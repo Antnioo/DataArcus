@@ -428,13 +428,6 @@ section {
   position: relative;
 }
 
-.section-divider {
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
-  margin: 0;
-  border: none;
-}
-
 /* CTA Section */
 .cta-section {
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
@@ -551,4 +544,9 @@ footer::before {
 [data-aos] {
   transition-duration: 0.8s !important;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Glowing Effects */
+.glowing-divider-bg {
+  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
 }
