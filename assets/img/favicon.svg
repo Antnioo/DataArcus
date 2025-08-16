@@ -1,6 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64">
-  <rect width="64" height="64" fill="#0E1B3D"/>
-  <path d="M12 52 L32 12 L52 52" fill="none" stroke="#00E1FF" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-  <line x1="20" y1="38" x2="44" y2="38" stroke="#40F3FF" stroke-width="6" stroke-linecap="round"/>
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0a0f1c"/>
+      <stop offset="100%" stop-color="#1a1f2e"/>
+    </linearGradient>
+    <linearGradient id="iconGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="100%" stop-color="#40f3ff"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="64" height="64" rx="12" fill="url(#bgGrad)"/>
+  <path d="M12 52 L32 12 L52 52" fill="none" stroke="url(#iconGrad)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <line x1="20" y1="38" x2="44" y2="38" stroke="url(#iconGrad)" stroke-width="6" stroke-linecap="round"/>
+  
+  <!-- Glow effect -->
+  <path d="M12 52 L32 12 L52 52" fill="none" stroke="url(#iconGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.5" filter="blur(2px)"/>
+  <line x1="20" y1="38" x2="44" y2="38" stroke="url(#iconGrad)" stroke-width="2" stroke-linecap="round" opacity="0.5" filter="blur(2px)"/>
 </svg>
