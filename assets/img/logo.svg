@@ -1,18 +1,119 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-
+<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#00E1FF"/>
-      <stop offset="100%" stop-color="#40F3FF"/>
+    <!-- Gradient definitions -->
+    <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00d4ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#40f3ff;stop-opacity:1" />
     </linearGradient>
-    <linearGradient id="grad2" x1="0" y1="1" x2="1" y2="0">
-      <stop offset="0%" stop-color="#00E1FF"/>
-      <stop offset="100%" stop-color="#40F3FF"/>
+    
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6c5ce7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#a29bfe;stop-opacity:1" />
     </linearGradient>
+    
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ffffff;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#40f3ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00d4ff;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Glow filter -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Drop shadow -->
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
   </defs>
-
-<rect width="512" height="512" fill="none"/>
-<path d="M64 448 L256 64 L448 448" fill="none" stroke="url(#grad)" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
-<line x1="160" y1="320" x2="352" y2="320" stroke="url(#grad2)" stroke-width="40" stroke-linecap="round"/>
+  
+  <!-- Background circle with subtle glow -->
+  <circle cx="30" cy="30" r="25" fill="url(#primaryGradient)" opacity="0.1" filter="url(#glow)"/>
+  
+  <!-- Main logo icon container -->
+  <g transform="translate(10, 10)">
+    <!-- Data visualization bars -->
+    <rect x="8" y="20" width="4" height="20" rx="2" fill="url(#primaryGradient)" filter="url(#shadow)">
+      <animate attributeName="height" values="20;25;20" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="20;15;20" dur="2s" repeatCount="indefinite"/>
+    </rect>
+    
+    <rect x="14" y="15" width="4" height="25" rx="2" fill="url(#accentGradient)" filter="url(#shadow)">
+      <animate attributeName="height" values="25;30;25" dur="2.5s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="15;10;15" dur="2.5s" repeatCount="indefinite"/>
+    </rect>
+    
+    <rect x="20" y="12" width="4" height="28" rx="2" fill="url(#primaryGradient)" filter="url(#shadow)">
+      <animate attributeName="height" values="28;35;28" dur="3s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="12;5;12" dur="3s" repeatCount="indefinite"/>
+    </rect>
+    
+    <rect x="26" y="18" width="4" height="22" rx="2" fill="url(#accentGradient)" filter="url(#shadow)">
+      <animate attributeName="height" values="22;27;22" dur="2.2s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="18;13;18" dur="2.2s" repeatCount="indefinite"/>
+    </rect>
+    
+    <rect x="32" y="10" width="4" height="30" rx="2" fill="url(#primaryGradient)" filter="url(#shadow)">
+      <animate attributeName="height" values="30;38;30" dur="2.8s" repeatCount="indefinite"/>
+      <animate attributeName="y" values="10;2;10" dur="2.8s" repeatCount="indefinite"/>
+    </rect>
+    
+    <!-- Data connection lines -->
+    <path d="M10 30 Q15 25 20 30 Q25 35 30 30 Q35 25 40 30" 
+          stroke="url(#primaryGradient)" 
+          stroke-width="1.5" 
+          fill="none" 
+          opacity="0.6"
+          stroke-dasharray="2,2">
+      <animate attributeName="stroke-dashoffset" values="0;20" dur="3s" repeatCount="indefinite"/>
+    </path>
+    
+    <!-- Floating data points -->
+    <circle cx="12" cy="28" r="2" fill="#00d4ff" opacity="0.8">
+      <animate attributeName="r" values="2;3;2" dur="1.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="22" cy="25" r="2" fill="#6c5ce7" opacity="0.8">
+      <animate attributeName="r" values="2;3;2" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;1;0.8" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    
+    <circle cx="34" cy="32" r="2" fill="#40f3ff" opacity="0.8">
+      <animate attributeName="r" values="2;3;2" dur="1.8s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.8;1;0.8" dur="1.8s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- Company name -->
+  <text x="70" y="25" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800" fill="url(#textGradient)" filter="url(#shadow)">
+    DataArcus
+  </text>
+  
+  <!-- Tagline -->
+  <text x="70" y="40" font-family="Inter, Arial, sans-serif" font-size="10" font-weight="500" fill="#ffffff" opacity="0.7">
+    Premium Power BI Solutions
+  </text>
+  
+  <!-- Subtle background pattern -->
+  <defs>
+    <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+      <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#00d4ff" stroke-width="0.5" opacity="0.1"/>
+    </pattern>
+  </defs>
+  <rect width="200" height="60" fill="url(#grid)" opacity="0.3"/>
+  
+  <!-- Accent geometric shapes -->
+  <polygon points="180,10 190,10 185,20" fill="url(#accentGradient)" opacity="0.3">
+    <animateTransform attributeName="transform" type="rotate" values="0 185 13.33;360 185 13.33" dur="10s" repeatCount="indefinite"/>
+  </polygon>
+  
+  <rect x="175" y="45" width="8" height="8" rx="2" fill="url(#primaryGradient)" opacity="0.4">
+    <animateTransform attributeName="transform" type="rotate" values="0 179 49;360 179 49" dur="8s" repeatCount="indefinite"/>
+  </rect>
 </svg>
