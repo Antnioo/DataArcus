@@ -271,7 +271,7 @@
               <span class="badge bg-success mb-2">FINANCE</span>
               <h5 class="mb-3">Financial Control Center</h5>
               <p class="text-white-50 small mb-3">Comprehensive P&L analysis, cash flow monitoring, and budget variance tracking with automated alerting systems.</p>
-              <a class="btn btn-accent btn-sm" href="#" onclick="alert('Demo available on request'); return false;">
+              <a class="btn btn-accent btn-sm" href="#" data-bs-toggle="modal" data-bs-target="#requestDemoModal">
                 <i class="bi bi-eye me-1"></i>Request Demo
               </a>
             </div>
@@ -286,7 +286,7 @@
               <span class="badge bg-warning mb-2">OPERATIONS</span>
               <h5 class="mb-3">Supply Chain Analytics</h5>
               <p class="text-white-50 small mb-3">End-to-end visibility of logistics, OTIF performance, inventory optimization, and predictive maintenance insights.</p>
-              <a class="btn btn-accent btn-sm" href="#" onclick="alert('Demo available on request'); return false;">
+              <a class="btn btn-accent btn-sm" href="#" data-bs-toggle="modal" data-bs-target="#requestDemoModal">
                 <i class="bi bi-eye me-1"></i>Request Demo
               </a>
             </div>
@@ -530,6 +530,25 @@
       </div>
     </div>
   </section>
+
+  <!-- Request Demo Modal -->  
+  <div class="modal fade" id="requestDemoModal" tabindex="-1" aria-labelledby="requestDemoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content bg-dark text-white" style="background: var(--dk-3); border: 1px solid var(--glass-border);">
+        <div class="modal-header border-bottom-0">
+          <h5 class="modal-title" id="requestDemoModalLabel">Request a Private Demo</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>This dashboard contains proprietary data. Please provide your email, and we'll send you a link to a personalized, interactive demo.</p>
+          <form>
+            <input type="email" class="form-control mb-3" placeholder="your@company.com">
+            <button type="submit" class="btn btn-accent w-100">Send Request</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Enhanced Footer -->
   <footer class="py-5">
