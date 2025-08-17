@@ -1,0 +1,37 @@
+<svg width="180" height="40" viewBox="0 0 180 40" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoPrimaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00d4ff;" />
+      <stop offset="100%" style="stop-color:#40f3ff;" />
+    </linearGradient>
+    <linearGradient id="logoAccentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6c5ce7;" />
+      <stop offset="100%" style="stop-color:#a29bfe;" />
+    </linearGradient>
+  </defs>
+  <g id="Icon" transform="translate(0, 4)">
+    <rect x="0" y="15" width="4" height="10" rx="2" fill="url(#logoPrimaryGradient)">
+      <animate attributeName="height" values="10;22;10" begin="0s" dur="1.5s" repeatCount="indefinite" />
+      <animate attributeName="y" values="15;9;15" begin="0s" dur="1.5s" repeatCount="indefinite" />
+    </rect>
+    <rect x="7" y="15" width="4" height="15" rx="2" fill="url(#logoAccentGradient)">
+      <animate attributeName="height" values="15;28;15" begin="0.2s" dur="1.5s" repeatCount="indefinite" />
+      <animate attributeName="y" values="15;6;15" begin="0.2s" dur="1.5s" repeatCount="indefinite" />
+    </rect>
+    <rect x="14" y="15" width="4" height="20" rx="2" fill="url(#logoPrimaryGradient)">
+      <animate attributeName="height" values="20;32;20" begin="0.4s" dur="1.5s" repeatCount="indefinite" />
+      <animate attributeName="y" values="15;4;15" begin="0.4s" dur="1.5s" repeatCount="indefinite" />
+    </rect>
+    <rect x="21" y="15" width="4" height="12" rx="2" fill="url(#logoAccentGradient)">
+      <animate attributeName="height" values="12;24;12" begin="0.6s" dur="1.5s" repeatCount="indefinite" />
+      <animate attributeName="y" values="15;8;15" begin="0.6s" dur="1.5s" repeatCount="indefinite" />
+    </rect>
+    <rect x="28" y="15" width="4" height="18" rx="2" fill="url(#logoPrimaryGradient)">
+      <animate attributeName="height" values="18;30;18" begin="0.8s" dur="1.5s" repeatCount="indefinite" />
+      <animate attributeName="y" values="15;5;15" begin="0.8s" dur="1.5s" repeatCount="indefinite" />
+    </rect>
+  </g>
+  <text x="45" y="27" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="800" fill="#FFFFFF">
+    DataArcus
+  </text>
+</svg>
