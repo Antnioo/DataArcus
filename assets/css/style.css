@@ -28,6 +28,10 @@ html, body {
   line-height: 1.6;
 }
 
+html {
+  scroll-padding-top: 80px; /* Adjust this value if needed */
+}
+
 body {
   background: var(--dk);
   color: #fff;
