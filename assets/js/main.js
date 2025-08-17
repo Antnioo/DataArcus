@@ -31,28 +31,44 @@ document.addEventListener('DOMContentLoaded', () => {
   // Counter animation for stats
   const animateCounters = () => {
     const counters = document.querySelectorAll('[data-count]');
+    
     counters.forEach(counter => {
-      const target = parseInt(counter.getAttribute('data-count'));
-      const duration = 2000;
-      const step = target / (duration / 16);
+      const target = parseFloat(counter.getAttribute('data-count'));
+      const suffix = counter.getAttribute('data-suffix') || '';
+      const duration = 2000; // Animation duration in ms
+      
+      // Calculate how much to increment on each frame
+      const step = target / (duration / 16); // Roughly 60 frames per second
       let current = 0;
 
       const updateCounter = () => {
         current += step;
+        
         if (current >= target) {
-          counter.textContent = target + (target < 100 && target > 10 ? 'h' : target === 100 ? '%' : '+');
+          // Animation finished, set the final text
+          counter.textContent = target + suffix;
         } else {
-          counter.textContent = Math.floor(current);
+          // During animation, update the text
+          if (target.toString().includes('.')) {
+            // Handle decimal points like in 99.9
+            counter.textContent = current.toFixed(1);
+          } else {
+            // Handle whole numbers
+            counter.textContent = Math.floor(current);
+          }
+          // Request the next frame to continue the animation
           requestAnimationFrame(updateCounter);
         }
       };
+      
+      // Start the animation
       updateCounter();
     });
   };
 
   // Trigger counter animation when stats section is visible
   const observerOptions = {
-    threshold: 0.5,
+    threshold: 0.2,
     rootMargin: '0px 0px -100px 0px'
   };
 
@@ -494,7 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
   lazyImages.forEach(img => imageObserver.observe(img));
 
   // Console welcome message
-  console.log('%c🚀 DataArcus Premium Website', 
+  console.log('%c🚀 DataArcus Website', 
     'color: #00d4ff; font-size: 20px; font-weight: bold;');
   console.log('%cBuilt with premium features and modern web technologies', 
     'color: #40f3ff; font-size: 14px;');
@@ -508,7 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Final initialization complete
   document.body.classList.add('loaded');
-  console.log('✅ DataArcus Premium Website fully initialized!');
+  console.log('✅ DataArcus Website fully initialized!');
 
   // --- Initialize Custom Dropdown ---
   const budgetSelect = document.getElementById('budget-select');
