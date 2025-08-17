@@ -509,4 +509,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Final initialization complete
   document.body.classList.add('loaded');
   console.log('✅ DataArcus Premium Website fully initialized!');
+
+  // --- Initialize Custom Dropdown ---
+  const budgetSelect = document.getElementById('budget-select');
+  if (budgetSelect) {
+    const choices = new Choices(budgetSelect, {
+      searchEnabled: false, // Disables the search box
+      itemSelectText: '', // Removes the "Press to select" text
+    });
+  }
 });
