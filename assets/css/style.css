@@ -85,15 +85,6 @@ body {
   border-bottom: 1px solid rgba(0, 212, 255, 0.2);
 }
 
-.navbar-brand {
-  font-weight: 800;
-  font-size: 1.5rem;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
 .nav-link {
   position: relative;
   font-weight: 500;
