@@ -138,24 +138,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Form enhancement
-  const form = document.querySelector('form');
-  if (form) {
-    form.addEventListener('submit', function(e) {
-      const button = form.querySelector('button[type="submit"]');
-      if (button) {
-        button.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Sending...';
-        button.disabled = true;
-        
-        // Re-enable after 3 seconds (for demo purposes)
-        setTimeout(() => {
-          button.innerHTML = '<i class="bi bi-send me-2"></i>Send Message';
-          button.disabled = false;
-        }, 3000);
-      }
-    });
-  }
-
   // Enhanced tech icon interactions
   document.querySelectorAll('.tech-icon').forEach(icon => {
     icon.addEventListener('mouseenter', function() {
@@ -189,6 +171,65 @@ document.addEventListener('DOMContentLoaded', () => {
       this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
     });
   });
+
+  // --- Final Combined Contact Form Script ---
+  const contactForm = document.getElementById('contact-form');
+  const formResult = document.getElementById('form-result');
+
+  if (contactForm) {
+    contactForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const formButton = contactForm.querySelector('button[type="submit"]');
+      const originalButtonHtml = formButton.innerHTML;
+
+      // 1. Change button to "Sending..." state
+      formButton.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Sending...';
+      formButton.disabled = true;
+      
+      // 2. Prepare form data and show "Please wait" message
+      const formData = new FormData(contactForm);
+      const object = Object.fromEntries(formData);
+      const json = JSON.stringify(object);
+      formResult.innerHTML = `<div class="alert alert-info mt-3">Please wait...</div>`;
+      formResult.style.display = 'block';
+
+      // 3. Submit the form to Web3Forms
+      fetch('https://api.web3forms.com/submit', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json'
+              },
+              body: json
+          })
+          .then(async (response) => {
+              let jsonResponse = await response.json();
+              if (response.status == 200) {
+                  // Success
+                  formResult.innerHTML = `<div class="alert alert-success mt-3">${jsonResponse.message}</div>`;
+              } else {
+                  // Error
+                  console.log(response);
+                  formResult.innerHTML = `<div class="alert alert-danger mt-3">${jsonResponse.message}</div>`;
+              }
+          })
+          .catch(error => {
+              // Network or other error
+              console.log(error);
+              formResult.innerHTML = `<div class="alert alert-danger mt-3">Something went wrong!</div>`;
+          })
+          .finally(() => {
+              // 4. Reset button and form, then hide message
+              formButton.innerHTML = originalButtonHtml;
+              formButton.disabled = false;
+              contactForm.reset();
+              setTimeout(() => {
+                  formResult.style.display = 'none';
+              }, 6000); // Hide the message after 6 seconds
+          });
+    });
+  }
 
   // Portfolio card advanced hover effects
   document.querySelectorAll('.portfolio-card').forEach(card => {
