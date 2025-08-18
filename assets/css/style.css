@@ -35,7 +35,6 @@ html {
 body {
   background: var(--dk);
   color: #fff;
-  overflow-x: hidden;
 }
 
 /* Premium Animations */
