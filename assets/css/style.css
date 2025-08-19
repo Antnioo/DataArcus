@@ -615,3 +615,10 @@ footer::before {
     opacity: 1;
   }
 }
+
+/* --- Final Mobile Stat Font Size Tweak --- */
+@media (max-width: 767px) {
+  .stat-number {
+    font-size: 2.3rem; /* Reduces font size on mobile */
+  }
+}
