@@ -333,83 +333,6 @@
     </div>
   </section>
 
-  <!-- Testimonials Section -->
-  <section id="testimonials" class="py-5">
-    <div class="container">
-      <div class="row mb-5">
-        <div class="col-lg-8 mx-auto text-center">
-          <h2 class="display-6 fw-bold mb-4">What Our Clients Say</h2>
-          <p class="lead text-white-50">Real feedback from business leaders who transformed their data strategy.</p>
-        </div>
-      </div>
-      
-      <div class="row g-4">
-        <!-- Testimonial 1 -->
-        <div class="col-md-6 col-lg-4" data-aos="fade-up">
-          <div class="glass-card p-4 h-100">
-            <div class="mb-3">
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-            </div>
-            <blockquote class="mb-3">"DataArcus transformed our messy Excel reports into a real-time dashboard. We now make decisions 3x faster."</blockquote>
-            <div class="d-flex align-items-center">
-              <div class="icon-badge me-3">AM</div>
-              <div>
-                <div class="fw-bold">Ahmed Mohamed</div>
-                <div class="small text-white-50">CEO, TechCorp Egypt</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Testimonial 2 -->
-        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
-          <div class="glass-card p-4 h-100">
-            <div class="mb-3">
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-            </div>
-            <blockquote class="mb-3">"The financial dashboard saved us 15 hours per month. ROI was immediate and the insights are game-changing."</blockquote>
-            <div class="d-flex align-items-center">
-              <div class="icon-badge me-3">SF</div>
-              <div>
-                <div class="fw-bold">Sarah Farouk</div>
-                <div class="small text-white-50">CFO, RetailPlus</div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Testimonial 3 -->
-        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="200">
-          <div class="glass-card p-4 h-100">
-            <div class="mb-3">
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-              <i class="bi bi-star-fill text-warning"></i>
-            </div>
-            <blockquote class="mb-3">"Professional, fast, and exactly what we needed. Our supply chain visibility improved dramatically."</blockquote>
-            <div class="d-flex align-items-center">
-              <div class="icon-badge me-3">KH</div>
-              <div>
-                <div class="fw-bold">Karim Hassan</div>
-                <div class="small text-white-50">Operations Dir., LogiFlow</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- Enhanced About -->
   <section id="about" class="py-5">
     <div class="container">
@@ -823,14 +746,20 @@
           <h3 class="modal-title h5" id="requestDemoModalLabel">Request a Private Demo</h3>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <div class="modal-body">
-          <p>This dashboard contains proprietary data. Please provide your email, and we'll send you a link to a personalized, interactive demo.</p>
-          <form>
-            <label for="demo-email" class="form-label visually-hidden">Your Company Email</label>
-            <input type="email" class="form-control mb-3" placeholder="your@company.com">
-            <button type="submit" class="btn btn-accent w-100">Send Request</button>
-          </form>
-        </div>
+          <div class="modal-body">
+            <p>This dashboard contains proprietary data. Please provide your email, and we'll send you a link to a personalized, interactive demo.</p>
+            <form id="demo-form" action="https://api.web3forms.com/submit" method="POST">
+              <input type="hidden" name="access_key" value="91d8ce12-3f16-41c9-8393-4bebe0611b3f">
+              <input type="hidden" name="subject" value="Demo Request - DataArcus">
+              <input type="hidden" name="from_name" value="Demo Request">
+              
+              <div id="demo-form-result" style="display: none;"></div>
+              
+              <label for="demo-email" class="form-label visually-hidden">Your Company Email</label>
+              <input type="email" name="email" id="demo-email" class="form-control mb-3" placeholder="your@company.com" required>
+              <button type="submit" class="btn btn-accent w-100">Send Request</button>
+            </form>
+          </div>
       </div>
     </div>
   </div>
