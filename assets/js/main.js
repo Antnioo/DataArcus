@@ -247,6 +247,59 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Demo form handler
+  const demoForm = document.getElementById('demo-form');
+  const demoFormResult = document.getElementById('demo-form-result');
+
+  if (demoForm) {
+    demoForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const formButton = demoForm.querySelector('button[type="submit"]');
+      const originalButtonHtml = formButton.innerHTML;
+
+      // Change button state
+      formButton.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Sending...';
+      formButton.disabled = true;
+      
+      // Show waiting message
+      const formData = new FormData(demoForm);
+      const object = Object.fromEntries(formData);
+      const json = JSON.stringify(object);
+      demoFormResult.innerHTML = `<div class="alert alert-info mt-3">Sending demo request...</div>`;
+      demoFormResult.style.display = 'block';
+
+      // Submit to Web3Forms
+      fetch('https://api.web3forms.com/submit', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json'
+              },
+              body: json
+          })
+          .then(async (response) => {
+              let jsonResponse = await response.json();
+              if (response.status == 200) {
+                  demoFormResult.innerHTML = `<div class="alert alert-success mt-3">Demo request sent! Check your email.</div>`;
+              } else {
+                  demoFormResult.innerHTML = `<div class="alert alert-danger mt-3">${jsonResponse.message}</div>`;
+              }
+          })
+          .catch(error => {
+              demoFormResult.innerHTML = `<div class="alert alert-danger mt-3">Something went wrong!</div>`;
+          })
+          .finally(() => {
+              formButton.innerHTML = originalButtonHtml;
+              formButton.disabled = false;
+              demoForm.reset();
+              setTimeout(() => {
+                  demoFormResult.style.display = 'none';
+              }, 5000);
+          });
+    });
+  }
+
   // Portfolio card advanced hover effects
   document.querySelectorAll('.portfolio-card').forEach(card => {
     card.addEventListener('mouseenter', function() {
