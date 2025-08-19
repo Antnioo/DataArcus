@@ -21,6 +21,13 @@ document.addEventListener('DOMContentLoaded', () => {
   onScroll();
   window.addEventListener('scroll', onScroll);
 
+  // Initialize AOS
+  AOS.init({
+    once: true,
+    duration: 800,
+    easing: 'ease-out-cubic'
+  });
+
   // Counter animation for stats
   const animateCounters = () => {
     const counters = document.querySelectorAll('[data-count]');
@@ -73,21 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }, observerOptions);
-
-  // --- Custom Intersection Observer for Animations ---
-  const animationObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('is-visible');
-        animationObserver.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1 });
-
-  const elementsToAnimate = document.querySelectorAll('[data-aos]');
-  elementsToAnimate.forEach(el => {
-    animationObserver.observe(el);
-  });
 
   const statsSection = document.querySelector('#about');
   if (statsSection) observer.observe(statsSection);
