@@ -622,3 +622,29 @@ footer::before {
     font-size: 2.3rem; /* Reduces font size on mobile */
   }
 }
+
+/* FAQ Accordion Styling */
+.accordion-button {
+  padding: 1.5rem;
+  font-size: 1.1rem;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.accordion-button:not(.collapsed) {
+  background: rgba(0, 212, 255, 0.1) !important;
+  color: var(--accent) !important;
+}
+
+.accordion-button::after {
+  filter: brightness(0) invert(1);
+}
+
+.accordion-button:not(.collapsed)::after {
+  filter: brightness(0) invert(1) sepia(1) saturate(3) hue-rotate(180deg);
+}
+
+.accordion-body {
+  padding: 1.5rem;
+  line-height: 1.7;
+}
