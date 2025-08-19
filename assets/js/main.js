@@ -29,60 +29,60 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Counter animation for stats
-  const animateCounters = () => {
-    const counters = document.querySelectorAll('[data-count]');
-    
-    counters.forEach(counter => {
-      const target = parseFloat(counter.getAttribute('data-count'));
-      const suffix = counter.getAttribute('data-suffix') || '';
-      const duration = 2000; // Animation duration in ms
-      
-      // Calculate how much to increment on each frame
-      const step = target / (duration / 16); // Roughly 60 frames per second
-      let current = 0;
+  const animateCounters = (counter) => {
+    const target = parseFloat(counter.getAttribute('data-count'));
+    const suffix = counter.getAttribute('data-suffix') || '';
+    const duration = 2000;
+    const step = target / (duration / 16);
+    let current = 0;
 
-      const updateCounter = () => {
-        current += step;
-        
-        if (current >= target) {
-          // Animation finished, set the final text
-          counter.textContent = target + suffix;
+    const updateCounter = () => {
+      current += step;
+      if (current >= target) {
+        counter.textContent = target + suffix;
+      } else {
+        if (target.toString().includes('.')) {
+          counter.textContent = current.toFixed(1);
         } else {
-          // During animation, update the text
-          if (target.toString().includes('.')) {
-            // Handle decimal points like in 99.9
-            counter.textContent = current.toFixed(1);
-          } else {
-            // Handle whole numbers
-            counter.textContent = Math.floor(current);
-          }
-          // Request the next frame to continue the animation
-          requestAnimationFrame(updateCounter);
+          counter.textContent = Math.floor(current);
         }
-      };
-      
-      // Start the animation
-      updateCounter();
-    });
+        requestAnimationFrame(updateCounter);
+      }
+    };
+    updateCounter();
   };
 
-  // Trigger counter animation when stats section is visible
-  const observerOptions = {
-    threshold: 0.2,
-    rootMargin: '0px 0px -100px 0px'
-  };
-
-  const observer = new IntersectionObserver((entries) => {
+  // --- Unified Intersection Observer for All Animations ---
+  const animationObserver = new IntersectionObserver((entries, observer) => {
     entries.forEach(entry => {
-      if (entry.isIntersecting && entry.target.querySelector('[data-count]')) {
-        animateCounters();
+      if (entry.isIntersecting) {
+        // Check if the element is a counter that needs animating
+        if (entry.target.hasAttribute('data-count')) {
+          animateCounters(entry.target); // Pass the specific counter element
+        } else {
+          // Otherwise, it's a fade-in element
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+        // Stop observing the element once it has animated
         observer.unobserve(entry.target);
       }
     });
-  }, observerOptions);
+  }, { threshold: 0.2 }); // Use a 20% visibility threshold
 
-  const statsSection = document.querySelector('#about');
-  if (statsSection) observer.observe(statsSection);
+  // Find all elements we want to animate
+  const elementsToAnimate = document.querySelectorAll('[data-aos], [data-count]');
+
+  elementsToAnimate.forEach(el => {
+    // Prepare the fade-in elements with their starting styles
+    if (el.hasAttribute('data-aos')) {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(20px)';
+      el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    }
+    // Tell the observer to watch this element
+    animationObserver.observe(el);
+  });
 
   // Interactive background particles
   const createParticles = () => {
@@ -282,24 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
       this.style.boxShadow = 'none';
       this.style.transform = 'translateY(0) scale(1)';
     });
-  });
-
-  // Intersection Observer for fade-in animations
-  const fadeElements = document.querySelectorAll('.glass-card, .service-card, .portfolio-card');
-  const fadeObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
-      }
-    });
-  }, { threshold: 0.1 });
-
-  fadeElements.forEach(el => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(20px)';
-    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-    fadeObserver.observe(el);
   });
 
   // Performance monitoring
