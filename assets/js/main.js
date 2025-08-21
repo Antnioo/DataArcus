@@ -21,12 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
   onScroll();
   window.addEventListener('scroll', onScroll);
 
-  // Initialize AOS
-  AOS.init({
-    once: true,
-    duration: 800,
-    easing: 'ease-out-cubic'
-  });
+  // Initialize AOS only on desktop
+  if (window.innerWidth > 767) {
+    AOS.init({
+      once: true,
+      duration: 800,
+      easing: 'ease-out-cubic'
+    });
+  }
 
   // Counter animation for stats
   const animateCounters = () => {
