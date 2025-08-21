@@ -582,9 +582,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Initialize Custom Dropdown ---
   const budgetSelect = document.getElementById('budget-select');
   if (budgetSelect) {
-    const choices = new Choices(budgetSelect, {
-      searchEnabled: false, // Disables the search box
-      itemSelectText: '', // Removes the "Press to select" text
-    });
+    budgetSelect.classList.add('form-select');
+    // The dropdown already works perfectly with your existing CSS
   }
 });

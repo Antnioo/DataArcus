@@ -694,3 +694,34 @@ footer::before {
     padding: 1.5rem !important; /* Smaller padding on mobile */
   }
 }
+
+.custom-select-wrapper {
+  position: relative;
+}
+
+.custom-budget-select {
+  appearance: none;
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 12px !important;
+  color: #fff !important;
+  padding: 15px 20px !important;
+  width: 100%;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300d4ff' stroke-width='2'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 16px;
+}
+
+.custom-budget-select:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1) !important;
+  outline: none;
+}
+
+.custom-budget-select option {
+  background: var(--dk-3);
+  color: #fff;
+  padding: 10px;
+}
