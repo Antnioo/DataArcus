@@ -35,9 +35,9 @@
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <!-- Bootstrap Icons -->
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <!-- AOS (Animate on Scroll) -->
+  <!-- AOS (Animate on Scroll) 
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  
+  -->
   <noscript>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">  
@@ -878,8 +878,44 @@
 
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-  <!--<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script> -->
+  <!-- <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script> -->
   <script src="assets/js/main.js"></script>
+
+  <script>
+  // Lazy load AOS only on desktop and when user interacts
+  if (window.innerWidth > 768) {
+    // Load AOS CSS
+    const aosCSS = document.createElement('link');
+    aosCSS.rel = 'stylesheet';
+    aosCSS.href = 'https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css';
+    document.head.appendChild(aosCSS);
+    
+    // Load AOS JS after user interaction
+    const loadAOS = () => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js';
+      script.onload = () => {
+        AOS.init({
+          once: true,
+          duration: 800,
+          easing: 'ease-out-cubic'
+        });
+      };
+      document.body.appendChild(script);
+      
+      // Remove listeners after loading
+      document.removeEventListener('scroll', loadAOS);
+      document.removeEventListener('mousemove', loadAOS);
+      document.removeEventListener('touchstart', loadAOS);
+    };
+    
+    // Load AOS on first user interaction
+    document.addEventListener('scroll', loadAOS, { once: true });
+    document.addEventListener('mousemove', loadAOS, { once: true });
+    document.addEventListener('touchstart', loadAOS, { once: true });
+  }
+  </script>
+
 </body>
 </html>

@@ -22,11 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('scroll', onScroll);
 
   // Initialize AOS
-  AOS.init({
-    once: true,
-    duration: 800,
-    easing: 'ease-out-cubic'
-  });
+  //AOS.init({
+  //  once: true,
+  //  duration: 800,
+  //  easing: 'ease-out-cubic'
+  //});
 
   // Counter animation for stats
   const animateCounters = () => {
