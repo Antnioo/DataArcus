@@ -660,3 +660,37 @@ footer::before {
     transform: none;
   }
 }
+
+@media (max-width: 768px) {
+  section {
+    padding: 60px 0 !important; /* Reduces from 120px to 60px */
+  }
+  
+  .hero {
+    padding-top: 100px !important; /* Reduces hero padding */
+    min-height: 80vh !important; /* Shorter hero on mobile */
+  }
+}
+
+@media (max-width: 768px) {
+  .accordion-body {
+    padding: 1rem !important; /* Reduces from 1.5rem */
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  
+  .accordion-button {
+    padding: 1rem !important; /* Reduces from 1.5rem */
+    font-size: 1rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .stat-number {
+    font-size: 2rem !important; /* Already done, but ensures it's applied */
+  }
+  
+  .glass-card.p-4 {
+    padding: 1.5rem !important; /* Smaller padding on mobile */
+  }
+}
