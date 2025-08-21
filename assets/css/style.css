@@ -648,3 +648,15 @@ footer::before {
   padding: 1.5rem;
   line-height: 1.7;
 }
+
+@media (max-width: 768px) {
+  .floating-element,
+  .particle,
+  .interactive-bg {
+    display: none !important;
+  }
+  
+  .glass-card:hover {
+    transform: none;
+  }
+}
