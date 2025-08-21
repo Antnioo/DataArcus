@@ -29,7 +29,7 @@ html, body {
 }
 
 html {
-  scroll-padding-top: 80px;
+  scroll-padding-top: 80px; /* Adjust this value if needed */
 }
 
 body {
@@ -391,38 +391,6 @@ body {
   margin-bottom: 8px;
 }
 
-/* Custom Select Dropdown */
-.custom-select-wrapper {
-  position: relative;
-}
-
-.custom-budget-select {
-  appearance: none;
-  background: var(--glass-bg) !important;
-  border: 1px solid var(--glass-border) !important;
-  border-radius: 12px !important;
-  color: #fff !important;
-  padding: 15px 20px !important;
-  width: 100%;
-  cursor: pointer;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300d4ff' stroke-width='2'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 15px center;
-  background-size: 16px;
-}
-
-.custom-budget-select:focus {
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1) !important;
-  outline: none;
-}
-
-.custom-budget-select option {
-  background: var(--dk-3);
-  color: #fff;
-  padding: 10px;
-}
-
 /* Floating Elements */
 .floating-element {
   position: absolute;
@@ -524,36 +492,29 @@ footer::before {
   animation: particleFloat 15s infinite linear;
 }
 
-/* FAQ Accordion Styling */
-.accordion-button {
-  padding: 1.5rem;
-  font-size: 1.1rem;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-.accordion-button:not(.collapsed) {
-  background: rgba(0, 212, 255, 0.1) !important;
-  color: var(--accent) !important;
-}
-
-.accordion-button::after {
-  filter: brightness(0) invert(1);
-}
-
-.accordion-button:not(.collapsed)::after {
-  filter: brightness(0) invert(1) sepia(1) saturate(3) hue-rotate(180deg);
-}
-
-.accordion-body {
-  padding: 1.5rem;
-  line-height: 1.7;
-}
-
 /* Hover Effects */
 .hover-accent:hover { 
   color: var(--accent) !important; 
   transition: color 0.3s ease; 
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  section { 
+    padding: 80px 0; 
+  }
+  
+  .hero h1 { 
+    font-size: 2.5rem; 
+  }
+  
+  .hero .lead { 
+    font-size: 1.1rem; 
+  }
+  
+  .floating-element {
+    display: none;
+  }
 }
 
 /* Custom Scrollbar */
@@ -585,7 +546,7 @@ footer::before {
   background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
 }
 
-/* Custom Choices.js Dropdown Styling */
+/* --- Custom Choices.js Dropdown Styling --- */
 .choices {
   margin-bottom: 0;
 }
@@ -626,6 +587,7 @@ footer::before {
   word-break: break-all;
 }
 
+/* Custom dropdown arrow */
 .choices__inner::after {
   border-color: var(--accent) transparent transparent !important;
   height: 6px;
@@ -639,56 +601,140 @@ footer::before {
   margin-top: 0;
 }
 
-/* Mobile Optimizations */
-@media (max-width: 768px) {
-  /* Reduce section padding and hero height */
-  section {
-    padding: 60px 0 !important;
+/* --- AOS Mobile Overflow Fix --- */
+@media screen and (max-width: 767px) {
+  [data-aos="fade-right"],
+  [data-aos="fade-left"] {
+    transform: none;
+    opacity: 1;
   }
-  
-  .hero {
-    padding-top: 100px !important;
-    min-height: 80vh !important;
+
+  [data-aos][data-aos].aos-animate[data-aos="fade-right"],
+  [data-aos][data-aos].aos-animate[data-aos="fade-left"] {
+    transform: none;
+    opacity: 1;
   }
-  
-  .hero h1 { 
-    font-size: 2.5rem; 
-  }
-  
-  .hero .lead { 
-    font-size: 1.1rem; 
-  }
-  
-  /* Reduce stats font size */
+}
+
+/* --- Final Mobile Stat Font Size Tweak --- */
+@media (max-width: 767px) {
   .stat-number {
-    font-size: 2rem !important;
+    font-size: 2.3rem; /* Reduces font size on mobile */
   }
-  
-  /* Reduce glass card padding */
-  .glass-card.p-4 {
-    padding: 1.5rem !important;
-  }
-  
-  /* Reduce accordion padding */
-  .accordion-body {
-    padding: 1rem !important;
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
-  
-  .accordion-button {
-    padding: 1rem !important;
-    font-size: 1rem !important;
-  }
-  
-  /* Disable expensive animations and effects */
+}
+
+/* FAQ Accordion Styling */
+.accordion-button {
+  padding: 1.5rem;
+  font-size: 1.1rem;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.accordion-button:not(.collapsed) {
+  background: rgba(0, 212, 255, 0.1) !important;
+  color: var(--accent) !important;
+}
+
+.accordion-button::after {
+  filter: brightness(0) invert(1);
+}
+
+.accordion-button:not(.collapsed)::after {
+  filter: brightness(0) invert(1) sepia(1) saturate(3) hue-rotate(180deg);
+}
+
+.accordion-body {
+  padding: 1.5rem;
+  line-height: 1.7;
+}
+
+@media (max-width: 768px) {
   .floating-element,
   .particle,
   .interactive-bg {
     display: none !important;
   }
   
-  /* Disable AOS animations */
+  .glass-card:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 768px) {
+  section {
+    padding: 60px 0 !important; /* Reduces from 120px to 60px */
+  }
+  
+  .hero {
+    padding-top: 100px !important; /* Reduces hero padding */
+    min-height: 80vh !important; /* Shorter hero on mobile */
+  }
+}
+
+@media (max-width: 768px) {
+  .accordion-body {
+    padding: 1rem !important; /* Reduces from 1.5rem */
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+  
+  .accordion-button {
+    padding: 1rem !important; /* Reduces from 1.5rem */
+    font-size: 1rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .stat-number {
+    font-size: 2rem !important; /* Already done, but ensures it's applied */
+  }
+  
+  .glass-card.p-4 {
+    padding: 1.5rem !important; /* Smaller padding on mobile */
+  }
+}
+
+.custom-select-wrapper {
+  position: relative;
+}
+
+.custom-budget-select {
+  appearance: none;
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 12px !important;
+  color: #fff !important;
+  padding: 15px 20px !important;
+  width: 100%;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300d4ff' stroke-width='2'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 16px;
+}
+
+.custom-budget-select:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1) !important;
+  outline: none;
+}
+
+.custom-budget-select option {
+  background: var(--dk-3);
+  color: #fff;
+  padding: 10px;
+}
+
+@media (max-width: 768px) {
+  /* Disable expensive animations */
+  .floating-element,
+  .particle,
+  .interactive-bg {
+    display: none !important;
+  }
+  
+  /* Disable AOS animations on mobile */
   [data-aos] {
     transform: none !important;
     opacity: 1 !important;
@@ -701,20 +747,5 @@ footer::before {
   .service-card:hover {
     transform: none !important;
     box-shadow: none !important;
-  }
-}
-
-/* AOS Mobile Overflow Fix */
-@media screen and (max-width: 767px) {
-  [data-aos="fade-right"],
-  [data-aos="fade-left"] {
-    transform: none;
-    opacity: 1;
-  }
-
-  [data-aos][data-aos].aos-animate[data-aos="fade-right"],
-  [data-aos][data-aos].aos-animate[data-aos="fade-left"] {
-    transform: none;
-    opacity: 1;
   }
 }
