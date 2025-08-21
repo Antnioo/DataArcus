@@ -725,3 +725,27 @@ footer::before {
   color: #fff;
   padding: 10px;
 }
+
+@media (max-width: 768px) {
+  /* Disable expensive animations */
+  .floating-element,
+  .particle,
+  .interactive-bg {
+    display: none !important;
+  }
+  
+  /* Disable AOS animations on mobile */
+  [data-aos] {
+    transform: none !important;
+    opacity: 1 !important;
+    transition: none !important;
+  }
+  
+  /* Reduce hover effects */
+  .glass-card:hover,
+  .portfolio-card:hover,
+  .service-card:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
