@@ -41,9 +41,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <!-- Custom CSS -->
   <link href="assets/css/style.css" rel="stylesheet">
-  <!-- Choices.js for custom select -->
+  <!-- Choices.js for custom select
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css"/>
-
+  -->
   <!-- Structured Data -->
   <script type="application/ld+json">
   {
@@ -693,13 +693,15 @@
               </div>
               <div class="col-sm-6">
                 <label class="form-label">Project Budget</label>
-                <select name="budget" class="form-select" id="budget-select">
-                  <option value="">Select range (EGP)</option>
-                  <option value="30k-75k">EGP 30,000 - 75,000</option>
-                  <option value="75k-150k">EGP 75,000 - 150,000</option>
-                  <option value="150k-300k">EGP 150,000 - 300,000</option>
-                  <option value="300k+">EGP 300,000+</option>
-                </select>
+                <div class="custom-select-wrapper">
+                  <select name="budget" class="form-select custom-budget-select" id="budget-select">
+                    <option value="">Select range (EGP)</option>
+                    <option value="30k-75k">EGP 30,000 - 75,000</option>
+                    <option value="75k-150k">EGP 75,000 - 150,000</option>
+                    <option value="150k-300k">EGP 150,000 - 300,000</option>
+                    <option value="300k+">EGP 300,000+</option>
+                  </select>
+                </div>
               </div>
               <div class="col-12">
                 <label class="form-label">Project Details *</label>
@@ -870,7 +872,7 @@
   <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+  <!--<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script> -->
   <script src="assets/js/main.js"></script>
 </body>
 </html>
