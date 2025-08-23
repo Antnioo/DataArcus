@@ -1,5 +1,21 @@
 // Premium DataArcus JavaScript
 document.addEventListener('DOMContentLoaded', () => {
+
+    // --- Interactive background particles (CORRECTED PLACEMENT) ---
+  const interactiveBg = document.getElementById('interactiveBg');
+  if (interactiveBg) {
+    for (let i = 0; i < 50; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.top = Math.random() * 100 + '%';
+      particle.style.animationDelay = Math.random() * 20 + 's';
+      particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
+      interactiveBg.appendChild(particle);
+    }
+  }
+  // --- END of particle script ---
+
   // Hide loading overlay
   setTimeout(() => {
     const loadingOverlay = document.getElementById('loadingOverlay');
@@ -11,15 +27,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Enhanced navbar scroll effect
   const nav = document.querySelector('.navbar');
-  const onScroll = () => {
-    if (window.scrollY > 20) {
-      nav.classList.add('scrolled');
-    } else {
-      nav.classList.remove('scrolled');
-    }
-  };
-  onScroll();
-  window.addEventListener('scroll', onScroll);
+  if (nav) {
+    const onScroll = () => {
+      if (window.scrollY > 20) {
+        nav.classList.add('scrolled');
+      } else {
+        nav.classList.remove('scrolled');
+      }
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll);
+  }
 
   // Initialize AOS only on desktop
   if (window.innerWidth > 767) {
@@ -86,27 +104,17 @@ document.addEventListener('DOMContentLoaded', () => {
   const statsSection = document.querySelector('#about');
   if (statsSection) observer.observe(statsSection);
 
-  // Interactive background particles
-  const createParticles = () => {
-    const interactiveBg = document.getElementById('interactiveBg');
-    if (!interactiveBg) return;
 
-    for (let i = 0; i < 50; i++) {
-      const particle = document.createElement('div');
-      particle.className = 'particle';
-      particle.style.left = Math.random() * 100 + '%';
-      particle.style.top = Math.random() * 100 + '%';
-      particle.style.animationDelay = Math.random() * 20 + 's';
-      particle.style.animationDuration = (Math.random() * 10 + 10) + 's';
-      interactiveBg.appendChild(particle);
-    }
-  };
 
-  createParticles();
-
-  // Smooth scrolling for anchor links
+  // Smooth scrolling for anchor links (Homepage Only)
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
+      // Check if the current page is NOT the homepage. If so, do nothing.
+      if (window.location.pathname.includes('article-clv.html')) {
+        return; // This allows the links on the article page to work normally
+      }
+
+      // If we are on the homepage, perform the smooth scroll
       e.preventDefault();
       const target = document.querySelector(this.getAttribute('href'));
       if (target) {
