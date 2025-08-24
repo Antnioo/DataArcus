@@ -106,24 +106,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-  // Smooth scrolling for anchor links (Homepage Only)
-  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-    anchor.addEventListener('click', function (e) {
-      // Check if the current page is NOT the homepage. If so, do nothing.
-      if (window.location.pathname.includes('article-clv.html')) {
-        return; // This allows the links on the article page to work normally
-      }
+  // --- Final, Professional Smooth Scrolling Script ---
+  document.addEventListener('click', function(e) {
+    // Find the closest link that was clicked
+    const anchor = e.target.closest('a');
 
-      // If we are on the homepage, perform the smooth scroll
+    // If no link was clicked, or it's not a hash link, do nothing
+    if (!anchor || !anchor.getAttribute('href')?.startsWith('#')) {
+      return;
+    }
+    
+    // Get the target ID from the href
+    const targetId = anchor.getAttribute('href');
+    
+    // If it's just a "#" link, do nothing (or scroll to top if you want)
+    if (targetId === '#') {
+      return;
+    }
+    
+    // Find the target element on the current page
+    const targetElement = document.querySelector(targetId);
+
+    // If the target element actually exists on this page...
+    if (targetElement) {
+      // ...then, and only then, prevent the default jump and scroll smoothly.
       e.preventDefault();
-      const target = document.querySelector(this.getAttribute('href'));
-      if (target) {
-        target.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }
-    });
+      targetElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+      });
+    }
+    // If the target element doesn't exist (e.g., a link on portfolio.html pointing to #services),
+    // the script does nothing, and the browser handles the link normally.
   });
 
   // Enhanced hover effects for glass cards

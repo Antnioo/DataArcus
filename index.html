@@ -43,22 +43,19 @@
     })(window, document, "clarity", "script", "sy2681b9al");
   </script>
 
-  <!-- Bootstrap 5 -->
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Custom CSS -->
-  <link href="assets/css/style.css" rel="stylesheet">
-  <!-- Bootstrap Icons -->
-  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <!-- AOS (Animate on Scroll) -->
-  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">  
     <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
   </noscript>
   
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   
   <!-- Structured Data -->
@@ -106,7 +103,7 @@
       <div class="collapse navbar-collapse" id="navmenu">
         <ul class="navbar-nav ms-auto">
           <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
-          <li class="nav-item"><a class="nav-link" href="#portfolio">Portfolio</a></li>
+          <li class="nav-item"><a class="nav-link" href="portfolio.html">Portfolio</a></li>
           <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
           <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
         </ul>
@@ -278,101 +275,33 @@
       <div class="row mb-5">
         <div class="col-lg-8 mx-auto text-center">
           <h2 class="display-6 fw-bold mb-4">Proven Results</h2>
-          <p class="lead text-white-50">We measure our success by the success of our clients. Here’s how we've helped businesses like yours turn data into a competitive advantage.</p>
-        </div>
-      </div>
-
-      <div class="row mb-3">
-        <div class="col-12 text-center">
-          <p class="small text-white-50 mb-0">
-            <i class="bi bi-info-circle me-1"></i>
-            More client dashboards coming soon. Each solution is custom-built and requires client approval before showcasing.
-          </p>
-        </div>
-      </div>
-
-      <div class="row g-4 mb-5">
-        <div class="col-md-6 col-lg-4" data-aos="fade-up">
-          <div class="portfolio-card h-100">
-            <div class="portfolio-image">
-              <i class="bi bi-bar-chart-line"></i>
-            </div>
-            <div class="p-4">
-              <span class="badge bg-primary mb-2">SALES ANALYTICS</span>
-              <h3 class="mb-3">Executive Sales Dashboard</h3>
-              <p class="text-white-50 small mb-3">
-                <strong>The Challenge:</strong> A SaaS client had disjointed sales data across three platforms, making it impossible to get a clear view of revenue and team performance.
-                <br><br>
-                <strong>The Result:</strong> The new dashboard provided a single source of truth, leading to a <strong>15% increase in sales efficiency</strong> and better strategic decisions.
-              </p>
-              <a class="btn btn-accent btn-sm" href="https://app.powerbi.com/view?r=eyJrIjoiNWM0ZTJmMjgtMDMyOS00OGM4LTg1YzYtZWZlODE0OGFjZGUyIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9" target="_blank">
-                <i class="bi bi-eye me-1"></i>Live Demo
-              </a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
-          <div class="portfolio-card h-100">
-            <div class="portfolio-image">
-              <i class="bi bi-currency-dollar"></i>
-            </div>
-            <div class="p-4">
-              <span class="badge bg-success mb-2">FINANCE</span>
-              <h3 class="mb-3">Financial Control Center</h3>
-              <p class="text-white-50 small mb-3">
-                <strong>The Challenge:</strong> A growing e-commerce brand struggled with manual financial reporting, leading to slow month-end closing and missed budget variances.
-                <br><br>
-                <strong>The Result:</strong> We automated their P&L reporting, <strong>reducing closing time by 3 days</strong> and providing real-time cash flow alerts.
-              </p>
-              <a class="btn btn-accent btn-sm" href="#" data-bs-toggle="modal" data-bs-target="#requestDemoModal">
-                <i class="bi bi-eye me-1"></i>Request Demo
-              </a>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="200">
-          <div class="portfolio-card h-100">
-            <div class="portfolio-image">
-              <i class="bi bi-truck"></i>
-            </div>
-            <div class="p-4">
-              <span class="badge bg-warning mb-2">OPERATIONS</span>
-              <h3 class="mb-3">Supply Chain Analytics</h3>
-              <p class="text-white-50 small mb-3">
-                <strong>The Challenge:</strong> A logistics company faced high costs due to inventory imbalances and lacked visibility into their delivery performance (OTIF).
-                <br><br>
-                <strong>The Result:</strong> Their new dashboard helped optimize stock levels across warehouses, <strong>improving OTIF by 12%</strong> and cutting holding costs.
-              </p>
-              <a class="btn btn-accent btn-sm" href="#" data-bs-toggle="modal" data-bs-target="#requestDemoModal">
-                <i class="bi bi-eye me-1"></i>Request Demo
-              </a>
-            </div>
-          </div>
+          <p class="lead text-white-50">We measure our success by the success of our clients. Our portfolio is a showcase of the custom-built, high-impact data solutions we've delivered.</p>
         </div>
       </div>
       
-      <div class="row">
-        <div class="col-12" data-aos="fade-up">
-          <div class="glass-card p-4">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-              <h3 class="mb-0"><i class="bi bi-display me-2"></i>Interactive Dashboard Preview</h3>
-              <span class="badge bg-primary">LIVE DATA</span>
+      <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-5" data-aos="fade-up">
+          <div class="portfolio-card">
+            <div class="portfolio-image">
+                <img src="assets/img/dashboard-preview.jpg" class="img-fluid" alt="Screenshot of the Executive Sales Dashboard">
             </div>
-            <div class="ratio ratio-16x9 rounded-3 overflow-hidden">
-              <iframe 
-                title="AdventureWorks Sales Dashboard" 
-                src="https://app.powerbi.com/view?r=eyJrIjoiNWM0ZTJmMjgtMDMyOS00OGM4LTg1YzYtZWZlODE0OGFjZGUyIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9" 
-                frameborder="0" 
-                allowFullScreen="true"
-                style="border-radius: 12px;">
-              </iframe>
+            <div class="p-4 text-center">
+              <span class="badge bg-primary mb-2">SALES ANALYTICS</span>
+              <h3 class="mb-3">Executive Sales Dashboard</h3>
+              <p class="text-white-50 small mb-3">
+                A single source of truth for a SaaS client, leading to a <strong>15% increase in sales efficiency</strong>.
+              </p>
             </div>
-            <p class="small text-white-50 mt-3 mb-0">
-              <i class="bi bi-info-circle me-1"></i>
-              Fully interactive dashboard - click, filter, and explore the data in real-time.
-            </p>
           </div>
         </div>
+      </div>
+
+      <div class="row mt-5">
+          <div class="col-12 text-center">
+              <a href="portfolio.html" class="btn btn-accent btn-lg">
+                  <i class="bi bi-grid-fill me-2"></i>View All Case Studies
+              </a>
+          </div>
       </div>
     </div>
   </section>
@@ -855,7 +784,7 @@
           <h3 class="mb-3">Company</h3>
           <ul class="list-unstyled">
             <li class="mb-2"><a href="#about" class="text-white-50 text-decoration-none hover-accent">About</a></li>
-            <li class="mb-2"><a href="#portfolio" class="text-white-50 text-decoration-none hover-accent">Portfolio</a></li>
+            <li class="mb-2"><a href="portfolio.html" class="text-white-50 text-decoration-none hover-accent">Portfolio</a></li>
             <li class="mb-2"><a href="#contact" class="text-white-50 text-decoration-none hover-accent">Contact</a></li>
             <li class="mb-2"><a href="article-clv.html" class="text-white-50 text-decoration-none hover-accent">Blog</a></li>
           </ul>
