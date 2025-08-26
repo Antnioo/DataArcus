@@ -63,14 +63,52 @@
   
   <!-- Structured Data -->
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    "name": "DataArcus",
-    "url": "https://DataArcus.com",
-    "logo": "https://DataArcus.com/assets/img/logo.svg",
-    "sameAs": []
-  }
+  [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "DataArcus",
+      "url": "https://dataarcus.com",
+      "logo": "https://dataarcus.com/assets/img/logo.svg",
+      "sameAs": []
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfessionalService",
+      "name": "DataArcus",
+      "image": "https://dataarcus.com/assets/img/logo.svg",
+      "telephone": "+20 106 605 3022",
+      "email": "hello@DataArcus.com",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "EG"
+      },
+      "priceRange": "EGP 50,000 - 500,000+",
+      "serviceArea": [
+        { "@type": "Country", "name": "Egypt" },
+        { "@type": "Country", "name": "United Arab Emirates" },
+        { "@type": "Country", "name": "Saudi Arabia" },
+        { "@type": "Country", "name": "Qatar" }
+      ]
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      "name": "Power BI Dashboard Development",
+      "description": "Custom Power BI dashboards and data analytics solutions for businesses in the MENA region.",
+      "provider": {
+        "@type": "Organization",
+        "name": "DataArcus"
+      },
+      "serviceType": "Business Intelligence",
+      "areaServed": [
+          { "@type": "Country", "name": "Egypt" },
+          { "@type": "Country", "name": "United Arab Emirates" },
+          { "@type": "Country", "name": "Saudi Arabia" },
+          { "@type": "Country", "name": "Qatar" }
+      ]
+    }
+  ]
   </script>
 </head>
 <body data-bs-spy="scroll" data-bs-target="#navbar" data-bs-offset="80" tabindex="0">
