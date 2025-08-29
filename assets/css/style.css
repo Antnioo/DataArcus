@@ -1,5 +1,14 @@
-/* Premium DataArcus Styles */
-:root{
+/*
+=========================================================
+* Premium DataArcus Stylesheet
+*
+* Main stylesheet for the DataArcus consultancy website.
+* Sections are commented for clarity and maintainability.
+=========================================================
+*/
+
+/* ===== 1. Root Variables & Global Styles ===== */
+:root {
   --dk: #0a0f1c;
   --dk-2: #050a14;
   --dk-3: #1a1f2e;
@@ -22,14 +31,14 @@
   box-sizing: border-box;
 }
 
-html, body { 
-  scroll-behavior: smooth; 
+html, body {
+  scroll-behavior: smooth;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.6;
 }
 
 html {
-  scroll-padding-top: 80px; /* Adjust this value if needed */
+  scroll-padding-top: 80px;
 }
 
 body {
@@ -38,7 +47,7 @@ body {
   overflow-x: hidden;
 }
 
-/* Premium Animations */
+/* ===== 2. Keyframe Animations ===== */
 @keyframes float {
   0%, 100% { transform: translateY(0px) rotate(0deg); }
   50% { transform: translateY(-20px) rotate(2deg); }
@@ -55,11 +64,6 @@ body {
   100% { background-position: 0% 50%; }
 }
 
-@keyframes pulse-border {
-  0%, 100% { border-color: rgba(0, 212, 255, 0.3); }
-  50% { border-color: rgba(0, 212, 255, 0.8); }
-}
-
 @keyframes particleFloat {
   0% { transform: translateY(100vh) translateX(0); opacity: 0; }
   10% { opacity: 0.3; }
@@ -72,7 +76,9 @@ body {
   100% { transform: rotate(360deg); }
 }
 
-/* Enhanced Navbar */
+/* ===== 3. Core Layout & Components ===== */
+
+/* --- Navigation Bar --- */
 .navbar {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(20px);
@@ -113,7 +119,7 @@ body {
   width: 100%;
 }
 
-/* Premium Buttons */
+/* --- Buttons --- */
 .btn-accent {
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   border: none;
@@ -164,58 +170,7 @@ body {
   transform: translateY(-2px);
 }
 
-/* Enhanced Hero */
-.hero {
-  min-height: 100vh;
-  position: relative;
-  background: 
-    radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.15) 0%, transparent 40%),
-    radial-gradient(circle at 80% 80%, rgba(64, 243, 255, 0.1) 0%, transparent 40%),
-    radial-gradient(circle at 40% 60%, rgba(108, 92, 231, 0.1) 0%, transparent 40%),
-    linear-gradient(135deg, var(--dk) 0%, var(--dk-2) 50%, var(--dk-3) 100%);
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  padding-top: 80px;
-}
-
-.hero::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: 
-    conic-gradient(from 0deg, transparent, rgba(0, 212, 255, 0.03), transparent, rgba(64, 243, 255, 0.03), transparent);
-  animation: float 20s infinite linear;
-  pointer-events: none;
-}
-
-.hero-content {
-  position: relative;
-  z-index: 2;
-}
-
-.hero h1 {
-  font-size: clamp(2.5rem, 8vw, 4.5rem);
-  font-weight: 900;
-  line-height: 1.1;
-  background: linear-gradient(135deg, #fff 0%, var(--accent-2) 50%, var(--accent) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 1.5rem;
-}
-
-.hero .lead {
-  font-size: 1.25rem;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.7);
-  max-width: 600px;
-}
-
-/* Premium Glass Cards */
+/* --- Glassmorphism Cards (Base Style) --- */
 .glass-card {
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
@@ -243,35 +198,65 @@ body {
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
-/* Icon Badge */
-.icon-badge {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  border-radius: 10px;
+/* --- Footer --- */
+footer {
+  background: var(--dk-2);
+  border-top: 1px solid rgba(0, 212, 255, 0.2);
+  padding: 60px 0 30px 0;
+  position: relative;
+}
+
+footer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+/* ===== 4. Section-Specific Styles ===== */
+
+/* --- Hero Section --- */
+.hero {
+  min-height: 100vh;
+  position: relative;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.15) 0%, transparent 40%),
+    radial-gradient(circle at 80% 80%, rgba(64, 243, 255, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 40% 60%, rgba(108, 92, 231, 0.1) 0%, transparent 40%),
+    linear-gradient(135deg, var(--dk) 0%, var(--dk-2) 50%, var(--dk-3) 100%);
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
-  color: #000;
-  flex-shrink: 0;
+  overflow: hidden;
+  padding-top: 80px;
 }
 
-/* Tech Icons */
-.tech-icon {
-  font-size: 2rem;
-  color: var(--accent);
-  transition: all 0.3s ease;
-  display: block;
-  margin: 0 auto;
+.hero-content {
+  position: relative;
+  z-index: 2;
 }
 
-.tech-icon:hover {
-  transform: scale(1.1);
-  filter: brightness(1.2);
+.hero h1 {
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-weight: 900;
+  line-height: 1.1;
+  background: linear-gradient(135deg, #fff 0%, var(--accent-2) 50%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1.5rem;
 }
 
-/* Tech Stack Section Alignment */
+.hero .lead {
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
+  max-width: 600px;
+}
+
+/* --- Tech Stack Section --- */
 .tech-stack-item {
   display: flex;
   flex-direction: column;
@@ -280,12 +265,13 @@ body {
   min-height: 80px;
 }
 
-.tech-stack-item .small {
-  margin-top: 8px;
-  text-align: center;
+.tech-icon {
+  font-size: 2rem;
+  color: var(--accent);
+  transition: all 0.3s ease;
 }
 
-/* Enhanced Services */
+/* --- Services Section --- */
 .service-icon {
   width: 80px;
   height: 80px;
@@ -305,7 +291,7 @@ body {
   animation: glow 2s infinite;
 }
 
-/* Interactive Portfolio Cards */
+/* --- Portfolio Section --- */
 .portfolio-card {
   background: var(--glass-bg);
   backdrop-filter: blur(20px);
@@ -314,22 +300,6 @@ body {
   overflow: hidden;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-}
-
-.portfolio-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(64, 243, 255, 0.1));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.portfolio-card:hover::before {
-  opacity: 1;
 }
 
 .portfolio-card:hover {
@@ -353,7 +323,18 @@ body {
   transform: scale(1.1);
 }
 
-/* Stats Counter Animation */
+.tech-pill {
+  display: inline-block;
+  background-color: rgba(0, 212, 255, 0.1);
+  color: var(--accent-2);
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+/* --- About Section (Stats) --- */
 .stat-number {
   font-size: 3rem;
   font-weight: 900;
@@ -363,7 +344,78 @@ body {
   background-clip: text;
 }
 
-/* Enhanced Contact Form */
+/* --- FAQ Section (Accordion) --- */
+.accordion-button {
+  padding: 1.5rem;
+  font-size: 1.1rem;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.accordion-button:not(.collapsed) {
+  background: rgba(0, 212, 255, 0.1) !important;
+  color: var(--accent) !important;
+}
+
+.accordion-button::after {
+  filter: brightness(0) invert(1);
+}
+
+.accordion-body {
+  padding: 1.5rem;
+  line-height: 1.7;
+}
+
+/* --- Call to Action (CTA) Section --- */
+.cta-section {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #000;
+}
+
+/* --- Article & Project Page Styles --- */
+.page-header {
+    padding-top: 160px;
+    padding-bottom: 80px;
+    background: linear-gradient(135deg, var(--dk-2), var(--dk-3));
+}
+
+.article-section {
+  padding: 120px 0;
+}
+
+.article-header h1 {
+  color: var(--accent);
+}
+
+.article-body {
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.article-body h2 {
+  font-weight: 700;
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  color: #fff;
+}
+
+.article-body strong {
+  color: #fff;
+}
+
+.article-body ol, .article-body ul {
+  padding-left: 2rem;
+}
+
+.article-body li {
+  margin-bottom: 1rem;
+}
+
+
+/* ===== 5. Forms & Inputs ===== */
+
+/* --- Base Form Control Styles --- */
 .form-control, .form-select {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -391,310 +443,7 @@ body {
   margin-bottom: 8px;
 }
 
-/* Floating Elements */
-.floating-element {
-  position: absolute;
-  pointer-events: none;
-  opacity: 0.1;
-  z-index: 1;
-}
-
-.floating-1 {
-  top: 20%;
-  right: 10%;
-  animation: float 15s infinite ease-in-out;
-}
-
-.floating-2 {
-  bottom: 20%;
-  left: 5%;
-  animation: float 20s infinite ease-in-out reverse;
-}
-
-.floating-3 {
-  top: 60%;
-  right: 5%;
-  animation: float 18s infinite ease-in-out;
-}
-
-/* Section Spacing */
-section {
-  padding: 120px 0;
-  position: relative;
-}
-
-/* CTA Section */
-.cta-section {
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #000;
-}
-
-/* Enhanced Footer */
-footer {
-  background: var(--dk-2);
-  border-top: 1px solid rgba(0, 212, 255, 0.2);
-  padding: 60px 0 30px 0;
-  position: relative;
-}
-
-footer::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-}
-
-/* Loading Animation */
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--dk);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.5s ease;
-}
-
-.loading-spinner {
-  width: 60px;
-  height: 60px;
-  border: 3px solid rgba(0, 212, 255, 0.2);
-  border-top: 3px solid var(--accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-/* Interactive Elements */
-.interactive-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  z-index: -1;
-}
-
-.particle {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: var(--accent);
-  border-radius: 50%;
-  opacity: 0.3;
-  animation: particleFloat 15s infinite linear;
-}
-
-/* Hover Effects */
-.hover-accent:hover { 
-  color: var(--accent) !important; 
-  transition: color 0.3s ease; 
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  section { 
-    padding: 80px 0; 
-  }
-  
-  .hero h1 { 
-    font-size: 2.5rem; 
-  }
-  
-  .hero .lead { 
-    font-size: 1.1rem; 
-  }
-  
-  .floating-element {
-    display: none;
-  }
-}
-
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--dk-2);
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--accent), var(--accent-2));
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, var(--accent-2), var(--accent));
-}
-
-/* Premium AOS Overrides */
-[data-aos] {
-  transition-duration: 0.8s !important;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
-}
-
-/* Glowing Effects */
-.glowing-divider-bg {
-  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
-}
-
-/* --- Custom Choices.js Dropdown Styling --- */
-.choices {
-  margin-bottom: 0;
-}
-
-.choices__inner {
-  background: var(--glass-bg) !important;
-  border: 1px solid var(--glass-border) !important;
-  border-radius: 12px !important;
-  color: #fff !important;
-  padding: 11px 20px !important;
-  font-size: 1rem;
-  min-height: auto;
-}
-
-.choices.is-focused .choices__inner {
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1) !important;
-}
-
-.choices__list--dropdown {
-  background: var(--dk-3) !important;
-  border: 1px solid var(--accent) !important;
-  border-radius: 12px !important;
-  margin-top: 8px !important;
-}
-
-.choices__item--choice {
-  padding: 10px 20px !important;
-  color: rgba(255, 255, 255, 0.8) !important;
-}
-
-.choices__item--choice.is-highlighted {
-  background: var(--accent) !important;
-  color: var(--dk) !important;
-}
-
-.choices__list [role=option] {
-  word-break: break-all;
-}
-
-/* Custom dropdown arrow */
-.choices__inner::after {
-  border-color: var(--accent) transparent transparent !important;
-  height: 6px;
-  width: 6px;
-  margin-top: -5px;
-  right: 15px;
-}
-
-.is-open .choices__inner::after {
-  border-color: transparent transparent var(--accent) !important;
-  margin-top: 0;
-}
-
-/* --- AOS Mobile Overflow Fix --- */
-@media screen and (max-width: 767px) {
-  [data-aos="fade-right"],
-  [data-aos="fade-left"] {
-    transform: none;
-    opacity: 1;
-  }
-
-  [data-aos][data-aos].aos-animate[data-aos="fade-right"],
-  [data-aos][data-aos].aos-animate[data-aos="fade-left"] {
-    transform: none;
-    opacity: 1;
-  }
-}
-
-/* --- Final Mobile Stat Font Size Tweak --- */
-@media (max-width: 767px) {
-  .stat-number {
-    font-size: 2.3rem; /* Reduces font size on mobile */
-  }
-}
-
-/* FAQ Accordion Styling */
-.accordion-button {
-  padding: 1.5rem;
-  font-size: 1.1rem;
-  border: none !important;
-  box-shadow: none !important;
-}
-
-.accordion-button:not(.collapsed) {
-  background: rgba(0, 212, 255, 0.1) !important;
-  color: var(--accent) !important;
-}
-
-.accordion-button::after {
-  filter: brightness(0) invert(1);
-}
-
-.accordion-button:not(.collapsed)::after {
-  filter: brightness(0) invert(1) sepia(1) saturate(3) hue-rotate(180deg);
-}
-
-.accordion-body {
-  padding: 1.5rem;
-  line-height: 1.7;
-}
-
-@media (max-width: 768px) {
-  .floating-element,
-  .particle,
-  .interactive-bg {
-    display: none !important;
-  }
-  
-  .glass-card:hover {
-    transform: none;
-  }
-}
-
-@media (max-width: 768px) {
-  section {
-    padding: 60px 0 !important; /* Reduces from 120px to 60px */
-  }
-  
-  .hero {
-    padding-top: 100px !important; /* Reduces hero padding */
-    min-height: 80vh !important; /* Shorter hero on mobile */
-  }
-}
-
-@media (max-width: 768px) {
-  .accordion-body {
-    padding: 1rem !important; /* Reduces from 1.5rem */
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
-  
-  .accordion-button {
-    padding: 1rem !important; /* Reduces from 1.5rem */
-    font-size: 1rem !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .stat-number {
-    font-size: 2rem !important; /* Already done, but ensures it's applied */
-  }
-  
-  .glass-card.p-4 {
-    padding: 1.5rem !important; /* Smaller padding on mobile */
-  }
-}
-
+/* --- Custom Select Dropdown (Budget) --- */
 .custom-select-wrapper {
   position: relative;
 }
@@ -723,41 +472,205 @@ footer::before {
 .custom-budget-select option {
   background: var(--dk-3);
   color: #fff;
-  padding: 10px;
 }
 
+
+/* ===== 6. Utility & Helper Classes ===== */
+
+/* --- General Section Spacing --- */
+section {
+  padding: 120px 0;
+  position: relative;
+}
+
+/* --- Icon Badge --- */
+.icon-badge {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: #000;
+  flex-shrink: 0;
+}
+
+/* --- Hover Effects --- */
+.hover-accent:hover {
+  color: var(--accent) !important;
+  transition: color 0.3s ease;
+}
+
+/* --- Background & Loading Effects --- */
+.interactive-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--accent);
+  border-radius: 50%;
+  opacity: 0.3;
+  animation: particleFloat 15s infinite linear;
+}
+
+.floating-element {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.1;
+  z-index: 1;
+  animation: float 15s infinite ease-in-out;
+}
+
+.floating-1 { top: 20%; right: 10%; animation-duration: 15s; }
+.floating-2 { bottom: 20%; left: 5%; animation-duration: 20s; animation-direction: reverse;}
+.floating-3 { top: 60%; right: 5%; animation-duration: 18s; }
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--dk);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.5s ease;
+}
+
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 3px solid rgba(0, 212, 255, 0.2);
+  border-top: 3px solid var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* --- Custom Scrollbar --- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--dk-2);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+  border-radius: 4px;
+}
+
+/* ===== 7. Third-Party Library Overrides ===== */
+
+/* --- Animate on Scroll (AOS) --- */
+[data-aos] {
+  transition-duration: 0.8s !important;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* --- Choices.js Dropdown Styling (Not used, but kept for future) --- */
+/*
+.choices__inner {
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 12px !important;
+  color: #fff !important;
+  padding: 11px 20px !important;
+}
+
+.choices.is-focused .choices__inner {
+  border-color: var(--accent) !important;
+}
+
+.choices__list--dropdown {
+  background: var(--dk-3) !important;
+  border: 1px solid var(--accent) !important;
+}
+
+.choices__item--choice.is-highlighted {
+  background: var(--accent) !important;
+  color: var(--dk) !important;
+}
+*/
+
+/* ===== 8. Responsive Design (Mobile-First Adjustments) ===== */
 @media (max-width: 768px) {
-  /* Disable expensive animations */
+  /* --- Performance Optimizations on Mobile --- */
   .floating-element,
   .particle,
   .interactive-bg {
     display: none !important;
   }
-  
-  /* Disable AOS animations on mobile */
+
   [data-aos] {
     transform: none !important;
     opacity: 1 !important;
     transition: none !important;
   }
-  
-  /* Reduce hover effects */
+
   .glass-card:hover,
   .portfolio-card:hover,
-  .service-card:hover {
+  .service-card:hover,
+  .btn-accent:hover,
+  .btn-glass:hover,
+  .nav-link:hover {
     transform: none !important;
     box-shadow: none !important;
   }
-}
 
-/* --- Tech Pill Styles for Portfolio --- */
-.tech-pill {
-  display: inline-block;
-  background-color: rgba(0, 212, 255, 0.1);
-  color: var(--accent-2);
-  padding: 5px 12px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
-  border: 1px solid rgba(0, 212, 255, 0.2);
+  /* --- Layout & Spacing Adjustments --- */
+  section {
+    padding: 60px 0 !important;
+  }
+
+  .hero {
+    padding-top: 100px !important;
+    min-height: 80vh !important;
+  }
+
+  /* --- Typography Adjustments --- */
+  .hero h1 {
+    font-size: 2.5rem;
+  }
+
+  .hero .lead {
+    font-size: 1.1rem;
+  }
+
+  .stat-number {
+    font-size: 2.3rem !important;
+  }
+  
+  .article-body {
+      font-size: 1rem;
+  }
+
+  /* --- Component Adjustments --- */
+  .glass-card.p-4 {
+    padding: 1.5rem !important;
+  }
+
+  .accordion-body {
+    padding: 1rem !important;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .accordion-button {
+    padding: 1rem !important;
+    font-size: 1rem !important;
+  }
 }
