@@ -320,17 +320,47 @@
         </div>
       </div>
       
-      <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-5" data-aos="fade-up">
-          <div class="portfolio-card">
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4" data-aos="fade-up">
+          <div class="portfolio-card h-100 d-flex flex-column">
             <div class="portfolio-image">
-                <img src="assets/img/dashboard-preview.jpg" class="img-fluid" alt="Screenshot of the Executive Sales Dashboard">
+              <img src="assets/img/portfolio/maven-market-preview.jpg" alt="A preview of the Maven-Market Retail Analysis dashboard" class="img-fluid">
             </div>
-            <div class="p-4 text-center">
-              <span class="badge bg-primary mb-2">SALES ANALYTICS</span>
-              <h3 class="mb-3">Executive Sales Dashboard</h3>
-              <p class="text-white-50 small mb-3">
-                A single source of truth for a SaaS client, leading to a <strong>15% increase in sales efficiency</strong>.
+            <div class="p-4 d-flex flex-column flex-grow-1">
+              <span class="badge bg-primary mb-2 align-self-start">RETAIL ANALYTICS</span>
+              <h3 class="mb-3">Maven-Market Retail Analysis</h3>
+              <p class="text-white-50 small mb-4 flex-grow-1">
+                An in-depth analysis of retail trends, helping an e-commerce business identify top-selling products and optimize marketing spend based on customer behavior.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
+          <div class="portfolio-card h-100 d-flex flex-column">
+            <div class="portfolio-image">
+              <img src="assets/img/portfolio/call-center-preview.jpg" alt="A preview of the Call Center Performance dashboard" class="img-fluid">
+            </div>
+            <div class="p-4 d-flex flex-column flex-grow-1">
+              <span class="badge bg-info mb-2 align-self-start">CUSTOMER SERVICE</span>
+              <h3 class="mb-3">Call Center Performance</h3>
+              <p class="text-white-50 small mb-4 flex-grow-1">
+                A complete command center for monitoring call center KPIs, tracking agent performance, and improving customer satisfaction through data-driven insights.
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-12 col-lg-4" data-aos="fade-up" data-aos-delay="200">
+          <div class="portfolio-card h-100 d-flex flex-column">
+            <div class="portfolio-image">
+                <img src="assets/img/portfolio/adventureworks-preview.jpg" alt="A preview of the AdventureWorks Sales & Operations dashboard" class="img-fluid">
+            </div>
+            <div class="p-4 d-flex flex-column flex-grow-1">
+              <span class="badge bg-warning mb-2 align-self-start">ENTERPRISE SALES</span>
+              <h3 class="mb-3">AdventureWorks Sales & Operations</h3>
+              <p class="text-white-50 small mb-4 flex-grow-1">
+                Our flagship project featuring predictive 'What-If' analysis, deep customer segmentation, and advanced diagnostics in a multi-page command center.
               </p>
             </div>
           </div>
@@ -379,7 +409,7 @@
       <div class="row g-4 mt-4">
         <div class="col-6 col-lg-3">
           <div class="glass-card p-4 text-center h-100">
-            <div class="stat-number" data-count="20" data-suffix="+">0</div>
+            <div class="stat-number" data-count="15" data-suffix="+">0</div>
             <div class="small text-white-50">Projects Delivered</div>
           </div>
         </div>
@@ -400,6 +430,16 @@
             <div class="stat-number" data-count="100" data-suffix="%">0</div>
             <div class="small text-white-50">Client Satisfaction</div>
           </div>
+        </div>
+      </div>
+
+      <div class="row mt-5 pt-4">
+        <div class="col-lg-8 mx-auto text-center" data-aos="fade-up">
+          <h4 class="fw-bold">Ready to See These Numbers Work for You?</h4>
+          <p class="text-white-50 mb-4">Let's turn your data challenges into your greatest advantage. The first step is a simple conversation.</p>
+          <a href="#contact" class="btn btn-accent btn-lg">
+            <i class="bi bi-calendar3 me-2"></i>Book Your Free Consultation
+          </a>
         </div>
       </div>
       
@@ -770,32 +810,6 @@
       </div>
     </div>
   </section>
-
-  <!-- Request Demo Modal -->  
-  <div class="modal fade" id="requestDemoModal" tabindex="-1" aria-labelledby="requestDemoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content bg-dark text-white" style="background: var(--dk-3); border: 1px solid var(--glass-border);">
-        <div class="modal-header border-bottom-0">
-          <h3 class="modal-title h5" id="requestDemoModalLabel">Request a Private Demo</h3>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-          <div class="modal-body">
-            <p>This dashboard contains proprietary data. Please provide your email, and we'll send you a link to a personalized, interactive demo.</p>
-            <form id="demo-form" action="https://api.web3forms.com/submit" method="POST">
-              <input type="hidden" name="access_key" value="91d8ce12-3f16-41c9-8393-4bebe0611b3f">
-              <input type="hidden" name="subject" value="Demo Request - DataArcus">
-              <input type="hidden" name="from_name" value="Demo Request">
-              
-              <div id="demo-form-result" style="display: none;"></div>
-              
-              <label for="demo-email" class="form-label visually-hidden">Your Company Email</label>
-              <input type="email" name="email" id="demo-email" class="form-control mb-3" placeholder="your@company.com" required>
-              <button type="submit" class="btn btn-accent w-100">Send Request</button>
-            </form>
-          </div>
-      </div>
-    </div>
-  </div>
 
   <!-- Enhanced Footer -->
   <footer class="py-5">

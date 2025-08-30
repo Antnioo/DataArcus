@@ -319,8 +319,15 @@ footer::before {
   transition: all 0.3s ease;
 }
 
-.portfolio-card:hover .portfolio-image {
-  transform: scale(1.1);
+.portfolio-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.portfolio-card:hover .portfolio-image img {
+    transform: scale(1.1);
 }
 
 .tech-pill {
@@ -376,7 +383,7 @@ footer::before {
 .page-header {
     padding-top: 160px;
     padding-bottom: 80px;
-    background: linear-gradient(135deg, var(--dk-2), var(--dk-3));
+    /*background: linear-gradient(135deg, var(--dk-2), var(--dk-3)); */
 }
 
 .article-section {
