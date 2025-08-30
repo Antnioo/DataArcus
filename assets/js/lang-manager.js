@@ -228,7 +228,7 @@ class LanguageManager {
         </li>
         <li>
           <button class="dropdown-item lang-option ${this.currentLang === 'ar' ? 'active' : ''}" data-lang="ar">
-            <span class="lang-flag">🇸🇦</span>
+            <span class="lang-flag" style="font-weight: 600;">AR</span>
             <span class="lang-name">العربية</span>
           </button>
         </li>
