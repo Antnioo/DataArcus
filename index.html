@@ -134,9 +134,9 @@
   </div>
 
   <!-- Enhanced Header -->
-  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top bg-transparent py-3">
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top scrolled">
     <div class="container">
-      <a class="navbar-brand" href="#hero">
+      <a class="navbar-brand" href="index.html#hero">
         <img src="assets/img/logo.svg" alt="DataArcus logo" height="40">
       </a>
       <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation">
@@ -144,734 +144,573 @@
       </button>
       <div class="collapse navbar-collapse" id="navmenu">
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
-          <li class="nav-item"><a class="nav-link" href="portfolio.html">Portfolio</a></li>
-          <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
-          <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="portfolio.html" data-i18n="nav.portfolio">Portfolio</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html#contact" data-i18n="nav.contact">Contact</a></li>
         </ul>
-        <a href="#contact" class="btn btn-accent ms-lg-3">Get a Free Consultation</a>
+        <a href="index.html#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Get a Free Consultation</a>
       </div>
     </div>
   </nav>
 
   <!-- Enhanced Hero -->
   <header id="hero" class="hero">
-    <div class="container hero-content">
-      <div class="row align-items-center">
-        <div class="col-lg-7" data-aos="fade-up">
-          <h1>From Data Chaos to Actionable Clarity</h1>
-          <p class="lead">
-            Stop guessing, start knowing. We build powerful Power BI solutions that give decision-makers the confidence to act decisively and drive measurable growth.
-          </p>
-          <div class="d-flex flex-column flex-sm-row gap-3 mt-4">
-            <a href="#portfolio" class="btn btn-accent btn-lg px-4 py-3">
-              <i class="bi bi-bar-chart me-2"></i>Explore Our Work
-            </a>
-            <a href="#contact" class="btn btn-glass btn-lg px-4 py-3">
-              <i class="bi bi-calendar3 me-2"></i>Discuss Your Project
-            </a>
-          </div>
-          <div class="mt-5 d-flex flex-wrap gap-4 small text-white-50">
-            <div><i class="bi bi-shield-check text-success me-2"></i>Enterprise Security</div>
-            <div><i class="bi bi-lightning text-warning me-2"></i>Fast turnaround</div>
-            <div><i class="bi bi-award text-info me-2"></i>Committed to Excellence</div>
-          </div>
-        </div>
-        <div class="col-lg-5 mt-5 mt-lg-0" data-aos="fade-up" data-aos-delay="200">
-          <div class="glass-card p-4">
-            <div class="d-flex align-items-center mb-4">
-              <div class="icon-badge me-3">
-                <i class="bi bi-microsoft"></i>
-              </div>
-              <h2 class="mb-0 h5">Our Commitment to Excellence</h2>
+      <div class="container hero-content">
+        <div class="row align-items-center">
+          <div class="col-lg-7" data-aos="fade-up">
+            <h1 data-i18n="hero.title">From Data Chaos to Actionable Clarity</h1>
+            <p class="lead" data-i18n="hero.subtitle">
+              Stop guessing, start knowing. We build powerful Power BI solutions that give decision-makers the confidence to act decisively and drive measurable growth.
+            </p>
+            <div class="d-flex flex-column flex-sm-row gap-3 mt-4">
+              <a href="#portfolio" class="btn btn-accent btn-lg px-4 py-3">
+                <i class="bi bi-bar-chart me-2"></i><span data-i18n="hero.buttonWork">Explore Our Work</span>
+              </a>
+              <a href="#contact" class="btn btn-glass btn-lg px-4 py-3">
+                <i class="bi bi-calendar3 me-2"></i><span data-i18n="hero.buttonDiscuss">Discuss Your Project</span>
+              </a>
             </div>
-            <div class="row g-3">
-              <div class="col-12">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-check-circle-fill text-success me-3"></i>
-                  <span>Advanced DAX & Power Query Mastery</span>
+            <div class="mt-5 d-flex flex-wrap gap-4 small text-white-50">
+              <div><i class="bi bi-shield-check text-success me-2"></i><span data-i18n="hero.badgeSecurity">Enterprise Security</span></div>
+              <div><i class="bi bi-lightning text-warning me-2"></i><span data-i18n="hero.badgeTurnaround">Fast Turnaround</span></div>
+              <div><i class="bi bi-award text-info me-2"></i><span data-i18n="hero.badgeExcellence">Committed to Excellence</span></div>
+            </div>
+          </div>
+          <div class="col-lg-5 mt-5 mt-lg-0" data-aos="fade-up" data-aos-delay="200">
+            <div class="glass-card p-4">
+              <div class="d-flex align-items-center mb-4">
+                <div class="icon-badge me-3">
+                  <i class="bi bi-microsoft"></i>
                 </div>
+                <h2 class="mb-0 h5" data-i18n="hero.commitmentTitle">Our Commitment to Excellence</h2>
               </div>
-              <div class="col-12">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-check-circle-fill text-success me-3"></i>
-                  <span>Real-time Data Pipeline Architecture</span>
+              <div class="row g-3">
+                <div class="col-12">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill text-success me-3"></i>
+                    <span data-i18n="hero.commitmentPoints.0">Advanced DAX & Power Query Mastery</span>
+                  </div>
                 </div>
-              </div>
-              <div class="col-12">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-check-circle-fill text-success me-3"></i>
-                  <span>Enterprise Governance & Security</span>
+                <div class="col-12">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill text-success me-3"></i>
+                    <span data-i18n="hero.commitmentPoints.1">Real-time Data Pipeline Architecture</span>
+                  </div>
                 </div>
-              </div>
-              <div class="col-12">
-                <div class="d-flex align-items-center">
-                  <i class="bi bi-check-circle-fill text-success me-3"></i>
-                  <span>Custom Visual Development</span>
+                <div class="col-12">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill text-success me-3"></i>
+                    <span data-i18n="hero.commitmentPoints.2">Enterprise Governance & Security</span>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill text-success me-3"></i>
+                    <span data-i18n="hero.commitmentPoints.3">Custom Visual Development</span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
   </header>
 
-  <!-- Tech Stack -->
   <section class="py-4 border-bottom glowing-divider-bg">
-    <div class="container">
-      <div class="row justify-content-center align-items-center g-4">
-        <div class="col-6 col-md-2">
-          <div class="tech-stack-item">
-            <i class="bi bi-microsoft tech-icon"></i>
-            <div class="small mt-2 text-white-50">Power BI</div>
+      <div class="container">
+        <div class="row justify-content-center align-items-center g-4">
+          <div class="col-6 col-md-2">
+            <div class="tech-stack-item">
+              <i class="bi bi-microsoft tech-icon"></i>
+              <div class="small mt-2 text-white-50" data-i18n="techStack.powerbi">Power BI</div>
+            </div>
           </div>
-        </div>
-        <div class="col-6 col-md-2">
-          <div class="tech-stack-item">
-            <i class="bi bi-file-earmark-spreadsheet tech-icon" style="color: var(--green);"></i>
-            <div class="small mt-2 text-white-50">Excel</div>
+          <div class="col-6 col-md-2">
+            <div class="tech-stack-item">
+              <i class="bi bi-file-earmark-spreadsheet tech-icon" style="color: var(--green);"></i>
+              <div class="small mt-2 text-white-50" data-i18n="techStack.excel">Excel</div>
+            </div>
           </div>
-        </div>
-        <div class="col-6 col-md-2">
-          <div class="tech-stack-item">
-            <i class="bi bi-database tech-icon" style="color: var(--purple);"></i>
-            <div class="small mt-2 text-white-50">SQL</div>
+          <div class="col-6 col-md-2">
+            <div class="tech-stack-item">
+              <i class="bi bi-database tech-icon" style="color: var(--purple);"></i>
+              <div class="small mt-2 text-white-50" data-i18n="techStack.sql">SQL</div>
+            </div>
           </div>
-        </div>
-        <div class="col-6 col-md-2">
-          <div class="tech-stack-item">
-            <i class="bi bi-cloud tech-icon" style="color: var(--orange);"></i>
-            <div class="small mt-2 text-white-50">Azure</div>
+          <div class="col-6 col-md-2">
+            <div class="tech-stack-item">
+              <i class="bi bi-cloud tech-icon" style="color: var(--orange);"></i>
+              <div class="small mt-2 text-white-50" data-i18n="techStack.azure">Azure</div>
+            </div>
           </div>
-        </div>
-        <div class="col-6 col-md-2">
-          <div class="tech-stack-item">
-            <i class="bi bi-code-slash tech-icon" style="color: var(--green);"></i>
-            <div class="small mt-2 text-white-50">Python</div>
+          <div class="col-6 col-md-2">
+            <div class="tech-stack-item">
+              <i class="bi bi-code-slash tech-icon" style="color: var(--green);"></i>
+              <div class="small mt-2 text-white-50" data-i18n="techStack.python">Python</div>
+            </div>
           </div>
-        </div>
-        <div class="col-6 col-md-2">
-          <div class="tech-stack-item">
-            <i class="bi bi-bar-chart tech-icon" style="color: var(--orange);"></i> 
-            <div class="small mt-2 text-white-50">Tableau</div>
+          <div class="col-6 col-md-2">
+            <div class="tech-stack-item">
+              <i class="bi bi-bar-chart tech-icon" style="color: var(--orange);"></i> 
+              <div class="small mt-2 text-white-50" data-i18n="techStack.tableau">Tableau</div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
   </section>
 
-  <!-- Enhanced Services -->
   <section id="services" class="py-5">
-    <div class="container">
-      <div class="row mb-5">
-        <div class="col-lg-8 mx-auto text-center">
-          <h2 class="display-6 fw-bold mb-4">Solutions That Drive Performance</h2>
-          <p class="lead text-white-50">We don't just process data; we deliver the targeted insights that empower your teams and accelerate business growth.</p>
-        </div>
-      </div>
-      <div class="row g-4">
-        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="0">
-          <div class="glass-card service-card h-100 p-4 text-center">
-            <div class="service-icon mx-auto">
-              <i class="bi bi-speedometer2"></i>
-            </div>
-            <h3 class="mb-3">Executive Dashboards</h3>
-            <p class="text-white-50 mb-0">Get a real-time, 360-degree view of your business. We turn complex data into intuitive dashboards so you can track KPIs and spot opportunities instantly.</p>
+      <div class="container">
+        <div class="row mb-5">
+          <div class="col-lg-8 mx-auto text-center">
+            <h2 class="display-6 fw-bold mb-4" data-i18n="services.title">Solutions That Drive Performance</h2>
+            <p class="lead text-white-50" data-i18n="services.subtitle">We don't just process data; we deliver the targeted insights that empower your teams and accelerate business growth.</p>
           </div>
         </div>
-        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
-          <div class="glass-card service-card h-100 p-4 text-center">
-            <div class="service-icon mx-auto">
-              <i class="bi bi-funnel"></i>
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="0">
+            <div class="glass-card service-card h-100 p-4 text-center">
+              <div class="service-icon mx-auto"><i class="bi bi-speedometer2"></i></div>
+              <h3 class="mb-3" data-i18n="services.cards.0.title">Executive Dashboards</h3>
+              <p class="text-white-50 mb-0" data-i18n="services.cards.0.desc">Get a real-time, 360-degree view of your business. We turn complex data into intuitive dashboards so you can track KPIs and spot opportunities instantly.</p>
             </div>
-            <h3 class="mb-3">Reliable Data Pipelines</h3>
-            <p class="text-white-50 mb-0">Your insights are only as good as your data. We build robust ETL pipelines that ensure your information is accurate, timely, and always ready for analysis.</p>
           </div>
-        </div>
-        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
-          <div class="glass-card service-card h-100 p-4 text-center">
-            <div class="service-icon mx-auto">
-              <i class="bi bi-diagram-3"></i>
+          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="100">
+            <div class="glass-card service-card h-100 p-4 text-center">
+              <div class="service-icon mx-auto"><i class="bi bi-funnel"></i></div>
+              <h3 class="mb-3" data-i18n="services.cards.1.title">Reliable Data Pipelines</h3>
+              <p class="text-white-50 mb-0" data-i18n="services.cards.1.desc">Your insights are only as good as your data. We build robust ETL pipelines that ensure your information is accurate, timely, and always ready for analysis.</p>
             </div>
-            <h3 class="mb-3">Predictive Insights</h3>
-            <p class="text-white-50 mb-0">Look beyond the "what" to understand the "why" and "what's next." We leverage advanced analytics to uncover hidden trends and forecast future outcomes.</p>
           </div>
-        </div>
-        <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
-          <div class="glass-card service-card h-100 p-4 text-center">
-            <div class="service-icon mx-auto">
-              <i class="bi bi-shield-lock"></i>
+          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="200">
+            <div class="glass-card service-card h-100 p-4 text-center">
+              <div class="service-icon mx-auto"><i class="bi bi-diagram-3"></i></div>
+              <h3 class="mb-3" data-i18n="services.cards.2.title">Predictive Insights</h3>
+              <p class="text-white-50 mb-0" data-i18n="services.cards.2.desc">Look beyond the "what" to understand the "why" and "what's next." We leverage advanced analytics to uncover hidden trends and forecast future outcomes.</p>
             </div>
-            <h3 class="mb-3">Secure & Scalable Systems</h3>
-            <p class="text-white-50 mb-0">From governance frameworks to enterprise-grade security, we build solutions that are not only powerful but also compliant and ready to scale with you.</p>
+          </div>
+          <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="300">
+            <div class="glass-card service-card h-100 p-4 text-center">
+              <div class="service-icon mx-auto"><i class="bi bi-shield-lock"></i></div>
+              <h3 class="mb-3" data-i18n="services.cards.3.title">Secure & Scalable Systems</h3>
+              <p class="text-white-50 mb-0" data-i18n="services.cards.3.desc">From governance frameworks to enterprise-grade security, we build solutions that are not only powerful but also compliant and ready to scale with you.</p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
   </section>
 
-  <!-- Enhanced Portfolio -->
   <section id="portfolio" class="py-5">
-    <div class="container">
-      <div class="row mb-5">
-        <div class="col-lg-8 mx-auto text-center">
-          <h2 class="display-6 fw-bold mb-4">Proven Results</h2>
-          <p class="lead text-white-50">We measure our success by the success of our clients. Our portfolio is a showcase of the custom-built, high-impact data solutions we've delivered.</p>
+      <div class="container">
+        <div class="row mb-5">
+          <div class="col-lg-8 mx-auto text-center">
+            <h2 class="display-6 fw-bold mb-4" data-i18n="portfolio.title">Proven Results</h2>
+            <p class="lead text-white-50" data-i18n="portfolio.subtitle">We measure our success by the success of our clients. Our portfolio is a showcase of the custom-built, high-impact data solutions we've delivered.</p>
+          </div>
         </div>
-      </div>
-      
-      <div class="row g-4">
-        <div class="col-md-6 col-lg-4" data-aos="fade-up">
-          <div class="portfolio-card h-100 d-flex flex-column">
-            <div class="portfolio-image">
-              <img src="assets/img/portfolio/maven-market-preview.jpg" alt="A preview of the Maven-Market Retail Analysis dashboard" class="img-fluid">
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-4" data-aos="fade-up">
+            <div class="portfolio-card h-100 d-flex flex-column">
+              <div class="portfolio-image"><img src="assets/img/portfolio/maven-market-preview.jpg" alt="A preview of the Maven-Market Retail Analysis dashboard" class="img-fluid"></div>
+              <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="badge bg-primary mb-2 align-self-start" data-i18n="portfolio.cardMaven.badge">RETAIL ANALYTICS</span>
+                <h3 class="mb-3" data-i18n="portfolio.cardMaven.title">Maven-Market Retail Analysis</h3>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="portfolio.cardMaven.desc">An in-depth analysis of retail trends, helping an e-commerce business identify top-selling products and optimize marketing spend based on customer behavior.</p>
+              </div>
             </div>
-            <div class="p-4 d-flex flex-column flex-grow-1">
-              <span class="badge bg-primary mb-2 align-self-start">RETAIL ANALYTICS</span>
-              <h3 class="mb-3">Maven-Market Retail Analysis</h3>
-              <p class="text-white-50 small mb-4 flex-grow-1">
-                An in-depth analysis of retail trends, helping an e-commerce business identify top-selling products and optimize marketing spend based on customer behavior.
-              </p>
+          </div>
+          <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="portfolio-card h-100 d-flex flex-column">
+              <div class="portfolio-image"><img src="assets/img/portfolio/call-center-preview.jpg" alt="A preview of the Call Center Performance dashboard" class="img-fluid"></div>
+              <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="badge bg-info mb-2 align-self-start" data-i18n="portfolio.cardCallCenter.badge">CUSTOMER SERVICE</span>
+                <h3 class="mb-3" data-i18n="portfolio.cardCallCenter.title">Call Center Performance</h3>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="portfolio.cardCallCenter.desc">A complete command center for monitoring call center KPIs, tracking agent performance, and improving customer satisfaction through data-driven insights.</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-12 col-lg-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="portfolio-card h-100 d-flex flex-column">
+              <div class="portfolio-image"><img src="assets/img/portfolio/adventureworks-preview.jpg" alt="A preview of the AdventureWorks Sales & Operations dashboard" class="img-fluid"></div>
+              <div class="p-4 d-flex flex-column flex-grow-1">
+                <span class="badge bg-warning mb-2 align-self-start" data-i18n="portfolio.cardAdventure.badge">ENTERPRISE SALES</span>
+                <h3 class="mb-3" data-i18n="portfolio.cardAdventure.title">AdventureWorks Sales & Operations</h3>
+                <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="portfolio.cardAdventure.desc">Our flagship project featuring predictive 'What-If' analysis, deep customer segmentation, and advanced diagnostics in a multi-page command center.</p>
+              </div>
             </div>
           </div>
         </div>
-
-        <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
-          <div class="portfolio-card h-100 d-flex flex-column">
-            <div class="portfolio-image">
-              <img src="assets/img/portfolio/call-center-preview.jpg" alt="A preview of the Call Center Performance dashboard" class="img-fluid">
-            </div>
-            <div class="p-4 d-flex flex-column flex-grow-1">
-              <span class="badge bg-info mb-2 align-self-start">CUSTOMER SERVICE</span>
-              <h3 class="mb-3">Call Center Performance</h3>
-              <p class="text-white-50 small mb-4 flex-grow-1">
-                A complete command center for monitoring call center KPIs, tracking agent performance, and improving customer satisfaction through data-driven insights.
-              </p>
-            </div>
-          </div>
-        </div>
-        
-        <div class="col-md-12 col-lg-4" data-aos="fade-up" data-aos-delay="200">
-          <div class="portfolio-card h-100 d-flex flex-column">
-            <div class="portfolio-image">
-                <img src="assets/img/portfolio/adventureworks-preview.jpg" alt="A preview of the AdventureWorks Sales & Operations dashboard" class="img-fluid">
-            </div>
-            <div class="p-4 d-flex flex-column flex-grow-1">
-              <span class="badge bg-warning mb-2 align-self-start">ENTERPRISE SALES</span>
-              <h3 class="mb-3">AdventureWorks Sales & Operations</h3>
-              <p class="text-white-50 small mb-4 flex-grow-1">
-                Our flagship project featuring predictive 'What-If' analysis, deep customer segmentation, and advanced diagnostics in a multi-page command center.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="row mt-5">
+        <div class="row mt-5">
           <div class="col-12 text-center">
-              <a href="portfolio.html" class="btn btn-accent btn-lg">
-                  <i class="bi bi-grid-fill me-2"></i>View All Case Studies
-              </a>
+            <a href="portfolio.html" class="btn btn-accent btn-lg">
+              <i class="bi bi-grid-fill me-2"></i><span data-i18n="portfolio.button">View All Case Studies</span>
+            </a>
           </div>
+        </div>
       </div>
-    </div>
   </section>
 
-  <!-- Enhanced About -->
   <section id="about" class="py-5">
-    <div class="container">
-      
-      <div class="row align-items-center g-5 mb-5 pb-5">
-        <div class="col-lg-5" data-aos="fade-right">
-          <img loading="lazy" src="assets/img/founder-photo.jpg" class="img-fluid rounded-3" alt="A photo of [Your Name], Founder of DataArcus" style="border: 1px solid var(--glass-border); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);">
-        </div>
-        <div class="col-lg-7" data-aos="fade-left">
-          <h2 class="display-6 fw-bold mb-4">A Partner in Your Success</h2>
-          <p class="lead text-white-50">
-            At DataArcus, we don't just build dashboards—we build data-driven partnerships that empower you to lead with confidence.
-          </p>
-          <blockquote class="fs-5" style="border-left: 3px solid var(--accent); padding-left: 1.5rem; font-style: italic;">
-            "My name is Abdelrahman M., and I founded DataArcus to eliminate guesswork from business. After 5 years in data analytics, I saw too many brilliant leaders held back by messy, inaccessible data. We exist to bridge that gap."
-          </blockquote>
-          <p class="mt-4 text-white-50">
-            Our approach is built on a deep understanding of both technology and business strategy. We take the time to understand your unique challenges and goals, ensuring that every solution we build is not just technically excellent, but perfectly aligned with the outcomes you need to achieve.
-          </p>
-          <div class="mt-3 fw-bold">Abdelrahman M., Founder & Lead Data Architect</div>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-lg-8 mx-auto text-center" data-aos="fade-up">
-          <h3 class="fw-bold mb-4">Our Commitment, Measured</h3>
-          <p class="text-white-50">Our passion is backed by a track record of excellence and reliability.</p>
-        </div>
-      </div>
-      <div class="row g-4 mt-4">
-        <div class="col-6 col-lg-3">
-          <div class="glass-card p-4 text-center h-100">
-            <div class="stat-number" data-count="15" data-suffix="+">0</div>
-            <div class="small text-white-50">Projects Delivered</div>
+      <div class="container">
+        <div class="row align-items-center g-5 mb-5 pb-5">
+          <div class="col-lg-5" data-aos="fade-right">
+            <img loading="lazy" src="assets/img/founder-photo.jpg" class="img-fluid rounded-3" alt="A photo of Abdelrahman M., Founder of DataArcus" style="border: 1px solid var(--glass-border); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);">
+          </div>
+          <div class="col-lg-7" data-aos="fade-left">
+            <h2 class="display-6 fw-bold mb-4" data-i18n="about.title">A Partner in Your Success</h2>
+            <p class="lead text-white-50" data-i18n="about.subtitle">At DataArcus, we don't just build dashboards—we build data-driven partnerships that empower you to lead with confidence.</p>
+            <blockquote class="fs-5" style="border-left: 3px solid var(--accent); padding-left: 1.5rem; font-style: italic;" data-i18n="about.quote">
+              "My name is Abdelrahman M., and I founded DataArcus to eliminate guesswork from business. After 5 years in data analytics, I saw too many brilliant leaders held back by messy, inaccessible data. We exist to bridge that gap."
+            </blockquote>
+            <p class="mt-4 text-white-50" data-i18n="about.p1">Our approach is built on a deep understanding of both technology and business strategy. We take the time to understand your unique challenges and goals, ensuring that every solution we build is not just technically excellent, but perfectly aligned with the outcomes you need to achieve.</p>
+            <div class="mt-3 fw-bold" data-i18n="about.founder">Abdelrahman M., Founder & Lead Data Architect</div>
           </div>
         </div>
-        <div class="col-6 col-lg-3">
-          <div class="glass-card p-4 text-center h-100">
-            <div class="stat-number" data-count="48" data-suffix="h">0</div>
-            <div class="small text-white-50">Avg. Turnaround</div>
+        <div class="row">
+          <div class="col-lg-8 mx-auto text-center" data-aos="fade-up">
+            <h3 class="fw-bold mb-4" data-i18n="about.statsTitle">Our Commitment, Measured</h3>
+            <p class="text-white-50" data-i18n="about.statsSubtitle">Our passion is backed by a track record of excellence and reliability.</p>
           </div>
         </div>
-        <div class="col-6 col-lg-3">
-          <div class="glass-card p-4 text-center h-100">
-            <div class="stat-number" data-count="99.9" data-suffix="%">0</div>
-            <div class="small text-white-50">Uptime SLA</div>
+        <div class="row g-4 mt-4">
+          <div class="col-6 col-lg-3">
+            <div class="glass-card p-4 text-center h-100">
+              <div class="stat-number" data-count="15" data-suffix="+">0</div>
+              <div class="small text-white-50" data-i18n="about.stats.0.title">Projects Delivered</div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="glass-card p-4 text-center h-100">
+              <div class="stat-number" data-count="48" data-suffix="h">0</div>
+              <div class="small text-white-50" data-i18n="about.stats.1.title">Avg. Turnaround</div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="glass-card p-4 text-center h-100">
+              <div class="stat-number" data-count="99.9" data-suffix="%">0</div>
+              <div class="small text-white-50" data-i18n="about.stats.2.title">Uptime SLA</div>
+            </div>
+          </div>
+          <div class="col-6 col-lg-3">
+            <div class="glass-card p-4 text-center h-100">
+              <div class="stat-number" data-count="100" data-suffix="%">0</div>
+              <div class="small text-white-50" data-i18n="about.stats.3.title">Client Satisfaction</div>
+            </div>
           </div>
         </div>
-        <div class="col-6 col-lg-3">
-          <div class="glass-card p-4 text-center h-100">
-            <div class="stat-number" data-count="100" data-suffix="%">0</div>
-            <div class="small text-white-50">Client Satisfaction</div>
+        <div class="row mt-5 pt-4">
+          <div class="col-lg-8 mx-auto text-center" data-aos="fade-up">
+            <h4 class="fw-bold" data-i18n="about.ctaTitle">Ready to See These Numbers Work for You?</h4>
+            <p class="text-white-50 mb-4" data-i18n="about.ctaSubtitle">Let's turn your data challenges into your greatest advantage. The first step is a simple conversation.</p>
+            <a href="#contact" class="btn btn-accent btn-lg">
+              <i class="bi bi-calendar3 me-2"></i><span data-i18n="about.ctaButton">Book Your Free Consultation</span>
+            </a>
           </div>
         </div>
       </div>
-
-      <div class="row mt-5 pt-4">
-        <div class="col-lg-8 mx-auto text-center" data-aos="fade-up">
-          <h4 class="fw-bold">Ready to See These Numbers Work for You?</h4>
-          <p class="text-white-50 mb-4">Let's turn your data challenges into your greatest advantage. The first step is a simple conversation.</p>
-          <a href="#contact" class="btn btn-accent btn-lg">
-            <i class="bi bi-calendar3 me-2"></i>Book Your Free Consultation
-          </a>
-        </div>
-      </div>
-      
-    </div>
   </section>
 
-  <!-- FAQ Section -->
   <section id="faq" class="py-5">
-    <div class="container">
-      <div class="row mb-5">
-        <div class="col-lg-8 mx-auto text-center">
-          <h2 class="display-6 fw-bold mb-4">Your Questions, Answered</h2>
-          <p class="lead text-white-50">We've helped 25+ businesses transform their data. Here are the answers to questions every executive asks.</p>
+      <div class="container">
+        <div class="row mb-5">
+          <div class="col-lg-8 mx-auto text-center">
+            <h2 class="display-6 fw-bold mb-4" data-i18n="faq.title">Your Questions, Answered</h2>
+            <p class="lead text-white-50" data-i18n="faq.subtitle">We've helped 25+ businesses transform their data. Here are the answers to questions every executive asks.</p>
+          </div>
         </div>
-      </div>
-      
-      <div class="row">
-        <div class="col-lg-8 mx-auto">
-          <div class="accordion accordion-flush" id="faqAccordion" data-aos="fade-up">
-            
-            <!-- FAQ 1 - Timeline -->
-            <div class="glass-card mb-3">
-              <div class="accordion-item bg-transparent border-0">
-                <h3 class="accordion-header">
-                  <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
-                    <i class="bi bi-clock me-3 text-accent"></i>
-                    How quickly can we see our first dashboard?
-                  </button>
-                </h3>
-                <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                  <div class="accordion-body text-white-50">
-                    <strong class="text-white">Most clients see their first working dashboard within the first week.</strong> We start with your most critical metrics and expand from there. You'll have something actionable immediately, not after weeks of "analysis paralysis."
-                    <div class="mt-3 p-3 rounded" style="background: rgba(0, 212, 255, 0.1); border-left: 3px solid var(--accent);">
-                      <strong>Typical Timeline:</strong> Day 1 (Data audit), Day 2-3 (Core dashboard), Day 4-7 (Refinements & training)
-                    </div>
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+            <div class="accordion accordion-flush" id="faqAccordion" data-aos="fade-up">
+              <div class="glass-card mb-3">
+                <div class="accordion-item bg-transparent border-0">
+                  <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                      <i class="bi bi-clock me-3 text-accent"></i><span data-i18n="faq.items.0.q">How quickly can we see our first dashboard?</span>
+                    </button>
+                  </h3>
+                  <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-white-50" data-i18n-html="faq.items.0.a">...</div>
+                  </div>
+                </div>
+              </div>
+              <div class="glass-card mb-3">
+                <div class="accordion-item bg-transparent border-0">
+                  <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                      <i class="bi bi-currency-dollar me-3 text-accent"></i><span data-i18n="faq.items.1.q">What's the real ROI of a Power BI implementation?</span>
+                    </button>
+                  </h3>
+                  <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-white-50" data-i18n-html="faq.items.1.a">...</div>
+                  </div>
+                </div>
+              </div>
+              <div class="glass-card mb-3">
+                <div class="accordion-item bg-transparent border-0">
+                  <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                      <i class="bi bi-shield-lock me-3 text-accent"></i><span data-i18n="faq.items.2.q">How do you handle our sensitive business data?</span>
+                    </button>
+                  </h3>
+                  <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-white-50" data-i18n-html="faq.items.2.a">...</div>
+                  </div>
+                </div>
+              </div>
+              <div class="glass-card mb-3">
+                <div class="accordion-item bg-transparent border-0">
+                  <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                      <i class="bi bi-gear me-3 text-accent"></i><span data-i18n="faq.items.3.q">What if our data is a mess? Excel files, old systems, manual processes?</span>
+                    </button>
+                  </h3>
+                  <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-white-50" data-i18n-html="faq.items.3.a">...</div>
+                  </div>
+                </div>
+              </div>
+              <div class="glass-card mb-3">
+                <div class="accordion-item bg-transparent border-0">
+                  <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                      <i class="bi bi-people me-3 text-accent"></i><span data-i18n="faq.items.4.q">Will our team be able to use and maintain the dashboards?</span>
+                    </button>
+                  </h3>
+                  <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-white-50" data-i18n-html="faq.items.4.a">...</div>
+                  </div>
+                </div>
+              </div>
+              <div class="glass-card mb-3">
+                <div class="accordion-item bg-transparent border-0">
+                  <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                      <i class="bi bi-star me-3 text-accent"></i><span data-i18n="faq.items.5.q">Why choose DataArcus over freelancers or big consulting firms?</span>
+                    </button>
+                  </h3>
+                  <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-white-50" data-i18n-html="faq.items.5.a">...</div>
+                  </div>
+                </div>
+              </div>
+              <div class="glass-card mb-3">
+                <div class="accordion-item bg-transparent border-0">
+                  <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                      <i class="bi bi-question-circle me-3 text-accent"></i><span data-i18n="faq.items.6.q">What if we're not sure what we need?</span>
+                    </button>
+                  </h3>
+                  <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-white-50" data-i18n-html="faq.items.6.a">...</div>
                   </div>
                 </div>
               </div>
             </div>
-
-            <!-- FAQ 2 - Cost/ROI -->
-            <div class="glass-card mb-3">
-              <div class="accordion-item bg-transparent border-0">
-                <h3 class="accordion-header">
-                  <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
-                    <i class="bi bi-currency-dollar me-3 text-accent"></i>
-                    What's the real ROI of a Power BI implementation?
-                  </button>
-                </h3>
-                <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                  <div class="accordion-body text-white-50">
-                    <strong class="text-white">Our clients typically see 300-500% ROI within 6 months.</strong> Here's the math: If your team spends 10 hours/week on manual reporting, that's 520 hours/year. At EGP 200/hour, you're spending EGP 104,000 annually on manual work.
-                    <div class="mt-3">
-                      <div class="row g-3">
-                        <div class="col-sm-6">
-                          <div class="p-3 rounded" style="background: rgba(253, 121, 168, 0.1);">
-                            <strong>Before:</strong><br>
-                            • 10h/week manual reports<br>
-                            • Delayed decisions<br>
-                            • Data inconsistencies
-                          </div>
-                        </div>
-                        <div class="col-sm-6">
-                          <div class="p-3 rounded" style="background: rgba(0, 206, 201, 0.1);">
-                            <strong>After:</strong><br>
-                            • 30min/week monitoring<br>
-                            • Real-time insights<br>
-                            • Confident decisions
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- FAQ 3 - Data Security -->
-            <div class="glass-card mb-3">
-              <div class="accordion-item bg-transparent border-0">
-                <h3 class="accordion-header">
-                  <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
-                    <i class="bi bi-shield-lock me-3 text-accent"></i>
-                    How do you handle our sensitive business data?
-                  </button>
-                </h3>
-                <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                  <div class="accordion-body text-white-50">
-                    <strong class="text-white">Your data never leaves your control.</strong> We work within your existing Microsoft environment using row-level security, encrypted connections, and enterprise-grade governance.
-                    <div class="mt-3">
-                      <div class="d-flex align-items-start mb-2">
-                        <i class="bi bi-check-circle-fill text-success me-2 mt-1"></i>
-                        <span>NDA signed before any data access</span>
-                      </div>
-                      <div class="d-flex align-items-start mb-2">
-                        <i class="bi bi-check-circle-fill text-success me-2 mt-1"></i>
-                        <span>Data stays in your Microsoft tenant</span>
-                      </div>
-                      <div class="d-flex align-items-start mb-2">
-                        <i class="bi bi-check-circle-fill text-success me-2 mt-1"></i>
-                        <span>Role-based access controls implemented</span>
-                      </div>
-                      <div class="d-flex align-items-start">
-                        <i class="bi bi-check-circle-fill text-success me-2 mt-1"></i>
-                        <span>Full audit trail of all activities</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- FAQ 4 - Technical Requirements -->
-            <div class="glass-card mb-3">
-              <div class="accordion-item bg-transparent border-0">
-                <h3 class="accordion-header">
-                  <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
-                    <i class="bi bi-gear me-3 text-accent"></i>
-                    What if our data is a mess? Excel files, old systems, manual processes?
-                  </button>
-                </h3>
-                <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                  <div class="accordion-body text-white-50">
-                    <strong class="text-white">Perfect! That's exactly what we specialize in.</strong> 80% of our clients start with "messy" data. We've connected everything from legacy ERP systems to Google Sheets.
-                    <div class="mt-3 p-3 rounded" style="background: rgba(108, 92, 231, 0.1);">
-                      <strong>We connect to:</strong> Excel files, SQL databases, Oracle, SAP, Salesforce, QuickBooks, Google Analytics, APIs, web scraping, manual uploads, and 200+ other sources.
-                    </div>
-                    <p class="mt-3 mb-0"><em>"The messier your data, the bigger the transformation impact."</em></p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- FAQ 5 - Training & Support -->
-            <div class="glass-card mb-3">
-              <div class="accordion-item bg-transparent border-0">
-                <h3 class="accordion-header">
-                  <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
-                    <i class="bi bi-people me-3 text-accent"></i>
-                    Will our team be able to use and maintain the dashboards?
-                  </button>
-                </h3>
-                <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                  <div class="accordion-body text-white-50">
-                    <strong class="text-white">Absolutely. We build for your team's skill level and provide comprehensive training.</strong> Every project includes user training and documentation. Plus, we offer ongoing support packages.
-                    <div class="mt-3">
-                      <div class="row g-2 small">
-                        <div class="col-md-6">
-                          <strong class="text-accent">For End Users:</strong><br>
-                          • How to read dashboards<br>
-                          • Filtering and drilling down<br>
-                          • Export and sharing options
-                        </div>
-                        <div class="col-md-6">
-                          <strong class="text-accent">For Admins:</strong><br>
-                          • Data refresh schedules<br>
-                          • User permissions<br>
-                          • Basic troubleshooting
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- FAQ 6 - What Makes Us Different -->
-            <div class="glass-card mb-3">
-              <div class="accordion-item bg-transparent border-0">
-                <h3 class="accordion-header">
-                  <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
-                    <i class="bi bi-star me-3 text-accent"></i>
-                    Why choose DataArcus over freelancers or big consulting firms?
-                  </button>
-                </h3>
-                <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                  <div class="accordion-body text-white-50">
-                    <strong class="text-white">We're the sweet spot between cost and quality.</strong> Freelancers lack enterprise experience. Big firms charge 10x more and take 10x longer. We deliver enterprise-quality work at startup speed.
-                    <div class="mt-3">
-                      <div class="row g-3">
-                        <div class="col-md-4 text-center">
-                          <div class="p-3 rounded" style="background: rgba(253, 121, 168, 0.1);">
-                            <strong>Freelancers</strong><br>
-                            <small>Cheap but risky<br>Limited expertise<br>No support</small>
-                          </div>
-                        </div>
-                        <div class="col-md-4 text-center">
-                          <div class="p-3 rounded" style="background: rgba(0, 212, 255, 0.1); border: 2px solid var(--accent);">
-                            <strong>DataArcus</strong><br>
-                            <small>Best value<br>Proven expertise<br>Ongoing partnership</small>
-                          </div>
-                        </div>
-                        <div class="col-md-4 text-center">
-                          <div class="p-3 rounded" style="background: rgba(100, 116, 139, 0.1);">
-                            <strong>Big Firms</strong><br>
-                            <small>Expensive & slow<br>Junior staff<br>Cookie-cutter</small>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- FAQ 7 - Not Sure What You Need -->
-            <div class="glass-card mb-3">
-              <div class="accordion-item bg-transparent border-0">
-                <h3 class="accordion-header">
-                  <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
-                    <i class="bi bi-question-circle me-3 text-accent"></i>
-                    What if we're not sure what we need?
-                  </button>
-                </h3>
-                <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
-                  <div class="accordion-body text-white-50">
-                    <strong class="text-white">That's exactly why we start with a free data assessment.</strong> We'll audit your current setup and recommend the best path forward - no commitment required. Most clients discover opportunities they never knew existed.
-                  </div>
-                </div>
-              </div>
-            </div>
-
           </div>
         </div>
       </div>
-    </div>
   </section>
 
-  <!-- Enhanced CTA -->
   <section class="py-5 cta-section">
-    <div class="container">
-      <div class="row align-items-center">
-        <div class="col-lg-8" data-aos="fade-right">
-          <h2 class="display-6 fw-bold mb-3">Ready to Transform Your Data Strategy?</h2>
-          <p class="lead mb-0">
-            Share your data challenges with us and receive a custom dashboard mockup within 24 hours. No commitment required.
-          </p>
-        </div>
-        <div class="col-lg-4 text-lg-end mt-4 mt-lg-0" data-aos="fade-left">
-          <a href="#contact" class="btn btn-dark btn-lg px-4 py-3">
-            <i class="bi bi-rocket me-2"></i>Start Your Project
-          </a>
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-8" data-aos="fade-right">
+            <h2 class="display-6 fw-bold mb-3" data-i18n="finalCta.title">Ready to Transform Your Data Strategy?</h2>
+            <p class="lead mb-0" data-i18n="finalCta.subtitle">Share your data challenges with us and receive a custom dashboard mockup within 24 hours. No commitment required.</p>
+          </div>
+          <div class="col-lg-4 text-lg-end mt-4 mt-lg-0" data-aos="fade-left">
+            <a href="#contact" class="btn btn-dark btn-lg px-4 py-3">
+              <i class="bi bi-rocket me-2"></i><span data-i18n="finalCta.button">Start Your Project</span>
+            </a>
+          </div>
         </div>
       </div>
-    </div>
   </section>
 
   <!-- Enhanced Contact -->
   <section id="contact" class="py-5">
-    <div class="container">
-      <div class="row mb-5">
-        <div class="col-lg-8 mx-auto text-center">
-          <h2 class="display-6 fw-bold mb-4">Let's Discuss Your Data Challenges</h2>
-          <p class="lead text-white-50">Tell us about your data landscape and the insights you need to drive your business forward.</p>
+      <div class="container">
+        <div class="row mb-5">
+          <div class="col-lg-8 mx-auto text-center">
+            <h2 class="display-6 fw-bold mb-4" data-i18n="contact.title">Let's Discuss Your Data Challenges</h2>
+            <p class="lead text-white-50" data-i18n="contact.subtitle">Tell us about your data landscape and the insights you need to drive your business forward.</p>
+          </div>
         </div>
-      </div>
-      <div class="row g-5">
-        
-        <div class="col-lg-7" data-aos="fade-up">
-          <div class="glass-card p-4 p-md-5">
-            <form id="contact-form" action="https://api.web3forms.com/submit" method="POST" class="row g-4" data-bs-theme="dark"> <input type="hidden" name="access_key" value="91d8ce12-3f16-41c9-8393-4bebe0611b3f">
+        <div class="row g-5">
+          
+          <div class="col-lg-7" data-aos="fade-up">
+            <div class="glass-card p-4 p-md-5">
+              <form id="contact-form" action="https://api.web3forms.com/submit" method="POST" class="row g-4" data-bs-theme="dark"> <input type="hidden" name="access_key" value="91d8ce12-3f16-41c9-8393-4bebe0611b3f">
 
-              <div class="col-12">
-                <div id="form-result" style="display: none;"></div>
-              </div>
-
-              <div class="col-sm-6">
-                <label for="contact-name" class="form-label">Full Name *</label>
-                <input type="text" name="name" class="form-control" id="contact-name" required>
-              </div>
-              <div class="col-sm-6">
-                <label for="contact-email" class="form-label">Business Email *</label>
-                <input type="email" name="email" class="form-control" id="contact-email" required>
-              </div>
-              <div class="col-sm-6">
-                <label for="contact-company" class="form-label">Company</label>
-                <input type="text" name="company" class="form-control" id="contact-company">
-              </div>
-              <div class="col-sm-6">
-                <label class="form-label" for="budget-select">Project Budget</label>
-                <div class="custom-select-wrapper">
-                  <select name="budget" class="form-select custom-budget-select" id="budget-select">
-                    <option value="">Select range (EGP)</option>
-                    <option value="30k-75k">EGP 30,000 - 75,000</option>
-                    <option value="75k-150k">EGP 75,000 - 150,000</option>
-                    <option value="150k-300k">EGP 150,000 - 300,000</option>
-                    <option value="300k+">EGP 300,000+</option>
-                  </select>
+                <div class="col-12">
+                  <div id="form-result" style="display: none;"></div>
                 </div>
-              </div>
-              <div class="col-12">
-                <label class="form-label">Project Details *</label>
-                <textarea name="message" class="form-control" rows="5" placeholder="Describe your data sources, key metrics, and desired outcomes..." required></textarea>
-              </div>
-              <div class="col-12">
-                <div class="d-flex flex-column flex-sm-row align-items-start gap-3">
-                  <button type="submit" class="btn btn-accent btn-lg px-4">
-                    <i class="bi bi-send me-2"></i>Send Message
-                  </button>
-                  <div class="text-white-50 small">
-                    <div><i class="bi bi-envelope me-2"></i>hello@DataArcus.com</div>
-                    <div><i class="bi bi-clock me-2"></i>Response within 4 hours</div>
+
+                <div class="col-sm-6">
+                  <label for="contact-name" class="form-label" data-i18n="contact.form.name">Full Name *</label>
+                  <input type="text" name="name" class="form-control" id="contact-name" required>
+                </div>
+                <div class="col-sm-6">
+                  <label for="contact-email" class="form-label" data-i18n="contact.form.email">Business Email *</label>
+                  <input type="email" name="email" class="form-control" id="contact-email" required>
+                </div>
+                <div class="col-sm-6">
+                  <label for="contact-company" class="form-label" data-i18n="contact.form.company">Company</label>
+                  <input type="text" name="company" class="form-control" id="contact-company">
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label" for="budget-select" data-i18n="contact.form.budget">Project Budget</label>
+                  <div class="custom-select-wrapper">
+                    <select name="budget" class="form-select custom-budget-select" id="budget-select">
+                      <option value="" data-i18n="contact.form.budgetText">Select range (EGP)</option>
+                      <option value="30k-75k">EGP 30,000 - 75,000</option>
+                      <option value="75k-150k">EGP 75,000 - 150,000</option>
+                      <option value="150k-300k">EGP 150,000 - 300,000</option>
+                      <option value="300k+">EGP 300,000+</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <label class="form-label" data-i18n="contact.form.details">Project Details *</label>
+                  <textarea name="message" class="form-control" rows="5" placeholder="Describe your data sources, key metrics, and desired outcomes..." data-i18n="contact.form.placeholder" required></textarea>
+                </div>
+                <div class="col-12">
+                  <div class="d-flex flex-column flex-sm-row align-items-start gap-3">
+                    <button type="submit" class="btn btn-accent btn-lg px-4">
+                      <i class="bi bi-send me-2"></i><span data-i18n="contact.form.button">Send Message</span>
+                    </button>
+                    <div class="text-white-50 small">
+                      <div><i class="bi bi-envelope me-2"></i>hello@DataArcus.com</div>
+                      <div><i class="bi bi-clock me-2"></i><span data-i18n="contact.form.response">Response within 4 hours</span></div>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+          </div>
+          
+          <div class="col-lg-5" data-aos="fade-up" data-aos-delay="200">
+            <div class="glass-card p-4 p-md-5 h-100">
+              <h3 class="mb-4"><i class="bi bi-clipboard-check me-2"></i><span data-i18n="contact.checklist.title">Discovery Checklist</span></h3>
+              <div class="d-flex flex-column gap-3">
+                <div class="d-flex align-items-start">
+                  <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                  <div>
+                    <h4 class="mb-1" data-i18n="contact.checklist.items.0.title">Business Objectives</h4>
+                    <p class="text-white-50 small mb-0" data-i18n="contact.checklist.items.0.desc">What decisions need to be made faster or better?</p>
+                  </div>
+                </div>
+                <div class="d-flex align-items-start">
+                  <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                  <div>
+                    <h4 class="mb-1" data-i18n="contact.checklist.items.1.title">Data Sources</h4>
+                    <p class="text-white-50 small mb-0" data-i18n="contact.checklist.items.1.desc">Excel files, databases, CRM, ERP systems, APIs</p>
+                  </div>
+                </div>
+                <div class="d-flex align-items-start">
+                  <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                  <div>
+                    <h4 class="mb-1" data-i18n="contact.checklist.items.2.title">Key Stakeholders</h4>
+                    <p class="text-white-50 small mb-0" data-i18n="contact.checklist.items.2.desc">Who will be using the dashboards daily?</p>
+                  </div>
+                </div>
+                <div class="d-flex align-items-start">
+                  <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
+                  <div>
+                    <h4 class="mb-1" data-i18n="contact.checklist.items.3.title">Success Metrics</h4>
+                    <p class="text-white-50 small mb-0" data-i18n="contact.checklist.items.3.desc">How will we measure project success?</p>
                   </div>
                 </div>
               </div>
-            </form>
-          </div>
-        </div>
-        
-        <div class="col-lg-5" data-aos="fade-up" data-aos-delay="200">
-          <div class="glass-card p-4 p-md-5 h-100">
-            <h3 class="mb-4"><i class="bi bi-clipboard-check me-2"></i>Discovery Checklist</h3>
-            <div class="d-flex flex-column gap-3">
-              <div class="d-flex align-items-start">
-                <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
-                <div>
-                  <h4 class="mb-1">Business Objectives</h4>
-                  <p class="text-white-50 small mb-0">What decisions need to be made faster or better?</p>
+              
+              <hr class="my-4">
+              
+              <h3 class="mb-3"><i class="bi bi-calendar3 me-2"></i><span data-i18n="contact.timeline.title">Typical Timeline</span></h3>
+              <div class="d-flex flex-column gap-2 small">
+                <div class="d-flex justify-content-between">
+                  <span class="text-white-50" data-i18n="contact.timeline.items.0.label">Discovery & Planning</span>
+                  <span data-i18n="contact.timeline.items.0.value">Day 1</span>
                 </div>
-              </div>
-              <div class="d-flex align-items-start">
-                <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
-                <div>
-                  <h4 class="mb-1">Data Sources</h4>
-                  <p class="text-white-50 small mb-0">Excel files, databases, CRM, ERP systems, APIs</p>
+                <div class="d-flex justify-content-between">
+                  <span class="text-white-50" data-i18n="contact.timeline.items.1.label">Data Modeling & ETL</span>
+                  <span data-i18n="contact.timeline.items.1.value">Day 2-3</span>
                 </div>
-              </div>
-              <div class="d-flex align-items-start">
-                <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
-                <div>
-                  <h4 class="mb-1">Key Stakeholders</h4>
-                  <p class="text-white-50 small mb-0">Who will be using the dashboards daily?</p>
+                <div class="d-flex justify-content-between">
+                  <span class="text-white-50" data-i18n="contact.timeline.items.2.label">Dashboard Development</span>
+                  <span data-i18n="contact.timeline.items.2.value">Day 4-5</span>
                 </div>
-              </div>
-              <div class="d-flex align-items-start">
-                <i class="bi bi-check-circle-fill text-success me-3 mt-1"></i>
-                <div>
-                  <h4 class="mb-1">Success Metrics</h4>
-                  <p class="text-white-50 small mb-0">How will we measure project success?</p>
+                <div class="d-flex justify-content-between">
+                  <span class="text-white-50" data-i18n="contact.timeline.items.3.label">Testing & Deployment</span>
+                  <span data-i18n="contact.timeline.items.3.value">Day 6-7</span>
                 </div>
               </div>
             </div>
-            
-            <hr class="my-4">
-            
-            <h3 class="mb-3"><i class="bi bi-calendar3 me-2"></i>Typical Timeline</h3>
-            <div class="d-flex flex-column gap-2 small">
-              <div class="d-flex justify-content-between">
-                <span class="text-white-50">Discovery & Planning</span>
-                <span>Day 1</span>
-              </div>
-              <div class="d-flex justify-content-between">
-                <span class="text-white-50">Data Modeling & ETL</span>
-                <span>Day 2-3</span>
-              </div>
-              <div class="d-flex justify-content-between">
-                <span class="text-white-50">Dashboard Development</span>
-                <span>Day 4-5</span>
-              </div>
-              <div class="d-flex justify-content-between">
-                <span class="text-white-50">Testing & Deployment</span>
-                <span>Day 6-7</span>
-              </div>
-            </div>
           </div>
+          
         </div>
-        
       </div>
-    </div>
   </section>
 
-  <!-- Enhanced Footer -->
   <footer class="py-5">
-    <div class="container">
-      <div class="row g-4">
-        <div class="col-lg-4">
-          <a href="#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
-            <img src="assets/img/logo.svg" alt="DataArcus logo" height="40">
-          </a>
-          <p class="text-white-50 mb-3">Expert, custom-built Power BI solutions that turn your complex data into a clear strategic advantage.</p>
-            <!-- <div class="d-flex gap-2">
-              <a href="#" class="text-white-50 hover-accent" aria-label="LinkedIn"><i class="bi bi-linkedin fs-5"></i></a>
-              <a href="#" class="text-white-50 hover-accent" aria-label="Twitter"><i class="bi bi-twitter fs-5"></i></a>
-              <a href="#" class="text-white-50 hover-accent" aria-label="GitHub"><i class="bi bi-github fs-5"></i></a>
-            </div> -->
-        </div>
-        <div class="col-lg-2 col-md-3">
-          <h3 class="mb-3">Services</h3>
-          <ul class="list-unstyled">
-            <li class="mb-2"><a href="#services" class="text-white-50 text-decoration-none hover-accent">Power BI</a></li>
-            <li class="mb-2"><a href="#services" class="text-white-50 text-decoration-none hover-accent">Data Engineering</a></li>
-            <li class="mb-2"><a href="#services" class="text-white-50 text-decoration-none hover-accent">Analytics</a></li>
-            <li class="mb-2"><a href="#services" class="text-white-50 text-decoration-none hover-accent">Consulting</a></li>
-          </ul>
-        </div>
-        <div class="col-lg-2 col-md-3">
-          <h3 class="mb-3">Company</h3>
-          <ul class="list-unstyled">
-            <li class="mb-2"><a href="#about" class="text-white-50 text-decoration-none hover-accent">About</a></li>
-            <li class="mb-2"><a href="portfolio.html" class="text-white-50 text-decoration-none hover-accent">Portfolio</a></li>
-            <li class="mb-2"><a href="#contact" class="text-white-50 text-decoration-none hover-accent">Contact</a></li>
-            <li class="mb-2"><a href="article-clv.html" class="text-white-50 text-decoration-none hover-accent">Blog</a></li>
-          </ul>
-        </div>
-        <div class="col-lg-4 col-md-6">
-          <h3 class="mb-3 h6">Contact Info</h3>
-          <div class="d-flex flex-column gap-2">
-            <div class="d-flex align-items-center">
-              <i class="bi bi-envelope me-3"></i>
-              <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
-            </div>
-            <div class="d-flex align-items-center">
-              <i class="bi bi-telephone me-3"></i>
-              <span class="text-white-50">+20 106 605 3022</span>
-            </div>
-            <div class="d-flex align-items-center">
-              <i class="bi bi-clock me-3"></i>
-              <span class="text-white-50">Mon-Fri 9AM-6PM</span>
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="index.html#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="assets/img/logo.svg" alt="DataArcus logo" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Expert, custom-built Power BI solutions that turn your complex data into a clear strategic advantage.</p>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="index.html#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Portfolio</a></li>
+              <li class="mb-2"><a href="index.html#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="article-clv.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3 h6" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope me-3"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-telephone me-3"></i>
+                <span class="text-white-50 ltr-text">+20 106 605 3022</span>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-clock me-3"></i>
+                <span class="text-white-50" data-i18n="footer.hours">Mon-Fri 9AM-6PM</span>
+              </div>
             </div>
           </div>
         </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Built with passion • Powered by innovation</div>
+        </div>
       </div>
-      <hr class="my-4">
-      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-        <div class="text-white-50">&copy; <span id="year"></span> DataArcus. All rights reserved.</div>
-        <div class="small text-white-50 mt-2 mt-md-0">Built with passion • Powered by innovation</div>
-      </div>
-    </div>
   </footer>
 
-  <!-- Scripts -->
+  <script src="assets/js/translations/common.js" defer></script>
+  <script src="assets/js/translations/homepage.js" defer></script>
+  <script src="assets/js/lang-manager.js" defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" defer></script>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
   <script src="assets/js/main.js" defer></script>

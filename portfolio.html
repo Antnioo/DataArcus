@@ -67,7 +67,7 @@
     
   <div class="interactive-bg" id="interactiveBg"></div>
 
-  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top bg-transparent py-3">
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top scrolled">
     <div class="container">
       <a class="navbar-brand" href="index.html#hero">
         <img src="assets/img/logo.svg" alt="DataArcus logo" height="40">
@@ -77,20 +77,20 @@
       </button>
       <div class="collapse navbar-collapse" id="navmenu">
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="index.html#services">Services</a></li>
-          <li class="nav-item"><a class="nav-link" href="portfolio.html">Portfolio</a></li>
-          <li class="nav-item"><a class="nav-link" href="index.html#about">About</a></li>
-          <li class="nav-item"><a class="nav-link" href="index.html#contact">Contact</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="portfolio.html" data-i18n="nav.portfolio">Portfolio</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html#contact" data-i18n="nav.contact">Contact</a></li>
         </ul>
-        <a href="index.html#contact" class="btn btn-accent ms-lg-3">Get a Free Consultation</a>
+        <a href="index.html#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Get a Free Consultation</a>
       </div>
     </div>
   </nav>
 
   <header class="page-header">
     <div class="container text-center">
-        <h1 class="display-4 fw-bold">Our Work</h1>
-        <p class="lead text-white-50 col-lg-8 mx-auto">We build custom data solutions that drive real business results. Explore our case studies to see how we turn complex data into strategic assets.</p>
+        <h1 class="display-4 fw-bold" data-i18n="header.title">Our Work</h1>
+        <p class="lead text-white-50 col-lg-8 mx-auto" data-i18n="header.subtitle">We build custom data solutions that drive real business results. Explore our case studies to see how we turn complex data into strategic assets.</p>
     </div>
   </header>
 
@@ -98,8 +98,8 @@
     <div class="container">
       <div class="row mb-5">
         <div class="col-lg-8 mx-auto text-center">
-          <h2 class="display-6 fw-bold">Case Studies</h2>
-          <p class="lead text-white-50">Each project is a partnership. Here’s a look at the challenges we’ve solved and the value we’ve delivered through our custom Power BI solutions.</p>
+          <h2 class="display-6 fw-bold mb-4" data-i18n="portfolio.sectionTitle">Case Studies</h2>
+          <p class="lead text-white-50" data-i18n="portfolio.sectionSubtitle">Each project is a partnership. Here’s a look at the challenges we’ve solved and the value we’ve delivered through our custom Power BI solutions.</p>
         </div>
       </div>
 
@@ -111,13 +111,13 @@
               <img src="assets/img/portfolio/maven-market-preview.jpg" alt="A preview of the Maven-Market Retail Analysis dashboard" class="img-fluid">
             </div>
             <div class="p-4 d-flex flex-column flex-grow-1">
-              <span class="badge bg-primary mb-2 align-self-start">RETAIL ANALYTICS</span>
-              <h3 class="mb-3">Maven-Market Retail Analysis</h3>
-              <p class="text-white-50 small mb-4 flex-grow-1">
+              <span class="badge bg-primary mb-2 align-self-start" data-i18n="portfolio.projects.mavenmarket.badge">RETAIL ANALYTICS</span>
+              <h3 class="mb-3" data-i18n="portfolio.projects.mavenmarket.title">Maven-Market Retail Analysis</h3>
+              <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="portfolio.projects.mavenmarket.description">
                 An in-depth analysis of retail trends, helping an e-commerce business identify top-selling products and optimize marketing spend based on customer behavior.
               </p>
               <a class="btn btn-glass" href="dashboards/maven-market-dashboard.html">
-                <i class="bi bi-file-text me-2"></i>View Case Study
+                <i class="bi bi-file-text me-2"></i><span data-i18n="portfolio.projects.mavenmarket.button">View Case Study</span>
               </a>
             </div>
           </div>
@@ -129,13 +129,13 @@
               <img src="assets/img/portfolio/call-center-preview.jpg" alt="A preview of the Call Center Performance dashboard" class="img-fluid">
             </div>
             <div class="p-4 d-flex flex-column flex-grow-1">
-              <span class="badge bg-info mb-2 align-self-start">CUSTOMER SERVICE</span>
-              <h3 class="mb-3">Call Center Performance</h3>
-              <p class="text-white-50 small mb-4 flex-grow-1">
+              <span class="badge bg-info mb-2 align-self-start" data-i18n="portfolio.projects.callcenter.badge">CUSTOMER SERVICE</span>
+              <h3 class="mb-3" data-i18n="portfolio.projects.callcenter.title">Call Center Performance</h3>
+              <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="portfolio.projects.callcenter.description">
                 A complete command center for monitoring call center KPIs, tracking agent performance, and improving customer satisfaction through data-driven insights.
               </p>
               <a class="btn btn-glass" href="dashboards/call-center-dashboard.html">
-                <i class="bi bi-file-text me-2"></i>View Case Study
+                <i class="bi bi-file-text me-2"></i><span data-i18n="portfolio.projects.callcenter.button">View Case Study</span>
               </a>
             </div>
           </div>
@@ -147,13 +147,13 @@
                 <i class="bi bi-shield-lock" style="font-size: 4rem;"></i>
             </div>
             <div class="p-4 d-flex flex-column flex-grow-1">
-              <span class="badge bg-success mb-2 align-self-start">FINANCE</span>
-              <h3 class="mb-3">Confidential Financial Dashboard</h3>
-              <p class="text-white-50 small mb-4 flex-grow-1">
+              <span class="badge bg-success mb-2 align-self-start" data-i18n="portfolio.projects.confidential.badge">FINANCE</span>
+              <h3 class="mb-3" data-i18n="portfolio.projects.confidential.title">Confidential Financial Dashboard</h3>
+              <p class="text-white-50 small mb-4 flex-grow-1" data-i18n="portfolio.projects.confidential.description">
                 Developed a comprehensive financial control center for a private client. This dashboard provides real-time P&L insights and cash flow alerts under a strict NDA.
               </p>
               <a class="btn btn-glass" href="#" data-bs-toggle="modal" data-bs-target="#requestDemoModal">
-                <i class="bi bi-eye-slash me-2"></i>Request Info
+                <i class="bi bi-eye-slash me-2"></i><span data-i18n="portfolio.projects.confidential.button">Request Info</span>
               </a>
             </div>
           </div>
@@ -165,8 +165,8 @@
         <div class="col-12" data-aos="fade-up">
           <div class="glass-card p-4">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-              <h3 class="mb-0"><i class="bi bi-star-fill me-2 text-warning"></i>Hero Project: AdventureWorks Sales & Operations</h3>
-              <span class="badge bg-primary">LIVE & INTERACTIVE</span>
+              <h3 class="mb-0"><i class="bi bi-star-fill me-2 text-warning"></i><span data-i18n="heroProject.title">Hero Project: AdventureWorks Sales & Operations</span></h3>
+              <span class="badge bg-primary" data-i18n="heroProject.badge">LIVE & INTERACTIVE</span>
             </div>
             <div class="ratio ratio-16x9 rounded-3 overflow-hidden">
               <iframe 
@@ -180,18 +180,18 @@
 
             <div class="row align-items-center mt-4">
                 <div class="col-lg-8">
-                    <h4 class="h6 mb-3" style="color: var(--accent);">Key Features & Technologies Used:</h4>
+                    <h4 class="h6 mb-3" style="color: var(--accent);" data-i18n="heroProject.featuresTitle">Key Features & Technologies Used:</h4>
                     <div class="d-flex flex-wrap gap-2">
-                        <span class="tech-pill">Power BI</span>
-                        <span class="tech-pill">Advanced DAX</span>
-                        <span class="tech-pill">What-If Parameters</span>
-                        <span class="tech-pill">Geospatial Analysis</span>
-                        <span class="tech-pill">Decomposition Tree</span>
+                        <span class="tech-pill" data-i18n="heroProject.tags.0">Power BI</span>
+                        <span class="tech-pill" data-i18n="heroProject.tags.1">Advanced DAX</span>
+                        <span class="tech-pill" data-i18n="heroProject.tags.2">What-If Parameters</span>
+                        <span class="tech-pill" data-i18n="heroProject.tags.3">Geospatial Analysis</span>
+                        <span class="tech-pill" data-i18n="heroProject.tags.4">Decomposition Tree</span>
                     </div>
                 </div>
                 <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
                     <a href="dashboards/adventureworks-dashboard.html" class="btn btn-accent">
-                        <i class="bi bi-file-text me-2"></i>View Full Case Study
+                        <i class="bi bi-file-text me-2"></i><span data-i18n="heroProject.button">View Full Case Study</span>
                     </a>
                 </div>
             </div>
@@ -202,82 +202,82 @@
   </section>
   
   <footer class="py-5">
-    <div class="container">
-      <div class="row g-4">
-        <div class="col-lg-4">
-          <a href="index.html#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
-            <img src="assets/img/logo.svg" alt="DataArcus logo" height="40">
-          </a>
-          <p class="text-white-50 mb-3">Expert, custom-built Power BI solutions that turn your complex data into a clear strategic advantage.</p>
-            <!-- <div class="d-flex gap-2">
-              <a href="#" class="text-white-50 hover-accent" aria-label="LinkedIn"><i class="bi bi-linkedin fs-5"></i></a>
-              <a href="#" class="text-white-50 hover-accent" aria-label="Twitter"><i class="bi bi-twitter fs-5"></i></a>
-              <a href="#" class="text-white-50 hover-accent" aria-label="GitHub"><i class="bi bi-github fs-5"></i></a>
-            </div> -->
-        </div>
-        <div class="col-lg-2 col-md-3">
-          <h3 class="mb-3">Services</h3>
-          <ul class="list-unstyled">
-            <li class="mb-2"><a href="index.html#services" class="text-white-50 text-decoration-none hover-accent">Power BI</a></li>
-            <li class="mb-2"><a href="index.html#services" class="text-white-50 text-decoration-none hover-accent">Data Engineering</a></li>
-            <li class="mb-2"><a href="index.html#services" class="text-white-50 text-decoration-none hover-accent">Analytics</a></li>
-            <li class="mb-2"><a href="index.html#services" class="text-white-50 text-decoration-none hover-accent">Consulting</a></li>
-          </ul>
-        </div>
-        <div class="col-lg-2 col-md-3">
-          <h3 class="mb-3">Company</h3>
-          <ul class="list-unstyled">
-            <li class="mb-2"><a href="index.html#about" class="text-white-50 text-decoration-none hover-accent">About</a></li>
-            <li class="mb-2"><a href="portfolio.html" class="text-white-50 text-decoration-none hover-accent">Portfolio</a></li>
-            <li class="mb-2"><a href="index.html#contact" class="text-white-50 text-decoration-none hover-accent">Contact</a></li>
-            <li class="mb-2"><a href="article-clv.html" class="text-white-50 text-decoration-none hover-accent">Blog</a></li>
-          </ul>
-        </div>
-        <div class="col-lg-4 col-md-6">
-          <h3 class="mb-3 h6">Contact Info</h3>
-          <div class="d-flex flex-column gap-2">
-            <div class="d-flex align-items-center">
-              <i class="bi bi-envelope me-3"></i>
-              <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
-            </div>
-            <div class="d-flex align-items-center">
-              <i class="bi bi-telephone me-3"></i>
-              <span class="text-white-50">+20 106 605 3022</span>
-            </div>
-            <div class="d-flex align-items-center">
-              <i class="bi bi-clock me-3"></i>
-              <span class="text-white-50">Mon-Fri 9AM-6PM</span>
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="index.html#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="assets/img/logo.svg" alt="DataArcus logo" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Expert, custom-built Power BI solutions that turn your complex data into a clear strategic advantage.</p>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="index.html#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Portfolio</a></li>
+              <li class="mb-2"><a href="index.html#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="article-clv.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3 h6" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope me-3"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-telephone me-3"></i>
+                <span class="text-white-50 ltr-text">+20 106 605 3022</span>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-clock me-3"></i>
+                <span class="text-white-50" data-i18n="footer.hours">Mon-Fri 9AM-6PM</span>
+              </div>
             </div>
           </div>
         </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Built with passion • Powered by innovation</div>
+        </div>
       </div>
-      <hr class="my-4">
-      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
-        <div class="text-white-50">&copy; <span id="year"></span> DataArcus. All rights reserved.</div>
-        <div class="small text-white-50 mt-2 mt-md-0">Built with passion • Powered by innovation</div>
-      </div>
-    </div>
   </footer>
 
   <div class="modal fade" id="requestDemoModal" tabindex="-1" aria-labelledby="requestDemoModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content bg-dark text-white" style="background: var(--dk-3); border: 1px solid var(--glass-border);">
         <div class="modal-header border-bottom-0">
-          <h3 class="modal-title h5" id="requestDemoModalLabel">Confidential Project Information</h3>
+          <h3 class="modal-title h5" id="requestDemoModalLabel" data-i18n="modal.title">Confidential Project Information</h3>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <p>Due to a non-disclosure agreement (NDA), the details of this project are confidential. We take client privacy very seriously.</p>
-          <p>However, we can discuss how we applied similar techniques and principles to solve challenges in the financial sector. Please contact us to schedule a private consultation.</p>
+          <p data-i18n="modal.content.paragraph1">Due to a non-disclosure agreement (NDA), the details of this project are confidential. We take client privacy very seriously.</p>
+          <p data-i18n="modal.content.paragraph2">However, we can discuss how we applied similar techniques and principles to solve challenges in the financial sector. Please contact us to schedule a private consultation.</p>
           <hr>
           <a href="index.html#contact" class="btn btn-accent w-100">
-              <i class="bi bi-calendar3 me-2"></i>Schedule a Consultation
+              <i class="bi bi-calendar3 me-2"></i><span data-i18n="modal.button">Schedule a Consultation</span>
           </a>
         </div>
       </div>
     </div>
   </div>
 
+  <script src="assets/js/translations/common.js" defer></script>
+  <script src="assets/js/translations/portfolio.js" defer></script>
+  <script src="assets/js/lang-manager.js" defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
   <script src="assets/js/main.js" defer></script>
