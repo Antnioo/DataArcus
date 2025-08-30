@@ -89,47 +89,51 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
 
-  /**
-   * 2. Navigation & Scrolling
-   * Manages all navigation and scrolling behaviors, including the navbar's
-   * appearance on scroll and smooth scrolling for anchor links.
+/**
+   * 2. Navigation & Scrolling - FIXED VERSION
+   * ==================================================================
+   * This version uses consistent 80px offset and simplified logic
+   * ==================================================================
    */
 
-  // Add a 'scrolled' class to the navbar when the page is scrolled
-  const nav = document.querySelector('.navbar');
-  if (nav) {
-    const onScroll = () => {
+  // Simple, reliable navbar scroll effect
+  const navbar = document.querySelector('.navbar');
+  if (navbar) {
+    const handleScroll = () => {
       if (window.scrollY > 20) {
-        nav.classList.add('scrolled');
+        navbar.classList.add('scrolled');
       } else {
-        nav.classList.remove('scrolled');
+        navbar.classList.remove('scrolled');
       }
     };
-    onScroll(); // Check on initial load
-    window.addEventListener('scroll', onScroll);
+    
+    handleScroll(); // Check on initial load
+    window.addEventListener('scroll', handleScroll, { passive: true });
   }
 
-  // Handle smooth scrolling for on-page anchor links, accounting for the fixed navbar
+  // SIMPLIFIED smooth scrolling - no complex timing, just works
   document.addEventListener('click', function(e) {
-    const anchor = e.target.closest('a');
-    if (!anchor || !anchor.getAttribute('href')?.startsWith('#') || anchor.getAttribute('href') === '#') {
-      return;
-    }
+    const anchor = e.target.closest('a[href^="#"]');
+    if (!anchor || anchor.getAttribute('href') === '#') return;
     
     const targetId = anchor.getAttribute('href');
     const targetElement = document.querySelector(targetId);
 
     if (targetElement) {
       e.preventDefault();
-      const navbarHeight = nav ? nav.offsetHeight : 0;
-      const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+      
+      // Force immediate layout recalculation
+      targetElement.offsetTop;
+      
+      // Simple calculation: element position minus 80px navbar height
+      const targetPosition = targetElement.offsetTop - 80;
 
       window.scrollTo({
         top: targetPosition,
         behavior: 'smooth'
       });
 
-      // Close mobile navbar after click
+      // Close mobile menu if open
       const navmenu = document.querySelector('#navmenu');
       if (navmenu && navmenu.classList.contains('show')) {
         const bsCollapse = new bootstrap.Collapse(navmenu, { toggle: false });
@@ -138,21 +142,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Corrects scroll position for anchor links on cross-page navigation
+  // Handle page load with hash (cross-page navigation)
   window.addEventListener('load', () => {
     if (window.location.hash) {
-      const targetId = window.location.hash;
-      const targetElement = document.querySelector(targetId);
-
+      const targetElement = document.querySelector(window.location.hash);
       if (targetElement) {
+        // Wait for page to fully render, then scroll
         setTimeout(() => {
-          const navbarHeight = nav ? nav.offsetHeight : 0;
-          const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+          const targetPosition = targetElement.offsetTop - 80;
           window.scrollTo({
             top: targetPosition,
             behavior: 'auto'
           });
-        }, 300);
+        }, 500);
       }
     }
   });
