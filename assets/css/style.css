@@ -35,10 +35,23 @@ html, body {
   scroll-behavior: smooth;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.6;
+  overflow-x: hidden;
 }
 
 html {
   scroll-padding-top: 80px;
+}
+
+#hero{
+  margin-top: -20px;
+}
+
+#services {
+  margin-top: 20px;
+}
+
+#contact {
+  margin-top: 20px;
 }
 
 body {
@@ -796,6 +809,12 @@ html[dir="rtl"] blockquote {
   padding-right: 1.5rem;
 }
 
+/*
+===================================================================
+* Section 11: Internationalization & RTL Support (Corrected)
+===================================================================
+*/
+
 /* --- Language Switcher Styling --- */
 .language-dropdown {
   background: var(--dk-2);
@@ -830,8 +849,10 @@ html[dir="rtl"] blockquote {
 }
 
 .lang-flag {
-  font-size: 1.1em;
-  width: 20px;
+  font-size: 0.85em;
+  font-weight: 700;
+  opacity: 0.7;
+  width: 25px;
   text-align: center;
 }
 
@@ -850,12 +871,27 @@ html[dir="rtl"] blockquote {
   opacity: 0.8;
 }
 
-.nav-link:hover .bi-globe2 {
-  opacity: 1;
-  color: var(--accent);
+/* --- RTL & LTR Layout Support --- */
+/* This ensures the navbar links are pushed to the right in English */
+html:not([dir="rtl"]) .navbar-nav {
+  margin-left: auto !important;
 }
 
-/* --- RTL Specific Component Adjustments --- */
+/* These rules apply ONLY when the language is switched to Arabic */
+html[dir="rtl"] {
+  text-align: right;
+}
+
+html[dir="rtl"] .navbar-nav {
+  margin-right: auto !important;
+  margin-left: 0 !important;
+}
+
+html[dir="rtl"] .ms-lg-3 {
+  margin-left: 0 !important;
+  margin-right: 1rem !important;
+}
+
 html[dir="rtl"] .dropdown-menu-end {
   right: auto !important;
   left: 0 !important;
@@ -866,13 +902,19 @@ html[dir="rtl"] .lang-option {
   flex-direction: row-reverse;
 }
 
-/* Language switching animation */
+/* --- LTR Text Utility --- */
+.ltr-text {
+  direction: ltr;
+  unicode-bidi: bidi-override;
+}
+
+/* --- Effects --- */
 body.language-switching [data-i18n] {
   opacity: 0.7;
   transition: opacity 0.2s ease;
 }
 
-/* Mobile optimization for switcher */
+/* --- Responsive Adjustments --- */
 @media (max-width: 991.98px) {
   .language-dropdown {
     position: static;
@@ -890,11 +932,4 @@ body.language-switching [data-i18n] {
   .lang-option:last-child {
     border-bottom: none;
   }
-}
-
-/* --- LTR Text Utility --- */
-/* Forces text to display Left-to-Right, useful for phone numbers/emails in RTL layouts */
-.ltr-text {
-  direction: ltr;
-  unicode-bidi: bidi-override;
 }
