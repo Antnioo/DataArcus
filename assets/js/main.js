@@ -609,4 +609,29 @@ document.addEventListener('DOMContentLoaded', () => {
     budgetSelect.classList.add('form-select');
     // The dropdown already works perfectly with your existing CSS
   }
+
+  // --- Anchor Link Correction on Page Load ---
+  // This fixes the issue where jumping to a section from another page
+  // doesn't account for the fixed navbar height due to a race condition.
+  window.addEventListener('load', () => {
+    if (window.location.hash) {
+      const targetId = window.location.hash;
+      const targetElement = document.querySelector(targetId);
+
+      if (targetElement) {
+        // A small delay ensures all elements are rendered and have their final dimensions
+        setTimeout(() => {
+          const navbar = document.querySelector('#navbar');
+          const navbarHeight = navbar ? navbar.offsetHeight : 0;
+          const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - navbarHeight;
+
+          window.scrollTo({
+            top: targetPosition,
+            behavior: 'auto' // Use 'auto' for an instant jump, 'smooth' for a scroll
+          });
+        }, 300); // 100ms delay to let the page settle
+      }
+    }
+  });
+
 });
