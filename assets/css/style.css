@@ -933,3 +933,24 @@ body.language-switching [data-i18n] {
     border-bottom: none;
   }
 }
+
+.certification-container {
+  display: flex;
+  align-items: center;
+}
+
+.certification-container iframe {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
+}
+
+.certification-container:hover iframe {
+  transform: scale(1.02);
+}
+
+@media (max-width: 576px) {
+  .certification-container {
+    align-self: center;
+  }
+}

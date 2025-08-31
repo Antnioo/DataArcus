@@ -89,6 +89,11 @@ window.homepageTranslations = {
       quote: "\"My name is Abdelrahman M., and I founded DataArcus to eliminate guesswork from business. After 5 years in data analytics, I saw too many brilliant leaders held back by messy, inaccessible data. We exist to bridge that gap.\"",
       p1: "Our approach is built on a deep understanding of both technology and business strategy. We take the time to understand your unique challenges and goals, ensuring that every solution we build is not just technically excellent, but perfectly aligned with the outcomes you need to achieve.",
       founder: "Abdelrahman M., Founder & Lead Data Architect",
+      certification: {
+        title: "Google Certified",
+        subtitle: "Data Analytics Professional", 
+        verified: "Verified on Credly"
+      },
       statsTitle: "Our Commitment, Measured",
       statsSubtitle: "Our passion is backed by a track record of excellence and reliability.",
       stats: [
@@ -294,6 +299,11 @@ window.homepageTranslations = {
       quote: "\"اسمي عبد الرحمن م.، وقد أسست DataArcus للقضاء على التخمين في الأعمال. بعد 5 سنوات في تحليل البيانات، رأيت العديد من القادة اللامعين مقيدين ببيانات فوضوية وغير متاحة. نحن موجودون لسد هذه الفجوة.\"",
       p1: "يعتمد نهجنا على فهم عميق لكل من التكنولوجيا واستراتيجية الأعمال. نأخذ الوقت الكافي لفهم تحدياتك وأهدافك الفريدة، مما يضمن أن كل حل نبنيه ليس ممتازًا من الناحية الفنية فحسب، بل متوافق تمامًا مع النتائج التي تحتاج إلى تحقيقها.",
       founder: "عبد الرحمن م.، المؤسس ومهندس البيانات الرئيسي",
+      certification: {
+        title: "معتمد من Google",
+        subtitle: "محترف تحليل البيانات",
+        verified: "محقق على Credly"
+      },
       statsTitle: "التزامنا بالأرقام",
       statsSubtitle: "شغفنا مدعوم بسجل حافل من التميز والموثوقية.",
       stats: [
