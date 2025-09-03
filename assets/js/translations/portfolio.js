@@ -21,6 +21,14 @@ window.portfolioTranslations = {
       
       // Individual Projects
       projects: {
+
+        erhealth: {
+          badge: "HEALTHCARE ANALYTICS",
+          title: "Emergency Room Performance Analysis",
+          description: "An interactive dashboard designed to provide healthcare administrators with a clear view of ER operations and patient flow.",
+          button: "View Case Study"
+        },
+
         mavenmarket: {
           badge: "RETAIL ANALYTICS",
           title: "Maven-Market Retail Analysis",
@@ -85,6 +93,14 @@ window.portfolioTranslations = {
       
       // Individual Projects Arabic
       projects: {
+
+        erhealth: {
+          badge: "تحليلات الرعاية الصحية",
+          title: "تحليل أداء غرفة الطوارئ",
+          description: "لوحة تحكم تفاعلية مصممة لتزويد مديري الرعاية الصحية برؤية واضحة لعمليات الطوارئ وتدفق المرضى.",
+          button: "عرض دراسة الحالة"
+        },
+
         mavenmarket: {
           badge: "تحليلات التجزئة",
           title: "تحليل التجزئة Maven-Market",

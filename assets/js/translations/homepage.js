@@ -64,10 +64,10 @@ window.homepageTranslations = {
     portfolio: {
       title: "Proven Results",
       subtitle: "We measure our success by the success of our clients. Our portfolio is a showcase of the custom-built, high-impact data solutions we've delivered.",
-      cardMaven: {
-        badge: "RETAIL ANALYTICS",
-        title: "Maven-Market Retail Analysis",
-        desc: "An in-depth analysis of retail trends, helping an e-commerce business identify top-selling products and optimize marketing spend based on customer behavior."
+      cardErHealth: {
+        badge: "HEALTHCARE ANALYTICS",
+        title: "Emergency Room Performance Analysis",
+        desc: "An interactive dashboard providing administrators with a clear view of ER operations, patient wait times, and satisfaction scores."
       },
       cardCallCenter: {
         badge: "CUSTOMER SERVICE",
@@ -274,10 +274,10 @@ window.homepageTranslations = {
     portfolio: {
       title: "نتائج مثبتة",
       subtitle: "نقيس نجاحنا بنجاح عملائنا. معرض أعمالنا هو عرض لحلول البيانات المخصصة وعالية التأثير التي قدمناها.",
-      cardMaven: {
-        badge: "تحليلات التجزئة",
-        title: "تحليل التجزئة Maven-Market",
-        desc: "تحليل متعمق لاتجاهات التجزئة، مساعداً أعمال التجارة الإلكترونية على تحديد المنتجات الأكثر مبيعاً وتحسين إنفاق التسويق بناءً على سلوك العملاء."
+      cardErHealth: {
+        badge: "تحليلات الرعاية الصحية",
+        title: "تحليل أداء غرفة الطوارئ",
+        desc: "لوحة تحكم تفاعلية تزود المديرين برؤية واضحة لعمليات الطوارئ، وأوقات انتظار المرضى، ومؤشرات الرضا."
       },
       cardCallCenter: {
         badge: "خدمة العملاء",

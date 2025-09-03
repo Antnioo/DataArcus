@@ -62,8 +62,9 @@ class LanguageManager {
       return window.homepageTranslations;
     } else if (path.includes('article-clv.html')) {
       return window.articleTranslations;
+    } else if (path.includes('er-health-dashboard')) {
+     return window.erHealthTranslations;
     }
-    
     return null;
   }
   
