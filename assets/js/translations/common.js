@@ -51,19 +51,19 @@ window.commonTranslations = {
     // Navigation Arabic
     nav: {
       services: "الخدمات",
-      portfolio: "أعمالنا",
-      about: "من نحن",
-      contact: "اتصل بنا", 
-      consultation: "احصل على استشارة مجانية"
+      portfolio: "الأعمال",
+      about: "عن الشركة",
+      contact: "تواصل معنا", 
+      consultation: "احجز استشارة مجانية"
     },
     
     // Footer Arabic
     footer: {
-      tagline: "حلول Power BI متخصصة ومبنية خصيصاً تحول بياناتك المعقدة إلى ميزة استراتيجية واضحة.",
+      tagline: "حلول Power BI مصممة خصيصًا لتحوّل بياناتك المعقدة إلى رؤية أوضح وميزة تنافسية.",
       services: "الخدمات",
       company: "الشركة",
-      contact: "معلومات الاتصال", 
-      hours: "الإثنين-الجمعة 9ص-6م",
+      contact: "التواصل", 
+      hours: "الإثنين - الجمعة 9ص إلى 6م",
       copyright: "جميع الحقوق محفوظة.",
       built: "مبني بشغف • مدعوم بالابتكار",
       
@@ -71,11 +71,11 @@ window.commonTranslations = {
       links: {
         powerbi: "Power BI",
         dataengineering: "هندسة البيانات",
-        analytics: "التحليلات",
-        consulting: "الاستشارات",
-        about: "من نحن",
-        portfolio: "أعمالنا", 
-        contact: "اتصل بنا",
+        analytics: "تحليلات",
+        consulting: "استشارات",
+        about: "عن الشركة",
+        portfolio: "الأعمال", 
+        contact: "تواصل معنا",
         blog: "المدونة"
       }
     },
@@ -83,9 +83,9 @@ window.commonTranslations = {
     // Common CTAs Arabic
     cta: {
       discuss: "ناقش مشروعك",
-      viewcase: "عرض دراسة الحالة",
-      contact: "اتصل بنا",
-      calendar: "حدد موعد اجتماع"
+      viewcase: "شوف دراسة الحالة",
+      contact: "تواصل معنا",
+      calendar: "احجز اجتماع"
     },
     
     // Common Meta
