@@ -52,6 +52,13 @@ window.adventureworksTranslations = {
         "<strong>Advanced Return Analysis:</strong> A powerful decomposition tree provides a clear, hierarchical view of product returns. A manager can start at the overall return rate and drill down through categories (Bikes, Clothing) and subcategories to pinpoint specific products causing the most returns."
       ]
     },
+
+    // Explore More Section
+    exploreMore: {
+      title: "Explore More Case Studies",
+      subtitle: "See how we solve challenges across different industries.",
+      button: "View Full Portfolio"
+    },
     
     // Final CTA
     finalCta: {
@@ -112,6 +119,13 @@ window.adventureworksTranslations = {
         "<strong>تحليل العملاء العميق:</strong> تقسم صفحة العملاء المخصصة 17.4 ألف عميل فريد حسب مستوى الدخل والمهنة. كما تحدد أفضل 100 عميل من حيث الإيرادات وتسمح بالتعمق في تاريخ المشتريات الفردية.",
         "<strong>تحليل الإرجاع المتقدم:</strong> توفر شجرة التفكيك القوية رؤية واضحة وهرمية لإرجاع المنتجات. يمكن للمدير أن يبدأ من معدل الإرجاع الإجمالي ويتعمق عبر الفئات (الدراجات، الملابس) والفئات الفرعية لتحديد المنتجات المحددة التي تسبب أكثر الإرجاعات."
       ]
+    },
+
+    // Explore More Section Arabic
+    exploreMore: {
+      title: "استكشف المزيد من دراسات الحالة",
+      subtitle: "شاهد كيف نحل التحديات في مختلف الصناعات.",
+      button: "عرض كل المشاريع"
     },
     
     // Final CTA Arabic
