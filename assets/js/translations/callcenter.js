@@ -45,6 +45,13 @@ window.callcenterTranslations = {
         "<strong>Intuitive UX:</strong> The clean, multi-page design with simple navigation allows any user, regardless of technical skill, to move from a 30,000-foot view to granular agent details with a single click."
       ]
     },
+
+    // Explore More Section
+    exploreMore: {
+      title: "Explore More Case Studies",
+      subtitle: "See how we solve challenges across different industries.",
+      button: "View Full Portfolio"
+    },
     
     // Final CTA
     finalCta: {
@@ -98,6 +105,13 @@ window.callcenterTranslations = {
         "<strong>إدارة أداء الوكلاء:</strong> توفر صفحة \"أداء الوكلاء\" بطاقات أداء مفصلة لكل عضو في الفريق. يمكن للمدير بسهولة مقارنة الوكلاء مثل بيكي ودان على مقاييس مثل المكالمات المُعالجة ونسبة الإجابة ومعدل الحل.",
         "<strong>واجهة مستخدم بديهية:</strong> التصميم النظيف متعدد الصفحات مع التنقل البسيط يسمح لأي مستخدم، بغض النظر عن المهارة التقنية، بالانتقال من نظرة عامة إلى تفاصيل الوكيل المحددة بنقرة واحدة."
       ]
+    },
+
+    // Explore More Section Arabic
+    exploreMore: {
+      title: "استكشف المزيد من دراسات الحالة",
+      subtitle: "شاهد كيف نحل التحديات في مختلف الصناعات.",
+      button: "عرض كل المشاريع"
     },
     
     // Final CTA Arabic

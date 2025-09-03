@@ -54,6 +54,13 @@ window.mavenmarketTranslations = {
       ]
     },
     
+    // Explore More Section
+    exploreMore: {
+      title: "Explore More Case Studies",
+      subtitle: "See how we solve challenges across different industries.",
+      button: "View Full Portfolio"
+    },
+
     // Final CTA
     finalCta: {
       title: "Ready to Build Your Custom Dashboard?",
@@ -114,6 +121,13 @@ window.mavenmarketTranslations = {
         "<strong>رؤى المنتجات والعملاء:</strong> تسمح الصفحة الثانية المفصلة للمستخدمين بالتعمق في أداء فئة المنتجات وفهم التركيبة السكانية للعملاء وسلوك الشراء.",
         "<strong>واجهة مستخدم جاهزة للتنفيذيين:</strong> تضمن الواجهة النظيفة أن صناع القرار يمكنهم العثور على الإجابات التي يحتاجونها بسرعة دون أن تغمرهم البيانات."
       ]
+    },
+
+    // Explore More Section Arabic
+    exploreMore: {
+      title: "استكشف المزيد من دراسات الحالة",
+      subtitle: "شاهد كيف نحل التحديات في مختلف الصناعات.",
+      button: "عرض كل المشاريع"
     },
     
     // Final CTA Arabic

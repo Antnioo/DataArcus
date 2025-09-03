@@ -50,6 +50,13 @@ window.erHealthTranslations = {
         "<strong>Patient Satisfaction Analysis:</strong> Correlate patient satisfaction scores with factors like wait times and demographics to pinpoint specific areas for improvement in the patient experience."
       ]
     },
+
+    // Explore More Section
+    exploreMore: {
+      title: "Explore More Case Studies",
+      subtitle: "See how we solve challenges across different industries.",
+      button: "View Full Portfolio"
+    },
     
     // Final CTA
     finalCta: {
@@ -108,6 +115,13 @@ window.erHealthTranslations = {
         "<strong>كشف الاختناقات التشغيلية:</strong> تصور خريطة حرارية أكثر الأيام والأوقات ازدحامًا، وتحدد بعد ظهر الثلاثاء كفترات ذروة لتحسين جدولة الموظفين. يساعد مخطط \"متوسط وقت الانتظار حسب القسم\" في تحديد التخصصات التي قد تواجه تأخيرات.",
         "<strong>تحليل رضا المرضى:</strong> ربط درجات رضا المرضى بعوامل مثل أوقات الانتظار والتركيبة السكانية لتحديد مجالات محددة للتحسين في تجربة المريض."
       ]
+    },
+
+    // Explore More Section Arabic
+    exploreMore: {
+      title: "استكشف المزيد من دراسات الحالة",
+      subtitle: "شاهد كيف نحل التحديات في مختلف الصناعات.",
+      button: "عرض كل المشاريع"
     },
     
     // Final CTA Arabic
