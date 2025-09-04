@@ -954,3 +954,104 @@ body.language-switching [data-i18n] {
     align-self: center;
   }
 }
+
+/* ===== Blog Page Specific Styles ===== */
+
+/* --- Blog Filter Buttons --- */
+.btn-glass.active {
+  background: rgba(0, 212, 255, 0.2);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.btn-glass.active:hover {
+  background: rgba(0, 212, 255, 0.3);
+  color: var(--accent);
+}
+
+/* --- Blog Search Input --- */
+#blogSearch {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: #fff;
+  backdrop-filter: blur(20px);
+}
+
+#blogSearch:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+  color: #fff;
+}
+
+#blogSearch::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.input-group-text {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-right: none;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* --- Blog Card Specific Styles --- */
+.blog-card {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 400px;
+}
+
+.blog-card:hover {
+  transform: translateY(-10px);
+  border-color: var(--accent);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.blog-card .badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.blog-card time {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.blog-card h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: #fff;
+}
+
+.blog-card p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* --- Subscribe Section --- */
+.glass-card .badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+}
+
+/* --- Responsive Adjustments for Blog --- */
+@media (max-width: 768px) {
+  .blog-card {
+    min-height: auto;
+  }
+  
+  .d-flex.flex-wrap.gap-2 {
+    flex-direction: column;
+    gap: 1rem !important;
+  }
+  
+  .btn-glass {
+    margin-bottom: 0.5rem;
+  }
+}

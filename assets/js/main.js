@@ -414,6 +414,71 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Blog page functionality
+  const blogSearch = document.getElementById('blogSearch');
+  const filterButtons = document.querySelectorAll('[data-filter]');
+  const blogCards = document.querySelectorAll('[data-category]');
+
+  if (blogSearch && filterButtons.length > 0) {
+    // Search functionality
+    let searchTimeout;
+    blogSearch.addEventListener('input', function() {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        const searchTerm = this.value.toLowerCase();
+
+        if (searchTerm) {
+          filterButtons.forEach(btn => btn.classList.remove('active'));
+          document.querySelector('[data-filter="all"]').classList.add('active');
+        }
+        
+        blogCards.forEach(card => {
+          const title = card.querySelector('h3').textContent.toLowerCase();
+          const excerpt = card.querySelector('.text-white-50').textContent.toLowerCase();
+          const badge = card.querySelector('.badge').textContent.toLowerCase();
+          
+          const matchesSearch = title.includes(searchTerm) || 
+                              excerpt.includes(searchTerm) || 
+                              badge.includes(searchTerm);
+          
+          card.style.display = matchesSearch ? 'block' : 'none';
+        });
+
+        const visibleCards = Array.from(blogCards).filter(card => 
+          card.style.display !== 'none');
+        document.getElementById('noResults').style.display = 
+          visibleCards.length === 0 ? 'block' : 'none';
+      });
+    }, 300);
+
+    // Filter functionality
+    filterButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        const filter = this.getAttribute('data-filter');
+        
+        // Update active button
+        filterButtons.forEach(btn => btn.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Filter cards
+        blogCards.forEach(card => {
+          const categories = card.getAttribute('data-category');
+          
+          if (filter === 'all' || categories.includes(filter)) {
+            card.style.display = 'block';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+        const visibleCards = Array.from(blogCards).filter(card => 
+          card.style.display !== 'none'
+        );
+        document.getElementById('noResults').style.display = 
+          visibleCards.length === 0 ? 'block' : 'none';
+      });
+    });
+  }
+
   // Display a welcome message in the browser console
   console.log('%c🚀 DataArcus Website', 'color: #00d4ff; font-size: 20px; font-weight: bold;');
   console.log('%cBuilt with premium features and modern web technologies.', 'color: #40f3ff; font-size: 14px;');
