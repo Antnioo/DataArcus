@@ -64,6 +64,10 @@ class LanguageManager {
       return window.articleTranslations;
     } else if (path.includes('er-health-dashboard')) {
      return window.erHealthTranslations;
+    } else if (path.includes('blog')) {
+     return window.blogTranslations;
+    } else if (path.includes('article-etl-vs-power-query')) {
+     return window.etlpqTranslations;
     }
     return null;
   }
