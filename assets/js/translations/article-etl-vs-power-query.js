@@ -74,7 +74,7 @@ window.etlpqTranslations = {
 
       h7: "Performance & Governance Tips",
       list7: [
-        "<strong>Favor folding:</strong> Avoid un-foldable M patterns (row-by-row loops, custom functions on large tables, premature <code>Table.Buffer</code>).",
+        "<strong>Favor folding:</strong> Avoid un-foldable M patterns (row-by-row loops, custom functions on large tables, premature `Table.Buffer`).",
         "<strong>Design star schemas:</strong> Dimensions + fact tables beat wide single tables for scale and DAX performance.",
         "<strong>Type everything:</strong> Declare accurate data types early to improve query folding and compression.",
         "<strong>Partition wisely:</strong> Use incremental refresh with meaningful date keys; keep partitions balanced.",
@@ -171,7 +171,7 @@ window.etlpqTranslations = {
 
       h7: "نصائح أداء وحَوْكمة",
       list7: [
-        "<strong>افضل الطيّ:</strong> تجنب أنماط M غير القابلة للطيّ (حلقات صف-بصف، دوال مخصّصة على جداول ضخمة، <code>Table.Buffer</code> المبكر).",
+        "<strong>افضل الطيّ:</strong> تجنب أنماط M غير القابلة للطيّ (حلقات صف-بصف، دوال مخصّصة على جداول ضخمة، `Table.Buffer` المبكر).",
         "<strong>صمّم نماذج نجمية:</strong> أبعاد + حقائق تتفوق على الجداول العريضة في الأداء وDAX.",
         "<strong>عرّف الأنواع:</strong> تحديد أنواع البيانات مبكرًا يحسّن الطيّ والضغط.",
         "<strong>قسّم بذكاء:</strong> استخدم التحديث التفاضلي بمفاتيح تاريخ مفيدة وحافظ على توازن الأقسام.",
