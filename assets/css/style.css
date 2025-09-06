@@ -678,12 +678,10 @@ section {
 
 /* ===== 8. Responsive Design (Mobile-First Adjustments) ===== */
 
-/* FINAL DEFINITIVE FIX for RTL Navbar Alignment */
+/* FINAL FIX: Remove Bootstrap's default margin on the logo in RTL mobile view */
 @media (max-width: 991.98px) {
-  html[dir="rtl"] .navbar > .container {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
+  html[dir="rtl"] .navbar-brand {
+    margin-right: 0 !important;
   }
 }
 
@@ -724,6 +722,7 @@ section {
   /* --- Typography Adjustments --- */
   .hero h1 {
     font-size: 2.5rem;
+    margin-bottom: 2.5rem;
   }
 
   .hero .lead {
