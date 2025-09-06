@@ -49,6 +49,32 @@ document.addEventListener('DOMContentLoaded', () => {
    * Handles the initial setup of the page, including the loading screen,
    * background particles, AOS library, and dynamic footer year.
    */
+
+  // Throttling utility to limit the rate at which a function can fire.
+  const throttle = (callback, delay = 100) => {
+    let shouldWait = false;
+    let waitingArgs;
+    const timeoutFunc = () => {
+      if (waitingArgs == null) {
+        shouldWait = false;
+      } else {
+        callback(...waitingArgs);
+        waitingArgs = null;
+        setTimeout(timeoutFunc, delay);
+      }
+    };
+
+    return (...args) => {
+      if (shouldWait) {
+        waitingArgs = args;
+        return;
+      }
+      callback(...args);
+      shouldWait = true;
+      setTimeout(timeoutFunc, delay);
+    };
+  };
+
   
   // Hide loading overlay after a delay
   const loadingOverlay = document.getElementById('loadingOverlay');
@@ -387,31 +413,6 @@ document.addEventListener('DOMContentLoaded', () => {
    * 6. Utility, Performance & Finalization
    * Contains helper scripts, performance monitoring, and final setup calls.
    */
-
-  // Throttling utility to limit the rate at which a function can fire.
-  const throttle = (callback, delay = 100) => {
-    let shouldWait = false;
-    let waitingArgs;
-    const timeoutFunc = () => {
-      if (waitingArgs == null) {
-        shouldWait = false;
-      } else {
-        callback(...waitingArgs);
-        waitingArgs = null;
-        setTimeout(timeoutFunc, delay);
-      }
-    };
-
-    return (...args) => {
-      if (shouldWait) {
-        waitingArgs = args;
-        return;
-      }
-      callback(...args);
-      shouldWait = true;
-      setTimeout(timeoutFunc, delay);
-    };
-  };
 
   // Enhance keyboard navigation (e.g., closing mobile menu with ESC)
   document.addEventListener('keydown', (e) => {
