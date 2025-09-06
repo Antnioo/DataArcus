@@ -23,45 +23,63 @@ window.callcenterTranslations = {
       
       solution: {
         title: "Our Solution: A 4-Day Development Sprint",
-        content: "To showcase our rapid development capabilities, we undertook a focused 4-day sprint to build this comprehensive solution from a dummy dataset. The result is an enterprise-grade tool that demonstrates our ability to deliver deep, actionable insights under a tight deadline."
+        content: "To showcase our rapid development capabilities, we undertook a focused 4-day sprint to build this comprehensive solution from a dummy dataset. The result is an enterprise-grade tool that demonstrates our ability to deliver deep, actionable insights under a tight deadline.",
+        list: [
+          "<strong>Customer Service Analytics:</strong> Track average call time, response rates, and call completion percentages.",
+          "<strong>Data Modeling:</strong> Integrate call logs with employee data to link individual performance with overall performance.",
+          "<strong>Pattern Analysis:</strong> Identify peak hours and optimize workload distribution.",
+          "<strong>Executive Interface Design:</strong> Simple, clear dashboards that let managers quickly see key performance indicators."
+        ]
       }
     },
     
     // Dashboard Features
     features: {
       title: "Key Features & Technologies Used:",
-      tags: ["Power BI", "DAX", "Data Modeling", "UX/UI Design", "Performance KPIs"],
-      note: "This is a fully interactive, two-page report. Use the tabs on the left to switch between the \"Overview\" and \"Agent Performance\" pages."
+      tags: [
+        "Power BI",
+        "DAX", 
+        "Customer Service Analytics",
+        "Data Modeling",
+        "Pattern Analysis"
+      ],
+      note: "The dashboard is fully interactive. You can use filters to drill down by support teams, call types, or time periods."
     },
     
     // Capabilities Section
     capabilities: {
-      title: "Capabilities on Display",
-      subtitle: "This dashboard is more than a visual report; it's a demonstration of our core analytical capabilities:",
+      title: "Dashboard Capabilities",
+      subtitle: "This dashboard helps call center managers make faster and more accurate decisions:",
       list: [
-        "<strong>Executive Overview:</strong> The main page provides a high-level snapshot of critical KPIs, including total calls, resolution rate (71.84%), and an average customer satisfaction score of 3.38 out of 5.",
-        "<strong>Root Cause Analysis:</strong> Managers can instantly see calls by department, identifying that \"Fridge\" and \"Air Conditioner\" are the top sources of inquiries. A heatmap clearly visualizes the busiest days and times, showing Wednesday afternoons as peak periods.",
-        "<strong>Agent Performance Management:</strong> The \"Agent Performance\" page provides detailed scorecards for each team member. A manager can easily compare agents like Becky and Dan on metrics such as calls handled, answered percentage, and resolution rate.",
-        "<strong>Intuitive UX:</strong> The clean, multi-page design with simple navigation allows any user, regardless of technical skill, to move from a 30,000-foot view to granular agent details with a single click."
+        "<strong>Real-time Overview:</strong> Monitor metrics like average wait time, call duration, and answered call percentage.",
+        "<strong>Team Comparison:</strong> Analyze performance across different support teams and identify who needs additional training.",
+        "<strong>Peak Time Discovery:</strong> Identify the busiest days and hours to schedule staff accordingly.",
+        "<strong>Quality Improvement:</strong> Link customer satisfaction with call duration data and first-call resolution rates to identify improvement opportunities."
       ]
     },
 
     // Explore More Section
     exploreMore: {
       title: "Explore More Case Studies",
-      subtitle: "See how we solve challenges across different industries.",
-      button: "View Full Portfolio"
+      subtitle: "See more examples of how we use data to solve different challenges.",
+      button: "View All Projects"
     },
     
     // Final CTA
     finalCta: {
-      title: "Ready to Build Your Custom Dashboard?",
-      subtitle: "Imagine having this level of clarity for your own business operations. Let's talk.",
+      title: "Want a Dashboard Like This for Your Call Center?",
+      subtitle: "Make performance monitoring easier and quality clearer. Let's get started together.",
       button: "Discuss Your Project"
     }
   },
 
   ar: {
+    meta: {
+      title: "عرض لوحة البيانات: تحليل أداء مركز الاتصال - DataArcus",
+      description: "تحليل معمّق باستخدام Power BI لعمليات مراكز الاتصال. التقرير التفاعلي المكوّن من صفحتين يعرض مؤشرات أساسية مثل رضا العملاء، نسب الحل، وأداء الموظفين.",
+      keywords: "لوحة مركز الاتصال, Power BI, مؤشرات خدمة العملاء, أداء الوكلاء, معدل الحل, رضا العملاء, الكفاءة التشغيلية"
+    },
+
     header: {
       title: "عرض لوحة البيانات: أداء مركز الاتصال",
       subtitle: "Dashboard تفاعلي بيعرض مؤشرات الأداء وجودة الخدمة في مراكز الاتصال."
@@ -69,10 +87,10 @@ window.callcenterTranslations = {
 
     intro: {
       challenge: {
-        title: "التحدي: متابعة آلاف المكالمات يوميًا",
+        title: "التحدي: متابعة آلاف المكالمات يومياً",
         content: "مراكز الاتصال بتستقبل كم هائل من المكالمات كل يوم. التحدي هو إزاي نتابع الأداء وجودة الخدمة في الوقت الحقيقي ونكشف نقاط الضعف بسرعة قبل ما تأثر على تجربة العملاء."
       },
-      skills: {
+      solution: {
         title: "المهارات المعروضة",
         content: "المشروع ده بيقدم مثال عملي على إزاي الـ Power BI يقدر يحوّل أرقام المكالمات لمصدر رؤى. وبيبرز خبرات زي:",
         list: [
@@ -91,7 +109,6 @@ window.callcenterTranslations = {
         "DAX",
         "تحليلات خدمة العملاء",
         "نمذجة البيانات",
-        "تصميم واجهات",
         "تحليل الأنماط"
       ],
       note: "اللوحة تفاعلية بالكامل. تقدر تستخدم الفلاتر للتعمق حسب فرق الدعم، نوع المكالمات، أو الفترات الزمنية."
@@ -103,7 +120,7 @@ window.callcenterTranslations = {
       list: [
         "<strong>رؤية لحظية:</strong> متابعة مؤشرات زي متوسط زمن الانتظار، وقت المكالمة، ونسبة المكالمات المجابة.",
         "<strong>مقارنة الفرق:</strong> تحليل أداء فرق الدعم المختلفة وتحديد مين محتاج تدريب إضافي.",
-        "<strong>كشف أوقات الذروة:</strong> تحديد الأيام والساعات الأكتر ضغط وتنظيم جداول الموظفين accordingly.",
+        "<strong>كشف أوقات الذروة:</strong> تحديد الأيام والساعات الأكثر ضغط وتنظيم جداول الموظفين accordingly.",
         "<strong>تحسين الجودة:</strong> ربط رضا العملاء ببيانات زمن المكالمة ونسبة الحل من أول اتصال لتحديد فرص التحسين."
       ]
     },

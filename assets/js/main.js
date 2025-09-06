@@ -111,6 +111,17 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('scroll', handleScroll, { passive: true });
   }
 
+  // Remove focus from navbar-toggler (hamburger icon) after click
+  const navbarToggler = document.querySelector('.navbar-toggler');
+  if (navbarToggler) {
+    navbarToggler.addEventListener('click', () => {
+      // Use a brief timeout to ensure the blur happens after other click events
+      setTimeout(() => {
+        navbarToggler.blur();
+      }, 0);
+    });
+  }
+
   // SIMPLIFIED smooth scrolling - no complex timing, just works
   document.addEventListener('click', function(e) {
     const anchor = e.target.closest('a[href^="#"]');
@@ -249,13 +260,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * Manages hover and interaction effects for various components like cards and buttons.
    */
   
-  // Add hover effects for non-portfolio glass cards
-  document.querySelectorAll('.glass-card:not(.portfolio-card)').forEach(card => {
-    card.addEventListener('mouseenter', () => card.style.transform = 'translateY(-5px) scale(1.02)');
-    card.addEventListener('mouseleave', () => card.style.transform = 'translateY(0) scale(1)');
-  });
-
-  // Add 3D tilt effect for service cards
+  // Add 3D tilt effect for service cards (This requires JS for dynamic values)
   document.querySelectorAll('.service-card').forEach(card => {
     card.addEventListener('mousemove', function(e) {
       const rect = this.getBoundingClientRect();
@@ -272,18 +277,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Add hover effect for accent buttons
-  document.querySelectorAll('.btn-accent').forEach(btn => {
-    btn.addEventListener('mouseenter', function() {
-      this.style.boxShadow = '0 15px 35px rgba(0, 212, 255, 0.5)';
-      this.style.transform = 'translateY(-4px) scale(1.02)';
-    });
-    btn.addEventListener('mouseleave', function() {
-      this.style.boxShadow = 'none';
-      this.style.transform = 'translateY(0) scale(1)';
-    });
+  // Close mobile menu when clicking outside of the navbar
+  document.addEventListener('click', (event) => {
+    const navmenu = document.querySelector('#navmenu');
+    if (!navmenu) return; // Exit if the menu element doesn't exist
+
+    const isMenuOpen = navmenu.classList.contains('show');
+    const isClickInsideNavbar = event.target.closest('.navbar');
+
+    // If the menu is open and the click was not inside the navbar, hide the menu
+    if (isMenuOpen && !isClickInsideNavbar) {
+      const bsCollapse = new bootstrap.Collapse(navmenu, { toggle: false });
+      bsCollapse.hide();
+    }
   });
-  
+
   // Add a ripple effect to all buttons on click
   document.querySelectorAll('.btn').forEach(button => {
     button.addEventListener('click', function(e) {
@@ -296,18 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
       ripple.style.top = `${e.clientY - rect.top - size / 2}px`;
       this.appendChild(ripple);
       setTimeout(() => ripple.remove(), 600);
-    });
-  });
-
-  // Add hover effects for tech stack icons
-  document.querySelectorAll('.tech-icon').forEach(icon => {
-    icon.addEventListener('mouseenter', function() {
-      this.style.transform = 'scale(1.2) rotate(10deg)';
-      this.style.filter = 'brightness(1.3) drop-shadow(0 0 20px currentColor)';
-    });
-    icon.addEventListener('mouseleave', function() {
-      this.style.transform = 'scale(1) rotate(0deg)';
-      this.style.filter = 'brightness(1)';
     });
   });
 
