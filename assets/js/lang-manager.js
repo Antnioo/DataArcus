@@ -1,10 +1,11 @@
-// lang-manager.js - Core Language Management System
+// lang-manager.js - Enhanced Language Management System
 class LanguageManager {
   constructor() {
     this.currentLang = this.detectLanguage();
     this.rtlLanguages = ['ar', 'he', 'fa'];
     this.translations = {};
     this.initialized = false;
+    this.breakpoint = 992; // Bootstrap's lg breakpoint
   }
   
   // Detect browser/stored language preference
@@ -114,6 +115,7 @@ class LanguageManager {
     
     this.applyLanguage();
     this.updateDirection();
+    this.updateSwitcherText();
     return true;
   }
   
@@ -211,84 +213,191 @@ class LanguageManager {
       }
     }
   }
-  
-  // Create and inject language switcher
-  createLanguageSwitcher() {
-    // UPDATED: Target the main navbar collapse container
-    const navCollapse = document.querySelector('#navmenu');
-    if (!navCollapse) return;
 
-    const switcherHTML = `
-      <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" 
-         data-bs-toggle="dropdown" aria-expanded="false" style="color: rgba(255,255,255,0.8);">
-        <i class="bi bi-globe2 me-2"></i>
-        <span class="current-lang">${this.currentLang.toUpperCase()}</span>
-      </a>
-      <ul class="dropdown-menu dropdown-menu-end language-dropdown">
-        <li>
-          <button class="dropdown-item lang-option ${this.currentLang === 'en' ? 'active' : ''}" data-lang="en">
-            <span class="lang-flag">🇺🇸</span>
-            <span class="lang-name">English</span>
-          </button>
-        </li>
-        <li>
-          <button class="dropdown-item lang-option ${this.currentLang === 'ar' ? 'active' : ''}" data-lang="ar">
-            <span class="lang-flag" style="font-weight: 600;">AR</span>
-            <span class="lang-name">العربية</span>
-          </button>
-        </li>
-      </ul>
-    `;
-
-    // Create a new div wrapper for the dropdown
-    const wrapper = document.createElement('div');
-    wrapper.className = 'nav-item dropdown ms-lg-3'; // Added margin for spacing
-    wrapper.innerHTML = switcherHTML;
-
-    // UPDATED: Append it to the end of the entire nav container
-    navCollapse.appendChild(wrapper);
-
-    // Manually initialize the new Bootstrap dropdown
-    const dropdownToggle = wrapper.querySelector('[data-bs-toggle="dropdown"]');
-    if (dropdownToggle) {
-      new bootstrap.Dropdown(dropdownToggle);
-    }
-    
-    this.setupLanguageSwitchingEvents();
+  // Check if current screen size is mobile (below breakpoint)
+  isMobileView() {
+    return window.innerWidth < this.breakpoint;
   }
   
-  // Setup language switching event listeners
-  setupLanguageSwitchingEvents() {
-    const langOptions = document.querySelectorAll('.lang-option');
-    const currentLangSpan = document.querySelector('.current-lang');
-    
-    langOptions.forEach(option => {
-      option.addEventListener('click', (e) => {
-        e.preventDefault();
+  /**
+   * Creates the language switcher button with improved responsive handling
+   */
+  createLanguageSwitcher() {
+    // Remove any existing switchers to prevent duplicates
+    this.removeSwitchers();
+
+    // Only create mobile switcher if we're in mobile view
+    if (this.isMobileView()) {
+      this.createMobileSwitcher();
+    } else {
+      this.createDesktopSwitcher();
+    }
+
+    // Listen for window resize to recreate switcher if needed
+    this.setupResizeListener();
+  }
+
+  /**
+   * Remove all existing language switchers
+   */
+  removeSwitchers() {
+    const existingSwitchers = document.querySelectorAll(
+      '.lang-switcher-simple, .language-switcher-container, .desktop-lang-switcher'
+    );
+    existingSwitchers.forEach(switcher => switcher.remove());
+  }
+
+  /**
+   * Create mobile language switcher (next to hamburger)
+   */
+  createMobileSwitcher() {
+    const navbarToggler = document.querySelector('.navbar-toggler');
+    if (!navbarToggler) {
+      console.error("Navbar Toggler not found. Cannot create mobile language switcher.");
+      return;
+    }
+
+    const switcherHTML = `
+      <div class="language-switcher-container">
+        <button class="lang-btn" type="button" aria-label="Switch language">
+          <i class="bi bi-globe2"></i>
+          <span class="lang-text">${this.currentLang.toUpperCase()}</span>
+        </button>
+      </div>
+    `;
+
+    navbarToggler.insertAdjacentHTML('beforebegin', switcherHTML);
+    this.setupSwitcherEvents();
+  }
+
+  /**
+   * Create desktop language switcher (in navbar menu)
+   */
+  createDesktopSwitcher() {
+    const navbarNav = document.querySelector('.navbar-nav');
+    if (!navbarNav) {
+      console.error("Navbar nav not found. Cannot create desktop language switcher.");
+      return;
+    }
+
+    const switcherHTML = `
+      <li class="nav-item desktop-lang-switcher">
+        <button class="nav-link lang-btn-desktop" type="button" aria-label="Switch language">
+          <i class="bi bi-globe2 me-1"></i>
+          ${this.currentLang.toUpperCase()}
+        </button>
+      </li>
+    `;
+
+    navbarNav.insertAdjacentHTML('beforeend', switcherHTML);
+    this.setupDesktopSwitcherEvents();
+  }
+
+  /**
+   * Setup resize listener to recreate switcher when crossing breakpoint
+   */
+  setupResizeListener() {
+    // Debounce resize events to avoid excessive recreations
+    let resizeTimeout;
+    const handleResize = () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        const wasMobile = document.querySelector('.language-switcher-container') !== null;
+        const isMobile = this.isMobileView();
         
-        const selectedLang = option.getAttribute('data-lang');
-        
-        // Add switching animation
-        document.body.classList.add('language-switching');
-        
-        // Update language
-        if (this.setLanguage(selectedLang)) {
-          // Update active state
-          langOptions.forEach(opt => opt.classList.remove('active'));
-          option.classList.add('active');
-          
-          // Update current language display
-          if (currentLangSpan) {
-            currentLangSpan.textContent = selectedLang.toUpperCase();
-          }
-          
-          // Remove switching animation after short delay
-          setTimeout(() => {
-            document.body.classList.remove('language-switching');
-          }, 300);
+        // Only recreate if we've crossed the breakpoint
+        if (wasMobile !== isMobile) {
+          this.createLanguageSwitcher();
         }
-      });
+      }, 150);
+    };
+
+    // Remove existing listener if any
+    window.removeEventListener('resize', this.handleResize);
+    
+    // Store reference for cleanup
+    this.handleResize = handleResize;
+    window.addEventListener('resize', handleResize);
+  }
+
+  /**
+   * Enhanced mobile switcher events with better touch handling
+   */
+  setupSwitcherEvents() {
+    const button = document.querySelector('.lang-btn');
+    if (!button) return;
+
+    // Prevent default touch behavior to avoid sticky highlights
+    button.addEventListener('touchstart', (event) => {
+      event.preventDefault();
+    }, { passive: false });
+
+    // Handle touch end for mobile
+    button.addEventListener('touchend', (event) => {
+      event.preventDefault();
+      this.toggleLanguage();
     });
+
+    // Handle click for non-touch devices
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      this.toggleLanguage();
+    });
+  }
+
+  /**
+   * Desktop switcher events
+   */
+  setupDesktopSwitcherEvents() {
+    const button = document.querySelector('.lang-btn-desktop');
+    if (!button) return;
+
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      this.toggleLanguage();
+      
+      // Fix for focus outline
+      button.blur();
+
+      // New Fix: Forcefully remove the sticky :hover background by briefly
+      // disabling and re-enabling pointer events. This makes the browser
+      // remove the hover state.
+      button.style.pointerEvents = 'none';
+      setTimeout(() => {
+        button.style.pointerEvents = 'auto';
+      }, 50);
+    });
+  }
+
+  /**
+   * Update switcher text after language change
+   */
+  updateSwitcherText() {
+    const mobileText = document.querySelector('.lang-text');
+    const desktopButton = document.querySelector('.lang-btn-desktop');
+    
+    if (mobileText) {
+      mobileText.textContent = this.currentLang.toUpperCase();
+    }
+    
+    if (desktopButton) {
+      const icon = desktopButton.querySelector('i');
+      desktopButton.innerHTML = '';
+      if (icon) {
+        desktopButton.appendChild(icon);
+        desktopButton.appendChild(document.createTextNode(` ${this.currentLang.toUpperCase()}`));
+      } else {
+        desktopButton.innerHTML = `<i class="bi bi-globe2 me-1"></i> ${this.currentLang.toUpperCase()}`;
+      }
+    }
+  }
+
+  /**
+   * Core language switching logic
+   */
+  toggleLanguage() {
+    const newLang = this.currentLang === 'en' ? 'ar' : 'en';
+    this.setLanguage(newLang);
   }
   
   // Initialize the language manager
@@ -300,6 +409,16 @@ class LanguageManager {
     this.initialized = true;
     
     console.log('LanguageManager initialized with language:', this.currentLang);
+    console.log('Mobile view:', this.isMobileView());
+    console.log('Breakpoint:', this.breakpoint);
+  }
+
+  // Cleanup method
+  destroy() {
+    if (this.handleResize) {
+      window.removeEventListener('resize', this.handleResize);
+    }
+    this.removeSwitchers();
   }
 }
 
