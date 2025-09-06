@@ -235,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Apply parallax effect to floating elements on mouse move
-  document.addEventListener('mousemove', (e) => {
+  const handleParallax = (e) => {
     const mouseX = e.clientX / window.innerWidth;
     const mouseY = e.clientY / window.innerHeight;
     
@@ -245,7 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const y = (mouseY - 0.5) * speed * 20;
       element.style.transform = `translate(${x}px, ${y}px)`;
     });
-  });
+  };
+  document.addEventListener('mousemove', throttle(handleParallax, 100));
 
   // Animate the gradient on the CTA section
   const ctaSection = document.querySelector('.cta-section');
@@ -351,6 +352,17 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => resultContainer.style.display = 'none', 6000);
       });
     });
+
+    // NEW: Add event listeners to inputs to clear the result message on new input
+    const formInputs = form.querySelectorAll('input, textarea, select');
+    formInputs.forEach(input => {
+      input.addEventListener('input', () => {
+        if (resultContainer.style.display !== 'none') {
+          resultContainer.style.display = 'none';
+          resultContainer.innerHTML = '';
+        }
+      });
+    });
   };
 
   // Initialize form handlers
@@ -375,6 +387,31 @@ document.addEventListener('DOMContentLoaded', () => {
    * 6. Utility, Performance & Finalization
    * Contains helper scripts, performance monitoring, and final setup calls.
    */
+
+  // Throttling utility to limit the rate at which a function can fire.
+  const throttle = (callback, delay = 100) => {
+    let shouldWait = false;
+    let waitingArgs;
+    const timeoutFunc = () => {
+      if (waitingArgs == null) {
+        shouldWait = false;
+      } else {
+        callback(...waitingArgs);
+        waitingArgs = null;
+        setTimeout(timeoutFunc, delay);
+      }
+    };
+
+    return (...args) => {
+      if (shouldWait) {
+        waitingArgs = args;
+        return;
+      }
+      callback(...args);
+      shouldWait = true;
+      setTimeout(timeoutFunc, delay);
+    };
+  };
 
   // Enhance keyboard navigation (e.g., closing mobile menu with ESC)
   document.addEventListener('keydown', (e) => {
