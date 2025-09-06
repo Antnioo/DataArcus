@@ -678,23 +678,12 @@ section {
 
 /* ===== 8. Responsive Design (Mobile-First Adjustments) ===== */
 
-/* FINAL FIX: Explicitly position navbar items in RTL mobile view */
+/* FINAL DEFINITIVE FIX for RTL Navbar Alignment */
 @media (max-width: 991.98px) {
   html[dir="rtl"] .navbar > .container {
-    display: flex;
-    align-items: center;
-  }
-  
-  /* Push the logo to the far-right by having it consume all available space to its left */
-  html[dir="rtl"] .navbar-brand {
-    margin-left: auto !important;
-  }
-  
-  /* Ensure the buttons do not have conflicting margins and stay grouped on the left */
-  html[dir="rtl"] .language-switcher-container,
-  html[dir="rtl"] .navbar-toggler {
-    margin-left: 0 !important;
-    margin-right: 0 !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
   }
 }
 
