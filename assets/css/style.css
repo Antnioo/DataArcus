@@ -677,6 +677,14 @@ section {
 
 
 /* ===== 8. Responsive Design (Mobile-First Adjustments) ===== */
+
+/* FIX: Ensure mobile navbar logo is always aligned to the start */
+@media (max-width: 991.98px) {
+  html[dir="rtl"] .navbar-brand {
+    margin-right: 0 !important;
+  }
+}
+
 @media (max-width: 768px) {
   /* --- Performance Optimizations on Mobile --- */
   .floating-element,
