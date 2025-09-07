@@ -16,7 +16,6 @@ window.commonTranslations = {
       services: "Services",
       company: "Company",
       contact: "Contact Info",
-      hours: "Mon-Fri 9AM-6PM",
       copyright: "All rights reserved.",
       built: "Built with passion • Powered by innovation",
       
@@ -63,7 +62,6 @@ window.commonTranslations = {
       services: "الخدمات",
       company: "الشركة",
       contact: "معلومات التواصل", 
-      hours: "الإثنين - الجمعة 9ص إلى 6م",
       copyright: "جميع الحقوق محفوظة.",
       built: "بُنِي بشغف • يُديره الابتكار",
       
