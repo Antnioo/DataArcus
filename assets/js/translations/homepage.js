@@ -110,7 +110,7 @@ window.homepageTranslations = {
     // FAQ Section
     faq: {
       title: "Your Questions, Answered",
-      subtitle: "We've helped 25+ businesses transform their data. Here are the answers to questions every executive asks.",
+      subtitle: "We've helped 15+ businesses transform their data. Here are the answers to questions every executive asks.",
       items: [
         {
           q: "How quickly can I see my first Proof-of-Concept dashboard?",
@@ -320,7 +320,7 @@ window.homepageTranslations = {
     // FAQ Section
     faq: {
       title: "الأسئلة الشائعة",
-      subtitle: "لقد ساعدنا أكثر من 25 شركة على تحويل بياناتها. إليك إجابات للأسئلة التي يطرحها كل مدير تنفيذي.",
+      subtitle: "لقد ساعدنا أكثر من 15 شركة على تحويل بياناتها. إليك إجابات للأسئلة التي يطرحها كل مدير تنفيذي.",
       items: [
         {
           q: "ما مدى سرعة رؤية أول لوحة تحكم تجريبية؟",
