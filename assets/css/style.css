@@ -666,6 +666,24 @@ section {
   border-radius: 4px;
 }
 
+/* FINAL GLOBAL FIX for Icon Spacing */
+/* This targets containers with icons to create a gap between the icon and text */
+div:has(> .icon-badge),
+div:has(> i[class*="bi-"]:not(.tech-icon)),
+li:has(> i[class*="bi-"]:not(.tech-icon)) {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+}
+
+/* FINAL ADDITION: Add spacing for icons inside buttons */
+.btn:has(> i[class*="bi-"]) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5em;
+}
+
 
 /* ===== 7. Third-Party Library Overrides ===== */
 
