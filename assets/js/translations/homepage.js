@@ -387,7 +387,7 @@ window.homepageTranslations = {
             desc: "Shopify, WooCommerce, Meta Ads, Google Ads..."
           },
           {
-            title: "أصحاب المصلحة",
+            title: "أصحاب القرارات",
             desc: "من سيستخدم لوحات التحكم بشكل يومي؟"
           },
           {
