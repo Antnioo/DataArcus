@@ -3,24 +3,24 @@ window.homepageTranslations = {
   en: {
     // Page Meta
     meta: {
-      title: "DataArcus — Expert Power BI & Data Solutions",
-      description: "DataArcus delivers custom Power BI dashboards, data engineering, and analytics consulting to help businesses turn raw data into strategic decisions.",
-      keywords: "Power BI consulting, data analytics Egypt, business intelligence MENA, custom dashboards, data engineering, DataArcus, Power BI solutions"
+      title: "DataArcus — Power BI for E-commerce Growth in MENA",
+      description: "We build custom Power BI dashboards for e-commerce businesses in Egypt & the MENA region to optimize marketing ROI, increase customer lifetime value, and streamline inventory.",
+      keywords: "Power BI for e-commerce, e-commerce analytics MENA, Shopify dashboard, customer lifetime value, marketing ROI analytics, DataArcus Egypt"
     },
 
     // Hero Section
     hero: {
-      title: "From Data Chaos to Actionable Clarity",
-      subtitle: "Stop guessing, start knowing. We build powerful Power BI solutions that give decision-makers the confidence to act decisively and drive measurable growth.",
-      buttonWork: "Explore Our Work",
-      buttonDiscuss: "Discuss Your Project",
+      title: "From Scattered Sales Data to Profitable Growth",
+      subtitle: "Stop guessing which campaigns are profitable. We build custom Power BI dashboards for MENA e-commerce leaders to unlock true marketing ROI and drive measurable growth.",
+      buttonWork: "Explore E-commerce Solutions",
+      buttonDiscuss: "Get Your Free PoC Dashboard",
       badgeSecurity: "Enterprise Security",
       badgeTurnaround: "Fast Turnaround",
       badgeExcellence: "Committed to Excellence",
       commitmentTitle: "Our Commitment to Excellence",
       commitmentPoints: [
         "Advanced DAX & Power Query Mastery",
-        "Real-time Data Pipeline Architecture",
+        "Unified E-commerce Data Modeling",
         "Enterprise Governance & Security",
         "Custom Visual Development"
       ]
@@ -38,32 +38,32 @@ window.homepageTranslations = {
 
     // Services Section
     services: {
-      title: "Solutions That Drive Performance",
-      subtitle: "We don't just process data; we deliver the targeted insights that empower your teams and accelerate business growth.",
+      title: "Solutions That Drive E-commerce Performance",
+      subtitle: "We deliver targeted insights that empower your e-commerce team to make smarter decisions on marketing, inventory, and customer retention.",
       cards: [
         {
-          title: "Executive Dashboards",
-          desc: "Get a real-time, 360-degree view of your business. We turn complex data into intuitive dashboards so you can track KPIs and spot opportunities instantly."
+          title: "Marketing ROI Dashboards",
+          desc: "Get a real-time view of your ad spend. We connect your Shopify, Meta Ads, and Google Ads data to show you exactly which campaigns are driving profitable customers."
         },
         {
-          title: "Reliable Data Pipelines",
-          desc: "Your insights are only as good as your data. We build robust ETL pipelines that ensure your information is accurate, timely, and always ready for analysis."
+          title: "Unified Sales Analytics",
+          desc: "Your insights are only as good as your data. We build robust data pipelines to unify sales, customer, and inventory data into a single source of truth."
         },
         {
-          title: "Predictive Insights",
-          desc: "Look beyond the \"what\" to understand the \"why\" and \"what's next.\" We leverage advanced analytics to uncover hidden trends and forecast future outcomes."
+          title: "Customer Lifetime Value (CLV)",
+          desc: "Look beyond the first sale. We analyze purchasing patterns to calculate CLV, helping you identify and retain your most valuable customers."
         },
         {
-          title: "Secure & Scalable Systems",
-          desc: "From governance frameworks to enterprise-grade security, we build solutions that are not only powerful but also compliant and ready to scale with you."
+          title: "Inventory & Operations",
+          desc: "From demand forecasting to stock level alerts, we build systems that help you avoid stockouts and reduce excess inventory, directly impacting your bottom line."
         }
       ]
     },
 
     // Portfolio Section
     portfolio: {
-      title: "Proven Results",
-      subtitle: "We measure our success by the success of our clients. Our portfolio is a showcase of the custom-built, high-impact data solutions we've delivered.",
+      title: "Solution Showcases",
+      subtitle: "Explore our proof-of-concept dashboards, engineered to solve common business challenges. See what's possible for your e-commerce data.",
       cardErHealth: {
         badge: "HEALTHCARE ANALYTICS",
         title: "Emergency Room Performance Analysis",
@@ -79,7 +79,7 @@ window.homepageTranslations = {
         title: "AdventureWorks Sales & Operations",
         desc: "Our flagship project featuring predictive 'What-If' analysis, deep customer segmentation, and advanced diagnostics in a multi-page command center."
       },
-      button: "View All Case Studies"
+      button: "View All Showcases"
     },
 
     // About Section
@@ -98,23 +98,23 @@ window.homepageTranslations = {
       statsSubtitle: "Our passion is backed by a track record of excellence and reliability.",
       stats: [
         { title: "Projects Delivered" },
-        { title: "Avg. First Dashboard Turnaround" }, // UPDATED
+        { title: "Avg. First Dashboard Turnaround" },
         { title: "Uptime SLA" },
         { title: "Client Satisfaction" }
       ],
       ctaTitle: "Ready to See These Numbers Work for You?",
       ctaSubtitle: "Let's turn your data challenges into your greatest advantage. The first step is a simple conversation.",
-      ctaButton: "Book Your Free Consultation"
+      ctaButton: "Book Your Free PoC Strategy Call"
     },
 
     // FAQ Section
     faq: {
       title: "Your Questions, Answered",
-      subtitle: "We've helped 25+ businesses transform their data. Here are the answers to questions every executive asks.", // UPDATED
+      subtitle: "We've helped 25+ businesses transform their data. Here are the answers to questions every executive asks.",
       items: [
         {
-          q: "How quickly can we see our first dashboard?",
-          a: "<strong>Our process is built for speed. Most clients receive a custom mockup in 24 hours and a functional, core dashboard within 48-72 hours.</strong> Our full end-to-end project, including deep data modeling and deployment, is typically completed within one week." // UPDATED
+          q: "How quickly can I see my first Proof-of-Concept dashboard?",
+          a: "<strong>Our process is built for speed. Provide us with a sample of your anonymized data (Excel/CSV), and you will receive a free, custom one-page dashboard within 48 hours.</strong> A full, multi-page project is typically completed within one week."
         },
         {
           q: "What's the real ROI of a Power BI implementation?",
@@ -122,14 +122,14 @@ window.homepageTranslations = {
         },
         {
           q: "How do you handle our sensitive business data?",
-          a: "<strong>Your data never leaves your control.</strong> We work within your existing Microsoft environment using row-level security, encrypted connections, and enterprise-grade governance.<div class=\"mt-3\"><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>NDA signed before any data access</span></div><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>Data stays in your Microsoft tenant</span></div><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>Role-based access controls implemented</span></div><div class=\"d-flex align-items-start\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>Full audit trail of all activities</span></div></div>"
+          a: "<strong>Your data never leaves your control. For the free PoC, you provide anonymized sample data.</strong> For full projects, we work within your existing Microsoft environment using row-level security, encrypted connections, and enterprise-grade governance.<div class=\"mt-3\"><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>NDA signed before any data access</span></div><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>Data stays in your Microsoft tenant</span></div><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>Role-based access controls implemented</span></div><div class=\"d-flex align-items-start\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>Full audit trail of all activities</span></div></div>"
         },
         {
-          q: "What if our data is a mess? Excel files, old systems, manual processes?",
-          a: "<strong>Perfect! That's exactly what we specialize in.</strong> 80% of our clients start with \"messy\" data. We've connected everything from legacy ERP systems to Google Sheets.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(108, 92, 231, 0.1);\"><strong>We connect to:</strong> Excel files, SQL databases, Oracle, SAP, Salesforce, QuickBooks, Google Analytics, APIs, web scraping, manual uploads, and 200+ other sources.</div><p class=\"mt-3 mb-0\"><em>\"The messier your data, the bigger the transformation impact.\"</em></p>"
+          q: "What if our data is a mess? Shopify exports, Meta Ads CSVs, manual processes?",
+          a: "<strong>Perfect! That's exactly what we specialize in.</strong> 80% of our clients start with \"messy\" data. We connect everything from e-commerce platforms to Google Sheets.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(108, 92, 231, 0.1);\"><strong>We connect to:</strong> Shopify, WooCommerce, Meta Ads, Google Ads, Google Analytics, SQL databases, APIs, Excel files, and 200+ other sources.</div><p class=\"mt-3 mb-0\"><em>\"The messier your data, the bigger the transformation impact.\"</em></p>"
         },
         {
-          q: "Will our team be able to use and maintain the dashboards?",
+          q: "Will our team be able to use the dashboards?",
           a: "<strong>Absolutely. We build for your team's skill level and provide comprehensive training.</strong> Every project includes user training and documentation. Plus, we offer ongoing support packages.<div class=\"mt-3\"><div class=\"row g-2 small\"><div class=\"col-md-6\"><strong class=\"text-accent\">For End Users:</strong><br>• How to read dashboards<br>• Filtering and drilling down<br>• Export and sharing options</div><div class=\"col-md-6\"><strong class=\"text-accent\">For Admins:</strong><br>• Data refresh schedules<br>• User permissions<br>• Basic troubleshooting</div></div></div>"
         },
         {
@@ -138,35 +138,35 @@ window.homepageTranslations = {
         },
         {
           q: "What if we're not sure what we need?",
-          a: "<strong>That's exactly why we start with a free data assessment.</strong> We'll audit your current setup and recommend the best path forward - no commitment required. Most clients discover opportunities they never knew existed."
+          a: "<strong>That's exactly why we start with the free Proof-of-Concept dashboard.</strong> We'll take your sample data and build a real dashboard to show you what's possible, revealing opportunities you may not have known existed. No commitment required."
         }
       ]
     },
 
     // Final CTA Section
     finalCta: {
-      title: "Ready to Transform Your Data Strategy?",
-      subtitle: "Share your data challenges with us and receive a custom dashboard mockup within 24 hours. No commitment required.",
-      button: "Start Your Project"
+      title: "Ready to See Your E-commerce Data in Action?",
+      subtitle: "Share a sample of your anonymized data and receive a free, custom Proof-of-Concept dashboard within 48 hours. No commitment required.",
+      button: "Start Your Free PoC"
     },
 
     // Contact Section
     contact: {
-      title: "Let's Discuss Your Data Challenges",
-      subtitle: "Tell us about your data landscape and the insights you need to drive your business forward.",
+      title: "Start Your Free Proof-of-Concept",
+      subtitle: "Tell us about your e-commerce platform and the key metrics you need to track. We'll build a one-page dashboard with your sample data to show you what's possible.",
       form: {
         name: "Full Name *",
         email: "Business Email *",
         company: "Company",
-        budget: "Estimated Budget",
-        budgetText: "Select range (USD)",
+        platform: "E-commerce Platform (Optional)",
+        platformPlaceholder: "e.g., Shopify, WooCommerce",
         details: "Project Details *",
-        placeholder: "Describe your data sources, key metrics, and desired outcomes...",
-        button: "Send Message",
+        placeholder: "e.g., We use Shopify and Meta Ads. We need to track Customer Acquisition Cost (CAC) and see our Marketing ROI by channel...",
+        button: "Request My Free PoC",
         response: "Response within 4 hours"
       },
       checklist: {
-        title: "Discovery Checklist",
+        title: "PoC Discovery Checklist",
         items: [
           {
             title: "Business Objectives",
@@ -174,7 +174,7 @@ window.homepageTranslations = {
           },
           {
             title: "Data Sources",
-            desc: "Excel files, databases, CRM, ERP systems, APIs"
+            desc: "Shopify, WooCommerce, Meta Ads, Google Ads..."
           },
           {
             title: "Key Stakeholders",
@@ -187,7 +187,7 @@ window.homepageTranslations = {
         ]
       },
       timeline: {
-        title: "Full Project Timeline", // UPDATED
+        title: "Full Project Timeline",
         items: [
           {
             label: "Discovery & Planning",
@@ -213,25 +213,25 @@ window.homepageTranslations = {
   ar: {
     // Page Meta
     meta: {
-      title: "DataArcus — حلول متخصصة في Power BI وتحليل البيانات",
-      description: "تقدم DataArcus لوحات تحكم Power BI مخصصة، وخدمات هندسة بيانات، واستشارات تحليلية لمساعدة الشركات على تحويل بياناتها الأولية إلى قرارات استراتيجية.",
-      keywords: "استشارات Power BI, تحليل بيانات في مصر, ذكاء الأعمال, لوحات تحكم مخصصة, هندسة بيانات, DataArcus, حلول Power BI"
+      title: "DataArcus — حلول Power BI لنمو التجارة الإلكترونية في الشرق الأوسط",
+      description: "نبني لوحات تحكم Power BI مخصصة لشركات التجارة الإلكترونية في مصر والشرق الأوسط لتحسين عائد الاستثمار التسويقي، وزيادة القيمة العمرية للعميل، وإدارة المخزون بكفاءة.",
+      keywords: "Power BI للتجارة الإلكترونية, تحليلات التجارة الإلكترونية, داشبورد Shopify, القيمة العمرية للعميل, عائد الاستثمار التسويقي, DataArcus مصر"
     },
 
     // Hero Section
     hero: {
-      title: "من فوضى البيانات إلى وضوح يدعم القرار",
-      subtitle: "توقف عن التخمين، وابدأ في اتخاذ قرارات مبنية على الحقائق. نحن نبني حلول Power BI قوية تمنح صانعي القرار الثقة لاتخاذ إجراءات حاسمة وتحقيق نمو قابل للقياس.",
-      buttonWork: "استكشف أعمالنا",
-      buttonDiscuss: "ناقش مشروعك",
-      badgeSecurity: "أمان على مستوى المؤسسات",
+      title: "من بيانات المبيعات المشتتة إلى نمو مربح",
+      subtitle: "توقف عن تخمين الحملات المربحة. نحن نبني لوحات تحكم Power BI مخصصة لقادة التجارة الإلكترونية في الشرق الأوسط للكشف عن العائد الحقيقي على الاستثمار التسويقي وتحقيق نمو قابل للقياس.",
+      buttonWork: "استكشف حلولنا للتجارة الإلكترونية",
+      buttonDiscuss: "احصل على لوحة تحكم تجريبية مجانية",
+      badgeSecurity: "أمان على مستوى الشركات",
       badgeTurnaround: "تنفيذ سريع",
       badgeExcellence: "ملتزمون بالتميز",
       commitmentTitle: "التزامنا بالتميز",
       commitmentPoints: [
         "إتقان متقدم للغات DAX و Power Query",
-        "بنية تحتية لخطوط البيانات تعمل لحظيًا",
-        "حوكمة وأمان على مستوى المؤسسات",
+        "نمذجة موحدة لبيانات التجارة الإلكترونية",
+        "حوكمة وأمان على مستوى الشركات",
         "تطوير واجهات مرئية مخصصة"
       ]
     },
@@ -248,32 +248,32 @@ window.homepageTranslations = {
 
     // Services Section
     services: {
-      title: "حلول تعزز الأداء",
-      subtitle: "نحن لا نكتفي بمعالجة البيانات؛ بل نقدم الرؤى المستهدفة التي تمكّن فرق عملك وتسرّع نمو أعمالك.",
+      title: "حلول تعزز أداء التجارة الإلكترونية",
+      subtitle: "نقدم رؤى مستهدفة تمكّن فريق التجارة الإلكترونية لديك من اتخاذ قرارات أذكى بشأن التسويق والمخزون والاحتفاظ بالعملاء.",
       cards: [
         {
-          title: "لوحات تحكم تنفيذية",
-          desc: "احصل على رؤية شاملة ولحظية لأعمالك. نحن نحوّل البيانات المعقدة إلى لوحات تحكم سهلة الاستخدام تمكّنك من تتبع مؤشرات الأداء الرئيسية واكتشاف الفرص فورًا."
+          title: "لوحات تحكم عائد الاستثمار التسويقي",
+          desc: "احصل على رؤية لحظية لإنفاقك الإعلاني. نربط بيانات Shopify وإعلانات Meta و Google لنوضح لك بالضبط الحملات التي تجلب العملاء المربحين."
         },
         {
-          title: "خطوط بيانات موثوقة",
-          desc: "جودة رؤيتك تعتمد على جودة بياناتك. نحن نبني خطوط بيانات (ETL) قوية تضمن أن تكون معلوماتك دقيقة، محدّثة، وجاهزة دائمًا للتحليل."
+          title: "تحليلات مبيعات موحدة",
+          desc: "جودة رؤيتك تعتمد على جودة بياناتك. نبني خطوط بيانات قوية لتوحيد بيانات المبيعات والعملاء والمخزون في مصدر واحد للحقيقة."
         },
         {
-          title: "رؤى تنبؤية",
-          desc: "تجاوز مرحلة 'ماذا حدث' لفهم 'لماذا' و 'ماذا بعد'. نحن نستخدم التحليلات المتقدمة للكشف عن الاتجاهات الخفية والتنبؤ بالنتائج المستقبلية."
+          title: "القيمة العمرية للعميل (CLV)",
+          desc: "انظر إلى ما هو أبعد من عملية البيع الأولى. نحلل أنماط الشراء لحساب القيمة العمرية للعميل، مما يساعدك على تحديد عملائك الأكثر قيمة والاحتفاظ بهم."
         },
         {
-          title: "أنظمة آمنة وقابلة للتطوير",
-          desc: "بدءًا من أطر الحوكمة وحتى الأمان على مستوى المؤسسات، نبني حلولاً ليست قوية فحسب، بل متوافقة مع المعايير وجاهزة للنمو مع شركتك."
+          title: "إدارة المخزون والعمليات",
+          desc: "من توقع الطلب إلى تنبيهات مستوى المخزون، نبني أنظمة تساعدك على تجنب نفاد المخزون وتقليل الفائض، مما يؤثر بشكل مباشر على أرباحك."
         }
       ]
     },
 
     // Portfolio Section
     portfolio: {
-      title: "نتائج مُثبتة",
-      subtitle: "نحن نقيس نجاحنا بنجاح عملائنا. معرض أعمالنا هو عرض لحلول البيانات عالية التأثير والمصممة خصيصًا التي قدمناها.",
+      title: "نماذج الحلول",
+      subtitle: "استكشف لوحات التحكم التجريبية لدينا، والمصممة لحل التحديات الشائعة في الأعمال. شاهد ما هو ممكن لبيانات تجارتك الإلكترونية.",
       cardErHealth: {
         badge: "تحليلات الرعاية الصحية",
         title: "تحليل أداء غرف الطوارئ",
@@ -289,7 +289,7 @@ window.homepageTranslations = {
         title: "تحليل مبيعات وعمليات AdventureWorks",
         desc: "مشروعنا الرائد الذي يتميز بتحليل 'ماذا لو' التنبؤي، وتقسيم عميق للعملاء، وتشخيصات متقدمة في مركز تحكم متعدد الصفحات."
       },
-      button: "عرض كل دراسات الحالة"
+      button: "عرض كل النماذج"
     },
 
     // About Section
@@ -314,7 +314,7 @@ window.homepageTranslations = {
       ],
       ctaTitle: "هل أنت مستعد لترى هذه الأرقام تعمل لصالحك؟",
       ctaSubtitle: "دعنا نحوّل تحديات بياناتك إلى أعظم ميزة لديك. الخطوة الأولى هي محادثة بسيطة.",
-      ctaButton: "احجز استشارتك المجانية"
+      ctaButton: "احجز مكالمة استراتيجية للوحة التحكم التجريبية"
     },
 
     // FAQ Section
@@ -323,8 +323,8 @@ window.homepageTranslations = {
       subtitle: "لقد ساعدنا أكثر من 25 شركة على تحويل بياناتها. إليك إجابات للأسئلة التي يطرحها كل مدير تنفيذي.",
       items: [
         {
-          q: "ما مدى سرعة رؤية أول لوحة تحكم؟",
-          a: "<strong>عمليتنا مصممة للسرعة. يحصل معظم العملاء على نموذج أولي مخصص خلال 24 ساعة ولوحة تحكم أساسية فعّالة في غضون 48-72 ساعة.</strong> وعادةً ما يكتمل مشروعنا بالكامل، بما في ذلك نمذجة البيانات العميقة والنشر، في غضون أسبوع واحد."
+          q: "ما مدى سرعة رؤية أول لوحة تحكم تجريبية؟",
+          a: "<strong>عمليتنا مصممة للسرعة. زوّدنا بعينة من بياناتك المجهولة (ملف Excel/CSV)، وستتلقى لوحة تحكم مجانية ومخصصة من صفحة واحدة في غضون 48 ساعة.</strong> أما المشروع الكامل متعدد الصفحات، فعادةً ما يكتمل في غضون أسبوع واحد."
         },
         {
           q: "ما هو العائد الحقيقي على الاستثمار (ROI) من تطبيق Power BI؟",
@@ -332,14 +332,14 @@ window.homepageTranslations = {
         },
         {
           q: "كيف تتعاملون مع بيانات أعمالنا الحساسة؟",
-          a: "<strong>بياناتك لا تغادر بيئة عملك أبدًا.</strong> نحن نعمل داخل بيئة Microsoft الخاصة بك باستخدام الأمان على مستوى الصف (RLS)، والاتصالات المشفرة، والحوكمة على مستوى المؤسسات.<div class=\"mt-3\"><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>توقيع اتفاقية سرية (NDA) قبل الوصول لأي بيانات</span></div><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>تبقى البيانات داخل حساب Microsoft الخاص بك</span></div><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>تطبيق ضوابط الوصول المستندة إلى الأدوار الوظيفية</span></div><div class=\"d-flex align-items-start\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>سجل تدقيق كامل لجميع الأنشطة</span></div></div>"
+          a: "<strong>بياناتك لا تغادر بيئة عملك أبدًا. بالنسبة للوحة التحكم التجريبية المجانية، فإنك تقدم عينة بيانات مجهولة الهوية.</strong> أما في المشاريع الكاملة، فنحن نعمل داخل بيئة Microsoft الخاصة بك باستخدام الأمان على مستوى الصف (RLS)، والاتصالات المشفرة، والحوكمة على مستوى الشركات.<div class=\"mt-3\"><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>توقيع اتفاقية سرية (NDA) قبل الوصول لأي بيانات</span></div><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>تبقى البيانات داخل حساب Microsoft الخاص بك</span></div><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>تطبيق ضوابط الوصول المستندة إلى الأدوار الوظيفية</span></div><div class=\"d-flex align-items-start\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>سجل تدقيق كامل لجميع الأنشطة</span></div></div>"
         },
         {
-          q: "ماذا لو كانت بياناتنا فوضوية؟ (ملفات Excel، أنظمة قديمة، عمليات يدوية)",
-          a: "<strong>ممتاز! هذا هو تخصصنا بالضبط.</strong> 80% من عملائنا يبدأون ببيانات \"فوضوية\". لقد قمنا بربط كل شيء بدءًا من أنظمة ERP القديمة إلى جداول بيانات Google.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(108, 92, 231, 0.1);\"><strong>نحن نتصل بـ:</strong> ملفات Excel، قواعد بيانات SQL، Oracle، SAP، Salesforce، QuickBooks، Google Analytics، واجهات برمجة التطبيقات (APIs)، استخلاص البيانات من الويب، والملفات اليدوية، وأكثر من 200 مصدر آخر.</div><p class=\"mt-3 mb-0\"><em>\"كلما كانت بياناتك أكثر فوضوية، كان تأثير التحول أكبر.\"</em></p>"
+          q: "ماذا لو كانت بياناتنا فوضوية؟ (ملفات Shopify، إعلانات Meta، عمليات يدوية)",
+          a: "<strong>ممتاز! هذا هو تخصصنا بالضبط.</strong> 80% من عملائنا يبدأون ببيانات \"فوضوية\". نحن نربط كل شيء بدءًا من منصات التجارة الإلكترونية إلى جداول بيانات Google.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(108, 92, 231, 0.1);\"><strong>نحن نتصل بـ:</strong> Shopify، WooCommerce، إعلانات Meta، إعلانات Google، Google Analytics، قواعد بيانات SQL، واجهات APIs، ملفات Excel، وأكثر من 200 مصدر آخر.</div><p class=\"mt-3 mb-0\"><em>\"كلما كانت بياناتك أكثر فوضوية، كان تأثير التحول أكبر.\"</em></p>"
         },
         {
-          q: "هل سيتمكن فريقنا من استخدام وصيانة لوحات التحكم؟",
+          q: "هل سيتمكن فريقنا من استخدام لوحات التحكم؟",
           a: "<strong>بالتأكيد. نحن نبني الحلول لتناسب مستوى مهارة فريقك ونقدم تدريبًا شاملاً.</strong> يتضمن كل مشروع تدريبًا للمستخدمين ووثائق كاملة. بالإضافة إلى ذلك، نقدم باقات دعم مستمرة.<div class=\"mt-3\"><div class=\"row g-2 small\"><div class=\"col-md-6\"><strong class=\"text-accent\">للمستخدمين:</strong><br>• كيفية قراءة لوحات التحكم<br>• الفلترة والتعمق في البيانات<br>• خيارات التصدير والمشاركة</div><div class=\"col-md-6\"><strong class=\"text-accent\">للمسؤولين:</strong><br>• جدولة تحديث البيانات<br>• صلاحيات المستخدمين<br>• استكشاف الأخطاء الأساسية</div></div></div>"
         },
         {
@@ -348,35 +348,35 @@ window.homepageTranslations = {
         },
         {
           q: "ماذا لو لم نكن متأكدين مما نحتاجه؟",
-          a: "<strong>لهذا السبب نبدأ بتقييم مجاني للبيانات.</strong> سنقوم بمراجعة وضعك الحالي ونوصي بأفضل مسار للمضي قدمًا - دون أي التزام. يكتشف معظم العملاء فرصًا لم يكونوا على علم بوجودها."
+          a: "<strong>لهذا السبب نبدأ بلوحة التحكم التجريبية المجانية.</strong> سنأخذ عينة بياناتك ونبني لوحة تحكم حقيقية لنوضح لك ما هو ممكن، مما يكشف عن فرص ربما لم تكن على علم بوجودها. لا يوجد أي التزام مطلوب."
         }
       ]
     },
 
     // Final CTA Section
     finalCta: {
-      title: "مستعد لتحويل استراتيجية بياناتك؟",
-      subtitle: "شاركنا تحديات بياناتك واحصل على نموذج أولي مخصص للوحة التحكم في غضون 24 ساعة. لا يوجد أي التزام مطلوب.",
-      button: "ابدأ مشروعك"
+      title: "هل أنت مستعد لرؤية بيانات تجارتك الإلكترونية تتجسد في لوحة تحكم؟",
+      subtitle: "شاركنا عينة من بياناتك المجهولة واحصل على لوحة تحكم تجريبية مخصصة ومجانية في غضون 48 ساعة. لا يوجد أي التزام مطلوب.",
+      button: "ابدأ بالنسخة التجريبية المجانية"
     },
 
     // Contact Section
     contact: {
-      title: "لنتناقش حول تحديات بياناتك",
-      subtitle: "أخبرنا عن بيئة بياناتك الحالية والرؤى التي تحتاجها لدفع أعمالك إلى الأمام.",
+      title: "ابدأ تجربتك المجانية للوحة التحكم",
+      subtitle: "أخبرنا عن منصة التجارة الإلكترونية التي تستخدمها وأهم المقاييس التي تحتاج إلى تتبعها. سنبني لك لوحة تحكم من صفحة واحدة باستخدام عينة بياناتك لنوضح لك ما هو ممكن.",
       form: {
         name: "الاسم بالكامل *",
         email: "البريد الإلكتروني للعمل *",
         company: "الشركة",
-        budget: "الميزانية التقديرية",
-        budgetText: "حدد النطاق (بالدولار الأمريكي)",
+        platform: "منصة التجارة الإلكترونية (اختياري)",
+        platformPlaceholder: "مثال: Shopify, WooCommerce",
         details: "تفاصيل المشروع *",
-        placeholder: "صف مصادر بياناتك، مؤشرات الأداء الرئيسية، والنتائج المرجوة...",
-        button: "أرسل الرسالة",
+        placeholder: "مثال: نستخدم Shopify وإعلانات Meta. نحتاج لتتبع تكلفة اكتساب العميل (CAC) ورؤية عائد الاستثمار التسويقي حسب القناة...",
+        button: "اطلب لوحة التحكم التجريبية المجانية",
         response: "الرد في غضون ٤ ساعات"
       },
       checklist: {
-        title: "قائمة التحقق المبدئية",
+        title: "قائمة التحقق للنسخة التجريبية",
         items: [
           {
             title: "أهداف العمل",
@@ -384,7 +384,7 @@ window.homepageTranslations = {
           },
           {
             title: "مصادر البيانات",
-            desc: "ملفات Excel، قواعد البيانات، أنظمة CRM و ERP، واجهات APIs"
+            desc: "Shopify, WooCommerce, Meta Ads, Google Ads..."
           },
           {
             title: "أصحاب المصلحة",
