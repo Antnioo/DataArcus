@@ -3,50 +3,46 @@ window.portfolioTranslations = {
   en: {
     // Page Meta
     meta: {
-      title: "Our Work & Case Studies - DataArcus",
-      description: "Explore a portfolio of custom Power BI dashboards and data analytics solutions built by DataArcus.",
-      keywords: "Power BI portfolio, data analytics case studies, business intelligence examples, sales dashboards, call center analytics, DataArcus projects"
+      title: "Solution Showcases & Dashboard Examples - DataArcus",
+      description: "Explore our proof-of-concept Power BI dashboards. See examples of how we solve challenges in e-commerce, healthcare, and customer service.",
+      keywords: "Power BI examples, dashboard showcase, e-commerce analytics dashboard, healthcare analytics, customer service dashboard, DataArcus solutions"
     },
     
     // Page Header
     header: {
-      title: "Our Work",
-      subtitle: "We build custom data solutions that drive real business results. Explore our case studies to see how we turn complex data into strategic assets."
+      title: "Solution Showcases",
+      subtitle: "We engineer proof-of-concept dashboards to demonstrate how we turn complex data into strategic assets for industries like e-commerce, healthcare, and more."
     },
     
     // Main Portfolio Section
     portfolio: {
-      sectionTitle: "Case Studies",
-      sectionSubtitle: "Each project is a partnership. Here's a look at the challenges we've solved and the value we've delivered through our custom Power BI solutions.",
+      sectionTitle: "Dashboard Examples",
+      sectionSubtitle: "Each showcase is a deep dive into a specific business problem. Explore these examples to see the level of clarity and insight we can bring to your data.",
       
       // Individual Projects
       projects: {
-
         erhealth: {
           badge: "HEALTHCARE ANALYTICS",
           title: "Emergency Room Performance Analysis",
           description: "An interactive dashboard designed to provide healthcare administrators with a clear view of ER operations and patient flow.",
-          button: "View Case Study"
+          button: "View Showcase"
         },
-
         mavenmarket: {
           badge: "RETAIL ANALYTICS",
           title: "Maven-Market Retail Analysis",
           description: "An in-depth analysis of retail trends, helping an e-commerce business identify top-selling products and optimize marketing spend based on customer behavior.",
-          button: "View Case Study"
+          button: "View Showcase"
         },
-        
         callcenter: {
           badge: "CUSTOMER SERVICE",
           title: "Call Center Performance",
           description: "A complete command center for monitoring call center KPIs, tracking agent performance, and improving customer satisfaction through data-driven insights.",
-          button: "View Case Study"
+          button: "View Showcase"
         },
-        
         confidential: {
           badge: "FINANCE",
           title: "Confidential Financial Dashboard",
-          description: "Developed a comprehensive financial control center for a private client. This dashboard provides real-time P&L insights and cash flow alerts under a strict NDA.",
+          description: "A proof-of-concept dashboard demonstrating how we build secure, comprehensive financial control centers with real-time P&L insights and cash flow alerts.",
           button: "Request Info"
         }
       }
@@ -55,41 +51,41 @@ window.portfolioTranslations = {
     // Hero Project Section
     heroProject: {
       badge: "LIVE & INTERACTIVE",
-      title: "Hero Project: AdventureWorks Sales & Operations",
+      title: "Hero Showcase: AdventureWorks Sales & Operations",
       featuresTitle: "Key Features & Technologies Used:",
       tags: ["Power BI", "Advanced DAX", "What-If Parameters", "Geospatial Analysis", "Decomposition Tree"],
-      button: "View Full Case Study"
+      button: "View Full Showcase"
     },
     
     // Confidential Modal
     modal: {
-      title: "Confidential Project Information",
+      title: "About This Financial Showcase",
       content: {
-        paragraph1: "Due to a non-disclosure agreement (NDA), the details of this project are confidential. We take client privacy very seriously.",
-        paragraph2: "However, we can discuss how we applied similar techniques and principles to solve challenges in the financial sector. Please contact us to schedule a private consultation."
+        paragraph1: "This dashboard is a proof-of-concept demonstrating how we handle sensitive financial data. To showcase our commitment to security and privacy, the underlying data and specific metrics have been generalized.",
+        paragraph2: "We can discuss how we apply these same secure principles to build a custom financial dashboard for your business. Contact us to schedule a private consultation and start your free PoC."
       },
-      button: "Schedule a Consultation"
+      button: "Start Your Free PoC"
     }
   },
 
   ar: {
     // Page Meta Arabic
     meta: {
-      title: "أعمالنا ودراسات الحالة - DataArcus",
-      description: "استكشف معرض أعمالنا الذي يضم لوحات تحكم Power BI مخصصة وحلولاً لتحليل البيانات صممتها DataArcus.",
-      keywords: "معرض أعمال Power BI, دراسات حالة تحليل البيانات, أمثلة ذكاء الأعمال, لوحات تحكم المبيعات, تحليلات مراكز الاتصال, مشاريع DataArcus"
+      title: "نماذج الحلول وأمثلة لوحات التحكم - DataArcus",
+      description: "استكشف لوحات تحكم Power BI التجريبية لدينا. شاهد أمثلة على كيفية حل التحديات في التجارة الإلكترونية، والرعاية الصحية، وخدمة العملاء.",
+      keywords: "أمثلة Power BI, نماذج لوحات تحكم, داشبورد تحليلات التجارة الإلكترونية, تحليلات الرعاية الصحية, لوحة تحكم خدمة العملاء, حلول DataArcus"
     },
 
     // Page Header Arabic
     header: {
-      title: "أعمالنا",
-      subtitle: "نحن نبني حلول بيانات مخصصة تحقق نتائج أعمال حقيقية. استكشف دراسات الحالة لدينا لترى كيف نحوّل البيانات المعقدة إلى أصول استراتيجية."
+      title: "نماذج الحلول",
+      subtitle: "نقوم بهندسة لوحات تحكم تجريبية لنوضح كيف نحوّل البيانات المعقدة إلى أصول استراتيجية لقطاعات مثل التجارة الإلكترونية، والرعاية الصحية، وغيرها."
     },
 
     // Main Portfolio Section Arabic
     portfolio: {
-      sectionTitle: "دراسات الحالة",
-      sectionSubtitle: "كل مشروع هو شراكة. نلقي هنا نظرة على التحديات التي قمنا بحلها والقيمة التي قدمناها من خلال حلول Power BI المخصصة لدينا.",
+      sectionTitle: "أمثلة لوحات التحكم",
+      sectionSubtitle: "كل نموذج هو استعراض لآلية حل مشكلة عمل محددة. استكشف هذه الأمثلة لترى مستوى الوضوح والرؤى التي يمكننا تقديمها لبياناتك.",
 
       // Individual Projects Arabic
       projects: {
@@ -97,27 +93,24 @@ window.portfolioTranslations = {
           badge: "تحليلات الرعاية الصحية",
           title: "تحليل أداء غرفة الطوارئ",
           description: "لوحة تحكم تفاعلية مصممة لتزويد مديري الرعاية الصحية برؤية واضحة لعمليات غرف الطوارئ وتدفق المرضى.",
-          button: "عرض دراسة الحالة"
+          button: "عرض النموذج"
         },
-
         mavenmarket: {
           badge: "تحليلات التجزئة",
           title: "تحليل مبيعات Maven Market",
           description: "تحليل متعمق لاتجاهات قطاع التجزئة، لمساعدة إحدى شركات التجارة الإلكترونية على تحديد المنتجات الأكثر مبيعًا وتحسين الإنفاق التسويقي.",
-          button: "عرض دراسة الحالة"
+          button: "عرض النموذج"
         },
-
         callcenter: {
           badge: "خدمة العملاء",
           title: "أداء مركز الاتصال",
           description: "مركز تحكم متكامل لمراقبة مؤشرات الأداء الرئيسية لمركز الاتصال، وتتبع أداء الموظفين، وتحسين رضا العملاء.",
-          button: "عرض دراسة الحالة"
+          button: "عرض النموذج"
         },
-
         confidential: {
           badge: "القطاع المالي",
           title: "لوحة تحكم مالية سرية",
-          description: "تم تطوير مركز تحكم مالي شامل لعميل خاص. توفر هذه اللوحة رؤى لحظية حول الأرباح والخسائر وتنبيهات التدفق النقدي بموجب اتفاقية سرية صارمة.",
+          description: "نموذج تجريبي يوضح كيف نبني مراكز تحكم مالية شاملة وآمنة مع رؤى لحظية للأرباح والخسائر وتنبيهات التدفق النقدي.",
           button: "طلب معلومات"
         }
       }
@@ -126,20 +119,20 @@ window.portfolioTranslations = {
     // Hero Project Section Arabic
     heroProject: {
       badge: "تفاعلي ومباشر",
-      title: "المشروع المميز: مبيعات وعمليات AdventureWorks",
+      title: "النموذج المميّز: مبيعات وعمليات AdventureWorks",
       featuresTitle: "أهم المزايا والتقنيات المستخدمة:",
       tags: ["Power BI", "DAX متقدّم", "معاملات «ماذا لو»", "تحليل جغرافي", "شجرة التفكيك"],
-      button: "عرض دراسة الحالة الكاملة"
+      button: "عرض النموذج الكامل"
     },
 
     // Confidential Modal Arabic
     modal: {
-      title: "معلومات مشروع سري",
+      title: "حول هذا النموذج المالي",
       content: {
-        paragraph1: "نظرًا لوجود اتفاقية عدم إفصاح (NDA)، فإن تفاصيل هذا المشروع سرية. نحن نأخذ خصوصية العملاء على محمل الجد.",
-        paragraph2: "ومع ذلك، يمكننا مناقشة كيفية تطبيقنا لتقنيات ومبادئ مماثلة لحل التحديات في القطاع المالي. يرجى التواصل معنا لتحديد موعد استشارة خاصة."
+        paragraph1: "لوحة التحكم هذه هي نموذج تجريبي يوضح كيف نتعامل مع البيانات المالية الحساسة. ولإظهار التزامنا بالأمان والخصوصية، تم تعميم البيانات الأساسية والمقاييس المحددة.",
+        paragraph2: "يمكننا مناقشة كيفية تطبيقنا لنفس هذه المبادئ الآمنة لبناء لوحة تحكم مالية مخصصة لعملك. تواصل معنا لتحديد موعد استشارة خاصة وبدء لوحة التحكم التجريبية المجانية الخاصة بك."
       },
-      button: "تحديد موعد استشارة"
+      button: "ابدأ نسختك التجريبية المجانية"
     }
   }
 };

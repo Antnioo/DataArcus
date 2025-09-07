@@ -4,15 +4,15 @@ window.commonTranslations = {
     // Navigation
     nav: {
       services: "Services",
-      portfolio: "Portfolio",
+      portfolio: "Showcases",
       about: "About", 
       contact: "Contact",
-      consultation: "Get a Free Consultation"
+      consultation: "Get Your Free PoC"
     },
     
     // Footer
     footer: {
-      tagline: "Expert, custom-built Power BI solutions that turn your complex data into a clear strategic advantage.",
+      tagline: "Custom-built Power BI solutions for e-commerce leaders in the MENA region, turning complex data into a clear strategic advantage.",
       services: "Services",
       company: "Company",
       contact: "Contact Info",
@@ -27,7 +27,7 @@ window.commonTranslations = {
         analytics: "Analytics",
         consulting: "Consulting",
         about: "About",
-        portfolio: "Portfolio",
+        portfolio: "Showcases",
         contact: "Contact",
         blog: "Blog"
       }
@@ -35,8 +35,8 @@ window.commonTranslations = {
     
     // Common CTAs
     cta: {
-      discuss: "Discuss Your Project",
-      viewcase: "View Case Study",
+      discuss: "Start Your Free PoC",
+      viewcase: "View Showcase",
       contact: "Contact Us",
       calendar: "Schedule a Meeting"
     },
@@ -51,30 +51,30 @@ window.commonTranslations = {
     // Navigation Arabic
     nav: {
       services: "الخدمات",
-      portfolio: "الأعمال",
+      portfolio: "نماذج الحلول",
       about: "عن الشركة",
       contact: "تواصل معنا", 
-      consultation: "احجز استشارة مجانية"
+      consultation: "اطلب نسختك التجريبية"
     },
     
     // Footer Arabic
     footer: {
-      tagline: "حلول Power BI مصممة خصيصًا لتحوّل بياناتك المعقدة إلى رؤية أوضح وميزة تنافسية.",
+      tagline: "حلول Power BI مخصصة لقادة التجارة الإلكترونية في الشرق الأوسط، نحوّل بياناتك المعقدة إلى ميزة استراتيجية واضحة.",
       services: "الخدمات",
       company: "الشركة",
-      contact: "التواصل", 
+      contact: "معلومات التواصل", 
       hours: "الإثنين - الجمعة 9ص إلى 6م",
       copyright: "جميع الحقوق محفوظة.",
-      built: "مبني بشغف • مدعوم بالابتكار",
+      built: "بُنِي بشغف • يُديره الابتكار",
       
       // Footer Links Arabic
       links: {
         powerbi: "Power BI",
         dataengineering: "هندسة البيانات",
-        analytics: "تحليلات",
-        consulting: "استشارات",
+        analytics: "التحليلات",
+        consulting: "الاستشارات",
         about: "عن الشركة",
-        portfolio: "الأعمال", 
+        portfolio: "نماذج الحلول", 
         contact: "تواصل معنا",
         blog: "المدونة"
       }
@@ -82,10 +82,10 @@ window.commonTranslations = {
     
     // Common CTAs Arabic
     cta: {
-      discuss: "ناقش مشروعك",
-      viewcase: "شوف دراسة الحالة",
+      discuss: "ابدأ نسختك التجريبية المجانية",
+      viewcase: "عرض النموذج",
       contact: "تواصل معنا",
-      calendar: "احجز اجتماع"
+      calendar: "احجز اجتماعًا"
     },
     
     // Common Meta

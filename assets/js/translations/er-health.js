@@ -1,33 +1,33 @@
-// translations/er-health.js - Emergency Room Dashboard Specific
-window.erHealthTranslations = {
+// translations/er-health.js - ER Health Dashboard Specific
+window.erhealthTranslations = {
   en: {
     // Page Meta
     meta: {
-      title: "Dashboard Showcase: Emergency Room Performance Analysis - DataArcus",
-      description: "An interactive Power BI dashboard analyzing Emergency Room visits. Track KPIs like wait times, patient satisfaction, and demographics to improve operational efficiency.",
-      keywords: "healthcare dashboard, Power BI healthcare, ER analytics, patient wait time KPI, hospital performance dashboard, patient satisfaction"
+      title: "Healthcare Showcase: ER Performance Analysis - DataArcus",
+      description: "Explore a Power BI showcase for healthcare analytics. See how we analyze ER patient flow, wait times, and satisfaction to improve hospital operations.",
+      keywords: "healthcare analytics, hospital dashboard, Power BI healthcare, ER analytics, patient wait time, DataArcus"
     },
     
     // Page Header
     header: {
-      title: "Dashboard Showcase: Emergency Room Performance Analysis",
-      subtitle: "An interactive dashboard designed to provide healthcare administrators with a clear view of ER operations and patient flow."
+      title: "Showcase: Healthcare Analytics",
+      subtitle: "An interactive dashboard demonstrating how we provide clarity on complex ER operations and patient flow for healthcare administrators."
     },
     
     // Case Study Introduction
     intro: {
       challenge: {
-        title: "The Challenge: Finding Clarity in Chaos",
-        content: "Emergency rooms are high-pressure environments that generate vast amounts of data. The challenge is to transform this raw data into actionable insights that can improve patient care, streamline operations, and optimize resource allocation. This project aimed to build a tool to do just that."
+        title: "The Healthcare Data Challenge",
+        content: "High-pressure environments like emergency rooms generate vast amounts of critical data. This showcase was built to demonstrate how we transform that raw data into a clear operational tool to improve patient care and optimize resource allocation."
       },
       skills: {
-        title: "Skills Showcase",
-        content: "This dashboard is a practical demonstration of end-to-end Power BI development in a healthcare context, highlighting expertise in:",
+        title: "Capabilities Demonstrated",
+        content: "This dashboard is a practical example of our end-to-end Power BI development capabilities, highlighting expertise in:",
         list: [
-          "<strong>Healthcare Analytics:</strong> Developing KPIs for critical metrics like wait times, satisfaction, and departmental performance.",
-          "<strong>Data Modeling:</strong> Structuring complex patient and visit data into a cohesive and efficient model.",
+          "<strong>Healthcare-Specific KPIs:</strong> Developing metrics for wait times, satisfaction, and departmental performance.",
+          "<strong>Complex Data Modeling:</strong> Structuring complex patient and visit data into an efficient model.",
           "<strong>Time-Series Analysis:</strong> Visualizing trends over time to identify peak hours and days.",
-          "<strong>Executive UX/UI:</strong> Creating a clean, intuitive interface for non-technical stakeholders to explore clinical data."
+          "<strong>Executive UX/UI:</strong> Creating an intuitive interface for non-technical stakeholders to explore clinical data."
         ]
       }
     },
@@ -36,64 +36,64 @@ window.erHealthTranslations = {
     features: {
       title: "Key Features & Technologies Used:",
       tags: ["Power BI", "DAX", "Data Modeling", "UX/UI Design", "Healthcare KPIs", "Time Series Analysis"],
-      note: "This is a fully interactive, two-page report. Use the tabs at the top right to switch between the \"Dashboard\" and \"Summary\" views."
+      note: "This is a fully interactive, two-page report. Use the tabs at the top right to switch between the 'Dashboard' and 'Summary' views."
     },
     
     // Capabilities Section
     capabilities: {
-      title: "Capabilities on Display",
-      subtitle: "This dashboard transforms complex clinical data into a powerful tool for operational management, providing clear insights into:",
+      title: "Insights We Can Deliver for Complex Operations",
+      subtitle: "This showcase transforms complex clinical data into a powerful tool, demonstrating how we provide clear insights into:",
       list: [
-        "<strong>At-a-Glance KPIs:</strong> The main dashboard offers a real-time overview of critical metrics, including total patient volume, average wait time, and average satisfaction scores, with trend indicators to track performance over time.",
-        "<strong>Demographic Insights:</strong> Understand the patient population with interactive filters for age group, gender, and race, helping to identify community health trends and ensure equitable care.",
-        "<strong>Operational Bottleneck Detection:</strong> A heatmap visualizes the busiest days and times, pinpointing Tuesday afternoons as peak periods for better staff scheduling. The \"Avg Wait Time by Department\" chart helps identify which specialties may be experiencing delays.",
-        "<strong>Patient Satisfaction Analysis:</strong> Correlate patient satisfaction scores with factors like wait times and demographics to pinpoint specific areas for improvement in the patient experience."
+        "<strong>At-a-Glance KPIs:</strong> We build real-time overviews of your critical metrics, with trend indicators to track performance over time.",
+        "<strong>Demographic Insights:</strong> Our dashboards allow you to understand your user/patient population with interactive filters to identify key trends.",
+        "<strong>Operational Bottleneck Detection:</strong> We use tools like heatmaps to visualize your busiest periods, helping you optimize staff and resource scheduling.",
+        "<strong>Satisfaction Analysis:</strong> We can correlate satisfaction scores with operational factors to pinpoint specific areas for improvement in the user experience."
       ]
     },
 
     // Explore More Section
     exploreMore: {
-      title: "Explore More Case Studies",
+      title: "Explore More Showcases",
       subtitle: "See how we solve challenges across different industries.",
-      button: "View Full Portfolio"
+      button: "View All Showcases"
     },
     
     // Final CTA
     finalCta: {
-      title: "Ready to Build Your Custom Dashboard?",
-      subtitle: "Imagine having this level of clarity for your own business operations. Let's talk.",
-      button: "Discuss Your Project"
+      title: "Ready to Get This Clarity for Your Business?",
+      subtitle: "Even if you're not in healthcare, these principles apply. Let's build a free PoC dashboard with your data.",
+      button: "Start Your Free PoC"
     }
   },
 
   ar: {
     // Page Meta
     meta: {
-      title: "عرض لوحة تحكم: تحليل أداء غرف الطوارئ - DataArcus",
-      description: "لوحة تحكم تفاعلية باستخدام Power BI لتحليل زيارات غرف الطوارئ. تتبع مؤشرات الأداء الرئيسية مثل أوقات الانتظار، ورضا المرضى، والبيانات الديموغرافية لتحسين الكفاءة التشغيلية.",
-      keywords: "لوحة تحكم للرعاية الصحية, Power BI في الصحة, تحليلات غرف الطوارئ, مؤشرات أوقات انتظار المرضى, أداء المستشفيات, رضا المرضى"
+      title: "نموذج للرعاية الصحية: تحليل أداء غرف الطوارئ - DataArcus",
+      description: "استكشف نموذج Power BI لتحليلات الرعاية الصحية. شاهد كيف نحلل تدفق مرضى الطوارئ، وأوقات الانتظار، والرضا لتحسين عمليات المستشفى.",
+      keywords: "تحليلات الرعاية الصحية, داشبورد المستشفيات, Power BI للرعاية الصحية, تحليلات الطوارئ, وقت انتظار المريض, DataArcus"
     },
 
     // Page Header
     header: {
-      title: "عرض لوحة تحكم: تحليل أداء غرف الطوارئ",
-      subtitle: "لوحة تحكم تفاعلية مصممة لتزويد مديري الرعاية الصحية برؤية واضحة لعمليات غرف الطوارئ وتدفق المرضى."
+      title: "نموذج: تحليلات الرعاية الصحية",
+      subtitle: "لوحة تحكم تفاعلية توضح كيف نقدم رؤية واضحة حول عمليات الطوارئ المعقدة وتدفق المرضى لمديري الرعاية الصحية."
     },
 
     // Case Study Introduction
     intro: {
       challenge: {
-        title: "التحدي: إيجاد الوضوح في بيئة عمل فوضوية",
-        content: "تعتبر غرف الطوارئ بيئات عمل عالية الضغط تولّد كميات هائلة من البيانات. يكمن التحدي في تحويل هذه البيانات الأولية إلى رؤى قابلة للتنفيذ يمكنها تحسين رعاية المرضى، وتبسيط العمليات، وتحسين تخصيص الموارد. هدف هذا المشروع إلى بناء أداة تحقق ذلك بالضبط."
+        title: "تحدي بيانات الرعاية الصحية",
+        content: "تُولّد البيئات عالية الضغط مثل غرف الطوارئ كميات هائلة من البيانات الهامة. تم بناء هذا النموذج ليُظهر كيف نحوّل تلك البيانات الأولية إلى أداة تشغيلية واضحة لتحسين رعاية المرضى وتخصيص الموارد."
       },
       skills: {
-        title: "المهارات المعروضة",
-        content: "تُعد لوحة التحكم هذه عرضًا عمليًا للتطوير المتكامل باستخدام Power BI في سياق الرعاية الصحية، مما يبرز خبرتنا في:",
+        title: "الإمكانيات المعروضة",
+        content: "تُعد لوحة التحكم هذه مثالاً عملياً على قدراتنا في تطوير Power BI بشكل متكامل، مما يبرز خبرتنا في:",
         list: [
-          "<strong>تحليلات الرعاية الصحية:</strong> تطوير مؤشرات أداء رئيسية لمقاييس حيوية مثل أوقات الانتظار، والرضا، وأداء الأقسام.",
-          "<strong>نمذجة البيانات:</strong> هيكلة بيانات المرضى والزيارات المعقدة في نموذج متماسك وفعال.",
+          "<strong>مؤشرات أداء خاصة بالرعاية الصحية:</strong> تطوير مقاييس لأوقات الانتظار والرضا وأداء الأقسام.",
+          "<strong>نمذجة البيانات المعقدة:</strong> هيكلة بيانات المرضى والزيارات المعقدة في نموذج فعال.",
           "<strong>تحليل السلاسل الزمنية:</strong> عرض الاتجاهات بمرور الوقت لتحديد ساعات وأيام الذروة.",
-          "<strong>تصميم واجهة تنفيذية (UX/UI):</strong> إنشاء واجهة نظيفة وبديهية لأصحاب المصلحة غير التقنيين لاستكشاف البيانات الطبية."
+          "<strong>تصميم واجهة تنفيذية (UX/UI):</strong> إنشاء واجهة سهلة الاستخدام للمديرين غير التقنيين لاستكشاف البيانات."
         ]
       }
     },
@@ -107,28 +107,28 @@ window.erHealthTranslations = {
 
     // Capabilities Section
     capabilities: {
-      title: "الإمكانيات المعروضة",
-      subtitle: "تحوّل لوحة التحكم هذه البيانات الطبية المعقدة إلى أداة قوية للإدارة التشغيلية، وتقدم رؤى واضحة حول:",
+      title: "رؤى يمكننا تقديمها للعمليات المعقدة",
+      subtitle: "يحوّل هذا النموذج البيانات الطبية المعقدة إلى أداة قوية، مما يوضح كيف نقدم رؤى واضحة حول:",
       list: [
-        "<strong>مؤشرات أداء رئيسية سريعة:</strong> تقدم لوحة التحكم الرئيسية نظرة عامة لحظية على المقاييس الحيوية، بما في ذلك إجمالي عدد المرضى، ومتوسط وقت الانتظار، ومتوسط درجات الرضا، مع مؤشرات اتجاه لتتبع الأداء بمرور الوقت.",
-        "<strong>رؤى ديموغرافية:</strong> فهم التركيبة السكانية للمرضى من خلال فلاتر تفاعلية للفئة العمرية، والجنس، والعرق، مما يساعد في تحديد اتجاهات الصحة المجتمعية وضمان الرعاية العادلة.",
-        "<strong>كشف الاختناقات التشغيلية:</strong> توضح الخريطة الحرارية الأيام والأوقات الأكثر ازدحامًا، مما يساعد على تحسين جدولة الموظفين. كما يساعد مخطط 'متوسط وقت الانتظار حسب القسم' في تحديد التخصصات التي قد تواجه تأخيرًا.",
-        "<strong>تحليل رضا المرضى:</strong> ربط درجات رضا المرضى بعوامل مثل أوقات الانتظار والبيانات الديموغرافية لتحديد مجالات التحسين المحددة في تجربة المريض."
+        "<strong>مؤشرات أداء رئيسية سريعة:</strong> نبني لك نظرة عامة لحظية لمقاييسك الهامة، مع مؤشرات اتجاه لتتبع الأداء بمرور الوقت.",
+        "<strong>رؤى ديموغرافية:</strong> تتيح لك لوحات التحكم فهم قاعدة المستخدمين/المرضى لديك من خلال فلاتر تفاعلية لتحديد الاتجاهات الرئيسية.",
+        "<strong>كشف الاختناقات التشغيلية:</strong> نستخدم أدوات مثل الخرائط الحرارية لتصوّر الفترات الأكثر ازدحامًا، مما يساعد على تحسين جدولة الموظفين والموارد.",
+        "<strong>تحليل الرضا:</strong> يمكننا ربط درجات الرضا بالعوامل التشغيلية لتحديد مجالات محددة للتحسين في تجربة المستخدم."
       ]
     },
 
     // Explore More Section
     exploreMore: {
-      title: "استكشف المزيد من دراسات الحالة",
-      subtitle: "شاهد كيف نقدم حلولاً للتحديات في مختلف القطاعات.",
-      button: "عرض كامل الأعمال"
+      title: "استكشف المزيد من النماذج",
+      subtitle: "شاهد كيف نحل التحديات عبر مختلف القطاعات.",
+      button: "عرض كل النماذج"
     },
 
     // Final CTA
     finalCta: {
-      title: "هل أنت مستعد لبناء لوحة التحكم المخصصة لك؟",
-      subtitle: "تخيل هذا المستوى من الوضوح في عملياتك التشغيلية. لنتحدث.",
-      button: "ناقش مشروعك"
+      title: "هل أنت مستعد للحصول على هذا الوضوح لعملك؟",
+      subtitle: "حتى لو لم تكن في قطاع الرعاية الصحية، فإن هذه المبادئ تنطبق. دعنا نبني لك لوحة تحكم تجريبية مجانية ببياناتك.",
+      button: "ابدأ نسختك التجريبية المجانية"
     }
   }
 };
