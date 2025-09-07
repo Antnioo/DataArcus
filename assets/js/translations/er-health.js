@@ -1,5 +1,5 @@
 // translations/er-health.js - ER Health Dashboard Specific
-window.erhealthTranslations = {
+window.erHealthTranslations = {
   en: {
     // Page Meta
     meta: {
