@@ -711,11 +711,11 @@ li:has(> i[class*="bi-"]:not(.tech-icon)) {
 /* ===== 8. Responsive Design (Mobile-First Adjustments) ===== */
 
 /* FINAL FIX: Remove Bootstrap's default margin on the logo in RTL mobile view */
-@media (max-width: 991.98px) {
-  html[dir="rtl"] .navbar-brand {
-    margin-right: 0 !important;
-  }
+
+html[dir="rtl"] .navbar-brand {
+  margin-right: 0 !important;
 }
+
 
 @media (max-width: 768px) {
   /* --- Performance Optimizations on Mobile --- */

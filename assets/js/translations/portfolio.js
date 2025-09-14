@@ -5,7 +5,22 @@ window.portfolioTranslations = {
     meta: {
       title: "Solution Showcases & Dashboard Examples - DataArcus",
       description: "Explore our proof-of-concept Power BI dashboards. See examples of how we solve challenges in e-commerce, healthcare, and customer service.",
-      keywords: "Power BI examples, dashboard showcase, e-commerce analytics dashboard, healthcare analytics, customer service dashboard, DataArcus solutions"
+      keywords: "Power BI examples, dashboard showcase, e-commerce analytics dashboard, healthcare analytics, customer service dashboard, DataArcus solutions",
+      author: "DataArcus",
+      "og:type": "website",
+      "og:title": "Solution Showcases & Dashboard Examples - DataArcus",
+      "og:description": "Explore our proof-of-concept Power BI dashboards. See examples of how we solve challenges in e-commerce, healthcare, and customer service.",
+      "og:url": "https://dataarcus.com/portfolio.html",
+      "og:site_name": "DataArcus",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      "og:locale": "en_US",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "Solution Showcases & Dashboard Examples - DataArcus",
+      "twitter:description": "Explore our proof-of-concept Power BI dashboards. See examples of how we solve challenges in e-commerce, healthcare, and customer service.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      canonical: "https://dataarcus.com/portfolio.html",
     },
     
     // Page Header
@@ -71,9 +86,24 @@ window.portfolioTranslations = {
   ar: {
     // Page Meta Arabic
     meta: {
-      title: "نماذج الحلول وأمثلة لوحات التحكم - DataArcus",
-      description: "استكشف لوحات تحكم Power BI التجريبية لدينا. شاهد أمثلة على كيفية حل التحديات في التجارة الإلكترونية، والرعاية الصحية، وخدمة العملاء.",
-      keywords: "أمثلة Power BI, نماذج لوحات تحكم, داشبورد تحليلات التجارة الإلكترونية, تحليلات الرعاية الصحية, لوحة تحكم خدمة العملاء, حلول DataArcus"
+      title: "أمثلة لوحات المعلومات وحلول البيانات - داتا اركوس",
+      description: "استكشف لوحات تحكم Power BI التجريبية لدينا. شاهد أمثلة على كيفية حلنا للتحديات في التجارة الإلكترونية والرعاية الصحية وخدمة العملاء.",
+      keywords: "أمثلة Power BI, عرض لوحات المعلومات, لوحة تحكم تحليلات التجارة الإلكترونية, تحليلات الرعاية الصحية, لوحة تحكم خدمة العملاء, حلول DataArcus",
+      author: "داتا اركوس",
+      "og:type": "website",
+      "og:title": "أمثلة لوحات المعلومات وحلول البيانات - داتا اركوس",
+      "og:description": "استكشف لوحات تحكم Power BI التجريبية لدينا. شاهد أمثلة على كيفية حلنا للتحديات في التجارة الإلكترونية والرعاية الصحية وخدمة العملاء.",
+      "og:url": "https://dataarcus.com/portfolio.html",
+      "og:site_name": "داتا اركوس",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:locale": "ar_EG",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "أمثلة لوحات المعلومات وحلول البيانات - داتا اركوس",
+      "twitter:description": "استكشف لوحات تحكم Power BI التجريبية لدينا. شاهد أمثلة على كيفية حلنا للتحديات في التجارة الإلكترونية والرعاية الصحية وخدمة العملاء.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      canonical: "https://dataarcus.com/portfolio.html",
     },
 
     // Page Header Arabic

@@ -3,9 +3,24 @@ window.erHealthTranslations = {
   en: {
     // Page Meta
     meta: {
-      title: "Healthcare Showcase: ER Performance Analysis - DataArcus",
-      description: "Explore a Power BI showcase for healthcare analytics. See how we analyze ER patient flow, wait times, and satisfaction to improve hospital operations.",
-      keywords: "healthcare analytics, hospital dashboard, Power BI healthcare, ER analytics, patient wait time, DataArcus"
+      title: "ER Health Power BI Dashboard Example - DataArcus",
+      description: "See our ER Health Power BI dashboard: real-time analytics for emergency room operations, patient flow, and healthcare KPIs.",
+      keywords: "ER Health dashboard, Power BI healthcare analytics, emergency room dashboard, patient flow analytics, healthcare KPIs, DataArcus",
+      author: "DataArcus",
+      "og:type": "website",
+      "og:title": "ER Health Power BI Dashboard Example - DataArcus",
+      "og:description": "See our ER Health Power BI dashboard: real-time analytics for emergency room operations, patient flow, and healthcare KPIs.",
+      "og:url": "https://dataarcus.com/dashboards/er-health-dashboard.html",
+      "og:site_name": "DataArcus",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      "og:locale": "en_US",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "ER Health Power BI Dashboard Example - DataArcus",
+      "twitter:description": "See our ER Health Power BI dashboard: real-time analytics for emergency room operations, patient flow, and healthcare KPIs.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      canonical: "https://dataarcus.com/dashboards/er-health-dashboard.html",
     },
     
     // Page Header
@@ -69,9 +84,24 @@ window.erHealthTranslations = {
   ar: {
     // Page Meta
     meta: {
-      title: "نموذج للرعاية الصحية: تحليل أداء غرف الطوارئ - DataArcus",
-      description: "استكشف نموذج Power BI لتحليلات الرعاية الصحية. شاهد كيف نحلل تدفق مرضى الطوارئ، وأوقات الانتظار، والرضا لتحسين عمليات المستشفى.",
-      keywords: "تحليلات الرعاية الصحية, داشبورد المستشفيات, Power BI للرعاية الصحية, تحليلات الطوارئ, وقت انتظار المريض, DataArcus"
+      title: "مثال لوحة تحكم الطوارئ الصحية في Power BI - داتا اركوس",
+      description: "شاهد لوحة تحكم الطوارئ الصحية في Power BI: تحليلات فورية لعمليات قسم الطوارئ وتدفق المرضى ومؤشرات الرعاية الصحية.",
+      keywords: "لوحة تحكم الطوارئ الصحية, تحليلات Power BI للرعاية الصحية, لوحة قسم الطوارئ, تحليلات تدفق المرضى, مؤشرات الرعاية الصحية, داتا اركوس",
+      author: "داتا اركوس",
+      "og:type": "website",
+      "og:title": "مثال لوحة تحكم الطوارئ الصحية في Power BI - داتا اركوس",
+      "og:description": "شاهد لوحة تحكم الطوارئ الصحية في Power BI: تحليلات فورية لعمليات قسم الطوارئ وتدفق المرضى ومؤشرات الرعاية الصحية.",
+      "og:url": "https://dataarcus.com/dashboards/er-health-dashboard.html",
+      "og:site_name": "داتا اركوس",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:locale": "ar_EG",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "مثال لوحة تحكم الطوارئ الصحية في Power BI - داتا اركوس",
+      "twitter:description": "شاهد لوحة تحكم الطوارئ الصحية في Power BI: تحليلات فورية لعمليات قسم الطوارئ وتدفق المرضى ومؤشرات الرعاية الصحية.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      canonical: "https://dataarcus.com/dashboards/er-health-dashboard.html",
     },
 
     // Page Header

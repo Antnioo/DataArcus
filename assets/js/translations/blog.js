@@ -5,7 +5,22 @@ window.blogTranslations = {
     meta: {
       title: "E-commerce Analytics Blog | Power BI & Data Strategy - DataArcus",
       description: "Practical guides for MENA e-commerce leaders on Power BI, data modeling, and analytics strategy. Learn to track CLV, optimize marketing ROI, and more.",
-      keywords: "e-commerce analytics blog, Power BI for e-commerce, Shopify analytics, MENA e-commerce, customer lifetime value, DataArcus blog"
+      keywords: "e-commerce analytics blog, Power BI for e-commerce, Shopify analytics, MENA e-commerce, customer lifetime value, DataArcus blog",
+      author: "DataArcus",
+      "og:type": "website",
+      "og:title": "E-commerce Analytics Blog | Power BI & Data Strategy - DataArcus",
+      "og:description": "Practical guides for MENA e-commerce leaders on Power BI, data modeling, and analytics strategy. Learn to track CLV, optimize marketing ROI, and more.",
+      "og:url": "https://dataarcus.com/blog.html",
+      "og:site_name": "DataArcus",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      "og:locale": "en_US",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "E-commerce Analytics Blog | Power BI & Data Strategy - DataArcus",
+      "twitter:description": "Practical guides for MENA e-commerce leaders on Power BI, data modeling, and analytics strategy. Learn to track CLV, optimize marketing ROI, and more.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      canonical: "https://dataarcus.com/blog.html",
     },
     
     // Header
@@ -24,11 +39,20 @@ window.blogTranslations = {
     blog: {
       sectionTitle: "Latest from the Playbook",
       sectionSubtitle: "Curated tutorials and strategies that help e-commerce teams move from raw Shopify & Meta Ads data to trusted, profitable insights.",
-      searchPlaceholder: "Search playbooks…"
+      searchPlaceholder: "Search playbooks…",
+      noResultsTitle: "No posts found",
+      noResultsSubtext: "Try adjusting your search terms or filters."
     },
 
     // Posts
     posts: {
+      kpis: {
+        badge: "STRATEGY",
+        title: "5 Marketing KPIs Your E-commerce Store is Ignoring",
+        date: "September 15, 2025",
+        excerpt: "Our new playbook dives into the advanced marketing analytics, including Customer Acquisition Cost (CAC) and Marketing Efficiency Ratio (MER), that drive profitable growth.",
+        button: "Read Playbook"
+      },
       etlpq: {
         badge: "DATA ENGINEERING",
         title: "ETL vs Power Query: The Right Data Strategy for Your E-commerce Store",
@@ -41,13 +65,6 @@ window.blogTranslations = {
         title: "The One Metric That Defines Your E-commerce Future (And How to Track It)",
         date: "August 23, 2025",
         excerpt: "Why Customer Lifetime Value (not just revenue) is the north-star KPI for e-commerce growth, and a concrete path to model it in Power BI.",
-        button: "Read Playbook"
-      },
-      placeholder: {
-        badge: "COMING SOON",
-        title: "5 Marketing KPIs Your Competitors Track in Power BI (And You Aren't)",
-        date: "September 10, 2025",
-        excerpt: "Our next playbook will dive into advanced marketing analytics, including Customer Acquisition Cost (CAC) and Marketing Efficiency Ratio (MER).",
         button: "Read Playbook"
       }
     },
@@ -64,9 +81,24 @@ window.blogTranslations = {
   ar: {
     // Meta (AR)
     meta: {
-      title: "مدونة تحليلات التجارة الإلكترونية | Power BI واستراتيجية البيانات - DataArcus",
-      description: "أدلة عملية لقادة التجارة الإلكترونية في الشرق الأوسط حول Power BI، ونمذجة البيانات، واستراتيجية التحليلات. تعلم تتبع القيمة العمرية للعميل، وتحسين عائد الاستثمار التسويقي، والمزيد.",
-      keywords: "مدونة تحليلات التجارة الإلكترونية, Power BI للتجارة الإلكترونية, تحليلات Shopify, التجارة الإلكترونية في الشرق الأوسط, القيمة العمرية للعميل, مدونة DataArcus"
+      title: "مدونة تحليلات التجارة الإلكترونية | Power BI واستراتيجية البيانات - داتا اركوس",
+      description: "أدلة عملية لقادة التجارة الإلكترونية في الشرق الأوسط حول Power BI ونمذجة البيانات واستراتيجية التحليلات. تعلم تتبع قيمة عمر العميل وتحسين عائد التسويق والمزيد.",
+      keywords: "مدونة تحليلات التجارة الإلكترونية, Power BI للتجارة الإلكترونية, تحليلات Shopify, التجارة الإلكترونية في الشرق الأوسط, قيمة عمر العميل, مدونة DataArcus",
+      author: "داتا اركوس",
+      "og:type": "website",
+      "og:title": "مدونة تحليلات التجارة الإلكترونية | Power BI واستراتيجية البيانات - داتا اركوس",
+      "og:description": "أدلة عملية لقادة التجارة الإلكترونية في الشرق الأوسط حول Power BI ونمذجة البيانات واستراتيجية التحليلات. تعلم تتبع قيمة عمر العميل وتحسين عائد التسويق والمزيد.",
+      "og:url": "https://dataarcus.com/blog.html",
+      "og:site_name": "داتا اركوس",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:locale": "ar_EG",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "مدونة تحليلات التجارة الإلكترونية | Power BI واستراتيجية البيانات - داتا اركوس",
+      "twitter:description": "أدلة عملية لقادة التجارة الإلكترونية في الشرق الأوسط حول Power BI ونمذجة البيانات واستراتيجية التحليلات. تعلم تتبع قيمة عمر العميل وتحسين عائد التسويق والمزيد.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      canonical: "https://dataarcus.com/blog.html",
     },
 
     // Header (AR)
@@ -85,11 +117,20 @@ window.blogTranslations = {
     blog: {
       sectionTitle: "أحدث الأدلة الإرشادية",
       sectionSubtitle: "شروحات واستراتيجيات تساعد فرق التجارة الإلكترونية على الانتقال من بيانات Shopify و Meta Ads الأولية إلى رؤى موثوقة ومربحة.",
-      searchPlaceholder: "ابحث في الأدلة…"
+      searchPlaceholder: "ابحث في الأدلة…",
+      noResultsTitle: "لم يتم العثور على مقالات",
+      noResultsSubtext: "حاول تعديل كلمات البحث أو الفلاتر."
     },
 
     // Posts (AR)
     posts: {
+      kpis: {
+        badge: "استراتيجية",
+        title: "5 مؤشرات أداء تسويقية يتجاهلها متجرك الإلكتروني",
+        date: "15 سبتمبر 2025",
+        excerpt: "يتعمق دليلنا الجديد في تحليلات التسويق المتقدمة، بما في ذلك تكلفة اكتساب العملاء (CAC) ونسبة كفاءة التسويق (MER)، التي تدفع النمو المربح.",
+        button: "اقرأ الدليل"
+      },
       etlpq: {
         badge: "هندسة البيانات",
         title: "ETL مقابل Power Query: استراتيجية البيانات الصحيحة لمتجرك الإلكتروني",
@@ -102,13 +143,6 @@ window.blogTranslations = {
         title: "المقياس الوحيد الذي يحدد مستقبل تجارتك الإلكترونية (وكيفية تتبعه)",
         date: "23 أغسطس 2025",
         excerpt: "لماذا تُعد القيمة العمرية للعميل (وليس فقط الإيرادات) هي مؤشر الأداء الرئيسي لنمو التجارة الإلكترونية، ومسار عملي لنمذجتها في Power BI.",
-        button: "اقرأ الدليل"
-      },
-      placeholder: {
-        badge: "قريبًا",
-        title: "5 مؤشرات تسويقية يتتبعها منافسوك في Power BI (وأنت لا تفعل)",
-        date: "10 سبتمبر 2025",
-        excerpt: "سيتناول دليلنا القادم تحليلات التسويق المتقدمة، بما في ذلك تكلفة اكتساب العملاء (CAC) ونسبة كفاءة التسويق (MER).",
         button: "اقرأ الدليل"
       }
     },

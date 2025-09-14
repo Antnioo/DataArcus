@@ -57,18 +57,20 @@ class LanguageManager {
       return window.callcenterTranslations;
     } else if (path.includes('maven-market-dashboard')) {
       return window.mavenmarketTranslations;
-    } else if (path.includes('portfolio.html')) {
+    } else if (path.includes('portfolio')) {
       return window.portfolioTranslations;
-    } else if (path.includes('index.html') || path === '/' || path === '') {
+    } else if (path.includes('index') || path === '/' || path === '') {
       return window.homepageTranslations;
-    } else if (path.includes('article-clv.html')) {
-      return window.articleTranslations;
+    } else if (path.includes('article-clv')) {
+      return window.clvTranslations;
     } else if (path.includes('er-health-dashboard')) {
      return window.erHealthTranslations;
     } else if (path.includes('blog')) {
      return window.blogTranslations;
     } else if (path.includes('article-etl-vs-power-query')) {
      return window.etlpqTranslations;
+    } else if (path.includes('article-kpi')) {
+     return window.kpiTranslations;
     }
     return null;
   }
@@ -189,31 +191,70 @@ class LanguageManager {
   // Update meta tags for SEO
   updateMetaTags() {
     const metaData = this.getText('meta');
-    
     if (typeof metaData === 'object') {
-      // Update title
+      // Update <title>
       if (metaData.title) {
         document.title = metaData.title;
       }
-      
-      // Update description
-      if (metaData.description) {
-        const descMeta = document.querySelector('meta[name="description"]');
-        if (descMeta) {
-          descMeta.content = metaData.description;
+
+      // Loop through all meta properties
+      Object.entries(metaData).forEach(([key, value]) => {
+        if (!value) return;
+        if (key === 'title') return; // Already handled
+
+        // Handle standard meta tags
+        let selector, attr;
+        if (key === 'description' || key === 'keywords' || key === 'author') {
+          selector = `meta[name="${key}"]`;
+          attr = 'content';
         }
-      }
-      
-      // Update keywords
-      if (metaData.keywords) {
-        const keywordsMeta = document.querySelector('meta[name="keywords"]');
-        if (keywordsMeta) {
-          keywordsMeta.content = metaData.keywords;
+        // Handle Open Graph tags
+        else if (key.startsWith('og:')) {
+          selector = `meta[property="${key}"]`;
+          attr = 'content';
         }
-      }
+        // Handle Twitter tags
+        else if (key.startsWith('twitter:')) {
+          selector = `meta[name="${key}"]`;
+          attr = 'content';
+        }
+        // Handle canonical link
+        else if (key === 'canonical') {
+          selector = 'link[rel="canonical"]';
+          attr = 'href';
+        }
+        // Handle favicon
+        else if (key === 'icon') {
+          selector = 'link[rel="icon"]';
+          attr = 'href';
+        }
+        // Add more custom cases as needed
+
+        if (selector) {
+          let tag = document.querySelector(selector);
+          if (!tag) {
+            // Create tag if it doesn't exist
+            if (selector.startsWith('meta')) {
+              tag = document.createElement('meta');
+              if (selector.includes('property')) {
+                tag.setAttribute('property', key);
+              } else if (selector.includes('name')) {
+                tag.setAttribute('name', key);
+              }
+              document.head.appendChild(tag);
+            } else if (selector.startsWith('link')) {
+              tag = document.createElement('link');
+              if (key === 'canonical') tag.setAttribute('rel', 'canonical');
+              if (key === 'icon') tag.setAttribute('rel', 'icon');
+              document.head.appendChild(tag);
+            }
+          }
+          tag.setAttribute(attr, value);
+        }
+      });
     }
   }
-
+  
   // Check if current screen size is mobile (below breakpoint)
   isMobileView() {
     return window.innerWidth < this.breakpoint;

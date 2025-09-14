@@ -3,9 +3,24 @@ window.mavenmarketTranslations = {
   en: {
     // Page Meta
     meta: {
-      title: "E-commerce Showcase: Retail Sales Analysis - DataArcus",
-      description: "Explore a Power BI showcase for e-commerce & retail. See how we analyze sales trends, product performance, and customer behavior to drive growth.",
-      keywords: "e-commerce dashboard, retail analytics, Power BI e-commerce, Shopify analytics, sales performance, DataArcus"
+      title: "Maven Market Power BI Dashboard Example - DataArcus",
+      description: "Explore our Maven Market Power BI dashboard: interactive sales, inventory, and profit analytics for retail and e-commerce businesses.",
+      keywords: "Maven Market dashboard, Power BI retail analytics, sales dashboard, inventory analytics, e-commerce dashboard, DataArcus",
+      author: "DataArcus",
+      "og:type": "website",
+      "og:title": "Maven Market Power BI Dashboard Example - DataArcus",
+      "og:description": "Explore our Maven Market Power BI dashboard: interactive sales, inventory, and profit analytics for retail and e-commerce businesses.",
+      "og:url": "https://dataarcus.com/dashboards/maven-market-dashboard.html",
+      "og:site_name": "DataArcus",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      "og:locale": "en_US",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "Maven Market Power BI Dashboard Example - DataArcus",
+      "twitter:description": "Explore our Maven Market Power BI dashboard: interactive sales, inventory, and profit analytics for retail and e-commerce businesses.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      canonical: "https://dataarcus.com/dashboards/maven-market-dashboard.html",
     },
     
     // Page Header
@@ -71,9 +86,24 @@ window.mavenmarketTranslations = {
 
   ar: {
     meta: {
-      title: "نموذج للتجارة الإلكترونية: تحليل مبيعات التجزئة - DataArcus",
-      description: "استكشف نموذج Power BI للتجارة الإلكترونية والتجزئة. شاهد كيف نحلل اتجاهات المبيعات، وأداء المنتجات، وسلوك العملاء لدفع النمو.",
-      keywords: "داشبورد تجارة إلكترونية, تحليلات التجزئة, Power BI للتجارة الإلكترونية, تحليلات Shopify, أداء المبيعات, DataArcus"
+      title: "مثال لوحة تحكم Maven Market في Power BI - داتا اركوس",
+      description: "استكشف لوحة تحكم Maven Market في Power BI: تحليلات تفاعلية للمبيعات والمخزون والأرباح لقطاع التجزئة والتجارة الإلكترونية.",
+      keywords: "لوحة تحكم Maven Market, تحليلات Power BI للبيع بالتجزئة, لوحة مبيعات, تحليلات المخزون, لوحة التجارة الإلكترونية, داتا اركوس",
+      author: "داتا اركوس",
+      "og:type": "website",
+      "og:title": "مثال لوحة تحكم Maven Market في Power BI - داتا اركوس",
+      "og:description": "استكشف لوحة تحكم Maven Market في Power BI: تحليلات تفاعلية للمبيعات والمخزون والأرباح لقطاع التجزئة والتجارة الإلكترونية.",
+      "og:url": "https://dataarcus.com/dashboards/maven-market-dashboard.html",
+      "og:site_name": "داتا اركوس",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:locale": "ar_EG",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "مثال لوحة تحكم Maven Market في Power BI - داتا اركوس",
+      "twitter:description": "استكشف لوحة تحكم Maven Market في Power BI: تحليلات تفاعلية للمبيعات والمخزون والأرباح لقطاع التجزئة والتجارة الإلكترونية.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      canonical: "https://dataarcus.com/dashboards/maven-market-dashboard.html",
     },
 
     header: {

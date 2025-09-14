@@ -1,11 +1,28 @@
 // translations/article.js - CLV Article Specific
-window.articleTranslations = {
+window.clvTranslations = {
   en: {
     // Page Meta
     meta: {
       title: "The E-commerce Metric That Defines Your Future: CLV - DataArcus",
       description: "Learn why Customer Lifetime Value (CLV) is the most critical metric for e-commerce growth and how to track it in Power BI with your Shopify or store data.",
-      keywords: "customer lifetime value e-commerce, CLV for Shopify, Power BI for CLV, customer retention, e-commerce KPIs, DataArcus"
+      keywords: "customer lifetime value e-commerce, CLV for Shopify, Power BI for CLV, customer retention, e-commerce KPIs, DataArcus",
+      author: "DataArcus",
+      "og:type": "article",
+      "og:title": "The E-commerce Metric That Defines Your Future: CLV - DataArcus",
+      "og:description": "Learn why Customer Lifetime Value (CLV) is the most critical metric for e-commerce growth and how to track it in Power BI with your Shopify or store data.",
+      "og:url": "https://dataarcus.com/articles/article-clv.html",
+      "og:site_name": "DataArcus",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      "og:locale": "en_US",
+      "og:article:published_time": "2025-08-23T12:00:00Z",
+      "og:article:author": "Abdelrahman M.",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "The E-commerce Metric That Defines Your Future: CLV - DataArcus",
+      "twitter:description": "Learn why Customer Lifetime Value (CLV) is the most critical metric for e-commerce growth and how to track it in Power BI with your Shopify or store data.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      canonical: "https://dataarcus.com/articles/article-clv.html",
     },
     
     // Article Header
@@ -61,9 +78,26 @@ window.articleTranslations = {
   ar: {
     // Page Meta Arabic
     meta: {
-      title: "مقياس التجارة الإلكترونية الذي يحدد مستقبلك: CLV - DataArcus",
-      description: "تعرّف على سبب كون القيمة العمرية للعميل (CLV) هي المقياس الأكثر أهمية لنمو التجارة الإلكترونية، وكيفية تتبعها في Power BI باستخدام بيانات متجرك.",
-      keywords: "القيمة العمرية للعميل للتجارة الإلكترونية, CLV لمتجر Shopify, Power BI لـ CLV, الاحتفاظ بالعملاء, مؤشرات التجارة الإلكترونية, DataArcus"
+      title: "مؤشر قيمة عمر العميل: سر نجاح التجارة الإلكترونية - داتا اركوس",
+      description: "تعرف على أهمية قيمة عمر العميل (CLV) كأهم مؤشر لنمو التجارة الإلكترونية وكيفية تتبعها في Power BI باستخدام بيانات متجرك.",
+      keywords: "قيمة عمر العميل, CLV لمتاجر Shopify, Power BI لقيمة عمر العميل, الاحتفاظ بالعملاء, مؤشرات التجارة الإلكترونية, داتا اركوس",
+      author: "داتا اركوس",
+      "og:type": "article",
+      "og:title": "مؤشر قيمة عمر العميل: سر نجاح التجارة الإلكترونية - داتا اركوس",
+      "og:description": "تعرف على أهمية قيمة عمر العميل (CLV) كأهم مؤشر لنمو التجارة الإلكترونية وكيفية تتبعها في Power BI باستخدام بيانات متجرك.",
+      "og:url": "https://dataarcus.com/articles/article-clv.html",
+      "og:site_name": "داتا اركوس",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:locale": "ar_EG",
+      "og:article:published_time": "2025-08-23T12:00:00Z",
+      "og:article:author": "عبدالرحمن م.",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "مؤشر قيمة عمر العميل: سر نجاح التجارة الإلكترونية - داتا اركوس",
+      "twitter:description": "تعرف على أهمية قيمة عمر العميل (CLV) كأهم مؤشر لنمو التجارة الإلكترونية وكيفية تتبعها في Power BI باستخدام بيانات متجرك.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      canonical: "https://dataarcus.com/articles/article-clv.html",
     },
     // Article Header Arabic
     header: {

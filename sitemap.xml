@@ -38,19 +38,25 @@
   </url>
   <url>
     <loc>https://dataarcus.com/blog.html</loc>
-    <lastmod>2025-09-08</lastmod>
+    <lastmod>2025-09-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
     <url>
     <loc>https://dataarcus.com/article-clv.html</loc>
-    <lastmod>2025-09-08</lastmod>
+    <lastmod>2025-09-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
     <url>
     <loc>https://dataarcus.com/article-etl-power-query.html</loc>
-    <lastmod>2025-09-08</lastmod>
+    <lastmod>2025-09-15</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.7</priority>
+  </url>
+    <url>
+    <loc>https://dataarcus.com/articles/article-kpi.html</loc>
+    <lastmod>2025-09-15</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.7</priority>
   </url>
