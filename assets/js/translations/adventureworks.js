@@ -3,9 +3,24 @@ window.adventureworksTranslations = {
   en: {
     // Page Meta
     meta: {
-      title: "Advanced Showcase: Enterprise Sales & Operations Analysis - DataArcus",
-      description: "Explore our flagship Power BI showcase. A multi-page command center demonstrating advanced capabilities like predictive what-if analysis and customer segmentation.",
-      keywords: "advanced Power BI dashboard, predictive analytics showcase, what-if analysis Power BI, enterprise sales dashboard, DataArcus"
+      title: "AdventureWorks Power BI Dashboard Example - DataArcus",
+      description: "View our AdventureWorks Power BI dashboard: comprehensive analytics for sales, product performance, and business insights.",
+      keywords: "AdventureWorks dashboard, Power BI sales analytics, product performance dashboard, business insights, DataArcus",
+      author: "DataArcus",
+      "og:type": "website",
+      "og:title": "AdventureWorks Power BI Dashboard Example - DataArcus",
+      "og:description": "View our AdventureWorks Power BI dashboard: comprehensive analytics for sales, product performance, and business insights.",
+      "og:url": "https://dataarcus.com/dashboards/adventureworks-dashboard.html",
+      "og:site_name": "DataArcus",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      "og:locale": "en_US",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "AdventureWorks Power BI Dashboard Example - DataArcus",
+      "twitter:description": "View our AdventureWorks Power BI dashboard: comprehensive analytics for sales, product performance, and business insights.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      canonical: "https://dataarcus.com/dashboards/adventureworks-dashboard.html",
     },
     
     // Page Header
@@ -71,9 +86,24 @@ window.adventureworksTranslations = {
   ar: {
     // Page Meta
     meta: {
-      title: "نموذج متقدم: تحليل مبيعات وعمليات الشركات - DataArcus",
-      description: "استكشف نموذجنا الرائد في Power BI. مركز تحكم متعدد الصفحات يعرض إمكانيات متقدمة مثل تحليل 'ماذا لو' التنبؤي وتقسيم العملاء.",
-      keywords: "داشبورد Power BI متقدم, نموذج تحليلات تنبؤية, تحليل ماذا لو, داشبورد مبيعات الشركات, DataArcus"
+      title: "مثال لوحة تحكم AdventureWorks في Power BI - داتا اركوس",
+      description: "شاهد لوحة تحكم AdventureWorks في Power BI: تحليلات شاملة للمبيعات وأداء المنتجات ورؤى الأعمال.",
+      keywords: "لوحة تحكم AdventureWorks, تحليلات Power BI للمبيعات, لوحة أداء المنتجات, رؤى الأعمال, داتا اركوس",
+      author: "داتا اركوس",
+      "og:type": "website",
+      "og:title": "مثال لوحة تحكم AdventureWorks في Power BI - داتا اركوس",
+      "og:description": "شاهد لوحة تحكم AdventureWorks في Power BI: تحليلات شاملة للمبيعات وأداء المنتجات ورؤى الأعمال.",
+      "og:url": "https://dataarcus.com/dashboards/adventureworks-dashboard.html",
+      "og:site_name": "داتا اركوس",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:locale": "ar_EG",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "مثال لوحة تحكم AdventureWorks في Power BI - داتا اركوس",
+      "twitter:description": "شاهد لوحة تحكم AdventureWorks في Power BI: تحليلات شاملة للمبيعات وأداء المنتجات ورؤى الأعمال.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      canonical: "https://dataarcus.com/dashboards/adventureworks-dashboard.html",
     },
 
     // Page Header

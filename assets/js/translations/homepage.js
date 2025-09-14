@@ -4,8 +4,23 @@ window.homepageTranslations = {
     // Page Meta
     meta: {
       title: "DataArcus — Power BI for E-commerce Growth in MENA",
-      description: "We build custom Power BI dashboards for e-commerce businesses in Egypt & the MENA region to optimize marketing ROI, increase customer lifetime value, and streamline inventory.",
-      keywords: "Power BI for e-commerce, e-commerce analytics MENA, Shopify dashboard, customer lifetime value, marketing ROI analytics, DataArcus Egypt"
+      description: "DataArcus builds custom Power BI dashboards for e-commerce businesses in Egypt & the MENA region to optimize marketing ROI, increase customer lifetime value, and streamline inventory.",
+      keywords: "Power BI for e-commerce, e-commerce analytics MENA, Shopify dashboard, customer lifetime value, marketing ROI analytics, DataArcus Egypt",
+      author: "DataArcus",
+      "og:type": "website",
+      "og:title": "DataArcus — Power BI for E-commerce Growth in MENA",
+      "og:description": "We build custom Power BI dashboards for e-commerce businesses in Egypt & the MENA region to optimize marketing ROI, increase customer lifetime value, and streamline inventory.",
+      "og:url": "https://dataarcus.com",
+      "og:site_name": "DataArcus",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      "og:locale": "en_US",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "DataArcus — Power BI for E-commerce Growth in MENA",
+      "twitter:description": "We build custom Power BI dashboards for e-commerce businesses in Egypt & the MENA region to optimize marketing ROI, increase customer lifetime value, and streamline inventory.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      canonical: "https://dataarcus.com/",
     },
 
     // Hero Section
@@ -213,9 +228,24 @@ window.homepageTranslations = {
   ar: {
     // Page Meta
     meta: {
-      title: "DataArcus — حلول Power BI لنمو التجارة الإلكترونية في الشرق الأوسط",
-      description: "نبني لوحات تحكم Power BI مخصصة لشركات التجارة الإلكترونية في مصر والشرق الأوسط لتحسين عائد الاستثمار التسويقي، وزيادة القيمة العمرية للعميل، وإدارة المخزون بكفاءة.",
-      keywords: "Power BI للتجارة الإلكترونية, تحليلات التجارة الإلكترونية, داشبورد Shopify, القيمة العمرية للعميل, عائد الاستثمار التسويقي, DataArcus مصر"
+      title: "داتا اركوس — حلول Power BI لنمو التجارة الإلكترونية في الشرق الأوسط",
+      description: "تقوم داتا اركوس ببناء لوحات تحكم Power BI مخصصة لشركات التجارة الإلكترونية في مصر ومنطقة الشرق الأوسط وشمال إفريقيا لتحسين عائد التسويق وزيادة قيمة عمر العميل وتبسيط المخزون.",
+      keywords: "Power BI للتجارة الإلكترونية, تحليلات التجارة الإلكترونية الشرق الأوسط, لوحة تحكم Shopify, قيمة عمر العميل, تحليلات عائد التسويق, DataArcus مصر",
+      author: "داتا اركوس",
+      "og:type": "website",
+      "og:title": "داتا اركوس — حلول Power BI لنمو التجارة الإلكترونية في الشرق الأوسط",
+      "og:description": "نحن نبني لوحات تحكم Power BI مخصصة لشركات التجارة الإلكترونية في مصر ومنطقة الشرق الأوسط وشمال إفريقيا لتحسين عائد التسويق وزيادة قيمة عمر العميل وتبسيط المخزون.",
+      "og:url": "https://dataarcus.com",
+      "og:site_name": "داتا اركوس",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:locale": "ar_EG",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "داتا اركوس — حلول Power BI لنمو التجارة الإلكترونية في الشرق الأوسط",
+      "twitter:description": "نحن نبني لوحات تحكم Power BI مخصصة لشركات التجارة الإلكترونية في مصر ومنطقة الشرق الأوسط وشمال إفريقيا لتحسين عائد التسويق وزيادة قيمة عمر العميل وتبسيط المخزون.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      canonical: "https://dataarcus.com/",
     },
 
     // Hero Section

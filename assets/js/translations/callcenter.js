@@ -3,9 +3,24 @@ window.callcenterTranslations = {
   en: {
     // Page Meta
     meta: {
-      title: "E-commerce Showcase: Customer Service Analysis - DataArcus",
-      description: "Explore a Power BI showcase for e-commerce customer service. See how we analyze agent performance, resolution rates, and satisfaction to improve your customer experience.",
-      keywords: "e-commerce customer service, call center dashboard, Power BI for support, agent performance, customer satisfaction KPI, DataArcus"
+      title: "Call Center Power BI Dashboard Example - DataArcus",
+      description: "Discover our Call Center Power BI dashboard: monitor agent performance, call volume, and customer satisfaction in real time.",
+      keywords: "Call Center dashboard, Power BI call analytics, agent performance dashboard, customer satisfaction analytics, DataArcus",
+      author: "DataArcus",
+      "og:type": "website",
+      "og:title": "Call Center Power BI Dashboard Example - DataArcus",
+      "og:description": "Discover our Call Center Power BI dashboard: monitor agent performance, call volume, and customer satisfaction in real time.",
+      "og:url": "https://dataarcus.com/dashboards/call-center-dashboard.html",
+      "og:site_name": "DataArcus",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      "og:locale": "en_US",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "Call Center Power BI Dashboard Example - DataArcus",
+      "twitter:description": "Discover our Call Center Power BI dashboard: monitor agent performance, call volume, and customer satisfaction in real time.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      canonical: "https://dataarcus.com/dashboards/call-center-dashboard.html",
     },
     
     // Page Header
@@ -70,9 +85,24 @@ window.callcenterTranslations = {
   ar: {
     // Page Meta
     meta: {
-      title: "نموذج للتجارة الإلكترونية: تحليل خدمة العملاء - DataArcus",
-      description: "استكشف نموذج Power BI لخدمة عملاء التجارة الإلكترونية. شاهد كيف نحلل أداء الموظفين، ومعدلات حل المشكلات، والرضا لتحسين تجربة عملائك.",
-      keywords: "خدمة عملاء التجارة الإلكترونية, داشبورد مركز الاتصال, Power BI للدعم, أداء الموظفين, مؤشرات رضا العملاء, DataArcus"
+      title: "مثال لوحة تحكم مركز الاتصال في Power BI - داتا اركوس",
+      description: "اكتشف لوحة تحكم مركز الاتصال في Power BI: راقب أداء الوكلاء وحجم المكالمات ورضا العملاء في الوقت الفعلي.",
+      keywords: "لوحة تحكم مركز الاتصال, تحليلات Power BI للمكالمات, لوحة أداء الوكلاء, تحليلات رضا العملاء, داتا اركوس",
+      author: "داتا اركوس",
+      "og:type": "website",
+      "og:title": "مثال لوحة تحكم مركز الاتصال في Power BI - داتا اركوس",
+      "og:description": "اكتشف لوحة تحكم مركز الاتصال في Power BI: راقب أداء الوكلاء وحجم المكالمات ورضا العملاء في الوقت الفعلي.",
+      "og:url": "https://dataarcus.com/dashboards/call-center-dashboard.html",
+      "og:site_name": "داتا اركوس",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:locale": "ar_EG",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "مثال لوحة تحكم مركز الاتصال في Power BI - داتا اركوس",
+      "twitter:description": "اكتشف لوحة تحكم مركز الاتصال في Power BI: راقب أداء الوكلاء وحجم المكالمات ورضا العملاء في الوقت الفعلي.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      canonical: "https://dataarcus.com/dashboards/call-center-dashboard.html",
     },
 
     // Page Header

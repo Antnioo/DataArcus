@@ -5,7 +5,24 @@ window.etlpqTranslations = {
     meta: {
       title: "ETL vs Power Query: E-commerce Data Strategy - DataArcus",
       description: "A guide for e-commerce businesses on when to use ETL vs Power Query in Power BI. Learn the right approach for handling Shopify data, ad APIs, and more for scale and governance.",
-      keywords: "ETL vs Power Query e-commerce, Shopify data pipeline, Power BI data preparation, data engineering for e-commerce, DataArcus"
+      keywords: "ETL vs Power Query e-commerce, Shopify data pipeline, Power BI data preparation, data engineering for e-commerce, DataArcus",
+      author: "DataArcus",
+      "og:type": "article",
+      "og:title": "ETL vs Power Query: E-commerce Data Strategy - DataArcus",
+      "og:description": "A guide for e-commerce businesses on when to use ETL vs Power Query in Power BI. Learn the right approach for handling Shopify data, ad APIs, and more.",
+      "og:url": "https://dataarcus.com/articles/article-etl-vs-power-query.html",
+      "og:site_name": "DataArcus",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      "og:locale": "en_US",
+      "og:article:published_time": "2025-09-04T12:00:00Z",
+      "og:article:author": "Abdelrahman M.",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "ETL vs Power Query: E-commerce Data Strategy - DataArcus",
+      "twitter:description": "A guide for e-commerce businesses on when to use ETL vs Power Query in Power BI. Learn the right approach for handling Shopify data, ad APIs, and more.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
+      canonical: "https://dataarcus.com/articles/article-etl-vs-power-query.html",
     },
     // Article Header
     header: {
@@ -101,9 +118,26 @@ window.etlpqTranslations = {
   ar: {
     // Page Meta Arabic
     meta: {
-      title: "ETL مقابل Power Query: استراتيجية البيانات للتجارة الإلكترونية - DataArcus",
-      description: "دليل لشركات التجارة الإلكترونية حول متى تستخدم ETL مقابل Power Query في Power BI. تعلم النهج الصحيح للتعامل مع بيانات Shopify وواجهات برمجة التطبيقات للإعلانات والمزيد.",
-      keywords: "ETL للتجارة الإلكترونية, خط بيانات Shopify, تجهيز بيانات Power BI, هندسة البيانات للتجارة الإلكترونية, DataArcus"
+      title: "ETL أم Power Query: استراتيجية بيانات التجارة الإلكترونية - داتا اركوس",
+      description: "دليل لشركات التجارة الإلكترونية حول متى تستخدم ETL ومتى تستخدم Power Query في Power BI. تعلم النهج الصحيح للتعامل مع بيانات Shopify وواجهات برمجة الإعلانات والمزيد.",
+      keywords: "ETL مقابل Power Query للتجارة الإلكترونية, خطوط بيانات Shopify, إعداد البيانات في Power BI, هندسة البيانات للتجارة الإلكترونية, داتا اركوس",
+      author: "داتا اركوس",
+      "og:type": "article",
+      "og:title": "ETL أم Power Query: استراتيجية بيانات التجارة الإلكترونية - داتا اركوس",
+      "og:description": "دليل لشركات التجارة الإلكترونية حول متى تستخدم ETL ومتى تستخدم Power Query في Power BI. تعلم النهج الصحيح للتعامل مع بيانات Shopify وواجهات برمجة الإعلانات والمزيد.",
+      "og:url": "https://dataarcus.com/articles/article-etl-vs-power-query.html",
+      "og:site_name": "داتا اركوس",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:locale": "ar_EG",
+      "og:article:published_time": "2025-09-04T12:00:00Z",
+      "og:article:author": "عبدالرحمن م.",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "ETL أم Power Query: استراتيجية بيانات التجارة الإلكترونية - داتا اركوس",
+      "twitter:description": "دليل لشركات التجارة الإلكترونية حول متى تستخدم ETL ومتى تستخدم Power Query في Power BI. تعلم النهج الصحيح للتعامل مع بيانات Shopify وواجهات برمجة الإعلانات والمزيد.",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      canonical: "https://dataarcus.com/articles/article-etl-vs-power-query.html",
     },
     // Article Header Arabic
     header: {
