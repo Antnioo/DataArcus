@@ -71,6 +71,8 @@ class LanguageManager {
      return window.etlpqTranslations;
     } else if (path.includes('article-kpi')) {
      return window.kpiTranslations;
+    } else if (path.includes('article-shopify')) {
+     return window.shopifyTranslations;
     }
     return null;
   }
