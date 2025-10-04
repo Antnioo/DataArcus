@@ -46,6 +46,13 @@ window.blogTranslations = {
 
     // Posts
     posts: {
+      shopify: {
+        badge: "STRATEGY",
+        title: "The Ultimate Shopify Dashboard: How to Build a Single Source of Truth in Power BI",
+        date: "October 04, 2025",
+        excerpt: "A playbook for e-commerce leaders on building a single source of truth from Shopify data in Power BI to track sales, marketing ROI, and customer behavior.",
+        button: "Read Playbook"
+      },
       kpis: {
         badge: "STRATEGY",
         title: "5 Marketing KPIs Your E-commerce Store is Ignoring",
@@ -124,6 +131,13 @@ window.blogTranslations = {
 
     // Posts (AR)
     posts: {
+      shopify: {
+        badge: "استراتيجية",
+        title: "دليل لقادة التجارة الإلكترونية حول بناء مصدر موحد للحقيقة من بيانات Shopify في Power BI.",
+        date: "04 اكتوبر 2025",
+        excerpt: "دليل لقادة التجارة الإلكترونية حول بناء مصدر موحد للحقيقة من بيانات Shopify في Power BI لتتبع المبيعات وعائد الاستثمار التسويقي وسلوك العملاء.",
+        button: "اقرأ الدليل"
+      },
       kpis: {
         badge: "استراتيجية",
         title: "5 مؤشرات أداء تسويقية يتجاهلها متجرك الإلكتروني",

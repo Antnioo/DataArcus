@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://dataarcus.com/articles/article-shopify.html" />
+  
+  <title>The Ultimate Shopify Dashboard in Power BI - DataArcus</title>
+  <meta name="description" content="A playbook for e-commerce leaders on building a single source of truth from Shopify data in Power BI to track sales, marketing ROI, and customer behavior." />
+  <meta name="author" content="DataArcus" />
+  <meta name="keywords" content="Shopify dashboard, Power BI Shopify, e-commerce analytics, Shopify analytics, marketing ROI, DataArcus" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="The Ultimate Shopify Dashboard in Power BI - DataArcus" />
+  <meta property="og:description" content="A playbook for e-commerce leaders on building a single source of truth from Shopify data in Power BI to track sales, marketing ROI, and customer behavior." />
+  <meta property="og:url" content="https://dataarcus.com/articles/article-shopify.html" />
+  <meta property="og:site_name" content="DataArcus" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og-image-kpi-playbook.png" />
+  <meta property="og:image:alt" content="A title card for the article 'The Ultimate Shopify Dashboard in Power BI'." />
+  <meta property="og:locale" content="en_US" />
+  <meta property="article:published_time" content="2025-10-04T12:00:00Z" />
+  <meta property="article:author" content="Abdelrahman M." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The Ultimate Shopify Dashboard in Power BI - DataArcus" />
+  <meta name="twitter:description" content="A playbook for e-commerce leaders on building a single source of truth from Shopify data in Power BI to track sales, marketing ROI, and customer behavior." />
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og-image-shopify-playbook.png" />
+  <meta name="twitter:image:alt" content="A title card for the article 'The Ultimate Shopify Dashboard in Power BI'." />
+  
+  <link rel="icon" href="../assets/img/favicon.svg"/>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-RC3MRC4JZH');
+  </script>
+
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "sy2681b9al");
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/css/style.css" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">  
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  </noscript>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "The Ultimate Shopify Dashboard: How to Build a Single Source of Truth in Power BI",
+    "description": "A playbook for e-commerce leaders on building a single source of truth from Shopify data in Power BI to track sales, marketing ROI, and customer behavior.",
+    "url": "https://dataarcus.com/articles/article-shopify.html",
+    "author": {
+      "@type": "Person",
+      "name": "Abdelrahman M."
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "DataArcus",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://dataarcus.com/assets/img/logo.svg"
+      }
+    },
+    "datePublished": "2025-10-04",
+    "image": "https://dataarcus.com/assets/img/og-image-kpi-playbook.png"
+  }
+  </script>
+
+</head>
+<body>
+    
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html#hero">
+        <img src="../assets/img/logo.svg" alt="DataArcus logo" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="../index.html#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="../portfolio.html" data-i18n="nav.portfolio">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <a href="../index.html#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Get Your Free PoC</a>
+      </div>
+    </div>
+  </nav>
+
+<main class="article-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+            
+            <header class="article-header">
+              <h1 class="display-5 fw-bold" data-i18n="header.title">The Ultimate Shopify Dashboard: How to Build a Single Source of Truth in Power BI</h1>
+              <p class="lead text-white-50" data-i18n="header.subtitle">Posted on October 4, 2025</p>
+            </header>
+
+            <article class="article-body">
+              <p data-i18n-html="content.intro1"></p>
+              <p data-i18n-html="content.intro2"></p>
+              <ul>
+                <li data-i18n-html="content.intro_list.0"></li>
+                <li data-i18n-html="content.intro_list.1"></li>
+                <li data-i18n-html="content.intro_list.2"></li>
+              </ul>
+              <p data-i18n-html="content.intro3"></p>
+              <p data-i18n-html="content.intro4"></p>
+
+              <h2 class="mt-5 mb-3" data-i18n="content.h_mod1"></h2>
+              <p data-i18n-html="content.p_mod1_1"></p>
+              <p data-i18n-html="content.p_mod1_2"></p>
+
+              <h2 class="mt-5 mb-3" data-i18n="content.h_mod2"></h2>
+              <p data-i18n-html="content.p_mod2_1"></p>
+              <p data-i18n-html="content.p_mod2_2"></p>
+
+              <h2 class="mt-5 mb-3" data-i18n="content.h_mod3"></h2>
+              <p data-i18n-html="content.p_mod3_1"></p>
+              <p data-i18n-html="content.p_mod3_2"></p>
+
+              <h2 class="mt-5 mb-3" data-i18n="content.h_mod4"></h2>
+              <p data-i18n-html="content.p_mod4_1"></p>
+              <p data-i18n-html="content.p_mod4_2"></p>
+
+              <h2 class="mt-5 mb-3" data-i18n="content.h_conclusion"></h2>
+              <p data-i18n-html="content.p_conclusion1"></p>
+              <p data-i18n-html="content.p_conclusion2"></p>
+              <p data-i18n-html="content.p_conclusion3"></p>
+            </article>
+
+            <div class="text-center my-5 py-5">
+              <div class="glass-card p-4 p-md-5 d-inline-block" data-aos="fade-up">
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title"><i class="bi bi-grid-fill me-2"></i></h3>
+                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle"></p>
+                <a href="blog.html" class="btn btn-accent">
+                    <i class="bi bi-arrow-right-circle me-2"></i><span data-i18n="exploreMore.button"></span>
+                </a>
+              </div>
+            </div>
+
+            <div class="text-center mt-5 pt-5">
+              <hr class="mb-5">
+              <h3 class="h4 mb-3" data-i18n="finalCta.title"></h3>
+              <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle"></p>
+              <a href="index.html#contact" class="btn btn-accent btn-lg">
+                  <i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button"></span>
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+  </main>
+  
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="../index.html#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="../assets/img/logo.svg" alt="DataArcus logo" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Expert, custom-built Power BI solutions that turn your complex data into a clear strategic advantage.</p>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="../portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Portfolio</a></li>
+              <li class="mb-2"><a href="../index.html#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="../blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Built with passion • Powered by innovation</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="../assets/js/translations/common.js" defer></script>
+  <script src="../assets/js/translations/article-shopify.js" defer></script>
+  <script src="../assets/js/lang-manager.js" defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
+  <script src="../assets/js/main.js" defer></script>
+</body>
+</html>
