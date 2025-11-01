@@ -36,6 +36,13 @@ window.portfolioTranslations = {
       
       // Individual Projects
       projects: {
+
+        cfpb: {
+          badge: "FINANCE & COMPLIANCE",
+          title: "Consumer Financial Complaints Analysis",
+          description: "A 4-page showcase analyzing 7 years of U.S. consumer complaints, focusing on trends, company accountability, and regional fairness.",
+          button: "View Showcase"
+        },
         erhealth: {
           badge: "HEALTHCARE ANALYTICS",
           title: "Emergency Room Performance Analysis",
@@ -119,6 +126,13 @@ window.portfolioTranslations = {
 
       // Individual Projects Arabic
       projects: {
+
+        cfpb: {
+          badge: "تحليلات مالية وامتثال",
+          title: "تحليل شكاوى الخدمات المالية",
+          description: "نموذج من 4 صفحات يحلل 7 سنوات من شكاوى المستهلكين في الولايات المتحدة، مع التركيز على الاتجاهات ومساءلة الشركات والعدالة الإقليمية.",
+          button: "عرض النموذج"
+        },
         erhealth: {
           badge: "تحليلات الرعاية الصحية",
           title: "تحليل أداء غرفة الطوارئ",

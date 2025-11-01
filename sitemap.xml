@@ -36,6 +36,12 @@
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
   </url>
+    <url>
+    <loc>https://dataarcus.com/dashboards/consumer-financial-complaints.html</loc>
+    <lastmod>2025-01-01</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
+  </url>
   <url>
     <loc>https://dataarcus.com/blog.html</loc>
     <lastmod>2025-09-15</lastmod>

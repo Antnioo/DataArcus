@@ -73,6 +73,8 @@ class LanguageManager {
      return window.kpiTranslations;
     } else if (path.includes('article-shopify')) {
      return window.shopifyTranslations;
+    } else if (path.includes('consumer-financial-complaints')) {
+     return window.cfpbComplaintsTranslations;
     }
     return null;
   }
