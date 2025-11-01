@@ -105,9 +105,9 @@ window.homepageTranslations = {
       p1: "Our approach is built on a deep understanding of both technology and business strategy. We take the time to understand your unique challenges and goals, ensuring that every solution we build is not just technically excellent, but perfectly aligned with the outcomes you need to achieve.",
       founder: "Abdelrahman M., Founder & Lead Data Architect",
       certification: {
-        title: "Google Certified",
+        title: "Industry Certified",
         subtitle: "Data Analytics Professional", 
-        verified: "Verified on Credly"
+        verified: "Verified by Google & Microsoft"
       },
       statsTitle: "Our Commitment, Measured",
       statsSubtitle: "Our passion is backed by a track record of excellence and reliability.",
@@ -330,9 +330,9 @@ window.homepageTranslations = {
       p1: "يقوم نهجنا على فهم عميق للتكنولوجيا واستراتيجية الأعمال. نأخذ الوقت الكافي لفهم تحدياتك وأهدافك الفريدة، لضمان أن كل حل نبنيه ليس ممتازًا من الناحية التقنية فحسب، بل متوافق تمامًا مع النتائج التي تسعى لتحقيقها.",
       founder: "عبد الرحمن م.، المؤسس وكبير مهندسي البيانات",
       certification: {
-        title: "شهادة Google",
-        subtitle: "محترف تحليل البيانات",
-        verified: "موثق عبر Credly"
+        title: "شهادات معتمدة",
+        subtitle: "محترف تحليل بيانات",
+        verified: "موثق من Google و Microsoft"
       },
       statsTitle: "التزامنا بالأرقام",
       statsSubtitle: "شغفنا مدعوم بسجل حافل من التميز والموثوقية.",
