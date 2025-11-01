@@ -48,7 +48,7 @@ window.homepageTranslations = {
       sql: "SQL",
       azure: "Azure",
       python: "Python",
-      tableau: "Tableau"
+      fabric: "Fabric"
     },
 
     // Services Section
@@ -273,7 +273,7 @@ window.homepageTranslations = {
       sql: "SQL",
       azure: "Azure",
       python: "Python",
-      tableau: "Tableau"
+      fabric: "Fabric"
     },
 
     // Services Section
