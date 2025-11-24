@@ -42,8 +42,7 @@
     <changefreq>yearly</changefreq>
     <priority>0.8</priority>
   </url>
-  </url>
-    <url>
+  <url>
     <loc>https://dataarcus.com/dashboards/repeatiq-dashboard.html</loc>
     <lastmod>2025-11-24</lastmod>
     <changefreq>yearly</changefreq>
