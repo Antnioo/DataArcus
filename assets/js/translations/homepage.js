@@ -3,12 +3,12 @@ window.homepageTranslations = {
   en: {
     // Page Meta
     meta: {
-      title: "DataArcus — Power BI for E-commerce Growth in MENA",
+      title: "DataArcus - Power BI for E-commerce Growth in MENA",
       description: "DataArcus builds custom Power BI dashboards for e-commerce businesses in Egypt & the MENA region to optimize marketing ROI, increase customer lifetime value, and streamline inventory.",
       keywords: "Power BI for e-commerce, e-commerce analytics MENA, Shopify dashboard, customer lifetime value, marketing ROI analytics, DataArcus Egypt",
       author: "DataArcus",
       "og:type": "website",
-      "og:title": "DataArcus — Power BI for E-commerce Growth in MENA",
+      "og:title": "DataArcus - Power BI for E-commerce Growth in MENA",
       "og:description": "We build custom Power BI dashboards for e-commerce businesses in Egypt & the MENA region to optimize marketing ROI, increase customer lifetime value, and streamline inventory.",
       "og:url": "https://dataarcus.com",
       "og:site_name": "DataArcus",
@@ -16,7 +16,7 @@ window.homepageTranslations = {
       "og:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
       "og:locale": "en_US",
       "twitter:card": "summary_large_image",
-      "twitter:title": "DataArcus — Power BI for E-commerce Growth in MENA",
+      "twitter:title": "DataArcus - Power BI for E-commerce Growth in MENA",
       "twitter:description": "We build custom Power BI dashboards for e-commerce businesses in Egypt & the MENA region to optimize marketing ROI, increase customer lifetime value, and streamline inventory.",
       "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "twitter:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
@@ -100,7 +100,7 @@ portfolio: {
     // About Section
     about: {
       title: "A Partner in Your Success",
-      subtitle: "At DataArcus, we don't just build dashboards—we build data-driven partnerships that empower you to lead with confidence.",
+      subtitle: "At DataArcus, we don't just build dashboards-we build data-driven partnerships that empower you to lead with confidence.",
       quote: "\"My name is Abdelrahman M., and I founded DataArcus to eliminate guesswork from business. After 5 years in data analytics, I saw too many brilliant leaders held back by messy, inaccessible data. We exist to bridge that gap.\"",
       p1: "Our approach is built on a deep understanding of both technology and business strategy. We take the time to understand your unique challenges and goals, ensuring that every solution we build is not just technically excellent, but perfectly aligned with the outcomes you need to achieve.",
       founder: "Abdelrahman M., Founder & Lead Data Architect",
@@ -228,12 +228,12 @@ portfolio: {
   ar: {
     // Page Meta
     meta: {
-      title: "داتا اركوس — حلول Power BI لنمو التجارة الإلكترونية في الشرق الأوسط",
+      title: "داتا اركوس - حلول Power BI لنمو التجارة الإلكترونية في الشرق الأوسط",
       description: "تقوم داتا اركوس ببناء لوحات تحكم Power BI مخصصة لشركات التجارة الإلكترونية في مصر ومنطقة الشرق الأوسط وشمال إفريقيا لتحسين عائد التسويق وزيادة قيمة عمر العميل وتبسيط المخزون.",
       keywords: "Power BI للتجارة الإلكترونية, تحليلات التجارة الإلكترونية الشرق الأوسط, لوحة تحكم Shopify, قيمة عمر العميل, تحليلات عائد التسويق, DataArcus مصر",
       author: "داتا اركوس",
       "og:type": "website",
-      "og:title": "داتا اركوس — حلول Power BI لنمو التجارة الإلكترونية في الشرق الأوسط",
+      "og:title": "داتا اركوس - حلول Power BI لنمو التجارة الإلكترونية في الشرق الأوسط",
       "og:description": "نحن نبني لوحات تحكم Power BI مخصصة لشركات التجارة الإلكترونية في مصر ومنطقة الشرق الأوسط وشمال إفريقيا لتحسين عائد التسويق وزيادة قيمة عمر العميل وتبسيط المخزون.",
       "og:url": "https://dataarcus.com",
       "og:site_name": "داتا اركوس",
@@ -241,7 +241,7 @@ portfolio: {
       "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       "og:locale": "ar_EG",
       "twitter:card": "summary_large_image",
-      "twitter:title": "داتا اركوس — حلول Power BI لنمو التجارة الإلكترونية في الشرق الأوسط",
+      "twitter:title": "داتا اركوس - حلول Power BI لنمو التجارة الإلكترونية في الشرق الأوسط",
       "twitter:description": "نحن نبني لوحات تحكم Power BI مخصصة لشركات التجارة الإلكترونية في مصر ومنطقة الشرق الأوسط وشمال إفريقيا لتحسين عائد التسويق وزيادة قيمة عمر العميل وتبسيط المخزون.",
       "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",

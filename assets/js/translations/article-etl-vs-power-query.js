@@ -39,7 +39,7 @@ window.etlpqTranslations = {
         "<strong>Engineered & orchestrated:</strong> Scheduled pipelines with monitoring, alerts, and lineage.",
         "<strong>Versionable & testable:</strong> Stored in code repos (e.g., SQL/dbt) with CI/CD and peer review.",
         "<strong>Built for scale:</strong> Handles high volumes (e.g., millions of orders from Shopify), and complex business rules upstream of BI.",
-        "<strong>Reusable data products:</strong> Outputs modeled tables (star schemas) for many reports and tools—not just Power BI."
+        "<strong>Reusable data products:</strong> Outputs modeled tables (star schemas) for many reports and tools-not just Power BI."
       ],
       h2: "What is Power Query?",
       p4: "Power Query is the M transformation engine inside Power BI. Analysts shape data with step-by-step queries that can fold back to the source, keeping logic close to the report.",
@@ -49,7 +49,7 @@ window.etlpqTranslations = {
         "<strong>Model-centric:</strong> Transformations live with the dataset; <em>Dataflows</em> promote reuse across reports.",
         "<strong>Best for medium data:</strong> Ideal when sources are simple (e.g., a few key Shopify exports) and volumes are moderate."
       ],
-      h3: "ETL vs Power Query — Key Differences",
+      h3: "ETL vs Power Query - Key Differences",
       list3: [
         "<strong>Scale:</strong> ETL is for big volumes; Power Query is excellent for smaller, well-scoped transformations.",
         "<strong>Latency:</strong> ETL supports near-real-time; Power Query aligns with scheduled dataset refresh windows.",
@@ -98,7 +98,7 @@ window.etlpqTranslations = {
         "<strong>Evolving marketing requirements:</strong> Start in Power Query, then migrate to ETL."
       ],
       h9: "Conclusion",
-      p7: "There’s no rivalry—only fit for purpose. Use ETL for scale and governance; use Power Query for speed. Blend them to maximize value for your store.",
+      p7: "There’s no rivalry-only fit for purpose. Use ETL for scale and governance; use Power Query for speed. Blend them to maximize value for your store.",
       p8: "<strong>Need help designing the right data architecture for your e-commerce business?</strong> Book a free, no-obligation strategy call and we’ll map the path from raw data to trusted insight with a free PoC."
     },
     
@@ -154,7 +154,7 @@ window.etlpqTranslations = {
         "<strong>هندسية ومُنسَّقة:</strong> خطوط أنابيب مجدولة مع مراقبة وتنبيهات وتتبع لمسار البيانات.",
         "<strong>قابلة للإصدار والاختبار:</strong> تُخزن في مستودعات الأكواد (مثل SQL/dbt) مع CI/CD.",
         "<strong>مصممة للتوسع:</strong> تتعامل مع الأحجام الكبيرة (مثل ملايين الطلبات من Shopify)، وقواعد العمل المعقدة قبل طبقة ذكاء الأعمال.",
-        "<strong>منتجات بيانات قابلة لإعادة الاستخدام:</strong> تُنتج جداول مُنمذجة (نماذج نجمية) تخدم العديد من التقارير والأدوات—وليس فقط Power BI."
+        "<strong>منتجات بيانات قابلة لإعادة الاستخدام:</strong> تُنتج جداول مُنمذجة (نماذج نجمية) تخدم العديد من التقارير والأدوات-وليس فقط Power BI."
       ],
       h2: "ما هو Power Query؟",
       p4: "Power Query هو محرك التحويل M المدمج في Power BI. يقوم المحللون بتشكيل البيانات عبر استعلامات متدرجة يمكنها 'الطي' (folding) إلى المصدر، مما يُبقي منطق العمل قريبًا من التقرير.",
@@ -164,7 +164,7 @@ window.etlpqTranslations = {
         "<strong>متمحور حول النموذج:</strong> التحويلات تعيش مع مجموعة البيانات؛ وتعزز <em>Dataflows</em> إعادة الاستخدام عبر التقارير.",
         "<strong>الأفضل للبيانات المتوسطة:</strong> مثالي عندما تكون المصادر بسيطة (مثل بعض تقارير Shopify المصدرة) والأحجام معتدلة."
       ],
-      h3: "ETL مقابل Power Query — الفروقات الرئيسية",
+      h3: "ETL مقابل Power Query - الفروقات الرئيسية",
       list3: [
         "<strong>الحجم:</strong> ETL للأحجام الضخمة؛ Power Query ممتازة للتحويلات الأصغر والمحددة النطاق.",
         "<strong>زمن الوصول:</strong> تدعم ETL شبه الوقت الفعلي؛ Power Query تتماشى مع نوافذ تحديث مجموعة البيانات المجدولة.",

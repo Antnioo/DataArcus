@@ -46,7 +46,7 @@ window.shopifyTranslations = {
       p_mod1_2: "<strong>Decisions It Drives:</strong> This view gives you the immediate, daily pulse of your business's financial health. You can instantly see how a new promotion is affecting your net revenue and profit margin, not just your sales volume. It helps you answer questions like, 'Did our 20% Off sale this week actually increase our overall profit, or did it just drive a lot of low-margin sales?'",
 
       h_mod2: "Module #2: The Marketing ROI Command Center",
-      p_mod2_1: "<strong>What It Shows:</strong> This is where the real magic happens. This view blends your sales data from Shopify with your spend data from all your marketing channels—Meta Ads, Google Ads, TikTok, etc. It provides one unified command center to see what you're spending and what you're earning in return.",
+      p_mod2_1: "<strong>What It Shows:</strong> This is where the real magic happens. This view blends your sales data from Shopify with your spend data from all your marketing channels-Meta Ads, Google Ads, TikTok, etc. It provides one unified command center to see what you're spending and what you're earning in return.",
       p_mod2_2: "<strong>Decisions It Drives:</strong> This module helps you answer the most expensive question in e-commerce: 'Where should I spend my next marketing dollar?' Instead of relying on misleading, platform-specific ROAS (Return On Ad Spend), we calculate your true, blended <strong>Marketing Efficiency Ratio (MER)</strong>. You can see at a glance if your overall marketing engine is profitable and then drill down to see which channels are true growth drivers and which are just wasting your budget.",
       
       h_mod3: "Module #3: The Customer Segmentation View",
@@ -121,7 +121,7 @@ window.shopifyTranslations = {
       p_mod1_2: "<strong>القرارات التي تدفعها:</strong> تمنحك هذه الرؤية النبض اليومي الفوري للصحة المالية لعملك. يمكنك أن ترى على الفور كيف يؤثر عرض ترويجي جديد على صافي إيراداتك وهامش ربحك، وليس فقط حجم مبيعاتك. إنها تساعدك على الإجابة على أسئلة مثل، 'هل أدت حملة خصم 20% هذا الأسبوع إلى زيادة أرباحي الإجمالية، أم أنها دفعت فقط الكثير من المبيعات منخفضة الهامش؟'",
 
       h_mod2: "الوحدة رقم 2: مركز قيادة عائد الاستثمار التسويقي",
-      p_mod2_1: "<strong>ماذا تعرض:</strong> هنا يحدث السحر الحقيقي. تمزج هذه الرؤية بيانات مبيعاتك من Shopify مع بيانات الإنفاق من جميع قنواتك التسويقية—إعلانات Meta، إعلانات Google، TikTok، إلخ. إنها توفر مركز قيادة موحدًا لترى ما تنفقه وما تكسبه في المقابل.",
+      p_mod2_1: "<strong>ماذا تعرض:</strong> هنا يحدث السحر الحقيقي. تمزج هذه الرؤية بيانات مبيعاتك من Shopify مع بيانات الإنفاق من جميع قنواتك التسويقية-إعلانات Meta، إعلانات Google، TikTok، إلخ. إنها توفر مركز قيادة موحدًا لترى ما تنفقه وما تكسبه في المقابل.",
       p_mod2_2: "<strong>القرارات التي تدفعها:</strong> تساعدك هذه الوحدة على الإجابة على السؤال الأكثر تكلفة في التجارة الإلكترونية: 'أين يجب أن أنفق دولاري التسويقي التالي؟' بدلاً من الاعتماد على عائد الإنفاق الإعلاني (ROAS) المضلل الخاص بكل منصة، نقوم بحساب <strong>نسبة كفاءة التسويق (MER)</strong> المدمجة الحقيقية. يمكنك أن ترى بلمحة واحدة ما إذا كان محرك التسويق العام الخاص بك مربحًا ثم تتعمق لترى أي القنوات هي محركات نمو حقيقية وأيها تهدر ميزانيتك فقط.",
       
       h_mod3: "الوحدة رقم 3: رؤية تقسيم العملاء",

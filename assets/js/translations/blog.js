@@ -26,7 +26,7 @@ window.blogTranslations = {
     // Header
     header: {
       title: "The E-commerce Analytics Playbook",
-      subtitle: "Practical, engineering-first guides for MENA e-commerce leaders on Power BI, data modeling, and growth strategy—written by the team that builds it."
+      subtitle: "Practical, engineering-first guides for MENA e-commerce leaders on Power BI, data modeling, and growth strategy-written by the team that builds it."
     },
 
     // Filters / Search
@@ -80,7 +80,7 @@ window.blogTranslations = {
     subscribe: {
       title: "Get the Next E-commerce Playbook",
       badge: "NO SPAM",
-      copy: "A monthly, high-signal playbook on Power BI engineering and growth strategy for e-commerce leaders. No fluff—just what works.",
+      copy: "A monthly, high-signal playbook on Power BI engineering and growth strategy for e-commerce leaders. No fluff-just what works.",
       button: "Subscribe for Free"
     }
   },
@@ -111,7 +111,7 @@ window.blogTranslations = {
     // Header (AR)
     header: {
       title: "دليل تحليلات التجارة الإلكترونية",
-      subtitle: "أدلة عملية ذات أساس هندسي لقادة التجارة الإلكترونية في الشرق الأوسط حول Power BI، ونمذجة البيانات، واستراتيجية النمو—مكتوبة بواسطة الفريق الذي يبنيها."
+      subtitle: "أدلة عملية ذات أساس هندسي لقادة التجارة الإلكترونية في الشرق الأوسط حول Power BI، ونمذجة البيانات، واستراتيجية النمو-مكتوبة بواسطة الفريق الذي يبنيها."
     },
 
     // Filters / Search (AR)
@@ -165,7 +165,7 @@ window.blogTranslations = {
     subscribe: {
       title: "احصل على الدليل القادم لمتجرك",
       badge: "لا رسائل مزعجة",
-      copy: "دليل شهري عالي القيمة حول هندسة Power BI واستراتيجية النمو لقادة التجارة الإلكترونية. لا حشو—فقط ما هو فعال.",
+      copy: "دليل شهري عالي القيمة حول هندسة Power BI واستراتيجية النمو لقادة التجارة الإلكترونية. لا حشو-فقط ما هو فعال.",
       button: "اشترك مجانًا"
     }
   }

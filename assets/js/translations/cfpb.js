@@ -77,7 +77,7 @@ window.cfpbComplaintsTranslations = {
     capabilities: {
       title: "What You Can Answer With This Dashboard",
       subtitle:
-        "Designed for clarity and fairness—so teams can move from questions to decisions.",
+        "Designed for clarity and fairness-so teams can move from questions to decisions.",
       list: [
         "<strong>Overview:</strong> Track total complaints, institutions, average response time, on-time rate, and YoY growth. Spot national patterns, top products, hotspots, and resolution timelines.",
         "<strong>Issues Deep-Dive:</strong> Identify top consumer pain points by product → issue → sub-issue, response speeds by submission channel, and outcome mix (explanation vs. monetary/non-monetary relief).",
