@@ -37,6 +37,12 @@ window.portfolioTranslations = {
       // Individual Projects
       projects: {
 
+        repeatiq: {
+          badge: "SAAS & RETENTION",
+          title: "RepeatIQ Commerce Analytics",
+          description: "A 5-page strategic suite maximizing Customer Lifetime Value (CLV) through cohort analysis, churn prediction, and risk modeling.",
+          button: "View Showcase"
+        },
         cfpb: {
           badge: "FINANCE & COMPLIANCE",
           title: "Consumer Financial Complaints Analysis",
@@ -127,6 +133,12 @@ window.portfolioTranslations = {
       // Individual Projects Arabic
       projects: {
 
+        repeatiq: {
+          badge: "تحليلات الاشتراكات",
+          title: "تحليلات RepeatIQ للتجارة",
+          description: "جناح استراتيجي من 5 صفحات لتعظيم القيمة الدائمة للعميل من خلال تحليل الدفعات (Cohorts) والتنبؤ بالتسرب.",
+          button: "عرض النموذج"
+        },
         cfpb: {
           badge: "تحليلات مالية وامتثال",
           title: "تحليل شكاوى الخدمات المالية",
