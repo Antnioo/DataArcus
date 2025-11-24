@@ -35,18 +35,18 @@ window.kpiTranslations = {
     content: {
       p1: "As an e-commerce leader, you probably check your Shopify or WooCommerce dashboard every day. Revenue is up. Website sessions are climbing. On the surface, things look good.",
       p2: "But what if those are the wrong numbers to focus on? These are surface-level metrics. They tell you you're busy, but they don't tell you if you're actually <strong>profitable</strong>.",
-      p3: "The fastest-growing e-commerce businesses in the MENA region look deeper. They've moved beyond vanity metrics to track a different set of KPIs—the ones that are directly tied to profit and long-term, sustainable growth.",
+      p3: "The fastest-growing e-commerce businesses in the MENA region look deeper. They've moved beyond vanity metrics to track a different set of KPIs-the ones that are directly tied to profit and long-term, sustainable growth.",
       p4: "In this playbook, we'll break down the 5 essential marketing KPIs you need to be tracking in Power BI to build a truly resilient and profitable e-commerce business.",
 
       h_kpi1: "KPI #1: Blended Customer Acquisition Cost (CAC)",
       p_kpi1_1: "<strong>What It Is:</strong> CAC is the total cost of your sales and marketing efforts needed to acquire a single new customer over a specific period.",
-      p_kpi1_2: "<strong>Why It's Critical for Your Store:</strong> This is the most important metric for sustainable growth. If your average customer generates $50 in profit, but it costs you $60 to acquire them, your business is a leaking bucket—no matter how high your revenue is. Knowing your true CAC is the key to scaling profitably.",
+      p_kpi1_2: "<strong>Why It's Critical for Your Store:</strong> This is the most important metric for sustainable growth. If your average customer generates $50 in profit, but it costs you $60 to acquire them, your business is a leaking bucket-no matter how high your revenue is. Knowing your true CAC is the key to scaling profitably.",
       p_kpi1_3: "<strong>The Power BI Advantage:</strong> Your Shopify dashboard can tell you how many new customers you got, and your Meta Ads dashboard tells you your ad spend. But neither can tell you your <strong>true, blended CAC</strong>. In Power BI, we unify all your costs (ad spend from every channel, marketing team salaries, software costs) and divide by the total number of new customers from your sales platform. This allows you to see your CAC per channel, finally answering the question: 'Is my TikTok advertising more profitable than my Google Ads?'",
 
       h_kpi2: "KPI #2: Marketing Efficiency Ratio (MER)",
       p_kpi2_1: "<strong>What It Is:</strong> Often called 'blended ROAS,' MER is your total store revenue divided by your total ad spend from all channels. It answers one simple question: 'For every dollar I spend on marketing, how many dollars of total sales am I getting back?'",
       p_kpi2_2: "<strong>Why It's Critical for Your Store:</strong> Platform-specific ROAS (Return On Ad Spend) from Meta or Google can be misleading. A customer might see a Facebook ad and then search on Google a day later. MER ignores the attribution mess and gives you the ultimate 30,000-foot view: is my overall marketing engine profitable and sustainable?",
-      p_kpi2_3: "<strong>The Power BI Advantage:</strong> This metric is impossible to see in any single platform. In Power BI, we build automated connections to all your revenue and spend sources to create <strong>one, simple, top-level KPI</strong>—your MER—that you can track daily to see how your overall efficiency is truly changing.",
+      p_kpi2_3: "<strong>The Power BI Advantage:</strong> This metric is impossible to see in any single platform. In Power BI, we build automated connections to all your revenue and spend sources to create <strong>one, simple, top-level KPI</strong>-your MER-that you can track daily to see how your overall efficiency is truly changing.",
 
       h_kpi3: "KPI #3: Customer Lifetime Value (CLV)",
       p_kpi3_1: "<strong>What It Is:</strong> CLV is the total <strong>profit</strong> you can expect to earn from an average customer over the entire duration of their relationship with your store. It’s not just their first purchase; it’s every purchase they will ever make.",
@@ -117,18 +117,18 @@ window.kpiTranslations = {
     content: {
       p1: "بصفتك قائدًا في التجارة الإلكترونية، ربما تتحقق من لوحة تحكم Shopify أو WooCommerce كل يوم. الإيرادات في ارتفاع. زيارات الموقع تتزايد. على السطح، تبدو الأمور جيدة.",
       p2: "ولكن ماذا لو كانت هذه هي الأرقام الخاطئة التي يجب التركيز عليها؟ هذه مقاييس سطحية. تخبرك أنك مشغول، لكنها لا تخبرك ما إذا كنت تحقق <strong>أرباحًا</strong> بالفعل.",
-      p3: "أسرع متاجر التجارة الإلكترونية نموًا في منطقة الشرق الأوسط تنظر إلى ما هو أعمق. لقد تجاوزوا مقاييس الغرور لتتبع مجموعة مختلفة من مؤشرات الأداء الرئيسية—تلك المرتبطة مباشرة بالربح والنمو المستدام على المدى الطويل.",
+      p3: "أسرع متاجر التجارة الإلكترونية نموًا في منطقة الشرق الأوسط تنظر إلى ما هو أعمق. لقد تجاوزوا مقاييس الغرور لتتبع مجموعة مختلفة من مؤشرات الأداء الرئيسية-تلك المرتبطة مباشرة بالربح والنمو المستدام على المدى الطويل.",
       p4: "في هذا الدليل، سنقوم بتحليل 5 مؤشرات أداء تسويقية أساسية تحتاج إلى تتبعها في Power BI لبناء عمل تجاري إلكتروني مرن ومربح حقًا.",
 
       h_kpi1: "مؤشر الأداء رقم 1: تكلفة اكتساب العميل المدمجة (CAC)",
       p_kpi1_1: "<strong>ما هو:</strong> CAC هو التكلفة الإجمالية لجهود المبيعات والتسويق اللازمة لاكتساب عميل جديد واحد خلال فترة محددة.",
-      p_kpi1_2: "<strong>لماذا هو حاسم لمتجرك:</strong> هذا هو أهم مقياس للنمو المستدام. إذا كان عميلك المتوسط يدر ربحًا بقيمة 50 دولارًا، ولكن يكلفك 60 دولارًا لاكتسابه، فإن عملك به ثقب—بغض النظر عن مدى ارتفاع إيراداتك. معرفة CAC الحقيقية هي مفتاح التوسع المربح.",
+      p_kpi1_2: "<strong>لماذا هو حاسم لمتجرك:</strong> هذا هو أهم مقياس للنمو المستدام. إذا كان عميلك المتوسط يدر ربحًا بقيمة 50 دولارًا، ولكن يكلفك 60 دولارًا لاكتسابه، فإن عملك به ثقب-بغض النظر عن مدى ارتفاع إيراداتك. معرفة CAC الحقيقية هي مفتاح التوسع المربح.",
       p_kpi1_3: "<strong>ميزة Power BI:</strong> يمكن أن تخبرك لوحة تحكم Shopify بعدد العملاء الجدد الذين حصلت عليهم، وتخبرك لوحة تحكم إعلانات Meta بإنفاقك الإعلاني. لكن لا يمكن لأي منهما إخبارك بـ <strong>CAC الحقيقية والمدمجة</strong>. في Power BI، نوحد جميع تكاليفك (الإنفاق الإعلاني من كل قناة، رواتب فريق التسويق، تكاليف البرامج) ونقسمها على إجمالي عدد العملاء الجدد من منصة المبيعات الخاصة بك. يتيح لك هذا رؤية CAC لكل قناة، والإجابة أخيرًا على سؤال: 'هل إعلاناتي على TikTok أكثر ربحية من إعلانات Google؟'",
 
       h_kpi2: "مؤشر الأداء رقم 2: نسبة كفاءة التسويق (MER)",
       p_kpi2_1: "<strong>ما هي:</strong> تُعرف غالبًا باسم 'ROAS المدمج'، MER هي إجمالي إيرادات متجرك مقسومة على إجمالي إنفاقك التسويقي من جميع القنوات. إنها تجيب على سؤال واحد بسيط: 'مقابل كل دولار أنفقه على التسويق، كم عدد الدولارات التي أحصل عليها في المبيعات الإجمالية؟'",
       p_kpi2_2: "<strong>لماذا هي حاسمة لمتجرك:</strong> يمكن أن يكون عائد الإنفاق الإعلاني (ROAS) الخاص بمنصة معينة مثل Meta أو Google مضللاً. قد يرى العميل إعلانًا على فيسبوك ثم يبحث عنك على Google بعد يوم. تتجاهل MER فوضى الإسناد وتمنحك النظرة الشاملة النهائية: هل محرك التسويق العام الخاص بي مربح ومستدام؟",
-      p_kpi2_3: "<strong>ميزة Power BI:</strong> من المستحيل رؤية هذا المقياس في أي منصة واحدة. في Power BI، نبني اتصالات آلية بجميع مصادر إيراداتك وإنفاقك لإنشاء <strong>مؤشر أداء رئيسي واحد وبسيط</strong>—MER الخاص بك—والذي يمكنك تتبعه يوميًا لترى كيف تتغير كفاءتك الإجمالية حقًا.",
+      p_kpi2_3: "<strong>ميزة Power BI:</strong> من المستحيل رؤية هذا المقياس في أي منصة واحدة. في Power BI، نبني اتصالات آلية بجميع مصادر إيراداتك وإنفاقك لإنشاء <strong>مؤشر أداء رئيسي واحد وبسيط</strong>-MER الخاص بك-والذي يمكنك تتبعه يوميًا لترى كيف تتغير كفاءتك الإجمالية حقًا.",
 
       h_kpi3: "مؤشر الأداء رقم 3: القيمة العمرية للعميل (CLV)",
       p_kpi3_1: "<strong>ما هي:</strong> CLV هي إجمالي <strong>الربح</strong> الذي تتوقع كسبه من العميل المتوسط على مدار علاقته الكاملة بمتجرك. إنها ليست مجرد عملية الشراء الأولى؛ إنها كل عملية شراء سيقومون بها على الإطلاق.",
