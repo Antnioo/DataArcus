@@ -76,22 +76,22 @@ window.homepageTranslations = {
     },
 
     // Portfolio Section
-    portfolio: {
+portfolio: {
       title: "Solution Showcases",
-      subtitle: "Explore our proof-of-concept dashboards, engineered to solve common business challenges. See what's possible for your e-commerce data.",
-      cardErHealth: {
-        badge: "HEALTHCARE ANALYTICS",
-        title: "Emergency Room Performance Analysis",
-        desc: "An interactive dashboard providing administrators with a clear view of ER operations, patient wait times, and satisfaction scores."
+      subtitle: "Explore our proof-of-concept dashboards, engineered to solve common business challenges. See what's possible for your data.",
+      cardRepeatiq: {
+        badge: "SAAS & RETENTION",
+        title: "RepeatIQ Commerce Analytics",
+        desc: "A 5-page strategic suite maximizing Customer Lifetime Value (CLV) through cohort analysis, churn prediction, and risk modeling."
       },
-      cardCallCenter: {
-        badge: "CUSTOMER SERVICE",
-        title: "Call Center Performance",
-        desc: "A complete command center for monitoring call center KPIs, tracking agent performance, and improving customer satisfaction through data-driven insights."
+      cardCfpb: {
+        badge: "FINANCE & COMPLIANCE",
+        title: "Consumer Financial Complaints",
+        desc: "A 4-page showcase analyzing 7 years of U.S. consumer complaints, focusing on trends, company accountability, and regional fairness."
       },
       cardAdventure: {
         badge: "ENTERPRISE SALES",
-        title: "AdventureWorks Sales & Operations",
+        title: "AdventureWorks Sales & Ops",
         desc: "Our flagship project featuring predictive 'What-If' analysis, deep customer segmentation, and advanced diagnostics in a multi-page command center."
       },
       button: "View All Showcases"
@@ -301,22 +301,22 @@ window.homepageTranslations = {
     },
 
     // Portfolio Section
-    portfolio: {
+portfolio: {
       title: "نماذج الحلول",
-      subtitle: "استكشف لوحات التحكم التجريبية لدينا، والمصممة لحل التحديات الشائعة في الأعمال. شاهد ما هو ممكن لبيانات تجارتك الإلكترونية.",
-      cardErHealth: {
-        badge: "تحليلات الرعاية الصحية",
-        title: "تحليل أداء غرف الطوارئ",
-        desc: "لوحة تحكم تفاعلية توفر للمديرين رؤية واضحة لعمليات الطوارئ، وأوقات انتظار المرضى، ومؤشرات رضاهم."
+      subtitle: "استكشف لوحات التحكم التجريبية لدينا. شاهد ما هو ممكن لبياناتك.",
+      cardRepeatiq: {
+        badge: "تحليلات الاشتراكات",
+        title: "تحليلات RepeatIQ للتجارة",
+        desc: "جناح استراتيجي من 5 صفحات لتعظيم القيمة الدائمة للعميل من خلال تحليل الدفعات (Cohorts) والتنبؤ بالتسرب."
       },
-      cardCallCenter: {
-        badge: "خدمة العملاء",
-        title: "أداء مركز الاتصال",
-        desc: "مركز تحكم متكامل لمراقبة مؤشرات الأداء الرئيسية، وتتبع أداء الموظفين، وتحسين رضا العملاء من خلال رؤى قائمة على البيانات."
+      cardCfpb: {
+        badge: "تحليلات مالية وامتثال",
+        title: "تحليل شكاوى الخدمات المالية",
+        desc: "نموذج من 4 صفحات يحلل 7 سنوات من شكاوى المستهلكين في الولايات المتحدة، مع التركيز على الاتجاهات ومساءلة الشركات."
       },
       cardAdventure: {
         badge: "مبيعات الشركات",
-        title: "تحليل مبيعات وعمليات AdventureWorks",
+        title: "تحليل مبيعات AdventureWorks",
         desc: "مشروعنا الرائد الذي يتميز بتحليل 'ماذا لو' التنبؤي، وتقسيم عميق للعملاء، وتشخيصات متقدمة في مركز تحكم متعدد الصفحات."
       },
       button: "عرض كل النماذج"

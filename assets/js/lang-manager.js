@@ -75,6 +75,8 @@ class LanguageManager {
      return window.shopifyTranslations;
     } else if (path.includes('consumer-financial-complaints')) {
      return window.cfpbComplaintsTranslations;
+    } else if (path.includes('repeatiq-dashboard')) {
+     return window.repeatiqCommerceTranslations;
     }
     return null;
   }
