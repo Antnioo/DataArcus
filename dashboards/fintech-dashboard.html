@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://dataarcus.com/dashboards/fintech-dashboard.html" />
+
+  <title>Fintech Portfolio Risk & Delivery Analytics - DataArcus</title>
+  <meta name="description" content="A predictive Power BI solution for a European Fintech. Features Earned Value Management (EVM), ZoomCharts, and AI-driven risk forecasting for 72 projects." />
+  <meta name="author" content="DataArcus" />
+  <meta name="keywords" content="Fintech analytics, Project Portfolio Management (PPM), Earned Value Management, CPI SPI, Power BI risk dashboard, ZoomCharts, DataArcus" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Fintech Portfolio: Predictive Risk & Delivery" />
+  <meta property="og:description" content="Moving beyond tracking to prediction. See how we use EVM and ZoomCharts to forecast project delays and budget overruns." />
+  <meta property="og:url" content="https://dataarcus.com/dashboards/fintech-dashboard.html" />
+  <meta property="og:site_name" content="DataArcus" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/portfolio/fintech-preview.jpg" />
+  <meta property="og:image:alt" content="Fintech Project Portfolio Risk Dashboard Preview" />
+  <meta property="og:locale" content="en_US" />
+  
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Fintech Portfolio: Predictive Risk & Delivery" />
+  <meta name="twitter:description" content="Moving beyond tracking to prediction. See how we use EVM and ZoomCharts to forecast project delays and budget overruns." />
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/portfolio/fintech-preview.jpg" />
+  <meta name="twitter:image:alt" content="Fintech Project Portfolio Risk Dashboard Preview" />
+
+  <link rel="icon" href="../assets/img/favicon.svg" />
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-RC3MRC4JZH');
+  </script>
+
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "sy2681b9al");
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/css/style.css" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">  
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  </noscript>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Fintech Portfolio Risk & Delivery Analytics",
+    "description": "A predictive Power BI solution for a European Fintech. Features Earned Value Management (EVM), ZoomCharts, and AI-driven risk forecasting for 72 projects.",
+    "url": "https://dataarcus.com/dashboards/fintech-dashboard.html",
+    "author": {
+      "@type": "Organization",
+      "name": "DataArcus",
+      "url": "https://dataarcus.com"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "DataArcus",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://dataarcus.com/assets/img/logo.svg"
+      }
+    },
+    "keywords": "Fintech analytics, Project Portfolio Management (PPM), Earned Value Management, CPI SPI, Power BI risk dashboard, ZoomCharts, DataArcus"
+  }
+  </script>
+</head>
+<body>
+    
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html#hero">
+        <img src="../assets/img/logo.svg" alt="DataArcus logo" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="../index.html#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="../portfolio.html" data-i18n="nav.portfolio">Portfolio</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <a href="../index.html#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Get a Free Consultation</a>
+      </div>
+    </div>
+  </nav>
+
+    <main class="article-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-10 mx-auto">
+            
+            <header class="page-header article-header text-center">
+              <h1 class="display-5 fw-bold" data-i18n="header.title">Showcase: Fintech Portfolio Risk Engine</h1>
+              <p class="lead text-white-50" data-i18n="header.subtitle">A live early-warning system for 72 European payment projects. Analyzing budget, schedule, and delivery risk using Earned Value Management (EVM).</p>
+            </header>
+
+            <article class="article-body">
+              
+              <div class="case-study-intro mb-5">
+                <div class="row g-4">
+                  <div class="col-md-6">
+                    <h2 class="h4" data-i18n="intro.challenge.title">The Project Governance Challenge</h2>
+                    <p data-i18n="intro.challenge.content">In high-stakes Fintech product development, 'on time and on budget' is rarely the reality. PMOs struggle to see which of their 72+ active projects are truly at risk until it's too late. They need a predictive view that connects financial burn rates with schedule slippage.</p>
+                  </div>
+                  <div class="col-md-6">
+                    <h2 class="h4" data-i18n="intro.skills.title">Advanced Capabilities</h2>
+                    <p data-i18n="intro.skills.content">This report demonstrates enterprise-level Project Portfolio Management (PPM) techniques.</p>
+                    <ul>
+                      <li data-i18n-html="intro.skills.list.0"><strong>Predictive Modeling:</strong> forecasting project end dates and costs (EAC) based on current Schedule Performance Index (SPI) and Cost Performance Index (CPI).</li>
+                      <li data-i18n-html="intro.skills.list.1"><strong>Earned Value Management (EVM):</strong> moving beyond simple 'budget vs actual' to true performance indexing.</li>
+                      <li data-i18n-html="intro.skills.list.2"><strong>Advanced UX with ZoomCharts:</strong> interactive, touch-friendly visuals for drilling down into departments and timelines.</li>
+                      <li data-i18n-html="intro.skills.list.3"><strong>Risk Scoring:</strong> A composite risk algorithm that flags projects as 'Critical' based on a weighted mix of days late and efficiency variance.</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div class="glass-card p-3">
+                <div class="ratio ratio-16x9 rounded-3 overflow-hidden">
+                  <iframe 
+                    title="Fintech Project Risk Dashboard" 
+                    src="https://app.powerbi.com/view?r=eyJrIjoiNDlhY2I0YjgtZGI4Mi00NzU4LThhYWMtNGVhNGUzMDBlYTE5IiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en" 
+                    frameborder="0" 
+                    allowFullScreen="true"
+                    style="border-radius: 12px;">
+                  </iframe>
+                </div>
+                
+                <div class="p-3">
+                  <h4 class="h6 mb-3 mt-3" style="color: var(--accent);" data-i18n="features.title">Key Features & Technologies Used:</h4>
+                  <div class="d-flex flex-wrap gap-2">
+                    <span class="tech-pill" data-i18n="features.tags.0">Earned Value (CPI/SPI)</span>
+                    <span class="tech-pill" data-i18n="features.tags.1">Predictive Forecasting</span>
+                    <span class="tech-pill" data-i18n="features.tags.2">ZoomCharts Custom Visuals</span>
+                    <span class="tech-pill" data-i18n="features.tags.3">Risk Algorithms</span>
+                    <span class="tech-pill" data-i18n="features.tags.4">Gantt Charts</span>
+                    <span class="tech-pill" data-i18n="features.tags.5">Drill-Through Logic</span>
+                    <span class="tech-pill" data-i18n="features.tags.6">Financial Variance</span>
+                  </div>
+                  <p class="small text-white-50 mt-4 mb-0">
+                    <i class="bi bi-info-circle me-1"></i>
+                    <span data-i18n="features.note">This report features a 'Control Tower' view for executives and a detailed 'Drill-Through' page for deep-dives into specific project teams and milestones.</span>
+                  </p>
+                </div>
+              </div>
+
+              <div class="article-body mt-5">
+                <h2 class="mt-5 mb-3" data-i18n="capabilities.title">Answering Critical Business Questions</h2>
+                <p data-i18n="capabilities.subtitle">Designed for PMOs, CFOs, and Product Heads to intervene before projects fail.</p>
+                <ul>
+                  <li data-i18n-html="capabilities.list.0"><strong>Portfolio Health (Control Tower):</strong> A high-level view of 72 projects using an efficiency map (CPI vs. SPI bubble chart). Instantly spots projects that are over budget and behind schedule.</li>
+                  <li data-i18n-html="capabilities.list.1"><strong>Predictive Risk Watchlist:</strong> An auto-generated 'To-Do' list for the PMO, highlighting only the projects predicted to finish late based on current velocity.</li>
+                  <li data-i18n-html="capabilities.list.2"><strong>Budget & Hours Efficiency:</strong> A dual-view analysis (Money vs. Time) that identifies which departments are burning cash without delivering milestones.</li>
+                  <li data-i18n-html="capabilities.list.3"><strong>Project Deep-Dive:</strong> A detailed case file for every project. Analyzes team composition, hourly rates, and specific milestone slippage to find the root cause of failure.</li>
+                </ul>
+              </div>
+
+              <div class="text-center my-5 py-5">
+                <div class="glass-card p-4 p-md-5 d-inline-block" data-aos="fade-up">
+                  <h3 class="h4 mb-3" data-i18n="exploreMore.title"><i class="bi bi-grid-fill me-2"></i>Explore More Showcases</h3>
+                  <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">See our other enterprise-grade solutions.</p>
+                  <a href="../portfolio.html" class="btn btn-accent">
+                      <i class="bi bi-arrow-right-circle me-2"></i><span data-i18n="exploreMore.button">View Portfolio</span>
+                  </a>
+                </div>
+              </div>
+
+              <div class="text-center mt-5 pt-5">
+                <hr class="mb-5">
+                <h3 class="h4 mb-3" data-i18n="finalCta.title">Need better visibility on your portfolio?</h3>
+                <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">We build PMO command centers that turn red projects into green ones. Let's audit your project data.</p>
+                <a href="../index.html#contact" class="btn btn-accent btn-lg">
+                    <i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">Book a Strategy Call</span>
+                </a>
+              </div>
+
+            </article>
+          </div>
+        </div>
+      </div>
+  </main>
+  
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="../index.html#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="../assets/img/logo.svg" alt="DataArcus logo" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Expert, custom-built Power BI solutions that turn your complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="../portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Portfolio</a></li>
+              <li class="mb-2"><a href="../index.html#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="../blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Built with passion • Powered by innovation</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="../assets/js/translations/common.js" defer></script>
+  <script src="../assets/js/translations/fintech-risk.js" defer></script>
+  <script src="../assets/js/lang-manager.js" defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
+  <script src="../assets/js/main.js" defer></script>
+</body>
+</html>
