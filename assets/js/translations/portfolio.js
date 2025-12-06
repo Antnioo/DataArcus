@@ -37,6 +37,12 @@ window.portfolioTranslations = {
       // Individual Projects
       projects: {
 
+        fintech: {
+          badge: "FINTECH & RISK",
+          title: "Fintech Portfolio Risk Engine",
+          description: "A live early-warning system for 72 projects, analyzing budget, schedule, and delivery risk using Earned Value Management (EVM).",
+          button: "View Showcase"
+        },
         repeatiq: {
           badge: "SAAS & RETENTION",
           title: "RepeatIQ Commerce Analytics",
@@ -133,6 +139,12 @@ window.portfolioTranslations = {
       // Individual Projects Arabic
       projects: {
 
+        fintech: {
+          badge: "التكنولوجيا المالية والمخاطر",
+          title: "محرك مخاطر محافظ التكنولوجيا المالية",
+          description: "نظام إنذار مبكر لـ 72 مشروعًا، يحلل الميزانية والجدول الزمني ومخاطر التسليم باستخدام إدارة القيمة المكتسبة (EVM).",
+          button: "عرض النموذج"
+        },
         repeatiq: {
           badge: "تحليلات الاشتراكات",
           title: "تحليلات RepeatIQ للتجارة",

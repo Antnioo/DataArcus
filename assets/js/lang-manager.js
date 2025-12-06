@@ -77,6 +77,8 @@ class LanguageManager {
      return window.cfpbComplaintsTranslations;
     } else if (path.includes('repeatiq-dashboard')) {
      return window.repeatiqCommerceTranslations;
+    } else if (path.includes('fintech-dashboard')) {
+     return window.fintechRiskTranslations;
     }
     return null;
   }

@@ -79,6 +79,11 @@ window.homepageTranslations = {
 portfolio: {
       title: "Solution Showcases",
       subtitle: "Explore our proof-of-concept dashboards, engineered to solve common business challenges. See what's possible for your data.",
+      cardFintech: {
+        badge: "FINTECH & RISK",
+        title: "Fintech Portfolio Risk Engine",
+        desc: "A live early-warning system for 72 projects, analyzing budget, schedule, and delivery risk using Earned Value Management (EVM)."
+      },
       cardRepeatiq: {
         badge: "SAAS & RETENTION",
         title: "RepeatIQ Commerce Analytics",
@@ -88,11 +93,6 @@ portfolio: {
         badge: "FINANCE & COMPLIANCE",
         title: "Consumer Financial Complaints",
         desc: "A 4-page showcase analyzing 7 years of U.S. consumer complaints, focusing on trends, company accountability, and regional fairness."
-      },
-      cardAdventure: {
-        badge: "ENTERPRISE SALES",
-        title: "AdventureWorks Sales & Ops",
-        desc: "Our flagship project featuring predictive 'What-If' analysis, deep customer segmentation, and advanced diagnostics in a multi-page command center."
       },
       button: "View All Showcases"
     },
@@ -304,6 +304,11 @@ portfolio: {
 portfolio: {
       title: "نماذج الحلول",
       subtitle: "استكشف لوحات التحكم التجريبية لدينا. شاهد ما هو ممكن لبياناتك.",
+      cardFintech: {
+        badge: "التكنولوجيا المالية والمخاطر",
+        title: "محرك مخاطر محافظ التكنولوجيا المالية",
+        desc: "نظام إنذار مبكر لـ 72 مشروعًا، يحلل الميزانية والجدول الزمني ومخاطر التسليم باستخدام إدارة القيمة المكتسبة (EVM)."
+      },
       cardRepeatiq: {
         badge: "تحليلات الاشتراكات",
         title: "تحليلات RepeatIQ للتجارة",
@@ -313,11 +318,6 @@ portfolio: {
         badge: "تحليلات مالية وامتثال",
         title: "تحليل شكاوى الخدمات المالية",
         desc: "نموذج من 4 صفحات يحلل 7 سنوات من شكاوى المستهلكين في الولايات المتحدة، مع التركيز على الاتجاهات ومساءلة الشركات."
-      },
-      cardAdventure: {
-        badge: "مبيعات الشركات",
-        title: "تحليل مبيعات AdventureWorks",
-        desc: "مشروعنا الرائد الذي يتميز بتحليل 'ماذا لو' التنبؤي، وتقسيم عميق للعملاء، وتشخيصات متقدمة في مركز تحكم متعدد الصفحات."
       },
       button: "عرض كل النماذج"
     },
