@@ -34,7 +34,8 @@ window.blogTranslations = {
       all: "All",
       powerbi: "Power BI",
       dataengineering: "Data Engineering",
-      strategy: "Strategy"
+      strategy: "Strategy",
+      projectanalytics: "Project Analytics"
     },
     blog: {
       sectionTitle: "Latest from the Playbook",
@@ -126,7 +127,8 @@ window.blogTranslations = {
       all: "الكل",
       powerbi: "Power BI",
       dataengineering: "هندسة البيانات",
-      strategy: "استراتيجية"
+      strategy: "استراتيجية",
+      projectanalytics: "تحليلات المشاريع"
     },
     blog: {
       sectionTitle: "أحدث الأدلة الإرشادية",
