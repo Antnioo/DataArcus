@@ -46,6 +46,13 @@ window.blogTranslations = {
 
     // Posts
     posts: {
+      evm: {
+        badge: "PROJECT ANALYTICS",
+        title: "Beyond \"Traffic Lights\": How Earned Value Management (EVM) Predicts Project Risk",
+        date: "December 10, 2025",
+        excerpt: "Most project dashboards tell you what happened yesterday. Learn how to use CPI and SPI to mathematically forecast tomorrow's delays and budget overruns.",
+        button: "Read Playbook"
+      },
       shopify: {
         badge: "STRATEGY",
         title: "The Ultimate Shopify Dashboard: How to Build a Single Source of Truth in Power BI",
@@ -131,6 +138,13 @@ window.blogTranslations = {
 
     // Posts (AR)
     posts: {
+      evm: {
+        badge: "تحليلات المشاريع",
+        title: "ما وراء \"إشارات المرور\": كيف تتنبأ إدارة القيمة المكتسبة (EVM) بمخاطر المشروع",
+        date: "١٠ ديسمبر ٢٠٢٥",
+        excerpt: "تخبرك معظم لوحات المعلومات بما حدث بالأمس. تعلم كيف تستخدم CPI و SPI للتنبؤ رياضيًا بالتأخيرات وتجاوز الميزانية قبل حدوثها.",
+        button: "اقرأ المقال"
+      },
       shopify: {
         badge: "استراتيجية",
         title: "دليل لقادة التجارة الإلكترونية حول بناء مصدر موحد للحقيقة من بيانات Shopify في Power BI.",

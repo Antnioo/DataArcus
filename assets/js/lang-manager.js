@@ -79,6 +79,8 @@ class LanguageManager {
      return window.repeatiqCommerceTranslations;
     } else if (path.includes('fintech-dashboard')) {
      return window.fintechRiskTranslations;
+    } else if (path.includes('article-evm')) {
+     return window.evmTranslations;
     }
     return null;
   }
