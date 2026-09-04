@@ -77,7 +77,7 @@ window.callcenterTranslations = {
     // Final CTA
     finalCta: {
       title: "Want a Dashboard Like This for Your Support Team?",
-      subtitle: "Let's build a free Proof-of-Concept dashboard using a sample of your own customer service data.",
+      subtitle: "Book a free 20-minute Data Clarity Call - no obligation, just a straight look at what's possible with your own customer service data.",
       button: "Book a Free Call"
     }
   },

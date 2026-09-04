@@ -76,7 +76,7 @@ window.erHealthTranslations = {
     // Final CTA
     finalCta: {
       title: "Ready to Get This Clarity for Your Business?",
-      subtitle: "Even if you're not in healthcare, these principles apply. Let's build a free PoC dashboard with your data.",
+      subtitle: "Even if you're not in healthcare, these principles apply. Book a free 20-minute Data Clarity Call to talk through your own data.",
       button: "Book a Free Call"
     }
   },

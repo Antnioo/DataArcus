@@ -79,7 +79,7 @@ window.mavenmarketTranslations = {
     // Final CTA
     finalCta: {
       title: "Ready to See This Clarity with Your Own Data?",
-      subtitle: "Let's build you a free Proof-of-Concept dashboard using a sample of your own e-commerce data.",
+      subtitle: "Book a free 20-minute Data Clarity Call - no obligation, just a straight look at what's possible with your own e-commerce data.",
       button: "Book a Free Call"
     }
   },

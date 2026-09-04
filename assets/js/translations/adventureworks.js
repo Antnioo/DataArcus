@@ -78,7 +78,7 @@ window.adventureworksTranslations = {
     // Final CTA
     finalCta: {
       title: "Ready to See This Power Applied to Your Data?",
-      subtitle: "Let's build a free Proof-of-Concept dashboard that tackles one of your key business challenges.",
+      subtitle: "Book a free 20-minute Data Clarity Call - no obligation, just a straight look at what's possible with your own operations data.",
       button: "Book a Free Call"
     }
   },
