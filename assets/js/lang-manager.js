@@ -81,6 +81,10 @@ class LanguageManager {
      return window.fintechRiskTranslations;
     } else if (path.includes('article-evm')) {
      return window.evmTranslations;
+    } else if (path.includes('dataarcus-pulse')) {
+     return window.dataarcusPulseTranslations;
+    } else if (path.includes('article-journey-attribution')) {
+     return window.journeyAttributionTranslations;
     }
     return null;
   }

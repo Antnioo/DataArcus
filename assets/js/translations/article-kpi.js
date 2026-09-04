@@ -78,7 +78,7 @@ window.kpiTranslations = {
     finalCta: {
       title: "Ready to See This Power Applied to Your Data?",
       subtitle: "Let's build a free Proof-of-Concept dashboard that tackles one of your key business challenges.",
-      button: "Start Your Free PoC"
+      button: "Book a Free Call"
     }
   },
 
@@ -160,7 +160,7 @@ window.kpiTranslations = {
     finalCta: {
       title: "هل أنت مستعد لرؤية هذه القوة مطبقة على بياناتك؟",
       subtitle: "دعنا نبني لك لوحة تحكم تجريبية مجانية تعالج أحد تحديات عملك الرئيسية.",
-      button: "ابدأ نسختك التجريبية المجانية"
+      button: "احجز مكالمة مجانية"
     }
   }
 };

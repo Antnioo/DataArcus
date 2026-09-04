@@ -75,7 +75,11 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   };
 
-  
+
+  // Respect the OS-level "reduce motion" setting: skip purely decorative
+  // JS-driven animation (particles, parallax, tilt) for anyone who has it on.
+  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   // Hide loading overlay after a delay
   const loadingOverlay = document.getElementById('loadingOverlay');
   if (loadingOverlay) {
@@ -85,9 +89,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
   }
 
-  // Generate interactive background particles
+  // Generate interactive background particles (desktop only, motion allowed).
+  // CSS already hides these with display:none on mobile, but skip creating
+  // the 50 DOM nodes in the first place rather than just hiding them.
   const interactiveBg = document.getElementById('interactiveBg');
-  if (interactiveBg) {
+  if (interactiveBg && window.innerWidth > 767 && !prefersReducedMotion) {
     for (let i = 0; i < 50; i++) {
       const particle = document.createElement('div');
       particle.className = 'particle';
@@ -103,8 +109,9 @@ document.addEventListener('DOMContentLoaded', () => {
   if (window.innerWidth > 767) {
     AOS.init({
       once: true,
-      duration: 800,
-      easing: 'ease-out-cubic'
+      duration: prefersReducedMotion ? 0 : 800,
+      easing: 'ease-out-cubic',
+      disable: prefersReducedMotion
     });
   }
 
@@ -204,29 +211,45 @@ document.addEventListener('DOMContentLoaded', () => {
    */
 
   // Animate numbers in the stats section when they become visible
-  const statsSection = document.querySelector('#about');
+  // Falls back to any [data-stats] container on pages without an #about section (e.g. showcase pages).
+  const statsSection = document.querySelector('#about') || document.querySelector('[data-stats]');
   if (statsSection) {
+    // Duration scales to the number's magnitude: big numbers (e.g. 113,000) get a short,
+    // rapid climb; small numbers (e.g. 15) get a longer, more deliberate one. Tuned on a
+    // log scale so the difference is visible across the 1-100,000+ range used on the site.
+    const MIN_DURATION = 700;   // big numbers: fast/rapid finish
+    const MAX_DURATION = 2200;  // small numbers: slow, deliberate finish
+    const durationFor = (target) => {
+      const magnitude = Math.max(Math.abs(target), 1);
+      const scale = Math.min(Math.log10(magnitude) / 4, 1); // 1 -> 0, ~10,000+ -> 1
+      return MAX_DURATION - (MAX_DURATION - MIN_DURATION) * scale;
+    };
+
     const animateCounters = () => {
       const counters = statsSection.querySelectorAll('[data-count]');
       counters.forEach(counter => {
         const target = parseFloat(counter.getAttribute('data-count'));
         const suffix = counter.getAttribute('data-suffix') || '';
-        const duration = 2000;
-        const step = target / (duration / 16);
-        let current = 0;
+        const duration = durationFor(target);
+        const isDecimal = target.toString().includes('.');
+        let startTime = null;
 
-        const updateCounter = () => {
-          current += step;
-          if (current >= target) {
+        // Timestamp-based (not frame-count-based): the animation takes the
+        // same real-world duration regardless of the display's refresh rate,
+        // instead of finishing early on 120Hz/144Hz screens.
+        const updateCounter = (timestamp) => {
+          if (startTime === null) startTime = timestamp;
+          const progress = Math.min((timestamp - startTime) / duration, 1);
+          const current = target * progress;
+
+          if (progress >= 1) {
             counter.textContent = target + suffix;
           } else {
-            counter.textContent = target.toString().includes('.') 
-              ? current.toFixed(1) 
-              : Math.floor(current);
+            counter.textContent = isDecimal ? current.toFixed(1) : Math.floor(current);
             requestAnimationFrame(updateCounter);
           }
         };
-        updateCounter();
+        requestAnimationFrame(updateCounter);
       });
     };
 
@@ -260,19 +283,23 @@ document.addEventListener('DOMContentLoaded', () => {
     fadeObserver.observe(el);
   });
 
-  // Apply parallax effect to floating elements on mouse move
-  const handleParallax = (e) => {
-    const mouseX = e.clientX / window.innerWidth;
-    const mouseY = e.clientY / window.innerHeight;
-    
-    document.querySelectorAll('.floating-element').forEach((element, index) => {
-      const speed = (index + 1) * 0.5;
-      const x = (mouseX - 0.5) * speed * 20;
-      const y = (mouseY - 0.5) * speed * 20;
-      element.style.transform = `translate(${x}px, ${y}px)`;
-    });
-  };
-  document.addEventListener('mousemove', throttle(handleParallax, 100));
+  // Apply parallax effect to floating elements on mouse move (skipped for
+  // reduced-motion users - this is purely decorative, JS-driven movement
+  // that the CSS-only reduced-motion rules can't reach on their own).
+  if (!prefersReducedMotion) {
+    const handleParallax = (e) => {
+      const mouseX = e.clientX / window.innerWidth;
+      const mouseY = e.clientY / window.innerHeight;
+
+      document.querySelectorAll('.floating-element').forEach((element, index) => {
+        const speed = (index + 1) * 0.5;
+        const x = (mouseX - 0.5) * speed * 20;
+        const y = (mouseY - 0.5) * speed * 20;
+        element.style.transform = `translate(${x}px, ${y}px)`;
+      });
+    };
+    document.addEventListener('mousemove', throttle(handleParallax, 100));
+  }
 
   // Animate the gradient on the CTA section
   const ctaSection = document.querySelector('.cta-section');
@@ -288,21 +315,24 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   
   // Add 3D tilt effect for service cards (This requires JS for dynamic values)
-  document.querySelectorAll('.service-card').forEach(card => {
-    card.addEventListener('mousemove', function(e) {
-      const rect = this.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const centerX = rect.width / 2;
-      const centerY = rect.height / 2;
-      const rotateX = (y - centerY) / 10;
-      const rotateY = (centerX - x) / 10;
-      this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-5px)`;
+  // Skipped for reduced-motion users, same reasoning as the parallax effect above.
+  if (!prefersReducedMotion) {
+    document.querySelectorAll('.service-card').forEach(card => {
+      card.addEventListener('mousemove', function(e) {
+        const rect = this.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateX = (y - centerY) / 10;
+        const rotateY = (centerX - x) / 10;
+        this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-5px)`;
+      });
+      card.addEventListener('mouseleave', function() {
+        this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
+      });
     });
-    card.addEventListener('mouseleave', function() {
-      this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
-    });
-  });
+  }
 
   // Close mobile menu when clicking outside of the navbar
   document.addEventListener('click', (event) => {
@@ -442,7 +472,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Log page load performance to the console
   window.addEventListener('load', () => {
-    if (window.performance && window.performance.timing) {
+    // Navigation Timing Level 2 (modern browsers) - falls back to the
+    // deprecated performance.timing API for anything that doesn't support it.
+    if (window.performance && typeof window.performance.getEntriesByType === 'function') {
+      const [navEntry] = window.performance.getEntriesByType('navigation');
+      if (navEntry) {
+        console.log(`🚀 DataArcus loaded in ${Math.round(navEntry.duration)}ms`);
+      }
+    } else if (window.performance && window.performance.timing) {
       const loadTime = window.performance.timing.loadEventEnd - window.performance.timing.navigationStart;
       console.log(`🚀 DataArcus loaded in ${loadTime}ms`);
     }
@@ -454,61 +491,52 @@ document.addEventListener('DOMContentLoaded', () => {
   const blogCards = document.querySelectorAll('[data-category]');
 
   if (blogSearch && filterButtons.length > 0) {
+    // Applies the search term AND the active category filter together, so
+    // neither control silently undoes the other (e.g. searching, then
+    // clicking a filter, no longer wipes out the search results).
+    const applyBlogFilters = () => {
+      const searchTerm = blogSearch.value.toLowerCase();
+      const activeButton = document.querySelector('[data-filter].active');
+      const activeFilter = activeButton ? activeButton.getAttribute('data-filter') : 'all';
+
+      blogCards.forEach(card => {
+        const categories = card.getAttribute('data-category');
+        const title = card.querySelector('h3').textContent.toLowerCase();
+        const excerpt = card.querySelector('.text-white-50').textContent.toLowerCase();
+        const badge = card.querySelector('.badge').textContent.toLowerCase();
+
+        const matchesFilter = activeFilter === 'all' || categories.includes(activeFilter);
+        const matchesSearch = !searchTerm ||
+                            title.includes(searchTerm) ||
+                            excerpt.includes(searchTerm) ||
+                            badge.includes(searchTerm);
+
+        card.style.display = (matchesFilter && matchesSearch) ? 'block' : 'none';
+      });
+
+      const visibleCards = Array.from(blogCards).filter(card =>
+        card.style.display !== 'none');
+      document.getElementById('noResults').style.display =
+        visibleCards.length === 0 ? 'block' : 'none';
+    };
+
     // Search functionality
     let searchTimeout;
     blogSearch.addEventListener('input', function() {
       clearTimeout(searchTimeout);
       searchTimeout = setTimeout(() => {
-        const searchTerm = this.value.toLowerCase();
-
-        if (searchTerm) {
-          filterButtons.forEach(btn => btn.classList.remove('active'));
-          document.querySelector('[data-filter="all"]').classList.add('active');
-        }
-        
-        blogCards.forEach(card => {
-          const title = card.querySelector('h3').textContent.toLowerCase();
-          const excerpt = card.querySelector('.text-white-50').textContent.toLowerCase();
-          const badge = card.querySelector('.badge').textContent.toLowerCase();
-          
-          const matchesSearch = title.includes(searchTerm) || 
-                              excerpt.includes(searchTerm) || 
-                              badge.includes(searchTerm);
-          
-          card.style.display = matchesSearch ? 'block' : 'none';
-        });
-
-        const visibleCards = Array.from(blogCards).filter(card => 
-          card.style.display !== 'none');
-        document.getElementById('noResults').style.display = 
-          visibleCards.length === 0 ? 'block' : 'none';
-      });
-    }, 300);
+        applyBlogFilters();
+      }, 300);
+    });
 
     // Filter functionality
     filterButtons.forEach(button => {
       button.addEventListener('click', function() {
-        const filter = this.getAttribute('data-filter');
-        
         // Update active button
         filterButtons.forEach(btn => btn.classList.remove('active'));
         this.classList.add('active');
-        
-        // Filter cards
-        blogCards.forEach(card => {
-          const categories = card.getAttribute('data-category');
-          
-          if (filter === 'all' || categories.includes(filter)) {
-            card.style.display = 'block';
-          } else {
-            card.style.display = 'none';
-          }
-        });
-        const visibleCards = Array.from(blogCards).filter(card => 
-          card.style.display !== 'none'
-        );
-        document.getElementById('noResults').style.display = 
-          visibleCards.length === 0 ? 'block' : 'none';
+
+        applyBlogFilters();
       });
     });
   }

@@ -7,12 +7,12 @@ window.commonTranslations = {
       portfolio: "Showcases",
       about: "About", 
       contact: "Contact",
-      consultation: "Get Your Free PoC"
+      consultation: "Book a Free Call"
     },
-    
+
     // Footer
     footer: {
-      tagline: "Custom-built Power BI solutions for e-commerce leaders in the MENA region, turning complex data into a clear strategic advantage.",
+      tagline: "Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.",
       services: "Services",
       company: "Company",
       contact: "Contact Info",
@@ -34,7 +34,7 @@ window.commonTranslations = {
     
     // Common CTAs
     cta: {
-      discuss: "Start Your Free PoC",
+      discuss: "Book a Free Call",
       viewcase: "View Showcase",
       contact: "Contact Us",
       calendar: "Schedule a Meeting"
@@ -53,12 +53,12 @@ window.commonTranslations = {
       portfolio: "نماذج الحلول",
       about: "عن الشركة",
       contact: "تواصل معنا", 
-      consultation: "اطلب نسختك التجريبية"
+      consultation: "احجز مكالمة مجانية"
     },
     
     // Footer Arabic
     footer: {
-      tagline: "حلول Power BI مخصصة لقادة التجارة الإلكترونية في الشرق الأوسط، نحوّل بياناتك المعقدة إلى ميزة استراتيجية واضحة.",
+      tagline: "حلول Power BI مخصصة للشركات في الشرق الأوسط، نحوّل بياناتك المعقدة إلى ميزة استراتيجية واضحة.",
       services: "الخدمات",
       company: "الشركة",
       contact: "للتواصل", 
@@ -80,7 +80,7 @@ window.commonTranslations = {
     
     // Common CTAs Arabic
     cta: {
-      discuss: "ابدأ نسختك التجريبية المجانية",
+      discuss: "احجز مكالمة مجانية",
       viewcase: "عرض النموذج",
       contact: "تواصل معنا",
       calendar: "احجز اجتماعًا"
