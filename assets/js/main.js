@@ -80,6 +80,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // JS-driven animation (particles, parallax, tilt) for anyone who has it on.
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  // Read the viewport width once, up front, before any DOM writes below.
+  // Reading window.innerWidth after a DOM mutation forces the browser to
+  // run a synchronous layout recalculation just to answer the query, so
+  // caching it here (before the loading-overlay/particle/AOS setup that
+  // follows) avoids that forced reflow.
+  const isDesktopViewport = window.innerWidth > 767;
+
   // Hide loading overlay after a delay
   const loadingOverlay = document.getElementById('loadingOverlay');
   if (loadingOverlay) {
@@ -93,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // CSS already hides these with display:none on mobile, but skip creating
   // the 50 DOM nodes in the first place rather than just hiding them.
   const interactiveBg = document.getElementById('interactiveBg');
-  if (interactiveBg && window.innerWidth > 767 && !prefersReducedMotion) {
+  if (interactiveBg && isDesktopViewport && !prefersReducedMotion) {
     for (let i = 0; i < 50; i++) {
       const particle = document.createElement('div');
       particle.className = 'particle';
@@ -106,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Initialize Animate on Scroll (AOS) library only on desktop
-  if (window.innerWidth > 767) {
+  if (isDesktopViewport) {
     AOS.init({
       once: true,
       duration: prefersReducedMotion ? 0 : 800,
