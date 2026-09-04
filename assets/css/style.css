@@ -371,12 +371,12 @@ footer a.text-white-50:hover {
 .portfolio-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     transition: transform 0.3s ease;
 }
 
 .portfolio-card:hover .portfolio-image img {
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 /* THE FIX for Tech Pills layout */
