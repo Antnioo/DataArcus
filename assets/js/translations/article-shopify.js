@@ -60,7 +60,7 @@ window.shopifyTranslations = {
       h_conclusion: "Bringing It All Together: Your Single Source of Truth",
       p_conclusion1: "A true Shopify dashboard in Power BI is more than just a report; it's a command center for your entire e-commerce operation. It connects your sales, marketing, customer, and inventory data into a single source of truth that drives profitable growth.",
       p_conclusion2: "Building this level of clarity from scattered data sources is a complex data engineering challenge, but getting started doesn't have to be.",
-      p_conclusion3: "If you're ready to see what a real command center for your Shopify store looks like, the first step is our <strong>free, no-obligation Proof-of-Concept dashboard.</strong> Let's connect a sample of your Shopify data and uncover your first major growth opportunity."
+      p_conclusion3: "If you're ready to see what a real command center for your Shopify store looks like, the first step is our <strong>free, no-obligation Data Clarity Call.</strong> Bring a sample of your Shopify data and let's uncover your first major growth opportunity."
     },
 
     exploreMore: {
@@ -70,7 +70,7 @@ window.shopifyTranslations = {
     },
     finalCta: {
       title: "Ready to Build Your Shopify Command Center?",
-      subtitle: "Let's build a free Proof-of-Concept dashboard using a sample of your own Shopify data.",
+      subtitle: "Book a free 20-minute Data Clarity Call - no obligation, just a straight look at what's possible with your own Shopify data.",
       button: "Book a Free Call"
     }
   },

@@ -99,7 +99,7 @@ window.etlpqTranslations = {
       ],
       h9: "Conclusion",
       p7: "There’s no rivalry-only fit for purpose. Use ETL for scale and governance; use Power Query for speed. Blend them to maximize value for your store.",
-      p8: "<strong>Need help designing the right data architecture for your e-commerce business?</strong> Book a free, no-obligation strategy call and we’ll map the path from raw data to trusted insight with a free PoC."
+      p8: "<strong>Need help designing the right data architecture for your e-commerce business?</strong> Book a free, no-obligation Data Clarity Call and we'll map the path from raw data to trusted insight."
     },
     
     // ADDED FOR CONSISTENCY
@@ -110,7 +110,7 @@ window.etlpqTranslations = {
     },
     finalCta: {
       title: "Ready to See This Power Applied to Your Data?",
-      subtitle: "Let's build a free Proof-of-Concept dashboard that tackles one of your key business challenges.",
+      subtitle: "Book a free 20-minute Data Clarity Call - no obligation, just a straight look at what's possible with your own data.",
       button: "Book a Free Call"
     }
   },
@@ -214,7 +214,7 @@ window.etlpqTranslations = {
       ],
       h9: "الخلاصة",
       p7: "لا توجد منافسة، بل 'الملاءمة للغرض'. استخدم ETL للتوسع والحوكمة؛ واستخدم Power Query للسرعة. امزج بينهما لتحقيق أقصى قيمة لمتجرك.",
-      p8: "<strong>هل تحتاج إلى مساعدة في تصميم بنية البيانات المناسبة لعملك في التجارة الإلكترونية؟</strong> احجز مكالمة استراتيجية مجانية وغير مُلزِمة وسنرسم لك الطريق من البيانات الأولية إلى رؤى موثوقة مع نسخة تجريبية مجانية."
+      p8: "<strong>هل تحتاج إلى مساعدة في تصميم بنية البيانات المناسبة لعملك في التجارة الإلكترونية؟</strong> احجز مكالمة وضوح بيانات مجانية وغير مُلزِمة وسنرسم لك الطريق من البيانات الأولية إلى رؤى موثوقة."
     },
     
     // ADDED FOR CONSISTENCY (AR)

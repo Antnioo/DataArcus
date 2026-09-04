@@ -66,7 +66,7 @@ window.kpiTranslations = {
       h_conclusion: "From Busy to Profitable: Your Next Step",
       p_conclusion1: "Tracking revenue and website sessions will tell you if your e-commerce store is busy. Tracking these five KPIs will tell you if your business is <strong>profitable and built to last.</strong>",
       p_conclusion2: "The challenge is that the data you need is scattered across multiple platforms. This is precisely the problem DataArcus was founded to solve. We build a single source of truth in Power BI, automating this complex analysis so you can focus on making strategic decisions.",
-      p_conclusion3: "If you're ready to stop guessing and start knowing your most critical numbers, the first step is simple and has zero risk. Let's build you a <strong>free Proof-of-Concept dashboard.</strong>"
+      p_conclusion3: "If you're ready to stop guessing and start knowing your most critical numbers, the first step is simple and has zero risk. Let's book you a <strong>free Data Clarity Call.</strong>"
     },
     
     // Explore More & Final CTA
@@ -77,7 +77,7 @@ window.kpiTranslations = {
     },
     finalCta: {
       title: "Ready to See This Power Applied to Your Data?",
-      subtitle: "Let's build a free Proof-of-Concept dashboard that tackles one of your key business challenges.",
+      subtitle: "Book a free 20-minute Data Clarity Call - no obligation, just a straight look at what's possible with your own data.",
       button: "Book a Free Call"
     }
   },

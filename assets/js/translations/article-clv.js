@@ -59,7 +59,7 @@ window.clvTranslations = {
       h3: "Stop Guessing, Start Engineering Your Growth",
       p11: "Tracking Customer Lifetime Value is the difference between hoping for growth and actively engineering it. It transforms your data from a historical record into a predictive roadmap for the future.",
       p12: "If you're ready to start making decisions based on the most important metric in your business, the first step is a conversation.",
-      p13: "<strong>Book a free, no-obligation strategy call with us today.</strong> We'll discuss your unique e-commerce data challenges and show you exactly what's possible with a free Proof-of-Concept dashboard."
+      p13: "<strong>Book a free, no-obligation Data Clarity Call today.</strong> We'll discuss your unique e-commerce data challenges and show you exactly what's possible with your own data."
     },
     
     // ADDED FOR CONSISTENCY
@@ -70,7 +70,7 @@ window.clvTranslations = {
     },
     finalCta: {
       title: "Ready to See This Power Applied to Your Data?",
-      subtitle: "Let's build a free Proof-of-Concept dashboard that tackles one of your key business challenges.",
+      subtitle: "Book a free 20-minute Data Clarity Call - no obligation, just a straight look at what's possible with your own data.",
       button: "Book a Free Call"
     }
   },

@@ -108,7 +108,7 @@ window.portfolioTranslations = {
       title: "About This Financial Showcase",
       content: {
         paragraph1: "This dashboard is a proof-of-concept demonstrating how we handle sensitive financial data. To showcase our commitment to security and privacy, the underlying data and specific metrics have been generalized.",
-        paragraph2: "We can discuss how we apply these same secure principles to build a custom financial dashboard for your business. Contact us to schedule a private consultation and start your free PoC."
+        paragraph2: "We can discuss how we apply these same secure principles to build a custom financial dashboard for your business. Contact us to schedule a free Data Clarity Call."
       },
       button: "Book a Free Call"
     }
