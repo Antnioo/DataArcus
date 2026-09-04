@@ -80,7 +80,7 @@ window.mavenmarketTranslations = {
     finalCta: {
       title: "Ready to See This Clarity with Your Own Data?",
       subtitle: "Let's build you a free Proof-of-Concept dashboard using a sample of your own e-commerce data.",
-      button: "Start Your Free PoC"
+      button: "Book a Free Call"
     }
   },
 
@@ -163,7 +163,7 @@ window.mavenmarketTranslations = {
     finalCta: {
       title: "هل أنت مستعد لرؤية هذا الوضوح ببياناتك الخاصة؟",
       subtitle: "دعنا نبني لك لوحة تحكم تجريبية مجانية باستخدام عينة من بيانات التجارة الإلكترونية الخاصة بك.",
-      button: "ابدأ نسختك التجريب'ية المجانية"
+      button: "احجز مكالمة مجانية"
     }
   }
 };

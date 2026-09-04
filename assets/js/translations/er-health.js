@@ -77,7 +77,7 @@ window.erHealthTranslations = {
     finalCta: {
       title: "Ready to Get This Clarity for Your Business?",
       subtitle: "Even if you're not in healthcare, these principles apply. Let's build a free PoC dashboard with your data.",
-      button: "Start Your Free PoC"
+      button: "Book a Free Call"
     }
   },
 
@@ -158,7 +158,7 @@ window.erHealthTranslations = {
     finalCta: {
       title: "هل أنت مستعد للحصول على هذا الوضوح لعملك؟",
       subtitle: "حتى لو لم تكن في قطاع الرعاية الصحية، فإن هذه المبادئ تنطبق. دعنا نبني لك لوحة تحكم تجريبية مجانية ببياناتك.",
-      button: "ابدأ نسختك التجريبية المجانية"
+      button: "احجز مكالمة مجانية"
     }
   }
 };

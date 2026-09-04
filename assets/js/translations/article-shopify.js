@@ -12,13 +12,13 @@ window.shopifyTranslations = {
       "og:description": "A playbook for e-commerce leaders on building a single source of truth from Shopify data in Power BI.",
       "og:url": "https://dataarcus.com/articles/article-shopify.html",
       "og:site_name": "DataArcus",
-      "og:image": "https://dataarcus.com/assets/img/og-image-shopify.png",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "og:image:alt": "A title card for the article 'The Ultimate Shopify Dashboard in Power BI'.",
       "og:locale": "en_US",
       "twitter:card": "summary_large_image",
       "twitter:title": "The Ultimate Shopify Dashboard in Power BI - DataArcus",
       "twitter:description": "A playbook for e-commerce leaders on building a single source of truth from Shopify data in Power BI.",
-      "twitter:image": "https://dataarcus.com/assets/img/og-image-shopify.png",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "twitter:image:alt": "A title card for the article 'The Ultimate Shopify Dashboard in Power BI'.",
       canonical: "https://dataarcus.com/articles/article-shopify.html",
     },
@@ -71,7 +71,7 @@ window.shopifyTranslations = {
     finalCta: {
       title: "Ready to Build Your Shopify Command Center?",
       subtitle: "Let's build a free Proof-of-Concept dashboard using a sample of your own Shopify data.",
-      button: "Start Your Free PoC"
+      button: "Book a Free Call"
     }
   },
 
@@ -87,13 +87,13 @@ window.shopifyTranslations = {
       "og:description": "دليل لقادة التجارة الإلكترونية حول بناء مصدر موحد للحقيقة من بيانات Shopify في Power BI.",
       "og:url": "https://dataarcus.com/articles/article-shopify.html",
       "og:site_name": "داتا اركوس",
-      "og:image": "https://dataarcus.com/assets/img/og-image-shopify.png",
+      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "og:image:alt": "صورة عنوان لمقال 'لوحة تحكم Shopify المثالية في Power BI'.",
       "og:locale": "ar_AR",
       "twitter:card": "summary_large_image",
       "twitter:title": "لوحة تحكم Shopify المثالية في Power BI - داتا اركوس",
       "twitter:description": "دليل لقادة التجارة الإلكترونية حول بناء مصدر موحد للحقيقة من بيانات Shopify في Power BI.",
-      "twitter:image": "https://dataarcus.com/assets/img/og-image-shopify.png",
+      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "twitter:image:alt": "صورة عنوان لمقال 'لوحة تحكم Shopify المثالية في Power BI'.",
       canonical: "https://dataarcus.com/articles/article-shopify.html",
     },
@@ -146,7 +146,7 @@ window.shopifyTranslations = {
     finalCta: {
       title: "هل أنت مستعد لبناء مركز قيادة Shopify الخاص بك؟",
       subtitle: "دعنا نبني لك لوحة تحكم تجريبية مجانية باستخدام عينة من بيانات Shopify الخاصة بك.",
-      button: "ابدأ نسختك التجريبية المجانية"
+      button: "احجز مكالمة مجانية"
     }
   }
 };

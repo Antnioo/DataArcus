@@ -47,6 +47,13 @@ window.blogTranslations = {
 
     // Posts
     posts: {
+      journeyAttribution: {
+        badge: "DATA ENGINEERING",
+        title: "Resolve Once, Hydrate Many: A DAX Pattern for Lead Attribution",
+        date: "September 1, 2026",
+        excerpt: "Why matching the same lead five times produces disagreeing KPIs, and the single-resolution DAX pattern that validated 54,403/54,403 leads before replacing scattered join logic.",
+        button: "Read Playbook"
+      },
       evm: {
         badge: "PROJECT ANALYTICS",
         title: "Beyond \"Traffic Lights\": How Earned Value Management (EVM) Predicts Project Risk",
@@ -140,6 +147,13 @@ window.blogTranslations = {
 
     // Posts (AR)
     posts: {
+      journeyAttribution: {
+        badge: "هندسة البيانات",
+        title: "حلّ مرة واحدة، غذِّ كل مكان: نمط DAX لعزو العملاء المحتملين",
+        date: "1 سبتمبر 2026",
+        excerpt: "لماذا تُنتج مطابقة نفس العميل المحتمل خمس مرات مؤشرات أداء متضاربة، ونمط DAX الذي وثّق تطابق 54,403 من أصل 54,403 عميل محتمل قبل استبدال منطق الربط المتناثر.",
+        button: "اقرأ الدليل"
+      },
       evm: {
         badge: "تحليلات المشاريع",
         title: "ما وراء \"إشارات المرور\": كيف تتنبأ إدارة القيمة المكتسبة (EVM) بمخاطر المشروع",

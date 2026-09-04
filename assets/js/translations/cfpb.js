@@ -98,7 +98,7 @@ window.cfpbComplaintsTranslations = {
       title: "Want this level of clarity on your data?",
       subtitle:
         "We can adapt this framework to your customer support, compliance, or operations data. Ask for a free, lightweight PoC.",
-      button: "Start Your Free PoC"
+      button: "Book a Free Call"
     }
   },
 
@@ -199,7 +199,7 @@ window.cfpbComplaintsTranslations = {
       title: "هل تريد هذا الوضوح لبياناتك؟",
       subtitle:
         "نُخصِّص هذا الإطار لبيانات الدعم أو الامتثال لديك. اطلب نموذجًا تجريبيًا مجانيًا.",
-      button: "ابدأ النسخة التجريبية"
+      button: "احجز مكالمة مجانية"
     }
   }
 };

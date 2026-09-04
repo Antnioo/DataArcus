@@ -19,7 +19,7 @@
   --purple: #6c5ce7;
   --purple-2: #a29bfe;
   --green: #00cec9;
-  --orange: #fd79a8;
+  --pink: #fd79a8;
   --text-muted: #64748b;
   --glass-bg: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
@@ -105,7 +105,7 @@ body {
 
 @keyframes langPulse {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
+  50% { transform: scale(1.05); }
 }
 
 
@@ -183,11 +183,8 @@ body {
   transform: translateX(100%);
 }
 
-.btn-accent:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 12px 24px rgba(0, 212, 255, 0.4);
-  color: #000;
-}
+/* .btn-accent:hover is defined once, further down in Section 11,
+   with the more dramatic hover effect (translateY(-4px) scale(1.02)). */
 
 .btn-glass {
   background: rgba(255, 255, 255, 0.1);
@@ -520,7 +517,7 @@ footer a.text-white-50:hover {
 }
 
 .form-control.is-invalid {
-  border-color: var(--orange);
+  border-color: var(--pink);
   box-shadow: 0 0 0 3px rgba(253, 121, 168, 0.1);
 }
 
@@ -798,6 +795,41 @@ html[dir="rtl"] .navbar-brand {
 
 
 /* ===== 9. Accessibility & Print ===== */
+
+/* --- Reduced Motion --- */
+/* Honors the OS-level "reduce motion" preference: cuts every CSS animation/
+   transition to effectively instant and hides the purely decorative moving
+   elements, same treatment already given to mobile for performance. */
+@media (prefers-reduced-motion: reduce) {
+  html, body {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .floating-element,
+  .particle,
+  .interactive-bg {
+    display: none !important;
+  }
+
+  .glass-card:hover,
+  .portfolio-card:hover,
+  .service-card:hover,
+  .btn-accent:hover,
+  .btn-glass:hover,
+  .nav-link:hover {
+    transform: none !important;
+    box-shadow: none !important;
+  }
+}
+
 .btn:focus {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -1078,11 +1110,6 @@ html[dir="rtl"] .navbar-nav {
 .lang-btn-desktop.switching {
   animation: langPulse 0.6s ease-in-out;
   pointer-events: none;
-}
-
-@keyframes langPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
 }
 
 /* --- Improved Mobile Responsiveness --- */

@@ -3,21 +3,21 @@ window.homepageTranslations = {
   en: {
     // Page Meta
     meta: {
-      title: "DataArcus - Power BI for E-commerce Growth in MENA",
-      description: "DataArcus builds custom Power BI dashboards for e-commerce businesses in Egypt & the MENA region to optimize marketing ROI, increase customer lifetime value, and streamline inventory.",
-      keywords: "Power BI for e-commerce, e-commerce analytics MENA, Shopify dashboard, customer lifetime value, marketing ROI analytics, DataArcus Egypt",
+      title: "DataArcus - Power BI & Data Modeling for Growing Businesses",
+      description: "DataArcus builds production-grade Power BI dashboards and data models for businesses across the MENA region - from CRM intelligence to project risk to retention analytics.",
+      keywords: "Power BI consultant, data modeling, DAX, business intelligence dashboards, MENA, CRM analytics, Power BI specialist",
       author: "DataArcus",
       "og:type": "website",
-      "og:title": "DataArcus - Power BI for E-commerce Growth in MENA",
-      "og:description": "We build custom Power BI dashboards for e-commerce businesses in Egypt & the MENA region to optimize marketing ROI, increase customer lifetime value, and streamline inventory.",
+      "og:title": "DataArcus - Power BI & Data Modeling for Growing Businesses",
+      "og:description": "I build production-grade Power BI dashboards and data models for businesses across the MENA region - from CRM intelligence to project risk to retention analytics.",
       "og:url": "https://dataarcus.com",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "og:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
       "og:locale": "en_US",
       "twitter:card": "summary_large_image",
-      "twitter:title": "DataArcus - Power BI for E-commerce Growth in MENA",
-      "twitter:description": "We build custom Power BI dashboards for e-commerce businesses in Egypt & the MENA region to optimize marketing ROI, increase customer lifetime value, and streamline inventory.",
+      "twitter:title": "DataArcus - Power BI & Data Modeling for Growing Businesses",
+      "twitter:description": "I build production-grade Power BI dashboards and data models for businesses across the MENA region - from CRM intelligence to project risk to retention analytics.",
       "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "twitter:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
       canonical: "https://dataarcus.com/",
@@ -25,17 +25,17 @@ window.homepageTranslations = {
 
     // Hero Section
     hero: {
-      title: "From Scattered Sales Data to Profitable Growth",
-      subtitle: "Stop guessing which campaigns are profitable. We build custom Power BI dashboards for MENA e-commerce leaders to unlock true marketing ROI and drive measurable growth.",
-      buttonWork: "Explore E-commerce Solutions",
-      buttonDiscuss: "Get Your Free PoC Dashboard",
+      title: "From Scattered Business Data to Decisions You Can Trust",
+      subtitle: "I design and build production-grade Power BI systems - for dealership CRMs, project risk tracking, subscription retention, and more - that turn messy operational data into numbers your team can actually rely on.",
+      buttonWork: "Explore My Work",
+      buttonDiscuss: "Book a Free Data Clarity Call",
       badgeSecurity: "Enterprise Security",
       badgeTurnaround: "Fast Turnaround",
       badgeExcellence: "Committed to Excellence",
       commitmentTitle: "Our Commitment to Excellence",
       commitmentPoints: [
         "Advanced DAX & Power Query Mastery",
-        "Unified E-commerce Data Modeling",
+        "Unified Business Data Modeling",
         "Enterprise Governance & Security",
         "Custom Visual Development"
       ]
@@ -53,24 +53,24 @@ window.homepageTranslations = {
 
     // Services Section
     services: {
-      title: "Solutions That Drive E-commerce Performance",
-      subtitle: "We deliver targeted insights that empower your e-commerce team to make smarter decisions on marketing, inventory, and customer retention.",
+      title: "Solutions Built Around Your Data, Not a Template",
+      subtitle: "Whatever platform your business runs on - CRM, e-commerce, project tools, spreadsheets - I turn it into a model your team can actually trust.",
       cards: [
         {
-          title: "Marketing ROI Dashboards",
-          desc: "Get a real-time view of your ad spend. We connect your Shopify, Meta Ads, and Google Ads data to show you exactly which campaigns are driving profitable customers."
+          title: "Executive & Operational Dashboards",
+          desc: "A real-time, single view of your business, built the way every DataArcus model is: one validated source of truth instead of five reports that quietly disagree."
         },
         {
-          title: "Unified Sales Analytics",
-          desc: "Your insights are only as good as your data. We build robust data pipelines to unify sales, customer, and inventory data into a single source of truth."
+          title: "Reliable Data Modeling & Pipelines",
+          desc: "Your dashboards are only as good as the model underneath them. I build clean, documented models validated against the source system before anything goes live."
         },
         {
-          title: "Customer Lifetime Value (CLV)",
-          desc: "Look beyond the first sale. We analyze purchasing patterns to calculate CLV, helping you identify and retain your most valuable customers."
+          title: "Predictive & Trend Analysis",
+          desc: "Beyond what happened - forecasting, cohort analysis, and pacing models that show you what's coming next, whether that's next month's sales pace or a lead about to go cold."
         },
         {
-          title: "Inventory & Operations",
-          desc: "From demand forecasting to stock level alerts, we build systems that help you avoid stockouts and reduce excess inventory, directly impacting your bottom line."
+          title: "Governance & Security",
+          desc: "Row-level security and PII-safe anonymization built into the model from day one, not bolted on after the fact."
         }
       ]
     },
@@ -79,6 +79,11 @@ window.homepageTranslations = {
 portfolio: {
       title: "Solution Showcases",
       subtitle: "Explore our proof-of-concept dashboards, engineered to solve common business challenges. See what's possible for your data.",
+      cardPulse: {
+        badge: "AUTOMOTIVE CRM",
+        title: "DataArcus Pulse: CRM Intelligence",
+        desc: "A production-grade dealership CRM command center: 54K leads, 113K calls and 72K call journeys resolved into one model with 410 measures and daily pacing targets."
+      },
       cardFintech: {
         badge: "FINTECH & RISK",
         title: "Fintech Portfolio Risk Engine",
@@ -100,88 +105,88 @@ portfolio: {
     // About Section
     about: {
       title: "A Partner in Your Success",
-      subtitle: "At DataArcus, we don't just build dashboards-we build data-driven partnerships that empower you to lead with confidence.",
-      quote: "\"My name is Abdelrahman M., and I founded DataArcus to eliminate guesswork from business. After 5 years in data analytics, I saw too many brilliant leaders held back by messy, inaccessible data. We exist to bridge that gap.\"",
-      p1: "Our approach is built on a deep understanding of both technology and business strategy. We take the time to understand your unique challenges and goals, ensuring that every solution we build is not just technically excellent, but perfectly aligned with the outcomes you need to achieve.",
+      subtitle: "DataArcus isn't a dashboard factory - it's one person building the same kind of production-grade models you'd get from an internal data team, without the internal data team price tag.",
+      quote: "\"My name is Abdelrahman M. I've spent 2 years working in CRM and data-driven operations - but I got tired of waiting for someone else to build the reporting I actually needed, so I started building it myself in Power BI. DataArcus is where that work lives: real, production-grade models, not templates.\"",
+      p1: "I'm not running a large consultancy - I'm one person who builds every model personally. That means direct access to whoever's actually doing the work, no account-manager layer between you and your dashboard, and what you see in the portfolio is exactly what you'd get.",
       founder: "Abdelrahman M., Founder & Lead Data Architect",
       certification: {
         title: "Industry Certified",
-        subtitle: "Data Analytics Professional", 
+        subtitle: "Data Analytics Professional",
         verified: "Verified by Google & Microsoft"
       },
-      statsTitle: "Our Commitment, Measured",
-      statsSubtitle: "Our passion is backed by a track record of excellence and reliability.",
+      statsTitle: "The Track Record So Far",
+      statsSubtitle: "Real numbers from real production models - not agency metrics.",
       stats: [
-        { title: "Projects Delivered" },
-        { title: "Avg. First Dashboard Turnaround" },
-        { title: "Uptime SLA" },
-        { title: "Client Satisfaction" }
+        { title: "Year of Hands-On Power BI Building" },
+        { title: "DAX Measures in Production" },
+        { title: "End-to-End Dashboard Builds" },
+        { title: "Industry Certifications" }
       ],
-      ctaTitle: "Ready to See These Numbers Work for You?",
-      ctaSubtitle: "Let's turn your data challenges into your greatest advantage. The first step is a simple conversation.",
-      ctaButton: "Book Your Free PoC Strategy Call"
+      ctaTitle: "Curious What This Could Look Like for Your Data?",
+      ctaSubtitle: "No obligation - tell me what you're working with, and I'll show you what's possible on a quick call.",
+      ctaButton: "Book a Free Data Clarity Call"
     },
 
     // FAQ Section
     faq: {
       title: "Your Questions, Answered",
-      subtitle: "We've helped 15+ businesses transform their data. Here are the answers to questions every executive asks.",
+      subtitle: "Here are the answers to the questions I get asked most before a project starts.",
       items: [
         {
-          q: "How quickly can I see my first Proof-of-Concept dashboard?",
-          a: "<strong>Our process is built for speed. Provide us with a sample of your anonymized data (Excel/CSV), and you will receive a free, custom one-page dashboard within 48 hours.</strong> A full, multi-page project is typically completed within one week."
+          q: "How does the free Data Clarity Call work?",
+          a: "<strong>It's a focused 20-minute call, not a sales pitch.</strong> Bring whatever you've got - a messy spreadsheet, a CRM export, your current dashboard - and I'll walk through what's actually fixable and what a real model would look like. No build, no obligation, just a straight answer on whether this is worth pursuing."
         },
         {
           q: "What's the real ROI of a Power BI implementation?",
-          a: "<strong>Our clients typically see 300-500% ROI within 6 months.</strong> Here's the math: If your team spends 10 hours/week on manual reporting, that's 520 hours/year. At EGP 200/hour, you're spending EGP 104,000 annually on manual work.<div class=\"mt-3\"><div class=\"row g-3\"><div class=\"col-sm-6\"><div class=\"p-3 rounded\" style=\"background: rgba(253, 121, 168, 0.1);\"><strong>Before:</strong><br>• 10h/week manual reports<br>• Delayed decisions<br>• Data inconsistencies</div></div><div class=\"col-sm-6\"><div class=\"p-3 rounded\" style=\"background: rgba(0, 206, 201, 0.1);\"><strong>After:</strong><br>• 30min/week monitoring<br>• Real-time insights<br>• Confident decisions</div></div></div></div>"
+          a: "<strong>Here's a simple way to estimate it, not a guarantee.</strong> If your team spends 10 hours a week on manual reporting, that's roughly 500+ hours a year - and that's before counting the cost of decisions made late because the numbers weren't ready.<div class=\"mt-3\"><div class=\"row g-3\"><div class=\"col-sm-6\"><div class=\"p-3 rounded\" style=\"background: rgba(253, 121, 168, 0.1);\"><strong>Before:</strong><br>• 10h/week manual reports<br>• Delayed decisions<br>• Data inconsistencies</div></div><div class=\"col-sm-6\"><div class=\"p-3 rounded\" style=\"background: rgba(0, 206, 201, 0.1);\"><strong>After:</strong><br>• 30min/week monitoring<br>• Real-time insights<br>• Confident decisions</div></div></div></div>"
         },
         {
           q: "How do you handle our sensitive business data?",
-          a: "<strong>Your data never leaves your control. For the free PoC, you provide anonymized sample data.</strong> For full projects, we work within your existing Microsoft environment using row-level security, encrypted connections, and enterprise-grade governance.<div class=\"mt-3\"><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>NDA signed before any data access</span></div><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>Data stays in your Microsoft tenant</span></div><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>Role-based access controls implemented</span></div><div class=\"d-flex align-items-start\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>Full audit trail of all activities</span></div></div>"
+          a: "<strong>On the discovery call, we talk through your data without you needing to hand anything over.</strong> If we move forward, I work within your existing Microsoft environment using row-level security, encrypted connections, and enterprise-grade governance.<div class=\"mt-3\"><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>NDA signed before any data access</span></div><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>Data stays in your Microsoft tenant</span></div><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>Role-based access controls implemented</span></div><div class=\"d-flex align-items-start\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>Full audit trail of all activities</span></div></div>"
         },
         {
-          q: "What if our data is a mess? Shopify exports, Meta Ads CSVs, manual processes?",
-          a: "<strong>Perfect! That's exactly what we specialize in.</strong> 80% of our clients start with \"messy\" data. We connect everything from e-commerce platforms to Google Sheets.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(108, 92, 231, 0.1);\"><strong>We connect to:</strong> Shopify, WooCommerce, Meta Ads, Google Ads, Google Analytics, SQL databases, APIs, Excel files, and 200+ other sources.</div><p class=\"mt-3 mb-0\"><em>\"The messier your data, the bigger the transformation impact.\"</em></p>"
+          q: "What if our data is a mess? Excel exports, legacy systems, manual processes?",
+          a: "<strong>That's normal, and it's exactly the kind of problem I solve.</strong> I connect and clean data from CRMs, e-commerce platforms, ERPs, and spreadsheets into one reliable model.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(108, 92, 231, 0.1);\"><strong>I connect to:</strong> CRM systems, Shopify, WooCommerce, SQL databases, APIs, Excel files, and most other common business data sources.</div><p class=\"mt-3 mb-0\"><em>\"The messier your data, the bigger the transformation impact.\"</em></p>"
         },
         {
           q: "Will our team be able to use the dashboards?",
-          a: "<strong>Absolutely. We build for your team's skill level and provide comprehensive training.</strong> Every project includes user training and documentation. Plus, we offer ongoing support packages.<div class=\"mt-3\"><div class=\"row g-2 small\"><div class=\"col-md-6\"><strong class=\"text-accent\">For End Users:</strong><br>• How to read dashboards<br>• Filtering and drilling down<br>• Export and sharing options</div><div class=\"col-md-6\"><strong class=\"text-accent\">For Admins:</strong><br>• Data refresh schedules<br>• User permissions<br>• Basic troubleshooting</div></div></div>"
+          a: "<strong>Absolutely. I build for your team's skill level and provide comprehensive training.</strong> Every project includes user training and documentation, plus ongoing support options.<div class=\"mt-3\"><div class=\"row g-2 small\"><div class=\"col-md-6\"><strong class=\"text-accent\">For End Users:</strong><br>• How to read dashboards<br>• Filtering and drilling down<br>• Export and sharing options</div><div class=\"col-md-6\"><strong class=\"text-accent\">For Admins:</strong><br>• Data refresh schedules<br>• User permissions<br>• Basic troubleshooting</div></div></div>"
         },
         {
-          q: "Why choose DataArcus over freelancers or big consulting firms?",
-          a: "<strong>We're the sweet spot between cost and quality.</strong> Freelancers lack enterprise experience. Big firms charge 10x more and take 10x longer. We deliver enterprise-quality work at startup speed.<div class=\"mt-3\"><div class=\"row g-3\"><div class=\"col-md-4 text-center\"><div class=\"p-3 rounded\" style=\"background: rgba(253, 121, 168, 0.1);\"><strong>Freelancers</strong><br><small>Cheap but risky<br>Limited expertise<br>No support</small></div></div><div class=\"col-md-4 text-center\"><div class=\"p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 2px solid var(--accent);\"><strong>DataArcus</strong><br><small>Best value<br>Proven expertise<br>Ongoing partnership</small></div></div><div class=\"col-md-4 text-center\"><div class=\"p-3 rounded\" style=\"background: rgba(100, 116, 139, 0.1);\"><strong>Big Firms</strong><br><small>Expensive & slow<br>Junior staff<br>Cookie-cutter</small></div></div></div></div>"
+          q: "Why work with an independent specialist instead of a large agency?",
+          a: "<strong>You get direct access to the person actually building your model.</strong> No account manager relaying requests to a junior analyst - I built <a href='dashboards/dataarcus-pulse.html' class='text-accent'>DataArcus Pulse</a>, a production-grade automotive CRM model with 410 measures, entirely myself, and that's the level of hands-on ownership every project gets.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);\">What you lose versus a big firm is overhead. What you gain is speed, direct communication, and someone personally accountable for every number in your dashboard.</div>"
         },
         {
           q: "What if we're not sure what we need?",
-          a: "<strong>That's exactly why we start with the free Proof-of-Concept dashboard.</strong> We'll take your sample data and build a real dashboard to show you what's possible, revealing opportunities you may not have known existed. No commitment required."
+          a: "<strong>That's exactly what the free Data Clarity Call is for.</strong> Bring what you've got, and I'll help you figure out where the real opportunity is - even if that's not a full dashboard build yet. No commitment required."
         }
       ]
     },
 
     // Final CTA Section
     finalCta: {
-      title: "Ready to See Your E-commerce Data in Action?",
-      subtitle: "Share a sample of your anonymized data and receive a free, custom Proof-of-Concept dashboard within 48 hours. No commitment required.",
-      button: "Start Your Free PoC"
+      title: "Ready to See Your Data in Action?",
+      subtitle: "Book a free 20-minute Data Clarity Call - no obligation, just a straight look at what's possible with what you've got.",
+      button: "Book Your Free Call"
     },
 
     // Contact Section
     contact: {
-      title: "Start Your Free Proof-of-Concept",
-      subtitle: "Tell us about your e-commerce platform and the key metrics you need to track. We'll build a one-page dashboard with your sample data to show you what's possible.",
+      title: "Start a Conversation About Your Data",
+      subtitle: "Tell me about your business and the decisions you need better data for - I'll walk you through what's possible on a free call.",
       form: {
         name: "Full Name *",
         email: "Business Email *",
         company: "Company",
-        platform: "E-commerce Platform (Optional)",
-        platformPlaceholder: "e.g., Shopify, WooCommerce",
+        platform: "Data Source / Platform (Optional)",
+        platformPlaceholder: "e.g., CRM system, Shopify, internal database...",
         details: "Project Details *",
-        placeholder: "e.g., We use Shopify and Meta Ads. We need to track Customer Acquisition Cost (CAC) and see our Marketing ROI by channel...",
-        button: "Request My Free PoC",
+        placeholder: "e.g., We use a CRM and a few spreadsheets. We need a single view of leads, conversion, and team performance...",
+        button: "Book My Free Call",
         response: "Response within 4 hours"
       },
       checklist: {
-        title: "PoC Discovery Checklist",
+        title: "Data Clarity Call Checklist",
         items: [
           {
             title: "Business Objectives",
@@ -189,7 +194,7 @@ portfolio: {
           },
           {
             title: "Data Sources",
-            desc: "Shopify, WooCommerce, Meta Ads, Google Ads..."
+            desc: "CRM, ERP, e-commerce platforms, spreadsheets..."
           },
           {
             title: "Key Stakeholders",
@@ -228,21 +233,21 @@ portfolio: {
   ar: {
     // Page Meta
     meta: {
-      title: "داتا اركوس - حلول Power BI لنمو التجارة الإلكترونية في الشرق الأوسط",
-      description: "تقوم داتا اركوس ببناء لوحات تحكم Power BI مخصصة لشركات التجارة الإلكترونية في مصر ومنطقة الشرق الأوسط وشمال إفريقيا لتحسين عائد التسويق وزيادة قيمة عمر العميل وتبسيط المخزون.",
-      keywords: "Power BI للتجارة الإلكترونية, تحليلات التجارة الإلكترونية الشرق الأوسط, لوحة تحكم Shopify, قيمة عمر العميل, تحليلات عائد التسويق, DataArcus مصر",
+      title: "داتا اركوس - حلول Power BI ونمذجة البيانات للأعمال النامية",
+      description: "تبني داتا اركوس لوحات تحكم Power BI ونماذج بيانات بمستوى الإنتاج للشركات في منطقة الشرق الأوسط - من ذكاء إدارة علاقات العملاء إلى مخاطر المشاريع وتحليلات الاحتفاظ بالعملاء.",
+      keywords: "استشاري Power BI, نمذجة البيانات, DAX, لوحات تحكم ذكاء الأعمال, الشرق الأوسط, تحليلات CRM, متخصص Power BI",
       author: "داتا اركوس",
       "og:type": "website",
-      "og:title": "داتا اركوس - حلول Power BI لنمو التجارة الإلكترونية في الشرق الأوسط",
-      "og:description": "نحن نبني لوحات تحكم Power BI مخصصة لشركات التجارة الإلكترونية في مصر ومنطقة الشرق الأوسط وشمال إفريقيا لتحسين عائد التسويق وزيادة قيمة عمر العميل وتبسيط المخزون.",
+      "og:title": "داتا اركوس - حلول Power BI ونمذجة البيانات للأعمال النامية",
+      "og:description": "أبني لوحات تحكم Power BI ونماذج بيانات بمستوى الإنتاج للشركات في منطقة الشرق الأوسط - من ذكاء إدارة علاقات العملاء إلى مخاطر المشاريع وتحليلات الاحتفاظ بالعملاء.",
       "og:url": "https://dataarcus.com",
       "og:site_name": "داتا اركوس",
       "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       "og:locale": "ar_EG",
       "twitter:card": "summary_large_image",
-      "twitter:title": "داتا اركوس - حلول Power BI لنمو التجارة الإلكترونية في الشرق الأوسط",
-      "twitter:description": "نحن نبني لوحات تحكم Power BI مخصصة لشركات التجارة الإلكترونية في مصر ومنطقة الشرق الأوسط وشمال إفريقيا لتحسين عائد التسويق وزيادة قيمة عمر العميل وتبسيط المخزون.",
+      "twitter:title": "داتا اركوس - حلول Power BI ونمذجة البيانات للأعمال النامية",
+      "twitter:description": "أبني لوحات تحكم Power BI ونماذج بيانات بمستوى الإنتاج للشركات في منطقة الشرق الأوسط - من ذكاء إدارة علاقات العملاء إلى مخاطر المشاريع وتحليلات الاحتفاظ بالعملاء.",
       "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       canonical: "https://dataarcus.com/",
@@ -250,17 +255,17 @@ portfolio: {
 
     // Hero Section
     hero: {
-      title: "من بيانات المبيعات المشتتة إلى نمو مربح",
-      subtitle: "توقف عن تخمين الحملات المربحة. نحن نبني لوحات تحكم Power BI مخصصة لقادة التجارة الإلكترونية في الشرق الأوسط للكشف عن العائد الحقيقي على الاستثمار التسويقي وتحقيق نمو قابل للقياس.",
-      buttonWork: "استكشف حلولنا للتجارة الإلكترونية",
-      buttonDiscuss: "احصل على لوحة تحكم تجريبية مجانية",
+      title: "من بيانات أعمال مشتتة إلى قرارات يمكنك الوثوق بها",
+      subtitle: "أصمم وأبني أنظمة Power BI بمستوى الإنتاج - لأنظمة CRM لدى الوكلاء، وتتبع مخاطر المشاريع، وتحليلات الاحتفاظ بالعملاء، وأكثر - تحوّل بياناتك التشغيلية المشتتة إلى أرقام يمكن لفريقك الاعتماد عليها فعليًا.",
+      buttonWork: "استكشف أعمالي",
+      buttonDiscuss: "احجز مكالمة وضوح بيانات مجانية",
       badgeSecurity: "أمان على مستوى الشركات",
       badgeTurnaround: "تنفيذ سريع",
       badgeExcellence: "ملتزمون بالتميز",
       commitmentTitle: "التزامنا بالتميز",
       commitmentPoints: [
         "إتقان متقدم للغات DAX و Power Query",
-        "نمذجة موحدة لبيانات التجارة الإلكترونية",
+        "نمذجة موحدة لبيانات الأعمال",
         "حوكمة وأمان على مستوى الشركات",
         "تطوير واجهات مرئية مخصصة"
       ]
@@ -278,24 +283,24 @@ portfolio: {
 
     // Services Section
     services: {
-      title: "حلول تعزز أداء التجارة الإلكترونية",
-      subtitle: "نقدم رؤى مستهدفة تمكّن فريق التجارة الإلكترونية لديك من اتخاذ قرارات أذكى بشأن التسويق والمخزون والاحتفاظ بالعملاء.",
+      title: "حلول مبنية حول بياناتك، لا قالب جاهز",
+      subtitle: "أيًا كانت المنصة التي تعمل عليها شركتك - CRM، تجارة إلكترونية، أدوات إدارة مشاريع، جداول بيانات - أحوّلها إلى نموذج يمكن لفريقك الوثوق به فعليًا.",
       cards: [
         {
-          title: "لوحات تحكم عائد الاستثمار التسويقي",
-          desc: "احصل على رؤية لحظية لإنفاقك الإعلاني. نربط بيانات Shopify وإعلانات Meta و Google لنوضح لك بالضبط الحملات التي تجلب العملاء المربحين."
+          title: "لوحات تحكم تنفيذية وتشغيلية",
+          desc: "رؤية لحظية وموحدة لأعمالك، مبنية بنفس الطريقة التي يُبنى بها كل نموذج في داتا أركوس: مصدر حقيقة واحد تم التحقق منه بدلاً من خمسة تقارير تتعارض بصمت."
         },
         {
-          title: "تحليلات المبيعات الموحدة",
-          desc: "جودة رؤيتك تعتمد على جودة بياناتك. نبني خطوط بيانات قوية لتوحيد بيانات المبيعات والعملاء والمخزون في مصدر واحد للحقيقة."
+          title: "نمذجة بيانات وخطوط بيانات موثوقة",
+          desc: "جودة لوحات تحكمك تعتمد على جودة النموذج تحتها. أبني نماذج نظيفة وموثقة تم التحقق منها مقابل النظام المصدر قبل إطلاق أي شيء."
         },
         {
-          title: "القيمة العمرية للعميل (CLV)",
-          desc: "انظر إلى ما هو أبعد من عملية البيع الأولى. نحلل أنماط الشراء لحساب القيمة العمرية للعميل، مما يساعدك على تحديد عملائك الأكثر قيمة والاحتفاظ بهم."
+          title: "التحليل التنبؤي والاتجاهات",
+          desc: "ما وراء ما حدث - نماذج تنبؤ وتحليل دفعات ووتيرة تُظهر لك ما هو قادم، سواء كان ذلك وتيرة مبيعات الشهر القادم أو عميلاً محتملاً على وشك أن يبرد."
         },
         {
-          title: "إدارة المخزون والعمليات",
-          desc: "من توقع الطلب إلى تنبيهات مستوى المخزون، نبني أنظمة تساعدك على تجنب نفاد المخزون وتقليل الفائض، مما يؤثر بشكل مباشر على أرباحك."
+          title: "الحوكمة والأمان",
+          desc: "أمان على مستوى الصف وإخفاء هوية آمن للبيانات الحساسة، مدمجان في النموذج منذ اليوم الأول، وليسا إضافة لاحقة."
         }
       ]
     },
@@ -304,6 +309,11 @@ portfolio: {
 portfolio: {
       title: "نماذج الحلول",
       subtitle: "استكشف لوحات التحكم التجريبية لدينا. شاهد ما هو ممكن لبياناتك.",
+      cardPulse: {
+        badge: "CRM لقطاع السيارات",
+        title: "داتا أركوس بالس: ذكاء إدارة علاقات العملاء",
+        desc: "مركز قيادة CRM لوكالة سيارات بمستوى الإنتاج: 54 ألف عميل محتمل، 113 ألف مكالمة و72 ألف رحلة اتصال في نموذج واحد يضم 410 مقياس وأهداف وتيرة يومية."
+      },
       cardFintech: {
         badge: "التكنولوجيا المالية والمخاطر",
         title: "محرك مخاطر محافظ التكنولوجيا المالية",
@@ -325,88 +335,88 @@ portfolio: {
     // About Section
     about: {
       title: "شريك في نجاحك",
-      subtitle: "في DataArcus، لا نكتفي ببناء لوحات التحكم، بل نبني شراكات قائمة على البيانات تمكّنك من القيادة بثقة.",
-      quote: "\"اسمي عبد الرحمن م.، وأسست DataArcus للقضاء على التخمين في عالم الأعمال. بعد 5 سنوات في تحليل البيانات، رأيت العديد من القادة المتميزين تعيقهم البيانات الفوضوية التي يصعب الوصول إليها. نحن هنا لسد هذه الفجوة.\"",
-      p1: "يقوم نهجنا على فهم عميق للتكنولوجيا واستراتيجية الأعمال. نأخذ الوقت الكافي لفهم تحدياتك وأهدافك الفريدة، لضمان أن كل حل نبنيه ليس ممتازًا من الناحية التقنية فحسب، بل متوافق تمامًا مع النتائج التي تسعى لتحقيقها.",
+      subtitle: "داتا أركوس ليست مصنعًا للوحات التحكم - إنها شخص واحد يبني نفس نوع النماذج بمستوى الإنتاج التي كنت لتحصل عليها من فريق بيانات داخلي، دون تكلفة فريق داخلي كامل.",
+      quote: "\"اسمي عبد الرحمن م. أمضيت سنتين في العمل ضمن إدارة علاقات العملاء والعمليات القائمة على البيانات - لكنني مللت من انتظار شخص آخر ليبني التقارير التي أحتاجها فعليًا، فبدأت ببنائها بنفسي في Power BI. داتا أركوس هي المكان الذي يعيش فيه هذا العمل: نماذج حقيقية بمستوى الإنتاج، لا قوالب جاهزة.\"",
+      p1: "أنا لا أدير استشارة كبرى - أنا شخص واحد يبني كل نموذج بنفسه. هذا يعني وصولاً مباشرًا لمن يقوم بالعمل فعليًا، دون طبقة مدير حسابات بينك وبين لوحة تحكمك، وما تراه في المعرض هو بالضبط ما ستحصل عليه.",
       founder: "عبد الرحمن م.، المؤسس وكبير مهندسي البيانات",
       certification: {
         title: "شهادات معتمدة",
         subtitle: "محترف تحليل بيانات",
         verified: "موثق من Google و Microsoft"
       },
-      statsTitle: "التزامنا بالأرقام",
-      statsSubtitle: "شغفنا مدعوم بسجل حافل من التميز والموثوقية.",
+      statsTitle: "السجل حتى الآن",
+      statsSubtitle: "أرقام حقيقية من نماذج إنتاج حقيقية - لا مقاييس وكالات مصطنعة.",
       stats: [
-        { title: "مشروعاً تم تسليمه" },
-        { title: "متوسط تسليم أول لوحة تحكم" },
-        { title: "اتفاقية مستوى الخدمة" },
-        { title: "رضا العملاء" }
+        { title: "سنة من البناء العملي في Power BI" },
+        { title: "مقياس DAX في الإنتاج" },
+        { title: "لوحة تحكم متكاملة تم بناؤها" },
+        { title: "شهادة معتمدة في المجال" }
       ],
-      ctaTitle: "هل أنت مستعد لترى هذه الأرقام تعمل لصالحك؟",
-      ctaSubtitle: "دعنا نحوّل تحديات بياناتك إلى أعظم ميزة لديك. الخطوة الأولى هي محادثة بسيطة.",
-      ctaButton: "احجز مكالمة استراتيجية للوحة التحكم التجريبية"
+      ctaTitle: "هل تتساءل كيف سيبدو هذا لبياناتك؟",
+      ctaSubtitle: "بدون أي التزام - أخبرني بما تعمل عليه، وسأوضح لك ما هو ممكن في مكالمة سريعة.",
+      ctaButton: "احجز مكالمة وضوح بيانات مجانية"
     },
 
     // FAQ Section
     faq: {
       title: "الأسئلة الشائعة",
-      subtitle: "لقد ساعدنا أكثر من 15 شركة على تحويل بياناتها. إليك إجابات للأسئلة التي يطرحها كل مدير تنفيذي.",
+      subtitle: "إليك إجابات الأسئلة التي أسمعها غالبًا قبل بدء أي مشروع.",
       items: [
         {
-          q: "ما مدى سرعة رؤية أول لوحة تحكم تجريبية؟",
-          a: "<strong>عمليتنا مصممة للسرعة. زوّدنا بعينة من بياناتك المجهولة (ملف Excel/CSV)، وستتلقى لوحة تحكم مجانية ومخصصة من صفحة واحدة في غضون 48 ساعة.</strong> أما المشروع الكامل متعدد الصفحات، فعادةً ما يكتمل في غضون أسبوع واحد."
+          q: "كيف تعمل مكالمة وضوح البيانات المجانية؟",
+          a: "<strong>إنها مكالمة مركّزة مدتها 20 دقيقة، وليست عرضًا ترويجيًا.</strong> أحضر ما لديك - جدول بيانات فوضوي، تصدير من CRM، لوحة تحكمك الحالية - وسأستعرض معك ما يمكن إصلاحه فعليًا وكيف سيبدو نموذج حقيقي. بدون بناء، بدون التزام، فقط إجابة صريحة حول ما إذا كان الأمر يستحق المتابعة."
         },
         {
           q: "ما هو العائد الحقيقي على الاستثمار (ROI) من تطبيق Power BI؟",
-          a: "<strong>عادةً ما يحقق عملاؤنا عائدًا على الاستثمار يتراوح بين 300-500% في غضون 6 أشهر.</strong> إليك الحساب: إذا كان فريقك يقضي 10 ساعات أسبوعيًا في إعداد التقارير اليدوية، فهذا يعني 520 ساعة سنويًا. بتكلفة 200 جنيه مصري/ساعة، فأنت تنفق 104,000 جنيه مصري سنويًا على العمل اليدوي.<div class=\"mt-3\"><div class=\"row g-3\"><div class=\"col-sm-6\"><div class=\"p-3 rounded\" style=\"background: rgba(253, 121, 168, 0.1);\"><strong>قبل:</strong><br>• ١٠ ساعات/أسبوع تقارير يدوية<br>• قرارات متأخرة<br>• بيانات غير متسقة</div></div><div class=\"col-sm-6\"><div class=\"p-3 rounded\" style=\"background: rgba(0, 206, 201, 0.1);\"><strong>بعد:</strong><br>• ٣٠ دقيقة/أسبوع للمراقبة<br>• رؤى لحظية<br>• قرارات واثقة</div></div></div></div>"
+          a: "<strong>إليك طريقة بسيطة لتقديره، وليست ضمانًا.</strong> إذا كان فريقك يقضي 10 ساعات أسبوعيًا في إعداد التقارير اليدوية، فهذا يعني أكثر من 500 ساعة سنويًا - وهذا قبل احتساب تكلفة القرارات المتأخرة بسبب عدم جاهزية الأرقام.<div class=\"mt-3\"><div class=\"row g-3\"><div class=\"col-sm-6\"><div class=\"p-3 rounded\" style=\"background: rgba(253, 121, 168, 0.1);\"><strong>قبل:</strong><br>• ١٠ ساعات/أسبوع تقارير يدوية<br>• قرارات متأخرة<br>• بيانات غير متسقة</div></div><div class=\"col-sm-6\"><div class=\"p-3 rounded\" style=\"background: rgba(0, 206, 201, 0.1);\"><strong>بعد:</strong><br>• ٣٠ دقيقة/أسبوع للمراقبة<br>• رؤى لحظية<br>• قرارات واثقة</div></div></div></div>"
         },
         {
-          q: "كيف تتعاملون مع بيانات أعمالنا الحساسة؟",
-          a: "<strong>بياناتك لا تغادر بيئة عملك أبدًا. بالنسبة للوحة التحكم التجريبية المجانية، فإنك تقدم عينة بيانات مجهولة الهوية.</strong> أما في المشاريع الكاملة، فنحن نعمل داخل بيئة Microsoft الخاصة بك باستخدام الأمان على مستوى الصف (RLS)، والاتصالات المشفرة، والحوكمة على مستوى الشركات.<div class=\"mt-3\"><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>توقيع اتفاقية سرية (NDA) قبل الوصول لأي بيانات</span></div><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>تبقى البيانات داخل حساب Microsoft الخاص بك</span></div><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>تطبيق ضوابط الوصول المستندة إلى الأدوار الوظيفية</span></div><div class=\"d-flex align-items-start\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>سجل تدقيق كامل لجميع الأنشطة</span></div></div>"
+          q: "كيف تتعامل مع بيانات أعمالنا الحساسة؟",
+          a: "<strong>في مكالمة الاكتشاف، نناقش بياناتك دون الحاجة لتسليم أي شيء.</strong> إذا تقدمنا في المشروع، أعمل داخل بيئة Microsoft الخاصة بك باستخدام الأمان على مستوى الصف (RLS)، والاتصالات المشفرة، والحوكمة على مستوى الشركات.<div class=\"mt-3\"><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>توقيع اتفاقية سرية (NDA) قبل الوصول لأي بيانات</span></div><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>تبقى البيانات داخل حساب Microsoft الخاص بك</span></div><div class=\"d-flex align-items-start mb-2\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>تطبيق ضوابط الوصول المستندة إلى الأدوار الوظيفية</span></div><div class=\"d-flex align-items-start\"><i class=\"bi bi-check-circle-fill text-success me-2 mt-1\"></i><span>سجل تدقيق كامل لجميع الأنشطة</span></div></div>"
         },
         {
-          q: "ماذا لو كانت بياناتنا فوضوية؟ (ملفات Shopify، إعلانات Meta، عمليات يدوية)",
-          a: "<strong>ممتاز! هذا هو تخصصنا بالضبط.</strong> 80% من عملائنا يبدأون ببيانات \"فوضوية\". نحن نربط كل شيء بدءًا من منصات التجارة الإلكترونية إلى جداول بيانات Google.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(108, 92, 231, 0.1);\"><strong>نحن نتصل بـ:</strong> Shopify، WooCommerce، إعلانات Meta، إعلانات Google، Google Analytics، قواعد بيانات SQL، واجهات APIs، ملفات Excel، وأكثر من 200 مصدر آخر.</div><p class=\"mt-3 mb-0\"><em>\"كلما كانت بياناتك أكثر فوضوية، كان تأثير التحول أكبر.\"</em></p>"
+          q: "ماذا لو كانت بياناتنا فوضوية؟ ملفات Excel، أنظمة قديمة، عمليات يدوية؟",
+          a: "<strong>هذا أمر طبيعي، وهو بالضبط نوع المشكلة التي أحلّها.</strong> أربط وأنظّف البيانات من أنظمة CRM ومنصات التجارة الإلكترونية وأنظمة ERP وجداول البيانات في نموذج واحد موثوق.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(108, 92, 231, 0.1);\"><strong>أتصل بـ:</strong> أنظمة CRM، Shopify، WooCommerce، قواعد بيانات SQL، واجهات APIs، ملفات Excel، ومعظم مصادر بيانات الأعمال الشائعة الأخرى.</div><p class=\"mt-3 mb-0\"><em>\"كلما كانت بياناتك أكثر فوضوية، كان تأثير التحول أكبر.\"</em></p>"
         },
         {
           q: "هل سيتمكن فريقنا من استخدام لوحات التحكم؟",
-          a: "<strong>بالتأكيد. نحن نبني الحلول لتناسب مستوى مهارة فريقك ونقدم تدريبًا شاملاً.</strong> يتضمن كل مشروع تدريبًا للمستخدمين ووثائق كاملة. بالإضافة إلى ذلك، نقدم باقات دعم مستمرة.<div class=\"mt-3\"><div class=\"row g-2 small\"><div class=\"col-md-6\"><strong class=\"text-accent\">للمستخدمين:</strong><br>• كيفية قراءة لوحات التحكم<br>• الفلترة والتعمق في البيانات<br>• خيارات التصدير والمشاركة</div><div class=\"col-md-6\"><strong class=\"text-accent\">للمسؤولين:</strong><br>• جدولة تحديث البيانات<br>• صلاحيات المستخدمين<br>• استكشاف الأخطاء الأساسية</div></div></div>"
+          a: "<strong>بالتأكيد. أبني الحلول لتناسب مستوى مهارة فريقك وأقدم تدريبًا شاملاً.</strong> يتضمن كل مشروع تدريبًا للمستخدمين ووثائق كاملة، بالإضافة إلى خيارات دعم مستمرة.<div class=\"mt-3\"><div class=\"row g-2 small\"><div class=\"col-md-6\"><strong class=\"text-accent\">للمستخدمين:</strong><br>• كيفية قراءة لوحات التحكم<br>• الفلترة والتعمق في البيانات<br>• خيارات التصدير والمشاركة</div><div class=\"col-md-6\"><strong class=\"text-accent\">للمسؤولين:</strong><br>• جدولة تحديث البيانات<br>• صلاحيات المستخدمين<br>• استكشاف الأخطاء الأساسية</div></div></div>"
         },
         {
-          q: "لماذا أختار DataArcus بدلاً من المستقلين أو شركات الاستشارات الكبرى؟",
-          a: "<strong>نحن نمثل التوازن المثالي بين التكلفة والجودة.</strong> المستقلون يفتقرون إلى خبرة العمل مع الشركات الكبيرة. والشركات الكبرى تتقاضى 10 أضعاف التكلفة وتستغرق 10 أضعاف الوقت. نحن نقدم عملًا بجودة مؤسسية وبسرعة شركة ناشئة.<div class=\"mt-3\"><div class=\"row g-3\"><div class=\"col-md-4 text-center\"><div class=\"p-3 rounded\" style=\"background: rgba(253, 121, 168, 0.1);\"><strong>المستقلون</strong><br><small>تكلفة أقل ولكن مخاطرة أعلى<br>خبرة محدودة<br>لا يوجد دعم</small></div></div><div class=\"col-md-4 text-center\"><div class=\"p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 2px solid var(--accent);\"><strong>DataArcus</strong><br><small>أفضل قيمة<br>خبرة مُثبتة<br>شراكة مستمرة</small></div></div><div class=\"col-md-4 text-center\"><div class=\"p-3 rounded\" style=\"background: rgba(100, 116, 139, 0.1);\"><strong>الشركات الكبرى</strong><br><small>تكلفة باهظة وبطء<br>موظفون مبتدئون<br>حلول نمطية</small></div></div></div></div>"
+          q: "لماذا العمل مع متخصص مستقل بدلاً من شركة استشارات كبرى؟",
+          a: "<strong>تحصل على وصول مباشر للشخص الذي يبني نموذجك فعليًا.</strong> بلا مدير حسابات ينقل الطلبات إلى محلل مبتدئ - لقد بنيت <a href='dashboards/dataarcus-pulse.html' class='text-accent'>داتا أركوس بلس</a>، نموذج ذكاء CRM لقطاع السيارات بمستوى الإنتاج ويضم 410 مقياسًا، بنفسي بالكامل، وهذا هو مستوى الملكية العملية الذي يحصل عليه كل مشروع.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);\">ما تخسره مقارنة بشركة كبرى هو التكاليف الإضافية. وما تكسبه هو السرعة والتواصل المباشر وشخص مسؤول شخصيًا عن كل رقم في لوحة تحكمك.</div>"
         },
         {
           q: "ماذا لو لم نكن متأكدين مما نحتاجه؟",
-          a: "<strong>لهذا السبب نبدأ بلوحة التحكم التجريبية المجانية.</strong> سنأخذ عينة بياناتك ونبني لوحة تحكم حقيقية لنوضح لك ما هو ممكن، مما يكشف عن فرص ربما لم تكن على علم بوجودها. لا يوجد أي التزام مطلوب."
+          a: "<strong>هذا بالضبط سبب وجود مكالمة وضوح البيانات المجانية.</strong> أحضر ما لديك، وسأساعدك في تحديد الفرصة الحقيقية - حتى لو لم تكن بناء لوحة تحكم كاملة بعد. لا يوجد أي التزام مطلوب."
         }
       ]
     },
 
     // Final CTA Section
     finalCta: {
-      title: "هل أنت مستعد لرؤية بيانات تجارتك الإلكترونية تتجسد في لوحة تحكم؟",
-      subtitle: "شاركنا عينة من بياناتك المجهولة واحصل على لوحة تحكم تجريبية مخصصة ومجانية في غضون 48 ساعة. لا يوجد أي التزام مطلوب.",
-      button: "ابدأ بالنسخة التجريبية المجانية"
+      title: "هل أنت مستعد لرؤية بياناتك في العمل؟",
+      subtitle: "احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة - بدون التزام، فقط نظرة صريحة على ما هو ممكن بما لديك.",
+      button: "احجز مكالمتك المجانية"
     },
 
     // Contact Section
     contact: {
-      title: "ابدأ تجربتك المجانية للوحة التحكم",
-      subtitle: "أخبرنا عن منصة التجارة الإلكترونية التي تستخدمها وأهم المقاييس التي تحتاج إلى تتبعها. سنبني لك لوحة تحكم من صفحة واحدة باستخدام عينة بياناتك لنوضح لك ما هو ممكن.",
+      title: "ابدأ محادثة حول بياناتك",
+      subtitle: "أخبرني عن أعمالك والقرارات التي تحتاج بيانات أفضل من أجلها - سأوضح لك ما هو ممكن في مكالمة مجانية.",
       form: {
         name: "الاسم بالكامل *",
         email: "البريد الإلكتروني للعمل *",
         company: "الشركة",
-        platform: "منصة التجارة الإلكترونية (اختياري)",
-        platformPlaceholder: "مثال: Shopify, WooCommerce",
+        platform: "مصدر البيانات / المنصة (اختياري)",
+        platformPlaceholder: "مثال: نظام CRM، Shopify، قاعدة بيانات داخلية...",
         details: "تفاصيل المشروع *",
-        placeholder: "مثال: نستخدم Shopify وإعلانات Meta. نحتاج لتتبع تكلفة اكتساب العميل (CAC) ورؤية عائد الاستثمار التسويقي حسب القناة...",
-        button: "اطلب لوحة التحكم التجريبية المجانية",
+        placeholder: "مثال: نستخدم نظام CRM وبعض جداول البيانات. نحتاج رؤية موحدة للعملاء المحتملين والتحويل وأداء الفريق...",
+        button: "احجز مكالمتي المجانية",
         response: "الرد في غضون ٤ ساعات"
       },
       checklist: {
-        title: "قائمة التحقق للنسخة التجريبية",
+        title: "قائمة تحقق مكالمة وضوح البيانات",
         items: [
           {
             title: "أهداف العمل",
@@ -414,7 +424,7 @@ portfolio: {
           },
           {
             title: "مصادر البيانات",
-            desc: "Shopify, WooCommerce, Meta Ads, Google Ads..."
+            desc: "CRM، ERP، منصات التجارة الإلكترونية، جداول البيانات..."
           },
           {
             title: "أصحاب القرارات",

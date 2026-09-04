@@ -37,6 +37,12 @@ window.portfolioTranslations = {
       // Individual Projects
       projects: {
 
+        pulse: {
+          badge: "AUTOMOTIVE CRM",
+          title: "DataArcus Pulse: CRM Intelligence",
+          description: "A production-grade dealership CRM command center: 54K leads, 113K calls and 72K call journeys resolved into one model with 410 measures, daily pacing targets and PII-safe anonymization.",
+          button: "View Showcase"
+        },
         fintech: {
           badge: "FINTECH & RISK",
           title: "Fintech Portfolio Risk Engine",
@@ -73,6 +79,12 @@ window.portfolioTranslations = {
           description: "A complete command center for monitoring call center KPIs, tracking agent performance, and improving customer satisfaction through data-driven insights.",
           button: "View Showcase"
         },
+        adventureworks: {
+          badge: "SALES & OPERATIONS",
+          title: "AdventureWorks Sales & Operations",
+          description: "A 6-page enterprise command center with What-If pricing simulation, geospatial sales analysis, and a decomposition tree for root-cause analysis of product returns.",
+          button: "View Showcase"
+        },
         confidential: {
           badge: "FINANCE",
           title: "Confidential Financial Dashboard",
@@ -85,9 +97,9 @@ window.portfolioTranslations = {
     // Hero Project Section
     heroProject: {
       badge: "LIVE & INTERACTIVE",
-      title: "Hero Showcase: AdventureWorks Sales & Operations",
+      title: "Hero Showcase: DataArcus Pulse - Automotive CRM Intelligence",
       featuresTitle: "Key Features & Technologies Used:",
-      tags: ["Power BI", "Advanced DAX", "What-If Parameters", "Geospatial Analysis", "Decomposition Tree"],
+      tags: ["Fabric Lakehouse", "Advanced DAX (410 measures)", "Journey Clustering", "Run-Rate Forecasting", "PII-Safe Anonymization"],
       button: "View Full Showcase"
     },
     
@@ -98,7 +110,7 @@ window.portfolioTranslations = {
         paragraph1: "This dashboard is a proof-of-concept demonstrating how we handle sensitive financial data. To showcase our commitment to security and privacy, the underlying data and specific metrics have been generalized.",
         paragraph2: "We can discuss how we apply these same secure principles to build a custom financial dashboard for your business. Contact us to schedule a private consultation and start your free PoC."
       },
-      button: "Start Your Free PoC"
+      button: "Book a Free Call"
     }
   },
 
@@ -139,6 +151,12 @@ window.portfolioTranslations = {
       // Individual Projects Arabic
       projects: {
 
+        pulse: {
+          badge: "CRM لقطاع السيارات",
+          title: "داتا أركوس بالس: ذكاء إدارة علاقات العملاء",
+          description: "مركز قيادة CRM لوكالة سيارات بمستوى الإنتاج: 54 ألف عميل محتمل، 113 ألف مكالمة و72 ألف رحلة اتصال في نموذج واحد يضم 410 مقياس، وأهداف وتيرة يومية، وإخفاء هوية آمن للبيانات الشخصية.",
+          button: "عرض النموذج"
+        },
         fintech: {
           badge: "التكنولوجيا المالية والمخاطر",
           title: "محرك مخاطر محافظ التكنولوجيا المالية",
@@ -175,6 +193,12 @@ window.portfolioTranslations = {
           description: "مركز تحكم متكامل لمراقبة مؤشرات الأداء الرئيسية لمركز الاتصال، وتتبع أداء الموظفين، وتحسين رضا العملاء.",
           button: "عرض النموذج"
         },
+        adventureworks: {
+          badge: "المبيعات والعمليات",
+          title: "مبيعات وعمليات AdventureWorks",
+          description: "مركز قيادة مؤسسي من 6 صفحات مع محاكاة تسعير «ماذا لو»، وتحليل مبيعات جغرافي، وشجرة تفكيك لتحليل الأسباب الجذرية لمرتجعات المنتجات.",
+          button: "عرض النموذج"
+        },
         confidential: {
           badge: "القطاع المالي",
           title: "لوحة تحكم مالية سرية",
@@ -187,9 +211,9 @@ window.portfolioTranslations = {
     // Hero Project Section Arabic
     heroProject: {
       badge: "تفاعلي ومباشر",
-      title: "النموذج المميّز: مبيعات وعمليات AdventureWorks",
+      title: "النموذج المميّز: داتا أركوس بالس - ذكاء CRM لقطاع السيارات",
       featuresTitle: "أهم المزايا والتقنيات المستخدمة:",
-      tags: ["Power BI", "DAX متقدّم", "معاملات «ماذا لو»", "تحليل جغرافي", "شجرة التفكيك"],
+      tags: ["Fabric Lakehouse", "DAX متقدّم (410 مقياس)", "تجميع الرحلات", "تنبؤ معدل الإنجاز", "إخفاء هوية آمن للبيانات"],
       button: "عرض النموذج الكامل"
     },
 
@@ -200,7 +224,7 @@ window.portfolioTranslations = {
         paragraph1: "لوحة التحكم هذه هي نموذج تجريبي يوضح كيف نتعامل مع البيانات المالية الحساسة. ولإظهار التزامنا بالأمان والخصوصية، تم تعميم البيانات الأساسية والمقاييس المحددة.",
         paragraph2: "يمكننا مناقشة كيفية تطبيقنا لنفس هذه المبادئ الآمنة لبناء لوحة تحكم مالية مخصصة لعملك. تواصل معنا لتحديد موعد استشارة خاصة وبدء لوحة التحكم التجريبية المجانية الخاصة بك."
       },
-      button: "ابدأ نسختك التجريبية المجانية"
+      button: "احجز مكالمة مجانية"
     }
   }
 };

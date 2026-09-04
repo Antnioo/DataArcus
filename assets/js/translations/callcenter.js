@@ -78,7 +78,7 @@ window.callcenterTranslations = {
     finalCta: {
       title: "Want a Dashboard Like This for Your Support Team?",
       subtitle: "Let's build a free Proof-of-Concept dashboard using a sample of your own customer service data.",
-      button: "Start Your Free PoC"
+      button: "Book a Free Call"
     }
   },
 
@@ -159,7 +159,7 @@ window.callcenterTranslations = {
     finalCta: {
       title: "هل تريد لوحة تحكم مثل هذه لفريق الدعم الخاص بك؟",
       subtitle: "دعنا نبني لك لوحة تحكم تجريبية مجانية باستخدام عينة من بيانات خدمة العملاء الخاصة بك.",
-      button: "ابدأ نسختك التجريبية المجانية"
+      button: "احجز مكالمة مجانية"
     }
   }
 };
