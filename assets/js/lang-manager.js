@@ -458,11 +458,16 @@ class LanguageManager {
   // Initialize the language manager
   init() {
     this.loadTranslations();
+    // Create the switcher first: it's the only step here that reads a
+    // layout-dependent value (window.innerWidth, via isMobileView()).
+    // Running it before the DOM-mutating steps below (which rewrite
+    // textContent/innerHTML on every [data-i18n] element) avoids forcing
+    // a synchronous layout recalculation mid-script.
+    this.createLanguageSwitcher();
     this.updateDirection();
     this.applyLanguage();
-    this.createLanguageSwitcher();
     this.initialized = true;
-    
+
     console.log('LanguageManager initialized with language:', this.currentLang);
     console.log('Mobile view:', this.isMobileView());
     console.log('Breakpoint:', this.breakpoint);
