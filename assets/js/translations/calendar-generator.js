@@ -62,7 +62,8 @@ window.calendarGeneratorTranslations = {
       "cta": {
         "title": "Ramadan changes everything in your numbers",
         "desc": "Comparing this Ramadan to last Ramadan, not March to March, is where the real insight is. DataArcus builds Power BI reports that understand the Gulf calendar.",
-        "next": "Next: build YoY and YTD measures"
+        "next": "Next: build YoY and YTD measures",
+        "guide": "Read the guide: compare this Ramadan with last Ramadan →"
       },
       "faq": {
         "title": "Questions",
@@ -144,7 +145,8 @@ window.calendarGeneratorTranslations = {
       "cta": {
         "title": "رمضان يغيّر كل شيء في أرقامك",
         "desc": "المقارنة الحقيقية هي بين رمضان هذا العام ورمضان الماضي، لا بين مارس ومارس. تبني داتا أركوس تقارير Power BI تفهم التقويم الخليجي.",
-        "next": "التالي: أنشئ مقاييس YoY و YTD"
+        "next": "التالي: أنشئ مقاييس YoY و YTD",
+        "guide": "اقرأ الدليل: قارن رمضان هذا العام برمضان الماضي ←"
       },
       "faq": {
         "title": "أسئلة شائعة",

@@ -98,6 +98,10 @@ class LanguageManager {
      return window.dataarcusPulseTranslations;
     } else if (path.includes('article-journey-attribution')) {
      return window.journeyAttributionTranslations;
+    } else if (path.includes('article-ramadan-sales-power-bi')) {
+     return window.ramadanSalesTranslations;
+    } else if (path.includes('article-power-bi-licensing-guide')) {
+     return window.licensingGuideTranslations;
     }
     return null;
   }

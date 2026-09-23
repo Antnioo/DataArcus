@@ -38,7 +38,8 @@ window.licensingCalculatorTranslations = {
       "cta": {
         "title": "Licenses are the small part of the bill",
         "desc": "A slow model on the wrong capacity costs more than any license. DataArcus designs Power BI setups that fit your users, your data and your budget.",
-        "more": "More free tools"
+        "more": "More free tools",
+        "guide": "Read the guide: Pro, PPU or Fabric, which license do you need? →"
       },
       "faq": {
         "title": "Questions",
@@ -91,7 +92,8 @@ window.licensingCalculatorTranslations = {
       "cta": {
         "title": "التراخيص هي الجزء الأصغر من التكلفة",
         "desc": "نموذج بطيء على سعة غير مناسبة يكلّف أكثر من أي ترخيص. تصمم داتا أركوس حلول Power BI تناسب مستخدميك وبياناتك وميزانيتك.",
-        "more": "المزيد من الأدوات المجانية"
+        "more": "المزيد من الأدوات المجانية",
+        "guide": "اقرأ الدليل: Pro أم PPU أم Fabric، أي ترخيص تحتاج؟ ←"
       },
       "faq": {
         "title": "أسئلة شائعة",

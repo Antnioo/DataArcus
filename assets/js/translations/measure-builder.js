@@ -38,7 +38,8 @@ window.measureBuilderTranslations = {
       "cta": {
         "title": "Measures are easy. The right numbers are not.",
         "desc": "When totals don’t match, relationships double count, or YoY looks wrong, the problem is the model. DataArcus builds and fixes Power BI data models.",
-        "next": "Free DAX Calendar Generator"
+        "next": "Free DAX Calendar Generator",
+        "guide": "Guide: why YoY breaks in Ramadan, and the measure that fixes it →"
       },
       "faq": {
         "title": "Questions",
@@ -96,7 +97,8 @@ window.measureBuilderTranslations = {
       "cta": {
         "title": "المقاييس سهلة. الأرقام الصحيحة ليست كذلك.",
         "desc": "عندما لا تتطابق الإجماليات، أو تتكرر الأرقام بسبب العلاقات، أو يبدو النمو السنوي خاطئًا، فالمشكلة في النموذج. تبني داتا أركوس نماذج بيانات Power BI وتصلحها.",
-        "next": "مولّد تقويم DAX المجاني"
+        "next": "مولّد تقويم DAX المجاني",
+        "guide": "دليل: لماذا تنكسر المقارنة السنوية في رمضان، والمقياس الذي يصلحها ←"
       },
       "faq": {
         "title": "أسئلة شائعة",
