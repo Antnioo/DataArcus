@@ -39,6 +39,10 @@
 * - Console Welcome Message
 * - Final Initialization
 *
+* 7. Analytics Events (GA4 + Clarity)
+* - Leads, CTA clicks, contact & outbound links
+* - Dashboard engagement, article reads, language, blog search
+*
 * ===================================================================
 */
 
@@ -402,6 +406,10 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(async (response) => {
         const jsonResponse = await response.json();
         const alertClass = response.status === 200 ? 'alert-success' : 'alert-danger';
+        // Tell the analytics layer (section 7) that a lead came in
+        if (response.status === 200) {
+          document.dispatchEvent(new CustomEvent('dataarcus:lead', { detail: { formId: form.id } }));
+        }
         resultContainer.innerHTML = `<div class="alert ${alertClass} mt-3">${jsonResponse.message}</div>`;
       })
       .catch(error => {
@@ -557,3 +565,113 @@ document.addEventListener('DOMContentLoaded', () => {
   console.log('✅ DataArcus Website fully initialized!');
 
 });
+
+
+/**
+ * 7. Analytics Events (GA4 + Clarity)
+ * ==================================================================
+ * Sends named events so GA4 shows what visitors DO, not just page views.
+ * Everything is guarded: if an ad blocker removes gtag or Clarity,
+ * nothing breaks. Event names follow GA4 conventions where one exists.
+ * Mark "generate_lead" as a Key Event in GA4 (Admin > Events).
+ * ==================================================================
+ */
+(() => {
+  const page = location.pathname.replace(/\/index\.html$/, '/') || '/';
+  const pageType = page.includes('/articles/') ? 'article'
+    : page.includes('/dashboards/') ? 'dashboard'
+    : page.includes('/tools/') ? 'tool'
+    : page.replace(/^\//, '').replace('.html', '') || 'home';
+
+  const track = (name, params = {}) => {
+    const payload = { page_type: pageType, ...params };
+    try { if (typeof window.gtag === 'function') window.gtag('event', name, payload); } catch (e) { /* ignore */ }
+    try { if (typeof window.clarity === 'function') window.clarity('event', name); } catch (e) { /* ignore */ }
+  };
+  window.dataArcusTrack = track; // lets tool pages send their own events
+
+  const once = new Set();
+  const trackOnce = (key, name, params) => { if (once.has(key)) return; once.add(key); track(name, params); };
+
+  // --- Leads: fired by the form handler in section 5 after a successful send
+  document.addEventListener('dataarcus:lead', (e) => {
+    track('generate_lead', { form_id: (e.detail && e.detail.formId) || 'unknown' });
+  });
+
+  // --- Form funnel: first interaction with a form (started but maybe not sent)
+  document.querySelectorAll('form').forEach((form) => {
+    form.addEventListener('focusin', () => trackOnce('form_start:' + form.id, 'form_start', { form_id: form.id || 'form' }), { once: true });
+  });
+
+  // --- Clicks: CTAs, email/phone/WhatsApp, outbound links
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href]');
+    if (!a) return;
+    const href = a.getAttribute('href') || '';
+    const text = (a.textContent || a.getAttribute('aria-label') || '').trim().slice(0, 60);
+
+    if (/^mailto:/i.test(href)) return track('contact_click', { method: 'email', link_text: text });
+    if (/^tel:/i.test(href)) return track('contact_click', { method: 'phone', link_text: text });
+    if (/wa\.me|whatsapp\.com/i.test(href)) return track('contact_click', { method: 'whatsapp', link_text: text });
+
+    if (/#contact\b/.test(href) || a.classList.contains('btn-accent')) {
+      return track('cta_click', { cta_text: text, cta_target: href });
+    }
+
+    try {
+      const url = new URL(href, location.href);
+      if (url.hostname && url.hostname !== location.hostname && /^https?:$/.test(url.protocol)) {
+        track('outbound_click', { link_domain: url.hostname.replace(/^www\./, ''), link_url: url.href.slice(0, 100), link_text: text });
+      }
+    } catch (err) { /* ignore bad URLs */ }
+  }, { capture: true });
+
+  // --- Dashboards: a click into the Power BI iframe blurs the window.
+  //     Page loads alone don't count; this means someone actually used it.
+  const pbiFrames = document.querySelectorAll('iframe[src*="powerbi.com"]');
+  if (pbiFrames.length) {
+    const title = document.title.replace(/\s*-\s*DataArcus\s*$/, '');
+    trackOnce('dash_view', 'dashboard_view', { dashboard: title });
+    window.addEventListener('blur', () => {
+      setTimeout(() => {
+        if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+          trackOnce('dash_engage', 'dashboard_engage', { dashboard: title });
+        }
+      }, 0);
+    });
+  }
+
+  // --- Articles: "read" = 75% scrolled AND 30 seconds on the page
+  if (pageType === 'article') {
+    const article = document.title.replace(/\s*-\s*DataArcus\s*$/, '');
+    let deepScroll = false, longEnough = false;
+    const check = () => { if (deepScroll && longEnough) trackOnce('read', 'article_read', { article }); };
+    setTimeout(() => { longEnough = true; check(); }, 30000);
+    const onScroll = () => {
+      const h = document.documentElement;
+      const pct = (h.scrollTop + window.innerHeight) / h.scrollHeight;
+      if (pct >= 0.75) { deepScroll = true; check(); window.removeEventListener('scroll', onScroll); }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
+  // --- Language switch: watch the <html lang> attribute the language manager sets
+  let lastLang = document.documentElement.lang;
+  new MutationObserver(() => {
+    const lang = document.documentElement.lang;
+    if (lang && lang !== lastLang) { lastLang = lang; track('language_switch', { language: lang }); }
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+
+  // --- Blog: what people search for and which filters they use
+  const blogSearch = document.getElementById('blogSearch');
+  if (blogSearch) {
+    let t;
+    blogSearch.addEventListener('input', () => {
+      clearTimeout(t);
+      t = setTimeout(() => { const q = blogSearch.value.trim(); if (q.length >= 3) track('search', { search_term: q.slice(0, 50) }); }, 1500);
+    });
+  }
+  document.querySelectorAll('[data-filter]').forEach((btn) => {
+    btn.addEventListener('click', () => track('blog_filter', { filter: btn.getAttribute('data-filter') }));
+  });
+})();
