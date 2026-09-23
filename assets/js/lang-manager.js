@@ -158,6 +158,15 @@ class LanguageManager {
     document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
     document.documentElement.lang = this.currentLang;
     
+    // Arabic font: Inter has no Arabic letters, so load IBM Plex Sans Arabic on demand
+    if (isRTL && !document.getElementById('ar-font')) {
+      const font = document.createElement('link');
+      font.id = 'ar-font';
+      font.rel = 'stylesheet';
+      font.href = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap';
+      document.head.appendChild(font);
+    }
+
     // Add/remove RTL class
     if (isRTL) {
       document.body.classList.add('rtl');
@@ -484,6 +493,8 @@ class LanguageManager {
     this.updateDirection();
     this.applyLanguage();
     this.initialized = true;
+    // Translations are in place: show the page (hidden by the early script in <head>)
+    document.documentElement.classList.remove('i18n-pending');
 
     console.log('LanguageManager initialized with language:', this.currentLang);
     console.log('Mobile view:', this.isMobileView());

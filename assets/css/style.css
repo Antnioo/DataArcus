@@ -1276,3 +1276,19 @@ html[dir="rtl"] .article-body ol,html[dir="rtl"] .article-body ul{padding-left:0
 /* Links inside articles use the brand accent */
 .article-body a{color:var(--accent);text-underline-offset:3px}
 .article-body a:hover{color:#fff}
+
+/* ===== Premium polish (update 12) ===== */
+/* Arabic typography: Inter keeps the Latin words, IBM Plex Sans Arabic draws the Arabic */
+html[lang="ar"] body{font-family:'Inter','IBM Plex Sans Arabic',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,sans-serif}
+/* Letter spacing breaks the joins between Arabic letters */
+html[lang="ar"] body *{letter-spacing:normal!important}
+/* Phones: frosted-glass blur is expensive to scroll; the navbar keeps it */
+@media (max-width:991.98px){.glass-card,.btn-glass,.portfolio-card,.form-control,.form-select,#blogSearch{-webkit-backdrop-filter:none;backdrop-filter:none}}
+/* Visible keyboard focus on every link and control (not on mouse click) */
+a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visible,.form-check-input:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:4px}
+/* Bigger touch targets for footer links */
+footer .list-unstyled a{display:inline-block;padding:4px 0}
+footer .list-unstyled li.mb-2{margin-bottom:.25rem!important}
+/* Touch targets: hero proof link and footer email */
+.proof-link{display:inline-block;padding:7px 0}
+footer a[href^="mailto:"]{display:inline-block;padding:4px 0}
