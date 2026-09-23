@@ -11,8 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const L = (en, ar) => (isAr() ? ar : en);
   const STORE = 'dataarcus-licensing-calculator';
 
-  // ---------- prices (USD list, checked September 2026) ----------
+  // ---------- prices ----------
+  // Built-in fallback. The live values come from assets/data/powerbi-prices.json,
+  // which a GitHub Action refreshes every week from Microsoft's own sources.
   const PRICES = {
+    checked: '2026-09-23',
     pro: 14,            // Power BI Pro, per user per month, paid yearly
     ppu: 24,            // Premium Per User, per user per month, paid yearly
     ppuAddon: 10,       // PPU for users who already have Pro (e.g. via Microsoft 365 E5)
@@ -21,6 +24,15 @@ document.addEventListener('DOMContentLoaded', () => {
     hours: 730
   };
   const SKUS = [2, 4, 8, 16, 32, 64, 128, 256];
+  fetch('../assets/data/powerbi-prices.json', { cache: 'no-cache' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => {
+      if (!d) return;
+      ['pro', 'ppu', 'cuPayg', 'reservedSaving', 'checked'].forEach((k) => { if (d[k] !== undefined) PRICES[k] = d[k]; });
+      PRICES.ppuAddon = Math.max(0, PRICES.ppu - PRICES.pro);
+      render();
+    })
+    .catch(() => { /* offline or opened as a file: keep the built-in prices */ });
   const FX = { USD: 1, AED: 3.6725, SAR: 3.75 }; // both currencies are pegged to USD
 
   const skuMonthly = (cu, billing) => {
@@ -96,6 +108,11 @@ document.addEventListener('DOMContentLoaded', () => {
     $('rec').innerHTML = rec;
     $('fx').textContent = state.currency === 'USD' ? '' : L(`Converted at the fixed peg: 1 USD = ${FX[state.currency]} ${state.currency}.`, `التحويل بسعر الربط الثابت: 1 دولار = ${FX[state.currency]} ${state.currency}.`);
     $('smallWrap').style.display = state.premium || state.fabric ? '' : 'none';
+    // Fill the live prices into the note under the results
+    const usd = (n) => '$' + (n % 1 ? n.toFixed(2) : n);
+    const checked = new Date(PRICES.checked + 'T00:00:00Z').toLocaleDateString(isAr() ? 'ar-u-nu-latn' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+    const fill = { checked, pro: usd(PRICES.pro), ppu: usd(PRICES.ppu), cu: usd(PRICES.cuPayg), save: (PRICES.reservedSaving * 100).toFixed(1).replace(/\.0$/, '') + '%' };
+    document.querySelectorAll('[data-p]').forEach((el) => { if (fill[el.dataset.p]) el.textContent = fill[el.dataset.p]; });
     save();
   };
 
