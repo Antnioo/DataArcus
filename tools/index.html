@@ -55,6 +55,7 @@
     "@type": "ItemList",
     "name": "Free Power BI Tools by DataArcus",
     "itemListElement": [
+          { "@type": "ListItem", "position": 4, "name": "Power BI Licensing Cost Calculator", "url": "https://dataarcus.com/tools/power-bi-licensing-cost-calculator.html" },
           { "@type": "ListItem", "position": 1, "name": "Power BI Theme Generator", "url": "https://dataarcus.com/tools/power-bi-theme-generator.html" },
           { "@type": "ListItem", "position": 2, "name": "DAX Calendar Table Generator", "url": "https://dataarcus.com/tools/dax-calendar-table-generator.html" },
           { "@type": "ListItem", "position": 3, "name": "DAX Measure Builder", "url": "https://dataarcus.com/tools/dax-measure-builder.html" }
@@ -71,6 +72,7 @@
     .th-visual { height: 64px; border-radius: 10px; background: var(--dk-3); display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .th-sw { display: flex; gap: 6px; } .th-sw i { width: 22px; height: 34px; border-radius: 6px; display: block; }
     .th-cal { display: flex; flex-direction: column; align-items: center; font-weight: 700; color: var(--green); } .th-cal .dim { color: #94a3b8; font-weight: 500; font-size: .8rem; }
+    .th-cost { display: flex; align-items: baseline; gap: 6px; } .th-cost span { color: #94a3b8; font-weight: 700; } .th-cost b { color: var(--accent); font-size: 1.3rem; } .th-cost .dim { font-size: .8rem; }
     .th-code { font: 12px ui-monospace, Consolas, monospace; color: var(--accent-2); padding: 0 10px; text-align: center; }
     .th-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
     .th-tags span { font-size: .72rem; font-weight: 600; color: var(--accent); border: 1px solid rgba(0,212,255,.3); border-radius: 20px; padding: 2px 9px; }
@@ -140,12 +142,18 @@
               <span class="th-open"><span data-i18n="hub.open">Open tool</span> <i class="bi bi-arrow-right"></i></span>
             </a>
           </div>
+          <div class="col-md-6 col-lg-4">
+            <a class="th-card" href="power-bi-licensing-cost-calculator.html" data-tool="power-bi-licensing-cost-calculator">
+              <div class="th-visual"><div class="th-cost"><span>F64</span><b>$5,004</b><span class="dim">/ month</span></div></div>
+              <h2 data-i18n="hub.cards.licensing.title">Power BI Licensing Cost Calculator</h2>
+              <p data-i18n="hub.cards.licensing.desc">Pro vs Premium Per User vs Fabric for your number of creators and viewers, in USD, AED or SAR.</p>
+              <div class="th-tags"><span data-i18n="hub.cards.licensing.tag1">Pro vs PPU vs Fabric</span><span data-i18n="hub.cards.licensing.tag2">F64 break-even</span></div>
+              <span class="th-open"><span data-i18n="hub.open">Open tool</span> <i class="bi bi-arrow-right"></i></span>
+            </a>
+          </div>
       </div>
       <h2 class="h5 fw-bold mt-5 mb-3 text-white-50" data-i18n="hub.nextUp">Next up</h2>
       <div class="row g-4">
-          <div class="col-md-6 col-lg-4">
-            <div class="th-card soon"><span class="th-badge" data-i18n="hub.soonBadge">Coming soon</span><h2 data-i18n="hub.soon.licensing.title">Power BI Licensing Cost Calculator</h2><p data-i18n="hub.soon.licensing.desc">Pro vs Premium Per User vs Fabric, for your number of users.</p></div>
-          </div>
           <div class="col-md-6 col-lg-4">
             <div class="th-card soon"><span class="th-badge" data-i18n="hub.soonBadge">Coming soon</span><h2 data-i18n="hub.soon.kpi.title">E-commerce KPI Calculator</h2><p data-i18n="hub.soon.kpi.desc">CAC, ROAS, CLV and AOV from four numbers, with what each one means.</p></div>
           </div>

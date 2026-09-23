@@ -24,6 +24,12 @@ window.toolsHubTranslations = {
           "desc": "YTD, prior year, YoY %, rolling months, running totals and Ramadan vs last Ramadan, added to your model in one click.",
           "tag1": "Time intelligence",
           "tag2": "DAX query view"
+        },
+        "licensing": {
+          "title": "Power BI Licensing Cost Calculator",
+          "desc": "Pro vs Premium Per User vs Fabric for your number of creators and viewers, in USD, AED or SAR.",
+          "tag1": "Pro vs PPU vs Fabric",
+          "tag2": "F64 break-even"
         }
       },
       "nextUp": "Next up",
@@ -77,6 +83,12 @@ window.toolsHubTranslations = {
           "desc": "YTD والسنة السابقة ونسبة النمو السنوي والأشهر المتحركة والإجماليات التراكمية ورمضان مقابل رمضان الماضي، تُضاف إلى نموذجك بنقرة واحدة.",
           "tag1": "ذكاء الوقت",
           "tag2": "عرض استعلام DAX"
+        },
+        "licensing": {
+          "title": "حاسبة تكلفة تراخيص Power BI",
+          "desc": "مقارنة Pro و Premium Per User و Fabric حسب عدد المنشئين والمشاهدين، بالدولار أو الدرهم أو الريال.",
+          "tag1": "Pro مقابل PPU مقابل Fabric",
+          "tag2": "نقطة التعادل لـ F64"
         }
       },
       "nextUp": "قريبًا",
