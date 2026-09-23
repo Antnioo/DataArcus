@@ -38,7 +38,9 @@ window.homepageTranslations = {
         "Unified Business Data Modeling",
         "Enterprise Governance & Security",
         "Custom Visual Development"
-      ]
+      ],
+      proofBadges: ["Microsoft Certified Power BI Data Analyst", "Every number validated against the source", "Arabic & English"],
+      proof: {"live": "Production model", "subtitle": "Automotive dealership CRM, anonymized", "kpis": ["leads", "calls", "call journeys", "DAX measures"], "caption": "Three disconnected systems, one model, every lead resolved once and matched against the source.", "link": "See the live dashboard"}
     },
 
     // Tech Stack Section
@@ -117,15 +119,19 @@ portfolio: {
       statsTitle: "The Track Record So Far",
       statsSubtitle: "Real numbers from real production models - not agency metrics.",
       stats: [
-        { title: "Year of Hands-On Power BI Building" },
+        { title: "Leads Resolved in One Production Model" },
         { title: "DAX Measures in Production" },
         { title: "End-to-End Dashboard Builds" },
-        { title: "Industry Certifications" }
+        { title: "Free Power BI Tools Published" }
       ],
       ctaTitle: "Curious What This Could Look Like for Your Data?",
       ctaSubtitle: "No obligation - tell me what you're working with, and I'll show you what's possible on a quick call.",
       ctaButton: "Book a Free Data Clarity Call"
     },
+
+    process: {"title": "How a Project Works", "subtitle": "Three steps, no surprises.", "steps": [{"title": "Free Data Clarity Call", "desc": "20 minutes on your data and the decisions you need to make. You get a straight answer on what's fixable, even if we never work together."}, {"title": "Build and Validate", "desc": "I build the data model and dashboards, and check every number against your source system before you see a single chart."}, {"title": "Handover and Support", "desc": "Your team gets the report, a walkthrough and documentation. Changes after launch are one message away, and you talk to the person who built it."}]},
+    toolsStrip: {"badge": "Free · No sign-up", "title": "Free Power BI Tools", "subtitle": "Built from real client work. Use them on your own reports today.", "button": "See all tools", "cards": [{"title": "Theme Generator", "desc": "Brand colors to a Power BI theme JSON."}, {"title": "DAX Calendar Generator", "desc": "Date table with Hijri dates and Ramadan flags."}, {"title": "DAX Measure Builder", "desc": "YTD, YoY, rolling and running totals in one click."}]},
+    latest: {"title": "Latest from the Blog", "subtitle": "Playbooks from real models: the patterns, the mistakes, and the fixes.", "button": "All articles", "posts": {"journeyAttribution": {"badge": "DATA ENGINEERING", "title": "Resolve Once, Hydrate Many: A DAX Pattern for Lead Attribution", "date": "September 1, 2026", "excerpt": "Why matching the same lead five times produces disagreeing KPIs, and the single-resolution DAX pattern that validated 54,403/54,403 leads before replacing scattered join logic.", "button": "Read Playbook"}, "evm": {"badge": "PROJECT ANALYTICS", "title": "Beyond \"Traffic Lights\": How Earned Value Management (EVM) Predicts Project Risk", "date": "December 10, 2025", "excerpt": "Most project dashboards tell you what happened yesterday. Learn how to use CPI and SPI to mathematically forecast tomorrow's delays and budget overruns.", "button": "Read Playbook"}, "shopify": {"badge": "STRATEGY", "title": "The Ultimate Shopify Dashboard: How to Build a Single Source of Truth in Power BI", "date": "October 04, 2025", "excerpt": "A playbook for e-commerce leaders on building a single source of truth from Shopify data in Power BI to track sales, marketing ROI, and customer behavior.", "button": "Read Playbook"}}},
 
     // FAQ Section
     faq: {
@@ -268,7 +274,9 @@ portfolio: {
         "نمذجة موحدة لبيانات الأعمال",
         "حوكمة وأمان على مستوى الشركات",
         "تطوير واجهات مرئية مخصصة"
-      ]
+      ],
+      proofBadges: ["محلل بيانات Power BI معتمد من Microsoft", "كل رقم مُطابق مع المصدر", "العربية والإنجليزية"],
+      proof: {"live": "نموذج إنتاج حقيقي", "subtitle": "نظام CRM لوكيل سيارات، ببيانات مجهولة الهوية", "kpis": ["عميل محتمل", "مكالمة", "رحلة اتصال", "مقياس DAX"], "caption": "ثلاثة أنظمة منفصلة، نموذج واحد، وكل عميل محتمل يُحل مرة واحدة ويُطابق مع المصدر.", "link": "شاهد لوحة التحكم"}
     },
 
     // Tech Stack Section
@@ -347,15 +355,19 @@ portfolio: {
       statsTitle: "السجل حتى الآن",
       statsSubtitle: "أرقام حقيقية من نماذج إنتاج حقيقية - لا مقاييس وكالات مصطنعة.",
       stats: [
-        { title: "سنة من البناء العملي في Power BI" },
+        { title: "عميل محتمل تم حله في نموذج إنتاج واحد" },
         { title: "مقياس DAX في الإنتاج" },
         { title: "لوحة تحكم متكاملة تم بناؤها" },
-        { title: "شهادة معتمدة في المجال" }
+        { title: "أداة Power BI مجانية منشورة" }
       ],
       ctaTitle: "هل تتساءل كيف سيبدو هذا لبياناتك؟",
       ctaSubtitle: "بدون أي التزام - أخبرني بما تعمل عليه، وسأوضح لك ما هو ممكن في مكالمة سريعة.",
       ctaButton: "احجز مكالمة وضوح بيانات مجانية"
     },
+
+    process: {"title": "كيف يسير المشروع", "subtitle": "ثلاث خطوات، بدون مفاجآت.", "steps": [{"title": "مكالمة وضوح البيانات المجانية", "desc": "20 دقيقة حول بياناتك والقرارات التي تحتاج إلى اتخاذها. تحصل على إجابة واضحة عمّا يمكن إصلاحه، حتى لو لم نعمل معًا."}, {"title": "البناء والتحقق", "desc": "أبني نموذج البيانات ولوحات التحكم، وأطابق كل رقم مع نظامك المصدر قبل أن ترى أي رسم بياني."}, {"title": "التسليم والدعم", "desc": "يحصل فريقك على التقرير وشرح عملي وتوثيق كامل. أي تعديل بعد الإطلاق على بُعد رسالة واحدة، مع الشخص الذي بناه مباشرة."}]},
+    toolsStrip: {"badge": "مجانية · بدون تسجيل", "title": "أدوات Power BI مجانية", "subtitle": "مبنية من عمل حقيقي مع العملاء. استخدمها في تقاريرك اليوم.", "button": "عرض كل الأدوات", "cards": [{"title": "مولّد السمات", "desc": "حوّل ألوان علامتك التجارية إلى ملف سمة Power BI."}, {"title": "مولّد تقويم DAX", "desc": "جدول تواريخ بالتاريخ الهجري وعلامات رمضان."}, {"title": "منشئ مقاييس DAX", "desc": "مقاييس YTD و YoY والمتحركة والتراكمية بنقرة واحدة."}]},
+    latest: {"title": "أحدث المقالات", "subtitle": "أدلة عملية من نماذج حقيقية: الأنماط والأخطاء والحلول.", "button": "كل المقالات", "posts": {"journeyAttribution": {"badge": "هندسة البيانات", "title": "حلّ مرة واحدة، غذِّ كل مكان: نمط DAX لعزو العملاء المحتملين", "date": "1 سبتمبر 2026", "excerpt": "لماذا تُنتج مطابقة نفس العميل المحتمل خمس مرات مؤشرات أداء متضاربة، ونمط DAX الذي وثّق تطابق 54,403 من أصل 54,403 عميل محتمل قبل استبدال منطق الربط المتناثر.", "button": "اقرأ الدليل"}, "evm": {"badge": "تحليلات المشاريع", "title": "ما وراء \"إشارات المرور\": كيف تتنبأ إدارة القيمة المكتسبة (EVM) بمخاطر المشروع", "date": "10 ديسمبر 2025", "excerpt": "تخبرك معظم لوحات المعلومات بما حدث بالأمس. تعلم كيف تستخدم CPI و SPI للتنبؤ رياضيًا بالتأخيرات وتجاوز الميزانية قبل حدوثها.", "button": "اقرأ الدليل"}, "shopify": {"badge": "استراتيجية", "title": "دليل لقادة التجارة الإلكترونية حول بناء مصدر موحد للحقيقة من بيانات Shopify في Power BI.", "date": "04 اكتوبر 2025", "excerpt": "دليل لقادة التجارة الإلكترونية حول بناء مصدر موحد للحقيقة من بيانات Shopify في Power BI لتتبع المبيعات وعائد الاستثمار التسويقي وسلوك العملاء.", "button": "اقرأ الدليل"}}},
 
     // FAQ Section
     faq: {

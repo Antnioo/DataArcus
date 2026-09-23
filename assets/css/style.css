@@ -1242,3 +1242,27 @@ html[dir="rtl"] .navbar-nav {
   transform: scale(1.2) rotate(10deg);
   filter: brightness(1.3) drop-shadow(0 0 20px currentColor);
 }
+/* ===== Home refresh (Sep 2026): proof card, process, tools strip ===== */
+.proof-card { position: relative; overflow: hidden; }
+.proof-live { display: inline-flex; align-items: center; gap: 8px; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--green); }
+.proof-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 0 rgba(0, 206, 201, .6); animation: proofPulse 2s infinite; }
+@keyframes proofPulse { 70% { box-shadow: 0 0 0 8px rgba(0, 206, 201, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 206, 201, 0); } }
+.proof-kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-bottom: 16px; }
+.proof-kpis > div { background: rgba(255, 255, 255, .04); border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 12px; }
+.proof-num { font-size: 1.6rem; font-weight: 800; line-height: 1.1; color: var(--accent); font-variant-numeric: tabular-nums; }
+.proof-lbl { font-size: .78rem; color: #94a3b8; }
+.proof-bars { display: flex; align-items: flex-end; gap: 6px; height: 56px; margin-bottom: 14px; }
+.proof-bars span { flex: 1; border-radius: 4px 4px 0 0; background: linear-gradient(180deg, var(--accent), rgba(0, 132, 255, .4)); }
+.proof-link { color: var(--accent); font-weight: 700; text-decoration: none; }
+.proof-link:hover { color: var(--accent-2); }
+.step-card { position: relative; }
+.step-num { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; font-size: 1.2rem; color: #051018; background: linear-gradient(135deg, var(--accent), var(--accent-3)); margin-bottom: 16px; }
+.tools-strip { background: linear-gradient(135deg, rgba(0, 212, 255, .08), rgba(108, 92, 231, .08)); }
+.tool-mini { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 16px; border-radius: 14px; background: rgba(255, 255, 255, .04); border: 1px solid var(--glass-border); color: var(--lt); text-decoration: none; transition: transform .2s, border-color .2s; }
+.tool-mini:hover { transform: translateY(-3px); border-color: var(--accent); color: var(--lt); }
+.tool-mini span { font-size: .85rem; color: #94a3b8; }
+.tool-mini-sw { display: flex; gap: 4px; margin-bottom: 6px; }
+.tool-mini-sw i { width: 18px; height: 26px; border-radius: 5px; display: block; }
+.tool-mini-cal { font-weight: 700; color: var(--green); margin-bottom: 6px; }
+.tool-mini-code { font: 600 .85rem ui-monospace, Consolas, monospace; color: var(--accent-2); margin-bottom: 6px; }
+@media (prefers-reduced-motion: reduce) { .proof-dot { animation: none; } }
