@@ -1292,3 +1292,5 @@ footer .list-unstyled li.mb-2{margin-bottom:.25rem!important}
 /* Touch targets: hero proof link and footer email */
 .proof-link{display:inline-block;padding:7px 0}
 footer a[href^="mailto:"]{display:inline-block;padding:4px 0}
+/* CTA button pairs: keep a gap when they wrap onto two lines (and stay centered in Arabic) */
+.tg-cta > a.btn,.tg-cta > a.tg-btn2,.th-cta > a.btn,.th-cta > a.tg-btn2{margin:6px 4px!important;vertical-align:middle}
