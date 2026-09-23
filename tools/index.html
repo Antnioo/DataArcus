@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://dataarcus.com/tools/" />
+  <title>Free Power BI Tools - DataArcus</title>
+  <meta name="description" content="Free Power BI tools: theme JSON generator, DAX calendar table with Hijri dates and Ramadan flags, and a DAX time intelligence measure builder. No sign-up." />
+  <meta name="author" content="DataArcus" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Free Power BI Tools - DataArcus" />
+  <meta property="og:description" content="Free Power BI tools: theme JSON generator, DAX calendar table with Hijri dates and Ramadan flags, and a DAX time intelligence measure builder. No sign-up." />
+  <meta property="og:url" content="https://dataarcus.com/tools/" />
+  <meta property="og:site_name" content="DataArcus" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/dataarcus-og-logo.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="../assets/img/favicon.svg"/>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-RC3MRC4JZH');
+  </script>
+
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "sy2681b9al");
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link href="../assets/css/vendor/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/css/style.min.css" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">  
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  </noscript>
+  
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Free Power BI Tools by DataArcus",
+    "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Power BI Theme Generator", "url": "https://dataarcus.com/tools/power-bi-theme-generator.html" },
+          { "@type": "ListItem", "position": 2, "name": "DAX Calendar Table Generator", "url": "https://dataarcus.com/tools/dax-calendar-table-generator.html" },
+          { "@type": "ListItem", "position": 3, "name": "DAX Measure Builder", "url": "https://dataarcus.com/tools/dax-measure-builder.html" }
+    ]
+  }
+  </script>
+  <style>
+    .th { padding: 110px 0 60px; }
+    .th h1 { color: var(--accent); }
+    .th-card { display: flex; flex-direction: column; gap: 10px; height: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; color: var(--lt); text-decoration: none; transition: transform .2s, border-color .2s; }
+    a.th-card:hover { transform: translateY(-4px); border-color: var(--accent); color: var(--lt); }
+    .th-card h2 { font-size: 1.2rem; font-weight: 800; margin: 4px 0 0; }
+    .th-card p { color: #94a3b8; margin: 0; font-size: .92rem; }
+    .th-visual { height: 64px; border-radius: 10px; background: var(--dk-3); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .th-sw { display: flex; gap: 6px; } .th-sw i { width: 22px; height: 34px; border-radius: 6px; display: block; }
+    .th-cal { display: flex; flex-direction: column; align-items: center; font-weight: 700; color: var(--green); } .th-cal .dim { color: #94a3b8; font-weight: 500; font-size: .8rem; }
+    .th-code { font: 12px ui-monospace, Consolas, monospace; color: var(--accent-2); padding: 0 10px; text-align: center; }
+    .th-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+    .th-tags span { font-size: .72rem; font-weight: 600; color: var(--accent); border: 1px solid rgba(0,212,255,.3); border-radius: 20px; padding: 2px 9px; }
+    .th-open { color: var(--accent); font-weight: 700; font-size: .9rem; }
+    .th-card.soon { border-style: dashed; opacity: .75; }
+    .th-badge { align-self: flex-start; font-size: .7rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: #fdcb6e; border: 1px solid rgba(253,203,110,.4); border-radius: 20px; padding: 2px 9px; }
+    .th-cta { background: linear-gradient(135deg, rgba(0,212,255,.12), rgba(108,92,231,.12)); border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px; }
+  </style>
+</head>
+<body>
+    
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html#hero">
+        <img src="../assets/img/logo.svg" alt="DataArcus logo" width="190" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="../index.html#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="../portfolio.html" data-i18n="nav.portfolio">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html" data-i18n="nav.tools">Free Tools</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <a href="../index.html#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="th">
+    <div class="container">
+      <header class="mb-5">
+        <span class="badge rounded-pill text-bg-dark border border-secondary mb-2">Free · No sign-up · Runs in your browser</span>
+        <h1 class="display-5 fw-bold">Free Power BI Tools</h1>
+        <p class="lead text-white-50 mb-0" style="max-width:720px">Small tools that save Power BI developers hours, built from real client work. Nothing you enter leaves your browser.</p>
+      </header>
+      <div class="row g-4">
+          <div class="col-md-6 col-lg-4">
+            <a class="th-card" href="power-bi-theme-generator.html" data-tool="power-bi-theme-generator">
+              <div class="th-visual"><div class="th-sw"><i style="background:#00d4ff"></i><i style="background:#6c5ce7"></i><i style="background:#00cec9"></i><i style="background:#fd79a8"></i><i style="background:#0084ff"></i><i style="background:#fdcb6e"></i></div></div>
+              <h2>Power BI Theme Generator</h2>
+              <p>Turn your brand colors into a theme JSON with a live report preview and a readability check.</p>
+              <div class="th-tags"><span>Theme JSON</span><span>Live preview</span></div>
+              <span class="th-open">Open tool <i class="bi bi-arrow-right"></i></span>
+            </a>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <a class="th-card" href="dax-calendar-table-generator.html" data-tool="dax-calendar-table-generator">
+              <div class="th-visual"><div class="th-cal"><span>1 Ramadan 1447</span><span class="dim">18 Feb 2026</span></div></div>
+              <h2>DAX Calendar Table Generator</h2>
+              <p>A complete date table in one paste, with fiscal years, GCC weekends, and Hijri dates with Ramadan and Eid flags.</p>
+              <div class="th-tags"><span>Hijri</span><span>Ramadan</span><span>Fiscal year</span></div>
+              <span class="th-open">Open tool <i class="bi bi-arrow-right"></i></span>
+            </a>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <a class="th-card" href="dax-measure-builder.html" data-tool="dax-measure-builder">
+              <div class="th-visual"><div class="th-code">DIVIDE ( [Sales] - [Sales PY], [Sales PY] )</div></div>
+              <h2>DAX Measure Builder</h2>
+              <p>YTD, prior year, YoY %, rolling months, running totals and Ramadan vs last Ramadan, added to your model in one click.</p>
+              <div class="th-tags"><span>Time intelligence</span><span>DAX query view</span></div>
+              <span class="th-open">Open tool <i class="bi bi-arrow-right"></i></span>
+            </a>
+          </div>
+      </div>
+      <h2 class="h5 fw-bold mt-5 mb-3 text-white-50">Next up</h2>
+      <div class="row g-4">
+          <div class="col-md-6 col-lg-4">
+            <div class="th-card soon"><span class="th-badge">Coming soon</span><h2>Power BI Licensing Cost Calculator</h2><p>Pro vs Premium Per User vs Fabric, for your number of users.</p></div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="th-card soon"><span class="th-badge">Coming soon</span><h2>E-commerce KPI Calculator</h2><p>CAC, ROAS, CLV and AOV from four numbers, with what each one means.</p></div>
+          </div>
+          <div class="col-md-6 col-lg-4">
+            <div class="th-card soon"><span class="th-badge">Coming soon</span><h2>SVG KPI Card Generator</h2><p>Arrows, sparklines and progress rings drawn by a DAX measure.</p></div>
+          </div>
+      </div>
+      <div class="row mt-5 justify-content-center">
+        <div class="col-lg-8">
+          <div class="th-cta text-center">
+            <h2 class="h4 fw-bold mb-2">Need something these tools can’t do?</h2>
+            <p class="text-white-50 mb-3">DataArcus builds complete Power BI solutions: data models, measures and dashboards for businesses across the MENA region.</p>
+            <a href="../index.html#contact" class="btn btn-accent">Book a Free Call</a>
+            <a href="mailto:hello@DataArcus.com?subject=Tool%20idea" class="tg-btn2 ms-2 text-decoration-none d-inline-block" style="border:1px solid var(--accent);color:var(--accent);border-radius:50px;padding:10px 20px;font-weight:600">Suggest a tool</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="../index.html#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="../assets/img/logo.svg" alt="DataArcus logo" width="190" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+              <li class="mb-2"><a href="index.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">Free Power BI Tools</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="../portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Showcases</a></li>
+              <li class="mb-2"><a href="../index.html#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="../blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Built with passion • Powered by innovation</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="../assets/js/translations/common.min.js" defer></script>
+  <script src="../assets/js/lang-manager.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
+  <script src="../assets/js/main.min.js" defer></script>
+  <script>
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest('[data-tool]');
+      if (a && typeof window.dataArcusTrack === 'function') window.dataArcusTrack('tool_open', { tool: a.getAttribute('data-tool'), from: 'tools_hub' });
+    });
+  </script>
+</body>
+</html>
