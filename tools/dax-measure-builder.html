@@ -4,15 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://dataarcus.com/tools/dax-calendar-table-generator.html" />
-  <title>DAX Calendar Table Generator with Hijri Dates - DataArcus</title>
-  <meta name="description" content="Generate a Power BI date table in DAX with fiscal years, GCC weekends and Hijri (Umm al-Qura) dates, Ramadan and Eid flags. Copy, paste, done. Free." />
+  <link rel="canonical" href="https://dataarcus.com/tools/dax-measure-builder.html" />
+  <title>DAX Measure Builder: YoY, YTD, MTD and Rolling - DataArcus</title>
+  <meta name="description" content="Generate Power BI time intelligence measures from one base measure: YTD, MTD, prior year, YoY %, MoM %, rolling months, running total and Ramadan vs last Ramadan. Free." />
   <meta name="author" content="DataArcus" />
-  <meta name="keywords" content="DAX calendar table, Power BI date table, DAX date table generator, Hijri calendar Power BI, Ramadan Power BI, fiscal calendar DAX" />
+  <meta name="keywords" content="DAX year over year, DAX YTD, DAX running total, DAX rolling 3 months, Power BI time intelligence, DAX measure generator" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="DAX Calendar Table Generator with Hijri Dates - DataArcus" />
-  <meta property="og:description" content="Generate a Power BI date table in DAX with fiscal years, GCC weekends and Hijri (Umm al-Qura) dates, Ramadan and Eid flags. Copy, paste, done. Free." />
-  <meta property="og:url" content="https://dataarcus.com/tools/dax-calendar-table-generator.html" />
+  <meta property="og:title" content="DAX Measure Builder: YoY, YTD, MTD and Rolling - DataArcus" />
+  <meta property="og:description" content="Generate Power BI time intelligence measures from one base measure: YTD, MTD, prior year, YoY %, MoM %, rolling months, running total and Ramadan vs last Ramadan. Free." />
+  <meta property="og:url" content="https://dataarcus.com/tools/dax-measure-builder.html" />
   <meta property="og:site_name" content="DataArcus" />
   <meta property="og:image" content="https://dataarcus.com/assets/img/dataarcus-og-logo.png" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -56,8 +56,8 @@
     "@graph": [
       {
         "@type": "WebApplication",
-        "name": "DAX Calendar Table Generator with Hijri Dates",
-        "url": "https://dataarcus.com/tools/dax-calendar-table-generator.html",
+        "name": "DAX Time Intelligence Measure Builder",
+        "url": "https://dataarcus.com/tools/dax-measure-builder.html",
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "Any (web browser)",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -66,12 +66,12 @@
       {
         "@type": "FAQPage",
         "mainEntity": [
-          { "@type": "Question", "name": "How do I add a calendar table in Power BI?",
-            "acceptedAnswer": { "@type": "Answer", "text": "In Power BI Desktop go to Modeling, click New table, paste the DAX, and press Enter. Then use Mark as date table and pick the Date column." } },
-          { "@type": "Question", "name": "How do I get Hijri dates in Power BI?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Power BI has no built-in Hijri functions. This generator embeds the Umm al-Qura month start dates in the DAX, then calculates Hijri year, month, day, Ramadan and Eid for every date." } },
-          { "@type": "Question", "name": "Are the Ramadan dates exact?",
-            "acceptedAnswer": { "@type": "Answer", "text": "They follow the official Saudi Umm al-Qura calendar. Countries that rely on local moon sighting can differ by one day, so adjust the month start in the DATATABLE if needed." } }
+          { "@type": "Question", "name": "How do I calculate year over year growth in DAX?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Create a prior-year measure with CALCULATE and SAMEPERIODLASTYEAR, then divide the difference by it: DIVIDE([Sales] - [Sales PY], [Sales PY]). DIVIDE returns blank instead of an error when last year is empty." } },
+          { "@type": "Question", "name": "How do I add many measures at once in Power BI?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Open DAX query view in Power BI Desktop, paste a DEFINE block with several MEASURE lines, and click Update model with changes. All measures are added in one step." } },
+          { "@type": "Question", "name": "Why do my time intelligence measures return blank or wrong values?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Time intelligence needs a proper date table: one row per day with no gaps, marked as a date table, and related to your fact table. Use the date column from that table in visuals and in the measures." } }
         ]
       }
     ]
@@ -131,6 +131,24 @@
     .tg-table td { color: var(--lt); border-bottom: 1px solid rgba(255, 255, 255, .05); }
     .cg-err { color: #f59e0b; font-size: .85rem; }
     @media (max-width: 767px) { .cg-form { grid-template-columns: 1fr; } }
+    .mb-seg { display: inline-flex; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 30px; padding: 3px; }
+    .mb-seg button { background: none; border: 0; color: #94a3b8; font-weight: 600; font-size: .85rem; padding: 6px 14px; border-radius: 30px; }
+    .mb-seg button.active { background: var(--accent); color: #051018; }
+    .mb-group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .mb-group .tg-label { width: 100%; margin-bottom: 0; }
+    .mb-check { display: inline-flex; align-items: center; gap: 8px; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 30px; padding: 6px 12px; font-size: .85rem; color: var(--lt); cursor: pointer; }
+    .mb-check input { accent-color: var(--accent); }
+    .mb-check:has(input:checked) { border-color: var(--accent); }
+    .mb-card { border: 1px solid var(--glass-border); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+    .mb-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+    .mb-head b { color: var(--lt); }
+    .mb-what { color: #94a3b8; font-size: .82rem; margin-top: 2px; }
+    .mb-tag { display: inline-block; margin-left: 8px; font-size: .7rem; font-weight: 700; color: var(--accent); border: 1px solid rgba(0,212,255,.35); border-radius: 20px; padding: 1px 8px; }
+    .mb-tag.dep { color: #fdcb6e; border-color: rgba(253,203,110,.4); }
+    .mb-pre { max-height: 180px; margin: 0; }
+    .mb-copy { padding: 6px 12px; }
+    .mb-note { font-size: .82rem; color: #fdcb6e; }
+    .tg-panel a.hover-accent { color: var(--accent); }
   </style>
 </head>
 <body>
@@ -161,61 +179,72 @@
     <div class="container">
       <header class="mb-4">
         <span class="badge rounded-pill text-bg-dark border border-secondary mb-2">Free tool · No sign-up</span>
-        <h1 class="display-5 fw-bold">DAX Calendar Table Generator</h1>
-        <p class="lead text-white-50 mb-0">A complete Power BI date table in one paste: fiscal years, GCC weekends, and Hijri dates with Ramadan and Eid flags that no built-in function gives you.</p>
+        <h1 class="display-5 fw-bold">DAX Measure Builder</h1>
+        <p class="lead text-white-50 mb-0">One base measure in, a full set of time intelligence out: YTD, prior year, YoY %, rolling months, running totals, even Ramadan vs last Ramadan. Add them all to Power BI in one click.</p>
       </header>
 
       <div class="row g-4">
         <div class="col-lg-5">
           <div class="tg-panel d-flex flex-column gap-4">
             <div>
-              <span class="tg-label">Quick setup</span>
-              <div class="cg-quick">
-                <button class="tg-preset" type="button" data-quick="uae">UAE</button>
-                <button class="tg-preset" type="button" data-quick="ksa">Saudi Arabia</button>
-                <button class="tg-preset" type="button" data-quick="egypt">Egypt</button>
-                <button class="tg-preset" type="button" data-quick="global">Global (no Hijri)</button>
+              <span class="tg-label">1. Your base measure</span>
+              <div class="mb-seg mb-3" role="group" aria-label="Base measure source">
+                <button type="button" data-mode="column">Build from a column</button>
+                <button type="button" data-mode="existing">I already have one</button>
+              </div>
+              <div id="modeColumn" class="cg-form">
+                <div><label class="tg-label" for="agg">Calculation</label>
+                  <select id="agg" class="form-select"><option>SUM</option><option>AVERAGE</option><option>DISTINCTCOUNT</option><option>COUNT</option><option>MIN</option><option>MAX</option><option value="COUNTROWS">COUNTROWS (count rows)</option></select></div>
+                <div><label class="tg-label" for="base">Measure name</label><input id="base" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="fact">Fact table</label><input id="fact" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="column">Column</label><input id="column" class="form-control" maxlength="60"></div>
+              </div>
+              <div id="modeExisting" class="cg-form">
+                <div><label class="tg-label" for="existing">Existing measure name</label><input id="existing" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="home">Put new measures in table</label><input id="home" class="form-control" maxlength="60"></div>
               </div>
             </div>
-            <div class="cg-form">
-              <div style="grid-column:1/-1"><label class="tg-label" for="cgName">Table name</label><input id="cgName" class="form-control" maxlength="40"></div>
-              <div><label class="tg-label" for="cgStart">Start date</label><input id="cgStart" type="date" class="form-control"></div>
-              <div><label class="tg-label" for="cgEnd">End date</label><input id="cgEnd" type="date" class="form-control"></div>
-              <div><label class="tg-label" for="cgWeek">Week starts on</label>
-                <select id="cgWeek" class="form-select"><option value="sun">Sunday</option><option value="mon">Monday</option><option value="sat">Saturday</option></select></div>
-              <div><label class="tg-label" for="cgWeekend">Weekend</label>
-                <select id="cgWeekend" class="form-select"><option value="sat-sun">Saturday + Sunday</option><option value="fri-sat">Friday + Saturday</option><option value="fri">Friday only</option><option value="sun">Sunday only</option></select></div>
-              <div><label class="tg-label" for="cgFy">Fiscal year starts</label>
-                <select id="cgFy" class="form-select"><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select></div>
-              <div><label class="tg-label" for="cgLang">Month and day names</label>
-                <select id="cgLang" class="form-select"><option value="en">English</option><option value="ar">العربية</option></select></div>
+            <div>
+              <span class="tg-label">2. Your date table</span>
+              <div class="cg-form">
+                <div><label class="tg-label" for="cal">Date table</label><input id="cal" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="dateCol">Date column</label><input id="dateCol" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="fyEnd">Fiscal year ends</label>
+                  <select id="fyEnd" class="form-select"><option value="12-31">31 December</option><option value="3-31">31 March</option><option value="6-30">30 June</option><option value="9-30">30 September</option></select></div>
+                <div><label class="tg-label" for="n">Rolling months / avg days</label>
+                  <div class="d-flex gap-2"><input id="n" type="number" min="1" max="36" class="form-control" aria-label="Rolling months"><input id="days" type="number" min="1" max="365" class="form-control" aria-label="Average days"></div></div>
+              </div>
+              <p class="small text-white-50 mt-2 mb-0">No date table yet? <a href="dax-calendar-table-generator.html" class="hover-accent">Generate one here</a> first.</p>
             </div>
-            <div class="cg-checks">
-              <span class="tg-label mb-0">Columns to include</span>
-              <label><input type="checkbox" id="cgHijri"><span>Hijri dates, Ramadan and Eid<small id="hijriNote">Umm al-Qura calendar: Hijri year, month, day, Ramadan day, Eid al-Fitr and Eid al-Adha flags.</small></span></label>
-              <label><input type="checkbox" id="cgFiscal"><span>Fiscal year, quarter and month<small>Labels like FY2026 and FQ1, based on your fiscal start month.</small></span></label>
-              <label><input type="checkbox" id="cgRel"><span>Relative offsets<small>Day, month and year offsets from today, for "last 3 months" slicers that never need updating.</small></span></label>
+            <div>
+              <span class="tg-label">3. Pick your measures</span>
+              <div id="patterns"></div>
             </div>
-            <div class="cg-err" id="err" role="alert"></div>
           </div>
         </div>
 
-        <div class="col-lg-7 d-flex flex-column gap-4">
-          <div class="tg-panel">
-            <div class="d-flex justify-content-between flex-wrap gap-2"><span class="tg-label">Preview</span><span class="small text-white-50" id="stats"></span></div>
-            <div id="preview" style="overflow-x:auto"></div>
-            <div id="ramWrap" class="mt-3"><span class="tg-label">Ramadan in your date range</span><div id="ramadan"></div></div>
-          </div>
+        <div class="col-lg-7">
           <div class="tg-panel d-flex flex-column gap-3">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-              <span class="tg-label mb-0">Your DAX</span>
-              <div class="tg-actions">
-                <button class="tg-btn2" id="dlBtn" type="button"><i class="bi bi-download me-1"></i>Download</button>
-                <button class="btn btn-accent" id="copyBtn" type="button"><i class="bi bi-clipboard me-1"></i>Copy DAX</button>
+              <div class="mb-seg" role="tablist" aria-label="Output format">
+                <button type="button" class="active" data-tab-out="all">All at once</button>
+                <button type="button" data-tab-out="one">One by one</button>
               </div>
+              <span class="small text-white-50" id="count"></span>
             </div>
-            <pre class="tg-json" id="dax"></pre>
-            <p class="small text-white-50 mb-0">In Power BI Desktop: <strong>Modeling → New table</strong>, paste, press Enter. Then <strong>Mark as date table</strong> and choose Date. Sort Month Name by Month Number.</p>
+            <div id="outAll" class="d-flex flex-column gap-3">
+              <div class="tg-actions justify-content-end">
+                <button class="tg-btn2" id="dlBtn" type="button"><i class="bi bi-download me-1"></i>Download</button>
+                <button class="btn btn-accent" id="copyAll" type="button"><i class="bi bi-clipboard me-1"></i>Copy all measures</button>
+              </div>
+              <pre class="tg-json" id="script" style="max-height:520px"></pre>
+              <p class="small text-white-50 mb-0">In Power BI Desktop open <strong>DAX query view</strong> (left toolbar), paste, and click <strong>Update model with changes</strong>. Every measure is added in one go.</p>
+            </div>
+            <div id="outOne" style="display:none">
+              <p class="small text-white-50">For <strong>Modeling → New measure</strong>: copy each one and paste. Create them in this order.</p>
+              <div id="list"></div>
+            </div>
+            <p class="mb-note mb-0" id="ramNote"><i class="bi bi-moon-stars me-1"></i>Ramadan measures use the Hijri Year, Is Ramadan and Ramadan Day columns from the <a href="dax-calendar-table-generator.html" class="hover-accent">DataArcus calendar</a>.</p>
           </div>
         </div>
       </div>
@@ -223,23 +252,23 @@
       <div class="row mt-5 justify-content-center">
         <div class="col-lg-8">
           <div class="tg-cta mb-5 text-center">
-            <h2 class="h4 fw-bold mb-2">Ramadan changes everything in your numbers</h2>
-            <p class="text-white-50 mb-3">Comparing this Ramadan to last Ramadan, not March to March, is where the real insight is. DataArcus builds Power BI reports that understand the Gulf calendar.</p>
+            <h2 class="h4 fw-bold mb-2">Measures are easy. The right numbers are not.</h2>
+            <p class="text-white-50 mb-3">When totals don’t match, relationships double count, or YoY looks wrong, the problem is the model. DataArcus builds and fixes Power BI data models.</p>
             <a href="../index.html#contact" class="btn btn-accent">Book a Free Call</a>
-            <a href="dax-measure-builder.html" class="tg-btn2 ms-2 text-decoration-none d-inline-block">Next: build YoY and YTD measures</a>
+            <a href="dax-calendar-table-generator.html" class="tg-btn2 ms-2 text-decoration-none d-inline-block">Free DAX Calendar Generator</a>
           </div>
           <section class="tg-faq">
             <h2 class="h4 fw-bold">Questions</h2>
-            <h3>How do I add this table in Power BI?</h3>
-            <p>In Power BI Desktop go to <strong>Modeling → New table</strong>, paste the DAX and press Enter. Then right-click the table, choose <strong>Mark as date table</strong>, and pick the Date column. Relate Date to the date column of your fact table.</p>
-            <h3>How does it get Hijri dates without Power Query?</h3>
-            <p>Power BI has no Hijri functions. The generator calculates every Hijri month start in your range and embeds them in a small DATATABLE inside the DAX. Each date then looks up its Hijri month, so the table works offline and refreshes instantly.</p>
-            <h3>Are the Ramadan and Eid dates exact?</h3>
-            <p>They follow the official Saudi Umm al-Qura calendar. Countries that rely on local moon sighting can differ by one day. If yours did, edit that month's start date in the DATATABLE.</p>
-            <h3>How do I compare this Ramadan with last Ramadan?</h3>
-            <p>Put <strong>Ramadan Day</strong> on the axis and <strong>Hijri Year</strong> in the legend. Every Ramadan lines up day by day, even though the Gregorian dates move about 11 days earlier each year.</p>
-            <h3>Why relative offsets?</h3>
-            <p>Filter on <strong>Month Offset</strong> between -2 and 0 to always show the last three months. It updates by itself every day, so nobody has to change a slicer again.</p>
+            <h3>How do I calculate year over year growth in DAX?</h3>
+            <p>Make a prior-year measure with <strong>SAMEPERIODLASTYEAR</strong>, then use <strong>DIVIDE(current - prior year, prior year)</strong>. DIVIDE returns blank instead of an error when last year has no data. Tick "YoY %" above and the builder writes both for you.</p>
+            <h3>How do I add all the measures at once?</h3>
+            <p>Use <strong>DAX query view</strong> in Power BI Desktop. Paste the whole script and click <strong>Update model with changes</strong>. Then set the % measures to Percentage format in the Measure tools ribbon.</p>
+            <h3>My YTD or PY measure is blank. Why?</h3>
+            <p>Time intelligence needs a real date table: one row per day, no gaps, marked as a date table, and related to your fact table. Use that table’s Date column on your visuals, not the date column from the fact table.</p>
+            <h3>What is the difference between Rolling 3M and 30D Avg?</h3>
+            <p><strong>Rolling 3M</strong> adds up the last three months, which is great for smoothing seasonal sales. <strong>30D Avg</strong> is the average per day over the last 30 days, which is better for trend lines on daily data.</p>
+            <h3>How does Ramadan vs last Ramadan work?</h3>
+            <p>Ramadan moves about 11 days earlier every year, so comparing March with March is misleading. The measure looks up the same Ramadan days in the previous Hijri year. Put <strong>Ramadan Day</strong> on the axis and you compare day 5 with day 5.</p>
           </section>
         </div>
       </div>
@@ -304,6 +333,6 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
   <script src="../assets/js/main.min.js" defer></script>
-  <script src="../assets/js/calendar-generator.min.js" defer></script>
+  <script src="../assets/js/measure-builder.min.js" defer></script>
 </body>
 </html>
