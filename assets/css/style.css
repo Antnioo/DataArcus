@@ -1274,8 +1274,8 @@ html[dir="rtl"] .navbar-nav {
 .article-body pre code{color:#e6edf3;white-space:pre;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
 html[dir="rtl"] .article-body ol,html[dir="rtl"] .article-body ul{padding-left:0;padding-right:2rem}
 /* Links inside articles use the brand accent */
-.article-body a{color:var(--accent);text-underline-offset:3px}
-.article-body a:hover{color:#fff}
+.article-body a:not(.btn){color:var(--accent);text-underline-offset:3px}
+.article-body a:not(.btn):hover{color:#fff}
 
 /* ===== Premium polish (update 12) ===== */
 /* Arabic typography: Inter keeps the Latin words, IBM Plex Sans Arabic draws the Arabic */
