@@ -1,0 +1,42 @@
+name: Update Power BI prices
+
+on:
+  schedule:
+    - cron: '0 5 * * 1'   # every Monday 05:00 UTC (09:00 Dubai)
+  workflow_dispatch:       # "Run workflow" button for a manual check
+
+permissions:
+  contents: write
+
+jobs:
+  check-prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check Microsoft prices
+        id: check
+        run: node scripts/update-powerbi-prices.mjs
+        continue-on-error: true
+
+      - name: Save updated prices
+        run: |
+          if git diff --quiet assets/data/powerbi-prices.json; then
+            echo "No changes"
+          else
+            git config user.name "DataArcus price bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add assets/data/powerbi-prices.json
+            git commit -m "Weekly Power BI price check $(date -u +%Y-%m-%d)"
+            git push
+          fi
+
+      - name: Flag problems (GitHub emails you when this fails)
+        if: steps.check.outcome == 'failure'
+        run: |
+          echo "::error::The price check could not verify every number. Open this run's log, step 'Check Microsoft prices', to see what needs a look."
+          exit 1
