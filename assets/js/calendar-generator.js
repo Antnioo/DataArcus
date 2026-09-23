@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const $ = (id) => document.getElementById(id);
   const track = (name, params) => { if (typeof window.dataArcusTrack === 'function') window.dataArcusTrack(name, params); };
   const STORE = 'dataarcus-calendar-generator';
+  const isAr = () => document.documentElement.lang === 'ar';
+  const L = (en, ar) => (isAr() ? ar : en);
 
   const MONTHS = {
     en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
@@ -43,7 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- state ----------
   const DEFAULTS = { name: 'Calendar', start: '2022-01-01', end: '2027-12-31', fy: 1, week: 'sun', weekend: 'sat-sun', lang: 'en', hijri: true, fiscal: true, relative: true };
   let state;
-  try { state = { ...DEFAULTS, ...JSON.parse(localStorage.getItem(STORE) || '{}') }; } catch (e) { state = { ...DEFAULTS }; }
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { saved = null; }
+  // First visit in Arabic: default the month and day names to Arabic too
+  state = { ...DEFAULTS, ...(saved ? {} : { lang: (isAr() || (() => { try { return localStorage.getItem('dataarcus-lang') === 'ar'; } catch (e) { return false; } })()) ? 'ar' : 'en' }), ...(saved || {}) };
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* private mode */ } };
 
   const q = (s) => '"' + String(s).replace(/"/g, '""') + '"';
@@ -162,22 +167,22 @@ ${L.join(',\n')}
     if (cur) out.push(cur);
     return out;
   };
-  const fmt = (t) => new Date(t).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  const fmt = (t) => new Date(t).toLocaleDateString(isAr() ? 'ar-u-nu-latn' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
 
   // ---------- render ----------
   const render = () => {
     const s = parse(state.start), e = parse(state.end);
     const bad = !(s && e) || e < s || (e - s) / DAY > 365 * 60;
-    $('err').textContent = bad ? 'End date must be after the start date (max 60 years).' : '';
+    $('err').textContent = bad ? L('End date must be after the start date (max 60 years).', 'يجب أن يكون تاريخ النهاية بعد تاريخ البداية (بحد أقصى 60 عامًا).') : '';
     if (bad) return;
     const dax = buildDax();
     $('dax').textContent = dax;
-    $('stats').textContent = `${Math.round((e - s) / DAY) + 1} rows · ${colCount} columns`;
+    $('stats').textContent = L(`${Math.round((e - s) / DAY) + 1} rows · ${colCount} columns`, `${Math.round((e - s) / DAY) + 1} صف · ${colCount} عمود`);
     const rows = previewRows();
-    $('preview').innerHTML = `<table class="tg-table"><tr><th>Date</th><th>Day</th>${state.hijri ? '<th>Hijri date</th><th>Ramadan</th>' : ''}<th>Weekend</th></tr>${rows.map((r) =>
+    $('preview').innerHTML = `<table class="tg-table"><tr><th>${L('Date', 'التاريخ')}</th><th>${L('Day', 'اليوم')}</th>${state.hijri ? `<th>${L('Hijri date', 'التاريخ الهجري')}</th><th>${L('Ramadan', 'رمضان')}</th>` : ''}<th>${L('Weekend', 'عطلة')}</th></tr>${rows.map((r) =>
       `<tr${r.ramadan ? ' class="ram"' : ''}><td>${r.date}</td><td>${r.day}</td>${state.hijri ? `<td>${r.hijri}</td><td>${r.ramadan ? '✓' : ''}</td>` : ''}<td>${r.weekend ? '✓' : ''}</td></tr>`).join('')}</table>`;
     const rl = ramadanList();
-    $('ramadan').innerHTML = state.hijri ? (rl.length ? rl.map((r) => `<span class="cg-chip">Ramadan ${r.y}: ${fmt(r.a)} to ${fmt(r.b)}</span>`).join('') : '<span class="text-white-50 small">No Ramadan in this range.</span>') : '';
+    $('ramadan').innerHTML = state.hijri ? (rl.length ? rl.map((r) => `<span class="cg-chip">${L(`Ramadan ${r.y}: ${fmt(r.a)} to ${fmt(r.b)}`, `رمضان ${r.y}: من ${fmt(r.a)} إلى ${fmt(r.b)}`)}</span>`).join('') : `<span class="text-white-50 small">${L('No Ramadan in this range.', 'لا يوجد رمضان ضمن هذا النطاق.')}</span>`) : '';
     $('ramWrap').style.display = state.hijri ? '' : 'none';
     save();
   };
@@ -191,20 +196,20 @@ ${L.join(',\n')}
   bind('cgName', 'name'); bind('cgStart', 'start'); bind('cgEnd', 'end'); bind('cgFy', 'fy', Number);
   bind('cgWeek', 'week'); bind('cgWeekend', 'weekend'); bind('cgLang', 'lang');
   bind('cgHijri', 'hijri'); bind('cgFiscal', 'fiscal'); bind('cgRel', 'relative');
-  if (!hijriFmt) { $('cgHijri').checked = false; $('cgHijri').disabled = true; state.hijri = false; $('hijriNote').textContent = 'Your browser does not support Hijri dates. Try Chrome, Edge or Safari.'; }
+  if (!hijriFmt) { $('cgHijri').checked = false; $('cgHijri').disabled = true; state.hijri = false; $('hijriNote').textContent = L('Your browser does not support Hijri dates. Try Chrome, Edge or Safari.', 'متصفحك لا يدعم التاريخ الهجري. جرّب Chrome أو Edge أو Safari.'); }
 
   const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.style.opacity = 1; clearTimeout(toast.h); toast.h = setTimeout(() => { t.style.opacity = 0; }, 1800); };
   $('copyBtn').addEventListener('click', () => {
     const text = $('dax').textContent;
-    const fallback = () => { const r = document.createRange(); r.selectNodeContents($('dax')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast('Selected. Press Ctrl+C to copy'); };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast('DAX copied. Paste it in New table'), fallback); else fallback();
+    const fallback = () => { const r = document.createRange(); r.selectNodeContents($('dax')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); toast(L('Selected. Press Ctrl+C to copy', 'تم التحديد. اضغط Ctrl+C للنسخ')); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast(L('DAX copied. Paste it in New table', 'تم نسخ DAX. الصقه في New table')), fallback); else fallback();
     track('calendar_copy', { hijri: state.hijri, week: state.week, weekend: state.weekend, fiscal_start: state.fy });
   });
   $('dlBtn').addEventListener('click', () => {
     const blob = new Blob([$('dax').textContent], { type: 'text/plain' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = tableName().toLowerCase().replace(/\s+/g, '-') + '-table.dax';
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    toast('Downloaded'); track('calendar_download', { hijri: state.hijri });
+    toast(L('Downloaded', 'تم التنزيل')); track('calendar_download', { hijri: state.hijri });
   });
   document.querySelectorAll('[data-quick]').forEach((b) => b.addEventListener('click', () => {
     const p = b.dataset.quick;
@@ -217,4 +222,5 @@ ${L.join(',\n')}
     render(); track('calendar_preset', { preset: p });
   }));
   render();
+  new MutationObserver(render).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 });

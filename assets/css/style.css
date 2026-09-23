@@ -1266,3 +1266,5 @@ html[dir="rtl"] .navbar-nav {
 .tool-mini-cal { font-weight: 700; color: var(--green); margin-bottom: 6px; }
 .tool-mini-code { font: 600 .85rem ui-monospace, Consolas, monospace; color: var(--accent-2); margin-bottom: 6px; }
 @media (prefers-reduced-motion: reduce) { .proof-dot { animation: none; } }
+
+.tool-mini-code, .th-code { direction: ltr; unicode-bidi: plaintext; }

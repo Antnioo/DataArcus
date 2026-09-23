@@ -51,6 +51,17 @@ class LanguageManager {
   getPageTranslations() {
     const path = window.location.pathname;
     
+    // Free tools pages (checked first: /tools/index.html also contains "index")
+    if (path.includes('power-bi-theme-generator')) {
+      return window.themeGeneratorTranslations;
+    } else if (path.includes('dax-calendar-table-generator')) {
+      return window.calendarGeneratorTranslations;
+    } else if (path.includes('dax-measure-builder')) {
+      return window.measureBuilderTranslations;
+    } else if (path.includes('/tools/')) {
+      return window.toolsHubTranslations;
+    }
+
     if (path.includes('adventureworks-dashboard')) {
       return window.adventureworksTranslations;
     } else if (path.includes('call-center-dashboard')) {
