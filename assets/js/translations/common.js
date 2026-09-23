@@ -5,6 +5,7 @@ window.commonTranslations = {
     nav: {
       services: "Services",
       portfolio: "Showcases",
+      tools: "Free Tools",
       about: "About", 
       contact: "Contact",
       consultation: "Book a Free Call"
@@ -28,7 +29,8 @@ window.commonTranslations = {
         about: "About",
         portfolio: "Showcases",
         contact: "Contact",
-        blog: "Blog"
+        blog: "Blog",
+        tools: "Free Power BI Tools"
       }
     },
     
@@ -51,6 +53,7 @@ window.commonTranslations = {
     nav: {
       services: "الخدمات",
       portfolio: "نماذج الحلول",
+      tools: "أدوات مجانية",
       about: "عن الشركة",
       contact: "تواصل معنا", 
       consultation: "احجز مكالمة مجانية"
@@ -74,7 +77,8 @@ window.commonTranslations = {
         about: "عن الشركة",
         portfolio: "نماذج الحلول", 
         contact: "تواصل معنا",
-        blog: "المدونة"
+        blog: "المدونة",
+        tools: "أدوات Power BI مجانية"
       }
     },
     
