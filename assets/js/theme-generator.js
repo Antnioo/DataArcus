@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const $ = (id) => document.getElementById(id);
   const track = (name, params) => { if (typeof window.dataArcusTrack === 'function') window.dataArcusTrack(name, params); };
   const STORE = 'dataarcus-theme-generator';
+  // Arabic/English for text drawn by this script (static page text uses data-i18n)
+  const isAr = () => document.documentElement.lang === 'ar';
+  const L = (en, ar) => (isAr() ? ar : en);
+  const PRESET_AR = { 'DataArcus': 'داتا أركوس', 'Corporate': 'رسمي', 'Colorblind safe': 'آمن لعمى الألوان', 'Desert Gulf': 'صحراء الخليج', 'Midnight': 'منتصف الليل', 'Earthy': 'ترابي' };
 
   const PRESETS = {
     'DataArcus': { data: ['#00d4ff', '#6c5ce7', '#00cec9', '#fd79a8', '#0084ff', '#a29bfe', '#fdcb6e', '#40f3ff'], ui: { background: '#0a0f1c', card: '#1a1f2e', text: '#f8fafc', accent: '#00d4ff', good: '#00b894', neutral: '#fdcb6e', bad: '#e17055' } },
@@ -16,7 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
     'Midnight': { data: ['#4cc9f0', '#f72585', '#ffd166', '#4361ee', '#b5179e', '#90e0ef', '#7209b7', '#06d6a0'], ui: { background: '#0b0d17', card: '#15182a', text: '#e8eaf6', accent: '#4cc9f0', good: '#06d6a0', neutral: '#ffd166', bad: '#ef476f' } },
     'Earthy': { data: ['#6b705c', '#cb997e', '#3f4238', '#e9c46a', '#8a5a44', '#a5a58d', '#264653', '#ddbea9'], ui: { background: '#f7f4ef', card: '#ffffff', text: '#2d2a26', accent: '#6b705c', good: '#588157', neutral: '#e9c46a', bad: '#bc4749' } }
   };
-  const UI_LABELS = { background: 'Page', card: 'Visual', text: 'Text', accent: 'Table accent', good: 'Good', neutral: 'Neutral', bad: 'Bad' };
+  const UI_LABELS_EN = { background: 'Page', card: 'Visual', text: 'Text', accent: 'Table accent', good: 'Good', neutral: 'Neutral', bad: 'Bad' };
+  const UI_LABELS_AR = { background: 'الصفحة', card: 'العنصر المرئي', text: 'النص', accent: 'لون الجدول', good: 'جيد', neutral: 'محايد', bad: 'سيئ' };
+  const uiLabel = (k) => (isAr() ? UI_LABELS_AR : UI_LABELS_EN)[k];
+  const UI_LABELS = UI_LABELS_EN;
 
   // ---------- color math ----------
   const clampHex = (v) => { v = (v || '').trim(); if (!v.startsWith('#')) v = '#' + v; return /^#[0-9a-fA-F]{6}$/.test(v) ? v.toLowerCase() : null; };
@@ -57,8 +64,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- builders ----------
   const colorInput = (key, value, label) => `<div class="tg-color"><input type="color" value="${value}" data-key="${key}" aria-label="${label} color"><input type="text" value="${value}" data-key="${key}" maxlength="7" aria-label="${label} hex code" spellcheck="false"><span>${label}</span></div>`;
   const renderInputs = () => {
-    $('dataColors').innerHTML = state.data.map((c, i) => colorInput('d' + i, c, 'Color ' + (i + 1))).join('');
-    $('uiColors').innerHTML = Object.keys(UI_LABELS).map((k) => colorInput('u_' + k, state.ui[k], UI_LABELS[k])).join('');
+    $('dataColors').innerHTML = state.data.map((c, i) => colorInput('d' + i, c, L('Color ', 'اللون ') + (i + 1))).join('');
+    $('uiColors').innerHTML = Object.keys(UI_LABELS).map((k) => colorInput('u_' + k, state.ui[k], uiLabel(k))).join('');
     $('themeName').value = state.name; $('font').value = state.font;
     document.querySelectorAll('.tg-preset').forEach((b) => b.classList.toggle('active', b.dataset.p === state.preset));
   };
@@ -101,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const renderPreview = () => {
     const u = state.ui, d = state.data, sec = mix(u.text, u.card, 0.35), grid = mix(u.text, u.card, 0.85);
     const card = (k, v, delta, good) => `<div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${sec}">${k}</div><div class="v">${v}</div><div class="d" style="color:${good ? u.good : u.bad}">${delta}</div></div>`;
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    const months = isAr() ? ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'] : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
     const s1 = [42, 55, 48, 63, 70, 78], s2 = [30, 34, 41, 38, 49, 52], s3 = [18, 22, 20, 27, 25, 31];
     const bars = months.map((m, i) => [s1[i], s2[i], s3[i]].map((v, j) => { const x = 34 + i * 58 + j * 15, h = v * 1.6; return `<rect x="${x}" y="${150 - h}" width="13" height="${h}" rx="2" fill="${d[j]}"/>`; }).join('') + `<text x="${34 + i * 58 + 21}" y="166" font-size="10" text-anchor="middle" fill="${sec}">${m}</text>`).join('');
     const gridLines = [0, 40, 80, 120].map((v) => `<line x1="28" x2="380" y1="${150 - v}" y2="${150 - v}" stroke="${grid}" stroke-width="1"/><text x="22" y="${154 - v}" font-size="9" text-anchor="end" fill="${sec}">${v / 1.6 | 0}</text>`).join('');
@@ -111,19 +118,19 @@ document.addEventListener('DOMContentLoaded', () => {
     $('preview').style.background = u.background;
     $('preview').style.fontFamily = `'${state.font}', 'Segoe UI', sans-serif`;
     $('preview').innerHTML = `
-      <div class="tg-kpis">${card('Revenue', 'AED 1.24M', '▲ 12.4% vs LM', true)}${card('Orders', '8,432', '▲ 5.1% vs LM', true)}${card('Return rate', '4.8%', '▼ 0.6 pts', false)}</div>
+      <div class="tg-kpis">${card(L('Revenue', 'الإيرادات'), 'AED 1.24M', L('▲ 12.4% vs LM', '▲ 12.4% عن الشهر الماضي'), true)}${card(L('Orders', 'الطلبات'), '8,432', L('▲ 5.1% vs LM', '▲ 5.1% عن الشهر الماضي'), true)}${card(L('Return rate', 'نسبة المرتجعات'), '4.8%', L('▼ 0.6 pts', '▼ 0.6 نقطة'), false)}</div>
       <div class="tg-grid2">
-        <div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">Sales by channel</div>
+        <div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">${L('Sales by channel', 'المبيعات حسب القناة')}</div>
           <svg viewBox="0 0 390 172" role="img" aria-label="Clustered bar chart preview">${gridLines}${bars}</svg></div>
-        <div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">Share by brand</div>
+        <div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">${L('Share by brand', 'الحصة حسب العلامة')}</div>
           <svg viewBox="0 0 140 140" style="max-width:170px;margin:6px auto 0" role="img" aria-label="Donut chart preview">${donut}<text x="70" y="75" font-size="16" font-weight="800" text-anchor="middle" fill="${u.text}">40%</text></svg></div>
       </div>
       <div class="tg-grid2" style="margin-top:10px">
-        <div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">Trend</div>
+        <div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${u.text};opacity:1;font-weight:700;text-transform:none;font-size:.8rem">${L('Trend', 'الاتجاه')}</div>
           <svg viewBox="0 0 390 160" role="img" aria-label="Line chart preview">${gridLines}<polyline points="${pts(s1, 1.6)}" fill="none" stroke="${d[0]}" stroke-width="3" stroke-linejoin="round"/><polyline points="${pts(s2, 1.6)}" fill="none" stroke="${d[1]}" stroke-width="3" stroke-linejoin="round"/></svg></div>
         <div class="tg-card" style="background:${u.card};color:${u.text};overflow-x:auto"><table class="tg-table">
-          <tr style="background:${u.accent}">${['Brand', 'Sales', 'Status'].map((h) => `<th style="color:${contrast(u.accent, '#ffffff') >= contrast(u.accent, '#111111') ? '#ffffff' : '#111111'}">${h}</th>`).join('')}</tr>
-          ${[['North', '412K', 'good'], ['South', '288K', 'neutral'], ['East', '176K', 'bad']].map((r, i) => `<tr style="background:${i % 2 ? mix(u.card, u.accent, 0.08) : u.card}"><td>${r[0]}</td><td>${r[1]}</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${u[r[2]]}"></span></td></tr>`).join('')}
+          <tr style="background:${u.accent}">${(isAr() ? ['العلامة', 'المبيعات', 'الحالة'] : ['Brand', 'Sales', 'Status']).map((h) => `<th style="color:${contrast(u.accent, '#ffffff') >= contrast(u.accent, '#111111') ? '#ffffff' : '#111111'}">${h}</th>`).join('')}</tr>
+          ${[[L('North', 'الشمال'), '412K', 'good'], [L('South', 'الجنوب'), '288K', 'neutral'], [L('East', 'الشرق'), '176K', 'bad']].map((r, i) => `<tr style="background:${i % 2 ? mix(u.card, u.accent, 0.08) : u.card}"><td>${r[0]}</td><td>${r[1]}</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${u[r[2]]}"></span></td></tr>`).join('')}
         </table></div>
       </div>`;
   };
@@ -131,21 +138,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const renderContrast = () => {
     const u = state.ui, sec = mix(u.text, u.card, 0.35);
     const checks = [
-      ['Text on visuals', contrast(u.text, u.card), 4.5],
-      ['Labels on visuals', contrast(sec, u.card), 4.5],
-      ['Text on page', contrast(u.text, u.background), 4.5],
-      ['Color 1 on visuals', contrast(state.data[0], u.card), 3]
+      [L('Text on visuals', 'النص على العناصر المرئية'), contrast(u.text, u.card), 4.5],
+      [L('Labels on visuals', 'التسميات على العناصر المرئية'), contrast(sec, u.card), 4.5],
+      [L('Text on page', 'النص على الصفحة'), contrast(u.text, u.background), 4.5],
+      [L('Color 1 on visuals', 'اللون 1 على العناصر المرئية'), contrast(state.data[0], u.card), 3]
     ];
     const weak = state.data.map((c, i) => [i + 1, contrast(c, u.card)]).filter(([, r]) => r < 1.6).map(([i]) => i);
-    $('contrast').innerHTML = checks.map(([k, r, min]) => `<div class="${r >= min ? 'ok' : 'warn'}"><i class="bi ${r >= min ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-1"></i>${k}: ${r.toFixed(1)}:1 ${r >= min ? '' : `(aim for ${min}:1)`}</div>`).join('')
-      + (weak.length ? `<div class="warn"><i class="bi bi-exclamation-triangle me-1"></i>Color ${weak.join(', ')} almost disappears on the visual background.</div>` : '');
+    $('contrast').innerHTML = checks.map(([k, r, min]) => `<div class="${r >= min ? 'ok' : 'warn'}"><i class="bi ${r >= min ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-1"></i>${k}: ${r.toFixed(1)}:1 ${r >= min ? '' : L(`(aim for ${min}:1)`, `(المطلوب ${min}:1)`)}</div>`).join('')
+      + (weak.length ? `<div class="warn"><i class="bi bi-exclamation-triangle me-1"></i>${L(`Color ${weak.join(', ')} almost disappears on the visual background.`, `اللون ${weak.join('، ')} يكاد يختفي على خلفية العنصر المرئي.`)}</div>` : '');
   };
 
   const renderJson = () => { $('json').textContent = JSON.stringify(buildTheme(), null, 2); };
   const renderAll = () => { renderPreview(); renderContrast(); renderJson(); save(); };
 
   // ---------- events ----------
-  $('presets').innerHTML = Object.entries(PRESETS).map(([name, p]) => `<button class="tg-preset" type="button" data-p="${name}"><span class="sw">${p.data.slice(0, 5).map((c) => `<i style="background:${c}"></i>`).join('')}</span>${name}</button>`).join('');
+  const renderPresets = () => {
+    $('presets').innerHTML = Object.entries(PRESETS).map(([name, p]) => `<button class="tg-preset${name === state.preset ? ' active' : ''}" type="button" data-p="${name}"><span class="sw">${p.data.slice(0, 5).map((c) => `<i style="background:${c}"></i>`).join('')}</span>${isAr() ? PRESET_AR[name] : name}</button>`).join('');
+  };
+  renderPresets();
   $('presets').addEventListener('click', (e) => {
     const b = e.target.closest('[data-p]'); if (!b) return;
     const p = PRESETS[b.dataset.p]; state.preset = b.dataset.p; state.data = p.data.slice(); state.ui = { ...p.ui };
@@ -171,8 +181,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.style.opacity = 1; clearTimeout(toast.h); toast.h = setTimeout(() => { t.style.opacity = 0; }, 1800); };
   $('copyBtn').addEventListener('click', () => {
     const text = JSON.stringify(buildTheme(), null, 2);
-    const fallback = () => { const r = document.createRange(); r.selectNodeContents($('json')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Selected. Press Ctrl+C to copy'); };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast('Theme JSON copied'), fallback); else fallback();
+    const fallback = () => { const r = document.createRange(); r.selectNodeContents($('json')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast(L('Selected. Press Ctrl+C to copy', 'تم التحديد. اضغط Ctrl+C للنسخ')); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast(L('Theme JSON copied', 'تم نسخ ملف السمة')), fallback); else fallback();
     track('theme_copy', { preset: state.preset || 'custom' });
   });
   $('dlBtn').addEventListener('click', () => {
@@ -182,9 +192,12 @@ document.addEventListener('DOMContentLoaded', () => {
     a.download = (state.name || 'power-bi-theme').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase() + '.json';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    toast('Downloaded. Import it via View → Themes');
+    toast(L('Downloaded. Import it via View → Themes', 'تم التنزيل. استورده من View → Themes'));
     track('theme_download', { preset: state.preset || 'custom', font: state.font });
   });
 
   renderInputs(); renderAll();
+  // Redraw script-generated text when the visitor switches language
+  new MutationObserver(() => { renderPresets(); renderInputs(); renderAll(); })
+    .observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 });

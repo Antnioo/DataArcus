@@ -9,6 +9,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const $ = (id) => document.getElementById(id);
   const track = (name, params) => { if (typeof window.dataArcusTrack === 'function') window.dataArcusTrack(name, params); };
   const STORE = 'dataarcus-measure-builder';
+  const isAr = () => document.documentElement.lang === 'ar';
+  const L = (en, ar) => (isAr() ? ar : en);
+  // Arabic explanations per pattern (measure names stay English because they go into the model)
+  const WHAT_AR = {
+    mtd: 'من بداية الشهر حتى التاريخ المحدد.',
+    qtd: 'من بداية الربع حتى التاريخ المحدد.',
+    ytd: 'من بداية السنة حتى التاريخ المحدد. يستخدم نهاية سنتك المالية إذا حددتها.',
+    py: 'نفس الفترة من السنة الماضية.',
+    yoy: 'الفرق عن السنة الماضية بنفس وحدة المقياس الأساسي.',
+    yoyPct: 'نسبة النمو عن السنة الماضية. تظهر فارغة إذا لم توجد بيانات للسنة الماضية.',
+    pytd: 'السنة الماضية، لنفس فترة YTD.',
+    ytdPct: 'نمو YTD مقارنة بنفس الفترة من السنة الماضية.',
+    pm: 'الشهر السابق (يُرجع الاختيار الحالي شهرًا واحدًا).',
+    momPct: 'نسبة النمو عن الشهر السابق.',
+    roll: () => `إجمالي آخر ${state.n} أشهر حتى التاريخ المحدد.`,
+    avgDays: () => `المتوسط اليومي لآخر ${state.days} يومًا. يخفف القفزات في خطوط الاتجاه.`,
+    running: 'الإجمالي التراكمي من أول تاريخ حتى التاريخ المحدد.',
+    share: 'النسبة من الإجمالي للفترة المعروضة، مثل حصة كل علامة تجارية من المبيعات.',
+    ramLY: 'نفس أيام رمضان من السنة الهجرية الماضية. ضع Ramadan Day على المحور للمقارنة يومًا بيوم. يحتاج جدول تقويم داتا أركوس.',
+    ramPct: 'نسبة النمو مقارنة بنفس أيام رمضان الماضي.'
+  };
+  const GROUP_AR = { 'To date': 'حتى تاريخه', 'Compare': 'مقارنة', 'Rolling': 'متحرك وتراكمي', 'Ramadan': 'رمضان (يحتاج تقويم داتا أركوس)' };
 
   const DEFAULTS = {
     mode: 'column', agg: 'SUM', fact: 'Sales', column: 'Amount', base: 'Total Sales', existing: 'Total Sales', home: 'Sales',
@@ -76,9 +98,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const b = mRef(baseName()), d = dateRef(), out = [];
     if (state.mode === 'column') {
       const expr = state.agg === 'COUNTROWS' ? `COUNTROWS ( ${tbl(state.fact)} )` : `${state.agg} ( ${colRef(state.fact, state.column)} )`;
-      out.push({ name: baseName(), expr, what: 'Your base measure. Every other measure builds on it.', auto: false });
+      out.push({ name: baseName(), expr, what: L('Your base measure. Every other measure builds on it.', 'المقياس الأساسي. كل المقاييس الأخرى مبنية عليه.'), auto: false });
     }
-    PATTERNS.forEach((p) => { if (picked.has(p.id)) out.push({ name: `${baseName()} ${val(p.suffix)}`, expr: p.dax(b, d), what: val(p.what), pct: !!p.pct, auto: !state.pick.includes(p.id), g: p.g }); });
+    PATTERNS.forEach((p) => { if (picked.has(p.id)) out.push({ name: `${baseName()} ${val(p.suffix)}`, expr: p.dax(b, d), what: isAr() ? val(WHAT_AR[p.id]) : val(p.what), pct: !!p.pct, auto: !state.pick.includes(p.id), g: p.g }); });
     return out;
   };
   const indent = (s, pad) => s.split('\n').map((l, i) => (i === 0 ? l : pad + l)).join('\n');
@@ -94,9 +116,9 @@ ${ms.map((m) => `    MEASURE ${h}[${m.name.replace(/]/g, ']]')}] =\n        ${in
 EVALUATE
     { ${mRef(baseName())} }`;
     $('script').textContent = script;
-    $('count').textContent = `${ms.length} measure${ms.length === 1 ? '' : 's'}`;
+    $('count').textContent = L(`${ms.length} measure${ms.length === 1 ? '' : 's'}`, `${ms.length} مقياس`);
     $('list').innerHTML = ms.map((m, i) => `<div class="mb-card">
-        <div class="mb-head"><div><b>${escapeHtml(m.name)}</b>${m.pct ? '<span class="mb-tag">Format as %</span>' : ''}${m.auto ? '<span class="mb-tag dep">Added: needed by another measure</span>' : ''}<div class="mb-what">${escapeHtml(m.what)}</div></div>
+        <div class="mb-head"><div><b>${escapeHtml(m.name)}</b>${m.pct ? `<span class="mb-tag">${L('Format as %', 'تنسيق كنسبة %')}</span>` : ''}${m.auto ? `<span class="mb-tag dep">${L('Added: needed by another measure', 'أُضيف: يحتاجه مقياس آخر')}</span>` : ''}<div class="mb-what">${escapeHtml(m.what)}</div></div>
         <button class="tg-btn2 mb-copy" type="button" data-i="${i}" aria-label="Copy ${escapeHtml(m.name)}"><i class="bi bi-clipboard"></i></button></div>
         <pre class="tg-json mb-pre">${escapeHtml(`${m.name} =\n${m.expr}`)}</pre></div>`).join('');
     $('list').querySelectorAll('.mb-copy').forEach((btn) => btn.addEventListener('click', () => {
@@ -126,8 +148,9 @@ EVALUATE
   });
   // pattern checkboxes grouped
   const groups = [...new Set(PATTERNS.map((p) => p.g))];
-  $('patterns').innerHTML = groups.map((g) => `<div class="mb-group"><span class="tg-label">${g === 'Ramadan' ? 'Ramadan (needs the DataArcus calendar)' : g}</span>${PATTERNS.filter((p) => p.g === g).map((p) =>
-    `<label class="mb-check"><input type="checkbox" value="${p.id}" ${state.pick.includes(p.id) ? 'checked' : ''}><span>${escapeHtml(val(p.suffix))}</span></label>`).join('')}</div>`).join('');
+  const renderPatterns = () => { $('patterns').innerHTML = groups.map((g) => `<div class="mb-group"><span class="tg-label">${isAr() ? GROUP_AR[g] : (g === 'Ramadan' ? 'Ramadan (needs the DataArcus calendar)' : g)}</span>${PATTERNS.filter((p) => p.g === g).map((p) =>
+    `<label class="mb-check"><input type="checkbox" value="${p.id}" ${state.pick.includes(p.id) ? 'checked' : ''}><span>${escapeHtml(val(p.suffix))}</span></label>`).join('')}</div>`).join(''); };
+  renderPatterns();
   $('patterns').addEventListener('change', (e) => {
     if (e.target.type !== 'checkbox') return;
     state.pick = [...$('patterns').querySelectorAll('input:checked')].map((i) => i.value);
@@ -139,15 +162,15 @@ EVALUATE
   // ---------- copy / download ----------
   const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.style.opacity = 1; clearTimeout(toast.h); toast.h = setTimeout(() => { t.style.opacity = 0; }, 1800); };
   const copy = (text, pre) => {
-    const fallback = () => { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast('Selected. Press Ctrl+C to copy'); };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast('Copied'), fallback); else fallback();
+    const fallback = () => { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast(L('Selected. Press Ctrl+C to copy', 'تم التحديد. اضغط Ctrl+C للنسخ')); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast(L('Copied', 'تم النسخ')), fallback); else fallback();
   };
   $('copyAll').addEventListener('click', () => { copy($('script').textContent, $('script')); track('measure_copy_all', { count: buildMeasures().length, mode: state.mode }); });
   $('dlBtn').addEventListener('click', () => {
     const blob = new Blob([$('script').textContent], { type: 'text/plain' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = baseName().toLowerCase().replace(/[^\w]+/g, '-') + '-measures.dax';
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    toast('Downloaded'); track('measure_download', { count: buildMeasures().length });
+    toast(L('Downloaded', 'تم التنزيل')); track('measure_download', { count: buildMeasures().length });
   });
   document.querySelectorAll('[data-tab-out]').forEach((b) => b.addEventListener('click', () => {
     document.querySelectorAll('[data-tab-out]').forEach((x) => x.classList.toggle('active', x === b));
@@ -156,4 +179,6 @@ EVALUATE
   }));
 
   setMode(); render();
+  new MutationObserver(() => { renderPatterns(); render(); })
+    .observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 });

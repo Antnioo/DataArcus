@@ -149,6 +149,8 @@
     .mb-copy { padding: 6px 12px; }
     .mb-note { font-size: .82rem; color: #fdcb6e; }
     .tg-panel a.hover-accent { color: var(--accent); }
+    /* Code and hex values always read left to right, even on the Arabic page */
+    .tg-json, .tg-color input[type=text], .mb-pre, #cgStart, #cgEnd { direction: ltr; text-align: left; unicode-bidi: plaintext; }
   </style>
 </head>
 <body>
@@ -179,46 +181,46 @@
   <main class="tg">
     <div class="container">
       <header class="mb-4">
-        <span class="badge rounded-pill text-bg-dark border border-secondary mb-2">Free tool · No sign-up</span>
-        <h1 class="display-5 fw-bold">DAX Measure Builder</h1>
-        <p class="lead text-white-50 mb-0">One base measure in, a full set of time intelligence out: YTD, prior year, YoY %, rolling months, running totals, even Ramadan vs last Ramadan. Add them all to Power BI in one click.</p>
+        <span class="badge rounded-pill text-bg-dark border border-secondary mb-2" data-i18n="mb.badge">Free tool · No sign-up</span>
+        <h1 class="display-5 fw-bold" data-i18n="mb.title">DAX Measure Builder</h1>
+        <p class="lead text-white-50 mb-0" data-i18n="mb.subtitle">One base measure in, a full set of time intelligence out: YTD, prior year, YoY %, rolling months, running totals, even Ramadan vs last Ramadan. Add them all to Power BI in one click.</p>
       </header>
 
       <div class="row g-4">
         <div class="col-lg-5">
           <div class="tg-panel d-flex flex-column gap-4">
             <div>
-              <span class="tg-label">1. Your base measure</span>
+              <span class="tg-label" data-i18n="mb.step1">1. Your base measure</span>
               <div class="mb-seg mb-3" role="group" aria-label="Base measure source">
-                <button type="button" data-mode="column">Build from a column</button>
-                <button type="button" data-mode="existing">I already have one</button>
+                <button type="button" data-mode="column" data-i18n="mb.fromColumn">Build from a column</button>
+                <button type="button" data-mode="existing" data-i18n="mb.haveOne">I already have one</button>
               </div>
               <div id="modeColumn" class="cg-form">
-                <div><label class="tg-label" for="agg">Calculation</label>
-                  <select id="agg" class="form-select"><option>SUM</option><option>AVERAGE</option><option>DISTINCTCOUNT</option><option>COUNT</option><option>MIN</option><option>MAX</option><option value="COUNTROWS">COUNTROWS (count rows)</option></select></div>
-                <div><label class="tg-label" for="base">Measure name</label><input id="base" class="form-control" maxlength="60"></div>
-                <div><label class="tg-label" for="fact">Fact table</label><input id="fact" class="form-control" maxlength="60"></div>
-                <div><label class="tg-label" for="column">Column</label><input id="column" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="agg" data-i18n="mb.calc">Calculation</label>
+                  <select id="agg" class="form-select"><option>SUM</option><option>AVERAGE</option><option>DISTINCTCOUNT</option><option>COUNT</option><option>MIN</option><option>MAX</option><option value="COUNTROWS" data-i18n="mb.countrows">COUNTROWS (count rows)</option></select></div>
+                <div><label class="tg-label" for="base" data-i18n="mb.measureName">Measure name</label><input id="base" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="fact" data-i18n="mb.fact">Fact table</label><input id="fact" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="column" data-i18n="mb.column">Column</label><input id="column" class="form-control" maxlength="60"></div>
               </div>
               <div id="modeExisting" class="cg-form">
-                <div><label class="tg-label" for="existing">Existing measure name</label><input id="existing" class="form-control" maxlength="60"></div>
-                <div><label class="tg-label" for="home">Put new measures in table</label><input id="home" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="existing" data-i18n="mb.existing">Existing measure name</label><input id="existing" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="home" data-i18n="mb.home">Put new measures in table</label><input id="home" class="form-control" maxlength="60"></div>
               </div>
             </div>
             <div>
-              <span class="tg-label">2. Your date table</span>
+              <span class="tg-label" data-i18n="mb.step2">2. Your date table</span>
               <div class="cg-form">
-                <div><label class="tg-label" for="cal">Date table</label><input id="cal" class="form-control" maxlength="60"></div>
-                <div><label class="tg-label" for="dateCol">Date column</label><input id="dateCol" class="form-control" maxlength="60"></div>
-                <div><label class="tg-label" for="fyEnd">Fiscal year ends</label>
-                  <select id="fyEnd" class="form-select"><option value="12-31">31 December</option><option value="3-31">31 March</option><option value="6-30">30 June</option><option value="9-30">30 September</option></select></div>
-                <div><label class="tg-label" for="n">Rolling months / avg days</label>
+                <div><label class="tg-label" for="cal" data-i18n="mb.cal">Date table</label><input id="cal" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="dateCol" data-i18n="mb.dateCol">Date column</label><input id="dateCol" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="fyEnd" data-i18n="mb.fyEnd">Fiscal year ends</label>
+                  <select id="fyEnd" class="form-select"><option value="12-31" data-i18n="mb.fy.dec">31 December</option><option value="3-31" data-i18n="mb.fy.mar">31 March</option><option value="6-30" data-i18n="mb.fy.jun">30 June</option><option value="9-30" data-i18n="mb.fy.sep">30 September</option></select></div>
+                <div><label class="tg-label" for="n" data-i18n="mb.rolling">Rolling months / avg days</label>
                   <div class="d-flex gap-2"><input id="n" type="number" min="1" max="36" class="form-control" aria-label="Rolling months"><input id="days" type="number" min="1" max="365" class="form-control" aria-label="Average days"></div></div>
               </div>
-              <p class="small text-white-50 mt-2 mb-0">No date table yet? <a href="dax-calendar-table-generator.html" class="hover-accent">Generate one here</a> first.</p>
+              <p class="small text-white-50 mt-2 mb-0" data-i18n-html="mb.noDate">No date table yet? <a href="dax-calendar-table-generator.html" class="hover-accent">Generate one here</a> first.</p>
             </div>
             <div>
-              <span class="tg-label">3. Pick your measures</span>
+              <span class="tg-label" data-i18n="mb.step3">3. Pick your measures</span>
               <div id="patterns"></div>
             </div>
           </div>
@@ -228,24 +230,24 @@
           <div class="tg-panel d-flex flex-column gap-3">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
               <div class="mb-seg" role="tablist" aria-label="Output format">
-                <button type="button" class="active" data-tab-out="all">All at once</button>
-                <button type="button" data-tab-out="one">One by one</button>
+                <button type="button" class="active" data-tab-out="all" data-i18n="mb.allAtOnce">All at once</button>
+                <button type="button" data-tab-out="one" data-i18n="mb.oneByOne">One by one</button>
               </div>
               <span class="small text-white-50" id="count"></span>
             </div>
             <div id="outAll" class="d-flex flex-column gap-3">
               <div class="tg-actions justify-content-end">
-                <button class="tg-btn2" id="dlBtn" type="button"><i class="bi bi-download me-1"></i>Download</button>
-                <button class="btn btn-accent" id="copyAll" type="button"><i class="bi bi-clipboard me-1"></i>Copy all measures</button>
+                <button class="tg-btn2" id="dlBtn" type="button"><i class="bi bi-download me-1"></i><span data-i18n="mb.download">Download</span></button>
+                <button class="btn btn-accent" id="copyAll" type="button"><i class="bi bi-clipboard me-1"></i><span data-i18n="mb.copyAll">Copy all measures</span></button>
               </div>
               <pre class="tg-json" id="script" style="max-height:520px"></pre>
-              <p class="small text-white-50 mb-0">In Power BI Desktop open <strong>DAX query view</strong> (left toolbar), paste, and click <strong>Update model with changes</strong>. Every measure is added in one go.</p>
+              <p class="small text-white-50 mb-0" data-i18n-html="mb.allHow">In Power BI Desktop open <strong>DAX query view</strong> (left toolbar), paste, and click <strong>Update model with changes</strong>. Every measure is added in one go.</p>
             </div>
             <div id="outOne" style="display:none">
-              <p class="small text-white-50">For <strong>Modeling → New measure</strong>: copy each one and paste. Create them in this order.</p>
+              <p class="small text-white-50" data-i18n-html="mb.oneHow">For <strong>Modeling → New measure</strong>: copy each one and paste. Create them in this order.</p>
               <div id="list"></div>
             </div>
-            <p class="mb-note mb-0" id="ramNote"><i class="bi bi-moon-stars me-1"></i>Ramadan measures use the Hijri Year, Is Ramadan and Ramadan Day columns from the <a href="dax-calendar-table-generator.html" class="hover-accent">DataArcus calendar</a>.</p>
+            <p class="mb-note mb-0" id="ramNote"><i class="bi bi-moon-stars me-1"></i><span data-i18n-html="mb.ramNote">Ramadan measures use the Hijri Year, Is Ramadan and Ramadan Day columns from the <a href="dax-calendar-table-generator.html" class="hover-accent">DataArcus calendar</a>.</span></p>
           </div>
         </div>
       </div>
@@ -253,23 +255,23 @@
       <div class="row mt-5 justify-content-center">
         <div class="col-lg-8">
           <div class="tg-cta mb-5 text-center">
-            <h2 class="h4 fw-bold mb-2">Measures are easy. The right numbers are not.</h2>
-            <p class="text-white-50 mb-3">When totals don’t match, relationships double count, or YoY looks wrong, the problem is the model. DataArcus builds and fixes Power BI data models.</p>
-            <a href="../index.html#contact" class="btn btn-accent">Book a Free Call</a>
-            <a href="dax-calendar-table-generator.html" class="tg-btn2 ms-2 text-decoration-none d-inline-block">Free DAX Calendar Generator</a>
+            <h2 class="h4 fw-bold mb-2" data-i18n="mb.cta.title">Measures are easy. The right numbers are not.</h2>
+            <p class="text-white-50 mb-3" data-i18n="mb.cta.desc">When totals don’t match, relationships double count, or YoY looks wrong, the problem is the model. DataArcus builds and fixes Power BI data models.</p>
+            <a href="../index.html#contact" class="btn btn-accent" data-i18n="nav.consultation">Book a Free Call</a>
+            <a href="dax-calendar-table-generator.html" class="tg-btn2 ms-2 text-decoration-none d-inline-block" data-i18n="mb.cta.next">Free DAX Calendar Generator</a>
           </div>
           <section class="tg-faq">
-            <h2 class="h4 fw-bold">Questions</h2>
-            <h3>How do I calculate year over year growth in DAX?</h3>
-            <p>Make a prior-year measure with <strong>SAMEPERIODLASTYEAR</strong>, then use <strong>DIVIDE(current - prior year, prior year)</strong>. DIVIDE returns blank instead of an error when last year has no data. Tick "YoY %" above and the builder writes both for you.</p>
-            <h3>How do I add all the measures at once?</h3>
-            <p>Use <strong>DAX query view</strong> in Power BI Desktop. Paste the whole script and click <strong>Update model with changes</strong>. Then set the % measures to Percentage format in the Measure tools ribbon.</p>
-            <h3>My YTD or PY measure is blank. Why?</h3>
-            <p>Time intelligence needs a real date table: one row per day, no gaps, marked as a date table, and related to your fact table. Use that table’s Date column on your visuals, not the date column from the fact table.</p>
-            <h3>What is the difference between Rolling 3M and 30D Avg?</h3>
-            <p><strong>Rolling 3M</strong> adds up the last three months, which is great for smoothing seasonal sales. <strong>30D Avg</strong> is the average per day over the last 30 days, which is better for trend lines on daily data.</p>
-            <h3>How does Ramadan vs last Ramadan work?</h3>
-            <p>Ramadan moves about 11 days earlier every year, so comparing March with March is misleading. The measure looks up the same Ramadan days in the previous Hijri year. Put <strong>Ramadan Day</strong> on the axis and you compare day 5 with day 5.</p>
+            <h2 class="h4 fw-bold" data-i18n="mb.faq.title">Questions</h2>
+            <h3 data-i18n="mb.faq.q1">How do I calculate year over year growth in DAX?</h3>
+            <p data-i18n-html="mb.faq.a1">Make a prior-year measure with <strong>SAMEPERIODLASTYEAR</strong>, then use <strong>DIVIDE(current - prior year, prior year)</strong>. DIVIDE returns blank instead of an error when last year has no data. Tick "YoY %" above and the builder writes both for you.</p>
+            <h3 data-i18n="mb.faq.q2">How do I add all the measures at once?</h3>
+            <p data-i18n-html="mb.faq.a2">Use <strong>DAX query view</strong> in Power BI Desktop. Paste the whole script and click <strong>Update model with changes</strong>. Then set the % measures to Percentage format in the Measure tools ribbon.</p>
+            <h3 data-i18n="mb.faq.q3">My YTD or PY measure is blank. Why?</h3>
+            <p data-i18n="mb.faq.a3">Time intelligence needs a real date table: one row per day, no gaps, marked as a date table, and related to your fact table. Use that table’s Date column on your visuals, not the date column from the fact table.</p>
+            <h3 data-i18n="mb.faq.q4">What is the difference between Rolling 3M and 30D Avg?</h3>
+            <p data-i18n-html="mb.faq.a4"><strong>Rolling 3M</strong> adds up the last three months, which is great for smoothing seasonal sales. <strong>30D Avg</strong> is the average per day over the last 30 days, which is better for trend lines on daily data.</p>
+            <h3 data-i18n="mb.faq.q5">How does Ramadan vs last Ramadan work?</h3>
+            <p data-i18n-html="mb.faq.a5">Ramadan moves about 11 days earlier every year, so comparing March with March is misleading. The measure looks up the same Ramadan days in the previous Hijri year. Put <strong>Ramadan Day</strong> on the axis and you compare day 5 with day 5.</p>
           </section>
         </div>
       </div>
@@ -327,6 +329,7 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js" defer></script>
+  <script src="../assets/js/translations/measure-builder.min.js" defer></script>
   <script src="../assets/js/lang-manager.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>

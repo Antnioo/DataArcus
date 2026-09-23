@@ -118,6 +118,8 @@
     .tg-faq p { color: #94a3b8; }
     .tg-cta { background: linear-gradient(135deg, rgba(0, 212, 255, .12), rgba(108, 92, 231, .12)); border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px; }
     @media (max-width: 767px) { .tg-colors { grid-template-columns: repeat(4, minmax(0, 1fr)); } .tg-grid2, .tg-kpis { grid-template-columns: 1fr; } }
+    /* Code and hex values always read left to right, even on the Arabic page */
+    .tg-json, .tg-color input[type=text], .mb-pre, #cgStart, #cgEnd { direction: ltr; text-align: left; unicode-bidi: plaintext; }
   </style>
 </head>
 <body>
@@ -148,46 +150,46 @@
   <main class="tg">
     <div class="container">
       <header class="mb-4">
-        <span class="badge rounded-pill text-bg-dark border border-secondary mb-2">Free tool · No sign-up</span>
-        <h1 class="display-5 fw-bold">Power BI Theme Generator</h1>
-        <p class="lead text-white-50 mb-0">Pick your brand colors, preview a live report, and download a theme JSON you can import into Power BI Desktop in seconds.</p>
+        <span class="badge rounded-pill text-bg-dark border border-secondary mb-2" data-i18n="tg.badge">Free tool · No sign-up</span>
+        <h1 class="display-5 fw-bold" data-i18n="tg.title">Power BI Theme Generator</h1>
+        <p class="lead text-white-50 mb-0" data-i18n="tg.subtitle">Pick your brand colors, preview a live report, and download a theme JSON you can import into Power BI Desktop in seconds.</p>
       </header>
 
       <div class="row g-4">
         <div class="col-lg-5">
           <div class="tg-panel d-flex flex-column gap-4">
             <div>
-              <span class="tg-label">Start from a preset</span>
+              <span class="tg-label" data-i18n="tg.presets">Start from a preset</span>
               <div class="tg-presets" id="presets"></div>
             </div>
             <div>
-              <span class="tg-label">Or generate from one brand color</span>
+              <span class="tg-label" data-i18n="tg.fromBrand">Or generate from one brand color</span>
               <div class="tg-row">
                 <input type="color" id="brand" value="#0084ff" aria-label="Brand color" style="width:52px;height:42px;border-radius:10px;border:1px solid var(--glass-border);background:none;padding:2px">
                 <select id="harmony" class="form-select" style="width:auto" aria-label="Palette style">
-                  <option value="analogous">Analogous (calm)</option>
-                  <option value="complementary">Complementary (contrast)</option>
-                  <option value="triadic">Triadic (vivid)</option>
-                  <option value="mono">Monochrome (shades)</option>
+                  <option value="analogous" data-i18n="tg.harmony.analogous">Analogous (calm)</option>
+                  <option value="complementary" data-i18n="tg.harmony.complementary">Complementary (contrast)</option>
+                  <option value="triadic" data-i18n="tg.harmony.triadic">Triadic (vivid)</option>
+                  <option value="mono" data-i18n="tg.harmony.mono">Monochrome (shades)</option>
                 </select>
-                <button class="tg-btn2" id="genBtn" type="button">Generate</button>
+                <button class="tg-btn2" id="genBtn" type="button" data-i18n="tg.generate">Generate</button>
               </div>
             </div>
             <div>
-              <span class="tg-label">Data colors (used in order)</span>
+              <span class="tg-label" data-i18n="tg.dataColors">Data colors (used in order)</span>
               <div class="tg-colors" id="dataColors"></div>
             </div>
             <div>
-              <span class="tg-label">Report colors</span>
+              <span class="tg-label" data-i18n="tg.reportColors">Report colors</span>
               <div class="tg-colors" id="uiColors"></div>
             </div>
             <div class="tg-row">
               <div style="flex:1;min-width:150px">
-                <label class="tg-label" for="themeName">Theme name</label>
+                <label class="tg-label" for="themeName" data-i18n="tg.themeName">Theme name</label>
                 <input id="themeName" class="form-control" value="My Brand Theme" maxlength="60">
               </div>
               <div style="flex:1;min-width:150px">
-                <label class="tg-label" for="font">Font</label>
+                <label class="tg-label" for="font" data-i18n="tg.font">Font</label>
                 <select id="font" class="form-select">
                   <option>Segoe UI</option><option>Segoe UI Semibold</option><option>DIN</option><option>Arial</option>
                   <option>Calibri</option><option>Tahoma</option><option>Verdana</option><option>Georgia</option>
@@ -195,7 +197,7 @@
               </div>
             </div>
             <div>
-              <span class="tg-label">Readability check</span>
+              <span class="tg-label" data-i18n="tg.readability">Readability check</span>
               <div class="tg-contrast" id="contrast"></div>
             </div>
           </div>
@@ -203,19 +205,19 @@
 
         <div class="col-lg-7 d-flex flex-column gap-4">
           <div class="tg-panel">
-            <span class="tg-label">Live preview</span>
+            <span class="tg-label" data-i18n="tg.preview">Live preview</span>
             <div class="tg-preview" id="preview"></div>
           </div>
           <div class="tg-panel d-flex flex-column gap-3">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-              <span class="tg-label mb-0">Your theme JSON</span>
+              <span class="tg-label mb-0" data-i18n="tg.json">Your theme JSON</span>
               <div class="tg-actions">
-                <button class="tg-btn2" id="copyBtn" type="button"><i class="bi bi-clipboard me-1"></i>Copy</button>
-                <button class="btn btn-accent" id="dlBtn" type="button"><i class="bi bi-download me-1"></i>Download .json</button>
+                <button class="tg-btn2" id="copyBtn" type="button"><i class="bi bi-clipboard me-1"></i><span data-i18n="tg.copy">Copy</span></button>
+                <button class="btn btn-accent" id="dlBtn" type="button"><i class="bi bi-download me-1"></i><span data-i18n="tg.download">Download .json</span></button>
               </div>
             </div>
             <pre class="tg-json" id="json"></pre>
-            <p class="small text-white-50 mb-0">Import it in Power BI Desktop: <strong>View → Themes → Browse for themes</strong>, then pick the file.</p>
+            <p class="small text-white-50 mb-0" data-i18n-html="tg.importNote">Import it in Power BI Desktop: <strong>View → Themes → Browse for themes</strong>, then pick the file.</p>
           </div>
         </div>
       </div>
@@ -223,23 +225,23 @@
       <div class="row mt-5 justify-content-center">
         <div class="col-lg-8">
           <div class="tg-cta mb-5 text-center">
-            <h2 class="h4 fw-bold mb-2">Want the whole report in your brand?</h2>
-            <p class="text-white-50 mb-3">A theme is the first 5%. DataArcus builds complete Power BI dashboards: data model, measures, and a design your team actually uses.</p>
-            <a href="../index.html#contact" class="btn btn-accent">Book a Free Call</a>
-            <a href="dax-calendar-table-generator.html" class="tg-btn2 ms-2 text-decoration-none d-inline-block">Free DAX Calendar Generator</a>
+            <h2 class="h4 fw-bold mb-2" data-i18n="tg.cta.title">Want the whole report in your brand?</h2>
+            <p class="text-white-50 mb-3" data-i18n="tg.cta.desc">A theme is the first 5%. DataArcus builds complete Power BI dashboards: data model, measures, and a design your team actually uses.</p>
+            <a href="../index.html#contact" class="btn btn-accent" data-i18n="nav.consultation">Book a Free Call</a>
+            <a href="dax-calendar-table-generator.html" class="tg-btn2 ms-2 text-decoration-none d-inline-block" data-i18n="tg.cta.next">Free DAX Calendar Generator</a>
           </div>
           <section class="tg-faq">
-            <h2 class="h4 fw-bold">Questions</h2>
-            <h3>How do I import a theme into Power BI?</h3>
-            <p>In Power BI Desktop open the <strong>View</strong> tab, click the <strong>Themes</strong> dropdown, choose <strong>Browse for themes</strong>, and select the downloaded .json file. Every visual updates at once.</p>
-            <h3>Does it work in Power BI Service?</h3>
-            <p>Yes. Import the theme in Desktop and publish. The theme travels with the report.</p>
-            <h3>How many data colors should I use?</h3>
-            <p>Power BI uses the data colors in order: the first series gets color 1, the second gets color 2, and so on. Six to eight clearly different colors cover almost every report. Put your main brand color first.</p>
-            <h3>What are good, neutral and bad colors?</h3>
-            <p>Power BI uses them for KPI visuals and status indicators. Keep "good" green-ish and "bad" red-ish so people read them instantly, even in your brand palette.</p>
-            <h3>Why the readability check?</h3>
-            <p>Text needs a contrast ratio of at least 4.5:1 against its background to be readable for everyone (WCAG AA). The check warns you before your managers squint at the report.</p>
+            <h2 class="h4 fw-bold" data-i18n="tg.faq.title">Questions</h2>
+            <h3 data-i18n="tg.faq.q1">How do I import a theme into Power BI?</h3>
+            <p data-i18n-html="tg.faq.a1">In Power BI Desktop open the <strong>View</strong> tab, click the <strong>Themes</strong> dropdown, choose <strong>Browse for themes</strong>, and select the downloaded .json file. Every visual updates at once.</p>
+            <h3 data-i18n="tg.faq.q2">Does it work in Power BI Service?</h3>
+            <p data-i18n="tg.faq.a2">Yes. Import the theme in Desktop and publish. The theme travels with the report.</p>
+            <h3 data-i18n="tg.faq.q3">How many data colors should I use?</h3>
+            <p data-i18n="tg.faq.a3">Power BI uses the data colors in order: the first series gets color 1, the second gets color 2, and so on. Six to eight clearly different colors cover almost every report. Put your main brand color first.</p>
+            <h3 data-i18n="tg.faq.q4">What are good, neutral and bad colors?</h3>
+            <p data-i18n="tg.faq.a4">Power BI uses them for KPI visuals and status indicators. Keep "good" green-ish and "bad" red-ish so people read them instantly, even in your brand palette.</p>
+            <h3 data-i18n="tg.faq.q5">Why the readability check?</h3>
+            <p data-i18n="tg.faq.a5">Text needs a contrast ratio of at least 4.5:1 against its background to be readable for everyone (WCAG AA). The check warns you before your managers squint at the report.</p>
           </section>
         </div>
       </div>
@@ -297,6 +299,7 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js" defer></script>
+  <script src="../assets/js/translations/theme-generator.min.js" defer></script>
   <script src="../assets/js/lang-manager.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
