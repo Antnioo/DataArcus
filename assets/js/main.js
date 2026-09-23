@@ -92,12 +92,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const isDesktopViewport = window.innerWidth > 767;
 
   // Hide loading overlay after a delay
+  // Hide the loading overlay as soon as the page is ready. It used to wait
+  // a fixed 1s + 0.5s fade, which delayed every page for no reason.
   const loadingOverlay = document.getElementById('loadingOverlay');
   if (loadingOverlay) {
-    setTimeout(() => {
+    loadingOverlay.style.transition = 'opacity .25s ease';
+    requestAnimationFrame(() => {
       loadingOverlay.style.opacity = '0';
-      setTimeout(() => loadingOverlay.style.display = 'none', 500);
-    }, 1000);
+      setTimeout(() => loadingOverlay.style.display = 'none', 250);
+    });
   }
 
   // Generate interactive background particles (desktop only, motion allowed).
