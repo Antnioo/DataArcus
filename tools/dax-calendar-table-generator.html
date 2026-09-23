@@ -4,15 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="index, follow" />
-  <link rel="canonical" href="https://dataarcus.com/tools/power-bi-theme-generator.html" />
-  <title>Free Power BI Theme Generator (JSON) - DataArcus</title>
-  <meta name="description" content="Create a Power BI theme JSON file in seconds. Pick your brand colors, preview charts live, check contrast, and download a ready-to-import theme. Free, no sign-up." />
+  <link rel="canonical" href="https://dataarcus.com/tools/dax-calendar-table-generator.html" />
+  <title>DAX Calendar Table Generator with Hijri Dates - DataArcus</title>
+  <meta name="description" content="Generate a Power BI date table in DAX with fiscal years, GCC weekends and Hijri (Umm al-Qura) dates, Ramadan and Eid flags. Copy, paste, done. Free." />
   <meta name="author" content="DataArcus" />
-  <meta name="keywords" content="Power BI theme generator, Power BI theme JSON, Power BI color palette, custom Power BI theme, Power BI report theme" />
+  <meta name="keywords" content="DAX calendar table, Power BI date table, DAX date table generator, Hijri calendar Power BI, Ramadan Power BI, fiscal calendar DAX" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Free Power BI Theme Generator (JSON) - DataArcus" />
-  <meta property="og:description" content="Pick your brand colors, preview a live report, and download a Power BI theme JSON. Free, no sign-up." />
-  <meta property="og:url" content="https://dataarcus.com/tools/power-bi-theme-generator.html" />
+  <meta property="og:title" content="DAX Calendar Table Generator with Hijri Dates - DataArcus" />
+  <meta property="og:description" content="Generate a Power BI date table in DAX with fiscal years, GCC weekends and Hijri (Umm al-Qura) dates, Ramadan and Eid flags. Copy, paste, done. Free." />
+  <meta property="og:url" content="https://dataarcus.com/tools/dax-calendar-table-generator.html" />
   <meta property="og:site_name" content="DataArcus" />
   <meta property="og:image" content="https://dataarcus.com/assets/img/dataarcus-og-logo.png" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -56,8 +56,8 @@
     "@graph": [
       {
         "@type": "WebApplication",
-        "name": "Power BI Theme Generator",
-        "url": "https://dataarcus.com/tools/power-bi-theme-generator.html",
+        "name": "DAX Calendar Table Generator with Hijri Dates",
+        "url": "https://dataarcus.com/tools/dax-calendar-table-generator.html",
         "applicationCategory": "BusinessApplication",
         "operatingSystem": "Any (web browser)",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
@@ -66,12 +66,12 @@
       {
         "@type": "FAQPage",
         "mainEntity": [
-          { "@type": "Question", "name": "How do I import a theme into Power BI?",
-            "acceptedAnswer": { "@type": "Answer", "text": "In Power BI Desktop open the View tab, click the Themes dropdown, choose Browse for themes, and select the downloaded .json file." } },
-          { "@type": "Question", "name": "Does the theme work in Power BI Service?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Yes. Import the theme in Power BI Desktop and publish the report. The theme travels with the report to the Service." } },
-          { "@type": "Question", "name": "How many data colors should a Power BI theme have?",
-            "acceptedAnswer": { "@type": "Answer", "text": "Power BI cycles through the dataColors list in order. Six to eight distinct colors cover most reports; beyond that, charts become hard to read." } }
+          { "@type": "Question", "name": "How do I add a calendar table in Power BI?",
+            "acceptedAnswer": { "@type": "Answer", "text": "In Power BI Desktop go to Modeling, click New table, paste the DAX, and press Enter. Then use Mark as date table and pick the Date column." } },
+          { "@type": "Question", "name": "How do I get Hijri dates in Power BI?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Power BI has no built-in Hijri functions. This generator embeds the Umm al-Qura month start dates in the DAX, then calculates Hijri year, month, day, Ramadan and Eid for every date." } },
+          { "@type": "Question", "name": "Are the Ramadan dates exact?",
+            "acceptedAnswer": { "@type": "Answer", "text": "They follow the official Saudi Umm al-Qura calendar. Countries that rely on local moon sighting can differ by one day, so adjust the month start in the DATATABLE if needed." } }
         ]
       }
     ]
@@ -118,6 +118,19 @@
     .tg-faq p { color: #94a3b8; }
     .tg-cta { background: linear-gradient(135deg, rgba(0, 212, 255, .12), rgba(108, 92, 231, .12)); border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px; }
     @media (max-width: 767px) { .tg-colors { grid-template-columns: repeat(4, minmax(0, 1fr)); } .tg-grid2, .tg-kpis { grid-template-columns: 1fr; } }
+      .cg-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .cg-form .form-control, .cg-form .form-select { background: var(--dk-3); color: var(--lt); border-color: var(--glass-border); }
+    .cg-checks { display: flex; flex-direction: column; gap: 8px; }
+    .cg-checks label { display: flex; gap: 10px; align-items: flex-start; font-size: .9rem; color: var(--lt); cursor: pointer; }
+    .cg-checks small { display: block; color: #94a3b8; }
+    .cg-checks input { margin-top: 4px; accent-color: var(--accent); width: 16px; height: 16px; }
+    .cg-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+    .cg-chip { display: inline-block; background: rgba(0, 212, 255, .08); border: 1px solid rgba(0, 212, 255, .3); color: var(--accent-2); border-radius: 30px; padding: 5px 12px; font-size: .8rem; margin: 0 6px 6px 0; }
+    .tg-table tr.ram td { background: rgba(0, 206, 201, .1); }
+    .tg-table th { color: var(--accent); border-bottom: 1px solid var(--glass-border); }
+    .tg-table td { color: var(--lt); border-bottom: 1px solid rgba(255, 255, 255, .05); }
+    .cg-err { color: #f59e0b; font-size: .85rem; }
+    @media (max-width: 767px) { .cg-form { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -148,73 +161,61 @@
     <div class="container">
       <header class="mb-4">
         <span class="badge rounded-pill text-bg-dark border border-secondary mb-2">Free tool · No sign-up</span>
-        <h1 class="display-5 fw-bold">Power BI Theme Generator</h1>
-        <p class="lead text-white-50 mb-0">Pick your brand colors, preview a live report, and download a theme JSON you can import into Power BI Desktop in seconds.</p>
+        <h1 class="display-5 fw-bold">DAX Calendar Table Generator</h1>
+        <p class="lead text-white-50 mb-0">A complete Power BI date table in one paste: fiscal years, GCC weekends, and Hijri dates with Ramadan and Eid flags that no built-in function gives you.</p>
       </header>
 
       <div class="row g-4">
         <div class="col-lg-5">
           <div class="tg-panel d-flex flex-column gap-4">
             <div>
-              <span class="tg-label">Start from a preset</span>
-              <div class="tg-presets" id="presets"></div>
-            </div>
-            <div>
-              <span class="tg-label">Or generate from one brand color</span>
-              <div class="tg-row">
-                <input type="color" id="brand" value="#0084ff" aria-label="Brand color" style="width:52px;height:42px;border-radius:10px;border:1px solid var(--glass-border);background:none;padding:2px">
-                <select id="harmony" class="form-select" style="width:auto" aria-label="Palette style">
-                  <option value="analogous">Analogous (calm)</option>
-                  <option value="complementary">Complementary (contrast)</option>
-                  <option value="triadic">Triadic (vivid)</option>
-                  <option value="mono">Monochrome (shades)</option>
-                </select>
-                <button class="tg-btn2" id="genBtn" type="button">Generate</button>
+              <span class="tg-label">Quick setup</span>
+              <div class="cg-quick">
+                <button class="tg-preset" type="button" data-quick="uae">UAE</button>
+                <button class="tg-preset" type="button" data-quick="ksa">Saudi Arabia</button>
+                <button class="tg-preset" type="button" data-quick="egypt">Egypt</button>
+                <button class="tg-preset" type="button" data-quick="global">Global (no Hijri)</button>
               </div>
             </div>
-            <div>
-              <span class="tg-label">Data colors (used in order)</span>
-              <div class="tg-colors" id="dataColors"></div>
+            <div class="cg-form">
+              <div style="grid-column:1/-1"><label class="tg-label" for="cgName">Table name</label><input id="cgName" class="form-control" maxlength="40"></div>
+              <div><label class="tg-label" for="cgStart">Start date</label><input id="cgStart" type="date" class="form-control"></div>
+              <div><label class="tg-label" for="cgEnd">End date</label><input id="cgEnd" type="date" class="form-control"></div>
+              <div><label class="tg-label" for="cgWeek">Week starts on</label>
+                <select id="cgWeek" class="form-select"><option value="sun">Sunday</option><option value="mon">Monday</option><option value="sat">Saturday</option></select></div>
+              <div><label class="tg-label" for="cgWeekend">Weekend</label>
+                <select id="cgWeekend" class="form-select"><option value="sat-sun">Saturday + Sunday</option><option value="fri-sat">Friday + Saturday</option><option value="fri">Friday only</option><option value="sun">Sunday only</option></select></div>
+              <div><label class="tg-label" for="cgFy">Fiscal year starts</label>
+                <select id="cgFy" class="form-select"><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select></div>
+              <div><label class="tg-label" for="cgLang">Month and day names</label>
+                <select id="cgLang" class="form-select"><option value="en">English</option><option value="ar">العربية</option></select></div>
             </div>
-            <div>
-              <span class="tg-label">Report colors</span>
-              <div class="tg-colors" id="uiColors"></div>
+            <div class="cg-checks">
+              <span class="tg-label mb-0">Columns to include</span>
+              <label><input type="checkbox" id="cgHijri"><span>Hijri dates, Ramadan and Eid<small id="hijriNote">Umm al-Qura calendar: Hijri year, month, day, Ramadan day, Eid al-Fitr and Eid al-Adha flags.</small></span></label>
+              <label><input type="checkbox" id="cgFiscal"><span>Fiscal year, quarter and month<small>Labels like FY2026 and FQ1, based on your fiscal start month.</small></span></label>
+              <label><input type="checkbox" id="cgRel"><span>Relative offsets<small>Day, month and year offsets from today, for "last 3 months" slicers that never need updating.</small></span></label>
             </div>
-            <div class="tg-row">
-              <div style="flex:1;min-width:150px">
-                <label class="tg-label" for="themeName">Theme name</label>
-                <input id="themeName" class="form-control" value="My Brand Theme" maxlength="60">
-              </div>
-              <div style="flex:1;min-width:150px">
-                <label class="tg-label" for="font">Font</label>
-                <select id="font" class="form-select">
-                  <option>Segoe UI</option><option>Segoe UI Semibold</option><option>DIN</option><option>Arial</option>
-                  <option>Calibri</option><option>Tahoma</option><option>Verdana</option><option>Georgia</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <span class="tg-label">Readability check</span>
-              <div class="tg-contrast" id="contrast"></div>
-            </div>
+            <div class="cg-err" id="err" role="alert"></div>
           </div>
         </div>
 
         <div class="col-lg-7 d-flex flex-column gap-4">
           <div class="tg-panel">
-            <span class="tg-label">Live preview</span>
-            <div class="tg-preview" id="preview"></div>
+            <div class="d-flex justify-content-between flex-wrap gap-2"><span class="tg-label">Preview</span><span class="small text-white-50" id="stats"></span></div>
+            <div id="preview" style="overflow-x:auto"></div>
+            <div id="ramWrap" class="mt-3"><span class="tg-label">Ramadan in your date range</span><div id="ramadan"></div></div>
           </div>
           <div class="tg-panel d-flex flex-column gap-3">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-              <span class="tg-label mb-0">Your theme JSON</span>
+              <span class="tg-label mb-0">Your DAX</span>
               <div class="tg-actions">
-                <button class="tg-btn2" id="copyBtn" type="button"><i class="bi bi-clipboard me-1"></i>Copy</button>
-                <button class="btn btn-accent" id="dlBtn" type="button"><i class="bi bi-download me-1"></i>Download .json</button>
+                <button class="tg-btn2" id="dlBtn" type="button"><i class="bi bi-download me-1"></i>Download</button>
+                <button class="btn btn-accent" id="copyBtn" type="button"><i class="bi bi-clipboard me-1"></i>Copy DAX</button>
               </div>
             </div>
-            <pre class="tg-json" id="json"></pre>
-            <p class="small text-white-50 mb-0">Import it in Power BI Desktop: <strong>View → Themes → Browse for themes</strong>, then pick the file.</p>
+            <pre class="tg-json" id="dax"></pre>
+            <p class="small text-white-50 mb-0">In Power BI Desktop: <strong>Modeling → New table</strong>, paste, press Enter. Then <strong>Mark as date table</strong> and choose Date. Sort Month Name by Month Number.</p>
           </div>
         </div>
       </div>
@@ -222,23 +223,23 @@
       <div class="row mt-5 justify-content-center">
         <div class="col-lg-8">
           <div class="tg-cta mb-5 text-center">
-            <h2 class="h4 fw-bold mb-2">Want the whole report in your brand?</h2>
-            <p class="text-white-50 mb-3">A theme is the first 5%. DataArcus builds complete Power BI dashboards: data model, measures, and a design your team actually uses.</p>
+            <h2 class="h4 fw-bold mb-2">Ramadan changes everything in your numbers</h2>
+            <p class="text-white-50 mb-3">Comparing this Ramadan to last Ramadan, not March to March, is where the real insight is. DataArcus builds Power BI reports that understand the Gulf calendar.</p>
             <a href="../index.html#contact" class="btn btn-accent">Book a Free Call</a>
-            <a href="dax-calendar-table-generator.html" class="tg-btn2 ms-2 text-decoration-none d-inline-block">Free DAX Calendar Generator</a>
+            <a href="power-bi-theme-generator.html" class="tg-btn2 ms-2 text-decoration-none d-inline-block">Try the Theme Generator</a>
           </div>
           <section class="tg-faq">
             <h2 class="h4 fw-bold">Questions</h2>
-            <h3>How do I import a theme into Power BI?</h3>
-            <p>In Power BI Desktop open the <strong>View</strong> tab, click the <strong>Themes</strong> dropdown, choose <strong>Browse for themes</strong>, and select the downloaded .json file. Every visual updates at once.</p>
-            <h3>Does it work in Power BI Service?</h3>
-            <p>Yes. Import the theme in Desktop and publish. The theme travels with the report.</p>
-            <h3>How many data colors should I use?</h3>
-            <p>Power BI uses the data colors in order: the first series gets color 1, the second gets color 2, and so on. Six to eight clearly different colors cover almost every report. Put your main brand color first.</p>
-            <h3>What are good, neutral and bad colors?</h3>
-            <p>Power BI uses them for KPI visuals and status indicators. Keep "good" green-ish and "bad" red-ish so people read them instantly, even in your brand palette.</p>
-            <h3>Why the readability check?</h3>
-            <p>Text needs a contrast ratio of at least 4.5:1 against its background to be readable for everyone (WCAG AA). The check warns you before your managers squint at the report.</p>
+            <h3>How do I add this table in Power BI?</h3>
+            <p>In Power BI Desktop go to <strong>Modeling → New table</strong>, paste the DAX and press Enter. Then right-click the table, choose <strong>Mark as date table</strong>, and pick the Date column. Relate Date to the date column of your fact table.</p>
+            <h3>How does it get Hijri dates without Power Query?</h3>
+            <p>Power BI has no Hijri functions. The generator calculates every Hijri month start in your range and embeds them in a small DATATABLE inside the DAX. Each date then looks up its Hijri month, so the table works offline and refreshes instantly.</p>
+            <h3>Are the Ramadan and Eid dates exact?</h3>
+            <p>They follow the official Saudi Umm al-Qura calendar. Countries that rely on local moon sighting can differ by one day. If yours did, edit that month's start date in the DATATABLE.</p>
+            <h3>How do I compare this Ramadan with last Ramadan?</h3>
+            <p>Put <strong>Ramadan Day</strong> on the axis and <strong>Hijri Year</strong> in the legend. Every Ramadan lines up day by day, even though the Gregorian dates move about 11 days earlier each year.</p>
+            <h3>Why relative offsets?</h3>
+            <p>Filter on <strong>Month Offset</strong> between -2 and 0 to always show the last three months. It updates by itself every day, so nobody has to change a slicer again.</p>
           </section>
         </div>
       </div>
@@ -302,6 +303,6 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
   <script src="../assets/js/main.min.js" defer></script>
-  <script src="../assets/js/theme-generator.min.js" defer></script>
+  <script src="../assets/js/calendar-generator.min.js" defer></script>
 </body>
 </html>
