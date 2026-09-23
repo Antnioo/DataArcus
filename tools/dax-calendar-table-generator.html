@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://dataarcus.com/tools/dax-calendar-table-generator.html" />
+  <title>DAX Calendar Table Generator with Hijri Dates - DataArcus</title>
+  <meta name="description" content="Generate a Power BI date table in DAX with fiscal years, GCC weekends and Hijri (Umm al-Qura) dates, Ramadan and Eid flags. Copy, paste, done. Free." />
+  <meta name="author" content="DataArcus" />
+  <meta name="keywords" content="DAX calendar table, Power BI date table, DAX date table generator, Hijri calendar Power BI, Ramadan Power BI, fiscal calendar DAX" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="DAX Calendar Table Generator with Hijri Dates - DataArcus" />
+  <meta property="og:description" content="Generate a Power BI date table in DAX with fiscal years, GCC weekends and Hijri (Umm al-Qura) dates, Ramadan and Eid flags. Copy, paste, done. Free." />
+  <meta property="og:url" content="https://dataarcus.com/tools/dax-calendar-table-generator.html" />
+  <meta property="og:site_name" content="DataArcus" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/dataarcus-og-logo.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="../assets/img/favicon.svg"/>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-RC3MRC4JZH');
+  </script>
+
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "sy2681b9al");
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link href="../assets/css/vendor/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/css/style.min.css" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">  
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  </noscript>
+  
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "DAX Calendar Table Generator with Hijri Dates",
+        "url": "https://dataarcus.com/tools/dax-calendar-table-generator.html",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Any (web browser)",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "publisher": { "@type": "Organization", "name": "DataArcus", "url": "https://dataarcus.com/" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "How do I add a calendar table in Power BI?",
+            "acceptedAnswer": { "@type": "Answer", "text": "In Power BI Desktop go to Modeling, click New table, paste the DAX, and press Enter. Then use Mark as date table and pick the Date column." } },
+          { "@type": "Question", "name": "How do I get Hijri dates in Power BI?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Power BI has no built-in Hijri functions. This generator embeds the Umm al-Qura month start dates in the DAX, then calculates Hijri year, month, day, Ramadan and Eid for every date." } },
+          { "@type": "Question", "name": "Are the Ramadan dates exact?",
+            "acceptedAnswer": { "@type": "Answer", "text": "They follow the official Saudi Umm al-Qura calendar. Countries that rely on local moon sighting can differ by one day, so adjust the month start in the DATATABLE if needed." } }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    .tg { padding: 110px 0 60px; }
+    .tg h1 { color: var(--accent); }
+    .tg-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; }
+    .tg-label { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-bottom: 8px; display: block; }
+    .tg-presets { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tg-preset { display: flex; align-items: center; gap: 8px; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 30px; padding: 6px 12px 6px 8px; font-size: .85rem; cursor: pointer; }
+    .tg-preset:hover, .tg-preset.active { border-color: var(--accent); }
+    .tg-preset .sw { display: flex; }
+    .tg-preset .sw i { width: 10px; height: 16px; display: block; }
+    .tg-preset .sw i:first-child { border-radius: 8px 0 0 8px; } .tg-preset .sw i:last-child { border-radius: 0 8px 8px 0; }
+    .tg-colors { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .tg-color { display: flex; flex-direction: column; gap: 4px; }
+    .tg-color input[type=color] { width: 100%; height: 42px; border: 1px solid var(--glass-border); border-radius: 10px; background: none; padding: 2px; cursor: pointer; }
+    .tg-color input[type=text] { width: 100%; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 8px; font: 500 .8rem ui-monospace, Consolas, monospace; padding: 4px 6px; text-align: center; }
+    .tg-color span { font-size: .7rem; color: #94a3b8; text-align: center; }
+    .tg-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+    .tg-row .form-control, .tg-row .form-select { background: var(--dk-3); color: var(--lt); border-color: var(--glass-border); }
+    .tg-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .tg-btn2 { background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 50px; padding: 10px 20px; font-weight: 600; }
+    .tg-btn2:hover { background: rgba(0, 212, 255, .1); color: var(--accent-2); }
+    .tg-preview { border-radius: 14px; padding: 14px; transition: background .2s; }
+    .tg-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
+    .tg-card { border-radius: 10px; padding: 12px; }
+    .tg-card .k { font-size: .7rem; opacity: .7; text-transform: uppercase; letter-spacing: .06em; }
+    .tg-card .v { font-size: 1.5rem; font-weight: 800; line-height: 1.2; }
+    .tg-card .d { font-size: .75rem; font-weight: 600; }
+    .tg-grid2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
+    .tg-grid2 .tg-card { min-height: 190px; }
+    .tg-card svg { width: 100%; height: auto; display: block; }
+    .tg-table { width: 100%; font-size: .8rem; border-collapse: collapse; }
+    .tg-table th { text-align: left; padding: 6px 8px; font-weight: 700; }
+    .tg-table td { padding: 6px 8px; color: inherit; }
+    .tg-contrast { font-size: .85rem; display: flex; flex-direction: column; gap: 6px; }
+    .tg-contrast .ok { color: #22c55e; } .tg-contrast .warn { color: #f59e0b; }
+    .tg-json { background: #050a14; border: 1px solid var(--glass-border); border-radius: 12px; color: #cbd5e1; font: 12px/1.5 ui-monospace, Consolas, monospace; padding: 14px; max-height: 280px; overflow: auto; white-space: pre; }
+    .tg-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--accent); color: #051018; font-weight: 700; padding: 10px 18px; border-radius: 30px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 2000; }
+    .tg-faq h3 { font-size: 1.05rem; color: var(--lt); margin-top: 1.2rem; }
+    .tg-faq p { color: #94a3b8; }
+    .tg-cta { background: linear-gradient(135deg, rgba(0, 212, 255, .12), rgba(108, 92, 231, .12)); border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px; }
+    @media (max-width: 767px) { .tg-colors { grid-template-columns: repeat(4, minmax(0, 1fr)); } .tg-grid2, .tg-kpis { grid-template-columns: 1fr; } }
+      .cg-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .cg-form .form-control, .cg-form .form-select { background: var(--dk-3); color: var(--lt); border-color: var(--glass-border); }
+    .cg-checks { display: flex; flex-direction: column; gap: 8px; }
+    .cg-checks label { display: flex; gap: 10px; align-items: flex-start; font-size: .9rem; color: var(--lt); cursor: pointer; }
+    .cg-checks small { display: block; color: #94a3b8; }
+    .cg-checks input { margin-top: 4px; accent-color: var(--accent); width: 16px; height: 16px; }
+    .cg-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+    .cg-chip { display: inline-block; background: rgba(0, 212, 255, .08); border: 1px solid rgba(0, 212, 255, .3); color: var(--accent-2); border-radius: 30px; padding: 5px 12px; font-size: .8rem; margin: 0 6px 6px 0; }
+    .tg-table tr.ram td { background: rgba(0, 206, 201, .1); }
+    .tg-table th { color: var(--accent); border-bottom: 1px solid var(--glass-border); }
+    .tg-table td { color: var(--lt); border-bottom: 1px solid rgba(255, 255, 255, .05); }
+    .cg-err { color: #f59e0b; font-size: .85rem; }
+    @media (max-width: 767px) { .cg-form { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+    
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html#hero">
+        <img src="../assets/img/logo.svg" alt="DataArcus logo" width="190" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="../index.html#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="../portfolio.html" data-i18n="nav.portfolio">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <a href="../index.html#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="tg">
+    <div class="container">
+      <header class="mb-4">
+        <span class="badge rounded-pill text-bg-dark border border-secondary mb-2">Free tool · No sign-up</span>
+        <h1 class="display-5 fw-bold">DAX Calendar Table Generator</h1>
+        <p class="lead text-white-50 mb-0">A complete Power BI date table in one paste: fiscal years, GCC weekends, and Hijri dates with Ramadan and Eid flags that no built-in function gives you.</p>
+      </header>
+
+      <div class="row g-4">
+        <div class="col-lg-5">
+          <div class="tg-panel d-flex flex-column gap-4">
+            <div>
+              <span class="tg-label">Quick setup</span>
+              <div class="cg-quick">
+                <button class="tg-preset" type="button" data-quick="uae">UAE</button>
+                <button class="tg-preset" type="button" data-quick="ksa">Saudi Arabia</button>
+                <button class="tg-preset" type="button" data-quick="egypt">Egypt</button>
+                <button class="tg-preset" type="button" data-quick="global">Global (no Hijri)</button>
+              </div>
+            </div>
+            <div class="cg-form">
+              <div style="grid-column:1/-1"><label class="tg-label" for="cgName">Table name</label><input id="cgName" class="form-control" maxlength="40"></div>
+              <div><label class="tg-label" for="cgStart">Start date</label><input id="cgStart" type="date" class="form-control"></div>
+              <div><label class="tg-label" for="cgEnd">End date</label><input id="cgEnd" type="date" class="form-control"></div>
+              <div><label class="tg-label" for="cgWeek">Week starts on</label>
+                <select id="cgWeek" class="form-select"><option value="sun">Sunday</option><option value="mon">Monday</option><option value="sat">Saturday</option></select></div>
+              <div><label class="tg-label" for="cgWeekend">Weekend</label>
+                <select id="cgWeekend" class="form-select"><option value="sat-sun">Saturday + Sunday</option><option value="fri-sat">Friday + Saturday</option><option value="fri">Friday only</option><option value="sun">Sunday only</option></select></div>
+              <div><label class="tg-label" for="cgFy">Fiscal year starts</label>
+                <select id="cgFy" class="form-select"><option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option></select></div>
+              <div><label class="tg-label" for="cgLang">Month and day names</label>
+                <select id="cgLang" class="form-select"><option value="en">English</option><option value="ar">العربية</option></select></div>
+            </div>
+            <div class="cg-checks">
+              <span class="tg-label mb-0">Columns to include</span>
+              <label><input type="checkbox" id="cgHijri"><span>Hijri dates, Ramadan and Eid<small id="hijriNote">Umm al-Qura calendar: Hijri year, month, day, Ramadan day, Eid al-Fitr and Eid al-Adha flags.</small></span></label>
+              <label><input type="checkbox" id="cgFiscal"><span>Fiscal year, quarter and month<small>Labels like FY2026 and FQ1, based on your fiscal start month.</small></span></label>
+              <label><input type="checkbox" id="cgRel"><span>Relative offsets<small>Day, month and year offsets from today, for "last 3 months" slicers that never need updating.</small></span></label>
+            </div>
+            <div class="cg-err" id="err" role="alert"></div>
+          </div>
+        </div>
+
+        <div class="col-lg-7 d-flex flex-column gap-4">
+          <div class="tg-panel">
+            <div class="d-flex justify-content-between flex-wrap gap-2"><span class="tg-label">Preview</span><span class="small text-white-50" id="stats"></span></div>
+            <div id="preview" style="overflow-x:auto"></div>
+            <div id="ramWrap" class="mt-3"><span class="tg-label">Ramadan in your date range</span><div id="ramadan"></div></div>
+          </div>
+          <div class="tg-panel d-flex flex-column gap-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+              <span class="tg-label mb-0">Your DAX</span>
+              <div class="tg-actions">
+                <button class="tg-btn2" id="dlBtn" type="button"><i class="bi bi-download me-1"></i>Download</button>
+                <button class="btn btn-accent" id="copyBtn" type="button"><i class="bi bi-clipboard me-1"></i>Copy DAX</button>
+              </div>
+            </div>
+            <pre class="tg-json" id="dax"></pre>
+            <p class="small text-white-50 mb-0">In Power BI Desktop: <strong>Modeling → New table</strong>, paste, press Enter. Then <strong>Mark as date table</strong> and choose Date. Sort Month Name by Month Number.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mt-5 justify-content-center">
+        <div class="col-lg-8">
+          <div class="tg-cta mb-5 text-center">
+            <h2 class="h4 fw-bold mb-2">Ramadan changes everything in your numbers</h2>
+            <p class="text-white-50 mb-3">Comparing this Ramadan to last Ramadan, not March to March, is where the real insight is. DataArcus builds Power BI reports that understand the Gulf calendar.</p>
+            <a href="../index.html#contact" class="btn btn-accent">Book a Free Call</a>
+            <a href="power-bi-theme-generator.html" class="tg-btn2 ms-2 text-decoration-none d-inline-block">Try the Theme Generator</a>
+          </div>
+          <section class="tg-faq">
+            <h2 class="h4 fw-bold">Questions</h2>
+            <h3>How do I add this table in Power BI?</h3>
+            <p>In Power BI Desktop go to <strong>Modeling → New table</strong>, paste the DAX and press Enter. Then right-click the table, choose <strong>Mark as date table</strong>, and pick the Date column. Relate Date to the date column of your fact table.</p>
+            <h3>How does it get Hijri dates without Power Query?</h3>
+            <p>Power BI has no Hijri functions. The generator calculates every Hijri month start in your range and embeds them in a small DATATABLE inside the DAX. Each date then looks up its Hijri month, so the table works offline and refreshes instantly.</p>
+            <h3>Are the Ramadan and Eid dates exact?</h3>
+            <p>They follow the official Saudi Umm al-Qura calendar. Countries that rely on local moon sighting can differ by one day. If yours did, edit that month's start date in the DATATABLE.</p>
+            <h3>How do I compare this Ramadan with last Ramadan?</h3>
+            <p>Put <strong>Ramadan Day</strong> on the axis and <strong>Hijri Year</strong> in the legend. Every Ramadan lines up day by day, even though the Gregorian dates move about 11 days earlier each year.</p>
+            <h3>Why relative offsets?</h3>
+            <p>Filter on <strong>Month Offset</strong> between -2 and 0 to always show the last three months. It updates by itself every day, so nobody has to change a slicer again.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div class="tg-toast" id="toast" role="status" aria-live="polite"></div>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="../index.html#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="../assets/img/logo.svg" alt="DataArcus logo" width="190" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+              <li class="mb-2"><a href="../tools/power-bi-theme-generator.html" class="text-white-50 text-decoration-none hover-accent">Free Theme Generator</a></li>
+              <li class="mb-2"><a href="../tools/dax-calendar-table-generator.html" class="text-white-50 text-decoration-none hover-accent">Free DAX Calendar Generator</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="../portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Showcases</a></li>
+              <li class="mb-2"><a href="../index.html#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="../blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Built with passion • Powered by innovation</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="../assets/js/translations/common.min.js" defer></script>
+  <script src="../assets/js/lang-manager.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
+  <script src="../assets/js/main.min.js" defer></script>
+  <script src="../assets/js/calendar-generator.min.js" defer></script>
+</body>
+</html>
