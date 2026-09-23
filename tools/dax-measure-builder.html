@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://dataarcus.com/tools/dax-measure-builder.html" />
+  <title>DAX Measure Builder: YoY, YTD, MTD and Rolling - DataArcus</title>
+  <meta name="description" content="Generate Power BI time intelligence measures from one base measure: YTD, MTD, prior year, YoY %, MoM %, rolling months, running total and Ramadan vs last Ramadan. Free." />
+  <meta name="author" content="DataArcus" />
+  <meta name="keywords" content="DAX year over year, DAX YTD, DAX running total, DAX rolling 3 months, Power BI time intelligence, DAX measure generator" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="DAX Measure Builder: YoY, YTD, MTD and Rolling - DataArcus" />
+  <meta property="og:description" content="Generate Power BI time intelligence measures from one base measure: YTD, MTD, prior year, YoY %, MoM %, rolling months, running total and Ramadan vs last Ramadan. Free." />
+  <meta property="og:url" content="https://dataarcus.com/tools/dax-measure-builder.html" />
+  <meta property="og:site_name" content="DataArcus" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/dataarcus-og-logo.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="../assets/img/favicon.svg"/>
+
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-RC3MRC4JZH');
+  </script>
+
+  <script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "sy2681b9al");
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link href="../assets/css/vendor/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/css/style.min.css" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">  
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  </noscript>
+  
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "DAX Time Intelligence Measure Builder",
+        "url": "https://dataarcus.com/tools/dax-measure-builder.html",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Any (web browser)",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "publisher": { "@type": "Organization", "name": "DataArcus", "url": "https://dataarcus.com/" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "How do I calculate year over year growth in DAX?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Create a prior-year measure with CALCULATE and SAMEPERIODLASTYEAR, then divide the difference by it: DIVIDE([Sales] - [Sales PY], [Sales PY]). DIVIDE returns blank instead of an error when last year is empty." } },
+          { "@type": "Question", "name": "How do I add many measures at once in Power BI?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Open DAX query view in Power BI Desktop, paste a DEFINE block with several MEASURE lines, and click Update model with changes. All measures are added in one step." } },
+          { "@type": "Question", "name": "Why do my time intelligence measures return blank or wrong values?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Time intelligence needs a proper date table: one row per day with no gaps, marked as a date table, and related to your fact table. Use the date column from that table in visuals and in the measures." } }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    .tg { padding: 110px 0 60px; }
+    .tg h1 { color: var(--accent); }
+    .tg-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; }
+    .tg-label { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-bottom: 8px; display: block; }
+    .tg-presets { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tg-preset { display: flex; align-items: center; gap: 8px; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 30px; padding: 6px 12px 6px 8px; font-size: .85rem; cursor: pointer; }
+    .tg-preset:hover, .tg-preset.active { border-color: var(--accent); }
+    .tg-preset .sw { display: flex; }
+    .tg-preset .sw i { width: 10px; height: 16px; display: block; }
+    .tg-preset .sw i:first-child { border-radius: 8px 0 0 8px; } .tg-preset .sw i:last-child { border-radius: 0 8px 8px 0; }
+    .tg-colors { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .tg-color { display: flex; flex-direction: column; gap: 4px; }
+    .tg-color input[type=color] { width: 100%; height: 42px; border: 1px solid var(--glass-border); border-radius: 10px; background: none; padding: 2px; cursor: pointer; }
+    .tg-color input[type=text] { width: 100%; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 8px; font: 500 .8rem ui-monospace, Consolas, monospace; padding: 4px 6px; text-align: center; }
+    .tg-color span { font-size: .7rem; color: #94a3b8; text-align: center; }
+    .tg-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+    .tg-row .form-control, .tg-row .form-select { background: var(--dk-3); color: var(--lt); border-color: var(--glass-border); }
+    .tg-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .tg-btn2 { background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 50px; padding: 10px 20px; font-weight: 600; }
+    .tg-btn2:hover { background: rgba(0, 212, 255, .1); color: var(--accent-2); }
+    .tg-preview { border-radius: 14px; padding: 14px; transition: background .2s; }
+    .tg-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
+    .tg-card { border-radius: 10px; padding: 12px; }
+    .tg-card .k { font-size: .7rem; opacity: .7; text-transform: uppercase; letter-spacing: .06em; }
+    .tg-card .v { font-size: 1.5rem; font-weight: 800; line-height: 1.2; }
+    .tg-card .d { font-size: .75rem; font-weight: 600; }
+    .tg-grid2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
+    .tg-grid2 .tg-card { min-height: 190px; }
+    .tg-card svg { width: 100%; height: auto; display: block; }
+    .tg-table { width: 100%; font-size: .8rem; border-collapse: collapse; }
+    .tg-table th { text-align: left; padding: 6px 8px; font-weight: 700; }
+    .tg-table td { padding: 6px 8px; color: inherit; }
+    .tg-contrast { font-size: .85rem; display: flex; flex-direction: column; gap: 6px; }
+    .tg-contrast .ok { color: #22c55e; } .tg-contrast .warn { color: #f59e0b; }
+    .tg-json { background: #050a14; border: 1px solid var(--glass-border); border-radius: 12px; color: #cbd5e1; font: 12px/1.5 ui-monospace, Consolas, monospace; padding: 14px; max-height: 280px; overflow: auto; white-space: pre; }
+    .tg-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--accent); color: #051018; font-weight: 700; padding: 10px 18px; border-radius: 30px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 2000; }
+    .tg-faq h3 { font-size: 1.05rem; color: var(--lt); margin-top: 1.2rem; }
+    .tg-faq p { color: #94a3b8; }
+    .tg-cta { background: linear-gradient(135deg, rgba(0, 212, 255, .12), rgba(108, 92, 231, .12)); border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px; }
+    @media (max-width: 767px) { .tg-colors { grid-template-columns: repeat(4, minmax(0, 1fr)); } .tg-grid2, .tg-kpis { grid-template-columns: 1fr; } }
+      .cg-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .cg-form .form-control, .cg-form .form-select { background: var(--dk-3); color: var(--lt); border-color: var(--glass-border); }
+    .cg-checks { display: flex; flex-direction: column; gap: 8px; }
+    .cg-checks label { display: flex; gap: 10px; align-items: flex-start; font-size: .9rem; color: var(--lt); cursor: pointer; }
+    .cg-checks small { display: block; color: #94a3b8; }
+    .cg-checks input { margin-top: 4px; accent-color: var(--accent); width: 16px; height: 16px; }
+    .cg-quick { display: flex; flex-wrap: wrap; gap: 8px; }
+    .cg-chip { display: inline-block; background: rgba(0, 212, 255, .08); border: 1px solid rgba(0, 212, 255, .3); color: var(--accent-2); border-radius: 30px; padding: 5px 12px; font-size: .8rem; margin: 0 6px 6px 0; }
+    .tg-table tr.ram td { background: rgba(0, 206, 201, .1); }
+    .tg-table th { color: var(--accent); border-bottom: 1px solid var(--glass-border); }
+    .tg-table td { color: var(--lt); border-bottom: 1px solid rgba(255, 255, 255, .05); }
+    .cg-err { color: #f59e0b; font-size: .85rem; }
+    @media (max-width: 767px) { .cg-form { grid-template-columns: 1fr; } }
+    .mb-seg { display: inline-flex; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 30px; padding: 3px; }
+    .mb-seg button { background: none; border: 0; color: #94a3b8; font-weight: 600; font-size: .85rem; padding: 6px 14px; border-radius: 30px; }
+    .mb-seg button.active { background: var(--accent); color: #051018; }
+    .mb-group { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 10px; }
+    .mb-group .tg-label { width: 100%; margin-bottom: 0; }
+    .mb-check { display: inline-flex; align-items: center; gap: 8px; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 30px; padding: 6px 12px; font-size: .85rem; color: var(--lt); cursor: pointer; }
+    .mb-check input { accent-color: var(--accent); }
+    .mb-check:has(input:checked) { border-color: var(--accent); }
+    .mb-card { border: 1px solid var(--glass-border); border-radius: 12px; padding: 12px; margin-bottom: 10px; }
+    .mb-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+    .mb-head b { color: var(--lt); }
+    .mb-what { color: #94a3b8; font-size: .82rem; margin-top: 2px; }
+    .mb-tag { display: inline-block; margin-left: 8px; font-size: .7rem; font-weight: 700; color: var(--accent); border: 1px solid rgba(0,212,255,.35); border-radius: 20px; padding: 1px 8px; }
+    .mb-tag.dep { color: #fdcb6e; border-color: rgba(253,203,110,.4); }
+    .mb-pre { max-height: 180px; margin: 0; }
+    .mb-copy { padding: 6px 12px; }
+    .mb-note { font-size: .82rem; color: #fdcb6e; }
+    .tg-panel a.hover-accent { color: var(--accent); }
+  </style>
+</head>
+<body>
+    
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html#hero">
+        <img src="../assets/img/logo.svg" alt="DataArcus logo" width="190" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="../index.html#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="../portfolio.html" data-i18n="nav.portfolio">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <a href="../index.html#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="tg">
+    <div class="container">
+      <header class="mb-4">
+        <span class="badge rounded-pill text-bg-dark border border-secondary mb-2">Free tool · No sign-up</span>
+        <h1 class="display-5 fw-bold">DAX Measure Builder</h1>
+        <p class="lead text-white-50 mb-0">One base measure in, a full set of time intelligence out: YTD, prior year, YoY %, rolling months, running totals, even Ramadan vs last Ramadan. Add them all to Power BI in one click.</p>
+      </header>
+
+      <div class="row g-4">
+        <div class="col-lg-5">
+          <div class="tg-panel d-flex flex-column gap-4">
+            <div>
+              <span class="tg-label">1. Your base measure</span>
+              <div class="mb-seg mb-3" role="group" aria-label="Base measure source">
+                <button type="button" data-mode="column">Build from a column</button>
+                <button type="button" data-mode="existing">I already have one</button>
+              </div>
+              <div id="modeColumn" class="cg-form">
+                <div><label class="tg-label" for="agg">Calculation</label>
+                  <select id="agg" class="form-select"><option>SUM</option><option>AVERAGE</option><option>DISTINCTCOUNT</option><option>COUNT</option><option>MIN</option><option>MAX</option><option value="COUNTROWS">COUNTROWS (count rows)</option></select></div>
+                <div><label class="tg-label" for="base">Measure name</label><input id="base" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="fact">Fact table</label><input id="fact" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="column">Column</label><input id="column" class="form-control" maxlength="60"></div>
+              </div>
+              <div id="modeExisting" class="cg-form">
+                <div><label class="tg-label" for="existing">Existing measure name</label><input id="existing" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="home">Put new measures in table</label><input id="home" class="form-control" maxlength="60"></div>
+              </div>
+            </div>
+            <div>
+              <span class="tg-label">2. Your date table</span>
+              <div class="cg-form">
+                <div><label class="tg-label" for="cal">Date table</label><input id="cal" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="dateCol">Date column</label><input id="dateCol" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="fyEnd">Fiscal year ends</label>
+                  <select id="fyEnd" class="form-select"><option value="12-31">31 December</option><option value="3-31">31 March</option><option value="6-30">30 June</option><option value="9-30">30 September</option></select></div>
+                <div><label class="tg-label" for="n">Rolling months / avg days</label>
+                  <div class="d-flex gap-2"><input id="n" type="number" min="1" max="36" class="form-control" aria-label="Rolling months"><input id="days" type="number" min="1" max="365" class="form-control" aria-label="Average days"></div></div>
+              </div>
+              <p class="small text-white-50 mt-2 mb-0">No date table yet? <a href="dax-calendar-table-generator.html" class="hover-accent">Generate one here</a> first.</p>
+            </div>
+            <div>
+              <span class="tg-label">3. Pick your measures</span>
+              <div id="patterns"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-lg-7">
+          <div class="tg-panel d-flex flex-column gap-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+              <div class="mb-seg" role="tablist" aria-label="Output format">
+                <button type="button" class="active" data-tab-out="all">All at once</button>
+                <button type="button" data-tab-out="one">One by one</button>
+              </div>
+              <span class="small text-white-50" id="count"></span>
+            </div>
+            <div id="outAll" class="d-flex flex-column gap-3">
+              <div class="tg-actions justify-content-end">
+                <button class="tg-btn2" id="dlBtn" type="button"><i class="bi bi-download me-1"></i>Download</button>
+                <button class="btn btn-accent" id="copyAll" type="button"><i class="bi bi-clipboard me-1"></i>Copy all measures</button>
+              </div>
+              <pre class="tg-json" id="script" style="max-height:520px"></pre>
+              <p class="small text-white-50 mb-0">In Power BI Desktop open <strong>DAX query view</strong> (left toolbar), paste, and click <strong>Update model with changes</strong>. Every measure is added in one go.</p>
+            </div>
+            <div id="outOne" style="display:none">
+              <p class="small text-white-50">For <strong>Modeling → New measure</strong>: copy each one and paste. Create them in this order.</p>
+              <div id="list"></div>
+            </div>
+            <p class="mb-note mb-0" id="ramNote"><i class="bi bi-moon-stars me-1"></i>Ramadan measures use the Hijri Year, Is Ramadan and Ramadan Day columns from the <a href="dax-calendar-table-generator.html" class="hover-accent">DataArcus calendar</a>.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mt-5 justify-content-center">
+        <div class="col-lg-8">
+          <div class="tg-cta mb-5 text-center">
+            <h2 class="h4 fw-bold mb-2">Measures are easy. The right numbers are not.</h2>
+            <p class="text-white-50 mb-3">When totals don’t match, relationships double count, or YoY looks wrong, the problem is the model. DataArcus builds and fixes Power BI data models.</p>
+            <a href="../index.html#contact" class="btn btn-accent">Book a Free Call</a>
+            <a href="dax-calendar-table-generator.html" class="tg-btn2 ms-2 text-decoration-none d-inline-block">Free DAX Calendar Generator</a>
+          </div>
+          <section class="tg-faq">
+            <h2 class="h4 fw-bold">Questions</h2>
+            <h3>How do I calculate year over year growth in DAX?</h3>
+            <p>Make a prior-year measure with <strong>SAMEPERIODLASTYEAR</strong>, then use <strong>DIVIDE(current - prior year, prior year)</strong>. DIVIDE returns blank instead of an error when last year has no data. Tick "YoY %" above and the builder writes both for you.</p>
+            <h3>How do I add all the measures at once?</h3>
+            <p>Use <strong>DAX query view</strong> in Power BI Desktop. Paste the whole script and click <strong>Update model with changes</strong>. Then set the % measures to Percentage format in the Measure tools ribbon.</p>
+            <h3>My YTD or PY measure is blank. Why?</h3>
+            <p>Time intelligence needs a real date table: one row per day, no gaps, marked as a date table, and related to your fact table. Use that table’s Date column on your visuals, not the date column from the fact table.</p>
+            <h3>What is the difference between Rolling 3M and 30D Avg?</h3>
+            <p><strong>Rolling 3M</strong> adds up the last three months, which is great for smoothing seasonal sales. <strong>30D Avg</strong> is the average per day over the last 30 days, which is better for trend lines on daily data.</p>
+            <h3>How does Ramadan vs last Ramadan work?</h3>
+            <p>Ramadan moves about 11 days earlier every year, so comparing March with March is misleading. The measure looks up the same Ramadan days in the previous Hijri year. Put <strong>Ramadan Day</strong> on the axis and you compare day 5 with day 5.</p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div class="tg-toast" id="toast" role="status" aria-live="polite"></div>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="../index.html#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="../assets/img/logo.svg" alt="DataArcus logo" width="190" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+              <li class="mb-2"><a href="../tools/power-bi-theme-generator.html" class="text-white-50 text-decoration-none hover-accent">Free Theme Generator</a></li>
+              <li class="mb-2"><a href="../tools/dax-calendar-table-generator.html" class="text-white-50 text-decoration-none hover-accent">Free DAX Calendar Generator</a></li>
+              <li class="mb-2"><a href="../tools/dax-measure-builder.html" class="text-white-50 text-decoration-none hover-accent">Free DAX Measure Builder</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="../portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Showcases</a></li>
+              <li class="mb-2"><a href="../index.html#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="../blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Built with passion • Powered by innovation</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="../assets/js/translations/common.min.js" defer></script>
+  <script src="../assets/js/lang-manager.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
+  <script src="../assets/js/main.min.js" defer></script>
+  <script src="../assets/js/measure-builder.min.js" defer></script>
+</body>
+</html>
