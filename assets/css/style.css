@@ -1268,3 +1268,11 @@ html[dir="rtl"] .navbar-nav {
 @media (prefers-reduced-motion: reduce) { .proof-dot { animation: none; } }
 
 .tool-mini-code, .th-code { direction: ltr; unicode-bidi: plaintext; }
+
+/* Article code blocks: always left to right, also on Arabic pages */
+.article-body pre{direction:ltr;text-align:left;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:1rem 1.25rem;margin:1.5rem 0;overflow-x:auto;font-size:.85rem;line-height:1.6}
+.article-body pre code{color:#e6edf3;white-space:pre;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+html[dir="rtl"] .article-body ol,html[dir="rtl"] .article-body ul{padding-left:0;padding-right:2rem}
+/* Links inside articles use the brand accent */
+.article-body a{color:var(--accent);text-underline-offset:3px}
+.article-body a:hover{color:#fff}

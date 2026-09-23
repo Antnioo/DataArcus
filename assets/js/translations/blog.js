@@ -47,6 +47,20 @@ window.blogTranslations = {
 
     // Posts
     posts: {
+      ramadanSales: {
+        badge: "POWER BI",
+        title: "Ramadan Sales in Power BI: Compare This Ramadan With Last Ramadan",
+        date: "September 23, 2026",
+        excerpt: "SAMEPERIODLASTYEAR compares March with March, but Ramadan moved 11 days. The Hijri calendar and the one DAX measure that line up every Ramadan day by day.",
+        button: "Read Playbook"
+      },
+      licensingGuide: {
+        badge: "STRATEGY",
+        title: "Power BI Pro, Premium Per User or Fabric: Which License Do You Actually Need?",
+        date: "September 23, 2026",
+        excerpt: "One number decides your Power BI license: how many people only view reports. Current prices, the F64 break-even point and a worked example.",
+        button: "Read Playbook"
+      },
       journeyAttribution: {
         badge: "DATA ENGINEERING",
         title: "Resolve Once, Hydrate Many: A DAX Pattern for Lead Attribution",
@@ -147,6 +161,20 @@ window.blogTranslations = {
 
     // Posts (AR)
     posts: {
+      ramadanSales: {
+        badge: "Power BI",
+        title: "مبيعات رمضان في Power BI: قارن رمضان هذا العام برمضان الماضي",
+        date: "23 سبتمبر 2026",
+        excerpt: "تقارن SAMEPERIODLASTYEAR مارس بمارس، لكن رمضان تحرّك 11 يومًا. التقويم الهجري ومقياس DAX الذي يطابق كل رمضان يومًا بيوم.",
+        button: "اقرأ الدليل"
+      },
+      licensingGuide: {
+        badge: "استراتيجية",
+        title: "Power BI Pro أم Premium Per User أم Fabric: أي ترخيص تحتاجه فعلًا؟",
+        date: "23 سبتمبر 2026",
+        excerpt: "رقم واحد يحسم ترخيص Power BI: عدد من يشاهدون التقارير فقط. الأسعار الحالية ونقطة التعادل لـ F64 ومثال عملي.",
+        button: "اقرأ الدليل"
+      },
       journeyAttribution: {
         badge: "هندسة البيانات",
         title: "حلّ مرة واحدة، غذِّ كل مكان: نمط DAX لعزو العملاء المحتملين",
