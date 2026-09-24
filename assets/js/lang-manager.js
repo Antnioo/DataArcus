@@ -58,6 +58,8 @@ class LanguageManager {
       return window.calendarGeneratorTranslations;
     } else if (path.includes('dax-measure-builder')) {
       return window.measureBuilderTranslations;
+    } else if (path.includes('dp-600-practice-exam')) {
+      return window.dp600Translations;
     } else if (path.includes('power-bi-licensing-cost-calculator')) {
       return window.licensingCalculatorTranslations;
     } else if (path.includes('/tools/')) {
