@@ -1,0 +1,56 @@
+name: Check DP-600 skills outline
+
+on:
+  schedule:
+    - cron: '15 5 * * 1'  # every Monday 05:15 UTC (09:15 Dubai), just after the price check
+  workflow_dispatch:       # "Run workflow" button for a manual check
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  check-outline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Read Microsoft's DP-600 study guide
+        id: check
+        run: node scripts/check-dp600-outline.mjs
+        continue-on-error: true
+
+      - name: Save the check date
+        run: |
+          if git diff --quiet assets/data/dp600-outline.json; then
+            echo "No changes"
+          else
+            git config user.name "DataArcus exam bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add assets/data/dp600-outline.json
+            git commit -m "Weekly DP-600 outline check $(date -u +%Y-%m-%d)"
+            git pull --rebase
+            git push
+          fi
+
+      - name: Open an issue when Microsoft changed something
+        if: steps.check.outcome == 'failure' && hashFiles('review.md') != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TITLE="DP-600: Microsoft changed the exam outline, questions need a review"
+          if gh issue list --state open --search "$TITLE in:title" --json number --jq 'length' | grep -q '^0$'; then
+            gh issue create --title "$TITLE" --body-file review.md
+          else
+            echo "An issue is already open, not adding another one."
+          fi
+
+      - name: Flag problems (GitHub emails you when this fails)
+        if: steps.check.outcome == 'failure'
+        run: |
+          echo "::error::The DP-600 outline check found a change or could not read Microsoft's page. See the issue or this run's log."
+          exit 1
