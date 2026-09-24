@@ -1,0 +1,47 @@
+// Translations for tools/dp-600-practice-exam.html
+window.dp600Translations = {
+  "en": {
+    "meta": { "title": "Free DP-600 Practice Exam and Simulator (Fabric Analytics Engineer) - DataArcus" },
+    "dp": {
+      "badge": "Free · No sign-up · 220 original questions",
+      "title": "DP-600 Practice Exam Simulator",
+      "subtitle": "Get ready for Microsoft Fabric Analytics Engineer (DP-600) with timed mock exams, case studies and an explanation for every option.",
+      "pill": { "outline": "Skills outline of 19 Oct 2026", "learn": "Every answer linked to Microsoft Learn", "ar": "Arabic takeaway on every question" },
+      "disclaimer": "Independent practice tool by DataArcus. <b>Not affiliated with or endorsed by Microsoft.</b> All questions are original, written from the public <a href=\"https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/dp-600\" target=\"_blank\" rel=\"noopener\">DP-600 study guide</a> and Microsoft Learn documentation. They are not real exam questions. Microsoft, Microsoft Fabric and Power BI are trademarks of the Microsoft group of companies. Your progress is saved only in this browser. <button type=\"button\" id=\"dpReset\" class=\"dp-link\">Reset progress</button>",
+      "cta": { "title": "Passing is step one. Building is the job.", "desc": "DataArcus builds Fabric and Power BI solutions for businesses across the MENA region: lakehouses, semantic models and reports people use every day.", "more": "More free tools" },
+      "faq": {
+        "title": "Questions",
+        "q1": "Are these real DP-600 exam questions?",
+        "a1": "No. Every question is original, written for DataArcus from the public skills outline and checked against Microsoft Learn. Real exam questions are confidential, and using leaked \"dumps\" breaks the exam agreement and can cost you the certification.",
+        "q2": "How close is the mock exam to the real one?",
+        "a2": "It follows the same weights, the same question styles (single answer, multiple answers, Yes/No statements, ordering and a case study), 100 minutes and a 700 pass mark. Your score here is an estimate, not a prediction.",
+        "q3": "What changed in the October 2026 update?",
+        "a3": "The exam now puts more weight on preparing data (45 to 50%) and covers newer topics such as OneLake catalog, Real-Time hub, Direct Lake on OneLake and OneLake security. Read the <a href=\"https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/dp-600\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">official study guide</a> for the full list.",
+        "q4": "What else should I use to prepare?",
+        "a4": "Hands-on time in a Fabric trial workspace, the free <a href=\"https://learn.microsoft.com/en-us/credentials/certifications/exams/dp-600/practice/assessment?assessment-type=practice&amp;assessmentId=90\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">Microsoft practice assessment</a>, and the Learn pages linked under every explanation here."
+      }
+    }
+  },
+  "ar": {
+    "meta": { "title": "اختبار DP-600 التجريبي المجاني (Fabric Analytics Engineer) - DataArcus" },
+    "dp": {
+      "badge": "مجاني · بدون تسجيل · 220 سؤالًا أصليًا",
+      "title": "محاكي اختبار DP-600",
+      "subtitle": "استعد لشهادة Microsoft Fabric Analytics Engineer (DP-600) باختبارات تجريبية بوقت محدد ودراسات حالة وشرح لكل خيار.",
+      "pill": { "outline": "محدّث لمنهج 19 أكتوبر 2026", "learn": "كل إجابة مرتبطة بـ Microsoft Learn", "ar": "خلاصة بالعربي لكل سؤال" },
+      "disclaimer": "أداة تدريب مستقلة من DataArcus. <b>غير تابعة لـ Microsoft ولا معتمدة منها.</b> كل الأسئلة أصلية، مكتوبة من <a href=\"https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/dp-600\" target=\"_blank\" rel=\"noopener\">دليل مذاكرة DP-600</a> المنشور ووثائق Microsoft Learn، وليست أسئلة من الاختبار الحقيقي. Microsoft وMicrosoft Fabric وPower BI علامات تجارية لمجموعة شركات Microsoft. تقدمك محفوظ في هذا المتصفح فقط. <button type=\"button\" id=\"dpReset\" class=\"dp-link\">مسح التقدم</button>",
+      "cta": { "title": "النجاح في الاختبار خطوة أولى. البناء هو الشغل الحقيقي.", "desc": "DataArcus تبني حلول Fabric وPower BI للشركات في منطقة الشرق الأوسط وشمال أفريقيا: lakehouses ونماذج دلالية وتقارير يستخدمها الناس كل يوم.", "more": "أدوات مجانية أخرى" },
+      "faq": {
+        "title": "أسئلة شائعة",
+        "q1": "هل هذه أسئلة حقيقية من اختبار DP-600؟",
+        "a1": "لا. كل سؤال أصلي، كُتب لـ DataArcus من منهج الاختبار المنشور وتمت مراجعته مع Microsoft Learn. أسئلة الاختبار الحقيقي سرية، واستخدام الأسئلة المسرّبة يخالف اتفاقية الاختبار وقد يُفقدك الشهادة.",
+        "q2": "ما مدى قرب الاختبار التجريبي من الحقيقي؟",
+        "a2": "يتبع نفس الأوزان ونفس أنواع الأسئلة (إجابة واحدة، إجابات متعددة، عبارات نعم/لا، ترتيب خطوات ودراسة حالة)، و100 دقيقة، ودرجة نجاح 700. نتيجتك هنا تقديرية وليست توقعًا مضمونًا.",
+        "q3": "ما الذي تغيّر في تحديث أكتوبر 2026؟",
+        "a3": "أصبح وزن تجهيز البيانات أكبر (45 إلى 50%)، ودخلت مواضيع أحدث مثل OneLake catalog وReal-Time hub وDirect Lake on OneLake وOneLake security. اقرأ <a href=\"https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/dp-600\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">دليل المذاكرة الرسمي</a> للقائمة الكاملة.",
+        "q4": "ماذا أستخدم أيضًا للتحضير؟",
+        "a4": "تجربة عملية في مساحة Fabric تجريبية، و<a href=\"https://learn.microsoft.com/en-us/credentials/certifications/exams/dp-600/practice/assessment?assessment-type=practice&amp;assessmentId=90\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">التقييم التدريبي المجاني من Microsoft</a>، وصفحات Learn المرفقة تحت كل شرح هنا."
+      }
+    }
+  }
+};

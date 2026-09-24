@@ -30,6 +30,13 @@ window.toolsHubTranslations = {
           "desc": "Pro vs Premium Per User vs Fabric for your number of creators and viewers, in USD, AED or SAR.",
           "tag1": "Pro vs PPU vs Fabric",
           "tag2": "F64 break-even"
+        },
+        "dp600": {
+          "title": "DP-600 Practice Exam Simulator",
+          "desc": "220 original Fabric questions with explanations, timed mock exams scored out of 1000, case studies and a study plan.",
+          "tag1": "New",
+          "tag2": "Mock exams",
+          "tag3": "Oct 2026 outline"
         }
       },
       "nextUp": "Next up",
@@ -89,6 +96,13 @@ window.toolsHubTranslations = {
           "desc": "مقارنة Pro و Premium Per User و Fabric حسب عدد المنشئين والمشاهدين، بالدولار أو الدرهم أو الريال.",
           "tag1": "Pro مقابل PPU مقابل Fabric",
           "tag2": "نقطة التعادل لـ F64"
+        },
+        "dp600": {
+          "title": "محاكي اختبار DP-600",
+          "desc": "220 سؤالًا أصليًا عن Fabric مع الشرح، واختبارات تجريبية بوقت ونتيجة من 1000، ودراسات حالة وخطة مذاكرة.",
+          "tag1": "جديد",
+          "tag2": "اختبارات تجريبية",
+          "tag3": "منهج أكتوبر 2026"
         }
       },
       "nextUp": "قريبًا",
