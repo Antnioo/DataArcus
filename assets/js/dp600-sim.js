@@ -218,12 +218,45 @@ document.addEventListener('DOMContentLoaded', () => {
   const bar = (pct, cls) => '<div class="dp-bar ' + (cls || '') + '"><span style="width:' + Math.round(Math.max(0, Math.min(1, pct)) * 100) + '%"></span></div>';
   const top = () => { const y = root.getBoundingClientRect().top + window.scrollY - 90; if (window.scrollY > y) window.scrollTo({ top: y, behavior: 'auto' }); };
 
+  // ---------- weekly outline check (assets/data/dp600-outline.json, refreshed by a GitHub Action) ----------
+  let OUT = null;
+  const fmtDate = (iso) => new Intl.DateTimeFormat(isAr() ? 'ar-u-nu-latn' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(iso + 'T00:00:00Z'));
+  function renderOutline() {
+    const el = document.getElementById('dpOutline');
+    if (!el || !OUT || !OUT.checked) return;
+    const guide = '<a href="' + esc(OUT.sources.studyGuide) + '" target="_blank" rel="noopener">' + L('study guide', 'دليل المذاكرة') + '</a>';
+    let html;
+    if (OUT.status === 'review') {
+      el.className = 'dp-outline review';
+      html = '<i class="bi bi-arrow-repeat"></i> ' + L('Microsoft updated the DP-600 skills outline (checked ' + fmtDate(OUT.checked) + '). We are reviewing the questions now. Most of them still apply. See the ' + guide + ' for what changed.',
+        'حدّثت Microsoft منهج DP-600 (آخر فحص ' + fmtDate(OUT.checked) + '). نراجع الأسئلة الآن ومعظمها ما زال صالحًا. راجع ' + guide + ' لمعرفة التغييرات.');
+    } else {
+      el.className = 'dp-outline';
+      html = '<i class="bi bi-shield-check"></i> ' + L('Checked weekly against Microsoft\'s DP-600 ' + guide + '. Last check: ' + fmtDate(OUT.checked) + '. Questions match the skills measured as of ' + fmtDate(OUT.bankOutlineDate) + '.',
+        'نراجع أسبوعيًا ' + guide + ' الخاص بـ DP-600 من Microsoft. آخر فحص: ' + fmtDate(OUT.checked) + '. الأسئلة مطابقة للمهارات المقاسة اعتبارًا من ' + fmtDate(OUT.bankOutlineDate) + '.');
+      if (today() < OUT.bankOutlineDate) html += ' ' + L('Taking the exam before then? The previous outline is still live and most topics overlap.', 'ستختبر قبل هذا التاريخ؟ المنهج السابق ما زال ساريًا ومعظم المواضيع مشتركة.');
+    }
+    el.innerHTML = html;
+  }
+  fetch('../assets/data/dp600-outline.json', { cache: 'no-cache' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((d) => {
+      if (!d) return;
+      OUT = d;
+      const names = { prep: 'prepare data', model: 'implement and manage semantic models', maintain: 'maintain a data analytics solution' };
+      (d.domains || []).forEach((x) => { const k = Object.keys(names).find((n) => names[n] === String(x.name).toLowerCase()); if (k && x.w) DOM[k].w = x.w; });
+      renderOutline();
+      if (view === 'home') home();
+    })
+    .catch(() => { /* opened as a file or offline: keep the built-in weights */ });
+
   // ---------- router ----------
   let view = 'home', ctx = {};
   let timer = null;
   const go = (v, c) => { view = v; ctx = c || {}; if (timer && v !== 'mock') { clearInterval(timer); timer = null; } render(); top(); };
   function render() {
     root.classList.toggle('dp-exammode', view === 'mock');
+    renderOutline();
     ({ home, practiceSetup, session, mockSetup, mock, results, plan, cases: caseList })[view]();
   }
 

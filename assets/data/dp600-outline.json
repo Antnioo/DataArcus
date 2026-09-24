@@ -1,0 +1,20 @@
+{
+  "checked": "2026-09-24",
+  "status": "current",
+  "outlineDate": "2026-10-19",
+  "bankOutlineDate": "2026-10-19",
+  "bankHash": null,
+  "outlineHash": null,
+  "announcedUpdate": "2026-10-19",
+  "retirement": null,
+  "domains": [
+    { "name": "Maintain a data analytics solution", "w": "25–30%" },
+    { "name": "Prepare data", "w": "45–50%" },
+    { "name": "Implement and manage semantic models", "w": "25–30%" }
+  ],
+  "outline": [],
+  "sources": {
+    "studyGuide": "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/dp-600",
+    "certPage": "https://learn.microsoft.com/en-us/credentials/certifications/fabric-analytics-engineer-associate/"
+  }
+}

@@ -94,6 +94,12 @@
     .dp-note { font-size: .82rem; color: #94a3b8; }
     .dp-disclaimer { font-size: .78rem; color: #94a3b8; border-top: 1px solid var(--glass-border); padding-top: 14px; }
     .dp-disclaimer a, .dp-link { color: var(--accent); }
+    .dp-outline { font-size: .82rem; color: #cbd5e1; background: rgba(34,197,94,.06); border: 1px solid rgba(34,197,94,.25); border-radius: 12px; padding: 10px 14px; margin-bottom: 12px; }
+    .dp-outline:empty { display: none; }
+    .dp-outline i { color: #22c55e; }
+    .dp-outline.review { background: rgba(253,203,110,.07); border-color: rgba(253,203,110,.35); }
+    .dp-outline.review i { color: #fdcb6e; }
+    .dp-outline a { color: var(--accent); }
     .dp-link { background: none; border: 0; padding: 0; text-decoration: underline; font-size: inherit; }
 
     /* dashboard */
@@ -354,7 +360,8 @@
       </header>
       <div id="dpApp" aria-live="polite"><div class="dp-panel dp-note">Loading…</div></div>
       <noscript><p class="text-warning">The simulator needs JavaScript.</p></noscript>
-      <p class="dp-disclaimer mt-4" data-i18n-html="dp.disclaimer">Independent practice tool by DataArcus. <b>Not affiliated with or endorsed by Microsoft.</b> All questions are original, written from the public <a href="https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/dp-600" target="_blank" rel="noopener">DP-600 study guide</a> and Microsoft Learn documentation. They are not real exam questions. Microsoft, Microsoft Fabric and Power BI are trademarks of the Microsoft group of companies. Your progress is saved only in this browser. <button type="button" id="dpReset" class="dp-link">Reset progress</button></p>
+      <p class="dp-outline mt-4" id="dpOutline"></p>
+      <p class="dp-disclaimer" data-i18n-html="dp.disclaimer">Independent practice tool by DataArcus. <b>Not affiliated with or endorsed by Microsoft.</b> All questions are original, written from the public <a href="https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/dp-600" target="_blank" rel="noopener">DP-600 study guide</a> and Microsoft Learn documentation. They are not real exam questions. Microsoft, Microsoft Fabric and Power BI are trademarks of the Microsoft group of companies. Your progress is saved only in this browser. <button type="button" id="dpReset" class="dp-link">Reset progress</button></p>
       <div class="row mt-5 justify-content-center">
         <div class="col-lg-8">
           <div class="tg-cta mb-5 text-center">
