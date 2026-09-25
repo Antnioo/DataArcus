@@ -192,46 +192,47 @@ portfolio: {
         response: "Response within 4 hours"
       },
       checklist: {
-        title: "Data Clarity Call Checklist",
+        title: "What to bring to your Data Clarity Call",
         items: [
           {
-            title: "Business Objectives",
-            desc: "What decisions need to be made faster or better?"
+            title: "One decision you want to make faster",
+            desc: "For example: \"Which campaigns bring buyers, not just leads?\""
           },
           {
-            title: "Data Sources",
-            desc: "CRM, ERP, e-commerce platforms, spreadsheets..."
+            title: "Where your data lives today",
+            desc: "CRM export, Excel sheets, Shopify, Google Sheets..."
           },
           {
-            title: "Key Stakeholders",
-            desc: "Who will be using the dashboards daily?"
+            title: "Who reads the numbers",
+            desc: "You, a manager, the sales team?"
           },
           {
-            title: "Success Metrics",
-            desc: "How will we measure project success?"
+            title: "What \"better\" looks like",
+            desc: "A report you stop building by hand, a number you can finally trust"
           }
         ]
       },
       timeline: {
-        title: "Full Project Timeline",
+        title: "How a typical project runs",
         items: [
           {
-            label: "Discovery & Planning",
-            value: "Day 1"
+            label: "Discovery and data access",
+            value: "Week 1"
           },
           {
-            label: "Data Modeling & ETL",
-            value: "Day 2-3"
+            label: "Data model and measures",
+            value: "Weeks 1-2"
           },
           {
-            label: "Dashboard Development",
-            value: "Day 4-5"
+            label: "Dashboard build",
+            value: "Weeks 2-3"
           },
           {
-            label: "Testing & Deployment",
-            value: "Day 6-7"
+            label: "Testing, training and handover",
+            value: "Weeks 3-4"
           }
-        ]
+        ],
+        note: "Smaller jobs, like one report on clean data, can take a few days. You get a fixed timeline after the call."
       }
     }
   },
@@ -428,46 +429,47 @@ portfolio: {
         response: "الرد في غضون ٤ ساعات"
       },
       checklist: {
-        title: "قائمة تحقق مكالمة وضوح البيانات",
+        title: "ما الذي تحضره إلى مكالمة وضوح البيانات",
         items: [
           {
-            title: "أهداف العمل",
-            desc: "ما هي القرارات التي يجب اتخاذها بشكل أسرع أو أفضل؟"
+            title: "قرار واحد تريد اتخاذه أسرع",
+            desc: "مثال: \"أي الحملات تجلب مشترين، وليس مجرد عملاء محتملين؟\""
           },
           {
-            title: "مصادر البيانات",
-            desc: "CRM، ERP، منصات التجارة الإلكترونية، جداول البيانات..."
+            title: "أين توجد بياناتك اليوم",
+            desc: "تصدير من CRM، أو ملفات Excel، أو متجر Shopify، أو Google Sheets وغيرها"
           },
           {
-            title: "أصحاب القرارات",
-            desc: "من سيستخدم لوحات التحكم بشكل يومي؟"
+            title: "من يقرأ الأرقام",
+            desc: "أنت، أحد المدراء، أم فريق المبيعات؟"
           },
           {
-            title: "مقاييس النجاح",
-            desc: "كيف سنقيس نجاح المشروع؟"
+            title: "كيف يبدو الأفضل",
+            desc: "تقرير تتوقف عن إعداده يدويًا، أو رقم تثق به أخيرًا"
           }
         ]
       },
       timeline: {
-        title: "الجدول الزمني الكامل للمشروع",
+        title: "كيف يسير المشروع عادةً",
         items: [
           {
-            label: "الاكتشاف والتخطيط",
-            value: "اليوم ١"
+            label: "الاكتشاف والوصول إلى البيانات",
+            value: "الأسبوع الأول"
           },
           {
-            label: "نمذجة البيانات وETL",
-            value: "اليوم ٢-٣"
+            label: "نموذج البيانات والمقاييس",
+            value: "الأسبوعان الأول والثاني"
           },
           {
-            label: "تطوير لوحة التحكم",
-            value: "اليوم ٤-٥"
+            label: "بناء لوحة التحكم",
+            value: "الأسبوعان الثاني والثالث"
           },
           {
-            label: "الاختبار والنشر",
-            value: "اليوم ٦-٧"
+            label: "الاختبار والتدريب والتسليم",
+            value: "الأسبوعان الثالث والرابع"
           }
-        ]
+        ],
+        note: "المهام الأصغر، مثل تقرير واحد على بيانات نظيفة، قد تستغرق أيامًا قليلة. تحصل على جدول زمني محدد بعد المكالمة."
       }
     }
   }
