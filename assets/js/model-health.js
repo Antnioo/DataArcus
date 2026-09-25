@@ -269,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '<div class="mh-h"><b>' + bdi('[' + sel.name + ']') + '</b>' + (sel.used === false ? '<span class="mh-badge off ms-2">' + L('unused', 'غير مستخدم') + '</span>' : '') + '</div>' +
         '<div class="mh-meta">' + (sel.folder ? '<span><i class="bi bi-folder2"></i> ' + bdi(sel.folder) + '</span>' : '') + '<span><i class="bi bi-table"></i> ' + bdi(sel.table) + '</span>' + (sel.formatString ? '<span><i class="bi bi-hash"></i> ' + bdi(sel.formatString) + '</span>' : '') + '<span title="' + esc(sel.pages.join(', ')) + '"><i class="bi bi-bar-chart"></i> ' + (sel.visuals ? L('in ' + num(sel.visuals) + ' visual' + (sel.visuals > 1 ? 's' : '') + ' on ' + num(sel.pages.length) + ' page' + (sel.pages.length > 1 ? 's' : ''), 'في ' + num(sel.visuals) + ' visual على ' + num(sel.pages.length) + ' صفحة') : (sel.refs ? L('in page or report filters', 'في فلاتر الصفحة أو التقرير') : L('in no visual', 'غير موجود في أي visual'))) + '</span><span><i class="bi bi-layers"></i> ' + L('chain depth ' + sel.depth, 'عمق السلسلة ' + sel.depth) + '</span></div>' +
         (sel.description ? '<p class="mh-note" dir="auto">' + esc(sel.description) + '</p>' : '') +
-        (sel.pages.length ? '<div class="mh-pages"><i class="bi bi-file-earmark-richtext"></i> ' + sel.pages.map((pg) => '<span>' + bdi(pg) + '</span>').join('') + '</div>' : '') +
+        (sel.pages.length ? '<div class="mh-pages" title="' + L('Pages that show this measure', 'الصفحات التي تعرض هذا المقياس') + '"><i class="bi bi-file-earmark-richtext"></i>' + sel.pages.map((pg, i) => '<span' + (i >= 6 ? ' hidden' : '') + ' title="' + esc(pg) + '">' + bdi(pg) + '</span>').join('') + (sel.pages.length > 6 ? '<button type="button" data-allpages>+' + num(sel.pages.length - 6) + ' ' + L('more', 'أخرى') + '</button>' : '') + '</div>' : '') +
         '<pre class="mh-dax">' + esc(sel.expr.trim()) + '</pre>' +
         '<span class="tg-label">' + L('Depends on', 'يعتمد على') + ' (' + num(sel.dependsOn.length) + ')</span><div class="mh-deps">' + (sel.dependsOn.map(chip).join('') || '<span class="mh-note">·</span>') + '</div>' +
         '<span class="tg-label mt-3">' + L('Used by', 'يستخدمه') + ' (' + num(sel.usedBy.length) + ')</span><div class="mh-deps">' + (sel.usedBy.map(chip).join('') || '<span class="mh-note">' + L('No other measure uses it.', 'لا يستخدمه أي مقياس آخر.') + '</span>') + '</div>'
@@ -277,6 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const qi = $('mhQ');
     qi.oninput = () => { msQuery = qi.value; const pos = qi.selectionStart; tMeasures(); const n = $('mhQ'); n.focus(); n.setSelectionRange(pos, pos); };
     el.querySelectorAll('[data-mf]').forEach((b) => b.onclick = () => { msFilter = b.dataset.mf; tMeasures(); });
+    const ap = el.querySelector('[data-allpages]'); if (ap) ap.onclick = () => { ap.parentElement.querySelectorAll('span[hidden]').forEach((x) => { x.hidden = false; }); ap.remove(); };
     el.querySelectorAll('[data-ms]').forEach((b) => b.onclick = () => { msOpen = b.dataset.ms; tMeasures(); if (window.innerWidth < 992) { const d = el.querySelector('.mh-mdetail'); if (d) d.scrollIntoView({ behavior: 'smooth', block: 'start' }); } });
     const on = el.querySelector('.mh-mrow.on'); if (on) on.scrollIntoView({ block: 'nearest' });
   }
