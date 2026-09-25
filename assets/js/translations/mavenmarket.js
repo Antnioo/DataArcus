@@ -79,30 +79,30 @@ window.mavenmarketTranslations = {
     // Final CTA
     finalCta: {
       title: "Ready to See This Clarity with Your Own Data?",
-      subtitle: "Book a free 20-minute Data Clarity Call - no obligation, just a straight look at what's possible with your own e-commerce data.",
+      subtitle: "Book a free 20-minute Data Clarity Call. No obligation, just a straight look at what's possible with your own e-commerce data.",
       button: "Book a Free Call"
     }
   },
 
   ar: {
     meta: {
-      title: "مثال لوحة تحكم Maven Market في Power BI - داتا اركوس",
+      title: "مثال لوحة تحكم Maven Market في Power BI - داتا أركوس",
       description: "استكشف لوحة تحكم Maven Market في Power BI: تحليلات تفاعلية للمبيعات والمخزون والأرباح لقطاع التجزئة والتجارة الإلكترونية.",
-      keywords: "لوحة تحكم Maven Market, تحليلات Power BI للبيع بالتجزئة, لوحة مبيعات, تحليلات المخزون, لوحة التجارة الإلكترونية, داتا اركوس",
-      author: "داتا اركوس",
+      keywords: "لوحة تحكم Maven Market, تحليلات Power BI للبيع بالتجزئة, لوحة مبيعات, تحليلات المخزون, لوحة التجارة الإلكترونية, داتا أركوس",
+      author: "داتا أركوس",
       "og:type": "website",
-      "og:title": "مثال لوحة تحكم Maven Market في Power BI - داتا اركوس",
+      "og:title": "مثال لوحة تحكم Maven Market في Power BI - داتا أركوس",
       "og:description": "استكشف لوحة تحكم Maven Market في Power BI: تحليلات تفاعلية للمبيعات والمخزون والأرباح لقطاع التجزئة والتجارة الإلكترونية.",
       "og:url": "https://dataarcus.com/dashboards/maven-market-dashboard.html",
-      "og:site_name": "داتا اركوس",
+      "og:site_name": "داتا أركوس",
       "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
-      "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       "og:locale": "ar_EG",
       "twitter:card": "summary_large_image",
-      "twitter:title": "مثال لوحة تحكم Maven Market في Power BI - داتا اركوس",
+      "twitter:title": "مثال لوحة تحكم Maven Market في Power BI - داتا أركوس",
       "twitter:description": "استكشف لوحة تحكم Maven Market في Power BI: تحليلات تفاعلية للمبيعات والمخزون والأرباح لقطاع التجزئة والتجارة الإلكترونية.",
       "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
-      "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "twitter:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       canonical: "https://dataarcus.com/dashboards/maven-market-dashboard.html",
     },
 
@@ -162,7 +162,7 @@ window.mavenmarketTranslations = {
 
     finalCta: {
       title: "هل أنت مستعد لرؤية هذا الوضوح ببياناتك الخاصة؟",
-      subtitle: "احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة - بدون أي التزام، فقط نظرة مباشرة على ما هو ممكن ببيانات تجارتك الإلكترونية الخاصة.",
+      subtitle: "احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة. بدون أي التزام، فقط نظرة مباشرة على ما هو ممكن ببيانات تجارتك الإلكترونية الخاصة.",
       button: "احجز مكالمة مجانية"
     }
   }

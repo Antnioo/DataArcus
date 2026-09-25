@@ -2,19 +2,19 @@
 window.licensingGuideTranslations = {
   "en": {
     "meta": {
-      "title": "Power BI Pro vs Premium Per User vs Fabric F64: Cost Guide 2026 - DataArcus",
+      "title": "Power BI Pro vs PPU vs Fabric F64: 2026 Cost Guide",
       "description": "Pro, Premium Per User or a Fabric capacity? One number decides it: how many people only view reports. Prices, the F64 break-even point and a worked example.",
       "keywords": "Power BI licensing, Power BI Pro vs Premium Per User, Fabric F64 cost, Power BI pricing 2026, Fabric capacity pricing, Power BI free viewers, DataArcus",
       "author": "DataArcus",
       "og:type": "article",
-      "og:title": "Power BI Pro vs Premium Per User vs Fabric F64: Cost Guide 2026 - DataArcus",
+      "og:title": "Power BI Pro vs PPU vs Fabric F64: 2026 Cost Guide",
       "og:description": "Pro, Premium Per User or a Fabric capacity? One number decides it: how many people only view reports. Prices, the F64 break-even point and a worked example.",
       "og:url": "https://dataarcus.com/articles/article-power-bi-licensing-guide.html",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "og:locale": "en_US",
       "twitter:card": "summary_large_image",
-      "twitter:title": "Power BI Pro vs Premium Per User vs Fabric F64: Cost Guide 2026 - DataArcus",
+      "twitter:title": "Power BI Pro vs PPU vs Fabric F64: 2026 Cost Guide",
       "twitter:description": "Pro, Premium Per User or a Fabric capacity? One number decides it: how many people only view reports. Prices, the F64 break-even point and a worked example.",
       "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "canonical": "https://dataarcus.com/articles/article-power-bi-licensing-guide.html"
@@ -57,19 +57,19 @@ window.licensingGuideTranslations = {
   },
   "ar": {
     "meta": {
-      "title": "Power BI Pro مقابل Premium Per User مقابل Fabric F64: دليل التكلفة 2026 - DataArcus",
+      "title": "Power BI Pro مقابل PPU مقابل Fabric F64: دليل التكلفة 2026",
       "description": "Pro أم Premium Per User أم سعة Fabric؟ رقم واحد يحسم القرار: عدد من يشاهدون التقارير فقط. الأسعار ونقطة التعادل لـ F64 ومثال عملي.",
       "keywords": "Power BI licensing, Power BI Pro vs Premium Per User, Fabric F64 cost, Power BI pricing 2026, Fabric capacity pricing, Power BI free viewers, DataArcus",
       "author": "DataArcus",
       "og:type": "article",
-      "og:title": "Power BI Pro مقابل Premium Per User مقابل Fabric F64: دليل التكلفة 2026 - DataArcus",
+      "og:title": "Power BI Pro مقابل PPU مقابل Fabric F64: دليل التكلفة 2026",
       "og:description": "Pro أم Premium Per User أم سعة Fabric؟ رقم واحد يحسم القرار: عدد من يشاهدون التقارير فقط. الأسعار ونقطة التعادل لـ F64 ومثال عملي.",
       "og:url": "https://dataarcus.com/articles/article-power-bi-licensing-guide.html",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "og:locale": "ar_AR",
       "twitter:card": "summary_large_image",
-      "twitter:title": "Power BI Pro مقابل Premium Per User مقابل Fabric F64: دليل التكلفة 2026 - DataArcus",
+      "twitter:title": "Power BI Pro مقابل PPU مقابل Fabric F64: دليل التكلفة 2026",
       "twitter:description": "Pro أم Premium Per User أم سعة Fabric؟ رقم واحد يحسم القرار: عدد من يشاهدون التقارير فقط. الأسعار ونقطة التعادل لـ F64 ومثال عملي.",
       "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "canonical": "https://dataarcus.com/articles/article-power-bi-licensing-guide.html"

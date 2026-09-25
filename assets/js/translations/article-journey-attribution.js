@@ -3,12 +3,12 @@ window.journeyAttributionTranslations = {
   en: {
     // Page Meta
     meta: {
-      title: "Resolve Once, Hydrate Many: A DAX Attribution Pattern - DataArcus",
+      title: "Resolve Once, Hydrate Many: A DAX Attribution Pattern",
       description: "Why matching the same lead five times produces disagreeing KPIs, and the DAX pattern that resolves attribution once and reuses it everywhere.",
       keywords: "lead attribution, DAX pattern, Power BI data modeling, journey resolution, CRM analytics, DataArcus, data engineering",
       author: "DataArcus",
       "og:type": "article",
-      "og:title": "Resolve Once, Hydrate Many: A DAX Attribution Pattern - DataArcus",
+      "og:title": "Resolve Once, Hydrate Many: A DAX Attribution Pattern",
       "og:description": "Why matching the same lead five times produces disagreeing KPIs, and the DAX pattern that resolves attribution once and reuses it everywhere.",
       "og:url": "https://dataarcus.com/articles/article-journey-attribution.html",
       "og:site_name": "DataArcus",
@@ -18,7 +18,7 @@ window.journeyAttributionTranslations = {
       "og:article:published_time": "2026-09-01T09:00:00Z",
       "og:article:author": "Abdelrahman M.",
       "twitter:card": "summary_large_image",
-      "twitter:title": "Resolve Once, Hydrate Many: A DAX Attribution Pattern - DataArcus",
+      "twitter:title": "Resolve Once, Hydrate Many: A DAX Attribution Pattern",
       "twitter:description": "Why matching the same lead five times produces disagreeing KPIs, and the DAX pattern that resolves attribution once and reuses it everywhere.",
       "twitter:image": "https://dataarcus.com/assets/img/portfolio/pulse-preview.jpg",
       canonical: "https://dataarcus.com/articles/article-journey-attribution.html",
@@ -68,12 +68,12 @@ window.journeyAttributionTranslations = {
   ar: {
     // Page Meta
     meta: {
-      title: "حلّ مرة واحدة، غذِّ كل مكان: نمط DAX لعزو العملاء المحتملين - داتا أركوس",
+      title: "حلّ مرة واحدة، غذِّ كل مكان: نمط DAX للعزو - داتا أركوس",
       description: "لماذا تُنتج مطابقة نفس العميل المحتمل خمس مرات مؤشرات أداء متضاربة، ونمط DAX الذي يحل العزو مرة واحدة ويعيد استخدامه في كل مكان.",
       keywords: "عزو العملاء المحتملين, نمط DAX, نمذجة بيانات Power BI, حل الرحلات, تحليلات CRM, داتا أركوس, هندسة البيانات",
       author: "داتا أركوس",
       "og:type": "article",
-      "og:title": "حلّ مرة واحدة، غذِّ كل مكان: نمط DAX لعزو العملاء المحتملين - داتا أركوس",
+      "og:title": "حلّ مرة واحدة، غذِّ كل مكان: نمط DAX للعزو - داتا أركوس",
       "og:description": "لماذا تُنتج مطابقة نفس العميل المحتمل خمس مرات مؤشرات أداء متضاربة، ونمط DAX الذي يحل العزو مرة واحدة ويعيد استخدامه في كل مكان.",
       "og:url": "https://dataarcus.com/articles/article-journey-attribution.html",
       "og:site_name": "داتا أركوس",
@@ -83,7 +83,7 @@ window.journeyAttributionTranslations = {
       "og:article:published_time": "2026-09-01T09:00:00Z",
       "og:article:author": "عبد الرحمن م.",
       "twitter:card": "summary_large_image",
-      "twitter:title": "حلّ مرة واحدة، غذِّ كل مكان: نمط DAX لعزو العملاء المحتملين - داتا أركوس",
+      "twitter:title": "حلّ مرة واحدة، غذِّ كل مكان: نمط DAX للعزو - داتا أركوس",
       "twitter:description": "لماذا تُنتج مطابقة نفس العميل المحتمل خمس مرات مؤشرات أداء متضاربة، ونمط DAX الذي يحل العزو مرة واحدة ويعيد استخدامه في كل مكان.",
       "twitter:image": "https://dataarcus.com/assets/img/portfolio/pulse-preview.jpg",
       canonical: "https://dataarcus.com/articles/article-journey-attribution.html",

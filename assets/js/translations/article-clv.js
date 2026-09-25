@@ -3,12 +3,12 @@ window.clvTranslations = {
   en: {
     // Page Meta
     meta: {
-      title: "The E-commerce Metric That Defines Your Future: CLV - DataArcus",
+      title: "Customer Lifetime Value (CLV) for E-commerce - DataArcus",
       description: "Learn why Customer Lifetime Value (CLV) is the most critical metric for e-commerce growth and how to track it in Power BI with your Shopify or store data.",
       keywords: "customer lifetime value e-commerce, CLV for Shopify, Power BI for CLV, customer retention, e-commerce KPIs, DataArcus",
       author: "DataArcus",
       "og:type": "article",
-      "og:title": "The E-commerce Metric That Defines Your Future: CLV - DataArcus",
+      "og:title": "Customer Lifetime Value (CLV) for E-commerce - DataArcus",
       "og:description": "Learn why Customer Lifetime Value (CLV) is the most critical metric for e-commerce growth and how to track it in Power BI with your Shopify or store data.",
       "og:url": "https://dataarcus.com/articles/article-clv.html",
       "og:site_name": "DataArcus",
@@ -18,7 +18,7 @@ window.clvTranslations = {
       "og:article:published_time": "2025-08-23T12:00:00Z",
       "og:article:author": "Abdelrahman M.",
       "twitter:card": "summary_large_image",
-      "twitter:title": "The E-commerce Metric That Defines Your Future: CLV - DataArcus",
+      "twitter:title": "Customer Lifetime Value (CLV) for E-commerce - DataArcus",
       "twitter:description": "Learn why Customer Lifetime Value (CLV) is the most critical metric for e-commerce growth and how to track it in Power BI with your Shopify or store data.",
       "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "twitter:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
@@ -70,7 +70,7 @@ window.clvTranslations = {
     },
     finalCta: {
       title: "Ready to See This Power Applied to Your Data?",
-      subtitle: "Book a free 20-minute Data Clarity Call - no obligation, just a straight look at what's possible with your own data.",
+      subtitle: "Book a free 20-minute Data Clarity Call. No obligation, just a straight look at what's possible with your own data.",
       button: "Book a Free Call"
     }
   },
@@ -78,25 +78,25 @@ window.clvTranslations = {
   ar: {
     // Page Meta Arabic
     meta: {
-      title: "مؤشر القيمة الدائمة للعميل: سر نجاح التجارة الإلكترونية - داتا اركوس",
+      title: "القيمة الدائمة للعميل (CLV) للتجارة الإلكترونية - داتا أركوس",
       description: "تعرف على أهمية القيمة الدائمة للعميل (CLV) كأهم مؤشر لنمو التجارة الإلكترونية وكيفية تتبعها في Power BI باستخدام بيانات متجرك.",
-      keywords: "القيمة الدائمة للعميل, CLV لمتاجر Shopify, Power BI للقيمة الدائمة للعميل, الاحتفاظ بالعملاء, مؤشرات التجارة الإلكترونية, داتا اركوس",
-      author: "داتا اركوس",
+      keywords: "القيمة الدائمة للعميل, CLV لمتاجر Shopify, Power BI للقيمة الدائمة للعميل, الاحتفاظ بالعملاء, مؤشرات التجارة الإلكترونية, داتا أركوس",
+      author: "داتا أركوس",
       "og:type": "article",
-      "og:title": "مؤشر القيمة الدائمة للعميل: سر نجاح التجارة الإلكترونية - داتا اركوس",
+      "og:title": "القيمة الدائمة للعميل (CLV) للتجارة الإلكترونية - داتا أركوس",
       "og:description": "تعرف على أهمية القيمة الدائمة للعميل (CLV) كأهم مؤشر لنمو التجارة الإلكترونية وكيفية تتبعها في Power BI باستخدام بيانات متجرك.",
       "og:url": "https://dataarcus.com/articles/article-clv.html",
-      "og:site_name": "داتا اركوس",
+      "og:site_name": "داتا أركوس",
       "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
-      "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       "og:locale": "ar_EG",
       "og:article:published_time": "2025-08-23T12:00:00Z",
       "og:article:author": "عبدالرحمن م.",
       "twitter:card": "summary_large_image",
-      "twitter:title": "مؤشر القيمة الدائمة للعميل: سر نجاح التجارة الإلكترونية - داتا اركوس",
+      "twitter:title": "القيمة الدائمة للعميل (CLV) للتجارة الإلكترونية - داتا أركوس",
       "twitter:description": "تعرف على أهمية القيمة الدائمة للعميل (CLV) كأهم مؤشر لنمو التجارة الإلكترونية وكيفية تتبعها في Power BI باستخدام بيانات متجرك.",
       "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
-      "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "twitter:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       canonical: "https://dataarcus.com/articles/article-clv.html",
     },
     // Article Header Arabic
@@ -106,12 +106,12 @@ window.clvTranslations = {
     },
     // Article Content Arabic
     content: {
-      p1: "بصفتك قائدًا في التجارة الإلكترونية، أنت غارق في البيانات ولكنك متعطش للحكمة. تتابع المبيعات اليومية من Shopify، والإنفاق الإعلاني من Meta، وعشرات المؤشرات الأخرى من تقارير متفرقة. ولكن ماذا لو كان الرقم الأهم - الذي يتنبأ حقًا بصحة شركتك على المدى الطويل - مفقودًا تمامًا من لوحة التحكم الخاصة بك؟",
+      p1: "بصفتك قائدًا في التجارة الإلكترونية، أنت غارق في البيانات ولكنك متعطش للحكمة. تتابع المبيعات اليومية من Shopify، والإنفاق الإعلاني من Meta، وعشرات المؤشرات الأخرى من تقارير متفرقة. ولكن ماذا لو كان الرقم الأهم، الذي يتنبأ حقًا بصحة شركتك على المدى الطويل، مفقودًا تمامًا من لوحة التحكم الخاصة بك؟",
       p2: "لديك متجر إلكتروني ناجح، وهذا يعني أن لديك بيانات. كل عملية بيع، وكل تفاعل مع عميل، وكل حملة تسويقية تضيف إلى جبل من المعلومات القيمة. يخبرك حدسك أن الإجابات مخفية داخل تلك البيانات، لكنك مشغول جدًا بإدارة العمليات اليومية للبحث عنها.",
       p3: "لذلك، تركز على الأرقام السهلة: إيرادات الشهر الماضي، إنفاق الإعلانات هذا الأسبوع. لكن هذه مجرد مقاييس سطحية.",
       p4: "إن الرقم الأهم الذي يحدد صحة شركتك على المدى الطويل هو <strong>القيمة الدائمة للعميل (CLV)</strong>.",
       p5: "ببساطة، CLV هو إجمالي الربح الذي يحققه عملك من العميل على مدار علاقته الكاملة معك. إنه المقياس الذي لا يخبرك فقط بما كسبته، بل بما يمكنك أن تتوقع كسبه. إنه يساعدك على تركيز طاقتك على جذب عملائك <em>الأكثر ربحية</em> والاحتفاظ بهم.",
-      p6: "إذا كان الأمر بهذه الأهمية، فلماذا لا يظهر على لوحة تحكم كل مدير تجارة إلكترونية؟ لأن البيانات غالبًا ما تكون في حالة فوضى - متناثرة عبر Shopify ومنصات الإعلانات وبرامج المحاسبة. حل هذه الأحجية يدويًا أمر صعب، لذلك يتم تجاهله.",
+      p6: "إذا كان الأمر بهذه الأهمية، فلماذا لا يظهر على لوحة تحكم كل مدير تجارة إلكترونية؟ لأن البيانات غالبًا ما تكون في حالة فوضى، متناثرة عبر Shopify ومنصات الإعلانات وبرامج المحاسبة. حل هذه الأحجية يدويًا أمر صعب، لذلك يتم تجاهله.",
       h1: "الحل: من بيانات متفرقة إلى مصدر واحد للحقيقة",
       p7: "هنا يأتي دور حلول ذكاء الأعمال (BI) من DataArcus. بدلاً من قضاء ساعات في جداول البيانات، نبني نظامًا مؤتمتًا يقوم بالعمل الشاق، محولاً تلك البيانات المعقدة إلى لوحة تحكم واحدة، واضحة، وقابلة للتنفيذ.",
       p8: "عمليتنا مبنية على خبرة على مستوى الشركات:",
@@ -119,7 +119,7 @@ window.clvTranslations = {
           "<strong>نقوم بتوصيل بياناتك:</strong> نبني جسورًا آمنة لمصادر بياناتك، سواء كانت Shopify، WooCommerce، إعلانات Meta، قواعد بيانات SQL، أو ملفات Excel بسيطة.",
           "<strong>نهندس خط بيانات موثوقًا به:</strong> البيانات الأولية دائمًا فوضوية. نستخدم أدوات قوية لتنظيف وتشكيل بياناتك، مما يضمن أن الأرقام التي تراها دقيقة بنسبة 100%.",
           "<strong>نبني 'العقل' التحليلي:</strong> باستخدام DAX المتقدم في Power BI، ننشئ العمليات الحسابية التي لا تعرض فقط القيمة الإجمالية لعملائك، بل تقسمها أيضًا حسب القناة التسويقية وخط الإنتاج والبلد.",
-          "<strong>نعرض القصة بصريًا:</strong> نحوّل هذه الحسابات إلى لوحة تحكم بديهية وتفاعلية. لا مزيد من جداول البيانات - فقط إجابات مرئية وواضحة لأهم أسئلة عملك."
+          "<strong>نعرض القصة بصريًا:</strong> نحوّل هذه الحسابات إلى لوحة تحكم بديهية وتفاعلية. لا مزيد من جداول البيانات، فقط إجابات مرئية وواضحة لأهم أسئلة عملك."
       ],
       h2: "التحوّل: اتخاذ قرارات قائمة على البيانات بثقة",
       p9: "بمجرد أن تصبح لوحة تحكم CLV الخاصة بك جاهزة، ستتغير طريقة نظرتك لعملك بشكل جذري. ستنتقل من حل المشكلات كرد فعل إلى استراتيجية استباقية قائمة على البيانات.",
@@ -143,7 +143,7 @@ window.clvTranslations = {
     },
     finalCta: {
       title: "هل أنت مستعد لرؤية هذه القوة مطبقة على بياناتك؟",
-      subtitle: "احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة - بدون أي التزام، فقط نظرة مباشرة على ما هو ممكن ببياناتك الخاصة.",
+      subtitle: "احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة. بدون أي التزام، فقط نظرة مباشرة على ما هو ممكن ببياناتك الخاصة.",
       button: "احجز مكالمة مجانية"
     }
   }

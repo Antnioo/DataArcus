@@ -4,12 +4,12 @@ window.adventureworksTranslations = {
     // Page Meta
     meta: {
       title: "AdventureWorks Power BI Dashboard Example - DataArcus",
-      description: "View our AdventureWorks Power BI dashboard: comprehensive analytics for sales, product performance, and business insights.",
+      description: "View our AdventureWorks Power BI dashboard example: sales, product performance, what-if analysis and customer segmentation in one report.",
       keywords: "AdventureWorks dashboard, Power BI sales analytics, product performance dashboard, business insights, DataArcus",
       author: "DataArcus",
       "og:type": "website",
       "og:title": "AdventureWorks Power BI Dashboard Example - DataArcus",
-      "og:description": "View our AdventureWorks Power BI dashboard: comprehensive analytics for sales, product performance, and business insights.",
+      "og:description": "View our AdventureWorks Power BI dashboard example: sales, product performance, what-if analysis and customer segmentation in one report.",
       "og:url": "https://dataarcus.com/dashboards/adventureworks-dashboard.html",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
@@ -17,7 +17,7 @@ window.adventureworksTranslations = {
       "og:locale": "en_US",
       "twitter:card": "summary_large_image",
       "twitter:title": "AdventureWorks Power BI Dashboard Example - DataArcus",
-      "twitter:description": "View our AdventureWorks Power BI dashboard: comprehensive analytics for sales, product performance, and business insights.",
+      "twitter:description": "View our AdventureWorks Power BI dashboard example: sales, product performance, what-if analysis and customer segmentation in one report.",
       "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "twitter:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
       canonical: "https://dataarcus.com/dashboards/adventureworks-dashboard.html",
@@ -78,7 +78,7 @@ window.adventureworksTranslations = {
     // Final CTA
     finalCta: {
       title: "Ready to See This Power Applied to Your Data?",
-      subtitle: "Book a free 20-minute Data Clarity Call - no obligation, just a straight look at what's possible with your own operations data.",
+      subtitle: "Book a free 20-minute Data Clarity Call. No obligation, just a straight look at what's possible with your own operations data.",
       button: "Book a Free Call"
     }
   },
@@ -86,23 +86,23 @@ window.adventureworksTranslations = {
   ar: {
     // Page Meta
     meta: {
-      title: "مثال لوحة تحكم AdventureWorks في Power BI - داتا اركوس",
-      description: "شاهد لوحة تحكم AdventureWorks في Power BI: تحليلات شاملة للمبيعات وأداء المنتجات ورؤى الأعمال.",
-      keywords: "لوحة تحكم AdventureWorks, تحليلات Power BI للمبيعات, لوحة أداء المنتجات, رؤى الأعمال, داتا اركوس",
-      author: "داتا اركوس",
+      title: "مثال لوحة تحكم AdventureWorks في Power BI - داتا أركوس",
+      description: "شاهد مثال لوحة تحكم AdventureWorks في Power BI: المبيعات وأداء المنتجات وتحليل ماذا لو وتقسيم العملاء في تقرير واحد.",
+      keywords: "لوحة تحكم AdventureWorks, تحليلات Power BI للمبيعات, لوحة أداء المنتجات, رؤى الأعمال, داتا أركوس",
+      author: "داتا أركوس",
       "og:type": "website",
-      "og:title": "مثال لوحة تحكم AdventureWorks في Power BI - داتا اركوس",
-      "og:description": "شاهد لوحة تحكم AdventureWorks في Power BI: تحليلات شاملة للمبيعات وأداء المنتجات ورؤى الأعمال.",
+      "og:title": "مثال لوحة تحكم AdventureWorks في Power BI - داتا أركوس",
+      "og:description": "شاهد مثال لوحة تحكم AdventureWorks في Power BI: المبيعات وأداء المنتجات وتحليل ماذا لو وتقسيم العملاء في تقرير واحد.",
       "og:url": "https://dataarcus.com/dashboards/adventureworks-dashboard.html",
-      "og:site_name": "داتا اركوس",
+      "og:site_name": "داتا أركوس",
       "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
-      "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       "og:locale": "ar_EG",
       "twitter:card": "summary_large_image",
-      "twitter:title": "مثال لوحة تحكم AdventureWorks في Power BI - داتا اركوس",
-      "twitter:description": "شاهد لوحة تحكم AdventureWorks في Power BI: تحليلات شاملة للمبيعات وأداء المنتجات ورؤى الأعمال.",
+      "twitter:title": "مثال لوحة تحكم AdventureWorks في Power BI - داتا أركوس",
+      "twitter:description": "شاهد مثال لوحة تحكم AdventureWorks في Power BI: المبيعات وأداء المنتجات وتحليل ماذا لو وتقسيم العملاء في تقرير واحد.",
       "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
-      "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "twitter:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       canonical: "https://dataarcus.com/dashboards/adventureworks-dashboard.html",
     },
 
@@ -161,7 +161,7 @@ window.adventureworksTranslations = {
     // Final CTA
     finalCta: {
       title: "هل أنت مستعد لرؤية هذه القوة مطبقة على بياناتك؟",
-      subtitle: "احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة - بدون أي التزام، فقط نظرة مباشرة على ما هو ممكن ببيانات عملياتك الخاصة.",
+      subtitle: "احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة. بدون أي التزام، فقط نظرة مباشرة على ما هو ممكن ببيانات عملياتك الخاصة.",
       button: "احجز مكالمة مجانية"
     }
   }

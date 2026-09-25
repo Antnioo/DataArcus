@@ -1,7 +1,7 @@
 // Translations for tools/power-bi-model-health-check.html
 window.modelHealthTranslations = {
   "en": {
-    "meta": { "title": "Free Power BI Model Health Check: Find Unused Columns, Slow DAX and Model Issues - DataArcus" },
+    "meta": { "title": "Free Power BI Model Health Check: Unused Columns & Slow DAX" },
     "mh": {
       "badge": "Free · Runs in your browser · Nothing is uploaded",
       "title": "Power BI Model Health Check",
@@ -22,7 +22,7 @@ window.modelHealthTranslations = {
     }
   },
   "ar": {
-    "meta": { "title": "فحص صحة نموذج Power BI مجانًا: الأعمدة غير المستخدمة وDAX البطيء ومشاكل النموذج - DataArcus" },
+    "meta": { "title": "فحص صحة نموذج Power BI مجانًا: أعمدة غير مستخدمة وDAX بطيء" },
     "mh": {
       "badge": "مجاني · يعمل داخل متصفحك · لا يتم رفع أي ملف",
       "title": "فحص صحة نموذج Power BI",

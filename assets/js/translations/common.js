@@ -18,7 +18,7 @@ window.commonTranslations = {
       company: "Company",
       contact: "Contact Info",
       copyright: "All rights reserved.",
-      built: "Built with passion • Powered by innovation",
+      built: "Made in Dubai",
       
       // Footer Links
       links: {
@@ -66,7 +66,7 @@ window.commonTranslations = {
       company: "الشركة",
       contact: "للتواصل", 
       copyright: "جميع الحقوق محفوظة.",
-      built: "بُنِي بشغف • يُديره الابتكار",
+      built: "صُنع في دبي",
       
       // Footer Links Arabic
       links: {

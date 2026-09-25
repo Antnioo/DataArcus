@@ -1,7 +1,7 @@
 // Translations for tools/dp-600-practice-exam.html
 window.dp600Translations = {
   "en": {
-    "meta": { "title": "Free DP-600 Practice Exam and Simulator (Fabric Analytics Engineer) - DataArcus" },
+    "meta": { "title": "Free DP-600 Practice Exam: Fabric Analytics Engineer" },
     "dp": {
       "badge": "Free · No sign-up · 220 original questions",
       "title": "DP-600 Practice Exam Simulator",
@@ -23,7 +23,7 @@ window.dp600Translations = {
     }
   },
   "ar": {
-    "meta": { "title": "اختبار DP-600 التجريبي المجاني (Fabric Analytics Engineer) - DataArcus" },
+    "meta": { "title": "اختبار DP-600 تجريبي مجاني: Fabric Analytics Engineer" },
     "dp": {
       "badge": "مجاني · بدون تسجيل · 220 سؤالًا أصليًا",
       "title": "محاكي اختبار DP-600",

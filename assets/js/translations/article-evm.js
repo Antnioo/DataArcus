@@ -3,13 +3,13 @@ window.evmTranslations = {
   en: {
     // Page Meta
     meta: {
-      title: "Beyond 'Traffic Lights': How EVM Predicts Project Risk - DataArcus",
-      description: "Stop relying on subjective 'Green/Amber/Red' status reports. Learn how Earned Value Management (EVM) metrics like CPI and SPI mathematically forecast project delays.",
+      title: "Beyond Traffic Lights: How EVM Predicts Project Risk",
+      description: "Stop relying on subjective Green/Amber/Red status reports. See how EVM metrics like CPI and SPI forecast project delays with simple math.",
       keywords: "Earned Value Management, EVM, Project Risk, Power BI for PMO, CPI, SPI, DataArcus, Fintech Project Management",
       author: "DataArcus",
       "og:type": "article",
-      "og:title": "Beyond 'Traffic Lights': How EVM Predicts Project Risk - DataArcus",
-      "og:description": "Stop relying on subjective 'Green/Amber/Red' status reports. Learn how Earned Value Management (EVM) metrics like CPI and SPI mathematically forecast project delays.",
+      "og:title": "Beyond Traffic Lights: How EVM Predicts Project Risk",
+      "og:description": "Stop relying on subjective Green/Amber/Red status reports. See how EVM metrics like CPI and SPI forecast project delays with simple math.",
       "og:url": "https://dataarcus.com/articles/article-evm.html",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/portfolio/fintech-preview.jpg", // Re-using the dashboard image or a specific blog image
@@ -18,7 +18,7 @@ window.evmTranslations = {
       "og:article:published_time": "2025-12-10T09:00:00Z",
       "og:article:author": "Abdelrahman M.",
       "twitter:card": "summary_large_image",
-      "twitter:title": "Beyond 'Traffic Lights': How EVM Predicts Project Risk - DataArcus",
+      "twitter:title": "Beyond Traffic Lights: How EVM Predicts Project Risk",
       "twitter:description": "Stop relying on subjective status reports. Learn how CPI and SPI mathematically forecast project delays.",
       "twitter:image": "https://dataarcus.com/assets/img/portfolio/fintech-preview.jpg",
       canonical: "https://dataarcus.com/articles/article-evm.html",
@@ -68,12 +68,12 @@ window.evmTranslations = {
   ar: {
     // Page Meta
     meta: {
-      title: "ما وراء 'إشارات المرور': كيف تتنبأ EVM بمخاطر المشروع - داتا أركوس",
+      title: "ما وراء إشارات المرور: كيف تتنبأ EVM بمخاطر المشاريع",
       description: "توقف عن الاعتماد على تقارير الحالة الذاتية. تعلم كيف تستخدم إدارة القيمة المكتسبة (EVM) للتنبؤ رياضيًا بتأخيرات المشروع.",
       keywords: "إدارة القيمة المكتسبة, مخاطر المشروع, Power BI, CPI, SPI, داتا أركوس, إدارة مشاريع التكنولوجيا المالية",
       author: "داتا أركوس",
       "og:type": "article",
-      "og:title": "ما وراء 'إشارات المرور': كيف تتنبأ EVM بمخاطر المشروع - داتا أركوس",
+      "og:title": "ما وراء إشارات المرور: كيف تتنبأ EVM بمخاطر المشاريع",
       "og:description": "توقف عن الاعتماد على تقارير الحالة الذاتية. تعلم كيف تستخدم إدارة القيمة المكتسبة (EVM) للتنبؤ رياضيًا بتأخيرات المشروع.",
       "og:url": "https://dataarcus.com/articles/article-evm.html",
       "og:site_name": "داتا أركوس",
@@ -83,7 +83,7 @@ window.evmTranslations = {
       "og:article:published_time": "2025-12-10T09:00:00Z",
       "og:article:author": "عبد الرحمن م.",
       "twitter:card": "summary_large_image",
-      "twitter:title": "ما وراء 'إشارات المرور': كيف تتنبأ EVM بمخاطر المشروع - داتا أركوس",
+      "twitter:title": "ما وراء إشارات المرور: كيف تتنبأ EVM بمخاطر المشاريع",
       "twitter:description": "توقف عن الاعتماد على تقارير الحالة الذاتية. تعلم كيف تستخدم إدارة القيمة المكتسبة (EVM) للتنبؤ رياضيًا بتأخيرات المشروع.",
       "twitter:image": "https://dataarcus.com/assets/img/portfolio/fintech-preview.jpg",
       canonical: "https://dataarcus.com/articles/article-evm.html",
