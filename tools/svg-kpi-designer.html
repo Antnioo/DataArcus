@@ -157,6 +157,7 @@
     @keyframes kdfall { to { transform: translateY(105vh) rotate(540deg); opacity: .3; } }
     @media (max-width: 575.98px) { .kd-tour, [dir="rtl"] .kd-tour { left: 8px; right: 8px; bottom: 8px; width: auto; max-width: none; } }
     @media (prefers-reduced-motion: reduce) { .kd-glow, .kd-tour { animation: none; } .kd-confetti { display: none; } }
+    body:has(.kd-tour) .wa-float { display: none; } /* the tutorial panel sits in the same corner */
   </style>
 </head>
 <body>

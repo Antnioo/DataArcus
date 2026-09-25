@@ -42,6 +42,24 @@ window.commonTranslations = {
       calendar: "Schedule a Meeting"
     },
     
+    // 404 page
+    notFound: {
+      kicker: "Error 404",
+      title: "This page took a wrong turn",
+      text: "The link may be old or mistyped. Everything else is still here.",
+      home: "Back to home",
+      tools: "Free Power BI & Fabric Tools",
+      showcases: "Dashboard showcases",
+      blog: "Articles",
+      talk: "Or message me on WhatsApp"
+    },
+
+    // WhatsApp button
+    wa: {
+      label: "Chat on WhatsApp",
+      message: "Hi Abdelrahman, I found DataArcus and would like to talk about a Power BI project."
+    },
+
     // Common Meta
     meta: {
       author: "DataArcus"
@@ -91,6 +109,24 @@ window.commonTranslations = {
     },
     
     // Common Meta
+    // صفحة 404
+    notFound: {
+      kicker: "خطأ 404",
+      title: "هذه الصفحة غير موجودة",
+      text: "ربما الرابط قديم أو فيه خطأ. كل شيء آخر ما زال هنا.",
+      home: "العودة للرئيسية",
+      tools: "أدوات Power BI و Fabric مجانية",
+      showcases: "نماذج اللوحات",
+      blog: "المقالات",
+      talk: "أو راسلني على واتساب"
+    },
+
+    // زر واتساب
+    wa: {
+      label: "تواصل عبر واتساب",
+      message: "مرحبًا عبدالرحمن، وجدت DataArcus وأود التحدث عن مشروع Power BI."
+    },
+
     meta: {
       author: "DataArcus"
     }
