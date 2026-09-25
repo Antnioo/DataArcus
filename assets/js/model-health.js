@@ -240,6 +240,40 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   const splitObj = (o) => { const m = String(o).match(/^(.*)\[(.*)\]$/); return m ? [m[1], m[2]] : null; };
   const findingOf = (id) => (ignored.has(id) ? null : R.findings.find((f) => f.id === id));
+  // Mechanical fixes as data, shared by the Tabular Editor and TMDL versions
+  function quickEdits() {
+    const dates = [], edits = [], notes = [];
+    const dt = findingOf('DATE_NOT_MARKED');
+    if (dt) dt.items.forEach((i) => {
+      const t = R.tables.find((x) => x.name === i.obj); if (!t) return;
+      const target = R.relationships.find((r) => r.toTable === t.name && t.columns.some((c) => c.name === r.toColumn && c.dataType === 'dateTime'));
+      const dcol = (target && target.toColumn) || (t.columns.find((c) => /^date$/i.test(c.name) && c.dataType === 'dateTime') || t.columns.find((c) => c.dataType === 'dateTime') || {}).name;
+      if (dcol) dates.push({ table: t.name, column: dcol });
+    });
+    const ms = findingOf('MONTH_SORT');
+    if (ms) ms.items.forEach((i) => {
+      const p = splitObj(i.obj); if (!p) return;
+      const t = R.tables.find((x) => x.name === p[0]); if (!t) return;
+      const isDay = /day|week/i.test(p[1]);
+      const sortCol = t.columns.find((c) => /int64|double|decimal/.test(c.dataType) && (isDay ? /(weekday|day\s*of\s*week)\s*(no|num|number|index)?$|^weekday$/i : /month\s*(no|num|number|index)$|^month$|month\s*of\s*year/i).test(c.name.trim()));
+      if (sortCol) edits.push({ table: t.name, column: p[1], set: { sortByColumn: sortCol.name }, kind: 'sort' });
+      else notes.push(t.name + '[' + p[1] + ']: ' + (isDay ? 'no weekday number column' : 'no month number column'));
+    });
+    const sk = findingOf('SUMMARIZE_KEYS');
+    if (sk) sk.items.forEach((i) => { const p = splitObj(i.obj); if (p) edits.push({ table: p[0], column: p[1], set: { summarizeBy: 'none' }, kind: 'sum' }); });
+    const fk = findingOf('FK_VISIBLE');
+    if (fk) fk.items.forEach((i) => { const p = splitObj(i.obj); if (p) edits.push({ table: p[0], column: p[1], set: { isHidden: true }, kind: 'hide' }); });
+    return { dates, edits, notes };
+  }
+  function tmdlScripts() {
+    if (!window.MHTmdl || !R.rawTables) return null;
+    const qe = quickEdits();
+    const fixes = qe.edits.length ? window.MHTmdl.columnFixes(R.rawTables, qe.edits) : null;
+    const unused = R.meta.hasReport ? R.measures.filter((m) => m.used === false).map((m) => m.name) : [];
+    const move = unused.length ? window.MHTmdl.moveMeasures(R.rawTables, unused, '_Unused (review)') : null;
+    return { fixes, move, dates: qe.dates, notes: qe.notes };
+  }
+
   function quickFixScript() {
     const lines = [];
     const q = (x) => csStr(x);
@@ -308,17 +342,41 @@ document.addEventListener('DOMContentLoaded', () => {
       (experts.length ? '<div class="mh-panel mt-4 mh-expertbox"><div class="mh-h"><b><i class="bi bi-person-gear"></i> ' + L('Needs an expert', 'يحتاج خبيرًا') + '</b></div><p class="mh-note">' + L('These need design decisions and testing against your data, not a script. Getting them wrong can change the numbers in your reports.', 'هذه تحتاج قرارات تصميم واختبارًا على بياناتك وليس سكربتًا، والخطأ فيها قد يغيّر أرقام تقاريرك.') + '</p><ul class="mh-elist">' + experts.map((f) => '<li><span class="mh-sev ' + f.sev + '">' + (isAr() ? SEVL[f.sev][1] : SEVL[f.sev][0]) + '</span> ' + rt(f.id)[0] + ' <small>(' + num(f.items.length) + ')</small></li>').join('') + '</ul><a href="../index.html#contact" class="btn btn-accent btn-sm" data-expert="plan"><i class="bi bi-calendar3"></i> ' + L('Book a free call', 'احجز مكالمة مجانية') + '</a></div>' : '') +
       '</div><div class="col-lg-7">' +
       (qf ? '<div class="mh-panel mh-clean"><div class="mh-h"><b><i class="bi bi-lightning-charge-fill text-warning"></i> ' + L('Quick-fixes script', 'سكربت الإصلاحات السريعة') + '</b><span class="mh-count">' + num(qf.count) + '</span><button type="button" class="mh-copy ms-auto" data-script="te:quick"><i class="bi bi-clipboard"></i> ' + L('Copy', 'نسخ') + '</button></div><p class="mh-note">' + L('One Tabular Editor script for the mechanical fixes. External tools > Tabular Editor > C# Script, paste, run, save. If Power BI Desktop blocks one change, do that one by hand.', 'سكربت Tabular Editor واحد للإصلاحات الآلية. من External tools افتح Tabular Editor ثم C# Script والصق وشغّل واحفظ. إن منع Power BI Desktop تعديلًا فنفّذه يدويًا.') + '</p><pre class="mh-dax mh-qf">' + esc(qf.code) + '</pre></div>' : '') +
+      tmdlPanel() +
       (R.meta.hasReport ? cleanupHtml(cols, ms) : '<div class="mh-panel mh-note">' + L('Cleanup scripts for unused columns and measures need the report pages. Use a .pbit.', 'سكربتات تنظيف الأعمدة والمقاييس غير المستخدمة تحتاج صفحات التقرير. استخدم ملف .pbit.') + '</div>') +
       '</div></div>';
     if (qf) scripts['te:quick'] = qf.code;
+    const tm = tmdlScripts();
+    if (tm && tm.fixes && tm.fixes.script) scripts['tmdl:fixes'] = tm.fixes.script;
+    if (tm && tm.move && tm.move.script) scripts['tmdl:move'] = tm.move.script;
     el.querySelectorAll('[data-step]').forEach((c) => c.onchange = () => {
       if (c.checked) done.add(c.dataset.step); else done.delete(c.dataset.step);
       plans[key] = Array.from(done); store.set('dataarcus-mh-plan', plans);
       track('mh_plan_step', { step: c.dataset.step, done: c.checked });
       const y = window.scrollY; tFix(); window.scrollTo(0, y);
     });
-    el.querySelectorAll('[data-script]').forEach((b) => b.onclick = () => { copy(scripts[b.dataset.script]); track('mh_copy', { list: 'script_' + b.dataset.script.split(':')[1] }); });
+    el.querySelectorAll('[data-script]').forEach((b) => b.onclick = () => { copy(scripts[b.dataset.script]); track('mh_copy', { list: 'script_' + b.dataset.script.replace(':', '_') }); });
     el.querySelectorAll('[data-expert]').forEach((a) => a.addEventListener('click', () => track('mh_expert_click', { rule: a.dataset.expert, score: score().overall })));
+  }
+
+  function tmdlPanel() {
+    const tm = tmdlScripts();
+    if (!tm || (!(tm.fixes && tm.fixes.script) && !(tm.move && tm.move.script) && !tm.dates.length)) return '';
+    const btn = (k, label, n) => '<button type="button" class="btn btn-accent btn-sm" data-script="' + k + '"><i class="bi bi-clipboard"></i> ' + label + ' <small>(' + num(n) + ')</small></button>';
+    let h = '<div class="mh-panel mt-4 mh-premium"><div class="mh-h"><b><i class="bi bi-stars"></i> ' + L('Apply in Power BI Desktop, no install', 'طبّق داخل Power BI Desktop بدون تثبيت أي أداة') + '</b><span class="mh-prem">' + L('Premium preview', 'نسخة مميزة تجريبية') + '</span></div>' +
+      '<p class="mh-note">' + L('TMDL scripts that run in Power BI Desktop\'s own TMDL view. Each object is written out in full, the way Power BI writes it, with only the fix changed.', 'سكربتات TMDL تعمل داخل TMDL view في Power BI Desktop نفسه. كل عنصر مكتوب بالكامل بنفس طريقة Power BI مع تغيير الإصلاح فقط.') + '</p>' +
+      '<ol class="mh-steps"><li>' + L('Export a fresh .pbit of the exact file you will change, and check it here.', 'صدّر ملف .pbit جديدًا من نفس الملف الذي ستعدّله وافحصه هنا.') + '</li><li>' + L('In Power BI Desktop open TMDL view, add a new tab and paste the script.', 'في Power BI Desktop افتح TMDL view وأضف تبويبًا جديدًا والصق السكربت.') + '</li><li>' + L('Click <b>Preview</b> and read the diff: only the listed properties should change.', 'اضغط <b>Preview</b> وراجع الفروقات: يجب أن تتغير الخصائص المذكورة فقط.') + '</li><li>' + L('Click <b>Apply</b>, check your report, then save.', 'اضغط <b>Apply</b> وراجع تقريرك ثم احفظ.') + '</li></ol>' +
+      '<div class="mh-sbtns">' + (tm.fixes && tm.fixes.script ? btn('tmdl:fixes', L('Copy quick fixes', 'نسخ الإصلاحات السريعة'), tm.fixes.count) : '') + (tm.move && tm.move.script ? btn('tmdl:move', L('Copy: move unused measures', 'نسخ: نقل المقاييس غير المستخدمة'), tm.move.count) : '') + '</div>';
+    const manual = [];
+    tm.dates.forEach((d) => manual.push(L('Mark ' + d.table + ' as a date table (Table tools > Mark as date table > ' + d.column + ')', 'علّم ' + d.table + ' كجدول تاريخ (Table tools > Mark as date table > ' + d.column + ')')));
+    tm.notes.forEach((n) => manual.push(n));
+    if (tm.fixes) tm.fixes.manual.forEach((m) => {
+      const what = m.set && m.set.isHidden ? L('hide it', 'أخفِه') : m.set && m.set.summarizeBy ? L('set Summarization to Don\'t summarize', 'اضبط Summarization على Don\'t summarize') : m.set && m.set.sortByColumn ? L('sort by ' + m.set.sortByColumn, 'رتّبه حسب ' + m.set.sortByColumn) : L('change by hand', 'غيّره يدويًا');
+      manual.push(m.table + '[' + m.column + ']: ' + what + (m.reason === 'daxTable' ? L(' (column of a DAX table, TMDL cannot change it alone)', ' (عمود في جدول DAX لا يمكن لـ TMDL تعديله منفردًا)') : ''));
+    });
+    if (tm.move) tm.move.manual.forEach((m) => manual.push('[' + m + ']: ' + L('move by hand', 'انقله يدويًا')));
+    if (manual.length) h += '<span class="tg-label mt-3">' + L('Do these by hand', 'نفّذ هذه يدويًا') + '</span><ul class="mh-manual">' + manual.map((x) => '<li dir="auto">' + esc(x) + '</li>').join('') + '</ul>';
+    return h + '<p class="mh-help mt-2">' + L('Preview feature: always use Preview before Apply, and keep a copy of your file. Tell us if a script fails: hello@dataarcus.com', 'ميزة تجريبية: استخدم Preview دائمًا قبل Apply واحتفظ بنسخة من ملفك. أخبرنا إن فشل سكربت: hello@dataarcus.com') + '</p></div>';
   }
 
   // Ready-to-paste cleanup: Power Query steps for unused source columns, Tabular Editor scripts for unused measures
@@ -339,7 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (ms.length) {
       const list = 'var names = new[] {\n    ' + ms.map((m) => csStr(m.name)).join(',\n    ') + '\n};\n';
-      scripts['te:move'] = '// DataArcus Model Health Check: move measures no visual uses into a review folder (safe, nothing is deleted)\n' + list + 'foreach (var n in names) {\n    var m = Model.AllMeasures.FirstOrDefault(x => x.Name == n);\n    if (m != null) m.DisplayFolder = "_Unused (review)";\n}';
+      scripts['te:move'] = '// DataArcus Model Health Check: move measures no visual uses into a review folder (safe, nothing is deleted)\n' + list + 'foreach (var n in names) {\n    var m = Model.AllMeasures.FirstOrDefault(x => x.Name == n);\n    if (m != null) m.DisplayFolder = string.IsNullOrEmpty(m.DisplayFolder) ? "_Unused (review)" : "_Unused (review)\\" + m.DisplayFolder;\n}';
       scripts['te:delete'] = '// DataArcus Model Health Check: delete measures no visual uses. Save a copy of your file first.\n' + list + 'foreach (var n in names) {\n    var m = Model.AllMeasures.FirstOrDefault(x => x.Name == n);\n    if (m != null) m.Delete();\n}';
       html += '<span class="tg-label mt-3">' + L('Tabular Editor: ' + num(ms.length) + ' unused measures', 'Tabular Editor: ' + num(ms.length) + ' مقياس غير مستخدم') + '</span><p class="mh-note">' + L('Open the model in Tabular Editor (External tools), then C# Script, paste and run, then save. Start with "move to folder": it hides nothing and deletes nothing, so you can review first.', 'افتح النموذج في Tabular Editor من External tools ثم C# Script والصق وشغّل ثم احفظ. ابدأ بـ "نقل لمجلد": لا يحذف شيئًا، فتراجع أولًا.') + '</p>' +
         '<div class="mh-sbtns"><button type="button" class="tg-btn2 btn-sm" data-script="te:move"><i class="bi bi-folder-symlink"></i> ' + L('Copy: move to a review folder', 'نسخ: نقل إلى مجلد مراجعة') + '</button><button type="button" class="tg-btn2 btn-sm mh-danger" data-script="te:delete"><i class="bi bi-trash3"></i> ' + L('Copy: delete them', 'نسخ: حذفها') + '</button></div>';
