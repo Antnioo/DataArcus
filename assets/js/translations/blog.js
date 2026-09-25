@@ -26,7 +26,7 @@ window.blogTranslations = {
     // Header
     header: {
       title: "The E-commerce Analytics Playbook",
-      subtitle: "Practical, engineering-first guides for MENA e-commerce leaders on Power BI, data modeling, and growth strategy-written by the team that builds it."
+      subtitle: "Practical, engineering-first guides for MENA e-commerce leaders on Power BI, data modeling, and growth strategy, written by someone who builds them every day."
     },
 
     // Filters / Search
@@ -147,7 +147,7 @@ window.blogTranslations = {
     // Header (AR)
     header: {
       title: "دليل تحليلات التجارة الإلكترونية",
-      subtitle: "أدلة عملية ذات أساس هندسي لقادة التجارة الإلكترونية في الشرق الأوسط حول Power BI، ونمذجة البيانات، واستراتيجية النمو-مكتوبة بواسطة الفريق الذي يبنيها."
+      subtitle: "أدلة عملية ذات أساس هندسي لقادة التجارة الإلكترونية في الشرق الأوسط حول Power BI، ونمذجة البيانات، واستراتيجية النمو، يكتبها من يبنيها كل يوم."
     },
 
     // Filters / Search (AR)
