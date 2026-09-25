@@ -24,11 +24,12 @@ document.addEventListener('DOMContentLoaded', () => {
     line: { en: 'Line', ar: 'خط', icon: 'bi-slash-lg' },
     text: { en: 'Text', ar: 'نص', icon: 'bi-fonts' },
     ring: { en: 'Progress ring', ar: 'حلقة تقدم', icon: 'bi-bullseye' },
-    arrow: { en: 'Trend arrow', ar: 'سهم اتجاه', icon: 'bi-caret-up-fill' }
+    arrow: { en: 'Trend arrow', ar: 'سهم اتجاه', icon: 'bi-caret-up-fill' },
+    spark: { en: 'Sparkline', ar: 'خط الاتجاه', icon: 'bi-graph-up' }
   };
   const FMT = [['auto', 'Auto (1.2K / 3.4M)', 'تلقائي (1.2K / 3.4M)'], ['n0', '1,235', '1,235'], ['n1', '1,234.6', '1,234.6'], ['n2', '1,234.57', '1,234.57'], ['k1', '1.2K', '1.2K'], ['m1', '1.2M', '1.2M'], ['p0', '83%', '83%'], ['p1', '82.7%', '82.7%']];
   const KINDS = { ratio: ['A ÷ B', 'أ ÷ ب'], diff: ['A − B', 'أ − ب'], pct: ['% change of A vs B', 'نسبة تغير أ عن ب'] };
-  const POS = { rect: [['x', 'y']], circle: [['cx', 'cy']], ring: [['cx', 'cy']], text: [['x', 'y']], arrow: [['x', 'y']], line: [['x1', 'y1'], ['x2', 'y2']] };
+  const POS = { rect: [['x', 'y']], circle: [['cx', 'cy']], ring: [['cx', 'cy']], text: [['x', 'y']], arrow: [['x', 'y']], line: [['x1', 'y1'], ['x2', 'y2']], spark: [['x', 'y']] };
 
   // ---------- design state ----------
   const blankDesign = () => ({ name: 'My KPI', w: 240, h: 80, values: clone(T.TEMPLATES[0].values), layers: [] });
@@ -62,6 +63,22 @@ document.addEventListener('DOMContentLoaded', () => {
     design.values.forEach((v) => { if (v.kind === 'measure' && v.sample !== '' && v.sample != null && isFinite(+v.sample)) m[v.measure] = +v.sample; });
     return m;
   };
+  // Test series for sparklines (newest first), made from each measure's test value and the chosen shape
+  const SHAPES = {
+    wave: (i, ph) => 1 + 0.12 * Math.sin(i * 0.9 + ph) + 0.05 * Math.cos(i * 2.1 + ph),
+    up: (i, ph) => 1 / (1 + 0.045 * i) + 0.04 * Math.sin(i * 1.3 + ph),
+    down: (i, ph) => 1 + 0.045 * i + 0.04 * Math.sin(i * 1.3 + ph)
+  };
+  const seriesFor = () => {
+    const out = {}, shape = SHAPES[design.testShape] || SHAPES.up;
+    design.values.forEach((v) => {
+      if (v.kind !== 'measure' || v.sample === '' || v.sample == null || !isFinite(+v.sample)) return;
+      let ph = 0; for (const ch of String(v.measure)) ph = (ph * 31 + ch.charCodeAt(0)) % 628;
+      out[v.measure] = Array.from({ length: 60 }, (_, i) => (i === 0 ? +v.sample : Math.round(+v.sample * shape(i, ph / 100) / shape(0, ph / 100) * 100) / 100));
+    });
+    return out;
+  };
+  const preview = (d, tag) => K.toImageUrl(d, samples(), { tag: tag, series: seriesFor() });
   // Same BLANK rules as the compiler, for showing formula results next to the inputs
   const evalValues = () => {
     const out = {}, m = samples();
@@ -88,14 +105,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- canvas ----------
   const stage = $('stage');
-  const compileForCanvas = () => K.toImageUrl(Object.assign({}, design, { hideIfBlank: null }), samples(), { tag: true });
+  const compileForCanvas = () => preview(Object.assign({}, design, { hideIfBlank: null }), true);
   const svgEl = () => stage.querySelector('svg.kd-svg');
   const bboxOf = (i) => { const g = stage.querySelector(`g[data-l='${i}']`); if (!g) return null; try { const b = g.getBBox(); return b.width || b.height ? b : { x: b.x, y: b.y, width: 1, height: 1 }; } catch (e) { return null; } };
   const toDesign = (e) => { const s = svgEl(); const r = s.getBoundingClientRect(); return { x: (e.clientX - r.left) * design.w / r.width, y: (e.clientY - r.top) * design.h / r.height }; };
 
   const handlesFor = (l, b) => {
     const bd = l.bind || {}, H = [];
-    if (l.type === 'rect') { if (!bd.w && !bd.h) H.push(['se', l.x + l.w, l.y + l.h]); if (!bd.w) H.push(['e', l.x + l.w, l.y + l.h / 2]); if (!bd.h) H.push(['s', l.x + l.w / 2, l.y + l.h]); }
+    if (l.type === 'rect' || l.type === 'spark') { if (!bd.w && !bd.h) H.push(['se', l.x + l.w, l.y + l.h]); if (!bd.w) H.push(['e', l.x + l.w, l.y + l.h / 2]); if (!bd.h) H.push(['s', l.x + l.w / 2, l.y + l.h]); }
     if ((l.type === 'circle' && !bd.r) || l.type === 'ring') H.push(['r', l.cx + l.r, l.cy]);
     if (l.type === 'line') { if (!bd.x1 && !bd.y1) H.push(['p1', l.x1, l.y1]); if (!bd.x2 && !bd.y2) H.push(['p2', l.x2, l.y2]); }
     if (l.type === 'arrow') H.push(['size', l.x + l.size, l.y + l.size]);
@@ -134,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
     s.appendChild(ui);
-    const hidden = K.toImageUrl(design, samples()).url === '';
+    const hidden = preview(design, false).url === '';
     $('blankNote').hidden = !hidden;
   }
 
@@ -219,6 +236,10 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'text': return { type, name, x: R(W / 2), y: R(H / 2 + 5), size: 14, weight: 600, anchor: 'middle', fill: '#f8fafc', text: L('Text', 'نص') };
       case 'ring': return { type, name, cx: R(W / 2), cy: R(H / 2), r: Math.max(8, R(m / 2 - 10)), sw: 8, track: '#1e293b', fill: '#00d4ff', cap: 'round', p: 0.75 };
       case 'arrow': return { type, name, x: R(W / 2 - 8), y: R(H / 2 - 8), size: 16, goodWhen: 'up', good: '#22c55e', bad: '#ef4444', neutral: '#94a3b8' };
+      case 'spark': {
+        const mv = design.values.find((v) => v.kind === 'measure') || design.values[0];
+        return { type, name, x: 8, y: 8, w: Math.max(20, W - 16), h: Math.max(10, H - 16), n: 12, grain: 'month', end: 'data', stroke: '#00d4ff', sw: 2, area: true, areaColor: '#00d4ff', areaOpacity: 0.2, dot: true, dotR: 3, dotColor: '#ffffff', bind: mv ? { series: { v: mv.id } } : undefined };
+      }
     }
   };
   $('addBar').innerHTML = Object.entries(TYPES).map(([k, t]) => `<button type="button" class="kd-add" data-add="${k}"><i class="bi ${t.icon}"></i><span data-tn="${k}"></span></button>`).join('');
@@ -287,6 +308,8 @@ document.addEventListener('DOMContentLoaded', () => {
         ${num(L('Width', 'العرض'), 'card.w', design.w, 1)}${num(L('Height', 'الارتفاع'), 'card.h', design.h, 1)}
         <label class="kd-toggle kd-wide"><input type="checkbox" data-card-bg${hasBg ? ' checked' : ''}> <span>${L('Background color', 'لون الخلفية')}</span><small>${L('Off = transparent, takes the report background', 'بدونها تكون شفافة وتأخذ خلفية التقرير')}</small></label>
         ${hasBg ? col(L('Background', 'الخلفية'), 'card.bg', design.bg) + num(L('Corner radius', 'استدارة الزوايا'), 'card.radius', design.radius || 0, 1) : ''}
+        ${design.layers.some((l) => l.type === 'spark') ? `${txt(L('Date column for sparklines', 'عمود التاريخ لخطوط الاتجاه'), 'card.dateCol', design.dateCol || "'Date'[Date]", 'maxlength="100" spellcheck="false"')}
+        <label class="kd-toggle kd-wide"><input type="checkbox" data-p="card.clearDateFilters"${design.clearDateFilters !== false ? ' checked' : ''}> <span>${L('Ignore date slicers inside the sparkline', 'تجاهل فلاتر التاريخ داخل خط الاتجاه')}</span><small>${L('Keeps the full trend when a Year or Month slicer is set. Turn off if your dates are not in a separate date table.', 'يحافظ على الاتجاه كاملًا عند اختيار سنة أو شهر. أوقفه إذا لم تكن التواريخ في جدول تاريخ منفصل.')}</small></label>` : ''}
         ${sel_(L('Show nothing when this is blank', 'لا تعرض شيئًا عندما تكون هذه فارغة'), 'card.hideIfBlank', design.hideIfBlank || '', [['', L('(always show)', '(اعرض دائمًا)')]].concat(design.values.filter((v) => v.kind === 'measure').map((v) => [v.id, v.label || v.measure])))}</div>
         <p class="kd-hint mt-2">${L('Click a layer on the canvas to edit it.', 'اضغط على أي طبقة في اللوحة لتعديلها.')}</p>`;
       return;
@@ -305,6 +328,16 @@ document.addEventListener('DOMContentLoaded', () => {
           sel_(L('Align', 'المحاذاة'), 'anchor', l.anchor || 'start', [['start', L('From X to the right', 'من X إلى اليمين')], ['middle', L('Centred on X', 'في منتصف X')], ['end', L('Ending at X', 'ينتهي عند X')]]) + col(L('Color', 'اللون'), 'fill', l.fill);
         break;
       case 'ring': h += pos('cx', 'cy') + num(L('Radius', 'نصف القطر'), 'r', l.r) + num(L('Thickness', 'السماكة'), 'sw', l.sw) + col(L('Progress color', 'لون التقدم'), 'fill', l.fill) + col(L('Track color', 'لون المسار'), 'track', l.track) + sel_(L('Ends', 'الأطراف'), 'cap', l.cap || 'butt', [['butt', L('Square', 'مربعة')], ['round', L('Round', 'دائرية')]]) + (b.p && b.p.v ? '' : num(L('Progress (0 to 1)', 'التقدم (0 إلى 1)'), 'p', l.p, 0.05)); break;
+      case 'spark':
+        h += pos('x', 'y') + num(L('Width', 'العرض'), 'w', l.w) + num(L('Height', 'الارتفاع'), 'h', l.h) +
+          sel_(L('Each point is a', 'كل نقطة تمثل'), 'grain', l.grain || 'month', [['month', L('Month', 'شهر')], ['week', L('Week', 'أسبوع')], ['day', L('Day', 'يوم')]]) + num(L('Number of points', 'عدد النقاط'), 'n', l.n || 12, 1) +
+          `<div class="kd-wide">${sel_(L('Ends at', 'ينتهي عند'), 'end', l.end || 'data', [['data', L('The last date with data', 'آخر تاريخ فيه بيانات')], ['filter', L('The last date in the current filters', 'آخر تاريخ في الفلاتر الحالية')]])}</div>` +
+          col(L('Line color', 'لون الخط'), 'stroke', l.stroke) + num(L('Thickness', 'السماكة'), 'sw', l.sw) +
+          `<label class="kd-toggle kd-wide"><input type="checkbox" data-p="area"${l.area ? ' checked' : ''}> <span>${L('Fill the area under the line', 'تعبئة المساحة تحت الخط')}</span></label>` +
+          (l.area ? col(L('Area color', 'لون المساحة'), 'areaColor', l.areaColor || l.stroke) + num(L('Area opacity', 'شفافية المساحة'), 'areaOpacity', l.areaOpacity == null ? 0.2 : l.areaOpacity, 0.05) : '') +
+          `<label class="kd-toggle kd-wide"><input type="checkbox" data-p="dot"${l.dot ? ' checked' : ''}> <span>${L('Dot on the latest point', 'نقطة على آخر قيمة')}</span></label>` +
+          (l.dot ? col(L('Dot color', 'لون النقطة'), 'dotColor', l.dotColor || l.stroke) + num(L('Dot size', 'حجم النقطة'), 'dotR', l.dotR || 3, 0.5) : '');
+        break;
       case 'arrow': h += pos('x', 'y') + num(L('Size', 'الحجم'), 'size', l.size) + sel_(L('Good when', 'جيد عندما'), 'goodWhen', l.goodWhen || 'up', [['up', L('Value goes up', 'القيمة ترتفع')], ['down', L('Value goes down', 'القيمة تنخفض')]]) + col(L('Good', 'جيد'), 'good', l.good) + col(L('Bad', 'سيئ'), 'bad', l.bad) + col(L('No change', 'بدون تغيير'), 'neutral', l.neutral); break;
     }
     if (['rect', 'circle', 'text'].includes(l.type)) h += num(L('Opacity (0 to 1)', 'الشفافية (0 إلى 1)'), 'opacity', l.opacity == null ? 1 : l.opacity, 0.05);
@@ -315,6 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'line': h += scaleUI('x2', L('End X from a value', 'نهاية X من قيمة'), b.x2, 'X2') + rulesUI('stroke', L('Color by rules', 'اللون حسب قواعد'), b.stroke, l.stroke); break;
       case 'text': h += textUI(b.text) + rulesUI('fill', L('Color by rules', 'اللون حسب قواعد'), b.fill, l.fill); break;
       case 'ring': h += scaleUI('p', L('Progress from a value', 'التقدم من قيمة'), b.p) + rulesUI('fill', L('Progress color by rules', 'لون التقدم حسب قواعد'), b.fill, l.fill); break;
+      case 'spark': h += `<div class="kd-bind kd-bind-flat">${sel_(L('Trend of', 'اتجاه'), 'bind.series.v', (b.series && b.series.v) || '', design.values.map((v) => [v.id, v.label || v.measure]))}<p class="kd-hint">${L('Recalculated for each period using the date column in Card settings.', 'تُحسب لكل فترة باستخدام عمود التاريخ في إعدادات البطاقة.')}</p></div>` + rulesUI('stroke', L('Line color by rules', 'لون الخط حسب قواعد'), b.stroke, l.stroke); break;
       case 'arrow': h += `<div class="kd-bind kd-bind-flat">${sel_(L('Direction from', 'الاتجاه من'), 'bind.dir.v', (b.dir && b.dir.v) || '', [['', L('(fixed: up)', '(ثابت: للأعلى)')]].concat(design.values.map((v) => [v.id, v.label || v.measure])))}<p class="kd-hint">${L('Points up above 0, down below 0, flat at 0.', 'يتجه للأعلى فوق 0، وللأسفل تحت 0، وأفقي عند 0.')}</p></div>`; break;
     }
     h += showUI(b.show) + '</div>';
@@ -323,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // set a value on an object by a dotted path like "bind.fill.rules.0.c"
   const setPath = (obj, path, v) => { const ks = path.split('.'); let o = obj; ks.slice(0, -1).forEach((k) => { if (o[k] == null) o[k] = {}; o = o[k]; }); o[ks[ks.length - 1]] = v; };
-  const NUMERIC = /(^|\.)(x|y|w|h|rx|r|cx|cy|x1|y1|x2|y2|sw|size|opacity|p|d0|d1|r0|r1|t|radius|weight)$/;
+  const NUMERIC = /(^|\.)(x|y|w|h|rx|r|cx|cy|x1|y1|x2|y2|sw|size|opacity|p|d0|d1|r0|r1|t|radius|weight|n|dotR|areaOpacity)$/;
   $('props').addEventListener('input', (e) => {
     const el = e.target, path = el.dataset.p; if (!path) return;
     beforeEdit();
@@ -337,9 +371,11 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
       const l = design.layers[sel]; if (!l) return;
       if (path === 'bind.dir.v') { l.bind = l.bind || {}; if (v) l.bind.dir = { v: v }; else delete l.bind.dir; }
+      else if (path === 'n') l.n = Math.max(2, Math.min(60, Math.round(v)));
       else setPath(l, path, v);
     }
     renderCanvas(); renderDax(); renderLayers(); save();
+    if (el.type === 'checkbox' && (path === 'area' || path === 'dot')) { renderProps(); return; }
     // a changed value can change which hints apply
     if (/\.v$/.test(path) || path === 'card.w' || path === 'card.h') { if (el.tagName === 'SELECT') renderProps(); }
   });
@@ -376,7 +412,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const fmtVal = (x) => (x == null ? L('blank', 'فارغ') : Math.abs(x) < 10 && x % 1 ? x.toFixed(3) : K.formatNumber(x, '#,0.00').replace(/\.00$/, ''));
   function renderValues() {
     const vals = evalValues();
-    $('values').innerHTML = design.values.map((v, i) => {
+    const shape = design.layers.some((l) => l.type === 'spark') ? `<label class="kd-f"><span>${L('Test trend shape (preview only)', 'شكل الاتجاه للتجربة (للمعاينة فقط)')}</span><select id="testShape">${[['wave', L('Up and down', 'صعود وهبوط')], ['up', L('Growing', 'نمو')], ['down', L('Falling', 'انخفاض')]].map(([k, t]) => `<option value="${k}"${(design.testShape || 'up') === k ? ' selected' : ''}>${t}</option>`).join('')}</select></label>` : '';
+    $('values').innerHTML = shape + design.values.map((v, i) => {
       const del = `<button type="button" class="kd-x" data-vdel="${i}" aria-label="${L('Remove', 'حذف')}"><i class="bi bi-trash"></i></button>`;
       if (v.kind === 'measure') {
         const s = +v.sample || 0, max = Math.max(10, Math.abs(s) * 2);
@@ -399,7 +436,10 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCanvas(); renderDax(); save();
     if (k === 'sample' || k === 'a' || k === 'b' || k === 'kind') $('values').querySelectorAll('.kd-val').forEach((row, j) => { const f = design.values[j]; if (f.kind !== 'measure') { const vals = evalValues(); row.querySelector('.kd-hint').textContent = '= ' + fmtVal(vals[f.id]) + (isFraction(f.id) && vals[f.id] != null ? ' (' + r1(vals[f.id] * 100) + '%)' : ''); } });
   });
-  $('values').addEventListener('change', (e) => { if (e.target.dataset.vk === 'label') { renderProps(); renderLayers(); } });
+  $('values').addEventListener('change', (e) => {
+    if (e.target.id === 'testShape') { design.testShape = e.target.value; renderCanvas(); save(); return; }
+    if (e.target.dataset.vk === 'label') { renderProps(); renderLayers(); }
+  });
   $('values').addEventListener('click', (e) => {
     const b = e.target.closest('[data-vdel]'); if (!b) return;
     const v = design.values[+b.dataset.vdel], refs = usedBy(v.id);

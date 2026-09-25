@@ -54,7 +54,16 @@
       ]
     },
     {
-      id: 'card', name: 'KPI card', nameAr: 'بطاقة مؤشر', premium: true, w: 260, h: 112, bg: '#1a1f2e', radius: 12, values: V(), hideIfBlank: 'sales',
+      id: 'spark', name: 'Sparkline', nameAr: 'خط الاتجاه', w: 220, h: 48, values: V(), hideIfBlank: 'sales', dateCol: "'Date'[Date]",
+      layers: [
+        { type: 'text', name: 'Value', x: 0, y: 22, size: 16, weight: 700, anchor: 'start', fill: INK, bind: { text: { v: 'sales', fmt: 'auto' } } },
+        { type: 'text', name: 'Growth', x: 0, y: 40, size: 11, weight: 600, anchor: 'start', fill: GOOD,
+          bind: { text: { v: 'growth', fmt: 'p1', sign: true }, fill: { rules: [{ v: 'growth', op: '<', t: 0, c: BAD }], other: GOOD } } },
+        { type: 'spark', name: 'Trend', x: 76, y: 6, w: 140, h: 36, n: 12, grain: 'month', end: 'data', stroke: ACCENT, sw: 2, area: true, areaColor: ACCENT, areaOpacity: 0.18, dot: true, dotR: 3, dotColor: INK, bind: { series: { v: 'sales' } } }
+      ]
+    },
+    {
+      id: 'card', name: 'KPI card', nameAr: 'بطاقة مؤشر', premium: true, w: 260, h: 112, bg: '#1a1f2e', radius: 12, values: V(), hideIfBlank: 'sales', dateCol: "'Date'[Date]",
       layers: [
         { type: 'text', name: 'Title', x: 16, y: 26, size: 12, weight: 600, anchor: 'start', fill: MUTED, text: 'Sales' },
         { type: 'text', name: 'Achievement', x: 244, y: 26, size: 11, weight: 600, anchor: 'end', fill: MUTED, bind: { text: { v: 'ach', fmt: 'p0', suffix: ' of target' } } },
@@ -64,7 +73,8 @@
           bind: { text: { v: 'growth', fmt: 'p1', sign: true }, fill: { rules: [{ v: 'growth', op: '<', t: 0, c: BAD }], other: GOOD } } },
         { type: 'text', name: 'Caption', x: 82, y: 84, size: 11, weight: 400, anchor: 'start', fill: MUTED, text: 'vs last year' },
         { type: 'rect', name: 'Track', x: 16, y: 96, w: 228, h: 6, rx: 3, fill: '#0a0f1c' },
-        { type: 'rect', name: 'Bar', x: 16, y: 96, w: 0, h: 6, rx: 3, fill: ACCENT, bind: { w: { v: 'ach', d0: 0, d1: 1, r0: 0, r1: 228 }, fill: achColor() } }
+        { type: 'rect', name: 'Bar', x: 16, y: 96, w: 0, h: 6, rx: 3, fill: ACCENT, bind: { w: { v: 'ach', d0: 0, d1: 1, r0: 0, r1: 228 }, fill: achColor() } },
+        { type: 'spark', name: 'Trend', x: 164, y: 38, w: 80, h: 42, n: 12, grain: 'month', end: 'data', stroke: ACCENT, sw: 2, area: true, areaColor: ACCENT, areaOpacity: 0.15, dot: true, dotR: 2.5, dotColor: INK, bind: { series: { v: 'sales' } } }
       ]
     }
   ];
