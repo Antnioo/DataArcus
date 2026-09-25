@@ -237,6 +237,18 @@
     .mh-pages > span, .mh-pages > button { background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 20px; padding: 2px 9px; color: #cbd5e1; font-size: .75rem; font-weight: 500; white-space: nowrap; max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
     .mh-pages > button { color: var(--accent); cursor: pointer; }
     .mh-pages > button:hover { border-color: var(--accent); }
+    .mh-help { font-size: .76rem; color: #64748b; margin: -4px 0 8px; }
+    .mh-chain { margin-top: 14px; border: 1px solid var(--glass-border); border-radius: 12px; padding: 8px 12px; background: rgba(255,255,255,.015); }
+    .mh-chain summary { cursor: pointer; color: var(--accent); font-size: .85rem; font-weight: 600; }
+    .mh-chain[open] summary { margin-bottom: 8px; }
+    .mh-tree, .mh-tree ul { list-style: none; margin: 0; padding: 0; text-align: left; }
+    .mh-tree { overflow-x: auto; }
+    .mh-tree ul { padding-inline-start: 18px; border-inline-start: 1px dashed rgba(125,211,252,.3); margin-inline-start: 8px; }
+    .mh-tree li { position: relative; padding-block: 3px; padding-inline-start: 10px; }
+    .mh-tree ul > li::before { content: ''; position: absolute; inset-inline-start: -18px; top: 14px; width: 24px; border-top: 1px dashed rgba(125,211,252,.3); }
+    .mh-tnode { background: none; border: 0; padding: 0; color: #7dd3fc; font-size: .82rem; text-align: start; }
+    .mh-tnode:hover { text-decoration: underline; }
+    .mh-tree small { color: #64748b; font-size: .72rem; margin-inline-start: 6px; }
     .mh-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--accent); color: #051018; font-weight: 700; padding: 10px 18px; border-radius: 30px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 3000; }
     .mh-toast.show { opacity: 1; }
     [dir=rtl] .mh-issue summary b, [dir=rtl] .mh-quick button { text-align: right; }
