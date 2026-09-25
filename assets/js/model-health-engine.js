@@ -441,6 +441,19 @@
     const roots = new Set();
     const rep = analyzeReport(report);
     const reportUse = { measures: new Map(), columns: new Map() };
+    const vis = { measures: new Map(), columns: new Map() }; // key -> { v: distinct visuals, p: Set(pages) }
+    if (rep) rep.perVisual.forEach((pv, i) => {
+      const seen = new Set();
+      pv.refs.forEach((r) => {
+        const t = IX.tables.get(lc(r.entity)); if (!t || !r.prop) return;
+        const isM = IX.measures.has(lc(r.prop)) && (r.kind === 'Measure' || !IX.columns.has(lc(t.name) + '|' + lc(r.prop)));
+        const bucket = isM ? vis.measures : vis.columns, key = isM ? lc(r.prop) : lc(t.name) + '|' + lc(r.prop);
+        if (seen.has(bucket === vis.measures ? 'm' + key : 'c' + key)) return;
+        seen.add(bucket === vis.measures ? 'm' + key : 'c' + key);
+        if (!bucket.has(key)) bucket.set(key, { v: 0, p: new Set() });
+        const e = bucket.get(key); e.v++; e.p.add(pv.page);
+      });
+    });
     const broken = new Map();
     const extNames = new Set();
     const noteBroken = (r) => {
@@ -733,7 +746,9 @@
     const measures = allMeasures.map((ms) => ({
       name: ms.name, table: ms.table, expr: ms.expr, formatString: ms.formatString, folder: ms.displayFolder, description: ms.description, hidden: ms.hidden,
       used: rep ? used.has(K.m(ms.name)) : null,
-      visuals: reportUse.measures.get(lc(ms.name)) || 0,
+      visuals: vis.measures.has(lc(ms.name)) ? vis.measures.get(lc(ms.name)).v : 0,
+      pages: vis.measures.has(lc(ms.name)) ? Array.from(vis.measures.get(lc(ms.name)).p) : [],
+      refs: reportUse.measures.get(lc(ms.name)) || 0,
       depth: depth(K.m(ms.name), new Set()),
       dependsOn: mDeps(ms).map(nice).filter((x) => x && !(x.type === 'table' && x.name === ms.table)),
       usedBy: Array.from(usedBy.get(K.m(ms.name)) || []).map(nice).filter(Boolean)
@@ -750,7 +765,8 @@
       columns: t.columns.filter((c) => c.kind !== 'rowNumber').map((c) => ({
         name: c.name, dataType: c.dataType, kind: c.kind, hidden: c.hidden, expr: c.expr, sortBy: c.sortBy, format: c.formatString, description: c.description, sourceColumn: c.sourceColumn,
         used: rep ? used.has(K.c(t.name, c.name)) : null,
-        visuals: reportUse.columns.get(lc(t.name) + '|' + lc(c.name)) || 0
+        visuals: vis.columns.has(lc(t.name) + '|' + lc(c.name)) ? vis.columns.get(lc(t.name) + '|' + lc(c.name)).v : 0,
+        refs: reportUse.columns.get(lc(t.name) + '|' + lc(c.name)) || 0
       }))
     }));
     const userCols = userTables.reduce((a, t) => a + t.columns.filter((c) => c.kind !== 'rowNumber').length, 0);
