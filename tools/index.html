@@ -7,12 +7,12 @@
   <style>html.i18n-pending body{visibility:hidden}</style>
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://dataarcus.com/tools/" />
-  <title>Free Power BI Tools - DataArcus</title>
-  <meta name="description" content="Free Power BI tools: DP-600 practice exam, model health check, licensing cost calculator, theme generator, Hijri DAX calendar and DAX measure builder." />
+  <title>Free Power BI &amp; Fabric Tools - DataArcus</title>
+  <meta name="description" content="Free Power BI and Fabric tools: model health check, licensing calculator, theme generator, Hijri DAX calendar, measure builder and DP-600 practice exam." />
   <meta name="author" content="DataArcus" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="Free Power BI Tools - DataArcus" />
-  <meta property="og:description" content="Free Power BI tools: DP-600 practice exam, model health check, licensing cost calculator, theme generator, Hijri DAX calendar and DAX measure builder." />
+  <meta property="og:title" content="Free Power BI &amp; Fabric Tools - DataArcus" />
+  <meta property="og:description" content="Free Power BI and Fabric tools: model health check, licensing calculator, theme generator, Hijri DAX calendar, measure builder and DP-600 practice exam." />
   <meta property="og:url" content="https://dataarcus.com/tools/" />
   <meta property="og:site_name" content="DataArcus" />
   <meta property="og:image" content="https://dataarcus.com/assets/img/og/tools.jpg" />
@@ -59,12 +59,14 @@
   {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    "name": "Free Power BI Tools by DataArcus",
+    "name": "Free Power BI & Fabric Tools by DataArcus",
     "itemListElement": [
-          { "@type": "ListItem", "position": 4, "name": "Power BI Licensing Cost Calculator", "url": "https://dataarcus.com/tools/power-bi-licensing-cost-calculator.html" },
-          { "@type": "ListItem", "position": 1, "name": "Power BI Theme Generator", "url": "https://dataarcus.com/tools/power-bi-theme-generator.html" },
-          { "@type": "ListItem", "position": 2, "name": "DAX Calendar Table Generator", "url": "https://dataarcus.com/tools/dax-calendar-table-generator.html" },
-          { "@type": "ListItem", "position": 3, "name": "DAX Measure Builder", "url": "https://dataarcus.com/tools/dax-measure-builder.html" }
+      { "@type": "ListItem", "position": 1, "name": "Power BI Theme Generator", "url": "https://dataarcus.com/tools/power-bi-theme-generator.html" },
+      { "@type": "ListItem", "position": 2, "name": "DAX Calendar Table Generator", "url": "https://dataarcus.com/tools/dax-calendar-table-generator.html" },
+      { "@type": "ListItem", "position": 3, "name": "DAX Measure Builder", "url": "https://dataarcus.com/tools/dax-measure-builder.html" },
+      { "@type": "ListItem", "position": 4, "name": "Power BI Model Health Check", "url": "https://dataarcus.com/tools/power-bi-model-health-check.html" },
+      { "@type": "ListItem", "position": 5, "name": "Power BI Licensing Cost Calculator", "url": "https://dataarcus.com/tools/power-bi-licensing-cost-calculator.html" },
+      { "@type": "ListItem", "position": 6, "name": "DP-600 Practice Exam Simulator", "url": "https://dataarcus.com/tools/dp-600-practice-exam.html" }
     ]
   }
   </script>
@@ -73,7 +75,13 @@
     .th h1 { color: var(--accent); }
     .th-card { display: flex; flex-direction: column; gap: 10px; height: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; color: var(--lt); text-decoration: none; transition: transform .2s, border-color .2s; }
     a.th-card:hover { transform: translateY(-4px); border-color: var(--accent); color: var(--lt); }
-    .th-card h2 { font-size: 1.2rem; font-weight: 800; margin: 4px 0 0; }
+    .th-card h2, .th-card h3 { font-size: 1.2rem; font-weight: 800; margin: 4px 0 0; }
+    /* the site gives every <section> 120px padding; tool groups sit closer together */
+    .th .th-group { padding: 0; }
+    /* dates, prices and scores in the card previews always read left to right, also on the Arabic page */
+    .th-cal, .th-cost, .th-code { direction: ltr; unicode-bidi: isolate; }
+    .th-group-h { margin-bottom: 18px; max-width: 720px; }
+    .th-group-k { display: inline-block; font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
     .th-card p { color: #94a3b8; margin: 0; font-size: .92rem; }
     .th-visual { height: 64px; border-radius: 10px; background: var(--dk-3); display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .th-sw { display: flex; gap: 6px; } .th-sw i { width: 22px; height: 34px; border-radius: 6px; display: block; }
@@ -117,32 +125,18 @@
     <div class="container">
       <header class="mb-5">
         <span class="badge rounded-pill text-bg-dark border border-secondary mb-2" data-i18n="hub.badge">Free · No sign-up · Runs in your browser</span>
-        <h1 class="display-5 fw-bold" data-i18n="hub.title">Free Power BI Tools</h1>
-        <p class="lead text-white-50 mb-0" style="max-width:720px" data-i18n="hub.subtitle">Small tools that save Power BI developers hours, built from real client work. Nothing you enter leaves your browser.</p>
+        <h1 class="display-5 fw-bold" data-i18n="hub.title">Free Power BI &amp; Fabric Tools</h1>
+        <p class="lead text-white-50 mb-0" style="max-width:720px" data-i18n="hub.subtitle">Small tools that save Power BI and Fabric developers hours, built from real client work. Nothing you enter leaves your browser.</p>
       </header>
-      <div class="row g-4">
-          <div class="col-md-6 col-lg-4">
-            <a class="th-card" href="power-bi-model-health-check.html" data-tool="power-bi-model-health-check">
-              <div class="th-visual"><div class="th-cost"><span>Health</span><b>87</b><span class="dim">/ 100</span></div></div>
-              <h2 data-i18n="hub.cards.health.title">Power BI Model Health Check</h2>
-              <p data-i18n="hub.cards.health.desc">Drop a .pbit: health score, unused columns and measures, risky relationships, slow DAX and full documentation. Nothing is uploaded.</p>
-              <div class="th-tags"><span data-i18n="hub.cards.health.tag1">New</span><span data-i18n="hub.cards.health.tag2">Unused columns</span><span data-i18n="hub.cards.health.tag3">Documentation</span></div>
-              <span class="th-open"><span data-i18n="hub.open">Open tool</span> <i class="bi bi-arrow-right"></i></span>
-            </a>
-          </div>
-          <div class="col-md-6 col-lg-4">
-            <a class="th-card" href="dp-600-practice-exam.html" data-tool="dp-600-practice-exam">
-              <div class="th-visual"><div class="th-cost"><span>DP-600</span><b>850</b><span class="dim">/ 1000</span></div></div>
-              <h2 data-i18n="hub.cards.dp600.title">DP-600 Practice Exam Simulator</h2>
-              <p data-i18n="hub.cards.dp600.desc">220 original Fabric questions with explanations, timed mock exams scored out of 1000, case studies and a study plan.</p>
-              <div class="th-tags"><span data-i18n="hub.cards.dp600.tag1">Exam prep</span><span data-i18n="hub.cards.dp600.tag2">Mock exams</span><span data-i18n="hub.cards.dp600.tag3">Oct 2026 outline</span></div>
-              <span class="th-open"><span data-i18n="hub.open">Open tool</span> <i class="bi bi-arrow-right"></i></span>
-            </a>
-          </div>
+      <section class="th-group" aria-labelledby="grp-build">
+        <div class="th-group-h"><span class="th-group-k" data-i18n="hub.groups.build.label">Build</span>
+          <h2 class="h4 fw-bold mb-1" id="grp-build" data-i18n="hub.groups.build.title">Build faster in Power BI</h2>
+          <p class="text-white-50 mb-0" data-i18n="hub.groups.build.desc">Themes, date tables and measures, generated with your own table and column names.</p></div>
+        <div class="row g-4">
           <div class="col-md-6 col-lg-4">
             <a class="th-card" href="power-bi-theme-generator.html" data-tool="power-bi-theme-generator">
               <div class="th-visual"><div class="th-sw"><i style="background:#00d4ff"></i><i style="background:#6c5ce7"></i><i style="background:#00cec9"></i><i style="background:#fd79a8"></i><i style="background:#0084ff"></i><i style="background:#fdcb6e"></i></div></div>
-              <h2 data-i18n="hub.cards.theme.title">Power BI Theme Generator</h2>
+              <h3 data-i18n="hub.cards.theme.title">Power BI Theme Generator</h3>
               <p data-i18n="hub.cards.theme.desc">Turn your brand colors into a theme JSON with a live report preview and a readability check.</p>
               <div class="th-tags"><span data-i18n="hub.cards.theme.tag1">Theme JSON</span><span data-i18n="hub.cards.theme.tag2">Live preview</span></div>
               <span class="th-open"><span data-i18n="hub.open">Open tool</span> <i class="bi bi-arrow-right"></i></span>
@@ -151,7 +145,7 @@
           <div class="col-md-6 col-lg-4">
             <a class="th-card" href="dax-calendar-table-generator.html" data-tool="dax-calendar-table-generator">
               <div class="th-visual"><div class="th-cal"><span>1 Ramadan 1447</span><span class="dim">18 Feb 2026</span></div></div>
-              <h2 data-i18n="hub.cards.calendar.title">DAX Calendar Table Generator</h2>
+              <h3 data-i18n="hub.cards.calendar.title">DAX Calendar Table Generator</h3>
               <p data-i18n="hub.cards.calendar.desc">A complete date table in one paste, with fiscal years, GCC weekends, and Hijri dates with Ramadan and Eid flags.</p>
               <div class="th-tags"><span data-i18n="hub.cards.calendar.tag1">Hijri</span><span data-i18n="hub.cards.calendar.tag2">Ramadan</span><span data-i18n="hub.cards.calendar.tag3">Fiscal year</span></div>
               <span class="th-open"><span data-i18n="hub.open">Open tool</span> <i class="bi bi-arrow-right"></i></span>
@@ -160,29 +154,62 @@
           <div class="col-md-6 col-lg-4">
             <a class="th-card" href="dax-measure-builder.html" data-tool="dax-measure-builder">
               <div class="th-visual"><div class="th-code">DIVIDE ( [Sales] - [Sales PY], [Sales PY] )</div></div>
-              <h2 data-i18n="hub.cards.measure.title">DAX Measure Builder</h2>
+              <h3 data-i18n="hub.cards.measure.title">DAX Measure Builder</h3>
               <p data-i18n="hub.cards.measure.desc">YTD, prior year, YoY %, rolling months, running totals and Ramadan vs last Ramadan, added to your model in one click.</p>
               <div class="th-tags"><span data-i18n="hub.cards.measure.tag1">Time intelligence</span><span data-i18n="hub.cards.measure.tag2">DAX query view</span></div>
+              <span class="th-open"><span data-i18n="hub.open">Open tool</span> <i class="bi bi-arrow-right"></i></span>
+            </a>
+          </div>
+        </div>
+      </section>
+      <section class="th-group mt-5" aria-labelledby="grp-check">
+        <div class="th-group-h"><span class="th-group-k" data-i18n="hub.groups.check.label">Check</span>
+          <h2 class="h4 fw-bold mb-1" id="grp-check" data-i18n="hub.groups.check.title">Check your model and your costs</h2>
+          <p class="text-white-50 mb-0" data-i18n="hub.groups.check.desc">Score a model before you ship it, and find the cheapest license for your team.</p></div>
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-4">
+            <a class="th-card" href="power-bi-model-health-check.html" data-tool="power-bi-model-health-check">
+              <div class="th-visual"><div class="th-cost"><span>Health</span><b>87</b><span class="dim">/ 100</span></div></div>
+              <h3 data-i18n="hub.cards.health.title">Power BI Model Health Check</h3>
+              <p data-i18n="hub.cards.health.desc">Drop a .pbit: health score, unused columns and measures, risky relationships, slow DAX and full documentation. Nothing is uploaded.</p>
+              <div class="th-tags"><span data-i18n="hub.cards.health.tag1">New</span><span data-i18n="hub.cards.health.tag2">Unused columns</span><span data-i18n="hub.cards.health.tag3">Documentation</span></div>
               <span class="th-open"><span data-i18n="hub.open">Open tool</span> <i class="bi bi-arrow-right"></i></span>
             </a>
           </div>
           <div class="col-md-6 col-lg-4">
             <a class="th-card" href="power-bi-licensing-cost-calculator.html" data-tool="power-bi-licensing-cost-calculator">
               <div class="th-visual"><div class="th-cost"><span>F64</span><b>$5,004</b><span class="dim">/ month</span></div></div>
-              <h2 data-i18n="hub.cards.licensing.title">Power BI Licensing Cost Calculator</h2>
+              <h3 data-i18n="hub.cards.licensing.title">Power BI Licensing Cost Calculator</h3>
               <p data-i18n="hub.cards.licensing.desc">Pro vs Premium Per User vs Fabric for your number of creators and viewers, in USD, AED or SAR.</p>
               <div class="th-tags"><span data-i18n="hub.cards.licensing.tag1">Pro vs PPU vs Fabric</span><span data-i18n="hub.cards.licensing.tag2">F64 break-even</span></div>
               <span class="th-open"><span data-i18n="hub.open">Open tool</span> <i class="bi bi-arrow-right"></i></span>
             </a>
           </div>
-      </div>
+        </div>
+      </section>
+      <section class="th-group mt-5" aria-labelledby="grp-learn">
+        <div class="th-group-h"><span class="th-group-k" data-i18n="hub.groups.learn.label">Learn</span>
+          <h2 class="h4 fw-bold mb-1" id="grp-learn" data-i18n="hub.groups.learn.title">Prepare for Microsoft Fabric exams</h2>
+          <p class="text-white-50 mb-0" data-i18n="hub.groups.learn.desc">Practice questions and timed mock exams, aligned to the current exam outline.</p></div>
+        <div class="row g-4">
+          <div class="col-md-6 col-lg-4">
+            <a class="th-card" href="dp-600-practice-exam.html" data-tool="dp-600-practice-exam">
+              <div class="th-visual"><div class="th-cost"><span>DP-600</span><b>850</b><span class="dim">/ 1000</span></div></div>
+              <h3 data-i18n="hub.cards.dp600.title">DP-600 Practice Exam Simulator</h3>
+              <p data-i18n="hub.cards.dp600.desc">220 original Fabric questions with explanations, timed mock exams scored out of 1000, case studies and a study plan.</p>
+              <div class="th-tags"><span data-i18n="hub.cards.dp600.tag1">Exam prep</span><span data-i18n="hub.cards.dp600.tag2">Mock exams</span><span data-i18n="hub.cards.dp600.tag3">Oct 2026 outline</span></div>
+              <span class="th-open"><span data-i18n="hub.open">Open tool</span> <i class="bi bi-arrow-right"></i></span>
+            </a>
+          </div>
+        </div>
+      </section>
       <h2 class="h5 fw-bold mt-5 mb-3 text-white-50" data-i18n="hub.nextUp">Next up</h2>
       <div class="row g-4">
           <div class="col-md-6 col-lg-4">
             <div class="th-card soon"><span class="th-badge" data-i18n="hub.soonBadge">Coming soon</span><h2 data-i18n="hub.soon.kpi.title">E-commerce KPI Calculator</h2><p data-i18n="hub.soon.kpi.desc">CAC, ROAS, CLV and AOV from four numbers, with what each one means.</p></div>
           </div>
           <div class="col-md-6 col-lg-4">
-            <div class="th-card soon"><span class="th-badge" data-i18n="hub.soonBadge">Coming soon</span><h2 data-i18n="hub.soon.svg.title">SVG KPI Card Generator</h2><p data-i18n="hub.soon.svg.desc">Arrows, sparklines and progress rings drawn by a DAX measure.</p></div>
+            <div class="th-card soon"><span class="th-badge" data-i18n="hub.soonBadge">Coming soon</span><h2 data-i18n="hub.soon.svg.title">SVG KPI Designer</h2><p data-i18n="hub.soon.svg.desc">Design KPI cards, progress rings, arrows and sparklines, and get the DAX measure that draws them.</p></div>
           </div>
       </div>
       <div class="row mt-5 justify-content-center">
@@ -217,7 +244,7 @@
               <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
               <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
               <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
-              <li class="mb-2"><a href="index.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">Free Power BI Tools</a></li>
+              <li class="mb-2"><a href="index.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">Free Power BI &amp; Fabric Tools</a></li>
             </ul>
           </div>
           <div class="col-lg-2 col-md-3">

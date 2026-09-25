@@ -3,8 +3,8 @@ window.toolsHubTranslations = {
   "en": {
     "hub": {
       "badge": "Free · No sign-up · Runs in your browser",
-      "title": "Free Power BI Tools",
-      "subtitle": "Small tools that save Power BI developers hours, built from real client work. Nothing you enter leaves your browser.",
+      "title": "Free Power BI & Fabric Tools",
+      "subtitle": "Small tools that save Power BI and Fabric developers hours, built from real client work. Nothing you enter leaves your browser.",
       "cards": {
         "theme": {
           "title": "Power BI Theme Generator",
@@ -57,8 +57,8 @@ window.toolsHubTranslations = {
           "desc": "CAC, ROAS, CLV and AOV from four numbers, with what each one means."
         },
         "svg": {
-          "title": "SVG KPI Card Generator",
-          "desc": "Arrows, sparklines and progress rings drawn by a DAX measure."
+          "title": "SVG KPI Designer",
+          "desc": "Design KPI cards, progress rings, arrows and sparklines, and get the DAX measure that draws them."
         }
       },
       "cta": {
@@ -67,17 +67,34 @@ window.toolsHubTranslations = {
         "suggest": "Suggest a tool"
       },
       "open": "Open tool",
-      "soonBadge": "Coming soon"
+      "soonBadge": "Coming soon",
+      "groups": {
+        "build": {
+          "label": "Build",
+          "title": "Build faster in Power BI",
+          "desc": "Themes, date tables and measures, generated with your own table and column names."
+        },
+        "check": {
+          "label": "Check",
+          "title": "Check your model and your costs",
+          "desc": "Score a model before you ship it, and find the cheapest license for your team."
+        },
+        "learn": {
+          "label": "Learn",
+          "title": "Prepare for Microsoft Fabric exams",
+          "desc": "Practice questions and timed mock exams, aligned to the current exam outline."
+        }
+      }
     },
     "meta": {
-      "title": "Free Power BI Tools - DataArcus"
+      "title": "Free Power BI & Fabric Tools - DataArcus"
     }
   },
   "ar": {
     "hub": {
       "badge": "مجانية · بدون تسجيل · تعمل في متصفحك",
-      "title": "أدوات Power BI مجانية",
-      "subtitle": "أدوات صغيرة توفر على مطوري Power BI ساعات من العمل، مبنية من مشاريع حقيقية مع العملاء. لا شيء مما تدخله يغادر متصفحك.",
+      "title": "أدوات Power BI و Fabric مجانية",
+      "subtitle": "أدوات صغيرة توفر على مطوري Power BI و Fabric ساعات من العمل، مبنية من مشاريع حقيقية مع العملاء. لا شيء مما تدخله يغادر متصفحك.",
       "cards": {
         "theme": {
           "title": "مولّد سمات Power BI",
@@ -130,8 +147,8 @@ window.toolsHubTranslations = {
           "desc": "CAC و ROAS و CLV و AOV من أربعة أرقام، مع شرح معنى كل منها."
         },
         "svg": {
-          "title": "مولّد بطاقات KPI بصيغة SVG",
-          "desc": "أسهم وخطوط مصغرة وحلقات تقدم يرسمها مقياس DAX."
+          "title": "مصمم مؤشرات KPI بصيغة SVG",
+          "desc": "صمم بطاقات مؤشرات وحلقات تقدم وأسهمًا وخطوط اتجاه، واحصل على مقياس DAX الذي يرسمها."
         }
       },
       "cta": {
@@ -140,10 +157,27 @@ window.toolsHubTranslations = {
         "suggest": "اقترح أداة"
       },
       "open": "افتح الأداة",
-      "soonBadge": "قريبًا"
+      "soonBadge": "قريبًا",
+      "groups": {
+        "build": {
+          "label": "ابنِ",
+          "title": "ابنِ أسرع في Power BI",
+          "desc": "سمات وجداول تواريخ ومقاييس، تُولَّد بأسماء جداولك وأعمدتك."
+        },
+        "check": {
+          "label": "افحص",
+          "title": "افحص نموذجك وتكاليفك",
+          "desc": "قيّم نموذجك قبل نشره، واعرف أرخص ترخيص لفريقك."
+        },
+        "learn": {
+          "label": "تعلّم",
+          "title": "استعد لاختبارات Microsoft Fabric",
+          "desc": "أسئلة تدريبية واختبارات موقوتة مطابقة لمنهج الاختبار الحالي."
+        }
+      }
     },
     "meta": {
-      "title": "أدوات Power BI مجانية - داتا أركوس"
+      "title": "أدوات Power BI و Fabric مجانية - داتا أركوس"
     }
   }
 };

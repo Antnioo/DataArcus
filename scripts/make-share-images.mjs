@@ -162,8 +162,12 @@ const JOBS = [
   { id: 'home', html: page(textBlock({ kicker: 'Power BI consulting · Dubai', title: 'From Scattered Business Data to Decisions You Can Trust', size: 42, chips: ['8 showcase dashboards', '6 free tools', 'English & Arabic'] }),
     `<div class="fan">${screenshot('assets/img/portfolio/fintech-preview.jpg', '', 'left:0;top:10px;transform:rotate(-5deg);opacity:.75')}${screenshot('assets/img/portfolio/repeatiq-preview.jpg', '', 'left:110px;top:0;transform:rotate(4deg);opacity:.85')}${screenshot('assets/img/portfolio/pulse-preview.jpg', '', 'left:40px;top:120px')}</div>`, '500px 1fr') },
   ...PAGES.map(([id, kicker, title, o, right, cols]) => ({ id, html: page(textBlock(Object.assign({ kicker, title }, o)), right, cols) })),
-  { id: 'tools', html: page(textBlock({ kicker: 'Free · No sign-up · English & Arabic', title: 'Free Power BI Tools', sub: 'Six tools that save hours on real Power BI work. Nothing to install.' }),
-    `<div class="tiles">${HUB.map(([n, d, ic]) => `<div class="card tile">${ic}<div><b>${esc(n)}</b><small>${esc(d)}</small></div></div>`).join('')}</div>`, '480px 1fr') },
+  { id: 'tools', html: page(textBlock({ kicker: 'Free · No sign-up · English & Arabic', title: 'Free Power BI & Fabric Tools', sub: 'Build, check and learn. Nothing to install.' }), (() => {
+    // the hub's three groups; HUB order is DP-600, health, licensing, theme, calendar, measures
+    const tile = ([n, d, ic], stack) => `<div class="card tile" style="padding:12px 14px;gap:${stack ? 8 : 12}px${stack ? ';flex-direction:column;align-items:flex-start' : ''}">${ic.replace('width="42" height="42"', 'width="36" height="36"')}<div><b style="font-size:16px">${esc(n)}</b><small style="font-size:13px">${esc(d)}</small></div></div>`;
+    const group = (label, items, cols) => `<div><div style="font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#00d4ff;margin:0 0 8px 2px">${label}</div><div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:10px">${items.map((it) => tile(it, cols === 3)).join('')}</div></div>`;
+    return `<div style="display:flex;flex-direction:column;gap:16px">${group('Build', [HUB[3], HUB[4], HUB[5]], 3)}${group('Check', [HUB[1], HUB[2]], 2)}${group('Learn', [HUB[0]], 2)}</div>`;
+  })(), '430px 1fr') },
   { id: 'kpi-playbook', html: page(textBlock({ kicker: 'E-commerce playbook · Power BI', title: 'The 5 Marketing KPIs Every E-commerce Leader Should Track', sub: 'Five numbers that decide profit, tracked in Power BI.' }), kpiRows, '600px 1fr') },
   { id: 'shopify-dashboard', html: page(textBlock({ kicker: 'Shopify · Power BI', title: 'Your Shopify Dashboard in Power BI', sub: 'Sales, marketing ROI, customers and inventory in one source of truth.' }), shopMods, '600px 1fr') }
 ];

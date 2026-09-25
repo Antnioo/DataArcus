@@ -122,7 +122,7 @@ portfolio: {
         { title: "Leads Resolved in One Production Model" },
         { title: "DAX Measures in Production" },
         { title: "End-to-End Dashboard Builds" },
-        { title: "Free Power BI Tools Published" }
+        { title: "Free Power BI & Fabric Tools Published" }
       ],
       ctaTitle: "Curious What This Could Look Like for Your Data?",
       ctaSubtitle: "No obligation. Tell me what you're working with, and I'll show you what's possible on a quick call.",
@@ -130,7 +130,44 @@ portfolio: {
     },
 
     process: {"title": "How a Project Works", "subtitle": "Three steps, no surprises.", "steps": [{"title": "Free Data Clarity Call", "desc": "20 minutes on your data and the decisions you need to make. You get a straight answer on what's fixable, even if we never work together."}, {"title": "Build and Validate", "desc": "I build the data model and dashboards, and check every number against your source system before you see a single chart."}, {"title": "Handover and Support", "desc": "Your team gets the report, a walkthrough and documentation. Changes after launch are one message away, and you talk to the person who built it."}]},
-    toolsStrip: {"badge": "Free · No sign-up", "title": "Free Power BI Tools", "subtitle": "Built from real client work. Use them on your own reports today.", "button": "See all tools", "cards": [{"title": "DP-600 Practice Exam", "desc": "220 Fabric questions, mock exams and case studies."}, {"title": "DAX Calendar Generator", "desc": "Date table with Hijri dates and Ramadan flags."}, {"title": "DAX Measure Builder", "desc": "YTD, YoY, rolling and running totals in one click."}]},
+    toolsStrip: {
+        badge: "Free · No sign-up",
+        title: "Free Power BI & Fabric Tools",
+        subtitle: "Built from real client work. Use them on your own reports today.",
+        button: "See all tools",
+        cards: [
+          {
+            tag: "Build",
+            title: "Theme Generator",
+            desc: "Brand colors to a theme JSON, with a live preview."
+          },
+          {
+            tag: "Build",
+            title: "DAX Calendar Generator",
+            desc: "Date table with Hijri dates and Ramadan flags."
+          },
+          {
+            tag: "Build",
+            title: "DAX Measure Builder",
+            desc: "YTD, YoY, rolling and running totals in one click."
+          },
+          {
+            tag: "Check",
+            title: "Model Health Check",
+            desc: "Score your model: unused columns, slow DAX, broken visuals."
+          },
+          {
+            tag: "Check",
+            title: "Licensing Cost Calculator",
+            desc: "Pro, PPU or Fabric for your team, in USD, AED or SAR."
+          },
+          {
+            tag: "Learn",
+            title: "DP-600 Practice Exam",
+            desc: "220 Fabric questions, mock exams and case studies."
+          }
+        ]
+      },
     latest: {"title": "Latest from the Blog", "subtitle": "Playbooks from real models: the patterns, the mistakes, and the fixes.", "button": "All articles", "posts": {"ramadanSales": {"badge": "POWER BI", "title": "Ramadan Sales in Power BI: Compare This Ramadan With Last Ramadan", "date": "September 23, 2026", "excerpt": "SAMEPERIODLASTYEAR compares March with March, but Ramadan moved 11 days. The Hijri calendar and the one DAX measure that line up every Ramadan day by day.", "button": "Read Playbook"}, "licensingGuide": {"badge": "STRATEGY", "title": "Power BI Pro, Premium Per User or Fabric: Which License Do You Actually Need?", "date": "September 23, 2026", "excerpt": "One number decides your Power BI license: how many people only view reports. Current prices, the F64 break-even point and a worked example.", "button": "Read Playbook"}, "journeyAttribution": {"badge": "DATA ENGINEERING", "title": "Resolve Once, Hydrate Many: A DAX Pattern for Lead Attribution", "date": "September 1, 2026", "excerpt": "Why matching the same lead five times produces disagreeing KPIs, and the single-resolution DAX pattern that validated 54,403/54,403 leads before replacing scattered join logic.", "button": "Read Playbook"}}},
 
     // FAQ Section
@@ -359,7 +396,7 @@ portfolio: {
         { title: "عميل محتمل تم حله في نموذج إنتاج واحد" },
         { title: "مقياس DAX في الإنتاج" },
         { title: "لوحة تحكم متكاملة تم بناؤها" },
-        { title: "أداة Power BI مجانية منشورة" }
+        { title: "أدوات Power BI و Fabric مجانية منشورة" }
       ],
       ctaTitle: "هل تتساءل كيف سيبدو هذا لبياناتك؟",
       ctaSubtitle: "بدون أي التزام. أخبرني بما تعمل عليه، وسأوضح لك ما هو ممكن في مكالمة سريعة.",
@@ -367,7 +404,44 @@ portfolio: {
     },
 
     process: {"title": "كيف يسير المشروع", "subtitle": "ثلاث خطوات، بدون مفاجآت.", "steps": [{"title": "مكالمة وضوح البيانات المجانية", "desc": "20 دقيقة حول بياناتك والقرارات التي تحتاج إلى اتخاذها. تحصل على إجابة واضحة عمّا يمكن إصلاحه، حتى لو لم نعمل معًا."}, {"title": "البناء والتحقق", "desc": "أبني نموذج البيانات ولوحات التحكم، وأطابق كل رقم مع نظامك المصدر قبل أن ترى أي رسم بياني."}, {"title": "التسليم والدعم", "desc": "يحصل فريقك على التقرير وشرح عملي وتوثيق كامل. أي تعديل بعد الإطلاق على بُعد رسالة واحدة، مع الشخص الذي بناه مباشرة."}]},
-    toolsStrip: {"badge": "مجانية · بدون تسجيل", "title": "أدوات Power BI مجانية", "subtitle": "مبنية من عمل حقيقي مع العملاء. استخدمها في تقاريرك اليوم.", "button": "عرض كل الأدوات", "cards": [{"title": "اختبار DP-600 التجريبي", "desc": "220 سؤالًا عن Fabric واختبارات تجريبية ودراسات حالة."}, {"title": "مولّد تقويم DAX", "desc": "جدول تواريخ بالتاريخ الهجري وعلامات رمضان."}, {"title": "منشئ مقاييس DAX", "desc": "مقاييس YTD و YoY والمتحركة والتراكمية بنقرة واحدة."}]},
+    toolsStrip: {
+        badge: "مجانية · بدون تسجيل",
+        title: "أدوات Power BI و Fabric مجانية",
+        subtitle: "مبنية من عمل حقيقي مع العملاء. استخدمها في تقاريرك اليوم.",
+        button: "عرض كل الأدوات",
+        cards: [
+          {
+            tag: "ابنِ",
+            title: "مولّد السمات",
+            desc: "حوّل ألوان علامتك إلى ملف سمة JSON مع معاينة مباشرة."
+          },
+          {
+            tag: "ابنِ",
+            title: "مولّد تقويم DAX",
+            desc: "جدول تواريخ بالتاريخ الهجري وعلامات رمضان."
+          },
+          {
+            tag: "ابنِ",
+            title: "منشئ مقاييس DAX",
+            desc: "مقاييس YTD و YoY والمتحركة والتراكمية بنقرة واحدة."
+          },
+          {
+            tag: "افحص",
+            title: "فحص صحة النموذج",
+            desc: "قيّم نموذجك: أعمدة غير مستخدمة، DAX بطيء، مرئيات مكسورة."
+          },
+          {
+            tag: "افحص",
+            title: "حاسبة تكلفة التراخيص",
+            desc: "Pro أم PPU أم Fabric لفريقك، بالدولار أو الدرهم أو الريال."
+          },
+          {
+            tag: "تعلّم",
+            title: "اختبار DP-600 التجريبي",
+            desc: "220 سؤالًا عن Fabric واختبارات تجريبية ودراسات حالة."
+          }
+        ]
+      },
     latest: {"title": "أحدث المقالات", "subtitle": "أدلة عملية من نماذج حقيقية: الأنماط والأخطاء والحلول.", "button": "كل المقالات", "posts": {"ramadanSales": {"badge": "Power BI", "title": "مبيعات رمضان في Power BI: قارن رمضان هذا العام برمضان الماضي", "date": "23 سبتمبر 2026", "excerpt": "تقارن SAMEPERIODLASTYEAR مارس بمارس، لكن رمضان تحرّك 11 يومًا. التقويم الهجري ومقياس DAX الذي يطابق كل رمضان يومًا بيوم.", "button": "اقرأ الدليل"}, "licensingGuide": {"badge": "استراتيجية", "title": "Power BI Pro أم Premium Per User أم Fabric: أي ترخيص تحتاجه فعلًا؟", "date": "23 سبتمبر 2026", "excerpt": "رقم واحد يحسم ترخيص Power BI: عدد من يشاهدون التقارير فقط. الأسعار الحالية ونقطة التعادل لـ F64 ومثال عملي.", "button": "اقرأ الدليل"}, "journeyAttribution": {"badge": "هندسة البيانات", "title": "حلّ مرة واحدة، غذِّ كل مكان: نمط DAX لعزو العملاء المحتملين", "date": "1 سبتمبر 2026", "excerpt": "لماذا تُنتج مطابقة نفس العميل المحتمل خمس مرات مؤشرات أداء متضاربة، ونمط DAX الذي وثّق تطابق 54,403 من أصل 54,403 عميل محتمل قبل استبدال منطق الربط المتناثر.", "button": "اقرأ الدليل"}}},
 
     // FAQ Section
