@@ -115,7 +115,7 @@ window.measureBuilderTranslations = {
       }
     },
     "meta": {
-      "title": "منشئ مقاييس DAX: النمو السنوي و YTD و MTD والمتحرك - داتا أركوس"
+      "title": "منشئ مقاييس DAX: النمو السنوي وYTD وMTD والمتحرك"
     }
   }
 };

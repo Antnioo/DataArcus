@@ -4,20 +4,20 @@ window.homepageTranslations = {
     // Page Meta
     meta: {
       title: "DataArcus - Power BI & Data Modeling for Growing Businesses",
-      description: "DataArcus builds production-grade Power BI dashboards and data models for businesses across the MENA region - from CRM intelligence to project risk to retention analytics.",
+      description: "Production-grade Power BI dashboards and data models for businesses across the MENA region: CRM intelligence, project risk and retention analytics.",
       keywords: "Power BI consultant, data modeling, DAX, business intelligence dashboards, MENA, CRM analytics, Power BI specialist",
       author: "DataArcus",
       "og:type": "website",
       "og:title": "DataArcus - Power BI & Data Modeling for Growing Businesses",
-      "og:description": "I build production-grade Power BI dashboards and data models for businesses across the MENA region - from CRM intelligence to project risk to retention analytics.",
-      "og:url": "https://dataarcus.com",
+      "og:description": "I build production-grade Power BI dashboards and data models for businesses across the MENA region, from CRM intelligence to project risk to retention analytics.",
+      "og:url": "https://dataarcus.com/",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "og:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
       "og:locale": "en_US",
       "twitter:card": "summary_large_image",
       "twitter:title": "DataArcus - Power BI & Data Modeling for Growing Businesses",
-      "twitter:description": "I build production-grade Power BI dashboards and data models for businesses across the MENA region - from CRM intelligence to project risk to retention analytics.",
+      "twitter:description": "I build production-grade Power BI dashboards and data models for businesses across the MENA region, from CRM intelligence to project risk to retention analytics.",
       "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
       "twitter:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
       canonical: "https://dataarcus.com/",
@@ -26,7 +26,7 @@ window.homepageTranslations = {
     // Hero Section
     hero: {
       title: "From Scattered Business Data to Decisions You Can Trust",
-      subtitle: "I design and build production-grade Power BI systems - for dealership CRMs, project risk tracking, subscription retention, and more - that turn messy operational data into numbers your team can actually rely on.",
+      subtitle: "I design and build production-grade Power BI systems that turn messy operational data into numbers your team can actually rely on: dealership CRMs, project risk tracking, subscription retention and more.",
       buttonWork: "Explore My Work",
       buttonDiscuss: "Book a Free Data Clarity Call",
       badgeSecurity: "Enterprise Security",
@@ -56,7 +56,7 @@ window.homepageTranslations = {
     // Services Section
     services: {
       title: "Solutions Built Around Your Data, Not a Template",
-      subtitle: "Whatever platform your business runs on - CRM, e-commerce, project tools, spreadsheets - I turn it into a model your team can actually trust.",
+      subtitle: "CRM, e-commerce, project tools or spreadsheets: whatever your business runs on, I turn it into a model your team can actually trust.",
       cards: [
         {
           title: "Executive & Operational Dashboards",
@@ -68,7 +68,7 @@ window.homepageTranslations = {
         },
         {
           title: "Predictive & Trend Analysis",
-          desc: "Beyond what happened - forecasting, cohort analysis, and pacing models that show you what's coming next, whether that's next month's sales pace or a lead about to go cold."
+          desc: "Beyond what happened: forecasting, cohort analysis, and pacing models that show you what's coming next, whether that's next month's sales pace or a lead about to go cold."
         },
         {
           title: "Governance & Security",
@@ -107,9 +107,9 @@ portfolio: {
     // About Section
     about: {
       title: "A Partner in Your Success",
-      subtitle: "DataArcus isn't a dashboard factory - it's one person building the same kind of production-grade models you'd get from an internal data team, without the internal data team price tag.",
-      quote: "\"My name is Abdelrahman M. I've spent 2 years working in CRM and data-driven operations - but I got tired of waiting for someone else to build the reporting I actually needed, so I started building it myself in Power BI. DataArcus is where that work lives: real, production-grade models, not templates.\"",
-      p1: "I'm not running a large consultancy - I'm one person who builds every model personally. That means direct access to whoever's actually doing the work, no account-manager layer between you and your dashboard, and what you see in the portfolio is exactly what you'd get.",
+      subtitle: "DataArcus isn't a dashboard factory. It's one person building the same kind of production-grade models you'd get from an internal data team, without the internal data team price tag.",
+      quote: "\"My name is Abdelrahman M. I've spent 2 years working in CRM and data-driven operations, and I got tired of waiting for someone else to build the reporting I actually needed, so I started building it myself in Power BI. DataArcus is where that work lives: real, production-grade models, not templates.\"",
+      p1: "I'm not running a large consultancy. I'm one person who builds every model personally. That means direct access to whoever's actually doing the work, no account-manager layer between you and your dashboard, and what you see in the portfolio is exactly what you'd get.",
       founder: "Abdelrahman M., Founder & Lead Data Architect",
       certification: {
         title: "Industry Certified",
@@ -117,7 +117,7 @@ portfolio: {
         verified: "Verified by Google & Microsoft"
       },
       statsTitle: "The Track Record So Far",
-      statsSubtitle: "Real numbers from real production models - not agency metrics.",
+      statsSubtitle: "Real numbers from real production models, not agency metrics.",
       stats: [
         { title: "Leads Resolved in One Production Model" },
         { title: "DAX Measures in Production" },
@@ -125,7 +125,7 @@ portfolio: {
         { title: "Free Power BI Tools Published" }
       ],
       ctaTitle: "Curious What This Could Look Like for Your Data?",
-      ctaSubtitle: "No obligation - tell me what you're working with, and I'll show you what's possible on a quick call.",
+      ctaSubtitle: "No obligation. Tell me what you're working with, and I'll show you what's possible on a quick call.",
       ctaButton: "Book a Free Data Clarity Call"
     },
 
@@ -140,11 +140,11 @@ portfolio: {
       items: [
         {
           q: "How does the free Data Clarity Call work?",
-          a: "<strong>It's a focused 20-minute call, not a sales pitch.</strong> Bring whatever you've got - a messy spreadsheet, a CRM export, your current dashboard - and I'll walk through what's actually fixable and what a real model would look like. No build, no obligation, just a straight answer on whether this is worth pursuing."
+          a: "<strong>It's a focused 20-minute call, not a sales pitch.</strong> Bring whatever you've got (a messy spreadsheet, a CRM export, your current dashboard) and I'll walk through what's actually fixable and what a real model would look like. No build, no obligation, just a straight answer on whether this is worth pursuing."
         },
         {
           q: "What's the real ROI of a Power BI implementation?",
-          a: "<strong>Here's a simple way to estimate it, not a guarantee.</strong> If your team spends 10 hours a week on manual reporting, that's roughly 500+ hours a year - and that's before counting the cost of decisions made late because the numbers weren't ready.<div class=\"mt-3\"><div class=\"row g-3\"><div class=\"col-sm-6\"><div class=\"p-3 rounded\" style=\"background: rgba(253, 121, 168, 0.1);\"><strong>Before:</strong><br>• 10h/week manual reports<br>• Delayed decisions<br>• Data inconsistencies</div></div><div class=\"col-sm-6\"><div class=\"p-3 rounded\" style=\"background: rgba(0, 206, 201, 0.1);\"><strong>After:</strong><br>• 30min/week monitoring<br>• Real-time insights<br>• Confident decisions</div></div></div></div>"
+          a: "<strong>Here's a simple way to estimate it, not a guarantee.</strong> If your team spends 10 hours a week on manual reporting, that's roughly 500+ hours a year, and that's before counting the cost of decisions made late because the numbers weren't ready.<div class=\"mt-3\"><div class=\"row g-3\"><div class=\"col-sm-6\"><div class=\"p-3 rounded\" style=\"background: rgba(253, 121, 168, 0.1);\"><strong>Before:</strong><br>• 10h/week manual reports<br>• Delayed decisions<br>• Data inconsistencies</div></div><div class=\"col-sm-6\"><div class=\"p-3 rounded\" style=\"background: rgba(0, 206, 201, 0.1);\"><strong>After:</strong><br>• 30min/week monitoring<br>• Real-time insights<br>• Confident decisions</div></div></div></div>"
         },
         {
           q: "How do you handle our sensitive business data?",
@@ -160,11 +160,11 @@ portfolio: {
         },
         {
           q: "Why work with an independent specialist instead of a large agency?",
-          a: "<strong>You get direct access to the person actually building your model.</strong> No account manager relaying requests to a junior analyst - I built <a href='dashboards/dataarcus-pulse.html' class='text-accent'>DataArcus Pulse</a>, a production-grade automotive CRM model with 410 measures, entirely myself, and that's the level of hands-on ownership every project gets.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);\">What you lose versus a big firm is overhead. What you gain is speed, direct communication, and someone personally accountable for every number in your dashboard.</div>"
+          a: "<strong>You get direct access to the person actually building your model.</strong> No account manager relaying requests to a junior analyst. I built <a href='dashboards/dataarcus-pulse.html' class='text-accent'>DataArcus Pulse</a>, a production-grade automotive CRM model with 410 measures, entirely myself, and that's the level of hands-on ownership every project gets.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);\">What you lose versus a big firm is overhead. What you gain is speed, direct communication, and someone personally accountable for every number in your dashboard.</div>"
         },
         {
           q: "What if we're not sure what we need?",
-          a: "<strong>That's exactly what the free Data Clarity Call is for.</strong> Bring what you've got, and I'll help you figure out where the real opportunity is - even if that's not a full dashboard build yet. No commitment required."
+          a: "<strong>That's exactly what the free Data Clarity Call is for.</strong> Bring what you've got, and I'll help you figure out where the real opportunity is, even if that's not a full dashboard build yet. No commitment required."
         }
       ]
     },
@@ -172,14 +172,14 @@ portfolio: {
     // Final CTA Section
     finalCta: {
       title: "Ready to See Your Data in Action?",
-      subtitle: "Book a free 20-minute Data Clarity Call - no obligation, just a straight look at what's possible with what you've got.",
+      subtitle: "Book a free 20-minute Data Clarity Call. No obligation, just a straight look at what's possible with what you've got.",
       button: "Book Your Free Call"
     },
 
     // Contact Section
     contact: {
       title: "Start a Conversation About Your Data",
-      subtitle: "Tell me about your business and the decisions you need better data for - I'll walk you through what's possible on a free call.",
+      subtitle: "Tell me about your business and the decisions you need better data for, and I'll walk you through what's possible on a free call.",
       form: {
         name: "Full Name *",
         email: "Business Email *",
@@ -239,30 +239,30 @@ portfolio: {
   ar: {
     // Page Meta
     meta: {
-      title: "داتا اركوس - حلول Power BI ونمذجة البيانات للأعمال النامية",
-      description: "تبني داتا اركوس لوحات تحكم Power BI ونماذج بيانات بمستوى الإنتاج للشركات في منطقة الشرق الأوسط - من ذكاء إدارة علاقات العملاء إلى مخاطر المشاريع وتحليلات الاحتفاظ بالعملاء.",
+      title: "داتا أركوس - حلول Power BI ونمذجة البيانات للأعمال النامية",
+      description: "لوحات تحكم Power BI ونماذج بيانات بمستوى الإنتاج للشركات في الشرق الأوسط: ذكاء علاقات العملاء ومخاطر المشاريع وتحليلات الاحتفاظ بالعملاء.",
       keywords: "استشاري Power BI, نمذجة البيانات, DAX, لوحات تحكم ذكاء الأعمال, الشرق الأوسط, تحليلات CRM, متخصص Power BI",
-      author: "داتا اركوس",
+      author: "داتا أركوس",
       "og:type": "website",
-      "og:title": "داتا اركوس - حلول Power BI ونمذجة البيانات للأعمال النامية",
-      "og:description": "أبني لوحات تحكم Power BI ونماذج بيانات بمستوى الإنتاج للشركات في منطقة الشرق الأوسط - من ذكاء إدارة علاقات العملاء إلى مخاطر المشاريع وتحليلات الاحتفاظ بالعملاء.",
-      "og:url": "https://dataarcus.com",
-      "og:site_name": "داتا اركوس",
+      "og:title": "داتا أركوس - حلول Power BI ونمذجة البيانات للأعمال النامية",
+      "og:description": "أبني لوحات تحكم Power BI ونماذج بيانات بمستوى الإنتاج للشركات في منطقة الشرق الأوسط، من ذكاء إدارة علاقات العملاء إلى مخاطر المشاريع وتحليلات الاحتفاظ بالعملاء.",
+      "og:url": "https://dataarcus.com/",
+      "og:site_name": "داتا أركوس",
       "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
-      "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       "og:locale": "ar_EG",
       "twitter:card": "summary_large_image",
-      "twitter:title": "داتا اركوس - حلول Power BI ونمذجة البيانات للأعمال النامية",
-      "twitter:description": "أبني لوحات تحكم Power BI ونماذج بيانات بمستوى الإنتاج للشركات في منطقة الشرق الأوسط - من ذكاء إدارة علاقات العملاء إلى مخاطر المشاريع وتحليلات الاحتفاظ بالعملاء.",
+      "twitter:title": "داتا أركوس - حلول Power BI ونمذجة البيانات للأعمال النامية",
+      "twitter:description": "أبني لوحات تحكم Power BI ونماذج بيانات بمستوى الإنتاج للشركات في منطقة الشرق الأوسط، من ذكاء إدارة علاقات العملاء إلى مخاطر المشاريع وتحليلات الاحتفاظ بالعملاء.",
       "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
-      "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "twitter:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       canonical: "https://dataarcus.com/",
     },
 
     // Hero Section
     hero: {
       title: "من بيانات أعمال مشتتة إلى قرارات يمكنك الوثوق بها",
-      subtitle: "أصمم وأبني أنظمة Power BI بمستوى الإنتاج - لأنظمة CRM لدى الوكلاء، وتتبع مخاطر المشاريع، وتحليلات الاحتفاظ بالعملاء، وأكثر - تحوّل بياناتك التشغيلية المشتتة إلى أرقام يمكن لفريقك الاعتماد عليها فعليًا.",
+      subtitle: "أصمم وأبني أنظمة Power BI بمستوى الإنتاج تحوّل بياناتك التشغيلية المشتتة إلى أرقام يمكن لفريقك الاعتماد عليها فعليًا: أنظمة CRM لدى الوكلاء، وتتبع مخاطر المشاريع، وتحليلات الاحتفاظ بالعملاء، وأكثر.",
       buttonWork: "استكشف أعمالي",
       buttonDiscuss: "احجز مكالمة وضوح بيانات مجانية",
       badgeSecurity: "أمان على مستوى الشركات",
@@ -292,7 +292,7 @@ portfolio: {
     // Services Section
     services: {
       title: "حلول مبنية حول بياناتك، لا قالب جاهز",
-      subtitle: "أيًا كانت المنصة التي تعمل عليها شركتك - CRM، تجارة إلكترونية، أدوات إدارة مشاريع، جداول بيانات - أحوّلها إلى نموذج يمكن لفريقك الوثوق به فعليًا.",
+      subtitle: "أيًا كانت المنصة التي تعمل عليها شركتك، سواء CRM أو تجارة إلكترونية أو أدوات إدارة مشاريع أو جداول بيانات، أحوّلها إلى نموذج يمكن لفريقك الوثوق به فعليًا.",
       cards: [
         {
           title: "لوحات تحكم تنفيذية وتشغيلية",
@@ -304,7 +304,7 @@ portfolio: {
         },
         {
           title: "التحليل التنبؤي والاتجاهات",
-          desc: "ما وراء ما حدث - نماذج تنبؤ وتحليل دفعات ووتيرة تُظهر لك ما هو قادم، سواء كان ذلك وتيرة مبيعات الشهر القادم أو عميلاً محتملاً على وشك أن يبرد."
+          desc: "ما وراء ما حدث: نماذج تنبؤ وتحليل دفعات ووتيرة تُظهر لك ما هو قادم، سواء كان ذلك وتيرة مبيعات الشهر القادم أو عميلاً محتملاً على وشك أن يبرد."
         },
         {
           title: "الحوكمة والأمان",
@@ -343,9 +343,9 @@ portfolio: {
     // About Section
     about: {
       title: "شريك في نجاحك",
-      subtitle: "داتا أركوس ليست مصنعًا للوحات التحكم - إنها شخص واحد يبني نفس نوع النماذج بمستوى الإنتاج التي كنت لتحصل عليها من فريق بيانات داخلي، دون تكلفة فريق داخلي كامل.",
-      quote: "\"اسمي عبد الرحمن م. أمضيت سنتين في العمل ضمن إدارة علاقات العملاء والعمليات القائمة على البيانات - لكنني مللت من انتظار شخص آخر ليبني التقارير التي أحتاجها فعليًا، فبدأت ببنائها بنفسي في Power BI. داتا أركوس هي المكان الذي يعيش فيه هذا العمل: نماذج حقيقية بمستوى الإنتاج، لا قوالب جاهزة.\"",
-      p1: "أنا لا أدير استشارة كبرى - أنا شخص واحد يبني كل نموذج بنفسه. هذا يعني وصولاً مباشرًا لمن يقوم بالعمل فعليًا، دون طبقة مدير حسابات بينك وبين لوحة تحكمك، وما تراه في المعرض هو بالضبط ما ستحصل عليه.",
+      subtitle: "داتا أركوس ليست مصنعًا للوحات التحكم، بل شخص واحد يبني نفس نوع النماذج بمستوى الإنتاج التي كنت لتحصل عليها من فريق بيانات داخلي، دون تكلفة فريق داخلي كامل.",
+      quote: "\"اسمي عبد الرحمن م. أمضيت سنتين في العمل ضمن إدارة علاقات العملاء والعمليات القائمة على البيانات، ثم مللت من انتظار شخص آخر ليبني التقارير التي أحتاجها فعليًا، فبدأت ببنائها بنفسي في Power BI. داتا أركوس هي المكان الذي يعيش فيه هذا العمل: نماذج حقيقية بمستوى الإنتاج، لا قوالب جاهزة.\"",
+      p1: "أنا لا أدير استشارة كبرى. أنا شخص واحد يبني كل نموذج بنفسه. هذا يعني وصولاً مباشرًا لمن يقوم بالعمل فعليًا، دون طبقة مدير حسابات بينك وبين لوحة تحكمك، وما تراه في المعرض هو بالضبط ما ستحصل عليه.",
       founder: "عبد الرحمن م.، المؤسس وكبير مهندسي البيانات",
       certification: {
         title: "شهادات معتمدة",
@@ -353,7 +353,7 @@ portfolio: {
         verified: "موثق من Google و Microsoft"
       },
       statsTitle: "السجل حتى الآن",
-      statsSubtitle: "أرقام حقيقية من نماذج إنتاج حقيقية - لا مقاييس وكالات مصطنعة.",
+      statsSubtitle: "أرقام حقيقية من نماذج إنتاج حقيقية، لا مقاييس وكالات مصطنعة.",
       stats: [
         { title: "عميل محتمل تم حله في نموذج إنتاج واحد" },
         { title: "مقياس DAX في الإنتاج" },
@@ -361,7 +361,7 @@ portfolio: {
         { title: "أداة Power BI مجانية منشورة" }
       ],
       ctaTitle: "هل تتساءل كيف سيبدو هذا لبياناتك؟",
-      ctaSubtitle: "بدون أي التزام - أخبرني بما تعمل عليه، وسأوضح لك ما هو ممكن في مكالمة سريعة.",
+      ctaSubtitle: "بدون أي التزام. أخبرني بما تعمل عليه، وسأوضح لك ما هو ممكن في مكالمة سريعة.",
       ctaButton: "احجز مكالمة وضوح بيانات مجانية"
     },
 
@@ -376,11 +376,11 @@ portfolio: {
       items: [
         {
           q: "كيف تعمل مكالمة وضوح البيانات المجانية؟",
-          a: "<strong>إنها مكالمة مركّزة مدتها 20 دقيقة، وليست عرضًا ترويجيًا.</strong> أحضر ما لديك - جدول بيانات فوضوي، تصدير من CRM، لوحة تحكمك الحالية - وسأستعرض معك ما يمكن إصلاحه فعليًا وكيف سيبدو نموذج حقيقي. بدون بناء، بدون التزام، فقط إجابة صريحة حول ما إذا كان الأمر يستحق المتابعة."
+          a: "<strong>إنها مكالمة مركّزة مدتها 20 دقيقة، وليست عرضًا ترويجيًا.</strong> أحضر ما لديك (جدول بيانات فوضوي، تصدير من CRM، لوحة تحكمك الحالية) وسأستعرض معك ما يمكن إصلاحه فعليًا وكيف سيبدو نموذج حقيقي. بدون بناء، بدون التزام، فقط إجابة صريحة حول ما إذا كان الأمر يستحق المتابعة."
         },
         {
           q: "ما هو العائد الحقيقي على الاستثمار (ROI) من تطبيق Power BI؟",
-          a: "<strong>إليك طريقة بسيطة لتقديره، وليست ضمانًا.</strong> إذا كان فريقك يقضي 10 ساعات أسبوعيًا في إعداد التقارير اليدوية، فهذا يعني أكثر من 500 ساعة سنويًا - وهذا قبل احتساب تكلفة القرارات المتأخرة بسبب عدم جاهزية الأرقام.<div class=\"mt-3\"><div class=\"row g-3\"><div class=\"col-sm-6\"><div class=\"p-3 rounded\" style=\"background: rgba(253, 121, 168, 0.1);\"><strong>قبل:</strong><br>• ١٠ ساعات/أسبوع تقارير يدوية<br>• قرارات متأخرة<br>• بيانات غير متسقة</div></div><div class=\"col-sm-6\"><div class=\"p-3 rounded\" style=\"background: rgba(0, 206, 201, 0.1);\"><strong>بعد:</strong><br>• ٣٠ دقيقة/أسبوع للمراقبة<br>• رؤى لحظية<br>• قرارات واثقة</div></div></div></div>"
+          a: "<strong>إليك طريقة بسيطة لتقديره، وليست ضمانًا.</strong> إذا كان فريقك يقضي 10 ساعات أسبوعيًا في إعداد التقارير اليدوية، فهذا يعني أكثر من 500 ساعة سنويًا، وهذا قبل احتساب تكلفة القرارات المتأخرة بسبب عدم جاهزية الأرقام.<div class=\"mt-3\"><div class=\"row g-3\"><div class=\"col-sm-6\"><div class=\"p-3 rounded\" style=\"background: rgba(253, 121, 168, 0.1);\"><strong>قبل:</strong><br>• ١٠ ساعات/أسبوع تقارير يدوية<br>• قرارات متأخرة<br>• بيانات غير متسقة</div></div><div class=\"col-sm-6\"><div class=\"p-3 rounded\" style=\"background: rgba(0, 206, 201, 0.1);\"><strong>بعد:</strong><br>• ٣٠ دقيقة/أسبوع للمراقبة<br>• رؤى لحظية<br>• قرارات واثقة</div></div></div></div>"
         },
         {
           q: "كيف تتعامل مع بيانات أعمالنا الحساسة؟",
@@ -396,11 +396,11 @@ portfolio: {
         },
         {
           q: "لماذا العمل مع متخصص مستقل بدلاً من شركة استشارات كبرى؟",
-          a: "<strong>تحصل على وصول مباشر للشخص الذي يبني نموذجك فعليًا.</strong> بلا مدير حسابات ينقل الطلبات إلى محلل مبتدئ - لقد بنيت <a href='dashboards/dataarcus-pulse.html' class='text-accent'>داتا أركوس بلس</a>، نموذج ذكاء CRM لقطاع السيارات بمستوى الإنتاج ويضم 410 مقياسًا، بنفسي بالكامل، وهذا هو مستوى الملكية العملية الذي يحصل عليه كل مشروع.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);\">ما تخسره مقارنة بشركة كبرى هو التكاليف الإضافية. وما تكسبه هو السرعة والتواصل المباشر وشخص مسؤول شخصيًا عن كل رقم في لوحة تحكمك.</div>"
+          a: "<strong>تحصل على وصول مباشر للشخص الذي يبني نموذجك فعليًا.</strong> بلا مدير حسابات ينقل الطلبات إلى محلل مبتدئ. لقد بنيت <a href='dashboards/dataarcus-pulse.html' class='text-accent'>داتا أركوس بلس</a>، نموذج ذكاء CRM لقطاع السيارات بمستوى الإنتاج ويضم 410 مقياسًا، بنفسي بالكامل، وهذا هو مستوى الملكية العملية الذي يحصل عليه كل مشروع.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);\">ما تخسره مقارنة بشركة كبرى هو التكاليف الإضافية. وما تكسبه هو السرعة والتواصل المباشر وشخص مسؤول شخصيًا عن كل رقم في لوحة تحكمك.</div>"
         },
         {
           q: "ماذا لو لم نكن متأكدين مما نحتاجه؟",
-          a: "<strong>هذا بالضبط سبب وجود مكالمة وضوح البيانات المجانية.</strong> أحضر ما لديك، وسأساعدك في تحديد الفرصة الحقيقية - حتى لو لم تكن بناء لوحة تحكم كاملة بعد. لا يوجد أي التزام مطلوب."
+          a: "<strong>هذا بالضبط سبب وجود مكالمة وضوح البيانات المجانية.</strong> أحضر ما لديك، وسأساعدك في تحديد الفرصة الحقيقية، حتى لو لم تكن بناء لوحة تحكم كاملة بعد. لا يوجد أي التزام مطلوب."
         }
       ]
     },
@@ -408,14 +408,14 @@ portfolio: {
     // Final CTA Section
     finalCta: {
       title: "هل أنت مستعد لرؤية بياناتك في العمل؟",
-      subtitle: "احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة - بدون التزام، فقط نظرة صريحة على ما هو ممكن بما لديك.",
+      subtitle: "احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة. بدون التزام، فقط نظرة صريحة على ما هو ممكن بما لديك.",
       button: "احجز مكالمتك المجانية"
     },
 
     // Contact Section
     contact: {
       title: "ابدأ محادثة حول بياناتك",
-      subtitle: "أخبرني عن أعمالك والقرارات التي تحتاج بيانات أفضل من أجلها - سأوضح لك ما هو ممكن في مكالمة مجانية.",
+      subtitle: "أخبرني عن أعمالك والقرارات التي تحتاج بيانات أفضل من أجلها، وسأوضح لك ما هو ممكن في مكالمة مجانية.",
       form: {
         name: "الاسم بالكامل *",
         email: "البريد الإلكتروني للعمل *",

@@ -4,7 +4,7 @@ window.etlpqTranslations = {
     // Page Meta
     meta: {
       title: "ETL vs Power Query: E-commerce Data Strategy - DataArcus",
-      description: "A guide for e-commerce businesses on when to use ETL vs Power Query in Power BI. Learn the right approach for handling Shopify data, ad APIs, and more for scale and governance.",
+      description: "When to use ETL and when to use Power Query in Power BI: a practical guide for e-commerce teams handling Shopify data, ad APIs, scale and governance.",
       keywords: "ETL vs Power Query e-commerce, Shopify data pipeline, Power BI data preparation, data engineering for e-commerce, DataArcus",
       author: "DataArcus",
       "og:type": "article",
@@ -39,7 +39,7 @@ window.etlpqTranslations = {
         "<strong>Engineered & orchestrated:</strong> Scheduled pipelines with monitoring, alerts, and lineage.",
         "<strong>Versionable & testable:</strong> Stored in code repos (e.g., SQL/dbt) with CI/CD and peer review.",
         "<strong>Built for scale:</strong> Handles high volumes (e.g., millions of orders from Shopify), and complex business rules upstream of BI.",
-        "<strong>Reusable data products:</strong> Outputs modeled tables (star schemas) for many reports and tools-not just Power BI."
+        "<strong>Reusable data products:</strong> Outputs modeled tables (star schemas) for many reports and tools, not just Power BI."
       ],
       h2: "What is Power Query?",
       p4: "Power Query is the M transformation engine inside Power BI. Analysts shape data with step-by-step queries that can fold back to the source, keeping logic close to the report.",
@@ -49,7 +49,7 @@ window.etlpqTranslations = {
         "<strong>Model-centric:</strong> Transformations live with the dataset; <em>Dataflows</em> promote reuse across reports.",
         "<strong>Best for medium data:</strong> Ideal when sources are simple (e.g., a few key Shopify exports) and volumes are moderate."
       ],
-      h3: "ETL vs Power Query - Key Differences",
+      h3: "ETL vs Power Query: Key Differences",
       list3: [
         "<strong>Scale:</strong> ETL is for big volumes; Power Query is excellent for smaller, well-scoped transformations.",
         "<strong>Latency:</strong> ETL supports near-real-time; Power Query aligns with scheduled dataset refresh windows.",
@@ -110,7 +110,7 @@ window.etlpqTranslations = {
     },
     finalCta: {
       title: "Ready to See This Power Applied to Your Data?",
-      subtitle: "Book a free 20-minute Data Clarity Call - no obligation, just a straight look at what's possible with your own data.",
+      subtitle: "Book a free 20-minute Data Clarity Call. No obligation, just a straight look at what's possible with your own data.",
       button: "Book a Free Call"
     }
   },
@@ -118,25 +118,25 @@ window.etlpqTranslations = {
   ar: {
     // Page Meta Arabic
     meta: {
-      title: "ETL أم Power Query: استراتيجية بيانات التجارة الإلكترونية - داتا اركوس",
-      description: "دليل لشركات التجارة الإلكترونية حول متى تستخدم ETL ومتى تستخدم Power Query في Power BI. تعلم النهج الصحيح للتعامل مع بيانات Shopify وواجهات برمجة الإعلانات والمزيد.",
-      keywords: "ETL مقابل Power Query للتجارة الإلكترونية, خطوط بيانات Shopify, إعداد البيانات في Power BI, هندسة البيانات للتجارة الإلكترونية, داتا اركوس",
-      author: "داتا اركوس",
+      title: "ETL أم Power Query لبيانات التجارة الإلكترونية - داتا أركوس",
+      description: "متى تستخدم ETL ومتى تستخدم Power Query في Power BI: دليل عملي لفرق التجارة الإلكترونية للتعامل مع بيانات Shopify وواجهات الإعلانات والحوكمة.",
+      keywords: "ETL مقابل Power Query للتجارة الإلكترونية, خطوط بيانات Shopify, إعداد البيانات في Power BI, هندسة البيانات للتجارة الإلكترونية, داتا أركوس",
+      author: "داتا أركوس",
       "og:type": "article",
-      "og:title": "ETL أم Power Query: استراتيجية بيانات التجارة الإلكترونية - داتا اركوس",
-      "og:description": "دليل لشركات التجارة الإلكترونية حول متى تستخدم ETL ومتى تستخدم Power Query في Power BI. تعلم النهج الصحيح للتعامل مع بيانات Shopify وواجهات برمجة الإعلانات والمزيد.",
+      "og:title": "ETL أم Power Query لبيانات التجارة الإلكترونية - داتا أركوس",
+      "og:description": "متى تستخدم ETL ومتى تستخدم Power Query في Power BI: دليل عملي لفرق التجارة الإلكترونية للتعامل مع بيانات Shopify وواجهات الإعلانات والحوكمة.",
       "og:url": "https://dataarcus.com/articles/article-etl-vs-power-query.html",
-      "og:site_name": "داتا اركوس",
+      "og:site_name": "داتا أركوس",
       "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
-      "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       "og:locale": "ar_EG",
       "og:article:published_time": "2025-09-04T12:00:00Z",
       "og:article:author": "عبدالرحمن م.",
       "twitter:card": "summary_large_image",
-      "twitter:title": "ETL أم Power Query: استراتيجية بيانات التجارة الإلكترونية - داتا اركوس",
-      "twitter:description": "دليل لشركات التجارة الإلكترونية حول متى تستخدم ETL ومتى تستخدم Power Query في Power BI. تعلم النهج الصحيح للتعامل مع بيانات Shopify وواجهات برمجة الإعلانات والمزيد.",
+      "twitter:title": "ETL أم Power Query لبيانات التجارة الإلكترونية - داتا أركوس",
+      "twitter:description": "متى تستخدم ETL ومتى تستخدم Power Query في Power BI: دليل عملي لفرق التجارة الإلكترونية للتعامل مع بيانات Shopify وواجهات الإعلانات والحوكمة.",
       "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
-      "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "twitter:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       canonical: "https://dataarcus.com/articles/article-etl-vs-power-query.html",
     },
     // Article Header Arabic
@@ -154,7 +154,7 @@ window.etlpqTranslations = {
         "<strong>هندسية ومُنسَّقة:</strong> خطوط أنابيب مجدولة مع مراقبة وتنبيهات وتتبع لمسار البيانات.",
         "<strong>قابلة للإصدار والاختبار:</strong> تُخزن في مستودعات الأكواد (مثل SQL/dbt) مع CI/CD.",
         "<strong>مصممة للتوسع:</strong> تتعامل مع الأحجام الكبيرة (مثل ملايين الطلبات من Shopify)، وقواعد العمل المعقدة قبل طبقة ذكاء الأعمال.",
-        "<strong>منتجات بيانات قابلة لإعادة الاستخدام:</strong> تُنتج جداول مُنمذجة (نماذج نجمية) تخدم العديد من التقارير والأدوات-وليس فقط Power BI."
+        "<strong>منتجات بيانات قابلة لإعادة الاستخدام:</strong> تُنتج جداول مُنمذجة (نماذج نجمية) تخدم العديد من التقارير والأدوات، وليس فقط Power BI."
       ],
       h2: "ما هو Power Query؟",
       p4: "Power Query هو محرك التحويل M المدمج في Power BI. يقوم المحللون بتشكيل البيانات عبر استعلامات متدرجة يمكنها 'الطي' (folding) إلى المصدر، مما يُبقي منطق العمل قريبًا من التقرير.",
@@ -164,7 +164,7 @@ window.etlpqTranslations = {
         "<strong>متمحور حول النموذج:</strong> التحويلات تعيش مع مجموعة البيانات؛ وتعزز <em>Dataflows</em> إعادة الاستخدام عبر التقارير.",
         "<strong>الأفضل للبيانات المتوسطة:</strong> مثالي عندما تكون المصادر بسيطة (مثل بعض تقارير Shopify المصدرة) والأحجام معتدلة."
       ],
-      h3: "ETL مقابل Power Query - الفروقات الرئيسية",
+      h3: "ETL مقابل Power Query: الفروقات الرئيسية",
       list3: [
         "<strong>الحجم:</strong> ETL للأحجام الضخمة؛ Power Query ممتازة للتحويلات الأصغر والمحددة النطاق.",
         "<strong>زمن الوصول:</strong> تدعم ETL شبه الوقت الفعلي؛ Power Query تتماشى مع نوافذ تحديث مجموعة البيانات المجدولة.",
@@ -225,7 +225,7 @@ window.etlpqTranslations = {
     },
     finalCta: {
       title: "هل أنت مستعد لرؤية هذه القوة مطبقة على بياناتك؟",
-      subtitle: "احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة - بدون أي التزام، فقط نظرة مباشرة على ما هو ممكن ببياناتك الخاصة.",
+      subtitle: "احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة. بدون أي التزام، فقط نظرة مباشرة على ما هو ممكن ببياناتك الخاصة.",
       button: "احجز مكالمة مجانية"
     }
   }

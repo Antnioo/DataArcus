@@ -2,7 +2,7 @@
 window.licensingCalculatorTranslations = {
   "en": {
     "meta": {
-      "title": "Power BI Licensing Cost Calculator: Pro vs PPU vs Fabric - DataArcus"
+      "title": "Power BI Licensing Cost Calculator: Pro vs PPU vs Fabric"
     },
     "lc": {
       "badge": "Free tool · No sign-up",
@@ -56,7 +56,7 @@ window.licensingCalculatorTranslations = {
   },
   "ar": {
     "meta": {
-      "title": "حاسبة تكلفة تراخيص Power BI: Pro مقابل PPU مقابل Fabric - داتا أركوس"
+      "title": "حاسبة تكلفة تراخيص Power BI: Pro مقابل PPU مقابل Fabric"
     },
     "lc": {
       "badge": "أداة مجانية · بدون تسجيل",

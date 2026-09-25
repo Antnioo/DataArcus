@@ -97,7 +97,7 @@ window.portfolioTranslations = {
     // Hero Project Section
     heroProject: {
       badge: "LIVE & INTERACTIVE",
-      title: "Hero Showcase: DataArcus Pulse - Automotive CRM Intelligence",
+      title: "Hero Showcase: DataArcus Pulse (Automotive CRM Intelligence)",
       featuresTitle: "Key Features & Technologies Used:",
       tags: ["Fabric Lakehouse", "Advanced DAX (410 measures)", "Journey Clustering", "Run-Rate Forecasting", "PII-Safe Anonymization"],
       button: "View Full Showcase"
@@ -117,23 +117,23 @@ window.portfolioTranslations = {
   ar: {
     // Page Meta Arabic
     meta: {
-      title: "أمثلة لوحات المعلومات وحلول البيانات - داتا اركوس",
+      title: "أمثلة لوحات المعلومات وحلول البيانات - داتا أركوس",
       description: "استكشف لوحات تحكم Power BI التجريبية لدينا. شاهد أمثلة على كيفية حلنا للتحديات في التجارة الإلكترونية والرعاية الصحية وخدمة العملاء.",
       keywords: "أمثلة Power BI, عرض لوحات المعلومات, لوحة تحكم تحليلات التجارة الإلكترونية, تحليلات الرعاية الصحية, لوحة تحكم خدمة العملاء, حلول DataArcus",
-      author: "داتا اركوس",
+      author: "داتا أركوس",
       "og:type": "website",
-      "og:title": "أمثلة لوحات المعلومات وحلول البيانات - داتا اركوس",
+      "og:title": "أمثلة لوحات المعلومات وحلول البيانات - داتا أركوس",
       "og:description": "استكشف لوحات تحكم Power BI التجريبية لدينا. شاهد أمثلة على كيفية حلنا للتحديات في التجارة الإلكترونية والرعاية الصحية وخدمة العملاء.",
       "og:url": "https://dataarcus.com/portfolio.html",
-      "og:site_name": "داتا اركوس",
+      "og:site_name": "داتا أركوس",
       "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
-      "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       "og:locale": "ar_EG",
       "twitter:card": "summary_large_image",
-      "twitter:title": "أمثلة لوحات المعلومات وحلول البيانات - داتا اركوس",
+      "twitter:title": "أمثلة لوحات المعلومات وحلول البيانات - داتا أركوس",
       "twitter:description": "استكشف لوحات تحكم Power BI التجريبية لدينا. شاهد أمثلة على كيفية حلنا للتحديات في التجارة الإلكترونية والرعاية الصحية وخدمة العملاء.",
       "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
-      "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "twitter:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       canonical: "https://dataarcus.com/portfolio.html",
     },
 
@@ -211,7 +211,7 @@ window.portfolioTranslations = {
     // Hero Project Section Arabic
     heroProject: {
       badge: "تفاعلي ومباشر",
-      title: "النموذج المميّز: داتا أركوس بالس - ذكاء CRM لقطاع السيارات",
+      title: "النموذج المميّز: داتا أركوس بالس (ذكاء CRM لقطاع السيارات)",
       featuresTitle: "أهم المزايا والتقنيات المستخدمة:",
       tags: ["Fabric Lakehouse", "DAX متقدّم (410 مقياس)", "تجميع الرحلات", "تنبؤ معدل الإنجاز", "إخفاء هوية آمن للبيانات"],
       button: "عرض النموذج الكامل"

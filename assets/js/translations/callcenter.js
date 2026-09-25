@@ -77,7 +77,7 @@ window.callcenterTranslations = {
     // Final CTA
     finalCta: {
       title: "Want a Dashboard Like This for Your Support Team?",
-      subtitle: "Book a free 20-minute Data Clarity Call - no obligation, just a straight look at what's possible with your own customer service data.",
+      subtitle: "Book a free 20-minute Data Clarity Call. No obligation, just a straight look at what's possible with your own customer service data.",
       button: "Book a Free Call"
     }
   },
@@ -85,23 +85,23 @@ window.callcenterTranslations = {
   ar: {
     // Page Meta
     meta: {
-      title: "مثال لوحة تحكم مركز الاتصال في Power BI - داتا اركوس",
+      title: "مثال لوحة تحكم مركز الاتصال في Power BI - داتا أركوس",
       description: "اكتشف لوحة تحكم مركز الاتصال في Power BI: راقب أداء الوكلاء وحجم المكالمات ورضا العملاء في الوقت الفعلي.",
-      keywords: "لوحة تحكم مركز الاتصال, تحليلات Power BI للمكالمات, لوحة أداء الوكلاء, تحليلات رضا العملاء, داتا اركوس",
-      author: "داتا اركوس",
+      keywords: "لوحة تحكم مركز الاتصال, تحليلات Power BI للمكالمات, لوحة أداء الوكلاء, تحليلات رضا العملاء, داتا أركوس",
+      author: "داتا أركوس",
       "og:type": "website",
-      "og:title": "مثال لوحة تحكم مركز الاتصال في Power BI - داتا اركوس",
+      "og:title": "مثال لوحة تحكم مركز الاتصال في Power BI - داتا أركوس",
       "og:description": "اكتشف لوحة تحكم مركز الاتصال في Power BI: راقب أداء الوكلاء وحجم المكالمات ورضا العملاء في الوقت الفعلي.",
       "og:url": "https://dataarcus.com/dashboards/call-center-dashboard.html",
-      "og:site_name": "داتا اركوس",
+      "og:site_name": "داتا أركوس",
       "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
-      "og:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "og:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       "og:locale": "ar_EG",
       "twitter:card": "summary_large_image",
-      "twitter:title": "مثال لوحة تحكم مركز الاتصال في Power BI - داتا اركوس",
+      "twitter:title": "مثال لوحة تحكم مركز الاتصال في Power BI - داتا أركوس",
       "twitter:description": "اكتشف لوحة تحكم مركز الاتصال في Power BI: راقب أداء الوكلاء وحجم المكالمات ورضا العملاء في الوقت الفعلي.",
       "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
-      "twitter:image:alt": "شعار داتا اركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
+      "twitter:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       canonical: "https://dataarcus.com/dashboards/call-center-dashboard.html",
     },
 
@@ -158,7 +158,7 @@ window.callcenterTranslations = {
     // Final CTA
     finalCta: {
       title: "هل تريد لوحة تحكم مثل هذه لفريق الدعم الخاص بك؟",
-      subtitle: "احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة - بدون أي التزام، فقط نظرة مباشرة على ما هو ممكن ببيانات خدمة العملاء الخاصة بك.",
+      subtitle: "احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة. بدون أي التزام، فقط نظرة مباشرة على ما هو ممكن ببيانات خدمة العملاء الخاصة بك.",
       button: "احجز مكالمة مجانية"
     }
   }

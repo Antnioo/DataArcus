@@ -3,7 +3,7 @@ window.dataarcusPulseTranslations = {
   en: {
     // Page Meta
     meta: {
-      title: "DataArcus Pulse - Automotive CRM Intelligence in Power BI - DataArcus",
+      title: "DataArcus Pulse: Automotive CRM Intelligence in Power BI",
       description:
         "54K leads, 113K calls, 72K journeys: a production-grade automotive CRM dashboard in Power BI with 410 DAX measures and PII-safe anonymization.",
       keywords:
@@ -130,9 +130,9 @@ window.dataarcusPulseTranslations = {
   ar: {
     // Page Meta
     meta: {
-      title: "داتا أركوس بالس - ذكاء إدارة علاقات العملاء للسيارات في Power BI - داتا أركوس",
+      title: "داتا أركوس بالس: ذكاء CRM للسيارات في Power BI",
       description:
-        "مركز قيادة لإدارة علاقات العملاء في قطاع السيارات بمستوى الإنتاج: 54 ألف عميل محتمل، 113 ألف مكالمة و72 ألف رحلة اتصال في نموذج دلالي واحد يضم 410 مقياس DAX، وأهداف وتيرة يومية، وخط أنابيب إخفاء هوية آمن للبيانات الشخصية.",
+        "لوحة CRM لقطاع السيارات بمستوى الإنتاج في Power BI: 54 ألف عميل محتمل و113 ألف مكالمة و72 ألف رحلة، مع 410 مقاييس DAX وإخفاء آمن للبيانات الشخصية.",
       keywords:
         "تحليلات CRM للسيارات, إدارة العملاء المحتملين للوكالات, Power BI مركز اتصال, تأهيل العملاء المحتملين, تحليلات Keyloop, نموذج دلالي DAX, إخفاء هوية البيانات, داتا أركوس",
       author: "داتا أركوس",

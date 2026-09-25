@@ -77,7 +77,7 @@ window.kpiTranslations = {
     },
     finalCta: {
       title: "Ready to See This Power Applied to Your Data?",
-      subtitle: "Book a free 20-minute Data Clarity Call - no obligation, just a straight look at what's possible with your own data.",
+      subtitle: "Book a free 20-minute Data Clarity Call. No obligation, just a straight look at what's possible with your own data.",
       button: "Book a Free Call"
     }
   },
@@ -85,22 +85,22 @@ window.kpiTranslations = {
   ar: {
     // Page Meta
     meta: {
-      title: "أهم 5 مؤشرات أداء للتجارة الإلكترونية لتحقيق الربحية - داتا اركوس",
+      title: "5 مؤشرات أداء تصنع ربحية التجارة الإلكترونية - داتا أركوس",
       description: "دليل لقادة التجارة الإلكترونية في الشرق الأوسط حول أهم 5 مؤشرات تسويقية يجب تتبعها في Power BI لتحقيق نمو مستدام.",
-      keywords: "مؤشرات التجارة الإلكترونية, مؤشرات التسويق, Power BI للتجارة الإلكترونية, CAC, MER, CLV, داتا اركوس",
-      author: "داتا اركوس",
+      keywords: "مؤشرات التجارة الإلكترونية, مؤشرات التسويق, Power BI للتجارة الإلكترونية, CAC, MER, CLV, داتا أركوس",
+      author: "داتا أركوس",
       "og:type": "article",
-      "og:title": "أهم 5 مؤشرات أداء للتجارة الإلكترونية لتحقيق الربحية - داتا اركوس",
+      "og:title": "5 مؤشرات أداء تصنع ربحية التجارة الإلكترونية - داتا أركوس",
       "og:description": "دليل لقادة التجارة الإلكترونية في الشرق الأوسط حول أهم 5 مؤشرات تسويقية يجب تتبعها في Power BI لتحقيق نمو مستدام.",
       "og:url": "https://dataarcus.com/articles/article-kpi.html",
-      "og:site_name": "داتا اركوس",
+      "og:site_name": "داتا أركوس",
       "og:image": "https://dataarcus.com/assets/img/og-image-kpi-playbook.png",
       "og:image:alt": "صورة بعنوان: أهم 5 مؤشرات تسويقية يجب على كل قائد تجارة إلكترونية تتبعها.",
       "og:locale": "ar_EG",
       "og:article:published_time": "2025-09-15T12:00:00Z",
       "og:article:author": "عبدالرحمن م.",
       "twitter:card": "summary_large_image",
-      "twitter:title": "أهم 5 مؤشرات أداء للتجارة الإلكترونية لتحقيق الربحية - داتا اركوس",
+      "twitter:title": "5 مؤشرات أداء تصنع ربحية التجارة الإلكترونية - داتا أركوس",
       "twitter:description": "دليل لقادة التجارة الإلكترونية في الشرق الأوسط حول أهم 5 مؤشرات تسويقية يجب تتبعها في Power BI لتحقيق نمو مستدام.",
       "twitter:image": "https://dataarcus.com/assets/img/og-image-kpi-playbook.png",
       "twitter:image:alt": "صورة بعنوان: أهم 5 مؤشرات تسويقية يجب على كل قائد تجارة إلكترونية تتبعها.",
@@ -159,7 +159,7 @@ window.kpiTranslations = {
     },
     finalCta: {
       title: "هل أنت مستعد لرؤية هذه القوة مطبقة على بياناتك؟",
-      subtitle: "احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة - بدون أي التزام، فقط نظرة مباشرة على ما هو ممكن ببياناتك الخاصة.",
+      subtitle: "احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة. بدون أي التزام، فقط نظرة مباشرة على ما هو ممكن ببياناتك الخاصة.",
       button: "احجز مكالمة مجانية"
     }
   }
