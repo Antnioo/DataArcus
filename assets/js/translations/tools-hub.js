@@ -31,10 +31,17 @@ window.toolsHubTranslations = {
           "tag1": "Pro vs PPU vs Fabric",
           "tag2": "F64 break-even"
         },
+        "health": {
+          "title": "Power BI Model Health Check",
+          "desc": "Drop a .pbit: health score, unused columns and measures, risky relationships, slow DAX and full documentation. Nothing is uploaded.",
+          "tag1": "New",
+          "tag2": "Unused columns",
+          "tag3": "Documentation"
+        },
         "dp600": {
           "title": "DP-600 Practice Exam Simulator",
           "desc": "220 original Fabric questions with explanations, timed mock exams scored out of 1000, case studies and a study plan.",
-          "tag1": "New",
+          "tag1": "Exam prep",
           "tag2": "Mock exams",
           "tag3": "Oct 2026 outline"
         }
@@ -97,10 +104,17 @@ window.toolsHubTranslations = {
           "tag1": "Pro مقابل PPU مقابل Fabric",
           "tag2": "نقطة التعادل لـ F64"
         },
+        "health": {
+          "title": "فحص صحة نموذج Power BI",
+          "desc": "أسقط ملف .pbit: تقييم لصحة النموذج، الأعمدة والمقاييس غير المستخدمة، العلاقات الخطرة، DAX البطيء وتوثيق كامل. لا يتم رفع أي ملف.",
+          "tag1": "جديد",
+          "tag2": "أعمدة غير مستخدمة",
+          "tag3": "توثيق"
+        },
         "dp600": {
           "title": "محاكي اختبار DP-600",
           "desc": "220 سؤالًا أصليًا عن Fabric مع الشرح، واختبارات تجريبية بوقت ونتيجة من 1000، ودراسات حالة وخطة مذاكرة.",
-          "tag1": "جديد",
+          "tag1": "تحضير للاختبار",
           "tag2": "اختبارات تجريبية",
           "tag3": "منهج أكتوبر 2026"
         }
