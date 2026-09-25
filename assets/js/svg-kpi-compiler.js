@@ -13,7 +13,7 @@
   // ---------- expression tree ----------
   // Every dynamic part of the SVG is one of these nodes. evalNode() runs it in JS, dax() prints it as DAX.
   const N = {
-    num: (n) => ({ k: 'num', n: n }),
+    num: (n) => ({ k: 'num', n: +(+n).toFixed(6) }),       // rounded so the DAX text and the JS value are the same number
     str: (s) => ({ k: 'str', s: s }),
     ref: (name) => ({ k: 'ref', name: name }),            // a VAR defined earlier
     measure: (name) => ({ k: 'measure', name: name }),
@@ -29,18 +29,34 @@
       return p.length === 1 ? p[0] : p.length ? { k: 'cat', parts: p } : { k: 'str', s: '' };
     },
     blank: () => ({ k: 'blank' }),
-    isBlank: (a) => ({ k: 'isblank', a: a })
+    isBlank: (a) => ({ k: 'isblank', a: a }),
+    // sparkline pieces: a small table of { Value: periods back, @v: value } and row functions over it
+    col: (name) => ({ k: 'col', name: name }),
+    spark: (o) => Object.assign({ k: 'spark' }, o),         // FILTER ( ADDCOLUMNS ( GENERATESERIES ... ), NOT ISBLANK )
+    sparkEnd: (o) => Object.assign({ k: 'sparkEnd' }, o),   // the last date of the series
+    aggx: (f, t, e) => ({ k: 'aggx', f: f, t: t, e: e }),   // MINX MAXX COUNTROWS
+    filt: (t, c) => ({ k: 'filt', t: t, c: c }),
+    concatx: (t, e, by) => ({ k: 'concatx', t: t, e: e, by: by })
   };
   // "0.00" (not "0.##") for SVG numbers: Excel-style formatting can print "12." for "0.##", which some SVG attributes reject
   const PATTERNS = { '0.00': [2, 2, false], '#,0': [0, 0, true], '#,0.0': [1, 1, true], '#,0.00': [2, 2, true] };
 
   // FORMAT with the en-US locale: half away from zero, like .NET
+  // Rounds the number as written (69.115 -> 69.12), not its binary value (69.11499...), like .NET and Intl do
+  function roundDecimal(abs, d) {
+    const [ip, fp = ''] = abs.toFixed(d + 6).split('.');
+    let digits = ip + fp.slice(0, d);
+    if (fp[d] >= '5') {
+      const a = digits.split(''); let i = a.length - 1;
+      while (i >= 0) { if (a[i] === '9') { a[i] = '0'; i--; } else { a[i] = String(+a[i] + 1); break; } }
+      digits = (i < 0 ? '1' : '') + a.join('');
+    }
+    return d ? digits.slice(0, digits.length - d) + '.' + digits.slice(digits.length - d) : digits;
+  }
   function formatNumber(v, pattern) {
     const [minD, maxD, group] = PATTERNS[pattern];
-    const p = Math.pow(10, maxD);
-    let r = Math.round(Math.abs(v) * p) / p;
-    const neg = v < 0 && r !== 0;
-    let s = r.toFixed(maxD);
+    let s = roundDecimal(Math.abs(v), maxD);
+    const neg = v < 0 && /[1-9]/.test(s);
     if (minD < maxD) s = s.replace(/0+$/, '').replace(/\.$/, '');
     if (group) { const parts = s.split('.'); parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ','); s = parts.join('.'); }
     return (neg ? '-' : '') + s;
@@ -89,6 +105,32 @@
       case 'switch': { for (const [c, v] of n.cases) if (evalNode(c, env)) return evalNode(v, env); return evalNode(n.other, env); }
       case 'fmt': return formatNumber(z(evalNode(n.a, env)), n.p);
       case 'cat': return n.parts.map((p) => { const v = evalNode(p, env); return v == null ? '' : String(v); }).join('');
+      case 'col': return env.row[n.name];
+      case 'sparkEnd': return null; // dates only matter in DAX; the preview uses the test series directly
+      case 'spark': {
+        // period i = i periods back from the last one; test series are newest first
+        const rows = [], series = env.series || {};
+        for (let i = 0; i < n.n; i++) {
+          const m = {}; Object.keys(series).forEach((k) => { const v = series[k][i]; if (v != null && isFinite(v)) m[k] = v; });
+          const v = evalNode(n.expr, { measures: m, vars: {} });
+          if (v != null) rows.push({ Value: i, '@v': v });
+        }
+        return rows;
+      }
+      case 'filt': return evalNode(n.t, env).filter((r) => evalNode(n.c, Object.assign({}, env, { row: r })));
+      case 'aggx': {
+        const rows = evalNode(n.t, env);
+        if (n.f === 'COUNTROWS') return rows.length || null; // COUNTROWS of an empty table is BLANK
+        const vals = rows.map((r) => evalNode(n.e, Object.assign({}, env, { row: r }))).filter((v) => v != null);
+        if (!vals.length) return null;
+        return n.f === 'MINX' ? Math.min.apply(null, vals) : Math.max.apply(null, vals);
+      }
+      case 'concatx': {
+        const rows = evalNode(n.t, env).map((r) => ({ r: r, by: evalNode(n.by, Object.assign({}, env, { row: r })) }));
+        rows.sort((a, b) => b.by - a.by);
+        const out = rows.map((x) => { const v = evalNode(n.e, Object.assign({}, env, { row: x.r })); return v == null ? '' : String(v); });
+        return out.length ? out.join(' ') : null;
+      }
     }
     throw new Error('node ' + n.k);
   }
@@ -111,6 +153,21 @@
       case 'switch': return 'SWITCH ( TRUE (), ' + n.cases.map(([c, v]) => dax(c) + ', ' + dax(v)).join(', ') + ', ' + dax(n.other) + ' )';
       case 'fmt': return 'FORMAT ( ' + dax(n.a) + ', ' + daxStr(n.p) + ', "en-US" )';
       case 'cat': return n.parts.map(dax).join(' & ');
+      case 'col': return '[' + n.name + ']';
+      case 'sparkEnd': return n.mode === 'filter' ? 'MAX ( ' + n.col + ' )' : 'CALCULATE ( MAX ( ' + n.col + ' ), LASTNONBLANK ( ' + n.col + ', ' + dax(n.expr) + ' ) )';
+      case 'spark': {
+        const E = dax(n.end);
+        const win = {
+          month: ['EOMONTH ( ' + E + ', -[Value] - 1 ) + 1', 'EOMONTH ( ' + E + ', -[Value] )'],
+          week: [E + ' - 7 * [Value] - 6', E + ' - 7 * [Value]'],
+          day: [E + ' - [Value]', E + ' - [Value]']
+        }[n.grain];
+        return 'FILTER ( ADDCOLUMNS ( GENERATESERIES ( 0, ' + (n.n - 1) + ' ), "@v", CALCULATE ( ' + dax(n.expr) + ', ' +
+          (n.clear ? 'REMOVEFILTERS ( ' + n.table + ' ), ' : '') + 'DATESBETWEEN ( ' + n.col + ', ' + win[0] + ', ' + win[1] + ' ) ) ), NOT ( ISBLANK ( [@v] ) ) )';
+      }
+      case 'filt': return 'FILTER ( ' + dax(n.t) + ', ' + dax(n.c) + ' )';
+      case 'aggx': return n.f === 'COUNTROWS' ? 'COUNTROWS ( ' + dax(n.t) + ' )' : n.f + ' ( ' + dax(n.t) + ', ' + dax(n.e) + ' )';
+      case 'concatx': return 'CONCATENATEX ( ' + dax(n.t) + ', ' + dax(n.e) + ', " ", ' + dax(n.by) + ', DESC )';
     }
     throw new Error('node ' + n.k);
   }
@@ -185,6 +242,18 @@
       vars.push({ name: varName(v.id), node: make(v, R), comment: null });
       valueIds.add(v.id);
     });
+
+    // A value written out in full, with its measures inline, so it can be recalculated per period
+    const exprOf = (id, depth) => {
+      const v = (d.values || []).find((x) => x.id === id);
+      if (!v || !VALUE_KINDS[v.kind] || (depth || 0) > 20) { errors.push('Unknown value: ' + id); return N.num(0); }
+      return VALUE_KINDS[v.kind](v, (x) => exprOf(x, (depth || 0) + 1));
+    };
+    // 'Date'[Date] or Date[Date] -> table and column, always quoted
+    const dateCol = (() => {
+      const m = /^\s*'?([^'\[\]]+?)'?\s*\[([^\[\]]+)\]\s*$/.exec(d.dateCol || "'Date'[Date]");
+      return m ? { table: "'" + m[1].trim().replace(/'/g, "''") + "'", col: "'" + m[1].trim().replace(/'/g, "''") + "'[" + m[2].trim() + ']' } : null;
+    })();
 
     // Bound numeric prop: range r0..r1 driven by value v across d0..d1 (clamped)
     const scale = (b) => {
@@ -302,6 +371,42 @@
           lit(out, '/>');
           break;
         }
+        case 'spark': {
+          // Line over the last n periods: one CALCULATE per period, scaled between the lowest and highest value
+          const sv = b.series && b.series.v;
+          if (!sv || !valueIds.has(sv)) { errors.push('Sparkline "' + (el.name || 'spark') + '" needs a value'); return; }
+          if (!dateCol) { errors.push("Date column must look like 'Date'[Date]"); return; }
+          const n = Math.max(2, Math.min(60, Math.round(+el.n || 12))), grain = ['month', 'week', 'day'].includes(el.grain) ? el.grain : 'month';
+          const x = +el.x || 0, y = +el.y || 0, w = Math.max(1, +el.w || 100), h = Math.max(1, +el.h || 30), step = w / (n - 1);
+          const expr = exprOf(sv);
+          const end = hoist(el, 'end', N.sparkEnd({ col: dateCol.col, expr: expr, mode: el.end === 'filter' ? 'filter' : 'data' }), note());
+          const pts = hoist(el, 'pts', N.spark({ expr: expr, grain: grain, n: n, end: end, col: dateCol.col, table: dateCol.table, clear: d.clearDateFilters !== false }), note());
+          const lo = hoist(el, 'lo', N.aggx('MINX', pts, N.col('@v')), note());
+          const hi = hoist(el, 'hi', N.aggx('MAXX', pts, N.col('@v')), note());
+          const F = (node) => N.fmt(x < 0 || y < 0 ? zeroSmall(node, 2) : node, '0.00');
+          const xOf = (i) => N.op('+', N.num(x), N.op('*', N.op('-', N.num(n - 1), i), N.num(step)));
+          const yOf = (v) => N.iff(N.op('=', hi, lo), N.num(y + h / 2), N.op('-', N.num(y + h), N.op('*', N.op('/', N.op('-', v, lo), N.op('-', hi, lo)), N.num(h))));
+          const line = hoist(el, 'line', N.concatx(pts, N.cat([F(xOf(N.col('Value'))), N.str(','), F(yOf(N.col('@v')))]), N.col('Value')), note());
+          const count = N.aggx('COUNTROWS', pts);
+          if (el.area) {
+            const bottom = attrNum(y + h), op = attrNum(el.areaOpacity == null ? 0.2 : Math.max(0, Math.min(1, +el.areaOpacity)));
+            out.push(N.iff(N.op('>', count, N.num(1)), N.cat([N.str("<polygon points='"), F(xOf(N.aggx('MAXX', pts, N.col('Value')))), N.str(',' + bottom + ' '), line, N.str(' '),
+              F(xOf(N.aggx('MINX', pts, N.col('Value')))), N.str(',' + bottom + "' fill='" + color(el.areaColor || el.stroke || '#00d4ff') + "' fill-opacity='" + op + "'/>")]), N.str('')));
+          }
+          lit(out, "<polyline points='"); out.push(line); lit(out, "' fill='none'");
+          colA('stroke', 'stroke', el.stroke || '#00d4ff');
+          lit(out, " stroke-width='" + attrNum(el.sw || 2) + "' stroke-linejoin='round' stroke-linecap='round'");
+          if (el.opacity != null && +el.opacity < 1) lit(out, " opacity='" + attrNum(el.opacity) + "'");
+          lit(out, '/>');
+          if (el.dot) {
+            // dot on the newest period that has a value
+            const i0 = hoist(el, 'i0', N.aggx('MINX', pts, N.col('Value')), note());
+            const v0 = hoist(el, 'v0', N.aggx('MAXX', N.filt(pts, N.op('=', N.col('Value'), i0)), N.col('@v')), note());
+            out.push(N.iff(N.op('>', count, N.num(0)), N.cat([N.str("<circle cx='"), F(xOf(i0)), N.str("' cy='"), F(yOf(v0)),
+              N.str("' r='" + attrNum(el.dotR || 3) + "' fill='" + color(el.dotColor || el.stroke || '#00d4ff') + "'/>")]), N.str('')));
+          }
+          break;
+        }
         default:
           errors.push('Unknown layer type: ' + el.type);
           return;
@@ -356,7 +461,7 @@
   // measures: { "Sales": 1240000, ... } keyed by measure name; returns the image URL (or '' when hidden)
   function toImageUrl(design, measures, opts) {
     const c = compile(design, opts);
-    const env = { measures: measures || {}, vars: {} };
+    const env = { measures: measures || {}, vars: {}, series: (opts && opts.series) || {} };
     c.vars.forEach((v) => { env.vars[v.name] = evalNode(v.node, env); });
     if (c.hideIf && env.vars[c.hideIf] == null) return { url: '', errors: c.errors };
     return { url: PREFIX + evalNode(c.svg, env), errors: c.errors };
