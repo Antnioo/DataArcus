@@ -15,7 +15,7 @@ window.cfpbComplaintsTranslations = {
         "Interactive Power BI report: national trends, pain points, company fairness, and regional performance for U.S. consumer finance complaints.",
       "og:url": "https://dataarcus.com/dashboards/consumer-financial-complaints.html",
       "og:site_name": "DataArcus",
-      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image": "https://dataarcus.com/assets/img/og/cfpb.jpg",
       "og:image:alt":
         "DataArcus brand mark over a blue background with animated data bars.",
       "og:locale": "en_US",
@@ -24,7 +24,7 @@ window.cfpbComplaintsTranslations = {
         "Consumer Financial Complaints Power BI Dashboard - DataArcus",
       "twitter:description":
         "See how we turn 7 years of complaints into clear insights on service quality and accountability.",
-      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image": "https://dataarcus.com/assets/img/og/cfpb.jpg",
       "twitter:image:alt": "DataArcus brand mark.",
       canonical:
         "https://dataarcus.com/dashboards/consumer-financial-complaints.html"
@@ -117,7 +117,7 @@ window.cfpbComplaintsTranslations = {
         "تقرير Power BI تفاعلي: اتجاهات وطنية، أسباب الشكاوى، عدالة الشركات، والأداء الإقليمي.",
       "og:url": "https://dataarcus.com/dashboards/consumer-financial-complaints.html",
       "og:site_name": "DataArcus",
-      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image": "https://dataarcus.com/assets/img/og/cfpb.jpg",
       "og:image:alt": "شعار داتا أركوس على خلفية زرقاء.",
       "og:locale": "ar_EG",
       "twitter:card": "summary_large_image",
@@ -125,7 +125,7 @@ window.cfpbComplaintsTranslations = {
         "لوحة شكاوى الخدمات المالية في Power BI - داتا أركوس",
       "twitter:description":
         "حوّلنا بيانات 7 سنوات إلى رؤى واضحة حول جودة الخدمة والمسؤولية.",
-      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image": "https://dataarcus.com/assets/img/og/cfpb.jpg",
       "twitter:image:alt": "شعار داتا أركوس.",
       canonical:
         "https://dataarcus.com/dashboards/consumer-financial-complaints.html"
