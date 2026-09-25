@@ -31,7 +31,8 @@
     blank: () => ({ k: 'blank' }),
     isBlank: (a) => ({ k: 'isblank', a: a })
   };
-  const PATTERNS = { '0.##': [0, 2, false], '#,0': [0, 0, true], '#,0.0': [1, 1, true], '#,0.00': [2, 2, true] };
+  // "0.00" (not "0.##") for SVG numbers: Excel-style formatting can print "12." for "0.##", which some SVG attributes reject
+  const PATTERNS = { '0.00': [2, 2, false], '#,0': [0, 0, true], '#,0.0': [1, 1, true], '#,0.00': [2, 2, true] };
 
   // FORMAT with the en-US locale: half away from zero, like .NET
   function formatNumber(v, pattern) {
@@ -131,30 +132,49 @@
     diff: (v, R) => N.op('-', R(v.a), R(v.b)),
     pct: (v, R) => N.fn('DIVIDE', [N.op('-', R(v.a), R(v.b)), R(v.b)])
   };
-  const varName = (id) => '_' + String(id).replace(/[^A-Za-z0-9_]/g, '_');
+  // DAX variable names come from the value labels (_Sales_LY), falling back to the id for non-Latin labels
+  const slug = (s) => String(s || '').replace(/[^A-Za-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40);
+  function varNames(values) {
+    const map = new Map(), used = new Set(['_svg']);
+    values.forEach((v) => {
+      let base = slug(v.label) || slug(v.id) || 'value';
+      if (/^\d/.test(base)) base = 'v' + base;
+      base = '_' + base;
+      if (/^_L\d+_/.test(base)) base += '_v';   // keep clear of the layer variables
+      let n = base, k = 2;
+      while (used.has(n.toLowerCase())) n = base + '_' + k++;  // DAX names are not case sensitive
+      used.add(n.toLowerCase()); map.set(v.id, n);
+    });
+    return map;
+  }
 
   // Number formats for text: all arithmetic + FORMAT with fixed patterns, so JS and DAX agree exactly.
   // Percent is written as a static "%25" suffix: a raw % would break the image URL.
+  // A number that rounds to zero is made exactly 0 first, so no engine can print "-0.0".
+  const zeroSmall = (a, decimals) => N.iff(N.op('<', N.fn('ABS', [a]), N.num(0.5 / Math.pow(10, decimals))), N.num(0), a);
   const FORMATS = {
-    n0: (a) => N.fmt(a, '#,0'),
-    n1: (a) => N.fmt(a, '#,0.0'),
-    n2: (a) => N.fmt(a, '#,0.00'),
-    k1: (a) => N.cat([N.fmt(N.op('/', a, N.num(1000)), '#,0.0'), N.str('K')]),
-    m1: (a) => N.cat([N.fmt(N.op('/', a, N.num(1000000)), '#,0.0'), N.str('M')]),
+    n0: (a) => N.fmt(zeroSmall(a, 0), '#,0'),
+    n1: (a) => N.fmt(zeroSmall(a, 1), '#,0.0'),
+    n2: (a) => N.fmt(zeroSmall(a, 2), '#,0.00'),
+    k1: (a) => N.cat([N.fmt(zeroSmall(N.op('/', a, N.num(1000)), 1), '#,0.0'), N.str('K')]),
+    m1: (a) => N.cat([N.fmt(zeroSmall(N.op('/', a, N.num(1000000)), 1), '#,0.0'), N.str('M')]),
     auto: (a) => N.iff(N.op('>=', N.fn('ABS', [a]), N.num(1000000)), FORMATS.m1(a),
       N.iff(N.op('>=', N.fn('ABS', [a]), N.num(1000)), FORMATS.k1(a), FORMATS.n0(a))),
-    p0: (a) => N.cat([N.fmt(N.op('*', a, N.num(100)), '#,0'), N.str('%25')]),
-    p1: (a) => N.cat([N.fmt(N.op('*', a, N.num(100)), '#,0.0'), N.str('%25')])
+    p0: (a) => N.cat([N.fmt(zeroSmall(N.op('*', a, N.num(100)), 0), '#,0'), N.str('%25')]),
+    p1: (a) => N.cat([N.fmt(zeroSmall(N.op('*', a, N.num(100)), 1), '#,0.0'), N.str('%25')])
   };
   const OPS = ['<', '<=', '>', '>=', '=', '<>'];
 
   // ---------- compile ----------
-  function compile(design) {
+  function compile(design, opts) {
     const d = design || {};
+    const tag = !!(opts && opts.tag);  // preview only: wrap each layer in <g data-l='n'> for the editor
     const W = Math.max(8, Math.min(2000, +d.w || 240)), H = Math.max(8, Math.min(2000, +d.h || 80));
     const vars = [];      // { name, node, comment }
     const errors = [];
     const valueIds = new Set();
+    const names = varNames(d.values || []);
+    const varName = (id) => names.get(id);
     const R = (id) => { if (!valueIds.has(id)) { errors.push('Unknown value: ' + id); return N.num(0); } return N.ref(varName(id)); };
     const Z = (id) => N.fn('COALESCE', [R(id), N.num(0)]);
 
@@ -186,7 +206,6 @@
     const rules = (b) => ((b.rules || []).length ? N.sw(b.rules.map((r) => [cond(r), N.str(color(r.c))]), N.str(color(b.other))) : N.str(color(b.other)));
 
     const parts = [];     // top-level SVG pieces: string or node
-    const layerComments = [];
     const lit = (arr, s) => { const last = arr[arr.length - 1]; if (typeof last === 'string') arr[arr.length - 1] = last + s; else arr.push(s); };
     const hoist = (el, prop, node, list) => { const name = '_L' + el._i + '_' + prop; vars.push({ name: name, node: node, comment: list }); return N.ref(name); };
 
@@ -198,7 +217,7 @@
       const note = () => { const c = first ? 'Layer ' + el._i + ': ' + (el.name || el.type) : null; first = false; return c; };
       // attribute helpers: static value, or a hoisted VAR when bound
       const numA = (name, prop, v) => {
-        if (b[prop] && b[prop].v) { const r = hoist(el, prop, scale(b[prop]), note()); lit(out, ' ' + name + "='"); out.push(N.fmt(r, '0.##')); lit(out, "'"); }
+        if (b[prop] && b[prop].v) { const r = hoist(el, prop, scale(b[prop]), note()); lit(out, ' ' + name + "='"); out.push(N.fmt(+b[prop].r0 < 0 || +b[prop].r1 < 0 ? zeroSmall(r, 2) : r, '0.00')); lit(out, "'"); }
         else lit(out, ' ' + name + "='" + attrNum(v) + "'");
       };
       const colA = (name, prop, v) => {
@@ -255,7 +274,7 @@
           lit(out, " stroke-width='" + sw + "'" + (el.cap === 'round' ? " stroke-linecap='round'" : '') + " transform='rotate(-90 " + cx + ' ' + cy + ")'");
           if (b.p && b.p.v) {
             const p = hoist(el, 'p', scale({ v: b.p.v, d0: b.p.d0, d1: b.p.d1, r0: 0, r1: 1 }), note());
-            lit(out, " stroke-dasharray='"); out.push(N.fmt(N.op('*', p, N.num(+C.toFixed(4))), '0.##')); lit(out, ' ' + attrNum(C) + "'");
+            lit(out, " stroke-dasharray='"); out.push(N.fmt(N.op('*', p, N.num(+C.toFixed(4))), '0.00')); lit(out, ' ' + attrNum(C) + "'");
             // a round cap draws a dot at 0%, so hide the arc when there is no progress
             lit(out, " stroke-opacity='"); out.push(N.iff(N.op('>', p, N.num(0)), N.str('1'), N.str('0'))); lit(out, "'");
           } else lit(out, " stroke-dasharray='" + attrNum(C * Math.max(0, Math.min(1, +el.p || 0))) + ' ' + attrNum(C) + "'");
@@ -287,16 +306,18 @@
           errors.push('Unknown layer type: ' + el.type);
           return;
       }
+      // The editor wraps each layer (outside any "show if") so hidden layers stay selectable
+      if (tag) lit(parts, "<g data-l='" + (el._i - 1) + "'>");
       // Show if: the whole layer becomes "" when the condition is false
       if (b.show && b.show.v) {
         const shown = hoist(el, 'show', cond(b.show), note());
         const inner = out.map((p) => (typeof p === 'string' ? N.str(p) : p));
         parts.push(N.iff(shown, N.cat(inner), N.str('')));
       } else out.forEach((p) => (typeof p === 'string' ? lit(parts, p) : parts.push(p)));
-      layerComments.push(el.name || el.type);
+      if (tag) lit(parts, '</g>');
     });
 
-    const bg = hexOk(d.bg) ? "<rect width='100%' height='100%' rx='" + attrNum(d.radius || 0) + "' fill='" + color(d.bg) + "'/>" : '';
+    const bg = hexOk(d.bg) ? "<rect width='" + W + "' height='" + H + "' rx='" + attrNum(d.radius || 0) + "' fill='" + color(d.bg) + "'/>" : '';
     const open = "<svg xmlns='http://www.w3.org/2000/svg' width='" + W + "' height='" + H + "' viewBox='0 0 " + W + ' ' + H + "'>" + bg;
     const svgParts = [open].concat(parts).concat(['</svg>']);
     // merge neighbouring strings
@@ -306,7 +327,7 @@
     // Only a measure can be "blank" in the same way in DAX and in the preview
     const hideIf = (d.values || []).some((v) => v.id === d.hideIfBlank && v.kind === 'measure' && valueIds.has(v.id)) ? d.hideIfBlank : null;
 
-    return { vars: vars, svg: svgNode, hideIf: hideIf, errors: errors, name: d.name || 'SVG KPI' };
+    return { vars: vars, svg: svgNode, hideIf: hideIf ? varName(hideIf) : null, errors: errors, name: String(d.name || 'SVG KPI').replace(/[\r\n]+/g, ' ').trim() || 'SVG KPI' };
   }
 
   // ---------- outputs ----------
@@ -327,17 +348,17 @@
     L.push('    ' + pieces[0]);
     pieces.slice(1).forEach((p) => L.push('        & ' + p));
     L.push('RETURN');
-    if (c.hideIf) L.push('    IF ( ISBLANK ( ' + varName(c.hideIf) + ' ), BLANK (), ' + daxStr(PREFIX) + ' & _svg )');
+    if (c.hideIf) L.push('    IF ( ISBLANK ( ' + c.hideIf + ' ), BLANK (), ' + daxStr(PREFIX) + ' & _svg )');
     else L.push('    ' + daxStr(PREFIX) + ' & _svg');
     return { dax: L.join('\n'), errors: c.errors };
   }
 
   // measures: { "Sales": 1240000, ... } keyed by measure name; returns the image URL (or '' when hidden)
-  function toImageUrl(design, measures) {
-    const c = compile(design);
+  function toImageUrl(design, measures, opts) {
+    const c = compile(design, opts);
     const env = { measures: measures || {}, vars: {} };
     c.vars.forEach((v) => { env.vars[v.name] = evalNode(v.node, env); });
-    if (c.hideIf && env.vars[varName(c.hideIf)] == null) return { url: '', errors: c.errors };
+    if (c.hideIf && env.vars[c.hideIf] == null) return { url: '', errors: c.errors };
     return { url: PREFIX + evalNode(c.svg, env), errors: c.errors };
   }
 

@@ -55,26 +55,79 @@
   <style>
     .kd { padding: 110px 0 60px; }
     .kd h1 { color: var(--accent); }
-    .kd-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; }
-    .kd-label { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-bottom: 8px; display: block; }
+    .kd-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 16px; }
+    .kd-label { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin: 0 0 10px; display: block; }
+    .kd-top { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
     .kd-starters { display: flex; flex-wrap: wrap; gap: 8px; }
     .kd-starter { background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 30px; padding: 6px 14px; font-size: .85rem; }
-    .kd-starter:hover, .kd-starter.active { border-color: var(--accent); }
-    .kd-values { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 1fr); gap: 8px 10px; align-items: center; font-size: .85rem; }
-    .kd-values .h { font-size: .7rem; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; }
-    .kd-values input { width: 100%; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 8px; padding: 6px 8px; font-size: .85rem; }
-    .kd-values .calc { color: #94a3b8; font-size: .8rem; }
-    .kd-stage { display: grid; place-items: center; min-height: 220px; border-radius: 14px; background: #0a0f1c; border: 1px solid var(--glass-border); padding: 20px; }
-    .kd-stage img { max-width: 100%; height: auto; }
-    .kd-dax { background: #050a14; border: 1px solid var(--glass-border); border-radius: 12px; color: #cbd5e1; font: 12px/1.5 ui-monospace, Consolas, monospace; padding: 14px; max-height: 360px; overflow: auto; white-space: pre; margin: 0; }
-    .kd-btn2 { background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 50px; padding: 8px 18px; font-weight: 600; }
-    .kd-btn2:hover { background: rgba(0, 212, 255, .1); color: var(--accent-2); }
-    .kd-steps { color: #cbd5e1; font-size: .9rem; padding-inline-start: 1.2rem; margin: 0; }
+    .kd-starter:hover { border-color: var(--accent); }
+    .kd-starter.kd-pro { border-color: rgba(253, 203, 110, .45); }
+    .kd-prem { font-size: .6rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: #1a1200; background: linear-gradient(90deg, #fdcb6e, #f59e0b); border-radius: 20px; padding: 2px 7px; margin-inline-start: 4px; vertical-align: middle; }
+    .kd-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .kd-actions button { background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 10px; padding: 6px 11px; font-size: .82rem; }
+    .kd-actions button:hover:not(:disabled) { border-color: var(--accent); }
+    .kd-actions button:disabled { opacity: .4; }
+    .kd-add-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+    .kd-add { background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 10px; padding: 8px 4px; font-size: .72rem; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+    .kd-add i { font-size: 1.05rem; color: var(--accent); }
+    .kd-add:hover { border-color: var(--accent); }
+    .kd-layers { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; max-height: 360px; overflow: auto; }
+    .kd-layer { display: flex; align-items: center; gap: 4px; border: 1px solid transparent; border-radius: 10px; padding: 2px 4px; }
+    .kd-layer.active { border-color: var(--accent); background: rgba(0, 212, 255, .06); }
+    .kd-lname { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; background: none; border: 0; color: var(--lt); font-size: .85rem; padding: 5px 4px; text-align: start; }
+    .kd-lname span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .kd-linked { color: #fdcb6e; }
+    .kd-lbtns { display: flex; }
+    .kd-lbtns button, .kd-x { background: none; border: 0; color: #94a3b8; padding: 4px 5px; border-radius: 6px; }
+    .kd-lbtns button:hover:not(:disabled), .kd-x:hover { color: var(--lt); background: rgba(255, 255, 255, .06); }
+    .kd-lbtns button:disabled { opacity: .3; }
+    .kd-empty { color: #94a3b8; font-size: .85rem; padding: 6px; list-style: none; }
+    .kd-canvas-wrap { display: grid; place-items: center; min-height: 260px; border-radius: 14px; background: #050a14; border: 1px solid var(--glass-border); padding: 20px; overflow: hidden; }
+    /* Power BI draws the image on its own, left to right: the canvas must too, even on the Arabic page */
+    #stage { touch-action: none; line-height: 0; direction: ltr; }
+    #stage.kd-transparent svg { background-color: #0f1524; background-image: linear-gradient(45deg, #151c2e 25%, transparent 25%), linear-gradient(-45deg, #151c2e 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #151c2e 75%), linear-gradient(-45deg, transparent 75%, #151c2e 75%); background-size: 16px 16px; background-position: 0 0, 0 8px, 8px -8px, -8px 0; }
+    #stage svg { display: block; cursor: default; overflow: visible; }
+    #stage g[data-l] { cursor: move; }
+    .kd-selbox { fill: none; stroke: var(--accent); pointer-events: none; }
+    .kd-handle { fill: #fff; stroke: var(--accent); cursor: nwse-resize; }
+    .kd-guide { stroke: #fd79a8; pointer-events: none; }
+    .kd-note { font-size: .8rem; color: #fdcb6e; margin-top: 8px; }
+    .kd-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .kd-f { display: flex; flex-direction: column; gap: 3px; font-size: .72rem; color: #94a3b8; min-width: 0; }
+    .kd-f input, .kd-f select, .kd-rule select, .kd-rule input[type=number], .kd-vlabel { width: 100%; min-width: 0; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 8px; padding: 5px 7px; font-size: .82rem; }
+    .kd-f input[type=color], .kd-rule input[type=color] { padding: 1px 2px; height: 31px; cursor: pointer; }
+    .kd-wide { grid-column: 1 / -1; }
+    .kd-row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .kd-data { margin-top: 14px; border-top: 1px solid var(--glass-border); padding-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .kd-data-h { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: #fdcb6e; font-weight: 700; }
+    .kd-toggle { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: .85rem; color: var(--lt); cursor: pointer; }
+    .kd-toggle input { accent-color: var(--accent); width: 15px; height: 15px; }
+    .kd-toggle small { width: 100%; color: #94a3b8; font-size: .72rem; padding-inline-start: 21px; }
+    .kd-bind { border-inline-start: 2px solid rgba(253, 203, 110, .5); padding-inline-start: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .kd-bind-flat { border: 0; padding: 0; }
+    .kd-rule { display: flex; gap: 5px; align-items: center; font-size: .78rem; color: #94a3b8; }
+    .kd-rule select { flex: 1.2; } .kd-rule input[type=number] { flex: 1; } .kd-rule input[type=color] { width: 36px; flex: none; }
+    .kd-hint { font-size: .74rem; color: #94a3b8; margin: 0; }
+    .kd-link { background: none; border: 0; color: var(--accent); font-size: .8rem; padding: 2px 4px; white-space: nowrap; }
+    .kd-vals { display: flex; flex-direction: column; gap: 10px; }
+    .kd-val { border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .kd-val-h { display: flex; align-items: center; gap: 6px; }
+    .kd-vlabel { font-weight: 700; }
+    .kd-tag { font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); border: 1px solid rgba(0, 212, 255, .4); border-radius: 20px; padding: 1px 7px; white-space: nowrap; }
+    .kd-tag2 { color: #a29bfe; border-color: rgba(162, 155, 254, .45); }
+    .kd-slider { width: 100%; accent-color: var(--accent); }
+    .kd-dax { background: #050a14; border: 1px solid var(--glass-border); border-radius: 12px; color: #cbd5e1; font: 12px/1.5 ui-monospace, Consolas, monospace; padding: 14px; max-height: 380px; overflow: auto; white-space: pre; margin: 0; }
+    .kd-steps { color: #cbd5e1; font-size: .88rem; padding-inline-start: 1.2rem; margin: 0; }
     .kd-steps li { margin-bottom: 4px; }
     .kd-err { color: #f59e0b; font-size: .85rem; }
-    .kd-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--accent); color: #051018; font-weight: 700; padding: 10px 18px; border-radius: 30px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 2000; }
+    .kd-premium { border-color: rgba(253, 203, 110, .45); background: linear-gradient(135deg, rgba(253, 203, 110, .07), rgba(167, 139, 250, .07)); }
+    .kd-lib { list-style: none; padding: 0; margin: 8px 0 0; display: flex; flex-direction: column; gap: 4px; }
+    .kd-lib li { display: flex; align-items: center; gap: 8px; } .kd-lib li small { color: #94a3b8; margin-inline-start: auto; }
+    .kd-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--accent); color: #051018; font-weight: 700; padding: 10px 18px; border-radius: 30px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 2000; max-width: 90vw; text-align: center; }
+    @media (max-width: 991.98px) { .kd-layers { max-height: 220px; } }
     /* DAX, measure names and numbers always read left to right, even on the Arabic page */
-    .kd-dax, .kd-values input { direction: ltr; text-align: left; unicode-bidi: plaintext; }
+    .kd-dax, .kd-f input, .kd-rule input, [data-vk="measure"] { direction: ltr; unicode-bidi: plaintext; }
+    .kd-dax { text-align: left; }
   </style>
 </head>
 <body>
@@ -103,39 +156,82 @@
   </nav>
 
   <main class="kd">
-    <div class="container">
+    <div class="container" id="kdApp">
       <header class="mb-4">
         <span class="badge rounded-pill text-bg-dark border border-secondary mb-2">Preview build · Not listed yet</span>
         <h1 class="display-5 fw-bold">SVG KPI Designer</h1>
-        <p class="lead text-white-50 mb-0">Pick a starter, type your own measure names, and copy a DAX measure that draws it in Power BI. The full drag-and-drop designer is being built on this engine.</p>
+        <p class="lead text-white-50 mb-0">Draw a KPI visual, link any part of it to your measures, and copy a DAX measure that draws it in Power BI. No code, nothing uploaded.</p>
       </header>
 
-      <div class="row g-4">
-        <div class="col-lg-5">
-          <div class="kd-panel d-flex flex-column gap-4">
-            <div>
-              <span class="kd-label">Start from a design</span>
-              <div class="kd-starters" id="starters"></div>
-            </div>
-            <div>
-              <span class="kd-label">Your measures</span>
-              <div class="kd-values" id="values"></div>
-              <p class="small text-white-50 mt-2 mb-0">Type the measure names exactly as they are in your model. The sample numbers only drive this preview.</p>
-            </div>
+      <div class="kd-panel mb-3">
+        <div class="kd-top">
+          <div>
+            <span class="kd-label">Start from</span>
+            <div class="kd-starters" id="starters"></div>
+          </div>
+          <div class="kd-actions">
+            <button type="button" id="undoBtn" disabled><i class="bi bi-arrow-counterclockwise"></i> Undo</button>
+            <button type="button" id="redoBtn" disabled><i class="bi bi-arrow-clockwise"></i> Redo</button>
+            <button type="button" id="shareBtn"><i class="bi bi-link-45deg"></i> Share link</button>
+            <button type="button" id="exportBtn"><i class="bi bi-download"></i> Export</button>
+            <button type="button" id="importBtn"><i class="bi bi-upload"></i> Import</button>
+            <button type="button" id="libBtn"><i class="bi bi-stars" style="color:#fdcb6e"></i> Library</button>
+            <input type="file" id="importFile" accept=".json,application/json" hidden>
           </div>
         </div>
-
-        <div class="col-lg-7 d-flex flex-column gap-4">
-          <div class="kd-panel">
-            <span class="kd-label">Live preview (the same image Power BI will draw)</span>
-            <div class="kd-stage" id="stage"></div>
-            <div class="kd-err mt-2" id="errors"></div>
+        <div class="kd-panel kd-premium mt-3" id="libPanel" hidden>
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <b><i class="bi bi-stars" style="color:#fdcb6e"></i> Design library</b><span class="kd-prem">Premium preview</span>
+            <button type="button" class="kd-link ms-auto" id="libSave"><i class="bi bi-save"></i> Save current design</button>
           </div>
+          <ul class="kd-lib" id="libList"></ul>
+        </div>
+      </div>
+
+      <div class="row g-3">
+        <div class="col-lg-3 col-md-6 order-2 order-lg-1 d-flex flex-column gap-3">
+          <div class="kd-panel">
+            <span class="kd-label">Add</span>
+            <div class="kd-add-grid" id="addBar"></div>
+          </div>
+          <div class="kd-panel">
+            <span class="kd-label">Layers</span>
+            <ul class="kd-layers" id="layers"></ul>
+          </div>
+        </div>
+        <div class="col-lg-6 order-1 order-lg-2">
+          <div class="kd-panel">
+            <span class="kd-label">Canvas: drag to move, handles to resize, Alt turns off snapping</span>
+            <div class="kd-canvas-wrap"><div id="stage"></div></div>
+            <div class="kd-note" id="blankNote" hidden><i class="bi bi-info-circle"></i> The "show nothing when blank" measure is blank right now, so Power BI would show an empty cell.</div>
+          </div>
+        </div>
+        <div class="col-lg-3 col-md-6 order-3">
+          <div class="kd-panel">
+            <span class="kd-label" id="propsTitle">Card</span>
+            <div id="props"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-1">
+        <div class="col-lg-5">
+          <div class="kd-panel">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+              <span class="kd-label mb-0">Data</span>
+              <div class="d-flex gap-1"><button type="button" class="kd-link" id="addMeasure"><i class="bi bi-plus"></i> Measure</button><button type="button" class="kd-link" id="addFormula"><i class="bi bi-plus"></i> Formula</button></div>
+            </div>
+            <div class="kd-vals" id="values"></div>
+            <p class="kd-hint mt-2 mb-0">Type your measure names exactly as they are in your model. Test values only drive the preview; drag the sliders to see the design react.</p>
+          </div>
+        </div>
+        <div class="col-lg-7">
           <div class="kd-panel d-flex flex-column gap-3">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
               <span class="kd-label mb-0">Your DAX measure</span>
               <button class="btn btn-accent" id="copyBtn" type="button"><i class="bi bi-clipboard me-1"></i>Copy DAX</button>
             </div>
+            <div class="kd-err" id="errors" hidden></div>
             <pre class="kd-dax" id="dax"></pre>
             <ol class="kd-steps">
               <li>In Power BI Desktop, select a table and click <strong>New measure</strong>, then paste.</li>
