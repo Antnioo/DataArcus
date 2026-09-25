@@ -11,12 +11,12 @@ window.modelHealthArticleTranslations = {
       "og:description": "A real 410-measure Power BI model: 41% of columns never used and 23 visuals pointing at deleted measures. What we found and how to check yours in a minute.",
       "og:url": "https://dataarcus.com/articles/article-power-bi-model-health-check.html",
       "og:site_name": "DataArcus",
-      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image": "https://dataarcus.com/assets/img/og/health-check-article.jpg",
       "og:locale": "en_US",
       "twitter:card": "summary_large_image",
       "twitter:title": "We Checked a Real Power BI Model: 41% of Columns Unused",
       "twitter:description": "A real 410-measure Power BI model: 41% of columns never used and 23 visuals pointing at deleted measures. What we found and how to check yours in a minute.",
-      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image": "https://dataarcus.com/assets/img/og/health-check-article.jpg",
       "canonical": "https://dataarcus.com/articles/article-power-bi-model-health-check.html"
     },
     "header": {
@@ -78,12 +78,12 @@ window.modelHealthArticleTranslations = {
       "og:description": "نموذج Power BI حقيقي فيه 410 مقاييس: 41% من الأعمدة غير مستخدمة و23 visual تشير إلى مقاييس محذوفة. ما وجدناه وكيف تفحص نموذجك في دقيقة.",
       "og:url": "https://dataarcus.com/articles/article-power-bi-model-health-check.html",
       "og:site_name": "DataArcus",
-      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image": "https://dataarcus.com/assets/img/og/health-check-article.jpg",
       "og:locale": "ar_AR",
       "twitter:card": "summary_large_image",
       "twitter:title": "فحصنا نموذج Power BI حقيقيًا: 41% من الأعمدة غير مستخدمة",
       "twitter:description": "نموذج Power BI حقيقي فيه 410 مقاييس: 41% من الأعمدة غير مستخدمة و23 visual تشير إلى مقاييس محذوفة. ما وجدناه وكيف تفحص نموذجك في دقيقة.",
-      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image": "https://dataarcus.com/assets/img/og/health-check-article.jpg",
       "canonical": "https://dataarcus.com/articles/article-power-bi-model-health-check.html"
     },
     "header": {

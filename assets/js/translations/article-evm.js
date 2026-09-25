@@ -12,7 +12,7 @@ window.evmTranslations = {
       "og:description": "Stop relying on subjective Green/Amber/Red status reports. See how EVM metrics like CPI and SPI forecast project delays with simple math.",
       "og:url": "https://dataarcus.com/articles/article-evm.html",
       "og:site_name": "DataArcus",
-      "og:image": "https://dataarcus.com/assets/img/portfolio/fintech-preview.jpg", // Re-using the dashboard image or a specific blog image
+      "og:image": "https://dataarcus.com/assets/img/og/evm.jpg", // Re-using the dashboard image or a specific blog image
       "og:image:alt": "A dashboard showing project risk timelines.",
       "og:locale": "en_US",
       "og:article:published_time": "2025-12-10T09:00:00Z",
@@ -20,7 +20,7 @@ window.evmTranslations = {
       "twitter:card": "summary_large_image",
       "twitter:title": "Beyond Traffic Lights: How EVM Predicts Project Risk",
       "twitter:description": "Stop relying on subjective status reports. Learn how CPI and SPI mathematically forecast project delays.",
-      "twitter:image": "https://dataarcus.com/assets/img/portfolio/fintech-preview.jpg",
+      "twitter:image": "https://dataarcus.com/assets/img/og/evm.jpg",
       canonical: "https://dataarcus.com/articles/article-evm.html",
     },
     
@@ -77,7 +77,7 @@ window.evmTranslations = {
       "og:description": "توقف عن الاعتماد على تقارير الحالة الذاتية. تعلم كيف تستخدم إدارة القيمة المكتسبة (EVM) للتنبؤ رياضيًا بتأخيرات المشروع.",
       "og:url": "https://dataarcus.com/articles/article-evm.html",
       "og:site_name": "داتا أركوس",
-      "og:image": "https://dataarcus.com/assets/img/portfolio/fintech-preview.jpg",
+      "og:image": "https://dataarcus.com/assets/img/og/evm.jpg",
       "og:image:alt": "لوحة تحكم توضح مخاطر المشروع.",
       "og:locale": "ar_EG",
       "og:article:published_time": "2025-12-10T09:00:00Z",
@@ -85,7 +85,7 @@ window.evmTranslations = {
       "twitter:card": "summary_large_image",
       "twitter:title": "ما وراء إشارات المرور: كيف تتنبأ EVM بمخاطر المشاريع",
       "twitter:description": "توقف عن الاعتماد على تقارير الحالة الذاتية. تعلم كيف تستخدم إدارة القيمة المكتسبة (EVM) للتنبؤ رياضيًا بتأخيرات المشروع.",
-      "twitter:image": "https://dataarcus.com/assets/img/portfolio/fintech-preview.jpg",
+      "twitter:image": "https://dataarcus.com/assets/img/og/evm.jpg",
       canonical: "https://dataarcus.com/articles/article-evm.html",
     },
     

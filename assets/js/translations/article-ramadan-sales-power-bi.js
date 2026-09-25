@@ -11,12 +11,12 @@ window.ramadanSalesTranslations = {
       "og:description": "Ramadan starts about 11 days earlier each year, so comparing months misleads. Use a Hijri calendar and a DAX measure to compare Ramadan day by day.",
       "og:url": "https://dataarcus.com/articles/article-ramadan-sales-power-bi.html",
       "og:site_name": "DataArcus",
-      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image": "https://dataarcus.com/assets/img/og/ramadan-sales.jpg",
       "og:locale": "en_US",
       "twitter:card": "summary_large_image",
       "twitter:title": "Compare Ramadan Sales Year over Year in Power BI (DAX)",
       "twitter:description": "Ramadan starts about 11 days earlier each year, so comparing months misleads. Use a Hijri calendar and a DAX measure to compare Ramadan day by day.",
-      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image": "https://dataarcus.com/assets/img/og/ramadan-sales.jpg",
       "canonical": "https://dataarcus.com/articles/article-ramadan-sales-power-bi.html"
     },
     "header": {
@@ -69,12 +69,12 @@ window.ramadanSalesTranslations = {
       "og:description": "يبدأ رمضان قبل نحو 11 يومًا كل عام، لذلك تضلّل مقارنة الأشهر الميلادية. إليك التقويم الهجري ومقياس DAX لمقارنة رمضان يومًا بيوم.",
       "og:url": "https://dataarcus.com/articles/article-ramadan-sales-power-bi.html",
       "og:site_name": "DataArcus",
-      "og:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "og:image": "https://dataarcus.com/assets/img/og/ramadan-sales.jpg",
       "og:locale": "ar_AR",
       "twitter:card": "summary_large_image",
       "twitter:title": "مقارنة مبيعات رمضان سنويًا في Power BI باستخدام DAX",
       "twitter:description": "يبدأ رمضان قبل نحو 11 يومًا كل عام، لذلك تضلّل مقارنة الأشهر الميلادية. إليك التقويم الهجري ومقياس DAX لمقارنة رمضان يومًا بيوم.",
-      "twitter:image": "https://dataarcus.com/assets/img/dataarcus-og-logo.png",
+      "twitter:image": "https://dataarcus.com/assets/img/og/ramadan-sales.jpg",
       "canonical": "https://dataarcus.com/articles/article-ramadan-sales-power-bi.html"
     },
     "header": {
