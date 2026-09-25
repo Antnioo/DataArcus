@@ -15,8 +15,10 @@
 
   // ---------- 1. normalise the TOM JSON ----------
   function normalizeModel(json) {
+    json = json || {};
     const m = json.model || json;
-    const tables = (m.tables || []).map((t) => {
+    const nm = (x) => String(x == null ? '' : x);
+    const tables = (m.tables || []).filter((t) => t && t.name != null).map((t) => {
       const parts = (t.partitions || []).map((p) => ({
         name: p.name,
         mode: p.mode || m.defaultMode || 'import',
@@ -27,7 +29,7 @@
       }));
       const calcPart = parts.find((p) => p.sourceType === 'calculated');
       return {
-        name: t.name,
+        name: nm(t.name),
         hidden: !!t.isHidden,
         description: text(t.description),
         dataCategory: t.dataCategory || '',
@@ -44,8 +46,8 @@
             fsExpr: ci.formatStringDefinition ? text(ci.formatStringDefinition.expression) : ''
           }))
         } : null,
-        columns: (t.columns || []).map((c) => ({
-          name: c.name,
+        columns: (t.columns || []).filter((c) => c && c.name != null).map((c) => ({
+          name: nm(c.name),
           kind: c.type || (c.expression != null ? 'calculated' : 'data'),
           dataType: c.dataType || 'string',
           hidden: !!c.isHidden,
@@ -61,21 +63,22 @@
           extendedProperties: c.extendedProperties || null,
           relatedColumnDetails: c.relatedColumnDetails || null
         })),
-        measures: (t.measures || []).map((ms) => ({
-          name: ms.name,
-          table: t.name,
+        measures: (t.measures || []).filter((ms) => ms && ms.name != null).map((ms) => ({
+          name: nm(ms.name),
+          table: nm(t.name),
           expr: text(ms.expression),
           formatString: ms.formatString || '',
           fsExpr: ms.formatStringDefinition ? text(ms.formatStringDefinition.expression) : '',
           displayFolder: ms.displayFolder || '',
           description: text(ms.description),
           hidden: !!ms.isHidden,
-          detailRows: ms.detailRowsDefinition ? text(ms.detailRowsDefinition.expression) : ''
+          detailRows: ms.detailRowsDefinition ? text(ms.detailRowsDefinition.expression) : '',
+          kpi: ms.kpi ? [ms.kpi.targetExpression, ms.kpi.statusExpression, ms.kpi.trendExpression].map(text).join('\n') : ''
         })),
         hierarchies: (t.hierarchies || []).map((h) => ({ name: h.name, levels: (h.levels || []).map((l) => ({ name: l.name, column: l.column })) }))
       };
     });
-    const relationships = (m.relationships || []).map((r) => ({
+    const relationships = (m.relationships || []).filter((r) => r && r.fromTable && r.toTable).map((r) => ({
       name: r.name,
       fromTable: r.fromTable, fromColumn: r.fromColumn, toTable: r.toTable, toColumn: r.toColumn,
       active: r.isActive !== false,
@@ -87,13 +90,16 @@
       name: r.name,
       permissions: (r.tablePermissions || []).map((tp) => ({ table: tp.name, filter: text(tp.filterExpression), columns: (tp.columnPermissions || []).map((c) => c.name) }))
     }));
-    const expressions = (m.expressions || []).map((e) => ({ name: e.name, kind: e.kind || 'm', expr: text(e.expression) }));
+    const expressions = (m.expressions || []).map((e) => ({ name: nm(e.name), kind: e.kind || 'm', expr: text(e.expression) }));
+    const entityExprs = new Set();
+    (m.tables || []).forEach((t) => (t.partitions || []).forEach((p) => { if (p && p.source && p.source.expressionSource) entityExprs.add(lc(p.source.expressionSource)); }));
+    const functions = (m.functions || []).map((f) => ({ name: nm(f.name), expr: text(f.expression) }));
     const annotations = {};
     (m.annotations || []).forEach((a) => { annotations[a.name] = text(a.value); });
     return {
       compatibilityLevel: json.compatibilityLevel || null,
       culture: m.culture || '',
-      tables, relationships, roles, expressions, annotations,
+      tables, relationships, roles, expressions, annotations, entityExprs, functions,
       perspectives: (m.perspectives || []).length,
       cultures: (m.cultures || []).length
     };
@@ -130,13 +136,13 @@
 
   // ---------- 3. index and dependency graph ----------
   function buildIndex(M) {
-    const tables = new Map(), columns = new Map(), measures = new Map();
+    const tables = new Map(), columns = new Map(), measures = new Map(), colsByName = new Map();
     M.tables.forEach((t) => {
       tables.set(lc(t.name), t);
-      t.columns.forEach((c) => columns.set(lc(t.name) + '|' + lc(c.name), { table: t, col: c }));
+      t.columns.forEach((c) => { const e = { table: t, col: c }; columns.set(lc(t.name) + '|' + lc(c.name), e); if (!colsByName.has(lc(c.name))) colsByName.set(lc(c.name), []); colsByName.get(lc(c.name)).push(e); });
       t.measures.forEach((ms) => measures.set(lc(ms.name), { table: t, m: ms }));
     });
-    return { tables, columns, measures };
+    return { tables, columns, measures, colsByName };
   }
   const K = {
     m: (name) => 'm:' + lc(name),
@@ -146,12 +152,17 @@
 
   // Resolves references in one DAX expression. homeTable: table for unqualified column refs.
   function daxRefs(expr, homeTable, IX) {
-    const toks = tokenizeDax(expr);
+    const src = expr || '';
+    const toks = tokenizeDax(src);
+    // names created inside the expression (ADDCOLUMNS, SELECTCOLUMNS, SUMMARIZE, ROW...) are virtual columns, not model objects
+    const virtual = new Set(toks.filter((t) => t.t === 'str').map((t) => lc(t.v)));
+    const seenTables = [];
+    toks.forEach((t, i) => { if ((t.t === 'tbl' || t.t === 'id') && IX.tables.has(lc(t.v)) && !(toks[i + 1] && toks[i + 1].t === 'op' && toks[i + 1].v === '(')) seenTables.push(lc(t.v)); });
     const refs = [];
     const style = { qualifiedMeasures: [], unqualifiedColumns: [] };
     for (let i = 0; i < toks.length; i++) {
       const tk = toks[i], nx = toks[i + 1];
-      if ((tk.t === 'tbl' || tk.t === 'id') && nx && nx.t === 'br' && nx.p === tk.p + (tk.t === 'tbl' ? tk.v.replace(/'/g, "''").length + 2 : tk.v.length)) {
+      if ((tk.t === 'tbl' || tk.t === 'id') && nx && nx.t === 'br' && /^\s*$/.test(src.slice(tk.p + (tk.t === 'tbl' ? tk.v.replace(/'/g, "''").length + 2 : tk.v.length), nx.p))) {
         const tName = tk.v, x = nx.v;
         const col = IX.columns.get(lc(tName) + '|' + lc(x));
         if (col) refs.push(K.c(col.table.name, col.col.name));
@@ -161,8 +172,15 @@
         continue;
       }
       if (tk.t === 'br') {
-        if (IX.measures.has(lc(tk.v))) refs.push(K.m(tk.v));
-        else if (homeTable && IX.columns.has(lc(homeTable) + '|' + lc(tk.v))) { refs.push(K.c(homeTable, tk.v)); style.unqualifiedColumns.push('[' + tk.v + ']'); }
+        const key = lc(tk.v);
+        if (IX.measures.has(key) && !virtual.has(key)) refs.push(K.m(tk.v));
+        else if (homeTable && IX.columns.has(lc(homeTable) + '|' + key)) refs.push(K.c(homeTable, tk.v));
+        else if (!homeTable && !virtual.has(key) && IX.colsByName.has(key)) {
+          // unqualified column inside a measure (row context of an iterator): prefer tables named in the same expression
+          const cands = IX.colsByName.get(key);
+          const hit = cands.find((c) => seenTables.includes(lc(c.table.name))) || (cands.length === 1 ? cands[0] : null);
+          if (hit) { refs.push(K.c(hit.table.name, hit.col.name)); style.unqualifiedColumns.push('[' + tk.v + ']'); }
+        }
         continue;
       }
       if (tk.t === 'tbl' || tk.t === 'id') {
@@ -203,6 +221,10 @@
         if (ent) acc.push({ kind, entity: ent, prop: f.Property });
       }
     });
+    if (node.PropertyVariationSource && node.PropertyVariationSource.Property) {
+      const ent = entityOf(node.PropertyVariationSource.Expression);
+      if (ent) acc.push({ kind: 'Column', entity: ent, prop: node.PropertyVariationSource.Property });
+    }
     if (node.HierarchyLevel && node.HierarchyLevel.Expression && node.HierarchyLevel.Expression.Hierarchy) {
       const h = node.HierarchyLevel.Expression.Hierarchy;
       const ent = entityOf(h.Expression);
@@ -215,11 +237,12 @@
   function analyzeReport(report) {
     if (!report || !report.files || !report.files.length) return null;
     const refs = [];
+    const ext = [];
     let pages = 0, visuals = 0;
     const pageNames = [];
     const perVisual = [];
     if (report.format === 'legacy') {
-      const layout = report.files[0].json;
+      const layout = report.files[0].json || {};
       (layout.sections || []).forEach((sec) => {
         pages++; pageNames.push(sec.displayName || sec.name);
         collectReportRefs(sec.filters, refs, {});
@@ -229,27 +252,41 @@
           collectReportRefs(vc.config, r, {});
           collectReportRefs(vc.filters, r, {});
           collectReportRefs(vc.query, r, {});
+          collectReportRefs(vc.dataTransforms, r, {});
+          r.forEach((x) => { x.page = sec.displayName || sec.name; });
           refs.push.apply(refs, r);
           perVisual.push({ page: sec.displayName || sec.name, refs: r });
         });
       });
       collectReportRefs(layout.filters, refs, {});
       collectReportRefs(layout.config, refs, {});
+      collectReportRefs(layout.pods, refs, {});
+      try {
+        const cfg = typeof layout.config === 'string' ? JSON.parse(layout.config) : (layout.config || {});
+        (cfg.modelExtensions || []).forEach((me) => (me.entities || []).forEach((en) => (en.measures || []).forEach((ms) => ext.push({ entity: en.name, name: ms.name, expr: text(ms.expression) }))));
+      } catch (e) { /* no extensions */ }
     } else {
       const pageTitle = {};
       report.files.forEach((f) => {
         const m = f.path.match(/pages\/([^/]+)\/page\.json$/);
-        if (m) { pages++; pageTitle[m[1]] = f.json.displayName || m[1]; pageNames.push(f.json.displayName || m[1]); }
+        if (m) { const dn = (f.json && f.json.displayName) || m[1]; pages++; pageTitle[m[1]] = dn; pageNames.push(dn); }
       });
       report.files.forEach((f) => {
+        if (/reportExtensions\.json$/i.test(f.path)) {
+          ((f.json && f.json.entities) || []).forEach((en) => (en.measures || []).forEach((ms) => ext.push({ entity: en.name, name: ms.name, expr: text(ms.expression) })));
+          return;
+        }
         const r = [];
         collectReportRefs(f.json, r, {});
+        const pm = f.path.match(/pages\/([^/]+)\//);
+        if (pm) r.forEach((x) => { x.page = pageTitle[pm[1]] || pm[1]; });
         refs.push.apply(refs, r);
         const vm = f.path.match(/pages\/([^/]+)\/visuals\/[^/]+\/visual\.json$/);
         if (vm) { visuals++; perVisual.push({ page: pageTitle[vm[1]] || vm[1], refs: r }); }
       });
     }
-    return { format: report.format, pages, visuals, pageNames, refs, perVisual };
+    if (!pages && !visuals) return null; // no report pages: treat as model only
+    return { format: report.format, pages, visuals, pageNames, refs, perVisual, ext };
   }
 
   // ---------- 5. rule catalogue ----------
@@ -354,6 +391,12 @@
     NO_RLS: { cat: 'bp', sev: 'info',
       en: ['No row-level security roles', 'Fine for a personal report. If the model is shared with teams who should see only their own data, RLS is the safe way to do it.', 'Add roles in Modeling > Manage roles if different people should see different rows.'],
       ar: ['لا توجد أدوار Row-level security', 'لا بأس لتقرير شخصي، لكن إن كان النموذج مشتركًا مع فرق يجب أن يرى كل منها بياناته فقط فإن RLS هو الطريقة الآمنة.', 'أضف أدوارًا من Modeling > Manage roles إن كان يجب أن يرى كل شخص صفوفًا مختلفة.'] },
+    BROKEN_REF: { cat: 'bp', sev: 'high',
+      en: ['Visuals that point to fields that no longer exist', 'These visuals or filters use a measure or column that was renamed or deleted. They show an error or a blank box to report users.', 'Open each page listed, then replace or remove the broken field in the visual or filter.'],
+      ar: ['Visuals تشير إلى حقول لم تعد موجودة', 'هذه الـ visuals أو الفلاتر تستخدم مقياسًا أو عمودًا تمت إعادة تسميته أو حذفه، فتظهر خطأ أو مربعًا فارغًا لمستخدمي التقرير.', 'افتح كل صفحة مذكورة واستبدل الحقل المكسور أو احذفه من الـ visual أو الفلتر.'] },
+    USEREL_ACTIVE: { cat: 'maint', sev: 'low',
+      en: ['USERELATIONSHIP on a relationship that is already active', 'USERELATIONSHIP only changes something for inactive relationships. On an active one it does nothing and confuses whoever reads the measure next.', 'Remove the USERELATIONSHIP call, or check whether the intended relationship is a different, inactive one.'],
+      ar: ['USERELATIONSHIP على علاقة نشطة بالفعل', 'USERELATIONSHIP يغيّر شيئًا فقط مع العلاقات غير النشطة، وعلى علاقة نشطة لا يفعل شيئًا ويربك من يقرأ المقياس لاحقًا.', 'احذف USERELATIONSHIP أو تحقق إن كانت العلاقة المقصودة علاقة أخرى غير نشطة.'] },
     STRING_KEYS: { cat: 'perf', sev: 'info',
       en: ['Text columns used as relationship keys', 'Relationships on whole numbers are smaller and faster than on text.', 'Where the source allows, relate on an integer key.'],
       ar: ['أعمدة نصية كمفاتيح علاقات', 'العلاقات على أرقام صحيحة أصغر وأسرع من العلاقات على النصوص.', 'استخدم مفتاحًا رقميًا صحيحًا للعلاقة حيثما أمكن.'] }
@@ -376,7 +419,7 @@
     // dependencies from DAX
     M.tables.forEach((t) => {
       t.measures.forEach((ms) => {
-        const r = daxRefs(ms.expr + '\n' + ms.fsExpr + '\n' + ms.detailRows, null, IX);
+        const r = daxRefs(ms.expr + '\n' + ms.fsExpr + '\n' + ms.detailRows + '\n' + ms.kpi, null, IX);
         addDeps(K.m(ms.name), r.refs);
         styleByMeasure[ms.name] = r.style;
       });
@@ -398,10 +441,18 @@
     const roots = new Set();
     const rep = analyzeReport(report);
     const reportUse = { measures: new Map(), columns: new Map() };
+    const broken = new Map();
+    const extNames = new Set();
+    const noteBroken = (r) => {
+      const k = lc(r.entity) + '|' + lc(r.prop);
+      if (!broken.has(k)) broken.set(k, { obj: r.entity + '[' + r.prop + ']', pages: new Set(), n: 0 });
+      const b = broken.get(k); b.n++; if (r.page) b.pages.add(r.page);
+    };
     if (rep) {
+      rep.ext.forEach((x) => { extNames.add(lc(x.name)); daxRefs(x.expr, null, IX).refs.forEach((n) => roots.add(n)); });
       rep.refs.forEach((r) => {
         const t = IX.tables.get(lc(r.entity));
-        if (!t) return;
+        if (!t) { if (r.kind !== 'HierarchyLevel' && !extNames.has(lc(r.prop))) noteBroken(r); return; }
         if (r.kind === 'HierarchyLevel') {
           const h = t.hierarchies.find((x) => lc(x.name) === lc(r.hierarchy));
           const lvl = h && h.levels.find((l) => lc(l.name) === lc(r.level));
@@ -415,7 +466,7 @@
         } else if (IX.columns.has(lc(t.name) + '|' + lc(r.prop))) {
           roots.add(K.c(t.name, r.prop));
           const k = lc(t.name) + '|' + lc(r.prop); reportUse.columns.set(k, (reportUse.columns.get(k) || 0) + 1);
-        }
+        } else if (!extNames.has(lc(r.prop)) && !t.hierarchies.some((h) => lc(h.name) === lc(r.prop))) noteBroken(r);
       });
     }
     M.relationships.forEach((r) => { roots.add(K.c(r.fromTable, r.fromColumn)); roots.add(K.c(r.toTable, r.toColumn)); });
@@ -438,14 +489,17 @@
 
     // measure depth
     const depthMemo = new Map();
+    let cycleHit = false;
     const depth = (node, seen) => {
       if (depthMemo.has(node)) return depthMemo.get(node);
-      if (seen.has(node)) return 0;
+      if (seen.has(node)) { cycleHit = true; return 0; }
       seen.add(node);
+      const before = cycleHit; cycleHit = false;
       let d = 0;
       (deps.get(node) || new Set()).forEach((x) => { if (x.startsWith('m:')) d = Math.max(d, 1 + depth(x, seen)); });
       seen.delete(node);
-      depthMemo.set(node, d);
+      if (!cycleHit) depthMemo.set(node, d); // results cut short by a cycle depend on visit order, so they are not cached
+      cycleHit = cycleHit || before;
       return d;
     };
 
@@ -455,13 +509,37 @@
     // ---- relationships ----
     add('BIDI', M.relationships.filter((r) => r.cross === 'bothDirections').map((r) => ({ obj: `${r.fromTable}[${r.fromColumn}] ↔ ${r.toTable}[${r.toColumn}]` })));
     add('M2M', M.relationships.filter((r) => r.fromCard === 'many' && r.toCard === 'many').map((r) => ({ obj: `${r.fromTable}[${r.fromColumn}] ↔ ${r.toTable}[${r.toColumn}]` })));
-    const allDax = allMeasures.map((m) => m.expr).concat(M.tables.map((t) => t.calcExpr)).concat(M.tables.reduce((a, t) => a.concat(t.columns.map((c) => c.expr)), [])).join('\n');
-    const useRel = [];
-    allDax.replace(/USERELATIONSHIP\s*\(([^,]+),([^)]+)\)/gi, (_, a, b) => { useRel.push([a, b].map((x) => lc(x.replace(/\s+/g, '').replace(/'/g, '')))); return ''; });
-    add('INACTIVE_UNUSED', M.relationships.filter((r) => !r.active).filter((r) => {
-      const f = lc((r.fromTable + '[' + r.fromColumn + ']').replace(/\s+/g, '')), t2 = lc((r.toTable + '[' + r.toColumn + ']').replace(/\s+/g, ''));
-      return !useRel.some((u) => (u[0] === f && u[1] === t2) || (u[0] === t2 && u[1] === f));
-    }).map((r) => ({ obj: `${r.fromTable}[${r.fromColumn}] → ${r.toTable}[${r.toColumn}]` })));
+    const daxSources = [];
+    M.tables.forEach((t) => {
+      t.measures.forEach((ms) => daxSources.push({ where: '[' + ms.name + ']', expr: [ms.expr, ms.fsExpr, ms.detailRows, ms.kpi].join('\n') }));
+      t.columns.forEach((c) => { if (c.expr) daxSources.push({ where: t.name + '[' + c.name + ']', expr: c.expr }); });
+      if (t.calcExpr) daxSources.push({ where: t.name, expr: t.calcExpr });
+      if (t.calcGroup) t.calcGroup.items.forEach((ci) => daxSources.push({ where: t.name + ' / ' + ci.name, expr: ci.expr + '\n' + ci.fsExpr }));
+    });
+    M.roles.forEach((ro) => ro.permissions.forEach((p) => daxSources.push({ where: 'Role ' + ro.name, expr: p.filter })));
+    M.functions.forEach((f) => daxSources.push({ where: f.name, expr: f.expr }));
+    if (rep) rep.ext.forEach((x) => daxSources.push({ where: '[' + x.name + ']', expr: x.expr }));
+    const useRel = []; // { a: 'table|col', b: 'table|col', where }
+    daxSources.forEach((src) => {
+      if (!/USERELATIONSHIP/i.test(src.expr || '')) return;
+      const tk = tokenizeDax(src.expr);
+      for (let i = 0; i < tk.length; i++) {
+        if (!(tk[i].t === 'id' && tk[i].v.toUpperCase() === 'USERELATIONSHIP' && tk[i + 1] && tk[i + 1].v === '(')) continue;
+        const cols = [];
+        for (let j = i + 2; j < tk.length && cols.length < 2; j++) {
+          if (tk[j].t === 'op' && tk[j].v === ')') break;
+          if ((tk[j].t === 'tbl' || tk[j].t === 'id') && tk[j + 1] && tk[j + 1].t === 'br') { cols.push(lc(tk[j].v) + '|' + lc(tk[j + 1].v)); j++; }
+        }
+        if (cols.length === 2) useRel.push({ a: cols[0], b: cols[1], where: src.where });
+      }
+    });
+    const relKey = (r) => [lc(r.fromTable) + '|' + lc(r.fromColumn), lc(r.toTable) + '|' + lc(r.toColumn)];
+    const relUsed = (r) => { const [f, t2] = relKey(r); return useRel.filter((u) => (u.a === f && u.b === t2) || (u.a === t2 && u.b === f)); };
+    add('INACTIVE_UNUSED', M.relationships.filter((r) => !r.active && !relUsed(r).length).map((r) => ({ obj: `${r.fromTable}[${r.fromColumn}] → ${r.toTable}[${r.toColumn}]` })));
+    const activeUse = [];
+    M.relationships.filter((r) => r.active).forEach((r) => { const u = relUsed(r); if (u.length) activeUse.push({ obj: `${r.fromTable}[${r.fromColumn}] → ${r.toTable}[${r.toColumn}]`, detail: uniq(u.map((x) => x.where)).slice(0, 3).join(', ') }); });
+    add('USEREL_ACTIVE', activeUse);
+    if (broken.size) add('BROKEN_REF', Array.from(broken.values()).sort((a, b) => b.n - a.n).map((b) => ({ obj: b.obj, detail: Array.from(b.pages).slice(0, 3).join(', ') })));
     const strKeys = [];
     M.relationships.forEach((r) => {
       const c = IX.columns.get(lc(r.toTable) + '|' + lc(r.toColumn));
@@ -484,7 +562,7 @@
         t.columns.forEach((c) => {
           if (c.kind === 'rowNumber') return;
           if (measureTable && c.hidden) return; // placeholder column of a measures-only table
-          if (!used.has(K.c(t.name, c.name))) unusedCols.push({ obj: `${t.name}[${c.name}]`, detail: c.kind === 'calculated' ? 'calculated' : (c.hidden ? 'hidden' : '') });
+          if (!used.has(K.c(t.name, c.name))) unusedCols.push({ obj: `${t.name}[${c.name}]`, detail: t.isCalcTable ? 'DAX table: edit its DAX' : c.kind === 'calculated' ? 'calculated' : (c.hidden ? 'hidden' : '') });
         });
       });
       add('UNUSED_COL', unusedCols);
@@ -494,39 +572,63 @@
 
     // ---- columns ----
     const doubles = [], calcCols = [], fkVisible = [], sumKeys = [], monthSort = [];
-    const manySide = new Set(M.relationships.map((r) => lc(r.fromTable) + '|' + lc(r.fromColumn)));
+    const manySide = new Set(M.relationships.filter((r) => r.fromCard === 'many' && r.toCard === 'one').map((r) => lc(r.fromTable) + '|' + lc(r.fromColumn)));
+    const isUnused = (t, c) => rep && !used.has(K.c(t.name, c.name));
     userTables.forEach((t) => {
       const importFromSource = !t.isCalcTable && t.mode !== 'directQuery';
       t.columns.forEach((c) => {
         if (c.kind === 'rowNumber') return;
         if (c.dataType === 'double' && !c.hidden) doubles.push({ obj: `${t.name}[${c.name}]` });
         if (c.kind === 'calculated' && importFromSource) calcCols.push({ obj: `${t.name}[${c.name}]`, detail: /RELATED|LOOKUPVALUE|CALCULATE|SUMX|COUNTROWS|FILTER/i.test(c.expr) ? 'uses model data' : '' });
+        if (isUnused(t, c)) return; // already reported as unused, do not count it twice
         if (!c.hidden && manySide.has(lc(t.name) + '|' + lc(c.name))) fkVisible.push({ obj: `${t.name}[${c.name}]` });
-        if (!c.hidden && /^(int64|double|decimal)$/.test(c.dataType) && (c.summarizeBy === 'default' || c.summarizeBy === 'sum') && /(\bid\b|_id$|id$|key$|\byear\b|code$|\bnumber\b|\bno\b|month\s*(no|num|number)|week\s*(no|num)|index$|sort)/i.test(c.name)) sumKeys.push({ obj: `${t.name}[${c.name}]` });
-        if (/(^|\s|_)(month|day|weekday)\s*_?name$|^month$|^day of week$|^weekday$|^mmm$/i.test(c.name.trim()) && c.dataType === 'string' && !c.sortBy) monthSort.push({ obj: `${t.name}[${c.name}]` });
+        const cn = c.name.trim();
+        if (!c.hidden && /^(int64|double|decimal)$/.test(c.dataType) && (c.summarizeBy === 'default' || c.summarizeBy === 'sum') && /((^|[\s_])(id|key|code|no|index)$|_id$|^(year|month|week|day|quarter)(\s*(no|num|number))?$|^(fiscal\s*)?year$|(month|week|day|quarter)\s*(no|num|number|of year)$|sort\s*(order|key)?$)/i.test(cn)) sumKeys.push({ obj: `${t.name}[${c.name}]` });
+        const monthLike = /(^|\s|_)(month|day|weekday)\s*_?(name|short)$|^(day of week|weekday|mmm|mmmm)$|short\s*month|month\s*-?\s*year|^month\s*year$/i.test(cn) || (c.kind === 'calculated' && /FORMAT\s*\([^)]*"\s*(mmm|mmmm|ddd|dddd)\s*"/i.test(c.expr));
+        if (monthLike && c.dataType === 'string' && !c.sortBy) monthSort.push({ obj: `${t.name}[${c.name}]` });
       });
     });
     add('DOUBLE', doubles); add('CALC_COLS', calcCols); add('FK_VISIBLE', fkVisible); add('SUMMARIZE_KEYS', sumKeys); add('MONTH_SORT', monthSort);
 
     // ---- date table ----
-    const calendars = userTables.filter((t) => /calendar|date|dim_?date|\bdates?\b|تقويم/i.test(t.name) && t.columns.some((c) => c.dataType === 'dateTime'));
+    const dateParts = (t) => t.columns.filter((c) => /^(year|month|month name|month number|quarter|weekday|week|day|fiscal year)/i.test(c.name.trim())).length;
+    const relDateTargets = new Set(M.relationships.map((r) => lc(r.toTable) + '|' + lc(r.toColumn)));
+    const calendars = userTables.filter((t) => t.columns.some((c) => c.dataType === 'dateTime') && (
+      /^(dim[_ ]?)?(calendar|dates?|date\s*table|تقويم)\b/i.test(t.name.trim()) ||
+      (dateParts(t) >= 2 && t.columns.some((c) => c.dataType === 'dateTime' && relDateTargets.has(lc(t.name) + '|' + lc(c.name))))));
     add('DATE_NOT_MARKED', calendars.filter((t) => lc(t.dataCategory) !== 'time').map((t) => ({ obj: t.name })));
     add('CALENDARAUTO', userTables.filter((t) => t.isCalcTable && /CALENDARAUTO\s*\(/i.test(daxCode(t.calcExpr))).map((t) => ({ obj: t.name })));
 
     // ---- DAX patterns ----
     const filterTable = [], iferr = [], division = [], noFmt = [], pctFmt = [], noFolder = [], noDesc = [], longMs = [], deep = [], qualM = [], unqualC = [];
-    const tableNameRe = M.tables.map((t) => t.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).sort((a, b) => b.length - a.length);
-    const tblAlt = tableNameRe.length ? "(?:'(?:" + tableNameRe.join('|') + ")'|(?:" + tableNameRe.filter((n) => /^[A-Za-z_][\w]*$/.test(n.replace(/\\/g, ''))).join('|') + '))' : null;
-    const filterRe = tblAlt ? new RegExp('\\bFILTER\\s*\\(\\s*' + tblAlt + '\\s*,', 'i') : null;
+    // FILTER(<table>, ...) or FILTER(ALL(<table>), ...) used directly as a filter argument of CALCULATE / CALCULATETABLE
+    const isTbl = (tk) => tk && (tk.t === 'tbl' || tk.t === 'id') && IX.tables.has(lc(tk.v));
+    const filterOverTable = (src) => {
+      const tk = tokenizeDax(src), stack = [];
+      for (let i = 0; i < tk.length; i++) {
+        const t = tk[i];
+        if (t.t === 'op' && t.v === '(') { stack.push({ fn: tk[i - 1] && tk[i - 1].t === 'id' ? tk[i - 1].v.toUpperCase() : '', argStart: true }); continue; }
+        if (t.t === 'op' && t.v === ')') { stack.pop(); continue; }
+        if (t.t === 'op' && t.v === ',') { if (stack.length) stack[stack.length - 1].argStart = true; continue; }
+        const top = stack[stack.length - 1];
+        if (top && top.argStart && /^CALCULATE(TABLE)?$/.test(top.fn) && t.t === 'id' && t.v.toUpperCase() === 'FILTER' && tk[i + 1] && tk[i + 1].v === '(') {
+          const a = tk[i + 2];
+          if (isTbl(a) && tk[i + 3] && tk[i + 3].v === ',') return true;
+          if (a && a.t === 'id' && /^(ALL|ALLNOBLANKROW)$/i.test(a.v) && tk[i + 3] && tk[i + 3].v === '(' && isTbl(tk[i + 4]) && tk[i + 5] && tk[i + 5].v === ')') return true;
+        }
+        if (top && t.t !== 'op') top.argStart = false;
+      }
+      return false;
+    };
     allMeasures.forEach((ms) => {
       const code = daxCode(ms.expr);
       const name = `[${ms.name}]`;
-      if (filterRe && /\bCALCULATE(TABLE)?\s*\(/i.test(code) && filterRe.test(code)) filterTable.push({ obj: name });
+      if (/\bCALCULATE(TABLE)?\b/i.test(code) && /\bFILTER\b/i.test(code) && filterOverTable(ms.expr)) filterTable.push({ obj: name });
       if (/\b(IFERROR|ISERROR)\s*\(/i.test(code)) iferr.push({ obj: name });
       // "/" followed by something that is not a plain number
       if (/\/\s*(?![\d.\s]+(?:[)\s,]|$))[\[\w'(]/.test(code)) division.push({ obj: name });
       if (!ms.formatString && !ms.fsExpr) noFmt.push({ obj: name });
-      if (/(%|\bpct\b|\bpercent(age)?\b|\brate\b|\bratio\b|\bshare\b)/i.test(ms.name) && !/(colou?r|icon|label|text|arrow|title|\bpp\b|\(pp\)|mom|yoy|delta|change|diff|▲|▼)/i.test(ms.name) && ms.formatString && !/[%@]|pp/.test(ms.formatString) && !ms.fsExpr) pctFmt.push({ obj: name, detail: ms.formatString });
+      if (/(%|\bpct\b|\bpercent(age)?\b|\brate\b|\bratio\b|\bshare\b)/i.test(ms.name) && !/(colou?r|icon|label|text|arrow|title|\bpp\b|\(pp\)|mom|yoy|delta|change|diff|hourly|exchange|run rate|\bper\b|▲|▼)/i.test(ms.name) && ms.formatString && !/[%@]|pp|percent/i.test(ms.formatString) && !ms.fsExpr) pctFmt.push({ obj: name, detail: ms.formatString });
       if (!ms.displayFolder) noFolder.push({ obj: name });
       if (!ms.description) noDesc.push({ obj: name });
       const lines = ms.expr.split('\n').length;
@@ -569,13 +671,16 @@
     // ---- Power Query ----
     const mQueries = [];
     userTables.forEach((t) => t.partitions.forEach((p) => { if (p.sourceType === 'm' && p.expression) mQueries.push({ name: t.name, expr: p.expression }); }));
-    M.expressions.forEach((e) => { if (e.kind === 'm') mQueries.push({ name: e.name, expr: e.expr }); });
+    M.expressions.forEach((e) => { if (e.kind === 'm') mQueries.push({ name: e.name, expr: e.expr, isExpr: true }); });
     const hard = [], buffer = [], longM = [];
     const sources = new Map();
     mQueries.forEach((q) => {
       const e = q.expr;
       const isParam = /IsParameterQuery\s*=\s*true/i.test(e);
-      if (!isParam && /"(?:[A-Za-z]:\\\\?|\\\\\\\\|https?:\/\/[^"]*(?:sharepoint|onedrive|\.database\.windows\.net|\.fabric\.microsoft\.com|\.datawarehouse)|[a-z0-9-]+\.(?:database\.windows\.net|datawarehouse\.fabric\.microsoft\.com))/i.test(e)) hard.push({ obj: q.name });
+      const isEntitySource = q.isExpr && (M.entityExprs.has(lc(q.name)) || /^DatabaseQuery$/i.test(q.name));
+      const literalDb = /\b(Sql\.Databases?|Oracle\.Database|MySQL\.Database|PostgreSQL\.Database|Snowflake\.Databases|AnalysisServices\.Databases?|Teradata\.Database|Sybase\.Database|IbmDb2\.Database|SapHana\.Database)\s*\(\s*"[^"]+"/.test(e);
+      if (!isParam && !isEntitySource && literalDb) hard.push({ obj: q.name });
+      else if (!isParam && !isEntitySource && /"(?:[A-Za-z]:\\\\?|\\\\\\\\|https?:\/\/[^"]*(?:sharepoint|onedrive|\.database\.windows\.net|\.fabric\.microsoft\.com|\.datawarehouse)|[a-z0-9-]+\.(?:database\.windows\.net|datawarehouse\.fabric\.microsoft\.com))/i.test(e)) hard.push({ obj: q.name });
       if (/Table\.Buffer\s*\(/.test(e)) buffer.push({ obj: q.name });
       const steps = (e.match(/^\s*(#"[^"]+"|[A-Za-z_]\w*)\s*=/gm) || []).length;
       if (steps > 40) longM.push({ obj: q.name, detail: steps + ' steps' });
@@ -586,19 +691,34 @@
 
     // ---- scores ----
     const catScore = { perf: 100, maint: 100, bp: 100 };
+    // Rules that apply to many objects are judged by the share of objects affected, so a large model is not punished for being large.
+    const SCOPE = {
+      measures: ['FILTER_TABLE', 'IFERROR', 'DIVISION', 'NO_FORMAT', 'PCT_FORMAT', 'UNUSED_MEASURE', 'QUALIFIED_MEASURE', 'UNQUALIFIED_COLUMN', 'LONG_MEASURE', 'DEEP_CHAIN', 'NO_DESC', 'NO_FOLDERS', 'DUP_MEASURE'],
+      columns: ['UNUSED_COL', 'DOUBLE', 'CALC_COLS', 'FK_VISIBLE', 'SUMMARIZE_KEYS', 'TRAILING_SPACE'],
+      rels: ['BIDI', 'M2M', 'INACTIVE_UNUSED', 'STRING_KEYS', 'USEREL_ACTIVE'],
+      queries: ['HARDCODED_PATH', 'TABLE_BUFFER', 'LONG_M']
+    };
+    const denom = {
+      measures: allMeasures.length,
+      columns: userTables.reduce((a, t) => a + t.columns.filter((c) => c.kind !== 'rowNumber').length, 0),
+      rels: M.relationships.length,
+      queries: mQueries.length
+    };
     findings.forEach((f) => {
       const R = RULES[f.id];
       f.cat = R.cat; f.sev = R.sev;
-      let pen = SEV[R.sev] * f.items.length;
-      if (f.id === 'UNUSED_COL' || f.id === 'UNUSED_MEASURE' || f.id === 'NO_FORMAT' || f.id === 'DIVISION') {
-        // scale by share of objects affected rather than raw count
-        const total = f.id === 'UNUSED_COL' ? userTables.reduce((a, t) => a + t.columns.length, 0) : allMeasures.length;
-        pen = Math.round(CAP[R.sev] * Math.min(1, (f.items.length / Math.max(1, total)) * 2.5));
-      }
+      const scope = Object.keys(SCOPE).find((k) => SCOPE[k].includes(f.id));
+      let pen;
+      if (scope && CAP[R.sev]) {
+        const share = f.items.length / Math.max(1, denom[scope]);
+        pen = Math.round(CAP[R.sev] * Math.min(1, 0.3 + 2.5 * share));
+        f.share = Math.round(share * 1000) / 10;
+      } else pen = SEV[R.sev] * f.items.length;
       f.penalty = Math.min(CAP[R.sev], pen);
-      catScore[R.cat] = Math.max(0, catScore[R.cat] - f.penalty);
     });
-    const overall = Math.round(catScore.perf * 0.4 + catScore.maint * 0.3 + catScore.bp * 0.3);
+    const sc = scoreFrom(findings);
+    Object.assign(catScore, sc);
+    const overall = sc.overall;
     const sevRank = { high: 0, medium: 1, low: 2, info: 3 };
     findings.sort((a, b) => sevRank[a.sev] - sevRank[b.sev] || b.penalty - a.penalty || b.items.length - a.items.length);
 
@@ -624,10 +744,11 @@
       markedDate: lc(t.dataCategory) === 'time',
       calcExpr: t.calcExpr,
       mExpr: (t.partitions.find((p) => p.sourceType === 'm') || {}).expression || '',
+      fromM: t.partitions.some((p) => p.sourceType === 'm'),
       measures: t.measures.length,
       used: rep ? used.has(K.t(t.name)) || t.columns.some((c) => used.has(K.c(t.name, c.name))) : null,
       columns: t.columns.filter((c) => c.kind !== 'rowNumber').map((c) => ({
-        name: c.name, dataType: c.dataType, kind: c.kind, hidden: c.hidden, expr: c.expr, sortBy: c.sortBy, format: c.formatString, description: c.description,
+        name: c.name, dataType: c.dataType, kind: c.kind, hidden: c.hidden, expr: c.expr, sortBy: c.sortBy, format: c.formatString, description: c.description, sourceColumn: c.sourceColumn,
         used: rep ? used.has(K.c(t.name, c.name)) : null,
         visuals: reportUse.columns.get(lc(t.name) + '|' + lc(c.name)) || 0
       }))
@@ -660,7 +781,18 @@
     };
   }
 
-  const api = { analyze, normalizeModel, tokenizeDax, daxRefs, collectReportRefs, analyzeReport, RULES };
+  // Diminishing curve: the first problems cost the most, and a score never collapses to zero.
+  // ignored: optional Set of rule ids the user chose to ignore.
+  function scoreFrom(findings, ignored) {
+    const lost = { perf: 0, maint: 0, bp: 0 };
+    (findings || []).forEach((f) => { if (!(ignored && ignored.has(f.id))) lost[f.cat] += f.penalty || 0; });
+    const out = {};
+    Object.keys(lost).forEach((k) => { out[k] = Math.round(100 * Math.exp(-lost[k] / 90)); });
+    out.overall = Math.round(out.perf * 0.4 + out.maint * 0.3 + out.bp * 0.3);
+    return out;
+  }
+
+  const api = { analyze, scoreFrom, normalizeModel, tokenizeDax, daxRefs, collectReportRefs, analyzeReport, RULES };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MHEngine = api;
 })(typeof self !== 'undefined' ? self : this);

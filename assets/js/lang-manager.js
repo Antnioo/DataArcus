@@ -58,7 +58,7 @@ class LanguageManager {
       return window.calendarGeneratorTranslations;
     } else if (path.includes('dax-measure-builder')) {
       return window.measureBuilderTranslations;
-    } else if (path.includes('power-bi-model-health-check')) {
+    } else if (path.includes('/tools/power-bi-model-health-check')) {
       return window.modelHealthTranslations;
     } else if (path.includes('dp-600-practice-exam')) {
       return window.dp600Translations;
@@ -104,6 +104,8 @@ class LanguageManager {
      return window.journeyAttributionTranslations;
     } else if (path.includes('article-ramadan-sales-power-bi')) {
      return window.ramadanSalesTranslations;
+    } else if (path.includes('article-power-bi-model-health-check')) {
+     return window.modelHealthArticleTranslations;
     } else if (path.includes('article-power-bi-licensing-guide')) {
      return window.licensingGuideTranslations;
     }

@@ -98,7 +98,7 @@ async function fromZip(buf, fileName) {
   let report = null;
   const layout = byName(/(^|\/)Report\/Layout$/)[0];
   const legacyPbip = byName(/\.Report\/report\.json$/i)[0];
-  const pbir = byName(/(^|\/)definition\/(report\.json|pages\/.*\.json|bookmarks\/.*\.json)$/i).filter((e) => !/StaticResources|CustomVisuals/i.test(e.name));
+  const pbir = byName(/(^|\/)definition\/(report\.json|reportExtensions\.json|pages\/.*\.json|bookmarks\/.*\.json)$/i).filter((e) => !/StaticResources|CustomVisuals/i.test(e.name));
   if (layout) report = { format: 'legacy', files: [{ path: 'Report/Layout', json: parseJson(await zip.read(layout)) }] };
   else if (pbir.length) {
     const files = [];
@@ -126,6 +126,7 @@ self.onmessage = async (ev) => {
     }
     post('progress', { step: 'analyze' });
     const result = MHEngine.analyze(input.model, input.report);
+    if (!result.stats.tables) throw new Error('NO_MODEL');
     result.meta = { fileName, source: input.source, ms: Date.now() - t0, hasReport: !!input.report, analyzedAt: new Date().toISOString() };
     post('done', { result });
   } catch (e) {
