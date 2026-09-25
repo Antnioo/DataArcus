@@ -127,6 +127,9 @@
     @media (max-width: 991.98px) { .kd-layers { max-height: 220px; } }
     /* DAX, measure names and numbers always read left to right, even on the Arabic page */
     .kd-dax, .kd-f input, .kd-rule input, [data-vk="measure"] { direction: ltr; unicode-bidi: plaintext; }
+    /* rule operator: "<" must not mirror to ">" on the Arabic page; give the threshold room */
+    .kd-rule { flex-wrap: wrap; } .kd-rule select[data-p$=".v"] { flex: 1 1 calc(100% - 40px); }
+    .kd-rule select[data-p$=".op"] { direction: ltr; flex: 0 0 56px; } .kd-rule input[type=number] { flex: 1; }
     .kd-dax { text-align: left; }
     /* tutorial */
     .kd-tour-btn { border-color: rgba(253, 203, 110, .55) !important; color: #fdcb6e !important; }
