@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return d;
   };
   let design = null, sel = -1, zoom = 1, drag = null, guides = [];
+  let tour = null; // the beginner tutorial, set up below
   const undo = [], redo = [];
 
   // ---------- history ----------
@@ -153,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
     s.appendChild(ui);
     const hidden = preview(design, false).url === '';
     $('blankNote').hidden = !hidden;
+    if (tour) tour.check();
   }
 
   // ---------- pointer: select, move, resize ----------
@@ -246,7 +248,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const renderAddBar = () => $('addBar').querySelectorAll('[data-tn]').forEach((s) => { const t = TYPES[s.dataset.tn]; s.textContent = L(t.en, t.ar); });
   $('addBar').addEventListener('click', (e) => {
     const b = e.target.closest('[data-add]'); if (!b) return;
-    checkpoint(); design.layers.push(makeLayer(b.dataset.add)); sel = design.layers.length - 1; renderAll();
+    checkpoint(); design.layers.push(makeLayer(b.dataset.add)); sel = design.layers.length - 1;
+    if (tour) tour.place(design.layers[sel]);
+    renderAll();
     track('svgkpi_add_layer', { layer_type: b.dataset.add });
   });
 
@@ -477,6 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
     checkpoint();
     const old = {}; design.values.forEach((v) => { if (v.kind === 'measure') old[v.id] = v; });
     const t = b.dataset.t === '__blank' ? blankDesign() : clone(T.TEMPLATES.find((x) => x.id === b.dataset.t));
+    if (b.dataset.t === '__blank' && tour) tour.blank(t);
     // keep the measure names and test values the visitor already typed
     t.values.forEach((v) => { if (old[v.id]) { v.measure = old[v.id].measure; v.sample = old[v.id].sample; } });
     design = t; sel = -1; renderAll();
@@ -545,6 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fallback = () => { const r = document.createRange(); r.selectNodeContents($('dax')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast(L('Selected. Press Ctrl+C to copy', 'تم التحديد. اضغط Ctrl+C للنسخ')); };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast(L('DAX copied. Set Data category to Image URL.', 'تم نسخ DAX. اجعل Data category = Image URL.')), fallback); else fallback();
     track('svgkpi_copy', { template: design.id || 'custom', layers: design.layers.length });
+    if (tour) tour.copied();
   });
   $('undoBtn').addEventListener('click', doUndo);
   $('redoBtn').addEventListener('click', doRedo);
@@ -568,6 +574,106 @@ document.addEventListener('DOMContentLoaded', () => {
       renderCanvas(); renderDax(); renderProps(); save();
     }
   });
+
+  // ---------- tutorial: build your first KPI card ----------
+  // Each step checks the design itself, so it moves on as soon as the visitor has done it.
+  tour = (() => {
+    const KEY = 'dataarcus-svg-kpi-tour';
+    let step = -1, flags = {}, startSample = null, advancing = false, panel = null;
+    const texts = () => design.layers.filter((l) => l.type === 'text');
+    const sales = () => design.values.find((v) => v.kind === 'measure');
+    const rectIndex = () => design.layers.findIndex((l) => l.type === 'rect');
+    const selectRect = () => { const i = rectIndex(); if (i >= 0 && sel !== i) { sel = i; renderAll(); } };
+    const STEPS = [
+      { target: () => '[data-t="__blank"]', t: ['Start with a blank card', 'ابدأ ببطاقة فارغة'],
+        d: ['Click <b>Blank card</b> at the top. You will build a small sales card from nothing.', 'اضغط <b>بطاقة فارغة</b> في الأعلى. ستبني بطاقة مبيعات صغيرة من الصفر.'], ok: () => flags.blank },
+      { target: () => '[data-add="text"]', t: ['Add a title', 'أضف عنوانًا'],
+        d: ['Click <b>Text</b> in the Add panel. We place it at the top of the card for you.', 'اضغط <b>نص</b> في لوحة الإضافة. سنضعه في أعلى البطاقة.'], ok: () => texts().length >= 1 },
+      { target: () => '[data-p="text"]', t: ['Name it', 'سمّه'],
+        d: ['In the panel on the right, change the text to <b>Sales</b>, or any title you like.', 'من اللوحة الجانبية، غيّر النص إلى <b>المبيعات</b> أو أي عنوان تحبه.'],
+        ok: () => texts().some((l) => !(l.bind && l.bind.text) && String(l.text || '').trim() && !/^(Text|نص)$/.test(String(l.text).trim())) },
+      { target: () => (texts().length >= 2 ? '[data-bind-toggle="text"]' : '[data-add="text"]'), t: ['Show a live number', 'اعرض رقمًا حيًا'],
+        d: ['Add another <b>Text</b>, then under <b>Link to data</b> tick <b>Show a value</b>. It now shows your Sales measure, formatted.', 'أضف <b>نصًا</b> آخر، ثم من <b>اربط بالبيانات</b> فعّل <b>اعرض قيمة</b>. سيعرض الآن مقياس المبيعات منسقًا.'],
+        ok: () => texts().some((l) => l.bind && l.bind.text && l.bind.text.v) },
+      { target: () => (rectIndex() >= 0 ? '[data-bind-toggle="w"]' : '[data-add="rect"]'), prep: selectRect, t: ['Make a progress bar', 'اصنع شريط تقدم'],
+        d: ['Add a <b>Rectangle</b>, then tick <b>Width from a value</b>. It grows with Achievement (Sales ÷ Target).', 'أضف <b>مستطيلًا</b>، ثم فعّل <b>العرض من قيمة</b>. سيكبر مع نسبة الإنجاز (المبيعات ÷ الهدف).'],
+        ok: () => design.layers.some((l) => l.type === 'rect' && l.bind && l.bind.w && l.bind.w.v) },
+      { target: () => '[data-bind-toggle="fill"]', prep: selectRect, t: ['Color it by rules', 'لوّنه حسب قواعد'],
+        d: ['With the bar selected, tick <b>Fill color by rules</b>. Below 0.9, which means 90% of target, it turns red.', 'والشريط محدد، فعّل <b>لون التعبئة حسب قواعد</b>. تحت 0.9، أي 90% من الهدف، يتحول للأحمر.'],
+        ok: () => design.layers.some((l) => l.bind && l.bind.fill && l.bind.fill.rules) },
+      { target: () => '.kd-slider', enter: () => { startSample = (sales() || {}).sample; }, t: ['Test it', 'جرّبه'],
+        d: ['Drag the <b>Sales</b> test slider in the Data panel. Watch the number, the bar and its color react.', 'اسحب شريط تجربة <b>المبيعات</b> في لوحة البيانات. شاهد الرقم والشريط ولونه يتفاعل.'],
+        ok: () => sales() && sales().sample !== startSample },
+      { target: () => '#copyBtn', t: ['Take it to Power BI', 'انقله إلى Power BI'],
+        d: ['Click <b>Copy DAX</b>. In Power BI: <b>New measure</b>, paste, set <b>Data category</b> to <b>Image URL</b>. Then <b>Insert › Image</b> and set its <b>Image URL</b> with <b>fx › Field value</b> to your measure.',
+          'اضغط <b>نسخ DAX</b>. في Power BI: <b>New measure</b> ثم الصق واجعل <b>Data category</b> = <b>Image URL</b>. بعدها <b>Insert › Image</b> واختر في <b>Image URL</b> عبر <b>fx › Field value</b> مقياسك.'], ok: () => flags.copied }
+    ];
+    const target = () => { const sel_ = STEPS[step].target(); let el = document.querySelector(sel_); if (el && el.tagName === 'INPUT' && el.closest('label')) el = el.closest('label'); return el; };
+    const clearHint = () => document.querySelectorAll('.kd-glow').forEach((e) => e.classList.remove('kd-glow'));
+    const hint = () => { clearHint(); if (step < 0 || step >= STEPS.length) return; const el = target(); if (el) el.classList.add('kd-glow'); };
+    const draw = (ok) => {
+      if (!panel) { panel = document.createElement('div'); panel.className = 'kd-tour'; panel.setAttribute('role', 'dialog'); panel.setAttribute('aria-live', 'polite'); document.body.appendChild(panel);
+        panel.addEventListener('click', (e) => { const b = e.target.closest('[data-tour]'); if (!b) return; const a = b.dataset.tour;
+          if (a === 'show') { const s0 = STEPS[step]; if (s0 && s0.prep) s0.prep(); const el = target(); if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); hint(); } }
+          if (a === 'skip') next(); if (a === 'close') stop(); if (a === 'again') start();
+          if (a === 'kpi') { stop(); const btn = document.querySelector('[data-t="card"]'); if (btn) btn.click(); }
+          if (a === 'spark') { stop(); const btn = document.querySelector('[data-add="spark"]'); if (btn) btn.click(); }
+          if (a === 'share') { stop(); $('shareBtn').click(); } }); }
+      if (step >= STEPS.length) {
+        panel.className = 'kd-tour kd-tour-done';
+        panel.innerHTML = `<div class="kd-tour-top"><span class="kd-tour-k"><i class="bi bi-trophy-fill"></i> ${L('Tutorial complete', 'اكتمل الدرس')}</span><button type="button" class="kd-x" data-tour="close" aria-label="${L('Close', 'إغلاق')}"><i class="bi bi-x-lg"></i></button></div>
+          <h4>${L('You built a live KPI card!', 'بنيت بطاقة مؤشر حيّة!')}</h4><p>${L('Title, live value, a progress bar and color rules, all in one DAX measure. Where next?', 'عنوان وقيمة حيّة وشريط تقدم وقواعد ألوان، كلها في مقياس DAX واحد. ماذا بعد؟')}</p>
+          <div class="kd-tour-btns kd-tour-wrap"><button type="button" class="kd-link" data-tour="spark"><i class="bi bi-graph-up"></i> ${L('Add a sparkline', 'أضف خط اتجاه')}</button><button type="button" class="kd-link" data-tour="kpi"><i class="bi bi-stars"></i> ${L('Open the KPI card', 'افتح بطاقة المؤشر')}</button><button type="button" class="kd-link" data-tour="share"><i class="bi bi-link-45deg"></i> ${L('Share your design', 'شارك تصميمك')}</button></div>`;
+        return;
+      }
+      const s0 = STEPS[step];
+      panel.className = 'kd-tour' + (ok ? ' ok' : '');
+      panel.innerHTML = `<div class="kd-tour-top"><span class="kd-tour-k"><i class="bi bi-mortarboard"></i> ${L('Tutorial', 'درس تفاعلي')} · ${step + 1} / ${STEPS.length}</span><button type="button" class="kd-x" data-tour="close" aria-label="${L('Close', 'إغلاق')}"><i class="bi bi-x-lg"></i></button></div>
+        <div class="kd-tour-bar"><b style="width:${Math.round(100 * (step + (ok ? 1 : 0)) / STEPS.length)}%"></b></div>
+        <h4>${ok ? '<i class="bi bi-check-circle-fill"></i> ' : ''}${L(s0.t[0], s0.t[1])}</h4><p>${L(s0.d[0], s0.d[1])}</p>
+        <div class="kd-tour-btns"><button type="button" class="btn btn-accent btn-sm" data-tour="show"><i class="bi bi-cursor"></i> ${L('Show me', 'أرني')}</button><button type="button" class="kd-link" data-tour="skip">${L('Skip step', 'تخطَّ الخطوة')}</button></div>`;
+    };
+    const confetti = () => { const box = document.createElement('div'); box.className = 'kd-confetti'; const cs = ['#00d4ff', '#6c5ce7', '#fdcb6e', '#00cec9', '#fd79a8'];
+      for (let i = 0; i < 36; i++) { const c = document.createElement('i'); c.style.left = Math.random() * 100 + 'vw'; c.style.background = cs[i % cs.length]; c.style.animationDelay = (Math.random() * 0.5) + 's'; box.appendChild(c); }
+      document.body.appendChild(box); setTimeout(() => box.remove(), 2600); };
+    function next() {
+      advancing = false; step++;
+      track('svgkpi_tutorial_step', { step: step });
+      if (step >= STEPS.length) { clearHint(); draw(); confetti(); store.set(KEY, { done: true }); track('svgkpi_tutorial_complete'); return; }
+      if (STEPS[step].enter) STEPS[step].enter();
+      draw(false); hint(); check();
+    }
+    function start() { hideBanner(); step = -1; flags = {}; store.set(KEY, { seen: true }); track('svgkpi_tutorial_start'); next(); }
+    function stop() { step = -1; clearHint(); if (panel) { panel.remove(); panel = null; } }
+    function check() {
+      if (step < 0 || step >= STEPS.length || advancing) return;
+      hint();
+      if (!STEPS[step].ok()) return;
+      advancing = true; draw(true); setTimeout(next, 900);
+    }
+    // place the tutorial's layers neatly: title top-left, value under it, bar along the bottom
+    function place(l) {
+      if (step < 0) return;
+      const W = design.w;
+      if (l.type === 'text' && texts().length === 1) Object.assign(l, { x: 16, y: 26, size: 12, weight: 600, anchor: 'start', fill: '#94a3b8' });
+      else if (l.type === 'text') Object.assign(l, { x: 16, y: 58, size: 26, weight: 800, anchor: 'start', fill: '#f8fafc' });
+      else if (l.type === 'rect') Object.assign(l, { x: 16, y: 70, w: W - 32, h: 8, rx: 4, fill: '#00d4ff' });
+    }
+    function blank(d) { if (step < 0) return; flags.blank = true; Object.assign(d, { name: 'Sales card', w: 260, h: 92, bg: '#1a1f2e', radius: 12 }); }
+    function copied() { if (step >= 0) { flags.copied = true; check(); } }
+    // entry points: a button with the other actions, and a one-time invitation for first visits
+    const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'kd-tour-btn';
+    const label = () => { btn.innerHTML = `<i class="bi bi-mortarboard"></i> ${L('Tutorial', 'درس تفاعلي')}`; };
+    label(); btn.addEventListener('click', start); document.querySelector('.kd-actions').prepend(btn);
+    const banner = document.createElement('div'); banner.className = 'kd-banner';
+    const drawBanner = () => { banner.innerHTML = `<i class="bi bi-mortarboard"></i><div><b>${L('New here? Build your first KPI card in 2 minutes.', 'جديد هنا؟ ابنِ أول بطاقة مؤشر في دقيقتين.')}</b><span>${L('A short, guided tutorial. No Power BI needed until the last step.', 'درس قصير موجّه. لا تحتاج Power BI حتى الخطوة الأخيرة.')}</span></div><button type="button" class="btn btn-accent btn-sm" data-b="go">${L('Start tutorial', 'ابدأ الدرس')}</button><button type="button" class="kd-link" data-b="no">${L('No thanks', 'لا، شكرًا')}</button>`; };
+    function hideBanner() { banner.remove(); }
+    banner.addEventListener('click', (e) => { const b = e.target.closest('[data-b]'); if (!b) return; if (b.dataset.b === 'go') start(); else { store.set(KEY, { seen: true }); hideBanner(); } });
+    const st = store.get(KEY, null);
+    if (!st) { drawBanner(); $('kdApp').querySelector('.kd-panel').before(banner); }
+    new MutationObserver(() => { label(); if (banner.isConnected) drawBanner(); if (step >= 0 || (panel && step >= STEPS.length)) draw(false); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+    return { check: check, place: place, blank: blank, copied: copied, start: start };
+  })();
 
   // ---------- render + boot ----------
   const save = () => store.set(STORE, design);
