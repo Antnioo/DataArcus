@@ -47,12 +47,21 @@ h1{margin-top:16px;font-size:52px;line-height:1.08;font-weight:800;letter-spacin
 .shot .bar{height:30px;display:flex;align-items:center;gap:7px;padding:0 14px;background:#1a1f2e;border-bottom:1px solid rgba(255,255,255,.08)}
 .shot .bar i{width:10px;height:10px;border-radius:50%;display:block}
 .shot img{display:block;width:100%;height:auto}
+.shot .vp{max-height:440px;overflow:hidden}
+.shot .url{margin-left:10px;font-size:13px;color:#94a3b8;font-weight:500;background:rgba(255,255,255,.05);border-radius:6px;padding:3px 10px}
+.fan{position:relative;height:470px}
+.fan .shot{position:absolute;width:560px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.tile{display:flex;align-items:center;gap:14px;padding:16px 18px}
+.tile svg{flex:none}
+.tile b{font-size:18px;font-weight:700;display:block}
+.tile small{font-size:14px;color:#94a3b8}
 </style></head><body><div class="l">${logo}${left}<div class="f"><i></i>dataarcus.com</div></div><div class="r">${right}</div></body></html>`;
 
-const textBlock = ({ kicker, title, sub, chips }) =>
-  `<div class="k">${esc(kicker)}</div><h1>${esc(title)}</h1>` + (sub ? `<div class="s">${esc(sub)}</div>` : '') +
+const textBlock = ({ kicker, title, sub, chips, size }) =>
+  `<div class="k">${esc(kicker)}</div><h1${size ? ` style="font-size:${size}px"` : ''}>${esc(title)}</h1>` + (sub ? `<div class="s">${esc(sub)}</div>` : '') +
   (chips ? `<div class="chips">${chips.map((c) => `<span>${esc(c)}</span>`).join('')}</div>` : '');
-const screenshot = (file) => `<div class="shot"><div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div><img src="${dataUrl(file)}"></div>`;
+const screenshot = (file, url, style) => `<div class="shot"${style ? ` style="${style}"` : ''}><div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i>${url ? `<span class="url">${esc(url)}</span>` : ''}</div><div class="vp"><img src="${dataUrl(file)}"></div></div>`;
 
 // ---------- dashboards: title, 3 facts from the page, the real screenshot ----------
 const DASH = [
@@ -66,6 +75,26 @@ const DASH = [
   ['repeatiq', 'Subscriptions · Power BI dashboard', 'RepeatIQ Subscription Analytics', ['5 pages', 'Retention cohorts', 'Churn risk'], 'repeatiq-preview.jpg']
 ];
 
+// ---------- tools: the tool itself, captured from the live page (assets/img/og/src) ----------
+const TOOLS = [
+  ['theme-generator', 'power-bi-theme-generator', 'Power BI Theme Generator', ['Brand colors', 'Live preview', 'Contrast check'], 'tool-theme.jpg'],
+  ['calendar-generator', 'dax-calendar-table-generator', 'DAX Calendar Table Generator', ['Hijri dates', 'Ramadan & Eid', 'GCC weekends'], 'tool-calendar.jpg'],
+  ['measure-builder', 'dax-measure-builder', 'DAX Measure Builder', ['YTD, MTD, YoY', 'Rolling months', 'Ramadan vs last year'], 'tool-measures.jpg'],
+  ['licensing-calculator', 'power-bi-licensing-cost-calculator', 'Power BI Licensing Cost Calculator', ['Pro vs PPU vs Fabric', 'F64 break-even', 'USD, AED, SAR'], 'tool-licensing.jpg'],
+  ['model-health-check', 'power-bi-model-health-check', 'Power BI Model Health Check', ['Unused columns', 'Slow DAX', 'Nothing uploaded'], 'tool-health.jpg'],
+  ['dp-600', 'dp-600-practice-exam', 'DP-600 Practice Exam', ['220 questions', 'Timed mocks', 'Score out of 1000'], 'tool-dp600.jpg']
+];
+// small line icons for the tools hub
+const icon = (d) => `<svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="background:rgba(0,212,255,.1);border-radius:12px;padding:8px">${d}</svg>`;
+const HUB = [
+  ['DP-600 exam', '220 practice questions', icon('<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>')],
+  ['Model health check', 'Score your model', icon('<path d="M3 12h4l3-8 4 16 3-8h4"/>')],
+  ['Licensing calculator', 'Pro, PPU or Fabric', icon('<circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .8-3 2s1.3 1.7 3 2 3 .8 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6v2M12 16v2"/>')],
+  ['Theme generator', 'Brand colors to JSON', icon('<circle cx="8" cy="9" r="1.5"/><circle cx="12" cy="7" r="1.5"/><circle cx="16" cy="9" r="1.5"/><path d="M12 21a9 9 0 1 1 9-9c0 2-1.5 3-3 3h-2a2 2 0 0 0-1 3.7c.3.2.5.6.5 1 0 .7-.6 1.3-1.5 1.3z"/>')],
+  ['DAX calendar', 'Hijri, Ramadan, Eid', icon('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>')],
+  ['Measure builder', 'YTD, YoY, rolling DAX', icon('<path d="M17 5H7l6 7-6 7h10"/>')]
+];
+
 // ---------- articles with their own visual ----------
 const kpiRows = [['CAC', 'Blended acquisition cost', 0.55, '#00d4ff'], ['MER', 'Marketing efficiency ratio', 0.78, '#40f3ff'], ['CLV', 'Customer lifetime value', 0.92, '#6c5ce7'], ['Repurchase rate', 'Customers who come back', 0.64, '#a29bfe'], ['Contribution margin', 'Profit per order', 0.71, '#00cec9']]
   .map(([n, d, w, c], i) => `<div class="card" style="display:flex;align-items:center;gap:16px;padding:14px 18px"><div style="width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:19px;color:#051018;background:${c}">${i + 1}</div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:20px">${n}</div><div style="font-size:14px;color:#94a3b8;margin-top:2px">${d}</div><div style="height:6px;border-radius:4px;background:rgba(255,255,255,.08);margin-top:9px"><div style="height:6px;border-radius:4px;width:${w * 100}%;background:${c}"></div></div></div></div>`).join('');
@@ -77,6 +106,11 @@ const shopMods = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14p
 
 const JOBS = [
   ...DASH.map(([id, kicker, title, chips, shot]) => ({ id, html: page(textBlock({ kicker, title, chips }), screenshot('assets/img/portfolio/' + shot), '430px 1fr') })),
+  ...TOOLS.map(([id, slug, title, chips, shot]) => ({ id, html: page(textBlock({ kicker: 'Free tool · No sign-up', title, chips, size: title.length > 26 ? 46 : 52 }), screenshot('assets/img/og/src/' + shot, 'dataarcus.com/tools/' + slug + '.html'), '430px 1fr') })),
+  { id: 'home', html: page(textBlock({ kicker: 'Power BI consulting · Dubai', title: 'From Scattered Business Data to Decisions You Can Trust', size: 42, chips: ['8 showcase dashboards', '6 free tools', 'English & Arabic'] }),
+    `<div class="fan">${screenshot('assets/img/portfolio/fintech-preview.jpg', '', 'left:0;top:10px;transform:rotate(-5deg);opacity:.75')}${screenshot('assets/img/portfolio/repeatiq-preview.jpg', '', 'left:110px;top:0;transform:rotate(4deg);opacity:.85')}${screenshot('assets/img/portfolio/pulse-preview.jpg', '', 'left:40px;top:120px')}</div>`, '500px 1fr') },
+  { id: 'tools', html: page(textBlock({ kicker: 'Free · No sign-up · English & Arabic', title: 'Free Power BI Tools', sub: 'Six tools that save hours on real Power BI work. Nothing to install.' }),
+    `<div class="tiles">${HUB.map(([n, d, ic]) => `<div class="card tile">${ic}<div><b>${esc(n)}</b><small>${esc(d)}</small></div></div>`).join('')}</div>`, '480px 1fr') },
   { id: 'kpi-playbook', html: page(textBlock({ kicker: 'E-commerce playbook · Power BI', title: 'The 5 Marketing KPIs Every E-commerce Leader Should Track', sub: 'Five numbers that decide profit, tracked in Power BI.' }), kpiRows, '600px 1fr') },
   { id: 'shopify-dashboard', html: page(textBlock({ kicker: 'Shopify · Power BI', title: 'Your Shopify Dashboard in Power BI', sub: 'Sales, marketing ROI, customers and inventory in one source of truth.' }), shopMods, '600px 1fr') }
 ];
@@ -90,7 +124,7 @@ let failed = 0;
 for (const job of JOBS.filter((j) => !only.length || only.includes(j.id))) {
   await tab.setContent(job.html, { waitUntil: 'load' });
   await tab.evaluate(() => document.fonts.ready);
-  const fits = await tab.evaluate(() => [...document.querySelectorAll('h1,.card,.f,.shot,.chips')].every((e) => { const r = e.getBoundingClientRect(); return r.bottom <= 631 && r.right <= 1201; }));
+  const fits = await tab.evaluate(() => [...document.querySelectorAll('h1,.card,.f,.chips,.shot:not(.fan .shot)')].every((e) => { const r = e.getBoundingClientRect(); return r.bottom <= 631 && r.right <= 1201; }));
   const file = path.join(OUT, job.id + '.jpg');
   let q = 88;
   do { await tab.screenshot({ path: file, type: 'jpeg', quality: q }); q -= 6; } while (fs.statSync(file).size > MAX_BYTES && q > 50);
