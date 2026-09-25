@@ -678,3 +678,31 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.addEventListener('click', () => track('blog_filter', { filter: btn.getAttribute('data-filter') }));
   });
 })();
+
+
+/**
+ * 8. WhatsApp Button
+ * ==================================================================
+ * A small floating chat button on every page. The pre-filled message
+ * follows the page language. Clicks are counted by section 7 as
+ * contact_click (method: whatsapp).
+ * ==================================================================
+ */
+(() => {
+  const NUMBER = '971506583577';
+  const a = document.createElement('a');
+  a.className = 'wa-float';
+  a.target = '_blank';
+  a.rel = 'noopener';
+  a.innerHTML = '<i class="bi bi-whatsapp" aria-hidden="true"></i>';
+  const texts = () => {
+    const all = window.commonTranslations || {};
+    const t = (all[document.documentElement.lang === 'ar' ? 'ar' : 'en'] || {}).wa || {};
+    a.href = 'https://wa.me/' + NUMBER + (t.message ? '?text=' + encodeURIComponent(t.message) : '');
+    a.setAttribute('aria-label', t.label || 'WhatsApp');
+    a.title = t.label || 'WhatsApp';
+  };
+  texts();
+  document.body.appendChild(a);
+  new MutationObserver(texts).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+})();
