@@ -1241,6 +1241,7 @@ html[dir="rtl"] .navbar-nav {
 @media (prefers-reduced-motion: reduce) { .proof-dot { animation: none; } }
 
 .tool-mini-code, .th-code { direction: ltr; unicode-bidi: plaintext; }
+.tool-mini-cal { direction: ltr; unicode-bidi: isolate; text-align: start; }
 
 /* Article code blocks: always left to right, also on Arabic pages */
 .article-body pre{direction:ltr;text-align:left;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:1rem 1.25rem;margin:1.5rem 0;overflow-x:auto;font-size:.85rem;line-height:1.6}
@@ -1267,3 +1268,8 @@ footer .list-unstyled li.mb-2{margin-bottom:.25rem!important}
 footer a[href^="mailto:"]{display:inline-block;padding:4px 0}
 /* CTA button pairs: keep a gap when they wrap onto two lines (and stay centered in Arabic) */
 .tg-cta > a.btn,.tg-cta > a.tg-btn2,.th-cta > a.btn,.th-cta > a.tg-btn2{margin:6px 4px!important;vertical-align:middle}
+
+/* Tools strip on the home page: group tag (Build / Check / Learn) and theme swatches */
+.tool-mini .tool-mini-tag { align-self: flex-start; font-size: .66rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent); border: 1px solid rgba(0, 212, 255, .35); border-radius: 20px; padding: 1px 8px; }
+.tool-mini-sw { display: flex; gap: 4px; margin-bottom: 6px; }
+.tool-mini-sw i { width: 18px; height: 26px; border-radius: 5px; display: block; }
