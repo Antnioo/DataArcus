@@ -17,10 +17,8 @@
   --accent-2: #40f3ff;
   --accent-3: #0084ff;
   --purple: #6c5ce7;
-  --purple-2: #a29bfe;
   --green: #00cec9;
   --pink: #fd79a8;
-  --text-muted: #64748b;
   --glass-bg: rgba(255, 255, 255, 0.05);
   --glass-border: rgba(255, 255, 255, 0.1);
 }
@@ -533,39 +531,16 @@ footer a.text-white-50:hover {
   box-shadow: 0 0 0 3px rgba(253, 121, 168, 0.1);
 }
 
-/* --- Custom Select Dropdown (Budget) --- */
-.custom-select-wrapper {
-  position: relative;
-}
-
-.custom-budget-select {
-  appearance: none;
-  background: var(--glass-bg) !important;
-  border: 1px solid var(--glass-border) !important;
-  border-radius: 12px !important;
-  color: #fff !important;
-  padding: 15px 20px !important;
-  width: 100%;
-  cursor: pointer;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300d4ff' stroke-width='2'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 15px center;
-  background-size: 16px;
-}
-
-.custom-budget-select:focus {
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1) !important;
-  outline: none;
-}
-
-.custom-budget-select option {
-  background: var(--dk-3);
-  color: #fff;
-}
-
-
 /* ===== 6. Utility & Helper Classes ===== */
+
+/* --- Accent Text (like Bootstrap's .text-* utilities) --- */
+.text-accent {
+  color: var(--accent) !important;
+}
+
+a.text-accent:hover {
+  color: #fff !important;
+}
 
 /* --- General Section Spacing --- */
 section {
@@ -1261,8 +1236,6 @@ html[dir="rtl"] .navbar-nav {
 .tool-mini { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 16px; border-radius: 14px; background: rgba(255, 255, 255, .04); border: 1px solid var(--glass-border); color: var(--lt); text-decoration: none; transition: transform .2s, border-color .2s; }
 .tool-mini:hover { transform: translateY(-3px); border-color: var(--accent); color: var(--lt); }
 .tool-mini span { font-size: .85rem; color: #94a3b8; }
-.tool-mini-sw { display: flex; gap: 4px; margin-bottom: 6px; }
-.tool-mini-sw i { width: 18px; height: 26px; border-radius: 5px; display: block; }
 .tool-mini-cal { font-weight: 700; color: var(--green); margin-bottom: 6px; }
 .tool-mini-code { font: 600 .85rem ui-monospace, Consolas, monospace; color: var(--accent-2); margin-bottom: 6px; }
 @media (prefers-reduced-motion: reduce) { .proof-dot { animation: none; } }

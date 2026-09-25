@@ -84,23 +84,18 @@
     .tg h1 { color: var(--accent); }
     .tg-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; }
     .tg-label { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-bottom: 8px; display: block; }
-    .tg-presets { display: flex; flex-wrap: wrap; gap: 8px; }
     .tg-preset { display: flex; align-items: center; gap: 8px; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 30px; padding: 6px 12px 6px 8px; font-size: .85rem; cursor: pointer; }
     .tg-preset:hover, .tg-preset.active { border-color: var(--accent); }
     .tg-preset .sw { display: flex; }
     .tg-preset .sw i { width: 10px; height: 16px; display: block; }
     .tg-preset .sw i:first-child { border-radius: 8px 0 0 8px; } .tg-preset .sw i:last-child { border-radius: 0 8px 8px 0; }
-    .tg-colors { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
     .tg-color { display: flex; flex-direction: column; gap: 4px; }
     .tg-color input[type=color] { width: 100%; height: 42px; border: 1px solid var(--glass-border); border-radius: 10px; background: none; padding: 2px; cursor: pointer; }
     .tg-color input[type=text] { width: 100%; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 8px; font: 500 .8rem ui-monospace, Consolas, monospace; padding: 4px 6px; text-align: center; }
     .tg-color span { font-size: .7rem; color: #94a3b8; text-align: center; }
-    .tg-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
-    .tg-row .form-control, .tg-row .form-select { background: var(--dk-3); color: var(--lt); border-color: var(--glass-border); }
     .tg-actions { display: flex; flex-wrap: wrap; gap: 10px; }
     .tg-btn2 { background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 50px; padding: 10px 20px; font-weight: 600; }
     .tg-btn2:hover { background: rgba(0, 212, 255, .1); color: var(--accent-2); }
-    .tg-preview { border-radius: 14px; padding: 14px; transition: background .2s; }
     .tg-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
     .tg-card { border-radius: 10px; padding: 12px; }
     .tg-card .k { font-size: .7rem; opacity: .7; text-transform: uppercase; letter-spacing: .06em; }
@@ -110,28 +105,18 @@
     .tg-grid2 .tg-card { min-height: 190px; }
     .tg-card svg { width: 100%; height: auto; display: block; }
     .tg-table { width: 100%; font-size: .8rem; border-collapse: collapse; }
-    .tg-table th { text-align: left; padding: 6px 8px; font-weight: 700; }
-    .tg-table td { padding: 6px 8px; color: inherit; }
-    .tg-contrast { font-size: .85rem; display: flex; flex-direction: column; gap: 6px; }
-    .tg-contrast .ok { color: #22c55e; } .tg-contrast .warn { color: #f59e0b; }
+    .tg-table th { text-align: left; padding: 6px 8px; font-weight: 700; color: var(--accent); border-bottom: 1px solid var(--glass-border); }
+    .tg-table td { padding: 6px 8px; color: var(--lt); border-bottom: 1px solid rgba(255, 255, 255, .05); }
     .tg-json { background: #050a14; border: 1px solid var(--glass-border); border-radius: 12px; color: #cbd5e1; font: 12px/1.5 ui-monospace, Consolas, monospace; padding: 14px; max-height: 280px; overflow: auto; white-space: pre; }
     .tg-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--accent); color: #051018; font-weight: 700; padding: 10px 18px; border-radius: 30px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 2000; }
     .tg-faq h3 { font-size: 1.05rem; color: var(--lt); margin-top: 1.2rem; }
     .tg-faq p { color: #94a3b8; }
     .tg-cta { background: linear-gradient(135deg, rgba(0, 212, 255, .12), rgba(108, 92, 231, .12)); border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px; }
-    @media (max-width: 767px) { .tg-colors { grid-template-columns: repeat(4, minmax(0, 1fr)); } .tg-grid2, .tg-kpis { grid-template-columns: 1fr; } }
-      .cg-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 767px) { .tg-grid2, .tg-kpis { grid-template-columns: 1fr; } }
+    .cg-form { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .cg-form .form-control, .cg-form .form-select { background: var(--dk-3); color: var(--lt); border-color: var(--glass-border); }
-    .cg-checks { display: flex; flex-direction: column; gap: 8px; }
-    .cg-checks label { display: flex; gap: 10px; align-items: flex-start; font-size: .9rem; color: var(--lt); cursor: pointer; }
-    .cg-checks small { display: block; color: #94a3b8; }
-    .cg-checks input { margin-top: 4px; accent-color: var(--accent); width: 16px; height: 16px; }
-    .cg-quick { display: flex; flex-wrap: wrap; gap: 8px; }
     .cg-chip { display: inline-block; background: rgba(0, 212, 255, .08); border: 1px solid rgba(0, 212, 255, .3); color: var(--accent-2); border-radius: 30px; padding: 5px 12px; font-size: .8rem; margin: 0 6px 6px 0; }
     .tg-table tr.ram td { background: rgba(0, 206, 201, .1); }
-    .tg-table th { color: var(--accent); border-bottom: 1px solid var(--glass-border); }
-    .tg-table td { color: var(--lt); border-bottom: 1px solid rgba(255, 255, 255, .05); }
-    .cg-err { color: #f59e0b; font-size: .85rem; }
     @media (max-width: 767px) { .cg-form { grid-template-columns: 1fr; } }
     .mb-seg { display: inline-flex; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 30px; padding: 3px; }
     .mb-seg button { background: none; border: 0; color: #94a3b8; font-weight: 600; font-size: .85rem; padding: 6px 14px; border-radius: 30px; }
