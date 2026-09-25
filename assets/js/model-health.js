@@ -251,6 +251,27 @@ document.addEventListener('DOMContentLoaded', () => {
     return html + '</div>';
   }
 
+  // Measure dependency tree (measures only), capped so huge models stay readable
+  function chainTree(name) {
+    const byName = new Map(R.measures.map((m) => [m.name.toLowerCase(), m]));
+    let count = 0; const shown = new Set();
+    const node = (n, lvl, path) => {
+      const m = byName.get(n.toLowerCase()); if (!m) return '';
+      count++;
+      const kids = m.dependsOn.filter((d) => d.type === 'measure');
+      const cols = m.dependsOn.filter((d) => d.type === 'column').length;
+      const again = shown.has(n.toLowerCase()); shown.add(n.toLowerCase());
+      let h = '<li><button type="button" class="mh-tnode" data-ms="' + esc(m.name) + '">' + bdi('[' + m.name + ']') + '</button>' +
+        '<small>' + (cols ? L(num(cols) + ' col', num(cols) + ' عمود') : '') + (m.used === false ? ' · <span class="mh-badge off">' + L('unused', 'غير مستخدم') + '</span>' : '') + (again && kids.length ? ' · ' + L('shown above', 'مذكور بالأعلى') : '') + '</small>';
+      if (kids.length && !again && lvl < 12 && count < 120 && !path.has(n.toLowerCase())) {
+        const p2 = new Set(path); p2.add(n.toLowerCase());
+        h += '<ul>' + kids.map((k) => node(k.name, lvl + 1, p2)).join('') + '</ul>';
+      }
+      return h + '</li>';
+    };
+    return '<ul class="mh-tree" dir="ltr">' + node(name, 0, new Set()) + '</ul>' + (count >= 120 ? '<p class="mh-help">' + L('Showing the first 120 measures of the chain.', 'يتم عرض أول 120 مقياسًا من السلسلة.') + '</p>' : '');
+  }
+
   function tMeasures() {
     const el = $('mhTab');
     const q = msQuery.toLowerCase();
@@ -267,12 +288,13 @@ document.addEventListener('DOMContentLoaded', () => {
       (list.length > 400 ? '<div class="mh-note p-2">' + L('Showing 400. Refine the search to see more.', 'يتم عرض 400. استخدم البحث لرؤية المزيد.') + '</div>' : '') + '</div></div></div>' +
       '<div class="col-lg-7"><div class="mh-panel mh-mdetail">' + (sel ?
         '<div class="mh-h"><b>' + bdi('[' + sel.name + ']') + '</b>' + (sel.used === false ? '<span class="mh-badge off ms-2">' + L('unused', 'غير مستخدم') + '</span>' : '') + '</div>' +
-        '<div class="mh-meta">' + (sel.folder ? '<span><i class="bi bi-folder2"></i> ' + bdi(sel.folder) + '</span>' : '') + '<span><i class="bi bi-table"></i> ' + bdi(sel.table) + '</span>' + (sel.formatString ? '<span><i class="bi bi-hash"></i> ' + bdi(sel.formatString) + '</span>' : '') + '<span title="' + esc(sel.pages.join(', ')) + '"><i class="bi bi-bar-chart"></i> ' + (sel.visuals ? L('in ' + num(sel.visuals) + ' visual' + (sel.visuals > 1 ? 's' : '') + ' on ' + num(sel.pages.length) + ' page' + (sel.pages.length > 1 ? 's' : ''), 'في ' + num(sel.visuals) + ' visual على ' + num(sel.pages.length) + ' صفحة') : (sel.refs ? L('in page or report filters', 'في فلاتر الصفحة أو التقرير') : L('in no visual', 'غير موجود في أي visual'))) + '</span><span><i class="bi bi-layers"></i> ' + L('chain depth ' + sel.depth, 'عمق السلسلة ' + sel.depth) + '</span></div>' +
+        '<div class="mh-meta">' + (sel.folder ? '<span><i class="bi bi-folder2"></i> ' + bdi(sel.folder) + '</span>' : '') + '<span><i class="bi bi-table"></i> ' + bdi(sel.table) + '</span>' + (sel.formatString ? '<span><i class="bi bi-hash"></i> ' + bdi(sel.formatString) + '</span>' : '') + '<span title="' + esc(sel.pages.join(', ')) + '"><i class="bi bi-bar-chart"></i> ' + (sel.visuals ? L('in ' + num(sel.visuals) + ' visual' + (sel.visuals > 1 ? 's' : '') + ' on ' + num(sel.pages.length) + ' page' + (sel.pages.length > 1 ? 's' : ''), 'في ' + num(sel.visuals) + ' visual على ' + num(sel.pages.length) + ' صفحة') : (sel.refs ? L('in page or report filters', 'في فلاتر الصفحة أو التقرير') : L('in no visual', 'غير موجود في أي visual'))) + '</span><span title="' + L('How many levels of other measures sit under this one. 0 means it reads columns directly. Higher means more places a wrong number can come from.', 'عدد مستويات المقاييس الأخرى التي يعتمد عليها هذا المقياس. 0 يعني أنه يقرأ الأعمدة مباشرة، والرقم الأعلى يعني أماكن أكثر قد يأتي منها رقم خاطئ.') + '"><i class="bi bi-layers"></i> ' + (sel.depth ? L(num(sel.depth) + ' measure layer' + (sel.depth > 1 ? 's' : '') + ' below', num(sel.depth) + ' مستوى مقاييس تحته') : L('reads columns directly', 'يقرأ الأعمدة مباشرة')) + ' <i class="bi bi-info-circle mh-dim"></i></span></div>' +
         (sel.description ? '<p class="mh-note" dir="auto">' + esc(sel.description) + '</p>' : '') +
         (sel.pages.length ? '<div class="mh-pages" title="' + L('Pages that show this measure', 'الصفحات التي تعرض هذا المقياس') + '"><i class="bi bi-file-earmark-richtext"></i>' + sel.pages.map((pg, i) => '<span' + (i >= 6 ? ' hidden' : '') + ' title="' + esc(pg) + '">' + bdi(pg) + '</span>').join('') + (sel.pages.length > 6 ? '<button type="button" data-allpages>+' + num(sel.pages.length - 6) + ' ' + L('more', 'أخرى') + '</button>' : '') + '</div>' : '') +
         '<pre class="mh-dax">' + esc(sel.expr.trim()) + '</pre>' +
-        '<span class="tg-label">' + L('Depends on', 'يعتمد على') + ' (' + num(sel.dependsOn.length) + ')</span><div class="mh-deps">' + (sel.dependsOn.map(chip).join('') || '<span class="mh-note">·</span>') + '</div>' +
-        '<span class="tg-label mt-3">' + L('Used by', 'يستخدمه') + ' (' + num(sel.usedBy.length) + ')</span><div class="mh-deps">' + (sel.usedBy.map(chip).join('') || '<span class="mh-note">' + L('No other measure uses it.', 'لا يستخدمه أي مقياس آخر.') + '</span>') + '</div>'
+        '<span class="tg-label">' + L('Depends on', 'يعتمد على') + ' (' + num(sel.dependsOn.length) + ')</span><p class="mh-help">' + L('Measures, columns and tables this formula reads directly. Click a measure to open it.', 'المقاييس والأعمدة والجداول التي تقرأها هذه الصيغة مباشرة. اضغط على مقياس لفتحه.') + '</p><div class="mh-deps">' + (sel.dependsOn.map(chip).join('') || '<span class="mh-note">·</span>') + '</div>' +
+        (sel.depth ? '<details class="mh-chain"><summary><i class="bi bi-diagram-3"></i> ' + L('Show the full chain', 'اعرض السلسلة كاملة') + '</summary><p class="mh-help">' + L('Every measure under this one, level by level. If a number looks wrong, check from the bottom up.', 'كل المقاييس تحت هذا المقياس مستوى بمستوى. إن بدا رقم خاطئًا فافحص من الأسفل للأعلى.') + '</p>' + chainTree(sel.name) + '</details>' : '') +
+        '<span class="tg-label mt-3">' + L('Used by', 'يستخدمه') + ' (' + num(sel.usedBy.length) + ')</span><p class="mh-help">' + L('Measures, calculated columns and tables whose DAX reads this measure. Visuals are listed in the pages line above.', 'المقاييس والأعمدة والجداول المحسوبة التي تقرأ صيغتها هذا المقياس. الـ visuals مذكورة في سطر الصفحات بالأعلى.') + '</p><div class="mh-deps">' + (sel.usedBy.map(chip).join('') || '<span class="mh-note">' + L('No other measure uses it.', 'لا يستخدمه أي مقياس آخر.') + '</span>') + '</div>'
         : '<div class="mh-empty"><i class="bi bi-diagram-2"></i><p>' + L('Pick a measure to see its DAX, what it depends on and what uses it.', 'اختر مقياسًا لترى صيغة DAX وما يعتمد عليه وما يستخدمه.') + '</p></div>') + '</div></div></div>';
     const qi = $('mhQ');
     qi.oninput = () => { msQuery = qi.value; const pos = qi.selectionStart; tMeasures(); const n = $('mhQ'); n.focus(); n.setSelectionRange(pos, pos); };
