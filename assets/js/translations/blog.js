@@ -47,6 +47,13 @@ window.blogTranslations = {
 
     // Posts
     posts: {
+      modelHealth: {
+        badge: "BEST PRACTICE",
+        title: "We Ran a Health Check on Our Own Power BI Model. It Scored 67.",
+        date: "September 25, 2026",
+        excerpt: "A real 410-measure model, checked in under a second: 100 unused columns, 23 visuals pointing at deleted measures and 15 slow filters. Here is what we found and how to check yours.",
+        button: "Read Playbook"
+      },
       ramadanSales: {
         badge: "POWER BI",
         title: "Ramadan Sales in Power BI: Compare This Ramadan With Last Ramadan",
@@ -161,6 +168,13 @@ window.blogTranslations = {
 
     // Posts (AR)
     posts: {
+      modelHealth: {
+        badge: "أفضل الممارسات",
+        title: "فحصنا صحة نموذج Power BI الخاص بنا. النتيجة: 67 من 100.",
+        date: "25 سبتمبر 2026",
+        excerpt: "نموذج حقيقي فيه 410 مقاييس فُحص في أقل من ثانية: 100 عمود غير مستخدم و23 visual تشير إلى مقاييس محذوفة و15 فلترًا بطيئًا. هذا ما وجدناه وكيف تفحص نموذجك.",
+        button: "اقرأ الدليل"
+      },
       ramadanSales: {
         badge: "Power BI",
         title: "مبيعات رمضان في Power BI: قارن رمضان هذا العام برمضان الماضي",

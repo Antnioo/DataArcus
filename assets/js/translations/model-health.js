@@ -7,7 +7,7 @@ window.modelHealthTranslations = {
       "title": "Power BI Model Health Check",
       "subtitle": "Drop a .pbit and get a health score, the columns and measures nobody uses, risky relationships and slow DAX, with a clear fix for each. Plus full model documentation in one click.",
       "pill": { "private": "Your file stays on your computer", "rules": "30+ checks", "docs": "Documentation export" },
-      "cta": { "title": "Want these fixed for you?", "desc": "DataArcus reviews and tunes Power BI models for businesses across the MENA region: faster reports, smaller models and DAX your team can maintain.", "more": "More free tools" },
+      "cta": { "title": "Want these fixed for you?", "desc": "DataArcus reviews and tunes Power BI models for businesses across the MENA region: faster reports, smaller models and DAX your team can maintain.", "more": "More free tools", "article": "Read the case study: what the check found in a real 410-measure model →" },
       "faq": {
         "title": "Questions",
         "q1": "Is my file uploaded anywhere?",
@@ -28,7 +28,7 @@ window.modelHealthTranslations = {
       "title": "فحص صحة نموذج Power BI",
       "subtitle": "أسقط ملف .pbit واحصل على تقييم لصحة النموذج، والأعمدة والمقاييس التي لا يستخدمها أحد، والعلاقات الخطرة وDAX البطيء، مع طريقة إصلاح واضحة لكل مشكلة. وتوثيق كامل للنموذج بضغطة واحدة.",
       "pill": { "private": "ملفك يبقى على جهازك", "rules": "أكثر من 30 فحصًا", "docs": "تصدير التوثيق" },
-      "cta": { "title": "تريد من يصلحها لك؟", "desc": "DataArcus تراجع وتحسّن نماذج Power BI للشركات في منطقة الشرق الأوسط وشمال أفريقيا: تقارير أسرع ونماذج أصغر وDAX يسهل على فريقك صيانته.", "more": "أدوات مجانية أخرى" },
+      "cta": { "title": "تريد من يصلحها لك؟", "desc": "DataArcus تراجع وتحسّن نماذج Power BI للشركات في منطقة الشرق الأوسط وشمال أفريقيا: تقارير أسرع ونماذج أصغر وDAX يسهل على فريقك صيانته.", "more": "أدوات مجانية أخرى", "article": "اقرأ دراسة الحالة: ماذا وجد الفحص في نموذج حقيقي فيه 410 مقاييس ←" },
       "faq": {
         "title": "أسئلة شائعة",
         "q1": "هل يتم رفع ملفي إلى أي مكان؟",

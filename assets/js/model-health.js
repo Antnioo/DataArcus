@@ -16,6 +16,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const RULES = () => (window.MHEngine && window.MHEngine.RULES) || {};
 
   let R = null;          // analysis result
+  const store = { get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* private mode */ } } };
+  const ignored = new Set(store.get('dataarcus-mh-ignored', []));
+  const saveIgnored = () => store.set('dataarcus-mh-ignored', Array.from(ignored));
+  const score = () => (window.MHEngine && window.MHEngine.scoreFrom ? window.MHEngine.scoreFrom(R.findings, ignored) : R.score);
+  let prev = null; // previous check of the same file
   let tab = 'issues';
   let filt = { cat: 'all' };
   let msQuery = '', msFilter = 'all', msOpen = null;
@@ -50,6 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
       else if (d.type === 'error') { showError(d.code, d.message); worker.terminate(); worker = null; }
       else if (d.type === 'done') {
         R = d.result; tab = 'issues'; filt = { cat: 'all' }; msOpen = null; msQuery = ''; msFilter = 'all';
+        const hist = store.get('dataarcus-mh-history', {});
+        const key = String(fileName).toLowerCase();
+        prev = hist[key] && hist[key].length ? hist[key][hist[key].length - 1] : null;
+        hist[key] = (hist[key] || []).concat({ d: new Date().toISOString().slice(0, 10), s: score().overall }).slice(-10);
+        const keys = Object.keys(hist); if (keys.length > 30) delete hist[keys[0]];
+        store.set('dataarcus-mh-history', hist);
         worker.terminate(); worker = null;
         render();
         const top = root.getBoundingClientRect().top + window.scrollY - 90; window.scrollTo({ top, behavior: 'smooth' });
@@ -117,14 +128,16 @@ document.addEventListener('DOMContentLoaded', () => {
   const bar = (v, col) => '<div class="mh-bar"><span style="width:' + Math.max(2, v) + '%;background:' + (col || grade(v)[1]) + '"></span></div>';
 
   function renderResult() {
-    const s = R.stats, sc = R.score, rep = R.meta.hasReport;
+    const s = R.stats, sc = score(), rep = R.meta.hasReport;
     const counts = { issues: R.findings.length };
     const pill = (icon, v, lab) => '<span class="mh-pill"><i class="bi ' + icon + '"></i><b>' + v + '</b> ' + lab + '</span>';
-    const quick = R.findings.filter((f) => f.penalty > 0).slice(0, 3);
+    const quick = R.findings.filter((f) => f.penalty > 0 && !ignored.has(f.id)).slice(0, 3);
     root.innerHTML =
       '<div class="mh-filebar"><span><i class="bi bi-file-earmark-bar-graph"></i> <b>' + bdi(R.meta.fileName) + '</b> · ' + L('checked in ', 'تم الفحص في ') + (R.meta.ms / 1000).toFixed(1) + L(' s', ' ث') + '</span><button type="button" class="tg-btn2 btn-sm" id="mhNew"><i class="bi bi-arrow-repeat"></i> ' + L('Check another file', 'افحص ملفًا آخر') + '</button></div>' +
       '<div class="row g-4">' +
       '<div class="col-lg-4"><div class="mh-panel mh-scorecard text-center">' + ring(sc.overall, 170) +
+      (prev ? (() => { const dlt = sc.overall - prev.s; return '<div class="mh-delta ' + (dlt > 0 ? 'up' : dlt < 0 ? 'down' : '') + '">' + (dlt > 0 ? '▲ +' + dlt : dlt < 0 ? '▼ ' + dlt : '=') + ' ' + L('since your last check (' + prev.d + ')', 'منذ آخر فحص (' + prev.d + ')') + '</div>'; })() : '') +
+      (ignored.size && R.findings.some((f) => ignored.has(f.id)) ? '<div class="mh-note mt-1">' + L(num(R.findings.filter((f) => ignored.has(f.id)).length) + ' check(s) ignored', 'تم تجاهل ' + num(R.findings.filter((f) => ignored.has(f.id)).length) + ' فحص') + '</div>' : '') +
       '<div class="mh-cats">' + Object.keys(CAT).map((k) => '<div><span><i class="bi ' + CAT[k].icon + '"></i> ' + L(CAT[k].en, CAT[k].ar) + '</span><b>' + sc[k] + '</b>' + bar(sc[k]) + '</div>').join('') + '</div>' +
       '<button type="button" class="mh-share" id="mhShare"><i class="bi bi-linkedin"></i> ' + L('Share my score', 'شارك نتيجتي') + '</button></div></div>' +
       '<div class="col-lg-8"><div class="mh-panel"><div class="mh-pills">' +
@@ -162,12 +175,19 @@ document.addEventListener('DOMContentLoaded', () => {
       '<button type="button" class="tg-btn2 btn-sm ms-auto" id="mhCsv"><i class="bi bi-download"></i> CSV</button></div>' +
       (list.length ? list.map((f) => {
         const [title, why, fix] = rt(f.id);
-        return '<details class="mh-issue" data-rule="' + f.id + '"><summary><span class="mh-sev ' + f.sev + '">' + (isAr() ? SEVL[f.sev][1] : SEVL[f.sev][0]) + '</span><b>' + title + '</b><span class="mh-count">' + num(f.items.length) + '</span>' + (f.penalty ? '<span class="mh-pen">−' + f.penalty + '</span>' : '') + '<i class="bi bi-chevron-down"></i></summary>' +
+        const ign = ignored.has(f.id);
+        return '<details class="mh-issue' + (ign ? ' ignored' : '') + '" data-rule="' + f.id + '"><summary><span class="mh-sev ' + f.sev + '">' + (isAr() ? SEVL[f.sev][1] : SEVL[f.sev][0]) + '</span><b>' + title + '</b><span class="mh-count">' + num(f.items.length) + '</span>' + (f.penalty ? '<span class="mh-pen">−' + f.penalty + '</span>' : '') + '<i class="bi bi-chevron-down"></i></summary>' +
           '<div class="mh-ibody"><p><b>' + L('Why it matters', 'لماذا يهم') + ':</b> ' + why + '</p><p class="mh-fix"><i class="bi bi-wrench-adjustable"></i> <b>' + L('How to fix', 'طريقة الإصلاح') + ':</b> ' + fix + '</p>' +
-          '<div class="mh-cat"><i class="bi ' + CAT[f.cat].icon + '"></i> ' + L(CAT[f.cat].en, CAT[f.cat].ar) + '</div>' + itemList(f.items) + '</div></details>';
+          '<div class="mh-cat"><i class="bi ' + CAT[f.cat].icon + '"></i> ' + L(CAT[f.cat].en, CAT[f.cat].ar) + (f.share != null ? ' · ' + L(f.share + '% of objects', f.share + '% من العناصر') : '') + '<button type="button" class="mh-ign" data-ign="' + f.id + '">' + (ign ? '<i class="bi bi-eye"></i> ' + L('Count it again', 'احسبه مرة أخرى') : '<i class="bi bi-eye-slash"></i> ' + L('Ignore this check', 'تجاهل هذا الفحص')) + '</button></div>' + itemList(f.items) + '</div></details>';
       }).join('') : '<div class="mh-panel mh-note">' + L('No issues in this group. Nice work.', 'لا توجد مشاكل في هذه المجموعة. عمل ممتاز.') + '</div>');
     el.querySelectorAll('[data-cat]').forEach((b) => b.onclick = () => { filt.cat = b.dataset.cat; tIssues(); });
     el.querySelectorAll('.mh-issue').forEach((d) => d.addEventListener('toggle', () => { if (d.open) track('mh_issue_open', { rule: d.dataset.rule }); }));
+    el.querySelectorAll('[data-ign]').forEach((b) => b.onclick = (e) => {
+      e.preventDefault(); const id = b.dataset.ign;
+      if (ignored.has(id)) ignored.delete(id); else ignored.add(id);
+      saveIgnored(); track('mh_ignore', { rule: id, on: ignored.has(id) });
+      const y = window.scrollY; renderResult(); const d = document.querySelector('[data-rule="' + id + '"]'); if (d) d.open = true; window.scrollTo(0, y);
+    });
     el.querySelectorAll('[data-more]').forEach((b) => b.onclick = () => { const d = b.closest('.mh-issue'); const f = R.findings.find((x) => x.id === d.dataset.rule); b.previousElementSibling.outerHTML = itemList(f.items, 100000).replace(/<button[\s\S]*$/, ''); b.remove(); });
     $('mhCsv').onclick = () => {
       const rows = [['Severity', 'Category', 'Rule', 'Object', 'Detail']];
@@ -195,11 +215,40 @@ document.addEventListener('DOMContentLoaded', () => {
       cols.map((x) => '<div class="mh-group"><div class="mh-gh">' + bdi(x.t.name) + ' <small>' + num(x.u.length) + ' / ' + num(x.t.columns.length) + '</small></div><div class="mh-tags">' + x.u.map((c) => '<code' + (c.kind === 'calculated' ? ' class="calc" title="' + L('Calculated column', 'عمود محسوب') + '"' : '') + '>' + esc(c.name) + '</code>').join('') + '</div></div>').join('') + '</div></div>' +
       '<div class="col-lg-6"><div class="mh-panel"><div class="mh-h"><b>' + L('Measures', 'المقاييس') + '</b> <span class="mh-count">' + num(ms.length) + '</span><button type="button" class="mh-copy ms-auto" data-copy="ms"><i class="bi bi-clipboard"></i> ' + L('Copy list', 'نسخ القائمة') + '</button></div>' +
       Object.keys(byFolder).sort().map((k) => '<div class="mh-group"><div class="mh-gh"><i class="bi bi-folder2"></i> ' + bdi(k) + ' <small>' + num(byFolder[k].length) + '</small></div><div class="mh-tags">' + byFolder[k].map((m) => '<code class="ms" data-ms="' + esc(m.name) + '">' + esc(m.name) + '</code>').join('') + '</div></div>').join('') + '</div></div></div>';
+    el.insertAdjacentHTML('beforeend', cleanupHtml(cols, ms));
     el.querySelectorAll('[data-ms]').forEach((c) => c.onclick = () => { tab = 'measures'; msOpen = c.dataset.ms; renderResult(); });
+    el.querySelectorAll('[data-script]').forEach((b) => b.onclick = () => { copy(scripts[b.dataset.script]); track('mh_copy', { list: 'script_' + b.dataset.script.split(':')[0] }); });
     el.querySelectorAll('[data-copy]').forEach((b) => b.onclick = () => {
       const txt = b.dataset.copy === 'cols' ? cols.map((x) => x.u.map((c) => "'" + x.t.name + "'[" + c.name + ']').join('\n')).join('\n') : ms.map((m) => '[' + m.name + ']').join('\n');
       copy(txt); track('mh_copy', { list: b.dataset.copy });
     });
+  }
+
+  // Ready-to-paste cleanup: Power Query steps for unused source columns, Tabular Editor scripts for unused measures
+  const scripts = {};
+  const csStr = (x) => '"' + String(x).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+  const mStr = (x) => '"' + String(x).replace(/"/g, '""') + '"';
+  function cleanupHtml(cols, ms) {
+    const pq = cols.filter((x) => x.t.fromM).map((x) => ({ t: x.t, names: x.u.filter((c) => c.kind === 'data' || c.kind === 'calculatedTableColumn' ? c.kind === 'data' : false).map((c) => c.sourceColumn || c.name) })).filter((x) => x.names.length);
+    const calc = cols.reduce((a, x) => a.concat(x.u.filter((c) => c.kind === 'calculated').map((c) => ({ t: x.t.name, c: c.name }))), []);
+    let html = '<div class="mh-panel mt-4 mh-clean"><div class="mh-h"><b><i class="bi bi-magic"></i> ' + L('Cleanup scripts', 'سكربتات التنظيف') + '</b></div><p class="mh-note">' + L('Save a copy of your file first. Then use these to remove what nobody uses.', 'احفظ نسخة من ملفك أولًا، ثم استخدم هذه السكربتات لحذف ما لا يستخدمه أحد.') + '</p>';
+    if (pq.length) {
+      html += '<span class="tg-label mt-2">' + L('Power Query: remove unused source columns', 'Power Query: حذف أعمدة المصدر غير المستخدمة') + '</span><p class="mh-note">' + L('In Power Query, select the table, click fx to add a step, and paste the line. Replace #"Previous step" with the name Power Query shows in the formula bar.', 'في Power Query اختر الجدول واضغط fx لإضافة خطوة والصق السطر. استبدل #"Previous step" بالاسم الذي يظهره Power Query في شريط الصيغة.') + '</p>';
+      pq.forEach((x, i) => {
+        const code = '= Table.RemoveColumns(#"Previous step", {' + x.names.map(mStr).join(', ') + '}, MissingField.Ignore)';
+        scripts['pq:' + i] = code;
+        html += '<div class="mh-script"><div class="mh-sh"><b>' + bdi(x.t.name) + '</b> <small>' + L(num(x.names.length) + ' columns', num(x.names.length) + ' عمود') + '</small><button type="button" class="mh-copy ms-auto" data-script="pq:' + i + '"><i class="bi bi-clipboard"></i> ' + L('Copy', 'نسخ') + '</button></div><pre class="mh-dax">' + esc(code) + '</pre></div>';
+      });
+    }
+    if (ms.length) {
+      const list = 'var names = new[] {\n    ' + ms.map((m) => csStr(m.name)).join(',\n    ') + '\n};\n';
+      scripts['te:move'] = '// DataArcus Model Health Check: move measures no visual uses into a review folder (safe, nothing is deleted)\n' + list + 'foreach (var n in names) {\n    var m = Model.AllMeasures.FirstOrDefault(x => x.Name == n);\n    if (m != null) m.DisplayFolder = "_Unused (review)";\n}';
+      scripts['te:delete'] = '// DataArcus Model Health Check: delete measures no visual uses. Save a copy of your file first.\n' + list + 'foreach (var n in names) {\n    var m = Model.AllMeasures.FirstOrDefault(x => x.Name == n);\n    if (m != null) m.Delete();\n}';
+      html += '<span class="tg-label mt-3">' + L('Tabular Editor: ' + num(ms.length) + ' unused measures', 'Tabular Editor: ' + num(ms.length) + ' مقياس غير مستخدم') + '</span><p class="mh-note">' + L('Open the model in Tabular Editor (External tools), then C# Script, paste and run, then save. Start with "move to folder": it hides nothing and deletes nothing, so you can review first.', 'افتح النموذج في Tabular Editor من External tools ثم C# Script والصق وشغّل ثم احفظ. ابدأ بـ "نقل لمجلد": لا يحذف شيئًا، فتراجع أولًا.') + '</p>' +
+        '<div class="mh-sbtns"><button type="button" class="tg-btn2 btn-sm" data-script="te:move"><i class="bi bi-folder-symlink"></i> ' + L('Copy: move to a review folder', 'نسخ: نقل إلى مجلد مراجعة') + '</button><button type="button" class="tg-btn2 btn-sm mh-danger" data-script="te:delete"><i class="bi bi-trash3"></i> ' + L('Copy: delete them', 'نسخ: حذفها') + '</button></div>';
+    }
+    if (calc.length) html += '<span class="tg-label mt-3">' + L('Calculated columns to delete by hand', 'أعمدة محسوبة تُحذف يدويًا') + '</span><div class="mh-tags">' + calc.map((x) => '<code>' + esc(x.t) + '[' + esc(x.c) + ']</code>').join('') + '</div>';
+    return html + '</div>';
   }
 
   function tMeasures() {
@@ -269,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---------- documentation builders (always English, like the model) ----------
   function docHtml() {
-    const s = R.stats, sc = R.score, d = new Date().toISOString().slice(0, 10);
+    const s = R.stats, sc = score(), d = new Date().toISOString().slice(0, 10);
     const h = (x) => esc(x);
     const folders = {};
     R.measures.forEach((m) => { const k = m.folder || '(no folder)'; (folders[k] = folders[k] || []).push(m); });
@@ -292,7 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
       '<footer>Generated in the browser by the free Power BI Model Health Check at dataarcus.com/tools. The file was not uploaded anywhere.</footer></body></html>';
   }
   function docMd() {
-    const s = R.stats, sc = R.score, lines = [];
+    const s = R.stats, sc = score(), lines = [];
     const cell = (x) => String(x == null ? '' : x).replace(/\|/g, '\\|').replace(/\n/g, ' ');
     lines.push('# ' + R.meta.fileName, '', 'Model documentation and health check, ' + new Date().toISOString().slice(0, 10), '');
     lines.push('**Health score: ' + sc.overall + '/100** (Performance ' + sc.perf + ', Maintainability ' + sc.maint + ', Best practice ' + sc.bp + ')', '');

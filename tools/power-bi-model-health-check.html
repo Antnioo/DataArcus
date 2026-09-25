@@ -220,6 +220,18 @@
     .mh-doc p { flex: 1; }
     .mh-mrow bdi, .mh-gh bdi { unicode-bidi: isolate; }
     [dir=rtl] .mh-mrow > span:first-child { text-align: right; }
+    .mh-delta { font-size: .85rem; font-weight: 700; color: #94a3b8; margin-top: 6px; }
+    .mh-delta.up { color: #22c55e; } .mh-delta.down { color: #f87171; }
+    .mh-ign { background: none; border: 0; color: #94a3b8; font-size: .75rem; margin-inline-start: 10px; padding: 0; }
+    .mh-ign:hover { color: var(--accent); }
+    .mh-issue.ignored { opacity: .55; }
+    .mh-issue.ignored summary b { text-decoration: line-through; }
+    .mh-script { margin-top: 10px; }
+    .mh-sh { display: flex; align-items: center; gap: 8px; color: var(--lt); font-size: .88rem; margin-bottom: 4px; }
+    .mh-sh small { color: #94a3b8; }
+    .mh-script .mh-dax { max-height: 140px; white-space: pre-wrap; word-break: break-word; }
+    .mh-sbtns { display: flex; flex-wrap: wrap; gap: 8px; }
+    .mh-danger { border-color: #f87171 !important; color: #f87171 !important; }
     .mh-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--accent); color: #051018; font-weight: 700; padding: 10px 18px; border-radius: 30px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 3000; }
     .mh-toast.show { opacity: 1; }
     [dir=rtl] .mh-issue summary b, [dir=rtl] .mh-quick button { text-align: right; }
@@ -274,6 +286,7 @@
             <p class="text-white-50 mb-3" data-i18n="mh.cta.desc">DataArcus reviews and tunes Power BI models for businesses across the MENA region: faster reports, smaller models and DAX your team can maintain.</p>
             <a href="../index.html#contact" class="btn btn-accent" data-i18n="nav.consultation">Book a Free Call</a>
             <a href="index.html" class="tg-btn2 text-decoration-none d-inline-block" data-i18n="mh.cta.more">More free tools</a>
+            <p class="small mt-3 mb-0"><a href="../articles/article-power-bi-model-health-check.html" class="text-accent" data-i18n="mh.cta.article">Read the case study: what the check found in a real 410-measure model →</a></p>
           </div>
           <section class="tg-faq">
             <h2 class="h4 fw-bold" data-i18n="mh.faq.title">Questions</h2>
