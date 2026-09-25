@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
         : '<div class="mh-warn"><i class="bi bi-info-circle"></i> ' + L('This file has no report pages, so unused columns and measures could not be checked. Use a .pbit to include them.', 'الملف لا يحتوي صفحات تقرير، لذلك لم يتم فحص الأعمدة والمقاييس غير المستخدمة. استخدم ملف .pbit لتضمينها.') + '</div>') +
       (quick.length ? '<span class="tg-label mt-3">' + L('Fix these first', 'ابدأ بإصلاح هذه') + '</span><div class="mh-quick">' + quick.map((f) => '<button type="button" data-jump="' + f.id + '"><span class="mh-sev ' + f.sev + '">' + (isAr() ? SEVL[f.sev][1] : SEVL[f.sev][0]) + '</span><span>' + rt(f.id)[0] + ' <small>(' + num(f.items.length) + ')</small></span><b title="' + L('Points added to the overall score', 'نقاط تضاف للتقييم العام') + '">+' + Math.max(1, Math.round(f.penalty * (f.cat === 'perf' ? 0.4 : 0.3))) + '</b></button>').join('') + '</div>' : '') +
       '</div></div></div>' +
-      '<div class="mh-tabs" role="tablist">' + [['issues', L('Issues', 'المشاكل'), counts.issues], ['unused', L('Unused', 'غير المستخدم'), rep ? s.unusedColumns + s.unusedMeasures : null], ['measures', L('Measures', 'المقاييس'), s.measures], ['tables', L('Tables', 'الجداول'), s.tables], ['rels', L('Relationships', 'العلاقات'), s.relationships], ['docs', L('Documentation', 'التوثيق'), null]]
+      '<div class="mh-tabs" role="tablist">' + [['issues', L('Issues', 'المشاكل'), counts.issues], ['fix', L('Fix plan', 'خطة الإصلاح'), null], ['unused', L('Unused', 'غير المستخدم'), rep ? s.unusedColumns + s.unusedMeasures : null], ['measures', L('Measures', 'المقاييس'), s.measures], ['tables', L('Tables', 'الجداول'), s.tables], ['rels', L('Relationships', 'العلاقات'), s.relationships], ['docs', L('Documentation', 'التوثيق'), null]]
         .map((t) => '<button type="button" role="tab" data-tab="' + t[0] + '" class="' + (tab === t[0] ? 'on' : '') + '" aria-selected="' + (tab === t[0]) + '">' + t[1] + (t[2] != null ? ' <small>' + num(t[2]) + '</small>' : '') + '</button>').join('') + '</div>' +
       '<div id="mhTab"></div>';
     $('mhNew').onclick = () => { R = null; render(); };
@@ -158,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     root.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => { tab = b.dataset.tab; track('mh_tab', { tab }); renderResult(); });
     root.querySelectorAll('[data-jump]').forEach((b) => b.onclick = () => { tab = 'issues'; filt.cat = 'all'; renderResult(); const el = document.querySelector('[data-rule="' + b.dataset.jump + '"]'); if (el) { el.open = true; el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } });
-    ({ issues: tIssues, unused: tUnused, measures: tMeasures, tables: tTables, rels: tRels, docs: tDocs })[tab]();
+    ({ issues: tIssues, fix: tFix, unused: tUnused, measures: tMeasures, tables: tTables, rels: tRels, docs: tDocs })[tab]();
   }
 
   const itemList = (items, limit) => {
@@ -176,11 +176,17 @@ document.addEventListener('DOMContentLoaded', () => {
       (list.length ? list.map((f) => {
         const [title, why, fix] = rt(f.id);
         const ign = ignored.has(f.id);
-        return '<details class="mh-issue' + (ign ? ' ignored' : '') + '" data-rule="' + f.id + '"><summary><span class="mh-sev ' + f.sev + '">' + (isAr() ? SEVL[f.sev][1] : SEVL[f.sev][0]) + '</span><b>' + title + '</b><span class="mh-count">' + num(f.items.length) + '</span>' + (f.penalty ? '<span class="mh-pen">−' + f.penalty + '</span>' : '') + '<i class="bi bi-chevron-down"></i></summary>' +
-          '<div class="mh-ibody"><p><b>' + L('Why it matters', 'لماذا يهم') + ':</b> ' + why + '</p><p class="mh-fix"><i class="bi bi-wrench-adjustable"></i> <b>' + L('How to fix', 'طريقة الإصلاح') + ':</b> ' + fix + '</p>' +
+        const kind = QUICK.has(f.id) ? 'quick' : EXPERT.has(f.id) ? 'expert' : '';
+        const badge = kind === 'quick' ? '<span class="mh-kind quick" title="' + L('The Fix plan tab has a ready script or step for this', 'تبويب خطة الإصلاح فيه سكربت أو خطوة جاهزة لهذا') + '"><i class="bi bi-lightning-charge-fill"></i> ' + L('Quick fix', 'إصلاح سريع') + '</span>' : kind === 'expert' ? '<span class="mh-kind expert" title="' + L('Needs design decisions and testing, not a script', 'يحتاج قرارات تصميم واختبار وليس سكربتًا') + '"><i class="bi bi-person-gear"></i> ' + L('Expert', 'خبير') + '</span>' : '';
+        const extra = kind === 'quick' ? '<button type="button" class="tg-btn2 btn-sm mt-1 mb-2" data-gofix><i class="bi bi-list-check"></i> ' + L('Open the fix plan', 'افتح خطة الإصلاح') + '</button>'
+          : kind === 'expert' ? '<div class="mh-expert"><i class="bi bi-person-gear"></i><div><b>' + L('Want this fixed for you?', 'تريد من يصلحها لك؟') + '</b><span>' + L('This one needs design decisions and testing, not just a script. DataArcus reviews and fixes models like this.', 'هذه تحتاج قرارات تصميم واختبار وليس مجرد سكربت. DataArcus تراجع وتصلح نماذج كهذه.') + '</span></div><a href="../index.html#contact" class="btn btn-accent btn-sm" data-expert="' + f.id + '">' + L('Book a free call', 'احجز مكالمة مجانية') + '</a></div>' : '';
+        return '<details class="mh-issue' + (ign ? ' ignored' : '') + '" data-rule="' + f.id + '"><summary><span class="mh-sev ' + f.sev + '">' + (isAr() ? SEVL[f.sev][1] : SEVL[f.sev][0]) + '</span><b>' + title + '</b>' + badge + '<span class="mh-count">' + num(f.items.length) + '</span>' + (f.penalty ? '<span class="mh-pen">−' + f.penalty + '</span>' : '') + '<i class="bi bi-chevron-down"></i></summary>' +
+          '<div class="mh-ibody"><p><b>' + L('Why it matters', 'لماذا يهم') + ':</b> ' + why + '</p><p class="mh-fix"><i class="bi bi-wrench-adjustable"></i> <b>' + L('How to fix', 'طريقة الإصلاح') + ':</b> ' + fix + '</p>' + extra +
           '<div class="mh-cat"><i class="bi ' + CAT[f.cat].icon + '"></i> ' + L(CAT[f.cat].en, CAT[f.cat].ar) + (f.share != null ? ' · ' + L(f.share + '% of objects', f.share + '% من العناصر') : '') + '<button type="button" class="mh-ign" data-ign="' + f.id + '">' + (ign ? '<i class="bi bi-eye"></i> ' + L('Count it again', 'احسبه مرة أخرى') : '<i class="bi bi-eye-slash"></i> ' + L('Ignore this check', 'تجاهل هذا الفحص')) + '</button></div>' + itemList(f.items) + '</div></details>';
       }).join('') : '<div class="mh-panel mh-note">' + L('No issues in this group. Nice work.', 'لا توجد مشاكل في هذه المجموعة. عمل ممتاز.') + '</div>');
     el.querySelectorAll('[data-cat]').forEach((b) => b.onclick = () => { filt.cat = b.dataset.cat; tIssues(); });
+    el.querySelectorAll('[data-gofix]').forEach((b) => b.onclick = () => { tab = 'fix'; renderResult(); const t = document.getElementById('mhTab'); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+    el.querySelectorAll('[data-expert]').forEach((a) => a.addEventListener('click', () => track('mh_expert_click', { rule: a.dataset.expert, score: score().overall })));
     el.querySelectorAll('.mh-issue').forEach((d) => d.addEventListener('toggle', () => { if (d.open) track('mh_issue_open', { rule: d.dataset.rule }); }));
     el.querySelectorAll('[data-ign]').forEach((b) => b.onclick = (e) => {
       e.preventDefault(); const id = b.dataset.ign;
@@ -215,13 +221,104 @@ document.addEventListener('DOMContentLoaded', () => {
       cols.map((x) => '<div class="mh-group"><div class="mh-gh">' + bdi(x.t.name) + ' <small>' + num(x.u.length) + ' / ' + num(x.t.columns.length) + '</small></div><div class="mh-tags">' + x.u.map((c) => '<code' + (c.kind === 'calculated' ? ' class="calc" title="' + L('Calculated column', 'عمود محسوب') + '"' : '') + '>' + esc(c.name) + '</code>').join('') + '</div></div>').join('') + '</div></div>' +
       '<div class="col-lg-6"><div class="mh-panel"><div class="mh-h"><b>' + L('Measures', 'المقاييس') + '</b> <span class="mh-count">' + num(ms.length) + '</span><button type="button" class="mh-copy ms-auto" data-copy="ms"><i class="bi bi-clipboard"></i> ' + L('Copy list', 'نسخ القائمة') + '</button></div>' +
       Object.keys(byFolder).sort().map((k) => '<div class="mh-group"><div class="mh-gh"><i class="bi bi-folder2"></i> ' + bdi(k) + ' <small>' + num(byFolder[k].length) + '</small></div><div class="mh-tags">' + byFolder[k].map((m) => '<code class="ms" data-ms="' + esc(m.name) + '">' + esc(m.name) + '</code>').join('') + '</div></div>').join('') + '</div></div></div>';
-    el.insertAdjacentHTML('beforeend', cleanupHtml(cols, ms));
+    el.insertAdjacentHTML('beforeend', '<div class="mh-panel mt-4 d-flex flex-wrap align-items-center gap-3"><i class="bi bi-magic text-accent fs-4"></i><div class="flex-grow-1"><b>' + L('Ready-made cleanup scripts', 'سكربتات تنظيف جاهزة') + '</b><div class="mh-note">' + L('Power Query steps for these columns and a Tabular Editor script for these measures are in the Fix plan.', 'خطوات Power Query لهذه الأعمدة وسكربت Tabular Editor لهذه المقاييس موجودة في خطة الإصلاح.') + '</div></div><button type="button" class="btn btn-accent btn-sm" data-gofix>' + L('Open the fix plan', 'افتح خطة الإصلاح') + '</button></div>');
+    el.querySelectorAll('[data-gofix]').forEach((b) => b.onclick = () => { tab = 'fix'; renderResult(); });
     el.querySelectorAll('[data-ms]').forEach((c) => c.onclick = () => { tab = 'measures'; msOpen = c.dataset.ms; renderResult(); });
-    el.querySelectorAll('[data-script]').forEach((b) => b.onclick = () => { copy(scripts[b.dataset.script]); track('mh_copy', { list: 'script_' + b.dataset.script.split(':')[0] }); });
     el.querySelectorAll('[data-copy]').forEach((b) => b.onclick = () => {
       const txt = b.dataset.copy === 'cols' ? cols.map((x) => x.u.map((c) => "'" + x.t.name + "'[" + c.name + ']').join('\n')).join('\n') : ms.map((m) => '[' + m.name + ']').join('\n');
       copy(txt); track('mh_copy', { list: b.dataset.copy });
     });
+  }
+
+  // ---------- Fix plan: safe order, quick-fixes script, cleanup scripts, expert items ----------
+  const QUICK = new Set(['DATE_NOT_MARKED', 'MONTH_SORT', 'SUMMARIZE_KEYS', 'FK_VISIBLE', 'UNUSED_COL', 'UNUSED_MEASURE']);
+  const EXPERT = new Set(['FILTER_TABLE', 'BIDI', 'M2M', 'DEEP_CHAIN', 'LONG_MEASURE', 'CALC_COLS', 'STRING_KEYS', 'LONG_M', 'HARDCODED_PATH', 'NO_RLS']);
+  const unusedData = () => {
+    const cols = [];
+    R.tables.filter((t) => !t.auto).forEach((t) => { const u = t.columns.filter((c) => c.used === false); if (u.length) cols.push({ t, u }); });
+    return { cols, ms: R.measures.filter((m) => m.used === false) };
+  };
+  const splitObj = (o) => { const m = String(o).match(/^(.*)\[(.*)\]$/); return m ? [m[1], m[2]] : null; };
+  const findingOf = (id) => (ignored.has(id) ? null : R.findings.find((f) => f.id === id));
+  function quickFixScript() {
+    const lines = [];
+    const q = (x) => csStr(x);
+    const col = (t, c) => 'Model.Tables[' + q(t) + '].Columns[' + q(c) + ']';
+    const has = (t, c) => 'Model.Tables.Contains(' + q(t) + ') && Model.Tables[' + q(t) + '].Columns.Contains(' + q(c) + ')';
+    let count = 0;
+    const dt = findingOf('DATE_NOT_MARKED');
+    if (dt) {
+      lines.push('', '// 1. Mark calendar tables as date tables');
+      dt.items.forEach((i) => {
+        const t = R.tables.find((x) => x.name === i.obj); if (!t) return;
+        const target = R.relationships.find((r) => r.toTable === t.name && t.columns.some((c) => c.name === r.toColumn && c.dataType === 'dateTime'));
+        const dcol = (target && target.toColumn) || (t.columns.find((c) => /^date$/i.test(c.name) && c.dataType === 'dateTime') || t.columns.find((c) => c.dataType === 'dateTime') || {}).name;
+        if (!dcol) return;
+        lines.push('if (' + has(t.name, dcol) + ') { Model.Tables[' + q(t.name) + '].DataCategory = "Time"; ' + col(t.name, dcol) + '.IsKey = true; n++; }'); count++;
+      });
+    }
+    const ms = findingOf('MONTH_SORT');
+    if (ms) {
+      const out = [];
+      ms.items.forEach((i) => {
+        const p = splitObj(i.obj); if (!p) return;
+        const t = R.tables.find((x) => x.name === p[0]); if (!t) return;
+        const isDay = /day|week/i.test(p[1]);
+        const sortCol = t.columns.find((c) => /int64|double|decimal/.test(c.dataType) && (isDay ? /(weekday|day\s*of\s*week)\s*(no|num|number|index)?$|^weekday$/i : /month\s*(no|num|number|index)$|^month$|month\s*of\s*year/i).test(c.name.trim()));
+        if (sortCol) { out.push('if (' + has(t.name, p[1]) + ' && Model.Tables[' + q(t.name) + '].Columns.Contains(' + q(sortCol.name) + ')) { ' + col(t.name, p[1]) + '.SortByColumn = ' + col(t.name, sortCol.name) + '; n++; }'); count++; }
+        else out.push('// ' + t.name + '[' + p[1] + ']: no ' + (isDay ? 'weekday' : 'month') + ' number column found. Add one, then sort by it.');
+      });
+      if (out.length) lines.push('', '// 2. Sort month and day names by their number'), lines.push.apply(lines, out);
+    }
+    const sk = findingOf('SUMMARIZE_KEYS');
+    if (sk) {
+      lines.push('', '// 3. IDs, years and codes: do not summarize');
+      sk.items.forEach((i) => { const p = splitObj(i.obj); if (p) { lines.push('if (' + has(p[0], p[1]) + ') { ' + col(p[0], p[1]) + '.SummarizeBy = AggregateFunction.None; n++; }'); count++; } });
+    }
+    const fk = findingOf('FK_VISIBLE');
+    if (fk) {
+      lines.push('', '// 4. Hide key columns on the many side of relationships');
+      fk.items.forEach((i) => { const p = splitObj(i.obj); if (p) { lines.push('if (' + has(p[0], p[1]) + ') { ' + col(p[0], p[1]) + '.IsHidden = true; n++; }'); count++; } });
+    }
+    if (!count) return null;
+    return { count, code: '// DataArcus Model Health Check: quick fixes (' + count + ' changes). Save a copy of your file first.\n// Tabular Editor: C# Script tab, paste, run (F5), then save (Ctrl+S).\nint n = 0;' + lines.join('\n') + '\n\nInfo(n + " quick fixes applied. Save the model to keep them.");' };
+  }
+  function tFix() {
+    const el = $('mhTab');
+    const key = String(R.meta.fileName).toLowerCase();
+    const plans = store.get('dataarcus-mh-plan', {});
+    const done = new Set(plans[key] || []);
+    const { cols, ms } = R.meta.hasReport ? unusedData() : { cols: [], ms: [] };
+    const broken = findingOf('BROKEN_REF');
+    const qf = quickFixScript();
+    const pqCount = cols.filter((x) => x.t.fromM && x.u.some((c) => c.kind === 'data')).length;
+    const calcCount = cols.reduce((a, x) => a + x.u.filter((c) => c.kind === 'calculated').length, 0);
+    const steps = [['copy', L('Save a copy of your .pbix', 'احفظ نسخة من ملف ‎.pbix'), L('Every step below changes the model. Keep a copy so you can go back.', 'كل خطوة بالأسفل تغيّر النموذج، فاحتفظ بنسخة للرجوع إليها.')]];
+    if (broken) steps.push(['broken', L('Fix ' + num(broken.items.length) + ' broken fields in visuals', 'أصلح ' + num(broken.items.length) + ' حقلًا مكسورًا في الـ visuals'), L('Open each page listed in the Issues tab and replace or remove the missing field. Users see these errors today.', 'افتح كل صفحة مذكورة في تبويب المشاكل واستبدل الحقل المفقود أو احذفه، فالمستخدمون يرون هذه الأخطاء الآن.')]);
+    if (qf) steps.push(['quick', L('Run the quick-fixes script (' + num(qf.count) + ' changes)', 'شغّل سكربت الإصلاحات السريعة (' + num(qf.count) + ' تعديل)'), L('Date tables, month sorting, summarization and hidden keys. Safe, mechanical changes.', 'جداول التاريخ وترتيب الشهور والتجميع وإخفاء المفاتيح. تعديلات آمنة وآلية.')]);
+    if (ms.length) steps.push(['measures', L('Move ' + num(ms.length) + ' unused measures to a review folder', 'انقل ' + num(ms.length) + ' مقياسًا غير مستخدم إلى مجلد مراجعة'), L('Nothing is deleted. Look through the folder, then delete it when you are sure.', 'لا يُحذف شيء. راجع المجلد ثم احذفه عندما تتأكد.')]);
+    if (pqCount) steps.push(['columns', L('Remove unused columns in Power Query (' + num(pqCount) + ' tables)', 'احذف الأعمدة غير المستخدمة في Power Query (' + num(pqCount) + ' جدول)'), L('Paste one line per table. Hiding is not enough: hidden columns still load.', 'الصق سطرًا واحدًا لكل جدول. الإخفاء لا يكفي فالأعمدة المخفية ما زالت تُحمَّل.')]);
+    if (calcCount) steps.push(['calc', L('Delete ' + num(calcCount) + ' unused calculated columns', 'احذف ' + num(calcCount) + ' عمودًا محسوبًا غير مستخدم'), L('Listed at the bottom of this page.', 'موجودة في أسفل هذه الصفحة.')]);
+    steps.push(['recheck', L('Refresh, export a new .pbit and check again', 'حدّث النموذج وصدّر .pbit جديدًا وافحصه مرة أخرى'), L('Your score history shows how many points you gained.', 'سجل التقييم يوضح كم نقطة كسبت.')]);
+    const nDone = steps.filter((x) => done.has(x[0])).length;
+    const experts = R.findings.filter((f) => EXPERT.has(f.id) && !ignored.has(f.id) && f.sev !== 'info');
+    el.innerHTML = '<div class="row g-4"><div class="col-lg-5"><div class="mh-panel mh-plan"><div class="mh-h"><b><i class="bi bi-list-check"></i> ' + L('Safe order', 'الترتيب الآمن') + '</b><span class="ms-auto mh-note">' + L(num(nDone) + ' of ' + num(steps.length) + ' done', 'تم ' + num(nDone) + ' من ' + num(steps.length)) + '</span></div>' +
+      '<div class="mh-bar mb-3"><span style="width:' + Math.round(nDone / steps.length * 100) + '%;background:#22c55e"></span></div>' +
+      steps.map((x, i) => '<label class="mh-step' + (done.has(x[0]) ? ' done' : '') + '"><input type="checkbox" data-step="' + x[0] + '"' + (done.has(x[0]) ? ' checked' : '') + '><span><b>' + (i + 1) + '. ' + x[1] + '</b><small>' + x[2] + '</small></span></label>').join('') + '</div>' +
+      (experts.length ? '<div class="mh-panel mt-4 mh-expertbox"><div class="mh-h"><b><i class="bi bi-person-gear"></i> ' + L('Needs an expert', 'يحتاج خبيرًا') + '</b></div><p class="mh-note">' + L('These need design decisions and testing against your data, not a script. Getting them wrong can change the numbers in your reports.', 'هذه تحتاج قرارات تصميم واختبارًا على بياناتك وليس سكربتًا، والخطأ فيها قد يغيّر أرقام تقاريرك.') + '</p><ul class="mh-elist">' + experts.map((f) => '<li><span class="mh-sev ' + f.sev + '">' + (isAr() ? SEVL[f.sev][1] : SEVL[f.sev][0]) + '</span> ' + rt(f.id)[0] + ' <small>(' + num(f.items.length) + ')</small></li>').join('') + '</ul><a href="../index.html#contact" class="btn btn-accent btn-sm" data-expert="plan"><i class="bi bi-calendar3"></i> ' + L('Book a free call', 'احجز مكالمة مجانية') + '</a></div>' : '') +
+      '</div><div class="col-lg-7">' +
+      (qf ? '<div class="mh-panel mh-clean"><div class="mh-h"><b><i class="bi bi-lightning-charge-fill text-warning"></i> ' + L('Quick-fixes script', 'سكربت الإصلاحات السريعة') + '</b><span class="mh-count">' + num(qf.count) + '</span><button type="button" class="mh-copy ms-auto" data-script="te:quick"><i class="bi bi-clipboard"></i> ' + L('Copy', 'نسخ') + '</button></div><p class="mh-note">' + L('One Tabular Editor script for the mechanical fixes. External tools > Tabular Editor > C# Script, paste, run, save. If Power BI Desktop blocks one change, do that one by hand.', 'سكربت Tabular Editor واحد للإصلاحات الآلية. من External tools افتح Tabular Editor ثم C# Script والصق وشغّل واحفظ. إن منع Power BI Desktop تعديلًا فنفّذه يدويًا.') + '</p><pre class="mh-dax mh-qf">' + esc(qf.code) + '</pre></div>' : '') +
+      (R.meta.hasReport ? cleanupHtml(cols, ms) : '<div class="mh-panel mh-note">' + L('Cleanup scripts for unused columns and measures need the report pages. Use a .pbit.', 'سكربتات تنظيف الأعمدة والمقاييس غير المستخدمة تحتاج صفحات التقرير. استخدم ملف .pbit.') + '</div>') +
+      '</div></div>';
+    if (qf) scripts['te:quick'] = qf.code;
+    el.querySelectorAll('[data-step]').forEach((c) => c.onchange = () => {
+      if (c.checked) done.add(c.dataset.step); else done.delete(c.dataset.step);
+      plans[key] = Array.from(done); store.set('dataarcus-mh-plan', plans);
+      track('mh_plan_step', { step: c.dataset.step, done: c.checked });
+      const y = window.scrollY; tFix(); window.scrollTo(0, y);
+    });
+    el.querySelectorAll('[data-script]').forEach((b) => b.onclick = () => { copy(scripts[b.dataset.script]); track('mh_copy', { list: 'script_' + b.dataset.script.split(':')[1] }); });
+    el.querySelectorAll('[data-expert]').forEach((a) => a.addEventListener('click', () => track('mh_expert_click', { rule: a.dataset.expert, score: score().overall })));
   }
 
   // Ready-to-paste cleanup: Power Query steps for unused source columns, Tabular Editor scripts for unused measures
