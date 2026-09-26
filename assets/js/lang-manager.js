@@ -350,9 +350,9 @@ class LanguageManager {
 
     const switcherHTML = `
       <div class="language-switcher-container">
-        <button class="lang-btn" type="button" aria-label="Switch language">
+        <button class="lang-btn" type="button" aria-label="${this.switcherAria()}">
           <i class="bi bi-globe2"></i>
-          <span class="lang-text">${this.currentLang.toUpperCase()}</span>
+          <span class="lang-text" lang="${this.otherLang()}">${this.switcherLabel(true)}</span>
         </button>
       </div>
     `;
@@ -373,9 +373,9 @@ class LanguageManager {
 
     const switcherHTML = `
       <li class="nav-item desktop-lang-switcher">
-        <button class="nav-link lang-btn-desktop" type="button" aria-label="Switch language">
+        <button class="nav-link lang-btn-desktop" type="button" aria-label="${this.switcherAria()}">
           <i class="bi bi-globe2 me-1"></i>
-          ${this.currentLang.toUpperCase()}
+          <span lang="${this.otherLang()}">${this.switcherLabel(false)}</span>
         </button>
       </li>
     `;
@@ -464,23 +464,36 @@ class LanguageManager {
    * Update switcher text after language change
    */
   updateSwitcherText() {
+    const mobileButton = document.querySelector('.lang-btn');
     const mobileText = document.querySelector('.lang-text');
     const desktopButton = document.querySelector('.lang-btn-desktop');
     
     if (mobileText) {
-      mobileText.textContent = this.currentLang.toUpperCase();
+      mobileText.textContent = this.switcherLabel(true);
+      mobileText.lang = this.otherLang();
     }
+    if (mobileButton) mobileButton.setAttribute('aria-label', this.switcherAria());
     
     if (desktopButton) {
-      const icon = desktopButton.querySelector('i');
-      desktopButton.innerHTML = '';
-      if (icon) {
-        desktopButton.appendChild(icon);
-        desktopButton.appendChild(document.createTextNode(` ${this.currentLang.toUpperCase()}`));
-      } else {
-        desktopButton.innerHTML = `<i class="bi bi-globe2 me-1"></i> ${this.currentLang.toUpperCase()}`;
-      }
+      desktopButton.innerHTML = `<i class="bi bi-globe2 me-1"></i> <span lang="${this.otherLang()}">${this.switcherLabel(false)}</span>`;
+      desktopButton.setAttribute('aria-label', this.switcherAria());
     }
+  }
+
+  /**
+   * The switcher names the language you switch TO, in its own script
+   */
+  otherLang() {
+    return this.currentLang === 'en' ? 'ar' : 'en';
+  }
+
+  switcherLabel(short) {
+    if (this.currentLang === 'en') return short ? 'عربي' : 'العربية';
+    return short ? 'EN' : 'English';
+  }
+
+  switcherAria() {
+    return this.currentLang === 'en' ? 'Switch to Arabic' : 'التبديل إلى الإنجليزية';
   }
 
   /**
