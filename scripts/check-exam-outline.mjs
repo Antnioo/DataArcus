@@ -1,19 +1,22 @@
-// Weekly check of the DP-600 skills outline for the DP-600 Practice Exam Simulator.
+// Weekly check of a Microsoft exam's skills outline for the DataArcus practice exam simulators.
 // Reads Microsoft's public study guide and certification page, then rewrites
-// assets/data/dp600-outline.json (the simulator shows the "last checked" date from it).
+// assets/data/<exam>-outline.json (the simulator shows the "last checked" date from it).
 // If Microsoft changed the skills measured, announced a new update date, or mentions
-// retirement, it writes review.md and exits with an error so GitHub emails you.
+// retirement, it writes review-<exam>.md and exits with an error so GitHub emails you.
 // The question bank is NOT changed automatically: new questions need a human review.
-// Run locally: node scripts/check-dp600-outline.mjs
+// Run locally: node scripts/check-exam-outline.mjs dp-600   (or pl-300)
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 
-const FILE = 'assets/data/dp600-outline.json';
+const EXAM = (process.argv[2] || 'dp-600').toLowerCase();   // dp-600 or pl-300
+const CODE = EXAM.toUpperCase();
+const FILE = 'assets/data/' + EXAM.replace('-', '') + '-outline.json';
+const REVIEW = 'review-' + EXAM + '.md';
 const cur = JSON.parse(fs.readFileSync(FILE, 'utf8'));
 const next = { ...cur };
 const problems = [];   // could not read something
 const changes = [];    // Microsoft changed something: questions need a look
-const UA = { 'user-agent': 'Mozilla/5.0 (DataArcus weekly DP-600 outline check; +https://dataarcus.com)' };
+const UA = { 'user-agent': 'Mozilla/5.0 (DataArcus weekly ' + CODE + ' outline check; +https://dataarcus.com)' };
 
 const decode = (s) => s.replace(/&nbsp;|&#160;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&#x27;/g, "'").replace(/&#8211;|&ndash;/g, '–');
 const clean = (s) => decode(s.replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim();
@@ -22,7 +25,7 @@ const DATE = /(January|February|March|April|May|June|July|August|September|Octob
 
 // ---------- 1. Study guide: skills measured ----------
 try {
-  const res = await fetch(process.env.DP600_STUDY_GUIDE || cur.sources.studyGuide, { headers: UA });
+  const res = await fetch((EXAM === 'dp-600' && process.env.DP600_STUDY_GUIDE) || cur.sources.studyGuide, { headers: UA });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const html = (await res.text()).replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, ' ');
 
@@ -70,7 +73,7 @@ try {
 
 // ---------- 2. Certification page: announced updates or retirement ----------
 try {
-  const res = await fetch(process.env.DP600_CERT_PAGE || cur.sources.certPage, { headers: UA });
+  const res = await fetch((EXAM === 'dp-600' && process.env.DP600_CERT_PAGE) || cur.sources.certPage, { headers: UA });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const text = clean((await res.text()).replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, ' '));
   const upd = text.match(new RegExp('will be updated on (' + DATE.source + ')', 'i'));
@@ -93,10 +96,10 @@ if (changes.length || problems.length) {
   const body = [
     changes.length ? '## What changed at Microsoft\n\n' + changes.join('\n\n') : '',
     problems.length ? '## What could not be checked\n\n' + problems.map((p) => '- ' + p).join('\n') : '',
-    '## What to do\n\n1. Open the [study guide](' + cur.sources.studyGuide + ') and read its Change log table.\n2. Ask Claude to update the DP-600 question bank for the new outline (upload the repo snapshot).\n3. After the update, set `bankOutlineDate` and `bankHash` in `' + FILE + '` to the new values, and this check turns green again.'
+    '## What to do\n\n1. Open the [study guide](' + cur.sources.studyGuide + ') and read its Change log table.\n2. Ask Claude to update the ' + CODE + ' question bank for the new outline (upload the repo snapshot).\n3. After the update, set `bankOutlineDate` and `bankHash` in `' + FILE + '` to the new values, and this check turns green again.'
   ].filter(Boolean).join('\n\n');
-  if (changes.length) fs.writeFileSync('review.md', body + '\n'); // only real changes open an issue
+  if (changes.length) fs.writeFileSync(REVIEW, body + '\n'); // only real changes open an issue
   console.error(body);
   process.exit(1);
 }
-console.log('DP-600 outline unchanged. Questions are current.');
+console.log(CODE + ' outline unchanged. Questions are current.');

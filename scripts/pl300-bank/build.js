@@ -143,7 +143,7 @@ console.log('ERRORS', errs.length); errs.forEach((e) => console.log('  ' + e));
 console.log('warnings', warn.length); warn.forEach((e) => console.log('  ' + e));
 if (errs.length) process.exit(1);
 const EXAM = {
-  data: 'PL300', code: 'PL-300', store: 'dataarcus-pl300-v1', ev: 'pl300', outline: null,
+  data: 'PL300', code: 'PL-300', store: 'dataarcus-pl300-v1', ev: 'pl300', outline: '../assets/data/pl300-outline.json',
   page: 'https://dataarcus.com/tools/pl-300-practice-exam.html',
   dom: {
     prep: { en: 'Prepare the data', ar: 'تجهيز البيانات', w: '25–30%', wt: 27.5 },
@@ -164,7 +164,7 @@ const EXAM = {
     workspace: { d: 'manage', en: 'Workspaces and assets', ar: 'مساحات العمل والمحتوى' },
     security: { d: 'manage', en: 'Secure and govern Power BI items', ar: 'تأمين وحوكمة عناصر Power BI' }
   },
-  outlineNames: {}, mix: null,
+  outlineNames: { prep: 'prepare the data', model: 'model the data', viz: 'visualize and analyze the data', manage: 'manage and secure power bi' }, mix: null,
   mixText: ['Questions are drawn by exam weight: about a quarter each on preparing, modeling and visualizing data, and the rest on managing and securing Power BI.', 'الأسئلة موزعة حسب أوزان الاختبار: نحو الربع لكل من تجهيز البيانات ونمذجتها والتصور والتحليل، والباقي لإدارة Power BI وتأمينه.'],
   official: [
     ['https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/pl-300', 'PL-300 study guide: the skills measured', 'دليل مذاكرة PL-300: المهارات المقاسة'],
