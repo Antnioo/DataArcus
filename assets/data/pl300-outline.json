@@ -1,0 +1,21 @@
+{
+  "checked": null,
+  "status": "current",
+  "outlineDate": "2026-04-20",
+  "bankOutlineDate": "2026-04-20",
+  "bankHash": null,
+  "outlineHash": null,
+  "announcedUpdate": null,
+  "retirement": null,
+  "domains": [
+    { "name": "Prepare the data", "w": "25–30%" },
+    { "name": "Model the data", "w": "25–30%" },
+    { "name": "Visualize and analyze the data", "w": "25–30%" },
+    { "name": "Manage and secure Power BI", "w": "15–20%" }
+  ],
+  "outline": [],
+  "sources": {
+    "studyGuide": "https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/pl-300",
+    "certPage": "https://learn.microsoft.com/en-us/credentials/certifications/power-bi-data-analyst-associate/"
+  }
+}

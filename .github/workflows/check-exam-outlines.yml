@@ -1,4 +1,4 @@
-name: Check DP-600 skills outline
+name: Check exam skills outlines (DP-600, PL-300)
 
 on:
   schedule:
@@ -10,7 +10,7 @@ permissions:
   issues: write
 
 jobs:
-  check-outline:
+  check-outlines:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -20,37 +20,46 @@ jobs:
           node-version: 22
 
       - name: Read Microsoft's DP-600 study guide
-        id: check
-        run: node scripts/check-dp600-outline.mjs
+        id: dp600
+        run: node scripts/check-exam-outline.mjs dp-600
         continue-on-error: true
 
-      - name: Save the check date
+      - name: Read Microsoft's PL-300 study guide
+        id: pl300
+        run: node scripts/check-exam-outline.mjs pl-300
+        continue-on-error: true
+
+      - name: Save the check dates
         run: |
-          if git diff --quiet assets/data/dp600-outline.json; then
+          if git diff --quiet assets/data/dp600-outline.json assets/data/pl300-outline.json; then
             echo "No changes"
           else
             git config user.name "DataArcus exam bot"
             git config user.email "actions@users.noreply.github.com"
-            git add assets/data/dp600-outline.json
-            git commit -m "Weekly DP-600 outline check $(date -u +%Y-%m-%d)"
+            git add assets/data/dp600-outline.json assets/data/pl300-outline.json
+            git commit -m "Weekly exam outline check $(date -u +%Y-%m-%d)"
             git pull --rebase
             git push
           fi
 
       - name: Open an issue when Microsoft changed something
-        if: steps.check.outcome == 'failure' && hashFiles('review.md') != ''
+        if: hashFiles('review-*.md') != ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          TITLE="DP-600: Microsoft changed the exam outline, questions need a review"
-          if gh issue list --state open --search "$TITLE in:title" --json number --jq 'length' | grep -q '^0$'; then
-            gh issue create --title "$TITLE" --body-file review.md
-          else
-            echo "An issue is already open, not adding another one."
-          fi
+          for f in review-*.md; do
+            [ -f "$f" ] || continue
+            EXAM=$(basename "$f" .md | sed 's/^review-//' | tr '[:lower:]' '[:upper:]')
+            TITLE="$EXAM: Microsoft changed the exam outline, questions need a review"
+            if gh issue list --state open --search "$TITLE in:title" --json number --jq 'length' | grep -q '^0$'; then
+              gh issue create --title "$TITLE" --body-file "$f"
+            else
+              echo "An issue for $EXAM is already open, not adding another one."
+            fi
+          done
 
       - name: Flag problems (GitHub emails you when this fails)
-        if: steps.check.outcome == 'failure'
+        if: steps.dp600.outcome == 'failure' || steps.pl300.outcome == 'failure'
         run: |
-          echo "::error::The DP-600 outline check found a change or could not read Microsoft's page. See the issue or this run's log."
+          echo "::error::An exam outline check found a change or could not read Microsoft's page. See the issue or this run's log."
           exit 1
