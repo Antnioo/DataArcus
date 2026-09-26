@@ -41,6 +41,20 @@ window.themeGeneratorTranslations = {
         "a4": "Power BI uses them for KPI visuals and status indicators. Keep \"good\" green-ish and \"bad\" red-ish so people read them instantly, even in your brand palette.",
         "q5": "Why the readability check?",
         "a5": "Text needs a contrast ratio of at least 4.5:1 against its background to be readable for everyone (WCAG AA). The check warns you before your managers squint at the report."
+      },
+      "layout": {
+        "new": "New",
+        "title": "Page background and layout",
+        "subtitle": "A full report background in your theme colors, with a place for every visual. Layouts follow dashboard design principles from Stephen Few, the IBCS standards and Microsoft's report design guidance.",
+        "slots": "Where each visual goes",
+        "copyTable": "Copy table",
+        "csv": "Download .csv",
+        "howTitle": "How to use it in Power BI",
+        "how1": "<strong>Download the background</strong> and your theme JSON (tick \"Transparent visuals\" first).",
+        "how2": "Import the theme: <strong>View › Themes › Browse for themes</strong>.",
+        "how3": "Set the background: <strong>Format page › Canvas background › Image</strong>, Image fit <strong>Fit</strong>, Transparency <strong>0%</strong>.",
+        "how4": "Add each visual, then type its numbers from the table into <strong>Format › General › Properties</strong> (Size and Position). It lands exactly on its panel.",
+        "png": "Download background (PNG)"
       }
     },
     "meta": {
@@ -88,6 +102,20 @@ window.themeGeneratorTranslations = {
         "a4": "يستخدمها Power BI في مؤشرات الأداء ومؤشرات الحالة. اجعل \"الجيد\" مائلًا للأخضر و\"السيئ\" مائلًا للأحمر ليفهمها الجميع فورًا، حتى ضمن ألوان علامتك.",
         "q5": "لماذا فحص سهولة القراءة؟",
         "a5": "يحتاج النص إلى نسبة تباين لا تقل عن 4.5:1 مع خلفيته ليكون مقروءًا للجميع (معيار WCAG AA). ينبهك الفحص قبل أن يجهد مديروك أعينهم أمام التقرير."
+      },
+      "layout": {
+        "new": "جديد",
+        "title": "خلفية الصفحة والتخطيط",
+        "subtitle": "خلفية تقرير كاملة بألوان سمتك، مع مكان محدد لكل عنصر مرئي. التخطيطات مبنية على مبادئ تصميم لوحات المعلومات من ستيفن فيو ومعايير IBCS وإرشادات Microsoft لتصميم التقارير.",
+        "slots": "أين يوضع كل عنصر",
+        "copyTable": "انسخ الجدول",
+        "csv": "نزّل ملف .csv",
+        "howTitle": "طريقة الاستخدام في Power BI",
+        "how1": "<strong>نزّل الخلفية</strong> وملف السمة (فعّل \"عناصر شفافة\" أولًا).",
+        "how2": "استورد السمة: <strong><bdi dir=\"ltr\">View › Themes › Browse for themes</bdi></strong>.",
+        "how3": "ضع الخلفية: <strong><bdi dir=\"ltr\">Format page › Canvas background › Image</bdi></strong>، واختر <strong><bdi dir=\"ltr\">Image fit: Fit</bdi></strong> والشفافية <strong><bdi dir=\"ltr\">0%</bdi></strong>.",
+        "how4": "أضف كل عنصر، ثم اكتب أرقامه من الجدول في <strong><bdi dir=\"ltr\">Format › General › Properties</bdi></strong> (الحجم والموضع). سيستقر تمامًا على لوحته.",
+        "png": "نزّل الخلفية (PNG)"
       }
     },
     "meta": {

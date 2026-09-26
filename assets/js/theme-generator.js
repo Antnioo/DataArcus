@@ -94,7 +94,8 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       visualStyles: {
         '*': { '*': {
-          background: [{ show: true, color: { solid: { color: u.card } }, transparency: 0 }],
+          // with a layout background the panels are drawn in the image, so visuals go transparent
+          background: state.layout && state.layout.transparent ? [{ show: false }] : [{ show: true, color: { solid: { color: u.card } }, transparency: 0 }],
           border: [{ show: false }]
         } },
         page: { '*': {
@@ -149,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const renderJson = () => { $('json').textContent = JSON.stringify(buildTheme(), null, 2); };
-  const renderAll = () => { renderPreview(); renderContrast(); renderJson(); save(); };
+  const renderAll = () => { renderPreview(); renderContrast(); renderJson(); renderLayout(); save(); };
 
   // ---------- events ----------
   const renderPresets = () => {
@@ -194,6 +195,212 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     toast(L('Downloaded. Import it via View → Themes', 'تم التنزيل. استورده من View → Themes'));
     track('theme_download', { preset: state.preset || 'custom', font: state.font });
+  });
+
+  // ---------- page layout: a full background with a place for every visual ----------
+  // Power BI's default page is 1280 × 720, so every slot is in those units and can be typed straight
+  // into Format › General › Properties. The PNG is drawn at 1.5× (1920 × 1080) so it stays sharp.
+  const PW = 1280, PH = 720, M = 16, G = 12, HH = 56;
+  const KINDS = { kpi: ['Card', 'بطاقة'], line: ['Line chart', 'مخطط خطي'], bar: ['Bar chart', 'مخطط شريطي'], column: ['Column chart', 'مخطط أعمدة'], donut: ['Donut chart', 'مخطط دائري'], table: ['Table or matrix', 'جدول أو مصفوفة'], text: ['Text box or narrative', 'مربع نص أو سرد'], slicer: ['Slicers', 'مقسمات (Slicers)'], title: ['Text box (page title)', 'مربع نص (عنوان الصفحة)'], logo: ['Image (logo)', 'صورة (الشعار)'] };
+  const LAYOUTS = {
+    exec: { name: ['Executive summary', 'ملخص تنفيذي'], kpis: 4, kpiH: 96, filters: false, flex: [1.3, 1],
+      rows: [[[2, 'line', ['Main trend', 'الاتجاه الرئيسي']], [1, 'bar', ['Breakdown', 'التوزيع']]], [[1, 'column', ['Comparison', 'المقارنة']], [1, 'table', ['Detail', 'التفاصيل']]]],
+      why: [['Key numbers first, where the eye starts', 'الأرقام الأهم أولًا حيث تبدأ العين'], ['One screen, no scrolling', 'شاشة واحدة بدون تمرير'], ['8 visuals at most', '8 عناصر كحد أقصى']] },
+    analysis: { name: ['Analysis', 'تحليل'], kpis: 3, kpiH: 84, filters: true, flex: [1, 1.25],
+      rows: [[[1, 'column', ['Main chart', 'المخطط الرئيسي']]], [[1, 'table', ['Detail table', 'جدول التفاصيل']]]],
+      why: [['All filters in one place', 'كل الفلاتر في مكان واحد'], ['Overview on top, detail below', 'النظرة العامة في الأعلى والتفاصيل في الأسفل'], ['A wide table that is easy to read', 'جدول عريض سهل القراءة']] },
+    ops: { name: ['Operations monitor', 'مراقبة العمليات'], kpis: 6, kpiH: 84, filters: false, flex: [1, 1],
+      rows: [[[1, 'line', ['Trend', 'الاتجاه']], [1, 'bar', ['Ranking', 'الترتيب']], [1, 'donut', ['Mix', 'التركيبة']]], [[1, 'column', ['Volume', 'الحجم']], [1, 'bar', ['Exceptions', 'الاستثناءات']], [1, 'table', ['Watch list', 'قائمة المتابعة']]]],
+      why: [['Equal tiles for equal importance', 'مربعات متساوية لأهمية متساوية'], ['Dense but on one grid', 'كثيف لكن على شبكة واحدة'], ['Made for a daily check or a wall screen', 'مصمم للمتابعة اليومية أو شاشة العرض']] },
+    focus: { name: ['Single focus', 'رسالة واحدة'], kpis: 3, kpiH: 96, filters: false, flex: [1],
+      rows: [[[2.2, 'line', ['Hero chart', 'المخطط الرئيسي']], [1, 'text', ['What it means', 'ماذا يعني']]]],
+      why: [['One message per page', 'رسالة واحدة لكل صفحة'], ['A short text explains the chart', 'نص قصير يشرح المخطط'], ['Generous white space', 'مساحة بيضاء مريحة']] }
+  };
+  state.layout = Object.assign({ preset: 'exec', kpis: 4, filters: false, dir: '', radius: 12, shadow: true, header: true, accentBar: true, samples: true, transparent: false }, state.layout || {});
+  if (!LAYOUTS[state.layout.preset]) state.layout.preset = 'exec';
+  const lay = () => state.layout;
+  const rtl = (c) => ((c || lay()).dir ? (c || lay()).dir === 'rtl' : isAr());
+  const nm = (pair) => (isAr() ? pair[1] : pair[0]);
+
+  function computeSlots(c) {
+    const P = LAYOUTS[c.preset], slots = [], top = c.header ? HH + 14 : M;
+    if (c.header) {
+      slots.push({ kind: 'title', role: ['Page title', 'عنوان الصفحة'], x: M + 8, y: 12, w: 560, h: 32 });
+      slots.push({ kind: 'logo', role: ['Logo', 'الشعار'], x: PW - M - 8 - 150, y: 12, w: 150, h: 32 });
+    }
+    let x0 = M, cw = PW - 2 * M;
+    if (c.filters) { slots.push({ kind: 'slicer', role: ['Filters', 'الفلاتر'], x: M, y: top, w: 196, h: PH - M - top, rail: true }); x0 = M + 196 + G; cw = PW - M - x0; }
+    const rows = [{ fixed: P.kpiH, cols: Array.from({ length: c.kpis }, (_, i) => [1, 'kpi', [`KPI ${i + 1}`, `مؤشر ${i + 1}`]]) }]
+      .concat(P.rows.map((cols, i) => ({ flex: P.flex[i], cols })));
+    const flexSum = P.flex.reduce((a, b) => a + b, 0), free = PH - M - top - G * (rows.length - 1) - P.kpiH;
+    let y = top;
+    rows.forEach((r, ri) => {
+      const h = r.fixed || (ri === rows.length - 1 ? PH - M - y : Math.round(free * r.flex / flexSum));
+      const wsum = r.cols.reduce((a, col) => a + col[0], 0), avail = cw - G * (r.cols.length - 1);
+      let x = x0;
+      r.cols.forEach((col, ci) => {
+        const w = ci === r.cols.length - 1 ? x0 + cw - x : Math.round(avail * col[0] / wsum);
+        slots.push({ kind: col[1], role: col[2], x, y, w, h }); x += w + G;
+      });
+      y += h + G;
+    });
+    // Arabic reports read from the right: mirror the whole page so KPI 1 and the title start there
+    if (rtl(c)) slots.forEach((s) => { s.x = PW - s.x - s.w; });
+    return slots;
+  }
+
+  // Sample content so the preview reads like a finished report (never drawn in the PNG)
+  function sample(s, u, right) {
+    const d = state.data, sec = mix(u.text, u.card, 0.35), grid = mix(u.text, u.card, 0.85), p = 14;
+    const X = s.x + p, Y = s.y + 32, W = s.w - 2 * p, H = s.h - 32 - p;
+    const at = (fx) => (right ? s.x + s.w - p - fx : X + fx); // horizontal position from the reading start
+    const font = `font-family="'${state.font}', 'Segoe UI', Arial, sans-serif"`;
+    switch (s.kind) {
+      case 'kpi': {
+        const vals = ['AED 1.24M', '8,432', '4.8%', '312', '96%', '27 min'], v = vals[(+s.role[0].split(' ')[1] - 1) % vals.length];
+        const fs = Math.min(30, Math.round(s.h * 0.3));
+        return `<text x="${at(c0(s))}" y="${s.y + s.h / 2 + fs / 2.6}" ${font} font-size="${fs}" font-weight="800" fill="${u.text}" text-anchor="${right ? 'end' : 'start'}">${v}</text>`
+          + `<text x="${at(c0(s))}" y="${s.y + s.h - 14}" ${font} font-size="11" font-weight="600" fill="${u.good}" text-anchor="${right ? 'end' : 'start'}">▲ ${L('5.1% vs LM', '5.1% عن الشهر الماضي')}</text>`;
+      }
+      case 'line': {
+        const a = [0.55, 0.62, 0.58, 0.7, 0.66, 0.78, 0.74, 0.86, 0.82, 0.92], b = [0.35, 0.4, 0.38, 0.45, 0.5, 0.48, 0.56, 0.54, 0.6, 0.64];
+        const pts = (arr) => arr.map((v, i) => `${(X + (i / (arr.length - 1)) * W).toFixed(1)},${(Y + H - v * H * 0.9).toFixed(1)}`).join(' ');
+        return [0.25, 0.5, 0.75].map((f) => `<line x1="${X}" x2="${X + W}" y1="${Y + H * f}" y2="${Y + H * f}" stroke="${grid}"/>`).join('')
+          + `<polyline points="${pts(b)}" fill="none" stroke="${d[1]}" stroke-width="2.5" stroke-linejoin="round"/><polyline points="${pts(a)}" fill="none" stroke="${d[0]}" stroke-width="3" stroke-linejoin="round"/>`;
+      }
+      case 'bar': {
+        const v = [0.92, 0.74, 0.61, 0.45, 0.32], n = Math.max(3, Math.min(5, Math.floor(H / 26))), bh = Math.min(16, H / n - 8);
+        return v.slice(0, n).map((f, i) => { const w = (W - 8) * f; return `<rect x="${right ? X + W - w : X}" y="${Y + i * (H / n) + 4}" width="${w.toFixed(1)}" height="${bh.toFixed(1)}" rx="3" fill="${d[0]}" opacity="${1 - i * 0.12}"/>`; }).join('');
+      }
+      case 'column': {
+        const v = [0.5, 0.64, 0.58, 0.72, 0.68, 0.84, 0.78, 0.95], n = v.length, gap = W / n;
+        return v.map((f, i) => `<rect x="${(X + i * gap + gap * 0.18).toFixed(1)}" y="${(Y + H - f * H).toFixed(1)}" width="${(gap * 0.64).toFixed(1)}" height="${(f * H).toFixed(1)}" rx="3" fill="${d[0]}" opacity="${i === n - 1 ? 1 : 0.5}"/>`).join('');
+      }
+      case 'donut': {
+        const r = Math.max(10, Math.min(W, H) / 2 - 10), cx = s.x + s.w / 2, cy = Y + H / 2, C = 2 * Math.PI * r; let acc = 0;
+        return [0.4, 0.25, 0.2, 0.15].map((v, i) => { const seg = `<circle r="${r.toFixed(1)}" cx="${cx}" cy="${cy}" fill="none" stroke="${d[i]}" stroke-width="${Math.max(8, r * 0.36).toFixed(1)}" stroke-dasharray="${(C * v).toFixed(1)} ${C.toFixed(1)}" stroke-dashoffset="${(-C * acc).toFixed(1)}" transform="rotate(-90 ${cx} ${cy})"/>`; acc += v; return seg; }).join('');
+      }
+      case 'table': {
+        const rows = Math.max(3, Math.min(8, Math.floor((H - 12) / 24)));
+        let t = `<rect x="${X}" y="${Y}" width="${W}" height="20" rx="4" fill="${u.accent}" opacity=".9"/>`;
+        for (let i = 1; i < rows; i++) t += `<rect x="${X}" y="${Y + i * 24 + 16}" width="${W}" height="1" fill="${grid}"/>` + [0.34, 0.18, 0.14].map((f, j) => `<rect x="${right ? X + W - (8 + j * W * 0.36) - W * f : X + 8 + j * W * 0.36}" y="${Y + i * 24 + 4}" width="${(W * f).toFixed(1)}" height="6" rx="3" fill="${sec}" opacity=".45"/>`).join('');
+        return t;
+      }
+      case 'text': return [1, 0.92, 0.96, 0.7, 0, 1, 0.84, 0.6].map((f, i) => (f ? `<rect x="${right ? X + W - W * f : X}" y="${Y + 6 + i * 18}" width="${(W * f).toFixed(1)}" height="7" rx="3.5" fill="${sec}" opacity=".45"/>` : '')).join('');
+      case 'slicer': return [0, 1, 2, 3].map((i) => `<rect x="${X}" y="${Y + i * 46}" width="${W}" height="30" rx="7" fill="none" stroke="${grid}" stroke-width="1.5"/><rect x="${right ? X + W - 10 - W * 0.45 : X + 10}" y="${Y + i * 46 + 12}" width="${(W * 0.45).toFixed(1)}" height="6" rx="3" fill="${sec}" opacity=".5"/>`).join('');
+      case 'title': return `<text x="${right ? s.x + s.w : s.x}" y="${s.y + 23}" ${font} font-size="19" font-weight="700" fill="${u.text}" text-anchor="${right ? 'end' : 'start'}">${L('Sales overview', 'نظرة عامة على المبيعات')}</text>`;
+      case 'logo': return `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="6" fill="none" stroke="${sec}" stroke-dasharray="4 4" opacity=".6"/><text x="${s.x + s.w / 2}" y="${s.y + 21}" ${font} font-size="11" font-weight="700" fill="${sec}" text-anchor="middle" letter-spacing="1">${L('YOUR LOGO', 'شعارك')}</text>`;
+    }
+    return '';
+  }
+  const c0 = () => (lay().accentBar ? 12 : 0); // KPI text sits after the accent bar
+
+  function bgSvg(slots, opt) {
+    const u = state.ui, c = lay(), right = rtl(), light = lum(u.background) > 0.45;
+    const edge = mix(u.text, u.card, light ? 0.86 : 0.9), rail = mix(u.card, u.background, 0.35), r = +c.radius;
+    let s = `<rect width="${PW}" height="${PH}" fill="${u.background}"/>`;
+    if (c.header) {
+      s += `<rect width="${PW}" height="${HH}" fill="${mix(u.card, u.background, 0.25)}"/><rect y="${HH - 1}" width="${PW}" height="1" fill="${edge}"/>`
+        + `<rect x="${right ? PW - M - 8 - 40 : M + 8}" y="${HH - 9}" width="40" height="3" rx="1.5" fill="${u.accent}"/>`;
+    }
+    slots.forEach((p, i) => {
+      if (p.kind === 'title' || p.kind === 'logo') return;
+      s += `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="${r}" fill="${p.rail ? rail : u.card}"${c.shadow ? ' filter="url(#sh)"' : ''}${light || !c.shadow ? ` stroke="${edge}" stroke-width="1"` : ''}/>`;
+      if (p.kind === 'kpi' && c.accentBar) s += `<rect x="${right ? p.x + p.w - 14 : p.x + 10}" y="${p.y + 16}" width="4" height="${p.h - 32}" rx="2" fill="${u.accent}"/>`;
+    });
+    if (opt.preview) {
+      const sec = mix(u.text, u.card, 0.35), font = `font-family="'${state.font}', 'Segoe UI', Arial, sans-serif"`;
+      slots.forEach((p, i) => {
+        let g = c.samples ? sample(p, u, right) : '';
+        if (p.kind !== 'title' && p.kind !== 'logo') {
+          const lx = right ? p.x + p.w - 14 - (p.kind === 'kpi' ? c0(p) : 0) : p.x + 14 + (p.kind === 'kpi' ? c0(p) : 0);
+          g += `<text x="${lx}" y="${p.y + 22}" ${font} font-size="12" font-weight="700" fill="${sec}" text-anchor="${right ? 'end' : 'start'}">${nm(p.role)}</text>`
+            + `<text x="${right ? p.x + 12 : p.x + p.w - 12}" y="${p.y + 22}" font-family="Consolas, monospace" font-size="10" fill="${sec}" opacity=".75" text-anchor="${right ? 'start' : 'end'}">${p.w}×${p.h}</text>`;
+        }
+        s += `<g data-s="${i}">${g}<rect class="o" x="${p.x - 2}" y="${p.y - 2}" width="${p.w + 4}" height="${p.h + 4}" rx="${r + 2}" fill="none" stroke="#fdcb6e" stroke-width="3" opacity="0"/></g>`;
+      });
+    }
+    const defs = c.shadow ? `<defs><filter id="sh" x="-10%" y="-10%" width="120%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="${light ? 4 : 6}" flood-color="#000" flood-opacity="${light ? 0.1 : 0.35}"/></filter></defs>` : '';
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${PW} ${PH}" width="${opt.w || PW}" height="${opt.h || PH}"${opt.preview ? ' role="img" aria-label="Page layout preview"' : ''}>${defs}${s}</svg>`;
+  }
+
+  // small wireframe for the layout buttons
+  const thumb = (key) => {
+    const c = Object.assign({}, lay(), { preset: key, kpis: LAYOUTS[key].kpis, filters: LAYOUTS[key].filters }), u = state.ui;
+    return `<svg viewBox="0 0 ${PW} ${PH}"><rect width="${PW}" height="${PH}" fill="${u.background}"/>${c.header ? `<rect width="${PW}" height="${HH}" fill="${mix(u.card, u.background, 0.25)}"/>` : ''}`
+      + computeSlots(c).filter((s) => s.kind !== 'title' && s.kind !== 'logo').map((s) => `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="18" fill="${s.kind === 'kpi' ? u.accent : u.card}" opacity="${s.kind === 'kpi' ? 0.55 : 1}"/>`).join('') + '</svg>';
+  };
+
+  const seg = (key, opts, cur) => `<div class="tg-seg" role="group">${opts.map(([v, t]) => `<button type="button" data-l="${key}" data-v="${v}" class="${String(v) === String(cur) ? 'active' : ''}" aria-pressed="${String(v) === String(cur)}">${t}</button>`).join('')}</div>`;
+  const chk = (key, t, note) => `<label class="tg-check"><input type="checkbox" data-l="${key}"${lay()[key] ? ' checked' : ''}> <span>${t}${note ? `<br><small class="text-white-50">${note}</small>` : ''}</span></label>`;
+
+  function renderLayout() {
+    const c = lay(), slots = computeSlots(c);
+    $('layControls').innerHTML = `
+      <div><span class="tg-label">${L('Layout', 'التخطيط')}</span><div class="tg-lays">${Object.keys(LAYOUTS).map((k) => `<button type="button" class="tg-lay-b${k === c.preset ? ' active' : ''}" data-l="preset" data-v="${k}" aria-pressed="${k === c.preset}">${thumb(k)}${nm(LAYOUTS[k].name)}</button>`).join('')}</div></div>
+      <div><span class="tg-label">${L('KPI cards', 'بطاقات المؤشرات')}</span>${seg('kpis', [[3, '3'], [4, '4'], [5, '5'], [6, '6']], c.kpis)}</div>
+      <div><span class="tg-label">${L('Reading direction', 'اتجاه القراءة')}</span>${seg('dir', [['ltr', L('Left to right', 'من اليسار لليمين')], ['rtl', L('Right to left (Arabic)', 'من اليمين لليسار (عربي)')]], rtl() ? 'rtl' : 'ltr')}</div>
+      <div><span class="tg-label">${L('Corners', 'الزوايا')}</span>${seg('radius', [[0, L('Square', 'حادة')], [8, L('Soft', 'ناعمة')], [14, L('Round', 'دائرية')]], c.radius)}</div>
+      <div class="d-flex flex-column gap-2">
+        ${chk('header', L('Header band for title and logo', 'شريط علوي للعنوان والشعار'))}
+        ${chk('filters', L('Filter panel on the side', 'لوحة فلاتر جانبية'))}
+        ${chk('accentBar', L('Accent bar on KPI cards', 'خط ملون على بطاقات المؤشرات'))}
+        ${chk('shadow', L('Soft shadows', 'ظلال خفيفة'))}
+        ${chk('samples', L('Sample visuals in the preview', 'عناصر تجريبية في المعاينة'))}
+        ${chk('transparent', L('Transparent visuals in the theme JSON', 'عناصر شفافة في ملف السمة'), L('Tick this before downloading the theme, so every visual sits on its panel.', 'فعّلها قبل تنزيل السمة حتى يجلس كل عنصر على لوحته.'))}
+      </div>`;
+    $('layCanvas').innerHTML = bgSvg(slots, { preview: true });
+    $('layWhy').innerHTML = LAYOUTS[c.preset].why.map((w) => `<span><i class="bi bi-check2"></i> ${nm(w)}</span>`).join('');
+    const H = isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height'];
+    $('slotTable').innerHTML = `<table><thead><tr>${H.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${slots.map((s, i) => `<tr data-i="${i}"><td>${nm(s.role)}</td><td>${nm(KINDS[s.kind])}</td><td class="n">${s.x}</td><td class="n">${s.y}</td><td class="n">${s.w}</td><td class="n">${s.h}</td></tr>`).join('')}</tbody></table>`;
+  }
+
+  $('layControls').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-l]'); if (!b) return;
+    const k = b.dataset.l, v = b.dataset.v, c = lay();
+    if (k === 'preset') { c.preset = v; c.kpis = LAYOUTS[v].kpis; c.filters = LAYOUTS[v].filters; track('theme_layout', { layout: v }); }
+    else c[k] = k === 'dir' ? v : +v;
+    renderLayout(); save();
+  });
+  $('layControls').addEventListener('change', (e) => {
+    const el = e.target.closest('input[data-l]'); if (!el) return;
+    lay()[el.dataset.l] = el.checked;
+    if (el.dataset.l === 'transparent') renderJson();
+    renderLayout(); save();
+  });
+  // hovering a row outlines its panel on the preview
+  const hl = (i) => { $('layCanvas').querySelectorAll('[data-s] .o').forEach((o) => o.setAttribute('opacity', o.parentNode.dataset.s === i ? '1' : '0')); };
+  $('slotTable').addEventListener('mouseover', (e) => { const tr = e.target.closest('tr[data-i]'); if (tr) hl(tr.dataset.i); });
+  $('slotTable').addEventListener('mouseleave', () => hl(null));
+
+  const fileBase = () => (state.name || 'power-bi-theme').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase() || 'power-bi-theme';
+  const saveBlob = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
+  const slotRows = () => computeSlots(lay()).map((s) => [nm(s.role), nm(KINDS[s.kind]), s.x, s.y, s.w, s.h]);
+  const slotHead = () => (isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height']);
+  $('slotCopy').addEventListener('click', () => {
+    const text = [slotHead()].concat(slotRows()).map((r) => r.join('\t')).join('\n');
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast(L('Table copied. Paste it into Excel or Notes', 'تم نسخ الجدول. الصقه في Excel أو الملاحظات')), () => toast(L('Copy failed. Use Download .csv', 'تعذّر النسخ. استخدم تنزيل .csv')));
+    track('theme_layout_slots', { method: 'copy', layout: lay().preset });
+  });
+  $('slotCsv').addEventListener('click', () => {
+    const q = (v) => (/[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
+    const csv = '﻿' + [slotHead()].concat(slotRows()).map((r) => r.map(q).join(',')).join('\r\n');
+    saveBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), `${fileBase()}-layout-${lay().preset}.csv`);
+    track('theme_layout_slots', { method: 'csv', layout: lay().preset });
+  });
+  $('pngBtn').addEventListener('click', () => {
+    const img = new Image();
+    img.onload = () => {
+      const cv = document.createElement('canvas'); cv.width = 1920; cv.height = 1080;
+      cv.getContext('2d').drawImage(img, 0, 0, 1920, 1080);
+      cv.toBlob((b) => { if (!b) { toast(L('Could not create the image in this browser', 'تعذّر إنشاء الصورة في هذا المتصفح')); return; }
+        saveBlob(b, `${fileBase()}-background-${lay().preset}.png`);
+        toast(L('Background downloaded. Set it in Format page › Canvas background', 'تم تنزيل الخلفية. ضعها من Format page › Canvas background'));
+      }, 'image/png');
+    };
+    img.onerror = () => toast(L('Could not create the image in this browser', 'تعذّر إنشاء الصورة في هذا المتصفح'));
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(bgSvg(computeSlots(lay()), { w: 1920, h: 1080 }));
+    track('theme_layout_png', { layout: lay().preset, direction: rtl() ? 'rtl' : 'ltr', kpis: lay().kpis });
   });
 
   renderInputs(); renderAll();
