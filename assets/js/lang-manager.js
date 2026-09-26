@@ -233,11 +233,6 @@ class LanguageManager {
     
     // Update meta tags
     this.updateMetaTags();
-    
-    // Trigger custom event for page-specific updates
-    document.dispatchEvent(new CustomEvent('languageChanged', { 
-      detail: { language: this.currentLang } 
-    }));
   }
   
   // Update meta tags for SEO
@@ -335,7 +330,7 @@ class LanguageManager {
    */
   removeSwitchers() {
     const existingSwitchers = document.querySelectorAll(
-      '.lang-switcher-simple, .language-switcher-container, .desktop-lang-switcher'
+      '.language-switcher-container, .desktop-lang-switcher'
     );
     existingSwitchers.forEach(switcher => switcher.remove());
   }
@@ -520,24 +515,7 @@ class LanguageManager {
     this.initialized = true;
     // Translations are in place: show the page (hidden by the early script in <head>)
     document.documentElement.classList.remove('i18n-pending');
-
-    console.log('LanguageManager initialized with language:', this.currentLang);
-    console.log('Mobile view:', this.isMobileView());
-    console.log('Breakpoint:', this.breakpoint);
   }
-
-  // Cleanup method
-  destroy() {
-    if (this.handleResize) {
-      window.removeEventListener('resize', this.handleResize);
-    }
-    this.removeSwitchers();
-  }
-}
-
-// Global utility function for getting translations
-function t(key) {
-  return window.langManager ? window.langManager.getText(key) : key;
 }
 
 // Initialize when DOM is ready

@@ -83,11 +83,6 @@ body {
   100% { transform: translateY(-10vh) translateX(50px); opacity: 0; }
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
 @keyframes ripple {
   to {
     transform: scale(4);
@@ -692,29 +687,6 @@ section {
 .floating-2 { bottom: 20%; left: 5%; animation-duration: 20s; animation-direction: reverse;}
 .floating-3 { top: 60%; right: 5%; animation-duration: 18s; }
 
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--dk);
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: opacity 0.5s ease;
-}
-
-.loading-spinner {
-  width: 60px;
-  height: 60px;
-  border: 3px solid rgba(0, 212, 255, 0.2);
-  border-top: 3px solid var(--accent);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
 .ripple {
   position: absolute;
   border-radius: 50%;
@@ -913,7 +885,6 @@ html[dir="rtl"] .navbar-brand {
 
 @media print {
   .floating-element,
-  .loading-overlay,
   .interactive-bg {
     display: none !important;
   }

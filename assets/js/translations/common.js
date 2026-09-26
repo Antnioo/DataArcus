@@ -60,6 +60,14 @@ window.commonTranslations = {
       message: "Hi Abdelrahman, I found DataArcus and would like to talk about a Power BI project."
     },
 
+    // Contact form status messages
+    formMsg: {
+      wait: "Please wait...",
+      sending: "Sending...",
+      success: "Thank you! Your message was sent.",
+      error: "Your message could not be sent. Please try again, or contact me on WhatsApp."
+    },
+
     // Common Meta
     meta: {
       author: "DataArcus"
@@ -125,6 +133,14 @@ window.commonTranslations = {
     wa: {
       label: "تواصل عبر واتساب",
       message: "مرحبًا عبدالرحمن، وجدت DataArcus وأود التحدث عن مشروع Power BI."
+    },
+
+    // رسائل نموذج التواصل
+    formMsg: {
+      wait: "يرجى الانتظار...",
+      sending: "جارٍ الإرسال...",
+      success: "شكرًا لك! تم إرسال رسالتك.",
+      error: "تعذر إرسال رسالتك. يرجى المحاولة مرة أخرى أو التواصل معي عبر واتساب."
     },
 
     meta: {
