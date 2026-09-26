@@ -64,6 +64,8 @@ class LanguageManager {
       return window.dp600Translations;
     } else if (path.includes('pl-300-practice-exam')) {
       return window.pl300Translations;
+    } else if (path.includes('svg-kpi-designer')) {
+      return window.svgKpiTranslations;
     } else if (path.includes('power-bi-licensing-cost-calculator')) {
       return window.licensingCalculatorTranslations;
     } else if (path.includes('/tools/')) {
