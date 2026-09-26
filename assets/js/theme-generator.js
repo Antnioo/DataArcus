@@ -222,17 +222,42 @@ document.addEventListener('DOMContentLoaded', () => {
   const rtl = (c) => ((c || lay()).dir ? (c || lay()).dir === 'rtl' : isAr());
   const nm = (pair) => (isAr() ? pair[1] : pair[0]);
 
+  // Adjustable sizes, each kept inside a safe range so every visual stays usable
+  const RANGE = { hh: [44, 96], logoW: [100, 360], fw: [160, 320], fh: [56, 120], kpiH: [64, 160], mainW: [40, 75], split: [30, 70] };
+  const clampTo = (k, v) => Math.max(RANGE[k][0], Math.min(RANGE[k][1], Math.round(+v)));
+  const hasMain = (P) => P.rows[0].length > 1 && P.rows[0][0][0] > P.rows[0][1][0];   // a wider first chart
+  const hasSplit = (P) => P.rows.length === 2;
+  function sizes(c) {
+    const P = LAYOUTS[c.preset], n = (k, d) => clampTo(k, c[k] == null || !isFinite(+c[k]) ? d : c[k]);
+    const w0 = P.rows[0].reduce((a, col) => a + col[0], 0);
+    return { hh: n('hh', HH), logoW: n('logoW', 150), fpos: ['start', 'end', 'top'].includes(c.fpos) ? c.fpos : 'start', fw: n('fw', 196), fh: n('fh', 72),
+      kpiH: n('kpiH', P.kpiH), mainW: n('mainW', 100 * P.rows[0][0][0] / w0), split: n('split', P.flex.length === 2 ? 100 * P.flex[0] / (P.flex[0] + P.flex[1]) : 50) };
+  }
+
   function computeSlots(c) {
-    const P = LAYOUTS[c.preset], slots = [], top = c.header ? HH + 14 : M;
+    const P = LAYOUTS[c.preset], z = sizes(c), slots = [];
+    let top = c.header ? z.hh + 14 : M;
     if (c.header) {
-      slots.push({ kind: 'title', role: ['Page title', 'عنوان الصفحة'], x: M + 8, y: 12, w: 560, h: 32 });
-      slots.push({ kind: 'logo', role: ['Logo', 'الشعار'], x: PW - M - 8 - 150, y: 12, w: 150, h: 32 });
+      const th = z.hh - 24, lx = PW - M - 8 - z.logoW;
+      slots.push({ kind: 'title', role: ['Page title', 'عنوان الصفحة'], x: M + 8, y: 12, w: Math.min(560, lx - 24 - (M + 8)), h: th });
+      slots.push({ kind: 'logo', role: ['Logo', 'الشعار'], x: lx, y: 12, w: z.logoW, h: th });
     }
     let x0 = M, cw = PW - 2 * M;
-    if (c.filters) { slots.push({ kind: 'slicer', role: ['Filters', 'الفلاتر'], x: M, y: top, w: 196, h: PH - M - top, rail: true }); x0 = M + 196 + G; cw = PW - M - x0; }
-    const rows = [{ fixed: P.kpiH, cols: Array.from({ length: c.kpis }, (_, i) => [1, 'kpi', [`KPI ${i + 1}`, `مؤشر ${i + 1}`]]) }]
-      .concat(P.rows.map((cols, i) => ({ flex: P.flex[i], cols })));
-    const flexSum = P.flex.reduce((a, b) => a + b, 0), free = PH - M - top - G * (rows.length - 1) - P.kpiH;
+    if (c.filters && z.fpos === 'top') { slots.push({ kind: 'slicer', role: ['Filters', 'الفلاتر'], x: M, y: top, w: cw, h: z.fh, rail: true }); top += z.fh + G; }
+    else if (c.filters) {
+      const fx = z.fpos === 'end' ? PW - M - z.fw : M;
+      slots.push({ kind: 'slicer', role: ['Filters', 'الفلاتر'], x: fx, y: top, w: z.fw, h: PH - M - top, rail: true });
+      cw = PW - 2 * M - z.fw - G; if (z.fpos !== 'end') x0 = M + z.fw + G;
+    }
+    // the first chart row: the main chart takes its share, the others split the rest by their weights
+    const first = P.rows[0].map((col, i) => col.slice());
+    if (hasMain(P)) { const rest = first.slice(1).reduce((a, col) => a + col[0], 0); first[0][0] = rest * z.mainW / (100 - z.mainW); }
+    const flex = hasSplit(P) ? [z.split, 100 - z.split] : P.flex.slice();
+    const flexSum = flex.reduce((a, b) => a + b, 0), free = PH - M - top - G * P.rows.length - z.kpiH;
+    // no chart row shorter than 90: move the split back if needed
+    if (hasSplit(P) && free >= 180) { const h0 = free * flex[0] / flexSum; if (h0 < 90) flex[0] = flexSum * 90 / free; else if (free - h0 < 90) flex[0] = flexSum * (free - 90) / free; flex[1] = flexSum - flex[0]; }
+    const rows = [{ fixed: z.kpiH, cols: Array.from({ length: c.kpis }, (_, i) => [1, 'kpi', [`KPI ${i + 1}`, `مؤشر ${i + 1}`]]) }]
+      .concat([first].concat(P.rows.slice(1)).map((cols, i) => ({ flex: flex[i], cols })));
     let y = top;
     rows.forEach((r, ri) => {
       const h = r.fixed || (ri === rows.length - 1 ? PH - M - y : Math.round(free * r.flex / flexSum));
@@ -287,9 +312,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return t;
       }
       case 'text': return [1, 0.92, 0.96, 0.7, 0, 1, 0.84, 0.6].map((f, i) => (f ? `<rect x="${right ? X + W - W * f : X}" y="${Y + 6 + i * 18}" width="${(W * f).toFixed(1)}" height="7" rx="3.5" fill="${sec}" opacity=".45"/>` : '')).join('');
-      case 'slicer': return [0, 1, 2, 3].map((i) => `<rect x="${X}" y="${Y + i * 46}" width="${W}" height="30" rx="7" fill="none" stroke="${grid}" stroke-width="1.5"/><rect x="${right ? X + W - 10 - W * 0.45 : X + 10}" y="${Y + i * 46 + 12}" width="${(W * 0.45).toFixed(1)}" height="6" rx="3" fill="${sec}" opacity=".5"/>`).join('');
-      case 'title': return `<text x="${right ? s.x + s.w : s.x}" y="${s.y + 23}" ${font} font-size="19" font-weight="700" fill="${u.text}" text-anchor="${right ? 'end' : 'start'}">${L('Sales overview', 'نظرة عامة على المبيعات')}</text>`;
-      case 'logo': return `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="6" fill="none" stroke="${sec}" stroke-dasharray="4 4" opacity=".6"/><text x="${s.x + s.w / 2}" y="${s.y + 21}" ${font} font-size="11" font-weight="700" fill="${sec}" text-anchor="middle" letter-spacing="1">${L('YOUR LOGO', 'شعارك')}</text>`;
+      case 'slicer': if (s.w > s.h * 3) { const n = 4, bw = (W - (n - 1) * 10) / n, by = s.y + Math.max(28, s.h - 38); return Array.from({ length: n }, (_, i) => { const bx = right ? X + W - (i + 1) * bw - i * 10 : X + i * (bw + 10); return `<rect x="${bx.toFixed(1)}" y="${by}" width="${bw.toFixed(1)}" height="26" rx="7" fill="none" stroke="${grid}" stroke-width="1.5"/><rect x="${(right ? bx + bw - 10 - bw * 0.45 : bx + 10).toFixed(1)}" y="${by + 10}" width="${(bw * 0.45).toFixed(1)}" height="6" rx="3" fill="${sec}" opacity=".5"/>`; }).join(''); }
+        return [0, 1, 2, 3].map((i) => `<rect x="${X}" y="${Y + i * 46}" width="${W}" height="30" rx="7" fill="none" stroke="${grid}" stroke-width="1.5"/><rect x="${right ? X + W - 10 - W * 0.45 : X + 10}" y="${Y + i * 46 + 12}" width="${(W * 0.45).toFixed(1)}" height="6" rx="3" fill="${sec}" opacity=".5"/>`).join('');
+      case 'title': return `<text x="${right ? s.x + s.w : s.x}" y="${(s.y + s.h * 0.72).toFixed(1)}" ${font} font-size="${Math.min(30, Math.round(s.h * 0.6))}" font-weight="700" fill="${u.text}" text-anchor="${right ? 'end' : 'start'}">${L('Sales overview', 'نظرة عامة على المبيعات')}</text>`;
+      case 'logo': return `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="6" fill="none" stroke="${sec}" stroke-dasharray="4 4" opacity=".6"/><text x="${s.x + s.w / 2}" y="${s.y + s.h / 2 + 4}" ${font} font-size="11" font-weight="700" fill="${sec}" text-anchor="middle" letter-spacing="1">${L('YOUR LOGO', 'شعارك')}</text>`;
     }
     return '';
   }
@@ -300,8 +326,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const edge = mix(u.text, u.card, light ? 0.86 : 0.9), rail = mix(u.card, u.background, 0.35), r = +c.radius;
     let s = `<rect width="${PW}" height="${PH}" fill="${u.background}"/>`;
     if (c.header) {
-      s += `<rect width="${PW}" height="${HH}" fill="${mix(u.card, u.background, 0.25)}"/><rect y="${HH - 1}" width="${PW}" height="1" fill="${edge}"/>`
-        + `<rect x="${right ? PW - M - 8 - 40 : M + 8}" y="${HH - 9}" width="40" height="3" rx="1.5" fill="${u.accent}"/>`;
+      const hh = sizes(c).hh;
+      s += `<rect width="${PW}" height="${hh}" fill="${mix(u.card, u.background, 0.25)}"/><rect y="${hh - 1}" width="${PW}" height="1" fill="${edge}"/>`
+        + `<rect x="${right ? PW - M - 8 - 40 : M + 8}" y="${hh - 9}" width="40" height="3" rx="1.5" fill="${u.accent}"/>`;
     }
     slots.forEach((p, i) => {
       if (p.kind === 'title' || p.kind === 'logo') return;
@@ -326,16 +353,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // small wireframe for the layout buttons
   const thumb = (key) => {
-    const c = Object.assign({}, lay(), { preset: key, kpis: LAYOUTS[key].kpis, filters: LAYOUTS[key].filters }), u = state.ui;
-    return `<svg viewBox="0 0 ${PW} ${PH}"><rect width="${PW}" height="${PH}" fill="${u.background}"/>${c.header ? `<rect width="${PW}" height="${HH}" fill="${mix(u.card, u.background, 0.25)}"/>` : ''}`
+    const c = Object.assign({}, lay(), { preset: key, kpis: LAYOUTS[key].kpis, filters: LAYOUTS[key].filters, kpiH: null, mainW: null, split: null }), u = state.ui;
+    return `<svg viewBox="0 0 ${PW} ${PH}"><rect width="${PW}" height="${PH}" fill="${u.background}"/>${c.header ? `<rect width="${PW}" height="${sizes(c).hh}" fill="${mix(u.card, u.background, 0.25)}"/>` : ''}`
       + computeSlots(c).filter((s) => s.kind !== 'title' && s.kind !== 'logo').map((s) => `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="18" fill="${s.kind === 'kpi' ? u.accent : u.card}" opacity="${s.kind === 'kpi' ? 0.55 : 1}"/>`).join('') + '</svg>';
   };
 
   const seg = (key, opts, cur) => `<div class="tg-seg" role="group">${opts.map(([v, t]) => `<button type="button" data-l="${key}" data-v="${v}" class="${String(v) === String(cur) ? 'active' : ''}" aria-pressed="${String(v) === String(cur)}">${t}</button>`).join('')}</div>`;
   const chk = (key, t, note) => `<label class="tg-check"><input type="checkbox" data-l="${key}"${lay()[key] ? ' checked' : ''}> <span>${t}${note ? `<br><small class="text-white-50">${note}</small>` : ''}</span></label>`;
 
-  function renderLayout() {
+  const rng = (key, label, v, unit) => `<label class="tg-range"><span>${label} <b data-out="${key}">${v}${unit || ''}</b></span><input type="range" data-l="${key}" data-u="${unit || ''}" min="${RANGE[key][0]}" max="${RANGE[key][1]}" step="${unit === '%' ? 1 : 4}" value="${v}"></label>`;
+  function sizeControls(c) {
+    const P = LAYOUTS[c.preset], z = sizes(c), out = [];
+    if (c.header) out.push(rng('hh', L('Header height', 'ارتفاع الشريط العلوي'), z.hh), rng('logoW', L('Logo width', 'عرض الشعار'), z.logoW));
+    if (c.filters) {
+      out.push(`<div><span class="tg-label">${L('Filter panel position', 'موضع لوحة الفلاتر')}</span>${seg('fpos', [['start', L('Start side', 'جهة البداية')], ['end', L('End side', 'جهة النهاية')], ['top', L('Top', 'أعلى')]], z.fpos)}</div>`);
+      out.push(z.fpos === 'top' ? rng('fh', L('Filter strip height', 'ارتفاع شريط الفلاتر'), z.fh) : rng('fw', L('Filter panel width', 'عرض لوحة الفلاتر'), z.fw));
+    }
+    out.push(rng('kpiH', L('KPI row height', 'ارتفاع صف المؤشرات'), z.kpiH));
+    if (hasMain(P)) out.push(rng('mainW', L('Main chart width', 'عرض المخطط الرئيسي'), z.mainW, '%'));
+    if (hasSplit(P)) out.push(rng('split', L('Top row share of the chart area', 'حصة الصف العلوي من مساحة المخططات'), z.split, '%'));
+    return `<div class="tg-sizes"><div class="d-flex justify-content-between align-items-center"><span class="tg-label mb-0">${L('Adjust sizes', 'ضبط المقاسات')}</span><button type="button" class="tg-reset" data-l="reset"><i class="bi bi-arrow-counterclockwise"></i> ${L('Reset sizes', 'إعادة المقاسات')}</button></div>
+      <small class="text-white-50 d-block mb-2">${L('Start side is the left in left-to-right reports and the right in Arabic ones. Sizes are in Power BI units (page 1280 × 720).', 'جهة البداية هي اليسار في التقارير من اليسار لليمين واليمين في التقارير العربية. المقاسات بوحدات Power BI (صفحة 1280 × 720).')}</small>${out.join('')}</div>`;
+  }
+  function renderLayoutPreview() {
     const c = lay(), slots = computeSlots(c);
+    $('layCanvas').innerHTML = bgSvg(slots, { preview: true });
+    const H = isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height'];
+    $('slotTable').innerHTML = `<table><thead><tr>${H.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${slots.map((s, i) => `<tr data-i="${i}"><td>${nm(s.role)}</td><td>${nm(KINDS[s.kind])}</td><td class="n">${s.x}</td><td class="n">${s.y}</td><td class="n">${s.w}</td><td class="n">${s.h}</td></tr>`).join('')}</tbody></table>`;
+  }
+  function renderLayout() {
+    const c = lay();
     $('layControls').innerHTML = `
       <div><span class="tg-label">${L('Layout', 'التخطيط')}</span><div class="tg-lays">${Object.keys(LAYOUTS).map((k) => `<button type="button" class="tg-lay-b${k === c.preset ? ' active' : ''}" data-l="preset" data-v="${k}" aria-pressed="${k === c.preset}">${thumb(k)}${nm(LAYOUTS[k].name)}</button>`).join('')}</div></div>
       <div><span class="tg-label">${L('KPI cards', 'بطاقات المؤشرات')}</span>${seg('kpis', [[3, '3'], [4, '4'], [5, '5'], [6, '6']], c.kpis)}</div>
@@ -343,27 +390,34 @@ document.addEventListener('DOMContentLoaded', () => {
       <div><span class="tg-label">${L('Corners', 'الزوايا')}</span>${seg('radius', [[0, L('Square', 'حادة')], [8, L('Soft', 'ناعمة')], [14, L('Round', 'دائرية')]], c.radius)}</div>
       <div class="d-flex flex-column gap-2">
         ${chk('header', L('Header band for title and logo', 'شريط علوي للعنوان والشعار'))}
-        ${chk('filters', L('Filter panel on the side', 'لوحة فلاتر جانبية'))}
+        ${chk('filters', L('Filter panel', 'لوحة الفلاتر'))}
         ${chk('accentBar', L('Accent bar on KPI cards', 'خط ملون على بطاقات المؤشرات'))}
         ${chk('shadow', L('Soft shadows', 'ظلال خفيفة'))}
         ${chk('samples', L('Sample visuals in the preview', 'عناصر تجريبية في المعاينة'))}
         ${chk('transparent', L('Transparent visuals in the theme JSON', 'عناصر شفافة في ملف السمة'), L('Tick this before downloading the theme, so every visual sits on its panel.', 'فعّلها قبل تنزيل السمة حتى يجلس كل عنصر على لوحته.'))}
-      </div>`;
-    $('layCanvas').innerHTML = bgSvg(slots, { preview: true });
+      </div>
+      ${sizeControls(c)}`;
     $('layWhy').innerHTML = LAYOUTS[c.preset].why.map((w) => `<span><i class="bi bi-check2"></i> ${nm(w)}</span>`).join('');
-    const H = isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height'];
-    $('slotTable').innerHTML = `<table><thead><tr>${H.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${slots.map((s, i) => `<tr data-i="${i}"><td>${nm(s.role)}</td><td>${nm(KINDS[s.kind])}</td><td class="n">${s.x}</td><td class="n">${s.y}</td><td class="n">${s.w}</td><td class="n">${s.h}</td></tr>`).join('')}</tbody></table>`;
+    renderLayoutPreview();
   }
 
   $('layControls').addEventListener('click', (e) => {
     const b = e.target.closest('button[data-l]'); if (!b) return;
     const k = b.dataset.l, v = b.dataset.v, c = lay();
-    if (k === 'preset') { c.preset = v; c.kpis = LAYOUTS[v].kpis; c.filters = LAYOUTS[v].filters; track('theme_layout', { layout: v }); }
-    else c[k] = k === 'dir' ? v : +v;
+    if (k === 'preset') { c.preset = v; c.kpis = LAYOUTS[v].kpis; c.filters = LAYOUTS[v].filters; delete c.kpiH; delete c.mainW; delete c.split; track('theme_layout', { layout: v }); }
+    else if (k === 'reset') ['hh', 'logoW', 'fpos', 'fw', 'fh', 'kpiH', 'mainW', 'split'].forEach((x) => delete c[x]);
+    else c[k] = k === 'dir' || k === 'fpos' ? v : +v;
     renderLayout(); save();
   });
+  // sliders redraw the preview while dragging, without rebuilding the controls
+  $('layControls').addEventListener('input', (e) => {
+    const el = e.target.closest('input[type="range"][data-l]'); if (!el) return;
+    lay()[el.dataset.l] = clampTo(el.dataset.l, el.value);
+    const o = $('layControls').querySelector(`[data-out="${el.dataset.l}"]`); if (o) o.textContent = el.value + el.dataset.u;
+    renderLayoutPreview(); save();
+  });
   $('layControls').addEventListener('change', (e) => {
-    const el = e.target.closest('input[data-l]'); if (!el) return;
+    const el = e.target.closest('input[type="checkbox"][data-l]'); if (!el) return;
     lay()[el.dataset.l] = el.checked;
     if (el.dataset.l === 'transparent') renderJson();
     renderLayout(); save();
