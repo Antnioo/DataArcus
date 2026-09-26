@@ -51,6 +51,13 @@ window.toolsHubTranslations = {
           "tag1": "New",
           "tag2": "Renewal ready",
           "tag3": "Apr 2026 outline"
+        },
+        "svgkpi": {
+          "title": "SVG KPI Designer",
+          "desc": "Draw KPI cards, progress rings, sparklines and trend arrows, link them to your measures and copy the DAX that draws them.",
+          "tag1": "New",
+          "tag2": "No custom visual",
+          "tag3": "Tutorial"
         }
       },
       "nextUp": "Next up",
@@ -148,6 +155,13 @@ window.toolsHubTranslations = {
           "tag1": "جديد",
           "tag2": "جاهز للتجديد",
           "tag3": "منهج أبريل 2026"
+        },
+        "svgkpi": {
+          "title": "مصمم بطاقات KPI بصيغة SVG",
+          "desc": "ارسم بطاقات مؤشرات وحلقات تقدم وخطوط اتجاه وأسهم، واربطها بمقاييسك وانسخ DAX الذي يرسمها.",
+          "tag1": "جديد",
+          "tag2": "بدون custom visual",
+          "tag3": "درس تفاعلي"
         }
       },
       "nextUp": "قريبًا",

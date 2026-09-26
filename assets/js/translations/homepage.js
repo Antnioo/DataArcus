@@ -170,6 +170,11 @@ portfolio: {
             tag: "Learn",
             title: "PL-300 Practice Exam",
             desc: "228 Power BI questions, mock exams and renewal prep."
+          },
+          {
+            tag: "Build",
+            title: "SVG KPI Designer",
+            desc: "KPI cards and sparklines for Power BI, as one DAX measure."
           }
         ]
       },
@@ -449,6 +454,11 @@ portfolio: {
             tag: "تعلّم",
             title: "اختبار PL-300 التجريبي",
             desc: "228 سؤالًا عن Power BI واختبارات تجريبية وتحضير للتجديد."
+          },
+          {
+            tag: "ابنِ",
+            title: "مصمم بطاقات KPI",
+            desc: "بطاقات مؤشرات وخطوط اتجاه لـ Power BI في مقياس DAX واحد."
           }
         ]
       },

@@ -5,19 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
   <style>html.i18n-pending body{visibility:hidden}</style>
-  <meta name="robots" content="noindex, nofollow" />
+  <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://dataarcus.com/tools/svg-kpi-designer.html" />
-  <title>SVG KPI Designer for Power BI (preview) - DataArcus</title>
-  <meta name="description" content="Design KPI cards, progress rings and trend arrows for Power BI and get the DAX measure instantly. Free, no sign-up." />
+  <title>Free SVG KPI Designer for Power BI: DAX Image Measures - DataArcus</title>
+  <meta name="description" content="Design KPI cards, progress rings, sparklines and trend arrows for Power BI, linked to your measures, and copy the DAX instantly. Free, no sign-up, English and Arabic." />
   <meta name="author" content="DataArcus" />
   <meta name="keywords" content="Power BI SVG, SVG KPI card Power BI, DAX SVG measure, Power BI progress ring, Power BI sparkline, Image URL measure" />
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="SVG KPI Designer for Power BI - DataArcus" />
-  <meta property="og:description" content="Design KPI visuals for Power BI and get the DAX measure instantly. Free, no sign-up." />
+  <meta property="og:title" content="Free SVG KPI Designer for Power BI" />
+  <meta property="og:description" content="Design KPI cards, progress rings, sparklines and trend arrows for Power BI, linked to your measures, and copy the DAX instantly. Free, no sign-up, English and Arabic." />
   <meta property="og:url" content="https://dataarcus.com/tools/svg-kpi-designer.html" />
   <meta property="og:site_name" content="DataArcus" />
-  <meta property="og:image" content="https://dataarcus.com/assets/img/dataarcus-og-logo.png" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/svg-kpi-designer.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/svg-kpi-designer.jpg" />
   <link rel="icon" href="../assets/img/favicon.svg"/>
   <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png" />
 
@@ -35,6 +39,72 @@
         t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
         y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
     })(window, document, "clarity", "script", "sy2681b9al");
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "SVG KPI Designer for Power BI",
+        "url": "https://dataarcus.com/tools/svg-kpi-designer.html",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Any (web browser)",
+        "inLanguage": [
+          "en",
+          "ar"
+        ],
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "DataArcus",
+          "url": "https://dataarcus.com/"
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Do I need a custom visual?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. The measure returns an SVG image as text. Power BI's built-in Image visual, Table, Matrix and some card visuals can show it once the measure's Data category is set to Image URL."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Where should I show the image?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Insert › Image, then set Image URL with fx › Field value to your measure. It scales to any size. A Table or Matrix also works, but images there are capped at 512 pixels."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is my data uploaded?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. You type measure names and test values in the browser. The tool never connects to your model, and your design is saved only in this browser unless you share a link."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Why does my sparkline show a single dot?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The date column in Card settings must be the date table that actually filters your measure. If it points to a different calendar, only one period returns a value."
+            }
+          }
+        ]
+      }
+    ]
+  }
   </script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -132,6 +202,13 @@
     .kd-rule { flex-wrap: wrap; } .kd-rule select[data-p$=".v"] { flex: 1 1 calc(100% - 40px); }
     .kd-rule select[data-p$=".op"] { direction: ltr; flex: 0 0 56px; } .kd-rule input[type=number] { flex: 1; }
     .kd-dax { text-align: left; }
+    .kd-route { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 18px 20px; }
+    .kd-route h3 { font-size: 1.02rem; color: var(--lt); margin: 6px 0 10px; }
+    .kd-route-k { font-size: .66rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #051018; background: var(--accent); border-radius: 20px; padding: 2px 9px; }
+    .kd-route-k.alt { background: #fdcb6e; }
+    .kd-faq h3 { font-size: 1rem; color: var(--lt); margin-top: 1.1rem; }
+    .kd-faq p { color: #94a3b8; font-size: .92rem; }
+    .tg-cta { background: linear-gradient(135deg, rgba(0, 212, 255, .12), rgba(0,132,255,.12)); border: 1px solid var(--glass-border); border-radius: 16px; padding: 22px; }
     /* tutorial */
     .kd-tour-btn { border-color: rgba(253, 203, 110, .55) !important; color: #fdcb6e !important; }
     .kd-banner { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; background: linear-gradient(135deg, rgba(0, 212, 255, .1), rgba(0,132,255,.12)); border: 1px solid rgba(0, 212, 255, .35); border-radius: 14px; padding: 12px 16px; margin-bottom: 14px; }
@@ -189,31 +266,31 @@
   <main class="kd">
     <div class="container" id="kdApp">
       <header class="mb-4">
-        <span class="badge rounded-pill text-bg-dark border border-secondary mb-2">Preview build · Not listed yet</span>
-        <h1 class="display-5 fw-bold">SVG KPI Designer</h1>
-        <p class="lead text-white-50 mb-0">Draw a KPI visual, link any part of it to your measures, and copy a DAX measure that draws it in Power BI. No code, nothing uploaded.</p>
+        <span class="badge rounded-pill text-bg-dark border border-secondary mb-2" data-i18n="kd.badge">Free tool · No sign-up · Nothing uploaded</span>
+        <h1 class="display-5 fw-bold" data-i18n="kd.title">SVG KPI Designer for Power BI</h1>
+        <p class="lead text-white-50 mb-0" data-i18n="kd.subtitle">Draw a KPI visual, link any part of it to your measures, and copy a DAX measure that draws it in Power BI. No code, nothing uploaded.</p>
       </header>
 
       <div class="kd-panel mb-3">
         <div class="kd-top">
           <div>
-            <span class="kd-label">Start from</span>
+            <span class="kd-label" data-i18n="kd.startFrom">Start from</span>
             <div class="kd-starters" id="starters"></div>
           </div>
           <div class="kd-actions">
-            <button type="button" id="undoBtn" disabled><i class="bi bi-arrow-counterclockwise"></i> Undo</button>
-            <button type="button" id="redoBtn" disabled><i class="bi bi-arrow-clockwise"></i> Redo</button>
-            <button type="button" id="shareBtn"><i class="bi bi-link-45deg"></i> Share link</button>
-            <button type="button" id="exportBtn"><i class="bi bi-download"></i> Export</button>
-            <button type="button" id="importBtn"><i class="bi bi-upload"></i> Import</button>
-            <button type="button" id="libBtn"><i class="bi bi-stars" style="color:#fdcb6e"></i> Library</button>
+            <button type="button" id="undoBtn" disabled><i class="bi bi-arrow-counterclockwise"></i> <span data-i18n="kd.undo">Undo</span></button>
+            <button type="button" id="redoBtn" disabled><i class="bi bi-arrow-clockwise"></i> <span data-i18n="kd.redo">Redo</span></button>
+            <button type="button" id="shareBtn"><i class="bi bi-link-45deg"></i> <span data-i18n="kd.share">Share link</span></button>
+            <button type="button" id="exportBtn"><i class="bi bi-download"></i> <span data-i18n="kd.export">Export</span></button>
+            <button type="button" id="importBtn"><i class="bi bi-upload"></i> <span data-i18n="kd.import">Import</span></button>
+            <button type="button" id="libBtn"><i class="bi bi-stars" style="color:#fdcb6e"></i> <span data-i18n="kd.library">Library</span></button>
             <input type="file" id="importFile" accept=".json,application/json" hidden>
           </div>
         </div>
         <div class="kd-panel kd-premium mt-3" id="libPanel" hidden>
           <div class="d-flex flex-wrap align-items-center gap-2">
-            <b><i class="bi bi-stars" style="color:#fdcb6e"></i> Design library</b><span class="kd-prem">Premium preview</span>
-            <button type="button" class="kd-link ms-auto" id="libSave"><i class="bi bi-save"></i> Save current design</button>
+            <b><i class="bi bi-stars" style="color:#fdcb6e"></i> <span data-i18n="kd.libTitle">Design library</span></b><span class="kd-prem" data-i18n="kd.premium">Premium preview</span>
+            <button type="button" class="kd-link ms-auto" id="libSave"><i class="bi bi-save"></i> <span data-i18n="kd.libSave">Save current design</span></button>
           </div>
           <ul class="kd-lib" id="libList"></ul>
         </div>
@@ -222,19 +299,19 @@
       <div class="row g-3">
         <div class="col-lg-3 col-md-6 order-2 order-lg-1 d-flex flex-column gap-3">
           <div class="kd-panel">
-            <span class="kd-label">Add</span>
+            <span class="kd-label" data-i18n="kd.add">Add</span>
             <div class="kd-add-grid" id="addBar"></div>
           </div>
           <div class="kd-panel">
-            <span class="kd-label">Layers</span>
+            <span class="kd-label" data-i18n="kd.layers">Layers</span>
             <ul class="kd-layers" id="layers"></ul>
           </div>
         </div>
         <div class="col-lg-6 order-1 order-lg-2">
           <div class="kd-panel">
-            <span class="kd-label">Canvas: drag to move, handles to resize, Alt turns off snapping</span>
+            <span class="kd-label" data-i18n="kd.canvas">Canvas: drag to move, handles to resize, Alt turns off snapping</span>
             <div class="kd-canvas-wrap"><div id="stage"></div></div>
-            <div class="kd-note" id="blankNote" hidden><i class="bi bi-info-circle"></i> The "show nothing when blank" measure is blank right now, so Power BI would show an empty cell.</div>
+            <div class="kd-note" id="blankNote" hidden><i class="bi bi-info-circle"></i> <span data-i18n="kd.blankNote">The "show nothing when blank" measure is blank right now, so Power BI would show an empty cell.</span></div>
           </div>
         </div>
         <div class="col-lg-3 col-md-6 order-3">
@@ -249,26 +326,57 @@
         <div class="col-lg-5">
           <div class="kd-panel">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
-              <span class="kd-label mb-0">Data</span>
-              <div class="d-flex gap-1"><button type="button" class="kd-link" id="addMeasure"><i class="bi bi-plus"></i> Measure</button><button type="button" class="kd-link" id="addFormula"><i class="bi bi-plus"></i> Formula</button></div>
+              <span class="kd-label mb-0" data-i18n="kd.data">Data</span>
+              <div class="d-flex gap-1"><button type="button" class="kd-link" id="addMeasure"><i class="bi bi-plus"></i> <span data-i18n="kd.measure">Measure</span></button><button type="button" class="kd-link" id="addFormula"><i class="bi bi-plus"></i> <span data-i18n="kd.formula">Formula</span></button></div>
             </div>
             <div class="kd-vals" id="values"></div>
-            <p class="kd-hint mt-2 mb-0">Type your measure names exactly as they are in your model. Test values only drive the preview; drag the sliders to see the design react.</p>
+            <p class="kd-hint mt-2 mb-0" data-i18n="kd.dataHint">Type your measure names exactly as they are in your model. Test values only drive the preview; drag the sliders to see the design react.</p>
           </div>
         </div>
         <div class="col-lg-7">
           <div class="kd-panel d-flex flex-column gap-3">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-              <span class="kd-label mb-0">Your DAX measure</span>
-              <button class="btn btn-accent" id="copyBtn" type="button"><i class="bi bi-clipboard me-1"></i>Copy DAX</button>
+              <span class="kd-label mb-0" data-i18n="kd.daxTitle">Your DAX measure</span>
+              <button class="btn btn-accent" id="copyBtn" type="button"><i class="bi bi-clipboard me-1"></i><span data-i18n="kd.copy">Copy DAX</span></button>
             </div>
             <div class="kd-err" id="errors" hidden></div>
             <pre class="kd-dax" id="dax"></pre>
             <ol class="kd-steps">
-              <li>In Power BI Desktop, select a table and click <strong>New measure</strong>, then paste.</li>
-              <li>With the measure selected, open <strong>Measure tools</strong> and set <strong>Data category</strong> to <strong>Image URL</strong>.</li>
-              <li>Add it to a <strong>Table</strong> or <strong>Matrix</strong>, then set the height and width under <strong>Format visual &gt; Image size</strong>.</li>
+              <li data-i18n-html="kd.step1">In Power BI Desktop, select a table, click <strong>New measure</strong> and paste.</li>
+              <li data-i18n-html="kd.step2">In <strong>Measure tools</strong>, set <strong>Data category</strong> to <strong>Image URL</strong>.</li>
+              <li data-i18n-html="kd.step3"><strong>Insert › Image</strong>, then set <strong>Image URL</strong> with <strong>fx › Field value</strong> to the measure. It scales to any size.</li>
             </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="container mt-5">
+      <div class="row g-4">
+        <div class="col-lg-7">
+          <h2 class="h4 fw-bold mb-3" data-i18n="kd.how.title">Two ways to show it in Power BI</h2>
+          <div class="kd-route">
+            <span class="kd-route-k" data-i18n="kd.how.aTag">Recommended</span>
+            <h3 data-i18n="kd.how.aTitle">Image visual: any size, reads like a card</h3>
+            <ol class="kd-steps" data-i18n-html="kd.how.aSteps"><li>Create the measure and set its <strong>Data category</strong> to <strong>Image URL</strong>.</li><li>Select <strong>Insert › Image</strong> and place it on the page.</li><li>In <strong>Format › Image</strong>, set <strong>Image URL</strong> with <strong>fx › Field value</strong> and pick your measure.</li><li>Resize the visual freely. Slicers and filters on the page change the card.</li></ol>
+          </div>
+          <div class="kd-route mt-3">
+            <span class="kd-route-k alt" data-i18n="kd.how.bTag">One card per row</span>
+            <h3 data-i18n="kd.how.bTitle">Table or Matrix: a card for every product, store or person</h3>
+            <ol class="kd-steps" data-i18n-html="kd.how.bSteps"><li>Add a <strong>Table</strong> with a category column (for example Store) and the measure.</li><li>In <strong>Format › Image size</strong>, set height and width. The maximum is 512 pixels.</li><li>Turn off the column header and grid if you want a clean gallery.</li></ol>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <section class="tg-faq kd-faq">
+            <h2 class="h4 fw-bold" data-i18n="kd.faq.title">Questions</h2>
+            <h3 data-i18n="kd.faq.q1">Do I need a custom visual?</h3><p data-i18n="kd.faq.a1">No. The measure returns an SVG image as text. Power BI's built-in Image visual, Table, Matrix and some card visuals can show it once the measure's Data category is set to Image URL.</p>
+            <h3 data-i18n="kd.faq.q2">Is my data uploaded?</h3><p data-i18n="kd.faq.a2">No. You type measure names and test values in the browser. The tool never connects to your model, and your design is saved only in this browser unless you share a link.</p>
+            <h3 data-i18n="kd.faq.q3">Why does my sparkline show a single dot?</h3><p data-i18n="kd.faq.a3">The date column in Card settings must be the date table that actually filters your measure. If it points to a different calendar, only one period returns a value.</p>
+            <h3 data-i18n="kd.faq.q4">Can I change the design later?</h3><p data-i18n="kd.faq.a4">Yes. Use Export to save the design as a file, or Share link, then open it again and copy the updated DAX.</p>
+          </section>
+          <div class="tg-cta mt-4 text-center">
+            <h2 class="h5 fw-bold mb-2" data-i18n="kd.cta.title">Want KPI cards like this across your whole report?</h2>
+            <p class="text-white-50 mb-3" data-i18n="kd.cta.desc">DataArcus builds complete Power BI dashboards: data model, measures and a design your team uses every day.</p>
+            <a href="../index.html#contact" class="btn btn-accent" data-i18n="nav.consultation">Book a Free Call</a>
           </div>
         </div>
       </div>
@@ -330,6 +438,7 @@
   </footer>
 
   <script src="../assets/js/translations/common.min.js" defer></script>
+  <script src="../assets/js/translations/svg-kpi.min.js" defer></script>
   <script src="../assets/js/lang-manager.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
