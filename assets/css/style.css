@@ -114,6 +114,23 @@ body {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   backdrop-filter: blur(20px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+.navbar-brand img {
+  height: 36px;
+  width: auto;
+}
+
+.navbar .navbar-nav {
+  gap: 6px;
+}
+
+.navbar .btn-accent {
+  font-size: 15px;
+  padding: 9px 18px;
+  border-radius: 10px;
 }
 
 .navbar.scrolled {
@@ -125,22 +142,24 @@ body {
 .nav-link {
   position: relative;
   font-weight: 500;
+  font-size: 15px;
+  letter-spacing: .01em;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
   transition: all 0.3s ease;
   color: rgba(255, 255, 255, 0.8) !important;
 }
 
 .nav-link:hover {
   color: var(--accent) !important;
-  transform: translateY(-2px);
-  text-shadow: 0 0 10px currentColor;
 }
 
 .nav-link::after {
   content: '';
   position: absolute;
-  bottom: -5px;
-  left: 0;
-  width: 100%;
+  bottom: 2px;
+  left: 12px;
+  right: 12px;
   height: 2px;
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
   transition: transform 0.3s ease;
@@ -150,6 +169,77 @@ body {
 
 .nav-link:hover::after {
   transform: scaleX(1);
+}
+
+/* Phone menu: solid panel, one row per link, full-width call button */
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    background: rgba(10, 15, 28, 0.97);
+    backdrop-filter: blur(16px);
+    margin: 10px -12px -10px;
+    padding: 8px 16px 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .navbar .navbar-nav {
+    gap: 0;
+  }
+
+  .navbar-nav .nav-item + .nav-item {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .nav-link {
+    font-size: 17px;
+    padding: 14px 4px !important;
+  }
+
+  .nav-link::after {
+    display: none;
+  }
+
+  .navbar-collapse .btn-accent {
+    display: block;
+    width: 100%;
+    text-align: center;
+    margin: 14px 0 0 !important;
+    padding: 13px 18px;
+    font-size: 16px;
+  }
+}
+
+/* Small laptops: keep every link on one line (Arabic labels are longer) */
+.navbar .nav-link,
+.navbar .btn-accent {
+  white-space: nowrap;
+}
+
+@media (min-width: 992px) and (max-width: 1199.98px) {
+  .navbar .navbar-nav {
+    gap: 0;
+  }
+
+  .nav-link {
+    padding-left: 9px !important;
+    padding-right: 9px !important;
+  }
+
+  .nav-link::after {
+    left: 9px;
+    right: 9px;
+  }
+}
+
+/* Very small phones: logo, switcher and menu button on one row */
+@media (max-width: 359.98px) {
+  .navbar-brand img {
+    height: 30px;
+  }
+
+  .lang-btn .bi-globe2 {
+    display: none;
+  }
 }
 
 /* --- Buttons --- */
@@ -996,8 +1086,9 @@ html[dir="rtl"] .navbar-nav {
   border: 1px solid var(--glass-border); /* Match the glass card border */
   border-radius: 12px; /* Match the border-radius of other buttons */
   color: var(--accent); /* Use the site's accent color for text */
-  padding: 6px 12px;
-  font-size: 0.75rem;
+  padding: 7px 12px;
+  min-height: 36px;
+  font-size: 0.8125rem;
   font-weight: 600; /* Increased font-weight for better visibility */
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1013,7 +1104,6 @@ html[dir="rtl"] .navbar-nav {
 
 /* Enhanced hover effects for mobile button */
 .lang-btn:hover {
-  transform: translateY(-2px); /* Keep the subtle lift effect */
   background: rgba(0, 212, 255, 0.2); /* Brighter accent background on hover */
   border-color: var(--accent); /* Accent color border on hover */
   color: #fff; /* White text on hover for better contrast */
@@ -1026,8 +1116,8 @@ html[dir="rtl"] .navbar-nav {
 
 /* Mobile button text styling */
 .lang-text {
-  font-size: 0.7rem;
-  letter-spacing: 0.5px;
+  font-size: 0.8125rem;
+  letter-spacing: 0.3px;
   font-weight: 600;
 }
 
@@ -1046,7 +1136,13 @@ html[dir="rtl"] .navbar-nav {
 
 .lang-btn-desktop:hover {
   color: var(--accent) !important;
-  transform: translateY(-2px);
+}
+
+/* Thin divider so the switcher doesn't read as a page link */
+.desktop-lang-switcher {
+  border-inline-start: 1px solid rgba(255, 255, 255, 0.15);
+  padding-inline-start: 6px;
+  margin-inline-start: 4px;
 }
 
 .lang-btn-desktop:focus,
@@ -1059,7 +1155,7 @@ html[dir="rtl"] .navbar-nav {
 .lang-btn-desktop::after {
   content: '';
   position: absolute;
-  bottom: -2px;
+  bottom: 2px;
   left: 50%;
   width: 80%;
   height: 2px;
@@ -1111,13 +1207,13 @@ html[dir="rtl"] .navbar-nav {
   }
   
   .lang-btn {
-    padding: 5px 10px;
-    font-size: 0.7rem;
-    gap: 4px;
+    padding: 7px 11px;
+    font-size: 0.8125rem;
+    gap: 5px;
   }
   
   .lang-text {
-    font-size: 0.65rem;
+    font-size: 0.8125rem;
   }
 }
 
@@ -1140,20 +1236,6 @@ html[dir="rtl"] .navbar-nav {
 @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
   .lang-btn {
     border-width: 0.5px;
-  }
-}
-
-/* --- Dark/Light Theme Preparation (for future use) --- */
-@media (prefers-color-scheme: light) {
-  .lang-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(0, 0, 0, 0.2);
-    color: #000;
-  }
-  
-  .lang-btn:hover {
-    background: rgba(0, 212, 255, 0.15);
-    border-color: rgba(0, 212, 255, 0.3);
   }
 }
 
