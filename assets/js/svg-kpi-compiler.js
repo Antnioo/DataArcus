@@ -109,9 +109,10 @@
       case 'sparkEnd': return null; // dates only matter in DAX; the preview uses the test series directly
       case 'spark': {
         // period i = i periods back from the last one; test series are newest first
-        const rows = [], series = env.series || {};
+        // complete months only: the preview treats the newest test value as a month still running and leaves it out
+        const rows = [], series = env.series || {}, skip = n.complete ? 1 : 0;
         for (let i = 0; i < n.n; i++) {
-          const m = {}; Object.keys(series).forEach((k) => { const v = series[k][i]; if (v != null && isFinite(v)) m[k] = v; });
+          const m = {}; Object.keys(series).forEach((k) => { const v = series[k][i + skip]; if (v != null && isFinite(v)) m[k] = v; });
           const v = evalNode(n.expr, { measures: m, vars: {} });
           if (v != null) rows.push({ Value: i, '@v': v });
         }
@@ -154,7 +155,11 @@
       case 'fmt': return 'FORMAT ( ' + dax(n.a) + ', ' + daxStr(n.p) + ', "en-US" )';
       case 'cat': return n.parts.map(dax).join(' & ');
       case 'col': return '[' + n.name + ']';
-      case 'sparkEnd': return n.mode === 'filter' ? 'MAX ( ' + n.col + ' )' : 'CALCULATE ( MAX ( ' + n.col + ' ), LASTNONBLANK ( ' + n.col + ', ' + dax(n.expr) + ' ) )';
+      case 'sparkEnd': {
+        const e = n.mode === 'filter' ? 'MAX ( ' + n.col + ' )' : 'CALCULATE ( MAX ( ' + n.col + ' ), LASTNONBLANK ( ' + n.col + ', ' + dax(n.expr) + ' ) )';
+        // complete months only: a month that is still running ends the line at the month before
+        return n.complete ? '( VAR __e = ' + e + ' RETURN IF ( __e = EOMONTH ( __e, 0 ), __e, EOMONTH ( __e, -1 ) ) )' : e;
+      }
       case 'spark': {
         const E = dax(n.end);
         const win = {
@@ -378,9 +383,9 @@
           if (!dateCol) { errors.push("Date column must look like 'Date'[Date]"); return; }
           const n = Math.max(2, Math.min(60, Math.round(+el.n || 12))), grain = ['month', 'week', 'day'].includes(el.grain) ? el.grain : 'month';
           const x = +el.x || 0, y = +el.y || 0, w = Math.max(1, +el.w || 100), h = Math.max(1, +el.h || 30), step = w / (n - 1);
-          const expr = exprOf(sv);
-          const end = hoist(el, 'end', N.sparkEnd({ col: dateCol.col, expr: expr, mode: el.end === 'filter' ? 'filter' : 'data' }), note());
-          const pts = hoist(el, 'pts', N.spark({ expr: expr, grain: grain, n: n, end: end, col: dateCol.col, table: dateCol.table, clear: d.clearDateFilters !== false }), note());
+          const expr = exprOf(sv), complete = grain === 'month' && !!el.complete;
+          const end = hoist(el, 'end', N.sparkEnd({ col: dateCol.col, expr: expr, mode: el.end === 'filter' ? 'filter' : 'data', complete: complete }), note());
+          const pts = hoist(el, 'pts', N.spark({ expr: expr, grain: grain, n: n, end: end, col: dateCol.col, table: dateCol.table, clear: d.clearDateFilters !== false, complete: complete }), note());
           const lo = hoist(el, 'lo', N.aggx('MINX', pts, N.col('@v')), note());
           const hi = hoist(el, 'hi', N.aggx('MAXX', pts, N.col('@v')), note());
           const F = (node) => N.fmt(x < 0 || y < 0 ? zeroSmall(node, 2) : node, '0.00');

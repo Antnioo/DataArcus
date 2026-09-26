@@ -38,7 +38,16 @@ function parse(tokens) {
     if (x.t === 'meas') return { k: 'meas', v: x.v };
     if (x.t === 'tab') { if (peek() && peek().t === 'meas') return { k: 'colref', table: x.v, col: next().v }; return { k: 'tableref', table: x.v }; }
     if (x.t === 'op' && x.v === '-') return { k: 'neg', a: primary() };
-    if (x.t === '(') { const e = expr(0); expect(')'); return e; }
+    if (x.t === '(') {
+      // ( VAR a = ... RETURN expr ): an expression with its own variables
+      if (peek().t === 'id' && peek().v === 'VAR') {
+        const lets = [];
+        while (peek().t === 'id' && peek().v === 'VAR') { next(); const n = expect('id').v; if (next().v !== '=') throw new Error('expected ='); lets.push([n, expr(0)]); }
+        if (next().v !== 'RETURN') throw new Error('expected RETURN');
+        const r = expr(0); expect(')'); return { k: 'let', lets, r };
+      }
+      const e = expr(0); expect(')'); return e;
+    }
     if (x.t === 'id') {
       if (peek() && peek().t === '(') { next(); const args = []; if (peek().t !== ')') { for (;;) { args.push(expr(0)); if (peek().t === ',') { next(); continue; } break; } } expect(')'); return { k: 'call', f: x.v.toUpperCase(), args }; }
       return { k: 'var', v: x.v };
@@ -90,6 +99,7 @@ function run(prog, measures, ctx) {
       case 'str': return n.v;
       case 'meas': if (row && n.v in row) return row[n.v]; return n.v in mctx ? mctx[n.v] : BLANK;
       case 'var': if (!(n.v in env)) throw new Error('unknown var ' + n.v); return env[n.v];
+      case 'let': n.lets.forEach(([k, e]) => { env[k] = ev(e); }); return ev(n.r);
       case 'colref': throw new Error('column used as a value');
       case 'neg': { const a = ev(n.a, row); return a === BLANK ? BLANK : -a; }
       case 'bin': {
@@ -257,6 +267,23 @@ const tricky = { name: 'Odd "name"', w: 100, h: 20, values: [{ id: 'a', kind: 'm
   const prog = parse(tokenize(SVGKPI.toDax(d).dax));
   const series = { Sales: Array.from({ length: 14 }, (_, i) => i + 1) };
   ok(run(prog, {}, { end: serial(2028, 3, 15), series }) === SVGKPI.toImageUrl(d, {}, { series }).url, 'spark month windows across Feb 2028 (leap year)');
+  // complete months only: with data ending mid-month the running month is left out (the preview drops the newest test value);
+  // with data ending on the last day of a month nothing is left out
+  for (const endMode of ['data', 'filter']) {
+    const dc = { values, dateCol: "'Date'[Date]", layers: [{ type: 'spark', x: 0, y: 0, w: 100, h: 20, n: 12, grain: 'month', end: endMode, complete: true, area: true, dot: true, bind: { series: { v: 'ach' } } }] };
+    const { dax: cdax, errors: cerr } = SVGKPI.toDax(dc);
+    ok(!cerr.length && /EOMONTH \( __e, -1 \)/.test(cdax), 'complete months: DAX ends at the previous month');
+    const cp = parse(tokenize(cdax));
+    for (const [label, sr] of Object.entries(SERIES)) {
+      const m = { Sales: sr.Sales[0] ?? undefined, Target: sr.Target[0] ?? undefined }; Object.keys(m).forEach((k) => m[k] == null && delete m[k]);
+      ok(run(cp, m, { end: serial(2026, 9, 17), series: sr }) === SVGKPI.toImageUrl(dc, m, { series: sr }).url, `complete months ${endMode}/${label}: preview and DAX differ (mid-month)`);
+      const full = JSON.parse(JSON.stringify(dc)); full.layers[0].complete = false;
+      ok(run(cp, m, { end: serial(2026, 9, 30), series: sr }) === SVGKPI.toImageUrl(full, m, { series: sr }).url, `complete months ${endMode}/${label}: a finished month must stay in (month end)`);
+    }
+  }
+  // the option only applies to months
+  const wk = { values, dateCol: "'Date'[Date]", layers: [{ type: 'spark', x: 0, y: 0, w: 100, h: 20, n: 8, grain: 'week', complete: true, bind: { series: { v: 'sales' } } }] };
+  ok(!/__e/.test(SVGKPI.toDax(wk).dax), 'complete months: ignored for weeks');
 }
 // random designs: every layer type and every kind of data link, in any combination the editor allows
 {
