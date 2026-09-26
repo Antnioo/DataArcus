@@ -165,6 +165,11 @@ portfolio: {
             tag: "Learn",
             title: "DP-600 Practice Exam",
             desc: "220 Fabric questions, mock exams and case studies."
+          },
+          {
+            tag: "Learn",
+            title: "PL-300 Practice Exam",
+            desc: "228 Power BI questions, mock exams and renewal prep."
           }
         ]
       },
@@ -439,6 +444,11 @@ portfolio: {
             tag: "تعلّم",
             title: "اختبار DP-600 التجريبي",
             desc: "220 سؤالًا عن Fabric واختبارات تجريبية ودراسات حالة."
+          },
+          {
+            tag: "تعلّم",
+            title: "اختبار PL-300 التجريبي",
+            desc: "228 سؤالًا عن Power BI واختبارات تجريبية وتحضير للتجديد."
           }
         ]
       },

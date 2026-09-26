@@ -62,6 +62,8 @@ class LanguageManager {
       return window.modelHealthTranslations;
     } else if (path.includes('dp-600-practice-exam')) {
       return window.dp600Translations;
+    } else if (path.includes('pl-300-practice-exam')) {
+      return window.pl300Translations;
     } else if (path.includes('power-bi-licensing-cost-calculator')) {
       return window.licensingCalculatorTranslations;
     } else if (path.includes('/tools/')) {

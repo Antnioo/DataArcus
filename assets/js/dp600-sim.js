@@ -1,11 +1,40 @@
 /*
- * DataArcus - DP-600 Practice Exam Simulator
+ * DataArcus - Microsoft exam practice simulator (DP-600 by default, PL-300 via window.EXAM)
  * Independent practice tool. Not affiliated with or endorsed by Microsoft.
  * Questions are original, written for DataArcus from the public DP-600 skills
  * outline and Microsoft Learn documentation. Progress stays in the browser.
  */
 document.addEventListener('DOMContentLoaded', () => {
-  const DATA = window.DP600;
+  // Exam settings. DP-600 is the default; another exam page sets window.EXAM before this script.
+  const EX = Object.assign({
+    data: 'DP600', code: 'DP-600', store: 'dataarcus-dp600-v1', ev: 'dp600',
+    outline: '../assets/data/dp600-outline.json',
+    page: 'https://dataarcus.com/tools/dp-600-practice-exam.html',
+    dom: {
+      prep: { en: 'Prepare data', ar: 'تجهيز البيانات', w: '45–50%', wt: 47.5 },
+      model: { en: 'Implement and manage semantic models', ar: 'بناء وإدارة النماذج الدلالية', w: '25–30%', wt: 27.5 },
+      maintain: { en: 'Maintain a data analytics solution', ar: 'صيانة حل التحليلات', w: '25–30%', wt: 27.5 }
+    },
+    skill: {
+      get: { d: 'prep', en: 'Get data', ar: 'الحصول على البيانات' },
+      transform: { d: 'prep', en: 'Transform data', ar: 'تحويل البيانات' },
+      query: { d: 'prep', en: 'Query and analyze data', ar: 'الاستعلام والتحليل' },
+      design: { d: 'model', en: 'Design and build semantic models', ar: 'تصميم النماذج الدلالية' },
+      optimize: { d: 'model', en: 'Optimize enterprise-scale models', ar: 'تحسين النماذج الكبيرة' },
+      security: { d: 'maintain', en: 'Security and governance', ar: 'الأمان والحوكمة' },
+      lifecycle: { d: 'maintain', en: 'Development lifecycle', ar: 'دورة حياة التطوير' }
+    },
+    outlineNames: { prep: 'prepare data', model: 'implement and manage semantic models', maintain: 'maintain a data analytics solution' },
+    mix: { prep: 0.48, model: 0.26 },
+    mixText: ['Questions are drawn by exam weight: about half on preparing data, a quarter each on semantic models and maintenance.', 'الأسئلة موزعة حسب أوزان الاختبار: نحو النصف لتجهيز البيانات، والربع لكل من النماذج الدلالية والصيانة.'],
+    official: [
+      ['https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/dp-600', 'DP-600 study guide: the skills measured', 'دليل مذاكرة DP-600: المهارات المقاسة'],
+      ['https://learn.microsoft.com/en-us/credentials/certifications/exams/dp-600/practice/assessment?assessment-type=practice&assessmentId=90', 'Microsoft\'s free practice assessment', 'التقييم التدريبي المجاني من Microsoft'],
+      ['https://learn.microsoft.com/en-us/credentials/certifications/fabric-analytics-engineer-associate/', 'Fabric Analytics Engineer Associate certification page', 'صفحة شهادة Fabric Analytics Engineer Associate'],
+      ['https://aka.ms/examdemo', 'Exam sandbox: try the real exam interface', 'بيئة تجربة واجهة الاختبار الحقيقية']
+    ]
+  }, window.EXAM || {});
+  const DATA = window[EX.data];
   const root = document.getElementById('dpApp');
   if (!DATA || !root) return;
 
@@ -29,20 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
   CASES.forEach((c) => c.questions.forEach((q) => { q.caseId = c.id; byId[q.id] = q; }));
   const ALL = Object.values(byId);
 
-  const DOM = {
-    prep: { en: 'Prepare data', ar: 'تجهيز البيانات', w: '45–50%', wt: 47.5 },
-    model: { en: 'Implement and manage semantic models', ar: 'بناء وإدارة النماذج الدلالية', w: '25–30%', wt: 27.5 },
-    maintain: { en: 'Maintain a data analytics solution', ar: 'صيانة حل التحليلات', w: '25–30%', wt: 27.5 }
-  };
-  const SKILL = {
-    get: { d: 'prep', en: 'Get data', ar: 'الحصول على البيانات' },
-    transform: { d: 'prep', en: 'Transform data', ar: 'تحويل البيانات' },
-    query: { d: 'prep', en: 'Query and analyze data', ar: 'الاستعلام والتحليل' },
-    design: { d: 'model', en: 'Design and build semantic models', ar: 'تصميم النماذج الدلالية' },
-    optimize: { d: 'model', en: 'Optimize enterprise-scale models', ar: 'تحسين النماذج الكبيرة' },
-    security: { d: 'maintain', en: 'Security and governance', ar: 'الأمان والحوكمة' },
-    lifecycle: { d: 'maintain', en: 'Development lifecycle', ar: 'دورة حياة التطوير' }
-  };
+  const DOM = EX.dom;
+  const SKILL = EX.skill;
   const skillName = (s) => L(SKILL[s].en, SKILL[s].ar);
   const domName = (d) => L(DOM[d].en, DOM[d].ar);
 
@@ -55,7 +72,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---------- saved progress ----------
-  const STORE = 'dataarcus-dp600-v1';
+  const STORE = EX.store;
   const blank = () => ({ ans: {}, bm: [], mocks: [], days: [], mock: null });
   let P;
   try { P = Object.assign(blank(), JSON.parse(localStorage.getItem(STORE) || '{}')); } catch (e) { P = blank(); }
@@ -185,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mv = (k, d) => { const a = inst.r.slice(); [a[k], a[k + d]] = [a[k + d], a[k]]; inst.r = a; onChange(); };
     el.querySelectorAll('[data-up]').forEach((b) => b.addEventListener('click', () => mv(+b.dataset.up, -1)));
     el.querySelectorAll('[data-down]').forEach((b) => b.addEventListener('click', () => mv(+b.dataset.down, 1)));
-    el.querySelectorAll('[data-learn]').forEach((a) => a.addEventListener('click', () => track('dp600_learn_click', { question_id: q.id })));
+    el.querySelectorAll('[data-learn]').forEach((a) => a.addEventListener('click', () => track(EX.ev + '_learn_click', { question_id: q.id })));
   }
 
   function caseHTML(c) {
@@ -228,22 +245,22 @@ document.addEventListener('DOMContentLoaded', () => {
     let html;
     if (OUT.status === 'review') {
       el.className = 'dp-outline review';
-      html = '<i class="bi bi-arrow-repeat"></i> ' + L('Microsoft updated the DP-600 skills outline (checked ' + fmtDate(OUT.checked) + '). We are reviewing the questions now. Most of them still apply. See the ' + guide + ' for what changed.',
-        'حدّثت Microsoft منهج DP-600 (آخر فحص ' + fmtDate(OUT.checked) + '). نراجع الأسئلة الآن ومعظمها ما زال صالحًا. راجع ' + guide + ' لمعرفة التغييرات.');
+      html = '<i class="bi bi-arrow-repeat"></i> ' + L('Microsoft updated the ' + EX.code + ' skills outline (checked ' + fmtDate(OUT.checked) + '). We are reviewing the questions now. Most of them still apply. See the ' + guide + ' for what changed.',
+        'حدّثت Microsoft منهج ' + EX.code + ' (آخر فحص ' + fmtDate(OUT.checked) + '). نراجع الأسئلة الآن ومعظمها ما زال صالحًا. راجع ' + guide + ' لمعرفة التغييرات.');
     } else {
       el.className = 'dp-outline';
-      html = '<i class="bi bi-shield-check"></i> ' + L('Checked weekly against Microsoft\'s DP-600 ' + guide + '. Last check: ' + fmtDate(OUT.checked) + '. Questions match the skills measured as of ' + fmtDate(OUT.bankOutlineDate) + '.',
-        'نراجع أسبوعيًا ' + guide + ' الخاص بـ DP-600 من Microsoft. آخر فحص: ' + fmtDate(OUT.checked) + '. الأسئلة مطابقة للمهارات المقاسة اعتبارًا من ' + fmtDate(OUT.bankOutlineDate) + '.');
+      html = '<i class="bi bi-shield-check"></i> ' + L('Checked weekly against Microsoft\'s ' + EX.code + ' ' + guide + '. Last check: ' + fmtDate(OUT.checked) + '. Questions match the skills measured as of ' + fmtDate(OUT.bankOutlineDate) + '.',
+        'نراجع أسبوعيًا ' + guide + ' الخاص بـ ' + EX.code + ' من Microsoft. آخر فحص: ' + fmtDate(OUT.checked) + '. الأسئلة مطابقة للمهارات المقاسة اعتبارًا من ' + fmtDate(OUT.bankOutlineDate) + '.');
       if (today() < OUT.bankOutlineDate) html += ' ' + L('Taking the exam before then? The previous outline is still live and most topics overlap.', 'ستختبر قبل هذا التاريخ؟ المنهج السابق ما زال ساريًا ومعظم المواضيع مشتركة.');
     }
     el.innerHTML = html;
   }
-  fetch('../assets/data/dp600-outline.json', { cache: 'no-cache' })
+  if (EX.outline) fetch(EX.outline, { cache: 'no-cache' })
     .then((r) => (r.ok ? r.json() : null))
     .then((d) => {
       if (!d) return;
       OUT = d;
-      const names = { prep: 'prepare data', model: 'implement and manage semantic models', maintain: 'maintain a data analytics solution' };
+      const names = EX.outlineNames;
       (d.domains || []).forEach((x) => { const k = Object.keys(names).find((n) => names[n] === String(x.name).toLowerCase()); if (k && x.w) DOM[k].w = x.w; });
       renderOutline();
       if (view === 'home') home();
@@ -336,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (pset.fresh) list.sort((a, b) => (P.ans[a.id] ? (P.ans[a.id].last ? 2 : 1) : 0) - (P.ans[b.id] ? (P.ans[b.id].last ? 2 : 1) : 0));
       if (pset.count) list = list.slice(0, pset.count);
       if (!list.length) return toast(L('No questions match. Try another filter.', 'لا توجد أسئلة مطابقة. جرّب اختيارًا آخر.'));
-      track('dp600_practice_start', { skill: pset.skill, count: list.length });
+      track(EX.ev + '_practice_start', { skill: pset.skill, count: list.length });
       startSession(list, 'practice');
     });
   }
@@ -405,7 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
     bindBack();
     root.querySelectorAll('[data-case]').forEach((b) => b.addEventListener('click', () => {
       const c = CASES.find((x) => x.id === b.dataset.case);
-      track('dp600_case_start', { case_id: c.id });
+      track(EX.ev + '_case_start', { case_id: c.id });
       startSession(c.questions.slice(), 'case');
     }));
   }
@@ -424,12 +441,9 @@ document.addEventListener('DOMContentLoaded', () => {
           '<button type="button" class="tg-btn2 btn-sm" data-skill="' + s + '">' + L('Practice this skill', 'تدرّب على هذه المهارة') + '</button></div>';
       }).join('') +
       '<div class="dp-official"><b>' + L('Official Microsoft resources (free)', 'مصادر Microsoft الرسمية (مجانية)') + '</b><ul>' +
-      '<li><a href="https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/dp-600" target="_blank" rel="noopener" data-learn>' + L('DP-600 study guide: the skills measured', 'دليل مذاكرة DP-600: المهارات المقاسة') + '</a></li>' +
-      '<li><a href="https://learn.microsoft.com/en-us/credentials/certifications/exams/dp-600/practice/assessment?assessment-type=practice&assessmentId=90" target="_blank" rel="noopener" data-learn>' + L('Microsoft\'s free practice assessment', 'التقييم التدريبي المجاني من Microsoft') + '</a></li>' +
-      '<li><a href="https://learn.microsoft.com/en-us/credentials/certifications/fabric-analytics-engineer-associate/" target="_blank" rel="noopener" data-learn>' + L('Fabric Analytics Engineer Associate certification page', 'صفحة شهادة Fabric Analytics Engineer Associate') + '</a></li>' +
-      '<li><a href="https://aka.ms/examdemo" target="_blank" rel="noopener" data-learn>' + L('Exam sandbox: try the real exam interface', 'بيئة تجربة واجهة الاختبار الحقيقية') + '</a></li></ul></div></div>';
+      EX.official.map((o) => '<li><a href="' + o[0] + '" target="_blank" rel="noopener" data-learn>' + L(o[1], o[2]) + '</a></li>').join('') + '</ul></div></div>';
     bindBack();
-    root.querySelectorAll('[data-learn]').forEach((a) => a.addEventListener('click', () => track('dp600_learn_click', { from: 'plan' })));
+    root.querySelectorAll('[data-learn]').forEach((a) => a.addEventListener('click', () => track(EX.ev + '_learn_click', { from: 'plan' })));
     root.querySelectorAll('[data-skill]').forEach((b) => b.addEventListener('click', () => { pset.skill = b.dataset.skill; go('practiceSetup'); }));
   }
 
@@ -448,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card('half', L('Half exam', 'نصف اختبار'), L('25 questions · 50 minutes', '25 سؤالًا · 50 دقيقة')) +
       card('quick', L('Quick check', 'اختبار سريع'), L('10 questions · 15 minutes', '10 أسئلة · 15 دقيقة')) + '</div>' +
       '<ul class="dp-rules">' +
-      '<li>' + L('Questions are drawn by exam weight: about half on preparing data, a quarter each on semantic models and maintenance.', 'الأسئلة موزعة حسب أوزان الاختبار: نحو النصف لتجهيز البيانات، والربع لكل من النماذج الدلالية والصيانة.') + '</li>' +
+      '<li>' + L(EX.mixText[0], EX.mixText[1]) + '</li>' +
       '<li>' + L('No answers are shown until you submit. Flag questions and use the review screen, like on the real exam.', 'لا تظهر الإجابات حتى التسليم. علّم الأسئلة واستخدم شاشة المراجعة كما في الاختبار الحقيقي.') + '</li>' +
       '<li>' + L('Scored out of 1000 with 700 to pass. Multiple-answer and Yes/No questions can earn partial credit.', 'النتيجة من 1000 والنجاح من 700. أسئلة الاختيارات المتعددة ونعم/لا تمنح درجات جزئية.') + '</li>' +
       '<li>' + L('Your exam is saved if you close the tab. The timer keeps running.', 'يُحفظ اختبارك إذا أغلقت الصفحة، لكن الوقت يستمر.') + '</li></ul>' +
@@ -464,8 +478,10 @@ document.addEventListener('DOMContentLoaded', () => {
   function buildMock(kind) {
     const cfg = MOCKS[kind];
     const pool = QS.slice();
-    const want = { prep: Math.round(cfg.n * 0.48), model: Math.round(cfg.n * 0.26) };
-    want.maintain = cfg.n - want.prep - want.model;
+    // questions per exam area: fixed shares when given, otherwise by the official weights; the last area takes the rest
+    const doms = Object.keys(DOM), wsum = doms.reduce((a, d) => a + DOM[d].wt, 0), want = {};
+    doms.slice(0, -1).forEach((d) => { want[d] = Math.round(cfg.n * (EX.mix ? EX.mix[d] : DOM[d].wt / wsum)); });
+    want[doms[doms.length - 1]] = cfg.n - doms.slice(0, -1).reduce((a, d) => a + want[d], 0);
     // prefer questions the learner has not seen, then ones they got wrong
     const pri = (q) => (P.ans[q.id] ? (P.ans[q.id].last ? 2 : 1) : 0) + Math.random();
     let ids = [];
@@ -481,7 +497,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (cfg.cs) { const c = CASES[Math.floor(Math.random() * CASES.length)]; caseId = c.id; ids = ids.concat(c.questions.map((q) => q.id)); }
     P.mock = { kind, caseId, items: ids.map((id) => newInst(byId[id])), flags: [], i: 0, start: Date.now(), endAt: Date.now() + cfg.min * 60000, min: cfg.min };
     save();
-    track('dp600_mock_start', { length: kind, questions: ids.length });
+    track(EX.ev + '_mock_start', { length: kind, questions: ids.length });
   }
   function mock() {
     const M = P.mock;
@@ -490,7 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (ctx.review) return mockReview();
     const inst = M.items[M.i], q = byId[inst.id], cs = caseOf(q), flagged = M.flags.includes(M.i);
     root.innerHTML =
-      '<div class="dp-exambar"><span class="dp-ex-title">DP-600 ' + L('mock exam', 'اختبار تجريبي') + '</span><span class="dp-ex-count">' + (M.i + 1) + ' / ' + M.items.length + '</span><span class="dp-timer" id="dpTimer"><i class="bi bi-clock"></i> <b></b></span></div>' +
+      '<div class="dp-exambar"><span class="dp-ex-title">' + EX.code + ' ' + L('mock exam', 'اختبار تجريبي') + '</span><span class="dp-ex-count">' + (M.i + 1) + ' / ' + M.items.length + '</span><span class="dp-timer" id="dpTimer"><i class="bi bi-clock"></i> <b></b></span></div>' +
       bar(M.items.filter((it) => answered(byId[it.id], it.r)).length / M.items.length, 'thin') +
       '<div class="' + (cs ? 'dp-split' : '') + '">' + (cs ? caseHTML(cs) : '') +
       '<div class="dp-panel dp-qpanel">' + '<div class="dp-qmeta"><span class="dp-tag">' + (cs ? 'Case study' : L('Question', 'سؤال') + ' ' + (M.i + 1)) + '</span><button type="button" class="dp-flag' + (flagged ? ' on' : '') + '" id="dpFlag"><i class="bi bi-flag' + (flagged ? '-fill' : '') + '"></i> ' + L('Review later', 'مراجعة لاحقًا') + '</button></div>' +
@@ -537,7 +553,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function submitMock(timeUp) {
     const M = P.mock; if (!M) return;
     if (timer) { clearInterval(timer); timer = null; }
-    const dom = { prep: [0, 0], model: [0, 0], maintain: [0, 0] }, sk = {};
+    const dom = {}, sk = {}; Object.keys(DOM).forEach((d) => { dom[d] = [0, 0]; });
     let pts = 0;
     const res = M.items.map((it) => {
       const q = byId[it.id], g = answered(q, it.r) || q.type === 'multi' || q.type === 'yesno' ? grade(q, it.r) : 0;
@@ -552,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
     P.mocks.push(rec); P.mocks = P.mocks.slice(-30);
     const last = { rec, items: M.items, flags: M.flags, res, timeUp };
     P.mock = null; markDay(); save();
-    track('dp600_mock_finish', { length: rec.kind, score, passed: rec.pass, questions: rec.n, time_used_min: Math.round(used / 60) });
+    track(EX.ev + '_mock_finish', { length: rec.kind, score, passed: rec.pass, questions: rec.n, time_used_min: Math.round(used / 60) });
     go('results', { last, filter: 'all' });
   }
 
@@ -592,8 +608,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (a === 'retake') go('mockSetup');
       if (a === 'weak') { pset = Object.assign(pset, { skill: 'weak', diff: 0, count: 20, fresh: false }); go('practiceSetup'); }
       if (a === 'share') {
-        track('dp600_share', { score: r.score });
-        const url = 'https://dataarcus.com/tools/dp-600-practice-exam.html?utm_source=linkedin&utm_medium=social&utm_campaign=dp600_share';
+        track(EX.ev + '_share', { score: r.score });
+        const url = EX.page + '?utm_source=linkedin&utm_medium=social&utm_campaign=' + EX.ev + '_share';
         window.open('https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(url), '_blank', 'noopener');
       }
     }));
