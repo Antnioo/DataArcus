@@ -1,15 +1,1 @@
-<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="favPrimary" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#00d4ff"/>
-      <stop offset="100%" stop-color="#40f3ff"/>
-    </linearGradient>
-    <linearGradient id="favAccent" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#6c5ce7"/>
-      <stop offset="100%" stop-color="#a29bfe"/>
-    </linearGradient>
-  </defs>
-  <rect x="7" y="4" width="4" height="24" rx="2" fill="url(#favAccent)"/>
-  <rect x="14" y="0" width="4" height="32" rx="2" fill="url(#favPrimary)"/>
-  <rect x="21" y="8" width="4" height="16" rx="2" fill="url(#favAccent)"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 40 40"><rect width="40" height="40" rx="9" fill="#0a0f1c"/><g transform="translate(20 20.6) scale(.84) translate(-20 -20)"><path d="M8.7 31.3A16 16 0 1 1 31.3 31.3" fill="none" stroke="#fdcb6e" stroke-width="5" stroke-linecap="round"/><rect x="10.4" y="21" width="5.6" height="10" rx="2.8" fill="#00d4ff"/><rect x="17.2" y="13" width="5.6" height="18" rx="2.8" fill="#00d4ff"/><rect x="24" y="17" width="5.6" height="14" rx="2.8" fill="#00d4ff"/></g></svg>

@@ -31,7 +31,7 @@ const page = (left, right, cols) => `<!doctype html><html><head><style>
 @font-face{font-family:Inter;font-weight:800;src:url(${font(800)})}
 *{box-sizing:border-box;margin:0}
 body{width:1200px;height:630px;overflow:hidden;font-family:Inter,sans-serif;color:#f8fafc;
- background:radial-gradient(circle at 12% 18%,rgba(0,212,255,.16),transparent 42%),radial-gradient(circle at 88% 85%,rgba(108,92,231,.22),transparent 45%),#0a0f1c;
+ background:radial-gradient(circle at 12% 18%,rgba(0,212,255,.16),transparent 42%),radial-gradient(circle at 88% 85%,rgba(253,203,110,.1),transparent 45%),#0a0f1c;
  display:grid;grid-template-columns:${cols};gap:40px;padding:56px 60px}
 .l{display:flex;flex-direction:column;min-width:0}
 .k{margin-top:46px;font-size:17px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#00d4ff}
