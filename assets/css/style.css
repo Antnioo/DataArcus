@@ -1128,7 +1128,6 @@ html[dir="rtl"] .navbar-nav {
   color: rgba(255, 255, 255, 0.8) !important;
   font-weight: 500 !important;
   transition: all 0.3s ease !important;
-  padding: 0.5rem 1rem !important;
   border-radius: 8px !important;
   position: relative;
   user-select: none;
@@ -1136,6 +1135,12 @@ html[dir="rtl"] .navbar-nav {
 
 .lang-btn-desktop:hover {
   color: var(--accent) !important;
+}
+
+/* Icon gap follows reading direction (me-1 is always a right margin) */
+.lang-btn-desktop .bi-globe2 {
+  margin-right: 0 !important;
+  margin-inline-end: 0.25rem;
 }
 
 /* Thin divider so the switcher doesn't read as a page link */
@@ -1149,24 +1154,6 @@ html[dir="rtl"] .navbar-nav {
 .lang-btn-desktop:focus-visible {
   outline: 2px solid var(--accent) !important;
   outline-offset: 2px;
-}
-
-/* Add underline effect for desktop button similar to nav links */
-.lang-btn-desktop::after {
-  content: '';
-  position: absolute;
-  bottom: 2px;
-  left: 50%;
-  width: 80%;
-  height: 2px;
-  background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  transition: transform 0.3s ease;
-  transform: translateX(-50%) scaleX(0);
-  transform-origin: center;
-}
-
-.lang-btn-desktop:hover::after {
-  transform: translateX(-50%) scaleX(1);
 }
 
 /* --- Focus & Accessibility Improvements --- */
