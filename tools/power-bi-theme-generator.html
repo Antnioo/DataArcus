@@ -125,6 +125,31 @@
     .tg-faq p { color: #94a3b8; }
     .tg-cta { background: linear-gradient(135deg, rgba(0, 212, 255, .12), rgba(0,132,255,.12)); border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px; }
     @media (max-width: 767px) { .tg-colors { grid-template-columns: repeat(4, minmax(0, 1fr)); } .tg-grid2, .tg-kpis { grid-template-columns: 1fr; } }
+    /* page layout */
+    .tg-new { font-size: .62rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #051018; background: #fdcb6e; border-radius: 20px; padding: 2px 8px; }
+    .tg-lays { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .tg-lay-b { background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 12px; padding: 8px; text-align: start; font-size: .8rem; font-weight: 600; cursor: pointer; }
+    .tg-lay-b:hover, .tg-lay-b.active { border-color: var(--accent); }
+    .tg-lay-b svg { display: block; width: 100%; height: auto; border-radius: 6px; margin-bottom: 6px; direction: ltr; }
+    .tg-seg { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tg-seg button { background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 30px; padding: 4px 12px; font-size: .8rem; }
+    .tg-seg button.active { border-color: var(--accent); color: var(--accent); }
+    .tg-check { display: flex; align-items: flex-start; gap: 8px; font-size: .85rem; color: #cbd5e1; cursor: pointer; margin: 0; }
+    .tg-check input { accent-color: var(--accent); width: 16px; height: 16px; flex: none; margin-top: 2px; }
+    .tg-canvas { border-radius: 12px; overflow: hidden; border: 1px solid var(--glass-border); direction: ltr; background: #000; }
+    .tg-canvas svg { display: block; width: 100%; height: auto; }
+    @media (min-width: 992px) { .tg-stick { position: sticky; top: 90px; } }
+    .tg-why { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tg-why span { font-size: .75rem; color: #cbd5e1; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 20px; padding: 3px 10px; }
+    .tg-why i { color: #22c55e; }
+    .tg-slots { max-height: 320px; overflow: auto; border: 1px solid var(--glass-border); border-radius: 12px; }
+    .tg-slots table { width: 100%; font-size: .82rem; border-collapse: collapse; }
+    .tg-slots th { position: sticky; top: 0; background: var(--dk-3); color: #94a3b8; font-weight: 600; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; padding: 8px 10px; text-align: start; }
+    .tg-slots td { padding: 7px 10px; border-top: 1px solid var(--glass-border); color: #e2e8f0; }
+    .tg-slots td.n { font-variant-numeric: tabular-nums; direction: ltr; text-align: end; color: var(--accent); font-weight: 600; }
+    .tg-slots tr:hover td, .tg-slots tr.hl td { background: rgba(0, 212, 255, .06); }
+    .tg-how { color: #cbd5e1; font-size: .88rem; padding-inline-start: 1.2rem; }
+    .tg-how li { margin-bottom: 8px; }
     /* Code and hex values always read left to right, even on the Arabic page */
     .tg-json, .tg-color input[type=text], .mb-pre, #cgStart, #cgEnd { direction: ltr; text-align: left; unicode-bidi: plaintext; }
   </style>
@@ -225,6 +250,45 @@
             </div>
             <pre class="tg-json" id="json"></pre>
             <p class="small text-white-50 mb-0" data-i18n-html="tg.importNote">Import it in Power BI Desktop: <strong>View → Themes → Browse for themes</strong>, then pick the file.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="tg-panel tg-lay mt-4" id="layout" role="region" aria-labelledby="layTitle">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+          <h2 class="h4 fw-bold mb-0" id="layTitle" data-i18n="tg.layout.title">Page background and layout</h2>
+          <span class="tg-new" data-i18n="tg.layout.new">New</span>
+        </div>
+        <p class="text-white-50 mb-4" data-i18n="tg.layout.subtitle">A full report background in your theme colors, with a place for every visual. Layouts follow dashboard design principles from Stephen Few, the IBCS standards and Microsoft's report design guidance.</p>
+        <div class="row g-4">
+          <div class="col-lg-4 d-flex flex-column gap-3" id="layControls"></div>
+          <div class="col-lg-8">
+            <div class="tg-stick">
+              <div class="tg-canvas" id="layCanvas"></div>
+              <div class="tg-why" id="layWhy"></div>
+            </div>
+          </div>
+        </div>
+        <div class="row g-4 mt-1">
+          <div class="col-lg-7">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+              <span class="tg-label mb-0" data-i18n="tg.layout.slots">Where each visual goes</span>
+              <div class="tg-actions">
+                <button class="tg-btn2" id="slotCopy" type="button"><i class="bi bi-clipboard me-1"></i><span data-i18n="tg.layout.copyTable">Copy table</span></button>
+                <button class="tg-btn2" id="slotCsv" type="button"><i class="bi bi-filetype-csv me-1"></i><span data-i18n="tg.layout.csv">Download .csv</span></button>
+              </div>
+            </div>
+            <div class="tg-slots" id="slotTable"></div>
+          </div>
+          <div class="col-lg-5">
+            <span class="tg-label" data-i18n="tg.layout.howTitle">How to use it in Power BI</span>
+            <ol class="tg-how">
+              <li data-i18n-html="tg.layout.how1"><strong>Download the background</strong> and your theme JSON (keep "transparent visuals" ticked).</li>
+              <li data-i18n-html="tg.layout.how2">Import the theme: <strong>View › Themes › Browse for themes</strong>.</li>
+              <li data-i18n-html="tg.layout.how3">Set the background: <strong>Format page › Canvas background › Image</strong>, Image fit <strong>Fit</strong>, Transparency <strong>0%</strong>.</li>
+              <li data-i18n-html="tg.layout.how4">Add each visual, then type its numbers from the table into <strong>Format › General › Properties</strong> (Size and Position). It lands exactly on its panel.</li>
+            </ol>
+            <button class="btn btn-accent w-100" id="pngBtn" type="button"><i class="bi bi-image me-1"></i><span data-i18n="tg.layout.png">Download background (PNG)</span></button>
           </div>
         </div>
       </div>
