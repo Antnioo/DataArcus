@@ -336,6 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
         h += pos('x', 'y') + num(L('Width', 'العرض'), 'w', l.w) + num(L('Height', 'الارتفاع'), 'h', l.h) +
           sel_(L('Each point is a', 'كل نقطة تمثل'), 'grain', l.grain || 'month', [['month', L('Month', 'شهر')], ['week', L('Week', 'أسبوع')], ['day', L('Day', 'يوم')]]) + num(L('Number of points', 'عدد النقاط'), 'n', l.n || 12, 1) +
           `<div class="kd-wide">${sel_(L('Ends at', 'ينتهي عند'), 'end', l.end || 'data', [['data', L('The last date with data', 'آخر تاريخ فيه بيانات')], ['filter', L('The last date in the current filters', 'آخر تاريخ في الفلاتر الحالية')]])}</div>` +
+          ((l.grain || 'month') === 'month' ? `<label class="kd-toggle kd-wide"><input type="checkbox" data-p="complete"${l.complete ? ' checked' : ''}> <span>${L('Complete months only', 'الأشهر المكتملة فقط')}</span><small>${L('A month that is still running is left out, so a half month does not look like a drop.', 'يُستبعد الشهر الذي لم ينتهِ بعد، حتى لا يبدو نصف الشهر كأنه انخفاض.')}</small></label>` : '') +
           col(L('Line color', 'لون الخط'), 'stroke', l.stroke) + num(L('Thickness', 'السماكة'), 'sw', l.sw) +
           `<label class="kd-toggle kd-wide"><input type="checkbox" data-p="area"${l.area ? ' checked' : ''}> <span>${L('Fill the area under the line', 'تعبئة المساحة تحت الخط')}</span></label>` +
           (l.area ? col(L('Area color', 'لون المساحة'), 'areaColor', l.areaColor || l.stroke) + num(L('Area opacity', 'شفافية المساحة'), 'areaOpacity', l.areaOpacity == null ? 0.2 : l.areaOpacity, 0.05) : '') +
@@ -381,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCanvas(); renderDax(); renderLayers(); save();
     if (el.type === 'checkbox' && (path === 'area' || path === 'dot')) { renderProps(); return; }
     // a changed value can change which hints apply
-    if (/\.v$/.test(path) || path === 'card.w' || path === 'card.h') { if (el.tagName === 'SELECT') renderProps(); }
+    if (/\.v$/.test(path) || path === 'card.w' || path === 'card.h' || path === 'grain') { if (el.tagName === 'SELECT') renderProps(); }
   });
   $('props').addEventListener('change', (e) => { if (e.target.dataset.cardBg != null) { checkpoint(); if (e.target.checked) { design.bg = '#1a1f2e'; design.radius = design.radius || 12; } else delete design.bg; renderAll(); } });
   $('props').addEventListener('click', (e) => {
@@ -438,7 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (k === 'measure') v.measure = el.value.replace(/^\[|\]$/g, '');
     else v[k] = el.value;
     renderCanvas(); renderDax(); save();
-    if (k === 'sample' || k === 'a' || k === 'b' || k === 'kind') $('values').querySelectorAll('.kd-val').forEach((row, j) => { const f = design.values[j]; if (f.kind !== 'measure') { const vals = evalValues(); row.querySelector('.kd-hint').textContent = '= ' + fmtVal(vals[f.id]) + (isFraction(f.id) && vals[f.id] != null ? ' (' + r1(vals[f.id] * 100) + '%)' : ''); } });
+    if (k === 'sample' || k === 'measure' || k === 'a' || k === 'b' || k === 'kind') $('values').querySelectorAll('.kd-val').forEach((row, j) => { const f = design.values[j]; if (f.kind !== 'measure') { const vals = evalValues(); row.querySelector('.kd-hint').textContent = '= ' + fmtVal(vals[f.id]) + (isFraction(f.id) && vals[f.id] != null ? ' (' + r1(vals[f.id] * 100) + '%)' : ''); } });
   });
   $('values').addEventListener('change', (e) => {
     if (e.target.id === 'testShape') { design.testShape = e.target.value; renderCanvas(); save(); return; }
@@ -462,13 +463,29 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAll();
   });
 
+  // Values that can only give 100% (or 0): two values on the same measure, or a formula of a value with itself
+  function sameWarnings() {
+    const out = [], seen = {}, vname = (v) => v.label || v.measure || v.id;
+    design.values.forEach((v) => {
+      if (v.kind !== 'measure') return;
+      const k = String(v.measure || '').trim().toLowerCase(); if (!k) return;
+      if (seen[k]) out.push(L(`${vname(seen[k])} and ${vname(v)} both use [${v.measure}], so any comparison between them is always 100% (or 0).`, `${vname(seen[k])} و${vname(v)} يستخدمان نفس المقياس [${v.measure}]، لذلك أي مقارنة بينهما ستكون دائمًا 100% (أو 0).`));
+      else seen[k] = v;
+    });
+    design.values.forEach((v) => { if (v.kind !== 'measure' && v.a && v.a === v.b) out.push(L(`${vname(v)} compares ${valueName(v.a)} with itself.`, `${vname(v)} يقارن ${valueName(v.a)} بنفسه.`)); });
+    return out;
+  }
+
   // ---------- DAX ----------
   function renderDax() {
     const d = K.toDax(design);
     $('dax').textContent = d.dax;
-    const errs = d.errors.filter((e, i, a) => a.indexOf(e) === i);
+    const warns = sameWarnings();
+    const errs = d.errors.filter((e, i, a) => a.indexOf(e) === i).concat(warns);
     $('errors').textContent = errs.join(' · ');
     $('errors').hidden = !errs.length;
+    $('valWarn').innerHTML = warns.map((w) => '<i class="bi bi-exclamation-triangle" aria-hidden="true"></i> ' + esc(w)).join('<br>');
+    $('valWarn').hidden = !warns.length;
   }
 
   // ---------- starters, share, import/export, library ----------
