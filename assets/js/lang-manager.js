@@ -14,6 +14,8 @@ class LanguageManager {
     const urlParams = new URLSearchParams(window.location.search);
     const langParam = urlParams.get('lang');
     if (langParam && ['en', 'ar'].includes(langParam)) {
+      // Save it, so the next page opens in the language this page shows
+      try { localStorage.setItem('dataarcus-lang', langParam); } catch (e) {}
       return langParam;
     }
     
