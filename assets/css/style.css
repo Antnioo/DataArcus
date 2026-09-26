@@ -101,11 +101,6 @@ body {
   }
 }
 
-@keyframes langPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-}
-
 
 /* ===== 3. Core Layout & Components ===== */
 
@@ -131,6 +126,7 @@ body {
   font-size: 15px;
   padding: 9px 18px;
   border-radius: 10px;
+  white-space: nowrap;
 }
 
 .navbar.scrolled {
@@ -210,8 +206,7 @@ body {
 }
 
 /* Small laptops: keep every link on one line (Arabic labels are longer) */
-.navbar .nav-link,
-.navbar .btn-accent {
+.navbar .nav-link {
   white-space: nowrap;
 }
 
@@ -477,13 +472,6 @@ footer a.text-white-50:hover {
 
 .portfolio-card:hover .portfolio-image img {
     transform: scale(1.05);
-}
-
-/* THE FIX for Tech Pills layout */
-.portfolio-card .card-body > div:has(.tech-pill) {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem; /* 8px spacing between pills */
 }
 
 .tech-pill {
@@ -809,8 +797,7 @@ html[dir="rtl"] .navbar-brand {
   .portfolio-card:hover,
   .service-card:hover,
   .btn-accent:hover,
-  .btn-glass:hover,
-  .nav-link:hover {
+  .btn-glass:hover {
     transform: none !important;
     box-shadow: none !important;
   }
@@ -900,8 +887,7 @@ html[dir="rtl"] .navbar-brand {
   .portfolio-card:hover,
   .service-card:hover,
   .btn-accent:hover,
-  .btn-glass:hover,
-  .nav-link:hover {
+  .btn-glass:hover {
     transform: none !important;
     box-shadow: none !important;
   }
@@ -971,13 +957,6 @@ html[dir="rtl"] .navbar-brand {
 
 #blogSearch::placeholder {
   color: rgba(255, 255, 255, 0.5);
-}
-
-.input-group-text {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
-  border-right: none;
-  color: rgba(255, 255, 255, 0.6);
 }
 
 .blog-card {
@@ -1171,17 +1150,6 @@ html[dir="rtl"] .navbar-nav {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
 }
 
-/* --- Animation States --- */
-.lang-btn.switching {
-  animation: langPulse 0.6s ease-in-out;
-  pointer-events: none;
-}
-
-.lang-btn-desktop.switching {
-  animation: langPulse 0.6s ease-in-out;
-  pointer-events: none;
-}
-
 /* --- Improved Mobile Responsiveness --- */
 @media (max-width: 576px) {
   .language-switcher-container {
@@ -1206,13 +1174,7 @@ html[dir="rtl"] .navbar-nav {
 
 /* --- Enhanced Performance on Mobile --- */
 @media (max-width: 768px) {
-  .lang-btn,
-  .lang-btn-desktop {
-    /* Disable complex hover effects on mobile for better performance */
-    transform: none !important;
-  }
-  
-  /* But keep the visual feedback for touch */
+  /* Visual feedback for touch */
   .lang-btn:active {
     background: rgba(0, 212, 255, 0.2) !important;
     transform: scale(0.95) !important;
@@ -1232,32 +1194,6 @@ html[dir="rtl"] .navbar-nav {
   .desktop-lang-switcher {
     display: none !important;
   }
-}
-
-/* --- Cleanup Legacy Styles --- */
-.lang-switcher-simple {
-  display: none !important;
-}
-
-/* --- Loading State --- */
-.lang-btn.loading {
-  opacity: 0.6;
-  cursor: not-allowed;
-  pointer-events: none;
-}
-
-.lang-btn.loading::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 12px;
-  height: 12px;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  transform: translate(-50%, -50%);
 }
 
 /*
@@ -1297,7 +1233,7 @@ html[dir="rtl"] .navbar-nav {
 .proof-lbl { font-size: .78rem; color: #94a3b8; }
 .proof-bars { display: flex; align-items: flex-end; gap: 6px; height: 56px; margin-bottom: 14px; }
 .proof-bars span { flex: 1; border-radius: 4px 4px 0 0; background: linear-gradient(180deg, var(--accent), rgba(0, 132, 255, .4)); }
-.proof-link { color: var(--accent); font-weight: 700; text-decoration: none; }
+.proof-link { display: inline-block; padding: 7px 0; color: var(--accent); font-weight: 700; text-decoration: none; }
 .proof-link:hover { color: var(--accent-2); }
 .step-card { position: relative; }
 .step-num { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; font-size: 1.2rem; color: #051018; background: linear-gradient(135deg, var(--accent), var(--accent-3)); margin-bottom: 16px; }
@@ -1305,12 +1241,11 @@ html[dir="rtl"] .navbar-nav {
 .tool-mini { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 16px; border-radius: 14px; background: rgba(255, 255, 255, .04); border: 1px solid var(--glass-border); color: var(--lt); text-decoration: none; transition: transform .2s, border-color .2s; }
 .tool-mini:hover { transform: translateY(-3px); border-color: var(--accent); color: var(--lt); }
 .tool-mini span { font-size: .85rem; color: #94a3b8; }
-.tool-mini-cal { font-weight: 700; color: var(--green); margin-bottom: 6px; }
+.tool-mini-cal { font-weight: 700; color: var(--green); margin-bottom: 6px; direction: ltr; unicode-bidi: isolate; text-align: start; }
 .tool-mini-code { font: 600 .85rem ui-monospace, Consolas, monospace; color: var(--accent-2); margin-bottom: 6px; }
 @media (prefers-reduced-motion: reduce) { .proof-dot { animation: none; } }
 
 .tool-mini-code, .th-code { direction: ltr; unicode-bidi: plaintext; }
-.tool-mini-cal { direction: ltr; unicode-bidi: isolate; text-align: start; }
 
 /* Article code blocks: always left to right, also on Arabic pages */
 .article-body pre{direction:ltr;text-align:left;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:1rem 1.25rem;margin:1.5rem 0;overflow-x:auto;font-size:.85rem;line-height:1.6}
@@ -1332,8 +1267,7 @@ a:focus-visible,button:focus-visible,summary:focus-visible,[tabindex]:focus-visi
 /* Bigger touch targets for footer links */
 footer .list-unstyled a{display:inline-block;padding:4px 0}
 footer .list-unstyled li.mb-2{margin-bottom:.25rem!important}
-/* Touch targets: hero proof link and footer email */
-.proof-link{display:inline-block;padding:7px 0}
+/* Touch target: footer email */
 footer a[href^="mailto:"]{display:inline-block;padding:4px 0}
 /* CTA button pairs: keep a gap when they wrap onto two lines (and stay centered in Arabic) */
 .tg-cta > a.btn,.tg-cta > a.tg-btn2,.th-cta > a.btn,.th-cta > a.tg-btn2{margin:6px 4px!important;vertical-align:middle}
