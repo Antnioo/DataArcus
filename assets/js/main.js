@@ -6,7 +6,6 @@
 * ===================================================================
 *
 * 1. Initialization & Core Setup
-* - Loading Overlay
 * - Particle Background
 * - Animate on Scroll (AOS)
 * - Update Footer Year
@@ -19,25 +18,19 @@
 * 3. Dynamic Animations & Effects
 * - Counter Animation for Stats
 * - Intersection Observers (Counters & Fades)
-* - Mouse Move Parallax Effect
 * - Dynamic Gradient for CTA
 *
 * 4. Component-Specific Interactions
-* - Glass, Service & Portfolio Card Hovers
-* - Enhanced Button Interactions (Accent & Ripple)
-* - Tech Icon Interactions
+* - Close the phone menu on an outside click
+* - Button Ripple
 *
 * 5. Forms
-* - Main Contact Form Handler
-* - Demo Request Form Handler
+* - Contact Form Handler (messages in English and Arabic)
 * - Enhanced Form Validation UX
 *
-* 6. Utility, Performance & Finalization
+* 6. Utility & Finalization
 * - Keyboard Navigation Enhancement
-* - Lazy Loading for Images
-* - Performance Monitoring
-* - Console Welcome Message
-* - Final Initialization
+* - Blog search and filters
 *
 * 7. Analytics Events (GA4 + Clarity)
 * - Leads, CTA clicks, contact & outbound links
@@ -54,54 +47,16 @@ document.addEventListener('DOMContentLoaded', () => {
    * background particles, AOS library, and dynamic footer year.
    */
 
-  // Throttling utility to limit the rate at which a function can fire.
-  const throttle = (callback, delay = 100) => {
-    let shouldWait = false;
-    let waitingArgs;
-    const timeoutFunc = () => {
-      if (waitingArgs == null) {
-        shouldWait = false;
-      } else {
-        callback(...waitingArgs);
-        waitingArgs = null;
-        setTimeout(timeoutFunc, delay);
-      }
-    };
-
-    return (...args) => {
-      if (shouldWait) {
-        waitingArgs = args;
-        return;
-      }
-      callback(...args);
-      shouldWait = true;
-      setTimeout(timeoutFunc, delay);
-    };
-  };
-
-
   // Respect the OS-level "reduce motion" setting: skip purely decorative
-  // JS-driven animation (particles, parallax, tilt) for anyone who has it on.
+  // JS-driven animation (particles, card fade-in) for anyone who has it on.
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Read the viewport width once, up front, before any DOM writes below.
   // Reading window.innerWidth after a DOM mutation forces the browser to
   // run a synchronous layout recalculation just to answer the query, so
-  // caching it here (before the loading-overlay/particle/AOS setup that
+  // caching it here (before the particle/AOS setup that
   // follows) avoids that forced reflow.
   const isDesktopViewport = window.innerWidth > 767;
-
-  // Hide loading overlay after a delay
-  // Hide the loading overlay as soon as the page is ready. It used to wait
-  // a fixed 1s + 0.5s fade, which delayed every page for no reason.
-  const loadingOverlay = document.getElementById('loadingOverlay');
-  if (loadingOverlay) {
-    loadingOverlay.style.transition = 'opacity .25s ease';
-    requestAnimationFrame(() => {
-      loadingOverlay.style.opacity = '0';
-      setTimeout(() => loadingOverlay.style.display = 'none', 250);
-    });
-  }
 
   // Generate interactive background particles (desktop only, motion allowed).
   // CSS already hides these with display:none on mobile, but skip creating
@@ -180,9 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (targetElement) {
       e.preventDefault();
       
-      // Force immediate layout recalculation
-      targetElement.offsetTop;
-      
       // Simple calculation: element position minus 80px navbar height
       const targetPosition = targetElement.offsetTop - 80;
 
@@ -221,7 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
   /**
    * 3. Dynamic Animations & Effects
    * Controls animations that respond to user interaction or visibility,
-   * such as counters, parallax effects, and element fading.
+   * such as counters and element fading.
    */
 
   // Animate numbers in the stats section when they become visible
@@ -290,30 +242,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }, { threshold: 0.1 });
 
-  fadeElements.forEach(el => {
+  if (!prefersReducedMotion) fadeElements.forEach(el => {
     el.style.opacity = '0';
     el.style.transform = 'translateY(20px)';
     el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
     fadeObserver.observe(el);
   });
-
-  // Apply parallax effect to floating elements on mouse move (skipped for
-  // reduced-motion users - this is purely decorative, JS-driven movement
-  // that the CSS-only reduced-motion rules can't reach on their own).
-  if (!prefersReducedMotion) {
-    const handleParallax = (e) => {
-      const mouseX = e.clientX / window.innerWidth;
-      const mouseY = e.clientY / window.innerHeight;
-
-      document.querySelectorAll('.floating-element').forEach((element, index) => {
-        const speed = (index + 1) * 0.5;
-        const x = (mouseX - 0.5) * speed * 20;
-        const y = (mouseY - 0.5) * speed * 20;
-        element.style.transform = `translate(${x}px, ${y}px)`;
-      });
-    };
-    document.addEventListener('mousemove', throttle(handleParallax, 100));
-  }
 
   // Animate the gradient on the CTA section
   const ctaSection = document.querySelector('.cta-section');
@@ -328,26 +262,6 @@ document.addEventListener('DOMContentLoaded', () => {
    * Manages hover and interaction effects for various components like cards and buttons.
    */
   
-  // Add 3D tilt effect for service cards (This requires JS for dynamic values)
-  // Skipped for reduced-motion users, same reasoning as the parallax effect above.
-  if (!prefersReducedMotion) {
-    document.querySelectorAll('.service-card').forEach(card => {
-      card.addEventListener('mousemove', function(e) {
-        const rect = this.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const centerX = rect.width / 2;
-        const centerY = rect.height / 2;
-        const rotateX = (y - centerY) / 10;
-        const rotateY = (centerX - x) / 10;
-        this.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-5px)`;
-      });
-      card.addEventListener('mouseleave', function() {
-        this.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
-      });
-    });
-  }
-
   // Close mobile menu when clicking outside of the navbar
   document.addEventListener('click', (event) => {
     const navmenu = document.querySelector('#navmenu');
@@ -384,6 +298,13 @@ document.addEventListener('DOMContentLoaded', () => {
    * Handles submission and validation for all forms on the site.
    */
 
+  // Status messages follow the page language (keys in translations/common.js)
+  const formMsg = (key) => {
+    const all = window.commonTranslations || {};
+    const t = (all[document.documentElement.lang === 'ar' ? 'ar' : 'en'] || {}).formMsg || {};
+    return t[key] || ((all.en || {}).formMsg || {})[key] || '';
+  };
+
   // Generic form submission handler for Web3Forms
   const handleFormSubmit = (form, resultContainer) => {
     if (!form || !resultContainer) return;
@@ -396,9 +317,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const formButton = form.querySelector('button[type="submit"]');
       const originalButtonHtml = formButton.innerHTML;
 
-      resultContainer.innerHTML = `<div class="alert alert-info mt-3">Please wait...</div>`;
+      resultContainer.innerHTML = `<div class="alert alert-info mt-3">${formMsg('wait')}</div>`;
       resultContainer.style.display = 'block';
-      formButton.innerHTML = `<i class="bi bi-hourglass-split me-2"></i>Sending...`;
+      formButton.innerHTML = `<i class="bi bi-hourglass-split me-2"></i>${formMsg('sending')}`;
       formButton.disabled = true;
 
       fetch('https://api.web3forms.com/submit', {
@@ -406,23 +327,23 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
         body: json
       })
-      .then(async (response) => {
-        const jsonResponse = await response.json();
-        const alertClass = response.status === 200 ? 'alert-success' : 'alert-danger';
-        // Tell the analytics layer (section 7) that a lead came in
-        if (response.status === 200) {
+      .then((response) => {
+        const ok = response.status === 200;
+        if (ok) {
+          // Tell the analytics layer (section 7) that a lead came in
           document.dispatchEvent(new CustomEvent('dataarcus:lead', { detail: { formId: form.id } }));
+          // Clear the form only after a successful send, so a failed send keeps what the visitor wrote
+          form.reset();
         }
-        resultContainer.innerHTML = `<div class="alert ${alertClass} mt-3">${jsonResponse.message}</div>`;
+        resultContainer.innerHTML = `<div class="alert ${ok ? 'alert-success' : 'alert-danger'} mt-3">${formMsg(ok ? 'success' : 'error')}</div>`;
       })
       .catch(error => {
         console.error(error);
-        resultContainer.innerHTML = `<div class="alert alert-danger mt-3">Something went wrong!</div>`;
+        resultContainer.innerHTML = `<div class="alert alert-danger mt-3">${formMsg('error')}</div>`;
       })
       .finally(() => {
         formButton.innerHTML = originalButtonHtml;
         formButton.disabled = false;
-        form.reset();
         setTimeout(() => resultContainer.style.display = 'none', 6000);
       });
     });
@@ -441,7 +362,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize form handlers
   handleFormSubmit(document.getElementById('contact-form'), document.getElementById('form-result'));
-  handleFormSubmit(document.getElementById('demo-form'), document.getElementById('demo-form-result'));
   
   // Add focus/blur and validation effects to form inputs
   document.querySelectorAll('.form-control').forEach(input => {
@@ -458,8 +378,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   /**
-   * 6. Utility, Performance & Finalization
-   * Contains helper scripts, performance monitoring, and final setup calls.
+   * 6. Utility & Finalization
+   * Keyboard shortcuts and the blog search.
    */
 
   // Enhance keyboard navigation (e.g., closing mobile menu with ESC)
@@ -469,37 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (navmenu) {
         new bootstrap.Collapse(navmenu, { toggle: false }).hide();
       }
-    }
-  });
-
-  // Initialize lazy loading for images with data-src attribute
-  const lazyImages = document.querySelectorAll('img[data-src]');
-  if (lazyImages.length > 0) {
-    const imageObserver = new IntersectionObserver((entries, observer) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const img = entry.target;
-          img.src = img.dataset.src;
-          img.removeAttribute('data-src');
-          observer.unobserve(img);
-        }
-      });
-    });
-    lazyImages.forEach(img => imageObserver.observe(img));
-  }
-
-  // Log page load performance to the console
-  window.addEventListener('load', () => {
-    // Navigation Timing Level 2 (modern browsers) - falls back to the
-    // deprecated performance.timing API for anything that doesn't support it.
-    if (window.performance && typeof window.performance.getEntriesByType === 'function') {
-      const [navEntry] = window.performance.getEntriesByType('navigation');
-      if (navEntry) {
-        console.log(`🚀 DataArcus loaded in ${Math.round(navEntry.duration)}ms`);
-      }
-    } else if (window.performance && window.performance.timing) {
-      const loadTime = window.performance.timing.loadEventEnd - window.performance.timing.navigationStart;
-      console.log(`🚀 DataArcus loaded in ${loadTime}ms`);
     }
   });
 
@@ -559,13 +448,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Display a welcome message in the browser console
-  console.log('%c🚀 DataArcus Website', 'color: #00d4ff; font-size: 20px; font-weight: bold;');
-  console.log('%cBuilt with premium features and modern web technologies.', 'color: #40f3ff; font-size: 14px;');
-
-  // Final initialization complete signal
-  document.body.classList.add('loaded');
-  console.log('✅ DataArcus Website fully initialized!');
 
 });
 
