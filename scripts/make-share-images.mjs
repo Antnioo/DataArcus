@@ -82,7 +82,8 @@ const TOOLS = [
   ['measure-builder', 'dax-measure-builder', 'DAX Measure Builder', ['YTD, MTD, YoY', 'Rolling months', 'Ramadan vs last year'], 'tool-measures.jpg'],
   ['licensing-calculator', 'power-bi-licensing-cost-calculator', 'Power BI Licensing Cost Calculator', ['Pro vs PPU vs Fabric', 'F64 break-even', 'USD, AED, SAR'], 'tool-licensing.jpg'],
   ['model-health-check', 'power-bi-model-health-check', 'Power BI Model Health Check', ['Unused columns', 'Slow DAX', 'Nothing uploaded'], 'tool-health.jpg'],
-  ['dp-600', 'dp-600-practice-exam', 'DP-600 Practice Exam', ['220 questions', 'Timed mocks', 'Score out of 1000'], 'tool-dp600.jpg']
+  ['dp-600', 'dp-600-practice-exam', 'DP-600 Practice Exam', ['220 questions', 'Timed mocks', 'Score out of 1000'], 'tool-dp600.jpg'],
+  ['pl-300', 'pl-300-practice-exam', 'PL-300 Practice Exam', ['228 questions', 'Timed mocks', 'Renewal prep'], 'tool-pl300.jpg']
 ];
 // small line icons for the tools hub
 const icon = (d) => `<svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#00d4ff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="background:rgba(0,212,255,.1);border-radius:12px;padding:8px">${d}</svg>`;
@@ -92,7 +93,8 @@ const HUB = [
   ['Licensing calculator', 'Pro, PPU or Fabric', icon('<circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .8-3 2s1.3 1.7 3 2 3 .8 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6v2M12 16v2"/>')],
   ['Theme generator', 'Brand colors to JSON', icon('<circle cx="8" cy="9" r="1.5"/><circle cx="12" cy="7" r="1.5"/><circle cx="16" cy="9" r="1.5"/><path d="M12 21a9 9 0 1 1 9-9c0 2-1.5 3-3 3h-2a2 2 0 0 0-1 3.7c.3.2.5.6.5 1 0 .7-.6 1.3-1.5 1.3z"/>')],
   ['DAX calendar', 'Hijri, Ramadan, Eid', icon('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>')],
-  ['Measure builder', 'YTD, YoY, rolling DAX', icon('<path d="M17 5H7l6 7-6 7h10"/>')]
+  ['Measure builder', 'YTD, YoY, rolling DAX', icon('<path d="M17 5H7l6 7-6 7h10"/>')],
+  ['PL-300 exam', '228 practice questions', icon('<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>')]
 ];
 
 // ---------- articles with their own visual ----------
@@ -159,14 +161,14 @@ const PAGES = [
 const JOBS = [
   ...DASH.map(([id, kicker, title, chips, shot]) => ({ id, html: page(textBlock({ kicker, title, chips }), screenshot('assets/img/portfolio/' + shot), '430px 1fr') })),
   ...TOOLS.map(([id, slug, title, chips, shot]) => ({ id, html: page(textBlock({ kicker: 'Free tool · No sign-up', title, chips, size: title.length > 26 ? 46 : 52 }), screenshot('assets/img/og/src/' + shot, 'dataarcus.com/tools/' + slug + '.html'), '430px 1fr') })),
-  { id: 'home', html: page(textBlock({ kicker: 'Power BI consulting · Dubai', title: 'From Scattered Business Data to Decisions You Can Trust', size: 42, chips: ['8 showcase dashboards', '6 free tools', 'English & Arabic'] }),
+  { id: 'home', html: page(textBlock({ kicker: 'Power BI consulting · Dubai', title: 'From Scattered Business Data to Decisions You Can Trust', size: 42, chips: ['8 showcase dashboards', '7 free tools', 'English & Arabic'] }),
     `<div class="fan">${screenshot('assets/img/portfolio/fintech-preview.jpg', '', 'left:0;top:10px;transform:rotate(-5deg);opacity:.75')}${screenshot('assets/img/portfolio/repeatiq-preview.jpg', '', 'left:110px;top:0;transform:rotate(4deg);opacity:.85')}${screenshot('assets/img/portfolio/pulse-preview.jpg', '', 'left:40px;top:120px')}</div>`, '500px 1fr') },
   ...PAGES.map(([id, kicker, title, o, right, cols]) => ({ id, html: page(textBlock(Object.assign({ kicker, title }, o)), right, cols) })),
   { id: 'tools', html: page(textBlock({ kicker: 'Free · No sign-up · English & Arabic', title: 'Free Power BI & Fabric Tools', sub: 'Build, check and learn. Nothing to install.' }), (() => {
-    // the hub's three groups; HUB order is DP-600, health, licensing, theme, calendar, measures
+    // the hub's three groups; HUB order is DP-600, health, licensing, theme, calendar, measures, PL-300
     const tile = ([n, d, ic], stack) => `<div class="card tile" style="padding:12px 14px;gap:${stack ? 8 : 12}px${stack ? ';flex-direction:column;align-items:flex-start' : ''}">${ic.replace('width="42" height="42"', 'width="36" height="36"')}<div><b style="font-size:16px">${esc(n)}</b><small style="font-size:13px">${esc(d)}</small></div></div>`;
     const group = (label, items, cols) => `<div><div style="font-size:13px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#00d4ff;margin:0 0 8px 2px">${label}</div><div style="display:grid;grid-template-columns:repeat(${cols},1fr);gap:10px">${items.map((it) => tile(it, cols === 3)).join('')}</div></div>`;
-    return `<div style="display:flex;flex-direction:column;gap:16px">${group('Build', [HUB[3], HUB[4], HUB[5]], 3)}${group('Check', [HUB[1], HUB[2]], 2)}${group('Learn', [HUB[0]], 2)}</div>`;
+    return `<div style="display:flex;flex-direction:column;gap:16px">${group('Build', [HUB[3], HUB[4], HUB[5]], 3)}${group('Check', [HUB[1], HUB[2]], 2)}${group('Learn', [HUB[0], HUB[6]], 2)}</div>`;
   })(), '430px 1fr') },
   { id: 'kpi-playbook', html: page(textBlock({ kicker: 'E-commerce playbook · Power BI', title: 'The 5 Marketing KPIs Every E-commerce Leader Should Track', sub: 'Five numbers that decide profit, tracked in Power BI.' }), kpiRows, '600px 1fr') },
   { id: 'shopify-dashboard', html: page(textBlock({ kicker: 'Shopify · Power BI', title: 'Your Shopify Dashboard in Power BI', sub: 'Sales, marketing ROI, customers and inventory in one source of truth.' }), shopMods, '600px 1fr') }

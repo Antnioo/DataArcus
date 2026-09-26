@@ -44,6 +44,13 @@ window.toolsHubTranslations = {
           "tag1": "Exam prep",
           "tag2": "Mock exams",
           "tag3": "Oct 2026 outline"
+        },
+        "pl300": {
+          "title": "PL-300 Practice Exam Simulator",
+          "desc": "228 original Power BI questions with explanations, timed mock exams scored out of 1000, case studies and a study plan. Good prep for renewal too.",
+          "tag1": "New",
+          "tag2": "Renewal ready",
+          "tag3": "Apr 2026 outline"
         }
       },
       "nextUp": "Next up",
@@ -81,7 +88,7 @@ window.toolsHubTranslations = {
         },
         "learn": {
           "label": "Learn",
-          "title": "Prepare for Microsoft Fabric exams",
+          "title": "Prepare for Microsoft Power BI and Fabric exams",
           "desc": "Practice questions and timed mock exams, aligned to the current exam outline."
         }
       }
@@ -134,6 +141,13 @@ window.toolsHubTranslations = {
           "tag1": "تحضير للاختبار",
           "tag2": "اختبارات تجريبية",
           "tag3": "منهج أكتوبر 2026"
+        },
+        "pl300": {
+          "title": "محاكي اختبار PL-300",
+          "desc": "228 سؤالًا أصليًا عن Power BI مع الشرح، واختبارات تجريبية بوقت ونتيجة من 1000، ودراسات حالة وخطة مذاكرة. مفيد أيضًا لتجديد الشهادة.",
+          "tag1": "جديد",
+          "tag2": "جاهز للتجديد",
+          "tag3": "منهج أبريل 2026"
         }
       },
       "nextUp": "قريبًا",
@@ -171,7 +185,7 @@ window.toolsHubTranslations = {
         },
         "learn": {
           "label": "تعلّم",
-          "title": "استعد لاختبارات Microsoft Fabric",
+          "title": "استعد لاختبارات Microsoft في Power BI وFabric",
           "desc": "أسئلة تدريبية واختبارات موقوتة مطابقة لمنهج الاختبار الحالي."
         }
       }

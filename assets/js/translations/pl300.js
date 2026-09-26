@@ -1,0 +1,67 @@
+// Translations for tools/pl-300-practice-exam.html
+window.pl300Translations = {
+  "en": {
+    "meta": {
+      "title": "Free PL-300 Practice Exam: Power BI Data Analyst"
+    },
+    "dp": {
+      "badge": "Free · No sign-up · 228 original questions",
+      "title": "PL-300 Practice Exam Simulator",
+      "subtitle": "Get ready for Microsoft Power BI Data Analyst (PL-300), or your yearly renewal, with timed mock exams, case studies and an explanation for every option.",
+      "pill": {
+        "outline": "Skills outline of 20 Apr 2026",
+        "learn": "Every answer linked to Microsoft Learn",
+        "ar": "Arabic takeaway on every question"
+      },
+      "disclaimer": "Independent practice tool by DataArcus. <b>Not affiliated with or endorsed by Microsoft.</b> All questions are original, written from the public <a href=\"https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/pl-300\" target=\"_blank\" rel=\"noopener\">PL-300 study guide</a> and Microsoft Learn documentation. They are not real exam questions. Microsoft and Power BI are trademarks of the Microsoft group of companies. Your progress is saved only in this browser. <button type=\"button\" id=\"dpReset\" class=\"dp-link\">Reset progress</button>",
+      "cta": {
+        "title": "Passing is step one. Building is the job.",
+        "desc": "DataArcus builds Power BI solutions for businesses across the Gulf: data models, measures and reports people use every day.",
+        "more": "More free tools"
+      },
+      "faq": {
+        "title": "Questions",
+        "q1": "Are these real PL-300 exam questions?",
+        "a1": "No. Every question is original, written for DataArcus from the public skills outline and checked against Microsoft Learn. Real exam questions are confidential, and using leaked \"dumps\" breaks the exam agreement and can cost you the certification.",
+        "q2": "How close is the mock exam to the real one?",
+        "a2": "It follows the same weights, the same question styles (single answer, multiple answers, Yes/No statements, ordering and a case study), 100 minutes and a 700 pass mark. Your score here is an estimate, not a prediction.",
+        "q3": "I'm renewing my certification. Is this useful?",
+        "a3": "Yes. Renewal is a free, unproctored online assessment on Microsoft Learn that you can take in the six months before your certification expires. It follows the current skills outline, so practicing here skill by skill is a good way to prepare. Read about <a href=\"https://learn.microsoft.com/en-us/credentials/certifications/renew-your-microsoft-certification\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">certification renewal</a>.",
+        "q4": "What else should I use to prepare?",
+        "a4": "Hands-on time in Power BI Desktop, the free <a href=\"https://learn.microsoft.com/en-us/credentials/certifications/exams/pl-300/practice/assessment?assessment-type=practice&amp;assessmentId=48\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">Microsoft practice assessment</a>, and the Learn pages linked under every explanation here."
+      }
+    }
+  },
+  "ar": {
+    "meta": {
+      "title": "اختبار PL-300 تجريبي مجاني: Power BI Data Analyst"
+    },
+    "dp": {
+      "badge": "مجاني · بدون تسجيل · 228 سؤالًا أصليًا",
+      "title": "محاكي اختبار PL-300",
+      "subtitle": "استعد لشهادة Microsoft Power BI Data Analyst (PL-300) أو لتجديدها السنوي، باختبارات تجريبية بوقت محدد ودراسات حالة وشرح لكل خيار.",
+      "pill": {
+        "outline": "محدّث لمنهج 20 أبريل 2026",
+        "learn": "كل إجابة مرتبطة بـ Microsoft Learn",
+        "ar": "خلاصة بالعربي لكل سؤال"
+      },
+      "disclaimer": "أداة تدريب مستقلة من DataArcus. <b>غير تابعة لـ Microsoft ولا معتمدة منها.</b> كل الأسئلة أصلية، مكتوبة من <a href=\"https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/pl-300\" target=\"_blank\" rel=\"noopener\">دليل مذاكرة PL-300</a> المنشور ووثائق Microsoft Learn، وليست أسئلة من الاختبار الحقيقي. Microsoft وPower BI علامات تجارية لمجموعة شركات Microsoft. تقدمك محفوظ في هذا المتصفح فقط. <button type=\"button\" id=\"dpReset\" class=\"dp-link\">مسح التقدم</button>",
+      "cta": {
+        "title": "النجاح في الاختبار خطوة أولى. البناء هو الشغل الحقيقي.",
+        "desc": "DataArcus تبني حلول Power BI للشركات في الخليج: نماذج بيانات ومقاييس وتقارير يستخدمها الناس كل يوم.",
+        "more": "أدوات مجانية أخرى"
+      },
+      "faq": {
+        "title": "أسئلة شائعة",
+        "q1": "هل هذه أسئلة حقيقية من اختبار PL-300؟",
+        "a1": "لا. كل سؤال أصلي، كُتب لـ DataArcus من منهج الاختبار المنشور وتمت مراجعته مع Microsoft Learn. أسئلة الاختبار الحقيقي سرية، واستخدام الأسئلة المسرّبة يخالف اتفاقية الاختبار وقد يُفقدك الشهادة.",
+        "q2": "ما مدى قرب الاختبار التجريبي من الحقيقي؟",
+        "a2": "يتبع نفس الأوزان ونفس أنواع الأسئلة (إجابة واحدة، إجابات متعددة، عبارات نعم/لا، ترتيب خطوات ودراسة حالة)، و100 دقيقة، ودرجة نجاح 700. نتيجتك هنا تقديرية وليست توقعًا مضمونًا.",
+        "q3": "أجدد شهادتي، هل يفيدني هذا؟",
+        "a3": "نعم. التجديد تقييم مجاني عبر الإنترنت على Microsoft Learn بدون مراقبة، ويمكنك أداؤه خلال الأشهر الستة قبل انتهاء الشهادة. يتبع المنهج الحالي، لذلك التدرب هنا مهارة بمهارة طريقة جيدة للاستعداد. اقرأ عن <a href=\"https://learn.microsoft.com/en-us/credentials/certifications/renew-your-microsoft-certification\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">تجديد الشهادة</a>.",
+        "q4": "ماذا أستخدم أيضًا للتحضير؟",
+        "a4": "تجربة عملية في Power BI Desktop، و<a href=\"https://learn.microsoft.com/en-us/credentials/certifications/exams/pl-300/practice/assessment?assessment-type=practice&amp;assessmentId=48\" target=\"_blank\" rel=\"noopener\" class=\"hover-accent\">التقييم التدريبي المجاني من Microsoft</a>، وصفحات Learn المرفقة تحت كل شرح هنا."
+      }
+    }
+  }
+};
