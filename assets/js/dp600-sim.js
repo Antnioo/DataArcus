@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const refs = (q.ref || []).map((x) => '<li><a href="' + esc(x.u) + '" target="_blank" rel="noopener" data-learn>' + esc(x.t) + ' <i class="bi bi-box-arrow-up-right"></i></a></li>').join('');
     return '<div class="dp-exp">' + verdict +
       '<div class="dp-exptext" lang="en" dir="ltr">' + q.exp + '</div>' +
-      (q.ar ? '<div class="dp-ar" lang="ar" dir="rtl"><span>' + 'الخلاصة' + '</span>' + q.ar + '</div>' : '') +
+      (q.ar && isAr() ? '<div class="dp-ar" lang="ar" dir="rtl"><span>' + 'الخلاصة' + '</span>' + q.ar + '</div>' : '') +
       (refs ? '<div class="dp-refs"><b>' + L('Learn more on Microsoft Learn', 'اقرأ أكثر على Microsoft Learn') + '</b><ul>' + refs + '</ul></div>' : '') + '</div>';
   }
 

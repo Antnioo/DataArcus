@@ -380,6 +380,19 @@ footer a.text-white-50:hover {
   margin-bottom: 1.5rem;
 }
 
+/* English is wider than Arabic: scale it with the screen so it stays on 3 lines */
+@media (min-width: 769px) {
+  html:not([lang="ar"]) .hero h1 {
+    font-size: clamp(2.5rem, 3.95vw, 4rem);
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Trust line under the hero buttons: tighter gap when it wraps */
+.hero-trust {
+  row-gap: 0.75rem !important;
+}
+
 .hero .lead {
   font-size: 1.25rem;
   font-weight: 400;
@@ -1116,12 +1129,6 @@ html[dir="rtl"] .navbar-nav {
   color: var(--accent) !important;
 }
 
-/* Icon gap follows reading direction (me-1 is always a right margin) */
-.lang-btn-desktop .bi-globe2 {
-  margin-right: 0 !important;
-  margin-inline-end: 0.25rem;
-}
-
 /* Thin divider so the switcher doesn't read as a page link */
 .desktop-lang-switcher {
   border-inline-start: 1px solid rgba(255, 255, 255, 0.15);
@@ -1299,3 +1306,14 @@ footer a[href^="mailto:"]{display:inline-block;padding:4px 0}
 [dir="rtl"] .wa-float { right: auto; left: 20px; }
 @media (max-width: 575.98px) { .wa-float { right: 14px; bottom: 14px; width: 50px; height: 50px; } [dir="rtl"] .wa-float { right: auto; left: 14px; } }
 @media print { .wa-float { display: none; } }
+
+/* Arabic: the site uses the left-to-right Bootstrap build, where me-* is always a
+   right margin and ms-* a left margin. Flip them on icons so the gap sits between
+   the icon and its text. */
+html[dir="rtl"] .bi.me-1 { margin-right: 0 !important; margin-left: 0.25rem !important; }
+html[dir="rtl"] .bi.me-2 { margin-right: 0 !important; margin-left: 0.5rem !important; }
+html[dir="rtl"] .bi.me-3 { margin-right: 0 !important; margin-left: 1rem !important; }
+html[dir="rtl"] .bi.ms-1 { margin-left: 0 !important; margin-right: 0.25rem !important; }
+html[dir="rtl"] .bi.ms-2 { margin-left: 0 !important; margin-right: 0.5rem !important; }
+/* FAQ arrow: margin-left:auto keeps it next to the text in Arabic; push it to the far edge */
+html[dir="rtl"] .accordion-button::after { margin-left: 0; margin-right: auto; }
