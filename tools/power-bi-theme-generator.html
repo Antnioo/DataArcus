@@ -140,6 +140,13 @@
     .tg-range { display: flex; flex-direction: column; gap: 2px; margin: 0; font-size: .8rem; color: #cbd5e1; }
     .tg-range b { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
     .tg-range input { accent-color: var(--accent); width: 100%; }
+    .tg-custom { display: flex; align-items: flex-end; gap: 8px; margin-top: 8px; color: #94a3b8; }
+    .tg-custom label { display: flex; flex-direction: column; gap: 2px; font-size: .75rem; color: #cbd5e1; margin: 0; flex: 1; }
+    .tg-custom input { background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 8px; padding: 5px 8px; width: 100%; font-variant-numeric: tabular-nums; direction: ltr; }
+    .tg-custom input:focus { border-color: var(--accent); outline: none; }
+    .tg-custom span { padding-bottom: 7px; }
+    .tg-warn { color: #fdcb6e; }
+    #exampleUndo[hidden] { display: none; }
     .tg-reset { background: none; border: 0; color: var(--accent); font-size: .78rem; padding: 2px 0; cursor: pointer; }
     .tg-reset:hover { text-decoration: underline; }
     .tg-canvas { border-radius: 12px; overflow: hidden; border: 1px solid var(--glass-border); direction: ltr; background: #000; }
@@ -191,6 +198,11 @@
         <span class="badge rounded-pill text-bg-dark border border-secondary mb-2" data-i18n="tg.badge">Free tool · No sign-up</span>
         <h1 class="display-5 fw-bold" data-i18n="tg.title">Power BI Theme &amp; Layout Generator</h1>
         <p class="lead text-white-50 mb-0" data-i18n="tg.subtitle">Pick your brand colors, preview a live report, and download a theme JSON plus a matching page layout with the exact position of every visual.</p>
+        <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+          <button class="tg-btn2" id="exampleBtn" type="button"><i class="bi bi-stars me-1"></i><span data-i18n="tg.example">See an example</span></button>
+          <button class="tg-btn2" id="exampleUndo" type="button" hidden><i class="bi bi-arrow-counterclockwise me-1"></i><span data-i18n="tg.exampleUndo">Undo: back to my design</span></button>
+          <small class="text-white-50" data-i18n="tg.exampleHint">A finished executive sales report you can download and adapt.</small>
+        </div>
       </header>
 
       <div class="row g-4">

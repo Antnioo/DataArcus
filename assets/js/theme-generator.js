@@ -205,7 +205,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // Page sizes: the layout is designed on a grid 720 units tall and converted to the page's own units,
   // so the table, CSV and sliders always show the numbers to type into Power BI for that page.
   const PAGES = { '1280x720': [1280, 720], '1920x1080': [1920, 1080], '960x720': [960, 720] };
-  const page = (c) => { const [w, h] = PAGES[(c || lay()).page] || PAGES['1280x720']; return { w, h, s: h / 720 }; };
+  // Custom page: whole numbers, 640-3840 wide, 360-2160 tall, shaped between 4:3 and 2.4:1 so the layout grid still works
+  const LIM = { w: [640, 3840], h: [360, 2160], r: [4 / 3, 2.4] };
+  const within = (v, [lo, hi]) => Math.max(lo, Math.min(hi, v));
+  function fitCustom(w, h) {
+    w = within(Math.round(+w) || 1280, LIM.w); h = within(Math.round(+h) || 720, LIM.h);
+    if (w / h < LIM.r[0]) h = Math.round(w / LIM.r[0]);
+    if (w / h > LIM.r[1]) h = Math.round(w / LIM.r[1]);
+    if (h < LIM.h[0]) { h = LIM.h[0]; w = Math.max(w, Math.round(h * LIM.r[0])); }
+    return [w, h];
+  }
+  const page = (c) => { c = c || lay(); const [w, h] = c.page === 'custom' ? fitCustom(c.pageW, c.pageH) : PAGES[c.page] || PAGES['1280x720']; return { w, h, s: h / 720 }; };
+  let pageMsg = '';   // shown once after a typed value was outside the limits
+  const shapeMsg = (c) => { if (c.page !== 'custom') return ''; const [w, h] = fitCustom(c.pageW, c.pageH);
+    return w === c.pageW && h === c.pageH ? '' : L(`This shape is outside 4:3 to 2.4:1, so the preview uses ${w} × ${h}.`, `هذا الشكل خارج النطاق من 4:3 إلى 2.4:1، لذلك تستخدم المعاينة <bdi dir="ltr">${w} × ${h}</bdi>.`); };
   const applyPage = (c) => { const p = page(c); PW = Math.round(p.w / p.s); PH = 720; return p; };
   const toPage = (v, c) => Math.round(v * page(c).s);
   const KINDS = { kpi: ['Card', 'بطاقة'], line: ['Line chart', 'مخطط خطي'], bar: ['Bar chart', 'مخطط شريطي'], column: ['Column chart', 'مخطط أعمدة'], donut: ['Donut chart', 'مخطط دائري'], table: ['Table or matrix', 'جدول أو مصفوفة'], text: ['Text box or narrative', 'مربع نص أو سرد'], slicer: ['Slicers', 'مقسمات (Slicers)'], title: ['Text box (page title)', 'مربع نص (عنوان الصفحة)'], logo: ['Image (logo)', 'صورة (الشعار)'] };
@@ -388,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return `<div class="tg-sizes"><div class="d-flex justify-content-between align-items-center"><span class="tg-label mb-0">${L('Adjust sizes', 'ضبط المقاسات')}</span><button type="button" class="tg-reset" data-l="reset"><i class="bi bi-arrow-counterclockwise"></i> ${L('Reset sizes', 'إعادة المقاسات')}</button></div>
       <small class="text-white-50 d-block mb-2">${L(`Start side is the left in left-to-right reports and the right in Arabic ones. Sizes are in your page units (${pg.w} × ${pg.h}).`, `جهة البداية هي اليسار في التقارير من اليسار لليمين واليمين في التقارير العربية. المقاسات بوحدات صفحتك (${pg.w} × ${pg.h}).`)}</small>${out.join('')}</div>`;
   }
-  const pngSize = (c) => { const p = page(c), k = 1920 / p.w; return [Math.round(p.w * k), Math.round(p.h * k)]; };
+  const pngSize = (c) => { const p = page(c), k = Math.max(1, 1920 / p.w); return [Math.round(p.w * k), Math.round(p.h * k)]; };
   function renderLayoutPreview() {
     const c = lay(), slots = computeSlots(c), pg = page(c), T = (v) => toPage(v, c), [pw, ph] = pngSize(c);
     $('layCanvas').innerHTML = bgSvg(slots, { preview: true });
@@ -400,7 +413,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const c = lay(); applyPage(c);
     $('layControls').innerHTML = `
       <div><span class="tg-label">${L('Layout', 'التخطيط')}</span><div class="tg-lays">${Object.keys(LAYOUTS).map((k) => `<button type="button" class="tg-lay-b${k === c.preset ? ' active' : ''}" data-l="preset" data-v="${k}" aria-pressed="${k === c.preset}">${thumb(k)}${nm(LAYOUTS[k].name)}</button>`).join('')}</div></div>
-      <div><span class="tg-label">${L('Power BI page size', 'مقاس صفحة Power BI')}</span>${seg('page', [['1280x720', L('16:9 · 1280 × 720 (default)', '16:9 · 1280 × 720 (الافتراضي)')], ['1920x1080', '16:9 · 1920 × 1080'], ['960x720', '4:3 · 960 × 720']], PAGES[c.page] ? c.page : '1280x720')}</div>
+      <div><span class="tg-label">${L('Power BI page size', 'مقاس صفحة Power BI')}</span>${seg('page', [['1280x720', L('16:9 · 1280 × 720 (default)', '16:9 · 1280 × 720 (الافتراضي)')], ['1920x1080', '16:9 · 1920 × 1080'], ['960x720', '4:3 · 960 × 720'], ['custom', L('Custom', 'مخصص')]], c.page === 'custom' || PAGES[c.page] ? c.page : '1280x720')}
+        ${c.page === 'custom' ? `<div class="tg-custom"><label>${L('Width', 'العرض')}<input type="number" inputmode="numeric" data-l="pageW" min="${LIM.w[0]}" max="${LIM.w[1]}" step="1" value="${c.pageW}"></label><span aria-hidden="true">×</span><label>${L('Height', 'الارتفاع')}<input type="number" inputmode="numeric" data-l="pageH" min="${LIM.h[0]}" max="${LIM.h[1]}" step="1" value="${c.pageH}"></label></div>
+        <small class="d-block mt-1 ${pageMsg || shapeMsg(c) ? 'tg-warn' : 'text-white-50'}" role="status">${[pageMsg, shapeMsg(c)].filter(Boolean).join(' ') || L('Match Format page › Canvas settings › Custom in Power BI.', 'طابقه مع <bdi dir="ltr">Format page › Canvas settings › Custom</bdi> في Power BI.')}</small>` : ''}</div>
       <div><span class="tg-label">${L('KPI cards', 'بطاقات المؤشرات')}</span>${seg('kpis', [[3, '3'], [4, '4'], [5, '5'], [6, '6']], c.kpis)}</div>
       <div><span class="tg-label">${L('Reading direction', 'اتجاه القراءة')}</span>${seg('dir', [['ltr', L('Left to right', 'من اليسار لليمين')], ['rtl', L('Right to left (Arabic)', 'من اليمين لليسار (عربي)')]], rtl() ? 'rtl' : 'ltr')}</div>
       <div><span class="tg-label">${L('Corners', 'الزوايا')}</span>${seg('radius', [[0, L('Square', 'حادة')], [8, L('Soft', 'ناعمة')], [14, L('Round', 'دائرية')]], c.radius)}</div>
@@ -422,7 +437,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const k = b.dataset.l, v = b.dataset.v, c = lay();
     if (k === 'preset') { c.preset = v; c.kpis = LAYOUTS[v].kpis; c.filters = LAYOUTS[v].filters; delete c.kpiH; delete c.mainW; delete c.split; track('theme_layout', { layout: v }); }
     else if (k === 'reset') ['hh', 'logoW', 'fpos', 'fw', 'fh', 'kpiH', 'mainW', 'split'].forEach((x) => delete c[x]);
-    else c[k] = k === 'dir' || k === 'fpos' || k === 'page' ? v : +v;
+    else if (k === 'page') { if (v === 'custom' && c.page !== 'custom') { const p = page(c); c.pageW = p.w; c.pageH = p.h; } c.page = v; pageMsg = ''; track('theme_page_size', { size: v }); }
+    else c[k] = k === 'dir' || k === 'fpos' ? v : +v;
     renderLayout(); save();
   });
   // sliders redraw the preview while dragging, without rebuilding the controls
@@ -433,6 +449,15 @@ document.addEventListener('DOMContentLoaded', () => {
     renderLayoutPreview(); save();
   });
   $('layControls').addEventListener('change', (e) => {
+    const num = e.target.closest('input[type="number"][data-l]');
+    if (num) {
+      const c = lay(), k = num.dataset.l, isW = k === 'pageW', lim = isW ? LIM.w : LIM.h;
+      if (num.value === '' || !isFinite(+num.value)) { pageMsg = L('Enter a whole number.', 'أدخل رقمًا صحيحًا.'); renderLayout(); return; }
+      const v = Math.round(+num.value), kept = within(v, lim);
+      pageMsg = kept !== v ? (isW ? L(`Width set to ${kept} (allowed ${lim[0]} to ${lim[1]}).`, `تم ضبط العرض على ${kept} (المسموح من ${lim[0]} إلى ${lim[1]}).`) : L(`Height set to ${kept} (allowed ${lim[0]} to ${lim[1]}).`, `تم ضبط الارتفاع على ${kept} (المسموح من ${lim[0]} إلى ${lim[1]}).`)) : '';
+      c[k] = kept; const [w, h] = fitCustom(c.pageW, c.pageH); track('theme_page_size', { size: w + 'x' + h });
+      renderLayout(); save(); return;
+    }
     const el = e.target.closest('input[type="checkbox"][data-l]'); if (!el) return;
     lay()[el.dataset.l] = el.checked;
     if (el.dataset.l === 'transparent') renderJson();
@@ -471,6 +496,27 @@ document.addEventListener('DOMContentLoaded', () => {
     img.onerror = () => toast(L('Could not create the image in this browser', 'تعذّر إنشاء الصورة في هذا المتصفح'));
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(bgSvg(computeSlots(lay()), { w: pw, h: ph }));
     track('theme_layout_png', { layout: lay().preset, direction: rtl() ? 'rtl' : 'ltr', kpis: lay().kpis });
+  });
+
+  // "See an example": a complete executive sales design; the visitor's own design can be restored
+  let beforeExample = null;
+  $('exampleBtn').addEventListener('click', () => {
+    if (!beforeExample) beforeExample = JSON.stringify(state);
+    const p = PRESETS['Desert Gulf'];
+    state = { preset: 'Desert Gulf', name: 'Executive Sales', font: 'Segoe UI', data: p.data.slice(), ui: { ...p.ui },
+      layout: { preset: 'exec', kpis: 4, filters: true, fpos: 'top', dir: isAr() ? 'rtl' : 'ltr', radius: 12, shadow: true, header: true, accentBar: true, samples: true, transparent: true, page: '1920x1080', hh: 64, logoW: 200 } };
+    pageMsg = ''; renderPresets(); renderInputs(); renderAll();
+    $('exampleUndo').hidden = false;
+    $('layout').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    toast(L('Example loaded: an executive sales report', 'تم تحميل المثال: تقرير مبيعات تنفيذي'));
+    track('theme_example', { example: 'executive-sales' });
+  });
+  $('exampleUndo').addEventListener('click', () => {
+    if (!beforeExample) return;
+    state = JSON.parse(beforeExample); beforeExample = null; pageMsg = '';
+    renderPresets(); renderInputs(); renderAll();
+    $('exampleUndo').hidden = true;
+    toast(L('Your design is back', 'عاد تصميمك'));
   });
 
   renderInputs(); renderAll();
