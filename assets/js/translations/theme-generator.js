@@ -68,6 +68,7 @@ window.themeGeneratorTranslations = {
         "q6": "Why use this instead of designing directly in Power BI?",
         "a6": "Because it sets the whole visual system first: colors, fonts, page size and where every visual goes. Formatting visuals one by one in Power BI takes hours and drifts between pages; here you decide once, then build every page on the same design."
       },
+      "terms": "Free to use for your own and your clients' reports. The tool, its code and its design are © DataArcus. Please don't copy or republish them.",
       "layout": {
         "new": "New",
         "title": "Page size and layout",
@@ -159,6 +160,7 @@ window.themeGeneratorTranslations = {
         "q6": "لماذا أستخدم هذه الأداة بدل التصميم مباشرة في Power BI؟",
         "a6": "لأنها تضبط النظام البصري كله أولًا: الألوان والخطوط ومقاس الصفحة وموضع كل عنصر. تنسيق العناصر واحدًا واحدًا في Power BI يستغرق ساعات ويختلف من صفحة لأخرى؛ هنا تقرر مرة واحدة ثم تبني كل الصفحات على التصميم نفسه."
       },
+      "terms": "مجانية للاستخدام في تقاريرك وتقارير عملائك. الأداة وكودها وتصميمها © DataArcus. يُرجى عدم نسخها أو إعادة نشرها.",
       "layout": {
         "new": "جديد",
         "title": "مقاس الصفحة والتخطيط",
