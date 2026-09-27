@@ -51,7 +51,8 @@ window.themeGeneratorTranslations = {
       "cta": {
         "title": "Need more than the design?",
         "desc": "DataArcus also builds complete Power BI solutions, from the data model and measures to dashboards your team uses every day.",
-        "next": "Free DAX Calendar Generator"
+        "next": "Free DAX Calendar Generator",
+        "article": "Read the story: how we redesigned a real report in 5 minutes →"
       },
       "faq": {
         "title": "Questions",
@@ -143,7 +144,8 @@ window.themeGeneratorTranslations = {
       "cta": {
         "title": "تحتاج أكثر من التصميم؟",
         "desc": "تبني DataArcus أيضًا حلول Power BI كاملة، من نموذج البيانات والمقاييس إلى لوحات يستخدمها فريقك كل يوم.",
-        "next": "مولّد تقويم DAX المجاني"
+        "next": "مولّد تقويم DAX المجاني",
+        "article": "اقرأ القصة: كيف أعدنا تصميم تقرير حقيقي في 5 دقائق ←"
       },
       "faq": {
         "title": "أسئلة شائعة",
