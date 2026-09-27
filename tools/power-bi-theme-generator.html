@@ -157,8 +157,31 @@
     .tg-custom span { padding-bottom: 7px; }
     .tg-warn { color: #fdcb6e; }
     .tg-step { font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
-    .tg-jump { color: var(--accent); font-weight: 600; font-size: .9rem; text-decoration: none; padding: 8px 4px; }
-    .tg-jump:hover { text-decoration: underline; }
+    /* steps bar: pinned under the navbar; the current step is highlighted */
+    .tg-steps { position: sticky; top: var(--nav-h, 76px); z-index: 20; display: flex; gap: 4px; margin: 0 0 20px; padding: 5px; background: rgba(10, 15, 28, .92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid var(--glass-border); border-radius: 50px; }
+    .tg-steps a { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 6px 8px; border-radius: 40px; color: #94a3b8; font-size: .85rem; font-weight: 600; text-decoration: none; white-space: nowrap; position: relative; }
+    .tg-steps a b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid currentColor; font-size: .72rem; }
+    .tg-steps a:hover { color: var(--lt); }
+    .tg-steps a.active { background: rgba(0, 212, 255, .12); color: var(--accent); }
+    .tg-steps a.active b { background: var(--accent); border-color: var(--accent); color: #051018; }
+    .tg-steps a.stale::after { content: ""; position: absolute; top: 5px; inset-inline-end: 10px; width: 8px; height: 8px; border-radius: 50%; background: #fdcb6e; }
+    @media (max-width: 575.98px) { .tg-steps a { font-size: .78rem; gap: 5px; padding: 6px 2px; } .tg-steps a b { width: 20px; height: 20px; } }
+    .tg [id] { scroll-margin-top: calc(var(--nav-h, 76px) + 64px); }
+    .tg-tip { font-size: .85rem; color: #cbd5e1; background: rgba(253, 203, 110, .07); border: 1px solid rgba(253, 203, 110, .3); border-radius: 10px; padding: 8px 12px; }
+    .tg-tip i { color: #fdcb6e; margin-inline-end: 4px; }
+    .tg-tip a { color: var(--accent); font-weight: 600; }
+    .tg-files { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 575.98px) { .tg-files { grid-template-columns: 1fr; } }
+    .tg-file { display: flex; flex-direction: column; justify-content: space-between; gap: 12px; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 14px; padding: 14px; }
+    .tg-file-h { display: flex; gap: 10px; align-items: flex-start; }
+    .tg-file-h > i { font-size: 1.6rem; color: var(--accent); line-height: 1; }
+    .tg-file-h strong { display: block; }
+    .tg-file-h small { color: #94a3b8; }
+    .tg-note { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: .85rem; color: #fdcb6e; background: rgba(253, 203, 110, .07); border: 1px solid rgba(253, 203, 110, .35); border-radius: 12px; padding: 10px 14px; }
+    .tg-note + .tg-note { margin-top: 8px; }
+    .tg-note span { flex: 1 1 220px; }
+    .tg-note button { background: transparent; border: 1px solid #fdcb6e; color: #fdcb6e; border-radius: 30px; padding: 4px 12px; font-size: .8rem; font-weight: 600; }
+    .tg-note button:hover { background: rgba(253, 203, 110, .12); }
     .tg-swipe { display: block; margin-top: 6px; color: #94a3b8; font-size: .75rem; }
     /* phones: the layout preview comes before its controls, so changes are visible */
     @media (max-width: 991.98px) { .tg-prevcol { order: -1; } }
@@ -167,7 +190,7 @@
     .tg-reset:hover { text-decoration: underline; }
     .tg-canvas { border-radius: 12px; overflow: hidden; border: 1px solid var(--glass-border); direction: ltr; background: #000; }
     .tg-canvas svg { display: block; width: 100%; height: auto; }
-    @media (min-width: 992px) { .tg-stick { position: sticky; top: 90px; } }
+    @media (min-width: 992px) { .tg-stick { position: sticky; top: calc(var(--nav-h, 76px) + 64px); } }
     .tg-why { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
     .tg-why span { font-size: .75rem; color: #cbd5e1; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 20px; padding: 3px 10px; }
     .tg-why i { color: #22c55e; }
@@ -218,13 +241,20 @@
           <button class="tg-btn2" id="exampleBtn" type="button"><i class="bi bi-stars me-1"></i><span data-i18n="tg.example">See an example</span></button>
           <button class="tg-btn2" id="exampleUndo" type="button" hidden><i class="bi bi-arrow-counterclockwise me-1"></i><span data-i18n="tg.exampleUndo">Undo: back to my design</span></button>
           <small class="text-white-50" data-i18n="tg.exampleHint">A finished executive sales report you can download and adapt.</small>
-          <a class="tg-jump" href="#layout"><span data-i18n="tg.jump">Jump to page layout</span> <i class="bi bi-arrow-down-short" aria-hidden="true"></i></a>
         </div>
       </header>
 
+      <!-- steps bar: stays under the navbar so visitors always see where they are -->
+      <nav class="tg-steps" id="tgSteps" aria-label="Steps">
+        <a href="#colors" data-step="colors"><b>1</b><span data-i18n="tg.nav.colors">Colors</span></a>
+        <a href="#themeJson" data-step="themeJson"><b>2</b><span data-i18n="tg.nav.theme">Theme</span></a>
+        <a href="#layout" data-step="layout"><b>3</b><span data-i18n="tg.nav.layout">Layout</span></a>
+        <a href="#download" data-step="download"><b>4</b><span data-i18n="tg.nav.download">Download</span></a>
+      </nav>
+
       <div class="row g-4">
         <div class="col-lg-5">
-          <div class="tg-panel d-flex flex-column gap-4">
+          <div class="tg-panel d-flex flex-column gap-4" id="colors">
             <div>
               <div class="tg-step" data-i18n="tg.step1">1 · Colors</div>
               <span class="tg-label" data-i18n="tg.presets">Start from a preset</span>
@@ -276,7 +306,7 @@
             <span class="tg-label" data-i18n="tg.preview">Live preview</span>
             <div class="tg-preview" id="preview"></div>
           </div>
-          <div class="tg-panel d-flex flex-column gap-3">
+          <div class="tg-panel d-flex flex-column gap-3" id="themeJson">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
               <span class="tg-label mb-0"><span class="tg-step d-inline" data-i18n="tg.step2">2 · Theme JSON</span></span>
               <div class="tg-actions">
@@ -286,6 +316,8 @@
             </div>
             <pre class="tg-json" id="json"></pre>
             <p class="small text-white-50 mb-0" data-i18n-html="tg.importNote">Import it in Power BI Desktop: <strong>View → Themes → Browse for themes</strong>, then pick the file.</p>
+            <p class="tg-tip mb-0" data-i18n-html="tg.layoutTip"><i class="bi bi-lightbulb"></i> Using a page layout too? <a href="#download">Download at the end, in step 4</a>, so the theme includes your layout choices.</p>
+            <div id="jsonStatus" role="status" aria-live="polite"></div>
           </div>
         </div>
       </div>
@@ -306,7 +338,7 @@
           </div>
         </div>
         <div class="row g-4 mt-1">
-          <div class="col-lg-7">
+          <div class="col-12">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
               <span class="tg-label mb-0" data-i18n="tg.layout.slots">Where each visual goes</span>
               <div class="tg-actions">
@@ -317,16 +349,36 @@
             <div class="tg-slots" id="slotTable"></div>
             <small class="tg-swipe d-md-none" data-i18n="tg.swipe">Swipe the table sideways to see all columns</small>
           </div>
+        </div>
+      </div>
+
+      <div class="tg-panel mt-4" id="download" role="region" aria-labelledby="dlTitle">
+        <h2 class="h4 fw-bold mb-1" id="dlTitle"><span class="tg-step d-block mb-1" data-i18n="tg.step4">4 · Download</span><span data-i18n="tg.dl.title">Download your files</span></h2>
+        <p class="text-white-50 mb-4" data-i18n="tg.dl.subtitle">Both files use every choice above. If you change something after downloading, you'll see which file to download again.</p>
+        <div class="row g-4">
+          <div class="col-lg-7 d-flex flex-column gap-3">
+            <div id="dlVis"></div>
+            <div class="tg-files">
+              <div class="tg-file">
+                <div class="tg-file-h"><i class="bi bi-filetype-json" aria-hidden="true"></i><div><strong data-i18n="tg.dl.themeName">Theme</strong><small data-i18n="tg.dl.themeDesc">Colors, font and visual styles (.json)</small></div></div>
+                <button class="btn btn-accent w-100" id="dlBtn2" type="button"><i class="bi bi-download me-1"></i><span data-i18n="tg.dl.themeBtn">Download theme (.json)</span></button>
+              </div>
+              <div class="tg-file">
+                <div class="tg-file-h"><i class="bi bi-image" aria-hidden="true"></i><div><strong data-i18n="tg.dl.bgName">Page background</strong><small data-i18n="tg.dl.bgDesc">The layout as an image (.png)</small></div></div>
+                <button class="btn btn-accent w-100" id="pngBtn" type="button"><i class="bi bi-download me-1"></i><span data-i18n="tg.layout.png">Download background (PNG)</span></button>
+              </div>
+            </div>
+            <div id="dlStatus" role="status" aria-live="polite"></div>
+            <p class="small text-white-50 mb-0" id="layUnits"></p>
+          </div>
           <div class="col-lg-5">
             <span class="tg-label" data-i18n="tg.layout.howTitle">How to use it in Power BI</span>
             <ol class="tg-how">
-              <li data-i18n-html="tg.layout.how1"><strong>Download the background</strong> and your theme JSON (keep "transparent visuals" ticked).</li>
+              <li data-i18n-html="tg.layout.how1"><strong>Download both files</strong> in this step, with visual backgrounds set to <strong>Transparent</strong>.</li>
               <li data-i18n-html="tg.layout.how2">Import the theme: <strong>View › Themes › Browse for themes</strong>.</li>
               <li data-i18n-html="tg.layout.how3">Set the background: <strong>Format page › Canvas background › Image</strong>, Image fit <strong>Fit</strong>, Transparency <strong>0%</strong>.</li>
               <li data-i18n-html="tg.layout.how4">Add each visual, then type its numbers from the table into <strong>Format › General › Properties</strong> (Size and Position). It lands exactly on its panel.</li>
             </ol>
-            <button class="btn btn-accent w-100" id="pngBtn" type="button"><i class="bi bi-image me-1"></i><span data-i18n="tg.layout.png">Download background (PNG)</span></button>
-            <p class="small text-white-50 mt-2 mb-0" id="layUnits"></p>
           </div>
         </div>
       </div>
