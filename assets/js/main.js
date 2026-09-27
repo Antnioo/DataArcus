@@ -594,6 +594,7 @@ document.addEventListener('DOMContentLoaded', () => {
  * 9. Cookie Banner
  * ==================================================================
  * Works with the consent loader in each page's <head> (window.daConsent).
+ * Shown automatically only to visitors in Europe (by time zone).
  * Accept loads Google Analytics and Clarity; Reject stops them and clears
  * their cookies. The choice is remembered; the privacy page can reopen it.
  * ==================================================================
@@ -649,7 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
   C.open = show;   // "Cookie settings" on the privacy page
-  if (C.choice !== 'granted' && C.choice !== 'denied') show();
+  if (C.eu && C.choice !== 'granted' && C.choice !== 'denied') show();
   document.querySelectorAll('[data-cc-open]').forEach((b) => b.addEventListener('click', show));
   new MutationObserver(fill).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 })();
