@@ -141,8 +141,8 @@ export default async function ({ browser, url }) {
     await v.ctx.close();
   }
 
-  // 5. The downloaded PNG is nudged for Power BI: each panel's outer edge sits 1px right of and 3px below the
-  //    table's X / Y (Power BI draws visuals there; measured with a calibration background)
+  // 5. The downloaded PNG matches the table to the pixel: each panel's outer edge sits exactly at the table's X / Y
+  //    (confirmed in Power BI with calibration backgrounds at 1920 × 1080 and 1280 × 720, Image fit: Stretch)
   for (const size of ['1920x1080', '1280x720']) {
     v = await open('en');
     await v.pg.click('[data-p="Midnight"]'); await v.pg.click(`[data-l=page][data-v="${size}"]`); await v.pg.click('[data-l=radius][data-v="0"]');
@@ -156,7 +156,7 @@ export default async function ({ browser, url }) {
       const [x, y, w, h] = r.slice(2).map(Number), mx = Math.round((x + w / 2) * k), my = Math.round((y + h / 2) * k), fill = c(mx, my);
       let top = my; while (top > 0 && c(mx, top - 1) === fill) top--;
       let left = mx; while (left > 0 && c(left - 1, my) === fill) left--;
-      const got = [left / k, top / k].map((n) => Math.round(n)), want = [x + 1, y + 3];
+      const got = [left / k, top / k].map((n) => Math.round(n)), want = [x, y];
       check(Math.abs(got[0] - want[0]) <= 0.5 && Math.abs(got[1] - want[1]) <= 0.5, `${size} ${r[0]}: PNG panel starts at ${got.join(', ')}, expected ${want.join(', ')} (table ${x}, ${y})`);
     }
     await v.ctx.close();
