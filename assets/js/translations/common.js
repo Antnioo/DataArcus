@@ -55,6 +55,15 @@ window.commonTranslations = {
       talk: "Or message me on WhatsApp"
     },
 
+    // Cookie banner
+    consent: {
+      label: "Cookie choice",
+      text: "We use analytics cookies to understand how the site is used and to improve it.",
+      more: "Privacy policy",
+      accept: "Accept",
+      reject: "Reject"
+    },
+
     // WhatsApp button
     wa: {
       label: "Chat on WhatsApp",
@@ -129,6 +138,15 @@ window.commonTranslations = {
       showcases: "نماذج اللوحات",
       blog: "المقالات",
       talk: "أو راسلني على واتساب"
+    },
+
+    // شريط ملفات تعريف الارتباط
+    consent: {
+      label: "اختيار ملفات تعريف الارتباط",
+      text: "نستخدم ملفات تعريف ارتباط تحليلية لفهم طريقة استخدام الموقع وتحسينه.",
+      more: "سياسة الخصوصية",
+      accept: "موافق",
+      reject: "رفض"
     },
 
     // زر واتساب

@@ -588,3 +588,68 @@ document.addEventListener('DOMContentLoaded', () => {
   document.body.appendChild(a);
   new MutationObserver(texts).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 })();
+
+
+/**
+ * 9. Cookie Banner
+ * ==================================================================
+ * Works with the consent loader in each page's <head> (window.daConsent).
+ * Accept loads Google Analytics and Clarity; Reject stops them and clears
+ * their cookies. The choice is remembered; the privacy page can reopen it.
+ * ==================================================================
+ */
+(() => {
+  const C = window.daConsent;
+  if (!C) return;
+  const t = () => { const all = window.commonTranslations || {}; return (all[document.documentElement.lang === 'ar' ? 'ar' : 'en'] || {}).consent || {}; };
+  const privacyLink = document.querySelector('[data-i18n="footer.links.privacy"]');
+  const privacyHref = privacyLink ? privacyLink.getAttribute('href') : '/privacy.html';
+  let bar = null;
+
+  const save = (v) => { C.choice = v; try { localStorage.setItem(C.key, v); } catch (e) { /* private mode: asks again next visit */ } };
+  const clearCookies = () => {
+    const host = location.hostname, parts = host.split('.');
+    const domains = ['', host, '.' + host, parts.length > 1 ? '.' + parts.slice(-2).join('.') : ''];
+    document.cookie.split(';').forEach((c) => {
+      const name = c.split('=')[0].trim();
+      if (!/^(_ga|_gid|_gat|_clck|_clsk|CLID|ANONCHK|MR|MUID|SM)/.test(name)) return;
+      domains.forEach((d) => { document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/' + (d ? '; domain=' + d : ''); });
+    });
+  };
+  const fill = () => {
+    if (!bar) return;
+    const x = t();
+    bar.setAttribute('aria-label', x.label || 'Cookie choice');
+    bar.querySelector('.cc-text').innerHTML = (x.text || 'We use analytics cookies to understand how the site is used and to improve it.') +
+      ' <a href="' + privacyHref + '">' + (x.more || 'Privacy policy') + '</a>';
+    bar.querySelector('[data-cc="accept"]').textContent = x.accept || 'Accept';
+    bar.querySelector('[data-cc="reject"]').textContent = x.reject || 'Reject';
+  };
+  const hide = () => { if (bar) bar.remove(); bar = null; document.body.style.removeProperty('--cc-h'); document.body.classList.remove('cc-open'); };
+  const show = () => {
+    if (bar) return;
+    bar = document.createElement('div');
+    bar.className = 'cc-bar';
+    bar.setAttribute('role', 'region');
+    bar.innerHTML = '<p class="cc-text"></p><div class="cc-btns"><button type="button" class="btn btn-glass" data-cc="reject"></button><button type="button" class="btn btn-accent" data-cc="accept"></button></div>';
+    fill();
+    document.body.appendChild(bar);
+    document.body.classList.add('cc-open');
+    document.body.style.setProperty('--cc-h', bar.offsetHeight + 'px');   // lifts the WhatsApp button above the bar
+    bar.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-cc]'); if (!b) return;
+      if (b.dataset.cc === 'accept') { save('granted'); C.load(); }
+      else {
+        save('denied');
+        try { if (typeof window.gtag === 'function') window.gtag('consent', 'update', { analytics_storage: 'denied' }); } catch (err) { /* ignore */ }
+        try { if (typeof window.clarity === 'function') window.clarity('consent', false); } catch (err) { /* ignore */ }
+        clearCookies();
+      }
+      hide();
+    });
+  };
+  C.open = show;   // "Cookie settings" on the privacy page
+  if (C.choice !== 'granted' && C.choice !== 'denied') show();
+  document.querySelectorAll('[data-cc-open]').forEach((b) => b.addEventListener('click', show));
+  new MutationObserver(fill).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+})();
