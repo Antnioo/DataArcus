@@ -59,6 +59,12 @@ html.smooth-scroll, html.smooth-scroll body {
   scroll-behavior: smooth;
 }
 
+/* The 120px section padding is for homepage sections; the tool pages' FAQ is a
+   <section> too, and should sit right after the box above it */
+section.tg-faq {
+  padding: 0 !important;
+}
+
 #hero{
   margin-top: -20px;
 }

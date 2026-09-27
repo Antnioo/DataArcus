@@ -132,7 +132,7 @@
     .tg-cta { background: linear-gradient(135deg, rgba(0, 212, 255, .12), rgba(0,132,255,.12)); border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px; }
     @media (max-width: 767px) { .tg-colors { grid-template-columns: repeat(4, minmax(0, 1fr)); } .tg-grid2, .tg-kpis { grid-template-columns: 1fr; } }
     /* page layout */
-    .tg-new { font-size: .62rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #051018; background: #fdcb6e; border-radius: 20px; padding: 2px 8px; }
+    .tg-new { vertical-align: middle; margin-inline-start: 6px; font-size: .62rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #051018; background: #fdcb6e; border-radius: 20px; padding: 2px 8px; }
     .tg-lays { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     .tg-lay-b { background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 12px; padding: 8px; text-align: start; font-size: .8rem; font-weight: 600; cursor: pointer; }
     .tg-lay-b:hover, .tg-lay-b.active { border-color: var(--accent); }
@@ -344,10 +344,7 @@
       </div>
 
       <div class="tg-panel tg-lay mt-4" id="layout" role="region" aria-labelledby="layTitle">
-        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-          <h2 class="h4 fw-bold mb-0" id="layTitle"><span class="tg-step d-block mb-1" data-i18n="tg.step2">2 · Layout</span><span data-i18n="tg.layout.title">Page size and layout</span></h2>
-          <span class="tg-new" data-i18n="tg.layout.new">New</span>
-        </div>
+        <h2 class="h4 fw-bold mb-1" id="layTitle"><span class="tg-step d-block mb-1" data-i18n="tg.step2">2 · Layout</span><span data-i18n="tg.layout.title">Page size and layout</span> <span class="tg-new" data-i18n="tg.layout.new">New</span></h2>
         <p class="text-white-50 mb-4" data-i18n="tg.layout.subtitle">A full report background in your theme colors, with a place for every visual. Layouts follow dashboard design principles from Stephen Few, the IBCS standards and Microsoft's report design guidance.</p>
         <div class="tg-pagesize mb-4" id="pageSize"></div>
         <div class="row g-4">
@@ -410,8 +407,10 @@
           <div class="tg-cta mb-5 text-center">
             <h2 class="h4 fw-bold mb-2" data-i18n="tg.cta.title">Need more than the design?</h2>
             <p class="text-white-50 mb-3" data-i18n="tg.cta.desc">DataArcus also builds complete Power BI solutions, from the data model and measures to dashboards your team uses every day.</p>
-            <a href="../index.html#contact" class="btn btn-accent" data-i18n="nav.consultation">Book a Free Call</a>
-            <a href="dax-calendar-table-generator.html" class="tg-btn2 ms-2 text-decoration-none d-inline-block" data-i18n="tg.cta.next">Free DAX Calendar Generator</a>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+              <a href="../index.html#contact" class="btn btn-accent" data-i18n="nav.consultation">Book a Free Call</a>
+              <a href="dax-calendar-table-generator.html" class="tg-btn2 text-decoration-none d-inline-block" data-i18n="tg.cta.next">Free DAX Calendar Generator</a>
+            </div>
           </div>
           <section class="tg-faq">
             <h2 class="h4 fw-bold" data-i18n="tg.faq.title">Questions</h2>
