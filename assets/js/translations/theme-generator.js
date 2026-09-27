@@ -78,7 +78,7 @@ window.themeGeneratorTranslations = {
         "howTitle": "How to use it in Power BI",
         "how1": "<strong>Download the files</strong> above, with visual backgrounds set to <strong>Transparent</strong>.",
         "how2": "Import the theme: <strong>View › Themes › Browse for themes</strong>.",
-        "how3": "Set the background: <strong>Format page › Canvas background › Image</strong>, Image fit <strong>Fit</strong>, Transparency <strong>0%</strong>.",
+        "how3": "Set the background: <strong>Format page › Canvas background › Image</strong>, Image fit <strong>Fill</strong>, Transparency <strong>0%</strong>.",
         "how4": "Add each visual, then type its numbers from the table into <strong>Format › General › Properties</strong> (Size and Position). It lands exactly on its panel.",
         "png": "Download background (PNG)"
       },
@@ -169,7 +169,7 @@ window.themeGeneratorTranslations = {
         "howTitle": "طريقة الاستخدام في Power BI",
         "how1": "<strong>نزّل الملفات</strong> أعلاه، مع ضبط خلفيات العناصر على <strong>شفافة</strong>.",
         "how2": "استورد السمة: <strong><bdi dir=\"ltr\">View › Themes › Browse for themes</bdi></strong>.",
-        "how3": "ضع الخلفية: <strong><bdi dir=\"ltr\">Format page › Canvas background › Image</bdi></strong>، واختر <strong><bdi dir=\"ltr\">Image fit: Fit</bdi></strong> والشفافية <strong><bdi dir=\"ltr\">0%</bdi></strong>.",
+        "how3": "ضع الخلفية: <strong><bdi dir=\"ltr\">Format page › Canvas background › Image</bdi></strong>، واختر <strong><bdi dir=\"ltr\">Image fit: Fill</bdi></strong> والشفافية <strong><bdi dir=\"ltr\">0%</bdi></strong>.",
         "how4": "أضف كل عنصر، ثم اكتب أرقامه من الجدول في <strong><bdi dir=\"ltr\">Format › General › Properties</bdi></strong> (الحجم والموضع). سيستقر تمامًا على لوحته.",
         "png": "نزّل الخلفية (PNG)"
       },
