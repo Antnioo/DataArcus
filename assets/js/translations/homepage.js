@@ -138,8 +138,8 @@ portfolio: {
         cards: [
           {
             tag: "Build",
-            title: "Theme Generator",
-            desc: "Brand colors to a theme JSON, with a live preview."
+            title: "Theme & Layout Generator",
+            desc: "Brand colors to a theme JSON, plus a matching page layout."
           },
           {
             tag: "Build",
@@ -422,8 +422,8 @@ portfolio: {
         cards: [
           {
             tag: "ابنِ",
-            title: "مولّد السمات",
-            desc: "حوّل ألوان علامتك إلى ملف سمة JSON مع معاينة مباشرة."
+            title: "مولّد السمات والتخطيطات",
+            desc: "حوّل ألوان علامتك إلى ملف سمة JSON مع تخطيط صفحة مطابق."
           },
           {
             tag: "ابنِ",

@@ -7,10 +7,10 @@ window.toolsHubTranslations = {
       "subtitle": "Small tools that save Power BI and Fabric developers hours, built from real client work. Nothing you enter leaves your browser.",
       "cards": {
         "theme": {
-          "title": "Power BI Theme Generator",
-          "desc": "Turn your brand colors into a theme JSON with a live report preview and a readability check.",
+          "title": "Power BI Theme & Layout Generator",
+          "desc": "Turn your brand colors into a theme JSON, then get a matching page background with the exact position of every visual.",
           "tag1": "Theme JSON",
-          "tag2": "Live preview"
+          "tag2": "Page layouts"
         },
         "calendar": {
           "title": "DAX Calendar Table Generator",
@@ -111,10 +111,10 @@ window.toolsHubTranslations = {
       "subtitle": "أدوات صغيرة توفر على مطوري Power BI و Fabric ساعات من العمل، مبنية من مشاريع حقيقية مع العملاء. لا شيء مما تدخله يغادر متصفحك.",
       "cards": {
         "theme": {
-          "title": "مولّد سمات Power BI",
-          "desc": "حوّل ألوان علامتك التجارية إلى ملف سمة JSON مع معاينة مباشرة للتقرير وفحص لسهولة القراءة.",
+          "title": "مولّد السمات والتخطيطات لـ Power BI",
+          "desc": "حوّل ألوان علامتك التجارية إلى ملف سمة JSON، ثم احصل على خلفية صفحة مطابقة بموضع دقيق لكل عنصر مرئي.",
           "tag1": "ملف سمة JSON",
-          "tag2": "معاينة مباشرة"
+          "tag2": "تخطيطات الصفحة"
         },
         "calendar": {
           "title": "مولّد جدول التقويم في DAX",

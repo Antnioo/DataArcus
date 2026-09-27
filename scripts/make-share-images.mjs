@@ -22,7 +22,7 @@ const dataUrl = (file) => {
   return 'data:' + type + ';base64,' + buf.toString('base64');
 };
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;');
-const logo = fs.readFileSync(path.join(ROOT, 'assets/img/logo.svg'), 'utf8').replace(/width="190" height="40"/, 'width="228" height="48"');
+const logo = fs.readFileSync(path.join(ROOT, 'assets/img/logo.svg'), 'utf8').replace(/width="[\d.]+" height="40"/, 'width="208" height="48"');
 
 const page = (left, right, cols) => `<!doctype html><html><head><style>
 @font-face{font-family:Inter;font-weight:400;src:url(${font(400)})}
@@ -77,7 +77,7 @@ const DASH = [
 
 // ---------- tools: the tool itself, captured from the live page (assets/img/og/src) ----------
 const TOOLS = [
-  ['theme-generator', 'power-bi-theme-generator', 'Power BI Theme Generator', ['Brand colors', 'Live preview', 'Contrast check'], 'tool-theme.jpg'],
+  ['theme-generator', 'power-bi-theme-generator', 'Power BI Theme & Layout Generator', ['Brand colors', 'Page layouts', 'Exact positions'], 'tool-theme.jpg'],
   ['calendar-generator', 'dax-calendar-table-generator', 'DAX Calendar Table Generator', ['Hijri dates', 'Ramadan & Eid', 'GCC weekends'], 'tool-calendar.jpg'],
   ['measure-builder', 'dax-measure-builder', 'DAX Measure Builder', ['YTD, MTD, YoY', 'Rolling months', 'Ramadan vs last year'], 'tool-measures.jpg'],
   ['licensing-calculator', 'power-bi-licensing-cost-calculator', 'Power BI Licensing Cost Calculator', ['Pro vs PPU vs Fabric', 'F64 break-even', 'USD, AED, SAR'], 'tool-licensing.jpg'],
@@ -92,7 +92,7 @@ const HUB = [
   ['DP-600 exam', '220 practice questions', icon('<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>')],
   ['Model health check', 'Score your model', icon('<path d="M3 12h4l3-8 4 16 3-8h4"/>')],
   ['Licensing calculator', 'Pro, PPU or Fabric', icon('<circle cx="12" cy="12" r="9"/><path d="M15 9.5c-.5-1-1.6-1.5-3-1.5-1.7 0-3 .8-3 2s1.3 1.7 3 2 3 .8 3 2-1.3 2-3 2c-1.4 0-2.5-.5-3-1.5M12 6v2M12 16v2"/>')],
-  ['Theme generator', 'Brand colors to JSON', icon('<circle cx="8" cy="9" r="1.5"/><circle cx="12" cy="7" r="1.5"/><circle cx="16" cy="9" r="1.5"/><path d="M12 21a9 9 0 1 1 9-9c0 2-1.5 3-3 3h-2a2 2 0 0 0-1 3.7c.3.2.5.6.5 1 0 .7-.6 1.3-1.5 1.3z"/>')],
+  ['Theme & layout', 'Colors, JSON, layout', icon('<circle cx="8" cy="9" r="1.5"/><circle cx="12" cy="7" r="1.5"/><circle cx="16" cy="9" r="1.5"/><path d="M12 21a9 9 0 1 1 9-9c0 2-1.5 3-3 3h-2a2 2 0 0 0-1 3.7c.3.2.5.6.5 1 0 .7-.6 1.3-1.5 1.3z"/>')],
   ['DAX calendar', 'Hijri, Ramadan, Eid', icon('<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>')],
   ['Measure builder', 'YTD, YoY, rolling DAX', icon('<path d="M17 5H7l6 7-6 7h10"/>')],
   ['PL-300 exam', '228 practice questions', icon('<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>')],
