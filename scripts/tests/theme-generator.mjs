@@ -95,6 +95,14 @@ export default async function ({ browser, url }) {
   const tj = await json();
   check(tj.visualStyles['*']['*'].background[0].show === false, 'Transparent choice not in the theme JSON');
   check(Object.keys(tj.visualStyles).filter((k) => k !== 'page').every((k) => tj.visualStyles[k]['*'].border[0].show === false), 'Transparent visuals should have no border');
+  // Power BI's own square shadow: never with transparent visuals (the PNG draws the shadows); solid follows Soft shadows
+  const shadows = (T) => [...new Set(Object.keys(T.visualStyles).filter((k) => k !== 'page').map((k) => T.visualStyles[k]['*'].dropShadow[0].show))].join();
+  check(shadows(tj) === 'false', `Transparent visuals should have Power BI's shadow off (got ${shadows(tj)})`);
+  await v.pg.click('#dlVis [data-l=transparent][data-v="0"]');
+  const setShadow = async (on) => { const cb = await v.pg.$('input[data-l=shadow]'); if ((await cb.isChecked()) !== on) await cb.click(); };
+  await setShadow(true); check(shadows(await json()) === 'true', 'Solid visuals with Soft shadows on should keep a shadow');
+  await setShadow(false); check(shadows(await json()) === 'false', 'Solid visuals with Soft shadows off should have no shadow');
+  await v.pg.click('#dlVis [data-l=transparent][data-v="1"]');
   // custom page size, including a value out of range
   await v.pg.click('[data-l=page][data-v=custom]');
   await v.pg.fill('input[data-l=pageW]', '5000'); await v.pg.press('input[data-l=pageW]', 'Tab');

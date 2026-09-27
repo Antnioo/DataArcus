@@ -84,6 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const borderStyle = (u) => (state.layout && state.layout.transparent
     ? [{ show: false }]
     : [{ show: true, color: { solid: { color: u.card } }, width: 1, radius: toPage(+state.layout.radius || 0) }]);
+  // Power BI's own visual shadow (on by default in Fluent 2) is a square box: with the PNG it would show around
+  // the rounded panels, so transparent visuals never get it; solid visuals follow the Soft shadows option
+  const shadowStyle = () => [{ show: !!(state.layout && !state.layout.transparent && state.layout.shadow) }];
   const buildTheme = () => {
     const u = state.ui, sec = mix(u.text, u.card, 0.35), ter = mix(u.text, u.card, 0.6), f = state.font;
     return {
@@ -110,13 +113,14 @@ document.addEventListener('DOMContentLoaded', () => {
           // with a layout background the panels are drawn in the image, so visuals go transparent
           background: state.layout && state.layout.transparent ? [{ show: false }] : [{ show: true, color: { solid: { color: u.card } }, transparency: 0 }],
           // same corners as the panels in the background PNG, in page units
-          border: borderStyle(u)
+          border: borderStyle(u),
+          dropShadow: shadowStyle()
         } },
         page: { '*': {
           background: [{ color: { solid: { color: u.background } }, transparency: 0 }],
           outspace: [{ color: { solid: { color: u.background } } }]
         } },
-        ...Object.fromEntries(VISUAL_TYPES.map((t) => [t, { '*': { border: borderStyle(u) } }]))
+        ...Object.fromEntries(VISUAL_TYPES.map((t) => [t, { '*': { border: borderStyle(u), dropShadow: shadowStyle() } }]))
       }
     };
   };
