@@ -199,8 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
     toast(L('Downloaded. Import it via View → Themes', 'تم التنزيل. استورده من View → Themes'));
     track('theme_download', { preset: state.preset || 'custom', font: state.font, from });
   };
-  $('dlBtn').addEventListener('click', () => downloadJson('step2'));
-  $('dlBtn2').addEventListener('click', () => downloadJson('step4'));
+  $('dlBtn').addEventListener('click', () => downloadJson('step3'));
 
   // ---------- page layout: a full background with a place for every visual ----------
   // Power BI's default page is 1280 × 720, so every slot is in those units and can be typed straight
@@ -220,7 +219,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (h < LIM.h[0]) { h = LIM.h[0]; w = Math.max(w, Math.round(h * LIM.r[0])); }
     return [w, h];
   }
-  const page = (c) => { c = c || lay(); const [w, h] = c.page === 'custom' ? fitCustom(c.pageW, c.pageH) : PAGES[c.page] || PAGES['1280x720']; return { w, h, s: h / 720 }; };
+  const page = (c) => { c = c || lay(); const [w, h] = c.page === 'custom' ? fitCustom(c.pageW, c.pageH) : PAGES[c.page] || PAGES['1920x1080']; return { w, h, s: h / 720 }; };
   let pageMsg = '';   // shown once after a typed value was outside the limits
   const shapeMsg = (c) => { if (c.page !== 'custom') return ''; const [w, h] = fitCustom(c.pageW, c.pageH);
     return w === c.pageW && h === c.pageH ? '' : L(`This shape is outside 4:3 to 2.4:1, so the preview uses ${w} × ${h}.`, `هذا الشكل خارج النطاق من 4:3 إلى 2.4:1، لذلك تستخدم المعاينة <bdi dir="ltr">${w} × ${h}</bdi>.`); };
@@ -248,9 +247,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!l.kpiBar) l.kpiBar = l.accentBar === false ? 'none' : 'start';
       delete l.accentBar; l.v = 2;
     }
+    // v3: the default page became 1920 x 1080; older saved designs keep the 1280 x 720 they were made on
+    if (l && l.v < 3) { if (!l.page) l.page = '1280x720'; l.v = 3; }
     return l;
   };
-  state.layout = Object.assign({ v: 2, preset: 'exec', kpis: 4, filters: false, dir: '', radius: 8, shadow: true, header: true, kpiBar: 'start', headLine: 'short', samples: true, transparent: false }, upgrade(state.layout) || {});
+  state.layout = Object.assign({ v: 3, page: '1920x1080', preset: 'exec', kpis: 4, filters: false, dir: '', radius: 8, shadow: true, header: true, kpiBar: 'start', headLine: 'short', samples: true, transparent: false }, upgrade(state.layout) || {});
   if (!LAYOUTS[state.layout.preset]) state.layout.preset = 'exec';
   const lay = () => state.layout;
   const rtl = (c) => ((c || lay()).dir ? (c || lay()).dir === 'rtl' : isAr());
@@ -453,11 +454,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   function renderLayout() {
     const c = lay(); applyPage(c); renderJson(); // the theme's corner radius follows the page size and corners
-    $('layControls').innerHTML = `
-      <div><span class="tg-label">${L('Layout', 'التخطيط')}</span><div class="tg-lays">${Object.keys(LAYOUTS).map((k) => `<button type="button" class="tg-lay-b${k === c.preset ? ' active' : ''}" data-l="preset" data-v="${k}" aria-pressed="${k === c.preset}">${thumb(k)}${nm(LAYOUTS[k].name)}</button>`).join('')}</div></div>
-      <div><span class="tg-label">${L('Power BI page size', 'مقاس صفحة Power BI')}</span>${seg('page', [['1280x720', L('16:9 · 1280 × 720 (default)', '16:9 · 1280 × 720 (الافتراضي)')], ['1920x1080', '16:9 · 1920 × 1080'], ['960x720', '4:3 · 960 × 720'], ['custom', L('Custom', 'مخصص')]], c.page === 'custom' || PAGES[c.page] ? c.page : '1280x720')}
+    // page size first: it is set once in Power BI and every number below depends on it
+    $('pageSize').innerHTML = `<span class="tg-label">${L('Power BI page size', 'مقاس صفحة Power BI')}</span>
+      <div>${seg('page', [['1920x1080', `1920 × 1080<small>${L('16:9 · Power BI default', '16:9 · افتراضي Power BI')}</small>`], ['1280x720', `1280 × 720<small>${L('16:9 · older reports', '16:9 · تقارير أقدم')}</small>`], ['960x720', `960 × 720<small>4:3</small>`], ['custom', `${L('Custom', 'مخصص')}<small>${L('any size', 'أي مقاس')}</small>`]], c.page === 'custom' || PAGES[c.page] ? c.page : '1920x1080')}
         ${c.page === 'custom' ? `<div class="tg-custom"><label>${L('Width', 'العرض')}<input type="number" inputmode="numeric" data-l="pageW" min="${LIM.w[0]}" max="${LIM.w[1]}" step="1" value="${c.pageW}"></label><span aria-hidden="true">×</span><label>${L('Height', 'الارتفاع')}<input type="number" inputmode="numeric" data-l="pageH" min="${LIM.h[0]}" max="${LIM.h[1]}" step="1" value="${c.pageH}"></label></div>
         <small class="d-block mt-1 ${pageMsg || shapeMsg(c) ? 'tg-warn' : 'text-white-50'}" role="status">${[pageMsg, shapeMsg(c)].filter(Boolean).join(' ') || L('Match Format page › Canvas settings › Custom in Power BI.', 'طابقه مع <bdi dir="ltr">Format page › Canvas settings › Custom</bdi> في Power BI.')}</small>` : ''}</div>
+      <small class="d-block mt-2 text-white-50">${L('Use the same size in Power BI: <b>Format page › Canvas settings</b>. All sizes and positions below follow it.', 'استخدم المقاس نفسه في Power BI: <b><bdi dir="ltr">Format page › Canvas settings</bdi></b>. كل المقاسات والمواضع أدناه تتبعه.')}</small>`;
+    $('layControls').innerHTML = `
+      <div><span class="tg-label">${L('Layout', 'التخطيط')}</span><div class="tg-lays">${Object.keys(LAYOUTS).map((k) => `<button type="button" class="tg-lay-b${k === c.preset ? ' active' : ''}" data-l="preset" data-v="${k}" aria-pressed="${k === c.preset}">${thumb(k)}${nm(LAYOUTS[k].name)}</button>`).join('')}</div></div>
       <div><span class="tg-label">${L('KPI cards', 'بطاقات المؤشرات')}</span>${seg('kpis', [[3, '3'], [4, '4'], [5, '5'], [6, '6']], c.kpis)}</div>
       <div><span class="tg-label">${L('Reading direction', 'اتجاه القراءة')}</span>${seg('dir', [['ltr', L('Left to right', 'من اليسار لليمين')], ['rtl', L('Right to left (Arabic)', 'من اليمين لليسار (عربي)')]], rtl() ? 'rtl' : 'ltr')}</div>
       <div><span class="tg-label">${L('Corners', 'الزوايا')}</span>${seg('radius', [[0, L('Square', 'حادة')], [8, L('Soft', 'ناعمة')], [16, L('Round', 'دائرية')]], c.radius)}</div>
@@ -475,7 +479,8 @@ document.addEventListener('DOMContentLoaded', () => {
     renderLayoutPreview(); renderVis();
   }
 
-  $('layControls').addEventListener('click', (e) => {
+  const step2 = $('layout');
+  step2.addEventListener('click', (e) => {
     const b = e.target.closest('button[data-l]'); if (!b) return;
     const k = b.dataset.l, v = b.dataset.v, c = lay();
     if (k === 'preset') { c.preset = v; c.kpis = LAYOUTS[v].kpis; c.filters = LAYOUTS[v].filters; delete c.kpiH; delete c.mainW; delete c.split; track('theme_layout', { layout: v }); }
@@ -487,7 +492,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderLayout(); save();
   });
   // sliders redraw the preview while dragging, without rebuilding the controls
-  $('layControls').addEventListener('input', (e) => {
+  step2.addEventListener('input', (e) => {
     const el = e.target.closest('input[type="range"][data-l]'); if (!el) return;
     lay()[el.dataset.l] = clampTo(el.dataset.l, el.value / (+el.dataset.f || 1));
     const o = $('layControls').querySelector(`[data-out="${el.dataset.l}"]`); if (o) o.textContent = el.value + el.dataset.u;
@@ -496,7 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el.dataset.l === 'radius') renderJson();
     renderLayoutPreview(); save();
   });
-  $('layControls').addEventListener('change', (e) => {
+  step2.addEventListener('change', (e) => {
     const num = e.target.closest('input[type="number"][data-l]');
     if (num) {
       const c = lay(), k = num.dataset.l, isW = k === 'pageW', lim = isW ? LIM.w : LIM.h;
@@ -508,7 +513,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const el = e.target.closest('input[type="checkbox"][data-l]'); if (!el) return;
     lay()[el.dataset.l] = el.checked;
-    if (el.dataset.l === 'transparent') renderJson();
     renderLayout(); save();
   });
   // remember whether Advanced options is open when the controls are rebuilt (toggle does not bubble)
@@ -525,14 +529,18 @@ document.addEventListener('DOMContentLoaded', () => {
   $('slotCopy').addEventListener('click', () => {
     const text = [slotHead()].concat(slotRows()).map((r) => r.join('\t')).join('\n');
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast(L('Table copied. Paste it into Excel or Notes', 'تم نسخ الجدول. الصقه في Excel أو الملاحظات')), () => toast(L('Copy failed. Use Download .csv', 'تعذّر النسخ. استخدم تنزيل .csv')));
+    lastCsv = csvKey(); updateStatus();
     track('theme_layout_slots', { method: 'copy', layout: lay().preset });
   });
-  $('slotCsv').addEventListener('click', () => {
+  const downloadCsv = () => {
     const q = (v) => (/[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
     const csv = '﻿' + [slotHead()].concat(slotRows()).map((r) => r.map(q).join(',')).join('\r\n');
     saveBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), `${fileBase()}-layout-${lay().preset}.csv`);
+    lastCsv = csvKey(); updateStatus();
+    toast(L('Table downloaded. Open it next to Power BI', 'تم تنزيل الجدول. افتحه بجانب Power BI'));
     track('theme_layout_slots', { method: 'csv', layout: lay().preset });
-  });
+  };
+  $('slotCsv').addEventListener('click', downloadCsv);
   const downloadPng = () => {
     const [pw, ph] = pngSize(), img = new Image();
     const key = pngKey();
@@ -551,9 +559,11 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   $('pngBtn').addEventListener('click', downloadPng);
 
-  // ---------- step 4: visual backgrounds, and a reminder when a downloaded file is out of date ----------
-  let lastJson = null, lastPng = null;
+  // ---------- step 3: visual backgrounds, and a reminder when a downloaded file is out of date ----------
+  // each file keeps a fingerprint of what was downloaded; a different fingerprint now means it is out of date
+  let lastJson = null, lastPng = null, lastCsv = null;
   function pngKey() { return bgSvg(computeSlots(lay()), {}); }
+  function csvKey() { return JSON.stringify(computeSlots(lay()).map((s) => [s.kind, toPage(s.x), toPage(s.y), toPage(s.w), toPage(s.h)])); }
   function renderVis() {
     const t = !!lay().transparent;
     $('dlVis').innerHTML = `<span class="tg-label">${L('Visual backgrounds in the theme', 'خلفيات العناصر في السمة')}</span>${seg('transparent', [[1, L('Transparent (use with the background)', 'شفافة (مع الخلفية)')], [0, L('Solid (theme only)', 'مصمتة (السمة فقط)')]], t ? 1 : 0)}
@@ -566,34 +576,33 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   function updateStatus() {
     if (!$('dlStatus')) return;
-    const jsonOld = lastJson !== null && lastJson !== JSON.stringify(buildTheme(), null, 2);
-    const pngOld = lastPng !== null && lastPng !== pngKey();
-    const solid = lastPng !== null && !lay().transparent;
+    const files = [
+      ['json', L('Theme', 'السمة'), lastJson !== null && lastJson !== JSON.stringify(buildTheme(), null, 2)],
+      ['png', L('Background', 'الخلفية'), lastPng !== null && lastPng !== pngKey()],
+      ['csv', L('Layout table', 'جدول التخطيط'), lastCsv !== null && lastCsv !== csvKey()]];
+    const old = files.filter((f) => f[2]), solid = lastPng !== null && !lay().transparent;
     const note = (text, act, btn) => `<div class="tg-note"><i class="bi bi-exclamation-circle" aria-hidden="true"></i><span>${text}</span><button type="button" data-dl="${act}">${btn}</button></div>`;
-    const again = L('Download again', 'نزّل من جديد');
     let h = '';
-    if (jsonOld && pngOld) h += note(L('You changed your design after downloading. Both files are out of date.', 'غيّرت تصميمك بعد التنزيل. الملفان لم يعودا محدّثين.'), 'both', L('Download both again', 'نزّل الملفين من جديد'));
-    else if (jsonOld) h += note(L('Your theme changed since you downloaded it.', 'تغيّرت السمة منذ نزّلتها.'), 'json', again);
-    else if (pngOld) h += note(L('Your background changed since you downloaded it.', 'تغيّرت الخلفية منذ نزّلتها.'), 'png', again);
+    if (old.length) h += note(L(`Changed since you downloaded: <b>${old.map((f) => f[1]).join(', ')}</b>.`, `تغيّر منذ التنزيل: <b>${old.map((f) => f[1]).join('، ')}</b>.`), 'stale', old.length > 1 ? L('Download these again', 'نزّلها من جديد') : L('Download again', 'نزّل من جديد'));
     if (solid) h += note(L('Your theme has solid visual backgrounds, so visuals will cover the panels in the background image.', 'سمتك بخلفيات عناصر مصمتة، فستغطي العناصر اللوحات في صورة الخلفية.'), 'transparent', L('Switch to transparent', 'حوّلها إلى شفافة'));
     $('dlStatus').innerHTML = h;
-    $('jsonStatus').innerHTML = jsonOld ? note(L('This theme changed since you downloaded or copied it.', 'تغيّرت هذه السمة منذ نزّلتها أو نسختها.'), 'json', again) : '';
-    const s4 = document.querySelector('.tg-steps [data-step="download"]'); if (s4) s4.classList.toggle('stale', jsonOld || pngOld || solid);
+    files.forEach((f) => { const card = document.querySelector(`.tg-file[data-file="${f[0]}"]`); if (card) card.classList.toggle('stale', f[2]); });
+    const s3 = document.querySelector('.tg-steps [data-step="download"]'); if (s3) s3.classList.toggle('stale', old.length > 0 || solid);
   }
+  const DL = { json: () => downloadJson('reminder'), png: downloadPng, csv: downloadCsv };
   document.querySelector('main.tg').addEventListener('click', (e) => {
     const b = e.target.closest('button[data-dl]'); if (!b) return;
     const a = b.dataset.dl;
-    if (a === 'json') downloadJson('reminder');
-    else if (a === 'png') downloadPng();
-    else if (a === 'both') { downloadJson('reminder'); setTimeout(downloadPng, 400); }
+    // several files one after another, so the browser does not merge or block them
+    if (a === 'stale') [['json', lastJson !== null && lastJson !== JSON.stringify(buildTheme(), null, 2)], ['png', lastPng !== null && lastPng !== pngKey()], ['csv', lastCsv !== null && lastCsv !== csvKey()]]
+      .filter((f) => f[1]).forEach((f, i) => setTimeout(DL[f[0]], i * 400));
     else if (a === 'transparent') { lay().transparent = true; renderVis(); renderJson(); save(); toast(L('Visuals are transparent. Download the theme again', 'أصبحت العناصر شفافة. نزّل السمة من جديد')); }
   });
 
   // ---------- steps bar: pinned under the navbar, highlights the step in view ----------
   const steps = $('tgSteps');
   if (steps) {
-    const setNav = () => { const n = document.getElementById('navbar'); if (n) document.documentElement.style.setProperty('--nav-h', n.offsetHeight + 'px'); };
-    const ids = ['colors', 'themeJson', 'layout', 'download'];
+    const ids = ['colors', 'layout', 'download'];
     let tick = 0;
     const mark = () => {
       tick = 0;
@@ -604,18 +613,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (innerHeight + scrollY >= document.documentElement.scrollHeight - 4) cur = 'download';
       steps.querySelectorAll('a').forEach((a) => { const on = a.dataset.step === cur; a.classList.toggle('active', on); if (on) a.setAttribute('aria-current', 'step'); else a.removeAttribute('aria-current'); });
     };
-    // in-page links land just below the steps bar (the site-wide handler only allows for the navbar)
-    const go = (id, smooth) => { const el = $(id); if (!el) return;
-      scrollTo({ top: el.getBoundingClientRect().top + scrollY - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 76) - steps.offsetHeight - 16,
-        behavior: smooth && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' }); };
-    document.querySelector('main.tg').addEventListener('click', (e) => {
-      const a = e.target.closest('a[href^="#"]'); if (!a || !ids.includes(a.getAttribute('href').slice(1))) return;
-      e.preventDefault(); e.stopPropagation(); go(a.getAttribute('href').slice(1), true);
-    });
-    // arriving with #layout or #download in the address: correct the site-wide jump once it has run
-    if (ids.includes(location.hash.slice(1))) addEventListener('load', () => setTimeout(() => go(location.hash.slice(1)), 600));
-    setNav(); mark();
-    addEventListener('resize', () => { setNav(); mark(); });
+    mark();
+    addEventListener('resize', mark);
     addEventListener('scroll', () => { if (!tick) tick = requestAnimationFrame(mark); }, { passive: true });
     const label = () => steps.setAttribute('aria-label', L('Steps', 'الخطوات'));
     label(); new MutationObserver(label).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
@@ -627,13 +626,17 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!beforeExample) beforeExample = JSON.stringify(state);
     const p = PRESETS['Desert Gulf'];
     state = { preset: 'Desert Gulf', name: 'Executive Sales', font: 'Segoe UI', data: p.data.slice(), ui: { ...p.ui },
-      layout: { preset: 'exec', kpis: 4, filters: true, fpos: 'top', dir: isAr() ? 'rtl' : 'ltr', v: 2, radius: 8, shadow: true, header: true, kpiBar: 'top', kpiBarC: 'data', headLine: 'full', samples: true, transparent: true, page: '1920x1080', hh: 64, logoW: 200 } };
+      layout: { preset: 'exec', kpis: 4, filters: true, fpos: 'top', dir: isAr() ? 'rtl' : 'ltr', v: 3, radius: 8, shadow: true, header: true, kpiBar: 'top', kpiBarC: 'data', headLine: 'full', samples: true, transparent: true, page: '1920x1080', hh: 64, logoW: 200 } };
     pageMsg = ''; renderPresets(); renderInputs(); renderAll();
     $('exampleUndo').hidden = false;
     $('layout').scrollIntoView({ behavior: 'smooth', block: 'start' });
     toast(L('Example loaded: an executive sales report', 'تم تحميل المثال: تقرير مبيعات تنفيذي'));
     track('theme_example', { example: 'executive-sales' });
   });
+  const exCard = $('exampleCard'), exImg = $('exampleImg');
+  if (exCard) exCard.addEventListener('click', () => $('exampleBtn').click());
+  const exPic = () => { if (exImg) exImg.src = `../assets/img/tools/theme-example-${isAr() ? 'ar' : 'en'}.jpg`; };
+  exPic(); new MutationObserver(exPic).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   $('exampleUndo').addEventListener('click', () => {
     if (!beforeExample) return;
     state = JSON.parse(beforeExample); beforeExample = null; pageMsg = '';

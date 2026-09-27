@@ -1,0 +1,15 @@
+{
+  "name": "dataarcus-site",
+  "private": true,
+  "description": "Tests and build helpers for dataarcus.com (the site itself needs no build).",
+  "scripts": {
+    "test": "node scripts/tests/run-all.mjs",
+    "test:full": "node scripts/tests/run-all.mjs --full"
+  },
+  "devDependencies": {
+    "aos": "2.3.4",
+    "bootstrap": "5.3.3",
+    "bootstrap-icons": "1.11.3",
+    "playwright-core": "1.63.0"
+  }
+}

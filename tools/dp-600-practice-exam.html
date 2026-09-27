@@ -241,7 +241,7 @@
     /* case study */
     .dp-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 16px; align-items: start; }
     .dp-case { background: var(--glass-bg); border: 1px solid rgba(167,139,250,.35); border-radius: 16px; overflow: hidden; text-align: left; }
-    .dp-split .dp-case { position: sticky; top: 90px; }
+    .dp-split .dp-case { position: sticky; top: var(--top-offset); }
     .dp-casehead { background: rgba(167,139,250,.12); color: #ddd6fe; font-weight: 700; padding: 10px 16px; }
     .dp-casebody { padding: 4px 16px 14px; max-height: calc(100vh - 170px); overflow: auto; color: #cbd5e1; font-size: .88rem; line-height: 1.6; }
     .dp-casebody h4 { font-size: .95rem; color: var(--lt); margin: 14px 0 6px; font-weight: 700; }
@@ -251,7 +251,7 @@
     .dp-csmini .dp-casebody { max-height: 320px; }
 
     /* exam mode */
-    .dp-exambar { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: #0b1220; border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 16px; position: sticky; top: 76px; z-index: 5; }
+    .dp-exambar { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: #0b1220; border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px 16px; position: sticky; top: calc(var(--nav-h) + 8px); z-index: 5; }
     .dp-ex-title { font-weight: 700; color: var(--lt); }
     .dp-ex-count { color: #94a3b8; font-variant-numeric: tabular-nums; }
     .dp-timer { font-variant-numeric: tabular-nums; color: var(--lt); font-size: 1.05rem; }

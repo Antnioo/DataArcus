@@ -30,15 +30,33 @@
 }
 
 html, body {
-  scroll-behavior: smooth;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.6;
   overflow-x: hidden;
   overflow-x: clip; /* blocks sideways scroll like hidden, but keeps position: sticky working */
 }
 
+/* Top offset: the one place that knows how much of the screen top is covered.
+   main.js measures the navbar (--nav-h) and any bar marked data-pin (--pin-h);
+   everything else uses --top-offset and never does its own math. */
+:root {
+  --nav-h: 67px;
+  --pin-h: 0px;
+  --top-offset: calc(var(--nav-h) + var(--pin-h) + 12px);
+}
+
 html {
-  scroll-padding-top: 80px;
+  scroll-padding-top: var(--top-offset);
+}
+
+/* smooth scrolling starts once the page is ready (main.js adds the class), so arriving
+   with #section in the address jumps straight there instead of racing the page as it builds */
+html:not(.smooth-scroll) {
+  scroll-behavior: auto; /* also overrides Bootstrap's :root smooth scrolling */
+}
+
+html.smooth-scroll, html.smooth-scroll body {
+  scroll-behavior: smooth;
 }
 
 #hero{
@@ -852,7 +870,7 @@ html[dir="rtl"] .navbar-brand {
    transition to effectively instant and hides the purely decorative moving
    elements, same treatment already given to mobile for performance. */
 @media (prefers-reduced-motion: reduce) {
-  html, body {
+  html, body, html.smooth-scroll, html.smooth-scroll body {
     scroll-behavior: auto;
   }
 

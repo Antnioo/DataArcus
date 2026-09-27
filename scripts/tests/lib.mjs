@@ -1,0 +1,76 @@
+// Shared helpers for the browser tests: a small web server for the site folder,
+// the browser, and pages with the CDN served from node_modules and analytics blocked.
+import http from 'node:http';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { execSync } from 'node:child_process';
+import { chromium } from 'playwright-core';
+
+export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
+
+const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.webp': 'image/webp',
+  '.ico': 'image/x-icon', '.xml': 'application/xml', '.txt': 'text/plain; charset=utf-8', '.woff2': 'font/woff2', '.pdf': 'application/pdf' };
+
+// Serves the site like GitHub Pages: folders open index.html, unknown paths get 404.html
+export function serve() {
+  const server = http.createServer((req, res) => {
+    let p = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+    let file = path.join(ROOT, p);
+    if (!file.startsWith(ROOT)) { res.writeHead(403); return res.end(); }
+    if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
+    if (!fs.existsSync(file)) { res.writeHead(404, { 'Content-Type': TYPES['.html'] }); return res.end(fs.readFileSync(path.join(ROOT, '404.html'))); }
+    res.writeHead(200, { 'Content-Type': TYPES[path.extname(file).toLowerCase()] || 'application/octet-stream' });
+    fs.createReadStream(file).pipe(res);
+  });
+  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({ url: `http://127.0.0.1:${server.address().port}`, close: () => server.close() })));
+}
+
+// CHROME_PATH wins; otherwise a preinstalled Chromium, installed Google Chrome, or Playwright's own download
+export async function launch() {
+  const tries = [];
+  if (process.env.CHROME_PATH) tries.push({ executablePath: process.env.CHROME_PATH });
+  if (fs.existsSync('/opt/pw-browsers/chromium')) tries.push({ executablePath: '/opt/pw-browsers/chromium' });
+  tries.push({}, { channel: 'chrome' });
+  let last;
+  for (const t of tries) { try { return await chromium.launch(t); } catch (e) { last = e; } }
+  throw new Error('No browser found. Run "npx playwright-core install chromium" or set CHROME_PATH.\n' + last.message);
+}
+
+// The HTML pages of the site (the go/ short links are redirects, not pages)
+export const pages = () => execSync("git ls-files '*.html'", { cwd: ROOT }).toString().trim().split('\n').filter((p) => !p.startsWith('go/'));
+
+/**
+ * A fresh visitor. Options: viewport [w, h], timezone, consent ('denied' | 'granted' | null for a first visit),
+ * downloads (true to accept file downloads), motion ('reduce' for visitors who turn animations off).
+ * Returns { ctx, pg, errs, hits } — errs collects page errors and console errors, hits counts analytics requests.
+ */
+export async function visitor(browser, { viewport = [1440, 900], timezone = 'Asia/Dubai', consent = 'denied', downloads = false, motion = 'no-preference' } = {}) {
+  const ctx = await browser.newContext({ viewport: { width: viewport[0], height: viewport[1] }, timezoneId: timezone, acceptDownloads: downloads, reducedMotion: motion });
+  await ctx.route('https://cdn.jsdelivr.net/npm/**', async (rt) => {
+    const m = new URL(rt.request().url()).pathname.match(/^\/npm\/((?:@[^/]+\/)?[^@/]+)@[^/]+\/(.*)$/);
+    const file = m && path.join(ROOT, 'node_modules', m[1], m[2]);
+    if (file && fs.existsSync(file)) await rt.fulfill({ path: file }); else await rt.fulfill({ status: 404, body: '' });
+  });
+  const hits = [];
+  await ctx.route(/googletagmanager\.com|clarity\.ms/, (rt) => { hits.push(new URL(rt.request().url()).host); rt.fulfill({ status: 200, contentType: 'text/javascript', body: '' }); });
+  await ctx.route(/fonts\.googleapis|fonts\.gstatic|app\.powerbi|web3forms/, (rt) => rt.fulfill({ status: 200, body: '' }));
+  if (consent) await ctx.addInitScript((c) => { try { if (!localStorage.getItem('dataarcus-consent')) localStorage.setItem('dataarcus-consent', c); } catch (e) { /* ignore */ } }, consent);
+  const pg = await ctx.newPage();
+  const errs = [];
+  pg.on('pageerror', (e) => errs.push(e.message));
+  pg.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errs.push('console: ' + m.text()); });
+  return { ctx, pg, errs, hits };
+}
+
+// Waits until the page stops scrolling (smooth scrolls take a moment)
+export async function settle(pg) {
+  let last = -1;
+  for (let i = 0; i < 40; i++) {
+    const y = await pg.evaluate(() => scrollY);
+    if (y === last) return y;
+    last = y; await pg.waitForTimeout(80);
+  }
+  return last;
+}

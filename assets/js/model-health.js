@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
         store.set('dataarcus-mh-history', hist);
         worker.terminate(); worker = null;
         render();
-        const top = root.getBoundingClientRect().top + window.scrollY - 90; window.scrollTo({ top, behavior: 'smooth' });
+        root.scrollIntoView({ behavior: 'smooth', block: 'start' }); // lands below the navbar (scroll-padding-top in style.css)
         track('mh_analyze', { source: R.meta.source, tables: R.stats.tables, measures: R.stats.measures, score: R.score.overall, has_report: R.meta.hasReport, size_kb: Math.round((size || 0) / 1024), sample: fileName === 'Contoso-Sales-Demo.pbit' });
       }
     };
