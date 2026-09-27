@@ -233,7 +233,8 @@ document.addEventListener('DOMContentLoaded', () => {
     return '<svg class="dp-ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="' + r + '" class="bg"/><circle cx="50" cy="50" r="' + r + '" class="fg" style="stroke:' + (color || 'var(--accent)') + ';stroke-dasharray:' + c + ';stroke-dashoffset:' + off + '"/></svg><div class="dp-ringlabel">' + label + '</div>';
   };
   const bar = (pct, cls) => '<div class="dp-bar ' + (cls || '') + '"><span style="width:' + Math.round(Math.max(0, Math.min(1, pct)) * 100) + '%"></span></div>';
-  const top = () => { const y = root.getBoundingClientRect().top + window.scrollY - 90; if (window.scrollY > y) window.scrollTo({ top: y, behavior: 'auto' }); };
+  // back to the top of the exam when it is scrolled out of view; the offset comes from --top-offset (style.css)
+  const top = () => { if (root.getBoundingClientRect().top < parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop)) root.scrollIntoView({ behavior: 'instant', block: 'start' }); };
 
   // ---------- weekly outline check (assets/data/dp600-outline.json, refreshed by a GitHub Action) ----------
   let OUT = null;

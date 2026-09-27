@@ -92,9 +92,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 /**
-   * 2. Navigation & Scrolling - FIXED VERSION
+   * 2. Navigation & Scrolling
    * ==================================================================
-   * This version uses consistent 80px offset and simplified logic
+   * Scrolling is native (CSS scroll-padding-top); this section only measures
+   * the navbar and pinned bars into --nav-h and --pin-h
    * ==================================================================
    */
 
@@ -124,50 +125,52 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // SIMPLIFIED smooth scrolling - no complex timing, just works
-  document.addEventListener('click', function(e) {
-    const anchor = e.target.closest('a[href^="#"]');
-    if (!anchor || anchor.getAttribute('href') === '#') return;
-    
-    const targetId = anchor.getAttribute('href');
-    const targetElement = document.querySelector(targetId);
-
-    if (targetElement) {
-      e.preventDefault();
-      
-      // Simple calculation: element position minus 80px navbar height
-      const targetPosition = targetElement.offsetTop - 80;
-
-      window.scrollTo({
-        top: targetPosition,
-        behavior: 'smooth'
-      });
-
-      // Close mobile menu if open
-      const navmenu = document.querySelector('#navmenu');
-      if (navmenu && navmenu.classList.contains('show')) {
-        const bsCollapse = new bootstrap.Collapse(navmenu, { toggle: false });
-        bsCollapse.hide();
-      }
+  // Top offset: measure what covers the top of the screen and publish it as CSS
+  // variables (see :root in style.css). In-page links then scroll natively:
+  // the browser's scroll-padding-top keeps targets below the navbar and pinned bars.
+  const root = document.documentElement;
+  const measureTop = () => {
+    if (navbar) {
+      let h = navbar.offsetHeight;
+      // on phones an open menu makes the navbar taller; only the bar itself counts
+      const menu = navbar.querySelector('.navbar-collapse');
+      if (menu && window.innerWidth < 992 && menu.offsetHeight) h -= menu.offsetHeight;
+      root.style.setProperty('--nav-h', h + 'px');
     }
+    const pins = [...document.querySelectorAll('[data-pin]')].reduce((a, el) => a + el.offsetHeight, 0);
+    root.style.setProperty('--pin-h', pins + 'px');
+  };
+  measureTop();
+  window.addEventListener('resize', measureTop);
+  window.addEventListener('load', measureTop);
+  if ('ResizeObserver' in window) {
+    const ro = new ResizeObserver(measureTop);
+    document.querySelectorAll('[data-pin]').forEach((el) => ro.observe(el));
+  }
+
+  // Close the phone menu after tapping an in-page link
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('a[href^="#"]')) return;
+    const navmenu = document.querySelector('#navmenu');
+    if (navmenu && navmenu.classList.contains('show')) bootstrap.Collapse.getOrCreateInstance(navmenu, { toggle: false }).hide();
   });
 
-  // Handle page load with hash (cross-page navigation)
-  window.addEventListener('load', () => {
-    if (window.location.hash) {
-      const targetElement = document.querySelector(window.location.hash);
-      if (targetElement) {
-        // Wait for page to fully render, then scroll
-        setTimeout(() => {
-          const targetPosition = targetElement.offsetTop - 80;
-          window.scrollTo({
-            top: targetPosition,
-            behavior: 'auto'
-          });
-        }, 500);
-      }
-    }
-  });
+  // Arriving with #section in the address: images and translations can still move the
+  // target after the browser's jump, so keep it in place until the page settles
+  // (at most 2.5 s, and never after the visitor scrolls themselves). Then smooth scrolling starts.
+  const target = window.location.hash && document.getElementById(decodeURIComponent(window.location.hash.slice(1)));
+  if (target) {
+    let done = false;
+    const land = () => { if (!done) target.scrollIntoView({ behavior: 'instant', block: 'start' }); };
+    const stop = () => { if (done) return; done = true; ro && ro.disconnect(); root.classList.add('smooth-scroll'); };
+    const ro = 'ResizeObserver' in window ? new ResizeObserver(land) : null;
+    if (ro) ro.observe(document.body);
+    ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach((ev) => window.addEventListener(ev, stop, { once: true, passive: true }));
+    window.addEventListener('load', () => { land(); setTimeout(() => { land(); stop(); }, 2500); });
+    land();
+  } else {
+    root.classList.add('smooth-scroll');
+  }
 
 
   /**
