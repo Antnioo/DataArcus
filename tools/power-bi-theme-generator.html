@@ -91,7 +91,7 @@
   }
   </script>
   <style>
-    .tg { padding: 110px 0 60px; }
+    .tg { padding: var(--page-top) 0 var(--page-bottom); }
     .tg h1 { color: var(--accent); }
     .tg-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; }
     .tg-label { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-bottom: 8px; display: block; }
@@ -125,7 +125,7 @@
     .tg-table td { padding: 6px 8px; color: inherit; }
     .tg-contrast { font-size: .85rem; display: flex; flex-direction: column; gap: 6px; }
     .tg-contrast .ok { color: #22c55e; } .tg-contrast .warn { color: #f59e0b; }
-    .tg-json { background: #050a14; border: 1px solid var(--glass-border); border-radius: 12px; color: #cbd5e1; font: 12px/1.5 ui-monospace, Consolas, monospace; padding: 14px; max-height: 280px; overflow: auto; white-space: pre; }
+    .tg-json { margin: 0; background: #050a14; border: 1px solid var(--glass-border); border-radius: 12px; color: #cbd5e1; font: 12px/1.5 ui-monospace, Consolas, monospace; padding: 14px; max-height: 280px; overflow: auto; white-space: pre; }
     .tg-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--accent); color: #051018; font-weight: 700; padding: 10px 18px; border-radius: 30px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 2000; }
     .tg-faq h3 { font-size: 1.05rem; color: var(--lt); margin-top: 1.2rem; }
     .tg-faq p { color: #94a3b8; }
@@ -160,7 +160,7 @@
     .tg-warn { color: #fdcb6e; }
     .tg-step { font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
     /* steps bar: pinned under the navbar; the current step is highlighted */
-    .tg-steps { position: sticky; top: var(--nav-h); z-index: 20; display: flex; gap: 4px; margin: 0 0 20px; padding: 5px; background: rgba(10, 15, 28, .92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid var(--glass-border); border-radius: 50px; }
+    .tg-steps { position: sticky; top: var(--nav-h); z-index: 20; display: flex; gap: 4px; margin: 0 0 var(--space-md); padding: 5px; background: rgba(10, 15, 28, .92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid var(--glass-border); border-radius: 50px; }
     .tg-steps a { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 6px 8px; border-radius: 40px; color: #94a3b8; font-size: .85rem; font-weight: 600; text-decoration: none; white-space: nowrap; position: relative; }
     .tg-steps a b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid currentColor; font-size: .72rem; }
     .tg-steps a:hover { color: var(--lt); }
@@ -168,7 +168,7 @@
     .tg-steps a.active b { background: var(--accent); border-color: var(--accent); color: #051018; }
     .tg-steps a.stale::after { content: ""; position: absolute; top: 5px; inset-inline-end: 10px; width: 8px; height: 8px; border-radius: 50%; background: #fdcb6e; }
     @media (max-width: 575.98px) { .tg-steps a { font-size: .78rem; gap: 5px; padding: 6px 2px; } .tg-steps a b { width: 20px; height: 20px; } }
-    .tg-files { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+    .tg-files { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--space-md); }
     .tg-file { display: flex; flex-direction: column; justify-content: space-between; gap: 12px; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 14px; padding: 14px; transition: border-color .2s; }
     .tg-file.stale { border-color: rgba(253, 203, 110, .6); }
     .tg-file-h b { color: #cbd5e1; font-weight: 600; }
@@ -377,10 +377,10 @@
             <button class="btn btn-accent w-100" id="pngBtn" type="button"><i class="bi bi-download me-1"></i><span data-i18n="tg.dl.bgBtn">Download background</span></button>
           </div>
           <div class="tg-file" data-file="csv">
-            <div class="tg-file-h"><i class="bi bi-filetype-csv" aria-hidden="true"></i><div><strong data-i18n="tg.dl.csvName">Layout table (.csv)</strong><small data-i18n-html="tg.dl.csvDesc">Size and position of every visual, for <b>Format › General › Properties</b>.</small></div></div>
+            <div class="tg-file-h"><i class="bi bi-filetype-csv" aria-hidden="true"></i><div><strong data-i18n="tg.dl.csvName">Layout table (.csv)</strong><small data-i18n-html="tg.dl.csvDesc">Size and position of every visual (the table in step 2), for <b>Format › General › Properties</b>. Copy pastes it into Excel.</small></div></div>
             <div class="d-flex gap-2">
               <button class="btn btn-accent flex-grow-1" id="slotCsv" type="button"><i class="bi bi-download me-1"></i><span data-i18n="tg.dl.csvBtn">Download table</span></button>
-              <button class="tg-btn2 px-3" id="slotCopy" type="button" title="Copy table" aria-label="Copy table"><i class="bi bi-clipboard"></i></button>
+              <button class="tg-btn2" id="slotCopy" type="button"><i class="bi bi-clipboard me-1"></i><span data-i18n="tg.copy">Copy</span></button>
             </div>
           </div>
         </div>

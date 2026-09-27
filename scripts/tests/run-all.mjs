@@ -7,7 +7,7 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { ROOT, serve, launch } from './lib.mjs';
 
-const ALL = ['site', 'anchors', 'tools', 'consent', 'theme-generator', 'layout', 'svg-kpi'];
+const ALL = ['site', 'anchors', 'tools', 'spacing', 'consent', 'theme-generator', 'layout', 'svg-kpi'];
 const args = process.argv.slice(2), full = args.includes('--full');
 const pick = args.filter((a) => !a.startsWith('--'));
 const run = pick.length ? pick : ALL;

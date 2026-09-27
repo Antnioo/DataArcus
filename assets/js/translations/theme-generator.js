@@ -26,7 +26,7 @@ window.themeGeneratorTranslations = {
         "bgDesc": "The layout as an image. Use it: <b>Format page › Canvas background</b>.",
         "bgBtn": "Download background",
         "csvName": "Layout table (.csv)",
-        "csvDesc": "Size and position of every visual, for <b>Format › General › Properties</b>.",
+        "csvDesc": "Size and position of every visual (the table in step 2), for <b>Format › General › Properties</b>. Copy pastes it into Excel.",
         "csvBtn": "Download table",
         "themeOnly": "Only want the colors? The theme file is all you need."
       },
@@ -117,7 +117,7 @@ window.themeGeneratorTranslations = {
         "bgDesc": "التخطيط كصورة. استخدمها: <b><bdi dir=\"ltr\">Format page › Canvas background</bdi></b>.",
         "bgBtn": "نزّل الخلفية",
         "csvName": "جدول التخطيط (csv.)",
-        "csvDesc": "مقاس وموضع كل عنصر، لخانة <b><bdi dir=\"ltr\">Format › General › Properties</bdi></b>.",
+        "csvDesc": "مقاس وموضع كل عنصر (الجدول في الخطوة 2)، لخانة <b><bdi dir=\"ltr\">Format › General › Properties</bdi></b>. زر النسخ يلصقه في Excel.",
         "csvBtn": "نزّل الجدول",
         "themeOnly": "تريد الألوان فقط؟ ملف السمة يكفيك."
       },

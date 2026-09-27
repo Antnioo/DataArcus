@@ -45,6 +45,50 @@ html, body {
   --top-offset: calc(var(--nav-h) + var(--pin-h) + 12px);
 }
 
+/* Spacing scale: every gap on the site comes from these five steps.
+   xs 8  inside a group (buttons, chips)
+   sm 16 between items inside a box
+   md 24 box padding, gap between cards in a grid
+   lg 48 between separate blocks (box to box, box to heading); 32 on phones
+   xl 96 between page sections, and above the footer; 64 on phones
+   Bootstrap's *-5 utilities (mt-5, py-5 ...) are tied to lg below, so they follow it too. */
+:root {
+  --space-xs: 8px;
+  --space-sm: 16px;
+  --space-md: 24px;
+  --space-lg: 48px;
+  --space-xl: 96px;
+  --page-top: calc(var(--nav-h) + var(--space-lg));  /* first content below the navbar */
+  --page-bottom: var(--space-xl);                    /* last content above the footer */
+}
+@media (max-width: 768px) {
+  :root {
+    --space-lg: 32px;
+    --space-xl: 64px;
+  }
+}
+
+/* a separate block in a page, e.g. a box after an article */
+.block { margin-top: var(--space-lg); }
+/* text blocks end at their text: the last paragraph or list adds no margin below the block */
+:is(.article-body, .case-study-intro [class*="col-"], .glass-card, .tg-panel) > :is(p, ul, ol):last-child,
+:is(.article-body, .case-study-intro [class*="col-"]) li:last-child {
+  margin-bottom: 0;
+}
+
+/* a thin line between blocks */
+.divider { border: 0; border-top: 1px solid var(--glass-border); opacity: 1; margin: var(--space-lg) 0; }
+
+/* Bootstrap's step 5 (3rem) becomes the lg step, so it shrinks on phones like everything else */
+.m-5 { margin: var(--space-lg) !important; }
+.mt-5, .my-5 { margin-top: var(--space-lg) !important; }
+.mb-5, .my-5 { margin-bottom: var(--space-lg) !important; }
+.p-5 { padding: var(--space-lg) !important; }
+.pt-5, .py-5 { padding-top: var(--space-lg) !important; }
+.pb-5, .py-5 { padding-bottom: var(--space-lg) !important; }
+.g-5, .gy-5 { --bs-gutter-y: var(--space-lg); }
+.g-5, .gx-5 { --bs-gutter-x: var(--space-lg); }
+
 html {
   scroll-padding-top: var(--top-offset);
 }
@@ -59,22 +103,10 @@ html.smooth-scroll, html.smooth-scroll body {
   scroll-behavior: smooth;
 }
 
-/* The 120px section padding is for homepage sections; the tool pages' FAQ is a
+/* Section padding is for homepage sections; the tool pages' FAQ is a
    <section> too, and should sit right after the box above it */
 section.tg-faq {
   padding: 0 !important;
-}
-
-#hero{
-  margin-top: -20px;
-}
-
-#services {
-  margin-top: 20px;
-}
-
-#contact {
-  margin-top: 20px;
 }
 
 body {
@@ -559,12 +591,17 @@ footer a.text-white-50:hover {
 
 /* --- Article & Project Page Styles --- */
 .page-header {
-    padding-top: 160px;
-    padding-bottom: 80px;
+  padding-top: var(--page-top);
+  padding-bottom: var(--space-lg);
 }
 
 .article-section {
-  padding: 120px 0;
+  padding: var(--page-top) 0 var(--page-bottom);
+}
+
+/* dashboard pages put their header inside the article: the article already starts below the navbar */
+.article-section .page-header {
+  padding-top: 0;
 }
 
 .article-header h1 {
@@ -655,8 +692,9 @@ a.text-accent:hover {
 }
 
 /* --- General Section Spacing --- */
+/* two sections meet with one xl step between them */
 section {
-  padding: 120px 0;
+  padding: calc(var(--space-xl) / 2) 0;
   position: relative;
 }
 
@@ -814,9 +852,6 @@ html[dir="rtl"] .navbar-brand {
   }
 
   /* --- Layout & Spacing Adjustments --- */
-  section {
-    padding: 60px 0 !important;
-  }
 
   .hero {
     padding-top: 100px !important;
