@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
       + (weak.length ? `<div class="warn"><i class="bi bi-exclamation-triangle me-1"></i>${L(`Color ${weak.join(', ')} almost disappears on the visual background.`, `اللون ${weak.join('، ')} يكاد يختفي على خلفية العنصر المرئي.`)}</div>` : '');
   };
 
-  const renderJson = () => { $('json').textContent = JSON.stringify(buildTheme(), null, 2); };
+  const renderJson = () => { $('json').textContent = JSON.stringify(buildTheme(), null, 2); updateStatus(); };
   const renderAll = () => { renderPreview(); renderContrast(); renderJson(); renderLayout(); save(); };
 
   // ---------- events ----------
@@ -185,18 +185,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const text = JSON.stringify(buildTheme(), null, 2);
     const fallback = () => { const r = document.createRange(); r.selectNodeContents($('json')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast(L('Selected. Press Ctrl+C to copy', 'تم التحديد. اضغط Ctrl+C للنسخ')); };
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast(L('Theme JSON copied', 'تم نسخ ملف السمة')), fallback); else fallback();
+    lastJson = text; updateStatus();
     track('theme_copy', { preset: state.preset || 'custom' });
   });
-  $('dlBtn').addEventListener('click', () => {
-    const blob = new Blob([JSON.stringify(buildTheme(), null, 2)], { type: 'application/json' });
+  const downloadJson = (from) => {
+    const text = JSON.stringify(buildTheme(), null, 2), blob = new Blob([text], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = (state.name || 'power-bi-theme').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase() + '.json';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    lastJson = text; updateStatus();
     toast(L('Downloaded. Import it via View → Themes', 'تم التنزيل. استورده من View → Themes'));
-    track('theme_download', { preset: state.preset || 'custom', font: state.font });
-  });
+    track('theme_download', { preset: state.preset || 'custom', font: state.font, from });
+  };
+  $('dlBtn').addEventListener('click', () => downloadJson('step2'));
+  $('dlBtn2').addEventListener('click', () => downloadJson('step4'));
 
   // ---------- page layout: a full background with a place for every visual ----------
   // Power BI's default page is 1280 × 720, so every slot is in those units and can be typed straight
@@ -444,6 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('layCanvas').innerHTML = bgSvg(slots, { preview: true });
     const H = isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height'];
     $('slotTable').innerHTML = `<table><thead><tr>${H.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${slots.map((s, i) => `<tr data-i="${i}"><td>${nm(s.role)}</td><td>${nm(KINDS[s.kind])}</td><td class="n">${T(s.x)}</td><td class="n">${T(s.y)}</td><td class="n">${T(s.w)}</td><td class="n">${T(s.h)}</td></tr>`).join('')}</tbody></table>`;
+    updateStatus();
     const note = $('layUnits'); if (note) note.innerHTML = L(`Numbers are for a Power BI page of <b>${pg.w} × ${pg.h}</b> (Format page › Canvas settings). The PNG is ${pw} × ${ph} pixels for a sharp background; with Image fit <b>Fit</b> it lines up exactly.`, `الأرقام لصفحة Power BI بمقاس <b><bdi dir="ltr">${pg.w} × ${pg.h}</bdi></b> (<bdi dir="ltr">Format page › Canvas settings</bdi>). الصورة PNG بمقاس <bdi dir="ltr">${pw} × ${ph}</bdi> بكسل لتكون حادة، ومع <bdi dir="ltr">Image fit: Fit</bdi> تنطبق تمامًا.`);
   }
   function renderLayout() {
@@ -463,12 +468,11 @@ document.addEventListener('DOMContentLoaded', () => {
         ${chk('filters', L('Filter panel', 'لوحة الفلاتر'))}
         ${chk('shadow', L('Soft shadows', 'ظلال خفيفة'))}
         ${chk('samples', L('Sample visuals in the preview', 'عناصر تجريبية في المعاينة'))}
-        ${chk('transparent', L('Transparent visuals in the theme JSON', 'عناصر شفافة في ملف السمة'), L('Tick this before downloading the theme, so every visual sits on its panel.', 'فعّلها قبل تنزيل السمة حتى يجلس كل عنصر على لوحته.'))}
       </div>
       ${sizeControls(c)}
       ${advControls(c)}`;
     $('layWhy').innerHTML = LAYOUTS[c.preset].why.map((w) => `<span><i class="bi bi-check2"></i> ${nm(w)}</span>`).join('');
-    renderLayoutPreview();
+    renderLayoutPreview(); renderVis();
   }
 
   $('layControls').addEventListener('click', (e) => {
@@ -529,9 +533,11 @@ document.addEventListener('DOMContentLoaded', () => {
     saveBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), `${fileBase()}-layout-${lay().preset}.csv`);
     track('theme_layout_slots', { method: 'csv', layout: lay().preset });
   });
-  $('pngBtn').addEventListener('click', () => {
+  const downloadPng = () => {
     const [pw, ph] = pngSize(), img = new Image();
+    const key = pngKey();
     img.onload = () => {
+      lastPng = key; updateStatus();
       const cv = document.createElement('canvas'); cv.width = pw; cv.height = ph;
       cv.getContext('2d').drawImage(img, 0, 0, pw, ph);
       cv.toBlob((b) => { if (!b) { toast(L('Could not create the image in this browser', 'تعذّر إنشاء الصورة في هذا المتصفح')); return; }
@@ -542,7 +548,78 @@ document.addEventListener('DOMContentLoaded', () => {
     img.onerror = () => toast(L('Could not create the image in this browser', 'تعذّر إنشاء الصورة في هذا المتصفح'));
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(bgSvg(computeSlots(lay()), { w: pw, h: ph }));
     track('theme_layout_png', { layout: lay().preset, direction: rtl() ? 'rtl' : 'ltr', kpis: lay().kpis });
+  };
+  $('pngBtn').addEventListener('click', downloadPng);
+
+  // ---------- step 4: visual backgrounds, and a reminder when a downloaded file is out of date ----------
+  let lastJson = null, lastPng = null;
+  function pngKey() { return bgSvg(computeSlots(lay()), {}); }
+  function renderVis() {
+    const t = !!lay().transparent;
+    $('dlVis').innerHTML = `<span class="tg-label">${L('Visual backgrounds in the theme', 'خلفيات العناصر في السمة')}</span>${seg('transparent', [[1, L('Transparent (use with the background)', 'شفافة (مع الخلفية)')], [0, L('Solid (theme only)', 'مصمتة (السمة فقط)')]], t ? 1 : 0)}
+      <small class="d-block mt-1 text-white-50">${t ? L('Visuals have no fill, so each one sits on its panel in the background image.', 'العناصر بلا تعبئة، فيجلس كل عنصر على لوحته في صورة الخلفية.') : L('Each visual gets its own card color. Choose this if you only use the theme, without the background image.', 'يأخذ كل عنصر لون بطاقة خاصًا به. اختره إذا كنت تستخدم السمة فقط دون صورة الخلفية.')}</small>`;
+  }
+  $('dlVis').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-l="transparent"]'); if (!b) return;
+    lay().transparent = b.dataset.v === '1'; renderVis(); renderJson(); save();
+    track('theme_visuals', { transparent: lay().transparent });
   });
+  function updateStatus() {
+    if (!$('dlStatus')) return;
+    const jsonOld = lastJson !== null && lastJson !== JSON.stringify(buildTheme(), null, 2);
+    const pngOld = lastPng !== null && lastPng !== pngKey();
+    const solid = lastPng !== null && !lay().transparent;
+    const note = (text, act, btn) => `<div class="tg-note"><i class="bi bi-exclamation-circle" aria-hidden="true"></i><span>${text}</span><button type="button" data-dl="${act}">${btn}</button></div>`;
+    const again = L('Download again', 'نزّل من جديد');
+    let h = '';
+    if (jsonOld && pngOld) h += note(L('You changed your design after downloading. Both files are out of date.', 'غيّرت تصميمك بعد التنزيل. الملفان لم يعودا محدّثين.'), 'both', L('Download both again', 'نزّل الملفين من جديد'));
+    else if (jsonOld) h += note(L('Your theme changed since you downloaded it.', 'تغيّرت السمة منذ نزّلتها.'), 'json', again);
+    else if (pngOld) h += note(L('Your background changed since you downloaded it.', 'تغيّرت الخلفية منذ نزّلتها.'), 'png', again);
+    if (solid) h += note(L('Your theme has solid visual backgrounds, so visuals will cover the panels in the background image.', 'سمتك بخلفيات عناصر مصمتة، فستغطي العناصر اللوحات في صورة الخلفية.'), 'transparent', L('Switch to transparent', 'حوّلها إلى شفافة'));
+    $('dlStatus').innerHTML = h;
+    $('jsonStatus').innerHTML = jsonOld ? note(L('This theme changed since you downloaded or copied it.', 'تغيّرت هذه السمة منذ نزّلتها أو نسختها.'), 'json', again) : '';
+    const s4 = document.querySelector('.tg-steps [data-step="download"]'); if (s4) s4.classList.toggle('stale', jsonOld || pngOld || solid);
+  }
+  document.querySelector('main.tg').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-dl]'); if (!b) return;
+    const a = b.dataset.dl;
+    if (a === 'json') downloadJson('reminder');
+    else if (a === 'png') downloadPng();
+    else if (a === 'both') { downloadJson('reminder'); setTimeout(downloadPng, 400); }
+    else if (a === 'transparent') { lay().transparent = true; renderVis(); renderJson(); save(); toast(L('Visuals are transparent. Download the theme again', 'أصبحت العناصر شفافة. نزّل السمة من جديد')); }
+  });
+
+  // ---------- steps bar: pinned under the navbar, highlights the step in view ----------
+  const steps = $('tgSteps');
+  if (steps) {
+    const setNav = () => { const n = document.getElementById('navbar'); if (n) document.documentElement.style.setProperty('--nav-h', n.offsetHeight + 'px'); };
+    const ids = ['colors', 'themeJson', 'layout', 'download'];
+    let tick = 0;
+    const mark = () => {
+      tick = 0;
+      const line = steps.getBoundingClientRect().bottom + 40;
+      let cur = ids[0];
+      ids.forEach((id) => { const el = $(id); if (el && el.getBoundingClientRect().top <= line) cur = id; });
+      // at the very bottom of the page the last step is the one in view
+      if (innerHeight + scrollY >= document.documentElement.scrollHeight - 4) cur = 'download';
+      steps.querySelectorAll('a').forEach((a) => { const on = a.dataset.step === cur; a.classList.toggle('active', on); if (on) a.setAttribute('aria-current', 'step'); else a.removeAttribute('aria-current'); });
+    };
+    // in-page links land just below the steps bar (the site-wide handler only allows for the navbar)
+    const go = (id, smooth) => { const el = $(id); if (!el) return;
+      scrollTo({ top: el.getBoundingClientRect().top + scrollY - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 76) - steps.offsetHeight - 16,
+        behavior: smooth && !matchMedia('(prefers-reduced-motion: reduce)').matches ? 'smooth' : 'auto' }); };
+    document.querySelector('main.tg').addEventListener('click', (e) => {
+      const a = e.target.closest('a[href^="#"]'); if (!a || !ids.includes(a.getAttribute('href').slice(1))) return;
+      e.preventDefault(); e.stopPropagation(); go(a.getAttribute('href').slice(1), true);
+    });
+    // arriving with #layout or #download in the address: correct the site-wide jump once it has run
+    if (ids.includes(location.hash.slice(1))) addEventListener('load', () => setTimeout(() => go(location.hash.slice(1)), 600));
+    setNav(); mark();
+    addEventListener('resize', () => { setNav(); mark(); });
+    addEventListener('scroll', () => { if (!tick) tick = requestAnimationFrame(mark); }, { passive: true });
+    const label = () => steps.setAttribute('aria-label', L('Steps', 'الخطوات'));
+    label(); new MutationObserver(label).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+  }
 
   // "See an example": a complete executive sales design; the visitor's own design can be restored
   let beforeExample = null;
