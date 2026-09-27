@@ -5,6 +5,9 @@ window.themeGeneratorTranslations = {
       "badge": "Free tool · No sign-up",
       "title": "Power BI Theme & Layout Generator",
       "subtitle": "Pick your brand colors, preview a live report, and download a theme JSON plus a matching page layout with the exact position of every visual.",
+      "example": "See an example",
+      "exampleUndo": "Undo: back to my design",
+      "exampleHint": "A finished executive sales report you can download and adapt.",
       "presets": "Start from a preset",
       "fromBrand": "Or generate from one brand color",
       "harmony": {
@@ -66,6 +69,9 @@ window.themeGeneratorTranslations = {
       "badge": "أداة مجانية · بدون تسجيل",
       "title": "مولّد السمات والتخطيطات لـ Power BI",
       "subtitle": "اختر ألوان علامتك التجارية، وشاهد معاينة مباشرة للتقرير، ونزّل ملف سمة JSON مع تخطيط صفحة مطابق يحدد موضع كل عنصر مرئي بدقة.",
+      "example": "شاهد مثالًا",
+      "exampleUndo": "تراجع: عودة إلى تصميمي",
+      "exampleHint": "تقرير مبيعات تنفيذي جاهز يمكنك تنزيله وتعديله.",
       "presets": "ابدأ من قالب جاهز",
       "fromBrand": "أو أنشئ لوحة ألوان من لون علامتك التجارية",
       "harmony": {
