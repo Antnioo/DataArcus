@@ -236,14 +236,23 @@ document.addEventListener('DOMContentLoaded', () => {
       rows: [[[2.2, 'line', ['Hero chart', 'المخطط الرئيسي']], [1, 'text', ['What it means', 'ماذا يعني']]]],
       why: [['One message per page', 'رسالة واحدة لكل صفحة'], ['A short text explains the chart', 'نص قصير يشرح المخطط'], ['Generous white space', 'مساحة بيضاء مريحة']] }
   };
-  state.layout = Object.assign({ preset: 'exec', kpis: 4, filters: false, dir: '', radius: 12, shadow: true, header: true, accentBar: true, samples: true, transparent: false }, state.layout || {});
+  // v2: corners 0/8/16, and the KPI accent bar became a choice of side (from the old on/off accentBar)
+  const upgrade = (l) => {
+    if (l && !l.v) {
+      if (+l.radius === 12) l.radius = 8; else if (+l.radius === 14) l.radius = 16;
+      if (!l.kpiBar) l.kpiBar = l.accentBar === false ? 'none' : 'start';
+      delete l.accentBar; l.v = 2;
+    }
+    return l;
+  };
+  state.layout = Object.assign({ v: 2, preset: 'exec', kpis: 4, filters: false, dir: '', radius: 8, shadow: true, header: true, kpiBar: 'start', headLine: 'short', samples: true, transparent: false }, upgrade(state.layout) || {});
   if (!LAYOUTS[state.layout.preset]) state.layout.preset = 'exec';
   const lay = () => state.layout;
   const rtl = (c) => ((c || lay()).dir ? (c || lay()).dir === 'rtl' : isAr());
   const nm = (pair) => (isAr() ? pair[1] : pair[0]);
 
   // Adjustable sizes, each kept inside a safe range so every visual stays usable
-  const RANGE = { hh: [44, 96], logoW: [100, 360], fw: [160, 320], fh: [56, 120], kpiH: [64, 160], mainW: [40, 75], split: [30, 70] };
+  const RANGE = { hh: [44, 96], logoW: [100, 360], fw: [160, 320], fh: [56, 120], kpiH: [64, 160], mainW: [40, 75], split: [30, 70], radius: [0, 24], kpiBarW: [2, 8], headLineW: [2, 8] };
   // on a narrow (4:3) page the side filter panel is capped at a quarter of the width
   const rangeOf = (k) => (k === 'fw' ? [160, Math.min(320, Math.round(PW / 4))] : RANGE[k]);
   const clampTo = (k, v) => Math.max(rangeOf(k)[0], Math.min(rangeOf(k)[1], Math.round(+v)));
@@ -342,7 +351,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     return '';
   }
-  const c0 = () => (lay().accentBar ? 12 : 0); // KPI text sits after the accent bar
+  // accent bars: side, thickness and color (Advanced options)
+  const barW = (k, c) => clampTo(k, (c || lay())[k] == null ? (k === 'kpiBarW' ? 4 : 3) : (c || lay())[k]);
+  const barColor = (k, i) => { const v = lay()[k], u = state.ui; return v === 'data' ? state.data[i % state.data.length] : (u[v] || u.accent); };
+  const c0 = () => (lay().kpiBar === 'start' ? barW('kpiBarW') + 8 : 0); // KPI text sits after a side bar
 
   function bgSvg(slots, opt) {
     const u = state.ui, c = lay(), right = rtl(), light = lum(u.background) > 0.45;
@@ -351,12 +363,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (c.header) {
       const hh = sizes(c).hh;
       s += `<rect width="${PW}" height="${hh}" fill="${mix(u.card, u.background, 0.25)}"/><rect y="${hh - 1}" width="${PW}" height="1" fill="${edge}"/>`
-        + `<rect x="${right ? PW - M - 8 - 40 : M + 8}" y="${hh - 9}" width="40" height="3" rx="1.5" fill="${u.accent}"/>`;
+        + (c.headLine === 'none' ? '' : (() => { const t = barW('headLineW', c), col = barColor('headLineC', 0);
+          return c.headLine === 'full' ? `<rect class="hl" y="${hh - t}" width="${PW}" height="${t}" fill="${col}"/>`
+            : `<rect class="hl" x="${right ? PW - M - 8 - 40 : M + 8}" y="${hh - 6 - t}" width="40" height="${t}" rx="${t / 2}" fill="${col}"/>`; })());
     }
+    let clips = '';
     slots.forEach((p, i) => {
       if (p.kind === 'title' || p.kind === 'logo') return;
       s += `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="${r}" fill="${p.rail ? rail : u.card}"${c.shadow ? ' filter="url(#sh)"' : ''}${light || !c.shadow ? ` stroke="${edge}" stroke-width="1"` : ''}/>`;
-      if (p.kind === 'kpi' && c.accentBar) s += `<rect x="${right ? p.x + p.w - 14 : p.x + 10}" y="${p.y + 16}" width="4" height="${p.h - 32}" rx="2" fill="${u.accent}"/>`;
+      if (p.kind !== 'kpi' || !c.kpiBar || c.kpiBar === 'none') return;
+      const t = barW('kpiBarW', c), col = barColor('kpiBarC', +p.role[0].split(' ')[1] - 1);
+      if (c.kpiBar === 'start') s += `<rect class="kb" x="${right ? p.x + p.w - 10 - t : p.x + 10}" y="${p.y + 16}" width="${t}" height="${p.h - 32}" rx="${t / 2}" fill="${col}"/>`;
+      else { // a strip along the top or bottom edge, clipped to the card's corners
+        clips += `<clipPath id="kc${i}"><rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="${r}"/></clipPath>`;
+        s += `<rect class="kb" x="${p.x}" y="${c.kpiBar === 'top' ? p.y : p.y + p.h - t}" width="${p.w}" height="${t}" fill="${col}" clip-path="url(#kc${i})"/>`;
+      }
     });
     if (opt.preview) {
       const sec = mix(u.text, u.card, 0.35), font = `font-family="'${state.font}', 'Segoe UI', Arial, sans-serif"`;
@@ -370,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
         s += `<g data-s="${i}">${g}<rect class="o" x="${p.x - 2}" y="${p.y - 2}" width="${p.w + 4}" height="${p.h + 4}" rx="${r + 2}" fill="none" stroke="#fdcb6e" stroke-width="3" opacity="0"/></g>`;
       });
     }
-    const defs = c.shadow ? `<defs><filter id="sh" x="-10%" y="-10%" width="120%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="${light ? 4 : 6}" flood-color="#000" flood-opacity="${light ? 0.1 : 0.35}"/></filter></defs>` : '';
+    const defs = c.shadow || clips ? `<defs>${c.shadow ? `<filter id="sh" x="-10%" y="-10%" width="120%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="${light ? 4 : 6}" flood-color="#000" flood-opacity="${light ? 0.1 : 0.35}"/></filter>` : ''}${clips}</defs>` : '';
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${PW} ${PH}" width="${opt.w || PW}" height="${opt.h || PH}"${opt.preview ? ' role="img" aria-label="Page layout preview"' : ''}>${defs}${s}</svg>`;
   }
 
@@ -385,8 +406,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const chk = (key, t, note) => `<label class="tg-check"><input type="checkbox" data-l="${key}"${lay()[key] ? ' checked' : ''}> <span>${t}${note ? `<br><small class="text-white-50">${note}</small>` : ''}</span></label>`;
 
   // sliders show and take page units (percentages stay percentages)
-  const rng = (key, label, v, unit) => { const f = unit === '%' ? 1 : page().s, [lo, hi] = rangeOf(key);
-    return `<label class="tg-range"><span>${label} <b data-out="${key}">${Math.round(v * f)}${unit || ''}</b></span><input type="range" data-l="${key}" data-u="${unit || ''}" data-f="${f}" min="${Math.round(lo * f)}" max="${Math.round(hi * f)}" step="${unit === '%' ? 1 : Math.max(1, Math.round(4 * f))}" value="${Math.round(v * f)}"></label>`; };
+  const rng = (key, label, v, unit, st) => { const f = unit === '%' ? 1 : page().s, [lo, hi] = rangeOf(key);
+    return `<label class="tg-range"><span>${label} <b data-out="${key}">${Math.round(v * f)}${unit || ''}</b></span><input type="range" data-l="${key}" data-u="${unit || ''}" data-f="${f}" min="${Math.round(lo * f)}" max="${Math.round(hi * f)}" step="${unit === '%' ? 1 : Math.max(1, Math.round((st || 4) * f))}" value="${Math.round(v * f)}"></label>`; };
   function sizeControls(c) {
     applyPage(c);
     const P = LAYOUTS[c.preset], z = sizes(c), out = [], pg = page(c);
@@ -400,6 +421,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (hasSplit(P)) out.push(rng('split', L('Top row share of the chart area', 'حصة الصف العلوي من مساحة المخططات'), z.split, '%'));
     return `<div class="tg-sizes"><div class="d-flex justify-content-between align-items-center"><span class="tg-label mb-0">${L('Adjust sizes', 'ضبط المقاسات')}</span><button type="button" class="tg-reset" data-l="reset"><i class="bi bi-arrow-counterclockwise"></i> ${L('Reset sizes', 'إعادة المقاسات')}</button></div>
       <small class="text-white-50 d-block mb-2">${L(`Start side is the left in left-to-right reports and the right in Arabic ones. Sizes are in your page units (${pg.w} × ${pg.h}).`, `جهة البداية هي اليسار في التقارير من اليسار لليمين واليمين في التقارير العربية. المقاسات بوحدات صفحتك (${pg.w} × ${pg.h}).`)}</small>${out.join('')}</div>`;
+  }
+  // Advanced options: exact values for people who want them; closed by default
+  let advOpen = false;
+  const dot = (col) => `<i class="tg-dot" style="background:${col}"></i>`;
+  const colorSeg = (key, cur) => { const u = state.ui;
+    return seg(key, [['accent', dot(u.accent) + L('Accent', 'التمييز')], ['good', dot(u.good) + L('Good', 'جيد')], ['neutral', dot(u.neutral) + L('Neutral', 'محايد')], ['data', `<span class="tg-dots">${state.data.slice(0, 3).map(dot).join('')}</span>` + L('Data colors', 'ألوان البيانات')]], cur || 'accent'); };
+  function advControls(c) {
+    const out = [rng('radius', L('Exact corner radius', 'نصف قطر الزوايا بدقة'), +c.radius || 0, '', 1)];
+    if (c.kpiBar && c.kpiBar !== 'none') out.push(rng('kpiBarW', L('KPI bar thickness', 'سُمك خط المؤشرات'), barW('kpiBarW', c), '', 1),
+      `<div><span class="tg-label">${L('KPI bar color', 'لون خط المؤشرات')}</span>${colorSeg('kpiBarC', c.kpiBarC)}</div>`);
+    if (c.header && c.headLine !== 'none') out.push(rng('headLineW', L('Header line thickness', 'سُمك خط الشريط العلوي'), barW('headLineW', c), '', 1),
+      `<div><span class="tg-label">${L('Header line color', 'لون خط الشريط العلوي')}</span>${colorSeg('headLineC', c.headLineC)}</div>`);
+    return `<details class="tg-adv"${advOpen ? ' open' : ''}><summary>${L('Advanced options', 'خيارات متقدمة')}</summary><div class="tg-sizes mt-2">
+      <div class="d-flex justify-content-between align-items-center"><small class="text-white-50">${L(`Fine control over corners and accent lines, in your page units (${page(c).w} × ${page(c).h}).`, `تحكم دقيق في الزوايا والخطوط الملونة، بوحدات صفحتك (${page(c).w} × ${page(c).h}).`)}</small><button type="button" class="tg-reset flex-shrink-0" data-l="resetAdv"><i class="bi bi-arrow-counterclockwise"></i> ${L('Reset', 'إعادة')}</button></div>
+      ${out.join('')}</div></details>`;
   }
   const pngSize = (c) => { const p = page(c), k = Math.max(1, 1920 / p.w); return [Math.round(p.w * k), Math.round(p.h * k)]; };
   function renderLayoutPreview() {
@@ -418,16 +454,18 @@ document.addEventListener('DOMContentLoaded', () => {
         <small class="d-block mt-1 ${pageMsg || shapeMsg(c) ? 'tg-warn' : 'text-white-50'}" role="status">${[pageMsg, shapeMsg(c)].filter(Boolean).join(' ') || L('Match Format page › Canvas settings › Custom in Power BI.', 'طابقه مع <bdi dir="ltr">Format page › Canvas settings › Custom</bdi> في Power BI.')}</small>` : ''}</div>
       <div><span class="tg-label">${L('KPI cards', 'بطاقات المؤشرات')}</span>${seg('kpis', [[3, '3'], [4, '4'], [5, '5'], [6, '6']], c.kpis)}</div>
       <div><span class="tg-label">${L('Reading direction', 'اتجاه القراءة')}</span>${seg('dir', [['ltr', L('Left to right', 'من اليسار لليمين')], ['rtl', L('Right to left (Arabic)', 'من اليمين لليسار (عربي)')]], rtl() ? 'rtl' : 'ltr')}</div>
-      <div><span class="tg-label">${L('Corners', 'الزوايا')}</span>${seg('radius', [[0, L('Square', 'حادة')], [12, L('Soft', 'ناعمة')], [14, L('Round', 'دائرية')]], c.radius)}</div>
+      <div><span class="tg-label">${L('Corners', 'الزوايا')}</span>${seg('radius', [[0, L('Square', 'حادة')], [8, L('Soft', 'ناعمة')], [16, L('Round', 'دائرية')]], c.radius)}</div>
+      <div><span class="tg-label">${L('KPI accent bar', 'الخط الملون لبطاقات المؤشرات')}</span>${seg('kpiBar', [['start', L('Start side', 'جهة البداية')], ['top', L('Top', 'أعلى')], ['bottom', L('Bottom', 'أسفل')], ['none', L('None', 'بدون')]], c.kpiBar || 'none')}</div>
+      ${c.header ? `<div><span class="tg-label">${L('Header accent line', 'الخط الملون للشريط العلوي')}</span>${seg('headLine', [['short', L('Short, under the title', 'قصير تحت العنوان')], ['full', L('Full width', 'بعرض الصفحة')], ['none', L('None', 'بدون')]], c.headLine || 'short')}</div>` : ''}
       <div class="d-flex flex-column gap-2">
         ${chk('header', L('Header band for title and logo', 'شريط علوي للعنوان والشعار'))}
         ${chk('filters', L('Filter panel', 'لوحة الفلاتر'))}
-        ${chk('accentBar', L('Accent bar on KPI cards', 'خط ملون على بطاقات المؤشرات'))}
         ${chk('shadow', L('Soft shadows', 'ظلال خفيفة'))}
         ${chk('samples', L('Sample visuals in the preview', 'عناصر تجريبية في المعاينة'))}
         ${chk('transparent', L('Transparent visuals in the theme JSON', 'عناصر شفافة في ملف السمة'), L('Tick this before downloading the theme, so every visual sits on its panel.', 'فعّلها قبل تنزيل السمة حتى يجلس كل عنصر على لوحته.'))}
       </div>
-      ${sizeControls(c)}`;
+      ${sizeControls(c)}
+      ${advControls(c)}`;
     $('layWhy').innerHTML = LAYOUTS[c.preset].why.map((w) => `<span><i class="bi bi-check2"></i> ${nm(w)}</span>`).join('');
     renderLayoutPreview();
   }
@@ -437,8 +475,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const k = b.dataset.l, v = b.dataset.v, c = lay();
     if (k === 'preset') { c.preset = v; c.kpis = LAYOUTS[v].kpis; c.filters = LAYOUTS[v].filters; delete c.kpiH; delete c.mainW; delete c.split; track('theme_layout', { layout: v }); }
     else if (k === 'reset') ['hh', 'logoW', 'fpos', 'fw', 'fh', 'kpiH', 'mainW', 'split'].forEach((x) => delete c[x]);
+    else if (k === 'resetAdv') { c.radius = 8; ['kpiBarW', 'kpiBarC', 'headLineW', 'headLineC'].forEach((x) => delete c[x]); }
     else if (k === 'page') { if (v === 'custom' && c.page !== 'custom') { const p = page(c); c.pageW = p.w; c.pageH = p.h; } c.page = v; pageMsg = ''; track('theme_page_size', { size: v }); }
-    else c[k] = k === 'dir' || k === 'fpos' ? v : +v;
+    else c[k] = ['dir', 'fpos', 'kpiBar', 'kpiBarC', 'headLine', 'headLineC'].includes(k) ? v : +v;
+    if (['kpiBar', 'kpiBarC', 'headLine', 'headLineC'].includes(k)) track('theme_accent', { option: k, value: v });
     renderLayout(); save();
   });
   // sliders redraw the preview while dragging, without rebuilding the controls
@@ -446,6 +486,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = e.target.closest('input[type="range"][data-l]'); if (!el) return;
     lay()[el.dataset.l] = clampTo(el.dataset.l, el.value / (+el.dataset.f || 1));
     const o = $('layControls').querySelector(`[data-out="${el.dataset.l}"]`); if (o) o.textContent = el.value + el.dataset.u;
+    // the exact radius slider keeps the Square/Soft/Round buttons in step
+    if (el.dataset.l === 'radius') $('layControls').querySelectorAll('button[data-l="radius"]').forEach((b) => { const on = +b.dataset.v === lay().radius; b.classList.toggle('active', on); b.setAttribute('aria-pressed', on); });
     renderLayoutPreview(); save();
   });
   $('layControls').addEventListener('change', (e) => {
@@ -463,6 +505,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el.dataset.l === 'transparent') renderJson();
     renderLayout(); save();
   });
+  // remember whether Advanced options is open when the controls are rebuilt (toggle does not bubble)
+  $('layControls').addEventListener('toggle', (e) => { if (e.target.classList && e.target.classList.contains('tg-adv')) advOpen = e.target.open; }, true);
   // hovering a row outlines its panel on the preview
   const hl = (i) => { $('layCanvas').querySelectorAll('[data-s] .o').forEach((o) => o.setAttribute('opacity', o.parentNode.dataset.s === i ? '1' : '0')); };
   $('slotTable').addEventListener('mouseover', (e) => { const tr = e.target.closest('tr[data-i]'); if (tr) hl(tr.dataset.i); });
@@ -504,7 +548,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!beforeExample) beforeExample = JSON.stringify(state);
     const p = PRESETS['Desert Gulf'];
     state = { preset: 'Desert Gulf', name: 'Executive Sales', font: 'Segoe UI', data: p.data.slice(), ui: { ...p.ui },
-      layout: { preset: 'exec', kpis: 4, filters: true, fpos: 'top', dir: isAr() ? 'rtl' : 'ltr', radius: 12, shadow: true, header: true, accentBar: true, samples: true, transparent: true, page: '1920x1080', hh: 64, logoW: 200 } };
+      layout: { preset: 'exec', kpis: 4, filters: true, fpos: 'top', dir: isAr() ? 'rtl' : 'ltr', v: 2, radius: 8, shadow: true, header: true, kpiBar: 'top', kpiBarC: 'data', headLine: 'full', samples: true, transparent: true, page: '1920x1080', hh: 64, logoW: 200 } };
     pageMsg = ''; renderPresets(); renderInputs(); renderAll();
     $('exampleUndo').hidden = false;
     $('layout').scrollIntoView({ behavior: 'smooth', block: 'start' });
