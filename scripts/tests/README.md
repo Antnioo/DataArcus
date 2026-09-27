@@ -24,6 +24,7 @@ Each test prints `PASS` or `FAIL` with the problems it found. The command fails 
 | `site` | Every page: no errors, no missing translations, no sideways scrolling, phone menu opens, top offset matches the navbar |
 | `anchors` | `#section` links, clicked or arrived at, land just below the navbar and pinned bars |
 | `tools` | Model health results and exam navigation scroll below the navbar, CTA buttons spaced in both directions, FAQ right after the CTA, site works if AOS fails to load |
+| `spacing` | Every page: stacked boxes are one step of the spacing scale apart (style.css `--space-*`), and content starts one step below the navbar |
 | `consent` | Cookie banner only in Europe, Reject stops analytics, privacy page button, phone layout |
 | `theme-generator` | Saved-design upgrades, accent bars and corners, page sizes, theme JSON, download reminders, example and Undo |
 | `layout` | 512 layout combinations: every visual on the page, usable size, no overlaps |

@@ -76,7 +76,7 @@
   }
   </script>
   <style>
-    .tg { padding: 110px 0 60px; }
+    .tg { padding: var(--page-top) 0 var(--page-bottom); }
     .tg h1 { color: var(--accent); }
     .tg-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; }
     .tg-label { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-bottom: 8px; display: block; }
@@ -102,7 +102,7 @@
     .tg-table { width: 100%; font-size: .8rem; border-collapse: collapse; }
     .tg-table th { text-align: left; padding: 6px 8px; font-weight: 700; color: var(--accent); border-bottom: 1px solid var(--glass-border); }
     .tg-table td { padding: 6px 8px; color: var(--lt); border-bottom: 1px solid rgba(255, 255, 255, .05); }
-    .tg-json { background: #050a14; border: 1px solid var(--glass-border); border-radius: 12px; color: #cbd5e1; font: 12px/1.5 ui-monospace, Consolas, monospace; padding: 14px; max-height: 280px; overflow: auto; white-space: pre; }
+    .tg-json { margin: 0; background: #050a14; border: 1px solid var(--glass-border); border-radius: 12px; color: #cbd5e1; font: 12px/1.5 ui-monospace, Consolas, monospace; padding: 14px; max-height: 280px; overflow: auto; white-space: pre; }
     .tg-faq h3 { font-size: 1.05rem; color: var(--lt); margin-top: 1.2rem; }
     .tg-faq p { color: #94a3b8; }
     .tg-cta { background: linear-gradient(135deg, rgba(0, 212, 255, .12), rgba(0,132,255,.12)); border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px; }
@@ -135,7 +135,7 @@
     .tg-json, .tg-color input[type=text], .mb-pre, #cgStart, #cgEnd { direction: ltr; text-align: left; unicode-bidi: plaintext; }
     .lc-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .lc-inputs .form-control { background: var(--dk-3); color: var(--lt); border-color: var(--glass-border); font-size: 1.3rem; font-weight: 700; }
-    .lc-row { border: 1px solid var(--glass-border); border-radius: 14px; padding: 14px 16px; margin-bottom: 12px; }
+    .lc-row { border: 1px solid var(--glass-border); border-radius: 14px; padding: 14px 16px; margin-bottom: var(--space-sm); }
     .lc-row.best { border-color: var(--accent); background: rgba(0, 212, 255, .06); }
     .lc-row.invalid { opacity: .5; }
     .lc-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 8px; }
@@ -152,6 +152,7 @@
     .lc-rec { background: linear-gradient(135deg, rgba(0,212,255,.12), rgba(0,132,255,.12)); border: 1px solid var(--glass-border); border-radius: 14px; padding: 14px 16px; line-height: 1.6; }
     .lc-rec b { color: var(--accent); }
     .lc-note { font-size: .78rem; color: #94a3b8; }
+    .lc-note:empty { display: none; } /* an empty note must not add a gap */
   </style>
 </head>
 <body>
