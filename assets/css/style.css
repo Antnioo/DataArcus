@@ -42,7 +42,8 @@ html, body {
 :root {
   --nav-h: 67px;
   --pin-h: 0px;
-  --top-offset: calc(var(--nav-h) + var(--pin-h) + 12px);
+  --top-gap: 12px; /* air between the bars and a box or heading you jump to */
+  --top-offset: calc(var(--nav-h) + var(--pin-h) + var(--top-gap));
 }
 
 /* Spacing scale: every gap on the site comes from these five steps.
@@ -91,6 +92,12 @@ html, body {
 
 html {
   scroll-padding-top: var(--top-offset);
+}
+
+/* A full-width section brings its own air (its padding), so it lands flush under the bars:
+   no strip of the section above shows, and its content starts one section step down */
+section[id] {
+  scroll-margin-top: calc(-1 * var(--top-gap));
 }
 
 /* smooth scrolling starts once the page is ready (main.js adds the class), so arriving
