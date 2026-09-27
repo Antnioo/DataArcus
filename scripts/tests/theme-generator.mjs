@@ -1,6 +1,9 @@
 // Power BI Theme & Layout Generator: saved-design upgrades, accent bars and corners,
 // page sizes, the theme JSON, the download reminders, and the example.
+import fs from 'node:fs';
+import { createRequire } from 'node:module';
 import { visitor, settle } from './lib.mjs';
+const { PNG } = createRequire(import.meta.url)('pngjs');
 
 const PAGE = '/tools/power-bi-theme-generator.html';
 const STORE = 'dataarcus-theme-generator';
@@ -138,7 +141,28 @@ export default async function ({ browser, url }) {
     await v.ctx.close();
   }
 
-  // 5. The example: loads, scrolls to the layout, Undo restores the visitor's own design exactly
+  // 5. The downloaded PNG is nudged for Power BI: each panel's outer edge sits 1px left of and 2px above the
+  //    table's X / Y (Power BI draws visuals there; measured with a calibration background)
+  for (const size of ['1920x1080', '1280x720']) {
+    v = await open('en');
+    await v.pg.click('[data-p="Midnight"]'); await v.pg.click(`[data-l=page][data-v="${size}"]`); await v.pg.click('[data-l=radius][data-v="0"]');
+    await v.pg.click('[data-l=kpiBar][data-v=none]');
+    const cb = await v.pg.$('input[data-l=shadow]'); if (!(await cb.isChecked())) await cb.click(); // dark + shadow: no outline, crisp panel edge
+    const rows = await v.pg.evaluate(() => [...document.querySelectorAll('#slotTable tbody tr')].map((tr) => [...tr.children].map((td) => td.textContent)));
+    const [d] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('#pngBtn')]);
+    const png = PNG.sync.read(fs.readFileSync(await d.path())), k = png.width / +size.split('x')[0];
+    const c = (x, y) => { const i = (png.width * y + x) * 4; return png.data.slice(i, i + 3).join(); };
+    for (const r of rows.filter((r) => /^(KPI 1|Comparison)$/.test(r[0]))) {
+      const [x, y, w, h] = r.slice(2).map(Number), mx = Math.round((x + w / 2) * k), my = Math.round((y + h / 2) * k), fill = c(mx, my);
+      let top = my; while (top > 0 && c(mx, top - 1) === fill) top--;
+      let left = mx; while (left > 0 && c(left - 1, my) === fill) left--;
+      const got = [left / k, top / k].map((n) => Math.round(n)), want = [x - 1, y - 2];
+      check(Math.abs(got[0] - want[0]) <= 0.5 && Math.abs(got[1] - want[1]) <= 0.5, `${size} ${r[0]}: PNG panel starts at ${got.join(', ')}, expected ${want.join(', ')} (table ${x}, ${y})`);
+    }
+    await v.ctx.close();
+  }
+
+  // 6. The example: loads, scrolls to the layout, Undo restores the visitor's own design exactly
   for (const lang of ['en', 'ar']) {
     v = await open(lang);
     await v.pg.click('[data-p="Midnight"]'); await v.pg.click('[data-l=preset][data-v=ops]');

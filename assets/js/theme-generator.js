@@ -380,15 +380,22 @@ document.addEventListener('DOMContentLoaded', () => {
   const barColor = (k, i) => { const v = lay()[k], u = state.ui; return v === 'data' ? state.data[i % state.data.length] : (u[v] || u.accent); };
   const c0 = () => (lay().kpiBar === 'start' ? barW('kpiBarW') + 8 : 0); // KPI text sits after a side bar
 
+  // Power BI draws a visual's box 1px left of and 2px above the X/Y typed in Format › General › Properties
+  // (measured with a calibration background on a 1920 × 1080 page: the image itself lands exactly on the canvas).
+  // The PNG for Power BI moves everything drawn on the page background by the same amount, so panels meet their
+  // visuals exactly while the table keeps the numbers people type. The on-screen preview is not moved.
+  const PBI_NUDGE = { x: -1, y: -2 }; // in Power BI page pixels
   function bgSvg(slots, opt) {
     const u = state.ui, c = lay(), right = rtl(), light = lum(u.background) > 0.45;
     const edge = mix(u.text, u.card, light ? 0.86 : 0.9), rail = mix(u.card, u.background, 0.35), r = +c.radius;
-    let s = `<rect width="${PW}" height="${PH}" fill="${u.background}"/>`;
+    const bg = `<rect width="${PW}" height="${PH}" fill="${u.background}"/>`;
+    let s = '';
     if (c.header) {
       const hh = sizes(c).hh;
-      s += `<rect width="${PW}" height="${hh}" fill="${mix(u.card, u.background, 0.25)}"/><rect y="${hh - 1}" width="${PW}" height="1" fill="${edge}"/>`
+      // full-width parts reach a few units past the page edges, so the Power BI nudge never shows a gap
+      s += `<rect x="-4" y="-4" width="${PW + 8}" height="${hh + 4}" fill="${mix(u.card, u.background, 0.25)}"/><rect x="-4" y="${hh - 1}" width="${PW + 8}" height="1" fill="${edge}"/>`
         + (c.headLine === 'none' ? '' : (() => { const t = barW('headLineW', c), col = barColor('headLineC', 0);
-          return c.headLine === 'full' ? `<rect class="hl" y="${hh - t}" width="${PW}" height="${t}" fill="${col}"/>`
+          return c.headLine === 'full' ? `<rect class="hl" x="-4" y="${hh - t}" width="${PW + 8}" height="${t}" fill="${col}"/>`
             : `<rect class="hl" x="${right ? PW - M - 8 - 40 : M + 8}" y="${hh - 6 - t}" width="40" height="${t}" rx="${t / 2}" fill="${col}"/>`; })());
     }
     let clips = '';
@@ -416,7 +423,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
     const defs = c.shadow || clips ? `<defs>${c.shadow ? `<filter id="sh" x="-10%" y="-10%" width="120%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="${light ? 4 : 6}" flood-color="#000" flood-opacity="${light ? 0.1 : 0.35}"/></filter>` : ''}${clips}</defs>` : '';
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${PW} ${PH}" width="${opt.w || PW}" height="${opt.h || PH}"${opt.preview ? ' role="img" aria-label="Page layout preview"' : ''}>${defs}${s}</svg>`;
+    const k = page(c).s, nudge = opt.preview ? '' : ` transform="translate(${PBI_NUDGE.x / k} ${PBI_NUDGE.y / k})"`; // page px to layout units
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${PW} ${PH}" width="${opt.w || PW}" height="${opt.h || PH}"${opt.preview ? ' role="img" aria-label="Page layout preview"' : ''}>${defs}${bg}<g${nudge}>${s}</g></svg>`;
   }
 
   // small wireframe for the layout buttons
