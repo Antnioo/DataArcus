@@ -74,14 +74,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Initialize Animate on Scroll (AOS) library only on desktop
-  if (isDesktopViewport) {
-    AOS.init({
-      once: true,
-      duration: prefersReducedMotion ? 0 : 800,
-      easing: 'ease-out-cubic',
-      disable: prefersReducedMotion
-    });
+  // Initialize Animate on Scroll (AOS) library only on desktop.
+  // If the library did not load (blocked or offline), show the content instead of
+  // leaving it hidden, and carry on with the rest of this file.
+  if (window.AOS) {
+    if (isDesktopViewport) {
+      AOS.init({
+        once: true,
+        duration: prefersReducedMotion ? 0 : 800,
+        easing: 'ease-out-cubic',
+        disable: prefersReducedMotion
+      });
+    }
+  } else {
+    document.querySelectorAll('[data-aos]').forEach((el) => el.removeAttribute('data-aos'));
   }
 
   // Update year in footer
@@ -152,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.addEventListener('click', (e) => {
     if (!e.target.closest('a[href^="#"]')) return;
     const navmenu = document.querySelector('#navmenu');
-    if (navmenu && navmenu.classList.contains('show')) bootstrap.Collapse.getOrCreateInstance(navmenu, { toggle: false }).hide();
+    if (navmenu && navmenu.classList.contains('show') && window.bootstrap) bootstrap.Collapse.getOrCreateInstance(navmenu, { toggle: false }).hide();
   });
 
   // Arriving with #section in the address: images and translations can still move the
