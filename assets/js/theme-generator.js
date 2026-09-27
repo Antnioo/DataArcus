@@ -380,11 +380,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const barColor = (k, i) => { const v = lay()[k], u = state.ui; return v === 'data' ? state.data[i % state.data.length] : (u[v] || u.accent); };
   const c0 = () => (lay().kpiBar === 'start' ? barW('kpiBarW') + 8 : 0); // KPI text sits after a side bar
 
-  // Power BI draws a visual's box 1px right of and 2px below the X/Y typed in Format › General › Properties
-  // (measured with a calibration background on a 1920 × 1080 page: the image itself lands exactly on the canvas).
+  // Power BI draws a visual's box 1px right of and 3px below the X/Y typed in Format › General › Properties
+  // (measured in Power BI Desktop on a 1920 × 1080 page with a calibration background, then confirmed with a real
+  // layout: the image itself lands exactly on the canvas).
   // The PNG for Power BI moves everything drawn on the page background by the same amount, so panels meet their
   // visuals exactly while the table keeps the numbers people type. The on-screen preview is not moved.
-  const PBI_NUDGE = { x: 1, y: 2 }; // in Power BI page pixels
+  const PBI_NUDGE = { x: 1, y: 3 }; // in Power BI page pixels
   function bgSvg(slots, opt) {
     const u = state.ui, c = lay(), right = rtl(), light = lum(u.background) > 0.45;
     const edge = mix(u.text, u.card, light ? 0.86 : 0.9), rail = mix(u.card, u.background, 0.35), r = +c.radius;
