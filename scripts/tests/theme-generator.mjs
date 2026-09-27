@@ -84,8 +84,10 @@ export default async function ({ browser, url }) {
   const json = () => v.pg.evaluate(() => JSON.parse(document.getElementById('json').textContent));
   for (const [size, r, want] of [['1280x720', '16', 16], ['1920x1080', '16', 24], ['1920x1080', '8', 12], ['960x720', '0', 0]]) {
     await v.pg.click(`[data-l=page][data-v="${size}"]`); await v.pg.click(`[data-l=radius][data-v="${r}"]`);
-    const got = (await json()).visualStyles['*']['*'].border[0].radius;
-    check(got === want, `${size} radius ${r}: theme JSON has ${got}, expected ${want}`);
+    // every visual (*) and every visual type, since Power BI's base theme sets corners per type
+    const vs = (await json()).visualStyles, types = Object.keys(vs).filter((k) => k !== 'page');
+    const got = [...new Set(types.map((k) => vs[k]['*'].border[0].radius))];
+    check(types.length > 40 && got.length === 1 && got[0] === want, `${size} radius ${r}: theme JSON has ${got.join('/')} on ${types.length} visual types, expected ${want}`);
   }
   await v.pg.click('#dlVis [data-l=transparent][data-v="1"]');
   check((await json()).visualStyles['*']['*'].background[0].show === false, 'Transparent choice not in the theme JSON');

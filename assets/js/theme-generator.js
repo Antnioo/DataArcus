@@ -71,6 +71,14 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   const setColor = (key, val) => { if (key[0] === 'd') state.data[+key.slice(1)] = val; else state.ui[key.slice(2)] = val; state.preset = null; };
 
+  // Every visual type in Power BI's theme schema (2.157). The Fluent 2 base theme sets rounded corners per
+  // visual type, which outranks a theme's "every visual" (*) value, so the radius is also written per type.
+  const VISUAL_TYPES = ['group', 'actionButton', 'bookmarkNavigator', 'textbox', 'pageNavigator', 'shape', 'barChart', 'columnChart', 'clusteredBarChart',
+    'clusteredColumnChart', 'hundredPercentStackedBarChart', 'hundredPercentStackedColumnChart', 'lineChart', 'areaChart', 'stackedAreaChart',
+    'hundredPercentStackedAreaChart', 'lineStackedColumnComboChart', 'lineClusteredColumnComboChart', 'ribbonChart', 'waterfallChart', 'funnel',
+    'scatterChart', 'pieChart', 'donutChart', 'treemap', 'map', 'filledMap', 'shapeMap', 'azureMap', 'gauge', 'cardVisual', 'card', 'multiRowCard', 'kpi',
+    'slicer', 'tableEx', 'pivotTable', 'scriptVisual', 'pythonVisual', 'keyDriversVisual', 'decompositionTreeVisual', 'qnaVisual', 'aiNarratives',
+    'scorecard', 'rdlVisual', 'advancedSlicerVisual', 'textSlicer', 'listSlicer', 'image'];
   const buildTheme = () => {
     const u = state.ui, sec = mix(u.text, u.card, 0.35), ter = mix(u.text, u.card, 0.6), f = state.font;
     return {
@@ -102,7 +110,8 @@ document.addEventListener('DOMContentLoaded', () => {
         page: { '*': {
           background: [{ color: { solid: { color: u.background } }, transparency: 0 }],
           outspace: [{ color: { solid: { color: u.background } } }]
-        } }
+        } },
+        ...Object.fromEntries(VISUAL_TYPES.map((t) => [t, { '*': { border: [{ radius: toPage(+state.layout.radius || 0) }] } }]))
       }
     };
   };
@@ -448,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const c = lay(), slots = computeSlots(c), pg = page(c), T = (v) => toPage(v, c), [pw, ph] = pngSize(c);
     $('layCanvas').innerHTML = bgSvg(slots, { preview: true });
     const H = isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height'];
-    $('slotTable').innerHTML = `<table><thead><tr>${H.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${slots.map((s, i) => `<tr data-i="${i}"><td>${nm(s.role)}</td><td>${nm(KINDS[s.kind])}</td><td class="n">${T(s.x)}</td><td class="n">${T(s.y)}</td><td class="n">${T(s.w)}</td><td class="n">${T(s.h)}</td></tr>`).join('')}</tbody></table>`;
+    $('slotTable').innerHTML = `<table><thead><tr>${H.map((h, i) => `<th${i > 1 ? ' class="n"' : ''}>${h}</th>`).join('')}</tr></thead><tbody>${slots.map((s, i) => `<tr data-i="${i}"><td>${nm(s.role)}</td><td>${nm(KINDS[s.kind])}</td><td class="n">${T(s.x)}</td><td class="n">${T(s.y)}</td><td class="n">${T(s.w)}</td><td class="n">${T(s.h)}</td></tr>`).join('')}</tbody></table>`;
     updateStatus();
     const note = $('layUnits'); if (note) note.innerHTML = L(`Numbers are for a Power BI page of <b>${pg.w} × ${pg.h}</b> (Format page › Canvas settings). The PNG is ${pw} × ${ph} pixels for a sharp background; with Image fit <b>Fit</b> it lines up exactly.`, `الأرقام لصفحة Power BI بمقاس <b><bdi dir="ltr">${pg.w} × ${pg.h}</bdi></b> (<bdi dir="ltr">Format page › Canvas settings</bdi>). الصورة PNG بمقاس <bdi dir="ltr">${pw} × ${ph}</bdi> بكسل لتكون حادة، ومع <bdi dir="ltr">Image fit: Fit</bdi> تنطبق تمامًا.`);
   }
