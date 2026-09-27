@@ -114,6 +114,8 @@ class LanguageManager {
      return window.modelHealthArticleTranslations;
     } else if (path.includes('article-power-bi-licensing-guide')) {
      return window.licensingGuideTranslations;
+    } else if (path.includes('privacy')) {
+     return window.privacyTranslations;
     }
     return null;
   }
