@@ -17,7 +17,7 @@
 *
 * 3. Dynamic Animations & Effects
 * - Counter Animation for Stats
-* - Intersection Observers (Counters & Fades)
+* - Intersection Observer for the counters
 * - Dynamic Gradient for CTA
 *
 * 4. Component-Specific Interactions
@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
    */
 
   // Respect the OS-level "reduce motion" setting: skip purely decorative
-  // JS-driven animation (particles, card fade-in) for anyone who has it on.
+  // JS-driven animation (particles, AOS) for anyone who has it on.
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Read the viewport width once, up front, before any DOM writes below.
@@ -240,23 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
     statsObserver.observe(statsSection);
   }
   
-  // Fade in elements as they enter the viewport
-  const fadeElements = document.querySelectorAll('.glass-card, .service-card, .portfolio-card');
-  const fadeObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        entry.target.style.transform = 'translateY(0)';
-      }
-    });
-  }, { threshold: 0.1 });
-
-  if (!prefersReducedMotion) fadeElements.forEach(el => {
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(20px)';
-    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-    fadeObserver.observe(el);
-  });
+  // Scroll-in animations come from AOS only (data-aos attributes, section 1)
 
   // Animate the gradient on the CTA section
   const ctaSection = document.querySelector('.cta-section');

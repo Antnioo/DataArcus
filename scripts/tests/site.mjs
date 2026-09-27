@@ -1,10 +1,19 @@
 // Every page, in English and Arabic, on a phone and a laptop:
 // no errors, no missing translations, no sideways scrolling, the phone menu opens,
 // and the top offset (style.css --top-offset) matches the real navbar.
-import { pages, visitor } from './lib.mjs';
+import fs from 'node:fs';
+import path from 'node:path';
+import { pages, visitor, ROOT } from './lib.mjs';
 
 export default async function ({ browser, url }) {
   const problems = []; let checks = 0;
+  // text-only translations (data-i18n) replace the whole element, so their HTML must be plain text:
+  // an icon or tag inside would be wiped, and duplicated text would still show to search engines
+  for (const p of pages()) {
+    const html = fs.readFileSync(path.join(ROOT, p), 'utf8');
+    for (const m of html.matchAll(/data-i18n="([^"]+)"[^>]*>([^<]*)<(?!\/)/g)) problems.push(`${p}: data-i18n="${m[1]}" has a tag inside ("${m[2].trim().slice(0, 40)}...")`);
+    checks++;
+  }
   for (const p of pages()) for (const lang of ['en', 'ar']) for (const vp of [[390, 844], [1440, 900]]) {
     const v = await visitor(browser, { viewport: vp });
     await v.pg.goto(`${url}/${p}?lang=${lang}`, { waitUntil: 'networkidle' });
