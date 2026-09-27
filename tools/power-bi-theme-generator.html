@@ -146,6 +146,12 @@
     .tg-custom input:focus { border-color: var(--accent); outline: none; }
     .tg-custom span { padding-bottom: 7px; }
     .tg-warn { color: #fdcb6e; }
+    .tg-step { font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+    .tg-jump { color: var(--accent); font-weight: 600; font-size: .9rem; text-decoration: none; padding: 8px 4px; }
+    .tg-jump:hover { text-decoration: underline; }
+    .tg-swipe { display: block; margin-top: 6px; color: #94a3b8; font-size: .75rem; }
+    /* phones: the layout preview comes before its controls, so changes are visible */
+    @media (max-width: 991.98px) { .tg-prevcol { order: -1; } }
     #exampleUndo[hidden] { display: none; }
     .tg-reset { background: none; border: 0; color: var(--accent); font-size: .78rem; padding: 2px 0; cursor: pointer; }
     .tg-reset:hover { text-decoration: underline; }
@@ -202,6 +208,7 @@
           <button class="tg-btn2" id="exampleBtn" type="button"><i class="bi bi-stars me-1"></i><span data-i18n="tg.example">See an example</span></button>
           <button class="tg-btn2" id="exampleUndo" type="button" hidden><i class="bi bi-arrow-counterclockwise me-1"></i><span data-i18n="tg.exampleUndo">Undo: back to my design</span></button>
           <small class="text-white-50" data-i18n="tg.exampleHint">A finished executive sales report you can download and adapt.</small>
+          <a class="tg-jump" href="#layout"><span data-i18n="tg.jump">Jump to page layout</span> <i class="bi bi-arrow-down-short" aria-hidden="true"></i></a>
         </div>
       </header>
 
@@ -209,6 +216,7 @@
         <div class="col-lg-5">
           <div class="tg-panel d-flex flex-column gap-4">
             <div>
+              <div class="tg-step" data-i18n="tg.step1">1 · Colors</div>
               <span class="tg-label" data-i18n="tg.presets">Start from a preset</span>
               <div class="tg-presets" id="presets"></div>
             </div>
@@ -260,7 +268,7 @@
           </div>
           <div class="tg-panel d-flex flex-column gap-3">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-              <span class="tg-label mb-0" data-i18n="tg.json">Your theme JSON</span>
+              <span class="tg-label mb-0"><span class="tg-step d-inline" data-i18n="tg.step2">2 · Theme JSON</span></span>
               <div class="tg-actions">
                 <button class="tg-btn2" id="copyBtn" type="button"><i class="bi bi-clipboard me-1"></i><span data-i18n="tg.copy">Copy</span></button>
                 <button class="btn btn-accent" id="dlBtn" type="button"><i class="bi bi-download me-1"></i><span data-i18n="tg.download">Download .json</span></button>
@@ -274,13 +282,13 @@
 
       <div class="tg-panel tg-lay mt-4" id="layout" role="region" aria-labelledby="layTitle">
         <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-          <h2 class="h4 fw-bold mb-0" id="layTitle" data-i18n="tg.layout.title">Page background and layout</h2>
+          <h2 class="h4 fw-bold mb-0" id="layTitle"><span class="tg-step d-block mb-1" data-i18n="tg.step3">3 · Page layout</span><span data-i18n="tg.layout.title">Page background and layout</span></h2>
           <span class="tg-new" data-i18n="tg.layout.new">New</span>
         </div>
         <p class="text-white-50 mb-4" data-i18n="tg.layout.subtitle">A full report background in your theme colors, with a place for every visual. Layouts follow dashboard design principles from Stephen Few, the IBCS standards and Microsoft's report design guidance.</p>
         <div class="row g-4">
           <div class="col-lg-4 d-flex flex-column gap-3" id="layControls"></div>
-          <div class="col-lg-8">
+          <div class="col-lg-8 tg-prevcol">
             <div class="tg-stick">
               <div class="tg-canvas" id="layCanvas"></div>
               <div class="tg-why" id="layWhy"></div>
@@ -297,6 +305,7 @@
               </div>
             </div>
             <div class="tg-slots" id="slotTable"></div>
+            <small class="tg-swipe d-md-none" data-i18n="tg.swipe">Swipe the table sideways to see all columns</small>
           </div>
           <div class="col-lg-5">
             <span class="tg-label" data-i18n="tg.layout.howTitle">How to use it in Power BI</span>

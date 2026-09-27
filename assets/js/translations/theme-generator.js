@@ -8,6 +8,11 @@ window.themeGeneratorTranslations = {
       "example": "See an example",
       "exampleUndo": "Undo: back to my design",
       "exampleHint": "A finished executive sales report you can download and adapt.",
+      "jump": "Jump to page layout",
+      "step1": "1 · Colors",
+      "step2": "2 · Theme JSON",
+      "step3": "3 · Page layout",
+      "swipe": "Swipe the table sideways to see all columns",
       "presets": "Start from a preset",
       "fromBrand": "Or generate from one brand color",
       "harmony": {
@@ -72,6 +77,11 @@ window.themeGeneratorTranslations = {
       "example": "شاهد مثالًا",
       "exampleUndo": "تراجع: عودة إلى تصميمي",
       "exampleHint": "تقرير مبيعات تنفيذي جاهز يمكنك تنزيله وتعديله.",
+      "jump": "انتقل إلى تخطيط الصفحة",
+      "step1": "1 · الألوان",
+      "step2": "2 · ملف السمة JSON",
+      "step3": "3 · تخطيط الصفحة",
+      "swipe": "اسحب الجدول جانبًا لرؤية كل الأعمدة",
       "presets": "ابدأ من قالب جاهز",
       "fromBrand": "أو أنشئ لوحة ألوان من لون علامتك التجارية",
       "harmony": {
