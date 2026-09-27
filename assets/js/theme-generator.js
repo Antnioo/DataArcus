@@ -200,7 +200,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- page layout: a full background with a place for every visual ----------
   // Power BI's default page is 1280 × 720, so every slot is in those units and can be typed straight
   // into Format › General › Properties. The PNG is drawn at 1.5× (1920 × 1080) so it stays sharp.
-  const PW = 1280, PH = 720, M = 16, G = 12, HH = 56;
+  let PW = 1280, PH = 720;
+  const M = 16, G = 12, HH = 56;
+  // Page sizes: the layout is designed on a grid 720 units tall and converted to the page's own units,
+  // so the table, CSV and sliders always show the numbers to type into Power BI for that page.
+  const PAGES = { '1280x720': [1280, 720], '1920x1080': [1920, 1080], '960x720': [960, 720] };
+  const page = (c) => { const [w, h] = PAGES[(c || lay()).page] || PAGES['1280x720']; return { w, h, s: h / 720 }; };
+  const applyPage = (c) => { const p = page(c); PW = Math.round(p.w / p.s); PH = 720; return p; };
+  const toPage = (v, c) => Math.round(v * page(c).s);
   const KINDS = { kpi: ['Card', 'بطاقة'], line: ['Line chart', 'مخطط خطي'], bar: ['Bar chart', 'مخطط شريطي'], column: ['Column chart', 'مخطط أعمدة'], donut: ['Donut chart', 'مخطط دائري'], table: ['Table or matrix', 'جدول أو مصفوفة'], text: ['Text box or narrative', 'مربع نص أو سرد'], slicer: ['Slicers', 'مقسمات (Slicers)'], title: ['Text box (page title)', 'مربع نص (عنوان الصفحة)'], logo: ['Image (logo)', 'صورة (الشعار)'] };
   const LAYOUTS = {
     exec: { name: ['Executive summary', 'ملخص تنفيذي'], kpis: 4, kpiH: 96, filters: false, flex: [1.3, 1],
@@ -224,7 +231,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Adjustable sizes, each kept inside a safe range so every visual stays usable
   const RANGE = { hh: [44, 96], logoW: [100, 360], fw: [160, 320], fh: [56, 120], kpiH: [64, 160], mainW: [40, 75], split: [30, 70] };
-  const clampTo = (k, v) => Math.max(RANGE[k][0], Math.min(RANGE[k][1], Math.round(+v)));
+  // on a narrow (4:3) page the side filter panel is capped at a quarter of the width
+  const rangeOf = (k) => (k === 'fw' ? [160, Math.min(320, Math.round(PW / 4))] : RANGE[k]);
+  const clampTo = (k, v) => Math.max(rangeOf(k)[0], Math.min(rangeOf(k)[1], Math.round(+v)));
   const hasMain = (P) => P.rows[0].length > 1 && P.rows[0][0][0] > P.rows[0][1][0];   // a wider first chart
   const hasSplit = (P) => P.rows.length === 2;
   function sizes(c) {
@@ -235,6 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function computeSlots(c) {
+    applyPage(c);
     const P = LAYOUTS[c.preset], z = sizes(c), slots = [];
     let top = c.header ? z.hh + 14 : M;
     if (c.header) {
@@ -342,7 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (p.kind !== 'title' && p.kind !== 'logo') {
           const lx = right ? p.x + p.w - 14 - (p.kind === 'kpi' ? c0(p) : 0) : p.x + 14 + (p.kind === 'kpi' ? c0(p) : 0);
           g += `<text x="${lx}" y="${p.y + 22}" ${font} font-size="12" font-weight="700" fill="${sec}" text-anchor="${right ? 'end' : 'start'}">${nm(p.role)}</text>`
-            + `<text x="${right ? p.x + 12 : p.x + p.w - 12}" y="${p.y + 22}" font-family="Consolas, monospace" font-size="10" fill="${sec}" opacity=".75" text-anchor="${right ? 'start' : 'end'}">${p.w}×${p.h}</text>`;
+            + `<text x="${right ? p.x + 12 : p.x + p.w - 12}" y="${p.y + 22}" font-family="Consolas, monospace" font-size="10" fill="${sec}" opacity=".75" text-anchor="${right ? 'start' : 'end'}">${toPage(p.w)}×${toPage(p.h)}</text>`;
         }
         s += `<g data-s="${i}">${g}<rect class="o" x="${p.x - 2}" y="${p.y - 2}" width="${p.w + 4}" height="${p.h + 4}" rx="${r + 2}" fill="none" stroke="#fdcb6e" stroke-width="3" opacity="0"/></g>`;
       });
@@ -361,9 +371,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const seg = (key, opts, cur) => `<div class="tg-seg" role="group">${opts.map(([v, t]) => `<button type="button" data-l="${key}" data-v="${v}" class="${String(v) === String(cur) ? 'active' : ''}" aria-pressed="${String(v) === String(cur)}">${t}</button>`).join('')}</div>`;
   const chk = (key, t, note) => `<label class="tg-check"><input type="checkbox" data-l="${key}"${lay()[key] ? ' checked' : ''}> <span>${t}${note ? `<br><small class="text-white-50">${note}</small>` : ''}</span></label>`;
 
-  const rng = (key, label, v, unit) => `<label class="tg-range"><span>${label} <b data-out="${key}">${v}${unit || ''}</b></span><input type="range" data-l="${key}" data-u="${unit || ''}" min="${RANGE[key][0]}" max="${RANGE[key][1]}" step="${unit === '%' ? 1 : 4}" value="${v}"></label>`;
+  // sliders show and take page units (percentages stay percentages)
+  const rng = (key, label, v, unit) => { const f = unit === '%' ? 1 : page().s, [lo, hi] = rangeOf(key);
+    return `<label class="tg-range"><span>${label} <b data-out="${key}">${Math.round(v * f)}${unit || ''}</b></span><input type="range" data-l="${key}" data-u="${unit || ''}" data-f="${f}" min="${Math.round(lo * f)}" max="${Math.round(hi * f)}" step="${unit === '%' ? 1 : Math.max(1, Math.round(4 * f))}" value="${Math.round(v * f)}"></label>`; };
   function sizeControls(c) {
-    const P = LAYOUTS[c.preset], z = sizes(c), out = [];
+    applyPage(c);
+    const P = LAYOUTS[c.preset], z = sizes(c), out = [], pg = page(c);
     if (c.header) out.push(rng('hh', L('Header height', 'ارتفاع الشريط العلوي'), z.hh), rng('logoW', L('Logo width', 'عرض الشعار'), z.logoW));
     if (c.filters) {
       out.push(`<div><span class="tg-label">${L('Filter panel position', 'موضع لوحة الفلاتر')}</span>${seg('fpos', [['start', L('Start side', 'جهة البداية')], ['end', L('End side', 'جهة النهاية')], ['top', L('Top', 'أعلى')]], z.fpos)}</div>`);
@@ -373,18 +386,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if (hasMain(P)) out.push(rng('mainW', L('Main chart width', 'عرض المخطط الرئيسي'), z.mainW, '%'));
     if (hasSplit(P)) out.push(rng('split', L('Top row share of the chart area', 'حصة الصف العلوي من مساحة المخططات'), z.split, '%'));
     return `<div class="tg-sizes"><div class="d-flex justify-content-between align-items-center"><span class="tg-label mb-0">${L('Adjust sizes', 'ضبط المقاسات')}</span><button type="button" class="tg-reset" data-l="reset"><i class="bi bi-arrow-counterclockwise"></i> ${L('Reset sizes', 'إعادة المقاسات')}</button></div>
-      <small class="text-white-50 d-block mb-2">${L('Start side is the left in left-to-right reports and the right in Arabic ones. Sizes are in Power BI units (page 1280 × 720).', 'جهة البداية هي اليسار في التقارير من اليسار لليمين واليمين في التقارير العربية. المقاسات بوحدات Power BI (صفحة 1280 × 720).')}</small>${out.join('')}</div>`;
+      <small class="text-white-50 d-block mb-2">${L(`Start side is the left in left-to-right reports and the right in Arabic ones. Sizes are in your page units (${pg.w} × ${pg.h}).`, `جهة البداية هي اليسار في التقارير من اليسار لليمين واليمين في التقارير العربية. المقاسات بوحدات صفحتك (${pg.w} × ${pg.h}).`)}</small>${out.join('')}</div>`;
   }
+  const pngSize = (c) => { const p = page(c), k = 1920 / p.w; return [Math.round(p.w * k), Math.round(p.h * k)]; };
   function renderLayoutPreview() {
-    const c = lay(), slots = computeSlots(c);
+    const c = lay(), slots = computeSlots(c), pg = page(c), T = (v) => toPage(v, c), [pw, ph] = pngSize(c);
     $('layCanvas').innerHTML = bgSvg(slots, { preview: true });
     const H = isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height'];
-    $('slotTable').innerHTML = `<table><thead><tr>${H.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${slots.map((s, i) => `<tr data-i="${i}"><td>${nm(s.role)}</td><td>${nm(KINDS[s.kind])}</td><td class="n">${s.x}</td><td class="n">${s.y}</td><td class="n">${s.w}</td><td class="n">${s.h}</td></tr>`).join('')}</tbody></table>`;
+    $('slotTable').innerHTML = `<table><thead><tr>${H.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${slots.map((s, i) => `<tr data-i="${i}"><td>${nm(s.role)}</td><td>${nm(KINDS[s.kind])}</td><td class="n">${T(s.x)}</td><td class="n">${T(s.y)}</td><td class="n">${T(s.w)}</td><td class="n">${T(s.h)}</td></tr>`).join('')}</tbody></table>`;
+    const note = $('layUnits'); if (note) note.innerHTML = L(`Numbers are for a Power BI page of <b>${pg.w} × ${pg.h}</b> (Format page › Canvas settings). The PNG is ${pw} × ${ph} pixels for a sharp background; with Image fit <b>Fit</b> it lines up exactly.`, `الأرقام لصفحة Power BI بمقاس <b><bdi dir="ltr">${pg.w} × ${pg.h}</bdi></b> (<bdi dir="ltr">Format page › Canvas settings</bdi>). الصورة PNG بمقاس <bdi dir="ltr">${pw} × ${ph}</bdi> بكسل لتكون حادة، ومع <bdi dir="ltr">Image fit: Fit</bdi> تنطبق تمامًا.`);
   }
   function renderLayout() {
-    const c = lay();
+    const c = lay(); applyPage(c);
     $('layControls').innerHTML = `
       <div><span class="tg-label">${L('Layout', 'التخطيط')}</span><div class="tg-lays">${Object.keys(LAYOUTS).map((k) => `<button type="button" class="tg-lay-b${k === c.preset ? ' active' : ''}" data-l="preset" data-v="${k}" aria-pressed="${k === c.preset}">${thumb(k)}${nm(LAYOUTS[k].name)}</button>`).join('')}</div></div>
+      <div><span class="tg-label">${L('Power BI page size', 'مقاس صفحة Power BI')}</span>${seg('page', [['1280x720', L('16:9 · 1280 × 720 (default)', '16:9 · 1280 × 720 (الافتراضي)')], ['1920x1080', '16:9 · 1920 × 1080'], ['960x720', '4:3 · 960 × 720']], PAGES[c.page] ? c.page : '1280x720')}</div>
       <div><span class="tg-label">${L('KPI cards', 'بطاقات المؤشرات')}</span>${seg('kpis', [[3, '3'], [4, '4'], [5, '5'], [6, '6']], c.kpis)}</div>
       <div><span class="tg-label">${L('Reading direction', 'اتجاه القراءة')}</span>${seg('dir', [['ltr', L('Left to right', 'من اليسار لليمين')], ['rtl', L('Right to left (Arabic)', 'من اليمين لليسار (عربي)')]], rtl() ? 'rtl' : 'ltr')}</div>
       <div><span class="tg-label">${L('Corners', 'الزوايا')}</span>${seg('radius', [[0, L('Square', 'حادة')], [8, L('Soft', 'ناعمة')], [14, L('Round', 'دائرية')]], c.radius)}</div>
@@ -406,13 +422,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const k = b.dataset.l, v = b.dataset.v, c = lay();
     if (k === 'preset') { c.preset = v; c.kpis = LAYOUTS[v].kpis; c.filters = LAYOUTS[v].filters; delete c.kpiH; delete c.mainW; delete c.split; track('theme_layout', { layout: v }); }
     else if (k === 'reset') ['hh', 'logoW', 'fpos', 'fw', 'fh', 'kpiH', 'mainW', 'split'].forEach((x) => delete c[x]);
-    else c[k] = k === 'dir' || k === 'fpos' ? v : +v;
+    else c[k] = k === 'dir' || k === 'fpos' || k === 'page' ? v : +v;
     renderLayout(); save();
   });
   // sliders redraw the preview while dragging, without rebuilding the controls
   $('layControls').addEventListener('input', (e) => {
     const el = e.target.closest('input[type="range"][data-l]'); if (!el) return;
-    lay()[el.dataset.l] = clampTo(el.dataset.l, el.value);
+    lay()[el.dataset.l] = clampTo(el.dataset.l, el.value / (+el.dataset.f || 1));
     const o = $('layControls').querySelector(`[data-out="${el.dataset.l}"]`); if (o) o.textContent = el.value + el.dataset.u;
     renderLayoutPreview(); save();
   });
@@ -429,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const fileBase = () => (state.name || 'power-bi-theme').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase() || 'power-bi-theme';
   const saveBlob = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
-  const slotRows = () => computeSlots(lay()).map((s) => [nm(s.role), nm(KINDS[s.kind]), s.x, s.y, s.w, s.h]);
+  const slotRows = () => computeSlots(lay()).map((s) => [nm(s.role), nm(KINDS[s.kind]), toPage(s.x), toPage(s.y), toPage(s.w), toPage(s.h)]);
   const slotHead = () => (isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height']);
   $('slotCopy').addEventListener('click', () => {
     const text = [slotHead()].concat(slotRows()).map((r) => r.join('\t')).join('\n');
@@ -443,17 +459,17 @@ document.addEventListener('DOMContentLoaded', () => {
     track('theme_layout_slots', { method: 'csv', layout: lay().preset });
   });
   $('pngBtn').addEventListener('click', () => {
-    const img = new Image();
+    const [pw, ph] = pngSize(), img = new Image();
     img.onload = () => {
-      const cv = document.createElement('canvas'); cv.width = 1920; cv.height = 1080;
-      cv.getContext('2d').drawImage(img, 0, 0, 1920, 1080);
+      const cv = document.createElement('canvas'); cv.width = pw; cv.height = ph;
+      cv.getContext('2d').drawImage(img, 0, 0, pw, ph);
       cv.toBlob((b) => { if (!b) { toast(L('Could not create the image in this browser', 'تعذّر إنشاء الصورة في هذا المتصفح')); return; }
         saveBlob(b, `${fileBase()}-background-${lay().preset}.png`);
         toast(L('Background downloaded. Set it in Format page › Canvas background', 'تم تنزيل الخلفية. ضعها من Format page › Canvas background'));
       }, 'image/png');
     };
     img.onerror = () => toast(L('Could not create the image in this browser', 'تعذّر إنشاء الصورة في هذا المتصفح'));
-    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(bgSvg(computeSlots(lay()), { w: 1920, h: 1080 }));
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(bgSvg(computeSlots(lay()), { w: pw, h: ph }));
     track('theme_layout_png', { layout: lay().preset, direction: rtl() ? 'rtl' : 'ltr', kpis: lay().kpis });
   });
 
