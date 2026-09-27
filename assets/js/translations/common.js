@@ -30,7 +30,8 @@ window.commonTranslations = {
         portfolio: "Showcases",
         contact: "Contact",
         blog: "Blog",
-        tools: "Free Power BI & Fabric Tools"
+        tools: "Free Power BI & Fabric Tools",
+        privacy: "Privacy"
       }
     },
     
@@ -104,7 +105,8 @@ window.commonTranslations = {
         portfolio: "نماذج الحلول", 
         contact: "تواصل معنا",
         blog: "المدونة",
-        tools: "أدوات Power BI و Fabric مجانية"
+        tools: "أدوات Power BI و Fabric مجانية",
+        privacy: "الخصوصية"
       }
     },
     

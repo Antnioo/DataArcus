@@ -5,11 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
   <style>html.i18n-pending body{visibility:hidden}</style>
-  <base href="/">
-
-  <meta name="robots" content="noindex" />
-  <title>Page not found - DataArcus</title>
-  <meta name="description" content="This page does not exist. Find DataArcus Power BI services, free tools, dashboards and articles from here." />
+  <title>Privacy policy - DataArcus</title>
+  <meta name="description" content="How DataArcus handles your data: the free tools run in your browser, analytics with Google Analytics and Microsoft Clarity, and the contact form." />
+  <link rel="canonical" href="https://dataarcus.com/privacy.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Privacy policy - DataArcus" />
+  <meta property="og:description" content="How DataArcus handles your data: the free tools run in your browser, analytics with Google Analytics and Microsoft Clarity, and the contact form." />
+  <meta property="og:url" content="https://dataarcus.com/privacy.html" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/home.jpg" />
   <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png" />
 
@@ -46,15 +49,17 @@
   <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
 
   <style>
-    .nf { min-height: 78vh; display: flex; align-items: center; padding: 140px 0 80px; }
-    .nf-code { display: flex; align-items: flex-end; justify-content: center; gap: 10px; height: 110px; margin-bottom: 22px; }
-    .nf-bar { width: 22px; border-radius: 6px 6px 2px 2px; background: linear-gradient(180deg, var(--accent), var(--accent-3)); opacity: .85; }
-    .nf-miss { background: none; border: 2px dashed rgba(0, 212, 255, .55); animation: nfblink 2.4s ease-in-out infinite; }
-    @keyframes nfblink { 50% { opacity: .35; } }
-    .nf-kicker { color: var(--accent); font-weight: 800; letter-spacing: .12em; text-transform: uppercase; font-size: .8rem; margin-bottom: 8px; }
-    .nf-wa { color: #94a3b8; text-decoration: none; }
-    .nf .btn { padding: 11px 20px; line-height: 1.3; }
-    @media (prefers-reduced-motion: reduce) { .nf-miss { animation: none; } }
+    .pv { padding: 140px 0 80px; }
+    .pv-card { max-width: 820px; margin: 0 auto; }
+    .pv-kicker { color: var(--accent); font-weight: 800; letter-spacing: .12em; text-transform: uppercase; font-size: .8rem; margin-bottom: 8px; }
+    .pv h2 { font-size: 1.25rem; font-weight: 700; margin: 2.2rem 0 .7rem; color: #f8fafc; }
+    .pv p, .pv li { color: #cbd5e1; line-height: 1.75; }
+    .pv ul { padding-inline-start: 1.3rem; margin-bottom: .6rem; }
+    .pv li { margin-bottom: .35rem; }
+    .pv a { color: var(--accent); }
+    .pv-short { background: rgba(0, 212, 255, .06); border: 1px solid var(--glass-border); border-radius: 14px; padding: 18px 22px; }
+    .pv-short h2 { margin-top: 0; }
+    html[dir="rtl"] .pv ul { padding-left: 0; }
   </style>
 </head>
 <body>
@@ -83,21 +88,38 @@
   </nav>
 
   <main>
-    <section class="nf">
-      <div class="container text-center">
-        <div class="nf-code" aria-hidden="true">
-          <span class="nf-bar" style="height:38%"></span><span class="nf-bar" style="height:64%"></span><span class="nf-bar" style="height:22%"></span><span class="nf-bar nf-miss" style="height:88%"></span><span class="nf-bar" style="height:50%"></span>
+    <section class="pv">
+      <div class="container">
+        <article class="pv-card">
+        <p class="pv-kicker" data-i18n="pv.kicker">Privacy</p>
+        <h1 class="display-5 fw-bold" data-i18n="pv.title">Privacy policy</h1>
+        <p class="text-white-50 small" data-i18n="pv.updated">Last updated: 27 September 2026</p>
+        <p class="lead" data-i18n="pv.intro">DataArcus (dataarcus.com) is run by Abdelrahman Mohammed in Dubai, UAE. This page explains, in plain language, what information the website collects, why, and what you can do about it.</p>
+        <div class="pv-short mt-4">
+        <h2 data-i18n="pv.shortTitle">The short version</h2>
+        <ul class="mb-0" data-i18n-html="pv.short"><li>The free tools run in your browser. What you type or open in them is <strong>not uploaded</strong> to us.</li><li>We use Google Analytics and Microsoft Clarity to understand how the site is used, so we can improve it.</li><li>If you use the contact form, we receive the details you send so we can reply.</li><li>We do not sell your data, and we do not show ads.</li></ul>
         </div>
-        <p class="nf-kicker" data-i18n="notFound.kicker">Error 404</p>
-        <h1 class="display-5 fw-bold" data-i18n="notFound.title">This page took a wrong turn</h1>
-        <p class="lead text-white-50 col-lg-7 mx-auto mb-4" data-i18n="notFound.text">The link may be old or mistyped. Everything else is still here.</p>
-        <div class="d-flex flex-wrap justify-content-center gap-2 mb-4">
-          <a href="index.html" class="btn btn-accent" data-i18n="notFound.home">Back to home</a>
-          <a href="tools/index.html" class="btn btn-glass" data-i18n="notFound.tools">Free Power BI &amp; Fabric Tools</a>
-          <a href="portfolio.html" class="btn btn-glass" data-i18n="notFound.showcases">Dashboard showcases</a>
-          <a href="blog.html" class="btn btn-glass" data-i18n="notFound.blog">Articles</a>
-        </div>
-        <a href="https://wa.me/971506583577" class="nf-wa hover-accent" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> <span data-i18n="notFound.talk">Or message me on WhatsApp</span></a>
+        <h2 data-i18n="pv.toolsTitle">The free tools</h2>
+        <p data-i18n-html="pv.tools">The Power BI and Fabric tools (theme and layout generator, KPI designer, calendar and measure builders, model health check, licensing calculator and exam simulators) run entirely in your browser. Your colors, measure names, test values, model files and exam answers stay on your device. To keep your work between visits, the tools save it in your browser's local storage. You can clear it at any time from your browser settings. Share links from the KPI designer contain the design inside the link itself, so only people you send the link to can see it.</p>
+        <h2 data-i18n="pv.analyticsTitle">Analytics: Google Analytics and Microsoft Clarity</h2>
+        <p data-i18n-html="pv.analytics"><strong>Google Analytics</strong> tells us which pages are visited, roughly where visitors come from (country and city level), the device and browser, how people found the site, and which tool features are used (for example, downloading a theme or starting a practice exam). Search words typed into the blog search may be recorded to improve the articles.<br><br><strong>Microsoft Clarity</strong> shows how pages are used through heatmaps and session replays: clicks, scrolling and mouse movement. It helps us find confusing parts of the site.<br><br>Both services use cookies and receive your IP address as part of normal web traffic. They process this data under their own privacy policies (Google and Microsoft).</p>
+        <h2 data-i18n="pv.contactTitle">Contact form and WhatsApp</h2>
+        <p data-i18n-html="pv.contact">When you send the contact form, your name, email address, company, the options you pick and your message are delivered to our email through <strong>Web3Forms</strong>, a form delivery service. We use them only to reply to you and to follow up on your request. The WhatsApp buttons open WhatsApp, which is run by Meta under its own privacy policy. We only see what you choose to send there.</p>
+        <h2 data-i18n="pv.hostTitle">Hosting and content delivery</h2>
+        <p data-i18n-html="pv.host">The website is hosted on <strong>GitHub Pages</strong>. Fonts come from <strong>Google Fonts</strong>, and some scripts and icons come from the <strong>jsDelivr</strong> network. Like any website server, these services receive your IP address and basic browser details when your browser loads files from them.</p>
+        <h2 data-i18n="pv.cookiesTitle">Cookies and browser storage</h2>
+        <div data-i18n-html="pv.cookies"><ul><li><strong>Analytics cookies</strong> from Google Analytics and Microsoft Clarity, to count visits and understand usage.</li><li><strong>Browser storage</strong> on your own device: your language choice, and your work in the tools.</li></ul>You can block or delete cookies and clear site data in your browser settings. The site and all tools keep working without analytics cookies.</div>
+        <h2 data-i18n="pv.notTitle">What we do not do</h2>
+        <p data-i18n-html="pv.not">We do not sell or rent personal information. We do not use it for advertising. We do not ask you to create an account.</p>
+        <h2 data-i18n="pv.rightsTitle">Your choices</h2>
+        <p data-i18n-html="pv.rights">You can ask us what personal information we hold about you (for example, a contact form message), ask us to correct it, or ask us to delete it. Email <a href="mailto:hello@DataArcus.com">hello@DataArcus.com</a> and we will reply within a reasonable time. To stop Google Analytics on all websites, Google offers a browser add-on. Content blockers and your browser's privacy settings also block these services.</p>
+        <h2 data-i18n="pv.kidsTitle">Children</h2>
+        <p data-i18n-html="pv.kids">This website is meant for professionals and is not directed at children.</p>
+        <h2 data-i18n="pv.changesTitle">Changes</h2>
+        <p data-i18n-html="pv.changes">If this policy changes, the new version will be posted on this page with a new date.</p>
+        <h2 data-i18n="pv.contactUsTitle">Questions</h2>
+        <p data-i18n-html="pv.contactUs">Email <a href="mailto:hello@DataArcus.com">hello@DataArcus.com</a> or message <a href="https://wa.me/971506583577" target="_blank" rel="noopener"><bdi dir="ltr">+971 50 658 3577</bdi></a> on WhatsApp.</p>
+        </article>
       </div>
     </section>
   </main>
@@ -157,6 +179,7 @@
   </footer>
 
   <script src="assets/js/translations/common.min.js" defer></script>
+  <script src="assets/js/translations/privacy.min.js" defer></script>
   <script src="assets/js/lang-manager.min.js" defer></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
