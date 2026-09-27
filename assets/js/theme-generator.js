@@ -79,6 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
     'scatterChart', 'pieChart', 'donutChart', 'treemap', 'map', 'filledMap', 'shapeMap', 'azureMap', 'gauge', 'cardVisual', 'card', 'multiRowCard', 'kpi',
     'slicer', 'tableEx', 'pivotTable', 'scriptVisual', 'pythonVisual', 'keyDriversVisual', 'decompositionTreeVisual', 'qnaVisual', 'aiNarratives',
     'scorecard', 'rdlVisual', 'advancedSlicerVisual', 'textSlicer', 'listSlicer', 'image'];
+  // Corners: Power BI only rounds a visual when its border is on. Solid visuals get a 1px border in their own
+  // background color (invisible, only the rounded shape shows); transparent visuals sit on the PNG panels, no border.
+  const borderStyle = (u) => (state.layout && state.layout.transparent
+    ? [{ show: false }]
+    : [{ show: true, color: { solid: { color: u.card } }, width: 1, radius: toPage(+state.layout.radius || 0) }]);
   const buildTheme = () => {
     const u = state.ui, sec = mix(u.text, u.card, 0.35), ter = mix(u.text, u.card, 0.6), f = state.font;
     return {
@@ -105,13 +110,13 @@ document.addEventListener('DOMContentLoaded', () => {
           // with a layout background the panels are drawn in the image, so visuals go transparent
           background: state.layout && state.layout.transparent ? [{ show: false }] : [{ show: true, color: { solid: { color: u.card } }, transparency: 0 }],
           // same corners as the panels in the background PNG, in page units
-          border: [{ show: false, radius: toPage(+state.layout.radius || 0) }]
+          border: borderStyle(u)
         } },
         page: { '*': {
           background: [{ color: { solid: { color: u.background } }, transparency: 0 }],
           outspace: [{ color: { solid: { color: u.background } } }]
         } },
-        ...Object.fromEntries(VISUAL_TYPES.map((t) => [t, { '*': { border: [{ radius: toPage(+state.layout.radius || 0) }] } }]))
+        ...Object.fromEntries(VISUAL_TYPES.map((t) => [t, { '*': { border: borderStyle(u) } }]))
       }
     };
   };

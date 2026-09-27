@@ -84,13 +84,17 @@ export default async function ({ browser, url }) {
   const json = () => v.pg.evaluate(() => JSON.parse(document.getElementById('json').textContent));
   for (const [size, r, want] of [['1280x720', '16', 16], ['1920x1080', '16', 24], ['1920x1080', '8', 12], ['960x720', '0', 0]]) {
     await v.pg.click(`[data-l=page][data-v="${size}"]`); await v.pg.click(`[data-l=radius][data-v="${r}"]`);
-    // every visual (*) and every visual type, since Power BI's base theme sets corners per type
-    const vs = (await json()).visualStyles, types = Object.keys(vs).filter((k) => k !== 'page');
-    const got = [...new Set(types.map((k) => vs[k]['*'].border[0].radius))];
-    check(types.length > 40 && got.length === 1 && got[0] === want, `${size} radius ${r}: theme JSON has ${got.join('/')} on ${types.length} visual types, expected ${want}`);
+    // every visual (*) and every visual type, since Power BI's base theme sets corners per type;
+    // Power BI only rounds a visual with its border on, so solid visuals get a 1px border in their own background color
+    const T = await json(), vs = T.visualStyles, types = Object.keys(vs).filter((k) => k !== 'page');
+    const borders = [...new Set(types.map((k) => JSON.stringify(vs[k]['*'].border[0])))];
+    const want2 = JSON.stringify({ show: true, color: { solid: { color: T.background } }, width: 1, radius: want });
+    check(types.length > 40 && borders.length === 1 && borders[0] === want2, `${size} radius ${r}: borders ${borders.join(' / ')} on ${types.length} visual types, expected ${want2}`);
   }
   await v.pg.click('#dlVis [data-l=transparent][data-v="1"]');
-  check((await json()).visualStyles['*']['*'].background[0].show === false, 'Transparent choice not in the theme JSON');
+  const tj = await json();
+  check(tj.visualStyles['*']['*'].background[0].show === false, 'Transparent choice not in the theme JSON');
+  check(Object.keys(tj.visualStyles).filter((k) => k !== 'page').every((k) => tj.visualStyles[k]['*'].border[0].show === false), 'Transparent visuals should have no border');
   // custom page size, including a value out of range
   await v.pg.click('[data-l=page][data-v=custom]');
   await v.pg.fill('input[data-l=pageW]', '5000'); await v.pg.press('input[data-l=pageW]', 'Tab');
