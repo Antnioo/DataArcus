@@ -1,3 +1,4 @@
+/*! DataArcus Power BI Theme & Layout Generator | (c) 2026 DataArcus, dataarcus.com | All rights reserved. Not licensed for copying or reuse. */
 /*
  * DataArcus - Power BI Theme & Layout Generator
  * Builds a Power BI report theme JSON from brand colors, with a live preview,
@@ -554,13 +555,27 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   const downloadCsv = () => {
     const q = (v) => (/[",\n]/.test(String(v)) ? `"${String(v).replace(/"/g, '""')}"` : String(v));
-    const csv = '﻿' + [slotHead()].concat(slotRows()).map((r) => r.map(q).join(',')).join('\r\n');
+    const credit = [[], [L('Made with the DataArcus Power BI Theme & Layout Generator: dataarcus.com/tools/power-bi-theme-generator.html', 'صُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: dataarcus.com/tools/power-bi-theme-generator.html')]];   // a credit line after the table
+    const csv = '﻿' + [slotHead()].concat(slotRows(), credit).map((r) => r.map(q).join(',')).join('\r\n');
     saveBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), `${fileBase()}-layout-${lay().preset}.csv`);
     lastCsv = csvKey(); updateStatus();
     toast(L('Table downloaded. Open it next to Power BI', 'تم تنزيل الجدول. افتحه بجانب Power BI'));
     track('theme_layout_slots', { method: 'csv', layout: lay().preset });
   };
   $('slotCsv').addEventListener('click', downloadCsv);
+  // PNG text metadata (tEXt chunks after the header) credit DataArcus without touching a single pixel
+  const CRC = Array.from({ length: 256 }, (_, n) => { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; return c >>> 0; });
+  const crc32 = (u) => { let c = 0xffffffff; for (const x of u) c = CRC[(c ^ x) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
+  const textChunk = (key, value) => {
+    const data = new TextEncoder().encode(`${key}\0${value}`.replace(/[^\x00-\xff]/g, '')), out = new Uint8Array(12 + data.length), v = new DataView(out.buffer);
+    v.setUint32(0, data.length); out.set([116, 69, 88, 116], 4); out.set(data, 8); v.setUint32(8 + data.length, crc32(out.subarray(4, 8 + data.length)));
+    return out;
+  };
+  const withCredits = (blob) => blob.arrayBuffer().then((buf) => {
+    const png = new Uint8Array(buf), head = 33;   // 8-byte signature + 25-byte IHDR chunk
+    const chunks = [textChunk('Software', 'DataArcus Power BI Theme & Layout Generator'), textChunk('Source', 'https://dataarcus.com/tools/power-bi-theme-generator.html')];
+    return new Blob([png.subarray(0, head), ...chunks, png.subarray(head)], { type: 'image/png' });
+  }).catch(() => blob);
   const downloadPng = () => {
     const [pw, ph] = pngSize(), img = new Image();
     const key = pngKey();
@@ -569,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const cv = document.createElement('canvas'); cv.width = pw; cv.height = ph;
       cv.getContext('2d').drawImage(img, 0, 0, pw, ph);
       cv.toBlob((b) => { if (!b) { toast(L('Could not create the image in this browser', 'تعذّر إنشاء الصورة في هذا المتصفح')); return; }
-        saveBlob(b, `${fileBase()}-background-${lay().preset}.png`);
+        withCredits(b).then((png) => saveBlob(png, `${fileBase()}-background-${lay().preset}.png`));
         toast(L('Background downloaded. Set it in Format page › Canvas background', 'تم تنزيل الخلفية. ضعها من Format page › Canvas background'));
       }, 'image/png');
     };
