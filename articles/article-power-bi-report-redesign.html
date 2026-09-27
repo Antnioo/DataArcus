@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://dataarcus.com/articles/article-power-bi-report-redesign.html" />
+
+  <title>Same Visuals, New Design: A Power BI Report Redesign in 5 Minutes</title>
+  <meta name="description" content="A Power BI leads report with the right visuals but the wrong colours and a messy layout. What we changed, why it works, and how to do it in 5 minutes." />
+  <meta name="author" content="DataArcus" />
+  <meta name="keywords" content="Power BI report design, Power BI theme, Power BI layout, Power BI dashboard design, Power BI background, Power BI canvas background, Power BI theme generator, Arabic Power BI report, DataArcus" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Same Visuals, New Design: A Power BI Report Redesign in 5 Minutes" />
+  <meta property="og:description" content="A Power BI leads report with the right visuals but the wrong colours and a messy layout. What we changed, why it works, and how to do it in 5 minutes." />
+  <meta property="og:url" content="https://dataarcus.com/articles/article-power-bi-report-redesign.html" />
+  <meta property="og:site_name" content="DataArcus" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/report-redesign.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:alt" content="A Power BI report before and after its redesign" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="article:published_time" content="2026-09-28T09:00:00Z" />
+  <meta property="article:author" content="Abdelrahman M." />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Same Visuals, New Design: A Power BI Report Redesign in 5 Minutes" />
+  <meta name="twitter:description" content="A Power BI leads report with the right visuals but the wrong colours and a messy layout. What we changed, why it works, and how to do it in 5 minutes." />
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/report-redesign.jpg" />
+  <meta name="twitter:image:alt" content="A Power BI report before and after its redesign" />
+
+  <link rel="icon" href="../assets/img/favicon.svg"/>
+  <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png" />
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="../assets/css/vendor/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/css/style.min.css" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  </noscript>
+
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Same Visuals, New Design: How We Redesigned a Power BI Report in 5 Minutes",
+    "description": "A Power BI leads report with the right visuals but the wrong colours and a messy layout. What we changed, why it works, and how to do it in 5 minutes.",
+    "url": "https://dataarcus.com/articles/article-power-bi-report-redesign.html",
+    "mainEntityOfPage": "https://dataarcus.com/articles/article-power-bi-report-redesign.html",
+    "author": {
+      "@type": "Person",
+      "name": "Abdelrahman M."
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "DataArcus",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://dataarcus.com/assets/img/logo.svg"
+      }
+    },
+    "datePublished": "2026-09-28",
+    "dateModified": "2026-09-28",
+    "image": [
+      "https://dataarcus.com/assets/img/og/report-redesign.jpg",
+      "https://dataarcus.com/assets/img/articles/power-bi-redesign-after.jpg"
+    ]
+  }
+  </script>
+</head>
+<body>
+
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html#hero">
+        <img src="../assets/img/logo.svg" alt="DataArcus logo" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="../index.html#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="../portfolio.html" data-i18n="nav.portfolio">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="../tools/index.html" data-i18n="nav.tools">Free Tools</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <a href="../index.html#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="article-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+
+            <header class="article-header">
+              <span class="badge bg-info mb-3" data-i18n="header.badge">REPORT DESIGN</span>
+              <h1 class="display-5 fw-bold" data-i18n="header.title">Same Visuals, New Design: How We Redesigned a Power BI Report in 5 Minutes</h1>
+              <p class="lead text-white-50" data-i18n="header.subtitle">Posted on September 28, 2026</p>
+            </header>
+
+            <article class="article-body">
+              <p data-i18n-html="content.p1">Monday, 8:47. The CEO needs the sales dashboard in the company colours, and the board meeting starts at 9:00. The data is ready. The design is not. Most Power BI reports don't fail because of the numbers. They fail because nobody can read them in the ten seconds a manager gives them.</p>
+              <p data-i18n-html="content.p2">This is a leads report from a car dealer: campaigns, why leads are declined, where they come from, and who is still waiting for a call. (The brands NOVA and KAIRO and all the numbers are fictional.) Every visual is the right one. The problem is everything around them.</p>
+              <figure class="my-4">
+                <picture>
+                  <source type="image/webp" srcset="../assets/img/articles/power-bi-redesign-before.webp">
+                  <img src="../assets/img/articles/power-bi-redesign-before.jpg" width="1600" height="900" loading="lazy" class="img-fluid rounded-3" alt="A Power BI leads report with loud colours, uneven gaps and no clear reading order" style="border: 1px solid var(--glass-border);">
+                </picture>
+                <figcaption class="small text-white-50 mt-2" data-i18n="content.fig1">Before: the right visuals, but loud colours, uneven gaps and no clear place to start reading.</figcaption>
+              </figure>
+              <h2 class="mt-5 mb-3" data-i18n="content.h1">What was wrong</h2>
+              <ul>
+                <li data-i18n-html="content.l1_1"><strong>Too many colours.</strong> Blue, orange, pink, yellow and green all compete, so none of them means anything.</li>
+                <li data-i18n-html="content.l1_2"><strong>No grid.</strong> Cards of different sizes, uneven gaps and panels that almost line up, which makes the page look unfinished.</li>
+                <li data-i18n-html="content.l1_3"><strong>No reading order.</strong> The title sits in the middle, the logo on the left and the page tabs at the bottom. The eye doesn't know where to start.</li>
+                <li data-i18n-html="content.l1_4"><strong>Colour without meaning.</strong> Full green, amber and red cells shout at the same volume as the numbers that matter.</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h2">What we changed, and why it works</h2>
+              <p data-i18n-html="content.p3">Nothing about the data changed. We kept every visual and changed five design decisions:</p>
+              <ul>
+                <li data-i18n-html="content.l2_1"><strong>One brand colour, quiet neutrals.</strong> Navy for the data, light greys for the rest. When only one colour is strong, it's obvious what to look at.</li>
+                <li data-i18n-html="content.l2_2"><strong>KPIs first, in one row of equal cards.</strong> The page is read from the top left, so the five numbers a manager asks about come first.</li>
+                <li data-i18n-html="content.l2_3"><strong>One grid, the same gap everywhere.</strong> Every panel lines up with the ones above and beside it. Nobody notices a good grid; everybody notices a bad one.</li>
+                <li data-i18n-html="content.l2_4"><strong>Titles that explain.</strong> A short title, and a subtitle under it that says what good looks like, for example "12% or more is good".</li>
+                <li data-i18n-html="content.l2_5"><strong>Colour only for status.</strong> Green, amber and red appear only as text on the numbers that need attention, like the qualification rate and the days a lead has been waiting.</li>
+              </ul>
+              <figure class="my-4">
+                <picture>
+                  <source type="image/webp" srcset="../assets/img/articles/power-bi-redesign-after.webp">
+                  <img src="../assets/img/articles/power-bi-redesign-after.jpg" width="1600" height="900" loading="lazy" class="img-fluid rounded-3" alt="The same Power BI leads report redesigned with one brand colour, one grid and KPIs first" style="border: 1px solid var(--glass-border);">
+                </picture>
+                <figcaption class="small text-white-50 mt-2" data-i18n="content.fig2">After: the same visuals and the same data, with one brand colour, one grid and a clear reading order.</figcaption>
+              </figure>
+              <h2 class="mt-5 mb-3" data-i18n="content.h3">The same redesign in three steps</h2>
+              <p data-i18n-html="content.p4">We built a free <a href='../tools/power-bi-theme-generator.html' class='text-accent'>Power BI Theme &amp; Layout Generator</a> for exactly this. This is the setup behind the report above:</p>
+              <ul>
+                <li data-i18n-html="content.l3_1"><strong>Colours.</strong> Pick a preset or your brand colour. The whole theme follows it: eight data colours, text, backgrounds, tables, and good, neutral and bad colours for status. A readability check warns you if text gets hard to read.</li>
+                <li data-i18n-html="content.l3_2"><strong>Page size and layout.</strong> 1920 × 1080, the Executive summary layout, five KPI cards, a filter strip on top, rounded corners, a KPI accent bar and a header line. The live preview updates with every click.</li>
+                <li data-i18n-html="content.l3_3"><strong>Download.</strong> Three files: the theme (JSON), a matching background (PNG) and a table with the exact X, Y, width and height of every visual (CSV).</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h4">In Power BI</h2>
+              <ul>
+                <li data-i18n-html="content.l4_1">Import the theme: <strong>View › Themes › Browse for themes</strong>.</li>
+                <li data-i18n-html="content.l4_2">Set the background: <strong>Format page › Canvas background › Image</strong>, Image fit <strong>Stretch</strong>, Transparency <strong>0%</strong>.</li>
+                <li data-i18n-html="content.l4_3">Add each visual and type its four numbers from the table into <strong>Format › General › Properties</strong>. It lands exactly on its panel. Power BI can't import positions, so this is the one manual step, about a minute per page.</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h5">The detail that cost us hours: use Stretch</h2>
+              <p data-i18n-html="content.p5">Power BI offers several Image fit options for a background, such as Normal, Fit and Fill. With anything other than <strong>Stretch</strong>, Power BI scales the image slightly and the panels drift by a few pixels, so your visuals never quite sit on them. We tested it at 1920 × 1080 and at 1280 × 720. With Stretch, every panel lined up exactly.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h6">Arabic reports, one click</h2>
+              <p data-i18n-html="content.p6">Arabic readers start on the right. One click switches the whole layout to right-to-left: the KPIs, the filters and the logo move to the side where Arabic readers start, and the positions table follows.</p>
+              <p data-i18n-html="content.p7">Same data, same visuals. The difference is that the report now has a reading order, and a manager finds the answer before the meeting starts.</p>
+            </article>
+
+            <div class="text-center block">
+              <div class="glass-card p-4 p-md-5 d-inline-block" data-aos="fade-up">
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title">Redesign your report now</h3>
+                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">Free, no sign-up, in English and Arabic. Colours, layout and exact positions in a few minutes.</p>
+                <a href="../tools/power-bi-theme-generator.html" class="btn btn-accent m-1"><i class="bi bi-palette me-2"></i><span data-i18n="exploreMore.button1">Open the Theme &amp; Layout Generator</span></a>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <hr class="divider">
+              <h3 class="h4 mb-3" data-i18n="finalCta.title">Want your reports redesigned?</h3>
+              <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">We redesign Power BI reports for businesses across the MENA region: your brand colours, a clean layout and a reading order your managers follow.</p>
+              <a href="../index.html#contact" class="btn btn-accent btn-lg">
+                  <i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">Book a Free Call</span>
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="../index.html#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="../assets/img/logo.svg" alt="DataArcus logo" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+              <li class="mb-2"><a href="../tools/index.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">Free Power BI &amp; Fabric Tools</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="../portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Showcases</a></li>
+              <li class="mb-2"><a href="../index.html#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="../blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+              <li class="mb-2"><a href="../privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">Privacy</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Made in Dubai</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="../assets/js/translations/common.min.js" defer></script>
+  <script src="../assets/js/translations/article-power-bi-report-redesign.min.js" defer></script>
+  <script src="../assets/js/lang-manager.min.js" defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
+  <script src="../assets/js/main.min.js" defer></script>
+</body>
+</html>

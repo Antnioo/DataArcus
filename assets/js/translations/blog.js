@@ -47,6 +47,13 @@ window.blogTranslations = {
 
     // Posts
     posts: {
+      reportRedesign: {
+        badge: "REPORT DESIGN",
+        title: "Same Visuals, New Design: How We Redesigned a Power BI Report in 5 Minutes",
+        date: "September 28, 2026",
+        excerpt: "A leads report with the right visuals but loud colours and a messy layout. The five design changes that fixed it, and how to make them in 5 minutes with a free tool.",
+        button: "Read Playbook"
+      },
       modelHealth: {
         badge: "BEST PRACTICE",
         title: "We Ran a Health Check on Our Own Power BI Model. It Scored 67.",
@@ -168,6 +175,13 @@ window.blogTranslations = {
 
     // Posts (AR)
     posts: {
+      reportRedesign: {
+        badge: "تصميم التقارير",
+        title: "نفس العناصر، تصميم جديد: كيف أعدنا تصميم تقرير Power BI في 5 دقائق",
+        date: "28 سبتمبر 2026",
+        excerpt: "تقرير عملاء محتملين بالعناصر الصحيحة لكن بألوان صاخبة وتخطيط فوضوي. خمسة تغييرات في التصميم أصلحته، وكيف تطبقها في 5 دقائق بأداة مجانية.",
+        button: "اقرأ الدليل"
+      },
       modelHealth: {
         badge: "أفضل الممارسات",
         title: "فحصنا صحة نموذج Power BI الخاص بنا. النتيجة: 67 من 100.",
