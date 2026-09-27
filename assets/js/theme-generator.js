@@ -96,7 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
         '*': { '*': {
           // with a layout background the panels are drawn in the image, so visuals go transparent
           background: state.layout && state.layout.transparent ? [{ show: false }] : [{ show: true, color: { solid: { color: u.card } }, transparency: 0 }],
-          border: [{ show: false }]
+          // same corners as the panels in the background PNG, in page units
+          border: [{ show: false, radius: toPage(+state.layout.radius || 0) }]
         } },
         page: { '*': {
           background: [{ color: { solid: { color: u.background } }, transparency: 0 }],
@@ -446,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const note = $('layUnits'); if (note) note.innerHTML = L(`Numbers are for a Power BI page of <b>${pg.w} × ${pg.h}</b> (Format page › Canvas settings). The PNG is ${pw} × ${ph} pixels for a sharp background; with Image fit <b>Fit</b> it lines up exactly.`, `الأرقام لصفحة Power BI بمقاس <b><bdi dir="ltr">${pg.w} × ${pg.h}</bdi></b> (<bdi dir="ltr">Format page › Canvas settings</bdi>). الصورة PNG بمقاس <bdi dir="ltr">${pw} × ${ph}</bdi> بكسل لتكون حادة، ومع <bdi dir="ltr">Image fit: Fit</bdi> تنطبق تمامًا.`);
   }
   function renderLayout() {
-    const c = lay(); applyPage(c);
+    const c = lay(); applyPage(c); renderJson(); // the theme's corner radius follows the page size and corners
     $('layControls').innerHTML = `
       <div><span class="tg-label">${L('Layout', 'التخطيط')}</span><div class="tg-lays">${Object.keys(LAYOUTS).map((k) => `<button type="button" class="tg-lay-b${k === c.preset ? ' active' : ''}" data-l="preset" data-v="${k}" aria-pressed="${k === c.preset}">${thumb(k)}${nm(LAYOUTS[k].name)}</button>`).join('')}</div></div>
       <div><span class="tg-label">${L('Power BI page size', 'مقاس صفحة Power BI')}</span>${seg('page', [['1280x720', L('16:9 · 1280 × 720 (default)', '16:9 · 1280 × 720 (الافتراضي)')], ['1920x1080', '16:9 · 1920 × 1080'], ['960x720', '4:3 · 960 × 720'], ['custom', L('Custom', 'مخصص')]], c.page === 'custom' || PAGES[c.page] ? c.page : '1280x720')}
@@ -488,6 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const o = $('layControls').querySelector(`[data-out="${el.dataset.l}"]`); if (o) o.textContent = el.value + el.dataset.u;
     // the exact radius slider keeps the Square/Soft/Round buttons in step
     if (el.dataset.l === 'radius') $('layControls').querySelectorAll('button[data-l="radius"]').forEach((b) => { const on = +b.dataset.v === lay().radius; b.classList.toggle('active', on); b.setAttribute('aria-pressed', on); });
+    if (el.dataset.l === 'radius') renderJson();
     renderLayoutPreview(); save();
   });
   $('layControls').addEventListener('change', (e) => {
