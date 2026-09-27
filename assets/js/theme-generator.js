@@ -380,9 +380,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const barColor = (k, i) => { const v = lay()[k], u = state.ui; return v === 'data' ? state.data[i % state.data.length] : (u[v] || u.accent); };
   const c0 = () => (lay().kpiBar === 'start' ? barW('kpiBarW') + 8 : 0); // KPI text sits after a side bar
 
-  // Power BI draws a visual's box 1px right of and 3px below the X/Y typed in Format › General › Properties
-  // (measured in Power BI Desktop on a 1920 × 1080 page with a calibration background, then confirmed with a real
-  // layout: the image itself lands exactly on the canvas).
+  // Power BI draws a visual's box 1px right of and 3px below the X/Y typed in Format › General › Properties,
+  // the same number of page pixels at every page size (measured in Power BI Desktop with calibration backgrounds
+  // on 1920 × 1080 and 1280 × 720 pages, Image fit: Stretch; the image itself lands exactly on the canvas).
   // The PNG for Power BI moves everything drawn on the page background by the same amount, so panels meet their
   // visuals exactly while the table keeps the numbers people type. The on-screen preview is not moved.
   const PBI_NUDGE = { x: 1, y: 3 }; // in Power BI page pixels
@@ -477,7 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const H = isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height'];
     $('slotTable').innerHTML = `<table><thead><tr>${H.map((h, i) => `<th${i > 1 ? ' class="n"' : ''}>${h}</th>`).join('')}</tr></thead><tbody>${slots.map((s, i) => `<tr data-i="${i}"><td>${nm(s.role)}</td><td>${nm(KINDS[s.kind])}</td><td class="n">${T(s.x)}</td><td class="n">${T(s.y)}</td><td class="n">${T(s.w)}</td><td class="n">${T(s.h)}</td></tr>`).join('')}</tbody></table>`;
     updateStatus();
-    const note = $('layUnits'); if (note) note.innerHTML = L(`Numbers are for a Power BI page of <b>${pg.w} × ${pg.h}</b> (Format page › Canvas settings). The PNG is ${pw} × ${ph} pixels for a sharp background; with Image fit <b>Fill</b> it lines up exactly.`, `الأرقام لصفحة Power BI بمقاس <b><bdi dir="ltr">${pg.w} × ${pg.h}</bdi></b> (<bdi dir="ltr">Format page › Canvas settings</bdi>). الصورة PNG بمقاس <bdi dir="ltr">${pw} × ${ph}</bdi> بكسل لتكون حادة، ومع <bdi dir="ltr">Image fit: Fill</bdi> تنطبق تمامًا.`);
+    const note = $('layUnits'); if (note) note.innerHTML = L(`Numbers are for a Power BI page of <b>${pg.w} × ${pg.h}</b> (Format page › Canvas settings). The PNG is ${pw} × ${ph} pixels for a sharp background; with Image fit <b>Stretch</b> it lines up exactly.`, `الأرقام لصفحة Power BI بمقاس <b><bdi dir="ltr">${pg.w} × ${pg.h}</bdi></b> (<bdi dir="ltr">Format page › Canvas settings</bdi>). الصورة PNG بمقاس <bdi dir="ltr">${pw} × ${ph}</bdi> بكسل لتكون حادة، ومع <bdi dir="ltr">Image fit: Stretch</bdi> تنطبق تمامًا.`);
   }
   function renderLayout() {
     const c = lay(); applyPage(c); renderJson(); // the theme's corner radius follows the page size and corners
