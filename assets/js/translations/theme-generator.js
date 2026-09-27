@@ -3,8 +3,8 @@ window.themeGeneratorTranslations = {
   "en": {
     "tg": {
       "badge": "Free tool · No sign-up",
-      "title": "Power BI Theme Generator",
-      "subtitle": "Pick your brand colors, preview a live report, and download a theme JSON you can import into Power BI Desktop in seconds.",
+      "title": "Power BI Theme & Layout Generator",
+      "subtitle": "Pick your brand colors, preview a live report, and download a theme JSON plus a matching page layout with the exact position of every visual.",
       "presets": "Start from a preset",
       "fromBrand": "Or generate from one brand color",
       "harmony": {
@@ -58,14 +58,14 @@ window.themeGeneratorTranslations = {
       }
     },
     "meta": {
-      "title": "Free Power BI Theme Generator (JSON) - DataArcus"
+      "title": "Free Power BI Theme & Layout Generator (JSON + Background) - DataArcus"
     }
   },
   "ar": {
     "tg": {
       "badge": "أداة مجانية · بدون تسجيل",
-      "title": "مولّد سمات Power BI",
-      "subtitle": "اختر ألوان علامتك التجارية، وشاهد معاينة مباشرة للتقرير، ونزّل ملف سمة JSON تستورده في Power BI Desktop خلال ثوانٍ.",
+      "title": "مولّد السمات والتخطيطات لـ Power BI",
+      "subtitle": "اختر ألوان علامتك التجارية، وشاهد معاينة مباشرة للتقرير، ونزّل ملف سمة JSON مع تخطيط صفحة مطابق يحدد موضع كل عنصر مرئي بدقة.",
       "presets": "ابدأ من قالب جاهز",
       "fromBrand": "أو أنشئ لوحة ألوان من لون علامتك التجارية",
       "harmony": {
@@ -119,7 +119,7 @@ window.themeGeneratorTranslations = {
       }
     },
     "meta": {
-      "title": "مولّد سمات Power BI مجاني (JSON) - داتا أركوس"
+      "title": "مولّد السمات والتخطيطات لـ Power BI مجانًا (JSON وخلفية) - داتا أركوس"
     }
   }
 };

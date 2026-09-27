@@ -1,5 +1,5 @@
 /*
- * DataArcus - Power BI Theme Generator
+ * DataArcus - Power BI Theme & Layout Generator
  * Builds a Power BI report theme JSON from brand colors, with a live preview,
  * a WCAG contrast check, copy and download. No libraries, no server.
  */
