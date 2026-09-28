@@ -72,6 +72,9 @@ export default async function ({ browser, url }) {
       const ps = names(n);
       check(ps.every((p) => !p.split('/').some((seg) => seg === '..' || seg === '.' || (seg !== '.gitignore' && /^[.\s]|[.\s]$/.test(seg.replace(/\.(pbip|Report|SemanticModel)$/, ''))))), `names: "${n}" gives ${ps.find((p) => /(^|\/)\.|\.\//.test(p)) || ps[0]}`);
     }
+    // the longest path stays well under Windows' 260 characters after "Extract all" into C:\Users\<name>\Downloads\<zip name>\
+    const longest = Math.max(...names('A'.repeat(60)).map((p) => p.length));
+    check(longest <= 160, `names: longest path in the zip is ${longest} characters`);
     check(emoji.every((n) => !/[\uD800-\uDFFF]/.test(n.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '')) && !n.includes('\uFFFD')), `names: an emoji cut in half: ${emoji[0]}`);
   }
 
