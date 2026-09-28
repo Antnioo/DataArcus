@@ -78,7 +78,8 @@
   // model, and the one nearest the top of the chosen folder is used.
   async function fromFolder(fileList) {
     const files = Array.from(fileList || []), rel = (f) => f.webkitRelativePath || f.name;
-    const modelOf = (f) => { const m = rel(f).match(/^((?:[^/]+\/)*?[^/]+\.SemanticModel)\//i); return m ? m[1] : null; };
+    // .Dataset is the older name of the model folder, still in Microsoft's own definition.pbir example
+    const modelOf = (f) => { const m = rel(f).match(/^((?:[^/]+\/)*?[^/]+\.(?:SemanticModel|Dataset))\//i); return m ? m[1] : null; };
     const depth = (p) => p.split('/').length;
     const models = [...new Set(files.map(modelOf).filter(Boolean))].sort((a, b) => depth(a) - depth(b) || (a < b ? -1 : a > b ? 1 : 0));
     if (!models.length) throw new Error('NO_SEMANTIC_MODEL');
