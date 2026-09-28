@@ -688,7 +688,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ---- your own model: a local project (the report points at its .SemanticModel folder) or a published one ----
     const dataIn = $('pbipData'), own = { tables: null, folder: null, getBind: null };
     const loadBind = () => (window.DABind ? Promise.resolve(window.DABind) : new Promise((resolve, reject) => {
-      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-bind.min.js?v=20260930a'; sc.onload = () => resolve(window.DABind); sc.onerror = reject; document.head.appendChild(sc);
+      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-bind.min.js?v=20260930c'; sc.onload = () => resolve(window.DABind); sc.onerror = reject; document.head.appendChild(sc);
     }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');

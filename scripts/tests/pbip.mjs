@@ -77,6 +77,8 @@ export default async function ({ browser, url }) {
     check(picked[0] === 'Total Sales' && picked[1] === 'Orders' && picked[4] === 'Total Sales' && picked[5] === 'Month Name', `local: suggestions ${picked.join(' | ')}`);
     check(picked[3] === '', `local: a 4th KPI card with only 3 measures should stay empty, got "${picked[3]}"`);
     check(!picked.some((p) => /Helper|Key|LocalDate/.test(p)), `local: hidden or key fields suggested: ${picked.join(' | ')}`);
+    const sl = picked.slice(-3).filter(Boolean);
+    check(sl.length === 3 && new Set(sl).size === 3, `local: slicers should be three different fields: ${sl.join(' | ')}`);
     check(picked.includes("Customer's City") || picked.includes('المنطقة'), `local: no category column suggested: ${picked.join(' | ')}`);
     const MODEL = { m: { Sales: ['Total Sales', 'Orders', 'Sales YoY %'] }, c: { Sales: ['CustomerKey', 'Sales Channel'], Customer: ["Customer's City", 'المنطقة'], Calendar: ['Date', 'Year', 'Month Name'] } };
     const rs = refs(files);
