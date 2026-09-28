@@ -173,8 +173,16 @@ ${L.join(',\n')}
   const render = () => {
     const s = parse(state.start), e = parse(state.end);
     const bad = !(s && e) || e < s || (e - s) / DAY > 365 * 60;
-    $('err').textContent = bad ? L('End date must be after the start date (max 60 years).', 'يجب أن يكون تاريخ النهاية بعد تاريخ البداية (بحد أقصى 60 عامًا).') : '';
-    if (bad) return;
+    const msg = bad ? L('End date must be after the start date (max 60 years).', 'يجب أن يكون تاريخ النهاية بعد تاريخ البداية (بحد أقصى 60 عامًا).') : '';
+    $('err').textContent = msg;
+    ['copyBtn', 'dlBtn'].forEach((id) => { $(id).disabled = bad; });
+    if (bad) {
+      // clear the old table, so Copy and Download never hand out DAX for dates the form no longer shows;
+      // the message also goes where the output was, as the form's own message can be below the fold
+      $('dax').textContent = ''; $('stats').textContent = ''; $('ramadan').innerHTML = '';
+      $('preview').innerHTML = `<p class="cg-err mb-0">${msg}</p>`;
+      return;
+    }
     const dax = buildDax();
     $('dax').textContent = dax;
     $('stats').textContent = L(`${Math.round((e - s) / DAY) + 1} rows · ${colCount} columns`, `${Math.round((e - s) / DAY) + 1} صف · ${colCount} عمود`);
