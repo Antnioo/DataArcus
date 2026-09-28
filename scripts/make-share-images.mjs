@@ -112,7 +112,7 @@ const shopMods = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14p
 const pill = (t, c) => `<span style="font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${c || '#00d4ff'}">${esc(t)}</span>`;
 const mosaic = ['pulse', 'fintech', 'repeatiq', 'cfpb', 'call-center', 'adventureworks'].map((k) => `<div class="shot" style="border-radius:10px"><div class="vp" style="max-height:150px"><img src="${dataUrl('assets/img/portfolio/' + k + '-preview.jpg')}"></div></div>`);
 const PORTFOLIO = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">${mosaic.join('')}</div>`;
-const BLOG = [['Report design', 'Same Visuals, New Design: A Report Redesign in 5 Minutes'], ['Case study', 'We Ran a Health Check on Our Own Power BI Model. It Scored 67.'], ['Ramadan · DAX', 'Compare This Ramadan With Last Ramadan'], ['Licensing', 'Pro, PPU or Fabric: Which License Do You Need?']]
+const BLOG = [['Report design', 'One Design Doesn’t Fit All: 7 Power BI Report Styles'], ['Report design', 'Same Visuals, New Design: A Report Redesign in 5 Minutes'], ['Ramadan · DAX', 'Compare This Ramadan With Last Ramadan'], ['Licensing', 'Pro, PPU or Fabric: Which License Do You Need?']]
   .map(([t, n]) => `<div class="card" style="padding:16px 20px">${pill(t)}<div style="font-size:20px;font-weight:700;margin-top:4px;line-height:1.3">${esc(n)}</div></div>`).join('');
 const CLV = `<div class="card" style="padding:22px 24px">${pill('Value of one customer over time')}<svg viewBox="0 0 560 300" width="100%" style="margin-top:10px">
   ${[0, 1, 2, 3].map((i) => `<line x1="40" x2="550" y1="${40 + i * 70}" y2="${40 + i * 70}" stroke="rgba(255,255,255,.07)"/>`).join('')}
@@ -150,6 +150,10 @@ const REDESIGN = (() => {   // one screenshot split diagonally: before on the le
     + `<svg viewBox="0 0 100 56.25" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%"><line x1="57" y1="0" x2="43" y2="56.25" stroke="#40f3ff" stroke-width=".6"/></svg>`
     + tag('BEFORE', 'left', '#c62828', '#fff') + tag('AFTER', 'right', '#00d4ff', '#051018') + `</div></div>`;
 })();
+const STYLES = (() => {   // four of the seven style mockups in a 2 x 2 grid, each labelled with its style
+  const tile = (id, name) => `<div style="position:relative;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,.14)"><img src="${dataUrl(`assets/img/articles/styles/${id}-en.jpg`)}" style="display:block;width:100%"><span style="position:absolute;left:8px;bottom:8px;padding:3px 10px;border-radius:12px;font-size:13px;font-weight:800;background:rgba(5,16,24,.85);color:#40f3ff">${name}</span></div>`;
+  return `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">${tile('executive', 'Executive')}${tile('sales', 'Sales')}${tile('finance', 'Finance')}${tile('operations', 'Operations')}</div>`;
+})();
 const RAMADAN = `<div class="card" style="padding:22px 24px"><div style="display:flex;justify-content:space-between;align-items:center">${pill('Sales by Ramadan day')}<svg width="30" height="30" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" fill="#fdcb6e"/></svg></div>
   <svg viewBox="0 0 560 250" width="100%" style="margin-top:8px">${[0, 1, 2, 3].map((i) => `<line x1="40" x2="550" y1="${30 + i * 60}" y2="${30 + i * 60}" stroke="rgba(255,255,255,.07)"/>`).join('')}
   <polyline points="${ramPts(70, 22, 0.6)}" fill="none" stroke="#6c5ce7" stroke-width="3" stroke-dasharray="7 6" stroke-linejoin="round"/>
@@ -165,6 +169,7 @@ const PAGES = [
   ['evm', 'Project governance · Power BI', 'Beyond Traffic Lights: How EVM Predicts Project Risk', { size: 46, sub: 'Two numbers that forecast delays and overruns.' }, EVM, '480px 1fr'],
   ['journey-attribution', 'DAX pattern · Lead attribution', 'Resolve Once, Hydrate Many', { sub: 'Match each lead to its journey once, then reuse it everywhere so every report agrees.' }, JOURNEY, '470px 1fr'],
   ['licensing-guide', 'Power BI licensing · 2026', 'Pro, PPU or Fabric: Which License Do You Need?', { size: 46, sub: 'Real prices and the F64 break-even point.' }, LICENSING, '480px 1fr'],
+  ['report-styles', 'Report design · 7 styles', 'One Design Doesn’t Fit All: 7 Power BI Report Styles', { size: 44, sub: 'Every department asks a different question.' }, STYLES, '470px 1fr'],
   ['report-redesign', 'Case study · Report design', 'Same Visuals, New Design: A Power BI Report in 5 Minutes', { size: 44, sub: 'One brand colour, one grid, KPIs first.' }, REDESIGN, '470px 1fr'],
   ['health-check-article', 'Case study · Power BI', 'We Ran a Health Check on Our Own Model. It Scored 67.', { size: 44, sub: 'What a real 410-measure model was hiding.' }, HEALTH, '470px 1fr'],
   ['ramadan-sales', 'Ramadan · DAX · Hijri calendar', 'Compare This Ramadan With Last Ramadan', { sub: 'SAMEPERIODLASTYEAR gets it wrong. A Hijri calendar and one DAX measure fix it.' }, RAMADAN, '470px 1fr']

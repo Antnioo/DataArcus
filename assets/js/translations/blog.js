@@ -47,6 +47,13 @@ window.blogTranslations = {
 
     // Posts
     posts: {
+      reportStyles: {
+        badge: "REPORT DESIGN",
+        title: "One Design Doesn’t Fit All: 7 Power BI Report Styles",
+        date: "September 29, 2026",
+        excerpt: "Executive, sales, finance, marketing, operations, HR and customer service reports each answer a different question. The 7 styles with example pages, and a 3-question quiz to pick yours.",
+        button: "Read Playbook"
+      },
       reportRedesign: {
         badge: "REPORT DESIGN",
         title: "Same Visuals, New Design: How We Redesigned a Power BI Report in 5 Minutes",
@@ -175,6 +182,13 @@ window.blogTranslations = {
 
     // Posts (AR)
     posts: {
+      reportStyles: {
+        badge: "تصميم التقارير",
+        title: "تصميم واحد لا يناسب الجميع: 7 أنماط لتقارير Power BI",
+        date: "29 سبتمبر 2026",
+        excerpt: "تقارير الإدارة والمبيعات والمالية والتسويق والعمليات والموارد البشرية وخدمة العملاء تجيب كل منها عن سؤال مختلف. الأنماط السبعة بصفحات أمثلة، واختبار من 3 أسئلة لاختيار نمطك.",
+        button: "اقرأ الدليل"
+      },
       reportRedesign: {
         badge: "تصميم التقارير",
         title: "نفس العناصر، تصميم جديد: كيف أعدنا تصميم تقرير Power BI في 5 دقائق",
