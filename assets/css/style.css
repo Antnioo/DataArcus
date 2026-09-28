@@ -1304,8 +1304,15 @@ html[dir="rtl"] .article-body ol,html[dir="rtl"] .article-body ul{padding-left:0
 /* ===== Premium polish (update 12) ===== */
 /* Arabic typography: Inter keeps the Latin words, IBM Plex Sans Arabic draws the Arabic */
 html[lang="ar"] body{font-family:'Inter','IBM Plex Sans Arabic',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,sans-serif}
+/* Arabic words on an English page (the language switcher's label, any lang="ar" snippet) use the same Arabic font as
+   Arabic pages. Without it the phone draws them in its system Arabic font; lang-manager loads just those letters. */
+:lang(ar){font-family:'Inter','IBM Plex Sans Arabic',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,sans-serif}
+/* The switcher's Arabic label next to the globe: most letters of "عربي" hang below the line, so a centred box still
+   reads low. Lift it by the measured amount (both labels land within 1px of the icon's centre). */
+.lang-btn .lang-text:lang(ar){position:relative;top:-.3em}
+.lang-btn-desktop span:lang(ar){position:relative;top:-.12em}
 /* Letter spacing breaks the joins between Arabic letters */
-html[lang="ar"] body *{letter-spacing:normal!important}
+html[lang="ar"] body *,:lang(ar){letter-spacing:normal!important}
 /* Phones: frosted-glass blur is expensive to scroll; the navbar keeps it */
 @media (max-width:991.98px){.glass-card,.btn-glass,.portfolio-card,.form-control,.form-select,#blogSearch{-webkit-backdrop-filter:none;backdrop-filter:none}}
 /* Visible keyboard focus on every link and control (not on mouse click) */
