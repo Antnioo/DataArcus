@@ -145,6 +145,22 @@ export default async function ({ browser, url }) {
     check(!clash.length && names.includes('Exec - New design 2.pbip'), `existing reports: the download would replace ${clash.slice(0, 3).join(', ') || 'nothing, but is named ' + names.find((n) => n.endsWith('.pbip'))}`);
   }
 
+  // 6. Local project, then a published model's .pbit, then back to local: the download uses the local model's
+  //    fields again (not the .pbit's), and each choice keeps its own
+  {
+    let back = [];
+    const { files } = await run('en', 'Switch', async (pg) => {
+      await pg.selectOption('#pbipData', 'local'); await pg.setInputFiles('#pbipFolder', PROJECT); const first = await picker(pg);
+      await pg.selectOption('#pbipData', 'service'); await pg.setInputFiles('#pbipModelFile', PBIT);
+      await pg.waitForFunction(() => /\.pbit/.test(document.getElementById('pbipOwnMsg').textContent), null, { timeout: 15000 });
+      await pg.selectOption('#pbipData', 'local'); back = await picker(pg);
+      check(back.join() === first.join(), `switching: the local picker came back as ${back.join(' | ')}`);
+      return back;
+    });
+    const bad = refs(files).filter((r) => !(LOCAL[r.kind][r.t] || []).includes(r.n));
+    check(!bad.length, `switching: the local report uses fields of the other model: ${bad.slice(0, 5).map((r) => `${r.kind} ${r.t}[${r.n}]`).join(', ')}`);
+  }
+
   // 3. Missing inputs stop the download with a message instead of a broken project
   {
     const v = await visitor(browser, { viewport: [1440, 900], downloads: true });

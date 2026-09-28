@@ -686,38 +686,52 @@ document.addEventListener('DOMContentLoaded', () => {
       const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20260930b'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
     }));
     // ---- your own model: a local project (the report points at its .SemanticModel folder) or a published one ----
-    const dataIn = $('pbipData'), own = { tables: null, folder: null, dir: '', reports: [], getBind: null };
+    // Each choice keeps its own model and the fields picked for it, so switching between them never pairs one
+    // model's fields with the other's location: own.local / own.service = { tables, msg, bad, folder, dir, reports, choices }
+    const dataIn = $('pbipData'), own = { local: null, service: null, getBind: null };
     const loadBind = () => (window.DABind ? Promise.resolve(window.DABind) : new Promise((resolve, reject) => {
-      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-bind.min.js?v=20260930e'; sc.onload = () => resolve(window.DABind); sc.onerror = reject; document.head.appendChild(sc);
+      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-bind.min.js?v=20260930f'; sc.onload = () => resolve(window.DABind); sc.onerror = reject; document.head.appendChild(sc);
     }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
+    // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)
+    const kpiSlots = () => Math.max(lay().kpis || 0, $('pbipPages') && $('pbipPages').checked ? 4 : 0, 1);
+    // the picker for the model of the current choice, with the visitor's picks kept
+    const showPicker = (DB) => {
+      if (own.getBind) own.getBind();   // remember the picks shown so far
+      own.getBind = null; const map = $('pbipMap'); if (map) map.innerHTML = '';
+      const e = own[mode()];
+      if (!e || !map) { ownMsg(''); return; }
+      ownMsg(e.msg, e.bad);
+      if (!e.tables.length) return;
+      const n = kpiSlots(), fresh = DB.suggest(e.tables, n);
+      const bind = e.choices ? DB.build(e.choices) : fresh;
+      const get = DB.renderPicker(map, e.tables, bind, L);
+      own.getBind = () => { const b = get(); e.choices = b.choices; return b; };
+    };
     const showOwn = () => {
       const m = mode(), box = $('pbipOwn'); if (!box) return;
       box.hidden = m !== 'local' && m !== 'service';
       box.querySelectorAll('[data-own]').forEach((d) => { d.hidden = d.dataset.own !== m; });
-      if (!box.hidden) loadBind().catch(() => {});
+      if (!box.hidden) loadBind().then(showPicker).catch(() => {});
     };
-    // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)
-    const kpiSlots = () => Math.max(lay().kpis || 0, $('pbipPages') && $('pbipPages').checked ? 4 : 0, 1);
-    const loaded = (res, where0) => loadBind().then((DB) => {
+    const loaded = (m, res, where0) => loadBind().then((DB) => {
       const where = DB.iso(where0);
-      own.tables = res.tables;
       const ms = res.tables.reduce((a, t) => a + t.measures.filter((x) => !x.isHidden).length, 0);
-      if (!res.tables.length) { own.getBind = null; $('pbipMap').innerHTML = ''; ownMsg(L('No tables found in this model.', 'لم يتم العثور على جداول في هذا النموذج.'), true); return; }
-      own.getBind = DB.renderPicker($('pbipMap'), res.tables, DB.suggest(res.tables, kpiSlots()), L);
-      ownMsg(L(`${where}: ${res.tables.length} tables, ${ms} measures. Each visual below has a suggested field; change any of them.`,
-        `${where}: ${res.tables.length} جدول، ${ms} مقياس. لكل عنصر أدناه حقل مقترح، ويمكنك تغيير أي منها.`)
-        + (!ms ? L(' This model has no measures, so KPI cards and charts stay empty until you add some.', ' لا توجد مقاييس في هذا النموذج، لذا تبقى البطاقات والمخططات فارغة حتى تضيفها.') : ''));
-      track('theme_pbip_model', { mode: mode(), tables: res.tables.length, measures: ms });
+      own[m] = Object.assign({}, res, !res.tables.length ? { msg: L('No tables found in this model.', 'لم يتم العثور على جداول في هذا النموذج.'), bad: true }
+        : { msg: L(`${where}: ${res.tables.length} tables, ${ms} measures. Each visual below has a suggested field; change any of them.`,
+          `${where}: ${res.tables.length} جدول، ${ms} مقياس. لكل عنصر أدناه حقل مقترح، ويمكنك تغيير أي منها.`)
+          + (!ms ? L(' This model has no measures, so KPI cards and charts stay empty until you add some.', ' لا توجد مقاييس في هذا النموذج، لذا تبقى البطاقات والمخططات فارغة حتى تضيفها.') : '') });
+      if (mode() === m) { own.getBind = null; showPicker(DB); }   // a new model starts from the suggestions
+      if (res.tables.length) track('theme_pbip_model', { mode: m, tables: res.tables.length, measures: ms });
     });
-    const failed = (e) => {
+    const failed = (m, e) => {
       const code = e && e.message;
-      own.getBind = null; if ($('pbipMap')) $('pbipMap').innerHTML = '';
-      ownMsg(code === 'NO_SEMANTIC_MODEL' ? L('No .SemanticModel folder here. Choose the folder you saved the Power BI project in.', 'لا يوجد مجلد .SemanticModel هنا. اختر المجلد الذي حفظت فيه مشروع Power BI.')
+      own[m] = { tables: [], bad: true, msg: code === 'NO_SEMANTIC_MODEL' ? L('No .SemanticModel folder here. Choose the folder you saved the Power BI project in.', 'لا يوجد مجلد .SemanticModel هنا. اختر المجلد الذي حفظت فيه مشروع Power BI.')
         : code === 'PBIX' ? L('A .pbix keeps its model in a format only Power BI reads. Use File › Export › Power BI template (.pbit).', 'ملف .pbix يحفظ النموذج بصيغة لا يقرؤها إلا Power BI. استخدم File › Export › Power BI template (.pbit).')
           : code === 'TMDL_ONLY' ? L('This file has the model as TMDL. Choose the project folder instead, on the other option.', 'هذا الملف يحفظ النموذج بصيغة TMDL. اختر مجلد المشروع بدلًا منه.')
-            : L('Could not read the model in this file.', 'تعذّرت قراءة النموذج في هذا الملف.'), true);
+            : L('Could not read the model in this file.', 'تعذّرت قراءة النموذج في هذا الملف.') };
+      if (mode() === m) { own.getBind = null; loadBind().then(showPicker).catch(() => ownMsg(own[m].msg, true)); }
     };
     if (dataIn) {
       dataIn.addEventListener('change', showOwn); showOwn();
@@ -725,14 +739,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const files = e.target.files; if (!files || !files.length) return;
         ownMsg(L('Reading the model…', 'جارٍ قراءة النموذج…'));
         // with more than one model in the folder, say which one (by its path) the report will use
-        loadBind().then((DB) => DB.fromFolder(files)).then((res) => { own.folder = res.folder; own.dir = res.path.replace(/\/?[^/]*$/, ''); own.reports = res.reports;
-          return loaded(res, res.others ? res.path + L(` (${res.others + 1} models in this folder; this one is used)`, ` (عدد النماذج في المجلد: ${res.others + 1}، ويُستخدم هذا النموذج)`) : res.folder); })
-          .catch((err) => { own.folder = null; failed(err); });
+        loadBind().then((DB) => DB.fromFolder(files)).then((res) => loaded('local', Object.assign(res, { dir: res.path.replace(/\/?[^/]*$/, '') }),
+          res.others ? res.path + L(` (${res.others + 1} models in this folder; this one is used)`, ` (عدد النماذج في المجلد: ${res.others + 1}، ويُستخدم هذا النموذج)`) : res.folder))
+          .catch((err) => failed('local', err));
       });
       $('pbipModelFile').addEventListener('change', (e) => {
         const f = e.target.files && e.target.files[0]; if (!f) return;
         ownMsg(L('Reading the model…', 'جارٍ قراءة النموذج…'));
-        loadBind().then((DB) => DB.fromFile(f, '../assets/js/model-health-worker.min.js?v=20260928b')).then((res) => loaded(res, f.name)).catch(failed);
+        loadBind().then((DB) => DB.fromFile(f, '../assets/js/model-health-worker.min.js?v=20260928b')).then((res) => loaded('service', res, f.name)).catch((err) => failed('service', err));
       });
     }
     const logoIn = $('pbipLogo');
@@ -749,14 +763,15 @@ document.addEventListener('DOMContentLoaded', () => {
       // your own model: where it is, and the fields picked for each visual
       let model = null;
       if (m === 'local') {
-        if (!own.folder) { toast(L('Choose your Power BI project folder first', 'اختر مجلد مشروع Power BI أولًا')); return; }
-        model = { byPath: own.folder, taken: own.reports };
+        if (!own.local || !own.local.folder) { toast(L('Choose your Power BI project folder first', 'اختر مجلد مشروع Power BI أولًا')); return; }
+        model = { byPath: own.local.folder, taken: own.local.reports };
       } else if (m === 'service') {
         const ws = $('pbipWs').value.trim(), mn = $('pbipModelName').value.trim();
         if (!ws || !mn) { toast(L('Type the workspace and the semantic model names', 'اكتب اسم مساحة العمل واسم النموذج الدلالي')); return; }
         model = { ws, mn };   // the connection string is written once the helper has loaded, below
       }
-      const bind = model && own.getBind && (m === 'service' || own.folder) ? own.getBind() : null;
+      // the picker always shows the model of the current choice (see showPicker)
+      const bind = model && own[m] && own.getBind ? own.getBind() : null;
       pbipBtn.disabled = true;
       // visuals sit on the panels of the background image, so the project's theme always has transparent visuals
       const was = c.transparent; c.transparent = true; const theme = buildTheme(); c.transparent = was;
@@ -800,8 +815,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         saveBlob(new Blob([r.zip()], { type: 'application/zip' }), `${fileBase()}-power-bi-${m === 'local' || m === 'service' ? 'report' : 'project'}.zip`);
         if (m === 'local') {
-          const at = own.dir ? ` (${own.dir})` : '';
-          const msg = L(`Unzip it into the folder that holds ${own.folder}${at}, then open ${r.base}.pbip`, `فك الضغط داخل المجلد الذي فيه ${own.folder}${at}، ثم افتح ${r.base}.pbip`);
+          const e = own.local, at = e.dir ? ` (${e.dir})` : '';
+          const msg = L(`Unzip it into the folder that holds ${e.folder}${at}, then open ${r.base}.pbip`, `فك الضغط داخل المجلد الذي فيه ${e.folder}${at}، ثم افتح ${r.base}.pbip`);
           toast(msg); ownMsg(msg);
         } else toast(L('Project downloaded. Unzip it and open the .pbip file', 'تم تنزيل المشروع. فك الضغط وافتح ملف .pbip'));
         track('theme_pbip', { layout: c.preset, direction: rtl() ? 'rtl' : 'ltr', kpis: c.kpis, sample, data: m, bound: !!bind, logo: !!logo, page: c.page, pages: pages.length, panel: pages.some((pp) => pp.panel) });

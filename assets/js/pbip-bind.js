@@ -210,7 +210,9 @@
     ].join('');
     const all = { m: measures, c: columns };
     let current = bind;
-    el.addEventListener('change', (e) => {
+    // drawn again when the layout changes: the previous picker's listener goes
+    if (el.daPick) el.removeEventListener('change', el.daPick);
+    el.addEventListener('change', el.daPick = (e) => {
       const s = e.target.closest('select[data-path]'); if (!s) return;
       const pick = all[s.dataset.kind].find((x) => key(x) === s.value) || null;
       const [a, i] = s.dataset.path.split('.');
