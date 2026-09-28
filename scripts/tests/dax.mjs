@@ -19,6 +19,20 @@ export default async function ({ browser, url }) {
   };
   const done = async (v, tag) => { if (v.errs.length) problems.push(`${tag}: ${v.errs.join(' | ')}`); await v.ctx.close(); };
 
+  // Rolling months and average days: the number used in the DAX is the number the box shows once the visitor leaves it
+  {
+    const v = await open(MB);
+    await v.pg.click('input[value="avgDays"]');
+    const M = /DATESINPERIOD \([^\n]*, -(\d+), MONTH/, D = /DATESINPERIOD \([^\n]*, -(\d+), DAY/;
+    for (const [id, typed, want, re] of [['n', '999', 36, M], ['n', '-3', 1, M], ['n', '0', 1, M], ['days', '1e2', 100, D], ['days', '999', 365, D]]) {
+      await v.pg.fill('#' + id, typed); await v.pg.locator('#' + id).blur();
+      const r = await v.pg.evaluate((id) => ({ box: document.getElementById(id).value, dax: document.getElementById('script').textContent }), id);
+      const used = +((r.dax.match(re) || [])[1]);
+      check(used === want && +r.box === want, `measure builder: typed ${typed} in ${id}: DAX uses ${used}, box shows ${r.box} (want ${want})`);
+    }
+    await done(v, 'measure builder rolling');
+  }
+
   // Calendar generator: a range it cannot build clears the old table, so Copy and Download cannot hand it out
   {
     const v = await open(CG);
