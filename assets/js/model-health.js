@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let worker = null;
   function run(buffer, fileName, size) {
     if (worker) worker.terminate();
-    try { worker = new Worker('../assets/js/model-health-worker.min.js?v=20260925b'); } catch (e) { return showError('WORKER'); }
+    try { worker = new Worker('../assets/js/model-health-worker.min.js?v=20260928'); } catch (e) { return showError('WORKER'); }
     worker.onmessage = (ev) => {
       const d = ev.data;
       if (d.type === 'progress') setStep(d.step);
@@ -527,7 +527,13 @@ document.addEventListener('DOMContentLoaded', () => {
     lines.push('| Tables | Columns | Measures | Relationships |' + (s.pages != null ? ' Pages | Visuals |' : ''), '|---|---|---|---|' + (s.pages != null ? '---|---|' : ''), '| ' + [s.tables, s.columns, s.measures, s.relationships].join(' | ') + ' |' + (s.pages != null ? ' ' + s.pages + ' | ' + s.visuals + ' |' : ''), '');
     lines.push('## Findings', '', '| Severity | Finding | Count | How to fix |', '|---|---|---|---|');
     R.findings.forEach((f) => lines.push('| ' + f.sev + ' | ' + cell(RULES()[f.id].en[0]) + ' | ' + f.items.length + ' | ' + cell(RULES()[f.id].en[2]) + ' |'));
-    lines.push('', '## Tables', '');
+    lines.push('');
+    R.findings.forEach((f) => {
+      lines.push('### ' + RULES()[f.id].en[0] + ' (' + f.items.length + ')', '');
+      f.items.forEach((i) => lines.push('- `' + String(i.obj).replace(/`/g, "'") + '`' + (i.detail ? ': ' + String(i.detail).replace(/\n/g, ' ') : '')));
+      lines.push('');
+    });
+    lines.push('## Tables', '');
     R.tables.filter((t) => !t.auto).forEach((t) => {
       lines.push('### ' + t.name, '', '| Column | Type | Kind | Used |', '|---|---|---|---|');
       t.columns.forEach((c) => lines.push('| ' + cell(c.name) + ' | ' + c.dataType + ' | ' + (c.kind === 'calculated' ? 'Calculated' : 'Data') + (c.hidden ? ', hidden' : '') + ' | ' + (c.used == null ? '' : c.used ? 'Yes' : 'No') + ' |'));
