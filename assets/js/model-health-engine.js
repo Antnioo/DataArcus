@@ -778,6 +778,11 @@
       if (node.startsWith('m:')) { const x = IX.measures.get(node.slice(2)); return x ? { type: 'measure', name: x.m.name, table: x.table.name } : null; }
       if (node.startsWith('c:')) { const [t, c] = node.slice(2).split('|'); const x = IX.columns.get(t + '|' + c); return x ? { type: 'column', name: x.col.name, table: x.table.name } : null; }
       if (node.startsWith('t:')) { const x = IX.tables.get(node.slice(2)); return x ? { type: 'table', name: x.name } : null; }
+      if (node.startsWith('h:')) {
+        const [t, hn] = node.slice(2).split('|'); const x = IX.tables.get(t);
+        const h = x && x.hierarchies.find((y) => lc(y.name) === hn);
+        return h ? { type: 'hierarchy', name: h.name, table: x.name } : null;
+      }
       return null;
     };
     const measures = allMeasures.map((ms) => ({
@@ -802,6 +807,8 @@
       columns: t.columns.filter((c) => c.kind !== 'rowNumber').map((c) => ({
         name: c.name, dataType: c.dataType, kind: c.kind, hidden: c.hidden, expr: c.expr, sortBy: c.sortBy, format: c.formatString, description: c.description, sourceColumn: c.sourceColumn,
         used: rep ? used.has(K.c(t.name, c.name)) : null,
+        // model objects that read this column (measures, calculated columns and tables, sorts, hierarchies), so a cleanup never breaks them
+        neededBy: Array.from(usedBy.get(K.c(t.name, c.name)) || []).map(nice).filter((x) => x && !(x.type === 'table' && x.name === t.name)),
         visuals: vis.columns.has(lc(t.name) + '|' + lc(c.name)) ? vis.columns.get(lc(t.name) + '|' + lc(c.name)).v : 0,
         refs: reportUse.columns.get(lc(t.name) + '|' + lc(c.name)) || 0
       }))
