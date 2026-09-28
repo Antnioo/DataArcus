@@ -23,7 +23,7 @@ const planModel = () => ({ name: 'x', compatibilityLevel: 1567, model: { culture
     { name: 'Flag', type: 'calculated', dataType: 'string', expression: 'Sales[Note] & "x"' }],
   hierarchies: [{ name: 'Codes', levels: [{ name: 'Code', column: 'Code' }] }], partitions: mpart('Sales') },
   { name: '_Measures', columns: [{ name: 'Column1', dataType: 'string', isHidden: true, sourceColumn: 'Column1' }],
-    measures: [{ name: 'Total', expression: 'SUM(Sales[Amount])', formatString: '#,0' }, { name: 'Unused Qty', expression: 'SUM(Sales[Qty])', formatString: '0' }],
+    measures: [{ name: 'Total', expression: 'SUM(Sales[Amount])', formatString: '#,0' }, { name: 'Unused Qty', expression: 'SUM(Sales[Qty]) // ```', formatString: '0' }],
     partitions: [{ name: 'm', source: { type: 'm', expression: enterData } }] },
   { name: 'Calendar', columns: [{ name: 'Date', dataType: 'dateTime', sourceColumn: 'Date' }, { name: 'Month Year', dataType: 'string', sourceColumn: 'Month Year' },
     { name: 'Month Name', dataType: 'string', sourceColumn: 'Month Name' }, { name: 'Month Number', dataType: 'int64', sourceColumn: 'Month Number', summarizeBy: 'none' },
@@ -142,7 +142,7 @@ export default async function ({ browser, url }) {
   // ---- fix plan in the page ----
   for (const [name, file] of [['legacy.pbit', fs.readFileSync(path.join(ROOT, 'scripts/tests/fixtures/model-health/legacy.pbit'))],
     ['plan.pbit', pbit({ DataModelSchema: JSON.stringify(planModel()), 'Report/Layout': JSON.stringify(planLayout), Version: '1.28' })]]) {
-    const v = await visitor(browser, { viewport: [1440, 900] });
+    const v = await visitor(browser, { viewport: [1440, 900], downloads: true });
     await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });
     await v.pg.setInputFiles('#mhFile', { name, mimeType: 'application/octet-stream', buffer: file });
     await v.pg.waitForSelector('#mhTab', { timeout: 20000 });
@@ -169,6 +169,13 @@ export default async function ({ browser, url }) {
       check(sorts.some((s) => s.col === 'Month Year' && s.by === 'Year Month') && sorts.some((s) => s.col === 'Month Name' && s.by === 'Month Number'), `${tag}: sorts ${JSON.stringify(sorts)}`);
       for (const k of ['Sales[Qty]', 'Sales[Code]', 'Calendar[Month Number]', 'Calendar[Year Month]', 'Old[A]']) check(plan.kept.some((x) => x.startsWith(k)), `${tag}: ${k} is not listed as kept`);
       check(plan.calc.includes('Sales[Flag]'), `${tag}: the unused calculated column Sales[Flag] is not listed`);
+      // Markdown documentation: same content as the HTML one, and DAX containing ``` stays inside its code block
+      await v.pg.click('[data-tab=docs]');
+      const [dl] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('[data-doc="md"]')]);
+      const md = fs.readFileSync(await dl.path(), 'utf8');
+      check(md.includes('````dax\nSUM(Sales[Qty]) // ```\n````'), `${tag}: Markdown: DAX containing \`\`\` breaks its code block`);
+      check(md.includes('**Sales[Flag]**\n\n```dax\nSales[Note] & "x"\n```'), `${tag}: Markdown: no DAX for the calculated column Sales[Flag]`);
+      check(md.includes('Depends on: Sales[Amount]') && md.includes('**Data sources:** Sql.Database'), `${tag}: Markdown: no "Depends on" or data sources`);
     }
     if (v.errs.length) problems.push(`${tag}: ${v.errs.join(' | ')}`);
     await v.ctx.close();
