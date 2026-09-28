@@ -55,5 +55,17 @@ export default async function ({ browser, url }) {
     if (wrong.length) problems.push(`${p} 844x390: counters stuck at ${wrong.join(', ')}`);
     checks++; await v.ctx.close();
   }
+  // blog search looks in each card's title, excerpt and category, not its date
+  for (const [lang, term] of [['en', 'quiz'], ['en', 'september'], ['ar', 'اختبار']]) {
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/blog.html?lang=${lang}`, { waitUntil: 'networkidle' });
+    await v.pg.fill('#blogSearch', term); await v.pg.waitForTimeout(500);
+    const r = await v.pg.evaluate((term) => {
+      const cards = [...document.querySelectorAll('[data-category]')], has = (c) => ['h3', 'p', '.badge'].some((s) => (c.querySelector(s) || { textContent: '' }).textContent.toLowerCase().includes(term));
+      return { shown: cards.filter((c) => c.style.display !== 'none').length, want: cards.filter(has).length, wrong: cards.filter((c) => (c.style.display !== 'none') !== has(c)).length };
+    }, term);
+    if (r.wrong) problems.push(`blog ${lang} search "${term}": shows ${r.shown} posts, ${r.want} contain it`);
+    checks++; await v.ctx.close();
+  }
   return { checks, problems };
 }
