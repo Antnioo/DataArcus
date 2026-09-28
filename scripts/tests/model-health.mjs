@@ -77,6 +77,15 @@ export default async function ({ browser, url }) {
     check(col(r, 'Parameter', 'Parameter Fields').used === true, 'field parameter: the "Parameter Fields" column is reported unused');
   }
 
+  {
+    // DAX user-defined functions: a used measure calls a function, which calls another that reads Sales[Amount]
+    const m = { model: { tables: [Object.assign(sales(), { measures: [{ name: 'M', expression: 'Fn.Total ( )', formatString: '0' }] })],
+      functions: [{ name: 'Fn.Total', expression: '() => Fn.Sum ( )' }, { name: 'Fn.Sum', expression: '() => SUM ( Sales[Amount] )' }, { name: 'Fn.Unused', expression: '() => SUM ( Sales[Qty] )' }] } };
+    const r = E.analyze(m, report([['Measure', 'Sales', 'M']]));
+    check(col(r, 'Sales', 'Amount').used === true, 'DAX function: a column read only inside a function the report uses is reported unused');
+    check(col(r, 'Sales', 'Qty').used === false, 'DAX function: a column read only by a function nobody calls counts as used');
+  }
+
   // ---- fix plan in the page ----
   for (const [name, file] of [['legacy.pbit', fs.readFileSync(path.join(ROOT, 'scripts/tests/fixtures/model-health/legacy.pbit'))],
     ['plan.pbit', pbit({ DataModelSchema: JSON.stringify(planModel()), 'Report/Layout': JSON.stringify(planLayout), Version: '1.28' })]]) {

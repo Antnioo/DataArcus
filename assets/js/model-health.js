@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const keep = (k, why) => { const x = out.get(k); out.delete(k); kept.push({ t: x.t.name, c: x.c.name, why }); };
     R.tables.filter((t) => !t.auto && t.columns.length && t.columns.every((c) => out.has(key(t.name, c.name)))).forEach((t) => t.columns.forEach((c) => keep(key(t.name, c.name),
       t.used === false ? L('nothing in ' + t.name + ' is used: delete the whole table instead', 'لا شيء في ' + t.name + ' مستخدم: احذف الجدول كله بدلًا من ذلك') : L(t.name + ' would have no columns left', 'لن يبقى في ' + t.name + ' أي عمود'))));
-    const what = (d) => (d.type === 'measure' ? '[' + d.name + ']' : d.type === 'column' ? d.table + '[' + d.name + ']' : d.type === 'hierarchy' ? L('hierarchy ', 'التسلسل الهرمي ') + d.table + '[' + d.name + ']' : d.name);
+    const what = (d) => (d.type === 'measure' ? '[' + d.name + ']' : d.type === 'column' ? d.table + '[' + d.name + ']' : d.type === 'hierarchy' ? L('hierarchy ', 'التسلسل الهرمي ') + d.table + '[' + d.name + ']' : d.type === 'function' ? d.name + '()' : d.name);
     for (let changed = true; changed;) {
       changed = false;
       Array.from(out.keys()).forEach((k) => {
@@ -481,7 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (msFilter === 'visual') list = list.filter((m) => m.visuals > 0);
     list.sort((a, b) => (a.folder || '').localeCompare(b.folder || '') || a.name.localeCompare(b.name));
     const sel = msOpen ? R.measures.find((m) => m.name === msOpen) : null;
-    const chip = (d) => '<button type="button" class="mh-dep ' + (d.type === 'table' ? 'tbl' : d.type) + '" ' + (d.type === 'measure' ? 'data-ms="' + esc(d.name) + '"' : '') + '><i class="bi ' + (d.type === 'measure' ? 'bi-calculator' : d.type === 'column' ? 'bi-layout-three-columns' : 'bi-table') + '"></i> ' + (d.type === 'column' ? esc(d.table) + '[' + esc(d.name) + ']' : d.type === 'measure' ? '[' + esc(d.name) + ']' : esc(d.name)) + '</button>';
+    const chip = (d) => '<button type="button" class="mh-dep ' + (d.type === 'table' ? 'tbl' : d.type) + '" ' + (d.type === 'measure' ? 'data-ms="' + esc(d.name) + '"' : '') + '><i class="bi ' + (d.type === 'measure' ? 'bi-calculator' : d.type === 'column' ? 'bi-layout-three-columns' : d.type === 'function' ? 'bi-braces' : 'bi-table') + '"></i> ' + (d.type === 'column' ? esc(d.table) + '[' + esc(d.name) + ']' : d.type === 'measure' ? '[' + esc(d.name) + ']' : esc(d.name)) + '</button>';
     el.innerHTML = '<div class="row g-4"><div class="col-lg-5"><div class="mh-panel mh-mlist"><div class="mh-search"><i class="bi bi-search"></i><input type="search" id="mhQ" value="' + esc(msQuery) + '" placeholder="' + L('Search name, folder or DAX', 'ابحث بالاسم أو المجلد أو DAX') + '"></div>' +
       '<div class="mb-seg mb-2">' + [['all', L('All', 'الكل')], ['visual', L('In visuals', 'في visuals')], ['unused', L('Unused', 'غير مستخدم')]].map((x) => '<button type="button" data-mf="' + x[0] + '" class="' + (msFilter === x[0] ? 'active' : '') + '">' + x[1] + '</button>').join('') + '</div>' +
       '<div class="mh-note mb-1">' + num(list.length) + ' ' + L('measures', 'مقياس') + '</div><div class="mh-mscroll">' +
