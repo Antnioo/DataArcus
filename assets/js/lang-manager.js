@@ -182,6 +182,15 @@ class LanguageManager {
       font.href = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap';
       document.head.appendChild(font);
     }
+    // English pages still show Arabic words: the switcher's label. Without the Arabic font the phone draws them
+    // in its own system font, which sits lower than the icon. Load only the letters of those words (a few KB).
+    if (!isRTL && !document.getElementById('ar-font-label')) {
+      const label = document.createElement('link');
+      label.id = 'ar-font-label';
+      label.rel = 'stylesheet';
+      label.href = 'https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@500;600&display=swap&text=' + encodeURIComponent('عربي العربية');
+      document.head.appendChild(label);
+    }
 
     // Add/remove RTL class
     if (isRTL) {
