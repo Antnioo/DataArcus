@@ -277,6 +277,8 @@
         let title = s.title;
         const extra = {};
         if (s.kind === 'kpi') { if (o.sample) title = [t.m.rev, t.m.ord, t.m.aov, t.m.mar, t.m.cus, t.m.rpc][kpiIndex % 6]; kpiIndex++; }
+        // KPI names read as labels: semibold, so the number below stays the hero
+        if (s.kind === 'kpi') extra.title = obj({ show: bool(true), text: str(title), alignment: str(align), bold: bool(true) });
         visual = { visualType: type, visualContainerObjects: frame(title, title, extra), drillFilterOtherVisuals: true };
         if (query) visual.query = query;
         // the title already names the KPI, so the card's own label under the number is not repeated

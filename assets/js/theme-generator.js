@@ -88,6 +88,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // Power BI's own visual shadow (on by default in Fluent 2) is a square box: with the PNG it would show around
   // the rounded panels, so transparent visuals never get it; solid visuals follow the Soft shadows option
   const shadowStyle = () => [{ show: !!(state.layout && !state.layout.transparent && state.layout.shadow) }];
+  // Power BI's default text sizes (title 12, label 10, callout 28) are made for a 1280 × 720 page. On a bigger page
+  // everything looks small, so every size grows with the page: × 1.5 on 1920 × 1080, unchanged on 1280 × 720.
+  const fs = (n) => Math.round(n * page(state.layout).s * 2) / 2;
+  const textSizes = () => {
+    const merge = (t, extra) => ({ [t]: { '*': Object.assign({ border: borderStyle(state.ui), dropShadow: shadowStyle() }, extra) } });
+    const grid = { values: [{ fontSize: fs(10) }], columnHeaders: [{ fontSize: fs(10) }], total: [{ fontSize: fs(10) }] };
+    return Object.assign({},
+      merge('tableEx', grid),
+      merge('pivotTable', Object.assign({ rowHeaders: [{ fontSize: fs(10) }] }, grid)),
+      merge('slicer', { header: [{ textSize: fs(10) }], items: [{ textSize: fs(10) }] }),
+      merge('card', { labels: [{ fontSize: fs(28) }], categoryLabels: [{ fontSize: fs(10) }] }),
+      merge('multiRowCard', { cardTitle: [{ fontSize: fs(12) }], dataLabels: [{ fontSize: fs(18) }], categoryLabels: [{ fontSize: fs(10) }] }));
+  };
   const buildTheme = () => {
     const u = state.ui, sec = mix(u.text, u.card, 0.35), ter = mix(u.text, u.card, 0.6), f = state.font;
     return {
@@ -104,10 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
       maximum: u.good, center: u.neutral, minimum: u.bad,
       hyperlink: state.data[0], visitedHyperlink: mix(state.data[0], u.text, 0.3),
       textClasses: {
-        callout: { fontSize: 28, fontFace: f, color: u.text },
-        title: { fontSize: 12, fontFace: f, color: u.text },
-        header: { fontSize: 12, fontFace: f, color: u.text },
-        label: { fontSize: 10, fontFace: f, color: sec }
+        callout: { fontSize: fs(28), fontFace: f, color: u.text },
+        title: { fontSize: fs(12), fontFace: f, color: u.text },
+        header: { fontSize: fs(12), fontFace: f, color: u.text },
+        label: { fontSize: fs(10), fontFace: f, color: sec }
       },
       visualStyles: {
         '*': { '*': {
@@ -121,7 +134,9 @@ document.addEventListener('DOMContentLoaded', () => {
           background: [{ color: { solid: { color: u.background } }, transparency: 0 }],
           outspace: [{ color: { solid: { color: u.background } } }]
         } },
-        ...Object.fromEntries(VISUAL_TYPES.map((t) => [t, { '*': { border: borderStyle(u), dropShadow: shadowStyle() } }]))
+        ...Object.fromEntries(VISUAL_TYPES.map((t) => [t, { '*': { border: borderStyle(u), dropShadow: shadowStyle() } }])),
+        // visuals with their own text sizes, which do not follow the text classes above
+        ...textSizes()
       }
     };
   };
