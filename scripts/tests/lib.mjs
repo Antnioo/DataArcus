@@ -65,11 +65,14 @@ export async function visitor(browser, { viewport = [1440, 900], timezone = 'Asi
 }
 
 // Waits until the page stops scrolling (smooth scrolls take a moment)
+// Waits until the page stops scrolling. A smooth scroll can start a moment after a click (later still on a busy
+// machine), so one unchanged reading is not enough: the position must hold for 4 readings in a row (about 320 ms).
 export async function settle(pg) {
-  let last = -1;
-  for (let i = 0; i < 40; i++) {
+  let last = -1, same = 0;
+  for (let i = 0; i < 60; i++) {
     const y = await pg.evaluate(() => scrollY);
-    if (y === last) return y;
+    same = y === last ? same + 1 : 0;
+    if (same >= 3) return y;
     last = y; await pg.waitForTimeout(80);
   }
   return last;

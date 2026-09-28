@@ -12,8 +12,9 @@ npx playwright-core install chromium   # skip if Chrome is installed, or set CHR
 ## Run
 
 ```
-npm test                          # everything (about 5 minutes)
+npm test                          # everything, 3 tests at a time (about 4 minutes)
 npm test -- anchors consent       # only these
+npm test -- --jobs 1              # one at a time (about 9 minutes), to rule out a busy machine
 npm run test:full                 # also the long layout test on every page size
 ```
 
