@@ -15,7 +15,10 @@
     report: S + 'item/report/definition/report/2.1.0/schema.json',
     pages: S + 'item/report/definition/pagesMetadata/1.0.0/schema.json',
     page: S + 'item/report/definition/page/2.0.0/schema.json',
-    visual: S + 'item/report/definition/visualContainer/2.1.0/schema.json'
+    visual: S + 'item/report/definition/visualContainer/2.1.0/schema.json',
+    mobile: S + 'item/report/definition/visualContainerMobileState/2.1.0/schema.json',
+    bookmark: S + 'item/report/definition/bookmark/1.4.0/schema.json',
+    bookmarks: S + 'item/report/definition/bookmarksMetadata/1.0.0/schema.json'
   };
 
   // ---------- small helpers ----------
@@ -146,7 +149,10 @@
     const base = (o.name || 'Power BI Report').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || 'Power BI Report';
     const slug = base.replace(/[^\w-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'report';
     const R = base + '.Report', M = base + '.SemanticModel', D = R + '/definition';
-    const themeFile = slug + '-theme.json', bgFile = slug + '-background.png', logoFile = o.logo ? slug + '-logo.' + o.logo.ext : null;
+    const themeFile = slug + '-theme.json', logoFile = o.logo ? slug + '-logo.' + o.logo.ext : null;
+    // pages: the main page first; each has its own layout and background image
+    const PAGES = (o.pages && o.pages.length ? o.pages : [{ name: o.pageName, page: o.page, slots: o.slots, png: o.png }])
+      .map((pg, i) => Object.assign({}, pg, { id: rnd(), bgFile: slug + '-background' + (i ? '-' + (i + 1) : '') + '.png' }));
     const files = [];
     const add = (path, data) => files.push({ path: base + '/' + path, data });
     const align = rtl ? 'right' : 'left';
@@ -168,9 +174,9 @@
 
     // resources: the theme, the background, the logo
     add(R + '/StaticResources/RegisteredResources/' + themeFile, json(o.theme));
-    add(R + '/StaticResources/RegisteredResources/' + bgFile, o.png);
+    PAGES.forEach((pg) => add(R + '/StaticResources/RegisteredResources/' + pg.bgFile, pg.png));
     if (logoFile) add(R + '/StaticResources/RegisteredResources/' + logoFile, o.logo.bytes);
-    const items = [{ name: themeFile, path: themeFile, type: 'CustomTheme' }, { name: bgFile, path: bgFile, type: 'Image' }];
+    const items = [{ name: themeFile, path: themeFile, type: 'CustomTheme' }].concat(PAGES.map((pg) => ({ name: pg.bgFile, path: pg.bgFile, type: 'Image' })));
     if (logoFile) items.push({ name: logoFile, path: logoFile, type: 'Image' });
 
     add(D + '/version.json', json({ $schema: SCHEMA.version, version: '2.0.0' }));
@@ -187,8 +193,8 @@
     }));
 
     // pages
-    const mainName = rnd(), tipName = rnd(), tipBinding = rnd();
-    add(D + '/pages/pages.json', json({ $schema: SCHEMA.pages, pageOrder: [mainName, tipName], activePageName: mainName }));
+    const tipName = rnd(), tipBinding = rnd(), bookmarks = [];
+    add(D + '/pages/pages.json', json({ $schema: SCHEMA.pages, pageOrder: PAGES.map((pg) => pg.id).concat([tipName]), activePageName: PAGES[0].id }));
 
     // filter pane in the theme's colors, so it matches the page
     const paneObjects = {
@@ -198,28 +204,6 @@
         { properties: { backgroundColor: color(u.card), foregroundColor: color(u.text), transparency: num(0), border: bool(true), borderColor: color(edge), fontFamily: str(font) }, selector: { id: 'Available' } }
       ]
     };
-    add(D + '/pages/' + mainName + '/page.json', json({
-      $schema: SCHEMA.page, name: mainName, displayName: o.pageName || base, displayOption: 'FitToPage', width: o.page.w, height: o.page.h,
-      objects: Object.assign({
-        background: obj({ image: { image: { name: str(bgFile), url: resource(bgFile), scaling: str('Fit') } }, transparency: num(0) }),
-        outspace: obj({ color: color(u.background) }),
-        displayArea: obj({ verticalAlignment: str('Middle') })
-      }, paneObjects)
-    }));
-
-    // visuals, in reading order: z and tab order follow it, so keyboard users move through the page the way it reads
-    const visuals = [];
-    // a visual inside a group stores its position relative to the group's top-left corner, not the page
-    const origin = {};
-    const container = (spec) => {
-      const o0 = spec.parent ? origin[spec.parent] : { x: 0, y: 0 };
-      const v = { $schema: SCHEMA.visual, name: spec.name || rnd(), position: { x: spec.x - o0.x, y: spec.y - o0.y, z: spec.z, height: spec.h, width: spec.w, tabOrder: spec.z } };
-      if (spec.group) origin[v.name] = { x: spec.x, y: spec.y };
-      if (spec.group) v.visualGroup = spec.group; else v.visual = spec.visual;
-      if (spec.parent) v.parentGroupName = spec.parent;
-      if (spec.annotations) v.annotations = spec.annotations;
-      visuals.push(v); return v;
-    };
     const frame = (title, alt, extra) => Object.assign({
       title: obj(title ? { show: bool(true), text: str(title), alignment: str(align) } : { show: bool(false) }),
       background: obj({ show: bool(false) }),
@@ -228,70 +212,167 @@
       general: obj({ altText: str(alt || title || '') })
     }, extra || {});
     const textbox = (text, size, bold, colr) => ({ general: obj({ paragraphs: [{ textRuns: [{ value: text, textStyle: { fontFamily: font, fontSize: size + 'pt', fontWeight: bold ? 'bold' : 'normal', color: colr } }], horizontalTextAlignment: align }] }) });
+    const def = (props) => [{ properties: props, selector: { id: 'default' } }];
 
-    const sorted = o.slots.slice().sort((a, b) => (a.y - b.y) || (rtl ? b.x - a.x : a.x - b.x));
-    const groups = {};
-    const groupOf = (kind) => (kind === 'title' || kind === 'logo' ? 'header' : kind === 'kpi' ? 'kpis' : kind === 'slicer' ? 'filters' : null);
-    const GROUP_NAMES = { header: W.header || 'Header', kpis: W.kpis || 'KPI cards', filters: W.filters || 'Filters' };
-    let z = 1000, kpiIndex = 0, mainChart = null;
-    sorted.forEach((s) => {
-      const g = groupOf(s.kind);
-      if (g && !groups[g]) groups[g] = { name: rnd(), x0: s.x, y0: s.y, x1: s.x + s.w, y1: s.y + s.h, z: 0 };
-      if (g) { const G = groups[g]; G.x0 = Math.min(G.x0, s.x); G.y0 = Math.min(G.y0, s.y); G.x1 = Math.max(G.x1, s.x + s.w); G.y1 = Math.max(G.y1, s.y + s.h); }
-    });
-    // groups sit under their visuals in the layer order
-    Object.keys(groups).forEach((g) => { const G = groups[g]; G.z = z; z += 1000;
-      container({ name: G.name, x: G.x0, y: G.y0, w: G.x1 - G.x0, h: G.y1 - G.y0, z: G.z, group: { displayName: GROUP_NAMES[g], groupMode: 'ScaleMode' } }); });
+    PAGES.forEach((pg, pageIndex) => {
+      const pageName = pg.id;
+      add(D + '/pages/' + pageName + '/page.json', json({
+        $schema: SCHEMA.page, name: pageName, displayName: pg.name || base, displayOption: 'FitToPage', width: pg.page.w, height: pg.page.h,
+        objects: Object.assign({
+          background: obj({ image: { image: { name: str(pg.bgFile), url: resource(pg.bgFile), scaling: str('Fit') } }, transparency: num(0) }),
+          outspace: obj({ color: color(u.background) }),
+          displayArea: obj({ verticalAlignment: str('Middle') })
+        }, paneObjects)
+      }));
 
-    sorted.forEach((s) => {
-      const g = groupOf(s.kind), parent = g ? groups[g].name : null, type = TYPES[s.kind] || 'card';
-      if (s.kind === 'slicer') {
-        // the filter panel holds several dropdown slicers: stacked in a side panel, side by side in a top strip
-        const fields = o.sample ? [t.region, t.category, t.month] : [null, null, null], pad = 10, gap = 8, n = fields.length;
-        const across = s.w > s.h;
-        const sw = across ? (s.w - 2 * pad - gap * (n - 1)) / n : s.w - 2 * pad, sh = across ? s.h - 2 * pad : Math.min(76, (s.h - 2 * pad - gap * (n - 1)) / n);
-        fields.forEach((f, i) => {
-          // in a right-to-left report the first slicer is the rightmost one, so tab order follows the reading
-          const x = across ? (rtl ? s.x + s.w - pad - sw - i * (sw + gap) : s.x + pad + i * (sw + gap)) : s.x + pad, y = across ? s.y + pad : s.y + pad + i * (sh + gap);
-          const title = f || (W.slicer || 'Slicer') + ' ' + (i + 1);
-          container({ x: Math.round(x), y: Math.round(y), w: Math.round(sw), h: Math.round(sh), z: z, parent,
-            visual: { $schema: undefined, visualType: 'slicer', query: f ? q({ Values: [fieldCol(t.table, f)] }) : undefined,
-              objects: { data: obj({ mode: str('Dropdown') }), header: obj({ show: bool(true), fontFamily: str(font) }) },
-              visualContainerObjects: frame(null, title), drillFilterOtherVisuals: true } });
+      // visuals, in reading order: z and tab order follow it, so keyboard users move through the page the way it reads
+      const visuals = [], mob = [], slicerNames = [];
+      // a visual inside a group stores its position relative to the group's top-left corner, not the page
+      const origin = {};
+      const container = (spec) => {
+        const o0 = spec.parent ? origin[spec.parent] : { x: 0, y: 0 };
+        const v = { $schema: SCHEMA.visual, name: spec.name || rnd(), position: { x: spec.x - o0.x, y: spec.y - o0.y, z: spec.z, height: spec.h, width: spec.w, tabOrder: spec.z } };
+        if (spec.group) origin[v.name] = { x: spec.x, y: spec.y };
+        if (spec.group) v.visualGroup = spec.group; else v.visual = spec.visual;
+        if (spec.parent) v.parentGroupName = spec.parent;
+        visuals.push(v); mob.push({ v, kind: spec.kind, parent: spec.parent, group: spec.groupKey });
+        return v;
+      };
+
+      const sorted = pg.slots.slice().sort((a, b) => (a.y - b.y) || (rtl ? b.x - a.x : a.x - b.x));
+      const groups = {};
+      const groupOf = (kind) => (kind === 'title' || kind === 'logo' ? 'header' : kind === 'kpi' ? 'kpis' : kind === 'slicer' ? 'filters' : null);
+      const GROUP_NAMES = { header: W.header || 'Header', kpis: W.kpis || 'KPI cards', filters: W.filters || 'Filters' };
+      let z = 1000, kpiIndex = 0, mainChart = null;
+      sorted.forEach((s) => {
+        const g = groupOf(s.kind);
+        if (g && !groups[g]) groups[g] = { name: rnd(), x0: s.x, y0: s.y, x1: s.x + s.w, y1: s.y + s.h, z: 0 };
+        if (g) { const G = groups[g]; G.x0 = Math.min(G.x0, s.x); G.y0 = Math.min(G.y0, s.y); G.x1 = Math.max(G.x1, s.x + s.w); G.y1 = Math.max(G.y1, s.y + s.h); }
+      });
+      // groups sit under their visuals in the layer order
+      Object.keys(groups).forEach((g) => { const G = groups[g]; G.z = z; z += 1000;
+        container({ name: G.name, x: G.x0, y: G.y0, w: G.x1 - G.x0, h: G.y1 - G.y0, z: G.z, group: { displayName: GROUP_NAMES[g], groupMode: 'ScaleMode' }, kind: 'group', groupKey: g }); });
+
+      // page navigation between the title and the logo, when the report has more than one page
+      const title = pg.slots.find((s) => s.kind === 'title'), logo = pg.slots.find((s) => s.kind === 'logo');
+      let nav = null;
+      if (PAGES.length > 1 && title && logo) {
+        const gap = 24, x0 = rtl ? logo.x + logo.w + gap : title.x + title.w + gap, x1 = rtl ? title.x - gap : logo.x - gap;
+        if (x1 - x0 >= 220) { const w = Math.min(x1 - x0, 140 * PAGES.length + 40); nav = { x: rtl ? x0 : x1 - w, y: title.y, w, h: title.h }; }
+      }
+
+      sorted.forEach((s) => {
+        const g = groupOf(s.kind), parent = g ? groups[g].name : null, type = TYPES[s.kind] || 'card';
+        if (s.kind === 'slicer') {
+          // the filter panel holds several dropdown slicers and a Reset button:
+          // stacked in a side panel, side by side in a top strip
+          const fields = o.sample ? [t.region, t.category, t.month] : [null, null, null], pad = 10, gap = 8, n = fields.length;
+          const across = s.w > s.h, bw = across ? Math.min(160, Math.round(s.w * 0.14)) : s.w - 2 * pad, bh = across ? s.h - 2 * pad : 40;
+          const room = across ? s.w - 2 * pad - bw - gap : s.w - 2 * pad;
+          const sw = across ? (room - gap * (n - 1)) / n : room, sh = across ? s.h - 2 * pad : Math.min(76, (s.h - 2 * pad - bh - gap * n) / n);
+          fields.forEach((f, i) => {
+            // in a right-to-left report the first slicer is the rightmost one, so tab order follows the reading
+            const x = across ? (rtl ? s.x + s.w - pad - sw - i * (sw + gap) : s.x + pad + i * (sw + gap)) : s.x + pad, y = across ? s.y + pad : s.y + pad + i * (sh + gap);
+            const ttl = f || (W.slicer || 'Slicer') + ' ' + (i + 1);
+            const v = container({ x: Math.round(x), y: Math.round(y), w: Math.round(sw), h: Math.round(sh), z: z, parent, kind: 'slicer',
+              visual: { visualType: 'slicer', query: f ? q({ Values: [fieldCol(t.table, f)] }) : undefined,
+                objects: { data: obj({ mode: str('Dropdown') }), header: obj({ show: bool(true), fontFamily: str(font) }) },
+                visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true } });
+            slicerNames.push(v.name);
+            z += 1000;
+          });
+          // Reset button: applies a bookmark that clears these slicers
+          const bm = rnd(), bx = across ? (rtl ? s.x + pad : s.x + s.w - pad - bw) : s.x + pad, by = across ? s.y + pad : s.y + s.h - pad - bh;
+          container({ x: Math.round(bx), y: Math.round(by), w: Math.round(bw), h: Math.round(bh), z, parent, kind: 'button',
+            visual: { visualType: 'actionButton',
+              objects: { icon: def({ shapeType: str('reset'), lineColor: color(u.accent || u.text) }), text: def({ show: bool(true), text: str(W.reset || 'Reset filters'), fontColor: color(u.text), fontFamily: str(font) }),
+                fill: def({ show: bool(true), fillColor: color(mixHex(u.card, u.text, 0.06)), transparency: num(0) }), outline: def({ show: bool(true), lineColor: color(edge) }) },
+              visualContainerObjects: Object.assign(frame(null, W.reset || 'Reset filters'), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(bm) }) }) } });
           z += 1000;
-        });
-        return;
-      }
-      let visual;
-      if (s.kind === 'title') {
-        const size = Math.max(12, Math.min(28, Math.round(s.h * 0.42)));
-        visual = { visualType: 'textbox', objects: textbox(o.title || base, size, true, u.text), visualContainerObjects: frame(null, o.title || base) };
-      } else if (s.kind === 'logo') {
-        visual = logoFile
-          ? { visualType: 'image', objects: { general: obj({ imageUrl: resource(logoFile) }), imageScaling: obj({ imageScalingType: str('Fit') }) }, visualContainerObjects: frame(null, W.logo || 'Logo') }
-          : { visualType: 'textbox', objects: textbox(W.logoHere || 'Your logo', 10, false, mixHex(u.text, u.card, 0.5)), visualContainerObjects: frame(null, W.logo || 'Logo') };
-      } else if (s.kind === 'text') {
-        visual = { visualType: 'textbox', objects: textbox(W.textHere || 'Explain what the main chart shows and what to do about it.', 11, false, u.text), visualContainerObjects: frame(s.title, s.title) };
-      } else {
-        const query = o.sample ? sampleQuery(s.kind, t, kpiIndex) : null;
-        let title = s.title;
-        const extra = {};
-        if (s.kind === 'kpi') { if (o.sample) title = [t.m.rev, t.m.ord, t.m.aov, t.m.mar, t.m.cus, t.m.rpc][kpiIndex % 6]; kpiIndex++; }
-        // KPI names read as labels: semibold, so the number below stays the hero
-        if (s.kind === 'kpi') extra.title = obj({ show: bool(true), text: str(title), alignment: str(align), bold: bool(true) });
-        visual = { visualType: type, visualContainerObjects: frame(title, title, extra), drillFilterOtherVisuals: true };
-        if (query) visual.query = query;
-        // the title already names the KPI, so the card's own label under the number is not repeated
-        if (s.kind === 'kpi' || s.kind === 'card') visual.objects = { categoryLabels: obj({ show: bool(false) }) };
-      }
-      const v = container({ x: s.x, y: s.y, w: s.w, h: s.h, z, parent, visual });
-      if (!mainChart && ['line', 'column', 'bar'].includes(s.kind)) mainChart = v;
-      z += 1000;
+          bookmarks.push({ name: bm, page: pageName, targets: slicerNames.slice(), label: (W.reset || 'Reset filters') + (PAGES.length > 1 ? ' · ' + (pg.name || '') : '') });
+          return;
+        }
+        let visual;
+        if (s.kind === 'title') {
+          const size = Math.max(12, Math.min(28, Math.round(s.h * 0.42)));
+          visual = { visualType: 'textbox', objects: textbox(o.title || base, size, true, u.text), visualContainerObjects: frame(null, o.title || base) };
+        } else if (s.kind === 'logo') {
+          visual = logoFile
+            ? { visualType: 'image', objects: { general: obj({ imageUrl: resource(logoFile) }), imageScaling: obj({ imageScalingType: str('Fit') }) }, visualContainerObjects: frame(null, W.logo || 'Logo') }
+            : { visualType: 'textbox', objects: textbox(W.logoHere || 'Your logo', 10, false, mixHex(u.text, u.card, 0.5)), visualContainerObjects: frame(null, W.logo || 'Logo') };
+        } else if (s.kind === 'text') {
+          visual = { visualType: 'textbox', objects: textbox(W.textHere || 'Explain what the main chart shows and what to do about it.', 11, false, u.text), visualContainerObjects: frame(s.title, s.title) };
+        } else {
+          const query = o.sample ? sampleQuery(s.kind, t, kpiIndex) : null;
+          let ttl = s.title;
+          const extra = {};
+          if (s.kind === 'kpi') { if (o.sample) ttl = [t.m.rev, t.m.ord, t.m.aov, t.m.mar, t.m.cus, t.m.rpc][kpiIndex % 6]; kpiIndex++; }
+          // KPI names read as labels: semibold, so the number below stays the hero
+          if (s.kind === 'kpi') extra.title = obj({ show: bool(true), text: str(ttl), alignment: str(align), bold: bool(true) });
+          visual = { visualType: type, visualContainerObjects: frame(ttl, ttl, extra), drillFilterOtherVisuals: true };
+          if (query) visual.query = query;
+          // the title already names the KPI, so the card's own label under the number is not repeated
+          if (s.kind === 'kpi' || s.kind === 'card') visual.objects = { categoryLabels: obj({ show: bool(false) }) };
+        }
+        const v = container({ x: s.x, y: s.y, w: s.w, h: s.h, z, parent, visual, kind: s.kind });
+        if (!mainChart && ['line', 'column', 'bar'].includes(s.kind)) mainChart = v;
+        z += 1000;
+        // the page navigator follows the title in the reading order
+        if (s.kind === 'title' && nav) {
+          container({ x: Math.round(nav.x), y: nav.y, w: Math.round(nav.w), h: nav.h, z, parent: groups.header.name, kind: 'nav',
+            visual: { visualType: 'pageNavigator', visualContainerObjects: frame(null, W.pages || 'Pages') } });
+          z += 1000;
+        }
+      });
+
+      // the main chart of the first page shows the tooltip page when you hover it
+      if (mainChart && pageIndex === 0) mainChart.visual.visualContainerObjects.visualTooltip = obj({ show: bool(true), type: str('ReportPage'), section: str(tipName) });
+
+      // phone layout: Power BI's phone canvas is 323 points wide. Cards go two per row (158 x 100), charts and
+      // tables full width, slicers and buttons as short full-width rows, in the reading order of the page.
+      const PW = 323, GAP = 8, SIZE = { title: 56, nav: 44, logo: 56, kpi: 100, card: 100, slicer: 64, button: 40, text: 120, table: 270, gauge: 180, donut: 220, map: 220, treemap: 220 };
+      const pos = {}, bottom = {};
+      let y = 0, col = 0;
+      const place = (m) => {
+        const k = m.kind, half = k === 'kpi' || k === 'card';
+        const h = SIZE[k] || 190;
+        if (half) {
+          const x = col ? PW - 157.5 : 0; pos[m.v.name] = { x: rtl ? PW - 157.5 - x : x, y, w: 157.5, h };
+          if (col) { y += h + GAP; col = 0; } else col = 1;
+        } else {
+          if (col) { y += 100 + GAP; col = 0; }
+          pos[m.v.name] = { x: 0, y, w: PW, h }; y += h + GAP;
+        }
+      };
+      const order = ['header', 'filters', 'kpis', null];
+      order.forEach((g) => mob.filter((m) => m.kind !== 'group' && (g ? m.parent === (groups[g] || {}).name : !m.parent) && m.kind !== 'logo').forEach(place));
+      if (col) { y += 100 + GAP; col = 0; }
+      // groups wrap their children on the phone as well; children are placed relative to the group
+      Object.keys(groups).forEach((g) => {
+        const kids = mob.filter((m) => m.parent === groups[g].name && pos[m.v.name]);
+        if (!kids.length) return;
+        const x0 = Math.min(...kids.map((m) => pos[m.v.name].x)), y0 = Math.min(...kids.map((m) => pos[m.v.name].y));
+        const x1 = Math.max(...kids.map((m) => pos[m.v.name].x + pos[m.v.name].w)), y1 = Math.max(...kids.map((m) => pos[m.v.name].y + pos[m.v.name].h));
+        pos[groups[g].name] = { x: x0, y: y0, w: x1 - x0, h: y1 - y0, origin: true };
+        kids.forEach((m) => { const p = pos[m.v.name]; p.x -= x0; p.y -= y0; });
+      });
+      visuals.forEach((v) => {
+        add(D + '/pages/' + pageName + '/visuals/' + v.name + '/visual.json', json(v));
+        const p = pos[v.name];
+        if (p) add(D + '/pages/' + pageName + '/visuals/' + v.name + '/mobile.json', json({ $schema: SCHEMA.mobile,
+          position: { x: +p.x.toFixed(1), y: +p.y.toFixed(1), z: v.position.z, width: +p.w.toFixed(1), height: +p.h.toFixed(1), tabOrder: v.position.tabOrder } }));
+      });
     });
 
-    // the main chart shows the tooltip page when you hover it
-    if (mainChart) mainChart.visual.visualContainerObjects.visualTooltip = obj({ show: bool(true), type: str('ReportPage'), section: str(tipName) });
-    visuals.forEach((v) => { if (v.visual) delete v.visual.$schema; add(D + '/pages/' + mainName + '/visuals/' + v.name + '/visual.json', json(v)); });
+    // Reset buttons: one data-only bookmark per page that brings that page's slicers back to "All"
+    if (bookmarks.length) {
+      bookmarks.forEach((b) => add(D + '/bookmarks/' + b.name + '.bookmark.json', json({
+        $schema: SCHEMA.bookmark, displayName: b.label, name: b.name,
+        options: { targetVisualNames: b.targets, applyOnlyToTargetVisuals: true, suppressDisplay: true, suppressActiveSection: true },
+        explorationState: { version: '1.3', activeSection: b.page, sections: { [b.page]: { visualContainers: Object.fromEntries(b.targets.map((n) => [n, {}])) } } }
+      })));
+      add(D + '/bookmarks/bookmarks.json', json({ $schema: SCHEMA.bookmarks, items: bookmarks.map((b) => ({ name: b.name })) }));
+    }
 
     // tooltip page: small, hidden in view mode, ready for custom tooltips
     add(D + '/pages/' + tipName + '/page.json', json({
