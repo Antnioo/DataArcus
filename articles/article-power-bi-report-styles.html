@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://dataarcus.com/articles/article-power-bi-report-styles.html" />
+
+  <title>Power BI Dashboard Design by Department: 7 Report Styles</title>
+  <meta name="description" content="Executive, sales, finance, marketing, operations, HR and customer service reports need different designs. 7 styles with examples, and how to pick yours." />
+  <meta name="author" content="DataArcus" />
+  <meta name="keywords" content="Power BI dashboard design, Power BI report design examples, Power BI sales dashboard, Power BI finance report, Power BI executive dashboard, Power BI HR dashboard, Power BI operations dashboard, Power BI marketing dashboard, customer service dashboard, report design philosophy, DataArcus" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Power BI Dashboard Design by Department: 7 Report Styles" />
+  <meta property="og:description" content="Executive, sales, finance, marketing, operations, HR and customer service reports need different designs. 7 styles with examples, and how to pick yours." />
+  <meta property="og:url" content="https://dataarcus.com/articles/article-power-bi-report-styles.html" />
+  <meta property="og:site_name" content="DataArcus" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/report-styles.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:alt" content="Seven Power BI report styles: executive, sales, finance, marketing, operations, HR and customer service" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="article:published_time" content="2026-09-29T09:00:00Z" />
+  <meta property="article:author" content="Abdelrahman M." />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Power BI Dashboard Design by Department: 7 Report Styles" />
+  <meta name="twitter:description" content="Executive, sales, finance, marketing, operations, HR and customer service reports need different designs. 7 styles with examples, and how to pick yours." />
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/report-styles.jpg" />
+  <meta name="twitter:image:alt" content="Seven Power BI report styles: executive, sales, finance, marketing, operations, HR and customer service" />
+
+  <link rel="icon" href="../assets/img/favicon.svg"/>
+  <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png" />
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="../assets/css/vendor/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/css/style.min.css" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  </noscript>
+
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "One Design Doesn’t Fit All: 7 Power BI Report Styles",
+    "description": "Executive, sales, finance, marketing, operations, HR and customer service reports need different designs. 7 styles with examples, and how to pick yours.",
+    "url": "https://dataarcus.com/articles/article-power-bi-report-styles.html",
+    "mainEntityOfPage": "https://dataarcus.com/articles/article-power-bi-report-styles.html",
+    "author": {
+      "@type": "Person",
+      "name": "Abdelrahman M."
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "DataArcus",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://dataarcus.com/assets/img/logo.svg"
+      }
+    },
+    "datePublished": "2026-09-29",
+    "dateModified": "2026-09-29",
+    "image": [
+      "https://dataarcus.com/assets/img/og/report-styles.jpg",
+      "https://dataarcus.com/assets/img/articles/styles/executive-en.jpg",
+      "https://dataarcus.com/assets/img/articles/styles/sales-en.jpg",
+      "https://dataarcus.com/assets/img/articles/styles/finance-en.jpg",
+      "https://dataarcus.com/assets/img/articles/styles/marketing-en.jpg",
+      "https://dataarcus.com/assets/img/articles/styles/operations-en.jpg",
+      "https://dataarcus.com/assets/img/articles/styles/hr-en.jpg",
+      "https://dataarcus.com/assets/img/articles/styles/service-en.jpg"
+    ]
+  }
+  </script>
+
+  <style>
+    /* report styles article: language images, explorer, quiz, hotspots */
+    html[lang="ar"] .lang-en, html:not([lang="ar"]) .lang-ar { display: none; }
+    .rs-box { padding: var(--space-md); margin: var(--space-lg) 0; }
+    .rs-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: var(--space-sm); }
+    .rs-tab { background: rgba(255,255,255,.05); border: 1px solid var(--glass-border); color: #cbd5e1; border-radius: 999px; padding: 6px 14px; font-size: .9rem; font-weight: 600; }
+    .rs-tab b { color: var(--accent); margin-inline-end: 2px; }
+    .rs-tab.on { background: var(--accent); border-color: var(--accent); color: #051018; }
+    .rs-tab.on b { color: #051018; }
+    .rs-panel { display: grid; grid-template-columns: 1.35fr 1fr; gap: var(--space-md); align-items: start; }
+    .rs-panel[hidden] { display: none; }
+    .rs-shot { position: relative; border-radius: 12px; overflow: hidden; border: 1px solid var(--glass-border); }
+    .rs-shot img { display: block; width: 100%; height: auto; }
+    .rs-nick { font-size: 1.25rem; font-weight: 800; color: #fff; margin-bottom: 8px; }
+    .rs-info dl { margin: 0; } .rs-info dt { font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); margin-top: 10px; }
+    html[lang="ar"] .rs-info dt { text-transform: none; font-size: .85rem; }
+    .rs-info dd { margin: 2px 0 0; color: #e2e8f0; }
+    .rs-jump { display: inline-block; margin-top: 14px; font-weight: 600; }
+    @media (max-width: 767.98px) { .rs-panel { grid-template-columns: 1fr; } }
+    #rs-quiz fieldset { margin-bottom: var(--space-sm); } #rs-quiz legend { font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .rs-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+    .rs-opt { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--glass-border); border-radius: 10px; padding: 6px 12px; cursor: pointer; font-size: .92rem; color: #cbd5e1; background: rgba(255,255,255,.03); }
+    .rs-opt:has(input:checked) { border-color: var(--accent); color: #fff; background: rgba(0,212,255,.12); }
+    .rs-opt input { accent-color: var(--accent); }
+    .rs-result { border-top: 1px solid var(--glass-border); padding-top: var(--space-sm); }
+    .rs-result .rs-win { font-size: 1.2rem; font-weight: 800; color: #fff; }
+    .rs-result .btn { margin-top: 10px; }
+    .rs-h { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+    .rs-n { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 10px; background: var(--accent); color: #051018; font-size: 1.1rem; flex: none; align-self: center; }
+    .rs-phil { font-size: 1.15rem; color: #fff; font-weight: 600; border-inline-start: 3px solid var(--accent); padding-inline-start: 12px; }
+    .rs-fig { margin: var(--space-md) 0; }
+    .rs-hs { position: absolute; left: var(--xe); top: var(--ye); transform: translate(-50%, -50%); width: 34px; height: 34px; border-radius: 50%; border: 2px solid #fff; background: #ff3d7f; color: #fff; font-weight: 800; font-size: .95rem; box-shadow: 0 0 0 5px rgba(255,61,127,.28); animation: rs-pulse 2.4s ease-in-out infinite; cursor: pointer; display: grid; place-items: center; padding: 0; }
+    html[lang="ar"] .rs-hs { left: var(--xa); top: var(--ya); }
+    .rs-hs:hover, .rs-hs:focus-visible, .rs-hs.on { background: #fff; color: #ff3d7f; }
+    @keyframes rs-pulse { 50% { box-shadow: 0 0 0 10px rgba(255,61,127,0); } }
+    @media (prefers-reduced-motion: reduce) { .rs-hs { animation: none; } }
+    @media (max-width: 575.98px) { .rs-hs { width: 26px; height: 26px; font-size: .8rem; } }
+    .rs-notes { margin: 12px 0 0; padding-inline-start: 1.4rem; }
+    .rs-notes li { margin-bottom: 6px; color: #cbd5e1; transition: color .2s; }
+    .rs-notes li.on { color: #fff; } .rs-notes li::marker { color: #ff3d7f; font-weight: 800; }
+    .rs-table table { font-size: .92rem; } .rs-table th a { font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html#hero">
+        <img src="../assets/img/logo.svg" alt="DataArcus logo" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="../index.html#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="../portfolio.html" data-i18n="nav.portfolio">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="../tools/index.html" data-i18n="nav.tools">Free Tools</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <a href="../index.html#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="article-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-9 mx-auto">
+
+            <header class="article-header">
+              <span class="badge bg-info mb-3" data-i18n="header.badge">REPORT DESIGN</span>
+              <h1 class="display-5 fw-bold" data-i18n="header.title">One Design Doesn’t Fit All: 7 Power BI Report Styles</h1>
+              <p class="lead text-white-50" data-i18n="header.subtitle">Every department asks a different question, so every report needs a different design. Here are the 7 styles, with a picture of each and how to pick yours.</p>
+            </header>
+
+            <article class="article-body">
+              <p data-i18n-html="content.i0">A CEO and a warehouse supervisor open the same beautiful dashboard. The CEO closes it after five seconds because she can’t see if the company is on track. The supervisor closes it too, because nothing tells him what to fix before the next truck leaves. The dashboard wasn’t badly designed. It was designed for nobody in particular.</p>
+              <p data-i18n-html="content.i1">Good report design starts with one rule: <strong>design follows the question your reader asks.</strong> A sales manager asks “who is winning?”, a finance manager asks “where did the money go?”, an operations lead asks “what needs action now?”. Different questions, different designs.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.i2">Three questions decide the style</h2>
+              <ul>
+              <li data-i18n-html="content.i3"><strong>Who reads it?</strong> A board member, a team leader or an analyst reads in very different ways.</li>
+              <li data-i18n-html="content.i4"><strong>How long do they look?</strong> Five seconds, five minutes a day, or an hour at month end.</li>
+              <li data-i18n-html="content.i5"><strong>What do they do next?</strong> Decide a direction, chase a target, explain a number, or fix something now.</li>
+              </ul>
+              <p data-i18n-html="content.i6">Answer these three and the design choices (how many visuals, which charts, how dense, which colours) almost make themselves. Explore the seven styles below, or take the 3-question quiz to find yours.</p>
+              <section class="rs-box glass-card" aria-labelledby="rs-explorer-h"><h2 id="rs-explorer-h" class="h4 mb-1" data-i18n="ui.explorer">Explore the 7 styles</h2><p class="text-white-50 mb-3" data-i18n="ui.explorerSub">Click a style to see its philosophy and an example page.</p>
+<div class="rs-tabs" role="tablist" aria-labelledby="rs-explorer-h"><button type="button" role="tab" class="rs-tab on" id="rs-t-executive" aria-controls="rs-p-executive" aria-selected="true" data-rs="executive"><b>1</b> <span data-i18n="styles.executive.name">Executive</span></button><button type="button" role="tab" class="rs-tab" id="rs-t-sales" aria-controls="rs-p-sales" aria-selected="false" data-rs="sales"><b>2</b> <span data-i18n="styles.sales.name">Sales</span></button><button type="button" role="tab" class="rs-tab" id="rs-t-finance" aria-controls="rs-p-finance" aria-selected="false" data-rs="finance"><b>3</b> <span data-i18n="styles.finance.name">Finance</span></button><button type="button" role="tab" class="rs-tab" id="rs-t-marketing" aria-controls="rs-p-marketing" aria-selected="false" data-rs="marketing"><b>4</b> <span data-i18n="styles.marketing.name">Marketing</span></button><button type="button" role="tab" class="rs-tab" id="rs-t-operations" aria-controls="rs-p-operations" aria-selected="false" data-rs="operations"><b>5</b> <span data-i18n="styles.operations.name">Operations</span></button><button type="button" role="tab" class="rs-tab" id="rs-t-hr" aria-controls="rs-p-hr" aria-selected="false" data-rs="hr"><b>6</b> <span data-i18n="styles.hr.name">HR</span></button><button type="button" role="tab" class="rs-tab" id="rs-t-service" aria-controls="rs-p-service" aria-selected="false" data-rs="service"><b>7</b> <span data-i18n="styles.service.name">Customer service</span></button></div><div class="rs-panel" role="tabpanel" id="rs-p-executive" aria-labelledby="rs-t-executive">
+  <div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="../assets/img/articles/styles/executive-en.webp"><img src="../assets/img/articles/styles/executive-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a executive report in Power BI: the 5-second report" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="../assets/img/articles/styles/executive-ar.webp"><img src="../assets/img/articles/styles/executive-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير الإدارة العليا في Power BI: تقرير الثواني الخمس" lang="ar"></picture></div>
+  <div class="rs-info"><div class="rs-nick" data-i18n="styles.executive.nick">The 5-second report</div>
+    <dl><dt data-i18n="ui.philosophy">Philosophy</dt><dd data-i18n="styles.executive.phil">Answer “are we OK?” before the reader finishes their coffee.</dd>
+    <dt data-i18n="ui.question">The reader’s question</dt><dd data-i18n="styles.executive.q">Are we on track, and is anything off?</dd>
+    <dt data-i18n="ui.signature">Signature</dt><dd data-i18n="styles.executive.sig">4–5 big KPIs, one trend against target, and only the exceptions.</dd></dl>
+    <a href="#style-executive" class="rs-jump"><span data-i18n="ui.jump">Read the full breakdown</span> <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
+</div><div class="rs-panel" role="tabpanel" id="rs-p-sales" aria-labelledby="rs-t-sales" hidden>
+  <div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="../assets/img/articles/styles/sales-en.webp"><img src="../assets/img/articles/styles/sales-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a sales report in Power BI: the race" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="../assets/img/articles/styles/sales-ar.webp"><img src="../assets/img/articles/styles/sales-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير المبيعات في Power BI: السباق" lang="ar"></picture></div>
+  <div class="rs-info"><div class="rs-nick" data-i18n="styles.sales.nick">The race</div>
+    <dl><dt data-i18n="ui.philosophy">Philosophy</dt><dd data-i18n="styles.sales.phil">Show the gap to target, and who is closing it.</dd>
+    <dt data-i18n="ui.question">The reader’s question</dt><dd data-i18n="styles.sales.q">Will we hit target this month, and who is winning?</dd>
+    <dt data-i18n="ui.signature">Signature</dt><dd data-i18n="styles.sales.sig">Actual vs target everywhere, rankings, days left, a pipeline.</dd></dl>
+    <a href="#style-sales" class="rs-jump"><span data-i18n="ui.jump">Read the full breakdown</span> <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
+</div><div class="rs-panel" role="tabpanel" id="rs-p-finance" aria-labelledby="rs-t-finance" hidden>
+  <div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="../assets/img/articles/styles/finance-en.webp"><img src="../assets/img/articles/styles/finance-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a finance report in Power BI: the ledger" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="../assets/img/articles/styles/finance-ar.webp"><img src="../assets/img/articles/styles/finance-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير المالية في Power BI: الدفتر" lang="ar"></picture></div>
+  <div class="rs-info"><div class="rs-nick" data-i18n="styles.finance.nick">The ledger</div>
+    <dl><dt data-i18n="ui.philosophy">Philosophy</dt><dd data-i18n="styles.finance.phil">Precision first: every number in its place, every difference explained.</dd>
+    <dt data-i18n="ui.question">The reader’s question</dt><dd data-i18n="styles.finance.q">Where exactly are we against budget, and why?</dd>
+    <dt data-i18n="ui.signature">Signature</dt><dd data-i18n="styles.finance.sig">A P&L table with variances, a waterfall bridge, written commentary.</dd></dl>
+    <a href="#style-finance" class="rs-jump"><span data-i18n="ui.jump">Read the full breakdown</span> <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
+</div><div class="rs-panel" role="tabpanel" id="rs-p-marketing" aria-labelledby="rs-t-marketing" hidden>
+  <div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="../assets/img/articles/styles/marketing-en.webp"><img src="../assets/img/articles/styles/marketing-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a marketing report in Power BI: the journey" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="../assets/img/articles/styles/marketing-ar.webp"><img src="../assets/img/articles/styles/marketing-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير التسويق في Power BI: الرحلة" lang="ar"></picture></div>
+  <div class="rs-info"><div class="rs-nick" data-i18n="styles.marketing.nick">The journey</div>
+    <dl><dt data-i18n="ui.philosophy">Philosophy</dt><dd data-i18n="styles.marketing.phil">Follow the customer from first view to purchase, and price every step.</dd>
+    <dt data-i18n="ui.question">The reader’s question</dt><dd data-i18n="styles.marketing.q">Which channel brings customers, and at what cost?</dd>
+    <dt data-i18n="ui.signature">Signature</dt><dd data-i18n="styles.marketing.sig">A funnel with conversion rates, cost per lead by channel, trends by source.</dd></dl>
+    <a href="#style-marketing" class="rs-jump"><span data-i18n="ui.jump">Read the full breakdown</span> <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
+</div><div class="rs-panel" role="tabpanel" id="rs-p-operations" aria-labelledby="rs-t-operations" hidden>
+  <div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="../assets/img/articles/styles/operations-en.webp"><img src="../assets/img/articles/styles/operations-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a operations report in Power BI: the control room" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="../assets/img/articles/styles/operations-ar.webp"><img src="../assets/img/articles/styles/operations-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير العمليات في Power BI: غرفة التحكم" lang="ar"></picture></div>
+  <div class="rs-info"><div class="rs-nick" data-i18n="styles.operations.nick">The control room</div>
+    <dl><dt data-i18n="ui.philosophy">Philosophy</dt><dd data-i18n="styles.operations.phil">Silence when all is well, alarms when it isn’t.</dd>
+    <dt data-i18n="ui.question">The reader’s question</dt><dd data-i18n="styles.operations.q">What needs action right now?</dd>
+    <dt data-i18n="ui.signature">Signature</dt><dd data-i18n="styles.operations.sig">Status tiles with limits, live timestamps, an exception list sorted by urgency.</dd></dl>
+    <a href="#style-operations" class="rs-jump"><span data-i18n="ui.jump">Read the full breakdown</span> <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
+</div><div class="rs-panel" role="tabpanel" id="rs-p-hr" aria-labelledby="rs-t-hr" hidden>
+  <div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="../assets/img/articles/styles/hr-en.webp"><img src="../assets/img/articles/styles/hr-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a hr report in Power BI: the people map" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="../assets/img/articles/styles/hr-ar.webp"><img src="../assets/img/articles/styles/hr-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير الموارد البشرية في Power BI: خريطة الموظفين" lang="ar"></picture></div>
+  <div class="rs-info"><div class="rs-nick" data-i18n="styles.hr.nick">The people map</div>
+    <dl><dt data-i18n="ui.philosophy">Philosophy</dt><dd data-i18n="styles.hr.phil">Show how the workforce is changing, without exposing individuals.</dd>
+    <dt data-i18n="ui.question">The reader’s question</dt><dd data-i18n="styles.hr.q">How is our workforce changing, and where are we losing people?</dd>
+    <dt data-i18n="ui.signature">Signature</dt><dd data-i18n="styles.hr.sig">Joiners vs leavers, attrition by team, tenure, and privacy rules.</dd></dl>
+    <a href="#style-hr" class="rs-jump"><span data-i18n="ui.jump">Read the full breakdown</span> <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
+</div><div class="rs-panel" role="tabpanel" id="rs-p-service" aria-labelledby="rs-t-service" hidden>
+  <div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="../assets/img/articles/styles/service-en.webp"><img src="../assets/img/articles/styles/service-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a customer service report in Power BI: the queue" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="../assets/img/articles/styles/service-ar.webp"><img src="../assets/img/articles/styles/service-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير خدمة العملاء في Power BI: الطابور" lang="ar"></picture></div>
+  <div class="rs-info"><div class="rs-nick" data-i18n="styles.service.nick">The queue</div>
+    <dl><dt data-i18n="ui.philosophy">Philosophy</dt><dd data-i18n="styles.service.phil">Measure the promise you made to customers, and the queue behind it.</dd>
+    <dt data-i18n="ui.question">The reader’s question</dt><dd data-i18n="styles.service.q">Are we keeping our promise to customers?</dd>
+    <dt data-i18n="ui.signature">Signature</dt><dd data-i18n="styles.service.sig">Service level against the promise, backlog by age, response time, agents.</dd></dl>
+    <a href="#style-service" class="rs-jump"><span data-i18n="ui.jump">Read the full breakdown</span> <i class="bi bi-arrow-down" aria-hidden="true"></i></a></div>
+</div></section>
+              <section class="rs-box glass-card" id="rs-quiz" aria-labelledby="rs-quiz-h"><h2 id="rs-quiz-h" class="h4 mb-1" data-i18n="ui.quiz">Which style does your report need?</h2><p class="text-white-50 mb-3" data-i18n="ui.quizSub">Three questions, ten seconds.</p>
+<fieldset><legend data-i18n="ui.q1">How long does your reader look at the report?</legend><div class="rs-opts"><label class="rs-opt"><input type="radio" name="rs-q1" value="a"> <span data-i18n="ui.q1a">A few seconds</span></label><label class="rs-opt"><input type="radio" name="rs-q1" value="b"> <span data-i18n="ui.q1b">A few minutes, most days</span></label><label class="rs-opt"><input type="radio" name="rs-q1" value="c"> <span data-i18n="ui.q1c">A long review, monthly</span></label></div></fieldset>
+<fieldset><legend data-i18n="ui.q2">What do they do after reading it?</legend><div class="rs-opts"><label class="rs-opt"><input type="radio" name="rs-q2" value="a"> <span data-i18n="ui.q2a">Decide a direction</span></label><label class="rs-opt"><input type="radio" name="rs-q2" value="b"> <span data-i18n="ui.q2b">Push to hit a target</span></label><label class="rs-opt"><input type="radio" name="rs-q2" value="c"> <span data-i18n="ui.q2c">Explain every number</span></label><label class="rs-opt"><input type="radio" name="rs-q2" value="d"> <span data-i18n="ui.q2d">Fix something right now</span></label><label class="rs-opt"><input type="radio" name="rs-q2" value="e"> <span data-i18n="ui.q2e">Change where money goes</span></label><label class="rs-opt"><input type="radio" name="rs-q2" value="f"> <span data-i18n="ui.q2f">Plan people and teams</span></label><label class="rs-opt"><input type="radio" name="rs-q2" value="g"> <span data-i18n="ui.q2g">Keep a promise to customers</span></label></div></fieldset>
+<fieldset><legend data-i18n="ui.q3">How often does the data change?</legend><div class="rs-opts"><label class="rs-opt"><input type="radio" name="rs-q3" value="a"> <span data-i18n="ui.q3a">Every few minutes</span></label><label class="rs-opt"><input type="radio" name="rs-q3" value="b"> <span data-i18n="ui.q3b">Daily</span></label><label class="rs-opt"><input type="radio" name="rs-q3" value="c"> <span data-i18n="ui.q3c">Weekly or monthly</span></label></div></fieldset>
+<div class="rs-result" id="rs-result" role="status" aria-live="polite"><span class="text-white-50" data-i18n="ui.pick">Answer all three questions</span></div></section>
+              <h2 class="mt-5 mb-2 rs-h" id="style-executive"><span class="rs-n">1</span> <span data-i18n="styles.executive.name">Executive</span>: <span data-i18n="styles.executive.nick">The 5-second report</span></h2>
+<p class="rs-phil" data-i18n="styles.executive.phil">Answer “are we OK?” before the reader finishes their coffee.</p>
+<p data-i18n="styles.executive.body">Executives don’t explore; they scan. Their report is a verdict, not a workshop. Every extra visual makes the one important number harder to find, so the discipline here is what you leave out.</p>
+<figure class="rs-fig"><div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="../assets/img/articles/styles/executive-en.webp"><img src="../assets/img/articles/styles/executive-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a executive report in Power BI: the 5-second report" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="../assets/img/articles/styles/executive-ar.webp"><img src="../assets/img/articles/styles/executive-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير الإدارة العليا في Power BI: تقرير الثواني الخمس" lang="ar"></picture><button type="button" class="rs-hs" style="--xe:24.2%;--ye:11.6%;--xa:76.4%;--ya:12.6%" aria-describedby="rs-executive-n1"><span aria-hidden="true">1</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button><button type="button" class="rs-hs" style="--xe:65.9%;--ye:32.2%;--xa:34.1%;--ya:33.2%" aria-describedby="rs-executive-n2"><span aria-hidden="true">2</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:32.2%;--xa:3.1%;--ya:33.2%" aria-describedby="rs-executive-n3"><span aria-hidden="true">3</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button></div>
+<figcaption class="small text-white-50 mt-2"><span data-i18n="ui.tap">Tap the numbers on the picture</span> · <span data-i18n="ui.fictional">All names and numbers are fictional.</span></figcaption>
+<ol class="rs-notes"><li id="rs-executive-n1" data-i18n="styles.executive.n1">Big numbers with context: every KPI shows the change vs last year and a tiny trend, so “good or bad?” needs no second look.</li><li id="rs-executive-n2" data-i18n="styles.executive.n2">One trend, one target line, last year in grey. The eye sees in a second whether the year is above or below plan.</li><li id="rs-executive-n3" data-i18n="styles.executive.n3">“3 things to know”: written exceptions instead of ten more charts. Only what changed or needs a decision.</li></ol></figure>
+<h3 class="h5 mt-4" data-i18n="ui.use">Do</h3><ul><li data-i18n="styles.executive.u1">Five KPIs at most, each with a comparison (target, last year).</li><li data-i18n="styles.executive.u2">Lots of white space and large type.</li><li data-i18n="styles.executive.u3">A short written summary of what changed.</li></ul>
+<p><strong data-i18n="ui.avoid">Avoid:</strong> <span data-i18n="styles.executive.avoid">Tables, slicers and drill-downs on the first page. Put them on a second page for the analysts.</span></p>
+              <h2 class="mt-5 mb-2 rs-h" id="style-sales"><span class="rs-n">2</span> <span data-i18n="styles.sales.name">Sales</span>: <span data-i18n="styles.sales.nick">The race</span></h2>
+<p class="rs-phil" data-i18n="styles.sales.phil">Show the gap to target, and who is closing it.</p>
+<p data-i18n="styles.sales.body">Sales is a race against the calendar. Every number only means something next to its target and the days left, and people are motivated by where they stand. Make the report feel like a scoreboard.</p>
+<figure class="rs-fig"><div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="../assets/img/articles/styles/sales-en.webp"><img src="../assets/img/articles/styles/sales-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a sales report in Power BI: the race" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="../assets/img/articles/styles/sales-ar.webp"><img src="../assets/img/articles/styles/sales-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير المبيعات في Power BI: السباق" lang="ar"></picture><button type="button" class="rs-hs" style="--xe:23.6%;--ye:10.9%;--xa:76.4%;--ya:11.8%" aria-describedby="rs-sales-n1"><span aria-hidden="true">1</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button><button type="button" class="rs-hs" style="--xe:56.3%;--ye:29.3%;--xa:43.7%;--ya:30.2%" aria-describedby="rs-sales-n2"><span aria-hidden="true">2</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:29.3%;--xa:3.1%;--ya:30.2%" aria-describedby="rs-sales-n3"><span aria-hidden="true">3</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:63.6%;--xa:3.1%;--ya:64.4%" aria-describedby="rs-sales-n4"><span aria-hidden="true">4</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button></div>
+<figcaption class="small text-white-50 mt-2"><span data-i18n="ui.tap">Tap the numbers on the picture</span> · <span data-i18n="ui.fictional">All names and numbers are fictional.</span></figcaption>
+<ol class="rs-notes"><li id="rs-sales-n1" data-i18n="styles.sales.n1">Month to date with its target as a progress bar, plus days left and the daily amount needed. The question “will we make it?” is answered on top.</li><li id="rs-sales-n2" data-i18n="styles.sales.n2">A leaderboard with bullet bars: the bar is actual, the black mark is target, orange means behind. Ranking makes it personal.</li><li id="rs-sales-n3" data-i18n="styles.sales.n3">The pipeline shows where deals get stuck, with the conversion between each step.</li><li id="rs-sales-n4" data-i18n="styles.sales.n4">Regions against target with the same bullet bars, so one visual language runs through the page.</li></ol></figure>
+<h3 class="h5 mt-4" data-i18n="ui.use">Do</h3><ul><li data-i18n="styles.sales.u1">Month to date and quarter to date, never just totals.</li><li data-i18n="styles.sales.u2">Rankings and progress to target per person or region.</li><li data-i18n="styles.sales.u3">A refresh time on the page, because people act on it today.</li></ul>
+<p><strong data-i18n="ui.avoid">Avoid:</strong> <span data-i18n="styles.sales.avoid">Pie charts of revenue by product. They show share, but sales people need progress.</span></p>
+              <h2 class="mt-5 mb-2 rs-h" id="style-finance"><span class="rs-n">3</span> <span data-i18n="styles.finance.name">Finance</span>: <span data-i18n="styles.finance.nick">The ledger</span></h2>
+<p class="rs-phil" data-i18n="styles.finance.phil">Precision first: every number in its place, every difference explained.</p>
+<p data-i18n="styles.finance.body">Finance readers trust tables more than charts, and they read every row. The design goal is calm order: aligned numbers, consistent formats, and a fixed notation so actual, budget and last year are never confused.</p>
+<figure class="rs-fig"><div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="../assets/img/articles/styles/finance-en.webp"><img src="../assets/img/articles/styles/finance-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a finance report in Power BI: the ledger" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="../assets/img/articles/styles/finance-ar.webp"><img src="../assets/img/articles/styles/finance-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير المالية في Power BI: الدفتر" lang="ar"></picture><button type="button" class="rs-hs" style="--xe:53.3%;--ye:11.9%;--xa:46.7%;--ya:12.8%" aria-describedby="rs-finance-n1"><span aria-hidden="true">1</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:11.9%;--xa:3.1%;--ya:12.8%" aria-describedby="rs-finance-n2"><span aria-hidden="true">2</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:54%;--xa:3.1%;--ya:55.6%" aria-describedby="rs-finance-n3"><span aria-hidden="true">3</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button><button type="button" class="rs-hs" style="--xe:53.3%;--ye:60.9%;--xa:46.7%;--ya:65.8%" aria-describedby="rs-finance-n4"><span aria-hidden="true">4</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button></div>
+<figcaption class="small text-white-50 mt-2"><span data-i18n="ui.tap">Tap the numbers on the picture</span> · <span data-i18n="ui.fictional">All names and numbers are fictional.</span></figcaption>
+<ol class="rs-notes"><li id="rs-finance-n1" data-i18n="styles.finance.n1">The P&L as a table: actual, budget, variance and prior year, with small variance bars inside the table. Costs in brackets, totals with a double line, as on paper.</li><li id="rs-finance-n2" data-i18n="styles.finance.n2">A waterfall bridge from budget to actual: volume, price, mix and costs explain the difference in one picture.</li><li id="rs-finance-n3" data-i18n="styles.finance.n3">Actual is solid, budget is an outline. The same notation on every page, so nobody has to read a legend twice.</li><li id="rs-finance-n4" data-i18n="styles.finance.n4">Written commentary: the story behind the variance in two sentences. Finance reports are read, not glanced at.</li></ol></figure>
+<h3 class="h5 mt-4" data-i18n="ui.use">Do</h3><ul><li data-i18n="styles.finance.u1">One number format per report (AED million, one decimal).</li><li data-i18n="styles.finance.u2">Right-aligned numbers and tabular figures so columns line up.</li><li data-i18n="styles.finance.u3">Green and red only for better or worse than budget.</li></ul>
+<p><strong data-i18n="ui.avoid">Avoid:</strong> <span data-i18n="styles.finance.avoid">Decoration: gradients, icons, 3D and rounded “friendly” cards make numbers look less reliable.</span></p>
+              <h2 class="mt-5 mb-2 rs-h" id="style-marketing"><span class="rs-n">4</span> <span data-i18n="styles.marketing.name">Marketing</span>: <span data-i18n="styles.marketing.nick">The journey</span></h2>
+<p class="rs-phil" data-i18n="styles.marketing.phil">Follow the customer from first view to purchase, and price every step.</p>
+<p data-i18n="styles.marketing.body">Marketing is a chain of small conversions. A campaign can look great on reach and still waste money, so the design always connects spend to the next step and to customers, never to impressions alone.</p>
+<figure class="rs-fig"><div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="../assets/img/articles/styles/marketing-en.webp"><img src="../assets/img/articles/styles/marketing-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a marketing report in Power BI: the journey" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="../assets/img/articles/styles/marketing-ar.webp"><img src="../assets/img/articles/styles/marketing-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير التسويق في Power BI: الرحلة" lang="ar"></picture><button type="button" class="rs-hs" style="--xe:44.2%;--ye:27.1%;--xa:55.8%;--ya:28%" aria-describedby="rs-marketing-n1"><span aria-hidden="true">1</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:27.1%;--xa:3.1%;--ya:28%" aria-describedby="rs-marketing-n2"><span aria-hidden="true">2</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:62.2%;--xa:3.1%;--ya:63.1%" aria-describedby="rs-marketing-n3"><span aria-hidden="true">3</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button></div>
+<figcaption class="small text-white-50 mt-2"><span data-i18n="ui.tap">Tap the numbers on the picture</span> · <span data-i18n="ui.fictional">All names and numbers are fictional.</span></figcaption>
+<ol class="rs-notes"><li id="rs-marketing-n1" data-i18n="styles.marketing.n1">The customer journey as a funnel, with the conversion between steps. The biggest drop is where the money leaks.</li><li id="rs-marketing-n2" data-i18n="styles.marketing.n2">Cost per lead by channel, sorted, with the cheapest in green. It answers “where do I put the next dirham?”</li><li id="rs-marketing-n3" data-i18n="styles.marketing.n3">Leads by month, paid vs organic, to see whether growth is bought or earned.</li></ol></figure>
+<h3 class="h5 mt-4" data-i18n="ui.use">Do</h3><ul><li data-i18n="styles.marketing.u1">Cost per lead and return on ad spend next to every volume number.</li><li data-i18n="styles.marketing.u2">One fixed colour per channel across all pages.</li><li data-i18n="styles.marketing.u3">A clear note of the biggest drop in the journey.</li></ul>
+<p><strong data-i18n="ui.avoid">Avoid:</strong> <span data-i18n="styles.marketing.avoid">Vanity metrics on top (impressions, likes). Show them, but below the numbers that cost money.</span></p>
+              <h2 class="mt-5 mb-2 rs-h" id="style-operations"><span class="rs-n">5</span> <span data-i18n="styles.operations.name">Operations</span>: <span data-i18n="styles.operations.nick">The control room</span></h2>
+<p class="rs-phil" data-i18n="styles.operations.phil">Silence when all is well, alarms when it isn’t.</p>
+<p data-i18n="styles.operations.body">Operations reports often live on a wall screen or a tablet, read in seconds from a distance. They are dense on purpose, but colour is reserved for one job: telling you what is over its limit.</p>
+<figure class="rs-fig"><div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="../assets/img/articles/styles/operations-en.webp"><img src="../assets/img/articles/styles/operations-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a operations report in Power BI: the control room" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="../assets/img/articles/styles/operations-ar.webp"><img src="../assets/img/articles/styles/operations-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير العمليات في Power BI: غرفة التحكم" lang="ar"></picture><button type="button" class="rs-hs" style="--xe:31.9%;--ye:9.9%;--xa:68.1%;--ya:10.7%" aria-describedby="rs-operations-n1"><span aria-hidden="true">1</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button><button type="button" class="rs-hs" style="--xe:52.6%;--ye:24.3%;--xa:47.4%;--ya:25.1%" aria-describedby="rs-operations-n2"><span aria-hidden="true">2</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:24.3%;--xa:3.1%;--ya:25.1%" aria-describedby="rs-operations-n3"><span aria-hidden="true">3</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button></div>
+<figcaption class="small text-white-50 mt-2"><span data-i18n="ui.tap">Tap the numbers on the picture</span> · <span data-i18n="ui.fictional">All names and numbers are fictional.</span></figcaption>
+<ol class="rs-notes"><li id="rs-operations-n1" data-i18n="styles.operations.n1">Every tile has its limit written under the number, and the coloured top edge shows the status. Late shipments are red because 27 is over the limit of 15.</li><li id="rs-operations-n2" data-i18n="styles.operations.n2">The queue through the day against its limit line. Supervisors see the peak coming, not just the current number.</li><li id="rs-operations-n3" data-i18n="styles.operations.n3">“Needs action now”: only items over their limit, sorted by delay. It’s a to-do list, not a report.</li></ol></figure>
+<h3 class="h5 mt-4" data-i18n="ui.use">Do</h3><ul><li data-i18n="styles.operations.u1">Thresholds on every number, visible on the page.</li><li data-i18n="styles.operations.u2">A live refresh time, and automatic page refresh.</li><li data-i18n="styles.operations.u3">Dark theme for wall screens, large text readable from 3 metres.</li></ul>
+<p><strong data-i18n="ui.avoid">Avoid:</strong> <span data-i18n="styles.operations.avoid">Monthly totals and long trends here. They belong in a weekly review report, not the control room.</span></p>
+              <h2 class="mt-5 mb-2 rs-h" id="style-hr"><span class="rs-n">6</span> <span data-i18n="styles.hr.name">HR</span>: <span data-i18n="styles.hr.nick">The people map</span></h2>
+<p class="rs-phil" data-i18n="styles.hr.phil">Show how the workforce is changing, without exposing individuals.</p>
+<p data-i18n="styles.hr.body">HR data is about people, so the tone matters as much as the numbers. The design is calm, shows flows and groups rather than names, and never lets a small team be identified.</p>
+<figure class="rs-fig"><div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="../assets/img/articles/styles/hr-en.webp"><img src="../assets/img/articles/styles/hr-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a hr report in Power BI: the people map" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="../assets/img/articles/styles/hr-ar.webp"><img src="../assets/img/articles/styles/hr-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير الموارد البشرية في Power BI: خريطة الموظفين" lang="ar"></picture><button type="button" class="rs-hs" style="--xe:53.6%;--ye:27.1%;--xa:46.4%;--ya:28%" aria-describedby="rs-hr-n1"><span aria-hidden="true">1</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:27.1%;--xa:3.1%;--ya:28%" aria-describedby="rs-hr-n2"><span aria-hidden="true">2</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button><button type="button" class="rs-hs" style="--xe:52.2%;--ye:80.3%;--xa:47.8%;--ya:82.4%" aria-describedby="rs-hr-n3"><span aria-hidden="true">3</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button></div>
+<figcaption class="small text-white-50 mt-2"><span data-i18n="ui.tap">Tap the numbers on the picture</span> · <span data-i18n="ui.fictional">All names and numbers are fictional.</span></figcaption>
+<ol class="rs-notes"><li id="rs-hr-n1" data-i18n="styles.hr.n1">Joiners above the line, leavers below: the gap is net growth. A flow tells more than a headcount number.</li><li id="rs-hr-n2" data-i18n="styles.hr.n2">Attrition by department against the industry average; only the teams above it get the highlight colour.</li><li id="rs-hr-n3" data-i18n="styles.hr.n3">The why behind the numbers, from exit interviews, written in one line.</li></ol></figure>
+<h3 class="h5 mt-4" data-i18n="ui.use">Do</h3><ul><li data-i18n="styles.hr.u1">Rates and flows (attrition %, joiners vs leavers), not lists of names.</li><li data-i18n="styles.hr.u2">A privacy rule: hide groups smaller than 5 people.</li><li data-i18n="styles.hr.u3">Benchmarks, so a number means something.</li></ul>
+<p><strong data-i18n="ui.avoid">Avoid:</strong> <span data-i18n="styles.hr.avoid">Salary or performance details on shared pages. Use row-level security for anything personal.</span></p>
+              <h2 class="mt-5 mb-2 rs-h" id="style-service"><span class="rs-n">7</span> <span data-i18n="styles.service.name">Customer service</span>: <span data-i18n="styles.service.nick">The queue</span></h2>
+<p class="rs-phil" data-i18n="styles.service.phil">Measure the promise you made to customers, and the queue behind it.</p>
+<p data-i18n="styles.service.body">Customers don’t care about averages; they care about their ticket. The design measures service against the promise (answered within 2 hours, closed within 3 days) and makes the oldest tickets impossible to miss.</p>
+<figure class="rs-fig"><div class="rs-shot"><picture class="lang-en"><source type="image/webp" srcset="../assets/img/articles/styles/service-en.webp"><img src="../assets/img/articles/styles/service-en.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="Example of a customer service report in Power BI: the queue" lang="en"></picture><picture class="lang-ar"><source type="image/webp" srcset="../assets/img/articles/styles/service-ar.webp"><img src="../assets/img/articles/styles/service-ar.jpg" width="1600" height="900" loading="lazy" decoding="async" class="img-fluid " alt="مثال على تقرير خدمة العملاء في Power BI: الطابور" lang="ar"></picture><button type="button" class="rs-hs" style="--xe:25.7%;--ye:10.9%;--xa:74.3%;--ya:11.8%" aria-describedby="rs-service-n1"><span aria-hidden="true">1</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button><button type="button" class="rs-hs" style="--xe:64.6%;--ye:10.9%;--xa:35.4%;--ya:11.8%" aria-describedby="rs-service-n2"><span aria-hidden="true">2</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button><button type="button" class="rs-hs" style="--xe:96.9%;--ye:10.9%;--xa:3.1%;--ya:11.8%" aria-describedby="rs-service-n3"><span aria-hidden="true">3</span><span class="visually-hidden" data-i18n="ui.tap">Tap the numbers on the picture</span></button></div>
+<figcaption class="small text-white-50 mt-2"><span data-i18n="ui.tap">Tap the numbers on the picture</span> · <span data-i18n="ui.fictional">All names and numbers are fictional.</span></figcaption>
+<ol class="rs-notes"><li id="rs-service-n1" data-i18n="styles.service.n1">One big service level against its target, then the three numbers behind it: open tickets, first response and satisfaction.</li><li id="rs-service-n2" data-i18n="styles.service.n2">Open tickets by age, coloured from fresh to overdue. The red bar is the promise being broken.</li><li id="rs-service-n3" data-i18n="styles.service.n3">Agents compared with the promise, not with each other, so the page coaches instead of blaming.</li></ol></figure>
+<h3 class="h5 mt-4" data-i18n="ui.use">Do</h3><ul><li data-i18n="styles.service.u1">Service level against a written target.</li><li data-i18n="styles.service.u2">Backlog by age, not just the total.</li><li data-i18n="styles.service.u3">Satisfaction next to speed, so speed never wins alone.</li></ul>
+<p><strong data-i18n="ui.avoid">Avoid:</strong> <span data-i18n="styles.service.avoid">Average handling time as the headline. It rewards rushing customers off the phone.</span></p>
+              <h2 class="mt-5 mb-3" id="rs-table" data-i18n="ui.tableTitle">The 7 styles side by side</h2>
+<div class="table-responsive rs-table"><table class="table table-dark mb-0"><thead><tr><th scope="col" data-i18n="ui.thStyle">Style</th><th scope="col" data-i18n="ui.thReader">Reader</th><th scope="col" data-i18n="ui.thTime">Time spent</th><th scope="col" data-i18n="ui.thDens">Density</th><th scope="col" data-i18n="ui.thCol">Colour rule</th></tr></thead><tbody><tr><th scope="row"><a href="#style-executive" data-i18n="styles.executive.name">Executive</a><small class="d-block text-white-50" data-i18n="styles.executive.nick">The 5-second report</small></th><td data-i18n="styles.executive.reader">CEO, board, directors</td><td data-i18n="styles.executive.time">5–30 seconds</td><td data-i18n="styles.executive.dens">Very low</td><td data-i18n="styles.executive.col">One brand colour; green and red only for status</td></tr><tr><th scope="row"><a href="#style-sales" data-i18n="styles.sales.name">Sales</a><small class="d-block text-white-50" data-i18n="styles.sales.nick">The race</small></th><td data-i18n="styles.sales.reader">Sales managers and reps</td><td data-i18n="styles.sales.time">2–5 minutes, daily</td><td data-i18n="styles.sales.dens">Medium</td><td data-i18n="styles.sales.col">Energetic accent; orange for “behind target”</td></tr><tr><th scope="row"><a href="#style-finance" data-i18n="styles.finance.name">Finance</a><small class="d-block text-white-50" data-i18n="styles.finance.nick">The ledger</small></th><td data-i18n="styles.finance.reader">CFO, controllers, finance team</td><td data-i18n="styles.finance.time">30–60 minutes, monthly</td><td data-i18n="styles.finance.dens">High, but ordered</td><td data-i18n="styles.finance.col">Black and grey; green/red only for variance</td></tr><tr><th scope="row"><a href="#style-marketing" data-i18n="styles.marketing.name">Marketing</a><small class="d-block text-white-50" data-i18n="styles.marketing.nick">The journey</small></th><td data-i18n="styles.marketing.reader">Marketing managers, agencies</td><td data-i18n="styles.marketing.time">5–15 minutes, weekly</td><td data-i18n="styles.marketing.dens">Medium</td><td data-i18n="styles.marketing.col">Brand colours per channel, kept the same everywhere</td></tr><tr><th scope="row"><a href="#style-operations" data-i18n="styles.operations.name">Operations</a><small class="d-block text-white-50" data-i18n="styles.operations.nick">The control room</small></th><td data-i18n="styles.operations.reader">Supervisors, shift leads, wall screens</td><td data-i18n="styles.operations.time">Seconds, many times a day</td><td data-i18n="styles.operations.dens">High</td><td data-i18n="styles.operations.col">Dark background; green, amber, red as signals</td></tr><tr><th scope="row"><a href="#style-hr" data-i18n="styles.hr.name">HR</a><small class="d-block text-white-50" data-i18n="styles.hr.nick">The people map</small></th><td data-i18n="styles.hr.reader">HR leaders, department heads</td><td data-i18n="styles.hr.time">10–20 minutes, monthly</td><td data-i18n="styles.hr.dens">Low to medium</td><td data-i18n="styles.hr.col">Calm, warm palette; one highlight colour for risk</td></tr><tr><th scope="row"><a href="#style-service" data-i18n="styles.service.name">Customer service</a><small class="d-block text-white-50" data-i18n="styles.service.nick">The queue</small></th><td data-i18n="styles.service.reader">Service managers, team leads</td><td data-i18n="styles.service.time">Minutes, several times a day</td><td data-i18n="styles.service.dens">Medium</td><td data-i18n="styles.service.col">Neutral base; colour by age and against the promise</td></tr></tbody></table></div>
+              <h2 class="mt-5 mb-3" data-i18n="content.o0">One report, several styles</h2>
+              <p data-i18n-html="content.o1">Real reports mix styles by page. A good pattern: an executive page first (the verdict), then one page per team in its own style (the detail), then a drill-through page for the analysts. Each page still answers one question for one reader.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.o2">Build your layout in minutes</h2>
+              <p data-i18n-html="content.o3">Our free <a href='../tools/power-bi-theme-generator.html'>Power BI Theme &amp; Layout Generator</a> has layouts for executive summaries, analysis pages and operations monitors: pick one, set your brand colours, and download the theme, a matching background and the exact position of every visual.</p>
+              <p data-i18n-html="content.o4">This is the first article of a series. Next, each style gets its own deep dive: the exact layout, the DAX for its KPIs, the most common mistakes, and a checklist.</p>
+            </article>
+
+            <div class="text-center block">
+              <div class="glass-card p-4 p-md-5 d-inline-block" data-aos="fade-up">
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title">Design your report in your brand colours</h3>
+                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">Theme, background and layout for Power BI, free and without sign-up.</p>
+                <a href="../tools/power-bi-theme-generator.html" class="btn btn-accent m-1"><i class="bi bi-palette me-2"></i><span data-i18n="exploreMore.button1">Open the Theme &amp; Layout Generator</span></a>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <hr class="divider">
+              <h3 class="h4 mb-3" data-i18n="finalCta.title">Want a report your team actually uses?</h3>
+              <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">I design and build Power BI reports around the questions your people ask.</p>
+              <a href="../index.html#contact" class="btn btn-accent btn-lg">
+                  <i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">Book a free call</span>
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="../index.html#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="../assets/img/logo.svg" alt="DataArcus logo" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+              <li class="mb-2"><a href="../tools/index.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">Free Power BI &amp; Fabric Tools</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="../portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Showcases</a></li>
+              <li class="mb-2"><a href="../index.html#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="../blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+              <li class="mb-2"><a href="../privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">Privacy</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Made in Dubai</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="../assets/js/translations/common.min.js" defer></script>
+  <script src="../assets/js/translations/article-power-bi-report-styles.min.js" defer></script>
+  <script src="../assets/js/lang-manager.min.js" defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
+  <script src="../assets/js/main.min.js" defer></script>
+  <script>
+    // Report styles article: the explorer tabs, the 3-question quiz and the picture hotspots
+    document.addEventListener('DOMContentLoaded', () => {
+      const tabs = [...document.querySelectorAll('.rs-tab')];
+      const show = (id, focus) => tabs.forEach((t) => { const on = t.dataset.rs === id; t.classList.toggle('on', on); t.setAttribute('aria-selected', on); t.tabIndex = on ? 0 : -1;
+        document.getElementById('rs-p-' + t.dataset.rs).hidden = !on; if (on && focus) t.focus(); });
+      tabs.forEach((t, i) => {
+        t.addEventListener('click', () => { show(t.dataset.rs); if (window.dataArcusTrack) window.dataArcusTrack('styles_tab', { style: t.dataset.rs }); });
+        t.addEventListener('keydown', (e) => { const d = { ArrowRight: 1, ArrowLeft: -1 }[e.key] * (document.documentElement.dir === 'rtl' ? -1 : 1); if (d) { e.preventDefault(); show(tabs[(i + d + tabs.length) % tabs.length].dataset.rs, true); } });
+      });
+      show(tabs[0].dataset.rs);
+      const SCORE = {"q1": {"a": {"executive": 2, "operations": 1}, "b": {"sales": 1, "operations": 1, "service": 1, "marketing": 1}, "c": {"finance": 2, "hr": 2, "executive": 1}}, "q2": {"a": {"executive": 3}, "b": {"sales": 3}, "c": {"finance": 3}, "d": {"operations": 3}, "e": {"marketing": 3}, "f": {"hr": 3}, "g": {"service": 3}}, "q3": {"a": {"operations": 2, "service": 1}, "b": {"sales": 1, "service": 1, "marketing": 1}, "c": {"finance": 1, "hr": 1, "executive": 1, "marketing": 1}}}, NAMES = {"executive": "Executive", "sales": "Sales", "finance": "Finance", "marketing": "Marketing", "operations": "Operations", "hr": "HR", "service": "Customer service"};
+      const quiz = document.getElementById('rs-quiz'), res = document.getElementById('rs-result');
+      const tr = (k) => { const L = document.documentElement.lang === 'ar' ? 'ar' : 'en', T = window.reportStylesArticleTranslations; return T && T[L] ? k.split('.').reduce((o, p) => (o || {})[p], T[L]) : null; };
+      const render = () => {
+        const pick = ['q1', 'q2', 'q3'].map((q) => (quiz.querySelector(`input[name="rs-${q}"]:checked`) || {}).value);
+        if (pick.some((v) => !v)) return;
+        const pts = {}; pick.forEach((v, i) => Object.entries(SCORE['q' + (i + 1)][v]).forEach(([s, n]) => { pts[s] = (pts[s] || 0) + n; }));
+        const win = Object.keys(pts).sort((a, b) => pts[b] - pts[a])[0];
+        res.innerHTML = `<div class="text-white-50">${tr('ui.result') || 'Your style:'}</div><div class="rs-win">${tr('styles.' + win + '.name') || NAMES[win]}: ${tr('styles.' + win + '.nick') || ''}</div><div>${tr('styles.' + win + '.phil') || ''}</div>`
+          + `<a class="btn btn-accent btn-sm" href="#style-${win}">${tr('ui.show') || 'See this style'}</a>`;
+        show(win); res.dataset.win = win;
+        if (window.dataArcusTrack) window.dataArcusTrack('styles_quiz', { style: win });
+      };
+      quiz.addEventListener('change', render);
+      new MutationObserver(() => { if (res.dataset.win) render(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+      // hotspots: tapping a number highlights its note under the picture
+      document.querySelectorAll('.rs-hs').forEach((b) => b.addEventListener('click', () => {
+        const fig = b.closest('.rs-fig'), id = b.getAttribute('aria-describedby');
+        fig.querySelectorAll('.rs-hs').forEach((x) => x.classList.toggle('on', x === b));
+        fig.querySelectorAll('.rs-notes li').forEach((li) => li.classList.toggle('on', li.id === id));
+        const li = document.getElementById(id); if (li && li.getBoundingClientRect().top > innerHeight - 40) li.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }));
+    });
+  </script>
+
+</body>
+</html>
