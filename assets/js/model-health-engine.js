@@ -470,6 +470,9 @@
       // a column always needs its table
       t.columns.forEach((c) => addDeps(K.c(t.name, c.name), [K.t(t.name)]));
       t.measures.forEach((ms) => addDeps(K.m(ms.name), [K.t(t.name)]));
+      // a measures table needs its only column (the "Enter data" placeholder): a table cannot lose its last column
+      const cols = t.columns.filter((c) => c.kind !== 'rowNumber');
+      if (t.measures.length && cols.length === 1) addDeps(K.t(t.name), [K.c(t.name, cols[0].name)]);
     });
 
     // roots: report, relationships, security
@@ -607,10 +610,8 @@
       const unusedCols = [];
       userTables.forEach((t) => {
         if (t.calcGroup) return;
-        const measureTable = t.measures.length > 0 && t.columns.filter((c) => c.kind !== 'rowNumber').length <= 1;
         t.columns.forEach((c) => {
           if (c.kind === 'rowNumber') return;
-          if (measureTable && c.hidden) return; // placeholder column of a measures-only table
           if (!used.has(K.c(t.name, c.name))) unusedCols.push({ obj: `${t.name}[${c.name}]`, detail: t.isCalcTable ? 'DAX table: edit its DAX' : c.kind === 'calculated' ? 'calculated' : (c.hidden ? 'hidden' : '') });
         });
       });
