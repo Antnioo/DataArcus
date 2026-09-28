@@ -28,7 +28,15 @@ window.themeGeneratorTranslations = {
         "csvName": "Layout table (.csv)",
         "csvDesc": "Size and position of every visual (the table in step 2), for <b>Format › General › Properties</b>. Copy pastes it into Excel.",
         "csvBtn": "Download table",
-        "themeOnly": "Only want the colors? The theme file is all you need."
+        "themeOnly": "Only want the colors? The theme file is all you need.",
+        "pbipName": "Power BI project (.pbip)",
+        "pbipDesc": "Everything above in one report: the theme applied, the background set and every visual in place. Unzip it and open the <b>.pbip</b> file in Power BI Desktop.",
+        "pbipSample": "Sample data, so it opens looking finished <small class=\"d-block text-white-50\">Click Refresh once in Power BI.</small>",
+        "pbipLogo": "Add your logo (optional, PNG or JPG)",
+        "pbipBtn": "Download project"
+      },
+      "lab": {
+        "note": "<b>Test page.</b> This is the theme generator with a new download: a ready Power BI project. It is not listed on the site yet."
       },
       "swipe": "Swipe the table sideways to see all columns",
       "presets": "Start from a preset",
@@ -121,7 +129,15 @@ window.themeGeneratorTranslations = {
         "csvName": "جدول التخطيط (csv.)",
         "csvDesc": "مقاس وموضع كل عنصر (الجدول في الخطوة 2)، لخانة <b><bdi dir=\"ltr\">Format › General › Properties</bdi></b>. زر النسخ يلصقه في Excel.",
         "csvBtn": "نزّل الجدول",
-        "themeOnly": "تريد الألوان فقط؟ ملف السمة يكفيك."
+        "themeOnly": "تريد الألوان فقط؟ ملف السمة يكفيك.",
+        "pbipName": "مشروع Power BI (pbip.)",
+        "pbipDesc": "كل ما سبق في تقرير واحد: السمة مطبّقة والخلفية موضوعة وكل عنصر في مكانه. فك الضغط وافتح ملف <b><bdi dir=\"ltr\">.pbip</bdi></b> في Power BI Desktop.",
+        "pbipSample": "بيانات تجريبية ليظهر التقرير مكتملًا <small class=\"d-block text-white-50\">اضغط Refresh مرة واحدة في Power BI.</small>",
+        "pbipLogo": "أضف شعارك (اختياري، PNG أو JPG)",
+        "pbipBtn": "نزّل المشروع"
+      },
+      "lab": {
+        "note": "<b>صفحة تجريبية.</b> هذا مولّد السمات مع تنزيل جديد: مشروع Power BI جاهز. لم يُضف إلى الموقع بعد."
       },
       "swipe": "اسحب الجدول جانبًا لرؤية كل الأعمدة",
       "presets": "ابدأ من قالب جاهز",
