@@ -58,7 +58,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const hist = store.get('dataarcus-mh-history', {});
         const key = String(fileName).toLowerCase();
         prev = hist[key] && hist[key].length ? hist[key][hist[key].length - 1] : null;
-        hist[key] = (hist[key] || []).concat({ d: new Date().toISOString().slice(0, 10), s: score().overall }).slice(-10);
+        // re-insert the file so key order is least recently checked first, and the oldest check is the one dropped
+        const runs = (hist[key] || []).concat({ d: new Date().toISOString().slice(0, 10), s: score().overall }).slice(-10);
+        delete hist[key]; hist[key] = runs;
         const keys = Object.keys(hist); if (keys.length > 30) delete hist[keys[0]];
         store.set('dataarcus-mh-history', hist);
         worker.terminate(); worker = null;
