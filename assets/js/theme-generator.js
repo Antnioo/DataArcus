@@ -635,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (pbipBtn) {
     let logo = null;
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : new Promise((resolve, reject) => {
-      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20260929'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
+      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20260929b'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
     }));
     const logoIn = $('pbipLogo');
     if (logoIn) logoIn.addEventListener('change', () => {
@@ -656,14 +656,29 @@ document.addEventListener('DOMContentLoaded', () => {
       // overview, or an executive overview after an analysis page
       const second = $('pbipPages') && $('pbipPages').checked;
       const c2 = Object.assign({}, c, c.preset === 'analysis' ? { preset: 'exec', kpis: 4, filters: false } : { preset: 'analysis', kpis: 3, filters: true, fpos: 'start' }, { kpiH: null, mainW: null, split: null });
-      const specs = [{ c, name: nm(LAYOUTS[c.preset].name) }].concat(second ? [{ c: c2, name: c.preset === 'analysis' ? L('Overview', 'نظرة عامة') : L('Details', 'التفاصيل') }] : []);
+      const slide = $('pbipPanel') && $('pbipPanel').checked;
+      const withPanel = (cc) => {
+        if (!slide || !cc.filters || !cc.header) return { c: cc, panel: null };
+        const open = Object.assign({}, cc, { filters: false });
+        const was = state.layout; state.layout = cc; applyPage(cc);
+        const z = sizes(cc), w = Math.max(240, Math.min(320, z.fw + 40)), top = z.hh + 14;
+        // the panel opens under the Filters button, at the end of the header (right in English, left in Arabic)
+        const r = { x: rtl(cc) ? M : PW - M - w, y: top, w, h: PH - M - top };
+        const panel = { x: toPage(r.x, cc), y: toPage(r.y, cc), w: toPage(r.w, cc), h: toPage(r.h, cc) };
+        state.layout = was; applyPage(was);
+        return { c: open, panel };
+      };
+      const specs = [{ c, name: nm(LAYOUTS[c.preset].name) }].concat(second ? [{ c: c2, name: c.preset === 'analysis' ? L('Overview', 'نظرة عامة') : L('Details', 'التفاصيل') }] : [])
+        .map((sp) => Object.assign(sp, withPanel(sp.c)));
       Promise.all([loadBuilder()].concat(specs.map((sp) => pngBlob(sp.c).then((b) => b.arrayBuffer())))).then(([P, ...bufs]) => {
-        const pages = specs.map((sp, i) => ({ name: sp.name, page: { w: page(sp.c).w, h: page(sp.c).h }, slots: slotsOf(sp.c), png: new Uint8Array(bufs[i]) }));
+        const pages = specs.map((sp, i) => ({ name: sp.name, page: { w: page(sp.c).w, h: page(sp.c).h }, slots: slotsOf(sp.c), png: new Uint8Array(bufs[i]), panel: sp.panel || null }));
         const r = P.build({
           name: state.name || 'Power BI Report', title: state.name || L('Sales overview', 'نظرة عامة على المبيعات'), pageName: nm(LAYOUTS[c.preset].name),
           lang: isAr() ? 'ar' : 'en', rtl: rtl(), font: state.font, ui: state.ui, pages, theme, logo, sample,
           texts: {
-            reset: L('Reset filters', 'إعادة ضبط الفلاتر'), pages: L('Pages', 'الصفحات'),
+            reset: L('Reset filters', 'إعادة ضبط الفلاتر'), pages: L('Pages', 'الصفحات'), close: L('Close', 'إغلاق'),
+            filterPanel: L('Filter panel', 'لوحة الفلاتر'), openFilters: L('Open the filter panel', 'افتح لوحة الفلاتر'), closeFilters: L('Close the filter panel', 'أغلق لوحة الفلاتر'),
+            filtersOpen: L('Filters open', 'الفلاتر مفتوحة'), filtersClosed: L('Filters closed', 'الفلاتر مغلقة'),
             header: L('Header', 'الشريط العلوي'), kpis: L('KPI cards', 'بطاقات المؤشرات'), filters: L('Filters', 'الفلاتر'), slicer: L('Slicer', 'مقسم'),
             logo: L('Logo', 'الشعار'), logoHere: L('Your logo', 'شعارك'), textHere: L('Explain what the main chart shows and what to do about it.', 'اشرح ما يعرضه المخطط الرئيسي وما الإجراء المطلوب.'),
             tooltipPage: L('Tooltip', 'تلميح'), tooltipHere: L('Tooltip page: add a card or a small chart here.', 'صفحة التلميح: أضف بطاقة أو مخططًا صغيرًا هنا.'),
@@ -673,7 +688,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         saveBlob(new Blob([r.zip()], { type: 'application/zip' }), `${fileBase()}-power-bi-project.zip`);
         toast(L('Project downloaded. Unzip it and open the .pbip file', 'تم تنزيل المشروع. فك الضغط وافتح ملف .pbip'));
-        track('theme_pbip', { layout: c.preset, direction: rtl() ? 'rtl' : 'ltr', kpis: c.kpis, sample, logo: !!logo, page: c.page, pages: pages.length });
+        track('theme_pbip', { layout: c.preset, direction: rtl() ? 'rtl' : 'ltr', kpis: c.kpis, sample, logo: !!logo, page: c.page, pages: pages.length, panel: pages.some((pp) => pp.panel) });
       }).catch(() => toast(L('Could not build the project in this browser', 'تعذّر إنشاء المشروع في هذا المتصفح'))).then(() => { pbipBtn.disabled = false; });
     });
   }
