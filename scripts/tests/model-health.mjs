@@ -139,6 +139,22 @@ export default async function ({ browser, url }) {
     await v.ctx.close();
   }
 
+  {
+    // score history keeps the 30 most recently checked files: re-checking a file keeps it, a new file drops the oldest
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });
+    await v.pg.evaluate(() => { const h = { 'legacy.pbit': [{ d: '2026-09-01', s: 40 }] }; for (let i = 0; i < 29; i++) h['f' + i + '.pbit'] = [{ d: '2026-09-02', s: 50 }]; localStorage.setItem('dataarcus-mh-history', JSON.stringify(h)); });
+    const legacy = fs.readFileSync(path.join(ROOT, 'scripts/tests/fixtures/model-health/legacy.pbit'));
+    for (const name of ['legacy.pbit', 'new.pbit']) {
+      await v.pg.evaluate(() => { const b = document.getElementById('mhNew'); if (b) b.click(); });
+      await v.pg.setInputFiles('#mhFile', { name, mimeType: 'application/octet-stream', buffer: legacy });
+      await v.pg.waitForSelector('#mhTab', { timeout: 20000 });
+    }
+    const keys = await v.pg.evaluate(() => Object.keys(JSON.parse(localStorage.getItem('dataarcus-mh-history'))));
+    check(keys.length === 30 && keys.includes('legacy.pbit') && keys.includes('new.pbit') && !keys.includes('f0.pbit'), `score history: re-checked file dropped (${keys.length} files, legacy.pbit ${keys.includes('legacy.pbit')}, f0.pbit ${keys.includes('f0.pbit')})`);
+    await v.ctx.close();
+  }
+
   // ---- fix plan in the page ----
   for (const [name, file] of [['legacy.pbit', fs.readFileSync(path.join(ROOT, 'scripts/tests/fixtures/model-health/legacy.pbit'))],
     ['plan.pbit', pbit({ DataModelSchema: JSON.stringify(planModel()), 'Report/Layout': JSON.stringify(planLayout), Version: '1.28' })]]) {
