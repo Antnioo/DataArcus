@@ -680,10 +680,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- Power BI project (.pbip): theme, background and every visual in one download ----------
   // Only on pages that have the project card (the lab page for now). The builder loads on first use.
   const pbipBtn = $('pbipBtn');
+  let pbipSync = null;   // set below on pages with the project card: keeps the field picker in step with the layout
   if (pbipBtn) {
     let logo = null;
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : new Promise((resolve, reject) => {
-      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20260930b'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
+      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20260930c'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
     }));
     // ---- your own model: a local project (the report points at its .SemanticModel folder) or a published one ----
     // Each choice keeps its own model and the fields picked for it, so switching between them never pairs one
@@ -696,7 +697,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mode = () => (dataIn ? dataIn.value : 'sample');
     // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)
     const kpiSlots = () => Math.max(lay().kpis || 0, $('pbipPages') && $('pbipPages').checked ? 4 : 0, 1);
-    // the picker for the model of the current choice, with the visitor's picks kept
+    // the picker for the model of the current choice, one KPI row per card; the visitor's picks are kept
     const showPicker = (DB) => {
       if (own.getBind) own.getBind();   // remember the picks shown so far
       own.getBind = null; const map = $('pbipMap'); if (map) map.innerHTML = '';
@@ -705,10 +706,19 @@ document.addEventListener('DOMContentLoaded', () => {
       ownMsg(e.msg, e.bad);
       if (!e.tables.length) return;
       const n = kpiSlots(), fresh = DB.suggest(e.tables, n);
-      const bind = e.choices ? DB.build(e.choices) : fresh;
+      let bind = fresh;
+      if (e.choices) {
+        const id = (k) => (k ? k.t + '\u0000' + k.m : ''), kpis = e.choices.kpis.slice(0, n);
+        fresh.choices.kpis.forEach((k) => { if (k && kpis.length < n && !kpis.some((x) => id(x) === id(k))) kpis.push(k); });
+        while (kpis.length < n) kpis.push(null);
+        bind = DB.build(Object.assign({}, e.choices, { kpis }));
+      }
+      e.kpiN = n;
       const get = DB.renderPicker(map, e.tables, bind, L);
       own.getBind = () => { const b = get(); e.choices = b.choices; return b; };
     };
+    // the number of KPI cards changed (layout, second page): the picker follows
+    pbipSync = () => { const e = own[mode()]; if (e && window.DABind && e.kpiN !== kpiSlots()) showPicker(window.DABind); };
     const showOwn = () => {
       const m = mode(), box = $('pbipOwn'); if (!box) return;
       box.hidden = m !== 'local' && m !== 'service';
@@ -735,6 +745,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     if (dataIn) {
       dataIn.addEventListener('change', showOwn); showOwn();
+      if ($('pbipPages')) $('pbipPages').addEventListener('change', () => pbipSync());
       $('pbipFolder').addEventListener('change', (e) => {
         const files = e.target.files; if (!files || !files.length) return;
         ownMsg(L('Reading the model…', 'جارٍ قراءة النموذج…'));
@@ -853,6 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
     $('dlStatus').innerHTML = h;
     files.forEach((f) => { const card = document.querySelector(`.tg-file[data-file="${f[0]}"]`); if (card) card.classList.toggle('stale', f[2]); });
     const s3 = document.querySelector('.tg-steps [data-step="download"]'); if (s3) s3.classList.toggle('stale', old.length > 0 || solid);
+    if (pbipSync) pbipSync();
   }
   const DL = { json: () => downloadJson('reminder'), png: downloadPng, csv: downloadCsv };
   document.querySelector('main.tg').addEventListener('click', (e) => {
