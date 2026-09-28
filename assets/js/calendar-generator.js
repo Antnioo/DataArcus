@@ -48,6 +48,13 @@ document.addEventListener('DOMContentLoaded', () => {
   let state;
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { saved = null; }
+  // keep only saved values of the right type and range, so an old or hand-edited save cannot break the page
+  const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+  if (saved && typeof saved === 'object') {
+    const ok = { start: (v) => /^\d{4}-\d{2}-\d{2}$/.test(v), end: (v) => /^\d{4}-\d{2}-\d{2}$/.test(v), fy: (v) => Number.isInteger(v) && v >= 1 && v <= 12,
+      week: (v) => ['sun', 'mon', 'sat'].includes(v), weekend: (v) => own(WEEKENDS, v), lang: (v) => own(MONTHS, v) };
+    saved = Object.fromEntries(Object.entries(saved).filter(([k, v]) => own(DEFAULTS, k) && typeof v === typeof DEFAULTS[k] && (!ok[k] || ok[k](v))));
+  } else saved = null;
   // First visit in Arabic: default the month and day names to Arabic too
   state = { ...DEFAULTS, ...(saved ? {} : { lang: (isAr() || (() => { try { return localStorage.getItem('dataarcus-lang') === 'ar'; } catch (e) { return false; } })()) ? 'ar' : 'en' }), ...(saved || {}) };
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* private mode */ } };

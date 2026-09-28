@@ -66,6 +66,21 @@ export default async function ({ browser, url }) {
     await done(c, 'calendar Arabic name');
   }
 
+  // Odd saved settings (an old version, a hand edit): the page still loads and writes valid DAX
+  for (const bad of [{ pick: null }, { pick: 'ytd' }, { fyEnd: null }, { fyEnd: '2-30' }, { n: -3 }, { n: '5' }, { agg: 'SUMX' }, { mode: 7 }, [1, 2], 5]) {
+    const v = await open(MB, ['dataarcus-measure-builder', JSON.stringify(bad)]);
+    const dax = await v.pg.$eval('#script', (e) => e.textContent).catch(() => '');
+    check(/MEASURE 'Sales'\[Total Sales YTD\]/.test(dax) || (Array.isArray(bad.pick) && bad.pick.length === 0), `measure builder saved ${JSON.stringify(bad)}: default measures missing`);
+    check(!/--\d|, "(undefined|null|NaN)|\bSUMX \(/.test(dax), `measure builder saved ${JSON.stringify(bad)}: ${(dax.match(/.*(--\d|undefined|null|NaN|SUMX).*/) || [''])[0].trim()}`);
+    await done(v, `measure builder saved ${JSON.stringify(bad)}`);
+  }
+  for (const bad of [{ start: null }, { end: 5 }, { start: 'soon' }, { weekend: 'x' }, { weekend: 'toString' }, { week: 'tue' }, { lang: 'fr' }, { fy: 13 }, { fy: '4' }, { hijri: 'yes' }, 'x']) {
+    const v = await open(CG, ['dataarcus-calendar-generator', JSON.stringify(bad)]);
+    const dax = await v.pg.$eval('#dax', (e) => e.textContent).catch(() => '');
+    check(/^Calendar =\n[\s\S]*CALENDAR \( DATE \( 2022, 1, 1 \), DATE \( 2027, 12, 31 \) \)/.test(dax) && !/undefined|NaN/.test(dax), `calendar saved ${JSON.stringify(bad)}: DAX ${JSON.stringify(dax.slice(0, 60))}`);
+    await done(v, `calendar saved ${JSON.stringify(bad)}`);
+  }
+
   // Calendar generator: a range it cannot build clears the old table, so Copy and Download cannot hand it out
   {
     const v = await open(CG);
