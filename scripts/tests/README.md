@@ -25,6 +25,7 @@ Each test prints `PASS` or `FAIL` with the problems it found. The command fails 
 | `site` | Every page: no errors, no missing translations, no sideways scrolling, phone menu opens, top offset matches the navbar |
 | `anchors` | `#section` links, clicked or arrived at, land just below the navbar and pinned bars |
 | `tools` | Model health results and exam navigation scroll below the navbar, CTA buttons spaced in both directions, FAQ right after the CTA, site works if AOS fails to load |
+| `model-health` | Model Health Check: the engine sees every real use of a column (measure-table placeholders, field parameters, DAX functions, aggregations), and the fix plan never removes anything that something staying still needs |
 | `spacing` | Every page: stacked boxes are one step of the spacing scale apart (style.css `--space-*`), and content starts one step below the navbar |
 | `consent` | Cookie banner only in Europe, Reject stops analytics, privacy page button, phone layout |
 | `lang-switcher` | Every page: the language switcher's label is in the other language, the Arabic label gets the Arabic font (its letters load on English pages), joined letters and its optical lift, so it sits level with the globe |
