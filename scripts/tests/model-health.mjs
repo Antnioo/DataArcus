@@ -86,6 +86,15 @@ export default async function ({ browser, url }) {
     check(col(r, 'Sales', 'Qty').used === false, 'DAX function: a column read only by a function nobody calls counts as used');
   }
 
+  for (const [form, base] of [['object', { table: 'Sales', column: 'Amount' }], ['text', "'Sales'[Amount]"]]) {
+    // aggregation table: a visual on Sales[Amount] is answered from the hidden Sales Agg table
+    const m = { model: { tables: [sales(), { name: 'Sales Agg', isHidden: true, columns: [{ name: 'SumAmount', dataType: 'double', sourceColumn: 'SumAmount', alternateOf: { baseColumn: base, summarization: 'sum' } },
+      { name: 'Rows', dataType: 'int64', sourceColumn: 'Rows', alternateOf: { baseTable: 'Sales', summarization: 'countTableRows' } }], partitions: mpart('Sales Agg') }] } };
+    const r = E.analyze(m, report([['Column', 'Sales', 'Amount']]));
+    check(col(r, 'Sales Agg', 'SumAmount').used === true && col(r, 'Sales Agg', 'Rows').used === true, `aggregation table (${form} baseColumn): its columns are reported unused`);
+    check(!r.findings.some((f) => f.id === 'UNUSED_TABLE' && f.items.some((i) => i.obj === 'Sales Agg')), `aggregation table (${form} baseColumn): reported as a table nobody uses`);
+  }
+
   // ---- fix plan in the page ----
   for (const [name, file] of [['legacy.pbit', fs.readFileSync(path.join(ROOT, 'scripts/tests/fixtures/model-health/legacy.pbit'))],
     ['plan.pbit', pbit({ DataModelSchema: JSON.stringify(planModel()), 'Report/Layout': JSON.stringify(planLayout), Version: '1.28' })]]) {

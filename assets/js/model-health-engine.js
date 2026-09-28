@@ -61,7 +61,8 @@
           isKey: !!c.isKey,
           sourceColumn: c.sourceColumn || '',
           extendedProperties: c.extendedProperties || null,
-          relatedColumnDetails: c.relatedColumnDetails || null
+          relatedColumnDetails: c.relatedColumnDetails || null,
+          alternateOf: c.alternateOf || null
         })),
         measures: (t.measures || []).filter((ms) => ms && ms.name != null).map((ms) => ({
           name: nm(ms.name),
@@ -191,6 +192,17 @@
       }
     }
     return { refs: uniq(refs), style };
+  }
+
+  // Detail column (or table) of an aggregation column. baseColumn is written as { table, column } or as 'Table'[Column].
+  function aggBase(a) {
+    if (!a) return null;
+    const b = a.baseColumn;
+    if (b && typeof b === 'object' && b.table && b.column) return K.c(b.table, b.column);
+    const m = typeof b === 'string' && b.match(/^\s*(?:'((?:[^']|'')+)'|([^\[]+?))\s*\[((?:[^\]]|\]\])+)\]\s*$/);
+    if (m) return K.c((m[1] || m[2]).replace(/''/g, "'"), m[3].replace(/]]/g, ']'));
+    const t = a.baseTable && (typeof a.baseTable === 'object' ? a.baseTable.name : a.baseTable);
+    return t ? K.t(t) : null;
   }
 
   // ---------- 4. report field usage ----------
@@ -469,6 +481,12 @@
       }
       if (t.calcGroup) t.calcGroup.items.forEach((ci) => addDeps(K.t(t.name), daxRefs(ci.expr + '\n' + ci.fsExpr, null, IX).refs));
       t.columns.forEach((c) => { if (c.sortBy) addDeps(K.c(t.name, c.name), [K.c(t.name, c.sortBy)]); });
+      // aggregation tables: queries on the detail table are answered from the hidden aggregation table, so an aggregation
+      // column is used whenever its detail column (or for Count table rows, its detail table) is, and it needs that detail
+      t.columns.forEach((c) => {
+        const base = aggBase(c.alternateOf);
+        if (base) { addDeps(base, [K.c(t.name, c.name)]); addDeps(K.c(t.name, c.name), [base]); }
+      });
       // field parameters: the visible column groups by the hidden "Fields" column, so a visual using one uses both
       t.columns.forEach((c) => ((c.relatedColumnDetails && c.relatedColumnDetails.groupByColumns) || []).forEach((g) => { if (g && g.groupingColumn) addDeps(K.c(t.name, c.name), [K.c(t.name, g.groupingColumn)]); }));
       t.hierarchies.forEach((h) => h.levels.forEach((l) => addDeps('h:' + lc(t.name) + '|' + lc(h.name), [K.c(t.name, l.column)])));
