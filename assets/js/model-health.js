@@ -570,8 +570,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function docMd() {
     const s = R.stats, sc = score(), lines = [];
     const cell = (x) => String(x == null ? '' : x).replace(/\|/g, '\\|').replace(/\n/g, ' ');
+    // a code fence longer than any run of backticks in the code, so DAX containing ``` cannot close it early
+    const fence = (code) => { const f = '`'.repeat(Math.max(3, ...(code.match(/`+/g) || []).map((x) => x.length + 1))); return [f + 'dax', code, f, '']; };
+    const dep = (x) => (x.type === 'measure' ? '[' + x.name + ']' : x.type === 'column' ? x.table + '[' + x.name + ']' : x.type === 'function' ? x.name + '()' : x.name);
     lines.push('# ' + R.meta.fileName, '', 'Model documentation and health check, ' + new Date().toISOString().slice(0, 10), '');
     lines.push('**Health score: ' + sc.overall + '/100** (Performance ' + sc.perf + ', Maintainability ' + sc.maint + ', Best practice ' + sc.bp + ')', '');
+    if (s.sources.length) lines.push('**Data sources:** ' + s.sources.map((x) => x.name + ' (' + x.count + ')').join(', '), '');
     lines.push('| Tables | Columns | Measures | Relationships |' + (s.pages != null ? ' Pages | Visuals |' : ''), '|---|---|---|---|' + (s.pages != null ? '---|---|' : ''), '| ' + [s.tables, s.columns, s.measures, s.relationships].join(' | ') + ' |' + (s.pages != null ? ' ' + s.pages + ' | ' + s.visuals + ' |' : ''), '');
     lines.push('## Findings', '', '| Severity | Finding | Count | How to fix |', '|---|---|---|---|');
     R.findings.forEach((f) => lines.push('| ' + f.sev + ' | ' + cell(RULES()[f.id].en[0]) + ' | ' + f.items.length + ' | ' + cell(RULES()[f.id].en[2]) + ' |'));
@@ -583,15 +587,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     lines.push('## Tables', '');
     R.tables.filter((t) => !t.auto).forEach((t) => {
-      lines.push('### ' + t.name, '', '| Column | Type | Kind | Used |', '|---|---|---|---|');
-      t.columns.forEach((c) => lines.push('| ' + cell(c.name) + ' | ' + c.dataType + ' | ' + (c.kind === 'calculated' ? 'Calculated' : 'Data') + (c.hidden ? ', hidden' : '') + ' | ' + (c.used == null ? '' : c.used ? 'Yes' : 'No') + ' |'));
+      lines.push('### ' + t.name + (t.hidden ? ' (hidden)' : ''), '');
+      if (t.description) lines.push(t.description, '');
+      lines.push('| Column | Type | Kind | Used | Notes |', '|---|---|---|---|---|');
+      t.columns.forEach((c) => lines.push('| ' + cell(c.name) + ' | ' + c.dataType + ' | ' + (c.kind === 'calculated' ? 'Calculated' : 'Data') + (c.hidden ? ', hidden' : '') + ' | ' + (c.used == null ? '' : c.used ? 'Yes' : 'No') + ' | ' + cell((c.sortBy ? 'Sorted by ' + c.sortBy + '. ' : '') + (c.description || '')) + ' |'));
       lines.push('');
+      t.columns.filter((c) => c.expr).forEach((c) => lines.push('**' + t.name + '[' + c.name + ']**', '', ...fence(c.expr.trim())));
+      if (t.calcExpr) lines.push('**Table DAX**', '', ...fence(t.calcExpr.trim()));
     });
     lines.push('## Measures', '');
     R.measures.slice().sort((a, b) => (a.folder || '').localeCompare(b.folder || '') || a.name.localeCompare(b.name)).forEach((m) => {
       lines.push('### ' + m.name, '', (m.folder ? 'Folder: ' + m.folder + '  ' : '') + (m.formatString ? 'Format: `' + m.formatString + '`  ' : '') + (m.used == null ? '' : m.used ? (m.visuals ? 'In ' + m.visuals + ' visuals on ' + m.pages.length + ' pages' : 'Used by other measures or filters') : 'Unused'), '');
       if (m.description) lines.push(m.description, '');
-      lines.push('```dax', m.expr.trim(), '```', '');
+      lines.push(...fence(m.expr.trim()));
+      if (m.dependsOn.length) lines.push('Depends on: ' + m.dependsOn.map(dep).join(', '), '');
     });
     lines.push('## Relationships', '', '| From | To | Cardinality | Filter | Active |', '|---|---|---|---|---|');
     R.relationships.forEach((r) => lines.push('| ' + cell(r.fromTable + '[' + r.fromColumn + ']') + ' | ' + cell(r.toTable + '[' + r.toColumn + ']') + ' | ' + (r.fromCard === 'many' ? 'Many' : 'One') + ':' + (r.toCard === 'many' ? 'Many' : 'One') + ' | ' + (r.cross === 'bothDirections' ? 'Both' : 'Single') + ' | ' + (r.active ? 'Yes' : 'No') + ' |'));
