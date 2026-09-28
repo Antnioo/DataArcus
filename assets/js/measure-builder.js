@@ -151,13 +151,18 @@ EVALUATE
     $('column').disabled = state.agg === 'COUNTROWS';
   };
   document.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => { state.mode = b.dataset.mode; setMode(); render(); }));
+  // rolling months and average days: whole numbers within the same limits as the number boxes (max="36", max="365")
+  const LIMIT = { n: 36, days: 365 };
+  const count = (v, max) => Math.max(1, Math.min(max, Math.round(Number(v)) || 1));
   ['agg', 'fact', 'column', 'base', 'existing', 'home', 'cal', 'dateCol', 'fyEnd', 'n', 'days'].forEach((k) => {
     const el = $(k); if (!el) return; el.value = state[k];
     el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => {
-      state[k] = (k === 'n' || k === 'days') ? Math.max(1, Math.min(365, parseInt(el.value, 10) || 1)) : el.value;
+      state[k] = LIMIT[k] ? count(el.value, LIMIT[k]) : el.value;
       if (k === 'agg') setMode();
       render();
     });
+    // when the visitor leaves the box, show the number the measures really use
+    if (LIMIT[k]) el.addEventListener('change', () => { el.value = state[k]; });
   });
   // pattern checkboxes grouped
   const groups = [...new Set(PATTERNS.map((p) => p.g))];
