@@ -200,9 +200,8 @@ document.addEventListener('DOMContentLoaded', () => {
       return MAX_DURATION - (MAX_DURATION - MIN_DURATION) * scale;
     };
 
-    const animateCounters = () => {
-      const counters = statsSection.querySelectorAll('[data-count]');
-      counters.forEach(counter => {
+    const animateCounter = (counter) => {
+      {
         const target = parseFloat(counter.getAttribute('data-count'));
         const suffix = counter.getAttribute('data-suffix') || '';
         const duration = durationFor(target);
@@ -225,19 +224,21 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         };
         requestAnimationFrame(updateCounter);
-      });
+      }
     };
 
+    // Each number starts when it comes into view. Watching the whole section instead never fired on short
+    // screens (a phone held sideways), where a tall section can never be 20% visible at once.
     const statsObserver = new IntersectionObserver((entries, observer) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          animateCounters();
+          animateCounter(entry.target);
           observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.2, rootMargin: '0px 0px -100px 0px' });
-    
-    statsObserver.observe(statsSection);
+    }, { threshold: 1 });
+
+    statsSection.querySelectorAll('[data-count]').forEach((counter) => statsObserver.observe(counter));
   }
   
   // Scroll-in animations come from AOS only (data-aos attributes, section 1)
