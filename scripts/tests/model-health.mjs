@@ -95,6 +95,14 @@ export default async function ({ browser, url }) {
     check(!r.findings.some((f) => f.id === 'UNUSED_TABLE' && f.items.some((i) => i.obj === 'Sales Agg')), `aggregation table (${form} baseColumn): reported as a table nobody uses`);
   }
 
+  {
+    // "/" inside a column name is not a division; a real one still is
+    const m = { model: { tables: [Object.assign(sales(), { columns: sales().columns.concat({ name: 'Qty/Box', dataType: 'int64', sourceColumn: 'Qty/Box' }),
+      measures: [{ name: 'Boxes', expression: "SUM ( Sales[Qty/Box] ) + SUM ( 'Sales'[Qty/Box] )", formatString: '0' }, { name: 'Per Box', expression: 'SUM ( Sales[Amount] ) / SUM ( Sales[Qty/Box] )', formatString: '0' }] })] } };
+    const div = ((E.analyze(m, null).findings.find((f) => f.id === 'DIVISION') || {}).items || []).map((i) => i.obj);
+    check(JSON.stringify(div) === '["[Per Box]"]', `division check: flags ${JSON.stringify(div)}, expected only [Per Box]`);
+  }
+
   // ---- fix plan in the page ----
   for (const [name, file] of [['legacy.pbit', fs.readFileSync(path.join(ROOT, 'scripts/tests/fixtures/model-health/legacy.pbit'))],
     ['plan.pbit', pbit({ DataModelSchema: JSON.stringify(planModel()), 'Report/Layout': JSON.stringify(planLayout), Version: '1.28' })]]) {

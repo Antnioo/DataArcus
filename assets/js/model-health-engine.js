@@ -130,9 +130,10 @@
     return out;
   }
 
-  // Strip comments and string contents, for regex based checks that must not match inside strings.
+  // Strip comments, string contents and object names, for regex based checks that must not match inside
+  // strings or names (a column called Sales[Qty/Box] is not a division).
   function daxCode(src) {
-    return tokenizeDax(src).map((t) => (t.t === 'str' ? '""' : t.t === 'tbl' ? "'" + t.v + "'" : t.t === 'br' ? '[' + t.v + ']' : t.v)).join(' ');
+    return tokenizeDax(src).map((t) => (t.t === 'str' ? '""' : t.t === 'tbl' ? "'_'" : t.t === 'br' ? '[_]' : t.v)).join(' ');
   }
 
   // ---------- 3. index and dependency graph ----------
