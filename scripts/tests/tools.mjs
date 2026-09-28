@@ -26,6 +26,28 @@ export default async function ({ browser, url }) {
     await v.ctx.close();
   }
 
+  // Measure builder: each output tab shows only its own box, and the TMDL script sets formats, folders and descriptions
+  {
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/tools/dax-measure-builder.html?lang=en`, { waitUntil: 'networkidle' });
+    for (const tab of ['tmdl', 'one', 'all']) {
+      await v.pg.click(`[data-tab-out="${tab}"]`);
+      const shown = await v.pg.evaluate(() => ['outAll', 'outTmdl', 'outOne'].filter((id) => document.getElementById(id).offsetParent));
+      const want = { all: 'outAll', tmdl: 'outTmdl', one: 'outOne' }[tab];
+      check(shown.length === 1 && shown[0] === want, `measure builder "${tab}" tab shows ${shown.join(', ') || 'nothing'}`);
+    }
+    const t = await v.pg.$eval('#tmdl', (e) => e.textContent);
+    check(t.startsWith('createOrReplace\n\n\tref table Sales\n'), `measure builder TMDL: header ${JSON.stringify(t.slice(0, 40))}`);
+    check(/\t\tmeasure 'Total Sales YoY %' = ```\n[\s\S]*?\t\t\t\t```\n\t\t\tformatString: 0\.0%\n\t\t\tdisplayFolder: Time intelligence\\Compare\n/.test(t), 'measure builder TMDL: YoY % has no % format or folder');
+    check(/\t\t\/\/\/ Month to date[^\n]*\n\t\tmeasure 'Total Sales MTD' = ```\n\t\t\t\tCALCULATE/.test(t), 'measure builder TMDL: MTD has no description or expression');
+    check((t.match(/```/g) || []).length % 2 === 0, 'measure builder TMDL: unbalanced ``` fences');
+    await v.pg.evaluate(() => { document.documentElement.lang = 'ar'; });
+    const ar = await v.pg.$eval('#tmdl', (e) => e.textContent);
+    check(ar === t, 'measure builder TMDL: the model text changes with the page language');
+    if (v.errs.length) problems.push(`measure builder: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
+
   // Exam simulators: moving to the next question from lower down scrolls back to the question
   for (const page of ['dp-600-practice-exam', 'pl-300-practice-exam']) {
     const v = await visitor(browser, { viewport: [1440, 900] });

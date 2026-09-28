@@ -3,7 +3,8 @@
  * Turns one base measure into a full set of time-intelligence measures
  * (MTD, YTD, prior year, YoY %, rolling, running total, Ramadan vs last Ramadan).
  * Output 1: one DAX query view script that adds every measure at once.
- * Output 2: each measure on its own, for Modeling > New measure.
+ * Output 2: one TMDL view script that also sets number formats, display folders and descriptions.
+ * Output 3: each measure on its own, for Modeling > New measure.
  */
 document.addEventListener('DOMContentLoaded', () => {
   const $ = (id) => document.getElementById(id);
@@ -98,11 +99,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const b = mRef(baseName()), d = dateRef(), out = [];
     if (state.mode === 'column') {
       const expr = state.agg === 'COUNTROWS' ? `COUNTROWS ( ${tbl(state.fact)} )` : `${state.agg} ( ${colRef(state.fact, state.column)} )`;
-      out.push({ name: baseName(), expr, what: L('Your base measure. Every other measure builds on it.', 'المقياس الأساسي. كل المقاييس الأخرى مبنية عليه.'), auto: false });
+      out.push({ name: baseName(), expr, what: L('Your base measure. Every other measure builds on it.', 'المقياس الأساسي. كل المقاييس الأخرى مبنية عليه.'), desc: 'Base measure. The time intelligence measures build on it.', fmt: '#,0', auto: false });
     }
-    PATTERNS.forEach((p) => { if (picked.has(p.id)) out.push({ name: `${baseName()} ${val(p.suffix)}`, expr: p.dax(b, d), what: isAr() ? val(WHAT_AR[p.id]) : val(p.what), pct: !!p.pct, auto: !state.pick.includes(p.id), g: p.g }); });
+    PATTERNS.forEach((p) => { if (picked.has(p.id)) out.push({ name: `${baseName()} ${val(p.suffix)}`, expr: p.dax(b, d), what: isAr() ? val(WHAT_AR[p.id]) : val(p.what), desc: val(p.what), fmt: p.pct ? '0.0%' : (p.id === 'avgDays' ? '#,0.0' : '#,0'), pct: !!p.pct, auto: !state.pick.includes(p.id), g: p.g }); });
     return out;
   };
+  // TMDL view: createOrReplace under "ref table" adds or updates only these measures, the rest of the table is kept.
+  // Names follow the TMDL quoting rule; expressions are fenced with ``` so the DAX is kept exactly.
+  const tName = (n) => (/^[A-Za-z_][A-Za-z0-9_-]*$/.test(n) ? n : "'" + String(n).replace(/'/g, "''") + "'");
+  const tmdlScript = (ms) => ['createOrReplace', '', `\tref table ${tName(home())}`, ''].concat(...ms.map((m) => [
+    ...(m.desc ? [`\t\t/// ${m.desc}`] : []),
+    `\t\tmeasure ${tName(m.name)} = \`\`\``,
+    ...m.expr.split('\n').map((l) => '\t\t\t\t' + l),
+    '\t\t\t\t```',
+    `\t\t\tformatString: ${m.fmt}`,
+    ...(m.g ? [`\t\t\tdisplayFolder: Time intelligence\\${m.g}`] : []),
+    ''])).join('\n');
   const indent = (s, pad) => s.split('\n').map((l, i) => (i === 0 ? l : pad + l)).join('\n');
 
   const render = () => {
@@ -116,6 +128,7 @@ ${ms.map((m) => `    MEASURE ${h}[${m.name.replace(/]/g, ']]')}] =\n        ${in
 EVALUATE
     { ${mRef(baseName())} }`;
     $('script').textContent = script;
+    $('tmdl').textContent = tmdlScript(ms);
     $('count').textContent = L(`${ms.length} measure${ms.length === 1 ? '' : 's'}`, `${ms.length} مقياس`);
     $('list').innerHTML = ms.map((m, i) => `<div class="mb-card">
         <div class="mb-head"><div><b>${escapeHtml(m.name)}</b>${m.pct ? `<span class="mb-tag">${L('Format as %', 'تنسيق كنسبة %')}</span>` : ''}${m.auto ? `<span class="mb-tag dep">${L('Added: needed by another measure', 'أُضيف: يحتاجه مقياس آخر')}</span>` : ''}<div class="mb-what">${escapeHtml(m.what)}</div></div>
@@ -166,16 +179,19 @@ EVALUATE
     if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(() => toast(L('Copied', 'تم النسخ')), fallback); else fallback();
   };
   $('copyAll').addEventListener('click', () => { copy($('script').textContent, $('script')); track('measure_copy_all', { count: buildMeasures().length, mode: state.mode }); });
-  $('dlBtn').addEventListener('click', () => {
-    const blob = new Blob([$('script').textContent], { type: 'text/plain' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = baseName().toLowerCase().replace(/[^\w]+/g, '-') + '-measures.dax';
+  $('copyTmdl').addEventListener('click', () => { copy($('tmdl').textContent, $('tmdl')); track('measure_copy_tmdl', { count: buildMeasures().length, mode: state.mode }); });
+  const download = (id, ext, event) => {
+    const blob = new Blob([$(id).textContent], { type: 'text/plain' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = baseName().toLowerCase().replace(/[^\w]+/g, '-') + '-measures.' + ext;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    toast(L('Downloaded', 'تم التنزيل')); track('measure_download', { count: buildMeasures().length });
-  });
+    toast(L('Downloaded', 'تم التنزيل')); track(event, { count: buildMeasures().length });
+  };
+  $('dlBtn').addEventListener('click', () => download('script', 'dax', 'measure_download'));
+  $('dlTmdl').addEventListener('click', () => download('tmdl', 'tmdl', 'measure_download_tmdl'));
   document.querySelectorAll('[data-tab-out]').forEach((b) => b.addEventListener('click', () => {
     document.querySelectorAll('[data-tab-out]').forEach((x) => x.classList.toggle('active', x === b));
-    $('outAll').style.display = b.dataset.tabOut === 'all' ? '' : 'none';
-    $('outOne').style.display = b.dataset.tabOut === 'one' ? '' : 'none';
+    // d-none, not style.display: the output boxes are d-flex, whose !important beats an inline display
+    [['outAll', 'all'], ['outTmdl', 'tmdl'], ['outOne', 'one']].forEach(([id, tab]) => $(id).classList.toggle('d-none', b.dataset.tabOut !== tab));
   }));
 
   setMode(); render();
