@@ -176,9 +176,13 @@
     const sample = !!o.sample && !own;
     const B = own ? (o.bind || null) : sample ? sampleBind(t) : null;
     let base = (o.name || 'Power BI Report').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || 'Power BI Report';
-    // next to someone's project: never the name of their own report folder (it is usually named like the model)
+    // next to someone's project: never the name of a report already there (o.model.taken: their X.Report folders and
+    // X.pbip files), nor the model's own name, which their first report usually has
     const theirs = o.model && o.model.byPath ? String(o.model.byPath).replace(/^.*\//, '').replace(/\.SemanticModel$/i, '') : null;
-    if (theirs && base.toLowerCase() === theirs.toLowerCase()) base += ' - ' + (W.newDesign || 'New design');
+    if (theirs) {
+      const taken = new Set([theirs].concat(o.model.taken || []).map((n) => String(n).toLowerCase())), b0 = base;
+      for (let n = 1; taken.has(base.toLowerCase()); n++) base = b0 + ' - ' + (W.newDesign || 'New design') + (n > 1 ? ' ' + n : '');
+    }
     const slug = base.replace(/[^\w-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'report';
     const R = base + '.Report', M = base + '.SemanticModel', D = R + '/definition';
     const themeFile = slug + '-theme.json', logoFile = o.logo ? slug + '-logo.' + o.logo.ext : null;
