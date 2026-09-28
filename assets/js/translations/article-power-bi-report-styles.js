@@ -54,10 +54,14 @@ window.reportStylesArticleTranslations = {
       "thReader": "Reader",
       "thTime": "Time spent",
       "thDens": "Density",
-      "thCol": "Colour rule"
+      "thCol": "Colour rule",
+      "expert": "Where this comes from",
+      "sources": "Sources and further reading",
+      "sourcesNote": "The books and standards behind these styles. The example pages are our own, with fictional data."
     },
     "styles": {
       "executive": {
+        "expert": "Stephen Few defines a dashboard as the most important information needed to reach one or more objectives, on a single screen, so it can be monitored <em>at a glance</em> (<em>Information Dashboard Design</em>). A practical check is the 5-second test: show the page for five seconds, then ask whether things are good or bad. If the reader can’t say, simplify.",
         "name": "Executive",
         "nick": "The 5-second report",
         "phil": "Answer “are we OK?” before the reader finishes their coffee.",
@@ -78,6 +82,7 @@ window.reportStylesArticleTranslations = {
         "alt": "Example of a executive report in Power BI: the 5-second report"
       },
       "sales": {
+        "expert": "The bullet bars in the leaderboard are Stephen Few’s <em>bullet graph</em>, designed to replace gauges: actual, target and ranges in a fraction of the space. Many sales teams also track <em>pipeline coverage</em>, open pipeline divided by the target still to close, and treat roughly 3× as healthy; the right ratio depends on your own win rate.",
         "name": "Sales",
         "nick": "The race",
         "phil": "Show the gap to target, and who is closing it.",
@@ -99,6 +104,7 @@ window.reportStylesArticleTranslations = {
         "alt": "Example of a sales report in Power BI: the race"
       },
       "finance": {
+        "expert": "The notation (actual solid and dark, budget as an outline, prior year in grey, variances green or red) follows the <em>International Business Communication Standards</em> (IBCS), which grew from Rolf Hichert’s SUCCESS rules for business reports. The bridge is a classic <em>price–volume–mix</em> analysis: it splits the revenue variance into what you sold more of, what you charged, and what you sold.",
         "name": "Finance",
         "nick": "The ledger",
         "phil": "Precision first: every number in its place, every difference explained.",
@@ -120,6 +126,7 @@ window.reportStylesArticleTranslations = {
         "alt": "Example of a finance report in Power BI: the ledger"
       },
       "marketing": {
+        "expert": "Funnel analysis only works if the steps are counted the same way in every channel. Watch attribution: <em>last-click</em> reporting gives all the credit to the final touch, so awareness channels look worse than they are. Compare channels on cost per <em>customer</em> as well as cost per lead, because cheap leads that never buy are the most expensive kind.",
         "name": "Marketing",
         "nick": "The journey",
         "phil": "Follow the customer from first view to purchase, and price every step.",
@@ -140,6 +147,7 @@ window.reportStylesArticleTranslations = {
         "alt": "Example of a marketing report in Power BI: the journey"
       },
       "operations": {
+        "expert": "This is the approach of industrial control rooms, set out in the <em>high-performance HMI</em> practice and the ISA-101 standard for operator screens: grey and calm when everything is normal, colour only for abnormal states, so an alarm stands out instantly. It works because colour is a <em>pre-attentive</em> attribute: the eye finds it before you start reading (Colin Ware, <em>Information Visualization: Perception for Design</em>).",
         "name": "Operations",
         "nick": "The control room",
         "phil": "Silence when all is well, alarms when it isn’t.",
@@ -160,6 +168,7 @@ window.reportStylesArticleTranslations = {
         "alt": "Example of a operations report in Power BI: the control room"
       },
       "hr": {
+        "expert": "Hiding small groups is a <em>minimum group size</em> rule, the same idea as k-anonymity in privacy work: an average over three people can reveal one person’s salary or rating. Many organisations use a threshold of 5 or 10. Show attrition as a 12-month rolling rate (leavers in the last 12 months divided by average headcount) so one bad month doesn’t swing the number.",
         "name": "HR",
         "nick": "The people map",
         "phil": "Show how the workforce is changing, without exposing individuals.",
@@ -180,6 +189,7 @@ window.reportStylesArticleTranslations = {
         "alt": "Example of a hr report in Power BI: the people map"
       },
       "service": {
+        "expert": "Contact centres define <em>service level</em> as the share of contacts answered within a set time; a widely used benchmark for calls is 80/20, 80% answered within 20 seconds. Email and ticket teams use the same idea with hours instead of seconds. Colouring agents against the promise, not against each other, keeps the report a coaching tool.",
         "name": "Customer service",
         "nick": "The queue",
         "phil": "Measure the promise you made to customers, and the queue behind it.",
@@ -288,10 +298,14 @@ window.reportStylesArticleTranslations = {
       "thReader": "القارئ",
       "thTime": "الوقت",
       "thDens": "الكثافة",
-      "thCol": "قاعدة الألوان"
+      "thCol": "قاعدة الألوان",
+      "expert": "من أين جاء هذا",
+      "sources": "المصادر وقراءات إضافية",
+      "sourcesNote": "الكتب والمعايير وراء هذه الأنماط. صفحات الأمثلة من إعدادنا، ببيانات وهمية."
     },
     "styles": {
       "executive": {
+        "expert": "يعرّف ستيفن فيو (Stephen Few) لوحة المعلومات بأنها أهم المعلومات اللازمة لتحقيق هدف أو أكثر، على شاشة واحدة، بحيث تُتابع <em>بنظرة واحدة</em> (كتاب <em>Information Dashboard Design</em>). واختبار عملي لذلك هو اختبار الثواني الخمس: اعرض الصفحة خمس ثوانٍ ثم اسأل هل الوضع جيد أم سيئ. إن لم يستطع القارئ الإجابة، فبسّط.",
         "name": "الإدارة العليا",
         "nick": "تقرير الثواني الخمس",
         "phil": "أجب عن سؤال \"هل نحن بخير؟\" قبل أن ينهي القارئ قهوته.",
@@ -312,6 +326,7 @@ window.reportStylesArticleTranslations = {
         "alt": "مثال على تقرير الإدارة العليا في Power BI: تقرير الثواني الخمس"
       },
       "sales": {
+        "expert": "أشرطة المقارنة في لوحة الترتيب هي <em>مخطط الرصاصة</em> (bullet graph) الذي صممه ستيفن فيو بديلًا لعدّادات القياس: الفعلي والهدف والنطاقات في جزء صغير من المساحة. كما تتابع فرق مبيعات كثيرة <em>تغطية مسار الصفقات</em>، أي الصفقات المفتوحة مقسومة على المتبقي من الهدف، وتعدّ نحو 3 أضعاف مستوى صحيًا؛ والنسبة الصحيحة تعتمد على نسبة فوزك أنت.",
         "name": "المبيعات",
         "nick": "السباق",
         "phil": "أظهر الفجوة عن الهدف، ومن يسدّها.",
@@ -333,6 +348,7 @@ window.reportStylesArticleTranslations = {
         "alt": "مثال على تقرير المبيعات في Power BI: السباق"
       },
       "finance": {
+        "expert": "الترميز (الفعلي مصمت وداكن، والموازنة بإطار فقط، والعام السابق بالرمادي، والفروقات بالأخضر أو الأحمر) يتبع <em>معايير التواصل في الأعمال الدولية</em> (IBCS)، التي نشأت من قواعد SUCCESS لرولف هيشرت (Rolf Hichert) لتقارير الأعمال. أما الجسر فهو تحليل <em>السعر والحجم والمزيج</em> الكلاسيكي: يقسم فرق الإيرادات إلى ما بعت منه أكثر، وما سعّرت به، وما الذي بعته.",
         "name": "المالية",
         "nick": "الدفتر",
         "phil": "الدقة أولًا: كل رقم في مكانه، وكل فرق مشروح.",
@@ -354,6 +370,7 @@ window.reportStylesArticleTranslations = {
         "alt": "مثال على تقرير المالية في Power BI: الدفتر"
       },
       "marketing": {
+        "expert": "تحليل القمع لا ينجح إلا إذا عُدّت الخطوات بالطريقة نفسها في كل قناة. وانتبه لطريقة الإسناد: تقارير <em>النقرة الأخيرة</em> تنسب الفضل كله للمسة الأخيرة، فتبدو قنوات التوعية أسوأ مما هي عليه. قارن القنوات بتكلفة <em>العميل</em> لا بتكلفة العميل المحتمل فقط، لأن العملاء المحتملين الرخيصين الذين لا يشترون هم الأغلى.",
         "name": "التسويق",
         "nick": "الرحلة",
         "phil": "تتبّع العميل من أول مشاهدة حتى الشراء، واحسب تكلفة كل خطوة.",
@@ -374,6 +391,7 @@ window.reportStylesArticleTranslations = {
         "alt": "مثال على تقرير التسويق في Power BI: الرحلة"
       },
       "operations": {
+        "expert": "هذا نهج غرف التحكم الصناعية، كما في ممارسة <em>واجهات التشغيل عالية الأداء</em> (High-Performance HMI) ومعيار ISA-101 لشاشات المشغّلين: رمادي وهادئ عندما يكون كل شيء طبيعيًا، واللون فقط للحالات غير الطبيعية، فيبرز الإنذار فورًا. وينجح ذلك لأن اللون سمة <em>ما قبل الانتباه</em>: تجده العين قبل أن تبدأ القراءة (كولن وير، <em>Information Visualization: Perception for Design</em>).",
         "name": "العمليات",
         "nick": "غرفة التحكم",
         "phil": "هدوء عندما يكون كل شيء بخير، وإنذار عندما لا يكون.",
@@ -394,6 +412,7 @@ window.reportStylesArticleTranslations = {
         "alt": "مثال على تقرير العمليات في Power BI: غرفة التحكم"
       },
       "hr": {
+        "expert": "إخفاء المجموعات الصغيرة قاعدة <em>حد أدنى لحجم المجموعة</em>، وهي فكرة إخفاء الهوية (k-anonymity) نفسها في أعمال الخصوصية: متوسط ثلاثة أشخاص قد يكشف راتب شخص أو تقييمه. تستخدم مؤسسات كثيرة حدًا من 5 أو 10. واعرض نسبة ترك العمل كمعدل متحرك لـ 12 شهرًا (المغادرون في آخر 12 شهرًا مقسومين على متوسط عدد الموظفين) حتى لا يغيّر شهر سيئ واحد الرقم.",
         "name": "الموارد البشرية",
         "nick": "خريطة الموظفين",
         "phil": "أظهر كيف تتغير القوى العاملة، دون كشف الأفراد.",
@@ -414,6 +433,7 @@ window.reportStylesArticleTranslations = {
         "alt": "مثال على تقرير الموارد البشرية في Power BI: خريطة الموظفين"
       },
       "service": {
+        "expert": "تعرّف مراكز الاتصال <em>مستوى الخدمة</em> بأنه نسبة التواصلات التي يُرد عليها خلال وقت محدد؛ ومعيار شائع للمكالمات هو 80/20، أي الرد على 80% خلال 20 ثانية. وتستخدم فرق البريد والتذاكر الفكرة نفسها بالساعات بدل الثواني. وتلوين الموظفين مقارنة بالوعد، لا ببعضهم، يُبقي التقرير أداة توجيه.",
         "name": "خدمة العملاء",
         "nick": "الطابور",
         "phil": "قِس الوعد الذي قطعته للعملاء، والطابور خلفه.",
