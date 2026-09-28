@@ -55,6 +55,12 @@ export default async function ({ browser, url }) {
     await v.pg.goto(`${url}/tools/power-bi-licensing-cost-calculator.html?lang=${lang}`, { waitUntil: 'networkidle' });
     const note = await v.pg.$eval('[data-i18n="lc.premiumNote"]', (e) => e.textContent);
     check(!/paginated|مرقّمة/i.test(note), `licensing ${lang}: Premium features list paginated reports: ${note}`);
+    // a number the calculator cannot use is replaced by the one it used once the field is left
+    for (const [typed, shown] of [['250000', '100000'], ['-50', '0'], ['12.7', '12']]) {
+      await v.pg.fill('#viewers', typed); await v.pg.press('#viewers', 'Tab');
+      const got = await v.pg.$eval('#viewers', (e) => e.value);
+      check(got === shown, `licensing ${lang}: typed ${typed} viewers, the field shows ${got}, the costs use ${shown}`);
+    }
     await v.ctx.close();
   }
 

@@ -117,7 +117,12 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ---------- inputs ----------
-  const num = (id, key) => { const el = $(id); el.value = state[key]; el.addEventListener('input', () => { state[key] = Math.max(0, Math.min(100000, parseInt(el.value, 10) || 0)); render(); }); };
+  const num = (id, key) => {
+    const el = $(id); el.value = state[key];
+    el.addEventListener('input', () => { state[key] = Math.max(0, Math.min(100000, parseInt(el.value, 10) || 0)); render(); });
+    // when the field is left, show the number the costs use (whole people, 0 to 100,000), not what was typed
+    el.addEventListener('change', () => { el.value = state[key]; });
+  };
   num('creators', 'creators'); num('viewers', 'viewers');
   ['premium', 'fabric', 'e5'].forEach((k) => { const el = $(k); el.checked = !!state[k]; el.addEventListener('change', () => { state[k] = el.checked; render(); track('licensing_option', { option: k, on: el.checked }); }); });
   const seg = (attr, key) => document.querySelectorAll(`[${attr}]`).forEach((b) => {
