@@ -186,6 +186,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const renderJson = () => { $('json').textContent = JSON.stringify(buildTheme(), null, 2); updateStatus(); };
   const renderAll = () => { renderPreview(); renderContrast(); renderJson(); renderLayout(); save(); };
+  // Every font in the list is built into Power BI, but only some have Arabic letters: in an Arabic or
+  // right-to-left report the others fall back to another font, so say so under the font picker.
+  const AR_FONTS = ['Segoe UI', 'Segoe UI Semibold', 'Arial', 'Tahoma'];
+  function fontNote() {
+    const sel = $('font'); if (!sel) return;
+    let n = $('fontNote');
+    if (!n) { n = document.createElement('small'); n.id = 'fontNote'; n.className = 'd-block mt-1 tg-warn'; n.setAttribute('role', 'status'); sel.insertAdjacentElement('afterend', n); }
+    const arabic = isAr() || (state.layout && state.layout.dir === 'rtl');
+    n.textContent = arabic && !AR_FONTS.includes(state.font)
+      ? L(`${state.font} has no Arabic letters, so Arabic text will show in another font. For Arabic reports use Segoe UI, Tahoma or Arial.`, `خط ${state.font} لا يحتوي حروفًا عربية، فسيظهر النص العربي بخط آخر. للتقارير العربية استخدم Segoe UI أو Tahoma أو Arial.`)
+      : '';
+    n.hidden = !n.textContent;
+  }
 
   // ---------- events ----------
   const renderPresets = () => {
@@ -512,7 +525,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ${sizeControls(c)}
       ${advControls(c)}`;
     $('layWhy').innerHTML = LAYOUTS[c.preset].why.map((w) => `<span><i class="bi bi-check2"></i> ${nm(w)}</span>`).join('');
-    renderLayoutPreview(); renderVis();
+    renderLayoutPreview(); renderVis(); fontNote();
   }
 
   const step2 = $('layout');
@@ -592,15 +605,18 @@ document.addEventListener('DOMContentLoaded', () => {
     return new Blob([png.subarray(0, head), ...chunks, png.subarray(head)], { type: 'image/png' });
   }).catch(() => blob);
   // the background as a PNG blob (with the credit metadata); used by the PNG download and the Power BI project
-  const pngBlob = () => new Promise((resolve, reject) => {
-    const [pw, ph] = pngSize(), img = new Image();
+  const pngBlob = (c) => new Promise((resolve, reject) => {
+    const was = state.layout; if (c) state.layout = c;
+    const [pw, ph] = pngSize(), svg = bgSvg(computeSlots(lay()), { w: pngSize()[0], h: pngSize()[1] });
+    state.layout = was; if (c) applyPage(was);
+    const img = new Image();
     img.onload = () => {
       const cv = document.createElement('canvas'); cv.width = pw; cv.height = ph;
       cv.getContext('2d').drawImage(img, 0, 0, pw, ph);
       cv.toBlob((b) => (b ? withCredits(b).then(resolve) : reject(new Error('png'))), 'image/png');
     };
     img.onerror = () => reject(new Error('png'));
-    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(bgSvg(computeSlots(lay()), { w: pw, h: ph }));
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
   });
   const downloadPng = () => {
     const key = pngKey();
@@ -619,7 +635,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (pbipBtn) {
     let logo = null;
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : new Promise((resolve, reject) => {
-      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20260928'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
+      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20260929'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
     }));
     const logoIn = $('pbipLogo');
     if (logoIn) logoIn.addEventListener('change', () => {
@@ -635,12 +651,19 @@ document.addEventListener('DOMContentLoaded', () => {
       pbipBtn.disabled = true;
       // visuals sit on the panels of the background image, so the project's theme always has transparent visuals
       const was = c.transparent; c.transparent = true; const theme = buildTheme(); c.transparent = was;
-      const slots = computeSlots(c).map((s) => ({ kind: s.kind, title: nm(s.role), rail: !!s.rail, x: toPage(s.x), y: toPage(s.y), w: toPage(s.w), h: toPage(s.h) }));
-      Promise.all([loadBuilder(), pngBlob().then((b) => b.arrayBuffer())]).then(([P, buf]) => {
+      const slotsOf = (cc) => { const was = state.layout; state.layout = cc; const r = computeSlots(cc).map((s) => ({ kind: s.kind, title: nm(s.role), rail: !!s.rail, x: toPage(s.x, cc), y: toPage(s.y, cc), w: toPage(s.w, cc), h: toPage(s.h, cc) })); state.layout = was; applyPage(was); return r; };
+      // a second page in a complementary layout: an analysis page (filters, a main chart, a wide table) after an
+      // overview, or an executive overview after an analysis page
+      const second = $('pbipPages') && $('pbipPages').checked;
+      const c2 = Object.assign({}, c, c.preset === 'analysis' ? { preset: 'exec', kpis: 4, filters: false } : { preset: 'analysis', kpis: 3, filters: true, fpos: 'start' }, { kpiH: null, mainW: null, split: null });
+      const specs = [{ c, name: nm(LAYOUTS[c.preset].name) }].concat(second ? [{ c: c2, name: c.preset === 'analysis' ? L('Overview', 'نظرة عامة') : L('Details', 'التفاصيل') }] : []);
+      Promise.all([loadBuilder()].concat(specs.map((sp) => pngBlob(sp.c).then((b) => b.arrayBuffer())))).then(([P, ...bufs]) => {
+        const pages = specs.map((sp, i) => ({ name: sp.name, page: { w: page(sp.c).w, h: page(sp.c).h }, slots: slotsOf(sp.c), png: new Uint8Array(bufs[i]) }));
         const r = P.build({
           name: state.name || 'Power BI Report', title: state.name || L('Sales overview', 'نظرة عامة على المبيعات'), pageName: nm(LAYOUTS[c.preset].name),
-          lang: isAr() ? 'ar' : 'en', rtl: rtl(), font: state.font, ui: state.ui, page: { w: p.w, h: p.h }, slots, theme, png: new Uint8Array(buf), logo, sample,
+          lang: isAr() ? 'ar' : 'en', rtl: rtl(), font: state.font, ui: state.ui, pages, theme, logo, sample,
           texts: {
+            reset: L('Reset filters', 'إعادة ضبط الفلاتر'), pages: L('Pages', 'الصفحات'),
             header: L('Header', 'الشريط العلوي'), kpis: L('KPI cards', 'بطاقات المؤشرات'), filters: L('Filters', 'الفلاتر'), slicer: L('Slicer', 'مقسم'),
             logo: L('Logo', 'الشعار'), logoHere: L('Your logo', 'شعارك'), textHere: L('Explain what the main chart shows and what to do about it.', 'اشرح ما يعرضه المخطط الرئيسي وما الإجراء المطلوب.'),
             tooltipPage: L('Tooltip', 'تلميح'), tooltipHere: L('Tooltip page: add a card or a small chart here.', 'صفحة التلميح: أضف بطاقة أو مخططًا صغيرًا هنا.'),
@@ -650,7 +673,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         saveBlob(new Blob([r.zip()], { type: 'application/zip' }), `${fileBase()}-power-bi-project.zip`);
         toast(L('Project downloaded. Unzip it and open the .pbip file', 'تم تنزيل المشروع. فك الضغط وافتح ملف .pbip'));
-        track('theme_pbip', { layout: c.preset, direction: rtl() ? 'rtl' : 'ltr', kpis: c.kpis, sample, logo: !!logo, page: c.page });
+        track('theme_pbip', { layout: c.preset, direction: rtl() ? 'rtl' : 'ltr', kpis: c.kpis, sample, logo: !!logo, page: c.page, pages: pages.length });
       }).catch(() => toast(L('Could not build the project in this browser', 'تعذّر إنشاء المشروع في هذا المتصفح'))).then(() => { pbipBtn.disabled = false; });
     });
   }

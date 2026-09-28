@@ -32,6 +32,7 @@ window.themeGeneratorTranslations = {
         "pbipName": "Power BI project (.pbip)",
         "pbipDesc": "Everything above in one report: the theme applied, the background set and every visual in place. Unzip it and open the <b>.pbip</b> file in Power BI Desktop.",
         "pbipSample": "Sample data, so it opens looking finished <small class=\"d-block text-white-50\">Click Refresh once in Power BI.</small>",
+        "pbipPages": "A second page and page buttons <small class=\"d-block text-white-50\">Details or overview, in the same design.</small>",
         "pbipLogo": "Add your logo (optional, PNG or JPG)",
         "pbipBtn": "Download project"
       },
@@ -133,6 +134,7 @@ window.themeGeneratorTranslations = {
         "pbipName": "مشروع Power BI (pbip.)",
         "pbipDesc": "كل ما سبق في تقرير واحد: السمة مطبّقة والخلفية موضوعة وكل عنصر في مكانه. فك الضغط وافتح ملف <b><bdi dir=\"ltr\">.pbip</bdi></b> في Power BI Desktop.",
         "pbipSample": "بيانات تجريبية ليظهر التقرير مكتملًا <small class=\"d-block text-white-50\">اضغط Refresh مرة واحدة في Power BI.</small>",
+        "pbipPages": "صفحة ثانية وأزرار للتنقل <small class=\"d-block text-white-50\">تفاصيل أو نظرة عامة، بنفس التصميم.</small>",
         "pbipLogo": "أضف شعارك (اختياري، PNG أو JPG)",
         "pbipBtn": "نزّل المشروع"
       },
