@@ -8,6 +8,10 @@
 */
 
 /* ===== 1. Root Variables & Global Styles ===== */
+/* Hidden means hidden. Bootstrap's own [hidden] rule comes before its display utilities, so an element with
+   d-flex or d-block stayed on screen when a script hid it. Repeated here, after Bootstrap, it wins everywhere. */
+[hidden] { display: none !important; }
+
 :root {
   --dk: #0a0f1c;
   --dk-2: #050a14;

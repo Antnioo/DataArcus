@@ -1,0 +1,41 @@
+/// Sales facts: one row per order line
+table Sales
+	lineageTag: 0b1c
+
+	/// Headline number
+	measure 'Total Sales' = SUM(Sales[Amount])
+		formatString: #,0
+
+	measure Orders = COUNTROWS(Sales)
+		formatString: #,0
+
+	measure 'Sales YoY %' = ```
+			VAR _PY = CALCULATE([Total Sales], SAMEPERIODLASTYEAR('Calendar'[Date]))
+			column fake
+			RETURN DIVIDE([Total Sales] - _PY, _PY)
+			```
+		formatString: 0.0%
+
+	measure 'Helper Measure' = 1
+		isHidden
+
+	column Amount
+		dataType: double
+		isHidden
+		sourceColumn: Amount
+
+	column CustomerKey
+		dataType: int64
+		sourceColumn: CustomerKey
+
+	column 'Sales Channel'
+		dataType: string
+		sourceColumn: Sales Channel
+
+	partition Sales = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Amount"}, {})
+				in
+				    Source

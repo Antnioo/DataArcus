@@ -117,36 +117,68 @@
   const fieldCol = (t, c) => ({ field: { Column: { Expression: { SourceRef: { Entity: t } }, Property: c } }, queryRef: t + '.' + c, nativeQueryRef: c });
   const fieldMea = (t, m) => ({ field: { Measure: { Expression: { SourceRef: { Entity: t } }, Property: m } }, queryRef: t + '.' + m, nativeQueryRef: m });
   const q = (roles) => { const st = {}; Object.keys(roles).forEach((r) => { st[r] = { projections: roles[r] }; }); return { queryState: st }; };
+  // a bound field: { t: table, c: column } or { t: table, m: measure }
+  const proj = (f) => (f.m != null ? fieldMea(f.t, f.m) : fieldCol(f.t, f.c));
+  const label = (f) => (f ? (f.m != null ? f.m : f.c) : null);
 
   // what each slot becomes in Power BI, and the sample fields it shows
   const TYPES = { kpi: 'card', card: 'card', line: 'lineChart', bar: 'clusteredBarChart', column: 'clusteredColumnChart', donut: 'donutChart', table: 'tableEx',
     gauge: 'gauge', funnel: 'funnel', treemap: 'treemap', map: 'map', text: 'textbox', slicer: 'slicer', title: 'textbox', logo: 'image' };
-  function sampleQuery(kind, t, kpiIndex) {
-    const tb = t.table, m = t.m, rev = fieldMea(tb, m.rev);
-    const kpis = [m.rev, m.ord, m.aov, m.mar, m.cus, m.rpc];
+  // Which fields each kind of visual shows. The sample data and a user's own model both come in this shape:
+  // { kpis: [f], measure: f, date: f, cats: { bar, column, donut, funnel, treemap, map }, y: { funnel, gauge },
+  //   table: [f], slicers: [f], tip: { card, cat, y } }, where f is a bound field (see proj above)
+  function sampleBind(t) {
+    const C = (c) => ({ t: t.table, c }), Me = (m) => ({ t: t.table, m }), m = t.m;
+    return {
+      kpis: [m.rev, m.ord, m.aov, m.mar, m.cus, m.rpc].map(Me), measure: Me(m.rev), date: C(t.month),
+      cats: { bar: C(t.category), column: C(t.region), donut: C(t.category), funnel: C(t.category), treemap: C(t.category), map: C(t.region) },
+      y: { funnel: Me(m.ord), gauge: Me(m.mar) },
+      table: [C(t.region), Me(m.rev), Me(m.ord), Me(m.mar)],
+      slicers: [C(t.region), C(t.category), C(t.month)],
+      tip: { card: Me(m.rev), cat: C(t.category), y: Me(m.ord) }
+    };
+  }
+  // the query of one visual, or null when a field it needs is not bound
+  function bindQuery(kind, B, kpiIndex) {
+    const cat = (B.cats || {})[kind], y = (B.y || {})[kind] || B.measure, need = (...fs) => fs.every(Boolean);
+    const kpi = B.kpis && B.kpis.length ? B.kpis[kpiIndex % B.kpis.length] : null;
     switch (kind) {
-      case 'kpi': return q({ Values: [fieldMea(tb, kpis[kpiIndex % kpis.length])] });
-      case 'card': return q({ Values: [rev] });
-      case 'line': return q({ Category: [fieldCol(tb, t.month)], Y: [rev] });
-      case 'bar': return q({ Category: [fieldCol(tb, t.category)], Y: [rev] });
-      case 'column': return q({ Category: [fieldCol(tb, t.region)], Y: [rev] });
-      case 'donut': return q({ Category: [fieldCol(tb, t.category)], Y: [rev] });
-      case 'table': return q({ Values: [fieldCol(tb, t.region), rev, fieldMea(tb, m.ord), fieldMea(tb, m.mar)] });
-      case 'gauge': return q({ Y: [fieldMea(tb, m.mar)] });
-      case 'funnel': return q({ Category: [fieldCol(tb, t.category)], Y: [fieldMea(tb, m.ord)] });
-      case 'treemap': return q({ Group: [fieldCol(tb, t.category)], Values: [rev] });
-      case 'map': return q({ Category: [fieldCol(tb, t.region)], Size: [rev] });
+      case 'kpi': return kpi ? q({ Values: [proj(kpi)] }) : null;
+      case 'card': return need(B.measure) ? q({ Values: [proj(B.measure)] }) : null;
+      case 'line': return need(B.date, B.measure) ? q({ Category: [proj(B.date)], Y: [proj(B.measure)] }) : null;
+      case 'bar': case 'column': case 'donut': case 'funnel': return need(cat, y) ? q({ Category: [proj(cat)], Y: [proj(y)] }) : null;
+      case 'table': { const fs = (B.table || []).filter(Boolean); return fs.length ? q({ Values: fs.map(proj) }) : null; }
+      case 'gauge': return need(y) ? q({ Y: [proj(y)] }) : null;
+      case 'treemap': return need(cat, y) ? q({ Group: [proj(cat)], Values: [proj(y)] }) : null;
+      case 'map': return need(cat, y) ? q({ Category: [proj(cat)], Size: [proj(y)] }) : null;
       default: return null;
     }
+  }
+  // chart title for a user's own fields: "Sales by Region"
+  function bindTitle(kind, B, by) {
+    const cat = (B.cats || {})[kind], y = (B.y || {})[kind] || B.measure;
+    if (kind === 'line' && B.date && B.measure) return label(B.measure) + ' ' + by + ' ' + label(B.date);
+    if (['bar', 'column', 'donut', 'funnel', 'treemap', 'map'].includes(kind) && cat && y) return label(y) + ' ' + by + ' ' + label(cat);
+    if ((kind === 'gauge' || kind === 'card') && y) return label(y);
+    return null;
   }
 
   // ---------- the project ----------
   // o: { name, lang, rtl, font, ui, page:{w,h}, slots:[{kind,title,x,y,w,h,rail}] in page units, theme, png (Uint8Array),
-  //      logo: { bytes, ext } or null, sample: true|false, texts: {...} }
+  //      logo: { bytes, ext } or null, sample: true|false, texts: {...},
+  //      model: { byPath: 'Their.SemanticModel' } or { byConnection: 'Data Source=...' } for the user's own model,
+  //      bind: their fields for each visual (see sampleBind) }
   function build(o) {
     const lang = o.lang === 'ar' ? 'ar' : 'en', t = T[lang], rtl = !!o.rtl, u = o.ui, font = o.font || 'Segoe UI';
     const W = o.texts || {};
-    const base = (o.name || 'Power BI Report').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || 'Power BI Report';
+    // the data: the sample table, the user's own model (o.model: { byPath } or { byConnection }), or none
+    const own = !!(o.model && (o.model.byPath || o.model.byConnection));
+    const sample = !!o.sample && !own;
+    const B = own ? (o.bind || null) : sample ? sampleBind(t) : null;
+    let base = (o.name || 'Power BI Report').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || 'Power BI Report';
+    // next to someone's project: never the name of their own report folder (it is usually named like the model)
+    const theirs = o.model && o.model.byPath ? String(o.model.byPath).replace(/^.*\//, '').replace(/\.SemanticModel$/i, '') : null;
+    if (theirs && base.toLowerCase() === theirs.toLowerCase()) base += ' - ' + (W.newDesign || 'New design');
     const slug = base.replace(/[^\w-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'report';
     const R = base + '.Report', M = base + '.SemanticModel', D = R + '/definition';
     const themeFile = slug + '-theme.json', logoFile = o.logo ? slug + '-logo.' + o.logo.ext : null;
@@ -154,20 +186,23 @@
     const PAGES = (o.pages && o.pages.length ? o.pages : [{ name: o.pageName, page: o.page, slots: o.slots, png: o.png }])
       .map((pg, i) => Object.assign({}, pg, { id: rnd(), bgFile: slug + '-background' + (i ? '-' + (i + 1) : '') + '.png' }));
     const files = [];
-    const add = (path, data) => files.push({ path: base + '/' + path, data });
+    // a report for a local model is unzipped into the user's project folder, so it has no folder of its own
+    const add = (path, data) => files.push({ path: (theirs ? '' : base + '/') + path, data });
     const align = rtl ? 'right' : 'left';
     const edge = mixHex(u.text, u.card, 0.85);
 
     // project shortcut, report pointer, semantic model
     add(base + '.pbip', json({ $schema: SCHEMA.pbip, version: '1.0', artifacts: [{ report: { path: R } }], settings: { enableAutoRecovery: true } }));
-    add(R + '/definition.pbir', json({ $schema: SCHEMA.pbir, version: '4.0', datasetReference: { byPath: { path: '../' + M } } }));
-    add(M + '/definition.pbism', json({ $schema: SCHEMA.pbism, version: '4.0', settings: {} }));
+    const ref = own ? (o.model.byPath ? { byPath: { path: '../' + String(o.model.byPath).replace(/^.*\//, '') } } : { byConnection: { connectionString: o.model.byConnection } })
+      : { byPath: { path: '../' + M } };
+    add(R + '/definition.pbir', json({ $schema: SCHEMA.pbir, version: '4.0', datasetReference: ref }));
+    if (!own) add(M + '/definition.pbism', json({ $schema: SCHEMA.pbism, version: '4.0', settings: {} }));
     const culture = 'en-US';   // data and names can be Arabic; en-US keeps number and date parsing predictable
-    add(M + '/model.bim', json({
+    if (!own) add(M + '/model.bim', json({
       compatibilityLevel: 1567,
       model: {
         culture, dataAccessOptions: { legacyRedirects: true, returnErrorValuesAsNull: true }, defaultPowerBIDataSourceVersion: 'powerBI_V3', sourceQueryCulture: culture,
-        tables: o.sample ? [sampleModel(t)] : [],
+        tables: sample ? [sampleModel(t)] : [],
         annotations: [{ name: '__PBI_TimeIntelligenceEnabled', value: '0' }, { name: 'PBI_ProTooling', value: '["DevMode"]' }]
       }
     }));
@@ -271,16 +306,16 @@
         if (s.kind === 'slicer') {
           // the filter panel holds several dropdown slicers and a Reset button:
           // stacked in a side panel, side by side in a top strip
-          const fields = o.sample ? [t.region, t.category, t.month] : [null, null, null], pad = 10, gap = 8, n = fields.length;
+          const fields = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null), pad = 10, gap = 8, n = fields.length;
           const across = s.w > s.h, bw = across ? Math.min(160, Math.round(s.w * 0.14)) : s.w - 2 * pad, bh = across ? s.h - 2 * pad : 40;
           const room = across ? s.w - 2 * pad - bw - gap : s.w - 2 * pad;
           const sw = across ? (room - gap * (n - 1)) / n : room, sh = across ? s.h - 2 * pad : Math.min(76, (s.h - 2 * pad - bh - gap * n) / n);
           fields.forEach((f, i) => {
             // in a right-to-left report the first slicer is the rightmost one, so tab order follows the reading
             const x = across ? (rtl ? s.x + s.w - pad - sw - i * (sw + gap) : s.x + pad + i * (sw + gap)) : s.x + pad, y = across ? s.y + pad : s.y + pad + i * (sh + gap);
-            const ttl = f || (W.slicer || 'Slicer') + ' ' + (i + 1);
+            const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
             const v = container({ x: Math.round(x), y: Math.round(y), w: Math.round(sw), h: Math.round(sh), z: z, parent, kind: 'slicer',
-              visual: { visualType: 'slicer', query: f ? q({ Values: [fieldCol(t.table, f)] }) : undefined,
+              visual: { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
                 objects: { data: obj({ mode: str('Dropdown') }), header: obj({ show: bool(true), fontFamily: str(font) }) },
                 visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true } });
             slicerNames.push(v.name);
@@ -308,10 +343,11 @@
         } else if (s.kind === 'text') {
           visual = { visualType: 'textbox', objects: textbox(W.textHere || 'Explain what the main chart shows and what to do about it.', 11, false, u.text), visualContainerObjects: frame(s.title, s.title) };
         } else {
-          const query = o.sample ? sampleQuery(s.kind, t, kpiIndex) : null;
+          const query = B ? bindQuery(s.kind, B, kpiIndex) : null;
           let ttl = s.title;
           const extra = {};
-          if (s.kind === 'kpi') { if (o.sample) ttl = [t.m.rev, t.m.ord, t.m.aov, t.m.mar, t.m.cus, t.m.rpc][kpiIndex % 6]; kpiIndex++; }
+          if (own && B && query) ttl = bindTitle(s.kind, B, W.by || 'by') || ttl;
+          if (s.kind === 'kpi') { if (B && query) ttl = label(B.kpis[kpiIndex % B.kpis.length]); kpiIndex++; }
           // KPI names read as labels: semibold, so the number below stays the hero
           if (s.kind === 'kpi') extra.title = obj({ show: bool(true), text: str(ttl), alignment: str(align), bold: bool(true) });
           visual = { visualType: type, visualContainerObjects: frame(ttl, ttl, extra), drillFilterOtherVisuals: true };
@@ -343,7 +379,7 @@
       // bookmarks show and hide it, so the user's slicer selections stay when it opens and closes
       if (panel && pg.openBm) {
         const P = panel, gname = rnd(), kids = [], pad = 16, head = 44, bh = 40, gap = 10;
-        const fields = o.sample ? [t.region, t.category, t.month] : [null, null, null];
+        const fields = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null);
         z = Math.max(z, 900000);
         container({ name: gname, x: P.x, y: P.y, w: P.w, h: P.h, z, hidden: true, kind: 'group', groupKey: 'panel', group: { displayName: W.filterPanel || 'Filter panel', groupMode: 'ScaleMode' } });
         z += 1000;
@@ -363,9 +399,9 @@
         // slicers stacked, then Reset at the bottom
         const sw = P.w - 2 * pad, sh = Math.min(76, (P.h - head - pad - bh - gap * (fields.length + 1)) / fields.length), names = [];
         fields.forEach((f, i) => {
-          const ttl = f || (W.slicer || 'Slicer') + ' ' + (i + 1);
+          const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
           const v = add1({ x: P.x + pad, y: Math.round(P.y + head + 8 + i * (sh + gap)), w: sw, h: Math.round(sh), kind: 'slicer',
-            visual: { visualType: 'slicer', query: f ? q({ Values: [fieldCol(t.table, f)] }) : undefined,
+            visual: { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
               objects: { data: obj({ mode: str('Dropdown') }), header: obj({ show: bool(true), fontFamily: str(font) }) },
               visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true } });
           names.push(v.name);
@@ -440,9 +476,10 @@
       type: 'Tooltip', visibility: 'HiddenInViewMode', pageBinding: { name: tipBinding, type: 'Tooltip' },
       objects: { background: obj({ color: color(u.card), transparency: num(0) }), outspace: obj({ color: color(u.card) }) }
     }));
-    const tipVisuals = o.sample
-      ? [{ x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'card', query: q({ Values: [fieldMea(t.table, t.m.rev)] }), objects: { categoryLabels: obj({ show: bool(false) }) }, visualContainerObjects: frame(t.m.rev, t.m.rev) } },
-        { x: 12, y: 92, w: 296, h: 140, visual: { visualType: 'clusteredColumnChart', query: q({ Category: [fieldCol(t.table, t.category)], Y: [fieldMea(t.table, t.m.ord)] }), visualContainerObjects: frame(t.m.ord, t.m.ord) } }]
+    const tip = B && B.tip && B.tip.card && B.tip.cat && B.tip.y ? B.tip : null;
+    const tipVisuals = tip
+      ? [{ x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'card', query: q({ Values: [proj(tip.card)] }), objects: { categoryLabels: obj({ show: bool(false) }) }, visualContainerObjects: frame(label(tip.card), label(tip.card)) } },
+        { x: 12, y: 92, w: 296, h: 140, visual: { visualType: 'clusteredColumnChart', query: q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), visualContainerObjects: frame(label(tip.y), label(tip.y)) } }]
       : [{ x: 12, y: 12, w: 296, h: 216, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }];
     tipVisuals.forEach((s, i) => {
       const v = { $schema: SCHEMA.visual, name: rnd(), position: { x: s.x, y: s.y, z: (i + 1) * 1000, height: s.h, width: s.w, tabOrder: (i + 1) * 1000 }, visual: s.visual };
@@ -450,8 +487,11 @@
     });
 
     // git: keep local and cached files out of source control
-    add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
-    add('README.md', (W.readme || '').replace(/\{name\}/g, base));
+    // in someone's project folder these would replace their own files, so they are left out there
+    if (!theirs) {
+      add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
+      add('README.md', (W.readme || '').replace(/\{name\}/g, base));
+    }
     return { base, files, zip: () => zip(files) };
   }
 
