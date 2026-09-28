@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let worker = null;
   function run(buffer, fileName, size) {
     if (worker) worker.terminate();
-    try { worker = new Worker('../assets/js/model-health-worker.min.js?v=20260928'); } catch (e) { return showError('WORKER'); }
+    try { worker = new Worker('../assets/js/model-health-worker.min.js?v=20260928b'); } catch (e) { return showError('WORKER'); }
     worker.onmessage = (ev) => {
       const d = ev.data;
       if (d.type === 'progress') setStep(d.step);
@@ -328,7 +328,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pqCount = cols.filter((x) => x.t.fromM && x.u.some((c) => c.kind === 'data')).length;
     const calcCount = cols.reduce((a, x) => a + x.u.filter((c) => c.kind === 'calculated').length, 0);
     const steps = [['copy', L('Save a copy of your .pbix', 'احفظ نسخة من ملف ‎.pbix'), L('Every step below changes the model. Keep a copy so you can go back.', 'كل خطوة بالأسفل تغيّر النموذج، فاحتفظ بنسخة للرجوع إليها.')]];
-    if (broken) steps.push(['broken', L('Fix ' + num(broken.items.length) + ' broken fields in visuals', 'أصلح ' + num(broken.items.length) + ' حقلًا مكسورًا في الـ visuals'), L('Open each page listed in the Issues tab and replace or remove the missing field. Users see these errors today.', 'افتح كل صفحة مذكورة في تبويب المشاكل واستبدل الحقل المفقود أو احذفه، فالمستخدمون يرون هذه الأخطاء الآن.')]);
+    if (broken) steps.push(['broken', L('Fix ' + num(broken.items.length) + ' broken fields in visuals', 'أصلح ' + num(broken.items.length) + ' حقلًا مكسورًا في الـ visuals'), L('The Issues tab lists the page and visual for each missing field. Replace or remove the field there. Users see these errors today.', 'تبويب المشاكل يذكر الصفحة والـ visual لكل حقل مفقود. استبدل الحقل أو احذفه هناك، فالمستخدمون يرون هذه الأخطاء الآن.')]);
     if (qf) steps.push(['quick', L('Run the quick-fixes script (' + num(qf.count) + ' changes)', 'شغّل سكربت الإصلاحات السريعة (' + num(qf.count) + ' تعديل)'), L('Date tables, month sorting, summarization and hidden keys. Safe, mechanical changes.', 'جداول التاريخ وترتيب الشهور والتجميع وإخفاء المفاتيح. تعديلات آمنة وآلية.')]);
     if (ms.length) steps.push(['measures', L('Move ' + num(ms.length) + ' unused measures to a review folder', 'انقل ' + num(ms.length) + ' مقياسًا غير مستخدم إلى مجلد مراجعة'), L('Nothing is deleted. Look through the folder, then delete it when you are sure.', 'لا يُحذف شيء. راجع المجلد ثم احذفه عندما تتأكد.')]);
     if (pqCount) steps.push(['columns', L('Remove unused columns in Power Query (' + num(pqCount) + ' tables)', 'احذف الأعمدة غير المستخدمة في Power Query (' + num(pqCount) + ' جدول)'), L('Paste one line per table. Hiding is not enough: hidden columns still load.', 'الصق سطرًا واحدًا لكل جدول. الإخفاء لا يكفي فالأعمدة المخفية ما زالت تُحمَّل.')]);

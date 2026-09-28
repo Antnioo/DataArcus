@@ -233,6 +233,31 @@
     for (const k in node) if (Object.prototype.hasOwnProperty.call(node, k)) collectReportRefs(node[k], acc, al);
   }
 
+  // Friendly label for a visual: its title when it has a fixed one, else its type ("Table", "Card").
+  const VISUAL_TYPES = {
+    card: 'Card', cardVisual: 'Card', multiRowCard: 'Multi-row card', kpi: 'KPI', gauge: 'Gauge',
+    tableEx: 'Table', pivotTable: 'Matrix', slicer: 'Slicer', advancedSlicerVisual: 'Button slicer', listSlicer: 'List slicer', textSlicer: 'Text slicer',
+    barChart: 'Bar chart', clusteredBarChart: 'Bar chart', hundredPercentStackedBarChart: '100% bar chart',
+    columnChart: 'Column chart', clusteredColumnChart: 'Column chart', hundredPercentStackedColumnChart: '100% column chart',
+    lineChart: 'Line chart', areaChart: 'Area chart', stackedAreaChart: 'Stacked area chart', ribbonChart: 'Ribbon chart',
+    lineClusteredColumnComboChart: 'Line and column chart', lineStackedColumnComboChart: 'Line and column chart',
+    pieChart: 'Pie chart', donutChart: 'Donut chart', treemap: 'Treemap', funnel: 'Funnel', waterfallChart: 'Waterfall chart',
+    scatterChart: 'Scatter chart', map: 'Map', filledMap: 'Filled map', azureMap: 'Azure map', textbox: 'Text box',
+    actionButton: 'Button', shape: 'Shape', image: 'Image', decompositionTreeVisual: 'Decomposition tree', keyDriversVisual: 'Key influencers'
+  };
+  function visualLabel(v) {
+    if (!v) return '';
+    const type = v.visualType || '';
+    let title = '';
+    try {
+      const t = ((v.vcObjects || v.visualContainerObjects || {}).title || [])[0];
+      const lit = t && t.properties && t.properties.text && t.properties.text.expr && t.properties.text.expr.Literal;
+      if (lit && typeof lit.Value === 'string') title = lit.Value.replace(/^'|'$/g, '').replace(/''/g, "'").trim();
+    } catch (e) { /* no title */ }
+    const kind = VISUAL_TYPES[type] || type;
+    return title ? (kind ? kind + ' "' + title + '"' : '"' + title + '"') : (kind || 'Visual');
+  }
+
   // report = { format: 'pbir'|'legacy', files: [{path, json}] } ; returns stats + refs
   function analyzeReport(report) {
     if (!report || !report.files || !report.files.length) return null;
@@ -245,7 +270,10 @@
       const layout = report.files[0].json || {};
       (layout.sections || []).forEach((sec) => {
         pages++; pageNames.push(sec.displayName || sec.name);
-        collectReportRefs(sec.filters, refs, {});
+        const pf = [];
+        collectReportRefs(sec.filters, pf, {});
+        pf.forEach((x) => { x.page = sec.displayName || sec.name; x.visual = 'page filter'; });
+        refs.push.apply(refs, pf);
         (sec.visualContainers || []).forEach((vc) => {
           visuals++;
           const r = [];
@@ -253,7 +281,12 @@
           collectReportRefs(vc.filters, r, {});
           collectReportRefs(vc.query, r, {});
           collectReportRefs(vc.dataTransforms, r, {});
-          r.forEach((x) => { x.page = sec.displayName || sec.name; });
+          let label = '';
+          try {
+            const cfg = typeof vc.config === 'string' ? JSON.parse(vc.config) : (vc.config || {});
+            label = cfg.singleVisual ? visualLabel(cfg.singleVisual) : cfg.singleVisualGroup ? 'Group "' + (cfg.singleVisualGroup.displayName || '') + '"' : '';
+          } catch (e) { /* unreadable config */ }
+          r.forEach((x) => { x.page = sec.displayName || sec.name; x.visual = label || 'Visual'; });
           refs.push.apply(refs, r);
           perVisual.push({ page: sec.displayName || sec.name, refs: r });
         });
@@ -279,7 +312,9 @@
         const r = [];
         collectReportRefs(f.json, r, {});
         const pm = f.path.match(/pages\/([^/]+)\//);
-        if (pm) r.forEach((x) => { x.page = pageTitle[pm[1]] || pm[1]; });
+        const isVisual = /\/visuals\/[^/]+\/visual\.json$/.test(f.path);
+        const label = isVisual ? visualLabel(f.json && f.json.visual) : /\/page\.json$/.test(f.path) ? 'page filter' : '';
+        if (pm) r.forEach((x) => { x.page = pageTitle[pm[1]] || pm[1]; if (label) x.visual = label; });
         refs.push.apply(refs, r);
         const vm = f.path.match(/pages\/([^/]+)\/visuals\/[^/]+\/visual\.json$/);
         if (vm) { visuals++; perVisual.push({ page: pageTitle[vm[1]] || vm[1], refs: r }); }
@@ -392,8 +427,8 @@
       en: ['No row-level security roles', 'Fine for a personal report. If the model is shared with teams who should see only their own data, RLS is the safe way to do it.', 'Add roles in Modeling > Manage roles if different people should see different rows.'],
       ar: ['لا توجد أدوار Row-level security', 'لا بأس لتقرير شخصي، لكن إن كان النموذج مشتركًا مع فرق يجب أن يرى كل منها بياناته فقط فإن RLS هو الطريقة الآمنة.', 'أضف أدوارًا من Modeling > Manage roles إن كان يجب أن يرى كل شخص صفوفًا مختلفة.'] },
     BROKEN_REF: { cat: 'bp', sev: 'high',
-      en: ['Visuals that point to fields that no longer exist', 'These visuals or filters use a measure or column that was renamed or deleted. They show an error or a blank box to report users.', 'Open each page listed, then replace or remove the broken field in the visual or filter.'],
-      ar: ['Visuals تشير إلى حقول لم تعد موجودة', 'هذه الـ visuals أو الفلاتر تستخدم مقياسًا أو عمودًا تمت إعادة تسميته أو حذفه، فتظهر خطأ أو مربعًا فارغًا لمستخدمي التقرير.', 'افتح كل صفحة مذكورة واستبدل الحقل المكسور أو احذفه من الـ visual أو الفلتر.'] },
+      en: ['Visuals that point to fields that no longer exist', 'These visuals or filters use a measure or column that was renamed or deleted. They show an error or a blank box to report users.', 'Each item shows the page and the visual (its title, or its type if it has none). Open it, then replace or remove the broken field. The Selection pane helps find a visual by name.'],
+      ar: ['Visuals تشير إلى حقول لم تعد موجودة', 'هذه الـ visuals أو الفلاتر تستخدم مقياسًا أو عمودًا تمت إعادة تسميته أو حذفه، فتظهر خطأ أو مربعًا فارغًا لمستخدمي التقرير.', 'كل عنصر يذكر الصفحة والـ visual (بعنوانه، أو بنوعه إن لم يكن له عنوان). افتحه واستبدل الحقل المكسور أو احذفه. لوحة Selection تساعدك في إيجاد الـ visual بالاسم.'] },
     USEREL_ACTIVE: { cat: 'maint', sev: 'low',
       en: ['USERELATIONSHIP on a relationship that is already active', 'USERELATIONSHIP only changes something for inactive relationships. On an active one it does nothing and confuses whoever reads the measure next.', 'Remove the USERELATIONSHIP call, or check whether the intended relationship is a different, inactive one.'],
       ar: ['USERELATIONSHIP على علاقة نشطة بالفعل', 'USERELATIONSHIP يغيّر شيئًا فقط مع العلاقات غير النشطة، وعلى علاقة نشطة لا يفعل شيئًا ويربك من يقرأ المقياس لاحقًا.', 'احذف USERELATIONSHIP أو تحقق إن كانت العلاقة المقصودة علاقة أخرى غير نشطة.'] },
@@ -459,7 +494,8 @@
     const noteBroken = (r) => {
       const k = lc(r.entity) + '|' + lc(r.prop);
       if (!broken.has(k)) broken.set(k, { obj: r.entity + '[' + r.prop + ']', pages: new Set(), n: 0 });
-      const b = broken.get(k); b.n++; if (r.page) b.pages.add(r.page);
+      const b = broken.get(k); b.n++;
+      b.pages.add(r.page ? r.page + (r.visual ? ' › ' + r.visual : '') : 'report filter');
     };
     if (rep) {
       rep.ext.forEach((x) => { extNames.add(lc(x.name)); daxRefs(x.expr, null, IX).refs.forEach((n) => roots.add(n)); });
@@ -552,7 +588,7 @@
     const activeUse = [];
     M.relationships.filter((r) => r.active).forEach((r) => { const u = relUsed(r); if (u.length) activeUse.push({ obj: `${r.fromTable}[${r.fromColumn}] → ${r.toTable}[${r.toColumn}]`, detail: uniq(u.map((x) => x.where)).slice(0, 3).join(', ') }); });
     add('USEREL_ACTIVE', activeUse);
-    if (broken.size) add('BROKEN_REF', Array.from(broken.values()).sort((a, b) => b.n - a.n).map((b) => ({ obj: b.obj, detail: Array.from(b.pages).join(', ') })));
+    if (broken.size) add('BROKEN_REF', Array.from(broken.values()).sort((a, b) => b.n - a.n).map((b) => ({ obj: b.obj, detail: Array.from(b.pages).join('; ') })));
     const strKeys = [];
     M.relationships.forEach((r) => {
       const c = IX.columns.get(lc(r.toTable) + '|' + lc(r.toColumn));
