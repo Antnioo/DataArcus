@@ -48,6 +48,16 @@ export default async function ({ browser, url }) {
     await v.ctx.close();
   }
 
+  // Licensing calculator: paginated reports are not sold as a Premium feature (Microsoft Learn: Pro can publish
+  // them to any workspace), in either language
+  for (const lang of ['en', 'ar']) {
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/tools/power-bi-licensing-cost-calculator.html?lang=${lang}`, { waitUntil: 'networkidle' });
+    const note = await v.pg.$eval('[data-i18n="lc.premiumNote"]', (e) => e.textContent);
+    check(!/paginated|مرقّمة/i.test(note), `licensing ${lang}: Premium features list paginated reports: ${note}`);
+    await v.ctx.close();
+  }
+
   // Exam simulators: moving to the next question from lower down scrolls back to the question
   for (const page of ['dp-600-practice-exam', 'pl-300-practice-exam']) {
     const v = await visitor(browser, { viewport: [1440, 900] });
