@@ -92,7 +92,13 @@
       tables = [];
       for (const f of tmdl) tables.push(...parseTmdl(decodeText(new Uint8Array(await f.arrayBuffer()))));
     }
-    return { folder, path, others: models.length - 1, tables: clean(tables) };
+    // the reports already next to the model (X.Report folders, X.pbip files), so the new one never takes their name
+    const dir = path.includes('/') ? path.replace(/\/[^/]*$/, '') + '/' : '', reports = new Set();
+    files.forEach((f) => {
+      const p = rel(f); if (!p.startsWith(dir)) return;
+      const m = p.slice(dir.length).match(/^([^/]+)\.pbip$|^([^/]+)\.Report\//i); if (m) reports.add(m[1] || m[2]);
+    });
+    return { folder, path, others: models.length - 1, reports: [...reports], tables: clean(tables) };
   }
   // A model.bim, or a .pbit (unzipped by the Model Health Check's worker, which already reads them)
   function fromFile(file, workerUrl) {

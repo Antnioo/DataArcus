@@ -130,6 +130,21 @@ export default async function ({ browser, url }) {
     check(JSON.parse(files['Board.Report/definition.pbir'] || '{}').datasetReference?.byPath?.path === '../Sales.SemanticModel' && /holds Sales\.SemanticModel \(proj\)/.test(msg), `backup copy: report or message "${msg}"`);
   }
 
+  // 5. Their folder already has reports with the name of the design (Exec.Report, Exec.pbip, and even
+  //    "Exec - New design.Report"): the download takes a free name, so unzipping it replaces nothing
+  {
+    const dir = project((d) => {
+      for (const r of ['Exec', 'exec - new design']) {
+        fs.mkdirSync(path.join(d, r + '.Report'), { recursive: true });
+        fs.writeFileSync(path.join(d, r + '.Report', 'definition.pbir'), fs.readFileSync(path.join(d, 'Sales.Report', 'definition.pbir')));
+      }
+      fs.writeFileSync(path.join(d, 'Exec.pbip'), '{}');
+    });
+    const { files } = await run('en', 'Exec', async (pg) => { await pg.selectOption('#pbipData', 'local'); await pg.setInputFiles('#pbipFolder', dir); return picker(pg); });
+    const names = Object.keys(files), clash = names.filter((n) => fs.existsSync(path.join(dir, n)) || /^(exec|exec - new design|sales)\.(pbip$|report\/)/i.test(n));
+    check(!clash.length && names.includes('Exec - New design 2.pbip'), `existing reports: the download would replace ${clash.slice(0, 3).join(', ') || 'nothing, but is named ' + names.find((n) => n.endsWith('.pbip'))}`);
+  }
+
   // 3. Missing inputs stop the download with a message instead of a broken project
   {
     const v = await visitor(browser, { viewport: [1440, 900], downloads: true });

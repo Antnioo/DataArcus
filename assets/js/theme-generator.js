@@ -683,12 +683,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (pbipBtn) {
     let logo = null;
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : new Promise((resolve, reject) => {
-      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20260930a'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
+      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20260930b'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
     }));
     // ---- your own model: a local project (the report points at its .SemanticModel folder) or a published one ----
-    const dataIn = $('pbipData'), own = { tables: null, folder: null, dir: '', getBind: null };
+    const dataIn = $('pbipData'), own = { tables: null, folder: null, dir: '', reports: [], getBind: null };
     const loadBind = () => (window.DABind ? Promise.resolve(window.DABind) : new Promise((resolve, reject) => {
-      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-bind.min.js?v=20260930d'; sc.onload = () => resolve(window.DABind); sc.onerror = reject; document.head.appendChild(sc);
+      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-bind.min.js?v=20260930e'; sc.onload = () => resolve(window.DABind); sc.onerror = reject; document.head.appendChild(sc);
     }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
@@ -725,7 +725,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const files = e.target.files; if (!files || !files.length) return;
         ownMsg(L('Reading the model…', 'جارٍ قراءة النموذج…'));
         // with more than one model in the folder, say which one (by its path) the report will use
-        loadBind().then((DB) => DB.fromFolder(files)).then((res) => { own.folder = res.folder; own.dir = res.path.replace(/\/?[^/]*$/, '');
+        loadBind().then((DB) => DB.fromFolder(files)).then((res) => { own.folder = res.folder; own.dir = res.path.replace(/\/?[^/]*$/, ''); own.reports = res.reports;
           return loaded(res, res.others ? res.path + L(` (${res.others + 1} models in this folder; this one is used)`, ` (عدد النماذج في المجلد: ${res.others + 1}، ويُستخدم هذا النموذج)`) : res.folder); })
           .catch((err) => { own.folder = null; failed(err); });
       });
@@ -750,7 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let model = null;
       if (m === 'local') {
         if (!own.folder) { toast(L('Choose your Power BI project folder first', 'اختر مجلد مشروع Power BI أولًا')); return; }
-        model = { byPath: own.folder };
+        model = { byPath: own.folder, taken: own.reports };
       } else if (m === 'service') {
         const ws = $('pbipWs').value.trim(), mn = $('pbipModelName').value.trim();
         if (!ws || !mn) { toast(L('Type the workspace and the semantic model names', 'اكتب اسم مساحة العمل واسم النموذج الدلالي')); return; }
