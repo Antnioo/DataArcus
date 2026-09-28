@@ -38,8 +38,12 @@ document.addEventListener('DOMContentLoaded', () => {
     cal: 'Calendar', dateCol: 'Date', fyEnd: '12-31', n: 3, days: 30,
     pick: ['mtd', 'ytd', 'py', 'yoy', 'yoyPct', 'pm', 'momPct', 'roll', 'running']
   };
-  let state;
-  try { state = { ...DEFAULTS, ...JSON.parse(localStorage.getItem(STORE) || '{}') }; } catch (e) { state = { ...DEFAULTS }; }
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { saved = null; }
+  if (!saved || typeof saved !== 'object') saved = {};
+  // a saved value is used only when it has the default's type, so an old or hand-edited save cannot break the page
+  // (the values themselves are checked once the patterns and the inputs are known, below)
+  const state = Object.fromEntries(Object.entries(DEFAULTS).map(([k, d]) => [k, Array.isArray(d) ? (Array.isArray(saved[k]) ? saved[k] : d) : (typeof saved[k] === typeof d ? saved[k] : d)]));
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* private mode */ } };
 
   // ---------- DAX name helpers ----------
@@ -91,6 +95,13 @@ document.addEventListener('DOMContentLoaded', () => {
       dax: (b) => `DIVIDE ( ${b} - ${mRef(baseName() + ' Last Ramadan')}, ${mRef(baseName() + ' Last Ramadan')} )` }
   ];
   const val = (x) => (typeof x === 'function' ? x() : x);
+  // rolling months and average days: whole numbers within the same limits as the number boxes (max="36", max="365")
+  const LIMIT = { n: 36, days: 365 };
+  const count = (v, max) => Math.max(1, Math.min(max, Math.round(Number(v)) || 1));
+  ['n', 'days'].forEach((k) => { state[k] = count(state[k], LIMIT[k]); });
+  state.pick = state.pick.filter((id) => PATTERNS.some((p) => p.id === id));
+  if (!['column', 'existing'].includes(state.mode)) state.mode = DEFAULTS.mode;
+  ['agg', 'fyEnd'].forEach((k) => { if (![...$(k).options].some((o) => o.value === state[k])) state[k] = DEFAULTS[k]; });
 
   // ---------- build ----------
   const buildMeasures = () => {
@@ -153,9 +164,6 @@ EVALUATE
     $('column').disabled = state.agg === 'COUNTROWS';
   };
   document.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => { state.mode = b.dataset.mode; setMode(); render(); }));
-  // rolling months and average days: whole numbers within the same limits as the number boxes (max="36", max="365")
-  const LIMIT = { n: 36, days: 365 };
-  const count = (v, max) => Math.max(1, Math.min(max, Math.round(Number(v)) || 1));
   ['agg', 'fact', 'column', 'base', 'existing', 'home', 'cal', 'dateCol', 'fyEnd', 'n', 'days'].forEach((k) => {
     const el = $(k); if (!el) return; el.value = state[k];
     if (el.tagName === 'INPUT' && !LIMIT[k]) el.placeholder = DEFAULTS[k];
