@@ -33,6 +33,19 @@ export default async function ({ browser, url }) {
     await done(v, 'measure builder rolling');
   }
 
+  // Empty name boxes: the DAX uses the default each box shows as its placeholder, never '' or [] or an invented table
+  {
+    const v = await open(MB);
+    for (const id of ['base', 'fact', 'column', 'cal', 'dateCol']) await v.pg.fill('#' + id, '  ');
+    const r = await v.pg.evaluate(() => ({ dax: document.getElementById('script').textContent, tmdl: document.getElementById('tmdl').textContent,
+      ph: ['base', 'fact', 'column', 'cal', 'dateCol', 'existing', 'home'].map((id) => document.getElementById(id).placeholder) }));
+    check(!/''\[|\[\]|'Measures'/.test(r.dax), `measure builder: empty names give ${(r.dax.match(/.*(''\[|\[\]|'Measures').*/) || [''])[0].trim()}`);
+    check(/MEASURE 'Sales'\[Total Sales\] =\n\s+SUM \( 'Sales'\[Amount\] \)/.test(r.dax) && /DATESMTD \( 'Calendar'\[Date\] \)/.test(r.dax) && /ref table Sales\n/.test(r.tmdl),
+      'measure builder: empty names do not fall back to the defaults');
+    check(r.ph.join() === 'Total Sales,Sales,Amount,Calendar,Date,Total Sales,Sales', `measure builder: placeholders ${r.ph.join()}`);
+    await done(v, 'measure builder empty names');
+  }
+
   // Calendar generator: a range it cannot build clears the old table, so Copy and Download cannot hand it out
   {
     const v = await open(CG);

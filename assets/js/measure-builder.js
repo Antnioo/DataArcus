@@ -46,9 +46,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const tbl = (t) => "'" + String(t || '').trim().replace(/'/g, "''") + "'";
   const colRef = (t, c) => `${tbl(t)}[${String(c || '').trim().replace(/]/g, ']]')}]`;
   const mRef = (m) => `[${String(m || '').trim().replace(/]/g, ']]')}]`;
-  const baseName = () => (state.mode === 'column' ? state.base : state.existing).trim() || 'Measure';
-  const home = () => (state.mode === 'column' ? state.fact : state.home).trim() || 'Measures';
-  const dateRef = () => colRef(state.cal, state.dateCol);
+  // a name left empty uses the default, which the empty box shows as its placeholder (never '' or an invented table)
+  const name = (k) => String(state[k] || '').trim() || DEFAULTS[k];
+  const baseName = () => name(state.mode === 'column' ? 'base' : 'existing');
+  const home = () => name(state.mode === 'column' ? 'fact' : 'home');
+  const dateRef = () => colRef(name('cal'), name('dateCol'));
   const fyEndArg = () => { const [mm, dd] = state.fyEnd.split('-').map(Number); return mm === 12 && dd === 31 ? '' : `, "${mm}/${dd}"`; };
 
   // Each pattern: id, group, name suffix, what it does, expression builder, format hint, needs other patterns
@@ -78,12 +80,12 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'avgDays', g: 'Rolling', suffix: () => `${state.days}D Avg`, what: () => `Daily average over the last ${state.days} days. Smooths out spikes in trend lines.`,
       dax: (b, d) => `AVERAGEX (\n    DATESINPERIOD ( ${d}, MAX ( ${d} ), -${state.days}, DAY ),\n    ${b}\n)` },
     { id: 'running', g: 'Rolling', suffix: 'Running Total', what: 'Cumulative total from the first date up to the selected date.',
-      dax: (b, d) => `VAR _LastDate = MAX ( ${d} )\nRETURN\n    CALCULATE (\n        ${b},\n        ${d} <= _LastDate,\n        REMOVEFILTERS ( ${tbl(state.cal)} )\n    )` },
+      dax: (b, d) => `VAR _LastDate = MAX ( ${d} )\nRETURN\n    CALCULATE (\n        ${b},\n        ${d} <= _LastDate,\n        REMOVEFILTERS ( ${tbl(name('cal'))} )\n    )` },
     { id: 'share', g: 'Rolling', suffix: '% of Total', pct: true, what: 'Share of the grand total for the visible period, e.g. each brand’s share of sales.',
       dax: (b) => `DIVIDE ( ${b}, CALCULATE ( ${b}, ALLSELECTED () ) )` },
     { id: 'ramLY', g: 'Ramadan', suffix: 'Last Ramadan', ramadan: true,
       what: 'Same Ramadan days last Hijri year. Put Ramadan Day on the axis to compare day by day. Needs the DataArcus calendar table.',
-      dax: (b) => `VAR _HijriYear = MAX ( ${tbl(state.cal)}[Hijri Year] )\nVAR _Days = VALUES ( ${tbl(state.cal)}[Ramadan Day] )\nRETURN\n    CALCULATE (\n        ${b},\n        REMOVEFILTERS ( ${tbl(state.cal)} ),\n        ${tbl(state.cal)}[Is Ramadan] = TRUE (),\n        ${tbl(state.cal)}[Hijri Year] = _HijriYear - 1,\n        TREATAS ( _Days, ${tbl(state.cal)}[Ramadan Day] )\n    )` },
+      dax: (b) => `VAR _HijriYear = MAX ( ${tbl(name('cal'))}[Hijri Year] )\nVAR _Days = VALUES ( ${tbl(name('cal'))}[Ramadan Day] )\nRETURN\n    CALCULATE (\n        ${b},\n        REMOVEFILTERS ( ${tbl(name('cal'))} ),\n        ${tbl(name('cal'))}[Is Ramadan] = TRUE (),\n        ${tbl(name('cal'))}[Hijri Year] = _HijriYear - 1,\n        TREATAS ( _Days, ${tbl(name('cal'))}[Ramadan Day] )\n    )` },
     { id: 'ramPct', g: 'Ramadan', suffix: 'vs Last Ramadan %', pct: true, ramadan: true, needs: ['ramLY'],
       what: 'Growth vs the same days of last Ramadan.',
       dax: (b) => `DIVIDE ( ${b} - ${mRef(baseName() + ' Last Ramadan')}, ${mRef(baseName() + ' Last Ramadan')} )` }
@@ -98,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     while (grew) { grew = false; PATTERNS.forEach((p) => { if (picked.has(p.id)) (p.needs || []).forEach((n) => { if (!picked.has(n)) { picked.add(n); grew = true; } }); }); }
     const b = mRef(baseName()), d = dateRef(), out = [];
     if (state.mode === 'column') {
-      const expr = state.agg === 'COUNTROWS' ? `COUNTROWS ( ${tbl(state.fact)} )` : `${state.agg} ( ${colRef(state.fact, state.column)} )`;
+      const expr = state.agg === 'COUNTROWS' ? `COUNTROWS ( ${tbl(name('fact'))} )` : `${state.agg} ( ${colRef(name('fact'), name('column'))} )`;
       out.push({ name: baseName(), expr, what: L('Your base measure. Every other measure builds on it.', 'المقياس الأساسي. كل المقاييس الأخرى مبنية عليه.'), desc: 'Base measure. The time intelligence measures build on it.', fmt: '#,0', auto: false });
     }
     PATTERNS.forEach((p) => { if (picked.has(p.id)) out.push({ name: `${baseName()} ${val(p.suffix)}`, expr: p.dax(b, d), what: isAr() ? val(WHAT_AR[p.id]) : val(p.what), desc: val(p.what), fmt: p.pct ? '0.0%' : (p.id === 'avgDays' ? '#,0.0' : '#,0'), pct: !!p.pct, auto: !state.pick.includes(p.id), g: p.g }); });
@@ -156,6 +158,7 @@ EVALUATE
   const count = (v, max) => Math.max(1, Math.min(max, Math.round(Number(v)) || 1));
   ['agg', 'fact', 'column', 'base', 'existing', 'home', 'cal', 'dateCol', 'fyEnd', 'n', 'days'].forEach((k) => {
     const el = $(k); if (!el) return; el.value = state[k];
+    if (el.tagName === 'INPUT' && !LIMIT[k]) el.placeholder = DEFAULTS[k];
     el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', () => {
       state[k] = LIMIT[k] ? count(el.value, LIMIT[k]) : el.value;
       if (k === 'agg') setMode();
