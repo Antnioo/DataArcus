@@ -576,23 +576,69 @@ document.addEventListener('DOMContentLoaded', () => {
     const chunks = [textChunk('Software', 'DataArcus Power BI Theme & Layout Generator'), textChunk('Source', 'https://dataarcus.com/tools/power-bi-theme-generator.html')];
     return new Blob([png.subarray(0, head), ...chunks, png.subarray(head)], { type: 'image/png' });
   }).catch(() => blob);
-  const downloadPng = () => {
+  // the background as a PNG blob (with the credit metadata); used by the PNG download and the Power BI project
+  const pngBlob = () => new Promise((resolve, reject) => {
     const [pw, ph] = pngSize(), img = new Image();
-    const key = pngKey();
     img.onload = () => {
-      lastPng = key; updateStatus();
       const cv = document.createElement('canvas'); cv.width = pw; cv.height = ph;
       cv.getContext('2d').drawImage(img, 0, 0, pw, ph);
-      cv.toBlob((b) => { if (!b) { toast(L('Could not create the image in this browser', 'تعذّر إنشاء الصورة في هذا المتصفح')); return; }
-        withCredits(b).then((png) => saveBlob(png, `${fileBase()}-background-${lay().preset}.png`));
-        toast(L('Background downloaded. Set it in Format page › Canvas background', 'تم تنزيل الخلفية. ضعها من Format page › Canvas background'));
-      }, 'image/png');
+      cv.toBlob((b) => (b ? withCredits(b).then(resolve) : reject(new Error('png'))), 'image/png');
     };
-    img.onerror = () => toast(L('Could not create the image in this browser', 'تعذّر إنشاء الصورة في هذا المتصفح'));
+    img.onerror = () => reject(new Error('png'));
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(bgSvg(computeSlots(lay()), { w: pw, h: ph }));
+  });
+  const downloadPng = () => {
+    const key = pngKey();
+    pngBlob().then((png) => {
+      lastPng = key; updateStatus();
+      saveBlob(png, `${fileBase()}-background-${lay().preset}.png`);
+      toast(L('Background downloaded. Set it in Format page › Canvas background', 'تم تنزيل الخلفية. ضعها من Format page › Canvas background'));
+    }, () => toast(L('Could not create the image in this browser', 'تعذّر إنشاء الصورة في هذا المتصفح')));
     track('theme_layout_png', { layout: lay().preset, direction: rtl() ? 'rtl' : 'ltr', kpis: lay().kpis });
   };
   $('pngBtn').addEventListener('click', downloadPng);
+
+  // ---------- Power BI project (.pbip): theme, background and every visual in one download ----------
+  // Only on pages that have the project card (the lab page for now). The builder loads on first use.
+  const pbipBtn = $('pbipBtn');
+  if (pbipBtn) {
+    let logo = null;
+    const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : new Promise((resolve, reject) => {
+      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20260928'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
+    }));
+    const logoIn = $('pbipLogo');
+    if (logoIn) logoIn.addEventListener('change', () => {
+      const f = logoIn.files && logoIn.files[0]; logo = null;
+      const out = $('pbipLogoName');
+      if (!f) { if (out) out.textContent = ''; return; }
+      const ext = /png$/i.test(f.type) ? 'png' : /jpe?g$/i.test(f.type) ? 'jpg' : null;
+      if (!ext || f.size > 2 * 1024 * 1024) { logoIn.value = ''; if (out) out.textContent = ''; toast(L('Use a PNG or JPG logo under 2 MB', 'استخدم شعارًا بصيغة PNG أو JPG أقل من 2 ميجابايت')); return; }
+      f.arrayBuffer().then((buf) => { logo = { bytes: new Uint8Array(buf), ext }; if (out) out.textContent = f.name; });
+    });
+    pbipBtn.addEventListener('click', () => {
+      const c = lay(), p = page(c), sample = !!($('pbipSample') && $('pbipSample').checked);
+      pbipBtn.disabled = true;
+      // visuals sit on the panels of the background image, so the project's theme always has transparent visuals
+      const was = c.transparent; c.transparent = true; const theme = buildTheme(); c.transparent = was;
+      const slots = computeSlots(c).map((s) => ({ kind: s.kind, title: nm(s.role), rail: !!s.rail, x: toPage(s.x), y: toPage(s.y), w: toPage(s.w), h: toPage(s.h) }));
+      Promise.all([loadBuilder(), pngBlob().then((b) => b.arrayBuffer())]).then(([P, buf]) => {
+        const r = P.build({
+          name: state.name || 'Power BI Report', title: state.name || L('Sales overview', 'نظرة عامة على المبيعات'), pageName: nm(LAYOUTS[c.preset].name),
+          lang: isAr() ? 'ar' : 'en', rtl: rtl(), font: state.font, ui: state.ui, page: { w: p.w, h: p.h }, slots, theme, png: new Uint8Array(buf), logo, sample,
+          texts: {
+            header: L('Header', 'الشريط العلوي'), kpis: L('KPI cards', 'بطاقات المؤشرات'), filters: L('Filters', 'الفلاتر'), slicer: L('Slicer', 'مقسم'),
+            logo: L('Logo', 'الشعار'), logoHere: L('Your logo', 'شعارك'), textHere: L('Explain what the main chart shows and what to do about it.', 'اشرح ما يعرضه المخطط الرئيسي وما الإجراء المطلوب.'),
+            tooltipPage: L('Tooltip', 'تلميح'), tooltipHere: L('Tooltip page: add a card or a small chart here.', 'صفحة التلميح: أضف بطاقة أو مخططًا صغيرًا هنا.'),
+            readme: L('# {name}\n\nMade with the DataArcus Power BI Theme & Layout Generator: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## Open it\n1. Unzip this folder.\n2. Open **{name}.pbip** in Power BI Desktop.\n3. If you chose sample data, click **Refresh** once so it loads.\n\n## Use your own data\nGet data, then drag your fields into each visual. The theme, background, positions, tooltip page and filter pane styling are already set.\n\nOlder Power BI Desktop versions: turn on **File > Options > Preview features > Power BI Project (.pbip) save option** and **Store reports using enhanced metadata format (PBIR)**.\n',
+              '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop.\n3. إذا اخترت البيانات التجريبية، اضغط **Refresh** مرة واحدة لتظهر.\n\n## استخدم بياناتك\nاضغط Get data ثم اسحب حقولك إلى كل عنصر. السمة والخلفية والمواضع وصفحة التلميح وتنسيق لوحة الفلاتر جاهزة.\n\nفي إصدارات Power BI Desktop الأقدم: فعّل **File > Options > Preview features > Power BI Project (.pbip) save option** و **Store reports using enhanced metadata format (PBIR)**.\n')
+          }
+        });
+        saveBlob(new Blob([r.zip()], { type: 'application/zip' }), `${fileBase()}-power-bi-project.zip`);
+        toast(L('Project downloaded. Unzip it and open the .pbip file', 'تم تنزيل المشروع. فك الضغط وافتح ملف .pbip'));
+        track('theme_pbip', { layout: c.preset, direction: rtl() ? 'rtl' : 'ltr', kpis: c.kpis, sample, logo: !!logo, page: c.page });
+      }).catch(() => toast(L('Could not build the project in this browser', 'تعذّر إنشاء المشروع في هذا المتصفح'))).then(() => { pbipBtn.disabled = false; });
+    });
+  }
 
   // ---------- step 3: visual backgrounds, and a reminder when a downloaded file is out of date ----------
   // each file keeps a fingerprint of what was downloaded; a different fingerprint now means it is out of date

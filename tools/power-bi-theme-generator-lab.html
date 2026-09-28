@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+  <meta name="robots" content="noindex, nofollow" />
+  <link rel="canonical" href="https://dataarcus.com/tools/power-bi-theme-generator.html" />
+  <title>Free Power BI Theme &amp; Layout Generator (JSON + Background) - DataArcus</title>
+  <meta name="description" content="Create a Power BI theme JSON and a matching page layout: pick brand colors, preview charts live, check contrast, and download a background with the exact position of every visual. Free, no sign-up." />
+  <meta name="author" content="DataArcus" />
+  <meta name="keywords" content="Power BI theme generator, Power BI theme JSON, Power BI layout template, Power BI report background, Power BI color palette, custom Power BI theme" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Free Power BI Theme &amp; Layout Generator (JSON + Background) - DataArcus" />
+  <meta property="og:description" content="Pick your brand colors, preview a live report, and download a Power BI theme JSON plus a matching page background and layout. Free, no sign-up." />
+  <meta property="og:url" content="https://dataarcus.com/tools/power-bi-theme-generator.html" />
+  <meta property="og:site_name" content="DataArcus" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/theme-generator.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/theme-generator.jpg" />
+  <link rel="icon" href="../assets/img/favicon.svg"/>
+  <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png" />
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  
+  <link href="../assets/css/vendor/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/css/style.min.css" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">  
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  </noscript>
+  
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "Power BI Theme & Layout Generator",
+        "url": "https://dataarcus.com/tools/power-bi-theme-generator.html",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Any (web browser)",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "publisher": { "@type": "Organization", "name": "DataArcus", "url": "https://dataarcus.com/" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "How do I import a theme into Power BI?",
+            "acceptedAnswer": { "@type": "Answer", "text": "In Power BI Desktop open the View tab, click the Themes dropdown, choose Browse for themes, and select the downloaded .json file." } },
+          { "@type": "Question", "name": "Does the theme work in Power BI Service?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Yes. Import the theme in Power BI Desktop and publish the report. The theme travels with the report to the Service." } },
+          { "@type": "Question", "name": "How many data colors should a Power BI theme have?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Power BI cycles through the dataColors list in order. Six to eight distinct colors cover most reports; beyond that, charts become hard to read." } },
+          { "@type": "Question", "name": "Why use a theme and layout generator instead of designing directly in Power BI?",
+            "acceptedAnswer": { "@type": "Answer", "text": "It sets the whole visual system first: colors, fonts, page size and where every visual goes. You decide once, then build every page on the same design instead of formatting visuals one by one." } }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    .tg { padding: var(--page-top) 0 var(--page-bottom); }
+    .tg h1 { color: var(--accent); }
+    .tg-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; }
+    .tg-label { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-bottom: 8px; display: block; }
+    .tg-presets { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tg-preset { display: flex; align-items: center; gap: 8px; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 30px; padding: 6px 12px 6px 8px; font-size: .85rem; cursor: pointer; }
+    .tg-preset:hover, .tg-preset.active { border-color: var(--accent); }
+    .tg-preset .sw { display: flex; }
+    .tg-preset .sw i { width: 10px; height: 16px; display: block; }
+    .tg-preset .sw i:first-child { border-radius: 8px 0 0 8px; } .tg-preset .sw i:last-child { border-radius: 0 8px 8px 0; }
+    .tg-colors { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .tg-color { display: flex; flex-direction: column; gap: 4px; }
+    .tg-color input[type=color] { width: 100%; height: 42px; border: 1px solid var(--glass-border); border-radius: 10px; background: none; padding: 2px; cursor: pointer; }
+    .tg-color input[type=text] { width: 100%; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 8px; font: 500 .8rem ui-monospace, Consolas, monospace; padding: 4px 6px; text-align: center; }
+    .tg-color span { font-size: .7rem; color: #94a3b8; text-align: center; }
+    .tg-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+    .tg-row .form-control, .tg-row .form-select { background: var(--dk-3); color: var(--lt); border-color: var(--glass-border); }
+    .tg-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+    .tg-btn2 { background: transparent; border: 1px solid var(--accent); color: var(--accent); border-radius: 50px; padding: 10px 20px; font-weight: 600; }
+    .tg-btn2:hover { background: rgba(0, 212, 255, .1); color: var(--accent-2); }
+    .tg-preview { border-radius: 14px; padding: 14px; transition: background .2s; }
+    .tg-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
+    .tg-card { border-radius: 10px; padding: 12px; }
+    .tg-card .k { font-size: .7rem; opacity: .7; text-transform: uppercase; letter-spacing: .06em; }
+    .tg-card .v { font-size: 1.5rem; font-weight: 800; line-height: 1.2; }
+    .tg-card .d { font-size: .75rem; font-weight: 600; }
+    .tg-grid2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
+    .tg-grid2 .tg-card { min-height: 190px; }
+    .tg-card svg { width: 100%; height: auto; display: block; }
+    .tg-table { width: 100%; font-size: .8rem; border-collapse: collapse; }
+    .tg-table th { text-align: left; padding: 6px 8px; font-weight: 700; }
+    .tg-table td { padding: 6px 8px; color: inherit; }
+    .tg-contrast { font-size: .85rem; display: flex; flex-direction: column; gap: 6px; }
+    .tg-contrast .ok { color: #22c55e; } .tg-contrast .warn { color: #f59e0b; }
+    .tg-json { margin: 0; background: #050a14; border: 1px solid var(--glass-border); border-radius: 12px; color: #cbd5e1; font: 12px/1.5 ui-monospace, Consolas, monospace; padding: 14px; max-height: 280px; overflow: auto; white-space: pre; }
+    .tg-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--accent); color: #051018; font-weight: 700; padding: 10px 18px; border-radius: 30px; opacity: 0; transition: opacity .25s; pointer-events: none; z-index: 2000; }
+    .tg-faq h3 { font-size: 1.05rem; color: var(--lt); margin-top: 1.2rem; }
+    .tg-faq p { color: #94a3b8; }
+    .tg-cta { background: linear-gradient(135deg, rgba(0, 212, 255, .12), rgba(0,132,255,.12)); border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px; }
+    @media (max-width: 767px) { .tg-colors { grid-template-columns: repeat(4, minmax(0, 1fr)); } .tg-grid2, .tg-kpis { grid-template-columns: 1fr; } }
+    /* page layout */
+    .tg-new { vertical-align: middle; margin-inline-start: 6px; font-size: .62rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #051018; background: #fdcb6e; border-radius: 20px; padding: 2px 8px; }
+    .tg-lays { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .tg-lay-b { background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 12px; padding: 8px; text-align: start; font-size: .8rem; font-weight: 600; cursor: pointer; }
+    .tg-lay-b:hover, .tg-lay-b.active { border-color: var(--accent); }
+    .tg-lay-b svg { display: block; width: 100%; height: auto; border-radius: 6px; margin-bottom: 6px; direction: ltr; }
+    .tg-seg { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tg-seg button { background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 30px; padding: 4px 12px; font-size: .8rem; }
+    .tg-seg button.active { border-color: var(--accent); color: var(--accent); }
+    .tg-check { display: flex; align-items: flex-start; gap: 8px; font-size: .85rem; color: #cbd5e1; cursor: pointer; margin: 0; }
+    .tg-lab { display: flex; gap: 10px; align-items: center; background: rgba(253, 203, 110, .12); border: 1px solid rgba(253, 203, 110, .45); color: #fde68a; border-radius: 12px; padding: 10px 14px; font-size: .9rem; }
+    .tg-file-pbip { border-color: rgba(108, 92, 231, .6); }
+    .tg-logo-in { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+    .tg-check input { accent-color: var(--accent); width: 16px; height: 16px; flex: none; margin-top: 2px; }
+    .tg-sizes { border-top: 1px solid var(--glass-border); padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .tg-adv { border-top: 1px solid var(--glass-border); padding-top: 12px; }
+    .tg-adv summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: .9rem; }
+    .tg-adv .tg-sizes { border-top: 0; padding-top: 0; }
+    .tg-adv .tg-reset { margin-inline-start: 8px; }
+    .tg-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-inline-end: 5px; vertical-align: 0; }
+    .tg-dots { display: inline-flex; margin-inline-end: 2px; } .tg-dots .tg-dot { margin-inline-end: -3px; } .tg-dots .tg-dot:last-child { margin-inline-end: 5px; }
+    .tg-range { display: flex; flex-direction: column; gap: 2px; margin: 0; font-size: .8rem; color: #cbd5e1; }
+    .tg-range b { color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .tg-range input { accent-color: var(--accent); width: 100%; }
+    .tg-custom { display: flex; align-items: flex-end; gap: 8px; margin-top: 8px; color: #94a3b8; }
+    .tg-custom label { display: flex; flex-direction: column; gap: 2px; font-size: .75rem; color: #cbd5e1; margin: 0; flex: 1; }
+    .tg-custom input { background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 8px; padding: 5px 8px; width: 100%; font-variant-numeric: tabular-nums; direction: ltr; }
+    .tg-custom input:focus { border-color: var(--accent); outline: none; }
+    .tg-custom span { padding-bottom: 7px; }
+    .tg-warn { color: #fdcb6e; }
+    .tg-step { font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+    /* steps bar: pinned under the navbar; the current step is highlighted */
+    .tg-steps { position: sticky; top: var(--nav-h); z-index: 20; display: flex; gap: 4px; margin: 0 0 var(--space-md); padding: 5px; background: rgba(10, 15, 28, .92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid var(--glass-border); border-radius: 50px; }
+    .tg-steps a { flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 6px 8px; border-radius: 40px; color: #94a3b8; font-size: .85rem; font-weight: 600; text-decoration: none; white-space: nowrap; position: relative; }
+    .tg-steps a b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid currentColor; font-size: .72rem; }
+    .tg-steps a:hover { color: var(--lt); }
+    .tg-steps a.active { background: rgba(0, 212, 255, .12); color: var(--accent); }
+    .tg-steps a.active b { background: var(--accent); border-color: var(--accent); color: #051018; }
+    .tg-steps a.stale::after { content: ""; position: absolute; top: 5px; inset-inline-end: 10px; width: 8px; height: 8px; border-radius: 50%; background: #fdcb6e; }
+    @media (max-width: 575.98px) { .tg-steps a { font-size: .78rem; gap: 5px; padding: 6px 2px; } .tg-steps a b { width: 20px; height: 20px; } }
+    .tg-files { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--space-md); }
+    .tg-file { display: flex; flex-direction: column; justify-content: space-between; gap: 12px; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 14px; padding: 14px; transition: border-color .2s; }
+    .tg-file.stale { border-color: rgba(253, 203, 110, .6); }
+    .tg-file-h b { color: #cbd5e1; font-weight: 600; }
+    /* theme code: tucked away for people who want to read or copy it */
+    .tg-code { border-top: 1px solid var(--glass-border); padding-top: 10px; }
+    .tg-code summary { cursor: pointer; color: var(--accent); font-weight: 600; font-size: .9rem; }
+    .tg-code a { color: var(--accent); }
+    /* page size: the first choice in step 2, shown large */
+    .tg-pagesize { background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 14px; padding: 14px 16px; }
+    .tg-pagesize .tg-seg button { padding: 8px 14px; font-size: .88rem; }
+    .tg-pagesize .tg-seg button small { display: block; font-size: .7rem; color: #94a3b8; font-weight: 500; }
+    .tg-pagesize .tg-seg button.active small { color: inherit; opacity: .8; }
+    /* example picture in the header */
+    .tg-excard { display: block; width: 100%; padding: 0; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden; color: #cbd5e1; text-align: start; font-size: .82rem; cursor: pointer; transition: border-color .2s, transform .2s; }
+    .tg-excard:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .tg-excard img { display: block; width: 100%; height: auto; }
+    .tg-excard > span { display: block; padding: 10px 14px; }
+    .tg-excard i { color: var(--accent); }
+    @media (prefers-reduced-motion: reduce) { .tg-excard:hover { transform: none; } }
+    .tg-file-h { display: flex; gap: 10px; align-items: flex-start; }
+    .tg-file-h > i { font-size: 1.6rem; color: var(--accent); line-height: 1; }
+    .tg-file-h strong { display: block; }
+    .tg-file-h small { color: #94a3b8; }
+    .tg-note { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: .85rem; color: #fdcb6e; background: rgba(253, 203, 110, .07); border: 1px solid rgba(253, 203, 110, .35); border-radius: 12px; padding: 10px 14px; }
+    .tg-note + .tg-note { margin-top: 8px; }
+    .tg-note span { flex: 1 1 220px; }
+    .tg-note button { background: transparent; border: 1px solid #fdcb6e; color: #fdcb6e; border-radius: 30px; padding: 4px 12px; font-size: .8rem; font-weight: 600; }
+    .tg-note button:hover { background: rgba(253, 203, 110, .12); }
+    .tg-swipe { display: block; margin-top: 6px; color: #94a3b8; font-size: .75rem; }
+    /* phones: the layout preview comes before its controls, so changes are visible */
+    @media (max-width: 991.98px) { .tg-prevcol { order: -1; } }
+    #exampleUndo[hidden] { display: none; }
+    .tg-reset { background: none; border: 0; color: var(--accent); font-size: .78rem; padding: 2px 0; cursor: pointer; }
+    .tg-reset:hover { text-decoration: underline; }
+    .tg-canvas { border-radius: 12px; overflow: hidden; border: 1px solid var(--glass-border); direction: ltr; background: #000; }
+    .tg-canvas svg { display: block; width: 100%; height: auto; }
+    @media (min-width: 992px) { .tg-stick { position: sticky; top: var(--top-offset); } }
+    .tg-why { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .tg-why span { font-size: .75rem; color: #cbd5e1; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 20px; padding: 3px 10px; }
+    .tg-why i { color: #22c55e; }
+    .tg-slots { max-height: 320px; overflow: auto; border: 1px solid var(--glass-border); border-radius: 12px; }
+    .tg-slots table { width: 100%; font-size: .82rem; border-collapse: collapse; }
+    .tg-slots th { position: sticky; top: 0; background: var(--dk-3); color: #94a3b8; font-weight: 600; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; padding: 8px 10px; text-align: start; }
+    .tg-slots td { padding: 7px 10px; border-top: 1px solid var(--glass-border); color: #e2e8f0; }
+    .tg-slots td.n { font-variant-numeric: tabular-nums; direction: ltr; text-align: right; color: var(--accent); font-weight: 600; }
+    .tg-slots th.n { text-align: right; } /* numeric headers line up with their numbers, in both languages */
+    .tg-slots tr:hover td, .tg-slots tr.hl td { background: rgba(0, 212, 255, .06); }
+    .tg-how { color: #cbd5e1; font-size: .88rem; padding-inline-start: 1.2rem; }
+    .tg-how li { margin-bottom: 8px; }
+    /* Code and hex values always read left to right, even on the Arabic page */
+    .tg-json, .tg-color input[type=text], .mb-pre, #cgStart, #cgEnd { direction: ltr; text-align: left; unicode-bidi: plaintext; }
+  </style>
+</head>
+<body>
+    
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html#hero">
+        <img src="../assets/img/logo.svg" alt="DataArcus logo" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="../index.html#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="../portfolio.html" data-i18n="nav.portfolio">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="index.html" data-i18n="nav.tools">Free Tools</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <a href="../index.html#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="tg">
+    <div class="container">
+      <header class="row g-4 align-items-center mb-4">
+        <div class="col-lg-8">
+          <span class="badge rounded-pill text-bg-dark border border-secondary mb-2" data-i18n="tg.badge">Free tool · No sign-up</span>
+          <h1 class="display-5 fw-bold" data-i18n="tg.title">Power BI Theme &amp; Layout Generator</h1>
+          <p class="lead text-white-50 mb-0" data-i18n="tg.subtitle">Design your Power BI report before you build it: a brand theme, the page size, and a layout with the exact position of every visual, ready to use in Power BI.</p>
+          <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+            <button class="tg-btn2" id="exampleBtn" type="button"><i class="bi bi-stars me-1"></i><span data-i18n="tg.example">See an example</span></button>
+            <button class="tg-btn2" id="exampleUndo" type="button" hidden><i class="bi bi-arrow-counterclockwise me-1"></i><span data-i18n="tg.exampleUndo">Undo: back to my design</span></button>
+            <small class="text-white-50 d-lg-none" data-i18n="tg.exampleHint">A finished executive sales report you can download and adapt.</small>
+          </div>
+        </div>
+        <div class="col-lg-4 d-none d-lg-block">
+          <!-- a picture of the example, so visitors see what they will get before clicking -->
+          <button class="tg-excard" id="exampleCard" type="button" tabindex="-1" aria-hidden="true">
+            <img id="exampleImg" src="../assets/img/tools/theme-example-en.jpg" alt="" width="640" height="360">
+            <span><i class="bi bi-stars"></i> <span data-i18n="tg.exampleHint">A finished executive sales report you can download and adapt.</span></span>
+          </button>
+        </div>
+      </header>
+      <div class="tg-lab mb-4" role="note"><i class="bi bi-cone-striped" aria-hidden="true"></i> <span data-i18n-html="tg.lab.note"><b>Test page.</b> This is the theme generator with a new download: a ready Power BI project. It is not listed on the site yet.</span></div>
+
+      <!-- steps bar: pinned under the navbar (data-pin: main.js counts it in the top offset) -->
+      <nav class="tg-steps" id="tgSteps" aria-label="Steps" data-pin>
+        <a href="#colors" data-step="colors"><b>1</b><span data-i18n="tg.nav.colors">Colors</span></a>
+        <a href="#layout" data-step="layout"><b>2</b><span data-i18n="tg.nav.layout">Layout</span></a>
+        <a href="#download" data-step="download"><b>3</b><span data-i18n="tg.nav.download">Download</span></a>
+      </nav>
+
+      <div class="tg-panel" id="colors" role="region" aria-labelledby="colTitle">
+        <h2 class="h4 fw-bold mb-1" id="colTitle"><span class="tg-step d-block mb-1" data-i18n="tg.step1">1 · Colors</span><span data-i18n="tg.colTitle">Brand colors and font</span></h2>
+        <p class="text-white-50 mb-4" data-i18n="tg.colSub">Start from a preset or your brand color. The preview shows how a real report looks with it.</p>
+        <div class="row g-4">
+          <div class="col-lg-5 d-flex flex-column gap-4">
+            <div>
+              <span class="tg-label" data-i18n="tg.presets">Start from a preset</span>
+              <div class="tg-presets" id="presets"></div>
+            </div>
+            <div>
+              <span class="tg-label" data-i18n="tg.fromBrand">Or generate from one brand color</span>
+              <div class="tg-row">
+                <input type="color" id="brand" value="#0084ff" aria-label="Brand color" style="width:52px;height:42px;border-radius:10px;border:1px solid var(--glass-border);background:none;padding:2px">
+                <select id="harmony" class="form-select" style="width:auto" aria-label="Palette style">
+                  <option value="analogous" data-i18n="tg.harmony.analogous">Analogous (calm)</option>
+                  <option value="complementary" data-i18n="tg.harmony.complementary">Complementary (contrast)</option>
+                  <option value="triadic" data-i18n="tg.harmony.triadic">Triadic (vivid)</option>
+                  <option value="mono" data-i18n="tg.harmony.mono">Monochrome (shades)</option>
+                </select>
+                <button class="tg-btn2" id="genBtn" type="button" data-i18n="tg.generate">Generate</button>
+              </div>
+            </div>
+            <div>
+              <span class="tg-label" data-i18n="tg.dataColors">Data colors (used in order)</span>
+              <div class="tg-colors" id="dataColors"></div>
+            </div>
+            <div>
+              <span class="tg-label" data-i18n="tg.reportColors">Report colors</span>
+              <div class="tg-colors" id="uiColors"></div>
+            </div>
+            <div class="tg-row">
+              <div style="flex:1;min-width:150px">
+                <label class="tg-label" for="themeName" data-i18n="tg.themeName">Theme name</label>
+                <input id="themeName" class="form-control" value="My Brand Theme" maxlength="60">
+              </div>
+              <div style="flex:1;min-width:150px">
+                <label class="tg-label" for="font" data-i18n="tg.font">Font</label>
+                <select id="font" class="form-select">
+                  <option>Segoe UI</option><option>Segoe UI Semibold</option><option>DIN</option><option>Arial</option>
+                  <option>Calibri</option><option>Tahoma</option><option>Verdana</option><option>Georgia</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <span class="tg-label" data-i18n="tg.readability">Readability check</span>
+              <div class="tg-contrast" id="contrast"></div>
+            </div>
+          </div>
+          <div class="col-lg-7 d-flex flex-column gap-3">
+            <div>
+              <span class="tg-label" data-i18n="tg.preview">Live preview</span>
+              <div class="tg-preview" id="preview"></div>
+            </div>
+            <!-- the theme code, for people who want to read or copy it; the file itself downloads in step 3 -->
+            <details class="tg-code">
+              <summary><i class="bi bi-code-slash me-1"></i><span data-i18n="tg.code">Theme code (JSON)</span></summary>
+              <div class="d-flex flex-column gap-2 mt-2">
+                <pre class="tg-json" id="json"></pre>
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                  <small class="text-white-50" data-i18n-html="tg.codeNote">Download the file in <a href="#download">step 3</a>.</small>
+                  <button class="tg-btn2" id="copyBtn" type="button"><i class="bi bi-clipboard me-1"></i><span data-i18n="tg.copy">Copy</span></button>
+                </div>
+              </div>
+            </details>
+          </div>
+        </div>
+      </div>
+
+      <div class="tg-panel tg-lay mt-4" id="layout" role="region" aria-labelledby="layTitle">
+        <h2 class="h4 fw-bold mb-1" id="layTitle"><span class="tg-step d-block mb-1" data-i18n="tg.step2">2 · Layout</span><span data-i18n="tg.layout.title">Page size and layout</span> <span class="tg-new" data-i18n="tg.layout.new">New</span></h2>
+        <p class="text-white-50 mb-4" data-i18n="tg.layout.subtitle">A full report background in your theme colors, with a place for every visual. Layouts follow dashboard design principles from Stephen Few, the IBCS standards and Microsoft's report design guidance.</p>
+        <div class="tg-pagesize mb-4" id="pageSize"></div>
+        <div class="row g-4">
+          <div class="col-lg-4 d-flex flex-column gap-3" id="layControls"></div>
+          <div class="col-lg-8 tg-prevcol">
+            <div class="tg-stick">
+              <div class="tg-canvas" id="layCanvas"></div>
+              <div class="tg-why" id="layWhy"></div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4">
+          <span class="tg-label" data-i18n="tg.layout.slots">Where each visual goes</span>
+          <div class="tg-slots" id="slotTable"></div>
+          <small class="tg-swipe d-md-none" data-i18n="tg.swipe">Swipe the table sideways to see all columns</small>
+        </div>
+      </div>
+
+      <div class="tg-panel mt-4" id="download" role="region" aria-labelledby="dlTitle">
+        <h2 class="h4 fw-bold mb-1" id="dlTitle"><span class="tg-step d-block mb-1" data-i18n="tg.step3">3 · Download</span><span data-i18n="tg.dl.title">Your Power BI design</span></h2>
+        <p class="text-white-50 mb-4" data-i18n="tg.dl.subtitle">Three files, one design. They use every choice above; if you change something after downloading, you'll see which file to download again.</p>
+        <div id="dlVis" class="mb-3"></div>
+        <div class="tg-files">
+          <div class="tg-file" data-file="json">
+            <div class="tg-file-h"><i class="bi bi-filetype-json" aria-hidden="true"></i><div><strong data-i18n="tg.dl.themeName">Theme (.json)</strong><small data-i18n-html="tg.dl.themeDesc">Colors, font and visual styles. Import it: <b>View › Themes › Browse for themes</b>.</small></div></div>
+            <button class="btn btn-accent w-100" id="dlBtn" type="button"><i class="bi bi-download me-1"></i><span data-i18n="tg.dl.themeBtn">Download theme</span></button>
+          </div>
+          <div class="tg-file" data-file="png">
+            <div class="tg-file-h"><i class="bi bi-image" aria-hidden="true"></i><div><strong data-i18n="tg.dl.bgName">Background (.png)</strong><small data-i18n-html="tg.dl.bgDesc">The layout as an image. Use it: <b>Format page › Canvas background</b>.</small></div></div>
+            <button class="btn btn-accent w-100" id="pngBtn" type="button"><i class="bi bi-download me-1"></i><span data-i18n="tg.dl.bgBtn">Download background</span></button>
+          </div>
+          <div class="tg-file tg-file-pbip" data-file="pbip">
+            <div class="tg-file-h"><i class="bi bi-file-earmark-zip" aria-hidden="true"></i><div><strong data-i18n="tg.dl.pbipName">Power BI project (.pbip)</strong><small data-i18n-html="tg.dl.pbipDesc">Everything above in one report: the theme applied, the background set and every visual in place. Unzip it and open the <b>.pbip</b> file in Power BI Desktop.</small></div></div>
+            <div class="d-flex flex-column gap-2">
+              <label class="tg-check"><input type="checkbox" id="pbipSample" checked> <span data-i18n-html="tg.dl.pbipSample">Sample data, so it opens looking finished <small class="d-block text-white-50">Click Refresh once in Power BI.</small></span></label>
+              <label class="tg-check tg-logo-in"><i class="bi bi-image" aria-hidden="true"></i> <span><span data-i18n="tg.dl.pbipLogo">Add your logo (optional, PNG or JPG)</span> <small class="d-block text-white-50" id="pbipLogoName"></small></span><input type="file" id="pbipLogo" accept="image/png,image/jpeg" class="visually-hidden"></label>
+            </div>
+            <button class="btn btn-accent w-100" id="pbipBtn" type="button"><i class="bi bi-download me-1"></i><span data-i18n="tg.dl.pbipBtn">Download project</span></button>
+          </div>
+          <div class="tg-file" data-file="csv">
+            <div class="tg-file-h"><i class="bi bi-filetype-csv" aria-hidden="true"></i><div><strong data-i18n="tg.dl.csvName">Layout table (.csv)</strong><small data-i18n-html="tg.dl.csvDesc">Size and position of every visual (the table in step 2), for <b>Format › General › Properties</b>. Copy pastes it into Excel.</small></div></div>
+            <div class="d-flex gap-2">
+              <button class="btn btn-accent flex-grow-1" id="slotCsv" type="button"><i class="bi bi-download me-1"></i><span data-i18n="tg.dl.csvBtn">Download table</span></button>
+              <button class="tg-btn2" id="slotCopy" type="button"><i class="bi bi-clipboard me-1"></i><span data-i18n="tg.copy">Copy</span></button>
+            </div>
+          </div>
+        </div>
+        <p class="small text-white-50 mt-2 mb-0" data-i18n="tg.dl.themeOnly">Only want the colors? The theme file is all you need.</p>
+        <div id="dlStatus" class="mt-3" role="status" aria-live="polite"></div>
+        <div class="row g-4 mt-1">
+          <div class="col-lg-7">
+            <span class="tg-label" data-i18n="tg.layout.howTitle">How to use it in Power BI</span>
+            <ol class="tg-how mb-0">
+              <li data-i18n-html="tg.layout.how1"><strong>Download the files</strong> above, with visual backgrounds set to <strong>Transparent</strong>.</li>
+              <li data-i18n-html="tg.layout.how2">Import the theme: <strong>View › Themes › Browse for themes</strong>.</li>
+              <li data-i18n-html="tg.layout.how3">Set the background: <strong>Format page › Canvas background › Image</strong>, Image fit <strong>Stretch</strong>, Transparency <strong>0%</strong>.</li>
+              <li data-i18n-html="tg.layout.how4">Add each visual, then type its numbers from the table into <strong>Format › General › Properties</strong> (Size and Position). It lands exactly on its panel.</li>
+            </ol>
+          </div>
+          <div class="col-lg-5">
+            <p class="small text-white-50 mb-0" id="layUnits"></p>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mt-5 justify-content-center">
+        <div class="col-lg-8">
+          <div class="tg-cta mb-5 text-center">
+            <h2 class="h4 fw-bold mb-2" data-i18n="tg.cta.title">Need more than the design?</h2>
+            <p class="text-white-50 mb-3" data-i18n="tg.cta.desc">DataArcus also builds complete Power BI solutions, from the data model and measures to dashboards your team uses every day.</p>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+              <a href="../index.html#contact" class="btn btn-accent" data-i18n="nav.consultation">Book a Free Call</a>
+              <a href="dax-calendar-table-generator.html" class="tg-btn2 text-decoration-none d-inline-block" data-i18n="tg.cta.next">Free DAX Calendar Generator</a>
+            </div>
+            <p class="small mt-3 mb-0"><a href="../articles/article-power-bi-report-redesign.html" class="text-accent" data-i18n="tg.cta.article">Read the story: how we redesigned a real report in 5 minutes →</a></p>
+          </div>
+          <section class="tg-faq">
+            <h2 class="h4 fw-bold" data-i18n="tg.faq.title">Questions</h2>
+            <h3 data-i18n="tg.faq.q1">How do I import a theme into Power BI?</h3>
+            <p data-i18n-html="tg.faq.a1">In Power BI Desktop open the <strong>View</strong> tab, click the <strong>Themes</strong> dropdown, choose <strong>Browse for themes</strong>, and select the downloaded .json file. Every visual updates at once.</p>
+            <h3 data-i18n="tg.faq.q2">Does it work in Power BI Service?</h3>
+            <p data-i18n="tg.faq.a2">Yes. Import the theme in Desktop and publish. The theme travels with the report.</p>
+            <h3 data-i18n="tg.faq.q3">How many data colors should I use?</h3>
+            <p data-i18n="tg.faq.a3">Power BI uses the data colors in order: the first series gets color 1, the second gets color 2, and so on. Six to eight clearly different colors cover almost every report. Put your main brand color first.</p>
+            <h3 data-i18n="tg.faq.q4">What are good, neutral and bad colors?</h3>
+            <p data-i18n="tg.faq.a4">Power BI uses them for KPI visuals and status indicators. Keep "good" green-ish and "bad" red-ish so people read them instantly, even in your brand palette.</p>
+            <h3 data-i18n="tg.faq.q5">Why the readability check?</h3>
+            <p data-i18n="tg.faq.a5">Text needs a contrast ratio of at least 4.5:1 against its background to be readable for everyone (WCAG AA). The check warns you before your managers squint at the report.</p>
+            <h3 data-i18n="tg.faq.q6">Why use this instead of designing directly in Power BI?</h3>
+            <p data-i18n="tg.faq.a6">Because it sets the whole visual system first: colors, fonts, page size and where every visual goes. Formatting visuals one by one in Power BI takes hours and drifts between pages; here you decide once, then build every page on the same design.</p>
+          </section>
+          <p class="small text-white-50 mt-4 mb-0" data-i18n="tg.terms">Free to use for your own and your clients' reports. The tool, its code and its design are © DataArcus. Please don't copy or republish them.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div class="tg-toast" id="toast" role="status" aria-live="polite"></div>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="../index.html#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="../assets/img/logo.svg" alt="DataArcus logo" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+              <li class="mb-2"><a href="index.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">Free Power BI &amp; Fabric Tools</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="../portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Showcases</a></li>
+              <li class="mb-2"><a href="../index.html#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="../blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+              <li class="mb-2"><a href="../privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">Privacy</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Made in Dubai</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="../assets/js/translations/common.min.js" defer></script>
+  <script src="../assets/js/translations/theme-generator.min.js" defer></script>
+  <script src="../assets/js/lang-manager.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
+  <script src="../assets/js/main.min.js" defer></script>
+  <script src="../assets/js/theme-generator.min.js" defer></script>
+</body>
+</html>
