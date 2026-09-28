@@ -68,6 +68,10 @@ export default async function ({ browser, url }) {
     const names = (name) => P.build({ name, lang: 'en', font: 'Segoe UI', ui: { text: '#111111', card: '#ffffff', background: '#eeeeee', accent: '#0077ff' }, theme: {}, sample: true, texts: {},
       pages: [{ name: 'P', page: { w: 1280, h: 720 }, slots: [{ kind: 'kpi', title: 'K', x: 0, y: 0, w: 100, h: 50 }], png: new Uint8Array([1]) }] }).files.map((f) => f.path);
     const emoji = names('x'.repeat(59) + '\u{1F4CA} Sales');
+    for (const n of ['..', '.', ' .. ', 'Sales.', '.hidden']) {
+      const ps = names(n);
+      check(ps.every((p) => !p.split('/').some((seg) => seg === '..' || seg === '.' || (seg !== '.gitignore' && /^[.\s]|[.\s]$/.test(seg.replace(/\.(pbip|Report|SemanticModel)$/, ''))))), `names: "${n}" gives ${ps.find((p) => /(^|\/)\.|\.\//.test(p)) || ps[0]}`);
+    }
     check(emoji.every((n) => !/[\uD800-\uDFFF]/.test(n.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '')) && !n.includes('\uFFFD')), `names: an emoji cut in half: ${emoji[0]}`);
   }
 
