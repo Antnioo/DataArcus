@@ -31,6 +31,12 @@ export default async function ({ browser, url }) {
     await setDates(v.pg, '2024-01-01', '2024-12-31');
     const ok = await v.pg.evaluate(() => ({ dax: document.getElementById('dax').textContent, copy: document.getElementById('copyBtn').disabled }));
     check(/DATE \( 2024, 12, 31 \)/.test(ok.dax) && !ok.copy, 'calendar: a good range after a bad one does not bring the output back');
+    // 1970-01-01 (timestamp 0) is a date like any other, and the 60-year limit counts leap days
+    for (const [a, b, good] of [['1970-01-01', '1971-01-01', true], ['1966-01-01', '2025-12-31', true], ['1966-01-01', '2026-01-01', false]]) {
+      await setDates(v.pg, a, b);
+      const err = await v.pg.$eval('#err', (e) => e.textContent);
+      check(!err === good, `calendar: ${a} to ${b} ${good ? 'rejected' : 'accepted'}`);
+    }
     await done(v, 'calendar range');
   }
 
