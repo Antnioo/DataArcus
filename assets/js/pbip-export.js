@@ -209,8 +209,12 @@
 
     // visuals, in reading order: z and tab order follow it, so keyboard users move through the page the way it reads
     const visuals = [];
+    // a visual inside a group stores its position relative to the group's top-left corner, not the page
+    const origin = {};
     const container = (spec) => {
-      const v = { $schema: SCHEMA.visual, name: spec.name || rnd(), position: { x: spec.x, y: spec.y, z: spec.z, height: spec.h, width: spec.w, tabOrder: spec.z } };
+      const o0 = spec.parent ? origin[spec.parent] : { x: 0, y: 0 };
+      const v = { $schema: SCHEMA.visual, name: spec.name || rnd(), position: { x: spec.x - o0.x, y: spec.y - o0.y, z: spec.z, height: spec.h, width: spec.w, tabOrder: spec.z } };
+      if (spec.group) origin[v.name] = { x: spec.x, y: spec.y };
       if (spec.group) v.visualGroup = spec.group; else v.visual = spec.visual;
       if (spec.parent) v.parentGroupName = spec.parent;
       if (spec.annotations) v.annotations = spec.annotations;
