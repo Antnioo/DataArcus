@@ -142,6 +142,13 @@
     .tg-seg { display: flex; flex-wrap: wrap; gap: 6px; }
     .tg-seg button { background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 30px; padding: 4px 12px; font-size: .8rem; }
     .tg-seg button.active { border-color: var(--accent); color: var(--accent); }
+    .tg-bind-row { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; color: #cbd5e1; margin: 0; }
+    .tg-bind { border: 1px solid var(--glass-border); border-radius: 12px; padding: 12px; }
+    .tg-bind-map { display: flex; flex-direction: column; gap: 8px; }
+    .tg-bind-map:not(:empty) { margin-top: 10px; }
+    .tg-bind-sec { font-size: .7rem; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-top: 4px; }
+    .tg-pick { cursor: pointer; display: inline-flex; align-items: center; }
+    .tg-pick:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
     .tg-check { display: flex; align-items: flex-start; gap: 8px; font-size: .85rem; color: #cbd5e1; cursor: pointer; margin: 0; }
     .tg-lab { display: flex; gap: 10px; align-items: center; background: rgba(253, 203, 110, .12); border: 1px solid rgba(253, 203, 110, .45); color: #fde68a; border-radius: 12px; padding: 10px 14px; font-size: .9rem; }
     .tg-file-pbip { border-color: rgba(108, 92, 231, .6); }
@@ -396,7 +403,27 @@
           <div class="tg-file tg-file-pbip" data-file="pbip">
             <div class="tg-file-h"><i class="bi bi-file-earmark-zip" aria-hidden="true"></i><div><strong data-i18n="tg.dl.pbipName">Power BI project (.pbip)</strong><small data-i18n-html="tg.dl.pbipDesc">Everything above in one report: the theme applied, the background set and every visual in place. Unzip it and open the <b>.pbip</b> file in Power BI Desktop.</small></div></div>
             <div class="d-flex flex-column gap-2">
-              <label class="tg-check"><input type="checkbox" id="pbipSample" checked> <span data-i18n-html="tg.dl.pbipSample">Sample data, so it opens looking finished <small class="d-block text-white-50">Click Refresh once in Power BI.</small></span></label>
+              <label class="tg-bind-row"><span data-i18n="tg.dl.pbipData">Data in the report</span>
+                <select id="pbipData" class="form-select form-select-sm">
+                  <option value="sample" data-i18n="tg.dl.pbipDataSample">Sample data (click Refresh once)</option>
+                  <option value="local" data-i18n="tg.dl.pbipDataLocal">My model: Power BI project on my PC</option>
+                  <option value="service" data-i18n="tg.dl.pbipDataService">My model: published in a workspace</option>
+                  <option value="empty" data-i18n="tg.dl.pbipDataEmpty">No data, empty visuals</option>
+                </select></label>
+              <div id="pbipOwn" class="tg-bind" hidden>
+                <div data-own="local">
+                  <p class="small text-white-50 mb-2" data-i18n-html="tg.dl.pbipLocalHow">Your model stays as it is. You get a new report that uses it. If your file is a .pbix, first use <b>File › Save as › Power BI project</b> in Power BI Desktop.</p>
+                  <label class="tg-btn2 tg-pick"><i class="bi bi-folder2-open me-1" aria-hidden="true"></i><span data-i18n="tg.dl.pbipFolder">Choose the project folder</span><input type="file" id="pbipFolder" webkitdirectory multiple class="visually-hidden"></label>
+                </div>
+                <div data-own="service" class="d-flex flex-column gap-2">
+                  <p class="small text-white-50 mb-0" data-i18n-html="tg.dl.pbipServiceHow">The report connects live to your published model. Nothing in the workspace changes until you publish it.</p>
+                  <label class="tg-bind-row"><span data-i18n="tg.dl.pbipWs">Workspace name</span><input id="pbipWs" class="form-control form-control-sm" maxlength="200" autocomplete="off"></label>
+                  <label class="tg-bind-row"><span data-i18n="tg.dl.pbipModel">Semantic model name</span><input id="pbipModelName" class="form-control form-control-sm" maxlength="200" autocomplete="off"></label>
+                  <label class="tg-btn2 tg-pick"><i class="bi bi-file-earmark-arrow-up me-1" aria-hidden="true"></i><span data-i18n="tg.dl.pbipModelFile">Load its fields (.pbit or model.bim)</span><input type="file" id="pbipModelFile" accept=".pbit,.bim,.json" class="visually-hidden"></label>
+                </div>
+                <small class="d-block mt-2" id="pbipOwnMsg" role="status"></small>
+                <div id="pbipMap" class="tg-bind-map"></div>
+              </div>
               <label class="tg-check"><input type="checkbox" id="pbipPages" checked> <span data-i18n-html="tg.dl.pbipPages">A second page and page buttons <small class="d-block text-white-50">Details or overview, in the same design.</small></span></label>
               <label class="tg-check"><input type="checkbox" id="pbipPanel"> <span data-i18n-html="tg.dl.pbipPanel">Filters as a slide-in panel <small class="d-block text-white-50">A Filters button opens them over the page, so charts get the full width.</small></span></label>
               <label class="tg-check tg-logo-in"><i class="bi bi-image" aria-hidden="true"></i> <span><span data-i18n="tg.dl.pbipLogo">Add your logo (optional, PNG or JPG)</span> <small class="d-block text-white-50" id="pbipLogoName"></small></span><input type="file" id="pbipLogo" accept="image/png,image/jpeg" class="visually-hidden"></label>

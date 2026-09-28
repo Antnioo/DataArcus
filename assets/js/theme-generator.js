@@ -683,8 +683,56 @@ document.addEventListener('DOMContentLoaded', () => {
   if (pbipBtn) {
     let logo = null;
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : new Promise((resolve, reject) => {
-      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20260929b'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
+      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20260930a'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
     }));
+    // ---- your own model: a local project (the report points at its .SemanticModel folder) or a published one ----
+    const dataIn = $('pbipData'), own = { tables: null, folder: null, getBind: null };
+    const loadBind = () => (window.DABind ? Promise.resolve(window.DABind) : new Promise((resolve, reject) => {
+      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-bind.min.js?v=20260930a'; sc.onload = () => resolve(window.DABind); sc.onerror = reject; document.head.appendChild(sc);
+    }));
+    const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
+    const mode = () => (dataIn ? dataIn.value : 'sample');
+    const showOwn = () => {
+      const m = mode(), box = $('pbipOwn'); if (!box) return;
+      box.hidden = m !== 'local' && m !== 'service';
+      box.querySelectorAll('[data-own]').forEach((d) => { d.hidden = d.dataset.own !== m; });
+      if (!box.hidden) loadBind().catch(() => {});
+    };
+    // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)
+    const kpiSlots = () => Math.max(lay().kpis || 0, $('pbipPages') && $('pbipPages').checked ? 4 : 0, 1);
+    const loaded = (res, where0) => loadBind().then((DB) => {
+      const where = DB.iso(where0);
+      own.tables = res.tables;
+      const ms = res.tables.reduce((a, t) => a + t.measures.filter((x) => !x.isHidden).length, 0);
+      if (!res.tables.length) { own.getBind = null; $('pbipMap').innerHTML = ''; ownMsg(L('No tables found in this model.', 'لم يتم العثور على جداول في هذا النموذج.'), true); return; }
+      own.getBind = DB.renderPicker($('pbipMap'), res.tables, DB.suggest(res.tables, kpiSlots()), L);
+      ownMsg(L(`${where}: ${res.tables.length} tables, ${ms} measures. Each visual below has a suggested field; change any of them.`,
+        `${where}: ${res.tables.length} جدول، ${ms} مقياس. لكل عنصر أدناه حقل مقترح، ويمكنك تغيير أي منها.`)
+        + (!ms ? L(' This model has no measures, so KPI cards and charts stay empty until you add some.', ' لا توجد مقاييس في هذا النموذج، لذا تبقى البطاقات والمخططات فارغة حتى تضيفها.') : ''));
+      track('theme_pbip_model', { mode: mode(), tables: res.tables.length, measures: ms });
+    });
+    const failed = (e) => {
+      const code = e && e.message;
+      own.getBind = null; if ($('pbipMap')) $('pbipMap').innerHTML = '';
+      ownMsg(code === 'NO_SEMANTIC_MODEL' ? L('No .SemanticModel folder here. Choose the folder you saved the Power BI project in.', 'لا يوجد مجلد .SemanticModel هنا. اختر المجلد الذي حفظت فيه مشروع Power BI.')
+        : code === 'PBIX' ? L('A .pbix keeps its model in a format only Power BI reads. Use File › Export › Power BI template (.pbit).', 'ملف .pbix يحفظ النموذج بصيغة لا يقرؤها إلا Power BI. استخدم File › Export › Power BI template (.pbit).')
+          : code === 'TMDL_ONLY' ? L('This file has the model as TMDL. Choose the project folder instead, on the other option.', 'هذا الملف يحفظ النموذج بصيغة TMDL. اختر مجلد المشروع بدلًا منه.')
+            : L('Could not read the model in this file.', 'تعذّرت قراءة النموذج في هذا الملف.'), true);
+    };
+    if (dataIn) {
+      dataIn.addEventListener('change', showOwn); showOwn();
+      $('pbipFolder').addEventListener('change', (e) => {
+        const files = e.target.files; if (!files || !files.length) return;
+        ownMsg(L('Reading the model…', 'جارٍ قراءة النموذج…'));
+        loadBind().then((DB) => DB.fromFolder(files)).then((res) => { own.folder = res.folder; return loaded(res, res.folder + (res.others ? L(` (first of ${res.others + 1} models)`, ` (الأول من ${res.others + 1} نماذج)`) : '')); })
+          .catch((err) => { own.folder = null; failed(err); });
+      });
+      $('pbipModelFile').addEventListener('change', (e) => {
+        const f = e.target.files && e.target.files[0]; if (!f) return;
+        ownMsg(L('Reading the model…', 'جارٍ قراءة النموذج…'));
+        loadBind().then((DB) => DB.fromFile(f, '../assets/js/model-health-worker.min.js?v=20260928b')).then((res) => loaded(res, f.name)).catch(failed);
+      });
+    }
     const logoIn = $('pbipLogo');
     if (logoIn) logoIn.addEventListener('change', () => {
       const f = logoIn.files && logoIn.files[0]; logo = null;
@@ -695,7 +743,18 @@ document.addEventListener('DOMContentLoaded', () => {
       f.arrayBuffer().then((buf) => { logo = { bytes: new Uint8Array(buf), ext }; if (out) out.textContent = f.name; });
     });
     pbipBtn.addEventListener('click', () => {
-      const c = lay(), p = page(c), sample = !!($('pbipSample') && $('pbipSample').checked);
+      const c = lay(), p = page(c), m = mode(), sample = m === 'sample';
+      // your own model: where it is, and the fields picked for each visual
+      let model = null;
+      if (m === 'local') {
+        if (!own.folder) { toast(L('Choose your Power BI project folder first', 'اختر مجلد مشروع Power BI أولًا')); return; }
+        model = { byPath: own.folder };
+      } else if (m === 'service') {
+        const ws = $('pbipWs').value.trim(), mn = $('pbipModelName').value.trim();
+        if (!ws || !mn) { toast(L('Type the workspace and the semantic model names', 'اكتب اسم مساحة العمل واسم النموذج الدلالي')); return; }
+        model = { ws, mn };   // the connection string is written once the helper has loaded, below
+      }
+      const bind = model && own.getBind && (m === 'service' || own.folder) ? own.getBind() : null;
       pbipBtn.disabled = true;
       // visuals sit on the panels of the background image, so the project's theme always has transparent visuals
       const was = c.transparent; c.transparent = true; const theme = buildTheme(); c.transparent = was;
@@ -718,25 +777,31 @@ document.addEventListener('DOMContentLoaded', () => {
       };
       const specs = [{ c, name: nm(LAYOUTS[c.preset].name) }].concat(second ? [{ c: c2, name: c.preset === 'analysis' ? L('Overview', 'نظرة عامة') : L('Details', 'التفاصيل') }] : [])
         .map((sp) => Object.assign(sp, withPanel(sp.c)));
-      Promise.all([loadBuilder()].concat(specs.map((sp) => pngBlob(sp.c).then((b) => b.arrayBuffer())))).then(([P, ...bufs]) => {
+      Promise.all([loadBuilder(), model ? loadBind() : null].concat(specs.map((sp) => pngBlob(sp.c).then((b) => b.arrayBuffer())))).then(([P, DB, ...bufs]) => {
+        if (model && model.ws) model = { byConnection: DB.connection(model.ws, model.mn) };
         const pages = specs.map((sp, i) => ({ name: sp.name, page: { w: page(sp.c).w, h: page(sp.c).h }, slots: slotsOf(sp.c), png: new Uint8Array(bufs[i]), panel: sp.panel || null }));
         const r = P.build({
           name: state.name || 'Power BI Report', title: state.name || L('Sales overview', 'نظرة عامة على المبيعات'), pageName: nm(LAYOUTS[c.preset].name),
-          lang: isAr() ? 'ar' : 'en', rtl: rtl(), font: state.font, ui: state.ui, pages, theme, logo, sample,
+          lang: isAr() ? 'ar' : 'en', rtl: rtl(), font: state.font, ui: state.ui, pages, theme, logo, sample, model, bind,
           texts: {
             reset: L('Reset filters', 'إعادة ضبط الفلاتر'), pages: L('Pages', 'الصفحات'), close: L('Close', 'إغلاق'),
             filterPanel: L('Filter panel', 'لوحة الفلاتر'), openFilters: L('Open the filter panel', 'افتح لوحة الفلاتر'), closeFilters: L('Close the filter panel', 'أغلق لوحة الفلاتر'),
             filtersOpen: L('Filters open', 'الفلاتر مفتوحة'), filtersClosed: L('Filters closed', 'الفلاتر مغلقة'),
             header: L('Header', 'الشريط العلوي'), kpis: L('KPI cards', 'بطاقات المؤشرات'), filters: L('Filters', 'الفلاتر'), slicer: L('Slicer', 'مقسم'),
             logo: L('Logo', 'الشعار'), logoHere: L('Your logo', 'شعارك'), textHere: L('Explain what the main chart shows and what to do about it.', 'اشرح ما يعرضه المخطط الرئيسي وما الإجراء المطلوب.'),
+            by: L('by', 'حسب'), newDesign: L('New design', 'تصميم جديد'),
             tooltipPage: L('Tooltip', 'تلميح'), tooltipHere: L('Tooltip page: add a card or a small chart here.', 'صفحة التلميح: أضف بطاقة أو مخططًا صغيرًا هنا.'),
-            readme: L('# {name}\n\nMade with the DataArcus Power BI Theme & Layout Generator: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## Open it\n1. Unzip this folder.\n2. Open **{name}.pbip** in Power BI Desktop.\n3. If you chose sample data, click **Refresh** once so it loads.\n\n## Use your own data\nGet data, then drag your fields into each visual. The theme, background, positions, tooltip page and filter pane styling are already set.\n\nOlder Power BI Desktop versions: turn on **File > Options > Preview features > Power BI Project (.pbip) save option** and **Store reports using enhanced metadata format (PBIR)**.\n',
+            readme: m === 'service' ? L('# {name}\n\nMade with the DataArcus Power BI Theme & Layout Generator: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## Open it\n1. Unzip this folder.\n2. Open **{name}.pbip** in Power BI Desktop and sign in. The report connects live to your published semantic model.\n3. Check each visual, then publish the report to the same workspace.\n',
+              '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop وسجّل الدخول. يتصل التقرير مباشرة بنموذجك الدلالي المنشور.\n3. راجع كل عنصر، ثم انشر التقرير في نفس مساحة العمل.\n') : L('# {name}\n\nMade with the DataArcus Power BI Theme & Layout Generator: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## Open it\n1. Unzip this folder.\n2. Open **{name}.pbip** in Power BI Desktop.\n3. If you chose sample data, click **Refresh** once so it loads.\n\n## Use your own data\nGet data, then drag your fields into each visual. The theme, background, positions, tooltip page and filter pane styling are already set.\n\nOlder Power BI Desktop versions: turn on **File > Options > Preview features > Power BI Project (.pbip) save option** and **Store reports using enhanced metadata format (PBIR)**.\n',
               '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop.\n3. إذا اخترت البيانات التجريبية، اضغط **Refresh** مرة واحدة لتظهر.\n\n## استخدم بياناتك\nاضغط Get data ثم اسحب حقولك إلى كل عنصر. السمة والخلفية والمواضع وصفحة التلميح وتنسيق لوحة الفلاتر جاهزة.\n\nفي إصدارات Power BI Desktop الأقدم: فعّل **File > Options > Preview features > Power BI Project (.pbip) save option** و **Store reports using enhanced metadata format (PBIR)**.\n')
           }
         });
-        saveBlob(new Blob([r.zip()], { type: 'application/zip' }), `${fileBase()}-power-bi-project.zip`);
-        toast(L('Project downloaded. Unzip it and open the .pbip file', 'تم تنزيل المشروع. فك الضغط وافتح ملف .pbip'));
-        track('theme_pbip', { layout: c.preset, direction: rtl() ? 'rtl' : 'ltr', kpis: c.kpis, sample, logo: !!logo, page: c.page, pages: pages.length, panel: pages.some((pp) => pp.panel) });
+        saveBlob(new Blob([r.zip()], { type: 'application/zip' }), `${fileBase()}-power-bi-${m === 'local' || m === 'service' ? 'report' : 'project'}.zip`);
+        if (m === 'local') {
+          const msg = L(`Unzip it into the folder that holds ${own.folder}, then open ${r.base}.pbip`, `فك الضغط داخل المجلد الذي فيه ${own.folder}، ثم افتح ${r.base}.pbip`);
+          toast(msg); ownMsg(msg);
+        } else toast(L('Project downloaded. Unzip it and open the .pbip file', 'تم تنزيل المشروع. فك الضغط وافتح ملف .pbip'));
+        track('theme_pbip', { layout: c.preset, direction: rtl() ? 'rtl' : 'ltr', kpis: c.kpis, sample, data: m, bound: !!bind, logo: !!logo, page: c.page, pages: pages.length, panel: pages.some((pp) => pp.panel) });
       }).catch(() => toast(L('Could not build the project in this browser', 'تعذّر إنشاء المشروع في هذا المتصفح'))).then(() => { pbipBtn.disabled = false; });
     });
   }

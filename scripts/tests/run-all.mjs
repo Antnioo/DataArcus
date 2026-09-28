@@ -8,12 +8,12 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { ROOT, serve, launch } from './lib.mjs';
 
-const ALL = ['site', 'anchors', 'tools', 'spacing', 'consent', 'lang-switcher', 'theme-generator', 'layout', 'svg-kpi'];
+const ALL = ['site', 'anchors', 'tools', 'spacing', 'consent', 'lang-switcher', 'theme-generator', 'pbip', 'layout', 'svg-kpi'];
 const args = process.argv.slice(2), full = args.includes('--full');
 const ji = args.indexOf('--jobs'), jobs = Math.max(1, ji >= 0 ? +args[ji + 1] || 1 : 3);
 const pick = args.filter((a, i) => !a.startsWith('--') && !(ji >= 0 && i === ji + 1));
 // the slowest tests start first, so the whole run ends as early as possible
-const SLOW = ['anchors', 'site', 'theme-generator', 'spacing', 'tools', 'lang-switcher', 'layout', 'consent', 'svg-kpi'];
+const SLOW = ['anchors', 'site', 'theme-generator', 'spacing', 'tools', 'lang-switcher', 'pbip', 'layout', 'consent', 'svg-kpi'];
 const run = (pick.length ? pick : ALL).slice().sort((a, b) => SLOW.indexOf(a) - SLOW.indexOf(b));
 const unknown = run.filter((n) => !ALL.includes(n));
 if (unknown.length) { console.error(`Unknown test: ${unknown.join(', ')}. Tests: ${ALL.join(', ')}`); process.exit(2); }

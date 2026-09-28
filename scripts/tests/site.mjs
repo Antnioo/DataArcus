@@ -1,5 +1,5 @@
 // Every page, in English and Arabic, on a phone and a laptop:
-// no errors, no missing translations, no sideways scrolling, the phone menu opens,
+// no errors, no missing translations, no sideways scrolling, nothing marked hidden on screen, the phone menu opens,
 // and the top offset (style.css --top-offset) matches the real navbar.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -24,11 +24,14 @@ export default async function ({ browser, url }) {
         missing: document.body.innerText.includes('[Missing:'),
         sideways: document.documentElement.scrollWidth > innerWidth,
         offset: parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop),
-        expected: nav ? nav.offsetHeight + pins + 12 : null
+        expected: nav ? nav.offsetHeight + pins + 12 : null,
+        // an element marked hidden must not show, whatever display class it has (Bootstrap's d-flex beats its own [hidden])
+        shownHidden: [...document.querySelectorAll('[hidden]')].filter((e) => getComputedStyle(e).display !== 'none').map((e) => e.id || e.className || e.tagName)
       };
     });
     if (r.missing) problems.push(`${tag}: missing translation`);
     if (r.sideways) problems.push(`${tag}: page scrolls sideways`);
+    if (r.shownHidden.length) problems.push(`${tag}: hidden but shown: ${r.shownHidden.join(', ')}`);
     if (r.expected !== null && Math.abs(r.offset - r.expected) > 1) problems.push(`${tag}: top offset ${r.offset}, navbar needs ${r.expected}`);
     if (vp[0] < 992 && await v.pg.locator('.navbar-toggler').count()) {
       await v.pg.click('.navbar-toggler'); await v.pg.waitForTimeout(450);

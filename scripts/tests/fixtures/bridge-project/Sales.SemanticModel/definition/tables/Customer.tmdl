@@ -1,0 +1,11 @@
+table Customer
+
+	column CustomerKey
+		dataType: int64
+		isHidden
+
+	column 'Customer''s City'
+		dataType: string
+
+	column المنطقة
+		dataType: string
