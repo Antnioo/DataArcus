@@ -94,6 +94,8 @@
     .tg { padding: var(--page-top) 0 var(--page-bottom); }
     .tg h1 { color: var(--accent); }
     .tg-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; }
+    .tg-chart { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+    .tg-chart label { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; color: #cbd5e1; margin: 0; }
     .tg-label { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-bottom: 8px; display: block; }
     .tg-presets { display: flex; flex-wrap: wrap; gap: 8px; }
     .tg-preset { display: flex; align-items: center; gap: 8px; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 30px; padding: 6px 12px 6px 8px; font-size: .85rem; cursor: pointer; }
@@ -317,6 +319,16 @@
                   <option>Segoe UI</option><option>Segoe UI Semibold</option><option>DIN</option><option>Arial</option>
                   <option>Calibri</option><option>Tahoma</option><option>Verdana</option><option>Georgia</option>
                 </select>
+              </div>
+            </div>
+            <div>
+              <span class="tg-label" data-i18n="tg.chart.title">Chart style</span>
+              <div class="tg-chart">
+                <label><span data-i18n="tg.chart.labels">Data labels</span><select id="csLabels" class="form-select form-select-sm"><option value="auto" data-i18n="tg.chart.auto">Power BI default</option><option value="on" data-i18n="tg.chart.on">On</option><option value="off" data-i18n="tg.chart.off">Off</option></select></label>
+                <label><span data-i18n="tg.chart.grid">Gridlines</span><select id="csGrid" class="form-select form-select-sm"><option value="auto" data-i18n="tg.chart.auto">Power BI default</option><option value="dotted" data-i18n="tg.chart.dotted">Light dotted</option><option value="off" data-i18n="tg.chart.none">None</option></select></label>
+                <label><span data-i18n="tg.chart.legend">Legend</span><select id="csLegend" class="form-select form-select-sm"><option value="auto" data-i18n="tg.chart.auto">Power BI default</option><option value="Top" data-i18n="tg.chart.top">Top</option><option value="TopCenter" data-i18n="tg.chart.topCenter">Top, centered</option><option value="Bottom" data-i18n="tg.chart.bottom">Bottom</option><option value="Right" data-i18n="tg.chart.side">Side</option><option value="off" data-i18n="tg.chart.hidden">Hidden</option></select></label>
+                <label><span data-i18n="tg.chart.axis">Axis titles</span><select id="csAxis" class="form-select form-select-sm"><option value="auto" data-i18n="tg.chart.auto">Power BI default</option><option value="off" data-i18n="tg.chart.hidden">Hidden</option></select></label>
+                <label><span data-i18n="tg.chart.table">Tables</span><select id="csTable" class="form-select form-select-sm"><option value="auto" data-i18n="tg.chart.auto">Power BI default</option><option value="minimal" data-i18n="tg.chart.minimal">Minimal lines</option><option value="banded" data-i18n="tg.chart.banded">Banded rows</option></select></label>
               </div>
             </div>
             <div>

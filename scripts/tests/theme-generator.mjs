@@ -1,4 +1,4 @@
-// Power BI Theme & Layout Generator: saved-design upgrades, accent bars and corners,
+// Power BI Theme & Layout Generator: saved-design upgrades, accent bars and corners, chart style,
 // page sizes, the theme JSON, the download reminders, and the example.
 import fs from 'node:fs';
 import { createRequire } from 'node:module';
@@ -176,6 +176,54 @@ export default async function ({ browser, url }) {
     await v.pg.click('#exampleUndo');
     check(await v.pg.evaluate((k) => localStorage.getItem(k), STORE) === mine, `${lang}: Undo did not restore the design exactly`);
     if (v.errs.length) problems.push(`${lang}: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
+  // 7. Chart style: "Power BI default" writes nothing; each choice lands only on visual types whose theme schema
+  //    (2.157) has that setting, because one unknown property makes Power BI reject the whole theme.
+  //    Lists below are copied from the schema, independent of the generator's own lists.
+  {
+    const CART = ['barChart', 'columnChart', 'clusteredBarChart', 'clusteredColumnChart', 'hundredPercentStackedBarChart', 'hundredPercentStackedColumnChart', 'lineChart',
+      'areaChart', 'stackedAreaChart', 'hundredPercentStackedAreaChart', 'lineStackedColumnComboChart', 'lineClusteredColumnComboChart', 'ribbonChart'];
+    const LABELS = [...CART, 'waterfallChart', 'funnel', 'pieChart', 'donutChart', 'treemap', 'filledMap', 'azureMap', 'gauge'];
+    const LEGEND = [...CART, 'waterfallChart', 'scatterChart', 'pieChart', 'donutChart', 'treemap', 'map', 'filledMap', 'shapeMap', 'azureMap'];
+    const ALLOWED = {
+      labels: [LABELS, ['show']], legend: [LEGEND, ['show', 'position']],
+      valueAxis: [[...CART, 'waterfallChart', 'scatterChart'], ['gridlineShow', 'gridlineStyle', 'gridlineColor', 'showAxisTitle']],
+      categoryAxis: [[...CART, 'scatterChart'], ['gridlineShow', 'showAxisTitle']], categoryAxisTitle: [[...CART, 'waterfallChart', 'scatterChart'], ['showAxisTitle']],
+      grid: [['tableEx', 'pivotTable'], ['gridVertical', 'gridHorizontal', 'gridHorizontalColor']],
+      values: [['tableEx', 'pivotTable'], ['fontSize', 'backColorPrimary', 'backColorSecondary']]
+    };
+    const CARDS = ['labels', 'legend', 'valueAxis', 'categoryAxis', 'grid'];
+    v = await open('en');
+    const sel = async (c) => { for (const [i, id] of ['csLabels', 'csGrid', 'csLegend', 'csAxis', 'csTable'].entries()) await v.pg.selectOption('#' + id, c[i]); };
+    const theme = () => v.pg.evaluate(() => JSON.parse(document.getElementById('json').textContent).visualStyles);
+    const auto = await theme();
+    // text sizes already use some of these cards (the card visual's labels), so only what differs from "default" counts
+    const added = (t, card, o) => Object.keys(o).filter((k) => JSON.stringify(auto[t]?.['*'][card]?.[0]?.[k]) !== JSON.stringify(o[k]));
+    check(Object.entries(auto).every(([t, s]) => CARDS.every((c) => !s['*'][c] || t === 'card')), 'Chart style on "Power BI default" still writes chart settings');
+    for (const c of [['on', 'dotted', 'TopCenter', 'off', 'minimal'], ['off', 'off', 'off', 'auto', 'banded'], ['on', 'off', 'Right', 'off', 'auto']]) {
+      const vs = await theme(), tag = `chart style ${c.join('/')}`;
+      await sel(c);
+      const got = await theme();
+      for (const [t, s] of Object.entries(got)) for (const [card, arr] of Object.entries(s['*'])) {
+        const keys = [...CARDS, 'values'].includes(card) ? added(t, card, arr[0]) : [];
+        if (!keys.length) continue;
+        const [types, props] = card === 'categoryAxis' && keys.every((k) => k === 'showAxisTitle') ? ALLOWED.categoryAxisTitle : ALLOWED[card];
+        check(types.includes(t) && keys.every((k) => props.includes(k)), `${tag}: ${t}.${card} ${keys.join(', ')} is not in the theme schema`);
+      }
+      const col = got.clusteredColumnChart['*'], tbl = got.tableEx['*'];
+      check(col.labels[0].show === (c[0] === 'on'), `${tag}: data labels ${JSON.stringify(col.labels)}`);
+      check(col.valueAxis[0].gridlineShow === (c[1] === 'dotted') && (c[1] !== 'dotted' || col.valueAxis[0].gridlineStyle === 'dotted'), `${tag}: gridlines ${JSON.stringify(col.valueAxis)}`);
+      check(c[2] === 'off' ? col.legend[0].show === false : col.legend[0].position === c[2], `${tag}: legend ${JSON.stringify(col.legend)}`);
+      check((c[3] === 'off') === (col.categoryAxis?.[0].showAxisTitle === false), `${tag}: axis titles ${JSON.stringify(col.categoryAxis)}`);
+      check(c[4] === 'auto' ? !tbl.grid : tbl.grid[0].gridHorizontal === (c[4] === 'minimal') && tbl.values[0].fontSize === vs.tableEx['*'].values[0].fontSize, `${tag}: table ${JSON.stringify(tbl)}`);
+      // the preview follows: labels on the bars, the legend where it is set
+      const pv = await v.pg.evaluate(() => ({ labels: document.querySelectorAll('#preview svg text[font-size="7"]').length, legend: !!document.querySelector('#preview .tg-legend') }));
+      check((pv.labels > 0) === (c[0] === 'on') && pv.legend === (c[2] !== 'off'), `${tag}: preview ${JSON.stringify(pv)}`);
+    }
+    await v.pg.reload({ waitUntil: 'networkidle' });
+    check(await v.pg.$eval('#csLegend', (e) => e.value) === 'Right', 'Chart style is not kept after reload');
+    if (v.errs.length) problems.push(`chart style: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
   return { checks, problems };
