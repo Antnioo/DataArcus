@@ -235,7 +235,8 @@
         if (spec.group) origin[v.name] = { x: spec.x, y: spec.y };
         if (spec.group) v.visualGroup = spec.group; else v.visual = spec.visual;
         if (spec.parent) v.parentGroupName = spec.parent;
-        visuals.push(v); mob.push({ v, kind: spec.kind, parent: spec.parent, group: spec.groupKey });
+        if (spec.hidden) v.isHidden = true;
+        visuals.push(v); mob.push({ v, kind: spec.kind, parent: spec.parent, group: spec.groupKey, noPhone: spec.noPhone });
         return v;
       };
 
@@ -255,10 +256,14 @@
 
       // page navigation between the title and the logo, when the report has more than one page
       const title = pg.slots.find((s) => s.kind === 'title'), logo = pg.slots.find((s) => s.kind === 'logo');
-      let nav = null;
-      if (PAGES.length > 1 && title && logo) {
-        const gap = 24, x0 = rtl ? logo.x + logo.w + gap : title.x + title.w + gap, x1 = rtl ? title.x - gap : logo.x - gap;
-        if (x1 - x0 >= 220) { const w = Math.min(x1 - x0, 140 * PAGES.length + 40); nav = { x: rtl ? x0 : x1 - w, y: title.y, w, h: title.h }; }
+      let nav = null, openBtn = null;
+      const panel = pg.panel && title && logo ? pg.panel : null;
+      if (title && logo) {
+        const gap = 24;
+        let x0 = rtl ? logo.x + logo.w + gap : title.x + title.w + gap, x1 = rtl ? title.x - gap : logo.x - gap;
+        // slide-in filters: the Filters button sits next to the logo, the page buttons use what is left
+        if (panel) { const bw = Math.round(Math.min(180, Math.max(120, title.h * 3))); openBtn = { x: rtl ? x0 : x1 - bw, y: title.y, w: bw, h: title.h }; if (rtl) x0 += bw + 16; else x1 -= bw + 16; }
+        if (PAGES.length > 1 && x1 - x0 >= 220) { const w = Math.min(x1 - x0, 140 * PAGES.length + 40); nav = { x: rtl ? x0 : x1 - w, y: title.y, w, h: title.h }; }
       }
 
       sorted.forEach((s) => {
@@ -323,7 +328,58 @@
             visual: { visualType: 'pageNavigator', visualContainerObjects: frame(null, W.pages || 'Pages') } });
           z += 1000;
         }
+        if (s.kind === 'title' && openBtn) {
+          pg.openBm = rnd(); pg.closeBm = rnd();
+          container({ x: openBtn.x, y: openBtn.y, w: openBtn.w, h: openBtn.h, z, parent: groups.header.name, kind: 'button', noPhone: true,
+            visual: { visualType: 'actionButton',
+              objects: { icon: def({ shapeType: str('blank') }), text: def({ show: bool(true), text: str('\u2630  ' + (W.filters || 'Filters')), fontColor: color(u.text), fontFamily: str(font) }),
+                fill: def({ show: bool(true), fillColor: color(mixHex(u.card, u.text, 0.06)), transparency: num(0) }), outline: def({ show: bool(true), lineColor: color(edge) }) },
+              visualContainerObjects: Object.assign(frame(null, W.openFilters || 'Open the filter panel'), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(pg.openBm) }) }) } });
+          z += 1000;
+        }
       });
+
+      // slide-in filter panel: one hidden group over the page (card, slicers, Reset, Close); two display-only
+      // bookmarks show and hide it, so the user's slicer selections stay when it opens and closes
+      if (panel && pg.openBm) {
+        const P = panel, gname = rnd(), kids = [], pad = 16, head = 44, bh = 40, gap = 10;
+        const fields = o.sample ? [t.region, t.category, t.month] : [null, null, null];
+        z = Math.max(z, 900000);
+        container({ name: gname, x: P.x, y: P.y, w: P.w, h: P.h, z, hidden: true, kind: 'group', groupKey: 'panel', group: { displayName: W.filterPanel || 'Filter panel', groupMode: 'ScaleMode' } });
+        z += 1000;
+        const add1 = (spec) => { const v = container(Object.assign({ parent: gname, z, noPhone: true }, spec)); kids.push(v.name); z += 1000; return v; };
+        // the card: an empty text box with the container background, border and shadow
+        add1({ x: P.x, y: P.y, w: P.w, h: P.h, kind: 'text', visual: { visualType: 'textbox', objects: textbox(W.filters || 'Filters', 14, true, u.text),
+          visualContainerObjects: Object.assign(frame(null, W.filterPanel || 'Filter panel'), {
+            background: obj({ show: bool(true), color: color(u.card), transparency: num(0) }),
+            border: obj({ show: bool(true), color: color(edge), radius: num(12) }),
+            dropShadow: obj({ show: bool(true) }),
+            padding: obj({ top: num(14), left: num(16), right: num(16), bottom: num(12) }) }) } });
+        // Close, in the panel's top corner at the end of the reading line
+        const cw = 96, cx = rtl ? P.x + pad : P.x + P.w - pad - cw;
+        add1({ x: cx, y: P.y + 10, w: cw, h: 32, kind: 'button', visual: { visualType: 'actionButton',
+          objects: { icon: def({ shapeType: str('blank') }), text: def({ show: bool(true), text: str('\u2715  ' + (W.close || 'Close')), fontColor: color(u.text), fontFamily: str(font) }), fill: def({ show: bool(false) }), outline: def({ show: bool(false) }) },
+          visualContainerObjects: Object.assign(frame(null, W.closeFilters || 'Close the filter panel'), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(pg.closeBm) }) }) } });
+        // slicers stacked, then Reset at the bottom
+        const sw = P.w - 2 * pad, sh = Math.min(76, (P.h - head - pad - bh - gap * (fields.length + 1)) / fields.length), names = [];
+        fields.forEach((f, i) => {
+          const ttl = f || (W.slicer || 'Slicer') + ' ' + (i + 1);
+          const v = add1({ x: P.x + pad, y: Math.round(P.y + head + 8 + i * (sh + gap)), w: sw, h: Math.round(sh), kind: 'slicer',
+            visual: { visualType: 'slicer', query: f ? q({ Values: [fieldCol(t.table, f)] }) : undefined,
+              objects: { data: obj({ mode: str('Dropdown') }), header: obj({ show: bool(true), fontFamily: str(font) }) },
+              visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true } });
+          names.push(v.name);
+        });
+        const rb = rnd();
+        add1({ x: P.x + pad, y: P.y + P.h - pad - bh, w: sw, h: bh, kind: 'button', visual: { visualType: 'actionButton',
+          objects: { icon: def({ shapeType: str('reset'), lineColor: color(u.accent || u.text) }), text: def({ show: bool(true), text: str(W.reset || 'Reset filters'), fontColor: color(u.text), fontFamily: str(font) }),
+            fill: def({ show: bool(true), fillColor: color(mixHex(u.card, u.text, 0.06)), transparency: num(0) }), outline: def({ show: bool(true), lineColor: color(edge) }) },
+          visualContainerObjects: Object.assign(frame(null, W.reset || 'Reset filters'), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(rb) }) }) } });
+        bookmarks.push({ name: rb, page: pageName, targets: names, label: (W.reset || 'Reset filters') + (PAGES.length > 1 ? ' · ' + (pg.name || '') : '') });
+        const suffix = PAGES.length > 1 ? ' · ' + (pg.name || '') : '';
+        bookmarks.push({ name: pg.openBm, page: pageName, targets: [gname].concat(kids), group: gname, hidden: false, label: (W.filtersOpen || 'Filters open') + suffix });
+        bookmarks.push({ name: pg.closeBm, page: pageName, targets: [gname].concat(kids), group: gname, hidden: true, label: (W.filtersClosed || 'Filters closed') + suffix });
+      }
 
       // the main chart of the first page shows the tooltip page when you hover it
       if (mainChart && pageIndex === 0) mainChart.visual.visualContainerObjects.visualTooltip = obj({ show: bool(true), type: str('ReportPage'), section: str(tipName) });
@@ -345,7 +401,7 @@
         }
       };
       const order = ['header', 'filters', 'kpis', null];
-      order.forEach((g) => mob.filter((m) => m.kind !== 'group' && (g ? m.parent === (groups[g] || {}).name : !m.parent) && m.kind !== 'logo').forEach(place));
+      order.forEach((g) => mob.filter((m) => m.kind !== 'group' && !m.noPhone && (g ? m.parent === (groups[g] || {}).name : !m.parent) && m.kind !== 'logo').forEach(place));
       if (col) { y += 100 + GAP; col = 0; }
       // groups wrap their children on the phone as well; children are placed relative to the group
       Object.keys(groups).forEach((g) => {
@@ -366,11 +422,15 @@
 
     // Reset buttons: one data-only bookmark per page that brings that page's slicers back to "All"
     if (bookmarks.length) {
-      bookmarks.forEach((b) => add(D + '/bookmarks/' + b.name + '.bookmark.json', json({
-        $schema: SCHEMA.bookmark, displayName: b.label, name: b.name,
-        options: { targetVisualNames: b.targets, applyOnlyToTargetVisuals: true, suppressDisplay: true, suppressActiveSection: true },
-        explorationState: { version: '1.3', activeSection: b.page, sections: { [b.page]: { visualContainers: Object.fromEntries(b.targets.map((n) => [n, {}])) } } }
-      })));
+      bookmarks.forEach((b) => add(D + '/bookmarks/' + b.name + '.bookmark.json', json(b.group
+        ? { $schema: SCHEMA.bookmark, displayName: b.label, name: b.name,
+            options: { targetVisualNames: b.targets, applyOnlyToTargetVisuals: true, suppressData: true, suppressActiveSection: true },
+            explorationState: { version: '1.3', activeSection: b.page, sections: { [b.page]: {
+              visualContainers: Object.fromEntries(b.targets.filter((n) => n !== b.group).map((n) => [n, {}])),
+              visualContainerGroups: { [b.group]: { isHidden: b.hidden } } } } } }
+        : { $schema: SCHEMA.bookmark, displayName: b.label, name: b.name,
+            options: { targetVisualNames: b.targets, applyOnlyToTargetVisuals: true, suppressDisplay: true, suppressActiveSection: true },
+            explorationState: { version: '1.3', activeSection: b.page, sections: { [b.page]: { visualContainers: Object.fromEntries(b.targets.map((n) => [n, {}])) } } } })));
       add(D + '/bookmarks/bookmarks.json', json({ $schema: SCHEMA.bookmarks, items: bookmarks.map((b) => ({ name: b.name })) }));
     }
 
