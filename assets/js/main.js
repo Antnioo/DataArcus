@@ -403,7 +403,8 @@ document.addEventListener('DOMContentLoaded', () => {
       blogCards.forEach(card => {
         const categories = card.getAttribute('data-category');
         const title = card.querySelector('h3').textContent.toLowerCase();
-        const excerpt = card.querySelector('.text-white-50').textContent.toLowerCase();
+        // the excerpt paragraph, not the first .text-white-50 (that is the date line, so every month name matched)
+        const excerpt = (card.querySelector('p') || { textContent: '' }).textContent.toLowerCase();
         const badge = card.querySelector('.badge').textContent.toLowerCase();
 
         const matchesFilter = activeFilter === 'all' || categories.includes(activeFilter);
