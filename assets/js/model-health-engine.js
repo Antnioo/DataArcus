@@ -142,12 +142,14 @@
       t.columns.forEach((c) => { const e = { table: t, col: c }; columns.set(lc(t.name) + '|' + lc(c.name), e); if (!colsByName.has(lc(c.name))) colsByName.set(lc(c.name), []); colsByName.get(lc(c.name)).push(e); });
       t.measures.forEach((ms) => measures.set(lc(ms.name), { table: t, m: ms }));
     });
-    return { tables, columns, measures, colsByName };
+    const functions = new Map(M.functions.map((f) => [lc(f.name), f]));
+    return { tables, columns, measures, colsByName, functions };
   }
   const K = {
     m: (name) => 'm:' + lc(name),
     c: (t, c) => 'c:' + lc(t) + '|' + lc(c),
-    t: (t) => 't:' + lc(t)
+    t: (t) => 't:' + lc(t),
+    f: (f) => 'f:' + lc(f)
   };
 
   // Resolves references in one DAX expression. homeTable: table for unqualified column refs.
@@ -184,7 +186,7 @@
         continue;
       }
       if (tk.t === 'tbl' || tk.t === 'id') {
-        if (tk.t === 'id' && nx && nx.t === 'op' && nx.v === '(') continue; // function call
+        if (tk.t === 'id' && nx && nx.t === 'op' && nx.v === '(') { if (IX.functions.has(lc(tk.v))) refs.push(K.f(tk.v)); continue; } // function call: a model function (UDF) is a dependency
         if (IX.tables.has(lc(tk.v))) refs.push(K.t(tk.v));
       }
     }
@@ -452,6 +454,7 @@
     const userTables = M.tables.filter((t) => !autoSet.has(lc(t.name)));
 
     // dependencies from DAX
+    M.functions.forEach((f) => addDeps(K.f(f.name), daxRefs(f.expr, null, IX).refs));
     M.tables.forEach((t) => {
       t.measures.forEach((ms) => {
         const r = daxRefs(ms.expr + '\n' + ms.fsExpr + '\n' + ms.detailRows + '\n' + ms.kpi, null, IX);
@@ -785,6 +788,7 @@
         const h = x && x.hierarchies.find((y) => lc(y.name) === hn);
         return h ? { type: 'hierarchy', name: h.name, table: x.name } : null;
       }
+      if (node.startsWith('f:')) { const f = IX.functions.get(node.slice(2)); return f ? { type: 'function', name: f.name } : null; }
       return null;
     };
     const measures = allMeasures.map((ms) => ({
