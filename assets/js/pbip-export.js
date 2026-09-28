@@ -176,7 +176,8 @@
     const own = !!(o.model && (o.model.byPath || o.model.byConnection));
     const sample = !!o.sample && !own;
     const B = own ? (o.bind || null) : sample ? sampleBind(t) : null;
-    let base = (o.name || 'Power BI Report').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 60) || 'Power BI Report';
+    // cut by characters, not UTF-16 units, so an emoji at the cut is never split into a broken file name
+    let base = Array.from((o.name || 'Power BI Report').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ').trim()).slice(0, 60).join('').trim() || 'Power BI Report';
     // next to someone's project: never the name of a report already there (o.model.taken: their X.Report folders and
     // X.pbip files), nor the model's own name, which their first report usually has
     const theirs = o.model && o.model.byPath ? String(o.model.byPath).replace(/^.*\//, '').replace(/\.(SemanticModel|Dataset)$/i, '') : null;

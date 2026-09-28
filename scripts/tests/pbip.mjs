@@ -62,6 +62,15 @@ export default async function ({ browser, url }) {
     check(JSON.stringify(viaPbit) === JSON.stringify(direct), `pbit: the model differs from the model.bim: ${JSON.stringify(viaPbit.map((t) => [t.name, t.hidden, t.date]))}`);
   }
 
+  // 9. File and folder names from any design name: whole characters only (an emoji is never cut in half)
+  {
+    const require = createRequire(import.meta.url), P = require('../../assets/js/pbip-export.js');
+    const names = (name) => P.build({ name, lang: 'en', font: 'Segoe UI', ui: { text: '#111111', card: '#ffffff', background: '#eeeeee', accent: '#0077ff' }, theme: {}, sample: true, texts: {},
+      pages: [{ name: 'P', page: { w: 1280, h: 720 }, slots: [{ kind: 'kpi', title: 'K', x: 0, y: 0, w: 100, h: 50 }], png: new Uint8Array([1]) }] }).files.map((f) => f.path);
+    const emoji = names('x'.repeat(59) + '\u{1F4CA} Sales');
+    check(emoji.every((n) => !/[\uD800-\uDFFF]/.test(n.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '')) && !n.includes('\uFFFD')), `names: an emoji cut in half: ${emoji[0]}`);
+  }
+
   const run = async (lang, name, setup) => {
     const v = await visitor(browser, { viewport: [1440, 900], downloads: true });
     await v.pg.goto(`${url}${PAGE}?lang=${lang}`, { waitUntil: 'networkidle' });
