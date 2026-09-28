@@ -120,6 +120,25 @@ export default async function ({ browser, url }) {
       check(s.includes(want), `TMDL: no line ${JSON.stringify(want)}`);
   }
 
+  {
+    // "Fix these first": the points on each button are what the score really gains when that check is fixed
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });
+    await v.pg.click('#mhSample');
+    await v.pg.waitForSelector('.mh-quick button', { timeout: 20000 });
+    const ids = await v.pg.$$eval('.mh-quick button', (bs) => bs.map((b) => b.dataset.jump));
+    for (const id of ids) {
+      const before = await v.pg.evaluate((id) => ({ score: +document.querySelector('.mh-scorecard .mh-ring b').textContent, badge: +((document.querySelector(`.mh-quick [data-jump="${id}"] b`) || {}).textContent || '0').replace('+', '') }), id);
+      await v.pg.click(`[data-jump="${id}"]`);
+      await v.pg.click(`[data-ign="${id}"]`);
+      const after = +(await v.pg.$eval('.mh-scorecard .mh-ring b', (b) => b.textContent));
+      check(after - before.score === before.badge, `Fix these first: ${id} shows +${before.badge}, fixing it gains ${after - before.score}`);
+      await v.pg.click(`[data-ign="${id}"]`); // count it again
+    }
+    if (v.errs.length) problems.push(`Fix these first: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
+
   // ---- fix plan in the page ----
   for (const [name, file] of [['legacy.pbit', fs.readFileSync(path.join(ROOT, 'scripts/tests/fixtures/model-health/legacy.pbit'))],
     ['plan.pbit', pbit({ DataModelSchema: JSON.stringify(planModel()), 'Report/Layout': JSON.stringify(planLayout), Version: '1.28' })]]) {
