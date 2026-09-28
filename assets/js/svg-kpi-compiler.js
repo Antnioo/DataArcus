@@ -254,10 +254,14 @@
       if (!v || !VALUE_KINDS[v.kind] || (depth || 0) > 20) { errors.push('Unknown value: ' + id); return N.num(0); }
       return VALUE_KINDS[v.kind](v, (x) => exprOf(x, (depth || 0) + 1));
     };
-    // 'Date'[Date] or Date[Date] -> table and column, always quoted
+    // 'Date'[Date] or Date[Date] -> table and column, always quoted. DAX doubles a ' inside a quoted table name
+    // and a ] inside a column name ('Date''s'[Date], 'Cal'[Da]]te]), so those are read and written back the same way.
     const dateCol = (() => {
-      const m = /^\s*'?([^'\[\]]+?)'?\s*\[([^\[\]]+)\]\s*$/.exec(d.dateCol || "'Date'[Date]");
-      return m ? { table: "'" + m[1].trim().replace(/'/g, "''") + "'", col: "'" + m[1].trim().replace(/'/g, "''") + "'[" + m[2].trim() + ']' } : null;
+      const m = /^\s*(?:'((?:[^']|'')+)'|([^'\[\]]+?))\s*\[((?:[^\]]|\]\])+)\]\s*$/.exec(d.dateCol || "'Date'[Date]");
+      if (!m) return null;
+      const t = (m[1] !== undefined ? m[1].replace(/''/g, "'") : m[2]).trim(), c = m[3].replace(/\]\]/g, ']').trim();
+      const table = "'" + t.replace(/'/g, "''") + "'";
+      return t && c ? { table, col: table + '[' + c.replace(/\]/g, ']]') + ']' } : null;
     })();
 
     // Bound numeric prop: range r0..r1 driven by value v across d0..d1 (clamped)

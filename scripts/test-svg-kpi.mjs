@@ -284,6 +284,12 @@ const tricky = { name: 'Odd "name"', w: 100, h: 20, values: [{ id: 'a', kind: 'm
   // the option only applies to months
   const wk = { values, dateCol: "'Date'[Date]", layers: [{ type: 'spark', x: 0, y: 0, w: 100, h: 20, n: 8, grain: 'week', complete: true, bind: { series: { v: 'sales' } } }] };
   ok(!/__e/.test(SVGKPI.toDax(wk).dax), 'complete months: ignored for weeks');
+  // date column names as DAX writes them: a doubled ' in a quoted table, a doubled ] in a column, no quotes
+  for (const [input, want] of [["'Date'[Date]", "'Date'[Date]"], ['Calendar[Day]', "'Calendar'[Day]"], ["'Date''s'[Date]", "'Date''s'[Date]"],
+    ["'Cal'[Da]]te]", "'Cal'[Da]]te]"], [" 'My Dates' [ Date ] ", "'My Dates'[Date]"], ["'Date'[Date", null], ["Date'[Date]", null], ["''[Date]", null]]) {
+    const { dax, errors } = SVGKPI.toDax({ ...wk, dateCol: input });
+    ok(want ? !errors.length && dax.includes(want + ' ') : errors.some((e) => /Date column/.test(e)), `date column ${input}: ${want ? (errors.join('; ') || 'not written as ' + want) : 'accepted'}`);
+  }
 }
 // random designs: every layer type and every kind of data link, in any combination the editor allows
 {
