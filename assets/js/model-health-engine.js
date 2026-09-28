@@ -466,6 +466,8 @@
       }
       if (t.calcGroup) t.calcGroup.items.forEach((ci) => addDeps(K.t(t.name), daxRefs(ci.expr + '\n' + ci.fsExpr, null, IX).refs));
       t.columns.forEach((c) => { if (c.sortBy) addDeps(K.c(t.name, c.name), [K.c(t.name, c.sortBy)]); });
+      // field parameters: the visible column groups by the hidden "Fields" column, so a visual using one uses both
+      t.columns.forEach((c) => ((c.relatedColumnDetails && c.relatedColumnDetails.groupByColumns) || []).forEach((g) => { if (g && g.groupingColumn) addDeps(K.c(t.name, c.name), [K.c(t.name, g.groupingColumn)]); }));
       t.hierarchies.forEach((h) => h.levels.forEach((l) => addDeps('h:' + lc(t.name) + '|' + lc(h.name), [K.c(t.name, l.column)])));
       // a column always needs its table
       t.columns.forEach((c) => addDeps(K.c(t.name, c.name), [K.t(t.name)]));

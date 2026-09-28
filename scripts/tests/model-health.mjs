@@ -66,6 +66,17 @@ export default async function ({ browser, url }) {
     check(!unusedCols(r).includes('_Measures[Column1]'), 'placeholder column of a measures table reported unused');
   }
 
+  {
+    // field parameter: the visual shows Parameter, which groups by the hidden Parameter Fields column
+    const m = { model: { tables: [sales(), { name: 'Parameter', columns: [
+      { type: 'calculatedTableColumn', name: 'Parameter', dataType: 'string', isNameInferred: true, sourceColumn: '[Value1]', sortByColumn: 'Parameter Order', relatedColumnDetails: { groupByColumns: [{ groupingColumn: 'Parameter Fields' }] } },
+      { type: 'calculatedTableColumn', name: 'Parameter Fields', dataType: 'string', isHidden: true, sourceColumn: '[Value2]', extendedProperties: [{ type: 'json', name: 'ParameterMetadata', value: { version: 3, kind: 2 } }] },
+      { type: 'calculatedTableColumn', name: 'Parameter Order', dataType: 'int64', isHidden: true, sourceColumn: '[Value3]' }],
+    partitions: [{ name: 'Parameter', source: { type: 'calculated', expression: '{ ("Amount", NAMEOF(\'Sales\'[Amount]), 0), ("Qty", NAMEOF(\'Sales\'[Qty]), 1) }' } }] }] } };
+    const r = E.analyze(m, report([['Column', 'Parameter', 'Parameter']]));
+    check(col(r, 'Parameter', 'Parameter Fields').used === true, 'field parameter: the "Parameter Fields" column is reported unused');
+  }
+
   // ---- fix plan in the page ----
   for (const [name, file] of [['legacy.pbit', fs.readFileSync(path.join(ROOT, 'scripts/tests/fixtures/model-health/legacy.pbit'))],
     ['plan.pbit', pbit({ DataModelSchema: JSON.stringify(planModel()), 'Report/Layout': JSON.stringify(planLayout), Version: '1.28' })]]) {
