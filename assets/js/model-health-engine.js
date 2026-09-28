@@ -668,7 +668,8 @@
     const dateParts = (t) => t.columns.filter((c) => /^(year|month|month name|month number|quarter|weekday|week|day|fiscal year)/i.test(c.name.trim())).length;
     const relDateTargets = new Set(M.relationships.map((r) => lc(r.toTable) + '|' + lc(r.toColumn)));
     const calendars = userTables.filter((t) => t.columns.some((c) => c.dataType === 'dateTime') && (
-      /^(dim[_ ]?)?(calendar|dates?|date\s*table|تقويم)\b/i.test(t.name.trim()) ||
+      // not \b: in JavaScript it only knows ASCII letters, so it never matches after an Arabic word
+      /^(dim[_ ]?)?(calendar|dates?|date\s*table|(ال)?تقويم)(?![\p{L}\p{N}_])/iu.test(t.name.trim()) ||
       (dateParts(t) >= 2 && t.columns.some((c) => c.dataType === 'dateTime' && relDateTargets.has(lc(t.name) + '|' + lc(c.name))))));
     add('DATE_NOT_MARKED', calendars.filter((t) => lc(t.dataCategory) !== 'time').map((t) => ({ obj: t.name })));
     add('CALENDARAUTO', userTables.filter((t) => t.isCalcTable && /CALENDARAUTO\s*\(/i.test(daxCode(t.calcExpr))).map((t) => ({ obj: t.name })));
