@@ -227,6 +227,7 @@
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
               <div class="mb-seg" role="tablist" aria-label="Output format">
                 <button type="button" class="active" data-tab-out="all" data-i18n="mb.allAtOnce">All at once</button>
+                <button type="button" data-tab-out="tmdl" data-i18n="mb.tmdlTab">With formats (TMDL)</button>
                 <button type="button" data-tab-out="one" data-i18n="mb.oneByOne">One by one</button>
               </div>
               <span class="small text-white-50" id="count"></span>
@@ -239,7 +240,15 @@
               <pre class="tg-json" id="script" style="max-height:520px"></pre>
               <p class="small text-white-50 mb-0" data-i18n-html="mb.allHow">In Power BI Desktop open <strong>DAX query view</strong> (left toolbar), paste, and click <strong>Update model with changes</strong>. Every measure is added in one go.</p>
             </div>
-            <div id="outOne" style="display:none">
+            <div id="outTmdl" class="d-flex flex-column gap-3 d-none">
+              <div class="tg-actions justify-content-end">
+                <button class="tg-btn2" id="dlTmdl" type="button"><i class="bi bi-download me-1"></i><span data-i18n="mb.download">Download</span></button>
+                <button class="btn btn-accent" id="copyTmdl" type="button"><i class="bi bi-clipboard me-1"></i><span data-i18n="mb.copyAll">Copy all measures</span></button>
+              </div>
+              <pre class="tg-json" id="tmdl" style="max-height:520px"></pre>
+              <p class="small text-white-50 mb-0" data-i18n-html="mb.tmdlHow">In Power BI Desktop open <strong>TMDL view</strong> (left toolbar), paste, and click <strong>Apply</strong>. Every measure is added with its number format, a display folder and a description. Needs Desktop from 2025 on.</p>
+            </div>
+            <div id="outOne" class="d-none">
               <p class="small text-white-50" data-i18n-html="mb.oneHow">For <strong>Modeling → New measure</strong>: copy each one and paste. Create them in this order.</p>
               <div id="list"></div>
             </div>
