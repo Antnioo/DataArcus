@@ -240,6 +240,16 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   const splitObj = (o) => { const m = String(o).match(/^(.*)\[(.*)\]$/); return m ? [m[1], m[2]] : null; };
   const findingOf = (id) => (ignored.has(id) ? null : R.findings.find((f) => f.id === id));
+  // The column a month or day name should sort by. "Month Year" needs a year-month number (202401):
+  // sorting it by the month number 1-12 would put January of every year together.
+  const sortKind = (name) => (/month/i.test(name) && /year/i.test(name) ? 'yearMonth' : /day|week/i.test(name) ? 'day' : 'month');
+  const SORT_BY = {
+    yearMonth: /^(year\s*-?\s*month|month\s*-?\s*year|yyyymm)\s*(no|num|number|index|key|sort|order|id)?$/i,
+    day: /(weekday|day\s*of\s*week)\s*(no|num|number|index)?$|^weekday$/i,
+    month: /month\s*(no|num|number|index)$|^month$|month\s*of\s*year/i
+  };
+  const sortColumnFor = (t, name) => t.columns.find((c) => c.name !== name && /int64|double|decimal/.test(c.dataType) && SORT_BY[sortKind(name)].test(c.name.trim()));
+  const noSortColumn = (name) => ({ yearMonth: 'no year-month number column (like 202401)', day: 'no weekday number column', month: 'no month number column' })[sortKind(name)];
   // Mechanical fixes as data, shared by the Tabular Editor and TMDL versions
   function quickEdits() {
     const dates = [], edits = [], notes = [];
@@ -254,16 +264,51 @@ document.addEventListener('DOMContentLoaded', () => {
     if (ms) ms.items.forEach((i) => {
       const p = splitObj(i.obj); if (!p) return;
       const t = R.tables.find((x) => x.name === p[0]); if (!t) return;
-      const isDay = /day|week/i.test(p[1]);
-      const sortCol = t.columns.find((c) => /int64|double|decimal/.test(c.dataType) && (isDay ? /(weekday|day\s*of\s*week)\s*(no|num|number|index)?$|^weekday$/i : /month\s*(no|num|number|index)$|^month$|month\s*of\s*year/i).test(c.name.trim()));
+      const sortCol = sortColumnFor(t, p[1]);
       if (sortCol) edits.push({ table: t.name, column: p[1], set: { sortByColumn: sortCol.name }, kind: 'sort' });
-      else notes.push(t.name + '[' + p[1] + ']: ' + (isDay ? 'no weekday number column' : 'no month number column'));
+      else notes.push(t.name + '[' + p[1] + ']: ' + noSortColumn(p[1]));
     });
     const sk = findingOf('SUMMARIZE_KEYS');
     if (sk) sk.items.forEach((i) => { const p = splitObj(i.obj); if (p) edits.push({ table: p[0], column: p[1], set: { summarizeBy: 'none' }, kind: 'sum' }); });
     const fk = findingOf('FK_VISIBLE');
     if (fk) fk.items.forEach((i) => { const p = splitObj(i.obj); if (p) edits.push({ table: p[0], column: p[1], set: { isHidden: true }, kind: 'hide' }); });
     return { dates, edits, notes };
+  }
+  // What the cleanup can safely remove. An unused column stays when something that stays needs it (a measure
+  // that is only moved to the review folder, a hierarchy, a DAX table, the sort of a column that stays, a quick
+  // fix), or when it is the last column of its table. Removing any of these would break the next refresh.
+  function cleanupPlan() {
+    const { cols, ms } = unusedData();
+    const key = (t, c) => (t + '|' + c).toLowerCase();
+    const qe = quickEdits();
+    const fixNeeds = new Map();
+    qe.edits.forEach((e) => { if (e.set.sortByColumn) fixNeeds.set(key(e.table, e.set.sortByColumn), L('the quick fixes sort ' + e.column + ' by it', 'الإصلاحات السريعة ترتّب ' + e.column + ' حسبه')); });
+    qe.dates.forEach((d) => fixNeeds.set(key(d.table, d.column), L('the date column when ' + d.table + ' is marked as a date table', 'عمود التاريخ عند تعليم ' + d.table + ' كجدول تاريخ')));
+    const out = new Map(); // key -> { t, c }: removed in Power Query (data columns) or deleted by hand (calculated columns)
+    cols.forEach((x) => x.u.forEach((c) => { if ((c.kind === 'data' && x.t.fromM) || c.kind === 'calculated') out.set(key(x.t.name, c.name), { t: x.t, c }); }));
+    const kept = [];
+    const keep = (k, why) => { const x = out.get(k); out.delete(k); kept.push({ t: x.t.name, c: x.c.name, why }); };
+    R.tables.filter((t) => !t.auto && t.columns.length && t.columns.every((c) => out.has(key(t.name, c.name)))).forEach((t) => t.columns.forEach((c) => keep(key(t.name, c.name),
+      t.used === false ? L('nothing in ' + t.name + ' is used: delete the whole table instead', 'لا شيء في ' + t.name + ' مستخدم: احذف الجدول كله بدلًا من ذلك') : L(t.name + ' would have no columns left', 'لن يبقى في ' + t.name + ' أي عمود'))));
+    const what = (d) => (d.type === 'measure' ? '[' + d.name + ']' : d.type === 'column' ? d.table + '[' + d.name + ']' : d.type === 'hierarchy' ? L('hierarchy ', 'التسلسل الهرمي ') + d.table + '[' + d.name + ']' : d.name);
+    for (let changed = true; changed;) {
+      changed = false;
+      Array.from(out.keys()).forEach((k) => {
+        const x = out.get(k);
+        const needs = (x.c.neededBy || []).filter((d) => !(d.type === 'column' && out.has(key(d.table, d.name))));
+        if (fixNeeds.has(k)) keep(k, fixNeeds.get(k));
+        else if (needs.length) keep(k, L('still needed by ', 'ما زال يحتاجه ') + needs.slice(0, 3).map(what).join(', ') + (needs.length > 3 ? ' …' : ''));
+        else return;
+        changed = true;
+      });
+    }
+    const pq = [], calc = [];
+    cols.forEach((x) => {
+      const names = x.u.filter((c) => c.kind === 'data' && out.has(key(x.t.name, c.name))).map((c) => c.sourceColumn || c.name);
+      if (names.length) pq.push({ t: x.t, names });
+      x.u.forEach((c) => { if (c.kind === 'calculated' && out.has(key(x.t.name, c.name))) calc.push({ t: x.t.name, c: c.name }); });
+    });
+    return { pq, calc, kept, ms };
   }
   function tmdlScripts() {
     if (!window.MHTmdl || !R.rawTables) return null;
@@ -297,10 +342,9 @@ document.addEventListener('DOMContentLoaded', () => {
       ms.items.forEach((i) => {
         const p = splitObj(i.obj); if (!p) return;
         const t = R.tables.find((x) => x.name === p[0]); if (!t) return;
-        const isDay = /day|week/i.test(p[1]);
-        const sortCol = t.columns.find((c) => /int64|double|decimal/.test(c.dataType) && (isDay ? /(weekday|day\s*of\s*week)\s*(no|num|number|index)?$|^weekday$/i : /month\s*(no|num|number|index)$|^month$|month\s*of\s*year/i).test(c.name.trim()));
+        const sortCol = sortColumnFor(t, p[1]);
         if (sortCol) { out.push('if (' + has(t.name, p[1]) + ' && Model.Tables[' + q(t.name) + '].Columns.Contains(' + q(sortCol.name) + ')) { ' + col(t.name, p[1]) + '.SortByColumn = ' + col(t.name, sortCol.name) + '; n++; }'); count++; }
-        else out.push('// ' + t.name + '[' + p[1] + ']: no ' + (isDay ? 'weekday' : 'month') + ' number column found. Add one, then sort by it.');
+        else out.push('// ' + t.name + '[' + p[1] + ']: ' + noSortColumn(p[1]) + ' found. Add one, then sort by it.');
       });
       if (out.length) lines.push('', '// 2. Sort month and day names by their number'), lines.push.apply(lines, out);
     }
@@ -322,17 +366,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const key = String(R.meta.fileName).toLowerCase();
     const plans = store.get('dataarcus-mh-plan', {});
     const done = new Set(plans[key] || []);
-    const { cols, ms } = R.meta.hasReport ? unusedData() : { cols: [], ms: [] };
+    const plan = R.meta.hasReport ? cleanupPlan() : { pq: [], calc: [], kept: [], ms: [] };
+    const ms = plan.ms;
     const broken = findingOf('BROKEN_REF');
     const qf = quickFixScript();
-    const pqCount = cols.filter((x) => x.t.fromM && x.u.some((c) => c.kind === 'data')).length;
-    const calcCount = cols.reduce((a, x) => a + x.u.filter((c) => c.kind === 'calculated').length, 0);
+    const pqCount = plan.pq.length;
+    const calcCount = plan.calc.length;
     const steps = [['copy', L('Save a copy of your .pbix', 'احفظ نسخة من ملف ‎.pbix'), L('Every step below changes the model. Keep a copy so you can go back.', 'كل خطوة بالأسفل تغيّر النموذج، فاحتفظ بنسخة للرجوع إليها.')]];
     if (broken) steps.push(['broken', L('Fix ' + num(broken.items.length) + ' broken fields in visuals', 'أصلح ' + num(broken.items.length) + ' حقلًا مكسورًا في الـ visuals'), L('The Issues tab lists the page and visual for each missing field. Replace or remove the field there. Users see these errors today.', 'تبويب المشاكل يذكر الصفحة والـ visual لكل حقل مفقود. استبدل الحقل أو احذفه هناك، فالمستخدمون يرون هذه الأخطاء الآن.')]);
     if (qf) steps.push(['quick', L('Run the quick-fixes script (' + num(qf.count) + ' changes)', 'شغّل سكربت الإصلاحات السريعة (' + num(qf.count) + ' تعديل)'), L('Date tables, month sorting, summarization and hidden keys. Safe, mechanical changes.', 'جداول التاريخ وترتيب الشهور والتجميع وإخفاء المفاتيح. تعديلات آمنة وآلية.')]);
     if (ms.length) steps.push(['measures', L('Move ' + num(ms.length) + ' unused measures to a review folder', 'انقل ' + num(ms.length) + ' مقياسًا غير مستخدم إلى مجلد مراجعة'), L('Nothing is deleted. Look through the folder, then delete it when you are sure.', 'لا يُحذف شيء. راجع المجلد ثم احذفه عندما تتأكد.')]);
-    if (pqCount) steps.push(['columns', L('Remove unused columns in Power Query (' + num(pqCount) + ' tables)', 'احذف الأعمدة غير المستخدمة في Power Query (' + num(pqCount) + ' جدول)'), L('Paste one line per table. Hiding is not enough: hidden columns still load.', 'الصق سطرًا واحدًا لكل جدول. الإخفاء لا يكفي فالأعمدة المخفية ما زالت تُحمَّل.')]);
+    // calculated columns first: one may read a column the Power Query step removes
     if (calcCount) steps.push(['calc', L('Delete ' + num(calcCount) + ' unused calculated columns', 'احذف ' + num(calcCount) + ' عمودًا محسوبًا غير مستخدم'), L('Listed at the bottom of this page.', 'موجودة في أسفل هذه الصفحة.')]);
+    if (pqCount) steps.push(['columns', L('Remove unused columns in Power Query (' + num(pqCount) + ' tables)', 'احذف الأعمدة غير المستخدمة في Power Query (' + num(pqCount) + ' جدول)'), L('Paste one line per table. Hiding is not enough: hidden columns still load.', 'الصق سطرًا واحدًا لكل جدول. الإخفاء لا يكفي فالأعمدة المخفية ما زالت تُحمَّل.')]);
     steps.push(['recheck', L('Refresh, export a new .pbit and check again', 'حدّث النموذج وصدّر .pbit جديدًا وافحصه مرة أخرى'), L('Your score history shows how many points you gained.', 'سجل التقييم يوضح كم نقطة كسبت.')]);
     const nDone = steps.filter((x) => done.has(x[0])).length;
     const experts = R.findings.filter((f) => EXPERT.has(f.id) && !ignored.has(f.id) && f.sev !== 'info');
@@ -343,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
       '</div><div class="col-lg-7">' +
       (qf ? '<div class="mh-panel mh-clean"><div class="mh-h"><b><i class="bi bi-lightning-charge-fill text-warning"></i> ' + L('Quick-fixes script', 'سكربت الإصلاحات السريعة') + '</b><span class="mh-count">' + num(qf.count) + '</span><button type="button" class="mh-copy ms-auto" data-script="te:quick"><i class="bi bi-clipboard"></i> ' + L('Copy', 'نسخ') + '</button></div><p class="mh-note">' + L('One Tabular Editor script for the mechanical fixes. External tools > Tabular Editor > C# Script, paste, run, save. If Power BI Desktop blocks one change, do that one by hand.', 'سكربت Tabular Editor واحد للإصلاحات الآلية. من External tools افتح Tabular Editor ثم C# Script والصق وشغّل واحفظ. إن منع Power BI Desktop تعديلًا فنفّذه يدويًا.') + '</p><pre class="mh-dax mh-qf">' + esc(qf.code) + '</pre></div>' : '') +
       tmdlPanel() +
-      (R.meta.hasReport ? cleanupHtml(cols, ms) : '<div class="mh-panel mh-note">' + L('Cleanup scripts for unused columns and measures need the report pages. Use a .pbit.', 'سكربتات تنظيف الأعمدة والمقاييس غير المستخدمة تحتاج صفحات التقرير. استخدم ملف .pbit.') + '</div>') +
+      (R.meta.hasReport ? cleanupHtml(plan) :'<div class="mh-panel mh-note">' + L('Cleanup scripts for unused columns and measures need the report pages. Use a .pbit.', 'سكربتات تنظيف الأعمدة والمقاييس غير المستخدمة تحتاج صفحات التقرير. استخدم ملف .pbit.') + '</div>') +
       '</div></div>';
     if (qf) scripts['te:quick'] = qf.code;
     const tm = tmdlScripts();
@@ -383,9 +429,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const scripts = {};
   const csStr = (x) => '"' + String(x).replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
   const mStr = (x) => '"' + String(x).replace(/"/g, '""') + '"';
-  function cleanupHtml(cols, ms) {
-    const pq = cols.filter((x) => x.t.fromM).map((x) => ({ t: x.t, names: x.u.filter((c) => c.kind === 'data' || c.kind === 'calculatedTableColumn' ? c.kind === 'data' : false).map((c) => c.sourceColumn || c.name) })).filter((x) => x.names.length);
-    const calc = cols.reduce((a, x) => a.concat(x.u.filter((c) => c.kind === 'calculated').map((c) => ({ t: x.t.name, c: c.name }))), []);
+  function cleanupHtml(plan) {
+    const { pq, calc, kept, ms } = plan;
     let html = '<div class="mh-panel mt-4 mh-clean"><div class="mh-h"><b><i class="bi bi-magic"></i> ' + L('Cleanup scripts', 'سكربتات التنظيف') + '</b></div><p class="mh-note">' + L('Save a copy of your file first. Then use these to remove what nobody uses.', 'احفظ نسخة من ملفك أولًا، ثم استخدم هذه السكربتات لحذف ما لا يستخدمه أحد.') + '</p>';
     if (pq.length) {
       html += '<span class="tg-label mt-2">' + L('Power Query: remove unused source columns', 'Power Query: حذف أعمدة المصدر غير المستخدمة') + '</span><p class="mh-note">' + L('In Power Query, select the table, click fx to add a step, and paste the line. Replace #"Previous step" with the name Power Query shows in the formula bar.', 'في Power Query اختر الجدول واضغط fx لإضافة خطوة والصق السطر. استبدل #"Previous step" بالاسم الذي يظهره Power Query في شريط الصيغة.') + '</p>';
@@ -403,6 +448,7 @@ document.addEventListener('DOMContentLoaded', () => {
         '<div class="mh-sbtns"><button type="button" class="tg-btn2 btn-sm" data-script="te:move"><i class="bi bi-folder-symlink"></i> ' + L('Copy: move to a review folder', 'نسخ: نقل إلى مجلد مراجعة') + '</button><button type="button" class="tg-btn2 btn-sm mh-danger" data-script="te:delete"><i class="bi bi-trash3"></i> ' + L('Copy: delete them', 'نسخ: حذفها') + '</button></div>';
     }
     if (calc.length) html += '<span class="tg-label mt-3">' + L('Calculated columns to delete by hand', 'أعمدة محسوبة تُحذف يدويًا') + '</span><div class="mh-tags">' + calc.map((x) => '<code>' + esc(x.t) + '[' + esc(x.c) + ']</code>').join('') + '</div>';
+    if (kept.length) html += '<span class="tg-label mt-3">' + L('Unused, but kept for now', 'غير مستخدمة لكن أُبقيت الآن') + '</span><p class="mh-note">' + L('Removing these now would break something that stays, so the scripts above leave them. Check again after the cleanup.', 'حذفها الآن يكسر شيئًا باقيًا في النموذج، لذلك لا تحذفها السكربتات أعلاه. افحص مرة أخرى بعد التنظيف.') + '</p><ul class="mh-manual mh-kept">' + kept.map((x) => '<li dir="auto"><code>' + esc(x.t) + '[' + esc(x.c) + ']</code> ' + esc(x.why) + '</li>').join('') + '</ul>';
     return html + '</div>';
   }
 
