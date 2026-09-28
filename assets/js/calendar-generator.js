@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const DAY = 864e5;
   const iso = (t) => new Date(t).toISOString().slice(0, 10);
   const parse = (s) => { const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d); };
+  const addYears = (t, n) => { const d = new Date(t); return Date.UTC(d.getUTCFullYear() + n, d.getUTCMonth(), d.getUTCDate()); };
   const hijriMonthStarts = (from, to) => {
     const out = [];
     for (let t = from - 40 * DAY; t <= to; t += DAY) { const h = hijri(t); if (h.day === 1) out.push({ t, y: h.year, m: h.month }); }
@@ -172,7 +173,8 @@ ${L.join(',\n')}
   // ---------- render ----------
   const render = () => {
     const s = parse(state.start), e = parse(state.end);
-    const bad = !(s && e) || e < s || (e - s) / DAY > 365 * 60;
+    // 1970-01-01 is timestamp 0, so test for NaN rather than falsy; 60 calendar years, leap days included
+    const bad = Number.isNaN(s) || Number.isNaN(e) || e < s || e >= addYears(s, 60);
     const msg = bad ? L('End date must be after the start date (max 60 years).', 'يجب أن يكون تاريخ النهاية بعد تاريخ البداية (بحد أقصى 60 عامًا).') : '';
     $('err').textContent = msg;
     ['copyBtn', 'dlBtn'].forEach((id) => { $(id).disabled = bad; });
