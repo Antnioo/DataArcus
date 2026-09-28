@@ -830,7 +830,7 @@
       relationships: M.relationships,
       roles: M.roles.map((r) => ({ name: r.name, tables: r.permissions.map((p) => p.table) })),
       pageNames: rep ? rep.pageNames : [],
-      rawTables: (((modelJson || {}).model || modelJson || {}).tables || []).filter((t) => t && t.name != null).map((t) => ({ name: String(t.name), columns: t.columns || [], measures: t.measures || [] }))
+      rawTables: (((modelJson || {}).model || modelJson || {}).tables || []).filter((t) => t && t.name != null).map((t) => ({ name: String(t.name), isHidden: !!t.isHidden, dataCategory: t.dataCategory, columns: t.columns || [], measures: t.measures || [] }))
     };
   }
 

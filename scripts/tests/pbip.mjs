@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { visitor } from './lib.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -47,6 +48,19 @@ const project = (edit) => {
 export default async function ({ browser, url }) {
   const problems = []; let checks = 0;
   const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+
+  // 0. A .pbit is read by the Model Health Check's engine: it keeps hidden tables and the date-table mark, so the
+  //    picker sees the same model as from the model.bim
+  {
+    const require = createRequire(import.meta.url);
+    const E = require('../../assets/js/model-health-engine.js'), DB = require('../../assets/js/pbip-bind.js');
+    const bim = { model: { tables: [
+      { name: 'Sales', columns: [{ name: 'Amount', dataType: 'double' }, { name: 'Region', dataType: 'string' }], measures: [{ name: 'Total', expression: 'SUM(Sales[Amount])' }] },
+      { name: 'Helpers', isHidden: true, columns: [{ name: 'X', dataType: 'string' }], measures: [{ name: 'Hidden One', expression: '1' }] },
+      { name: 'Dim', dataCategory: 'Time', columns: [{ name: 'Day', dataType: 'dateTime' }, { name: 'Mon', dataType: 'string' }] }] } };
+    const viaPbit = DB.fromTmsl({ tables: E.analyze(bim).rawTables }), direct = DB.fromTmsl(bim);
+    check(JSON.stringify(viaPbit) === JSON.stringify(direct), `pbit: the model differs from the model.bim: ${JSON.stringify(viaPbit.map((t) => [t.name, t.hidden, t.date]))}`);
+  }
 
   const run = async (lang, name, setup) => {
     const v = await visitor(browser, { viewport: [1440, 900], downloads: true });
