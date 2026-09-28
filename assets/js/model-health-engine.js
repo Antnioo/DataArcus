@@ -552,7 +552,7 @@
     const activeUse = [];
     M.relationships.filter((r) => r.active).forEach((r) => { const u = relUsed(r); if (u.length) activeUse.push({ obj: `${r.fromTable}[${r.fromColumn}] → ${r.toTable}[${r.toColumn}]`, detail: uniq(u.map((x) => x.where)).slice(0, 3).join(', ') }); });
     add('USEREL_ACTIVE', activeUse);
-    if (broken.size) add('BROKEN_REF', Array.from(broken.values()).sort((a, b) => b.n - a.n).map((b) => ({ obj: b.obj, detail: Array.from(b.pages).slice(0, 3).join(', ') })));
+    if (broken.size) add('BROKEN_REF', Array.from(broken.values()).sort((a, b) => b.n - a.n).map((b) => ({ obj: b.obj, detail: Array.from(b.pages).join(', ') })));
     const strKeys = [];
     M.relationships.forEach((r) => {
       const c = IX.columns.get(lc(r.toTable) + '|' + lc(r.toColumn));
