@@ -190,7 +190,7 @@ EVALUATE
   $('copyTmdl').addEventListener('click', () => { copy($('tmdl').textContent, $('tmdl')); track('measure_copy_tmdl', { count: buildMeasures().length, mode: state.mode }); });
   const download = (id, ext, event) => {
     const blob = new Blob([$(id).textContent], { type: 'text/plain' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = baseName().toLowerCase().replace(/[^\w]+/g, '-') + '-measures.' + ext;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = (baseName().toLowerCase().replace(/[^\p{L}\p{M}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '') || 'measure') + '-measures.' + ext;
     document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     toast(L('Downloaded', 'تم التنزيل')); track(event, { count: buildMeasures().length });
   };

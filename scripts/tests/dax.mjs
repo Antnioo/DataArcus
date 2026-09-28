@@ -17,6 +17,13 @@ export default async function ({ browser, url }) {
     await v.pg.goto(url + page, { waitUntil: 'networkidle' });
     return v;
   };
+  // the name the page gives the download (read from the link: this test browser may rename non-Latin file names)
+  const fileName = (pg, btn) => pg.evaluate((btn) => {
+    let name = null; const click = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function () { name = this.download; };
+    try { document.querySelector(btn).click(); } finally { HTMLAnchorElement.prototype.click = click; }
+    return name;
+  }, btn);
   const done = async (v, tag) => { if (v.errs.length) problems.push(`${tag}: ${v.errs.join(' | ')}`); await v.ctx.close(); };
 
   // Rolling months and average days: the number used in the DAX is the number the box shows once the visitor leaves it
@@ -44,6 +51,19 @@ export default async function ({ browser, url }) {
       'measure builder: empty names do not fall back to the defaults');
     check(r.ph.join() === 'Total Sales,Sales,Amount,Calendar,Date,Total Sales,Sales', `measure builder: placeholders ${r.ph.join()}`);
     await done(v, 'measure builder empty names');
+  }
+
+  // Arabic names: kept in the calendar's table name and in both download file names
+  {
+    const v = await open(MB);
+    await v.pg.fill('#base', 'المبيعات');
+    { const f = await fileName(v.pg, '#dlBtn'); check(f === 'المبيعات-measures.dax', `measure builder: an Arabic measure name gives the file name ${f}`); }
+    await done(v, 'measure builder Arabic name');
+    const c = await open(CG);
+    await c.pg.fill('#cgName', 'تقويم');
+    check((await c.pg.$eval('#dax', (e) => e.textContent)).startsWith('تقويم =\n'), 'calendar: an Arabic table name becomes Calendar');
+    check(await fileName(c.pg, '#dlBtn') === 'تقويم-table.dax', 'calendar: an Arabic table name is dropped from the file name');
+    await done(c, 'calendar Arabic name');
   }
 
   // Calendar generator: a range it cannot build clears the old table, so Copy and Download cannot hand it out

@@ -54,7 +54,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const q = (s) => '"' + String(s).replace(/"/g, '""') + '"';
   const sw = (expr, list, offset = 1) => `SWITCH ( ${expr}, ${list.map((v, i) => `${i + offset}, ${q(v)}`).join(', ')} )`;
-  const tableName = () => (state.name || 'Calendar').replace(/[^\w ]/g, '').trim() || 'Calendar';
+  // letters and digits of any script (an Arabic name like تقويم is a valid table name), spaces and _
+  const tableName = () => (state.name || 'Calendar').replace(/[^\p{L}\p{M}\p{N}_ ]/gu, '').trim() || 'Calendar';
 
   // ---------- DAX builder ----------
   let colCount = 0;
