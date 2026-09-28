@@ -5,6 +5,7 @@
 //  - every field a visual uses exists in the model, as the right kind (measure or column)
 //  - the sample-data download still has its own model
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { visitor } from './lib.mjs';
@@ -33,6 +34,15 @@ const refs = (files) => Object.entries(files).filter(([n]) => n.endsWith('/visua
   });
   return out;
 });
+
+// the fields of the fixture's model
+const LOCAL = { m: { Sales: ['Total Sales', 'Orders', 'Sales YoY %'] }, c: { Sales: ['CustomerKey', 'Sales Channel'], Customer: ["Customer's City", 'المنطقة'], Calendar: ['Date', 'Year', 'Month Name'] } };
+// a copy of the fixture project in a temporary folder named proj, changed by edit(dir)
+const project = (edit) => {
+  const dir = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'pbip-')), 'proj');
+  fs.cpSync(PROJECT, dir, { recursive: true }); edit(dir);
+  return dir;
+};
 
 export default async function ({ browser, url }) {
   const problems = []; let checks = 0;
@@ -80,10 +90,9 @@ export default async function ({ browser, url }) {
     const sl = picked.slice(-3).filter(Boolean);
     check(sl.length === 3 && new Set(sl).size === 3, `local: slicers should be three different fields: ${sl.join(' | ')}`);
     check(picked.includes("Customer's City") || picked.includes('المنطقة'), `local: no category column suggested: ${picked.join(' | ')}`);
-    const MODEL = { m: { Sales: ['Total Sales', 'Orders', 'Sales YoY %'] }, c: { Sales: ['CustomerKey', 'Sales Channel'], Customer: ["Customer's City", 'المنطقة'], Calendar: ['Date', 'Year', 'Month Name'] } };
     const rs = refs(files);
     check(rs.length > 20, `local: only ${rs.length} fields bound`);
-    const bad = rs.filter((r) => !(MODEL[r.kind][r.t] || []).includes(r.n));
+    const bad = rs.filter((r) => !(LOCAL[r.kind][r.t] || []).includes(r.n));
     check(!bad.length, `local: fields not in the model: ${bad.map((r) => `${r.kind} ${r.t}[${r.n}]`).join(', ')}`);
   }
 
@@ -101,6 +110,24 @@ export default async function ({ browser, url }) {
     check(!Object.keys(files).some((n) => /\.SemanticModel\//.test(n)), 'service: a live report must not carry a model of its own');
     check(picked.filter(Boolean).length >= 10, `service: few suggestions ${picked.join(' | ')}`);
     check(refs(files).length > 20, 'service: fields not bound');
+  }
+
+  // 4. A copy of the model with the same name further down (a backup): the report and its fields come from the
+  //    model at the top of the chosen folder, not a mix of the two
+  {
+    const dir = project((d) => {
+      fs.mkdirSync(path.join(d, 'backup', 'Sales.SemanticModel'), { recursive: true });
+      fs.writeFileSync(path.join(d, 'backup', 'Sales.SemanticModel', 'model.bim'), JSON.stringify({ model: { tables: [{ name: 'Old Sales', measures: [{ name: 'Legacy Revenue' }, { name: 'Legacy Orders' }], columns: [{ name: 'Old Region', dataType: 'string' }, { name: 'Old Date', dataType: 'dateTime' }] }] } }));
+    });
+    let note = '';
+    const { files, picked, msg } = await run('en', 'Board', async (pg) => {
+      await pg.selectOption('#pbipData', 'local'); await pg.setInputFiles('#pbipFolder', dir);
+      const p = await picker(pg); note = await pg.$eval('#pbipOwnMsg', (e) => e.textContent); return p;
+    });
+    const bad = refs(files).filter((r) => !(LOCAL[r.kind][r.t] || []).includes(r.n));
+    check(!bad.length && !picked.some((p) => /Legacy|Old /.test(p)), `backup copy: fields from the other model: ${bad.map((r) => `${r.kind} ${r.t}[${r.n}]`).concat(picked.filter((p) => /Legacy|Old /.test(p))).join(', ')}`);
+    check(/proj\/Sales\.SemanticModel\u2069? \(2 models/.test(note), `backup copy: the message does not say which model is used: "${note}"`);
+    check(JSON.parse(files['Board.Report/definition.pbir'] || '{}').datasetReference?.byPath?.path === '../Sales.SemanticModel' && /holds Sales\.SemanticModel \(proj\)/.test(msg), `backup copy: report or message "${msg}"`);
   }
 
   // 3. Missing inputs stop the download with a message instead of a broken project
