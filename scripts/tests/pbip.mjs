@@ -196,6 +196,14 @@ export default async function ({ browser, url }) {
     check(Object.keys(pages).length && !rep.length, `more KPI cards: a KPI repeats on a page (${Object.values(pages).map((l) => l.length).join(', ')} bound cards)`);
   }
 
+  // 8. An older project whose model folder is Sales.Dataset: read, and the report points at it
+  {
+    const dir = project((d) => fs.renameSync(path.join(d, 'Sales.SemanticModel'), path.join(d, 'Sales.Dataset')));
+    const { files } = await run('en', 'Sales', async (pg) => { await pg.selectOption('#pbipData', 'local'); await pg.setInputFiles('#pbipFolder', dir); return picker(pg); });
+    const pbir = JSON.parse(files['Sales - New design.Report/definition.pbir'] || '{}');
+    check(pbir.datasetReference?.byPath?.path === '../Sales.Dataset', `.Dataset folder: report points at ${JSON.stringify(pbir.datasetReference)}`);
+  }
+
   // 3. Missing inputs stop the download with a message instead of a broken project
   {
     const v = await visitor(browser, { viewport: [1440, 900], downloads: true });
