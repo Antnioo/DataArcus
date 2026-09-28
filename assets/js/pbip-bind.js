@@ -143,12 +143,15 @@
     // time axis: a month column from the date table, else its date column, else any date column
     const inDate = columns.filter((c) => c.dateTable);
     const date = inDate.find((c) => /^(month[\s_-]*(name|year)?|year[\s_-]*month|الشهر)$/i.test(c.c)) || inDate.find((c) => /month|الشهر/i.test(c.c))
-      || inDate.find((c) => /date/.test(c.type)) || columns.find((c) => /date/.test(c.type)) || null;
+      || inDate.find((c) => /date/.test(c.type)) || columns.find((c) => /date/.test(c.type))
+      || columns.find((c) => /^(month[\s_-]*(name)?|الشهر)$/i.test(c.c)) || null;   // no date table: a month column anywhere
     const year = inDate.find((c) => /^(year|السنة)$/i.test(c.c)) || null;
-    const cats = columns.filter((c) => !c.dateTable && c.type === 'string' && !NOT_CAT.test(c.c))
+    const cats = columns.filter((c) => !c.dateTable && c.type === 'string' && !NOT_CAT.test(c.c) && c !== date)
       .sort((a, b) => (CAT.test(b.c) ? 1 : 0) - (CAT.test(a.c) ? 1 : 0));
     const catA = cats[0] || null, catB = cats.find((c) => c !== catA && c.t !== (catA && catA.t)) || cats[1] || catA;
-    return build({ kpis, main, date, catA, catB, slicers: [year || catB, catA, catB === catA ? null : catB] });
+    // three different slicers: the year, then the categories, then the time axis
+    const sl = [year, catA, catB, date].filter((x, i, l) => x && l.indexOf(x) === i);
+    return build({ kpis, main, date, catA, catB, slicers: [sl[0] || null, sl[1] || null, sl[2] || null] });
   }
   // the visual-by-visual binding the exporter reads, from the few choices the user makes
   function build(ch) {
