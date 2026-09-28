@@ -686,9 +686,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20260930a'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
     }));
     // ---- your own model: a local project (the report points at its .SemanticModel folder) or a published one ----
-    const dataIn = $('pbipData'), own = { tables: null, folder: null, getBind: null };
+    const dataIn = $('pbipData'), own = { tables: null, folder: null, dir: '', getBind: null };
     const loadBind = () => (window.DABind ? Promise.resolve(window.DABind) : new Promise((resolve, reject) => {
-      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-bind.min.js?v=20260930c'; sc.onload = () => resolve(window.DABind); sc.onerror = reject; document.head.appendChild(sc);
+      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-bind.min.js?v=20260930d'; sc.onload = () => resolve(window.DABind); sc.onerror = reject; document.head.appendChild(sc);
     }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
@@ -724,7 +724,9 @@ document.addEventListener('DOMContentLoaded', () => {
       $('pbipFolder').addEventListener('change', (e) => {
         const files = e.target.files; if (!files || !files.length) return;
         ownMsg(L('Reading the model…', 'جارٍ قراءة النموذج…'));
-        loadBind().then((DB) => DB.fromFolder(files)).then((res) => { own.folder = res.folder; return loaded(res, res.folder + (res.others ? L(` (first of ${res.others + 1} models)`, ` (الأول من ${res.others + 1} نماذج)`) : '')); })
+        // with more than one model in the folder, say which one (by its path) the report will use
+        loadBind().then((DB) => DB.fromFolder(files)).then((res) => { own.folder = res.folder; own.dir = res.path.replace(/\/?[^/]*$/, '');
+          return loaded(res, res.others ? res.path + L(` (${res.others + 1} models in this folder; this one is used)`, ` (عدد النماذج في المجلد: ${res.others + 1}، ويُستخدم هذا النموذج)`) : res.folder); })
           .catch((err) => { own.folder = null; failed(err); });
       });
       $('pbipModelFile').addEventListener('change', (e) => {
@@ -798,7 +800,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         saveBlob(new Blob([r.zip()], { type: 'application/zip' }), `${fileBase()}-power-bi-${m === 'local' || m === 'service' ? 'report' : 'project'}.zip`);
         if (m === 'local') {
-          const msg = L(`Unzip it into the folder that holds ${own.folder}, then open ${r.base}.pbip`, `فك الضغط داخل المجلد الذي فيه ${own.folder}، ثم افتح ${r.base}.pbip`);
+          const at = own.dir ? ` (${own.dir})` : '';
+          const msg = L(`Unzip it into the folder that holds ${own.folder}${at}, then open ${r.base}.pbip`, `فك الضغط داخل المجلد الذي فيه ${own.folder}${at}، ثم افتح ${r.base}.pbip`);
           toast(msg); ownMsg(msg);
         } else toast(L('Project downloaded. Unzip it and open the .pbip file', 'تم تنزيل المشروع. فك الضغط وافتح ملف .pbip'));
         track('theme_pbip', { layout: c.preset, direction: rtl() ? 'rtl' : 'ltr', kpis: c.kpis, sample, data: m, bound: !!bind, logo: !!logo, page: c.page, pages: pages.length, panel: pages.some((pp) => pp.panel) });

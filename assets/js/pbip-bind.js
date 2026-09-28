@@ -73,13 +73,16 @@
   // Power BI's hidden automatic date tables are not fields anyone picks
   const clean = (tables) => tables.filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name));
 
-  // A folder from <input webkitdirectory>: the .SemanticModel folder itself, or a project folder holding one
+  // A folder from <input webkitdirectory>: the .SemanticModel folder itself, or a project folder holding one.
+  // A model is known by its whole path, not its name: a copy with the same name in a subfolder (a backup) is another
+  // model, and the one nearest the top of the chosen folder is used.
   async function fromFolder(fileList) {
-    const files = Array.from(fileList || []);
-    const modelOf = (f) => { const m = (f.webkitRelativePath || f.name).match(/(^|\/)([^/]+\.SemanticModel)\//i); return m ? m[2] : null; };
-    const models = [...new Set(files.map(modelOf).filter(Boolean))];
+    const files = Array.from(fileList || []), rel = (f) => f.webkitRelativePath || f.name;
+    const modelOf = (f) => { const m = rel(f).match(/^((?:[^/]+\/)*?[^/]+\.SemanticModel)\//i); return m ? m[1] : null; };
+    const depth = (p) => p.split('/').length;
+    const models = [...new Set(files.map(modelOf).filter(Boolean))].sort((a, b) => depth(a) - depth(b) || (a < b ? -1 : a > b ? 1 : 0));
     if (!models.length) throw new Error('NO_SEMANTIC_MODEL');
-    const folder = models[0], inside = files.filter((f) => modelOf(f) === folder);
+    const path = models[0], folder = path.replace(/^.*\//, ''), inside = files.filter((f) => modelOf(f) === path);
     const bim = inside.find((f) => /\/model\.bim$/i.test(f.webkitRelativePath || f.name));
     let tables;
     if (bim) tables = fromTmsl(JSON.parse(decodeText(new Uint8Array(await bim.arrayBuffer()))));
@@ -89,7 +92,7 @@
       tables = [];
       for (const f of tmdl) tables.push(...parseTmdl(decodeText(new Uint8Array(await f.arrayBuffer()))));
     }
-    return { folder, others: models.length - 1, tables: clean(tables) };
+    return { folder, path, others: models.length - 1, tables: clean(tables) };
   }
   // A model.bim, or a .pbit (unzipped by the Model Health Check's worker, which already reads them)
   function fromFile(file, workerUrl) {
