@@ -111,6 +111,15 @@ export default async function ({ browser, url }) {
     check(JSON.stringify(found) === JSON.stringify(['Calendar', 'التقويم', 'تقويم'].sort()), `calendar tables: found ${JSON.stringify(found)}`);
   }
 
+  {
+    // TMDL: property values with double quotes (or edge spaces) are quoted with inner quotes doubled, as the TMDL spec says
+    const T = load('model-health-tmdl.min.js');
+    const raw = [{ name: 'Sales', measures: [{ name: 'Flag', expression: '[X] > 0', formatString: '"Yes";"Yes";"No"' }, { name: 'Amt', expression: 'SUM ( Sales[Amount] )', formatString: '"AED "#,0', displayFolder: 'Money ' }, { name: 'Plain', expression: '1', formatString: '#,0' }] }];
+    const s = (T.moveMeasures(raw, ['Flag', 'Amt', 'Plain'], 'Review').script || '').split('\n');
+    for (const want of ['\t\t\tformatString: """Yes"";""Yes"";""No"""', '\t\t\tformatString: """AED ""#,0"', '\t\t\tdisplayFolder: "Review\\Money "', '\t\t\tformatString: #,0'])
+      check(s.includes(want), `TMDL: no line ${JSON.stringify(want)}`);
+  }
+
   // ---- fix plan in the page ----
   for (const [name, file] of [['legacy.pbit', fs.readFileSync(path.join(ROOT, 'scripts/tests/fixtures/model-health/legacy.pbit'))],
     ['plan.pbit', pbit({ DataModelSchema: JSON.stringify(planModel()), 'Report/Layout': JSON.stringify(planLayout), Version: '1.28' })]]) {

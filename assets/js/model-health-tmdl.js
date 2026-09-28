@@ -14,8 +14,11 @@
 
   // Names: quote unless plain; escape single quotes by doubling
   const name = (n) => (/^[A-Za-z_][A-Za-z0-9_-]*$/.test(n) ? n : "'" + String(n).replace(/'/g, "''") + "'");
-  // Single-line property values are written as-is; refuse values that would break the line
-  const safeValue = (v) => typeof v === 'string' && !/[\r\n]/.test(v) && v === v.trim();
+  // Single-line property values; refuse values that would break the line
+  const safeValue = (v) => typeof v === 'string' && !/[\r\n]/.test(v);
+  // TMDL strips leading and trailing double quotes and whitespace from a property value, so a value with either
+  // is written in double quotes, with its own double quotes doubled ("Yes";"No" -> """Yes"";""No""")
+  const textValue = (v) => (/"/.test(v) || v !== v.trim() ? '"' + v.replace(/"/g, '""') + '"' : v);
 
   const MEASURE_KEYS = new Set(['name', 'expression', 'formatString', 'displayFolder', 'description', 'lineageTag', 'isHidden', 'dataCategory', 'annotations', 'changedProperties', 'formatStringDefinition', 'detailRowsDefinition', 'isSimpleMeasure', 'sourceLineageTag']);
   const COLUMN_KEYS = new Set(['type', 'name', 'dataType', 'isNameInferred', 'isDataTypeInferred', 'isHidden', 'sourceColumn', 'lineageTag', 'summarizeBy', 'annotations', 'formatString', 'sortByColumn', 'changedProperties', 'description', 'expression', 'displayFolder', 'dataCategory', 'isKey', 'isUnique', 'isNullable', 'isDefaultLabel', 'isDefaultImage', 'isAvailableInMdx', 'encodingHint', 'sourceProviderType', 'keepUniqueRows', 'sourceLineageTag']);
@@ -39,7 +42,7 @@
     if (typeof v === 'number') { out.push(ind(depth) + key + ': ' + v); return true; }
     if (key === 'sortByColumn') { out.push(ind(depth) + key + ': ' + name(v)); return true; }
     if (!safeValue(v)) return false;
-    out.push(ind(depth) + key + ': ' + v);
+    out.push(ind(depth) + key + ': ' + textValue(v));
     return true;
   }
   function trailer(obj, depth, out) {
