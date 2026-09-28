@@ -141,7 +141,8 @@
   // the query of one visual, or null when a field it needs is not bound
   function bindQuery(kind, B, kpiIndex) {
     const cat = (B.cats || {})[kind], y = (B.y || {})[kind] || B.measure, need = (...fs) => fs.every(Boolean);
-    const kpi = B.kpis && B.kpis.length ? B.kpis[kpiIndex % B.kpis.length] : null;
+    // one field per card: a card past the end of the list stays empty rather than repeating the first KPI
+    const kpi = (B.kpis || [])[kpiIndex] || null;
     switch (kind) {
       case 'kpi': return kpi ? q({ Values: [proj(kpi)] }) : null;
       case 'card': return need(B.measure) ? q({ Values: [proj(B.measure)] }) : null;
@@ -351,7 +352,7 @@
           let ttl = s.title;
           const extra = {};
           if (own && B && query) ttl = bindTitle(s.kind, B, W.by || 'by') || ttl;
-          if (s.kind === 'kpi') { if (B && query) ttl = label(B.kpis[kpiIndex % B.kpis.length]); kpiIndex++; }
+          if (s.kind === 'kpi') { if (B && query) ttl = label(B.kpis[kpiIndex]); kpiIndex++; }
           // KPI names read as labels: semibold, so the number below stays the hero
           if (s.kind === 'kpi') extra.title = obj({ show: bool(true), text: str(ttl), alignment: str(align), bold: bool(true) });
           visual = { visualType: type, visualContainerObjects: frame(ttl, ttl, extra), drillFilterOtherVisuals: true };

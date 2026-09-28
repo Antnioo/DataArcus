@@ -161,6 +161,27 @@ export default async function ({ browser, url }) {
     check(!bad.length, `switching: the local report uses fields of the other model: ${bad.slice(0, 5).map((r) => `${r.kind} ${r.t}[${r.n}]`).join(', ')}`);
   }
 
+  // 7. More KPI cards after the model is loaded (4 -> 6): the picker gets a row per card, and no card repeats another's KPI
+  {
+    let rows = 0;
+    const { files } = await run('en', 'Cards', async (pg) => {
+      await pg.selectOption('#pbipData', 'local'); await pg.setInputFiles('#pbipFolder', PROJECT); await picker(pg);
+      await pg.click('#layControls button[data-l="kpis"][data-v="6"]');
+      rows = await pg.$$eval('#pbipMap select[data-path^="kpis."]', (ss) => ss.length);
+      return picker(pg);
+    });
+    check(rows === 6, `more KPI cards: the picker has ${rows} KPI rows for 6 cards`);
+    const pages = {};
+    Object.entries(files).filter(([n]) => n.endsWith('/visual.json')).forEach(([n, b]) => {
+      const v = JSON.parse(b.toString('utf8')), t = v.visual && v.visual.visualContainerObjects && v.visual.visualContainerObjects.title;
+      if (!(t && t[0].properties.bold)) return;   // KPI cards are the visuals with a bold title
+      const m = JSON.stringify(v.visual.query || null), pgName = n.split('/pages/')[1].split('/')[0];
+      if (v.visual.query) (pages[pgName] = pages[pgName] || []).push(m);
+    });
+    const rep = Object.values(pages).filter((l) => new Set(l).size !== l.length);
+    check(Object.keys(pages).length && !rep.length, `more KPI cards: a KPI repeats on a page (${Object.values(pages).map((l) => l.length).join(', ')} bound cards)`);
+  }
+
   // 3. Missing inputs stop the download with a message instead of a broken project
   {
     const v = await visitor(browser, { viewport: [1440, 900], downloads: true });
