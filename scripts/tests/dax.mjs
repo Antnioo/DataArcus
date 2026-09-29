@@ -26,6 +26,21 @@ export default async function ({ browser, url }) {
   }, btn);
   const done = async (v, tag) => { if (v.errs.length) problems.push(`${tag}: ${v.errs.join(' | ')}`); await v.ctx.close(); };
 
+  // Ramadan vs last Ramadan: on a card or total row the previous Ramadan is found per Hijri year in view
+  // (not from MAX ( Hijri Year ), which is often the Ramadan in view itself), and the % compares Ramadan days only
+  {
+    const v = await open(MB);
+    await v.pg.click('input[value="ramPct"]');
+    const s = await v.pg.$eval('#script', (e) => e.textContent);
+    const ly = (s.match(/MEASURE 'Sales'\[Total Sales Last Ramadan\] =[\s\S]*?(?=\n\n|\n\nEVALUATE)/) || [''])[0];
+    const pct = (s.match(/MEASURE 'Sales'\[Total Sales vs Last Ramadan %\] =[\s\S]*?(?=\n\n)/) || [''])[0];
+    check(ly && !/MAX \( 'Calendar'\[Hijri Year\] \)/.test(ly), 'Last Ramadan: previous Ramadan taken from MAX ( Hijri Year )');
+    check(/SUMMARIZE \( 'Calendar', 'Calendar'\[Hijri Year\], 'Calendar'\[Ramadan Day\] \)/.test(ly) && /TREATAS \( _SameDaysLastYear, 'Calendar'\[Hijri Year\], 'Calendar'\[Ramadan Day\] \)/.test(ly),
+      'Last Ramadan: not matched per Hijri year and Ramadan day');
+    check(/KEEPFILTERS \( 'Calendar'\[Is Ramadan\] = TRUE \(\) \)/.test(pct), 'vs Last Ramadan %: the current side is not limited to Ramadan days');
+    await done(v, 'measure builder Ramadan');
+  }
+
   // Rolling months and average days: the number used in the DAX is the number the box shows once the visitor leaves it
   {
     const v = await open(MB);
