@@ -252,5 +252,21 @@ export default async function ({ browser, url }) {
     if (v.errs.length) problems.push(`readability: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
+  // Hex boxes: a pasted code with spaces or the short #abc form is taken; anything else is reset with a message
+  {
+    const v = await open('en');
+    const box = '#uiColors input[type=text][data-key="u_accent"]';
+    const put = async (t) => { await v.pg.fill(box, t); await v.pg.locator(box).blur(); return v.pg.evaluate((b) => ({ box: document.querySelector(b).value, saved: JSON.parse(localStorage.getItem('dataarcus-theme-generator')).ui.accent, toast: document.getElementById('toast').textContent }), box); };
+    let r = await put(' #112233 ');
+    check(r.saved === '#112233' && r.box === '#112233', `hex: " #112233 " gives ${JSON.stringify(r)}`);
+    r = await put('#abc');
+    check(r.saved === '#aabbcc', `hex: #abc gives ${JSON.stringify(r)}`);
+    for (const bad of ['zzzzzz', '']) {
+      r = await put(bad);
+      check(r.box === '#aabbcc' && r.saved === '#aabbcc' && /hex color/.test(r.toast), `hex: "${bad}" is left in the box: ${JSON.stringify(r)}`);
+    }
+    if (v.errs.length) problems.push(`hex: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
   return { checks, problems };
 }

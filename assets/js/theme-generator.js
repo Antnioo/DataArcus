@@ -27,7 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const UI_LABELS = UI_LABELS_EN;
 
   // ---------- color math ----------
-  const clampHex = (v) => { v = (v || '').trim(); if (!v.startsWith('#')) v = '#' + v; return /^#[0-9a-fA-F]{6}$/.test(v) ? v.toLowerCase() : null; };
+  // #1a2b3c, 1a2b3c or the short #abc form, spaces around allowed; anything else is not a color (null)
+  const clampHex = (v) => { v = (v || '').trim(); if (!v.startsWith('#')) v = '#' + v; if (/^#[0-9a-fA-F]{3}$/.test(v)) v = '#' + [...v.slice(1)].map((c) => c + c).join(''); return /^#[0-9a-fA-F]{6}$/.test(v) ? v.toLowerCase() : null; };
   const hexToRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
   const rgbToHex = (r) => '#' + r.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
   const mix = (a, b, t) => { const A = hexToRgb(a), B = hexToRgb(b); return rgbToHex(A.map((v, i) => v + (B[i] - v) * t)); };
@@ -63,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* private mode */ } };
 
   // ---------- builders ----------
-  const colorInput = (key, value, label) => `<div class="tg-color"><input type="color" value="${value}" data-key="${key}" aria-label="${label} color"><input type="text" value="${value}" data-key="${key}" maxlength="7" aria-label="${label} hex code" spellcheck="false"><span>${label}</span></div>`;
+  const colorInput = (key, value, label) => `<div class="tg-color"><input type="color" value="${value}" data-key="${key}" aria-label="${label} color"><input type="text" value="${value}" data-key="${key}" maxlength="9" aria-label="${label} hex code" spellcheck="false"><span>${label}</span></div>`;
   const CHART_INPUTS = { csLabels: 'labels', csGrid: 'grid', csLegend: 'legend', csAxis: 'axis', csTable: 'table' };
   const renderInputs = () => {
     $('dataColors').innerHTML = state.data.map((c, i) => colorInput('d' + i, c, L('Color ', 'اللون ') + (i + 1))).join('');
@@ -260,6 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const onColor = (e) => {
     const el = e.target; if (!el.dataset.key) return;
     const val = el.type === 'color' ? el.value : clampHex(el.value);
+    if (el.type === 'text') { el.classList.toggle('is-invalid', !val); el.setAttribute('aria-invalid', String(!val)); }
     if (!val) return;
     setColor(el.dataset.key, val);
     const twin = el.parentElement.querySelector(el.type === 'color' ? 'input[type=text]' : 'input[type=color]'); twin.value = val;
@@ -267,6 +269,13 @@ document.addEventListener('DOMContentLoaded', () => {
     renderAll();
   };
   ['dataColors', 'uiColors'].forEach((id) => { $(id).addEventListener('input', onColor); });
+  // leaving a hex box with something that is not a color: the box shows the color in use again, and says why
+  ['dataColors', 'uiColors'].forEach((id) => $(id).addEventListener('change', (e) => {
+    const el = e.target; if (el.type !== 'text' || !el.dataset.key) return;
+    const k = el.dataset.key, cur = k[0] === 'd' ? state.data[+k.slice(1)] : state.ui[k.slice(2)], val = clampHex(el.value);
+    if (!val) toast(L('Use a hex color like #1a2b3c', 'استخدم رمز لون مثل ‎#1a2b3c'));
+    el.value = val || cur; el.classList.remove('is-invalid'); el.setAttribute('aria-invalid', 'false');
+  }));
   $('genBtn').addEventListener('click', () => {
     state.data = generate($('brand').value, $('harmony').value); state.ui.accent = state.data[0]; state.preset = null;
     renderInputs(); renderAll(); track('theme_generate', { harmony: $('harmony').value });
