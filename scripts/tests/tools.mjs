@@ -102,10 +102,18 @@ export default async function ({ browser, url }) {
         const [a, b] = btns, sameRow = Math.abs(a.top - b.top) < 5;
         gap = sameRow ? Math.round(Math.max(b.left - a.right, a.left - b.right)) : Math.round(b.top - a.bottom);
       }
-      return { gap, faqGap: cta && faq ? Math.round(faq.getBoundingClientRect().top - cta.getBoundingClientRect().bottom) : null };
+      // settings boxes in tool panels are compact (the site-wide form style is sized for the contact form);
+      // headline number boxes with a big font, like the licensing calculator's, are meant to be larger
+      const tall = [...document.querySelectorAll('.tg-panel .form-control, .tg-panel .form-select')].filter((e) => e.getClientRects().length && e.getBoundingClientRect().height > 44 && parseFloat(getComputedStyle(e).fontSize) < 18).map((e) => (e.id || e.tagName) + ' ' + Math.round(e.getBoundingClientRect().height) + 'px');
+      // a button right beside a settings box (the theme generator's Generate) is as tall as the box
+      const gen = document.getElementById('genBtn'), sel = document.getElementById('harmony');
+      const rowGap = gen && sel ? Math.abs(Math.round(gen.getBoundingClientRect().height - sel.getBoundingClientRect().height)) : 0;
+      return { rowGap, tall, gap, faqGap: cta && faq ? Math.round(faq.getBoundingClientRect().top - cta.getBoundingClientRect().bottom) : null };
     });
     const tag = `${page} ${lang} ${vp[0]}px`;
     if (r.gap !== null) check(r.gap >= 6, `${tag}: CTA buttons ${r.gap}px apart`);
+    check(!r.tall.length, `${tag}: tall input boxes: ${r.tall.join(', ')}`);
+    check(r.rowGap <= 1, `${tag}: Generate button ${r.rowGap}px off the height of the box beside it`);
     if (r.faqGap !== null) check(r.faqGap <= 60, `${tag}: ${r.faqGap}px between the CTA box and the FAQ`);
     await v.ctx.close();
   }

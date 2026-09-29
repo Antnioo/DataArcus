@@ -666,6 +666,15 @@ footer a.text-white-50:hover {
   outline: none;
 }
 
+/* Tool panels: compact inputs. The padding above is sized for the contact form; in a tool panel full of
+   settings it made every box about 56px tall. The dropdown arrow keeps its room on the reading-end side. */
+.tg-panel .form-control, .tg-panel .form-select { padding: 7px 12px; border-radius: 10px; font-size: .95rem; }
+.tg-panel .form-select { padding-inline-end: 34px; }
+.tg-panel .form-control-sm, .tg-panel .form-select-sm { padding-block: 5px; font-size: .85rem; border-radius: 8px; }
+html[dir="rtl"] .tg-panel .form-select { background-position: left 12px center; }
+/* a button right beside a settings box (like Generate) takes the box height, so the row lines up */
+.tg-panel :has(> .form-control, > .form-select) > .tg-btn2 { padding-block: 0; min-height: 39px; align-self: stretch; }
+
 .form-control::placeholder {
   color: rgba(255, 255, 255, 0.5);
 }
