@@ -63,15 +63,15 @@ export default async function ({ browser, url }) {
       check(JSON.stringify(options(id)) === JSON.stringify(E.CHART_OPTIONS[k]), `${page}: chart ${k} choices ${JSON.stringify(options(id))} are not the engine's ${JSON.stringify(E.CHART_OPTIONS[k])}`);
   }
 
-  // each page runs the code it should: the lab page the engine and theme-generator-next, the live page the old script
+  // each page runs the code it should: both pages the engine and theme-generator.js on it
   for (const [name, page] of Object.entries(PAGES_TO_CHECK)) {
     const v = await visitor(browser);
     const seen = [];
     v.pg.on('request', (rq) => { const m = rq.url().match(/assets\/js\/((?:design-engine|theme-generator(?:-next)?)\.min\.js)/); if (m) seen.push(m[1]); });
     await v.pg.goto(`${url}${page}`, { waitUntil: 'networkidle' });
     const engine = await v.pg.evaluate(() => !!window.DAEngine && document.getElementById('json').textContent.length > 100);
-    const want = name === 'lab' ? ['design-engine.min.js', 'theme-generator-next.min.js'] : ['theme-generator.min.js'];
-    check(JSON.stringify(seen.sort()) === JSON.stringify(want) && engine === (name === 'lab') && !v.errs.length, `${name} page loads ${JSON.stringify(seen)}, engine ${engine}, errors ${v.errs.join(' | ')}`);
+    const want = ['design-engine.min.js', 'theme-generator.min.js'];
+    check(JSON.stringify(seen.sort()) === JSON.stringify(want) && engine && !v.errs.length, `${name} page loads ${JSON.stringify(seen)}, engine ${engine}, errors ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
 
