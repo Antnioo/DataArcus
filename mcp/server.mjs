@@ -37,16 +37,22 @@ server.registerTool('suggest_fields', {
 
 server.registerTool('check_model_health', {
   title: 'Check model health',
-  description: 'Runs the DataArcus Model Health Check: score, and every finding with the objects it concerns (unused columns and measures, risky relationships, slow DAX, date tables...). Needs a model.bim or .pbit (TMDL-only projects: export a .pbit first).',
+  description: 'Runs the DataArcus Model Health Check: score, and every finding with the objects it concerns (unused columns and measures, risky relationships, slow DAX, date tables...). Reads a project saved by Power BI Desktop (TMDL or model.bim), a model.bim or a .pbit.',
   inputSchema: { path: modelPath, maxItems: z.number().int().min(1).max(200).default(15).describe('Objects listed per finding') }
 }, safe(async ({ path: p, maxItems }) => {
   const m = loadModel(p);
-  if (!m.tmsl) throw new Error('This project stores its model as TMDL files. In Power BI Desktop use File > Export > Power BI template, and check the .pbit.');
   const r = Health.analyze(m.tmsl, m.report);
   return text({
     source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report,
     findings: r.findings.map((f) => { const rule = Health.RULES[f.id] || {}; const en = rule.en || [f.id, '', ''];
-      return { id: f.id, severity: rule.sev, category: rule.cat, title: en[0], why: en[1], fix: en[2], count: f.items.length, items: f.items.slice(0, maxItems) }; })
+      return { id: f.id, severity: rule.sev, category: rule.cat, title: en[0], why: en[1], fix: en[2], count: f.items.length, items: f.items.slice(0, maxItems) }; }),
+    // checks that need a column type the files don't give (columns of DAX tables in a TMDL project): listed, not guessed
+    skipped: r.skipped.length ? {
+      why: 'The TMDL files give no data type for these columns: Power BI works out the types of a DAX table\'s columns from its DAX, and only the open model knows them. The checks below need the type, so they were not run for these objects and are not in the score.',
+      getThem: ['Export a .pbit from the same model (Power BI Desktop: File > Export > Power BI template) and run check_model_health on it.',
+        'Coming next: read the column types from the model open in Power BI Desktop, through Microsoft\'s Power BI Authoring MCP.'],
+      checks: r.skipped.map((s) => ({ id: s.id, title: ((Health.RULES[s.id] || {}).en || [s.id])[0], count: s.items.length, items: s.items.slice(0, maxItems) }))
+    } : undefined
   });
 }));
 
