@@ -2,6 +2,7 @@
 window.themeGeneratorTranslations = {
   "en": {
     "tg": {
+      "attrs": { "brand": "Brand color", "palette": "Palette style" },
       "badge": "Free tool · No sign-up",
       "title": "Power BI Theme & Layout Generator",
       "subtitle": "Design your Power BI report before you build it: a brand theme, the page size, and a layout with the exact position of every visual, ready to use in Power BI.",
@@ -111,6 +112,7 @@ window.themeGeneratorTranslations = {
   },
   "ar": {
     "tg": {
+      "attrs": { "brand": "لون العلامة التجارية", "palette": "نمط لوحة الألوان" },
       "badge": "أداة مجانية · بدون تسجيل",
       "title": "مولّد السمات والتخطيطات لـ Power BI",
       "subtitle": "صمّم تقرير Power BI قبل أن تبنيه: سمة بألوان علامتك، ومقاس الصفحة، وتخطيط بالموضع الدقيق لكل عنصر، جاهز للاستخدام في Power BI.",

@@ -28,6 +28,11 @@ export default async function ({ browser, url }) {
           .filter(([, e]) => e !== null).map(([n, e]) => [n, typeof e === 'string' ? e : e.getAttribute('content') || '']),
         // translated attributes (data-i18n-placeholder, -alt, -aria-label, -title): never a missing key, and Arabic on Arabic pages
         attrs: ['placeholder', 'alt', 'aria-label', 'title'].flatMap((a) => [...document.querySelectorAll(`[data-i18n-${a}]`)].map((e) => [a, e.getAttribute(a) || ''])),
+        // on Arabic pages no label stays English: every alt, aria-label, placeholder and title in words has a translation
+        // (brand names alone, like "LinkedIn", and fields marked translate="no", such as model names, stay as they are)
+        untranslated: document.documentElement.lang === 'ar' ? ['placeholder', 'alt', 'aria-label', 'title'].flatMap((a) => [...document.querySelectorAll(`[${a}]:not([data-i18n-${a}])`)]
+          .filter((e) => !e.closest('svg, script, template, iframe, [translate="no"]') && e.getClientRects().length && /[A-Za-z]{2}/.test(e.getAttribute(a)) && !/[\u0600-\u06FF]/.test(e.getAttribute(a)) && !/^(LinkedIn|WhatsApp|GitHub|X|YouTube|Instagram|Microsoft Learn|DataArcus)$/i.test(e.getAttribute(a).trim()))
+          .map((e) => `${a}="${e.getAttribute(a).slice(0, 40)}"`)) : [],
         sideways: document.documentElement.scrollWidth > innerWidth,
         offset: parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop),
         expected: nav ? nav.offsetHeight + pins + 12 : null,
@@ -49,6 +54,7 @@ export default async function ({ browser, url }) {
     if (r.sideways) problems.push(`${tag}: page scrolls sideways`);
     const wrongWay = r.arrows.filter((f) => f !== (lang === 'ar' ? 1 : 0)).length;
     if (wrongWay) problems.push(`${tag}: ${wrongWay} of ${r.arrows.length} arrows point against the reading direction`);
+    if (r.untranslated.length) problems.push(`${tag}: English labels: ${[...new Set(r.untranslated)].join(' | ')}`);
     if (r.shownHidden.length) problems.push(`${tag}: hidden but shown: ${r.shownHidden.join(', ')}`);
     if (r.expected !== null && Math.abs(r.offset - r.expected) > 1) problems.push(`${tag}: top offset ${r.offset}, navbar needs ${r.expected}`);
     if (vp[0] < 992 && await v.pg.locator('.navbar-toggler').count()) {

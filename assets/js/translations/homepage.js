@@ -10,7 +10,10 @@ window.homepageTranslations = {
       fabric: "Fabric icon",
       pulse: "A preview of the DataArcus Pulse automotive CRM intelligence dashboard",
       fintech: "A preview of the Fintech Portfolio Risk dashboard",
-      repeatiq: "A preview of the RepeatIQ Commerce Analytics dashboard"
+      repeatiq: "A preview of the RepeatIQ Commerce Analytics dashboard",
+      founder: "A photo of Abdelrahman M., Founder of DataArcus",
+      googleCert: "Google Data Analytics Professional Certificate",
+      msCert: "Microsoft Certified: Data Analyst Associate"
     },
     // Page Meta
     meta: {
@@ -305,7 +308,10 @@ portfolio: {
       fabric: "أيقونة Fabric",
       pulse: "معاينة للوحة DataArcus Pulse لتحليلات CRM في قطاع السيارات",
       fintech: "معاينة للوحة مخاطر محفظة مشاريع Fintech",
-      repeatiq: "معاينة للوحة تحليلات التجارة RepeatIQ"
+      repeatiq: "معاينة للوحة تحليلات التجارة RepeatIQ",
+      founder: "صورة عبدالرحمن م.، مؤسس DataArcus",
+      googleCert: "شهادة Google Data Analytics الاحترافية",
+      msCert: "شهادة Microsoft Certified: Data Analyst Associate"
     },
     // Page Meta
     meta: {
