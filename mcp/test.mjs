@@ -65,6 +65,10 @@ if (!r.err) {
   const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression) refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); });
   walk(dir);
   check(refs.length >= 4, `create_report bound only ${refs.length} fields`);
+  // with no background given, the page background is fully transparent (the theme's page colour shows)
+  const { PNG } = (await import('node:module')).createRequire(import.meta.url)(path.join(REPO, 'node_modules/pngjs'));
+  const bg = fs.readdirSync(path.join(dir, 'StaticResources/RegisteredResources')).filter((f) => f.endsWith('.png'));
+  check(bg.length && bg.every((f) => PNG.sync.read(fs.readFileSync(path.join(dir, 'StaticResources/RegisteredResources', f))).data.every((v, i) => i % 4 !== 3 || v === 0)), `background not transparent: ${bg}`);
   const bad = refs.filter(([k, t, n]) => !has(k, t, n));
   check(!bad.length, `fields not in the model: ${bad.map((b) => b.join(' ')).join(', ')}`);
 }
