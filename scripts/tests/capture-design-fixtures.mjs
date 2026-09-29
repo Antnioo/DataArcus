@@ -4,6 +4,7 @@
 //
 //   node scripts/tests/capture-design-fixtures.mjs          writes scripts/tests/fixtures/design-engine/cases.json
 //   node scripts/tests/capture-design-fixtures.mjs --check  compares the page with the saved fixtures, writes nothing
+//   add --page lab to the check to run the same cases on the lab page
 //
 // Fixtures are only remade with the owner's approval: they freeze today's behaviour, quirks included.
 import fs from 'node:fs';
@@ -30,6 +31,10 @@ export function cases(all) {
   // colours: every preset, every harmony from two brand colours
   PRESETS.forEach((p, i) => add(`preset-${i + 1}`, { preset: p }));
   ['#0f4c5c', '#e36414'].forEach((b, j) => ['analogous', 'complementary', 'triadic', 'mono'].forEach((h) => add(`harmony-${h}-${j + 1}`, { harmony: [b, h] })));
+  // the clamps in generate(): a grey brand colour has its saturation raised to 0.45, a light one its lightness lowered to 0.55
+  // (the 0.15 lightness floor cannot be reached: the base is held at 0.4 or more and no harmony steps down more than 0.2)
+  add('harmony-grey', { harmony: ['#6b7280', 'analogous'] });
+  add('harmony-light', { harmony: ['#a0e7ff', 'triadic'] });
   // fonts other than the default
   ['DIN', 'Tahoma', 'Georgia'].forEach((f) => add(`font-${f.toLowerCase()}`, { set: { font: f } }));
   // chart styles: every value of every setting at least once
@@ -38,6 +43,7 @@ export function cases(all) {
   // names: Arabic letters and symbols (the theme name and the file names)
   add('name-arabic', { set: { name: 'سمة المبيعات' } });
   add('name-symbols', { set: { name: 'Café "Q3" / Board' } });
+  add('name-only-symbols', { set: { name: '***' } });   // nothing left for a file name: power-bi-theme
   // a hand-edited or damaged save: every bad value falls back to its default
   add('repair-values', { raw: { preset: 'Nope', name: 42, font: 'Comic Sans MS', data: ['#abc', 'red', '#123456', '', '#FFFFFF', 'x', '#00d4ff', '#6C5CE7'], ui: { background: '#000', card: 'blue' }, chart: { labels: 'maybe', legend: 'Right' },
     layout: { v: 3, page: '1920x1080', preset: 'ghost', kpis: 9, dir: 'up', radius: 99, kpiBar: 'left', headLine: 'thick', filters: 'yes', shadow: 1, hh: 'x', kpiH: 1e9 } } });
@@ -54,6 +60,8 @@ export function cases(all) {
     const i = n++;
     add(`layout-${l}-${pg === 'custom' ? w + 'x' + h : pg}`, { preset: pick(PRESETS, i), layout: Object.assign({ preset: l, page: pg }, pg === 'custom' ? { pageW: w, pageH: h } : {}, vary(i), pick(EXT, i)) });
   }));
+  // on a 4:3 page the side filter panel is held at a quarter of the width (320 asked, 240 kept)
+  add('filter-width-cap', { layout: { preset: 'analysis', page: '960x720', filters: true, fpos: 'start', fw: 320 } });
   // custom sizes outside the allowed shape and range
   add('page-too-wide', { layout: { page: 'custom', pageW: 3840, pageH: 1000 } });
   add('page-too-tall', { layout: { page: 'custom', pageW: 700, pageH: 2000, preset: 'ops' } });
@@ -84,25 +92,27 @@ export function cases(all) {
 
 // ---------- capturing one case on the page ----------
 const read = (pg) => pg.evaluate((STORE) => new Promise((resolve) => {
-  window.__bg = [];
-  document.getElementById('pngBtn').click();   // draws the background from bgSvg through an <img>; the init script keeps the SVG
+  window.__bg = []; window.__dl = [];
+  // draws the background from bgSvg through an <img>, then saves it through an <a download>; the init scripts keep both
+  document.getElementById('pngBtn').click();
   const until = Date.now() + 5000;
   (function wait() {
-    if (window.__bg.length || Date.now() > until) {
+    if ((window.__bg.length && window.__dl.length) || Date.now() > until) {
       resolve({
         state: JSON.parse(localStorage.getItem(STORE)),
         theme: document.getElementById('json').textContent,
         slots: [...document.querySelectorAll('#slotTable tbody tr')].map((tr) => [...tr.children].map((td) => td.textContent)),
         preview: document.getElementById('layCanvas').innerHTML,
-        bg: window.__bg[0] || null
+        bg: window.__bg[0] || null,
+        file: window.__dl[0] || null   // the PNG's file name: the theme's name made safe for a file (fileBase), then the layout
       });
     } else setTimeout(wait, 20);
   })();
 }), STORE);
 
 // hook(pg): called on the new page before it loads; it may return a function run before the page closes, whose result
-// is kept as r.extra (the coverage check uses it)
-export async function captureCase(browser, url, c, hook) {
+// is kept as r.extra (the coverage check uses it). page: the generator page to use (default: the live page).
+export async function captureCase(browser, url, c, hook, page) {
   const v = await visitor(browser, { viewport: [1440, 1000], downloads: true });
   const finish = hook ? await hook(v.pg) : null;
   // keep the SVG that pngBlob hands to an <img> (data:image/svg+xml,...), without touching the page's code
@@ -111,7 +121,12 @@ export async function captureCase(browser, url, c, hook) {
     Object.defineProperty(HTMLImageElement.prototype, 'src', { configurable: true, get() { return d.get.call(this); },
       set(val) { if (typeof val === 'string' && val.startsWith('data:image/svg+xml')) (window.__bg = window.__bg || []).push(decodeURIComponent(val.slice(val.indexOf(',') + 1))); d.set.call(this, val); } });
   });
-  const pg = v.pg, go = async () => { await pg.goto(`${url}${PAGE}?lang=${c.lang}`, { waitUntil: 'networkidle' }); await pg.waitForFunction(() => document.getElementById('json').textContent.length > 100); };
+  // and the file name the page gives its download (<a download>), so the result never depends on the machine's locale
+  await v.ctx.addInitScript(() => {
+    const click = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function () { if (this.download) (window.__dl = window.__dl || []).push(this.download); return click.call(this); };
+  });
+  const pg = v.pg, go = async () => { await pg.goto(`${url}${page || PAGE}?lang=${c.lang}`, { waitUntil: 'networkidle' }); await pg.waitForFunction(() => document.getElementById('json').textContent.length > 100); };
   await go();
   // steps on the page: a preset button, or a generated harmony
   if (c.preset) await pg.click(`#presets [data-p="${c.preset}"]`);
@@ -128,19 +143,17 @@ export async function captureCase(browser, url, c, hook) {
     }, [STORE, c]);
     await go();
   }
-  // the PNG download's file name: the theme's name made safe for a file (fileBase), then the layout
-  const dl = pg.waitForEvent('download', { timeout: 10000 }).then((d) => d.suggestedFilename(), () => null);
   const r = await read(pg);
-  r.file = await dl;
   if (finish) r.extra = await finish();
   const errs = v.errs.slice();
   await v.ctx.close();
   return Object.assign(r, { errs });
 }
 
-export async function captureAll(browser, url) {
+export const PAGES_TO_CHECK = { live: PAGE, lab: '/tools/power-bi-theme-generator-lab.html' };
+export async function captureAll(browser, url, page) {
   const out = [];
-  for (const c of cases()) out.push(Object.assign({ case: c }, await captureCase(browser, url, c)));
+  for (const c of cases()) out.push(Object.assign({ case: c }, await captureCase(browser, url, c, null, page)));
   return out;
 }
 
@@ -165,9 +178,11 @@ export const unpack = (f) => f.cases.map((c) => Object.assign({}, c, { theme: te
 
 // ---------- command line ----------
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const check = process.argv.includes('--check');
+  // --page lab: the same cases on the lab page (fixtures are always written from the live page)
+  const check = process.argv.includes('--check'), pi = process.argv.indexOf('--page'), which = pi > 0 ? process.argv[pi + 1] : 'live';
+  if (!PAGES_TO_CHECK[which] || (which !== 'live' && !check)) { console.error('Use --page live or --page lab (lab only with --check)'); process.exit(2); }
   const server = await serve(), browser = await launch();
-  const t0 = Date.now(), results = await captureAll(browser, server.url);
+  const t0 = Date.now(), results = await captureAll(browser, server.url, PAGES_TO_CHECK[which]);
   const problems = [];
   results.forEach((r) => {
     if (r.errs.length) problems.push(`${r.case.id}: page errors: ${r.errs.join(' | ')}`);
@@ -194,6 +209,6 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   await browser.close(); server.close();
   const size = fs.existsSync(FILE) ? fs.statSync(FILE).size : 0;
   console.log(problems.length ? `FAIL  ${problems.length} problems\n` + problems.map((p) => '      - ' + p).join('\n')
-    : `${check ? 'MATCH' : 'WROTE'}  ${results.length} cases  ${(size / 1024).toFixed(0)} KB  ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+    : `${check ? 'MATCH' : 'WROTE'}  ${which} page  ${results.length} cases  ${(size / 1024).toFixed(0)} KB  ${((Date.now() - t0) / 1000).toFixed(0)}s`);
   process.exit(problems.length ? 1 : 0);
 }
