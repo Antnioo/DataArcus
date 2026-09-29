@@ -461,6 +461,15 @@
     const styleByMeasure = {};
     const findings = [];
     const add = (id, items) => { if (items && items.length) findings.push({ id, items }); };
+    // A check that needs a column's type is skipped for a column whose type is unknown (dataType "unknown": a TMDL
+    // project gives no type for columns of DAX tables), and listed, so a missing type never becomes a wrong finding.
+    const skipped = [];
+    const skip = (id, obj) => {
+      let s = skipped.find((x) => x.id === id);
+      if (!s) skipped.push(s = { id, reason: 'unknownType', items: [] });
+      if (!s.items.some((x) => x.obj === obj)) s.items.push({ obj });
+    };
+    const untyped = (c) => c.dataType === 'unknown';
 
     const autoDateTables = M.tables.filter((t) => /^(LocalDateTable_|DateTableTemplate_)/.test(t.name));
     const autoSet = new Set(autoDateTables.map((t) => lc(t.name)));
@@ -619,6 +628,7 @@
     const strKeys = [];
     M.relationships.forEach((r) => {
       const c = IX.columns.get(lc(r.toTable) + '|' + lc(r.toColumn));
+      if (c && untyped(c.col)) skip('STRING_KEYS', `${r.toTable}[${r.toColumn}]`);
       if (c && c.col.dataType === 'string' && !strKeys.some((x) => x.obj === `${r.toTable}[${r.toColumn}]`)) strKeys.push({ obj: `${r.toTable}[${r.toColumn}]` });
     });
     add('STRING_KEYS', strKeys);
@@ -653,13 +663,17 @@
       t.columns.forEach((c) => {
         if (c.kind === 'rowNumber') return;
         if (c.dataType === 'double' && !c.hidden) doubles.push({ obj: `${t.name}[${c.name}]` });
+        if (untyped(c) && !c.hidden) skip('DOUBLE', `${t.name}[${c.name}]`);
         if (c.kind === 'calculated' && importFromSource) calcCols.push({ obj: `${t.name}[${c.name}]`, detail: /RELATED|LOOKUPVALUE|CALCULATE|SUMX|COUNTROWS|FILTER/i.test(c.expr) ? 'uses model data' : '' });
         if (isUnused(t, c)) return; // already reported as unused, do not count it twice
         if (!c.hidden && manySide.has(lc(t.name) + '|' + lc(c.name))) fkVisible.push({ obj: `${t.name}[${c.name}]` });
         const cn = c.name.trim();
-        if (!c.hidden && /^(int64|double|decimal)$/.test(c.dataType) && (c.summarizeBy === 'default' || c.summarizeBy === 'sum') && /((^|[\s_])(id|key|code|no|index)$|_id$|^(year|month|week|day|quarter)(\s*(no|num|number))?$|^(fiscal\s*)?year$|(month|week|day|quarter)\s*(no|num|number|of year)$|sort\s*(order|key)?$)/i.test(cn)) sumKeys.push({ obj: `${t.name}[${c.name}]` });
+        const keyLike = !c.hidden && (c.summarizeBy === 'default' || c.summarizeBy === 'sum') && /((^|[\s_])(id|key|code|no|index)$|_id$|^(year|month|week|day|quarter)(\s*(no|num|number))?$|^(fiscal\s*)?year$|(month|week|day|quarter)\s*(no|num|number|of year)$|sort\s*(order|key)?$)/i.test(cn);
+        if (keyLike && /^(int64|double|decimal)$/.test(c.dataType)) sumKeys.push({ obj: `${t.name}[${c.name}]` });
+        if (keyLike && untyped(c)) skip('SUMMARIZE_KEYS', `${t.name}[${c.name}]`);
         const monthLike = /(^|\s|_)(month|day|weekday)\s*_?(name|short)$|^(day of week|weekday|mmm|mmmm)$|short\s*month|month\s*-?\s*year|^month\s*year$/i.test(cn) || (c.kind === 'calculated' && /FORMAT\s*\([^)]*"\s*(mmm|mmmm|ddd|dddd)\s*"/i.test(c.expr));
         if (monthLike && c.dataType === 'string' && !c.sortBy) monthSort.push({ obj: `${t.name}[${c.name}]` });
+        if (monthLike && untyped(c) && !c.sortBy) skip('MONTH_SORT', `${t.name}[${c.name}]`);
       });
     });
     add('DOUBLE', doubles); add('CALC_COLS', calcCols); add('FK_VISIBLE', fkVisible); add('SUMMARIZE_KEYS', sumKeys); add('MONTH_SORT', monthSort);
@@ -667,11 +681,15 @@
     // ---- date table ----
     const dateParts = (t) => t.columns.filter((c) => /^(year|month|month name|month number|quarter|weekday|week|day|fiscal year)/i.test(c.name.trim())).length;
     const relDateTargets = new Set(M.relationships.map((r) => lc(r.toTable) + '|' + lc(r.toColumn)));
-    const calendars = userTables.filter((t) => t.columns.some((c) => c.dataType === 'dateTime') && (
+    // a calendar: a date column (isDate) and a calendar name, or date parts and a relationship to its date column
+    const calendarBy = (isDate) => (t) => t.columns.some(isDate) && (
       // not \b: in JavaScript it only knows ASCII letters, so it never matches after an Arabic word
       /^(dim[_ ]?)?(calendar|dates?|date\s*table|(ال)?تقويم)(?![\p{L}\p{N}_])/iu.test(t.name.trim()) ||
-      (dateParts(t) >= 2 && t.columns.some((c) => c.dataType === 'dateTime' && relDateTargets.has(lc(t.name) + '|' + lc(c.name))))));
+      (dateParts(t) >= 2 && t.columns.some((c) => isDate(c) && relDateTargets.has(lc(t.name) + '|' + lc(c.name)))));
+    const calendars = userTables.filter(calendarBy((c) => c.dataType === 'dateTime'));
     add('DATE_NOT_MARKED', calendars.filter((t) => lc(t.dataCategory) !== 'time').map((t) => ({ obj: t.name })));
+    // would be a calendar if a column of unknown type were a date
+    userTables.filter((t) => !calendars.includes(t) && lc(t.dataCategory) !== 'time' && calendarBy((c) => c.dataType === 'dateTime' || untyped(c))(t)).forEach((t) => skip('DATE_NOT_MARKED', t.name));
     add('CALENDARAUTO', userTables.filter((t) => t.isCalcTable && /CALENDARAUTO\s*\(/i.test(daxCode(t.calcExpr))).map((t) => ({ obj: t.name })));
 
     // ---- DAX patterns ----
@@ -859,6 +877,7 @@
       },
       score: { overall, perf: catScore.perf, maint: catScore.maint, bp: catScore.bp },
       findings,
+      skipped,
       tables,
       measures,
       relationships: M.relationships,
