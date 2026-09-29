@@ -9,6 +9,7 @@ const require = createRequire(import.meta.url);
 export const Bind = require('../../assets/js/pbip-bind.js');
 export const Health = require('../../assets/js/model-health-engine.js');
 export const Pbip = require('../../assets/js/pbip-export.js');
+const Tmdl = require('../../assets/js/tmdl-model.js');
 
 // Every path the tools read or write must sit inside this folder (DATAARCUS_ROOT, or where the server was started)
 export const ROOT = path.resolve(process.env.DATAARCUS_ROOT || process.cwd());
@@ -51,7 +52,7 @@ const walk = (dir, depth = 0) => (depth > 4 ? [] : fs.readdirSync(dir, { withFil
 }));
 
 // The model a path points at: a project folder (nearest .SemanticModel or older .Dataset), a model folder,
-// a model.bim or a .pbit. Returns { source, folder, tables (field-picker shape), tmsl (full JSON, when there is one),
+// a model.bim or a .pbit. Returns { source, folder, tables (field-picker shape), tmsl (full model JSON, built from the TMDL files when there is no model.bim),
 // report (for the health check, when the file has one) }.
 export function loadModel(p) {
   const full = inside(p), st = fs.statSync(full);
@@ -81,6 +82,9 @@ export function loadModel(p) {
     const tdir = path.join(folder, 'definition', 'tables');
     if (!fs.existsSync(tdir)) throw new Error(`No model.bim and no definition/tables in ${folder}`);
     tables = fs.readdirSync(tdir).filter((f) => /\.tmdl$/i.test(f)).flatMap((f) => Bind.parseTmdl(decode(fs.readFileSync(path.join(tdir, f)))));
+    // the whole model (expressions, relationships, roles...) in model.bim form, for the health check
+    const def = path.join(folder, 'definition');
+    tmsl = Tmdl.fromFiles(walk(def).filter((f) => /\.tmdl$/i.test(f)).map((f) => ({ path: path.relative(folder, f).replace(/\\/g, '/'), text: decode(fs.readFileSync(f)) })));
   }
   tables = tables.filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name));
   // the project's own reports (PBIR), for the health check and for choosing a report name that is free
