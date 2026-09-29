@@ -26,11 +26,19 @@ export default async function ({ browser, url }) {
         offset: parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop),
         expected: nav ? nav.offsetHeight + pins + 12 : null,
         // an element marked hidden must not show, whatever display class it has (Bootstrap's d-flex beats its own [hidden])
-        shownHidden: [...document.querySelectorAll('[hidden]')].filter((e) => getComputedStyle(e).display !== 'none').map((e) => e.id || e.className || e.tagName)
+        shownHidden: [...document.querySelectorAll('[hidden]')].filter((e) => getComputedStyle(e).display !== 'none').map((e) => e.id || e.className || e.tagName),
+        // forward and back arrows point the reading direction: mirrored exactly once on Arabic pages
+        arrows: [...document.querySelectorAll('.bi-arrow-right, .bi-arrow-left, .bi-arrow-right-circle, .bi-arrow-left-circle')].filter((e) => e.getClientRects().length).map((e) => {
+          let flips = 0; for (let n = e; n && n.nodeType === 1; n = n.parentElement) if (/^matrix\(-1/.test(getComputedStyle(n).transform)) flips++;
+          if (/^matrix\(-1/.test(getComputedStyle(e, '::before').transform)) flips++;
+          return flips % 2;
+        })
       };
     });
     if (r.missing) problems.push(`${tag}: missing translation`);
     if (r.sideways) problems.push(`${tag}: page scrolls sideways`);
+    const wrongWay = r.arrows.filter((f) => f !== (lang === 'ar' ? 1 : 0)).length;
+    if (wrongWay) problems.push(`${tag}: ${wrongWay} of ${r.arrows.length} arrows point against the reading direction`);
     if (r.shownHidden.length) problems.push(`${tag}: hidden but shown: ${r.shownHidden.join(', ')}`);
     if (r.expected !== null && Math.abs(r.offset - r.expected) > 1) problems.push(`${tag}: top offset ${r.offset}, navbar needs ${r.expected}`);
     if (vp[0] < 992 && await v.pg.locator('.navbar-toggler').count()) {

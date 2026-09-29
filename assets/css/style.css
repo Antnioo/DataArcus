@@ -1095,6 +1095,13 @@ html[dir="rtl"] .navbar-nav {
   margin-left: 10px !important;
 }
 
+/* Forward and back arrows point the way Arabic reads. The glyph (::before) is mirrored, not the <i>,
+   so transforms on the icon itself (hover nudges) keep working. */
+html[dir="rtl"] :is(.bi-arrow-right, .bi-arrow-left, .bi-arrow-right-circle, .bi-arrow-left-circle)::before {
+  display: inline-block;
+  transform: scaleX(-1);
+}
+
 /* Hide mobile switcher on desktop */
 @media (min-width: 992px) {
   .language-switcher-container {
