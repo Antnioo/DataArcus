@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     running: 'الإجمالي التراكمي من أول تاريخ حتى التاريخ المحدد.',
     share: 'النسبة من الإجمالي للفترة المعروضة، مثل حصة كل علامة تجارية من المبيعات.',
     ramLY: 'نفس أيام رمضان من السنة الهجرية الماضية. ضع Ramadan Day على المحور للمقارنة يومًا بيوم. يحتاج جدول تقويم داتا أركوس.',
-    ramPct: 'نسبة النمو مقارنة بنفس أيام رمضان الماضي.'
+    ramPct: 'نسبة نمو أيام رمضان المعروضة مقارنة بنفس الأيام من رمضان الماضي. الأيام خارج رمضان لا تُحسب، لذلك تقارن البطاقة المفلترة على سنة بين رمضانين.'
   };
   const GROUP_AR = { 'To date': 'حتى تاريخه', 'Compare': 'مقارنة', 'Rolling': 'متحرك وتراكمي', 'Ramadan': 'رمضان (يحتاج تقويم داتا أركوس)' };
 
@@ -89,10 +89,13 @@ document.addEventListener('DOMContentLoaded', () => {
       dax: (b) => `DIVIDE ( ${b}, CALCULATE ( ${b}, ALLSELECTED () ) )` },
     { id: 'ramLY', g: 'Ramadan', suffix: 'Last Ramadan', ramadan: true,
       what: 'Same Ramadan days last Hijri year. Put Ramadan Day on the axis to compare day by day. Needs the DataArcus calendar table.',
-      dax: (b) => `VAR _HijriYear = MAX ( ${tbl(name('cal'))}[Hijri Year] )\nVAR _Days = VALUES ( ${tbl(name('cal'))}[Ramadan Day] )\nRETURN\n    CALCULATE (\n        ${b},\n        REMOVEFILTERS ( ${tbl(name('cal'))} ),\n        ${tbl(name('cal'))}[Is Ramadan] = TRUE (),\n        ${tbl(name('cal'))}[Hijri Year] = _HijriYear - 1,\n        TREATAS ( _Days, ${tbl(name('cal'))}[Ramadan Day] )\n    )` },
+      // The Ramadan days in view (Hijri year + day, so a year with two Ramadans keeps both), moved back one Hijri year.
+      // Not MAX ( Hijri Year ): on a card or total row that is the latest year in view, often the Ramadan in view itself.
+      dax: (b) => { const c = tbl(name('cal')); return `VAR _RamadanDays =\n    FILTER (\n        SUMMARIZE ( ${c}, ${c}[Hijri Year], ${c}[Ramadan Day] ),\n        NOT ISBLANK ( ${c}[Ramadan Day] )\n    )\nVAR _SameDaysLastYear =\n    SELECTCOLUMNS (\n        _RamadanDays,\n        "Hijri Year", ${c}[Hijri Year] - 1,\n        "Ramadan Day", ${c}[Ramadan Day]\n    )\nRETURN\n    CALCULATE (\n        ${b},\n        REMOVEFILTERS ( ${c} ),\n        TREATAS ( _SameDaysLastYear, ${c}[Hijri Year], ${c}[Ramadan Day] )\n    )`; } },
     { id: 'ramPct', g: 'Ramadan', suffix: 'vs Last Ramadan %', pct: true, ramadan: true, needs: ['ramLY'],
-      what: 'Growth vs the same days of last Ramadan.',
-      dax: (b) => `DIVIDE ( ${b} - ${mRef(baseName() + ' Last Ramadan')}, ${mRef(baseName() + ' Last Ramadan')} )` }
+      what: 'Growth of the Ramadan days in view vs the same days of last Ramadan. Days outside Ramadan are left out, so a card filtered to a year compares the two Ramadans.',
+      // only the Ramadan days count on this side too, or a year card divides the whole year by one Ramadan
+      dax: (b) => `VAR _ThisRamadan = CALCULATE ( ${b}, KEEPFILTERS ( ${tbl(name('cal'))}[Is Ramadan] = TRUE () ) )\nVAR _LastRamadan = ${mRef(baseName() + ' Last Ramadan')}\nRETURN\n    DIVIDE ( _ThisRamadan - _LastRamadan, _LastRamadan )` }
   ];
   const val = (x) => (typeof x === 'function' ? x() : x);
   // rolling months and average days: whole numbers within the same limits as the number boxes (max="36", max="365")
