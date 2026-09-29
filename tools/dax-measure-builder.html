@@ -156,9 +156,9 @@
   <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
     <div class="container">
       <a class="navbar-brand" href="../index.html#hero">
-        <img src="../assets/img/logo.svg" alt="DataArcus logo" width="173" height="40">
+        <img src="../assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
       </a>
-      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation">
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation" data-i18n-aria-label="nav.toggle">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse" id="navmenu">
@@ -187,31 +187,31 @@
           <div class="tg-panel d-flex flex-column gap-4">
             <div>
               <span class="tg-label" data-i18n="mb.step1">1. Your base measure</span>
-              <div class="mb-seg mb-3" role="group" aria-label="Base measure source">
+              <div class="mb-seg mb-3" role="group" aria-label="Base measure source" data-i18n-aria-label="mb.attrs.source">
                 <button type="button" data-mode="column" data-i18n="mb.fromColumn">Build from a column</button>
                 <button type="button" data-mode="existing" data-i18n="mb.haveOne">I already have one</button>
               </div>
               <div id="modeColumn" class="cg-form">
                 <div><label class="tg-label" for="agg" data-i18n="mb.calc">Calculation</label>
                   <select id="agg" class="form-select"><option>SUM</option><option>AVERAGE</option><option>DISTINCTCOUNT</option><option>COUNT</option><option>MIN</option><option>MAX</option><option value="COUNTROWS" data-i18n="mb.countrows">COUNTROWS (count rows)</option></select></div>
-                <div><label class="tg-label" for="base" data-i18n="mb.measureName">Measure name</label><input id="base" class="form-control" maxlength="60"></div>
-                <div><label class="tg-label" for="fact" data-i18n="mb.fact">Fact table</label><input id="fact" class="form-control" maxlength="60"></div>
-                <div><label class="tg-label" for="column" data-i18n="mb.column">Column</label><input id="column" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="base" data-i18n="mb.measureName">Measure name</label><input id="base" translate="no" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="fact" data-i18n="mb.fact">Fact table</label><input id="fact" translate="no" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="column" data-i18n="mb.column">Column</label><input id="column" translate="no" class="form-control" maxlength="60"></div>
               </div>
               <div id="modeExisting" class="cg-form">
-                <div><label class="tg-label" for="existing" data-i18n="mb.existing">Existing measure name</label><input id="existing" class="form-control" maxlength="60"></div>
-                <div><label class="tg-label" for="home" data-i18n="mb.home">Put new measures in table</label><input id="home" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="existing" data-i18n="mb.existing">Existing measure name</label><input id="existing" translate="no" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="home" data-i18n="mb.home">Put new measures in table</label><input id="home" translate="no" class="form-control" maxlength="60"></div>
               </div>
             </div>
             <div>
               <span class="tg-label" data-i18n="mb.step2">2. Your date table</span>
               <div class="cg-form">
-                <div><label class="tg-label" for="cal" data-i18n="mb.cal">Date table</label><input id="cal" class="form-control" maxlength="60"></div>
-                <div><label class="tg-label" for="dateCol" data-i18n="mb.dateCol">Date column</label><input id="dateCol" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="cal" data-i18n="mb.cal">Date table</label><input id="cal" translate="no" class="form-control" maxlength="60"></div>
+                <div><label class="tg-label" for="dateCol" data-i18n="mb.dateCol">Date column</label><input id="dateCol" translate="no" class="form-control" maxlength="60"></div>
                 <div><label class="tg-label" for="fyEnd" data-i18n="mb.fyEnd">Fiscal year ends</label>
                   <select id="fyEnd" class="form-select"><option value="12-31" data-i18n="mb.fy.dec">31 December</option><option value="3-31" data-i18n="mb.fy.mar">31 March</option><option value="6-30" data-i18n="mb.fy.jun">30 June</option><option value="9-30" data-i18n="mb.fy.sep">30 September</option></select></div>
                 <div><label class="tg-label" for="n" data-i18n="mb.rolling">Rolling months / avg days</label>
-                  <div class="d-flex gap-2"><input id="n" type="number" min="1" max="36" class="form-control" aria-label="Rolling months"><input id="days" type="number" min="1" max="365" class="form-control" aria-label="Average days"></div></div>
+                  <div class="d-flex gap-2"><input id="n" type="number" min="1" max="36" class="form-control" aria-label="Rolling months" data-i18n-aria-label="mb.attrs.months"><input id="days" type="number" min="1" max="365" class="form-control" aria-label="Average days" data-i18n-aria-label="mb.attrs.days"></div></div>
               </div>
               <p class="small text-white-50 mt-2 mb-0" data-i18n-html="mb.noDate">No date table yet? <a href="dax-calendar-table-generator.html" class="hover-accent">Generate one here</a> first.</p>
             </div>
@@ -225,7 +225,7 @@
         <div class="col-lg-7">
           <div class="tg-panel d-flex flex-column gap-3">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-              <div class="mb-seg" role="tablist" aria-label="Output format">
+              <div class="mb-seg" role="tablist" aria-label="Output format" data-i18n-aria-label="mb.attrs.output">
                 <button type="button" class="active" data-tab-out="all" data-i18n="mb.allAtOnce">All at once</button>
                 <button type="button" data-tab-out="tmdl" data-i18n="mb.tmdlTab">With formats (TMDL)</button>
                 <button type="button" data-tab-out="one" data-i18n="mb.oneByOne">One by one</button>
@@ -292,7 +292,7 @@
         <div class="row g-4">
           <div class="col-lg-4">
             <a href="../index.html#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
-              <img src="../assets/img/logo.svg" alt="DataArcus logo" width="173" height="40">
+              <img src="../assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
             </a>
             <p class="text-white-50 mb-3" data-i18n="footer.tagline">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
             <div class="d-flex gap-2 mt-1">

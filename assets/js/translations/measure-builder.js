@@ -2,6 +2,7 @@
 window.measureBuilderTranslations = {
   "en": {
     "mb": {
+      "attrs": { "source": "Base measure source", "months": "Rolling months", "days": "Average days", "output": "Output format" },
       "badge": "Free tool · No sign-up",
       "title": "DAX Measure Builder",
       "subtitle": "One base measure in, a full set of time intelligence out: YTD, prior year, YoY %, rolling months, running totals, even Ramadan vs last Ramadan. Add them all to Power BI in one click.",
@@ -63,6 +64,7 @@ window.measureBuilderTranslations = {
   },
   "ar": {
     "mb": {
+      "attrs": { "source": "مصدر المقياس الأساسي", "months": "عدد الأشهر المتحركة", "days": "عدد أيام المتوسط", "output": "صيغة المخرجات" },
       "badge": "أداة مجانية · بدون تسجيل",
       "title": "منشئ مقاييس DAX",
       "subtitle": "مقياس أساسي واحد يتحول إلى مجموعة كاملة من مقاييس ذكاء الوقت: YTD والسنة السابقة ونسبة النمو السنوي والأشهر المتحركة والإجماليات التراكمية، وحتى رمضان مقابل رمضان الماضي. أضفها كلها إلى Power BI بنقرة واحدة.",
