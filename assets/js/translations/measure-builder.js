@@ -58,7 +58,7 @@ window.measureBuilderTranslations = {
       }
     },
     "meta": {
-      "title": "DAX Measure Builder: YoY, YTD, MTD and Rolling - DataArcus"
+      "title": "DAX Measure Builder: YoY, YTD, MTD and Rolling - DataArcus", "description": "Generate Power BI time intelligence measures from one base measure: YTD, MTD, YoY %, MoM %, rolling months, running totals and Ramadan vs last Ramadan."
     }
   },
   "ar": {
@@ -119,7 +119,7 @@ window.measureBuilderTranslations = {
       }
     },
     "meta": {
-      "title": "منشئ مقاييس DAX: النمو السنوي وYTD وMTD والمتحرك"
+      "title": "منشئ مقاييس DAX: النمو السنوي وYTD وMTD والمتحرك", "description": "أنشئ مقاييس ذكاء الوقت في Power BI من مقياس أساسي واحد: YTD وMTD ونسبة النمو السنوي والشهري والأشهر المتحركة والإجماليات التراكمية ورمضان مقارنة برمضان الماضي."
     }
   }
 };

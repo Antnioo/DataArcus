@@ -262,8 +262,19 @@ class LanguageManager {
   
   // Update meta tags for SEO
   updateMetaTags() {
-    const metaData = this.getText('meta');
-    if (typeof metaData === 'object') {
+    // pages without their own translation file (404) name their meta key on <html data-i18n-meta="...">
+    const found = this.getText(document.documentElement.getAttribute('data-i18n-meta') || 'meta');
+    if (typeof found === 'object') {
+      // Share previews follow the page: og:/twitter: title and description default to the page's own, and
+      // og:locale to its language, so a page only needs a title and a description in each language
+      const metaData = Object.assign({}, found);
+      const has = (sel) => !!document.querySelector(sel);
+      [['title', 'og:title', 'twitter:title'], ['description', 'og:description', 'twitter:description']].forEach(([base, og, tw]) => {
+        if (!metaData[base]) return;
+        if (!metaData[og] && has(`meta[property="${og}"]`)) metaData[og] = metaData[base];
+        if (!metaData[tw] && has(`meta[name="${tw}"]`)) metaData[tw] = metaData[og] || metaData[base];
+      });
+      if (has('meta[property="og:locale"]')) metaData['og:locale'] = this.currentLang === 'ar' ? 'ar_EG' : 'en_US';
       // Update <title>
       if (metaData.title) {
         document.title = metaData.title;

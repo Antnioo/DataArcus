@@ -106,7 +106,7 @@ window.themeGeneratorTranslations = {
       "codeNote": "Download the file in <a href=\"#download\">step 3</a>."
     },
     "meta": {
-      "title": "Free Power BI Theme & Layout Generator (JSON + Background) - DataArcus"
+      "title": "Free Power BI Theme & Layout Generator (JSON + Background) - DataArcus", "description": "Create a Power BI theme JSON and a matching page layout: pick brand colors, preview charts live, check contrast, and download a background with the exact position of every visual. Free, no sign-up."
     }
   },
   "ar": {
@@ -215,7 +215,7 @@ window.themeGeneratorTranslations = {
       "codeNote": "نزّل الملف في <a href=\"#download\">الخطوة 3</a>."
     },
     "meta": {
-      "title": "مولّد السمات والتخطيطات لـ Power BI مجانًا (JSON وخلفية) - داتا أركوس"
+      "title": "مولّد السمات والتخطيطات لـ Power BI مجانًا (JSON وخلفية) - داتا أركوس", "description": "أنشئ ملف سمة JSON لـ Power BI وتخطيط صفحة مطابقًا: اختر ألوان علامتك، وعاين الرسوم مباشرة، وافحص التباين، ونزّل خلفية بموضع كل visual بدقة. مجانًا وبدون تسجيل."
     }
   }
 };

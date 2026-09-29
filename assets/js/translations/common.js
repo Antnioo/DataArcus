@@ -47,6 +47,7 @@ window.commonTranslations = {
     
     // 404 page
     notFound: {
+      meta: { title: "Page not found - DataArcus", description: "This page does not exist. Find DataArcus Power BI services, free tools, dashboards and articles from here." },
       kicker: "Error 404",
       title: "This page took a wrong turn",
       text: "The link may be old or mistyped. Everything else is still here.",
@@ -134,6 +135,7 @@ window.commonTranslations = {
     // Common Meta
     // صفحة 404
     notFound: {
+      meta: { title: "الصفحة غير موجودة - داتا أركوس", description: "هذه الصفحة غير موجودة. من هنا تجد خدمات Power BI من داتا أركوس والأدوات المجانية ولوحات التحكم والمقالات." },
       kicker: "خطأ 404",
       title: "هذه الصفحة غير موجودة",
       text: "ربما الرابط قديم أو فيه خطأ. كل شيء آخر ما زال هنا.",

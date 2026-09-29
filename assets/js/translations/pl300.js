@@ -2,7 +2,7 @@
 window.pl300Translations = {
   "en": {
     "meta": {
-      "title": "Free PL-300 Practice Exam: Power BI Data Analyst"
+      "title": "Free PL-300 Practice Exam: Power BI Data Analyst", "description": "Free PL-300 practice exam: 228 original questions with explanations, timed mocks scored out of 1000, case studies and a study plan for the Apr 2026 outline."
     },
     "dp": {
       "badge": "Free · No sign-up · 228 original questions",
@@ -34,7 +34,7 @@ window.pl300Translations = {
   },
   "ar": {
     "meta": {
-      "title": "اختبار PL-300 تجريبي مجاني: Power BI Data Analyst"
+      "title": "اختبار PL-300 تجريبي مجاني: Power BI Data Analyst", "description": "اختبار PL-300 تجريبي مجاني: 228 سؤالًا أصليًا مع الشرح، واختبارات بوقت محدد تُصحَّح من 1000، ودراسات حالة وخطة مذاكرة لمنهج أبريل 2026."
     },
     "dp": {
       "badge": "مجاني · بدون تسجيل · 228 سؤالًا أصليًا",

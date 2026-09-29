@@ -1,7 +1,7 @@
 // Translations for tools/power-bi-model-health-check.html
 window.modelHealthTranslations = {
   "en": {
-    "meta": { "title": "Free Power BI Model Health Check: Unused Columns & Slow DAX" },
+    "meta": { "title": "Free Power BI Model Health Check: Unused Columns & Slow DAX", "description": "Drop a .pbit and get a health score for your Power BI model: unused columns and measures, risky relationships, slow DAX and full documentation." },
     "mh": {
       "badge": "Free · Runs in your browser · Nothing is uploaded",
       "title": "Power BI Model Health Check",
@@ -22,7 +22,7 @@ window.modelHealthTranslations = {
     }
   },
   "ar": {
-    "meta": { "title": "فحص صحة نموذج Power BI مجانًا: أعمدة غير مستخدمة وDAX بطيء" },
+    "meta": { "title": "فحص صحة نموذج Power BI مجانًا: أعمدة غير مستخدمة وDAX بطيء", "description": "أسقط ملف ‎.pbit واحصل على تقييم لصحة نموذج Power BI: الأعمدة والمقاييس غير المستخدمة، والعلاقات الخطرة، وDAX البطيء، وتوثيق كامل." },
     "mh": {
       "badge": "مجاني · يعمل داخل متصفحك · لا يتم رفع أي ملف",
       "title": "فحص صحة نموذج Power BI",
