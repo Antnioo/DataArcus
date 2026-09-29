@@ -343,6 +343,8 @@ document.addEventListener('DOMContentLoaded', () => {
     return w === c.pageW && h === c.pageH ? '' : L(`This shape is outside 4:3 to 2.4:1, so the preview uses ${w} × ${h}.`, `هذا الشكل خارج النطاق من 4:3 إلى 2.4:1، لذلك تستخدم المعاينة <bdi dir="ltr">${w} × ${h}</bdi>.`); };
   const applyPage = (c) => { const p = page(c); PW = Math.round(p.w / p.s); PH = 720; return p; };
   const toPage = (v, c) => Math.round(v * page(c).s);
+  // a box in page units: its edges are rounded, not its size, so equal margins and gaps stay equal after rounding
+  const boxOf = (s, c) => { const x = toPage(s.x, c), y = toPage(s.y, c); return { x, y, w: toPage(s.x + s.w, c) - x, h: toPage(s.y + s.h, c) - y }; };
   const KINDS = { kpi: ['Card', 'بطاقة'], line: ['Line chart', 'مخطط خطي'], bar: ['Bar chart', 'مخطط شريطي'], column: ['Column chart', 'مخطط أعمدة'], donut: ['Donut chart', 'مخطط دائري'], table: ['Table or matrix', 'جدول أو مصفوفة'], text: ['Text box or narrative', 'مربع نص أو سرد'], slicer: ['Slicers', 'مقسمات (Slicers)'], title: ['Text box (page title)', 'مربع نص (عنوان الصفحة)'], logo: ['Image (logo)', 'صورة (الشعار)'] };
   const LAYOUTS = {
     exec: { name: ['Executive summary', 'ملخص تنفيذي'], kpis: 4, kpiH: 96, filters: false, flex: [1.3, 1],
@@ -578,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const c = lay(), slots = computeSlots(c), pg = page(c), T = (v) => toPage(v, c), [pw, ph] = pngSize(c);
     $('layCanvas').innerHTML = bgSvg(slots, { preview: true });
     const H = isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height'];
-    $('slotTable').innerHTML = `<table><thead><tr>${H.map((h, i) => `<th${i > 1 ? ' class="n"' : ''}>${h}</th>`).join('')}</tr></thead><tbody>${slots.map((s, i) => `<tr data-i="${i}"><td>${nm(s.role)}</td><td>${nm(KINDS[s.kind])}</td><td class="n">${T(s.x)}</td><td class="n">${T(s.y)}</td><td class="n">${T(s.w)}</td><td class="n">${T(s.h)}</td></tr>`).join('')}</tbody></table>`;
+    $('slotTable').innerHTML = `<table><thead><tr>${H.map((h, i) => `<th${i > 1 ? ' class="n"' : ''}>${h}</th>`).join('')}</tr></thead><tbody>${slots.map((s, i) => `<tr data-i="${i}"><td>${nm(s.role)}</td><td>${nm(KINDS[s.kind])}</td>${((b) => [b.x, b.y, b.w, b.h].map((n) => `<td class="n">${n}</td>`).join(''))(boxOf(s, c))}</tr>`).join('')}</tbody></table>`;
     updateStatus();
     const note = $('layUnits'); if (note) note.innerHTML = L(`Numbers are for a Power BI page of <b>${pg.w} × ${pg.h}</b> (Format page › Canvas settings). The PNG is ${pw} × ${ph} pixels for a sharp background; with Image fit <b>Stretch</b> it lines up exactly.`, `الأرقام لصفحة Power BI بمقاس <b><bdi dir="ltr">${pg.w} × ${pg.h}</bdi></b> (<bdi dir="ltr">Format page › Canvas settings</bdi>). الصورة PNG بمقاس <bdi dir="ltr">${pw} × ${ph}</bdi> بكسل لتكون حادة، ومع <bdi dir="ltr">Image fit: Stretch</bdi> تنطبق تمامًا.`);
   }
@@ -655,7 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // every download is named after the theme: letters of any script are kept (Arabic, café), other symbols dropped
   const fileBase = () => (state.name || 'power-bi-theme').replace(/[^\p{L}\p{M}\p{N}_\- ]+/gu, '').trim().replace(/\s+/g, '-').toLowerCase() || 'power-bi-theme';
   const saveBlob = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
-  const slotRows = () => computeSlots(lay()).map((s) => [nm(s.role), nm(KINDS[s.kind]), toPage(s.x), toPage(s.y), toPage(s.w), toPage(s.h)]);
+  const slotRows = () => computeSlots(lay()).map((s) => { const b = boxOf(s); return [nm(s.role), nm(KINDS[s.kind]), b.x, b.y, b.w, b.h]; });
   const slotHead = () => (isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height']);
   $('slotCopy').addEventListener('click', () => {
     const text = [slotHead()].concat(slotRows()).map((r) => r.join('\t')).join('\n');
@@ -820,7 +822,7 @@ document.addEventListener('DOMContentLoaded', () => {
       pbipBtn.disabled = true;
       // visuals sit on the panels of the background image, so the project's theme always has transparent visuals
       const was = c.transparent; c.transparent = true; const theme = buildTheme(); c.transparent = was;
-      const slotsOf = (cc) => { const was = state.layout; state.layout = cc; const r = computeSlots(cc).map((s) => ({ kind: s.kind, title: nm(s.role), rail: !!s.rail, x: toPage(s.x, cc), y: toPage(s.y, cc), w: toPage(s.w, cc), h: toPage(s.h, cc) })); state.layout = was; applyPage(was); return r; };
+      const slotsOf = (cc) => { const was = state.layout; state.layout = cc; const r = computeSlots(cc).map((s) => Object.assign({ kind: s.kind, title: nm(s.role), rail: !!s.rail }, boxOf(s, cc))); state.layout = was; applyPage(was); return r; };
       // a second page in a complementary layout: an analysis page (filters, a main chart, a wide table) after an
       // overview, or an executive overview after an analysis page
       const second = $('pbipPages') && $('pbipPages').checked;
@@ -833,7 +835,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const z = sizes(cc), w = Math.max(240, Math.min(320, z.fw + 40)), top = z.hh + 14;
         // the panel opens under the Filters button, at the end of the header (right in English, left in Arabic)
         const r = { x: rtl(cc) ? M : PW - M - w, y: top, w, h: PH - M - top };
-        const panel = { x: toPage(r.x, cc), y: toPage(r.y, cc), w: toPage(r.w, cc), h: toPage(r.h, cc) };
+        const panel = boxOf(r, cc);
         state.layout = was; applyPage(was);
         return { c: open, panel };
       };
@@ -873,7 +875,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // each file keeps a fingerprint of what was downloaded; a different fingerprint now means it is out of date
   let lastJson = null, lastPng = null, lastCsv = null;
   function pngKey() { return bgSvg(computeSlots(lay()), {}); }
-  function csvKey() { return JSON.stringify(computeSlots(lay()).map((s) => [s.kind, toPage(s.x), toPage(s.y), toPage(s.w), toPage(s.h)])); }
+  function csvKey() { return JSON.stringify(computeSlots(lay()).map((s) => [s.kind, boxOf(s)])); }
   function renderVis() {
     const t = !!lay().transparent;
     $('dlVis').innerHTML = `<span class="tg-label">${L('Visual backgrounds in the theme', 'خلفيات العناصر في السمة')}</span>${seg('transparent', [[1, L('Transparent (use with the background)', 'شفافة (مع الخلفية)')], [0, L('Solid (theme only)', 'مصمتة (السمة فقط)')]], t ? 1 : 0)}

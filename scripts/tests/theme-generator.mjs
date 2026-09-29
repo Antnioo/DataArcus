@@ -292,5 +292,24 @@ export default async function ({ browser, url }) {
     if (v.errs.length) problems.push(`example undo: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
+  // Slot table at 1920 x 1080, every layout: the page margin is the same on both sides and cards in a row are the same gap apart
+  {
+    const v = await open('en');
+    await v.pg.click('button[data-l="page"][data-v="1920x1080"]');
+    for (const preset of ['exec', 'analysis', 'ops', 'focus']) for (const k of [3, 4, 5, 6]) {
+    await v.pg.click(`button[data-l="preset"][data-v="${preset}"]`); await v.pg.click(`button[data-l="kpis"][data-v="${k}"]`);
+    // the KPI row and the bottom row of charts, each [x, w] sorted left to right
+    const S = await v.pg.evaluate(() => [...document.querySelectorAll('#slotTable tbody tr')].map((tr) => [...tr.children].map((td, i) => (i > 1 ? +td.textContent : td.textContent))));
+    const kpis = S.filter((r) => /^KPI/.test(r[0])), bottom = Math.max(...S.map((r) => r[3]));
+    const bad = [];
+    for (const row of [kpis, S.filter((r) => r[3] === bottom)]) {
+      const r = row.map((x) => [x[2], x[4]]).sort((a, b) => a[0] - b[0]);
+      const gaps = r.slice(1).map(([x], i) => x - r[i][0] - r[i][1]), left = r[0][0], right = 1920 - r.at(-1)[0] - r.at(-1)[1];
+      if (right !== 24 || (left < 100 && left !== 24) || new Set(gaps).size > 1) bad.push(`margins ${left}/${right}, gaps ${gaps}`);
+    }
+    check(kpis.length === k && !bad.length, `slot table ${preset} ${k} KPIs: ${bad.join('; ')}`);
+    }
+    await v.ctx.close();
+  }
   return { checks, problems };
 }
