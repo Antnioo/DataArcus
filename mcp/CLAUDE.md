@@ -21,7 +21,8 @@ and never damages the user's files.
 - `mcp/lib/model.mjs`: reads models from disk (project folders with TMDL or model.bim, model.bim files, .pbit zips), keeps every path inside `DATAARCUS_ROOT`.
 - **The engines are shared with the website, on purpose.** They live in `assets/js/` and run in the browser and in Node:
   `pbip-export.js` (writes PBIR projects), `pbip-bind.js` (reads models, suggests fields), `model-health-engine.js`
-  (the health check), `model-health-tmdl.js` (TMDL fix scripts), `svg-kpi-compiler.js`. Extend these rather than
+  (the health check), `model-health-tmdl.js` (TMDL fix scripts), `tmdl-model.js` (reads a project's `definition/*.tmdl`
+  into model.bim JSON, for the health check), `svg-kpi-compiler.js`. Extend these rather than
   copying them into `mcp/`, so the website and the MCP always give the same answers. A change to a shared engine must
   pass the website's test suites too.
 - Still browser-only (next to move into shared modules): the theme and layout engine (`theme-generator.js`), the
@@ -29,7 +30,7 @@ and never damages the user's files.
 
 ## Tests
 - MCP: `cd mcp && npm install && npm test` (starts the server over stdio and calls every tool on copies of the fixtures). The MCP must stay self-contained: its code and tests use only its own `mcp/package.json` packages, never the website's `node_modules`, so it can be packaged on its own.
-- Website: `node scripts/tests/run-all.mjs` from the repo root (12 suites, about 4,700 checks, 3 at a time). Needs `npm install` in the repo root and Chromium (`npx playwright-core install chromium` if Chrome isn't found).
+- Website: `node scripts/tests/run-all.mjs` from the repo root (13 suites, 3 at a time; `tmdl-model` runs in Node alone too: `node scripts/tests/tmdl-model.mjs`). Needs `npm install` in the repo root and Chromium (`npx playwright-core install chromium` if Chrome isn't found).
 - After editing a file in `assets/js/`, rebuild its `.min.js` (`npx terser file.js -c -m -o file.min.js`); for `assets/css/style.css` use `npx lightningcss-cli --minify style.css -o style.min.css`. Where a page loads a file with `?v=...`, bump that version.
 - Power BI Desktop checks: `scripts/tests/DESKTOP-TESTS.md` has what was proven in Desktop, how, and the quirks. Add every new Desktop result there.
 
@@ -43,7 +44,10 @@ and never damages the user's files.
 ## Power BI facts learned the hard way
 - PBIR: positions of visuals inside a group are relative to the group. Schemas used: report 2.1.0, page 2.0.0, visualContainer 2.1.0, definitionProperties 2.0.0 (version "4.0").
 - Theme font sizes must stay within 8-60. The menu import refuses the whole theme otherwise; a theme inside a project loads silently with broken text.
-- Power BI Desktop saves projects as TMDL by default (no model.bim). The health check reads model.bim or .pbit today; TMDL is on the roadmap.
+- Power BI Desktop saves projects as TMDL by default (no model.bim). `tmdl-model.js` reads them for the health check.
+- TMDL has no `dataType` for columns whose type Power BI infers from DAX (columns of DAX tables, like the calendar
+  generator's). A .pbit has it. The reader marks them `unknown`, and the engine skips (and lists) the checks that need
+  a type for them: never default a missing type to text, it gives wrong findings.
 - A relationship created through the API needs a Calculate refresh before queries work.
 - TMDL `createOrReplace` gives objects new lineage tags when the script has none (hand-written test models have none; Desktop exports do).
 - Aggregations need a DirectQuery detail table; Import-only test models can't have them.

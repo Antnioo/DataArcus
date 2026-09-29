@@ -7,7 +7,7 @@ It works next to Microsoft's Power BI Authoring MCP server (model edits, DAX que
 |---|---|
 | `read_model` | Tables, visible columns with types, measures with formats, date tables. Reads a project folder (TMDL or model.bim), a model.bim or a .pbit. Changes nothing. |
 | `suggest_fields` | Which measures and columns go in each KPI card, chart, table and slicer (same rules as the theme generator). |
-| `check_model_health` | The Model Health Check: score and every finding with its objects. Needs model.bim or .pbit. |
+| `check_model_health` | The Model Health Check: score and every finding with its objects. Reads a project folder (TMDL or model.bim), a model.bim or a .pbit. On a TMDL project, checks that need the type of a DAX table's column are listed as skipped (the files don't have it), with how to get them. |
 | `create_report` | A new report (PBIR) next to the user's model, every visual placed and bound to their fields. Never touches the model or an existing report; picks a free name. |
 
 ## Safety
