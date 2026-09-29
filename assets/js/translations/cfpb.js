@@ -1,6 +1,9 @@
 // translations/cfpb-complaints.js - Consumer Financial Complaints Dashboard
 window.cfpbComplaintsTranslations = {
   en: {
+    attrs: {
+      embed: "Consumer Financial Complaints Dashboard"
+    },
     // Page Meta
     meta: {
       title: "Consumer Financial Complaints Power BI Dashboard - DataArcus",
@@ -103,6 +106,9 @@ window.cfpbComplaintsTranslations = {
   },
 
   ar: {
+    attrs: {
+      embed: "لوحة Power BI التفاعلية: Consumer Financial Complaints Dashboard"
+    },
     // Page Meta
     meta: {
       title: "لوحة شكاوى الخدمات المالية في Power BI - داتا أركوس",

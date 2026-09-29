@@ -1,6 +1,9 @@
 // translations/mavenmarket.js - Maven Market Dashboard Specific
 window.mavenmarketTranslations = {
   en: {
+    attrs: {
+      embed: "Maven-Market Retail Analysis Dashboard"
+    },
     // Page Meta
     meta: {
       title: "Maven Market Power BI Dashboard Example - DataArcus",
@@ -85,6 +88,9 @@ window.mavenmarketTranslations = {
   },
 
   ar: {
+    attrs: {
+      embed: "لوحة Power BI التفاعلية: Maven-Market Retail Analysis Dashboard"
+    },
     meta: {
       title: "مثال لوحة تحكم Maven Market في Power BI - داتا أركوس",
       description: "استكشف لوحة تحكم Maven Market في Power BI: تحليلات تفاعلية للمبيعات والمخزون والأرباح لقطاع التجزئة والتجارة الإلكترونية.",

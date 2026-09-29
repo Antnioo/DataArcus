@@ -1,6 +1,9 @@
 // assets/js/translations/blog.js
 window.blogTranslations = {
   en: {
+    attrs: {
+      search: "Search posts"
+    },
     // Meta (for inclusion in blog.html if needed)
     meta: {
       title: "Power BI and E-commerce Analytics Blog - DataArcus",
@@ -136,6 +139,9 @@ window.blogTranslations = {
   },
 
   ar: {
+    attrs: {
+      search: "ابحث في المقالات"
+    },
     // Meta (AR)
     meta: {
       title: "مدونة Power BI وتحليلات التجارة الإلكترونية - داتا أركوس",

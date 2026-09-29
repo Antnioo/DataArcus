@@ -1,6 +1,9 @@
 // translations/callcenter.js - Call Center Dashboard Specific
 window.callcenterTranslations = {
   en: {
+    attrs: {
+      embed: "Call Center Performance Dashboard"
+    },
     // Page Meta
     meta: {
       title: "Call Center Power BI Dashboard Example - DataArcus",
@@ -83,6 +86,9 @@ window.callcenterTranslations = {
   },
 
   ar: {
+    attrs: {
+      embed: "لوحة Power BI التفاعلية: Call Center Performance Dashboard"
+    },
     // Page Meta
     meta: {
       title: "مثال لوحة تحكم مركز الاتصال في Power BI - داتا أركوس",

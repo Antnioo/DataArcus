@@ -1,6 +1,9 @@
 // translations/adventureworks.js - AdventureWorks Dashboard Specific
 window.adventureworksTranslations = {
   en: {
+    attrs: {
+      embed: "AdventureWorks Sales Dashboard"
+    },
     // Page Meta
     meta: {
       title: "AdventureWorks Power BI Dashboard Example - DataArcus",
@@ -84,6 +87,9 @@ window.adventureworksTranslations = {
   },
 
   ar: {
+    attrs: {
+      embed: "لوحة Power BI التفاعلية: AdventureWorks Sales Dashboard"
+    },
     // Page Meta
     meta: {
       title: "مثال لوحة تحكم AdventureWorks في Power BI - داتا أركوس",

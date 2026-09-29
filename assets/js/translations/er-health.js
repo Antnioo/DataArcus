@@ -1,6 +1,9 @@
 // translations/er-health.js - ER Health Dashboard Specific
 window.erHealthTranslations = {
   en: {
+    attrs: {
+      embed: "Emergency Room Visits"
+    },
     // Page Meta
     meta: {
       title: "ER Health Power BI Dashboard Example - DataArcus",
@@ -82,6 +85,9 @@ window.erHealthTranslations = {
   },
 
   ar: {
+    attrs: {
+      embed: "لوحة Power BI التفاعلية: Emergency Room Visits"
+    },
     // Page Meta
     meta: {
       title: "مثال لوحة تحكم الطوارئ الصحية في Power BI - داتا أركوس",
