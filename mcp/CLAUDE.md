@@ -28,12 +28,13 @@ and never damages the user's files.
   Measure Builder, the calendar generator.
 
 ## Tests
-- MCP: `cd mcp && npm test` (starts the server over stdio and calls every tool on copies of the fixtures).
+- MCP: `cd mcp && npm install && npm test` (starts the server over stdio and calls every tool on copies of the fixtures). The MCP must stay self-contained: its code and tests use only its own `mcp/package.json` packages, never the website's `node_modules`, so it can be packaged on its own.
 - Website: `node scripts/tests/run-all.mjs` from the repo root (12 suites, about 4,700 checks, 3 at a time). Needs `npm install` in the repo root and Chromium (`npx playwright-core install chromium` if Chrome isn't found).
 - After editing a file in `assets/js/`, rebuild its `.min.js` (`npx terser file.js -c -m -o file.min.js`); for `assets/css/style.css` use `npx lightningcss-cli --minify style.css -o style.min.css`. Where a page loads a file with `?v=...`, bump that version.
 - Power BI Desktop checks: `scripts/tests/DESKTOP-TESTS.md` has what was proven in Desktop, how, and the quirks. Add every new Desktop result there.
 
 ## The live loop on this laptop
+- **Use only Microsoft's Power BI Authoring MCP for DataArcus work.** The "MCP Engine for Power BI" connector is the owner's tool for his job's dashboards: never use it here, so employer models stay out of DataArcus.
 - **Microsoft's Power BI Authoring MCP** (from the `powerbi-authoring` plugin): connect to the model open in Desktop, create tables, measures, relationships, run DAX, refresh. EULA accepted by the owner.
 - **Desktop bridge CLI** (`powerbi-desktop`): `status`, `open`, `reload`, `screenshot <page-id>`. Power BI is the Microsoft Store version: set `PBI_DESKTOP_PATH` for `open`. `screenshot-all` fails on generated projects (REPORT_DIR_REQUIRED); take pages one at a time and close any capture window left behind.
 - **DataArcus MCP**: this folder.

@@ -69,7 +69,7 @@ if (!r.err) {
   walk(dir);
   check(refs.length >= 4, `create_report bound only ${refs.length} fields`);
   // with no background given, the page background is fully transparent (the theme's page colour shows)
-  const { PNG } = (await import('node:module')).createRequire(import.meta.url)(path.join(REPO, 'node_modules/pngjs'));
+  const { PNG } = (await import('node:module')).createRequire(import.meta.url)('pngjs');   // the MCP's own dev dependency
   const bg = fs.readdirSync(path.join(dir, 'StaticResources/RegisteredResources')).filter((f) => f.endsWith('.png'));
   check(bg.length && bg.every((f) => PNG.sync.read(fs.readFileSync(path.join(dir, 'StaticResources/RegisteredResources', f))).data.every((v, i) => i % 4 !== 3 || v === 0)), `background not transparent: ${bg}`);
   const bad = refs.filter(([k, t, n]) => !has(k, t, n));
