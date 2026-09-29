@@ -932,9 +932,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // "See an example": a complete executive sales design; the visitor's own design can be restored
+  // the visitor's design is kept next to the saved one, so Undo still works after a reload
+  const UNDO = STORE + '-before';
   let beforeExample = null;
+  try { beforeExample = localStorage.getItem(UNDO); } catch (e) { /* private mode */ }
+  if (beforeExample) $('exampleUndo').hidden = false;
   $('exampleBtn').addEventListener('click', () => {
-    if (!beforeExample) beforeExample = JSON.stringify(state);
+    if (!beforeExample) { beforeExample = JSON.stringify(state); try { localStorage.setItem(UNDO, beforeExample); } catch (e) { /* private mode */ } }
     const p = PRESETS['Desert Gulf'];
     state = { preset: 'Desert Gulf', name: 'Executive Sales', font: 'Segoe UI', data: p.data.slice(), ui: { ...p.ui },
       layout: { preset: 'exec', kpis: 4, filters: true, fpos: 'top', dir: isAr() ? 'rtl' : 'ltr', v: 3, radius: 8, shadow: true, header: true, kpiBar: 'top', kpiBarC: 'data', headLine: 'full', samples: true, transparent: true, page: '1920x1080', hh: 64, logoW: 200 } };
@@ -951,6 +955,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('exampleUndo').addEventListener('click', () => {
     if (!beforeExample) return;
     state = JSON.parse(beforeExample); beforeExample = null; pageMsg = '';
+    try { localStorage.removeItem(UNDO); } catch (e) { /* private mode */ }
     renderPresets(); renderInputs(); renderAll();
     $('exampleUndo').hidden = true;
     toast(L('Your design is back', 'عاد تصميمك'));
