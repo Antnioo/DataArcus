@@ -88,7 +88,8 @@ export function loadModel(p) {
   const reports = fs.readdirSync(projectDir).filter((n) => /\.Report$/i.test(n));
   const pbir = reports.flatMap((r) => { const d = path.join(projectDir, r, 'definition'); return fs.existsSync(d) ? walk(d).filter((f) => f.endsWith('.json')) : []; });
   const report = pbir.length ? { format: 'pbir', files: pbir.map((f) => { try { return { path: f.replace(/\\/g, '/'), json: json(fs.readFileSync(f)) }; } catch (e) { return null; } }).filter(Boolean) } : null;
-  const taken = fs.readdirSync(projectDir).filter((n) => /\.(Report|pbip)$/i.test(n)).map((n) => n.replace(/\.(Report|pbip)$/i, ''));
+  // report names in use: an X.Report folder and its X.pbip count once
+  const taken = [...new Set(fs.readdirSync(projectDir).filter((n) => /\.(Report|pbip)$/i.test(n)).map((n) => n.replace(/\.(Report|pbip)$/i, '')))];
   return { source: path.relative(ROOT, folder) || folder, folder, projectDir, taken, tmsl, tables, report };
 }
 

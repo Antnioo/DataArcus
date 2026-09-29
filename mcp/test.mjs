@@ -29,6 +29,9 @@ let r = await call('read_model', { path: 'tmdl-project' });
 check(!r.err && r.j.tables.map((t) => t.table).join() === 'Calendar,Customer,Sales', `read_model tables: ${r.err ? r.t : r.j.tables.map((t) => t.table)}`);
 check(!r.err && r.j.tables.find((t) => t.table === 'Calendar').dateTable, 'read_model: Calendar not marked as the date table');
 
+r = await call('read_model', { path: 'bim-project' });
+check(!r.err && r.j.existingReports.join() === 'Health Test Report', `existing reports: ${r.err ? r.t : r.j.existingReports}`);
+
 // suggest_fields: base measures first, three different slicers
 r = await call('suggest_fields', { path: 'tmdl-project', kpis: 3 });
 check(!r.err && r.j.kpis[0].m === 'Total Sales' && r.j.date.c === 'Month Name', `suggest_fields: ${r.t.slice(0, 200)}`);
