@@ -163,6 +163,17 @@
     .tg-custom input:focus { border-color: var(--accent); outline: none; }
     .tg-custom span { padding-bottom: 7px; }
     .tg-warn { color: #fdcb6e; }
+    .tg-panel { position: relative; }
+    .tg-panel > h2 { cursor: pointer; padding-inline-end: 44px; }
+    .tg-fold { position: absolute; top: 16px; inset-inline-end: 16px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; border: 1px solid var(--glass-border); background: var(--dk-3); color: var(--lt); }
+    .tg-fold:hover, .tg-fold:focus-visible { border-color: var(--accent); color: var(--accent); }
+    .tg-fold i { transition: transform .2s; }
+    .tg-folded .tg-fold i { transform: rotate(180deg); }
+    .tg-fold-sum { display: none; margin: 0; color: #94a3b8; font-size: .9rem; }
+    .tg-folded > :not(h2):not(.tg-fold):not(.tg-fold-sum) { display: none !important; }
+    .tg-folded > .tg-fold-sum { display: block; }
+    .tg-folded > h2 { margin-bottom: 4px !important; }
+    @media (prefers-reduced-motion: reduce) { .tg-fold i { transition: none; } }
     .tg-step { font-size: .72rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
     /* steps bar: pinned under the navbar; the current step is highlighted */
     .tg-steps { position: sticky; top: var(--nav-h); z-index: 20; display: flex; gap: 4px; margin: 0 0 var(--space-md); padding: 5px; background: rgba(10, 15, 28, .92); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid var(--glass-border); border-radius: 50px; }

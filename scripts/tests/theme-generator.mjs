@@ -320,5 +320,37 @@ export default async function ({ browser, url }) {
     }
     await v.ctx.close();
   }
+  // 8. Foldable steps: all open on a first visit; a folded step shows its summary and stays folded after a reload;
+  //    the steps bar, "See an example" and #download links unfold what they point at; mirrored in Arabic
+  for (const lang of ['en', 'ar']) {
+    v = await open(lang, { viewport: [1440, 900] });
+    const st = () => v.pg.evaluate(() => ['colors', 'layout', 'download'].map((id) => { const p = document.getElementById(id), b = p.querySelector(':scope > .tg-fold');
+      return { id, folded: p.classList.contains('tg-folded'), expanded: b && b.getAttribute('aria-expanded'), sum: p.querySelector(':scope > .tg-fold-sum').offsetParent ? p.querySelector(':scope > .tg-fold-sum').textContent : '',
+        bodyShown: !!p.querySelector('.row, .tg-files, #pageSize')?.offsetParent, h: Math.round(p.getBoundingClientRect().height) }; }));
+    let s0 = await st();
+    check(s0.every((x) => !x.folded && x.expanded === 'true' && x.bodyShown), `${lang}: steps not all open on a first visit ${JSON.stringify(s0)}`);
+    await v.pg.click('#colors > .tg-fold');
+    await v.pg.click('#layout > h2');
+    let s1 = await st();
+    check(s1[0].folded && s1[0].expanded === 'false' && !s1[0].bodyShown && /Segoe UI/.test(s1[0].sum) && s1[0].h < 160, `${lang}: Colors did not fold with its summary ${JSON.stringify(s1[0])}`);
+    check(s1[1].folded && /1920 × 1080/.test(s1[1].sum), `${lang}: Layout did not fold from its header ${JSON.stringify(s1[1])}`);
+    // the fold button sits at the end of the reading line: right in English, left in Arabic
+    const side = await v.pg.evaluate(() => { const b = document.querySelector('#colors > .tg-fold').getBoundingClientRect(), p = document.getElementById('colors').getBoundingClientRect(); return b.left - p.left > p.width / 2 ? 'right' : 'left'; });
+    check(side === (lang === 'ar' ? 'left' : 'right'), `${lang}: fold button on the ${side}`);
+    await v.pg.reload({ waitUntil: 'networkidle' });
+    s1 = await st();
+    check(s1[0].folded && s1[1].folded && !s1[2].folded, `${lang}: folds not kept after a reload ${JSON.stringify(s1.map((x) => x.folded))}`);
+    await v.pg.click('#tgSteps a[data-step=layout]'); await settle(v.pg);
+    const land = await v.pg.evaluate(() => ({ open: !document.getElementById('layout').classList.contains('tg-folded'), top: Math.round(document.getElementById('layout').getBoundingClientRect().top), bars: Math.round(document.getElementById('tgSteps').getBoundingClientRect().bottom) }));
+    check(land.open && land.top >= land.bars - 1 && land.top < land.bars + 60, `${lang}: steps bar did not open and land on Layout ${JSON.stringify(land)}`);
+    await v.pg.click('#layout > .tg-fold'); await v.pg.click('#download > .tg-fold');
+    await v.pg.click('#exampleBtn'); await settle(v.pg);
+    check(!(await st())[1].folded, `${lang}: See an example did not open Layout`);
+    await v.pg.click('#exampleUndo');
+    await v.pg.goto(`${url}${PAGE}?lang=${lang}#download`, { waitUntil: 'networkidle' });
+    check(!(await st())[2].folded, `${lang}: a #download link did not open Download`);
+    if (v.errs.length) problems.push(`folds ${lang}: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
   return { checks, problems };
 }
