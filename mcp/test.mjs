@@ -75,6 +75,15 @@ if (!r.err) {
   const bad = refs.filter(([k, t, n]) => !has(k, t, n));
   check(!bad.length, `fields not in the model: ${bad.map((b) => b.join(' ')).join(', ')}`);
 }
+// a dark theme: the report's title and panes take the theme's colours, not the light defaults
+fs.writeFileSync(path.join(ROOT, 'dark.json'), JSON.stringify({ name: 'Dark', foreground: '#f8fafc', background: '#1a1f2e', tableAccent: '#00d4ff',
+  visualStyles: { page: { '*': { background: [{ color: { solid: { color: '#0a0f1c' } }, transparency: 0 }] } } } }));
+r = await call('create_report', { path: 'bim-project', name: 'Dark Test', theme: 'dark.json', pages: [page] });
+if (!r.err) {
+  const titles = []; const walkT = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walkT(f); else if (e.name === 'visual.json') { const t = fs.readFileSync(f, 'utf8'); if (/"textRuns"/.test(t) && /Dark Test/.test(t)) titles.push(t); } });
+  walkT(path.join(ROOT, 'bim-project', r.j.report));
+  check(titles.length && titles.every((t) => /#f8fafc/i.test(t) && !/#1f2937/i.test(t)), 'dark theme: the title does not use the theme text colour');
+} else check(false, `dark theme report: ${r.t}`);
 r = await call('create_report', { path: 'sample.pbit', name: 'X', pages: [page] });
 check(r.err && /project folder/.test(r.t), 'create_report accepted a .pbit');
 
