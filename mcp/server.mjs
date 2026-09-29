@@ -15,6 +15,14 @@ const fail = (e) => ({ isError: true, content: [{ type: 'text', text: String(e &
 const safe = (fn) => async (args) => { try { return await fn(args); } catch (e) { return fail(e); } };
 const modelPath = z.string().describe('A Power BI project folder, its .SemanticModel folder, a model.bim or a .pbit, relative to the DataArcus folder');
 
+// A theme's own colours (DataArcus theme generator and Power BI themes): text, visual and page background, accent,
+// so the title, buttons and filter pane match the theme instead of the defaults
+const themeColors = (t) => {
+  const page = t && t.visualStyles && t.visualStyles.page && t.visualStyles.page['*'] && t.visualStyles.page['*'].background;
+  const out = { text: t && t.foreground, card: t && t.background, accent: t && t.tableAccent, background: page && page[0] && page[0].color && page[0].color.solid && page[0].color.solid.color };
+  return Object.fromEntries(Object.entries(out).filter(([, v]) => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v)));
+};
+
 server.registerTool('read_model', {
   title: 'Read a Power BI model',
   description: 'Lists the tables, visible columns (with types), measures (with formats) and date tables of a model, without changing it.',
@@ -48,7 +56,7 @@ const slot = z.object({
 });
 server.registerTool('create_report', {
   title: 'Create a report project for an existing model',
-  description: 'Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme and background applied. The model and any existing report are never touched; the new report gets a free name. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge).',
+  description: 'Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme and background applied. The model and any existing report are never touched; the new report gets a free name. Every report also gets a hidden tooltip page, ready for custom tooltips. Colours come from the theme when one is given. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge).',
   inputSchema: {
     path: modelPath.describe('The project folder or .SemanticModel folder the report will use'),
     name: z.string().min(1).max(60).describe('Report name'),
@@ -67,7 +75,7 @@ server.registerTool('create_report', {
   const kpis = a.pages.reduce((n, p) => Math.max(n, p.slots.filter((s) => s.kind === 'kpi').length), 0) || 1;
   const r = Pbip.build({
     name: a.name, title: a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo: null, theme,
-    ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, a.colors || {}),
+    ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
     model: { byPath: path.basename(m.folder), taken: m.taken }, bind: Bind.suggest(m.tables, kpis),
     texts: { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' },
     pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
