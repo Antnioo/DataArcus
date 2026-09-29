@@ -1,0 +1,180 @@
+{
+  "compatibilityLevel": 1567,
+  "model": {
+    "culture": "en-US",
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "sourceQueryCulture": "en-US",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "tables": [
+      {
+        "name": "Sales",
+        "columns": [
+          {
+            "name": "Date",
+            "dataType": "dateTime",
+            "sourceColumn": "Date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Amount",
+            "dataType": "double",
+            "sourceColumn": "Amount",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "Note",
+            "dataType": "string",
+            "sourceColumn": "Note",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Customer Code",
+            "dataType": "string",
+            "sourceColumn": "Customer Code",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "p",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Dates = List.Dates(#date(2024, 1, 1), 731, #duration(1, 0, 0, 0)),\n    T = Table.FromList(Dates, Splitter.SplitByNothing(), {\"Date\"}),\n    A = Table.AddColumn(T, \"Amount\", each Date.Day([Date]) * 10),\n    N = Table.AddColumn(A, \"Note\", each \"note\"),\n    C = Table.AddColumn(N, \"Customer Code\", each \"C\" & Text.From(Date.Month([Date]))),\n    Typed = Table.TransformColumnTypes(C, {{\"Date\", type date}, {\"Amount\", type number}, {\"Note\", type text}, {\"Customer Code\", type text}})\nin\n    Typed"
+            }
+          }
+        ]
+      },
+      {
+        "name": "Calendar",
+        "columns": [
+          {
+            "name": "Date",
+            "dataType": "dateTime",
+            "sourceColumn": "Date",
+            "formatString": "yyyy-mm-dd",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Year",
+            "dataType": "int64",
+            "sourceColumn": "Year",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Month Number",
+            "dataType": "int64",
+            "sourceColumn": "Month Number",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Month Year",
+            "dataType": "string",
+            "sourceColumn": "Month Year",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Year Month",
+            "dataType": "int64",
+            "sourceColumn": "Year Month",
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "p",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Dates = List.Dates(#date(2024, 1, 1), 731, #duration(1, 0, 0, 0)),\n    T = Table.FromList(Dates, Splitter.SplitByNothing(), {\"Date\"}),\n    Y = Table.AddColumn(T, \"Year\", each Date.Year([Date])),\n    MN = Table.AddColumn(Y, \"Month Number\", each Date.Month([Date])),\n    MY = Table.AddColumn(MN, \"Month Year\", each Date.ToText([Date], \"MMM yyyy\", \"en-US\")),\n    YM = Table.AddColumn(MY, \"Year Month\", each Date.Year([Date]) * 100 + Date.Month([Date])),\n    Typed = Table.TransformColumnTypes(YM, {{\"Date\", type date}, {\"Year\", Int64.Type}, {\"Month Number\", Int64.Type}, {\"Month Year\", type text}, {\"Year Month\", Int64.Type}})\nin\n    Typed"
+            }
+          }
+        ]
+      },
+      {
+        "name": "_Measures",
+        "columns": [
+          {
+            "name": "Column1",
+            "dataType": "string",
+            "sourceColumn": "Column1",
+            "isHidden": true,
+            "summarizeBy": "none"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "p",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Source = #table(type table [Column1 = text], {})\nin\n    Source"
+            }
+          }
+        ],
+        "measures": [
+          {
+            "name": "Total",
+            "expression": "SUM ( Sales[Amount] )",
+            "formatString": "#,0"
+          },
+          {
+            "name": "Unused One",
+            "expression": "1",
+            "formatString": "\"Yes\";\"Yes\";\"No\""
+          }
+        ]
+      },
+      {
+        "name": "Sales Agg",
+        "columns": [
+          {
+            "name": "Year",
+            "dataType": "int64",
+            "sourceColumn": "Year",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "Amount",
+            "dataType": "double",
+            "sourceColumn": "Amount",
+            "summarizeBy": "sum"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "p",
+            "mode": "import",
+            "source": {
+              "type": "m",
+              "expression": "let\n    Source = #table(type table [Year = Int64.Type, Amount = number], {{2024, 0}, {2025, 0}})\nin\n    Source"
+            }
+          }
+        ]
+      }
+    ],
+    "relationships": [
+      {
+        "name": "r1",
+        "fromTable": "Sales",
+        "fromColumn": "Date",
+        "toTable": "Calendar",
+        "toColumn": "Date"
+      }
+    ],
+    "annotations": [
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "0"
+      },
+      {
+        "name": "PBI_ProTooling",
+        "value": "[\"DevMode\"]"
+      }
+    ]
+  }
+}

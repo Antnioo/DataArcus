@@ -1,0 +1,11 @@
+{
+  "name": "dataarcus-mcp",
+  "version": "0.1.0",
+  "description": "DataArcus design and model tools for Power BI, as an MCP server: read a model, suggest fields, check model health, create a report project.",
+  "private": true,
+  "type": "module",
+  "bin": { "dataarcus-mcp": "server.mjs" },
+  "scripts": { "start": "node server.mjs", "test": "node test.mjs" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "@modelcontextprotocol/sdk": "^1.31.0", "zod": "^3.25.0" }
+}
