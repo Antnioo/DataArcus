@@ -103,7 +103,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const shadowStyle = () => [{ show: !!(state.layout && !state.layout.transparent && state.layout.shadow) }];
   // Power BI's default text sizes (title 12, label 10, callout 28) are made for a 1280 × 720 page. On a bigger page
   // everything looks small, so every size grows with the page: × 1.5 on 1920 × 1080, unchanged on 1280 × 720.
-  const fs = (n) => Math.round(n * page(state.layout).s * 2) / 2;
+  // Power BI rejects the whole theme when one font size is outside 8-60 (tested in Desktop), so very big or small pages stop there
+  const fs = (n) => Math.min(60, Math.max(8, Math.round(n * page(state.layout).s * 2) / 2));
   const textSizes = () => {
     const merge = (t, extra) => ({ [t]: { '*': Object.assign({ border: borderStyle(state.ui), dropShadow: shadowStyle() }, extra) } });
     const grid = { values: [{ fontSize: fs(10) }], columnHeaders: [{ fontSize: fs(10) }], total: [{ fontSize: fs(10) }] };
