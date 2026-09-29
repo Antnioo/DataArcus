@@ -34,5 +34,24 @@ export default async function ({ browser, url }) {
     if (v.errs.length) problems.push(`${vp[0]}px: ` + v.errs.slice(0, 3).join(' | '));
     await v.ctx.close();
   }
+  // Storage blocked (strict privacy settings): an Arabic browser still gets Arabic and a working switcher on every page
+  {
+    const v = await visitor(browser, { viewport: [1440, 900], motion: 'reduce', consent: null });
+    await v.ctx.addInitScript(() => {
+      Object.defineProperty(window, 'localStorage', { get() { throw new DOMException('The operation is insecure.', 'SecurityError'); } });
+      Object.defineProperty(navigator, 'language', { get: () => 'ar-AE' });
+    });
+    for (const p of pages()) {
+      await v.pg.goto(`${url}/${p}`, { waitUntil: 'domcontentloaded' });
+      const s = await v.pg.waitForSelector('.lang-btn-desktop', { timeout: 5000 }).catch(() => null);
+      const lang = await v.pg.evaluate(() => document.documentElement.lang);
+      if (!s) { if (!/404|offline/.test(p)) check(false, `${p} storage blocked: no language switcher (page in ${lang})`); continue; }
+      check(lang === 'ar', `${p} storage blocked: Arabic browser gets ${lang}`);
+      await s.click(); await v.pg.waitForTimeout(100);
+      check(await v.pg.evaluate(() => document.documentElement.lang) === 'en', `${p} storage blocked: the switcher does not switch to English`);
+    }
+    if (v.errs.length) problems.push('storage blocked: ' + v.errs.slice(0, 3).join(' | '));
+    await v.ctx.close();
+  }
   return { checks, problems };
 }
