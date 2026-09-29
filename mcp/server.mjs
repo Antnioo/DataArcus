@@ -7,12 +7,27 @@ import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { Bind, Health, Pbip, ROOT, inside, loadModel, summary } from './lib/model.mjs';
+import { Bind, Health, Pbip, ROOT, applyColumnTypes, inside, loadModel, summary } from './lib/model.mjs';
 
 const server = new McpServer({ name: 'dataarcus', version: '0.1.0' });
 const text = (o) => ({ content: [{ type: 'text', text: typeof o === 'string' ? o : JSON.stringify(o, null, 2) }] });
 const fail = (e) => ({ isError: true, content: [{ type: 'text', text: String(e && e.message || e) }] });
 const safe = (fn) => async (args) => { try { return await fn(args); } catch (e) { return fail(e); } };
+// The DAX query that reads every column's type from the model open in Power BI Desktop (run it with Microsoft's
+// Power BI Authoring MCP). INFO.COLUMNS gives the Tabular DataType numbers; a column Power BI names or types from DAX
+// has them in InferredName / InferredDataType. Its rows go into check_model_health's columnTypes as Table[Column]: type.
+const COLUMN_TYPES_QUERY = [
+  'EVALUATE',
+  'VAR _Tables = SELECTCOLUMNS ( INFO.TABLES (), "TableID", [ID], "Table", [Name] )',
+  'VAR _Columns =',
+  '    SELECTCOLUMNS (',
+  '        FILTER ( INFO.COLUMNS (), [Type] <> 3 ),',
+  '        "TableID", [TableID],',
+  '        "Column", IF ( [ExplicitName] = "", [InferredName], [ExplicitName] ),',
+  '        "Type", IF ( [ExplicitDataType] IN { 1, 19 }, [InferredDataType], [ExplicitDataType] )',
+  '    )',
+  'RETURN SELECTCOLUMNS ( NATURALLEFTOUTERJOIN ( _Columns, _Tables ), "Table", [Table], "Column", [Column], "Type", [Type] )'
+].join('\n');
 const modelPath = z.string().describe('A Power BI project folder, its .SemanticModel folder, a model.bim or a .pbit, relative to the DataArcus folder');
 
 // A theme's own colours (DataArcus theme generator and Power BI themes): text, visual and page background, accent,
@@ -38,19 +53,26 @@ server.registerTool('suggest_fields', {
 server.registerTool('check_model_health', {
   title: 'Check model health',
   description: 'Runs the DataArcus Model Health Check: score, and every finding with the objects it concerns (unused columns and measures, risky relationships, slow DAX, date tables...). Reads a project saved by Power BI Desktop (TMDL or model.bim), a model.bim or a .pbit.',
-  inputSchema: { path: modelPath, maxItems: z.number().int().min(1).max(200).default(15).describe('Objects listed per finding') }
-}, safe(async ({ path: p, maxItems }) => {
+  inputSchema: {
+    path: modelPath, maxItems: z.number().int().min(1).max(200).default(15).describe('Objects listed per finding'),
+    columnTypes: z.record(z.string(), z.union([z.string(), z.number()])).optional()
+      .describe('Only when a TMDL project skipped checks: column types read from the same model open in Power BI Desktop, as { "Table[Column]": type }. The type is a model.bim name (string, int64, double, decimal, dateTime, boolean) or the number INFO.COLUMNS returns (2, 6, 8, 10, 9, 11), also as text. Fills only columns the files leave without a type.')
+  }
+}, safe(async ({ path: p, maxItems, columnTypes }) => {
   const m = loadModel(p);
+  const typed = columnTypes ? applyColumnTypes(m.tmsl, columnTypes) : undefined;
   const r = Health.analyze(m.tmsl, m.report);
   return text({
     source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report,
+    // what was done with columnTypes: types used, types the files already had (kept), names and types that could not be used
+    columnTypes: typed,
     findings: r.findings.map((f) => { const rule = Health.RULES[f.id] || {}; const en = rule.en || [f.id, '', ''];
       return { id: f.id, severity: rule.sev, category: rule.cat, title: en[0], why: en[1], fix: en[2], count: f.items.length, items: f.items.slice(0, maxItems) }; }),
     // checks that need a column type the files don't give (columns of DAX tables in a TMDL project): listed, not guessed
     skipped: r.skipped.length ? {
       why: 'The TMDL files give no data type for these columns: Power BI works out the types of a DAX table\'s columns from its DAX, and only the open model knows them. The checks below need the type, so they were not run for these objects and are not in the score.',
       getThem: ['Export a .pbit from the same model (Power BI Desktop: File > Export > Power BI template) and run check_model_health on it.',
-        'Coming next: read the column types from the model open in Power BI Desktop, through Microsoft\'s Power BI Authoring MCP.'],
+        'Or read the types from the same model open in Power BI Desktop: run this DAX query with Microsoft\'s Power BI Authoring MCP (dax_query_operations, Execute), then call check_model_health again with columnTypes = { "Table[Column]": Type } for every row:\n' + COLUMN_TYPES_QUERY],
       checks: r.skipped.map((s) => ({ id: s.id, title: ((Health.RULES[s.id] || {}).en || [s.id])[0], count: s.items.length, items: s.items.slice(0, maxItems) }))
     } : undefined
   });
