@@ -246,7 +246,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const renderJson = () => { $('json').textContent = JSON.stringify(buildTheme(), null, 2); updateStatus(); };
-  const renderAll = () => { renderPreview(); renderContrast(); renderJson(); renderLayout(); save(); };
+  const renderAll = () => { renderPreview(); renderContrast(); renderJson(); renderLayout(); save(); if (window.__tgFoldSums) window.__tgFoldSums(); };
   // Every font in the list is built into Power BI, but only some have Arabic letters: in an Arabic or
   // right-to-left report the others fall back to another font, so say so under the font picker.
   const AR_FONTS = ['Segoe UI', 'Segoe UI Semibold', 'Arial', 'Tahoma'];
@@ -934,6 +934,57 @@ document.addEventListener('DOMContentLoaded', () => {
     label(); new MutationObserver(label).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   }
 
+  // ---------- foldable steps: each section folds on its own; a folded one shows a one-line summary ----------
+  // All open on a first visit; what the visitor folds is remembered. Anything that points at a section
+  // (the steps bar, "See an example", a #download link) unfolds it first, so nobody lands on a closed step.
+  const FOLD = STORE + '-folded', FOLDS = ['colors', 'layout', 'download'];
+  let folded = [];
+  try { folded = JSON.parse(localStorage.getItem(FOLD) || '[]').filter((id) => FOLDS.includes(id)); } catch (e) { folded = []; }
+  const foldSum = (id) => {
+    const c = lay(), p = page(c);
+    if (id === 'colors') return (state.preset ? (isAr() ? PRESET_AR[state.preset] || state.preset : state.preset) : L('Your colors', 'ألوانك')) + ' · ' + state.font + ' · ' + (state.name || '');
+    if (id === 'layout') return nm(LAYOUTS[c.preset].name) + ' · ' + p.w + ' × ' + p.h + ' · ' + L(`${c.kpis} KPI cards`, `${c.kpis} بطاقات مؤشرات`);
+    return L('Theme, background and layout table', 'السمة والخلفية وجدول المواضع');
+  };
+  const foldSums = () => FOLDS.forEach((id) => { const s2 = document.querySelector(`#${id} > .tg-fold-sum`); if (s2) s2.textContent = foldSum(id); });
+  const setFold = (id, fold, restoring) => {
+    const panel = $(id); if (!panel) return;
+    panel.classList.toggle('tg-folded', fold);
+    const b = panel.querySelector(':scope > .tg-fold');
+    b.setAttribute('aria-expanded', String(!fold));
+    b.setAttribute('aria-label', (fold ? L('Open', 'افتح') : L('Fold', 'اطوِ')) + ' ' + panel.querySelector('h2 .tg-step').textContent);
+    if (!restoring) {
+      folded = FOLDS.filter((f) => $(f) && $(f).classList.contains('tg-folded'));
+      try { localStorage.setItem(FOLD, JSON.stringify(folded)); } catch (e) { /* private mode */ }
+    }
+    if (fold) foldSums();
+  };
+  const openStep = (id) => { if ($(id) && $(id).classList.contains('tg-folded')) setFold(id, false); };
+  FOLDS.forEach((id) => {
+    const panel = $(id); if (!panel) return;
+    const h2 = panel.querySelector(':scope > h2');
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'tg-fold'; b.setAttribute('aria-controls', id);
+    b.innerHTML = '<i class="bi bi-chevron-up" aria-hidden="true"></i>';
+    b.addEventListener('click', () => setFold(id, !panel.classList.contains('tg-folded')));
+    h2.addEventListener('click', (e) => { if (!e.target.closest('a, button')) setFold(id, !panel.classList.contains('tg-folded')); });
+    const sum = document.createElement('p'); sum.className = 'tg-fold-sum'; sum.setAttribute('aria-live', 'polite');
+    h2.after(sum); panel.prepend(b);
+    setFold(id, folded.includes(id), true);
+  });
+  window.__tgFoldSums = foldSums;
+  // links to a section unfold it before the page scrolls there
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[href^="#"]'); if (!a) return;
+    const t = document.getElementById(a.getAttribute('href').slice(1)); if (!t) return;
+    const panel = FOLDS.map($).find((pnl) => pnl && pnl.contains(t)); if (panel) openStep(panel.id);
+  }, true);
+  // arriving with #layout or #download in the address, or the address changing to one, opens that step too
+  const openHash = () => { const t = location.hash && document.getElementById(location.hash.slice(1)); const panel = t && FOLDS.map($).find((pnl) => pnl && pnl.contains(t)); if (panel) openStep(panel.id); };
+  openHash(); addEventListener('hashchange', openHash);
+  new MutationObserver(() => FOLDS.forEach((id) => { if ($(id)) setFold(id, $(id).classList.contains('tg-folded'), true); }))
+    .observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+
   // "See an example": a complete executive sales design; the visitor's own design can be restored
   // the visitor's design is kept next to the saved one, so Undo still works after a reload
   const UNDO = STORE + '-before';
@@ -947,7 +998,7 @@ document.addEventListener('DOMContentLoaded', () => {
       layout: { preset: 'exec', kpis: 4, filters: true, fpos: 'top', dir: isAr() ? 'rtl' : 'ltr', v: 3, radius: 8, shadow: true, header: true, kpiBar: 'top', kpiBarC: 'data', headLine: 'full', samples: true, transparent: true, page: '1920x1080', hh: 64, logoW: 200 } };
     pageMsg = ''; renderPresets(); renderInputs(); renderAll();
     $('exampleUndo').hidden = false;
-    $('layout').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    openStep('layout'); $('layout').scrollIntoView({ behavior: 'smooth', block: 'start' });
     toast(L('Example loaded: an executive sales report', 'تم تحميل المثال: تقرير مبيعات تنفيذي'));
     track('theme_example', { example: 'executive-sales' });
   });
