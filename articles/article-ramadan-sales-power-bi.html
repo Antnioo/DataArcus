@@ -88,7 +88,7 @@
       "logo": { "@type": "ImageObject", "url": "https://dataarcus.com/assets/img/logo.svg" }
     },
     "datePublished": "2026-09-23",
-    "dateModified": "2026-09-23",
+    "dateModified": "2026-09-29",
     "image": "https://dataarcus.com/assets/img/og/ramadan-sales.jpg"
   }
   </script>
@@ -139,21 +139,28 @@
               <p data-i18n-html="content.p5">Power BI has no Hijri date functions, so the calendar table has to carry the answer. You need five columns: <strong>Hijri Year</strong>, <strong>Hijri Month Number</strong>, <strong>Hijri Day</strong>, <strong>Is Ramadan</strong> and <strong>Ramadan Day</strong> (1 to 30).</p>
               <p data-i18n-html="content.p6">Our free <a href='../tools/dax-calendar-table-generator.html' class='text-accent'>DAX Calendar Table Generator</a> builds all of them for you, using the official Umm al-Qura calendar. It embeds the Hijri month starts in a small DATATABLE inside the DAX, so there is no Power Query step and no external file. Tick Hijri, pick your date range, copy, and paste it as a new table.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h3">Step 2: the Last Ramadan measure</h2>
-              <p data-i18n-html="content.p7">The idea is simple. Find the Hijri year and the Ramadan days in the current filter, then read the same Ramadan days one Hijri year back.</p>
+              <p data-i18n-html="content.p7">Take the Ramadan days in the current filter as pairs of Hijri year and Ramadan day, move each pair one Hijri year back, and read those days. The pairs are what keep a card or a total row right: a card filtered to 2025 also holds the first weeks of Hijri 1447, so taking the latest Hijri year would point at Ramadan 2025 itself.</p>
               <pre><code>Sales Last Ramadan =
-VAR _HijriYear = MAX ( &#x27;Calendar&#x27;[Hijri Year] )
-VAR _Days = VALUES ( &#x27;Calendar&#x27;[Ramadan Day] )
+VAR _RamadanDays =
+    FILTER (
+        SUMMARIZE ( &#x27;Calendar&#x27;, &#x27;Calendar&#x27;[Hijri Year], &#x27;Calendar&#x27;[Ramadan Day] ),
+        NOT ISBLANK ( &#x27;Calendar&#x27;[Ramadan Day] )
+    )
+VAR _SameDaysLastYear =
+    SELECTCOLUMNS (
+        _RamadanDays,
+        &quot;Hijri Year&quot;, &#x27;Calendar&#x27;[Hijri Year] - 1,
+        &quot;Ramadan Day&quot;, &#x27;Calendar&#x27;[Ramadan Day]
+    )
 RETURN
     CALCULATE (
         [Total Sales],
         REMOVEFILTERS ( &#x27;Calendar&#x27; ),
-        &#x27;Calendar&#x27;[Is Ramadan] = TRUE (),
-        &#x27;Calendar&#x27;[Hijri Year] = _HijriYear - 1,
-        TREATAS ( _Days, &#x27;Calendar&#x27;[Ramadan Day] )
+        TREATAS ( _SameDaysLastYear, &#x27;Calendar&#x27;[Hijri Year], &#x27;Calendar&#x27;[Ramadan Day] )
     )</code></pre>
-              <p data-i18n-html="content.p8"><strong>REMOVEFILTERS</strong> drops the Gregorian dates from the filter, and <strong>TREATAS</strong> maps Ramadan day 5 this year onto Ramadan day 5 last year, whatever Gregorian date each one fell on. The growth measure is then the usual pattern:</p>
+              <p data-i18n-html="content.p8"><strong>REMOVEFILTERS</strong> drops the Gregorian dates from the filter, and <strong>TREATAS</strong> applies the shifted pairs, so Ramadan day 5 this year meets Ramadan day 5 last year, whatever Gregorian date each one fell on. On this year's side, count only the Ramadan days too, then the growth measure is the usual pattern:</p>
               <pre><code>Sales This Ramadan =
-CALCULATE ( [Total Sales], &#x27;Calendar&#x27;[Is Ramadan] = TRUE () )
+CALCULATE ( [Total Sales], KEEPFILTERS ( &#x27;Calendar&#x27;[Is Ramadan] = TRUE () ) )
 
 Ramadan Growth % =
 DIVIDE ( [Sales This Ramadan] - [Sales Last Ramadan], [Sales Last Ramadan] )</code></pre>
