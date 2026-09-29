@@ -27,6 +27,18 @@ Authoring MCP (connect to the model in Desktop, run DAX), and the `powerbi-deskt
 7. **Fix and repeat** from step 4 with a new name until the page is clean, then tell the user which file to open and
    what you checked.
 
+## Health check: skipped checks on a TMDL project
+If `check_model_health` returns `skipped`, the project has DAX tables whose column types are not in its files. Get
+them from the same model open in Power BI Desktop:
+1. The model must be the same project, saved (unsaved edits can change a type). With Microsoft's Power BI Authoring
+   MCP: `ListLocalInstances`, connect only to the instance whose window title is this project, and check its tables match
+   what `read_model` shows. Anything else open: stop and ask the user to close it.
+2. Run the DAX query in `skipped.getThem[1]` (`dax_query_operations`, Execute). Or `column_operations` List, whose
+   `dataType` per column (`DateTime`, `Int64`...) works the same.
+3. Call `check_model_health` again with `columnTypes`: `{ "Table[Column]": type }` for every row, the type as returned.
+4. Read `columnTypes` in the answer: `notInModel` and `badType` must be empty, and `skipped` gone. If not, tell the
+   user which columns and why; never guess a type.
+
 ## Rules
 - Work only inside the DataArcus folder; never connect to another model open in Desktop.
 - Never overwrite, delete or save over the user's files. Close test windows without saving.
