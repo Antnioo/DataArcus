@@ -1,6 +1,10 @@
 // Translations for article-power-bi-report-redesign.js (generated)
 window.reportRedesignArticleTranslations = {
   "en": {
+    "attrs": {
+      "before": "A Power BI leads report with loud colours, uneven gaps and no clear reading order",
+      "after": "The same Power BI leads report redesigned with one brand colour, one grid and KPIs first"
+    },
     "meta": {
       "title": "Same Visuals, New Design: A Power BI Report Redesign in 5 Minutes",
       "description": "A Power BI leads report with the right visuals but the wrong colours and a messy layout. What we changed, why it works, and how to do it in 5 minutes.",
@@ -68,6 +72,10 @@ window.reportRedesignArticleTranslations = {
     }
   },
   "ar": {
+    "attrs": {
+      "before": "تقرير عملاء محتملين في Power BI بألوان صاخبة ومسافات غير متساوية وبلا ترتيب قراءة واضح",
+      "after": "نفس التقرير بعد إعادة التصميم: لون واحد للعلامة التجارية وشبكة واحدة والمؤشرات الرئيسية أولًا"
+    },
     "meta": {
       "title": "نفس العناصر، تصميم جديد: إعادة تصميم تقرير Power BI في 5 دقائق",
       "description": "تقرير Power BI بالعناصر الصحيحة لكن بألوان خاطئة وتخطيط فوضوي. ما الذي غيّرناه، ولماذا ينجح، وكيف تفعله في 5 دقائق.",

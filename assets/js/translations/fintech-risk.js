@@ -1,6 +1,9 @@
 // translations/fintech-risk.js - Fintech Project Portfolio Dashboard
 window.fintechRiskTranslations = {
   en: {
+    attrs: {
+      embed: "Fintech Project Risk Dashboard"
+    },
     // Page Meta
     meta: {
       title: "Fintech Portfolio Risk & Delivery Analytics - DataArcus",
@@ -87,6 +90,9 @@ window.fintechRiskTranslations = {
   },
 
   ar: {
+    attrs: {
+      embed: "لوحة Power BI التفاعلية: Fintech Project Risk Dashboard"
+    },
     // Page Meta
     meta: {
       title: "تحليلات مخاطر مشاريع التكنولوجيا المالية - داتا أركوس",

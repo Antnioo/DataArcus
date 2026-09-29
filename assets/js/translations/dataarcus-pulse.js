@@ -1,6 +1,9 @@
 // translations/dataarcus-pulse.js - DataArcus Pulse (Automotive CRM Intelligence) Showcase
 window.dataarcusPulseTranslations = {
   en: {
+    attrs: {
+      embed: "DataArcus Pulse CRM Intelligence Dashboard"
+    },
     // Page Meta
     meta: {
       title: "DataArcus Pulse: Automotive CRM Intelligence in Power BI",
@@ -128,6 +131,9 @@ window.dataarcusPulseTranslations = {
   },
 
   ar: {
+    attrs: {
+      embed: "لوحة Power BI التفاعلية: DataArcus Pulse CRM Intelligence Dashboard"
+    },
     // Page Meta
     meta: {
       title: "داتا أركوس بالس: ذكاء CRM للسيارات في Power BI",

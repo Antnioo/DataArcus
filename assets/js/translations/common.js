@@ -8,7 +8,9 @@ window.commonTranslations = {
       tools: "Free Tools",
       about: "About", 
       contact: "Contact",
-      consultation: "Book a Free Call"
+      consultation: "Book a Free Call",
+      logoAlt: "DataArcus logo",
+      toggle: "Open or close the menu"
     },
 
     // Footer
@@ -92,7 +94,9 @@ window.commonTranslations = {
       tools: "أدوات مجانية",
       about: "عن الشركة",
       contact: "تواصل معنا", 
-      consultation: "احجز مكالمة مجانية"
+      consultation: "احجز مكالمة مجانية",
+      logoAlt: "شعار DataArcus",
+      toggle: "فتح القائمة أو إغلاقها"
     },
     
     // Footer Arabic

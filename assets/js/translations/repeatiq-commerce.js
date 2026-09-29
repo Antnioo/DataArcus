@@ -1,6 +1,9 @@
 // translations/repeatiq-commerce.js - SaaS & E-commerce Retention Dashboard
 window.repeatiqCommerceTranslations = {
   en: {
+    attrs: {
+      embed: "RepeatIQ Commerce Dashboard"
+    },
     // Page Meta
     meta: {
       title: "RepeatIQ Commerce: SaaS & Retention Analytics - DataArcus",
@@ -88,6 +91,9 @@ window.repeatiqCommerceTranslations = {
   },
 
   ar: {
+    attrs: {
+      embed: "لوحة Power BI التفاعلية: RepeatIQ Commerce Dashboard"
+    },
     // Page Meta
     meta: {
       title: "RepeatIQ Commerce: تحليلات الاحتفاظ والاشتراكات - داتا أركوس",

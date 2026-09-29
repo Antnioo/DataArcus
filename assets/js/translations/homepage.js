@@ -1,6 +1,17 @@
 // translations/homepage.js - Homepage Specific
 window.homepageTranslations = {
   en: {
+    attrs: {
+      powerBi: "Power BI icon",
+      excel: "Excel icon",
+      sql: "SQL icon",
+      azure: "Azure icon",
+      python: "Python icon",
+      fabric: "Fabric icon",
+      pulse: "A preview of the DataArcus Pulse automotive CRM intelligence dashboard",
+      fintech: "A preview of the Fintech Portfolio Risk dashboard",
+      repeatiq: "A preview of the RepeatIQ Commerce Analytics dashboard"
+    },
     // Page Meta
     meta: {
       title: "DataArcus - Power BI & Data Modeling for Growing Businesses",
@@ -285,6 +296,17 @@ portfolio: {
   },
 
   ar: {
+    attrs: {
+      powerBi: "أيقونة Power BI",
+      excel: "أيقونة Excel",
+      sql: "أيقونة SQL",
+      azure: "أيقونة Azure",
+      python: "أيقونة Python",
+      fabric: "أيقونة Fabric",
+      pulse: "معاينة للوحة DataArcus Pulse لتحليلات CRM في قطاع السيارات",
+      fintech: "معاينة للوحة مخاطر محفظة مشاريع Fintech",
+      repeatiq: "معاينة للوحة تحليلات التجارة RepeatIQ"
+    },
     // Page Meta
     meta: {
       title: "داتا أركوس - حلول Power BI ونمذجة البيانات للأعمال النامية",

@@ -1,6 +1,16 @@
 // translations/portfolio.js - Portfolio Page Specific
 window.portfolioTranslations = {
   en: {
+    attrs: {
+      pulse: "A preview of the DataArcus Pulse automotive CRM intelligence dashboard",
+      fintech: "A preview of the Fintech Portfolio Risk dashboard",
+      repeatiq: "A preview of the RepeatIQ Commerce Analytics dashboard",
+      cfpb: "A preview of the Consumer Financial Complaints Analysis dashboard",
+      er: "A preview of the Emergency Room Performance Analysis dashboard",
+      maven: "A preview of the Maven-Market Retail Analysis dashboard",
+      callcenter: "A preview of the Call Center Performance dashboard",
+      adventureworks: "A preview of the AdventureWorks Sales & Operations dashboard"
+    },
     // Page Meta
     meta: {
       title: "Solution Showcases & Dashboard Examples - DataArcus",
@@ -115,6 +125,16 @@ window.portfolioTranslations = {
   },
 
   ar: {
+    attrs: {
+      pulse: "معاينة للوحة DataArcus Pulse لتحليلات CRM في قطاع السيارات",
+      fintech: "معاينة للوحة مخاطر محفظة مشاريع Fintech",
+      repeatiq: "معاينة للوحة تحليلات التجارة RepeatIQ",
+      cfpb: "معاينة للوحة تحليل الشكاوى المالية للمستهلكين",
+      er: "معاينة للوحة تحليل أداء قسم الطوارئ",
+      maven: "معاينة للوحة تحليل مبيعات التجزئة Maven-Market",
+      callcenter: "معاينة للوحة أداء مركز الاتصال",
+      adventureworks: "معاينة للوحة المبيعات والعمليات AdventureWorks"
+    },
     // Page Meta Arabic
     meta: {
       title: "أمثلة لوحات المعلومات وحلول البيانات - داتا أركوس",
