@@ -226,5 +226,22 @@ export default async function ({ browser, url }) {
     if (v.errs.length) problems.push(`chart style: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
+  // Download names: the theme's own name in any script, the same for the JSON and the other files
+  {
+    const v = await open('en');
+    const names = {};
+    for (const n of ['سمة المبيعات', 'Café Theme', '***']) {
+      await v.pg.fill('#themeName', n);
+      names[n] = await v.pg.evaluate(() => {
+        let name = null; const click = HTMLAnchorElement.prototype.click;
+        HTMLAnchorElement.prototype.click = function () { name = this.download; };
+        try { document.getElementById('dlBtn').click(); } finally { HTMLAnchorElement.prototype.click = click; }
+        return name;
+      });
+    }
+    check(names['سمة المبيعات'] === 'سمة-المبيعات.json' && names['Café Theme'] === 'café-theme.json' && names['***'] === 'power-bi-theme.json', `theme file names: ${JSON.stringify(names)}`);
+    if (v.errs.length) problems.push(`file names: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
   return { checks, problems };
 }

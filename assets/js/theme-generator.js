@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const text = JSON.stringify(buildTheme(), null, 2), blob = new Blob([text], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = (state.name || 'power-bi-theme').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase() + '.json';
+    a.download = fileBase() + '.json';
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     lastJson = text; updateStatus();
@@ -619,7 +619,8 @@ document.addEventListener('DOMContentLoaded', () => {
   $('slotTable').addEventListener('mouseover', (e) => { const tr = e.target.closest('tr[data-i]'); if (tr) hl(tr.dataset.i); });
   $('slotTable').addEventListener('mouseleave', () => hl(null));
 
-  const fileBase = () => (state.name || 'power-bi-theme').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-').toLowerCase() || 'power-bi-theme';
+  // every download is named after the theme: letters of any script are kept (Arabic, café), other symbols dropped
+  const fileBase = () => (state.name || 'power-bi-theme').replace(/[^\p{L}\p{M}\p{N}_\- ]+/gu, '').trim().replace(/\s+/g, '-').toLowerCase() || 'power-bi-theme';
   const saveBlob = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000); };
   const slotRows = () => computeSlots(lay()).map((s) => [nm(s.role), nm(KINDS[s.kind]), toPage(s.x), toPage(s.y), toPage(s.w), toPage(s.h)]);
   const slotHead = () => (isAr() ? ['العنصر', 'النوع المقترح', 'أفقي X', 'رأسي Y', 'العرض', 'الارتفاع'] : ['Slot', 'Suggested visual', 'X (horizontal)', 'Y (vertical)', 'Width', 'Height']);
