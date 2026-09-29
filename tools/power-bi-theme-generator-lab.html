@@ -104,10 +104,13 @@
     .tg-preset .sw i { width: 10px; height: 16px; display: block; }
     .tg-preset .sw i:first-child { border-radius: 8px 0 0 8px; } .tg-preset .sw i:last-child { border-radius: 0 8px 8px 0; }
     .tg-colors { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
-    .tg-color { display: flex; flex-direction: column; gap: 4px; }
-    .tg-color input[type=color] { width: 100%; height: 42px; border: 1px solid var(--glass-border); border-radius: 10px; background: none; padding: 2px; cursor: pointer; }
-    .tg-color input[type=text] { width: 100%; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 8px; font: 500 .8rem ui-monospace, Consolas, monospace; padding: 4px 6px; text-align: center; }
-    .tg-color span { font-size: .7rem; color: #94a3b8; text-align: center; }
+    .tg-color { display: grid; grid-template-columns: 30px minmax(0, 1fr); grid-template-areas: "name name" "swatch hex"; gap: 3px 6px; align-items: center; }
+    .tg-color input[type=color] { grid-area: swatch; width: 30px; height: 30px; border: 1px solid var(--glass-border); border-radius: 8px; background: none; padding: 0; cursor: pointer; }
+    .tg-color input[type=color]::-webkit-color-swatch-wrapper { padding: 2px; }
+    .tg-color input[type=color]::-webkit-color-swatch { border: 0; border-radius: 6px; }
+    .tg-color input[type=color]::-moz-color-swatch { border: 0; border-radius: 6px; }
+    .tg-color input[type=text] { grid-area: hex; width: 100%; height: 30px; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 8px; font: 500 .8rem ui-monospace, Consolas, monospace; padding: 4px 8px; }
+    .tg-color span { grid-area: name; font-size: .7rem; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .tg-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
     .tg-row .form-control, .tg-row .form-select { background: var(--dk-3); color: var(--lt); border-color: var(--glass-border); }
     .tg-actions { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -132,7 +135,7 @@
     .tg-faq h3 { font-size: 1.05rem; color: var(--lt); margin-top: 1.2rem; }
     .tg-faq p { color: #94a3b8; }
     .tg-cta { background: linear-gradient(135deg, rgba(0, 212, 255, .12), rgba(0,132,255,.12)); border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px; }
-    @media (max-width: 767px) { .tg-colors { grid-template-columns: repeat(4, minmax(0, 1fr)); } .tg-grid2, .tg-kpis { grid-template-columns: 1fr; } }
+    @media (max-width: 767px) { .tg-colors { grid-template-columns: repeat(2, minmax(0, 1fr)); } .tg-grid2, .tg-kpis { grid-template-columns: 1fr; } }
     /* page layout */
     .tg-new { vertical-align: middle; margin-inline-start: 6px; font-size: .62rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #051018; background: #fdcb6e; border-radius: 20px; padding: 2px 8px; }
     .tg-lays { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -301,7 +304,7 @@
             <div>
               <span class="tg-label" data-i18n="tg.fromBrand">Or generate from one brand color</span>
               <div class="tg-row">
-                <input type="color" id="brand" value="#0084ff" aria-label="Brand color" data-i18n-aria-label="tg.attrs.brand" style="width:52px;height:42px;border-radius:10px;border:1px solid var(--glass-border);background:none;padding:2px">
+                <input type="color" id="brand" value="#0084ff" aria-label="Brand color" data-i18n-aria-label="tg.attrs.brand" style="width:44px;height:39px;border-radius:10px;border:1px solid var(--glass-border);background:none;padding:2px">
                 <select id="harmony" class="form-select" style="width:auto" aria-label="Palette style" data-i18n-aria-label="tg.attrs.palette">
                   <option value="analogous" data-i18n="tg.harmony.analogous">Analogous (calm)</option>
                   <option value="complementary" data-i18n="tg.harmony.complementary">Complementary (contrast)</option>
