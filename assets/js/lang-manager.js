@@ -20,7 +20,8 @@ class LanguageManager {
     }
     
     // Check localStorage
-    const stored = localStorage.getItem('dataarcus-lang');
+    let stored = null;
+    try { stored = localStorage.getItem('dataarcus-lang'); } catch (e) { /* storage blocked: fall back to the browser language */ }
     if (stored && ['en', 'ar'].includes(stored)) {
       return stored;
     }
@@ -157,7 +158,7 @@ class LanguageManager {
     if (!['en', 'ar'].includes(lang)) return false;
     
     this.currentLang = lang;
-    localStorage.setItem('dataarcus-lang', lang);
+    try { localStorage.setItem('dataarcus-lang', lang); } catch (e) { /* storage blocked: the ?lang= in the URL still carries it */ }
     
     // Update URL without reload
     const url = new URL(window.location);
