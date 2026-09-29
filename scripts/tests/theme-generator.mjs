@@ -268,5 +268,15 @@ export default async function ({ browser, url }) {
     if (v.errs.length) problems.push(`hex: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
+  // Odd saved designs (an old version, a hand edit): the page loads without errors and writes valid theme values
+  for (const bad of [{ ui: undefined }, { ui: { text: '#111111' } }, { data: Array(8).fill('red') }, { font: 'Comic Sans MS' }, { chart: { legend: 'Sideways' } }, { layout: { radius: 'abc', kpis: 9, kpiBar: 'x', page: 'huge', hh: 'tall' } }, { preset: 'Nope' }]) {
+    const v = await open('en');
+    await v.pg.evaluate(([k, b]) => { const d = JSON.parse(localStorage.getItem(k)); Object.assign(d, b); if ('ui' in b && b.ui === undefined) delete d.ui; localStorage.setItem(k, JSON.stringify(d)); }, [STORE, bad]);
+    await v.pg.reload({ waitUntil: 'networkidle' });
+    const r = await v.pg.evaluate(() => { let t = {}; try { t = JSON.parse(document.getElementById('json').textContent); } catch (e) { /* no theme shown */ } return { hexes: JSON.stringify(t).match(/"#[^"]*"/g) || [], dataColors: t.dataColors, preview: document.querySelectorAll('#preview svg').length, slots: document.querySelectorAll('#slotTable tr').length }; });
+    const badHex = r.hexes.filter((h) => !/^"#[0-9a-f]{6}([0-9a-f]{2})?"$/i.test(h));
+    check(!v.errs.length && r.preview > 0 && r.slots > 1 && !badHex.length && (r.dataColors || []).length === 8, `saved ${JSON.stringify(bad)}: ${v.errs.slice(0, 2).join(' | ') || JSON.stringify({ badHex: badHex.slice(0, 3), preview: r.preview, slots: r.slots })}`);
+    await v.ctx.close();
+  }
   return { checks, problems };
 }

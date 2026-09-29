@@ -60,7 +60,17 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---------- state ----------
   let state;
   try { state = JSON.parse(localStorage.getItem(STORE)); } catch (e) { state = null; }
-  if (!state || !Array.isArray(state.data) || state.data.length !== 8) state = { preset: 'DataArcus', name: 'My Brand Theme', font: 'Segoe UI', data: PRESETS.DataArcus.data.slice(), ui: { ...PRESETS.DataArcus.ui } };
+  const fresh = () => ({ preset: 'DataArcus', name: 'My Brand Theme', font: 'Segoe UI', data: PRESETS.DataArcus.data.slice(), ui: { ...PRESETS.DataArcus.ui } });
+  if (!state || typeof state !== 'object' || !Array.isArray(state.data) || state.data.length !== 8) state = fresh();
+  // an old or hand-edited save may be partial: each value that is not valid falls back to the default
+  {
+    const d = fresh(), hex = (v) => (typeof v === 'string' ? clampHex(v) : null), ui = state.ui && typeof state.ui === 'object' ? state.ui : {};
+    state.data = state.data.map((c, i) => hex(c) || d.data[i]);
+    state.ui = Object.fromEntries(Object.keys(d.ui).map((k) => [k, hex(ui[k]) || d.ui[k]]));
+    if (typeof state.name !== 'string') state.name = d.name;
+    if (![...$('font').options].some((o) => o.value === state.font)) state.font = d.font;
+    if (state.preset != null && !PRESETS[state.preset]) state.preset = null;
+  }
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* private mode */ } };
 
   // ---------- builders ----------
@@ -108,6 +118,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // setting, because Power BI rejects the whole theme when one property is unknown. "auto" writes nothing.
   const CHART_DEFAULTS = { labels: 'auto', grid: 'auto', legend: 'auto', axis: 'auto', table: 'auto' };
   const chart = () => Object.assign({}, CHART_DEFAULTS, state.chart);
+  // saved chart choices: only the ones the page offers
+  if (state.chart) state.chart = Object.fromEntries(Object.entries(CHART_INPUTS).filter(([id, k]) => [...$(id).options].some((o) => o.value === state.chart[k])).map(([, k]) => [k, state.chart[k]]));
   const AXIS_CHARTS = ['barChart', 'columnChart', 'clusteredBarChart', 'clusteredColumnChart', 'hundredPercentStackedBarChart', 'hundredPercentStackedColumnChart',
     'lineChart', 'areaChart', 'stackedAreaChart', 'hundredPercentStackedAreaChart', 'lineStackedColumnComboChart', 'lineClusteredColumnComboChart', 'ribbonChart', 'waterfallChart'];
   const chartStyles = (u) => {
@@ -359,6 +371,16 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   state.layout = Object.assign({ v: 3, page: '1920x1080', preset: 'exec', kpis: 4, filters: false, dir: '', radius: 8, shadow: true, header: true, kpiBar: 'start', headLine: 'short', samples: true, transparent: false }, upgrade(state.layout) || {});
   if (!LAYOUTS[state.layout.preset]) state.layout.preset = 'exec';
+  // saved layout values outside the choices the page offers fall back to the defaults
+  {
+    const l = state.layout, one = (k, list, d) => { if (!list.includes(l[k])) l[k] = d; };
+    one('kpis', [3, 4, 5, 6], LAYOUTS[l.preset].kpis); one('dir', ['', 'ltr', 'rtl'], '');
+    if (!(+l.radius >= 0 && +l.radius <= 24)) l.radius = 8;
+    one('kpiBar', ['start', 'top', 'bottom', 'none'], 'start'); one('headLine', ['short', 'full', 'none'], 'short');
+    if (!PAGES[l.page] && l.page !== 'custom') l.page = '1920x1080';
+    ['filters', 'shadow', 'header', 'samples', 'transparent'].forEach((k) => { if (typeof l[k] !== 'boolean') l[k] = k !== 'filters' && k !== 'transparent'; });
+    ['hh', 'logoW', 'fw', 'fh', 'kpiH', 'mainW', 'split', 'kpiBarW', 'headLineW', 'pageW', 'pageH'].forEach((k) => { if (l[k] != null && !isFinite(+l[k])) delete l[k]; });
+  }
   const lay = () => state.layout;
   const rtl = (c) => ((c || lay()).dir ? (c || lay()).dir === 'rtl' : isAr());
   const nm = (pair) => (isAr() ? pair[1] : pair[0]);
