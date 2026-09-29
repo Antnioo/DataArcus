@@ -34,6 +34,7 @@ Each test prints `PASS` or `FAIL` with the problems it found. The command fails 
 | `dax` | DAX Measure Builder and Calendar Generator: Ramadan vs last Ramadan is right on cards and totals, bad inputs never give broken DAX or stale output, odd saved settings don't break the page |
 | `layout` | 512 layout combinations: every visual on the page, usable size, no overlaps |
 | `svg-kpi` | The SVG KPI Designer's DAX output matches its preview (runs `scripts/test-svg-kpi.mjs`) |
+| `tmdl-model` | TMDL projects read into the same model as a model.bim: every kind of TMDL object, and the Model Health Check gives identical results on a project saved by Power BI Desktop and its .pbit export (fixtures in `fixtures/model-health/tmdl-*`). Runs in Node, no browser: `node scripts/tests/tmdl-model.mjs` |
 
 ## How it works
 

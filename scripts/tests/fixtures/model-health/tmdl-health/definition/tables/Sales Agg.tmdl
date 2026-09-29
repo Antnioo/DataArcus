@@ -1,0 +1,23 @@
+table 'Sales Agg'
+	lineageTag: 98cd671c-60cf-4e17-9337-5492fa452514
+
+	column Year
+		dataType: int64
+		lineageTag: 45ebccb5-b256-4086-b754-f12ad2887fd1
+		summarizeBy: none
+		sourceColumn: Year
+
+	column Amount
+		dataType: double
+		lineageTag: 5afd0009-0188-422a-af3f-d041ded34523
+		summarizeBy: sum
+		sourceColumn: Amount
+
+	partition p = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Year = Int64.Type, Amount = number], {{2024, 0}, {2025, 0}})
+				in
+				    Source
+

@@ -1,0 +1,4 @@
+relationship Sales_Date_Calendar_Date
+	fromColumn: Sales.Date
+	toColumn: Calendar.Date
+

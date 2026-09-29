@@ -1,0 +1,46 @@
+table Calendar
+	lineageTag: 7213bc02-d7fc-4853-a783-8521a923437f
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		isUnique
+		formatString: yyyy-mm-dd
+		lineageTag: 66b7a0b0-12e8-4a55-8ada-779cc0cc8f24
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column 'Month Year'
+		dataType: string
+		lineageTag: 9e6cf02a-ef69-47ad-b326-129d756695d9
+		summarizeBy: none
+		sourceColumn: Month Year
+		sortByColumn: 'Year Month'
+
+	column 'Year Month'
+		dataType: int64
+		lineageTag: a1be48bd-fba9-4fcd-9541-1a112184b428
+		summarizeBy: none
+		sourceColumn: Year Month
+
+	partition p = m
+		mode: import
+		source =
+				let
+				    Dates = List.Dates(#date(2024, 1, 1), 731, #duration(1, 0, 0, 0)),
+				    T = Table.FromList(Dates, Splitter.SplitByNothing(), {"Date"}),
+				    Y = Table.AddColumn(T, "Year", each Date.Year([Date])),
+				    MN = Table.AddColumn(Y, "Month Number", each Date.Month([Date])),
+				    MY = Table.AddColumn(MN, "Month Year", each Date.ToText([Date], "MMM yyyy", "en-US")),
+				    YM = Table.AddColumn(MY, "Year Month", each Date.Year([Date]) * 100 + Date.Month([Date])),
+				    Typed = Table.TransformColumnTypes(YM, {{"Date", type date}, {"Year", Int64.Type}, {"Month Number", Int64.Type}, {"Month Year", type text}, {"Year Month", Int64.Type}}),
+				    Custom1 = Table.RemoveColumns(Typed, {"Year", "Month Number"}, MissingField.Ignore)
+				in
+				    Custom1
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
