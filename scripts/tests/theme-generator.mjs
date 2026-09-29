@@ -111,6 +111,15 @@ export default async function ({ browser, url }) {
   await v.pg.fill('input[data-l=pageW]', '5000'); await v.pg.press('input[data-l=pageW]', 'Tab');
   const msg = await v.pg.evaluate(() => document.querySelector('#pageSize [role=status]')?.textContent || '');
   check(/3840/.test(msg), `custom width 5000 not limited to 3840 with a message (${msg})`);
+  // every font size in the theme stays within Power BI's 8-60, or Power BI rejects the whole theme
+  // (seen in Power BI Desktop 2.157: 84 on a 3840 x 2160 page, 5 on 640 x 360)
+  for (const [w, h] of [[3840, 2160], [640, 360], [1920, 1080]]) {
+    await v.pg.fill('input[data-l=pageW]', String(w)); await v.pg.press('input[data-l=pageW]', 'Tab');
+    await v.pg.fill('input[data-l=pageH]', String(h)); await v.pg.press('input[data-l=pageH]', 'Tab');
+    const sizes = [];
+    JSON.stringify(await json(), (k, val) => { if ((k === 'fontSize' || k === 'textSize') && typeof val === 'number') sizes.push(val); return val; });
+    check(sizes.length > 10 && sizes.every((n) => n >= 8 && n <= 60), `${w} x ${h}: theme font sizes outside 8-60: ${[...new Set(sizes)].filter((n) => n < 8 || n > 60).join(', ')}`);
+  }
   await v.ctx.close();
 
   // 4. Downloads: three files, reminders when they go out of date, the solid-visuals hint

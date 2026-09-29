@@ -13,6 +13,7 @@ expected number is written down before the run.
 | D1 fix plan keeps refresh working | Model Health fix plan on a model with Month Year, Month Number, Year Month: TMDL quick fixes, review-folder script, Power Query removals, mark date table, refresh | PASS, refresh OK, months in date order |
 | D2 measures table keeps its column | Same run: _Measures[Column1] still there | PASS |
 | D6 TMDL quoting | Format string `"Yes";"Yes";"No"` through the review-folder TMDL script | PASS, unchanged |
+| C2 theme font sizes | Themes from the live generator with custom pages 3840 x 2160 (font 84) and 640 x 360 (font 5), inside a project made with the DataArcus MCP | FAIL as reported: Power BI refuses the whole theme ("must be <= 60", "must be >= 8"). Fixed: sizes kept within 8-60 |
 | D5 aggregation tables | Manage aggregations needs a DirectQuery detail table; an Import-only test model cannot have one | Not testable here. Shipped because it can only mark tables as used (worst case: same as before) |
 
 ## Lessons
