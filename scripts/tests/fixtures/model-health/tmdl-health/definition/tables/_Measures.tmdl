@@ -1,0 +1,27 @@
+table _Measures
+	lineageTag: 207fb945-c978-4604-88fc-49563b218039
+
+	measure Total = SUM ( Sales[Amount] )
+		formatString: #,0
+		lineageTag: 8023d0e3-6293-4d7c-964a-54a6d6769c1d
+
+	measure 'Unused One' = 1
+		formatString: """Yes"";""Yes"";""No"""
+		displayFolder: _Unused (review)
+		lineageTag: eef1ef3b-f6f0-41f2-ac5a-1cac4594fa2b
+
+	column Column1
+		dataType: string
+		isHidden
+		lineageTag: 4d69c07a-d38d-4a8f-8f01-c07560d24e07
+		summarizeBy: none
+		sourceColumn: Column1
+
+	partition p = m
+		mode: import
+		source =
+				let
+				    Source = #table(type table [Column1 = text], {})
+				in
+				    Source
+

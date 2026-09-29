@@ -1,0 +1,39 @@
+table Sales
+	lineageTag: bf9d9c9f-1ce9-46bf-a8e2-73ed405b8c59
+
+	column Date
+		dataType: dateTime
+		isHidden
+		formatString: yyyy-mm-dd
+		lineageTag: 756bf091-e258-499e-bf36-93b62e5e9248
+		summarizeBy: none
+		sourceColumn: Date
+
+		changedProperty = IsHidden
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Amount
+		dataType: double
+		lineageTag: de686a7d-62b5-409b-91f7-996c1a2d58de
+		summarizeBy: sum
+		sourceColumn: Amount
+
+	partition p = m
+		mode: import
+		source =
+				let
+				    Dates = List.Dates(#date(2024, 1, 1), 731, #duration(1, 0, 0, 0)),
+				    T = Table.FromList(Dates, Splitter.SplitByNothing(), {"Date"}),
+				    A = Table.AddColumn(T, "Amount", each Date.Day([Date]) * 10),
+				    N = Table.AddColumn(A, "Note", each "note"),
+				    C = Table.AddColumn(N, "Customer Code", each "C" & Text.From(Date.Month([Date]))),
+				    Typed = Table.TransformColumnTypes(C, {{"Date", type date}, {"Amount", type number}, {"Note", type text}, {"Customer Code", type text}}),
+				    Custom1 = Table.RemoveColumns(Typed, {"Note", "Customer Code"}, MissingField.Ignore)
+				in
+				    Custom1
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
