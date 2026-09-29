@@ -24,12 +24,12 @@ const geometry = () => {
   return { kb: kb.length, hl: hl.length, bad };
 };
 
-export default async function ({ browser, url }) {
+export default async function ({ browser, url, page = PAGE }) {
   const problems = []; let checks = 0;
   const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
   const open = async (lang, opts = {}) => {
     const v = await visitor(browser, { downloads: true, ...opts });
-    await v.pg.goto(`${url}${PAGE}?lang=${lang}`, { waitUntil: 'networkidle' });
+    await v.pg.goto(`${url}${page}?lang=${lang}`, { waitUntil: 'networkidle' });
     return v;
   };
   const saved = (pg) => pg.evaluate((k) => JSON.parse(localStorage.getItem(k)).layout, STORE);
@@ -347,7 +347,7 @@ export default async function ({ browser, url }) {
     await v.pg.click('#exampleBtn'); await settle(v.pg);
     check(!(await st())[1].folded, `${lang}: See an example did not open Layout`);
     await v.pg.click('#exampleUndo');
-    await v.pg.goto(`${url}${PAGE}?lang=${lang}#download`, { waitUntil: 'networkidle' });
+    await v.pg.goto(`${url}${page}?lang=${lang}#download`, { waitUntil: 'networkidle' });
     check(!(await st())[2].folded, `${lang}: a #download link did not open Download`);
     if (v.errs.length) problems.push(`folds ${lang}: ${v.errs.join(' | ')}`);
     await v.ctx.close();

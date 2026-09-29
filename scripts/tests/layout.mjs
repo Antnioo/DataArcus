@@ -4,12 +4,12 @@
 // Default: 1920 x 1080. With --full: all three presets and two custom sizes.
 import { visitor } from './lib.mjs';
 
-export default async function ({ browser, url, full }) {
+export default async function ({ browser, url, full, page = '/tools/power-bi-theme-generator.html' }) {
   const problems = []; let checks = 0;
   const sizes = full ? ['1280x720', '1920x1080', '960x720', 'c3840x2160', 'c1366x768'] : ['1920x1080'];
   for (const size of sizes) {
     const v = await visitor(browser, { viewport: [1440, 1000] });
-    await v.pg.goto(`${url}/tools/power-bi-theme-generator.html`, { waitUntil: 'networkidle' });
+    await v.pg.goto(`${url}${page}`, { waitUntil: 'networkidle' });
     const res = await v.pg.evaluate(async (PAGE) => {
       const C = document.getElementById('layout');
       const click = (l, val) => { const x = C.querySelector(`button[data-l="${l}"][data-v="${val}"]`); if (x) x.click(); return !!x; };
