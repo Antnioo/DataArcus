@@ -22,6 +22,8 @@ export default async function ({ browser, url }) {
       const nav = document.getElementById('navbar'), pins = [...document.querySelectorAll('[data-pin]')].reduce((a, e) => a + e.offsetHeight, 0);
       return {
         missing: document.body.innerText.includes('[Missing:'),
+        // translated attributes (data-i18n-placeholder, -alt, -aria-label, -title): never a missing key, and Arabic on Arabic pages
+        attrs: ['placeholder', 'alt', 'aria-label', 'title'].flatMap((a) => [...document.querySelectorAll(`[data-i18n-${a}]`)].map((e) => [a, e.getAttribute(a) || ''])),
         sideways: document.documentElement.scrollWidth > innerWidth,
         offset: parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop),
         expected: nav ? nav.offsetHeight + pins + 12 : null,
@@ -36,6 +38,8 @@ export default async function ({ browser, url }) {
       };
     });
     if (r.missing) problems.push(`${tag}: missing translation`);
+    const badAttrs = r.attrs.filter(([, val]) => val.includes('[Missing:') || (lang === 'ar' && !/[\u0600-\u06FF]/.test(val)));
+    if (badAttrs.length) problems.push(`${tag}: attributes not translated: ${badAttrs.slice(0, 3).map(([a, val]) => a + '=' + val).join(' | ')}`);
     if (r.sideways) problems.push(`${tag}: page scrolls sideways`);
     const wrongWay = r.arrows.filter((f) => f !== (lang === 'ar' ? 1 : 0)).length;
     if (wrongWay) problems.push(`${tag}: ${wrongWay} of ${r.arrows.length} arrows point against the reading direction`);

@@ -247,6 +247,15 @@ class LanguageManager {
       }
     });
     
+    // Translate attributes: data-i18n-placeholder, data-i18n-alt, data-i18n-aria-label and data-i18n-title
+    // each name the key for that attribute, so inputs, images and buttons read in the page's language too
+    ['placeholder', 'alt', 'aria-label', 'title'].forEach((attr) => {
+      document.querySelectorAll(`[data-i18n-${attr}]`).forEach((element) => {
+        const text = this.getText(element.getAttribute(`data-i18n-${attr}`));
+        if (typeof text === 'string') element.setAttribute(attr, text);
+      });
+    });
+
     // Update meta tags
     this.updateMetaTags();
   }
