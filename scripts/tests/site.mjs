@@ -91,5 +91,16 @@ export default async function ({ browser, url }) {
     if (r.wrong) problems.push(`blog ${lang} search "${term}": shows ${r.shown} posts, ${r.want} contain it`);
     checks++; await v.ctx.close();
   }
+  // footer links slide as smoothly in as out: while hovered, each one still animates its move, not only its colour
+  {
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/index.html?lang=en`, { waitUntil: 'networkidle' });
+    for (const sel of ['footer a[data-i18n="footer.links.powerbi"]', 'footer a[data-i18n="footer.links.about"]', 'footer a[href^="mailto:"]']) {
+      await v.pg.hover(sel);
+      const t = await v.pg.$eval(sel, (e) => { const s = getComputedStyle(e); return s.transitionProperty + ' ' + s.transitionDuration; });
+      checks++; if (!/^all 0\.3s/.test(t)) problems.push(`footer ${sel} while hovered: transition ${t}, the slide jumps instead of easing`);
+    }
+    await v.ctx.close();
+  }
   return { checks, problems };
 }

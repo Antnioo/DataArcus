@@ -733,9 +733,13 @@ section {
 }
 
 /* --- Hover Effects --- */
+/* the transition sits on the link, not on :hover, so a link eases the same way in and out
+   (on :hover it replaced the footer's own transition while hovered, and the slide jumped) */
+.hover-accent {
+  transition: color 0.3s ease;
+}
 .hover-accent:hover {
   color: var(--accent) !important;
-  transition: color 0.3s ease;
 }
 
 /* --- Background & Loading Effects --- */
