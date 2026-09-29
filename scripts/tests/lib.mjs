@@ -4,7 +4,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { chromium } from 'playwright-core';
 
 export const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -39,7 +39,12 @@ export async function launch() {
 }
 
 // The HTML pages of the site (the go/ short links are redirects, not pages)
-export const pages = () => execSync("git ls-files '*.html'", { cwd: ROOT }).toString().trim().split('\n').filter((p) => !p.startsWith('go/'));
+// git runs without a shell, so the pattern needs no quotes (Windows' cmd.exe keeps single quotes and finds nothing)
+export const pages = () => {
+  const list = execFileSync('git', ['ls-files', '*.html'], { cwd: ROOT }).toString().trim().split(/\r?\n/).filter((p) => p && !p.startsWith('go/'));
+  if (!list.length) throw new Error('No HTML pages found with git ls-files');
+  return list;
+};
 
 /**
  * A fresh visitor. Options: viewport [w, h], timezone, consent ('denied' | 'granted' | null for a first visit),
