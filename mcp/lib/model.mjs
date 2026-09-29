@@ -97,6 +97,35 @@ export function loadModel(p) {
   return { source: path.relative(ROOT, folder) || folder, folder, projectDir, taken, tmsl, tables, report };
 }
 
+// Column types read from the model open in Power BI Desktop (INFO.COLUMNS() through Microsoft's Power BI Authoring MCP),
+// for the columns a TMDL project leaves without one. Keys are Table[Column] ('Quoted Table'[Col]]x] as in DAX, any case);
+// values are model.bim names or the Tabular DataType numbers INFO.COLUMNS returns (also as text). A type the files
+// already give is never replaced. Returns what was used and what was not, so nothing is dropped silently.
+const TYPE_NUMBERS = { 2: 'string', 6: 'int64', 8: 'double', 9: 'dateTime', 10: 'decimal', 11: 'boolean' };
+const TYPE_NAMES = Object.fromEntries(Object.values(TYPE_NUMBERS).map((n) => [n.toLowerCase(), n]));
+function typeName(v) {
+  const s = String(v).trim();
+  return /^\d+$/.test(s) ? TYPE_NUMBERS[s] : TYPE_NAMES[s.toLowerCase()];
+}
+function columnKey(k) {
+  const m = String(k).trim().match(/^(?:'((?:[^']|'')+)'|([^'[\]]+?))\s*\[((?:[^\]]|\]\])+)\]$/);
+  return m ? [(m[1] || m[2]).replace(/''/g, "'").trim(), m[3].replace(/]]/g, ']')] : null;
+}
+export function applyColumnTypes(tmsl, types) {
+  const out = { applied: 0, alreadyTyped: [], notInModel: [], badType: [] };
+  const tables = ((tmsl && (tmsl.model || tmsl)) || {}).tables || [];
+  Object.entries(types || {}).forEach(([key, value]) => {
+    const ref = columnKey(key), t = ref && tables.find((x) => String(x.name).toLowerCase() === ref[0].toLowerCase());
+    const c = t && (t.columns || []).find((x) => x.type !== 'rowNumber' && String(x.name).toLowerCase() === ref[1].toLowerCase());
+    if (!c) return out.notInModel.push(key);
+    const type = typeName(value);
+    if (!type) return out.badType.push({ column: key, type: value });
+    if (c.dataType && c.dataType !== 'unknown') return out.alreadyTyped.push(key);
+    c.dataType = type; out.applied++;
+  });
+  return out;
+}
+
 // Short, readable summary of a model for the agent
 export function summary(m) {
   return m.tables.map((t) => ({
