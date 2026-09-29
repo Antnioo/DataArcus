@@ -243,5 +243,14 @@ export default async function ({ browser, url }) {
     if (v.errs.length) problems.push(`file names: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
+  // Readability: a ratio just under the target (#777 on white is 4.48) never shows as the target it misses
+  {
+    const v = await open('en');
+    for (const [k, c] of [['u_card', '#ffffff'], ['u_text', '#777777']]) await v.pg.fill(`#uiColors input[type=text][data-key="${k}"]`, c);
+    const first = await v.pg.$eval('#contrast div', (d) => ({ cls: d.className, text: d.textContent }));
+    check(first.cls === 'warn' && /4\.4:1 \(aim for 4\.5:1\)/.test(first.text), `readability: ${first.text}`);
+    if (v.errs.length) problems.push(`readability: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
   return { checks, problems };
 }
