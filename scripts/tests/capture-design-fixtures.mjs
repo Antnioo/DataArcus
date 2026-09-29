@@ -81,9 +81,9 @@ export function cases(all) {
   add('example-ar', { lang: 'ar', preset: 'Desert Gulf', set: { name: 'Executive Sales' }, rawLayout: Object.assign({ dir: 'rtl' }, example) });
   // left out to keep the fixtures small: each repeats a path other cases already cover (their layout choices above
   // still come from their place in the full list, so the cases kept are the same with or without this line).
-  // Checked with block coverage of theme-generator.js and, for Math.min/max clamps, by value: kept on purpose are
+  // Checked with block coverage of theme-generator.js (before the move) and, for Math.min/max clamps, by value: kept on purpose are
   // name-symbols (the only symbols in a file name), layout-analysis-1280x720 (the only lower chart row held at 90,
-  // theme-generator.js:427) and harmony-mono-2 (the only colour capped at lightness 0.85 in generate()).
+  // in computeSlots()) and harmony-mono-2 (the only colour capped at lightness 0.85 in generate()).
   const REPEATS = ['harmony-complementary-2', 'harmony-triadic-2', 'font-tahoma', 'layout-focus-1280x720',
     'layout-exec-1366x768', 'layout-ops-1366x768', 'layout-focus-960x720', 'layout-exec-1920x1080', 'layout-focus-1920x1080',
     'layout-analysis-3840x2160', 'layout-ops-1280x720', 'font-georgia'];

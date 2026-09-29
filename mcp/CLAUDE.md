@@ -25,7 +25,8 @@ and never damages the user's files.
   into model.bim JSON, for the health check), `svg-kpi-compiler.js`. Extend these rather than
   copying them into `mcp/`, so the website and the MCP always give the same answers. A change to a shared engine must
   pass the website's test suites too.
-- Still browser-only (next to move into shared modules): the theme and layout engine (`theme-generator.js`), the
+- The theme and layout engine is shared too: `assets/js/design-engine.js` (colours, theme JSON, page sizes, layout slots,
+  background SVG), used by the Theme Generator pages and meant for the MCP's design tools. Still browser-only: the
   Measure Builder, the calendar generator.
 
 ## Tests
