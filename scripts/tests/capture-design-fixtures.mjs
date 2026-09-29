@@ -176,6 +176,22 @@ export function pack(results, meta) {
 const text = (b) => (b == null ? null : b[0] === '=' ? b.slice(1) : pretty(b));
 export const unpack = (f) => f.cases.map((c) => Object.assign({}, c, { theme: text(f.blobs[c.theme]), preview: text(f.blobs[c.preview]), bg: c.bg ? text(f.blobs[c.bg]) : null }));
 
+// What the page made against the fixtures, byte for byte: [] when everything matches. Also used by the design-engine test.
+export function compare(results, tag = '') {
+  const problems = [], saved = unpack(JSON.parse(fs.readFileSync(FILE, 'utf8')));
+  if (results.length !== saved.length) problems.push(`${tag}${results.length} cases captured, ${saved.length} in the fixtures`);
+  results.forEach((r) => {
+    const f = saved.find((x) => x.id === r.case.id);
+    if (!f) return problems.push(`${tag}${r.case.id}: not in the fixtures`);
+    for (const k of ['theme', 'preview', 'bg']) if (r[k] !== f[k]) problems.push(`${tag}${r.case.id}: ${k} differs from the fixture`);
+    if (JSON.stringify(r.slots) !== JSON.stringify(f.slots)) problems.push(`${tag}${r.case.id}: slot table differs from the fixture`);
+    if (JSON.stringify(r.state) !== JSON.stringify(f.state)) problems.push(`${tag}${r.case.id}: saved design differs from the fixture`);
+    if (r.file !== f.file) problems.push(`${tag}${r.case.id}: file name ${JSON.stringify(r.file)} differs from the fixture ${JSON.stringify(f.file)}`);
+    if (r.errs && r.errs.length) problems.push(`${tag}${r.case.id}: page errors: ${r.errs.join(' | ')}`);
+  });
+  return problems;
+}
+
 // ---------- command line ----------
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   // --page lab: the same cases on the lab page (fixtures are always written from the live page)
@@ -190,17 +206,8 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     if (r.slots.length < 5) problems.push(`${r.case.id}: only ${r.slots.length} slots`);
     if (!r.file) problems.push(`${r.case.id}: no PNG download captured`);
   });
-  if (check) {
-    const saved = unpack(JSON.parse(fs.readFileSync(FILE, 'utf8')));
-    results.forEach((r) => {
-      const f = saved.find((x) => x.id === r.case.id);
-      if (!f) return problems.push(`${r.case.id}: not in the fixtures`);
-      for (const k of ['theme', 'preview', 'bg']) if (r[k] !== f[k]) problems.push(`${r.case.id}: ${k} differs from the fixture`);
-      if (JSON.stringify(r.slots) !== JSON.stringify(f.slots)) problems.push(`${r.case.id}: slot table differs from the fixture`);
-      if (JSON.stringify(r.state) !== JSON.stringify(f.state)) problems.push(`${r.case.id}: saved design differs from the fixture`);
-      if (r.file !== f.file) problems.push(`${r.case.id}: file name ${JSON.stringify(r.file)} differs from the fixture ${JSON.stringify(f.file)}`);
-    });
-  } else if (!problems.length) {
+  if (check) problems.push(...compare(results));
+  else if (!problems.length) {
     const head = (() => { try { return execFileSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: ROOT }).toString().trim(); } catch (e) { return ''; } })();
     const meta = { page: PAGE, commit: head, browser: browser.version(), captured: new Date().toISOString().slice(0, 10) };
     fs.mkdirSync(path.dirname(FILE), { recursive: true });

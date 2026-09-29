@@ -8,12 +8,14 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { ROOT, serve, launch } from './lib.mjs';
 
-const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'consent', 'lang-switcher', 'theme-generator', 'pbip', 'dax', 'layout', 'svg-kpi', 'tmdl-model'];
+const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'consent', 'lang-switcher', 'theme-generator', 'theme-generator-lab', 'pbip', 'dax', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'design-engine'];
+// the same test on the lab page, where the generator runs on the design engine (the live page keeps the old script for now)
+const LAB = { 'theme-generator-lab': 'theme-generator', 'layout-lab': 'layout' };
 const args = process.argv.slice(2), full = args.includes('--full');
 const ji = args.indexOf('--jobs'), jobs = Math.max(1, ji >= 0 ? +args[ji + 1] || 1 : 3);
 const pick = args.filter((a, i) => !a.startsWith('--') && !(ji >= 0 && i === ji + 1));
 // the slowest tests start first, so the whole run ends as early as possible
-const SLOW = ['anchors', 'site', 'theme-generator', 'spacing', 'tools', 'model-health', 'lang-switcher', 'pbip', 'dax', 'layout', 'consent', 'svg-kpi', 'tmdl-model'];
+const SLOW = ['design-engine', 'anchors', 'site', 'theme-generator', 'theme-generator-lab', 'spacing', 'tools', 'model-health', 'lang-switcher', 'pbip', 'dax', 'layout', 'layout-lab', 'consent', 'svg-kpi', 'tmdl-model'];
 const run = (pick.length ? pick : ALL).slice().sort((a, b) => SLOW.indexOf(a) - SLOW.indexOf(b));
 const unknown = run.filter((n) => !ALL.includes(n));
 if (unknown.length) { console.error(`Unknown test: ${unknown.join(', ')}. Tests: ${ALL.join(', ')}`); process.exit(2); }
@@ -32,7 +34,7 @@ async function one(name) {
       const line = (p.stdout.trim().split('\n').pop() || '');
       res = { checks: +(line.match(/\/(\d+)/) || [])[1] || 0, problems: p.status ? [line, ...p.stdout.split('\n').filter((l) => /FAIL/i.test(l)).slice(0, 10)] : [] };
     } else {
-      res = await (await import(`./${name}.mjs`)).default({ browser, url: server.url, full });
+      res = await (await import(`./${LAB[name] || name}.mjs`)).default({ browser, url: server.url, full, ...(LAB[name] ? { page: '/tools/power-bi-theme-generator-lab.html' } : {}) });
     }
   } catch (e) {
     res = { checks: 0, problems: ['crashed: ' + (e.stack || e.message).split('\n').slice(0, 3).join(' ')] };
