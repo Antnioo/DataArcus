@@ -23,7 +23,8 @@ const PRESETS = ['DataArcus', 'Corporate', 'Colorblind safe', 'Desert Gulf', 'Mi
 const LAYOUTS = ['exec', 'analysis', 'ops', 'focus'];
 const PAGES = [['1920x1080'], ['1280x720'], ['960x720'], ['custom', 3840, 2160], ['custom', 640, 360], ['custom', 1366, 768]];
 const pick = (list, i) => list[i % list.length];
-function cases() {
+// all: also the cases left out as repeats (to check that none of them was the only test of something)
+export function cases(all) {
   const out = [];
   const add = (id, c) => out.push(Object.assign({ id, lang: 'en' }, c));
   // colours: every preset, every harmony from two brand colours
@@ -71,11 +72,14 @@ function cases() {
   add('example-en', { preset: 'Desert Gulf', set: { name: 'Executive Sales' }, rawLayout: Object.assign({ dir: 'ltr' }, example) });
   add('example-ar', { lang: 'ar', preset: 'Desert Gulf', set: { name: 'Executive Sales' }, rawLayout: Object.assign({ dir: 'rtl' }, example) });
   // left out to keep the fixtures small: each repeats a path other cases already cover (their layout choices above
-  // still come from their place in the full list, so the cases kept are the same with or without this line)
-  const REPEATS = ['harmony-complementary-2', 'harmony-triadic-2', 'font-tahoma', 'layout-analysis-1280x720', 'layout-focus-1280x720',
-    'layout-exec-1366x768', 'layout-ops-1366x768', 'layout-focus-960x720', 'harmony-mono-2', 'layout-exec-1920x1080', 'layout-focus-1920x1080',
-    'layout-analysis-3840x2160', 'name-symbols', 'layout-ops-1280x720', 'font-georgia'];
-  return out.filter((c) => !REPEATS.includes(c.id));
+  // still come from their place in the full list, so the cases kept are the same with or without this line).
+  // Checked with block coverage of theme-generator.js and, for Math.min/max clamps, by value: kept on purpose are
+  // name-symbols (the only symbols in a file name), layout-analysis-1280x720 (the only lower chart row held at 90,
+  // theme-generator.js:427) and harmony-mono-2 (the only colour capped at lightness 0.85 in generate()).
+  const REPEATS = ['harmony-complementary-2', 'harmony-triadic-2', 'font-tahoma', 'layout-focus-1280x720',
+    'layout-exec-1366x768', 'layout-ops-1366x768', 'layout-focus-960x720', 'layout-exec-1920x1080', 'layout-focus-1920x1080',
+    'layout-analysis-3840x2160', 'layout-ops-1280x720', 'font-georgia'];
+  return all ? out : out.filter((c) => !REPEATS.includes(c.id));
 }
 
 // ---------- capturing one case on the page ----------
@@ -96,8 +100,11 @@ const read = (pg) => pg.evaluate((STORE) => new Promise((resolve) => {
   })();
 }), STORE);
 
-async function captureCase(browser, url, c) {
+// hook(pg): called on the new page before it loads; it may return a function run before the page closes, whose result
+// is kept as r.extra (the coverage check uses it)
+export async function captureCase(browser, url, c, hook) {
   const v = await visitor(browser, { viewport: [1440, 1000], downloads: true });
+  const finish = hook ? await hook(v.pg) : null;
   // keep the SVG that pngBlob hands to an <img> (data:image/svg+xml,...), without touching the page's code
   await v.ctx.addInitScript(() => {
     const d = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
@@ -121,7 +128,11 @@ async function captureCase(browser, url, c) {
     }, [STORE, c]);
     await go();
   }
+  // the PNG download's file name: the theme's name made safe for a file (fileBase), then the layout
+  const dl = pg.waitForEvent('download', { timeout: 10000 }).then((d) => d.suggestedFilename(), () => null);
   const r = await read(pg);
+  r.file = await dl;
+  if (finish) r.extra = await finish();
   const errs = v.errs.slice();
   await v.ctx.close();
   return Object.assign(r, { errs });
@@ -146,7 +157,7 @@ export function pack(results, meta) {
     return k;
   };
   const list = results.map((r) => ({ id: r.case.id, lang: r.case.lang, setup: Object.fromEntries(Object.entries(r.case).filter(([k]) => k !== 'id' && k !== 'lang')),
-    state: r.state, theme: keep(r.theme, true), slots: r.slots, preview: keep(r.preview), bg: keep(r.bg) }));
+    state: r.state, file: r.file, theme: keep(r.theme, true), slots: r.slots, preview: keep(r.preview), bg: keep(r.bg) }));
   return { meta, cases: list, blobs };
 }
 const text = (b) => (b == null ? null : b[0] === '=' ? b.slice(1) : pretty(b));
@@ -162,6 +173,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     if (r.errs.length) problems.push(`${r.case.id}: page errors: ${r.errs.join(' | ')}`);
     if (!r.bg) problems.push(`${r.case.id}: no background SVG captured`);
     if (r.slots.length < 5) problems.push(`${r.case.id}: only ${r.slots.length} slots`);
+    if (!r.file) problems.push(`${r.case.id}: no PNG download captured`);
   });
   if (check) {
     const saved = unpack(JSON.parse(fs.readFileSync(FILE, 'utf8')));
@@ -171,6 +183,7 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
       for (const k of ['theme', 'preview', 'bg']) if (r[k] !== f[k]) problems.push(`${r.case.id}: ${k} differs from the fixture`);
       if (JSON.stringify(r.slots) !== JSON.stringify(f.slots)) problems.push(`${r.case.id}: slot table differs from the fixture`);
       if (JSON.stringify(r.state) !== JSON.stringify(f.state)) problems.push(`${r.case.id}: saved design differs from the fixture`);
+      if (r.file !== f.file) problems.push(`${r.case.id}: file name ${JSON.stringify(r.file)} differs from the fixture ${JSON.stringify(f.file)}`);
     });
   } else if (!problems.length) {
     const head = (() => { try { return execFileSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: ROOT }).toString().trim(); } catch (e) { return ''; } })();
