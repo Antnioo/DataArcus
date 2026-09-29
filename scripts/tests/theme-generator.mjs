@@ -278,5 +278,19 @@ export default async function ({ browser, url }) {
     check(!v.errs.length && r.preview > 0 && r.slots > 1 && !badHex.length && (r.dataColors || []).length === 8, `saved ${JSON.stringify(bad)}: ${v.errs.slice(0, 2).join(' | ') || JSON.stringify({ badHex: badHex.slice(0, 3), preview: r.preview, slots: r.slots })}`);
     await v.ctx.close();
   }
+  // See an example, reload, Undo: the visitor's own design comes back
+  {
+    const v = await open('en');
+    await v.pg.fill('#themeName', 'My Own Design');
+    await v.pg.click('#exampleBtn'); await v.pg.reload({ waitUntil: 'networkidle' });
+    const shown = await v.pg.isVisible('#exampleUndo');
+    if (shown) await v.pg.click('#exampleUndo');
+    const name = await v.pg.$eval('#themeName', (e) => e.value);
+    await v.pg.reload({ waitUntil: 'networkidle' });
+    const after = await v.pg.evaluate(() => ({ name: document.getElementById('themeName').value, undo: !document.getElementById('exampleUndo').hidden }));
+    check(shown && name === 'My Own Design' && after.name === 'My Own Design' && !after.undo, `example then reload: Undo ${shown ? 'shown' : 'gone'}, design "${name}", after another reload ${JSON.stringify(after)}`);
+    if (v.errs.length) problems.push(`example undo: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
   return { checks, problems };
 }
