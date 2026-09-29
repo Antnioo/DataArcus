@@ -234,6 +234,10 @@ export default async function ({ browser, url }) {
     const [dl] = await Promise.all([v.pg.waitForEvent('download'), v.pg.click('#pbipBtn')]);
     const files = unzip(fs.readFileSync(await dl.path())), bim = Object.keys(files).find((n) => n.endsWith('.SemanticModel/model.bim'));
     check(!!bim && JSON.parse(files[bim]).model.tables.length === 1, 'sample: no sample model in the download');
+    // the README says how to check the report in Power BI, pointing at this project's own theme folder
+    const readme = Object.keys(files).find((n) => n.endsWith('/README.md'));
+    const rt = readme ? files[readme].toString('utf8') : '', base = readme ? readme.split('/')[0] : '';
+    check(/## Check it in Power BI/.test(rt) && rt.includes(base + '.Report/StaticResources/RegisteredResources'), 'sample: README has no Power BI check steps');
     if (v.errs.length) problems.push(`inputs: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
