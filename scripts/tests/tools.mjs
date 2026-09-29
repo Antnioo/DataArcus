@@ -22,6 +22,18 @@ export default async function ({ browser, url }) {
     await v.pg.waitForSelector('#mhTab', { timeout: 20000 });
     await settle(v.pg);
     landed(await below(v.pg, 'mhApp'), `model health ${vp[0]}px results`);
+    // every Tabular Editor (C#) script in the fix plan closes all its strings, so it compiles
+    if (vp[0] > 1000) {
+      await v.pg.click('[data-tab=fix]');
+      await v.pg.evaluate(() => { window.__copied = []; navigator.clipboard.writeText = (t) => { window.__copied.push(t); return Promise.resolve(); }; });
+      for (const b of await v.pg.$$('#mhTab [data-script^="te:"]')) await b.click();
+      const cs = await v.pg.evaluate(() => window.__copied);
+      const open = (src) => { let inStr = false; for (let i = 0; i < src.length; i++) { const ch = src[i];
+        if (!inStr) { if (ch === '/' && src[i + 1] === '/') { i = src.indexOf('\n', i); if (i < 0) break; } else if (ch === '"') inStr = true; }
+        else if (ch === '\\') i++; else if (ch === '"') inStr = false; else if (ch === '\n') return true; } return inStr; };
+      check(cs.length >= 2, `model health: only ${cs.length} Tabular Editor scripts to check`);
+      cs.forEach((c) => check(!open(c), `model health: a Tabular Editor script leaves a string open:\n${c.slice(0, 300)}`));
+    }
     if (v.errs.length) problems.push(`model health ${vp[0]}px: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
