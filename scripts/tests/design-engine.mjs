@@ -47,6 +47,12 @@ export default async function ({ browser, url }) {
     const slots = E.computeSlots(l, c.lang);
     const rows = slots.map((s) => { const b = E.boxOf(s, l); return [nm(s.role), nm(E.KINDS[s.kind]), b.x, b.y, b.w, b.h].map(String); });
     check(JSON.stringify(rows) === JSON.stringify(c.slots), `${c.id}: slot table differs\n        got  ${JSON.stringify(rows).slice(0, 300)}\n        want ${JSON.stringify(c.slots).slice(0, 300)}`);
+    // the preview's size label on each panel is the slot table's width x height (what visitors type into Power BI);
+    // title and logo have no label
+    const labels = [...c.preview.matchAll(/font-family="Consolas, monospace"[^>]*>([^<]*)</g)].map((m) => m[1]);
+    const want = c.slots.filter((row, i) => slots[i].kind !== 'title' && slots[i].kind !== 'logo').map((row) => `${row[4]}×${row[5]}`);
+    const off = want.map((w, i) => (labels[i] === w ? null : `${w} in the table, ${labels[i]} on the preview`)).filter(Boolean);
+    check(labels.length === want.length && !off.length, `${c.id}: preview size labels differ from the slot table (${off.length} of ${want.length}): ${off.slice(0, 3).join('; ')}`);
     // background SVG, at the PNG's size
     const [w, h] = E.pngSize(l);
     check(E.bgSvg(d, slots, { w, h }, c.lang) === c.bg, `${c.id}: background SVG differs`);
