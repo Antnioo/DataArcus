@@ -80,7 +80,7 @@ window.calendarGeneratorTranslations = {
       }
     },
     "meta": {
-      "title": "DAX Calendar Table Generator with Hijri Dates - DataArcus"
+      "title": "DAX Calendar Table Generator with Hijri Dates - DataArcus", "description": "Generate a Power BI date table in DAX with fiscal years, GCC weekends and Hijri (Umm al-Qura) dates, Ramadan and Eid flags. Copy, paste, done. Free."
     }
   },
   "ar": {
@@ -163,7 +163,7 @@ window.calendarGeneratorTranslations = {
       }
     },
     "meta": {
-      "title": "مولّد جدول التقويم في DAX بالتاريخ الهجري - داتا أركوس"
+      "title": "مولّد جدول التقويم في DAX بالتاريخ الهجري - داتا أركوس", "description": "أنشئ جدول تاريخ لـ Power BI بلغة DAX مع السنة المالية وعطلة نهاية الأسبوع الخليجية والتاريخ الهجري (أم القرى) وعلامات رمضان والعيد. انسخ والصق وانتهى. مجانًا."
     }
   }
 };

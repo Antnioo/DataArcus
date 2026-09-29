@@ -2,7 +2,7 @@
 window.licensingCalculatorTranslations = {
   "en": {
     "meta": {
-      "title": "Power BI Licensing Cost Calculator: Pro vs PPU vs Fabric"
+      "title": "Power BI Licensing Cost Calculator: Pro vs PPU vs Fabric", "description": "Compare Power BI Pro, Premium Per User and Fabric capacity costs for your team. See the cheapest option and when F64 pays off, in USD, AED or SAR."
     },
     "lc": {
       "badge": "Free tool · No sign-up",
@@ -56,7 +56,7 @@ window.licensingCalculatorTranslations = {
   },
   "ar": {
     "meta": {
-      "title": "حاسبة تكلفة تراخيص Power BI: Pro مقابل PPU مقابل Fabric"
+      "title": "حاسبة تكلفة تراخيص Power BI: Pro مقابل PPU مقابل Fabric", "description": "قارن تكلفة Power BI Pro وPremium Per User وسعة Fabric لفريقك، واعرف الخيار الأوفر ومتى يصبح F64 مجديًا، بالدولار أو الدرهم أو الريال."
     },
     "lc": {
       "badge": "أداة مجانية · بدون تسجيل",

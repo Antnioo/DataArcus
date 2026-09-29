@@ -1,7 +1,7 @@
 // Translations for tools/dp-600-practice-exam.html
 window.dp600Translations = {
   "en": {
-    "meta": { "title": "Free DP-600 Practice Exam: Fabric Analytics Engineer" },
+    "meta": { "title": "Free DP-600 Practice Exam: Fabric Analytics Engineer", "description": "Free DP-600 practice exam: 220 original questions with explanations, timed mocks scored out of 1000, case studies and a study plan for the Oct 2026 outline." },
     "dp": {
       "badge": "Free · No sign-up · 220 original questions",
       "title": "DP-600 Practice Exam Simulator",
@@ -23,7 +23,7 @@ window.dp600Translations = {
     }
   },
   "ar": {
-    "meta": { "title": "اختبار DP-600 تجريبي مجاني: Fabric Analytics Engineer" },
+    "meta": { "title": "اختبار DP-600 تجريبي مجاني: Fabric Analytics Engineer", "description": "اختبار DP-600 تجريبي مجاني: 220 سؤالًا أصليًا مع الشرح، واختبارات بوقت محدد تُصحَّح من 1000، ودراسات حالة وخطة مذاكرة لمنهج أكتوبر 2026." },
     "dp": {
       "badge": "مجاني · بدون تسجيل · 220 سؤالًا أصليًا",
       "title": "محاكي اختبار DP-600",

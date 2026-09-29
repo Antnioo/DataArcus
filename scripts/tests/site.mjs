@@ -22,6 +22,10 @@ export default async function ({ browser, url }) {
       const nav = document.getElementById('navbar'), pins = [...document.querySelectorAll('[data-pin]')].reduce((a, e) => a + e.offsetHeight, 0);
       return {
         missing: document.body.innerText.includes('[Missing:'),
+        // share previews and search snippets: title, description, og:/twitter: text and og:locale follow the page language
+        meta: [['title', document.title], ...['description', 'twitter:title', 'twitter:description'].map((n) => [n, document.querySelector(`meta[name="${n}"]`)]),
+          ...['og:title', 'og:description', 'og:locale'].map((n) => [n, document.querySelector(`meta[property="${n}"]`)])]
+          .filter(([, e]) => e !== null).map(([n, e]) => [n, typeof e === 'string' ? e : e.getAttribute('content') || '']),
         // translated attributes (data-i18n-placeholder, -alt, -aria-label, -title): never a missing key, and Arabic on Arabic pages
         attrs: ['placeholder', 'alt', 'aria-label', 'title'].flatMap((a) => [...document.querySelectorAll(`[data-i18n-${a}]`)].map((e) => [a, e.getAttribute(a) || ''])),
         sideways: document.documentElement.scrollWidth > innerWidth,
@@ -38,6 +42,8 @@ export default async function ({ browser, url }) {
       };
     });
     if (r.missing) problems.push(`${tag}: missing translation`);
+    const badMeta = r.meta.filter(([n, val]) => (n === 'og:locale' ? !val.startsWith(lang) : lang === 'ar' && !/[\u0600-\u06FF]/.test(val)));
+    if (badMeta.length) problems.push(`${tag}: meta not in the page language: ${badMeta.map(([n, val]) => n + '=' + val.slice(0, 40)).join(' | ')}`);
     const badAttrs = r.attrs.filter(([, val]) => val.includes('[Missing:') || (lang === 'ar' && !/[\u0600-\u06FF]/.test(val)));
     if (badAttrs.length) problems.push(`${tag}: attributes not translated: ${badAttrs.slice(0, 3).map(([a, val]) => a + '=' + val).join(' | ')}`);
     if (r.sideways) problems.push(`${tag}: page scrolls sideways`);
