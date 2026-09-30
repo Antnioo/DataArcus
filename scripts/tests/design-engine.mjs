@@ -60,6 +60,16 @@ export default async function ({ browser, url }) {
     check(`${E.fileBase(d.name)}-background-${l.preset}.png` === c.file, `${c.id}: file name ${E.fileBase(d.name)} does not give ${c.file}`);
   }
 
+  // an empty or blank theme name: the theme JSON and the files get the same default name, the one the name box shows
+  const base = all.find((x) => x.id === 'preset-1').state;
+  for (const n of ['', '   ']) {
+    const t = E.buildTheme(Object.assign(copy(base), { name: n }));
+    check(t.name === 'My Brand Theme' && E.fileBase(n) === 'my-brand-theme' && E.fileBase(n) === E.fileBase(t.name),
+      `name ${JSON.stringify(n)}: theme named ${JSON.stringify(t.name)}, files ${E.fileBase(n)}`);
+  }
+  // a name of only symbols keeps its own name in the theme; its files fall back to power-bi-theme
+  check(E.buildTheme(Object.assign(copy(base), { name: '***' })).name === '***' && E.fileBase('***') === 'power-bi-theme', 'name "***" changed');
+
   // the fonts and chart choices on both pages are the engine's own lists (the repairs rely on them)
   for (const page of Object.values(PAGES_TO_CHECK)) {
     const html = fs.readFileSync(path.join(ROOT, page), 'utf8');
@@ -67,6 +77,24 @@ export default async function ({ browser, url }) {
     check(JSON.stringify(options('font')) === JSON.stringify(E.FONTS), `${page}: fonts ${JSON.stringify(options('font'))} are not the engine's ${JSON.stringify(E.FONTS)}`);
     for (const [k, id] of Object.entries({ labels: 'csLabels', grid: 'csGrid', legend: 'csLegend', axis: 'csAxis', table: 'csTable' }))
       check(JSON.stringify(options(id)) === JSON.stringify(E.CHART_OPTIONS[k]), `${page}: chart ${k} choices ${JSON.stringify(options(id))} are not the engine's ${JSON.stringify(E.CHART_OPTIONS[k])}`);
+  }
+
+  // on both pages: empty the name box (or leave only spaces), and the theme download is named after the theme JSON's name
+  for (const [name, page] of Object.entries(PAGES_TO_CHECK)) {
+    const v = await visitor(browser);
+    await v.pg.goto(`${url}${page}?lang=en`, { waitUntil: 'networkidle' });
+    for (const n of ['', '   ']) {
+      await v.pg.fill('#themeName', n);
+      const r = await v.pg.evaluate(() => {
+        let file = null; const click = HTMLAnchorElement.prototype.click;
+        HTMLAnchorElement.prototype.click = function () { file = this.download; };
+        try { document.getElementById('dlBtn').click(); } finally { HTMLAnchorElement.prototype.click = click; }
+        return { file, theme: JSON.parse(document.getElementById('json').textContent).name };
+      });
+      check(r.theme === 'My Brand Theme' && r.file === 'my-brand-theme.json', `${name} page, name ${JSON.stringify(n)}: theme named ${JSON.stringify(r.theme)}, downloaded as ${r.file}`);
+    }
+    if (v.errs.length) problems.push(`${name} page (names): ${v.errs.join(' | ')}`);
+    await v.ctx.close();
   }
 
   // each page runs the code it should: both pages the engine and theme-generator.js on it
