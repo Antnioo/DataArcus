@@ -10,6 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { visitor } from './lib.mjs';
+import { layoutProblems, headerAndRail } from './report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT = path.join(HERE, 'fixtures', 'bridge-project');
@@ -131,6 +132,40 @@ export default async function ({ browser, url }) {
     check(designs === 54 && !bad.length, `cards on the design fixtures (${designs}): ${bad.length} wrong, e.g. ${bad.slice(0, 3).join(' | ')}`);
   }
 
+  // 11. Phone layout and sizes on every design fixture (see report-check.mjs), with and without the slide-in panel:
+  //     no visual on top of another on the phone, and the header, page buttons, slicers and buttons fit on every page size
+  {
+    const require = createRequire(import.meta.url), P = require('../../assets/js/pbip-export.js'), E = require('../../assets/js/design-engine.js');
+    const { cases } = JSON.parse(fs.readFileSync(path.join(HERE, 'fixtures', 'design-engine', 'cases.json'), 'utf8'));
+    const build = (d, lang, opts) => {
+      const pages = E.projectPages(d.layout, lang, opts);
+      const { files } = P.build({ name: 'Sizes', title: 'Sizes', pageName: pages[0].name, lang, rtl: E.rtl(d.layout, lang), font: d.font, ui: d.ui, theme: E.buildTheme(d, lang), sample: true, logo: null,
+        texts: E.REPORT_TEXTS[lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: new Uint8Array([1]), panel: p.panel })) });
+      return Object.fromEntries(files.map((f) => [f.path, typeof f.data === 'string' ? f.data : Buffer.from(f.data)]));
+    };
+    const phone = [], sizes = [];
+    // the fixtures' small and large pages use other header heights; add every layout with its defaults on the smallest
+    // and largest pages, as the Desktop checks build them (the header title is 16 high on 640 x 360)
+    const base0 = cases.find((c) => c.id === 'preset-1').state;
+    const extra = ['exec', 'analysis', 'ops', 'focus'].flatMap((preset) => [[640, 360], [3840, 2160]].flatMap(([w, h]) => ['en', 'ar'].map((lang) => ({
+      id: `default-${preset}-${w}x${h}-${lang}`, lang,
+      state: Object.assign({}, base0, { layout: { v: 3, preset, page: 'custom', pageW: w, pageH: h, header: true, kpis: E.LAYOUTS[preset].kpis, filters: E.LAYOUTS[preset].filters, fpos: 'end' } }) }))));
+    for (const c of cases.concat(extra)) for (const panel of [false, true]) {
+      const r = layoutProblems(build(c.state, c.lang, { second: true, panel })), tag = `${c.id}${panel ? ' (panel)' : ''}`;
+      if (r.phone.length) phone.push(`${tag}: ${r.phone[0]}${r.phone.length > 1 ? ` (+${r.phone.length - 1})` : ''}`);
+      if (r.sizes.length) sizes.push(`${tag}: ${r.sizes[0]}${r.sizes.length > 1 ? ` (+${r.sizes.length - 1})` : ''}`);
+    }
+    check(!phone.length, `phone layout overlaps on ${phone.length} of ${2 * (cases.length + extra.length)} designs, e.g. ${phone.slice(0, 3).join(' | ')}`);
+    check(!sizes.length, `sizes that don't fit on ${sizes.length} of ${2 * (cases.length + extra.length)} designs, e.g. ${sizes.slice(0, 3).join(' | ')}`);
+    // the guard: 1920 x 1080 keeps today's sizes, 1280 x 720 is scaled (2/3); exec layout, second page with the filter rail
+    const base = cases.find((c) => c.id === 'preset-1').state;
+    for (const [page, want] of [['1920x1080', { title: 20, logo: 14, nav: 320, slicer: 76, reset: 40 }], ['1280x720', { title: 13, logo: 10, nav: 213, slicer: 51, reset: 27 }]]) {
+      const d = Object.assign({}, base, { layout: Object.assign({}, base.layout, { preset: 'exec', page, header: true, kpis: 4, filters: false }) });
+      const got = headerAndRail(build(d, 'en', { second: true, panel: false }));
+      check(JSON.stringify(got) === JSON.stringify(want), `sizes on ${page}: ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
+    }
+  }
+
   const run = async (lang, name, setup) => {
     const v = await visitor(browser, { viewport: [1440, 900], downloads: true });
     await v.pg.goto(`${url}${PAGE}?lang=${lang}`, { waitUntil: 'networkidle' });
@@ -179,6 +214,8 @@ export default async function ({ browser, url }) {
     check(!bad.length, `local: fields not in the model: ${bad.map((r) => `${r.kind} ${r.t}[${r.n}]`).join(', ')}`);
     const cr = cardProblems(files, false);
     check(cr.cards >= 5 && !cr.bad.length, `local: ${cr.cards} cardVisual; ${cr.bad.slice(0, 4).join('; ')}`);
+    const lp = layoutProblems(files);
+    check(!lp.phone.length && !lp.sizes.length, `local: phone ${lp.phone.slice(0, 2).join('; ')} | sizes ${lp.sizes.slice(0, 2).join('; ')}`);
   }
 
   // 2. Published model, Arabic page: live connection, fields read from a .pbit
@@ -197,6 +234,8 @@ export default async function ({ browser, url }) {
     check(refs(files).length > 20, 'service: fields not bound');
     const cr = cardProblems(files, true);
     check(cr.cards >= 5 && !cr.bad.length, `service (Arabic): ${cr.cards} cardVisual; ${cr.bad.slice(0, 4).join('; ')}`);
+    const lp = layoutProblems(files);
+    check(!lp.phone.length && !lp.sizes.length, `service (Arabic): phone ${lp.phone.slice(0, 2).join('; ')} | sizes ${lp.sizes.slice(0, 2).join('; ')}`);
   }
 
   // 4. A copy of the model with the same name further down (a backup): the report and its fields come from the
