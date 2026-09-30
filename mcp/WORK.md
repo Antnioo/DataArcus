@@ -33,7 +33,37 @@ by the builder: the phone and page-size plan written on `fix/phone-and-sizes`, w
 - **Website dropdowns fixed** (merged): the open list was white on white on every tool page; form fields now use
   `color-scheme: dark` with dark option colours (`assets/css/style.css`), checked on every tool page in `tools.mjs`.
 
-## Next step: the owner's "go" on the plan below (branch `fix/phone-and-sizes`, plan only, no code yet)
+## Next step: build the phone and page-size fix (owner's "go" 2026-10-01 with three additions), branch `fix/phone-and-sizes`
+Steps: (1) tests first, failing on main; (2) code, `pbip-export.js` only; (3) `.min.js` and `?v=`; (4) full run;
+(5) the six Desktop reports built with this branch's `mcp/server.mjs` over stdio (the session's MCP runs old code and the
+desktop app can't restart it), exact numbers written here first; (6) Desktop check; then the two `mcp/CLAUDE.md` notes.
+Done so far: plan `6386930`.
+
+**Owner's additions (2026-10-01):**
+1. **1280 x 720 and every other page size.** Scaling with the page height changes every size except 1920 x 1080. From
+   the engine's slots (exec layout, header on; page 2's rail for slicers and Reset; theme text sizes), today → planned:
+
+| Page | Header title | Logo text | Page buttons (each, text) | Slicers (high, text) | Reset (high, text, lines) |
+|---|---|---|---|---|---|
+| 1920 x 1080 | 20 → 20 | 14 → 14 | 140 → 140, 14 | 76 → 76, 15 | 40 → 40, 15, 1 |
+| 1280 x 720 | 13 → 13 | 10 → 10 | 140 → 93, 10 | 76 → 51, 10 | 40 → 27, 10, 1 |
+| 700 x 525 | 12 → 10 | 10 → 8 | 140 → 108, 8 | 76 → 37, 8 | 40 → 19, 8, 1 |
+| 2560 x 1440 | 27 → 27 | 19 → 19 | 140 → 187, 19 | 76 → 101, 20 | 40 → 53, 20, 1 |
+| 640 x 360 | 12 → 8 | 10 → 8 | 140 → 105, 8 | 76 → 27, 8 | 40 → 28, 8, 2 |
+| 3840 x 2160 | 28 → 40 | 24 → 29 | 140 → 280, 29 | 76 → 152, 30 | 40 → 80, 30, 1 |
+
+   (Page and button text "today" is Power BI's own default, not set in the file.) Also scaled by k on every page but
+   1920 x 1080: the gaps and paddings of the header, rail and slide-in panel, the top rail's Reset width, the Close and
+   Filters buttons, the panel's header, padding and radius. Titles are whole numbers of points, like today. The size
+   guard test checks 1280 x 720 as well as 1920 x 1080. Correction to section 2: Reset on 3840 x 2160 is 80 high
+   (40 x 2), not 120.
+2. **Phone fact**, after the Desktop check confirms the fix: add to `mcp/CLAUDE.md`, "Power BI facts learned the hard
+   way": in `mobile.json`, visuals inside a group use page positions, not positions relative to the group as in
+   `visual.json`.
+3. **MCP restart note** in `mcp/CLAUDE.md`, "The live loop on this laptop": replace "(or `/mcp` → dataarcus → Restart)"
+   with "The desktop app has no restart button: start a new session, or run the branch's mcp/server.mjs directly over
+   stdio (as mcp/test.mjs does)."
+
 Plan written 2026-10-01 by the builder from the code on main `883ca2f`, the cards Desktop check's screenshots
 (`tests/phase2-try/shots-cards/`), Microsoft's `mobile.json` and `visualContainer` schemas (2.1.0) and Microsoft Learn's
 mobile layout pages. The powerbi-authoring references say nothing about `mobile.json` or groups; the schemas describe
@@ -71,7 +101,7 @@ grouped visual's phone position is relative to its group.
     shown when they fit between title and logo (today: when 220 page units are free).
   - Filter rail (side): padding 10k, gap 8k; slicer height min(76k cap, room) but at least 2 lines of the theme's
     slicer text + 8k (1080: 76, unchanged; 360: 27; 2160: 152). Reset: text at the theme's label size (1080: 15,
-    today Power BI's default), height max(40k, the lines its text needs + 12k) (1080: 40; 360: 28, two lines; 2160: 120).
+    today Power BI's default), height max(40k, the lines its text needs + 12k) (1080: 40; 360: 28, two lines; 2160: 80).
   - Top rail: the same, Reset width min(160k, 14% of the rail) or what its text needs.
   - Slide-in panel (website download): padding 16k, header 44k, gap 10k, Close max(96k, its text), Filters button
     min(180k, max(120k, 3h)) or its text, panel title 14k within 8-60, radius 12k, panel padding 14/16/16/12 x k.
@@ -94,14 +124,14 @@ grouped visual's phone position is relative to its group.
   and Filters buttons: their text fits their box (lines x 1.5 x size in height, 0.55 em per character in width); slicers
   at least 2 lines of their text high; page buttons between title and logo. Fails on main on 640 x 360 (title 12 in a
   16-high box) and 3840 x 2160 (slicers 76 under 30pt text).
-- **1920 x 1080 guard:** header title 20, logo 14, slicers 76, Reset 40 x the rail, page buttons 140 each, as today.
+- **1920 x 1080 and 1280 x 720 guard:** 1080: header title 20, logo 14, slicers 76, Reset 40, page buttons 140 each, as today; 720: title 13, logo 10, slicers 51, Reset 27, page buttons 93 each (addition 1).
 - Existing tests: none expect the old numbers except by building at 1920 x 1080; none change.
 - Rebuild `pbip-export.min.js`, bump `?v=` (`theme-generator.js` and both generator pages); all 16 website suites,
   the fixture check on both pages and `npm test` pass, laptop kept awake.
 
 ### 4. Desktop check (Power BI Desktop 2.157; expected results written now, exact numbers added from the built files
 before opening Desktop)
-Six reports built by this branch's MCP (restarted on `fix/phone-and-sizes`), same calls as the cards check:
+Six reports built by this branch's `mcp/server.mjs` over stdio (as for the cards check), same calls as the cards check:
 "Gulf Sales Sizes EN/AR 1080/360/2160" (EN exec 4 KPIs, AR analysis filters end). One screenshot per page, one DAX
 query per report. Expected:
 1. **Header, every page:** the title "Gulf Sales" whole on one line; the page buttons whole (each page name readable,
