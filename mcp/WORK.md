@@ -78,6 +78,15 @@ Calendar[Month Name], Sales[Total Sales vs Last Ramadan %], Calendar[Day Name]. 
 (EN pages: "Executive summary", "Details"; AR: "تحليل", "نظرة عامة". On the EN reports the rail is on page 2, on the
 AR ones on page 1.) Screenshots go to `C:\DataArcus\tests\phase2-try\shots-sizes\`.
 
+**Desktop check stopped on the second report (EN 360):** EN 1080 PASS on items 1-5. EN 360 FAIL on item 1 (the title
+"Gulf Sales" and "Your logo", 8pt in 16-high text boxes, are cut at the bottom and show a scroll thumb; the page buttons
+are whole) and item 2 (the 27-high slicers show only their titles, no dropdown box; Reset is whole); cards and DAX
+pass. Cause: `fitText`'s 1.5 x line height and the two-line slicer minimum are estimates that are too small for a text
+box and a dropdown slicer on the smallest page; the tests use the same estimates. Details in
+`scripts/tests/DESKTOP-TESTS.md`. **Waiting for the owner:** how to size header text boxes and slicers on 640 x 360
+(e.g. measure in Desktop the smallest height an 8pt text box and a dropdown slicer need, then use those numbers in
+`fitText` and the tests). The CLAUDE.md notes (additions 2 and 3) wait for a passing phone check. Not merged.
+
 **Owner's additions (2026-10-01):**
 1. **1280 x 720 and every other page size.** Scaling with the page height changes every size except 1920 x 1080. From
    the engine's slots (exec layout, header on; page 2's rail for slicers and Reset; theme text sizes), today → planned:
