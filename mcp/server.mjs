@@ -150,7 +150,7 @@ server.registerTool('create_report', {
 
 // Things in the user's model that make the new report look wrong, for the fields it uses. The report never changes the
 // model: these are told to the user, with the fix, to make in Power BI Desktop (or through Microsoft's MCP, with the
-// user's go). A month name without a sort column shows months A to Z; a ratio without a format string shows 0.34, not 34%.
+// user's go). A month or day name without a sort column shows them A to Z; a ratio without a format string shows 0.34, not 34%.
 function modelNotes(tmsl, bind) {
   const model = (tmsl && (tmsl.model || tmsl)) || {}, notes = [], seen = new Set();
   const find = (f, kind) => { const t = (model.tables || []).find((x) => x.name === f.t); return t && (t[kind] || []).find((x) => x.name === (f.c || f.m)); };
@@ -163,6 +163,9 @@ function modelNotes(tmsl, bind) {
       if (c && !c.sortByColumn && /month|الشهر/i.test(f.c) && !/number|num|no|sort|key|offset|start|date/i.test(f.c))
         notes.push({ field: key, issue: 'Months will show in alphabetical order: this column has no sort-by column.',
           fix: `In Power BI Desktop select ${key}, then Column tools > Sort by column > the month number column.` });
+      if (c && !c.sortByColumn && /(day|weekday)\s*name|اسم اليوم/i.test(f.c))
+        notes.push({ field: key, issue: 'Days will show in alphabetical order (Friday, Monday, ...): this column has no sort-by column.',
+          fix: `In Power BI Desktop select ${key}, then Column tools > Sort by column > the day-of-week number column.` });
     } else {
       const ms = find(f, 'measures');
       if (ms && !ms.formatString && /%|ratio|rate|share|margin|نسبة|هامش/i.test(f.m))

@@ -344,6 +344,21 @@ check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.string
     check(notes.includes('Calendar[Month Name]') && notes.includes('Sales[Total Sales vs Last Ramadan %]'), `modelNotes: ${JSON.stringify(q.j.modelNotes)}`);
   }
 }
+// tables fill their visual (grow to fit); in a right-to-left report the category column comes last, so it sits on
+// the right where an Arabic reader starts (Power BI doesn't mirror tables); day names without a sort column are told
+{
+  const t1 = await tryCall('generate_theme', { name: 'Quality AR', brand: '#0F4C5C', folder: 'themes/q' });
+  const en = t1.err ? t1 : await tryCall('create_report', { path: 'dax-project', name: 'Table EN', design: t1.j.design, layout: 'analysis', filters: 'end', lang: 'en' });
+  const ar = t1.err ? t1 : await tryCall('create_report', { path: 'dax-project', name: 'Table AR', design: t1.j.design, layout: 'analysis', filters: 'end', lang: 'ar' });
+  const tables = (res) => res.err ? [] : readReport(path.join(ROOT, 'dax-project', res.j.report)).flatMap((p) => p.visuals).filter((v) => v.type === 'tableEx').map((v) => JSON.parse(v.text).visual);
+  const cols = (v) => v.query.queryState.Values.projections.map((x) => (x.field.Column ? 'C:' + x.field.Column.Property : 'M:' + x.field.Measure.Property));
+  const grow = (v) => /growToFit/.test(JSON.stringify(v.objects || {})) && /autoSizeColumnWidth/.test(JSON.stringify(v.objects || {}));
+  const te = tables(en), ta = tables(ar);
+  check(te.length && ta.length && te.concat(ta).every(grow), `tables must grow to fit: ${te.length} EN, ${ta.length} AR, ${JSON.stringify((te[0] || {}).objects)}`);
+  check(te.length && ta.length && cols(te[0])[0].startsWith('C:') && cols(ta[0]).slice(-1)[0].startsWith('C:') && JSON.stringify(cols(ta[0])) === JSON.stringify(cols(te[0]).slice().reverse()),
+    `right-to-left table column order: EN ${te.length ? cols(te[0]) : '-'} / AR ${ta.length ? cols(ta[0]) : '-'}`);
+  check(!ar.err && (ar.j.modelNotes || []).some((n) => n.field === 'Calendar[Day Name]'), `modelNotes should tell Day Name has no sort column: ${JSON.stringify(ar.j && ar.j.modelNotes)}`);
+}
 // suggest_fields on the same project: the same sensible fields
 r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 { const f = (x) => (x ? `${x.t}[${x.c}]` : null), sl = r.err ? [] : r.j.slicers.map(f);
