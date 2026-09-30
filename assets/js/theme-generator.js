@@ -56,9 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // legend of the bar chart, where the theme puts it (Power BI's default is top left)
     const legendItems = [L('Online', 'أونلاين'), L('Stores', 'المتاجر'), L('Partners', 'الشركاء')].map((n, i) => `<span style="display:inline-flex;align-items:center;gap:4px"><i style="width:8px;height:8px;border-radius:50%;background:${d[i]};display:inline-block"></i>${n}</span>`).join('');
     const side = cs.legend === 'Right';
+    // a "Side" legend goes where the theme puts it: left when the design reads right to left (the same rtl() as the
+    // theme), whatever the page's own writing direction, so the row is reversed when the two differ
+    const row = side && rtl() !== isAr() ? 'row-reverse' : 'row';
     const legend = cs.legend === 'off' ? '' : `<div class="tg-legend" style="display:flex;${side ? 'flex-direction:column;justify-content:center;' : ''}gap:${side ? 4 : 10}px;font-size:.68rem;color:${sec};justify-content:${cs.legend === 'TopCenter' ? 'center' : side ? 'center' : 'flex-start'};margin:${side ? '0' : '4px 0'}">${legendItems}</div>`;
     const barSvg = (g, b) => `<svg viewBox="0 0 390 172" role="img" aria-label="Clustered bar chart preview"${side ? ' style="flex:1;min-width:0"' : ''}>${g}${b}</svg>`;
-    const barChart = (g, b) => (side ? `<div style="display:flex;gap:8px">${barSvg(g, b)}${legend}</div>` : cs.legend === 'Bottom' ? barSvg(g, b) + legend : legend + barSvg(g, b));
+    const barChart = (g, b) => (side ? `<div style="display:flex;flex-direction:${row};gap:8px">${barSvg(g, b)}${legend}</div>` : cs.legend === 'Bottom' ? barSvg(g, b) + legend : legend + barSvg(g, b));
     const pts = (arr, k) => arr.map((v, i) => `${40 + i * 62},${150 - v * k}`).join(' ');
     const donutVals = [40, 25, 20, 15]; let acc = 0; const R = 46, C = 2 * Math.PI * R;
     const donut = donutVals.map((v, i) => { const seg = `<circle r="${R}" cx="70" cy="70" fill="none" stroke="${d[i]}" stroke-width="20" stroke-dasharray="${C * v / 100} ${C}" stroke-dashoffset="${-C * acc / 100}" transform="rotate(-90 70 70)"/>`; acc += v; return seg; }).join('');

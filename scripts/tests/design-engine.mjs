@@ -123,6 +123,25 @@ export default async function ({ browser, url }) {
     }
   }
 
+  // on both pages: the colour step's preview puts the "Side" legend on the same side as the theme, whatever the page's
+  // own writing direction (English or Arabic page, with the design read left to right or right to left)
+  for (const [name, page] of Object.entries(PAGES_TO_CHECK)) {
+    for (const [lang, dir, want] of [['en', 'rtl', 'Left'], ['en', 'ltr', 'Right'], ['ar', null, 'Left'], ['ar', 'ltr', 'Right']]) {
+      const v = await visitor(browser);
+      await v.pg.goto(`${url}${page}?lang=${lang}`, { waitUntil: 'networkidle' });
+      if (dir) await v.pg.click(`#layout button[data-l="dir"][data-v="${dir}"]`);
+      await v.pg.selectOption('#csLegend', 'Right');
+      const r = await v.pg.evaluate(() => {
+        const box = (e) => { const b = e.getBoundingClientRect(); return b.left + b.width / 2; };
+        const legend = document.querySelector('#preview .tg-legend'), chart = document.querySelector('#preview svg[aria-label="Clustered bar chart preview"]');
+        return { side: legend && chart ? (box(legend) < box(chart) ? 'Left' : 'Right') : null,
+          theme: JSON.parse(document.getElementById('json').textContent).visualStyles.columnChart['*'].legend[0].position };
+      });
+      check(r.side === want && r.theme === want && !v.errs.length, `${name} page, ${lang}, direction ${dir || '(page)'}: preview legend on the ${r.side}, theme ${r.theme}, want ${want} ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+  }
+
   // each page runs the code it should: both pages the engine and theme-generator.js on it
   for (const [name, page] of Object.entries(PAGES_TO_CHECK)) {
     const v = await visitor(browser);
