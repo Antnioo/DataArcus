@@ -108,11 +108,20 @@ export default async function ({ browser, url }) {
       // a button right beside a settings box (the theme generator's Generate) is as tall as the box
       const gen = document.getElementById('genBtn'), sel = document.getElementById('harmony');
       const rowGap = gen && sel ? Math.abs(Math.round(gen.getBoundingClientRect().height - sel.getBoundingClientRect().height)) : 0;
-      return { rowGap, tall, gap, faqGap: cta && faq ? Math.round(faq.getBoundingClientRect().top - cta.getBoundingClientRect().bottom) : null };
+      // dropdown lists: the browser draws the open list itself; with the site's white text it must also be dark,
+      // or the options are white on white (only the highlighted one shows)
+      const lum = (c) => { const m = c.match(/\d+(\.\d+)?/g); if (!m) return null; const [r, g, b, a] = m.map(Number); return a === 0 ? null : (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
+      const unreadable = [...document.querySelectorAll('select')].filter((e) => e.getClientRects().length).flatMap((sel) => [...sel.options].slice(0, 3).map((o) => {
+        const cs = getComputedStyle(o), fg = lum(cs.color), bg = lum(cs.backgroundColor);
+        const dark = /dark/.test(getComputedStyle(sel).colorScheme);
+        return (bg == null ? (dark ? null : (fg > 0.6 ? 'white text on the browser\'s light list' : null)) : (Math.abs(fg - bg) < 0.4 ? 'too little contrast' : null)) && `${sel.id || sel.name || 'select'}: ${o.textContent.trim().slice(0, 20)}`;
+      })).filter(Boolean);
+      return { unreadable, rowGap, tall, gap, faqGap: cta && faq ? Math.round(faq.getBoundingClientRect().top - cta.getBoundingClientRect().bottom) : null };
     });
     const tag = `${page} ${lang} ${vp[0]}px`;
     if (r.gap !== null) check(r.gap >= 6, `${tag}: CTA buttons ${r.gap}px apart`);
     check(!r.tall.length, `${tag}: tall input boxes: ${r.tall.join(', ')}`);
+    check(!r.unreadable.length, `${tag}: dropdown options unreadable (white on white): ${r.unreadable.slice(0, 3).join(' | ')}`);
     check(r.rowGap <= 1, `${tag}: Generate button ${r.rowGap}px off the height of the box beside it`);
     if (r.faqGap !== null) check(r.faqGap <= 60, `${tag}: ${r.faqGap}px between the CTA box and the FAQ`);
     await v.ctx.close();
