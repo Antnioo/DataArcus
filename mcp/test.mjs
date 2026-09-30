@@ -185,6 +185,13 @@ for (const [w, h] of [[3840, 2160], [640, 360]]) {
   const sizes = []; if (!r.err) JSON.stringify(JSON.parse(fs.readFileSync(r.j.path, 'utf8')), (k, v) => { if ((k === 'fontSize' || k === 'textSize') && typeof v === 'number') sizes.push(v); return v; });
   check(!r.err && sizes.length && sizes.every((s) => s >= 8 && s <= 60), `generate_theme ${w}x${h} font sizes: ${r.err ? r.t.slice(0, 100) : sizes}`);
 }
+// no layout, or only part of one: the engine's current defaults (1920 x 1080 and its text sizes), never an old save's
+const themeSizes = (file) => { const s = new Set(); JSON.stringify(JSON.parse(fs.readFileSync(file, 'utf8')), (k, v) => { if ((k === 'fontSize' || k === 'textSize') && typeof v === 'number') s.add(v); return v; }); return [...s].sort((a, b) => a - b).join(); };
+for (const [tag, extra] of [['no layout', {}], ['only radius', { layout: { radius: 4 } }]]) {
+  r = await tryCall('generate_theme', Object.assign({ name: 'Default ' + tag }, extra));
+  check(!r.err && JSON.stringify(r.j.page) === '{"w":1920,"h":1080}' && r.j.design.layout.page === '1920x1080' && themeSizes(r.j.path) === '15,18,27,42' && (!extra.layout || r.j.design.layout.radius === 4),
+    `generate_theme ${tag}: page ${r.err ? r.t.slice(0, 100) : JSON.stringify(r.j.page) + ', text sizes ' + themeSizes(r.j.path)}`);
+}
 // the contrast checks come back, with a warning for each one that fails
 r = await tryCall('generate_theme', { name: 'Low Contrast', palette: { data: Array(8).fill('#eeeeee'), ui: { background: '#ffffff', card: '#ffffff', text: '#cccccc', accent: '#0f4c5c' } } });
 check(!r.err && r.j.contrast.checks.length === 4 && r.j.contrast.checks.some((x) => !x.pass) && r.j.warnings.some((w) => /Text on visuals/.test(w)) && r.j.contrast.weak.length === 8,
@@ -217,6 +224,11 @@ check(!r.err && r.j.slots.length === 10 && !r.j.slots.some((s) => s.kind === 'ti
 // a custom size outside the limits is fitted, and says so
 r = await tryCall('plan_layout', { page: { w: 9999, h: 100 } });
 check(!r.err && JSON.stringify(r.j.page) === '{"w":3840,"h":1600}' && JSON.stringify(r.j.fitted) === '{"asked":{"w":9999,"h":100}}', `plan_layout fitted: ${r.t.slice(0, 200)}`);
+// a design with only part of a layout (no version, no page) is the current kind, not an old save: 1920 x 1080
+for (const [tag, dz] of [['partial layout', { name: 'P', layout: { preset: 'analysis' } }], ['no layout', { name: 'P' }]]) {
+  r = await tryCall('plan_layout', { design: dz });
+  check(!r.err && JSON.stringify(r.j.page) === '{"w":1920,"h":1080}' && r.j.design.layout.preset === (dz.layout ? 'analysis' : 'exec'), `plan_layout ${tag}: ${r.err ? r.t.slice(0, 100) : JSON.stringify(r.j.page) + ' ' + r.j.design.layout.preset}`);
+}
 // a design from generate_theme passes straight through: same colours, same page, positions for that page
 const gt = await tryCall('generate_theme', { name: 'Chain', brand: '#0f4c5c', harmony: 'analogous', layout: { page: '1280x720' } });
 r = gt.err ? gt : await tryCall('plan_layout', { design: gt.j.design, layout: 'ops' });

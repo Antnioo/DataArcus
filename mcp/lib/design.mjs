@@ -16,6 +16,15 @@ const CONTRAST_NAMES = { textOnVisuals: 'Text on visuals', labelsOnVisuals: 'Lab
 // a colour as the website takes it (#abc, abc, #aabbcc; any case), or null
 const hex = (v) => (typeof v === 'string' ? E.clampHex(v) : null);
 
+// The engine's own full design with everything given laid over it: the given layout is merged into the engine's
+// current layout (so a partial one is never read as an old saved design, and the MCP never names a layout version),
+// and the given data colours are used when there are 8 (otherwise the engine would drop the whole design)
+export function withDefaults(given) {
+  const base = E.repairState(E.fresh()), g = given ? JSON.parse(JSON.stringify(given)) : {};
+  if (!(Array.isArray(g.data) && g.data.length === 8)) delete g.data;
+  return E.repairState(Object.assign(base, g, { layout: Object.assign(base.layout, g.layout && typeof g.layout === 'object' ? g.layout : {}) }));
+}
+
 // The design for generate_theme's inputs (see server.mjs): the colours from palette, brand + harmony or preset (in that
 // order), then name, font, chart and the page choices that change the theme. Returns { design, repaired, notes }.
 export function themeDesign(a) {
@@ -61,7 +70,8 @@ export function themeDesign(a) {
     });
     d.chart = c;
   }
-  d.layout = layoutFrom(a.layout || {}, {}, fix);
+  // the page and style choices on top of the engine's full current layout (its version, 1920 x 1080 and defaults)
+  d.layout = layoutFrom(a.layout || {}, withDefaults().layout, fix);
   const design = E.repairState(d);
   return { design, repaired, notes };
 }
@@ -83,7 +93,7 @@ export function layoutFrom(l, base, fix) {
 // plan_layout: the design (from generate_theme, or a fresh one) with the tool's layout choices applied the way the
 // website applies them, and the slots in page units. Returns { design, slots, forAuthoring, why }.
 export function planLayout(a) {
-  const design = E.repairState(a.design ? JSON.parse(JSON.stringify(a.design)) : E.fresh()), l = design.layout;
+  const design = withDefaults(a.design), l = design.layout;
   // choosing a layout, as on the website: its own KPI count and filters, and the size sliders back to its defaults
   if (a.layout) { l.preset = a.layout; l.kpis = E.LAYOUTS[a.layout].kpis; l.filters = E.LAYOUTS[a.layout].filters; delete l.kpiH; delete l.mainW; delete l.split; }
   if (a.kpis != null) l.kpis = a.kpis;
