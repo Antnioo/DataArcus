@@ -3,6 +3,7 @@
 //   npm test -- anchors consent only these
 //   npm test -- --jobs 1        one at a time (slower; use it to rule out a machine that is too busy)
 //   npm test -- --full          also the long layout stress test on every page size
+//   npm test -- --slow 6        pages run 6 times slower, like a busy machine (to check the tests don't depend on speed)
 // Exit code 1 when anything fails, so it can gate a deploy.
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
@@ -13,7 +14,9 @@ const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'consent', '
 const LAB = { 'theme-generator-lab': 'theme-generator', 'layout-lab': 'layout' };
 const args = process.argv.slice(2), full = args.includes('--full');
 const ji = args.indexOf('--jobs'), jobs = Math.max(1, ji >= 0 ? +args[ji + 1] || 1 : 3);
-const pick = args.filter((a, i) => !a.startsWith('--') && !(ji >= 0 && i === ji + 1));
+const si = args.indexOf('--slow');
+if (si >= 0) process.env.DATAARCUS_TEST_SLOW = String(Math.max(1, +args[si + 1] || 4));
+const pick = args.filter((a, i) => !a.startsWith('--') && !(ji >= 0 && i === ji + 1) && !(si >= 0 && i === si + 1));
 // the slowest tests start first, so the whole run ends as early as possible
 const SLOW = ['design-engine', 'anchors', 'site', 'theme-generator', 'theme-generator-lab', 'spacing', 'tools', 'model-health', 'lang-switcher', 'pbip', 'dax', 'layout', 'layout-lab', 'consent', 'svg-kpi', 'tmdl-model'];
 const run = (pick.length ? pick : ALL).slice().sort((a, b) => SLOW.indexOf(a) - SLOW.indexOf(b));

@@ -2,7 +2,7 @@
 // in the address, the target sits just below the navbar and any pinned bar, never hidden under them.
 // Full-width sections land flush under the bars, with nothing of the section above showing.
 // This is what style.css (--top-offset, section[id]) and main.js section 2 promise.
-import { pages, visitor, settle } from './lib.mjs';
+import { pages, visitor, settle, ready } from './lib.mjs';
 
 const landing = (pg, id) => pg.evaluate((id) => {
   const el = document.getElementById(id), nav = document.getElementById('navbar');
@@ -28,6 +28,7 @@ export default async function ({ browser, url }) {
   for (const p of pages()) for (const vp of [[1440, 900], [390, 844]]) {
     const v = await visitor(browser, { viewport: vp });
     await v.pg.goto(`${url}/${p}?lang=en`, { waitUntil: 'networkidle' });
+    await ready(v.pg);
     const ids = await v.pg.evaluate(() => [...new Set([...document.querySelectorAll('main a[href^="#"], section a[href^="#"], header a[href^="#"]')]
       .filter((a) => a.offsetParent && a.getAttribute('href').length > 1 && document.getElementById(a.getAttribute('href').slice(1)))
       .map((a) => a.getAttribute('href').slice(1)))]);
@@ -39,7 +40,7 @@ export default async function ({ browser, url }) {
       // arriving from another page with #id in the address
       const w = await visitor(browser, { viewport: vp });
       await w.pg.goto(`${url}/${p}?lang=en#${id}`, { waitUntil: 'load' });
-      await w.pg.waitForTimeout(900); await settle(w.pg);
+      await ready(w.pg); await w.pg.waitForTimeout(900); await settle(w.pg);
       judge(await landing(w.pg, id), `${p} ${vp[0]}px arrive`, id, problems); checks++;
       if (w.errs.length) problems.push(`${p} #${id}: ${w.errs.join(' | ')}`);
       await w.ctx.close();
@@ -51,9 +52,10 @@ export default async function ({ browser, url }) {
   for (const vp of [[1440, 900], [390, 844]]) for (const from of ['index.html', 'tools/index.html']) for (const id of ['services', 'about', 'contact']) {
     const v = await visitor(browser, { viewport: vp });
     await v.pg.goto(`${url}/${from}?lang=en`, { waitUntil: 'networkidle' });
+    await ready(v.pg);
     if (vp[0] < 992) { await v.pg.click('.navbar-toggler'); await v.pg.waitForTimeout(400); }
     await v.pg.locator(`#navmenu a[href$="#${id}"]`).first().click();
-    await v.pg.waitForLoadState('networkidle'); await v.pg.waitForTimeout(700); await settle(v.pg);
+    await v.pg.waitForLoadState('networkidle'); await ready(v.pg); await v.pg.waitForTimeout(700); await settle(v.pg);
     judge(await landing(v.pg, id), `navbar ${from} ${vp[0]}px`, id, problems); checks++;
     if (v.errs.length) problems.push(`navbar ${from} #${id}: ${v.errs.join(' | ')}`);
     await v.ctx.close();
