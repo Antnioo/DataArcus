@@ -86,14 +86,10 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const renderContrast = () => {
-    const u = state.ui, sec = mix(u.text, u.card, 0.35);
-    const checks = [
-      [L('Text on visuals', 'النص على العناصر المرئية'), contrast(u.text, u.card), 4.5],
-      [L('Labels on visuals', 'التسميات على العناصر المرئية'), contrast(sec, u.card), 4.5],
-      [L('Text on page', 'النص على الصفحة'), contrast(u.text, u.background), 4.5],
-      [L('Color 1 on visuals', 'اللون 1 على العناصر المرئية'), contrast(state.data[0], u.card), 3]
-    ];
-    const weak = state.data.map((c, i) => [i + 1, contrast(c, u.card)]).filter(([, r]) => r < 1.6).map(([i]) => i);
+    // the numbers come from the engine (the MCP reports the same); the page gives each check its words
+    const NAMES = { textOnVisuals: L('Text on visuals', 'النص على العناصر المرئية'), labelsOnVisuals: L('Labels on visuals', 'التسميات على العناصر المرئية'),
+      textOnPage: L('Text on page', 'النص على الصفحة'), color1OnVisuals: L('Color 1 on visuals', 'اللون 1 على العناصر المرئية') };
+    const r0 = E.contrastChecks(state), checks = r0.checks.map((x) => [NAMES[x.id], x.ratio, x.min]), weak = r0.weak;
     // a failing ratio is rounded down, so 4.48 shows as 4.4:1 and never as the 4.5:1 it misses
     const shown = (r, min) => (r >= min ? r : Math.floor(r * 10) / 10).toFixed(1);
     $('contrast').innerHTML = checks.map(([k, r, min]) => `<div class="${r >= min ? 'ok' : 'warn'}"><i class="bi ${r >= min ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-1"></i>${k}: ${shown(r, min)}:1 ${r >= min ? '' : L(`(aim for ${min}:1)`, `(المطلوب ${min}:1)`)}</div>`).join('')
