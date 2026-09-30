@@ -8,6 +8,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { Bind, Health, Pbip, ROOT, applyColumnTypes, inside, loadModel, summary } from './lib/model.mjs';
+import { E, themeDesign, planLayout, pageOf, contrastReport, freeFile } from './lib/design.mjs';
 
 const server = new McpServer({ name: 'dataarcus', version: '0.1.0' });
 const text = (o) => ({ content: [{ type: 'text', text: typeof o === 'string' ? o : JSON.stringify(o, null, 2) }] });
@@ -113,6 +114,60 @@ server.registerTool('create_report', {
   if (clash.length) throw new Error(`Not written: ${clash.length} files already exist, e.g. ${clash[0]}`);
   r.files.forEach((f) => { const out = path.join(m.projectDir, f.path); fs.mkdirSync(path.dirname(out), { recursive: true }); fs.writeFileSync(out, f.data); });
   return text({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) });
+}));
+
+// ---------- design tools: the Theme Generator's engine (assets/js/design-engine.js) ----------
+const pageInput = z.union([z.enum(['1920x1080', '1280x720', '960x720']), z.object({ w: z.number(), h: z.number() })])
+  .describe('Power BI page size: 1920x1080 (default), 1280x720, 960x720, or { w, h } (640-3840 x 360-2160, shaped 4:3 to 2.4:1; other sizes are fitted as the website does)');
+const langInput = z.enum(['en', 'ar']).default('en').describe('Language of the report: names in it, and right to left when dir is not given');
+
+server.registerTool('generate_theme', {
+  title: 'Generate a Power BI theme',
+  description: 'Makes a Power BI report theme (JSON) exactly as the DataArcus Theme Generator does, and writes it to a new file inside the DataArcus folder (never over an existing one). Colours from a full palette, a brand colour and a harmony, or a preset (in that order). Returns the file, the full design (pass it to plan_layout and create_report), the readability checks and every input value that could not be used.',
+  inputSchema: {
+    name: z.string().max(60).optional().describe('Theme name; empty or blank gives "My Brand Theme"'),
+    palette: z.object({ data: z.array(z.string()).length(8).describe('8 data colours, hex'),
+      ui: z.object({ background: z.string(), card: z.string(), text: z.string(), accent: z.string(), good: z.string().optional(), neutral: z.string().optional(), bad: z.string().optional() })
+        .describe('Page, visual (card), text and table accent colours; good/neutral/bad come from the preset when left out') }).optional(),
+    brand: z.string().optional().describe('A brand colour (hex): 8 data colours are generated from it with the harmony'),
+    harmony: z.string().optional().describe('analogous (default), complementary, triadic or mono'),
+    preset: z.string().optional().describe(`A preset palette: ${Object.keys(E.PRESETS).join(', ')} (default DataArcus)`),
+    font: z.string().optional().describe(`One of: ${E.FONTS.join(', ')}. For Arabic reports: ${E.AR_FONTS.join(', ')}`),
+    chart: z.object({ labels: z.string(), grid: z.string(), legend: z.string(), axis: z.string(), table: z.string() }).partial().optional()
+      .describe(`Chart style: ${Object.entries(E.CHART_OPTIONS).map(([k, v]) => `${k} ${v.join('|')}`).join('; ')}. legend "Right" is the side (left in right-to-left designs)`),
+    layout: z.object({ page: pageInput.optional(), radius: z.number().optional().describe('Corner radius 0-24 (default 8)'), shadow: z.boolean().optional(),
+      transparent: z.boolean().optional().describe('Transparent visuals, for a background image with the panels'), dir: z.enum(['ltr', 'rtl']).optional() }).optional()
+      .describe('Page and style choices that change the theme (text sizes grow with the page, kept within 8-60)'),
+    lang: langInput,
+    folder: z.string().optional().describe('Folder for the theme file, inside the DataArcus folder (default: the DataArcus folder)')
+  }
+}, safe(async (a) => {
+  const { design, repaired, notes } = themeDesign(a);
+  const { page, fitted } = pageOf(design.layout), { contrast, warnings } = contrastReport(design);
+  if (fitted) warnings.push(`Page ${fitted.asked.w} x ${fitted.asked.h} is outside the sizes the generator allows; the theme is made for ${page.w} x ${page.h}.`);
+  const arabic = a.lang === 'ar' || design.layout.dir === 'rtl';
+  if (arabic && !E.AR_FONTS.includes(design.font)) warnings.push(`${design.font} has no Arabic letters, so Arabic text will show in another font. For Arabic reports use ${E.AR_FONTS.join(', ')}.`);
+  const file = freeFile(a.folder, E.fileBase(design.name), '.json');
+  fs.writeFileSync(file, JSON.stringify(E.buildTheme(design, a.lang), null, 2));
+  return text({ path: file, file: path.basename(file), page, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}) });
+}));
+
+server.registerTool('plan_layout', {
+  title: 'Plan a report page layout',
+  description: 'The exact position of every visual on a Power BI page, as the DataArcus Theme Generator lays it out: one row per visual with its name, the suggested visual, and x, y, width, height in the page\'s own units (Format > General > Properties). Right-to-left designs are mirrored. forAuthoring gives the same numbers as PBIR visual.json positions for editing an existing report: use them exactly, never snap them to multiples of 8, so every visual lands on its panel. Nothing is written.',
+  inputSchema: {
+    design: z.record(z.any()).optional().describe('The design from generate_theme (its layout is the starting point); the other inputs change it'),
+    layout: z.enum(['exec', 'analysis', 'ops', 'focus']).optional().describe('Executive summary, analysis (filters and a wide table), operations monitor, or single focus'),
+    kpis: z.number().int().min(3).max(6).optional().describe('KPI cards in the top row (3-6)'),
+    filters: z.enum(['none', 'start', 'end', 'top']).optional().describe('A filter panel at the start or end side (left or right by reading direction), a strip on top, or none'),
+    header: z.boolean().optional().describe('A header band with the page title and a logo (default on)'),
+    page: pageInput.optional(),
+    dir: z.enum(['ltr', 'rtl']).optional().describe('Reading direction; by default the language decides'),
+    lang: langInput
+  }
+}, safe(async (a) => {
+  const r = planLayout(a), { page, fitted } = pageOf(r.design.layout);
+  return text({ page, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring, design: r.design });
 }));
 
 await server.connect(new StdioServerTransport());

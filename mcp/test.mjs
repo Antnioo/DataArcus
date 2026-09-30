@@ -42,7 +42,7 @@ const call = async (name, args) => { const r = await client.callTool({ name, arg
 const hash = (f) => crypto.createHash('md5').update(fs.readFileSync(f)).digest('hex');
 
 const tools = (await client.listTools()).tools.map((t) => t.name).sort();
-check(tools.join() === 'check_model_health,create_report,read_model,suggest_fields', `tools: ${tools}`);
+check(tools.join() === 'check_model_health,create_report,generate_theme,plan_layout,read_model,suggest_fields', `tools: ${tools}`);
 
 // read_model: a TMDL project, automatic date tables left out
 let r = await call('read_model', { path: 'tmdl-project' });
@@ -137,6 +137,91 @@ if (!r.err) {
 } else check(false, `dark theme report: ${r.t}`);
 r = await call('create_report', { path: 'sample.pbit', name: 'X', pages: [page] });
 check(r.err && /project folder/.test(r.t), 'create_report accepted a .pbit');
+
+// ---------- design tools: the website's design engine, byte for byte ----------
+// The design fixtures (captured from the Theme Generator page), read here directly so the MCP needs none of the
+// website's test packages: a blob starting with "=" is kept as it is, any other is compact JSON to pretty-print.
+const FIX = JSON.parse(fs.readFileSync(path.join(REPO, 'scripts/tests/fixtures/design-engine/cases.json'), 'utf8'));
+const blob = (h) => { const v = FIX.blobs[h]; return v == null ? null : v[0] === '=' ? v.slice(1) : JSON.stringify(JSON.parse(v), null, 2); };
+const DESIGNS = FIX.cases.map((c) => Object.assign({}, c, { theme: blob(c.theme) }));
+const E = (await import('node:module')).createRequire(import.meta.url)('../assets/js/design-engine.js');
+const tryCall = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e.message), j: null }; } };
+check(DESIGNS.length === 54, `design fixtures: ${DESIGNS.length}`);
+
+// generate_theme: every fixture's saved design, given through the tool's own inputs, writes the website's theme JSON
+// byte for byte, under the website's file name (the PNG's name without -background-<layout>.png, plus .json)
+const themeInput = (c) => { const s = c.state, l = s.layout; return { name: s.name, palette: { data: s.data, ui: s.ui }, font: s.font, ...(s.chart ? { chart: s.chart } : {}),
+  layout: { page: l.page === 'custom' ? { w: l.pageW, h: l.pageH } : l.page, radius: l.radius, shadow: l.shadow, transparent: l.transparent, ...(l.dir ? { dir: l.dir } : {}) },
+  lang: c.lang, folder: `themes/${c.id}` }; };
+let themeOk = 0; const themeBad = [];
+for (const c of DESIGNS) {
+  r = await tryCall('generate_theme', themeInput(c));
+  const want = path.join(ROOT, 'themes', c.id, c.file.replace(/-background-(exec|analysis|ops|focus)\.png$/, '.json'));
+  const ok = !r.err && r.j.path === want && fs.existsSync(want) && fs.readFileSync(want, 'utf8') === c.theme && !r.j.repaired.length;
+  if (ok) themeOk++; else themeBad.push(`${c.id}: ${r.err ? r.t.slice(0, 120) : `path ${r.j.path}, same JSON ${fs.existsSync(want) && fs.readFileSync(want, 'utf8') === c.theme}, repaired ${JSON.stringify(r.j.repaired).slice(0, 120)}`}`);
+}
+check(themeOk === DESIGNS.length, `generate_theme parity: ${themeOk} of ${DESIGNS.length}; ${themeBad.slice(0, 3).join(' | ')}`);
+// a second theme with the same name gets a free file name; nothing outside the DataArcus folder
+r = await tryCall('generate_theme', { name: 'Same Name' }); const r2t = await tryCall('generate_theme', { name: 'Same Name' });
+check(!r.err && !r2t.err && path.basename(r.j.path) === 'same-name.json' && path.basename(r2t.j.path) === 'same-name-2.json', `generate_theme free names: ${r.t.slice(0, 100)} / ${r2t.t.slice(0, 100)}`);
+r = await tryCall('generate_theme', { name: 'X', folder: '../outside' });
+check(r.err && /outside the allowed folder/.test(r.t), `generate_theme wrote outside the folder: ${r.t.slice(0, 100)}`);
+// values that can't be used are listed with what was used instead, never guessed
+r = await tryCall('generate_theme', { name: 'Bad', palette: { data: ['#112233', 'red', '#445566', '#778899', '#aabbcc', '#ddeeff', '#123456', '#654321'], ui: { background: '#ffffff', card: 'white', text: '#111111', accent: '#0f4c5c' } },
+  font: 'Comic Sans MS', chart: { legend: 'Middle' }, preset: 'Nope' });
+const rep = r.err ? [] : r.j.repaired.map((x) => x.field);
+check(!r.err && ['palette.data[1]', 'palette.ui.card', 'palette.ui.good', 'palette.ui.neutral', 'palette.ui.bad', 'font', 'chart.legend', 'preset'].every((f) => rep.includes(f)) && r.j.design.font === 'Segoe UI',
+  `generate_theme repaired: ${r.err ? r.t.slice(0, 150) : JSON.stringify(rep)}`);
+r = await tryCall('generate_theme', { name: 'Bad Harmony', brand: '#0f4c5c', harmony: 'rainbow' });
+check(!r.err && r.j.repaired.some((x) => x.field === 'harmony'), `generate_theme bad harmony: ${r.t.slice(0, 150)}`);
+// brand + each harmony: the engine's generate(), with the first colour as the table accent, as on the website
+for (const h of ['analogous', 'complementary', 'triadic', 'mono']) {
+  r = await tryCall('generate_theme', { name: 'Brand ' + h, brand: '#0F4C5C', harmony: h });
+  check(!r.err && JSON.stringify(r.j.design.data) === JSON.stringify(E.generate('#0f4c5c', h)) && r.j.design.ui.accent === r.j.design.data[0], `generate_theme brand ${h}: ${r.t.slice(0, 150)}`);
+}
+// font sizes stay within Power BI's 8-60 on the biggest and smallest pages
+for (const [w, h] of [[3840, 2160], [640, 360]]) {
+  r = await tryCall('generate_theme', { name: `Size ${w}`, layout: { page: { w, h } } });
+  const sizes = []; if (!r.err) JSON.stringify(JSON.parse(fs.readFileSync(r.j.path, 'utf8')), (k, v) => { if ((k === 'fontSize' || k === 'textSize') && typeof v === 'number') sizes.push(v); return v; });
+  check(!r.err && sizes.length && sizes.every((s) => s >= 8 && s <= 60), `generate_theme ${w}x${h} font sizes: ${r.err ? r.t.slice(0, 100) : sizes}`);
+}
+// the contrast checks come back, with a warning for each one that fails
+r = await tryCall('generate_theme', { name: 'Low Contrast', palette: { data: Array(8).fill('#eeeeee'), ui: { background: '#ffffff', card: '#ffffff', text: '#cccccc', accent: '#0f4c5c' } } });
+check(!r.err && r.j.contrast.checks.length === 4 && r.j.contrast.checks.some((x) => !x.pass) && r.j.warnings.some((w) => /Text on visuals/.test(w)) && r.j.contrast.weak.length === 8,
+  `generate_theme contrast: ${r.t.slice(0, 200)}`);
+
+// plan_layout: every fixture's saved design gives the website's slot table exactly (names in the case's language,
+// right-to-left mirrored, custom sizes fitted as the website does)
+let slotOk = 0; const slotBad = [];
+for (const c of DESIGNS) {
+  r = await tryCall('plan_layout', { design: c.state, lang: c.lang });
+  const rows = r.err ? null : r.j.slots.map((s) => [s.role, s.visual, s.x, s.y, s.w, s.h].map(String));
+  if (rows && JSON.stringify(rows) === JSON.stringify(c.slots)) slotOk++;
+  else slotBad.push(`${c.id}: ${r.err ? r.t.slice(0, 120) : JSON.stringify(rows).slice(0, 160) + ' vs ' + JSON.stringify(c.slots).slice(0, 160)}`);
+}
+check(slotOk === DESIGNS.length, `plan_layout parity: ${slotOk} of ${DESIGNS.length}; ${slotBad.slice(0, 3).join(' | ')}`);
+// the tool's own choices override the design's: analysis, filters at the end, right to left, Arabic, 3 KPIs, 1920 x 1080
+r = await tryCall('plan_layout', { layout: 'analysis', filters: 'end', dir: 'rtl', lang: 'ar', kpis: 3, page: '1920x1080' });
+const ps = r.err ? [] : r.j.slots, at = (role) => ps.find((s) => s.role === role) || {};
+check(!r.err && JSON.stringify(r.j.page) === '{"w":1920,"h":1080}' && ps.length === 8 && at('الفلاتر').x === 24 && at('الفلاتر').w === 294 && at('مؤشر 1').x === 1388 && at('مؤشر 3').x === 336
+  && at('جدول التفاصيل').h === 442 && r.j.design.layout.preset === 'analysis' && r.j.design.layout.fpos === 'end', `plan_layout choices: ${r.t.slice(0, 250)}`);
+check(!r.err && r.j.why.length === 3 && r.j.why.every((w) => /[؀-ۿ]/.test(w)), `plan_layout reasons in Arabic: ${r.err ? '' : JSON.stringify(r.j.why)}`);
+// forAuthoring: the PBIR visual.json position (x, y, z, width, height, tabOrder), in reading order (top to bottom, then
+// along the reading direction), z and tabOrder 1000, 2000..., the same numbers as the slots
+const fa = r.err ? [] : r.j.forAuthoring, order = ps.slice().sort((a, b) => (a.y - b.y) || (b.x - a.x));
+check(fa.length > 0 && fa.length === ps.length && fa.every((v, i) => v.role === order[i].role && v.position.x === order[i].x && v.position.y === order[i].y && v.position.width === order[i].w
+  && v.position.height === order[i].h && v.position.z === (i + 1) * 1000 && v.position.tabOrder === (i + 1) * 1000), `plan_layout forAuthoring: ${JSON.stringify(fa).slice(0, 250)}`);
+// no filters, no header, left to right: fewer slots, the first KPI at the left margin
+r = await tryCall('plan_layout', { layout: 'exec', filters: 'none', header: false, dir: 'ltr', kpis: 6 });
+check(!r.err && r.j.slots.length === 10 && !r.j.slots.some((s) => s.kind === 'title' || s.kind === 'slicer') && r.j.slots.find((s) => s.role === 'KPI 1').x === 24, `plan_layout no header: ${r.t.slice(0, 200)}`);
+// a custom size outside the limits is fitted, and says so
+r = await tryCall('plan_layout', { page: { w: 9999, h: 100 } });
+check(!r.err && JSON.stringify(r.j.page) === '{"w":3840,"h":1600}' && JSON.stringify(r.j.fitted) === '{"asked":{"w":9999,"h":100}}', `plan_layout fitted: ${r.t.slice(0, 200)}`);
+// a design from generate_theme passes straight through: same colours, same page, positions for that page
+const gt = await tryCall('generate_theme', { name: 'Chain', brand: '#0f4c5c', harmony: 'analogous', layout: { page: '1280x720' } });
+r = gt.err ? gt : await tryCall('plan_layout', { design: gt.j.design, layout: 'ops' });
+check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.stringify(r.j.design.data) === JSON.stringify(gt.j.design.data) && r.j.slots.filter((s) => s.kind === 'kpi').length === 6,
+  `plan_layout after generate_theme: ${r.t.slice(0, 200)}`);
 
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });

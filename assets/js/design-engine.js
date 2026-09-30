@@ -283,6 +283,21 @@
     };
   };
 
+  // ---------- readability ----------
+  // WCAG contrast of the theme's main pairs (4.5:1 for text, 3:1 for the first data colour, which carries the main
+  // series), and the data colours that almost disappear on the visual background (below 1.6:1). d: the design
+  const contrastChecks = (d) => {
+    const u = d.ui, sec = mix(u.text, u.card, 0.35);
+    const checks = [
+      ['textOnVisuals', contrast(u.text, u.card), 4.5],
+      ['labelsOnVisuals', contrast(sec, u.card), 4.5],
+      ['textOnPage', contrast(u.text, u.background), 4.5],
+      ['color1OnVisuals', contrast(d.data[0], u.card), 3]
+    ].map(([id, ratio, min]) => ({ id, ratio, min, pass: ratio >= min }));
+    const weak = d.data.map((c, i) => [i + 1, contrast(c, u.card)]).filter(([, r]) => r < 1.6).map(([i]) => i);
+    return { checks, weak };
+  };
+
   // ---------- the background drawing ----------
   // accent bars: side, thickness and color (Advanced options)
   const barW = (k, c) => clampTo(k, c[k] == null ? (k === 'kpiBarW' ? 4 : 3) : c[k]);
@@ -359,7 +374,7 @@
     PRESETS, FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize,
-    fs, chart, buildTheme, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    fs, chart, buildTheme, contrastChecks, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;

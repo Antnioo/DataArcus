@@ -53,6 +53,14 @@ export default async function ({ browser, url }) {
     const want = c.slots.filter((row, i) => slots[i].kind !== 'title' && slots[i].kind !== 'logo').map((row) => `${row[4]}×${row[5]}`);
     const off = want.map((w, i) => (labels[i] === w ? null : `${w} in the table, ${labels[i]} on the preview`)).filter(Boolean);
     check(labels.length === want.length && !off.length, `${c.id}: preview size labels differ from the slot table (${off.length} of ${want.length}): ${off.slice(0, 3).join('; ')}`);
+    // the readability checks (the page's formulas: text, labels and text on page 4.5:1, colour 1 on visuals 3:1, and any
+    // data colour below 1.6:1 on the visual background)
+    const u = d.ui, sec = E.mix(u.text, u.card, 0.35);
+    const wantC = { checks: [['textOnVisuals', E.contrast(u.text, u.card), 4.5], ['labelsOnVisuals', E.contrast(sec, u.card), 4.5],
+      ['textOnPage', E.contrast(u.text, u.background), 4.5], ['color1OnVisuals', E.contrast(d.data[0], u.card), 3]].map(([id, ratio, min]) => ({ id, ratio, min, pass: ratio >= min })),
+    weak: d.data.map((x, i) => [i + 1, E.contrast(x, u.card)]).filter(([, r]) => r < 1.6).map(([i]) => i) };
+    const gotC = typeof E.contrastChecks === 'function' ? E.contrastChecks(d) : 'no contrastChecks';
+    check(JSON.stringify(gotC) === JSON.stringify(wantC), `${c.id}: contrast checks ${JSON.stringify(gotC).slice(0, 200)}, want ${JSON.stringify(wantC).slice(0, 200)}`);
     // background SVG, at the PNG's size
     const [w, h] = E.pngSize(l);
     check(E.bgSvg(d, slots, { w, h }, c.lang) === c.bg, `${c.id}: background SVG differs`);
