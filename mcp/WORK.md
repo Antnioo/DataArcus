@@ -56,6 +56,9 @@ minified file differs from before only in that version).
 wide (slide-in panel), and on the top rail Reset 160 → 190 wide (English) and 160 → 234 (Arabic), so the top rail's
 slicers get that much narrower (e.g. 556 → 546). The side rail (the MCP's reports, the Desktop check) is unchanged
 at 1080. Everything else at 1080 is identical apart from random ids.
+Code commit `945a03e`. Full run (laptop kept awake): all 16 website suites PASS (4965 checks; pbip 46, design-engine
+585 incl. the 60 project fixtures), `capture-design-fixtures.mjs --check` MATCH on the live and lab pages (54 cases
+each), MCP 87 PASS; `scripts/tests/fixtures` and `design-engine.js` identical to main. Next: the six Desktop reports.
 
 **Owner's additions (2026-10-01):**
 1. **1280 x 720 and every other page size.** Scaling with the page height changes every size except 1920 x 1080. From
