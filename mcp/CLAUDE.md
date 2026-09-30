@@ -16,8 +16,18 @@ and never damages the user's files.
 7. **Commits:** clear message saying what changed and why; end with the attribution lines your environment gives you. Never put a model name or version in commits, code or docs.
 8. **Public vs private:** see "Repo" in ROADMAP.md, and remind him when the trigger is reached.
 
+## Keeping the memory (`mcp/WORK.md`)
+Chats end (usage limits, new sessions, restarts); the repo stays. So the memory lives in `mcp/WORK.md`, not in a chat:
+- **Start of a session:** read `mcp/WORK.md` and continue from its "Next step". Don't redo finished work.
+- **Before approved work starts:** write its plan and the expected numbers (worked out before any run) into
+  `WORK.md` under "Next step", commit and push that first.
+- **After each step:** update "Where things stand" and "Next step" (what's done, commit hashes, what's left), commit
+  and push, so a session stopped at any moment can be picked up by the next one.
+- **Findings you were told not to fix yet** go under "Open items".
+
 ## How it is built
-- `mcp/server.mjs`: the MCP server (stdio). Tools: `read_model`, `suggest_fields`, `check_model_health`, `create_report`.
+- `mcp/server.mjs`: the MCP server (stdio). Tools: `read_model`, `suggest_fields`, `check_model_health`, `generate_theme`,
+  `plan_layout`, `create_report`. `mcp/lib/design.mjs`: the design tools' logic on top of `assets/js/design-engine.js`.
 - `mcp/lib/model.mjs`: reads models from disk (project folders with TMDL or model.bim, model.bim files, .pbit zips), keeps every path inside `DATAARCUS_ROOT`.
 - **The engines are shared with the website, on purpose.** They live in `assets/js/` and run in the browser and in Node:
   `pbip-export.js` (writes PBIR projects), `pbip-bind.js` (reads models, suggests fields), `model-health-engine.js`
