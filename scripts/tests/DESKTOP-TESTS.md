@@ -90,6 +90,72 @@ Seen, not in the expected list: table headers are left aligned in their columns 
 so on the wide page 1 table each number sits nearer the next column's header than its own. Days still run A to Z and
 the % card shows 0.34, as the model notes say.
 
+## 2026-09-30: cards moved to `cardVisual` (branch `feat/card-visual`, `feb8516`), Power BI Desktop 2.157: stopped on the first report
+
+Six reports built by this branch's `mcp/server.mjs` over stdio (the session's MCP still ran the old code), same calls as
+"Gulf Sales AR 3", in `tests/5-tmdl-sample/` ("Gulf Sales Cards EN/AR 1080/360/2160"); expected results in `mcp/WORK.md`,
+committed before the run (`5dd2059`). Opened "Gulf Sales Cards EN 1080" with `powerbi-desktop open`; screenshots in
+`tests/phase2-try/shots-cards/` (outside the repo; page 1's first capture right after `open` was empty, the retry 15 s
+later worked, as on AR 3). The run stopped at the first difference, per the plan; the other five reports weren't opened.
+
+| Check (EN 1080) | Expected | Seen | Result |
+|---|---|---|---|
+| 1. Title and whole number, nothing cut | every KPI card and the tooltip card whole | page 1: 4 cards, page 2: 3 cards, tooltip card: titles and numbers whole, no "..." | PASS |
+| 2. Value sizes | 42 on both pages, 20 on the tooltip page | numbers at the same size as AR 3's legacy cards (42); tooltip number as before (20) | PASS |
+| 3. No label, no inner box, no card background | as today | no label under the numbers, no inner rectangle; the KPI row's panel looks as on AR 3 | PASS |
+| 5. Values equal DAX, shown as 101.91K / 74.68K / 23.64K / 0.34 | 101.91K / 74.68K / 23.64K / 0.34 | **101.914K / 74.675K / 23.635K / 0.34** (the numbers equal the table totals 101914 / 74675 / 23635; the card shows one more decimal than the legacy card) | **FAIL** |
+| 6. Number centred, title in the reading direction | centred as on AR 3; title left (EN) | each number centred under its card; titles left | PASS |
+| 4, 7, 8 (Arabic, phone layout, hand-added card) and the other five reports | | not run (stopped) | not run |
+
+Cause: with the same automatic display units, the legacy card showed 2 decimals (101.91K) and the card visual shows 3
+(101.914K). The card visual's `value` has `labelDisplayUnits` and `labelPrecision` (Microsoft's theme schema 2.157).
+**Owner's decision:** keep the card visual's default format; no `labelPrecision`, because forcing 2 decimals would show
+counts as 47.00. Expected result 5 is now "values equal DAX; format = cardVisual's default (e.g. 101.914K)"; the run
+continues below with that expectation. The report was left open in Desktop, not saved.
+
+**Continued (same day), all six reports.** Each opened alone with `powerbi-desktop open` (the previous one closed first,
+nothing saved; a script refuses to close anything that isn't a "Gulf Sales Cards" report), one screenshot per page
+(`tests/phase2-try/shots-cards/<en|ar><1080|360|2160>-p1..p3.png`), then one DAX query on the open model through
+Microsoft's Authoring MCP: `EVALUATE ROW(...)` of the four KPI measures. DAX gave 101914 / 74675 / 23635 / 0.3377971
+on all six.
+
+| Check | EN 1080 | EN 360 | EN 2160 | AR 1080 | AR 360 | AR 2160 |
+|---|---|---|---|---|---|---|
+| 1. Title and whole number, nothing cut, no "..." on the number | PASS | PASS (long titles end in "...", see below) | PASS | PASS | PASS (same) | PASS |
+| 2. Value sizes as in the table (page 1 / page 2 / tooltip) | PASS 42 / 42 / 20 | PASS 14 / 12 / 20 | PASS 60 / 60 / 20 | PASS 42 / 42 / 20 | PASS 12 / 14 / 20 | PASS 60 / 60 / 20 |
+| 3. No label under the number, no inner box, panel as today | PASS | PASS | PASS | PASS | PASS | PASS |
+| 4. Arabic: title on the right, KPI 1 (Total Sales) rightmost | – | – | – | PASS | PASS | PASS |
+| 5. Values equal DAX; format = cardVisual's default | PASS 101.914K / 74.675K / 23.635K / 0.34 | PASS | PASS | PASS | PASS | PASS |
+| 6. Number centred in every card, as in AR 3; title in the reading direction | PASS (left) | PASS (left) | PASS (left) | PASS (right) | PASS (right) | PASS (right) |
+| 7. Phone layout (EN 1080): two cards per row, title and number whole | **FAIL** (owner, see below) | | | | | |
+| 8. Hand-added `cardVisual` shows 42 (EN 1080) | not confirmed (owner, see below) | | | | | |
+
+**Items 7 and 8, checked by the owner in Desktop** (View > Mobile layout; a new Card added by hand, closed without
+saving); his screenshots: `tests/phase2-try/shots-cards/en1080-phone-p1.png`, `en1080-phone-p2.png`,
+`en1080-handadded-card.png`.
+- **7. FAIL.** Two cards per row and every number whole (the phone sizes, value 20 and title 10, fit), but: long titles
+  end in "..." ("Total Sales Last Ra..."), and the cards sit on top of other visuals: on page 1 over the header ("Gulf
+  Sales" and the page buttons), on page 2 over the header and the slicers. The files don't overlap: page 1's KPI group
+  is at y 116 on the phone and its cards at y 0 and 108 inside it (`mobile.json`, relative to the group, the way the
+  desktop positions are written). Desktop drew the cards at page y 0 and 108, so in the phone layout it reads a grouped
+  visual's position as a page position. The header's children look right only because the header group is at y 0.
+  The phone positions come from the existing phone layout code; this branch didn't change them (only the cards' phone
+  sizes). Not fixed: needs the owner's go.
+- **8. Not confirmed.** The hand-added card shows "Total Sales" as a small label above a left-aligned 101.914K (the new
+  card's own defaults: label on, value not centred), in the theme's font. The crop has no KPI card beside it, so its
+  size can't be compared with the KPI numbers (42) from the screenshot.
+
+Sizes are read against each page's size in the screenshots (Desktop fits the page to the window), and the card files
+hold the exact values listed in WORK.md.
+
+Seen, not in the expected list (not cards; flagged, not fixed):
+- **640 x 360:** KPI titles longer than the card end in "..." ("Total Sales Last Ramada...", 8pt titles in 151-169 wide
+  cards); the header's page title "Gulf Sales" is cut at the bottom; slicer titles and the Reset button text wrap.
+- **3840 x 2160:** the slicers in the filter rail are squashed to thin lines (their dropdowns don't show), the header's
+  title, page buttons ("Executiv e...") and logo text are small, and the Reset button text is cut at the bottom.
+None of these is written by the card code (theme and fixtures unchanged); the page sizes 640 x 360 and 3840 x 2160 had
+not been checked in Desktop before.
+
 ## Lessons
 - **Prompts for the laptop agent:** start with the request itself, name every file, forbid changing the test files or the expected numbers, and say "stop and report on failure". Give the exact report format.
 - **What the agent can do alone:** create tables, relationships and measures, run DAX, mark date tables, refresh, screenshot one page at a time.

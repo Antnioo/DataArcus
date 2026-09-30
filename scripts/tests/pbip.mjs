@@ -36,6 +36,40 @@ const refs = (files) => Object.entries(files).filter(([n]) => n.endsWith('/visua
   return out;
 });
 
+// cards are cardVisual (Microsoft deprecates the legacy card): field role Data; value size and centring, no label and
+// no inner outline, each on the "default" selector; padding set; the height they need fits their box (Microsoft's card
+// sizing: text takes 1.5 x its size); the title follows the reading direction; on the phone, their own sizes.
+// files: { path: bytes } of a project. Returns the number of cards and what is wrong.
+function cardProblems(files, rtl) {
+  const bad = [], lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined), n = (p) => parseFloat(lit(p));
+  const def = (list) => (list || []).find((x) => x.selector && x.selector.id === 'default'), props = (list) => ((list || [])[0] || {}).properties || {};
+  let cards = 0;
+  Object.keys(files).filter((f) => f.endsWith('/visual.json')).forEach((f) => {
+    const j = JSON.parse(String(files[f])), v = j.visual, id = j.name;
+    if (!v) return;
+    if (v.visualType === 'card' || v.visualType === 'multiRowCard') { bad.push(`${id}: legacy ${v.visualType}`); return; }
+    if (v.visualType !== 'cardVisual') return;
+    cards++;
+    const o = v.objects || {}, c = v.visualContainerObjects || {}, val = def(o.value), pad = def(o.padding), lay = def(o.layout);
+    const roles = Object.keys((v.query || {}).queryState || {});
+    if (roles.length && roles.join() !== 'Data') bad.push(`${id}: role ${roles}`);
+    if (!val || !(n(val.properties.fontSize) >= 8) || lit(val.properties.horizontalAlignment) !== "'center'") bad.push(`${id}: value ${JSON.stringify(val)}`);
+    if (lit((def(o.label) || { properties: {} }).properties.show) !== 'false') bad.push(`${id}: label not hidden`);
+    if (lit((def(o.outline) || { properties: {} }).properties.show) !== 'false') bad.push(`${id}: inner outline not off`);
+    const t = props(c.title), vp = props(c.padding), sp = props(c.spacing);
+    if (lit(t.alignment) !== (rtl ? "'right'" : "'left'")) bad.push(`${id}: title alignment ${lit(t.alignment)}`);
+    if (lit(sp.customizeSpacing) !== 'true' || n(sp.spaceBelowTitleArea) !== 0) bad.push(`${id}: spacing ${JSON.stringify(sp)}`);
+    const need = n(vp.top) + n(vp.bottom) + (lit(t.show) === 'true' ? Math.ceil(1.5 * n(t.fontSize)) : 0) + 2 * n(pad && pad.properties.paddingUniform) + 2 * n(lay && lay.properties.paddingUniform) + Math.ceil(1.5 * n(val && val.properties.fontSize));
+    if (!(need <= j.position.height)) bad.push(`${id}: needs ${need} high, box ${j.position.height}`);
+    const mf = f.replace(/visual\.json$/, 'mobile.json');
+    if (files[mf]) {
+      const m = JSON.parse(String(files[mf]));
+      if (n((def((m.objects || {}).value) || { properties: {} }).properties.fontSize) !== 20 || n(props((m.visualContainerObjects || {}).title).fontSize) !== 10) bad.push(`${id}: phone sizes ${JSON.stringify(m.objects)} ${JSON.stringify(m.visualContainerObjects)}`);
+    }
+  });
+  return { cards, bad };
+}
+
 // the fields of the fixture's model
 const LOCAL = { m: { Sales: ['Total Sales', 'Orders', 'Sales YoY %'] }, c: { Sales: ['CustomerKey', 'Sales Channel'], Customer: ["Customer's City", 'المنطقة'], Calendar: ['Date', 'Year', 'Month Name'] } };
 // a copy of the fixture project in a temporary folder named proj, changed by edit(dir)
@@ -76,6 +110,25 @@ export default async function ({ browser, url }) {
     const longest = Math.max(...names('A'.repeat(60)).map((p) => p.length));
     check(longest <= 160, `names: longest path in the zip is ${longest} characters`);
     check(emoji.every((n) => !/[\uD800-\uDFFF]/.test(n.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '')) && !n.includes('\uFFFD')), `names: an emoji cut in half: ${emoji[0]}`);
+  }
+
+  // 10. Cards on every design fixture (54 designs: every layout on 9 page sizes, 640 x 360 to 3840 x 2160, English and
+  //     Arabic, the smallest and largest KPI heights), built the way the page builds its download: every KPI card and the
+  //     tooltip card is a cardVisual that fits its box (see cardProblems)
+  {
+    const require = createRequire(import.meta.url), P = require('../../assets/js/pbip-export.js'), E = require('../../assets/js/design-engine.js');
+    const { cases } = JSON.parse(fs.readFileSync(path.join(HERE, 'fixtures', 'design-engine', 'cases.json'), 'utf8'));
+    const bad = []; let designs = 0;
+    for (const c of cases) {
+      const d = c.state, pages = E.projectPages(d.layout, c.lang, { second: true, panel: true }), rtl = E.rtl(d.layout, c.lang);
+      const { files } = P.build({ name: 'Cards', title: 'Cards', pageName: pages[0].name, lang: c.lang, rtl, font: d.font, ui: d.ui, theme: E.buildTheme(d, c.lang), sample: true, logo: null,
+        texts: E.REPORT_TEXTS[c.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: new Uint8Array([1]), panel: p.panel })) });
+      const r = cardProblems(Object.fromEntries(files.map((f) => [f.path, typeof f.data === 'string' ? f.data : Buffer.from(f.data)])), rtl);
+      const want = pages.reduce((a, p) => a + p.slots.filter((s) => s.kind === 'kpi').length, 0) + 1;
+      if (r.cards !== want || r.bad.length) bad.push(`${c.id}: ${r.cards} cardVisual of ${want}; ${r.bad.slice(0, 3).join('; ')}`);
+      designs++;
+    }
+    check(designs === 54 && !bad.length, `cards on the design fixtures (${designs}): ${bad.length} wrong, e.g. ${bad.slice(0, 3).join(' | ')}`);
   }
 
   const run = async (lang, name, setup) => {
@@ -124,6 +177,8 @@ export default async function ({ browser, url }) {
     check(rs.length > 20, `local: only ${rs.length} fields bound`);
     const bad = rs.filter((r) => !(LOCAL[r.kind][r.t] || []).includes(r.n));
     check(!bad.length, `local: fields not in the model: ${bad.map((r) => `${r.kind} ${r.t}[${r.n}]`).join(', ')}`);
+    const cr = cardProblems(files, false);
+    check(cr.cards >= 5 && !cr.bad.length, `local: ${cr.cards} cardVisual; ${cr.bad.slice(0, 4).join('; ')}`);
   }
 
   // 2. Published model, Arabic page: live connection, fields read from a .pbit
@@ -140,6 +195,8 @@ export default async function ({ browser, url }) {
     check(!Object.keys(files).some((n) => /\.SemanticModel\//.test(n)), 'service: a live report must not carry a model of its own');
     check(picked.filter(Boolean).length >= 10, `service: few suggestions ${picked.join(' | ')}`);
     check(refs(files).length > 20, 'service: fields not bound');
+    const cr = cardProblems(files, true);
+    check(cr.cards >= 5 && !cr.bad.length, `service (Arabic): ${cr.cards} cardVisual; ${cr.bad.slice(0, 4).join('; ')}`);
   }
 
   // 4. A copy of the model with the same name further down (a backup): the report and its fields come from the
