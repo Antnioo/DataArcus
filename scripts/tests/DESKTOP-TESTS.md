@@ -156,6 +156,27 @@ Seen, not in the expected list (not cards; flagged, not fixed):
 None of these is written by the card code (theme and fixtures unchanged); the page sizes 640 x 360 and 3840 x 2160 had
 not been checked in Desktop before.
 
+## 2026-10-01: phone and page sizes (branch `fix/phone-and-sizes`, `d24c5c1`), Power BI Desktop 2.157: stopped on the second report
+
+Six reports "Gulf Sales Sizes EN/AR 1080/360/2160" built by this branch's `mcp/server.mjs` over stdio (same calls as the
+cards check), in `tests/5-tmdl-sample/`; expected sizes in `mcp/WORK.md`, committed before the run (`d24c5c1`). Each
+opened alone with `powerbi-desktop open`, one screenshot per page in `tests/phase2-try/shots-sizes/`, one DAX query per
+report (Microsoft's Authoring MCP). Stopped at the first failure (EN 360); AR 1080, AR 360, EN 2160, AR 2160 and the
+phone layout (item 6) not run.
+
+| Check | EN 1080 (`en1080-p1..p3.png`) | EN 360 (`en360-p1..p3.png`) |
+|---|---|---|
+| 1. Header: title one line whole, page buttons whole, logo text whole | PASS (as in the cards check) | **FAIL**: page buttons whole ("Executive summary", "Details", 8pt, one line), but the title "Gulf Sales" and "Your logo" (8pt in 16-high boxes) are cut at the bottom, each with a small scroll thumb beside it (the text box overflows) |
+| 2. Rail: slicers show title and dropdown; Reset whole | PASS (3 × 274x76, "Reset filters" one line) | **FAIL**: Reset whole on one line (91x28), but the slicers (91x27) show only their titles; the dropdown boxes are squashed to a line |
+| 3. 1080 as in the cards check | PASS (page 1, page 2 and tooltip look the same) | – |
+| 4. Cards | PASS | PASS (numbers whole and centred; long titles end in "...", the known limit) |
+| 5. Values equal DAX | PASS (101914 / 74675 / 23635 / 0.3377971; 101.914K ...) | PASS (same) |
+
+Cause (not fixed, needs the owner's go): the fit rules in `fitText` and the slicer minimum are estimates that Desktop
+doesn't bear out on the smallest page: a text box needs more than 1.5 x its text size in height (8pt text doesn't fit
+16), and a dropdown slicer needs more than two lines of its text (27 is too little for an 8pt title and its box). The
+tests use the same estimates, so they passed. The report was left open in Desktop, not saved.
+
 ## Lessons
 - **Prompts for the laptop agent:** start with the request itself, name every file, forbid changing the test files or the expected numbers, and say "stop and report on failure". Give the exact report format.
 - **What the agent can do alone:** create tables, relationships and measures, run DAX, mark date tables, refresh, screenshot one page at a time.
