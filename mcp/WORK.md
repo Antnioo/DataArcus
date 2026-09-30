@@ -48,8 +48,6 @@ Plan only, on a new branch `feat/card-visual` from main. Write the plan and its 
   (value and label, no clipping) on 1920 x 1080, 640 x 360 and 3840 x 2160, English and Arabic; values equal DAX.
 
 ## Open items (flagged, need the owner's go before any work)
-- **Table header alignment** (builder, on "Gulf Sales AR 3"): table headers are left aligned while the numbers are
-  right aligned. Look at it with the cardVisual work or on its own; Microsoft's table reference first.
 - **Table header alignment** (seen on "Gulf Sales AR 3"): headers are left aligned while numbers are right aligned,
   so on a wide table each number sits nearer the next column's header than its own.
 - **Mixed-language titles** in Arabic reports ("Total Sales حسب Quarter"): measure names come from the model.
