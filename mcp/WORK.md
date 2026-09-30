@@ -47,6 +47,16 @@ Done so far: plan `6386930`, additions `1cfbbe6`. Tests written (`scripts/tests/
   the sweep to cover what Desktop showed.
 - MCP: 87 checks, 10 fail: phone and sizes on "Sizes EN 1080", "Sizes EN/AR 360", "Sizes EN/AR 2160".
 
+Code (`pbip-export.js` only: `fitText`, `pt`, the header, page buttons, both rails, the slide-in panel, and the phone
+step removed): MCP 87 PASS, pbip 46 PASS. `pbip-export.min.js?v=20261001a`, `theme-generator.min.js?v=20261001a` (its
+minified file differs from before only in that version).
+**Differs from the plan's "1920 x 1080 output" line** (compared with main's `pbip-export.js` on all 30 fixtures at
+1920 x 1080, with and without the panel): besides the phone positions and the text sizes (page buttons 14, buttons
+15), three buttons grow to fit their 15pt text, by the plan's own rule ("or what its text needs"): Close 96 → 104
+wide (slide-in panel), and on the top rail Reset 160 → 190 wide (English) and 160 → 234 (Arabic), so the top rail's
+slicers get that much narrower (e.g. 556 → 546). The side rail (the MCP's reports, the Desktop check) is unchanged
+at 1080. Everything else at 1080 is identical apart from random ids.
+
 **Owner's additions (2026-10-01):**
 1. **1280 x 720 and every other page size.** Scaling with the page height changes every size except 1920 x 1080. From
    the engine's slots (exec layout, header on; page 2's rail for slicers and Reset; theme text sizes), today → planned:

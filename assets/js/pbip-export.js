@@ -275,6 +275,19 @@
       if (V < 8) { I = 0; V = Math.max(8, fit(0)); }
       return { P, I, V };
     };
+    // Sizes of the header, page buttons, filter rail and slide-in panel were made on a 1920 x 1080 page: they scale with
+    // the page (k = page height / 1080), as cardFit does, and text follows the page within Power BI's limits (8-60pt).
+    // Where the 8pt minimum makes a text bigger than its scaled box (small pages), the box grows to fit the text.
+    // fitText(text, t, w, maxLines): how a text of size t fits a width w, with Microsoft's card rule (a line takes 1.5 x
+    // the size) and 0.55 em per character as in cardFit: the lines it needs (at most maxLines), their height, and
+    // whether it fits in them. pt(t): a text size within Power BI's limits. LABEL: button text, the theme's label size.
+    const pt = (t) => Math.max(8, Math.min(60, Math.round(t))), lineOf = (t) => Math.ceil(t * 1.5), charW = (t) => t * 0.55 * 4 / 3;
+    const fitText = (text, t, w, maxLines) => {
+      const need = Math.ceil(charW(t) * String(text).length / Math.max(1, w)), lines = Math.min(maxLines || 1, Math.max(1, need));
+      return { lines, h: lines * lineOf(t), fits: need <= lines };
+    };
+    const LABEL = +(TH.label || {}).fontSize || 10;
+    const SLICER_TEXT = +((((((o.theme || {}).visualStyles || {}).slicer || {})['*'] || {}).header || [{}])[0].textSize) || LABEL;
     // Every card formatting object needs the "default" selector, or Power BI ignores it; the number stays centred, like
     // the legacy card's, in both reading directions; the inner outline would draw a box inside the panel
     const DEF = { id: 'default' };
@@ -346,13 +359,26 @@
       // page navigation between the title and the logo, when the report has more than one page
       const title = pg.slots.find((s) => s.kind === 'title'), logo = pg.slots.find((s) => s.kind === 'logo');
       let nav = null, openBtn = null;
-      const panel = pg.panel && title && logo ? pg.panel : null;
+      const panel = pg.panel && title && logo ? pg.panel : null, k = pg.page.h / 1080;
       if (title && logo) {
-        const gap = 24;
+        const gap = 24 * k, openText = '☰  ' + (W.filters || 'Filters');
         let x0 = rtl ? logo.x + logo.w + gap : title.x + title.w + gap, x1 = rtl ? title.x - gap : logo.x - gap;
         // slide-in filters: the Filters button sits next to the logo, the page buttons use what is left
-        if (panel) { const bw = Math.round(Math.min(180, Math.max(120, title.h * 3))); openBtn = { x: rtl ? x0 : x1 - bw, y: title.y, w: bw, h: title.h }; if (rtl) x0 += bw + 16; else x1 -= bw + 16; }
-        if (PAGES.length > 1 && x1 - x0 >= 220) { const w = Math.min(x1 - x0, 140 * PAGES.length + 40); nav = { x: rtl ? x0 : x1 - w, y: title.y, w, h: title.h }; }
+        if (panel) {
+          const bw = Math.round(Math.max(Math.min(180 * k, Math.max(120 * k, title.h * 3)), charW(LABEL) * openText.length + 16 * k));
+          openBtn = { x: Math.round(rtl ? x0 : x1 - bw), y: title.y, w: bw, h: title.h, text: openText };
+          if (rtl) x0 += bw + 16 * k; else x1 -= bw + 16 * k;
+        }
+        // page buttons: 140 each on 1920 x 1080, or what the longest page name needs (two lines when the header holds
+        // them); squeezed into the room left, with smaller text if needed; left out when even 8pt doesn't fit
+        if (PAGES.length > 1) {
+          const n = PAGES.length, longest = Math.max(...PAGES.map((p) => String(p.name || base).length));
+          const need = (t) => { const L = Math.min(2, Math.max(1, Math.floor(title.h / lineOf(t)))); return Math.ceil(charW(t) * Math.ceil(longest / L)) + 16 * k; };
+          let t = pt(title.h * 0.3);
+          const w = Math.min(x1 - x0, n * Math.max(140 * k, need(t)) + 40 * k);
+          while (t > 8 && (need(t) > (w - 40 * k) / n || lineOf(t) > title.h)) t--;
+          if (need(t) <= (w - 40 * k) / n && lineOf(t) <= title.h) nav = { x: rtl ? x0 : x1 - w, y: title.y, w, h: title.h, t };
+        }
       }
 
       sorted.forEach((s) => {
@@ -360,10 +386,14 @@
         if (s.kind === 'slicer') {
           // the filter panel holds several dropdown slicers and a Reset button:
           // stacked in a side panel, side by side in a top strip
-          const fields = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null), pad = 10, gap = 8, n = fields.length;
-          const across = s.w > s.h, bw = across ? Math.min(160, Math.round(s.w * 0.14)) : s.w - 2 * pad, bh = across ? s.h - 2 * pad : 40;
+          // (sizes from 1920 x 1080 scaled by k; Reset as wide or as high as its text needs, slicers two lines of theirs)
+          const fields = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null), pad = 10 * k, gap = 8 * k, n = fields.length;
+          const resetText = W.reset || 'Reset filters', across = s.w > s.h;
+          const bw = across ? Math.max(Math.min(160 * k, Math.round(s.w * 0.14)), Math.ceil(charW(LABEL) * resetText.length) + lineOf(LABEL) + 24 * k) : s.w - 2 * pad;
+          const bh = across ? s.h - 2 * pad : Math.max(40 * k, fitText(resetText, LABEL, bw - lineOf(LABEL) - 24 * k, 2).h + 12 * k);
           const room = across ? s.w - 2 * pad - bw - gap : s.w - 2 * pad;
-          const sw = across ? (room - gap * (n - 1)) / n : room, sh = across ? s.h - 2 * pad : Math.min(76, (s.h - 2 * pad - bh - gap * n) / n);
+          const sw = across ? (room - gap * (n - 1)) / n : room;
+          const sh = across ? s.h - 2 * pad : Math.max(2 * lineOf(SLICER_TEXT) + 8 * k, Math.min(76 * k, (s.h - 2 * pad - bh - gap * n) / n));
           fields.forEach((f, i) => {
             // in a right-to-left report the first slicer is the rightmost one, so tab order follows the reading
             const x = across ? (rtl ? s.x + s.w - pad - sw - i * (sw + gap) : s.x + pad + i * (sw + gap)) : s.x + pad, y = across ? s.y + pad : s.y + pad + i * (sh + gap);
@@ -379,22 +409,23 @@
           const bm = rnd(), bx = across ? (rtl ? s.x + pad : s.x + s.w - pad - bw) : s.x + pad, by = across ? s.y + pad : s.y + s.h - pad - bh;
           container({ x: Math.round(bx), y: Math.round(by), w: Math.round(bw), h: Math.round(bh), z, parent, kind: 'button',
             visual: { visualType: 'actionButton',
-              objects: { icon: def({ shapeType: str('reset'), lineColor: color(u.accent || u.text) }), text: def({ show: bool(true), text: str(W.reset || 'Reset filters'), fontColor: color(u.text), fontFamily: str(font) }),
+              objects: { icon: def({ shapeType: str('reset'), lineColor: color(u.accent || u.text) }), text: def({ show: bool(true), text: str(resetText), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL) }),
                 fill: def({ show: bool(true), fillColor: color(mixHex(u.card, u.text, 0.06)), transparency: num(0) }), outline: def({ show: bool(true), lineColor: color(edge) }) },
-              visualContainerObjects: Object.assign(frame(null, W.reset || 'Reset filters'), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(bm) }) }) } });
+              visualContainerObjects: Object.assign(frame(null, resetText), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(bm) }) }) } });
           z += 1000;
           bookmarks.push({ name: bm, page: pageName, targets: slicerNames.slice(), label: (W.reset || 'Reset filters') + (PAGES.length > 1 ? ' · ' + (pg.name || '') : '') });
           return;
         }
         let visual;
         if (s.kind === 'title') {
-          const size = Math.max(12, Math.min(28, Math.round(s.h * 0.42)));
+          // the title and the logo text follow the header's height (within 8-60pt), and stay on one line in it
+          const size = Math.min(pt(s.h * 0.42), Math.max(8, Math.floor(s.h / 1.5)));
           visual = { visualType: 'textbox', objects: textbox(o.title || base, size, true, u.text), visualContainerObjects: frame(null, o.title || base) };
         } else if (s.kind === 'logo') {
           visual = logoFile
             ? { visualType: 'image', objects: { general: obj({ imageUrl: resource(logoFile) }), imageScaling: obj({ imageScalingType: str('Fit') }) }, visualContainerObjects: frame(null, W.logo || 'Logo') }
             // the placeholder until a logo is added: sized to the header slot, in the secondary text colour so it reads
-            : { visualType: 'textbox', objects: textbox(W.logoHere || 'Your logo', Math.max(10, Math.min(24, Math.round(s.h * 0.3))), false, mixHex(u.text, u.card, 0.3)), visualContainerObjects: frame(null, W.logo || 'Logo') };
+            : { visualType: 'textbox', objects: textbox(W.logoHere || 'Your logo', Math.min(pt(s.h * 0.3), Math.max(8, Math.floor(s.h / 1.5))), false, mixHex(u.text, u.card, 0.3)), visualContainerObjects: frame(null, W.logo || 'Logo') };
         } else if (s.kind === 'text') {
           visual = { visualType: 'textbox', objects: textbox(W.textHere || 'Explain what the main chart shows and what to do about it.', 11, false, u.text), visualContainerObjects: frame(s.title, s.title) };
         } else {
@@ -419,14 +450,14 @@
         // the page navigator follows the title in the reading order
         if (s.kind === 'title' && nav) {
           container({ x: Math.round(nav.x), y: nav.y, w: Math.round(nav.w), h: nav.h, z, parent: groups.header.name, kind: 'nav',
-            visual: { visualType: 'pageNavigator', visualContainerObjects: frame(null, W.pages || 'Pages') } });
+            visual: { visualType: 'pageNavigator', objects: { text: def({ fontSize: num(nav.t) }) }, visualContainerObjects: frame(null, W.pages || 'Pages') } });
           z += 1000;
         }
         if (s.kind === 'title' && openBtn) {
           pg.openBm = rnd(); pg.closeBm = rnd();
           container({ x: openBtn.x, y: openBtn.y, w: openBtn.w, h: openBtn.h, z, parent: groups.header.name, kind: 'button', noPhone: true,
             visual: { visualType: 'actionButton',
-              objects: { icon: def({ shapeType: str('blank') }), text: def({ show: bool(true), text: str('\u2630  ' + (W.filters || 'Filters')), fontColor: color(u.text), fontFamily: str(font) }),
+              objects: { icon: def({ shapeType: str('blank') }), text: def({ show: bool(true), text: str(openBtn.text), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL) }),
                 fill: def({ show: bool(true), fillColor: color(mixHex(u.card, u.text, 0.06)), transparency: num(0) }), outline: def({ show: bool(true), lineColor: color(edge) }) },
               visualContainerObjects: Object.assign(frame(null, W.openFilters || 'Open the filter panel'), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(pg.openBm) }) }) } });
           z += 1000;
@@ -436,39 +467,43 @@
       // slide-in filter panel: one hidden group over the page (card, slicers, Reset, Close); two display-only
       // bookmarks show and hide it, so the user's slicer selections stay when it opens and closes
       if (panel && pg.openBm) {
-        const P = panel, gname = rnd(), kids = [], pad = 16, head = 44, bh = 40, gap = 10;
+        // (sizes from 1920 x 1080 scaled by k; Close and Reset as big as their text needs, slicers two lines of theirs)
+        const P = panel, gname = rnd(), kids = [], pad = 16 * k, head = 44 * k, gap = 10 * k, sw = P.w - 2 * pad;
+        const resetText = W.reset || 'Reset filters', closeText = '✕  ' + (W.close || 'Close');
+        const bh = Math.round(Math.max(40 * k, fitText(resetText, LABEL, sw - lineOf(LABEL) - 24 * k, 2).h + 12 * k));
         const fields = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null);
         z = Math.max(z, 900000);
         container({ name: gname, x: P.x, y: P.y, w: P.w, h: P.h, z, hidden: true, kind: 'group', groupKey: 'panel', group: { displayName: W.filterPanel || 'Filter panel', groupMode: 'ScaleMode' } });
         z += 1000;
         const add1 = (spec) => { const v = container(Object.assign({ parent: gname, z, noPhone: true }, spec)); kids.push(v.name); z += 1000; return v; };
         // the card: an empty text box with the container background, border and shadow
-        add1({ x: P.x, y: P.y, w: P.w, h: P.h, kind: 'text', visual: { visualType: 'textbox', objects: textbox(W.filters || 'Filters', 14, true, u.text),
+        add1({ x: P.x, y: P.y, w: P.w, h: P.h, kind: 'text', visual: { visualType: 'textbox', objects: textbox(W.filters || 'Filters', pt(14 * k), true, u.text),
           visualContainerObjects: Object.assign(frame(null, W.filterPanel || 'Filter panel'), {
             background: obj({ show: bool(true), color: color(u.card), transparency: num(0) }),
-            border: obj({ show: bool(true), color: color(edge), radius: num(12) }),
+            border: obj({ show: bool(true), color: color(edge), radius: num(Math.round(12 * k)) }),
             dropShadow: obj({ show: bool(true) }),
-            padding: obj({ top: num(14), left: num(16), right: num(16), bottom: num(12) }) }) } });
+            padding: obj({ top: num(Math.round(14 * k)), left: num(Math.round(16 * k)), right: num(Math.round(16 * k)), bottom: num(Math.round(12 * k)) }) }) } });
         // Close, in the panel's top corner at the end of the reading line
-        const cw = 96, cx = rtl ? P.x + pad : P.x + P.w - pad - cw;
-        add1({ x: cx, y: P.y + 10, w: cw, h: 32, kind: 'button', visual: { visualType: 'actionButton',
-          objects: { icon: def({ shapeType: str('blank') }), text: def({ show: bool(true), text: str('\u2715  ' + (W.close || 'Close')), fontColor: color(u.text), fontFamily: str(font) }), fill: def({ show: bool(false) }), outline: def({ show: bool(false) }) },
+        const cw = Math.round(Math.max(96 * k, charW(LABEL) * closeText.length + 16 * k)), ch = Math.round(Math.max(32 * k, lineOf(LABEL) + 8 * k));
+        const cx = Math.round(rtl ? P.x + pad : P.x + P.w - pad - cw);
+        add1({ x: cx, y: Math.round(P.y + 10 * k), w: cw, h: ch, kind: 'button', visual: { visualType: 'actionButton',
+          objects: { icon: def({ shapeType: str('blank') }), text: def({ show: bool(true), text: str(closeText), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL) }), fill: def({ show: bool(false) }), outline: def({ show: bool(false) }) },
           visualContainerObjects: Object.assign(frame(null, W.closeFilters || 'Close the filter panel'), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(pg.closeBm) }) }) } });
         // slicers stacked, then Reset at the bottom
-        const sw = P.w - 2 * pad, sh = Math.min(76, (P.h - head - pad - bh - gap * (fields.length + 1)) / fields.length), names = [];
+        const sh = Math.max(2 * lineOf(SLICER_TEXT) + 8 * k, Math.min(76 * k, (P.h - head - pad - bh - gap * (fields.length + 1)) / fields.length)), names = [];
         fields.forEach((f, i) => {
           const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
-          const v = add1({ x: P.x + pad, y: Math.round(P.y + head + 8 + i * (sh + gap)), w: sw, h: Math.round(sh), kind: 'slicer',
+          const v = add1({ x: Math.round(P.x + pad), y: Math.round(P.y + head + 8 * k + i * (sh + gap)), w: Math.round(sw), h: Math.round(sh), kind: 'slicer',
             visual: { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
               objects: { data: obj({ mode: str('Dropdown') }), header: obj({ show: bool(true), fontFamily: str(font) }) },
               visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true } });
           names.push(v.name);
         });
         const rb = rnd();
-        add1({ x: P.x + pad, y: P.y + P.h - pad - bh, w: sw, h: bh, kind: 'button', visual: { visualType: 'actionButton',
-          objects: { icon: def({ shapeType: str('reset'), lineColor: color(u.accent || u.text) }), text: def({ show: bool(true), text: str(W.reset || 'Reset filters'), fontColor: color(u.text), fontFamily: str(font) }),
+        add1({ x: Math.round(P.x + pad), y: Math.round(P.y + P.h - pad - bh), w: Math.round(sw), h: bh, kind: 'button', visual: { visualType: 'actionButton',
+          objects: { icon: def({ shapeType: str('reset'), lineColor: color(u.accent || u.text) }), text: def({ show: bool(true), text: str(resetText), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL) }),
             fill: def({ show: bool(true), fillColor: color(mixHex(u.card, u.text, 0.06)), transparency: num(0) }), outline: def({ show: bool(true), lineColor: color(edge) }) },
-          visualContainerObjects: Object.assign(frame(null, W.reset || 'Reset filters'), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(rb) }) }) } });
+          visualContainerObjects: Object.assign(frame(null, resetText), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(rb) }) }) } });
         bookmarks.push({ name: rb, page: pageName, targets: names, label: (W.reset || 'Reset filters') + (PAGES.length > 1 ? ' · ' + (pg.name || '') : '') });
         const suffix = PAGES.length > 1 ? ' · ' + (pg.name || '') : '';
         bookmarks.push({ name: pg.openBm, page: pageName, targets: [gname].concat(kids), group: gname, hidden: false, label: (W.filtersOpen || 'Filters open') + suffix });
@@ -497,14 +532,14 @@
       const order = ['header', 'filters', 'kpis', null];
       order.forEach((g) => mob.filter((m) => m.kind !== 'group' && !m.noPhone && (g ? m.parent === (groups[g] || {}).name : !m.parent) && m.kind !== 'logo').forEach(place));
       if (col) { y += 100 + GAP; col = 0; }
-      // groups wrap their children on the phone as well; children are placed relative to the group
+      // groups wrap their children on the phone as well; the children keep their page positions: in mobile.json Power BI
+      // Desktop reads a grouped visual's position as a page position, not relative to its group as in visual.json
       Object.keys(groups).forEach((g) => {
         const kids = mob.filter((m) => m.parent === groups[g].name && pos[m.v.name]);
         if (!kids.length) return;
         const x0 = Math.min(...kids.map((m) => pos[m.v.name].x)), y0 = Math.min(...kids.map((m) => pos[m.v.name].y));
         const x1 = Math.max(...kids.map((m) => pos[m.v.name].x + pos[m.v.name].w)), y1 = Math.max(...kids.map((m) => pos[m.v.name].y + pos[m.v.name].h));
-        pos[groups[g].name] = { x: x0, y: y0, w: x1 - x0, h: y1 - y0, origin: true };
-        kids.forEach((m) => { const p = pos[m.v.name]; p.x -= x0; p.y -= y0; });
+        pos[groups[g].name] = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
       });
       visuals.forEach((v) => {
         add(D + '/pages/' + pageName + '/visuals/' + v.name + '/visual.json', json(v));
