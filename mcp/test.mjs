@@ -312,6 +312,43 @@ r = gt.err ? gt : await tryCall('plan_layout', { design: gt.j.design, layout: 'o
 check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.stringify(r.j.design.data) === JSON.stringify(gt.j.design.data) && r.j.slots.filter((s) => s.kind === 'kpi').length === 6,
   `plan_layout after generate_theme: ${r.t.slice(0, 200)}`);
 
+// ---------- report quality: what the Desktop check of Gulf Sales AR found ----------
+// a report from a design on the Ramadan Test project (its DAX tables' columns have no type in the files)
+{
+  const t0 = await tryCall('generate_theme', { name: 'Quality', brand: '#0F4C5C', folder: 'themes/q' });
+  const q = t0.err ? t0 : await tryCall('create_report', { path: 'dax-project', name: 'Quality', design: t0.j.design, layout: 'analysis', kpis: 4, filters: 'end', lang: 'en' });
+  check(!q.err, `quality report: ${q.t.slice(0, 200)}`);
+  if (!q.err) {
+    const dir = path.join(ROOT, 'dax-project', q.j.report), pages = readReport(dir), all = pages.flatMap((p) => p.visuals);
+    // 1. buttons: each formatting card's "show" on its own (no state selector), the look in the default state, the way
+    //    Desktop saves buttons; a "show" inside the state is ignored and the Reset button drew only its icon
+    const buttons = all.filter((v) => v.type === 'actionButton').map((v) => JSON.parse(v.text).visual.objects);
+    const bad = buttons.flatMap((o) => Object.entries(o).filter(([, list]) => list.some((x) => x.selector && x.properties.show !== undefined)).map(([k]) => k));
+    check(buttons.length > 0 && !bad.length, `buttons: "show" inside a state selector in ${bad.join(', ') || 'no button found'}`);
+    const reset = buttons.find((o) => o.icon && JSON.stringify(o.icon).includes("'reset'"));
+    const on = (card) => reset && (reset[card] || []).some((x) => !x.selector && JSON.stringify(x.properties.show) === JSON.stringify({ expr: { Literal: { Value: 'true' } } }));
+    check(on('text') && on('fill') && on('outline'), `Reset button: text, fill and outline must be switched on outside the state (${JSON.stringify(reset).slice(0, 300)})`);
+    // 2. tooltip page: its own text sizes (the theme's are made for the full page): value 20, titles 10
+    const tipPage = pages.find((p) => p.hidden), tipText = tipPage ? tipPage.visuals.map((v) => v.text).join('') : '';
+    check(/"labels":\[\{"properties":\{"fontSize":\{"expr":\{"Literal":\{"Value":"20D"\}\}\}\}\}\]/.test(tipText.replace(/\s/g, '')) && (tipText.replace(/\s/g, '').match(/"fontSize":\{"expr":\{"Literal":\{"Value":"10D"\}\}\}/g) || []).length === 2,
+      'tooltip page: the card value must be 20 and both titles 10');
+    // 3. logo placeholder: readable (at least 12pt in a 48-high header slot)
+    const logo = all.find((v) => v.type === 'textbox' && /Your logo/.test(v.text)), size = logo && +((logo.text.match(/"fontSize":\s*"(\d+)pt"/) || [])[1]);
+    check(size >= 12, `logo placeholder: ${size}pt`);
+    // 4. fields: no number (Amount) or date (Sales[Date]) as a category, axis or slicer; the date table's named parts instead
+    const cols = boundFields(dir).filter(([k]) => k === 'Column').map(([, t, c]) => `${t}[${c}]`);
+    check(!cols.includes('Sales[Amount]') && !cols.includes('Sales[Date]') && cols.includes('Calendar[Month Name]') && cols.includes('Calendar[Quarter]') && cols.includes('Calendar[Day Name]'),
+      `fields: ${[...new Set(cols)].join(', ')}`);
+    // 5. the model's own issues are told, with the fix, and the model is not changed
+    const notes = (q.j.modelNotes || []).map((n) => n.field);
+    check(notes.includes('Calendar[Month Name]') && notes.includes('Sales[Total Sales vs Last Ramadan %]'), `modelNotes: ${JSON.stringify(q.j.modelNotes)}`);
+  }
+}
+// suggest_fields on the same project: the same sensible fields
+r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
+{ const f = (x) => (x ? `${x.t}[${x.c}]` : null), sl = r.err ? [] : r.j.slicers.map(f);
+  check(!r.err && f(r.j.date) === 'Calendar[Month Name]' && !sl.includes('Sales[Amount]') && !sl.includes('Sales[Date]') && sl.every(Boolean), `suggest_fields on dax-project: ${r.t.slice(0, 300)}`); }
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);

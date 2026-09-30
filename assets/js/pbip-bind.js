@@ -45,7 +45,9 @@
       } else if (depth === 1 && table) {
         const m = trimmed.match(/^(column|measure)\s+(.+)$/);
         if (m) {
-          cur = m[1] === 'column' ? { name: tmdlName(m[2]), dataType: 'string', isHidden: false } : { name: tmdlName(m[2]), isHidden: false };
+          // a column with no dataType line (columns of DAX tables in a project Desktop saved) is 'unknown', never
+          // guessed as text: guessing made numbers and dates look like categories (a chart "by Amount")
+          cur = m[1] === 'column' ? { name: tmdlName(m[2]), dataType: 'unknown', isHidden: false } : { name: tmdlName(m[2]), isHidden: false };
           table[m[1] === 'column' ? 'columns' : 'measures'].push(cur);
         } else {
           cur = null;
@@ -129,6 +131,11 @@
   const CAT = /category|product|brand|region|country|city|emirate|segment|channel|type|status|department|store|branch|source|platform|model|team|group|class|stage|agent|rep|salesperson|campaign|الفئة|المنتج|العلامة|المنطقة|المدينة|القناة|الفرع|المصدر/i;
   const NOT_CAT = /(^|[\s_-])(id|key|code|guid|sk|sort|order|index|url|link|email|phone|mobile|address|description|notes?|comments?|remarks?)s?$|[a-z]ID$|Key$/;
   const DATE_TABLE = /date|calendar|time|period|تقويم|تاريخ/i;
+  // names that read as a number or a date, for columns whose type the files don't give
+  const NUMBERISH = /amount|qty|quantity|price|cost|value|sales|revenue|total|count|number|units|profit|margin|rate|score|percent|%|offset|sort|المبلغ|الكمية|السعر|القيمة|المبيعات|العدد/i;
+  const DATEISH = /date|time|stamp|تاريخ|وقت/i;
+  // the date table's parts that make good categories when the model has no other ones, in order of preference
+  const DATE_PARTS = [/^(year\s*)?quarter$|الربع/i, /^(day|weekday)\s*name$|اسم اليوم/i, /^(hijri\s*)?month\s*name$|اسم الشهر/i];
 
   function catalog(tables) {
     const shown = tables.filter((t) => !t.hidden);
@@ -156,8 +163,12 @@
       || inDate.find((c) => /date/.test(c.type)) || columns.find((c) => /date/.test(c.type))
       || columns.find((c) => /^(month[\s_-]*(name)?|الشهر)$/i.test(c.c)) || null;   // no date table: a month column anywhere
     const year = inDate.find((c) => /^(year|السنة)$/i.test(c.c)) || null;
-    const cats = columns.filter((c) => !c.dateTable && c.type === 'string' && !NOT_CAT.test(c.c) && c !== date)
+    // a category: a text column, or one of unknown type whose name reads as a category (not a number, date or key)
+    const textLike = (c) => c.type === 'string' || (c.type === 'unknown' && !NUMBERISH.test(c.c) && !DATEISH.test(c.c));
+    let cats = columns.filter((c) => !c.dateTable && textLike(c) && !NOT_CAT.test(c.c) && c !== date)
       .sort((a, b) => (CAT.test(b.c) ? 1 : 0) - (CAT.test(a.c) ? 1 : 0));
+    // no category outside the date table: the date table's named parts (quarter, day, month names), never the time axis
+    if (!cats.length) cats = DATE_PARTS.map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date)).filter(Boolean);
     const catA = cats[0] || null, catB = cats.find((c) => c !== catA && c.t !== (catA && catA.t)) || cats[1] || catA;
     // three different slicers: the year, then the categories, then the time axis
     const sl = [year, catA, catB, date].filter((x, i, l) => x && l.indexOf(x) === i);

@@ -111,7 +111,7 @@ server.registerTool('create_report', {
   // no background image given: a fully transparent pixel, so the page colour from the theme shows
   const png1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4AWMAAQAABQABNtCI3QAAAABJRU5ErkJggg==', 'base64');
   const kpisOf = (pages) => pages.reduce((n, p) => Math.max(n, p.slots.filter((s) => s.kind === 'kpi').length), 0) || 1;
-  let r, extra = {};
+  let r, bind, extra = {};
   if (a.design) {
     // the website's project download for this design: its pages (second page, slide-in panel), labels and theme
     let design = planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang }).design;
@@ -124,7 +124,7 @@ server.registerTool('create_report', {
     const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel });
     r = Pbip.build({
       name: a.name, title: E.themeName(design.name), pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo: null,
-      theme: E.buildTheme(design, a.lang), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: Bind.suggest(m.tables, kpisOf(pages)),
+      theme: E.buildTheme(design, a.lang), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = Bind.suggest(m.tables, kpisOf(pages))),
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel }))
     });
     extra = { pages: pages.map((p) => ({ name: p.name, width: p.page.w, height: p.page.h, slots: p.slots.length, slideInPanel: !!p.panel })), theme: E.themeName(design.name),
@@ -134,7 +134,7 @@ server.registerTool('create_report', {
     r = Pbip.build({
       name: a.name, title: a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo: null, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: Bind.suggest(m.tables, kpisOf(a.pages)),
+      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = Bind.suggest(m.tables, kpisOf(a.pages))),
       texts: { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' },
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
     });
@@ -143,8 +143,35 @@ server.registerTool('create_report', {
   const clash = r.files.map((f) => path.join(m.projectDir, f.path)).filter((f) => fs.existsSync(f));
   if (clash.length) throw new Error(`Not written: ${clash.length} files already exist, e.g. ${clash[0]}`);
   r.files.forEach((f) => { const out = path.join(m.projectDir, f.path); fs.mkdirSync(path.dirname(out), { recursive: true }); fs.writeFileSync(out, f.data); });
-  return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra));
+  const notes = modelNotes(m.tmsl, bind);
+  return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra,
+    notes.length ? { modelNotes: notes } : {}));
 }));
+
+// Things in the user's model that make the new report look wrong, for the fields it uses. The report never changes the
+// model: these are told to the user, with the fix, to make in Power BI Desktop (or through Microsoft's MCP, with the
+// user's go). A month name without a sort column shows months A to Z; a ratio without a format string shows 0.34, not 34%.
+function modelNotes(tmsl, bind) {
+  const model = (tmsl && (tmsl.model || tmsl)) || {}, notes = [], seen = new Set();
+  const find = (f, kind) => { const t = (model.tables || []).find((x) => x.name === f.t); return t && (t[kind] || []).find((x) => x.name === (f.c || f.m)); };
+  const fields = bind ? [bind.date, bind.measure, ...(bind.kpis || []), ...Object.values(bind.cats || {}), ...Object.values(bind.y || {}), ...(bind.table || []), ...(bind.slicers || [])] : [];
+  fields.filter(Boolean).forEach((f) => {
+    const key = `${f.t}[${f.c || f.m}]`;
+    if (seen.has(key)) return; seen.add(key);
+    if (f.c != null) {
+      const c = find(f, 'columns');
+      if (c && !c.sortByColumn && /month|الشهر/i.test(f.c) && !/number|num|no|sort|key|offset|start|date/i.test(f.c))
+        notes.push({ field: key, issue: 'Months will show in alphabetical order: this column has no sort-by column.',
+          fix: `In Power BI Desktop select ${key}, then Column tools > Sort by column > the month number column.` });
+    } else {
+      const ms = find(f, 'measures');
+      if (ms && !ms.formatString && /%|ratio|rate|share|margin|نسبة|هامش/i.test(f.m))
+        notes.push({ field: key, issue: 'This looks like a percentage but has no format string, so cards show 0.34 instead of 34%.',
+          fix: `In Power BI Desktop select ${key}, then Measure tools > Format > Percentage.` });
+    }
+  });
+  return notes;
+}
 
 // ---------- design tools: the Theme Generator's engine (assets/js/design-engine.js) ----------
 

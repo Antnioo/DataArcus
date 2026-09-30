@@ -63,6 +63,13 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
 - TMDL `createOrReplace` gives objects new lineage tags when the script has none (hand-written test models have none; Desktop exports do).
 - Aggregations need a DirectQuery detail table; Import-only test models can't have them.
 - A theme's colours should drive the report's colours (`create_report` does this).
+- Buttons (`actionButton`): each formatting card's `show` switch goes in its own entry with no selector; the look
+  (text, colours, font) goes in the entry with `selector: { id: 'default' }`. A `show` inside the state selector is
+  ignored, and the text, fill or outline stay hidden (found in Desktop 2.157; matches Microsoft's button reference).
+- A theme's text sizes are made for the report's page. A much smaller page (the 320 x 240 tooltip page) needs its
+  own sizes on the visuals, or a 42pt card value is cut off.
+- Columns of DAX tables have no type in TMDL: the field picker must not guess them as text either (it made charts
+  "by Amount"); `pbip-bind.js` marks them `unknown` and picks categories by name.
 
 ## Writing prompts for another agent or session
 Start with the request itself ("Run this test now"). Name every file. List the steps. Add the rules: scope folder, don't
