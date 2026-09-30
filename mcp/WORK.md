@@ -1,7 +1,7 @@
 # Current work (the memory between sessions)
 
 Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). Last updated 2026-09-30
-by the reviewer, main at `84cc794`.
+by the builder, main at `fcd862e`.
 
 ## Where things stand
 - **MCP: 6 tools** (`read_model`, `suggest_fields`, `check_model_health`, `generate_theme`, `plan_layout`,
@@ -12,9 +12,10 @@ by the reviewer, main at `84cc794`.
   analysis) put every visual on both pages exactly where planned. Details: `mcp/PHASE2-SPEC.md`.
 - **Website:** Theme Generator runs on the shared engine (`assets/js/design-engine.js`); bug notes #1-#8 from the
   engine move are all closed. All 16 suites pass (~5,800 checks).
-- **Not done yet:** the Phase 2 Desktop check (next step below).
+- **Phase 2 Desktop check: run 2026-09-30** (next step below): layout and KPIs PASS; Reset button text and the
+  tooltip page FAIL, waiting for the owner.
 
-## Next step: Phase 2 step (f), the Desktop check (approved, not started)
+## Next step: Phase 2 step (f), the Desktop check (in progress on branch `docs/desktop-check-phase2`)
 Branch `docs/desktop-check-phase2` from main. Don't change code. Work models closed.
 1. Open `tests/5-tmdl-sample/Gulf Sales AR.pbip` in Power BI Desktop (bridge `powerbi-desktop open`; the Store
    version needs `PBI_DESKTOP_PATH`). If the file isn't there, rebuild it first with the same calls:
@@ -27,6 +28,18 @@ Branch `docs/desktop-check-phase2` from main. Don't change code. Work models clo
 4. Connect with Microsoft's Power BI Authoring MCP (only the Ramadan Test instance) and check each KPI card with DAX:
    expected (DAX) / shown / PASS or FAIL.
 5. Add the results to `scripts/tests/DESKTOP-TESTS.md`, commit, push the branch, don't merge. Close Desktop without saving.
+
+Progress (builder): branch made from main `fcd862e`. The report files were already there (built earlier the same
+day with the calls above), so no rebuild. Desktop is Power BI 2.157 (Store); `PBI_DESKTOP_PATH` = its
+`bin\PBIDesktop.exe` under `C:\Program Files\WindowsApps\Microsoft.MicrosoftPowerBIDesktop_*`.
+- [x] 1 open · [x] 2 screenshots · [x] 3 look · [x] 4 KPI DAX · [x] 5 DESKTOP-TESTS.md, push. Desktop closed, not saved.
+- Result (details in `scripts/tests/DESKTOP-TESTS.md`, 2026-09-30): layout on both pages PASS (right to left, no
+  overlaps), all 4 KPI values equal DAX. **Two FAILs, reported, not fixed (owner decides):**
+  (a) the Reset button on page 1 shows only its icon; the text "إعادة ضبط الفلاتر", fill and outline in its
+  `visual.json` are not drawn; (b) the tooltip page's card value is cut off and its chart title truncated.
+  Also: the logo placeholder "شعارك" is tiny and faint (10pt grey). Screenshots in `tests/phase2-try/desktop-check/`
+  (outside the repo).
+- Left: the owner's decision on (a), (b) and the logo text; then the reviewer reviews this branch.
 
 Expected positions (already proven in the files; the check is how Desktop draws them), x, y, w, h:
 - Page 1 "تحليل": title 1044,18,840,48 · logo 36,18,225,48 ("شعارك") · filter rail 24,105,294,951 (3 slicers and
