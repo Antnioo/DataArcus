@@ -37,7 +37,15 @@ by the builder: the phone and page-size plan written on `fix/phone-and-sizes`, w
 Steps: (1) tests first, failing on main; (2) code, `pbip-export.js` only; (3) `.min.js` and `?v=`; (4) full run;
 (5) the six Desktop reports built with this branch's `mcp/server.mjs` over stdio (the session's MCP runs old code and the
 desktop app can't restart it), exact numbers written here first; (6) Desktop check; then the two `mcp/CLAUDE.md` notes.
-Done so far: plan `6386930`.
+Done so far: plan `6386930`, additions `1cfbbe6`. Tests written (`scripts/tests/report-check.mjs`: `layoutProblems`,
+`headerAndRail`, used by `pbip.mjs` and `mcp/test.mjs`), failing on the current code for the expected reasons:
+- website `pbip`: 46 checks, 5 fail: phone overlaps on all 140 designs (54 fixtures + 16 default layouts on 640 x 360
+  and 3840 x 2160, each with and without the panel); sizes on 138 of 140 (page buttons and buttons have no text size;
+  640 x 360 header title 12pt in a 16-high box; 3840 x 2160 slicers 76 high under 30pt text); the 1280 x 720 guard
+  (nav 320, slicers 76, Reset 40; want 213, 51, 27; 1920 x 1080 passes); both downloads (phone overlaps, no sizes).
+  The fixtures' own 640 x 360 designs use the tallest header (title 36 high), so the default layouts were added to
+  the sweep to cover what Desktop showed.
+- MCP: 87 checks, 10 fail: phone and sizes on "Sizes EN 1080", "Sizes EN/AR 360", "Sizes EN/AR 2160".
 
 **Owner's additions (2026-10-01):**
 1. **1280 x 720 and every other page size.** Scaling with the page height changes every size except 1920 x 1080. From
