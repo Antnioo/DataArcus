@@ -1,7 +1,7 @@
 # Current work (the memory between sessions)
 
 Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). Last updated 2026-09-30
-by the reviewer, after merging `fix/report-quality` into main.
+by the builder; branch `fix/rtl-table` checked in Desktop (all PASS), waiting for the reviewer to merge.
 
 ## Where things stand
 - **MCP: 6 tools** (`read_model`, `suggest_fields`, `check_model_health`, `generate_theme`, `plan_layout`,
@@ -13,7 +13,23 @@ by the reviewer, after merging `fix/report-quality` into main.
   for untyped columns, `modelNotes`), and verified in Power BI Desktop 2.157 on "Gulf Sales AR 2": all 8 checks PASS
   (`scripts/tests/DESKTOP-TESTS.md`).
 
-## Next step: plan the move of the cards to `cardVisual` (owner approved the move 2026-09-30; plan first, wait for "go")
+- **Table fix on branch `fix/rtl-table`** (owner found it on "Gulf Sales AR 2": the Arabic title "جدول التفاصيل" on
+  the far right, the table on the far left): tables now set `columnHeaders.columnAdjustment: growToFit` and
+  `autoSizeColumnWidth: true` (Microsoft's table reference: always grow to fit; without it columns shrink to their
+  content); in right-to-left reports the table's columns are reversed so the category column sits on the right;
+  `modelNotes` also tells day names without a sort-by column (days showed Friday, Monday, ...). 3 new MCP checks
+  (75), failing before; all 16 website suites pass. `pbip-export.min.js?v=20260930f`, `theme-generator.min.js?v=20260930h`.
+  **Checked in Power BI Desktop 2.157 on "Gulf Sales AR 3": all 6 checks PASS** (both tables fill their width, Day
+  Name rightmost, the three `modelNotes`, everything else identical to AR 2, KPI values equal DAX;
+  `scripts/tests/DESKTOP-TESTS.md`).
+
+## Next step: the reviewer merges `fix/rtl-table`
+Desktop check done by the builder (2026-09-30, "Gulf Sales AR 3", MCP on `4ce4e59`): all PASS against the expected
+results written before the run (both tables fill their width; Day Name rightmost; `modelNotes` Calendar[Month Name],
+Calendar[Day Name], Sales[Total Sales vs Last Ramadan %]; everything else as in AR 2). Details in
+`scripts/tests/DESKTOP-TESTS.md`. Branch pushed, not merged.
+
+## After that: plan the move of the cards to `cardVisual` (owner approved the move 2026-09-30; plan first, wait for "go")
 KPI cards and the tooltip card use the legacy `card` visual, which Microsoft deprecates; move them to `cardVisual`.
 Plan only, on a new branch `feat/card-visual` from main. Write the plan and its expected results into this file
 (commit and push) before any code changes, then report and wait for "go". The plan must cover:
@@ -36,6 +52,8 @@ Plan only, on a new branch `feat/card-visual` from main. Write the plan and its 
   (value and label, no clipping) on 1920 x 1080, 640 x 360 and 3840 x 2160, English and Arabic; values equal DAX.
 
 ## Open items (flagged, need the owner's go before any work)
+- **Table header alignment** (seen on "Gulf Sales AR 3"): headers are left aligned while numbers are right aligned,
+  so on a wide table each number sits nearer the next column's header than its own.
 - **Mixed-language titles** in Arabic reports ("Total Sales حسب Quarter"): measure names come from the model.
 - **Flaky tests on a busy laptop:** `consent` ("Berlin: no banner") and `anchors` (home page #contact) failed once
   each under load and pass alone. They don't use `ready()` yet (`scripts/tests/lib.mjs`).

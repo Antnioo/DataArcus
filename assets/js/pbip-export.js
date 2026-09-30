@@ -139,7 +139,9 @@
     };
   }
   // the query of one visual, or null when a field it needs is not bound
-  function bindQuery(kind, B, kpiIndex) {
+  // rtl: a right-to-left report reverses a table's columns, so its first column (the category) sits on the right,
+  // where an Arabic reader starts; Power BI doesn't mirror tables itself
+  function bindQuery(kind, B, kpiIndex, rtl) {
     const cat = (B.cats || {})[kind], y = (B.y || {})[kind] || B.measure, need = (...fs) => fs.every(Boolean);
     // one field per card: a card past the end of the list stays empty rather than repeating the first KPI
     const kpi = (B.kpis || [])[kpiIndex] || null;
@@ -148,7 +150,7 @@
       case 'card': return need(B.measure) ? q({ Values: [proj(B.measure)] }) : null;
       case 'line': return need(B.date, B.measure) ? q({ Category: [proj(B.date)], Y: [proj(B.measure)] }) : null;
       case 'bar': case 'column': case 'donut': case 'funnel': return need(cat, y) ? q({ Category: [proj(cat)], Y: [proj(y)] }) : null;
-      case 'table': { const fs = (B.table || []).filter(Boolean); return fs.length ? q({ Values: fs.map(proj) }) : null; }
+      case 'table': { const fs = (B.table || []).filter(Boolean); if (rtl) fs.reverse(); return fs.length ? q({ Values: fs.map(proj) }) : null; }
       case 'gauge': return need(y) ? q({ Y: [proj(y)] }) : null;
       case 'treemap': return need(cat, y) ? q({ Group: [proj(cat)], Values: [proj(y)] }) : null;
       case 'map': return need(cat, y) ? q({ Category: [proj(cat)], Size: [proj(y)] }) : null;
@@ -361,7 +363,7 @@
         } else if (s.kind === 'text') {
           visual = { visualType: 'textbox', objects: textbox(W.textHere || 'Explain what the main chart shows and what to do about it.', 11, false, u.text), visualContainerObjects: frame(s.title, s.title) };
         } else {
-          const query = B ? bindQuery(s.kind, B, kpiIndex) : null;
+          const query = B ? bindQuery(s.kind, B, kpiIndex, rtl) : null;
           let ttl = s.title;
           const extra = {};
           if (own && B && query) ttl = bindTitle(s.kind, B, W.by || 'by') || ttl;
@@ -372,6 +374,9 @@
           if (query) visual.query = query;
           // the title already names the KPI, so the card's own label under the number is not repeated
           if (s.kind === 'kpi' || s.kind === 'card') visual.objects = { categoryLabels: obj({ show: bool(false) }) };
+          // tables fill their visual (grow to fit), instead of shrinking to their content and leaving the rest empty
+          // (on a right-to-left page the title sat on the right and the table on the left)
+          if (s.kind === 'table') visual.objects = { columnHeaders: obj({ columnAdjustment: str('growToFit'), autoSizeColumnWidth: bool(true) }) };
         }
         const v = container({ x: s.x, y: s.y, w: s.w, h: s.h, z, parent, visual, kind: s.kind });
         if (!mainChart && ['line', 'column', 'bar'].includes(s.kind)) mainChart = v;
