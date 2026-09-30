@@ -335,6 +335,43 @@
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${PW} ${PH}" width="${opt.w || PW}" height="${opt.h || PH}"${opt.preview ? ' role="img" aria-label="Page layout preview"' : ''}>${defs}${s}</svg>`;
   }
 
+  // ---------- the Power BI project download ----------
+  // The labels the report shows (buttons, groups, placeholders), in each language
+  const REPORT_TEXTS = {
+    en: { reset: 'Reset filters', pages: 'Pages', close: 'Close', filterPanel: 'Filter panel', openFilters: 'Open the filter panel', closeFilters: 'Close the filter panel',
+      filtersOpen: 'Filters open', filtersClosed: 'Filters closed', header: 'Header', kpis: 'KPI cards', filters: 'Filters', slicer: 'Slicer',
+      logo: 'Logo', logoHere: 'Your logo', textHere: 'Explain what the main chart shows and what to do about it.', by: 'by', newDesign: 'New design',
+      tooltipPage: 'Tooltip', tooltipHere: 'Tooltip page: add a card or a small chart here.' },
+    ar: { reset: 'إعادة ضبط الفلاتر', pages: 'الصفحات', close: 'إغلاق', filterPanel: 'لوحة الفلاتر', openFilters: 'افتح لوحة الفلاتر', closeFilters: 'أغلق لوحة الفلاتر',
+      filtersOpen: 'الفلاتر مفتوحة', filtersClosed: 'الفلاتر مغلقة', header: 'الشريط العلوي', kpis: 'بطاقات المؤشرات', filters: 'الفلاتر', slicer: 'مقسم',
+      logo: 'الشعار', logoHere: 'شعارك', textHere: 'اشرح ما يعرضه المخطط الرئيسي وما الإجراء المطلوب.', by: 'حسب', newDesign: 'تصميم جديد',
+      tooltipPage: 'تلميح', tooltipHere: 'صفحة التلميح: أضف بطاقة أو مخططًا صغيرًا هنا.' }
+  };
+  // A page's slots for the report: kind, name in lang, filter rail or not, and the box in page units
+  const projectSlots = (c, lang) => computeSlots(c, lang).map((s) => Object.assign({ kind: s.kind, title: lang === 'ar' ? s.role[1] : s.role[0], rail: !!s.rail }, boxOf(s, c)));
+  // a second page in a complementary layout: an analysis page (filters, a main chart, a wide table) after an
+  // overview, or an executive overview after an analysis page
+  const secondLayout = (c) => Object.assign({}, c, c.preset === 'analysis' ? { preset: 'exec', kpis: 4, filters: false } : { preset: 'analysis', kpis: 3, filters: true, fpos: 'start' }, { kpiH: null, mainW: null, split: null });
+  // Filters as a slide-in panel: the page without its filter rail, and the panel's box (null when the page has no
+  // filters or no header). The panel opens under the Filters button, at the end of the header (right in English, left in Arabic)
+  const slidePanel = (cc, lang) => {
+    if (!cc.filters || !cc.header) return null;
+    const open = Object.assign({}, cc, { filters: false });
+    const PW = pw(cc), PH = 720, z = sizes(cc, PW), w = Math.max(240, Math.min(320, z.fw + 40)), top = z.hh + 14;
+    const r = { x: rtl(cc, lang) ? M : PW - M - w, y: top, w, h: PH - M - top };
+    return { layout: open, panel: boxOf(r, cc) };
+  };
+  // The report's pages for a layout: this page, the second page when asked, each with the slide-in panel when asked.
+  // opts: { second, panel }. Each page: { layout (for its background), name, page { w, h }, slots, panel }
+  const projectPages = (c, lang, opts) => {
+    const nm = (pair) => (lang === 'ar' ? pair[1] : pair[0]), o = opts || {};
+    const specs = [{ c, name: nm(LAYOUTS[c.preset].name) }].concat(o.second ? [{ c: secondLayout(c), name: nm(c.preset === 'analysis' ? ['Overview', 'نظرة عامة'] : ['Details', 'التفاصيل']) }] : []);
+    return specs.map((sp) => {
+      const sl = o.panel ? slidePanel(sp.c, lang) : null, layout = sl ? sl.layout : sp.c, p = page(layout);
+      return { layout, name: sp.name, page: { w: p.w, h: p.h }, slots: projectSlots(layout, lang), panel: sl ? sl.panel : null };
+    });
+  };
+
   // ---------- saved designs ----------
   const fresh = () => ({ preset: 'DataArcus', name: DEFAULT_NAME, font: 'Segoe UI', data: PRESETS.DataArcus.data.slice(), ui: { ...PRESETS.DataArcus.ui } });
   // A saved design (or none) made safe to use, the way the generator repairs it on load: an old or hand-edited save may
@@ -374,7 +411,7 @@
     PRESETS, FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize,
-    fs, chart, buildTheme, contrastChecks, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    fs, chart, buildTheme, contrastChecks, REPORT_TEXTS, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;

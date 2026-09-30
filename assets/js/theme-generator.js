@@ -550,43 +550,21 @@ document.addEventListener('DOMContentLoaded', () => {
       pbipBtn.disabled = true;
       // visuals sit on the panels of the background image, so the project's theme always has transparent visuals
       const was = c.transparent; c.transparent = true; const theme = buildTheme(); c.transparent = was;
-      const slotsOf = (cc) => { const was = state.layout; state.layout = cc; const r = computeSlots(cc).map((s) => Object.assign({ kind: s.kind, title: nm(s.role), rail: !!s.rail }, boxOf(s, cc))); state.layout = was; applyPage(was); return r; };
-      // a second page in a complementary layout: an analysis page (filters, a main chart, a wide table) after an
-      // overview, or an executive overview after an analysis page
-      const second = $('pbipPages') && $('pbipPages').checked;
-      const c2 = Object.assign({}, c, c.preset === 'analysis' ? { preset: 'exec', kpis: 4, filters: false } : { preset: 'analysis', kpis: 3, filters: true, fpos: 'start' }, { kpiH: null, mainW: null, split: null });
-      const slide = $('pbipPanel') && $('pbipPanel').checked;
-      const withPanel = (cc) => {
-        if (!slide || !cc.filters || !cc.header) return { c: cc, panel: null };
-        const open = Object.assign({}, cc, { filters: false });
-        const was = state.layout; state.layout = cc; applyPage(cc);
-        const z = sizes(cc), w = Math.max(240, Math.min(320, z.fw + 40)), top = z.hh + 14;
-        // the panel opens under the Filters button, at the end of the header (right in English, left in Arabic)
-        const r = { x: rtl(cc) ? M : PW - M - w, y: top, w, h: PH - M - top };
-        const panel = boxOf(r, cc);
-        state.layout = was; applyPage(was);
-        return { c: open, panel };
-      };
-      const specs = [{ c, name: nm(LAYOUTS[c.preset].name) }].concat(second ? [{ c: c2, name: c.preset === 'analysis' ? L('Overview', 'نظرة عامة') : L('Details', 'التفاصيل') }] : [])
-        .map((sp) => Object.assign(sp, withPanel(sp.c)));
-      Promise.all([loadBuilder(), model ? loadBind() : null].concat(specs.map((sp) => pngBlob(sp.c).then((b) => b.arrayBuffer())))).then(([P, DB, ...bufs]) => {
+      // the pages (design engine): this layout, a second page in a complementary layout when asked, and filters as a
+      // slide-in panel when asked; each page's background is drawn for its own layout
+      const specs = E.projectPages(c, isAr() ? 'ar' : 'en', { second: !!($('pbipPages') && $('pbipPages').checked), panel: !!($('pbipPanel') && $('pbipPanel').checked) });
+      Promise.all([loadBuilder(), model ? loadBind() : null].concat(specs.map((sp) => pngBlob(sp.layout).then((b) => b.arrayBuffer())))).then(([P, DB, ...bufs]) => {
         if (model && model.ws) model = { byConnection: DB.connection(model.ws, model.mn) };
-        const pages = specs.map((sp, i) => ({ name: sp.name, page: { w: page(sp.c).w, h: page(sp.c).h }, slots: slotsOf(sp.c), png: new Uint8Array(bufs[i]), panel: sp.panel || null }));
+        const pages = specs.map((sp, i) => ({ name: sp.name, page: sp.page, slots: sp.slots, png: new Uint8Array(bufs[i]), panel: sp.panel }));
         const r = P.build({
           name: state.name || 'Power BI Report', title: state.name || L('Sales overview', 'نظرة عامة على المبيعات'), pageName: nm(LAYOUTS[c.preset].name),
           lang: isAr() ? 'ar' : 'en', rtl: rtl(), font: state.font, ui: state.ui, pages, theme, logo, sample, model, bind,
-          texts: {
-            reset: L('Reset filters', 'إعادة ضبط الفلاتر'), pages: L('Pages', 'الصفحات'), close: L('Close', 'إغلاق'),
-            filterPanel: L('Filter panel', 'لوحة الفلاتر'), openFilters: L('Open the filter panel', 'افتح لوحة الفلاتر'), closeFilters: L('Close the filter panel', 'أغلق لوحة الفلاتر'),
-            filtersOpen: L('Filters open', 'الفلاتر مفتوحة'), filtersClosed: L('Filters closed', 'الفلاتر مغلقة'),
-            header: L('Header', 'الشريط العلوي'), kpis: L('KPI cards', 'بطاقات المؤشرات'), filters: L('Filters', 'الفلاتر'), slicer: L('Slicer', 'مقسم'),
-            logo: L('Logo', 'الشعار'), logoHere: L('Your logo', 'شعارك'), textHere: L('Explain what the main chart shows and what to do about it.', 'اشرح ما يعرضه المخطط الرئيسي وما الإجراء المطلوب.'),
-            by: L('by', 'حسب'), newDesign: L('New design', 'تصميم جديد'),
-            tooltipPage: L('Tooltip', 'تلميح'), tooltipHere: L('Tooltip page: add a card or a small chart here.', 'صفحة التلميح: أضف بطاقة أو مخططًا صغيرًا هنا.'),
+          // the report's labels come from the design engine (the MCP uses the same); the readme stays here
+          texts: Object.assign({}, E.REPORT_TEXTS[isAr() ? 'ar' : 'en'], {
             readme: m === 'service' ? L('# {name}\n\nMade with the DataArcus Power BI Theme & Layout Generator: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## Open it\n1. Unzip this folder.\n2. Open **{name}.pbip** in Power BI Desktop and sign in. The report connects live to your published semantic model.\n3. Check each visual, then publish the report to the same workspace.\n\n## Check it in Power BI (2 minutes)\n1. On every page, each visual sits on its panel in the background and shows data.\n2. If the colours look off: **View > Themes > Browse for themes** and pick the theme file in **{name}.Report/StaticResources/RegisteredResources**.\n3. Hover the main chart on the first page: the tooltip page shows.\n4. Ctrl+click the page buttons and **Reset filters** (and the **Filters** button if you chose the slide-in panel).\n5. **View > Mobile layout**: the phone version is already laid out.\n\nSomething looks wrong? Send a screenshot to hello@dataarcus.com.\n',
               '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop وسجّل الدخول. يتصل التقرير مباشرة بنموذجك الدلالي المنشور.\n3. راجع كل عنصر، ثم انشر التقرير في نفس مساحة العمل.\n\n## راجعه في Power BI (دقيقتان)\n1. في كل صفحة، كل عنصر في مكانه على لوحته في الخلفية ويعرض بيانات.\n2. إذا بدت الألوان غير صحيحة: **View > Themes > Browse for themes** واختر ملف السمة في **{name}.Report/StaticResources/RegisteredResources**.\n3. مرّر الماوس على المخطط الرئيسي في الصفحة الأولى: تظهر صفحة التلميح.\n4. اضغط Ctrl مع النقر على أزرار الصفحات و **Reset filters** (وزر **Filters** إذا اخترت اللوحة المنزلقة).\n5. **View > Mobile layout**: نسخة الهاتف جاهزة.\n\nهل يبدو شيء غير صحيح؟ أرسل لقطة شاشة إلى hello@dataarcus.com.\n') : L('# {name}\n\nMade with the DataArcus Power BI Theme & Layout Generator: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## Open it\n1. Unzip this folder.\n2. Open **{name}.pbip** in Power BI Desktop.\n3. If you chose sample data, click **Refresh** once so it loads.\n\n## Use your own data\nGet data, then drag your fields into each visual. The theme, background, positions, tooltip page and filter pane styling are already set.\n\nOlder Power BI Desktop versions: turn on **File > Options > Preview features > Power BI Project (.pbip) save option** and **Store reports using enhanced metadata format (PBIR)**.\n\n## Check it in Power BI (2 minutes)\n1. On every page, each visual sits on its panel in the background and shows data.\n2. If the colours look off: **View > Themes > Browse for themes** and pick the theme file in **{name}.Report/StaticResources/RegisteredResources**.\n3. Hover the main chart on the first page: the tooltip page shows.\n4. Ctrl+click the page buttons and **Reset filters** (and the **Filters** button if you chose the slide-in panel).\n5. **View > Mobile layout**: the phone version is already laid out.\n\nSomething looks wrong? Send a screenshot to hello@dataarcus.com.\n',
               '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop.\n3. إذا اخترت البيانات التجريبية، اضغط **Refresh** مرة واحدة لتظهر.\n\n## استخدم بياناتك\nاضغط Get data ثم اسحب حقولك إلى كل عنصر. السمة والخلفية والمواضع وصفحة التلميح وتنسيق لوحة الفلاتر جاهزة.\n\nفي إصدارات Power BI Desktop الأقدم: فعّل **File > Options > Preview features > Power BI Project (.pbip) save option** و **Store reports using enhanced metadata format (PBIR)**.\n\n## راجعه في Power BI (دقيقتان)\n1. في كل صفحة، كل عنصر في مكانه على لوحته في الخلفية ويعرض بيانات.\n2. إذا بدت الألوان غير صحيحة: **View > Themes > Browse for themes** واختر ملف السمة في **{name}.Report/StaticResources/RegisteredResources**.\n3. مرّر الماوس على المخطط الرئيسي في الصفحة الأولى: تظهر صفحة التلميح.\n4. اضغط Ctrl مع النقر على أزرار الصفحات و **Reset filters** (وزر **Filters** إذا اخترت اللوحة المنزلقة).\n5. **View > Mobile layout**: نسخة الهاتف جاهزة.\n\nهل يبدو شيء غير صحيح؟ أرسل لقطة شاشة إلى hello@dataarcus.com.\n')
-          }
+          })
         });
         saveBlob(new Blob([r.zip()], { type: 'application/zip' }), `${fileBase()}-power-bi-${m === 'local' || m === 'service' ? 'report' : 'project'}.zip`);
         if (m === 'local') {

@@ -114,9 +114,11 @@ const read = (pg) => pg.evaluate((STORE) => new Promise((resolve) => {
 
 // hook(pg): called on the new page before it loads; it may return a function run before the page closes, whose result
 // is kept as r.extra (the coverage check uses it). page: the generator page to use (default: the live page).
-export async function captureCase(browser, url, c, hook, page) {
+// reader: what to record once the design is set (default: the design fixtures' read); reader.init runs before load.
+export async function captureCase(browser, url, c, hook, page, reader) {
   const v = await visitor(browser, { viewport: [1440, 1000], downloads: true });
   const finish = hook ? await hook(v.pg) : null;
+  if (reader && reader.init) await v.ctx.addInitScript(reader.init);
   // keep the SVG that pngBlob hands to an <img> (data:image/svg+xml,...), without touching the page's code
   await v.ctx.addInitScript(() => {
     const d = Object.getOwnPropertyDescriptor(HTMLImageElement.prototype, 'src');
@@ -145,7 +147,7 @@ export async function captureCase(browser, url, c, hook, page) {
     }, [STORE, c]);
     await go();
   }
-  const r = await read(pg);
+  const r = await (reader || read)(pg);
   if (finish) r.extra = await finish();
   const errs = v.errs.slice();
   await v.ctx.close();
@@ -153,6 +155,71 @@ export async function captureCase(browser, url, c, hook, page) {
 }
 
 export const PAGES_TO_CHECK = { live: PAGE, lab: '/tools/power-bi-theme-generator-lab.html' };
+
+// ---------- the Power BI project download (lab page only) ----------
+// What the page hands pbip-export's build() for a design: the pages (name, size, slots, slide-in panel), title, page
+// name, language, direction, font, colours, theme and labels, and the SVG each page's background PNG is drawn from.
+// The data is the project card's built-in sample (no model file is read). Random ids, PNG bytes and the readme are left
+// out. opts: second page, slide-in panel.
+export const PROJECT_FILE = path.join(ROOT, 'scripts/tests/fixtures/design-engine/project-pages.json');
+export function projectCases() {
+  const all = cases(), plain = ['preset-1', 'layout-analysis-1920x1080', 'arabic-analysis-filters', 'example-ar', 'layout-exec-3840x2160', 'page-out-of-range'];
+  return all.map((c) => Object.assign({}, c, { opts: { second: true, panel: true } }))
+    .concat(all.filter((c) => plain.includes(c.id)).map((c) => Object.assign({}, c, { id: c.id + '-plain', opts: { second: false, panel: false } })));
+}
+const readProject = (opts) => {
+  const reader = (pg) => pg.evaluate((opts) => new Promise((resolve) => {
+    window.__bg = []; window.__build = null; window.__dl = [];
+    const set = (id, on) => { const x = document.getElementById(id); if (x.checked !== on) x.click(); };
+    set('pbipPages', opts.second); set('pbipPanel', opts.panel);
+    document.getElementById('pbipBtn').click();
+    const until = Date.now() + 15000;
+    (function wait() {
+      if ((window.__build && window.__dl.length) || Date.now() > until) resolve({ build: window.__build, bgs: window.__bg.slice() });
+      else setTimeout(wait, 20);
+    })();
+  }), opts);
+  // pbip-export sets window.DAPbip when it loads: wrap its build() to keep a copy of what the page passes
+  reader.init = () => {
+    let api;
+    Object.defineProperty(window, 'DAPbip', { configurable: true, get() { return api; }, set(v) {
+      const build = v.build;
+      v.build = function (o) {
+        window.__build = JSON.parse(JSON.stringify(o, (k, x) => (k === 'png' || k === 'readme' ? undefined : x)));
+        return build.apply(this, arguments);
+      };
+      api = v;
+    } });
+  };
+  return reader;
+};
+export async function captureProjects(browser, url) {
+  const out = [];
+  for (const c of projectCases()) out.push(Object.assign({ case: c }, await captureCase(browser, url, c, null, PAGES_TO_CHECK.lab, readProject(c.opts))));
+  return out;
+}
+export function packProjects(results, meta) {
+  const blobs = {}, keep = (t) => { const k = sha(t); blobs[k] = t; return k; };
+  const list = results.map((r) => {
+    const b = r.build ? Object.assign({}, r.build, { theme: keep(JSON.stringify(r.build.theme)) }) : null;
+    return { id: r.case.id, lang: r.case.lang, opts: r.case.opts, build: b, bgs: r.bgs.map(keep) };
+  });
+  return { meta, cases: list, blobs };
+}
+export const unpackProjects = (f) => f.cases.map((c) => Object.assign({}, c, {
+  build: c.build ? Object.assign({}, c.build, { theme: JSON.parse(f.blobs[c.build.theme]) }) : null, bgs: c.bgs.map((k) => f.blobs[k]) }));
+export function compareProjects(results, tag = '') {
+  const problems = [], saved = unpackProjects(JSON.parse(fs.readFileSync(PROJECT_FILE, 'utf8')));
+  if (results.length !== saved.length) problems.push(`${tag}${results.length} project cases captured, ${saved.length} in the fixtures`);
+  results.forEach((r) => {
+    const f = saved.find((x) => x.id === r.case.id);
+    if (!f) return problems.push(`${tag}${r.case.id}: not in the project fixtures`);
+    if (JSON.stringify(r.build) !== JSON.stringify(f.build)) problems.push(`${tag}${r.case.id}: the project's build input differs from the fixture`);
+    if (JSON.stringify(r.bgs) !== JSON.stringify(f.bgs)) problems.push(`${tag}${r.case.id}: a page background differs from the fixture`);
+    if (r.errs && r.errs.length) problems.push(`${tag}${r.case.id}: page errors: ${r.errs.join(' | ')}`);
+  });
+  return problems;
+}
 export async function captureAll(browser, url, page) {
   const out = [];
   for (const c of cases()) out.push(Object.assign({ case: c }, await captureCase(browser, url, c, null, page)));
@@ -195,6 +262,27 @@ export function compare(results, tag = '') {
 }
 
 // ---------- command line ----------
+//   --project          writes fixtures/design-engine/project-pages.json from the lab page's project download
+//   --project --check  compares the lab page's project download with it
+if (import.meta.url === pathToFileURL(process.argv[1]).href && process.argv.includes('--project')) {
+  const check = process.argv.includes('--check'), server = await serve(), browser = await launch(), t0 = Date.now();
+  const results = await captureProjects(browser, server.url), problems = [];
+  results.forEach((r) => {
+    if (r.errs.length) problems.push(`${r.case.id}: page errors: ${r.errs.join(' | ')}`);
+    if (!r.build) problems.push(`${r.case.id}: no project build captured`);
+    else if (r.bgs.length !== r.build.pages.length) problems.push(`${r.case.id}: ${r.bgs.length} backgrounds for ${r.build.pages.length} pages`);
+  });
+  if (check) problems.push(...compareProjects(results));
+  else if (!problems.length) {
+    const head = (() => { try { return execFileSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: ROOT }).toString().trim(); } catch (e) { return ''; } })();
+    fs.writeFileSync(PROJECT_FILE, JSON.stringify(packProjects(results, { page: PAGES_TO_CHECK.lab, data: 'the project card\'s built-in sample', commit: head, browser: browser.version(), captured: new Date().toISOString().slice(0, 10) })) + '\n');
+  }
+  await browser.close(); server.close();
+  const size = fs.existsSync(PROJECT_FILE) ? fs.statSync(PROJECT_FILE).size : 0;
+  console.log(problems.length ? `FAIL  ${problems.length} problems\n` + problems.slice(0, 20).map((p) => '      - ' + p).join('\n')
+    : `${check ? 'MATCH' : 'WROTE'}  project  ${results.length} cases  ${(size / 1024).toFixed(0)} KB  ${((Date.now() - t0) / 1000).toFixed(0)}s`);
+  process.exit(problems.length ? 1 : 0);
+}
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   // --page lab: the same cases on the lab page (fixtures are always written from the live page)
   const check = process.argv.includes('--check'), pi = process.argv.indexOf('--page'), which = pi > 0 ? process.argv[pi + 1] : 'live';

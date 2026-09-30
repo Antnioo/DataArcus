@@ -1,31 +1,58 @@
 ---
 name: report-design
-description: Design or restyle a Power BI report on the user's own model with the DataArcus MCP, then check it in Power BI Desktop. Use when the user asks for a report design, a new report on their model, a theme or layout applied to a report, or a check that a report looks right.
+description: Design or restyle a Power BI report on the user's own model with the DataArcus MCP, then check it in Power BI Desktop. Use when the user asks for a report design, a new report on their model, a theme or layout for a report, or a check that a report looks right.
 ---
 
 # Power BI report design with DataArcus
 
-Tools: the DataArcus MCP (`read_model`, `suggest_fields`, `check_model_health`, `create_report`), Microsoft's Power BI
-Authoring MCP (connect to the model in Desktop, run DAX), and the `powerbi-desktop` bridge CLI (open, reload, screenshot).
+Tools: the DataArcus MCP (`read_model`, `suggest_fields`, `check_model_health`, `generate_theme`, `plan_layout`,
+`create_report`), Microsoft's Power BI Authoring MCP (connect to the model in Desktop, run DAX), the `powerbi-desktop`
+bridge CLI (open, reload, screenshot), and for edits to an existing report, Microsoft's Power BI Report skill
+(`powerbi-report-cli`).
 
-## Workflow
+DataArcus gives the design (the theme and every visual's position, exactly as the DataArcus Theme Generator); the
+report files are written by `create_report` for a new report, or by Microsoft's skill for an existing one.
+
+## New report
 1. **Understand the model.** `read_model` on the user's project folder. Tell the user in two lines what you see: the
    main measures, the date table, the obvious categories. Ask what the report is for if they didn't say (who reads it,
    which decision it supports).
 2. **Pick fields.** `suggest_fields` with the number of KPI cards. Show the picks in a short table and let the user
    change any of them before building.
-3. **Plan the page.** Title and logo along the top, KPI cards in one row, one main chart that answers the report's
-   question, supporting charts, a detail table last. Keep a 24 px margin and equal gaps. For Arabic, set `rtl` and
-   `lang: "ar"`. Explain the plan in a few lines and wait for "go".
-4. **Build.** `create_report` with the theme file if the user has one (the report takes the theme's colours). It
-   writes a new report next to their model and never changes the model or an existing report.
-5. **Open and look.** `powerbi-desktop open` on the new .pbip (Store installs need `PBI_DESKTOP_PATH`), then
+3. **Theme.** `generate_theme`: a brand colour and a harmony, a full palette, or a preset; the font; the language
+   (`lang: "ar"` for Arabic, with an Arabic font: Segoe UI, Segoe UI Semibold, Arial or Tahoma). Keep its `design`.
+4. **Layout.** `plan_layout` with that design: the layout (exec, analysis, ops, focus), KPI cards, filters, page size.
+5. **Show the plan and wait for "go":** the colours, the contrast checks (with every warning), anything under
+   `repaired`, the layout with its three reasons, and the slot table (name, suggested visual, x, y, width, height).
+6. **Build.** `create_report` with the design (and the same layout choices). It writes a new report next to their
+   model, never changing the model or an existing report: the pages (by default a second page in a complementary
+   layout; `slidePanel: true` for filters as a slide-in panel), the labels in the report's language, and the theme.
+   If the result has `themeChanged`, tell the user what changed and why.
+7. **Open and look.** `powerbi-desktop open` on the new .pbip (Store installs need `PBI_DESKTOP_PATH`), then
    `powerbi-desktop screenshot` one page at a time. Look at every screenshot yourself: cut-off text, overlaps, empty
    visuals, unreadable colours.
-6. **Check the numbers.** Connect with the Power BI Authoring MCP and run a DAX query for each KPI; compare with what the
+8. **Check the numbers.** Connect with the Power BI Authoring MCP and run a DAX query for each KPI; compare with what the
    card shows.
-7. **Fix and repeat** from step 4 with a new name until the page is clean, then tell the user which file to open and
-   what you checked.
+9. **Fix and repeat** from step 3 or 6 with a new name until the pages are clean, then tell the user which file to open
+   and what you checked.
+
+## Existing report
+- DataArcus gives the theme and the positions: `generate_theme` (the theme file to import or register) and
+  `plan_layout` (`forAuthoring`: each visual's PBIR `position` { x, y, z, width, height, tabOrder }).
+- Microsoft's Power BI Report skill (`powerbi-report-cli`) makes the file changes, **on a copy the user approves**,
+  never on their original. Ask the user to save in Power BI Desktop first: the files on disk are what gets edited.
+- Never have DataArcus and Microsoft's skill writing the same report at the same time.
+
+## Positions: exact, never snapped
+Use `plan_layout`'s numbers exactly, in the slot table and in `forAuthoring`. **Never snap them to multiples of 8**,
+even though Microsoft's skill advises it: DataArcus positions are exact (for example 455 x 144) so each visual lands on
+its panel in the background and the gaps stay equal. Right-to-left designs are already mirrored; don't mirror again.
+
+## Always report
+- Every contrast warning from `generate_theme` (failing checks and data colours that almost disappear), word for word.
+- Everything under `repaired` (a value that could not be used, what was used instead and why), and any `fitted` page
+  size. Never guess a colour, font or size.
+- `themeChanged` from `create_report`, with its reason.
 
 ## Health check: skipped checks on a TMDL project
 If `check_model_health` returns `skipped`, the project has DAX tables whose column types are not in its files. Get

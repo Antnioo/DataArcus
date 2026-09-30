@@ -229,6 +229,83 @@ for (const [tag, dz] of [['partial layout', { name: 'P', layout: { preset: 'anal
   r = await tryCall('plan_layout', { design: dz });
   check(!r.err && JSON.stringify(r.j.page) === '{"w":1920,"h":1080}' && r.j.design.layout.preset === (dz.layout ? 'analysis' : 'exec'), `plan_layout ${tag}: ${r.err ? r.t.slice(0, 100) : JSON.stringify(r.j.page) + ' ' + r.j.design.layout.preset}`);
 }
+// ---------- create_report with a design: the website's project pages, positions exactly as planned ----------
+// a written report read back: its visible pages in order, each with its size and every visual's absolute box (a visual in
+// a group stores its position relative to the group), type, hidden flag and text
+const readReport = (dir) => {
+  const D = path.join(dir, 'definition'), order = JSON.parse(fs.readFileSync(path.join(D, 'pages/pages.json'), 'utf8')).pageOrder;
+  return order.map((id) => {
+    const P = path.join(D, 'pages', id), pj = JSON.parse(fs.readFileSync(path.join(P, 'page.json'), 'utf8')), vs = {};
+    const vdir = path.join(P, 'visuals');
+    if (fs.existsSync(vdir)) fs.readdirSync(vdir).forEach((n) => { const t = fs.readFileSync(path.join(vdir, n, 'visual.json'), 'utf8'), v = JSON.parse(t); vs[v.name] = { v, t }; });
+    const abs = (v) => { const p = v.position, g = v.parentGroupName && vs[v.parentGroupName] ? abs(vs[v.parentGroupName].v) : { x: 0, y: 0 }; return { x: p.x + g.x, y: p.y + g.y }; };
+    const visuals = Object.values(vs).map(({ v, t }) => Object.assign(abs(v), { w: v.position.width, h: v.position.height, type: v.visual ? v.visual.visualType : 'group', hidden: !!v.isHidden, text: t }));
+    return { name: pj.displayName, w: pj.width, h: pj.height, hidden: pj.visibility === 'HiddenInViewMode', visuals };
+  });
+};
+const bimModel = JSON.parse(fs.readFileSync(path.join(ROOT, 'bim-project/Health Test.SemanticModel/model.bim'), 'utf8')).model.tables;
+const boundFields = (dir) => { const refs = []; const w = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) w(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Entity) refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); }); w(dir); return refs; };
+const inModel = ([k, t, n]) => bimModel.some((x) => x.name === t && (k === 'Measure' ? x.measures || [] : x.columns).some((c) => c.name === n));
+const slotsPlaced = (pages, want) => {   // every slot except the filter rail has a visual at exactly its box; slicers sit in the rail
+  const bad = [];
+  want.forEach((wp, i) => {
+    const got = pages[i] || { visuals: [] };
+    if (got.name !== wp.name || got.w !== wp.page.w || got.h !== wp.page.h) bad.push(`page ${i + 1}: ${got.name} ${got.w}x${got.h}, want ${wp.name} ${wp.page.w}x${wp.page.h}`);
+    wp.slots.forEach((s) => {
+      if (s.rail) { const sl = got.visuals.filter((v) => v.type === 'slicer'); if (!sl.length || sl.some((v) => v.x < s.x || v.y < s.y || v.x + v.w > s.x + s.w || v.y + v.h > s.y + s.h)) bad.push(`page ${i + 1}: slicers not inside the rail ${JSON.stringify(s)}`); }
+      else if (!got.visuals.some((v) => v.type !== 'group' && v.x === s.x && v.y === s.y && v.w === s.w && v.h === s.h)) bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
+    });
+  });
+  return bad;
+};
+const gs = await tryCall('generate_theme', { name: 'Gulf Sales', brand: '#0F4C5C', harmony: 'analogous', lang: 'ar', font: 'Tahoma', folder: 'themes/cr' });
+const gp = gs.err ? gs : await tryCall('plan_layout', { design: gs.j.design, layout: 'analysis', filters: 'end', lang: 'ar' });
+r = gp.err ? gp : await tryCall('create_report', { path: 'bim-project', name: 'Gulf Sales', design: gp.j.design, lang: 'ar' });
+if (!r.err) {
+  const dir = path.join(ROOT, 'bim-project', r.j.report), pages = readReport(dir), want = E.projectPages(gp.j.design.layout, 'ar', { second: true, panel: false });
+  const shown = pages.filter((p) => !p.hidden), bad = slotsPlaced(shown, want);
+  check(shown.length === 2 && pages.length === 3 && !bad.length, `create_report design: ${shown.length} pages; ${bad.slice(0, 4).join(' | ')}`);
+  check(shown[0].visuals.some((v) => v.x === 1388 && v.w === 508) && JSON.stringify(shown.map((p) => p.name)) === '["تحليل","نظرة عامة"]', 'create_report design: not mirrored or page names not Arabic');
+  // the Arabic labels from the engine
+  const all1 = shown.map((p) => p.visuals.map((v) => v.text).join('')).join('');
+  check(all1.includes('إعادة ضبط الفلاتر') && all1.includes('شعارك') && !all1.includes('Reset filters'), 'create_report design: the report labels are not Arabic');
+  // the registered theme is the design's theme exactly, with nothing changed (its visuals are already solid)
+  const themeFiles = fs.readdirSync(path.join(dir, 'StaticResources/RegisteredResources')).filter((f) => f.endsWith('-theme.json'));
+  check(themeFiles.length === 1 && fs.readFileSync(path.join(dir, 'StaticResources/RegisteredResources', themeFiles[0]), 'utf8') === JSON.stringify(E.buildTheme(gp.j.design, 'ar'), null, 2) && !r.j.themeChanged,
+    `create_report design: registered theme ${themeFiles} is not the design's theme; themeChanged ${JSON.stringify(r.j.themeChanged)}`);
+  const refs = boundFields(dir);
+  check(refs.length >= 4 && refs.every(inModel), `create_report design: fields not in the model: ${refs.filter((x) => !inModel(x)).map((x) => x.join(' '))}`);
+} else check(false, `create_report design: ${r.t.slice(0, 200)}`);
+// one page, and filters as a slide-in panel: a hidden group at the panel's box, the page without the rail
+r = gp.err ? gp : await tryCall('create_report', { path: 'bim-project', name: 'Gulf Panel', design: gp.j.design, lang: 'ar', secondPage: false, slidePanel: true });
+if (!r.err) {
+  const pages = readReport(path.join(ROOT, 'bim-project', r.j.report)).filter((p) => !p.hidden), want = E.projectPages(gp.j.design.layout, 'ar', { second: false, panel: true });
+  const panel = want[0].panel, bad = slotsPlaced(pages, want);
+  check(pages.length === 1 && !bad.length && panel && pages[0].visuals.some((v) => v.type === 'group' && v.hidden && v.x === panel.x && v.y === panel.y && v.w === panel.w && v.h === panel.h),
+    `create_report slide-in panel: ${pages.length} pages, panel ${JSON.stringify(panel)}; ${bad.slice(0, 3).join(' | ')}`);
+} else check(false, `create_report slide-in panel: ${r.t.slice(0, 200)}`);
+// a design with transparent visuals: the report's theme has solid visuals (no background panels yet), and says so
+const gt2 = await tryCall('generate_theme', { name: 'See Through', layout: { transparent: true }, folder: 'themes/cr' });
+r = gt2.err ? gt2 : await tryCall('create_report', { path: 'bim-project', name: 'See Through', design: gt2.j.design });
+if (!r.err) {
+  const dir = path.join(ROOT, 'bim-project', r.j.report), f = fs.readdirSync(path.join(dir, 'StaticResources/RegisteredResources')).find((x) => x.endsWith('-theme.json'));
+  const th = JSON.parse(fs.readFileSync(path.join(dir, 'StaticResources/RegisteredResources', f), 'utf8'));
+  check(th.visualStyles['*']['*'].background[0].show === true && r.j.themeChanged && /transparent/i.test(JSON.stringify(r.j.themeChanged)), `create_report transparent: ${JSON.stringify(r.j.themeChanged)}`);
+} else check(false, `create_report transparent: ${r.t.slice(0, 200)}`);
+// text sizes within 8-60 on the biggest and smallest pages
+for (const [w, h] of [[3840, 2160], [640, 360]]) {
+  const g = await tryCall('generate_theme', { name: `Report ${w}`, layout: { page: { w, h } }, folder: 'themes/cr' });
+  r = g.err ? g : await tryCall('create_report', { path: 'bim-project', name: `Report ${w}`, design: g.j.design });
+  const sizes = [];
+  if (!r.err) { const dir = path.join(ROOT, 'bim-project', r.j.report, 'StaticResources/RegisteredResources'); JSON.stringify(JSON.parse(fs.readFileSync(path.join(dir, fs.readdirSync(dir).find((x) => x.endsWith('-theme.json'))), 'utf8')), (k, v) => { if ((k === 'fontSize' || k === 'textSize') && typeof v === 'number') sizes.push(v); return v; }); }
+  check(!r.err && sizes.length && sizes.every((s) => s >= 8 && s <= 60) && readReport(path.join(ROOT, 'bim-project', r.j.report))[0].w === w, `create_report ${w}x${h}: ${r.err ? r.t.slice(0, 120) : sizes}`);
+}
+// pages or a design, never both or neither
+r = await tryCall('create_report', { path: 'bim-project', name: 'Both', pages: [page], design: gp.err ? {} : gp.j.design });
+check(r.err && /pages or a design/.test(r.t), `create_report with both: ${r.t.slice(0, 120)}`);
+r = await tryCall('create_report', { path: 'bim-project', name: 'Neither' });
+check(r.err && /pages or a design/.test(r.t), `create_report with neither: ${r.t.slice(0, 120)}`);
+
 // a design from generate_theme passes straight through: same colours, same page, positions for that page
 const gt = await tryCall('generate_theme', { name: 'Chain', brand: '#0f4c5c', harmony: 'analogous', layout: { page: '1280x720' } });
 r = gt.err ? gt : await tryCall('plan_layout', { design: gt.j.design, layout: 'ops' });
