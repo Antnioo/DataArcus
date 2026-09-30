@@ -20,6 +20,10 @@
   const CHART_OPTIONS = { labels: ['auto', 'on', 'off'], grid: ['auto', 'dotted', 'off'], legend: ['auto', 'Top', 'TopCenter', 'Bottom', 'Right', 'off'], axis: ['auto', 'off'], table: ['auto', 'minimal', 'banded'] };
   // Every font in the list is built into Power BI, but only these have Arabic letters
   const AR_FONTS = ['Segoe UI', 'Segoe UI Semibold', 'Arial', 'Tahoma'];
+  // The theme's name when none is given (the name box shows it to new visitors): the theme JSON and every file use it,
+  // so an empty or blank name gives one name everywhere. A name with text is kept exactly as typed.
+  const DEFAULT_NAME = 'My Brand Theme';
+  const themeName = (name) => (name && String(name).trim() ? name : DEFAULT_NAME);
 
   // ---------- color math ----------
   // #1a2b3c, 1a2b3c or the short #abc form, spaces around allowed; anything else is not a color (null)
@@ -49,6 +53,8 @@
       triadic: [[0, 0], [120, 0], [240, 0], [0, 0.18], [120, 0.18], [240, 0.18], [60, 0.05], [180, 0.05]],
       mono: [[0, -0.2], [0, -0.1], [0, 0], [0, 0.1], [0, 0.18], [0, 0.26], [0, 0.32], [0, 0.38]]
     };
+    // The 0.15 floor is never reached today: the base lightness is held at 0.4-0.55 and no step above goes down more
+    // than 0.2, so the darkest colour is 0.2. It stays as a safety limit in case the steps change.
     return plans[mode].map(([dh, dl]) => hslToHex(h + dh, s, Math.min(0.85, Math.max(0.15, l + dl))));
   };
 
@@ -236,7 +242,7 @@
   const buildTheme = (d) => {
     const u = d.ui, l = d.layout, sec = mix(u.text, u.card, 0.35), ter = mix(u.text, u.card, 0.6), f = d.font;
     return {
-      name: d.name || 'My Brand Theme',
+      name: themeName(d.name),
       dataColors: d.data,
       foreground: u.text,
       foregroundNeutralSecondary: sec,
@@ -311,7 +317,7 @@
   }
 
   // ---------- saved designs ----------
-  const fresh = () => ({ preset: 'DataArcus', name: 'My Brand Theme', font: 'Segoe UI', data: PRESETS.DataArcus.data.slice(), ui: { ...PRESETS.DataArcus.ui } });
+  const fresh = () => ({ preset: 'DataArcus', name: DEFAULT_NAME, font: 'Segoe UI', data: PRESETS.DataArcus.data.slice(), ui: { ...PRESETS.DataArcus.ui } });
   // A saved design (or none) made safe to use, the way the generator repairs it on load: an old or hand-edited save may
   // be partial, so each value that is not valid falls back to its default, and older layouts are upgraded.
   // Changes the design in place and returns it (or a fresh one when there is nothing usable).
@@ -341,11 +347,12 @@
     }
     return state;
   }
-  // every download is named after the theme: letters of any script are kept (Arabic, café), other symbols dropped
-  const fileBase = (name) => (name || 'power-bi-theme').replace(/[^\p{L}\p{M}\p{N}_\- ]+/gu, '').trim().replace(/\s+/g, '-').toLowerCase() || 'power-bi-theme';
+  // every download is named after the theme: letters of any script are kept (Arabic, café), other symbols dropped;
+  // a name of only symbols leaves nothing, so its files are power-bi-theme
+  const fileBase = (name) => themeName(name).replace(/[^\p{L}\p{M}\p{N}_\- ]+/gu, '').trim().replace(/\s+/g, '-').toLowerCase() || 'power-bi-theme';
 
   const api = {
-    PRESETS, FONTS, CHART_OPTIONS, AR_FONTS, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
+    PRESETS, FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize,
     fs, chart, buildTheme, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
