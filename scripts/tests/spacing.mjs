@@ -2,7 +2,7 @@
 // On every page, a box and whatever sits directly above or below it in the same container
 // must be one step of the scale apart (or touching). Also checks the page top: content starts
 // one lg step below the navbar. (Sections meet with one xl step by construction: section padding is xl / 2.)
-import { pages, visitor } from './lib.mjs';
+import { pages, visitor, ready } from './lib.mjs';
 
 const TOL = 4; // sub-pixel rounding and line-height of inline buttons
 
@@ -40,6 +40,7 @@ export default async function ({ browser, url }) {
     // animations off, so scroll-in effects (AOS, main.js fade-in) cannot shift boxes while measuring
     const v = await visitor(browser, { viewport: vp, motion: 'reduce' });
     await v.pg.goto(`${url}/${p}?lang=en`, { waitUntil: 'networkidle' });
+    await ready(v.pg);
     const r = await v.pg.evaluate(measure);
     const steps = [0, 8, 16, 24, r.lg];
     const tag = `${p} ${vp[0]}px`;

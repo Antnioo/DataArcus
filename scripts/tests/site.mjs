@@ -3,7 +3,7 @@
 // and the top offset (style.css --top-offset) matches the real navbar.
 import fs from 'node:fs';
 import path from 'node:path';
-import { pages, visitor, ROOT } from './lib.mjs';
+import { pages, visitor, ROOT, ready } from './lib.mjs';
 
 export default async function ({ browser, url }) {
   const problems = []; let checks = 0;
@@ -17,6 +17,7 @@ export default async function ({ browser, url }) {
   for (const p of pages()) for (const lang of ['en', 'ar']) for (const vp of [[390, 844], [1440, 900]]) {
     const v = await visitor(browser, { viewport: vp });
     await v.pg.goto(`${url}/${p}?lang=${lang}`, { waitUntil: 'networkidle' });
+    await ready(v.pg);
     const tag = `${p} ${lang} ${vp[0]}px`;
     const r = await v.pg.evaluate(() => {
       const nav = document.getElementById('navbar'), pins = [...document.querySelectorAll('[data-pin]')].reduce((a, e) => a + e.offsetHeight, 0);

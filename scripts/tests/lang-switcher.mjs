@@ -4,7 +4,7 @@
 //  - English pages load the Arabic letters of the label (without them phones use their own Arabic font, which sits low)
 //  - the Arabic label uses the site's Arabic font, keeps its letters joined, and gets its optical lift
 //  - the English label on Arabic pages stays in Inter with no lift
-import { visitor, pages } from './lib.mjs';
+import { visitor, pages, WAIT } from './lib.mjs';
 
 export default async function ({ browser, url }) {
   const problems = []; let checks = 0;
@@ -15,7 +15,7 @@ export default async function ({ browser, url }) {
     for (const p of pages()) for (const lang of ['en', 'ar']) {
       const where = `${p} ${lang} ${vp[0]}px`;
       await v.pg.goto(`${url}/${p}?lang=${lang}`, { waitUntil: 'domcontentloaded' });
-      const s = await v.pg.waitForSelector(sel, { timeout: 5000 }).catch(() => null);
+      const s = await v.pg.waitForSelector(sel, { timeout: /404|offline/.test(p) ? 3000 : WAIT }).catch(() => null);
       if (!s) { if (!/404|offline/.test(p)) check(false, `${where}: no language switcher`); continue; }
       const r = await s.evaluate((e) => { const c = getComputedStyle(e), f = document.getElementById('ar-font-label');
         return { lang: e.getAttribute('lang'), text: e.textContent.trim(), font: c.fontFamily, top: c.top, spacing: c.letterSpacing, labelFont: f ? decodeURIComponent(f.href) : null }; });
@@ -43,7 +43,7 @@ export default async function ({ browser, url }) {
     });
     for (const p of pages()) {
       await v.pg.goto(`${url}/${p}`, { waitUntil: 'domcontentloaded' });
-      const s = await v.pg.waitForSelector('.lang-btn-desktop', { timeout: 5000 }).catch(() => null);
+      const s = await v.pg.waitForSelector('.lang-btn-desktop', { timeout: /404|offline/.test(p) ? 3000 : WAIT }).catch(() => null);
       const lang = await v.pg.evaluate(() => document.documentElement.lang);
       if (!s) { if (!/404|offline/.test(p)) check(false, `${p} storage blocked: no language switcher (page in ${lang})`); continue; }
       check(lang === 'ar', `${p} storage blocked: Arabic browser gets ${lang}`);
