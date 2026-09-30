@@ -256,7 +256,15 @@
       general: obj({ altText: str(alt || title || '') })
     }, extra || {});
     const textbox = (text, size, bold, colr) => ({ general: obj({ paragraphs: [{ textRuns: [{ value: text, textStyle: { fontFamily: font, fontSize: size + 'pt', fontWeight: bold ? 'bold' : 'normal', color: colr } }], horizontalTextAlignment: align }] }) });
-    const def = (props) => [{ properties: props, selector: { id: 'default' } }];
+    // a button's formatting card: the on/off switch ("show") on its own, the look for the default state after it, the
+    // way Power BI Desktop saves buttons (a "show" inside the state selector is ignored, and the text, fill or outline
+    // stays hidden)
+    const def = (props) => {
+      const { show, ...look } = props, out = [];
+      if (show !== undefined) out.push({ properties: { show } });
+      if (Object.keys(look).length) out.push({ properties: look, selector: { id: 'default' } });
+      return out;
+    };
 
     PAGES.forEach((pg, pageIndex) => {
       const pageName = pg.id;
@@ -348,7 +356,8 @@
         } else if (s.kind === 'logo') {
           visual = logoFile
             ? { visualType: 'image', objects: { general: obj({ imageUrl: resource(logoFile) }), imageScaling: obj({ imageScalingType: str('Fit') }) }, visualContainerObjects: frame(null, W.logo || 'Logo') }
-            : { visualType: 'textbox', objects: textbox(W.logoHere || 'Your logo', 10, false, mixHex(u.text, u.card, 0.5)), visualContainerObjects: frame(null, W.logo || 'Logo') };
+            // the placeholder until a logo is added: sized to the header slot, in the secondary text colour so it reads
+            : { visualType: 'textbox', objects: textbox(W.logoHere || 'Your logo', Math.max(10, Math.min(24, Math.round(s.h * 0.3))), false, mixHex(u.text, u.card, 0.3)), visualContainerObjects: frame(null, W.logo || 'Logo') };
         } else if (s.kind === 'text') {
           visual = { visualType: 'textbox', objects: textbox(W.textHere || 'Explain what the main chart shows and what to do about it.', 11, false, u.text), visualContainerObjects: frame(s.title, s.title) };
         } else {
@@ -486,9 +495,13 @@
       objects: { background: obj({ color: color(u.card), transparency: num(0) }), outspace: obj({ color: color(u.card) }) }
     }));
     const tip = B && B.tip && B.tip.card && B.tip.cat && B.tip.y ? B.tip : null;
+    const TIP_VALUE = 20, TIP_TITLE = 10;
+    const tipFrame = (t) => { const f = frame(t, t); f.title = obj({ show: bool(true), text: str(t), alignment: str(align), fontSize: num(TIP_TITLE) }); return f; };
     const tipVisuals = tip
-      ? [{ x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'card', query: q({ Values: [proj(tip.card)] }), objects: { categoryLabels: obj({ show: bool(false) }) }, visualContainerObjects: frame(label(tip.card), label(tip.card)) } },
-        { x: 12, y: 92, w: 296, h: 140, visual: { visualType: 'clusteredColumnChart', query: q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), visualContainerObjects: frame(label(tip.y), label(tip.y)) } }]
+      // the theme's text sizes are made for the report's full page; on this 320 x 240 page the card value and the
+      // titles get their own, so the value isn't cut off and the titles fit
+      ? [{ x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'card', query: q({ Values: [proj(tip.card)] }), objects: { categoryLabels: obj({ show: bool(false) }), labels: obj({ fontSize: num(TIP_VALUE) }) }, visualContainerObjects: tipFrame(label(tip.card)) } },
+        { x: 12, y: 92, w: 296, h: 140, visual: { visualType: 'clusteredColumnChart', query: q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), visualContainerObjects: tipFrame(label(tip.y)) } }]
       : [{ x: 12, y: 12, w: 296, h: 216, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }];
     tipVisuals.forEach((s, i) => {
       const v = { $schema: SCHEMA.visual, name: rnd(), position: { x: s.x, y: s.y, z: (i + 1) * 1000, height: s.h, width: s.w, tabOrder: (i + 1) * 1000 }, visual: s.visual };
