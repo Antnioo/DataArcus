@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // chart style choices with the defaults filled in, and the theme JSON
   const chart = () => E.chart(state);
-  const buildTheme = () => E.buildTheme(state);
+  const buildTheme = () => E.buildTheme(state, isAr() ? 'ar' : 'en');
 
   const renderPreview = () => {
     const u = state.ui, d = state.data, sec = mix(u.text, u.card, 0.35), grid = mix(u.text, u.card, 0.85), cs = chart();

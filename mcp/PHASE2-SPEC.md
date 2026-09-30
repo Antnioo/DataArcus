@@ -13,7 +13,7 @@ Authoring skill, so an agent editing an existing report uses DataArcus numbers i
 ## What already exists (reuse, don't copy)
 - `assets/js/design-engine.js` exports: `PRESETS`, `FONTS`, `AR_FONTS`, `CHART_OPTIONS`, `LAYOUTS` (exec, analysis, ops,
   focus), `PAGES`, `LIM`, `generate(base, mode)` (4 harmonies), `contrast`, `mix`, `page`, `fitCustom`, `computeSlots`,
-  `boxOf`, `rtl`, `buildTheme(design)`, `bgSvg`, `pngSize`, `fresh()`, `repairState(state)`, `fileBase(name)`.
+  `boxOf`, `rtl`, `buildTheme(design, lang)`, `bgSvg`, `pngSize`, `fresh()`, `repairState(state)`, `fileBase(name)`.
 - A design is `{ preset, name, font, data: [8 hex], ui: { background, card, text, accent, good, neutral, bad, ... },
   chart: { labels, grid, legend, axis, table }, layout: { layout, page, kpis, filters, ... } }`, the same shape the
   website saves. `repairState` turns any partial or damaged input into a valid design: use it for every tool input.
