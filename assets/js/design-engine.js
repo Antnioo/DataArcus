@@ -208,7 +208,8 @@
   const chart = (d) => Object.assign({}, CHART_DEFAULTS, d.chart);
   const AXIS_CHARTS = ['barChart', 'columnChart', 'clusteredBarChart', 'clusteredColumnChart', 'hundredPercentStackedBarChart', 'hundredPercentStackedColumnChart',
     'lineChart', 'areaChart', 'stackedAreaChart', 'hundredPercentStackedAreaChart', 'lineStackedColumnComboChart', 'lineClusteredColumnComboChart', 'ribbonChart', 'waterfallChart'];
-  const chartStyles = (u, d) => {
+  // lang: the page's language, which sets the reading direction when the layout has none
+  const chartStyles = (u, d, lang) => {
     const c = chart(d), out = {};
     const add = (types, card, props) => types.forEach((t) => {
       const v = ((out[t] = out[t] || { '*': {} })['*']);
@@ -221,7 +222,9 @@
       // waterfall has no category gridlines in the schema; Power BI draws none there anyway
       if (c.grid === 'off') add(AXIS_CHARTS.concat('scatterChart').filter((t) => t !== 'waterfallChart'), 'categoryAxis', { gridlineShow: false });
     }
-    if (c.legend !== 'auto') add(AXIS_CHARTS.concat('scatterChart', 'pieChart', 'donutChart', 'treemap'), 'legend', c.legend === 'off' ? { show: false } : { show: true, position: c.legend });
+    // "Side" is stored as Right; in a right-to-left design it goes to the left, mirrored like the rest of the layout
+    if (c.legend !== 'auto') add(AXIS_CHARTS.concat('scatterChart', 'pieChart', 'donutChart', 'treemap'), 'legend', c.legend === 'off' ? { show: false }
+      : { show: true, position: c.legend === 'Right' && rtl(d.layout, lang) ? 'Left' : c.legend });
     if (c.axis === 'off') ['valueAxis', 'categoryAxis'].forEach((a) => add(AXIS_CHARTS.concat('scatterChart'), a, { showAxisTitle: false }));
     if (c.table !== 'auto') {
       const line = { solid: { color: mix(u.text, u.card, 0.85) } };
@@ -231,15 +234,16 @@
     return out;
   };
   // Adds the chart style cards into the per-visual entries built above (tables already carry text sizes there)
-  const withChartStyles = (vs, u, d) => {
-    Object.entries(chartStyles(u, d)).forEach(([t, v]) => {
+  const withChartStyles = (vs, u, d, lang) => {
+    Object.entries(chartStyles(u, d, lang)).forEach(([t, v]) => {
       const cur = ((vs[t] = vs[t] || { '*': {} })['*']);
       Object.entries(v['*']).forEach(([card, arr]) => { cur[card] = [Object.assign({}, (cur[card] || [{}])[0], arr[0])]; });
     });
     return vs;
   };
-  // d: the design { name, font, data, ui, chart, layout }
-  const buildTheme = (d) => {
+  // d: the design { name, font, data, ui, chart, layout }; lang: the page's language ('ar' or 'en'), for the reading
+  // direction when the layout has none (the legend's side follows it)
+  const buildTheme = (d, lang) => {
     const u = d.ui, l = d.layout, sec = mix(u.text, u.card, 0.35), ter = mix(u.text, u.card, 0.6), f = d.font;
     return {
       name: themeName(d.name),
@@ -275,7 +279,7 @@
         ...Object.fromEntries(VISUAL_TYPES.map((t) => [t, { '*': { border: borderStyle(u, l), dropShadow: shadowStyle(l) } }])),
         // visuals with their own text sizes, which do not follow the text classes above
         ...textSizes(d)
-      }, u, d)
+      }, u, d, lang)
     };
   };
 

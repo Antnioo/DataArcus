@@ -30,7 +30,7 @@ export default async function ({ browser, url }) {
   let E;
   try { E = load('design-engine.min.js'); } catch (e) { return { checks: 1, problems: ['assets/js/design-engine.min.js: ' + e.message] }; }
   const all = unpack(JSON.parse(fs.readFileSync(FILE, 'utf8')));
-  check(all.length === 53, `fixtures: ${all.length} cases, expected 53`);
+  check(all.length === 54, `fixtures: ${all.length} cases, expected 54`);
 
   for (const c of all) {
     const nm = (pair) => (c.lang === 'ar' ? pair[1] : pair[0]);
@@ -42,7 +42,7 @@ export default async function ({ browser, url }) {
     check(JSON.stringify(E.repairState(copy(c.state))) === JSON.stringify(c.state), `${c.id}: repairing a repaired design changed it`);
     const d = c.state, l = d.layout;
     // theme JSON, as the page shows and downloads it
-    check(JSON.stringify(E.buildTheme(d), null, 2) === c.theme, `${c.id}: theme JSON differs`);
+    check(JSON.stringify(E.buildTheme(d, c.lang), null, 2) === c.theme, `${c.id}: theme JSON differs`);
     // slot table: name, suggested visual, X, Y, width, height in page units
     const slots = E.computeSlots(l, c.lang);
     const rows = slots.map((s) => { const b = E.boxOf(s, l); return [nm(s.role), nm(E.KINDS[s.kind]), b.x, b.y, b.w, b.h].map(String); });
@@ -70,6 +70,18 @@ export default async function ({ browser, url }) {
   // a name of only symbols keeps its own name in the theme; its files fall back to power-bi-theme
   check(E.buildTheme(Object.assign(copy(base), { name: '***' })).name === '***' && E.fileBase('***') === 'power-bi-theme', 'name "***" changed');
 
+  // the legend's "Side" (Right) follows the reading direction like the rest of the layout: Left in right-to-left designs
+  // (the chosen direction, or the page's language when none is chosen), on every visual type that has a legend
+  const LEGEND_TYPES = E.AXIS_CHARTS.concat('scatterChart', 'pieChart', 'donutChart', 'treemap');
+  const legendOf = (dir, lang, legend) => {
+    const d = copy(base); d.chart = { legend }; d.layout = Object.assign({}, d.layout, { dir });
+    const vs = E.buildTheme(d, lang).visualStyles;
+    return [...new Set(LEGEND_TYPES.map((t) => vs[t]['*'].legend[0].position))].join(',');
+  };
+  for (const [dir, lang, want] of [['rtl', 'en', 'Left'], ['rtl', 'ar', 'Left'], ['', 'ar', 'Left'], ['ltr', 'en', 'Right'], ['ltr', 'ar', 'Right'], ['', 'en', 'Right']])
+    check(legendOf(dir, lang, 'Right') === want, `legend "Side", direction ${JSON.stringify(dir)}, page ${lang}: ${legendOf(dir, lang, 'Right')}, want ${want}`);
+  check(legendOf('rtl', 'ar', 'Top') === 'Top' && legendOf('rtl', 'ar', 'Bottom') === 'Bottom', 'legend Top/Bottom changed in a right-to-left design');
+
   // the fonts and chart choices on both pages are the engine's own lists (the repairs rely on them)
   for (const page of Object.values(PAGES_TO_CHECK)) {
     const html = fs.readFileSync(path.join(ROOT, page), 'utf8');
@@ -95,6 +107,20 @@ export default async function ({ browser, url }) {
     }
     if (v.errs.length) problems.push(`${name} page (names): ${v.errs.join(' | ')}`);
     await v.ctx.close();
+  }
+
+  // on both pages: legend "Side" is Left in the theme on the Arabic page (no direction chosen) and with Right to left
+  // chosen on the English page, and Right with Left to right
+  for (const [name, page] of Object.entries(PAGES_TO_CHECK)) {
+    for (const [lang, dir, want] of [['ar', null, 'Left'], ['en', 'rtl', 'Left'], ['en', 'ltr', 'Right']]) {
+      const v = await visitor(browser);
+      await v.pg.goto(`${url}${page}?lang=${lang}`, { waitUntil: 'networkidle' });
+      if (dir) await v.pg.click(`#layout button[data-l="dir"][data-v="${dir}"]`);
+      await v.pg.selectOption('#csLegend', 'Right');
+      const got = await v.pg.evaluate(() => JSON.parse(document.getElementById('json').textContent).visualStyles.columnChart['*'].legend[0].position);
+      check(got === want && !v.errs.length, `${name} page, ${lang}, direction ${dir || '(page)'}: legend "Side" is ${got}, want ${want} ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
   }
 
   // each page runs the code it should: both pages the engine and theme-generator.js on it

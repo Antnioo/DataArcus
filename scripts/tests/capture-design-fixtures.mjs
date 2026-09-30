@@ -75,6 +75,8 @@ export function cases(all) {
   add('arabic-analysis-filters', { lang: 'ar', preset: 'Desert Gulf', layout: { preset: 'analysis', dir: '', filters: true, fpos: 'end', page: '1280x720' } });
   add('arabic-ops-ltr', { lang: 'ar', preset: 'Midnight', layout: { preset: 'ops', dir: 'ltr', kpis: 5, page: 'custom', pageW: 2560, pageH: 1440 } });
   add('arabic-focus-font', { lang: 'ar', set: { font: 'Verdana' }, layout: { preset: 'focus', dir: '', transparent: true, page: '960x720' } });
+  // right to left (from the page's language) with the legend at the "Side": the theme puts it on the left
+  add('arabic-legend-side', { lang: 'ar', set: { chart: { legend: 'Right' } }, layout: { dir: '' } });
   // the example design the page offers ("See an example"), in both languages
   const example = { preset: 'exec', kpis: 4, filters: true, fpos: 'top', v: 3, radius: 8, shadow: true, header: true, kpiBar: 'top', kpiBarC: 'data', headLine: 'full', samples: true, transparent: true, page: '1920x1080', hh: 64, logoW: 200 };
   add('example-en', { preset: 'Desert Gulf', set: { name: 'Executive Sales' }, rawLayout: Object.assign({ dir: 'ltr' }, example) });
