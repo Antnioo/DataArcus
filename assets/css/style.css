@@ -658,6 +658,12 @@ footer a.text-white-50:hover {
   backdrop-filter: blur(20px);
 }
 
+/* The site is dark, so the browser's own parts of a field (the open dropdown list, date pickers, scrollbars) are drawn
+   dark too. Without it the list is the browser's white with the site's white text: only the highlighted option shows.
+   The option colours are the fallback for browsers that ignore color-scheme. */
+.form-control, .form-select, select { color-scheme: dark; }
+.form-select option, select option { background-color: var(--dk); color: #fff; }
+
 .form-control:focus, .form-select:focus {
   background: rgba(255, 255, 255, 0.08);
   border-color: var(--accent);
