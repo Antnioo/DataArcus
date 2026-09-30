@@ -7,7 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ROOT, visitor } from './lib.mjs';
-import { FILE, PAGES_TO_CHECK, unpack, captureAll, compare } from './capture-design-fixtures.mjs';
+import { FILE, PAGES_TO_CHECK, unpack, captureAll, compare, PROJECT_FILE, unpackProjects, captureProjects, compareProjects } from './capture-design-fixtures.mjs';
 
 // the engine exactly as the lab page loads it (minified)
 const load = (file) => { const m = { exports: {} }; new Function('module', 'exports', 'self', fs.readFileSync(path.join(ROOT, 'assets/js', file), 'utf8'))(m, m.exports, undefined); return m.exports; };
@@ -90,6 +90,18 @@ export default async function ({ browser, url }) {
     check(legendOf(dir, lang, 'Right') === want, `legend "Side", direction ${JSON.stringify(dir)}, page ${lang}: ${legendOf(dir, lang, 'Right')}, want ${want}`);
   check(legendOf('rtl', 'ar', 'Top') === 'Top' && legendOf('rtl', 'ar', 'Bottom') === 'Bottom', 'legend Top/Bottom changed in a right-to-left design');
 
+  // the Power BI project download: the engine gives exactly the pages the lab page hands pbip-export (page names, sizes,
+  // slots, the second page's layout, the slide-in panel) and the report's labels, for every project case
+  const projects = unpackProjects(JSON.parse(fs.readFileSync(PROJECT_FILE, 'utf8')));
+  check(projects.length === 60, `project fixtures: ${projects.length} cases, expected 60`);
+  for (const pc of projects) {
+    const dc = all.find((x) => x.id === pc.id.replace(/-plain$/, ''));
+    if (typeof E.projectPages !== 'function' || !E.REPORT_TEXTS) { check(false, `${pc.id}: no projectPages / REPORT_TEXTS in the engine`); continue; }
+    const got = E.projectPages(dc.state.layout, pc.lang, pc.opts).map((p) => ({ name: p.name, page: p.page, slots: p.slots, panel: p.panel }));
+    check(JSON.stringify(got) === JSON.stringify(pc.build.pages), `${pc.id}: project pages differ\n        got  ${JSON.stringify(got).slice(0, 250)}\n        want ${JSON.stringify(pc.build.pages).slice(0, 250)}`);
+    check(JSON.stringify(E.REPORT_TEXTS[pc.lang]) === JSON.stringify(pc.build.texts), `${pc.id}: report labels differ: ${JSON.stringify(E.REPORT_TEXTS[pc.lang]).slice(0, 150)}`);
+  }
+
   // the fonts and chart choices on both pages are the engine's own lists (the repairs rely on them)
   for (const page of Object.values(PAGES_TO_CHECK)) {
     const html = fs.readFileSync(path.join(ROOT, page), 'utf8');
@@ -160,6 +172,12 @@ export default async function ({ browser, url }) {
     const want = ['design-engine.min.js', 'theme-generator.min.js'];
     check(JSON.stringify(seen.sort()) === JSON.stringify(want) && engine && !v.errs.length, `${name} page loads ${JSON.stringify(seen)}, engine ${engine}, errors ${v.errs.join(' | ')}`);
     await v.ctx.close();
+  }
+
+  // the lab page's project download hands pbip-export exactly what the fixtures recorded, backgrounds included
+  {
+    const p = compareProjects(await captureProjects(browser, url), 'lab page project: ');
+    check(!p.length, p.slice(0, 10).join('\n        ') + (p.length > 10 ? `\n        ... and ${p.length - 10} more` : ''));
   }
 
   // both pages in the browser make exactly the fixtures: preview, theme, slots, background, file name, saved design
