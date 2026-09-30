@@ -330,7 +330,7 @@ check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.string
     check(on('text') && on('fill') && on('outline'), `Reset button: text, fill and outline must be switched on outside the state (${JSON.stringify(reset).slice(0, 300)})`);
     // 2. tooltip page: its own text sizes (the theme's are made for the full page): value 20, titles 10
     const tipPage = pages.find((p) => p.hidden), tipText = tipPage ? tipPage.visuals.map((v) => v.text).join('') : '';
-    check(/"labels":\[\{"properties":\{"fontSize":\{"expr":\{"Literal":\{"Value":"20D"\}\}\}\}\}\]/.test(tipText.replace(/\s/g, '')) && (tipText.replace(/\s/g, '').match(/"fontSize":\{"expr":\{"Literal":\{"Value":"10D"\}\}\}/g) || []).length === 2,
+    check(/"value":\[\{"properties":\{"fontSize":\{"expr":\{"Literal":\{"Value":"20D"\}\}\}[^\]]*"selector":\{"id":"default"\}\}\]/.test(tipText.replace(/\s/g, '')) && (tipText.replace(/\s/g, '').match(/"fontSize":\{"expr":\{"Literal":\{"Value":"10D"\}\}\}/g) || []).length === 2,
       'tooltip page: the card value must be 20 and both titles 10');
     // 3. logo placeholder: readable (at least 12pt in a 48-high header slot)
     const logo = all.find((v) => v.type === 'textbox' && /Your logo/.test(v.text)), size = logo && +((logo.text.match(/"fontSize":\s*"(\d+)pt"/) || [])[1]);
@@ -359,6 +359,53 @@ check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.string
     `right-to-left table column order: EN ${te.length ? cols(te[0]) : '-'} / AR ${ta.length ? cols(ta[0]) : '-'}`);
   check(!ar.err && (ar.j.modelNotes || []).some((n) => n.field === 'Calendar[Day Name]'), `modelNotes should tell Day Name has no sort column: ${JSON.stringify(ar.j && ar.j.modelNotes)}`);
 }
+// cards are cardVisual (Microsoft deprecates the legacy card): field role Data; value size and centring, no label
+// and no inner outline, each on the "default" selector; padding set; the height they need fits their box (Microsoft's
+// card sizing: text takes 1.5 x its size); the title follows the reading direction; on the phone, their own sizes
+const cardProblems = (dir, rtl) => {
+  const files = [], bad = [];
+  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else if (/^(visual|mobile)\.json$/.test(e.name)) files.push(f); });
+  walk(dir);
+  const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined), n = (p) => parseFloat(lit(p));
+  const def = (list) => (list || []).find((x) => x.selector && x.selector.id === 'default'), props = (list) => ((list || [])[0] || {}).properties || {};
+  let cards = 0;
+  files.filter((f) => f.endsWith('visual.json')).forEach((f) => {
+    const j = JSON.parse(fs.readFileSync(f, 'utf8')), v = j.visual, id = j.name;
+    if (!v) return;
+    if (v.visualType === 'card' || v.visualType === 'multiRowCard') { bad.push(`${id}: legacy ${v.visualType}`); return; }
+    if (v.visualType !== 'cardVisual') return;
+    cards++;
+    const o = v.objects || {}, c = v.visualContainerObjects || {}, val = def(o.value), pad = def(o.padding), lay = def(o.layout);
+    const roles = Object.keys((v.query || {}).queryState || {});
+    if (roles.length && roles.join() !== 'Data') bad.push(`${id}: role ${roles}`);
+    if (!val || !(n(val.properties.fontSize) >= 8) || lit(val.properties.horizontalAlignment) !== "'center'") bad.push(`${id}: value ${JSON.stringify(val)}`);
+    if (lit((def(o.label) || { properties: {} }).properties.show) !== 'false') bad.push(`${id}: label not hidden`);
+    if (lit((def(o.outline) || { properties: {} }).properties.show) !== 'false') bad.push(`${id}: inner outline not off`);
+    const t = props(c.title), vp = props(c.padding), sp = props(c.spacing);
+    if (lit(t.alignment) !== (rtl ? "'right'" : "'left'")) bad.push(`${id}: title alignment ${lit(t.alignment)}`);
+    if (lit(sp.customizeSpacing) !== 'true' || n(sp.spaceBelowTitleArea) !== 0) bad.push(`${id}: spacing ${JSON.stringify(sp)}`);
+    const need = n(vp.top) + n(vp.bottom) + (lit(t.show) === 'true' ? Math.ceil(1.5 * n(t.fontSize)) : 0) + 2 * n(pad && pad.properties.paddingUniform) + 2 * n(lay && lay.properties.paddingUniform) + Math.ceil(1.5 * n(val && val.properties.fontSize));
+    if (!(need <= j.position.height)) bad.push(`${id}: needs ${need} high, box ${j.position.height}`);
+    const mf = path.join(path.dirname(f), 'mobile.json');
+    if (fs.existsSync(mf)) {
+      const m = JSON.parse(fs.readFileSync(mf, 'utf8'));
+      if (n((def((m.objects || {}).value) || { properties: {} }).properties.fontSize) !== 20 || n(props((m.visualContainerObjects || {}).title).fontSize) !== 10) bad.push(`${id}: phone sizes ${JSON.stringify(m.objects)} ${JSON.stringify(m.visualContainerObjects)}`);
+    }
+  });
+  return { cards, bad };
+};
+{
+  const t2 = await tryCall('generate_theme', { name: 'Cards', brand: '#0F4C5C', folder: 'themes/c' });
+  for (const [name, lang, layout, kpis] of [['Cards EN', 'en', 'exec', 4], ['Cards AR', 'ar', 'analysis', 3]]) {
+    const plan = t2.err ? t2 : await tryCall('plan_layout', { design: t2.j.design, layout, kpis, filters: layout === 'exec' ? 'none' : 'end', lang });
+    const res = plan.err ? plan : await tryCall('create_report', { path: 'dax-project', name, design: plan.j.design, lang });
+    const { cards, bad } = res.err ? { cards: 0, bad: [res.t.slice(0, 200)] } : cardProblems(path.join(ROOT, 'dax-project', res.j.report), lang === 'ar');
+    // every KPI card on both pages, and the tooltip card
+    const want = plan.err ? -1 : E.projectPages(plan.j.design.layout, lang, { second: true, panel: false }).reduce((a, p) => a + p.slots.filter((s) => s.kind === 'kpi').length, 0) + 1;
+    check(cards === want && !bad.length, `${name}: ${cards} cardVisual, want ${want}; ${bad.slice(0, 6).join('; ')}`);
+  }
+}
+
 // suggest_fields on the same project: the same sensible fields
 r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 { const f = (x) => (x ? `${x.t}[${x.c}]` : null), sl = r.err ? [] : r.j.slicers.map(f);

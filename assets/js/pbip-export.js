@@ -121,8 +121,9 @@
   const proj = (f) => (f.m != null ? fieldMea(f.t, f.m) : fieldCol(f.t, f.c));
   const label = (f) => (f ? (f.m != null ? f.m : f.c) : null);
 
-  // what each slot becomes in Power BI, and the sample fields it shows
-  const TYPES = { kpi: 'card', card: 'card', line: 'lineChart', bar: 'clusteredBarChart', column: 'clusteredColumnChart', donut: 'donutChart', table: 'tableEx',
+  // what each slot becomes in Power BI, and the sample fields it shows; cards are the card visual (cardVisual): Microsoft
+  // deprecates the legacy "card"
+  const TYPES = { kpi: 'cardVisual', card: 'cardVisual', line: 'lineChart', bar: 'clusteredBarChart', column: 'clusteredColumnChart', donut: 'donutChart', table: 'tableEx',
     gauge: 'gauge', funnel: 'funnel', treemap: 'treemap', map: 'map', text: 'textbox', slicer: 'slicer', title: 'textbox', logo: 'image' };
   // Which fields each kind of visual shows. The sample data and a user's own model both come in this shape:
   // { kpis: [f], measure: f, date: f, cats: { bar, column, donut, funnel, treemap, map }, y: { funnel, gauge },
@@ -146,8 +147,9 @@
     // one field per card: a card past the end of the list stays empty rather than repeating the first KPI
     const kpi = (B.kpis || [])[kpiIndex] || null;
     switch (kind) {
-      case 'kpi': return kpi ? q({ Values: [proj(kpi)] }) : null;
-      case 'card': return need(B.measure) ? q({ Values: [proj(B.measure)] }) : null;
+      // the card visual's field role is Data (with Values or Fields it stays empty)
+      case 'kpi': return kpi ? q({ Data: [proj(kpi)] }) : null;
+      case 'card': return need(B.measure) ? q({ Data: [proj(B.measure)] }) : null;
       case 'line': return need(B.date, B.measure) ? q({ Category: [proj(B.date)], Y: [proj(B.measure)] }) : null;
       case 'bar': case 'column': case 'donut': case 'funnel': return need(cat, y) ? q({ Category: [proj(cat)], Y: [proj(y)] }) : null;
       case 'table': { const fs = (B.table || []).filter(Boolean); if (rtl) fs.reverse(); return fs.length ? q({ Values: fs.map(proj) }) : null; }
@@ -258,6 +260,39 @@
       general: obj({ altText: str(alt || title || '') })
     }, extra || {});
     const textbox = (text, size, bold, colr) => ({ general: obj({ paragraphs: [{ textRuns: [{ value: text, textStyle: { fontFamily: font, fontSize: size + 'pt', fontWeight: bold ? 'bold' : 'normal', color: colr } }], horizontalTextAlignment: align }] }) });
+    // Card visuals: sized so the title and the number fit the box, from Microsoft's card sizing (a line of text takes
+    // 1.5 x its size; the card's own label under the number stays hidden, the title already names the KPI). s: the page's
+    // scale (height / 720); title, callout: the title and value sizes the card would have. The padding is 8 on a
+    // 1920 x 1080 page, as in Microsoft's recipe, and scales with the page. The value keeps the callout size unless the
+    // box is too short, or too narrow for 7 characters ("101.91K"); below 8 the inner padding goes first.
+    const TH = (o.theme && o.theme.textClasses) || {}, TITLE = +(TH.title || {}).fontSize || 12, CALLOUT = +(TH.callout || {}).fontSize || 28;
+    // the theme's text sizes are made for the report's full page; the 320 x 240 tooltip page and the phone get their own
+    const TIP_VALUE = 20, TIP_TITLE = 10;
+    const cardFit = (w, h, s, title, callout) => {
+      const P = Math.round(8 * s / 1.5), line = (f) => Math.ceil(f * 1.5);
+      const fit = (I) => Math.min(callout, Math.floor((h - 2 * P - 2 * I - line(title)) / 1.5), Math.floor((w - 2 * P - 2 * I) / (7 * 0.55 * 4 / 3)));
+      let I = P, V = fit(I);
+      if (V < 8) { I = 0; V = Math.max(8, fit(0)); }
+      return { P, I, V };
+    };
+    // Every card formatting object needs the "default" selector, or Power BI ignores it; the number stays centred, like
+    // the legacy card's, in both reading directions; the inner outline would draw a box inside the panel
+    const DEF = { id: 'default' };
+    const cardObjects = (c) => ({
+      value: obj({ fontSize: num(c.V), horizontalAlignment: str('center') }, DEF),
+      label: obj({ show: bool(false) }, DEF),
+      padding: obj({ paddingUniform: num(c.I) }, DEF),
+      layout: obj({ paddingUniform: num(0) }, DEF),
+      outline: obj({ show: bool(false) }, DEF)
+    });
+    // the container: its padding set on the visual (Power BI resets it when other container settings are set), no gap
+    // under the title; title: the title's size, written so the height worked out above doesn't depend on the theme
+    const cardFrame = (f, c, title) => {
+      if (f.title && f.title[0].properties.show && f.title[0].properties.show.expr.Literal.Value === 'true') f.title[0].properties.fontSize = num(title);
+      f.padding = obj({ top: num(c.P), bottom: num(c.P), left: num(c.P), right: num(c.P) }, DEF);
+      f.spacing = obj({ customizeSpacing: bool(true), spaceBelowTitleArea: num(0), verticalSpacing: num(2) }, DEF);
+      return f;
+    };
     // a button's formatting card: the on/off switch ("show") on its own, the look for the default state after it, the
     // way Power BI Desktop saves buttons (a "show" inside the state selector is ignored, and the text, fill or outline
     // stays hidden)
@@ -321,7 +356,7 @@
       }
 
       sorted.forEach((s) => {
-        const g = groupOf(s.kind), parent = g ? groups[g].name : null, type = TYPES[s.kind] || 'card';
+        const g = groupOf(s.kind), parent = g ? groups[g].name : null, type = TYPES[s.kind] || 'cardVisual';
         if (s.kind === 'slicer') {
           // the filter panel holds several dropdown slicers and a Reset button:
           // stacked in a side panel, side by side in a top strip
@@ -373,7 +408,7 @@
           visual = { visualType: type, visualContainerObjects: frame(ttl, ttl, extra), drillFilterOtherVisuals: true };
           if (query) visual.query = query;
           // the title already names the KPI, so the card's own label under the number is not repeated
-          if (s.kind === 'kpi' || s.kind === 'card') visual.objects = { categoryLabels: obj({ show: bool(false) }) };
+          if (type === 'cardVisual') { const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT); visual.objects = cardObjects(c); cardFrame(visual.visualContainerObjects, c, TITLE); }
           // tables fill their visual (grow to fit), instead of shrinking to their content and leaving the rest empty
           // (on a right-to-left page the title sat on the right and the table on the left)
           if (s.kind === 'table') visual.objects = { columnHeaders: obj({ columnAdjustment: str('growToFit'), autoSizeColumnWidth: bool(true) }) };
@@ -474,8 +509,12 @@
       visuals.forEach((v) => {
         add(D + '/pages/' + pageName + '/visuals/' + v.name + '/visual.json', json(v));
         const p = pos[v.name];
-        if (p) add(D + '/pages/' + pageName + '/visuals/' + v.name + '/mobile.json', json({ $schema: SCHEMA.mobile,
-          position: { x: +p.x.toFixed(1), y: +p.y.toFixed(1), z: v.position.z, width: +p.w.toFixed(1), height: +p.h.toFixed(1), tabOrder: v.position.tabOrder } }));
+        // a card on the phone (157.5 x 100) gets its own sizes, as on the small tooltip page: the page's 42 would not fit
+        const phoneCard = v.visual && v.visual.visualType === 'cardVisual' ? cardFit(p ? p.w : 0, p ? p.h : 0, 1, TIP_TITLE, TIP_VALUE) : null;
+        if (p) add(D + '/pages/' + pageName + '/visuals/' + v.name + '/mobile.json', json(Object.assign({ $schema: SCHEMA.mobile,
+          position: { x: +p.x.toFixed(1), y: +p.y.toFixed(1), z: v.position.z, width: +p.w.toFixed(1), height: +p.h.toFixed(1), tabOrder: v.position.tabOrder } },
+          phoneCard ? { objects: { value: obj({ fontSize: num(phoneCard.V) }, DEF), padding: obj({ paddingUniform: num(phoneCard.I) }, DEF) },
+            visualContainerObjects: { title: obj({ fontSize: num(TIP_TITLE) }), padding: obj({ top: num(phoneCard.P), bottom: num(phoneCard.P), left: num(phoneCard.P), right: num(phoneCard.P) }, DEF) } } : {})));
       });
     });
 
@@ -500,12 +539,12 @@
       objects: { background: obj({ color: color(u.card), transparency: num(0) }), outspace: obj({ color: color(u.card) }) }
     }));
     const tip = B && B.tip && B.tip.card && B.tip.cat && B.tip.y ? B.tip : null;
-    const TIP_VALUE = 20, TIP_TITLE = 10;
+    const tipCard = cardFit(296, 76, 1, TIP_TITLE, TIP_VALUE);
     const tipFrame = (t) => { const f = frame(t, t); f.title = obj({ show: bool(true), text: str(t), alignment: str(align), fontSize: num(TIP_TITLE) }); return f; };
     const tipVisuals = tip
       // the theme's text sizes are made for the report's full page; on this 320 x 240 page the card value and the
       // titles get their own, so the value isn't cut off and the titles fit
-      ? [{ x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'card', query: q({ Values: [proj(tip.card)] }), objects: { categoryLabels: obj({ show: bool(false) }), labels: obj({ fontSize: num(TIP_VALUE) }) }, visualContainerObjects: tipFrame(label(tip.card)) } },
+      ? [{ x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(tip.card)] }), objects: cardObjects(tipCard), visualContainerObjects: cardFrame(tipFrame(label(tip.card)), tipCard, TIP_TITLE) } },
         { x: 12, y: 92, w: 296, h: 140, visual: { visualType: 'clusteredColumnChart', query: q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), visualContainerObjects: tipFrame(label(tip.y)) } }]
       : [{ x: 12, y: 12, w: 296, h: 216, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }];
     tipVisuals.forEach((s, i) => {
