@@ -58,7 +58,25 @@ slicers get that much narrower (e.g. 556 → 546). The side rail (the MCP's repo
 at 1080. Everything else at 1080 is identical apart from random ids.
 Code commit `945a03e`. Full run (laptop kept awake): all 16 website suites PASS (4965 checks; pbip 46, design-engine
 585 incl. the 60 project fixtures), `capture-design-fixtures.mjs --check` MATCH on the live and lab pages (54 cases
-each), MCP 87 PASS; `scripts/tests/fixtures` and `design-engine.js` identical to main. Next: the six Desktop reports.
+each), MCP 87 PASS; `scripts/tests/fixtures` and `design-engine.js` identical to main (`b978f4a`).
+
+**Desktop reports built (2026-10-01, before opening Desktop)** with this branch's `mcp/server.mjs` over stdio, root
+`C:\DataArcus\tests`, project `5-tmdl-sample` (model "Ramadan Test"), same calls as the cards check: `generate_theme`
+(Gulf Sales, #0F4C5C, analogous, Tahoma; `phase2-try/sizes-en`, `sizes-ar`) → `plan_layout` (EN exec, 4 KPIs, no
+filters; AR analysis, filters end) → `create_report`. `layoutProblems` finds nothing on all six; modelNotes on all six:
+Calendar[Month Name], Sales[Total Sales vs Last Ramadan %], Calendar[Day Name]. From the written files (page units):
+
+| Report | Header (every page): title, logo text, page buttons | Rail page: slicers, Reset | Cards (value) | Tooltip |
+|---|---|---|---|---|
+| EN 1080 | 20pt in 840x48; 14pt in 225x48; 14pt in 320x48 | 3 × 274x76; "Reset filters" 15pt in 274x40 | 454-455x144 (42), 507-509x126 (42) | 296x76 (20) |
+| EN 360 | 8pt in 280x16; 8pt in 75x16; 8pt in 224x16 | 3 × 91x27; 8pt in 91x28 | 151-152x48 (14), 169-170x42 (12) | same |
+| EN 2160 | 40pt in 1680x96; 29pt in 450x96; 29pt in 640x96 | 3 × 548x152; 30pt in 548x80 | 909x288 (60), 1014-1017x252 (60) | same |
+| AR 1080 | as EN 1080 | 3 × 274x76; "إعادة ضبط الفلاتر" 15pt in 274x40 | as EN 1080 | same |
+| AR 360 | 8pt in 280x16; 8pt in 75x16; 8pt in 130x16 | 3 × 91x27; 8pt in 91x28 | as EN 360 | same |
+| AR 2160 | as EN 2160 | 3 × 548x152; 30pt in 548x80 | as EN 2160 | same |
+
+(EN pages: "Executive summary", "Details"; AR: "تحليل", "نظرة عامة". On the EN reports the rail is on page 2, on the
+AR ones on page 1.) Screenshots go to `C:\DataArcus\tests\phase2-try\shots-sizes\`.
 
 **Owner's additions (2026-10-01):**
 1. **1280 x 720 and every other page size.** Scaling with the page height changes every size except 1920 x 1080. From
