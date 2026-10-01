@@ -144,6 +144,22 @@ rail 60 < 73; `page-too-tall` (700 x 525): header 23 < 25).
 reports, "Gulf Sales Sizes EN 1080 top" and "AR 1080 top" (analysis, filters top). Expected: Reset whole on one line
 (190 / 234 wide, 15pt), the three slicers whole (rail 108 high, slicers 88 >= 76), page and cards as in the cards check.
 
+**Owner's "go" on round 2 with option (a) (2026-10-01)**, the 1280 x 720 guard confirmed (title 12, page buttons 299 on
+one line, slicers 56, Reset 27), with three additions: the 3840 x 2160 reports (30pt slicers, 136 needed in 152) are
+the slicer rule's check (if they fail: stop and measure again, don't adjust the rule); every route goes through
+`sizes()` (sliders, saved designs, shared links, `plan_layout`), with an engine test; recapture only the 6 design and
+6 project fixtures, on both pages, prove the other 48 and 54 unchanged and list the changed fields.
+- Routes checked: the slots, slot table, preview, background SVG, slide-in panel, `projectPages`, and the MCP's
+  `plan_layout` / `create_report` all read hh and fh through `sizes()`; saved designs keep the raw value
+  (`repairState`) and `sizes()` clamps it on every read; the generator has no share links. The slider's range
+  (`rangeOf`) is the one place without the page: `theme-generator.js` passes only the page width, so it gets the layout
+  too (one line in `theme-generator.js`, beyond the two files named, needed for "the sliders start there").
+- Round 2 tests (failing on the current code): `report-check.mjs` takes the measured rules; the 1280 x 720 guard the
+  confirmed numbers; `design-engine.mjs` a new engine test (saved hh 44 / fh 56 on 960 x 720 come back 49 / 70 through
+  `sizes`, the slots and the slider range; 1920 x 1080 from 44 / 64; 640 x 360 defaults 74 / 110). Results: pbip 46
+  checks, 2 fail (sizes on 52 of 140 designs, the 1280 x 720 guard); design-engine 589 checks, 4 fail (the new test);
+  MCP 87 checks, 2 fail ("Sizes EN 360", "Sizes AR 360": 8pt header text in 16, slicers 27 < 48).
+
 **Order after "go":** tests first with the measured rules (and option (a)'s engine test if chosen), failing; code
 (`pbip-export.js`, and `design-engine.js` only under (a)); fixtures recaptured only under (a) and only the six listed;
 full run; the eight Desktop reports built over stdio, expected numbers written first; Desktop check, phone layout with
