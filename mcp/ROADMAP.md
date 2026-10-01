@@ -40,15 +40,28 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
 2. **"What I built and why":** after `create_report`, a short design summary for the user (pages, visuals, filter
    rail, tooltip and phone pages, and the design decisions: KPI order, filters on the right for right to left, sizes
    fitted to the page, Arabic text given more height). Builds trust.
-3. **Packaging:**
+3. **Split `pbip-export.js` into small parts (owner's go 2026-10-01).** It is about 600 dense lines doing every job
+   (cards, slicers, buttons, tables, header, filter rail, slide-in panel, phone layout, every size rule), so a fix in
+   one corner means editing a file where everything lives. Split it into modules with one job each:
+   - `sizes`: every rule measured in Desktop (text box, slicer, button, Reset, card), with a pointer to its
+     measurement in `scripts/tests/DESKTOP-TESTS.md`;
+   - visual builders, one per type (card, slicer, button, table, chart, text box);
+   - page assembly (header, filter rail, slide-in panel, tooltip page, bookmarks);
+   - phone layout (`mobile.json`).
+   The website keeps loading one file, built from the parts by a small build step (the same `.min.js` and `?v=`);
+   the MCP imports the parts directly. **Proof: the output is byte for byte identical** on all 54 design and 60
+   project fixtures, both downloads and the MCP reports; no fixture is recaptured and no expected number changes.
+   One writer: start only when no other branch touches `pbip-export.js`. Then a bug in buttons means opening the
+   button file, and nothing else is touched.
+4. **Packaging:**
    - A one-click Desktop Extension for Claude Desktop and Cowork (Anthropic's MCP bundle format). Check Anthropic's
      current docs for the format, manifest and signing before building; it is new and changes.
    - A Claude Code plugin with the report-design skill bundled.
    - First run: pick the working folder (becomes `DATAARCUS_ROOT`), explain what the tool can and can't touch.
    - Tested on a clean machine.
-4. **Private beta:** 5-10 Power BI developers (international and Gulf); collect what breaks and what they want.
-5. **Launch:** README, the launch article, LinkedIn (`content/`).
-6. **After the beta, as testers need them:** small pages (640 x 360 cards, charts, tables), backgrounds (phase 3:
+5. **Private beta:** 5-10 Power BI developers (international and Gulf); collect what breaks and what they want.
+6. **Launch:** README, the launch article, LinkedIn (`content/`).
+7. **After the beta, as testers need them:** small pages (640 x 360 cards, charts, tables), backgrounds (phase 3:
    the PNG from the engine's SVG), Gulf DAX patterns (Hijri, Ramadan, fiscal years), `screenshot-all` on generated
    projects, then Pro/Teams.
 
