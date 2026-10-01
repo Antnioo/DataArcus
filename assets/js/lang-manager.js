@@ -115,6 +115,8 @@ class LanguageManager {
      return window.modelHealthArticleTranslations;
     } else if (path.includes('article-power-bi-report-redesign')) {
      return window.reportRedesignArticleTranslations;
+    } else if (path.includes('article-power-bi-model-ai-ready')) {
+     return window.aiReadyArticleTranslations;
     } else if (path.includes('article-power-bi-report-styles')) {
      return window.reportStylesArticleTranslations;
     } else if (path.includes('article-power-bi-licensing-guide')) {
