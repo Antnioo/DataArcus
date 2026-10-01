@@ -122,7 +122,15 @@ failure here); values equal DAX; phone layout without overlaps (owner's clicks).
 **Desktop check stopped on the first report (AR 360):** header, the current page's button, slicers and DAX PASS; the
 Arabic Reset (91x15, 8pt, no icon as planned) has its text **cut at the bottom** at 1x and 2x: the owner's rule
 max(40 x page h / 1080, 2 + 1.6 x pt) gives 15 at 8pt, enough for the English text (whole from 14) but not the Arabic.
-Details and "Seen, not in scope" in `scripts/tests/DESKTOP-TESTS.md`. **Waiting for the owner.**
+Details and "Seen, not in scope" in `scripts/tests/DESKTOP-TESTS.md`.
+**Owner: measure the Arabic Reset; set the Reset rule from the larger of the two languages; if only the Reset's height
+changes, go straight on.** Measured ("Gulf Sales Measure 4", 2.158, 1x and 2x crops; DESKTOP-TESTS.md): Arabic 8pt
+whole from 19 (17-18 touch the edge), English 8pt from 14, Arabic 15pt from 30 (28 touching). **New Reset rule:**
+height max(40 x page h / 1080, 6 + 1.6 x pt) (was 2 + 1.6 x pt). What it changes: only the Reset's height where the
+second term wins: 640 x 360 Reset 15 → 19 (it stays at the bottom of the rail, so its y moves up 4); 1920 x 1080 (40),
+1280 x 720 (27), 700 x 525 (20), 2560 x 1440 and 3840 x 2160 unchanged; the English 640 x 360 Reset keeps its icon
+(text + 19 + 6 = 87 <= 91), the Arabic one stays without; the 640 x 360 slicers stay 48. Nothing else moves, so on:
+tests, code, full run, the eight reports ("Gulf Sales Fit3 ..."), Desktop and the phone layout.
 
 
 ## Builder's working notes (for a fresh session)
