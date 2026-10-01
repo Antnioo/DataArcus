@@ -208,7 +208,7 @@ the 169x42 cards are cut at the bottom; the bridge's 2x screenshots hid it, so m
 and in the cards check was wrong): `cardFit` counts a line as 1.5 x pt, the measured line is about 1.8 x pt plus
 padding. Details in `scripts/tests/DESKTOP-TESTS.md`. **Waiting for the owner:** (1) measure button text wrapping
 (the Arabic Reset at heights 28-44) and fix the Reset rule; (2) give `cardFit` the measured line rule (cost: on 1920 x
-1080 the 126-high KPI cards' value would drop from 42 to about 36, unless the card heights grow). The CLAUDE.md notes
+1080 the 126-high KPI cards' value would drop from 42 to 33 (the 144-high ones keep 42), unless the card heights grow). The CLAUDE.md notes
 wait for a passing phone check. Not merged.
 
 **Order after "go":** tests first with the measured rules (and option (a)'s engine test if chosen), failing; code
