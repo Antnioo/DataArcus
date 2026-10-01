@@ -10,3 +10,6 @@ Power BI Desktop) and a reviewer in the cloud (reviews, the full test run on Lin
 2. Read `mcp/CLAUDE.md`: the owner's rules, how things are built, the tests, and what was learned in Power BI.
 
 **While working:** keep `mcp/WORK.md` current (see "Keeping the memory" in `mcp/CLAUDE.md`).
+
+**Content (blog and LinkedIn):** before planning or writing an article, read `content/BLOG-PLAN.md`; before a
+LinkedIn post, read `content/LINKEDIN-PLAN.md`. Update them after each post (the log, "Next up", the queue).
