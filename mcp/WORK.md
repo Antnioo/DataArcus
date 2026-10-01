@@ -33,7 +33,7 @@ by the builder: the phone and page-size plan written on `fix/phone-and-sizes`, w
 - **Website dropdowns fixed** (merged): the open list was white on white on every tool page; form fields now use
   `color-scheme: dark` with dark option colours (`assets/css/style.css`), checked on every tool page in `tools.mjs`.
 
-## Next step: the owner's "go" on the round 2 plan (below), branch `fix/phone-and-sizes`
+## Next step: the owner's "go" on the round 3 plan (below), branch `fix/phone-and-sizes`
 Steps: (1) tests first, failing on main; (2) code, `pbip-export.js` only; (3) `.min.js` and `?v=`; (4) full run;
 (5) the six Desktop reports built with this branch's `mcp/server.mjs` over stdio (the session's MCP runs old code and the
 desktop app can't restart it), exact numbers written here first; (6) Desktop check; then the two `mcp/CLAUDE.md` notes.
@@ -210,6 +210,44 @@ padding. Details in `scripts/tests/DESKTOP-TESTS.md`. **Waiting for the owner:**
 (the Arabic Reset at heights 28-44) and fix the Reset rule; (2) give `cardFit` the measured line rule (cost: on 1920 x
 1080 the 126-high KPI cards' value would drop from 42 to 33 (the 144-high ones keep 42), unless the card heights grow). The CLAUDE.md notes
 wait for a passing phone check. Not merged.
+
+### Round 3 (owner 2026-10-01: neither option; one measurement pass on 2.158, plan only, waiting for "go")
+Owner: the 126-high cards at 1080 showed 42pt whole, so the text-box rule doesn't describe `cardVisual`; don't shrink
+them. Measure cards, Reset and page buttons; derive rules that match every Desktop result; judge every PASS from
+full-size crops, never from the scaled-down page. AR 360 closed without saving first.
+
+**Measured** (Power BI Desktop 2.158.1177; "Gulf Sales Measure 2" and "Measure 3", closed without saving; 1x and 2x
+captures, full-size crops; `scripts/tests/DESKTOP-TESTS.md`, 2026-10-01, page units):
+- Cards, the number whole from: 8pt title / padding 3 / value 12: 48 on 640 x 360 (44 touching), 44 on 1920 x 1080 and
+  3840 x 2160; same with value 14: 56 on 640 x 360 (52 touching, 48 cut), 44 on 1080 and 2160; 18pt title / padding
+  8 / value 42 on 1080: 88 (84 touching; whole at every height 88-144). So: the exported 640 x 360 cards (42 and 48
+  high) are cut, as the owner saw; the 1080 cards (126, 144) are whole with room.
+- Reset: the text never wraps; the icon grows with the button's height and is drawn at the start. English 8pt in 91:
+  the icon reaches the text from about 32 high; Arabic 8pt in 91: the text is wider than the room beside the icon, so
+  the icon covers its end at every height (18-44). 15pt in 260: cut at 18-22, whole from 24, icon clear up to 48.
+- Page buttons: whole at every height 30-56 (14pt, about 200 each); the text wraps when a button is narrow. The current
+  page's button shows Power BI's smaller default text: the export sizes the default state only.
+
+**What the measurements settle:**
+1. **Reset** (`pbip-export.js`, no fixtures): one line always (Power BI doesn't wrap a button's text), so the height is
+   one line, not two: max(40k, 2 + 1.6 x pt), which keeps today's 40 at 1080 and makes the icon small on small pages
+   (8pt: 18 at least, measured whole). Width: text + icon must fit; where they don't (the Arabic Reset in a 91-wide rail),
+   the icon is left out (`shapeType` blank) rather than drawn over the text. The test checks one line, not wrapping.
+2. **Page buttons** (`pbip-export.js`, no fixtures): the same text size also for the selected state (the page you're
+   on), so it doesn't fall back to Power BI's default. (The selector for that state to be confirmed in Microsoft's
+   button references before coding.)
+3. **Header text boxes and slicers**: the round-2 rules stand (measured, and EN/AR 360 headers and slicers passed).
+
+**What they don't settle yet: a card rule.** No single rule in points fits every row: a 42pt card needs 88 (2.1 x its
+value), the small cards 44-56 (3.1-4 x theirs), and the same small card needs more on the 640 x 360 page than on 1080 or
+2160. With only three page sizes measured, a rule fitted now would be a guess on 1280 x 720, 960 x 720, 1366 x 768,
+700 x 525 and 2560 x 1440. **Proposed next step (one more measurement report, plan only):** on each of those pages and
+640 x 360 again, a ladder in steps of 2 around the KPI heights the engine gives there, with the card exactly as
+`cardFit` writes it for that page (the theme's title, the page's padding, the callout value). From that: either a rule
+by page scale, or a table of the smallest card height per page size and value, used by `cardFit` to lower the value
+only where the card is too short (1080 and up keep 42-60, as the owner asked). Which sizes and fixtures change is known
+only after that measurement: `cardFit` changes no fixture; raising the engine's KPI height on small pages instead would
+(as with the header).
 
 **Order after "go":** tests first with the measured rules (and option (a)'s engine test if chosen), failing; code
 (`pbip-export.js`, and `design-engine.js` only under (a)); fixtures recaptured only under (a) and only the six listed;
