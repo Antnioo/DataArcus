@@ -131,6 +131,15 @@ second term wins: 640 x 360 Reset 15 → 19 (it stays at the bottom of the rail,
 1280 x 720 (27), 700 x 525 (20), 2560 x 1440 and 3840 x 2160 unchanged; the English 640 x 360 Reset keeps its icon
 (text + 19 + 6 = 87 <= 91), the Arabic one stays without; the 640 x 360 slicers stay 48. Nothing else moves, so on:
 tests, code, full run, the eight reports ("Gulf Sales Fit3 ..."), Desktop and the phone layout.
+- Tests `d3e0aa9` (failing first: MCP 2 of 87, pbip 1 of 46, the 640 x 360 Reset 15 < 19); code `2e26239`
+  (`resetFit`: 6 + 1.6 x pt; `pbip-export.min.js?v=20261001d`, `theme-generator.min.js?v=20261001d`, its minified file
+  differing only in that version). Full run: all 16 website suites PASS (4969 checks), design fixtures MATCH on both
+  pages (54 each), project fixtures MATCH (60), MCP 87 PASS; no fixture changed.
+- **Fit3 reports built (before opening Desktop)** with `builder-scripts/fit3-build.mjs` (themes `phase2-try/fit3-en`,
+  `fit3-ar`); `layoutProblems` finds nothing on all eight. Expected: exactly the Fit2 table above, except the 640 x 360
+  Reset: "Reset filters" 8pt in 91x19 with its icon (EN 360), "إعادة ضبط الفلاتر" 8pt in 91x19 without (AR 360). Page
+  buttons 8 / 14 / 29pt, the same in the selected state. Expected in Desktop: as listed for Fit2, with the AR 360 Reset
+  whole. Screenshots `shots-sizes\fit3-*` at 1x and 2x, judged from full-size crops.
 
 
 ## Builder's working notes (for a fresh session)
