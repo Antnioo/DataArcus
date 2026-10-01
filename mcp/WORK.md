@@ -96,6 +96,8 @@ Branch `fix/phone-and-sizes` (from main `883ca2f`), pushed, not merged. Last upd
    directly over stdio (as mcp/test.mjs does)."
 Stop and report on any failure; no fix without the owner's go; don't merge.
 
+**Round 3 progress:** state selector confirmed in Microsoft's references (formatting.md: pageNavigator `text` takes "default", "hover", "selected", "disabled"; the current page is "selected"); hover sized too, so a button doesn't change size under the mouse. Button text width for the icon check: 0.45 em per character (measured 0.40-0.41 for both Reset texts at 8pt in the m2 crops; layout widths keep 0.55, so nothing at 1080 moves); the icon taken as wide as the button is high (it reached the English text from about 32 high in 91). Tests written (`report-check.mjs`): button one line (height 2 + 1.6 x pt), text + icon + 6 fit the width, page buttons sized in all three states. Failing on the current code: MCP 87 checks, 5 fail (page buttons on all five reports; the 640 x 360 Reset, 28 high, in both languages); pbip 46 checks, 3 fail (sizes on 126 of 140 designs; both downloads: page buttons, and the top-rail Reset at 1080, 88 high, whose icon would cover its text).
+
 ## Builder's working notes (for a fresh session)
 - **Power BI Desktop is 2.158.1177** (Microsoft Store; it updated itself from 2.157.1354 on 2026-10-01). The bridge
   needs `PBI_DESKTOP_PATH = C:\Program Files\WindowsApps\Microsoft.MicrosoftPowerBIDesktop_2.158.1177.0_x64__8wekyb3d8bbwe\bin\PBIDesktop.exe`
