@@ -87,6 +87,28 @@ export default async function ({ browser, url }) {
     check(E.sizes(small, E.pw(small)).hh === 74 && E.sizes(small, E.pw(small)).fh === 110, `640 x 360 defaults: header ${E.sizes(small, E.pw(small)).hh} (want 74), top rail ${E.sizes(small, E.pw(small)).fh} (want 110)`);
   }
 
+  // an attached logo (round 0, 2026-10-01): the engine reads an image's size from its bytes (PNG and JPG), and with the
+  // logo's ratio the logo slot keeps the designed height and takes the logo's width (no minimum, 360 at most on the 720
+  // grid), its far edge where it was; the title keeps its box. Without a ratio nothing changes (the fixtures above).
+  {
+    const LOGOS = path.join(ROOT, 'scripts/tests/fixtures/logos'), size = (f) => (typeof E.imageSize === 'function' ? E.imageSize(new Uint8Array(fs.readFileSync(path.join(LOGOS, f)))) : 'no imageSize');
+    const got = ['wide.png', 'square.png', 'tall.png', 'wide.jpg'].map((f) => JSON.stringify(size(f))).join(' ');
+    check(got === '{"w":400,"h":100} {"w":200,"h":200} {"w":100,"h":250} {"w":600,"h":50}', `imageSize: ${got}`);
+    check(typeof E.imageSize === 'function' && E.imageSize(new Uint8Array([1, 2, 3, 4])) === null && E.imageSize(new Uint8Array(0)) === null, 'imageSize of something that is not an image must be null');
+    const base0 = all.find((x) => x.id === 'preset-1').state;
+    const lay = (page) => Object.assign({}, base0.layout, { preset: 'exec', page, header: true, kpis: 4, filters: false, hh: undefined, logoW: undefined });
+    const box = (page, lang, ratio) => { const p = E.projectPages(lay(page), lang, { second: false, panel: false, logoRatio: ratio })[0].slots, l = p.find((s) => s.kind === 'logo'), t = p.find((s) => s.kind === 'title'); return [l.x, l.w, l.h, t.w, t.h].join(' '); };
+    const WANT = [[4, '1692 192 48 840 48', '1128 128 32 560 32', '36 192 48 840 48'], [1, '1836 48 48 840 48', '1224 32 32 560 32', '36 48 48 840 48'],
+      [0.4, '1865 19 48 840 48', '1243 13 32 560 32', '36 20 48 840 48'   /* mirrored: the engine rounds edges, not sizes, so 19.5 is 20 */], [12, '1344 540 48 840 48', '896 360 32 560 32', '36 540 48 840 48'], [undefined, '1659 225 48 840 48', '1106 150 32 560 32', '36 225 48 840 48']];
+    for (const [ratio, a, b, c] of WANT) {
+      const g = [box('1920x1080', 'en', ratio), box('1280x720', 'en', ratio), box('1920x1080', 'ar', ratio)];
+      check(g[0] === a && g[1] === b && g[2] === c, `logo ratio ${ratio}: logo x, w, h and title w, h on 1080, 720, Arabic 1080: ${g.join(' | ')}, want ${[a, b, c].join(' | ')}`);
+    }
+    // the side accent bar's end plus round(5k): where a KPI card's title can start (26 on 1080, 17 on 720); 0 without a side bar
+    const ins = typeof E.kpiInset === 'function' ? [E.kpiInset(Object.assign(lay('1920x1080'), { kpiBar: 'start' })), E.kpiInset(Object.assign(lay('1280x720'), { kpiBar: 'start' })), E.kpiInset(Object.assign(lay('1920x1080'), { kpiBar: 'top' })), E.kpiInset(Object.assign(lay('1920x1080'), { kpiBar: 'none' }))] : 'no kpiInset';
+    check(JSON.stringify(ins) === '[26,17,0,0]', `kpiInset: ${JSON.stringify(ins)}, want [26,17,0,0]`);
+  }
+
   // an empty or blank theme name: the theme JSON and the files get the same default name, the one the name box shows
   const base = all.find((x) => x.id === 'preset-1').state;
   for (const n of ['', '   ']) {
@@ -116,7 +138,9 @@ export default async function ({ browser, url }) {
   for (const pc of projects) {
     const dc = all.find((x) => x.id === pc.id.replace(/-plain$/, ''));
     if (typeof E.projectPages !== 'function' || !E.REPORT_TEXTS) { check(false, `${pc.id}: no projectPages / REPORT_TEXTS in the engine`); continue; }
-    const got = E.projectPages(dc.state.layout, pc.lang, pc.opts).map((p) => ({ name: p.name, page: p.page, slots: p.slots, panel: p.panel }));
+    // (kpiInset: since round 0 the page also hands pbip-export where the KPI titles start beside a side accent bar,
+    // from the engine's kpiInset for each page's layout)
+    const got = E.projectPages(dc.state.layout, pc.lang, pc.opts).map((p) => ({ name: p.name, page: p.page, slots: p.slots, panel: p.panel, kpiInset: E.kpiInset(p.layout) }));
     check(JSON.stringify(got) === JSON.stringify(pc.build.pages), `${pc.id}: project pages differ\n        got  ${JSON.stringify(got).slice(0, 250)}\n        want ${JSON.stringify(pc.build.pages).slice(0, 250)}`);
     check(JSON.stringify(E.REPORT_TEXTS[pc.lang]) === JSON.stringify(pc.build.texts), `${pc.id}: report labels differ: ${JSON.stringify(E.REPORT_TEXTS[pc.lang]).slice(0, 150)}`);
   }

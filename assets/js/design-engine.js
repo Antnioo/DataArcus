@@ -139,14 +139,18 @@
 
   // The slots of a layout, on the 720-tall design grid (boxOf turns one into page units). lang: the page's language,
   // which sets the reading direction when the layout has none.
-  function computeSlots(c, lang) {
+  // opt.logoRatio (width / height of an attached logo, see imageSize): the logo slot keeps the designed height and takes
+  // the logo's own width (no minimum; at most the logo width range's 360), its far edge where it is; the title and the
+  // page buttons get the room that is left. Without it the slot is the designed logo width, as before.
+  function computeSlots(c, lang, opt) {
     const PW = pw(c), PH = 720;
     const P = LAYOUTS[c.preset], z = sizes(c, PW), slots = [];
     let top = c.header ? z.hh + 14 : M;
     if (c.header) {
-      const th = z.hh - 24, lx = PW - M - 8 - z.logoW;
+      const th = z.hh - 24, ratio = opt && +opt.logoRatio > 0 ? +opt.logoRatio : 0;
+      const logoW = ratio ? Math.max(1, Math.min(RANGE.logoW[1], Math.round(th * ratio))) : z.logoW, lx = PW - M - 8 - logoW;
       slots.push({ kind: 'title', role: ['Page title', 'عنوان الصفحة'], x: M + 8, y: 12, w: Math.min(560, lx - 24 - (M + 8)), h: th });
-      slots.push({ kind: 'logo', role: ['Logo', 'الشعار'], x: lx, y: 12, w: z.logoW, h: th });
+      slots.push({ kind: 'logo', role: ['Logo', 'الشعار'], x: lx, y: 12, w: logoW, h: th });
     }
     let x0 = M, cw = PW - 2 * M;
     if (c.filters && z.fpos === 'top') { slots.push({ kind: 'slicer', role: ['Filters', 'الفلاتر'], x: M, y: top, w: cw, h: z.fh, rail: true }); top += z.fh + G; }
@@ -178,6 +182,27 @@
     // Arabic reports read from the right: mirror the whole page so KPI 1 and the title start there
     if (rtl(c, lang)) slots.forEach((s) => { s.x = PW - s.x - s.w; });
     return slots;
+  }
+  // An image's size in pixels, read from its bytes (a Uint8Array): PNG (the IHDR chunk) or JPG (the frame header);
+  // null for anything else. Used for an attached logo, so its box can take the logo's own shape.
+  function imageSize(b) {
+    if (!b || b.length < 24) return null;
+    if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47) {
+      const u = (i) => ((b[i] << 24) | (b[i + 1] << 16) | (b[i + 2] << 8) | b[i + 3]) >>> 0, w = u(16), h = u(20);
+      return w && h ? { w, h } : null;
+    }
+    if (b[0] === 0xff && b[1] === 0xd8) {
+      for (let i = 2; i + 9 < b.length;) {
+        if (b[i] !== 0xff) { i++; continue; }
+        const m = b[i + 1];
+        if (m === 0xff) { i++; continue; }
+        // a frame header (SOF0-SOF15, but not the Huffman table, JPG extension or arithmetic conditioning markers)
+        if (m >= 0xc0 && m <= 0xcf && m !== 0xc4 && m !== 0xc8 && m !== 0xcc) { const h = (b[i + 5] << 8) | b[i + 6], w = (b[i + 7] << 8) | b[i + 8]; return w && h ? { w, h } : null; }
+        if (m === 0xd8 || m === 0x01 || (m >= 0xd0 && m <= 0xd7)) { i += 2; continue; }   // markers without a length
+        i += 2 + ((b[i + 2] << 8) | b[i + 3]);
+      }
+    }
+    return null;
   }
   // The background PNG's size in pixels: the page's own size, drawn at least 1920 wide so it stays sharp
   const pngSize = (c) => { const p = page(c), k = Math.max(1, 1920 / p.w); return [Math.round(p.w * k), Math.round(p.h * k)]; };
@@ -315,6 +340,11 @@
   const barW = (k, c) => clampTo(k, c[k] == null ? (k === 'kpiBarW' ? 4 : 3) : c[k]);
   const barColor = (d, k, i) => { const v = d.layout[k], u = d.ui; return v === 'data' ? d.data[i % d.data.length] : (u[v] || u.accent); };
   const c0 = (c) => (c.kpiBar === 'start' ? barW('kpiBarW', c) + 8 : 0); // KPI text sits after a side bar
+  // Where a KPI card's title can start beside the side accent bar, in page units from the card's reading-start edge: the
+  // bar's far edge (it is drawn 10 in, see bgSvg) plus round(5k), k = page height / 1080 (measured in Power BI Desktop
+  // 2.158: 26 on 1920 x 1080 and 17 on 1280 x 720 leave a clear gap; less and the title is drawn over the bar).
+  // 0 without a side bar. The report uses it as the card's padding on that side.
+  const kpiInset = (c) => (c.kpiBar === 'start' ? toPage(10 + barW('kpiBarW', c), c) + Math.round(5 * page(c).h / 1080) : 0);
 
   // The PNG matches the table to the pixel. In Power BI, with Image fit: Stretch, each panel lands exactly under
   // its visual (checked with calibration backgrounds on 1920 × 1080 and 1280 × 720 pages).
@@ -360,7 +390,7 @@
       tooltipPage: 'تلميح', tooltipHere: 'صفحة التلميح: أضف بطاقة أو مخططًا صغيرًا هنا.' }
   };
   // A page's slots for the report: kind, name in lang, filter rail or not, and the box in page units
-  const projectSlots = (c, lang) => computeSlots(c, lang).map((s) => Object.assign({ kind: s.kind, title: lang === 'ar' ? s.role[1] : s.role[0], rail: !!s.rail }, boxOf(s, c)));
+  const projectSlots = (c, lang, opt) => computeSlots(c, lang, opt).map((s) => Object.assign({ kind: s.kind, title: lang === 'ar' ? s.role[1] : s.role[0], rail: !!s.rail }, boxOf(s, c)));
   // a second page in a complementary layout: an analysis page (filters, a main chart, a wide table) after an
   // overview, or an executive overview after an analysis page
   const secondLayout = (c) => Object.assign({}, c, c.preset === 'analysis' ? { preset: 'exec', kpis: 4, filters: false } : { preset: 'analysis', kpis: 3, filters: true, fpos: 'start' }, { kpiH: null, mainW: null, split: null });
@@ -374,13 +404,14 @@
     return { layout: open, panel: boxOf(r, cc) };
   };
   // The report's pages for a layout: this page, the second page when asked, each with the slide-in panel when asked.
-  // opts: { second, panel }. Each page: { layout (for its background), name, page { w, h }, slots, panel }
+  // opts: { second, panel, logoRatio (an attached logo's width / height, see computeSlots) }.
+  // Each page: { layout (for its background), name, page { w, h }, slots, panel }
   const projectPages = (c, lang, opts) => {
     const nm = (pair) => (lang === 'ar' ? pair[1] : pair[0]), o = opts || {};
     const specs = [{ c, name: nm(LAYOUTS[c.preset].name) }].concat(o.second ? [{ c: secondLayout(c), name: nm(c.preset === 'analysis' ? ['Overview', 'نظرة عامة'] : ['Details', 'التفاصيل']) }] : []);
     return specs.map((sp) => {
       const sl = o.panel ? slidePanel(sp.c, lang) : null, layout = sl ? sl.layout : sp.c, p = page(layout);
-      return { layout, name: sp.name, page: { w: p.w, h: p.h }, slots: projectSlots(layout, lang), panel: sl ? sl.panel : null };
+      return { layout, name: sp.name, page: { w: p.w, h: p.h }, slots: projectSlots(layout, lang, { logoRatio: o.logoRatio }), panel: sl ? sl.panel : null };
     });
   };
 
@@ -422,7 +453,7 @@
   const api = {
     PRESETS, FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate,
-    within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize,
+    within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
     fs, chart, buildTheme, contrastChecks, REPORT_TEXTS, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

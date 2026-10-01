@@ -98,3 +98,121 @@ export function headerAndRail(files) {
   const pt = (v) => (v ? parseFloat(runs(v).textStyle.fontSize) : null);
   return { title: pt(title), logo: pt(logo), nav: nav ? nav.position.width : null, slicer: slicer ? slicer.position.height : null, reset: reset ? reset.position.height : null };
 }
+
+// ---------- round 0 (2026-10-01): what Power BI Desktop 2.158 was measured to need (DESKTOP-TESTS.md, "round 0") ----------
+const pagesOf = (files) => {
+  const J = (p) => JSON.parse(String(files[p])), pages = {};
+  Object.keys(files).filter((p) => p.endsWith('/page.json')).forEach((p) => { const pj = J(p); pages[pj.name] = { page: pj, visuals: [] }; });
+  Object.keys(files).filter((p) => p.endsWith('/visual.json')).forEach((p) => { const id = p.split('/pages/')[1].split('/')[0]; if (pages[id]) pages[id].visuals.push(J(p)); });
+  const order = (Object.keys(files).filter((p) => p.endsWith('/pages/pages.json')).map(J)[0] || {}).pageOrder || Object.keys(pages);
+  return order.filter((id) => pages[id]).map((id) => pages[id]);
+};
+const CHART_TYPES = ['lineChart', 'clusteredBarChart', 'clusteredColumnChart', 'donutChart', 'funnel', 'treemap', 'map'];
+
+// Every chart on every main page is linked to the tooltip page: visualTooltip { show, type 'Canvas', section }; the type
+// Desktop knows is 'Canvas' ('ReportPage' is not a value: it falls back to the default tooltip). Nothing else is linked.
+// Returns { charts, bad }.
+export function tooltipProblems(files) {
+  const pages = pagesOf(files), tips = pages.filter((p) => p.page.type === 'Tooltip').map((p) => p.page.name), bad = [];
+  let charts = 0;
+  pages.filter((p) => p.page.type !== 'Tooltip').forEach((p) => p.visuals.forEach((v) => {
+    if (!v.visual) return;
+    const tt = ((v.visual.visualContainerObjects || {}).visualTooltip || [])[0], id = `${p.page.displayName}/${v.visual.visualType}`;
+    if (!CHART_TYPES.includes(v.visual.visualType)) { if (tt) bad.push(`${id}: linked to a tooltip page, only charts are`); return; }
+    charts++;
+    if (!tt) { bad.push(`${id}: no tooltip link`); return; }
+    const pr = tt.properties;
+    if (lit(pr.show) !== 'true' || lit(pr.type) !== "'Canvas'" || !tips.includes(str(pr.section)) || tt.selector) bad.push(`${id}: tooltip link type ${lit(pr.type)}, page ${tips.includes(str(pr.section)) ? 'ok' : 'not a tooltip page'}`);
+  }));
+  return { charts, bad };
+}
+
+// The tooltip page is 320 x 284, and its chart is a bar chart (names always horizontal) with its own sizes: axis text 8,
+// 40% axis room, no axis titles, the value axis off and data labels on at 8; a bar row takes 22 and the chart's
+// title and padding 46 (measured), so its 184 show 6 rows. Returns { pages, charts, bad }.
+export function tooltipPageProblems(files) {
+  const bad = []; let charts = 0;
+  const tips = pagesOf(files).filter((p) => p.page.type === 'Tooltip');
+  tips.forEach((p) => {
+    if (p.page.width !== 320 || p.page.height !== 284) bad.push(`tooltip page is ${p.page.width} x ${p.page.height}, want 320 x 284`);
+    p.visuals.filter((v) => v.visual && /Chart$/.test(v.visual.visualType)).forEach((v) => {
+      charts++;
+      const o = v.visual.objects || {}, P = (k) => ((o[k] || [])[0] || {}).properties || {}, c = P('categoryAxis'), y = P('valueAxis'), l = P('labels');
+      const rows = Math.floor((v.position.height - 46) / 22);
+      const got = { type: v.visual.visualType, text: lit(c.fontSize), room: lit(c.maxMarginFactor), axisTitle: lit(c.showAxisTitle), valueAxis: lit(y.show), labels: lit(l.show), labelText: lit(l.fontSize), rows };
+      const want = { type: 'clusteredBarChart', text: '8D', room: '40L', axisTitle: 'false', valueAxis: 'false', labels: 'true', labelText: '8D', rows: 6 };
+      if (JSON.stringify(got) !== JSON.stringify(want)) bad.push(`tooltip chart ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
+      if (v.position.y + v.position.height > p.page.height || v.position.x + v.position.width > p.page.width) bad.push('tooltip chart outside its page');
+    });
+  });
+  return { pages: tips.length, charts, bad };
+}
+
+// Each column of every table has one columnFormatting entry (selector: the column's queryRef) that aligns its values
+// and its header together: text columns on the reading-start side (Left; Right in a right-to-left report), numbers on
+// the other. numbers: queryRefs of columns that are numbers (measures always are). Returns { columns, bad }.
+export function tableProblems(files, rtl, numbers) {
+  const bad = []; let columns = 0;
+  pagesOf(files).forEach((p) => p.visuals.filter((v) => v.visual && v.visual.visualType === 'tableEx' && v.visual.query).forEach((v) => {
+    const list = (v.visual.objects || {}).columnFormatting || [];
+    v.visual.query.queryState.Values.projections.forEach((pr) => {
+      columns++;
+      const mine = list.filter((x) => x.selector && x.selector.metadata === pr.queryRef), isNum = !!pr.field.Measure || (numbers || []).includes(pr.queryRef);
+      const want = "'" + (isNum ? (rtl ? 'Left' : 'Right') : (rtl ? 'Right' : 'Left')) + "'", id = `${p.page.displayName}/${pr.queryRef}`;
+      if (mine.length !== 1) { bad.push(`${id}: ${mine.length} columnFormatting entries`); return; }
+      const x = mine[0].properties;
+      if (lit(x.alignment) !== want || lit(x.styleHeader) !== 'true' || lit(x.styleValues) !== 'true' || lit(x.styleTotal) !== 'true') bad.push(`${id}: alignment ${lit(x.alignment)} (want ${want}), header ${lit(x.styleHeader)}, values ${lit(x.styleValues)}, total ${lit(x.styleTotal)}`);
+    });
+  }));
+  return { columns, bad };
+}
+
+// Cards, as measured: the card's own fill is off (fillCustom show false, with no selector: with the "default" selector
+// Desktop ignores it), so the panel and its accent bar show; the container padding and spacing have no selector (with
+// one they are ignored); on main pages the top padding is round(12k) (k = page height / 1080) unless even an 8pt number
+// would not fit then, the bottom and the far side P = round(8 x (page height / 720) / 1.5), the reading-start side the
+// page's inset (insets[page index], the side accent bar's end + round(5k)) or P; the tooltip card P on every side; the
+// number fits the width that is left (7 characters at 0.55 em). Returns { cards, bad }.
+export function cardStyleProblems(files, rtl, insets) {
+  const bad = []; let cards = 0;
+  pagesOf(files).forEach((p, pi) => p.visuals.filter((v) => v.visual && v.visual.visualType === 'cardVisual').forEach((v) => {
+    cards++;
+    const id = `${p.page.displayName}/${v.name.slice(0, 6)}`, o = v.visual.objects || {}, c = v.visual.visualContainerObjects || {}, tip = p.page.type === 'Tooltip';
+    const fill = o.fillCustom || [];
+    if (fill.length !== 1 || fill[0].selector || lit(fill[0].properties.show) !== 'false') bad.push(`${id}: fillCustom ${JSON.stringify(fill)}`);
+    for (const k of ['padding', 'spacing']) if (!(c[k] || []).length || c[k].some((x) => x.selector)) bad.push(`${id}: ${k} ${c[k] ? 'has a selector' : 'missing'}`);
+    const pad = ((c.padding || [])[0] || {}).properties || {}, t = ((c.title || [])[0] || {}).properties || {};
+    const s = tip ? 1 : p.page.height / 720, k = p.page.height / 1080, P = Math.round(8 * s / 1.5), line = lit(t.show) === 'true' ? Math.ceil(1.5 * num(t.fontSize)) : 0;
+    const T = tip ? P : Math.round(12 * k), top = T > P && Math.floor((v.position.height - T - P - line) / 1.5) < 8 ? P : T;
+    const inset = (!tip && insets && insets[pi]) || P, a = rtl ? 'right' : 'left', b = rtl ? 'left' : 'right';
+    const want = { top, bottom: P, [a]: inset, [b]: P }, got = { top: num(pad.top), bottom: num(pad.bottom), [a]: num(pad[a]), [b]: num(pad[b]) };
+    if (JSON.stringify(got) !== JSON.stringify(want)) bad.push(`${id}: padding ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
+    const I = num(look(o.padding).paddingUniform), V = num(look(o.value).fontSize);
+    if (V > 8 && num(pad.left) + num(pad.right) + 2 * I + 7 * 0.55 * 4 / 3 * V > v.position.width + 0.01) bad.push(`${id}: a ${V}pt number needs more than the ${v.position.width} wide box`);
+  }));
+  return { cards, bad };
+}
+
+// The project shell, as Microsoft's references and validator ask: the theme is referenced by one name everywhere
+// (report.json customTheme.name = the registered item's name = its path = the "name" inside the theme file, ending
+// .json), and the report folder (and a model folder written with it) has a .platform file. Returns what is wrong.
+export function projectProblems(files) {
+  const bad = [], J = (p) => JSON.parse(String(files[p]));
+  const rp = Object.keys(files).find((p) => p.endsWith('.Report/definition/report.json'));
+  if (!rp) return ['no report.json'];
+  const R = rp.replace(/definition\/report\.json$/, ''), rep = J(rp), ref = ((rep.themeCollection || {}).customTheme || {}).name;
+  const item = (((rep.resourcePackages || [])[0] || {}).items || []).find((x) => x.type === 'CustomTheme') || {};
+  const tf = R + 'StaticResources/RegisteredResources/' + item.path, inner = files[tf] ? J(tf).name : undefined;
+  if (!/\.json$/.test(ref || '') || item.name !== ref || item.path !== ref || inner !== ref) bad.push(`theme names differ: report.json ${ref}, item ${item.name} at ${item.path}, the theme file's name ${inner}`);
+  const platform = (folder, type) => {
+    const f = folder + '.platform';
+    if (!files[f]) { bad.push(`no ${f}`); return; }
+    const p = J(f), name = folder.replace(/\/$/, '').split('/').pop().replace(/\.(Report|SemanticModel)$/, '');
+    if (!/platformProperties\/2\.0\.0\/schema\.json$/.test(p.$schema || '') || (p.metadata || {}).type !== type || (p.metadata || {}).displayName !== name || (p.config || {}).version !== '2.0'
+      || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/.test((p.config || {}).logicalId || '')) bad.push(`${f}: ${JSON.stringify(p)}`);
+  };
+  platform(R, 'Report');
+  const model = Object.keys(files).find((p) => /\.SemanticModel\/(model\.bim|definition\.pbism)$/.test(p));
+  if (model) platform(model.replace(/[^/]+$/, ''), 'SemanticModel');
+  return bad;
+}

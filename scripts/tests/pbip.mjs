@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { visitor } from './lib.mjs';
-import { layoutProblems, headerAndRail } from './report-check.mjs';
+import { layoutProblems, headerAndRail, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems } from './report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT = path.join(HERE, 'fixtures', 'bridge-project');
@@ -105,7 +105,7 @@ export default async function ({ browser, url }) {
     const emoji = names('x'.repeat(59) + '\u{1F4CA} Sales');
     for (const n of ['..', '.', ' .. ', 'Sales.', '.hidden']) {
       const ps = names(n);
-      check(ps.every((p) => !p.split('/').some((seg) => seg === '..' || seg === '.' || (seg !== '.gitignore' && /^[.\s]|[.\s]$/.test(seg.replace(/\.(pbip|Report|SemanticModel)$/, ''))))), `names: "${n}" gives ${ps.find((p) => /(^|\/)\.|\.\//.test(p)) || ps[0]}`);
+      check(ps.every((p) => !p.split('/').some((seg) => seg === '..' || seg === '.' || (seg !== '.gitignore' && seg !== '.platform' && /^[.\s]|[.\s]$/.test(seg.replace(/\.(pbip|Report|SemanticModel)$/, ''))))), `names: "${n}" gives ${ps.find((p) => /(^|\/)\.|\.\//.test(p)) || ps[0]}`);
     }
     // the longest path stays well under Windows' 260 characters after "Extract all" into C:\Users\<name>\Downloads\<zip name>\
     const longest = Math.max(...names('A'.repeat(60)).map((p) => p.length));
@@ -167,6 +167,94 @@ export default async function ({ browser, url }) {
     }
   }
 
+  // 12. Round 0 (measured in Power BI Desktop 2.158, DESKTOP-TESTS.md): on every design fixture, built as the page
+  //     builds its download (each page with its accent-bar inset from the engine): every chart linked to the tooltip
+  //     page with type Canvas; the tooltip page 320 x 284 with a bar chart of 6 rows; every table column aligned with
+  //     its header; cards without their own fill, padding and spacing without a selector, the title's top margin and
+  //     the side that clears the accent bar; the theme under one name; a .platform file
+  {
+    const require = createRequire(import.meta.url), P = require('../../assets/js/pbip-export.js'), E = require('../../assets/js/design-engine.js');
+    const { cases } = JSON.parse(fs.readFileSync(path.join(HERE, 'fixtures', 'design-engine', 'cases.json'), 'utf8'));
+    const inset = (l) => (typeof E.kpiInset === 'function' ? E.kpiInset(l) : 0);
+    const build = (d, lang, opts, more) => {
+      const pages = E.projectPages(d.layout, lang, opts);
+      const { files } = P.build(Object.assign({ name: 'Round0', title: 'Round0', pageName: pages[0].name, lang, rtl: E.rtl(d.layout, lang), font: d.font, ui: d.ui, theme: E.buildTheme(d, lang), sample: true, logo: null,
+        texts: E.REPORT_TEXTS[lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: new Uint8Array([1]), panel: p.panel, kpiInset: inset(p.layout) })) }, more || {}));
+      return { files: Object.fromEntries(files.map((f) => [f.path, typeof f.data === 'string' ? f.data : Buffer.from(f.data)])), insets: pages.map((p) => inset(p.layout)), pages };
+    };
+    const bad = { link: [], tip: [], table: [], card: [], shell: [] };
+    for (const c of cases) {
+      const rtl = E.rtl(c.state.layout, c.lang), b = build(c.state, c.lang, { second: true, panel: false });
+      const a = tooltipProblems(b.files), t = tooltipPageProblems(b.files), tb = tableProblems(b.files, rtl), cd = cardStyleProblems(b.files, rtl, b.insets), sh = projectProblems(b.files);
+      if (a.bad.length) bad.link.push(`${c.id}: ${a.bad.length} of ${a.charts} charts, ${a.bad[0]}`);
+      if (t.bad.length || t.charts !== 1) bad.tip.push(`${c.id}: ${t.bad[0] || t.charts + ' tooltip charts'}`);
+      if (tb.bad.length) bad.table.push(`${c.id}: ${tb.bad.length} of ${tb.columns} columns, ${tb.bad[0]}`);
+      if (cd.bad.length) bad.card.push(`${c.id}: ${cd.bad[0]} (+${cd.bad.length - 1} on ${cd.cards} cards)`);
+      if (sh.length) bad.shell.push(`${c.id}: ${sh.join('; ')}`);
+    }
+    check(!bad.link.length, `tooltip link wrong on ${bad.link.length} of ${cases.length} designs, e.g. ${bad.link.slice(0, 2).join(' | ')}`);
+    check(!bad.tip.length, `tooltip page wrong on ${bad.tip.length} of ${cases.length} designs, e.g. ${bad.tip.slice(0, 2).join(' | ')}`);
+    check(!bad.table.length, `table header alignment wrong on ${bad.table.length} of ${cases.length} designs, e.g. ${bad.table.slice(0, 2).join(' | ')}`);
+    check(!bad.card.length, `card fill or padding wrong on ${bad.card.length} of ${cases.length} designs, e.g. ${bad.card.slice(0, 2).join(' | ')}`);
+    check(!bad.shell.length, `theme name or .platform wrong on ${bad.shell.length} of ${cases.length} designs, e.g. ${bad.shell.slice(0, 2).join(' | ')}`);
+
+    // the default two-page report (exec, 4 KPI cards; second page analysis), counted: 4 charts, 8 table columns, 8 cards
+    const base = cases.find((c) => c.id === 'preset-1').state;
+    const std = (page, more) => Object.assign({}, base, { layout: Object.assign({}, base.layout, { preset: 'exec', page, header: true, kpis: 4, filters: false, hh: undefined, logoW: undefined }, more || {}) });
+    {
+      const b = build(std('1920x1080'), 'en', { second: true, panel: false });
+      const a = tooltipProblems(b.files), tb = tableProblems(b.files, false), cd = cardStyleProblems(b.files, false, b.insets), cardsBad = new Set(cd.bad.map((x) => x.split(':')[0])).size;
+      check(a.charts === 4 && !a.bad.length, `default report: ${a.bad.length} of ${a.charts} charts without the Canvas link (4 charts expected)`);
+      check(tb.columns === 8 && !tb.bad.length, `default report: ${tb.bad.length} of ${tb.columns} table columns without header alignment (8 columns expected)`);
+      check(cd.cards === 8 && !cd.bad.length, `default report: ${cardsBad} of ${cd.cards} cards with their own fill or ignored padding (8 cards expected)`);
+      // value sizes: the default cards keep 42 (1080) and 28 (720); the tooltip card 20
+      const sizes = (files) => [...new Set(Object.keys(files).filter((f) => f.endsWith('/visual.json')).map((f) => JSON.parse(String(files[f]))).filter((v) => v.visual && v.visual.visualType === 'cardVisual').map((v) => parseFloat(v.visual.objects.value[0].properties.fontSize.expr.Literal.Value)))].sort((x, y) => x - y).join(',');
+      const s720 = sizes(build(std('1280x720'), 'en', { second: true, panel: false }).files);
+      check(sizes(b.files) === '20,42' && s720 === '20,28', `card value sizes: 1080 ${sizes(b.files)} (want 20,42), 720 ${s720} (want 20,28)`);
+      // a side accent bar: the title's side padding clears it (26 on 1080, 17 on 720); a bar on top needs none
+      const ins = ['1920x1080', '1280x720'].map((pg) => inset(std(pg, { kpiBar: 'start' }).layout)).concat(inset(std('1920x1080', { kpiBar: 'top' }).layout));
+      check(JSON.stringify(ins) === '[26,17,0]', `accent bar inset: ${JSON.stringify(ins)}, want [26,17,0]`);
+    }
+    // a number column in a table sits on the number side, like a measure (the bound field says so)
+    {
+      const d = std('1920x1080'), pages = E.projectPages(d.layout, 'en', { second: false, panel: false });
+      const C = (c, num) => ({ t: 'T', c, num }), M = (m) => ({ t: 'T', m });
+      const { files } = P.build({ name: 'Own', title: 'Own', pageName: pages[0].name, lang: 'en', rtl: false, font: d.font, ui: d.ui, theme: E.buildTheme(d, 'en'), sample: false, logo: null, texts: E.REPORT_TEXTS.en,
+        model: { byPath: 'T.SemanticModel' }, bind: { kpis: [M('A')], measure: M('A'), date: C('Month'), cats: { bar: C('Cat'), column: C('Cat') }, y: {}, table: [C('Cat'), C('Qty', true), M('A')], slicers: [], tip: null },
+        pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: new Uint8Array([1]), panel: p.panel })) });
+      const tb = tableProblems(Object.fromEntries(files.map((f) => [f.path, typeof f.data === 'string' ? f.data : Buffer.from(f.data)])), false, ['T.Qty']);
+      check(tb.columns === 3 && !tb.bad.length, `number column in a table: ${tb.bad.join('; ') || tb.columns + ' columns'}`);
+    }
+    // an attached logo: its box has the logo's own shape (designed height, width from the ratio, 360 at most on the
+    // 720 grid), at the header's far edge; the image is never stretched (image.fit Fit); the page buttons end 24k before it
+    {
+      const LOGOS = path.join(HERE, 'fixtures', 'logos'), abs = (files) => {
+        const vs = Object.keys(files).filter((f) => f.endsWith('/visual.json')).map((f) => JSON.parse(String(files[f]))), by = Object.fromEntries(vs.map((v) => [v.name, v]));
+        return vs.map((v) => { const g = v.parentGroupName ? by[v.parentGroupName].position : { x: 0, y: 0 }; return { v, x: v.position.x + g.x, y: v.position.y + g.y, w: v.position.width, h: v.position.height }; });
+      };
+      const WANT = { 'wide.png': { '1920x1080': [1692, 192, 48], '1280x720': [1128, 128, 32] }, 'square.png': { '1920x1080': [1836, 48, 48], '1280x720': [1224, 32, 32] },
+        'tall.png': { '1920x1080': [1865, 19, 48], '1280x720': [1243, 13, 32] }, 'wide.jpg': { '1920x1080': [1344, 540, 48], '1280x720': [896, 360, 32] } };
+      const off = [];
+      for (const [file, boxes] of Object.entries(WANT)) for (const [pg, [x, w0, h]] of Object.entries(boxes)) for (const lang of ['en', 'ar']) {
+        // mirrored for Arabic; the engine rounds a box's edges, not its size, so the tall logo's 19.5 is 20 wide there
+        const w = lang === 'ar' && file === 'tall.png' && pg === '1920x1080' ? 20 : w0;
+        const bytes = new Uint8Array(fs.readFileSync(path.join(LOGOS, file))), size = typeof E.imageSize === 'function' ? E.imageSize(bytes) : null;
+        const d = std(pg), k = E.page(d.layout).h / 1080, PW = E.page(d.layout).w;
+        const b = build(d, lang, { second: true, panel: false, logoRatio: size ? size.w / size.h : undefined }, { logo: { bytes, ext: file.slice(-3) } });
+        const first = Object.keys(b.files).filter((f) => f.endsWith('/visual.json')).map((f) => f.split('/pages/')[1].split('/')[0])[0];
+        const all = abs(Object.fromEntries(Object.entries(b.files).filter(([f]) => f.includes('/pages/' + first + '/'))));
+        const img = all.find((a) => a.v.visual && a.v.visual.visualType === 'image'), nav = all.find((a) => a.v.visual && a.v.visual.visualType === 'pageNavigator'), tag = `${file} ${pg} ${lang}`;
+        if (!img) { off.push(`${tag}: no image visual`); continue; }
+        const wantX = lang === 'ar' ? PW - x - w0 : x, o = img.v.visual.objects || {};
+        if (img.x !== wantX || img.w !== w || img.h !== h) off.push(`${tag}: logo box ${img.x}, ${img.w} x ${img.h}, want ${wantX}, ${w} x ${h}`);
+        if (((o.image || [])[0] || { properties: {} }).properties.fit?.expr.Literal.Value !== "'Fit'" || o.imageScaling) off.push(`${tag}: scaling ${JSON.stringify(o.image || o.imageScaling)}, want image.fit 'Fit' only`);
+        if (!nav || Math.abs((lang === 'ar' ? nav.x - (img.x + img.w) : img.x - (nav.x + nav.w)) - 24 * k) > 1) off.push(`${tag}: page buttons ${nav ? nav.x + ', ' + nav.w + ' wide' : 'missing'} are not 24k from the logo at ${img.x}`);
+        const lp = layoutProblems(b.files); if (lp.sizes.length || lp.phone.length) off.push(`${tag}: ${lp.sizes[0] || lp.phone[0]}`);
+      }
+      check(!off.length, `logo boxes wrong in ${off.length} of 16 builds, e.g. ${off.slice(0, 3).join(' | ')}`);
+    }
+  }
+
   const run = async (lang, name, setup) => {
     const v = await visitor(browser, { viewport: [1440, 900], downloads: true });
     await v.pg.goto(`${url}${PAGE}?lang=${lang}`, { waitUntil: 'networkidle' });
@@ -181,6 +269,13 @@ export default async function ({ browser, url }) {
     if (v.errs.length) problems.push(`${lang} ${name}: ${v.errs.join(' | ')}`);
     await v.ctx.close();
     return { files, picked, msg };
+  };
+  // the round 0 checks on a download from the page (run's layout has the accent bar on top, so no side inset; a new
+  // visitor's default design has it at the side: insets 26 on 1920 x 1080)
+  const round0 = (files, rtl, insets) => {
+    const a = tooltipProblems(files), t = tooltipPageProblems(files), tb = tableProblems(files, rtl), cd = cardStyleProblems(files, rtl, insets);
+    return a.bad.slice(0, 1).map((x) => `tooltip link (${a.bad.length} of ${a.charts}): ${x}`).concat(t.bad.slice(0, 1), tb.bad.slice(0, 1).map((x) => `table (${tb.bad.length} of ${tb.columns}): ${x}`),
+      cd.bad.slice(0, 1).map((x) => `cards (${cd.bad.length} on ${cd.cards}): ${x}`), projectProblems(files));
   };
   const picker = async (pg) => {
     await pg.waitForFunction(() => document.querySelectorAll('#pbipMap select').length > 0, null, { timeout: 15000 });
@@ -217,6 +312,9 @@ export default async function ({ browser, url }) {
     check(cr.cards >= 5 && !cr.bad.length, `local: ${cr.cards} cardVisual; ${cr.bad.slice(0, 4).join('; ')}`);
     const lp = layoutProblems(files);
     check(!lp.phone.length && !lp.sizes.length, `local: phone ${lp.phone.slice(0, 2).join('; ')} | sizes ${lp.sizes.slice(0, 2).join('; ')}`);
+    // round 0, on the page's own download: chart tooltips, the tooltip page, table headers, cards, the project shell
+    const r0 = round0(files, false);
+    check(!r0.length, `local, round 0: ${r0.slice(0, 4).join(' | ')}`);
   }
 
   // 2. Published model, Arabic page: live connection, fields read from a .pbit
@@ -237,6 +335,8 @@ export default async function ({ browser, url }) {
     check(cr.cards >= 5 && !cr.bad.length, `service (Arabic): ${cr.cards} cardVisual; ${cr.bad.slice(0, 4).join('; ')}`);
     const lp = layoutProblems(files);
     check(!lp.phone.length && !lp.sizes.length, `service (Arabic): phone ${lp.phone.slice(0, 2).join('; ')} | sizes ${lp.sizes.slice(0, 2).join('; ')}`);
+    const r0 = round0(files, true);
+    check(!r0.length, `service (Arabic), round 0: ${r0.slice(0, 4).join(' | ')}`);
   }
 
   // 4. A copy of the model with the same name further down (a backup): the report and its fields come from the
@@ -335,8 +435,28 @@ export default async function ({ browser, url }) {
     const readme = Object.keys(files).find((n) => n.endsWith('/README.md'));
     const rt = readme ? files[readme].toString('utf8') : '', base = readme ? readme.split('/')[0] : '';
     check(/## Check it in Power BI/.test(rt) && rt.includes(base + '.Report/StaticResources/RegisteredResources'), 'sample: README has no Power BI check steps');
+    check(/Hover any chart/.test(rt) && !/Hover the main chart/.test(rt), 'sample: the README should say every chart shows the tooltip page');
+    const r0 = round0(files, false, [26, 26]);
+    check(!r0.length, `sample, round 0: ${r0.slice(0, 4).join(' | ')}`);
+    // a tall logo attached on the page: its box takes the logo's shape (19 x 48 at the header's far edge), the image is
+    // not stretched, and the page says a horizontal logo would read better; a wide logo gets no such note
     if (v.errs.length) problems.push(`inputs: ${v.errs.join(' | ')}`);
     await v.ctx.close();
+    for (const [file, w, tall] of [['tall.png', 19, true], ['wide.png', 192, false]]) {
+      let note = '';
+      const { files: f2 } = await run('en', 'Logo', async (pg) => {
+        await pg.selectOption('#pbipData', 'sample');
+        await pg.setInputFiles('#pbipLogo', path.join(HERE, 'fixtures', 'logos', file));
+        await pg.waitForFunction((f) => document.getElementById('pbipLogoName').textContent.includes(f), file, { timeout: 15000 });
+        note = await pg.$eval('#pbipLogoName', (e) => e.textContent);
+        return [];
+      });
+      const img = Object.keys(f2).filter((n) => n.endsWith('/visual.json')).map((n) => JSON.parse(f2[n].toString('utf8'))).filter((x) => x.visual && x.visual.visualType === 'image');
+      const fit = img.length ? JSON.stringify(img[0].visual.objects.image || img[0].visual.objects.imageScaling) : '';
+      check(img.length >= 1 && img.every((x) => x.position.width === w && x.position.height === 48) && /'Fit'/.test(fit) && !img[0].visual.objects.imageScaling,
+        `${file} on the page: ${img.length} image visuals ${img.map((x) => x.position.width + ' x ' + x.position.height).join(', ')} (want ${w} x 48), scaling ${fit}`);
+      check(/horizontal version will read much better/.test(note) === tall, `${file} on the page: note "${note}"`);
+    }
   }
   return { checks, problems };
 }
