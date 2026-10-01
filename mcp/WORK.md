@@ -371,7 +371,14 @@ Any failure: stop and report, no fix without the owner's go.
   `tests/phase2-try/shots-cards/`.
 - **Table header alignment** (seen on "Gulf Sales AR 3"): headers are left aligned while numbers are right aligned,
   so on a wide table each number sits nearer the next column's header than its own.
-- **Mixed-language titles** in Arabic reports ("Total Sales حسب Quarter"): measure names come from the model.
+- **Next round after `fix/phone-and-sizes`, before the cards at 640 x 360 (owner 2026-10-01; plan only, then "go"):**
+  - **Arabic reports show English titles** ("Total Sales حسب Quarter", English KPI names, table headers, slicer titles):
+    measure and column names come from the model. Plan: `create_report` takes optional display names per field; in
+    an Arabic report, every field without an Arabic name is listed in the notes. No made-up translations.
+  - **Days sort alphabetically in tables** (Friday, Monday, ...: `Calendar[Day Name]` has no sort-by column; in
+    `modelNotes` since "Gulf Sales AR 3"; months too: `Calendar[Month Name]`). Plan: a model health finding with a
+    ready TMDL script that sets the sort column for day and month names, covering a week that starts on Saturday or
+    Sunday. The model is still never changed without the user.
 - **Flaky tests on a busy laptop:** `consent` ("Berlin: no banner") and `anchors` (home page #contact) failed once
   each under load and pass alone. They don't use `ready()` yet (`scripts/tests/lib.mjs`).
 - **Phase 3:** background PNGs from the engine's SVG (first test whether Power BI accepts the SVG itself).

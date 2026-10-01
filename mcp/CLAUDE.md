@@ -15,6 +15,9 @@ and never damages the user's files.
 6. **Never touch employer data.** No company files, models, screenshots, sheet IDs, SharePoint links or customer data from his job, ever, in this repo, in tests or in examples. Keep work models closed in Power BI while you run. Work only inside `C:\DataArcus`.
 7. **Commits:** clear message saying what changed and why; end with the attribution lines your environment gives you. Never put a model name or version in commits, code or docs.
 8. **Public vs private:** see "Repo" in ROADMAP.md, and remind him when the trigger is reached.
+9. **Every Desktop report ends with "Seen, not in scope":** everything visibly wrong on any page (wrong language,
+   wrong order, cut text, odd values), including known open items and every `modelNotes` warning, until the owner
+   decides on each one. Never leave something out because it isn't this branch's work.
 
 ## Keeping the memory (`mcp/WORK.md`)
 Chats end (usage limits, new sessions, restarts); the repo stays. So the memory lives in `mcp/WORK.md`, not in a chat:
