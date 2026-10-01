@@ -296,6 +296,22 @@ Last Ramadan (..." cut with "..." (8pt minimum); the table shows five rows with 
 Calendar[Month Name] and Calendar[Day Name] without a sort-by column, Sales[Total Sales vs Last Ramadan %] without a
 format string (the % card shows 0.34).
 
+## 2026-10-01: measured on Power BI Desktop 2.158.1177: the Reset button's height, Arabic and English
+
+"Gulf Sales Measure 4" (`tests/5-tmdl-sample/`, closed without saving): the exported Reset buttons copied from the
+"Gulf Sales Fit2" reports (Arabic without its icon, English with it, as exported on 640 x 360), with a visible
+background, at growing heights; captured at 1x and 2x, read from full-size crops (`tests/phase2-try/shots-sizes/
+m4-s1/s2-ar8.png`, `-en8.png`, `-ar15.png`, `m4-s2-ar8-17-18.png`). Page units.
+
+| Reset | Cut | Touching the edge | Whole from |
+|---|---|---|---|
+| "إعادة ضبط الفلاتر" 8pt, 91 wide, 640 x 360 | 14, 15, 16 | 17, 18 (the tail of "ر" on the button's edge) | 19 |
+| "Reset filters" 8pt, 91 wide, with icon, 640 x 360 | | | 14 (the icon clear of the text at every height 14-24) |
+| "إعادة ضبط الفلاتر" 15pt, 274 wide, with icon, 1920 x 1080 | 24, 26 | 28 | 30 |
+
+Rule from the larger of the two (Arabic): a Reset button needs 6 + 1.6 x pt (8pt 19, 15pt 30), 4 more than the
+button rule it used (2 + 1.6 x pt).
+
 ## Lessons
 - **Prompts for the laptop agent:** start with the request itself, name every file, forbid changing the test files or the expected numbers, and say "stop and report on failure". Give the exact report format.
 - **What the agent can do alone:** create tables, relationships and measures, run DAX, mark date tables, refresh, screenshot one page at a time.
