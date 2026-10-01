@@ -18,7 +18,8 @@
     visual: S + 'item/report/definition/visualContainer/2.1.0/schema.json',
     mobile: S + 'item/report/definition/visualContainerMobileState/2.1.0/schema.json',
     bookmark: S + 'item/report/definition/bookmark/1.4.0/schema.json',
-    bookmarks: S + 'item/report/definition/bookmarksMetadata/1.0.0/schema.json'
+    bookmarks: S + 'item/report/definition/bookmarksMetadata/1.0.0/schema.json',
+    platform: S + 'gitIntegration/platformProperties/2.0.0/schema.json'
   };
 
   // ---------- small helpers ----------
@@ -34,6 +35,12 @@
     const b = new Uint8Array(10);
     if (root.crypto && root.crypto.getRandomValues) root.crypto.getRandomValues(b); else for (let i = 0; i < 10; i++) b[i] = Math.floor(Math.random() * 256);
     return Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('');
+  };
+  // a random GUID (version 4), for a .platform file's logicalId
+  const guid = () => {
+    const h = (rnd() + rnd()).slice(0, 32).split('');
+    h[12] = '4'; h[16] = '89ab'[parseInt(h[16], 16) % 4];
+    return [h.slice(0, 8), h.slice(8, 12), h.slice(12, 16), h.slice(16, 20), h.slice(20, 32)].map((p) => p.join('')).join('-');
   };
   const mixHex = (a, b, t) => {
     const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
@@ -139,6 +146,10 @@
       tip: { card: Me(m.rev), cat: C(t.category), y: Me(m.ord) }
     };
   }
+  // the kinds of slot that are charts (they show the tooltip page on hover)
+  const CHARTS = ['line', 'bar', 'column', 'donut', 'funnel', 'treemap', 'map'];
+  // a table's fields in the order they are shown (see bindQuery)
+  const tableFields = (B, rtl) => { const fs = (B.table || []).filter(Boolean); if (rtl) fs.reverse(); return fs; };
   // the query of one visual, or null when a field it needs is not bound
   // rtl: a right-to-left report reverses a table's columns, so its first column (the category) sits on the right,
   // where an Arabic reader starts; Power BI doesn't mirror tables itself
@@ -152,7 +163,7 @@
       case 'card': return need(B.measure) ? q({ Data: [proj(B.measure)] }) : null;
       case 'line': return need(B.date, B.measure) ? q({ Category: [proj(B.date)], Y: [proj(B.measure)] }) : null;
       case 'bar': case 'column': case 'donut': case 'funnel': return need(cat, y) ? q({ Category: [proj(cat)], Y: [proj(y)] }) : null;
-      case 'table': { const fs = (B.table || []).filter(Boolean); if (rtl) fs.reverse(); return fs.length ? q({ Values: fs.map(proj) }) : null; }
+      case 'table': { const fs = tableFields(B, rtl); return fs.length ? q({ Values: fs.map(proj) }) : null; }
       case 'gauge': return need(y) ? q({ Y: [proj(y)] }) : null;
       case 'treemap': return need(cat, y) ? q({ Group: [proj(cat)], Values: [proj(y)] }) : null;
       case 'map': return need(cat, y) ? q({ Category: [proj(cat)], Size: [proj(y)] }) : null;
@@ -171,6 +182,8 @@
   // ---------- the project ----------
   // o: { name, lang, rtl, font, ui, page:{w,h}, slots:[{kind,title,x,y,w,h,rail}] in page units, theme, png (Uint8Array),
   //      logo: { bytes, ext } or null, sample: true|false, texts: {...},
+  //      pages: [{ name, page, slots, png, panel, kpiInset }] (kpiInset: the design engine's, where KPI titles start
+  //      beside a side accent bar drawn in the background image; 0 or absent without one),
   //      model: { byPath: 'Their.SemanticModel' } or { byConnection: 'Data Source=...' } for the user's own model,
   //      bind: their fields for each visual (see sampleBind) }
   function build(o) {
@@ -209,6 +222,10 @@
     const ref = own ? (o.model.byPath ? { byPath: { path: '../' + String(o.model.byPath).replace(/^.*\//, '') } } : { byConnection: { connectionString: o.model.byConnection } })
       : { byPath: { path: '../' + M } };
     add(R + '/definition.pbir', json({ $schema: SCHEMA.pbir, version: '4.0', datasetReference: ref }));
+    // the item metadata Power BI Desktop and Fabric keep next to each item (as Microsoft's own scaffold writes it)
+    const platform = (type) => json({ $schema: SCHEMA.platform, metadata: { type, displayName: base }, config: { version: '2.0', logicalId: guid() } });
+    add(R + '/.platform', platform('Report'));
+    if (!own) add(M + '/.platform', platform('SemanticModel'));
     if (!own) add(M + '/definition.pbism', json({ $schema: SCHEMA.pbism, version: '4.0', settings: {} }));
     const culture = 'en-US';   // data and names can be Arabic; en-US keeps number and date parsing predictable
     if (!own) add(M + '/model.bim', json({
@@ -221,7 +238,9 @@
     }));
 
     // resources: the theme, the background, the logo
-    add(R + '/StaticResources/RegisteredResources/' + themeFile, json(o.theme));
+    // inside a project the theme carries the name report.json references, its file name with .json (Microsoft's
+    // theming reference: customTheme.name, the registered item's name and path and the theme's own "name" must be equal)
+    add(R + '/StaticResources/RegisteredResources/' + themeFile, json(Object.assign({}, o.theme, { name: themeFile })));
     PAGES.forEach((pg) => add(R + '/StaticResources/RegisteredResources/' + pg.bgFile, pg.png));
     if (logoFile) add(R + '/StaticResources/RegisteredResources/' + logoFile, o.logo.bytes);
     const items = [{ name: themeFile, path: themeFile, type: 'CustomTheme' }].concat(PAGES.map((pg) => ({ name: pg.bgFile, path: pg.bgFile, type: 'Image' })));
@@ -268,12 +287,17 @@
     const TH = (o.theme && o.theme.textClasses) || {}, TITLE = +(TH.title || {}).fontSize || 12, CALLOUT = +(TH.callout || {}).fontSize || 28;
     // the theme's text sizes are made for the report's full page; the 320 x 240 tooltip page and the phone get their own
     const TIP_VALUE = 20, TIP_TITLE = 10;
-    const cardFit = (w, h, s, title, callout) => {
-      const P = Math.round(8 * s / 1.5), line = (f) => Math.ceil(f * 1.5);
-      const fit = (I) => Math.min(callout, Math.floor((h - 2 * P - 2 * I - line(title)) / 1.5), Math.floor((w - 2 * P - 2 * I) / (7 * 0.55 * 4 / 3)));
+    // m (KPI cards on a page): { top, side }, the margin above the title (round(12k), k = page height / 1080: measured
+    // in Desktop 2.158 as the smallest that looks right) and the padding on the reading-start side that keeps the title
+    // clear of a side accent bar (the page's kpiInset from the design engine). Both are reserved here, so the number
+    // still fits; the top margin gives way to P when even an 8pt number would not fit under it.
+    const cardFit = (w, h, s, title, callout, m) => {
+      const P = Math.round(8 * s / 1.5), line = (f) => Math.ceil(f * 1.5), S = (m && m.side) || P;
+      const T = m && m.top > P && Math.floor((h - m.top - P - line(title)) / 1.5) >= 8 ? m.top : P;
+      const fit = (I) => Math.min(callout, Math.floor((h - T - P - 2 * I - line(title)) / 1.5), Math.floor((w - S - P - 2 * I) / (7 * 0.55 * 4 / 3)));
       let I = P, V = fit(I);
       if (V < 8) { I = 0; V = Math.max(8, fit(0)); }
-      return { P, I, V };
+      return { P, I, V, T, S };
     };
     // Sizes of the header, page buttons, filter rail and slide-in panel were made on a 1920 x 1080 page: they scale with
     // the page (k = page height / 1080), as cardFit does, and text follows the page within Power BI's limits (8-60pt).
@@ -298,22 +322,28 @@
     const boxFit = (h) => Math.max(8, Math.floor((h - 10) / 1.8));
     const LABEL = +(TH.label || {}).fontSize || 10;
     const SLICER_TEXT = +((((((o.theme || {}).visualStyles || {}).slicer || {})['*'] || {}).header || [{}])[0].textSize) || LABEL;
-    // Every card formatting object needs the "default" selector, or Power BI ignores it; the number stays centred, like
-    // the legacy card's, in both reading directions; the inner outline would draw a box inside the panel
+    // The card's value, label, padding, layout and outline need the "default" selector, or Power BI ignores them; the
+    // number stays centred, like the legacy card's, in both reading directions; the inner outline would draw a box inside
+    // the panel. The card's own fill (on by default, in the theme's background colour) is switched off, so the panel and
+    // its accent bar show: that switch works only WITHOUT a selector (measured in Desktop 2.158, DESKTOP-TESTS.md round 0;
+    // with "default" it is ignored).
     const DEF = { id: 'default' };
     const cardObjects = (c) => ({
       value: obj({ fontSize: num(c.V), horizontalAlignment: str('center') }, DEF),
       label: obj({ show: bool(false) }, DEF),
       padding: obj({ paddingUniform: num(c.I) }, DEF),
       layout: obj({ paddingUniform: num(0) }, DEF),
-      outline: obj({ show: bool(false) }, DEF)
+      outline: obj({ show: bool(false) }, DEF),
+      fillCustom: obj({ show: bool(false) })
     });
     // the container: its padding set on the visual (Power BI resets it when other container settings are set), no gap
-    // under the title; title: the title's size, written so the height worked out above doesn't depend on the theme
+    // under the title; title: the title's size, written so the height worked out above doesn't depend on the theme.
+    // Padding and spacing are written WITHOUT a selector: with "default" Desktop 2.158 ignores both and the title sits
+    // on the panel's top edge (measured, DESKTOP-TESTS.md round 0). c.T: the top, c.S: the reading-start side.
     const cardFrame = (f, c, title) => {
       if (f.title && f.title[0].properties.show && f.title[0].properties.show.expr.Literal.Value === 'true') f.title[0].properties.fontSize = num(title);
-      f.padding = obj({ top: num(c.P), bottom: num(c.P), left: num(c.P), right: num(c.P) }, DEF);
-      f.spacing = obj({ customizeSpacing: bool(true), spaceBelowTitleArea: num(0), verticalSpacing: num(2) }, DEF);
+      f.padding = obj({ top: num(c.T), bottom: num(c.P), left: num(rtl ? c.P : c.S), right: num(rtl ? c.S : c.P) });
+      f.spacing = obj({ customizeSpacing: bool(true), spaceBelowTitleArea: num(0), verticalSpacing: num(2) });
       return f;
     };
     // a button's formatting card: the on/off switch ("show") on its own, the look for the default state after it, the
@@ -356,7 +386,8 @@
       const groups = {};
       const groupOf = (kind) => (kind === 'title' || kind === 'logo' ? 'header' : kind === 'kpi' ? 'kpis' : kind === 'slicer' ? 'filters' : null);
       const GROUP_NAMES = { header: W.header || 'Header', kpis: W.kpis || 'KPI cards', filters: W.filters || 'Filters' };
-      let z = 1000, kpiIndex = 0, mainChart = null;
+      let z = 1000, kpiIndex = 0;
+      const charts = [];
       sorted.forEach((s) => {
         const g = groupOf(s.kind);
         if (g && !groups[g]) groups[g] = { name: rnd(), x0: s.x, y0: s.y, x1: s.x + s.w, y1: s.y + s.h, z: 0 };
@@ -432,8 +463,10 @@
           const size = Math.min(pt(s.h * 0.42), boxFit(s.h));
           visual = { visualType: 'textbox', objects: textbox(o.title || base, size, true, u.text), visualContainerObjects: frame(null, o.title || base) };
         } else if (s.kind === 'logo') {
+          // image.fit 'Fit' keeps the logo's own ratio and shows it whole; the old imageScaling 'Fit' stretched it to the
+          // box (measured in Desktop 2.158). The box itself has the logo's shape (the design engine, logoRatio).
           visual = logoFile
-            ? { visualType: 'image', objects: { general: obj({ imageUrl: resource(logoFile) }), imageScaling: obj({ imageScalingType: str('Fit') }) }, visualContainerObjects: frame(null, W.logo || 'Logo') }
+            ? { visualType: 'image', objects: { general: obj({ imageUrl: resource(logoFile) }), image: obj({ fit: str('Fit') }) }, visualContainerObjects: frame(null, W.logo || 'Logo') }
             // the placeholder until a logo is added: sized to the header slot, in the secondary text colour so it reads
             : { visualType: 'textbox', objects: textbox(W.logoHere || 'Your logo', Math.min(pt(s.h * 0.3), boxFit(s.h)), false, mixHex(u.text, u.card, 0.3)), visualContainerObjects: frame(null, W.logo || 'Logo') };
         } else if (s.kind === 'text') {
@@ -449,13 +482,21 @@
           visual = { visualType: type, visualContainerObjects: frame(ttl, ttl, extra), drillFilterOtherVisuals: true };
           if (query) visual.query = query;
           // the title already names the KPI, so the card's own label under the number is not repeated
-          if (type === 'cardVisual') { const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT); visual.objects = cardObjects(c); cardFrame(visual.visualContainerObjects, c, TITLE); }
+          if (type === 'cardVisual') {
+            const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: s.kind === 'kpi' ? pg.kpiInset || 0 : 0 });
+            visual.objects = cardObjects(c); cardFrame(visual.visualContainerObjects, c, TITLE);
+          }
           // tables fill their visual (grow to fit), instead of shrinking to their content and leaving the rest empty
           // (on a right-to-left page the title sat on the right and the table on the left)
           if (s.kind === 'table') visual.objects = { columnHeaders: obj({ columnAdjustment: str('growToFit'), autoSizeColumnWidth: bool(true) }) };
+          // each column's header sits over its own values: text on the reading-start side, numbers (measures, and columns
+          // the model types as numbers) on the other; "Apply to header" (styleHeader) makes the header follow
+          if (s.kind === 'table' && query) visual.objects.columnFormatting = tableFields(B, rtl).map((f) => ({
+            properties: { alignment: str(f.m != null || f.num ? (rtl ? 'Left' : 'Right') : (rtl ? 'Right' : 'Left')), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) },
+            selector: { metadata: f.t + '.' + label(f) } }));
         }
         const v = container({ x: s.x, y: s.y, w: s.w, h: s.h, z, parent, visual, kind: s.kind });
-        if (!mainChart && ['line', 'column', 'bar'].includes(s.kind)) mainChart = v;
+        if (CHARTS.includes(s.kind)) charts.push(v);
         z += 1000;
         // the page navigator follows the title in the reading order; its text size is set for the default, hover and
         // selected states (the current page's button is the selected one, and would otherwise show Power BI's own size)
@@ -523,8 +564,9 @@
         bookmarks.push({ name: pg.closeBm, page: pageName, targets: [gname].concat(kids), group: gname, hidden: true, label: (W.filtersClosed || 'Filters closed') + suffix });
       }
 
-      // the main chart of the first page shows the tooltip page when you hover it
-      if (mainChart && pageIndex === 0) mainChart.visual.visualContainerObjects.visualTooltip = obj({ show: bool(true), type: str('ReportPage'), section: str(tipName) });
+      // every chart shows the tooltip page when you hover it: type 'Canvas' is Power BI's name for a report page tooltip
+      // ('ReportPage' is not a value: Desktop then shows its default tooltip; measured in Desktop 2.158)
+      charts.forEach((v) => { v.visual.visualContainerObjects.visualTooltip = obj({ show: bool(true), type: str('Canvas'), section: str(tipName) }); });
 
       // phone layout: Power BI's phone canvas is 323 points wide. Cards go two per row (158 x 100), charts and
       // tables full width, slicers and buttons as short full-width rows, in the reading order of the page.
@@ -580,9 +622,11 @@
       add(D + '/bookmarks/bookmarks.json', json({ $schema: SCHEMA.bookmarks, items: bookmarks.map((b) => ({ name: b.name })) }));
     }
 
-    // tooltip page: small, hidden in view mode, ready for custom tooltips
+    // tooltip page: small, hidden in view mode, shown when a chart is hovered. 320 x 284: the card, and a bar chart 184
+    // high, which holds 6 rows (measured in Desktop 2.158: a bar row takes 22 and the title and padding 46; a tooltip
+    // can't be scrolled, so rows past the last one would be lost behind a scrollbar)
     add(D + '/pages/' + tipName + '/page.json', json({
-      $schema: SCHEMA.page, name: tipName, displayName: W.tooltipPage || 'Tooltip', displayOption: 'FitToPage', width: 320, height: 240,
+      $schema: SCHEMA.page, name: tipName, displayName: W.tooltipPage || 'Tooltip', displayOption: 'FitToPage', width: 320, height: 284,
       type: 'Tooltip', visibility: 'HiddenInViewMode', pageBinding: { name: tipBinding, type: 'Tooltip' },
       objects: { background: obj({ color: color(u.card), transparency: num(0) }), outspace: obj({ color: color(u.card) }) }
     }));
@@ -593,8 +637,13 @@
       // the theme's text sizes are made for the report's full page; on this 320 x 240 page the card value and the
       // titles get their own, so the value isn't cut off and the titles fit
       ? [{ x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(tip.card)] }), objects: cardObjects(tipCard), visualContainerObjects: cardFrame(tipFrame(label(tip.card)), tipCard, TIP_TITLE) } },
-        { x: 12, y: 92, w: 296, h: 140, visual: { visualType: 'clusteredColumnChart', query: q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), visualContainerObjects: tipFrame(label(tip.y)) } }]
-      : [{ x: 12, y: 12, w: 296, h: 216, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }];
+        // a bar chart writes its category names horizontally (a column chart slants or cuts them); its own sizes, as
+        // the card has: axis text 8pt, 40% of the width for the names (a 20-character name is whole), no value axis and
+        // each bar's value beside it instead, which leaves room for one more row
+        { x: 12, y: 92, w: 296, h: 184, visual: { visualType: 'clusteredBarChart', query: q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }),
+          objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
+          visualContainerObjects: tipFrame(label(tip.y)) } }]
+      : [{ x: 12, y: 12, w: 296, h: 260, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }];
     tipVisuals.forEach((s, i) => {
       const v = { $schema: SCHEMA.visual, name: rnd(), position: { x: s.x, y: s.y, z: (i + 1) * 1000, height: s.h, width: s.w, tabOrder: (i + 1) * 1000 }, visual: s.visual };
       add(D + '/pages/' + tipName + '/visuals/' + v.name + '/visual.json', json(v));

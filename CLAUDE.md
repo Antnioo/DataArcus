@@ -23,8 +23,10 @@ The owner wants this done fast without losing accuracy. So:
   smallest and largest page) before it is coded; estimates have cost whole rounds.
 - **Test in the right order.** The failing tests first; then the suites the change touches; the full run once, at
   the end. Never rerun everything to check a one-line change.
-- **Stop at the first real failure** and report it with its cause and a proposed fix; don't push on and pile up
-  results that the fix will invalidate.
+- **Stop when a failure could change what Desktop shows** (owner 2026-10-01): report it with its cause and a
+  proposed fix, and don't pile up results that the fix will invalidate. Any other failure (a fixture that needs the
+  owner's go, a validator message, a test expectation to discuss): note it with its cause and proposed fix, and
+  continue with the work it doesn't touch.
 - **Judge from full-size crops**, never from a scaled-down page, and list everything visibly wrong under "Seen,
   not in scope" (rule 9 in `mcp/CLAUDE.md`).
 - **Short reports, fixed shape:** what was done (commits), tests before → after, Desktop results per item, the one

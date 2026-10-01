@@ -78,6 +78,20 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
   "by Amount"); `pbip-bind.js` marks them `unknown` and picks categories by name.
 - In `mobile.json`, visuals inside a group use page positions, not positions relative to the group as in
   `visual.json` (checked in Desktop 2.158: with relative positions the KPI cards landed on the header).
+- Round 0, measured in Desktop 2.158 (`scripts/tests/DESKTOP-TESTS.md`):
+  - A report page tooltip is linked with `visualTooltip.type: 'Canvas'` (`'ReportPage'` is not a value: Desktop shows
+    its default tooltip). The tooltip is always opaque, whatever the tooltip page's background says.
+  - **A formatting entry's selector decides whether Desktop uses it.** The card's container `padding` and `spacing`
+    and its `fillCustom.show` are ignored with the `default` selector and work without one; the card's `value`,
+    `label` and `outline` need it. Try a new entry both ways on a flat-coloured page before trusting it.
+  - The card visual has its own fill, on by default: `fillCustom: [{ properties: { show: false } }]` turns it off.
+  - An image keeps its ratio with `image.fit: 'Fit'`; the old `imageScaling.imageScalingType: 'Fit'` stretches it.
+  - A table header follows its column with `columnFormatting` (selector `{ metadata: queryRef }`): `alignment` plus
+    `styleHeader`, `styleValues`, `styleTotal`.
+  - A bar chart needs about 22 per row plus 46 (title, padding) without its value axis; rows past its height go
+    behind a scrollbar, which can't be used in a tooltip.
+  - Inside a project the theme's own `name` must be the file name `report.json` references (with `.json`), and the
+    report folder needs a `.platform` file: Microsoft's validator (`powerbi-report-author validate`) checks both.
 
 ## Writing prompts for another agent or session
 Start with the request itself ("Run this test now"). Name every file. List the steps. Add the rules: scope folder, don't

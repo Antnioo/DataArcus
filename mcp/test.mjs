@@ -8,7 +8,7 @@ import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { layoutProblems } from '../scripts/tests/report-check.mjs';
+import { layoutProblems, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems } from '../scripts/tests/report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-mcp-'));
@@ -270,9 +270,11 @@ if (!r.err) {
   // the Arabic labels from the engine
   const all1 = shown.map((p) => p.visuals.map((v) => v.text).join('')).join('');
   check(all1.includes('إعادة ضبط الفلاتر') && all1.includes('شعارك') && !all1.includes('Reset filters'), 'create_report design: the report labels are not Arabic');
-  // the registered theme is the design's theme exactly, with nothing changed (its visuals are already solid)
+  // the registered theme is the design's theme exactly, with nothing changed (its visuals are already solid) but its
+  // name: inside a project the theme carries the name report.json references, its file name (Microsoft's theming
+  // reference and validator; owner's decision 2026-10-01, round 0 change 7)
   const themeFiles = fs.readdirSync(path.join(dir, 'StaticResources/RegisteredResources')).filter((f) => f.endsWith('-theme.json'));
-  check(themeFiles.length === 1 && fs.readFileSync(path.join(dir, 'StaticResources/RegisteredResources', themeFiles[0]), 'utf8') === JSON.stringify(E.buildTheme(gp.j.design, 'ar'), null, 2) && !r.j.themeChanged,
+  check(themeFiles.length === 1 && fs.readFileSync(path.join(dir, 'StaticResources/RegisteredResources', themeFiles[0]), 'utf8') === JSON.stringify(Object.assign({}, E.buildTheme(gp.j.design, 'ar'), { name: themeFiles[0] }), null, 2) && !r.j.themeChanged,
     `create_report design: registered theme ${themeFiles} is not the design's theme; themeChanged ${JSON.stringify(r.j.themeChanged)}`);
   const refs = boundFields(dir);
   check(refs.length >= 4 && refs.every(inModel), `create_report design: fields not in the model: ${refs.filter((x) => !inModel(x)).map((x) => x.join(' '))}`);
@@ -420,6 +422,52 @@ const cardProblems = (dir, rtl) => {
     check(!lp.phone.length, `${name}: phone ${lp.phone.slice(0, 3).join('; ')}${lp.phone.length > 3 ? ` (+${lp.phone.length - 3})` : ''}`);
     check(!lp.sizes.length, `${name}: sizes ${lp.sizes.slice(0, 3).join('; ')}${lp.sizes.length > 3 ? ` (+${lp.sizes.length - 3})` : ''}`);
   }
+}
+
+// round 0 (measured in Power BI Desktop 2.158, scripts/tests/DESKTOP-TESTS.md): every chart linked to the tooltip page
+// with type Canvas; the tooltip page 320 x 284 with a bar chart; each table header aligned with its column; cards
+// without their own fill and with padding Desktop applies; the theme under one name and a .platform file; a logo
+{
+  const filesOf = (dir) => { const out = {}; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else out[path.relative(path.dirname(dir), f).split(path.sep).join('/')] = fs.readFileSync(f); }); walk(dir); return out; };
+  const t4 = await tryCall('generate_theme', { name: 'Round0', brand: '#0F4C5C', folder: 'themes/r0' });
+  const made = {};
+  for (const [name, lang] of [['Round0 EN', 'en'], ['Round0 AR', 'ar']]) {
+    const plan = t4.err ? t4 : await tryCall('plan_layout', { design: t4.j.design, layout: 'exec', kpis: 4, filters: 'none', lang });
+    const res = plan.err ? plan : await tryCall('create_report', { path: 'dax-project', name, design: plan.j.design, lang });
+    if (res.err) { check(false, `${name}: ${res.t.slice(0, 200)}`); continue; }
+    const files = filesOf(path.join(ROOT, 'dax-project', res.j.report)), rtl = lang === 'ar'; made[lang] = plan;
+    const a = tooltipProblems(files), t = tooltipPageProblems(files), tb = tableProblems(files, rtl), cd = cardStyleProblems(files, rtl), sh = projectProblems(files);
+    // the default two-page report: 4 charts (page 1 line, bar, column; page 2 column), 2 tables, 7 KPI cards and the tooltip card
+    check(a.charts === 4 && !a.bad.length, `${name}: ${a.bad.length} of ${a.charts} charts without the Canvas tooltip link (4 charts expected): ${a.bad.slice(0, 2).join('; ')}`);
+    check(t.pages === 1 && t.charts === 1 && !t.bad.length, `${name}: tooltip page: ${t.bad.slice(0, 2).join('; ') || t.charts + ' charts'}`);
+    check(tb.columns >= 6 && !tb.bad.length, `${name}: ${tb.bad.length} of ${tb.columns} table columns without header alignment: ${tb.bad.slice(0, 2).join('; ')}`);
+    check(cd.cards === 8 && !cd.bad.length, `${name}: ${new Set(cd.bad.map((x) => x.split(':')[0])).size} of ${cd.cards} cards with their own fill or ignored padding (8 cards expected): ${cd.bad.slice(0, 2).join('; ')}`);
+    check(!sh.length, `${name}: ${sh.join('; ')}`);
+  }
+  // a logo: a PNG or JPG inside the DataArcus folder (2 MB at most), copied into the report; its box takes the logo's
+  // shape and the image is never stretched; a logo taller than wide gets a note; anything else is refused with the reason
+  fs.cpSync(path.join(REPO, 'scripts/tests/fixtures/logos'), path.join(ROOT, 'logos'), { recursive: true });
+  fs.writeFileSync(path.join(ROOT, 'logos/logo.gif'), 'GIF89a');
+  fs.writeFileSync(path.join(ROOT, 'logos/big.png'), Buffer.concat([fs.readFileSync(path.join(ROOT, 'logos/wide.png')), Buffer.alloc(2 * 1024 * 1024)]));
+  fs.writeFileSync(path.join(path.dirname(ROOT), 'dataarcus-outside-logo.png'), fs.readFileSync(path.join(ROOT, 'logos/wide.png')));
+  const TALL = 'This logo is tall; a horizontal version will read much better in the header.';
+  for (const [file, lang, x, w, tall] of [['tall.png', 'en', 1865, 19, true], ['wide.png', 'ar', 36, 192, false], ['wide.jpg', 'en', 1344, 540, false]]) {
+    const res = !made[lang] || made[lang].err ? { err: true, t: 'no plan' } : await tryCall('create_report', { path: 'dax-project', name: 'Logo ' + file, design: made[lang].j.design, lang, logo: 'logos/' + file });
+    if (res.err) { check(false, `logo ${file}: ${res.t.slice(0, 200)}`); continue; }
+    const dir = path.join(ROOT, 'dax-project', res.j.report), img = readReport(dir)[0].visuals.filter((v) => v.type === 'image');
+    const o = img.length ? JSON.parse(img[0].text).visual.objects : {}, stored = fs.readdirSync(path.join(dir, 'StaticResources/RegisteredResources')).filter((f) => /-logo\.(png|jpg)$/.test(f));
+    check(img.length === 1 && img[0].x === x && img[0].w === w && img[0].h === 48 && JSON.stringify(o.image || '').includes("'Fit'") && !o.imageScaling && stored.length === 1
+      && fs.readFileSync(path.join(dir, 'StaticResources/RegisteredResources', stored[0])).equals(fs.readFileSync(path.join(ROOT, 'logos', file))),
+      `logo ${file} (${lang}): ${img.length} image visuals at ${img.map((v) => `${v.x}, ${v.w} x ${v.h}`).join('; ')} (want ${x}, ${w} x 48), scaling ${JSON.stringify(o.image || o.imageScaling)}, stored ${stored}`);
+    check((res.j.reportNotes || []).includes(TALL) === tall, `logo ${file}: reportNotes ${JSON.stringify(res.j.reportNotes)}`);
+    const lp = layoutProblems(filesOf(dir));
+    check(!lp.sizes.length && !lp.phone.length, `logo ${file}: ${lp.sizes[0] || lp.phone[0]}`);
+  }
+  for (const [file, why] of [['logos/logo.gif', /PNG or JPG/], ['logos/big.png', /2 MB/], ['../dataarcus-outside-logo.png', /outside|inside/i], ['logos/missing.png', /not found|no such|does not exist/i]]) {
+    const res = !made.en || made.en.err ? { err: false, t: 'no plan' } : await tryCall('create_report', { path: 'dax-project', name: 'Logo refused', design: made.en.j.design, logo: file });
+    check(res.err && why.test(res.t) && !fs.existsSync(path.join(ROOT, 'dax-project', 'Logo refused.Report')), `logo ${file} must be refused (${why}): ${res.t.slice(0, 160)}`);
+  }
+  fs.rmSync(path.join(path.dirname(ROOT), 'dataarcus-outside-logo.png'), { force: true });
 }
 
 // suggest_fields on the same project: the same sensible fields

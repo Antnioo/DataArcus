@@ -88,7 +88,7 @@ const slot = z.object({
 });
 server.registerTool('create_report', {
   title: 'Create a report project for an existing model',
-  description: 'Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme and background applied. The model and any existing report are never touched; the new report gets a free name. Every report also gets a hidden tooltip page, ready for custom tooltips. Give either pages (hand-placed slots) or a design (from generate_theme or plan_layout): with a design the pages, positions, second page, slide-in filter panel, labels and theme are exactly the DataArcus Theme Generator\'s project download. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge).',
+  description: 'Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme and background applied. The model and any existing report are never touched; the new report gets a free name. Every report also gets a hidden tooltip page, shown when a chart is hovered. An optional logo (a PNG or JPG in the DataArcus folder) goes in the header at its own shape. Give either pages (hand-placed slots) or a design (from generate_theme or plan_layout): with a design the pages, positions, second page, slide-in filter panel, labels and theme are exactly the DataArcus Theme Generator\'s project download. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge).',
   inputSchema: {
     path: modelPath.describe('The project folder or .SemanticModel folder the report will use'),
     name: z.string().min(1).max(60).describe('Report name'),
@@ -101,6 +101,7 @@ server.registerTool('create_report', {
     secondPage: z.boolean().default(true).describe('With a design: a second page in a complementary layout (details after an overview, an overview after analysis), with page buttons'),
     slidePanel: z.boolean().default(false).describe('With a design: filters as a slide-in panel opened from a Filters button in the header, instead of a filter rail'),
     theme: z.string().optional().describe('Theme JSON file (e.g. from the DataArcus theme generator), inside the DataArcus folder'),
+    logo: z.string().optional().describe('Logo image for the header: a PNG or JPG file inside the DataArcus folder, 2 MB at most. It is copied into the new report (the file itself is not changed) and shown at its own shape, never stretched; a horizontal logo reads best'),
     lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().default(false), font: z.string().default('Segoe UI'),
     colors: z.object({ text: z.string(), card: z.string(), background: z.string(), accent: z.string() }).partial().optional()
   }
@@ -111,6 +112,19 @@ server.registerTool('create_report', {
   // no background image given: a fully transparent pixel, so the page colour from the theme shows
   const png1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4AWMAAQAABQABNtCI3QAAAABJRU5ErkJggg==', 'base64');
   const kpisOf = (pages) => pages.reduce((n, p) => Math.max(n, p.slots.filter((s) => s.kind === 'kpi').length), 0) || 1;
+  // the logo, as the website takes it: a PNG or JPG, 2 MB at most; its size is read so its box can take its shape
+  const reportNotes = [];
+  let logo = null, logoRatio;
+  if (a.logo) {
+    const file = inside(a.logo), ext = /\.png$/i.test(file) ? 'png' : /\.jpe?g$/i.test(file) ? 'jpg' : null;
+    if (!ext) throw new Error(`The logo must be a PNG or JPG file: ${a.logo}`);
+    if (!fs.existsSync(file) || !fs.statSync(file).isFile()) throw new Error(`Logo not found: ${a.logo}`);
+    if (fs.statSync(file).size > 2 * 1024 * 1024) throw new Error(`The logo must be 2 MB at most: ${a.logo} is ${(fs.statSync(file).size / 1024 / 1024).toFixed(1)} MB`);
+    const bytes = new Uint8Array(fs.readFileSync(file)), size = E.imageSize(bytes);
+    if (!size) throw new Error(`The logo must be a PNG or JPG file: ${a.logo} could not be read as one`);
+    logo = { bytes, ext }; logoRatio = size.w / size.h;
+    if (size.h > size.w) reportNotes.push('This logo is tall; a horizontal version will read much better in the header.');
+  }
   let r, bind, extra = {};
   if (a.design) {
     // the website's project download for this design: its pages (second page, slide-in panel), labels and theme
@@ -121,9 +135,9 @@ server.registerTool('create_report', {
         why: 'Transparent visuals are meant to sit on panels drawn in a background image. This report has no background image yet, so its theme gives the visuals their own solid cards to keep them visible.' });
       design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { transparent: false }) });
     }
-    const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel });
+    const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel, logoRatio });
     r = Pbip.build({
-      name: a.name, title: E.themeName(design.name), pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo: null,
+      name: a.name, title: E.themeName(design.name), pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
       theme: E.buildTheme(design, a.lang), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = Bind.suggest(m.tables, kpisOf(pages))),
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel }))
     });
@@ -132,7 +146,7 @@ server.registerTool('create_report', {
   } else {
     const theme = a.theme ? JSON.parse(fs.readFileSync(inside(a.theme), 'utf8')) : { name: a.name };
     r = Pbip.build({
-      name: a.name, title: a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo: null, theme,
+      name: a.name, title: a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
       model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = Bind.suggest(m.tables, kpisOf(a.pages))),
       texts: { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' },
@@ -145,7 +159,7 @@ server.registerTool('create_report', {
   r.files.forEach((f) => { const out = path.join(m.projectDir, f.path); fs.mkdirSync(path.dirname(out), { recursive: true }); fs.writeFileSync(out, f.data); });
   const notes = modelNotes(m.tmsl, bind);
   return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra,
-    notes.length ? { modelNotes: notes } : {}));
+    notes.length ? { modelNotes: notes } : {}, reportNotes.length ? { reportNotes } : {}));
 }));
 
 // Things in the user's model that make the new report look wrong, for the fields it uses. The report never changes the
