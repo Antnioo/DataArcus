@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://dataarcus.com/articles/article-power-bi-model-ai-ready.html" />
+
+  <title>Is Your Power BI Model Ready for AI? A 7-Point Check</title>
+  <meta name="description" content="Copilot, data agents and the new Power BI apps all answer from your semantic model. The 7 things to fix first, based on Microsoft&#x27;s own guidance." />
+  <meta name="author" content="DataArcus" />
+  <meta name="keywords" content="Power BI Copilot, prepare semantic model for AI, Prep data for AI, AI data schema, verified answers, AI instructions, Power BI best practices, Power BI model health check, DataArcus" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Is Your Power BI Model Ready for AI? A 7-Point Check" />
+  <meta property="og:description" content="Copilot, data agents and the new Power BI apps all answer from your semantic model. The 7 things to fix first, based on Microsoft&#x27;s own guidance." />
+  <meta property="og:url" content="https://dataarcus.com/articles/article-power-bi-model-ai-ready.html" />
+  <meta property="og:site_name" content="DataArcus" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/ai-ready-article.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:alt" content="Is your Power BI model ready for AI? A 7-point check" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="article:published_time" content="2026-10-02T09:00:00Z" />
+  <meta property="article:author" content="Abdelrahman M." />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Is Your Power BI Model Ready for AI? A 7-Point Check" />
+  <meta name="twitter:description" content="Copilot, data agents and the new Power BI apps all answer from your semantic model. The 7 things to fix first, based on Microsoft&#x27;s own guidance." />
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/ai-ready-article.jpg" />
+  <meta name="twitter:image:alt" content="DataArcus logo" />
+
+  <link rel="icon" href="../assets/img/favicon.svg"/>
+  <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png" />
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="../assets/css/vendor/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/css/style.min.css" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  </noscript>
+
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "Is Your Power BI Model Ready for AI? A 7-Point Check",
+    "description": "Copilot, data agents and the new Power BI apps all answer from your semantic model. The 7 things to fix first, based on Microsoft's own guidance.",
+    "url": "https://dataarcus.com/articles/article-power-bi-model-ai-ready.html",
+    "mainEntityOfPage": "https://dataarcus.com/articles/article-power-bi-model-ai-ready.html",
+    "author": {
+      "@type": "Person",
+      "name": "Abdelrahman M."
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "DataArcus",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://dataarcus.com/assets/img/logo.svg"
+      }
+    },
+    "datePublished": "2026-10-02",
+    "dateModified": "2026-10-02",
+    "image": "https://dataarcus.com/assets/img/og/ai-ready-article.jpg"
+  }
+  </script>
+</head>
+<body>
+
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html#hero">
+        <img src="../assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="../index.html#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="../portfolio.html" data-i18n="nav.portfolio">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="../tools/index.html" data-i18n="nav.tools">Free Tools</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <a href="../index.html#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="article-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+
+            <header class="article-header">
+              <span class="badge bg-info mb-3" data-i18n="header.badge">COPILOT & AI</span>
+              <h1 class="display-5 fw-bold" data-i18n="header.title">Is Your Power BI Model Ready for AI? A 7-Point Check</h1>
+              <p class="lead text-white-50" data-i18n="header.subtitle">Posted on October 2, 2026</p>
+            </header>
+
+            <article class="article-body">
+              <p data-i18n-html="content.p1">Microsoft has just set out Power BI's next chapter: a new experience in Power BI Desktop that builds data apps from your semantic model in plain language, and Copilot answers grounded in the definitions inside your models (<a href='https://community.fabric.microsoft.com/blog/fbc_pbiupdatesblog/power-bi%e2%80%99s-next-chapter-the-evolution-of-business-intelligence/5369131' class='text-accent' target='_blank' rel='noopener'>Microsoft's announcement</a>). Every one of these features starts from the same place: <strong>your semantic model</strong>.</p>
+              <p data-i18n-html="content.p2">Microsoft is clear about what happens when that model isn't ready: <em>"Without proper preparation, Copilot can generate less helpful and inaccurate results"</em> (<a href='https://learn.microsoft.com/power-bi/create-reports/tutorial-copilot-power-bi-prepare-model' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>). In other words, the AI is only as good as the model behind it. Here are the seven things to check first, in the order we'd fix them.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h1">1. Names a person can read, and no duplicates</h2>
+              <p data-i18n-html="content.p3">AI reads your field names the way a new colleague would. <code>Sls_Amt_2</code> means nothing; <code>Sales Amount</code> does. Watch for the same name in two tables, like <code>Name</code> in Customer and <code>Name</code> in Store: Microsoft lists duplicate field names as a common cause of wrong answers. Rename them so each field says exactly what it is.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h2">2. Descriptions on the fields that matter</h2>
+              <p data-i18n-html="content.p4">A one-sentence description on a table, column or measure tells the AI what it means and when to use it: <em>"Net sales after returns, excluding VAT."</em> Start with your top 20 measures and the columns people filter by most. It's the cheapest accuracy gain you can make.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h3">3. Hide the technical fields</h2>
+              <p data-i18n-html="content.p5">IDs, keys and helper columns such as sort-order columns are needed by the model but confuse the AI. Hide them, or leave them out of the AI's view (step 7). In Microsoft's own tutorial, the first fields removed from the AI's view are an account ID and the day and month sort-order helper columns.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h4">4. Remove what nobody uses</h2>
+              <p data-i18n-html="content.p6">Microsoft recommends simplifying models by removing unused tables, columns and measures, because they add uncertainty to answers. Unused objects are also the hardest thing to find by hand. Our free <a href='../tools/power-bi-model-health-check.html' class='text-accent'>Model Health Check</a> lists every column and measure that no visual, filter, measure or relationship uses, and writes the cleanup steps for you.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h5">5. A clean star schema, without ambiguous paths</h2>
+              <p data-i18n-html="content.p7">Fact tables in the middle, dimension tables around them, one clear path between any two tables. Ambiguous or many-to-many relationships make a person hesitate, and they make the AI guess. Microsoft's guidance is the same as for any good model: follow star-schema design and avoid ambiguous relationships.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h6">6. Formats and sort orders, because the AI repeats them</h2>
+              <p data-i18n-html="content.p8">If a margin measure has no format, every answer shows <code>0.34</code> instead of <code>34%</code>. If month names have no sort-by column, a chart by month runs April, August, December. AI answers inherit these mistakes from your model, in front of whoever asked. The <a href='../tools/power-bi-model-health-check.html' class='text-accent'>Model Health Check</a> flags month and day names without a sort column and measures without a format.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h7">7. Use Prep data for AI</h2>
+              <p data-i18n-html="content.p9">Power BI now has a <strong>Prep data for AI</strong> button on the Home ribbon, in Desktop and in the service (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-prepare-data-ai' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>). It has three parts:</p>
+              <ul>
+  <li data-i18n-html="content.list1_1"><strong>AI data schema:</strong> choose which tables, columns and measures the AI should use, and leave the rest out.</li>
+  <li data-i18n-html="content.list1_2"><strong>Verified answers:</strong> link common questions to a visual you've already checked, so the answer is the one you approved.</li>
+  <li data-i18n-html="content.list1_3"><strong>AI instructions:</strong> explain your business terms in plain language, for example what "active customer" means in your company.</li>
+</ul>
+              <p data-i18n-html="content.p10">Two practical notes from Microsoft's documentation: Q&amp;A must be turned on for the model, or the tabs are disabled; and AI answers are nondeterministic, so preparation improves them but can't guarantee the same answer every time.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h8">If your business runs on the Gulf calendar</h2>
+              <p data-i18n-html="content.p11">Ask an AI to compare "this Ramadan with last Ramadan" and it can only answer if your model knows when Ramadan was. Put Hijri months, Ramadan and Eid flags and your weekend in the calendar table (our free <a href='../tools/dax-calendar-table-generator.html' class='text-accent'>Calendar Generator</a> builds one), then say in the AI instructions how your business compares those periods. We showed the DAX in <a href='article-ramadan-sales-power-bi.html' class='text-accent'>Ramadan sales in Power BI</a>.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h9">Start with a ten-minute check</h2>
+              <ul>
+  <li data-i18n-html="content.list2_1">In Power BI Desktop: <strong>File > Export > Power BI template</strong> (a .pbit has the model but no data).</li>
+  <li data-i18n-html="content.list2_2">Drop it on the <a href='../tools/power-bi-model-health-check.html' class='text-accent'>Model Health Check</a>. It runs in your browser and nothing is uploaded.</li>
+  <li data-i18n-html="content.list2_3">Fix the unused fields, missing sort orders and formats first, then add names, descriptions and Prep data for AI.</li>
+</ul>
+              <p data-i18n-html="content.p12">AI in Power BI is moving fast. The models that get good answers will be the ones that were clear for people first.</p>
+            </article>
+
+            <div class="text-center block">
+              <div class="glass-card p-4 p-md-5 d-inline-block" data-aos="fade-up">
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title">Check how ready your model is</h3>
+                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">Free, runs in your browser, nothing is uploaded.</p>
+                <a href="../tools/power-bi-model-health-check.html" class="btn btn-accent m-1"><i class="bi bi-heart-pulse me-2"></i><span data-i18n="exploreMore.button1">Open the Model Health Check</span></a>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <hr class="divider">
+              <h3 class="h4 mb-3" data-i18n="finalCta.title">Want your model AI-ready?</h3>
+              <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">We review Power BI models and prepare them for Copilot: clear names, descriptions, a clean schema and the Gulf calendar, in English and Arabic.</p>
+              <a href="../index.html#contact" class="btn btn-accent btn-lg">
+                  <i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">Book a Free Call</span>
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="../index.html#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="../assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+              <li class="mb-2"><a href="../tools/index.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">Free Power BI &amp; Fabric Tools</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="../portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Showcases</a></li>
+              <li class="mb-2"><a href="../index.html#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="../blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+              <li class="mb-2"><a href="../privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">Privacy</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Made in Dubai</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="../assets/js/translations/common.min.js" defer></script>
+  <script src="../assets/js/translations/article-power-bi-model-ai-ready.min.js" defer></script>
+  <script src="../assets/js/lang-manager.min.js" defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
+  <script src="../assets/js/main.min.js" defer></script>
+</body>
+</html>

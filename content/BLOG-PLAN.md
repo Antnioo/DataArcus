@@ -88,3 +88,4 @@ became a post). Add ideas here with the date and where they came from:
 | 2026-09-25 | We checked a real Power BI model: 41% of columns unused | Craft | Model Health Check |
 | 2026-09-28 | Same visuals, new design: a report redesign in 5 minutes | Design | Theme Generator |
 | 2026-09-29 | Power BI dashboard design by department: 7 report styles | Design | Theme Generator |
+| 2026-10-02 | Is your Power BI model ready for AI? A 7-point check | Craft (AI-ready models) | Model Health Check, Calendar Generator |

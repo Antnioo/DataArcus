@@ -50,6 +50,7 @@ window.blogTranslations = {
 
     // Posts
     posts: {
+      aiReady: {"badge": "COPILOT & AI", "title": "Is Your Power BI Model Ready for AI? A 7-Point Check", "date": "October 2, 2026", "excerpt": "Copilot, data agents and the new Power BI apps all answer from your semantic model. The 7 things to fix first, from names and descriptions to Prep data for AI.", "button": "Read Playbook"},
       reportStyles: {
         badge: "REPORT DESIGN",
         title: "One Design Doesn’t Fit All: 7 Power BI Report Styles",
@@ -188,6 +189,7 @@ window.blogTranslations = {
 
     // Posts (AR)
     posts: {
+      aiReady: {"badge": "Copilot والذكاء الاصطناعي", "title": "هل نموذج Power BI جاهز للذكاء الاصطناعي؟ فحص من 7 نقاط", "date": "2 أكتوبر 2026", "excerpt": "Copilot ووكلاء البيانات وتطبيقات Power BI الجديدة كلها تجيب من نموذجك الدلالي. سبعة أمور تصلحها أولًا، من الأسماء والأوصاف إلى Prep data for AI.", "button": "اقرأ الدليل"},
       reportStyles: {
         badge: "تصميم التقارير",
         title: "تصميم واحد لا يناسب الجميع: 7 أنماط لتقارير Power BI",
