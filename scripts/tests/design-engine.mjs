@@ -68,6 +68,25 @@ export default async function ({ browser, url }) {
     check(`${E.fileBase(d.name)}-background-${l.preset}.png` === c.file, `${c.id}: file name ${E.fileBase(d.name)} does not give ${c.file}`);
   }
 
+  // the header and the top filter rail are never too short for their text on the page (heights measured in Power BI
+  // Desktop, DESKTOP-TESTS.md 2026-10-01: an 8pt text box needs 25 page units, a dropdown slicer 16 + 4 x its points):
+  // a saved design with the smallest header (44) on a 960 x 720 page comes back with the header raised to the page's
+  // minimum (49), through every route (sizes, the slots, the slider's range); 1920 x 1080 keeps the old minimum (44)
+  {
+    const saved = E.repairState({ data: E.PRESETS.DataArcus.data, ui: E.PRESETS.DataArcus.ui, name: 'Saved', font: 'Segoe UI',
+      layout: { v: 3, preset: 'analysis', page: '960x720', header: true, hh: 44, filters: true, fpos: 'top', fh: 56, kpis: 3 } });
+    const l = saved.layout, PW = E.pw(l), z = E.sizes(l, PW), slots = E.computeSlots(l, 'en');
+    const title = E.boxOf(slots.find((s) => s.kind === 'title'), l), rail = E.boxOf(slots.find((s) => s.rail), l);
+    check(l.hh === 44 && z.hh === 49 && E.rangeOf('hh', PW, l)[0] === 49 && E.clampTo('hh', 44, PW, l) === 49 && title.h >= 25,
+      `saved hh 44 on 960 x 720: kept ${l.hh}, sizes ${z.hh}, slider from ${E.rangeOf('hh', PW, l)[0]}, title box ${title.h} (want 49 and 25+)`);
+    check(z.fh === 70 && E.rangeOf('fh', PW, l)[0] === 70 && rail.h >= 16 + 4 * 10 + 13, `saved fh 56 on 960 x 720: sizes ${z.fh}, slider from ${E.rangeOf('fh', PW, l)[0]}, rail ${rail.h} (want 70)`);
+    const big = Object.assign({}, l, { page: '1920x1080' });
+    check(E.sizes(big, E.pw(big)).hh === 44 && E.rangeOf('hh', E.pw(big), big)[0] === 44 && E.rangeOf('fh', E.pw(big), big)[0] === 64,
+      `1920 x 1080: header from ${E.rangeOf('hh', E.pw(big), big)[0]} (want 44), top rail from ${E.rangeOf('fh', E.pw(big), big)[0]} (want 64)`);
+    const small = Object.assign({}, l, { page: 'custom', pageW: 640, pageH: 360, hh: undefined, fh: undefined });
+    check(E.sizes(small, E.pw(small)).hh === 74 && E.sizes(small, E.pw(small)).fh === 110, `640 x 360 defaults: header ${E.sizes(small, E.pw(small)).hh} (want 74), top rail ${E.sizes(small, E.pw(small)).fh} (want 110)`);
+  }
+
   // an empty or blank theme name: the theme JSON and the files get the same default name, the one the name box shows
   const base = all.find((x) => x.id === 'preset-1').state;
   for (const n of ['', '   ']) {

@@ -8,6 +8,7 @@ import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { layoutProblems } from '../scripts/tests/report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-mcp-'));
@@ -403,6 +404,21 @@ const cardProblems = (dir, rtl) => {
     // every KPI card on both pages, and the tooltip card
     const want = plan.err ? -1 : E.projectPages(plan.j.design.layout, lang, { second: true, panel: false }).reduce((a, p) => a + p.slots.filter((s) => s.kind === 'kpi').length, 0) + 1;
     check(cards === want && !bad.length, `${name}: ${cards} cardVisual, want ${want}; ${bad.slice(0, 6).join('; ')}`);
+  }
+}
+
+// the phone layout (no visual on top of another) and the sizes of the header, page buttons, slicers and buttons, on the
+// smallest and largest pages and on 1920 x 1080 (see scripts/tests/report-check.mjs)
+{
+  const filesOf = (dir) => { const out = {}; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else out[path.relative(dir, f).split(path.sep).join('/')] = fs.readFileSync(f); }); walk(dir); return out; };
+  const t3 = await tryCall('generate_theme', { name: 'Sizes', brand: '#0F4C5C', folder: 'themes/s' });
+  for (const [name, lang, layout, page] of [['Sizes EN 1080', 'en', 'exec', '1920x1080'], ['Sizes EN 360', 'en', 'exec', { w: 640, h: 360 }], ['Sizes AR 360', 'ar', 'analysis', { w: 640, h: 360 }],
+    ['Sizes EN 2160', 'en', 'exec', { w: 3840, h: 2160 }], ['Sizes AR 2160', 'ar', 'analysis', { w: 3840, h: 2160 }]]) {
+    const plan = t3.err ? t3 : await tryCall('plan_layout', { design: t3.j.design, layout, filters: layout === 'exec' ? 'none' : 'end', lang, page });
+    const res = plan.err ? plan : await tryCall('create_report', { path: 'dax-project', name, design: plan.j.design, lang });
+    const lp = res.err ? { phone: [res.t.slice(0, 200)], sizes: [] } : layoutProblems(filesOf(path.join(ROOT, 'dax-project', res.j.report)));
+    check(!lp.phone.length, `${name}: phone ${lp.phone.slice(0, 3).join('; ')}${lp.phone.length > 3 ? ` (+${lp.phone.length - 3})` : ''}`);
+    check(!lp.sizes.length, `${name}: sizes ${lp.sizes.slice(0, 3).join('; ')}${lp.sizes.length > 3 ? ` (+${lp.sizes.length - 3})` : ''}`);
   }
 }
 
