@@ -97,6 +97,29 @@ Branch `fix/phone-and-sizes` (from main `883ca2f`), pushed, not merged. Last upd
 Stop and report on any failure; no fix without the owner's go; don't merge.
 
 **Round 3 progress:** state selector confirmed in Microsoft's references (formatting.md: pageNavigator `text` takes "default", "hover", "selected", "disabled"; the current page is "selected"); hover sized too, so a button doesn't change size under the mouse. Button text width for the icon check: 0.45 em per character (measured 0.40-0.41 for both Reset texts at 8pt in the m2 crops; layout widths keep 0.55, so nothing at 1080 moves); the icon taken as wide as the button is high (it reached the English text from about 32 high in 91). Tests written (`report-check.mjs`): button one line (height 2 + 1.6 x pt), text + icon + 6 fit the width, page buttons sized in all three states. Failing on the current code: MCP 87 checks, 5 fail (page buttons on all five reports; the 640 x 360 Reset, 28 high, in both languages); pbip 46 checks, 3 fail (sizes on 126 of 140 designs; both downloads: page buttons, and the top-rail Reset at 1080, 88 high, whose icon would cover its text). Code (`pbip-export.js`: `resetFit` for the side rail, top rail and slide-in panel, the top-rail Reset now one line high and centred in the rail; page buttons sized in default, hover and selected): MCP 87 PASS, pbip 46 PASS. `pbip-export.min.js?v=20261001c`, `theme-generator.min.js?v=20261001c` (its minified file differs only in that version). At 1920 x 1080 this changes: the top-rail Reset 88 high → 40 (centred), the page buttons' hover and selected text sizes; the side rail and Close are unchanged.
+Full run after `982fbbb` (laptop kept awake): all 16 website suites PASS (4969 checks), design fixtures MATCH on the
+live and lab pages (54 each), project fixtures MATCH (60), MCP 87 PASS; no fixture changed.
+
+**Desktop reports for round 3 (built 2026-10-01, before opening Desktop)**, "Gulf Sales Fit2 ..." with this branch's
+`mcp/server.mjs` over stdio (`builder-scripts/fit2-build.mjs`; themes in `phase2-try/fit2-en`, `fit2-ar`). The checker
+finds nothing on all eight; modelNotes on all eight: Calendar[Month Name], Sales[Total Sales vs Last Ramadan %],
+Calendar[Day Name]. From the written files (page units; page buttons sized the same in default, hover and selected):
+
+| Report | Header: title, logo, page buttons | Rail: slicers; Reset (size, icon) | Cards (value) |
+|---|---|---|---|
+| EN 1080 / AR 1080 | 20pt in 840x48; 14pt in 225x48; 14pt in 320x48 | 3 × 274x76; 15pt in 274x40, icon | 454-455x144, 507-509x126 (42) |
+| EN 360 | 8pt in 280x25; 8pt in 75x25; 8pt in 225x25 | 3 × 91x48; "Reset filters" 8pt in 91x15, icon | 151-152x48 (14), 169-170x42 (12): known cut |
+| AR 360 | as EN 360; page buttons 131x25 | 3 × 91x48; "إعادة ضبط الفلاتر" 8pt in 91x15, **no icon** | as EN 360 |
+| EN 2160 / AR 2160 | 40pt in 1680x96; 29pt in 450x96; 29pt in 640x96 | 3 × 548x152 (30pt, 136 needed); 30pt in 548x80, icon | 909x288, 1014-1017x252 (60) |
+| EN 1080 top | as EN 1080 | top rail: 3 × 542x88; 15pt in 201x40 (centred), icon | 612x126 (42), page 2 454-455x144 |
+| AR 1080 top | as EN 1080 | top rail: 3 × 528x88; 15pt in 245x40 (centred), icon | as EN 1080 top |
+
+Tooltip card 296x76 (20) on all. Expected in Desktop: header text whole; slicers with title and dropdown box (2160:
+the slicer rule's check); Reset text whole on one line, no icon over the text; the current page's button text the
+same size as the others; 1080 as in the cards check; cards whole except the known 640 x 360 cut (an open item, not a
+failure here); values equal DAX; phone layout without overlaps (owner's clicks). Screenshots
+`C:\DataArcus\tests\phase2-try\shots-sizes\fit2-*` at 1x and 2x, judged from full-size crops.
+
 
 ## Builder's working notes (for a fresh session)
 - **Power BI Desktop is 2.158.1177** (Microsoft Store; it updated itself from 2.157.1354 on 2026-10-01). The bridge
