@@ -148,6 +148,7 @@ tests, code, full run, the eight reports ("Gulf Sales Fit3 ..."), Desktop and th
   restart note). **Not whole on the phone** (not fixed, plan below): on 1080 the slicers' dropdown boxes are cut (64-high
   slots, 15pt text needs 76), "Executive summary" shows as "Executive...", long card and chart titles end in "..."; on
   2160 the page-sized text (title 40, page buttons 29, slicers and Reset 30) doesn't fit the phone slots.
+- **SAFE STOP 2026-10-01 (laptop battery).** Close/Filters round: tests `c2b3f9e` (failing first: Close too low on 23 of 140 designs), code `b669bcc` (Close 6 + 1.6 x pt, panel header max(44k, 12k + Close height); 1080 unchanged; `pbip-export.min.js?v=20261001e`, `theme-generator.min.js?v=20261001e`); MCP 87 and pbip 46 PASS. **The full run after `b669bcc` was started but NOT finished: rerun it first** (`builder-scriptsull-run2.ps1`), then report. No Desktop report is open. The slide-in panel has not been checked in Desktop.
 - **Phone text: plan only, waiting for the owner's go.** Cause: the phone slots are fixed sizes (title 56, page
   buttons 44, slicer 64, button 40, charts 190-270 on a 323-wide canvas), but only the cards have phone text sizes;
   everything else keeps the page's (15pt on 1080, 30pt on 2160). Plan (`pbip-export.js`, the phone layout, no
