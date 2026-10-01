@@ -1,9 +1,9 @@
 # Current work (the memory between sessions)
 
 Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). Last updated 2026-10-01
-by the builder: the plans for rounds 0, 1 and 2 (branch `plan/next-rounds`, plan only, no code changed), under
-"Next step", with the owner's seven answers applied and round 0 now five changes; they wait for the owner's go and
-for the split of `pbip-export.js` to merge.
+by the builder: round 0 measured in Power BI Desktop 2.158.1177 (seven changes; `scripts/tests/DESKTOP-TESTS.md`) and its
+plan rewritten from the measurements under "Next step" (branch `plan/next-rounds`, no code changed). Five decisions
+wait for the owner; the build waits for his go and for the split of `pbip-export.js` to merge.
 
 ## Where things stand
 - **MCP: 6 tools** (`read_model`, `suggest_fields`, `check_model_health`, `generate_theme`, `plan_layout`,
@@ -70,174 +70,160 @@ still `assets/js/pbip-export.js`. Every round: failing tests first; only the sui
 touches, judged from full-size crops; results into `scripts/tests/DESKTOP-TESTS.md`; only our own sample model
 (`C:\DataArcus\tests\5-tmdl-sample`). Stop and report at the first failure.
 
-#### Round 0: the owner's five findings (branch `fix/tooltip-logo-table`)
-The order: 0.1 tooltip link, 0.2 logo, 0.3 tooltip labels, 0.4 tooltip transparency, 0.5 table header alignment.
-Every Desktop check below runs on 1920 x 1080 and 1280 x 720, in English and Arabic, and includes the tooltip page.
-**Microsoft's report CLI is installed on the laptop as a reference** (owner's yes; `powerbi-report-author` 0.4.0,
-`npm install -g @microsoft/powerbi-report-authoring-cli`): `formatting describe-object <visual> <object>` lists every
-property and allowed value. It replaces guessing; Desktop stays the final check. What it says is quoted per item.
+#### Round 0: the owner's seven findings (branch `fix/tooltip-logo-table`)
+**Measured in Desktop 2.158.1177 on 2026-10-01, before any code** (`scripts/tests/DESKTOP-TESTS.md`, "round 0
+measurements": the table of results, the test reports and the scripts `builder-scripts\m0-*`). The plan below uses what
+was measured, not the earlier guesses. Property names and values were first read from Microsoft's report CLI
+(`powerbi-report-author` 0.4.0, installed on the laptop as a reference: `formatting describe-object`, `validate`).
+The seven, in build order: 1 tooltip link, 2 logo, 3 tooltip bar chart, 4 tooltip transparency (**measured: not
+possible, see 0.4**), 5 table header alignment, 6 transparent card fill, 7 card title margin.
+**One lesson runs through 6 and 7 (and the buttons before): a formatting entry's selector decides whether Desktop
+uses it.** The card's container `padding` and `spacing` and `fillCustom.show` are ignored with the `default` selector
+and work without one, while the card's `value`, `label` and `outline` need it. Every entry is written the way it was
+measured to work, and the tests pin the selector, not only the value.
 
-**0.1 The tooltip page linked to every chart.**
-- **What the code does today:** one chart only (the first line, column or bar chart of page 1) gets
-  `visualContainerObjects.visualTooltip = { show: true, type: 'ReportPage', section: <tooltip page name> }`; the
-  tooltip page has `type: 'Tooltip'`, `pageBinding: { name, type: 'Tooltip' }`, hidden in view mode. Earlier Desktop
-  checks only looked at the tooltip page itself, never at a hover.
-- **Cause, confirmed in Microsoft's references:** the CLI (`describe-object lineChart visualTooltip`) gives `type` as
-  an enum with exactly two values, **`Default` and `Canvas`** ("Allows report pages to be used as tooltips for this
-  visual"), and `section` as the page. `'ReportPage'` is not a value, so Desktop falls back to the default tooltip.
-  The object and its place are right (`visualTooltip` is one of the 15 `visualContainerObjects`; a tooltip page is
-  `pageBinding.type: "Tooltip"`, authoring skill `formatting.md` and `authoring-workflows.md`).
-- **Measurement M0.1 (Desktop, before any code), English and Arabic:** on a copy of a generated report set Format >
-  General > Tooltips > Options > Type "Report page", Page "Tooltip" / "تلميح" on one chart, save, and read that
-  `visual.json`: expected `type` `'Canvas'`, `section` the tooltip page's name. Note which of our visual kinds have the
-  Tooltips card at all (gauge, card and table expected not to).
-- **Change (page assembly: the tooltip link; visual builders: charts):** every chart on every main page (kinds line,
-  bar, column, donut, funnel, treemap, map; plus any other kind M0.1 shows the card on) gets
-  `{ show: true, type: 'Canvas', section: <tooltip page name> }`. Cards, tables, slicers, text and buttons get none.
-  The website's README step "Hover the main chart on the first page" becomes "Hover any chart" (both languages,
-  `assets/js/theme-generator.js`, `.min.js`, `?v=`).
-- **Tests first (failing):** `scripts/tests/report-check.mjs` gets `tooltipProblems(files)`: every chart has
-  `visualTooltip` with `show` true, `type` `'Canvas'`, `section` = the name of a page that exists with
-  `type: 'Tooltip'`; nothing else has it. Used by `pbip.mjs` (54 designs x 2 languages, both downloads) and
-  `mcp/test.mjs`. Expected before the fix: the default two-page report has 4 charts (page 1 line, bar, column; page 2
-  column) and 1 linked with the wrong type, so 4 of 4 fail; the ops layout has 5 charts. After: 0 problems.
+**The Desktop check for the whole round (after the code, once):** four reports as the website's sample download
+(English and Arabic, 1920 x 1080 and 1280 x 720, side accent bar) with the wide logo, the square and the tall logo on
+the same four, one dark report, and the same designs through the MCP on our sample model with the `logo` input. On
+each: every chart hovered (`m0-hover.ps1`), the tooltip page itself, every table, the KPI cards, the header with its
+logo, the phone layout (`phone-check.ps1`). Crops at 1x and 2x. Expected results are listed per change.
+
+**0.1 The tooltip page linked to every chart.** Module: page assembly (the link), visual builders (charts).
+- **Measured:** today's `type: 'ReportPage'` shows Power BI's default tooltip; Microsoft's validator rejects the value
+  ("valid: Default, Canvas"); with `type: 'Canvas'` our tooltip page shows on every hovered chart, in English and
+  Arabic, on 1080 and 720, light and dark.
+- **Change:** every chart on every main page (kinds line, bar, column, donut, funnel, treemap, map) gets
+  `visualTooltip: { show: true, type: 'Canvas', section: <tooltip page name> }`; today only the first chart of page 1
+  gets a link, with the wrong type. Cards, tables, slicers, text and buttons get none. The website's README step
+  "Hover the main chart on the first page" becomes "Hover any chart" (both languages, `theme-generator.js`, `?v=`).
+- **Tests first (failing):** `scripts/tests/report-check.mjs` gets `tooltipProblems(files)`: every chart has the link
+  with `type` `'Canvas'` and a `section` that is a page of `type: 'Tooltip'`; nothing else has one. In `pbip.mjs` (54
+  designs x 2 languages, both downloads) and `mcp/test.mjs`. Before: the default two-page report has 4 charts (page 1
+  line, bar, column; page 2 column), 1 linked with the wrong type: 4 of 4 fail; the ops layout 5 of 5. After: 0.
+- **Expected in Desktop:** hovering each of the 4 charts shows our tooltip page filtered to the hovered point.
 - **Fixtures:** none change (`cases.json` and `project-pages.json` hold themes and slots, not `visual.json`).
-- **Desktop check:** new script `builder-scripts\hover-check.ps1` (only on a "Gulf Sales ..." window): moves the mouse
-  onto a data point of each chart (positions from the report's own files), waits 2 s, captures the screen, moves away.
-  Four reports: EN 1080, AR 1080, EN 720, AR 720. **Expected:** on each of the 4 charts the hover shows our 320 x 240
-  page (the card and the small chart, filtered to the hovered point), not Power BI's default list; the cards and the
-  tables show their usual hover. If the script can't hover reliably, one batched request to the owner: hover the 4
-  charts on each of the 4 reports.
 
-**0.2 The logo box sized from the logo, and a `logo` input in `create_report`.**
-- **What the code does today:** the logo slot is `logoW` wide (default 150 on the 720 grid, range 100-360) and
-  `hh - 24` high whatever the image; the image visual is written with `imageScaling.imageScalingType: 'Fit'`. The MCP
-  never attaches a logo (`create_report` always passes `logo: null`); only the website does.
-- **Microsoft's references:** the CLI lists two scaling properties on the image visual: the old
-  `imageScaling.imageScalingType` (`Normal`, `Fit`, `Fill`) and the current `image.fit` ("Image fit": `Fit`,
-  `Stretch`, `Fill`, `Normal`). Learn's image visual article: Fit and Fill keep the aspect ratio, Stretch distorts.
-  We write only the old one.
-- **Measurement M0.2 (Desktop, before any code), English and Arabic, 1080 and 720:** an image visual in a box of
-  another shape than the image; what our current file renders as; then `image.fit` set to each of its four values by
-  hand, saved and read back. Crops of a wide, a square and a tall logo in each.
-- **Owner's decisions (2026-10-01):** the box takes the logo's shape: the designed height stays and the width comes
-  from the image's ratio; **no 100 minimum for an attached logo** (the 360 maximum stays); the title and the page
-  buttons use the space that's left; `create_report` gets a `logo` input.
-- **Change, shared engine (`assets/js/design-engine.js`, so the website and the MCP both get it):**
-  `imageSize(bytes)` reads width and height from the file (PNG: the IHDR chunk; JPG: the SOF marker), null when it
-  can't; `computeSlots`, `projectSlots` and `projectPages` take an optional `logoRatio` (width / height): the logo's
-  height is `hh - 24` and its width `min(360, round(height x ratio))`, its far edge where it is today. The title keeps
-  its own rule (it ends 24 before the logo, 560 at most) and the page buttons already fill from the title to the logo.
-  Without `logoRatio` (no logo, or a file whose size can't be read) every result is identical to today.
-- **Change, report (visual builders: image):** `image.fit: 'Fit'`, or what M0.2 shows never distorts.
-- **Change, callers:** `assets/js/theme-generator.js` passes the attached logo's ratio to `projectPages`;
-  `mcp/server.mjs` `create_report` gets an optional `logo`: a PNG or JPG file inside the working folder, 2 MB at
-  most, as on the website; it is copied into the new report, never changed; a file that isn't one of the two types,
-  is too big or is outside the folder is refused with the reason. Hand-placed pages keep their own logo box and only
-  get the scaling.
-- **Tests first (failing):** `scripts/tests/design-engine.mjs`: `imageSize` on four small logos made by us
+**0.2 The logo box sized from the logo, and a `logo` input in `create_report`.** Module: the shared design engine
+(`assets/js/design-engine.js`), visual builders (image), `mcp/server.mjs`.
+- **Measured:** today's `imageScaling.imageScalingType: 'Fit'` stretches the image to its box (the same as
+  `image.fit: 'Stretch'`); `image.fit: 'Fit'` keeps the ratio and shows the whole image, centred; `'Fill'` and
+  `'Normal'` crop. In a box of the logo's own shape the logo is undistorted. **The tall logo (100 x 250) at 19 x 48
+  (13 x 32 on 720) is whole but very thin**; the crop is `shots-m0\c-owner-logo-ratio-boxes.png` for the owner
+  (decision 3); nothing is changed for it until he answers.
+- **Owner's decisions:** the box takes the logo's shape (designed height, width from the ratio, **no 100 minimum for
+  an attached logo**, the 360 maximum stays); the title and page buttons use what's left; `create_report` gets `logo`.
+- **Change, engine:** `imageSize(bytes)` (PNG: IHDR; JPG: the SOF marker; null when it can't); `computeSlots`,
+  `projectSlots` and `projectPages` take an optional `logoRatio`: logo height `hh - 24`, width
+  `min(360, round(height x ratio))`, its far edge where it is today. Without it every result is identical to today.
+- **Change, report:** the image is written with `image.fit: 'Fit'` (the old `imageScaling` entry goes).
+- **Change, callers:** `theme-generator.js` passes the attached logo's ratio; `create_report` gets an optional `logo`
+  (a PNG or JPG inside the working folder, 2 MB at most; copied into the new report, never changed; another type, a
+  bigger file or one outside the folder is refused with the reason). Hand-placed pages keep their box, get the scaling.
+- **Tests first (failing):** `design-engine.mjs`: `imageSize` on four logos of ours
   (`scripts/tests/fixtures/logos/`: `wide.png` 400 x 100, `square.png` 200 x 200, `tall.png` 100 x 250, `wide.jpg`
-  600 x 50) and the header boxes below; `pbip.mjs` and `mcp/test.mjs` (the new `logo` input, and its refusals): the
-  image visual's box and scaling, the page buttons ending 24k before the logo, no overlap in the header,
-  `layoutProblems` clean, in English and Arabic.
-- **Expected boxes (default header 56, page units; today's logo box is 225 x 48 at x 1659 on 1080, 150 x 32 at x 1106
-  on 720; in Arabic the logo starts at x 36 / 24 with the same sizes):**
+  600 x 50) and the boxes below; `pbip.mjs` and `mcp/test.mjs` (the `logo` input and its three refusals): the image's
+  box, `image.fit` `'Fit'` and no `imageScaling`, page buttons ending 24k before the logo, no overlap in the header,
+  `layoutProblems` clean, both languages. Before: every report with a logo fails on the scaling and the box.
+- **Expected boxes (default header 56, page units; today 225 x 48 at x 1659 on 1080, 150 x 32 at x 1106 on 720; in
+  Arabic the logo starts at x 36 / 24):**
 
   | Logo | Ratio | 1920 x 1080 (x, w x h) | 1280 x 720 (x, w x h) | Drawn |
   |---|---|---|---|---|
   | wide 400 x 100 | 4 | 1692, 192 x 48 | 1128, 128 x 32 | fills its box |
   | square 200 x 200 | 1 | 1836, 48 x 48 | 1224, 32 x 32 | fills its box |
-  | tall 100 x 250 | 0.4 | 1865, 19 x 48 | 1243, 13 x 32 | fills its box |
-  | very wide 600 x 50 | 12 | 1344, 540 x 48 (kept at the 360 maximum) | 896, 360 x 32 | 540 x 45 / 360 x 30, whole, not stretched |
+  | tall 100 x 250 | 0.4 | 1865, 19 x 48 | 1243, 13 x 32 | fills its box (thin: decision 3) |
+  | very wide 600 x 50 | 12 | 1344, 540 x 48 (the 360 maximum) | 896, 360 x 32 | 540 x 45 / 360 x 30, whole |
 
-  The title stays 840 x 48 (560 x 32) in all four; the logo's far edge stays at 1884 (1256); the page buttons end 24
-  (16) before the logo.
-- **Fixtures:** none change, because no fixture has a logo and the new input is optional: the 54 design fixtures, the
-  60 project fixtures, both downloads and the MCP reports without a logo stay byte for byte the same. If one differs,
-  stop and report. Reports with a logo change (box, page buttons' position, scaling): that is the fix.
-- **Desktop check:** the three logo cases (wide, square, tall) on all four reports (EN and AR, 1080 and 720), built
-  through the MCP's new `logo` input, plus one website download with the wide logo (EN 1080): each logo undistorted
-  (its ratio measured in the crop within 2%), whole, at the header's far edge, title and page buttons whole and not
-  touching it. One report without a logo: the placeholder as before.
+  The title stays 840 x 48 (560 x 32); the logo's far edge stays at 1884 (1256).
+- **Expected in Desktop:** each logo undistorted (ratio in the crop within 2%), whole, at the header's far edge; title
+  and page buttons whole and not touching it; without a logo the placeholder as before.
+- **Fixtures:** none change (no fixture has a logo; the input is optional). If one differs, stop and report.
 
-**0.3 Tooltip chart labels cut ("El…", "F…" on the 320 x 240 tooltip page).**
-- **Cause:** on the tooltip page only the card and the titles have their own sizes (value 20, title 10); the small
-  chart (a column chart, 296 x 140) keeps the theme's axis text, which is sized for the report's page (15pt on
-  1920 x 1080), and a column chart's category labels have about 70 per column to fit in.
-- **Microsoft's references (CLI):** `categoryAxis` and `valueAxis` have `fontSize`, `showAxisTitle`,
-  `maxMarginFactor` ("the maximum percent of the visual allowed for the axis") and `preferredCategoryWidth`. **There is
-  no property that sets the angle of a column chart's category labels** (the only orientation is for data labels), so
-  horizontal names can't be forced on a column chart: Power BI slants or cuts them when they don't fit. A bar chart
-  writes its categories on the vertical axis, always horizontal.
-- **Measurement M0.3 (Desktop, before any code), English and Arabic, on the 320 x 240 page:** with category names
-  "Abu Dhabi", "Electronics", "Wednesday", "أبوظبي", "إلكترونيات", "الأربعاء" and a 20-character name: (a) the column
-  chart at 8, 9 and 10pt; (b) a bar chart at 8, 9 and 10pt with `maxMarginFactor` 25, 40 and 50. For each: which names
-  are whole, the width a name needs per character, the height one category row needs, and how many categories fit in
-  140 high before Power BI adds a scrollbar.
-- **Change (page assembly: the tooltip page; sizes: the measured tooltip rule):** the tooltip chart becomes a
-  clustered bar chart with its own sizes, as the card has: category and value axis text 8pt (or the size M0.3 shows),
-  axis titles off, `maxMarginFactor` as measured (start 40). **The switch from a column to a bar chart needs the
-  owner's yes** (decision 1); without it the plan is the column chart at 8pt, where long names may still be cut.
-- **Tests first (failing):** `report-check.mjs` gets `tooltipPageProblems(files)`: the tooltip chart has its own axis
-  sizes (both axes, within 8-60) and axis titles off, and by the measured rule its longest category label fits the
-  axis room; `pbip.mjs` (sample data, both languages) and `mcp/test.mjs` (the sample model). Expected before the fix:
-  every report with a bound tooltip page fails (no axis size on the chart); after: 0.
-- **Expected in Desktop (the hover from 0.1 and the tooltip page itself):** every category name whole and horizontal,
-  in English and Arabic, "Abu Dhabi" and the Arabic names included; value axis numbers whole; no "…"; up to 7
-  categories without a scrollbar (to be confirmed by M0.3); the card unchanged (101.91K whole, title whole).
+**0.3 The tooltip chart as a bar chart whose labels fit** (owner's yes to the bar chart). Module: page assembly (the
+tooltip page), sizes (the measured tooltip rule).
+- **Measured (296 x 140, English and Arabic):** today's column chart with the theme's 15pt axis text shows "El…",
+  "F…". A bar chart writes names horizontally; with axis text 8pt and axis room 40% (`categoryAxis.maxMarginFactor`)
+  a 20-character name is whole ("Ras Al Khaimah North", "رأس الخيمة الشمالية"); at 9pt and 10pt it needs 50%. **A bar
+  chart of this size shows only 3 rows, then a scrollbar** (which can't be used inside a tooltip); with the value axis
+  off and data labels on it shows 4, each bar with its value. One row takes 22:
+  rows = floor((height - 46) / 22) without the value axis.
+- **Change:** the tooltip chart becomes `clusteredBarChart`: `categoryAxis` `fontSize` 8, `maxMarginFactor` 40, axis
+  title off; `valueAxis` off; `labels` on at 8pt; its title as today (10pt). The card above it unchanged.
+- **Open point (decision 2):** 4 rows at today's size. A category with more values hides the rest behind the
+  scrollbar. Proposed: the tooltip page grows from 320 x 240 to 320 x 284 and the chart from 140 to 184 high, which
+  shows 6 rows; the report can't know how many values a field has, so beyond that the scrollbar stays.
+- **Tests first (failing):** `report-check.mjs` gets `tooltipPageProblems(files)`: the tooltip chart is a bar chart
+  with these four settings, and its height gives the rows the rule promises (4, or 6 after decision 2). In `pbip.mjs`
+  (sample data, both languages) and `mcp/test.mjs`. Before: every report with a bound tooltip page fails; after: 0.
+- **Expected in Desktop (hover and the page itself):** every category name whole and horizontal with its value,
+  "Abu Dhabi" and the Arabic names included, no "…"; 4 rows (6) without a scrollbar; the card as before.
 - **Fixtures:** none change.
 
-**0.4 Tooltip transparency.**
-- **What the code does today:** the tooltip page's background is the card colour with `transparency: 0`; the visuals
-  on it have no background of their own, so the page background is the only fill.
-- **Microsoft's references:** a page's `background` has `color` and `transparency` (and no `show`): CLI and
-  `formatting.md`. Text has no transparency of its own, so it stays solid.
-- **Measurement M0.4 (Desktop, before any code), English and Arabic:** the tooltip page's background at 0, 10, 15 and
-  20, hovered over the busiest places of the main page (the table, the line chart, a KPI card), with a light and a
-  dark preset: full-size crops; is every text on the tooltip readable; does Desktop honour the value in the hover (and
-  not only on the page itself).
-- **Change (page assembly: the tooltip page):** `background.transparency` 15 (the owner's range is 10-20; the measured
-  number is used if 15 doesn't read well over the table: 10 then). Card value, titles and axis text keep their solid
-  colours; nothing on the tooltip page gets a background.
-- **Tests first (failing):** `tooltipPageProblems`: the tooltip page's background transparency is the chosen number,
-  its colour the card colour, and no text on the page has a transparency. Before: 0 where 15 is expected, every
-  report fails; after: 0 problems.
-- **Expected in Desktop:** the page behind shows faintly through the tooltip; every text on it is fully solid and
-  readable over the table, the line chart and a card, in English and Arabic, light and dark. If no value in 10-20
-  reads well, stop and report with the crops.
-- **Fixtures:** none change.
+**0.4 Tooltip transparency: measured, not possible in Power BI Desktop.**
+- **Measured:** the tooltip is opaque at 0, 10, 15 and 20 alike (pixels inside it are exactly the card colour, light
+  and dark, also where a dark bar is behind it). Still opaque with the page background at 100, the wallpaper at 100
+  or removed, and with the hovered visual's own tooltip transparency or background colour set. Desktop draws a report
+  page tooltip on an opaque box; no setting tried shows the page through it.
+- **Plan:** nothing is built. **Decision 1:** drop it (proposed), or the owner checks one published report in the
+  Power BI service, which the builder can't do from here.
 
-**0.5 Table header alignment (closes the long-standing open item).**
-- **Seen:** headers are left aligned while numbers are right aligned, so on a wide table a number sits nearer the next
-  column's header than its own.
-- **Microsoft's references (CLI, `describe-object tableEx ...`):** per column it is **`columnFormatting`**, one entry
-  per column with the selector `{ metadata: '<the column's queryRef>' }`: `alignment` (`Auto`, `Left`, `Center`,
-  `Right`) with `styleHeader` ("Apply to header"), `styleValues` and `styleTotal`. `columnHeaders.alignment` (same
-  four values) sets all headers at once and can't follow each column. The authoring skill says the same:
-  `columnFormatting` is for static styling such as alignment, with a metadata-only selector.
-- **Measurement M0.5 (Desktop, before any code), English and Arabic:** set one text column and one number column by
-  hand (Format > Specific column > Alignment, Apply to header on), save and read the entries (selector and values);
-  check that header and values then line up, and that nothing flips by itself in a right-to-left report.
-- **Change (visual builders: table; `assets/js/pbip-bind.js` so a bound field says whether it is a number):** every
-  table column gets a `columnFormatting` entry with `styleHeader` and `styleValues` on: text columns `Left` and number
-  columns (measures, and columns of a number type) `Right`; in a right-to-left report mirrored, text `Right` and
-  numbers `Left`. A column whose type the files don't give (DAX tables) follows how it was picked: as a category, so
-  text. The sample data's table the same way.
+**0.5 Table header alignment** (closes the open item). Module: visual builders (table); `assets/js/pbip-bind.js` (a
+bound field says whether it is a number).
+- **Measured:** one `columnFormatting` entry per column, selector `{ metadata: <the column's queryRef> }`, with
+  `alignment` and `styleHeader`, `styleValues`, `styleTotal` on, puts each header over its own values: text `Left` and
+  numbers `Right` in English; text `Right` and numbers `Left` in Arabic, where the text column is the rightmost. The
+  columns still fill the width.
+- **Change:** every table column gets that entry: measures and columns of a number type on the number side, other
+  columns on the text side; a column whose type the files don't give (DAX tables) follows how it was picked (as a
+  category: text). The sample data's table the same way.
 - **Tests first (failing):** `report-check.mjs` gets `tableProblems(files)`: each column of every table has exactly
-  one entry, its selector the column's queryRef, the alignment its type and the report's direction ask for, header and
-  values both on. `pbip.mjs` (54 designs x 2 languages, both downloads) and `mcp/test.mjs`. Expected before the fix:
-  the default report has 2 tables of 4 columns, 8 of 8 columns fail; after: 0.
-- **Expected in Desktop:** in every table each header sits over its own values. English: the category column left
-  (header and values), the three number columns right. Arabic: the category column (rightmost) right, the number
-  columns left. Columns still fill the table's width (`growToFit` unchanged).
+  one entry with its queryRef, the alignment its type and the report's direction ask for, and the three switches on.
+  `pbip.mjs` (54 designs x 2 languages, both downloads), `mcp/test.mjs`. Before: the default report has 2 tables of 4
+  columns: 8 of 8 fail; after: 0.
+- **Expected in Desktop:** each header over its own values; English: Region left, three number columns right;
+  Arabic: المنطقة right, numbers left.
 - **Fixtures:** none change.
 
-**Round 0 as a whole.** One branch, five pairs of commits (tests, then code), in the order above; the measurements M0.1
-to M0.5 are done first in one Desktop sitting and written into `scripts/tests/DESKTOP-TESTS.md` before any code. One
-Desktop check at the end covers all five: EN 1080, AR 1080, EN 720, AR 720 with the wide logo; the square and the
-tall logo on the same four; a hover on every chart of each (the tooltip page with its link, labels and transparency);
-the tooltip page itself; every table. `mcp/CLAUDE.md` gets the facts learned (tooltip type `Canvas`, `image.fit`,
-`columnFormatting`, the CLI as a reference).
+**0.6 Transparent card fill, so the panel and its accent bar show.** Module: visual builders (card).
+- **Measured:** the solid fill is the card visual's own default (`fillCustom`, on in the theme's background colour),
+  not the theme and not `visualContainerObjects.background`; it covers the card below its title, so the accent bar
+  shows only as a sliver. `fillCustom: [{ properties: { show: false } }]` **with no selector** removes it and the bar
+  shows whole (side bar and top bar, English and Arabic, light and dark); the same entry with the `default` selector
+  is ignored. **Other types:** charts, slicers and text boxes have no fill; the table's header and rows have their own
+  (the theme's colours, the same as the panel, so nothing is hidden: decision 5); buttons are filled by design.
+- **Change:** every card (KPI cards, the tooltip card, the phone) gets that entry. Reports without a background image
+  (the MCP's) look the same as today: there the panel is the theme's visual background in the same colour.
+- **Tests first (failing):** `cardProblems` (`pbip.mjs`) and the card checks in `mcp/test.mjs`: each card has
+  `fillCustom` with `show` false and no selector. Before: every card on the 54 designs and both downloads fails (the
+  default report: 7 KPI cards and the tooltip card, 8 of 8); after: 0.
+- **Expected in Desktop:** on the website download every KPI card shows its accent bar whole (left in English, right
+  in Arabic, on top on the dark design) and the panel's border and shadow; numbers and titles unchanged.
+- **Fixtures:** none change.
+
+**0.7 The card title's margin.** Module: visual builders (card), sizes (`cardFit`).
+- **Measured:** the title touches the top because **the card's container padding is ignored**: we write `padding`
+  and `spacing` with the `default` selector, and the card is the same with them, without them and with top 30. With no
+  selector both apply. So today the title sits 0 from the top and from the side, and **with a side accent bar the
+  title is drawn over the bar**. On the real panels: top 8 on 1080 (5 on 720) is clear but tight, **12 (8) is the
+  smallest that looks right**, 16 and up looks loose; on the bar's side 22 (15) just touches the bar, **26 (17) leaves
+  a clear gap**. The number stays whole at every step.
+- **Change:** `padding` and `spacing` are written with no selector (on the page and in `mobile.json`); the top
+  padding becomes `round(12k)` (k = page height / 1080: 12 on 1080, 8 on 720), scaled like the other paddings; the
+  other sides stay `P` (8 on 1080, 5 on 720). Where the page has a side accent bar the padding on that side is the
+  bar's end plus `round(5k)` (26 on 1080, 17 on 720; **needs the owner's yes, decision 4**): a new engine function
+  gives it and the callers pass it per page, so `projectPages` and its fixtures stay as they are. The tooltip card and
+  the phone cards keep `P` on every side. `cardFit` takes the four paddings and reserves them:
+  value = min(callout, floor((h - top - bottom - 2I - title line) / 1.5), floor((w - start - end - 2I) / 5.13)).
+- **Expected numbers:** default cards keep their value size (1080: 454 x 144, room for 54, value 42; 720: 96 high,
+  room for 36, value 28; tooltip card 20; phone card 20). The lowest KPI height on 1080 (96) goes from 24 to 22. Any
+  pinned value size that moves (small pages) is listed with its reason for the reviewer before the code; none is
+  edited to pass. The 640 x 360 cards stay an open item: there the padding now really takes room.
+- **Tests first (failing):** `cardProblems`: `padding` and `spacing` have no selector; the top padding is
+  `round(12k)` on main pages; with a side bar the start-side padding clears it; the height and the width the card
+  needs (from the written paddings) fit its box. Before: every card fails on the selector; after: 0.
+- **Expected in Desktop:** the title clear of the panel's top (12 on 1080, 8 on 720), not over the accent bar, the
+  number whole and centred, on both pages, the tooltip and the phone; English and Arabic.
+- **Fixtures:** none change (they hold no card sizes).
 
 #### Round 1: phone text, and the slide-in panel in Desktop (branch `fix/phone-text`)
 **1.1 Phone text sizes (module: phone layout, with the sizes module's rules).**
@@ -358,12 +344,22 @@ the tooltip page itself; every table. `mcp/CLAUDE.md` gets the facts learned (to
 6. Formats: `#,0` for counts and whole-number sums, `#,0.00` otherwise, as suggested scripts with the reason shown,
    never applied automatically: round 2.2.
 7. Display names as `{ "Table[Field]": "name" }`: round 2.1.
+8. The tooltip chart becomes a bar chart; tooltip transparency starts at 15 within 10-20 (measured since: not
+   possible, decision 1 below).
 
-#### Decisions needed from the owner before round 0 starts
-1. **Tooltip chart:** a bar chart instead of the column chart, so category names are always horizontal (Power BI has
-   no setting for a column chart's label angle)? Proposed: yes.
-2. **Tooltip transparency:** 15 as the starting number inside 10-20, replaced by what the measurement shows reads
-   best? Proposed: yes.
+#### Decisions needed from the owner before round 0 is built (from the measurements)
+1. **Tooltip transparency can't be done in Desktop** (the tooltip is always opaque). Drop it from round 0 (proposed),
+   or check one published report in the service first?
+2. **The tooltip bar chart shows 4 rows** at today's tooltip size. Grow the tooltip page to 320 x 284 for 6 rows
+   (proposed), or keep 320 x 240 with 4?
+3. **The tall logo is 19 wide on 1080** (13 on 720): whole and undistorted, but thin (crop
+   `shots-m0\c-owner-logo-ratio-boxes.png`). Accept it as the logo's own shape (proposed), or give tall logos more
+   height or a smallest width?
+4. **Card title:** top margin 12 on 1080 and 8 on 720 (crops `c-en1080-pad-p4.png`, `c-en720-pad-p4.png`)? And, found
+   while measuring: with a side accent bar the title is drawn over the bar; move the title clear of it (26 on 1080,
+   17 on 720, crop `c-en1080-pad-p6.png`) in this round (proposed)?
+5. **The table's header and rows have their own fill** (the panel's colour, so nothing is hidden today). Leave it
+   (proposed), or make it transparent like the cards?
 
 ## Open items (flagged, need the owner's go before any work)
 - **Next round, after `fix/phone-and-sizes` (owner 2026-10-01; plan only, then "go"):**
