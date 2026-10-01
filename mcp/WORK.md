@@ -197,8 +197,14 @@ Reset whole; 1080 as in the cards check; cards whole; values equal DAX; phone la
 Screenshots in `C:\DataArcus\tests\phase2-try\shots-sizes\` (`fit-*.png`).
 **Desktop check not started (2026-10-01):** Power BI Desktop updated itself from 2.157.1354 to 2.158.1177 (Microsoft
 Store) since the last run, so `powerbi-desktop open` stopped with DESKTOP_EXE_NOT_FOUND at the old path; nothing was
-opened or captured. The measurements and every earlier Desktop check were on 2.157. **Waiting for the owner:** run the
-check on 2.158 as it is, or first repeat the measurement report on 2.158 (it is still in `tests/5-tmdl-sample/`).
+opened or captured. The measurements and every earlier Desktop check were on 2.157.
+**Owner: re-measure on 2.158 first.** Done: the measurement report's screenshots on 2.158.1177 are byte for byte the
+2.157 ones, so the check went on, on 2.158. **Stopped on the second report:** EN 360 PASS (header, slicers with
+their boxes, Reset, cards, DAX); AR 360 FAIL on item 2: the Arabic Reset "إعادة ضبط الفلاتر" (91x28, 8pt) is drawn on one
+line with the icon over its last letters; the plan's rule sized it for two lines, but Desktop didn't wrap it (at 40
+high in the cards check it did). Button text wrapping wasn't measured (the measurement report had only the English
+Reset). Header, slicers, cards and DAX on AR 360 pass. Details in `scripts/tests/DESKTOP-TESTS.md`. **Waiting for the
+owner.** The CLAUDE.md notes wait for a passing phone check. Not merged.
 
 **Order after "go":** tests first with the measured rules (and option (a)'s engine test if chosen), failing; code
 (`pbip-export.js`, and `design-engine.js` only under (a)); fixtures recaptured only under (a) and only the six listed;
