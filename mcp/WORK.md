@@ -119,6 +119,10 @@ the slicer rule's check); Reset text whole on one line, no icon over the text; t
 same size as the others; 1080 as in the cards check; cards whole except the known 640 x 360 cut (an open item, not a
 failure here); values equal DAX; phone layout without overlaps (owner's clicks). Screenshots
 `C:\DataArcus\tests\phase2-try\shots-sizes\fit2-*` at 1x and 2x, judged from full-size crops.
+**Desktop check stopped on the first report (AR 360):** header, the current page's button, slicers and DAX PASS; the
+Arabic Reset (91x15, 8pt, no icon as planned) has its text **cut at the bottom** at 1x and 2x: the owner's rule
+max(40 x page h / 1080, 2 + 1.6 x pt) gives 15 at 8pt, enough for the English text (whole from 14) but not the Arabic.
+Details and "Seen, not in scope" in `scripts/tests/DESKTOP-TESTS.md`. **Waiting for the owner.**
 
 
 ## Builder's working notes (for a fresh session)
