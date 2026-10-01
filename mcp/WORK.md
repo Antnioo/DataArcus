@@ -1,12 +1,18 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). Last updated 2026-10-01
-by the builder: `fix/mcp-visual-style` is built, checked in Desktop and waits for CI and the reviewer's merge (a solid
-design now shows its panels on the MCP's reports). Then the split of `pbip-export.js` (reviewer), then rounds 1 and 2.
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). Last updated 2026-10-02
+by the builder: stopped for today with nothing in progress. Main is at `e8fe171`. After the owner's usage limit resets
+on Sunday 2026-10-04: (1) the reviewer's split of `pbip-export.js`, (2) the reviewer: the validator on every export in CI,
+(3) round 1. See "Next step".
 
 ## Where things stand
-- **MCP: 6 tools** (`read_model`, `suggest_fields`, `check_model_health`, `generate_theme`, `plan_layout`,
-  `create_report`), 77 checks in `npm test`; all 16 website suites pass.
+- **Now (2026-10-02, main `e8fe171`):** 6 MCP tools (`read_model`, `suggest_fields`, `check_model_health`,
+  `generate_theme`, `plan_layout`, `create_report`), 120 checks in `npm test`; 16 website suites; CI runs all of them
+  on every push. Merged since 2026-10-01: round 0 (`14dd467`: the tooltip page on every chart, the logo at its own
+  shape and the `logo` input, the tooltip bar chart, table headers aligned with their columns, card fill and padding,
+  the theme name and `.platform`), `fix/card-theme-radius` (`99d1cee`: Microsoft's validator passes on the MCP's
+  exports) and `fix/mcp-visual-style` (`e8fe171`: a solid design shows its panels on the MCP's reports). Each was
+  measured and checked in Power BI Desktop 2.158.1177 (`scripts/tests/DESKTOP-TESTS.md`). The lines below are older.
 - **Phase 2 (design engine in the MCP): built, merged and checked in Desktop.** `generate_theme` and `plan_layout`
   reproduce the website byte for byte on all 54 design fixtures; `create_report` builds the website's project
   download from a design (60 project fixtures). Details: `mcp/PHASE2-SPEC.md`.
@@ -34,42 +40,40 @@ design now shows its panels on the MCP's reports). Then the split of `pbip-expor
 - **Website dropdowns fixed** (merged): the open list was white on white on every tool page; form fields now use
   `color-scheme: dark` with dark option colours (`assets/css/style.css`), checked on every tool page in `tools.mjs`.
 
-## Next step (reviewer, 2026-10-01): `fix/phone-and-sizes` merged into main as `f8d911f`
-Full run on Linux before the merge: 15 of 16 suites pass, `anchors` failed once under load (known flake, open item)
-and passes alone; MCP 87 pass; tree identical to the branch. The branch's plan, measurements and Desktop results are
-in its history (`b931ecd`) and `scripts/tests/DESKTOP-TESTS.md`.
+## Next step (builder, 2026-10-02): stopped for today; three steps after the owner's usage limit resets
+Main is at `e8fe171`. Nothing is in progress: round 0 (`14dd467`), `fix/card-theme-radius` (`99d1cee`) and
+`fix/mcp-visual-style` (`e8fe171`) are merged and their branches deleted; no test report is open in Power BI Desktop.
+The only open branch is `docs/work-next-steps`, which holds this update of this file and nothing else, for the
+reviewer to merge. **The owner's weekly usage limit resets on Sunday, 2026-10-04. Nothing is to be done before then.**
 
-**Order from here (owner's go; details in `mcp/ROADMAP.md`):**
-1. **Reviewer:** split `assets/js/pbip-export.js` into small modules (output byte for byte identical), then CI (every
-   suite on every push). **Nobody else touches `pbip-export.js` until that merges.**
-2. **Builder, at the same time, plan only** (branch `plan/next-rounds`), three rounds in this order. **(0) First,
-   found by the owner (most valuable):** (i) the tooltip page is not attached to the main page's visuals: link each
-   chart to it explicitly (the visual's "Tooltip: Report page" setting; confirm the PBIR property in Microsoft's
-   references, then check in Desktop that hovering shows it); (ii) an attached logo is stretched to its box: read the
-   logo's aspect ratio from the image file, keep the designed height, set the logo box's width from it (within the
-   logo width range) in the shared design engine (website and MCP), let the header's other parts use what's left, and
-   use an image scaling that never distorts. Then (a) phone text sizes per visual in
-   `mobile.json` (slicer boxes cut on the phone at 1080, page-sized text too big at 2160; measure first) plus a
-   Desktop check of the slide-in panel (Close and Filters, EN and AR); (b) Arabic accuracy (Arabic display names in
-   `create_report`; day and month sort order and measures without a format string as health findings with TMDL
-   fix scripts, weeks starting Saturday or Sunday).
-3. Builder builds (a) and (b) after the split merges; then the design summary, packaging, private-repo move, beta,
-   launch. **Dated:** the Gulf Calendar pack ready by 2026-12-01.
+**The next steps after the reset, in this order (owner 2026-10-02):**
+1. **The reviewer's split of `assets/js/pbip-export.js`, in a fresh reviewer session.** Small modules with one job
+   each (sizes, visual builders, page assembly, phone layout; `mcp/ROADMAP.md`), the output byte for byte identical
+   on all 54 design and 60 project fixtures. **Nobody else touches `pbip-export.js` until that merges.**
+2. **The validator on every export in CI (the reviewer, owner 2026-10-02: CI and test tooling run on Linux).** Microsoft's validator (their report authoring CLI, already a dev
+   dependency of the MCP's tests, pinned to 0.4.0) runs today on two MCP exports in `npm test`; it is to run on every
+   export the tests build, on every push.
+3. **Round 1** (builder; plan below under "Round 1", items 1.1 to 1.7; it starts with the owner's go, on its own
+   branch from main, after the split has merged).
 
-**Testing speed (owner 2026-10-01):** the builder runs only the failing tests and the suites a change touches; the
-reviewer runs the full run on Linux before every merge (and CI on every push once added). No 15-minute full runs on
-the laptop unless the reviewer asks.
+Then round 2 (Arabic accuracy), the design summary, packaging, the private-repo move, the beta and the launch
+(`mcp/ROADMAP.md`). **Dated:** the Gulf Calendar pack ready by 2026-12-01.
 
-### Plans for rounds 0, 1 and 2 (builder, 2026-10-01, branch `plan/next-rounds`; plan only, waiting for "go")
-Nothing below is built. Each round starts after the split merges and the owner says go, on its own branch from main.
-Modules are named as in `mcp/ROADMAP.md` (sizes, visual builders, page assembly, phone layout); today all of them are
-still `assets/js/pbip-export.js`. Every round: failing tests first; only the suites the change touches (`pbip`,
-`design-engine`, `theme-generator`, `model-health`, `npm test` in `mcp/`); reports built with the branch's
-`mcp/server.mjs` over stdio; Desktop 2.158.1177 on 1920 x 1080 and 1280 x 720, English and Arabic, plus what the round
-touches, judged from full-size crops; results into `scripts/tests/DESKTOP-TESTS.md`; only our own sample model
-(`C:\DataArcus\tests\5-tmdl-sample`). Stop and report at the first failure.
+**Testing speed (owner 2026-10-01):** the builder runs only the failing tests and the suites a change touches; CI
+runs all 16 website suites and the MCP's checks on every push, and the reviewer checks it before every merge. No
+15-minute full runs on the laptop unless the reviewer asks.
 
-#### `fix/mcp-visual-style`: BUILT, waits for the reviewer's merge (builder, 2026-10-02)
+### The rounds: what was built, and the plans for rounds 1 and 2 (builder)
+Rounds 1 and 2 below are plans: nothing in them is built. Each round starts with the owner's go, on its own branch
+from main. Modules are named as in `mcp/ROADMAP.md` (sizes, visual builders, page assembly, phone layout); until the
+split merges all of them are still `assets/js/pbip-export.js`. Every round: measure in Desktop first; failing tests
+first; only the suites the change touches (`pbip`, `design-engine`, `theme-generator`, `model-health`, `npm test` in
+`mcp/`); reports built with the branch's `mcp/server.mjs` over stdio; Desktop 2.158.1177 on 1920 x 1080 and
+1280 x 720, English and Arabic, plus what the round touches, judged from full-size crops; results into
+`scripts/tests/DESKTOP-TESTS.md`; only our own sample model (`C:\DataArcus\tests\5-tmdl-sample`) and the website's
+sample data. Stop when a failure could change what Desktop shows; otherwise note it and continue (root `CLAUDE.md`).
+
+#### `fix/mcp-visual-style`: merged into main as `e8fe171`; how it was built
 Commits (from main `99d1cee`): plan `ff25e53`, tests failing first `b6132f2`, code `f0142b4`.
 - **Change (`assets/js/pbip-export.js`):** when the theme it is given has solid visuals (its `"*"` visuals have a
   background), the visuals that sit on a panel (KPI cards, charts, tables, text slots) get no `background`, `border`
@@ -89,9 +93,8 @@ Commits (from main `99d1cee`): plan `ff25e53`, tests failing first `b6132f2`, co
   the three entries removed from cards, charts, tables and text slots and the background switched off on the KPI
   group; the 13 transparent designs are byte for byte the same.
 - **Microsoft's validator:** 0 errors on all nine reports of the check.
-- **Seen, not assigned yet:** on a solid design the header band and the filter rail have square corners and no
-  shadow, unlike the panels beside them (a group has no border or shadow setting). Needs the owner's decision on its
-  round.
+- **Seen, now in round 1 (item 1.7, owner 2026-10-02):** on a solid design the header band and the filter rail have
+  square corners and no shadow, unlike the panels beside them (a group has no border or shadow setting).
 
 #### The plan `fix/mcp-visual-style` was built from (owner's go 2026-10-02; reference, its state is above)
 `fix/card-theme-radius` is merged into main as `99d1cee` and its branch deleted; the validator stays a dev dependency
@@ -207,7 +210,8 @@ Commits: decisions `bda14f4`, tests failing first `199eab7`, code `93eb7ff`, Des
   card corners and everything else as before; Microsoft's validator passes on all of them.
 
 #### Where every "Seen, not in scope" item now lives (owner 2026-10-01)
-- **Round 1** (with the phone text and the slide-in panel, see 1.1 to 1.6 below): the page button "Executive…" on the
+- **Round 1** (with the phone text and the slide-in panel, see 1.1 to 1.7 below): the header band and the filter
+  rail on a solid design (1.7, owner 2026-10-02); the page button "Executive…" on the
   website's 1080 download; the header title and logo centred vertically in their boxes on big pages; phone padding at
   3840 x 2160 with a side bar; the tooltip chart as the hovered item's trend by month.
 - **Round 2** (see 2.1 to 2.3 below): English names in Arabic reports; day and month sorting; the "calculated tables
@@ -502,6 +506,17 @@ becomes the measure by month for the hovered item; when the page's charts are th
 second category. **Measure first:** month labels at tooltip size (320 x 284), English and Arabic, as a line or column
 chart and as a bar chart: which names are whole, and how many months fit. Module: page assembly (the tooltip page);
 `pbip-bind.js` for the choice of field.
+
+**1.7 The header band and the filter rail on a solid design (owner 2026-10-02, seen in `fix/mcp-visual-style`).** On
+a solid design (the MCP's reports) the cards, charts and tables are rounded with a shadow, drawn by the theme, while
+the header band and the filter rail have square corners and no shadow: they are drawn by their groups, and a group
+has no border or shadow setting (only a background, which can be switched off). **Measure the options in Desktop
+first, then plan:** for example a rounded shape behind the header and behind the rail, styled from the theme's panel
+settings (card colour, the design's corner radius, its shadow), with the groups' own backgrounds switched off; also a
+text box used as the panel, as the slide-in panel's card already is. For each option, in English and Arabic, light
+and dark, at 1080 and 720: does it match the panels beside it (corners, shadow, colour), does it stay behind the
+title, page buttons, logo, slicers and Reset, and how does it behave in the phone layout and in the selection order.
+A transparent design (the website's download) is not to change: there the background image draws the band and rail.
 
 #### Round 2: Arabic accuracy (branch `feature/arabic-accuracy`)
 **2.1 Arabic display names in `create_report`.**
