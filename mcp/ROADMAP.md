@@ -1,50 +1,56 @@
 # DataArcus MCP roadmap
 
-## Where it is (v0.1, 2026-09-30)
-4 tools (`read_model`, `suggest_fields`, `check_model_health`, `create_report`), 29 checks in `npm test`.
-Tested on the owner's laptop next to Power BI Desktop 2.157 with Microsoft's Power BI Authoring MCP and the Desktop bridge.
+## Where it is (2026-10-01)
+6 tools (`read_model`, `suggest_fields`, `check_model_health`, `generate_theme`, `plan_layout`, `create_report`), 87
+checks in `npm test`, the website's 16 suites, and every report change checked in Power BI Desktop. About 60% of the
+way to a first public release (estimate). Current work: `mcp/WORK.md`.
 
-## Position (from a comparison on 2026-09-30)
-Microsoft's `powerbi-authoring` plugin (preview) already covers the general report work: the Report Design skill
-(design brief, chart choice, one opinionated theme preset), the Report Authoring skill (create and edit PBIR pages,
-visuals, formatting, re-theme and modernise existing reports, validate, reload and screenshot through the Desktop
-bridge) and the Report Planner. The open-source `powerbi-report-mcp` builds pages and visuals with 4 theme presets and a
-simple grid, with no generated backgrounds, no health check and no right-to-left support. Power BI Desktop itself
-does not support right-to-left languages, and report layouts do not mirror for them.
-**So DataArcus does not rebuild general report authoring.** It is the design and Gulf layer that works alongside
-Microsoft's tools: brand-driven themes, exact layouts with matching backgrounds, Arabic and right-to-left reports,
-Gulf DAX, and the model health score. The skill tells Claude to use DataArcus for theme, layout and background, and
-Microsoft's authoring skill for the file work on existing reports.
+## Strategy (owner's go, 2026-10-01, after a second opinion on the project brief)
+- **The MCP is the product.** The website's free tools bring people in, prove the engine works and are the playground.
+- **The engine is the asset; the MCP is its first interface.** Brand it as the DataArcus Power BI design engine, not
+  "an MCP for Claude": MCP is an open standard, and the engine must outlive any one AI app. Keep the engines shared
+  between the website and the MCP. Only `pbip-export.js` writes Microsoft's report files (PBIR), so a format change
+  stays in that one file.
+- **Position:** Microsoft's Copilot and authoring tools create reports but don't do styling and formatting well.
+  DataArcus is the design layer (brand themes, layouts that fit every page size, backgrounds, model-aware fields) and
+  is built for teams that need Arabic, right-to-left, Hijri and Gulf reporting. Don't claim nobody else serves Arabic:
+  articles and tools on it exist; the moat is all of it together in real report files.
+- **Users before perfection.** The next milestone is a private beta with 5-10 Power BI developers, then launch. Small
+  pages and backgrounds wait for what testers actually hit.
+- **Who first:** independent Power BI developers and consultants, then small BI teams, then Gulf organisations;
+  enterprise later.
+- **Direction for money (not built yet):** free (website tools, the public core), Pro for individuals (AI report
+  design, Arabic/Gulf pack, saved designs), Teams (shared design systems, company themes, support). A marketplace
+  of designs applied to the buyer's real model comes later.
+- **Desktop checks, lighter:** each round checks the main path (1920 x 1080 and 1280 x 720, English and Arabic) plus
+  whatever the round touched; not every page size every time. The automated tests stay as they are.
 
 ## Done
-- **Health check on TMDL projects.** `assets/js/tmdl-model.js` reads `definition/*.tmdl`
-  into model.bim JSON; `check_model_health` reads Desktop-saved projects directly. Proven against the same model saved
-  by Desktop as TMDL and as .pbit (Health Test: identical; Ramadan Test: identical except the type checks
-  on its DAX tables). Columns of DAX tables have no type in TMDL: the checks that need it are skipped and listed, never guessed.
-- **Column types from the open model.** Optional `columnTypes` on `check_model_health`,
-  filled from the model open in Desktop (an `INFO.COLUMNS()` query, or `column_operations` List, through Microsoft's
-  Power BI Authoring MCP). Proven live on Ramadan Test: with the types the result is identical to its .pbit.
-- **Design engine, phase 1.** The Theme Generator's pure logic (colours, harmonies, theme JSON, page sizes, font sizes,
-  slots, background SVG, file names) is in `assets/js/design-engine.js`, shared by the website and meant for the MCP.
-  53 fixture cases prove the output is unchanged (`scripts/tests/design-engine.mjs`); the live generator runs on it.
+- **Phase 1 and 2:** the health check on TMDL projects and column types from the open model; the design engine
+  (`assets/js/design-engine.js`) shared by the website and the MCP; `generate_theme`, `plan_layout`, `create_report`
+  reproduce the website exactly (54 design and 60 project fixtures).
+- **Report quality:** buttons, tooltip page, field choice for untyped columns, `modelNotes`, tables that fill their
+  width (right to left too), cards moved to `cardVisual`, website dropdowns.
+- **Finishing now (`fix/phone-and-sizes`):** the phone layout without overlaps; header, filter rail, Reset and page
+  buttons sized from Desktop measurements on every page size; the engine's minimum header and rail heights.
 
 ## Next, in order
-1. **Design engine in the MCP (phase 2).** `generate_theme` (a brand theme from a colour, preset or palette, with the
-   contrast checks; written next to the model, never overwriting) and `plan_layout` (exact slot positions in page
-   units, as the website's slot table). Output that Microsoft's Report Authoring skill can register and place, so the
-   agent uses exact numbers instead of guessing coordinates. `create_report` takes a layout preset. Update the skill:
-   DataArcus for theme, layout and background; Microsoft's authoring skill for editing existing reports.
-2. **Backgrounds (phase 3).** The background PNG from the engine's SVG in Node, lined up with the slots
-   (first test whether Power BI accepts the SVG itself as a page background).
-3. **Arabic and right-to-left reports.** Mirrored layouts, Arabic titles and number formats, checked in Desktop. Nobody
-   else covers this; Desktop has no right-to-left support of its own.
-4. **Gulf DAX:** Measure Builder patterns (Hijri calendar, Ramadan vs last Ramadan, fiscal years) as tools.
-5. **Packaging:**
+1. **Arabic accuracy:** Arabic display names for titles (`create_report`), day and month sort order and measures
+   without a format string as health findings with ready fix scripts. Checked in Desktop in English and Arabic.
+2. **"What I built and why":** after `create_report`, a short design summary for the user (pages, visuals, filter
+   rail, tooltip and phone pages, and the design decisions: KPI order, filters on the right for right to left, sizes
+   fitted to the page, Arabic text given more height). Builds trust.
+3. **Packaging:**
    - A one-click Desktop Extension for Claude Desktop and Cowork (Anthropic's MCP bundle format). Check Anthropic's
      current docs for the format, manifest and signing before building; it is new and changes.
-   - A Claude Code plugin (like Microsoft's `powerbi-authoring`), with the report-design skill bundled.
-   - First-run: pick the working folder (becomes `DATAARCUS_ROOT`), explain what the tool can and can't touch.
-6. **`screenshot-all` on generated projects:** find what Desktop-saved projects have that generated ones lack.
+   - A Claude Code plugin with the report-design skill bundled.
+   - First run: pick the working folder (becomes `DATAARCUS_ROOT`), explain what the tool can and can't touch.
+   - Tested on a clean machine.
+4. **Private beta:** 5-10 Power BI developers (international and Gulf); collect what breaks and what they want.
+5. **Launch:** README, the launch article, LinkedIn (`content/`).
+6. **After the beta, as testers need them:** small pages (640 x 360 cards, charts, tables), backgrounds (phase 3:
+   the PNG from the engine's SVG), Gulf DAX patterns (Hijri, Ramadan, fiscal years), `screenshot-all` on generated
+   projects, then Pro/Teams.
 
 Dropped, because Microsoft's authoring skill and the Desktop bridge already do them: editing existing reports
 (restyle, re-layout, modernise visuals) and the reload-and-screenshot loop. Revisit only for something they can't do,
