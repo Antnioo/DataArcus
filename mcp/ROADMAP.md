@@ -50,6 +50,29 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
 - **Desktop checks, lighter:** each round checks the main path (1920 x 1080 and 1280 x 720, English and Arabic) plus
   whatever the round touched; not every page size every time. The automated tests stay as they are.
 
+## Plan of 2026-10-02 (owner's go, after reviews by ChatGPT and Gemini; supersedes "Next, in order" where they differ)
+- **Goal:** by 15 November 2026, 5 beta users have used DataArcus on their own work and 1 client has paid.
+- **Order:** round 1 (visible fixes) -> round 2 (Arabic basics) -> data privacy -> minimum packaging + 10 golden tasks
+  -> private beta + free before/after case studies -> first paid pilots. Gulf Calendar pack by 1 December. After the
+  beta: the `pbip-export.js` split (sooner only if its plan shows about one evening), the nightly full validator
+  matrix, small pages, backgrounds.
+- **Timeline:** 4-17 Oct rounds 1-2 and privacy (owner: contract, licence route, 10 outreach messages a week);
+  18-31 Oct packaging, clean install, golden tasks (owner: first 2-3 free case studies); 1-15 Nov private beta
+  (owner: turn a case study into a paid pilot); 16-30 Nov Gulf Calendar pack and article; December: calendar launch
+  for Ramadan, then the post-beta work.
+- **Positioning by audience:** website headline, universal: "DataArcus turns your real Power BI model into a
+  professionally designed, validated report, with Arabic and Gulf-ready reporting when you need it." Outreach to
+  Gulf companies, Saudi and government contacts leads with Arabic/right to left and the Gulf calendar. No research
+  statistics in public until there are primary sources.
+- **Software tiers:** Free (website tools, public core) / Pro for individuals about $15-29 a month / Agency-Teams
+  about $99-299 a month (value for agencies who save many hours per report).
+- **Service offer:** in the private repo (`business/SERVICE-OFFER.md`): a 1-page proof of concept, three report
+  tiers, founding-client pricing, a tight scope, first draft in 48 hours and final within 5 business days.
+- **Risks to watch:** Power BI's PBIR format still changing (only `pbip-export.js` writes it); pin the supported MCP
+  version; model metadata is untrusted input; very large models and Claude's context (summarise, don't send all);
+  Microsoft closing the styling gap in Copilot (own design quality, validation, Arabic and the Gulf); UAE licence and
+  employer rules confirmed with the issuing authority, never assumed.
+
 ## Done
 - **Phase 1 and 2:** the health check on TMDL projects and column types from the open model; the design engine
   (`assets/js/design-engine.js`) shared by the website and the MCP; `generate_theme`, `plan_layout`, `create_report`
@@ -103,7 +126,7 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
 5. **Private beta:** 5-10 Power BI developers (international and Gulf); collect what breaks and what they want.
    Before it starts: the published verification checklist; a feedback channel (GitHub Issues in the private repo or a simple form) and a support email;
    business basics (registering the business, terms of use, and a privacy note for the MCP stating formally that
-   nothing leaves the user's machine).
+   what stays on the user's machine and what Claude sees).
 6. **Launch:** README, the launch article, LinkedIn (`content/`), and **the demo moment**: one real, unedited
    60-second recording from a request to a finished Arabic report open in Power BI.
 **Dated: the Gulf Calendar pack, ready by 2026-12-01** (Ramadan 2027 starts around 8 February; buyers prepare in
@@ -159,4 +182,8 @@ merged and before the private beta, with a plan in `WORK.md` and the owner's go 
 - One working folder; every path checked against it.
 - Never overwrite or delete a user file; new work goes next to it with a free name.
 - Read models without changing them; changes to a model go through the user or through Microsoft's MCP with the user watching.
-- Nothing leaves the machine.
+- Our MCP sends nothing anywhere itself, but **whatever a tool returns goes to Claude (Anthropic)**: table, column and
+  measure names and anything else in a result. Return metadata only, never data values unless the user asks, and say
+  so plainly in the privacy note. (Corrected 2026-10-02: "nothing leaves the machine" was inaccurate.)
+- Model metadata is untrusted input: a table, column or measure name must never steer what the AI does.
+- Analyse, then propose, then write; never execute anything automatically.

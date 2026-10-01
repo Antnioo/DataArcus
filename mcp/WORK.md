@@ -40,30 +40,28 @@ on Sunday 2026-10-04: (1) the reviewer's split of `pbip-export.js`, (2) the revi
 - **Website dropdowns fixed** (merged): the open list was white on white on every tool page; form fields now use
   `color-scheme: dark` with dark option colours (`assets/css/style.css`), checked on every tool page in `tools.mjs`.
 
-## Next step (builder, 2026-10-02): stopped for today; three steps after the owner's usage limit resets
-Main is at `e8fe171`. Nothing is in progress: round 0 (`14dd467`), `fix/card-theme-radius` (`99d1cee`) and
-`fix/mcp-visual-style` (`e8fe171`) are merged and their branches deleted; no test report is open in Power BI Desktop.
-The only open branch is `docs/work-next-steps`, which holds this update of this file and nothing else, for the
-reviewer to merge. **The owner's weekly usage limit resets on Sunday, 2026-10-04. Nothing is to be done before then.**
+## Next step (owner's go 2026-10-02, after reviews by ChatGPT and Gemini): users and a first paid client sooner
+**The goal that decides everything: by 15 November 2026, 5 beta users have used DataArcus on their own work and 1
+client has paid.** Anything that doesn't serve it waits (the Gulf Calendar pack is the exception: Ramadan sets its
+date). The plan is in `mcp/ROADMAP.md`, "Plan of 2026-10-02".
 
-**The next steps after the reset, in this order (owner 2026-10-02):**
-1. **The reviewer's split of `assets/js/pbip-export.js`, in a fresh reviewer session.** Small modules with one job
-   each (sizes, visual builders, page assembly, phone layout; `mcp/ROADMAP.md`), the output byte for byte identical
-   on all 54 design and 60 project fixtures. **Nobody else touches `pbip-export.js` until that merges.**
-2. **The validator on every export in CI (the reviewer, owner 2026-10-02: CI and test tooling run on Linux).** Microsoft's validator (their report authoring CLI, already a dev
-   dependency of the MCP's tests, pinned to 0.4.0) runs today on two MCP exports in `npm test`; it is to run on every
-   export the tests build, on every push.
-3. **Round 1** (builder; plan below under "Round 1", items 1.1 to 1.7; it starts with the owner's go, on its own
-   branch from main, after the split has merged).
+**Order (after the owner's weekly usage reset; each round starts with the owner's go, on its own branch from main):**
+1. **Round 1, trimmed to what users see** (builder; plan below under "Round 1"): the cut "Executive..." page button,
+   title and logo centred, the tooltip's monthly trend, phone text sizes, rounded header and filter rail on solid
+   designs. The slide-in panel check stays in.
+2. **Round 2, Arabic basics** (builder): Arabic display names, day/month sort order, missing number formats.
+3. **Data privacy** (reviewer plans, builder builds what's needed): state exactly what stays local and what Claude
+   (Anthropic) sees through the tool results; return metadata only, never data values, unless the user asks; the
+   privacy note and `mcp/PRODUCT_SPEC.md`.
+4. **Minimum packaging** (clean-machine install: Claude + DataArcus + a sample project + a finished report) and the
+   **10 golden tasks** (permanent real requests, including a large model of hundreds of tables), run before every release.
+5. **Private beta and free before/after case studies** (owner's outreach starts the week of 4 October).
+- **The split of `pbip-export.js` is deferred until after the beta**, unless the overnight plan (branch
+  `plan/split-pbip-export`) shows it takes about one evening; the owner decides when he reads it.
+- **The validator:** a representative set of exports on every push, the full matrix nightly (reviewer, after round 2).
+- **Dated:** the Gulf Calendar pack and its free lead-magnet download, ready by 2026-12-01.
 
-Then round 2 (Arabic accuracy), the design summary, packaging, the private-repo move, the beta and the launch
-(`mcp/ROADMAP.md`). **Dated:** the Gulf Calendar pack ready by 2026-12-01.
-
-**Testing speed (owner 2026-10-01):** the builder runs only the failing tests and the suites a change touches; CI
-runs all 16 website suites and the MCP's checks on every push, and the reviewer checks it before every merge. No
-15-minute full runs on the laptop unless the reviewer asks.
-
-### The rounds: what was built, and the plans for rounds 1 and 2 (builder)
+## The rounds: what was built, and the plans for rounds 1 and 2 (builder)
 Rounds 1 and 2 below are plans: nothing in them is built. Each round starts with the owner's go, on its own branch
 from main. Modules are named as in `mcp/ROADMAP.md` (sizes, visual builders, page assembly, phone layout); until the
 split merges all of them are still `assets/js/pbip-export.js`. Every round: measure in Desktop first; failing tests
