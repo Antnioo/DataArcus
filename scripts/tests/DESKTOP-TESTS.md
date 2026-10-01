@@ -421,6 +421,37 @@ to a chart's position from the report's own files and captures the window.
 - The 640 x 360 items (cut cards, "…" titles, slanted labels, Q4 hidden, the detail table); the title and logo at the
   top of their boxes on big pages; English names in Arabic reports and days and months sorting alphabetically (round 2).
 
+## 2026-10-01: round 0 built (`fix/tooltip-logo-table`, `93eb7ff`), Power BI Desktop 2.158.1177: ten reports
+Ten test reports built from the branch's code (`builder-scripts\r0-build.mjs`), closed without saving. Six as the
+website's sample-data download (the engines called as the page calls them, background PNG drawn by Chromium):
+"Gulf Sales R0 EN 1080" (wide logo), "AR 1080" (tall logo), "EN 720" (square logo), "AR 720" (wide logo), all light with
+the side accent bar, and "EN 1080 dark", "AR 1080 dark" (accent bar on top, no logo); four through the branch's MCP over
+stdio on our sample model: "R0 MCP EN 1080 tall", "R0 MCP AR 720 squar" (square logo), "R0 MCP EN 1080", "R0 MCP AR
+1080". Expected results were written in `mcp/WORK.md` first. Pages at 2x; hovers from the screen with `m0-hover.ps1`
+(a flat magenta page is added to the copy after the page screenshots, only to find the page on the screen);
+screenshots and crops in `C:\DataArcus\tests\phase2-try\shots-r0\`, run log `...\r0\run.log`, what was built
+`...\r0\built.json`. No clicks from the owner.
+
+| # | Checked | Expected | Seen | Result |
+|---|---|---|---|---|
+| 1 | every chart on both pages hovered, all ten reports | our tooltip page on each of the 4 charts | the tooltip page (card and bar chart, filtered to the hovered point) on the line, bar and column chart of page 1 and the column chart of page 2, English and Arabic, 1080 and 720, light and dark, website and MCP; a table and a card show their usual hover | PASS |
+| 2 | header logo | undistorted, whole, at the far edge; wide 192 x 48 / 128 x 32, square 48 x 48 / 32 x 32, tall 19 x 48; title and page buttons not touching it; the tall-logo note | as expected, with one number different: **the tall logo's box is 20 x 48 in the Arabic 1080 report** (19 in English; the engine rounds a box's edges, not its size, and 13 grid units are 19.5); undistorted in both. `reportNotes` carries the tall-logo sentence for the tall logo only | PASS (expectation corrected: 20 mirrored) |
+| 3 | the tooltip (hover and page) | 320 x 284; card as before; bar chart, names whole and horizontal with values, no scrollbar | as expected: "Electronics", "Fashion", "Home", "Sports" and "أزياء", "إلكترونيات", "المنزل", "رياضة" whole with their values; Q1-Q4 on the MCP reports | PASS |
+| 4 | every table | each header over its own values; Arabic mirrored | English: text column left, numbers right, headers with them; Arabic: text column (rightmost) right, numbers left; columns fill the width | PASS |
+| 5 | KPI cards on the website download | accent bar whole; panel border and shadow visible | side bar whole on the left (English) and right (Arabic); top bar whole on the dark design; panels visible | PASS |
+| 6 | KPI cards | title clear of the top (12 / 8) and of the side bar (26 / 17); number whole; values 42 / 28, tooltip card 20 | as expected on all ten (files: top 12, side 26, value 42 on 1080; top 8, side 17, value 28 on 720; the MCP's cards top 12 / 8 and no side inset, as they have no bar) | PASS |
+| 7, 8 | Microsoft's validator; the theme in Desktop | 0 errors; theme applied | the six website exports: 0 errors (the two 720 ones with warnings: text box and slicer heights below the CLI's own floors, which Desktop showed whole). **The four MCP exports: 1 error each, `PBIR_THEME_VISUAL_PROP_UNKNOWN`: "Unknown theme property border.radius for cardVisual"** (the theme with solid visuals; not from this round). Colours, fonts and sizes as before on all ten | **FAIL on the MCP exports** |
+| all | everything else | unchanged; phone layout without overlaps | header, slicers, Reset, chart positions as before; phone pages of EN 1080 and AR 1080 (top of each page): no overlap | PASS |
+
+**Seen, not in scope:**
+- The first page button reads "Executive…" on the website's 1920 x 1080 download (Segoe UI); on 1280 x 720 and on the
+  MCP's reports (Tahoma, two lines) it is whole. It was the same before this round (the measurement reports).
+- The tooltip's bar chart shows a single bar when the hovered chart uses the tooltip's own category.
+- Phone: long card titles end in "…"; the phone still takes the page's card padding (round 1).
+- The MCP's reports on the sample model: English names in Arabic reports, months and days sorted alphabetically, the
+  % card shows 0.34, the table shows 101914 (round 2); the title and logo at the top of their boxes.
+- "One or more calculated tables need to be manually refreshed" on the sample download (open item).
+
 ## Lessons
 - **Prompts for the laptop agent:** start with the request itself, name every file, forbid changing the test files or the expected numbers, and say "stop and report on failure". Give the exact report format.
 - **What the agent can do alone:** create tables, relationships and measures, run DAX, mark date tables, refresh, screenshot one page at a time.
