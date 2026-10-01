@@ -143,8 +143,23 @@ tests, code, full run, the eight reports ("Gulf Sales Fit3 ..."), Desktop and th
 - **Desktop check of the eight Fit3 reports (2.158.1177): every automatic item PASS** on all eight (header, the
   current page's button, slicers incl. the 30pt ones on 2160, Reset in both languages, cards on 1080 and 2160, DAX);
   the 640 x 360 cards are the known open item. Table and "Seen, not in scope" in `scripts/tests/DESKTOP-TESTS.md`.
-  **Left: the phone layout** (View > Mobile layout, EN 1080 and AR 1080, both pages) with the owner's clicks, then the
-  two `mcp/CLAUDE.md` notes.
+- **Phone layout, automated** (`builder-scripts\phone-check.ps1`, UI Automation; EN 1080, AR 1080, EN 2160): **no
+  overlaps** on any page, so the phone position fix holds; the two `mcp/CLAUDE.md` notes are added (the phone fact, the
+  restart note). **Not whole on the phone** (not fixed, plan below): on 1080 the slicers' dropdown boxes are cut (64-high
+  slots, 15pt text needs 76), "Executive summary" shows as "Executive...", long card and chart titles end in "..."; on
+  2160 the page-sized text (title 40, page buttons 29, slicers and Reset 30) doesn't fit the phone slots.
+- **Phone text: plan only, waiting for the owner's go.** Cause: the phone slots are fixed sizes (title 56, page
+  buttons 44, slicer 64, button 40, charts 190-270 on a 323-wide canvas), but only the cards have phone text sizes;
+  everything else keeps the page's (15pt on 1080, 30pt on 2160). Plan (`pbip-export.js`, the phone layout, no
+  fixtures): each visual's `mobile.json` gets phone sizes that fit its slot by the measured rules, the same on every
+  page size, as the cards already do: slicer header and items 10pt (needs 56 <= 64); Reset and other buttons 10pt
+  (22 <= 40), the Reset icon by `resetFit` on the phone width; page buttons 10pt in all three states (one line in
+  161 per button); chart and table titles 12pt (container title); the header title: first check in Desktop whether a
+  text box's text can be overridden in `mobile.json` (`objects.general.paragraphs`); if not, its slot grows to what the
+  page's size needs. Chart axis and table text follow the theme's classes: listed per visual type after a Desktop look,
+  not guessed. Tests first: `report-check.mjs` reads each visual's phone sizes (the `mobile.json` override, else the
+  page's) and checks them against the phone slot with the measured rules, on 1080, 360 and 2160. Desktop:
+  `phone-check.ps1` on EN and AR at 1080, 360 and 2160.
 
 
 ## Builder's working notes (for a fresh session)
@@ -170,9 +185,19 @@ tests, code, full run, the eight reports ("Gulf Sales Fit3 ..."), Desktop and th
     proves the rest byte for byte (it reads the old files from `fx-old\` there; take them from git). `cols.mjs`: which
     slot-table columns changed. `limits.cjs`: which designs can't fit the measured header and rail needs.
     `cmp1080.cjs`, `btn1080.cjs`: what changed at 1920 x 1080 compared with main's `pbip-export.js`.
-  - `measure-build.cjs`, `measure2-build.cjs`, `measure3-build.cjs`: the measurement reports "Gulf Sales Measure",
-    "Measure 2", "Measure 3" in `C:\DataArcus\tests\5-tmdl-sample\` (text boxes, slicers, Reset; cards, Reset in both
-    languages, page buttons; cards on bigger pages).
+  - `measure-build.cjs`, `measure2-build.cjs`, `measure3-build.cjs`, `measure4-build.cjs`: the measurement reports
+    "Gulf Sales Measure", "Measure 2", "Measure 3", "Measure 4" in `C:\DataArcus\tests\5-tmdl-sample\` (text boxes,
+    slicers, Reset; cards, Reset in both languages, page buttons; cards on bigger pages; the Reset height in Arabic and
+    English).
+  - `fit3-build.mjs`: the latest build of the eight reports ("Gulf Sales Fit3 ..."; copy it and change the names for
+    the next round). `check-report.ps1 -Report <name> -Tag <tag>`: opens a report and captures every page at 2x and 1x
+    (`<tag>-s2-p<n>.png`, `<tag>-s1-p<n>.png`). `open-report.ps1 -Report <name>`: opens only.
+  - **`phone-check.ps1 -Tag <tag>`: the phone layout check without the owner's clicks.** On the report open in
+    Desktop it presses "Mobile layout" with Windows UI Automation (the switcher at the bottom of the page), selects each
+    page tab, saves the phone canvas (`<tag>-phone-p<n>.png`; the window's title bar is cropped away), then presses
+    "Desktop layout" again; nothing is saved. It waits up to a minute for the automation tree after a report opens.
+    It shows the top of each phone page only (the canvas can't be scrolled from the script). Use it every round:
+    `open-report.ps1`, then `phone-check.ps1`.
 - **Screenshots:** `C:\DataArcus\tests\phase2-try\shots-sizes\` (this branch; `fit-*`, `m2-*`, `m3-*`, `measure*`),
   `shots-cards\` (the cards check), `shots-ar3\`.
 - **Judging:** capture each page at 1x and 2x and judge every PASS from full-size crops of each card, button and slicer,
