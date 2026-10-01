@@ -156,6 +156,215 @@ Seen, not in the expected list (not cards; flagged, not fixed):
 None of these is written by the card code (theme and fixtures unchanged); the page sizes 640 x 360 and 3840 x 2160 had
 not been checked in Desktop before.
 
+## 2026-10-01: phone and page sizes (branch `fix/phone-and-sizes`, `d24c5c1`), Power BI Desktop 2.157: stopped on the second report
+
+Six reports "Gulf Sales Sizes EN/AR 1080/360/2160" built by this branch's `mcp/server.mjs` over stdio (same calls as the
+cards check), in `tests/5-tmdl-sample/`; expected sizes in `mcp/WORK.md`, committed before the run (`d24c5c1`). Each
+opened alone with `powerbi-desktop open`, one screenshot per page in `tests/phase2-try/shots-sizes/`, one DAX query per
+report (Microsoft's Authoring MCP). Stopped at the first failure (EN 360); AR 1080, AR 360, EN 2160, AR 2160 and the
+phone layout (item 6) not run.
+
+| Check | EN 1080 (`en1080-p1..p3.png`) | EN 360 (`en360-p1..p3.png`) |
+|---|---|---|
+| 1. Header: title one line whole, page buttons whole, logo text whole | PASS (as in the cards check) | **FAIL**: page buttons whole ("Executive summary", "Details", 8pt, one line), but the title "Gulf Sales" and "Your logo" (8pt in 16-high boxes) are cut at the bottom, each with a small scroll thumb beside it (the text box overflows) |
+| 2. Rail: slicers show title and dropdown; Reset whole | PASS (3 × 274x76, "Reset filters" one line) | **FAIL**: Reset whole on one line (91x28), but the slicers (91x27) show only their titles; the dropdown boxes are squashed to a line |
+| 3. 1080 as in the cards check | PASS (page 1, page 2 and tooltip look the same) | – |
+| 4. Cards | PASS | PASS (numbers whole and centred; long titles end in "...", the known limit) |
+| 5. Values equal DAX | PASS (101914 / 74675 / 23635 / 0.3377971; 101.914K ...) | PASS (same) |
+
+Cause (not fixed, needs the owner's go): the fit rules in `fitText` and the slicer minimum are estimates that Desktop
+doesn't bear out on the smallest page: a text box needs more than 1.5 x its text size in height (8pt text doesn't fit
+16), and a dropdown slicer needs more than two lines of its text (27 is too little for an 8pt title and its box). The
+tests use the same estimates, so they passed. The report was left open in Desktop, not saved.
+
+## 2026-10-01: measured in Power BI Desktop 2.157, the heights text boxes, dropdown slicers and Reset need
+
+A test report only, "Gulf Sales Measure" (`tests/5-tmdl-sample/`, closed without saving): ladders of the exported
+header text box, dropdown slicer (Calendar[Year]) and Reset button, copied from "Gulf Sales Sizes EN 360" so the
+formatting is what `pbip-export.js` writes, each with a visible background, at growing heights on a 640 x 360 page and
+a 1920 x 1080 page. Screenshots `tests/phase2-try/shots-sizes/measure-p1.png`, `measure-p2.png` (crops
+`measure-p1-rows12.png`, `measure-p1-rows345.png`, `measure-p2-text.png`, `measure-p2-slicer-reset.png`). Heights in page
+units; the same on both pages (a point size takes the same page units on any page).
+
+| Visual | Text | Smallest height that shows it whole | Not whole at |
+|---|---|---|---|
+| Text box, one line ("Gulf 24") | 8pt | 24 (640 x 360 and 1920 x 1080) | 22: text whole but a scroll thumb (overflow); 18 and less: cut |
+| Text box ("Gulf Sales 42") | 18pt (the theme's title on 1080) | 42 | 38 (scroll thumb) |
+| Text box ("Gulf Sales 44") | 20pt (the header title on 1080) | 44 | 40 (scroll thumb) |
+| Dropdown slicer, title and box | 8pt | 48 (640 x 360 and 1920 x 1080) | 44: the box's bottom edge cut; 24 and less: title only |
+| Dropdown slicer | 15pt (the theme's slicer text on 1080) | 76 | 68: box touching the bottom; 60: cut |
+| Reset, icon and text on one line, 91 and 140 wide | 8pt | 18 (icon whole); text whole from 14 | 12 |
+| Reset, 250 wide | 15pt | text whole from 24, icon full from 28 | 20 |
+
+Rules that fit every row: a one-line text box needs 10 + 1.8 x the point size (points to pixels 4/3, a line about 1.35
+of that, about 5 of padding at the top and at the bottom): 8pt 25, 18pt 43, 20pt 46. A dropdown slicer needs
+16 + 4 x the point size: 8pt 48, 15pt 76. The Reset button fits inside the text-box rule. The 91-wide Reset showed
+"Reset filters" on one line at 8pt, so the 0.55 em per character width estimate is on the safe side. A 10pt row in
+58-wide boxes wrapped its label, so it gave no height and is left out.
+
+**Repeated on Power BI Desktop 2.158.1177** (2026-10-01, the Store app updated itself overnight): the same report,
+opened with `powerbi-desktop open` (`PBI_DESKTOP_PATH` pointed at the 2.158.1177 install), one screenshot per page
+(`measure158-p1.png`, `measure158-p2.png`). Both are byte for byte the 2.157 screenshots (SHA-256 `01009a6f6065ffdf…`
+page 1, `3155cce97a8b3811…` page 2), so every row reads the same: text box 8pt 24, 18pt 42, 20pt 44; dropdown slicer
+8pt 48, 15pt 76; Reset 8pt 18, 15pt text from 24. Closed without saving.
+
+## 2026-10-01: round 2 of the phone and size fix (`fix/phone-and-sizes`, `071faa1`), Power BI Desktop 2.158.1177: stopped on the second report
+
+The eight "Gulf Sales Fit" reports (built with this branch's `mcp/server.mjs` over stdio, expected sizes in
+`mcp/WORK.md`, committed before the run in `071faa1`). Run on 2.158.1177, after the measurements were repeated on it
+and matched 2.157 exactly. One screenshot per page in `tests/phase2-try/shots-sizes/fit-*.png`, one DAX query per
+report. Stopped at the first failure (AR 360); EN 1080, EN 2160, AR 1080, AR 2160, EN/AR 1080 top and the phone
+layout not run.
+
+| Check | EN 360 (`fit-en360-p1..p3.png`) | AR 360 (`fit-ar360-p1..p3.png`) |
+|---|---|---|
+| 1. Header: title, page buttons, logo text whole | PASS ("Gulf Sales", "Executive summary", "Details", "Your logo"; no scroll thumb) | PASS ("Gulf Sales", "تحليل", "نظرة عامة", "شعارك") |
+| 2. Rail: slicers show title and dropdown; Reset whole | PASS (3 × 91x48 with "All" boxes; "Reset filters" one line) | **FAIL**: slicers PASS (3 × 91x48), but Reset (91x28, 8pt) shows "إعادة ضبط الفلاتر" on one line with the icon drawn over its last letters (`fit-ar360-reset-crop.png`); the plan sized it for two lines, Desktop didn't wrap it |
+| 4. Cards | PASS (whole, centred; long titles "...", the known limit) | PASS (titles on the right, Total Sales rightmost) |
+| 5. Values equal DAX | PASS (101914 / 74675 / 23635 / 0.3377971) | PASS (same) |
+
+Cause (not fixed, needs the owner's go): the Reset rule assumes Desktop wraps a button's text when its height holds two
+lines (2 + 1.6 x 8 x 2 = 28); on the 91-wide Arabic Reset it kept one line under the icon. In the cards check the same
+button 40 high wrapped onto two lines (`shots-cards/ar360-p1.png`); the measurement report only had the English text,
+which fits one line in 91. So button text wrapping wasn't measured. The report was left open in Desktop, not saved.
+
+**Correction, from the owner's screenshot of the same AR 360 page:** the card numbers are cut at the bottom ("23.635K",
+"74.675K", "101.914K" in the 169x42 cards: title 8pt, value 12pt). Item 4 on EN 360 and AR 360 is therefore **FAIL**,
+not PASS: I judged the cards from the bridge's screenshots, rendered at 2x, where the digits only just clear the
+card's bottom edge (`crop-ar360-cards42.png`); at the owner's window zoom they are cut. The same cards were marked PASS
+on 640 x 360 in the cards check (2026-09-30) and in round 1 here; that was wrong for the same reason. Cause: `cardFit`
+still counts a line as 1.5 x pt (points taken as pixels), while the measured text box line is about 1.8 x pt plus
+padding: a 42-high card needs about 48 by the measured rule, a 48-high card (14pt value) about 52. Not fixed: the owner
+had left `cardFit` alone unless the measurements showed it too tight; they now do, so it needs his go.
+
+## 2026-10-01: measured on Power BI Desktop 2.158.1177: KPI cards, Reset buttons, page buttons
+
+Two test reports, closed without saving: "Gulf Sales Measure 2" (cards on 640 x 360 and 1920 x 1080, Reset 8pt on
+640 x 360 and 15pt on 1080, page buttons 14pt) and "Gulf Sales Measure 3" (the 640 x 360 cards on 1920 x 1080 and
+3840 x 2160 pages, and 42pt cards at 60-100 on 1080). Every visual copied from the "Gulf Sales Fit" reports, so the
+formatting is what `pbip-export.js` writes, with a visible background. Each page captured at the bridge's 1x and 2x
+scale; every reading below from a full-size crop (`tests/phase2-try/shots-sizes/m2-*`, `m3-*`), not the page view.
+Heights in page units; "whole" = the number's bottom clear of the card's inner (callout) box.
+
+| Card (title, padding, value) | Page | Cut | Touching the edge | Whole from |
+|---|---|---|---|---|
+| 8pt title, padding 3, value 12 (the 169x42 cards) | 640 x 360 | 36, 40 | 44 | 48 |
+| 8pt, padding 3, value 14 (the 151x48 cards) | 640 x 360 | 40, 44, 48 | 52 | 56 |
+| 8pt, padding 3, value 12 | 1920 x 1080 and 3840 x 2160 | 36, 40 | | 44 |
+| 8pt, padding 3, value 14 | 1920 x 1080 and 3840 x 2160 | 40 | | 44 |
+| 18pt title, padding 8, value 42 (the 126 / 144 cards) | 1920 x 1080 | 60-80 | 84 | 88 (and every height 88-144) |
+
+So on 640 x 360 the exported cards (42 and 48 high) are cut, as the owner saw, and the same cards need less on the
+bigger pages. Neither a rule in points (text box 10 + 1.8 x pt) nor any one per-point line height fits all rows: the
+42pt card needs 88 (about 2.1 x its value), the small cards 44-56 (3.1-4 x theirs), and the same small card needs more
+on the 640 x 360 page than on 1080 or 2160. More page sizes are needed to find the rule (see `mcp/WORK.md`).
+
+| Reset (91 wide on 640 x 360, 260 on 1080) | Seen |
+|---|---|
+| "Reset filters" 8pt, heights 18-44 | never wraps; the icon grows with the height and reaches the text from about 32 |
+| "إعادة ضبط الفلاتر" 8pt, heights 18-44 | never wraps; the text is wider than the space beside the icon, so the icon covers its end at every height |
+| Both 15pt, 260 wide, heights 18-48 | cut at 18-22, whole from 24; the icon never reaches the text |
+
+Page buttons 14pt, about 200 each, heights 30-56: whole at every height; a page button's text does wrap when it is
+narrow (e.g. "Executive summary" on two lines in the 1080 reports). The current page's button uses Power BI's own
+smaller text: the export sets the text size for the default state only, not the selected one.
+
+## 2026-10-01: round 3 of `fix/phone-and-sizes` (`982fbbb`, Reset and page buttons), Power BI Desktop 2.158.1177: stopped on the first report
+
+The eight "Gulf Sales Fit2" reports (expected sizes in `mcp/WORK.md`, committed before the run in `6d29ac3`). Started
+with AR 360 (last round's failure), captured at 2x and 1x (`tests/phase2-try/shots-sizes/fit2-ar360-s1/s2-p*.png`),
+judged from full-size crops (`fit2-ar360-s1/s2-p1-header.png`, `-rail.png`, `-cards.png`). Stopped at its failure; the
+other seven reports and the phone layout not run. AR 360 left open in Desktop, not saved.
+
+| Check (AR 360, page "تحليل") | Expected | Seen | Result |
+|---|---|---|---|
+| Header: title, page buttons, logo text | whole | "Gulf Sales", "تحليل", "نظرة عامة", "شعارك" whole | PASS |
+| Current page's button text | the same size as the others | "تحليل" (current) the same size as "نظرة عامة" | PASS |
+| Slicers | title and dropdown box | Year, Quarter, Day Name each with its "All" box | PASS |
+| Reset: one line, no icon over the text | "إعادة ضبط الفلاتر" whole, no icon (91x15, 8pt) | no icon, one line, but the text is **cut at the bottom** at 1x and 2x | **FAIL** |
+| Cards | known 640 x 360 cut (open item) | digits touch the bottom edge | known, not judged |
+| Values equal DAX | 101914 / 74675 / 23635 / 0.3377971 | same | PASS |
+
+Cause: the owner's height rule for a one-line button, max(40 x page h / 1080, 2 + 1.6 x pt), gives 15 at 8pt on
+640 x 360; the measurement (2026-10-01) showed English 8pt text whole from 14 and the icon from 18, but the Arabic text
+(taller letters) needs more than 15. Not fixed: needs the owner's go.
+
+**Seen, not in scope** (rule 9; AR 360): KPI titles, chart titles ("Total Sales حسب Day Name"), table headers and
+slicer titles in English (open item: Arabic display names); days in alphabetical order in the chart and table (open
+item: sort columns); the KPI numbers touch or cross the cards' bottom edge (open item: 640 x 360 cards); "Total Sales
+Last Ramadan (..." cut with "..." (8pt minimum); the table shows five rows with a scroll bar; modelNotes:
+Calendar[Month Name] and Calendar[Day Name] without a sort-by column, Sales[Total Sales vs Last Ramadan %] without a
+format string (the % card shows 0.34).
+
+## 2026-10-01: measured on Power BI Desktop 2.158.1177: the Reset button's height, Arabic and English
+
+"Gulf Sales Measure 4" (`tests/5-tmdl-sample/`, closed without saving): the exported Reset buttons copied from the
+"Gulf Sales Fit2" reports (Arabic without its icon, English with it, as exported on 640 x 360), with a visible
+background, at growing heights; captured at 1x and 2x, read from full-size crops (`tests/phase2-try/shots-sizes/
+m4-s1/s2-ar8.png`, `-en8.png`, `-ar15.png`, `m4-s2-ar8-17-18.png`). Page units.
+
+| Reset | Cut | Touching the edge | Whole from |
+|---|---|---|---|
+| "إعادة ضبط الفلاتر" 8pt, 91 wide, 640 x 360 | 14, 15, 16 | 17, 18 (the tail of "ر" on the button's edge) | 19 |
+| "Reset filters" 8pt, 91 wide, with icon, 640 x 360 | | | 14 (the icon clear of the text at every height 14-24) |
+| "إعادة ضبط الفلاتر" 15pt, 274 wide, with icon, 1920 x 1080 | 24, 26 | 28 | 30 |
+
+Rule from the larger of the two (Arabic): a Reset button needs 6 + 1.6 x pt (8pt 19, 15pt 30), 4 more than the
+button rule it used (2 + 1.6 x pt).
+
+## 2026-10-01: `fix/phone-and-sizes` after the Reset rule (`2e26239`), Power BI Desktop 2.158.1177: eight reports
+
+The eight "Gulf Sales Fit3" reports (built with this branch's `mcp/server.mjs` over stdio; expected sizes in
+`mcp/WORK.md`, committed before the run in `465874b`). Each opened alone, every page captured at 2x and 1x
+(`tests/phase2-try/shots-sizes/fit3-<report>-s1/s2-p1..p3.png`), judged from full-size crops of the header, the rail
+or top rail, the Reset and the cards (`fit3-<report>-s1/s2-*-header/-rail/-head-cards/-head-rail/-reset.png`); one DAX
+query per report (101914 / 74675 / 23635 / 0.3377971 on all eight).
+
+| Check | AR 360 | EN 360 | AR 1080 | EN 1080 | AR 2160 | EN 2160 | AR 1080 top | EN 1080 top |
+|---|---|---|---|---|---|---|---|---|
+| Header: title, logo text, page buttons whole | PASS | PASS | PASS | PASS ("Executive summary" on two lines) | PASS | PASS (two lines) | PASS | PASS |
+| Current page's button text the same size as the others (both pages) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS |
+| Slicers: title and dropdown box | PASS (91x48) | PASS | PASS (274x76) | PASS | PASS (548x152, 30pt: the slicer rule holds) | PASS | PASS (top rail, 88 high) | PASS |
+| Reset: one line, whole, no icon over the text | PASS (91x19, no icon) | PASS (91x19, icon) | PASS (274x40) | PASS | PASS (548x80) | PASS | PASS (245x40, centred) | PASS (201x40, centred) |
+| Cards | known 640 x 360 cut (open item), not judged | same | PASS (whole, centred) | PASS | PASS | PASS | PASS | PASS |
+| 1920 x 1080 as in the cards check | – | – | PASS | PASS | – | – | – (new layout) | – |
+| Values equal DAX | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS |
+| Phone layout: no visual on top of another | | | PASS | PASS | | PASS | | |
+| Phone layout: every title, slicer and button whole | | | **FAIL** (slicer boxes cut) | **FAIL** (same; "Executive...") | | **FAIL** (page-sized text) | | |
+
+**Phone layout, automated** (no clicks from the owner): `builder-scripts\phone-check.ps1` presses "Mobile layout" with
+Windows UI Automation (the layout switcher at the bottom of the page), captures the phone canvas on each page, and
+switches back to "Desktop layout"; nothing saved (`hasUnsavedChanges` false after each). Captures
+`fit3-en1080-phone-p1..p3.png`, `fit3-ar1080-phone-p1..p3.png`, `fit3-en2160-phone-p1..p3.png` (the top of each phone
+page; the canvas can't be scrolled from the script).
+- **No overlaps** on EN 1080, AR 1080 and EN 2160, both pages: the header, then the slicers and Reset (rail page), then
+  the cards two per row, then the chart, in reading order (Arabic from the right). The phone position fix holds:
+  grouped visuals use page positions in `mobile.json`.
+- **Not whole** (phone slots are fixed sizes, while most text keeps the page's size): on 1080 the three slicers'
+  dropdown boxes are cut at the bottom (64-high slots, 15pt slicers need 76); the page button "Executive summary"
+  shows as "Executive..."; long card titles end in "..."; chart titles end in "...". On 2160 the page-sized text
+  doesn't fit the phone slots at all: the title (40pt) and page buttons (29pt) are cut, the slicers (30pt) show only
+  their titles, Reset's text (30pt) is cut, the chart title fills the chart. Cards are fine on all three (they have
+  their own phone sizes). Not fixed: reported with a plan in `mcp/WORK.md`.
+
+**Seen, not in scope** (rule 9; on these eight reports):
+- Arabic reports: KPI names, chart titles ("Total Sales حسب Day Name"), table headers and slicer titles in English
+  (open item: Arabic display names, next round).
+- Days in alphabetical order in the charts and tables (Friday, Monday, ...), months too (April, August, ...) (open
+  item: sort columns, next round).
+- modelNotes on all eight: Calendar[Month Name] and Calendar[Day Name] without a sort-by column; Sales[Total Sales vs
+  Last Ramadan %] without a format string: its card shows 0.34; the tables show 101914 while the cards show 101.914K
+  (open item: format strings, next round).
+- 640 x 360 (both languages): the KPI numbers touch or cross the cards' bottom edge; long KPI titles end in "...";
+  chart labels slanted and cut ("Wednes..."); "Total Sales by Quarter" hides Q4 behind a scroll bar; the detail table
+  shows two to five rows with scroll bars and a cut fourth column (open items: small-page round).
+- Table headers left aligned over right-aligned numbers (stays as it is, owner).
+- "Your logo" and the header title sit at the top of their boxes on the big pages, not vertically centred.
+- Not checked in Desktop: the slide-in panel (website download only): its Close button uses the 2 + 1.6 x pt height,
+  which the Arabic Reset measurement suggests is too low for Arabic text on small pages; and the phone layout of the
+  640 x 360 and 3840 x 2160 reports (phone slots are fixed sizes, while slicer and button text follow the page: 30pt
+  on 2160).
+
 ## Lessons
 - **Prompts for the laptop agent:** start with the request itself, name every file, forbid changing the test files or the expected numbers, and say "stop and report on failure". Give the exact report format.
 - **What the agent can do alone:** create tables, relationships and measures, run DAX, mark date tables, refresh, screenshot one page at a time.
