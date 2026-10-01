@@ -1,8 +1,9 @@
 # Current work (the memory between sessions)
 
 Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). Last updated 2026-10-01
-by the builder: round 0 has the owner's go (branch `fix/tooltip-logo-table`): its decisions, the eight changes in
-order, the failing tests and the Desktop check's expected results are under "Next step", "Round 0: GO".
+by the builder: round 0 is built on `fix/tooltip-logo-table` and checked in Desktop (changes 1 to 6 pass); it is not
+ready to merge: one suite fails on the 60 project fixtures and Microsoft's validator fails on the MCP's exports. Both
+wait for the owner; see "Round 0: BUILT" under "Next step".
 
 ## Where things stand
 - **MCP: 6 tools** (`read_model`, `suggest_fields`, `check_model_health`, `generate_theme`, `plan_layout`,
@@ -69,6 +70,42 @@ still `assets/js/pbip-export.js`. Every round: failing tests first; only the sui
 touches, judged from full-size crops; results into `scripts/tests/DESKTOP-TESTS.md`; only our own sample model
 (`C:\DataArcus\tests\5-tmdl-sample`). Stop and report at the first failure.
 
+#### Round 0: BUILT, not merged; two failures wait for the owner (builder, 2026-10-01)
+Branch `fix/tooltip-logo-table`: decisions `bda14f4`, tests failing first `199eab7`, code `93eb7ff`.
+- **Tests, before -> after:** pbip 66 checks, 18 failing -> 66 pass; MCP 110 checks, 19 failing -> 110 pass;
+  theme-generator 879 and theme-generator-lab 879 pass; **design-engine 597 checks, 7 failing -> 1 failing** (failure 1).
+  No full run on the laptop.
+- **Desktop 2.158.1177, ten reports** (`scripts/tests/DESKTOP-TESTS.md`, "round 0 built"): changes 1 to 6 PASS in
+  English and Arabic, 1080 and 720, light and dark, website download and MCP. One expected number corrected: the tall
+  logo's box is 20 x 48 mirrored on 1080 (19 in English; the engine rounds edges, not sizes).
+- **Microsoft's validator:** the six website exports pass with 0 errors; **the four MCP exports fail with 1 error**
+  (failure 2).
+- **Expectations changed in tests, each for a stated reason:** the theme inside a project carries its file name
+  (owner's change 7; `mcp/test.mjs`); `.platform` is allowed in the names check like `.gitignore` (owner's change 8;
+  `pbip.mjs`); in the new tests the Arabic tall logo is 20 wide and a new visitor's download has the side bar's inset.
+
+**Failure 1: the 60 project fixtures.** The page now hands the exporter one new field per page, `kpiInset` (where the
+KPI titles start beside the side accent bar). The `design-engine` suite compares that whole input with the fixtures,
+so all 60 differ; compared field by field (`builder-scripts\r0-fixture-diff.mjs`), they differ by `kpiInset` only, and
+no background differs. The plan said the fixtures would stay as they are: that was wrong, the plan missed that the
+build input is captured too. Nothing was recaptured. **Proposed fix: recapture the 60 project fixtures** (the only
+change is `"kpiInset": n` on each page). The other way keeps the fixtures but leaves the title over the side bar on
+the website download.
+
+**Failure 2: the validator on the MCP's exports.** `PBIR_THEME_VISUAL_PROP_UNKNOWN`: "Unknown theme property
+border.radius for cardVisual". Not from this round: the theme with solid visuals writes the rounded border for every
+visual type, and for the card visual the name `border` is the card's own border, which has no radius. The website's
+download (transparent visuals) doesn't write it and passes. **Proposed fix:** leave `radius` out of the card visual's
+entry in `design-engine.js`; that changes the theme JSON of every design with solid visuals (41 of the 54 design
+fixtures), so those fixtures are recaptured, and one Desktop look confirms the cards' corners are unchanged.
+
+**Decisions needed:** (1) recapture the 60 project fixtures for `kpiInset`? (2) fix the card visual's theme entry and
+recapture the solid-design fixtures, in this branch or as its own small round?
+
+**Seen while building, for round 1:** now that the card's padding is applied, the phone takes the page's padding (its
+own override in `mobile.json` still has the selector Desktop ignores). On 1080 and 720 the phone cards still fit; on
+3840 x 2160 with a side bar they would not (padding 24 / 52). It is the round 1 item, more urgent than it looked.
+
 #### Round 0: GO (owner, 2026-10-01). Branch `fix/tooltip-logo-table`, from `plan/next-rounds`
 The reviewer has not started the split, so `assets/js/pbip-export.js` is changed as it is today; the split comes right
 after this round merges. Where this block differs from the measured plan below it, this block wins.
@@ -125,7 +162,7 @@ without one. Pages at 2x, hovers from the screen, judged from full-size crops.
 | # | Checked | Expected |
 |---|---|---|
 | 1 | every chart on both pages hovered (`m0-hover.ps1`) | our tooltip page shows on each (4 charts: page 1 line, bar, column; page 2 column), filtered to the hovered point; cards and tables show their usual hover |
-| 2 | header logo: wide, square, tall | undistorted and whole; boxes (page units) wide 192 x 48 at x 1692 on 1080 and 128 x 32 at x 1128 on 720 (Arabic: x 36 / 24); square 48 x 48 at x 1836 and 32 x 32 at x 1224; tall 19 x 48 at x 1865 (Arabic x 36), thin as measured; title and page buttons whole, not touching the logo; the tall logo's note in the MCP's result; without a logo the placeholder as before |
+| 2 | header logo: wide, square, tall | undistorted and whole; boxes (page units) wide 192 x 48 at x 1692 on 1080 and 128 x 32 at x 1128 on 720 (Arabic: x 36 / 24); square 48 x 48 at x 1836 and 32 x 32 at x 1224; tall 19 x 48 at x 1865 (Arabic x 36; corrected after the build: 20 x 48 there, the engine rounds edges), thin as measured; title and page buttons whole, not touching the logo; the tall logo's note in the MCP's result; without a logo the placeholder as before |
 | 3 | the tooltip (hover and the page) | 320 x 284; the card as before; a bar chart with every category name whole and horizontal and its value beside the bar, 4 rows (the sample's 4 categories), no scrollbar, no "…"; English and Arabic |
 | 4 | every table | each header over its own values: English text left, numbers right; Arabic text column (rightmost) right, numbers left; columns fill the width |
 | 5 | KPI cards on the website download | the accent bar whole (left in English, right in Arabic, on top on the dark design); panel border and shadow visible |
