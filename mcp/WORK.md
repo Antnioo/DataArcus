@@ -1,8 +1,8 @@
 # Current work (the memory between sessions)
 
 Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). Last updated 2026-10-01
-by the builder: round 0 is merged (`14dd467`); `fix/card-theme-radius` is built, checked in Desktop and waits for CI
-and the reviewer's merge. Then the split of `pbip-export.js` (reviewer), then rounds 1 and 2. See "Next step".
+by the builder: `fix/mcp-visual-style` is built, checked in Desktop and waits for CI and the reviewer's merge (a solid
+design now shows its panels on the MCP's reports). Then the split of `pbip-export.js` (reviewer), then rounds 1 and 2.
 
 ## Where things stand
 - **MCP: 6 tools** (`read_model`, `suggest_fields`, `check_model_health`, `generate_theme`, `plan_layout`,
@@ -69,7 +69,76 @@ still `assets/js/pbip-export.js`. Every round: failing tests first; only the sui
 touches, judged from full-size crops; results into `scripts/tests/DESKTOP-TESTS.md`; only our own sample model
 (`C:\DataArcus\tests\5-tmdl-sample`). Stop and report at the first failure.
 
-#### `fix/card-theme-radius`: BUILT, waits for the reviewer's merge (builder, 2026-10-01)
+#### `fix/mcp-visual-style`: BUILT, waits for the reviewer's merge (builder, 2026-10-02)
+Commits (from main `99d1cee`): plan `ff25e53`, tests failing first `b6132f2`, code `f0142b4`.
+- **Change (`assets/js/pbip-export.js`):** when the theme it is given has solid visuals (its `"*"` visuals have a
+  background), the visuals that sit on a panel (KPI cards, charts, tables, text slots) get no `background`, `border`
+  or `dropShadow` entry, so the theme draws their panel, and the group around the KPI cards gets
+  `background: show false`, so no band lies behind them. With a transparent theme everything is written as before.
+  No new input: solid is read from the theme. `mcp/server.mjs`: `create_report`'s description, its message for a
+  design with transparent visuals, and a new `panels` line in the result say what the report shows.
+  `pbip-export.min.js?v=20261002a`, `theme-generator.min.js?v=20261002a`.
+- **Measured first in Desktop 2.158**, then checked on nine reports (`scripts/tests/DESKTOP-TESTS.md`): PASS. Solid
+  designs through the MCP show a panel behind every card, chart and table, English and Arabic, light and dark; the
+  website's download is the same as in round 0.
+- **Tests, before -> after:** pbip 67 checks, 1 failing (the 82 builds with a solid theme) -> 67 pass; MCP 120
+  checks, 6 failing -> 120 pass; design-engine 598, theme-generator 883 and theme-generator-lab 883 pass.
+- **Fixtures: none change.** Proof in commit `f0142b4` (`builder-scripts\mvs-proof.mjs`, the old and the new writer on
+  the same inputs with the same ids): the 60 project fixtures' builds, which are what the website hands the writer,
+  are byte for byte the same (4369 files); in the 41 solid designs built with their own theme the only changes are
+  the three entries removed from cards, charts, tables and text slots and the background switched off on the KPI
+  group; the 13 transparent designs are byte for byte the same.
+- **Microsoft's validator:** 0 errors on all nine reports of the check.
+- **Seen, not assigned yet:** on a solid design the header band and the filter rail have square corners and no
+  shadow, unlike the panels beside them (a group has no border or shadow setting). Needs the owner's decision on its
+  round.
+
+#### The plan `fix/mcp-visual-style` was built from (owner's go 2026-10-02; reference, its state is above)
+`fix/card-theme-radius` is merged into main as `99d1cee` and its branch deleted; the validator stays a dev dependency
+of the MCP's tests; the tag `round-0-tooltip-logo-table` stays. This branch is from main.
+
+**The problem.** On the MCP's reports no visual has a panel: charts, tables and cards sit straight on the page,
+although the report's theme has solid visuals and `create_report` says the theme gives the visuals "their own solid
+cards to keep them visible".
+- **Where it is switched off:** `assets/js/pbip-export.js`, `frame()`: every visual's `visualContainerObjects` gets
+  `background`, `border` and `dropShadow` with `show: false`, whatever the design. `visual.json` outranks the theme,
+  so the theme's solid background, rounded border and shadow never show.
+- **Why it was written so:** the website's download always carries a background image that draws the panels, with a
+  theme whose visuals are transparent (`theme-generator.js` forces `transparent` for the project's theme); there,
+  off is right. The MCP has no background image and makes the theme solid, and then the same switch hides the cards.
+
+**The rule.**
+- **Transparent design** (the background image draws the panels; the theme's visuals are transparent): the visuals'
+  background, border and shadow stay off, as today. This is every website download: nothing in it changes.
+- **Solid design** (no panels in a background image; the theme's visuals are solid): the visuals that sit on a panel
+  are left to the theme: `visual.json` writes no `background`, `border` or `dropShadow` for them, so the theme's card
+  colour, rounded corners and shadow show, as the website's own preview of a solid design shows them.
+- **How the report writer knows:** from the theme it is given: solid when `theme.visualStyles["*"]["*"].background[0]
+  .show` is true. No new input, so the page's build input and the 60 project fixtures are untouched.
+
+**Expected result per visual, solid design (to be confirmed by the measurement, then pinned by tests):**
+
+| Visual | Transparent design (today, unchanged) | Solid design (after) |
+|---|---|---|
+| KPI cards | on the image's panels, no fill of their own | each card its own panel from the theme (card colour, rounded, shadow if the design has it); the "KPI cards" group draws no band behind them |
+| charts, table, text slot | on the image's panels | each its own panel from the theme |
+| slicers and Reset in the filter rail | on the image's rail panel | inside one rail panel (the "Filters" group, from the theme); the slicers themselves without panels |
+| header: title, page buttons, logo | on the image's header band | on one header band (the "Header" group, from the theme), without panels of their own, as today |
+| buttons (Reset, Filters, Close), page buttons | their own fill, by design | the same |
+| slide-in panel | its own card (written in `visual.json`) | the same |
+| tooltip page | the page's card colour; its visuals without panels | the same |
+
+**Website download:** follows the rule already (always the transparent side); checked by a test that its `visual.json`
+files are byte for byte what they are today apart from random ids.
+
+**Steps:** this plan committed; measured in Desktop (one solid design through the MCP as it is and with the candidate
+change, one transparent design as the website's download; English and Arabic, 1080, light and dark); tests first
+(failing); code in `pbip-export.js`, and `create_report`'s description and message in `mcp/server.mjs` saying what the
+report shows; `pbip`, `design-engine`, `theme-generator`, `npm test`; `.min.js` and `?v=`; fixtures: none expected to
+change (stated with proof); CI green; the Desktop check; the report. Stop if a failure could change what Desktop
+shows.
+
+#### `fix/card-theme-radius`: merged into main as `99d1cee`; how it was built
 Round 0 is merged into main as `14dd467`; its branch tip is kept as the tag `round-0-tooltip-logo-table` (the fixture
 proof is in commit `0b9c813` there); `fix/tooltip-logo-table` and `plan/next-rounds` are deleted.
 Commits on `fix/card-theme-radius` (from main): tests failing first `51cdf5b`, code and fixtures `9057a6b`.

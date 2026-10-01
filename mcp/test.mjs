@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { layoutProblems, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems } from '../scripts/tests/report-check.mjs';
+import { layoutProblems, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems } from '../scripts/tests/report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-mcp-'));
@@ -295,6 +295,13 @@ if (!r.err) {
   const dir = path.join(ROOT, 'bim-project', r.j.report), f = fs.readdirSync(path.join(dir, 'StaticResources/RegisteredResources')).find((x) => x.endsWith('-theme.json'));
   const th = JSON.parse(fs.readFileSync(path.join(dir, 'StaticResources/RegisteredResources', f), 'utf8'));
   check(th.visualStyles['*']['*'].background[0].show === true && r.j.themeChanged && /transparent/i.test(JSON.stringify(r.j.themeChanged)), `create_report transparent: ${JSON.stringify(r.j.themeChanged)}`);
+  // and the report really shows those solid visuals: the cards, charts and tables leave their panel to the theme
+  // (visual.json used to switch every visual's background, border and shadow off, so nothing had a panel), and the
+  // result says what the report shows
+  const all = {}; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f2 = path.join(d, e.name); if (e.isDirectory()) walk(f2); else all[path.relative(path.dirname(dir), f2).split(path.sep).join('/')] = fs.readFileSync(f2); }); walk(dir);
+  const pp = panelProblems(all);
+  check(pp.solid && pp.panels > 0 && !pp.bad.length, `create_report transparent: ${pp.bad.length} visuals without the theme's panel: ${pp.bad.slice(0, 2).join('; ')}`);
+  check(/own panel/.test(String(r.j.panels)) && /own panel/.test(JSON.stringify(r.j.themeChanged)), `create_report transparent: the result should say each card, chart and table has its own panel: ${JSON.stringify(r.j.panels)}`);
 } else check(false, `create_report transparent: ${r.t.slice(0, 200)}`);
 // text sizes within 8-60 on the biggest and smallest pages
 for (const [w, h] of [[3840, 2160], [640, 360]]) {
@@ -453,6 +460,11 @@ const cardProblems = (dir, rtl) => {
     check(tb.columns >= 6 && !tb.bad.length, `${name}: ${tb.bad.length} of ${tb.columns} table columns without header alignment: ${tb.bad.slice(0, 2).join('; ')}`);
     check(cd.cards === 8 && !cd.bad.length, `${name}: ${new Set(cd.bad.map((x) => x.split(':')[0])).size} of ${cd.cards} cards with their own fill or ignored padding (8 cards expected): ${cd.bad.slice(0, 2).join('; ')}`);
     check(!sh.length, `${name}: ${sh.join('; ')}`);
+    // a solid design shows its panels: 13 visuals (7 KPI cards, 4 charts, 2 tables) are left to the theme, the group
+    // around the KPI cards draws no band, and the header, slicers and buttons keep theirs off
+    const pp = panelProblems(files);
+    check(pp.solid && pp.panels === 13 && !pp.bad.length, `${name}: panels: ${pp.panels} visuals left to the theme (13 expected), ${pp.bad.length} wrong: ${pp.bad.slice(0, 2).join('; ')}`);
+    check(/own panel/.test(String(res.j.panels)), `${name}: the result should say what the report shows: ${JSON.stringify(res.j.panels)}`);
     // Microsoft's validator (their report authoring CLI, a pinned dev dependency of these tests) finds no error in the
     // export; and the card visual's theme entry has no "radius": inside a theme the card's "border" is the card's own
     // border, which has none (the validator's PBIR_THEME_VISUAL_PROP_UNKNOWN), while other visual types keep theirs

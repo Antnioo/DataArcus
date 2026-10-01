@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { visitor } from './lib.mjs';
-import { layoutProblems, headerAndRail, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems } from './report-check.mjs';
+import { layoutProblems, headerAndRail, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems } from './report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT = path.join(HERE, 'fixtures', 'bridge-project');
@@ -197,6 +197,20 @@ export default async function ({ browser, url }) {
     check(!bad.table.length, `table header alignment wrong on ${bad.table.length} of ${cases.length} designs, e.g. ${bad.table.slice(0, 2).join(' | ')}`);
     check(!bad.card.length, `card fill or padding wrong on ${bad.card.length} of ${cases.length} designs, e.g. ${bad.card.slice(0, 2).join(' | ')}`);
     check(!bad.shell.length, `theme name or .platform wrong on ${bad.shell.length} of ${cases.length} designs, e.g. ${bad.shell.slice(0, 2).join(' | ')}`);
+    // who draws the panels (fix/mcp-visual-style): with a solid theme the cards, charts and tables are left to the
+    // theme and the KPI group draws no band; with a transparent theme every visual stays off, as the page's download
+    // needs it (its background image draws the panels). Each design with its own theme, with and without the slide-in
+    // panel, and each design again with the transparent theme the page's download always uses.
+    {
+      const wrong = [], counts = { solid: 0, transparent: 0 };
+      for (const c of cases) for (const panel of [false, true]) for (const forced of [false, true]) {
+        const d = forced ? Object.assign({}, c.state, { layout: Object.assign({}, c.state.layout, { transparent: true }) }) : c.state;
+        const pp = panelProblems(build(d, c.lang, { second: true, panel }).files), want = !d.layout.transparent;
+        counts[pp.solid ? 'solid' : 'transparent']++;
+        if (pp.solid !== want || pp.bad.length || (want && !pp.panels)) wrong.push(`${c.id}${panel ? ' (panel)' : ''}${forced ? ' (transparent theme)' : ''}: ${pp.solid ? 'solid' : 'transparent'}, ${pp.bad.length} wrong of ${pp.panels} panels, ${pp.bad[0] || ''}`);
+      }
+      check(!wrong.length && counts.solid === 82 && counts.transparent === 134, `panels wrong on ${wrong.length} of ${4 * cases.length} builds (${counts.solid} solid, ${counts.transparent} transparent; 82 and 134 expected), e.g. ${wrong.slice(0, 2).join(' | ')}`);
+    }
 
     // the default two-page report (exec, 4 KPI cards; second page analysis), counted: 4 charts, 8 table columns, 8 cards
     const base = cases.find((c) => c.id === 'preset-1').state;
@@ -274,8 +288,12 @@ export default async function ({ browser, url }) {
   // visitor's default design has it at the side: insets 26 on 1920 x 1080)
   const round0 = (files, rtl, insets) => {
     const a = tooltipProblems(files), t = tooltipPageProblems(files), tb = tableProblems(files, rtl), cd = cardStyleProblems(files, rtl, insets);
+    // the page's download always has a transparent theme and a background image that draws the panels: no visual
+    // may leave its panel to the theme there
+    const pp = panelProblems(files);
     return a.bad.slice(0, 1).map((x) => `tooltip link (${a.bad.length} of ${a.charts}): ${x}`).concat(t.bad.slice(0, 1), tb.bad.slice(0, 1).map((x) => `table (${tb.bad.length} of ${tb.columns}): ${x}`),
-      cd.bad.slice(0, 1).map((x) => `cards (${cd.bad.length} on ${cd.cards}): ${x}`), projectProblems(files));
+      cd.bad.slice(0, 1).map((x) => `cards (${cd.bad.length} on ${cd.cards}): ${x}`), projectProblems(files),
+      pp.solid || pp.bad.length ? [`panels: the download's theme is ${pp.solid ? 'solid' : 'transparent'}, ${pp.bad.length} visuals wrong: ${pp.bad[0] || ''}`] : []);
   };
   const picker = async (pg) => {
     await pg.waitForFunction(() => document.querySelectorAll('#pbipMap select').length > 0, null, { timeout: 15000 });

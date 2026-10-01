@@ -492,6 +492,45 @@ Arabic, 1920 x 1080, light and dark). Expected: the cards and everything else as
 - As before: English names in Arabic reports, months and days sorted alphabetically, 0.34 and 101914 (round 2); the
   title and logo at the top of their boxes (round 1).
 
+## 2026-10-02: `fix/mcp-visual-style`, Power BI Desktop 2.158.1177: a solid design shows its panels
+On the MCP's reports no visual had a panel: `pbip-export.js` switched every visual's container background, border and
+shadow off in `visual.json`, which outranks the theme's solid visuals. Test reports only, on our sample model and the
+website's sample data, closed without saving; scripts `builder-scripts\mvs-measure.mjs`, `mvs-check.mjs`,
+`mvs-proof.mjs`, `png-diff.ps1`; screenshots in `C:\DataArcus\tests\phase2-try\shots-mvs\`, pages at 2x.
+
+**Measured before any code** (a solid design through the MCP, English and Arabic, 1920 x 1080, light: preset
+Corporate, dark: the default design; A as written then, B and C candidates edited by script):
+
+| Report | Seen |
+|---|---|
+| A, as written then | header band, then KPI titles and numbers on one continuous band, charts and tables straight on the page: no panels |
+| B: the three entries left out on KPI cards, charts and tables; the KPI group's background off | each card, chart and table on its own panel from the theme: card colour, rounded corners, shadow; the page colour shows between the KPI cards; English and Arabic, light and dark |
+| C: as B, the KPI group left as it is | as B, but the group's band lies behind the cards (the gaps between them differ from B by up to 12 of 255) |
+| header and filter rail in B | one band each (their groups, from the theme): square corners, no shadow |
+| Microsoft's validator on B and C | 0 errors |
+
+**The check after the code** (expected: `mcp/WORK.md`, the table per visual). Nine reports from the branch's code:
+through the MCP a solid design in English and Arabic, light and dark, and one design with transparent visuals; the
+website's sample download (transparent theme, background image) in English and Arabic, light and dark.
+
+| Report | Compared with | Result |
+|---|---|---|
+| MCP, solid, EN and AR, light and dark, both pages | the measured candidate B | pixel for pixel the same (one page: 62 pixels by 1 of 255): every KPI card, chart and table on its own panel, no band behind the cards, header and rail as bands | 
+| MCP, a design with transparent visuals | the solid light report | pixel for pixel the same; `create_report` says its theme was made solid and that each card, chart and table shows on its own panel |
+| website download, dark, EN and AR, both pages | the round 0 reports of the same designs | the same but for drawing noise (EN: pixel for pixel; AR: 190 and 330 pixels by at most 6 of 255) |
+| website download, light, EN and AR | the round 0 reports (those had a logo) | the same below the header; the only differences are in the header strip, where the logo was |
+| all nine | Microsoft's validator | succeeded, 0 errors, 0 warnings |
+
+**PASS:** a solid design shows its panels on the MCP's reports; the website's download is unchanged.
+
+**Seen, not in scope:**
+- On a solid design the header band and the filter rail (their groups, drawn by the theme) have square corners and no
+  shadow, while the cards, charts and tables beside them are rounded with a shadow. A group has no border or shadow
+  setting of its own.
+- As before: "Executive…" on the first page button with Segoe UI at 1080 (round 1); English names in Arabic reports,
+  months and days sorted alphabetically, 0.34 and 101914 (round 2); the title and logo at the top of their boxes
+  (round 1).
+
 ## Lessons
 - **Prompts for the laptop agent:** start with the request itself, name every file, forbid changing the test files or the expected numbers, and say "stop and report on failure". Give the exact report format.
 - **What the agent can do alone:** create tables, relationships and measures, run DAX, mark date tables, refresh, screenshot one page at a time.

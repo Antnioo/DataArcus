@@ -216,3 +216,39 @@ export function projectProblems(files) {
   if (model) platform(model.replace(/[^/]+$/, ''), 'SemanticModel');
   return bad;
 }
+
+// ---------- panels (fix/mcp-visual-style, 2026-10-02; measured in Desktop 2.158, DESKTOP-TESTS.md) ----------
+// Who draws the panel behind a visual. A transparent design (the theme's visuals have no background: the page's
+// background image draws the panels) switches every visual's container background, border and shadow off in
+// visual.json. A solid design (the theme's "*" visuals have a background) leaves the visuals that sit on a panel (KPI
+// cards, charts, tables, text slots) to the theme: none of the three entries is written, so the theme's card colour,
+// rounded corners and shadow show; the group around the KPI cards draws no band behind them (background show false);
+// everything else (header title, logo, page buttons, slicers, buttons, the tooltip page's visuals) stays off.
+// Returns { solid, panels (visuals left to the theme), bad }.
+const PANEL_TYPES = ['cardVisual', 'gauge', 'tableEx'].concat(CHART_TYPES);
+export function panelProblems(files) {
+  const bad = [], themeFile = Object.keys(files).find((p) => /StaticResources\/RegisteredResources\/[^/]*\.json$/.test(p));
+  const theme = themeFile ? JSON.parse(String(files[themeFile])) : {};
+  const solid = !!((((((theme.visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).show);
+  let panels = 0;
+  const KEYS = ['background', 'border', 'dropShadow'], off = (c, k) => lit((((c[k] || [])[0] || {}).properties || {}).show) === 'false';
+  pagesOf(files).forEach((p) => {
+    const tip = p.page.type === 'Tooltip', byName = Object.fromEntries(p.visuals.map((v) => [v.name, v]));
+    const kpiGroups = new Set(p.visuals.filter((v) => v.visual && v.visual.visualType === 'cardVisual' && v.parentGroupName).map((v) => v.parentGroupName));
+    p.visuals.forEach((v) => {
+      const id = `${p.page.displayName}/${v.visual ? v.visual.visualType : 'group ' + v.visualGroup.displayName}`;
+      if (v.visualGroup) {
+        const gb = ((((v.visualGroup.objects || {}).background || [])[0] || {}).properties || {}).show;
+        if (solid && !tip && kpiGroups.has(v.name)) { if (lit(gb) !== 'false') bad.push(`${id}: the group around the KPI cards must draw no band (background ${lit(gb)})`); }
+        else if (v.visualGroup.objects) bad.push(`${id}: group objects ${JSON.stringify(v.visualGroup.objects)}`);
+        return;
+      }
+      const c = v.visual.visualContainerObjects || {}, parent = v.parentGroupName ? byName[v.parentGroupName] : null;
+      if (parent && parent.isHidden) return;   // the slide-in panel: its own card, written in visual.json
+      const panel = !tip && (PANEL_TYPES.includes(v.visual.visualType) || (v.visual.visualType === 'textbox' && !v.parentGroupName));
+      if (solid && panel) { panels++; const has = KEYS.filter((k) => c[k]); if (has.length) bad.push(`${id}: ${has.join(', ')} written, the theme can't draw its panel`); }
+      else { const on = KEYS.filter((k) => !off(c, k)); if (on.length) bad.push(`${id}: ${on.join(', ')} not switched off`); }
+    });
+  });
+  return { solid, panels, bad };
+}
