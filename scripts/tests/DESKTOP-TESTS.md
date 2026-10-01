@@ -237,6 +237,38 @@ still counts a line as 1.5 x pt (points taken as pixels), while the measured tex
 padding: a 42-high card needs about 48 by the measured rule, a 48-high card (14pt value) about 52. Not fixed: the owner
 had left `cardFit` alone unless the measurements showed it too tight; they now do, so it needs his go.
 
+## 2026-10-01: measured on Power BI Desktop 2.158.1177: KPI cards, Reset buttons, page buttons
+
+Two test reports, closed without saving: "Gulf Sales Measure 2" (cards on 640 x 360 and 1920 x 1080, Reset 8pt on
+640 x 360 and 15pt on 1080, page buttons 14pt) and "Gulf Sales Measure 3" (the 640 x 360 cards on 1920 x 1080 and
+3840 x 2160 pages, and 42pt cards at 60-100 on 1080). Every visual copied from the "Gulf Sales Fit" reports, so the
+formatting is what `pbip-export.js` writes, with a visible background. Each page captured at the bridge's 1x and 2x
+scale; every reading below from a full-size crop (`tests/phase2-try/shots-sizes/m2-*`, `m3-*`), not the page view.
+Heights in page units; "whole" = the number's bottom clear of the card's inner (callout) box.
+
+| Card (title, padding, value) | Page | Cut | Touching the edge | Whole from |
+|---|---|---|---|---|
+| 8pt title, padding 3, value 12 (the 169x42 cards) | 640 x 360 | 36, 40 | 44 | 48 |
+| 8pt, padding 3, value 14 (the 151x48 cards) | 640 x 360 | 40, 44, 48 | 52 | 56 |
+| 8pt, padding 3, value 12 | 1920 x 1080 and 3840 x 2160 | 36, 40 | | 44 |
+| 8pt, padding 3, value 14 | 1920 x 1080 and 3840 x 2160 | 40 | | 44 |
+| 18pt title, padding 8, value 42 (the 126 / 144 cards) | 1920 x 1080 | 60-80 | 84 | 88 (and every height 88-144) |
+
+So on 640 x 360 the exported cards (42 and 48 high) are cut, as the owner saw, and the same cards need less on the
+bigger pages. Neither a rule in points (text box 10 + 1.8 x pt) nor any one per-point line height fits all rows: the
+42pt card needs 88 (about 2.1 x its value), the small cards 44-56 (3.1-4 x theirs), and the same small card needs more
+on the 640 x 360 page than on 1080 or 2160. More page sizes are needed to find the rule (see `mcp/WORK.md`).
+
+| Reset (91 wide on 640 x 360, 260 on 1080) | Seen |
+|---|---|
+| "Reset filters" 8pt, heights 18-44 | never wraps; the icon grows with the height and reaches the text from about 32 |
+| "إعادة ضبط الفلاتر" 8pt, heights 18-44 | never wraps; the text is wider than the space beside the icon, so the icon covers its end at every height |
+| Both 15pt, 260 wide, heights 18-48 | cut at 18-22, whole from 24; the icon never reaches the text |
+
+Page buttons 14pt, about 200 each, heights 30-56: whole at every height; a page button's text does wrap when it is
+narrow (e.g. "Executive summary" on two lines in the 1080 reports). The current page's button uses Power BI's own
+smaller text: the export sets the text size for the default state only, not the selected one.
+
 ## Lessons
 - **Prompts for the laptop agent:** start with the request itself, name every file, forbid changing the test files or the expected numbers, and say "stop and report on failure". Give the exact report format.
 - **What the agent can do alone:** create tables, relationships and measures, run DAX, mark date tables, refresh, screenshot one page at a time.
