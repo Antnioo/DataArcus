@@ -56,11 +56,19 @@ Dropped, because Microsoft's authoring skill and the Desktop bridge already do t
 (restyle, re-layout, modernise visuals) and the reload-and-screenshot loop. Revisit only for something they can't do,
 such as mirroring a report for Arabic.
 
-## Repo: when to move it to a private repo
-It lives in the public DataArcus repo for now. **Remind the owner to move `mcp/` into a private repo as soon as any of
-these is true:** the design engine (item 1) is in the MCP, it is packaged for other users (item 5), or he wants to sell,
-license or brand it. Before moving, make sure the shared engines are handled (copy them in, or publish them as a
-package the website and the MCP both use).
+## Repo: the move to the private repo (decided 2026-10-01)
+The trigger is reached (the design engine is in the MCP; it is being branded). The private repo exists:
+`Antnioo/dataarcus-engine` (empty). **Owner's choice: option A**, after the current round (`fix/phone-and-sizes`) is
+merged and before the private beta, with a plan in `WORK.md` and the owner's go first:
+- **Moves to the private repo:** `mcp/`, the internal notes (`mcp/WORK.md`, `mcp/ROADMAP.md`, `mcp/CLAUDE.md`,
+  `scripts/tests/DESKTOP-TESTS.md`, `content/`), and all future paid work (the Arabic/Gulf pack, Pro features).
+- **Stays public:** the website, its tools and the shared engines in `assets/js/` (every visitor's browser downloads
+  them anyway, so hiding their source would hide little). The private repo takes a copy of the engines, with a check
+  that both copies match, so the website and the MCP keep giving the same answers.
+- **Rule from then on:** anything that should stay secret (the premium Arabic/Gulf pack) never goes into the
+  website's browser code; it lives only in the MCP.
+- Already-pushed history stays readable in the public repo; the move protects the work from then on.
+- The laptop clones the new repo next to the public one in `C:\DataArcus`.
 
 ## Safety model (keep it)
 - One working folder; every path checked against it.
