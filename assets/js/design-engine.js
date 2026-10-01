@@ -114,12 +114,24 @@
   // Adjustable sizes, each kept inside a safe range so every visual stays usable
   const RANGE = { hh: [44, 96], logoW: [100, 360], fw: [160, 320], fh: [56, 120], kpiH: [64, 160], mainW: [40, 75], split: [30, 70], radius: [0, 24], kpiBarW: [2, 8], headLineW: [2, 8] };
   // on a narrow (4:3) page the side filter panel is capped at a quarter of the width (PW: the page's width, see pw)
-  const rangeOf = (k, PW) => (k === 'fw' ? [160, Math.min(320, Math.round(PW / 4))] : RANGE[k]);
-  const clampTo = (k, v, PW) => Math.max(rangeOf(k, PW)[0], Math.min(rangeOf(k, PW)[1], Math.round(+v)));
+  // c (the layout, optional): on a small page the header and the top filter rail start higher, so their text fits:
+  // heights measured in Power BI Desktop 2.157 (scripts/tests/DESKTOP-TESTS.md, 2026-10-01), in page units: the header
+  // title box (hh - 24) holds an 8pt line (25), the top rail fh a dropdown slicer at the theme's slicer text size
+  // (16 + 4 x pt) and the report's padding (10 above and below on 1920 x 1080, scaled with the page)
+  const minOf = (k, c) => {
+    if (!c || (k !== 'hh' && k !== 'fh')) return 0;
+    const s = page(c).s;
+    return k === 'hh' ? Math.ceil(24 + 25 / s) : Math.ceil((16 + 4 * fs(10, c) + 20 * s / 1.5) / s);
+  };
+  const rangeOf = (k, PW, c) => {
+    const r = k === 'fw' ? [160, Math.min(320, Math.round(PW / 4))] : RANGE[k];
+    return [Math.min(r[1], Math.max(r[0], minOf(k, c))), r[1]];
+  };
+  const clampTo = (k, v, PW, c) => Math.max(rangeOf(k, PW, c)[0], Math.min(rangeOf(k, PW, c)[1], Math.round(+v)));
   const hasMain = (P) => P.rows[0].length > 1 && P.rows[0][0][0] > P.rows[0][1][0];   // a wider first chart
   const hasSplit = (P) => P.rows.length === 2;
   function sizes(c, PW) {
-    const P = LAYOUTS[c.preset], n = (k, d) => clampTo(k, c[k] == null || !isFinite(+c[k]) ? d : c[k], PW);
+    const P = LAYOUTS[c.preset], n = (k, d) => clampTo(k, c[k] == null || !isFinite(+c[k]) ? d : c[k], PW, c);
     const w0 = P.rows[0].reduce((a, col) => a + col[0], 0);
     return { hh: n('hh', HH), logoW: n('logoW', 150), fpos: ['start', 'end', 'top'].includes(c.fpos) ? c.fpos : 'start', fw: n('fw', 196), fh: n('fh', 72),
       kpiH: n('kpiH', P.kpiH), mainW: n('mainW', 100 * P.rows[0][0][0] / w0), split: n('split', P.flex.length === 2 ? 100 * P.flex[0] / (P.flex[0] + P.flex[1]) : 50) };

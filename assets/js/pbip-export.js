@@ -278,14 +278,22 @@
     // Sizes of the header, page buttons, filter rail and slide-in panel were made on a 1920 x 1080 page: they scale with
     // the page (k = page height / 1080), as cardFit does, and text follows the page within Power BI's limits (8-60pt).
     // Where the 8pt minimum makes a text bigger than its scaled box (small pages), the box grows to fit the text.
-    // fitText(text, t, w, maxLines): how a text of size t fits a width w, with Microsoft's card rule (a line takes 1.5 x
-    // the size) and 0.55 em per character as in cardFit: the lines it needs (at most maxLines), their height, and
-    // whether it fits in them. pt(t): a text size within Power BI's limits. LABEL: button text, the theme's label size.
-    const pt = (t) => Math.max(8, Math.min(60, Math.round(t))), lineOf = (t) => Math.ceil(t * 1.5), charW = (t) => t * 0.55 * 4 / 3;
-    const fitText = (text, t, w, maxLines) => {
+    // Heights measured in Power BI Desktop 2.157 (scripts/tests/DESKTOP-TESTS.md, 2026-10-01), in page units (a point
+    // size takes the same page units on any page): a text box needs 10 + 1.8 x pt per line (points to pixels 4/3, a line
+    // about 1.35 of that, padding about 5 above and below), button text 2 + 1.6 x pt per line, the Reset icon 2.25 x pt,
+    // a dropdown slicer (title and box) 16 + 4 x pt. Width: 0.55 em per character, in pixels (charW).
+    // fitText(text, t, w, maxLines, kind): the lines a text of size t needs in a width w (at most maxLines), the height
+    // they take in a 'box' (text box) or a 'button', and whether the text fits in them. pt(t): a size within 8-60pt.
+    // LABEL: button text, the theme's label size.
+    const pt = (t) => Math.max(8, Math.min(60, Math.round(t))), charW = (t) => t * 0.55 * 4 / 3;
+    const boxH = (t, n) => Math.ceil(10 + 1.8 * t * (n || 1)), buttonH = (t, n) => Math.ceil(2 + 1.6 * t * (n || 1));
+    const iconH = (t) => Math.ceil(2.25 * t), slicerH = (t) => Math.ceil(16 + 4 * t);
+    const fitText = (text, t, w, maxLines, kind) => {
       const need = Math.ceil(charW(t) * String(text).length / Math.max(1, w)), lines = Math.min(maxLines || 1, Math.max(1, need));
-      return { lines, h: lines * lineOf(t), fits: need <= lines };
+      return { lines, h: kind === 'box' ? boxH(t, lines) : buttonH(t, lines), fits: need <= lines };
     };
+    // the largest text size within 8-60 whose one line fits a text box h high (8 at least)
+    const boxFit = (h) => Math.max(8, Math.floor((h - 10) / 1.8));
     const LABEL = +(TH.label || {}).fontSize || 10;
     const SLICER_TEXT = +((((((o.theme || {}).visualStyles || {}).slicer || {})['*'] || {}).header || [{}])[0].textSize) || LABEL;
     // Every card formatting object needs the "default" selector, or Power BI ignores it; the number stays centred, like
@@ -373,11 +381,11 @@
         // them); squeezed into the room left, with smaller text if needed; left out when even 8pt doesn't fit
         if (PAGES.length > 1) {
           const n = PAGES.length, longest = Math.max(...PAGES.map((p) => String(p.name || base).length));
-          const need = (t) => { const L = Math.min(2, Math.max(1, Math.floor(title.h / lineOf(t)))); return Math.ceil(charW(t) * Math.ceil(longest / L)) + 16 * k; };
+          const need = (t) => { const L = Math.min(2, Math.max(1, Math.floor((title.h - 2) / (1.6 * t)))); return Math.ceil(charW(t) * Math.ceil(longest / L) + 16 * k); };
           let t = pt(title.h * 0.3);
           const w = Math.min(x1 - x0, n * Math.max(140 * k, need(t)) + 40 * k);
-          while (t > 8 && (need(t) > (w - 40 * k) / n || lineOf(t) > title.h)) t--;
-          if (need(t) <= (w - 40 * k) / n && lineOf(t) <= title.h) nav = { x: rtl ? x0 : x1 - w, y: title.y, w, h: title.h, t };
+          while (t > 8 && (need(t) > (w - 40 * k) / n || buttonH(t) > title.h)) t--;
+          if (need(t) <= (w - 40 * k) / n && buttonH(t) <= title.h) nav = { x: rtl ? x0 : x1 - w, y: title.y, w, h: title.h, t };
         }
       }
 
@@ -386,14 +394,14 @@
         if (s.kind === 'slicer') {
           // the filter panel holds several dropdown slicers and a Reset button:
           // stacked in a side panel, side by side in a top strip
-          // (sizes from 1920 x 1080 scaled by k; Reset as wide or as high as its text needs, slicers two lines of theirs)
+          // (sizes from 1920 x 1080 scaled by k; Reset as wide or as high as its text needs, slicers the height a dropdown needs)
           const fields = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null), pad = 10 * k, gap = 8 * k, n = fields.length;
           const resetText = W.reset || 'Reset filters', across = s.w > s.h;
-          const bw = across ? Math.max(Math.min(160 * k, Math.round(s.w * 0.14)), Math.ceil(charW(LABEL) * resetText.length) + lineOf(LABEL) + 24 * k) : s.w - 2 * pad;
-          const bh = across ? s.h - 2 * pad : Math.max(40 * k, fitText(resetText, LABEL, bw - lineOf(LABEL) - 24 * k, 2).h + 12 * k);
+          const bw = across ? Math.max(Math.min(160 * k, Math.round(s.w * 0.14)), Math.ceil(charW(LABEL) * resetText.length) + iconH(LABEL) + 24 * k) : s.w - 2 * pad;
+          const bh = across ? s.h - 2 * pad : Math.max(40 * k, iconH(LABEL), fitText(resetText, LABEL, bw - iconH(LABEL) - 24 * k, 2, 'button').h);
           const room = across ? s.w - 2 * pad - bw - gap : s.w - 2 * pad;
           const sw = across ? (room - gap * (n - 1)) / n : room;
-          const sh = across ? s.h - 2 * pad : Math.max(2 * lineOf(SLICER_TEXT) + 8 * k, Math.min(76 * k, (s.h - 2 * pad - bh - gap * n) / n));
+          const sh = across ? s.h - 2 * pad : Math.max(slicerH(SLICER_TEXT), Math.min(76 * k, (s.h - 2 * pad - bh - gap * n) / n));
           fields.forEach((f, i) => {
             // in a right-to-left report the first slicer is the rightmost one, so tab order follows the reading
             const x = across ? (rtl ? s.x + s.w - pad - sw - i * (sw + gap) : s.x + pad + i * (sw + gap)) : s.x + pad, y = across ? s.y + pad : s.y + pad + i * (sh + gap);
@@ -419,13 +427,13 @@
         let visual;
         if (s.kind === 'title') {
           // the title and the logo text follow the header's height (within 8-60pt), and stay on one line in it
-          const size = Math.min(pt(s.h * 0.42), Math.max(8, Math.floor(s.h / 1.5)));
+          const size = Math.min(pt(s.h * 0.42), boxFit(s.h));
           visual = { visualType: 'textbox', objects: textbox(o.title || base, size, true, u.text), visualContainerObjects: frame(null, o.title || base) };
         } else if (s.kind === 'logo') {
           visual = logoFile
             ? { visualType: 'image', objects: { general: obj({ imageUrl: resource(logoFile) }), imageScaling: obj({ imageScalingType: str('Fit') }) }, visualContainerObjects: frame(null, W.logo || 'Logo') }
             // the placeholder until a logo is added: sized to the header slot, in the secondary text colour so it reads
-            : { visualType: 'textbox', objects: textbox(W.logoHere || 'Your logo', Math.min(pt(s.h * 0.3), Math.max(8, Math.floor(s.h / 1.5))), false, mixHex(u.text, u.card, 0.3)), visualContainerObjects: frame(null, W.logo || 'Logo') };
+            : { visualType: 'textbox', objects: textbox(W.logoHere || 'Your logo', Math.min(pt(s.h * 0.3), boxFit(s.h)), false, mixHex(u.text, u.card, 0.3)), visualContainerObjects: frame(null, W.logo || 'Logo') };
         } else if (s.kind === 'text') {
           visual = { visualType: 'textbox', objects: textbox(W.textHere || 'Explain what the main chart shows and what to do about it.', 11, false, u.text), visualContainerObjects: frame(s.title, s.title) };
         } else {
@@ -467,10 +475,10 @@
       // slide-in filter panel: one hidden group over the page (card, slicers, Reset, Close); two display-only
       // bookmarks show and hide it, so the user's slicer selections stay when it opens and closes
       if (panel && pg.openBm) {
-        // (sizes from 1920 x 1080 scaled by k; Close and Reset as big as their text needs, slicers two lines of theirs)
+        // (sizes from 1920 x 1080 scaled by k; Close and Reset as big as their text needs, slicers the height a dropdown needs)
         const P = panel, gname = rnd(), kids = [], pad = 16 * k, head = 44 * k, gap = 10 * k, sw = P.w - 2 * pad;
         const resetText = W.reset || 'Reset filters', closeText = '✕  ' + (W.close || 'Close');
-        const bh = Math.round(Math.max(40 * k, fitText(resetText, LABEL, sw - lineOf(LABEL) - 24 * k, 2).h + 12 * k));
+        const bh = Math.round(Math.max(40 * k, iconH(LABEL), fitText(resetText, LABEL, sw - iconH(LABEL) - 24 * k, 2, 'button').h));
         const fields = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null);
         z = Math.max(z, 900000);
         container({ name: gname, x: P.x, y: P.y, w: P.w, h: P.h, z, hidden: true, kind: 'group', groupKey: 'panel', group: { displayName: W.filterPanel || 'Filter panel', groupMode: 'ScaleMode' } });
@@ -484,13 +492,13 @@
             dropShadow: obj({ show: bool(true) }),
             padding: obj({ top: num(Math.round(14 * k)), left: num(Math.round(16 * k)), right: num(Math.round(16 * k)), bottom: num(Math.round(12 * k)) }) }) } });
         // Close, in the panel's top corner at the end of the reading line
-        const cw = Math.round(Math.max(96 * k, charW(LABEL) * closeText.length + 16 * k)), ch = Math.round(Math.max(32 * k, lineOf(LABEL) + 8 * k));
+        const cw = Math.round(Math.max(96 * k, charW(LABEL) * closeText.length + 16 * k)), ch = Math.round(Math.max(32 * k, buttonH(LABEL)));
         const cx = Math.round(rtl ? P.x + pad : P.x + P.w - pad - cw);
         add1({ x: cx, y: Math.round(P.y + 10 * k), w: cw, h: ch, kind: 'button', visual: { visualType: 'actionButton',
           objects: { icon: def({ shapeType: str('blank') }), text: def({ show: bool(true), text: str(closeText), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL) }), fill: def({ show: bool(false) }), outline: def({ show: bool(false) }) },
           visualContainerObjects: Object.assign(frame(null, W.closeFilters || 'Close the filter panel'), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(pg.closeBm) }) }) } });
         // slicers stacked, then Reset at the bottom
-        const sh = Math.max(2 * lineOf(SLICER_TEXT) + 8 * k, Math.min(76 * k, (P.h - head - pad - bh - gap * (fields.length + 1)) / fields.length)), names = [];
+        const sh = Math.max(slicerH(SLICER_TEXT), Math.min(76 * k, (P.h - head - pad - bh - gap * (fields.length + 1)) / fields.length)), names = [];
         fields.forEach((f, i) => {
           const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
           const v = add1({ x: Math.round(P.x + pad), y: Math.round(P.y + head + 8 * k + i * (sh + gap)), w: Math.round(sw), h: Math.round(sh), kind: 'slicer',
