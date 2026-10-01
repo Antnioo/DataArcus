@@ -1,9 +1,8 @@
 # Current work (the memory between sessions)
 
 Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). Last updated 2026-10-01
-by the builder: round 0 measured in Power BI Desktop 2.158.1177 (seven changes; `scripts/tests/DESKTOP-TESTS.md`) and its
-plan rewritten from the measurements under "Next step" (branch `plan/next-rounds`, no code changed). Five decisions
-wait for the owner; the build waits for his go and for the split of `pbip-export.js` to merge.
+by the builder: round 0 has the owner's go (branch `fix/tooltip-logo-table`): its decisions, the eight changes in
+order, the failing tests and the Desktop check's expected results are under "Next step", "Round 0: GO".
 
 ## Where things stand
 - **MCP: 6 tools** (`read_model`, `suggest_fields`, `check_model_health`, `generate_theme`, `plan_layout`,
@@ -70,7 +69,71 @@ still `assets/js/pbip-export.js`. Every round: failing tests first; only the sui
 touches, judged from full-size crops; results into `scripts/tests/DESKTOP-TESTS.md`; only our own sample model
 (`C:\DataArcus\tests\5-tmdl-sample`). Stop and report at the first failure.
 
-#### Round 0: the owner's seven findings (branch `fix/tooltip-logo-table`)
+#### Round 0: GO (owner, 2026-10-01). Branch `fix/tooltip-logo-table`, from `plan/next-rounds`
+The reviewer has not started the split, so `assets/js/pbip-export.js` is changed as it is today; the split comes right
+after this round merges. Where this block differs from the measured plan below it, this block wins.
+
+**The owner's decisions on the five questions:** (1) tooltip transparency is dropped: Desktop doesn't support it;
+(2) the tooltip page grows to 320 x 284, so 6 rows fit; (3) a tall logo keeps its own ratio, and when a logo is taller
+than wide the report notes say "This logo is tall; a horizontal version will read much better in the header.";
+(4) card title: top margin `round(12k)` (12 at 1080, 8 at 720) and a side padding that keeps the title clear of the
+accent bar (26 at 1080, 17 at 720), both reserved by `cardFit`; (5) the table's own fill stays.
+
+**Eight changes, in this order:**
+1. Tooltip link: `visualTooltip.type` `'Canvas'` on every chart of every main page.
+2. Logo: width from the image's ratio, no minimum, `image.fit: 'Fit'`, the new `logo` input on `create_report`, and
+   the tall-logo note (`create_report`'s notes; on the website a line under the logo's file name).
+3. Tooltip chart: a bar chart, axis text 8pt, 40% axis room, value axis off, data labels on (8pt), on a 320 x 284
+   tooltip page (card 296 x 76 at 12, 8; chart 296 x 184 at 12, 92: floor((184 - 46) / 22) = 6 rows).
+4. Table header alignment: `columnFormatting` per column with "Apply to header"; text left, numbers right, mirrored
+   in Arabic.
+5. Card fill off: `fillCustom` `show: false`, no selector.
+6. Card padding and spacing written without the selector: top `round(12k)`; on the side of a side accent bar the
+   bar's end plus `round(5k)` (26 / 17); the other sides `P`; `cardFit` reserves all four.
+7. The theme inside the project carries the name `report.json` references (the theme's file name with `.json`), as
+   Microsoft's theming reference requires; the theme download on its own keeps its name.
+8. A `.platform` file in the report folder (and in the sample model's folder), as Microsoft's scaffold writes it.
+   Microsoft's validator (`powerbi-report-author validate`) must pass on our export.
+
+**Recorded elsewhere:** the phone card padding selector goes to round 1 (in this round the phone keeps what it
+writes today); "calculated tables need to be manually refreshed" on the sample download is an open item.
+
+**Steps:** this block committed and pushed; the tests, failing, committed; the code (`pbip-export.js`,
+`design-engine.js`, `pbip-bind.js`, `mcp/server.mjs`, `theme-generator.js` for the logo's ratio and note); only the
+touched suites (`pbip`, `design-engine`, `theme-generator`, `npm test` in `mcp/`); the `.min.js` files and `?v=`;
+the Desktop check; the validator; this file updated, committed and pushed. Stop at the first real failure.
+
+**Tests written first, with what must fail before the code:**
+
+| Test | Where | Before the code |
+|---|---|---|
+| every chart linked with `Canvas` to a tooltip page; nothing else linked | `report-check.mjs` `tooltipProblems`; `pbip.mjs`, `mcp/test.mjs` | the default two-page report: 4 of 4 charts |
+| `imageSize` (PNG, JPG); the logo box from the ratio; `image.fit` `'Fit'`, no `imageScaling`; the `logo` input, its refusals, the tall-logo note | `design-engine.mjs`, `pbip.mjs`, `mcp/test.mjs` | no `imageSize`; every report with a logo; no `logo` input |
+| the tooltip page is 320 x 284, its chart a bar chart with the four settings, 6 rows | `report-check.mjs` `tooltipPageProblems` | every report with a bound tooltip page |
+| each table column has its `columnFormatting` entry | `report-check.mjs` `tableProblems` | the default report: 8 of 8 columns |
+| each card: `fillCustom` off without a selector; `padding` and `spacing` without a selector; top `round(12k)`; the bar side clear; fits its box | `pbip.mjs` `cardProblems`, `mcp/test.mjs` | the default report: 8 of 8 cards |
+| the project's theme `name` = `customTheme.name` = the item's `name` = its `path`, ending `.json` | `report-check.mjs` `projectProblems` | every project |
+| `.platform` in the report folder (type Report, the report's name, a GUID) | the same | every project |
+
+**The Desktop check (expected results, written before any run).** Power BI Desktop 2.158.1177, test reports only,
+closed without saving. Ten reports: the website's sample download for English and Arabic at 1920 x 1080 and
+1280 x 720, light (Corporate, side accent bar), each with one logo (EN 1080 wide, AR 1080 tall, EN 720 square,
+AR 720 wide); EN 1080 and AR 1080 dark (DataArcus, accent bar on top) without a logo; and through the MCP on our
+sample model (`5-tmdl-sample`) EN 1080 with the tall logo and AR 720 with the square logo, plus EN 1080 and AR 1080
+without one. Pages at 2x, hovers from the screen, judged from full-size crops.
+
+| # | Checked | Expected |
+|---|---|---|
+| 1 | every chart on both pages hovered (`m0-hover.ps1`) | our tooltip page shows on each (4 charts: page 1 line, bar, column; page 2 column), filtered to the hovered point; cards and tables show their usual hover |
+| 2 | header logo: wide, square, tall | undistorted and whole; boxes (page units) wide 192 x 48 at x 1692 on 1080 and 128 x 32 at x 1128 on 720 (Arabic: x 36 / 24); square 48 x 48 at x 1836 and 32 x 32 at x 1224; tall 19 x 48 at x 1865 (Arabic x 36), thin as measured; title and page buttons whole, not touching the logo; the tall logo's note in the MCP's result; without a logo the placeholder as before |
+| 3 | the tooltip (hover and the page) | 320 x 284; the card as before; a bar chart with every category name whole and horizontal and its value beside the bar, 4 rows (the sample's 4 categories), no scrollbar, no "…"; English and Arabic |
+| 4 | every table | each header over its own values: English text left, numbers right; Arabic text column (rightmost) right, numbers left; columns fill the width |
+| 5 | KPI cards on the website download | the accent bar whole (left in English, right in Arabic, on top on the dark design); panel border and shadow visible |
+| 6 | KPI cards | the title clear of the panel's top (12 on 1080, 8 on 720) and clear of the side bar (26 / 17); the number whole and centred in what is left; value sizes 42 on 1080 and 28 on 720, the tooltip card 20 |
+| 7, 8 | Microsoft's validator on each export; the theme in Desktop | `validate`: 0 errors; colours, fonts and text sizes as before (the theme is applied) |
+| all | everything else on both pages | unchanged: header, slicers, Reset, page buttons, chart positions, phone layout without overlaps |
+
+#### Round 0, the measured plan per change (reference; the GO block above has the final decisions)
 **Measured in Desktop 2.158.1177 on 2026-10-01, before any code** (`scripts/tests/DESKTOP-TESTS.md`, "round 0
 measurements": the table of results, the test reports and the scripts `builder-scripts\m0-*`). The plan below uses what
 was measured, not the earlier guesses. Property names and values were first read from Microsoft's report CLI
@@ -249,6 +312,10 @@ bound field says whether it is a number).
   its top) on EN and AR at 1080, 720 and 2160. **Expected:** every title, slicer box, button and page button whole
   on every phone page, no "...", no overlap; cards as before (title 10, value 20).
 
+**1.1b The phone card padding selector (owner 2026-10-01, from round 0).** `mobile.json` writes the card's container
+padding with the `default` selector, which Desktop ignores on the page (measured in round 0). Check it in the mobile
+layout and write it without the selector if it is ignored there too, with `cardFit` on the phone box unchanged.
+
 **1.2 Slide-in panel checked in Desktop (never done; no code planned unless it fails).**
 - Reports: the design with `slidePanel: true`, EN and AR at 1080 and 720, built over stdio, and one website download
   (EN 1080) to cover that path. New script `builder-scripts\panel-check.ps1`: Ctrl+click on Filters, capture, pick a
@@ -347,19 +414,9 @@ bound field says whether it is a number).
 8. The tooltip chart becomes a bar chart; tooltip transparency starts at 15 within 10-20 (measured since: not
    possible, decision 1 below).
 
-#### Decisions needed from the owner before round 0 is built (from the measurements)
-1. **Tooltip transparency can't be done in Desktop** (the tooltip is always opaque). Drop it from round 0 (proposed),
-   or check one published report in the service first?
-2. **The tooltip bar chart shows 4 rows** at today's tooltip size. Grow the tooltip page to 320 x 284 for 6 rows
-   (proposed), or keep 320 x 240 with 4?
-3. **The tall logo is 19 wide on 1080** (13 on 720): whole and undistorted, but thin (crop
-   `shots-m0\c-owner-logo-ratio-boxes.png`). Accept it as the logo's own shape (proposed), or give tall logos more
-   height or a smallest width?
-4. **Card title:** top margin 12 on 1080 and 8 on 720 (crops `c-en1080-pad-p4.png`, `c-en720-pad-p4.png`)? And, found
-   while measuring: with a side accent bar the title is drawn over the bar; move the title clear of it (26 on 1080,
-   17 on 720, crop `c-en1080-pad-p6.png`) in this round (proposed)?
-5. **The table's header and rows have their own fill** (the panel's colour, so nothing is hidden today). Leave it
-   (proposed), or make it transparent like the cards?
+#### The owner's answers to the five round 0 questions (2026-10-01)
+In the GO block of round 0: transparency dropped; tooltip page 320 x 284; tall logos keep their ratio, with a note;
+card title margins 12k and the bar-side padding; the table's fill stays. No decision is open.
 
 ## Open items (flagged, need the owner's go before any work)
 - **Next round, after `fix/phone-and-sizes` (owner 2026-10-01; plan only, then "go"):**
@@ -372,6 +429,8 @@ bound field says whether it is a number).
     Saturday or Sunday. The model is still never changed without the user.
   - **Measures without a format string**, as model health findings: the % card shows 0.34 (Sales[Total Sales vs Last
     Ramadan %]); the table shows 101914 while the cards show 101.914K.
+- **The sample-data download opens with "One or more calculated tables need to be manually refreshed"** (seen in
+  round 0's measurements; the visuals show data anyway, and the README says to refresh once). Open (owner 2026-10-01).
 - **Small-page round, with the 640 x 360 cards (after the next round):**
   - **KPI cards cut at 640 x 360** (already on main): the numbers in the 42- and 48-high cards are cut at the bottom.
     Measured (2.158, `scripts/tests/DESKTOP-TESTS.md`): 8pt title / value 12 needs 48, value 14 needs 56 on 640 x 360,
