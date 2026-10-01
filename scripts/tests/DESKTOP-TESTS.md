@@ -329,7 +329,23 @@ query per report (101914 / 74675 / 23635 / 0.3377971 on all eight).
 | Cards | known 640 x 360 cut (open item), not judged | same | PASS (whole, centred) | PASS | PASS | PASS | PASS | PASS |
 | 1920 x 1080 as in the cards check | – | – | PASS | PASS | – | – | – (new layout) | – |
 | Values equal DAX | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS |
-| Phone layout (owner's clicks) | | | see below | see below | | | | |
+| Phone layout: no visual on top of another | | | PASS | PASS | | PASS | | |
+| Phone layout: every title, slicer and button whole | | | **FAIL** (slicer boxes cut) | **FAIL** (same; "Executive...") | | **FAIL** (page-sized text) | | |
+
+**Phone layout, automated** (no clicks from the owner): `builder-scripts\phone-check.ps1` presses "Mobile layout" with
+Windows UI Automation (the layout switcher at the bottom of the page), captures the phone canvas on each page, and
+switches back to "Desktop layout"; nothing saved (`hasUnsavedChanges` false after each). Captures
+`fit3-en1080-phone-p1..p3.png`, `fit3-ar1080-phone-p1..p3.png`, `fit3-en2160-phone-p1..p3.png` (the top of each phone
+page; the canvas can't be scrolled from the script).
+- **No overlaps** on EN 1080, AR 1080 and EN 2160, both pages: the header, then the slicers and Reset (rail page), then
+  the cards two per row, then the chart, in reading order (Arabic from the right). The phone position fix holds:
+  grouped visuals use page positions in `mobile.json`.
+- **Not whole** (phone slots are fixed sizes, while most text keeps the page's size): on 1080 the three slicers'
+  dropdown boxes are cut at the bottom (64-high slots, 15pt slicers need 76); the page button "Executive summary"
+  shows as "Executive..."; long card titles end in "..."; chart titles end in "...". On 2160 the page-sized text
+  doesn't fit the phone slots at all: the title (40pt) and page buttons (29pt) are cut, the slicers (30pt) show only
+  their titles, Reset's text (30pt) is cut, the chart title fills the chart. Cards are fine on all three (they have
+  their own phone sizes). Not fixed: reported with a plan in `mcp/WORK.md`.
 
 **Seen, not in scope** (rule 9; on these eight reports):
 - Arabic reports: KPI names, chart titles ("Total Sales حسب Day Name"), table headers and slicer titles in English
