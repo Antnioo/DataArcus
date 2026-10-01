@@ -282,15 +282,17 @@
     // size takes the same page units on any page): a text box needs 10 + 1.8 x pt per line (points to pixels 4/3, a line
     // about 1.35 of that, padding about 5 above and below), button text 2 + 1.6 x pt per line, the Reset icon 2.25 x pt,
     // a dropdown slicer (title and box) 16 + 4 x pt. Width: 0.55 em per character, in pixels (charW).
-    // fitText(text, t, w, maxLines, kind): the lines a text of size t needs in a width w (at most maxLines), the height
-    // they take in a 'box' (text box) or a 'button', and whether the text fits in them. pt(t): a size within 8-60pt.
-    // LABEL: button text, the theme's label size.
+    // Buttons (measured on 2.158): Power BI never wraps a button's text, and its icon grows with the button's height
+    // (about as wide as the button is high) and is drawn at the start. resetFit(text, w, k): a Reset button w wide is one
+    // line high, max(40k, 2 + 1.6 x pt), and keeps its icon only where the text (0.45 em per character, measured 0.40-0.41)
+    // and the icon fit side by side; otherwise the icon is left out rather than drawn over the text.
+    // pt(t): a size within 8-60pt. LABEL: button text, the theme's label size.
     const pt = (t) => Math.max(8, Math.min(60, Math.round(t))), charW = (t) => t * 0.55 * 4 / 3;
     const boxH = (t, n) => Math.ceil(10 + 1.8 * t * (n || 1)), buttonH = (t, n) => Math.ceil(2 + 1.6 * t * (n || 1));
     const iconH = (t) => Math.ceil(2.25 * t), slicerH = (t) => Math.ceil(16 + 4 * t);
-    const fitText = (text, t, w, maxLines, kind) => {
-      const need = Math.ceil(charW(t) * String(text).length / Math.max(1, w)), lines = Math.min(maxLines || 1, Math.max(1, need));
-      return { lines, h: kind === 'box' ? boxH(t, lines) : buttonH(t, lines), fits: need <= lines };
+    const resetFit = (text, w, k) => {
+      const h = Math.ceil(Math.max(40 * k, buttonH(LABEL)));
+      return { h, icon: 0.45 * 4 / 3 * LABEL * String(text).length + h + 6 <= w };
     };
     // the largest text size within 8-60 whose one line fits a text box h high (8 at least)
     const boxFit = (h) => Math.max(8, Math.floor((h - 10) / 1.8));
@@ -398,7 +400,7 @@
           const fields = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null), pad = 10 * k, gap = 8 * k, n = fields.length;
           const resetText = W.reset || 'Reset filters', across = s.w > s.h;
           const bw = across ? Math.max(Math.min(160 * k, Math.round(s.w * 0.14)), Math.ceil(charW(LABEL) * resetText.length) + iconH(LABEL) + 24 * k) : s.w - 2 * pad;
-          const bh = across ? s.h - 2 * pad : Math.max(40 * k, iconH(LABEL), fitText(resetText, LABEL, bw - iconH(LABEL) - 24 * k, 2, 'button').h);
+          const reset = resetFit(resetText, bw, k), bh = reset.h;
           const room = across ? s.w - 2 * pad - bw - gap : s.w - 2 * pad;
           const sw = across ? (room - gap * (n - 1)) / n : room;
           const sh = across ? s.h - 2 * pad : Math.max(slicerH(SLICER_TEXT), Math.min(76 * k, (s.h - 2 * pad - bh - gap * n) / n));
@@ -414,10 +416,10 @@
             z += 1000;
           });
           // Reset button: applies a bookmark that clears these slicers
-          const bm = rnd(), bx = across ? (rtl ? s.x + pad : s.x + s.w - pad - bw) : s.x + pad, by = across ? s.y + pad : s.y + s.h - pad - bh;
+          const bm = rnd(), bx = across ? (rtl ? s.x + pad : s.x + s.w - pad - bw) : s.x + pad, by = across ? s.y + (s.h - bh) / 2 : s.y + s.h - pad - bh;
           container({ x: Math.round(bx), y: Math.round(by), w: Math.round(bw), h: Math.round(bh), z, parent, kind: 'button',
             visual: { visualType: 'actionButton',
-              objects: { icon: def({ shapeType: str('reset'), lineColor: color(u.accent || u.text) }), text: def({ show: bool(true), text: str(resetText), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL) }),
+              objects: { icon: def({ shapeType: str(reset.icon ? 'reset' : 'blank'), lineColor: color(u.accent || u.text) }), text: def({ show: bool(true), text: str(resetText), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL) }),
                 fill: def({ show: bool(true), fillColor: color(mixHex(u.card, u.text, 0.06)), transparency: num(0) }), outline: def({ show: bool(true), lineColor: color(edge) }) },
               visualContainerObjects: Object.assign(frame(null, resetText), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(bm) }) }) } });
           z += 1000;
@@ -455,10 +457,11 @@
         const v = container({ x: s.x, y: s.y, w: s.w, h: s.h, z, parent, visual, kind: s.kind });
         if (!mainChart && ['line', 'column', 'bar'].includes(s.kind)) mainChart = v;
         z += 1000;
-        // the page navigator follows the title in the reading order
+        // the page navigator follows the title in the reading order; its text size is set for the default, hover and
+        // selected states (the current page's button is the selected one, and would otherwise show Power BI's own size)
         if (s.kind === 'title' && nav) {
           container({ x: Math.round(nav.x), y: nav.y, w: Math.round(nav.w), h: nav.h, z, parent: groups.header.name, kind: 'nav',
-            visual: { visualType: 'pageNavigator', objects: { text: def({ fontSize: num(nav.t) }) }, visualContainerObjects: frame(null, W.pages || 'Pages') } });
+            visual: { visualType: 'pageNavigator', objects: { text: ['default', 'hover', 'selected'].map((id) => ({ properties: { fontSize: num(nav.t) }, selector: { id } })) }, visualContainerObjects: frame(null, W.pages || 'Pages') } });
           z += 1000;
         }
         if (s.kind === 'title' && openBtn) {
@@ -478,7 +481,7 @@
         // (sizes from 1920 x 1080 scaled by k; Close and Reset as big as their text needs, slicers the height a dropdown needs)
         const P = panel, gname = rnd(), kids = [], pad = 16 * k, head = 44 * k, gap = 10 * k, sw = P.w - 2 * pad;
         const resetText = W.reset || 'Reset filters', closeText = '✕  ' + (W.close || 'Close');
-        const bh = Math.round(Math.max(40 * k, iconH(LABEL), fitText(resetText, LABEL, sw - iconH(LABEL) - 24 * k, 2, 'button').h));
+        const reset = resetFit(resetText, Math.round(sw), k), bh = reset.h;
         const fields = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null);
         z = Math.max(z, 900000);
         container({ name: gname, x: P.x, y: P.y, w: P.w, h: P.h, z, hidden: true, kind: 'group', groupKey: 'panel', group: { displayName: W.filterPanel || 'Filter panel', groupMode: 'ScaleMode' } });
@@ -509,7 +512,7 @@
         });
         const rb = rnd();
         add1({ x: Math.round(P.x + pad), y: Math.round(P.y + P.h - pad - bh), w: Math.round(sw), h: bh, kind: 'button', visual: { visualType: 'actionButton',
-          objects: { icon: def({ shapeType: str('reset'), lineColor: color(u.accent || u.text) }), text: def({ show: bool(true), text: str(resetText), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL) }),
+          objects: { icon: def({ shapeType: str(reset.icon ? 'reset' : 'blank'), lineColor: color(u.accent || u.text) }), text: def({ show: bool(true), text: str(resetText), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL) }),
             fill: def({ show: bool(true), fillColor: color(mixHex(u.card, u.text, 0.06)), transparency: num(0) }), outline: def({ show: bool(true), lineColor: color(edge) }) },
           visualContainerObjects: Object.assign(frame(null, resetText), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(rb) }) }) } });
         bookmarks.push({ name: rb, page: pageName, targets: names, label: (W.reset || 'Reset filters') + (PAGES.length > 1 ? ' · ' + (pg.name || '') : '') });
