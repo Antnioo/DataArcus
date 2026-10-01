@@ -4,8 +4,8 @@ What to post, when, and exactly how. Read it before writing a post; update the q
 Last updated 2026-10-01 by the reviewer.
 
 ## Who posts
-- **Abdelrahman's personal profile** for now (DataArcus isn't a registered business yet). People follow people; the
-  profile is the brand. A DataArcus company page comes after registration.
+- **The DataArcus page and Abdelrahman's personal profile.** Post on the page, then repost from the profile with one
+  personal line: LinkedIn shows page posts to far fewer people, and people follow people.
 - **Profile basics (once):** headline "Power BI developer | Free Power BI tools for the Gulf at dataarcus.com";
   the website in the profile's link; a featured section with the Theme Generator, the Model Health Check and the
   best-performing article.
@@ -65,4 +65,4 @@ visits from LinkedIn). Write what worked and what didn't below, and change the n
 ## Log
 | Date | Post | Type | Impressions | Comments | Site clicks | Note |
 |---|---|---|---|---|---|---|
-| | | | | | | |
+| 2026-10 | MCP teaser video (31 s, square, silent; "coming soon", link to the Theme Generator in the first comment) | Tool demo | | | | Page post + repost from the profile |
