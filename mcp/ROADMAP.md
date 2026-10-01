@@ -60,7 +60,7 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
   buttons sized from Desktop measurements on every page size; the engine's minimum header and rail heights.
 
 ## Next, in order
-1. **Split `pbip-export.js` into small parts (owner's go 2026-10-01; first, right after `fix/phone-and-sizes` merges, so Arabic accuracy and later fixes land in the small files).** It is about 600 dense lines doing every job
+1. **Split `pbip-export.js` into small parts (owner's go 2026-10-01; right after round 0 (`fix/tooltip-logo-table`) merges, in a fresh reviewer session, so Arabic accuracy and later fixes land in the small files).** It is about 600 dense lines doing every job
    (cards, slicers, buttons, tables, header, filter rail, slide-in panel, phone layout, every size rule), so a fix in
    one corner means editing a file where everything lives. Split it into modules with one job each:
    - `sizes`: every rule measured in Desktop (text box, slicer, button, Reset, card), with a pointer to its
@@ -73,7 +73,7 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
    project fixtures, both downloads and the MCP reports; no fixture is recaptured and no expected number changes.
    One writer: start only when no other branch touches `pbip-export.js`. Then a bug in buttons means opening the
    button file, and nothing else is touched.
-   **Then CI (done with the split):** a GitHub Actions workflow runs every website suite and `npm test` on every push
+   **CI: done 2026-10-01** (`.github/workflows/tests.yml`, first run green on `47fc6aa`; was planned after the split): a GitHub Actions workflow runs every website suite and `npm test` on every push
    and pull request, so nothing reaches main without passing (free on GitHub). The reviewer adds it.
 2. **Arabic accuracy:** Arabic display names for titles (`create_report`), day and month sort order and measures
    without a format string as health findings with ready fix scripts. Checked in Desktop in English and Arabic.
