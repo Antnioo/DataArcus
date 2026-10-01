@@ -11,10 +11,18 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
   "an MCP for Claude": MCP is an open standard, and the engine must outlive any one AI app. Keep the engines shared
   between the website and the MCP. Only `pbip-export.js` writes Microsoft's report files (PBIR), so a format change
   stays in that one file.
-- **Position:** Microsoft's Copilot and authoring tools create reports but don't do styling and formatting well.
-  DataArcus is the design layer (brand themes, layouts that fit every page size, backgrounds, model-aware fields) and
-  is built for teams that need Arabic, right-to-left, Hijri and Gulf reporting. Don't claim nobody else serves Arabic:
-  articles and tools on it exist; the moat is all of it together in real report files.
+- **Position (reframed 2026-10-01, owner's go; research on Arabic demand pending):** three layers.
+  - **Identity, for everyone:** "Power BI reports designed right, in minutes, and checked in Power BI, not just
+    generated." Speed plus trust (measured, tested, nothing broken). Microsoft's Copilot and authoring tools create
+    reports but don't do styling and formatting well.
+  - **Edge, across the Gulf: built for how the Gulf does business.** Ramadan vs last Ramadan (it moves about 11 days
+    a year), Eid peaks, Hijri months, the Saturday-Sunday weekend, VAT, in English or Arabic reports. Every Gulf
+    retailer, dealer, bank and telecom needs this even in English-only reports, and generic tools don't do it.
+  - **Premium: Arabic and right to left done properly**, for the clients who need it (government, semi-government,
+    Saudi Arabia). Arabic alone is too narrow to be the identity (most private-sector Gulf reports are in English),
+    but it is tedious in Power BI (no right-to-left setting), so it is worth paying for where it is required.
+  - Don't claim nobody else serves Arabic: articles and tools on it exist; the moat is all three together in real,
+    checked report files.
 - **Users before perfection.** The next milestone is a private beta with 5-10 Power BI developers, then launch. Small
   pages and backgrounds wait for what testers actually hit.
 - **Who first:** independent Power BI developers and consultants, then small BI teams, then Gulf organisations;
