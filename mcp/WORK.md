@@ -173,6 +173,29 @@ the slicer rule's check (if they fail: stop and measure again, don't adjust the 
   background SVG drawn from them, and in the project fixtures the pages' slot y/h and the slide-in panel's y/h and the
   background PNGs; theme, saved design and file name unchanged.
 
+- Full run after the recapture (laptop kept awake): all 16 website suites PASS (4969 checks; design-engine 589),
+  `capture-design-fixtures.mjs --check` MATCH on the live and lab pages (54 each), `--project --check` MATCH (60),
+  MCP 87 PASS.
+
+**Desktop reports, round 2 (built 2026-10-01, before opening Desktop)** with this branch's `mcp/server.mjs` over stdio,
+same calls as before, named "Gulf Sales Fit ..." (the round-1 "Gulf Sales Sizes" reports stay as they were; the MCP
+never overwrites): EN exec / AR analysis (filters end) at 1080, 360, 2160, and "EN/AR 1080 top" (analysis, filters
+top). `layoutProblems` finds nothing on all eight; modelNotes the same three on all. From the written files:
+
+| Report | Header: title, logo text, page buttons | Rail: slicers, Reset | Cards (value) |
+|---|---|---|---|
+| EN 1080 / AR 1080 | 20pt in 840x48; 14pt in 225x48; 14pt in 320x48 | 3 × 274x76; 15pt in 274x40 | 454-455x144, 507-509x126 (42) |
+| EN 360 / AR 360 | 8pt in 280x25; 8pt in 75x25; 8pt in 225x25 (AR 131x25) | 3 × 91x48; 8pt in 91x28 | 151-152x48 (14), 169-170x42 (12) |
+| EN 2160 / AR 2160 | 40pt in 1680x96; 29pt in 450x96; 29pt in 640x96 | 3 × 548x152 (30pt, 136 needed); 30pt in 548x80 | 909x288, 1014-1017x252 (60) |
+| EN 1080 top | as EN 1080 | top rail: 3 × 542x88; "Reset filters" 15pt in 201x88 | 612x126 (42), page 2 454-455x144 |
+| AR 1080 top | as EN 1080 | top rail: 3 × 528x88; "إعادة ضبط الفلاتر" 15pt in 245x88 | as EN 1080 top |
+
+Tooltip card 296x76 (20) on all. The top rail's Reset is 201 / 245 wide (not 190 / 234 as in the round-1 plan): its
+icon now takes the measured 2.25 x pt. Expected in Desktop (items 1-6 of the plan, plus the top rail): header title,
+logo text and page buttons whole; slicers show title and dropdown box (on 2160 the slicer rule's check: 30pt in 152);
+Reset whole; 1080 as in the cards check; cards whole; values equal DAX; phone layout without overlaps (owner's clicks).
+Screenshots in `C:\DataArcus\tests\phase2-try\shots-sizes\` (`fit-*.png`).
+
 **Order after "go":** tests first with the measured rules (and option (a)'s engine test if chosen), failing; code
 (`pbip-export.js`, and `design-engine.js` only under (a)); fixtures recaptured only under (a) and only the six listed;
 full run; the eight Desktop reports built over stdio, expected numbers written first; Desktop check, phone layout with
