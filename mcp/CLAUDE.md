@@ -92,6 +92,9 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
     behind a scrollbar, which can't be used in a tooltip.
   - Inside a project the theme's own `name` must be the file name `report.json` references (with `.json`), and the
     report folder needs a `.platform` file: Microsoft's validator (`powerbi-report-author validate`) checks both.
+  - Inside a theme the card visual's `border` is the card's own border, which has no `radius` (the validator rejects
+    it); Desktop draws the card's corners the same without it. `npm test` runs Microsoft's validator on two exports
+    (their report authoring CLI, a dev dependency pinned to 0.4.0, not shipped with the MCP).
 
 ## Writing prompts for another agent or session
 Start with the request itself ("Run this test now"). Name every file. List the steps. Add the rules: scope folder, don't

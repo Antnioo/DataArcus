@@ -218,9 +218,12 @@
     'scorecard', 'rdlVisual', 'advancedSlicerVisual', 'textSlicer', 'listSlicer', 'image'];
   // Corners: Power BI only rounds a visual when its border is on. Solid visuals get a 1px border in their own
   // background color (invisible, only the rounded shape shows); transparent visuals sit on the PNG panels, no border.
-  const borderStyle = (u, l) => (l && l.transparent
+  // t: the visual type. The card visual gets no "radius": inside a theme its "border" is the card's own border, which
+  // has none (Microsoft's validator: "Unknown theme property border.radius for cardVisual"), and Desktop 2.158 draws
+  // the card's corners the same with or without it (scripts/tests/DESKTOP-TESTS.md, 2026-10-01).
+  const borderStyle = (u, l, t) => (l && l.transparent
     ? [{ show: false }]
-    : [{ show: true, color: { solid: { color: u.card } }, width: 1, radius: toPage(+l.radius || 0, l) }]);
+    : [Object.assign({ show: true, color: { solid: { color: u.card } }, width: 1 }, t === 'cardVisual' ? {} : { radius: toPage(+l.radius || 0, l) })]);
   // Power BI's own visual shadow (on by default in Fluent 2) is a square box: with the PNG it would show around
   // the rounded panels, so transparent visuals never get it; solid visuals follow the Soft shadows option
   const shadowStyle = (l) => [{ show: !!(l && !l.transparent && l.shadow) }];
@@ -313,7 +316,7 @@
           background: [{ color: { solid: { color: u.background } }, transparency: 0 }],
           outspace: [{ color: { solid: { color: u.background } } }]
         } },
-        ...Object.fromEntries(VISUAL_TYPES.map((t) => [t, { '*': { border: borderStyle(u, l), dropShadow: shadowStyle(l) } }])),
+        ...Object.fromEntries(VISUAL_TYPES.map((t) => [t, { '*': { border: borderStyle(u, l, t), dropShadow: shadowStyle(l) } }])),
         // visuals with their own text sizes, which do not follow the text classes above
         ...textSizes(d)
       }, u, d, lang)

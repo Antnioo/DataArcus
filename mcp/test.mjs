@@ -6,6 +6,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import zlib from 'node:zlib';
 import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { layoutProblems, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems } from '../scripts/tests/report-check.mjs';
@@ -429,6 +430,15 @@ const cardProblems = (dir, rtl) => {
 // without their own fill and with padding Desktop applies; the theme under one name and a .platform file; a logo
 {
   const filesOf = (dir) => { const out = {}; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else out[path.relative(path.dirname(dir), f).split(path.sep).join('/')] = fs.readFileSync(f); }); walk(dir); return out; };
+  // Microsoft's validator on a report folder: { errors, what } (warnings are not errors)
+  const validate = (dir) => {
+    const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
+    const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' });
+    try {
+      const d = JSON.parse(p.stdout).data, diag = d.diagnostics || {};
+      return { errors: d.errorCount, what: Object.keys(diag).filter((k) => diag[k].severity === 'error').map((k) => `${k}: ${String(diag[k].items[0].message).split(': ')[0]}`).join('; ') };
+    } catch (e) { return { errors: -1, what: 'the validator did not run: ' + String(p.stderr || p.error || p.stdout).slice(0, 200) }; }
+  };
   const t4 = await tryCall('generate_theme', { name: 'Round0', brand: '#0F4C5C', folder: 'themes/r0' });
   const made = {};
   for (const [name, lang] of [['Round0 EN', 'en'], ['Round0 AR', 'ar']]) {
@@ -443,6 +453,14 @@ const cardProblems = (dir, rtl) => {
     check(tb.columns >= 6 && !tb.bad.length, `${name}: ${tb.bad.length} of ${tb.columns} table columns without header alignment: ${tb.bad.slice(0, 2).join('; ')}`);
     check(cd.cards === 8 && !cd.bad.length, `${name}: ${new Set(cd.bad.map((x) => x.split(':')[0])).size} of ${cd.cards} cards with their own fill or ignored padding (8 cards expected): ${cd.bad.slice(0, 2).join('; ')}`);
     check(!sh.length, `${name}: ${sh.join('; ')}`);
+    // Microsoft's validator (their report authoring CLI, a pinned dev dependency of these tests) finds no error in the
+    // export; and the card visual's theme entry has no "radius": inside a theme the card's "border" is the card's own
+    // border, which has none (the validator's PBIR_THEME_VISUAL_PROP_UNKNOWN), while other visual types keep theirs
+    const dir = path.join(ROOT, 'dax-project', res.j.report), v = validate(dir);
+    check(v.errors === 0, `${name}: Microsoft's validator: ${v.errors} errors: ${v.what}`);
+    const th = JSON.parse(fs.readFileSync(path.join(dir, 'StaticResources/RegisteredResources', fs.readdirSync(path.join(dir, 'StaticResources/RegisteredResources')).find((f) => f.endsWith('-theme.json'))), 'utf8')).visualStyles;
+    const cb = th.cardVisual['*'].border[0], ob = th.clusteredColumnChart['*'].border[0];
+    check(cb.show === true && !('radius' in cb) && ob.radius > 0 && th.card['*'].border[0].radius === ob.radius, `${name}: theme border: cardVisual ${JSON.stringify(cb)}, column chart ${JSON.stringify(ob)}`);
   }
   // a logo: a PNG or JPG inside the DataArcus folder (2 MB at most), copied into the report; its box takes the logo's
   // shape and the image is never stretched; a logo taller than wide gets a note; anything else is refused with the reason

@@ -89,10 +89,14 @@ export default async function ({ browser, url, page = PAGE }) {
     await v.pg.click(`[data-l=page][data-v="${size}"]`); await v.pg.click(`[data-l=radius][data-v="${r}"]`);
     // every visual (*) and every visual type, since Power BI's base theme sets corners per type;
     // Power BI only rounds a visual with its border on, so solid visuals get a 1px border in their own background color
-    const T = await json(), vs = T.visualStyles, types = Object.keys(vs).filter((k) => k !== 'page');
+    // The card visual is the one exception (owner 2026-10-01, fix/card-theme-radius): inside a theme its "border" is the
+    // card's own border, which has no radius (Microsoft's validator rejects it), so its entry has the border without one
+    const T = await json(), vs = T.visualStyles, types = Object.keys(vs).filter((k) => k !== 'page' && k !== 'cardVisual');
     const borders = [...new Set(types.map((k) => JSON.stringify(vs[k]['*'].border[0])))];
     const want2 = JSON.stringify({ show: true, color: { solid: { color: T.background } }, width: 1, radius: want });
     check(types.length > 40 && borders.length === 1 && borders[0] === want2, `${size} radius ${r}: borders ${borders.join(' / ')} on ${types.length} visual types, expected ${want2}`);
+    const cardB = JSON.stringify(vs.cardVisual['*'].border[0]), wantCard = JSON.stringify({ show: true, color: { solid: { color: T.background } }, width: 1 });
+    check(cardB === wantCard, `${size} radius ${r}: the card visual's border is ${cardB}, expected ${wantCard}`);
   }
   await v.pg.click('#dlVis [data-l=transparent][data-v="1"]');
   const tj = await json();

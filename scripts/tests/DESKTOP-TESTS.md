@@ -452,6 +452,46 @@ screenshots and crops in `C:\DataArcus\tests\phase2-try\shots-r0\`, run log `...
   % card shows 0.34, the table shows 101914 (round 2); the title and logo at the top of their boxes.
 - "One or more calculated tables need to be manually refreshed" on the sample download (open item).
 
+## 2026-10-01: `fix/card-theme-radius`, Power BI Desktop 2.158.1177: the card corners, before and after
+Microsoft's validator rejected every theme with solid visuals: "Unknown theme property border.radius for cardVisual"
+(inside a theme the card visual's `border` is the card's own border). Test reports only, on our sample model, closed
+without saving; scripts `builder-scripts\ctr-measure.mjs`, `ctr-check.mjs`, `png-diff.ps1`; screenshots in
+`C:\DataArcus\tests\phase2-try\shots-ctr\`, pages at 2x.
+
+**Measured before any code.** Two reports through the MCP (light: preset Corporate; dark: the default), each in two
+copies: A with the theme as written then, B with `radius` removed from `visualStyles.cardVisual["*"].border[0]`. Each
+got a page "Corners" on flat magenta: a KPI card as exported, the same card with no container entries of ours (as a
+card added by hand, so the theme decides), a column chart left to the theme, and a card with the radius in
+`visual.json`.
+
+| Compared | Result |
+|---|---|
+| A and B, page 1, light and dark | the same file, byte for byte |
+| A and B, the Corners page, light and dark | the same file, byte for byte |
+| the card left to the theme | rounded corners in A **and in B**, the same as the chart's: the card's corners don't come from that property |
+| Microsoft's validator | A: 1 error (`PBIR_THEME_VISUAL_PROP_UNKNOWN`); B: 0 errors |
+
+**The look after the code** (the engine without the card's radius; four reports through the branch's MCP, English and
+Arabic, 1920 x 1080, light and dark). Expected: the cards and everything else as before; the validator passes.
+
+| Report | Compared with | Result |
+|---|---|---|
+| EN dark, page 1 and 2 | the round 0 MCP report built from the same inputs before the change | page 1: 196 of 4.1 million pixels differ by 1 of 255; page 2: 386 by at most 3 (drawing noise, nothing visible) | 
+| AR dark, page 1 and 2 | the same | page 1: pixel for pixel the same; page 2: 330 pixels by at most 3 of 255 |
+| EN light, page 1 | measurement report A (theme with the radius) | the same but for the page buttons' strip (A had a third page, "Corners"); the cards and every visual pixel for pixel the same |
+| AR light | (no earlier report) | looks as the others: cards, charts and table as in round 0 |
+| all four | Microsoft's validator | succeeded, 0 errors, 0 warnings |
+
+**PASS:** the cards look as before, and the validator passes on the MCP's exports.
+
+**Seen, not in scope:**
+- On the MCP's reports every visual is drawn without a panel: `visual.json` switches the container's background,
+  border and shadow off on each visual, so the theme's solid visuals never show there (the "card as exported" on the
+  Corners page is see-through; charts sit straight on the page). `create_report` says the theme gives the visuals
+  "their own solid cards to keep them visible".
+- As before: English names in Arabic reports, months and days sorted alphabetically, 0.34 and 101914 (round 2); the
+  title and logo at the top of their boxes (round 1).
+
 ## Lessons
 - **Prompts for the laptop agent:** start with the request itself, name every file, forbid changing the test files or the expected numbers, and say "stop and report on failure". Give the exact report format.
 - **What the agent can do alone:** create tables, relationships and measures, run DAX, mark date tables, refresh, screenshot one page at a time.
@@ -469,6 +509,8 @@ screenshots and crops in `C:\DataArcus\tests\phase2-try\shots-r0\`, run log `...
 - **Microsoft's report CLI** (`powerbi-report-author`, `npm install -g @microsoft/powerbi-report-authoring-cli`): `formatting describe-object <visual> <object>` lists property names and allowed values, `validate <Report folder>` checks an export (it found our `visualTooltip.type`). A reference only: it lists `fillCustom` and `padding` with the `default` selector, which Desktop ignores for `show` and for the container padding.
 - **Hovering without the owner:** `builder-scriptsm0-hover.ps1` finds the page on the screen from a flat magenta page, moves the mouse to a chart's position from the report's files and captures the window. `powerbi-desktop reload` reloads an open report after its files change, so candidates can be tried in seconds.
 - **A report page tooltip is opaque in Desktop**, whatever the tooltip page's background, wallpaper or the visual's tooltip settings say.
+- **PowerShell ignores case in variable names:** a script parameter `$Root` or `$A` is the same variable as `$root` or `$a` inside it, and a typed parameter turns what is assigned to it into text. Three builder scripts broke on this; give parameters names the script body doesn't use.
+- **Comparing screenshots:** `builder-scriptspng-diff.ps1` counts the pixels that differ and gives their box. Two captures of the same page can differ in a few hundred pixels by 1 to 3 of 255 (drawing noise); a real change shows as thousands of pixels in one area.
 
 ## To do (DataArcus MCP)
 - A tool to apply a TMDL script to the open model, or a clear hand-off step.

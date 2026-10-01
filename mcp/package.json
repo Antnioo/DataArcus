@@ -19,6 +19,7 @@
     "zod": "^3.25.0"
   },
   "devDependencies": {
+    "@microsoft/powerbi-report-authoring-cli": "0.4.0",
     "pngjs": "^7.0.0"
   }
 }

@@ -1,9 +1,8 @@
 # Current work (the memory between sessions)
 
 Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). Last updated 2026-10-01
-by the builder: round 0 is built, checked in Desktop and finished on `fix/tooltip-logo-table` (fixtures recaptured, the
-touched suites pass); it waits for CI and the reviewer's merge. Next: the small round `fix/card-theme-radius`, then
-the split, then rounds 1 and 2. See "Round 0: BUILT and finished" under "Next step".
+by the builder: round 0 is merged (`14dd467`); `fix/card-theme-radius` is built, checked in Desktop and waits for CI
+and the reviewer's merge. Then the split of `pbip-export.js` (reviewer), then rounds 1 and 2. See "Next step".
 
 ## Where things stand
 - **MCP: 6 tools** (`read_model`, `suggest_fields`, `check_model_health`, `generate_theme`, `plan_layout`,
@@ -70,7 +69,31 @@ still `assets/js/pbip-export.js`. Every round: failing tests first; only the sui
 touches, judged from full-size crops; results into `scripts/tests/DESKTOP-TESTS.md`; only our own sample model
 (`C:\DataArcus\tests\5-tmdl-sample`). Stop and report at the first failure.
 
-#### Round 0: BUILT and finished on `fix/tooltip-logo-table`; waits for the reviewer's merge (builder, 2026-10-01)
+#### `fix/card-theme-radius`: BUILT, waits for the reviewer's merge (builder, 2026-10-01)
+Round 0 is merged into main as `14dd467`; its branch tip is kept as the tag `round-0-tooltip-logo-table` (the fixture
+proof is in commit `0b9c813` there); `fix/tooltip-logo-table` and `plan/next-rounds` are deleted.
+Commits on `fix/card-theme-radius` (from main): tests failing first `51cdf5b`, code and fixtures `9057a6b`.
+- **Change:** in `design-engine.js` (`buildTheme`) the card visual's theme entry has the border without `radius`;
+  every other visual type keeps its radius. `design-engine.min.js` rebuilt, `?v=20261001c` on both generator pages.
+- **Measured first in Desktop 2.158** (`scripts/tests/DESKTOP-TESTS.md`): a report whose theme has the card's radius
+  removed is byte for byte the same on screen as one with it, light and dark, also for a card left to the theme.
+- **Tests, before -> after:** MCP 114 checks, 4 failing -> 114 pass; design-engine: the new check failed on 41 of 54
+  designs -> 598 pass; pbip 66 pass; theme-generator and theme-generator-lab 883 pass. One existing check changed as
+  the change requires (`theme-generator.mjs`: the radius on every visual type but the card visual).
+- **Microsoft's validator:** 0 errors on the MCP's exports, now also checked in `mcp/test.mjs` on every run. For that
+  the validator (Microsoft's report authoring CLI, MIT) is a dev dependency of the MCP's tests, pinned to 0.4.0; it is
+  not shipped with the MCP. **Needs the owner's yes** (the alternative: keep it as a check on the laptop only).
+- **Fixtures (owner's go):** the design fixtures recaptured; proof in commit `9057a6b`: 13 cases byte for byte the
+  same (the 13 designs with transparent visuals), 41 changed (the 41 with solid visuals) by the removed
+  `cardVisual` radius only. The 60 project fixtures are not recaptured and still match (their theme is always
+  transparent).
+- **Desktop look after the code:** four MCP reports, English and Arabic, 1080, light and dark: cards and everything
+  else as before (pixel comparisons in `DESKTOP-TESTS.md`).
+- **Seen, not assigned yet:** on the MCP's reports every visual is drawn without a panel, because `visual.json`
+  switches the container's background, border and shadow off, so the solid theme `create_report` promises never
+  shows. Needs the owner's decision on its round.
+
+#### Round 0: merged into main as `14dd467` (tag `round-0-tooltip-logo-table`); how it was built
 Commits: decisions `bda14f4`, tests failing first `199eab7`, code `93eb7ff`, Desktop results `92581ee`, main merged
 `4cb35c1` (CI now runs on every push), project fixtures recaptured `0b9c813`.
 - **Tests, before -> after:** pbip 66 checks, 18 failing -> 66 pass; MCP 110 checks, 19 failing -> 110 pass;
@@ -94,7 +117,7 @@ Commits: decisions `bda14f4`, tests failing first `199eab7`, code `93eb7ff`, Des
 - **Rule from now on (owner 2026-10-01, in the root `CLAUDE.md`):** stop when a failure could change what Desktop
   shows; otherwise note it and continue.
 
-#### Next small round: `fix/card-theme-radius` (plan only; right after round 0 merges, with the owner's go)
+#### The plan `fix/card-theme-radius` was built from (reference; its state is above)
 - **Problem:** Microsoft's validator fails on every export whose theme has solid visuals (all the MCP's reports):
   `PBIR_THEME_VISUAL_PROP_UNKNOWN`, "Unknown theme property border.radius for cardVisual". `design-engine.js` writes
   the rounded container border (`border: [{ show, color, width, radius }]`) for every visual type, and inside a theme

@@ -109,6 +109,22 @@ export default async function ({ browser, url }) {
     check(JSON.stringify(ins) === '[26,17,0,0]', `kpiInset: ${JSON.stringify(ins)}, want [26,17,0,0]`);
   }
 
+  // the card visual's theme entry has no "radius" (fix/card-theme-radius, 2026-10-01): inside a theme the card visual's
+  // "border" is the card's own border, which has no radius (Microsoft's validator: "Unknown theme property
+  // border.radius for cardVisual"), and Desktop draws the card's corners the same without it (DESKTOP-TESTS.md); every
+  // other visual type keeps the radius of a design with solid visuals
+  {
+    const bad = [];
+    for (const c of all) {
+      const vs = E.buildTheme(c.state, c.lang).visualStyles, cb = vs.cardVisual['*'].border[0], solid = !c.state.layout.transparent;
+      const others = E.VISUAL_TYPES.filter((t) => t !== 'cardVisual').map((t) => vs[t]['*'].border[0]);
+      if ('radius' in cb) bad.push(`${c.id}: cardVisual border ${JSON.stringify(cb)}`);
+      else if (solid && (cb.show !== true || cb.width !== 1 || !others.every((b) => b.show === true && b.radius === vs['*']['*'].border[0].radius))) bad.push(`${c.id}: solid borders changed: card ${JSON.stringify(cb)}, others ${JSON.stringify(others[0])}`);
+      else if (!solid && (JSON.stringify(cb) !== '{"show":false}' || !others.every((b) => JSON.stringify(b) === '{"show":false}'))) bad.push(`${c.id}: transparent borders changed`);
+    }
+    check(!bad.length, `card visual theme entry: ${bad.length} of ${all.length} designs wrong, e.g. ${bad.slice(0, 2).join(' | ')}`);
+  }
+
   // an empty or blank theme name: the theme JSON and the files get the same default name, the one the name box shows
   const base = all.find((x) => x.id === 'preset-1').state;
   for (const n of ['', '   ']) {
