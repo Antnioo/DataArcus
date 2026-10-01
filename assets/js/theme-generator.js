@@ -187,9 +187,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const rtl = (c) => E.rtl(c || lay(), isAr() ? 'ar' : 'en');
   const nm = (pair) => (isAr() ? pair[1] : pair[0]);
 
-  // sizes kept inside their safe ranges (the filter panel's depends on the current page width)
-  const rangeOf = (k) => E.rangeOf(k, PW);
-  const clampTo = (k, v) => E.clampTo(k, v, PW);
+  // sizes kept inside their safe ranges (the filter panel's depends on the current page width; the header's and the top
+  // filter rail's start higher on a small page, so their text fits)
+  const rangeOf = (k) => E.rangeOf(k, PW, lay());
+  const clampTo = (k, v) => E.clampTo(k, v, PW, lay());
   const sizes = (c) => E.sizes(c, PW);
   function computeSlots(c) { applyPage(c); return E.computeSlots(c, isAr() ? 'ar' : 'en'); }
 
@@ -448,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (pbipBtn) {
     let logo = null;
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : new Promise((resolve, reject) => {
-      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20261001a'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
+      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20261001b'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
     }));
     // ---- your own model: a local project (the report points at its .SemanticModel folder) or a published one ----
     // Each choice keeps its own model and the fields picked for it, so switching between them never pairs one
