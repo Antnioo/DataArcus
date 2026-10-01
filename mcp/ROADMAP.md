@@ -75,6 +75,16 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
    button file, and nothing else is touched.
    **CI: done 2026-10-01** (`.github/workflows/tests.yml`, first run green on `47fc6aa`; was planned after the split): a GitHub Actions workflow runs every website suite and `npm test` on every push
    and pull request, so nothing reaches main without passing (free on GitHub). The reviewer adds it.
+   **Tools for accuracy (owner's go 2026-10-01):**
+   - **Dependabot: done** (`.github/dependabot.yml`; security updates for the site, the MCP and the workflows).
+   - **Microsoft's validator on every export** (right after the current round): today it runs on two MCP exports in
+     `mcp/test.mjs`; run it in CI on all 60 project fixtures and the MCP's report variants (languages, presets, page
+     sizes), and treat every warning as a finding (fix it, or note why it is fine).
+   - **Golden screenshots for Desktop checks** (before the beta): save an approved screenshot per test report and
+     compare automatically, so a Desktop check shows only what changed.
+   - **Microsoft's Best Practice Analyzer rules** (before round 2): compare the health check with the official rule
+     set and list the gaps.
+   - **Lighthouse and axe in CI** (before the SEO work): speed, SEO and accessibility on every website page.
 2. **Arabic accuracy:** Arabic display names for titles (`create_report`), day and month sort order and measures
    without a format string as health findings with ready fix scripts. Checked in Desktop in English and Arabic.
 3. **"What I built and why":** after `create_report`, a short design summary for the user (pages, visuals, filter
