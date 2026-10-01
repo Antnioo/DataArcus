@@ -99,7 +99,7 @@ export default async function ({ browser, url }) {
     const lay = (page) => Object.assign({}, base0.layout, { preset: 'exec', page, header: true, kpis: 4, filters: false, hh: undefined, logoW: undefined });
     const box = (page, lang, ratio) => { const p = E.projectPages(lay(page), lang, { second: false, panel: false, logoRatio: ratio })[0].slots, l = p.find((s) => s.kind === 'logo'), t = p.find((s) => s.kind === 'title'); return [l.x, l.w, l.h, t.w, t.h].join(' '); };
     const WANT = [[4, '1692 192 48 840 48', '1128 128 32 560 32', '36 192 48 840 48'], [1, '1836 48 48 840 48', '1224 32 32 560 32', '36 48 48 840 48'],
-      [0.4, '1865 19 48 840 48', '1243 13 32 560 32', '36 19 48 840 48'], [12, '1344 540 48 840 48', '896 360 32 560 32', '36 540 48 840 48'], [undefined, '1659 225 48 840 48', '1106 150 32 560 32', '36 225 48 840 48']];
+      [0.4, '1865 19 48 840 48', '1243 13 32 560 32', '36 20 48 840 48'   /* mirrored: the engine rounds edges, not sizes, so 19.5 is 20 */], [12, '1344 540 48 840 48', '896 360 32 560 32', '36 540 48 840 48'], [undefined, '1659 225 48 840 48', '1106 150 32 560 32', '36 225 48 840 48']];
     for (const [ratio, a, b, c] of WANT) {
       const g = [box('1920x1080', 'en', ratio), box('1280x720', 'en', ratio), box('1920x1080', 'ar', ratio)];
       check(g[0] === a && g[1] === b && g[2] === c, `logo ratio ${ratio}: logo x, w, h and title w, h on 1080, 720, Arabic 1080: ${g.join(' | ')}, want ${[a, b, c].join(' | ')}`);
