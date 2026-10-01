@@ -157,9 +157,10 @@ export default async function ({ browser, url }) {
     }
     check(!phone.length, `phone layout overlaps on ${phone.length} of ${2 * (cases.length + extra.length)} designs, e.g. ${phone.slice(0, 3).join(' | ')}`);
     check(!sizes.length, `sizes that don't fit on ${sizes.length} of ${2 * (cases.length + extra.length)} designs, e.g. ${sizes.slice(0, 3).join(' | ')}`);
-    // the guard: 1920 x 1080 keeps today's sizes, 1280 x 720 is scaled (2/3); exec layout, second page with the filter rail
+    // the guard: 1920 x 1080 keeps today's sizes; 1280 x 720 scaled (2/3) and fitted to the measured heights (owner-confirmed
+    // 2026-10-01: title 12, page buttons on one line, slicers 56); exec layout, second page with the filter rail
     const base = cases.find((c) => c.id === 'preset-1').state;
-    for (const [page, want] of [['1920x1080', { title: 20, logo: 14, nav: 320, slicer: 76, reset: 40 }], ['1280x720', { title: 13, logo: 10, nav: 213, slicer: 51, reset: 27 }]]) {
+    for (const [page, want] of [['1920x1080', { title: 20, logo: 14, nav: 320, slicer: 76, reset: 40 }], ['1280x720', { title: 12, logo: 10, nav: 299, slicer: 56, reset: 27 }]]) {
       const d = Object.assign({}, base, { layout: Object.assign({}, base.layout, { preset: 'exec', page, header: true, kpis: 4, filters: false }) });
       const got = headerAndRail(build(d, 'en', { second: true, panel: false }));
       check(JSON.stringify(got) === JSON.stringify(want), `sizes on ${page}: ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);

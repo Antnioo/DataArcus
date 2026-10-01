@@ -6,10 +6,12 @@
 //    group as in visual.json): no two visuals' phone boxes overlap, every box inside the 323-wide phone canvas, and each
 //    group's box around its children
 //  - sizes: every text size in the header, the page buttons, the slicers and the buttons within Power BI's 8-60; each
-//    text fits its box, with Microsoft's card rule (a line takes 1.5 x the size) and 0.55 em per character; slicers at
-//    least two lines of their text high
+//    text fits its box, with the heights measured in Power BI Desktop 2.157 (DESKTOP-TESTS.md, 2026-10-01; page units, a
+//    point size taking the same page units on any page): a text box 10 + 1.8 x pt per line, button text 2 + 1.6 x pt per
+//    line and a Reset icon 2.25 x pt, a dropdown slicer (title and box) 16 + 4 x pt; width 0.55 em per character
 // Returns { phone: [...], sizes: [...] }, what is wrong.
-const LINE = (t) => Math.ceil(t * 1.5), CH = (t) => t * 0.55 * 4 / 3;
+const BOX = (t) => Math.ceil(10 + 1.8 * t), ICON = (t) => Math.ceil(2.25 * t);
+const SLICER = (t) => Math.ceil(16 + 4 * t), CH = (t) => t * 0.55 * 4 / 3;
 const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
 const num = (p) => parseFloat(lit(p)), str = (p) => String(lit(p) || '').replace(/^'|'$/g, '').replace(/''/g, "'");
 const look = (list) => ((list || []).find((x) => x.selector && x.selector.id === 'default') || (list || [])[0] || {}).properties || {};
@@ -53,17 +55,17 @@ export function layoutProblems(files) {
         // the header's title and logo text, the slide-in panel's title: one line that fits
         const run = ((((v.objects || {}).general || [{}])[0].properties || {}).paragraphs || [{ textRuns: [{}] }])[0].textRuns[0];
         const t = font(id(x), parseFloat((run.textStyle || {}).fontSize)), text = run.value || '';
-        if (LINE(t) > h || CH(t) * text.length > w) sizes.push(`${id(x)}: "${text}" at ${t}pt doesn't fit ${w}x${h}`);
+        if (BOX(t) > h || CH(t) * text.length > w) sizes.push(`${id(x)}: "${text}" at ${t}pt doesn't fit ${w}x${h}`);
       } else if (v.visualType === 'pageNavigator') {
-        const t = font(id(x), num(look((v.objects || {}).text).fontSize)), lines = Math.min(2, Math.floor(h / LINE(t)));
+        const t = font(id(x), num(look((v.objects || {}).text).fontSize)), lines = Math.min(2, Math.floor((h - 2) / (1.6 * t)));
         const longest = Math.max(...pageNames.map((s) => s.length)), each = w / pageNames.length;
         if (!(lines >= 1) || CH(t) * Math.ceil(longest / Math.max(1, lines)) > each) sizes.push(`${id(x)}: page names at ${t}pt don't fit ${pageNames.length} buttons in ${w}x${h}`);
       } else if (v.visualType === 'actionButton') {
         const o = v.objects || {}, tx = look(o.text), t = font(id(x), num(tx.fontSize)), text = str(tx.text);
-        const icon = str(look(o.icon).shapeType) === 'blank' ? 0 : LINE(t), lines = Math.floor(h / LINE(t));
-        if (!(lines >= 1) || Math.ceil(CH(t) * text.length / (w - icon)) > lines) sizes.push(`${id(x)}: "${text}" at ${t}pt doesn't fit ${w}x${h}`);
+        const hasIcon = str(look(o.icon).shapeType) !== 'blank', icon = hasIcon ? ICON(t) : 0, lines = Math.floor((h - 2) / (1.6 * t));
+        if (!(lines >= 1) || (hasIcon && h < ICON(t)) || Math.ceil(CH(t) * text.length / (w - icon)) > lines) sizes.push(`${id(x)}: "${text}" at ${t}pt doesn't fit ${w}x${h}`);
       } else if (v.visualType === 'slicer' && slicerText) {
-        if (h < 2 * LINE(slicerText)) sizes.push(`${id(x)}: ${h} high, less than two lines of ${slicerText}pt`);
+        if (h < SLICER(slicerText)) sizes.push(`${id(x)}: ${h} high, a ${slicerText}pt dropdown slicer needs ${SLICER(slicerText)}`);
       }
     }
   }
