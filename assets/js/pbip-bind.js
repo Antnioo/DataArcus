@@ -176,7 +176,8 @@
   }
   // the visual-by-visual binding the exporter reads, from the few choices the user makes
   function build(ch) {
-    const f = (x) => (x ? (x.m != null ? { t: x.t, m: x.m } : { t: x.t, c: x.c }) : null);
+    // a column the model types as a number says so (num), so a table can put it on the number side, like a measure
+    const f = (x) => (x ? (x.m != null ? { t: x.t, m: x.m } : /^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }) : null);
     const kpis = (ch.kpis || []).map(f);
     const main = f(ch.main), second = kpis.find((k) => k && main && k.m !== main.m) || main;
     const ratio = (ch.kpis || []).find((k) => k && k.pct);

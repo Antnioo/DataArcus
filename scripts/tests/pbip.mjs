@@ -105,7 +105,7 @@ export default async function ({ browser, url }) {
     const emoji = names('x'.repeat(59) + '\u{1F4CA} Sales');
     for (const n of ['..', '.', ' .. ', 'Sales.', '.hidden']) {
       const ps = names(n);
-      check(ps.every((p) => !p.split('/').some((seg) => seg === '..' || seg === '.' || (seg !== '.gitignore' && /^[.\s]|[.\s]$/.test(seg.replace(/\.(pbip|Report|SemanticModel)$/, ''))))), `names: "${n}" gives ${ps.find((p) => /(^|\/)\.|\.\//.test(p)) || ps[0]}`);
+      check(ps.every((p) => !p.split('/').some((seg) => seg === '..' || seg === '.' || (seg !== '.gitignore' && seg !== '.platform' && /^[.\s]|[.\s]$/.test(seg.replace(/\.(pbip|Report|SemanticModel)$/, ''))))), `names: "${n}" gives ${ps.find((p) => /(^|\/)\.|\.\//.test(p)) || ps[0]}`);
     }
     // the longest path stays well under Windows' 260 characters after "Extract all" into C:\Users\<name>\Downloads\<zip name>\
     const longest = Math.max(...names('A'.repeat(60)).map((p) => p.length));
@@ -235,7 +235,9 @@ export default async function ({ browser, url }) {
       const WANT = { 'wide.png': { '1920x1080': [1692, 192, 48], '1280x720': [1128, 128, 32] }, 'square.png': { '1920x1080': [1836, 48, 48], '1280x720': [1224, 32, 32] },
         'tall.png': { '1920x1080': [1865, 19, 48], '1280x720': [1243, 13, 32] }, 'wide.jpg': { '1920x1080': [1344, 540, 48], '1280x720': [896, 360, 32] } };
       const off = [];
-      for (const [file, boxes] of Object.entries(WANT)) for (const [pg, [x, w, h]] of Object.entries(boxes)) for (const lang of ['en', 'ar']) {
+      for (const [file, boxes] of Object.entries(WANT)) for (const [pg, [x, w0, h]] of Object.entries(boxes)) for (const lang of ['en', 'ar']) {
+        // mirrored for Arabic; the engine rounds a box's edges, not its size, so the tall logo's 19.5 is 20 wide there
+        const w = lang === 'ar' && file === 'tall.png' && pg === '1920x1080' ? 20 : w0;
         const bytes = new Uint8Array(fs.readFileSync(path.join(LOGOS, file))), size = typeof E.imageSize === 'function' ? E.imageSize(bytes) : null;
         const d = std(pg), k = E.page(d.layout).h / 1080, PW = E.page(d.layout).w;
         const b = build(d, lang, { second: true, panel: false, logoRatio: size ? size.w / size.h : undefined }, { logo: { bytes, ext: file.slice(-3) } });
@@ -243,7 +245,7 @@ export default async function ({ browser, url }) {
         const all = abs(Object.fromEntries(Object.entries(b.files).filter(([f]) => f.includes('/pages/' + first + '/'))));
         const img = all.find((a) => a.v.visual && a.v.visual.visualType === 'image'), nav = all.find((a) => a.v.visual && a.v.visual.visualType === 'pageNavigator'), tag = `${file} ${pg} ${lang}`;
         if (!img) { off.push(`${tag}: no image visual`); continue; }
-        const wantX = lang === 'ar' ? PW - x - w : x, o = img.v.visual.objects || {};
+        const wantX = lang === 'ar' ? PW - x - w0 : x, o = img.v.visual.objects || {};
         if (img.x !== wantX || img.w !== w || img.h !== h) off.push(`${tag}: logo box ${img.x}, ${img.w} x ${img.h}, want ${wantX}, ${w} x ${h}`);
         if (((o.image || [])[0] || { properties: {} }).properties.fit?.expr.Literal.Value !== "'Fit'" || o.imageScaling) off.push(`${tag}: scaling ${JSON.stringify(o.image || o.imageScaling)}, want image.fit 'Fit' only`);
         if (!nav || Math.abs((lang === 'ar' ? nav.x - (img.x + img.w) : img.x - (nav.x + nav.w)) - 24 * k) > 1) off.push(`${tag}: page buttons ${nav ? nav.x + ', ' + nav.w + ' wide' : 'missing'} are not 24k from the logo at ${img.x}`);
@@ -268,9 +270,10 @@ export default async function ({ browser, url }) {
     await v.ctx.close();
     return { files, picked, msg };
   };
-  // the round 0 checks on a download from the page (its layout has the accent bar on top, so no side inset)
-  const round0 = (files, rtl) => {
-    const a = tooltipProblems(files), t = tooltipPageProblems(files), tb = tableProblems(files, rtl), cd = cardStyleProblems(files, rtl);
+  // the round 0 checks on a download from the page (run's layout has the accent bar on top, so no side inset; a new
+  // visitor's default design has it at the side: insets 26 on 1920 x 1080)
+  const round0 = (files, rtl, insets) => {
+    const a = tooltipProblems(files), t = tooltipPageProblems(files), tb = tableProblems(files, rtl), cd = cardStyleProblems(files, rtl, insets);
     return a.bad.slice(0, 1).map((x) => `tooltip link (${a.bad.length} of ${a.charts}): ${x}`).concat(t.bad.slice(0, 1), tb.bad.slice(0, 1).map((x) => `table (${tb.bad.length} of ${tb.columns}): ${x}`),
       cd.bad.slice(0, 1).map((x) => `cards (${cd.bad.length} on ${cd.cards}): ${x}`), projectProblems(files));
   };
@@ -433,7 +436,7 @@ export default async function ({ browser, url }) {
     const rt = readme ? files[readme].toString('utf8') : '', base = readme ? readme.split('/')[0] : '';
     check(/## Check it in Power BI/.test(rt) && rt.includes(base + '.Report/StaticResources/RegisteredResources'), 'sample: README has no Power BI check steps');
     check(/Hover any chart/.test(rt) && !/Hover the main chart/.test(rt), 'sample: the README should say every chart shows the tooltip page');
-    const r0 = round0(files, false);
+    const r0 = round0(files, false, [26, 26]);
     check(!r0.length, `sample, round 0: ${r0.slice(0, 4).join(' | ')}`);
     // a tall logo attached on the page: its box takes the logo's shape (19 x 48 at the header's far edge), the image is
     // not stretched, and the page says a horizontal logo would read better; a wide logo gets no such note
