@@ -269,6 +269,33 @@ Page buttons 14pt, about 200 each, heights 30-56: whole at every height; a page 
 narrow (e.g. "Executive summary" on two lines in the 1080 reports). The current page's button uses Power BI's own
 smaller text: the export sets the text size for the default state only, not the selected one.
 
+## 2026-10-01: round 3 of `fix/phone-and-sizes` (`982fbbb`, Reset and page buttons), Power BI Desktop 2.158.1177: stopped on the first report
+
+The eight "Gulf Sales Fit2" reports (expected sizes in `mcp/WORK.md`, committed before the run in `6d29ac3`). Started
+with AR 360 (last round's failure), captured at 2x and 1x (`tests/phase2-try/shots-sizes/fit2-ar360-s1/s2-p*.png`),
+judged from full-size crops (`fit2-ar360-s1/s2-p1-header.png`, `-rail.png`, `-cards.png`). Stopped at its failure; the
+other seven reports and the phone layout not run. AR 360 left open in Desktop, not saved.
+
+| Check (AR 360, page "تحليل") | Expected | Seen | Result |
+|---|---|---|---|
+| Header: title, page buttons, logo text | whole | "Gulf Sales", "تحليل", "نظرة عامة", "شعارك" whole | PASS |
+| Current page's button text | the same size as the others | "تحليل" (current) the same size as "نظرة عامة" | PASS |
+| Slicers | title and dropdown box | Year, Quarter, Day Name each with its "All" box | PASS |
+| Reset: one line, no icon over the text | "إعادة ضبط الفلاتر" whole, no icon (91x15, 8pt) | no icon, one line, but the text is **cut at the bottom** at 1x and 2x | **FAIL** |
+| Cards | known 640 x 360 cut (open item) | digits touch the bottom edge | known, not judged |
+| Values equal DAX | 101914 / 74675 / 23635 / 0.3377971 | same | PASS |
+
+Cause: the owner's height rule for a one-line button, max(40 x page h / 1080, 2 + 1.6 x pt), gives 15 at 8pt on
+640 x 360; the measurement (2026-10-01) showed English 8pt text whole from 14 and the icon from 18, but the Arabic text
+(taller letters) needs more than 15. Not fixed: needs the owner's go.
+
+**Seen, not in scope** (rule 9; AR 360): KPI titles, chart titles ("Total Sales حسب Day Name"), table headers and
+slicer titles in English (open item: Arabic display names); days in alphabetical order in the chart and table (open
+item: sort columns); the KPI numbers touch or cross the cards' bottom edge (open item: 640 x 360 cards); "Total Sales
+Last Ramadan (..." cut with "..." (8pt minimum); the table shows five rows with a scroll bar; modelNotes:
+Calendar[Month Name] and Calendar[Day Name] without a sort-by column, Sales[Total Sales vs Last Ramadan %] without a
+format string (the % card shows 0.34).
+
 ## Lessons
 - **Prompts for the laptop agent:** start with the request itself, name every file, forbid changing the test files or the expected numbers, and say "stop and report on failure". Give the exact report format.
 - **What the agent can do alone:** create tables, relationships and measures, run DAX, mark date tables, refresh, screenshot one page at a time.
