@@ -8,12 +8,18 @@
 //  - sizes: every text size in the header, the page buttons, the slicers and the buttons within Power BI's 8-60; each
 //    text fits its box, with the heights measured in Power BI Desktop 2.157 (DESKTOP-TESTS.md, 2026-10-01; page units, a
 //    point size taking the same page units on any page): a text box 10 + 1.8 x pt per line, button text 2 + 1.6 x pt per
-//    line and a Reset icon 2.25 x pt, a dropdown slicer (title and box) 16 + 4 x pt; width 0.55 em per character
+//    line, a dropdown slicer (title and box) 16 + 4 x pt; width 0.55 em per character for text boxes and page buttons.
+//    Buttons (measured 2026-10-01 on 2.158): Power BI never wraps a button's text, and its icon grows with the button's
+//    height (about as wide as the button is high) and is drawn at the start: a button's text is one line (its height
+//    holds 2 + 1.6 x pt), and with an icon, text + icon + 6 fit the width, the text measured at 0.45 em per character
+//    (0.40-0.41 seen for "Reset filters" and "إعادة ضبط الفلاتر" at 8pt). Page buttons: the text size is set for the
+//    default, hover and selected states (the current page is the selected one; unset, it shows Power BI's own size).
 // Returns { phone: [...], sizes: [...] }, what is wrong.
-const BOX = (t) => Math.ceil(10 + 1.8 * t), ICON = (t) => Math.ceil(2.25 * t);
+const BOX = (t) => Math.ceil(10 + 1.8 * t), BTN = (t) => Math.ceil(2 + 1.6 * t), TW = (t, n) => 0.45 * 4 / 3 * t * n;
 const SLICER = (t) => Math.ceil(16 + 4 * t), CH = (t) => t * 0.55 * 4 / 3;
 const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
 const num = (p) => parseFloat(lit(p)), str = (p) => String(lit(p) || '').replace(/^'|'$/g, '').replace(/''/g, "'");
+const state = (list, id) => ((list || []).find((x) => x.selector && x.selector.id === id) || {}).properties || {};
 const look = (list) => ((list || []).find((x) => x.selector && x.selector.id === 'default') || (list || [])[0] || {}).properties || {};
 
 export function layoutProblems(files) {
@@ -60,10 +66,13 @@ export function layoutProblems(files) {
         const t = font(id(x), num(look((v.objects || {}).text).fontSize)), lines = Math.min(2, Math.floor((h - 2) / (1.6 * t)));
         const longest = Math.max(...pageNames.map((s) => s.length)), each = w / pageNames.length;
         if (!(lines >= 1) || CH(t) * Math.ceil(longest / Math.max(1, lines)) > each) sizes.push(`${id(x)}: page names at ${t}pt don't fit ${pageNames.length} buttons in ${w}x${h}`);
+        const per = ['hover', 'selected'].map((k) => num(state((v.objects || {}).text, k).fontSize));
+        if (per.some((p) => p !== t)) sizes.push(`${id(x)}: page button text ${t}pt by default, hover ${per[0]}, selected ${per[1]} (the current page)`);
       } else if (v.visualType === 'actionButton') {
         const o = v.objects || {}, tx = look(o.text), t = font(id(x), num(tx.fontSize)), text = str(tx.text);
-        const hasIcon = str(look(o.icon).shapeType) !== 'blank', icon = hasIcon ? ICON(t) : 0, lines = Math.floor((h - 2) / (1.6 * t));
-        if (!(lines >= 1) || (hasIcon && h < ICON(t)) || Math.ceil(CH(t) * text.length / (w - icon)) > lines) sizes.push(`${id(x)}: "${text}" at ${t}pt doesn't fit ${w}x${h}`);
+        const hasIcon = str(look(o.icon).shapeType) !== 'blank';
+        if (h < BTN(t)) sizes.push(`${id(x)}: "${text}" at ${t}pt needs ${BTN(t)} high, has ${h}`);
+        if (TW(t, text.length) + (hasIcon ? h + 6 : 0) > w) sizes.push(`${id(x)}: "${text}" at ${t}pt${hasIcon ? ` with its icon (${h} wide at this height)` : ''} doesn't fit ${w} on one line`);
       } else if (v.visualType === 'slicer' && slicerText) {
         if (h < SLICER(slicerText)) sizes.push(`${id(x)}: ${h} high, a ${slicerText}pt dropdown slicer needs ${SLICER(slicerText)}`);
       }
