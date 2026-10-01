@@ -284,14 +284,14 @@
     // a dropdown slicer (title and box) 16 + 4 x pt. Width: 0.55 em per character, in pixels (charW).
     // Buttons (measured on 2.158): Power BI never wraps a button's text, and its icon grows with the button's height
     // (about as wide as the button is high) and is drawn at the start. resetFit(text, w, k): a Reset button w wide is one
-    // line high, max(40k, 2 + 1.6 x pt), and keeps its icon only where the text (0.45 em per character, measured 0.40-0.41)
+    // line high, max(40k, 6 + 1.6 x pt) (Arabic text needs 4 more than English: 19 at 8pt, 30 at 15pt), and keeps its icon only where the text (0.45 em per character, measured 0.40-0.41)
     // and the icon fit side by side; otherwise the icon is left out rather than drawn over the text.
     // pt(t): a size within 8-60pt. LABEL: button text, the theme's label size.
     const pt = (t) => Math.max(8, Math.min(60, Math.round(t))), charW = (t) => t * 0.55 * 4 / 3;
     const boxH = (t, n) => Math.ceil(10 + 1.8 * t * (n || 1)), buttonH = (t, n) => Math.ceil(2 + 1.6 * t * (n || 1));
     const iconH = (t) => Math.ceil(2.25 * t), slicerH = (t) => Math.ceil(16 + 4 * t);
     const resetFit = (text, w, k) => {
-      const h = Math.ceil(Math.max(40 * k, buttonH(LABEL)));
+      const h = Math.ceil(Math.max(40 * k, 6 + 1.6 * LABEL));
       return { h, icon: 0.45 * 4 / 3 * LABEL * String(text).length + h + 6 <= w };
     };
     // the largest text size within 8-60 whose one line fits a text box h high (8 at least)
