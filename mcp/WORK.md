@@ -41,7 +41,13 @@ in its history (`b931ecd`) and `scripts/tests/DESKTOP-TESTS.md`.
 **Order from here (owner's go; details in `mcp/ROADMAP.md`):**
 1. **Reviewer:** split `assets/js/pbip-export.js` into small modules (output byte for byte identical), then CI (every
    suite on every push). **Nobody else touches `pbip-export.js` until that merges.**
-2. **Builder, at the same time, plan only** (branch `plan/next-rounds`): (a) phone text sizes per visual in
+2. **Builder, at the same time, plan only** (branch `plan/next-rounds`), three rounds in this order. **(0) First,
+   found by the owner (most valuable):** (i) the tooltip page is not attached to the main page's visuals: link each
+   chart to it explicitly (the visual's "Tooltip: Report page" setting; confirm the PBIR property in Microsoft's
+   references, then check in Desktop that hovering shows it); (ii) an attached logo is stretched to its box: read the
+   logo's aspect ratio from the image file, keep the designed height, set the logo box's width from it (within the
+   logo width range) in the shared design engine (website and MCP), let the header's other parts use what's left, and
+   use an image scaling that never distorts. Then (a) phone text sizes per visual in
    `mobile.json` (slicer boxes cut on the phone at 1080, page-sized text too big at 2160; measure first) plus a
    Desktop check of the slide-in panel (Close and Filters, EN and AR); (b) Arabic accuracy (Arabic display names in
    `create_report`; day and month sort order and measures without a format string as health findings with TMDL
