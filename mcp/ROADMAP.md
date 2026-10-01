@@ -48,6 +48,8 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
    project fixtures, both downloads and the MCP reports; no fixture is recaptured and no expected number changes.
    One writer: start only when no other branch touches `pbip-export.js`. Then a bug in buttons means opening the
    button file, and nothing else is touched.
+   **Then CI (done with the split):** a GitHub Actions workflow runs every website suite and `npm test` on every push
+   and pull request, so nothing reaches main without passing (free on GitHub). The reviewer adds it.
 2. **Arabic accuracy:** Arabic display names for titles (`create_report`), day and month sort order and measures
    without a format string as health findings with ready fix scripts. Checked in Desktop in English and Arabic.
 3. **"What I built and why":** after `create_report`, a short design summary for the user (pages, visuals, filter
@@ -59,9 +61,20 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
    - A Claude Code plugin with the report-design skill bundled.
    - First run: pick the working folder (becomes `DATAARCUS_ROOT`), explain what the tool can and can't touch.
    - Tested on a clean machine.
+   - **AI evaluations:** 10-20 real requests ("a Ramadan sales report in Arabic", "an executive summary from this
+     model", ...) with expected results (tools called, pages and visuals built, nothing overwritten), run before
+     every release. They test whether Claude uses the tools well, not only the tools.
+   - **Releases:** numbered versions (0.2, 0.3, ...) and a `CHANGELOG.md` with what changed in each.
 5. **Private beta:** 5-10 Power BI developers (international and Gulf); collect what breaks and what they want.
-6. **Launch:** README, the launch article, LinkedIn (`content/`).
-7. **After the beta, as testers need them:** small pages (640 x 360 cards, charts, tables), backgrounds (phase 3:
+   Before it starts: a feedback channel (GitHub Issues in the private repo or a simple form) and a support email;
+   business basics (registering the business, terms of use, and a privacy note for the MCP stating formally that
+   nothing leaves the user's machine).
+6. **Launch:** README, the launch article, LinkedIn (`content/`), and **the demo moment**: one real, unedited
+   60-second recording from a request to a finished Arabic report open in Power BI.
+7. **After launch, the product's next layers:** measures (year over year, Ramadan vs last Ramadan, percentages) from
+   the Measure Builder and Gulf DAX, since many real models lack them; and saved company design systems (theme and
+   layout reused on every report), the base of the Teams tier.
+8. **After the beta, as testers need them:** small pages (640 x 360 cards, charts, tables), backgrounds (phase 3:
    the PNG from the engine's SVG), Gulf DAX patterns (Hijri, Ramadan, fiscal years), `screenshot-all` on generated
    projects, then Pro/Teams.
 
