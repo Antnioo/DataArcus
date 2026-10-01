@@ -44,9 +44,10 @@ on Sunday 2026-10-04: (1) the reviewer's split of `pbip-export.js`, (2) the revi
 ## Split plan (waiting for the owner's go)
 
 ### Report (2026-10-02, plan only: no code, test or fixture changed)
-- **Commit:** the plan is the first commit on `plan/split-pbip-export` (from main `bbc42df`); its hash is in the
-  line added by the commit after it, at the end of this report. `docs/work-next-steps` was deleted, locally and on
-  GitHub (its content is in main as `bbc42df`, a squash; its old tip was `3287216`).
+- **Commit:** `263263c` on `plan/split-pbip-export` (from main `bbc42df`), pushed; the commit after it only adds
+  this hash and the CI result. **CI on `263263c`: green** (run 36933747714: the website's 16 suites and the MCP's
+  checks both passed). `docs/work-next-steps` was deleted, locally and on GitHub (its content is in main
+  as `bbc42df`, a squash; its old tip was `3287216`).
 - **Module map:** a new folder `assets/js/pbip/` with 21 small CommonJS files: `helpers`, `zip`, `sample`,
   `fields`, `sizes` (every Desktop-measured rule with its pointer), `frame`; `visuals/` `card`, `slicer`, `button`,
   `table`, `chart`, `textbox`, `image`; `page/` `shell`, `page`, `header`, `rail`, `panel`, `tooltip`,
