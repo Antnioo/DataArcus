@@ -82,6 +82,25 @@ Dropped, because Microsoft's authoring skill and the Desktop bridge already do t
 (restyle, re-layout, modernise visuals) and the reload-and-screenshot loop. Revisit only for something they can't do,
 such as mirroring a report for Arabic.
 
+## Business: the report design service (owner's go 2026-10-01)
+The likeliest way to earn money first, before software sales: **sell report design as a service, delivered with the
+MCP.** "A professional, branded, bilingual (Arabic/English) Power BI report from your model, in 48 hours."
+- **Why:** companies already pay for Power BI reports; the MCP makes delivery much faster than doing it by hand; every
+  job tests the product on real work; the first invoice proves the business. It can start before the public launch.
+- **Before the first paid job (owner):** check the employment contract (side business, and who owns what he
+  creates); get the UAE licence needed to invoice (freelance permit or trade licence); a short service agreement with
+  an NDA.
+- **Client data rule (same as employer data):** a client's model, data, screenshots and names never enter any repo,
+  test or example. Client work happens in its own folder outside the repos and is deleted when the job ends. What a
+  job teaches goes back into the product only as a general rule or a test on our own sample models.
+- **Who to approach:** Gulf companies and consultancies with Power BI and Arabic reporting needs; Power BI
+  consultants who'd outsource design. The website's tools, articles and the demo video are the proof.
+- **Offer, simple at first:** one report design (theme, layout, pages, Arabic and English), a fixed price per report,
+  delivered as a Power BI project; optional monthly retainer for new reports. Prices are the owner's decision once
+  the licence is in place.
+- **Track:** leads, replies, paid jobs, hours per job (and how much the MCP saved), what clients asked for: in a
+  private file once the private repo is in use, never in the public repo.
+
 ## Repo: the move to the private repo (decided 2026-10-01)
 The trigger is reached (the design engine is in the MCP; it is being branded). The private repo exists:
 `Antnioo/dataarcus-engine` (empty). **Owner's choice: option A**, after the current round (`fix/phone-and-sizes`) is
