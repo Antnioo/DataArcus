@@ -138,7 +138,9 @@ export default async function ({ browser, url }) {
   for (const pc of projects) {
     const dc = all.find((x) => x.id === pc.id.replace(/-plain$/, ''));
     if (typeof E.projectPages !== 'function' || !E.REPORT_TEXTS) { check(false, `${pc.id}: no projectPages / REPORT_TEXTS in the engine`); continue; }
-    const got = E.projectPages(dc.state.layout, pc.lang, pc.opts).map((p) => ({ name: p.name, page: p.page, slots: p.slots, panel: p.panel }));
+    // (kpiInset: since round 0 the page also hands pbip-export where the KPI titles start beside a side accent bar,
+    // from the engine's kpiInset for each page's layout)
+    const got = E.projectPages(dc.state.layout, pc.lang, pc.opts).map((p) => ({ name: p.name, page: p.page, slots: p.slots, panel: p.panel, kpiInset: E.kpiInset(p.layout) }));
     check(JSON.stringify(got) === JSON.stringify(pc.build.pages), `${pc.id}: project pages differ\n        got  ${JSON.stringify(got).slice(0, 250)}\n        want ${JSON.stringify(pc.build.pages).slice(0, 250)}`);
     check(JSON.stringify(E.REPORT_TEXTS[pc.lang]) === JSON.stringify(pc.build.texts), `${pc.id}: report labels differ: ${JSON.stringify(E.REPORT_TEXTS[pc.lang]).slice(0, 150)}`);
   }
