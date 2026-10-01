@@ -14,8 +14,10 @@
 //    holds 2 + 1.6 x pt), and with an icon, text + icon + 6 fit the width, the text measured at 0.45 em per character
 //    (0.40-0.41 seen for "Reset filters" and "إعادة ضبط الفلاتر" at 8pt). Page buttons: the text size is set for the
 //    default, hover and selected states (the current page is the selected one; unset, it shows Power BI's own size).
+//    The Reset button needs more: 6 + 1.6 x pt (measured 2026-10-01 on 2.158: "إعادة ضبط الفلاتر" whole from 19 at 8pt
+//    and 30 at 15pt; English from 14).
 // Returns { phone: [...], sizes: [...] }, what is wrong.
-const BOX = (t) => Math.ceil(10 + 1.8 * t), BTN = (t) => Math.ceil(2 + 1.6 * t), TW = (t, n) => 0.45 * 4 / 3 * t * n;
+const BOX = (t) => Math.ceil(10 + 1.8 * t), BTN = (t) => Math.ceil(2 + 1.6 * t), RESET = (t) => Math.ceil(6 + 1.6 * t), TW = (t, n) => 0.45 * 4 / 3 * t * n;
 const SLICER = (t) => Math.ceil(16 + 4 * t), CH = (t) => t * 0.55 * 4 / 3;
 const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
 const num = (p) => parseFloat(lit(p)), str = (p) => String(lit(p) || '').replace(/^'|'$/g, '').replace(/''/g, "'");
@@ -70,8 +72,10 @@ export function layoutProblems(files) {
         if (per.some((p) => p !== t)) sizes.push(`${id(x)}: page button text ${t}pt by default, hover ${per[0]}, selected ${per[1]} (the current page)`);
       } else if (v.visualType === 'actionButton') {
         const o = v.objects || {}, tx = look(o.text), t = font(id(x), num(tx.fontSize)), text = str(tx.text);
-        const hasIcon = str(look(o.icon).shapeType) !== 'blank';
-        if (h < BTN(t)) sizes.push(`${id(x)}: "${text}" at ${t}pt needs ${BTN(t)} high, has ${h}`);
+        const shape = str(look(o.icon).shapeType), hasIcon = shape !== 'blank';
+        // the Reset: its reset icon, or no icon and not the panel's Close or Filters button
+        const need = shape === 'reset' || (!hasIcon && !/^[✕☰]/.test(text)) ? RESET(t) : BTN(t);
+        if (h < need) sizes.push(`${id(x)}: "${text}" at ${t}pt needs ${need} high, has ${h}`);
         if (TW(t, text.length) + (hasIcon ? h + 6 : 0) > w) sizes.push(`${id(x)}: "${text}" at ${t}pt${hasIcon ? ` with its icon (${h} wide at this height)` : ''} doesn't fit ${w} on one line`);
       } else if (v.visualType === 'slicer' && slicerText) {
         if (h < SLICER(slicerText)) sizes.push(`${id(x)}: ${h} high, a ${slicerText}pt dropdown slicer needs ${SLICER(slicerText)}`);
