@@ -312,6 +312,43 @@ m4-s1/s2-ar8.png`, `-en8.png`, `-ar15.png`, `m4-s2-ar8-17-18.png`). Page units.
 Rule from the larger of the two (Arabic): a Reset button needs 6 + 1.6 x pt (8pt 19, 15pt 30), 4 more than the
 button rule it used (2 + 1.6 x pt).
 
+## 2026-10-01: `fix/phone-and-sizes` after the Reset rule (`2e26239`), Power BI Desktop 2.158.1177: eight reports
+
+The eight "Gulf Sales Fit3" reports (built with this branch's `mcp/server.mjs` over stdio; expected sizes in
+`mcp/WORK.md`, committed before the run in `465874b`). Each opened alone, every page captured at 2x and 1x
+(`tests/phase2-try/shots-sizes/fit3-<report>-s1/s2-p1..p3.png`), judged from full-size crops of the header, the rail
+or top rail, the Reset and the cards (`fit3-<report>-s1/s2-*-header/-rail/-head-cards/-head-rail/-reset.png`); one DAX
+query per report (101914 / 74675 / 23635 / 0.3377971 on all eight).
+
+| Check | AR 360 | EN 360 | AR 1080 | EN 1080 | AR 2160 | EN 2160 | AR 1080 top | EN 1080 top |
+|---|---|---|---|---|---|---|---|---|
+| Header: title, logo text, page buttons whole | PASS | PASS | PASS | PASS ("Executive summary" on two lines) | PASS | PASS (two lines) | PASS | PASS |
+| Current page's button text the same size as the others (both pages) | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS |
+| Slicers: title and dropdown box | PASS (91x48) | PASS | PASS (274x76) | PASS | PASS (548x152, 30pt: the slicer rule holds) | PASS | PASS (top rail, 88 high) | PASS |
+| Reset: one line, whole, no icon over the text | PASS (91x19, no icon) | PASS (91x19, icon) | PASS (274x40) | PASS | PASS (548x80) | PASS | PASS (245x40, centred) | PASS (201x40, centred) |
+| Cards | known 640 x 360 cut (open item), not judged | same | PASS (whole, centred) | PASS | PASS | PASS | PASS | PASS |
+| 1920 x 1080 as in the cards check | – | – | PASS | PASS | – | – | – (new layout) | – |
+| Values equal DAX | PASS | PASS | PASS | PASS | PASS | PASS | PASS | PASS |
+| Phone layout (owner's clicks) | | | see below | see below | | | | |
+
+**Seen, not in scope** (rule 9; on these eight reports):
+- Arabic reports: KPI names, chart titles ("Total Sales حسب Day Name"), table headers and slicer titles in English
+  (open item: Arabic display names, next round).
+- Days in alphabetical order in the charts and tables (Friday, Monday, ...), months too (April, August, ...) (open
+  item: sort columns, next round).
+- modelNotes on all eight: Calendar[Month Name] and Calendar[Day Name] without a sort-by column; Sales[Total Sales vs
+  Last Ramadan %] without a format string: its card shows 0.34; the tables show 101914 while the cards show 101.914K
+  (open item: format strings, next round).
+- 640 x 360 (both languages): the KPI numbers touch or cross the cards' bottom edge; long KPI titles end in "...";
+  chart labels slanted and cut ("Wednes..."); "Total Sales by Quarter" hides Q4 behind a scroll bar; the detail table
+  shows two to five rows with scroll bars and a cut fourth column (open items: small-page round).
+- Table headers left aligned over right-aligned numbers (stays as it is, owner).
+- "Your logo" and the header title sit at the top of their boxes on the big pages, not vertically centred.
+- Not checked in Desktop: the slide-in panel (website download only): its Close button uses the 2 + 1.6 x pt height,
+  which the Arabic Reset measurement suggests is too low for Arabic text on small pages; and the phone layout of the
+  640 x 360 and 3840 x 2160 reports (phone slots are fixed sizes, while slicer and button text follow the page: 30pt
+  on 2160).
+
 ## Lessons
 - **Prompts for the laptop agent:** start with the request itself, name every file, forbid changing the test files or the expected numbers, and say "stop and report on failure". Give the exact report format.
 - **What the agent can do alone:** create tables, relationships and measures, run DAX, mark date tables, refresh, screenshot one page at a time.
