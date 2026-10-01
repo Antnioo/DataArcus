@@ -365,6 +365,62 @@ page; the canvas can't be scrolled from the script).
   640 x 360 and 3840 x 2160 reports (phone slots are fixed sizes, while slicer and button text follow the page: 30pt
   on 2160).
 
+## 2026-10-01: round 0 measurements (branch `plan/next-rounds`, no code changed), Power BI Desktop 2.158.1177
+Measurements only, before any code, for the seven changes of round 0 (`mcp/WORK.md`). One sitting, no clicks from the
+owner. Property names and allowed values first from Microsoft's report CLI (`powerbi-report-author` 0.4.0,
+`formatting describe-object`), then tried in Desktop.
+
+**Reports (test only, closed without saving, nothing in the repo changed).** Six base reports, each the website's
+sample-data project download built with the same engines the page uses (`design-engine.js`, `pbip-export.js`; the
+background PNG drawn by Chromium as on the page), the website's default layout (exec, top filter rail, second page):
+"Gulf Sales M0 EN 1080", "AR 1080", "EN 720", "AR 720" (preset Corporate, light, KPI accent bar at the side) and
+"EN 1080 dark", "AR 1080 dark" (preset DataArcus, accent bar on top). One region of the sample data was renamed to a
+20-character name ("Ras Al Khaimah North", "رأس الخيمة الشمالية"). A copy of each got measurement pages written by
+script: copies of page 1 with the candidate settings, the same pages on flat magenta (any fill of a visual's own shows
+as a box), a page of tooltip-sized charts, tables and logos, pages of card candidates. Scripts:
+`C:\DataArcus\tests\phase2-try\builder-scripts\m0-*` (`m0-base.mjs`, `m0-measure.mjs`, `m0-cards.mjs`, `m0-charts.mjs`,
+`m0-pad.mjs`, `m0-open.ps1`, `m0-shot.ps1`, `m0-hover.ps1`, `m0-crop.ps1`, `m0-run.ps1`); reports in
+`...\phase2-try\m0\`; screenshots in `...\phase2-try\shots-m0\`, pages at 2x (about 1.17 screen pixels per page unit
+on 1920 x 1080, 1.76 on 1280 x 720), hovers from the screen at 1x; judged from full-size crops (`c-*.png`).
+`m0-hover.ps1` hovers charts without the owner: it finds the page on the screen from the magenta page, moves the mouse
+to a chart's position from the report's own files and captures the window.
+
+| # | Measured | Result |
+|---|---|---|
+| 1 | Tooltip link. Today's page (`visualTooltip.type` `'ReportPage'` on the line chart, no link on the others) hovered | Power BI's default tooltip on the line and the bar chart ("Jul, Total Revenue 283,200"): our tooltip page never shows. Microsoft's validator (`powerbi-report-author validate`) reports the same file: "Invalid enum value "ReportPage" for visualTooltip.type (valid: Default, Canvas)" |
+| 1 | The same charts with `type` `'Canvas'`, `section` the tooltip page | **Our tooltip page shows on every hovered chart** (card and chart, filtered to the hovered point), on EN 1080, AR 1080, EN 720, AR 720 and both dark reports; line, bar and column charts |
+| 2 | Three logos (wide 400 x 100, square 200 x 200, tall 100 x 250) in today's 225 x 48 box, six scalings | today's `imageScaling.imageScalingType 'Fit'`: **stretched** to the box (the circle becomes an ellipse); no scaling property: whole, ratio kept, centred; `image.fit 'Fit'`: whole, ratio kept, centred; `'Stretch'`: stretched, as today; `'Fill'`: ratio kept, cropped; `'Normal'`: native size, cropped |
+| 2 | The same logos in boxes of their own shape (192 x 48, 48 x 48, 19 x 48; 128 x 32, 32 x 32, 13 x 32) | undistorted with `image.fit 'Fit'` and with today's scaling. The tall logo at 19 wide (13 on 720) is whole but very thin, its text unreadable (crop `c-owner-logo-ratio-boxes.png`) |
+| 3 | Tooltip chart (296 x 140) as today: column chart, theme axis text (15pt on 1920 x 1080) | labels slanted and cut: "El…", "F…", "H…", "S…" (the owner's finding), also in Arabic |
+| 3 | Column chart, axis text 8, 9, 10pt | horizontal; at 8pt "Electronics", "Fashion", "Home", "Sports", "Abu Dhabi" whole, the 20-character name wrapped on two lines and cut ("Ras Al Khaimah…", "رأس الخيمة ال…"); at 9 and 10pt "Abu Dh…" cut. The CLI has no setting for the angle of a column chart's category labels |
+| 3 | Bar chart, axis text 8, 9, 10pt, axis room (`categoryAxis.maxMarginFactor`) 25, 40, 50 | names always horizontal. The 20-character name is whole at 8pt with 40 or 50, at 9pt and 10pt only with 50; cut at 25. Arabic the same (8pt, 40: "رأس الخيمة الشمالية" whole) |
+| 3 | Bar chart: how many rows fit in 140 high | **3 rows, then a scrollbar** with the title and the value axis (a scrollbar can't be used inside a tooltip). 4 rows with the value axis off and data labels on (8pt), or with the title off; 5 with both off. One row takes about 22: rows = floor((height - 66) / 22) with the value axis, floor((height - 46) / 22) without (heights 140 to 220 measured: 3, 3, 4, 4, 5, 6, 7 and 4, 4, 5, 5, 6, 7, 8). `preferredCategoryWidth` below the default changes nothing (40 gives 1 row) |
+| 3 | The bar chart (8pt, 40, value axis off, data labels 8pt) in the tooltip, hovered | four categories whole and horizontal with their values, English and Arabic, light and dark |
+| 4 | Tooltip page background transparency 0, 10, 15, 20, hovered over the line chart, the cards and the bar chart | **no difference: the tooltip is opaque** at every value (pixels inside it are exactly the card colour, #ffffff light, #1a1f2e dark, also where a dark bar is behind it). Also opaque with the background at 100 and the wallpaper (`outspace`) at 100 or removed, and with the visual's own `visualTooltip.transparency` 50 or `background` magenta. Desktop draws a report page tooltip on an opaque box |
+| 5 | Table as today | headers left aligned in their columns, numbers right aligned (English); Arabic: every header and the text column left aligned, numbers right aligned |
+| 5 | `columnFormatting` per column (selector `{ metadata: queryRef }`), `alignment` with `styleHeader`, `styleValues`, `styleTotal` on: text Left / numbers Right; Arabic text Right / numbers Left | each header sits over its own values in both languages; Arabic mirrored (the text column, rightmost, right aligned; numbers left). Columns still fill the width |
+| 6 | Where the card's solid fill comes from (16 candidates on a magenta page) | **the card visual's own default fill (`fillCustom`), on by default in the theme's background colour**: a card with no objects of ours at all has it; the theme and `visualContainerObjects.background` don't cause it. It covers the card below its title, so the side accent bar shows only as a sliver beside the title |
+| 6 | Turning it off | `fillCustom: [{ properties: { show: false } }]` **without a selector** makes the card transparent and the accent bar shows whole (side bar light, top bar dark; English and Arabic). `show: false` with the `default` selector is ignored. `fillCustom` `show: true, transparency: 100` with the `default` selector also works. `cardCalloutArea`, `layout.backgroundShow`, `smallMultiplesCellBackGround`: no effect |
+| 6 | Other visual types on the magenta pages (page 1 and 2 as exported) | charts, slicers, text boxes: no fill. **Tables: header and rows have their own fill** (the theme's colours; the total row has none). Page buttons and Reset: filled, as designed |
+| 7 | Why the card title touches the top (16 candidates, positions measured in page units) | **the card's container padding is ignored**: we write `visualContainerObjects.padding` (and `spacing`) with the `default` selector, and the card is identical with it, without it, and with top 30 (body top 26.5 in all three). Without a selector the padding is applied (8: body top 34.1; top 30: 55.5) and so is `spacing` (body top 23.9). So today the title sits 0 from the top and 0 from the side |
+| 7 | Top padding ladder on the real panels, fill off: 8, 10, 12, 14, 16, 18, 20, 24 on 1080; 5, 6, 7, 8, 9, 10, 12, 14 on 720 | 8 (5): clear of the border but tight; **12 on 1080 and 8 on 720: the smallest that looks right** (builder's judgement, crops `c-en1080-pad-p4.png`, `c-en720-pad-p4.png`); 16 and more looks loose. The number (42pt / 28pt) stays whole at every step |
+| 7 | The title and the side accent bar (bar at 15-21 from the card's edge on 1080): padding on the bar's side 8, 22, 26, 33 (720: 5, 15, 17, 22) | 8 (5): **the title is drawn over the bar**; 22 (15): just clear, touching; **26 (17): a clear gap**; 33 (22): wide. Arabic the same on the right |
+
+**Not as planned (stopped and reported):**
+- Tooltip transparency (4) can't be done with any setting tried: Desktop shows a report page tooltip opaque.
+- A bar chart of tooltip size shows 3 rows (4 without its value axis); more categories go behind a scrollbar.
+
+**Seen, not in scope:**
+- Microsoft's validator on our export, besides the tooltip type: `PBIR_THEME_FILE_NAME_MISMATCH` (the theme file's
+  `name` is the design's name while `report.json` references the file name; Desktop still applies the theme) and
+  `PBIR_PLATFORM_MISSING` (no `.platform` file).
+- The sample-data download opens with "One or more calculated tables need to be manually refreshed" (the README says
+  to refresh once); the visuals show data anyway.
+- The phone layout writes the card padding with the same `default` selector (`mobile.json`): not checked, likely
+  ignored there too (round 1).
+- The 640 x 360 items (cut cards, "…" titles, slanted labels, Q4 hidden, the detail table); the title and logo at the
+  top of their boxes on big pages; English names in Arabic reports and days and months sorting alphabetically (round 2).
+
 ## Lessons
 - **Prompts for the laptop agent:** start with the request itself, name every file, forbid changing the test files or the expected numbers, and say "stop and report on failure". Give the exact report format.
 - **What the agent can do alone:** create tables, relationships and measures, run DAX, mark date tables, refresh, screenshot one page at a time.
@@ -378,6 +434,10 @@ page; the canvas can't be scrolled from the script).
 - **Desktop's TMDL, as seen in 2.157:** `database` has no name; model annotations and `ref table` lines sit at the top level of `model.tmdl`, and `ref` gives the table order (the .pbit uses the same order); columns carry `changedProperty = IsHidden` when hidden by hand; format strings with quotes are written as `"""Yes"";""No"""`.
 - **Types of DAX-table columns in the open model:** `INFO.COLUMNS()` gives them `ExplicitName` = blank and `ExplicitDataType` = 1 (Automatic); the name is in `InferredName` and the type in `InferredDataType` (Tabular DataType numbers: 2 String, 6 Int64, 8 Double, 9 DateTime, 10 Decimal, 11 Boolean). `INFO.VIEW.COLUMNS()` has only display names for types, not documented, so it is not used. Microsoft's `column_operations` List returns the same types as TOM names (`DateTime`, `Int64`, `String`, `Boolean`).
 - **`assets/data/model-health-sample.pbit` is not a valid Power BI file.** Desktop refuses it ("can't be opened. Either the file is encrypted or corrupted", missing part /Version). It was built by hand for the website's demo; use it only there, never for Desktop tests.
+- **A formatting entry's selector decides whether Desktop uses it (2.158):** the card's container `padding` and `spacing` and its `fillCustom.show` are ignored with the `default` selector and work without one; the card's `value`, `label` and `outline` (and a button's look) need it. Try a new entry both ways on a flat-coloured page before trusting it.
+- **Microsoft's report CLI** (`powerbi-report-author`, `npm install -g @microsoft/powerbi-report-authoring-cli`): `formatting describe-object <visual> <object>` lists property names and allowed values, `validate <Report folder>` checks an export (it found our `visualTooltip.type`). A reference only: it lists `fillCustom` and `padding` with the `default` selector, which Desktop ignores for `show` and for the container padding.
+- **Hovering without the owner:** `builder-scriptsm0-hover.ps1` finds the page on the screen from a flat magenta page, moves the mouse to a chart's position from the report's files and captures the window. `powerbi-desktop reload` reloads an open report after its files change, so candidates can be tried in seconds.
+- **A report page tooltip is opaque in Desktop**, whatever the tooltip page's background, wallpaper or the visual's tooltip settings say.
 
 ## To do (DataArcus MCP)
 - A tool to apply a TMDL script to the open model, or a clear hand-off step.
