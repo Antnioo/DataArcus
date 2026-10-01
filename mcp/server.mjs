@@ -88,7 +88,7 @@ const slot = z.object({
 });
 server.registerTool('create_report', {
   title: 'Create a report project for an existing model',
-  description: 'Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme and background applied. The model and any existing report are never touched; the new report gets a free name. Every report also gets a hidden tooltip page, shown when a chart is hovered. An optional logo (a PNG or JPG in the DataArcus folder) goes in the header at its own shape. Give either pages (hand-placed slots) or a design (from generate_theme or plan_layout): with a design the pages, positions, second page, slide-in filter panel, labels and theme are exactly the DataArcus Theme Generator\'s project download. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge).',
+  description: 'Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme applied; each KPI card, chart and table on its own panel (drawn by the theme\'s solid visuals, or by a page\'s background image when one is given). The model and any existing report are never touched; the new report gets a free name. Every report also gets a hidden tooltip page, shown when a chart is hovered. An optional logo (a PNG or JPG in the DataArcus folder) goes in the header at its own shape. Give either pages (hand-placed slots) or a design (from generate_theme or plan_layout): with a design the pages, positions, second page, slide-in filter panel, labels and theme are exactly the DataArcus Theme Generator\'s project download. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge).',
   inputSchema: {
     path: modelPath.describe('The project folder or .SemanticModel folder the report will use'),
     name: z.string().min(1).max(60).describe('Report name'),
@@ -125,26 +125,27 @@ server.registerTool('create_report', {
     logo = { bytes, ext }; logoRatio = size.w / size.h;
     if (size.h > size.w) reportNotes.push('This logo is tall; a horizontal version will read much better in the header.');
   }
-  let r, bind, extra = {};
+  let r, bind, extra = {}, written;
   if (a.design) {
     // the website's project download for this design: its pages (second page, slide-in panel), labels and theme
     let design = planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang }).design;
     const themeChanged = [];
     if (design.layout.transparent) {
       themeChanged.push({ setting: 'layout.transparent', from: true, to: false,
-        why: 'Transparent visuals are meant to sit on panels drawn in a background image. This report has no background image yet, so its theme gives the visuals their own solid cards to keep them visible.' });
+        why: 'Transparent visuals are meant to sit on panels drawn in a background image. This report has no background image, so its theme has solid visuals instead: each KPI card, chart and table shows on its own panel (the card colour, rounded corners, a shadow when the design has one).' });
       design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { transparent: false }) });
     }
     const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel, logoRatio });
     r = Pbip.build({
       name: a.name, title: E.themeName(design.name), pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: E.buildTheme(design, a.lang), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = Bind.suggest(m.tables, kpisOf(pages))),
+      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = Bind.suggest(m.tables, kpisOf(pages))),
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel }))
     });
     extra = { pages: pages.map((p) => ({ name: p.name, width: p.page.w, height: p.page.h, slots: p.slots.length, slideInPanel: !!p.panel })), theme: E.themeName(design.name),
       ...(themeChanged.length ? { themeChanged } : {}) };
   } else {
     const theme = a.theme ? JSON.parse(fs.readFileSync(inside(a.theme), 'utf8')) : { name: a.name };
+    written = theme;
     r = Pbip.build({
       name: a.name, title: a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
@@ -157,8 +158,13 @@ server.registerTool('create_report', {
   const clash = r.files.map((f) => path.join(m.projectDir, f.path)).filter((f) => fs.existsSync(f));
   if (clash.length) throw new Error(`Not written: ${clash.length} files already exist, e.g. ${clash[0]}`);
   r.files.forEach((f) => { const out = path.join(m.projectDir, f.path); fs.mkdirSync(path.dirname(out), { recursive: true }); fs.writeFileSync(out, f.data); });
+  // what the report shows behind its visuals (read from the theme that was written, as the report writer reads it)
+  const solid = !!((((((written.visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).show);
+  const panels = solid
+    ? 'Each KPI card, chart and table has its own panel, drawn by the theme (solid visuals in the card colour, with the design\'s corners and shadow); the header and the filter rail are bands. There is no background image.'
+    : 'The visuals have no panels of their own (the theme\'s visuals are transparent): they show on the page\'s background image where one is given, otherwise straight on the page. For panels, use a design or a theme with solid visuals.';
   const notes = modelNotes(m.tmsl, bind);
-  return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra,
+  return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
     notes.length ? { modelNotes: notes } : {}, reportNotes.length ? { reportNotes } : {}));
 }));
 

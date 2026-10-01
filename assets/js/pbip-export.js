@@ -271,11 +271,20 @@
         { properties: { backgroundColor: color(u.card), foregroundColor: color(u.text), transparency: num(0), border: bool(true), borderColor: color(edge), fontFamily: str(font) }, selector: { id: 'Available' } }
       ]
     };
-    const frame = (title, alt, extra) => Object.assign({
-      title: obj(title ? { show: bool(true), text: str(title), alignment: str(align) } : { show: bool(false) }),
+    // Who draws the panel behind a visual. A transparent design has them in the page's background image, so every
+    // visual's own background, border and shadow are switched off here (visual.json outranks the theme). A solid design
+    // has no such image: its theme gives each visual a background in the card colour, rounded corners and a shadow, so
+    // the visuals that sit on a panel (KPI cards, charts, tables, text slots: panel = true) are left to the theme and
+    // nothing is written for them. Solid is read from the theme itself: its "*" visuals have a background.
+    // Header title, logo, page buttons, slicers, buttons and the tooltip page's visuals stay off in both.
+    const SOLID = !!((((((o.theme || {}).visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).show;
+    const frame = (title, alt, extra, panel) => Object.assign({
+      title: obj(title ? { show: bool(true), text: str(title), alignment: str(align) } : { show: bool(false) })
+    }, panel && SOLID ? {} : {
       background: obj({ show: bool(false) }),
       border: obj({ show: bool(false) }),
-      dropShadow: obj({ show: bool(false) }),
+      dropShadow: obj({ show: bool(false) })
+    }, {
       general: obj({ altText: str(alt || title || '') })
     }, extra || {});
     const textbox = (text, size, bold, colr) => ({ general: obj({ paragraphs: [{ textRuns: [{ value: text, textStyle: { fontFamily: font, fontSize: size + 'pt', fontWeight: bold ? 'bold' : 'normal', color: colr } }], horizontalTextAlignment: align }] }) });
@@ -395,7 +404,10 @@
       });
       // groups sit under their visuals in the layer order
       Object.keys(groups).forEach((g) => { const G = groups[g]; G.z = z; z += 1000;
-        container({ name: G.name, x: G.x0, y: G.y0, w: G.x1 - G.x0, h: G.y1 - G.y0, z: G.z, group: { displayName: GROUP_NAMES[g], groupMode: 'ScaleMode' }, kind: 'group', groupKey: g }); });
+        // in a solid design the theme would draw a band behind the whole group; the KPI cards each have their own
+        // panel, so their group draws none (the header and the filter rail keep theirs: it is their band and rail)
+        container({ name: G.name, x: G.x0, y: G.y0, w: G.x1 - G.x0, h: G.y1 - G.y0, z: G.z, kind: 'group', groupKey: g,
+          group: Object.assign({ displayName: GROUP_NAMES[g], groupMode: 'ScaleMode' }, SOLID && g === 'kpis' ? { objects: { background: obj({ show: bool(false) }) } } : {}) }); });
 
       // page navigation between the title and the logo, when the report has more than one page
       const title = pg.slots.find((s) => s.kind === 'title'), logo = pg.slots.find((s) => s.kind === 'logo');
@@ -470,7 +482,7 @@
             // the placeholder until a logo is added: sized to the header slot, in the secondary text colour so it reads
             : { visualType: 'textbox', objects: textbox(W.logoHere || 'Your logo', Math.min(pt(s.h * 0.3), boxFit(s.h)), false, mixHex(u.text, u.card, 0.3)), visualContainerObjects: frame(null, W.logo || 'Logo') };
         } else if (s.kind === 'text') {
-          visual = { visualType: 'textbox', objects: textbox(W.textHere || 'Explain what the main chart shows and what to do about it.', 11, false, u.text), visualContainerObjects: frame(s.title, s.title) };
+          visual = { visualType: 'textbox', objects: textbox(W.textHere || 'Explain what the main chart shows and what to do about it.', 11, false, u.text), visualContainerObjects: frame(s.title, s.title, null, true) };
         } else {
           const query = B ? bindQuery(s.kind, B, kpiIndex, rtl) : null;
           let ttl = s.title;
@@ -479,7 +491,7 @@
           if (s.kind === 'kpi') { if (B && query) ttl = label(B.kpis[kpiIndex]); kpiIndex++; }
           // KPI names read as labels: semibold, so the number below stays the hero
           if (s.kind === 'kpi') extra.title = obj({ show: bool(true), text: str(ttl), alignment: str(align), bold: bool(true) });
-          visual = { visualType: type, visualContainerObjects: frame(ttl, ttl, extra), drillFilterOtherVisuals: true };
+          visual = { visualType: type, visualContainerObjects: frame(ttl, ttl, extra, true), drillFilterOtherVisuals: true };
           if (query) visual.query = query;
           // the title already names the KPI, so the card's own label under the number is not repeated
           if (type === 'cardVisual') {

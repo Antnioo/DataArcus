@@ -95,6 +95,11 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
   - Inside a theme the card visual's `border` is the card's own border, which has no `radius` (the validator rejects
     it); Desktop draws the card's corners the same without it. `npm test` runs Microsoft's validator on two exports
     (their report authoring CLI, a dev dependency pinned to 0.4.0, not shipped with the MCP).
+- `visual.json` outranks the theme: a container `background`, `border` or `dropShadow` written there with
+  `show: false` hides what a solid theme would draw. The report writer leaves those three out for the visuals that
+  sit on a panel when the theme has solid visuals, and switches them off when the theme is transparent (the page's
+  background image draws the panels then). A group can have its background switched off
+  (`visualGroup.objects.background`), but has no border or shadow.
 
 ## Writing prompts for another agent or session
 Start with the request itself ("Run this test now"). Name every file. List the steps. Add the rules: scope folder, don't
