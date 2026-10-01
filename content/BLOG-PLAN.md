@@ -36,7 +36,7 @@ The memory for the blog. Read it before planning or writing an article; update i
 - DP-600 practice exam (`tools/dp-600-practice-exam.html`)
 
 ## Next up (in order; reframed 2026-10-01: the Gulf calendar first, since every Gulf business needs it in any language)
-1. **A Gulf calendar in DAX**: Hijri months, Ramadan and Eid flags, the Saturday-Sunday weekend (UAE since 2022), and
+1. **A Gulf calendar in DAX** (publish by early December 2026, ahead of Ramadan 2027 around 8 February): Hijri months, Ramadan and Eid flags, the Saturday-Sunday weekend (UAE since 2022), and
    sorting day and month names correctly. Tool: Calendar Table Generator.
 2. **Arabic and right-to-left Power BI reports done right**: what Power BI does and doesn't support (no RTL setting
    in Desktop), mirroring the layout, Arabic fonts, numbers and titles. Tool: Theme Generator (Arabic).
@@ -45,6 +45,15 @@ The memory for the blog. Read it before planning or writing an article; update i
 4. **Measures without the guesswork**: time intelligence and ratios that people get wrong. Tool: DAX Measure Builder.
 5. **KPI cards that tell a story with SVG**: Tool: SVG KPI Designer.
 6. **Claude designs your Power BI report** (the MCP launch): only when the MCP is packaged and public.
+
+## Claims: safe and not (from the research of 2026-10-01)
+- **Safe, with the source linked:** Power BI Desktop has no right-to-left support (Microsoft Learn); GCC weekends
+  differ by country and the UAE changed in 2022; Ramadan moves about 11 days a year; figures from named sources
+  (NielsenIQ, Visa, the Saudi central bank's card data), dated.
+- **Never:** that a law requires Arabic dashboards; that DataArcus is "the only" or "the first"; a single Gulf BI
+  market size; prices or rates from vendor blogs as facts.
+- **Lead with the Gulf business logic** (useful in English too); present Arabic as quality done properly, not just
+  "dashboards in Arabic".
 
 ## Where ideas come from
 Questions people ask in LinkedIn comments and messages, Microsoft's monthly Power BI updates (only what matters to

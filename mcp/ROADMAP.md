@@ -23,6 +23,23 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
     but it is tedious in Power BI (no right-to-left setting), so it is worth paying for where it is required.
   - Don't claim nobody else serves Arabic: articles and tools on it exist; the moat is all three together in real,
     checked report files.
+- **Research (2026-10-01, "Gulf Arabic Power BI demand", in the private repo `Antnioo/dataarcus-engine`,
+  `research/`; medium confidence, much from search snippets).** It supports the three layers with three refinements:
+  - **Lead with the Gulf business logic** (the need is real in English too: Ramadan is about 19% of yearly MENA FMCG
+    sales; the week before Eid runs about 33% above normal on Saudi card data; no packaged competitor found).
+  - **Arabic/right to left is a premium mainly in Saudi Arabia, government, and banks and listed companies** (they
+    already publish in both languages). A plain "dashboard in Arabic" is a $5-100 commodity on Arabic freelance
+    sites, so the premium must be visible quality: mirrored layout, language switch, correct fonts.
+  - **Make "verified" concrete:** publish the verification checklist (what every report is checked for).
+  - **Targets, in order:** UAE groups trading in the UAE and Saudi Arabia (automotive distributors, retail and
+    franchise groups, F&B and FMCG distributors; mind the owner's employment contract with any company close to his
+    employer); Dubai Microsoft partners and ERP resellers as a subcontracting channel; regulated firms and
+    semi-government through those partners. Avoid direct Saudi government tenders and marketplace price wars.
+  - **Safe claims only:** Desktop has no right-to-left support (Microsoft's docs); GCC weekends differ by country;
+    Ramadan moves about 11 days a year. **Never claim:** that a law requires Arabic dashboards, "the only" or "the
+    first" provider, or a single Gulf BI market size.
+  - **Cheap checks next:** about 10 conversations with UAE-Saudi distributors and Dubai Microsoft partners; an Arabic
+    search of the Saudi tender portal (Etimad) for dashboard tenders.
 - **Users before perfection.** The next milestone is a private beta with 5-10 Power BI developers, then launch. Small
   pages and backgrounds wait for what testers actually hit.
 - **Who first:** independent Power BI developers and consultants, then small BI teams, then Gulf organisations;
@@ -74,14 +91,19 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
      every release. They test whether Claude uses the tools well, not only the tools.
    - **Releases:** numbered versions (0.2, 0.3, ...) and a `CHANGELOG.md` with what changed in each.
 5. **Private beta:** 5-10 Power BI developers (international and Gulf); collect what breaks and what they want.
-   Before it starts: a feedback channel (GitHub Issues in the private repo or a simple form) and a support email;
+   Before it starts: the published verification checklist; a feedback channel (GitHub Issues in the private repo or a simple form) and a support email;
    business basics (registering the business, terms of use, and a privacy note for the MCP stating formally that
    nothing leaves the user's machine).
 6. **Launch:** README, the launch article, LinkedIn (`content/`), and **the demo moment**: one real, unedited
    60-second recording from a request to a finished Arabic report open in Power BI.
+**Dated: the Gulf Calendar pack, ready by 2026-12-01** (Ramadan 2027 starts around 8 February; buyers prepare in
+   December). Hijri dates (Umm al-Qura, with UAE moon-sighting overrides), Ramadan day N vs last year, Eid windows,
+   per-country weekends and the 2022 UAE change; in the Calendar Generator, the Measure Builder and the MCP; with a
+   launch article and posts. Fit it around the rounds above; it is mostly DAX and the website's existing tools.
 7. **After launch, the product's next layers:** measures (year over year, Ramadan vs last Ramadan, percentages) from
    the Measure Builder and Gulf DAX, since many real models lack them; and saved company design systems (theme and
-   layout reused on every report), the base of the Teams tier.
+   layout reused on every report), the base of the Teams tier; and **automatic right-to-left mirroring of a report**
+   (no public equivalent found; our engine already places every visual): the clearest product moat for the premium.
 8. **After the beta, as testers need them:** small pages (640 x 360 cards, charts, tables), backgrounds (phase 3:
    the PNG from the engine's SVG), Gulf DAX patterns (Hijri, Ramadan, fiscal years), `screenshot-all` on generated
    projects, then Pro/Teams.
