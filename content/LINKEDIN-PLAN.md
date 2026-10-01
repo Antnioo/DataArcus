@@ -9,7 +9,7 @@ Last updated 2026-10-01 by the reviewer.
   repost of the Theme Generator post got 10 impressions in 4 days (2026-10).
 - **Growing the page:** use the page's monthly "Invite to follow" credits on Power BI and data connections, a few at
   a time.
-- **Profile basics (once):** headline "Power BI developer | Free Power BI tools for the Gulf at dataarcus.com";
+- **Profile basics (once):** headline "Power BI reports designed right, in minutes | Built for how the Gulf does business | dataarcus.com";
   the website in the profile's link; a featured section with the Theme Generator, the Model Health Check and the
   best-performing article.
 

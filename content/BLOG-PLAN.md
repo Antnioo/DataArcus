@@ -4,6 +4,9 @@ The memory for the blog. Read it before planning or writing an article; update i
 (the log, the map, "Next up"). Last updated 2026-10-01 by the reviewer.
 
 ## Who we write for, and how we sound
+- **Our identity:** Power BI reports designed right, fast, and checked in Power BI. **Our edge:** built for how the
+  Gulf does business (Ramadan, Eid, Hijri, the weekend, VAT), in English or Arabic. **Our premium:** Arabic and right
+  to left done properly where it is required. Posts serve the identity first; Gulf topics are the edge, not the limit.
 - **For:** people who build Power BI reports every day, above all in the Gulf: analysts, BI developers, finance and
   sales teams who own a dashboard. They are busy, practical and tired of generic advice.
 - **The voice of the people:** we write from their side of the desk. Start from a real problem they have ("Ramadan
@@ -19,7 +22,7 @@ The memory for the blog. Read it before planning or writing an article; update i
 ## The pillars (what the blog is about)
 | Pillar | Published | Free tool it leads to |
 |---|---|---|
-| Gulf and Arabic Power BI | Ramadan sales YoY (2026-09-23) | DAX Calendar Table Generator (Hijri), Theme Generator (Arabic) |
+| Gulf business logic (and Arabic) | Ramadan sales YoY (2026-09-23) | DAX Calendar Table Generator (Hijri), Theme Generator (Arabic) |
 | Power BI craft (DAX, models) | DAX attribution pattern (2026-09-01), Model health check (2026-09-25) | Model Health Check, DAX Measure Builder |
 | Report design | Report redesign in 5 minutes (2026-09-28), 7 report styles (2026-09-29) | Theme Generator, SVG KPI Designer |
 | Cost and licensing | Pro vs PPU vs Fabric F64 (2026-09-23) | Licensing Cost Calculator |
@@ -32,11 +35,11 @@ The memory for the blog. Read it before planning or writing an article; update i
 - PL-300 practice exam (`tools/pl-300-practice-exam.html`)
 - DP-600 practice exam (`tools/dp-600-practice-exam.html`)
 
-## Next up (in order, confirmed by the owner 2026-10-01; Arabic first: it is our niche and leads straight to our strongest tools)
-1. **Arabic and right-to-left Power BI reports done right**: what Power BI does and doesn't support (no RTL setting
-   in Desktop), mirroring the layout, Arabic fonts, numbers and titles. Tool: Theme Generator (Arabic).
-2. **A Gulf calendar in DAX**: Hijri months, Ramadan and Eid flags, the Saturday-Sunday weekend (UAE since 2022), and
+## Next up (in order; reframed 2026-10-01: the Gulf calendar first, since every Gulf business needs it in any language)
+1. **A Gulf calendar in DAX**: Hijri months, Ramadan and Eid flags, the Saturday-Sunday weekend (UAE since 2022), and
    sorting day and month names correctly. Tool: Calendar Table Generator.
+2. **Arabic and right-to-left Power BI reports done right**: what Power BI does and doesn't support (no RTL setting
+   in Desktop), mirroring the layout, Arabic fonts, numbers and titles. Tool: Theme Generator (Arabic).
 3. **PL-300 study guide** (then DP-600): what the exam weighs, a 4-week plan, the traps. Tool: the practice exams.
    Search demand is high and steady.
 4. **Measures without the guesswork**: time intelligence and ratios that people get wrong. Tool: DAX Measure Builder.
