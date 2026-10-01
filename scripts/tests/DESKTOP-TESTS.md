@@ -228,6 +228,15 @@ lines (2 + 1.6 x 8 x 2 = 28); on the 91-wide Arabic Reset it kept one line under
 button 40 high wrapped onto two lines (`shots-cards/ar360-p1.png`); the measurement report only had the English text,
 which fits one line in 91. So button text wrapping wasn't measured. The report was left open in Desktop, not saved.
 
+**Correction, from the owner's screenshot of the same AR 360 page:** the card numbers are cut at the bottom ("23.635K",
+"74.675K", "101.914K" in the 169x42 cards: title 8pt, value 12pt). Item 4 on EN 360 and AR 360 is therefore **FAIL**,
+not PASS: I judged the cards from the bridge's screenshots, rendered at 2x, where the digits only just clear the
+card's bottom edge (`crop-ar360-cards42.png`); at the owner's window zoom they are cut. The same cards were marked PASS
+on 640 x 360 in the cards check (2026-09-30) and in round 1 here; that was wrong for the same reason. Cause: `cardFit`
+still counts a line as 1.5 x pt (points taken as pixels), while the measured text box line is about 1.8 x pt plus
+padding: a 42-high card needs about 48 by the measured rule, a 48-high card (14pt value) about 52. Not fixed: the owner
+had left `cardFit` alone unless the measurements showed it too tight; they now do, so it needs his go.
+
 ## Lessons
 - **Prompts for the laptop agent:** start with the request itself, name every file, forbid changing the test files or the expected numbers, and say "stop and report on failure". Give the exact report format.
 - **What the agent can do alone:** create tables, relationships and measures, run DAX, mark date tables, refresh, screenshot one page at a time.

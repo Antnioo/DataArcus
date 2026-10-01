@@ -203,8 +203,13 @@ opened or captured. The measurements and every earlier Desktop check were on 2.1
 their boxes, Reset, cards, DAX); AR 360 FAIL on item 2: the Arabic Reset "إعادة ضبط الفلاتر" (91x28, 8pt) is drawn on one
 line with the icon over its last letters; the plan's rule sized it for two lines, but Desktop didn't wrap it (at 40
 high in the cards check it did). Button text wrapping wasn't measured (the measurement report had only the English
-Reset). Header, slicers, cards and DAX on AR 360 pass. Details in `scripts/tests/DESKTOP-TESTS.md`. **Waiting for the
-owner.** The CLAUDE.md notes wait for a passing phone check. Not merged.
+Reset). Header, slicers and DAX on AR 360 pass. **Cards on 640 x 360 also FAIL** (owner's screenshot: the numbers in
+the 169x42 cards are cut at the bottom; the bridge's 2x screenshots hid it, so my PASS on 360 cards here, in round 1
+and in the cards check was wrong): `cardFit` counts a line as 1.5 x pt, the measured line is about 1.8 x pt plus
+padding. Details in `scripts/tests/DESKTOP-TESTS.md`. **Waiting for the owner:** (1) measure button text wrapping
+(the Arabic Reset at heights 28-44) and fix the Reset rule; (2) give `cardFit` the measured line rule (cost: on 1920 x
+1080 the 126-high KPI cards' value would drop from 42 to about 36, unless the card heights grow). The CLAUDE.md notes
+wait for a passing phone check. Not merged.
 
 **Order after "go":** tests first with the measured rules (and option (a)'s engine test if chosen), failing; code
 (`pbip-export.js`, and `design-engine.js` only under (a)); fixtures recaptured only under (a) and only the six listed;
