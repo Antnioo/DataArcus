@@ -44,3 +44,8 @@ collecting every point decided so far, so nothing is lost between sessions. Chec
 8. Open items that must not be forgotten.
 Before a session is compacted or ends: write the current state, every decision and the next step into
 `mcp/WORK.md` (or the file that owns it), commit and push.
+
+## Commit attribution (owner's decision 2026-10-01)
+End every commit message with exactly these two lines, never a model name or version:
+`Co-Authored-By: Claude <noreply@anthropic.com>` and the `Claude-Session: ...` link your environment gives you
+(leave that line out if your environment gives none).
