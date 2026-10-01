@@ -1,9 +1,10 @@
 # Current work (the memory between sessions)
 
 Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). Last updated 2026-10-02
-by the builder: stopped for today with nothing in progress. Main is at `e8fe171`. After the owner's usage limit resets
+by the builder: stopped for today with nothing in progress. Main is at `bbc42df`. After the owner's usage limit resets
 on Sunday 2026-10-04: (1) the reviewer's split of `pbip-export.js`, (2) the reviewer: the validator on every export in CI,
-(3) round 1. See "Next step".
+(3) round 1. See "Next step". **The split's plan is written and waits for the owner's go: "Split plan" below
+(branch `plan/split-pbip-export`, plan only, no code changed).**
 
 ## Where things stand
 - **Now (2026-10-02, main `e8fe171`):** 6 MCP tools (`read_model`, `suggest_fields`, `check_model_health`,
@@ -40,11 +41,288 @@ on Sunday 2026-10-04: (1) the reviewer's split of `pbip-export.js`, (2) the revi
 - **Website dropdowns fixed** (merged): the open list was white on white on every tool page; form fields now use
   `color-scheme: dark` with dark option colours (`assets/css/style.css`), checked on every tool page in `tools.mjs`.
 
+## Split plan (waiting for the owner's go)
+
+### Report (2026-10-02, plan only: no code, test or fixture changed)
+- **Commit:** the plan is the first commit on `plan/split-pbip-export` (from main `bbc42df`); its hash is in the
+  line added by the commit after it, at the end of this report. `docs/work-next-steps` was deleted, locally and on
+  GitHub (its content is in main as `bbc42df`, a squash; its old tip was `3287216`).
+- **Module map:** a new folder `assets/js/pbip/` with 21 small CommonJS files: `helpers`, `zip`, `sample`,
+  `fields`, `sizes` (every Desktop-measured rule with its pointer), `frame`; `visuals/` `card`, `slicer`, `button`,
+  `table`, `chart`, `textbox`, `image`; `page/` `shell`, `page`, `header`, `rail`, `panel`, `tooltip`,
+  `bookmarks`; `phone`; and `index` (`build`). About 1,000 lines in all, the largest file about 130.
+- **Build tool:** a small Node script with no dependencies, `scripts/build-pbip.mjs`. It joins the parts into
+  `assets/js/pbip-export.js` (generated, committed, same global `DAPbip`); `terser` makes `pbip-export.min.js` as
+  today and the page loads it with `?v=` as today. The MCP requires `assets/js/pbip/index.js` directly and needs
+  no new package.
+- **Proof:** no existing test pins the writer's bytes (the fixtures hold what goes *into* the writer), so the split
+  starts by adding the check: the writer as it is on main, kept as a frozen copy, and the new one build the same
+  inputs with the same ids, and every file is compared byte for byte: the 60 project fixtures, the 54 designs with
+  their own theme, a set of inputs for the branches the fixtures don't reach, in Node (parts, joined file, minified
+  file), in the browser on both generator pages (zip included), and the MCP's reports over stdio by hashes
+  recorded on main. The same script writes every file to disk before and after for a folder comparison.
+- **Decisions the owner needs to make:**
+  1. Go on this plan (the split's branch: `refactor/split-pbip-export`, from main, in a fresh reviewer session).
+  2. The build tool: the Node script (proposed) or esbuild.
+  3. Add `terser` 5.51.2 as a pinned dev dependency of the website (not of the MCP), so CI can check that the
+     committed `.min.js` is the one built from the parts. Proposed: yes. Today it is run with `npx` and is in no
+     `package.json`; 5.51.2 reproduces the committed `pbip-export.min.js` byte for byte (checked on 2026-10-02).
+  4. After the split merges: keep the byte check in CI as a file of hashes that a later round updates on purpose,
+     with its proof (proposed), or remove it with the frozen copy.
+  5. No Desktop check for the split, because the files are byte for byte the same (proposed), or one look at one
+     report.
+- **Seen, not in scope:** (a) `origin/fix/generators` (23 commits ahead of main) and `origin/fix/report-quality` (5
+  ahead) still exist and differ from main in `pbip-export.js`; they look like old branches merged as squashes.
+  The split must not start until the owner says they are dead (or they are deleted). (b) In `pbip-export.js`:
+  `boxH` is defined and never called; two comments still say the tooltip page is 320 x 240 (it is 320 x 284); the
+  slicer visual and the Reset button are each written twice, word for word (filter rail and slide-in panel). The
+  split moves all of it as it is; cleaning any of it is a later, separate change. (c) The 2.25 x pt Reset icon and
+  the 0.45 em button character width are stated in the code's comment but I found no line in `DESKTOP-TESTS.md`
+  with those two numbers; the phone canvas's 323 width and slot heights are not there either. `sizes.js` will say
+  "no measurement recorded" for them rather than point at a wrong place.
+
+### 1. The map of `assets/js/pbip-export.js` today (675 lines, 56,800 bytes; main `bbc42df`)
+One wrapper function, `(function (root) { ... })(typeof self !== 'undefined' ? self : this)`, exporting
+`{ build, zip, crc32 }` as `module.exports` in Node and as `DAPbip` in the browser.
+
+| Lines | What | Does | Depends on | Writes |
+|---|---|---|---|---|
+| 8-23 | `S`, `SCHEMA` | Microsoft's schema addresses (12) | none | `$schema` of every JSON file |
+| 26-33 | `lit`, `str`, `bool`, `num`, `color`, `obj`, `resource`, `json` | PBIR literals, a formatting entry with or without a selector, a registered resource, JSON with 2 spaces | none | every formatting value |
+| 34-44 | `rnd`, `guid` | a random 20-hex id; a GUID from two of them | `root.crypto` in the browser, `Math.random` in Node | visual, page and bookmark names; `.platform` `logicalId` |
+| 45-49 | `mixHex` | mixes two colours | none | pane, button and placeholder colours |
+| 52-77 | `CRC`, `crc32`, `zip` | a stored zip | `TextEncoder`, `Date` | the download (`build().zip()`) |
+| 80-121 | `T`, `dq`, `ref`, `sampleModel` | the sample table and its 6 measures, English and Arabic | none | `model.bim` |
+| 124-129 | `fieldCol`, `fieldMea`, `q`, `proj`, `label` | a bound field as a query projection; its name | none | every visual's `query`, titles |
+| 133-148 | `TYPES`, `sampleBind` | slot kind to visual type; the sample's fields per visual | `T` | `visualType` |
+| 150-180 | `CHARTS`, `tableFields`, `bindQuery`, `bindTitle` | which kinds are charts; a visual's query (null when a field is missing); "X by Y" | `proj`, `label`, `q` | `query`, chart titles |
+| 189-218 | `build`: setup | language, texts, own model or sample, the report's name (`tidy`, `base`, `theirs`, taken names), `slug`, folder names, `PAGES` (an id and a background file name each), `add`, `align`, `edge` | `rnd`, `mixHex`, `sampleBind` | every path |
+| 220-238 | `build`: project shell | `.pbip`, `definition.pbir`, `.platform` (report, model), `definition.pbism`, `model.bim` | `guid`, `sampleModel` | those files |
+| 240-260 | `build`: resources | the theme under its file name, backgrounds, logo, `version.json`, `report.json` | `obj`, `bool` | `StaticResources/...`, `report.json` |
+| 263-273 | `tipName`, `pages.json`, `paneObjects` | page order; the filter pane's colours | `rnd`, `color`, `mixHex` | `pages.json`; part of each `page.json` |
+| 280-290 | `SOLID`, `frame`, `textbox` | who draws the panel (read from the theme); a visual's container objects (title, background/border/shadow rule, alt text); a text box's paragraph | `o.theme`, `align`, `font` | `visualContainerObjects`, text boxes |
+| 296-333 | `TITLE`, `CALLOUT`, `TIP_VALUE`, `TIP_TITLE`, `cardFit`, `pt`, `charW`, `boxH`, `buttonH`, `iconH`, `slicerH`, `resetFit`, `boxFit`, `LABEL`, `SLICER_TEXT` | every size rule | the theme's text sizes | sizes and positions |
+| 339-357 | `DEF`, `cardObjects`, `cardFrame` | the card's own objects and its container padding and spacing, each with the selector Desktop needs | `obj`, `num`, `rtl` | card `visual.json` |
+| 361-366 | `def` | a button's formatting card: `show` alone, the look under `default` | none | buttons |
+| 369-377 | per page: `page.json` | size, background image, outspace, pane | `paneObjects` | `pages/<id>/page.json` |
+| 380-392 | `container`, `origin` | one visual container: name, position (relative to its group), z and tab order, group, hidden; also the list for the phone | `rnd` | the `visuals` and `mob` lists |
+| 394-410 | `sorted`, `groupOf`, groups | reading order; the Header, KPI cards and Filters groups and their boxes | `SOLID`, `container` | group containers |
+| 413-435 | header layout | the page buttons' box and text size, the Filters button's box | `charW`, `buttonH`, `pt`, `LABEL` | `nav`, `openBtn` |
+| 437-471 | filter rail | three dropdown slicers (down a side rail or across a top strip), Reset and its bookmark | `resetFit`, `slicerH`, `iconH`, `charW`, `frame`, `def` | slicers, Reset, a bookmark |
+| 472-509 | the other slots | title, logo or its placeholder, text slot, cards, charts, tables | `textbox`, `frame`, `bindQuery`, `bindTitle`, `cardFit`, `cardObjects`, `cardFrame`, `tableFields` | those visuals |
+| 510-528 | after the title | the page navigator; the Filters button and its two bookmark names | `frame`, `def` | navigator, Filters button |
+| 533-577 | slide-in panel | a hidden group: card, Close, three slicers, Reset; three bookmarks | `resetFit`, `slicerH`, `charW`, `pt`, `frame`, `textbox`, `def` | panel visuals, bookmarks |
+| 581 | tooltip link | `visualTooltip` `Canvas` on every chart | `tipName` | added to the charts |
+| 585-620 | phone layout | `PW`, `GAP`, `SIZE`, `place`, group boxes; then writes each `visual.json` and `mobile.json` (cards with phone sizes) | `cardFit`, `TIP_*`, `DEF` | `visual.json`, `mobile.json` |
+| 624-635 | bookmarks | one file per bookmark (data-only for Reset, display-only for the panel), `bookmarks.json` | `SCHEMA` | `bookmarks/` |
+| 640-662 | tooltip page | 320 x 284: a card and a bar chart, or a placeholder text box | `cardFit`, `cardObjects`, `cardFrame`, `frame`, `textbox` | the tooltip page and its visuals |
+| 666-670 | the end | `.gitignore` and `README.md` (not next to someone's model); returns `{ base, files, zip }` | `zip` | those files |
+
+Who loads it today: `theme-generator.js` line 452 adds `pbip-export.min.js?v=20261002a` as a script and uses
+`window.DAPbip`; `mcp/lib/model.mjs` line 11 and `scripts/tests/pbip.mjs` (four places) `require` the full file;
+`capture-design-fixtures.mjs` wraps `window.DAPbip.build` to record what the page hands it.
+
+### 2. The modules (`assets/js/pbip/`, CommonJS, each `'use strict'`)
+Sizes are lines including comments. Code is moved as it is written today: same expressions, same order.
+
+| File | Functions | In | Out | Lines |
+|---|---|---|---|---|
+| `helpers.js` | `SCHEMA`, `lit`, `str`, `bool`, `num`, `color`, `obj`, `resource`, `json`, `rnd`, `guid`, `mixHex`, `DEF` | values | PBIR literals, ids | 55 |
+| `zip.js` | `crc32`, `zip` | `[{ path, data }]` | `Uint8Array` | 30 |
+| `sample.js` | `T`, `sampleModel`, `sampleBind` | language | the sample table for `model.bim`; its bind | 70 |
+| `fields.js` | `fieldCol`, `fieldMea`, `q`, `proj`, `label`, `TYPES`, `CHARTS`, `tableFields`, `bindQuery`, `bindTitle` | a bind, a slot kind | a query or null; a title | 60 |
+| `sizes.js` | `pt`, `charW`, `boxH`, `boxFit`, `buttonH`, `iconH`, `slicerH`, `resetFit`, `cardFit`, `themeSizes`, and the named numbers: tooltip (320 x 284, card 296 x 76, chart 296 x 184, 8pt, 40), `TIP_VALUE`, `TIP_TITLE`, phone (`PW` 323, `GAP` 8, `SIZE`, half width 157.5) | numbers, the theme | numbers only, never PBIR JSON | 130 |
+| `frame.js` | `isSolid(theme)`, `frame`, `textbox` | the build's context, a title | `visualContainerObjects`; a paragraph | 35 |
+| `visuals/card.js` | `cardObjects`, `cardFrame`, `card` | a slot, the query, the page's inset | a `cardVisual` | 50 |
+| `visuals/slicer.js` | `slicer` (one copy for rail and panel) | a field or none, its alt text | a dropdown slicer | 15 |
+| `visuals/button.js` | `def`, `resetButton`, `filtersButton`, `closeButton`, `pageNavigator` | text, the bookmark, the icon choice, the text size | an `actionButton` or `pageNavigator` | 50 |
+| `visuals/table.js` | `table` | the bind, the direction | `columnHeaders`, `columnFormatting` | 20 |
+| `visuals/chart.js` | `chart`, `tooltipLink`, `tooltipBarChart` | a slot kind, the query, a title | chart visuals | 35 |
+| `visuals/textbox.js` | `titleBox`, `logoPlaceholder`, `textSlot`, `panelCard`, `tooltipPlaceholder` | text, the slot's height | a `textbox` | 35 |
+| `visuals/image.js` | `logoImage` | the logo's file name | an `image` with `fit` `'Fit'` | 10 |
+| `page/shell.js` | `names` (`tidy`, `base`, `theirs`, `slug`, folders), `projectFiles`, `resources`, `reportJson`, `pagesJson`, `endFiles` | `o` | everything outside `pages/<id>/` and `bookmarks/` | 95 |
+| `page/page.js` | `paneObjects`, `pageJson`, `container`, `groups`, `slots` (the loop over the slots in reading order) | the context, one page | the page's list of containers | 95 |
+| `page/header.js` | `headerLayout` (the boxes), `headerExtras` (navigator, Filters button) | title and logo slots, page names | `nav`, `openBtn`, their containers | 50 |
+| `page/rail.js` | `rail` | the slicer slot | three slicers, Reset, one bookmark | 40 |
+| `page/panel.js` | `panel` | the page's panel box | the hidden group, its five kinds of visual, three bookmarks | 55 |
+| `page/tooltip.js` | `tooltipPage` | the bind's `tip` | the tooltip page and its visuals | 35 |
+| `page/bookmarks.js` | `bookmarkFiles` | the list of bookmarks | `bookmarks/*.json` | 20 |
+| `phone.js` | `phonePositions`, `mobileJson` | the page's containers and groups | `mobile.json` per visual | 55 |
+| `index.js` | `build`, and `module.exports = { build, zip, crc32 }` | `o` (unchanged) | `{ base, files, zip }` (unchanged) | 60 |
+
+**`sizes.js`: every rule with its pointer** (by section title in `scripts/tests/DESKTOP-TESTS.md`, since line
+numbers move; the split's first job on this file is to confirm each pointer by reading the section):
+
+| Rule | Measured in |
+|---|---|
+| a text box line: `10 + 1.8 x pt` (`boxH`, `boxFit`); a dropdown slicer: `16 + 4 x pt` (`slicerH`); width `0.55` em per character (`charW`) | "2026-10-01: measured in Power BI Desktop 2.157, the heights text boxes, dropdown slicers and Reset need" |
+| button text `2 + 1.6 x pt` per line (`buttonH`); a button never wraps; its icon grows with its height; a page button wraps when narrow | "round 2 of the phone and size fix" and "measured on Power BI Desktop 2.158.1177: KPI cards, Reset buttons, page buttons" |
+| Reset: `max(40k, 6 + 1.6 x pt)`, the icon only when text and icon fit side by side (`resetFit`); Close `max(32k, 6 + 1.6 x pt)` | "measured on Power BI Desktop 2.158.1177: the Reset button's height, Arabic and English" |
+| `iconH` `2.25 x pt`; `0.45` em per character in `resetFit` | no measurement recorded (see the report above) |
+| `cardFit`: a line `1.5 x` its size, padding `8 x s / 1.5`, 7 characters wide, the value never under 8 | "cards moved to `cardVisual`" and "measured on Power BI Desktop 2.158.1177: KPI cards, Reset buttons, page buttons" |
+| card title margin `round(12k)`, the accent-bar side from `kpiInset`; padding and spacing without a selector; `fillCustom` off without a selector | "round 0 measurements", rows 6 and 7 |
+| tooltip page 320 x 284, bar chart 184 high (22 a row plus 46), axis text 8pt, axis room 40; `TIP_VALUE` 20, `TIP_TITLE` 10 | "round 0 measurements", row 3; the report fixes of 2026-09-30 for the 20pt value |
+| phone: cards two per row, value 20 and title 10; grouped visuals in page positions | "cards moved to `cardVisual`", item 7; "`fix/phone-and-sizes` after the Reset rule" |
+| phone canvas 323 wide, gap 8, slot heights (`SIZE`) | no measurement recorded; round 1 item 1.1 measures the phone |
+| header, rail and panel numbers made on 1920 x 1080 and scaled by `k` (140, 180, 120, 160, 76, 96, 44, 24, 16, 10, 8) | design numbers, not measurements; `sizes.js` says so |
+
+**How the parts share the build's state.** Today everything inside `build` reads about 30 names from one closure.
+`index.js` makes one object for the build (`ctx`: language, direction, colours, font, texts, the bind, names and
+folders, `add`, `align`, `edge`, solid or not, the four theme sizes, the tooltip page's name, the bookmark list) and
+one per page (`pc`: the page, its name, `k`, the container list, the phone list, groups, charts, slicer names, and
+the two counters `z` and `kpiIndex`). Builders take what they need from these and return plain objects.
+
+### 3. The build step
+- **The tool: `scripts/build-pbip.mjs`**, about 50 lines of Node with no dependencies. It reads the parts in a
+  fixed list, wraps each in `def('./sizes.js', function (module, exports, require) { ... })`, puts a 10-line
+  registry in front, and writes `assets/js/pbip-export.js` with today's first line (the copyright banner, which
+  terser keeps), a "generated, edit `assets/js/pbip/`" line, today's wrapper and today's last line
+  (`module.exports = api` or `root.DAPbip = api`). It fails if a file in the folder is missing from the list or a
+  `require` points outside it. `--check` builds in memory and compares with the committed file.
+- **Why not esbuild:** it is a binary package per platform for a job that is joining files; its output changes
+  between versions, so the committed joined file would change without the parts changing; and nothing else on the
+  site is bundled ("the site itself needs no build"). **Why CommonJS parts:** the MCP and the tests load every
+  engine with a synchronous `require`; parts as ES modules would force either a bundler or awaited imports in
+  tests that may not be changed to pass.
+- **The website:** unchanged in what it loads. `node scripts/build-pbip.mjs`, then
+  `npx terser assets/js/pbip-export.js -c -m -o assets/js/pbip-export.min.js` (the rule in `mcp/CLAUDE.md`), then
+  the `?v=` in `theme-generator.js` line 452 is bumped, `theme-generator.min.js` rebuilt and its `?v=` bumped on
+  both generator pages, as every round has done. One `?v=` for the whole branch, set at step 2.
+- **The MCP:** `mcp/lib/model.mjs` line 11 becomes `require('../../assets/js/pbip/index.js')`: the parts, not
+  the joined file. Nothing is added to `mcp/package.json`; the build script and terser are never run by the MCP
+  or by its `npm test`. For packaging and for the private repo the folder `assets/js/pbip/` is copied with the
+  other engines, and the "both copies match" check covers it.
+- **The tests:** `scripts/tests/pbip.mjs` keeps `require('../../assets/js/pbip-export.js')` (not edited), so the
+  website's suites test the joined file and the page's `.min.js`, and the MCP's checks test the parts.
+
+### 4. The proof
+**What exists and what it proves.** `design-engine` (598 checks): both pages still make the 54 design fixtures
+and the lab page still hands the writer the 60 recorded inputs. `pbip` (67), `theme-generator` and
+`theme-generator-lab` (883 each): the downloads' structure through the page's `.min.js`, and blocks 9 to 12 on the
+54 designs through `require`. `npm test` in `mcp/` (120): `generate_theme` and `plan_layout` byte for byte, the
+reports' structure, Microsoft's validator on two exports. All of these must stay as they are and pass, untouched.
+**None of them compares the writer's output byte for byte**, because `cases.json` and `project-pages.json` hold
+themes, slots and build inputs, not `visual.json` files. So the proof is a new check, built the way
+`builder-scripts\mvs-proof.mjs` proved `f0142b4`.
+
+**The new check (added first, on the unchanged writer):**
+- `scripts/tests/fixtures/pbip-export.before-split.js`: main's `pbip-export.js`, byte for byte (git blob
+  `157595b`), the "before" writer.
+- `scripts/tests/pbip-golden.mjs`, the 17th website suite, and a command: `--write <folder>` writes every file of
+  every case to disk. It builds each input with the before writer and with the new one, with the same ids
+  (`Math.random` seeded in Node; `crypto.getRandomValues` seeded and `Date` fixed in the browser), and compares
+  every file's bytes and the list of files:
+  1. the 60 project fixtures: the exact build input the page hands the writer, with the fixtures' own
+     backgrounds. Expected: 60 cases, 4369 files, all identical;
+  2. the 54 designs with their own theme (41 solid, 13 transparent), second page, with and without the panel,
+     with `kpiInset`: the MCP's kind of report;
+  3. the 16 default layouts on 640 x 360 and 3840 x 2160 that `pbip.mjs` block 11 builds;
+  4. the branches those don't reach: a logo (PNG and JPG); the user's own model by path, with taken names, and by
+     connection; no sample and no model; one page; the old single-page input (`page`, `slots`, `png`); more KPI
+     slots than KPIs; a top filter strip; a Reset too narrow for its icon; page names too long for buttons; the
+     report names of `pbip.mjs` block 9. Node's built-in coverage (`NODE_V8_COVERAGE`) is run once over sets 1
+     to 4: every line of the parts must be reached, or the line is listed with the input added for it;
+  5. three loaders in Node on sets 1 to 4: the parts, the joined file, and the minified file;
+  6. the browser, on the lab page and the live page, through the page's own `pbip-export.min.js?v=`: the 60
+     project cases driven as `captureProjects` drives them; the before writer is loaded into the same page, and
+     each case's files and the zip's bytes are compared;
+  7. `node scripts/build-pbip.mjs --check`, and (decision 3) that terser's output from the joined file is the
+     committed `.min.js`.
+- In `mcp/test.mjs`: the MCP's `Pbip` (the parts) against the before writer on set 2 with a bind from the MCP's
+  own fixtures; and the reports of `create_report` over stdio, with a second server started with a seeded
+  `Math.random` (a preload, no change to `server.mjs`): design and hand-placed pages, English and Arabic, the four
+  layouts, 1280 x 720 and 1920 x 1080, panel on and off, the three logos. Their hashes are recorded in
+  `mcp/fixtures/report-hashes.json` at step 1, on main's writer, and must not change.
+- **The check must be able to fail:** step 1 also runs it once with one number changed in memory and expects it to
+  report that file; otherwise a comparison that compares nothing would pass.
+- **On disk, for the report:** `--write` on main's writer into `C:\DataArcus\tests\split-proof\before`, and after
+  the last step into `...\after`; `diff -rq` prints nothing; the file count and one SHA-256 of the whole tree go
+  into the final commit message and into this file.
+- **Expected numbers:** website 16 suites -> 17, every existing count unchanged (pbip 67, design-engine 598,
+  theme-generator 883 twice); MCP 120 -> 122; fixtures recaptured: none; expected numbers changed: none. The file
+  counts of sets 2 to 6 are written into this file by step 1's run, before any code moves.
+
+### 5. The order of steps (each one commit or a few, CI green after each)
+1. **The check, on the unchanged writer:** the frozen copy, `pbip-golden.mjs`, the MCP's two checks and hashes,
+   the suite added to `run-all.mjs`, the counts written here. Nothing the site or the MCP ships changes.
+2. **The build chain with one part:** `build-pbip.mjs`; `assets/js/pbip/index.js` holding today's whole body,
+   unchanged; the joined file and the `.min.js` generated; `?v=` bumped. This proves the joining, the minifying
+   and the browser path before any logic moves.
+3. **The MCP on the parts:** `mcp/lib/model.mjs` line 11. From here every step is checked through both loaders.
+4. **The parts with no state:** `helpers`, `zip`, `sample`, `fields`, one commit each.
+5. **`sizes`:** the rules as functions of numbers, each with its pointer; `resetFit` takes the label size as an
+   argument instead of reading it from the closure.
+6. **The context, inside `index.js`:** the closure's names become `ctx` and `pc`, the body becomes functions that
+   take them, still in one file. This is the step most likely to break something, so it moves no file.
+7. **Visual builders:** `frame`, then `card`, `slicer`, `button`, `table`, `chart`, `textbox`, `image`.
+8. **Page assembly:** `shell`, `page`, `header`, `rail`, `panel`, `tooltip`, `bookmarks`.
+9. **Phone layout:** `phone`.
+10. **The end:** the on-disk comparison; `mcp/CLAUDE.md` ("How it is built", the rebuild rule), `mcp/ROADMAP.md`,
+    `scripts/tests/README.md`, the workflow's comment (17 suites) and this file updated; decision 4 applied. The
+    reviewer merges after CI is green; nobody merges their own work.
+At every step: the joined file and `.min.js` rebuilt, `pbip-golden`, `pbip` and `npm test` in `mcp/` run locally,
+the full run in CI. A step that cannot be made identical is reverted and reported, not adjusted.
+
+**Risks, and how each is avoided:**
+- **The order of the random ids.** Byte for byte with the same seed needs `rnd()` called in today's order: each
+  page's id; the report's `.platform` GUID, then the model's; the tooltip page's name and binding; per page the
+  groups in the order their first slot is met; then per slot in reading order: three slicers, the Reset's bookmark,
+  then the Reset; any other visual; after the title the navigator, then the open and close bookmark names, then the
+  Filters button; the panel: group, card, Close, slicers, the Reset's bookmark, Reset; last the tooltip's visuals.
+  A builder that makes its bookmark name after its container instead of before would change every later id.
+- **Key order.** `JSON.stringify` writes keys in the order they were added: `frame` (title, the three panel
+  entries, general, extras), then `cardFrame` adds padding and spacing, then the tooltip link is added to charts
+  after the whole page. Builders return the same object that later code adds to: no copies, no reordering.
+- **Arithmetic.** Expressions are moved as written (`0.45 * 4 / 3 * LABEL * n + h + 6`), not simplified: floating
+  point depends on the order, and several results are rounded after.
+- **Shared counters and lists.** `z`, `kpiIndex`, `bookmarks`, `slicerNames`, `origin`, `groups`, and
+  `openBm`/`closeBm` written on the page are changed from several places; they live on `ctx` and `pc`, never in a
+  module's own variable, so two builds can never share state.
+- **Global names and shadowing.** In the browser the only global stays `DAPbip`, a plain object with `build`,
+  `zip`, `crc32` (the capture script wraps its `build`). In the joined file each part is inside its own function.
+  Today's file reuses names in inner scopes (`T`, `S`, `ref`, `k`, `y`, `P`, `title`, `add`/`add1`, `def`/`DEF`,
+  `o`/`o0`): once lifted to a file's top a name can quietly mean something else, so every moved function gets its
+  outside names listed and passed in; `'use strict'` everywhere; the coverage run reaches every line.
+- **Browser and Node.** `rnd` uses `crypto` only where `self` exists and `Math.random` otherwise, exactly as now
+  (`helpers.js`: `const root = typeof self !== 'undefined' ? self : {}`); it must not become `globalThis.crypto`,
+  which Node also has, and which would end seeding the ids in tests and proofs. The parts use nothing of the
+  browser (`window`, `document`) and nothing of Node (`fs`, `Buffer`). No syntax newer than today's file uses.
+- **Minifying.** terser cannot shorten property names, so `ctx.rtl` costs more than today's `rtl`: functions
+  unpack what they use at their top. Today's `.min.js` is 27,983 bytes; expected under 32,000; more is reported.
+  The minified file is checked by loaders 5 and 6, not assumed.
+- **Line endings.** The laptop checks files out with CRLF, CI with LF. The build script reads with CRLF turned
+  into LF and writes LF, and the parts contain no multi-line template strings, so both machines write the same
+  file.
+- **A stale joined or minified file,** or a hand edit of the joined file: caught by `--check` and decision 3.
+- **One writer.** Round 1 does not start, and no other branch touches the writer, until the split merges (see
+  "Seen, not in scope" (a) above).
+
+### 6. What changes for the next rounds
+A fix is made in a part; then `node scripts/build-pbip.mjs`, terser, `?v=`; never in the joined file.
+
+| Round item | Lands in |
+|---|---|
+| 1.1 phone text sizes; 1.1b and 1.5 phone card padding | `phone.js`; the measured phone rules in `sizes.js` |
+| 1.2 slide-in panel (only if the Desktop check fails) | `page/panel.js`, `sizes.js` |
+| 1.3 the page button "Executive…" | `sizes.js` (the page-button width rule), `page/header.js` |
+| 1.4 title and logo centred in their boxes | `visuals/textbox.js`, `visuals/image.js` |
+| 1.6 the tooltip chart by month | `page/tooltip.js`, `visuals/chart.js` (and `pbip-bind.js` for the field) |
+| 1.7 header band and filter rail on a solid design | `page/page.js` (groups), `page/header.js`, `page/rail.js`, `frame.js` |
+| 2.1 Arabic display names | `fields.js` (`label`, `proj`, `bindTitle`), `visuals/slicer.js`, `visuals/table.js`, `page/tooltip.js`; `mcp/server.mjs` |
+| 2.2 sort order and formats | the health engine, not the writer |
+| 2.3 the sample download's refresh message | `sample.js`, `page/shell.js` (the README) |
+| the validator on every export | reads the folders `pbip-golden.mjs --write` makes |
+
+With decision 4 as proposed, a round that changes the output on purpose updates the recorded hashes and says in
+its commit which cases changed and by what, which replaces the one-off proof scripts of earlier rounds
+(`r0-fixture-proof`, `ctr-fixture-proof`, `mvs-proof`).
+
 ## Next step (builder, 2026-10-02): stopped for today; three steps after the owner's usage limit resets
-Main is at `e8fe171`. Nothing is in progress: round 0 (`14dd467`), `fix/card-theme-radius` (`99d1cee`) and
+Main is at `bbc42df`. Nothing is in progress: round 0 (`14dd467`), `fix/card-theme-radius` (`99d1cee`) and
 `fix/mcp-visual-style` (`e8fe171`) are merged and their branches deleted; no test report is open in Power BI Desktop.
-The only open branch is `docs/work-next-steps`, which holds this update of this file and nothing else, for the
-reviewer to merge. **The owner's weekly usage limit resets on Sunday, 2026-10-04. Nothing is to be done before then.**
+`docs/work-next-steps` is merged (`bbc42df`) and deleted. The only open branch is `plan/split-pbip-export`, which
+holds the split's plan in this file ("Split plan" above) and nothing else, for the owner to read.
+**The owner's weekly usage limit resets on Sunday, 2026-10-04. Nothing is to be done before then.**
 
 **The next steps after the reset, in this order (owner 2026-10-02):**
 1. **The reviewer's split of `assets/js/pbip-export.js`, in a fresh reviewer session.** Small modules with one job
