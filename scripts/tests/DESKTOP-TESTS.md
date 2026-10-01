@@ -177,6 +177,31 @@ doesn't bear out on the smallest page: a text box needs more than 1.5 x its text
 16), and a dropdown slicer needs more than two lines of its text (27 is too little for an 8pt title and its box). The
 tests use the same estimates, so they passed. The report was left open in Desktop, not saved.
 
+## 2026-10-01: measured in Power BI Desktop 2.157, the heights text boxes, dropdown slicers and Reset need
+
+A test report only, "Gulf Sales Measure" (`tests/5-tmdl-sample/`, closed without saving): ladders of the exported
+header text box, dropdown slicer (Calendar[Year]) and Reset button, copied from "Gulf Sales Sizes EN 360" so the
+formatting is what `pbip-export.js` writes, each with a visible background, at growing heights on a 640 x 360 page and
+a 1920 x 1080 page. Screenshots `tests/phase2-try/shots-sizes/measure-p1.png`, `measure-p2.png` (crops
+`measure-p1-rows12.png`, `measure-p1-rows345.png`, `measure-p2-text.png`, `measure-p2-slicer-reset.png`). Heights in page
+units; the same on both pages (a point size takes the same page units on any page).
+
+| Visual | Text | Smallest height that shows it whole | Not whole at |
+|---|---|---|---|
+| Text box, one line ("Gulf 24") | 8pt | 24 (640 x 360 and 1920 x 1080) | 22: text whole but a scroll thumb (overflow); 18 and less: cut |
+| Text box ("Gulf Sales 42") | 18pt (the theme's title on 1080) | 42 | 38 (scroll thumb) |
+| Text box ("Gulf Sales 44") | 20pt (the header title on 1080) | 44 | 40 (scroll thumb) |
+| Dropdown slicer, title and box | 8pt | 48 (640 x 360 and 1920 x 1080) | 44: the box's bottom edge cut; 24 and less: title only |
+| Dropdown slicer | 15pt (the theme's slicer text on 1080) | 76 | 68: box touching the bottom; 60: cut |
+| Reset, icon and text on one line, 91 and 140 wide | 8pt | 18 (icon whole); text whole from 14 | 12 |
+| Reset, 250 wide | 15pt | text whole from 24, icon full from 28 | 20 |
+
+Rules that fit every row: a one-line text box needs 10 + 1.8 x the point size (points to pixels 4/3, a line about 1.35
+of that, about 5 of padding at the top and at the bottom): 8pt 25, 18pt 43, 20pt 46. A dropdown slicer needs
+16 + 4 x the point size: 8pt 48, 15pt 76. The Reset button fits inside the text-box rule. The 91-wide Reset showed
+"Reset filters" on one line at 8pt, so the 0.55 em per character width estimate is on the safe side. A 10pt row in
+58-wide boxes wrapped its label, so it gave no height and is left out.
+
 ## Lessons
 - **Prompts for the laptop agent:** start with the request itself, name every file, forbid changing the test files or the expected numbers, and say "stop and report on failure". Give the exact report format.
 - **What the agent can do alone:** create tables, relationships and measures, run DAX, mark date tables, refresh, screenshot one page at a time.

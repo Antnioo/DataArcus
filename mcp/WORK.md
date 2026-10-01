@@ -33,7 +33,7 @@ by the builder: the phone and page-size plan written on `fix/phone-and-sizes`, w
 - **Website dropdowns fixed** (merged): the open list was white on white on every tool page; form fields now use
   `color-scheme: dark` with dark option colours (`assets/css/style.css`), checked on every tool page in `tools.mjs`.
 
-## Next step: build the phone and page-size fix (owner's "go" 2026-10-01 with three additions), branch `fix/phone-and-sizes`
+## Next step: the owner's "go" on the round 2 plan (below), branch `fix/phone-and-sizes`
 Steps: (1) tests first, failing on main; (2) code, `pbip-export.js` only; (3) `.min.js` and `?v=`; (4) full run;
 (5) the six Desktop reports built with this branch's `mcp/server.mjs` over stdio (the session's MCP runs old code and the
 desktop app can't restart it), exact numbers written here first; (6) Desktop check; then the two `mcp/CLAUDE.md` notes.
@@ -83,9 +83,71 @@ AR ones on page 1.) Screenshots go to `C:\DataArcus\tests\phase2-try\shots-sizes
 are whole) and item 2 (the 27-high slicers show only their titles, no dropdown box; Reset is whole); cards and DAX
 pass. Cause: `fitText`'s 1.5 x line height and the two-line slicer minimum are estimates that are too small for a text
 box and a dropdown slicer on the smallest page; the tests use the same estimates. Details in
-`scripts/tests/DESKTOP-TESTS.md`. **Waiting for the owner:** how to size header text boxes and slicers on 640 x 360
-(e.g. measure in Desktop the smallest height an 8pt text box and a dropdown slicer need, then use those numbers in
-`fitText` and the tests). The CLAUDE.md notes (additions 2 and 3) wait for a passing phone check. Not merged.
+`scripts/tests/DESKTOP-TESTS.md`. The CLAUDE.md notes (additions 2 and 3) wait for a passing phone check. Not merged.
+
+### Round 2 plan (owner 2026-10-01: measure first, plan only; waiting for "go")
+**Measured in Desktop 2.157** (test report "Gulf Sales Measure", closed without saving; `scripts/tests/DESKTOP-TESTS.md`,
+2026-10-01), smallest heights that show the visual whole, page units, the same on 640 x 360 and 1920 x 1080:
+one-line text box 8pt 24, 18pt 42, 20pt 44; dropdown slicer (title and box) 8pt 48, 15pt 76; Reset (icon and text,
+one line) 8pt 18 (text alone from 14), 15pt text from 24. Page buttons (no icon) were whole at 8pt in 16 (EN 360)
+and two lines of 14pt in 48 (EN 1080).
+
+**1. Units and the fit rules** (`pbip-export.js`, `fitText`): `lineOf` takes the point size as page pixels (1.5 x pt),
+while `charW` converts points (4/3). The heights become the measured rules, in page units:
+- text box (header title, logo text, panel title): 10 + 1.8 x pt per line (4/3 to pixels x a line of about 1.35,
+  plus about 5 of padding top and bottom): 8pt 25, 18pt 43, 20pt 46;
+- button text (page buttons, Filters, Close; no icon): 2 + 1.6 x pt per line (8pt 15, two lines of 14pt 47);
+- Reset (with its icon): at least 2.25 x pt as well (8pt 18, 15pt 34);
+- dropdown slicer: 16 + 4 x pt (8pt 48, 15pt 76).
+Width stays 0.55 em per character, converted (on the safe side: "Reset filters" fitted 91 at 8pt). `cardFit` stays
+as it is: every card passed in Desktop on all six cards-check reports and on EN 360 here. The tests
+(`scripts/tests/report-check.mjs`) take the same measured rules, so they fail on the current code first (640 x 360:
+title 8pt in 16 < 25, slicers 27 < 48).
+- **Expected numbers that change** (the guard, owner please confirm): 1920 x 1080 stays title 20, logo 14, page
+  buttons 320, slicers 76, Reset 40. 1280 x 720 becomes title 12 (was planned 13: 13pt needs 34 > 32), logo 10, page
+  buttons 299 (two lines of 10pt need 34 > 32, so one line, 136 each; was planned 213), slicers 56 (10pt needs 56;
+  was 51), Reset 27.
+
+**2. Header and rail limits** (from `design-engine.js`, not `pbip-export.js`): the header title box is (hh - 24) x s
+high, the top rail fh x s, the side rail what is left under the header. With the measured rules, the smallest that
+fit (design units; engine ranges hh 44-96, default 56; fh 56-120, default 72):
+
+| Page | hh at least | fh at least (slicer text) |
+|---|---|---|
+| 1920 x 1080 | 41 | 64 (15pt) |
+| 1280 x 720, 960 x 720 | 49 | 70 (10pt) |
+| 1366 x 768 | 48 | 68 (10.5pt) |
+| 700 x 525 | 59 | 80 (8pt) |
+| 640 x 360 | 74 | 110 (8pt) |
+| 2560 x 1440 / 3840 x 2160 / 3840 x 1600 | 37 / 33 / 36 | 62 / 59 / 61 |
+
+The side rail fits on every page size. So today's layout can't fit the header text on 640 x 360 and 700 x 525 with
+the default header (56), nor on any page up to 1366 x 768 with the smallest header (44); the top rail doesn't fit
+on pages up to 1366 x 768 with its smallest height (56), nor on 640 x 360 / 700 x 525 with the default (72), nor on
+1920 x 1080 below 64. In the fixtures: 6 of 54 designs don't fit (`layout-exec-960x720`, `layout-analysis-960x720`,
+`layout-ops-960x720`: header 20 < 25; `layout-analysis-1366x768`, `layout-focus-1366x768`: header 21 < 25 and top
+rail 60 < 73; `page-too-tall` (700 x 525): header 23 < 25).
+- **Option (a): minimum header and rail heights in the design engine.** `sizes()` raises hh and fh to the page's
+  minimum above (hh >= 24 + 25 / s; fh >= (16 + 4 x slicer pt + 20 x page h / 1080) / s), and the generator's sliders
+  start there (`rangeOf`). Cost: a change to the shared engine the website runs; the 6 design fixtures above and the
+  same 6 project fixtures change (their slots: the header or rail taller, the rows below shorter), recaptured with
+  the owner's go, the other 48 + 54 stay byte for byte; the slot table and preview change on those pages; a new
+  engine test. Every report then fits on every page size.
+- **Option (b): a warning below the limits.** The Theme Generator shows a note under the layout controls, and
+  `plan_layout` returns a `warnings` entry, when the page, header or rail is below the minimum above. Cost: smaller (no
+  fixture changes, a text in both languages, two tests), but the reports on those pages stay cut: text can't go below
+  8pt, so nothing in `pbip-export.js` can make it fit.
+- **Recommendation: (a)**, because it fixes the cause where it is (the engine's slot sizes), keeps 48 of 54 designs
+  and 54 of 60 projects identical, and leaves no page size that gives a broken report. (b) only names the problem.
+
+**3. Top rail at 1920 x 1080** (Reset grew from 160 to 190 English / 234 Arabic for its 15pt text): two more Desktop
+reports, "Gulf Sales Sizes EN 1080 top" and "AR 1080 top" (analysis, filters top). Expected: Reset whole on one line
+(190 / 234 wide, 15pt), the three slicers whole (rail 108 high, slicers 88 >= 76), page and cards as in the cards check.
+
+**Order after "go":** tests first with the measured rules (and option (a)'s engine test if chosen), failing; code
+(`pbip-export.js`, and `design-engine.js` only under (a)); fixtures recaptured only under (a) and only the six listed;
+full run; the eight Desktop reports built over stdio, expected numbers written first; Desktop check, phone layout with
+the owner's clicks; then the two CLAUDE.md notes.
 
 **Owner's additions (2026-10-01):**
 1. **1280 x 720 and every other page size.** Scaling with the page height changes every size except 1920 x 1080. From
