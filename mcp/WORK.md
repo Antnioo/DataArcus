@@ -140,6 +140,11 @@ tests, code, full run, the eight reports ("Gulf Sales Fit3 ..."), Desktop and th
   Reset: "Reset filters" 8pt in 91x19 with its icon (EN 360), "إعادة ضبط الفلاتر" 8pt in 91x19 without (AR 360). Page
   buttons 8 / 14 / 29pt, the same in the selected state. Expected in Desktop: as listed for Fit2, with the AR 360 Reset
   whole. Screenshots `shots-sizes\fit3-*` at 1x and 2x, judged from full-size crops.
+- **Desktop check of the eight Fit3 reports (2.158.1177): every automatic item PASS** on all eight (header, the
+  current page's button, slicers incl. the 30pt ones on 2160, Reset in both languages, cards on 1080 and 2160, DAX);
+  the 640 x 360 cards are the known open item. Table and "Seen, not in scope" in `scripts/tests/DESKTOP-TESTS.md`.
+  **Left: the phone layout** (View > Mobile layout, EN 1080 and AR 1080, both pages) with the owner's clicks, then the
+  two `mcp/CLAUDE.md` notes.
 
 
 ## Builder's working notes (for a fresh session)
