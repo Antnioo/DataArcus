@@ -195,6 +195,10 @@ icon now takes the measured 2.25 x pt. Expected in Desktop (items 1-6 of the pla
 logo text and page buttons whole; slicers show title and dropdown box (on 2160 the slicer rule's check: 30pt in 152);
 Reset whole; 1080 as in the cards check; cards whole; values equal DAX; phone layout without overlaps (owner's clicks).
 Screenshots in `C:\DataArcus\tests\phase2-try\shots-sizes\` (`fit-*.png`).
+**Desktop check not started (2026-10-01):** Power BI Desktop updated itself from 2.157.1354 to 2.158.1177 (Microsoft
+Store) since the last run, so `powerbi-desktop open` stopped with DESKTOP_EXE_NOT_FOUND at the old path; nothing was
+opened or captured. The measurements and every earlier Desktop check were on 2.157. **Waiting for the owner:** run the
+check on 2.158 as it is, or first repeat the measurement report on 2.158 (it is still in `tests/5-tmdl-sample/`).
 
 **Order after "go":** tests first with the measured rules (and option (a)'s engine test if chosen), failing; code
 (`pbip-export.js`, and `design-engine.js` only under (a)); fixtures recaptured only under (a) and only the six listed;
