@@ -160,6 +160,19 @@ the slicer rule's check (if they fail: stop and measure again, don't adjust the 
   checks, 2 fail (sizes on 52 of 140 designs, the 1280 x 720 guard); design-engine 589 checks, 4 fail (the new test);
   MCP 87 checks, 2 fail ("Sizes EN 360", "Sizes AR 360": 8pt header text in 16, slicers 27 < 48).
 
+- Code `b1f3df0`: `pbip-export.js` (measured rules in `fitText`, `boxFit`, slicer and Reset heights),
+  `design-engine.js` (`minOf` in `rangeOf`, `sizes` passes the layout), `theme-generator.js` (the slider range gets
+  the layout). `design-engine.min.js?v=20261001a`, `theme-generator.min.js?v=20261001b`, `pbip-export.min.js?v=20261001b`.
+  After the code: pbip 46 PASS, MCP fails only "plan_layout parity: 48 of 54" (the six), design-engine fails only the
+  six cases (slot table, background, project pages) and the page comparisons for them; the new engine test passes.
+- Fixtures: the six recaptured (designs from the live page, projects from the lab page), merged into the old files so
+  only they change (`meta.recaptured` names them). Proof: the other 48 design cases and 54 project cases are byte for
+  byte the old entries and blobs; the fresh capture of those others equals the old; the merged files equal the fresh
+  capture case by case. What changed in the six: the slot table's Y and height columns only (title and logo 20/21/23 →
+  25; the rows below move down by 5/4/2, the side rail 5 shorter, the 1366 x 768 top rail 60 → 73), the preview and the
+  background SVG drawn from them, and in the project fixtures the pages' slot y/h and the slide-in panel's y/h and the
+  background PNGs; theme, saved design and file name unchanged.
+
 **Order after "go":** tests first with the measured rules (and option (a)'s engine test if chosen), failing; code
 (`pbip-export.js`, and `design-engine.js` only under (a)); fixtures recaptured only under (a) and only the six listed;
 full run; the eight Desktop reports built over stdio, expected numbers written first; Desktop check, phone layout with
