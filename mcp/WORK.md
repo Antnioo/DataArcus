@@ -1,9 +1,9 @@
 # Current work (the memory between sessions)
 
 Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). Last updated 2026-10-01
-by the builder: round 0 is built on `fix/tooltip-logo-table` and checked in Desktop (changes 1 to 6 pass); it is not
-ready to merge: one suite fails on the 60 project fixtures and Microsoft's validator fails on the MCP's exports. Both
-wait for the owner; see "Round 0: BUILT" under "Next step".
+by the builder: round 0 is built, checked in Desktop and finished on `fix/tooltip-logo-table` (fixtures recaptured, the
+touched suites pass); it waits for CI and the reviewer's merge. Next: the small round `fix/card-theme-radius`, then
+the split, then rounds 1 and 2. See "Round 0: BUILT and finished" under "Next step".
 
 ## Where things stand
 - **MCP: 6 tools** (`read_model`, `suggest_fields`, `check_model_health`, `generate_theme`, `plan_layout`,
@@ -70,41 +70,58 @@ still `assets/js/pbip-export.js`. Every round: failing tests first; only the sui
 touches, judged from full-size crops; results into `scripts/tests/DESKTOP-TESTS.md`; only our own sample model
 (`C:\DataArcus\tests\5-tmdl-sample`). Stop and report at the first failure.
 
-#### Round 0: BUILT, not merged; two failures wait for the owner (builder, 2026-10-01)
-Branch `fix/tooltip-logo-table`: decisions `bda14f4`, tests failing first `199eab7`, code `93eb7ff`.
+#### Round 0: BUILT and finished on `fix/tooltip-logo-table`; waits for the reviewer's merge (builder, 2026-10-01)
+Commits: decisions `bda14f4`, tests failing first `199eab7`, code `93eb7ff`, Desktop results `92581ee`, main merged
+`4cb35c1` (CI now runs on every push), project fixtures recaptured `0b9c813`.
 - **Tests, before -> after:** pbip 66 checks, 18 failing -> 66 pass; MCP 110 checks, 19 failing -> 110 pass;
-  theme-generator 879 and theme-generator-lab 879 pass; **design-engine 597 checks, 7 failing -> 1 failing** (failure 1).
-  No full run on the laptop.
+  design-engine 597 checks, 7 failing -> 597 pass (after the recapture); theme-generator 879 and
+  theme-generator-lab 879 pass. No full run on the laptop: CI runs all 16 suites and the MCP checks on the branch.
+- **Fixtures (owner's go 2026-10-01):** the 60 project fixtures recaptured from the lab page, because the page now
+  hands pbip-export one new field per page, `kpiInset`. Proof in commit `0b9c813`: in all 60 cases the build input is
+  equal once `kpiInset` is left out; it is the only field that differs (114 pages); languages, options and every page
+  background are equal. The 54 design fixtures are untouched and match the live and the lab page. The engine check in
+  `design-engine.mjs` builds the same page object as the page does (with `kpiInset`).
 - **Desktop 2.158.1177, ten reports** (`scripts/tests/DESKTOP-TESTS.md`, "round 0 built"): changes 1 to 6 PASS in
   English and Arabic, 1080 and 720, light and dark, website download and MCP. One expected number corrected: the tall
   logo's box is 20 x 48 mirrored on 1080 (19 in English; the engine rounds edges, not sizes).
-- **Microsoft's validator:** the six website exports pass with 0 errors; **the four MCP exports fail with 1 error**
-  (failure 2).
+- **Microsoft's validator:** the six website exports pass with 0 errors. The four MCP exports fail with 1 error,
+  "Unknown theme property border.radius for cardVisual", which predates this round: **its own round, right after this
+  one** (below).
 - **Expectations changed in tests, each for a stated reason:** the theme inside a project carries its file name
   (owner's change 7; `mcp/test.mjs`); `.platform` is allowed in the names check like `.gitignore` (owner's change 8;
-  `pbip.mjs`); in the new tests the Arabic tall logo is 20 wide and a new visitor's download has the side bar's inset.
+  `pbip.mjs`); the engine check carries `kpiInset` (the recapture); in the new tests the Arabic tall logo is 20 wide
+  and a new visitor's download has the side bar's inset.
+- **Rule from now on (owner 2026-10-01, in the root `CLAUDE.md`):** stop when a failure could change what Desktop
+  shows; otherwise note it and continue.
 
-**Failure 1: the 60 project fixtures.** The page now hands the exporter one new field per page, `kpiInset` (where the
-KPI titles start beside the side accent bar). The `design-engine` suite compares that whole input with the fixtures,
-so all 60 differ; compared field by field (`builder-scripts\r0-fixture-diff.mjs`), they differ by `kpiInset` only, and
-no background differs. The plan said the fixtures would stay as they are: that was wrong, the plan missed that the
-build input is captured too. Nothing was recaptured. **Proposed fix: recapture the 60 project fixtures** (the only
-change is `"kpiInset": n` on each page). The other way keeps the fixtures but leaves the title over the side bar on
-the website download.
+#### Next small round: `fix/card-theme-radius` (plan only; right after round 0 merges, with the owner's go)
+- **Problem:** Microsoft's validator fails on every export whose theme has solid visuals (all the MCP's reports):
+  `PBIR_THEME_VISUAL_PROP_UNKNOWN`, "Unknown theme property border.radius for cardVisual". `design-engine.js` writes
+  the rounded container border (`border: [{ show, color, width, radius }]`) for every visual type, and inside a theme
+  the card visual's `border` is the card's own border object, which has no `radius`. Themes with transparent visuals
+  (the website's project download) write `border: [{ show: false }]` and pass.
+- **Change (`assets/js/design-engine.js`, `buildTheme`):** the card visual's entry gets the border without `radius`;
+  every other type is unchanged. `.min.js` and `?v=` on both generator pages.
+- **Measure first (Desktop, one look):** an MCP report today and with the entry changed by hand: are the KPI cards'
+  corners the same (expected: yes, the property is unknown to the card and so does nothing today), and does the
+  card's own border show (it is written with `show: true` in the card colour)? If the corners change, stop and report.
+- **Tests first (failing):** `design-engine.mjs`: no theme has `radius` in `visualStyles.cardVisual`; `mcp/test.mjs`:
+  the registered theme of a report with solid visuals has none. A validator run on one MCP export: 0 errors.
+- **Fixtures:** the theme JSON of every design with solid visuals changes: 41 of the 54 design fixtures (and the
+  project fixtures that hold those themes). Recaptured with the owner's go, with the proof in the commit: in each
+  changed theme the only difference is `visualStyles.cardVisual["*"].border[0].radius`, and the 13 designs with
+  transparent visuals are byte for byte the same.
+- **Desktop check:** MCP reports in English and Arabic at 1080 and 720, and one website download with solid visuals:
+  card corners and everything else as before; Microsoft's validator passes on all of them.
 
-**Failure 2: the validator on the MCP's exports.** `PBIR_THEME_VISUAL_PROP_UNKNOWN`: "Unknown theme property
-border.radius for cardVisual". Not from this round: the theme with solid visuals writes the rounded border for every
-visual type, and for the card visual the name `border` is the card's own border, which has no radius. The website's
-download (transparent visuals) doesn't write it and passes. **Proposed fix:** leave `radius` out of the card visual's
-entry in `design-engine.js`; that changes the theme JSON of every design with solid visuals (41 of the 54 design
-fixtures), so those fixtures are recaptured, and one Desktop look confirms the cards' corners are unchanged.
-
-**Decisions needed:** (1) recapture the 60 project fixtures for `kpiInset`? (2) fix the card visual's theme entry and
-recapture the solid-design fixtures, in this branch or as its own small round?
-
-**Seen while building, for round 1:** now that the card's padding is applied, the phone takes the page's padding (its
-own override in `mobile.json` still has the selector Desktop ignores). On 1080 and 720 the phone cards still fit; on
-3840 x 2160 with a side bar they would not (padding 24 / 52). It is the round 1 item, more urgent than it looked.
+#### Where every "Seen, not in scope" item now lives (owner 2026-10-01)
+- **Round 1** (with the phone text and the slide-in panel, see 1.1 to 1.6 below): the page button "Executive…" on the
+  website's 1080 download; the header title and logo centred vertically in their boxes on big pages; phone padding at
+  3840 x 2160 with a side bar; the tooltip chart as the hovered item's trend by month.
+- **Round 2** (see 2.1 to 2.3 below): English names in Arabic reports; day and month sorting; the "calculated tables
+  need refreshing" message on the sample download.
+- **After the beta:** the 640 x 360 items (open items, "Small-page round").
+- **`fix/card-theme-radius`:** the validator's theme error on the MCP's exports.
 
 #### Round 0: GO (owner, 2026-10-01). Branch `fix/tooltip-logo-table`, from `plan/next-rounds`
 The reviewer has not started the split, so `assets/js/pbip-export.js` is changed as it is today; the split comes right
@@ -373,6 +390,27 @@ layout and write it without the selector if it is ignored there too, with `cardF
   after Close; the panel is hidden again; Arabic mirrored (panel on the left, Close at its left). A failure is
   reported with its measurement and a proposed fix, not fixed in the same step.
 
+**1.3 The page button "Executive…" cut on the website's 1080 download (owner 2026-10-01, seen in round 0).** On
+1920 x 1080 with Segoe UI the first page button reads "Executive…"; on 1280 x 720 it is whole, and on the MCP's
+reports (Tahoma) it wraps on two lines and is whole. The width rule assumes a long name wraps on two lines when the
+header holds them. **Measure first (Desktop, English and Arabic, Segoe UI and Tahoma, 1080 and 720):** when a page
+button's text wraps and when it is cut, and the width a name needs on one line at each size. Then fix the
+page-button width rule (module: sizes, page assembly) with a failing test in `report-check.mjs` first.
+
+**1.4 The header title and logo centred vertically in their boxes on big pages (owner 2026-10-01).** They sit at the
+top of their boxes. Measure what a text box and an image offer for vertical alignment in Desktop, then centre them
+(module: visual builders), with the placeholder "Your logo" included.
+
+**1.5 Phone padding at 3840 x 2160 with a side bar (owner 2026-10-01, with 1.1 and 1.1b).** Since round 0 the card's
+page padding is applied, and the phone takes it (top 24, side 52 on 2160), which leaves a phone card too little room.
+Fixed together with 1.1b (the phone's own padding without the selector) and checked on the phone at 2160.
+
+**1.6 The tooltip chart shows the hovered item's trend by month (owner's choice 2026-10-01).** The tooltip's chart
+becomes the measure by month for the hovered item; when the page's charts are themselves by month, it falls back to a
+second category. **Measure first:** month labels at tooltip size (320 x 284), English and Arabic, as a line or column
+chart and as a bar chart: which names are whole, and how many months fit. Module: page assembly (the tooltip page);
+`pbip-bind.js` for the choice of field.
+
 #### Round 2: Arabic accuracy (branch `feature/arabic-accuracy`)
 **2.1 Arabic display names in `create_report`.**
 - **Change:** `create_report` takes optional `displayNames`: `{ "Table[Field]": "name to show" }`. The report shows
@@ -438,6 +476,11 @@ layout and write it without the selector if it is ignored there too, with `cardF
   shows 34.0% instead of 0.34; the table shows 101,914 where the card shows 101.91K; running the health check again
   finds neither issue; nothing else in the model changed (TMDL diff: only the named columns and measures).
 
+**2.3 The sample download opens with "One or more calculated tables need to be manually refreshed" (owner
+2026-10-01).** Find out why (the sample table is a DAX table in a `model.bim` without data) and avoid it if the
+project can carry what Desktop needs; otherwise add one line of instructions to the download (the README already
+says to refresh once; put it where the visitor sees it). Measure in Desktop first: what removes the banner.
+
 #### The owner's answers (2026-10-01), applied above
 1. `b931ecd` is tagged `round-phone-and-sizes` (pushed); `fix/phone-and-sizes` is deleted, locally and on GitHub.
 2. `create_report` gets a `logo` input (a file inside the working folder): round 0.2.
@@ -466,9 +509,7 @@ card title margins 12k and the bar-side padding; the table's fill stays. No deci
     Saturday or Sunday. The model is still never changed without the user.
   - **Measures without a format string**, as model health findings: the % card shows 0.34 (Sales[Total Sales vs Last
     Ramadan %]); the table shows 101914 while the cards show 101.914K.
-- **The sample-data download opens with "One or more calculated tables need to be manually refreshed"** (seen in
-  round 0's measurements; the visuals show data anyway, and the README says to refresh once). Open (owner 2026-10-01).
-- **Small-page round, with the 640 x 360 cards (after the next round):**
+- **Small-page round, with the 640 x 360 cards (after the beta, owner 2026-10-01):**
   - **KPI cards cut at 640 x 360** (already on main): the numbers in the 42- and 48-high cards are cut at the bottom.
     Measured (2.158, `scripts/tests/DESKTOP-TESTS.md`): 8pt title / value 12 needs 48, value 14 needs 56 on 640 x 360,
     but 44 on 1920 x 1080 and 3840 x 2160; 42pt cards on 1080 need 88 (126 and 144 fine). No single rule fits yet:
