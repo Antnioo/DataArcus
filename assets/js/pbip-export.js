@@ -479,7 +479,9 @@
       // bookmarks show and hide it, so the user's slicer selections stay when it opens and closes
       if (panel && pg.openBm) {
         // (sizes from 1920 x 1080 scaled by k; Close and Reset as big as their text needs, slicers the height a dropdown needs)
-        const P = panel, gname = rnd(), kids = [], pad = 16 * k, head = 44 * k, gap = 10 * k, sw = P.w - 2 * pad;
+        const P = panel, gname = rnd(), kids = [], pad = 16 * k, gap = 10 * k, sw = P.w - 2 * pad;
+        // Close is as high as a button's text needs (Arabic: 6 + 1.6 x pt), and the panel's header holds it above the slicers
+        const ch = Math.ceil(Math.max(32 * k, 6 + 1.6 * LABEL)), head = Math.max(44 * k, 12 * k + ch);
         const resetText = W.reset || 'Reset filters', closeText = '✕  ' + (W.close || 'Close');
         const reset = resetFit(resetText, Math.round(sw), k), bh = reset.h;
         const fields = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null);
@@ -495,7 +497,7 @@
             dropShadow: obj({ show: bool(true) }),
             padding: obj({ top: num(Math.round(14 * k)), left: num(Math.round(16 * k)), right: num(Math.round(16 * k)), bottom: num(Math.round(12 * k)) }) }) } });
         // Close, in the panel's top corner at the end of the reading line
-        const cw = Math.round(Math.max(96 * k, charW(LABEL) * closeText.length + 16 * k)), ch = Math.round(Math.max(32 * k, buttonH(LABEL)));
+        const cw = Math.round(Math.max(96 * k, charW(LABEL) * closeText.length + 16 * k));
         const cx = Math.round(rtl ? P.x + pad : P.x + P.w - pad - cw);
         add1({ x: cx, y: Math.round(P.y + 10 * k), w: cw, h: ch, kind: 'button', visual: { visualType: 'actionButton',
           objects: { icon: def({ shapeType: str('blank') }), text: def({ show: bool(true), text: str(closeText), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL) }), fill: def({ show: bool(false) }), outline: def({ show: bool(false) }) },
