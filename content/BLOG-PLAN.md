@@ -23,7 +23,7 @@ The memory for the blog. Read it before planning or writing an article; update i
 | Power BI craft (DAX, models) | DAX attribution pattern (2026-09-01), Model health check (2026-09-25) | Model Health Check, DAX Measure Builder |
 | Report design | Report redesign in 5 minutes (2026-09-28), 7 report styles (2026-09-29) | Theme Generator, SVG KPI Designer |
 | Cost and licensing | Pro vs PPU vs Fabric F64 (2026-09-23) | Licensing Cost Calculator |
-| E-commerce analytics (2025, keep or retire: owner to decide) | CLV, 5 KPIs, Shopify dashboard, ETL vs Power Query, EVM (project risk) | none yet |
+| E-commerce analytics (2025; **no new posts**, owner 2026-10-01: the existing ones stay online) | CLV, 5 KPIs, Shopify dashboard, ETL vs Power Query, EVM (project risk) | none |
 
 ## Tools without an article yet (each deserves one)
 - DAX Measure Builder (`tools/dax-measure-builder.html`)
@@ -32,7 +32,7 @@ The memory for the blog. Read it before planning or writing an article; update i
 - PL-300 practice exam (`tools/pl-300-practice-exam.html`)
 - DP-600 practice exam (`tools/dp-600-practice-exam.html`)
 
-## Next up (in order; the owner can reorder)
+## Next up (in order, confirmed by the owner 2026-10-01; Arabic first because no one else covers it well)
 1. **Arabic and right-to-left Power BI reports done right**: what Power BI does and doesn't support (no RTL setting
    in Desktop), mirroring the layout, Arabic fonts, numbers and titles. Tool: Theme Generator (Arabic).
 2. **A Gulf calendar in DAX**: Hijri months, Ramadan and Eid flags, the Saturday-Sunday weekend (UAE since 2022), and
