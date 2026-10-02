@@ -55,6 +55,14 @@ The memory for the blog. Read it before planning or writing an article; update i
 - **Lead with the Gulf business logic** (useful in English too); present Arabic as quality done properly, not just
   "dashboards in Arabic".
 
+## To fix (owner confirmed 2026-10-02, not urgent)
+- **`article-power-bi-model-health-check.html` describes the owner's employer's CRM model** ("one of our own
+  production models: a CRM model we built and still maintain": 24 tables, 410 measures, 292 visuals, and example
+  columns such as customer names, phone numbers and notes). This breaks the rule of no employer data. Plan, with the
+  owner's go when there's time: (A) remove every identifying detail (no "our own", no "CRM", no example columns,
+  rounded numbers); then (B) re-run the Model Health Check on a public sample model (e.g. AdventureWorks or our test
+  model) and rewrite the case study with those numbers, in English and Arabic.
+
 ## Where ideas come from
 Questions people ask in LinkedIn comments and messages, Microsoft's monthly Power BI updates (only what matters to
 our readers), and problems found while building the tools (the model health check found 41% unused columns: that
