@@ -6,7 +6,7 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 
 ## Where things stand
 - **Merged 2026-10-03 (reviewer):** round 1 (`80d3a00`); the Microsoft plugin test (`bc05275`); privacy statement and
-  product spec (`515409d`: `mcp/PRIVACY.md`, `mcp/PRODUCT_SPEC.md`); the 10 golden tasks and test models (`39b5ab7`);
+  product spec (`515409d`: `mcp/PRIVACY.md`, `mcp/PRODUCT_SPEC.md`); the golden tasks (10 then, 11 now) and test models (`39b5ab7`);
   employer-sector details off the public site and the Health Check case study on Microsoft's public sample
   (`0a328b5`); round 2 (`ada2942`: right-to-left page buttons, month/day order in charts, Arabic display names, sort
   and format fixes as health findings with `weekStart`, the tooltip's base measure, KPI title padding; Desktop: 60
@@ -68,7 +68,7 @@ date). The plan is in `mcp/ROADMAP.md`, "Plan of 2026-10-02".
    (Anthropic) sees through the tool results; return metadata only, never data values, unless the user asks; the
    privacy note and `mcp/PRODUCT_SPEC.md`.
 4. **Minimum packaging** (clean-machine install: Claude + DataArcus + a sample project + a finished report) and the
-   **10 golden tasks** (permanent real requests, including a large model of hundreds of tables), run before every release.
+   **11 golden tasks** (permanent real requests, including a large model of hundreds of tables), run before every release.
 5. **Private beta and free before/after case studies** (owner's outreach starts the week of 4 October).
 - **The split of `pbip-export.js` is deferred until after the beta**, unless the overnight plan (branch
   `plan/split-pbip-export`) shows it takes about one evening; the owner decides when he reads it.
@@ -185,7 +185,29 @@ Owner's decisions: large models get a summary first, details on request; a model
 gets fewer cards and is told why (never an empty card). Not in this round: task 9's raw schema message, zod 4, the
 packaging build, the Gulf calendar's later items, the /ar/ pages.
 
-**State (updated as each item lands):** this plan; nothing built yet.
+**State (2026-10-03): built, pushed; the Desktop capture of the 2-card report waits for the laptop to be free.**
+Plan `4309775`; tests first `f83c169`; item 3's engine `162a24a`; item 4 `5763719`; items 1, 2, 3 in the MCP
+`eacbb00`; docs, golden baselines and item 5 in the commit after.
+- **Every expected number came out**, with two corrections to my own plan: the checks are 216, not 213; and the
+  summary's "other tables" are 235 (the calendar is one), not 234.
+- **Sizes on Large Synthetic:** `read_model` 178,303 → **10,380** characters; `check_model_health` 162,909 →
+  **17,997**; the five Logistics tables in full: 4,827.
+- **Existing expectations this decision changed** (old → new, why), all on Health Test, which has 2 measures:
+  the Arabic design report had a visual at each of the design's 3 and 4 KPI slots → 2 cards per page at the engine's
+  2-card slots; its "mirrored" check looked for the first of 3 cards at x 1388, 508 wide → the first of 2 at 1125,
+  771 wide; the slide-in panel report the same. Why: no card is written without a field any more.
+- **Not in the plan, built because the first run showed it:** with no measures at all the charts had no value
+  either (4 more validator errors), so they are left out and named (`kpiCards.leftOutVisuals`); the report then has
+  its header, filters and table only. The decision to confirm: this, or refuse the report on a model without
+  measures.
+- **Tests:** MCP 195 → 216; the full website run 17 of 17 with the engine and picker changes (design-engine 598,
+  pbip 71, both theme generators 883, layout 512: counts unchanged; no fixture changed).
+- **Golden tasks (tool level):** 7 FAIL → PASS (validator 11 → 0); 8 FAIL → PASS (3 → 0); 10 FAIL → PASS when the
+  agent gives the focus. `mcp/GOLDEN-TASKS.md` has the new baselines.
+- **Desktop:** the two reports are built (`Gulf Sales R4 EN 2 cards`, `... AR 2 cards`, `builder-scripts\r4-build.mjs`,
+  validator 0); the capture is not done yet.
+- **Next step:** the Desktop capture when the laptop is free; the reviewer's review, CI, merge; then zod 4, the
+  findings image, the packaging build.
 
 ### Measured before planning (main `b76bbbf`, `mcp/test-models/golden-baseline.mjs` and a one-off probe)
 - Task 10: `read_model` on Large Synthetic **178,303 characters**; `suggest_fields` picks AR Invoices and Bookings

@@ -147,6 +147,15 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
   the weekend option labels the fixes name are the page's own. Packaging must carry `gulf-health.js` and
   `gulf-dates.js` with the engines.
 
+- Large models (round 4): a model is large when `read_model`'s full answer would pass 40,000 characters
+  (`mcp/lib/scope.mjs`). Then `read_model` returns a summary, and `suggest_fields` and `create_report` need `focus` or
+  `tables`. Every answer that lists objects must have a cap: round 2's fix script made `check_model_health` 162,909
+  characters on the 300-table model without anyone noticing, because only `read_model` was measured. The golden
+  baseline prints the largest answer of the run: read it.
+- Fewer measures than KPI cards (round 4): the engine's `layout.kpiCards` caps the cards of every page (0 leaves the
+  KPI row out); the website's designs never have it. A visual is never written without its fields: Microsoft's
+  validator calls it `PBIR_QUERY_STATE_MISSING`.
+
 ## Writing prompts for another agent or session
 Start with the request itself ("Run this test now"). Name every file. List the steps. Add the rules: scope folder, don't
 change test files or expected numbers, stop and report on failure. Give the exact report format. Compare with expected
