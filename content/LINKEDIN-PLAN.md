@@ -14,6 +14,7 @@ Last updated 2026-10-01 by the reviewer.
   best-performing article.
 
 ## Rhythm
+- **From week 3: one public finding a week on Tuesday** (owner 2026-10-03, the one-year direction): a real, reproducible test, in his own words; test notes in `findings/` of this repo.
 - **3 posts a week:** Tuesday, Wednesday, Thursday, around 8:00-9:00 Gulf time (UAE). In Ramadan: after Iftar,
   about 21:00-22:00.
 - **Every blog post becomes 3 LinkedIn posts** over two weeks: (1) the problem and the result, (2) one practical
@@ -59,9 +60,10 @@ Last updated 2026-10-01 by the reviewer.
 |---|---|---|---|
 | 1 | Teaser video (MCP, "coming soon") | The AI-readiness article: is your model ready for Copilot? | Tip: Prep data for AI in 3 steps (AI data schema, verified answers, AI instructions) |
 | 2 (13-15 Oct) | Gulf calendar post 1: the problem and the result (`content/linkedin-gulf-calendar.md`) | Gulf calendar post 2: the tip | Gulf calendar post 3: the tool in action |
-| 3 | Before / after: the report redesign | Carousel: 7 report styles by department | Tool demo: the Theme Generator |
+| 3 (20-22 Oct) | **Finding #1:** Microsoft's AI plugin on an Arabic report (dataarcus-engine `business/findings/`) | Before / after: the report redesign | Carousel: 7 report styles by department (the Theme Generator demo moves to week 6) |
 | 4 | Gulf (Arabic + English): comparing Ramadan sales year over year | Tip: the Hijri calendar in DAX | Poll: which week start does your calendar use? |
 | 5 | Real result: Pro vs PPU vs F64, when each one pays off | Tip: the licensing mistake that costs the most | Tool demo: the licensing calculator |
+| 6 | Finding #2 (from the backlog) | Tool demo: the Theme Generator | (open) |
 
 **Ready to queue (after the Gulf calendar article is live):** three posts, Arabic then English, in
 `content/linkedin-gulf-calendar.md`: (1) the problem and the result (27 announced dates, one differed from Umm
