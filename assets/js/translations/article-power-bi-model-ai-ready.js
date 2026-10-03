@@ -76,7 +76,7 @@ window.aiReadyArticleTranslations = {
       "og:url": "https://dataarcus.com/articles/article-power-bi-model-ai-ready.html",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/ai-ready-article.jpg",
-      "og:locale": "ar_AR",
+      "og:locale": "ar_AE",
       "twitter:card": "summary_large_image",
       "twitter:title": "هل نموذج Power BI جاهز للذكاء الاصطناعي؟ فحص من 7 نقاط",
       "twitter:description": "Copilot ووكلاء البيانات وتطبيقات Power BI الجديدة كلها تجيب من نموذجك الدلالي. سبعة أمور تصلحها أولًا، بناءً على إرشادات Microsoft نفسها.",

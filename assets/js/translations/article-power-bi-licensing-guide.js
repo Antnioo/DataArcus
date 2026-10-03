@@ -22,7 +22,7 @@ window.licensingGuideTranslations = {
     "header": {
       "badge": "STRATEGY",
       "title": "Power BI Pro, Premium Per User or Fabric: Which License Do You Actually Need?",
-      "subtitle": "Posted on September 23, 2026"
+      "subtitle": "Posted on September 23, 2026 · Updated October 3, 2026"
     },
     "content": {
       "p1": "Licensing is the question that comes up most before a Power BI project starts. Most companies either overpay for capacity they do not need, or keep buying Pro seats long after capacity became cheaper. The answer usually depends on one number: <strong>how many people only view reports</strong>.",
@@ -91,7 +91,7 @@ window.licensingGuideTranslations = {
     "header": {
       "badge": "استراتيجية",
       "title": "Power BI Pro أم Premium Per User أم Fabric: أي ترخيص تحتاجه فعلًا؟",
-      "subtitle": "نُشر في 23 سبتمبر 2026"
+      "subtitle": "نُشر في 23 سبتمبر 2026 · حُدّث في 3 أكتوبر 2026"
     },
     "content": {
       "p1": "الترخيص هو السؤال الأكثر تكرارًا قبل بدء أي مشروع Power BI. معظم الشركات إما تدفع أكثر من اللازم على سعة لا تحتاجها، أو تستمر في شراء تراخيص Pro بعد أن أصبحت السعة أرخص بكثير. والإجابة تعتمد غالبًا على رقم واحد: <strong>عدد الأشخاص الذين يشاهدون التقارير فقط</strong>.",
