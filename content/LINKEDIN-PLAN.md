@@ -54,13 +54,14 @@ Last updated 2026-10-01 by the reviewer.
 - No engagement bait ("comment YES"), no fake numbers, no posting a tool feature that isn't live yet.
 - No tagging people who weren't part of the post.
 
-## Queue (next 4 weeks, from the published articles; adjust freely)
+## Queue (next 5 weeks, from the published articles; adjust freely; owner 2026-10-03: the Gulf calendar posts in week 2)
 | Week | Tue | Wed | Thu |
 |---|---|---|---|
 | 1 | Teaser video (MCP, "coming soon") | The AI-readiness article: is your model ready for Copilot? | Tip: Prep data for AI in 3 steps (AI data schema, verified answers, AI instructions) |
-| 2 | Before / after: the report redesign | Carousel: 7 report styles by department | Tool demo: the Theme Generator |
-| 3 | Gulf (Arabic + English): comparing Ramadan sales year over year | Tip: the Hijri calendar in DAX | Poll: which week start does your calendar use? |
-| 4 | Real result: Pro vs PPU vs F64, when each one pays off | Tip: the licensing mistake that costs the most | Tool demo: the licensing calculator |
+| 2 (13-15 Oct) | Gulf calendar post 1: the problem and the result (`content/linkedin-gulf-calendar.md`) | Gulf calendar post 2: the tip | Gulf calendar post 3: the tool in action |
+| 3 | Before / after: the report redesign | Carousel: 7 report styles by department | Tool demo: the Theme Generator |
+| 4 | Gulf (Arabic + English): comparing Ramadan sales year over year | Tip: the Hijri calendar in DAX | Poll: which week start does your calendar use? |
+| 5 | Real result: Pro vs PPU vs F64, when each one pays off | Tip: the licensing mistake that costs the most | Tool demo: the licensing calculator |
 
 **Ready to queue (after the Gulf calendar article is live):** three posts, Arabic then English, in
 `content/linkedin-gulf-calendar.md`: (1) the problem and the result (27 announced dates, one differed from Umm
