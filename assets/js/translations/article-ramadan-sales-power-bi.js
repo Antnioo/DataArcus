@@ -70,7 +70,7 @@ window.ramadanSalesTranslations = {
       "og:url": "https://dataarcus.com/articles/article-ramadan-sales-power-bi.html",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/ramadan-sales.jpg",
-      "og:locale": "ar_AR",
+      "og:locale": "ar_AE",
       "twitter:card": "summary_large_image",
       "twitter:title": "مقارنة مبيعات رمضان سنويًا في Power BI باستخدام DAX",
       "twitter:description": "يبدأ رمضان قبل نحو 11 يومًا كل عام، لذلك تضلّل مقارنة الأشهر الميلادية. إليك التقويم الهجري ومقياس DAX لمقارنة رمضان يومًا بيوم.",

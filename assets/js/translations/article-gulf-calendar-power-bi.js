@@ -87,7 +87,7 @@ window.gulfCalendarArticleTranslations = {
       "og:url": "https://dataarcus.com/articles/article-gulf-calendar-power-bi.html",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/gulf-calendar.jpg",
-      "og:locale": "ar_AR",
+      "og:locale": "ar_AE",
       "twitter:card": "summary_large_image",
       "twitter:title": "تقويم خليجي في Power BI: الهجري ورمضان والعيد والعطلة",
       "twitter:description": "جدول تواريخ خليجي في Power BI بلغة DAX: التاريخ الهجري، ومواعيد رمضان والعيد المعلنة، وعطلة كل دولة، وتغيير الإمارات في 2022.",

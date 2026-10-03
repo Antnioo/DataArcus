@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Built-in fallback. The live values come from assets/data/powerbi-prices.json,
   // which a GitHub Action refreshes every week from Microsoft's own sources.
   const PRICES = {
-    checked: '2026-09-23',
+    checked: '2026-10-03',
     pro: 14,            // Power BI Pro, per user per month, paid yearly
     ppu: 24,            // Premium Per User, per user per month, paid yearly
     ppuAddon: 14,       // PPU add-on for users who already have Pro or Microsoft 365 E5 (Microsoft lists it separately)

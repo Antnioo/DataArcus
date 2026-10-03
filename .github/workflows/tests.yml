@@ -32,6 +32,9 @@ jobs:
       - name: Every .min.js is built from its source
         run: node scripts/check-min.mjs
 
+      - name: The price updater reads Microsoft's page correctly (fixed text, no network)
+        run: node scripts/test-powerbi-prices.mjs
+
       - name: Install Chromium
         run: npx playwright-core install --with-deps chromium
 

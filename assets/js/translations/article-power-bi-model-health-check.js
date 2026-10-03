@@ -81,7 +81,7 @@ window.modelHealthArticleTranslations = {
       "og:url": "https://dataarcus.com/articles/article-power-bi-model-health-check.html",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/health-check-article.jpg",
-      "og:locale": "ar_AR",
+      "og:locale": "ar_AE",
       "twitter:card": "summary_large_image",
       "twitter:title": "فحصنا نموذجًا تجريبيًا من Microsoft: النتيجة 84 من 100",
       "twitter:description": "شغّلنا أداة فحص صحة النموذج المجانية على نموذج COVID-19 التجريبي العام من Microsoft: ربع الأعمدة غير مستخدمة وإشارتان مرجعيتان إلى عمود محذوف.",
