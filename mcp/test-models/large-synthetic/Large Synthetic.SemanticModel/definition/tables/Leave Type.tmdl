@@ -1,0 +1,38 @@
+table 'Leave Type'
+
+	column 'Leave Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Leave Type Key
+
+	column 'Leave Type'
+		dataType: string
+		sourceColumn: Leave Type
+
+	column 'Leave Type Valid From'
+		dataType: dateTime
+		sourceColumn: Leave Type Valid From
+
+	column 'Leave Type Region'
+		dataType: string
+		sourceColumn: Leave Type Region
+
+	column 'Leave Type Short Name'
+		dataType: string
+		sourceColumn: Leave Type Short Name
+
+	column 'Leave Type Code'
+		dataType: string
+		sourceColumn: Leave Type Code
+
+	column 'Leave Type Description'
+		dataType: string
+		sourceColumn: Leave Type Description
+
+	partition 'Leave Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Leave Type Key", "Leave Type", "Leave Type Valid From", "Leave Type Region", "Leave Type Short Name", "Leave Type Code", "Leave Type Description"}, {})
+				in
+				    Source

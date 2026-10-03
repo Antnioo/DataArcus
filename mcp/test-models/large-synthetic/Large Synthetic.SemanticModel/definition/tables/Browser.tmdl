@@ -1,0 +1,38 @@
+table Browser
+
+	column 'Browser Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Browser Key
+
+	column Browser
+		dataType: string
+		sourceColumn: Browser
+
+	column 'Browser Description'
+		dataType: string
+		sourceColumn: Browser Description
+
+	column 'Browser Category'
+		dataType: string
+		sourceColumn: Browser Category
+
+	column 'Browser Type'
+		dataType: string
+		sourceColumn: Browser Type
+
+	column 'Browser Code'
+		dataType: string
+		sourceColumn: Browser Code
+
+	column 'Browser Group'
+		dataType: string
+		sourceColumn: Browser Group
+
+	partition Browser = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Browser Key", "Browser", "Browser Description", "Browser Category", "Browser Type", "Browser Code", "Browser Group"}, {})
+				in
+				    Source

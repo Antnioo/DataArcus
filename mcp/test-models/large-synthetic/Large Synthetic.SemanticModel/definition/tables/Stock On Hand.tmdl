@@ -1,0 +1,125 @@
+table 'Stock On Hand'
+
+	measure 'Stock On Hand Total Price' = SUM ( 'Stock On Hand'[Price] )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Stock On Hand Average Price' = AVERAGE ( 'Stock On Hand'[Price] )
+		formatString: #,0.00
+		displayFolder: Inventory
+
+	measure 'Stock On Hand Count' = COUNTROWS ( 'Stock On Hand' )
+
+	/// Made-up measure for the large test model (Inventory).
+	measure 'Stock On Hand Total Price LY' = CALCULATE ( [Stock On Hand Total Price], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Stock On Hand Total Price YoY %' = DIVIDE ( [Stock On Hand Total Price] - [Stock On Hand Total Price LY], [Stock On Hand Total Price LY] )
+		formatString: 0.0%
+		displayFolder: Inventory
+
+	measure 'Stock On Hand Total Price YTD' = TOTALYTD ( [Stock On Hand Total Price], 'Calendar'[Date] )
+		formatString: #,0
+
+	/// Made-up measure for the large test model (Inventory).
+	measure 'Stock On Hand Max Price' = MAX ( 'Stock On Hand'[Price] )
+		displayFolder: Inventory
+
+	measure 'Stock On Hand Price Share %' = DIVIDE ( [Stock On Hand Total Price], CALCULATE ( [Stock On Hand Total Price], ALL ( 'Stock On Hand' ) ) )
+		displayFolder: Inventory
+
+	/// Made-up measure for the large test model (Inventory).
+	measure 'Stock On Hand Total Value' = SUM ( 'Stock On Hand'[Value] )
+		formatString: #,0
+		displayFolder: Inventory
+
+	/// Made-up measure for the large test model (Inventory).
+	measure 'Stock On Hand Average Value' = AVERAGE ( 'Stock On Hand'[Value] )
+
+	measure 'Stock On Hand Total Value LY' = CALCULATE ( [Stock On Hand Total Value], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Inventory
+
+	measure 'Stock On Hand Total Value YoY %' = DIVIDE ( [Stock On Hand Total Value] - [Stock On Hand Total Value LY], [Stock On Hand Total Value LY] )
+		formatString: 0.0%
+		displayFolder: Inventory
+
+	measure 'Stock On Hand Total Value YTD' = TOTALYTD ( [Stock On Hand Total Value], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Stock On Hand Max Value' = MAX ( 'Stock On Hand'[Value] )
+		displayFolder: Inventory
+
+	measure 'Stock On Hand Value Share %' = DIVIDE ( [Stock On Hand Total Value], CALCULATE ( [Stock On Hand Total Value], ALL ( 'Stock On Hand' ) ) )
+		displayFolder: Inventory
+
+	column 'Stock On Hand Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Stock On Hand Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Inventory Lookup 015 Key'
+		dataType: int64
+		sourceColumn: Inventory Lookup 015 Key
+
+	column 'Storage Condition Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Storage Condition Key
+
+	column 'Count Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Count Reason Key
+
+	column 'Unit Of Measure Key'
+		dataType: int64
+		sourceColumn: Unit Of Measure Key
+
+	column 'Budget Version Key'
+		dataType: int64
+		sourceColumn: Budget Version Key
+
+	column Price
+		dataType: double
+		isHidden
+		sourceColumn: Price
+
+	column Value
+		dataType: double
+		isHidden
+		sourceColumn: Value
+
+	column 'Duration Minutes'
+		dataType: double
+		isHidden
+		sourceColumn: Duration Minutes
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	column Hours
+		dataType: decimal
+		isHidden
+		sourceColumn: Hours
+
+	column Quantity
+		dataType: int64
+		isHidden
+		sourceColumn: Quantity
+
+	partition 'Stock On Hand' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Stock On Hand Id", "Date", "Inventory Lookup 015 Key", "Storage Condition Key", "Count Reason Key", "Unit Of Measure Key", "Budget Version Key", "Price", "Value", "Duration Minutes", "Count", "Hours", "Quantity"}, {})
+				in
+				    Source

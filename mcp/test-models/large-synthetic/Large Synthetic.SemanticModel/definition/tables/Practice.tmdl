@@ -1,0 +1,58 @@
+table Practice
+
+	column 'Practice Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Practice Key
+
+	column Practice
+		dataType: string
+		sourceColumn: Practice
+
+	column 'Practice Short Name'
+		dataType: string
+		sourceColumn: Practice Short Name
+
+	column 'Practice Region'
+		dataType: string
+		sourceColumn: Practice Region
+
+	column 'Practice Category'
+		dataType: string
+		sourceColumn: Practice Category
+
+	column 'Practice Notes'
+		dataType: string
+		sourceColumn: Practice Notes
+
+	column 'Practice Is Active'
+		dataType: boolean
+		sourceColumn: Practice Is Active
+
+	column 'Practice Group'
+		dataType: string
+		sourceColumn: Practice Group
+
+	column 'Practice Status'
+		dataType: string
+		sourceColumn: Practice Status
+
+	column 'Practice Valid From'
+		dataType: dateTime
+		sourceColumn: Practice Valid From
+
+	column 'Practice Code'
+		dataType: string
+		sourceColumn: Practice Code
+
+	column 'Practice Description'
+		dataType: string
+		sourceColumn: Practice Description
+
+	partition Practice = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Practice Key", "Practice", "Practice Short Name", "Practice Region", "Practice Category", "Practice Notes", "Practice Is Active", "Practice Group", "Practice Status", "Practice Valid From", "Practice Code", "Practice Description"}, {})
+				in
+				    Source

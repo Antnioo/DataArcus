@@ -1,0 +1,54 @@
+table 'Hospitality Lookup 027'
+
+	column 'Hospitality Lookup 027 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Hospitality Lookup 027 Key
+
+	column 'Hospitality Lookup 027'
+		dataType: string
+		sourceColumn: Hospitality Lookup 027
+
+	column 'Hospitality Lookup 027 Type'
+		dataType: string
+		sourceColumn: Hospitality Lookup 027 Type
+
+	column 'Hospitality Lookup 027 Level'
+		dataType: int64
+		sourceColumn: Hospitality Lookup 027 Level
+
+	column 'Hospitality Lookup 027 Sort Order'
+		dataType: int64
+		sourceColumn: Hospitality Lookup 027 Sort Order
+
+	column 'Hospitality Lookup 027 Status'
+		dataType: string
+		sourceColumn: Hospitality Lookup 027 Status
+
+	column 'Hospitality Lookup 027 Region'
+		dataType: string
+		sourceColumn: Hospitality Lookup 027 Region
+
+	column 'Hospitality Lookup 027 Group'
+		dataType: string
+		sourceColumn: Hospitality Lookup 027 Group
+
+	column 'Hospitality Lookup 027 External Id'
+		dataType: string
+		sourceColumn: Hospitality Lookup 027 External Id
+
+	column 'Hospitality Lookup 027 Valid From'
+		dataType: dateTime
+		sourceColumn: Hospitality Lookup 027 Valid From
+
+	column 'Hospitality Lookup 027 Code'
+		dataType: string
+		sourceColumn: Hospitality Lookup 027 Code
+
+	partition 'Hospitality Lookup 027' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Hospitality Lookup 027 Key", "Hospitality Lookup 027", "Hospitality Lookup 027 Type", "Hospitality Lookup 027 Level", "Hospitality Lookup 027 Sort Order", "Hospitality Lookup 027 Status", "Hospitality Lookup 027 Region", "Hospitality Lookup 027 Group", "Hospitality Lookup 027 External Id", "Hospitality Lookup 027 Valid From", "Hospitality Lookup 027 Code"}, {})
+				in
+				    Source

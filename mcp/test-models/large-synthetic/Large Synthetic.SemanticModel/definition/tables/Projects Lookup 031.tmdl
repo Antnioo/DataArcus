@@ -1,0 +1,42 @@
+table 'Projects Lookup 031'
+
+	column 'Projects Lookup 031 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Projects Lookup 031 Key
+
+	column 'Projects Lookup 031'
+		dataType: string
+		sourceColumn: Projects Lookup 031
+
+	column 'Projects Lookup 031 Parent Code'
+		dataType: string
+		sourceColumn: Projects Lookup 031 Parent Code
+
+	column 'Projects Lookup 031 Level'
+		dataType: int64
+		sourceColumn: Projects Lookup 031 Level
+
+	column 'Projects Lookup 031 Owner'
+		dataType: string
+		sourceColumn: Projects Lookup 031 Owner
+
+	column 'Projects Lookup 031 Valid From'
+		dataType: dateTime
+		sourceColumn: Projects Lookup 031 Valid From
+
+	column 'Projects Lookup 031 Sort Order'
+		dataType: int64
+		sourceColumn: Projects Lookup 031 Sort Order
+
+	column 'Projects Lookup 031 Code'
+		dataType: string
+		sourceColumn: Projects Lookup 031 Code
+
+	partition 'Projects Lookup 031' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Projects Lookup 031 Key", "Projects Lookup 031", "Projects Lookup 031 Parent Code", "Projects Lookup 031 Level", "Projects Lookup 031 Owner", "Projects Lookup 031 Valid From", "Projects Lookup 031 Sort Order", "Projects Lookup 031 Code"}, {})
+				in
+				    Source

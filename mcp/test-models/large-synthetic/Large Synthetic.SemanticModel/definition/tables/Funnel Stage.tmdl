@@ -1,0 +1,50 @@
+table 'Funnel Stage'
+
+	column 'Funnel Stage Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Funnel Stage Key
+
+	column 'Funnel Stage'
+		dataType: string
+		sourceColumn: Funnel Stage
+
+	column 'Funnel Stage Valid To'
+		dataType: dateTime
+		sourceColumn: Funnel Stage Valid To
+
+	column 'Funnel Stage Notes'
+		dataType: string
+		sourceColumn: Funnel Stage Notes
+
+	column 'Funnel Stage Created By'
+		dataType: string
+		sourceColumn: Funnel Stage Created By
+
+	column 'Funnel Stage Category'
+		dataType: string
+		sourceColumn: Funnel Stage Category
+
+	column 'Funnel Stage Code'
+		dataType: string
+		sourceColumn: Funnel Stage Code
+
+	column 'Funnel Stage External Id'
+		dataType: string
+		sourceColumn: Funnel Stage External Id
+
+	column 'Funnel Stage Description'
+		dataType: string
+		sourceColumn: Funnel Stage Description
+
+	column 'Funnel Stage Group'
+		dataType: string
+		sourceColumn: Funnel Stage Group
+
+	partition 'Funnel Stage' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Funnel Stage Key", "Funnel Stage", "Funnel Stage Valid To", "Funnel Stage Notes", "Funnel Stage Created By", "Funnel Stage Category", "Funnel Stage Code", "Funnel Stage External Id", "Funnel Stage Description", "Funnel Stage Group"}, {})
+				in
+				    Source

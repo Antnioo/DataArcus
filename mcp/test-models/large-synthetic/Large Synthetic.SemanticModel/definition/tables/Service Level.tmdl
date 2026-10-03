@@ -1,0 +1,46 @@
+table 'Service Level'
+
+	column 'Service Level Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Service Level Key
+
+	column 'Service Level'
+		dataType: string
+		sourceColumn: Service Level
+
+	column 'Service Level Status'
+		dataType: string
+		sourceColumn: Service Level Status
+
+	column 'Service Level Type'
+		dataType: string
+		sourceColumn: Service Level Type
+
+	column 'Service Level Owner'
+		dataType: string
+		sourceColumn: Service Level Owner
+
+	column 'Service Level Valid From'
+		dataType: dateTime
+		sourceColumn: Service Level Valid From
+
+	column 'Service Level Region'
+		dataType: string
+		sourceColumn: Service Level Region
+
+	column 'Service Level Code'
+		dataType: string
+		sourceColumn: Service Level Code
+
+	column 'Service Level Description'
+		dataType: string
+		sourceColumn: Service Level Description
+
+	partition 'Service Level' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Service Level Key", "Service Level", "Service Level Status", "Service Level Type", "Service Level Owner", "Service Level Valid From", "Service Level Region", "Service Level Code", "Service Level Description"}, {})
+				in
+				    Source

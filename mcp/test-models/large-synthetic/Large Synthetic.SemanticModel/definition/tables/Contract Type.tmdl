@@ -1,0 +1,54 @@
+table 'Contract Type'
+
+	column 'Contract Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Contract Type Key
+
+	column 'Contract Type'
+		dataType: string
+		sourceColumn: Contract Type
+
+	column 'Contract Type Is Active'
+		dataType: boolean
+		sourceColumn: Contract Type Is Active
+
+	column 'Contract Type Long Name'
+		dataType: string
+		sourceColumn: Contract Type Long Name
+
+	column 'Contract Type Parent Code'
+		dataType: string
+		sourceColumn: Contract Type Parent Code
+
+	column 'Contract Type Sort Order'
+		dataType: int64
+		sourceColumn: Contract Type Sort Order
+
+	column 'Contract Type Level'
+		dataType: int64
+		sourceColumn: Contract Type Level
+
+	column 'Contract Type Created By'
+		dataType: string
+		sourceColumn: Contract Type Created By
+
+	column 'Contract Type Status'
+		dataType: string
+		sourceColumn: Contract Type Status
+
+	column 'Contract Type Code'
+		dataType: string
+		sourceColumn: Contract Type Code
+
+	column 'Contract Type Description'
+		dataType: string
+		sourceColumn: Contract Type Description
+
+	partition 'Contract Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Contract Type Key", "Contract Type", "Contract Type Is Active", "Contract Type Long Name", "Contract Type Parent Code", "Contract Type Sort Order", "Contract Type Level", "Contract Type Created By", "Contract Type Status", "Contract Type Code", "Contract Type Description"}, {})
+				in
+				    Source

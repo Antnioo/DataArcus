@@ -1,0 +1,34 @@
+table 'Inspection Type'
+
+	column 'Inspection Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Inspection Type Key
+
+	column 'Inspection Type'
+		dataType: string
+		sourceColumn: Inspection Type
+
+	column 'Inspection Type Parent Code'
+		dataType: string
+		sourceColumn: Inspection Type Parent Code
+
+	column 'Inspection Type Status'
+		dataType: string
+		sourceColumn: Inspection Type Status
+
+	column 'Inspection Type Code'
+		dataType: string
+		sourceColumn: Inspection Type Code
+
+	column 'Inspection Type Description'
+		dataType: string
+		sourceColumn: Inspection Type Description
+
+	partition 'Inspection Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Inspection Type Key", "Inspection Type", "Inspection Type Parent Code", "Inspection Type Status", "Inspection Type Code", "Inspection Type Description"}, {})
+				in
+				    Source

@@ -1,0 +1,54 @@
+table 'Count Reason'
+
+	column 'Count Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Count Reason Key
+
+	column 'Count Reason'
+		dataType: string
+		sourceColumn: Count Reason
+
+	column 'Count Reason Region'
+		dataType: string
+		sourceColumn: Count Reason Region
+
+	column 'Count Reason Status'
+		dataType: string
+		sourceColumn: Count Reason Status
+
+	column 'Count Reason Created By'
+		dataType: string
+		sourceColumn: Count Reason Created By
+
+	column 'Count Reason Level'
+		dataType: int64
+		sourceColumn: Count Reason Level
+
+	column 'Count Reason Rank'
+		dataType: int64
+		sourceColumn: Count Reason Rank
+
+	column 'Count Reason Owner'
+		dataType: string
+		sourceColumn: Count Reason Owner
+
+	column 'Count Reason Parent Code'
+		dataType: string
+		sourceColumn: Count Reason Parent Code
+
+	column 'Count Reason Code'
+		dataType: string
+		sourceColumn: Count Reason Code
+
+	column 'Count Reason Description'
+		dataType: string
+		sourceColumn: Count Reason Description
+
+	partition 'Count Reason' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Count Reason Key", "Count Reason", "Count Reason Region", "Count Reason Status", "Count Reason Created By", "Count Reason Level", "Count Reason Rank", "Count Reason Owner", "Count Reason Parent Code", "Count Reason Code", "Count Reason Description"}, {})
+				in
+				    Source

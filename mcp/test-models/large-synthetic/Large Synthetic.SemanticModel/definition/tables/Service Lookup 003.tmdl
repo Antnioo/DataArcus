@@ -1,0 +1,54 @@
+table 'Service Lookup 003'
+
+	column 'Service Lookup 003 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Service Lookup 003 Key
+
+	column 'Service Lookup 003'
+		dataType: string
+		sourceColumn: Service Lookup 003
+
+	column 'Service Lookup 003 Region'
+		dataType: string
+		sourceColumn: Service Lookup 003 Region
+
+	column 'Service Lookup 003 Created By'
+		dataType: string
+		sourceColumn: Service Lookup 003 Created By
+
+	column 'Service Lookup 003 Group'
+		dataType: string
+		sourceColumn: Service Lookup 003 Group
+
+	column 'Service Lookup 003 Sort Order'
+		dataType: int64
+		sourceColumn: Service Lookup 003 Sort Order
+
+	column 'Service Lookup 003 Parent Code'
+		dataType: string
+		sourceColumn: Service Lookup 003 Parent Code
+
+	column 'Service Lookup 003 Type'
+		dataType: string
+		sourceColumn: Service Lookup 003 Type
+
+	column 'Service Lookup 003 Valid From'
+		dataType: dateTime
+		sourceColumn: Service Lookup 003 Valid From
+
+	column 'Service Lookup 003 Rank'
+		dataType: int64
+		sourceColumn: Service Lookup 003 Rank
+
+	column 'Service Lookup 003 Code'
+		dataType: string
+		sourceColumn: Service Lookup 003 Code
+
+	partition 'Service Lookup 003' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Service Lookup 003 Key", "Service Lookup 003", "Service Lookup 003 Region", "Service Lookup 003 Created By", "Service Lookup 003 Group", "Service Lookup 003 Sort Order", "Service Lookup 003 Parent Code", "Service Lookup 003 Type", "Service Lookup 003 Valid From", "Service Lookup 003 Rank", "Service Lookup 003 Code"}, {})
+				in
+				    Source

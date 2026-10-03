@@ -1,0 +1,46 @@
+table Asset
+
+	column 'Asset Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Asset Key
+
+	column Asset
+		dataType: string
+		sourceColumn: Asset
+
+	column 'Asset Region'
+		dataType: string
+		sourceColumn: Asset Region
+
+	column 'Asset Category'
+		dataType: string
+		sourceColumn: Asset Category
+
+	column 'Asset Type'
+		dataType: string
+		sourceColumn: Asset Type
+
+	column 'Asset Rank'
+		dataType: int64
+		sourceColumn: Asset Rank
+
+	column 'Asset Notes'
+		dataType: string
+		sourceColumn: Asset Notes
+
+	column 'Asset Code'
+		dataType: string
+		sourceColumn: Asset Code
+
+	column 'Asset Description'
+		dataType: string
+		sourceColumn: Asset Description
+
+	partition Asset = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Asset Key", "Asset", "Asset Region", "Asset Category", "Asset Type", "Asset Rank", "Asset Notes", "Asset Code", "Asset Description"}, {})
+				in
+				    Source

@@ -1,0 +1,151 @@
+table Milestones
+
+	measure 'Milestones Total Discount' = SUM ( Milestones[Discount] )
+		formatString: #,0
+		displayFolder: Projects
+
+	measure 'Milestones Average Discount' = AVERAGE ( Milestones[Discount] )
+		formatString: #,0.00
+		displayFolder: Projects
+
+	measure 'Milestones Count' = COUNTROWS ( Milestones )
+		formatString: #,0
+		displayFolder: Projects
+
+	measure 'Milestones Total Discount LY' = CALCULATE ( [Milestones Total Discount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Projects
+
+	measure 'Milestones Total Discount YoY %' = DIVIDE ( [Milestones Total Discount] - [Milestones Total Discount LY], [Milestones Total Discount LY] )
+		formatString: 0.0%
+		displayFolder: Projects
+
+	measure 'Milestones Total Discount YTD' = TOTALYTD ( [Milestones Total Discount], 'Calendar'[Date] )
+		formatString: #,0
+
+	/// Made-up measure for the large test model (Projects).
+	measure 'Milestones Max Discount' = MAX ( Milestones[Discount] )
+		displayFolder: Projects
+
+	measure 'Milestones Discount Share %' = DIVIDE ( [Milestones Total Discount], CALCULATE ( [Milestones Total Discount], ALL ( Milestones ) ) )
+		displayFolder: Projects
+
+	measure 'Milestones Total Value' = SUM ( Milestones[Value] )
+		formatString: #,0
+		displayFolder: Projects
+
+	measure 'Milestones Average Value' = AVERAGE ( Milestones[Value] )
+		formatString: #,0.00
+		displayFolder: Projects
+
+	measure 'Milestones Total Value LY' = CALCULATE ( [Milestones Total Value], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Projects
+
+	/// Made-up measure for the large test model (Projects).
+	measure 'Milestones Total Value YoY %' = DIVIDE ( [Milestones Total Value] - [Milestones Total Value LY], [Milestones Total Value LY] )
+		formatString: 0.0%
+		displayFolder: Projects
+
+	/// Made-up measure for the large test model (Projects).
+	measure 'Milestones Total Value YTD' = TOTALYTD ( [Milestones Total Value], 'Calendar'[Date] )
+		displayFolder: Projects
+
+	measure 'Milestones Max Value' = MAX ( Milestones[Value] )
+		displayFolder: Projects
+
+	/// Made-up measure for the large test model (Projects).
+	measure 'Milestones Value Share %' = DIVIDE ( [Milestones Total Value], CALCULATE ( [Milestones Total Value], ALL ( Milestones ) ) )
+		displayFolder: Projects
+
+	column 'Milestone Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Milestone Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Projects Lookup 031 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Projects Lookup 031 Key
+
+	column 'Client Program Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Client Program Key
+
+	column 'Project Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Project Type Key
+
+	column 'Project Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Project Key
+
+	column 'Role Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Role Key
+
+	column 'Billing Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Billing Type Key
+
+	column 'Resource Key'
+		dataType: int64
+		sourceColumn: Resource Key
+
+	column Discount
+		dataType: double
+		isHidden
+		sourceColumn: Discount
+
+	column Value
+		dataType: decimal
+		sourceColumn: Value
+
+	column 'Duration Minutes'
+		dataType: decimal
+		sourceColumn: Duration Minutes
+
+	column Price
+		dataType: double
+		sourceColumn: Price
+
+	column Cost
+		dataType: decimal
+		isHidden
+		sourceColumn: Cost
+
+	column Hours
+		dataType: double
+		sourceColumn: Hours
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	column 'Tax Amount'
+		dataType: decimal
+		isHidden
+		sourceColumn: Tax Amount
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	partition Milestones = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Milestone Id", "Date", "Projects Lookup 031 Key", "Client Program Key", "Project Type Key", "Project Key", "Role Key", "Billing Type Key", "Resource Key", "Discount", "Value", "Duration Minutes", "Price", "Cost", "Hours", "Count", "Tax Amount", "Quantity"}, {})
+				in
+				    Source

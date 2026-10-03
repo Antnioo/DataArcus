@@ -1,0 +1,42 @@
+table 'Delivery Status'
+
+	column 'Delivery Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Delivery Status Key
+
+	column 'Delivery Status'
+		dataType: string
+		sourceColumn: Delivery Status
+
+	column 'Delivery Status Created By'
+		dataType: string
+		sourceColumn: Delivery Status Created By
+
+	column 'Delivery Status Valid To'
+		dataType: dateTime
+		sourceColumn: Delivery Status Valid To
+
+	column 'Delivery Status Level'
+		dataType: int64
+		sourceColumn: Delivery Status Level
+
+	column 'Delivery Status Code'
+		dataType: string
+		sourceColumn: Delivery Status Code
+
+	column 'Delivery Status Description'
+		dataType: string
+		sourceColumn: Delivery Status Description
+
+	column 'Delivery Status Group'
+		dataType: string
+		sourceColumn: Delivery Status Group
+
+	partition 'Delivery Status' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Delivery Status Key", "Delivery Status", "Delivery Status Created By", "Delivery Status Valid To", "Delivery Status Level", "Delivery Status Code", "Delivery Status Description", "Delivery Status Group"}, {})
+				in
+				    Source

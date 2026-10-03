@@ -1,0 +1,42 @@
+table 'Delay Reason'
+
+	column 'Delay Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Delay Reason Key
+
+	column 'Delay Reason'
+		dataType: string
+		sourceColumn: Delay Reason
+
+	column 'Delay Reason Status'
+		dataType: string
+		sourceColumn: Delay Reason Status
+
+	column 'Delay Reason Is Active'
+		dataType: boolean
+		sourceColumn: Delay Reason Is Active
+
+	column 'Delay Reason Created By'
+		dataType: string
+		sourceColumn: Delay Reason Created By
+
+	column 'Delay Reason Valid To'
+		dataType: dateTime
+		sourceColumn: Delay Reason Valid To
+
+	column 'Delay Reason Code'
+		dataType: string
+		sourceColumn: Delay Reason Code
+
+	column 'Delay Reason Description'
+		dataType: string
+		sourceColumn: Delay Reason Description
+
+	partition 'Delay Reason' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Delay Reason Key", "Delay Reason", "Delay Reason Status", "Delay Reason Is Active", "Delay Reason Created By", "Delay Reason Valid To", "Delay Reason Code", "Delay Reason Description"}, {})
+				in
+				    Source

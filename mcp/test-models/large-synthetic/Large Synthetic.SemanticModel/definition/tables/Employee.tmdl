@@ -1,0 +1,54 @@
+table Employee
+
+	column 'Employee Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Employee Key
+
+	column Employee
+		dataType: string
+		sourceColumn: Employee
+
+	column 'Employee Sort Order'
+		dataType: int64
+		sourceColumn: Employee Sort Order
+
+	column 'Employee Code'
+		dataType: string
+		sourceColumn: Employee Code
+
+	column 'Employee Owner'
+		dataType: string
+		sourceColumn: Employee Owner
+
+	column 'Employee Level'
+		dataType: int64
+		sourceColumn: Employee Level
+
+	column 'Employee Region'
+		dataType: string
+		sourceColumn: Employee Region
+
+	column 'Employee Rank'
+		dataType: int64
+		sourceColumn: Employee Rank
+
+	column 'Employee External Id'
+		dataType: string
+		sourceColumn: Employee External Id
+
+	column 'Employee Description'
+		dataType: string
+		sourceColumn: Employee Description
+
+	column 'Employee Group'
+		dataType: string
+		sourceColumn: Employee Group
+
+	partition Employee = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Employee Key", "Employee", "Employee Sort Order", "Employee Code", "Employee Owner", "Employee Level", "Employee Region", "Employee Rank", "Employee External Id", "Employee Description", "Employee Group"}, {})
+				in
+				    Source

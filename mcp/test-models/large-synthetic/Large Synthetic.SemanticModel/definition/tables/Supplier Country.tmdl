@@ -1,0 +1,50 @@
+table 'Supplier Country'
+
+	column 'Supplier Country Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Supplier Country Key
+
+	column 'Supplier Country'
+		dataType: string
+		sourceColumn: Supplier Country
+
+	column 'Supplier Country Description'
+		dataType: string
+		sourceColumn: Supplier Country Description
+
+	column 'Supplier Country External Id'
+		dataType: string
+		sourceColumn: Supplier Country External Id
+
+	column 'Supplier Country Owner'
+		dataType: string
+		sourceColumn: Supplier Country Owner
+
+	column 'Supplier Country Level'
+		dataType: int64
+		sourceColumn: Supplier Country Level
+
+	column 'Supplier Country Status'
+		dataType: string
+		sourceColumn: Supplier Country Status
+
+	column 'Supplier Country Is Active'
+		dataType: boolean
+		sourceColumn: Supplier Country Is Active
+
+	column 'Supplier Country Code'
+		dataType: string
+		sourceColumn: Supplier Country Code
+
+	column 'Supplier Country Group'
+		dataType: string
+		sourceColumn: Supplier Country Group
+
+	partition 'Supplier Country' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Supplier Country Key", "Supplier Country", "Supplier Country Description", "Supplier Country External Id", "Supplier Country Owner", "Supplier Country Level", "Supplier Country Status", "Supplier Country Is Active", "Supplier Country Code", "Supplier Country Group"}, {})
+				in
+				    Source

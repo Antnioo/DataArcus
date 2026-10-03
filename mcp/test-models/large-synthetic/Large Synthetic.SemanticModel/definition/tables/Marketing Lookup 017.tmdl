@@ -1,0 +1,30 @@
+table 'Marketing Lookup 017'
+
+	column 'Marketing Lookup 017 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Marketing Lookup 017 Key
+
+	column 'Marketing Lookup 017'
+		dataType: string
+		sourceColumn: Marketing Lookup 017
+
+	column 'Marketing Lookup 017 Owner'
+		dataType: string
+		sourceColumn: Marketing Lookup 017 Owner
+
+	column 'Marketing Lookup 017 Region'
+		dataType: string
+		sourceColumn: Marketing Lookup 017 Region
+
+	column 'Marketing Lookup 017 Code'
+		dataType: string
+		sourceColumn: Marketing Lookup 017 Code
+
+	partition 'Marketing Lookup 017' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Marketing Lookup 017 Key", "Marketing Lookup 017", "Marketing Lookup 017 Owner", "Marketing Lookup 017 Region", "Marketing Lookup 017 Code"}, {})
+				in
+				    Source

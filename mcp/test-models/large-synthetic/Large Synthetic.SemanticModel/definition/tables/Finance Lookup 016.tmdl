@@ -1,0 +1,54 @@
+table 'Finance Lookup 016'
+
+	column 'Finance Lookup 016 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Finance Lookup 016 Key
+
+	column 'Finance Lookup 016'
+		dataType: string
+		sourceColumn: Finance Lookup 016
+
+	column 'Finance Lookup 016 Type'
+		dataType: string
+		sourceColumn: Finance Lookup 016 Type
+
+	column 'Finance Lookup 016 Category'
+		dataType: string
+		sourceColumn: Finance Lookup 016 Category
+
+	column 'Finance Lookup 016 Valid From'
+		dataType: dateTime
+		sourceColumn: Finance Lookup 016 Valid From
+
+	column 'Finance Lookup 016 Parent Code'
+		dataType: string
+		sourceColumn: Finance Lookup 016 Parent Code
+
+	column 'Finance Lookup 016 Rank'
+		dataType: int64
+		sourceColumn: Finance Lookup 016 Rank
+
+	column 'Finance Lookup 016 Group'
+		dataType: string
+		sourceColumn: Finance Lookup 016 Group
+
+	column 'Finance Lookup 016 Description'
+		dataType: string
+		sourceColumn: Finance Lookup 016 Description
+
+	column 'Finance Lookup 016 Sort Order'
+		dataType: int64
+		sourceColumn: Finance Lookup 016 Sort Order
+
+	column 'Finance Lookup 016 Code'
+		dataType: string
+		sourceColumn: Finance Lookup 016 Code
+
+	partition 'Finance Lookup 016' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Finance Lookup 016 Key", "Finance Lookup 016", "Finance Lookup 016 Type", "Finance Lookup 016 Category", "Finance Lookup 016 Valid From", "Finance Lookup 016 Parent Code", "Finance Lookup 016 Rank", "Finance Lookup 016 Group", "Finance Lookup 016 Description", "Finance Lookup 016 Sort Order", "Finance Lookup 016 Code"}, {})
+				in
+				    Source

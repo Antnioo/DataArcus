@@ -1,0 +1,50 @@
+table 'Downtime Reason'
+
+	column 'Downtime Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Downtime Reason Key
+
+	column 'Downtime Reason'
+		dataType: string
+		sourceColumn: Downtime Reason
+
+	column 'Downtime Reason Short Name'
+		dataType: string
+		sourceColumn: Downtime Reason Short Name
+
+	column 'Downtime Reason Owner'
+		dataType: string
+		sourceColumn: Downtime Reason Owner
+
+	column 'Downtime Reason Created By'
+		dataType: string
+		sourceColumn: Downtime Reason Created By
+
+	column 'Downtime Reason Region'
+		dataType: string
+		sourceColumn: Downtime Reason Region
+
+	column 'Downtime Reason Parent Code'
+		dataType: string
+		sourceColumn: Downtime Reason Parent Code
+
+	column 'Downtime Reason External Id'
+		dataType: string
+		sourceColumn: Downtime Reason External Id
+
+	column 'Downtime Reason Code'
+		dataType: string
+		sourceColumn: Downtime Reason Code
+
+	column 'Downtime Reason Description'
+		dataType: string
+		sourceColumn: Downtime Reason Description
+
+	partition 'Downtime Reason' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Downtime Reason Key", "Downtime Reason", "Downtime Reason Short Name", "Downtime Reason Owner", "Downtime Reason Created By", "Downtime Reason Region", "Downtime Reason Parent Code", "Downtime Reason External Id", "Downtime Reason Code", "Downtime Reason Description"}, {})
+				in
+				    Source

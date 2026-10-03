@@ -1,0 +1,121 @@
+table 'GL Entries'
+
+	measure 'GL Entries Total Units' = SUM ( 'GL Entries'[Units] )
+		formatString: #,0
+
+	measure 'GL Entries Average Units' = AVERAGE ( 'GL Entries'[Units] )
+		formatString: #,0.00
+
+	measure 'GL Entries Count' = COUNTROWS ( 'GL Entries' )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'GL Entries Total Units LY' = CALCULATE ( [GL Entries Total Units], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'GL Entries Total Units YoY %' = DIVIDE ( [GL Entries Total Units] - [GL Entries Total Units LY], [GL Entries Total Units LY] )
+		formatString: 0.0%
+
+	measure 'GL Entries Total Units YTD' = TOTALYTD ( [GL Entries Total Units], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'GL Entries Max Units' = MAX ( 'GL Entries'[Units] )
+
+	measure 'GL Entries Units Share %' = DIVIDE ( [GL Entries Total Units], CALCULATE ( [GL Entries Total Units], ALL ( 'GL Entries' ) ) )
+
+	measure 'GL Entries Total Price' = SUM ( 'GL Entries'[Price] )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'GL Entries Average Price' = AVERAGE ( 'GL Entries'[Price] )
+		formatString: #,0.00
+		displayFolder: Finance
+
+	measure 'GL Entries Total Price LY' = CALCULATE ( [GL Entries Total Price], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'GL Entries Total Price YoY %' = DIVIDE ( [GL Entries Total Price] - [GL Entries Total Price LY], [GL Entries Total Price LY] )
+		formatString: 0.0%
+
+	measure 'GL Entries Total Price YTD' = TOTALYTD ( [GL Entries Total Price], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'GL Entries Max Price' = MAX ( 'GL Entries'[Price] )
+		displayFolder: Finance
+
+	/// Made-up measure for the large test model (Finance).
+	measure 'GL Entries Price Share %' = DIVIDE ( [GL Entries Total Price], CALCULATE ( [GL Entries Total Price], ALL ( 'GL Entries' ) ) )
+		displayFolder: Finance
+
+	column 'GL Entrie Id'
+		dataType: int64
+		isHidden
+		sourceColumn: GL Entrie Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Asset Class Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Asset Class Key
+
+	column 'Finance Lookup 023 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Finance Lookup 023 Key
+
+	column 'Payment Term Key'
+		dataType: int64
+		sourceColumn: Payment Term Key
+
+	column 'Account Group Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Account Group Key
+
+	column 'Legal Entity Key'
+		dataType: int64
+		sourceColumn: Legal Entity Key
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column Price
+		dataType: double
+		isHidden
+		sourceColumn: Price
+
+	column 'Weight Kg'
+		dataType: decimal
+		isHidden
+		sourceColumn: Weight Kg
+
+	column 'Duration Minutes'
+		dataType: double
+		sourceColumn: Duration Minutes
+
+	column Cost
+		dataType: decimal
+		isHidden
+		sourceColumn: Cost
+
+	column 'Tax Amount'
+		dataType: double
+		isHidden
+		sourceColumn: Tax Amount
+
+	partition 'GL Entries' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"GL Entrie Id", "Date", "Asset Class Key", "Finance Lookup 023 Key", "Payment Term Key", "Account Group Key", "Legal Entity Key", "Units", "Price", "Weight Kg", "Duration Minutes", "Cost", "Tax Amount"}, {})
+				in
+				    Source

@@ -1,0 +1,38 @@
+table 'Loyalty Tier'
+
+	column 'Loyalty Tier Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Loyalty Tier Key
+
+	column 'Loyalty Tier'
+		dataType: string
+		sourceColumn: Loyalty Tier
+
+	column 'Loyalty Tier Created By'
+		dataType: string
+		sourceColumn: Loyalty Tier Created By
+
+	column 'Loyalty Tier Short Name'
+		dataType: string
+		sourceColumn: Loyalty Tier Short Name
+
+	column 'Loyalty Tier Rank'
+		dataType: int64
+		sourceColumn: Loyalty Tier Rank
+
+	column 'Loyalty Tier Code'
+		dataType: string
+		sourceColumn: Loyalty Tier Code
+
+	column 'Loyalty Tier Description'
+		dataType: string
+		sourceColumn: Loyalty Tier Description
+
+	partition 'Loyalty Tier' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Loyalty Tier Key", "Loyalty Tier", "Loyalty Tier Created By", "Loyalty Tier Short Name", "Loyalty Tier Rank", "Loyalty Tier Code", "Loyalty Tier Description"}, {})
+				in
+				    Source

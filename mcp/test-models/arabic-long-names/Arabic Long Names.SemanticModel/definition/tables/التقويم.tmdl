@@ -1,0 +1,47 @@
+table التقويم
+	dataCategory: Time
+
+	column التاريخ
+		dataType: dateTime
+		isKey
+		sourceColumn: التاريخ
+
+	column السنة
+		dataType: int64
+		sourceColumn: السنة
+
+	column 'رقم الشهر'
+		dataType: int64
+		isHidden
+		sourceColumn: رقم الشهر
+
+	column 'اسم الشهر'
+		dataType: string
+		sortByColumn: 'رقم الشهر'
+		sourceColumn: اسم الشهر
+
+	column 'رقم اليوم في الأسبوع'
+		dataType: int64
+		isHidden
+		sourceColumn: رقم اليوم في الأسبوع
+
+	column 'اسم اليوم'
+		dataType: string
+		sortByColumn: 'رقم اليوم في الأسبوع'
+		sourceColumn: اسم اليوم
+
+	column 'السنة الهجرية'
+		dataType: int64
+		sourceColumn: السنة الهجرية
+
+	column 'هل هو شهر رمضان'
+		dataType: boolean
+		sourceColumn: هل هو شهر رمضان
+
+	partition التقويم = m
+		mode: import
+		source =
+				let
+				    Source = #table({"التاريخ", "السنة", "رقم الشهر", "اسم الشهر", "رقم اليوم في الأسبوع", "اسم اليوم", "السنة الهجرية", "هل هو شهر رمضان"}, {})
+				in
+				    Source

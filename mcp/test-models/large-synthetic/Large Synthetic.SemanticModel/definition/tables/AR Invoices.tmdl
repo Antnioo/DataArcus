@@ -1,0 +1,128 @@
+table 'AR Invoices'
+
+	measure 'AR Invoices Total Price' = SUM ( 'AR Invoices'[Price] )
+		displayFolder: Finance
+
+	measure 'AR Invoices Average Price' = AVERAGE ( 'AR Invoices'[Price] )
+		formatString: #,0.00
+		displayFolder: Finance
+
+	measure 'AR Invoices Count' = COUNTROWS ( 'AR Invoices' )
+		formatString: #,0
+
+	measure 'AR Invoices Total Price LY' = CALCULATE ( [AR Invoices Total Price], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'AR Invoices Total Price YoY %' = DIVIDE ( [AR Invoices Total Price] - [AR Invoices Total Price LY], [AR Invoices Total Price LY] )
+		formatString: 0.0%
+
+	measure 'AR Invoices Total Price YTD' = TOTALYTD ( [AR Invoices Total Price], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'AR Invoices Max Price' = MAX ( 'AR Invoices'[Price] )
+		displayFolder: Finance
+
+	measure 'AR Invoices Price Share %' = DIVIDE ( [AR Invoices Total Price], CALCULATE ( [AR Invoices Total Price], ALL ( 'AR Invoices' ) ) )
+		displayFolder: Finance
+
+	/// Made-up measure for the large test model (Finance).
+	measure 'AR Invoices Total Tax Amount' = SUM ( 'AR Invoices'[Tax Amount] )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'AR Invoices Average Tax Amount' = AVERAGE ( 'AR Invoices'[Tax Amount] )
+
+	measure 'AR Invoices Total Tax Amount LY' = CALCULATE ( [AR Invoices Total Tax Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Finance
+
+	measure 'AR Invoices Total Tax Amount YoY %' = DIVIDE ( [AR Invoices Total Tax Amount] - [AR Invoices Total Tax Amount LY], [AR Invoices Total Tax Amount LY] )
+		formatString: 0.0%
+
+	measure 'AR Invoices Total Tax Amount YTD' = TOTALYTD ( [AR Invoices Total Tax Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Finance
+
+	/// Made-up measure for the large test model (Finance).
+	measure 'AR Invoices Max Tax Amount' = MAX ( 'AR Invoices'[Tax Amount] )
+		displayFolder: Finance
+
+	measure 'AR Invoices Tax Amount Share %' = DIVIDE ( [AR Invoices Total Tax Amount], CALCULATE ( [AR Invoices Total Tax Amount], ALL ( 'AR Invoices' ) ) )
+		displayFolder: Finance
+
+	column 'AR Invoice Id'
+		dataType: int64
+		isHidden
+		sourceColumn: AR Invoice Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Budget Version Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Budget Version Key
+
+	column 'Journal Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Journal Type Key
+
+	column 'Fiscal Period Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Fiscal Period Key
+
+	column 'People Lookup 057 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: People Lookup 057 Key
+
+	column 'Finance Lookup 045 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Finance Lookup 045 Key
+
+	column 'Dimension Set Key'
+		dataType: int64
+		sourceColumn: Dimension Set Key
+
+	column 'Allocation Rule Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Allocation Rule Key
+
+	column 'Finance Lookup 016 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Finance Lookup 016 Key
+
+	column Price
+		dataType: double
+		isHidden
+		sourceColumn: Price
+
+	column 'Tax Amount'
+		dataType: double
+		isHidden
+		sourceColumn: Tax Amount
+
+	column Score
+		dataType: decimal
+		sourceColumn: Score
+
+	column 'Duration Minutes'
+		dataType: decimal
+		isHidden
+		sourceColumn: Duration Minutes
+
+	partition 'AR Invoices' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"AR Invoice Id", "Date", "Budget Version Key", "Journal Type Key", "Fiscal Period Key", "People Lookup 057 Key", "Finance Lookup 045 Key", "Dimension Set Key", "Allocation Rule Key", "Finance Lookup 016 Key", "Price", "Tax Amount", "Score", "Duration Minutes"}, {})
+				in
+				    Source

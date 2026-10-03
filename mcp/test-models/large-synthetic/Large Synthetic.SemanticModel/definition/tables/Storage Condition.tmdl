@@ -1,0 +1,50 @@
+table 'Storage Condition'
+
+	column 'Storage Condition Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Storage Condition Key
+
+	column 'Storage Condition'
+		dataType: string
+		sourceColumn: Storage Condition
+
+	column 'Storage Condition Valid From'
+		dataType: dateTime
+		sourceColumn: Storage Condition Valid From
+
+	column 'Storage Condition Is Active'
+		dataType: boolean
+		sourceColumn: Storage Condition Is Active
+
+	column 'Storage Condition Created By'
+		dataType: string
+		sourceColumn: Storage Condition Created By
+
+	column 'Storage Condition Level'
+		dataType: int64
+		sourceColumn: Storage Condition Level
+
+	column 'Storage Condition Category'
+		dataType: string
+		sourceColumn: Storage Condition Category
+
+	column 'Storage Condition Long Name'
+		dataType: string
+		sourceColumn: Storage Condition Long Name
+
+	column 'Storage Condition Code'
+		dataType: string
+		sourceColumn: Storage Condition Code
+
+	column 'Storage Condition Description'
+		dataType: string
+		sourceColumn: Storage Condition Description
+
+	partition 'Storage Condition' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Storage Condition Key", "Storage Condition", "Storage Condition Valid From", "Storage Condition Is Active", "Storage Condition Created By", "Storage Condition Level", "Storage Condition Category", "Storage Condition Long Name", "Storage Condition Code", "Storage Condition Description"}, {})
+				in
+				    Source

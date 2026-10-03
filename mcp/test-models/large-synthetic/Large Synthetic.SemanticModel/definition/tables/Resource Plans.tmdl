@@ -1,0 +1,111 @@
+table 'Resource Plans'
+
+	measure 'Resource Plans Total Tax Amount' = SUM ( 'Resource Plans'[Tax Amount] )
+		formatString: #,0
+
+	measure 'Resource Plans Average Tax Amount' = AVERAGE ( 'Resource Plans'[Tax Amount] )
+		displayFolder: Projects
+
+	measure 'Resource Plans Count' = COUNTROWS ( 'Resource Plans' )
+		formatString: #,0
+		displayFolder: Projects
+
+	measure 'Resource Plans Total Tax Amount LY' = CALCULATE ( [Resource Plans Total Tax Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Projects
+
+	measure 'Resource Plans Total Tax Amount YoY %' = DIVIDE ( [Resource Plans Total Tax Amount] - [Resource Plans Total Tax Amount LY], [Resource Plans Total Tax Amount LY] )
+		formatString: 0.0%
+		displayFolder: Projects
+
+	measure 'Resource Plans Total Tax Amount YTD' = TOTALYTD ( [Resource Plans Total Tax Amount], 'Calendar'[Date] )
+		displayFolder: Projects
+
+	measure 'Resource Plans Max Tax Amount' = MAX ( 'Resource Plans'[Tax Amount] )
+		displayFolder: Projects
+
+	measure 'Resource Plans Tax Amount Share %' = DIVIDE ( [Resource Plans Total Tax Amount], CALCULATE ( [Resource Plans Total Tax Amount], ALL ( 'Resource Plans' ) ) )
+		displayFolder: Projects
+
+	measure 'Resource Plans Total Cost' = SUM ( 'Resource Plans'[Cost] )
+		formatString: #,0
+		displayFolder: Projects
+
+	measure 'Resource Plans Average Cost' = AVERAGE ( 'Resource Plans'[Cost] )
+		displayFolder: Projects
+
+	measure 'Resource Plans Total Cost LY' = CALCULATE ( [Resource Plans Total Cost], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Projects
+
+	measure 'Resource Plans Total Cost YoY %' = DIVIDE ( [Resource Plans Total Cost] - [Resource Plans Total Cost LY], [Resource Plans Total Cost LY] )
+
+	measure 'Resource Plans Total Cost YTD' = TOTALYTD ( [Resource Plans Total Cost], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Resource Plans Max Cost' = MAX ( 'Resource Plans'[Cost] )
+		displayFolder: Projects
+
+	measure 'Resource Plans Cost Share %' = DIVIDE ( [Resource Plans Total Cost], CALCULATE ( [Resource Plans Total Cost], ALL ( 'Resource Plans' ) ) )
+		displayFolder: Projects
+
+	column 'Resource Plan Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Resource Plan Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Project Key'
+		dataType: int64
+		sourceColumn: Project Key
+
+	column 'Sponsor Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Sponsor Key
+
+	column 'Risk Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Risk Key
+
+	column 'Projects Lookup 008 Key'
+		dataType: int64
+		sourceColumn: Projects Lookup 008 Key
+
+	column 'Phase Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Phase Key
+
+	column 'Tax Amount'
+		dataType: double
+		sourceColumn: Tax Amount
+
+	column Cost
+		dataType: decimal
+		isHidden
+		sourceColumn: Cost
+
+	column 'Net Amount'
+		dataType: decimal
+		sourceColumn: Net Amount
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	partition 'Resource Plans' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Resource Plan Id", "Date", "Project Key", "Sponsor Key", "Risk Key", "Projects Lookup 008 Key", "Phase Key", "Tax Amount", "Cost", "Net Amount", "Quantity", "Units"}, {})
+				in
+				    Source

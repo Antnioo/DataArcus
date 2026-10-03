@@ -1,0 +1,38 @@
+table 'Performance Rating'
+
+	column 'Performance Rating Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Performance Rating Key
+
+	column 'Performance Rating'
+		dataType: string
+		sourceColumn: Performance Rating
+
+	column 'Performance Rating Short Name'
+		dataType: string
+		sourceColumn: Performance Rating Short Name
+
+	column 'Performance Rating Owner'
+		dataType: string
+		sourceColumn: Performance Rating Owner
+
+	column 'Performance Rating Rank'
+		dataType: int64
+		sourceColumn: Performance Rating Rank
+
+	column 'Performance Rating Code'
+		dataType: string
+		sourceColumn: Performance Rating Code
+
+	column 'Performance Rating Description'
+		dataType: string
+		sourceColumn: Performance Rating Description
+
+	partition 'Performance Rating' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Performance Rating Key", "Performance Rating", "Performance Rating Short Name", "Performance Rating Owner", "Performance Rating Rank", "Performance Rating Code", "Performance Rating Description"}, {})
+				in
+				    Source

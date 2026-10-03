@@ -1,0 +1,46 @@
+table 'Milestone Status'
+
+	column 'Milestone Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Milestone Status Key
+
+	column 'Milestone Status'
+		dataType: string
+		sourceColumn: Milestone Status
+
+	column 'Milestone Status Status'
+		dataType: string
+		sourceColumn: Milestone Status Status
+
+	column 'Milestone Status Parent Code'
+		dataType: string
+		sourceColumn: Milestone Status Parent Code
+
+	column 'Milestone Status Notes'
+		dataType: string
+		sourceColumn: Milestone Status Notes
+
+	column 'Milestone Status Code'
+		dataType: string
+		sourceColumn: Milestone Status Code
+
+	column 'Milestone Status Long Name'
+		dataType: string
+		sourceColumn: Milestone Status Long Name
+
+	column 'Milestone Status Description'
+		dataType: string
+		sourceColumn: Milestone Status Description
+
+	column 'Milestone Status Group'
+		dataType: string
+		sourceColumn: Milestone Status Group
+
+	partition 'Milestone Status' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Milestone Status Key", "Milestone Status", "Milestone Status Status", "Milestone Status Parent Code", "Milestone Status Notes", "Milestone Status Code", "Milestone Status Long Name", "Milestone Status Description", "Milestone Status Group"}, {})
+				in
+				    Source

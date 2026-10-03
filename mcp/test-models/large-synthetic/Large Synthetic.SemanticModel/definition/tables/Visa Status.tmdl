@@ -1,0 +1,42 @@
+table 'Visa Status'
+
+	column 'Visa Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Visa Status Key
+
+	column 'Visa Status'
+		dataType: string
+		sourceColumn: Visa Status
+
+	column 'Visa Status Created By'
+		dataType: string
+		sourceColumn: Visa Status Created By
+
+	column 'Visa Status Category'
+		dataType: string
+		sourceColumn: Visa Status Category
+
+	column 'Visa Status Code'
+		dataType: string
+		sourceColumn: Visa Status Code
+
+	column 'Visa Status Long Name'
+		dataType: string
+		sourceColumn: Visa Status Long Name
+
+	column 'Visa Status Description'
+		dataType: string
+		sourceColumn: Visa Status Description
+
+	column 'Visa Status Group'
+		dataType: string
+		sourceColumn: Visa Status Group
+
+	partition 'Visa Status' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Visa Status Key", "Visa Status", "Visa Status Created By", "Visa Status Category", "Visa Status Code", "Visa Status Long Name", "Visa Status Description", "Visa Status Group"}, {})
+				in
+				    Source

@@ -1,0 +1,137 @@
+table 'Purchase Receipts'
+
+	measure 'Purchase Receipts Total Discount' = SUM ( 'Purchase Receipts'[Discount] )
+		formatString: #,0
+		displayFolder: Procurement
+
+	/// Made-up measure for the large test model (Procurement).
+	measure 'Purchase Receipts Average Discount' = AVERAGE ( 'Purchase Receipts'[Discount] )
+		formatString: #,0.00
+		displayFolder: Procurement
+
+	measure 'Purchase Receipts Count' = COUNTROWS ( 'Purchase Receipts' )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Purchase Receipts Total Discount LY' = CALCULATE ( [Purchase Receipts Total Discount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+
+	measure 'Purchase Receipts Total Discount YoY %' = DIVIDE ( [Purchase Receipts Total Discount] - [Purchase Receipts Total Discount LY], [Purchase Receipts Total Discount LY] )
+		displayFolder: Procurement
+
+	measure 'Purchase Receipts Total Discount YTD' = TOTALYTD ( [Purchase Receipts Total Discount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Purchase Receipts Max Discount' = MAX ( 'Purchase Receipts'[Discount] )
+
+	measure 'Purchase Receipts Discount Share %' = DIVIDE ( [Purchase Receipts Total Discount], CALCULATE ( [Purchase Receipts Total Discount], ALL ( 'Purchase Receipts' ) ) )
+		displayFolder: Procurement
+
+	/// Made-up measure for the large test model (Procurement).
+	measure 'Purchase Receipts Total Weight Kg' = SUM ( 'Purchase Receipts'[Weight Kg] )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Purchase Receipts Average Weight Kg' = AVERAGE ( 'Purchase Receipts'[Weight Kg] )
+		formatString: #,0.00
+		displayFolder: Procurement
+
+	/// Made-up measure for the large test model (Procurement).
+	measure 'Purchase Receipts Total Weight Kg LY' = CALCULATE ( [Purchase Receipts Total Weight Kg], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Procurement
+
+	measure 'Purchase Receipts Total Weight Kg YoY %' = DIVIDE ( [Purchase Receipts Total Weight Kg] - [Purchase Receipts Total Weight Kg LY], [Purchase Receipts Total Weight Kg LY] )
+		formatString: 0.0%
+		displayFolder: Procurement
+
+	measure 'Purchase Receipts Total Weight Kg YTD' = TOTALYTD ( [Purchase Receipts Total Weight Kg], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Purchase Receipts Max Weight Kg' = MAX ( 'Purchase Receipts'[Weight Kg] )
+		displayFolder: Procurement
+
+	measure 'Purchase Receipts Weight Kg Share %' = DIVIDE ( [Purchase Receipts Total Weight Kg], CALCULATE ( [Purchase Receipts Total Weight Kg], ALL ( 'Purchase Receipts' ) ) )
+
+	column 'Purchase Receipt Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Purchase Receipt Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Incoterm Key'
+		dataType: int64
+		sourceColumn: Incoterm Key
+
+	column 'Approval Level Key'
+		dataType: int64
+		sourceColumn: Approval Level Key
+
+	column 'Sourcing Event Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Sourcing Event Key
+
+	column 'Buyer Key'
+		dataType: int64
+		sourceColumn: Buyer Key
+
+	column 'Procurement Lookup 032 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Procurement Lookup 032 Key
+
+	column 'Procurement Lookup 025 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Procurement Lookup 025 Key
+
+	column 'Delivery Term Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Delivery Term Key
+
+	column Discount
+		dataType: decimal
+		isHidden
+		sourceColumn: Discount
+
+	column 'Weight Kg'
+		dataType: decimal
+		sourceColumn: Weight Kg
+
+	column Quantity
+		dataType: int64
+		isHidden
+		sourceColumn: Quantity
+
+	column 'Duration Minutes'
+		dataType: decimal
+		isHidden
+		sourceColumn: Duration Minutes
+
+	column Score
+		dataType: double
+		isHidden
+		sourceColumn: Score
+
+	column Amount
+		dataType: decimal
+		sourceColumn: Amount
+
+	column Price
+		dataType: double
+		sourceColumn: Price
+
+	partition 'Purchase Receipts' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Purchase Receipt Id", "Date", "Incoterm Key", "Approval Level Key", "Sourcing Event Key", "Buyer Key", "Procurement Lookup 032 Key", "Procurement Lookup 025 Key", "Delivery Term Key", "Discount", "Weight Kg", "Quantity", "Duration Minutes", "Score", "Amount", "Price"}, {})
+				in
+				    Source

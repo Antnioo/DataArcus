@@ -1,0 +1,117 @@
+table 'Social Posts'
+
+	measure 'Social Posts Total Margin' = SUM ( 'Social Posts'[Margin] )
+		displayFolder: Marketing
+
+	measure 'Social Posts Average Margin' = AVERAGE ( 'Social Posts'[Margin] )
+		formatString: #,0.00
+		displayFolder: Marketing
+
+	measure 'Social Posts Count' = COUNTROWS ( 'Social Posts' )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Social Posts Total Margin LY' = CALCULATE ( [Social Posts Total Margin], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Marketing
+
+	measure 'Social Posts Total Margin YoY %' = DIVIDE ( [Social Posts Total Margin] - [Social Posts Total Margin LY], [Social Posts Total Margin LY] )
+		formatString: 0.0%
+
+	measure 'Social Posts Total Margin YTD' = TOTALYTD ( [Social Posts Total Margin], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Social Posts Max Margin' = MAX ( 'Social Posts'[Margin] )
+		displayFolder: Marketing
+
+	measure 'Social Posts Margin Share %' = DIVIDE ( [Social Posts Total Margin], CALCULATE ( [Social Posts Total Margin], ALL ( 'Social Posts' ) ) )
+		displayFolder: Marketing
+
+	measure 'Social Posts Total Score' = SUM ( 'Social Posts'[Score] )
+		formatString: #,0
+		displayFolder: Marketing
+
+	/// Made-up measure for the large test model (Marketing).
+	measure 'Social Posts Average Score' = AVERAGE ( 'Social Posts'[Score] )
+		formatString: #,0.00
+		displayFolder: Marketing
+
+	measure 'Social Posts Total Score LY' = CALCULATE ( [Social Posts Total Score], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Social Posts Total Score YoY %' = DIVIDE ( [Social Posts Total Score] - [Social Posts Total Score LY], [Social Posts Total Score LY] )
+		formatString: 0.0%
+		displayFolder: Marketing
+
+	measure 'Social Posts Total Score YTD' = TOTALYTD ( [Social Posts Total Score], 'Calendar'[Date] )
+		displayFolder: Marketing
+
+	/// Made-up measure for the large test model (Marketing).
+	measure 'Social Posts Max Score' = MAX ( 'Social Posts'[Score] )
+
+	measure 'Social Posts Score Share %' = DIVIDE ( [Social Posts Total Score], CALCULATE ( [Social Posts Total Score], ALL ( 'Social Posts' ) ) )
+		displayFolder: Marketing
+
+	column 'Social Post Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Social Post Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Question Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Question Key
+
+	column 'Lead Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Lead Status Key
+
+	column 'Content Type Key'
+		dataType: int64
+		sourceColumn: Content Type Key
+
+	column 'Campaign Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Campaign Type Key
+
+	column Margin
+		dataType: decimal
+		sourceColumn: Margin
+
+	column Score
+		dataType: decimal
+		isHidden
+		sourceColumn: Score
+
+	column Price
+		dataType: decimal
+		sourceColumn: Price
+
+	column Cost
+		dataType: decimal
+		isHidden
+		sourceColumn: Cost
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column 'Tax Amount'
+		dataType: double
+		isHidden
+		sourceColumn: Tax Amount
+
+	partition 'Social Posts' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Social Post Id", "Date", "Question Key", "Lead Status Key", "Content Type Key", "Campaign Type Key", "Margin", "Score", "Price", "Cost", "Units", "Tax Amount"}, {})
+				in
+				    Source

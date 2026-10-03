@@ -1,0 +1,50 @@
+table 'Client Program'
+
+	column 'Client Program Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Client Program Key
+
+	column 'Client Program'
+		dataType: string
+		sourceColumn: Client Program
+
+	column 'Client Program Owner'
+		dataType: string
+		sourceColumn: Client Program Owner
+
+	column 'Client Program Long Name'
+		dataType: string
+		sourceColumn: Client Program Long Name
+
+	column 'Client Program Region'
+		dataType: string
+		sourceColumn: Client Program Region
+
+	column 'Client Program Created By'
+		dataType: string
+		sourceColumn: Client Program Created By
+
+	column 'Client Program Group'
+		dataType: string
+		sourceColumn: Client Program Group
+
+	column 'Client Program Description'
+		dataType: string
+		sourceColumn: Client Program Description
+
+	column 'Client Program Code'
+		dataType: string
+		sourceColumn: Client Program Code
+
+	column 'Client Program Category'
+		dataType: string
+		sourceColumn: Client Program Category
+
+	partition 'Client Program' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Client Program Key", "Client Program", "Client Program Owner", "Client Program Long Name", "Client Program Region", "Client Program Created By", "Client Program Group", "Client Program Description", "Client Program Code", "Client Program Category"}, {})
+				in
+				    Source

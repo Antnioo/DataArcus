@@ -1,0 +1,99 @@
+table Calendar
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		isKey
+		sourceColumn: Date
+
+	column Year
+		dataType: int64
+		sourceColumn: Year
+
+	column Quarter
+		dataType: string
+		sourceColumn: Quarter
+
+	column 'Year Quarter'
+		dataType: string
+		sourceColumn: Year Quarter
+
+	column 'Month Number'
+		dataType: int64
+		isHidden
+		sourceColumn: Month Number
+
+	column 'Month Name'
+		dataType: string
+		sortByColumn: 'Month Number'
+		sourceColumn: Month Name
+
+	column 'Month Short'
+		dataType: string
+		sortByColumn: 'Month Number'
+		sourceColumn: Month Short
+
+	column 'Year Month'
+		dataType: string
+		sortByColumn: 'Year Month Number'
+		sourceColumn: Year Month
+
+	column 'Year Month Number'
+		dataType: int64
+		isHidden
+		sourceColumn: Year Month Number
+
+	column Day
+		dataType: int64
+		sourceColumn: Day
+
+	column 'Weekday Number'
+		dataType: int64
+		isHidden
+		sourceColumn: Weekday Number
+
+	column 'Day Name'
+		dataType: string
+		sortByColumn: 'Weekday Number'
+		sourceColumn: Day Name
+
+	column 'Week Of Year'
+		dataType: int64
+		sourceColumn: Week Of Year
+
+	column 'Is Weekend'
+		dataType: boolean
+		sourceColumn: Is Weekend
+
+	column 'Fiscal Year'
+		dataType: string
+		sourceColumn: Fiscal Year
+
+	column 'Fiscal Quarter'
+		dataType: string
+		sourceColumn: Fiscal Quarter
+
+	column 'Fiscal Month Number'
+		dataType: int64
+		isHidden
+		sourceColumn: Fiscal Month Number
+
+	column 'Hijri Year'
+		dataType: int64
+		sourceColumn: Hijri Year
+
+	column 'Hijri Month Number'
+		dataType: int64
+		sourceColumn: Hijri Month Number
+
+	column 'Is Ramadan'
+		dataType: boolean
+		sourceColumn: Is Ramadan
+
+	partition Calendar = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Date", "Year", "Quarter", "Year Quarter", "Month Number", "Month Name", "Month Short", "Year Month", "Year Month Number", "Day", "Weekday Number", "Day Name", "Week Of Year", "Is Weekend", "Fiscal Year", "Fiscal Quarter", "Fiscal Month Number", "Hijri Year", "Hijri Month Number", "Is Ramadan"}, {})
+				in
+				    Source

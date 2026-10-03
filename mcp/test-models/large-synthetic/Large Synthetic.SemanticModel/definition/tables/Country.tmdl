@@ -1,0 +1,58 @@
+table Country
+
+	column 'Country Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Country Key
+
+	column Country
+		dataType: string
+		sourceColumn: Country
+
+	column 'Country Owner'
+		dataType: string
+		sourceColumn: Country Owner
+
+	column 'Country Long Name'
+		dataType: string
+		sourceColumn: Country Long Name
+
+	column 'Country Rank'
+		dataType: int64
+		sourceColumn: Country Rank
+
+	column 'Country Level'
+		dataType: int64
+		sourceColumn: Country Level
+
+	column 'Country Notes'
+		dataType: string
+		sourceColumn: Country Notes
+
+	column 'Country Valid To'
+		dataType: dateTime
+		sourceColumn: Country Valid To
+
+	column 'Country Code'
+		dataType: string
+		sourceColumn: Country Code
+
+	column 'Country External Id'
+		dataType: string
+		sourceColumn: Country External Id
+
+	column 'Country Description'
+		dataType: string
+		sourceColumn: Country Description
+
+	column 'Country Group'
+		dataType: string
+		sourceColumn: Country Group
+
+	partition Country = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Country Key", "Country", "Country Owner", "Country Long Name", "Country Rank", "Country Level", "Country Notes", "Country Valid To", "Country Code", "Country External Id", "Country Description", "Country Group"}, {})
+				in
+				    Source

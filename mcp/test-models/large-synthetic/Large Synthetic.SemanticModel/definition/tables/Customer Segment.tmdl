@@ -1,0 +1,50 @@
+table 'Customer Segment'
+
+	column 'Customer Segment Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Customer Segment Key
+
+	column 'Customer Segment'
+		dataType: string
+		sourceColumn: Customer Segment
+
+	column 'Customer Segment Is Active'
+		dataType: boolean
+		sourceColumn: Customer Segment Is Active
+
+	column 'Customer Segment Short Name'
+		dataType: string
+		sourceColumn: Customer Segment Short Name
+
+	column 'Customer Segment Group'
+		dataType: string
+		sourceColumn: Customer Segment Group
+
+	column 'Customer Segment Long Name'
+		dataType: string
+		sourceColumn: Customer Segment Long Name
+
+	column 'Customer Segment Region'
+		dataType: string
+		sourceColumn: Customer Segment Region
+
+	column 'Customer Segment External Id'
+		dataType: string
+		sourceColumn: Customer Segment External Id
+
+	column 'Customer Segment Code'
+		dataType: string
+		sourceColumn: Customer Segment Code
+
+	column 'Customer Segment Description'
+		dataType: string
+		sourceColumn: Customer Segment Description
+
+	partition 'Customer Segment' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Customer Segment Key", "Customer Segment", "Customer Segment Is Active", "Customer Segment Short Name", "Customer Segment Group", "Customer Segment Long Name", "Customer Segment Region", "Customer Segment External Id", "Customer Segment Code", "Customer Segment Description"}, {})
+				in
+				    Source

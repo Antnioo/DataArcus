@@ -1,0 +1,54 @@
+table Risk
+
+	column 'Risk Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Risk Key
+
+	column Risk
+		dataType: string
+		sourceColumn: Risk
+
+	column 'Risk Long Name'
+		dataType: string
+		sourceColumn: Risk Long Name
+
+	column 'Risk Rank'
+		dataType: int64
+		sourceColumn: Risk Rank
+
+	column 'Risk Sort Order'
+		dataType: int64
+		sourceColumn: Risk Sort Order
+
+	column 'Risk External Id'
+		dataType: string
+		sourceColumn: Risk External Id
+
+	column 'Risk Code'
+		dataType: string
+		sourceColumn: Risk Code
+
+	column 'Risk Level'
+		dataType: int64
+		sourceColumn: Risk Level
+
+	column 'Risk Description'
+		dataType: string
+		sourceColumn: Risk Description
+
+	column 'Risk Group'
+		dataType: string
+		sourceColumn: Risk Group
+
+	column 'Risk Category'
+		dataType: string
+		sourceColumn: Risk Category
+
+	partition Risk = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Risk Key", "Risk", "Risk Long Name", "Risk Rank", "Risk Sort Order", "Risk External Id", "Risk Code", "Risk Level", "Risk Description", "Risk Group", "Risk Category"}, {})
+				in
+				    Source

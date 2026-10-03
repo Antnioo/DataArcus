@@ -1,0 +1,134 @@
+table 'Payroll Lines'
+
+	measure 'Payroll Lines Total Tax Amount' = SUM ( 'Payroll Lines'[Tax Amount] )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Payroll Lines Average Tax Amount' = AVERAGE ( 'Payroll Lines'[Tax Amount] )
+		displayFolder: People
+
+	measure 'Payroll Lines Count' = COUNTROWS ( 'Payroll Lines' )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Payroll Lines Total Tax Amount LY' = CALCULATE ( [Payroll Lines Total Tax Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: People
+
+	measure 'Payroll Lines Total Tax Amount YoY %' = DIVIDE ( [Payroll Lines Total Tax Amount] - [Payroll Lines Total Tax Amount LY], [Payroll Lines Total Tax Amount LY] )
+		formatString: 0.0%
+
+	measure 'Payroll Lines Total Tax Amount YTD' = TOTALYTD ( [Payroll Lines Total Tax Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Payroll Lines Max Tax Amount' = MAX ( 'Payroll Lines'[Tax Amount] )
+		displayFolder: People
+
+	measure 'Payroll Lines Tax Amount Share %' = DIVIDE ( [Payroll Lines Total Tax Amount], CALCULATE ( [Payroll Lines Total Tax Amount], ALL ( 'Payroll Lines' ) ) )
+		displayFolder: People
+
+	measure 'Payroll Lines Total Net Amount' = SUM ( 'Payroll Lines'[Net Amount] )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Payroll Lines Average Net Amount' = AVERAGE ( 'Payroll Lines'[Net Amount] )
+		displayFolder: People
+
+	measure 'Payroll Lines Total Net Amount LY' = CALCULATE ( [Payroll Lines Total Net Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Payroll Lines Total Net Amount YoY %' = DIVIDE ( [Payroll Lines Total Net Amount] - [Payroll Lines Total Net Amount LY], [Payroll Lines Total Net Amount LY] )
+		formatString: 0.0%
+		displayFolder: People
+
+	measure 'Payroll Lines Total Net Amount YTD' = TOTALYTD ( [Payroll Lines Total Net Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Payroll Lines Max Net Amount' = MAX ( 'Payroll Lines'[Net Amount] )
+
+	measure 'Payroll Lines Net Amount Share %' = DIVIDE ( [Payroll Lines Total Net Amount], CALCULATE ( [Payroll Lines Total Net Amount], ALL ( 'Payroll Lines' ) ) )
+		displayFolder: People
+
+	column 'Payroll Line Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Payroll Line Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'People Lookup 020 Key'
+		dataType: int64
+		sourceColumn: People Lookup 020 Key
+
+	column 'Performance Rating Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Performance Rating Key
+
+	column 'Nationality Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Nationality Key
+
+	column 'People Lookup 022 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: People Lookup 022 Key
+
+	column 'Job Title Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Job Title Key
+
+	column 'Tax Amount'
+		dataType: decimal
+		sourceColumn: Tax Amount
+
+	column 'Net Amount'
+		dataType: double
+		isHidden
+		sourceColumn: Net Amount
+
+	column Cost
+		dataType: double
+		isHidden
+		sourceColumn: Cost
+
+	column Value
+		dataType: decimal
+		sourceColumn: Value
+
+	column Hours
+		dataType: decimal
+		sourceColumn: Hours
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	column Price
+		dataType: double
+		sourceColumn: Price
+
+	column Discount
+		dataType: double
+		sourceColumn: Discount
+
+	column Score
+		dataType: decimal
+		isHidden
+		sourceColumn: Score
+
+	partition 'Payroll Lines' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Payroll Line Id", "Date", "People Lookup 020 Key", "Performance Rating Key", "Nationality Key", "People Lookup 022 Key", "Job Title Key", "Tax Amount", "Net Amount", "Cost", "Value", "Hours", "Count", "Price", "Discount", "Score"}, {})
+				in
+				    Source

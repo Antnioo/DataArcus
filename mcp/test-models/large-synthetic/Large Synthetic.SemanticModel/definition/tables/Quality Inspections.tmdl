@@ -1,0 +1,130 @@
+table 'Quality Inspections'
+
+	measure 'Quality Inspections Total Cost' = SUM ( 'Quality Inspections'[Cost] )
+		formatString: #,0
+
+	measure 'Quality Inspections Average Cost' = AVERAGE ( 'Quality Inspections'[Cost] )
+		displayFolder: Production
+
+	/// Made-up measure for the large test model (Production).
+	measure 'Quality Inspections Count' = COUNTROWS ( 'Quality Inspections' )
+		displayFolder: Production
+
+	measure 'Quality Inspections Total Cost LY' = CALCULATE ( [Quality Inspections Total Cost], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Quality Inspections Total Cost YoY %' = DIVIDE ( [Quality Inspections Total Cost] - [Quality Inspections Total Cost LY], [Quality Inspections Total Cost LY] )
+		formatString: 0.0%
+		displayFolder: Production
+
+	measure 'Quality Inspections Total Cost YTD' = TOTALYTD ( [Quality Inspections Total Cost], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Quality Inspections Max Cost' = MAX ( 'Quality Inspections'[Cost] )
+		displayFolder: Production
+
+	measure 'Quality Inspections Cost Share %' = DIVIDE ( [Quality Inspections Total Cost], CALCULATE ( [Quality Inspections Total Cost], ALL ( 'Quality Inspections' ) ) )
+
+	measure 'Quality Inspections Total Tax Amount' = SUM ( 'Quality Inspections'[Tax Amount] )
+		formatString: #,0
+
+	measure 'Quality Inspections Average Tax Amount' = AVERAGE ( 'Quality Inspections'[Tax Amount] )
+		formatString: #,0.00
+		displayFolder: Production
+
+	measure 'Quality Inspections Total Tax Amount LY' = CALCULATE ( [Quality Inspections Total Tax Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+
+	measure 'Quality Inspections Total Tax Amount YoY %' = DIVIDE ( [Quality Inspections Total Tax Amount] - [Quality Inspections Total Tax Amount LY], [Quality Inspections Total Tax Amount LY] )
+		formatString: 0.0%
+		displayFolder: Production
+
+	/// Made-up measure for the large test model (Production).
+	measure 'Quality Inspections Total Tax Amount YTD' = TOTALYTD ( [Quality Inspections Total Tax Amount], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Quality Inspections Max Tax Amount' = MAX ( 'Quality Inspections'[Tax Amount] )
+		displayFolder: Production
+
+	measure 'Quality Inspections Tax Amount Share %' = DIVIDE ( [Quality Inspections Total Tax Amount], CALCULATE ( [Quality Inspections Total Tax Amount], ALL ( 'Quality Inspections' ) ) )
+		displayFolder: Production
+
+	column 'Quality Inspection Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Quality Inspection Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Production Lookup 001 Key'
+		dataType: int64
+		sourceColumn: Production Lookup 001 Key
+
+	column 'Machine Key'
+		dataType: int64
+		sourceColumn: Machine Key
+
+	column 'Downtime Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Downtime Reason Key
+
+	column 'Maintenance Type Key'
+		dataType: int64
+		sourceColumn: Maintenance Type Key
+
+	column Cost
+		dataType: decimal
+		isHidden
+		sourceColumn: Cost
+
+	column 'Tax Amount'
+		dataType: decimal
+		isHidden
+		sourceColumn: Tax Amount
+
+	column Units
+		dataType: int64
+		isHidden
+		sourceColumn: Units
+
+	column Hours
+		dataType: decimal
+		isHidden
+		sourceColumn: Hours
+
+	column Value
+		dataType: double
+		isHidden
+		sourceColumn: Value
+
+	column 'Net Amount'
+		dataType: decimal
+		sourceColumn: Net Amount
+
+	column Score
+		dataType: double
+		isHidden
+		sourceColumn: Score
+
+	column 'Weight Kg'
+		dataType: double
+		isHidden
+		sourceColumn: Weight Kg
+
+	column Discount
+		dataType: double
+		sourceColumn: Discount
+
+	partition 'Quality Inspections' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Quality Inspection Id", "Date", "Production Lookup 001 Key", "Machine Key", "Downtime Reason Key", "Maintenance Type Key", "Cost", "Tax Amount", "Units", "Hours", "Value", "Net Amount", "Score", "Weight Kg", "Discount"}, {})
+				in
+				    Source

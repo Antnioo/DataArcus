@@ -1,0 +1,58 @@
+table 'Pay Element'
+
+	column 'Pay Element Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Pay Element Key
+
+	column 'Pay Element'
+		dataType: string
+		sourceColumn: Pay Element
+
+	column 'Pay Element Valid From'
+		dataType: dateTime
+		sourceColumn: Pay Element Valid From
+
+	column 'Pay Element Valid To'
+		dataType: dateTime
+		sourceColumn: Pay Element Valid To
+
+	column 'Pay Element Type'
+		dataType: string
+		sourceColumn: Pay Element Type
+
+	column 'Pay Element Long Name'
+		dataType: string
+		sourceColumn: Pay Element Long Name
+
+	column 'Pay Element Short Name'
+		dataType: string
+		sourceColumn: Pay Element Short Name
+
+	column 'Pay Element Category'
+		dataType: string
+		sourceColumn: Pay Element Category
+
+	column 'Pay Element Rank'
+		dataType: int64
+		sourceColumn: Pay Element Rank
+
+	column 'Pay Element Owner'
+		dataType: string
+		sourceColumn: Pay Element Owner
+
+	column 'Pay Element Code'
+		dataType: string
+		sourceColumn: Pay Element Code
+
+	column 'Pay Element Description'
+		dataType: string
+		sourceColumn: Pay Element Description
+
+	partition 'Pay Element' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Pay Element Key", "Pay Element", "Pay Element Valid From", "Pay Element Valid To", "Pay Element Type", "Pay Element Long Name", "Pay Element Short Name", "Pay Element Category", "Pay Element Rank", "Pay Element Owner", "Pay Element Code", "Pay Element Description"}, {})
+				in
+				    Source

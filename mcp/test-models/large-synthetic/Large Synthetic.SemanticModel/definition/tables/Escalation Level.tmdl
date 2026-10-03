@@ -1,0 +1,38 @@
+table 'Escalation Level'
+
+	column 'Escalation Level Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Escalation Level Key
+
+	column 'Escalation Level'
+		dataType: string
+		sourceColumn: Escalation Level
+
+	column 'Escalation Level Level'
+		dataType: int64
+		sourceColumn: Escalation Level Level
+
+	column 'Escalation Level Status'
+		dataType: string
+		sourceColumn: Escalation Level Status
+
+	column 'Escalation Level Long Name'
+		dataType: string
+		sourceColumn: Escalation Level Long Name
+
+	column 'Escalation Level Code'
+		dataType: string
+		sourceColumn: Escalation Level Code
+
+	column 'Escalation Level Description'
+		dataType: string
+		sourceColumn: Escalation Level Description
+
+	partition 'Escalation Level' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Escalation Level Key", "Escalation Level", "Escalation Level Level", "Escalation Level Status", "Escalation Level Long Name", "Escalation Level Code", "Escalation Level Description"}, {})
+				in
+				    Source

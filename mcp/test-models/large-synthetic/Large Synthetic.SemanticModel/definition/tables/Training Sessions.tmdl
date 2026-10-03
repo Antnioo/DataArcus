@@ -1,0 +1,134 @@
+table 'Training Sessions'
+
+	measure 'Training Sessions Total Units' = SUM ( 'Training Sessions'[Units] )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Training Sessions Average Units' = AVERAGE ( 'Training Sessions'[Units] )
+		formatString: #,0.00
+		displayFolder: People
+
+	measure 'Training Sessions Count' = COUNTROWS ( 'Training Sessions' )
+
+	measure 'Training Sessions Total Units LY' = CALCULATE ( [Training Sessions Total Units], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: People
+
+	/// Made-up measure for the large test model (People).
+	measure 'Training Sessions Total Units YoY %' = DIVIDE ( [Training Sessions Total Units] - [Training Sessions Total Units LY], [Training Sessions Total Units LY] )
+		formatString: 0.0%
+		displayFolder: People
+
+	measure 'Training Sessions Total Units YTD' = TOTALYTD ( [Training Sessions Total Units], 'Calendar'[Date] )
+		formatString: #,0
+
+	/// Made-up measure for the large test model (People).
+	measure 'Training Sessions Max Units' = MAX ( 'Training Sessions'[Units] )
+		displayFolder: People
+
+	measure 'Training Sessions Units Share %' = DIVIDE ( [Training Sessions Total Units], CALCULATE ( [Training Sessions Total Units], ALL ( 'Training Sessions' ) ) )
+
+	measure 'Training Sessions Total Net Amount' = SUM ( 'Training Sessions'[Net Amount] )
+		formatString: #,0
+
+	measure 'Training Sessions Average Net Amount' = AVERAGE ( 'Training Sessions'[Net Amount] )
+		formatString: #,0.00
+		displayFolder: People
+
+	measure 'Training Sessions Total Net Amount LY' = CALCULATE ( [Training Sessions Total Net Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: People
+
+	measure 'Training Sessions Total Net Amount YoY %' = DIVIDE ( [Training Sessions Total Net Amount] - [Training Sessions Total Net Amount LY], [Training Sessions Total Net Amount LY] )
+		displayFolder: People
+
+	measure 'Training Sessions Total Net Amount YTD' = TOTALYTD ( [Training Sessions Total Net Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Training Sessions Max Net Amount' = MAX ( 'Training Sessions'[Net Amount] )
+		displayFolder: People
+
+	measure 'Training Sessions Net Amount Share %' = DIVIDE ( [Training Sessions Total Net Amount], CALCULATE ( [Training Sessions Total Net Amount], ALL ( 'Training Sessions' ) ) )
+
+	column 'Training Session Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Training Session Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Pay Element Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Pay Element Key
+
+	column 'Work Location Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Work Location Key
+
+	column 'Manager Key'
+		dataType: int64
+		sourceColumn: Manager Key
+
+	column 'Recruiter Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Recruiter Key
+
+	column 'Job Title Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Job Title Key
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column 'Net Amount'
+		dataType: decimal
+		sourceColumn: Net Amount
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	column Value
+		dataType: decimal
+		isHidden
+		sourceColumn: Value
+
+	column Score
+		dataType: double
+		sourceColumn: Score
+
+	column Amount
+		dataType: decimal
+		sourceColumn: Amount
+
+	column Price
+		dataType: decimal
+		isHidden
+		sourceColumn: Price
+
+	column 'Weight Kg'
+		dataType: decimal
+		isHidden
+		sourceColumn: Weight Kg
+
+	column Discount
+		dataType: double
+		isHidden
+		sourceColumn: Discount
+
+	partition 'Training Sessions' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Training Session Id", "Date", "Pay Element Key", "Work Location Key", "Manager Key", "Recruiter Key", "Job Title Key", "Units", "Net Amount", "Count", "Value", "Score", "Amount", "Price", "Weight Kg", "Discount"}, {})
+				in
+				    Source

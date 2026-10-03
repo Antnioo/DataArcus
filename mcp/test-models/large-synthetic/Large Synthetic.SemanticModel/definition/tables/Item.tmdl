@@ -1,0 +1,42 @@
+table Item
+
+	column 'Item Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Item Key
+
+	column Item
+		dataType: string
+		sourceColumn: Item
+
+	column 'Item Region'
+		dataType: string
+		sourceColumn: Item Region
+
+	column 'Item Valid To'
+		dataType: dateTime
+		sourceColumn: Item Valid To
+
+	column 'Item Created By'
+		dataType: string
+		sourceColumn: Item Created By
+
+	column 'Item Parent Code'
+		dataType: string
+		sourceColumn: Item Parent Code
+
+	column 'Item Code'
+		dataType: string
+		sourceColumn: Item Code
+
+	column 'Item Description'
+		dataType: string
+		sourceColumn: Item Description
+
+	partition Item = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Item Key", "Item", "Item Region", "Item Valid To", "Item Created By", "Item Parent Code", "Item Code", "Item Description"}, {})
+				in
+				    Source

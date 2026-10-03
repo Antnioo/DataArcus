@@ -1,0 +1,42 @@
+table Ledger
+
+	column 'Ledger Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Ledger Key
+
+	column Ledger
+		dataType: string
+		sourceColumn: Ledger
+
+	column 'Ledger Region'
+		dataType: string
+		sourceColumn: Ledger Region
+
+	column 'Ledger Owner'
+		dataType: string
+		sourceColumn: Ledger Owner
+
+	column 'Ledger Parent Code'
+		dataType: string
+		sourceColumn: Ledger Parent Code
+
+	column 'Ledger Category'
+		dataType: string
+		sourceColumn: Ledger Category
+
+	column 'Ledger Code'
+		dataType: string
+		sourceColumn: Ledger Code
+
+	column 'Ledger Description'
+		dataType: string
+		sourceColumn: Ledger Description
+
+	partition Ledger = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Ledger Key", "Ledger", "Ledger Region", "Ledger Owner", "Ledger Parent Code", "Ledger Category", "Ledger Code", "Ledger Description"}, {})
+				in
+				    Source

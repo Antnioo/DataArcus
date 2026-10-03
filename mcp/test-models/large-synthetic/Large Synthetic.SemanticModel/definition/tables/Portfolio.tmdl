@@ -1,0 +1,54 @@
+table Portfolio
+
+	column 'Portfolio Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Portfolio Key
+
+	column Portfolio
+		dataType: string
+		sourceColumn: Portfolio
+
+	column 'Portfolio Group'
+		dataType: string
+		sourceColumn: Portfolio Group
+
+	column 'Portfolio Region'
+		dataType: string
+		sourceColumn: Portfolio Region
+
+	column 'Portfolio Parent Code'
+		dataType: string
+		sourceColumn: Portfolio Parent Code
+
+	column 'Portfolio External Id'
+		dataType: string
+		sourceColumn: Portfolio External Id
+
+	column 'Portfolio Description'
+		dataType: string
+		sourceColumn: Portfolio Description
+
+	column 'Portfolio Sort Order'
+		dataType: int64
+		sourceColumn: Portfolio Sort Order
+
+	column 'Portfolio Code'
+		dataType: string
+		sourceColumn: Portfolio Code
+
+	column 'Portfolio Category'
+		dataType: string
+		sourceColumn: Portfolio Category
+
+	column 'Portfolio Type'
+		dataType: string
+		sourceColumn: Portfolio Type
+
+	partition Portfolio = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Portfolio Key", "Portfolio", "Portfolio Group", "Portfolio Region", "Portfolio Parent Code", "Portfolio External Id", "Portfolio Description", "Portfolio Sort Order", "Portfolio Code", "Portfolio Category", "Portfolio Type"}, {})
+				in
+				    Source

@@ -1,0 +1,106 @@
+table Bookings
+
+	/// Made-up measure for the large test model (Hospitality).
+	measure 'Bookings Total Margin' = SUM ( Bookings[Margin] )
+
+	measure 'Bookings Average Margin' = AVERAGE ( Bookings[Margin] )
+		formatString: #,0.00
+		displayFolder: Hospitality
+
+	measure 'Bookings Count' = COUNTROWS ( Bookings )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	measure 'Bookings Total Margin LY' = CALCULATE ( [Bookings Total Margin], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	measure 'Bookings Total Margin YoY %' = DIVIDE ( [Bookings Total Margin] - [Bookings Total Margin LY], [Bookings Total Margin LY] )
+		formatString: 0.0%
+		displayFolder: Hospitality
+
+	measure 'Bookings Total Margin YTD' = TOTALYTD ( [Bookings Total Margin], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	measure 'Bookings Max Margin' = MAX ( Bookings[Margin] )
+		displayFolder: Hospitality
+
+	measure 'Bookings Margin Share %' = DIVIDE ( [Bookings Total Margin], CALCULATE ( [Bookings Total Margin], ALL ( Bookings ) ) )
+		displayFolder: Hospitality
+
+	measure 'Bookings Total Net Amount' = SUM ( Bookings[Net Amount] )
+		formatString: #,0
+
+	measure 'Bookings Average Net Amount' = AVERAGE ( Bookings[Net Amount] )
+		formatString: #,0.00
+		displayFolder: Hospitality
+
+	measure 'Bookings Total Net Amount LY' = CALCULATE ( [Bookings Total Net Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	/// Made-up measure for the large test model (Hospitality).
+	measure 'Bookings Total Net Amount YoY %' = DIVIDE ( [Bookings Total Net Amount] - [Bookings Total Net Amount LY], [Bookings Total Net Amount LY] )
+		formatString: 0.0%
+		displayFolder: Hospitality
+
+	/// Made-up measure for the large test model (Hospitality).
+	measure 'Bookings Total Net Amount YTD' = TOTALYTD ( [Bookings Total Net Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	/// Made-up measure for the large test model (Hospitality).
+	measure 'Bookings Max Net Amount' = MAX ( Bookings[Net Amount] )
+		displayFolder: Hospitality
+
+	measure 'Bookings Net Amount Share %' = DIVIDE ( [Bookings Total Net Amount], CALCULATE ( [Bookings Total Net Amount], ALL ( Bookings ) ) )
+
+	column 'Booking Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Booking Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Review Site Key'
+		dataType: int64
+		sourceColumn: Review Site Key
+
+	column 'Risk Key'
+		dataType: int64
+		sourceColumn: Risk Key
+
+	column 'Room Type Key'
+		dataType: int64
+		sourceColumn: Room Type Key
+
+	column Margin
+		dataType: double
+		sourceColumn: Margin
+
+	column 'Net Amount'
+		dataType: double
+		isHidden
+		sourceColumn: Net Amount
+
+	column Cost
+		dataType: double
+		isHidden
+		sourceColumn: Cost
+
+	column Score
+		dataType: double
+		isHidden
+		sourceColumn: Score
+
+	partition Bookings = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Booking Id", "Date", "Review Site Key", "Risk Key", "Room Type Key", "Margin", "Net Amount", "Cost", "Score"}, {})
+				in
+				    Source

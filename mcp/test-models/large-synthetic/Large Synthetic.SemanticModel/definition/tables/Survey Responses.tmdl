@@ -1,0 +1,118 @@
+table 'Survey Responses'
+
+	measure 'Survey Responses Total Net Amount' = SUM ( 'Survey Responses'[Net Amount] )
+		displayFolder: Marketing
+
+	/// Made-up measure for the large test model (Marketing).
+	measure 'Survey Responses Average Net Amount' = AVERAGE ( 'Survey Responses'[Net Amount] )
+		formatString: #,0.00
+		displayFolder: Marketing
+
+	/// Made-up measure for the large test model (Marketing).
+	measure 'Survey Responses Count' = COUNTROWS ( 'Survey Responses' )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Survey Responses Total Net Amount LY' = CALCULATE ( [Survey Responses Total Net Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Survey Responses Total Net Amount YoY %' = DIVIDE ( [Survey Responses Total Net Amount] - [Survey Responses Total Net Amount LY], [Survey Responses Total Net Amount LY] )
+
+	measure 'Survey Responses Total Net Amount YTD' = TOTALYTD ( [Survey Responses Total Net Amount], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Survey Responses Max Net Amount' = MAX ( 'Survey Responses'[Net Amount] )
+
+	measure 'Survey Responses Net Amount Share %' = DIVIDE ( [Survey Responses Total Net Amount], CALCULATE ( [Survey Responses Total Net Amount], ALL ( 'Survey Responses' ) ) )
+
+	measure 'Survey Responses Total Quantity' = SUM ( 'Survey Responses'[Quantity] )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Survey Responses Average Quantity' = AVERAGE ( 'Survey Responses'[Quantity] )
+		formatString: #,0.00
+		displayFolder: Marketing
+
+	measure 'Survey Responses Total Quantity LY' = CALCULATE ( [Survey Responses Total Quantity], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Survey Responses Total Quantity YoY %' = DIVIDE ( [Survey Responses Total Quantity] - [Survey Responses Total Quantity LY], [Survey Responses Total Quantity LY] )
+		formatString: 0.0%
+		displayFolder: Marketing
+
+	measure 'Survey Responses Total Quantity YTD' = TOTALYTD ( [Survey Responses Total Quantity], 'Calendar'[Date] )
+		displayFolder: Marketing
+
+	measure 'Survey Responses Max Quantity' = MAX ( 'Survey Responses'[Quantity] )
+		displayFolder: Marketing
+
+	measure 'Survey Responses Quantity Share %' = DIVIDE ( [Survey Responses Total Quantity], CALCULATE ( [Survey Responses Total Quantity], ALL ( 'Survey Responses' ) ) )
+		displayFolder: Marketing
+
+	column 'Survey Response Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Survey Response Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Marketing Lookup 040 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Marketing Lookup 040 Key
+
+	column 'Persona Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Persona Key
+
+	column 'Marketing Lookup 014 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Marketing Lookup 014 Key
+
+	column 'Funnel Stage Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Funnel Stage Key
+
+	column 'Agency Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Agency Key
+
+	column 'Lead Source Key'
+		dataType: int64
+		sourceColumn: Lead Source Key
+
+	column 'Net Amount'
+		dataType: decimal
+		isHidden
+		sourceColumn: Net Amount
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	column Value
+		dataType: double
+		isHidden
+		sourceColumn: Value
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	partition 'Survey Responses' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Survey Response Id", "Date", "Marketing Lookup 040 Key", "Persona Key", "Marketing Lookup 014 Key", "Funnel Stage Key", "Agency Key", "Lead Source Key", "Net Amount", "Quantity", "Value", "Count"}, {})
+				in
+				    Source

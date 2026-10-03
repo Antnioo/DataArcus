@@ -1,0 +1,116 @@
+table Calls
+
+	/// Made-up measure for the large test model (Service).
+	measure 'Calls Total Net Amount' = SUM ( Calls[Net Amount] )
+		formatString: #,0
+		displayFolder: Service
+
+	/// Made-up measure for the large test model (Service).
+	measure 'Calls Average Net Amount' = AVERAGE ( Calls[Net Amount] )
+		formatString: #,0.00
+
+	measure 'Calls Count' = COUNTROWS ( Calls )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'Calls Total Net Amount LY' = CALCULATE ( [Calls Total Net Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Service
+
+	measure 'Calls Total Net Amount YoY %' = DIVIDE ( [Calls Total Net Amount] - [Calls Total Net Amount LY], [Calls Total Net Amount LY] )
+		displayFolder: Service
+
+	/// Made-up measure for the large test model (Service).
+	measure 'Calls Total Net Amount YTD' = TOTALYTD ( [Calls Total Net Amount], 'Calendar'[Date] )
+		displayFolder: Service
+
+	measure 'Calls Max Net Amount' = MAX ( Calls[Net Amount] )
+		displayFolder: Service
+
+	measure 'Calls Net Amount Share %' = DIVIDE ( [Calls Total Net Amount], CALCULATE ( [Calls Total Net Amount], ALL ( Calls ) ) )
+		displayFolder: Service
+
+	/// Made-up measure for the large test model (Service).
+	measure 'Calls Total Tax Amount' = SUM ( Calls[Tax Amount] )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'Calls Average Tax Amount' = AVERAGE ( Calls[Tax Amount] )
+		formatString: #,0.00
+		displayFolder: Service
+
+	measure 'Calls Total Tax Amount LY' = CALCULATE ( [Calls Total Tax Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'Calls Total Tax Amount YoY %' = DIVIDE ( [Calls Total Tax Amount] - [Calls Total Tax Amount LY], [Calls Total Tax Amount LY] )
+		formatString: 0.0%
+
+	/// Made-up measure for the large test model (Service).
+	measure 'Calls Total Tax Amount YTD' = TOTALYTD ( [Calls Total Tax Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Service
+
+	/// Made-up measure for the large test model (Service).
+	measure 'Calls Max Tax Amount' = MAX ( Calls[Tax Amount] )
+		displayFolder: Service
+
+	measure 'Calls Tax Amount Share %' = DIVIDE ( [Calls Total Tax Amount], CALCULATE ( [Calls Total Tax Amount], ALL ( Calls ) ) )
+		displayFolder: Service
+
+	column 'Call Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Call Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Service Lookup 051 Key'
+		dataType: int64
+		sourceColumn: Service Lookup 051 Key
+
+	column 'Agent Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Agent Key
+
+	column 'Service Lookup 033 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Service Lookup 033 Key
+
+	column 'Resolution Code Key'
+		dataType: int64
+		sourceColumn: Resolution Code Key
+
+	column 'Net Amount'
+		dataType: double
+		sourceColumn: Net Amount
+
+	column 'Tax Amount'
+		dataType: decimal
+		isHidden
+		sourceColumn: Tax Amount
+
+	column Value
+		dataType: double
+		isHidden
+		sourceColumn: Value
+
+	column 'Weight Kg'
+		dataType: double
+		sourceColumn: Weight Kg
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	partition Calls = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Call Id", "Date", "Service Lookup 051 Key", "Agent Key", "Service Lookup 033 Key", "Resolution Code Key", "Net Amount", "Tax Amount", "Value", "Weight Kg", "Quantity"}, {})
+				in
+				    Source

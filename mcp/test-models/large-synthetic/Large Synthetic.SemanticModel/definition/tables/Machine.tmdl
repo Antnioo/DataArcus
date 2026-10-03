@@ -1,0 +1,34 @@
+table Machine
+
+	column 'Machine Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Machine Key
+
+	column Machine
+		dataType: string
+		sourceColumn: Machine
+
+	column 'Machine Code'
+		dataType: string
+		sourceColumn: Machine Code
+
+	column 'Machine Level'
+		dataType: int64
+		sourceColumn: Machine Level
+
+	column 'Machine Description'
+		dataType: string
+		sourceColumn: Machine Description
+
+	column 'Machine Group'
+		dataType: string
+		sourceColumn: Machine Group
+
+	partition Machine = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Machine Key", "Machine", "Machine Code", "Machine Level", "Machine Description", "Machine Group"}, {})
+				in
+				    Source

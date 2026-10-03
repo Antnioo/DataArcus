@@ -1,0 +1,34 @@
+table 'People Lookup 035'
+
+	column 'People Lookup 035 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: People Lookup 035 Key
+
+	column 'People Lookup 035'
+		dataType: string
+		sourceColumn: People Lookup 035
+
+	column 'People Lookup 035 Status'
+		dataType: string
+		sourceColumn: People Lookup 035 Status
+
+	column 'People Lookup 035 Category'
+		dataType: string
+		sourceColumn: People Lookup 035 Category
+
+	column 'People Lookup 035 Type'
+		dataType: string
+		sourceColumn: People Lookup 035 Type
+
+	column 'People Lookup 035 Code'
+		dataType: string
+		sourceColumn: People Lookup 035 Code
+
+	partition 'People Lookup 035' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"People Lookup 035 Key", "People Lookup 035", "People Lookup 035 Status", "People Lookup 035 Category", "People Lookup 035 Type", "People Lookup 035 Code"}, {})
+				in
+				    Source

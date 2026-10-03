@@ -1,0 +1,54 @@
+table 'Projects Lookup 037'
+
+	column 'Projects Lookup 037 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Projects Lookup 037 Key
+
+	column 'Projects Lookup 037'
+		dataType: string
+		sourceColumn: Projects Lookup 037
+
+	column 'Projects Lookup 037 Long Name'
+		dataType: string
+		sourceColumn: Projects Lookup 037 Long Name
+
+	column 'Projects Lookup 037 Category'
+		dataType: string
+		sourceColumn: Projects Lookup 037 Category
+
+	column 'Projects Lookup 037 Notes'
+		dataType: string
+		sourceColumn: Projects Lookup 037 Notes
+
+	column 'Projects Lookup 037 Group'
+		dataType: string
+		sourceColumn: Projects Lookup 037 Group
+
+	column 'Projects Lookup 037 Level'
+		dataType: int64
+		sourceColumn: Projects Lookup 037 Level
+
+	column 'Projects Lookup 037 Is Active'
+		dataType: boolean
+		sourceColumn: Projects Lookup 037 Is Active
+
+	column 'Projects Lookup 037 Sort Order'
+		dataType: int64
+		sourceColumn: Projects Lookup 037 Sort Order
+
+	column 'Projects Lookup 037 External Id'
+		dataType: string
+		sourceColumn: Projects Lookup 037 External Id
+
+	column 'Projects Lookup 037 Code'
+		dataType: string
+		sourceColumn: Projects Lookup 037 Code
+
+	partition 'Projects Lookup 037' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Projects Lookup 037 Key", "Projects Lookup 037", "Projects Lookup 037 Long Name", "Projects Lookup 037 Category", "Projects Lookup 037 Notes", "Projects Lookup 037 Group", "Projects Lookup 037 Level", "Projects Lookup 037 Is Active", "Projects Lookup 037 Sort Order", "Projects Lookup 037 External Id", "Projects Lookup 037 Code"}, {})
+				in
+				    Source

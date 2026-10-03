@@ -1,0 +1,34 @@
+table Phase
+
+	column 'Phase Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Phase Key
+
+	column Phase
+		dataType: string
+		sourceColumn: Phase
+
+	column 'Phase Code'
+		dataType: string
+		sourceColumn: Phase Code
+
+	column 'Phase Level'
+		dataType: int64
+		sourceColumn: Phase Level
+
+	column 'Phase Description'
+		dataType: string
+		sourceColumn: Phase Description
+
+	column 'Phase Group'
+		dataType: string
+		sourceColumn: Phase Group
+
+	partition Phase = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Phase Key", "Phase", "Phase Code", "Phase Level", "Phase Description", "Phase Group"}, {})
+				in
+				    Source

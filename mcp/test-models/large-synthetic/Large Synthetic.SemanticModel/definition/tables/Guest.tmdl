@@ -1,0 +1,54 @@
+table Guest
+
+	column 'Guest Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Guest Key
+
+	column Guest
+		dataType: string
+		sourceColumn: Guest
+
+	column 'Guest Group'
+		dataType: string
+		sourceColumn: Guest Group
+
+	column 'Guest Description'
+		dataType: string
+		sourceColumn: Guest Description
+
+	column 'Guest Valid From'
+		dataType: dateTime
+		sourceColumn: Guest Valid From
+
+	column 'Guest Owner'
+		dataType: string
+		sourceColumn: Guest Owner
+
+	column 'Guest Notes'
+		dataType: string
+		sourceColumn: Guest Notes
+
+	column 'Guest Type'
+		dataType: string
+		sourceColumn: Guest Type
+
+	column 'Guest Long Name'
+		dataType: string
+		sourceColumn: Guest Long Name
+
+	column 'Guest Code'
+		dataType: string
+		sourceColumn: Guest Code
+
+	column 'Guest Category'
+		dataType: string
+		sourceColumn: Guest Category
+
+	partition Guest = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Guest Key", "Guest", "Guest Group", "Guest Description", "Guest Valid From", "Guest Owner", "Guest Notes", "Guest Type", "Guest Long Name", "Guest Code", "Guest Category"}, {})
+				in
+				    Source

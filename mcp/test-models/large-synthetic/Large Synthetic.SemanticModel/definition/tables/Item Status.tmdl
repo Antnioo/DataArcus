@@ -1,0 +1,38 @@
+table 'Item Status'
+
+	column 'Item Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Item Status Key
+
+	column 'Item Status'
+		dataType: string
+		sourceColumn: Item Status
+
+	column 'Item Status Valid To'
+		dataType: dateTime
+		sourceColumn: Item Status Valid To
+
+	column 'Item Status Type'
+		dataType: string
+		sourceColumn: Item Status Type
+
+	column 'Item Status Valid From'
+		dataType: dateTime
+		sourceColumn: Item Status Valid From
+
+	column 'Item Status Code'
+		dataType: string
+		sourceColumn: Item Status Code
+
+	column 'Item Status Description'
+		dataType: string
+		sourceColumn: Item Status Description
+
+	partition 'Item Status' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Item Status Key", "Item Status", "Item Status Valid To", "Item Status Type", "Item Status Valid From", "Item Status Code", "Item Status Description"}, {})
+				in
+				    Source

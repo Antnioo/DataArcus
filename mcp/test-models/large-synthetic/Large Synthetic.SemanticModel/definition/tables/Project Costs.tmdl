@@ -1,0 +1,129 @@
+table 'Project Costs'
+
+	measure 'Project Costs Total Margin' = SUM ( 'Project Costs'[Margin] )
+		formatString: #,0
+
+	measure 'Project Costs Average Margin' = AVERAGE ( 'Project Costs'[Margin] )
+		displayFolder: Projects
+
+	measure 'Project Costs Count' = COUNTROWS ( 'Project Costs' )
+		formatString: #,0
+		displayFolder: Projects
+
+	/// Made-up measure for the large test model (Projects).
+	measure 'Project Costs Total Margin LY' = CALCULATE ( [Project Costs Total Margin], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Projects
+
+	measure 'Project Costs Total Margin YoY %' = DIVIDE ( [Project Costs Total Margin] - [Project Costs Total Margin LY], [Project Costs Total Margin LY] )
+		formatString: 0.0%
+		displayFolder: Projects
+
+	/// Made-up measure for the large test model (Projects).
+	measure 'Project Costs Total Margin YTD' = TOTALYTD ( [Project Costs Total Margin], 'Calendar'[Date] )
+		displayFolder: Projects
+
+	measure 'Project Costs Max Margin' = MAX ( 'Project Costs'[Margin] )
+		displayFolder: Projects
+
+	measure 'Project Costs Margin Share %' = DIVIDE ( [Project Costs Total Margin], CALCULATE ( [Project Costs Total Margin], ALL ( 'Project Costs' ) ) )
+		displayFolder: Projects
+
+	measure 'Project Costs Total Tax Amount' = SUM ( 'Project Costs'[Tax Amount] )
+		formatString: #,0
+
+	measure 'Project Costs Average Tax Amount' = AVERAGE ( 'Project Costs'[Tax Amount] )
+		displayFolder: Projects
+
+	/// Made-up measure for the large test model (Projects).
+	measure 'Project Costs Total Tax Amount LY' = CALCULATE ( [Project Costs Total Tax Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Projects
+
+	measure 'Project Costs Total Tax Amount YoY %' = DIVIDE ( [Project Costs Total Tax Amount] - [Project Costs Total Tax Amount LY], [Project Costs Total Tax Amount LY] )
+		displayFolder: Projects
+
+	measure 'Project Costs Total Tax Amount YTD' = TOTALYTD ( [Project Costs Total Tax Amount], 'Calendar'[Date] )
+
+	measure 'Project Costs Max Tax Amount' = MAX ( 'Project Costs'[Tax Amount] )
+
+	measure 'Project Costs Tax Amount Share %' = DIVIDE ( [Project Costs Total Tax Amount], CALCULATE ( [Project Costs Total Tax Amount], ALL ( 'Project Costs' ) ) )
+		displayFolder: Projects
+
+	column 'Project Cost Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Project Cost Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Projects Lookup 037 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Projects Lookup 037 Key
+
+	column 'Projects Lookup 031 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Projects Lookup 031 Key
+
+	column 'Client Program Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Client Program Key
+
+	column 'Recipe Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Recipe Key
+
+	column 'Milestone Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Milestone Status Key
+
+	column 'Risk Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Risk Key
+
+	column Margin
+		dataType: double
+		sourceColumn: Margin
+
+	column 'Tax Amount'
+		dataType: decimal
+		sourceColumn: Tax Amount
+
+	column Hours
+		dataType: double
+		isHidden
+		sourceColumn: Hours
+
+	column Cost
+		dataType: decimal
+		isHidden
+		sourceColumn: Cost
+
+	column Amount
+		dataType: double
+		isHidden
+		sourceColumn: Amount
+
+	column 'Net Amount'
+		dataType: decimal
+		sourceColumn: Net Amount
+
+	column Count
+		dataType: int64
+		sourceColumn: Count
+
+	partition 'Project Costs' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Project Cost Id", "Date", "Projects Lookup 037 Key", "Projects Lookup 031 Key", "Client Program Key", "Recipe Key", "Milestone Status Key", "Risk Key", "Margin", "Tax Amount", "Hours", "Cost", "Amount", "Net Amount", "Count"}, {})
+				in
+				    Source

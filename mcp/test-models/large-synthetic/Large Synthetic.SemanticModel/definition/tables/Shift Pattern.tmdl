@@ -1,0 +1,46 @@
+table 'Shift Pattern'
+
+	column 'Shift Pattern Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Shift Pattern Key
+
+	column 'Shift Pattern'
+		dataType: string
+		sourceColumn: Shift Pattern
+
+	column 'Shift Pattern Status'
+		dataType: string
+		sourceColumn: Shift Pattern Status
+
+	column 'Shift Pattern Sort Order'
+		dataType: int64
+		sourceColumn: Shift Pattern Sort Order
+
+	column 'Shift Pattern Valid To'
+		dataType: dateTime
+		sourceColumn: Shift Pattern Valid To
+
+	column 'Shift Pattern Created By'
+		dataType: string
+		sourceColumn: Shift Pattern Created By
+
+	column 'Shift Pattern Group'
+		dataType: string
+		sourceColumn: Shift Pattern Group
+
+	column 'Shift Pattern Code'
+		dataType: string
+		sourceColumn: Shift Pattern Code
+
+	column 'Shift Pattern Description'
+		dataType: string
+		sourceColumn: Shift Pattern Description
+
+	partition 'Shift Pattern' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Shift Pattern Key", "Shift Pattern", "Shift Pattern Status", "Shift Pattern Sort Order", "Shift Pattern Valid To", "Shift Pattern Created By", "Shift Pattern Group", "Shift Pattern Code", "Shift Pattern Description"}, {})
+				in
+				    Source

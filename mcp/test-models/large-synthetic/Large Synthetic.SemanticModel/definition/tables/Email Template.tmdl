@@ -1,0 +1,50 @@
+table 'Email Template'
+
+	column 'Email Template Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Email Template Key
+
+	column 'Email Template'
+		dataType: string
+		sourceColumn: Email Template
+
+	column 'Email Template Status'
+		dataType: string
+		sourceColumn: Email Template Status
+
+	column 'Email Template Level'
+		dataType: int64
+		sourceColumn: Email Template Level
+
+	column 'Email Template Group'
+		dataType: string
+		sourceColumn: Email Template Group
+
+	column 'Email Template Valid From'
+		dataType: dateTime
+		sourceColumn: Email Template Valid From
+
+	column 'Email Template Region'
+		dataType: string
+		sourceColumn: Email Template Region
+
+	column 'Email Template Is Active'
+		dataType: boolean
+		sourceColumn: Email Template Is Active
+
+	column 'Email Template Code'
+		dataType: string
+		sourceColumn: Email Template Code
+
+	column 'Email Template Description'
+		dataType: string
+		sourceColumn: Email Template Description
+
+	partition 'Email Template' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Email Template Key", "Email Template", "Email Template Status", "Email Template Level", "Email Template Group", "Email Template Valid From", "Email Template Region", "Email Template Is Active", "Email Template Code", "Email Template Description"}, {})
+				in
+				    Source

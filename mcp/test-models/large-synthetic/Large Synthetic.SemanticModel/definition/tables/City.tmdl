@@ -1,0 +1,46 @@
+table City
+
+	column 'City Key'
+		dataType: int64
+		isHidden
+		sourceColumn: City Key
+
+	column City
+		dataType: string
+		sourceColumn: City
+
+	column 'City Status'
+		dataType: string
+		sourceColumn: City Status
+
+	column 'City Notes'
+		dataType: string
+		sourceColumn: City Notes
+
+	column 'City Group'
+		dataType: string
+		sourceColumn: City Group
+
+	column 'City Rank'
+		dataType: int64
+		sourceColumn: City Rank
+
+	column 'City Valid From'
+		dataType: dateTime
+		sourceColumn: City Valid From
+
+	column 'City Code'
+		dataType: string
+		sourceColumn: City Code
+
+	column 'City Description'
+		dataType: string
+		sourceColumn: City Description
+
+	partition City = m
+		mode: import
+		source =
+				let
+				    Source = #table({"City Key", "City", "City Status", "City Notes", "City Group", "City Rank", "City Valid From", "City Code", "City Description"}, {})
+				in
+				    Source

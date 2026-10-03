@@ -1,0 +1,1663 @@
+relationship rel_0001
+	fromColumn: 'GL Entries'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0002
+	fromColumn: 'GL Entries'.'Asset Class Key'
+	toColumn: 'Asset Class'.'Asset Class Key'
+
+relationship rel_0003
+	fromColumn: 'GL Entries'.'Finance Lookup 023 Key'
+	toColumn: 'Finance Lookup 023'.'Finance Lookup 023 Key'
+
+relationship rel_0004
+	fromColumn: 'GL Entries'.'Payment Term Key'
+	toColumn: 'Payment Term'.'Payment Term Key'
+
+relationship rel_0005
+	fromColumn: 'GL Entries'.'Account Group Key'
+	toColumn: 'Account Group'.'Account Group Key'
+
+relationship rel_0006
+	fromColumn: 'GL Entries'.'Legal Entity Key'
+	toColumn: 'Legal Entity'.'Legal Entity Key'
+
+relationship rel_0007
+	fromColumn: 'Budget Lines'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0008
+	fromColumn: 'Budget Lines'.'Allocation Rule Key'
+	toColumn: 'Allocation Rule'.'Allocation Rule Key'
+
+relationship rel_0009
+	fromColumn: 'Budget Lines'.'Finance Lookup 023 Key'
+	toColumn: 'Finance Lookup 023'.'Finance Lookup 023 Key'
+
+relationship rel_0010
+	fromColumn: 'Budget Lines'.'Finance Lookup 030 Key'
+	toColumn: 'Finance Lookup 030'.'Finance Lookup 030 Key'
+
+relationship rel_0011
+	fromColumn: 'Budget Lines'.'Bank Account Key'
+	toColumn: 'Bank Account'.'Bank Account Key'
+
+relationship rel_0012
+	fromColumn: 'Budget Lines'.'Trainer Key'
+	toColumn: Trainer.'Trainer Key'
+
+relationship rel_0013
+	fromColumn: 'Budget Lines'.'Journal Type Key'
+	toColumn: 'Journal Type'.'Journal Type Key'
+
+relationship rel_0014
+	fromColumn: 'Budget Lines'.'Payment Term Key'
+	toColumn: 'Payment Term'.'Payment Term Key'
+
+relationship rel_0015
+	fromColumn: 'Forecast Lines'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0016
+	fromColumn: 'Forecast Lines'.'Dimension Set Key'
+	toColumn: 'Dimension Set'.'Dimension Set Key'
+
+relationship rel_0017
+	fromColumn: 'Forecast Lines'.'Currency Key'
+	toColumn: Currency.'Currency Key'
+
+relationship rel_0018
+	fromColumn: 'Forecast Lines'.'Account Key'
+	toColumn: Account.'Account Key'
+
+relationship rel_0019
+	fromColumn: 'Forecast Lines'.'Budget Version Key'
+	toColumn: 'Budget Version'.'Budget Version Key'
+
+relationship rel_0020
+	fromColumn: 'Forecast Lines'.'Bank Account Key'
+	toColumn: 'Bank Account'.'Bank Account Key'
+
+relationship rel_0021
+	fromColumn: 'Forecast Lines'.'Tax Code Key'
+	toColumn: 'Tax Code'.'Tax Code Key'
+
+relationship rel_0022
+	fromColumn: 'AP Invoices'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0023
+	fromColumn: 'AP Invoices'.'Account Group Key'
+	toColumn: 'Account Group'.'Account Group Key'
+
+relationship rel_0024
+	fromColumn: 'AP Invoices'.'Finance Lookup 030 Key'
+	toColumn: 'Finance Lookup 030'.'Finance Lookup 030 Key'
+
+relationship rel_0025
+	fromColumn: 'AP Invoices'.'Allocation Rule Key'
+	toColumn: 'Allocation Rule'.'Allocation Rule Key'
+
+relationship rel_0026
+	fromColumn: 'AP Invoices'.'Fiscal Period Key'
+	toColumn: 'Fiscal Period'.'Fiscal Period Key'
+
+relationship rel_0027
+	fromColumn: 'AP Invoices'.'Exchange Rate Type Key'
+	toColumn: 'Exchange Rate Type'.'Exchange Rate Type Key'
+
+relationship rel_0028
+	fromColumn: 'AP Invoices'.'Currency Key'
+	toColumn: Currency.'Currency Key'
+
+relationship rel_0029
+	fromColumn: 'AP Invoices'.'Tax Code Key'
+	toColumn: 'Tax Code'.'Tax Code Key'
+
+relationship rel_0030
+	fromColumn: 'AR Invoices'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0031
+	fromColumn: 'AR Invoices'.'Budget Version Key'
+	toColumn: 'Budget Version'.'Budget Version Key'
+
+relationship rel_0032
+	fromColumn: 'AR Invoices'.'Journal Type Key'
+	toColumn: 'Journal Type'.'Journal Type Key'
+
+relationship rel_0033
+	fromColumn: 'AR Invoices'.'Fiscal Period Key'
+	toColumn: 'Fiscal Period'.'Fiscal Period Key'
+
+relationship rel_0034
+	fromColumn: 'AR Invoices'.'People Lookup 057 Key'
+	toColumn: 'People Lookup 057'.'People Lookup 057 Key'
+
+relationship rel_0035
+	fromColumn: 'AR Invoices'.'Finance Lookup 045 Key'
+	toColumn: 'Finance Lookup 045'.'Finance Lookup 045 Key'
+
+relationship rel_0036
+	fromColumn: 'AR Invoices'.'Dimension Set Key'
+	toColumn: 'Dimension Set'.'Dimension Set Key'
+
+relationship rel_0037
+	fromColumn: 'AR Invoices'.'Allocation Rule Key'
+	toColumn: 'Allocation Rule'.'Allocation Rule Key'
+
+relationship rel_0038
+	fromColumn: 'AR Invoices'.'Finance Lookup 016 Key'
+	toColumn: 'Finance Lookup 016'.'Finance Lookup 016 Key'
+
+relationship rel_0039
+	fromColumn: Payments.Date
+	toColumn: Calendar.Date
+
+relationship rel_0040
+	fromColumn: Payments.'Budget Version Key'
+	toColumn: 'Budget Version'.'Budget Version Key'
+
+relationship rel_0041
+	fromColumn: Payments.'Asset Class Key'
+	toColumn: 'Asset Class'.'Asset Class Key'
+
+relationship rel_0042
+	fromColumn: Payments.'Dimension Set Key'
+	toColumn: 'Dimension Set'.'Dimension Set Key'
+
+relationship rel_0043
+	fromColumn: Payments.'Account Group Key'
+	toColumn: 'Account Group'.'Account Group Key'
+
+relationship rel_0044
+	fromColumn: 'Fixed Asset Movements'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0045
+	fromColumn: 'Fixed Asset Movements'.'Account Group Key'
+	toColumn: 'Account Group'.'Account Group Key'
+
+relationship rel_0046
+	fromColumn: 'Fixed Asset Movements'.'Legal Entity Key'
+	toColumn: 'Legal Entity'.'Legal Entity Key'
+
+relationship rel_0047
+	fromColumn: 'Fixed Asset Movements'.'Finance Lookup 023 Key'
+	toColumn: 'Finance Lookup 023'.'Finance Lookup 023 Key'
+
+relationship rel_0048
+	fromColumn: 'Fixed Asset Movements'.'Payment Term Key'
+	toColumn: 'Payment Term'.'Payment Term Key'
+
+relationship rel_0049
+	fromColumn: 'Fixed Asset Movements'.'Finance Lookup 030 Key'
+	toColumn: 'Finance Lookup 030'.'Finance Lookup 030 Key'
+
+relationship rel_0050
+	fromColumn: 'Fixed Asset Movements'.'Budget Version Key'
+	toColumn: 'Budget Version'.'Budget Version Key'
+
+relationship rel_0051
+	fromColumn: 'Fixed Asset Movements'.'Intercompany Partner Key'
+	toColumn: 'Intercompany Partner'.'Intercompany Partner Key'
+
+relationship rel_0052
+	fromColumn: 'Payroll Lines'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0053
+	fromColumn: 'Payroll Lines'.'People Lookup 020 Key'
+	toColumn: 'People Lookup 020'.'People Lookup 020 Key'
+
+relationship rel_0054
+	fromColumn: 'Payroll Lines'.'Performance Rating Key'
+	toColumn: 'Performance Rating'.'Performance Rating Key'
+
+relationship rel_0055
+	fromColumn: 'Payroll Lines'.'Nationality Key'
+	toColumn: Nationality.'Nationality Key'
+
+relationship rel_0056
+	fromColumn: 'Payroll Lines'.'People Lookup 022 Key'
+	toColumn: 'People Lookup 022'.'People Lookup 022 Key'
+
+relationship rel_0057
+	fromColumn: 'Payroll Lines'.'Job Title Key'
+	toColumn: 'Job Title'.'Job Title Key'
+
+relationship rel_0058
+	fromColumn: Attendance.Date
+	toColumn: Calendar.Date
+
+relationship rel_0059
+	fromColumn: Attendance.'Leave Type Key'
+	toColumn: 'Leave Type'.'Leave Type Key'
+
+relationship rel_0060
+	fromColumn: Attendance.'Recruiter Key'
+	toColumn: Recruiter.'Recruiter Key'
+
+relationship rel_0061
+	fromColumn: Attendance.'Performance Rating Key'
+	toColumn: 'Performance Rating'.'Performance Rating Key'
+
+relationship rel_0062
+	fromColumn: Attendance.'People Lookup 035 Key'
+	toColumn: 'People Lookup 035'.'People Lookup 035 Key'
+
+relationship rel_0063
+	fromColumn: Attendance.'Work Location Key'
+	toColumn: 'Work Location'.'Work Location Key'
+
+relationship rel_0064
+	fromColumn: 'Leave Requests'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0065
+	fromColumn: 'Leave Requests'.'Grade Key'
+	toColumn: Grade.'Grade Key'
+
+relationship rel_0066
+	fromColumn: 'Leave Requests'.'People Lookup 057 Key'
+	toColumn: 'People Lookup 057'.'People Lookup 057 Key'
+
+relationship rel_0067
+	fromColumn: 'Leave Requests'.'Employee Key'
+	toColumn: Employee.'Employee Key'
+
+relationship rel_0068
+	fromColumn: 'Leave Requests'.'Course Key'
+	toColumn: Course.'Course Key'
+
+relationship rel_0069
+	fromColumn: 'Leave Requests'.'Performance Rating Key'
+	toColumn: 'Performance Rating'.'Performance Rating Key'
+
+relationship rel_0070
+	fromColumn: 'Leave Requests'.'Termination Reason Key'
+	toColumn: 'Termination Reason'.'Termination Reason Key'
+
+relationship rel_0071
+	fromColumn: 'Recruiting Pipeline'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0072
+	fromColumn: 'Recruiting Pipeline'.'Nationality Key'
+	toColumn: Nationality.'Nationality Key'
+
+relationship rel_0073
+	fromColumn: 'Recruiting Pipeline'.'Leave Type Key'
+	toColumn: 'Leave Type'.'Leave Type Key'
+
+relationship rel_0074
+	fromColumn: 'Recruiting Pipeline'.'People Lookup 057 Key'
+	toColumn: 'People Lookup 057'.'People Lookup 057 Key'
+
+relationship rel_0075
+	fromColumn: 'Recruiting Pipeline'.'Recruiter Key'
+	toColumn: Recruiter.'Recruiter Key'
+
+relationship rel_0076
+	fromColumn: 'Recruiting Pipeline'.'People Lookup 020 Key'
+	toColumn: 'People Lookup 020'.'People Lookup 020 Key'
+
+relationship rel_0077
+	fromColumn: 'Training Sessions'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0078
+	fromColumn: 'Training Sessions'.'Pay Element Key'
+	toColumn: 'Pay Element'.'Pay Element Key'
+
+relationship rel_0079
+	fromColumn: 'Training Sessions'.'Work Location Key'
+	toColumn: 'Work Location'.'Work Location Key'
+
+relationship rel_0080
+	fromColumn: 'Training Sessions'.'Manager Key'
+	toColumn: Manager.'Manager Key'
+
+relationship rel_0081
+	fromColumn: 'Training Sessions'.'Recruiter Key'
+	toColumn: Recruiter.'Recruiter Key'
+
+relationship rel_0082
+	fromColumn: 'Training Sessions'.'Job Title Key'
+	toColumn: 'Job Title'.'Job Title Key'
+
+relationship rel_0083
+	fromColumn: 'Headcount Snapshot'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0084
+	fromColumn: 'Headcount Snapshot'.'Work Location Key'
+	toColumn: 'Work Location'.'Work Location Key'
+
+relationship rel_0085
+	fromColumn: 'Headcount Snapshot'.'Pay Element Key'
+	toColumn: 'Pay Element'.'Pay Element Key'
+
+relationship rel_0086
+	fromColumn: 'Headcount Snapshot'.'Contract Type Key'
+	toColumn: 'Contract Type'.'Contract Type Key'
+
+relationship rel_0087
+	fromColumn: 'Headcount Snapshot'.'Recruiter Key'
+	toColumn: Recruiter.'Recruiter Key'
+
+relationship rel_0088
+	fromColumn: 'Purchase Orders'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0089
+	fromColumn: 'Purchase Orders'.'Procurement Lookup 041 Key'
+	toColumn: 'Procurement Lookup 041'.'Procurement Lookup 041 Key'
+
+relationship rel_0090
+	fromColumn: 'Purchase Orders'.'Procurement Lookup 054 Key'
+	toColumn: 'Procurement Lookup 054'.'Procurement Lookup 054 Key'
+
+relationship rel_0091
+	fromColumn: 'Purchase Orders'.'Procurement Lookup 025 Key'
+	toColumn: 'Procurement Lookup 025'.'Procurement Lookup 025 Key'
+
+relationship rel_0092
+	fromColumn: 'Purchase Orders'.'Purchase Category Key'
+	toColumn: 'Purchase Category'.'Purchase Category Key'
+
+relationship rel_0093
+	fromColumn: 'Purchase Orders'.'Marketing Lookup 017 Key'
+	toColumn: 'Marketing Lookup 017'.'Marketing Lookup 017 Key'
+
+relationship rel_0094
+	fromColumn: 'Purchase Orders'.'Delivery Term Key'
+	toColumn: 'Delivery Term'.'Delivery Term Key'
+
+relationship rel_0095
+	fromColumn: 'Purchase Orders'.'Incoterm Key'
+	toColumn: Incoterm.'Incoterm Key'
+
+relationship rel_0096
+	fromColumn: 'Purchase Receipts'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0097
+	fromColumn: 'Purchase Receipts'.'Incoterm Key'
+	toColumn: Incoterm.'Incoterm Key'
+
+relationship rel_0098
+	fromColumn: 'Purchase Receipts'.'Approval Level Key'
+	toColumn: 'Approval Level'.'Approval Level Key'
+
+relationship rel_0099
+	fromColumn: 'Purchase Receipts'.'Sourcing Event Key'
+	toColumn: 'Sourcing Event'.'Sourcing Event Key'
+
+relationship rel_0100
+	fromColumn: 'Purchase Receipts'.'Buyer Key'
+	toColumn: Buyer.'Buyer Key'
+
+relationship rel_0101
+	fromColumn: 'Purchase Receipts'.'Procurement Lookup 032 Key'
+	toColumn: 'Procurement Lookup 032'.'Procurement Lookup 032 Key'
+
+relationship rel_0102
+	fromColumn: 'Purchase Receipts'.'Procurement Lookup 025 Key'
+	toColumn: 'Procurement Lookup 025'.'Procurement Lookup 025 Key'
+
+relationship rel_0103
+	fromColumn: 'Purchase Receipts'.'Delivery Term Key'
+	toColumn: 'Delivery Term'.'Delivery Term Key'
+
+relationship rel_0104
+	fromColumn: 'Supplier Invoices'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0105
+	fromColumn: 'Supplier Invoices'.'Procurement Lookup 054 Key'
+	toColumn: 'Procurement Lookup 054'.'Procurement Lookup 054 Key'
+
+relationship rel_0106
+	fromColumn: 'Supplier Invoices'.'Procurement Lookup 025 Key'
+	toColumn: 'Procurement Lookup 025'.'Procurement Lookup 025 Key'
+
+relationship rel_0107
+	fromColumn: 'Supplier Invoices'.'Supplier Rating Key'
+	toColumn: 'Supplier Rating'.'Supplier Rating Key'
+
+relationship rel_0108
+	fromColumn: 'Supplier Invoices'.'Buyer Key'
+	toColumn: Buyer.'Buyer Key'
+
+relationship rel_0109
+	fromColumn: 'Supplier Invoices'.'Purchase Category Key'
+	toColumn: 'Purchase Category'.'Purchase Category Key'
+
+relationship rel_0110
+	fromColumn: 'Supplier Invoices'.'Supplier Country Key'
+	toColumn: 'Supplier Country'.'Supplier Country Key'
+
+relationship rel_0111
+	fromColumn: Contracts.Date
+	toColumn: Calendar.Date
+
+relationship rel_0112
+	fromColumn: Contracts.'Supplier Country Key'
+	toColumn: 'Supplier Country'.'Supplier Country Key'
+
+relationship rel_0113
+	fromColumn: Contracts.'Procurement Lookup 032 Key'
+	toColumn: 'Procurement Lookup 032'.'Procurement Lookup 032 Key'
+
+relationship rel_0114
+	fromColumn: Contracts.'Approval Level Key'
+	toColumn: 'Approval Level'.'Approval Level Key'
+
+relationship rel_0115
+	fromColumn: Contracts.'Procurement Lookup 041 Key'
+	toColumn: 'Procurement Lookup 041'.'Procurement Lookup 041 Key'
+
+relationship rel_0116
+	fromColumn: Contracts.'Procurement Lookup 009 Key'
+	toColumn: 'Procurement Lookup 009'.'Procurement Lookup 009 Key'
+
+relationship rel_0117
+	fromColumn: 'Spend Lines'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0118
+	fromColumn: 'Spend Lines'.'PO Status Key'
+	toColumn: 'PO Status'.'PO Status Key'
+
+relationship rel_0119
+	fromColumn: 'Spend Lines'.'Procurement Lookup 054 Key'
+	toColumn: 'Procurement Lookup 054'.'Procurement Lookup 054 Key'
+
+relationship rel_0120
+	fromColumn: 'Spend Lines'.'Incoterm Key'
+	toColumn: Incoterm.'Incoterm Key'
+
+relationship rel_0121
+	fromColumn: 'Spend Lines'.'Procurement Lookup 041 Key'
+	toColumn: 'Procurement Lookup 041'.'Procurement Lookup 041 Key'
+
+relationship rel_0122
+	fromColumn: 'Stock On Hand'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0123
+	fromColumn: 'Stock On Hand'.'Inventory Lookup 015 Key'
+	toColumn: 'Inventory Lookup 015'.'Inventory Lookup 015 Key'
+
+relationship rel_0124
+	fromColumn: 'Stock On Hand'.'Storage Condition Key'
+	toColumn: 'Storage Condition'.'Storage Condition Key'
+
+relationship rel_0125
+	fromColumn: 'Stock On Hand'.'Count Reason Key'
+	toColumn: 'Count Reason'.'Count Reason Key'
+
+relationship rel_0126
+	fromColumn: 'Stock On Hand'.'Unit Of Measure Key'
+	toColumn: 'Unit Of Measure'.'Unit Of Measure Key'
+
+relationship rel_0127
+	fromColumn: 'Stock On Hand'.'Budget Version Key'
+	toColumn: 'Budget Version'.'Budget Version Key'
+
+relationship rel_0128
+	fromColumn: 'Stock Movements'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0129
+	fromColumn: 'Stock Movements'.'Inventory Lookup 021 Key'
+	toColumn: 'Inventory Lookup 021'.'Inventory Lookup 021 Key'
+
+relationship rel_0130
+	fromColumn: 'Stock Movements'.'Unit Of Measure Key'
+	toColumn: 'Unit Of Measure'.'Unit Of Measure Key'
+
+relationship rel_0131
+	fromColumn: 'Stock Movements'.'Lot Key'
+	toColumn: Lot.'Lot Key'
+
+relationship rel_0132
+	fromColumn: 'Stock Movements'.'Warehouse Key'
+	toColumn: Warehouse.'Warehouse Key'
+
+relationship rel_0133
+	fromColumn: 'Stock Movements'.'Item Status Key'
+	toColumn: 'Item Status'.'Item Status Key'
+
+relationship rel_0134
+	fromColumn: 'Cycle Counts'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0135
+	fromColumn: 'Cycle Counts'.'Brand Key'
+	toColumn: Brand.'Brand Key'
+
+relationship rel_0136
+	fromColumn: 'Cycle Counts'.'Storage Condition Key'
+	toColumn: 'Storage Condition'.'Storage Condition Key'
+
+relationship rel_0137
+	fromColumn: 'Cycle Counts'.'Inventory Lookup 015 Key'
+	toColumn: 'Inventory Lookup 015'.'Inventory Lookup 015 Key'
+
+relationship rel_0138
+	fromColumn: 'Cycle Counts'.'Item Class Key'
+	toColumn: 'Item Class'.'Item Class Key'
+
+relationship rel_0139
+	fromColumn: 'Replenishment Orders'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0140
+	fromColumn: 'Replenishment Orders'.'Storage Condition Key'
+	toColumn: 'Storage Condition'.'Storage Condition Key'
+
+relationship rel_0141
+	fromColumn: 'Replenishment Orders'.'Movement Type Key'
+	toColumn: 'Movement Type'.'Movement Type Key'
+
+relationship rel_0142
+	fromColumn: 'Replenishment Orders'.'ABC Class Key'
+	toColumn: 'ABC Class'.'ABC Class Key'
+
+relationship rel_0143
+	fromColumn: 'Replenishment Orders'.'Brand Key'
+	toColumn: Brand.'Brand Key'
+
+relationship rel_0144
+	fromColumn: 'Replenishment Orders'.'Inventory Lookup 021 Key'
+	toColumn: 'Inventory Lookup 021'.'Inventory Lookup 021 Key'
+
+relationship rel_0145
+	fromColumn: 'Replenishment Orders'.'Lot Key'
+	toColumn: Lot.'Lot Key'
+
+relationship rel_0146
+	fromColumn: 'Write Offs'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0147
+	fromColumn: 'Write Offs'.'Resolution Code Key'
+	toColumn: 'Resolution Code'.'Resolution Code Key'
+
+relationship rel_0148
+	fromColumn: 'Write Offs'.'Inventory Lookup 050 Key'
+	toColumn: 'Inventory Lookup 050'.'Inventory Lookup 050 Key'
+
+relationship rel_0149
+	fromColumn: 'Write Offs'.'Trainer Key'
+	toColumn: Trainer.'Trainer Key'
+
+relationship rel_0150
+	fromColumn: 'Write Offs'.'Brand Key'
+	toColumn: Brand.'Brand Key'
+
+relationship rel_0151
+	fromColumn: 'Write Offs'.'Inventory Lookup 021 Key'
+	toColumn: 'Inventory Lookup 021'.'Inventory Lookup 021 Key'
+
+relationship rel_0152
+	fromColumn: 'Write Offs'.'Zone Key'
+	toColumn: Zone.'Zone Key'
+
+relationship rel_0153
+	fromColumn: 'Write Offs'.'Item Class Key'
+	toColumn: 'Item Class'.'Item Class Key'
+
+relationship rel_0154
+	fromColumn: Shipments.Date
+	toColumn: Calendar.Date
+
+relationship rel_0155
+	fromColumn: Shipments.'Logistics Lookup 024 Key'
+	toColumn: 'Logistics Lookup 024'.'Logistics Lookup 024 Key'
+
+relationship rel_0156
+	fromColumn: Shipments.'Customs Status Key'
+	toColumn: 'Customs Status'.'Customs Status Key'
+
+relationship rel_0157
+	fromColumn: Shipments.'Hub Key'
+	toColumn: Hub.'Hub Key'
+
+relationship rel_0158
+	fromColumn: Shipments.'Lane Key'
+	toColumn: Lane.'Lane Key'
+
+relationship rel_0159
+	fromColumn: Shipments.'Logistics Lookup 010 Key'
+	toColumn: 'Logistics Lookup 010'.'Logistics Lookup 010 Key'
+
+relationship rel_0160
+	fromColumn: 'Shipment Legs'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0161
+	fromColumn: 'Shipment Legs'.'Fleet Unit Key'
+	toColumn: 'Fleet Unit'.'Fleet Unit Key'
+
+relationship rel_0162
+	fromColumn: 'Shipment Legs'.'Lead Status Key'
+	toColumn: 'Lead Status'.'Lead Status Key'
+
+relationship rel_0163
+	fromColumn: Deliveries.Date
+	toColumn: Calendar.Date
+
+relationship rel_0164
+	fromColumn: Deliveries.'Driver Key'
+	toColumn: Driver.'Driver Key'
+
+relationship rel_0165
+	fromColumn: Deliveries.'Logistics Lookup 048 Key'
+	toColumn: 'Logistics Lookup 048'.'Logistics Lookup 048 Key'
+
+relationship rel_0166
+	fromColumn: Deliveries.'Route Key'
+	toColumn: Route.'Route Key'
+
+relationship rel_0167
+	fromColumn: Deliveries.'Carrier Key'
+	toColumn: Carrier.'Carrier Key'
+
+relationship rel_0168
+	fromColumn: 'Freight Costs'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0169
+	fromColumn: 'Freight Costs'.'Port Key'
+	toColumn: Port.'Port Key'
+
+relationship rel_0170
+	fromColumn: 'Freight Costs'.'Hub Key'
+	toColumn: Hub.'Hub Key'
+
+relationship rel_0171
+	fromColumn: 'Freight Costs'.'Delay Reason Key'
+	toColumn: 'Delay Reason'.'Delay Reason Key'
+
+relationship rel_0172
+	fromColumn: 'Freight Costs'.'Delivery Status Key'
+	toColumn: 'Delivery Status'.'Delivery Status Key'
+
+relationship rel_0173
+	fromColumn: 'Freight Costs'.'Customs Status Key'
+	toColumn: 'Customs Status'.'Customs Status Key'
+
+relationship rel_0174
+	fromColumn: 'Freight Costs'.'Return Reason Key'
+	toColumn: 'Return Reason'.'Return Reason Key'
+
+relationship rel_0175
+	fromColumn: Returns.Date
+	toColumn: Calendar.Date
+
+relationship rel_0176
+	fromColumn: Returns.'Port Key'
+	toColumn: Port.'Port Key'
+
+relationship rel_0177
+	fromColumn: Returns.'Fleet Unit Key'
+	toColumn: 'Fleet Unit'.'Fleet Unit Key'
+
+relationship rel_0178
+	fromColumn: Returns.'Logistics Lookup 010 Key'
+	toColumn: 'Logistics Lookup 010'.'Logistics Lookup 010 Key'
+
+relationship rel_0179
+	fromColumn: Returns.'Logistics Lookup 046 Key'
+	toColumn: 'Logistics Lookup 046'.'Logistics Lookup 046 Key'
+
+relationship rel_0180
+	fromColumn: Returns.'Logistics Lookup 029 Key'
+	toColumn: 'Logistics Lookup 029'.'Logistics Lookup 029 Key'
+
+relationship rel_0181
+	fromColumn: Returns.'Logistics Lookup 024 Key'
+	toColumn: 'Logistics Lookup 024'.'Logistics Lookup 024 Key'
+
+relationship rel_0182
+	fromColumn: 'Web Orders'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0183
+	fromColumn: 'Web Orders'.'Plan Key'
+	toColumn: Plan.'Plan Key'
+
+relationship rel_0184
+	fromColumn: 'Web Orders'.'Churn Reason Key'
+	toColumn: 'Churn Reason'.'Churn Reason Key'
+
+relationship rel_0185
+	fromColumn: 'Web Orders'.'Country Key'
+	toColumn: Country.'Country Key'
+
+relationship rel_0186
+	fromColumn: 'Web Orders'.'Coupon Key'
+	toColumn: Coupon.'Coupon Key'
+
+relationship rel_0187
+	fromColumn: 'Web Orders'.'Order Status Key'
+	toColumn: 'Order Status'.'Order Status Key'
+
+relationship rel_0188
+	fromColumn: 'Web Order Lines'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0189
+	fromColumn: 'Web Order Lines'.'Order Status Key'
+	toColumn: 'Order Status'.'Order Status Key'
+
+relationship rel_0190
+	fromColumn: 'Web Order Lines'.'Commerce Lookup 044 Key'
+	toColumn: 'Commerce Lookup 044'.'Commerce Lookup 044 Key'
+
+relationship rel_0191
+	fromColumn: 'Web Order Lines'.'Customer Segment Key'
+	toColumn: 'Customer Segment'.'Customer Segment Key'
+
+relationship rel_0192
+	fromColumn: 'Web Order Lines'.'Landing Page Key'
+	toColumn: 'Landing Page'.'Landing Page Key'
+
+relationship rel_0193
+	fromColumn: 'Web Order Lines'.'Plan Key'
+	toColumn: Plan.'Plan Key'
+
+relationship rel_0194
+	fromColumn: 'Web Order Lines'.'Customer Key'
+	toColumn: Customer.'Customer Key'
+
+relationship rel_0195
+	fromColumn: Sessions.Date
+	toColumn: Calendar.Date
+
+relationship rel_0196
+	fromColumn: Sessions.'Landing Page Key'
+	toColumn: 'Landing Page'.'Landing Page Key'
+
+relationship rel_0197
+	fromColumn: Sessions.'Commerce Lookup 052 Key'
+	toColumn: 'Commerce Lookup 052'.'Commerce Lookup 052 Key'
+
+relationship rel_0198
+	fromColumn: Sessions.'Device Key'
+	toColumn: Device.'Device Key'
+
+relationship rel_0199
+	fromColumn: Sessions.'Commerce Lookup 019 Key'
+	toColumn: 'Commerce Lookup 019'.'Commerce Lookup 019 Key'
+
+relationship rel_0200
+	fromColumn: Sessions.'Churn Reason Key'
+	toColumn: 'Churn Reason'.'Churn Reason Key'
+
+relationship rel_0201
+	fromColumn: 'Cart Events'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0202
+	fromColumn: 'Cart Events'.'Country Key'
+	toColumn: Country.'Country Key'
+
+relationship rel_0203
+	fromColumn: 'Cart Events'.'Order Status Key'
+	toColumn: 'Order Status'.'Order Status Key'
+
+relationship rel_0204
+	fromColumn: 'Cart Events'.'Promotion Key'
+	toColumn: Promotion.'Promotion Key'
+
+relationship rel_0205
+	fromColumn: 'Cart Events'.'Product Key'
+	toColumn: Product.'Product Key'
+
+relationship rel_0206
+	fromColumn: 'Promotions Applied'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0207
+	fromColumn: 'Promotions Applied'.'Channel Key'
+	toColumn: Channel.'Channel Key'
+
+relationship rel_0208
+	fromColumn: 'Promotions Applied'.'Product Key'
+	toColumn: Product.'Product Key'
+
+relationship rel_0209
+	fromColumn: 'Promotions Applied'.'Commerce Lookup 042 Key'
+	toColumn: 'Commerce Lookup 042'.'Commerce Lookup 042 Key'
+
+relationship rel_0210
+	fromColumn: 'Promotions Applied'.'Payment Method Key'
+	toColumn: 'Payment Method'.'Payment Method Key'
+
+relationship rel_0211
+	fromColumn: 'Promotions Applied'.'Country Key'
+	toColumn: Country.'Country Key'
+
+relationship rel_0212
+	fromColumn: 'Promotions Applied'.'Commerce Lookup 044 Key'
+	toColumn: 'Commerce Lookup 044'.'Commerce Lookup 044 Key'
+
+relationship rel_0213
+	fromColumn: 'Promotions Applied'.'Customer Segment Key'
+	toColumn: 'Customer Segment'.'Customer Segment Key'
+
+relationship rel_0214
+	fromColumn: Subscriptions.Date
+	toColumn: Calendar.Date
+
+relationship rel_0215
+	fromColumn: Subscriptions.'Commerce Lookup 019 Key'
+	toColumn: 'Commerce Lookup 019'.'Commerce Lookup 019 Key'
+
+relationship rel_0216
+	fromColumn: Subscriptions.'Commerce Lookup 018 Key'
+	toColumn: 'Commerce Lookup 018'.'Commerce Lookup 018 Key'
+
+relationship rel_0217
+	fromColumn: Subscriptions.'Plan Key'
+	toColumn: Plan.'Plan Key'
+
+relationship rel_0218
+	fromColumn: Subscriptions.'Referrer Key'
+	toColumn: Referrer.'Referrer Key'
+
+relationship rel_0219
+	fromColumn: Subscriptions.'Churn Reason Key'
+	toColumn: 'Churn Reason'.'Churn Reason Key'
+
+relationship rel_0220
+	fromColumn: Subscriptions.'Email Template Key'
+	toColumn: 'Email Template'.'Email Template Key'
+
+relationship rel_0221
+	fromColumn: 'Subscription Events'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0222
+	fromColumn: 'Subscription Events'.'Referrer Key'
+	toColumn: Referrer.'Referrer Key'
+
+relationship rel_0223
+	fromColumn: 'Subscription Events'.'Churn Reason Key'
+	toColumn: 'Churn Reason'.'Churn Reason Key'
+
+relationship rel_0224
+	fromColumn: 'Subscription Events'.'Commerce Lookup 018 Key'
+	toColumn: 'Commerce Lookup 018'.'Commerce Lookup 018 Key'
+
+relationship rel_0225
+	fromColumn: 'Subscription Events'.'Customer Segment Key'
+	toColumn: 'Customer Segment'.'Customer Segment Key'
+
+relationship rel_0226
+	fromColumn: 'Subscription Events'.'Commerce Lookup 042 Key'
+	toColumn: 'Commerce Lookup 042'.'Commerce Lookup 042 Key'
+
+relationship rel_0227
+	fromColumn: 'Subscription Events'.'Browser Key'
+	toColumn: Browser.'Browser Key'
+
+relationship rel_0228
+	fromColumn: 'Campaign Spend'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0229
+	fromColumn: 'Campaign Spend'.'Email Template Key'
+	toColumn: 'Email Template'.'Email Template Key'
+
+relationship rel_0230
+	fromColumn: 'Campaign Spend'.'Social Network Key'
+	toColumn: 'Social Network'.'Social Network Key'
+
+relationship rel_0231
+	fromColumn: 'Campaign Spend'.'Persona Key'
+	toColumn: Persona.'Persona Key'
+
+relationship rel_0232
+	fromColumn: 'Campaign Spend'.'Funnel Stage Key'
+	toColumn: 'Funnel Stage'.'Funnel Stage Key'
+
+relationship rel_0233
+	fromColumn: Leads.Date
+	toColumn: Calendar.Date
+
+relationship rel_0234
+	fromColumn: Leads.'Marketing Lookup 017 Key'
+	toColumn: 'Marketing Lookup 017'.'Marketing Lookup 017 Key'
+
+relationship rel_0235
+	fromColumn: Leads.'Question Key'
+	toColumn: Question.'Question Key'
+
+relationship rel_0236
+	fromColumn: Leads.'Marketing Lookup 055 Key'
+	toColumn: 'Marketing Lookup 055'.'Marketing Lookup 055 Key'
+
+relationship rel_0237
+	fromColumn: Leads.'Campaign Type Key'
+	toColumn: 'Campaign Type'.'Campaign Type Key'
+
+relationship rel_0238
+	fromColumn: 'Email Sends'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0239
+	fromColumn: 'Email Sends'.'Marketing Lookup 014 Key'
+	toColumn: 'Marketing Lookup 014'.'Marketing Lookup 014 Key'
+
+relationship rel_0240
+	fromColumn: 'Email Sends'.'Marketing Lookup 040 Key'
+	toColumn: 'Marketing Lookup 040'.'Marketing Lookup 040 Key'
+
+relationship rel_0241
+	fromColumn: 'Email Sends'.'Marketing Lookup 017 Key'
+	toColumn: 'Marketing Lookup 017'.'Marketing Lookup 017 Key'
+
+relationship rel_0242
+	fromColumn: 'Email Sends'.'Market Key'
+	toColumn: Market.'Market Key'
+
+relationship rel_0243
+	fromColumn: 'Email Sends'.'Funnel Stage Key'
+	toColumn: 'Funnel Stage'.'Funnel Stage Key'
+
+relationship rel_0244
+	fromColumn: 'Social Posts'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0245
+	fromColumn: 'Social Posts'.'Question Key'
+	toColumn: Question.'Question Key'
+
+relationship rel_0246
+	fromColumn: 'Social Posts'.'Lead Status Key'
+	toColumn: 'Lead Status'.'Lead Status Key'
+
+relationship rel_0247
+	fromColumn: 'Social Posts'.'Content Type Key'
+	toColumn: 'Content Type'.'Content Type Key'
+
+relationship rel_0248
+	fromColumn: 'Social Posts'.'Campaign Type Key'
+	toColumn: 'Campaign Type'.'Campaign Type Key'
+
+relationship rel_0249
+	fromColumn: 'Survey Responses'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0250
+	fromColumn: 'Survey Responses'.'Marketing Lookup 040 Key'
+	toColumn: 'Marketing Lookup 040'.'Marketing Lookup 040 Key'
+
+relationship rel_0251
+	fromColumn: 'Survey Responses'.'Persona Key'
+	toColumn: Persona.'Persona Key'
+
+relationship rel_0252
+	fromColumn: 'Survey Responses'.'Marketing Lookup 014 Key'
+	toColumn: 'Marketing Lookup 014'.'Marketing Lookup 014 Key'
+
+relationship rel_0253
+	fromColumn: 'Survey Responses'.'Funnel Stage Key'
+	toColumn: 'Funnel Stage'.'Funnel Stage Key'
+
+relationship rel_0254
+	fromColumn: 'Survey Responses'.'Agency Key'
+	toColumn: Agency.'Agency Key'
+
+relationship rel_0255
+	fromColumn: 'Survey Responses'.'Lead Source Key'
+	toColumn: 'Lead Source'.'Lead Source Key'
+
+relationship rel_0256
+	fromColumn: Tickets.Date
+	toColumn: Calendar.Date
+
+relationship rel_0257
+	fromColumn: Tickets.'Service Lookup 002 Key'
+	toColumn: 'Service Lookup 002'.'Service Lookup 002 Key'
+
+relationship rel_0258
+	fromColumn: Tickets.'Call Outcome Key'
+	toColumn: 'Call Outcome'.'Call Outcome Key'
+
+relationship rel_0259
+	fromColumn: Tickets.'Service Lookup 039 Key'
+	toColumn: 'Service Lookup 039'.'Service Lookup 039 Key'
+
+relationship rel_0260
+	fromColumn: 'Ticket Events'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0261
+	fromColumn: 'Ticket Events'.'Service Lookup 003 Key'
+	toColumn: 'Service Lookup 003'.'Service Lookup 003 Key'
+
+relationship rel_0262
+	fromColumn: 'Ticket Events'.'Customer Tier Key'
+	toColumn: 'Customer Tier'.'Customer Tier Key'
+
+relationship rel_0263
+	fromColumn: 'Ticket Events'.'Language Key'
+	toColumn: Language.'Language Key'
+
+relationship rel_0264
+	fromColumn: 'Ticket Events'.'Service Lookup 039 Key'
+	toColumn: 'Service Lookup 039'.'Service Lookup 039 Key'
+
+relationship rel_0265
+	fromColumn: Calls.Date
+	toColumn: Calendar.Date
+
+relationship rel_0266
+	fromColumn: Calls.'Service Lookup 051 Key'
+	toColumn: 'Service Lookup 051'.'Service Lookup 051 Key'
+
+relationship rel_0267
+	fromColumn: Calls.'Agent Key'
+	toColumn: Agent.'Agent Key'
+
+relationship rel_0268
+	fromColumn: Calls.'Service Lookup 033 Key'
+	toColumn: 'Service Lookup 033'.'Service Lookup 033 Key'
+
+relationship rel_0269
+	fromColumn: Calls.'Resolution Code Key'
+	toColumn: 'Resolution Code'.'Resolution Code Key'
+
+relationship rel_0270
+	fromColumn: Chats.Date
+	toColumn: Calendar.Date
+
+relationship rel_0271
+	fromColumn: Chats.'Team Key'
+	toColumn: Team.'Team Key'
+
+relationship rel_0272
+	fromColumn: Chats.'Service Lookup 013 Key'
+	toColumn: 'Service Lookup 013'.'Service Lookup 013 Key'
+
+relationship rel_0273
+	fromColumn: Chats.'Service Lookup 039 Key'
+	toColumn: 'Service Lookup 039'.'Service Lookup 039 Key'
+
+relationship rel_0274
+	fromColumn: Chats.'Knowledge Article Key'
+	toColumn: 'Knowledge Article'.'Knowledge Article Key'
+
+relationship rel_0275
+	fromColumn: Chats.'Service Lookup 036 Key'
+	toColumn: 'Service Lookup 036'.'Service Lookup 036 Key'
+
+relationship rel_0276
+	fromColumn: 'SLA Breaches'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0277
+	fromColumn: 'SLA Breaches'.'Service Lookup 002 Key'
+	toColumn: 'Service Lookup 002'.'Service Lookup 002 Key'
+
+relationship rel_0278
+	fromColumn: 'SLA Breaches'.'Queue Key'
+	toColumn: Queue.'Queue Key'
+
+relationship rel_0279
+	fromColumn: 'SLA Breaches'.'Service Lookup 007 Key'
+	toColumn: 'Service Lookup 007'.'Service Lookup 007 Key'
+
+relationship rel_0280
+	fromColumn: 'SLA Breaches'.'Customer Tier Key'
+	toColumn: 'Customer Tier'.'Customer Tier Key'
+
+relationship rel_0281
+	fromColumn: 'SLA Breaches'.'Language Key'
+	toColumn: Language.'Language Key'
+
+relationship rel_0282
+	fromColumn: 'SLA Breaches'.'Service Lookup 039 Key'
+	toColumn: 'Service Lookup 039'.'Service Lookup 039 Key'
+
+relationship rel_0283
+	fromColumn: 'SLA Breaches'.'Ticket Status Key'
+	toColumn: 'Ticket Status'.'Ticket Status Key'
+
+relationship rel_0284
+	fromColumn: 'CSAT Scores'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0285
+	fromColumn: 'CSAT Scores'.'Agent Key'
+	toColumn: Agent.'Agent Key'
+
+relationship rel_0286
+	fromColumn: 'CSAT Scores'.'Queue Key'
+	toColumn: Queue.'Queue Key'
+
+relationship rel_0287
+	fromColumn: 'CSAT Scores'.'Ticket Status Key'
+	toColumn: 'Ticket Status'.'Ticket Status Key'
+
+relationship rel_0288
+	fromColumn: 'CSAT Scores'.'Call Outcome Key'
+	toColumn: 'Call Outcome'.'Call Outcome Key'
+
+relationship rel_0289
+	fromColumn: 'CSAT Scores'.'Service Lookup 003 Key'
+	toColumn: 'Service Lookup 003'.'Service Lookup 003 Key'
+
+relationship rel_0290
+	fromColumn: 'CSAT Scores'.'Service Lookup 051 Key'
+	toColumn: 'Service Lookup 051'.'Service Lookup 051 Key'
+
+relationship rel_0291
+	fromColumn: 'CSAT Scores'.'Team Key'
+	toColumn: Team.'Team Key'
+
+relationship rel_0292
+	fromColumn: 'CSAT Scores'.'Service Lookup 007 Key'
+	toColumn: 'Service Lookup 007'.'Service Lookup 007 Key'
+
+relationship rel_0293
+	fromColumn: Timesheets.Date
+	toColumn: Calendar.Date
+
+relationship rel_0294
+	fromColumn: Timesheets.'Role Key'
+	toColumn: Role.'Role Key'
+
+relationship rel_0295
+	fromColumn: Timesheets.'Project Key'
+	toColumn: Project.'Project Key'
+
+relationship rel_0296
+	fromColumn: Timesheets.'Projects Lookup 037 Key'
+	toColumn: 'Projects Lookup 037'.'Projects Lookup 037 Key'
+
+relationship rel_0297
+	fromColumn: Timesheets.'Sponsor Key'
+	toColumn: Sponsor.'Sponsor Key'
+
+relationship rel_0298
+	fromColumn: Timesheets.'Phase Key'
+	toColumn: Phase.'Phase Key'
+
+relationship rel_0299
+	fromColumn: Timesheets.'Practice Key'
+	toColumn: Practice.'Practice Key'
+
+relationship rel_0300
+	fromColumn: 'Project Costs'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0301
+	fromColumn: 'Project Costs'.'Projects Lookup 037 Key'
+	toColumn: 'Projects Lookup 037'.'Projects Lookup 037 Key'
+
+relationship rel_0302
+	fromColumn: 'Project Costs'.'Projects Lookup 031 Key'
+	toColumn: 'Projects Lookup 031'.'Projects Lookup 031 Key'
+
+relationship rel_0303
+	fromColumn: 'Project Costs'.'Client Program Key'
+	toColumn: 'Client Program'.'Client Program Key'
+
+relationship rel_0304
+	fromColumn: 'Project Costs'.'Recipe Key'
+	toColumn: Recipe.'Recipe Key'
+
+relationship rel_0305
+	fromColumn: 'Project Costs'.'Milestone Status Key'
+	toColumn: 'Milestone Status'.'Milestone Status Key'
+
+relationship rel_0306
+	fromColumn: 'Project Costs'.'Risk Key'
+	toColumn: Risk.'Risk Key'
+
+relationship rel_0307
+	fromColumn: Milestones.Date
+	toColumn: Calendar.Date
+
+relationship rel_0308
+	fromColumn: Milestones.'Projects Lookup 031 Key'
+	toColumn: 'Projects Lookup 031'.'Projects Lookup 031 Key'
+
+relationship rel_0309
+	fromColumn: Milestones.'Client Program Key'
+	toColumn: 'Client Program'.'Client Program Key'
+
+relationship rel_0310
+	fromColumn: Milestones.'Project Type Key'
+	toColumn: 'Project Type'.'Project Type Key'
+
+relationship rel_0311
+	fromColumn: Milestones.'Project Key'
+	toColumn: Project.'Project Key'
+
+relationship rel_0312
+	fromColumn: Milestones.'Role Key'
+	toColumn: Role.'Role Key'
+
+relationship rel_0313
+	fromColumn: Milestones.'Billing Type Key'
+	toColumn: 'Billing Type'.'Billing Type Key'
+
+relationship rel_0314
+	fromColumn: Milestones.'Resource Key'
+	toColumn: Resource.'Resource Key'
+
+relationship rel_0315
+	fromColumn: 'Resource Plans'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0316
+	fromColumn: 'Resource Plans'.'Project Key'
+	toColumn: Project.'Project Key'
+
+relationship rel_0317
+	fromColumn: 'Resource Plans'.'Sponsor Key'
+	toColumn: Sponsor.'Sponsor Key'
+
+relationship rel_0318
+	fromColumn: 'Resource Plans'.'Risk Key'
+	toColumn: Risk.'Risk Key'
+
+relationship rel_0319
+	fromColumn: 'Resource Plans'.'Projects Lookup 008 Key'
+	toColumn: 'Projects Lookup 008'.'Projects Lookup 008 Key'
+
+relationship rel_0320
+	fromColumn: 'Resource Plans'.'Phase Key'
+	toColumn: Phase.'Phase Key'
+
+relationship rel_0321
+	fromColumn: 'Change Requests'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0322
+	fromColumn: 'Change Requests'.'Client Program Key'
+	toColumn: 'Client Program'.'Client Program Key'
+
+relationship rel_0323
+	fromColumn: 'Change Requests'.'Sponsor Key'
+	toColumn: Sponsor.'Sponsor Key'
+
+relationship rel_0324
+	fromColumn: 'Change Requests'.'Projects Lookup 037 Key'
+	toColumn: 'Projects Lookup 037'.'Projects Lookup 037 Key'
+
+relationship rel_0325
+	fromColumn: 'Change Requests'.'Task Key'
+	toColumn: Task.'Task Key'
+
+relationship rel_0326
+	fromColumn: 'Change Requests'.'Practice Key'
+	toColumn: Practice.'Practice Key'
+
+relationship rel_0327
+	fromColumn: 'Change Requests'.'Milestone Status Key'
+	toColumn: 'Milestone Status'.'Milestone Status Key'
+
+relationship rel_0328
+	fromColumn: 'Change Requests'.'Role Key'
+	toColumn: Role.'Role Key'
+
+relationship rel_0329
+	fromColumn: 'Production Orders'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0330
+	fromColumn: 'Production Orders'.'Survey Key'
+	toColumn: Survey.'Survey Key'
+
+relationship rel_0331
+	fromColumn: 'Production Orders'.'Shift Pattern Key'
+	toColumn: 'Shift Pattern'.'Shift Pattern Key'
+
+relationship rel_0332
+	fromColumn: 'Production Orders'.'Spare Kit Key'
+	toColumn: 'Spare Kit'.'Spare Kit Key'
+
+relationship rel_0333
+	fromColumn: 'Production Orders'.'Line Key'
+	toColumn: Line.'Line Key'
+
+relationship rel_0334
+	fromColumn: 'Production Orders'.'Maintenance Type Key'
+	toColumn: 'Maintenance Type'.'Maintenance Type Key'
+
+relationship rel_0335
+	fromColumn: 'Production Orders'.'Inspection Plan Key'
+	toColumn: 'Inspection Plan'.'Inspection Plan Key'
+
+relationship rel_0336
+	fromColumn: 'Production Orders'.'Machine Key'
+	toColumn: Machine.'Machine Key'
+
+relationship rel_0337
+	fromColumn: 'Production Orders'.'Scrap Reason Key'
+	toColumn: 'Scrap Reason'.'Scrap Reason Key'
+
+relationship rel_0338
+	fromColumn: 'Machine Events'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0339
+	fromColumn: 'Machine Events'.'Spare Kit Key'
+	toColumn: 'Spare Kit'.'Spare Kit Key'
+
+relationship rel_0340
+	fromColumn: 'Machine Events'.'Defect Type Key'
+	toColumn: 'Defect Type'.'Defect Type Key'
+
+relationship rel_0341
+	fromColumn: 'Machine Events'.'Operator Key'
+	toColumn: Operator.'Operator Key'
+
+relationship rel_0342
+	fromColumn: 'Machine Events'.'Batch Key'
+	toColumn: Batch.'Batch Key'
+
+relationship rel_0343
+	fromColumn: 'Machine Events'.'Production Lookup 047 Key'
+	toColumn: 'Production Lookup 047'.'Production Lookup 047 Key'
+
+relationship rel_0344
+	fromColumn: 'Machine Events'.'Inspection Plan Key'
+	toColumn: 'Inspection Plan'.'Inspection Plan Key'
+
+relationship rel_0345
+	fromColumn: 'Machine Events'.'Production Lookup 001 Key'
+	toColumn: 'Production Lookup 001'.'Production Lookup 001 Key'
+
+relationship rel_0346
+	fromColumn: 'Quality Inspections'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0347
+	fromColumn: 'Quality Inspections'.'Production Lookup 001 Key'
+	toColumn: 'Production Lookup 001'.'Production Lookup 001 Key'
+
+relationship rel_0348
+	fromColumn: 'Quality Inspections'.'Machine Key'
+	toColumn: Machine.'Machine Key'
+
+relationship rel_0349
+	fromColumn: 'Quality Inspections'.'Downtime Reason Key'
+	toColumn: 'Downtime Reason'.'Downtime Reason Key'
+
+relationship rel_0350
+	fromColumn: 'Quality Inspections'.'Maintenance Type Key'
+	toColumn: 'Maintenance Type'.'Maintenance Type Key'
+
+relationship rel_0351
+	fromColumn: Scrap.Date
+	toColumn: Calendar.Date
+
+relationship rel_0352
+	fromColumn: Scrap.'Defect Type Key'
+	toColumn: 'Defect Type'.'Defect Type Key'
+
+relationship rel_0353
+	fromColumn: Scrap.'Downtime Reason Key'
+	toColumn: 'Downtime Reason'.'Downtime Reason Key'
+
+relationship rel_0354
+	fromColumn: Scrap.'Batch Key'
+	toColumn: Batch.'Batch Key'
+
+relationship rel_0355
+	fromColumn: Scrap.'Logistics Lookup 024 Key'
+	toColumn: 'Logistics Lookup 024'.'Logistics Lookup 024 Key'
+
+relationship rel_0356
+	fromColumn: Scrap.'Shift Pattern Key'
+	toColumn: 'Shift Pattern'.'Shift Pattern Key'
+
+relationship rel_0357
+	fromColumn: Scrap.'Plant Key'
+	toColumn: Plant.'Plant Key'
+
+relationship rel_0358
+	fromColumn: 'Energy Readings'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0359
+	fromColumn: 'Energy Readings'.'Downtime Reason Key'
+	toColumn: 'Downtime Reason'.'Downtime Reason Key'
+
+relationship rel_0360
+	fromColumn: 'Energy Readings'.'Scrap Reason Key'
+	toColumn: 'Scrap Reason'.'Scrap Reason Key'
+
+relationship rel_0361
+	fromColumn: 'Energy Readings'.'Line Key'
+	toColumn: Line.'Line Key'
+
+relationship rel_0362
+	fromColumn: 'Energy Readings'.'Defect Type Key'
+	toColumn: 'Defect Type'.'Defect Type Key'
+
+relationship rel_0363
+	fromColumn: 'Energy Readings'.'Projects Lookup 031 Key'
+	toColumn: 'Projects Lookup 031'.'Projects Lookup 031 Key'
+
+relationship rel_0364
+	fromColumn: 'Maintenance Orders'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0365
+	fromColumn: 'Maintenance Orders'.'Maintenance Type Key'
+	toColumn: 'Maintenance Type'.'Maintenance Type Key'
+
+relationship rel_0366
+	fromColumn: 'Maintenance Orders'.'Plant Key'
+	toColumn: Plant.'Plant Key'
+
+relationship rel_0367
+	fromColumn: 'Maintenance Orders'.'Defect Type Key'
+	toColumn: 'Defect Type'.'Defect Type Key'
+
+relationship rel_0368
+	fromColumn: 'Maintenance Orders'.'Downtime Reason Key'
+	toColumn: 'Downtime Reason'.'Downtime Reason Key'
+
+relationship rel_0369
+	fromColumn: 'Maintenance Orders'.'Production Lookup 047 Key'
+	toColumn: 'Production Lookup 047'.'Production Lookup 047 Key'
+
+relationship rel_0370
+	fromColumn: 'Maintenance Orders'.'Spare Kit Key'
+	toColumn: 'Spare Kit'.'Spare Kit Key'
+
+relationship rel_0371
+	fromColumn: Bookings.Date
+	toColumn: Calendar.Date
+
+relationship rel_0372
+	fromColumn: Bookings.'Review Site Key'
+	toColumn: 'Review Site'.'Review Site Key'
+
+relationship rel_0373
+	fromColumn: Bookings.'Risk Key'
+	toColumn: Risk.'Risk Key'
+
+relationship rel_0374
+	fromColumn: Bookings.'Room Type Key'
+	toColumn: 'Room Type'.'Room Type Key'
+
+relationship rel_0375
+	fromColumn: 'Room Nights'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0376
+	fromColumn: 'Room Nights'.'Room Type Key'
+	toColumn: 'Room Type'.'Room Type Key'
+
+relationship rel_0377
+	fromColumn: 'Room Nights'.'Cancellation Reason Key'
+	toColumn: 'Cancellation Reason'.'Cancellation Reason Key'
+
+relationship rel_0378
+	fromColumn: 'Room Nights'.'Loyalty Tier Key'
+	toColumn: 'Loyalty Tier'.'Loyalty Tier Key'
+
+relationship rel_0379
+	fromColumn: 'Room Nights'.'Review Site Key'
+	toColumn: 'Review Site'.'Review Site Key'
+
+relationship rel_0380
+	fromColumn: 'Room Nights'.'Source Market Key'
+	toColumn: 'Source Market'.'Source Market Key'
+
+relationship rel_0381
+	fromColumn: 'Room Nights'.'Guest Key'
+	toColumn: Guest.'Guest Key'
+
+relationship rel_0382
+	fromColumn: 'Guest Reviews'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0383
+	fromColumn: 'Guest Reviews'.'Venue Key'
+	toColumn: Venue.'Venue Key'
+
+relationship rel_0384
+	fromColumn: 'Guest Reviews'.'Room Type Key'
+	toColumn: 'Room Type'.'Room Type Key'
+
+relationship rel_0385
+	fromColumn: 'Guest Reviews'.'Booking Channel Key'
+	toColumn: 'Booking Channel'.'Booking Channel Key'
+
+relationship rel_0386
+	fromColumn: 'Guest Reviews'.'Event Type Key'
+	toColumn: 'Event Type'.'Event Type Key'
+
+relationship rel_0387
+	fromColumn: Events.Date
+	toColumn: Calendar.Date
+
+relationship rel_0388
+	fromColumn: Events.'Meal Plan Key'
+	toColumn: 'Meal Plan'.'Meal Plan Key'
+
+relationship rel_0389
+	fromColumn: Events.'Rate Plan Key'
+	toColumn: 'Rate Plan'.'Rate Plan Key'
+
+relationship rel_0390
+	fromColumn: Events.'Review Site Key'
+	toColumn: 'Review Site'.'Review Site Key'
+
+relationship rel_0391
+	fromColumn: Events.'Cancellation Reason Key'
+	toColumn: 'Cancellation Reason'.'Cancellation Reason Key'
+
+relationship rel_0392
+	fromColumn: 'Work Orders'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0393
+	fromColumn: 'Work Orders'.'Occupancy Type Key'
+	toColumn: 'Occupancy Type'.'Occupancy Type Key'
+
+relationship rel_0394
+	fromColumn: 'Work Orders'.'Asset Key'
+	toColumn: Asset.'Asset Key'
+
+relationship rel_0395
+	fromColumn: 'Work Orders'.'Inspection Type Key'
+	toColumn: 'Inspection Type'.'Inspection Type Key'
+
+relationship rel_0396
+	fromColumn: 'Work Orders'.'Facilities Lookup 049 Key'
+	toColumn: 'Facilities Lookup 049'.'Facilities Lookup 049 Key'
+
+relationship rel_0397
+	fromColumn: 'Work Orders'.'Utility Key'
+	toColumn: Utility.'Utility Key'
+
+relationship rel_0398
+	fromColumn: 'Space Usage'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0399
+	fromColumn: 'Space Usage'.'Asset Key'
+	toColumn: Asset.'Asset Key'
+
+relationship rel_0400
+	fromColumn: 'Space Usage'.'Facilities Lookup 011 Key'
+	toColumn: 'Facilities Lookup 011'.'Facilities Lookup 011 Key'
+
+relationship rel_0401
+	fromColumn: 'Space Usage'.'Building Key'
+	toColumn: Building.'Building Key'
+
+relationship rel_0402
+	fromColumn: 'Space Usage'.'Facilities Lookup 049 Key'
+	toColumn: 'Facilities Lookup 049'.'Facilities Lookup 049 Key'
+
+relationship rel_0403
+	fromColumn: 'Space Usage'.'Cost Code Key'
+	toColumn: 'Cost Code'.'Cost Code Key'
+
+relationship rel_0404
+	fromColumn: 'Utility Bills'.Date
+	toColumn: Calendar.Date
+
+relationship rel_0405
+	fromColumn: 'Utility Bills'.'Building Key'
+	toColumn: Building.'Building Key'
+
+relationship rel_0406
+	fromColumn: 'Utility Bills'.'Inspection Type Key'
+	toColumn: 'Inspection Type'.'Inspection Type Key'
+
+relationship rel_0407
+	fromColumn: 'Utility Bills'.'Floor Key'
+	toColumn: Floor.'Floor Key'
+
+relationship rel_0408
+	fromColumn: 'Utility Bills'.'Asset Key'
+	toColumn: Asset.'Asset Key'
+
+relationship rel_0409
+	fromColumn: 'Utility Bills'.'Occupancy Type Key'
+	toColumn: 'Occupancy Type'.'Occupancy Type Key'
+
+relationship rel_0410
+	fromColumn: Inspections.Date
+	toColumn: Calendar.Date
+
+relationship rel_0411
+	fromColumn: Inspections.'Lease Key'
+	toColumn: Lease.'Lease Key'
+
+relationship rel_0412
+	fromColumn: Inspections.'Utility Key'
+	toColumn: Utility.'Utility Key'
+
+relationship rel_0413
+	fromColumn: Inspections.'Facilities Lookup 049 Key'
+	toColumn: 'Facilities Lookup 049'.'Facilities Lookup 049 Key'
+
+relationship rel_0414
+	fromColumn: Inspections.'Facilities Lookup 011 Key'
+	toColumn: 'Facilities Lookup 011'.'Facilities Lookup 011 Key'
+
+relationship rel_0415
+	fromColumn: Inspections.'Cost Code Key'
+	toColumn: 'Cost Code'.'Cost Code Key'
+
+relationship rel_0416
+	fromColumn: Inspections.'Building Key'
+	toColumn: Building.'Building Key'

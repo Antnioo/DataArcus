@@ -1,0 +1,142 @@
+table Inspections
+
+	/// Made-up measure for the large test model (Facilities).
+	measure 'Inspections Total Cost' = SUM ( Inspections[Cost] )
+		formatString: #,0
+		displayFolder: Facilities
+
+	measure 'Inspections Average Cost' = AVERAGE ( Inspections[Cost] )
+		displayFolder: Facilities
+
+	/// Made-up measure for the large test model (Facilities).
+	measure 'Inspections Count' = COUNTROWS ( Inspections )
+		formatString: #,0
+		displayFolder: Facilities
+
+	measure 'Inspections Total Cost LY' = CALCULATE ( [Inspections Total Cost], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+
+	measure 'Inspections Total Cost YoY %' = DIVIDE ( [Inspections Total Cost] - [Inspections Total Cost LY], [Inspections Total Cost LY] )
+		formatString: 0.0%
+		displayFolder: Facilities
+
+	measure 'Inspections Total Cost YTD' = TOTALYTD ( [Inspections Total Cost], 'Calendar'[Date] )
+
+	measure 'Inspections Max Cost' = MAX ( Inspections[Cost] )
+		displayFolder: Facilities
+
+	measure 'Inspections Cost Share %' = DIVIDE ( [Inspections Total Cost], CALCULATE ( [Inspections Total Cost], ALL ( Inspections ) ) )
+
+	measure 'Inspections Total Discount' = SUM ( Inspections[Discount] )
+		formatString: #,0
+		displayFolder: Facilities
+
+	measure 'Inspections Average Discount' = AVERAGE ( Inspections[Discount] )
+		formatString: #,0.00
+
+	measure 'Inspections Total Discount LY' = CALCULATE ( [Inspections Total Discount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+
+	measure 'Inspections Total Discount YoY %' = DIVIDE ( [Inspections Total Discount] - [Inspections Total Discount LY], [Inspections Total Discount LY] )
+		formatString: 0.0%
+		displayFolder: Facilities
+
+	measure 'Inspections Total Discount YTD' = TOTALYTD ( [Inspections Total Discount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Facilities
+
+	measure 'Inspections Max Discount' = MAX ( Inspections[Discount] )
+		displayFolder: Facilities
+
+	measure 'Inspections Discount Share %' = DIVIDE ( [Inspections Total Discount], CALCULATE ( [Inspections Total Discount], ALL ( Inspections ) ) )
+		displayFolder: Facilities
+
+	column 'Inspection Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Inspection Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Lease Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Lease Key
+
+	column 'Utility Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Utility Key
+
+	column 'Facilities Lookup 049 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Facilities Lookup 049 Key
+
+	column 'Facilities Lookup 011 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Facilities Lookup 011 Key
+
+	column 'Cost Code Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Cost Code Key
+
+	column 'Building Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Building Key
+
+	column Cost
+		dataType: double
+		isHidden
+		sourceColumn: Cost
+
+	column Discount
+		dataType: decimal
+		isHidden
+		sourceColumn: Discount
+
+	column 'Tax Amount'
+		dataType: double
+		isHidden
+		sourceColumn: Tax Amount
+
+	column 'Weight Kg'
+		dataType: decimal
+		sourceColumn: Weight Kg
+
+	column Units
+		dataType: int64
+		isHidden
+		sourceColumn: Units
+
+	column 'Duration Minutes'
+		dataType: double
+		isHidden
+		sourceColumn: Duration Minutes
+
+	column Hours
+		dataType: double
+		sourceColumn: Hours
+
+	column Price
+		dataType: double
+		isHidden
+		sourceColumn: Price
+
+	column Amount
+		dataType: double
+		sourceColumn: Amount
+
+	partition Inspections = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Inspection Id", "Date", "Lease Key", "Utility Key", "Facilities Lookup 049 Key", "Facilities Lookup 011 Key", "Cost Code Key", "Building Key", "Cost", "Discount", "Tax Amount", "Weight Kg", "Units", "Duration Minutes", "Hours", "Price", "Amount"}, {})
+				in
+				    Source

@@ -1,0 +1,42 @@
+table Driver
+
+	column 'Driver Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Driver Key
+
+	column Driver
+		dataType: string
+		sourceColumn: Driver
+
+	column 'Driver Parent Code'
+		dataType: string
+		sourceColumn: Driver Parent Code
+
+	column 'Driver Region'
+		dataType: string
+		sourceColumn: Driver Region
+
+	column 'Driver Status'
+		dataType: string
+		sourceColumn: Driver Status
+
+	column 'Driver Created By'
+		dataType: string
+		sourceColumn: Driver Created By
+
+	column 'Driver Code'
+		dataType: string
+		sourceColumn: Driver Code
+
+	column 'Driver Description'
+		dataType: string
+		sourceColumn: Driver Description
+
+	partition Driver = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Driver Key", "Driver", "Driver Parent Code", "Driver Region", "Driver Status", "Driver Created By", "Driver Code", "Driver Description"}, {})
+				in
+				    Source

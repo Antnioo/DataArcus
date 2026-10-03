@@ -1,0 +1,50 @@
+table 'Asset Class'
+
+	column 'Asset Class Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Asset Class Key
+
+	column 'Asset Class'
+		dataType: string
+		sourceColumn: Asset Class
+
+	column 'Asset Class Sort Order'
+		dataType: int64
+		sourceColumn: Asset Class Sort Order
+
+	column 'Asset Class Region'
+		dataType: string
+		sourceColumn: Asset Class Region
+
+	column 'Asset Class Owner'
+		dataType: string
+		sourceColumn: Asset Class Owner
+
+	column 'Asset Class Created By'
+		dataType: string
+		sourceColumn: Asset Class Created By
+
+	column 'Asset Class Notes'
+		dataType: string
+		sourceColumn: Asset Class Notes
+
+	column 'Asset Class Code'
+		dataType: string
+		sourceColumn: Asset Class Code
+
+	column 'Asset Class Description'
+		dataType: string
+		sourceColumn: Asset Class Description
+
+	column 'Asset Class Group'
+		dataType: string
+		sourceColumn: Asset Class Group
+
+	partition 'Asset Class' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Asset Class Key", "Asset Class", "Asset Class Sort Order", "Asset Class Region", "Asset Class Owner", "Asset Class Created By", "Asset Class Notes", "Asset Class Code", "Asset Class Description", "Asset Class Group"}, {})
+				in
+				    Source

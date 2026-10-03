@@ -1,0 +1,50 @@
+table 'Spare Kit'
+
+	column 'Spare Kit Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Spare Kit Key
+
+	column 'Spare Kit'
+		dataType: string
+		sourceColumn: Spare Kit
+
+	column 'Spare Kit Group'
+		dataType: string
+		sourceColumn: Spare Kit Group
+
+	column 'Spare Kit Description'
+		dataType: string
+		sourceColumn: Spare Kit Description
+
+	column 'Spare Kit External Id'
+		dataType: string
+		sourceColumn: Spare Kit External Id
+
+	column 'Spare Kit Notes'
+		dataType: string
+		sourceColumn: Spare Kit Notes
+
+	column 'Spare Kit Status'
+		dataType: string
+		sourceColumn: Spare Kit Status
+
+	column 'Spare Kit Code'
+		dataType: string
+		sourceColumn: Spare Kit Code
+
+	column 'Spare Kit Category'
+		dataType: string
+		sourceColumn: Spare Kit Category
+
+	column 'Spare Kit Type'
+		dataType: string
+		sourceColumn: Spare Kit Type
+
+	partition 'Spare Kit' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Spare Kit Key", "Spare Kit", "Spare Kit Group", "Spare Kit Description", "Spare Kit External Id", "Spare Kit Notes", "Spare Kit Status", "Spare Kit Code", "Spare Kit Category", "Spare Kit Type"}, {})
+				in
+				    Source

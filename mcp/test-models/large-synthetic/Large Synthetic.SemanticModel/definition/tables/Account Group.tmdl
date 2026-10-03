@@ -1,0 +1,46 @@
+table 'Account Group'
+
+	column 'Account Group Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Account Group Key
+
+	column 'Account Group'
+		dataType: string
+		sourceColumn: Account Group
+
+	column 'Account Group Region'
+		dataType: string
+		sourceColumn: Account Group Region
+
+	column 'Account Group Group'
+		dataType: string
+		sourceColumn: Account Group Group
+
+	column 'Account Group Long Name'
+		dataType: string
+		sourceColumn: Account Group Long Name
+
+	column 'Account Group Notes'
+		dataType: string
+		sourceColumn: Account Group Notes
+
+	column 'Account Group Parent Code'
+		dataType: string
+		sourceColumn: Account Group Parent Code
+
+	column 'Account Group Code'
+		dataType: string
+		sourceColumn: Account Group Code
+
+	column 'Account Group Description'
+		dataType: string
+		sourceColumn: Account Group Description
+
+	partition 'Account Group' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Account Group Key", "Account Group", "Account Group Region", "Account Group Group", "Account Group Long Name", "Account Group Notes", "Account Group Parent Code", "Account Group Code", "Account Group Description"}, {})
+				in
+				    Source

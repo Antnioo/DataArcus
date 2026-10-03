@@ -1,0 +1,34 @@
+table Sponsor
+
+	column 'Sponsor Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Sponsor Key
+
+	column Sponsor
+		dataType: string
+		sourceColumn: Sponsor
+
+	column 'Sponsor Type'
+		dataType: string
+		sourceColumn: Sponsor Type
+
+	column 'Sponsor Level'
+		dataType: int64
+		sourceColumn: Sponsor Level
+
+	column 'Sponsor Code'
+		dataType: string
+		sourceColumn: Sponsor Code
+
+	column 'Sponsor Description'
+		dataType: string
+		sourceColumn: Sponsor Description
+
+	partition Sponsor = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Sponsor Key", "Sponsor", "Sponsor Type", "Sponsor Level", "Sponsor Code", "Sponsor Description"}, {})
+				in
+				    Source

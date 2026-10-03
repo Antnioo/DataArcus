@@ -1,0 +1,34 @@
+table Incoterm
+
+	column 'Incoterm Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Incoterm Key
+
+	column Incoterm
+		dataType: string
+		sourceColumn: Incoterm
+
+	column 'Incoterm Valid From'
+		dataType: dateTime
+		sourceColumn: Incoterm Valid From
+
+	column 'Incoterm Code'
+		dataType: string
+		sourceColumn: Incoterm Code
+
+	column 'Incoterm Description'
+		dataType: string
+		sourceColumn: Incoterm Description
+
+	column 'Incoterm Group'
+		dataType: string
+		sourceColumn: Incoterm Group
+
+	partition Incoterm = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Incoterm Key", "Incoterm", "Incoterm Valid From", "Incoterm Code", "Incoterm Description", "Incoterm Group"}, {})
+				in
+				    Source

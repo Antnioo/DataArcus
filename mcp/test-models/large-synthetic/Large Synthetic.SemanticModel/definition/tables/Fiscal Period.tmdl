@@ -1,0 +1,38 @@
+table 'Fiscal Period'
+
+	column 'Fiscal Period Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Fiscal Period Key
+
+	column 'Fiscal Period'
+		dataType: string
+		sourceColumn: Fiscal Period
+
+	column 'Fiscal Period Category'
+		dataType: string
+		sourceColumn: Fiscal Period Category
+
+	column 'Fiscal Period Description'
+		dataType: string
+		sourceColumn: Fiscal Period Description
+
+	column 'Fiscal Period Status'
+		dataType: string
+		sourceColumn: Fiscal Period Status
+
+	column 'Fiscal Period Code'
+		dataType: string
+		sourceColumn: Fiscal Period Code
+
+	column 'Fiscal Period Group'
+		dataType: string
+		sourceColumn: Fiscal Period Group
+
+	partition 'Fiscal Period' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Fiscal Period Key", "Fiscal Period", "Fiscal Period Category", "Fiscal Period Description", "Fiscal Period Status", "Fiscal Period Code", "Fiscal Period Group"}, {})
+				in
+				    Source

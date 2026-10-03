@@ -1,0 +1,134 @@
+table 'CSAT Scores'
+
+	measure 'CSAT Scores Total Net Amount' = SUM ( 'CSAT Scores'[Net Amount] )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'CSAT Scores Average Net Amount' = AVERAGE ( 'CSAT Scores'[Net Amount] )
+		formatString: #,0.00
+		displayFolder: Service
+
+	measure 'CSAT Scores Count' = COUNTROWS ( 'CSAT Scores' )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'CSAT Scores Total Net Amount LY' = CALCULATE ( [CSAT Scores Total Net Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'CSAT Scores Total Net Amount YoY %' = DIVIDE ( [CSAT Scores Total Net Amount] - [CSAT Scores Total Net Amount LY], [CSAT Scores Total Net Amount LY] )
+		formatString: 0.0%
+		displayFolder: Service
+
+	measure 'CSAT Scores Total Net Amount YTD' = TOTALYTD ( [CSAT Scores Total Net Amount], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'CSAT Scores Max Net Amount' = MAX ( 'CSAT Scores'[Net Amount] )
+
+	measure 'CSAT Scores Net Amount Share %' = DIVIDE ( [CSAT Scores Total Net Amount], CALCULATE ( [CSAT Scores Total Net Amount], ALL ( 'CSAT Scores' ) ) )
+		displayFolder: Service
+
+	measure 'CSAT Scores Total Hours' = SUM ( 'CSAT Scores'[Hours] )
+		displayFolder: Service
+
+	/// Made-up measure for the large test model (Service).
+	measure 'CSAT Scores Average Hours' = AVERAGE ( 'CSAT Scores'[Hours] )
+		formatString: #,0.00
+		displayFolder: Service
+
+	measure 'CSAT Scores Total Hours LY' = CALCULATE ( [CSAT Scores Total Hours], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'CSAT Scores Total Hours YoY %' = DIVIDE ( [CSAT Scores Total Hours] - [CSAT Scores Total Hours LY], [CSAT Scores Total Hours LY] )
+		formatString: 0.0%
+
+	measure 'CSAT Scores Total Hours YTD' = TOTALYTD ( [CSAT Scores Total Hours], 'Calendar'[Date] )
+		displayFolder: Service
+
+	measure 'CSAT Scores Max Hours' = MAX ( 'CSAT Scores'[Hours] )
+		displayFolder: Service
+
+	measure 'CSAT Scores Hours Share %' = DIVIDE ( [CSAT Scores Total Hours], CALCULATE ( [CSAT Scores Total Hours], ALL ( 'CSAT Scores' ) ) )
+		displayFolder: Service
+
+	column 'CSAT Score Id'
+		dataType: int64
+		isHidden
+		sourceColumn: CSAT Score Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Agent Key'
+		dataType: int64
+		sourceColumn: Agent Key
+
+	column 'Queue Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Queue Key
+
+	column 'Ticket Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Ticket Status Key
+
+	column 'Call Outcome Key'
+		dataType: int64
+		sourceColumn: Call Outcome Key
+
+	column 'Service Lookup 003 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Service Lookup 003 Key
+
+	column 'Service Lookup 051 Key'
+		dataType: int64
+		sourceColumn: Service Lookup 051 Key
+
+	column 'Team Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Team Key
+
+	column 'Service Lookup 007 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Service Lookup 007 Key
+
+	column 'Net Amount'
+		dataType: double
+		sourceColumn: Net Amount
+
+	column Hours
+		dataType: double
+		isHidden
+		sourceColumn: Hours
+
+	column Score
+		dataType: double
+		sourceColumn: Score
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	column 'Weight Kg'
+		dataType: decimal
+		sourceColumn: Weight Kg
+
+	column 'Tax Amount'
+		dataType: decimal
+		isHidden
+		sourceColumn: Tax Amount
+
+	partition 'CSAT Scores' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"CSAT Score Id", "Date", "Agent Key", "Queue Key", "Ticket Status Key", "Call Outcome Key", "Service Lookup 003 Key", "Service Lookup 051 Key", "Team Key", "Service Lookup 007 Key", "Net Amount", "Hours", "Score", "Quantity", "Weight Kg", "Tax Amount"}, {})
+				in
+				    Source

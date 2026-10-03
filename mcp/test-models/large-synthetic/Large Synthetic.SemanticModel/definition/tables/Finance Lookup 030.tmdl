@@ -1,0 +1,38 @@
+table 'Finance Lookup 030'
+
+	column 'Finance Lookup 030 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Finance Lookup 030 Key
+
+	column 'Finance Lookup 030'
+		dataType: string
+		sourceColumn: Finance Lookup 030
+
+	column 'Finance Lookup 030 Owner'
+		dataType: string
+		sourceColumn: Finance Lookup 030 Owner
+
+	column 'Finance Lookup 030 Code'
+		dataType: string
+		sourceColumn: Finance Lookup 030 Code
+
+	column 'Finance Lookup 030 Short Name'
+		dataType: string
+		sourceColumn: Finance Lookup 030 Short Name
+
+	column 'Finance Lookup 030 Sort Order'
+		dataType: int64
+		sourceColumn: Finance Lookup 030 Sort Order
+
+	column 'Finance Lookup 030 Description'
+		dataType: string
+		sourceColumn: Finance Lookup 030 Description
+
+	partition 'Finance Lookup 030' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Finance Lookup 030 Key", "Finance Lookup 030", "Finance Lookup 030 Owner", "Finance Lookup 030 Code", "Finance Lookup 030 Short Name", "Finance Lookup 030 Sort Order", "Finance Lookup 030 Description"}, {})
+				in
+				    Source

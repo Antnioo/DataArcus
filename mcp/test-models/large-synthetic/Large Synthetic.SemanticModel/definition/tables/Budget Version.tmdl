@@ -1,0 +1,42 @@
+table 'Budget Version'
+
+	column 'Budget Version Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Budget Version Key
+
+	column 'Budget Version'
+		dataType: string
+		sourceColumn: Budget Version
+
+	column 'Budget Version Region'
+		dataType: string
+		sourceColumn: Budget Version Region
+
+	column 'Budget Version Category'
+		dataType: string
+		sourceColumn: Budget Version Category
+
+	column 'Budget Version Is Active'
+		dataType: boolean
+		sourceColumn: Budget Version Is Active
+
+	column 'Budget Version Group'
+		dataType: string
+		sourceColumn: Budget Version Group
+
+	column 'Budget Version Code'
+		dataType: string
+		sourceColumn: Budget Version Code
+
+	column 'Budget Version Description'
+		dataType: string
+		sourceColumn: Budget Version Description
+
+	partition 'Budget Version' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Budget Version Key", "Budget Version", "Budget Version Region", "Budget Version Category", "Budget Version Is Active", "Budget Version Group", "Budget Version Code", "Budget Version Description"}, {})
+				in
+				    Source

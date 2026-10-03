@@ -1,0 +1,117 @@
+table Payments
+
+	measure 'Payments Total Net Amount' = SUM ( Payments[Net Amount] )
+		displayFolder: Finance
+
+	measure 'Payments Average Net Amount' = AVERAGE ( Payments[Net Amount] )
+		formatString: #,0.00
+		displayFolder: Finance
+
+	measure 'Payments Count' = COUNTROWS ( Payments )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'Payments Total Net Amount LY' = CALCULATE ( [Payments Total Net Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+
+	measure 'Payments Total Net Amount YoY %' = DIVIDE ( [Payments Total Net Amount] - [Payments Total Net Amount LY], [Payments Total Net Amount LY] )
+		formatString: 0.0%
+
+	measure 'Payments Total Net Amount YTD' = TOTALYTD ( [Payments Total Net Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Finance
+
+	/// Made-up measure for the large test model (Finance).
+	measure 'Payments Max Net Amount' = MAX ( Payments[Net Amount] )
+		displayFolder: Finance
+
+	measure 'Payments Net Amount Share %' = DIVIDE ( [Payments Total Net Amount], CALCULATE ( [Payments Total Net Amount], ALL ( Payments ) ) )
+
+	measure 'Payments Total Weight Kg' = SUM ( Payments[Weight Kg] )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'Payments Average Weight Kg' = AVERAGE ( Payments[Weight Kg] )
+		formatString: #,0.00
+		displayFolder: Finance
+
+	measure 'Payments Total Weight Kg LY' = CALCULATE ( [Payments Total Weight Kg], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Finance
+
+	measure 'Payments Total Weight Kg YoY %' = DIVIDE ( [Payments Total Weight Kg] - [Payments Total Weight Kg LY], [Payments Total Weight Kg LY] )
+		formatString: 0.0%
+		displayFolder: Finance
+
+	measure 'Payments Total Weight Kg YTD' = TOTALYTD ( [Payments Total Weight Kg], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'Payments Max Weight Kg' = MAX ( Payments[Weight Kg] )
+
+	measure 'Payments Weight Kg Share %' = DIVIDE ( [Payments Total Weight Kg], CALCULATE ( [Payments Total Weight Kg], ALL ( Payments ) ) )
+		displayFolder: Finance
+
+	column 'Payment Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Payment Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Budget Version Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Budget Version Key
+
+	column 'Asset Class Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Asset Class Key
+
+	column 'Dimension Set Key'
+		dataType: int64
+		sourceColumn: Dimension Set Key
+
+	column 'Account Group Key'
+		dataType: int64
+		sourceColumn: Account Group Key
+
+	column 'Net Amount'
+		dataType: double
+		sourceColumn: Net Amount
+
+	column 'Weight Kg'
+		dataType: decimal
+		isHidden
+		sourceColumn: Weight Kg
+
+	column Amount
+		dataType: double
+		isHidden
+		sourceColumn: Amount
+
+	column Hours
+		dataType: double
+		sourceColumn: Hours
+
+	column Value
+		dataType: double
+		sourceColumn: Value
+
+	column 'Duration Minutes'
+		dataType: double
+		sourceColumn: Duration Minutes
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	partition Payments = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Payment Id", "Date", "Budget Version Key", "Asset Class Key", "Dimension Set Key", "Account Group Key", "Net Amount", "Weight Kg", "Amount", "Hours", "Value", "Duration Minutes", "Quantity"}, {})
+				in
+				    Source

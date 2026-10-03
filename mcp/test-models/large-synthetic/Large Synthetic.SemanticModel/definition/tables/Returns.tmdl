@@ -1,0 +1,122 @@
+table Returns
+
+	measure 'Returns Total Amount' = SUM ( Returns[Amount] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Returns Average Amount' = AVERAGE ( Returns[Amount] )
+		formatString: #,0.00
+		displayFolder: Logistics
+
+	measure 'Returns Count' = COUNTROWS ( Returns )
+		formatString: #,0
+
+	measure 'Returns Total Amount LY' = CALCULATE ( [Returns Total Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Returns Total Amount YoY %' = DIVIDE ( [Returns Total Amount] - [Returns Total Amount LY], [Returns Total Amount LY] )
+		displayFolder: Logistics
+
+	measure 'Returns Total Amount YTD' = TOTALYTD ( [Returns Total Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Returns Max Amount' = MAX ( Returns[Amount] )
+		displayFolder: Logistics
+
+	measure 'Returns Amount Share %' = DIVIDE ( [Returns Total Amount], CALCULATE ( [Returns Total Amount], ALL ( Returns ) ) )
+		displayFolder: Logistics
+
+	measure 'Returns Total Weight Kg' = SUM ( Returns[Weight Kg] )
+
+	measure 'Returns Average Weight Kg' = AVERAGE ( Returns[Weight Kg] )
+		displayFolder: Logistics
+
+	measure 'Returns Total Weight Kg LY' = CALCULATE ( [Returns Total Weight Kg], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Returns Total Weight Kg YoY %' = DIVIDE ( [Returns Total Weight Kg] - [Returns Total Weight Kg LY], [Returns Total Weight Kg LY] )
+		formatString: 0.0%
+		displayFolder: Logistics
+
+	measure 'Returns Total Weight Kg YTD' = TOTALYTD ( [Returns Total Weight Kg], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Returns Max Weight Kg' = MAX ( Returns[Weight Kg] )
+		displayFolder: Logistics
+
+	measure 'Returns Weight Kg Share %' = DIVIDE ( [Returns Total Weight Kg], CALCULATE ( [Returns Total Weight Kg], ALL ( Returns ) ) )
+		displayFolder: Logistics
+
+	column 'Return Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Return Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Port Key'
+		dataType: int64
+		sourceColumn: Port Key
+
+	column 'Fleet Unit Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Fleet Unit Key
+
+	column 'Logistics Lookup 010 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Logistics Lookup 010 Key
+
+	column 'Logistics Lookup 046 Key'
+		dataType: int64
+		sourceColumn: Logistics Lookup 046 Key
+
+	column 'Logistics Lookup 029 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Logistics Lookup 029 Key
+
+	column 'Logistics Lookup 024 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Logistics Lookup 024 Key
+
+	column Amount
+		dataType: double
+		isHidden
+		sourceColumn: Amount
+
+	column 'Weight Kg'
+		dataType: double
+		sourceColumn: Weight Kg
+
+	column Count
+		dataType: int64
+		sourceColumn: Count
+
+	column Cost
+		dataType: double
+		sourceColumn: Cost
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column 'Net Amount'
+		dataType: double
+		sourceColumn: Net Amount
+
+	partition Returns = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Return Id", "Date", "Port Key", "Fleet Unit Key", "Logistics Lookup 010 Key", "Logistics Lookup 046 Key", "Logistics Lookup 029 Key", "Logistics Lookup 024 Key", "Amount", "Weight Kg", "Count", "Cost", "Units", "Net Amount"}, {})
+				in
+				    Source

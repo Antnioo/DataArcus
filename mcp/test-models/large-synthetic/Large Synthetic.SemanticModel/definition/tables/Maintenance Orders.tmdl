@@ -1,0 +1,126 @@
+table 'Maintenance Orders'
+
+	measure 'Maintenance Orders Total Value' = SUM ( 'Maintenance Orders'[Value] )
+		formatString: #,0
+
+	/// Made-up measure for the large test model (Production).
+	measure 'Maintenance Orders Average Value' = AVERAGE ( 'Maintenance Orders'[Value] )
+		formatString: #,0.00
+
+	measure 'Maintenance Orders Count' = COUNTROWS ( 'Maintenance Orders' )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Maintenance Orders Total Value LY' = CALCULATE ( [Maintenance Orders Total Value], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+
+	measure 'Maintenance Orders Total Value YoY %' = DIVIDE ( [Maintenance Orders Total Value] - [Maintenance Orders Total Value LY], [Maintenance Orders Total Value LY] )
+		formatString: 0.0%
+		displayFolder: Production
+
+	measure 'Maintenance Orders Total Value YTD' = TOTALYTD ( [Maintenance Orders Total Value], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Maintenance Orders Max Value' = MAX ( 'Maintenance Orders'[Value] )
+		displayFolder: Production
+
+	measure 'Maintenance Orders Value Share %' = DIVIDE ( [Maintenance Orders Total Value], CALCULATE ( [Maintenance Orders Total Value], ALL ( 'Maintenance Orders' ) ) )
+		displayFolder: Production
+
+	measure 'Maintenance Orders Total Amount' = SUM ( 'Maintenance Orders'[Amount] )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Maintenance Orders Average Amount' = AVERAGE ( 'Maintenance Orders'[Amount] )
+		formatString: #,0.00
+		displayFolder: Production
+
+	measure 'Maintenance Orders Total Amount LY' = CALCULATE ( [Maintenance Orders Total Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Maintenance Orders Total Amount YoY %' = DIVIDE ( [Maintenance Orders Total Amount] - [Maintenance Orders Total Amount LY], [Maintenance Orders Total Amount LY] )
+		formatString: 0.0%
+		displayFolder: Production
+
+	measure 'Maintenance Orders Total Amount YTD' = TOTALYTD ( [Maintenance Orders Total Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Maintenance Orders Max Amount' = MAX ( 'Maintenance Orders'[Amount] )
+		displayFolder: Production
+
+	measure 'Maintenance Orders Amount Share %' = DIVIDE ( [Maintenance Orders Total Amount], CALCULATE ( [Maintenance Orders Total Amount], ALL ( 'Maintenance Orders' ) ) )
+		displayFolder: Production
+
+	column 'Maintenance Order Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Maintenance Order Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Maintenance Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Maintenance Type Key
+
+	column 'Plant Key'
+		dataType: int64
+		sourceColumn: Plant Key
+
+	column 'Defect Type Key'
+		dataType: int64
+		sourceColumn: Defect Type Key
+
+	column 'Downtime Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Downtime Reason Key
+
+	column 'Production Lookup 047 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Production Lookup 047 Key
+
+	column 'Spare Kit Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Spare Kit Key
+
+	column Value
+		dataType: double
+		isHidden
+		sourceColumn: Value
+
+	column Amount
+		dataType: double
+		isHidden
+		sourceColumn: Amount
+
+	column 'Net Amount'
+		dataType: decimal
+		isHidden
+		sourceColumn: Net Amount
+
+	column Score
+		dataType: double
+		isHidden
+		sourceColumn: Score
+
+	column Cost
+		dataType: double
+		isHidden
+		sourceColumn: Cost
+
+	partition 'Maintenance Orders' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Maintenance Order Id", "Date", "Maintenance Type Key", "Plant Key", "Defect Type Key", "Downtime Reason Key", "Production Lookup 047 Key", "Spare Kit Key", "Value", "Amount", "Net Amount", "Score", "Cost"}, {})
+				in
+				    Source

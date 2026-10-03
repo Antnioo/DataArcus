@@ -1,0 +1,132 @@
+table Leads
+
+	/// Made-up measure for the large test model (Marketing).
+	measure 'Leads Total Amount' = SUM ( Leads[Amount] )
+		displayFolder: Marketing
+
+	measure 'Leads Average Amount' = AVERAGE ( Leads[Amount] )
+		formatString: #,0.00
+		displayFolder: Marketing
+
+	measure 'Leads Count' = COUNTROWS ( Leads )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Leads Total Amount LY' = CALCULATE ( [Leads Total Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Leads Total Amount YoY %' = DIVIDE ( [Leads Total Amount] - [Leads Total Amount LY], [Leads Total Amount LY] )
+		formatString: 0.0%
+		displayFolder: Marketing
+
+	measure 'Leads Total Amount YTD' = TOTALYTD ( [Leads Total Amount], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Leads Max Amount' = MAX ( Leads[Amount] )
+		displayFolder: Marketing
+
+	measure 'Leads Amount Share %' = DIVIDE ( [Leads Total Amount], CALCULATE ( [Leads Total Amount], ALL ( Leads ) ) )
+		displayFolder: Marketing
+
+	measure 'Leads Total Margin' = SUM ( Leads[Margin] )
+		displayFolder: Marketing
+
+	measure 'Leads Average Margin' = AVERAGE ( Leads[Margin] )
+		displayFolder: Marketing
+
+	measure 'Leads Total Margin LY' = CALCULATE ( [Leads Total Margin], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Leads Total Margin YoY %' = DIVIDE ( [Leads Total Margin] - [Leads Total Margin LY], [Leads Total Margin LY] )
+		formatString: 0.0%
+		displayFolder: Marketing
+
+	measure 'Leads Total Margin YTD' = TOTALYTD ( [Leads Total Margin], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Leads Max Margin' = MAX ( Leads[Margin] )
+		displayFolder: Marketing
+
+	measure 'Leads Margin Share %' = DIVIDE ( [Leads Total Margin], CALCULATE ( [Leads Total Margin], ALL ( Leads ) ) )
+		displayFolder: Marketing
+
+	column 'Lead Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Lead Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Marketing Lookup 017 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Marketing Lookup 017 Key
+
+	column 'Question Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Question Key
+
+	column 'Marketing Lookup 055 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Marketing Lookup 055 Key
+
+	column 'Campaign Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Campaign Type Key
+
+	column Amount
+		dataType: double
+		sourceColumn: Amount
+
+	column Margin
+		dataType: double
+		sourceColumn: Margin
+
+	column Hours
+		dataType: decimal
+		sourceColumn: Hours
+
+	column 'Net Amount'
+		dataType: double
+		isHidden
+		sourceColumn: Net Amount
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	column Price
+		dataType: double
+		isHidden
+		sourceColumn: Price
+
+	column 'Tax Amount'
+		dataType: double
+		sourceColumn: Tax Amount
+
+	column Discount
+		dataType: double
+		isHidden
+		sourceColumn: Discount
+
+	partition Leads = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Lead Id", "Date", "Marketing Lookup 017 Key", "Question Key", "Marketing Lookup 055 Key", "Campaign Type Key", "Amount", "Margin", "Hours", "Net Amount", "Count", "Quantity", "Price", "Tax Amount", "Discount"}, {})
+				in
+				    Source

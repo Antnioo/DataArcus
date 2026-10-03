@@ -1,0 +1,50 @@
+table Requester
+
+	column 'Requester Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Requester Key
+
+	column Requester
+		dataType: string
+		sourceColumn: Requester
+
+	column 'Requester Level'
+		dataType: int64
+		sourceColumn: Requester Level
+
+	column 'Requester Code'
+		dataType: string
+		sourceColumn: Requester Code
+
+	column 'Requester Parent Code'
+		dataType: string
+		sourceColumn: Requester Parent Code
+
+	column 'Requester Rank'
+		dataType: int64
+		sourceColumn: Requester Rank
+
+	column 'Requester Created By'
+		dataType: string
+		sourceColumn: Requester Created By
+
+	column 'Requester Is Active'
+		dataType: boolean
+		sourceColumn: Requester Is Active
+
+	column 'Requester Description'
+		dataType: string
+		sourceColumn: Requester Description
+
+	column 'Requester Group'
+		dataType: string
+		sourceColumn: Requester Group
+
+	partition Requester = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Requester Key", "Requester", "Requester Level", "Requester Code", "Requester Parent Code", "Requester Rank", "Requester Created By", "Requester Is Active", "Requester Description", "Requester Group"}, {})
+				in
+				    Source

@@ -1,0 +1,58 @@
+table 'Event Type'
+
+	column 'Event Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Event Type Key
+
+	column 'Event Type'
+		dataType: string
+		sourceColumn: Event Type
+
+	column 'Event Type External Id'
+		dataType: string
+		sourceColumn: Event Type External Id
+
+	column 'Event Type Category'
+		dataType: string
+		sourceColumn: Event Type Category
+
+	column 'Event Type Group'
+		dataType: string
+		sourceColumn: Event Type Group
+
+	column 'Event Type Level'
+		dataType: int64
+		sourceColumn: Event Type Level
+
+	column 'Event Type Region'
+		dataType: string
+		sourceColumn: Event Type Region
+
+	column 'Event Type Status'
+		dataType: string
+		sourceColumn: Event Type Status
+
+	column 'Event Type Is Active'
+		dataType: boolean
+		sourceColumn: Event Type Is Active
+
+	column 'Event Type Valid From'
+		dataType: dateTime
+		sourceColumn: Event Type Valid From
+
+	column 'Event Type Code'
+		dataType: string
+		sourceColumn: Event Type Code
+
+	column 'Event Type Description'
+		dataType: string
+		sourceColumn: Event Type Description
+
+	partition 'Event Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Event Type Key", "Event Type", "Event Type External Id", "Event Type Category", "Event Type Group", "Event Type Level", "Event Type Region", "Event Type Status", "Event Type Is Active", "Event Type Valid From", "Event Type Code", "Event Type Description"}, {})
+				in
+				    Source

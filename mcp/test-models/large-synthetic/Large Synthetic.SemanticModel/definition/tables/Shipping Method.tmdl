@@ -1,0 +1,34 @@
+table 'Shipping Method'
+
+	column 'Shipping Method Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Shipping Method Key
+
+	column 'Shipping Method'
+		dataType: string
+		sourceColumn: Shipping Method
+
+	column 'Shipping Method Short Name'
+		dataType: string
+		sourceColumn: Shipping Method Short Name
+
+	column 'Shipping Method Category'
+		dataType: string
+		sourceColumn: Shipping Method Category
+
+	column 'Shipping Method Code'
+		dataType: string
+		sourceColumn: Shipping Method Code
+
+	column 'Shipping Method Description'
+		dataType: string
+		sourceColumn: Shipping Method Description
+
+	partition 'Shipping Method' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Shipping Method Key", "Shipping Method", "Shipping Method Short Name", "Shipping Method Category", "Shipping Method Code", "Shipping Method Description"}, {})
+				in
+				    Source

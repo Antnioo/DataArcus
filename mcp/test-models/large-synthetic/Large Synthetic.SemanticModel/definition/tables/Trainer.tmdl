@@ -1,0 +1,54 @@
+table Trainer
+
+	column 'Trainer Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Trainer Key
+
+	column Trainer
+		dataType: string
+		sourceColumn: Trainer
+
+	column 'Trainer Valid From'
+		dataType: dateTime
+		sourceColumn: Trainer Valid From
+
+	column 'Trainer Category'
+		dataType: string
+		sourceColumn: Trainer Category
+
+	column 'Trainer Group'
+		dataType: string
+		sourceColumn: Trainer Group
+
+	column 'Trainer Sort Order'
+		dataType: int64
+		sourceColumn: Trainer Sort Order
+
+	column 'Trainer Notes'
+		dataType: string
+		sourceColumn: Trainer Notes
+
+	column 'Trainer Parent Code'
+		dataType: string
+		sourceColumn: Trainer Parent Code
+
+	column 'Trainer Level'
+		dataType: int64
+		sourceColumn: Trainer Level
+
+	column 'Trainer Code'
+		dataType: string
+		sourceColumn: Trainer Code
+
+	column 'Trainer Description'
+		dataType: string
+		sourceColumn: Trainer Description
+
+	partition Trainer = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Trainer Key", "Trainer", "Trainer Valid From", "Trainer Category", "Trainer Group", "Trainer Sort Order", "Trainer Notes", "Trainer Parent Code", "Trainer Level", "Trainer Code", "Trainer Description"}, {})
+				in
+				    Source

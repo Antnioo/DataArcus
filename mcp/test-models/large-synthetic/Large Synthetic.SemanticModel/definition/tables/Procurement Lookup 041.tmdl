@@ -1,0 +1,46 @@
+table 'Procurement Lookup 041'
+
+	column 'Procurement Lookup 041 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Procurement Lookup 041 Key
+
+	column 'Procurement Lookup 041'
+		dataType: string
+		sourceColumn: Procurement Lookup 041
+
+	column 'Procurement Lookup 041 Is Active'
+		dataType: boolean
+		sourceColumn: Procurement Lookup 041 Is Active
+
+	column 'Procurement Lookup 041 Region'
+		dataType: string
+		sourceColumn: Procurement Lookup 041 Region
+
+	column 'Procurement Lookup 041 Valid From'
+		dataType: dateTime
+		sourceColumn: Procurement Lookup 041 Valid From
+
+	column 'Procurement Lookup 041 Sort Order'
+		dataType: int64
+		sourceColumn: Procurement Lookup 041 Sort Order
+
+	column 'Procurement Lookup 041 Created By'
+		dataType: string
+		sourceColumn: Procurement Lookup 041 Created By
+
+	column 'Procurement Lookup 041 Category'
+		dataType: string
+		sourceColumn: Procurement Lookup 041 Category
+
+	column 'Procurement Lookup 041 Code'
+		dataType: string
+		sourceColumn: Procurement Lookup 041 Code
+
+	partition 'Procurement Lookup 041' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Procurement Lookup 041 Key", "Procurement Lookup 041", "Procurement Lookup 041 Is Active", "Procurement Lookup 041 Region", "Procurement Lookup 041 Valid From", "Procurement Lookup 041 Sort Order", "Procurement Lookup 041 Created By", "Procurement Lookup 041 Category", "Procurement Lookup 041 Code"}, {})
+				in
+				    Source

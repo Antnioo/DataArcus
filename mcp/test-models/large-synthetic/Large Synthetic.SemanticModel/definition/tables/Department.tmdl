@@ -1,0 +1,34 @@
+table Department
+
+	column 'Department Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Department Key
+
+	column Department
+		dataType: string
+		sourceColumn: Department
+
+	column 'Department Group'
+		dataType: string
+		sourceColumn: Department Group
+
+	column 'Department Notes'
+		dataType: string
+		sourceColumn: Department Notes
+
+	column 'Department Code'
+		dataType: string
+		sourceColumn: Department Code
+
+	column 'Department Description'
+		dataType: string
+		sourceColumn: Department Description
+
+	partition Department = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Department Key", "Department", "Department Group", "Department Notes", "Department Code", "Department Description"}, {})
+				in
+				    Source

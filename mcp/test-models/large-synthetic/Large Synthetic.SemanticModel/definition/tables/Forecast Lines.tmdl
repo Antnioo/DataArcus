@@ -1,0 +1,138 @@
+table 'Forecast Lines'
+
+	measure 'Forecast Lines Total Score' = SUM ( 'Forecast Lines'[Score] )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'Forecast Lines Average Score' = AVERAGE ( 'Forecast Lines'[Score] )
+		formatString: #,0.00
+		displayFolder: Finance
+
+	measure 'Forecast Lines Count' = COUNTROWS ( 'Forecast Lines' )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'Forecast Lines Total Score LY' = CALCULATE ( [Forecast Lines Total Score], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'Forecast Lines Total Score YoY %' = DIVIDE ( [Forecast Lines Total Score] - [Forecast Lines Total Score LY], [Forecast Lines Total Score LY] )
+		displayFolder: Finance
+
+	measure 'Forecast Lines Total Score YTD' = TOTALYTD ( [Forecast Lines Total Score], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Forecast Lines Max Score' = MAX ( 'Forecast Lines'[Score] )
+		displayFolder: Finance
+
+	/// Made-up measure for the large test model (Finance).
+	measure 'Forecast Lines Score Share %' = DIVIDE ( [Forecast Lines Total Score], CALCULATE ( [Forecast Lines Total Score], ALL ( 'Forecast Lines' ) ) )
+		displayFolder: Finance
+
+	measure 'Forecast Lines Total Value' = SUM ( 'Forecast Lines'[Value] )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'Forecast Lines Average Value' = AVERAGE ( 'Forecast Lines'[Value] )
+		formatString: #,0.00
+		displayFolder: Finance
+
+	measure 'Forecast Lines Total Value LY' = CALCULATE ( [Forecast Lines Total Value], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'Forecast Lines Total Value YoY %' = DIVIDE ( [Forecast Lines Total Value] - [Forecast Lines Total Value LY], [Forecast Lines Total Value LY] )
+		displayFolder: Finance
+
+	/// Made-up measure for the large test model (Finance).
+	measure 'Forecast Lines Total Value YTD' = TOTALYTD ( [Forecast Lines Total Value], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'Forecast Lines Max Value' = MAX ( 'Forecast Lines'[Value] )
+		displayFolder: Finance
+
+	measure 'Forecast Lines Value Share %' = DIVIDE ( [Forecast Lines Total Value], CALCULATE ( [Forecast Lines Total Value], ALL ( 'Forecast Lines' ) ) )
+		displayFolder: Finance
+
+	column 'Forecast Line Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Forecast Line Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Dimension Set Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Dimension Set Key
+
+	column 'Currency Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Currency Key
+
+	column 'Account Key'
+		dataType: int64
+		sourceColumn: Account Key
+
+	column 'Budget Version Key'
+		dataType: int64
+		sourceColumn: Budget Version Key
+
+	column 'Bank Account Key'
+		dataType: int64
+		sourceColumn: Bank Account Key
+
+	column 'Tax Code Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Tax Code Key
+
+	column Score
+		dataType: double
+		isHidden
+		sourceColumn: Score
+
+	column Value
+		dataType: double
+		isHidden
+		sourceColumn: Value
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	column Margin
+		dataType: double
+		sourceColumn: Margin
+
+	column Price
+		dataType: double
+		isHidden
+		sourceColumn: Price
+
+	column 'Net Amount'
+		dataType: decimal
+		sourceColumn: Net Amount
+
+	column Amount
+		dataType: decimal
+		isHidden
+		sourceColumn: Amount
+
+	column Discount
+		dataType: double
+		sourceColumn: Discount
+
+	partition 'Forecast Lines' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Forecast Line Id", "Date", "Dimension Set Key", "Currency Key", "Account Key", "Budget Version Key", "Bank Account Key", "Tax Code Key", "Score", "Value", "Count", "Margin", "Price", "Net Amount", "Amount", "Discount"}, {})
+				in
+				    Source

@@ -1,0 +1,25 @@
+table Dates
+
+	column Date
+		dataType: dateTime
+		sourceColumn: Date
+
+	column Year
+		dataType: int64
+		sourceColumn: Year
+
+	column 'Month Name'
+		dataType: string
+		sourceColumn: Month Name
+
+	column 'Day Name'
+		dataType: string
+		sourceColumn: Day Name
+
+	partition Dates = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Date", "Year", "Month Name", "Day Name"}, {})
+				in
+				    Source

@@ -1,0 +1,46 @@
+table 'Service Lookup 036'
+
+	column 'Service Lookup 036 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Service Lookup 036 Key
+
+	column 'Service Lookup 036'
+		dataType: string
+		sourceColumn: Service Lookup 036
+
+	column 'Service Lookup 036 Status'
+		dataType: string
+		sourceColumn: Service Lookup 036 Status
+
+	column 'Service Lookup 036 Code'
+		dataType: string
+		sourceColumn: Service Lookup 036 Code
+
+	column 'Service Lookup 036 Parent Code'
+		dataType: string
+		sourceColumn: Service Lookup 036 Parent Code
+
+	column 'Service Lookup 036 Owner'
+		dataType: string
+		sourceColumn: Service Lookup 036 Owner
+
+	column 'Service Lookup 036 Short Name'
+		dataType: string
+		sourceColumn: Service Lookup 036 Short Name
+
+	column 'Service Lookup 036 Long Name'
+		dataType: string
+		sourceColumn: Service Lookup 036 Long Name
+
+	column 'Service Lookup 036 Description'
+		dataType: string
+		sourceColumn: Service Lookup 036 Description
+
+	partition 'Service Lookup 036' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Service Lookup 036 Key", "Service Lookup 036", "Service Lookup 036 Status", "Service Lookup 036 Code", "Service Lookup 036 Parent Code", "Service Lookup 036 Owner", "Service Lookup 036 Short Name", "Service Lookup 036 Long Name", "Service Lookup 036 Description"}, {})
+				in
+				    Source

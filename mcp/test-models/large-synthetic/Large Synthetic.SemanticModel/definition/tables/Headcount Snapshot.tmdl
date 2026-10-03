@@ -1,0 +1,115 @@
+table 'Headcount Snapshot'
+
+	measure 'Headcount Snapshot Total Amount' = SUM ( 'Headcount Snapshot'[Amount] )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Headcount Snapshot Average Amount' = AVERAGE ( 'Headcount Snapshot'[Amount] )
+		formatString: #,0.00
+		displayFolder: People
+
+	measure 'Headcount Snapshot Count' = COUNTROWS ( 'Headcount Snapshot' )
+		displayFolder: People
+
+	measure 'Headcount Snapshot Total Amount LY' = CALCULATE ( [Headcount Snapshot Total Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Headcount Snapshot Total Amount YoY %' = DIVIDE ( [Headcount Snapshot Total Amount] - [Headcount Snapshot Total Amount LY], [Headcount Snapshot Total Amount LY] )
+		formatString: 0.0%
+		displayFolder: People
+
+	measure 'Headcount Snapshot Total Amount YTD' = TOTALYTD ( [Headcount Snapshot Total Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Headcount Snapshot Max Amount' = MAX ( 'Headcount Snapshot'[Amount] )
+		displayFolder: People
+
+	measure 'Headcount Snapshot Amount Share %' = DIVIDE ( [Headcount Snapshot Total Amount], CALCULATE ( [Headcount Snapshot Total Amount], ALL ( 'Headcount Snapshot' ) ) )
+
+	measure 'Headcount Snapshot Total Quantity' = SUM ( 'Headcount Snapshot'[Quantity] )
+		formatString: #,0
+
+	measure 'Headcount Snapshot Average Quantity' = AVERAGE ( 'Headcount Snapshot'[Quantity] )
+		formatString: #,0.00
+		displayFolder: People
+
+	measure 'Headcount Snapshot Total Quantity LY' = CALCULATE ( [Headcount Snapshot Total Quantity], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: People
+
+	measure 'Headcount Snapshot Total Quantity YoY %' = DIVIDE ( [Headcount Snapshot Total Quantity] - [Headcount Snapshot Total Quantity LY], [Headcount Snapshot Total Quantity LY] )
+		displayFolder: People
+
+	measure 'Headcount Snapshot Total Quantity YTD' = TOTALYTD ( [Headcount Snapshot Total Quantity], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Headcount Snapshot Max Quantity' = MAX ( 'Headcount Snapshot'[Quantity] )
+		displayFolder: People
+
+	measure 'Headcount Snapshot Quantity Share %' = DIVIDE ( [Headcount Snapshot Total Quantity], CALCULATE ( [Headcount Snapshot Total Quantity], ALL ( 'Headcount Snapshot' ) ) )
+		displayFolder: People
+
+	column 'Headcount Snapshot Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Headcount Snapshot Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Work Location Key'
+		dataType: int64
+		sourceColumn: Work Location Key
+
+	column 'Pay Element Key'
+		dataType: int64
+		sourceColumn: Pay Element Key
+
+	column 'Contract Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Contract Type Key
+
+	column 'Recruiter Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Recruiter Key
+
+	column Amount
+		dataType: double
+		sourceColumn: Amount
+
+	column Quantity
+		dataType: int64
+		isHidden
+		sourceColumn: Quantity
+
+	column 'Net Amount'
+		dataType: double
+		sourceColumn: Net Amount
+
+	column Hours
+		dataType: double
+		isHidden
+		sourceColumn: Hours
+
+	column Score
+		dataType: decimal
+		isHidden
+		sourceColumn: Score
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	partition 'Headcount Snapshot' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Headcount Snapshot Id", "Date", "Work Location Key", "Pay Element Key", "Contract Type Key", "Recruiter Key", "Amount", "Quantity", "Net Amount", "Hours", "Score", "Units"}, {})
+				in
+				    Source

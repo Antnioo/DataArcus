@@ -1,0 +1,38 @@
+table 'Customs Status'
+
+	column 'Customs Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Customs Status Key
+
+	column 'Customs Status'
+		dataType: string
+		sourceColumn: Customs Status
+
+	column 'Customs Status Category'
+		dataType: string
+		sourceColumn: Customs Status Category
+
+	column 'Customs Status Sort Order'
+		dataType: int64
+		sourceColumn: Customs Status Sort Order
+
+	column 'Customs Status Valid To'
+		dataType: dateTime
+		sourceColumn: Customs Status Valid To
+
+	column 'Customs Status Code'
+		dataType: string
+		sourceColumn: Customs Status Code
+
+	column 'Customs Status Description'
+		dataType: string
+		sourceColumn: Customs Status Description
+
+	partition 'Customs Status' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Customs Status Key", "Customs Status", "Customs Status Category", "Customs Status Sort Order", "Customs Status Valid To", "Customs Status Code", "Customs Status Description"}, {})
+				in
+				    Source

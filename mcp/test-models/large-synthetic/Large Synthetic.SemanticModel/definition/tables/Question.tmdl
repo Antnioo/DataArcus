@@ -1,0 +1,42 @@
+table Question
+
+	column 'Question Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Question Key
+
+	column Question
+		dataType: string
+		sourceColumn: Question
+
+	column 'Question Owner'
+		dataType: string
+		sourceColumn: Question Owner
+
+	column 'Question Short Name'
+		dataType: string
+		sourceColumn: Question Short Name
+
+	column 'Question Is Active'
+		dataType: boolean
+		sourceColumn: Question Is Active
+
+	column 'Question Category'
+		dataType: string
+		sourceColumn: Question Category
+
+	column 'Question Code'
+		dataType: string
+		sourceColumn: Question Code
+
+	column 'Question Description'
+		dataType: string
+		sourceColumn: Question Description
+
+	partition Question = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Question Key", "Question", "Question Owner", "Question Short Name", "Question Is Active", "Question Category", "Question Code", "Question Description"}, {})
+				in
+				    Source

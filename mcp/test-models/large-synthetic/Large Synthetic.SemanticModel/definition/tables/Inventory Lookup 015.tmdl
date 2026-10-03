@@ -1,0 +1,54 @@
+table 'Inventory Lookup 015'
+
+	column 'Inventory Lookup 015 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Inventory Lookup 015 Key
+
+	column 'Inventory Lookup 015'
+		dataType: string
+		sourceColumn: Inventory Lookup 015
+
+	column 'Inventory Lookup 015 Valid To'
+		dataType: dateTime
+		sourceColumn: Inventory Lookup 015 Valid To
+
+	column 'Inventory Lookup 015 Sort Order'
+		dataType: int64
+		sourceColumn: Inventory Lookup 015 Sort Order
+
+	column 'Inventory Lookup 015 Code'
+		dataType: string
+		sourceColumn: Inventory Lookup 015 Code
+
+	column 'Inventory Lookup 015 Short Name'
+		dataType: string
+		sourceColumn: Inventory Lookup 015 Short Name
+
+	column 'Inventory Lookup 015 Valid From'
+		dataType: dateTime
+		sourceColumn: Inventory Lookup 015 Valid From
+
+	column 'Inventory Lookup 015 Description'
+		dataType: string
+		sourceColumn: Inventory Lookup 015 Description
+
+	column 'Inventory Lookup 015 Group'
+		dataType: string
+		sourceColumn: Inventory Lookup 015 Group
+
+	column 'Inventory Lookup 015 Category'
+		dataType: string
+		sourceColumn: Inventory Lookup 015 Category
+
+	column 'Inventory Lookup 015 Type'
+		dataType: string
+		sourceColumn: Inventory Lookup 015 Type
+
+	partition 'Inventory Lookup 015' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Inventory Lookup 015 Key", "Inventory Lookup 015", "Inventory Lookup 015 Valid To", "Inventory Lookup 015 Sort Order", "Inventory Lookup 015 Code", "Inventory Lookup 015 Short Name", "Inventory Lookup 015 Valid From", "Inventory Lookup 015 Description", "Inventory Lookup 015 Group", "Inventory Lookup 015 Category", "Inventory Lookup 015 Type"}, {})
+				in
+				    Source

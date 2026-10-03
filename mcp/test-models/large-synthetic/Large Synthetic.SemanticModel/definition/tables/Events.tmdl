@@ -1,0 +1,113 @@
+table Events
+
+	measure 'Events Total Quantity' = SUM ( Events[Quantity] )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	measure 'Events Average Quantity' = AVERAGE ( Events[Quantity] )
+		formatString: #,0.00
+		displayFolder: Hospitality
+
+	measure 'Events Count' = COUNTROWS ( Events )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	measure 'Events Total Quantity LY' = CALCULATE ( [Events Total Quantity], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	measure 'Events Total Quantity YoY %' = DIVIDE ( [Events Total Quantity] - [Events Total Quantity LY], [Events Total Quantity LY] )
+		formatString: 0.0%
+
+	measure 'Events Total Quantity YTD' = TOTALYTD ( [Events Total Quantity], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	measure 'Events Max Quantity' = MAX ( Events[Quantity] )
+
+	measure 'Events Quantity Share %' = DIVIDE ( [Events Total Quantity], CALCULATE ( [Events Total Quantity], ALL ( Events ) ) )
+		displayFolder: Hospitality
+
+	measure 'Events Total Duration Minutes' = SUM ( Events[Duration Minutes] )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	/// Made-up measure for the large test model (Hospitality).
+	measure 'Events Average Duration Minutes' = AVERAGE ( Events[Duration Minutes] )
+		formatString: #,0.00
+		displayFolder: Hospitality
+
+	measure 'Events Total Duration Minutes LY' = CALCULATE ( [Events Total Duration Minutes], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+
+	measure 'Events Total Duration Minutes YoY %' = DIVIDE ( [Events Total Duration Minutes] - [Events Total Duration Minutes LY], [Events Total Duration Minutes LY] )
+		formatString: 0.0%
+		displayFolder: Hospitality
+
+	/// Made-up measure for the large test model (Hospitality).
+	measure 'Events Total Duration Minutes YTD' = TOTALYTD ( [Events Total Duration Minutes], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Events Max Duration Minutes' = MAX ( Events[Duration Minutes] )
+		displayFolder: Hospitality
+
+	measure 'Events Duration Minutes Share %' = DIVIDE ( [Events Total Duration Minutes], CALCULATE ( [Events Total Duration Minutes], ALL ( Events ) ) )
+		displayFolder: Hospitality
+
+	column 'Event Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Event Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Meal Plan Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Meal Plan Key
+
+	column 'Rate Plan Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Rate Plan Key
+
+	column 'Review Site Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Review Site Key
+
+	column 'Cancellation Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Cancellation Reason Key
+
+	column Quantity
+		dataType: int64
+		isHidden
+		sourceColumn: Quantity
+
+	column 'Duration Minutes'
+		dataType: decimal
+		sourceColumn: Duration Minutes
+
+	column Amount
+		dataType: decimal
+		sourceColumn: Amount
+
+	column Price
+		dataType: decimal
+		sourceColumn: Price
+
+	column Margin
+		dataType: double
+		sourceColumn: Margin
+
+	partition Events = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Event Id", "Date", "Meal Plan Key", "Rate Plan Key", "Review Site Key", "Cancellation Reason Key", "Quantity", "Duration Minutes", "Amount", "Price", "Margin"}, {})
+				in
+				    Source

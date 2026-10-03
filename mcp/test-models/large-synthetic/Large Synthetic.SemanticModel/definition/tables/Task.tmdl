@@ -1,0 +1,38 @@
+table Task
+
+	column 'Task Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Task Key
+
+	column Task
+		dataType: string
+		sourceColumn: Task
+
+	column 'Task Notes'
+		dataType: string
+		sourceColumn: Task Notes
+
+	column 'Task Code'
+		dataType: string
+		sourceColumn: Task Code
+
+	column 'Task Group'
+		dataType: string
+		sourceColumn: Task Group
+
+	column 'Task Description'
+		dataType: string
+		sourceColumn: Task Description
+
+	column 'Task Category'
+		dataType: string
+		sourceColumn: Task Category
+
+	partition Task = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Task Key", "Task", "Task Notes", "Task Code", "Task Group", "Task Description", "Task Category"}, {})
+				in
+				    Source

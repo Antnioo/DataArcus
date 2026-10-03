@@ -1,0 +1,46 @@
+table Meter
+
+	column 'Meter Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Meter Key
+
+	column Meter
+		dataType: string
+		sourceColumn: Meter
+
+	column 'Meter Rank'
+		dataType: int64
+		sourceColumn: Meter Rank
+
+	column 'Meter Valid To'
+		dataType: dateTime
+		sourceColumn: Meter Valid To
+
+	column 'Meter Is Active'
+		dataType: boolean
+		sourceColumn: Meter Is Active
+
+	column 'Meter Code'
+		dataType: string
+		sourceColumn: Meter Code
+
+	column 'Meter Description'
+		dataType: string
+		sourceColumn: Meter Description
+
+	column 'Meter Group'
+		dataType: string
+		sourceColumn: Meter Group
+
+	column 'Meter Category'
+		dataType: string
+		sourceColumn: Meter Category
+
+	partition Meter = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Meter Key", "Meter", "Meter Rank", "Meter Valid To", "Meter Is Active", "Meter Code", "Meter Description", "Meter Group", "Meter Category"}, {})
+				in
+				    Source

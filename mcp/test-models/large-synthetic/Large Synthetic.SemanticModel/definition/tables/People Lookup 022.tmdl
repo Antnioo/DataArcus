@@ -1,0 +1,42 @@
+table 'People Lookup 022'
+
+	column 'People Lookup 022 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: People Lookup 022 Key
+
+	column 'People Lookup 022'
+		dataType: string
+		sourceColumn: People Lookup 022
+
+	column 'People Lookup 022 Region'
+		dataType: string
+		sourceColumn: People Lookup 022 Region
+
+	column 'People Lookup 022 Sort Order'
+		dataType: int64
+		sourceColumn: People Lookup 022 Sort Order
+
+	column 'People Lookup 022 Code'
+		dataType: string
+		sourceColumn: People Lookup 022 Code
+
+	column 'People Lookup 022 Description'
+		dataType: string
+		sourceColumn: People Lookup 022 Description
+
+	column 'People Lookup 022 Notes'
+		dataType: string
+		sourceColumn: People Lookup 022 Notes
+
+	column 'People Lookup 022 Group'
+		dataType: string
+		sourceColumn: People Lookup 022 Group
+
+	partition 'People Lookup 022' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"People Lookup 022 Key", "People Lookup 022", "People Lookup 022 Region", "People Lookup 022 Sort Order", "People Lookup 022 Code", "People Lookup 022 Description", "People Lookup 022 Notes", "People Lookup 022 Group"}, {})
+				in
+				    Source

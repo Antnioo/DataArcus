@@ -1,0 +1,124 @@
+table 'Web Order Lines'
+
+	measure 'Web Order Lines Total Cost' = SUM ( 'Web Order Lines'[Cost] )
+		displayFolder: Commerce
+
+	measure 'Web Order Lines Average Cost' = AVERAGE ( 'Web Order Lines'[Cost] )
+		formatString: #,0.00
+		displayFolder: Commerce
+
+	measure 'Web Order Lines Count' = COUNTROWS ( 'Web Order Lines' )
+		displayFolder: Commerce
+
+	measure 'Web Order Lines Total Cost LY' = CALCULATE ( [Web Order Lines Total Cost], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Web Order Lines Total Cost YoY %' = DIVIDE ( [Web Order Lines Total Cost] - [Web Order Lines Total Cost LY], [Web Order Lines Total Cost LY] )
+		formatString: 0.0%
+		displayFolder: Commerce
+
+	measure 'Web Order Lines Total Cost YTD' = TOTALYTD ( [Web Order Lines Total Cost], 'Calendar'[Date] )
+		displayFolder: Commerce
+
+	measure 'Web Order Lines Max Cost' = MAX ( 'Web Order Lines'[Cost] )
+		displayFolder: Commerce
+
+	measure 'Web Order Lines Cost Share %' = DIVIDE ( [Web Order Lines Total Cost], CALCULATE ( [Web Order Lines Total Cost], ALL ( 'Web Order Lines' ) ) )
+		displayFolder: Commerce
+
+	measure 'Web Order Lines Total Quantity' = SUM ( 'Web Order Lines'[Quantity] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Web Order Lines Average Quantity' = AVERAGE ( 'Web Order Lines'[Quantity] )
+		formatString: #,0.00
+		displayFolder: Commerce
+
+	measure 'Web Order Lines Total Quantity LY' = CALCULATE ( [Web Order Lines Total Quantity], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Web Order Lines Total Quantity YoY %' = DIVIDE ( [Web Order Lines Total Quantity] - [Web Order Lines Total Quantity LY], [Web Order Lines Total Quantity LY] )
+		formatString: 0.0%
+		displayFolder: Commerce
+
+	/// Made-up measure for the large test model (Commerce).
+	measure 'Web Order Lines Total Quantity YTD' = TOTALYTD ( [Web Order Lines Total Quantity], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	/// Made-up measure for the large test model (Commerce).
+	measure 'Web Order Lines Max Quantity' = MAX ( 'Web Order Lines'[Quantity] )
+		displayFolder: Commerce
+
+	/// Made-up measure for the large test model (Commerce).
+	measure 'Web Order Lines Quantity Share %' = DIVIDE ( [Web Order Lines Total Quantity], CALCULATE ( [Web Order Lines Total Quantity], ALL ( 'Web Order Lines' ) ) )
+
+	column 'Web Order Line Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Web Order Line Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Order Status Key'
+		dataType: int64
+		sourceColumn: Order Status Key
+
+	column 'Commerce Lookup 044 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Commerce Lookup 044 Key
+
+	column 'Customer Segment Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Customer Segment Key
+
+	column 'Landing Page Key'
+		dataType: int64
+		sourceColumn: Landing Page Key
+
+	column 'Plan Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Plan Key
+
+	column 'Customer Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Customer Key
+
+	column Cost
+		dataType: double
+		isHidden
+		sourceColumn: Cost
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column Margin
+		dataType: decimal
+		sourceColumn: Margin
+
+	column 'Tax Amount'
+		dataType: decimal
+		isHidden
+		sourceColumn: Tax Amount
+
+	partition 'Web Order Lines' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Web Order Line Id", "Date", "Order Status Key", "Commerce Lookup 044 Key", "Customer Segment Key", "Landing Page Key", "Plan Key", "Customer Key", "Cost", "Quantity", "Units", "Margin", "Tax Amount"}, {})
+				in
+				    Source

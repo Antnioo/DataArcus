@@ -1,0 +1,37 @@
+table Orders
+
+	column 'Order Id'
+		dataType: int64
+		sourceColumn: Order Id
+
+	column 'Order Date'
+		dataType: dateTime
+		sourceColumn: Order Date
+
+	column Region
+		dataType: string
+		sourceColumn: Region
+
+	column Product
+		dataType: string
+		sourceColumn: Product
+
+	column Amount
+		dataType: double
+		sourceColumn: Amount
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	column 'Discount Rate'
+		dataType: double
+		sourceColumn: Discount Rate
+
+	partition Orders = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Order Id", "Order Date", "Region", "Product", "Amount", "Quantity", "Discount Rate"}, {})
+				in
+				    Source

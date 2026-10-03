@@ -1,0 +1,54 @@
+table 'People Lookup 020'
+
+	column 'People Lookup 020 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: People Lookup 020 Key
+
+	column 'People Lookup 020'
+		dataType: string
+		sourceColumn: People Lookup 020
+
+	column 'People Lookup 020 Status'
+		dataType: string
+		sourceColumn: People Lookup 020 Status
+
+	column 'People Lookup 020 Valid From'
+		dataType: dateTime
+		sourceColumn: People Lookup 020 Valid From
+
+	column 'People Lookup 020 Valid To'
+		dataType: dateTime
+		sourceColumn: People Lookup 020 Valid To
+
+	column 'People Lookup 020 Region'
+		dataType: string
+		sourceColumn: People Lookup 020 Region
+
+	column 'People Lookup 020 Is Active'
+		dataType: boolean
+		sourceColumn: People Lookup 020 Is Active
+
+	column 'People Lookup 020 Code'
+		dataType: string
+		sourceColumn: People Lookup 020 Code
+
+	column 'People Lookup 020 Description'
+		dataType: string
+		sourceColumn: People Lookup 020 Description
+
+	column 'People Lookup 020 External Id'
+		dataType: string
+		sourceColumn: People Lookup 020 External Id
+
+	column 'People Lookup 020 Group'
+		dataType: string
+		sourceColumn: People Lookup 020 Group
+
+	partition 'People Lookup 020' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"People Lookup 020 Key", "People Lookup 020", "People Lookup 020 Status", "People Lookup 020 Valid From", "People Lookup 020 Valid To", "People Lookup 020 Region", "People Lookup 020 Is Active", "People Lookup 020 Code", "People Lookup 020 Description", "People Lookup 020 External Id", "People Lookup 020 Group"}, {})
+				in
+				    Source

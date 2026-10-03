@@ -1,0 +1,54 @@
+table 'Commerce Lookup 018'
+
+	column 'Commerce Lookup 018 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Commerce Lookup 018 Key
+
+	column 'Commerce Lookup 018'
+		dataType: string
+		sourceColumn: Commerce Lookup 018
+
+	column 'Commerce Lookup 018 Notes'
+		dataType: string
+		sourceColumn: Commerce Lookup 018 Notes
+
+	column 'Commerce Lookup 018 Parent Code'
+		dataType: string
+		sourceColumn: Commerce Lookup 018 Parent Code
+
+	column 'Commerce Lookup 018 Created By'
+		dataType: string
+		sourceColumn: Commerce Lookup 018 Created By
+
+	column 'Commerce Lookup 018 Valid To'
+		dataType: dateTime
+		sourceColumn: Commerce Lookup 018 Valid To
+
+	column 'Commerce Lookup 018 Type'
+		dataType: string
+		sourceColumn: Commerce Lookup 018 Type
+
+	column 'Commerce Lookup 018 Group'
+		dataType: string
+		sourceColumn: Commerce Lookup 018 Group
+
+	column 'Commerce Lookup 018 External Id'
+		dataType: string
+		sourceColumn: Commerce Lookup 018 External Id
+
+	column 'Commerce Lookup 018 Valid From'
+		dataType: dateTime
+		sourceColumn: Commerce Lookup 018 Valid From
+
+	column 'Commerce Lookup 018 Code'
+		dataType: string
+		sourceColumn: Commerce Lookup 018 Code
+
+	partition 'Commerce Lookup 018' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Commerce Lookup 018 Key", "Commerce Lookup 018", "Commerce Lookup 018 Notes", "Commerce Lookup 018 Parent Code", "Commerce Lookup 018 Created By", "Commerce Lookup 018 Valid To", "Commerce Lookup 018 Type", "Commerce Lookup 018 Group", "Commerce Lookup 018 External Id", "Commerce Lookup 018 Valid From", "Commerce Lookup 018 Code"}, {})
+				in
+				    Source

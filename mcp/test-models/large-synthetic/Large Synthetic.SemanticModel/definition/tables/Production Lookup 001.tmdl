@@ -1,0 +1,34 @@
+table 'Production Lookup 001'
+
+	column 'Production Lookup 001 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Production Lookup 001 Key
+
+	column 'Production Lookup 001'
+		dataType: string
+		sourceColumn: Production Lookup 001
+
+	column 'Production Lookup 001 Group'
+		dataType: string
+		sourceColumn: Production Lookup 001 Group
+
+	column 'Production Lookup 001 Created By'
+		dataType: string
+		sourceColumn: Production Lookup 001 Created By
+
+	column 'Production Lookup 001 Code'
+		dataType: string
+		sourceColumn: Production Lookup 001 Code
+
+	column 'Production Lookup 001 Description'
+		dataType: string
+		sourceColumn: Production Lookup 001 Description
+
+	partition 'Production Lookup 001' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Production Lookup 001 Key", "Production Lookup 001", "Production Lookup 001 Group", "Production Lookup 001 Created By", "Production Lookup 001 Code", "Production Lookup 001 Description"}, {})
+				in
+				    Source

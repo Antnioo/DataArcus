@@ -1,0 +1,51 @@
+table 'المبيعات اليومية'
+
+	measure 'إجمالي صافي المبيعات بعد الخصومات والمرتجعات' = SUM ( 'المبيعات اليومية'[صافي المبلغ] )
+		formatString: #,0
+
+	measure 'عدد الفواتير الصادرة خلال الفترة المحددة' = COUNTROWS ( 'المبيعات اليومية' )
+		formatString: #,0
+
+	measure 'متوسط قيمة الفاتورة الواحدة بعد الخصم' = DIVIDE ( [إجمالي صافي المبيعات بعد الخصومات والمرتجعات], [عدد الفواتير الصادرة خلال الفترة المحددة] )
+		formatString: #,0.00
+
+	measure 'نسبة النمو مقارنة بنفس الفترة من العام الماضي' = ```
+			VAR _LY = CALCULATE ( [إجمالي صافي المبيعات بعد الخصومات والمرتجعات], SAMEPERIODLASTYEAR ( التقويم[التاريخ] ) )
+			RETURN DIVIDE ( [إجمالي صافي المبيعات بعد الخصومات والمرتجعات] - _LY, _LY )
+			```
+		formatString: 0.0%
+
+	measure 'إجمالي الكمية المباعة من جميع الأصناف' = SUM ( 'المبيعات اليومية'[الكمية] )
+		formatString: #,0
+
+	column التاريخ
+		dataType: dateTime
+		isHidden
+		sourceColumn: التاريخ
+
+	column 'رمز الفرع'
+		dataType: int64
+		isHidden
+		sourceColumn: رمز الفرع
+
+	column 'صافي المبلغ'
+		dataType: double
+		isHidden
+		sourceColumn: صافي المبلغ
+
+	column الكمية
+		dataType: int64
+		isHidden
+		sourceColumn: الكمية
+
+	column 'قناة البيع المستخدمة في إتمام العملية'
+		dataType: string
+		sourceColumn: قناة البيع المستخدمة في إتمام العملية
+
+	partition 'المبيعات اليومية' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"التاريخ", "رمز الفرع", "صافي المبلغ", "الكمية", "قناة البيع المستخدمة في إتمام العملية"}, {})
+				in
+				    Source

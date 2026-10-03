@@ -1,0 +1,58 @@
+table 'Meal Plan'
+
+	column 'Meal Plan Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Meal Plan Key
+
+	column 'Meal Plan'
+		dataType: string
+		sourceColumn: Meal Plan
+
+	column 'Meal Plan Description'
+		dataType: string
+		sourceColumn: Meal Plan Description
+
+	column 'Meal Plan Valid To'
+		dataType: dateTime
+		sourceColumn: Meal Plan Valid To
+
+	column 'Meal Plan Level'
+		dataType: int64
+		sourceColumn: Meal Plan Level
+
+	column 'Meal Plan Rank'
+		dataType: int64
+		sourceColumn: Meal Plan Rank
+
+	column 'Meal Plan Owner'
+		dataType: string
+		sourceColumn: Meal Plan Owner
+
+	column 'Meal Plan Created By'
+		dataType: string
+		sourceColumn: Meal Plan Created By
+
+	column 'Meal Plan Is Active'
+		dataType: boolean
+		sourceColumn: Meal Plan Is Active
+
+	column 'Meal Plan Type'
+		dataType: string
+		sourceColumn: Meal Plan Type
+
+	column 'Meal Plan Code'
+		dataType: string
+		sourceColumn: Meal Plan Code
+
+	column 'Meal Plan Group'
+		dataType: string
+		sourceColumn: Meal Plan Group
+
+	partition 'Meal Plan' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Meal Plan Key", "Meal Plan", "Meal Plan Description", "Meal Plan Valid To", "Meal Plan Level", "Meal Plan Rank", "Meal Plan Owner", "Meal Plan Created By", "Meal Plan Is Active", "Meal Plan Type", "Meal Plan Code", "Meal Plan Group"}, {})
+				in
+				    Source

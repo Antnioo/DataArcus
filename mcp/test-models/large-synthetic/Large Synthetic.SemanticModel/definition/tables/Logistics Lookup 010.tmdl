@@ -1,0 +1,34 @@
+table 'Logistics Lookup 010'
+
+	column 'Logistics Lookup 010 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Logistics Lookup 010 Key
+
+	column 'Logistics Lookup 010'
+		dataType: string
+		sourceColumn: Logistics Lookup 010
+
+	column 'Logistics Lookup 010 Code'
+		dataType: string
+		sourceColumn: Logistics Lookup 010 Code
+
+	column 'Logistics Lookup 010 Level'
+		dataType: int64
+		sourceColumn: Logistics Lookup 010 Level
+
+	column 'Logistics Lookup 010 Description'
+		dataType: string
+		sourceColumn: Logistics Lookup 010 Description
+
+	column 'Logistics Lookup 010 Group'
+		dataType: string
+		sourceColumn: Logistics Lookup 010 Group
+
+	partition 'Logistics Lookup 010' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Logistics Lookup 010 Key", "Logistics Lookup 010", "Logistics Lookup 010 Code", "Logistics Lookup 010 Level", "Logistics Lookup 010 Description", "Logistics Lookup 010 Group"}, {})
+				in
+				    Source

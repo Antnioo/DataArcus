@@ -1,0 +1,116 @@
+table Shipments
+
+	measure 'Shipments Total Discount' = SUM ( Shipments[Discount] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Shipments Average Discount' = AVERAGE ( Shipments[Discount] )
+		formatString: #,0.00
+		displayFolder: Logistics
+
+	measure 'Shipments Count' = COUNTROWS ( Shipments )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Shipments Total Discount LY' = CALCULATE ( [Shipments Total Discount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Shipments Total Discount YoY %' = DIVIDE ( [Shipments Total Discount] - [Shipments Total Discount LY], [Shipments Total Discount LY] )
+		formatString: 0.0%
+		displayFolder: Logistics
+
+	measure 'Shipments Total Discount YTD' = TOTALYTD ( [Shipments Total Discount], 'Calendar'[Date] )
+
+	measure 'Shipments Max Discount' = MAX ( Shipments[Discount] )
+		displayFolder: Logistics
+
+	measure 'Shipments Discount Share %' = DIVIDE ( [Shipments Total Discount], CALCULATE ( [Shipments Total Discount], ALL ( Shipments ) ) )
+
+	measure 'Shipments Total Net Amount' = SUM ( Shipments[Net Amount] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Shipments Average Net Amount' = AVERAGE ( Shipments[Net Amount] )
+		formatString: #,0.00
+		displayFolder: Logistics
+
+	measure 'Shipments Total Net Amount LY' = CALCULATE ( [Shipments Total Net Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Logistics
+
+	measure 'Shipments Total Net Amount YoY %' = DIVIDE ( [Shipments Total Net Amount] - [Shipments Total Net Amount LY], [Shipments Total Net Amount LY] )
+		displayFolder: Logistics
+
+	measure 'Shipments Total Net Amount YTD' = TOTALYTD ( [Shipments Total Net Amount], 'Calendar'[Date] )
+		displayFolder: Logistics
+
+	measure 'Shipments Max Net Amount' = MAX ( Shipments[Net Amount] )
+		displayFolder: Logistics
+
+	measure 'Shipments Net Amount Share %' = DIVIDE ( [Shipments Total Net Amount], CALCULATE ( [Shipments Total Net Amount], ALL ( Shipments ) ) )
+		displayFolder: Logistics
+
+	column 'Shipment Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Shipment Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Logistics Lookup 024 Key'
+		dataType: int64
+		sourceColumn: Logistics Lookup 024 Key
+
+	column 'Customs Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Customs Status Key
+
+	column 'Hub Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Hub Key
+
+	column 'Lane Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Lane Key
+
+	column 'Logistics Lookup 010 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Logistics Lookup 010 Key
+
+	column Discount
+		dataType: decimal
+		sourceColumn: Discount
+
+	column 'Net Amount'
+		dataType: decimal
+		isHidden
+		sourceColumn: Net Amount
+
+	column Quantity
+		dataType: int64
+		isHidden
+		sourceColumn: Quantity
+
+	column Price
+		dataType: decimal
+		isHidden
+		sourceColumn: Price
+
+	column Margin
+		dataType: decimal
+		sourceColumn: Margin
+
+	partition Shipments = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Shipment Id", "Date", "Logistics Lookup 024 Key", "Customs Status Key", "Hub Key", "Lane Key", "Logistics Lookup 010 Key", "Discount", "Net Amount", "Quantity", "Price", "Margin"}, {})
+				in
+				    Source

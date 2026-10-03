@@ -1,0 +1,54 @@
+table 'Cost Code'
+
+	column 'Cost Code Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Cost Code Key
+
+	column 'Cost Code'
+		dataType: string
+		sourceColumn: Cost Code
+
+	column 'Cost Code Rank'
+		dataType: int64
+		sourceColumn: Cost Code Rank
+
+	column 'Cost Code Owner'
+		dataType: string
+		sourceColumn: Cost Code Owner
+
+	column 'Cost Code Code'
+		dataType: string
+		sourceColumn: Cost Code Code
+
+	column 'Cost Code Short Name'
+		dataType: string
+		sourceColumn: Cost Code Short Name
+
+	column 'Cost Code Valid To'
+		dataType: dateTime
+		sourceColumn: Cost Code Valid To
+
+	column 'Cost Code Valid From'
+		dataType: dateTime
+		sourceColumn: Cost Code Valid From
+
+	column 'Cost Code Category'
+		dataType: string
+		sourceColumn: Cost Code Category
+
+	column 'Cost Code Description'
+		dataType: string
+		sourceColumn: Cost Code Description
+
+	column 'Cost Code Group'
+		dataType: string
+		sourceColumn: Cost Code Group
+
+	partition 'Cost Code' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Cost Code Key", "Cost Code", "Cost Code Rank", "Cost Code Owner", "Cost Code Code", "Cost Code Short Name", "Cost Code Valid To", "Cost Code Valid From", "Cost Code Category", "Cost Code Description", "Cost Code Group"}, {})
+				in
+				    Source

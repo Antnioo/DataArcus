@@ -1,0 +1,54 @@
+table Supplier
+
+	column 'Supplier Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Supplier Key
+
+	column Supplier
+		dataType: string
+		sourceColumn: Supplier
+
+	column 'Supplier Level'
+		dataType: int64
+		sourceColumn: Supplier Level
+
+	column 'Supplier Status'
+		dataType: string
+		sourceColumn: Supplier Status
+
+	column 'Supplier Is Active'
+		dataType: boolean
+		sourceColumn: Supplier Is Active
+
+	column 'Supplier Short Name'
+		dataType: string
+		sourceColumn: Supplier Short Name
+
+	column 'Supplier Region'
+		dataType: string
+		sourceColumn: Supplier Region
+
+	column 'Supplier Created By'
+		dataType: string
+		sourceColumn: Supplier Created By
+
+	column 'Supplier Long Name'
+		dataType: string
+		sourceColumn: Supplier Long Name
+
+	column 'Supplier Code'
+		dataType: string
+		sourceColumn: Supplier Code
+
+	column 'Supplier Description'
+		dataType: string
+		sourceColumn: Supplier Description
+
+	partition Supplier = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Supplier Key", "Supplier", "Supplier Level", "Supplier Status", "Supplier Is Active", "Supplier Short Name", "Supplier Region", "Supplier Created By", "Supplier Long Name", "Supplier Code", "Supplier Description"}, {})
+				in
+				    Source
