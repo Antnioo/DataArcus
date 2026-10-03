@@ -48,6 +48,7 @@ Last updated 2026-10-01 by the reviewer.
 - Note every question people ask under "Ideas" in `content/BLOG-PLAN.md`: that's the next article.
 
 ## Never
+- Don't use the Model Health Check article ("41% unused columns") until it is rewritten: it describes the owner's employer's model (see `content/BLOG-PLAN.md`, "To fix").
 - Nothing from the owner's job: no employer name, dashboards, screenshots, customers or numbers. Only DataArcus test
   models and public data.
 - No engagement bait ("comment YES"), no fake numbers, no posting a tool feature that isn't live yet.
@@ -56,7 +57,7 @@ Last updated 2026-10-01 by the reviewer.
 ## Queue (next 4 weeks, from the published articles; adjust freely)
 | Week | Tue | Wed | Thu |
 |---|---|---|---|
-| 1 | Real result: 41% of columns unused (Model Health Check) | Tip: the 3 things the health check flags first | Tool demo: run the health check on your model |
+| 1 | Teaser video (MCP, "coming soon") | The AI-readiness article: is your model ready for Copilot? | Tip: Prep data for AI in 3 steps (AI data schema, verified answers, AI instructions) |
 | 2 | Before / after: the report redesign | Carousel: 7 report styles by department | Tool demo: the Theme Generator |
 | 3 | Gulf (Arabic + English): comparing Ramadan sales year over year | Tip: the Hijri calendar in DAX | Poll: which week start does your calendar use? |
 | 4 | Real result: Pro vs PPU vs F64, when each one pays off | Tip: the licensing mistake that costs the most | Tool demo: the licensing calculator |
