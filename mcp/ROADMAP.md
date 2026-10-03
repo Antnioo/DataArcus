@@ -144,11 +144,16 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
    December). Hijri dates (Umm al-Qura, with UAE moon-sighting overrides), Ramadan day N vs last year, Eid windows,
    per-country weekends and the 2022 UAE change; in the Calendar Generator, the Measure Builder and the MCP; with a
    launch article and posts. Fit it around the rounds above; it is mostly DAX and the website's existing tools.
-7. **After launch, the product's next layers:** measures (year over year, Ramadan vs last Ramadan, percentages) from
+7. **After the beta: a drag-and-drop layout editor in the Theme Generator** (owner 2026-10-03, after seeing a competitor's
+   AI -> HTML mockup -> PBIP builder with draggable visuals). The website already draws every slot of the layout in
+   the browser; let visitors move and resize them (snapping to the grid, keeping the measured minimum sizes), then
+   download the Power BI project as today. Our edge stays: Arabic/right-to-left mirroring, the Gulf calendar and
+   verified sizes. Not before the beta: it doesn't serve the goal of 5 beta users and 1 paid client by 15 November.
+8. **After launch, the product's next layers:** measures (year over year, Ramadan vs last Ramadan, percentages) from
    the Measure Builder and Gulf DAX, since many real models lack them; and saved company design systems (theme and
    layout reused on every report), the base of the Teams tier; and **automatic right-to-left mirroring of a report**
    (no public equivalent found; our engine already places every visual): the clearest product moat for the premium.
-8. **After the beta, as testers need them:** small pages (640 x 360 cards, charts, tables), backgrounds (phase 3:
+9. **After the beta, as testers need them:** small pages (640 x 360 cards, charts, tables), backgrounds (phase 3:
    the PNG from the engine's SVG), Gulf DAX patterns (Hijri, Ramadan, fiscal years), `screenshot-all` on generated
    projects, then Pro/Teams.
 
