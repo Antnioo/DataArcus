@@ -852,10 +852,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   chk(() => !two.err && two.t.length < 40000 && two.j.tables.map((t) => t.table).join() === 'Shipments,Carrier' && two.j.tables[0].measures.length === 15 && two.j.tables[0].columns.length > 0 && two.j.tables[0].columns.every((c) => /\((string|int64|double|decimal|dateTime|boolean)\)$/.test(c)) && JSON.stringify(two.j.notFound) === '["Nope"]', () => `read_model with tables must return exactly the named tables in full: ${two.err ? two.t.slice(0, 200) : two.j.tables.map((t) => t.table) + ' / notFound ' + JSON.stringify(two.j.notFound)}`);
   const allFacts = big.j && big.j.tablesWithMeasures ? await ask('read_model', { path: 'large', tables: big.j.tablesWithMeasures.map((t) => t.table) }) : { err: true, t: 'no summary' };
   chk(() => !allFacts.err && allFacts.t.length <= 40000 && allFacts.j.tables.length > 10 && allFacts.j.tables.length < 65 && allFacts.j.notShown.length === 65 - allFacts.j.tables.length && /40,000/.test(String(allFacts.j.note)), () => `read_model with more tables than fit must stop at a table and name the rest: ${allFacts.err ? allFacts.t.slice(0, 200) : allFacts.t.length + ' characters, ' + allFacts.j.tables.length + ' tables, notShown ' + (allFacts.j.notShown || []).length}`);
-  // read_model's answers on the small fixtures, as main gives them before round 4 (md5 start and length)
-  const SMALL_ANSWERS = { 'tmdl-project': 'de865f4e0d6e:894', 'bim-project': '303436b049d9:1345', 'dax-project': '83d749d8c3b8:2100', 'sample.pbit': '7d20d9242374:4518' };
+  // read_model's answers on the small fixtures, as main gives them before round 4 (md5 start and length, with the path separator in source as /: Windows writes it as a backslash)
+  const SMALL_ANSWERS = { 'tmdl-project': '63cfd0805729:893', 'bim-project': 'ccbcc917fc9e:1344', 'dax-project': '4502344299d5:2099', 'sample.pbit': '7d20d9242374:4518' };
   const small = {};
-  for (const p of ['tmdl-project', 'bim-project', 'dax-project', 'sample.pbit']) { const x = await ask('read_model', { path: p }); small[p] = x.err ? 'error' : crypto.createHash('md5').update(x.t).digest('hex').slice(0, 12) + ':' + x.t.length; }
+  for (const p of ['tmdl-project', 'bim-project', 'dax-project', 'sample.pbit']) { const x = await ask('read_model', { path: p }); const t = x.t.split(String.fromCharCode(92, 92)).join('/'); small[p] = x.err ? 'error' : crypto.createHash('md5').update(t).digest('hex').slice(0, 12) + ':' + t.length; }
   chk(() => JSON.stringify(small) === JSON.stringify(SMALL_ANSWERS), () => `read_model on the small fixtures changed: ${JSON.stringify(small)}`);
 
   // 1b. check_model_health on a large model fits too: a fix script and its list cover maxItems objects, and say so
