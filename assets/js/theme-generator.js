@@ -456,7 +456,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // model's fields with the other's location: own.local / own.service = { tables, msg, bad, folder, dir, reports, choices }
     const dataIn = $('pbipData'), own = { local: null, service: null, getBind: null };
     const loadBind = () => (window.DABind ? Promise.resolve(window.DABind) : new Promise((resolve, reject) => {
-      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-bind.min.js?v=20261003c'; sc.onload = () => resolve(window.DABind); sc.onerror = reject; document.head.appendChild(sc);
+      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-bind.min.js?v=20261003d'; sc.onload = () => resolve(window.DABind); sc.onerror = reject; document.head.appendChild(sc);
     }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');

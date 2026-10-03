@@ -33,7 +33,7 @@
     text.split(/\r?\n/).forEach((raw) => {
       const line = raw.replace(/^( {4})+/, (s) => '\t'.repeat(s.length / 4));
       const trimmed = line.trim();
-      if (fence) { if (trimmed === '```') fence = false; return; }
+      if (fence) { if (trimmed === '```') fence = false; else if (cur && cur.isMeasure && divides(trimmed)) cur.divides = true; return; }
       if (/=\s*```\s*$/.test(trimmed)) fence = true;
       if (!trimmed || trimmed.startsWith('///')) return;
       const depth = line.match(/^\t*/)[0].length;
@@ -47,7 +47,8 @@
         if (m) {
           // a column with no dataType line (columns of DAX tables in a project Desktop saved) is 'unknown', never
           // guessed as text: guessing made numbers and dates look like categories (a chart "by Amount")
-          cur = m[1] === 'column' ? { name: tmdlName(m[2]), dataType: 'unknown', isHidden: false } : { name: tmdlName(m[2]), isHidden: false };
+          cur = m[1] === 'column' ? { name: tmdlName(m[2]), dataType: 'unknown', isHidden: false } : { name: tmdlName(m[2]), isHidden: false, divides: divides(m[2].replace(/^('(?:[^']|'')*'|[^=]*)=/, '')) };
+          if (m[1] === 'measure') Object.defineProperty(cur, 'isMeasure', { value: true });
           table[m[1] === 'column' ? 'columns' : 'measures'].push(cur);
         } else {
           cur = null;
@@ -59,7 +60,8 @@
         if (p) cur[p[1]] = p[2].trim();
         else if (/^sortByColumn\s*:/.test(trimmed)) cur.sortBy = tmdlName(trimmed.replace(/^sortByColumn\s*:\s*/, ''));
         else if (/^isHidden(\s*:\s*true)?$/.test(trimmed)) cur.isHidden = true;
-      }
+        else if (cur.isMeasure && !/^[A-Za-z]+\s*(:|=|$)/.test(trimmed) && divides(trimmed)) cur.divides = true;
+      } else if (depth > 2 && cur && cur.isMeasure && divides(trimmed)) cur.divides = true;
     });
     return tables;
   }
@@ -70,7 +72,7 @@
       name: String(t.name), hidden: !!t.isHidden, date: /^time$/i.test(t.dataCategory || ''),
       columns: (t.columns || []).filter((c) => c.type !== 'rowNumber' && c.name != null)
         .map((c) => Object.assign({ name: String(c.name), dataType: c.dataType || 'string', isHidden: !!c.isHidden, dataCategory: c.dataCategory }, c.sortByColumn ? { sortBy: String(c.sortByColumn) } : {})),
-      measures: (t.measures || []).filter((x) => x.name != null).map((x) => ({ name: String(x.name), isHidden: !!x.isHidden, formatString: x.formatString }))
+      measures: (t.measures || []).filter((x) => x.name != null).map((x) => ({ name: String(x.name), isHidden: !!x.isHidden, formatString: x.formatString, divides: divides(x.expression) }))
     }));
   }
   // Power BI's hidden automatic date tables are not fields anyone picks
@@ -124,7 +126,12 @@
   }
 
   // ---------- suggestions ----------
-  const PCT = (x) => /%/.test(x.formatString || '') || /%|ratio|rate|margin|share|نسبة|هامش/i.test(x.name);
+  // A percentage: a % in the format or the name, or a name that says ratio or rate. "Margin" and "share" are money
+  // as often as a percentage ("Total Margin" = SUM): they count only when the measure has no format and its DAX
+  // divides (DIVIDE or /). x: { name, formatString, divides }
+  const DIVIDES = /\bDIVIDE\s*\(|(^|[^/])\/(?!\/)/i;
+  const divides = (expr) => DIVIDES.test(Array.isArray(expr) ? expr.join('\n') : String(expr == null ? '' : expr));
+  const PCT = (x) => /%/.test(x.formatString || '') || /%|ratio|rate|نسبة/i.test(x.name) || (/margin|share|هامش/i.test(x.name) && !x.formatString && !!x.divides);
   // time intelligence variants (MTD, PY, YoY %...) are not the headline number
   const VARIANT = /\b(PY|LY|YoY|MoM|QoQ|MTD|QTD|YTD|PYTD|PM|Prior|Previous|Prev|Last|vs|Rolling|Running|Avg|Average|\d+D)\b/i;
   const MAIN = /revenue|sales|amount|income|profit|value|bookings|orders|leads|deals|calls|visits|spend|cost|الإيرادات|المبيعات|الأرباح|الطلبات/i;
@@ -272,6 +279,8 @@
     return 'Data Source=' + qv('powerbi://api.powerbi.com/v1.0/myorg/' + String(workspace).trim()) + ';initial catalog=' + qv(model) + ';access mode=readonly;integrated security=ClaimsToken';
   };
 
-  const api = { iso, parseTmdl, fromTmsl, fromFolder, fromFile, suggest, build, sortColumnFor, renderPicker, connection };
+  // is this measure a percentage? (name, format string, DAX)
+  const isPercent = (name, formatString, expression) => PCT({ name: String(name), formatString, divides: divides(expression) });
+  const api = { isPercent, iso, parseTmdl, fromTmsl, fromFolder, fromFile, suggest, build, sortColumnFor, renderPicker, connection };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DABind = api;
 })(typeof self !== 'undefined' ? self : this);
