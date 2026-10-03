@@ -54,6 +54,27 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 - **Website dropdowns fixed** (merged): the open list was white on white on every tool page; form fields now use
   `color-scheme: dark` with dark option colours (`assets/css/style.css`), checked on every tool page in `tools.mjs`.
 
+## Laptop sitting 2026-10-04 (owner's go, in advance for every part; results branch `test/golden-agent-level`; nothing merged)
+Seven parts in order, each independent. No product code is changed in this sitting: every product problem is written
+down with its cause and a proposed fix. State after each part:
+
+- **Part 1, zod 4 (Dependabot PR #5): automated half done.** The PR's branch is on an old base (before rounds 3 and
+  4), so the bump was put on top of main locally (`local/zod4-on-main` in the worktree `C:\DataArcus\zod4-check`, not
+  pushed). `npm ci`, `npm test`: **216 of 216** with zod 4.6.5. `builder-scripts\zod4-compare.mjs` runs the same 14
+  calls on main's server and on the zod 4 server over stdio: **every tool answer and every written file is the
+  same** (23 comparisons). Two differences, neither in an answer:
+  - the wording of refusals: "Invalid enum value. Expected 'uae' | 'ksa'..., received 'egy'" becomes "Invalid option:
+    expected one of "uae"|"ksa"..." (the rejected value is no longer echoed); "Required at path" becomes "Invalid
+    input: expected string, received undefined at path"; "Number must be less than or equal to 6" becomes "Too big:
+    expected number to be <=6";
+  - the tools' input schemas as the AI app sees them: `additionalProperties: false` is gone from every object, whole
+    numbers gain safe-integer `minimum`/`maximum`, records gain `propertyNames`. No name, type, default or description
+    changed.
+  The Claude Desktop half follows after Part 2 (it needs a package of that server).
+- **Part 2, the build script: done.** dataarcus-engine, branch `packaging/build`, `862943a`:
+  `packaging/build.mjs` and `packaging/build.test.mjs` (5 tests). First build from main `19c5408`:
+  `dist/dataarcus-0.2.0.mcpb`, 3,319,052 bytes, unsigned, 18 staged files, 91 production packages.
+
 ## Next step (owner's go 2026-10-02, after reviews by ChatGPT and Gemini): users and a first paid client sooner
 **The goal that decides everything: by 15 November 2026, 5 beta users have used DataArcus on their own work and 1
 client has paid.** Anything that doesn't serve it waits (the Gulf Calendar pack is the exception: Ramadan sets its
