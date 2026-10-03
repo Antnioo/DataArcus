@@ -26,7 +26,7 @@ Last updated 2026-10-01 by the reviewer.
 | Type | What | Example from our work |
 |---|---|---|
 | Before / after | Two images side by side, 3 lines on what changed | The report redesign in 5 minutes |
-| Real result | One number from a real check, what it means, what to do | "41% of the columns in a real model were never used" |
+| Real result | One number from a real check, what it means, what to do | "A quarter of the columns in Microsoft's own sample model are never used" |
 | Tip | One problem, one fix, a short DAX snippet (as an image or code) | Sorting day names correctly with a sort-by column |
 | Carousel | A PDF of 6-8 slides that teaches one thing | The 7 report styles by department |
 | Tool demo | A 30-60 second screen recording, no voice needed | Theme Generator: brand colour in, theme and report out |
@@ -48,7 +48,7 @@ Last updated 2026-10-01 by the reviewer.
 - Note every question people ask under "Ideas" in `content/BLOG-PLAN.md`: that's the next article.
 
 ## Never
-- Don't use the Model Health Check article ("41% unused columns") until it is rewritten: it describes the owner's employer's model (see `content/BLOG-PLAN.md`, "To fix").
+- The Model Health Check article was rewritten on 2026-10-03 (branch `content/health-check-rewrite`) on Microsoft's public COVID-19 sample; use it only after that branch is merged, and never the old "41% unused columns" numbers (the employer's model).
 - Nothing from the owner's job: no employer name, dashboards, screenshots, customers or numbers. Only DataArcus test
   models and public data.
 - No engagement bait ("comment YES"), no fake numbers, no posting a tool feature that isn't live yet.
