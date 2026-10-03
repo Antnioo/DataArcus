@@ -729,6 +729,76 @@ Microsoft's validator: 0 errors on the twelve. **Seen, not in scope:** on the MC
 alphabetical order (round 2); the hover script must not run while someone is using the laptop (it moves the mouse and
 captures the screen); the bridge's page screenshots are safe then.
 
+## 2026-10-03: Microsoft's `powerbi-authoring` plugin on an Arabic report, Power BI Desktop 2.158.1177 (no code; for the owner's positioning)
+
+**What was tested.** The plugin as installed on the laptop (`fabric-collection/powerbi-authoring` 0.3.18: the skills
+`powerbi-report-cli` and `semantic-model-authoring`, the modelling MCP, and Microsoft's CLI `powerbi-report-author`
+0.4.0, the latest published). The request: "build an Arabic sales report from this model", on a copy of our test model
+(`tests/5-tmdl-sample`, "Ramadan Test": Sales and a Calendar with Gregorian and Hijri columns and the Ramadan measures).
+Everything is in `tests/6-ms-plugin/`: the spec the plugin requires (`_brief/report-spec.md`), the generator it
+recommends (`gen.mjs`), the report ("Arabic Sales"), the screenshot (`_shots/ms-plugin-pass1.png`). The report was
+opened and captured through the plugin's own preview command and closed without saving.
+
+**How, and the limits of this test (read these before the verdict).**
+- The plugin is instructions and tools for an AI agent, not a program that builds a report by itself. The agent here
+  was this builder session, which knows DataArcus's rules. It followed the plugin's own procedure to the letter
+  (planning -> design -> authoring: its FHD canvas, 32 margins and 24 gutters, the title at the left of the header band
+  with the slicers at its right, its base theme, Segoe UI, the CLI scaffold, validation, Desktop preview, screenshot)
+  and added nothing from DataArcus. A fresh agent that had never seen our work would be a cleaner test.
+- The plugin asks its questions one at a time and stops for an approval. Nobody else was in the session: each
+  question was answered with the option the plugin marks as recommended, and the spec approved by the tester.
+- One page, one pass. The plugin's fix loop after the screenshot review was not run a second time, so the result
+  shows what its defaults give, not the best it can reach.
+- What an agent adds on its own (here: Arabic titles and display names, because the request was in Arabic) is the
+  agent's, not the plugin's: the plugin has no instruction for it.
+
+**What the plugin's own text says** (all 111 files of the plugin searched):
+- "Arabic", "RTL", "right-to-left", "Hijri", "Ramadan", "Umm al-Qura": **no mention**, except one line about inverting a
+  bar chart's axis. Its layout rules are written for left to right: "Top-left carries the heaviest message", "the page
+  title remains the left anchor and slicers sit to the right", F- and Z-patterns from the left.
+- Fonts: "Segoe UI" for all text; nothing about Arabic fonts or Arabic numerals.
+- Checking: after every edit it requires its schema validator and a screenshot of each page, reviewed against a
+  checklist (clipped text, empty visuals, error icons, overlaps, contrast, theme applied). It asks for a DAX check of
+  values only after a model (TMDL) edit. It does not ask for the numbers shown on the visuals to be compared with DAX.
+- Calendars: its model skill covers ordinary time intelligence (TOTALYTD and the like); the modelling MCP has
+  `calendar_operations`, which marks existing columns of a table as a calendar's year, quarter, month and so on for
+  DAX time intelligence. It can mark Hijri columns that the model already has; it creates no Hijri dates and knows
+  nothing of Ramadan or Eid.
+
+**What it built** (`_shots/ms-plugin-pass1.png`): a clean, professional page on the first pass: the title, three
+dropdown slicers, three KPI cards, a monthly trend, sales by Hijri month, sales by weekday, a table by Hijri year. Every
+visual drew, with data.
+
+| Question | Seen | Verdict |
+|---|---|---|
+| Does it mirror the layout right to left? | No. Title at the top left, slicers at the top right, chart titles and KPI values left-aligned, the table's first column on the left, value axes on the left. Arabic text is drawn correctly but starts at the left edge. Its rules place things for a left-to-right reader and nothing tells the agent to mirror | **No** |
+| Arabic titles and fonts? | Arabic titles, slicer headers, card labels and column headers are there and shape correctly, because the agent wrote them (through the documented `displayName` and title properties). The font is the plugin's Segoe UI. What comes from the model stays English ("Ramadan", "Sha'ban", "Friday", "Total"), the slicers say "All", and digits are Western. No translation step, no warning about untranslated names | **Partly, and only as far as the agent thinks of it** |
+| A Hijri or Ramadan calendar? | It used the Hijri columns and Ramadan measures our model already has. On a model without them it would have nothing: no Hijri calendar, no Ramadan logic, no Gulf weekend anywhere in the plugin | **No (uses what the model has)** |
+| Does it check that the numbers are right, or only take screenshots? | Schema validation and screenshot review. The numbers on this page are right (101.914K, 74.675K, 0.34: the model's known answers 101914, 74675, 0.3378), but nothing in the procedure checked that: the tester did | **Screenshots and schema only** |
+
+**Other things seen, to be fair in both directions:**
+- Its strengths are real: a one-command scaffold with valid schema versions, a metadata CLI for roles and properties, a
+  validator, a preview command that opens Desktop and captures pages, a long design guide (archetypes, chart choice,
+  layout arithmetic, accessibility), and a planning step that asks before building. A report that opens, binds and looks
+  tidy on the first pass is not nothing.
+- Its planning step did notice the model's gaps (month and weekday names without a sort column, a percentage without a
+  format) as "likely missing model work"; with no permission to edit the model they stayed: months and weekdays are in
+  alphabetical order and the percentage shows as 0.34.
+- **Its own base theme fails its own validator**: 6 errors on `cardVisual` (`border.radius`, `spacing.customizeSpacing`,
+  `padding.top/bottom/left/right`) with CLI 0.4.0. The six entries were removed to continue. (The first of these is the
+  error we fixed in our own theme on 2026-10-01.)
+- Its preview command did not find the Microsoft Store install of Desktop until `PBI_DESKTOP_PATH` was set.
+- The monthly trend got a scrollbar and upright labels (60 months on the axis); the plugin's checklist would send the
+  agent back to fix that. It was left, as a first pass.
+
+**Honest verdict.** For a left-to-right report on a well-built model, Microsoft's plugin gives an agent a solid,
+well-documented way to a decent report, and it is free. For Arabic it has nothing of its own: no mirroring, no Arabic
+typography, no translation of field names, no Hijri or Ramadan calendar, and it does not check numbers. An Arabic
+report made with it is a left-to-right report with Arabic words in it, and how good it gets depends on what the agent
+happens to know. Those four gaps are exactly where DataArcus has measured, tested rules. This is one page, one pass and
+one tester who is not neutral: enough to say the gaps exist in the plugin's text and in its default result, not enough
+to say how a careful user with a good prompt would fare.
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
