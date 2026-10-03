@@ -1,0 +1,42 @@
+table 'PO Status'
+
+	column 'PO Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: PO Status Key
+
+	column 'PO Status'
+		dataType: string
+		sourceColumn: PO Status
+
+	column 'PO Status Category'
+		dataType: string
+		sourceColumn: PO Status Category
+
+	column 'PO Status Owner'
+		dataType: string
+		sourceColumn: PO Status Owner
+
+	column 'PO Status Parent Code'
+		dataType: string
+		sourceColumn: PO Status Parent Code
+
+	column 'PO Status Status'
+		dataType: string
+		sourceColumn: PO Status Status
+
+	column 'PO Status Code'
+		dataType: string
+		sourceColumn: PO Status Code
+
+	column 'PO Status Description'
+		dataType: string
+		sourceColumn: PO Status Description
+
+	partition 'PO Status' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"PO Status Key", "PO Status", "PO Status Category", "PO Status Owner", "PO Status Parent Code", "PO Status Status", "PO Status Code", "PO Status Description"}, {})
+				in
+				    Source

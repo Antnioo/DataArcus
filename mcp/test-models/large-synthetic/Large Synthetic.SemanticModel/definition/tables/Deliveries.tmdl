@@ -1,0 +1,129 @@
+table Deliveries
+
+	measure 'Deliveries Total Tax Amount' = SUM ( Deliveries[Tax Amount] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Deliveries Average Tax Amount' = AVERAGE ( Deliveries[Tax Amount] )
+		formatString: #,0.00
+		displayFolder: Logistics
+
+	measure 'Deliveries Count' = COUNTROWS ( Deliveries )
+		formatString: #,0
+		displayFolder: Logistics
+
+	/// Made-up measure for the large test model (Logistics).
+	measure 'Deliveries Total Tax Amount LY' = CALCULATE ( [Deliveries Total Tax Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Logistics
+
+	measure 'Deliveries Total Tax Amount YoY %' = DIVIDE ( [Deliveries Total Tax Amount] - [Deliveries Total Tax Amount LY], [Deliveries Total Tax Amount LY] )
+		formatString: 0.0%
+		displayFolder: Logistics
+
+	/// Made-up measure for the large test model (Logistics).
+	measure 'Deliveries Total Tax Amount YTD' = TOTALYTD ( [Deliveries Total Tax Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Deliveries Max Tax Amount' = MAX ( Deliveries[Tax Amount] )
+
+	/// Made-up measure for the large test model (Logistics).
+	measure 'Deliveries Tax Amount Share %' = DIVIDE ( [Deliveries Total Tax Amount], CALCULATE ( [Deliveries Total Tax Amount], ALL ( Deliveries ) ) )
+
+	measure 'Deliveries Total Hours' = SUM ( Deliveries[Hours] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Deliveries Average Hours' = AVERAGE ( Deliveries[Hours] )
+		formatString: #,0.00
+		displayFolder: Logistics
+
+	measure 'Deliveries Total Hours LY' = CALCULATE ( [Deliveries Total Hours], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Deliveries Total Hours YoY %' = DIVIDE ( [Deliveries Total Hours] - [Deliveries Total Hours LY], [Deliveries Total Hours LY] )
+		displayFolder: Logistics
+
+	measure 'Deliveries Total Hours YTD' = TOTALYTD ( [Deliveries Total Hours], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Deliveries Max Hours' = MAX ( Deliveries[Hours] )
+		displayFolder: Logistics
+
+	measure 'Deliveries Hours Share %' = DIVIDE ( [Deliveries Total Hours], CALCULATE ( [Deliveries Total Hours], ALL ( Deliveries ) ) )
+		displayFolder: Logistics
+
+	column 'Deliverie Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Deliverie Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Driver Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Driver Key
+
+	column 'Logistics Lookup 048 Key'
+		dataType: int64
+		sourceColumn: Logistics Lookup 048 Key
+
+	column 'Route Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Route Key
+
+	column 'Carrier Key'
+		dataType: int64
+		sourceColumn: Carrier Key
+
+	column 'Tax Amount'
+		dataType: decimal
+		sourceColumn: Tax Amount
+
+	column Hours
+		dataType: double
+		isHidden
+		sourceColumn: Hours
+
+	column Cost
+		dataType: decimal
+		sourceColumn: Cost
+
+	column 'Net Amount'
+		dataType: double
+		isHidden
+		sourceColumn: Net Amount
+
+	column Score
+		dataType: double
+		sourceColumn: Score
+
+	column Value
+		dataType: decimal
+		isHidden
+		sourceColumn: Value
+
+	column Amount
+		dataType: double
+		isHidden
+		sourceColumn: Amount
+
+	column 'Duration Minutes'
+		dataType: double
+		isHidden
+		sourceColumn: Duration Minutes
+
+	partition Deliveries = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Deliverie Id", "Date", "Driver Key", "Logistics Lookup 048 Key", "Route Key", "Carrier Key", "Tax Amount", "Hours", "Cost", "Net Amount", "Score", "Value", "Amount", "Duration Minutes"}, {})
+				in
+				    Source

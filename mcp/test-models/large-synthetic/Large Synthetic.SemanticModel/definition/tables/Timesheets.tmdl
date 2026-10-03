@@ -1,0 +1,121 @@
+table Timesheets
+
+	measure 'Timesheets Total Discount' = SUM ( Timesheets[Discount] )
+		formatString: #,0
+		displayFolder: Projects
+
+	measure 'Timesheets Average Discount' = AVERAGE ( Timesheets[Discount] )
+		formatString: #,0.00
+		displayFolder: Projects
+
+	measure 'Timesheets Count' = COUNTROWS ( Timesheets )
+		formatString: #,0
+
+	/// Made-up measure for the large test model (Projects).
+	measure 'Timesheets Total Discount LY' = CALCULATE ( [Timesheets Total Discount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Projects
+
+	measure 'Timesheets Total Discount YoY %' = DIVIDE ( [Timesheets Total Discount] - [Timesheets Total Discount LY], [Timesheets Total Discount LY] )
+		displayFolder: Projects
+
+	measure 'Timesheets Total Discount YTD' = TOTALYTD ( [Timesheets Total Discount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Projects
+
+	measure 'Timesheets Max Discount' = MAX ( Timesheets[Discount] )
+		displayFolder: Projects
+
+	measure 'Timesheets Discount Share %' = DIVIDE ( [Timesheets Total Discount], CALCULATE ( [Timesheets Total Discount], ALL ( Timesheets ) ) )
+		displayFolder: Projects
+
+	/// Made-up measure for the large test model (Projects).
+	measure 'Timesheets Total Units' = SUM ( Timesheets[Units] )
+		formatString: #,0
+		displayFolder: Projects
+
+	measure 'Timesheets Average Units' = AVERAGE ( Timesheets[Units] )
+		formatString: #,0.00
+		displayFolder: Projects
+
+	measure 'Timesheets Total Units LY' = CALCULATE ( [Timesheets Total Units], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Projects
+
+	/// Made-up measure for the large test model (Projects).
+	measure 'Timesheets Total Units YoY %' = DIVIDE ( [Timesheets Total Units] - [Timesheets Total Units LY], [Timesheets Total Units LY] )
+		displayFolder: Projects
+
+	/// Made-up measure for the large test model (Projects).
+	measure 'Timesheets Total Units YTD' = TOTALYTD ( [Timesheets Total Units], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Projects
+
+	measure 'Timesheets Max Units' = MAX ( Timesheets[Units] )
+		displayFolder: Projects
+
+	measure 'Timesheets Units Share %' = DIVIDE ( [Timesheets Total Units], CALCULATE ( [Timesheets Total Units], ALL ( Timesheets ) ) )
+		displayFolder: Projects
+
+	column 'Timesheet Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Timesheet Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Role Key'
+		dataType: int64
+		sourceColumn: Role Key
+
+	column 'Project Key'
+		dataType: int64
+		sourceColumn: Project Key
+
+	column 'Projects Lookup 037 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Projects Lookup 037 Key
+
+	column 'Sponsor Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Sponsor Key
+
+	column 'Phase Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Phase Key
+
+	column 'Practice Key'
+		dataType: int64
+		sourceColumn: Practice Key
+
+	column Discount
+		dataType: double
+		sourceColumn: Discount
+
+	column Units
+		dataType: int64
+		isHidden
+		sourceColumn: Units
+
+	column Hours
+		dataType: double
+		isHidden
+		sourceColumn: Hours
+
+	column 'Tax Amount'
+		dataType: decimal
+		sourceColumn: Tax Amount
+
+	partition Timesheets = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Timesheet Id", "Date", "Role Key", "Project Key", "Projects Lookup 037 Key", "Sponsor Key", "Phase Key", "Practice Key", "Discount", "Units", "Hours", "Tax Amount"}, {})
+				in
+				    Source

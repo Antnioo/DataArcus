@@ -1,0 +1,129 @@
+table 'AP Invoices'
+
+	measure 'AP Invoices Total Price' = SUM ( 'AP Invoices'[Price] )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'AP Invoices Average Price' = AVERAGE ( 'AP Invoices'[Price] )
+		formatString: #,0.00
+		displayFolder: Finance
+
+	/// Made-up measure for the large test model (Finance).
+	measure 'AP Invoices Count' = COUNTROWS ( 'AP Invoices' )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'AP Invoices Total Price LY' = CALCULATE ( [AP Invoices Total Price], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'AP Invoices Total Price YoY %' = DIVIDE ( [AP Invoices Total Price] - [AP Invoices Total Price LY], [AP Invoices Total Price LY] )
+		formatString: 0.0%
+		displayFolder: Finance
+
+	measure 'AP Invoices Total Price YTD' = TOTALYTD ( [AP Invoices Total Price], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'AP Invoices Max Price' = MAX ( 'AP Invoices'[Price] )
+		displayFolder: Finance
+
+	/// Made-up measure for the large test model (Finance).
+	measure 'AP Invoices Price Share %' = DIVIDE ( [AP Invoices Total Price], CALCULATE ( [AP Invoices Total Price], ALL ( 'AP Invoices' ) ) )
+		displayFolder: Finance
+
+	measure 'AP Invoices Total Count' = SUM ( 'AP Invoices'[Count] )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'AP Invoices Average Count' = AVERAGE ( 'AP Invoices'[Count] )
+		formatString: #,0.00
+		displayFolder: Finance
+
+	measure 'AP Invoices Total Count LY' = CALCULATE ( [AP Invoices Total Count], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Finance
+
+	/// Made-up measure for the large test model (Finance).
+	measure 'AP Invoices Total Count YoY %' = DIVIDE ( [AP Invoices Total Count] - [AP Invoices Total Count LY], [AP Invoices Total Count LY] )
+		formatString: 0.0%
+		displayFolder: Finance
+
+	/// Made-up measure for the large test model (Finance).
+	measure 'AP Invoices Total Count YTD' = TOTALYTD ( [AP Invoices Total Count], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'AP Invoices Max Count' = MAX ( 'AP Invoices'[Count] )
+		displayFolder: Finance
+
+	measure 'AP Invoices Count Share %' = DIVIDE ( [AP Invoices Total Count], CALCULATE ( [AP Invoices Total Count], ALL ( 'AP Invoices' ) ) )
+		displayFolder: Finance
+
+	column 'AP Invoice Id'
+		dataType: int64
+		isHidden
+		sourceColumn: AP Invoice Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Account Group Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Account Group Key
+
+	column 'Finance Lookup 030 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Finance Lookup 030 Key
+
+	column 'Allocation Rule Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Allocation Rule Key
+
+	column 'Fiscal Period Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Fiscal Period Key
+
+	column 'Exchange Rate Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Exchange Rate Type Key
+
+	column 'Currency Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Currency Key
+
+	column 'Tax Code Key'
+		dataType: int64
+		sourceColumn: Tax Code Key
+
+	column Price
+		dataType: decimal
+		sourceColumn: Price
+
+	column Count
+		dataType: int64
+		sourceColumn: Count
+
+	column Hours
+		dataType: double
+		isHidden
+		sourceColumn: Hours
+
+	column Cost
+		dataType: double
+		sourceColumn: Cost
+
+	partition 'AP Invoices' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"AP Invoice Id", "Date", "Account Group Key", "Finance Lookup 030 Key", "Allocation Rule Key", "Fiscal Period Key", "Exchange Rate Type Key", "Currency Key", "Tax Code Key", "Price", "Count", "Hours", "Cost"}, {})
+				in
+				    Source

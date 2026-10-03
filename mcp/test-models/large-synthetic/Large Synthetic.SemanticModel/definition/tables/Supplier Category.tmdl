@@ -1,0 +1,58 @@
+table 'Supplier Category'
+
+	column 'Supplier Category Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Supplier Category Key
+
+	column 'Supplier Category'
+		dataType: string
+		sourceColumn: Supplier Category
+
+	column 'Supplier Category Valid To'
+		dataType: dateTime
+		sourceColumn: Supplier Category Valid To
+
+	column 'Supplier Category Description'
+		dataType: string
+		sourceColumn: Supplier Category Description
+
+	column 'Supplier Category Created By'
+		dataType: string
+		sourceColumn: Supplier Category Created By
+
+	column 'Supplier Category Valid From'
+		dataType: dateTime
+		sourceColumn: Supplier Category Valid From
+
+	column 'Supplier Category Short Name'
+		dataType: string
+		sourceColumn: Supplier Category Short Name
+
+	column 'Supplier Category Category'
+		dataType: string
+		sourceColumn: Supplier Category Category
+
+	column 'Supplier Category Status'
+		dataType: string
+		sourceColumn: Supplier Category Status
+
+	column 'Supplier Category Code'
+		dataType: string
+		sourceColumn: Supplier Category Code
+
+	column 'Supplier Category Group'
+		dataType: string
+		sourceColumn: Supplier Category Group
+
+	column 'Supplier Category Type'
+		dataType: string
+		sourceColumn: Supplier Category Type
+
+	partition 'Supplier Category' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Supplier Category Key", "Supplier Category", "Supplier Category Valid To", "Supplier Category Description", "Supplier Category Created By", "Supplier Category Valid From", "Supplier Category Short Name", "Supplier Category Category", "Supplier Category Status", "Supplier Category Code", "Supplier Category Group", "Supplier Category Type"}, {})
+				in
+				    Source

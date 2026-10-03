@@ -1,0 +1,50 @@
+table Agency
+
+	column 'Agency Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Agency Key
+
+	column Agency
+		dataType: string
+		sourceColumn: Agency
+
+	column 'Agency Region'
+		dataType: string
+		sourceColumn: Agency Region
+
+	column 'Agency Owner'
+		dataType: string
+		sourceColumn: Agency Owner
+
+	column 'Agency Code'
+		dataType: string
+		sourceColumn: Agency Code
+
+	column 'Agency Long Name'
+		dataType: string
+		sourceColumn: Agency Long Name
+
+	column 'Agency Level'
+		dataType: int64
+		sourceColumn: Agency Level
+
+	column 'Agency Description'
+		dataType: string
+		sourceColumn: Agency Description
+
+	column 'Agency Group'
+		dataType: string
+		sourceColumn: Agency Group
+
+	column 'Agency Category'
+		dataType: string
+		sourceColumn: Agency Category
+
+	partition Agency = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Agency Key", "Agency", "Agency Region", "Agency Owner", "Agency Code", "Agency Long Name", "Agency Level", "Agency Description", "Agency Group", "Agency Category"}, {})
+				in
+				    Source

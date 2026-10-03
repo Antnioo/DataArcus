@@ -1,0 +1,138 @@
+table Scrap
+
+	measure 'Scrap Total Amount' = SUM ( Scrap[Amount] )
+		formatString: #,0
+
+	measure 'Scrap Average Amount' = AVERAGE ( Scrap[Amount] )
+		formatString: #,0.00
+		displayFolder: Production
+
+	/// Made-up measure for the large test model (Production).
+	measure 'Scrap Count' = COUNTROWS ( Scrap )
+		displayFolder: Production
+
+	measure 'Scrap Total Amount LY' = CALCULATE ( [Scrap Total Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Scrap Total Amount YoY %' = DIVIDE ( [Scrap Total Amount] - [Scrap Total Amount LY], [Scrap Total Amount LY] )
+		formatString: 0.0%
+		displayFolder: Production
+
+	measure 'Scrap Total Amount YTD' = TOTALYTD ( [Scrap Total Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Scrap Max Amount' = MAX ( Scrap[Amount] )
+
+	/// Made-up measure for the large test model (Production).
+	measure 'Scrap Amount Share %' = DIVIDE ( [Scrap Total Amount], CALCULATE ( [Scrap Total Amount], ALL ( Scrap ) ) )
+		displayFolder: Production
+
+	measure 'Scrap Total Price' = SUM ( Scrap[Price] )
+		formatString: #,0
+
+	measure 'Scrap Average Price' = AVERAGE ( Scrap[Price] )
+		displayFolder: Production
+
+	measure 'Scrap Total Price LY' = CALCULATE ( [Scrap Total Price], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Scrap Total Price YoY %' = DIVIDE ( [Scrap Total Price] - [Scrap Total Price LY], [Scrap Total Price LY] )
+		formatString: 0.0%
+		displayFolder: Production
+
+	measure 'Scrap Total Price YTD' = TOTALYTD ( [Scrap Total Price], 'Calendar'[Date] )
+		displayFolder: Production
+
+	measure 'Scrap Max Price' = MAX ( Scrap[Price] )
+
+	measure 'Scrap Price Share %' = DIVIDE ( [Scrap Total Price], CALCULATE ( [Scrap Total Price], ALL ( Scrap ) ) )
+		displayFolder: Production
+
+	column 'Scrap Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Scrap Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Defect Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Defect Type Key
+
+	column 'Downtime Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Downtime Reason Key
+
+	column 'Batch Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Batch Key
+
+	column 'Logistics Lookup 024 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Logistics Lookup 024 Key
+
+	column 'Shift Pattern Key'
+		dataType: int64
+		sourceColumn: Shift Pattern Key
+
+	column 'Plant Key'
+		dataType: int64
+		sourceColumn: Plant Key
+
+	column Amount
+		dataType: double
+		isHidden
+		sourceColumn: Amount
+
+	column Price
+		dataType: decimal
+		isHidden
+		sourceColumn: Price
+
+	column 'Net Amount'
+		dataType: decimal
+		isHidden
+		sourceColumn: Net Amount
+
+	column Value
+		dataType: decimal
+		sourceColumn: Value
+
+	column 'Weight Kg'
+		dataType: double
+		isHidden
+		sourceColumn: Weight Kg
+
+	column Discount
+		dataType: decimal
+		sourceColumn: Discount
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	column 'Tax Amount'
+		dataType: double
+		sourceColumn: Tax Amount
+
+	column Cost
+		dataType: decimal
+		sourceColumn: Cost
+
+	partition Scrap = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Scrap Id", "Date", "Defect Type Key", "Downtime Reason Key", "Batch Key", "Logistics Lookup 024 Key", "Shift Pattern Key", "Plant Key", "Amount", "Price", "Net Amount", "Value", "Weight Kg", "Discount", "Quantity", "Tax Amount", "Cost"}, {})
+				in
+				    Source

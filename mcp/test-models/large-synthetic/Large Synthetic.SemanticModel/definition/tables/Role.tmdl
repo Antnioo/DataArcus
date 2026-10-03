@@ -1,0 +1,42 @@
+table Role
+
+	column 'Role Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Role Key
+
+	column Role
+		dataType: string
+		sourceColumn: Role
+
+	column 'Role Sort Order'
+		dataType: int64
+		sourceColumn: Role Sort Order
+
+	column 'Role Parent Code'
+		dataType: string
+		sourceColumn: Role Parent Code
+
+	column 'Role Category'
+		dataType: string
+		sourceColumn: Role Category
+
+	column 'Role Rank'
+		dataType: int64
+		sourceColumn: Role Rank
+
+	column 'Role Code'
+		dataType: string
+		sourceColumn: Role Code
+
+	column 'Role Description'
+		dataType: string
+		sourceColumn: Role Description
+
+	partition Role = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Role Key", "Role", "Role Sort Order", "Role Parent Code", "Role Category", "Role Rank", "Role Code", "Role Description"}, {})
+				in
+				    Source

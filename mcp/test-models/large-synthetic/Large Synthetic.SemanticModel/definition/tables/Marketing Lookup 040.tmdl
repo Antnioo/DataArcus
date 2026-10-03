@@ -1,0 +1,54 @@
+table 'Marketing Lookup 040'
+
+	column 'Marketing Lookup 040 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Marketing Lookup 040 Key
+
+	column 'Marketing Lookup 040'
+		dataType: string
+		sourceColumn: Marketing Lookup 040
+
+	column 'Marketing Lookup 040 Category'
+		dataType: string
+		sourceColumn: Marketing Lookup 040 Category
+
+	column 'Marketing Lookup 040 Level'
+		dataType: int64
+		sourceColumn: Marketing Lookup 040 Level
+
+	column 'Marketing Lookup 040 Created By'
+		dataType: string
+		sourceColumn: Marketing Lookup 040 Created By
+
+	column 'Marketing Lookup 040 Parent Code'
+		dataType: string
+		sourceColumn: Marketing Lookup 040 Parent Code
+
+	column 'Marketing Lookup 040 Group'
+		dataType: string
+		sourceColumn: Marketing Lookup 040 Group
+
+	column 'Marketing Lookup 040 Valid From'
+		dataType: dateTime
+		sourceColumn: Marketing Lookup 040 Valid From
+
+	column 'Marketing Lookup 040 Notes'
+		dataType: string
+		sourceColumn: Marketing Lookup 040 Notes
+
+	column 'Marketing Lookup 040 Region'
+		dataType: string
+		sourceColumn: Marketing Lookup 040 Region
+
+	column 'Marketing Lookup 040 Code'
+		dataType: string
+		sourceColumn: Marketing Lookup 040 Code
+
+	partition 'Marketing Lookup 040' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Marketing Lookup 040 Key", "Marketing Lookup 040", "Marketing Lookup 040 Category", "Marketing Lookup 040 Level", "Marketing Lookup 040 Created By", "Marketing Lookup 040 Parent Code", "Marketing Lookup 040 Group", "Marketing Lookup 040 Valid From", "Marketing Lookup 040 Notes", "Marketing Lookup 040 Region", "Marketing Lookup 040 Code"}, {})
+				in
+				    Source

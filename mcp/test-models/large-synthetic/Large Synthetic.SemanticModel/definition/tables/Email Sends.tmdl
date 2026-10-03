@@ -1,0 +1,132 @@
+table 'Email Sends'
+
+	measure 'Email Sends Total Net Amount' = SUM ( 'Email Sends'[Net Amount] )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Email Sends Average Net Amount' = AVERAGE ( 'Email Sends'[Net Amount] )
+		formatString: #,0.00
+		displayFolder: Marketing
+
+	measure 'Email Sends Count' = COUNTROWS ( 'Email Sends' )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Email Sends Total Net Amount LY' = CALCULATE ( [Email Sends Total Net Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Marketing
+
+	/// Made-up measure for the large test model (Marketing).
+	measure 'Email Sends Total Net Amount YoY %' = DIVIDE ( [Email Sends Total Net Amount] - [Email Sends Total Net Amount LY], [Email Sends Total Net Amount LY] )
+		formatString: 0.0%
+		displayFolder: Marketing
+
+	measure 'Email Sends Total Net Amount YTD' = TOTALYTD ( [Email Sends Total Net Amount], 'Calendar'[Date] )
+		displayFolder: Marketing
+
+	measure 'Email Sends Max Net Amount' = MAX ( 'Email Sends'[Net Amount] )
+		displayFolder: Marketing
+
+	measure 'Email Sends Net Amount Share %' = DIVIDE ( [Email Sends Total Net Amount], CALCULATE ( [Email Sends Total Net Amount], ALL ( 'Email Sends' ) ) )
+
+	measure 'Email Sends Total Count' = SUM ( 'Email Sends'[Count] )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Email Sends Average Count' = AVERAGE ( 'Email Sends'[Count] )
+		displayFolder: Marketing
+
+	measure 'Email Sends Total Count LY' = CALCULATE ( [Email Sends Total Count], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Email Sends Total Count YoY %' = DIVIDE ( [Email Sends Total Count] - [Email Sends Total Count LY], [Email Sends Total Count LY] )
+		displayFolder: Marketing
+
+	measure 'Email Sends Total Count YTD' = TOTALYTD ( [Email Sends Total Count], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Marketing
+
+	measure 'Email Sends Max Count' = MAX ( 'Email Sends'[Count] )
+
+	measure 'Email Sends Count Share %' = DIVIDE ( [Email Sends Total Count], CALCULATE ( [Email Sends Total Count], ALL ( 'Email Sends' ) ) )
+		displayFolder: Marketing
+
+	column 'Email Send Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Email Send Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Marketing Lookup 014 Key'
+		dataType: int64
+		sourceColumn: Marketing Lookup 014 Key
+
+	column 'Marketing Lookup 040 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Marketing Lookup 040 Key
+
+	column 'Marketing Lookup 017 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Marketing Lookup 017 Key
+
+	column 'Market Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Market Key
+
+	column 'Funnel Stage Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Funnel Stage Key
+
+	column 'Net Amount'
+		dataType: decimal
+		sourceColumn: Net Amount
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	column Amount
+		dataType: double
+		sourceColumn: Amount
+
+	column 'Tax Amount'
+		dataType: double
+		isHidden
+		sourceColumn: Tax Amount
+
+	column Value
+		dataType: double
+		sourceColumn: Value
+
+	column Hours
+		dataType: double
+		sourceColumn: Hours
+
+	column Discount
+		dataType: decimal
+		sourceColumn: Discount
+
+	column Cost
+		dataType: double
+		sourceColumn: Cost
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	partition 'Email Sends' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Email Send Id", "Date", "Marketing Lookup 014 Key", "Marketing Lookup 040 Key", "Marketing Lookup 017 Key", "Market Key", "Funnel Stage Key", "Net Amount", "Count", "Amount", "Tax Amount", "Value", "Hours", "Discount", "Cost", "Units"}, {})
+				in
+				    Source

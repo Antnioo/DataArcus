@@ -1,0 +1,38 @@
+table 'Contact Reason'
+
+	column 'Contact Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Contact Reason Key
+
+	column 'Contact Reason'
+		dataType: string
+		sourceColumn: Contact Reason
+
+	column 'Contact Reason Region'
+		dataType: string
+		sourceColumn: Contact Reason Region
+
+	column 'Contact Reason Owner'
+		dataType: string
+		sourceColumn: Contact Reason Owner
+
+	column 'Contact Reason Status'
+		dataType: string
+		sourceColumn: Contact Reason Status
+
+	column 'Contact Reason Code'
+		dataType: string
+		sourceColumn: Contact Reason Code
+
+	column 'Contact Reason Description'
+		dataType: string
+		sourceColumn: Contact Reason Description
+
+	partition 'Contact Reason' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Contact Reason Key", "Contact Reason", "Contact Reason Region", "Contact Reason Owner", "Contact Reason Status", "Contact Reason Code", "Contact Reason Description"}, {})
+				in
+				    Source

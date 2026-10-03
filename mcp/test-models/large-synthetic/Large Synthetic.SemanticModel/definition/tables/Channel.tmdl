@@ -1,0 +1,58 @@
+table Channel
+
+	column 'Channel Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Channel Key
+
+	column Channel
+		dataType: string
+		sourceColumn: Channel
+
+	column 'Channel Status'
+		dataType: string
+		sourceColumn: Channel Status
+
+	column 'Channel Region'
+		dataType: string
+		sourceColumn: Channel Region
+
+	column 'Channel Description'
+		dataType: string
+		sourceColumn: Channel Description
+
+	column 'Channel Code'
+		dataType: string
+		sourceColumn: Channel Code
+
+	column 'Channel Is Active'
+		dataType: boolean
+		sourceColumn: Channel Is Active
+
+	column 'Channel Type'
+		dataType: string
+		sourceColumn: Channel Type
+
+	column 'Channel Group'
+		dataType: string
+		sourceColumn: Channel Group
+
+	column 'Channel Sort Order'
+		dataType: int64
+		sourceColumn: Channel Sort Order
+
+	column 'Channel Category'
+		dataType: string
+		sourceColumn: Channel Category
+
+	column 'Channel Owner'
+		dataType: string
+		sourceColumn: Channel Owner
+
+	partition Channel = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Channel Key", "Channel", "Channel Status", "Channel Region", "Channel Description", "Channel Code", "Channel Is Active", "Channel Type", "Channel Group", "Channel Sort Order", "Channel Category", "Channel Owner"}, {})
+				in
+				    Source

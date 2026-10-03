@@ -1,0 +1,34 @@
+table Contractor
+
+	column 'Contractor Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Contractor Key
+
+	column Contractor
+		dataType: string
+		sourceColumn: Contractor
+
+	column 'Contractor Status'
+		dataType: string
+		sourceColumn: Contractor Status
+
+	column 'Contractor Type'
+		dataType: string
+		sourceColumn: Contractor Type
+
+	column 'Contractor Code'
+		dataType: string
+		sourceColumn: Contractor Code
+
+	column 'Contractor Description'
+		dataType: string
+		sourceColumn: Contractor Description
+
+	partition Contractor = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Contractor Key", "Contractor", "Contractor Status", "Contractor Type", "Contractor Code", "Contractor Description"}, {})
+				in
+				    Source

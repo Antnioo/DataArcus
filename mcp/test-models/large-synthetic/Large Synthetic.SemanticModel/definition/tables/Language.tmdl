@@ -1,0 +1,46 @@
+table Language
+
+	column 'Language Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Language Key
+
+	column Language
+		dataType: string
+		sourceColumn: Language
+
+	column 'Language Notes'
+		dataType: string
+		sourceColumn: Language Notes
+
+	column 'Language Type'
+		dataType: string
+		sourceColumn: Language Type
+
+	column 'Language Description'
+		dataType: string
+		sourceColumn: Language Description
+
+	column 'Language Region'
+		dataType: string
+		sourceColumn: Language Region
+
+	column 'Language Code'
+		dataType: string
+		sourceColumn: Language Code
+
+	column 'Language Group'
+		dataType: string
+		sourceColumn: Language Group
+
+	column 'Language Category'
+		dataType: string
+		sourceColumn: Language Category
+
+	partition Language = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Language Key", "Language", "Language Notes", "Language Type", "Language Description", "Language Region", "Language Code", "Language Group", "Language Category"}, {})
+				in
+				    Source

@@ -1,0 +1,146 @@
+table 'Production Orders'
+
+	measure 'Production Orders Total Count' = SUM ( 'Production Orders'[Count] )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Production Orders Average Count' = AVERAGE ( 'Production Orders'[Count] )
+		displayFolder: Production
+
+	measure 'Production Orders Count' = COUNTROWS ( 'Production Orders' )
+		formatString: #,0
+
+	measure 'Production Orders Total Count LY' = CALCULATE ( [Production Orders Total Count], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Production Orders Total Count YoY %' = DIVIDE ( [Production Orders Total Count] - [Production Orders Total Count LY], [Production Orders Total Count LY] )
+		formatString: 0.0%
+		displayFolder: Production
+
+	measure 'Production Orders Total Count YTD' = TOTALYTD ( [Production Orders Total Count], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Production
+
+	measure 'Production Orders Max Count' = MAX ( 'Production Orders'[Count] )
+		displayFolder: Production
+
+	measure 'Production Orders Count Share %' = DIVIDE ( [Production Orders Total Count], CALCULATE ( [Production Orders Total Count], ALL ( 'Production Orders' ) ) )
+
+	measure 'Production Orders Total Price' = SUM ( 'Production Orders'[Price] )
+		formatString: #,0
+
+	measure 'Production Orders Average Price' = AVERAGE ( 'Production Orders'[Price] )
+		displayFolder: Production
+
+	measure 'Production Orders Total Price LY' = CALCULATE ( [Production Orders Total Price], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Production
+
+	measure 'Production Orders Total Price YoY %' = DIVIDE ( [Production Orders Total Price] - [Production Orders Total Price LY], [Production Orders Total Price LY] )
+		formatString: 0.0%
+		displayFolder: Production
+
+	measure 'Production Orders Total Price YTD' = TOTALYTD ( [Production Orders Total Price], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Production
+
+	/// Made-up measure for the large test model (Production).
+	measure 'Production Orders Max Price' = MAX ( 'Production Orders'[Price] )
+		displayFolder: Production
+
+	measure 'Production Orders Price Share %' = DIVIDE ( [Production Orders Total Price], CALCULATE ( [Production Orders Total Price], ALL ( 'Production Orders' ) ) )
+
+	column 'Production Order Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Production Order Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Survey Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Survey Key
+
+	column 'Shift Pattern Key'
+		dataType: int64
+		sourceColumn: Shift Pattern Key
+
+	column 'Spare Kit Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Spare Kit Key
+
+	column 'Line Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Line Key
+
+	column 'Maintenance Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Maintenance Type Key
+
+	column 'Inspection Plan Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Inspection Plan Key
+
+	column 'Machine Key'
+		dataType: int64
+		sourceColumn: Machine Key
+
+	column 'Scrap Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Scrap Reason Key
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	column Price
+		dataType: double
+		sourceColumn: Price
+
+	column Amount
+		dataType: double
+		sourceColumn: Amount
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	column Hours
+		dataType: decimal
+		isHidden
+		sourceColumn: Hours
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column 'Net Amount'
+		dataType: decimal
+		isHidden
+		sourceColumn: Net Amount
+
+	column Discount
+		dataType: decimal
+		sourceColumn: Discount
+
+	column Margin
+		dataType: double
+		sourceColumn: Margin
+
+	partition 'Production Orders' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Production Order Id", "Date", "Survey Key", "Shift Pattern Key", "Spare Kit Key", "Line Key", "Maintenance Type Key", "Inspection Plan Key", "Machine Key", "Scrap Reason Key", "Count", "Price", "Amount", "Quantity", "Hours", "Units", "Net Amount", "Discount", "Margin"}, {})
+				in
+				    Source

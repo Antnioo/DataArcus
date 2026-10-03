@@ -1,0 +1,38 @@
+table Utility
+
+	column 'Utility Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Utility Key
+
+	column Utility
+		dataType: string
+		sourceColumn: Utility
+
+	column 'Utility Code'
+		dataType: string
+		sourceColumn: Utility Code
+
+	column 'Utility Status'
+		dataType: string
+		sourceColumn: Utility Status
+
+	column 'Utility Description'
+		dataType: string
+		sourceColumn: Utility Description
+
+	column 'Utility Group'
+		dataType: string
+		sourceColumn: Utility Group
+
+	column 'Utility Category'
+		dataType: string
+		sourceColumn: Utility Category
+
+	partition Utility = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Utility Key", "Utility", "Utility Code", "Utility Status", "Utility Description", "Utility Group", "Utility Category"}, {})
+				in
+				    Source

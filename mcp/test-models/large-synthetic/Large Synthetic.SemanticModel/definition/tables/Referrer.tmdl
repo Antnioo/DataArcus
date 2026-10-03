@@ -1,0 +1,50 @@
+table Referrer
+
+	column 'Referrer Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Referrer Key
+
+	column Referrer
+		dataType: string
+		sourceColumn: Referrer
+
+	column 'Referrer Level'
+		dataType: int64
+		sourceColumn: Referrer Level
+
+	column 'Referrer Group'
+		dataType: string
+		sourceColumn: Referrer Group
+
+	column 'Referrer Long Name'
+		dataType: string
+		sourceColumn: Referrer Long Name
+
+	column 'Referrer Notes'
+		dataType: string
+		sourceColumn: Referrer Notes
+
+	column 'Referrer Region'
+		dataType: string
+		sourceColumn: Referrer Region
+
+	column 'Referrer Created By'
+		dataType: string
+		sourceColumn: Referrer Created By
+
+	column 'Referrer Code'
+		dataType: string
+		sourceColumn: Referrer Code
+
+	column 'Referrer Description'
+		dataType: string
+		sourceColumn: Referrer Description
+
+	partition Referrer = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Referrer Key", "Referrer", "Referrer Level", "Referrer Group", "Referrer Long Name", "Referrer Notes", "Referrer Region", "Referrer Created By", "Referrer Code", "Referrer Description"}, {})
+				in
+				    Source

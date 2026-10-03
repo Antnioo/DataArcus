@@ -1,0 +1,42 @@
+table 'Call Outcome'
+
+	column 'Call Outcome Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Call Outcome Key
+
+	column 'Call Outcome'
+		dataType: string
+		sourceColumn: Call Outcome
+
+	column 'Call Outcome Is Active'
+		dataType: boolean
+		sourceColumn: Call Outcome Is Active
+
+	column 'Call Outcome Rank'
+		dataType: int64
+		sourceColumn: Call Outcome Rank
+
+	column 'Call Outcome Sort Order'
+		dataType: int64
+		sourceColumn: Call Outcome Sort Order
+
+	column 'Call Outcome Valid To'
+		dataType: dateTime
+		sourceColumn: Call Outcome Valid To
+
+	column 'Call Outcome Code'
+		dataType: string
+		sourceColumn: Call Outcome Code
+
+	column 'Call Outcome Description'
+		dataType: string
+		sourceColumn: Call Outcome Description
+
+	partition 'Call Outcome' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Call Outcome Key", "Call Outcome", "Call Outcome Is Active", "Call Outcome Rank", "Call Outcome Sort Order", "Call Outcome Valid To", "Call Outcome Code", "Call Outcome Description"}, {})
+				in
+				    Source

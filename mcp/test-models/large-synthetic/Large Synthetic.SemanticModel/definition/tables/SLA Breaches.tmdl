@@ -1,0 +1,149 @@
+table 'SLA Breaches'
+
+	measure 'SLA Breaches Total Cost' = SUM ( 'SLA Breaches'[Cost] )
+		formatString: #,0
+		displayFolder: Service
+
+	/// Made-up measure for the large test model (Service).
+	measure 'SLA Breaches Average Cost' = AVERAGE ( 'SLA Breaches'[Cost] )
+		formatString: #,0.00
+		displayFolder: Service
+
+	measure 'SLA Breaches Count' = COUNTROWS ( 'SLA Breaches' )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'SLA Breaches Total Cost LY' = CALCULATE ( [SLA Breaches Total Cost], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+
+	/// Made-up measure for the large test model (Service).
+	measure 'SLA Breaches Total Cost YoY %' = DIVIDE ( [SLA Breaches Total Cost] - [SLA Breaches Total Cost LY], [SLA Breaches Total Cost LY] )
+		displayFolder: Service
+
+	measure 'SLA Breaches Total Cost YTD' = TOTALYTD ( [SLA Breaches Total Cost], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'SLA Breaches Max Cost' = MAX ( 'SLA Breaches'[Cost] )
+		displayFolder: Service
+
+	measure 'SLA Breaches Cost Share %' = DIVIDE ( [SLA Breaches Total Cost], CALCULATE ( [SLA Breaches Total Cost], ALL ( 'SLA Breaches' ) ) )
+		displayFolder: Service
+
+	measure 'SLA Breaches Total Value' = SUM ( 'SLA Breaches'[Value] )
+		formatString: #,0
+		displayFolder: Service
+
+	/// Made-up measure for the large test model (Service).
+	measure 'SLA Breaches Average Value' = AVERAGE ( 'SLA Breaches'[Value] )
+		formatString: #,0.00
+		displayFolder: Service
+
+	/// Made-up measure for the large test model (Service).
+	measure 'SLA Breaches Total Value LY' = CALCULATE ( [SLA Breaches Total Value], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Service
+
+	measure 'SLA Breaches Total Value YoY %' = DIVIDE ( [SLA Breaches Total Value] - [SLA Breaches Total Value LY], [SLA Breaches Total Value LY] )
+		formatString: 0.0%
+		displayFolder: Service
+
+	measure 'SLA Breaches Total Value YTD' = TOTALYTD ( [SLA Breaches Total Value], 'Calendar'[Date] )
+		displayFolder: Service
+
+	measure 'SLA Breaches Max Value' = MAX ( 'SLA Breaches'[Value] )
+		displayFolder: Service
+
+	measure 'SLA Breaches Value Share %' = DIVIDE ( [SLA Breaches Total Value], CALCULATE ( [SLA Breaches Total Value], ALL ( 'SLA Breaches' ) ) )
+		displayFolder: Service
+
+	column 'SLA Breache Id'
+		dataType: int64
+		isHidden
+		sourceColumn: SLA Breache Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Service Lookup 002 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Service Lookup 002 Key
+
+	column 'Queue Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Queue Key
+
+	column 'Service Lookup 007 Key'
+		dataType: int64
+		sourceColumn: Service Lookup 007 Key
+
+	column 'Customer Tier Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Customer Tier Key
+
+	column 'Language Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Language Key
+
+	column 'Service Lookup 039 Key'
+		dataType: int64
+		sourceColumn: Service Lookup 039 Key
+
+	column 'Ticket Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Ticket Status Key
+
+	column Cost
+		dataType: double
+		sourceColumn: Cost
+
+	column Value
+		dataType: double
+		sourceColumn: Value
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	column Discount
+		dataType: double
+		isHidden
+		sourceColumn: Discount
+
+	column Hours
+		dataType: double
+		isHidden
+		sourceColumn: Hours
+
+	column Quantity
+		dataType: int64
+		isHidden
+		sourceColumn: Quantity
+
+	column Price
+		dataType: double
+		sourceColumn: Price
+
+	column Margin
+		dataType: decimal
+		sourceColumn: Margin
+
+	column 'Duration Minutes'
+		dataType: decimal
+		isHidden
+		sourceColumn: Duration Minutes
+
+	partition 'SLA Breaches' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"SLA Breache Id", "Date", "Service Lookup 002 Key", "Queue Key", "Service Lookup 007 Key", "Customer Tier Key", "Language Key", "Service Lookup 039 Key", "Ticket Status Key", "Cost", "Value", "Count", "Discount", "Hours", "Quantity", "Price", "Margin", "Duration Minutes"}, {})
+				in
+				    Source

@@ -1,0 +1,38 @@
+table 'Lead Status'
+
+	column 'Lead Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Lead Status Key
+
+	column 'Lead Status'
+		dataType: string
+		sourceColumn: Lead Status
+
+	column 'Lead Status Short Name'
+		dataType: string
+		sourceColumn: Lead Status Short Name
+
+	column 'Lead Status Group'
+		dataType: string
+		sourceColumn: Lead Status Group
+
+	column 'Lead Status Long Name'
+		dataType: string
+		sourceColumn: Lead Status Long Name
+
+	column 'Lead Status Code'
+		dataType: string
+		sourceColumn: Lead Status Code
+
+	column 'Lead Status Description'
+		dataType: string
+		sourceColumn: Lead Status Description
+
+	partition 'Lead Status' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Lead Status Key", "Lead Status", "Lead Status Short Name", "Lead Status Group", "Lead Status Long Name", "Lead Status Code", "Lead Status Description"}, {})
+				in
+				    Source

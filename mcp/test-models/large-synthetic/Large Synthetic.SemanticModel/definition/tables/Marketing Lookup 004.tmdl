@@ -1,0 +1,54 @@
+table 'Marketing Lookup 004'
+
+	column 'Marketing Lookup 004 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Marketing Lookup 004 Key
+
+	column 'Marketing Lookup 004'
+		dataType: string
+		sourceColumn: Marketing Lookup 004
+
+	column 'Marketing Lookup 004 Valid From'
+		dataType: dateTime
+		sourceColumn: Marketing Lookup 004 Valid From
+
+	column 'Marketing Lookup 004 Category'
+		dataType: string
+		sourceColumn: Marketing Lookup 004 Category
+
+	column 'Marketing Lookup 004 External Id'
+		dataType: string
+		sourceColumn: Marketing Lookup 004 External Id
+
+	column 'Marketing Lookup 004 Notes'
+		dataType: string
+		sourceColumn: Marketing Lookup 004 Notes
+
+	column 'Marketing Lookup 004 Code'
+		dataType: string
+		sourceColumn: Marketing Lookup 004 Code
+
+	column 'Marketing Lookup 004 Parent Code'
+		dataType: string
+		sourceColumn: Marketing Lookup 004 Parent Code
+
+	column 'Marketing Lookup 004 Is Active'
+		dataType: boolean
+		sourceColumn: Marketing Lookup 004 Is Active
+
+	column 'Marketing Lookup 004 Description'
+		dataType: string
+		sourceColumn: Marketing Lookup 004 Description
+
+	column 'Marketing Lookup 004 Group'
+		dataType: string
+		sourceColumn: Marketing Lookup 004 Group
+
+	partition 'Marketing Lookup 004' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Marketing Lookup 004 Key", "Marketing Lookup 004", "Marketing Lookup 004 Valid From", "Marketing Lookup 004 Category", "Marketing Lookup 004 External Id", "Marketing Lookup 004 Notes", "Marketing Lookup 004 Code", "Marketing Lookup 004 Parent Code", "Marketing Lookup 004 Is Active", "Marketing Lookup 004 Description", "Marketing Lookup 004 Group"}, {})
+				in
+				    Source

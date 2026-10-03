@@ -1,0 +1,46 @@
+table 'Facilities Lookup 011'
+
+	column 'Facilities Lookup 011 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Facilities Lookup 011 Key
+
+	column 'Facilities Lookup 011'
+		dataType: string
+		sourceColumn: Facilities Lookup 011
+
+	column 'Facilities Lookup 011 Level'
+		dataType: int64
+		sourceColumn: Facilities Lookup 011 Level
+
+	column 'Facilities Lookup 011 Category'
+		dataType: string
+		sourceColumn: Facilities Lookup 011 Category
+
+	column 'Facilities Lookup 011 Valid To'
+		dataType: dateTime
+		sourceColumn: Facilities Lookup 011 Valid To
+
+	column 'Facilities Lookup 011 Parent Code'
+		dataType: string
+		sourceColumn: Facilities Lookup 011 Parent Code
+
+	column 'Facilities Lookup 011 Status'
+		dataType: string
+		sourceColumn: Facilities Lookup 011 Status
+
+	column 'Facilities Lookup 011 Type'
+		dataType: string
+		sourceColumn: Facilities Lookup 011 Type
+
+	column 'Facilities Lookup 011 Code'
+		dataType: string
+		sourceColumn: Facilities Lookup 011 Code
+
+	partition 'Facilities Lookup 011' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Facilities Lookup 011 Key", "Facilities Lookup 011", "Facilities Lookup 011 Level", "Facilities Lookup 011 Category", "Facilities Lookup 011 Valid To", "Facilities Lookup 011 Parent Code", "Facilities Lookup 011 Status", "Facilities Lookup 011 Type", "Facilities Lookup 011 Code"}, {})
+				in
+				    Source

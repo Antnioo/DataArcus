@@ -1,0 +1,34 @@
+table Lane
+
+	column 'Lane Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Lane Key
+
+	column Lane
+		dataType: string
+		sourceColumn: Lane
+
+	column 'Lane Region'
+		dataType: string
+		sourceColumn: Lane Region
+
+	column 'Lane Sort Order'
+		dataType: int64
+		sourceColumn: Lane Sort Order
+
+	column 'Lane Code'
+		dataType: string
+		sourceColumn: Lane Code
+
+	column 'Lane Description'
+		dataType: string
+		sourceColumn: Lane Description
+
+	partition Lane = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Lane Key", "Lane", "Lane Region", "Lane Sort Order", "Lane Code", "Lane Description"}, {})
+				in
+				    Source

@@ -1,0 +1,38 @@
+table 'Work Order Type'
+
+	column 'Work Order Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Work Order Type Key
+
+	column 'Work Order Type'
+		dataType: string
+		sourceColumn: Work Order Type
+
+	column 'Work Order Type Parent Code'
+		dataType: string
+		sourceColumn: Work Order Type Parent Code
+
+	column 'Work Order Type Valid To'
+		dataType: dateTime
+		sourceColumn: Work Order Type Valid To
+
+	column 'Work Order Type Long Name'
+		dataType: string
+		sourceColumn: Work Order Type Long Name
+
+	column 'Work Order Type Code'
+		dataType: string
+		sourceColumn: Work Order Type Code
+
+	column 'Work Order Type Description'
+		dataType: string
+		sourceColumn: Work Order Type Description
+
+	partition 'Work Order Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Work Order Type Key", "Work Order Type", "Work Order Type Parent Code", "Work Order Type Valid To", "Work Order Type Long Name", "Work Order Type Code", "Work Order Type Description"}, {})
+				in
+				    Source

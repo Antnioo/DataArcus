@@ -1,0 +1,58 @@
+table Team
+
+	column 'Team Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Team Key
+
+	column Team
+		dataType: string
+		sourceColumn: Team
+
+	column 'Team Code'
+		dataType: string
+		sourceColumn: Team Code
+
+	column 'Team Owner'
+		dataType: string
+		sourceColumn: Team Owner
+
+	column 'Team Parent Code'
+		dataType: string
+		sourceColumn: Team Parent Code
+
+	column 'Team Rank'
+		dataType: int64
+		sourceColumn: Team Rank
+
+	column 'Team Level'
+		dataType: int64
+		sourceColumn: Team Level
+
+	column 'Team Valid From'
+		dataType: dateTime
+		sourceColumn: Team Valid From
+
+	column 'Team Category'
+		dataType: string
+		sourceColumn: Team Category
+
+	column 'Team Type'
+		dataType: string
+		sourceColumn: Team Type
+
+	column 'Team Description'
+		dataType: string
+		sourceColumn: Team Description
+
+	column 'Team Group'
+		dataType: string
+		sourceColumn: Team Group
+
+	partition Team = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Team Key", "Team", "Team Code", "Team Owner", "Team Parent Code", "Team Rank", "Team Level", "Team Valid From", "Team Category", "Team Type", "Team Description", "Team Group"}, {})
+				in
+				    Source

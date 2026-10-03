@@ -1,0 +1,34 @@
+table 'Inventory Lookup 021'
+
+	column 'Inventory Lookup 021 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Inventory Lookup 021 Key
+
+	column 'Inventory Lookup 021'
+		dataType: string
+		sourceColumn: Inventory Lookup 021
+
+	column 'Inventory Lookup 021 Code'
+		dataType: string
+		sourceColumn: Inventory Lookup 021 Code
+
+	column 'Inventory Lookup 021 Notes'
+		dataType: string
+		sourceColumn: Inventory Lookup 021 Notes
+
+	column 'Inventory Lookup 021 Description'
+		dataType: string
+		sourceColumn: Inventory Lookup 021 Description
+
+	column 'Inventory Lookup 021 Group'
+		dataType: string
+		sourceColumn: Inventory Lookup 021 Group
+
+	partition 'Inventory Lookup 021' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Inventory Lookup 021 Key", "Inventory Lookup 021", "Inventory Lookup 021 Code", "Inventory Lookup 021 Notes", "Inventory Lookup 021 Description", "Inventory Lookup 021 Group"}, {})
+				in
+				    Source

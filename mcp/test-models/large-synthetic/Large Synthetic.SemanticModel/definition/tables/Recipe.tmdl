@@ -1,0 +1,42 @@
+table Recipe
+
+	column 'Recipe Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Recipe Key
+
+	column Recipe
+		dataType: string
+		sourceColumn: Recipe
+
+	column 'Recipe Region'
+		dataType: string
+		sourceColumn: Recipe Region
+
+	column 'Recipe Group'
+		dataType: string
+		sourceColumn: Recipe Group
+
+	column 'Recipe Notes'
+		dataType: string
+		sourceColumn: Recipe Notes
+
+	column 'Recipe Type'
+		dataType: string
+		sourceColumn: Recipe Type
+
+	column 'Recipe Code'
+		dataType: string
+		sourceColumn: Recipe Code
+
+	column 'Recipe Description'
+		dataType: string
+		sourceColumn: Recipe Description
+
+	partition Recipe = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Recipe Key", "Recipe", "Recipe Region", "Recipe Group", "Recipe Notes", "Recipe Type", "Recipe Code", "Recipe Description"}, {})
+				in
+				    Source

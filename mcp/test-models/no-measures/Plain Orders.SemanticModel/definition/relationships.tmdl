@@ -1,0 +1,3 @@
+relationship rel_orders_dates
+	fromColumn: Orders.'Order Date'
+	toColumn: Dates.Date

@@ -1,0 +1,38 @@
+table Promotion
+
+	column 'Promotion Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Promotion Key
+
+	column Promotion
+		dataType: string
+		sourceColumn: Promotion
+
+	column 'Promotion Type'
+		dataType: string
+		sourceColumn: Promotion Type
+
+	column 'Promotion Group'
+		dataType: string
+		sourceColumn: Promotion Group
+
+	column 'Promotion Level'
+		dataType: int64
+		sourceColumn: Promotion Level
+
+	column 'Promotion Code'
+		dataType: string
+		sourceColumn: Promotion Code
+
+	column 'Promotion Description'
+		dataType: string
+		sourceColumn: Promotion Description
+
+	partition Promotion = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Promotion Key", "Promotion", "Promotion Type", "Promotion Group", "Promotion Level", "Promotion Code", "Promotion Description"}, {})
+				in
+				    Source

@@ -1,0 +1,42 @@
+table 'Allocation Rule'
+
+	column 'Allocation Rule Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Allocation Rule Key
+
+	column 'Allocation Rule'
+		dataType: string
+		sourceColumn: Allocation Rule
+
+	column 'Allocation Rule Notes'
+		dataType: string
+		sourceColumn: Allocation Rule Notes
+
+	column 'Allocation Rule Short Name'
+		dataType: string
+		sourceColumn: Allocation Rule Short Name
+
+	column 'Allocation Rule Owner'
+		dataType: string
+		sourceColumn: Allocation Rule Owner
+
+	column 'Allocation Rule Group'
+		dataType: string
+		sourceColumn: Allocation Rule Group
+
+	column 'Allocation Rule Code'
+		dataType: string
+		sourceColumn: Allocation Rule Code
+
+	column 'Allocation Rule Description'
+		dataType: string
+		sourceColumn: Allocation Rule Description
+
+	partition 'Allocation Rule' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Allocation Rule Key", "Allocation Rule", "Allocation Rule Notes", "Allocation Rule Short Name", "Allocation Rule Owner", "Allocation Rule Group", "Allocation Rule Code", "Allocation Rule Description"}, {})
+				in
+				    Source

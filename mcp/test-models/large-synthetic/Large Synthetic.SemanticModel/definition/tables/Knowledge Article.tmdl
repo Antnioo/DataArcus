@@ -1,0 +1,38 @@
+table 'Knowledge Article'
+
+	column 'Knowledge Article Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Knowledge Article Key
+
+	column 'Knowledge Article'
+		dataType: string
+		sourceColumn: Knowledge Article
+
+	column 'Knowledge Article Status'
+		dataType: string
+		sourceColumn: Knowledge Article Status
+
+	column 'Knowledge Article Code'
+		dataType: string
+		sourceColumn: Knowledge Article Code
+
+	column 'Knowledge Article Owner'
+		dataType: string
+		sourceColumn: Knowledge Article Owner
+
+	column 'Knowledge Article Description'
+		dataType: string
+		sourceColumn: Knowledge Article Description
+
+	column 'Knowledge Article Group'
+		dataType: string
+		sourceColumn: Knowledge Article Group
+
+	partition 'Knowledge Article' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Knowledge Article Key", "Knowledge Article", "Knowledge Article Status", "Knowledge Article Code", "Knowledge Article Owner", "Knowledge Article Description", "Knowledge Article Group"}, {})
+				in
+				    Source

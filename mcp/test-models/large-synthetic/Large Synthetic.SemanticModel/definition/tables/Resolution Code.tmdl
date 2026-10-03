@@ -1,0 +1,46 @@
+table 'Resolution Code'
+
+	column 'Resolution Code Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Resolution Code Key
+
+	column 'Resolution Code'
+		dataType: string
+		sourceColumn: Resolution Code
+
+	column 'Resolution Code Short Name'
+		dataType: string
+		sourceColumn: Resolution Code Short Name
+
+	column 'Resolution Code Status'
+		dataType: string
+		sourceColumn: Resolution Code Status
+
+	column 'Resolution Code Description'
+		dataType: string
+		sourceColumn: Resolution Code Description
+
+	column 'Resolution Code Is Active'
+		dataType: boolean
+		sourceColumn: Resolution Code Is Active
+
+	column 'Resolution Code Rank'
+		dataType: int64
+		sourceColumn: Resolution Code Rank
+
+	column 'Resolution Code Code'
+		dataType: string
+		sourceColumn: Resolution Code Code
+
+	column 'Resolution Code Group'
+		dataType: string
+		sourceColumn: Resolution Code Group
+
+	partition 'Resolution Code' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Resolution Code Key", "Resolution Code", "Resolution Code Short Name", "Resolution Code Status", "Resolution Code Description", "Resolution Code Is Active", "Resolution Code Rank", "Resolution Code Code", "Resolution Code Group"}, {})
+				in
+				    Source

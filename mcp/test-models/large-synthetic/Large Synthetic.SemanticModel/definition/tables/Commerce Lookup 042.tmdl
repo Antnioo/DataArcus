@@ -1,0 +1,42 @@
+table 'Commerce Lookup 042'
+
+	column 'Commerce Lookup 042 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Commerce Lookup 042 Key
+
+	column 'Commerce Lookup 042'
+		dataType: string
+		sourceColumn: Commerce Lookup 042
+
+	column 'Commerce Lookup 042 Created By'
+		dataType: string
+		sourceColumn: Commerce Lookup 042 Created By
+
+	column 'Commerce Lookup 042 External Id'
+		dataType: string
+		sourceColumn: Commerce Lookup 042 External Id
+
+	column 'Commerce Lookup 042 Region'
+		dataType: string
+		sourceColumn: Commerce Lookup 042 Region
+
+	column 'Commerce Lookup 042 Category'
+		dataType: string
+		sourceColumn: Commerce Lookup 042 Category
+
+	column 'Commerce Lookup 042 Long Name'
+		dataType: string
+		sourceColumn: Commerce Lookup 042 Long Name
+
+	column 'Commerce Lookup 042 Code'
+		dataType: string
+		sourceColumn: Commerce Lookup 042 Code
+
+	partition 'Commerce Lookup 042' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Commerce Lookup 042 Key", "Commerce Lookup 042", "Commerce Lookup 042 Created By", "Commerce Lookup 042 External Id", "Commerce Lookup 042 Region", "Commerce Lookup 042 Category", "Commerce Lookup 042 Long Name", "Commerce Lookup 042 Code"}, {})
+				in
+				    Source

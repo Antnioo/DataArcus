@@ -1,0 +1,34 @@
+table 'Rate Plan'
+
+	column 'Rate Plan Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Rate Plan Key
+
+	column 'Rate Plan'
+		dataType: string
+		sourceColumn: Rate Plan
+
+	column 'Rate Plan Short Name'
+		dataType: string
+		sourceColumn: Rate Plan Short Name
+
+	column 'Rate Plan Description'
+		dataType: string
+		sourceColumn: Rate Plan Description
+
+	column 'Rate Plan Code'
+		dataType: string
+		sourceColumn: Rate Plan Code
+
+	column 'Rate Plan Group'
+		dataType: string
+		sourceColumn: Rate Plan Group
+
+	partition 'Rate Plan' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Rate Plan Key", "Rate Plan", "Rate Plan Short Name", "Rate Plan Description", "Rate Plan Code", "Rate Plan Group"}, {})
+				in
+				    Source

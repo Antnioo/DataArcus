@@ -1,0 +1,42 @@
+table Carrier
+
+	column 'Carrier Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Carrier Key
+
+	column Carrier
+		dataType: string
+		sourceColumn: Carrier
+
+	column 'Carrier Group'
+		dataType: string
+		sourceColumn: Carrier Group
+
+	column 'Carrier Description'
+		dataType: string
+		sourceColumn: Carrier Description
+
+	column 'Carrier Category'
+		dataType: string
+		sourceColumn: Carrier Category
+
+	column 'Carrier Owner'
+		dataType: string
+		sourceColumn: Carrier Owner
+
+	column 'Carrier Code'
+		dataType: string
+		sourceColumn: Carrier Code
+
+	column 'Carrier Type'
+		dataType: string
+		sourceColumn: Carrier Type
+
+	partition Carrier = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Carrier Key", "Carrier", "Carrier Group", "Carrier Description", "Carrier Category", "Carrier Owner", "Carrier Code", "Carrier Type"}, {})
+				in
+				    Source

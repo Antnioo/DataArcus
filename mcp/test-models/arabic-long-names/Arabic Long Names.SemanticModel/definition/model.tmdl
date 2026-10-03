@@ -1,0 +1,7 @@
+model Model
+	culture: ar-AE
+	defaultPowerBIDataSourceVersion: powerBI_V3
+
+ref table التقويم
+ref table 'الفروع والمناطق الإدارية'
+ref table 'المبيعات اليومية'

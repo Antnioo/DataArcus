@@ -1,0 +1,34 @@
+table Property
+
+	column 'Property Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Property Key
+
+	column Property
+		dataType: string
+		sourceColumn: Property
+
+	column 'Property Short Name'
+		dataType: string
+		sourceColumn: Property Short Name
+
+	column 'Property Region'
+		dataType: string
+		sourceColumn: Property Region
+
+	column 'Property Code'
+		dataType: string
+		sourceColumn: Property Code
+
+	column 'Property Description'
+		dataType: string
+		sourceColumn: Property Description
+
+	partition Property = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Property Key", "Property", "Property Short Name", "Property Region", "Property Code", "Property Description"}, {})
+				in
+				    Source

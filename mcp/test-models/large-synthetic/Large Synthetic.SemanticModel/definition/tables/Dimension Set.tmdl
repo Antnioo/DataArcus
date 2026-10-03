@@ -1,0 +1,58 @@
+table 'Dimension Set'
+
+	column 'Dimension Set Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Dimension Set Key
+
+	column 'Dimension Set'
+		dataType: string
+		sourceColumn: Dimension Set
+
+	column 'Dimension Set External Id'
+		dataType: string
+		sourceColumn: Dimension Set External Id
+
+	column 'Dimension Set Type'
+		dataType: string
+		sourceColumn: Dimension Set Type
+
+	column 'Dimension Set Category'
+		dataType: string
+		sourceColumn: Dimension Set Category
+
+	column 'Dimension Set Short Name'
+		dataType: string
+		sourceColumn: Dimension Set Short Name
+
+	column 'Dimension Set Notes'
+		dataType: string
+		sourceColumn: Dimension Set Notes
+
+	column 'Dimension Set Parent Code'
+		dataType: string
+		sourceColumn: Dimension Set Parent Code
+
+	column 'Dimension Set Valid From'
+		dataType: dateTime
+		sourceColumn: Dimension Set Valid From
+
+	column 'Dimension Set Description'
+		dataType: string
+		sourceColumn: Dimension Set Description
+
+	column 'Dimension Set Code'
+		dataType: string
+		sourceColumn: Dimension Set Code
+
+	column 'Dimension Set Group'
+		dataType: string
+		sourceColumn: Dimension Set Group
+
+	partition 'Dimension Set' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Dimension Set Key", "Dimension Set", "Dimension Set External Id", "Dimension Set Type", "Dimension Set Category", "Dimension Set Short Name", "Dimension Set Notes", "Dimension Set Parent Code", "Dimension Set Valid From", "Dimension Set Description", "Dimension Set Code", "Dimension Set Group"}, {})
+				in
+				    Source

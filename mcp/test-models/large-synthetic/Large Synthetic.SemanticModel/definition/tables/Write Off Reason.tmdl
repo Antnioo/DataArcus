@@ -1,0 +1,46 @@
+table 'Write Off Reason'
+
+	column 'Write Off Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Write Off Reason Key
+
+	column 'Write Off Reason'
+		dataType: string
+		sourceColumn: Write Off Reason
+
+	column 'Write Off Reason Description'
+		dataType: string
+		sourceColumn: Write Off Reason Description
+
+	column 'Write Off Reason Sort Order'
+		dataType: int64
+		sourceColumn: Write Off Reason Sort Order
+
+	column 'Write Off Reason Valid From'
+		dataType: dateTime
+		sourceColumn: Write Off Reason Valid From
+
+	column 'Write Off Reason Owner'
+		dataType: string
+		sourceColumn: Write Off Reason Owner
+
+	column 'Write Off Reason Is Active'
+		dataType: boolean
+		sourceColumn: Write Off Reason Is Active
+
+	column 'Write Off Reason Code'
+		dataType: string
+		sourceColumn: Write Off Reason Code
+
+	column 'Write Off Reason Group'
+		dataType: string
+		sourceColumn: Write Off Reason Group
+
+	partition 'Write Off Reason' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Write Off Reason Key", "Write Off Reason", "Write Off Reason Description", "Write Off Reason Sort Order", "Write Off Reason Valid From", "Write Off Reason Owner", "Write Off Reason Is Active", "Write Off Reason Code", "Write Off Reason Group"}, {})
+				in
+				    Source

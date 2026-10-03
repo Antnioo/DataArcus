@@ -1,0 +1,46 @@
+table 'Inspection Plan'
+
+	column 'Inspection Plan Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Inspection Plan Key
+
+	column 'Inspection Plan'
+		dataType: string
+		sourceColumn: Inspection Plan
+
+	column 'Inspection Plan Status'
+		dataType: string
+		sourceColumn: Inspection Plan Status
+
+	column 'Inspection Plan Group'
+		dataType: string
+		sourceColumn: Inspection Plan Group
+
+	column 'Inspection Plan Description'
+		dataType: string
+		sourceColumn: Inspection Plan Description
+
+	column 'Inspection Plan Created By'
+		dataType: string
+		sourceColumn: Inspection Plan Created By
+
+	column 'Inspection Plan Parent Code'
+		dataType: string
+		sourceColumn: Inspection Plan Parent Code
+
+	column 'Inspection Plan Code'
+		dataType: string
+		sourceColumn: Inspection Plan Code
+
+	column 'Inspection Plan Category'
+		dataType: string
+		sourceColumn: Inspection Plan Category
+
+	partition 'Inspection Plan' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Inspection Plan Key", "Inspection Plan", "Inspection Plan Status", "Inspection Plan Group", "Inspection Plan Description", "Inspection Plan Created By", "Inspection Plan Parent Code", "Inspection Plan Code", "Inspection Plan Category"}, {})
+				in
+				    Source

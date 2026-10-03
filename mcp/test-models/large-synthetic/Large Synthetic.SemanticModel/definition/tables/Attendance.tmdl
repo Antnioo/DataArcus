@@ -1,0 +1,126 @@
+table Attendance
+
+	/// Made-up measure for the large test model (People).
+	measure 'Attendance Total Quantity' = SUM ( Attendance[Quantity] )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Attendance Average Quantity' = AVERAGE ( Attendance[Quantity] )
+		displayFolder: People
+
+	measure 'Attendance Count' = COUNTROWS ( Attendance )
+		displayFolder: People
+
+	measure 'Attendance Total Quantity LY' = CALCULATE ( [Attendance Total Quantity], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Attendance Total Quantity YoY %' = DIVIDE ( [Attendance Total Quantity] - [Attendance Total Quantity LY], [Attendance Total Quantity LY] )
+		formatString: 0.0%
+		displayFolder: People
+
+	/// Made-up measure for the large test model (People).
+	measure 'Attendance Total Quantity YTD' = TOTALYTD ( [Attendance Total Quantity], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Attendance Max Quantity' = MAX ( Attendance[Quantity] )
+		displayFolder: People
+
+	measure 'Attendance Quantity Share %' = DIVIDE ( [Attendance Total Quantity], CALCULATE ( [Attendance Total Quantity], ALL ( Attendance ) ) )
+		displayFolder: People
+
+	measure 'Attendance Total Units' = SUM ( Attendance[Units] )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Attendance Average Units' = AVERAGE ( Attendance[Units] )
+		formatString: #,0.00
+		displayFolder: People
+
+	measure 'Attendance Total Units LY' = CALCULATE ( [Attendance Total Units], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Attendance Total Units YoY %' = DIVIDE ( [Attendance Total Units] - [Attendance Total Units LY], [Attendance Total Units LY] )
+		formatString: 0.0%
+		displayFolder: People
+
+	measure 'Attendance Total Units YTD' = TOTALYTD ( [Attendance Total Units], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Attendance Max Units' = MAX ( Attendance[Units] )
+		displayFolder: People
+
+	measure 'Attendance Units Share %' = DIVIDE ( [Attendance Total Units], CALCULATE ( [Attendance Total Units], ALL ( Attendance ) ) )
+		displayFolder: People
+
+	column 'Attendance Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Attendance Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Leave Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Leave Type Key
+
+	column 'Recruiter Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Recruiter Key
+
+	column 'Performance Rating Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Performance Rating Key
+
+	column 'People Lookup 035 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: People Lookup 035 Key
+
+	column 'Work Location Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Work Location Key
+
+	column Quantity
+		dataType: int64
+		sourceColumn: Quantity
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column Amount
+		dataType: double
+		isHidden
+		sourceColumn: Amount
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	column 'Net Amount'
+		dataType: double
+		sourceColumn: Net Amount
+
+	column Discount
+		dataType: decimal
+		sourceColumn: Discount
+
+	partition Attendance = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Attendance Id", "Date", "Leave Type Key", "Recruiter Key", "Performance Rating Key", "People Lookup 035 Key", "Work Location Key", "Quantity", "Units", "Amount", "Count", "Net Amount", "Discount"}, {})
+				in
+				    Source

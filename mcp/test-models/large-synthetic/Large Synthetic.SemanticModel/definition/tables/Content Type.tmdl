@@ -1,0 +1,54 @@
+table 'Content Type'
+
+	column 'Content Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Content Type Key
+
+	column 'Content Type'
+		dataType: string
+		sourceColumn: Content Type
+
+	column 'Content Type Category'
+		dataType: string
+		sourceColumn: Content Type Category
+
+	column 'Content Type Code'
+		dataType: string
+		sourceColumn: Content Type Code
+
+	column 'Content Type Status'
+		dataType: string
+		sourceColumn: Content Type Status
+
+	column 'Content Type Is Active'
+		dataType: boolean
+		sourceColumn: Content Type Is Active
+
+	column 'Content Type Rank'
+		dataType: int64
+		sourceColumn: Content Type Rank
+
+	column 'Content Type Region'
+		dataType: string
+		sourceColumn: Content Type Region
+
+	column 'Content Type Notes'
+		dataType: string
+		sourceColumn: Content Type Notes
+
+	column 'Content Type Description'
+		dataType: string
+		sourceColumn: Content Type Description
+
+	column 'Content Type Group'
+		dataType: string
+		sourceColumn: Content Type Group
+
+	partition 'Content Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Content Type Key", "Content Type", "Content Type Category", "Content Type Code", "Content Type Status", "Content Type Is Active", "Content Type Rank", "Content Type Region", "Content Type Notes", "Content Type Description", "Content Type Group"}, {})
+				in
+				    Source

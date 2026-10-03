@@ -1,0 +1,34 @@
+table Account
+
+	column 'Account Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Account Key
+
+	column Account
+		dataType: string
+		sourceColumn: Account
+
+	column 'Account Region'
+		dataType: string
+		sourceColumn: Account Region
+
+	column 'Account Level'
+		dataType: int64
+		sourceColumn: Account Level
+
+	column 'Account Code'
+		dataType: string
+		sourceColumn: Account Code
+
+	column 'Account Description'
+		dataType: string
+		sourceColumn: Account Description
+
+	partition Account = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Account Key", "Account", "Account Region", "Account Level", "Account Code", "Account Description"}, {})
+				in
+				    Source

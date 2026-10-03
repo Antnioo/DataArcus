@@ -1,0 +1,112 @@
+table 'Recruiting Pipeline'
+
+	measure 'Recruiting Pipeline Total Tax Amount' = SUM ( 'Recruiting Pipeline'[Tax Amount] )
+		displayFolder: People
+
+	measure 'Recruiting Pipeline Average Tax Amount' = AVERAGE ( 'Recruiting Pipeline'[Tax Amount] )
+		formatString: #,0.00
+
+	measure 'Recruiting Pipeline Count' = COUNTROWS ( 'Recruiting Pipeline' )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Recruiting Pipeline Total Tax Amount LY' = CALCULATE ( [Recruiting Pipeline Total Tax Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Recruiting Pipeline Total Tax Amount YoY %' = DIVIDE ( [Recruiting Pipeline Total Tax Amount] - [Recruiting Pipeline Total Tax Amount LY], [Recruiting Pipeline Total Tax Amount LY] )
+		formatString: 0.0%
+
+	measure 'Recruiting Pipeline Total Tax Amount YTD' = TOTALYTD ( [Recruiting Pipeline Total Tax Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: People
+
+	/// Made-up measure for the large test model (People).
+	measure 'Recruiting Pipeline Max Tax Amount' = MAX ( 'Recruiting Pipeline'[Tax Amount] )
+		displayFolder: People
+
+	measure 'Recruiting Pipeline Tax Amount Share %' = DIVIDE ( [Recruiting Pipeline Total Tax Amount], CALCULATE ( [Recruiting Pipeline Total Tax Amount], ALL ( 'Recruiting Pipeline' ) ) )
+		displayFolder: People
+
+	measure 'Recruiting Pipeline Total Units' = SUM ( 'Recruiting Pipeline'[Units] )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Recruiting Pipeline Average Units' = AVERAGE ( 'Recruiting Pipeline'[Units] )
+
+	measure 'Recruiting Pipeline Total Units LY' = CALCULATE ( [Recruiting Pipeline Total Units], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Recruiting Pipeline Total Units YoY %' = DIVIDE ( [Recruiting Pipeline Total Units] - [Recruiting Pipeline Total Units LY], [Recruiting Pipeline Total Units LY] )
+		displayFolder: People
+
+	measure 'Recruiting Pipeline Total Units YTD' = TOTALYTD ( [Recruiting Pipeline Total Units], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: People
+
+	measure 'Recruiting Pipeline Max Units' = MAX ( 'Recruiting Pipeline'[Units] )
+		displayFolder: People
+
+	measure 'Recruiting Pipeline Units Share %' = DIVIDE ( [Recruiting Pipeline Total Units], CALCULATE ( [Recruiting Pipeline Total Units], ALL ( 'Recruiting Pipeline' ) ) )
+		displayFolder: People
+
+	column 'Recruiting Pipeline Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Recruiting Pipeline Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Nationality Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Nationality Key
+
+	column 'Leave Type Key'
+		dataType: int64
+		sourceColumn: Leave Type Key
+
+	column 'People Lookup 057 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: People Lookup 057 Key
+
+	column 'Recruiter Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Recruiter Key
+
+	column 'People Lookup 020 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: People Lookup 020 Key
+
+	column 'Tax Amount'
+		dataType: decimal
+		isHidden
+		sourceColumn: Tax Amount
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column 'Net Amount'
+		dataType: double
+		sourceColumn: Net Amount
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	partition 'Recruiting Pipeline' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Recruiting Pipeline Id", "Date", "Nationality Key", "Leave Type Key", "People Lookup 057 Key", "Recruiter Key", "People Lookup 020 Key", "Tax Amount", "Units", "Net Amount", "Count"}, {})
+				in
+				    Source

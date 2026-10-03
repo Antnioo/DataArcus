@@ -1,0 +1,38 @@
+table Port
+
+	column 'Port Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Port Key
+
+	column Port
+		dataType: string
+		sourceColumn: Port
+
+	column 'Port Sort Order'
+		dataType: int64
+		sourceColumn: Port Sort Order
+
+	column 'Port Created By'
+		dataType: string
+		sourceColumn: Port Created By
+
+	column 'Port Status'
+		dataType: string
+		sourceColumn: Port Status
+
+	column 'Port Code'
+		dataType: string
+		sourceColumn: Port Code
+
+	column 'Port Description'
+		dataType: string
+		sourceColumn: Port Description
+
+	partition Port = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Port Key", "Port", "Port Sort Order", "Port Created By", "Port Status", "Port Code", "Port Description"}, {})
+				in
+				    Source

@@ -1,0 +1,58 @@
+table 'Supplier Rating'
+
+	column 'Supplier Rating Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Supplier Rating Key
+
+	column 'Supplier Rating'
+		dataType: string
+		sourceColumn: Supplier Rating
+
+	column 'Supplier Rating Type'
+		dataType: string
+		sourceColumn: Supplier Rating Type
+
+	column 'Supplier Rating Long Name'
+		dataType: string
+		sourceColumn: Supplier Rating Long Name
+
+	column 'Supplier Rating Parent Code'
+		dataType: string
+		sourceColumn: Supplier Rating Parent Code
+
+	column 'Supplier Rating Category'
+		dataType: string
+		sourceColumn: Supplier Rating Category
+
+	column 'Supplier Rating External Id'
+		dataType: string
+		sourceColumn: Supplier Rating External Id
+
+	column 'Supplier Rating Notes'
+		dataType: string
+		sourceColumn: Supplier Rating Notes
+
+	column 'Supplier Rating Valid From'
+		dataType: dateTime
+		sourceColumn: Supplier Rating Valid From
+
+	column 'Supplier Rating Group'
+		dataType: string
+		sourceColumn: Supplier Rating Group
+
+	column 'Supplier Rating Code'
+		dataType: string
+		sourceColumn: Supplier Rating Code
+
+	column 'Supplier Rating Description'
+		dataType: string
+		sourceColumn: Supplier Rating Description
+
+	partition 'Supplier Rating' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Supplier Rating Key", "Supplier Rating", "Supplier Rating Type", "Supplier Rating Long Name", "Supplier Rating Parent Code", "Supplier Rating Category", "Supplier Rating External Id", "Supplier Rating Notes", "Supplier Rating Valid From", "Supplier Rating Group", "Supplier Rating Code", "Supplier Rating Description"}, {})
+				in
+				    Source

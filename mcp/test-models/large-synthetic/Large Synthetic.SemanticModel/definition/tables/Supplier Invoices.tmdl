@@ -1,0 +1,135 @@
+table 'Supplier Invoices'
+
+	measure 'Supplier Invoices Total Tax Amount' = SUM ( 'Supplier Invoices'[Tax Amount] )
+		displayFolder: Procurement
+
+	/// Made-up measure for the large test model (Procurement).
+	measure 'Supplier Invoices Average Tax Amount' = AVERAGE ( 'Supplier Invoices'[Tax Amount] )
+		formatString: #,0.00
+		displayFolder: Procurement
+
+	measure 'Supplier Invoices Count' = COUNTROWS ( 'Supplier Invoices' )
+		formatString: #,0
+
+	measure 'Supplier Invoices Total Tax Amount LY' = CALCULATE ( [Supplier Invoices Total Tax Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+
+	measure 'Supplier Invoices Total Tax Amount YoY %' = DIVIDE ( [Supplier Invoices Total Tax Amount] - [Supplier Invoices Total Tax Amount LY], [Supplier Invoices Total Tax Amount LY] )
+		formatString: 0.0%
+		displayFolder: Procurement
+
+	/// Made-up measure for the large test model (Procurement).
+	measure 'Supplier Invoices Total Tax Amount YTD' = TOTALYTD ( [Supplier Invoices Total Tax Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Supplier Invoices Max Tax Amount' = MAX ( 'Supplier Invoices'[Tax Amount] )
+
+	measure 'Supplier Invoices Tax Amount Share %' = DIVIDE ( [Supplier Invoices Total Tax Amount], CALCULATE ( [Supplier Invoices Total Tax Amount], ALL ( 'Supplier Invoices' ) ) )
+		displayFolder: Procurement
+
+	measure 'Supplier Invoices Total Weight Kg' = SUM ( 'Supplier Invoices'[Weight Kg] )
+		formatString: #,0
+
+	/// Made-up measure for the large test model (Procurement).
+	measure 'Supplier Invoices Average Weight Kg' = AVERAGE ( 'Supplier Invoices'[Weight Kg] )
+		displayFolder: Procurement
+
+	measure 'Supplier Invoices Total Weight Kg LY' = CALCULATE ( [Supplier Invoices Total Weight Kg], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Procurement
+
+	measure 'Supplier Invoices Total Weight Kg YoY %' = DIVIDE ( [Supplier Invoices Total Weight Kg] - [Supplier Invoices Total Weight Kg LY], [Supplier Invoices Total Weight Kg LY] )
+		formatString: 0.0%
+		displayFolder: Procurement
+
+	measure 'Supplier Invoices Total Weight Kg YTD' = TOTALYTD ( [Supplier Invoices Total Weight Kg], 'Calendar'[Date] )
+
+	/// Made-up measure for the large test model (Procurement).
+	measure 'Supplier Invoices Max Weight Kg' = MAX ( 'Supplier Invoices'[Weight Kg] )
+
+	/// Made-up measure for the large test model (Procurement).
+	measure 'Supplier Invoices Weight Kg Share %' = DIVIDE ( [Supplier Invoices Total Weight Kg], CALCULATE ( [Supplier Invoices Total Weight Kg], ALL ( 'Supplier Invoices' ) ) )
+		displayFolder: Procurement
+
+	column 'Supplier Invoice Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Supplier Invoice Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Procurement Lookup 054 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Procurement Lookup 054 Key
+
+	column 'Procurement Lookup 025 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Procurement Lookup 025 Key
+
+	column 'Supplier Rating Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Supplier Rating Key
+
+	column 'Buyer Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Buyer Key
+
+	column 'Purchase Category Key'
+		dataType: int64
+		sourceColumn: Purchase Category Key
+
+	column 'Supplier Country Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Supplier Country Key
+
+	column 'Tax Amount'
+		dataType: double
+		sourceColumn: Tax Amount
+
+	column 'Weight Kg'
+		dataType: decimal
+		sourceColumn: Weight Kg
+
+	column Units
+		dataType: int64
+		isHidden
+		sourceColumn: Units
+
+	column Score
+		dataType: double
+		sourceColumn: Score
+
+	column Cost
+		dataType: decimal
+		isHidden
+		sourceColumn: Cost
+
+	column Hours
+		dataType: decimal
+		isHidden
+		sourceColumn: Hours
+
+	column Price
+		dataType: decimal
+		sourceColumn: Price
+
+	column 'Net Amount'
+		dataType: double
+		sourceColumn: Net Amount
+
+	partition 'Supplier Invoices' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Supplier Invoice Id", "Date", "Procurement Lookup 054 Key", "Procurement Lookup 025 Key", "Supplier Rating Key", "Buyer Key", "Purchase Category Key", "Supplier Country Key", "Tax Amount", "Weight Kg", "Units", "Score", "Cost", "Hours", "Price", "Net Amount"}, {})
+				in
+				    Source

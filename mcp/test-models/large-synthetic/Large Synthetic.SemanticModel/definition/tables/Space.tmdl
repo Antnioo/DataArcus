@@ -1,0 +1,50 @@
+table Space
+
+	column 'Space Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Space Key
+
+	column Space
+		dataType: string
+		sourceColumn: Space
+
+	column 'Space Status'
+		dataType: string
+		sourceColumn: Space Status
+
+	column 'Space Code'
+		dataType: string
+		sourceColumn: Space Code
+
+	column 'Space External Id'
+		dataType: string
+		sourceColumn: Space External Id
+
+	column 'Space Level'
+		dataType: int64
+		sourceColumn: Space Level
+
+	column 'Space Valid From'
+		dataType: dateTime
+		sourceColumn: Space Valid From
+
+	column 'Space Sort Order'
+		dataType: int64
+		sourceColumn: Space Sort Order
+
+	column 'Space Description'
+		dataType: string
+		sourceColumn: Space Description
+
+	column 'Space Group'
+		dataType: string
+		sourceColumn: Space Group
+
+	partition Space = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Space Key", "Space", "Space Status", "Space Code", "Space External Id", "Space Level", "Space Valid From", "Space Sort Order", "Space Description", "Space Group"}, {})
+				in
+				    Source

@@ -1,0 +1,50 @@
+table Currency
+
+	column 'Currency Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Currency Key
+
+	column Currency
+		dataType: string
+		sourceColumn: Currency
+
+	column 'Currency Created By'
+		dataType: string
+		sourceColumn: Currency Created By
+
+	column 'Currency Valid To'
+		dataType: dateTime
+		sourceColumn: Currency Valid To
+
+	column 'Currency Code'
+		dataType: string
+		sourceColumn: Currency Code
+
+	column 'Currency Group'
+		dataType: string
+		sourceColumn: Currency Group
+
+	column 'Currency Is Active'
+		dataType: boolean
+		sourceColumn: Currency Is Active
+
+	column 'Currency Status'
+		dataType: string
+		sourceColumn: Currency Status
+
+	column 'Currency Description'
+		dataType: string
+		sourceColumn: Currency Description
+
+	column 'Currency Category'
+		dataType: string
+		sourceColumn: Currency Category
+
+	partition Currency = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Currency Key", "Currency", "Currency Created By", "Currency Valid To", "Currency Code", "Currency Group", "Currency Is Active", "Currency Status", "Currency Description", "Currency Category"}, {})
+				in
+				    Source

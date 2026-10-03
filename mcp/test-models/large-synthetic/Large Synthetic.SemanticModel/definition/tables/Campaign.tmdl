@@ -1,0 +1,42 @@
+table Campaign
+
+	column 'Campaign Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Campaign Key
+
+	column Campaign
+		dataType: string
+		sourceColumn: Campaign
+
+	column 'Campaign Status'
+		dataType: string
+		sourceColumn: Campaign Status
+
+	column 'Campaign Owner'
+		dataType: string
+		sourceColumn: Campaign Owner
+
+	column 'Campaign Created By'
+		dataType: string
+		sourceColumn: Campaign Created By
+
+	column 'Campaign Valid From'
+		dataType: dateTime
+		sourceColumn: Campaign Valid From
+
+	column 'Campaign Code'
+		dataType: string
+		sourceColumn: Campaign Code
+
+	column 'Campaign Description'
+		dataType: string
+		sourceColumn: Campaign Description
+
+	partition Campaign = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Campaign Key", "Campaign", "Campaign Status", "Campaign Owner", "Campaign Created By", "Campaign Valid From", "Campaign Code", "Campaign Description"}, {})
+				in
+				    Source

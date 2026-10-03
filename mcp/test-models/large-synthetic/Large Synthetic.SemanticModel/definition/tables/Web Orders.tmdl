@@ -1,0 +1,115 @@
+table 'Web Orders'
+
+	measure 'Web Orders Total Score' = SUM ( 'Web Orders'[Score] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Web Orders Average Score' = AVERAGE ( 'Web Orders'[Score] )
+		formatString: #,0.00
+		displayFolder: Commerce
+
+	measure 'Web Orders Count' = COUNTROWS ( 'Web Orders' )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Web Orders Total Score LY' = CALCULATE ( [Web Orders Total Score], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+
+	measure 'Web Orders Total Score YoY %' = DIVIDE ( [Web Orders Total Score] - [Web Orders Total Score LY], [Web Orders Total Score LY] )
+		displayFolder: Commerce
+
+	/// Made-up measure for the large test model (Commerce).
+	measure 'Web Orders Total Score YTD' = TOTALYTD ( [Web Orders Total Score], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Web Orders Max Score' = MAX ( 'Web Orders'[Score] )
+		displayFolder: Commerce
+
+	measure 'Web Orders Score Share %' = DIVIDE ( [Web Orders Total Score], CALCULATE ( [Web Orders Total Score], ALL ( 'Web Orders' ) ) )
+		displayFolder: Commerce
+
+	measure 'Web Orders Total Value' = SUM ( 'Web Orders'[Value] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Web Orders Average Value' = AVERAGE ( 'Web Orders'[Value] )
+		displayFolder: Commerce
+
+	measure 'Web Orders Total Value LY' = CALCULATE ( [Web Orders Total Value], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Commerce
+
+	/// Made-up measure for the large test model (Commerce).
+	measure 'Web Orders Total Value YoY %' = DIVIDE ( [Web Orders Total Value] - [Web Orders Total Value LY], [Web Orders Total Value LY] )
+		formatString: 0.0%
+		displayFolder: Commerce
+
+	measure 'Web Orders Total Value YTD' = TOTALYTD ( [Web Orders Total Value], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Web Orders Max Value' = MAX ( 'Web Orders'[Value] )
+		displayFolder: Commerce
+
+	measure 'Web Orders Value Share %' = DIVIDE ( [Web Orders Total Value], CALCULATE ( [Web Orders Total Value], ALL ( 'Web Orders' ) ) )
+		displayFolder: Commerce
+
+	column 'Web Order Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Web Order Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Plan Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Plan Key
+
+	column 'Churn Reason Key'
+		dataType: int64
+		sourceColumn: Churn Reason Key
+
+	column 'Country Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Country Key
+
+	column 'Coupon Key'
+		dataType: int64
+		sourceColumn: Coupon Key
+
+	column 'Order Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Order Status Key
+
+	column Score
+		dataType: double
+		sourceColumn: Score
+
+	column Value
+		dataType: decimal
+		sourceColumn: Value
+
+	column Amount
+		dataType: decimal
+		isHidden
+		sourceColumn: Amount
+
+	column 'Net Amount'
+		dataType: double
+		isHidden
+		sourceColumn: Net Amount
+
+	partition 'Web Orders' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Web Order Id", "Date", "Plan Key", "Churn Reason Key", "Country Key", "Coupon Key", "Order Status Key", "Score", "Value", "Amount", "Net Amount"}, {})
+				in
+				    Source

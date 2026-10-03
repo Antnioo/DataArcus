@@ -1,0 +1,34 @@
+table Brand
+
+	column 'Brand Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Brand Key
+
+	column Brand
+		dataType: string
+		sourceColumn: Brand
+
+	column 'Brand Notes'
+		dataType: string
+		sourceColumn: Brand Notes
+
+	column 'Brand Valid To'
+		dataType: dateTime
+		sourceColumn: Brand Valid To
+
+	column 'Brand Code'
+		dataType: string
+		sourceColumn: Brand Code
+
+	column 'Brand Description'
+		dataType: string
+		sourceColumn: Brand Description
+
+	partition Brand = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Brand Key", "Brand", "Brand Notes", "Brand Valid To", "Brand Code", "Brand Description"}, {})
+				in
+				    Source

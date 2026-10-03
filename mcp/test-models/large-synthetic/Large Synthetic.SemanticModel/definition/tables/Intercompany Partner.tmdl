@@ -1,0 +1,54 @@
+table 'Intercompany Partner'
+
+	column 'Intercompany Partner Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Intercompany Partner Key
+
+	column 'Intercompany Partner'
+		dataType: string
+		sourceColumn: Intercompany Partner
+
+	column 'Intercompany Partner External Id'
+		dataType: string
+		sourceColumn: Intercompany Partner External Id
+
+	column 'Intercompany Partner Region'
+		dataType: string
+		sourceColumn: Intercompany Partner Region
+
+	column 'Intercompany Partner Owner'
+		dataType: string
+		sourceColumn: Intercompany Partner Owner
+
+	column 'Intercompany Partner Short Name'
+		dataType: string
+		sourceColumn: Intercompany Partner Short Name
+
+	column 'Intercompany Partner Notes'
+		dataType: string
+		sourceColumn: Intercompany Partner Notes
+
+	column 'Intercompany Partner Type'
+		dataType: string
+		sourceColumn: Intercompany Partner Type
+
+	column 'Intercompany Partner Parent Code'
+		dataType: string
+		sourceColumn: Intercompany Partner Parent Code
+
+	column 'Intercompany Partner Code'
+		dataType: string
+		sourceColumn: Intercompany Partner Code
+
+	column 'Intercompany Partner Description'
+		dataType: string
+		sourceColumn: Intercompany Partner Description
+
+	partition 'Intercompany Partner' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Intercompany Partner Key", "Intercompany Partner", "Intercompany Partner External Id", "Intercompany Partner Region", "Intercompany Partner Owner", "Intercompany Partner Short Name", "Intercompany Partner Notes", "Intercompany Partner Type", "Intercompany Partner Parent Code", "Intercompany Partner Code", "Intercompany Partner Description"}, {})
+				in
+				    Source

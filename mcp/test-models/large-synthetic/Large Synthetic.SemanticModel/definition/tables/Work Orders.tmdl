@@ -1,0 +1,134 @@
+table 'Work Orders'
+
+	measure 'Work Orders Total Units' = SUM ( 'Work Orders'[Units] )
+		formatString: #,0
+		displayFolder: Facilities
+
+	measure 'Work Orders Average Units' = AVERAGE ( 'Work Orders'[Units] )
+		formatString: #,0.00
+		displayFolder: Facilities
+
+	measure 'Work Orders Count' = COUNTROWS ( 'Work Orders' )
+		formatString: #,0
+		displayFolder: Facilities
+
+	measure 'Work Orders Total Units LY' = CALCULATE ( [Work Orders Total Units], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Facilities
+
+	measure 'Work Orders Total Units YoY %' = DIVIDE ( [Work Orders Total Units] - [Work Orders Total Units LY], [Work Orders Total Units LY] )
+		formatString: 0.0%
+		displayFolder: Facilities
+
+	measure 'Work Orders Total Units YTD' = TOTALYTD ( [Work Orders Total Units], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Facilities
+
+	/// Made-up measure for the large test model (Facilities).
+	measure 'Work Orders Max Units' = MAX ( 'Work Orders'[Units] )
+		displayFolder: Facilities
+
+	measure 'Work Orders Units Share %' = DIVIDE ( [Work Orders Total Units], CALCULATE ( [Work Orders Total Units], ALL ( 'Work Orders' ) ) )
+		displayFolder: Facilities
+
+	measure 'Work Orders Total Cost' = SUM ( 'Work Orders'[Cost] )
+		formatString: #,0
+		displayFolder: Facilities
+
+	measure 'Work Orders Average Cost' = AVERAGE ( 'Work Orders'[Cost] )
+		formatString: #,0.00
+
+	measure 'Work Orders Total Cost LY' = CALCULATE ( [Work Orders Total Cost], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Facilities
+
+	measure 'Work Orders Total Cost YoY %' = DIVIDE ( [Work Orders Total Cost] - [Work Orders Total Cost LY], [Work Orders Total Cost LY] )
+		formatString: 0.0%
+		displayFolder: Facilities
+
+	measure 'Work Orders Total Cost YTD' = TOTALYTD ( [Work Orders Total Cost], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Facilities
+
+	measure 'Work Orders Max Cost' = MAX ( 'Work Orders'[Cost] )
+		displayFolder: Facilities
+
+	measure 'Work Orders Cost Share %' = DIVIDE ( [Work Orders Total Cost], CALCULATE ( [Work Orders Total Cost], ALL ( 'Work Orders' ) ) )
+		displayFolder: Facilities
+
+	column 'Work Order Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Work Order Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Occupancy Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Occupancy Type Key
+
+	column 'Asset Key'
+		dataType: int64
+		sourceColumn: Asset Key
+
+	column 'Inspection Type Key'
+		dataType: int64
+		sourceColumn: Inspection Type Key
+
+	column 'Facilities Lookup 049 Key'
+		dataType: int64
+		sourceColumn: Facilities Lookup 049 Key
+
+	column 'Utility Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Utility Key
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column Cost
+		dataType: double
+		isHidden
+		sourceColumn: Cost
+
+	column 'Tax Amount'
+		dataType: double
+		sourceColumn: Tax Amount
+
+	column Score
+		dataType: decimal
+		sourceColumn: Score
+
+	column Value
+		dataType: double
+		isHidden
+		sourceColumn: Value
+
+	column Price
+		dataType: double
+		isHidden
+		sourceColumn: Price
+
+	column Margin
+		dataType: double
+		isHidden
+		sourceColumn: Margin
+
+	column Discount
+		dataType: double
+		isHidden
+		sourceColumn: Discount
+
+	partition 'Work Orders' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Work Order Id", "Date", "Occupancy Type Key", "Asset Key", "Inspection Type Key", "Facilities Lookup 049 Key", "Utility Key", "Units", "Cost", "Tax Amount", "Score", "Value", "Price", "Margin", "Discount"}, {})
+				in
+				    Source

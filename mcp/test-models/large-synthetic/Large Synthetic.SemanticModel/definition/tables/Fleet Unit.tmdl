@@ -1,0 +1,42 @@
+table 'Fleet Unit'
+
+	column 'Fleet Unit Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Fleet Unit Key
+
+	column 'Fleet Unit'
+		dataType: string
+		sourceColumn: Fleet Unit
+
+	column 'Fleet Unit Category'
+		dataType: string
+		sourceColumn: Fleet Unit Category
+
+	column 'Fleet Unit Valid From'
+		dataType: dateTime
+		sourceColumn: Fleet Unit Valid From
+
+	column 'Fleet Unit Rank'
+		dataType: int64
+		sourceColumn: Fleet Unit Rank
+
+	column 'Fleet Unit Owner'
+		dataType: string
+		sourceColumn: Fleet Unit Owner
+
+	column 'Fleet Unit Code'
+		dataType: string
+		sourceColumn: Fleet Unit Code
+
+	column 'Fleet Unit Description'
+		dataType: string
+		sourceColumn: Fleet Unit Description
+
+	partition 'Fleet Unit' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Fleet Unit Key", "Fleet Unit", "Fleet Unit Category", "Fleet Unit Valid From", "Fleet Unit Rank", "Fleet Unit Owner", "Fleet Unit Code", "Fleet Unit Description"}, {})
+				in
+				    Source

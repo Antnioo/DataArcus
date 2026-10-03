@@ -1,0 +1,132 @@
+table 'Replenishment Orders'
+
+	measure 'Replenishment Orders Total Count' = SUM ( 'Replenishment Orders'[Count] )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Replenishment Orders Average Count' = AVERAGE ( 'Replenishment Orders'[Count] )
+		formatString: #,0.00
+
+	/// Made-up measure for the large test model (Inventory).
+	measure 'Replenishment Orders Count' = COUNTROWS ( 'Replenishment Orders' )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Replenishment Orders Total Count LY' = CALCULATE ( [Replenishment Orders Total Count], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Replenishment Orders Total Count YoY %' = DIVIDE ( [Replenishment Orders Total Count] - [Replenishment Orders Total Count LY], [Replenishment Orders Total Count LY] )
+		formatString: 0.0%
+		displayFolder: Inventory
+
+	measure 'Replenishment Orders Total Count YTD' = TOTALYTD ( [Replenishment Orders Total Count], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Replenishment Orders Max Count' = MAX ( 'Replenishment Orders'[Count] )
+
+	measure 'Replenishment Orders Count Share %' = DIVIDE ( [Replenishment Orders Total Count], CALCULATE ( [Replenishment Orders Total Count], ALL ( 'Replenishment Orders' ) ) )
+		displayFolder: Inventory
+
+	measure 'Replenishment Orders Total Duration Minutes' = SUM ( 'Replenishment Orders'[Duration Minutes] )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Replenishment Orders Average Duration Minutes' = AVERAGE ( 'Replenishment Orders'[Duration Minutes] )
+		displayFolder: Inventory
+
+	measure 'Replenishment Orders Total Duration Minutes LY' = CALCULATE ( [Replenishment Orders Total Duration Minutes], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Replenishment Orders Total Duration Minutes YoY %' = DIVIDE ( [Replenishment Orders Total Duration Minutes] - [Replenishment Orders Total Duration Minutes LY], [Replenishment Orders Total Duration Minutes LY] )
+		formatString: 0.0%
+		displayFolder: Inventory
+
+	measure 'Replenishment Orders Total Duration Minutes YTD' = TOTALYTD ( [Replenishment Orders Total Duration Minutes], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Replenishment Orders Max Duration Minutes' = MAX ( 'Replenishment Orders'[Duration Minutes] )
+		displayFolder: Inventory
+
+	measure 'Replenishment Orders Duration Minutes Share %' = DIVIDE ( [Replenishment Orders Total Duration Minutes], CALCULATE ( [Replenishment Orders Total Duration Minutes], ALL ( 'Replenishment Orders' ) ) )
+		displayFolder: Inventory
+
+	column 'Replenishment Order Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Replenishment Order Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Storage Condition Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Storage Condition Key
+
+	column 'Movement Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Movement Type Key
+
+	column 'ABC Class Key'
+		dataType: int64
+		sourceColumn: ABC Class Key
+
+	column 'Brand Key'
+		dataType: int64
+		sourceColumn: Brand Key
+
+	column 'Inventory Lookup 021 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Inventory Lookup 021 Key
+
+	column 'Lot Key'
+		dataType: int64
+		sourceColumn: Lot Key
+
+	column Count
+		dataType: int64
+		isHidden
+		sourceColumn: Count
+
+	column 'Duration Minutes'
+		dataType: decimal
+		isHidden
+		sourceColumn: Duration Minutes
+
+	column 'Tax Amount'
+		dataType: double
+		sourceColumn: Tax Amount
+
+	column Amount
+		dataType: double
+		isHidden
+		sourceColumn: Amount
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column Discount
+		dataType: double
+		isHidden
+		sourceColumn: Discount
+
+	column Cost
+		dataType: decimal
+		sourceColumn: Cost
+
+	partition 'Replenishment Orders' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Replenishment Order Id", "Date", "Storage Condition Key", "Movement Type Key", "ABC Class Key", "Brand Key", "Inventory Lookup 021 Key", "Lot Key", "Count", "Duration Minutes", "Tax Amount", "Amount", "Units", "Discount", "Cost"}, {})
+				in
+				    Source

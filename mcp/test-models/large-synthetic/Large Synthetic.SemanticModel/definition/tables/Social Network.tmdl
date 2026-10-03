@@ -1,0 +1,50 @@
+table 'Social Network'
+
+	column 'Social Network Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Social Network Key
+
+	column 'Social Network'
+		dataType: string
+		sourceColumn: Social Network
+
+	column 'Social Network External Id'
+		dataType: string
+		sourceColumn: Social Network External Id
+
+	column 'Social Network Code'
+		dataType: string
+		sourceColumn: Social Network Code
+
+	column 'Social Network Notes'
+		dataType: string
+		sourceColumn: Social Network Notes
+
+	column 'Social Network Category'
+		dataType: string
+		sourceColumn: Social Network Category
+
+	column 'Social Network Long Name'
+		dataType: string
+		sourceColumn: Social Network Long Name
+
+	column 'Social Network Sort Order'
+		dataType: int64
+		sourceColumn: Social Network Sort Order
+
+	column 'Social Network Description'
+		dataType: string
+		sourceColumn: Social Network Description
+
+	column 'Social Network Group'
+		dataType: string
+		sourceColumn: Social Network Group
+
+	partition 'Social Network' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Social Network Key", "Social Network", "Social Network External Id", "Social Network Code", "Social Network Notes", "Social Network Category", "Social Network Long Name", "Social Network Sort Order", "Social Network Description", "Social Network Group"}, {})
+				in
+				    Source

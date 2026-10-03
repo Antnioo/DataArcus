@@ -1,0 +1,38 @@
+table 'Container Type'
+
+	column 'Container Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Container Type Key
+
+	column 'Container Type'
+		dataType: string
+		sourceColumn: Container Type
+
+	column 'Container Type Valid From'
+		dataType: dateTime
+		sourceColumn: Container Type Valid From
+
+	column 'Container Type Region'
+		dataType: string
+		sourceColumn: Container Type Region
+
+	column 'Container Type External Id'
+		dataType: string
+		sourceColumn: Container Type External Id
+
+	column 'Container Type Code'
+		dataType: string
+		sourceColumn: Container Type Code
+
+	column 'Container Type Description'
+		dataType: string
+		sourceColumn: Container Type Description
+
+	partition 'Container Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Container Type Key", "Container Type", "Container Type Valid From", "Container Type Region", "Container Type External Id", "Container Type Code", "Container Type Description"}, {})
+				in
+				    Source

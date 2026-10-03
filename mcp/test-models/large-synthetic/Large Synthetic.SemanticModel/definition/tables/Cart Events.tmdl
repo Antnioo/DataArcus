@@ -1,0 +1,119 @@
+table 'Cart Events'
+
+	measure 'Cart Events Total Units' = SUM ( 'Cart Events'[Units] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Cart Events Average Units' = AVERAGE ( 'Cart Events'[Units] )
+		formatString: #,0.00
+		displayFolder: Commerce
+
+	measure 'Cart Events Count' = COUNTROWS ( 'Cart Events' )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Cart Events Total Units LY' = CALCULATE ( [Cart Events Total Units], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Commerce
+
+	/// Made-up measure for the large test model (Commerce).
+	measure 'Cart Events Total Units YoY %' = DIVIDE ( [Cart Events Total Units] - [Cart Events Total Units LY], [Cart Events Total Units LY] )
+		formatString: 0.0%
+
+	measure 'Cart Events Total Units YTD' = TOTALYTD ( [Cart Events Total Units], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Cart Events Max Units' = MAX ( 'Cart Events'[Units] )
+		displayFolder: Commerce
+
+	/// Made-up measure for the large test model (Commerce).
+	measure 'Cart Events Units Share %' = DIVIDE ( [Cart Events Total Units], CALCULATE ( [Cart Events Total Units], ALL ( 'Cart Events' ) ) )
+		displayFolder: Commerce
+
+	measure 'Cart Events Total Hours' = SUM ( 'Cart Events'[Hours] )
+		formatString: #,0
+
+	measure 'Cart Events Average Hours' = AVERAGE ( 'Cart Events'[Hours] )
+		formatString: #,0.00
+		displayFolder: Commerce
+
+	measure 'Cart Events Total Hours LY' = CALCULATE ( [Cart Events Total Hours], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Cart Events Total Hours YoY %' = DIVIDE ( [Cart Events Total Hours] - [Cart Events Total Hours LY], [Cart Events Total Hours LY] )
+		formatString: 0.0%
+		displayFolder: Commerce
+
+	/// Made-up measure for the large test model (Commerce).
+	measure 'Cart Events Total Hours YTD' = TOTALYTD ( [Cart Events Total Hours], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Cart Events Max Hours' = MAX ( 'Cart Events'[Hours] )
+		displayFolder: Commerce
+
+	measure 'Cart Events Hours Share %' = DIVIDE ( [Cart Events Total Hours], CALCULATE ( [Cart Events Total Hours], ALL ( 'Cart Events' ) ) )
+		displayFolder: Commerce
+
+	column 'Cart Event Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Cart Event Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Country Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Country Key
+
+	column 'Order Status Key'
+		dataType: int64
+		sourceColumn: Order Status Key
+
+	column 'Promotion Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Promotion Key
+
+	column 'Product Key'
+		dataType: int64
+		sourceColumn: Product Key
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column Hours
+		dataType: decimal
+		isHidden
+		sourceColumn: Hours
+
+	column 'Tax Amount'
+		dataType: double
+		sourceColumn: Tax Amount
+
+	column Value
+		dataType: double
+		sourceColumn: Value
+
+	column Count
+		dataType: int64
+		sourceColumn: Count
+
+	column Margin
+		dataType: double
+		isHidden
+		sourceColumn: Margin
+
+	partition 'Cart Events' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Cart Event Id", "Date", "Country Key", "Order Status Key", "Promotion Key", "Product Key", "Units", "Hours", "Tax Amount", "Value", "Count", "Margin"}, {})
+				in
+				    Source

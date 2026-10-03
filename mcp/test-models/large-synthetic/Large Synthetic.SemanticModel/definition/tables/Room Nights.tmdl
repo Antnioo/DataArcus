@@ -1,0 +1,149 @@
+table 'Room Nights'
+
+	measure 'Room Nights Total Quantity' = SUM ( 'Room Nights'[Quantity] )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	/// Made-up measure for the large test model (Hospitality).
+	measure 'Room Nights Average Quantity' = AVERAGE ( 'Room Nights'[Quantity] )
+		formatString: #,0.00
+		displayFolder: Hospitality
+
+	measure 'Room Nights Count' = COUNTROWS ( 'Room Nights' )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	measure 'Room Nights Total Quantity LY' = CALCULATE ( [Room Nights Total Quantity], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	measure 'Room Nights Total Quantity YoY %' = DIVIDE ( [Room Nights Total Quantity] - [Room Nights Total Quantity LY], [Room Nights Total Quantity LY] )
+		formatString: 0.0%
+		displayFolder: Hospitality
+
+	/// Made-up measure for the large test model (Hospitality).
+	measure 'Room Nights Total Quantity YTD' = TOTALYTD ( [Room Nights Total Quantity], 'Calendar'[Date] )
+		formatString: #,0
+
+	measure 'Room Nights Max Quantity' = MAX ( 'Room Nights'[Quantity] )
+		displayFolder: Hospitality
+
+	measure 'Room Nights Quantity Share %' = DIVIDE ( [Room Nights Total Quantity], CALCULATE ( [Room Nights Total Quantity], ALL ( 'Room Nights' ) ) )
+		displayFolder: Hospitality
+
+	measure 'Room Nights Total Amount' = SUM ( 'Room Nights'[Amount] )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	measure 'Room Nights Average Amount' = AVERAGE ( 'Room Nights'[Amount] )
+		formatString: #,0.00
+		displayFolder: Hospitality
+
+	measure 'Room Nights Total Amount LY' = CALCULATE ( [Room Nights Total Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	measure 'Room Nights Total Amount YoY %' = DIVIDE ( [Room Nights Total Amount] - [Room Nights Total Amount LY], [Room Nights Total Amount LY] )
+		formatString: 0.0%
+		displayFolder: Hospitality
+
+	measure 'Room Nights Total Amount YTD' = TOTALYTD ( [Room Nights Total Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	measure 'Room Nights Max Amount' = MAX ( 'Room Nights'[Amount] )
+		displayFolder: Hospitality
+
+	measure 'Room Nights Amount Share %' = DIVIDE ( [Room Nights Total Amount], CALCULATE ( [Room Nights Total Amount], ALL ( 'Room Nights' ) ) )
+		displayFolder: Hospitality
+
+	column 'Room Night Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Room Night Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Room Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Room Type Key
+
+	column 'Cancellation Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Cancellation Reason Key
+
+	column 'Loyalty Tier Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Loyalty Tier Key
+
+	column 'Review Site Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Review Site Key
+
+	column 'Source Market Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Source Market Key
+
+	column 'Guest Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Guest Key
+
+	column Quantity
+		dataType: int64
+		isHidden
+		sourceColumn: Quantity
+
+	column Amount
+		dataType: double
+		sourceColumn: Amount
+
+	column Cost
+		dataType: double
+		isHidden
+		sourceColumn: Cost
+
+	column Hours
+		dataType: decimal
+		isHidden
+		sourceColumn: Hours
+
+	column Discount
+		dataType: decimal
+		isHidden
+		sourceColumn: Discount
+
+	column 'Net Amount'
+		dataType: decimal
+		isHidden
+		sourceColumn: Net Amount
+
+	column Price
+		dataType: double
+		isHidden
+		sourceColumn: Price
+
+	column 'Tax Amount'
+		dataType: decimal
+		sourceColumn: Tax Amount
+
+	column Score
+		dataType: decimal
+		isHidden
+		sourceColumn: Score
+
+	partition 'Room Nights' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Room Night Id", "Date", "Room Type Key", "Cancellation Reason Key", "Loyalty Tier Key", "Review Site Key", "Source Market Key", "Guest Key", "Quantity", "Amount", "Cost", "Hours", "Discount", "Net Amount", "Price", "Tax Amount", "Score"}, {})
+				in
+				    Source

@@ -1,0 +1,38 @@
+table 'Procurement Lookup 054'
+
+	column 'Procurement Lookup 054 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Procurement Lookup 054 Key
+
+	column 'Procurement Lookup 054'
+		dataType: string
+		sourceColumn: Procurement Lookup 054
+
+	column 'Procurement Lookup 054 Rank'
+		dataType: int64
+		sourceColumn: Procurement Lookup 054 Rank
+
+	column 'Procurement Lookup 054 Code'
+		dataType: string
+		sourceColumn: Procurement Lookup 054 Code
+
+	column 'Procurement Lookup 054 Type'
+		dataType: string
+		sourceColumn: Procurement Lookup 054 Type
+
+	column 'Procurement Lookup 054 Notes'
+		dataType: string
+		sourceColumn: Procurement Lookup 054 Notes
+
+	column 'Procurement Lookup 054 Description'
+		dataType: string
+		sourceColumn: Procurement Lookup 054 Description
+
+	partition 'Procurement Lookup 054' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Procurement Lookup 054 Key", "Procurement Lookup 054", "Procurement Lookup 054 Rank", "Procurement Lookup 054 Code", "Procurement Lookup 054 Type", "Procurement Lookup 054 Notes", "Procurement Lookup 054 Description"}, {})
+				in
+				    Source

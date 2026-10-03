@@ -1,0 +1,50 @@
+table Shift
+
+	column 'Shift Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Shift Key
+
+	column Shift
+		dataType: string
+		sourceColumn: Shift
+
+	column 'Shift Parent Code'
+		dataType: string
+		sourceColumn: Shift Parent Code
+
+	column 'Shift Owner'
+		dataType: string
+		sourceColumn: Shift Owner
+
+	column 'Shift Description'
+		dataType: string
+		sourceColumn: Shift Description
+
+	column 'Shift Region'
+		dataType: string
+		sourceColumn: Shift Region
+
+	column 'Shift Short Name'
+		dataType: string
+		sourceColumn: Shift Short Name
+
+	column 'Shift Is Active'
+		dataType: boolean
+		sourceColumn: Shift Is Active
+
+	column 'Shift Code'
+		dataType: string
+		sourceColumn: Shift Code
+
+	column 'Shift Group'
+		dataType: string
+		sourceColumn: Shift Group
+
+	partition Shift = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Shift Key", "Shift", "Shift Parent Code", "Shift Owner", "Shift Description", "Shift Region", "Shift Short Name", "Shift Is Active", "Shift Code", "Shift Group"}, {})
+				in
+				    Source

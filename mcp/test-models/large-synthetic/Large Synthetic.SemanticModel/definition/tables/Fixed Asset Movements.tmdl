@@ -1,0 +1,129 @@
+table 'Fixed Asset Movements'
+
+	/// Made-up measure for the large test model (Finance).
+	measure 'Fixed Asset Movements Total Discount' = SUM ( 'Fixed Asset Movements'[Discount] )
+		formatString: #,0
+		displayFolder: Finance
+
+	/// Made-up measure for the large test model (Finance).
+	measure 'Fixed Asset Movements Average Discount' = AVERAGE ( 'Fixed Asset Movements'[Discount] )
+		formatString: #,0.00
+
+	measure 'Fixed Asset Movements Count' = COUNTROWS ( 'Fixed Asset Movements' )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'Fixed Asset Movements Total Discount LY' = CALCULATE ( [Fixed Asset Movements Total Discount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'Fixed Asset Movements Total Discount YoY %' = DIVIDE ( [Fixed Asset Movements Total Discount] - [Fixed Asset Movements Total Discount LY], [Fixed Asset Movements Total Discount LY] )
+		formatString: 0.0%
+		displayFolder: Finance
+
+	/// Made-up measure for the large test model (Finance).
+	measure 'Fixed Asset Movements Total Discount YTD' = TOTALYTD ( [Fixed Asset Movements Total Discount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'Fixed Asset Movements Max Discount' = MAX ( 'Fixed Asset Movements'[Discount] )
+
+	measure 'Fixed Asset Movements Discount Share %' = DIVIDE ( [Fixed Asset Movements Total Discount], CALCULATE ( [Fixed Asset Movements Total Discount], ALL ( 'Fixed Asset Movements' ) ) )
+		displayFolder: Finance
+
+	measure 'Fixed Asset Movements Total Hours' = SUM ( 'Fixed Asset Movements'[Hours] )
+		formatString: #,0
+		displayFolder: Finance
+
+	measure 'Fixed Asset Movements Average Hours' = AVERAGE ( 'Fixed Asset Movements'[Hours] )
+		formatString: #,0.00
+		displayFolder: Finance
+
+	/// Made-up measure for the large test model (Finance).
+	measure 'Fixed Asset Movements Total Hours LY' = CALCULATE ( [Fixed Asset Movements Total Hours], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Finance
+
+	measure 'Fixed Asset Movements Total Hours YoY %' = DIVIDE ( [Fixed Asset Movements Total Hours] - [Fixed Asset Movements Total Hours LY], [Fixed Asset Movements Total Hours LY] )
+		formatString: 0.0%
+		displayFolder: Finance
+
+	measure 'Fixed Asset Movements Total Hours YTD' = TOTALYTD ( [Fixed Asset Movements Total Hours], 'Calendar'[Date] )
+
+	measure 'Fixed Asset Movements Max Hours' = MAX ( 'Fixed Asset Movements'[Hours] )
+		displayFolder: Finance
+
+	measure 'Fixed Asset Movements Hours Share %' = DIVIDE ( [Fixed Asset Movements Total Hours], CALCULATE ( [Fixed Asset Movements Total Hours], ALL ( 'Fixed Asset Movements' ) ) )
+		displayFolder: Finance
+
+	column 'Fixed Asset Movement Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Fixed Asset Movement Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Account Group Key'
+		dataType: int64
+		sourceColumn: Account Group Key
+
+	column 'Legal Entity Key'
+		dataType: int64
+		sourceColumn: Legal Entity Key
+
+	column 'Finance Lookup 023 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Finance Lookup 023 Key
+
+	column 'Payment Term Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Payment Term Key
+
+	column 'Finance Lookup 030 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Finance Lookup 030 Key
+
+	column 'Budget Version Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Budget Version Key
+
+	column 'Intercompany Partner Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Intercompany Partner Key
+
+	column Discount
+		dataType: decimal
+		isHidden
+		sourceColumn: Discount
+
+	column Hours
+		dataType: double
+		sourceColumn: Hours
+
+	column Value
+		dataType: decimal
+		sourceColumn: Value
+
+	column Score
+		dataType: double
+		isHidden
+		sourceColumn: Score
+
+	column 'Duration Minutes'
+		dataType: double
+		sourceColumn: Duration Minutes
+
+	partition 'Fixed Asset Movements' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Fixed Asset Movement Id", "Date", "Account Group Key", "Legal Entity Key", "Finance Lookup 023 Key", "Payment Term Key", "Finance Lookup 030 Key", "Budget Version Key", "Intercompany Partner Key", "Discount", "Hours", "Value", "Score", "Duration Minutes"}, {})
+				in
+				    Source

@@ -1,0 +1,46 @@
+table 'Production Lookup 053'
+
+	column 'Production Lookup 053 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Production Lookup 053 Key
+
+	column 'Production Lookup 053'
+		dataType: string
+		sourceColumn: Production Lookup 053
+
+	column 'Production Lookup 053 Valid To'
+		dataType: dateTime
+		sourceColumn: Production Lookup 053 Valid To
+
+	column 'Production Lookup 053 Code'
+		dataType: string
+		sourceColumn: Production Lookup 053 Code
+
+	column 'Production Lookup 053 Created By'
+		dataType: string
+		sourceColumn: Production Lookup 053 Created By
+
+	column 'Production Lookup 053 Notes'
+		dataType: string
+		sourceColumn: Production Lookup 053 Notes
+
+	column 'Production Lookup 053 Region'
+		dataType: string
+		sourceColumn: Production Lookup 053 Region
+
+	column 'Production Lookup 053 Valid From'
+		dataType: dateTime
+		sourceColumn: Production Lookup 053 Valid From
+
+	column 'Production Lookup 053 Description'
+		dataType: string
+		sourceColumn: Production Lookup 053 Description
+
+	partition 'Production Lookup 053' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Production Lookup 053 Key", "Production Lookup 053", "Production Lookup 053 Valid To", "Production Lookup 053 Code", "Production Lookup 053 Created By", "Production Lookup 053 Notes", "Production Lookup 053 Region", "Production Lookup 053 Valid From", "Production Lookup 053 Description"}, {})
+				in
+				    Source

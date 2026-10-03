@@ -1,0 +1,132 @@
+table 'Freight Costs'
+
+	measure 'Freight Costs Total Tax Amount' = SUM ( 'Freight Costs'[Tax Amount] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Freight Costs Average Tax Amount' = AVERAGE ( 'Freight Costs'[Tax Amount] )
+		formatString: #,0.00
+		displayFolder: Logistics
+
+	measure 'Freight Costs Count' = COUNTROWS ( 'Freight Costs' )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Freight Costs Total Tax Amount LY' = CALCULATE ( [Freight Costs Total Tax Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Freight Costs Total Tax Amount YoY %' = DIVIDE ( [Freight Costs Total Tax Amount] - [Freight Costs Total Tax Amount LY], [Freight Costs Total Tax Amount LY] )
+		formatString: 0.0%
+
+	/// Made-up measure for the large test model (Logistics).
+	measure 'Freight Costs Total Tax Amount YTD' = TOTALYTD ( [Freight Costs Total Tax Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Freight Costs Max Tax Amount' = MAX ( 'Freight Costs'[Tax Amount] )
+		displayFolder: Logistics
+
+	measure 'Freight Costs Tax Amount Share %' = DIVIDE ( [Freight Costs Total Tax Amount], CALCULATE ( [Freight Costs Total Tax Amount], ALL ( 'Freight Costs' ) ) )
+		displayFolder: Logistics
+
+	measure 'Freight Costs Total Units' = SUM ( 'Freight Costs'[Units] )
+		formatString: #,0
+
+	/// Made-up measure for the large test model (Logistics).
+	measure 'Freight Costs Average Units' = AVERAGE ( 'Freight Costs'[Units] )
+		formatString: #,0.00
+		displayFolder: Logistics
+
+	measure 'Freight Costs Total Units LY' = CALCULATE ( [Freight Costs Total Units], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Logistics
+
+	measure 'Freight Costs Total Units YoY %' = DIVIDE ( [Freight Costs Total Units] - [Freight Costs Total Units LY], [Freight Costs Total Units LY] )
+		displayFolder: Logistics
+
+	measure 'Freight Costs Total Units YTD' = TOTALYTD ( [Freight Costs Total Units], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Freight Costs Max Units' = MAX ( 'Freight Costs'[Units] )
+		displayFolder: Logistics
+
+	measure 'Freight Costs Units Share %' = DIVIDE ( [Freight Costs Total Units], CALCULATE ( [Freight Costs Total Units], ALL ( 'Freight Costs' ) ) )
+		displayFolder: Logistics
+
+	column 'Freight Cost Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Freight Cost Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Port Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Port Key
+
+	column 'Hub Key'
+		dataType: int64
+		sourceColumn: Hub Key
+
+	column 'Delay Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Delay Reason Key
+
+	column 'Delivery Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Delivery Status Key
+
+	column 'Customs Status Key'
+		dataType: int64
+		sourceColumn: Customs Status Key
+
+	column 'Return Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Return Reason Key
+
+	column 'Tax Amount'
+		dataType: double
+		isHidden
+		sourceColumn: Tax Amount
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column Score
+		dataType: decimal
+		isHidden
+		sourceColumn: Score
+
+	column Margin
+		dataType: decimal
+		sourceColumn: Margin
+
+	column Price
+		dataType: double
+		isHidden
+		sourceColumn: Price
+
+	column Count
+		dataType: int64
+		sourceColumn: Count
+
+	column 'Net Amount'
+		dataType: decimal
+		sourceColumn: Net Amount
+
+	partition 'Freight Costs' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Freight Cost Id", "Date", "Port Key", "Hub Key", "Delay Reason Key", "Delivery Status Key", "Customs Status Key", "Return Reason Key", "Tax Amount", "Units", "Score", "Margin", "Price", "Count", "Net Amount"}, {})
+				in
+				    Source

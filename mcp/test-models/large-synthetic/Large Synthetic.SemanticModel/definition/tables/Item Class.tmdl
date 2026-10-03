@@ -1,0 +1,46 @@
+table 'Item Class'
+
+	column 'Item Class Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Item Class Key
+
+	column 'Item Class'
+		dataType: string
+		sourceColumn: Item Class
+
+	column 'Item Class Region'
+		dataType: string
+		sourceColumn: Item Class Region
+
+	column 'Item Class External Id'
+		dataType: string
+		sourceColumn: Item Class External Id
+
+	column 'Item Class Owner'
+		dataType: string
+		sourceColumn: Item Class Owner
+
+	column 'Item Class Is Active'
+		dataType: boolean
+		sourceColumn: Item Class Is Active
+
+	column 'Item Class Valid To'
+		dataType: dateTime
+		sourceColumn: Item Class Valid To
+
+	column 'Item Class Code'
+		dataType: string
+		sourceColumn: Item Class Code
+
+	column 'Item Class Description'
+		dataType: string
+		sourceColumn: Item Class Description
+
+	partition 'Item Class' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Item Class Key", "Item Class", "Item Class Region", "Item Class External Id", "Item Class Owner", "Item Class Is Active", "Item Class Valid To", "Item Class Code", "Item Class Description"}, {})
+				in
+				    Source

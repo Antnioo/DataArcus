@@ -1,0 +1,58 @@
+table 'Ticket Status'
+
+	column 'Ticket Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Ticket Status Key
+
+	column 'Ticket Status'
+		dataType: string
+		sourceColumn: Ticket Status
+
+	column 'Ticket Status Rank'
+		dataType: int64
+		sourceColumn: Ticket Status Rank
+
+	column 'Ticket Status Status'
+		dataType: string
+		sourceColumn: Ticket Status Status
+
+	column 'Ticket Status Is Active'
+		dataType: boolean
+		sourceColumn: Ticket Status Is Active
+
+	column 'Ticket Status Notes'
+		dataType: string
+		sourceColumn: Ticket Status Notes
+
+	column 'Ticket Status Short Name'
+		dataType: string
+		sourceColumn: Ticket Status Short Name
+
+	column 'Ticket Status Level'
+		dataType: int64
+		sourceColumn: Ticket Status Level
+
+	column 'Ticket Status Valid From'
+		dataType: dateTime
+		sourceColumn: Ticket Status Valid From
+
+	column 'Ticket Status Category'
+		dataType: string
+		sourceColumn: Ticket Status Category
+
+	column 'Ticket Status Code'
+		dataType: string
+		sourceColumn: Ticket Status Code
+
+	column 'Ticket Status Description'
+		dataType: string
+		sourceColumn: Ticket Status Description
+
+	partition 'Ticket Status' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Ticket Status Key", "Ticket Status", "Ticket Status Rank", "Ticket Status Status", "Ticket Status Is Active", "Ticket Status Notes", "Ticket Status Short Name", "Ticket Status Level", "Ticket Status Valid From", "Ticket Status Category", "Ticket Status Code", "Ticket Status Description"}, {})
+				in
+				    Source

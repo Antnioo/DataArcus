@@ -1,0 +1,30 @@
+table 'Procurement Lookup 009'
+
+	column 'Procurement Lookup 009 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Procurement Lookup 009 Key
+
+	column 'Procurement Lookup 009'
+		dataType: string
+		sourceColumn: Procurement Lookup 009
+
+	column 'Procurement Lookup 009 Category'
+		dataType: string
+		sourceColumn: Procurement Lookup 009 Category
+
+	column 'Procurement Lookup 009 Group'
+		dataType: string
+		sourceColumn: Procurement Lookup 009 Group
+
+	column 'Procurement Lookup 009 Code'
+		dataType: string
+		sourceColumn: Procurement Lookup 009 Code
+
+	partition 'Procurement Lookup 009' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Procurement Lookup 009 Key", "Procurement Lookup 009", "Procurement Lookup 009 Category", "Procurement Lookup 009 Group", "Procurement Lookup 009 Code"}, {})
+				in
+				    Source

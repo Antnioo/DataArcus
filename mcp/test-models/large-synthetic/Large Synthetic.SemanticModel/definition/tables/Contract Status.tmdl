@@ -1,0 +1,50 @@
+table 'Contract Status'
+
+	column 'Contract Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Contract Status Key
+
+	column 'Contract Status'
+		dataType: string
+		sourceColumn: Contract Status
+
+	column 'Contract Status Category'
+		dataType: string
+		sourceColumn: Contract Status Category
+
+	column 'Contract Status Long Name'
+		dataType: string
+		sourceColumn: Contract Status Long Name
+
+	column 'Contract Status Is Active'
+		dataType: boolean
+		sourceColumn: Contract Status Is Active
+
+	column 'Contract Status Group'
+		dataType: string
+		sourceColumn: Contract Status Group
+
+	column 'Contract Status Parent Code'
+		dataType: string
+		sourceColumn: Contract Status Parent Code
+
+	column 'Contract Status Status'
+		dataType: string
+		sourceColumn: Contract Status Status
+
+	column 'Contract Status Code'
+		dataType: string
+		sourceColumn: Contract Status Code
+
+	column 'Contract Status Description'
+		dataType: string
+		sourceColumn: Contract Status Description
+
+	partition 'Contract Status' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Contract Status Key", "Contract Status", "Contract Status Category", "Contract Status Long Name", "Contract Status Is Active", "Contract Status Group", "Contract Status Parent Code", "Contract Status Status", "Contract Status Code", "Contract Status Description"}, {})
+				in
+				    Source

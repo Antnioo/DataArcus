@@ -1,0 +1,34 @@
+table Lot
+
+	column 'Lot Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Lot Key
+
+	column Lot
+		dataType: string
+		sourceColumn: Lot
+
+	column 'Lot Level'
+		dataType: int64
+		sourceColumn: Lot Level
+
+	column 'Lot Region'
+		dataType: string
+		sourceColumn: Lot Region
+
+	column 'Lot Code'
+		dataType: string
+		sourceColumn: Lot Code
+
+	column 'Lot Description'
+		dataType: string
+		sourceColumn: Lot Description
+
+	partition Lot = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Lot Key", "Lot", "Lot Level", "Lot Region", "Lot Code", "Lot Description"}, {})
+				in
+				    Source

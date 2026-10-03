@@ -1,0 +1,38 @@
+table 'Customer Tier'
+
+	column 'Customer Tier Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Customer Tier Key
+
+	column 'Customer Tier'
+		dataType: string
+		sourceColumn: Customer Tier
+
+	column 'Customer Tier Short Name'
+		dataType: string
+		sourceColumn: Customer Tier Short Name
+
+	column 'Customer Tier Category'
+		dataType: string
+		sourceColumn: Customer Tier Category
+
+	column 'Customer Tier Region'
+		dataType: string
+		sourceColumn: Customer Tier Region
+
+	column 'Customer Tier Code'
+		dataType: string
+		sourceColumn: Customer Tier Code
+
+	column 'Customer Tier Description'
+		dataType: string
+		sourceColumn: Customer Tier Description
+
+	partition 'Customer Tier' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Customer Tier Key", "Customer Tier", "Customer Tier Short Name", "Customer Tier Category", "Customer Tier Region", "Customer Tier Code", "Customer Tier Description"}, {})
+				in
+				    Source

@@ -1,0 +1,58 @@
+table 'Order Status'
+
+	column 'Order Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Order Status Key
+
+	column 'Order Status'
+		dataType: string
+		sourceColumn: Order Status
+
+	column 'Order Status Valid From'
+		dataType: dateTime
+		sourceColumn: Order Status Valid From
+
+	column 'Order Status Code'
+		dataType: string
+		sourceColumn: Order Status Code
+
+	column 'Order Status Description'
+		dataType: string
+		sourceColumn: Order Status Description
+
+	column 'Order Status Group'
+		dataType: string
+		sourceColumn: Order Status Group
+
+	column 'Order Status Region'
+		dataType: string
+		sourceColumn: Order Status Region
+
+	column 'Order Status Category'
+		dataType: string
+		sourceColumn: Order Status Category
+
+	column 'Order Status Valid To'
+		dataType: dateTime
+		sourceColumn: Order Status Valid To
+
+	column 'Order Status Short Name'
+		dataType: string
+		sourceColumn: Order Status Short Name
+
+	column 'Order Status Type'
+		dataType: string
+		sourceColumn: Order Status Type
+
+	column 'Order Status Status'
+		dataType: string
+		sourceColumn: Order Status Status
+
+	partition 'Order Status' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Order Status Key", "Order Status", "Order Status Valid From", "Order Status Code", "Order Status Description", "Order Status Group", "Order Status Region", "Order Status Category", "Order Status Valid To", "Order Status Short Name", "Order Status Type", "Order Status Status"}, {})
+				in
+				    Source

@@ -1,0 +1,46 @@
+table 'Delivery Term'
+
+	column 'Delivery Term Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Delivery Term Key
+
+	column 'Delivery Term'
+		dataType: string
+		sourceColumn: Delivery Term
+
+	column 'Delivery Term Type'
+		dataType: string
+		sourceColumn: Delivery Term Type
+
+	column 'Delivery Term Description'
+		dataType: string
+		sourceColumn: Delivery Term Description
+
+	column 'Delivery Term Status'
+		dataType: string
+		sourceColumn: Delivery Term Status
+
+	column 'Delivery Term Group'
+		dataType: string
+		sourceColumn: Delivery Term Group
+
+	column 'Delivery Term Sort Order'
+		dataType: int64
+		sourceColumn: Delivery Term Sort Order
+
+	column 'Delivery Term Code'
+		dataType: string
+		sourceColumn: Delivery Term Code
+
+	column 'Delivery Term Category'
+		dataType: string
+		sourceColumn: Delivery Term Category
+
+	partition 'Delivery Term' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Delivery Term Key", "Delivery Term", "Delivery Term Type", "Delivery Term Description", "Delivery Term Status", "Delivery Term Group", "Delivery Term Sort Order", "Delivery Term Code", "Delivery Term Category"}, {})
+				in
+				    Source

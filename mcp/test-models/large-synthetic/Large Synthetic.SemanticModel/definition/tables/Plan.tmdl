@@ -1,0 +1,54 @@
+table Plan
+
+	column 'Plan Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Plan Key
+
+	column Plan
+		dataType: string
+		sourceColumn: Plan
+
+	column 'Plan Long Name'
+		dataType: string
+		sourceColumn: Plan Long Name
+
+	column 'Plan Parent Code'
+		dataType: string
+		sourceColumn: Plan Parent Code
+
+	column 'Plan Code'
+		dataType: string
+		sourceColumn: Plan Code
+
+	column 'Plan Short Name'
+		dataType: string
+		sourceColumn: Plan Short Name
+
+	column 'Plan Description'
+		dataType: string
+		sourceColumn: Plan Description
+
+	column 'Plan Created By'
+		dataType: string
+		sourceColumn: Plan Created By
+
+	column 'Plan Sort Order'
+		dataType: int64
+		sourceColumn: Plan Sort Order
+
+	column 'Plan Group'
+		dataType: string
+		sourceColumn: Plan Group
+
+	column 'Plan Category'
+		dataType: string
+		sourceColumn: Plan Category
+
+	partition Plan = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Plan Key", "Plan", "Plan Long Name", "Plan Parent Code", "Plan Code", "Plan Short Name", "Plan Description", "Plan Created By", "Plan Sort Order", "Plan Group", "Plan Category"}, {})
+				in
+				    Source

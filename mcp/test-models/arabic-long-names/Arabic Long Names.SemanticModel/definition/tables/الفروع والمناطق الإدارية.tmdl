@@ -1,0 +1,26 @@
+table 'الفروع والمناطق الإدارية'
+
+	column 'رمز الفرع'
+		dataType: int64
+		isHidden
+		sourceColumn: رمز الفرع
+
+	column 'اسم الفرع التجاري الرئيسي'
+		dataType: string
+		sourceColumn: اسم الفرع التجاري الرئيسي
+
+	column 'المنطقة الإدارية والمحافظة التابعة لها'
+		dataType: string
+		sourceColumn: المنطقة الإدارية والمحافظة التابعة لها
+
+	column 'فئة الفرع حسب حجم المساحة التجارية'
+		dataType: string
+		sourceColumn: فئة الفرع حسب حجم المساحة التجارية
+
+	partition 'الفروع والمناطق الإدارية' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"رمز الفرع", "اسم الفرع التجاري الرئيسي", "المنطقة الإدارية والمحافظة التابعة لها", "فئة الفرع حسب حجم المساحة التجارية"}, {})
+				in
+				    Source

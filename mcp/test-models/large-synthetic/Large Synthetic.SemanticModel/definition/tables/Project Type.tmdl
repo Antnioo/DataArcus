@@ -1,0 +1,38 @@
+table 'Project Type'
+
+	column 'Project Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Project Type Key
+
+	column 'Project Type'
+		dataType: string
+		sourceColumn: Project Type
+
+	column 'Project Type Category'
+		dataType: string
+		sourceColumn: Project Type Category
+
+	column 'Project Type Owner'
+		dataType: string
+		sourceColumn: Project Type Owner
+
+	column 'Project Type Rank'
+		dataType: int64
+		sourceColumn: Project Type Rank
+
+	column 'Project Type Code'
+		dataType: string
+		sourceColumn: Project Type Code
+
+	column 'Project Type Description'
+		dataType: string
+		sourceColumn: Project Type Description
+
+	partition 'Project Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Project Type Key", "Project Type", "Project Type Category", "Project Type Owner", "Project Type Rank", "Project Type Code", "Project Type Description"}, {})
+				in
+				    Source

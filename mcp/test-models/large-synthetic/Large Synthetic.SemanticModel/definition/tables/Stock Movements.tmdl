@@ -1,0 +1,138 @@
+table 'Stock Movements'
+
+	measure 'Stock Movements Total Tax Amount' = SUM ( 'Stock Movements'[Tax Amount] )
+		formatString: #,0
+
+	measure 'Stock Movements Average Tax Amount' = AVERAGE ( 'Stock Movements'[Tax Amount] )
+		displayFolder: Inventory
+
+	measure 'Stock Movements Count' = COUNTROWS ( 'Stock Movements' )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Stock Movements Total Tax Amount LY' = CALCULATE ( [Stock Movements Total Tax Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Stock Movements Total Tax Amount YoY %' = DIVIDE ( [Stock Movements Total Tax Amount] - [Stock Movements Total Tax Amount LY], [Stock Movements Total Tax Amount LY] )
+		formatString: 0.0%
+		displayFolder: Inventory
+
+	measure 'Stock Movements Total Tax Amount YTD' = TOTALYTD ( [Stock Movements Total Tax Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Stock Movements Max Tax Amount' = MAX ( 'Stock Movements'[Tax Amount] )
+		displayFolder: Inventory
+
+	measure 'Stock Movements Tax Amount Share %' = DIVIDE ( [Stock Movements Total Tax Amount], CALCULATE ( [Stock Movements Total Tax Amount], ALL ( 'Stock Movements' ) ) )
+		displayFolder: Inventory
+
+	measure 'Stock Movements Total Net Amount' = SUM ( 'Stock Movements'[Net Amount] )
+		formatString: #,0
+
+	measure 'Stock Movements Average Net Amount' = AVERAGE ( 'Stock Movements'[Net Amount] )
+		formatString: #,0.00
+		displayFolder: Inventory
+
+	/// Made-up measure for the large test model (Inventory).
+	measure 'Stock Movements Total Net Amount LY' = CALCULATE ( [Stock Movements Total Net Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Inventory
+
+	measure 'Stock Movements Total Net Amount YoY %' = DIVIDE ( [Stock Movements Total Net Amount] - [Stock Movements Total Net Amount LY], [Stock Movements Total Net Amount LY] )
+		formatString: 0.0%
+		displayFolder: Inventory
+
+	/// Made-up measure for the large test model (Inventory).
+	measure 'Stock Movements Total Net Amount YTD' = TOTALYTD ( [Stock Movements Total Net Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Inventory
+
+	/// Made-up measure for the large test model (Inventory).
+	measure 'Stock Movements Max Net Amount' = MAX ( 'Stock Movements'[Net Amount] )
+
+	measure 'Stock Movements Net Amount Share %' = DIVIDE ( [Stock Movements Total Net Amount], CALCULATE ( [Stock Movements Total Net Amount], ALL ( 'Stock Movements' ) ) )
+		displayFolder: Inventory
+
+	column 'Stock Movement Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Stock Movement Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Inventory Lookup 021 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Inventory Lookup 021 Key
+
+	column 'Unit Of Measure Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Unit Of Measure Key
+
+	column 'Lot Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Lot Key
+
+	column 'Warehouse Key'
+		dataType: int64
+		sourceColumn: Warehouse Key
+
+	column 'Item Status Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Item Status Key
+
+	column 'Tax Amount'
+		dataType: decimal
+		sourceColumn: Tax Amount
+
+	column 'Net Amount'
+		dataType: decimal
+		isHidden
+		sourceColumn: Net Amount
+
+	column Amount
+		dataType: double
+		isHidden
+		sourceColumn: Amount
+
+	column Discount
+		dataType: double
+		sourceColumn: Discount
+
+	column Score
+		dataType: double
+		isHidden
+		sourceColumn: Score
+
+	column Units
+		dataType: int64
+		isHidden
+		sourceColumn: Units
+
+	column Count
+		dataType: int64
+		sourceColumn: Count
+
+	column 'Weight Kg'
+		dataType: decimal
+		sourceColumn: Weight Kg
+
+	column Hours
+		dataType: decimal
+		sourceColumn: Hours
+
+	partition 'Stock Movements' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Stock Movement Id", "Date", "Inventory Lookup 021 Key", "Unit Of Measure Key", "Lot Key", "Warehouse Key", "Item Status Key", "Tax Amount", "Net Amount", "Amount", "Discount", "Score", "Units", "Count", "Weight Kg", "Hours"}, {})
+				in
+				    Source

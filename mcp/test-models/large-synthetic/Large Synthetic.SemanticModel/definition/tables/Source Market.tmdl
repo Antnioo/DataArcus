@@ -1,0 +1,46 @@
+table 'Source Market'
+
+	column 'Source Market Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Source Market Key
+
+	column 'Source Market'
+		dataType: string
+		sourceColumn: Source Market
+
+	column 'Source Market Owner'
+		dataType: string
+		sourceColumn: Source Market Owner
+
+	column 'Source Market Long Name'
+		dataType: string
+		sourceColumn: Source Market Long Name
+
+	column 'Source Market Valid To'
+		dataType: dateTime
+		sourceColumn: Source Market Valid To
+
+	column 'Source Market Parent Code'
+		dataType: string
+		sourceColumn: Source Market Parent Code
+
+	column 'Source Market Code'
+		dataType: string
+		sourceColumn: Source Market Code
+
+	column 'Source Market Description'
+		dataType: string
+		sourceColumn: Source Market Description
+
+	column 'Source Market Group'
+		dataType: string
+		sourceColumn: Source Market Group
+
+	partition 'Source Market' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Source Market Key", "Source Market", "Source Market Owner", "Source Market Long Name", "Source Market Valid To", "Source Market Parent Code", "Source Market Code", "Source Market Description", "Source Market Group"}, {})
+				in
+				    Source

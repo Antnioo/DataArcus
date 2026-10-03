@@ -1,0 +1,50 @@
+table Lease
+
+	column 'Lease Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Lease Key
+
+	column Lease
+		dataType: string
+		sourceColumn: Lease
+
+	column 'Lease Status'
+		dataType: string
+		sourceColumn: Lease Status
+
+	column 'Lease Category'
+		dataType: string
+		sourceColumn: Lease Category
+
+	column 'Lease Code'
+		dataType: string
+		sourceColumn: Lease Code
+
+	column 'Lease Rank'
+		dataType: int64
+		sourceColumn: Lease Rank
+
+	column 'Lease Type'
+		dataType: string
+		sourceColumn: Lease Type
+
+	column 'Lease Short Name'
+		dataType: string
+		sourceColumn: Lease Short Name
+
+	column 'Lease Description'
+		dataType: string
+		sourceColumn: Lease Description
+
+	column 'Lease Group'
+		dataType: string
+		sourceColumn: Lease Group
+
+	partition Lease = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Lease Key", "Lease", "Lease Status", "Lease Category", "Lease Code", "Lease Rank", "Lease Type", "Lease Short Name", "Lease Description", "Lease Group"}, {})
+				in
+				    Source

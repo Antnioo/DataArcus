@@ -1,0 +1,54 @@
+table 'Room Type'
+
+	column 'Room Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Room Type Key
+
+	column 'Room Type'
+		dataType: string
+		sourceColumn: Room Type
+
+	column 'Room Type Code'
+		dataType: string
+		sourceColumn: Room Type Code
+
+	column 'Room Type Description'
+		dataType: string
+		sourceColumn: Room Type Description
+
+	column 'Room Type Valid To'
+		dataType: dateTime
+		sourceColumn: Room Type Valid To
+
+	column 'Room Type Group'
+		dataType: string
+		sourceColumn: Room Type Group
+
+	column 'Room Type Status'
+		dataType: string
+		sourceColumn: Room Type Status
+
+	column 'Room Type Short Name'
+		dataType: string
+		sourceColumn: Room Type Short Name
+
+	column 'Room Type External Id'
+		dataType: string
+		sourceColumn: Room Type External Id
+
+	column 'Room Type Category'
+		dataType: string
+		sourceColumn: Room Type Category
+
+	column 'Room Type Type'
+		dataType: string
+		sourceColumn: Room Type Type
+
+	partition 'Room Type' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Room Type Key", "Room Type", "Room Type Code", "Room Type Description", "Room Type Valid To", "Room Type Group", "Room Type Status", "Room Type Short Name", "Room Type External Id", "Room Type Category", "Room Type Type"}, {})
+				in
+				    Source

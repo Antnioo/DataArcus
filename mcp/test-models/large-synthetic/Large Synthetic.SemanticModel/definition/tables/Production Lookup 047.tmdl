@@ -1,0 +1,46 @@
+table 'Production Lookup 047'
+
+	column 'Production Lookup 047 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Production Lookup 047 Key
+
+	column 'Production Lookup 047'
+		dataType: string
+		sourceColumn: Production Lookup 047
+
+	column 'Production Lookup 047 Parent Code'
+		dataType: string
+		sourceColumn: Production Lookup 047 Parent Code
+
+	column 'Production Lookup 047 Level'
+		dataType: int64
+		sourceColumn: Production Lookup 047 Level
+
+	column 'Production Lookup 047 Sort Order'
+		dataType: int64
+		sourceColumn: Production Lookup 047 Sort Order
+
+	column 'Production Lookup 047 Code'
+		dataType: string
+		sourceColumn: Production Lookup 047 Code
+
+	column 'Production Lookup 047 Is Active'
+		dataType: boolean
+		sourceColumn: Production Lookup 047 Is Active
+
+	column 'Production Lookup 047 Description'
+		dataType: string
+		sourceColumn: Production Lookup 047 Description
+
+	column 'Production Lookup 047 Group'
+		dataType: string
+		sourceColumn: Production Lookup 047 Group
+
+	partition 'Production Lookup 047' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Production Lookup 047 Key", "Production Lookup 047", "Production Lookup 047 Parent Code", "Production Lookup 047 Level", "Production Lookup 047 Sort Order", "Production Lookup 047 Code", "Production Lookup 047 Is Active", "Production Lookup 047 Description", "Production Lookup 047 Group"}, {})
+				in
+				    Source

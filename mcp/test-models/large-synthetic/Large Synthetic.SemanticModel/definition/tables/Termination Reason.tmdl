@@ -1,0 +1,46 @@
+table 'Termination Reason'
+
+	column 'Termination Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Termination Reason Key
+
+	column 'Termination Reason'
+		dataType: string
+		sourceColumn: Termination Reason
+
+	column 'Termination Reason Rank'
+		dataType: int64
+		sourceColumn: Termination Reason Rank
+
+	column 'Termination Reason Description'
+		dataType: string
+		sourceColumn: Termination Reason Description
+
+	column 'Termination Reason Code'
+		dataType: string
+		sourceColumn: Termination Reason Code
+
+	column 'Termination Reason Valid To'
+		dataType: dateTime
+		sourceColumn: Termination Reason Valid To
+
+	column 'Termination Reason Parent Code'
+		dataType: string
+		sourceColumn: Termination Reason Parent Code
+
+	column 'Termination Reason Group'
+		dataType: string
+		sourceColumn: Termination Reason Group
+
+	column 'Termination Reason Category'
+		dataType: string
+		sourceColumn: Termination Reason Category
+
+	partition 'Termination Reason' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Termination Reason Key", "Termination Reason", "Termination Reason Rank", "Termination Reason Description", "Termination Reason Code", "Termination Reason Valid To", "Termination Reason Parent Code", "Termination Reason Group", "Termination Reason Category"}, {})
+				in
+				    Source

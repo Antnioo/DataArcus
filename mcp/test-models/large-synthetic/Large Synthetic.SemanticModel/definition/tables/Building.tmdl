@@ -1,0 +1,54 @@
+table Building
+
+	column 'Building Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Building Key
+
+	column Building
+		dataType: string
+		sourceColumn: Building
+
+	column 'Building Long Name'
+		dataType: string
+		sourceColumn: Building Long Name
+
+	column 'Building Is Active'
+		dataType: boolean
+		sourceColumn: Building Is Active
+
+	column 'Building Parent Code'
+		dataType: string
+		sourceColumn: Building Parent Code
+
+	column 'Building Status'
+		dataType: string
+		sourceColumn: Building Status
+
+	column 'Building Notes'
+		dataType: string
+		sourceColumn: Building Notes
+
+	column 'Building Sort Order'
+		dataType: int64
+		sourceColumn: Building Sort Order
+
+	column 'Building Rank'
+		dataType: int64
+		sourceColumn: Building Rank
+
+	column 'Building Code'
+		dataType: string
+		sourceColumn: Building Code
+
+	column 'Building Description'
+		dataType: string
+		sourceColumn: Building Description
+
+	partition Building = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Building Key", "Building", "Building Long Name", "Building Is Active", "Building Parent Code", "Building Status", "Building Notes", "Building Sort Order", "Building Rank", "Building Code", "Building Description"}, {})
+				in
+				    Source

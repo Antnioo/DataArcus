@@ -1,0 +1,135 @@
+table 'Subscription Events'
+
+	measure 'Subscription Events Total Hours' = SUM ( 'Subscription Events'[Hours] )
+		displayFolder: Commerce
+
+	measure 'Subscription Events Average Hours' = AVERAGE ( 'Subscription Events'[Hours] )
+		formatString: #,0.00
+		displayFolder: Commerce
+
+	measure 'Subscription Events Count' = COUNTROWS ( 'Subscription Events' )
+
+	measure 'Subscription Events Total Hours LY' = CALCULATE ( [Subscription Events Total Hours], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		displayFolder: Commerce
+
+	measure 'Subscription Events Total Hours YoY %' = DIVIDE ( [Subscription Events Total Hours] - [Subscription Events Total Hours LY], [Subscription Events Total Hours LY] )
+		formatString: 0.0%
+		displayFolder: Commerce
+
+	measure 'Subscription Events Total Hours YTD' = TOTALYTD ( [Subscription Events Total Hours], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Subscription Events Max Hours' = MAX ( 'Subscription Events'[Hours] )
+		displayFolder: Commerce
+
+	measure 'Subscription Events Hours Share %' = DIVIDE ( [Subscription Events Total Hours], CALCULATE ( [Subscription Events Total Hours], ALL ( 'Subscription Events' ) ) )
+		displayFolder: Commerce
+
+	measure 'Subscription Events Total Value' = SUM ( 'Subscription Events'[Value] )
+		formatString: #,0
+
+	measure 'Subscription Events Average Value' = AVERAGE ( 'Subscription Events'[Value] )
+		formatString: #,0.00
+
+	measure 'Subscription Events Total Value LY' = CALCULATE ( [Subscription Events Total Value], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Commerce
+
+	measure 'Subscription Events Total Value YoY %' = DIVIDE ( [Subscription Events Total Value] - [Subscription Events Total Value LY], [Subscription Events Total Value LY] )
+		formatString: 0.0%
+		displayFolder: Commerce
+
+	/// Made-up measure for the large test model (Commerce).
+	measure 'Subscription Events Total Value YTD' = TOTALYTD ( [Subscription Events Total Value], 'Calendar'[Date] )
+
+	measure 'Subscription Events Max Value' = MAX ( 'Subscription Events'[Value] )
+		displayFolder: Commerce
+
+	measure 'Subscription Events Value Share %' = DIVIDE ( [Subscription Events Total Value], CALCULATE ( [Subscription Events Total Value], ALL ( 'Subscription Events' ) ) )
+		displayFolder: Commerce
+
+	column 'Subscription Event Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Subscription Event Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Referrer Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Referrer Key
+
+	column 'Churn Reason Key'
+		dataType: int64
+		sourceColumn: Churn Reason Key
+
+	column 'Commerce Lookup 018 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Commerce Lookup 018 Key
+
+	column 'Customer Segment Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Customer Segment Key
+
+	column 'Commerce Lookup 042 Key'
+		dataType: int64
+		sourceColumn: Commerce Lookup 042 Key
+
+	column 'Browser Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Browser Key
+
+	column Hours
+		dataType: double
+		isHidden
+		sourceColumn: Hours
+
+	column Value
+		dataType: double
+		sourceColumn: Value
+
+	column 'Weight Kg'
+		dataType: decimal
+		isHidden
+		sourceColumn: Weight Kg
+
+	column Quantity
+		dataType: int64
+		isHidden
+		sourceColumn: Quantity
+
+	column Discount
+		dataType: double
+		sourceColumn: Discount
+
+	column Cost
+		dataType: double
+		sourceColumn: Cost
+
+	column 'Tax Amount'
+		dataType: decimal
+		sourceColumn: Tax Amount
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column 'Net Amount'
+		dataType: double
+		sourceColumn: Net Amount
+
+	partition 'Subscription Events' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Subscription Event Id", "Date", "Referrer Key", "Churn Reason Key", "Commerce Lookup 018 Key", "Customer Segment Key", "Commerce Lookup 042 Key", "Browser Key", "Hours", "Value", "Weight Kg", "Quantity", "Discount", "Cost", "Tax Amount", "Units", "Net Amount"}, {})
+				in
+				    Source

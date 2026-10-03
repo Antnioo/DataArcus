@@ -1,0 +1,38 @@
+table Queue
+
+	column 'Queue Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Queue Key
+
+	column Queue
+		dataType: string
+		sourceColumn: Queue
+
+	column 'Queue Level'
+		dataType: int64
+		sourceColumn: Queue Level
+
+	column 'Queue Description'
+		dataType: string
+		sourceColumn: Queue Description
+
+	column 'Queue Is Active'
+		dataType: boolean
+		sourceColumn: Queue Is Active
+
+	column 'Queue Code'
+		dataType: string
+		sourceColumn: Queue Code
+
+	column 'Queue Group'
+		dataType: string
+		sourceColumn: Queue Group
+
+	partition Queue = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Queue Key", "Queue", "Queue Level", "Queue Description", "Queue Is Active", "Queue Code", "Queue Group"}, {})
+				in
+				    Source

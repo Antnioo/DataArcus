@@ -1,0 +1,38 @@
+table 'Profit Center'
+
+	column 'Profit Center Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Profit Center Key
+
+	column 'Profit Center'
+		dataType: string
+		sourceColumn: Profit Center
+
+	column 'Profit Center Level'
+		dataType: int64
+		sourceColumn: Profit Center Level
+
+	column 'Profit Center Code'
+		dataType: string
+		sourceColumn: Profit Center Code
+
+	column 'Profit Center Is Active'
+		dataType: boolean
+		sourceColumn: Profit Center Is Active
+
+	column 'Profit Center Description'
+		dataType: string
+		sourceColumn: Profit Center Description
+
+	column 'Profit Center Group'
+		dataType: string
+		sourceColumn: Profit Center Group
+
+	partition 'Profit Center' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Profit Center Key", "Profit Center", "Profit Center Level", "Profit Center Code", "Profit Center Is Active", "Profit Center Description", "Profit Center Group"}, {})
+				in
+				    Source

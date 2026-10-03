@@ -1,0 +1,58 @@
+table Project
+
+	column 'Project Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Project Key
+
+	column Project
+		dataType: string
+		sourceColumn: Project
+
+	column 'Project Created By'
+		dataType: string
+		sourceColumn: Project Created By
+
+	column 'Project External Id'
+		dataType: string
+		sourceColumn: Project External Id
+
+	column 'Project Long Name'
+		dataType: string
+		sourceColumn: Project Long Name
+
+	column 'Project Rank'
+		dataType: int64
+		sourceColumn: Project Rank
+
+	column 'Project Short Name'
+		dataType: string
+		sourceColumn: Project Short Name
+
+	column 'Project Owner'
+		dataType: string
+		sourceColumn: Project Owner
+
+	column 'Project Group'
+		dataType: string
+		sourceColumn: Project Group
+
+	column 'Project Notes'
+		dataType: string
+		sourceColumn: Project Notes
+
+	column 'Project Code'
+		dataType: string
+		sourceColumn: Project Code
+
+	column 'Project Description'
+		dataType: string
+		sourceColumn: Project Description
+
+	partition Project = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Project Key", "Project", "Project Created By", "Project External Id", "Project Long Name", "Project Rank", "Project Short Name", "Project Owner", "Project Group", "Project Notes", "Project Code", "Project Description"}, {})
+				in
+				    Source

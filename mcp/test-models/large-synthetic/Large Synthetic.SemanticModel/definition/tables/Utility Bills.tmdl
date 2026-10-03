@@ -1,0 +1,132 @@
+table 'Utility Bills'
+
+	measure 'Utility Bills Total Margin' = SUM ( 'Utility Bills'[Margin] )
+		formatString: #,0
+
+	measure 'Utility Bills Average Margin' = AVERAGE ( 'Utility Bills'[Margin] )
+
+	/// Made-up measure for the large test model (Facilities).
+	measure 'Utility Bills Count' = COUNTROWS ( 'Utility Bills' )
+		formatString: #,0
+		displayFolder: Facilities
+
+	measure 'Utility Bills Total Margin LY' = CALCULATE ( [Utility Bills Total Margin], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+
+	measure 'Utility Bills Total Margin YoY %' = DIVIDE ( [Utility Bills Total Margin] - [Utility Bills Total Margin LY], [Utility Bills Total Margin LY] )
+		formatString: 0.0%
+		displayFolder: Facilities
+
+	/// Made-up measure for the large test model (Facilities).
+	measure 'Utility Bills Total Margin YTD' = TOTALYTD ( [Utility Bills Total Margin], 'Calendar'[Date] )
+		displayFolder: Facilities
+
+	measure 'Utility Bills Max Margin' = MAX ( 'Utility Bills'[Margin] )
+
+	measure 'Utility Bills Margin Share %' = DIVIDE ( [Utility Bills Total Margin], CALCULATE ( [Utility Bills Total Margin], ALL ( 'Utility Bills' ) ) )
+		displayFolder: Facilities
+
+	measure 'Utility Bills Total Cost' = SUM ( 'Utility Bills'[Cost] )
+		formatString: #,0
+		displayFolder: Facilities
+
+	measure 'Utility Bills Average Cost' = AVERAGE ( 'Utility Bills'[Cost] )
+
+	measure 'Utility Bills Total Cost LY' = CALCULATE ( [Utility Bills Total Cost], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Facilities
+
+	measure 'Utility Bills Total Cost YoY %' = DIVIDE ( [Utility Bills Total Cost] - [Utility Bills Total Cost LY], [Utility Bills Total Cost LY] )
+		formatString: 0.0%
+		displayFolder: Facilities
+
+	measure 'Utility Bills Total Cost YTD' = TOTALYTD ( [Utility Bills Total Cost], 'Calendar'[Date] )
+		displayFolder: Facilities
+
+	/// Made-up measure for the large test model (Facilities).
+	measure 'Utility Bills Max Cost' = MAX ( 'Utility Bills'[Cost] )
+		displayFolder: Facilities
+
+	/// Made-up measure for the large test model (Facilities).
+	measure 'Utility Bills Cost Share %' = DIVIDE ( [Utility Bills Total Cost], CALCULATE ( [Utility Bills Total Cost], ALL ( 'Utility Bills' ) ) )
+		displayFolder: Facilities
+
+	column 'Utility Bill Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Utility Bill Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Building Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Building Key
+
+	column 'Inspection Type Key'
+		dataType: int64
+		sourceColumn: Inspection Type Key
+
+	column 'Floor Key'
+		dataType: int64
+		sourceColumn: Floor Key
+
+	column 'Asset Key'
+		dataType: int64
+		sourceColumn: Asset Key
+
+	column 'Occupancy Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Occupancy Type Key
+
+	column Margin
+		dataType: double
+		sourceColumn: Margin
+
+	column Cost
+		dataType: decimal
+		isHidden
+		sourceColumn: Cost
+
+	column 'Duration Minutes'
+		dataType: double
+		sourceColumn: Duration Minutes
+
+	column 'Weight Kg'
+		dataType: decimal
+		isHidden
+		sourceColumn: Weight Kg
+
+	column Count
+		dataType: int64
+		sourceColumn: Count
+
+	column Units
+		dataType: int64
+		sourceColumn: Units
+
+	column Discount
+		dataType: double
+		isHidden
+		sourceColumn: Discount
+
+	column Value
+		dataType: decimal
+		isHidden
+		sourceColumn: Value
+
+	column Score
+		dataType: decimal
+		isHidden
+		sourceColumn: Score
+
+	partition 'Utility Bills' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Utility Bill Id", "Date", "Building Key", "Inspection Type Key", "Floor Key", "Asset Key", "Occupancy Type Key", "Margin", "Cost", "Duration Minutes", "Weight Kg", "Count", "Units", "Discount", "Value", "Score"}, {})
+				in
+				    Source

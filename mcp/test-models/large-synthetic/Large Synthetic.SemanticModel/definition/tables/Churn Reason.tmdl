@@ -1,0 +1,54 @@
+table 'Churn Reason'
+
+	column 'Churn Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Churn Reason Key
+
+	column 'Churn Reason'
+		dataType: string
+		sourceColumn: Churn Reason
+
+	column 'Churn Reason Short Name'
+		dataType: string
+		sourceColumn: Churn Reason Short Name
+
+	column 'Churn Reason Type'
+		dataType: string
+		sourceColumn: Churn Reason Type
+
+	column 'Churn Reason Description'
+		dataType: string
+		sourceColumn: Churn Reason Description
+
+	column 'Churn Reason Created By'
+		dataType: string
+		sourceColumn: Churn Reason Created By
+
+	column 'Churn Reason External Id'
+		dataType: string
+		sourceColumn: Churn Reason External Id
+
+	column 'Churn Reason Notes'
+		dataType: string
+		sourceColumn: Churn Reason Notes
+
+	column 'Churn Reason Status'
+		dataType: string
+		sourceColumn: Churn Reason Status
+
+	column 'Churn Reason Code'
+		dataType: string
+		sourceColumn: Churn Reason Code
+
+	column 'Churn Reason Group'
+		dataType: string
+		sourceColumn: Churn Reason Group
+
+	partition 'Churn Reason' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Churn Reason Key", "Churn Reason", "Churn Reason Short Name", "Churn Reason Type", "Churn Reason Description", "Churn Reason Created By", "Churn Reason External Id", "Churn Reason Notes", "Churn Reason Status", "Churn Reason Code", "Churn Reason Group"}, {})
+				in
+				    Source

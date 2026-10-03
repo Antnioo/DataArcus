@@ -1,0 +1,30 @@
+table 'Service Lookup 033'
+
+	column 'Service Lookup 033 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Service Lookup 033 Key
+
+	column 'Service Lookup 033'
+		dataType: string
+		sourceColumn: Service Lookup 033
+
+	column 'Service Lookup 033 Category'
+		dataType: string
+		sourceColumn: Service Lookup 033 Category
+
+	column 'Service Lookup 033 Group'
+		dataType: string
+		sourceColumn: Service Lookup 033 Group
+
+	column 'Service Lookup 033 Code'
+		dataType: string
+		sourceColumn: Service Lookup 033 Code
+
+	partition 'Service Lookup 033' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Service Lookup 033 Key", "Service Lookup 033", "Service Lookup 033 Category", "Service Lookup 033 Group", "Service Lookup 033 Code"}, {})
+				in
+				    Source

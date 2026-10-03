@@ -1,0 +1,46 @@
+table Zone
+
+	column 'Zone Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Zone Key
+
+	column Zone
+		dataType: string
+		sourceColumn: Zone
+
+	column 'Zone Long Name'
+		dataType: string
+		sourceColumn: Zone Long Name
+
+	column 'Zone Sort Order'
+		dataType: int64
+		sourceColumn: Zone Sort Order
+
+	column 'Zone Owner'
+		dataType: string
+		sourceColumn: Zone Owner
+
+	column 'Zone Valid To'
+		dataType: dateTime
+		sourceColumn: Zone Valid To
+
+	column 'Zone Level'
+		dataType: int64
+		sourceColumn: Zone Level
+
+	column 'Zone Code'
+		dataType: string
+		sourceColumn: Zone Code
+
+	column 'Zone Description'
+		dataType: string
+		sourceColumn: Zone Description
+
+	partition Zone = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Zone Key", "Zone", "Zone Long Name", "Zone Sort Order", "Zone Owner", "Zone Valid To", "Zone Level", "Zone Code", "Zone Description"}, {})
+				in
+				    Source

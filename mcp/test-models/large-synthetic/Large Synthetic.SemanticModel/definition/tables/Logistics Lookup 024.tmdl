@@ -1,0 +1,30 @@
+table 'Logistics Lookup 024'
+
+	column 'Logistics Lookup 024 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Logistics Lookup 024 Key
+
+	column 'Logistics Lookup 024'
+		dataType: string
+		sourceColumn: Logistics Lookup 024
+
+	column 'Logistics Lookup 024 Status'
+		dataType: string
+		sourceColumn: Logistics Lookup 024 Status
+
+	column 'Logistics Lookup 024 Valid From'
+		dataType: dateTime
+		sourceColumn: Logistics Lookup 024 Valid From
+
+	column 'Logistics Lookup 024 Code'
+		dataType: string
+		sourceColumn: Logistics Lookup 024 Code
+
+	partition 'Logistics Lookup 024' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Logistics Lookup 024 Key", "Logistics Lookup 024", "Logistics Lookup 024 Status", "Logistics Lookup 024 Valid From", "Logistics Lookup 024 Code"}, {})
+				in
+				    Source

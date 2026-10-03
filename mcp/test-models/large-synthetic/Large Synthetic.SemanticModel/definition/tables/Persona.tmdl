@@ -1,0 +1,46 @@
+table Persona
+
+	column 'Persona Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Persona Key
+
+	column Persona
+		dataType: string
+		sourceColumn: Persona
+
+	column 'Persona Short Name'
+		dataType: string
+		sourceColumn: Persona Short Name
+
+	column 'Persona Is Active'
+		dataType: boolean
+		sourceColumn: Persona Is Active
+
+	column 'Persona Code'
+		dataType: string
+		sourceColumn: Persona Code
+
+	column 'Persona Valid To'
+		dataType: dateTime
+		sourceColumn: Persona Valid To
+
+	column 'Persona Valid From'
+		dataType: dateTime
+		sourceColumn: Persona Valid From
+
+	column 'Persona Description'
+		dataType: string
+		sourceColumn: Persona Description
+
+	column 'Persona Group'
+		dataType: string
+		sourceColumn: Persona Group
+
+	partition Persona = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Persona Key", "Persona", "Persona Short Name", "Persona Is Active", "Persona Code", "Persona Valid To", "Persona Valid From", "Persona Description", "Persona Group"}, {})
+				in
+				    Source

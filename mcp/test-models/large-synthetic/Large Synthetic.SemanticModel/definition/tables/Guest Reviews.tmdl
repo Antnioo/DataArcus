@@ -1,0 +1,104 @@
+table 'Guest Reviews'
+
+	measure 'Guest Reviews Total Hours' = SUM ( 'Guest Reviews'[Hours] )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	measure 'Guest Reviews Average Hours' = AVERAGE ( 'Guest Reviews'[Hours] )
+		formatString: #,0.00
+		displayFolder: Hospitality
+
+	measure 'Guest Reviews Count' = COUNTROWS ( 'Guest Reviews' )
+		formatString: #,0
+
+	/// Made-up measure for the large test model (Hospitality).
+	measure 'Guest Reviews Total Hours LY' = CALCULATE ( [Guest Reviews Total Hours], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	measure 'Guest Reviews Total Hours YoY %' = DIVIDE ( [Guest Reviews Total Hours] - [Guest Reviews Total Hours LY], [Guest Reviews Total Hours LY] )
+		displayFolder: Hospitality
+
+	measure 'Guest Reviews Total Hours YTD' = TOTALYTD ( [Guest Reviews Total Hours], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	measure 'Guest Reviews Max Hours' = MAX ( 'Guest Reviews'[Hours] )
+		displayFolder: Hospitality
+
+	measure 'Guest Reviews Hours Share %' = DIVIDE ( [Guest Reviews Total Hours], CALCULATE ( [Guest Reviews Total Hours], ALL ( 'Guest Reviews' ) ) )
+
+	measure 'Guest Reviews Total Tax Amount' = SUM ( 'Guest Reviews'[Tax Amount] )
+		formatString: #,0
+
+	measure 'Guest Reviews Average Tax Amount' = AVERAGE ( 'Guest Reviews'[Tax Amount] )
+		formatString: #,0.00
+		displayFolder: Hospitality
+
+	measure 'Guest Reviews Total Tax Amount LY' = CALCULATE ( [Guest Reviews Total Tax Amount], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+
+	measure 'Guest Reviews Total Tax Amount YoY %' = DIVIDE ( [Guest Reviews Total Tax Amount] - [Guest Reviews Total Tax Amount LY], [Guest Reviews Total Tax Amount LY] )
+		formatString: 0.0%
+
+	measure 'Guest Reviews Total Tax Amount YTD' = TOTALYTD ( [Guest Reviews Total Tax Amount], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Hospitality
+
+	measure 'Guest Reviews Max Tax Amount' = MAX ( 'Guest Reviews'[Tax Amount] )
+		displayFolder: Hospitality
+
+	measure 'Guest Reviews Tax Amount Share %' = DIVIDE ( [Guest Reviews Total Tax Amount], CALCULATE ( [Guest Reviews Total Tax Amount], ALL ( 'Guest Reviews' ) ) )
+
+	column 'Guest Review Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Guest Review Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Venue Key'
+		dataType: int64
+		sourceColumn: Venue Key
+
+	column 'Room Type Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Room Type Key
+
+	column 'Booking Channel Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Booking Channel Key
+
+	column 'Event Type Key'
+		dataType: int64
+		sourceColumn: Event Type Key
+
+	column Hours
+		dataType: decimal
+		sourceColumn: Hours
+
+	column 'Tax Amount'
+		dataType: double
+		sourceColumn: Tax Amount
+
+	column 'Weight Kg'
+		dataType: decimal
+		isHidden
+		sourceColumn: Weight Kg
+
+	column 'Net Amount'
+		dataType: decimal
+		sourceColumn: Net Amount
+
+	partition 'Guest Reviews' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Guest Review Id", "Date", "Venue Key", "Room Type Key", "Booking Channel Key", "Event Type Key", "Hours", "Tax Amount", "Weight Kg", "Net Amount"}, {})
+				in
+				    Source

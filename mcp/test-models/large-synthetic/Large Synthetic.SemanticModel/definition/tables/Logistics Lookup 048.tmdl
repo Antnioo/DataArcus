@@ -1,0 +1,50 @@
+table 'Logistics Lookup 048'
+
+	column 'Logistics Lookup 048 Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Logistics Lookup 048 Key
+
+	column 'Logistics Lookup 048'
+		dataType: string
+		sourceColumn: Logistics Lookup 048
+
+	column 'Logistics Lookup 048 Status'
+		dataType: string
+		sourceColumn: Logistics Lookup 048 Status
+
+	column 'Logistics Lookup 048 External Id'
+		dataType: string
+		sourceColumn: Logistics Lookup 048 External Id
+
+	column 'Logistics Lookup 048 Level'
+		dataType: int64
+		sourceColumn: Logistics Lookup 048 Level
+
+	column 'Logistics Lookup 048 Is Active'
+		dataType: boolean
+		sourceColumn: Logistics Lookup 048 Is Active
+
+	column 'Logistics Lookup 048 Category'
+		dataType: string
+		sourceColumn: Logistics Lookup 048 Category
+
+	column 'Logistics Lookup 048 Type'
+		dataType: string
+		sourceColumn: Logistics Lookup 048 Type
+
+	column 'Logistics Lookup 048 Notes'
+		dataType: string
+		sourceColumn: Logistics Lookup 048 Notes
+
+	column 'Logistics Lookup 048 Code'
+		dataType: string
+		sourceColumn: Logistics Lookup 048 Code
+
+	partition 'Logistics Lookup 048' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Logistics Lookup 048 Key", "Logistics Lookup 048", "Logistics Lookup 048 Status", "Logistics Lookup 048 External Id", "Logistics Lookup 048 Level", "Logistics Lookup 048 Is Active", "Logistics Lookup 048 Category", "Logistics Lookup 048 Type", "Logistics Lookup 048 Notes", "Logistics Lookup 048 Code"}, {})
+				in
+				    Source

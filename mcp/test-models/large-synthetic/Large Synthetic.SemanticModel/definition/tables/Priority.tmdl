@@ -1,0 +1,34 @@
+table Priority
+
+	column 'Priority Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Priority Key
+
+	column Priority
+		dataType: string
+		sourceColumn: Priority
+
+	column 'Priority Region'
+		dataType: string
+		sourceColumn: Priority Region
+
+	column 'Priority Valid To'
+		dataType: dateTime
+		sourceColumn: Priority Valid To
+
+	column 'Priority Code'
+		dataType: string
+		sourceColumn: Priority Code
+
+	column 'Priority Description'
+		dataType: string
+		sourceColumn: Priority Description
+
+	partition Priority = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Priority Key", "Priority", "Priority Region", "Priority Valid To", "Priority Code", "Priority Description"}, {})
+				in
+				    Source

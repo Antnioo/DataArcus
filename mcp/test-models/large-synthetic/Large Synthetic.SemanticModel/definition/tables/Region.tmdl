@@ -1,0 +1,38 @@
+table Region
+
+	column 'Region Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Region Key
+
+	column Region
+		dataType: string
+		sourceColumn: Region
+
+	column 'Region Code'
+		dataType: string
+		sourceColumn: Region Code
+
+	column 'Region Created By'
+		dataType: string
+		sourceColumn: Region Created By
+
+	column 'Region Description'
+		dataType: string
+		sourceColumn: Region Description
+
+	column 'Region Group'
+		dataType: string
+		sourceColumn: Region Group
+
+	column 'Region Category'
+		dataType: string
+		sourceColumn: Region Category
+
+	partition Region = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Region Key", "Region", "Region Code", "Region Created By", "Region Description", "Region Group", "Region Category"}, {})
+				in
+				    Source

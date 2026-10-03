@@ -1,0 +1,99 @@
+table 'Shipment Legs'
+
+	measure 'Shipment Legs Total Hours' = SUM ( 'Shipment Legs'[Hours] )
+		displayFolder: Logistics
+
+	measure 'Shipment Legs Average Hours' = AVERAGE ( 'Shipment Legs'[Hours] )
+		displayFolder: Logistics
+
+	measure 'Shipment Legs Count' = COUNTROWS ( 'Shipment Legs' )
+
+	measure 'Shipment Legs Total Hours LY' = CALCULATE ( [Shipment Legs Total Hours], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Shipment Legs Total Hours YoY %' = DIVIDE ( [Shipment Legs Total Hours] - [Shipment Legs Total Hours LY], [Shipment Legs Total Hours LY] )
+		formatString: 0.0%
+		displayFolder: Logistics
+
+	measure 'Shipment Legs Total Hours YTD' = TOTALYTD ( [Shipment Legs Total Hours], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Shipment Legs Max Hours' = MAX ( 'Shipment Legs'[Hours] )
+		displayFolder: Logistics
+
+	/// Made-up measure for the large test model (Logistics).
+	measure 'Shipment Legs Hours Share %' = DIVIDE ( [Shipment Legs Total Hours], CALCULATE ( [Shipment Legs Total Hours], ALL ( 'Shipment Legs' ) ) )
+
+	measure 'Shipment Legs Total Score' = SUM ( 'Shipment Legs'[Score] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Shipment Legs Average Score' = AVERAGE ( 'Shipment Legs'[Score] )
+		formatString: #,0.00
+		displayFolder: Logistics
+
+	measure 'Shipment Legs Total Score LY' = CALCULATE ( [Shipment Legs Total Score], SAMEPERIODLASTYEAR ( 'Calendar'[Date] ) )
+		formatString: #,0
+		displayFolder: Logistics
+
+	/// Made-up measure for the large test model (Logistics).
+	measure 'Shipment Legs Total Score YoY %' = DIVIDE ( [Shipment Legs Total Score] - [Shipment Legs Total Score LY], [Shipment Legs Total Score LY] )
+		formatString: 0.0%
+		displayFolder: Logistics
+
+	measure 'Shipment Legs Total Score YTD' = TOTALYTD ( [Shipment Legs Total Score], 'Calendar'[Date] )
+		formatString: #,0
+		displayFolder: Logistics
+
+	measure 'Shipment Legs Max Score' = MAX ( 'Shipment Legs'[Score] )
+		displayFolder: Logistics
+
+	measure 'Shipment Legs Score Share %' = DIVIDE ( [Shipment Legs Total Score], CALCULATE ( [Shipment Legs Total Score], ALL ( 'Shipment Legs' ) ) )
+		displayFolder: Logistics
+
+	column 'Shipment Leg Id'
+		dataType: int64
+		isHidden
+		sourceColumn: Shipment Leg Id
+
+	column Date
+		dataType: dateTime
+		isHidden
+		sourceColumn: Date
+
+	column 'Fleet Unit Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Fleet Unit Key
+
+	column 'Lead Status Key'
+		dataType: int64
+		sourceColumn: Lead Status Key
+
+	column Hours
+		dataType: double
+		sourceColumn: Hours
+
+	column Score
+		dataType: decimal
+		isHidden
+		sourceColumn: Score
+
+	column Cost
+		dataType: decimal
+		isHidden
+		sourceColumn: Cost
+
+	column 'Weight Kg'
+		dataType: decimal
+		sourceColumn: Weight Kg
+
+	partition 'Shipment Legs' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Shipment Leg Id", "Date", "Fleet Unit Key", "Lead Status Key", "Hours", "Score", "Cost", "Weight Kg"}, {})
+				in
+				    Source

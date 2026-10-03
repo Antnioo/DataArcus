@@ -1,0 +1,46 @@
+table Warehouse
+
+	column 'Warehouse Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Warehouse Key
+
+	column Warehouse
+		dataType: string
+		sourceColumn: Warehouse
+
+	column 'Warehouse Created By'
+		dataType: string
+		sourceColumn: Warehouse Created By
+
+	column 'Warehouse External Id'
+		dataType: string
+		sourceColumn: Warehouse External Id
+
+	column 'Warehouse Valid To'
+		dataType: dateTime
+		sourceColumn: Warehouse Valid To
+
+	column 'Warehouse Code'
+		dataType: string
+		sourceColumn: Warehouse Code
+
+	column 'Warehouse Rank'
+		dataType: int64
+		sourceColumn: Warehouse Rank
+
+	column 'Warehouse Description'
+		dataType: string
+		sourceColumn: Warehouse Description
+
+	column 'Warehouse Group'
+		dataType: string
+		sourceColumn: Warehouse Group
+
+	partition Warehouse = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Warehouse Key", "Warehouse", "Warehouse Created By", "Warehouse External Id", "Warehouse Valid To", "Warehouse Code", "Warehouse Rank", "Warehouse Description", "Warehouse Group"}, {})
+				in
+				    Source

@@ -1,0 +1,58 @@
+table 'ABC Class'
+
+	column 'ABC Class Key'
+		dataType: int64
+		isHidden
+		sourceColumn: ABC Class Key
+
+	column 'ABC Class'
+		dataType: string
+		sourceColumn: ABC Class
+
+	column 'ABC Class Category'
+		dataType: string
+		sourceColumn: ABC Class Category
+
+	column 'ABC Class Group'
+		dataType: string
+		sourceColumn: ABC Class Group
+
+	column 'ABC Class Type'
+		dataType: string
+		sourceColumn: ABC Class Type
+
+	column 'ABC Class Parent Code'
+		dataType: string
+		sourceColumn: ABC Class Parent Code
+
+	column 'ABC Class Notes'
+		dataType: string
+		sourceColumn: ABC Class Notes
+
+	column 'ABC Class Status'
+		dataType: string
+		sourceColumn: ABC Class Status
+
+	column 'ABC Class Description'
+		dataType: string
+		sourceColumn: ABC Class Description
+
+	column 'ABC Class Valid From'
+		dataType: dateTime
+		sourceColumn: ABC Class Valid From
+
+	column 'ABC Class Code'
+		dataType: string
+		sourceColumn: ABC Class Code
+
+	column 'ABC Class Owner'
+		dataType: string
+		sourceColumn: ABC Class Owner
+
+	partition 'ABC Class' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"ABC Class Key", "ABC Class", "ABC Class Category", "ABC Class Group", "ABC Class Type", "ABC Class Parent Code", "ABC Class Notes", "ABC Class Status", "ABC Class Description", "ABC Class Valid From", "ABC Class Code", "ABC Class Owner"}, {})
+				in
+				    Source

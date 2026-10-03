@@ -1,0 +1,46 @@
+table 'Return Reason'
+
+	column 'Return Reason Key'
+		dataType: int64
+		isHidden
+		sourceColumn: Return Reason Key
+
+	column 'Return Reason'
+		dataType: string
+		sourceColumn: Return Reason
+
+	column 'Return Reason Category'
+		dataType: string
+		sourceColumn: Return Reason Category
+
+	column 'Return Reason External Id'
+		dataType: string
+		sourceColumn: Return Reason External Id
+
+	column 'Return Reason Valid From'
+		dataType: dateTime
+		sourceColumn: Return Reason Valid From
+
+	column 'Return Reason Valid To'
+		dataType: dateTime
+		sourceColumn: Return Reason Valid To
+
+	column 'Return Reason Rank'
+		dataType: int64
+		sourceColumn: Return Reason Rank
+
+	column 'Return Reason Code'
+		dataType: string
+		sourceColumn: Return Reason Code
+
+	column 'Return Reason Description'
+		dataType: string
+		sourceColumn: Return Reason Description
+
+	partition 'Return Reason' = m
+		mode: import
+		source =
+				let
+				    Source = #table({"Return Reason Key", "Return Reason", "Return Reason Category", "Return Reason External Id", "Return Reason Valid From", "Return Reason Valid To", "Return Reason Rank", "Return Reason Code", "Return Reason Description"}, {})
+				in
+				    Source
