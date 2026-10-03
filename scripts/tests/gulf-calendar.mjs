@@ -298,5 +298,22 @@ export default async function ({ browser, url }) {
     check(!!GH && other !== model && days(other, 'uae') === 'cannot tell', `gulf-health on another form of Is Weekend: ${GH ? days(other, 'uae') : 'no gulf-health.js'} (want "cannot tell")`);
   }
 
+  // ---------- 8. The Calendar Generator reads right in Arabic (live-site reports of 2026-10-04) ----------
+  // every option of every drop-down fits its box, in both languages, from phone to wide desktop
+  for (const lang of ['en', 'ar']) for (const w of [1440, 1280, 1024, 992, 768, 390]) {
+    const v = await visitor(browser, { viewport: [w, 900] });
+    await v.pg.goto(`${url}${CG}?lang=${lang}`, { waitUntil: 'networkidle' });
+    const cut = await v.pg.evaluate(() => {
+      const c = document.createElement('canvas').getContext('2d'), out = [];
+      for (const s of document.querySelectorAll('.cg-form select')) {
+        const cs = getComputedStyle(s), room = s.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        c.font = cs.font;
+        for (const o of s.options) { const need = Math.ceil(c.measureText(o.textContent.trim()).width); if (need > room) out.push(`${s.id} "${o.textContent.trim()}" needs ${need}px, has ${Math.floor(room)}px`); }
+      }
+      return out;
+    });
+    check(!cut.length, `calendar generator ${lang} ${w}px: drop-down text cut: ${cut.join('; ')}`);
+    await done(v, `drop-downs ${lang} ${w}px`);
+  }
   return { checks, problems };
 }
