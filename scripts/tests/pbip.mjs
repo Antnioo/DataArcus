@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { visitor } from './lib.mjs';
-import { layoutProblems, headerAndRail, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems } from './report-check.mjs';
+import { layoutProblems, phoneTextProblems, headerAndRail, headerProblems, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems } from './report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT = path.join(HERE, 'fixtures', 'bridge-project');
@@ -125,7 +125,8 @@ export default async function ({ browser, url }) {
       const { files } = P.build({ name: 'Cards', title: 'Cards', pageName: pages[0].name, lang: c.lang, rtl, font: d.font, ui: d.ui, theme: E.buildTheme(d, c.lang), sample: true, logo: null,
         texts: E.REPORT_TEXTS[c.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: new Uint8Array([1]), panel: p.panel })) });
       const r = cardProblems(Object.fromEntries(files.map((f) => [f.path, typeof f.data === 'string' ? f.data : Buffer.from(f.data)])), rtl);
-      const want = pages.reduce((a, p) => a + p.slots.filter((s) => s.kind === 'kpi').length, 0) + 1;
+      // (round 1: two tooltip pages, the monthly trend and the bar chart by category, each with its card)
+      const want = pages.reduce((a, p) => a + p.slots.filter((s) => s.kind === 'kpi').length, 0) + 2;
       if (r.cards !== want || r.bad.length) bad.push(`${c.id}: ${r.cards} cardVisual of ${want}; ${r.bad.slice(0, 3).join('; ')}`);
       designs++;
     }
@@ -143,7 +144,7 @@ export default async function ({ browser, url }) {
         texts: E.REPORT_TEXTS[lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: new Uint8Array([1]), panel: p.panel })) });
       return Object.fromEntries(files.map((f) => [f.path, typeof f.data === 'string' ? f.data : Buffer.from(f.data)]));
     };
-    const phone = [], sizes = [];
+    const phone = [], sizes = [], ptext = [];
     // the fixtures' small and large pages use other header heights; add every layout with its defaults on the smallest
     // and largest pages, as the Desktop checks build them (the header title is 16 high on 640 x 360)
     const base0 = cases.find((c) => c.id === 'preset-1').state;
@@ -151,16 +152,22 @@ export default async function ({ browser, url }) {
       id: `default-${preset}-${w}x${h}-${lang}`, lang,
       state: Object.assign({}, base0, { layout: { v: 3, preset, page: 'custom', pageW: w, pageH: h, header: true, kpis: E.LAYOUTS[preset].kpis, filters: E.LAYOUTS[preset].filters, fpos: 'end' } }) }))));
     for (const c of cases.concat(extra)) for (const panel of [false, true]) {
-      const r = layoutProblems(build(c.state, c.lang, { second: true, panel })), tag = `${c.id}${panel ? ' (panel)' : ''}`;
+      const files1 = build(c.state, c.lang, { second: true, panel }), r = layoutProblems(files1), tag = `${c.id}${panel ? ' (panel)' : ''}`;
       if (r.phone.length) phone.push(`${tag}: ${r.phone[0]}${r.phone.length > 1 ? ` (+${r.phone.length - 1})` : ''}`);
       if (r.sizes.length) sizes.push(`${tag}: ${r.sizes[0]}${r.sizes.length > 1 ? ` (+${r.sizes.length - 1})` : ''}`);
+      const pt = phoneTextProblems(files1);
+      if (pt.bad.length || !pt.visuals) ptext.push(`${tag}: ${pt.bad[0] || 'no phone layout'}${pt.bad.length > 1 ? ` (+${pt.bad.length - 1})` : ''}`);
     }
     check(!phone.length, `phone layout overlaps on ${phone.length} of ${2 * (cases.length + extra.length)} designs, e.g. ${phone.slice(0, 3).join(' | ')}`);
     check(!sizes.length, `sizes that don't fit on ${sizes.length} of ${2 * (cases.length + extra.length)} designs, e.g. ${sizes.slice(0, 3).join(' | ')}`);
+    // round 1: every text in the phone layout has a size that fits its phone box (mobile.json, with the selector that works)
+    check(!ptext.length, `phone text that doesn't fit on ${ptext.length} of ${2 * (cases.length + extra.length)} designs, e.g. ${ptext.slice(0, 3).join(' | ')}`);
     // the guard: 1920 x 1080 keeps today's sizes; 1280 x 720 scaled (2/3) and fitted to the measured heights (owner-confirmed
     // 2026-10-01: title 12, page buttons on one line, slicers 56); exec layout, second page with the filter rail
     const base = cases.find((c) => c.id === 'preset-1').state;
-    for (const [page, want] of [['1920x1080', { title: 20, logo: 14, nav: 320, slicer: 76, reset: 40 }], ['1280x720', { title: 12, logo: 10, nav: 299, slicer: 56, reset: 27 }]]) {
+    // (round 1: the 1080 page buttons are one line each and as wide as "Executive summary" needs, 422 for the two:
+    // Segoe UI can't put 14pt on two lines in the 48-high header, so the 320 of before cut the name; measured in Desktop 2.158)
+    for (const [page, want] of [['1920x1080', { title: 20, logo: 14, nav: 422, slicer: 76, reset: 40 }], ['1280x720', { title: 12, logo: 10, nav: 299, slicer: 56, reset: 27 }]]) {
       const d = Object.assign({}, base, { layout: Object.assign({}, base.layout, { preset: 'exec', page, header: true, kpis: 4, filters: false }) });
       const got = headerAndRail(build(d, 'en', { second: true, panel: false }));
       check(JSON.stringify(got) === JSON.stringify(want), `sizes on ${page}: ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
@@ -182,12 +189,15 @@ export default async function ({ browser, url }) {
         texts: E.REPORT_TEXTS[lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: new Uint8Array([1]), panel: p.panel, kpiInset: inset(p.layout) })) }, more || {}));
       return { files: Object.fromEntries(files.map((f) => [f.path, typeof f.data === 'string' ? f.data : Buffer.from(f.data)])), insets: pages.map((p) => inset(p.layout)), pages };
     };
-    const bad = { link: [], tip: [], table: [], card: [], shell: [] };
+    const bad = { link: [], tip: [], table: [], card: [], shell: [], header: [] };
     for (const c of cases) {
       const rtl = E.rtl(c.state.layout, c.lang), b = build(c.state, c.lang, { second: true, panel: false });
-      const a = tooltipProblems(b.files), t = tooltipPageProblems(b.files), tb = tableProblems(b.files, rtl), cd = cardStyleProblems(b.files, rtl, b.insets), sh = projectProblems(b.files);
+      const a = tooltipProblems(b.files), t = tooltipPageProblems(b.files), tb = tableProblems(b.files, rtl), cd = cardStyleProblems(b.files, rtl, b.insets), sh = projectProblems(b.files), hd = headerProblems(b.files);
+      if (hd.bad.length) bad.header.push(`${c.id}: ${hd.bad[0]}`);
       if (a.bad.length) bad.link.push(`${c.id}: ${a.bad.length} of ${a.charts} charts, ${a.bad[0]}`);
-      if (t.bad.length || t.charts !== 1) bad.tip.push(`${c.id}: ${t.bad[0] || t.charts + ' tooltip charts'}`);
+      // (round 1: the sample has a month, so two tooltip pages: the monthly trend, and the bar chart by category for the
+      // charts that are themselves by month; of the page's charts at least one is linked to the trend)
+      if (t.bad.length || t.pages !== 2 || t.charts !== 2 || t.trend !== 1 || !a.trend) bad.tip.push(`${c.id}: ${t.bad[0] || `${t.pages} tooltip pages, ${t.charts} charts, ${t.trend} trend, ${a.trend} charts linked to it`}`);
       if (tb.bad.length) bad.table.push(`${c.id}: ${tb.bad.length} of ${tb.columns} columns, ${tb.bad[0]}`);
       if (cd.bad.length) bad.card.push(`${c.id}: ${cd.bad[0]} (+${cd.bad.length - 1} on ${cd.cards} cards)`);
       if (sh.length) bad.shell.push(`${c.id}: ${sh.join('; ')}`);
@@ -197,6 +207,8 @@ export default async function ({ browser, url }) {
     check(!bad.table.length, `table header alignment wrong on ${bad.table.length} of ${cases.length} designs, e.g. ${bad.table.slice(0, 2).join(' | ')}`);
     check(!bad.card.length, `card fill or padding wrong on ${bad.card.length} of ${cases.length} designs, e.g. ${bad.card.slice(0, 2).join(' | ')}`);
     check(!bad.shell.length, `theme name or .platform wrong on ${bad.shell.length} of ${cases.length} designs, e.g. ${bad.shell.slice(0, 2).join(' | ')}`);
+    // round 1: the header's text boxes are centred in the header's height ("Your logo" sat high; DESKTOP-TESTS.md round 1)
+    check(!bad.header.length, `header text not centred on ${bad.header.length} of ${cases.length} designs, e.g. ${bad.header.slice(0, 2).join(' | ')}`);
     // who draws the panels (fix/mcp-visual-style): with a solid theme the cards, charts and tables are left to the
     // theme and the KPI group draws no band; with a transparent theme every visual stays off, as the page's download
     // needs it (its background image draws the panels). Each design with its own theme, with and without the slide-in
@@ -219,8 +231,10 @@ export default async function ({ browser, url }) {
       const b = build(std('1920x1080'), 'en', { second: true, panel: false });
       const a = tooltipProblems(b.files), tb = tableProblems(b.files, false), cd = cardStyleProblems(b.files, false, b.insets), cardsBad = new Set(cd.bad.map((x) => x.split(':')[0])).size;
       check(a.charts === 4 && !a.bad.length, `default report: ${a.bad.length} of ${a.charts} charts without the Canvas link (4 charts expected)`);
+      // round 1: the bar chart and the two column charts show the monthly trend on hover, the line chart (by month) the bar chart by category
+      check(a.trend === 3, `default report: ${a.trend} of 4 charts linked to the monthly trend tooltip (3 expected: all but the line chart)`);
       check(tb.columns === 8 && !tb.bad.length, `default report: ${tb.bad.length} of ${tb.columns} table columns without header alignment (8 columns expected)`);
-      check(cd.cards === 8 && !cd.bad.length, `default report: ${cardsBad} of ${cd.cards} cards with their own fill or ignored padding (8 cards expected)`);
+      check(cd.cards === 9 && !cd.bad.length, `default report: ${cardsBad} of ${cd.cards} cards with their own fill or ignored padding (9 cards expected: 7 KPI cards and the two tooltip cards)`);
       // value sizes: the default cards keep 42 (1080) and 28 (720); the tooltip card 20
       const sizes = (files) => [...new Set(Object.keys(files).filter((f) => f.endsWith('/visual.json')).map((f) => JSON.parse(String(files[f]))).filter((v) => v.visual && v.visual.visualType === 'cardVisual').map((v) => parseFloat(v.visual.objects.value[0].properties.fontSize.expr.Literal.Value)))].sort((x, y) => x - y).join(',');
       const s720 = sizes(build(std('1280x720'), 'en', { second: true, panel: false }).files);

@@ -134,7 +134,8 @@
     gauge: 'gauge', funnel: 'funnel', treemap: 'treemap', map: 'map', text: 'textbox', slicer: 'slicer', title: 'textbox', logo: 'image' };
   // Which fields each kind of visual shows. The sample data and a user's own model both come in this shape:
   // { kpis: [f], measure: f, date: f, cats: { bar, column, donut, funnel, treemap, map }, y: { funnel, gauge },
-  //   table: [f], slicers: [f], tip: { card, cat, y } }, where f is a bound field (see proj above)
+  //   table: [f], slicers: [f], tip: { card, cat, y, date } }, where f is a bound field (see proj above); tip.date is the
+  // month field for the tooltip's trend (optional: without it the report has the one tooltip page by category)
   function sampleBind(t) {
     const C = (c) => ({ t: t.table, c }), Me = (m) => ({ t: t.table, m }), m = t.m;
     return {
@@ -143,7 +144,7 @@
       y: { funnel: Me(m.ord), gauge: Me(m.mar) },
       table: [C(t.region), Me(m.rev), Me(m.ord), Me(m.mar)],
       slicers: [C(t.region), C(t.category), C(t.month)],
-      tip: { card: Me(m.rev), cat: C(t.category), y: Me(m.ord) }
+      tip: { card: Me(m.rev), cat: C(t.category), y: Me(m.ord), date: C(t.month) }
     };
   }
   // the kinds of slot that are charts (they show the tooltip page on hover)
@@ -261,7 +262,13 @@
 
     // pages
     const tipName = rnd(), tipBinding = rnd(), bookmarks = [];
-    add(D + '/pages/pages.json', json({ $schema: SCHEMA.pages, pageOrder: PAGES.map((pg) => pg.id).concat([tipName]), activePageName: PAGES[0].id }));
+    // Two tooltip pages when the bind has a month (tip.date): the trend page shows the hovered item's measure by month,
+    // and is linked from every chart that is not itself by that month; a chart by month (the line chart) keeps the page
+    // with the bar chart by category, where a monthly trend would be a single bar.
+    const tip = B && B.tip && B.tip.card && B.tip.cat && B.tip.y ? B.tip : null;
+    const trend = tip && tip.date ? { name: rnd(), binding: rnd() } : null;
+    const same = (a, b) => !!a && !!b && a.t === b.t && a.c != null && a.c === b.c;
+    add(D + '/pages/pages.json', json({ $schema: SCHEMA.pages, pageOrder: PAGES.map((pg) => pg.id).concat(trend ? [tipName, trend.name] : [tipName]), activePageName: PAGES[0].id }));
 
     // filter pane in the theme's colors, so it matches the page
     const paneObjects = {
@@ -329,6 +336,11 @@
     };
     // the largest text size within 8-60 whose one line fits a text box h high (8 at least)
     const boxFit = (h) => Math.max(8, Math.floor((h - 10) / 1.8));
+    // A text box is top-aligned and has no vertical alignment: the middle of its text is about 1.2 x pt below the box's
+    // top (measured in Desktop 2.158, DESKTOP-TESTS.md round 1: Segoe UI 3 + 1.19 x pt, Tahoma 1.12 x pt). centred(s, t):
+    // the slot's y and height with the box moved down so the text's middle is the slot's, as far as the text's own height
+    // allows; unchanged when the text is already there (the title at 0.42 x its box).
+    const centred = (s, t) => { const d = Math.min(Math.round(s.h / 2 - 1.2 * t), s.h - boxH(t)); return d > 0 ? { y: s.y + d, h: s.h - d } : { y: s.y, h: s.h }; };
     const LABEL = +(TH.label || {}).fontSize || 10;
     const SLICER_TEXT = +((((((o.theme || {}).visualStyles || {}).slicer || {})['*'] || {}).header || [{}])[0].textSize) || LABEL;
     // The card's value, label, padding, layout and outline need the "default" selector, or Power BI ignores them; the
@@ -404,10 +416,22 @@
       });
       // groups sit under their visuals in the layer order
       Object.keys(groups).forEach((g) => { const G = groups[g]; G.z = z; z += 1000;
-        // in a solid design the theme would draw a band behind the whole group; the KPI cards each have their own
-        // panel, so their group draws none (the header and the filter rail keep theirs: it is their band and rail)
+        // in a solid design the theme would draw a band behind the whole group, square and without a shadow (a group
+        // has neither a border nor a shadow), so no group draws one: the KPI cards each have their own panel, and the
+        // header and the filter rail get a panel behind them (below)
         container({ name: G.name, x: G.x0, y: G.y0, w: G.x1 - G.x0, h: G.y1 - G.y0, z: G.z, kind: 'group', groupKey: g,
-          group: Object.assign({ displayName: GROUP_NAMES[g], groupMode: 'ScaleMode' }, SOLID && g === 'kpis' ? { objects: { background: obj({ show: bool(false) }) } } : {}) }); });
+          group: Object.assign({ displayName: GROUP_NAMES[g], groupMode: 'ScaleMode' }, SOLID ? { objects: { background: obj({ show: bool(false) }) } } : {}) });
+        // The header's and the filter rail's panel on a solid design: an empty text box left to the theme, under the
+        // group in the layer order. Nothing is written for its background, border or shadow, so the theme draws the
+        // same panel as behind the cards (measured in Desktop 2.158, DESKTOP-TESTS.md round 1; a shape with its own
+        // rounded fill is not drawn rounded). The rail's is the group's box; the header's is grown by 12k at each side
+        // and 6k above and below, which lines it up with the rail and the cards. Not in the phone layout.
+        if (SOLID && g !== 'kpis') {
+          const kk = pg.page.h / 1080, dx = g === 'header' ? Math.round(12 * kk) : 0, dy = g === 'header' ? Math.round(6 * kk) : 0;
+          const bx = Math.max(0, G.x0 - dx), by = Math.max(0, G.y0 - dy);
+          container({ x: bx, y: by, w: G.x1 + dx - bx, h: G.y1 + dy - by, z: G.z - 500, kind: 'band', noPhone: true,
+            visual: { visualType: 'textbox', objects: { general: obj({ paragraphs: [{ textRuns: [{ value: '' }] }] }) }, visualContainerObjects: { title: obj({ show: bool(false) }) } } });
+        } });
 
       // page navigation between the title and the logo, when the report has more than one page
       const title = pg.slots.find((s) => s.kind === 'title'), logo = pg.slots.find((s) => s.kind === 'logo');
@@ -426,7 +450,9 @@
         // them); squeezed into the room left, with smaller text if needed; left out when even 8pt doesn't fit
         if (PAGES.length > 1) {
           const n = PAGES.length, longest = Math.max(...PAGES.map((p) => String(p.name || base).length));
-          const need = (t) => { const L = Math.min(2, Math.max(1, Math.floor((title.h - 2) / (1.6 * t)))); return Math.ceil(charW(t) * Math.ceil(longest / L) + 16 * k); };
+          // (a page button puts a long name on two lines only when two lines fit its height, 3.5 x pt in Segoe UI and
+          // 3.2 x pt in Tahoma, and cuts it with "..." otherwise: measured in Desktop 2.158, DESKTOP-TESTS.md round 1)
+          const need = (t) => { const L = Math.min(2, Math.max(1, Math.floor(title.h / (1.8 * t)))); return Math.ceil(charW(t) * Math.ceil(longest / L) + 16 * k); };
           let t = pt(title.h * 0.3);
           const w = Math.min(x1 - x0, n * Math.max(140 * k, need(t)) + 40 * k);
           while (t > 8 && (need(t) > (w - 40 * k) / n || buttonH(t) > title.h)) t--;
@@ -469,18 +495,22 @@
           bookmarks.push({ name: bm, page: pageName, targets: slicerNames.slice(), label: (W.reset || 'Reset filters') + (PAGES.length > 1 ? ' · ' + (pg.name || '') : '') });
           return;
         }
-        let visual;
+        let visual, box = s;
         if (s.kind === 'title') {
-          // the title and the logo text follow the header's height (within 8-60pt), and stay on one line in it
+          // the title and the logo text follow the header's height (within 8-60pt), and stay on one line in it, with
+          // the text's middle at the header's (see centred)
           const size = Math.min(pt(s.h * 0.42), boxFit(s.h));
+          box = centred(s, size);
           visual = { visualType: 'textbox', objects: textbox(o.title || base, size, true, u.text), visualContainerObjects: frame(null, o.title || base) };
         } else if (s.kind === 'logo') {
           // image.fit 'Fit' keeps the logo's own ratio and shows it whole; the old imageScaling 'Fit' stretched it to the
           // box (measured in Desktop 2.158). The box itself has the logo's shape (the design engine, logoRatio).
+          const size = Math.min(pt(s.h * 0.3), boxFit(s.h));
+          if (!logoFile) box = centred(s, size);
           visual = logoFile
             ? { visualType: 'image', objects: { general: obj({ imageUrl: resource(logoFile) }), image: obj({ fit: str('Fit') }) }, visualContainerObjects: frame(null, W.logo || 'Logo') }
             // the placeholder until a logo is added: sized to the header slot, in the secondary text colour so it reads
-            : { visualType: 'textbox', objects: textbox(W.logoHere || 'Your logo', Math.min(pt(s.h * 0.3), boxFit(s.h)), false, mixHex(u.text, u.card, 0.3)), visualContainerObjects: frame(null, W.logo || 'Logo') };
+            : { visualType: 'textbox', objects: textbox(W.logoHere || 'Your logo', size, false, mixHex(u.text, u.card, 0.3)), visualContainerObjects: frame(null, W.logo || 'Logo') };
         } else if (s.kind === 'text') {
           visual = { visualType: 'textbox', objects: textbox(W.textHere || 'Explain what the main chart shows and what to do about it.', 11, false, u.text), visualContainerObjects: frame(s.title, s.title, null, true) };
         } else {
@@ -507,8 +537,8 @@
             properties: { alignment: str(f.m != null || f.num ? (rtl ? 'Left' : 'Right') : (rtl ? 'Right' : 'Left')), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) },
             selector: { metadata: f.t + '.' + label(f) } }));
         }
-        const v = container({ x: s.x, y: s.y, w: s.w, h: s.h, z, parent, visual, kind: s.kind });
-        if (CHARTS.includes(s.kind)) charts.push(v);
+        const v = container({ x: s.x, y: box.y, w: s.w, h: box.h, z, parent, visual, kind: s.kind });
+        if (CHARTS.includes(s.kind)) charts.push({ v, byMonth: !!trend && same(s.kind === 'line' ? B.date : (B.cats || {})[s.kind], tip.date) });
         z += 1000;
         // the page navigator follows the title in the reading order; its text size is set for the default, hover and
         // selected states (the current page's button is the selected one, and would otherwise show Power BI's own size)
@@ -578,7 +608,7 @@
 
       // every chart shows the tooltip page when you hover it: type 'Canvas' is Power BI's name for a report page tooltip
       // ('ReportPage' is not a value: Desktop then shows its default tooltip; measured in Desktop 2.158)
-      charts.forEach((v) => { v.visual.visualContainerObjects.visualTooltip = obj({ show: bool(true), type: str('Canvas'), section: str(tipName) }); });
+      charts.forEach((c) => { c.v.visual.visualContainerObjects.visualTooltip = obj({ show: bool(true), type: str('Canvas'), section: str(trend && !c.byMonth ? trend.name : tipName) }); });
 
       // phone layout: Power BI's phone canvas is 323 points wide. Cards go two per row (158 x 100), charts and
       // tables full width, slicers and buttons as short full-width rows, in the reading order of the page.
@@ -608,15 +638,44 @@
         const x1 = Math.max(...kids.map((m) => pos[m.v.name].x + pos[m.v.name].w)), y1 = Math.max(...kids.map((m) => pos[m.v.name].y + pos[m.v.name].h));
         pos[groups[g].name] = { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
       });
+      // Text on the phone. The page's text sizes are made for the page: on the 323-wide phone canvas they are cut (15pt
+      // slicers on 1080, everything on 2160), so each visual gets its own sizes in mobile.json, the same on every page
+      // size. A size there is used only when it is written with the selector that property needs on the page (measured
+      // in Desktop 2.158, DESKTOP-TESTS.md round 1): none for a text box's paragraph, a slicer's header and items, a
+      // container title, a chart's axes, a table's text and the card's container padding (under "default" Desktop
+      // ignores it and the page's padding, with its accent-bar side, stays); "default" for a button's text; each state
+      // for page buttons. Not covered (not measured): data labels, legends and the text inside donut, funnel, treemap,
+      // map and gauge.
+      const PHONE = { title: 14, nav: 10, slicer: 10, button: 10, heading: 12, axis: 8, table: 8 };
+      const kindOf = {}; mob.forEach((m) => { kindOf[m.v.name] = m.kind; });
+      const phoneLook = (v, p) => {
+        const vis = v.visual, t = vis.visualType, objects = {}, vco = {};
+        const ttl = (vis.visualContainerObjects || {}).title, shown = !!(ttl && ttl[0].properties.show && ttl[0].properties.show.expr.Literal.Value === 'true');
+        if (t === 'cardVisual') {
+          // a card on the phone (157.5 x 100) gets its own sizes, as on the small tooltip page: the page's 42 would not fit
+          const c = cardFit(p.w, p.h, 1, TIP_TITLE, TIP_VALUE);
+          return { objects: { value: obj({ fontSize: num(c.V) }, DEF), padding: obj({ paddingUniform: num(c.I) }, DEF) },
+            visualContainerObjects: { title: obj({ fontSize: num(TIP_TITLE) }), padding: obj({ top: num(c.P), bottom: num(c.P), left: num(c.P), right: num(c.P) }) } };
+        }
+        if (shown) vco.title = obj({ fontSize: num(PHONE.heading) });
+        if (t === 'textbox' && kindOf[v.name] === 'title') {
+          // the header title: 14pt, or the largest size down to 8 whose one line fits the phone's width
+          const para = vis.objects.general[0].properties.paragraphs[0], run = para.textRuns[0];
+          const size = Math.max(8, Math.min(PHONE.title, Math.floor(p.w / (charW(1) * Math.max(1, String(run.value).length)))));
+          objects.general = obj({ paragraphs: [Object.assign({}, para, { textRuns: [Object.assign({}, run, { textStyle: Object.assign({}, run.textStyle, { fontSize: size + 'pt' }) })] })] });
+        } else if (t === 'pageNavigator') objects.text = ['default', 'hover', 'selected'].map((id) => ({ properties: { fontSize: num(PHONE.nav) }, selector: { id } }));
+        else if (t === 'slicer') { objects.header = obj({ textSize: num(PHONE.slicer) }); objects.items = obj({ textSize: num(PHONE.slicer) }); }
+        else if (t === 'actionButton') objects.text = obj({ fontSize: num(PHONE.button) }, DEF);
+        else if (t === 'lineChart' || t === 'clusteredBarChart' || t === 'clusteredColumnChart') { objects.categoryAxis = obj({ fontSize: num(PHONE.axis) }); objects.valueAxis = obj({ fontSize: num(PHONE.axis) }); }
+        else if (t === 'tableEx') { objects.columnHeaders = obj({ fontSize: num(PHONE.table) }); objects.values = obj({ fontSize: num(PHONE.table) }); objects.total = obj({ fontSize: num(PHONE.table) }); }
+        return Object.assign({}, Object.keys(objects).length ? { objects } : {}, Object.keys(vco).length ? { visualContainerObjects: vco } : {});
+      };
       visuals.forEach((v) => {
         add(D + '/pages/' + pageName + '/visuals/' + v.name + '/visual.json', json(v));
         const p = pos[v.name];
-        // a card on the phone (157.5 x 100) gets its own sizes, as on the small tooltip page: the page's 42 would not fit
-        const phoneCard = v.visual && v.visual.visualType === 'cardVisual' ? cardFit(p ? p.w : 0, p ? p.h : 0, 1, TIP_TITLE, TIP_VALUE) : null;
         if (p) add(D + '/pages/' + pageName + '/visuals/' + v.name + '/mobile.json', json(Object.assign({ $schema: SCHEMA.mobile,
           position: { x: +p.x.toFixed(1), y: +p.y.toFixed(1), z: v.position.z, width: +p.w.toFixed(1), height: +p.h.toFixed(1), tabOrder: v.position.tabOrder } },
-          phoneCard ? { objects: { value: obj({ fontSize: num(phoneCard.V) }, DEF), padding: obj({ paddingUniform: num(phoneCard.I) }, DEF) },
-            visualContainerObjects: { title: obj({ fontSize: num(TIP_TITLE) }), padding: obj({ top: num(phoneCard.P), bottom: num(phoneCard.P), left: num(phoneCard.P), right: num(phoneCard.P) }, DEF) } } : {})));
+          v.visual ? phoneLook(v, p) : {})));
       });
     });
 
@@ -637,29 +696,40 @@
     // tooltip page: small, hidden in view mode, shown when a chart is hovered. 320 x 284: the card, and a bar chart 184
     // high, which holds 6 rows (measured in Desktop 2.158: a bar row takes 22 and the title and padding 46; a tooltip
     // can't be scrolled, so rows past the last one would be lost behind a scrollbar)
-    add(D + '/pages/' + tipName + '/page.json', json({
-      $schema: SCHEMA.page, name: tipName, displayName: W.tooltipPage || 'Tooltip', displayOption: 'FitToPage', width: 320, height: 284,
-      type: 'Tooltip', visibility: 'HiddenInViewMode', pageBinding: { name: tipBinding, type: 'Tooltip' },
-      objects: { background: obj({ color: color(u.card), transparency: num(0) }), outspace: obj({ color: color(u.card) }) }
-    }));
-    const tip = B && B.tip && B.tip.card && B.tip.cat && B.tip.y ? B.tip : null;
+    const tipPage = (name, binding, displayName, visuals, height) => {
+      add(D + '/pages/' + name + '/page.json', json({
+        $schema: SCHEMA.page, name, displayName, displayOption: 'FitToPage', width: 320, height: height || 284,
+        type: 'Tooltip', visibility: 'HiddenInViewMode', pageBinding: { name: binding, type: 'Tooltip' },
+        objects: { background: obj({ color: color(u.card), transparency: num(0) }), outspace: obj({ color: color(u.card) }) }
+      }));
+      visuals.forEach((s, i) => {
+        const v = { $schema: SCHEMA.visual, name: rnd(), position: { x: s.x, y: s.y, z: (i + 1) * 1000, height: s.h, width: s.w, tabOrder: (i + 1) * 1000 }, visual: s.visual };
+        add(D + '/pages/' + name + '/visuals/' + v.name + '/visual.json', json(v));
+      });
+    };
     const tipCard = cardFit(296, 76, 1, TIP_TITLE, TIP_VALUE);
     const tipFrame = (t) => { const f = frame(t, t); f.title = obj({ show: bool(true), text: str(t), alignment: str(align), fontSize: num(TIP_TITLE) }); return f; };
-    const tipVisuals = tip
-      // the theme's text sizes are made for the report's full page; on this 320 x 240 page the card value and the
-      // titles get their own, so the value isn't cut off and the titles fit
-      ? [{ x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(tip.card)] }), objects: cardObjects(tipCard), visualContainerObjects: cardFrame(tipFrame(label(tip.card)), tipCard, TIP_TITLE) } },
+    // the theme's text sizes are made for the report's full page; on this small page the card value and the titles get
+    // their own, so the value isn't cut off and the titles fit
+    const tipCardVisual = () => ({ x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(tip.card)] }), objects: cardObjects(tipCard), visualContainerObjects: cardFrame(tipFrame(label(tip.card)), tipCard, TIP_TITLE) } });
+    tipPage(tipName, tipBinding, W.tooltipPage || 'Tooltip', tip
+      ? [tipCardVisual(),
         // a bar chart writes its category names horizontally (a column chart slants or cuts them); its own sizes, as
         // the card has: axis text 8pt, 40% of the width for the names (a 20-character name is whole), no value axis and
         // each bar's value beside it instead, which leaves room for one more row
         { x: 12, y: 92, w: 296, h: 184, visual: { visualType: 'clusteredBarChart', query: q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }),
           objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
           visualContainerObjects: tipFrame(label(tip.y)) } }]
-      : [{ x: 12, y: 12, w: 296, h: 260, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }];
-    tipVisuals.forEach((s, i) => {
-      const v = { $schema: SCHEMA.visual, name: rnd(), position: { x: s.x, y: s.y, z: (i + 1) * 1000, height: s.h, width: s.w, tabOrder: (i + 1) * 1000 }, visual: s.visual };
-      add(D + '/pages/' + tipName + '/visuals/' + v.name + '/visual.json', json(v));
-    });
+      : [{ x: 12, y: 12, w: 296, h: 260, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }]);
+    // the trend: the card's measure by month, as a bar chart with the same settings, 310 high on a 320 x 410 page: 12
+    // rows (22 a row and 46 for the title and padding), so every month's name is whole and horizontal with its value
+    // beside the bar, whatever the measure. Measured in Desktop 2.158 (DESKTOP-TESTS.md, "round 1 built"): at this width
+    // a column or line chart loses the last month behind a scrollbar as soon as the value axis's labels are wide
+    // ("100K", "0.4M"), and without that axis the first month's name is cut. The owner's choice, 2026-10-03.
+    if (trend) tipPage(trend.name, trend.binding, (W.tooltipPage || 'Tooltip') + ' \u00b7 ' + label(tip.date), [tipCardVisual(),
+      { x: 12, y: 92, w: 296, h: 310, visual: { visualType: 'clusteredBarChart', query: q({ Category: [proj(tip.date)], Y: [proj(tip.card)] }),
+        objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
+        visualContainerObjects: tipFrame(label(tip.card) + ' ' + (W.by || 'by') + ' ' + label(tip.date)) } }], 410);
 
     // git: keep local and cached files out of source control
     // in someone's project folder these would replace their own files, so they are left out there

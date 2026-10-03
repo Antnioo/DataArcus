@@ -190,7 +190,8 @@
       y: { funnel: second, gauge: f(ratio) || main },
       table: uniq([Bc || A, main, second, kpis[2]]),
       slicers: (ch.slicers || []).map(f),
-      tip: { card: main, cat: A, y: second }
+      // the tooltip's trend by month: the time axis when it is a month column (a date column would give a column per day)
+      tip: { card: main, cat: A, y: second, date: ch.date && /month|\u0627\u0644\u0634\u0647\u0631/i.test(ch.date.c) ? f(ch.date) : null }
     };
   }
 
