@@ -74,6 +74,40 @@ down with its cause and a proposed fix. State after each part:
 - **Part 2, the build script: done.** dataarcus-engine, branch `packaging/build`, `862943a`:
   `packaging/build.mjs` and `packaging/build.test.mjs` (5 tests). First build from main `19c5408`:
   `dist/dataarcus-0.2.0.mcpb`, 3,319,052 bytes, unsigned, 18 staged files, 91 production packages.
+- **Part 1, the Claude Desktop half: done. zod 4: same results.** A package built from the zod 4 worktree
+  (`dataarcus-zod4-0.2.0.mcpb`, test only) was installed in Claude Desktop; in a new chat the agent listed the tools
+  and ran `read_model`, `check_model_health` (country uae), `generate_theme` and `create_report` on the made-up
+  Ramadan model: all succeeded. The report it wrote has the same 76 files with the same sizes (188,977 bytes) as the
+  same calls on main's server (`builder-scripts\zod4-desktop-compare.mjs`). The test package was uninstalled
+  afterwards. **Recommendation for PR #5: mergeable after a rebase on main** (its branch is from before round 3); the
+  only visible change is the wording of refusals.
+- **Part 3, install and first check: done, with findings.** `dataarcus-0.2.0.mcpb` installed in Claude Desktop
+  (Store version 2.19675, built-in Node 24.21.0). Captures in `C:\DataArcus\tests\beta-sitting\` (`shot-*.png`).
+  - Empty working folder `C:\DataArcus\beta-check`: the agent says the folder is empty and how to save a project into
+    it. **As expected.**
+  - Golden task 1 from a new chat: a report was written, **validator 0**, opens in Desktop, cards 101.914K and
+    74.675K as in the golden task (details under Part 5).
+  - **What Claude Desktop shows for the unsigned package** (for `INSTALL.md`):
+    1. Double-clicking the `.mcpb` does nothing useful: Windows asks "How do you want to open this file?" (the Store
+       version of Claude registers no file type). Install through **Settings > Extensions > Advanced settings >
+       Install extension**, or drag the file onto the Extensions page.
+    2. "Advanced settings" shows a red "Developer tools warning" above the Install button.
+    3. The install screen: a red box "Installing will grant this extension access to everything on your computer.
+       Any developer information shown has not been verified by Anthropic. Ensure you trust the source of this
+       extension before installation." Then a Windows dialog "Do you want to install DataArcus for Power BI?".
+    4. The working-folder field shows the text `${DOCUMENTS}/DataArcus` as it is written in the manifest (the
+       variable is not filled in) and **Save stays disabled** until the tester types or browses to a folder.
+       *Cause:* this Claude version does not expand `${DOCUMENTS}` in a `user_config` default. *Proposed fix:* drop
+       the `default` from the manifest (an empty field and Browse), and say in `INSTALL.md` to pick a folder.
+    5. After Save the extension is **installed but Disabled** (Claude's log: "has missing required configuration,
+       not enabling automatically"): the tester must switch it on (the toggle on the same screen). *Proposed:* a
+       line and a picture in `INSTALL.md`; nothing in our files can change it.
+    6. Every tool asks "Claude wants to use ... Decline / Always allow / Allow once" the first time (the four
+       read-only tools are grouped as "Read-only tools", so the annotations work).
+    7. On the empty folder the first tool call is labelled "Failed" in red in the chat, although the answer is the
+       helpful "folder is empty" text (the tool returns it as an error). *Proposed:* decide whether this answer
+       should be a normal result instead of an error.
+  - The permission "Always allow" given to a tool survived uninstalling and reinstalling the extension.
 
 ## Next step (owner's go 2026-10-02, after reviews by ChatGPT and Gemini): users and a first paid client sooner
 **The goal that decides everything: by 15 November 2026, 5 beta users have used DataArcus on their own work and 1
