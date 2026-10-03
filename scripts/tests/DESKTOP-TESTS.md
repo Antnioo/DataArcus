@@ -938,6 +938,39 @@ the same.
 **Seen, not in scope:** a project whose DAX tables list no columns opens with "One or more calculated tables need to
 be manually refreshed" and is fine after "Refresh now" (Desktop works the columns out).
 
+## 2026-10-03: round 3, safety (`fix/round-3-safety`), Power BI Desktop 2.158.1177: items 8, 9, 10
+
+Made-up and sample models only; everything closed without saving. Scripts in `builder-scripts`: `r3-lineage.mjs`,
+`r3-fixes.mjs`, `tmdl-apply.ps1`, `gc-check.ps1` (reads `INFO.MEASURES()` from the open model). Captures:
+`tests/phase2-try/shots-r3/`.
+
+**Measured before the code (item 10): does a measure's `lineageTag` survive Apply in TMDL view?** On a copy of the
+sample project (`tests/8-lineage-copy`), the round 2 format script with the existing tag added for two of its five
+measures:
+
+| Measure | Tag in the script | Tag after Apply |
+|---|---|---|
+| Total Sales, Total Sales Last Ramadan | the measure's own | **unchanged** |
+| the other three | none | **a new tag each** |
+
+So the tag survives exactly when the script carries it.
+
+| Item | Expected | Result |
+|---|---|---|
+| 8. bookmark label | a broken field used only in a bookmark is listed as `bookmark "<name>"` | **as expected** from the shared engine: the MCP on `tests/9-bookmark` (the health fixture project with a bookmark "Q1 view" added) answers `Sales[Gone In Bookmark]`: `bookmark "Q1 view"`; the website's suite checks a PBIR report and an older-format report (a report's own filter still says "report filter"). Nothing for Desktop to show: the finding is text |
+| 9. "Refresh now" | following `howToApply` to the letter on `6-sort-sample` ends with tables and slicers in order and no error | **as expected**: Apply (Problems 0), the bar "One or more calculated columns need to be manually refreshed" appears as the text says, "Refresh now", then January ... December and Sunday ... Saturday in both tables and both slicers |
+| 10. lineage tags | Preview shows no `lineageTag` line removed; the measures' tags are the same before and after Apply | **as expected**: the branch's format script for the copy carries all five tags; Preview shows only `formatString` added (green), no tag removed; all five tags read from the open model are identical before and after Apply |
+
+**Not possible without the keyboard:** putting the script into TMDL view's editor through UI Automation alone
+(ValuePattern) gives "Problems 2" and nothing is applied, so the two TMDL steps were run with the keyboard-and-mouse
+script after the owner said the laptop was free. The first measurement (the table above) was run earlier with the
+same script **without checking that the laptop was free** (a mistake against the standing rule); its four captures
+were checked afterwards and show only Power BI with the test report.
+
+**Seen, not in scope:** the `gulf-calendar` suite fails on this Windows checkout (3 checks: the `.dax` files are
+checked out with CRLF and compared byte for byte; green on CI); `6-sort-sample` has no lineage tags (written by
+hand), so the sort script's tag-keeping is covered by the automated check only.
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.

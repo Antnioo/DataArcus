@@ -98,7 +98,10 @@
   }
 
   // ---------- 2. the tree into model JSON (the shape of a model.bim) ----------
-  const DROP = new Set(['lineageTag', 'sourceLineageTag', 'changedProperty']);
+  // lineage tags are left out (the health check has no use for them) unless fromFiles is asked to keep them: the
+  // fix scripts write an object back whole, and without its tag Power BI Desktop gives it a new one (measured)
+  const DROP = new Set(['lineageTag', 'sourceLineageTag', 'changedProperty']), TAGS = new Set(['lineageTag', 'sourceLineageTag']);
+  let keepTags = false;
   const NUMBERS = new Set(['compatibilityLevel', 'precedence', 'ordinal']);
   const NAMES = new Set(['sortByColumn', 'column', 'groupByColumn', 'expressionSource', 'queryGroup', 'baseTable', 'relationship', 'hierarchy']);
   const LISTS = { column: 'columns', measure: 'measures', hierarchy: 'hierarchies', level: 'levels', partition: 'partitions', calculationItem: 'calculationItems',
@@ -129,7 +132,7 @@
       else if (node.type === 'formatStringDefinition' || node.type === 'detailRowsDefinition' || node.type === 'source') o.expression = node.expr;
     }
     node.props.forEach(([k, v]) => {
-      if (DROP.has(k)) return;
+      if (DROP.has(k) && !(keepTags && TAGS.has(k))) return;
       if (node.type === 'relationship' && (k === 'fromColumn' || k === 'toColumn')) {
         const [t, c] = readRef(v), side = k.slice(0, -6);
         o[side + 'Table'] = t; o[side + 'Column'] = c;
@@ -153,7 +156,12 @@
   }
 
   // ---------- 3. a project's files into one model ----------
-  function fromFiles(files) {
+  // opts.lineageTags: keep each object's lineageTag and sourceLineageTag
+  function fromFiles(files, opts) {
+    keepTags = !!(opts && opts.lineageTags);
+    try { return build(files); } finally { keepTags = false; }
+  }
+  function build(files) {
     const parts = { tables: [], relationships: [], expressions: [], functions: [], roles: [], perspectives: [], cultures: [], dataSources: [], queryGroups: [], annotations: [] };
     const refs = {};
     let database = null, model = null;

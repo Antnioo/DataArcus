@@ -85,7 +85,7 @@ Power BI's PBIR format still changes. Only `assets/js/pbip-export.js` writes it,
 file; each Desktop release the owner uses is checked before a DataArcus release says it supports it.
 
 ## The safety rules
-1. **One working folder.** Every path is checked against `DATAARCUS_ROOT`; anything outside is refused.
+1. **One working folder.** Every path is checked against `DATAARCUS_ROOT` by where it really is (links that lead outside are refused); anything outside is refused. Without a working folder every tool refuses.
 2. **Never overwrite or delete.** New files only, under free names; `create_report` refuses if any file exists.
 3. **Read models without changing them.** Model changes go through the user, or through Microsoft's MCP with the
    user watching.

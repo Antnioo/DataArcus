@@ -596,6 +596,149 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 { const f = (x) => (x ? `${x.t}[${x.c}]` : null), sl = r.err ? [] : r.j.slicers.map(f);
   check(!r.err && f(r.j.date) === 'Calendar[Month Name]' && !sl.includes('Sales[Amount]') && !sl.includes('Sales[Date]') && sl.every(Boolean), `suggest_fields on dax-project: ${r.t.slice(0, 300)}`); }
 
+// ---------- round 3: safety before the first beta build ----------
+{
+  // another server, with its own environment (no DATAARCUS_ROOT unless given) and folder to start in
+  const start = async (env, cwd) => {
+    const c = new Client({ name: 'test-r3', version: '1' }), e = { ...process.env }; delete e.DATAARCUS_ROOT; Object.assign(e, env);
+    try { await c.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: e, cwd, stderr: 'ignore' })); } catch (err) { return { dead: String(err && err.message || err), call: async () => ({ err: true, t: 'the server did not start', j: null }), close: async () => {} }; }
+    return { c, close: () => c.close(), call: async (name, args) => { try { const r = await c.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; } catch (err) { return { err: true, t: 'call failed: ' + String(err && err.message || err), j: null }; } } };
+  };
+  const one = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const plan = await one('plan_layout', {}), design = plan.j && plan.j.design;
+  const unlink = (p) => { try { fs.unlinkSync(p); } catch (e) { try { fs.rmdirSync(p); } catch (e2) { /* already gone */ } } };
+
+  // 1. a link (symbolic link or junction) inside the working folder that leads outside it is never followed
+  {
+    const OUT = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-outside-'));
+    fs.cpSync(path.join(ROOT, 'tmdl-project'), path.join(OUT, 'tmdl-project'), { recursive: true });
+    fs.copyFileSync(path.join(REPO, 'scripts/tests/fixtures/logos/wide.png'), path.join(OUT, 'wide.png'));
+    const before = fs.readdirSync(OUT).sort().join();
+    fs.symlinkSync(OUT, path.join(ROOT, 'linked'), 'junction');
+    fs.mkdirSync(path.join(ROOT, 'link-project'));
+    fs.symlinkSync(path.join(OUT, 'tmdl-project', 'Sales.SemanticModel'), path.join(ROOT, 'link-project', 'Sales.SemanticModel'), 'junction');
+    const LINK = /leads outside the working folder .* through a link/;
+    let x = await one('read_model', { path: 'linked/tmdl-project' });
+    check(x.err && LINK.test(x.t), `a link to outside, read_model through it: ${x.err ? x.t.slice(0, 200) : 'the model outside was read: ' + x.j.tables.map((t) => t.table)}`);
+    x = await one('read_model', { path: 'link-project' });
+    check(x.err && LINK.test(x.t), `a project whose model folder is a link to outside: ${x.err ? x.t.slice(0, 200) : 'the model outside was read: ' + x.j.tables.map((t) => t.table)}`);
+    x = await one('generate_theme', { name: 'Linked', folder: 'linked' });
+    check(x.err && LINK.test(x.t) && fs.readdirSync(OUT).sort().join() === before, `a link to outside, generate_theme into it: ${x.t.slice(0, 160)}; outside now holds ${fs.readdirSync(OUT)}`);
+    x = design ? await one('create_report', { path: 'tmdl-project', name: 'Link logo', design, logo: 'linked/wide.png' }) : { err: false, t: 'no design' };
+    check(x.err && LINK.test(x.t) && !fs.existsSync(path.join(ROOT, 'tmdl-project', 'Link logo.Report')), `a logo behind a link to outside: ${x.t.slice(0, 200)}`);
+    unlink(path.join(ROOT, 'linked')); unlink(path.join(ROOT, 'link-project', 'Sales.SemanticModel'));
+    fs.rmSync(OUT, { recursive: true, force: true });
+  }
+
+  // 2. a working folder that is itself a model folder: reading works, nothing above it is read or written
+  {
+    const s = await start({ DATAARCUS_ROOT: path.join(ROOT, 'tmdl-project', 'Sales.SemanticModel') }, ROOT);
+    const rm = await s.call('read_model', { path: '.' });
+    check(!rm.err && rm.j.tables.map((t) => t.table).join() === 'Calendar,Customer,Sales' && rm.j.existingReports.length === 0, `the working folder is a model folder, read_model: ${rm.err ? rm.t.slice(0, 200) : 'reports listed from the folder above: ' + JSON.stringify(rm.j.existingReports)}`);
+    const cr = design ? await s.call('create_report', { path: '.', name: 'Root model', design }) : { err: false, t: 'no design' };
+    check(cr.err && /working folder is the model folder itself/.test(cr.t) && /project folder/.test(cr.t), `the working folder is a model folder, create_report must be refused: ${cr.t.slice(0, 200)}`);
+    check(!fs.existsSync(path.join(ROOT, 'tmdl-project', 'Root model.Report')) && !fs.existsSync(path.join(ROOT, 'tmdl-project', 'Root model.pbip')), 'the working folder is a model folder: create_report wrote above the working folder');
+    await s.close();
+  }
+
+  // 3. the report-design skill asks before a page screenshot and before a DAX query, and says where the result goes
+  {
+    const skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8').replace(/\r\n/g, '\n');
+    const step = (n) => (skill.match(new RegExp('\\n' + n + '\\. \\*\\*[\\s\\S]*?(?=\\n' + (n + 1) + '\\. \\*\\*|\\n## )')) || [''])[0];
+    for (const [n, what] of [[7, /screenshot/i], [8, /DAX/]]) {
+      const t = step(n);
+      check(what.test(t) && /ask the user/i.test(t) && /before|first/i.test(t) && /AI app/.test(t), `skill step ${n} must ask the user first and say that what the report shows goes to the AI app: ${t.slice(0, 200).replace(/\n/g, ' ')}`);
+    }
+  }
+
+  // 4. no working folder set: the server starts, every tool refuses with the reason, and no file is touched
+  {
+    const CWD = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-noroot-'));
+    const NOT_SET = /No working folder is set/, calls = [['read_model', { path: '.' }], ['suggest_fields', { path: '.' }], ['check_model_health', { path: '.' }], ['generate_theme', { name: 'No root' }], ['plan_layout', {}], ['create_report', { path: '.', name: 'No root', design: design || {} }]];
+    const s = await start({}, CWD);
+    const listed = s.dead ? [] : (await s.c.listTools()).tools.map((t) => t.name);
+    check(!s.dead && listed.length === 6, `no DATAARCUS_ROOT: the server must start and list its 6 tools: ${s.dead || listed}`);
+    const answers = []; for (const [n, a] of calls) answers.push([n, await s.call(n, a)]);
+    const wrong = answers.filter(([, x]) => !(x.err && NOT_SET.test(x.t) && /DATAARCUS_ROOT/.test(x.t)));
+    check(!wrong.length, `no DATAARCUS_ROOT: ${wrong.length} of 6 tools did not refuse with the reason, e.g. ${wrong[0] && wrong[0][0]}: ${wrong[0] && wrong[0][1].t.slice(0, 120)}`);
+    check(fs.readdirSync(CWD).length === 0, `no DATAARCUS_ROOT: written in the folder the server started in: ${fs.readdirSync(CWD)}`);
+    await s.close();
+    const bad = [];
+    for (const v of ['', '   ', '${user_config.working_folder}']) {
+      const s2 = await start({ DATAARCUS_ROOT: v }, CWD), x = await s2.call('generate_theme', { name: 'No root' });
+      if (!(x.err && NOT_SET.test(x.t)) || fs.readdirSync(CWD).length) bad.push(JSON.stringify(v) + ': ' + x.t.slice(0, 100) + ' / files: ' + fs.readdirSync(CWD));
+      await s2.close();
+    }
+    check(!bad.length, `DATAARCUS_ROOT empty, blank or an unfilled placeholder must count as not set: ${bad.join(' | ')}`);
+    fs.rmSync(CWD, { recursive: true, force: true });
+  }
+
+  // 5. a working folder that doesn't exist yet: made on start when its parent exists, otherwise told; never a raw ENOENT
+  {
+    const BASE = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-newroot-'));
+    const a = await start({ DATAARCUS_ROOT: path.join(BASE, 'new') }, BASE), ra = await a.call('read_model', { path: '.' });
+    check(fs.existsSync(path.join(BASE, 'new')) && ra.err && /is empty/.test(ra.t) && /\.pbip/.test(ra.t), `a new working folder: made on start (${fs.existsSync(path.join(BASE, 'new'))}), read_model: ${ra.t.slice(0, 200)}`);
+    await a.close();
+    const b = await start({ DATAARCUS_ROOT: path.join(BASE, 'a', 'b', 'c') }, BASE), rb = await b.call('read_model', { path: '.' }), tb = await b.call('generate_theme', { name: 'Missing' });
+    check(!fs.existsSync(path.join(BASE, 'a')) && rb.err && /doesn't exist yet/.test(rb.t) && /\.pbip/.test(rb.t) && tb.err && /doesn't exist yet/.test(tb.t), `a working folder with no parent: made anyway (${fs.existsSync(path.join(BASE, 'a'))}), read_model: ${rb.t.slice(0, 160)}; generate_theme: ${tb.t.slice(0, 120)}`);
+    check(!/ENOENT/.test(ra.t + rb.t + tb.t), `a missing working folder answered with a raw error: ${(ra.t + ' | ' + rb.t).slice(0, 240)}`);
+    await b.close();
+    fs.rmSync(BASE, { recursive: true, force: true });
+  }
+
+  // 6. the version is in one place: mcp/package.json
+  {
+    const pkg = JSON.parse(fs.readFileSync(path.join(HERE, 'package.json'), 'utf8')), src = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+    check((client.getServerVersion() || {}).version === pkg.version, `the server's version ${(client.getServerVersion() || {}).version} is not package.json's ${pkg.version}`);
+    check(!/version:\s*['"]\d/.test(src) && /package\.json/.test(src), 'server.mjs still holds a version of its own (it must read mcp/package.json)');
+  }
+
+  // 7. tool annotations: four tools only read; the two that write only add files
+  {
+    const ann = Object.fromEntries((await client.listTools()).tools.map((t) => [t.name, t.annotations || {}]));
+    const ro = ['read_model', 'suggest_fields', 'check_model_health', 'plan_layout'].filter((n) => ann[n].readOnlyHint !== true);
+    check(!ro.length, `readOnlyHint true is missing on: ${ro}`);
+    const wr = ['generate_theme', 'create_report'].filter((n) => !(ann[n].readOnlyHint === false && ann[n].destructiveHint === false));
+    check(!wr.length, `readOnlyHint false with destructiveHint false is missing on: ${wr} (${JSON.stringify(wr.map((n) => ann[n]))})`);
+  }
+
+  // 8. a broken field used only inside a bookmark is told as that bookmark, not as a "report filter"
+  {
+    fs.cpSync(path.join(ROOT, 'bim-project'), path.join(ROOT, 'bookmark-project'), { recursive: true });
+    const rep = fs.readdirSync(path.join(ROOT, 'bookmark-project')).find((n) => /\.Report$/.test(n)), bdir = path.join(ROOT, 'bookmark-project', rep, 'definition', 'bookmarks');
+    fs.mkdirSync(bdir, { recursive: true });
+    const gone = (prop) => ({ Column: { Expression: { SourceRef: { Entity: 'Sales' } }, Property: prop } });
+    fs.writeFileSync(path.join(bdir, 'Bookmark1a2b.bookmark.json'), JSON.stringify({ name: 'Bookmark1a2b', displayName: 'Q1 view', explorationState: { version: '1.3', filters: { byExpr: [{ name: 'f1', type: 'Categorical', expression: gone('Gone In Bookmark') }] } } }));
+    fs.writeFileSync(path.join(bdir, 'bookmarks.json'), JSON.stringify({ items: [{ name: 'Bookmark1a2b' }] }));
+    const x = await one('check_model_health', { path: 'bookmark-project', maxItems: 200 });
+    const it = x.err ? null : ((x.j.findings.find((f) => f.id === 'BROKEN_REF') || {}).items || []).find((i) => i.obj === 'Sales[Gone In Bookmark]');
+    check(!!it && it.detail === 'bookmark "Q1 view"', `a broken field in a bookmark: ${x.err ? x.t.slice(0, 200) : JSON.stringify(it)}`);
+  }
+
+  // 9 and 10. the fix scripts on a TMDL project saved by Desktop (every object has a lineageTag): the scripts keep each
+  // rewritten object's tag (without it Desktop gives the object a new one: measured), and the sort script, which adds
+  // columns, says to press "Refresh now" after Apply (measured: every visual shows an error until then)
+  {
+    const d = path.join(ROOT, 'tag-project', 'Tags.SemanticModel', 'definition');
+    fs.mkdirSync(path.join(d, 'tables'), { recursive: true });
+    fs.writeFileSync(path.join(d, 'database.tmdl'), 'database\n\tcompatibilityLevel: 1606\n');
+    fs.writeFileSync(path.join(d, 'model.tmdl'), 'model Model\n\tculture: en-US\n\nref table Calendar\nref table Sales\n');
+    fs.writeFileSync(path.join(d, 'relationships.tmdl'), 'relationship r1\n\tfromColumn: Sales.Date\n\ttoColumn: Calendar.Date\n');
+    const part = (n) => `\tpartition ${n} = m\n\t\tmode: import\n\t\tsource =\n\t\t\t\tlet\n\t\t\t\t    Source = #table({"Date"}, {})\n\t\t\t\tin\n\t\t\t\t    Source\n`;
+    fs.writeFileSync(path.join(d, 'tables', 'Calendar.tmdl'), "table Calendar\n\tlineageTag: t-cal\n\n\tcolumn Date\n\t\tdataType: dateTime\n\t\tlineageTag: c-date\n\t\tsummarizeBy: none\n\t\tsourceColumn: Date\n\n\tcolumn 'Month Name'\n\t\tdataType: string\n\t\tlineageTag: c-month-name\n\t\tsummarizeBy: none\n\t\tsourceColumn: Month Name\n\n\tcolumn 'Day Name'\n\t\tdataType: string\n\t\tlineageTag: c-day-name\n\t\tsummarizeBy: none\n\t\tsourceColumn: Day Name\n\n" + part('Calendar'));
+    fs.writeFileSync(path.join(d, 'tables', 'Sales.tmdl'), "table Sales\n\tlineageTag: t-sales\n\n\tmeasure 'Total Sales' = SUM ( 'Sales'[Amount] )\n\t\tlineageTag: m-total-sales\n\n\tmeasure 'Margin %' = DIVIDE ( 1, 2 )\n\t\tlineageTag: m-margin\n\n\tcolumn Date\n\t\tdataType: dateTime\n\t\tlineageTag: s-date\n\t\tsummarizeBy: none\n\t\tsourceColumn: Date\n\n\tcolumn Amount\n\t\tdataType: double\n\t\tlineageTag: s-amount\n\t\tsummarizeBy: sum\n\t\tsourceColumn: Amount\n\n" + part('Sales'));
+    const x = await one('check_model_health', { path: 'tag-project', maxItems: 200 }), fx = x.err ? {} : x.j.fixes || {}, nf = fx.NO_FORMAT || {}, ms = fx.MONTH_SORT || {};
+    // the lines of one object in a script: from its header to the next blank line
+    const block = (script, head) => { const l = String(script || '').split('\n'), i = l.findIndex((s) => s.trim().startsWith(head)); return i < 0 ? [] : l.slice(i, l.findIndex((s, j) => j > i && !s.trim()) < 0 ? undefined : l.findIndex((s, j) => j > i && !s.trim())).map((s) => s.trim()); };
+    check(block(nf.fixScript, "measure 'Total Sales'").includes('lineageTag: m-total-sales') && block(nf.fixScript, "measure 'Margin %'").includes('lineageTag: m-margin'),
+      `the format script from a TMDL project must keep each measure's lineageTag: ${x.err ? x.t.slice(0, 200) : String(nf.fixScript).slice(0, 300)}`);
+    check(block(ms.fixScript, "column 'Month Name'").includes('lineageTag: c-month-name') && block(ms.fixScript, "column 'Day Name'").includes('lineageTag: c-day-name') && !block(ms.fixScript, "column 'Month Number'").some((s) => /^lineageTag/.test(s)),
+      `the sort script from a TMDL project must keep each column's lineageTag (a new column has none): ${String(ms.fixScript).slice(0, 400)}`);
+    check((ms.sorts || []).some((s) => s.added) && /TMDL view/.test(String(ms.howToApply)) && /Refresh now/.test(String(ms.howToApply)), `the sort script adds columns: howToApply must say to press "Refresh now" after Apply: ${ms.howToApply}`);
+    check(!!nf.howToApply && !/Refresh now/.test(String(nf.howToApply)), `the format script adds no column: howToApply must not ask for a refresh: ${nf.howToApply}`);
+  }
+}
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);

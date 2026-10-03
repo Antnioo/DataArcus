@@ -28,13 +28,18 @@ report files are written by `create_report` for a new report, or by Microsoft's 
    model, never changing the model or an existing report: the pages (by default a second page in a complementary
    layout; `slidePanel: true` for filters as a slide-in panel), the labels in the report's language, and the theme.
    If the result has `themeChanged`, tell the user what changed and why.
-7. **Open and look.** `powerbi-desktop open` on the new .pbip (Store installs need `PBI_DESKTOP_PATH`), then
-   `powerbi-desktop screenshot` one page at a time. Look at every screenshot yourself: cut-off text, overlaps, empty
-   visuals, unreadable colours.
-8. **Check the numbers.** Connect with the Power BI Authoring MCP and run a DAX query for each KPI; compare with what the
-   card shows.
-9. **Fix and repeat** from step 3 or 6 with a new name until the pages are clean, then tell the user which file to open
-   and what you checked.
+7. **Open and look, only with the user's yes.** A page screenshot shows the report's numbers, and what you see goes
+   to the AI app (with Claude: to Anthropic). So ask the user first, before any screenshot: "May I take screenshots of
+   the pages to check them? They show your data, and the pictures go to the AI app." On a yes: `powerbi-desktop open`
+   on the new .pbip (Store installs need `PBI_DESKTOP_PATH`), then `powerbi-desktop screenshot` one page at a time,
+   and look at every screenshot yourself: cut-off text, overlaps, empty visuals, unreadable colours. Without a yes:
+   take no screenshot; tell the user which file to open and what to look for, and report this check as not done.
+8. **Check the numbers, only with the user's yes.** A DAX query returns data values, and the result goes to the AI
+   app. So ask the user first, before any query: "May I run one DAX query per KPI card to compare the numbers? The
+   results go to the AI app." On a yes: connect with the Power BI Authoring MCP and run a DAX query for each KPI;
+   compare with what the card shows. Without a yes: run no query and report this check as not done.
+9. **Fix and repeat** from step 3 or 6 with a new name until the pages are clean, then tell the user which file to open,
+   what you checked, and which checks were not done because the user did not agree to them.
 
 ## Existing report
 - DataArcus gives the theme and the positions: `generate_theme` (the theme file to import or register) and
@@ -42,6 +47,8 @@ report files are written by `create_report` for a new report, or by Microsoft's 
 - Microsoft's Power BI Report skill (`powerbi-report-cli`) makes the file changes, **on a copy the user approves**,
   never on their original. Ask the user to save in Power BI Desktop first: the files on disk are what gets edited.
 - Never have DataArcus and Microsoft's skill writing the same report at the same time.
+- Screenshots and DAX queries on an existing report follow steps 7 and 8 above: ask the user first, each time a new
+  report or model is involved, and say that what they show goes to the AI app.
 
 ## Positions: exact, never snapped
 Use `plan_layout`'s numbers exactly, in the slot table and in `forAuthoring`. **Never snap them to multiples of 8**,
@@ -68,6 +75,10 @@ them from the same model open in Power BI Desktop:
 
 ## Rules
 - Work only inside the DataArcus folder; never connect to another model open in Desktop.
+- The DataArcus tools return the model's structure only (names, types, formats), never data. Anything that shows data
+  (a page screenshot, a DAX query, a table preview) needs the user's yes first, with the words that it goes to the
+  AI app. A "go" on the design is not a yes to these. The column-types query below returns types, not data: it needs
+  no extra yes.
 - Never overwrite, delete or save over the user's files. Close test windows without saving.
 - Say exactly what you checked and what you could not check. A step you couldn't do is reported, not skipped.
 - If something needs the user (TMDL view, Power Query, saving, the theme import dialog), give the exact clicks and wait for "done".

@@ -1,19 +1,25 @@
 #!/usr/bin/env node
 // DataArcus MCP server: the engines behind dataarcus.com's Power BI tools, for an AI agent.
 // Pairs with Microsoft's Power BI Authoring MCP server (model edits, DAX) and the Desktop bridge (reload, screenshots).
-// Every path stays inside DATAARCUS_ROOT (default: the folder the server starts in), and nothing is ever overwritten.
+// Every path stays inside the working folder (DATAARCUS_ROOT; without it every tool refuses), and nothing is ever overwritten.
 import fs from 'node:fs';
 import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { Bind, Fix, Health, Pbip, ROOT, applyColumnTypes, inside, loadModel, summary } from './lib/model.mjs';
+import { Bind, Fix, Health, Pbip, ROOT, applyColumnTypes, inside, loadModel, prepareRoot, rootProblem, summary } from './lib/model.mjs';
 import { E, themeDesign, planLayout, pageOf, contrastReport, freeFile } from './lib/design.mjs';
 
-const server = new McpServer({ name: 'dataarcus', version: '0.1.0' });
+// the version is in one place: mcp/package.json
+const VERSION = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
+const server = new McpServer({ name: 'dataarcus', version: VERSION });
+// What a tool does to the user's files, for the AI app: four tools only read; the two that write only add new files
+// (never change or delete one) and stay inside the working folder
+const READS = { readOnlyHint: true, openWorldHint: false }, ADDS = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false };
 const text = (o) => ({ content: [{ type: 'text', text: typeof o === 'string' ? o : JSON.stringify(o, null, 2) }] });
 const fail = (e) => ({ isError: true, content: [{ type: 'text', text: String(e && e.message || e) }] });
-const safe = (fn) => async (args) => { try { return await fn(args); } catch (e) { return fail(e); } };
+// no working folder (not set, or not there): every tool answers with the reason and touches no file
+const safe = (fn) => async (args) => { try { const problem = rootProblem(); if (problem) return fail(problem); return await fn(args); } catch (e) { return fail(e); } };
 // The DAX query that reads every column's type from the model open in Power BI Desktop (run it with Microsoft's
 // Power BI Authoring MCP). INFO.COLUMNS gives the Tabular DataType numbers; a column Power BI names or types from DAX
 // has them in InferredName / InferredDataType. Its rows go into check_model_health's columnTypes as Table[Column]: type.
@@ -42,13 +48,13 @@ const themeColors = (t) => {
 server.registerTool('read_model', {
   title: 'Read a Power BI model',
   description: 'Lists the tables, visible columns (with types), measures (with formats) and date tables of a model, without changing it.',
-  inputSchema: { path: modelPath }
+  inputSchema: { path: modelPath }, annotations: READS
 }, safe(async ({ path: p }) => { const m = loadModel(p); return text({ source: m.source, existingReports: m.taken || [], tables: summary(m) }); }));
 
 server.registerTool('suggest_fields', {
   title: 'Suggest fields for a report design',
   description: 'Picks which of the model\'s measures and columns go in each KPI card, chart, table and slicer, the way the DataArcus theme generator does (base measures first, month from the date table, no keys or hidden fields).',
-  inputSchema: { path: modelPath, kpis: z.number().int().min(1).max(8).default(4).describe('Number of KPI cards') }
+  inputSchema: { path: modelPath, kpis: z.number().int().min(1).max(8).default(4).describe('Number of KPI cards') }, annotations: READS
 }, safe(async ({ path: p, kpis }) => { const m = loadModel(p); const b = Bind.suggest(m.tables, kpis); delete b.choices; return text(b); }));
 
 server.registerTool('check_model_health', {
@@ -59,7 +65,7 @@ server.registerTool('check_model_health', {
     weekStart: z.enum(['sunday', 'monday', 'saturday']).default('sunday').describe('The first day of the week, used only when a fix script has to add a weekday number column to sort day names: sunday (default: Saudi Arabia and most of the Gulf), monday (a Saturday-Sunday weekend, as in the UAE since 2022), or saturday'),
     columnTypes: z.record(z.string(), z.union([z.string(), z.number()])).optional()
       .describe('Only when a TMDL project skipped checks: column types read from the same model open in Power BI Desktop, as { "Table[Column]": type }. The type is a model.bim name (string, int64, double, decimal, dateTime, boolean) or the number INFO.COLUMNS returns (2, 6, 8, 10, 9, 11), also as text. Fills only columns the files leave without a type.')
-  }
+  }, annotations: READS
 }, safe(async ({ path: p, maxItems, columnTypes, weekStart }) => {
   const m = loadModel(p);
   const typed = columnTypes ? applyColumnTypes(m.tmsl, columnTypes) : undefined;
@@ -68,12 +74,15 @@ server.registerTool('check_model_health', {
   // applied by this tool. What a script can't do safely is listed as steps by hand, never guessed.
   const raw = ((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).tables || [], itemsOf = (id) => ((r.findings.find((f) => f.id === id) || {}).items || []).concat((((r.skipped || []).find((s) => s.id === id)) || {}).items || []);
   const howToApply = 'Save a copy of the file first. In Power BI Desktop open TMDL view, paste the script, choose Preview to see the changes, then Apply. The script is a suggestion: it is never applied by this tool.';
+  // measured in Power BI Desktop 2.158: after a script that adds a column, every visual shows an error until the
+  // yellow bar's "Refresh now" is pressed
+  const refreshAfter = ' This script adds a column: after Apply, press "Refresh now" in the yellow bar at the top of the report (until then every visual shows an error).';
   const fixes = {};
   {
     const cols = itemsOf('MONTH_SORT').map((i) => String(i.obj).match(/^(.*)\[(.*)\]$/)).filter(Boolean).map((x) => ({ table: x[1], column: x[2] }));
     if (cols.length) { const s = Fix.sortFixes(raw, cols, { weekStart });
       fixes.MONTH_SORT = Object.assign({ weekStart: s.weekStart, weekStartNote: s.sorts.some((x) => x.added && /Day of Week/.test(x.by)) ? `A weekday number column is added with the week starting on ${s.weekStart}; call again with weekStart: 'sunday', 'monday' or 'saturday' for another start.` : undefined,
-        sorts: s.sorts, byHand: s.byHand }, s.script ? { fixScript: s.script, howToApply } : {}); }
+        sorts: s.sorts, byHand: s.byHand }, s.script ? { fixScript: s.script, howToApply: howToApply + (s.sorts.some((x) => x.added) ? refreshAfter : '') } : {}); }
     for (const [id, percent] of [['NO_FORMAT', false], ['PCT_FORMAT', true]]) {
       const names = itemsOf(id).map((i) => String(i.obj).replace(/^\[|\]$/g, ''));
       if (!names.length) continue;
@@ -124,11 +133,13 @@ server.registerTool('create_report', {
     logo: z.string().optional().describe('Logo image for the header: a PNG or JPG file inside the DataArcus folder, 2 MB at most. It is copied into the new report (the file itself is not changed) and shown at its own shape, never stretched; a horizontal logo reads best'),
     lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().default(false), font: z.string().default('Segoe UI'),
     colors: z.object({ text: z.string(), card: z.string(), background: z.string(), accent: z.string() }).partial().optional()
-  }
+  }, annotations: ADDS
 }, safe(async (a) => {
   if (!a.pages === !a.design) throw new Error('Give create_report pages or a design, not both and not neither: pages with hand-placed slots, or the design from generate_theme or plan_layout.');
   const m = loadModel(a.path);
   if (!m.folder) throw new Error('create_report needs a project folder with a .SemanticModel (save the .pbix as a Power BI project first).');
+  // a report is written next to its model; when the working folder is the model folder, that is outside it
+  if (!m.projectDir) throw new Error(`Nothing was written: the working folder is the model folder itself (${path.basename(m.folder)}). A report is written next to its model, which would be outside the working folder. Choose the project folder (the folder that holds ${path.basename(m.folder)}) as the working folder, then ask again.`);
   // no background image given: a fully transparent pixel, so the page colour from the theme shows
   const png1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4AWMAAQAABQABNtCI3QAAAABJRU5ErkJggg==', 'base64');
   const kpisOf = (pages) => pages.reduce((n, p) => Math.max(n, p.slots.filter((s) => s.kind === 'kpi').length), 0) || 1;
@@ -257,7 +268,7 @@ server.registerTool('generate_theme', {
       .describe('Page and style choices that change the theme (text sizes grow with the page, kept within 8-60)'),
     lang: langInput,
     folder: z.string().optional().describe('Folder for the theme file, inside the DataArcus folder (default: the DataArcus folder)')
-  }
+  }, annotations: ADDS
 }, safe(async (a) => {
   const { design, repaired, notes } = themeDesign(a);
   const { page, fitted } = pageOf(design.layout), { contrast, warnings } = contrastReport(design);
@@ -281,11 +292,12 @@ server.registerTool('plan_layout', {
     page: pageInput.optional(),
     dir: z.enum(['ltr', 'rtl']).optional().describe('Reading direction; by default the language decides'),
     lang: langInput
-  }
+  }, annotations: READS
 }, safe(async (a) => {
   const r = planLayout(a), { page, fitted } = pageOf(r.design.layout);
   return text({ page, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring, design: r.design });
 }));
 
+prepareRoot();
 await server.connect(new StdioServerTransport());
-console.error(`DataArcus MCP ready. Folder: ${ROOT}`);
+console.error(rootProblem() ? `DataArcus MCP started, but no tool will work: ${rootProblem()}` : `DataArcus MCP ready. Folder: ${ROOT}`);

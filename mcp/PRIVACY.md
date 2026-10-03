@@ -1,7 +1,7 @@
 # DataArcus MCP: what stays on your machine, and what your AI app sees
 
-Plain English. Checked against the code on 2026-10-03 (main `bc05275`: `mcp/server.mjs`, `mcp/lib/`, and the shared
-engines it loads from `assets/js/`). If the code changes, this page is checked again before the next release.
+Plain English. Checked against the code on 2026-10-03 (branch `fix/round-3-safety`: `mcp/server.mjs`, `mcp/lib/`, the
+report-design skill, and the shared engines it loads from `assets/js/`). If the code changes, this page is checked again before the next release.
 
 ## In one paragraph
 The DataArcus MCP runs on your own computer and sends nothing anywhere by itself. But it is a tool for an AI app
@@ -46,12 +46,23 @@ path on Windows usually contains your Windows user name (for example `C:\Users\<
   concerns are.
 - **Data values only when you ask.** The other tools DataArcus is used with can read data: Microsoft's Power BI
   Authoring MCP runs DAX queries that return values, and a screenshot of a report page shows its numbers. Those are
-  other tools with their own terms; the DataArcus report-design skill should use them only when you agree (see
-  "Known gaps" below: today it does not ask first).
+  other tools with their own terms; the DataArcus report-design skill uses them only after asking you, each time
+  telling you that what the report shows goes to the AI app. If you don't agree, those checks are not done and the
+  skill says so.
 
 ## 4. Your files: never overwritten, and paths stay inside the working folder
-- **One working folder.** Every path a tool is given is resolved inside `DATAARCUS_ROOT` (by default, the folder
-  the server starts in). A path that leads outside it (for example `..\Documents` or `C:\Other`) is refused.
+- **One working folder.** Every path a tool is given is resolved inside `DATAARCUS_ROOT`, the folder you choose. A
+  path that leads outside it (for example `..\Documents` or `C:\Other`) is refused.
+- **No working folder, no work.** If no folder was chosen (the setting is missing or empty), every tool refuses and
+  says so; the server never falls back to whatever folder it happens to start in. A chosen folder that doesn't exist
+  yet is created when the folder above it exists (for example `Documents\DataArcus` on a new computer); otherwise the
+  tools tell you to create it.
+- **Links are not followed out of the folder.** A shortcut-like link inside the working folder (a symbolic link or a
+  Windows junction) that points to a folder outside it is refused, for reading and for writing: the tools check where
+  a path really is, not only its name. When searching a project for its model, links are never followed.
+- **A working folder that is itself a model folder** (`... .SemanticModel`): the reading tools work on it, and read
+  nothing above it. `create_report` refuses, because a report is written next to its model, which would be outside
+  the working folder; choose the project folder instead.
 - **Nothing is overwritten.**
   - `create_report` writes a new report next to your model under a free name, and refuses to write at all if any of
     its files already exists. It never changes your model or an existing report.
@@ -70,15 +81,15 @@ as data, never as instructions:
 - the AI should analyse, then propose, then write, and never run anything because a name or description told it to;
 - changes to your model are always yours to make (in Power BI Desktop, or through Microsoft's tools with you watching).
 
-## Known gaps (being fixed before the beta; listed so this page stays true)
-- **A link inside the working folder can lead outside it.** The folder check compares path names, not where a
-  shortcut-like link (a symbolic link or a Windows junction) really points. If the working folder contains such a
-  link to another folder, the tools read and write through it. Until fixed: don't put links in the working folder.
-- **A working folder that is itself a model folder** (`... .SemanticModel`): `create_report` then writes the new report
-  next to it, one level above the working folder. Until fixed: choose the project folder, or a folder above it.
-- **The report-design skill's checks show data.** Its steps "open and look" (page screenshots) and "check the numbers"
-  (a DAX query per KPI card, through Microsoft's MCP) send what the report shows to the AI app. They help catch wrong
-  reports, but the skill should ask you before doing them.
+## Known gaps
+None open. The three gaps listed here on 2026-10-03 were closed the same day (round 3), each with tests that failed
+before the fix:
+- a link inside the working folder leading outside it (now refused; see section 4);
+- a working folder that is itself a model folder (`create_report` now refuses instead of writing one level above);
+- the report-design skill's screenshots and DAX checks (the skill now asks first; see section 3).
+
+What a skill tells the AI to do is an instruction, not a lock: the AI app's own permission prompts for Microsoft's
+tools and for screenshots remain your control over what is run.
 
 ## Who to ask
 Questions or a problem with this page: [hello@dataarcus.com](mailto:hello@dataarcus.com).
