@@ -180,6 +180,120 @@ code. No fixture may change (if one would: stop for the owner's go).
 | Desktop, item 9 | | following `howToApply` to the letter on `6-sort-sample` ends with tables and slicers in order and no error |
 | Desktop, item 10 | | the script from the TMDL project shows no `lineageTag` line removed in Preview, and the measures' tags are the same before and after Apply |
 
+## The Gulf calendar beta cut in progress (owner's go 2026-10-03, in advance for every step; branch `feat/gulf-calendar-mcp-cut`, from main `87d9b33`)
+Only "The beta cut" of `mcp/plans/GULF-CALENDAR-MCP.md`: items **1a** (detection from the model files) and **5**
+(the country parameter, weekend only). Not in this cut: 1b (the calendar-only query), 0 (the shared DAX engine), 2,
+3, 4 (the page), 5b (other countries' dates), the website's health page (D4), the `read_model` hint.
+
+**State (2026-10-03): built, pushed; waiting for the reviewer.** Plan `bf35a0c`; tests first `8b8ea28`; code
+`33aeb2d`; docs and two small corrections after reading the output (the Hijri month column named is "Hijri Month
+Number", Arabic event names in the Arabic text) in the commit after it.
+- **Every expected number came out at the first run:** 626 and 939 days, 3 estimate items, 1 differing date
+  (Ramadan 1439), no section without a country on a model without Hijri columns, the score and findings unchanged.
+- **Tests:** MCP 174 → 192 (15 of the 18 new checks failed before the code; 3 assert that nothing moves and held
+  already); `gulf-calendar` 727 → 730; the full website run on the laptop: 17 of 17 pass (the `.dax` files are LF
+  now). No fixture changed or added.
+- **Seen while building (settled by the follow-up above):** on the pack's test model with `country: ksa` the
+  section gave `GC_DATES_DIFFER` for Ramadan 1439 against Umm al-Qura; Saudi Arabia is now compared with the announced
+  dates.
+- **For packaging (dataarcus-engine):** the staged files must include `assets/js/gulf-health.js` and
+  `assets/js/gulf-dates.js`.
+- **Next step:** the reviewer's review, CI, merge; then the queue (round 4, zod 4, the /ar/ pages, the Copilot
+  pre-check).
+
+### Follow-up (owner's decision 2026-10-03, after the Saudi sources were merged, main `380cc48`): which dates a country is compared with
+All 27 of Saudi Arabia's announced Ramadan and Eid dates 2018-2026 match the UAE's (`scripts/gulf-calendar/
+DATES-SOURCES.md`), Ramadan 1439 on 2018-05-17 included. So the rule "other countries: Umm al-Qura" told a Saudi
+user that a correct date was wrong. **New rule (replaces D2's cut):**
+- **UAE and Saudi Arabia:** compared with the announced dates (`gulf-dates.js`). For Saudi Arabia the section and the
+  fix say why: "the UAE's announced dates, which match Saudi Arabia's for 2018-2026"; the fix says announced dates
+  **on** (the generator's option is labelled "(UAE)").
+- **Qatar, Kuwait, Bahrain, Oman** (no sourced dates yet): a start that differs from Umm al-Qura is only a **low
+  note**, `GC_DATES_NOTE` ("differs from Umm al-Qura: check your country's official announcement"), never
+  `GC_DATES_DIFFER`; the fix leaves "announced dates" to the user's choice, with the same note.
+- The weekend checks are unchanged.
+
+**Expected (written before any run; `asOf: 2026-10-03`):**
+| Model | Country | Expected |
+|---|---|---|
+| the pack's test model | `ksa` | `GC_WEEKEND` **939** (unchanged); **no** date finding or note; `datesComparedWith.with` `uae-announced`, its note says the dates match Saudi Arabia's; fix: announced dates on, with that reason |
+| the pack's test model | `qat` | `GC_WEEKEND` **939** (Qatar is Friday-Saturday too); `GC_DATES_NOTE`, level low, **1** item: Ramadan 1439, model 2018-05-17, Umm al-Qura 2018-05-16; no `GC_DATES_DIFFER`; fix: announced dates "your choice", with the note |
+| the 2018-2030 calendar without announced dates | `ksa` | `GC_DATES_DIFFER` **1** item: Ramadan 1439, model 2018-05-16, announced 2018-05-17 (as for the UAE) |
+| `tmdl-ramadan` | `ksa` | 626 weekend days (unchanged); no date finding; compared with the announced dates |
+
+**Done 2026-10-03:** tests first, then the code in `assets/js/gulf-health.js` (with the Arabic text); MCP 195 pass;
+`GOLDEN-TASKS.md` is titled for 11 tasks and task 11 follows the new rule; README updated. Every number above came out.
+
+**Expected numbers this decision changes (old → new):**
+- `tmdl-ramadan` with `ksa`: `datesComparedWith.with` `umm-al-qura` → `uae-announced`; its note "sourced for the UAE
+  only" → "match Saudi Arabia's for 2018-2026". Why: Saudi Arabia's dates are now sourced and equal.
+- the pack's test model with `ksa` (golden task 11 and the builder's output): `GC_DATES_DIFFER` 1 item (Ramadan
+  1439) → **no date finding**. Why: 2018-05-17 is what Saudi Arabia announced.
+- Tests: MCP 192 → **195** (3 new checks; 1 existing check's expectation changed as above); `gulf-calendar` 730,
+  `model-health` 50, `tmdl-model` 70 unchanged.
+
+### What is built
+- **A new shared file, `assets/js/gulf-health.js`** (UMD, loads `gulf-dates.js`; not in `model-health-engine.js`'s
+  rule list): `analyze(model, { country, asOf, maxItems })`. **Nothing in the health engine changes: the score and
+  every existing finding count stay the same** on the website and in the MCP.
+- **`check_model_health`** (`mcp/server.mjs`) takes `country` (`uae` default, `ksa`, `qat`, `kwt`, `bhr`, `omn`) and
+  `asOf` (a date, for tests: today by default), and returns a section **`gulfCalendar`**, marked `scored: false`.
+  **D3:** the section is returned only when `country` is given or the model already has a Hijri or Ramadan column.
+  `country` changes only the weekend rule and the dates compared; **never `weekStart`** (round 2's fixes don't move).
+- **What is read, from the files only (no data values):**
+  - *any calendar:* whether Hijri year, month and day columns, Ramadan/Eid columns, a weekend column and an
+    "estimated date" column exist (by name: the generator's names and close variants, Arabic included), and whether
+    the model has Ramadan or Eid measures;
+  - *a calendar made by our generator* (a DAX table whose expression starts with the generator's comment): its range
+    (`CALENDAR ( DATE (...), DATE (...) )`), its Hijri month starts (the `DATATABLE` rows) and its `Is Weekend`
+    expression, evaluated per date by a small evaluator for the generator's forms only (`WEEKDAY ( [Date], 1 ) IN
+    { ... }`, `IF ( [Date] >= DATE ( ... ), ..., ... )`). Any other form, and any other calendar's weekend and
+    dates, are listed under `cantTell` ("can't tell from the files"), never guessed and never a finding.
+- **Findings** (the plan's IDs, levels and English/Arabic wording; the level orders them): `GC_NO_CALENDAR`,
+  `GC_NO_HIJRI`, `GC_NO_FLAGS`, `GC_WEEKEND` (days that disagree with the country's rule, with one example date),
+  `GC_DATES_DIFFER`, `GC_ESTIMATES`, `GC_ENDS_EARLY`, `GC_NO_MEASURES`. Each has `source: 'files'`, `count` and at
+  most `maxItems` items.
+- **D2:** Ramadan, Eid al-Fitr and Eid al-Adha starts are compared with the UAE's announced dates when the country
+  is the UAE; for the other five countries with Umm al-Qura (worked out with `Intl`, as the generator does), and the
+  section says "announced dates are sourced for the UAE only".
+- **Fixes point to the website tools, with the exact settings to pick; no DAX is returned (D1 is after the beta):**
+  `fixes.calendarGenerator` (the address; the same first and last date, or a last date that covers the next Ramadan;
+  the weekend option by its label, e.g. "UAE: Sat + Sun since 2022"; "Hijri dates, Ramadan and Eid" on; "Announced
+  Ramadan and Eid dates (UAE)" on for the UAE, and for another country off with the reason) and
+  `fixes.measureBuilder` (the address and which Ramadan and Eid measures to tick: only those the model lacks).
+- **Docs:** `mcp/README.md` (the tool's row), `mcp/PRIVACY.md` (what the section returns: column and measure names,
+  the calendar's own range and month-start dates, counts of days), `mcp/GOLDEN-TASKS.md` (one more task: "a Gulf
+  model's calendar checked", on the pack's test model), `mcp/CLAUDE.md`.
+
+### Expected results (written before any run; `asOf: 2026-10-03` unless said)
+| Model | Input | Expected |
+|---|---|---|
+| `tmdl-ramadan` (the generator's calendar 2022-2027, Umm al-Qura, fixed Sat-Sun; Ramadan measures) | country `uae` | section present; no `GC_WEEKEND`; no `GC_DATES_DIFFER`; `GC_ESTIMATES` with **3** items (Ramadan, Eid al-Fitr, Eid al-Adha 1448); no `GC_NO_MEASURES`; no `GC_ENDS_EARLY` |
+| the same | country `ksa` | `GC_WEEKEND` **626** days (every Friday and Sunday 2022-2027); dates compared with Umm al-Qura, none differ |
+| the same | no country | section present (the model has Hijri columns), country `uae` |
+| the same | `asOf: 2027-06-01` | `GC_ENDS_EARLY` (the calendar ends 2027-12-31; Ramadan 1449 is expected from 2028-01-28) |
+| the same | fixes | `calendarGenerator`: 2022-01-01 to 2027-12-31, the UAE weekend option, announced dates on; `measureBuilder`: the six Eid measures to tick, not the two Ramadan ones (they exist) |
+| the pack's test model (`calendar.dax` and `measures.dax`, wrapped as a model by the test) | `uae` | **no findings** |
+| the same | `ksa` | `GC_WEEKEND` **939** days (Fridays and Sundays 2022-2030; 2018-2021 agree) |
+| the baseline's calendar from 2018 without announced dates (`fixtures/gulf-calendar/baseline.json`) | `uae` | `GC_DATES_DIFFER` **1** item: Ramadan 1439, model 2018-05-16, announced 2018-05-17 |
+| `health-project` (imported calendar, no Hijri, no weekend column) | no country | **no `gulfCalendar` key** |
+| the same | `uae` | `GC_NO_HIJRI` only; no `GC_WEEKEND` |
+| a made-up imported calendar with Hijri, Ramadan/Eid and weekend columns, no Ramadan measures | no country | section present; weekend and dates under `cantTell`; `GC_NO_MEASURES` |
+| a made-up imported calendar with Hijri columns only | `uae` | `GC_NO_FLAGS` and `GC_NO_MEASURES` |
+| a made-up model with no calendar | `uae` | `GC_NO_CALENDAR` only |
+| the generator's calendar with `Is Weekend` in another form | `uae` | weekend under `cantTell`, no `GC_WEEKEND` |
+| any | country `egy` | refused, the six codes listed |
+| `sort.bim` (round 2) | with and without `country` | `fixes.MONTH_SORT` identical |
+| `dax-project`, `bim-project` | with and without `country` | score and findings identical |
+
+- **Tests:** MCP `npm test` 174 → **192** (18 new checks, failing first); website `gulf-calendar` 727 → **730** (the
+  checker on the pack's `calendar.dax`: UAE 0 and Saudi Arabia 939 mismatched days; every baseline calendar made
+  with a country's weekend agrees with that country's rule on every day; another form of `Is Weekend` is refused, not
+  guessed); `model-health` 50, `tmdl-model` 70 and every other suite unchanged; 17 of 17 pass on the laptop too.
+- **Fixtures:** none changed, none added (the new models are written by the tests from repo files).
+- **Desktop:** none needed (the section is text read from files). If the numbers above don't come out, that is a
+  disagreement between this plan and the generator: stop and report.
+
 ## Next step (queued, approved 2026-10-03; builder; plan first, then go)
 1. The 3 privacy gaps in `mcp/PRIVACY.md` ("Known gaps"): a link inside the working folder leading outside it; a
    working folder that is itself a model folder; the report-design skill's screenshots and DAX checks without asking.

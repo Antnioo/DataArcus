@@ -1,6 +1,6 @@
-# The 10 golden tasks
+# The 11 golden tasks
 
-Ten permanent, real requests, run before every release (`mcp/ROADMAP.md`, "Packaging": AI evaluations). They test
+Eleven permanent, real requests (ten written 2026-10-03; the eleventh added the same day with the Gulf calendar check), run before every release (`mcp/ROADMAP.md`, "Packaging": AI evaluations). They test
 whether an AI app uses DataArcus well, not only whether the tools work. Written 2026-10-03; baseline taken the same day
 on main `bc05275`. **Never change a task, its model or its expected results to make a release pass**; a change needs
 the owner's go and a reason written here.
@@ -31,6 +31,7 @@ the agent (names are data), the agent analyses, proposes, then writes.
 | Health Test (with a report) | `mcp/fixtures/health-project` | model.bim project with an existing report, "Health Test Report" |
 | Arabic Long Names | `mcp/test-models/arabic-long-names` | made up: three Arabic tables, five measures with names of 37-45 characters, Arabic month and day names with sort columns, a Hijri year, an "is Ramadan" flag |
 | Plain Orders | `mcp/test-models/no-measures` | made up: Orders and Dates, no measures at all, no format strings, the date table not marked, Month Name and Day Name without a sort column, keys visible |
+| Gulf Calendar Test | `scripts/gulf-calendar/test-model` (`calendar.dax`, `sales.dax`, `measures.dax`; as a project on the laptop in `C:\DataArcus\tests\7-gulf-calendar`, made by `builder-scripts\gc-model.mjs`) | made up: the Calendar Generator's table 2018-2030 with the UAE weekend and the announced Ramadan and Eid dates, a Sales table, the Ramadan and Eid measures |
 | Large Synthetic | `mcp/test-models/large-synthetic` (`node generate.mjs` rewrites it, byte for byte the same) | made up: 300 tables (65 facts, 234 lookups, a calendar), 3,000 columns, 975 measures, 416 relationships |
 
 ## The tasks
@@ -149,6 +150,21 @@ Each: the model, the request word for word, the expected tool calls, the checks,
   `suggest_fields` picks AR Invoices' "Total Tax Amount" and Bookings measures (the first fact tables by name, not
   Logistics) and "ABC Class" as the category; `create_report` flags "Bookings Total Margin" as a percentage (a money
   margin). The report itself builds: 35 visuals, validator 0, 0 overwritten.
+
+### 11. A Gulf model's calendar checked (added 2026-10-03 with the Gulf calendar beta cut; owner's decision)
+- **Model:** Gulf Calendar Test. **Request:** "We're a UAE retailer. Is our calendar right for Ramadan, Eid and the
+  weekend? And what if we report for our Saudi branch?"
+- **Expected calls:** `check_model_health` with `country: "uae"`, then again with `country: "ksa"`.
+- **Checks:** the agent reports the `gulfCalendar` section apart from the score and says it is not scored; for the
+  UAE: no findings; for Saudi Arabia: the weekend differs on **939 days** (Fridays and Sundays from 2022) and nothing
+  is said to be wrong with the Ramadan and Eid dates (they are the announced ones, which match Saudi Arabia's); it gives the
+  fix as the Calendar Generator's settings (the weekend option "Saudi Arabia: Fri + Sat since 2013", the same first
+  and last date), writes no DAX of its own for the calendar, and changes nothing in the model.
+- **Baseline (tool level, 2026-10-03, `feat/gulf-calendar-mcp-cut`):** PASS: UAE 0 findings; Saudi Arabia
+  `GC_WEEKEND` 939 days and no date finding; the health score the same with and without `country`. (Changed the same
+  day, owner's decision: the first baseline also had `GC_DATES_DIFFER` 1 item for Saudi Arabia, from comparing with
+  Umm al-Qura; Saudi Arabia's announced dates are now sourced and match the UAE's.) Agent
+  level: not run yet.
 
 ## Baseline summary (2026-10-03, main `bc05275`, tool level)
 | # | Task | Tool level | Why not |

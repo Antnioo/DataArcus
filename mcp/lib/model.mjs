@@ -11,6 +11,7 @@ export const Health = require('../../assets/js/model-health-engine.js');
 export const Pbip = require('../../assets/js/pbip-export.js');
 const Tmdl = require('../../assets/js/tmdl-model.js');
 export const Fix = require('../../assets/js/model-health-tmdl.js');
+export const Gulf = require('../../assets/js/gulf-health.js');
 
 // Every path the tools read or write must sit inside the working folder, DATAARCUS_ROOT. Not set, empty, blank or
 // still a placeholder ("${user_config.working_folder}": what an app's settings leave when nothing was chosen) means
