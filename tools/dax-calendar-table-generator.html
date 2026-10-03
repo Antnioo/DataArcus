@@ -127,6 +127,7 @@
     .cg-checks { display: flex; flex-direction: column; gap: 8px; }
     .cg-checks label { display: flex; gap: 10px; align-items: flex-start; font-size: .9rem; color: var(--lt); cursor: pointer; }
     .cg-checks small { display: block; color: #94a3b8; }
+    .cg-checks bdi { white-space: nowrap; }   /* a column name (Is Estimated Date) never breaks across lines */
     .cg-checks input { margin-top: 4px; accent-color: var(--accent); width: 16px; height: 16px; }
     .cg-quick { display: flex; flex-wrap: wrap; gap: 8px; }
     .cg-chip { display: inline-block; background: rgba(0, 212, 255, .08); border: 1px solid rgba(0, 212, 255, .3); color: var(--accent-2); border-radius: 30px; padding: 5px 12px; font-size: .8rem; margin: 0 6px 6px 0; }

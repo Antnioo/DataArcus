@@ -329,5 +329,23 @@ export default async function ({ browser, url }) {
     check(ok, `calendar preview, Arabic page, ${names} names: "${r.txt}" shows the day on the ${r.day.left < r.month.left ? 'left' : 'right'} of the month`);
     await done(v, `preview order ${names}`);
   }
+  // the Arabic note of the announced-dates option ends on an Arabic word, so its full stop sits after Arabic text and
+  // not next to the English column name (at desktop width, where the sentence ends on the name's line)
+  {
+    const v = await open(CG, null, 'ar');
+    const r = await v.pg.evaluate(() => {
+      const small = document.querySelector('#cgObserved + span small'), txt = small.textContent.trim();
+      const walker = document.createTreeWalker(small, NodeFilter.SHOW_TEXT); let last = null, n; while ((n = walker.nextNode())) if (n.textContent.trim()) last = n;
+      const s = last.textContent, end = s.lastIndexOf('.');
+      const g = document.createRange(); g.setStart(last, end); g.setEnd(last, end + 1); const dot = g.getBoundingClientRect();
+      const before = s.slice(0, end).trimEnd(), wordStart = before.search(/\S+$/);
+      const h = document.createRange(); h.setStart(last, Math.max(0, wordStart)); h.setEnd(last, before.length); const word = h.getBoundingClientRect();
+      return { txt, word: before.slice(wordStart), dot: { l: dot.left, r: dot.right, t: dot.top }, wb: { l: word.left, r: word.right, t: word.top } };
+    });
+    check(/[؀-ۿ]$/.test(r.word) && Math.abs(r.dot.t - r.wb.t) < 4 && r.wb.l >= r.dot.r - 1,
+      `calendar note in Arabic: the full stop follows "${r.word}" (${JSON.stringify(r.dot)} vs ${JSON.stringify(r.wb)}): ${r.txt.slice(-60)}`);
+    await done(v, 'note full stop');
+  }
+
   return { checks, problems };
 }
