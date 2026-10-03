@@ -315,5 +315,19 @@ export default async function ({ browser, url }) {
     check(!cut.length, `calendar generator ${lang} ${w}px: drop-down text cut: ${cut.join('; ')}`);
     await done(v, `drop-downs ${lang} ${w}px`);
   }
+  // with English month names on the Arabic page, a Hijri date reads "28 Sha'ban 1443" (day first, as in English);
+  // with Arabic names it stays right to left (day on the right)
+  for (const names of ['en', 'ar']) {
+    const v = await open(CG, cgSaved({ hijri: true, lang: names, start: '2022-03-25', end: '2022-04-30' }), 'ar');
+    const r = await v.pg.evaluate(() => {
+      const cell = document.querySelectorAll('#preview tr')[1].cells[2], txt = cell.textContent, node = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT).nextNode();
+      const rect = (a, b) => { const g = document.createRange(); g.setStart(node, a); g.setEnd(node, b); return g.getBoundingClientRect(); };
+      const day = txt.indexOf(' '), month = [day + 1, txt.lastIndexOf(' ')];
+      return { txt, day: rect(0, day), month: rect(month[0], month[1]) };
+    });
+    const ok = names === 'en' ? r.day.right <= r.month.left + 1 : r.day.left >= r.month.right - 1;
+    check(ok, `calendar preview, Arabic page, ${names} names: "${r.txt}" shows the day on the ${r.day.left < r.month.left ? 'left' : 'right'} of the month`);
+    await done(v, `preview order ${names}`);
+  }
   return { checks, problems };
 }

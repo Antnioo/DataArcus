@@ -136,6 +136,9 @@
     @media (max-width: 767px) { .cg-form { grid-template-columns: 1fr; } }
     /* Code and hex values always read left to right, even on the Arabic page */
     .tg-json, .tg-color input[type=text], .mb-pre, #cgStart, #cgEnd { direction: ltr; text-align: left; unicode-bidi: plaintext; }
+    /* The preview's Hijri date takes its reading order from its own words: "28 Sha'ban 1443" with English month
+       names on the Arabic page, "28 شعبان 1443" right to left with Arabic names */
+    #preview td:nth-child(3) { unicode-bidi: plaintext; }
   </style>
 </head>
 <body>
