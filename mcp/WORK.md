@@ -109,6 +109,12 @@ passed on the Arabic 1080 report; on the other eleven it was not done (the lapto
 report says. **Round 1 is complete and waits for the reviewer to merge.** `pbip-export.min.js?v=20261003e`,
 `theme-generator.min.js?v=20261003e`.
 
+**Microsoft's `powerbi-authoring` plugin tested on an Arabic report (2026-10-03, no code):** recorded in
+`scripts/tests/DESKTOP-TESTS.md` with its limits and a screenshot (`tests/6-ms-plugin/`). In short: it does not mirror
+the layout; Arabic titles appear only when the agent writes them and model names stay English; it has no Hijri or
+Ramadan calendar (it used ours); it checks the schema and screenshots, not the numbers; its own base theme fails its
+own validator. **The owner decides the repositioning from it.** Next for the builder: round 2, with the owner's go.
+
 (The block below is the state the owner decided on; kept for the record.)
 
 **Stopped on item 5 (the rule: a failure that could change what Desktop shows; and the fix is the owner's choice).**
