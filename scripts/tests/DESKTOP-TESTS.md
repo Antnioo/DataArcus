@@ -990,6 +990,40 @@ chart titles mix "حسب" with English field names (no display names given), the
 "Total" word. On a 927-wide card the number sits in the middle with a lot of empty card around it (a look, not a
 fault).
 
+## 2026-10-04: the images for findings 001 and 002 (no code), Power BI Desktop 2.158.1177
+
+The report Microsoft's `powerbi-authoring` plugin built on 2026-10-03 (`C:\DataArcus\tests\6-ms-plugin\Arabic
+Sales.pbip`, the made-up Ramadan Test model) was reopened, nothing rebuilt. The owner had said the laptop was free;
+`idle.ps1` showed no input for more than 8 minutes before the keyboard steps.
+
+| | Expected (written before the run) | Result |
+|---|---|---|
+| The three KPI cards | 101.914K, 74.675K, 0.34 | **101.914K, 74.675K, 0.34** |
+| The DAX query, through Microsoft's Power BI modelling MCP: `EVALUATE ROW("Total Sales", [Total Sales], "Total Sales Last Ramadan", [Total Sales Last Ramadan], "Total Sales vs Last Ramadan %", [Total Sales vs Last Ramadan %])` | 101914, 74675, 0.3377971 | **101914, 74675, 0.3377971208570472** |
+| The same query in Desktop's DAX query view | the same | 101914, 74675 and **0.34**: the result grid rounds to two decimals |
+| The page | as in `ms-plugin-pass1.png` | the same |
+
+Closed without saving. Desktop reported unsaved changes before closing because DAX query view keeps the query in the
+model until saved ("DAX queries will be saved to your model"); the process was stopped, and no file of the project
+changed (checked by modification time).
+
+Images, in `C:\DataArcus\tests\6-ms-plugin\_shots\` (each looked at in full size: canvas or query only, no title bar,
+path, user name or other app):
+- `f001-1-page.png` (1200 x 729): the canvas, four numbered markers (title, the table's first column, a value axis,
+  a KPI card), the caption line.
+- `f001-2-topband.png` (2250 x 120): the top band at full size.
+- `f001-3-numbers.png` (1200 x 330): the three cards above the query and its result grid (stacked, not side by side:
+  side by side at 1200 wide the query text was too small to read), the caption line.
+- For finding 002, `C:\DataArcus\tests\phase2-try\shots-r2\f002-1-before-after.png` (1200 x 313): the same card
+  before the format script (0.34) and after (33.8%), cropped from the round 2 sitting's window captures, with its
+  line. The crops are enlarged 2.1 times from 1x captures, so they are slightly soft.
+
+Scripts: `builder-scripts\f001-images.ps1`, `dax-view.ps1`, `f002-image.ps1`.
+
+**Seen, not in scope:** image 3's grid shows 0.34 while its caption says 0.3378 (the grid's own rounding; the exact
+value is from the modelling MCP). If the post should show 0.3378 on screen, the query needs a `FORMAT` or a `ROUND`
+to 4 places, which is a different query from the one in the notes: the owner's choice.
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
