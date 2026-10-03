@@ -1,7 +1,7 @@
 # DataArcus blog: the plan (read before writing a post)
 
 The memory for the blog. Read it before planning or writing an article; update it after each one is published
-(the log, the map, "Next up"). Last updated 2026-10-03 (the Gulf calendar article written, not yet published).
+(the log, the map, "Next up"). Last updated 2026-10-03 by the reviewer (Gulf calendar published; "Next up" from the SEO research).
 
 ## Who we write for, and how we sound
 - **Our identity:** Power BI reports designed right, fast, and checked in Power BI. **Our edge:** built for how the
@@ -22,7 +22,7 @@ The memory for the blog. Read it before planning or writing an article; update i
 ## The pillars (what the blog is about)
 | Pillar | Published | Free tool it leads to |
 |---|---|---|
-| Gulf business logic (and Arabic) | Ramadan sales YoY (2026-09-23) | DAX Calendar Table Generator (Hijri), Theme Generator (Arabic) |
+| Gulf business logic (and Arabic) | Ramadan sales YoY (2026-09-23), Gulf calendar in DAX (2026-10-03) | DAX Calendar Table Generator (Hijri), Theme Generator (Arabic) |
 | Power BI craft (DAX, models) | DAX attribution pattern (2026-09-01), Model health check (2026-09-25) | Model Health Check, DAX Measure Builder |
 | Report design | Report redesign in 5 minutes (2026-09-28), 7 report styles (2026-09-29) | Theme Generator, SVG KPI Designer |
 | Cost and licensing | Pro vs PPU vs Fabric F64 (2026-09-23) | Licensing Cost Calculator |
@@ -34,23 +34,27 @@ The memory for the blog. Read it before planning or writing an article; update i
 - PL-300 practice exam (`tools/pl-300-practice-exam.html`)
 - DP-600 practice exam (`tools/dp-600-practice-exam.html`)
 
-## Next up (in order; reframed 2026-10-01: the Gulf calendar first, since every Gulf business needs it in any language)
-1. **A Gulf calendar in DAX** (publish by early December 2026, ahead of Ramadan 2027 around 8 February): Hijri months, Ramadan and Eid flags, the Saturday-Sunday weekend (UAE since 2022), and
-   sorting day and month names correctly. Tool: Calendar Table Generator.
-   **Written 2026-10-03** on branch `feat/gulf-calendar-pack`: `articles/article-gulf-calendar-power-bi.html` (English
-   and Arabic), blog card, home page card, sitemap, share image `assets/img/og/gulf-calendar.jpg`, a link back from the
-   Ramadan sales article, and 3 LinkedIn drafts in `content/linkedin-gulf-calendar.md`. **Before publishing:** the
-   test model's 40 checks pass in Power BI Desktop (`scripts/gulf-calendar/test-model/README.md`; the article's DAX is
-   the Measure Builder's, checked there), the owner picks the publish date (the page says 3 October 2026: change
-   `datePublished`, the dates on the cards and the sitemap if it goes out later), then merge. After publishing: the
-   log below and the pillar table.
-2. **Arabic and right-to-left Power BI reports done right**: what Power BI does and doesn't support (no RTL setting
-   in Desktop), mirroring the layout, Arabic fonts, numbers and titles. Tool: Theme Generator (Arabic).
-3. **PL-300 study guide** (then DP-600): what the exam weighs, a 4-week plan, the traps. Tool: the practice exams.
-   Search demand is high and steady.
-4. **Measures without the guesswork**: time intelligence and ratios that people get wrong. Tool: DAX Measure Builder.
-5. **KPI cards that tell a story with SVG**: Tool: SVG KPI Designer.
-6. **Claude designs your Power BI report** (the MCP launch): only when the MCP is packaged and public.
+## Next up (in order; owner adopted 2026-10-03 from the SEO research, dataarcus-engine `research/SEO-REPORT.md`)
+1. **The Copilot-readiness audit page and "Is your model ready for Copilot? How to check in 10 minutes"** (improve
+   the AI-ready article: a step-by-step check with the Model Health Check, then the audit). Keywords: copilot
+   readiness assessment, power bi copilot best practices, prepare semantic model for copilot, power bi prep data for
+   AI. Tool: Model Health Check. The first paid offer. (Audit page: Beta prep, 2026-10-03.)
+2. **The week and the weekend in Power BI by Gulf country** (week start Saturday/Sunday, NETWORKDAYS weekend codes,
+   the 2022 UAE change, Eid holidays). Keywords: power bi week start saturday/sunday, networkdays power bi. Tool:
+   Calendar Table Generator.
+3. **How much does Power BI cost in the UAE and Saudi Arabia (with Copilot)?** (USD list prices, no AED price from
+   Microsoft, the peg, Copilot capacity). Keywords: power bi license cost uae, سعر باور بي اي, power bi copilot
+   capacity requirements. Tool: Licensing Cost Calculator. (A first FAQ and Copilot section: Beta prep, 2026-10-03.)
+4. **DP-600 after the October 2026 update**, then the **PL-300 study guide** (a 4-week plan, the traps). Tools: the
+   practice exams.
+5. **Arabic and right-to-left Power BI reports done right**: answer "does power bi support arabic", "matrix right to
+   left" and "bilingual report"; our angle is the mirrored layout plus the Gulf logic. Tool: Theme Generator
+   (Arabic). Publish with the `/ar/` pages (owner 2026-10-03: option A, after round 3).
+6. **KPI cards that tell a story with SVG**: no tool ranks for "power bi svg kpi card". Tool: SVG KPI Designer.
+7. **Measures without the guesswork** (target "power bi yoy measure", "power bi ytd"): Tool: DAX Measure Builder.
+8. **Claude designs your Power BI report** (the MCP launch): only when the MCP is packaged and public.
+- **Published 2026-10-03:** a Gulf calendar in DAX (`articles/article-gulf-calendar-power-bi.html`, merged `2e6fc3d`
+  after 40 of 40 Desktop checks); LinkedIn posts 13-15 Oct (`content/linkedin-gulf-calendar.md`).
 
 ## Claims: safe and not (from the research of 2026-10-01)
 - **Safe, with the source linked:** Power BI Desktop has no right-to-left support (Microsoft Learn); GCC weekends
@@ -62,7 +66,7 @@ The memory for the blog. Read it before planning or writing an article; update i
   "dashboards in Arabic".
 
 ## To fix
-- **Done 2026-10-03 (branch `content/health-check-rewrite`, waiting for the reviewer):** the Health Check article no
+- **Done 2026-10-03 (merged `0a328b5`; the owner reads the Arabic on 9 Oct):** the Health Check article no
   longer describes the owner's employer's model. The case study is now Microsoft's public COVID-19 US Tracking Sample
   (`powerbi-service-samples` in github.com/microsoft/powerbi-desktop-samples, MIT licence), run through our engine
   (`assets/js/model-health-engine.js`) in Node: score 84; 4 tables, 16 columns, 10 measures, 2 relationships, 2 pages,
@@ -104,3 +108,4 @@ became a post). Add ideas here with the date and where they came from:
 | 2026-09-28 | Same visuals, new design: a report redesign in 5 minutes | Design | Theme Generator |
 | 2026-09-29 | Power BI dashboard design by department: 7 report styles | Design | Theme Generator |
 | 2026-10-02 | Is your Power BI model ready for AI? A 7-point check | Craft (AI-ready models) | Model Health Check, Calendar Generator |
+| 2026-10-03 | A Gulf calendar in Power BI: Hijri dates, Ramadan, Eid and the right weekend | Gulf | Calendar generator, Measure Builder |
