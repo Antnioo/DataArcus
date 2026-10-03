@@ -185,7 +185,7 @@ Owner's decisions: large models get a summary first, details on request; a model
 gets fewer cards and is told why (never an empty card). Not in this round: task 9's raw schema message, zod 4, the
 packaging build, the Gulf calendar's later items, the /ar/ pages.
 
-**State (2026-10-03): built, pushed; the Desktop capture of the 2-card report waits for the laptop to be free.**
+**State (2026-10-03): built, pushed, Desktop checked; waiting for the reviewer.**
 Plan `4309775`; tests first `f83c169`; item 3's engine `162a24a`; item 4 `5763719`; items 1, 2, 3 in the MCP
 `eacbb00`; docs, golden baselines and item 5 in the commit after.
 - **Every expected number came out**, with two corrections to my own plan: the checks are 216, not 213; and the
@@ -204,9 +204,11 @@ Plan `4309775`; tests first `f83c169`; item 3's engine `162a24a`; item 4 `576371
   pbip 71, both theme generators 883, layout 512: counts unchanged; no fixture changed).
 - **Golden tasks (tool level):** 7 FAIL → PASS (validator 11 → 0); 8 FAIL → PASS (3 → 0); 10 FAIL → PASS when the
   agent gives the focus. `mcp/GOLDEN-TASKS.md` has the new baselines.
-- **Desktop:** the two reports are built (`Gulf Sales R4 EN 2 cards`, `... AR 2 cards`, `builder-scripts\r4-build.mjs`,
-  validator 0); the capture is not done yet.
-- **Next step:** the Desktop capture when the laptop is free; the reviewer's review, CI, merge; then zod 4, the
+- **Desktop:** two 2-card reports (English and Arabic, 1080), both pages each: as expected
+  (`scripts/tests/DESKTOP-TESTS.md`, "round 4"); validator 0.
+- **CI:** the first push failed on my new "small answers unchanged" check (the answer's path separator differs on
+  Linux); the check now normalises it (`044d709`), green.
+- **Next step:** the reviewer's review and merge; then zod 4, the
   findings image, the packaging build.
 
 ### Measured before planning (main `b76bbbf`, `mcp/test-models/golden-baseline.mjs` and a one-off probe)
