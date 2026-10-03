@@ -1,10 +1,25 @@
 # Current work (the memory between sessions)
 
 Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). Last updated 2026-10-03
-by the builder: **round 2 (Arabic accuracy) is in progress on `fix/round-2-arabic`** (owner's go in advance). State, plan
-and expected results: "Round 2 in progress". Round 1 is merged as `80d3a00`; main is at `bc05275`.
+by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
+`2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
 ## Where things stand
+- **Merged 2026-10-03 (reviewer):** round 1 (`80d3a00`); the Microsoft plugin test (`bc05275`); privacy statement and
+  product spec (`515409d`: `mcp/PRIVACY.md`, `mcp/PRODUCT_SPEC.md`); the 10 golden tasks and test models (`39b5ab7`);
+  employer-sector details off the public site and the Health Check case study on Microsoft's public sample
+  (`0a328b5`); round 2 (`ada2942`: right-to-left page buttons, month/day order in charts, Arabic display names, sort
+  and format fixes as health findings with `weekStart`, the tooltip's base measure, KPI title padding; Desktop: 60
+  captures, validator 0 errors, hover, Ctrl+click, the TMDL format script (33.8%, the plan's 34.0% came from the
+  rounded card) and the sort script on an imported calendar, all as expected); the Gulf Calendar pack (`2e6fc3d`:
+  sourced Ramadan/Eid dates 2018-2030 in `gulf-dates.js` with `scripts/gulf-calendar/DATES-SOURCES.md`, GCC weekends by
+  country in the Calendar Generator, Eid window measures in the Measure Builder, the article, LinkedIn drafts in
+  `content/linkedin-gulf-calendar.md`; Desktop: `check.dax` 40 of 40). MCP 149 checks; 17 website suites.
+- **Owner decisions 2026-10-03:** right-to-left page buttons in the website's Arabic download too; the Calendar
+  Generator's UAE and Saudi quick-setup buttons unchanged; the Gulf Calendar article live now; DataArcus Pulse stays
+  on the site as it is until the owner redesigns it with the tool.
+- **Planned, not approved:** the Gulf calendar inside the MCP (plan only, branch `plan/gulf-calendar-mcp`,
+  `mcp/plans/GULF-CALENDAR-MCP.md`).
 - **Now (2026-10-02, main `e8fe171`):** 6 MCP tools (`read_model`, `suggest_fields`, `check_model_health`,
   `generate_theme`, `plan_layout`, `create_report`), 120 checks in `npm test`; 16 website suites; CI runs all of them
   on every push. Merged since 2026-10-01: round 0 (`14dd467`: the tooltip page on every chart, the logo at its own
@@ -60,7 +75,20 @@ date). The plan is in `mcp/ROADMAP.md`, "Plan of 2026-10-02".
 - **The validator:** a representative set of exports on every push, the full matrix nightly (reviewer, after round 2).
 - **Dated:** the Gulf Calendar pack and its free lead-magnet download, ready by 2026-12-01.
 
-## Round 2 in progress (owner's go 2026-10-03, in advance for every step; branch `fix/round-2-arabic`, from main `bc05275`)
+## Next step (queued, approved 2026-10-03; builder; plan first, then go)
+1. The 3 privacy gaps in `mcp/PRIVACY.md` ("Known gaps"): a link inside the working folder leading outside it; a
+   working folder that is itself a model folder; the report-design skill's screenshots and DAX checks without asking.
+2. The 4 server fixes required before the first build (`packaging/PACKAGING.md` in dataarcus-engine): empty
+   `DATAARCUS_ROOT`, a missing folder, the version in two places, read-only tool hints.
+3. The health check calls a broken field inside a bookmark a "report filter": say "bookmark".
+4. Large models: a summary first, details on request (`mcp/GOLDEN-TASKS.md`). Fewer measures than KPI cards: build
+   fewer cards and say why (today `plan_layout` refuses fewer than 3).
+5. Round 2's two small fixes (owner to confirm; recommended with the server fixes): `howToApply` says to press
+   "Refresh now" after the sort script; fix scripts from a TMDL project carry no `lineageTag`.
+6. Then: Microsoft's validator on a representative set of exports every push, the full matrix nightly (reviewer);
+   the zod 4 smoke test in Claude Desktop (Dependabot PR #5).
+
+## Round 2 (history; merged as `ada2942`) (owner's go 2026-10-03, in advance for every step; branch `fix/round-2-arabic`, from main `bc05275`)
 Round 1 is merged (`80d3a00`), the plugin test too (`bc05275`); their branches are deleted. Round 2 is everything
 under "Round 2" below, with 2.4. Same method as round 1. The hover and panel scripts are not run while the owner uses
 the laptop: those checks come last, after telling him. If a fixture would change: stop for his go.
@@ -934,6 +962,15 @@ card title margins 12k and the bar-side padding; the table's fill stays. No deci
   each under load and pass alone. They don't use `ready()` yet (`scripts/tests/lib.mjs`).
 - **Phase 3:** background PNGs from the engine's SVG (first test whether Power BI accepts the SVG itself).
 - **Roadmap after that:** Arabic/right-to-left and Gulf DAX in a private repo, then packaging (`mcp/ROADMAP.md`).
+
+- **Round 2's "Seen, not in scope" (2026-10-03, triage with the owner):** tables and slicers list months and days A-Z
+  until the model has sort-by columns; "All" in English in Arabic slicers (no property exists); the 4th KPI shows 0.34
+  (no format in the model); no "Total" word in Arabic table totals; a chart title mixing Arabic and an English field
+  name draws the English word first; slanted month names at 720; the page 1 table cuts its last row or scrolls; the
+  website download's "calculated tables need refresh" banner; the website's card title close to the accent bar;
+  `create_report` shortens a long report name ("... Names les"); the website's health page has no format script yet;
+  the tooltip page can cover the ribbon near the top right; the website's Arabic tooltip chart title has the second
+  measure only, without "by"; cards read 101.91K and the table 13,857.00 after the format script.
 
 ## How to work (short)
 - Plan first, wait for "go"; tests first; one writer on the repo at a time; branch → push → the reviewer tests and
