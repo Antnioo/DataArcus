@@ -171,6 +171,11 @@ const GULF = (() => {
   <div class="card" style="padding:16px 22px">${pill('UAE weekend', '#fdcb6e')}<div style="display:flex;margin-top:10px;border-radius:10px;overflow:hidden">${seg('Fri + Sat · to 2021', 1, '#a29bfe')}${seg('Sat + Sun · from 1 Jan 2022', 1, '#00d4ff')}</div></div>`;
 })();
 
+// the Copilot readiness audit: the seven checks, then the Model Health Check findings
+const AUDIT = `<div class="card" style="padding:16px 22px">${pill('7 checks on your model')}${['Names a person can read', 'Descriptions that matter', 'Technical fields hidden', 'Unused fields found', 'A clean star schema', 'Formats and sort orders', 'Prep data for AI']
+  .map((t, i) => `<div style="display:flex;align-items:center;gap:14px;padding:7px 0;border-top:${i ? '1px solid rgba(255,255,255,.07)' : '0'}"><b style="width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:16px;font-weight:800;color:#051018;background:#00d4ff">${i + 1}</b><span style="font-size:19px;font-weight:700">${t}</span></div>`).join('')}</div>
+  <div class="card" style="padding:14px 20px;font-size:18px;font-weight:700;text-align:center">Plus the Model Health Check findings, each with its fix</div>`;
+
 const PAGES = [
   ['portfolio', 'Power BI showcases', 'Dashboards Built for Real Business Problems', { chips: ['8 dashboards', 'Retail to healthcare', 'Real models'] }, PORTFOLIO, '470px 1fr'],
   ['blog', 'Blog · Power BI & e-commerce', 'Power BI and E‑commerce Analytics Blog', { sub: 'Practical guides with real models, real DAX and real numbers.' }, BLOG, '500px 1fr'],
@@ -183,7 +188,8 @@ const PAGES = [
   ['report-redesign', 'Case study · Report design', 'Same Visuals, New Design: A Power BI Report in 5 Minutes', { size: 44, sub: 'One brand colour, one grid, KPIs first.' }, REDESIGN, '470px 1fr'],
   ['health-check-article', 'Case study · Power BI', 'We Ran a Health Check on a Microsoft Sample. It Scored 84.', { size: 44, sub: 'What a small, published model was hiding.' }, HEALTH, '470px 1fr'],
   ['ramadan-sales', 'Ramadan · DAX · Hijri calendar', 'Compare This Ramadan With Last Ramadan', { sub: 'SAMEPERIODLASTYEAR gets it wrong. A Hijri calendar and one DAX measure fix it.' }, RAMADAN, '470px 1fr'],
-  ['gulf-calendar', 'Gulf calendar · DAX · Free tool', 'A Gulf Calendar in Power BI', { sub: 'Hijri dates, announced Ramadan and Eid, and the right weekend for each country and year.' }, GULF, '470px 1fr']
+  ['gulf-calendar', 'Gulf calendar · DAX · Free tool', 'A Gulf Calendar in Power BI', { sub: 'Hijri dates, announced Ramadan and Eid, and the right weekend for each country and year.' }, GULF, '470px 1fr'],
+  ['copilot-audit', 'Service · Power BI · Copilot', 'Copilot Readiness Audit for Your Power\u00a0BI Model', { size: 44, sub: 'One model, a written report with the exact fixes, within 5 business days.' }, AUDIT, '470px 1fr']
 ];
 
 const JOBS = [

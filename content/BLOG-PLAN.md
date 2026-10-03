@@ -103,9 +103,10 @@ became a post). Add ideas here with the date and where they came from:
 | 2025-12-10 | Beyond traffic lights: how EVM predicts project risk | E-commerce / projects | - |
 | 2026-09-01 | Resolve once, hydrate many: a DAX attribution pattern | Craft | - |
 | 2026-09-23 | Compare Ramadan sales year over year (DAX) | Gulf | Calendar generator |
-| 2026-09-23 | Power BI Pro vs PPU vs Fabric F64: 2026 cost guide | Cost | Licensing calculator |
+| 2026-09-23 | Power BI Pro vs PPU vs Fabric F64: 2026 cost guide (updated 2026-10-03: what Copilot needs, Power BI price in the UAE and Saudi Arabia, PPU add-on $14) | Cost | Licensing calculator, Copilot readiness audit |
 | 2026-09-25 | Health check on a Microsoft Power BI sample: it scored 84 (rewritten 2026-10-03; was the employer's model) | Craft | Model Health Check |
 | 2026-09-28 | Same visuals, new design: a report redesign in 5 minutes | Design | Theme Generator |
 | 2026-09-29 | Power BI dashboard design by department: 7 report styles | Design | Theme Generator |
 | 2026-10-02 | Is your Power BI model ready for AI? A 7-point check | Craft (AI-ready models) | Model Health Check, Calendar Generator |
 | 2026-10-03 | A Gulf calendar in Power BI: Hijri dates, Ramadan, Eid and the right weekend | Gulf | Calendar generator, Measure Builder |
+| 2026-10-03 | Copilot readiness audit (a service page in `services/`, not a post; linked from the home page, the AI-ready article and the licensing guide) | Craft (AI-ready models) | Model Health Check |

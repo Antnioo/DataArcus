@@ -228,7 +228,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Each number starts when it comes into view. Watching the whole section instead never fired on short
-    // screens (a phone held sideways), where a tall section can never be 20% visible at once.
+    // screens (a phone held sideways), where a tall section can never be 20% visible at once. 0.9, not 1: layout
+    // heights are fractional (a 25.6px line), so a number scrolled to the screen edge can stay at 0.99 visible.
     const statsObserver = new IntersectionObserver((entries, observer) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -236,7 +237,7 @@ document.addEventListener('DOMContentLoaded', () => {
           observer.unobserve(entry.target);
         }
       });
-    }, { threshold: 1 });
+    }, { threshold: 0.9 });
 
     statsSection.querySelectorAll('[data-count]').forEach((counter) => statsObserver.observe(counter));
   }

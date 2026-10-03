@@ -74,23 +74,62 @@
   <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
 
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    "headline": "Power BI Pro, Premium Per User or Fabric: Which License Do You Actually Need?",
-    "description": "Pro, Premium Per User or a Fabric capacity? One number decides it: how many people only view reports. Prices, the F64 break-even point and a worked example.",
-    "url": "https://dataarcus.com/articles/article-power-bi-licensing-guide.html",
-    "mainEntityOfPage": "https://dataarcus.com/articles/article-power-bi-licensing-guide.html",
-    "author": { "@type": "Person", "name": "Abdelrahman M." },
-    "publisher": {
-      "@type": "Organization",
-      "name": "DataArcus",
-      "logo": { "@type": "ImageObject", "url": "https://dataarcus.com/assets/img/logo.svg" }
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "BlogPosting",
+      "headline": "Power BI Pro, Premium Per User or Fabric: Which License Do You Actually Need?",
+      "description": "Pro, Premium Per User or a Fabric capacity? One number decides it: how many people only view reports. Prices, the F64 break-even point and a worked example.",
+      "url": "https://dataarcus.com/articles/article-power-bi-licensing-guide.html",
+      "mainEntityOfPage": "https://dataarcus.com/articles/article-power-bi-licensing-guide.html",
+      "author": {
+        "@type": "Person",
+        "name": "Abdelrahman M."
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "DataArcus",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://dataarcus.com/assets/img/logo.svg"
+        }
+      },
+      "datePublished": "2026-09-23",
+      "dateModified": "2026-10-03",
+      "image": "https://dataarcus.com/assets/img/og/licensing-guide.jpg"
     },
-    "datePublished": "2026-09-23",
-    "dateModified": "2026-09-23",
-    "image": "https://dataarcus.com/assets/img/og/licensing-guide.jpg"
-  }
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How much does Power BI cost in the UAE and Saudi Arabia?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Microsoft publishes Power BI prices in US dollars: Pro $14 and Premium Per User $24 per user per month, paid yearly (Power BI pricing). It shows no dirham or riyal price, and its page notes that prices \"may not be reflective of actual list price due to currency, country, and regional variant factors\". At the fixed pegs of 3.6725 dirhams (Central Bank of the UAE) and 3.75 riyals (SAMA) to the dollar, that is about AED 51.42 or SAR 52.50 for Pro, and AED 88.14 or SAR 90.00 for PPU, before VAT. These are conversions, not local prices: the price you pay is your Microsoft reseller's quote."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Fabric capacity cost more in the UAE?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, in Azure's public price list (Fabric pricing). A capacity unit costs $0.22 an hour pay-as-you-go in UAE North against $0.18 in East US, so an F64 there is about $10,278 a month pay-as-you-go, or about $6,112 with a one-year reservation (US: about $8,410 and $5,004). That moves the reserved F64 break-even from about 358 to about 437 viewers. Microsoft's Fabric region list has no region in Saudi Arabia; in the Gulf it lists UAE North with all Fabric workloads, and UAE Central and Qatar Central for Power BI only."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which license do we need for Copilot?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A paid Fabric capacity (F2 or higher) or Power BI Premium (P1 or higher). Pro or PPU on its own isn't enough: see \"What Copilot needs\" above. To get the model ready first, see the Copilot readiness audit."
+          }
+        }
+      ]
+    }
+  ]
+}
   </script>
 </head>
 <body>
@@ -147,11 +186,27 @@
               <ul>
   <li data-i18n-html="content.list2_1"><strong>You need Fabric workloads.</strong> Lakehouses, pipelines and notebooks only run on capacity. A small F2 plus Pro seats is often the cheapest way in.</li>
   <li data-i18n-html="content.list2_2"><strong>Your models are outgrowing Pro.</strong> Pro caps model size at 1 GB and scheduled refresh at 8 times a day. PPU or capacity removes both limits.</li>
-  <li data-i18n-html="content.list2_3"><strong>You have Microsoft 365 E5.</strong> E5 already includes Pro, so Pro costs you nothing extra and PPU becomes an add-on of about $10 per user.</li>
+  <li data-i18n-html="content.list2_3"><strong>You have Microsoft 365 E5.</strong> E5 already includes Pro, so Pro costs you nothing extra, and Microsoft lists the step up to PPU as an add-on of $14 per user per month.</li>
   <li data-i18n-html="content.list2_4"><strong>You want to show reports to customers.</strong> Embedding reports in your own app or portal needs capacity, not per user licenses.</li>
 </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h5">What Copilot needs</h2>
+              <p data-i18n-html="content.p8">Copilot in Power BI does not come with Pro or PPU. Microsoft's requirements (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-introduction' class='text-accent' target='_blank' rel='noopener'>Copilot for Power BI overview</a>):</p>
+              <ul>
+  <li data-i18n-html="content.list3_1"><strong>A paid capacity.</strong> A Fabric capacity of F2 or higher, or Power BI Premium P1 or higher. Trial capacities and free SKUs aren't supported.</li>
+  <li data-i18n-html="content.list3_2"><strong>Pro or PPU alone isn't enough.</strong> In Microsoft's words, Copilot "requires organizational capacity". An F2 or larger can be set up as a <a href='https://learn.microsoft.com/fabric/enterprise/fabric-copilot-capacity' class='text-accent' target='_blank' rel='noopener'>Fabric Copilot capacity</a>: the users assigned to it can use Copilot in Power BI Desktop and in Pro and PPU workspaces, and their Copilot usage is billed to that capacity.</li>
+  <li data-i18n-html="content.list3_3"><strong>Copilot uses the capacity.</strong> Its usage is billed in capacity units, by the tokens it uses, on top of the load of your reports. Size the capacity with Copilot in mind.</li>
+  <li data-i18n-html="content.list3_4"><strong>In the UAE, an admin setting.</strong> The Azure OpenAI service behind Copilot runs in US and EU data centers. For a capacity in the UAE, Copilot stays off until your Fabric admin allows data to be processed outside the capacity's region (<a href='https://learn.microsoft.com/fabric/fundamentals/copilot-fabric-overview#available-regions' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>).</li>
+</ul>
+              <p data-i18n-html="content.p9">Then prepare the model before your users start asking it questions: Microsoft says that without preparation, Copilot can return generic or inaccurate results. Our <a href='article-power-bi-model-ai-ready.html' class='text-accent'>7-point check</a> lists what to fix, and the <a href='../services/copilot-readiness-audit.html' class='text-accent'>Copilot readiness audit</a> checks your own model and writes the exact fixes.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h6">Power BI price in the UAE and Saudi Arabia</h2>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q1">How much does Power BI cost in the UAE and Saudi Arabia?</h3>
+              <p data-i18n-html="content.a1">Microsoft publishes Power BI prices in US dollars: Pro $14 and Premium Per User $24 per user per month, paid yearly (<a href='https://www.microsoft.com/en-us/power-platform/products/power-bi/pricing' class='text-accent' target='_blank' rel='noopener'>Power BI pricing</a>). It shows no dirham or riyal price, and its page notes that prices "may not be reflective of actual list price due to currency, country, and regional variant factors". At the fixed pegs of 3.6725 dirhams (<a href='https://www.centralbank.ae/en/our-operations/monetary-policy-and-domestic-markets/domestic-market-operations/' class='text-accent' target='_blank' rel='noopener'>Central Bank of the UAE</a>) and 3.75 riyals (<a href='https://www.sama.gov.sa/en-US/MediaCenter/News/Pages/news-557.aspx' class='text-accent' target='_blank' rel='noopener'>SAMA</a>) to the dollar, that is about AED 51.42 or SAR 52.50 for Pro, and AED 88.14 or SAR 90.00 for PPU, before VAT. These are conversions, not local prices: the price you pay is your Microsoft reseller's quote.</p>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q2">Does Fabric capacity cost more in the UAE?</h3>
+              <p data-i18n-html="content.a2">Yes, in Azure's public price list (<a href='https://azure.microsoft.com/en-us/pricing/details/microsoft-fabric/' class='text-accent' target='_blank' rel='noopener'>Fabric pricing</a>). A capacity unit costs $0.22 an hour pay-as-you-go in UAE North against $0.18 in East US, so an F64 there is about $10,278 a month pay-as-you-go, or about $6,112 with a one-year reservation (US: about $8,410 and $5,004). That moves the reserved F64 break-even from about 358 to about 437 viewers. Microsoft's <a href='https://learn.microsoft.com/fabric/admin/region-availability' class='text-accent' target='_blank' rel='noopener'>Fabric region list</a> has no region in Saudi Arabia; in the Gulf it lists UAE North with all Fabric workloads, and UAE Central and Qatar Central for Power BI only.</p>
+              <h3 class="h5 mt-4 mb-2" data-i18n="content.q3">Which license do we need for Copilot?</h3>
+              <p data-i18n-html="content.a3">A paid Fabric capacity (F2 or higher) or Power BI Premium (P1 or higher). Pro or PPU on its own isn't enough: see "What Copilot needs" above. To get the model ready first, see the <a href='../services/copilot-readiness-audit.html' class='text-accent'>Copilot readiness audit</a>.</p>
               <p data-i18n-html="content.p6">Prices change, and your mix of creators and viewers will too. The free <a href='../tools/power-bi-licensing-cost-calculator.html' class='text-accent'>Power BI Licensing Cost Calculator</a> runs this comparison for your own numbers, in USD, AED or SAR, and its prices are checked against Microsoft every week.</p>
-              <p data-i18n-html="content.p7"><em>Microsoft list prices for US regions, checked September 2026. Enterprise agreements and local currency pricing can differ.</em></p>
+              <p data-i18n-html="content.p7"><em>Microsoft list prices, checked 3 October 2026 on the <a href='https://www.microsoft.com/en-us/power-platform/products/power-bi/pricing' class='text-accent' target='_blank' rel='noopener'>Power BI pricing page</a> and <a href='https://azure.microsoft.com/en-us/pricing/details/microsoft-fabric/' class='text-accent' target='_blank' rel='noopener'>Azure's Fabric price list</a>. US regions unless stated. Enterprise agreements and local currency pricing can differ.</em></p>
             </article>
 
             <div class="text-center block">

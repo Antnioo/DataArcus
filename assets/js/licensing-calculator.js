@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     checked: '2026-09-23',
     pro: 14,            // Power BI Pro, per user per month, paid yearly
     ppu: 24,            // Premium Per User, per user per month, paid yearly
-    ppuAddon: 10,       // PPU for users who already have Pro (e.g. via Microsoft 365 E5)
+    ppuAddon: 14,       // PPU add-on for users who already have Pro or Microsoft 365 E5 (Microsoft lists it separately)
     cuPayg: 0.18,       // Fabric capacity unit per hour, pay-as-you-go
     reservedSaving: 0.405, // Microsoft: annual reservation saves ~40.5%
     hours: 730
@@ -28,8 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .then((r) => (r.ok ? r.json() : null))
     .then((d) => {
       if (!d) return;
-      ['pro', 'ppu', 'cuPayg', 'reservedSaving', 'checked'].forEach((k) => { if (d[k] !== undefined) PRICES[k] = d[k]; });
-      PRICES.ppuAddon = Math.max(0, PRICES.ppu - PRICES.pro);
+      ['pro', 'ppu', 'ppuAddon', 'cuPayg', 'reservedSaving', 'checked'].forEach((k) => { if (d[k] !== undefined) PRICES[k] = d[k]; });
       render();
     })
     .catch(() => { /* offline or opened as a file: keep the built-in prices */ });
