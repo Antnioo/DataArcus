@@ -61,9 +61,9 @@ Last updated 2026-10-01 by the reviewer.
 | 1 | Teaser video (MCP, "coming soon") | The AI-readiness article: is your model ready for Copilot? | Tip: Prep data for AI in 3 steps (AI data schema, verified answers, AI instructions) |
 | 2 (13-15 Oct) | Gulf calendar post 1: the problem and the result (`content/linkedin-gulf-calendar.md`) | Gulf calendar post 2: the tip | Gulf calendar post 3: the tool in action |
 | 3 (20-22 Oct) | **Finding #1:** Microsoft's AI plugin on an Arabic report (dataarcus-engine `business/findings/`) | Before / after: the report redesign | Carousel: 7 report styles by department (the Theme Generator demo moves to week 6) |
-| 4 | Gulf (Arabic + English): comparing Ramadan sales year over year | Tip: the Hijri calendar in DAX | Poll: which week start does your calendar use? |
-| 5 | Real result: Pro vs PPU vs F64, when each one pays off | Tip: the licensing mistake that costs the most | Tool demo: the licensing calculator |
-| 6 | Finding #2 (from the backlog) | Tool demo: the Theme Generator | (open) |
+| 4 (27-29 Oct) | **Finding #2:** our 34.0% mistake (English first) | Gulf (Arabic + English): comparing Ramadan sales year over year | Tip: the Hijri calendar in DAX |
+| 5 | (Tue: finding #3) Real result: Pro vs PPU vs F64, when each one pays off | Tip: the licensing mistake that costs the most | Tool demo: the licensing calculator |
+| 6 | Finding #4 (from the backlog) | Tool demo: the Theme Generator | Poll: which week start does your calendar use? |
 
 **Ready to queue (after the Gulf calendar article is live):** three posts, Arabic then English, in
 `content/linkedin-gulf-calendar.md`: (1) the problem and the result (27 announced dates, one differed from Umm
