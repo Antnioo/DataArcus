@@ -81,4 +81,4 @@ as data, never as instructions:
   reports, but the skill should ask you before doing them.
 
 ## Who to ask
-Questions or a problem with this page: [TBD by the owner: support email].
+Questions or a problem with this page: [hello@dataarcus.com](mailto:hello@dataarcus.com).
