@@ -247,6 +247,67 @@ export function tooltipPageProblems(files) {
   return { pages: tips.length, charts, trend, bad };
 }
 
+// Page buttons in reading order (round 2; measured in Desktop 2.158, DESKTOP-TESTS.md round 2). The page navigator has
+// no setting for its order: it always puts the first page on the left. So a right-to-left report with more than one
+// page has single buttons instead: one actionButton per main page with visualLink { show, type 'PageNavigation',
+// navigationSection: that page's id }, the first page's button rightmost and the others to its left in page order,
+// none overlapping; the current page's button has bold text, the others not. Where even 8pt buttons would not fit
+// (a header under 6 + 1.6 x 8 = 19 high, or too little width for the longest name at 0.45 em a character) the
+// navigator stays. A left-to-right report keeps the navigator and has no such button.
+// Returns { buttons, navigators, bad }.
+export function navProblems(files, rtl) {
+  const bad = [], pages = pagesOf(files).filter((p) => p.page.type !== 'Tooltip'), ids = pages.map((p) => p.page.name);
+  let buttons = 0, navigators = 0;
+  pages.forEach((p) => {
+    const link = (v) => ((((v.visual.visualContainerObjects || {}).visualLink || [])[0] || {}).properties) || {};
+    const btns = p.visuals.filter((v) => v.visual && v.visual.visualType === 'actionButton' && lit(link(v).type) === "'PageNavigation'");
+    const navs = p.visuals.filter((v) => v.visual && v.visual.visualType === 'pageNavigator'), id = p.page.displayName;
+    buttons += btns.length; navigators += navs.length;
+    if (!rtl) { if (btns.length) bad.push(`${id}: ${btns.length} single page buttons in a left-to-right report`); return; }
+    const longest = Math.max(...pages.map((x) => String(x.page.displayName || '').length)), k = p.page.height / 1080;
+    const roomFor8 = (v) => v.position.height >= 19 && Math.ceil(TW(8, longest) + 16 * k) <= (v.position.width - 40 * k) / ids.length;
+    if (!btns.length) { if (navs.some(roomFor8)) bad.push(`${id}: a page navigator in a right-to-left report (the first page's button is on the left)`); return; }
+    if (navs.length) bad.push(`${id}: page buttons and a navigator`);
+    const byPage = ids.map((pid) => btns.filter((v) => str(link(v).navigationSection) === pid));
+    if (btns.length !== ids.length || byPage.some((l) => l.length !== 1)) { bad.push(`${id}: ${btns.length} page buttons for ${ids.length} pages, or not one each`); return; }
+    const xs = byPage.map((l) => l[0].position.x), ws = byPage.map((l) => l[0].position.width);
+    for (let i = 1; i < xs.length; i++) if (!(xs[i] + ws[i] <= xs[i - 1] + 0.5)) bad.push(`${id}: page ${i + 1}'s button at ${xs[i]} is not to the left of page ${i}'s at ${xs[i - 1]}`);
+    byPage.forEach((l, i) => {
+      const o = l[0].visual.objects || {}, bold = lit(look(o.text).bold) === 'true', current = ids[i] === p.page.name;
+      if (lit(link(l[0]).show) !== 'true' || bold !== current) bad.push(`${id}: the button of page ${i + 1} ${current ? 'is the current page\'s and not bold' : 'is bold but not the current page\'s'}`);
+    });
+  });
+  return { buttons, navigators, bad };
+}
+
+// Months and weekdays in order without changing the model (round 2; measured in Desktop 2.158, DESKTOP-TESTS.md round
+// 2). A chart sorts by a field only when that field is in the visual: so a chart whose category is a month or day name
+// without a sort-by column carries Min of the model's number column in its Tooltips role and sorts by it, ascending.
+// (A sort by a field that is not in the visual is ignored; our charts show a report page tooltip, so the number is
+// never seen.) Every chart with a sortDefinition must be written that way. Returns { sorted: [{ page, type, category,
+// by }], bad }.
+export function sortProblems(files) {
+  const bad = [], sorted = [];
+  pagesOf(files).forEach((p) => p.visuals.filter((v) => v.visual && v.visual.query).forEach((v) => {
+    const sd = v.visual.query.sortDefinition, id = `${p.page.displayName}/${v.visual.visualType}`;
+    if (!sd) return;
+    const s0 = (sd.sort || [])[0] || {}, agg = (s0.field || {}).Aggregation, tips = ((v.visual.query.queryState.Tooltips || {}).projections || []);
+    if ((sd.sort || []).length !== 1 || !agg || agg.Function !== 3 || !agg.Expression.Column || s0.direction !== 'Ascending') { bad.push(`${id}: sort ${JSON.stringify(sd).slice(0, 160)}, want one ascending Min of a column`); return; }
+    const by = agg.Expression.Column.Expression.SourceRef.Entity + '.' + agg.Expression.Column.Property;
+    if (!tips.some((t) => JSON.stringify(t.field) === JSON.stringify(s0.field))) bad.push(`${id}: sorted by Min of ${by}, which is not in its tooltip fields (Desktop ignores the sort)`);
+    if (!['lineChart', 'clusteredBarChart', 'clusteredColumnChart'].includes(v.visual.visualType)) bad.push(`${id}: a sort on a visual that is not a line, bar or column chart`);
+    sorted.push({ page: p.page.displayName, tooltip: p.page.type === 'Tooltip', type: v.visual.visualType, category: catRef(v), by });
+  }));
+  return { sorted, bad };
+}
+
+// The measure each tooltip page's chart shows (its Y projection's queryRef): { category, trend }.
+export function tooltipMeasures(files) {
+  const out = {};
+  pagesOf(files).filter((p) => p.page.type === 'Tooltip').forEach((p) => { const c = tipChart(p), y = c && ((c.visual.query || {}).queryState || {}).Y; if (y) out[isTrend(p) ? 'trend' : 'category'] = y.projections[0].queryRef; });
+  return out;
+}
+
 // Each column of every table has one columnFormatting entry (selector: the column's queryRef) that aligns its values
 // and its header together: text columns on the reading-start side (Left; Right in a right-to-left report), numbers on
 // the other. numbers: queryRefs of columns that are numbers (measures always are). Returns { columns, bad }.
@@ -271,9 +332,13 @@ export function tableProblems(files, rtl, numbers) {
 // one they are ignored); on main pages the top padding is round(12k) (k = page height / 1080) unless even an 8pt number
 // would not fit then, the bottom and the far side P = round(8 x (page height / 720) / 1.5), the reading-start side the
 // page's inset (insets[page index], the side accent bar's end + round(5k)) or P; the tooltip card P on every side; the
-// number fits the width that is left (7 characters at 0.55 em). Returns { cards, bad }.
+// number fits the width that is left (7 characters at 0.55 em). Round 2: on a solid design (the theme's "*" visuals have
+// a background) a main page's card without an accent-bar inset has round(16k) at the reading start: at 8 the title
+// touches the panel's rounded corner (measured in Desktop 2.158, DESKTOP-TESTS.md round 2). Returns { cards, bad }.
 export function cardStyleProblems(files, rtl, insets) {
   const bad = []; let cards = 0;
+  const themeFile = Object.keys(files).find((p) => /StaticResources\/RegisteredResources\/[^/]*\.json$/.test(p)), theme = themeFile ? JSON.parse(String(files[themeFile])) : {};
+  const solid = !!((((((theme.visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).show);
   pagesOf(files).forEach((p, pi) => p.visuals.filter((v) => v.visual && v.visual.visualType === 'cardVisual').forEach((v) => {
     cards++;
     const id = `${p.page.displayName}/${v.name.slice(0, 6)}`, o = v.visual.objects || {}, c = v.visual.visualContainerObjects || {}, tip = p.page.type === 'Tooltip';
@@ -283,7 +348,7 @@ export function cardStyleProblems(files, rtl, insets) {
     const pad = ((c.padding || [])[0] || {}).properties || {}, t = ((c.title || [])[0] || {}).properties || {};
     const s = tip ? 1 : p.page.height / 720, k = p.page.height / 1080, P = Math.round(8 * s / 1.5), line = lit(t.show) === 'true' ? Math.ceil(1.5 * num(t.fontSize)) : 0;
     const T = tip ? P : Math.round(12 * k), top = T > P && Math.floor((v.position.height - T - P - line) / 1.5) < 8 ? P : T;
-    const inset = (!tip && insets && insets[pi]) || P, a = rtl ? 'right' : 'left', b = rtl ? 'left' : 'right';
+    const inset = (!tip && insets && insets[pi]) || (!tip && solid ? Math.round(16 * k) : P), a = rtl ? 'right' : 'left', b = rtl ? 'left' : 'right';
     const want = { top, bottom: P, [a]: inset, [b]: P }, got = { top: num(pad.top), bottom: num(pad.bottom), [a]: num(pad[a]), [b]: num(pad[b]) };
     if (JSON.stringify(got) !== JSON.stringify(want)) bad.push(`${id}: padding ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
     const I = num(look(o.padding).paddingUniform), V = num(look(o.value).fontSize);

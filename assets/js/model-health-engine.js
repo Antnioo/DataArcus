@@ -671,7 +671,7 @@
         const keyLike = !c.hidden && (c.summarizeBy === 'default' || c.summarizeBy === 'sum') && /((^|[\s_])(id|key|code|no|index)$|_id$|^(year|month|week|day|quarter)(\s*(no|num|number))?$|^(fiscal\s*)?year$|(month|week|day|quarter)\s*(no|num|number|of year)$|sort\s*(order|key)?$)/i.test(cn);
         if (keyLike && /^(int64|double|decimal)$/.test(c.dataType)) sumKeys.push({ obj: `${t.name}[${c.name}]` });
         if (keyLike && untyped(c)) skip('SUMMARIZE_KEYS', `${t.name}[${c.name}]`);
-        const monthLike = /(^|\s|_)(month|day|weekday)\s*_?(name|short)$|^(day of week|weekday|mmm|mmmm)$|short\s*month|month\s*-?\s*year|^month\s*year$/i.test(cn) || (c.kind === 'calculated' && /FORMAT\s*\([^)]*"\s*(mmm|mmmm|ddd|dddd)\s*"/i.test(c.expr));
+        const monthLike = /(^|\s|_)(month|day|weekday)\s*_?(name|short)$|^(day of week|weekday|mmm|mmmm)$|short\s*month|month\s*-?\s*year|^month\s*year$|^(اسم\s*)?(الشهر|اليوم)$/i.test(cn) || (c.kind === 'calculated' && /FORMAT\s*\([^)]*"\s*(mmm|mmmm|ddd|dddd)\s*"/i.test(c.expr));
         if (monthLike && c.dataType === 'string' && !c.sortBy) monthSort.push({ obj: `${t.name}[${c.name}]` });
         if (monthLike && untyped(c) && !c.sortBy) skip('MONTH_SORT', `${t.name}[${c.name}]`);
       });

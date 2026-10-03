@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let worker = null;
   function run(buffer, fileName, size) {
     if (worker) worker.terminate();
-    try { worker = new Worker('../assets/js/model-health-worker.min.js?v=20260929c'); } catch (e) { return showError('WORKER'); }
+    try { worker = new Worker('../assets/js/model-health-worker.min.js?v=20261003a'); } catch (e) { return showError('WORKER'); }
     worker.onmessage = (ev) => {
       const d = ev.data;
       if (d.type === 'progress') setStep(d.step);
@@ -246,14 +246,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const findingOf = (id) => (ignored.has(id) ? null : R.findings.find((f) => f.id === id));
   // The column a month or day name should sort by. "Month Year" needs a year-month number (202401):
   // sorting it by the month number 1-12 would put January of every year together.
-  const sortKind = (name) => (/month/i.test(name) && /year/i.test(name) ? 'yearMonth' : /day|week/i.test(name) ? 'day' : 'month');
-  const SORT_BY = {
-    yearMonth: /^(year\s*-?\s*month|month\s*-?\s*year|yyyymm)\s*(no|num|number|index|key|sort|order|id)?$/i,
-    day: /(weekday|day\s*of\s*week)\s*(no|num|number|index)?$|^weekday$/i,
-    month: /month\s*(no|num|number|index)$|^month$|month\s*of\s*year/i
-  };
-  const sortColumnFor = (t, name) => t.columns.find((c) => c.name !== name && /int64|double|decimal/.test(c.dataType) && SORT_BY[sortKind(name)].test(c.name.trim()));
-  const noSortColumn = (name) => ({ yearMonth: 'no year-month number column (like 202401)', day: 'no weekday number column', month: 'no month number column' })[sortKind(name)];
+  // (the rule itself is in model-health-tmdl.js, shared with the MCP's health check and kept like the report writer's)
+  const sortColumnFor = (t, name) => (window.MHTmdl ? window.MHTmdl.sortColumnFor(t.columns, name) : null);
+  const noSortColumn = (name) => (window.MHTmdl ? window.MHTmdl.noSortColumn(name) : 'no number column');
   // Mechanical fixes as data, shared by the Tabular Editor and TMDL versions
   function quickEdits() {
     const dates = [], edits = [], notes = [];

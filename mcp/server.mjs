@@ -7,7 +7,7 @@ import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { Bind, Health, Pbip, ROOT, applyColumnTypes, inside, loadModel, summary } from './lib/model.mjs';
+import { Bind, Fix, Health, Pbip, ROOT, applyColumnTypes, inside, loadModel, summary } from './lib/model.mjs';
 import { E, themeDesign, planLayout, pageOf, contrastReport, freeFile } from './lib/design.mjs';
 
 const server = new McpServer({ name: 'dataarcus', version: '0.1.0' });
@@ -56,15 +56,34 @@ server.registerTool('check_model_health', {
   description: 'Runs the DataArcus Model Health Check: score, and every finding with the objects it concerns (unused columns and measures, risky relationships, slow DAX, date tables...). Reads a project saved by Power BI Desktop (TMDL or model.bim), a model.bim or a .pbit.',
   inputSchema: {
     path: modelPath, maxItems: z.number().int().min(1).max(200).default(15).describe('Objects listed per finding'),
+    weekStart: z.enum(['sunday', 'monday', 'saturday']).default('sunday').describe('The first day of the week, used only when a fix script has to add a weekday number column to sort day names: sunday (default: Saudi Arabia and most of the Gulf), monday (a Saturday-Sunday weekend, as in the UAE since 2022), or saturday'),
     columnTypes: z.record(z.string(), z.union([z.string(), z.number()])).optional()
       .describe('Only when a TMDL project skipped checks: column types read from the same model open in Power BI Desktop, as { "Table[Column]": type }. The type is a model.bim name (string, int64, double, decimal, dateTime, boolean) or the number INFO.COLUMNS returns (2, 6, 8, 10, 9, 11), also as text. Fills only columns the files leave without a type.')
   }
-}, safe(async ({ path: p, maxItems, columnTypes }) => {
+}, safe(async ({ path: p, maxItems, columnTypes, weekStart }) => {
   const m = loadModel(p);
   const typed = columnTypes ? applyColumnTypes(m.tmsl, columnTypes) : undefined;
   const r = Health.analyze(m.tmsl, m.report);
+  // ready fixes for three findings, as TMDL scripts the user applies in Power BI Desktop (TMDL view); nothing is ever
+  // applied by this tool. What a script can't do safely is listed as steps by hand, never guessed.
+  const raw = ((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).tables || [], itemsOf = (id) => ((r.findings.find((f) => f.id === id) || {}).items || []).concat((((r.skipped || []).find((s) => s.id === id)) || {}).items || []);
+  const howToApply = 'Save a copy of the file first. In Power BI Desktop open TMDL view, paste the script, choose Preview to see the changes, then Apply. The script is a suggestion: it is never applied by this tool.';
+  const fixes = {};
+  {
+    const cols = itemsOf('MONTH_SORT').map((i) => String(i.obj).match(/^(.*)\[(.*)\]$/)).filter(Boolean).map((x) => ({ table: x[1], column: x[2] }));
+    if (cols.length) { const s = Fix.sortFixes(raw, cols, { weekStart });
+      fixes.MONTH_SORT = Object.assign({ weekStart: s.weekStart, weekStartNote: s.sorts.some((x) => x.added && /Day of Week/.test(x.by)) ? `A weekday number column is added with the week starting on ${s.weekStart}; call again with weekStart: 'sunday', 'monday' or 'saturday' for another start.` : undefined,
+        sorts: s.sorts, byHand: s.byHand }, s.script ? { fixScript: s.script, howToApply } : {}); }
+    for (const [id, percent] of [['NO_FORMAT', false], ['PCT_FORMAT', true]]) {
+      const names = itemsOf(id).map((i) => String(i.obj).replace(/^\[|\]$/g, ''));
+      if (!names.length) continue;
+      const s = Fix.formatFixes(raw, names, { percent });
+      fixes[id] = Object.assign({ suggested: s.suggested, byHand: s.byHand }, s.script ? { fixScript: s.script, howToApply } : {});
+    }
+  }
   return text({
     source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report,
+    fixes: Object.keys(fixes).length ? fixes : undefined,
     // what was done with columnTypes: types used, types the files already had (kept), names and types that could not be used
     columnTypes: typed,
     findings: r.findings.map((f) => { const rule = Health.RULES[f.id] || {}; const en = rule.en || [f.id, '', ''];
@@ -101,6 +120,7 @@ server.registerTool('create_report', {
     secondPage: z.boolean().default(true).describe('With a design: a second page in a complementary layout (details after an overview, an overview after analysis), with page buttons'),
     slidePanel: z.boolean().default(false).describe('With a design: filters as a slide-in panel opened from a Filters button in the header, instead of a filter rail'),
     theme: z.string().optional().describe('Theme JSON file (e.g. from the DataArcus theme generator), inside the DataArcus folder'),
+    displayNames: z.record(z.string(), z.string()).optional().describe('Names to show instead of the model\'s field names, as { "Table[Field]": "name" } (for example Arabic names for an Arabic report). The report shows the name wherever it shows the field: KPI titles, chart titles, axis and legend, table headers, slicer headers, the tooltip pages. The model is never renamed. Give names only for fields you know the right name of: nothing is translated automatically'),
     logo: z.string().optional().describe('Logo image for the header: a PNG or JPG file inside the DataArcus folder, 2 MB at most. It is copied into the new report (the file itself is not changed) and shown at its own shape, never stretched; a horizontal logo reads best'),
     lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().default(false), font: z.string().default('Segoe UI'),
     colors: z.object({ text: z.string(), card: z.string(), background: z.string(), accent: z.string() }).partial().optional()
@@ -112,8 +132,21 @@ server.registerTool('create_report', {
   // no background image given: a fully transparent pixel, so the page colour from the theme shows
   const png1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4AWMAAQAABQABNtCI3QAAAABJRU5ErkJggg==', 'base64');
   const kpisOf = (pages) => pages.reduce((n, p) => Math.max(n, p.slots.filter((s) => s.kind === 'kpi').length), 0) || 1;
+  // display names: checked first, then put on the bound fields (the report writer shows a field's name when it has one)
+  const given = new Map();
+  for (const [k, v] of Object.entries(a.displayNames || {})) {
+    const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/), name = String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, ' ').trim();
+    if (!mk) throw new Error(`displayNames: "${k}" is not written as Table[Field]`);
+    if (!name || name.length > 80) throw new Error(`displayNames: the display name for ${k} is empty or longer than 80 characters`);
+    given.set(mk[1] + '[' + mk[2] + ']', { name, key: String(k), used: false });
+  }
+  const fieldsOf = (b) => (b ? [b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean) : []);
+  const keyOf = (f) => `${f.t}[${f.c != null ? f.c : f.m}]`;
+  const named = (b) => { fieldsOf(b).forEach((f) => { const g = given.get(keyOf(f)); if (g) { f.name = g.name; g.used = true; } }); return b; };
   // the logo, as the website takes it: a PNG or JPG, 2 MB at most; its size is read so its box can take its shape
   const reportNotes = [];
+  // Power BI's own words can't be set by a report (measured: no slicer property holds "All")
+  if (a.lang === 'ar') reportNotes.push('Power BI\'s own words in the report ("All" in a slicer, "Select all", "Search") follow each viewer\'s Power BI language, not the report: nothing in the report files can change them.');
   let logo = null, logoRatio;
   if (a.logo) {
     const file = inside(a.logo), ext = /\.png$/i.test(file) ? 'png' : /\.jpe?g$/i.test(file) ? 'jpg' : null;
@@ -138,7 +171,7 @@ server.registerTool('create_report', {
     const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel, logoRatio });
     r = Pbip.build({
       name: a.name, title: E.themeName(design.name), pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = Bind.suggest(m.tables, kpisOf(pages))),
+      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = named(Bind.suggest(m.tables, kpisOf(pages)))),
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel }))
     });
     extra = { pages: pages.map((p) => ({ name: p.name, width: p.page.w, height: p.page.h, slots: p.slots.length, slideInPanel: !!p.panel })), theme: E.themeName(design.name),
@@ -149,7 +182,7 @@ server.registerTool('create_report', {
     r = Pbip.build({
       name: a.name, title: a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = Bind.suggest(m.tables, kpisOf(a.pages))),
+      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = named(Bind.suggest(m.tables, kpisOf(a.pages)))),
       texts: { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' },
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
     });
@@ -164,8 +197,15 @@ server.registerTool('create_report', {
     ? 'Each KPI card, chart and table has its own panel, drawn by the theme (solid visuals in the card colour, with the design\'s corners and shadow); the header and the filter rail are bands. There is no background image.'
     : 'The visuals have no panels of their own (the theme\'s visuals are transparent): they show on the page\'s background image where one is given, otherwise straight on the page. For panels, use a design or a theme with solid visuals.';
   const notes = modelNotes(m.tmsl, bind);
+  // what was done with the display names; and in an Arabic report, the fields it shows under a model name that has no
+  // Arabic letter (no name is ever made up for them)
+  const shown = [...new Set(fieldsOf(bind).map(keyOf))];
+  const names = given.size ? { displayNames: { used: [...given.values()].filter((g) => g.used).length, notUsed: [...given.values()].filter((g) => !g.used).map((g) => g.key) } } : {};
+  const missing = a.lang === 'ar' ? fieldsOf(bind).filter((f) => !f.name && !/[\u0600-\u06FF]/.test(f.c != null ? f.c : f.m)).map(keyOf).filter((k, i, l) => l.indexOf(k) === i) : null;
+  const arabic = a.lang === 'ar' ? { arabicNames: { shownFields: shown.length, missing,
+    how: missing.length ? 'These fields show under their model names. To show Arabic names, call create_report again with displayNames: { "Table[Field]": "الاسم" } for each (ask the user for the names: nothing is translated automatically). The model is not renamed.' : 'Every field the report shows has an Arabic name.' } } : {};
   return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
-    notes.length ? { modelNotes: notes } : {}, reportNotes.length ? { reportNotes } : {}));
+    names, arabic, notes.length ? { modelNotes: notes } : {}, reportNotes.length ? { reportNotes } : {}));
 }));
 
 // Things in the user's model that make the new report look wrong, for the fields it uses. The report never changes the
@@ -181,16 +221,16 @@ function modelNotes(tmsl, bind) {
     if (f.c != null) {
       const c = find(f, 'columns');
       if (c && !c.sortByColumn && /month|الشهر/i.test(f.c) && !/number|num|no|sort|key|offset|start|date/i.test(f.c))
-        notes.push({ field: key, issue: 'Months will show in alphabetical order: this column has no sort-by column.',
-          fix: `In Power BI Desktop select ${key}, then Column tools > Sort by column > the month number column.` });
+        notes.push({ field: key, issue: f.sortBy ? 'This column has no sort-by column in the model. The report\'s charts are put in month order by the report itself; tables and slicers still show months in alphabetical order.' : 'Months will show in alphabetical order: this column has no sort-by column.',
+          fix: `In Power BI Desktop select ${key}, then Column tools > Sort by column > ${f.sortBy ? f.sortBy.c : 'the month number column'}. check_model_health gives the steps or a ready script (fixes.MONTH_SORT).` });
       if (c && !c.sortByColumn && /(day|weekday)\s*name|اسم اليوم/i.test(f.c))
-        notes.push({ field: key, issue: 'Days will show in alphabetical order (Friday, Monday, ...): this column has no sort-by column.',
-          fix: `In Power BI Desktop select ${key}, then Column tools > Sort by column > the day-of-week number column.` });
+        notes.push({ field: key, issue: f.sortBy ? 'This column has no sort-by column in the model. The report\'s charts are put in weekday order by the report itself; tables and slicers still show days in alphabetical order (Friday, Monday, ...).' : 'Days will show in alphabetical order (Friday, Monday, ...): this column has no sort-by column.',
+          fix: `In Power BI Desktop select ${key}, then Column tools > Sort by column > ${f.sortBy ? f.sortBy.c : 'the day-of-week number column'}. check_model_health gives the steps or a ready script (fixes.MONTH_SORT).` });
     } else {
       const ms = find(f, 'measures');
       if (ms && !ms.formatString && /%|ratio|rate|share|margin|نسبة|هامش/i.test(f.m))
         notes.push({ field: key, issue: 'This looks like a percentage but has no format string, so cards show 0.34 instead of 34%.',
-          fix: `In Power BI Desktop select ${key}, then Measure tools > Format > Percentage.` });
+          fix: `In Power BI Desktop select ${key}, then Measure tools > Format > Percentage. check_model_health gives a ready script (fixes.NO_FORMAT).` });
     }
   });
   return notes;

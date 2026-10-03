@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { layoutProblems, phoneTextProblems, headerProblems, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems } from '../scripts/tests/report-check.mjs';
+import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems } from '../scripts/tests/report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-mcp-'));
@@ -96,6 +96,44 @@ const plain = await call('check_model_health', { path: 'tmdl-project' });
 r = await call('check_model_health', { path: 'tmdl-project', columnTypes: { 'Sales[Amount]': 'string', 'Calendar[Date]': 'dateTime' } });
 check(!r.err && JSON.stringify(r.j.columnTypes && r.j.columnTypes.alreadyTyped) === '["Sales[Amount]","Calendar[Date]"]' && r.j.columnTypes.applied === 0 && same(r.j, plain.j),
   `columnTypes for typed columns: ${r.err ? r.t.slice(0, 200) : JSON.stringify(r.j.columnTypes)}`);
+
+// round 2: sort order and number formats come with ready TMDL scripts (fixes), never applied by the tool
+{
+  const dcol = (name, dataType) => ({ name, dataType, sourceColumn: name, lineageTag: 'tag-' + name }), mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Date"}, {}) in Source' } }];
+  fs.writeFileSync(path.join(ROOT, 'sort.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [
+    { name: 'Calendar', columns: [dcol('Date', 'dateTime'), dcol('Month Name', 'string'), dcol('Month Number', 'int64'), dcol('Day Name', 'string'), dcol('Hijri Month Name', 'string')], partitions: mp('Calendar') },
+    { name: 'Sales', columns: [dcol('Date', 'dateTime'), dcol('Amount', 'double'), dcol('Qty', 'int64')], partitions: mp('Sales'),
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )' }, { name: 'Units', expression: 'SUM ( Sales[Qty] )' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )' },
+        { name: 'Margin %', expression: 'DIVIDE ( [Total Sales] - 1, [Total Sales] )' }, { name: 'Has Format', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Return Rate', expression: 'DIVIDE ( 1, 2 )', formatString: '0.00' }] }],
+    relationships: [{ name: 'r1', fromTable: 'Sales', fromColumn: 'Date', toTable: 'Calendar', toColumn: 'Date' }] } }));
+  const plainRun = await call('check_model_health', { path: 'sort.bim' });
+  const fx = plainRun.err ? {} : plainRun.j.fixes || {}, ms = fx.MONTH_SORT || {}, nf = fx.NO_FORMAT || {}, pf = fx.PCT_FORMAT || {};
+  check(!plainRun.err && /sortByColumn: 'Month Number'/.test(ms.fixScript || '') && /WEEKDAY \( 'Calendar'\[Date\], 1 \)/.test(ms.fixScript || '') && ms.weekStart === 'sunday' && /TMDL view/.test(String(ms.howToApply))
+    && (ms.byHand || []).length === 1 && ms.byHand[0].column === 'Calendar[Hijri Month Name]', `health fixes, sort: ${plainRun.err ? plainRun.t.slice(0, 200) : JSON.stringify(ms).slice(0, 500)}`);
+  check(JSON.stringify((nf.suggested || []).map((x) => [x.measure, x.format])) === JSON.stringify([['[Total Sales]', '#,0.00'], ['[Units]', '#,0'], ['[Orders]', '#,0'], ['[Margin %]', '0.0%']]) && (nf.suggested || []).every((x) => x.reason)
+    && !/Has Format|Return Rate/.test(nf.fixScript || '') && /never applied/i.test(String(nf.howToApply)), `health fixes, formats: ${JSON.stringify(nf).slice(0, 500)}`);
+  check((pf.suggested || []).length === 1 && pf.suggested[0].measure === '[Return Rate]' && pf.suggested[0].format === '0.0%', `health fixes, a rate formatted as a number: ${JSON.stringify(pf).slice(0, 300)}`);
+  // the week start is a choice: Monday (the UAE's Saturday-Sunday weekend) and Saturday change the weekday expression only
+  for (const [ws, want] of [['monday', "WEEKDAY ( 'Calendar'[Date], 2 )"], ['saturday', "MOD ( WEEKDAY ( 'Calendar'[Date], 1 ), 7 ) + 1"]]) {
+    const o = await call('check_model_health', { path: 'sort.bim', weekStart: ws });
+    const a = String(((o.j || {}).fixes || {}).MONTH_SORT ? o.j.fixes.MONTH_SORT.fixScript : '').split('\n'), b = String(ms.fixScript || '').split('\n'), diff = a.filter((l, i) => l !== b[i]);
+    check(!o.err && a.length === b.length && diff.length === 1 && diff[0].trim() === want && o.j.fixes.MONTH_SORT.weekStart === ws, `health fixes, week starting ${ws}: ${o.err ? o.t.slice(0, 200) : JSON.stringify(diff).slice(0, 200)}`);
+    check(!o.err && JSON.stringify([o.j.score, o.j.findings]) === JSON.stringify([plainRun.j.score, plainRun.j.findings]), `health fixes, week starting ${ws}: the score or the findings moved`);
+  }
+  // a DAX table's columns are never rewritten by a script: steps by hand, naming the sort column
+  const dx = await call('check_model_health', { path: 'dax-project', maxItems: 200 });
+  const dms = dx.err ? {} : (dx.j.fixes || {}).MONTH_SORT || {};
+  const skippedSort = dx.err ? [] : (((dx.j.skipped || {}).checks || []).find((c) => c.id === 'MONTH_SORT') || {}).items || [];
+  check(!dx.err && !dms.fixScript && (dms.byHand || []).some((h) => h.column === 'Calendar[Month Name]' && /Sort by column > Month Number/.test(h.steps)) && (dms.byHand || []).some((h) => h.column === 'Calendar[Day Name]' && /Sort by column > Day of Week/.test(h.steps)),
+    `health fixes on DAX tables: ${dx.err ? dx.t.slice(0, 200) : JSON.stringify(dms).slice(0, 400)} (skipped: ${skippedSort.length})`);
+  // the report writer's rule for the sort column and the health check's are the same
+  const req = (await import('node:module')).createRequire(import.meta.url), Bn = req('../assets/js/pbip-bind.js'), Tm = req('../assets/js/model-health-tmdl.js');
+  const colsM = ['Date', 'Month', 'Month Number', 'Month No', 'Month Name', 'Month Short', 'Year Month', 'Year Month Sort', 'Month Year', 'Day of Week', 'Weekday', 'Day Name', 'Hijri Month Number', 'Hijri Month Name', 'Fiscal Month Number', 'Fiscal Month Name', 'Quarter', 'اسم الشهر', 'رقم الشهر', 'اسم اليوم', 'رقم اليوم'];
+  const mismatch = [];
+  for (const dataType of ['unknown', 'int64', 'string']) for (const n of colsM) { const cs = colsM.map((x) => ({ name: x, dataType: /name|short|اسم/i.test(x) ? 'string' : dataType }));
+    const a = (Bn.sortColumnFor(cs, n) || {}).name, b = typeof Tm.sortColumnFor === 'function' ? (Tm.sortColumnFor(cs, n) || {}).name : 'no function'; if (a !== b) mismatch.push(`${n} (${dataType}): ${a} vs ${b}`); }
+  check(!mismatch.length, `sort column rule differs between the report writer and the health check: ${mismatch.slice(0, 4).join(' | ')}`);
+}
 
 // nothing outside the DataArcus folder
 r = await call('read_model', { path: '../' });
@@ -466,6 +504,50 @@ const cardProblems = (dir, rtl) => {
     check(!sh.length, `${name}: ${sh.join('; ')}`);
     // round 1: "Your logo" and the title are centred in the header's height
     const hd = headerProblems(files), ph = phoneTextProblems(files);
+    // round 2: the category tooltip's chart shows a base measure, never one that is empty for a single item
+    // ("Total Sales Last Ramadan" gave an empty chart on the line chart's tooltip)
+    // round 2: an Arabic report's page buttons run right to left (two pages: two buttons on each); an English one keeps the navigator
+    const nv = navProblems(files, rtl);
+    check(!nv.bad.length && nv.buttons === (rtl ? 4 : 0) && nv.navigators === (rtl ? 0 : 2), `${name}: page buttons: ${nv.buttons} single buttons, ${nv.navigators} navigators; ${nv.bad.slice(0, 2).join('; ')}`);
+    // round 2: the model's Month Name and Day Name have no sort-by column; the charts by them are put in order by the
+    // report (Min of Month Number / Day of Week in the tooltip fields, sorted by it), the trend tooltip too
+    const sp = sortProblems(files), byOf = (cat) => [...new Set(sp.sorted.filter((x) => x.category === cat).map((x) => x.by))].join();
+    check(!sp.bad.length && byOf('Calendar.Month Name') === 'Calendar.Month Number' && sp.sorted.some((x) => x.tooltip && x.category === 'Calendar.Month Name') && sp.sorted.some((x) => x.type === 'lineChart'),
+      `${name}: months not put in order: ${JSON.stringify(sp.sorted).slice(0, 300)} ${sp.bad.slice(0, 2).join('; ')}`);
+    check(byOf('Calendar.Day Name') === 'Calendar.Day of Week', `${name}: the chart by Day Name is sorted by "${byOf('Calendar.Day Name')}", want Calendar.Day of Week`);
+    // round 2: display names. Without the input nothing carries one; an Arabic report lists the fields it shows under
+    // their model names (none has an Arabic letter here); an English report has no such list
+    const allText = (fl) => Object.keys(fl).filter((k) => k.endsWith('/visual.json')).map((k) => String(fl[k])).join('\n');
+    const projections = (fl) => { const out = []; Object.keys(fl).filter((k) => k.endsWith('/visual.json')).forEach((k) => { const v = JSON.parse(String(fl[k])); Object.values(((v.visual || {}).query || {}).queryState || {}).forEach((r) => (r.projections || []).forEach((p) => out.push(p))); }); return out; };
+    check(projections(files).every((p) => p.displayName === undefined) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Name]') : !res.j.arabicNames),
+      `${name}: without displayNames: a displayName written, or arabicNames ${JSON.stringify(res.j.arabicNames || null).slice(0, 200)}`);
+    if (rtl) {
+      const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Month Name]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
+      const nr = await tryCall('create_report', { path: 'dax-project', name: 'Names AR', design: plan.j.design, lang: 'ar', displayNames: given });
+      if (nr.err) check(false, `display names: ${nr.t.slice(0, 200)}`);
+      else {
+        const nf = filesOf(path.join(ROOT, 'dax-project', nr.j.report)), ps = projections(nf), txt = allText(nf);
+        const of = (ref) => ps.filter((p) => p.queryRef === ref);
+        // every projection of a named field shows the given name; a field without a name has none; queryRef is untouched
+        check(of('Sales.Total Sales').length >= 4 && of('Sales.Total Sales').every((p) => p.displayName === 'إجمالي المبيعات') && of('Calendar.Month Name').length >= 2 && of('Calendar.Month Name').every((p) => p.displayName === 'الشهر')
+          && of('Sales.Total Sales Last Ramadan').length >= 1 && of('Sales.Total Sales Last Ramadan').every((p) => p.displayName === undefined),
+          `display names: projections ${JSON.stringify(ps.filter((p) => /Total Sales$|Month Name|Last Ramadan$/.test(p.queryRef)).map((p) => [p.queryRef, p.displayName])).slice(0, 300)}`);
+        // our own titles use the names: the KPI card's title, "X حسب Y" on the line chart and on the trend tooltip
+        check(txt.includes("'إجمالي المبيعات حسب الشهر'") && txt.includes("'إجمالي المبيعات'") && !txt.includes("'Total Sales حسب Month Name'"), 'display names: titles still use the model names');
+        // the table's column formatting still points at the field (its queryRef), not at the name
+        const tp = tableProblems(nf, true);
+        check(tp.columns >= 6 && !tp.bad.length, `display names: ${tp.bad.length} of ${tp.columns} table columns lost their header alignment: ${tp.bad.slice(0, 2).join('; ')}`);
+        const an = nr.j.arabicNames || {}, dn = nr.j.displayNames || {};
+        check(Array.isArray(an.missing) && an.missing.includes('Sales[Total Sales Last Ramadan]') && !an.missing.includes('Sales[Total Sales]') && !an.missing.includes('Calendar[Month Name]') && !an.missing.includes('Calendar[Quarter]')
+          && JSON.stringify(dn.notUsed) === '["Nope[X]"]' && dn.used === 3, `display names: arabicNames ${JSON.stringify(an).slice(0, 200)}, displayNames ${JSON.stringify(dn)}`);
+        const v2 = validate(path.join(ROOT, 'dax-project', nr.j.report));
+        check(v2.errors === 0, `display names: Microsoft's validator: ${v2.errors} errors ${v2.what}`);
+      }
+      const bad = await tryCall('create_report', { path: 'dax-project', name: 'Names bad', design: plan.j.design, lang: 'ar', displayNames: { 'Sales[Total Sales]': '   ' } });
+      check(bad.err && /display name/i.test(bad.t), `display names: an empty name was accepted: ${bad.t.slice(0, 120)}`);
+    }
+    const tm = tooltipMeasures(files);
+    check(tm.category === 'Sales.Total Sales' && tm.trend === 'Sales.Total Sales', `${name}: tooltip charts show ${JSON.stringify(tm)}, want Sales.Total Sales on both`);
     // round 1: every text in the phone layout fits its phone box
     check(ph.visuals > 10 && !ph.bad.length, `${name}: phone text: ${ph.bad.slice(0, 2).join('; ')} (${ph.bad.length} of ${ph.visuals} visuals)`);
     check(hd.boxes >= 2 && !hd.bad.length, `${name}: header text not centred: ${hd.bad.slice(0, 2).join('; ')} (${hd.boxes} boxes)`);

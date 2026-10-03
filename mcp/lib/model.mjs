@@ -10,6 +10,7 @@ export const Bind = require('../../assets/js/pbip-bind.js');
 export const Health = require('../../assets/js/model-health-engine.js');
 export const Pbip = require('../../assets/js/pbip-export.js');
 const Tmdl = require('../../assets/js/tmdl-model.js');
+export const Fix = require('../../assets/js/model-health-tmdl.js');
 
 // Every path the tools read or write must sit inside this folder (DATAARCUS_ROOT, or where the server was started)
 export const ROOT = path.resolve(process.env.DATAARCUS_ROOT || process.cwd());

@@ -5,7 +5,7 @@
  * (c) DataArcus. All rights reserved.
  */
 /* global MHEngine */
-importScripts('model-health-engine.min.js?v=20260929c');
+importScripts('model-health-engine.min.js?v=20261003a');
 
 const post = (type, data) => self.postMessage(Object.assign({ type }, data || {}));
 

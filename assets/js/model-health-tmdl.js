@@ -145,7 +145,129 @@
     return { script: count ? out.join('\n').replace(/\n+$/, '\n') : null, count, manual };
   }
 
-  const api = { measure, column, columnFixes, moveMeasures, name };
+  // ---------- round 2: sort columns and number formats as ready scripts (shared by the website and the MCP) ----------
+  // Month and weekday names sort A to Z unless the model gives them a sort-by column. sortColumnFor finds the number
+  // column of the same table to sort by: a year-month number for "Month Year", a weekday number for a day name, a
+  // month number for a month name; a Hijri or fiscal name only by a Hijri or fiscal number; a column the files give no
+  // type for (a DAX table's) only when its name says it is a number. (assets/js/pbip-bind.js has the same rule for the
+  // report writer: keep the two alike; mcp/test.mjs compares them.)
+  const NAME_LIKE = /(^|\s|_)(month|day|weekday)\s*_?(name|short)$|^(day of week|weekday|mmm|mmmm)$|short\s*month|month\s*-?\s*year|^month\s*year$|^(اسم\s*)?(الشهر|اليوم)$/i;
+  const sortKind = (n) => (/month|الشهر/i.test(n) && /year|السنة/i.test(n) ? 'yearMonth' : /day|week|اليوم/i.test(n) ? 'day' : 'month');
+  const SORT_BY = {
+    yearMonth: /^(year\s*-?\s*month|month\s*-?\s*year|yyyymm)\s*(no|num|number|index|key|sort|order|id)?$/i,
+    day: /(weekday|day\s*of\s*week)\s*(no|num|number|index)?$|^weekday$|^رقم\s*اليوم$/i,
+    month: /month\s*(no|num|number|index)$|^month$|month\s*of\s*year|^رقم\s*الشهر$/i
+  };
+  const FAMILY = /hijri|fiscal|هجري|مالي/i;
+  const family = (n) => (String(n).match(FAMILY) || [''])[0].toLowerCase();
+  function sortColumnFor(columns, colName) {
+    if (!NAME_LIKE.test(String(colName).replace(FAMILY, '').trim())) return null;
+    const kind = sortKind(colName), fam = family(colName);
+    const type = (c) => String(c.dataType || (c.type === 'calculatedTableColumn' || c.isDataTypeInferred ? 'unknown' : 'string')).toLowerCase(), plain = (c) => String(c.name).replace(FAMILY, '').trim();
+    const numberName = /(no|num|number|index|key|sort|order|id)$|day\s*of\s*week|month\s*of\s*year|^رقم/i;
+    const ok = (c) => c.name !== colName && family(c.name) === fam && SORT_BY[kind].test(plain(c)) && (/^(int64|double|decimal|number)$/.test(type(c)) || (type(c) === 'unknown' && numberName.test(plain(c))));
+    return (columns || []).find(ok) || null;
+  }
+  const noSortColumn = (n) => ({ yearMonth: 'no year-month number column (like 202401)', day: 'no weekday number column', month: 'no month number column' })[sortKind(n)];
+  const WEEK_STARTS = ['sunday', 'monday', 'saturday'];
+  const tref = (t) => "'" + String(t).replace(/'/g, "''") + "'", cref = (t, c) => tref(t) + '[' + String(c).replace(/]/g, ']]') + ']';
+  // the DAX of a number column made from the table's date column; the week starts on Sunday (Saudi Arabia and most of
+  // the Gulf), Monday (the Saturday-Sunday weekend, as in the UAE since 2022) or Saturday
+  const numberDax = (kind, d, weekStart) => (kind === 'month' ? 'MONTH ( ' + d + ' )' : kind === 'yearMonth' ? 'YEAR ( ' + d + ' ) * 100 + MONTH ( ' + d + ' )'
+    : weekStart === 'monday' ? 'WEEKDAY ( ' + d + ', 2 )' : weekStart === 'saturday' ? 'MOD ( WEEKDAY ( ' + d + ', 1 ), 7 ) + 1' : 'WEEKDAY ( ' + d + ', 1 )');
+  const numberName = (kind) => ({ month: 'Month Number', yearMonth: 'Year Month Number', day: 'Day of Week Number' })[kind];
+  // items: [{ table, column }] (the columns of the MONTH_SORT finding); opts.weekStart: 'sunday' (default), 'monday', 'saturday'.
+  // Returns { script, count, sorts: [{ column, by, added }], byHand: [{ column, why, steps }], weekStart }.
+  // A column of a DAX table is never rewritten by a script (a TMDL script can't change it under "ref table":
+  // confirmed in Power BI Desktop), a Hijri or fiscal name without its own number can't be worked out from a date,
+  // and a table without a date column has nothing to make the number from: those are told as steps by hand.
+  function sortFixes(rawTables, items, opts) {
+    const weekStart = WEEK_STARTS.includes(opts && opts.weekStart) ? opts.weekStart : 'sunday';
+    const byTable = new Map(), sorts = [], byHand = [];
+    const hand = (obj, why, steps) => byHand.push({ column: obj, why, steps });
+    // a column that is itself the number another listed name is sorted by is not a name to sort (an untyped
+    // "Day of Week" beside "Day Name": the check can't tell without a type)
+    const numbers = new Set();
+    (items || []).forEach((it) => { const t = (rawTables || []).find((x) => x.name === it.table), by = t && sortColumnFor(t.columns, it.column); if (by) numbers.add(it.table + '[' + by.name + ']'); });
+    (items || []).forEach((it) => {
+      if (numbers.has(it.table + '[' + it.column + ']')) return;
+      const t = (rawTables || []).find((x) => x.name === it.table), c0 = t && (t.columns || []).find((x) => x.name === it.column), obj = it.table + '[' + it.column + ']';
+      if (!c0) { hand(obj, 'not found in the model files', 'Select the column in Power BI Desktop, then Column tools > Sort by column > its number column.'); return; }
+      const kind = sortKind(it.column), dax = c0.type === 'calculatedTableColumn', by = sortColumnFor(t.columns, it.column);
+      if (dax) { hand(obj, 'a column of a DAX table: a script can\'t change it', by ? 'Select ' + obj + ' in Power BI Desktop, then Column tools > Sort by column > ' + by.name + '.'
+        : 'Add a number column to the table\'s DAX (' + noSortColumn(it.column) + ' found), for example "' + numberName(kind) + '", ' + numberDax(kind, '[Date]', weekStart) + ', then select ' + obj + ' > Column tools > Sort by column > that column.'); return; }
+      if (!byTable.has(t.name)) byTable.set(t.name, { added: new Map(), cols: new Map() });
+      const g = byTable.get(t.name);
+      let byName = by && by.name, added = false;
+      if (!by) {
+        const d = (t.columns || []).find((x) => /^date$/i.test(x.name) && x.dataType === 'dateTime') || (t.columns || []).find((x) => x.dataType === 'dateTime');
+        if (family(it.column)) { hand(obj, noSortColumn(it.column) + ' for this ' + family(it.column) + ' name, and it can\'t be worked out from the date', 'Add the ' + family(it.column) + ' number column at the source, then Column tools > Sort by column.'); return; }
+        if (!d) { hand(obj, noSortColumn(it.column) + ', and the table has no date column to make one from', 'Add a number column at the source, then select ' + obj + ' > Column tools > Sort by column > that column.'); return; }
+        byName = numberName(kind);
+        for (let n = 2; (t.columns || []).some((x) => x.name === byName); n++) byName = numberName(kind) + ' ' + n;
+        if (!g.added.has(kind)) g.added.set(kind, { type: 'calculated', name: byName, dataType: 'int64', isHidden: true, summarizeBy: 'none', expression: numberDax(kind, cref(t.name, d.name), weekStart) });
+        byName = g.added.get(kind).name; added = true;
+      }
+      const c = g.cols.get(c0.name) || JSON.parse(JSON.stringify(c0));
+      c.sortByColumn = byName; g.cols.set(c0.name, c);
+      sorts.push({ column: obj, by: it.table + '[' + byName + ']', added });
+    });
+    const out = ['createOrReplace', ''];
+    let count = 0;
+    byTable.forEach((g, tname) => {
+      const block = [];
+      const emit = (c) => { const lines = column(c, 2); if (lines) { block.push.apply(block, lines); block.push(''); return true; } return false; };
+      const done = new Set();
+      g.cols.forEach((c, cname) => {
+        const newCol = Array.from(g.added.values()).find((a) => a.name === c.sortByColumn);
+        // the column must be one this builder can write back whole: otherwise it is left for the user, never half-written
+        if (!column(c, 2)) { hand(tname + '[' + cname + ']', 'has a property this script builder does not know', 'Select it in Power BI Desktop, then Column tools > Sort by column > ' + c.sortByColumn + (newCol ? ' (add it first: ' + newCol.expression + ')' : '') + '.'); return; }
+        if (newCol && !done.has(newCol.name)) { emit(newCol); done.add(newCol.name); }
+        emit(c); count++;
+      });
+      if (block.length) out.push(ind(1) + 'ref table ' + name(tname), '', ...block);
+    });
+    const kept = sorts.filter((s) => !byHand.some((h) => h.column === s.column));
+    return { script: count ? out.join('\n').replace(/\n+$/, '\n') : null, count, sorts: kept, byHand, weekStart };
+  }
+
+  // A format for a measure that has none, with its reason: a name that reads as a percentage gets 0.0%; a count (COUNT,
+  // COUNTROWS, DISTINCTCOUNT...) or a sum of a whole-number column gets #,0; every other measure #,0.00. A suggestion,
+  // shown with its reason and never applied by itself.
+  const PCT_NAME = /(%|\bpct\b|\bpercent(age)?\b|\brate\b|\bratio\b|\bshare\b|\bmargin\b|نسبة|هامش)/i;
+  function suggestFormat(m, rawTables) {
+    const expr = text(m.expression).replace(/\/\/.*$/gm, '').replace(/--.*$/gm, '').trim();
+    if (PCT_NAME.test(m.name)) return { format: '0.0%', reason: 'the name reads as a percentage' };
+    if (/^(COUNT|COUNTA|COUNTAX|COUNTBLANK|COUNTROWS|COUNTX|DISTINCTCOUNT|DISTINCTCOUNTNOBLANK)\s*\(/i.test(expr)) return { format: '#,0', reason: 'it counts rows or values' };
+    const sum = expr.match(/^SUM\s*\(\s*'?([^'\[\]]+?)'?\s*\[\s*([^\]]+)\]\s*\)$/i);
+    if (sum) {
+      const t = (rawTables || []).find((x) => x.name.toLowerCase() === sum[1].trim().toLowerCase()), c = t && (t.columns || []).find((x) => x.name.toLowerCase() === sum[2].trim().toLowerCase());
+      if (c && c.dataType === 'int64') return { format: '#,0', reason: 'a sum of a whole-number column' };
+    }
+    return { format: '#,0.00', reason: 'a number: thousands separator and two decimals' };
+  }
+  // names: the measures to give a format (the NO_FORMAT finding), or to change to a percentage (PCT_FORMAT: percent true).
+  // Returns { script, count, suggested: [{ measure, format, reason }], byHand: [{ measure, why, steps }] }.
+  function formatFixes(rawTables, names, opts) {
+    const want = new Set((names || []).map((n) => String(n).toLowerCase())), percent = !!(opts && opts.percent);
+    const out = ['createOrReplace', ''], suggested = [], byHand = [];
+    let count = 0;
+    (rawTables || []).forEach((t) => {
+      const block = [];
+      (t.measures || []).forEach((m0) => {
+        if (!want.has(String(m0.name).toLowerCase())) return;
+        if (m0.formatStringDefinition || (m0.formatString && !percent)) return;   // it has a format: never touched
+        const s = percent ? { format: '0.0%', reason: 'the name reads as a percentage but the format is ' + m0.formatString } : suggestFormat(m0, rawTables);
+        const lines = measure(Object.assign({}, m0, { formatString: s.format }), 2);
+        if (lines) { block.push.apply(block, lines); block.push(''); count++; suggested.push({ measure: '[' + m0.name + ']', format: s.format, reason: s.reason }); }
+        else byHand.push({ measure: '[' + m0.name + ']', why: 'has a property this script builder does not know', steps: 'Select the measure in Power BI Desktop, then Measure tools > Format: ' + s.format + ' (' + s.reason + ').' });
+      });
+      if (block.length) out.push(ind(1) + 'ref table ' + name(t.name), '', ...block);
+    });
+    return { script: count ? out.join('\n').replace(/\n+$/, '\n') : null, count, suggested, byHand };
+  }
+
+  const api = { measure, column, columnFixes, moveMeasures, name, sortColumnFor, noSortColumn, sortKind, sortFixes, formatFixes, suggestFormat };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MHTmdl = api;
 })(typeof self !== 'undefined' ? self : this);

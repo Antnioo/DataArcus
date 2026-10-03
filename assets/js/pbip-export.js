@@ -124,9 +124,13 @@
   const fieldCol = (t, c) => ({ field: { Column: { Expression: { SourceRef: { Entity: t } }, Property: c } }, queryRef: t + '.' + c, nativeQueryRef: c });
   const fieldMea = (t, m) => ({ field: { Measure: { Expression: { SourceRef: { Entity: t } }, Property: m } }, queryRef: t + '.' + m, nativeQueryRef: m });
   const q = (roles) => { const st = {}; Object.keys(roles).forEach((r) => { st[r] = { projections: roles[r] }; }); return { queryState: st }; };
-  // a bound field: { t: table, c: column } or { t: table, m: measure }
-  const proj = (f) => (f.m != null ? fieldMea(f.t, f.m) : fieldCol(f.t, f.c));
-  const label = (f) => (f ? (f.m != null ? f.m : f.c) : null);
+  // a bound field: { t: table, c: column } or { t: table, m: measure }, with an optional display name (name): the
+  // report then shows that name wherever it shows the field (legend, axis titles, table headers, slicer headers:
+  // the projection's displayName; measured in Desktop 2.158, DESKTOP-TESTS.md round 2) and in the titles written
+  // here. The model is not renamed, and queryRef stays the field's own.
+  const fname = (f) => (f.m != null ? f.m : f.c);
+  const proj = (f) => Object.assign(f.m != null ? fieldMea(f.t, f.m) : fieldCol(f.t, f.c), f.name ? { displayName: String(f.name) } : {});
+  const label = (f) => (f ? (f.name ? String(f.name) : fname(f)) : null);
 
   // what each slot becomes in Power BI, and the sample fields it shows; cards are the card visual (cardVisual): Microsoft
   // deprecates the legacy "card"
@@ -149,6 +153,18 @@
   }
   // the kinds of slot that are charts (they show the tooltip page on hover)
   const CHARTS = ['line', 'bar', 'column', 'donut', 'funnel', 'treemap', 'map'];
+  // Months and weekdays in order (round 2; measured in Desktop 2.158, DESKTOP-TESTS.md round 2): a category whose bound
+  // field says which number column puts it in order (f.sortBy, from the field picker: a month or day name without a
+  // sort-by column in the model) gets Min of that column in the chart's Tooltips role and a sort by it. A chart only
+  // sorts by a field that is in it, and our charts show a report page tooltip, so the number is never seen. The model
+  // is not touched; tables and slicers can't do this and follow the model.
+  const sorted = (query, f) => {
+    if (!query || !f || !f.sortBy) return query;
+    const field = { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Entity: f.sortBy.t } }, Property: f.sortBy.c } }, Function: 3 } };
+    query.queryState.Tooltips = { projections: [{ field, queryRef: 'Min(' + f.sortBy.t + '.' + f.sortBy.c + ')', nativeQueryRef: 'Min of ' + f.sortBy.c }] };
+    query.sortDefinition = { sort: [{ field, direction: 'Ascending' }], isDefaultSort: true };
+    return query;
+  };
   // a table's fields in the order they are shown (see bindQuery)
   const tableFields = (B, rtl) => { const fs = (B.table || []).filter(Boolean); if (rtl) fs.reverse(); return fs; };
   // the query of one visual, or null when a field it needs is not bound
@@ -162,8 +178,9 @@
       // the card visual's field role is Data (with Values or Fields it stays empty)
       case 'kpi': return kpi ? q({ Data: [proj(kpi)] }) : null;
       case 'card': return need(B.measure) ? q({ Data: [proj(B.measure)] }) : null;
-      case 'line': return need(B.date, B.measure) ? q({ Category: [proj(B.date)], Y: [proj(B.measure)] }) : null;
-      case 'bar': case 'column': case 'donut': case 'funnel': return need(cat, y) ? q({ Category: [proj(cat)], Y: [proj(y)] }) : null;
+      case 'line': return need(B.date, B.measure) ? sorted(q({ Category: [proj(B.date)], Y: [proj(B.measure)] }), B.date) : null;
+      case 'bar': case 'column': return need(cat, y) ? sorted(q({ Category: [proj(cat)], Y: [proj(y)] }), cat) : null;
+      case 'donut': case 'funnel': return need(cat, y) ? q({ Category: [proj(cat)], Y: [proj(y)] }) : null;
       case 'table': { const fs = tableFields(B, rtl); return fs.length ? q({ Values: fs.map(proj) }) : null; }
       case 'gauge': return need(y) ? q({ Y: [proj(y)] }) : null;
       case 'treemap': return need(cat, y) ? q({ Group: [proj(cat)], Values: [proj(y)] }) : null;
@@ -306,7 +323,9 @@
     // m (KPI cards on a page): { top, side }, the margin above the title (round(12k), k = page height / 1080: measured
     // in Desktop 2.158 as the smallest that looks right) and the padding on the reading-start side that keeps the title
     // clear of a side accent bar (the page's kpiInset from the design engine). Both are reserved here, so the number
-    // still fits; the top margin gives way to P when even an 8pt number would not fit under it.
+    // still fits; the top margin gives way to P when even an 8pt number would not fit under it. On a solid design, where
+    // the theme draws the card's panel with rounded corners and no accent bar, the side is round(16k): at P the title
+    // touches the panel's corner (measured in Desktop 2.158, DESKTOP-TESTS.md round 2).
     const cardFit = (w, h, s, title, callout, m) => {
       const P = Math.round(8 * s / 1.5), line = (f) => Math.ceil(f * 1.5), S = (m && m.side) || P;
       const T = m && m.top > P && Math.floor((h - m.top - P - line(title)) / 1.5) >= 8 ? m.top : P;
@@ -457,6 +476,18 @@
           const w = Math.min(x1 - x0, n * Math.max(140 * k, need(t)) + 40 * k);
           while (t > 8 && (need(t) > (w - 40 * k) / n || buttonH(t) > title.h)) t--;
           if (need(t) <= (w - 40 * k) / n && buttonH(t) <= title.h) nav = { x: rtl ? x0 : x1 - w, y: title.y, w, h: title.h, t };
+          // Right to left: the page navigator has no setting for its order and always puts the first page on the
+          // left, so the page buttons are single buttons, the first page's rightmost (measured in Desktop 2.158,
+          // DESKTOP-TESTS.md round 2). A button never wraps its text, which is 0.45 em a character at most (measured
+          // 0.38-0.42), and needs 6 + 1.6 x pt in height: the same box
+          // rule with one line; where the header is too low or too narrow for that even at 8pt, the navigator stays.
+          if (rtl) {
+            const need1 = (t1) => Math.ceil(0.45 * 4 / 3 * t1 * longest + 16 * k), fits = (t1, w1) => need1(t1) <= (w1 - 40 * k) / n && Math.ceil(6 + 1.6 * t1) <= title.h;
+            let t1 = pt(title.h * 0.3);
+            const w1 = Math.min(x1 - x0, n * Math.max(140 * k, need1(t1)) + 40 * k);
+            while (t1 > 8 && !fits(t1, w1)) t1--;
+            if (fits(t1, w1)) nav = { x: x0, y: title.y, w: w1, h: title.h, t: t1, buttons: true };
+          }
         }
       }
 
@@ -525,7 +556,7 @@
           if (query) visual.query = query;
           // the title already names the KPI, so the card's own label under the number is not repeated
           if (type === 'cardVisual') {
-            const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: s.kind === 'kpi' ? pg.kpiInset || 0 : 0 });
+            const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: (s.kind === 'kpi' && pg.kpiInset) || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) });
             visual.objects = cardObjects(c); cardFrame(visual.visualContainerObjects, c, TITLE);
           }
           // tables fill their visual (grow to fit), instead of shrinking to their content and leaving the rest empty
@@ -535,14 +566,27 @@
           // the model types as numbers) on the other; "Apply to header" (styleHeader) makes the header follow
           if (s.kind === 'table' && query) visual.objects.columnFormatting = tableFields(B, rtl).map((f) => ({
             properties: { alignment: str(f.m != null || f.num ? (rtl ? 'Left' : 'Right') : (rtl ? 'Right' : 'Left')), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) },
-            selector: { metadata: f.t + '.' + label(f) } }));
+            selector: { metadata: f.t + '.' + fname(f) } }));
         }
         const v = container({ x: s.x, y: box.y, w: s.w, h: box.h, z, parent, visual, kind: s.kind });
         if (CHARTS.includes(s.kind)) charts.push({ v, byMonth: !!trend && same(s.kind === 'line' ? B.date : (B.cats || {})[s.kind], tip.date) });
         z += 1000;
         // the page navigator follows the title in the reading order; its text size is set for the default, hover and
         // selected states (the current page's button is the selected one, and would otherwise show Power BI's own size)
-        if (s.kind === 'title' && nav) {
+        if (s.kind === 'title' && nav && nav.buttons) {
+          // one button per page, in the navigator's box, first page at the right; the current page's filled in the text
+          // colour with bold text in the card colour, the others outlined (the navigator's own look)
+          const n = PAGES.length, gap = 8 * k, bw = (nav.w - gap * (n - 1)) / n;
+          PAGES.forEach((p, i) => {
+            const current = i === pageIndex, name = String(p.name || base);
+            container({ x: Math.round(nav.x + nav.w - (i + 1) * bw - i * gap), y: nav.y, w: Math.round(bw), h: nav.h, z, parent: groups.header.name, kind: 'navbtn',
+              visual: { visualType: 'actionButton',
+                objects: { icon: def({ shapeType: str('blank') }), text: def({ show: bool(true), text: str(name), fontColor: color(current ? u.card : u.text), fontFamily: str(font), fontSize: num(nav.t), bold: bool(current) }),
+                  fill: def({ show: bool(true), fillColor: color(current ? u.text : u.card), transparency: num(0) }), outline: def({ show: bool(true), lineColor: color(u.text) }) },
+                visualContainerObjects: Object.assign(frame(null, name), { visualLink: obj({ show: bool(true), type: str('PageNavigation'), navigationSection: str(p.id) }) }) } });
+            z += 1000;
+          });
+        } else if (s.kind === 'title' && nav) {
           container({ x: Math.round(nav.x), y: nav.y, w: Math.round(nav.w), h: nav.h, z, parent: groups.header.name, kind: 'nav',
             visual: { visualType: 'pageNavigator', objects: { text: ['default', 'hover', 'selected'].map((id) => ({ properties: { fontSize: num(nav.t) }, selector: { id } })) }, visualContainerObjects: frame(null, W.pages || 'Pages') } });
           z += 1000;
@@ -615,9 +659,18 @@
       const PW = 323, GAP = 8, SIZE = { title: 56, nav: 44, logo: 56, kpi: 100, card: 100, slicer: 64, button: 40, text: 120, table: 270, gauge: 180, donut: 220, map: 220, treemap: 220 };
       const pos = {}, bottom = {};
       let y = 0, col = 0;
+      const navBtns = mob.filter((m) => m.kind === 'navbtn');
       const place = (m) => {
         const k = m.kind, half = k === 'kpi' || k === 'card';
         const h = SIZE[k] || 190;
+        if (k === 'navbtn') {
+          // the single page buttons of a right-to-left report: one row, shared equally, the first page's at the right
+          const n = navBtns.length, i = navBtns.indexOf(m), w = (PW - GAP * (n - 1)) / n;
+          if (col) { y += 100 + GAP; col = 0; }
+          pos[m.v.name] = { x: PW - (i + 1) * w - i * GAP, y, w, h: SIZE.nav };
+          if (i === n - 1) y += SIZE.nav + GAP;
+          return;
+        }
         if (half) {
           const x = col ? PW - 157.5 : 0; pos[m.v.name] = { x: rtl ? PW - 157.5 - x : x, y, w: 157.5, h };
           if (col) { y += h + GAP; col = 0; } else col = 1;
@@ -717,9 +770,9 @@
         // a bar chart writes its category names horizontally (a column chart slants or cuts them); its own sizes, as
         // the card has: axis text 8pt, 40% of the width for the names (a 20-character name is whole), no value axis and
         // each bar's value beside it instead, which leaves room for one more row
-        { x: 12, y: 92, w: 296, h: 184, visual: { visualType: 'clusteredBarChart', query: q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }),
+        { x: 12, y: 92, w: 296, h: 184, visual: { visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), tip.cat),
           objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
-          visualContainerObjects: tipFrame(label(tip.y)) } }]
+          visualContainerObjects: tipFrame(tip.y.m === tip.card.m && tip.y.t === tip.card.t ? label(tip.y) + ' ' + (W.by || 'by') + ' ' + label(tip.cat) : label(tip.y)) } }]
       : [{ x: 12, y: 12, w: 296, h: 260, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }]);
     // the trend: the card's measure by month, as a bar chart with the same settings, 310 high on a 320 x 410 page: 12
     // rows (22 a row and 46 for the title and padding), so every month's name is whole and horizontal with its value
@@ -727,7 +780,7 @@
     // a column or line chart loses the last month behind a scrollbar as soon as the value axis's labels are wide
     // ("100K", "0.4M"), and without that axis the first month's name is cut. The owner's choice, 2026-10-03.
     if (trend) tipPage(trend.name, trend.binding, (W.tooltipPage || 'Tooltip') + ' \u00b7 ' + label(tip.date), [tipCardVisual(),
-      { x: 12, y: 92, w: 296, h: 310, visual: { visualType: 'clusteredBarChart', query: q({ Category: [proj(tip.date)], Y: [proj(tip.card)] }),
+      { x: 12, y: 92, w: 296, h: 310, visual: { visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(tip.card)] }), tip.date),
         objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
         visualContainerObjects: tipFrame(label(tip.card) + ' ' + (W.by || 'by') + ' ' + label(tip.date)) } }], 410);
 

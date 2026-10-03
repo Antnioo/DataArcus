@@ -113,6 +113,20 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
   - Measure a chart with the measure it will show: the value axis's label width changes the plot, and a column
     chart that fits 12 month names with "1K" labels loses one behind a scrollbar with "0.4M".
 
+- Round 2, measured in Desktop 2.158 (`scripts/tests/DESKTOP-TESTS.md`):
+  - A chart sorts by a field only when that field is in the visual: Min of the model's month or weekday number in the
+    `Tooltips` role plus a `sortDefinition` by it puts month and day names in order without touching the model. A
+    table and a slicer can't: they need the model's sort-by column.
+  - A projection's `displayName` is shown everywhere Power BI shows the field (axis, legend, table header, slicer
+    header); the model is not renamed.
+  - The page navigator has no order setting (first page always left). A right-to-left report gets single
+    `actionButton`s with `visualLink` `type: 'PageNavigation'`, `navigationSection: <page id>`; a one-line button
+    needs about 0.45 em per character.
+  - A slicer's "All" is Power BI's own word and follows the viewer's language: no report property changes it.
+  - A sample table as a Power Query partition opens empty; as a DAX table it opens with data and a refresh banner.
+  - On a DAX calendar every column is untyped in TMDL, so a number column named like a name ("Day of Week") is listed
+    by the sort check too: the fix builder drops a column that another listed name is sorted by.
+
 ## Writing prompts for another agent or session
 Start with the request itself ("Run this test now"). Name every file. List the steps. Add the rules: scope folder, don't
 change test files or expected numbers, stop and report on failure. Give the exact report format. Compare with expected
