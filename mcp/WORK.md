@@ -248,8 +248,8 @@ their answers don't change.
 | a made-up model: Total Margin = SUM, no format; Net Margin = SUM, `#,0`; Gross Margin = DIVIDE, no format; Margin % = DIVIDE, no format | `modelNotes` flags Gross Margin and Margin % only; Total Margin is not picked as the ratio card |
 | Large Synthetic, "Bookings Total Margin" (golden task 10's note) | not flagged as a percentage |
 
-- **Tests:** MCP `npm test` 195 → **213** (18 new checks, failing first, except "small answers unchanged", which
-  holds before and after). Website suites: no count changes expected; `design-engine` (598), `pbip` (71), both
+- **Tests:** MCP `npm test` 195 → **216** (21 new checks: the plan first said 18, a miscount of the three plan_layout checks and two others; 18 fail first, and "small answers unchanged", "small fixes whole" and "7 cards refused"
+  hold before and after). Website suites: no count changes expected; `design-engine` (598), `pbip` (71), both
   theme generator suites and `layout` must pass unchanged, since the engine and the writer are only added to.
 - **Fixtures:** none may change (`cases.json`, `project-pages.json`): proved by the suites; if one would, stop.
 - **Golden tasks at tool level, expected:** 7 FAIL → PASS on the validator (0 errors, no empty card; the agent-level
