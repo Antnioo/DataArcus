@@ -799,6 +799,120 @@ happens to know. Those four gaps are exactly where DataArcus has measured, teste
 one tester who is not neutral: enough to say the gaps exist in the plugin's text and in its default result, not enough
 to say how a careful user with a good prompt would fare.
 
+## 2026-10-03: round 2 measurements (branch `fix/round-2-arabic`, no code changed), Power BI Desktop 2.158.1177
+
+Test reports only ("Gulf Sales M2 EN / AR" through the MCP on our sample model `tests/5-tmdl-sample`, a solid design,
+with measurement pages added by `builder-scripts\m2-build.mjs`; "Gulf Sales M2 Sample M", the website's sample
+download). Captured at 2x through the bridge only (`m2-run.ps1`: no mouse, no screen captures, because the laptop was
+in use), closed without saving. Captures: `tests/phase2-try/shots-m2/`. Property names were first read from
+Microsoft's CLI (`powerbi-report-author formatting describe-object`, 0.4.0).
+
+**1. Months and days in order without changing the model (the "Sort" page).** `Calendar[Month Name]` and
+`[Day Name]` have no sort-by column in this model, so every visual shows them A to Z.
+
+| Visual | Written | Result |
+|---|---|---|
+| bar chart by Month Name | as today | April, August, December, ... |
+| the same | `sortDefinition` by the column `Month Number`, which is not in the visual | ignored: A to Z |
+| the same | `sortDefinition` by Min of `Month Number`, not in the visual | ignored: A to Z |
+| the same | **Min of `Month Number` in the `Tooltips` role, and `sortDefinition` by it** | **January, February, March, ...** |
+| bar chart by Day Name | Min of `Day of Week` in `Tooltips`, sorted by it | **Sunday, Monday, ... Saturday** (the model's weekday number starts on Sunday) |
+| column chart, table | sorted by a field that is not in the visual | ignored: A to Z |
+
+So a chart can be put in month or weekday order by the report itself, when the model has the number column: the number
+goes into the chart's tooltip fields (our charts show a report page tooltip, so it is never seen) and the chart sorts
+by it. A table has no tooltip role and a slicer has no sort: those two follow the model, and need the model's sort-by
+column.
+
+**2. Display names (the "Names" page).** A `displayName` on a field's projection is shown wherever Power BI shows
+the field: the legend, both axis titles, a table's column headers, and a slicer's header (the slicer's `header.text`
+does the same). The model is not renamed. Arabic names shape and read correctly.
+
+**3. Page buttons in reading order (the "Nav" page).** The page navigator has no setting for its order (objects:
+`layout` with orientation only, `pages`, `text`, `fill`, `outline`, `shape`): it always puts the first page on the
+left, also in an Arabic report. Single buttons with `visualLink` `type: 'PageNavigation'` and
+`navigationSection: <page id>` can be placed in any order: with the current page's button filled in the text colour
+and bold and the others outlined, the header looks as it does with the navigator; in the Arabic report the first page's
+button is the rightmost. (Following the link needs a Ctrl+click in Desktop: checked last, when the laptop is free.)
+
+**4. KPI titles on a solid design (the "Pad" page).** The four cards with the reading-start padding at 8 (as written),
+12, 16, 20 and 24, English and Arabic, on 1920 x 1080: at 8 the title touches the panel's rounded corner; **16 is the
+first that reads as a margin**, and lines up with the slicer names in the rail above; 24 looks indented.
+
+**5. The slicer's "All".** No slicer property holds that text (searched every slicer object in the CLI): it is Power
+BI's own word and follows the viewer's Power BI language, not the report. Nothing in the report files can change it.
+
+**6. The sample download's banner (round 2 item 2.3).** With the sample table as a Power Query `#table` partition
+instead of a DAX table, Desktop opens with "Some of the tables have incomplete or no data" and **every visual is
+empty** until the visitor refreshes. With the DAX table (today) the banner says "One or more calculated tables need to
+be manually refreshed" but **every visual shows its data at once**. A project carries no data (the cache file is
+local), so one of the two banners always shows; today's is the better one. No change to the model; one line of help
+where the visitor downloads.
+
+## 2026-10-03: round 2 built (`fix/round-2-arabic`, `09d63f5`), Power BI Desktop 2.158.1177: fifteen reports
+
+Test reports only, built from the branch (`builder-scripts\r2-build.mjs`, `r2-one.mjs`): through the MCP on our sample
+model `tests/5-tmdl-sample` (solid designs) English and Arabic, 1920 x 1080 and 1280 x 720, light and dark (eight),
+three Arabic reports with display names ("Names all", "Names les": two names left out, "Tip": built after the tooltip
+title change); the website's sample download English and Arabic at 1080 and 720 (four). Every page and tooltip page
+captured at 2x through the bridge only (`r2-run.ps1`: no mouse, no screen captures; the laptop was in use), closed
+without saving. Captures: `tests/phase2-try/shots-r2/` (60). Judged from the full-size captures.
+
+| Item | Expected | Result |
+|---|---|---|
+| R2.1 the tooltip's measure | the category tooltip shows the card and a bar chart of Total Sales by the category, with bars | **as expected**: Q1 78K, Q2 23K, Q3 1K, Q4 1K under the card (it was "Total Sales Last Ramadan", empty for one item). The chart's title is "Total Sales by Quarter" ("إجمالي المبيعات حسب الربع" on "Tip"), no longer the card's title twice |
+| R2.2 KPI titles on a solid design | titles start 16 (11 on 720) inside the panel; the number centred; the website's download unchanged | **as expected** on the eight MCP reports, English (left) and Arabic (right), light and dark; the website's cards are as on main |
+| R2.3 page buttons | Arabic: right to left, the current page's filled, names whole; English: as before | **as expected**: on every Arabic report "ملخص تنفيذي" is the rightmost, filled on page 1; on page 2 "التفاصيل" is filled; whole names at 1080 and 720, light and dark (the filled one is white on dark); the logo sits left of them. English reports keep the navigator. The website's Arabic download gets the same buttons. Ctrl+click: see "the open checks" below |
+| R2.4 months and days in charts | line chart January to December, weekday chart Sunday to Saturday, trend tooltip January to December; tables and slicers A to Z, and the notes say so | **as expected** on all eleven MCP reports; the detail table still runs Friday, Monday, Saturday, ... and `modelNotes` says tables and slicers need the model's sort-by column |
+| R2.5 display names | with a name for every used field no English field name on any page or tooltip page; with two left out, those two are English and are the two listed | **as expected**: "Names all" and "Tip" show Arabic names on the KPI cards, chart titles, slicer headers, table headers and both tooltip pages (`arabicNames.missing` empty); "Names les" shows "Quarter" and "Total Sales Last Ramadan" in English, the two in `arabicNames.missing`. Category values (January, Sunday, Q1) are the model's data, not names |
+| R2.6 the scripts | accepted in TMDL view; after them tables and slicers in order, the % card 34.0% | see "the open checks" below. `check_model_health` on the sample model gives the format script for five measures (`0.0%` for the two "%" ones, `#,0.00` for the others) and, because its calendar is a DAX table, the two sort fixes as steps by hand (Month Name by Month Number, Day Name by Day of Week). Saved in `tests/phase2-try/r2-health-fixes.json` |
+| all | Microsoft's validator: 0 errors | **0 errors** on all fifteen (the 720 reports: the 10 known warnings) |
+
+### The open checks, same day (the owner kept hands off: mouse, keyboard and screen scripts allowed)
+Scripts in `builder-scripts`: `r2-desk-run.ps1` / `r2-desk.ps1` (hover, Ctrl+click; the opened page is read back
+through UI Automation), `tmdl-apply.ps1` (pastes a script into TMDL view, Preview, Apply), `uia-refresh.ps1`,
+`uia-refresh-now.ps1`, `r2-sort-model.mjs` (the made-up model). Captures: `tests/phase2-try/shots-r2/` (`desk-*`,
+`fmt-*`, `sort-*`). Everything closed without saving; the model files are unchanged.
+
+| Check | Expected | Result |
+|---|---|---|
+| 1. Hover | hovering a chart shows the tooltip page ("Total Sales by Quarter", bars) | **as expected** on four reports (MCP Arabic with names, MCP Arabic 720 dark, MCP English built after the title change, the website's Arabic download). The line chart shows the card and "Total Sales by Quarter" / "إجمالي المبيعات حسب الربع" for the hovered month (one bar: July is in Q3, 186); the bar and column charts show the card and the trend by month, January to December (hovering Q1: January to March) |
+| 1. Ctrl+click on the Arabic page buttons | each opens its page; the first page's button rightmost, the current one filled | **as expected** on the three Arabic reports, both directions (page 1 to 2 and back; the selected page tab read back each time). The rightmost button is "ملخص تنفيذي"; the filled one follows the page (white on dark) |
+| 2. The format script (`NO_FORMAT.fixScript`, on `5-tmdl-sample`) | accepted; the % card shows 34.0% | **accepted** (Preview shows `formatString` added to the five measures, Problems 0, "Changes applied to the model."). **The card shows 33.8%, not 34.0%: the expected number was wrong.** The measure's value is 0.3378 (DAX query on the open model, `FORMAT` gives "33.8%"); "34.0%" had been worked out from the card's rounded "0.34". The other cards read 101.91K, 74.68K, 23.64K and the table 13,857.00 |
+| 3. The sort script, on a made-up model with an imported calendar (`tests/6-sort-sample`: Power Query partitions, no number columns) | months January to December, days in the week-start order, in a table and a slicer | **as expected, after one "Refresh now"**. Before: both tables and both list slicers A to Z. The script adds hidden calculated columns `Month Number` and `Day of Week Number` and sets the two sort-by columns; accepted (Problems 0). Right after Apply every visual shows an error and the banner "One or more calculated columns need to be manually refreshed"; after "Refresh now": January ... December and **Sunday ... Saturday**. The `monday` script applied on top: **Monday ... Sunday**; the `saturday` script: **Saturday ... Friday** (each differs in the weekday expression only) |
+
+**Found by these checks, not changed (proposed fixes, for the owner):**
+- `howToApply` does not say that a script that adds a column needs "Refresh now" afterwards: until then every visual
+  on the page shows an error. Proposed: one more sentence in `howToApply` when the sort script adds a column.
+- The fix scripts built from a TMDL project carry no `lineageTag` (the TMDL reader drops them for the health
+  check), so Preview shows each rewritten measure or column losing its tag and Desktop gives it a new one. The report
+  is not affected (it binds by name). Proposed: the reader keeps the tags for the script builder; a test with a
+  tagged measure.
+- The expected "34.0%" in `mcp/WORK.md` was a wrong number (see check 2): the plan's table is corrected to 33.8%
+  with this note, the result was not adjusted.
+
+**Seen, not in scope (these checks):** on hover the tooltip page can cover the ribbon when the chart is near the top
+right; the website's Arabic download's tooltip chart is titled with the second measure only ("إجمالي الطلبات", no "by");
+`plan_layout` refuses fewer than 3 KPI cards, so the made-up model got two more measures (the queued "fewer KPI
+cards than measures" item); a model with Power Query partitions opens empty until Refresh (known).
+
+**Found by this check and fixed on the branch:** the tooltip chart's title repeated the card's (`28731f6`); the sort
+fixes told the user to give "Day of Week", the number column itself, a sort column (`09d63f5`, test first).
+
+**Seen, not in scope:**
+- Tables and slicers list months and days A to Z until the model has sort-by columns (the health check's fix).
+- The slicers say "All" in English in an Arabic report (Power BI's own word; said in `reportNotes`).
+- The fourth KPI shows 0.34, not 34.0% (no format string in the model; `modelNotes` and `fixes.NO_FORMAT`).
+- In an Arabic report the table's total row has no "Total" word (English reports show "Total" under the first column).
+- A chart title mixing Arabic and an English field name ("إجمالي المبيعات حسب Quarter") is drawn with the English
+  word first; with a display name for the field it reads correctly.
+- At 1280 x 720 the line chart's month names are slanted, and the page 1 table cuts its last visible row in half
+  (English) or shows a scrollbar (Arabic 1080: six rows of seven).
+- The website's download opens with "One or more calculated tables need to be manually refreshed" (measured: the
+  other form opens empty).
+- On the website's transparent cards the Arabic title sits close to the accent bar (as on main, English the same).
+- `create_report` shortens a long report name: "Gulf Sales R2 MCP AR Names less 2" became "... Names les".
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.

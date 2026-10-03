@@ -121,6 +121,50 @@ export default async function ({ browser, url }) {
   }
 
   {
+    // round 2: sort order and number formats as ready TMDL scripts (model-health-tmdl.js, shared with the MCP)
+    const T = load('model-health-tmdl.min.js');
+    const dcol = (name, dataType) => ({ name, dataType, sourceColumn: name });
+    const cal = { name: 'Calendar', columns: [dcol('Date', 'dateTime'), dcol('Month Name', 'string'), dcol('Month Number', 'int64'), dcol('Day Name', 'string'), dcol('Hijri Month Name', 'string'), dcol('Fiscal Month Number', 'int64')], partitions: mpart('Calendar') };
+    const xcol = (name) => ({ type: 'calculatedTableColumn', name, isNameInferred: true, isDataTypeInferred: true, sourceColumn: '[' + name + ']' });
+    const dax = { name: 'DaxCal', columns: [xcol('Date'), xcol('Month Name'), xcol('Month Number'), xcol('Day Name')], partitions: [{ name: 'DaxCal', source: { type: 'calculated', expression: 'CALENDAR ( DATE ( 2024, 1, 1 ), DATE ( 2024, 12, 31 ) )' } }] };
+    const items = [{ table: 'Calendar', column: 'Month Name' }, { table: 'Calendar', column: 'Day Name' }, { table: 'Calendar', column: 'Hijri Month Name' }, { table: 'DaxCal', column: 'Month Name' }, { table: 'DaxCal', column: 'Day Name' }];
+    const s = typeof T.sortFixes === 'function' ? T.sortFixes([cal, dax], items) : { script: '', sorts: [], byHand: [] }, lines = (s.script || '').split('\n');
+    // the month name is sorted by the month number that is there (never by the fiscal one); the day name gets a new
+    // weekday number made from the date, Sunday first by default
+    check(lines.includes("\t\tcolumn 'Month Name'") && lines.includes("\t\t\tsortByColumn: 'Month Number'") && !/Fiscal/.test(s.script || ''), `sort script: Month Name not sorted by Month Number: ${(s.script || '').slice(0, 300)}`);
+    check(lines.includes("\t\tcolumn 'Day of Week Number' = ```") && lines.includes("\t\t\t\tWEEKDAY ( 'Calendar'[Date], 1 )") && lines.includes("\t\t\tsortByColumn: 'Day of Week Number'") && s.weekStart === 'sunday', `sort script: no weekday number from the date, Sunday first: ${(s.script || '').slice(0, 600)}`);
+    check(JSON.stringify(s.sorts) === JSON.stringify([{ column: 'Calendar[Month Name]', by: 'Calendar[Month Number]', added: false }, { column: 'Calendar[Day Name]', by: 'Calendar[Day of Week Number]', added: true }]), `sort script: sorts ${JSON.stringify(s.sorts)}`);
+    // by hand, with the steps: a Hijri name without a Hijri number; columns of a DAX table (never rewritten by a script)
+    const hand = Object.fromEntries((s.byHand || []).map((h) => [h.column, h]));
+    check(Object.keys(hand).sort().join() === 'Calendar[Hijri Month Name],DaxCal[Day Name],DaxCal[Month Name]' && /Sort by column > Month Number/.test(hand['DaxCal[Month Name]'].steps) && /DAX table/.test(hand['DaxCal[Month Name]'].why) && !/DaxCal/.test(s.script || ''),
+      `sort script: by hand ${JSON.stringify(s.byHand).slice(0, 400)}`);
+    // a column that is itself the number another name is sorted by ("Day of Week" for "Day Name", untyped in a DAX
+    // table so the check can't tell) is never told to get a sort column of its own
+    const dax2 = { name: 'DaxCal2', columns: [xcol('Date'), xcol('Day Name'), xcol('Day of Week')], partitions: dax.partitions };
+    const s2 = typeof T.sortFixes === 'function' ? T.sortFixes([dax2], [{ table: 'DaxCal2', column: 'Day of Week' }, { table: 'DaxCal2', column: 'Day Name' }]) : { byHand: [] };
+    check(s2.byHand.length === 1 && s2.byHand[0].column === 'DaxCal2[Day Name]' && /Sort by column > Day of Week\.$/.test(s2.byHand[0].steps), `sort script: the number column itself: ${JSON.stringify(s2.byHand).slice(0, 300)}`);
+    // the week start: Monday and Saturday differ from Sunday in the weekday expression only
+    for (const [ws, want] of [['monday', "WEEKDAY ( 'Calendar'[Date], 2 )"], ['saturday', "MOD ( WEEKDAY ( 'Calendar'[Date], 1 ), 7 ) + 1"]]) {
+      const o = typeof T.sortFixes === 'function' ? T.sortFixes([cal, dax], items, { weekStart: ws }) : { script: '' }, ol = (o.script || '').split('\n');
+      const diff = ol.map((l, i) => [l, lines[i]]).filter(([a, b]) => a !== b);
+      check(ol.length === lines.length && diff.length === 1 && diff[0][0].trim() === want, `sort script, week starting ${ws}: ${diff.length} lines differ from Sunday's: ${JSON.stringify(diff).slice(0, 200)}`);
+    }
+    // formats: a suggestion per measure with its reason; a measure that has a format is never in the script
+    const st = Object.assign(sales(), { measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )' }, { name: 'Units', expression: "SUM ( 'Sales'[Qty] )" }, { name: 'Orders', expression: 'COUNTROWS ( Sales )' },
+      { name: 'Margin %', expression: 'DIVIDE ( [Total Sales] - 1, [Total Sales] )' }, { name: 'نسبة النمو', expression: 'DIVIDE ( 1, 2 )' }, { name: 'Has Format', expression: 'SUM ( Sales[Amount] )', formatString: '0' }] });
+    const f = typeof T.formatFixes === 'function' ? T.formatFixes([st], ['Total Sales', 'Units', 'Orders', 'Margin %', 'نسبة النمو', 'Has Format']) : { suggested: [], script: '' };
+    check(JSON.stringify(f.suggested.map((x) => [x.measure, x.format])) === JSON.stringify([['[Total Sales]', '#,0.00'], ['[Units]', '#,0'], ['[Orders]', '#,0'], ['[Margin %]', '0.0%'], ['[نسبة النمو]', '0.0%']]) && f.suggested.every((x) => x.reason),
+      `format script: suggestions ${JSON.stringify(f.suggested)}`);
+    check(f.count === 5 && !/Has Format/.test(f.script || '') && (f.script || '').split('\n').includes('\t\t\tformatString: 0.0%') && (f.script || '').split('\n').includes('\t\t\tformatString: #,0.00'), `format script: ${(f.script || '').slice(0, 300)}`);
+    const pf = typeof T.formatFixes === 'function' ? T.formatFixes([Object.assign(sales(), { measures: [{ name: 'Return Rate', expression: 'DIVIDE ( 1, 2 )', formatString: '0.00' }] })], ['Return Rate'], { percent: true }) : { suggested: [] };
+    check(pf.count === 1 && pf.suggested[0].format === '0.0%' && /formatString: 0\.0%/.test(pf.script), `format script, a rate formatted as a number: ${JSON.stringify(pf.suggested)}`);
+    // the engine finds Arabic month and day name columns too
+    const am = { model: { tables: [sales(), { name: 'التقويم', columns: [dcol('Date', 'dateTime'), dcol('اسم الشهر', 'string'), dcol('اسم اليوم', 'string'), dcol('رقم الشهر', 'int64')], partitions: mpart('التقويم') }] } };
+    const found = ((E.analyze(am, null).findings.find((x) => x.id === 'MONTH_SORT') || {}).items || []).map((i) => i.obj).sort();
+    check(JSON.stringify(found) === JSON.stringify(['التقويم[اسم الشهر]', 'التقويم[اسم اليوم]'].sort()), `Arabic month and day names without a sort column: found ${JSON.stringify(found)}`);
+  }
+
+  {
     // "Fix these first": the points on each button are what the score really gains when that check is fixed
     const v = await visitor(browser, { viewport: [1440, 900] });
     await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });

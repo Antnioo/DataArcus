@@ -57,6 +57,7 @@
       } else if (depth === 2 && cur) {
         const p = trimmed.match(/^(dataType|dataCategory|formatString)\s*:\s*(.*)$/);
         if (p) cur[p[1]] = p[2].trim();
+        else if (/^sortByColumn\s*:/.test(trimmed)) cur.sortBy = tmdlName(trimmed.replace(/^sortByColumn\s*:\s*/, ''));
         else if (/^isHidden(\s*:\s*true)?$/.test(trimmed)) cur.isHidden = true;
       }
     });
@@ -68,7 +69,7 @@
     return (m.tables || []).filter((t) => t && t.name != null).map((t) => ({
       name: String(t.name), hidden: !!t.isHidden, date: /^time$/i.test(t.dataCategory || ''),
       columns: (t.columns || []).filter((c) => c.type !== 'rowNumber' && c.name != null)
-        .map((c) => ({ name: String(c.name), dataType: c.dataType || 'string', isHidden: !!c.isHidden, dataCategory: c.dataCategory })),
+        .map((c) => Object.assign({ name: String(c.name), dataType: c.dataType || 'string', isHidden: !!c.isHidden, dataCategory: c.dataCategory }, c.sortByColumn ? { sortBy: String(c.sortByColumn) } : {})),
       measures: (t.measures || []).filter((x) => x.name != null).map((x) => ({ name: String(x.name), isHidden: !!x.isHidden, formatString: x.formatString }))
     }));
   }
@@ -137,12 +138,37 @@
   // the date table's parts that make good categories when the model has no other ones, in order of preference
   const DATE_PARTS = [/^(year\s*)?quarter$|الربع/i, /^(day|weekday)\s*name$|اسم اليوم/i, /^(hijri\s*)?month\s*name$|اسم الشهر/i];
 
+  // Month and weekday names sort A to Z unless the model gives them a sort-by column. For such a column without one,
+  // sortColumnFor finds the number column of the same table to sort by (the same rule as the Model Health Check's fix
+  // script, model-health-tmdl.js: keep the two alike; mcp/test.mjs compares them): a year-month number for "Month
+  // Year", a weekday number for a day name, a month number for a month name; a Hijri or fiscal name only by a Hijri or
+  // fiscal number. The report then sorts its charts by it, without touching the model.
+  const NAME_LIKE = /(^|\s|_)(month|day|weekday)\s*_?(name|short)$|^(day of week|weekday|mmm|mmmm)$|short\s*month|month\s*-?\s*year|^month\s*year$|^(اسم\s*)?(الشهر|اليوم)$/i;
+  const sortKind = (name) => (/month|الشهر/i.test(name) && /year|السنة/i.test(name) ? 'yearMonth' : /day|week|اليوم/i.test(name) ? 'day' : 'month');
+  const SORT_BY = {
+    yearMonth: /^(year\s*-?\s*month|month\s*-?\s*year|yyyymm)\s*(no|num|number|index|key|sort|order|id)?$/i,
+    day: /(weekday|day\s*of\s*week)\s*(no|num|number|index)?$|^weekday$|^رقم\s*اليوم$/i,
+    month: /month\s*(no|num|number|index)$|^month$|month\s*of\s*year|^رقم\s*الشهر$/i
+  };
+  const FAMILY = /hijri|fiscal|هجري|مالي/i;
+  const family = (n) => (String(n).match(FAMILY) || [''])[0].toLowerCase();
+  function sortColumnFor(columns, name) {
+    if (!NAME_LIKE.test(String(name).replace(FAMILY, '').trim())) return null;
+    const kind = sortKind(name), fam = family(name);
+    // a column the files give no type for (a DAX table's) counts only when its name says it is a number ("Month
+    // Number", "Year Month Sort", "Day of Week"): "Year Month" or "Month" alone may be text
+    const type = (c) => String(c.dataType || 'string').toLowerCase(), plain = (c) => c.name.replace(FAMILY, '').trim();
+    const numberName = /(no|num|number|index|key|sort|order|id)$|day\s*of\s*week|month\s*of\s*year|^رقم/i;
+    const ok = (c) => c.name !== name && family(c.name) === fam && SORT_BY[kind].test(plain(c)) && (/^(int64|double|decimal|number)$/.test(type(c)) || (type(c) === 'unknown' && numberName.test(plain(c))));
+    return columns.find(ok) || null;
+  }
   function catalog(tables) {
     const shown = tables.filter((t) => !t.hidden);
     const measures = [], columns = [];
     shown.forEach((t) => {
       t.measures.filter((m) => !m.isHidden).forEach((m) => measures.push({ t: t.name, m: m.name, pct: PCT(m), variant: VARIANT.test(m.name) }));
-      t.columns.filter((c) => !c.isHidden).forEach((c) => columns.push({ t: t.name, c: c.name, type: String(c.dataType || 'string').toLowerCase(), dateTable: t.date || DATE_TABLE.test(t.name), cat: c.dataCategory }));
+      t.columns.filter((c) => !c.isHidden).forEach((c) => { const by = c.sortBy ? null : sortColumnFor(t.columns, c.name);
+        columns.push(Object.assign({ t: t.name, c: c.name, type: String(c.dataType || 'string').toLowerCase(), dateTable: t.date || DATE_TABLE.test(t.name), cat: c.dataCategory }, by ? { sortBy: { t: t.name, c: by.name } } : {})); });
     });
     return { measures, columns };
   }
@@ -177,7 +203,8 @@
   // the visual-by-visual binding the exporter reads, from the few choices the user makes
   function build(ch) {
     // a column the model types as a number says so (num), so a table can put it on the number side, like a measure
-    const f = (x) => (x ? (x.m != null ? { t: x.t, m: x.m } : /^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }) : null);
+    // and a month or day name without a sort-by column says which number column puts it in order (sortBy)
+    const f = (x) => (x ? (x.m != null ? { t: x.t, m: x.m } : Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {})) : null);
     const kpis = (ch.kpis || []).map(f);
     const main = f(ch.main), second = kpis.find((k) => k && main && k.m !== main.m) || main;
     const ratio = (ch.kpis || []).find((k) => k && k.pct);
@@ -190,8 +217,10 @@
       y: { funnel: second, gauge: f(ratio) || main },
       table: uniq([Bc || A, main, second, kpis[2]]),
       slicers: (ch.slicers || []).map(f),
+      // the category tooltip's chart shows a base measure other than the main one, else the main one: never a variant
+      // ("last Ramadan", "previous", "vs") or a ratio, which is empty or meaningless for one hovered item
       // the tooltip's trend by month: the time axis when it is a month column (a date column would give a column per day)
-      tip: { card: main, cat: A, y: second, date: ch.date && /month|\u0627\u0644\u0634\u0647\u0631/i.test(ch.date.c) ? f(ch.date) : null }
+      tip: { card: main, cat: A, y: f((ch.kpis || []).find((k) => k && ch.main && k.m !== ch.main.m && !k.variant && !k.pct)) || main, date: ch.date && /month|\u0627\u0644\u0634\u0647\u0631/i.test(ch.date.c) ? f(ch.date) : null }
     };
   }
 
@@ -243,6 +272,6 @@
     return 'Data Source=' + qv('powerbi://api.powerbi.com/v1.0/myorg/' + String(workspace).trim()) + ';initial catalog=' + qv(model) + ';access mode=readonly;integrated security=ClaimsToken';
   };
 
-  const api = { iso, parseTmdl, fromTmsl, fromFolder, fromFile, suggest, build, renderPicker, connection };
+  const api = { iso, parseTmdl, fromTmsl, fromFolder, fromFile, suggest, build, sortColumnFor, renderPicker, connection };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DABind = api;
 })(typeof self !== 'undefined' ? self : this);

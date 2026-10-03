@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { visitor } from './lib.mjs';
-import { layoutProblems, phoneTextProblems, headerAndRail, headerProblems, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems } from './report-check.mjs';
+import { layoutProblems, phoneTextProblems, navProblems, headerAndRail, headerProblems, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems } from './report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT = path.join(HERE, 'fixtures', 'bridge-project');
@@ -189,10 +189,12 @@ export default async function ({ browser, url }) {
         texts: E.REPORT_TEXTS[lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: new Uint8Array([1]), panel: p.panel, kpiInset: inset(p.layout) })) }, more || {}));
       return { files: Object.fromEntries(files.map((f) => [f.path, typeof f.data === 'string' ? f.data : Buffer.from(f.data)])), insets: pages.map((p) => inset(p.layout)), pages };
     };
-    const bad = { link: [], tip: [], table: [], card: [], shell: [], header: [] };
+    const bad = { link: [], tip: [], table: [], card: [], shell: [], header: [], nav: [] }; let navButtons = 0;
     for (const c of cases) {
       const rtl = E.rtl(c.state.layout, c.lang), b = build(c.state, c.lang, { second: true, panel: false });
-      const a = tooltipProblems(b.files), t = tooltipPageProblems(b.files), tb = tableProblems(b.files, rtl), cd = cardStyleProblems(b.files, rtl, b.insets), sh = projectProblems(b.files), hd = headerProblems(b.files);
+      const a = tooltipProblems(b.files), t = tooltipPageProblems(b.files), tb = tableProblems(b.files, rtl), cd = cardStyleProblems(b.files, rtl, b.insets), sh = projectProblems(b.files), hd = headerProblems(b.files), nv = navProblems(b.files, rtl);
+      navButtons += nv.buttons;
+      if (nv.bad.length) bad.nav.push(`${c.id} (${c.lang}): ${nv.bad[0]}`);
       if (hd.bad.length) bad.header.push(`${c.id}: ${hd.bad[0]}`);
       if (a.bad.length) bad.link.push(`${c.id}: ${a.bad.length} of ${a.charts} charts, ${a.bad[0]}`);
       // (round 1: the sample has a month, so two tooltip pages: the monthly trend, and the bar chart by category for the
@@ -208,6 +210,8 @@ export default async function ({ browser, url }) {
     check(!bad.card.length, `card fill or padding wrong on ${bad.card.length} of ${cases.length} designs, e.g. ${bad.card.slice(0, 2).join(' | ')}`);
     check(!bad.shell.length, `theme name or .platform wrong on ${bad.shell.length} of ${cases.length} designs, e.g. ${bad.shell.slice(0, 2).join(' | ')}`);
     // round 1: the header's text boxes are centred in the header's height ("Your logo" sat high; DESKTOP-TESTS.md round 1)
+    // round 2: in a right-to-left report the page buttons are single buttons, the first page's rightmost
+    check(!bad.nav.length && navButtons > 0, `page buttons not in reading order on ${bad.nav.length} of ${cases.length} designs (${navButtons} single buttons in all), e.g. ${bad.nav.slice(0, 2).join(' | ')}`);
     check(!bad.header.length, `header text not centred on ${bad.header.length} of ${cases.length} designs, e.g. ${bad.header.slice(0, 2).join(' | ')}`);
     // who draws the panels (fix/mcp-visual-style): with a solid theme the cards, charts and tables are left to the
     // theme and the KPI group draws no band; with a transparent theme every visual stays off, as the page's download
@@ -271,7 +275,10 @@ export default async function ({ browser, url }) {
         const b = build(d, lang, { second: true, panel: false, logoRatio: size ? size.w / size.h : undefined }, { logo: { bytes, ext: file.slice(-3) } });
         const first = Object.keys(b.files).filter((f) => f.endsWith('/visual.json')).map((f) => f.split('/pages/')[1].split('/')[0])[0];
         const all = abs(Object.fromEntries(Object.entries(b.files).filter(([f]) => f.includes('/pages/' + first + '/'))));
-        const img = all.find((a) => a.v.visual && a.v.visual.visualType === 'image'), nav = all.find((a) => a.v.visual && a.v.visual.visualType === 'pageNavigator'), tag = `${file} ${pg} ${lang}`;
+        const img = all.find((a) => a.v.visual && a.v.visual.visualType === 'image'), tag = `${file} ${pg} ${lang}`;
+        // the page buttons' box: the navigator, or (round 2, right to left) the single page buttons together
+        const pb = all.filter((a) => a.v.visual && (a.v.visual.visualType === 'pageNavigator' || (a.v.visual.visualType === 'actionButton' && /PageNavigation/.test(JSON.stringify(a.v.visual.visualContainerObjects.visualLink || '')))));
+        const nav = pb.length ? { x: Math.min(...pb.map((a) => a.x)), w: Math.max(...pb.map((a) => a.x + a.w)) - Math.min(...pb.map((a) => a.x)) } : null;
         if (!img) { off.push(`${tag}: no image visual`); continue; }
         const wantX = lang === 'ar' ? PW - x - w0 : x, o = img.v.visual.objects || {};
         if (img.x !== wantX || img.w !== w || img.h !== h) off.push(`${tag}: logo box ${img.x}, ${img.w} x ${img.h}, want ${wantX}, ${w} x ${h}`);

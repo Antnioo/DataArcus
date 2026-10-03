@@ -1,10 +1,8 @@
 # Current work (the memory between sessions)
 
 Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). Last updated 2026-10-03
-by the builder: **round 1 is complete on `fix/round-1-visible` and waits for the reviewer to merge** (all eight items;
-item 5 rebuilt as the owner chose and checked in Desktop). State: "Round 1 in progress". Next: the test of
-Microsoft's `powerbi-authoring` plugin on an Arabic report (one Desktop sitting, no code), then round 2. Main is at
-`7a57a4e`.
+by the builder: **round 2 (Arabic accuracy) is in progress on `fix/round-2-arabic`** (owner's go in advance). State, plan
+and expected results: "Round 2 in progress". Round 1 is merged as `80d3a00`; main is at `bc05275`.
 
 ## Where things stand
 - **Now (2026-10-02, main `e8fe171`):** 6 MCP tools (`read_model`, `suggest_fields`, `check_model_health`,
@@ -61,6 +59,122 @@ date). The plan is in `mcp/ROADMAP.md`, "Plan of 2026-10-02".
   `plan/split-pbip-export`) shows it takes about one evening; the owner decides when he reads it.
 - **The validator:** a representative set of exports on every push, the full matrix nightly (reviewer, after round 2).
 - **Dated:** the Gulf Calendar pack and its free lead-magnet download, ready by 2026-12-01.
+
+## Round 2 in progress (owner's go 2026-10-03, in advance for every step; branch `fix/round-2-arabic`, from main `bc05275`)
+Round 1 is merged (`80d3a00`), the plugin test too (`bc05275`); their branches are deleted. Round 2 is everything
+under "Round 2" below, with 2.4. Same method as round 1. The hover and panel scripts are not run while the owner uses
+the laptop: those checks come last, after telling him. If a fixture would change: stop for his go.
+
+**State (2026-10-03): built, pushed, CI green, waiting for the reviewer and for two checks that need the owner.**
+Measured and planned `2e81750`. R2.1 + R2.2: tests `c2997c9`, code `6aec38a`. R2.3: `7d555b0`, `2d0f64d`. R2.4:
+`b96bdde`, `b8b6197`. R2.5: `32b2358`, `94354e8`. R2.6: `7ac3050`, `fa2e44e`. Found by the Desktop check and fixed:
+the tooltip chart's title (`28731f6`), the sort fixes and the number column itself (`09d63f5`). R2.7: the Arabic
+"All" note is in `reportNotes`; the website's page already says "Sample data (click Refresh once)", so no line added.
+- **Tests, main → branch:** pbip 71 → 71 (same count, new rules inside the shared checks), mcp 124 → 149,
+  model-health 37 → 48; design-engine 598, theme-generator and lab 883, tools 198 unchanged and passing.
+- **Fixtures:** none changed. The website's right-to-left project download changes (page buttons instead of the
+  navigator): 8 of the 60 project-fixture builds differ from main, all right-to-left; the 52 others are identical
+  (`builder-scripts\r2-proof.mjs`).
+- **Desktop:** fifteen reports, results in `scripts/tests/DESKTOP-TESTS.md` ("round 2 built"): R2.1 to R2.5 as
+  expected; the validator 0 errors.
+- **The two open checks were done in one sitting on 2026-10-03 (the owner hands off): see "round 2 built", "the
+  open checks", in `scripts/tests/DESKTOP-TESTS.md`.** Hover and Ctrl+click: as expected. The format script: accepted;
+  the % card shows 33.8%, not the 34.0% written below (the value is 0.3378: the expected number was wrong, worked out
+  from the rounded 0.34). The sort script on a made-up model with an imported calendar (`tests/6-sort-sample`,
+  `builder-scripts\r2-sort-model.mjs`): months and days in order in tables and slicers for sunday, monday and
+  saturday, after one "Refresh now". Two proposed fixes wait for the owner: `howToApply` should say "Refresh now"
+  when a column is added; the scripts from a TMDL project should keep `lineageTag`.
+- **Was left (now done, kept for the record):** (1) hover on a chart and Ctrl+click on the Arabic page buttons
+  (`builder-scripts\r1-desk.ps1` uses the mouse and the screen: only when he says the laptop is free); (2) R2.6 in
+  TMDL view: paste the format script from `tests/phase2-try/r2-health-fixes.json` (`NO_FORMAT.fixScript`) on
+  `5-tmdl-sample`, Preview, Apply, and see the % card show 34.0%; the sort script needs a model with an imported
+  calendar (the sample's is a DAX table: steps by hand) — not tried in Desktop yet.
+- **Not done from the plan:** M2.2's "rewrite a whole DAX table" was not measured and is not offered: columns of DAX
+  tables are steps by hand.
+- **Next step:** the reviewer's review and full run, then the merge; the owner's go on the two proposed fixes.
+
+### What the measurements changed in the plan
+- **Months and days in order:** a chart can sort by the model's month or weekday number when that number is in its
+  tooltip fields, so the report itself fixes its charts, the tooltip's trend chart included, without touching the
+  model. Tables and slicers can't: they need the model's sort-by column, which the health check's script sets.
+- **Page buttons:** the navigator can't be reordered, so an Arabic report gets single page buttons, first page
+  rightmost. An English report keeps the navigator.
+- **"All" in slicers** can't be set in a report: it is said in the report notes, nothing is written.
+- **The sample download's banner** stays (the other form opens empty); one line of help is added on the page.
+- **Display names** need only `displayName` on the projection, everywhere.
+
+### R2.1 The tooltip's second measure (`pbip-bind.js`)
+- **Change:** the category tooltip's chart no longer takes a measure that is empty for one item ("Last Ramadan",
+  "previous", "vs", year-over-year: the picker's variants): it takes the first KPI that is a base measure other than
+  the main one, else the main measure itself.
+- **Tests first (`mcp/test.mjs`):** on the sample model the tooltip's bar chart is bound to `Total Sales`, not to
+  `Total Sales Last Ramadan`. Before: fails.
+
+### R2.2 KPI titles on a solid design (`pbip-export.js`)
+- **Change:** on a solid design a KPI card's reading-start padding is `round(16k)` (16 on 1080, 11 on 720) where the
+  page has no accent-bar inset; `cardFit` already reserves it. A transparent design is unchanged.
+- **Tests:** `cardStyleProblems` takes the solid rule; the MCP's "Round0" reports are checked with it. No fixture
+  changes (the website's download is transparent): proved by building the 60 project fixtures before and after.
+
+### R2.3 Page buttons in reading order (`pbip-export.js`)
+- **Change:** in a right-to-left report the page buttons are single `actionButton`s (`PageNavigation`), in the
+  navigator's box, the first page rightmost; the current page's filled in the text colour with bold text in the card
+  colour, the others outlined; one line each (a button never wraps), text size and box from the same rule as today
+  with one line; on the phone one row, shared equally, 10pt. A left-to-right report keeps the navigator.
+- **Expected numbers:** Arabic 1080, two pages: 2 buttons 156 x 48 with an 8 gap in the 320 box, 14pt; 720: in the 213
+  box, 10pt.
+- **Tests first:** `navProblems(files, rtl)` in `report-check.mjs`: a right-to-left report has no navigator, one
+  button per main page linked to it, x descending with the page order, the current page's filled; a left-to-right
+  report has the navigator. `layoutProblems` and `phoneTextProblems` cover the buttons' sizes. Before: every
+  Arabic design with two pages fails.
+- **Fixtures:** none (visuals are written by the writer).
+
+### R2.4 Months and days in order in charts (`pbip-bind.js`, `pbip-export.js`)
+- **Change:** a bound column may carry `sortBy: { t, c }`, the model's number column for it (month number, year-month
+  number, weekday number: chosen by the rules the health check already uses, and only when the column has no sort-by
+  column of its own). The writer then puts Min of that column in the chart's `Tooltips` role and sorts by it,
+  ascending: line, bar, column charts and the tooltip pages' charts. The sample data needs none (its Month has a
+  sort column).
+- **Tests first:** `sortProblems(files)`: a chart whose category has `sortBy` has the tooltip field and the sort; on
+  the sample model (`mcp/test.mjs`) the charts by Month Name and Day Name and the trend tooltip have them. Before:
+  none has.
+- **Result notes:** `modelNotes` says for such a column that charts are in order and that tables and slicers need
+  the model's sort-by column, with the health check's script.
+
+### R2.5 Arabic display names (`pbip-export.js`, `mcp/server.mjs`; plan 2.1 below)
+- **Change:** as 2.1 below: `create_report` takes `displayNames` (`{ "Table[Field]": "name" }`); the name is written
+  as the projection's `displayName` and used in our own titles (KPI titles, "X by Y", slicer alt text, tooltip
+  titles). In an Arabic report `arabicNames.missing` lists the used fields without a name whose model name has no
+  Arabic letter; names for unused fields are listed as not used. No translation is made up.
+- **Tests first (`mcp/test.mjs`):** as 2.1 below. Without `displayNames` a report is the same as today apart from
+  random ids.
+
+### R2.6 Sort order and formats as health findings with scripts (plan 2.2 below)
+- **Change:** as 2.2 below, in `model-health-tmdl.js` (shared): `sortPlan` (the sort column, or the column to add,
+  with the week start: Sunday by default, Monday, Saturday), `formatPlan` (the suggested format and its reason per
+  measure), and the scripts; `check_model_health` takes `weekStart` and returns `fixScript` and `byHand` on
+  `MONTH_SORT`, `NO_FORMAT` and `PCT_FORMAT`; the website uses the same functions. Scores and counts don't move.
+- **M2.2, measured without the owner as far as it goes:** a DAX table rewritten whole (`createOrReplace` of the
+  table) is checked by loading the result with Microsoft's modelling MCP (offline TMDL import). **Applying a script in
+  Desktop's TMDL view needs the owner** (one batched request at the end).
+
+### R2.7 Notes and help
+- Arabic reports: `reportNotes` says that Power BI's own words (All, Select all, Search) follow each viewer's Power
+  BI language. The website: one line under the project download about "Refresh now".
+
+### The Desktop check at the end (expected results, written before the run)
+The MCP on `5-tmdl-sample` and the website's download, 1920 x 1080 and 1280 x 720, English and Arabic, light and
+dark; page screenshots through the bridge. Hover and the page buttons' Ctrl+click last, after telling the owner.
+
+| Item | Expected |
+|---|---|
+| R2.1 | the line chart's tooltip page shows the card and a bar chart of Total Sales by the category, with bars |
+| R2.2 | KPI titles on the MCP's reports start 16 (11 on 720) inside the panel, in line with the slicer names; the number centred; the website's download unchanged |
+| R2.3 | Arabic: page buttons right to left, the current page's filled, names whole; English: as before. Ctrl+click goes to the page |
+| R2.4 | MCP reports: the line chart runs January to December, the weekday chart Sunday to Saturday, the trend tooltip January to December; tables and slicers still A to Z, and the notes say so |
+| R2.5 | an Arabic MCP report with names for every used field shows no English field name on any page or tooltip page; with two names left out, those two are English and are the two listed |
+| R2.6 | the scripts are accepted (the owner, TMDL view); after them tables and slicers are in order and the % card shows 34.0% (wrong number, found 2026-10-03: the value is 0.3378, so 33.8%) |
+| all | Microsoft's validator: 0 errors |
 
 ## Round 1 in progress (owner's go 2026-10-03, in advance for every step; branch `fix/round-1-visible`)
 The owner approved the round in advance: work through it without waiting between steps; stop only when a measurement
