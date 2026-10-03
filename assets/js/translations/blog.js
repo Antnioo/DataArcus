@@ -50,6 +50,7 @@ window.blogTranslations = {
 
     // Posts
     posts: {
+      gulfCalendar: {"badge": "GULF CALENDAR", "title": "A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and the Right Weekend", "date": "October 3, 2026", "excerpt": "Ramadan and Eid move, and the UAE changed its weekend in 2022. One DAX calendar with Hijri dates, announced Ramadan and Eid days, each country's weekend, and an Eid window measure.", "button": "Read Playbook"},
       aiReady: {"badge": "COPILOT & AI", "title": "Is Your Power BI Model Ready for AI? A 7-Point Check", "date": "October 2, 2026", "excerpt": "Copilot, data agents and the new Power BI apps all answer from your semantic model. The 7 things to fix first, from names and descriptions to Prep data for AI.", "button": "Read Playbook"},
       reportStyles: {
         badge: "REPORT DESIGN",
@@ -189,6 +190,7 @@ window.blogTranslations = {
 
     // Posts (AR)
     posts: {
+      gulfCalendar: {"badge": "التقويم الخليجي", "title": "تقويم خليجي في Power BI: التاريخ الهجري ورمضان والعيد والعطلة الصحيحة", "date": "3 أكتوبر 2026", "excerpt": "رمضان والعيد يتحركان، والإمارات غيّرت عطلتها في 2022. تقويم DAX واحد بالتاريخ الهجري، ومواعيد رمضان والعيد المعلنة، وعطلة كل دولة، ومقياس لفترة العيد.", "button": "اقرأ الدليل"},
       aiReady: {"badge": "Copilot والذكاء الاصطناعي", "title": "هل نموذج Power BI جاهز للذكاء الاصطناعي؟ فحص من 7 نقاط", "date": "2 أكتوبر 2026", "excerpt": "Copilot ووكلاء البيانات وتطبيقات Power BI الجديدة كلها تجيب من نموذجك الدلالي. سبعة أمور تصلحها أولًا، من الأسماء والأوصاف إلى Prep data for AI.", "button": "اقرأ الدليل"},
       reportStyles: {
         badge: "تصميم التقارير",

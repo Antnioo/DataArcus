@@ -41,7 +41,7 @@ window.ramadanSalesTranslations = {
       "p10": "Use a line chart. Put <strong>Ramadan Day</strong> on the X axis, <strong>Hijri Year</strong> in the legend and <strong>[Total Sales]</strong> in the values, then filter the visual to Is Ramadan = True. Each line is one Ramadan. Day 1 lines up with day 1, and the spike before Eid lines up with the spike before Eid.",
       "p11": "The same trick works for Eid al-Fitr and Eid al-Adha. Filter on Hijri Month Number 10 or 12 and use Hijri Day on the axis.",
       "h5": "Three things to watch",
-      "list1_1": "<strong>Moon sighting.</strong> Umm al-Qura is the official Saudi calendar. Other countries that rely on local sighting can start Ramadan a day earlier or later. If yours did, edit that month's start date in the DATATABLE.",
+      "list1_1": "<strong>Moon sighting.</strong> Umm al-Qura is the official Saudi calendar, and a local sighting can start Ramadan a day earlier or later. The generator's <em>Announced Ramadan and Eid dates</em> option uses the UAE's announced dates since 2018: see <a href='article-gulf-calendar-power-bi.html' class='text-accent'>the Gulf calendar guide</a>.",
       "list1_2": "<strong>29 or 30 days.</strong> Ramadan 1446 had 29 days and Ramadan 1447 had 30. Day 30 has no partner last year, so it shows blank, which is correct. For totals, compare the average per day as well as the sum.",
       "list1_3": "<strong>Keep both views.</strong> Finance still closes the books on Gregorian months, so keep the normal year over year for them. Use the Ramadan view for sales, marketing and stock planning.",
       "p12": "Ramadan 1448 is expected to start around 8 February 2027. Set the calendar up now and the first comparison will be ready on day one."
@@ -99,7 +99,7 @@ window.ramadanSalesTranslations = {
       "p10": "استخدم مخططًا خطيًا. ضع <strong>Ramadan Day</strong> على المحور الأفقي، و<strong>Hijri Year</strong> في وسيلة الإيضاح، و<strong>[Total Sales]</strong> في القيم، ثم صفِّ المرئي على Is Ramadan = True. كل خط يمثل رمضانًا واحدًا، واليوم الأول يقابل اليوم الأول، وذروة ما قبل العيد تقابل ذروة ما قبل العيد.",
       "p11": "ينطبق الأسلوب نفسه على عيد الفطر وعيد الأضحى: صفِّ على Hijri Month Number يساوي 10 أو 12، واستخدم Hijri Day على المحور.",
       "h5": "ثلاثة أمور يجب الانتباه لها",
-      "list1_1": "<strong>رؤية الهلال.</strong> تقويم أم القرى هو التقويم الرسمي في السعودية. الدول التي تعتمد على الرؤية المحلية قد يبدأ فيها رمضان قبل يوم أو بعده. إن حدث ذلك عندك، عدّل تاريخ بداية ذلك الشهر في DATATABLE.",
+      "list1_1": "<strong>رؤية الهلال.</strong> تقويم أم القرى هو التقويم الرسمي في السعودية، وقد تجعل الرؤية المحلية رمضان يبدأ قبل يوم أو بعده. يستخدم خيار <em>مواعيد رمضان والعيد المعلنة</em> في المولّد المواعيد التي أعلنتها الإمارات منذ 2018: راجع <a href='article-gulf-calendar-power-bi.html' class='text-accent'>دليل التقويم الخليجي</a>.",
       "list1_2": "<strong>29 أو 30 يومًا.</strong> كان رمضان 1446 تسعة وعشرين يومًا، ورمضان 1447 ثلاثين يومًا. اليوم الثلاثون ليس له مقابل في العام الماضي فيظهر فارغًا، وهذا صحيح. عند مقارنة الإجماليات، قارن متوسط اليوم إلى جانب المجموع.",
       "list1_3": "<strong>احتفظ بالعرضين.</strong> المالية ما زالت تُقفل الحسابات بالأشهر الميلادية، فأبقِ المقارنة السنوية المعتادة لها. واستخدم عرض رمضان للمبيعات والتسويق وتخطيط المخزون.",
       "p12": "من المتوقع أن يبدأ رمضان 1448 تقريبًا في 8 فبراير 2027. جهّز التقويم الآن، وستكون أول مقارنة جاهزة من اليوم الأول."

@@ -37,7 +37,7 @@ window.measureBuilderTranslations = {
       "copyAll": "Copy all measures",
       "allHow": "In Power BI Desktop open <strong>DAX query view</strong> (left toolbar), paste, and click <strong>Update model with changes</strong>. Every measure is added in one go.",
       "oneHow": "For <strong>Modeling → New measure</strong>: copy each one and paste. Create them in this order.",
-      "ramNote": "Ramadan measures use the Hijri Year, Is Ramadan and Ramadan Day columns from the <a href=\"dax-calendar-table-generator.html\" class=\"hover-accent\">DataArcus calendar</a>.",
+      "ramNote": "Ramadan and Eid measures use the Hijri Year, Hijri Month Number, Hijri Day, Is Ramadan and Ramadan Day columns from the <a href=\"dax-calendar-table-generator.html\" class=\"hover-accent\">DataArcus calendar</a>.",
       "cta": {
         "title": "Measures are easy. The right numbers are not.",
         "desc": "When totals don’t match, relationships double count, or YoY looks wrong, the problem is the model. DataArcus builds and fixes Power BI data models.",
@@ -99,7 +99,7 @@ window.measureBuilderTranslations = {
       "copyAll": "نسخ كل المقاييس",
       "allHow": "في Power BI Desktop افتح <strong>DAX query view</strong> (الشريط الأيسر)، الصق الكود، واضغط <strong>Update model with changes</strong>. ستُضاف كل المقاييس دفعة واحدة.",
       "oneHow": "عبر <strong>Modeling → New measure</strong>: انسخ كل مقياس والصقه. أنشئها بهذا الترتيب.",
-      "ramNote": "تستخدم مقاييس رمضان أعمدة Hijri Year و Is Ramadan و Ramadan Day من <a href=\"dax-calendar-table-generator.html\" class=\"hover-accent\">تقويم داتا أركوس</a>.",
+      "ramNote": "تستخدم مقاييس رمضان والعيد أعمدة Hijri Year و Hijri Month Number و Hijri Day و Is Ramadan و Ramadan Day من <a href=\"dax-calendar-table-generator.html\" class=\"hover-accent\">تقويم داتا أركوس</a>.",
       "cta": {
         "title": "المقاييس سهلة. الأرقام الصحيحة ليست كذلك.",
         "desc": "عندما لا تتطابق الإجماليات، أو تتكرر الأرقام بسبب العلاقات، أو يبدو النمو السنوي خاطئًا، فالمشكلة في النموذج. تبني داتا أركوس نماذج بيانات Power BI وتصلحها.",

@@ -1,0 +1,55 @@
+// Gulf Calendar test model: each result next to the number worked out beforehand in JavaScript
+// (scripts/gulf-calendar/test-model/make-test-model.mjs). Run it in DAX query view: every row must say Pass = TRUE.
+EVALUATE
+VAR _Checks =
+    {
+        ( "C01 rows in the calendar", COUNTROWS ( 'Calendar' ), 4748 ),
+        ( "C02 Ramadan days in 2018", CALCULATE ( COUNTROWS ( 'Calendar' ), 'Calendar'[Is Ramadan] = TRUE (), 'Calendar'[Year] = 2018 ) + 0, 29 ),
+        ( "C03 first Ramadan day of 2018, days after 1 January", INT ( CALCULATE ( MIN ( 'Calendar'[Date] ), 'Calendar'[Is Ramadan] = TRUE (), 'Calendar'[Year] = 2018 ) - DATE ( 2018, 1, 1 ) ), 136 ),
+        ( "C04 Ramadan Day on 2026-03-19", CALCULATE ( MAX ( 'Calendar'[Ramadan Day] ), 'Calendar'[Date] = DATE ( 2026, 3, 19 ) ), 30 ),
+        ( "C05 Eid al-Fitr days in 2025", CALCULATE ( COUNTROWS ( 'Calendar' ), 'Calendar'[Is Eid al-Fitr] = TRUE (), 'Calendar'[Year] = 2025 ) + 0, 3 ),
+        ( "C06 Eid al-Adha days in 2026", CALCULATE ( COUNTROWS ( 'Calendar' ), 'Calendar'[Is Eid al-Adha] = TRUE (), 'Calendar'[Year] = 2026 ) + 0, 4 ),
+        ( "C07 estimated dates in 2026", CALCULATE ( COUNTROWS ( 'Calendar' ), 'Calendar'[Is Estimated Date] = TRUE (), 'Calendar'[Year] = 2026 ) + 0, 0 ),
+        ( "C08 estimated dates in 2027", CALCULATE ( COUNTROWS ( 'Calendar' ), 'Calendar'[Is Estimated Date] = TRUE (), 'Calendar'[Year] = 2027 ) + 0, 36 ),
+        ( "C09 weekend days in 2021 (Fri-Sat)", CALCULATE ( COUNTROWS ( 'Calendar' ), 'Calendar'[Is Weekend] = TRUE (), 'Calendar'[Year] = 2021 ) + 0, 105 ),
+        ( "C10 weekend days in 2022 (Sat-Sun)", CALCULATE ( COUNTROWS ( 'Calendar' ), 'Calendar'[Is Weekend] = TRUE (), 'Calendar'[Year] = 2022 ) + 0, 105 ),
+        ( "C11 Friday 2021-12-31 is a weekend day", CALCULATE ( COUNTROWS ( 'Calendar' ), 'Calendar'[Is Weekend] = TRUE (), 'Calendar'[Date] = DATE ( 2021, 12, 31 ) ) + 0, 1 ),
+        ( "C12 Friday 2022-01-07 is a working day", CALCULATE ( COUNTROWS ( 'Calendar' ), 'Calendar'[Is Working Day] = TRUE (), 'Calendar'[Date] = DATE ( 2022, 1, 7 ) ) + 0, 1 ),
+        ( "C13 days after the UAE weekend change in 2021", CALCULATE ( COUNTROWS ( 'Calendar' ), 'Calendar'[Is After UAE Weekend Change] = TRUE (), 'Calendar'[Year] = 2021 ) + 0, 0 ),
+        ( "C14 days after the UAE weekend change in 2022", CALCULATE ( COUNTROWS ( 'Calendar' ), 'Calendar'[Is After UAE Weekend Change] = TRUE (), 'Calendar'[Year] = 2022 ) + 0, 365 ),
+        ( "C15 Ramadan 1446 length", CALCULATE ( COUNTROWS ( 'Calendar' ), 'Calendar'[Is Ramadan] = TRUE (), 'Calendar'[Hijri Year] = 1446 ) + 0, 29 ),
+        ( "R01 Ramadan 1447 day 1: sales", CALCULATE ( [Total Sales], 'Calendar'[Hijri Year] = 1447, 'Calendar'[Ramadan Day] = 1 ), 257 ),
+        ( "R02 Ramadan 1447 day 1: last Ramadan", CALCULATE ( [Total Sales Last Ramadan], 'Calendar'[Hijri Year] = 1447, 'Calendar'[Ramadan Day] = 1 ), 263 ),
+        ( "R03 Ramadan 1447 day 15: last Ramadan", CALCULATE ( [Total Sales Last Ramadan], 'Calendar'[Hijri Year] = 1447, 'Calendar'[Ramadan Day] = 15 ), 277 ),
+        ( "R04 Ramadan 1447 day 30: last Ramadan had 29 days", CALCULATE ( [Total Sales Last Ramadan], 'Calendar'[Hijri Year] = 1447, 'Calendar'[Ramadan Day] = 30 ), BLANK () ),
+        ( "R05 Ramadan 1447 day 10: vs last Ramadan %", CALCULATE ( [Total Sales vs Last Ramadan %], 'Calendar'[Hijri Year] = 1447, 'Calendar'[Ramadan Day] = 10 ), -0.0242914979757085 ),
+        ( "R06 year 2026 card: last Ramadan", CALCULATE ( [Total Sales Last Ramadan], 'Calendar'[Year] = 2026 ), 7233 ),
+        ( "R07 year 2026 card: vs last Ramadan %", CALCULATE ( [Total Sales vs Last Ramadan %], 'Calendar'[Year] = 2026 ), 0.0322134660583437 ),
+        ( "R08 year 2030 (two Ramadans): last Ramadan", CALCULATE ( [Total Sales Last Ramadan], 'Calendar'[Year] = 2030 ), 8667 ),
+        ( "R09 Hijri year 1444: last Ramadan", CALCULATE ( [Total Sales Last Ramadan], 'Calendar'[Hijri Year] = 1444 ), 7217 ),
+        ( "R10 year 2018: no Ramadan before it in the calendar", CALCULATE ( [Total Sales Last Ramadan], 'Calendar'[Year] = 2018 ), BLANK () ),
+        ( "E01 2026: Eid al-Fitr window", CALCULATE ( [Total Sales Eid al-Fitr Window], 'Calendar'[Year] = 2026 ), 2460 ),
+        ( "E02 March 2026: Eid al-Fitr window", CALCULATE ( [Total Sales Eid al-Fitr Window], 'Calendar'[Year] = 2026, 'Calendar'[Month Number] = 3 ), 2460 ),
+        ( "E03 February 2026: no Eid starts in it", CALCULATE ( [Total Sales Eid al-Fitr Window], 'Calendar'[Year] = 2026, 'Calendar'[Month Number] = 2 ), BLANK () ),
+        ( "E04 March 2025: window runs into April", CALCULATE ( [Total Sales Eid al-Fitr Window], 'Calendar'[Year] = 2025, 'Calendar'[Month Number] = 3 ), 2526 ),
+        ( "E05 April 2025: Eid days but not its first day", CALCULATE ( [Total Sales Eid al-Fitr Window], 'Calendar'[Year] = 2025, 'Calendar'[Month Number] = 4 ), BLANK () ),
+        ( "E06 2026: Eid al-Fitr window last year", CALCULATE ( [Total Sales Eid al-Fitr Window Last Year], 'Calendar'[Year] = 2026 ), 2526 ),
+        ( "E07 2018: no Eid al-Fitr before it in the calendar", CALCULATE ( [Total Sales Eid al-Fitr Window Last Year], 'Calendar'[Year] = 2018 ), BLANK () ),
+        ( "E08 2026: Eid al-Fitr window vs last year %", CALCULATE ( [Total Sales Eid al-Fitr Window vs Last Year %], 'Calendar'[Year] = 2026 ), -0.0261282660332542 ),
+        ( "E09 2026: Eid al-Adha window", CALCULATE ( [Total Sales Eid al-Adha Window], 'Calendar'[Year] = 2026 ), 2775 ),
+        ( "E10 2026: Eid al-Adha window last year", CALCULATE ( [Total Sales Eid al-Adha Window Last Year], 'Calendar'[Year] = 2026 ), 2735 ),
+        ( "E11 2026: Eid al-Adha window vs last year %", CALCULATE ( [Total Sales Eid al-Adha Window vs Last Year %], 'Calendar'[Year] = 2026 ), 0.0146252285191956 ),
+        ( "E12 2030: Eid al-Fitr window", CALCULATE ( [Total Sales Eid al-Fitr Window], 'Calendar'[Year] = 2030 ), 2466 ),
+        ( "E13 whole calendar: every Eid al-Fitr window", [Total Sales Eid al-Fitr Window], 32196 ),
+        ( "E14 Hijri year 1447: Eid al-Adha window", CALCULATE ( [Total Sales Eid al-Adha Window], 'Calendar'[Hijri Year] = 1447 ), 2775 ),
+        ( "E15 Hijri year 1447: Eid al-Adha window last year", CALCULATE ( [Total Sales Eid al-Adha Window Last Year], 'Calendar'[Hijri Year] = 1447 ), 2735 )
+    }
+RETURN
+    SELECTCOLUMNS (
+        _Checks,
+        "Check", [Value1],
+        "Result", [Value2],
+        "Expected", [Value3],
+        "Pass", IF ( ISBLANK ( [Value3] ), ISBLANK ( [Value2] ), ABS ( [Value2] - [Value3] ) < 0.000001 )
+    )
+ORDER BY [Check]

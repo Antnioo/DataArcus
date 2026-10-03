@@ -160,6 +160,17 @@ const RAMADAN = `<div class="card" style="padding:22px 24px"><div style="display
   ${[1, 10, 20, 30].map((d) => `<text x="${50 + (d - 1) * 16.5}" y="244" text-anchor="${d === 30 ? 'end' : d === 1 ? 'start' : 'middle'}" fill="#94a3b8" font-size="14" font-family="Inter">Day ${d}</text>`).join('')}</svg>
   <div style="display:flex;gap:22px;margin-top:6px;font-size:16px;font-weight:600"><span style="color:#00d4ff">━ This Ramadan</span><span style="color:#a29bfe">┅ Last Ramadan</span></div></div>`;
 
+// the Gulf calendar article: Ramadan's first day by year (announced or estimate, from gulf-dates.js) and the UAE weekend change
+const GULF = (() => {
+  const G = require('../assets/js/gulf-dates.js');
+  const fmt = (d) => new Date(d + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  const rows = G.events.filter((e) => e.hijriYear >= 1445 && e.hijriYear <= 1449).map((e) => { const est = (e.estimate || []).includes('ramadan');
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-top:1px solid rgba(255,255,255,.07)"><span style="font-size:19px;font-weight:700">Ramadan ${e.hijriYear}</span><span style="font-size:19px;font-weight:600">${fmt(e.ramadan)}</span><span style="font-size:13px;font-weight:800;letter-spacing:.06em;padding:3px 10px;border-radius:12px;${est ? 'color:#fdcb6e;border:1px solid rgba(253,203,110,.5)' : 'color:#051018;background:#00d4ff'}">${est ? 'ESTIMATE' : 'ANNOUNCED'}</span></div>`; }).join('');
+  const seg = (label, w, c) => `<div style="flex:${w};padding:10px 12px;background:${c};color:#051018;font-weight:800;font-size:16px;text-align:center">${label}</div>`;
+  return `<div class="card" style="padding:18px 22px">${pill('Ramadan moves about 11 days a year')}<div style="margin-top:8px">${rows}</div></div>
+  <div class="card" style="padding:16px 22px">${pill('UAE weekend', '#fdcb6e')}<div style="display:flex;margin-top:10px;border-radius:10px;overflow:hidden">${seg('Fri + Sat · to 2021', 1, '#a29bfe')}${seg('Sat + Sun · from 1 Jan 2022', 1, '#00d4ff')}</div></div>`;
+})();
+
 const PAGES = [
   ['portfolio', 'Power BI showcases', 'Dashboards Built for Real Business Problems', { chips: ['8 dashboards', 'Retail to healthcare', 'Real models'] }, PORTFOLIO, '470px 1fr'],
   ['blog', 'Blog · Power BI & e-commerce', 'Power BI and E‑commerce Analytics Blog', { sub: 'Practical guides with real models, real DAX and real numbers.' }, BLOG, '500px 1fr'],
@@ -171,7 +182,8 @@ const PAGES = [
   ['report-styles', 'Report design · 7 styles', 'One Design Doesn’t Fit All: 7 Power BI Report Styles', { size: 44, sub: 'Every department asks a different question.' }, STYLES, '470px 1fr'],
   ['report-redesign', 'Case study · Report design', 'Same Visuals, New Design: A Power BI Report in 5 Minutes', { size: 44, sub: 'One brand colour, one grid, KPIs first.' }, REDESIGN, '470px 1fr'],
   ['health-check-article', 'Case study · Power BI', 'We Ran a Health Check on a Microsoft Sample. It Scored 84.', { size: 44, sub: 'What a small, published model was hiding.' }, HEALTH, '470px 1fr'],
-  ['ramadan-sales', 'Ramadan · DAX · Hijri calendar', 'Compare This Ramadan With Last Ramadan', { sub: 'SAMEPERIODLASTYEAR gets it wrong. A Hijri calendar and one DAX measure fix it.' }, RAMADAN, '470px 1fr']
+  ['ramadan-sales', 'Ramadan · DAX · Hijri calendar', 'Compare This Ramadan With Last Ramadan', { sub: 'SAMEPERIODLASTYEAR gets it wrong. A Hijri calendar and one DAX measure fix it.' }, RAMADAN, '470px 1fr'],
+  ['gulf-calendar', 'Gulf calendar · DAX · Free tool', 'A Gulf Calendar in Power BI', { sub: 'Hijri dates, announced Ramadan and Eid, and the right weekend for each country and year.' }, GULF, '470px 1fr']
 ];
 
 const JOBS = [

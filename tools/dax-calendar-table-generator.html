@@ -82,7 +82,7 @@
           { "@type": "Question", "name": "How do I get Hijri dates in Power BI?",
             "acceptedAnswer": { "@type": "Answer", "text": "Power BI has no built-in Hijri functions. This generator embeds the Umm al-Qura month start dates in the DAX, then calculates Hijri year, month, day, Ramadan and Eid for every date." } },
           { "@type": "Question", "name": "Are the Ramadan dates exact?",
-            "acceptedAnswer": { "@type": "Answer", "text": "They follow the official Saudi Umm al-Qura calendar. Countries that rely on local moon sighting can differ by one day, so adjust the month start in the DATATABLE if needed." } }
+            "acceptedAnswer": { "@type": "Answer", "text": "By default they follow the official Saudi Umm al-Qura calendar, and a moon sighting can differ by one day. The Announced Ramadan and Eid dates option uses the dates the UAE announced since 2018; future dates are estimates until they are announced." } }
         ]
       }
     ]
@@ -190,7 +190,7 @@
               <div><label class="tg-label" for="cgWeek" data-i18n="cg.weekStart">Week starts on</label>
                 <select id="cgWeek" class="form-select"><option value="sun" data-i18n="cg.day.sun">Sunday</option><option value="mon" data-i18n="cg.day.mon">Monday</option><option value="sat" data-i18n="cg.day.sat">Saturday</option></select></div>
               <div><label class="tg-label" for="cgWeekend" data-i18n="cg.weekend">Weekend</label>
-                <select id="cgWeekend" class="form-select"><option value="sat-sun" data-i18n="cg.we.satsun">Saturday + Sunday</option><option value="fri-sat" data-i18n="cg.we.frisat">Friday + Saturday</option><option value="fri" data-i18n="cg.we.fri">Friday only</option><option value="sun" data-i18n="cg.we.sun">Sunday only</option></select></div>
+                <select id="cgWeekend" class="form-select"><option value="sat-sun" data-i18n="cg.we.satsun">Saturday + Sunday</option><option value="fri-sat" data-i18n="cg.we.frisat">Friday + Saturday</option><option value="fri" data-i18n="cg.we.fri">Friday only</option><option value="sun" data-i18n="cg.we.sun">Sunday only</option><option value="uae" data-i18n="cg.we.uae">UAE: Sat + Sun since 2022</option><option value="ksa" data-i18n="cg.we.ksa">Saudi Arabia: Fri + Sat since 2013</option><option value="kwt" data-i18n="cg.we.kwt">Kuwait: Fri + Sat since 2007</option><option value="qat" data-i18n="cg.we.qat">Qatar: Fri + Sat since 2003</option><option value="bhr" data-i18n="cg.we.bhr">Bahrain: Fri + Sat since 2006</option><option value="omn" data-i18n="cg.we.omn">Oman: Fri + Sat since 2013</option></select></div>
               <div><label class="tg-label" for="cgFy" data-i18n="cg.fyStart">Fiscal year starts</label>
                 <select id="cgFy" class="form-select"><option value="1" data-i18n="cg.m.1">January</option><option value="2" data-i18n="cg.m.2">February</option><option value="3" data-i18n="cg.m.3">March</option><option value="4" data-i18n="cg.m.4">April</option><option value="5" data-i18n="cg.m.5">May</option><option value="6" data-i18n="cg.m.6">June</option><option value="7" data-i18n="cg.m.7">July</option><option value="8" data-i18n="cg.m.8">August</option><option value="9" data-i18n="cg.m.9">September</option><option value="10" data-i18n="cg.m.10">October</option><option value="11" data-i18n="cg.m.11">November</option><option value="12" data-i18n="cg.m.12">December</option></select></div>
               <div><label class="tg-label" for="cgLang" data-i18n="cg.names">Month and day names</label>
@@ -199,6 +199,7 @@
             <div class="cg-checks">
               <span class="tg-label mb-0" data-i18n="cg.columns">Columns to include</span>
               <label><input type="checkbox" id="cgHijri"><span><span data-i18n="cg.col.hijri">Hijri dates, Ramadan and Eid</span><small id="hijriNote" data-i18n="cg.col.hijriNote">Umm al-Qura calendar: Hijri year, month, day, Ramadan day, Eid al-Fitr and Eid al-Adha flags.</small></span></label>
+              <label><input type="checkbox" id="cgObserved"><span><span data-i18n="cg.col.observed">Announced Ramadan and Eid dates (UAE)</span><small data-i18n-html="cg.col.observedNote">Moves Ramadan, Shawwal and Dhu al-Hijjah to the dates the UAE announced since 2018. Dates not announced yet stay on Umm al-Qura and are flagged in Is Estimated Date.</small></span></label>
               <label><input type="checkbox" id="cgFiscal"><span><span data-i18n="cg.col.fiscal">Fiscal year, quarter and month</span><small data-i18n="cg.col.fiscalNote">Labels like FY2026 and FQ1, based on your fiscal start month.</small></span></label>
               <label><input type="checkbox" id="cgRel"><span><span data-i18n="cg.col.rel">Relative offsets</span><small data-i18n="cg.col.relNote">Day, month and year offsets from today, for "last 3 months" slicers that never need updating.</small></span></label>
             </div>
@@ -244,7 +245,7 @@
             <h3 data-i18n="cg.faq.q2">How does it get Hijri dates without Power Query?</h3>
             <p data-i18n="cg.faq.a2">Power BI has no Hijri functions. The generator calculates every Hijri month start in your range and embeds them in a small DATATABLE inside the DAX. Each date then looks up its Hijri month, so the table works offline and refreshes instantly.</p>
             <h3 data-i18n="cg.faq.q3">Are the Ramadan and Eid dates exact?</h3>
-            <p data-i18n="cg.faq.a3">They follow the official Saudi Umm al-Qura calendar. Countries that rely on local moon sighting can differ by one day. If yours did, edit that month's start date in the DATATABLE.</p>
+            <p data-i18n="cg.faq.a3">By default they follow the official Saudi Umm al-Qura calendar, and a moon sighting can differ by one day. Turn on Announced Ramadan and Eid dates to use the dates the UAE announced since 2018 (only Ramadan 2018 differed). Future dates are estimates until they are announced.</p>
             <h3 data-i18n="cg.faq.q4">How do I compare this Ramadan with last Ramadan?</h3>
             <p data-i18n-html="cg.faq.a4">Put <strong>Ramadan Day</strong> on the axis and <strong>Hijri Year</strong> in the legend. Every Ramadan lines up day by day, even though the Gregorian dates move about 11 days earlier each year.</p>
             <h3 data-i18n="cg.faq.q5">Why relative offsets?</h3>
@@ -316,6 +317,7 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
   <script src="../assets/js/main.min.js" defer></script>
+  <script src="../assets/js/gulf-dates.min.js" defer></script>
   <script src="../assets/js/calendar-generator.min.js" defer></script>
 </body>
 </html>

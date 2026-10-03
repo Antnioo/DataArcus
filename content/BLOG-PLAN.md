@@ -1,7 +1,7 @@
 # DataArcus blog: the plan (read before writing a post)
 
 The memory for the blog. Read it before planning or writing an article; update it after each one is published
-(the log, the map, "Next up"). Last updated 2026-10-01 by the reviewer.
+(the log, the map, "Next up"). Last updated 2026-10-03 (the Gulf calendar article written, not yet published).
 
 ## Who we write for, and how we sound
 - **Our identity:** Power BI reports designed right, fast, and checked in Power BI. **Our edge:** built for how the
@@ -30,7 +30,6 @@ The memory for the blog. Read it before planning or writing an article; update i
 
 ## Tools without an article yet (each deserves one)
 - DAX Measure Builder (`tools/dax-measure-builder.html`)
-- DAX Calendar Table Generator (`tools/dax-calendar-table-generator.html`)
 - SVG KPI Designer (`tools/svg-kpi-designer.html`)
 - PL-300 practice exam (`tools/pl-300-practice-exam.html`)
 - DP-600 practice exam (`tools/dp-600-practice-exam.html`)
@@ -38,6 +37,13 @@ The memory for the blog. Read it before planning or writing an article; update i
 ## Next up (in order; reframed 2026-10-01: the Gulf calendar first, since every Gulf business needs it in any language)
 1. **A Gulf calendar in DAX** (publish by early December 2026, ahead of Ramadan 2027 around 8 February): Hijri months, Ramadan and Eid flags, the Saturday-Sunday weekend (UAE since 2022), and
    sorting day and month names correctly. Tool: Calendar Table Generator.
+   **Written 2026-10-03** on branch `feat/gulf-calendar-pack`: `articles/article-gulf-calendar-power-bi.html` (English
+   and Arabic), blog card, home page card, sitemap, share image `assets/img/og/gulf-calendar.jpg`, a link back from the
+   Ramadan sales article, and 3 LinkedIn drafts in `content/linkedin-gulf-calendar.md`. **Before publishing:** the
+   test model's 40 checks pass in Power BI Desktop (`scripts/gulf-calendar/test-model/README.md`; the article's DAX is
+   the Measure Builder's, checked there), the owner picks the publish date (the page says 3 October 2026: change
+   `datePublished`, the dates on the cards and the sitemap if it goes out later), then merge. After publishing: the
+   log below and the pillar table.
 2. **Arabic and right-to-left Power BI reports done right**: what Power BI does and doesn't support (no RTL setting
    in Desktop), mirroring the layout, Arabic fonts, numbers and titles. Tool: Theme Generator (Arabic).
 3. **PL-300 study guide** (then DP-600): what the exam weighs, a 4-week plan, the traps. Tool: the practice exams.

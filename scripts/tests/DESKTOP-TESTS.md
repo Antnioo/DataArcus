@@ -913,6 +913,31 @@ fixes told the user to give "Day of Week", the number column itself, a sort colu
 - On the website's transparent cards the Arabic title sits close to the accent bar (as on main, English the same).
 - `create_report` shortens a long report name: "Gulf Sales R2 MCP AR Names less 2" became "... Names les".
 
+## 2026-10-03: the Gulf Calendar's DAX (`feat/gulf-calendar-pack`, `a74d050`), Power BI Desktop 2.158.1177
+
+`scripts/gulf-calendar/test-model/README.md`, steps 1 to 5, on made-up data only. **Expected, written before the
+run: `check.dax` returns 40 rows, every one Pass = TRUE (15 C, 10 R, 15 E).**
+
+**Result: 40 rows, 40 Pass = TRUE (15 C, 10 R, 15 E). No row failed.**
+
+How it was run (no hand typing of DAX, so nothing could be changed on the way):
+- Steps 1 and 3: `builder-scripts\gc-model.mjs` wrote a project (`C:\DataArcus\tests\7-gulf-calendar\Gulf Calendar
+  Test.pbip`) with `calendar.dax` and `sales.dax` as DAX tables and the nine `MEASURE` blocks of `measures.dax` as
+  the Sales table's measures; the script checks that the tables' DAX in the project equals the files byte for byte.
+  Opened in Desktop, "Refresh now": Calendar 4,748 rows, Sales 9,496 rows.
+- Step 2: the relationship `Sales[Date]` to `Calendar[Date]`, many to one, single direction, through Microsoft's
+  Power BI modelling MCP on the open model, then a Calculate refresh.
+- Step 4: `check.dax` run from the file on Desktop's local model (`builder-scripts\gc-check.ps1`, the ADOMD client
+  that ships with Desktop). Rows saved in `C:\DataArcus\tests\7-gulf-calendar\check-result.json`.
+- Closed without saving.
+
+Not the same as the README's clicks: the tables and measures came in through project files instead of "New table" and
+"Update model with changes", and the query ran through ADOMD instead of DAX query view. The DAX and the engine are
+the same.
+
+**Seen, not in scope:** a project whose DAX tables list no columns opens with "One or more calculated tables need to
+be manually refreshed" and is fine after "Refresh now" (Desktop works the columns out).
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
