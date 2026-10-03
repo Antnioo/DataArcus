@@ -2,7 +2,8 @@
 window.licensingCalculatorTranslations = {
   "en": {
     "meta": {
-      "title": "Power BI Licensing Cost Calculator: Pro vs PPU vs Fabric", "description": "Compare Power BI Pro, Premium Per User and Fabric capacity costs for your team. See the cheapest option and when F64 pays off, in USD, AED or SAR."
+      "title": "Power BI Licensing Cost Calculator: Pro vs PPU vs Fabric",
+      "description": "Compare Power BI Pro, Premium Per User and Fabric capacity costs for your team. See the cheapest option and when F64 pays off, in USD, AED or SAR."
     },
     "lc": {
       "badge": "Free tool · No sign-up",
@@ -49,14 +50,17 @@ window.licensingCalculatorTranslations = {
         "a2": "For small teams that need Premium features like bigger models, more frequent refreshes or deployment pipelines, but have too few viewers to justify F64. Remember that everyone reading PPU content needs PPU too. Paginated reports do not need Premium: with Pro you can publish them to shared workspaces.",
         "q3": "Reservation or pay-as-you-go?",
         "a3": "A 1-year reservation is about 40% cheaper if the capacity runs all month. Pay-as-you-go suits testing or capacities you pause outside working hours.",
-        "q4": "Are these prices exact for the UAE or Saudi Arabia?",
-        "a4": "They are US list prices converted at the fixed dirham and riyal pegs. Local Microsoft partners and regional data centers can price differently, so confirm with your reseller before you budget."
+        "q4": "How much does Power BI cost in the UAE and Saudi Arabia?",
+        "a4": "Microsoft publishes Power BI prices in US dollars only: Pro $14 and PPU $24 per user per month, paid yearly. There is no published dirham or riyal price, so this calculator converts at the fixed pegs of 3.6725 dirhams (<a href='https://www.centralbank.ae/en/our-operations/monetary-policy-and-domestic-markets/domestic-market-operations/' class='text-accent' target='_blank' rel='noopener'>Central Bank of the UAE</a>) and 3.75 riyals (<a href='https://www.sama.gov.sa/en-US/MediaCenter/News/Pages/news-557.aspx' class='text-accent' target='_blank' rel='noopener'>SAMA</a>) to the dollar: Pro is about AED 51.42 or SAR 52.50. Fabric capacity in Azure's UAE North region costs more than the US price used here: $0.22 against $0.18 per capacity unit per hour. Confirm with your Microsoft reseller before you budget.",
+        "q5": "Which license do we need for Copilot?",
+        "a5": "A paid Fabric capacity (F2 or higher) or Power BI Premium (P1 or higher). Pro or PPU on its own isn't enough (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-introduction' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>). Before you switch it on, check that your model is ready: see the <a href='../services/copilot-readiness-audit.html' class='text-accent'>Copilot readiness audit</a>."
       }
     }
   },
   "ar": {
     "meta": {
-      "title": "حاسبة تكلفة تراخيص Power BI: Pro مقابل PPU مقابل Fabric", "description": "قارن تكلفة Power BI Pro وPremium Per User وسعة Fabric لفريقك، واعرف الخيار الأوفر ومتى يصبح F64 مجديًا، بالدولار أو الدرهم أو الريال."
+      "title": "حاسبة تكلفة تراخيص Power BI: Pro مقابل PPU مقابل Fabric",
+      "description": "قارن تكلفة Power BI Pro وPremium Per User وسعة Fabric لفريقك، واعرف الخيار الأوفر ومتى يصبح F64 مجديًا، بالدولار أو الدرهم أو الريال."
     },
     "lc": {
       "badge": "أداة مجانية · بدون تسجيل",
@@ -103,8 +107,10 @@ window.licensingCalculatorTranslations = {
         "a2": "للفرق الصغيرة التي تحتاج مزايا Premium مثل النماذج الأكبر أو التحديث الأكثر تكرارًا أو خطوط النشر، دون عدد مشاهدين يبرر F64. تذكّر أن كل من يطّلع على محتوى PPU يحتاج PPU أيضًا. أما التقارير مرقّمة الصفحات فلا تحتاج Premium، إذ يكفي ترخيص Pro لنشرها في مساحات العمل المشتركة.",
         "q3": "الحجز أم الدفع حسب الاستخدام؟",
         "a3": "الحجز لسنة أرخص بنحو 40% إذا كانت السعة تعمل طوال الشهر. الدفع حسب الاستخدام يناسب التجارب أو السعات التي توقفها خارج ساعات العمل.",
-        "q4": "هل هذه الأسعار دقيقة للإمارات أو السعودية؟",
-        "a4": "هي أسعار القائمة الأمريكية محوّلة بسعر الربط الثابت للدرهم والريال. قد يختلف التسعير لدى شركاء Microsoft المحليين ومراكز البيانات الإقليمية، فتأكد من الموزّع قبل وضع الميزانية."
+        "q4": "كم يكلّف Power BI في الإمارات والسعودية؟",
+        "a4": "تنشر Microsoft أسعار Power BI بالدولار الأمريكي فقط: ‏Pro بـ 14 دولارًا وPPU بـ 24 دولارًا للمستخدم شهريًا، بدفع سنوي. ولا يوجد سعر منشور بالدرهم أو الريال، لذلك تحوّل هذه الحاسبة بسعر الربط الثابت، 3.6725 درهم (<a href='https://www.centralbank.ae/en/our-operations/monetary-policy-and-domestic-markets/domestic-market-operations/' class='text-accent' target='_blank' rel='noopener'>مصرف الإمارات العربية المتحدة المركزي</a>) و3.75 ريال (<a href='https://www.sama.gov.sa/en-US/MediaCenter/News/Pages/news-557.aspx' class='text-accent' target='_blank' rel='noopener'>البنك المركزي السعودي</a>) للدولار: فيكلّف Pro نحو 51.42 درهمًا أو 52.50 ريالًا. وسعة Fabric في منطقة UAE North من Azure أغلى من السعر الأمريكي المستخدم هنا: 0.22 دولار مقابل 0.18 دولار لوحدة السعة في الساعة. تأكد من موزّع Microsoft لديك قبل وضع الميزانية.",
+        "q5": "ما الترخيص الذي نحتاجه لـ Copilot؟",
+        "a5": "سعة Fabric مدفوعة (F2 أو أعلى) أو Power BI Premium ‏(P1 أو أعلى). أما Pro أو PPU وحده فلا يكفي (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-introduction' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>). وقبل تفعيله، تأكد من جاهزية نموذجك: اطّلع على <a href='../services/copilot-readiness-audit.html' class='text-accent'>تدقيق الجاهزية لـ Copilot</a>."
       }
     }
   }

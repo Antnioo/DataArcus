@@ -123,6 +123,8 @@ class LanguageManager {
      return window.reportStylesArticleTranslations;
     } else if (path.includes('article-power-bi-licensing-guide')) {
      return window.licensingGuideTranslations;
+    } else if (path.includes('copilot-readiness-audit')) {
+     return window.copilotAuditTranslations;
     } else if (path.includes('privacy')) {
      return window.privacyTranslations;
     }
@@ -278,7 +280,7 @@ class LanguageManager {
         if (!metaData[og] && has(`meta[property="${og}"]`)) metaData[og] = metaData[base];
         if (!metaData[tw] && has(`meta[name="${tw}"]`)) metaData[tw] = metaData[og] || metaData[base];
       });
-      if (has('meta[property="og:locale"]')) metaData['og:locale'] = this.currentLang === 'ar' ? 'ar_EG' : 'en_US';
+      if (has('meta[property="og:locale"]')) metaData['og:locale'] = this.currentLang === 'ar' ? 'ar_AE' : 'en_US';
       // Update <title>
       if (metaData.title) {
         document.title = metaData.title;

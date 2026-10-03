@@ -61,7 +61,7 @@ window.aiReadyArticleTranslations = {
     "finalCta": {
       "title": "Want your model AI-ready?",
       "subtitle": "We review Power BI models and prepare them for Copilot: clear names, descriptions, a clean schema and the Gulf calendar, in English and Arabic.",
-      "button": "Book a Free Call"
+      "button": "See the Copilot Readiness Audit"
     }
   },
   "ar": {
@@ -125,7 +125,7 @@ window.aiReadyArticleTranslations = {
     "finalCta": {
       "title": "تريد نموذجًا جاهزًا للذكاء الاصطناعي؟",
       "subtitle": "نراجع نماذج Power BI ونجهّزها لـ Copilot: أسماء واضحة وأوصاف ومخطط نظيف والتقويم الخليجي، بالعربية والإنجليزية.",
-      "button": "احجز مكالمة مجانية"
+      "button": "اطّلع على تدقيق الجاهزية لـ Copilot"
     }
   }
 };

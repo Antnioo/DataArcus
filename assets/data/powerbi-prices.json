@@ -1,9 +1,10 @@
 {
-  "checked": "2026-09-28",
+  "checked": "2026-10-03",
   "currency": "USD",
   "region": "US (eastus)",
   "pro": 14,
   "ppu": 24,
+  "ppuAddon": 14,
   "cuPayg": 0.18,
   "reservedSaving": 0.405,
   "sources": {

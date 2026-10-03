@@ -101,7 +101,7 @@ window.toolsHubTranslations = {
       }
     },
     "meta": {
-      "title": "Free Power BI & Fabric Tools - DataArcus", "description": "Free Power BI and Fabric tools: theme and layout generator, SVG KPI designer, Hijri DAX calendar, measure builder, model health check, licensing calculator, and DP-600 and PL-300 practice exams. No sign-up."
+      "title": "Free Power BI & Fabric Tools - DataArcus", "description": "Free Power BI and Fabric tools: theme and layout generator, Hijri DAX calendar, measure builder, model health check, licensing calculator, exam practice."
     }
   },
   "ar": {
@@ -205,7 +205,7 @@ window.toolsHubTranslations = {
       }
     },
     "meta": {
-      "title": "أدوات Power BI و Fabric مجانية - داتا أركوس", "description": "أدوات Power BI و Fabric مجانية: مولّد السمات والتخطيطات، ومصمم بطاقات KPI بصيغة SVG، وتقويم DAX هجري، ومنشئ المقاييس، وفحص صحة النموذج، وحاسبة التراخيص، واختبارات DP-600 وPL-300 التجريبية. بدون تسجيل."
+      "title": "أدوات Power BI و Fabric مجانية - داتا أركوس", "description": "أدوات Power BI و Fabric مجانية: مولّد السمات والتخطيطات، وتقويم DAX هجري، ومنشئ المقاييس، وفحص صحة النموذج، وحاسبة التراخيص، واختبارات تجريبية."
     }
   }
 };

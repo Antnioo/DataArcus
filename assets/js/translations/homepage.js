@@ -88,7 +88,8 @@ window.homepageTranslations = {
           title: "Governance & Security",
           desc: "Row-level security and PII-safe anonymization built into the model from day one, not bolted on after the fact."
         }
-      ]
+      ],
+      auditLink: "Getting ready for Copilot? <a href=\"services/copilot-readiness-audit.html\" class=\"text-accent\">See the fixed-price Copilot readiness audit</a>."
     },
 
     // Portfolio Section
@@ -386,7 +387,8 @@ portfolio: {
           title: "الحوكمة والأمان",
           desc: "أمان على مستوى الصف وإخفاء هوية آمن للبيانات الحساسة، مدمجان في النموذج منذ اليوم الأول، وليسا إضافة لاحقة."
         }
-      ]
+      ],
+      auditLink: "تستعد لـ Copilot؟ <a href=\"services/copilot-readiness-audit.html\" class=\"text-accent\">اطّلع على تدقيق الجاهزية لـ Copilot بسعر ثابت</a>."
     },
 
     // Portfolio Section

@@ -1054,7 +1054,6 @@ html[dir="rtl"] .navbar-brand {
 
 .blog-card time {
   font-size: 0.9rem;
-  opacity: 0.7;
 }
 
 .blog-card h3 {
@@ -1067,6 +1066,11 @@ html[dir="rtl"] .navbar-brand {
 .blog-card p {
   font-size: 0.95rem;
   line-height: 1.6;
+}
+
+/* Bootstrap's bg-info badge has white text on cyan (1.95:1); dark text reads at about 10:1 */
+.badge.bg-info {
+  color: #0a0f1c;
 }
 
 .glass-card .badge {
