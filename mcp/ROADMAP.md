@@ -17,7 +17,7 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
     reports but don't do styling and formatting well.
   - **Edge, across the Gulf: built for how the Gulf does business.** Ramadan vs last Ramadan (it moves about 11 days
     a year), Eid peaks, Hijri months, the Saturday-Sunday weekend, VAT, in English or Arabic reports. Every Gulf
-    retailer, dealer, bank and telecom needs this even in English-only reports, and generic tools don't do it.
+    retailer, distributor, bank and telecom needs this even in English-only reports, and generic tools don't do it.
   - **Premium: Arabic and right to left done properly**, for the clients who need it (government, semi-government,
     Saudi Arabia). Arabic alone is too narrow to be the identity (most private-sector Gulf reports are in English),
     but it is tedious in Power BI (no right-to-left setting), so it is worth paying for where it is required.
@@ -31,7 +31,7 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
     already publish in both languages). A plain "dashboard in Arabic" is a $5-100 commodity on Arabic freelance
     sites, so the premium must be visible quality: mirrored layout, language switch, correct fonts.
   - **Make "verified" concrete:** publish the verification checklist (what every report is checked for).
-  - **Targets, in order:** UAE groups trading in the UAE and Saudi Arabia (automotive distributors, retail and
+  - **Targets, in order:** UAE groups trading in the UAE and Saudi Arabia (retail and
     franchise groups, F&B and FMCG distributors; mind the owner's employment contract with any company close to his
     employer); Dubai Microsoft partners and ERP resellers as a subcontracting channel; regulated firms and
     semi-government through those partners. Avoid direct Saudi government tenders and marketplace price wars.
