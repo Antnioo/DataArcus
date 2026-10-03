@@ -2,13 +2,17 @@
 // Reads Microsoft's public sources, sanity-checks every number, and rewrites
 // assets/data/powerbi-prices.json. If a source can't be read or a number looks
 // wrong, it keeps the old value and exits with an error so GitHub emails you.
+// The PPU add-on is a footnote on the page: if it can't be confirmed, the old
+// value stays and the run shows a warning instead of failing.
 // Run locally: node scripts/update-powerbi-prices.mjs
 import fs from 'node:fs';
+import { pageText, perUserPrices, ppuAddon, checkAddon } from './powerbi-prices-read.mjs';
 
 const FILE = 'assets/data/powerbi-prices.json';
 const current = JSON.parse(fs.readFileSync(FILE, 'utf8'));
 const next = { ...current };
 const problems = [];
+const warnings = [];   // shown in the run (a GitHub warning), but the run still passes
 const UA = { 'user-agent': 'Mozilla/5.0 (DataArcus weekly price check; +https://dataarcus.com)' };
 
 // A new value is accepted only if it is in a sane range and within 50% of the old one.
@@ -21,26 +25,21 @@ const accept = (name, value, min, max) => {
   next[name] = value;
 };
 
-// ---------- 1. Power BI Pro and Premium Per User (Microsoft pricing page) ----------
+// ---------- 1. Power BI Pro, Premium Per User and the PPU add-on (Microsoft pricing page) ----------
 try {
-  const html = await (await fetch(current.sources.powerbi, { headers: UA })).text();
-  const text = html.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<[^>]+>/g, ' ').replace(/&nbsp;|&#160;/g, ' ').replace(/\s+/g, ' ');
-  // Each "$NN.NN user/month" belongs to the product name that appears closest before it.
-  // (Product names also appear in menus, so "first price after the label" is not enough.)
-  const LABELS = { pro: 'Power BI Pro', ppu: 'Premium Per User' };
-  const labelHits = Object.entries(LABELS).flatMap(([key, label]) => [...text.matchAll(new RegExp(label, 'g'))].map((m) => ({ key, i: m.index })));
-  const found = {};
-  for (const m of text.matchAll(/\$\s?(\d{1,3}(?:\.\d{2})?)\s*(?:USD\s*)?(?:per\s*)?user\s*\/\s*month/gi)) {
-    const owner = labelHits.filter((h) => h.i < m.index).sort((a, b) => b.i - a.i)[0];
-    if (owner && found[owner.key] === undefined && m.index - owner.i < 600) found[owner.key] = parseFloat(m[1]);
-  }
-  const priceAfter = (label) => found[Object.keys(LABELS).find((k) => LABELS[k] === label)] ?? null;
-  const pro = priceAfter('Power BI Pro');
-  const ppu = priceAfter('Premium Per User');
-  console.log('Power BI page read:', { pro, ppu });
+  const text = pageText(await (await fetch(current.sources.powerbi, { headers: UA })).text());
+  const { pro, ppu } = perUserPrices(text);
+  const addon = ppuAddon(text);
+  console.log('Power BI page read:', { pro, ppu, ppuAddon: addon });
   accept('pro', pro, 5, 60);
   accept('ppu', ppu, 10, 120);
   if (next.ppu <= next.pro) { problems.push(`ppu (${next.ppu}) should be more than pro (${next.pro})`); next.pro = current.pro; next.ppu = current.ppu; }
+  // the add-on is a footnote: when it can't be confirmed the old value stays and the run only warns
+  const a = checkAddon(addon, { old: current.ppuAddon, ppu: next.ppu });
+  if (a.problem) problems.push(a.problem);
+  if (a.warning) warnings.push(a.warning);
+  if (a.value !== current.ppuAddon) console.log(`CHANGED ppuAddon: ${current.ppuAddon} -> ${a.value}`);
+  next.ppuAddon = a.value;
 } catch (e) {
   problems.push(`Power BI pricing page could not be fetched: ${e.message}`);
 }
@@ -83,6 +82,8 @@ next.checked = new Date().toISOString().slice(0, 10);
 fs.writeFileSync(FILE, JSON.stringify(next, null, 2) + '\n');
 console.log('Saved', FILE, next);
 
+// "::warning::" shows as a warning on the GitHub run; locally it is just a line
+warnings.forEach((w) => console.log(`::warning::${w}`));
 if (problems.length) {
   console.error('\nPRICE CHECK NEEDS ATTENTION:\n- ' + problems.join('\n- '));
   console.error('The old values were kept for anything listed above.');
