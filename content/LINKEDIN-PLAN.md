@@ -62,6 +62,11 @@ Last updated 2026-10-01 by the reviewer.
 | 3 | Gulf (Arabic + English): comparing Ramadan sales year over year | Tip: the Hijri calendar in DAX | Poll: which week start does your calendar use? |
 | 4 | Real result: Pro vs PPU vs F64, when each one pays off | Tip: the licensing mistake that costs the most | Tool demo: the licensing calculator |
 
+**Ready to queue (after the Gulf calendar article is live):** three posts, Arabic then English, in
+`content/linkedin-gulf-calendar.md`: (1) the problem and the result (27 announced dates, one differed from Umm
+al-Qura; the UAE's 2022 weekend change), (2) tip: the Eid window measure, (3) tool demo: the Calendar Generator with
+announced dates and country weekends. Two weeks, Tuesday to Thursday; best before Ramadan 2027 (around 8 February).
+
 ## Measure (once a month)
 Followers, profile views, impressions and website clicks per post (LinkedIn analytics, and the site's analytics for
 visits from LinkedIn). Write what worked and what didn't below, and change the next month's queue accordingly.

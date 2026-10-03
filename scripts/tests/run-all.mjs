@@ -9,7 +9,7 @@ import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { ROOT, serve, launch } from './lib.mjs';
 
-const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'consent', 'lang-switcher', 'theme-generator', 'theme-generator-lab', 'pbip', 'dax', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'design-engine'];
+const ALL = ['site', 'anchors', 'tools', 'model-health', 'spacing', 'consent', 'lang-switcher', 'theme-generator', 'theme-generator-lab', 'pbip', 'dax', 'layout', 'layout-lab', 'svg-kpi', 'tmdl-model', 'design-engine', 'gulf-calendar'];
 // the same test on the lab page, where the generator runs on the design engine (the live page keeps the old script for now)
 const LAB = { 'theme-generator-lab': 'theme-generator', 'layout-lab': 'layout' };
 const args = process.argv.slice(2), full = args.includes('--full');
@@ -18,7 +18,7 @@ const si = args.indexOf('--slow');
 if (si >= 0) process.env.DATAARCUS_TEST_SLOW = String(Math.max(1, +args[si + 1] || 4));
 const pick = args.filter((a, i) => !a.startsWith('--') && !(ji >= 0 && i === ji + 1) && !(si >= 0 && i === si + 1));
 // the slowest tests start first, so the whole run ends as early as possible
-const SLOW = ['design-engine', 'anchors', 'site', 'theme-generator', 'theme-generator-lab', 'spacing', 'tools', 'model-health', 'lang-switcher', 'pbip', 'dax', 'layout', 'layout-lab', 'consent', 'svg-kpi', 'tmdl-model'];
+const SLOW = ['design-engine', 'anchors', 'site', 'theme-generator', 'theme-generator-lab', 'spacing', 'tools', 'model-health', 'lang-switcher', 'pbip', 'dax', 'layout', 'layout-lab', 'consent', 'svg-kpi', 'tmdl-model', 'gulf-calendar'];
 const run = (pick.length ? pick : ALL).slice().sort((a, b) => SLOW.indexOf(a) - SLOW.indexOf(b));
 const unknown = run.filter((n) => !ALL.includes(n));
 if (unknown.length) { console.error(`Unknown test: ${unknown.join(', ')}. Tests: ${ALL.join(', ')}`); process.exit(2); }

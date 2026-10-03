@@ -1,7 +1,7 @@
 /*
  * DataArcus - DAX Time Intelligence Measure Builder
  * Turns one base measure into a full set of time-intelligence measures
- * (MTD, YTD, prior year, YoY %, rolling, running total, Ramadan vs last Ramadan).
+ * (MTD, YTD, prior year, YoY %, rolling, running total, Ramadan vs last Ramadan, Eid windows).
  * Output 1: one DAX query view script that adds every measure at once.
  * Output 2: one TMDL view script that also sets number formats, display folders and descriptions.
  * Output 3: each measure on its own, for Modeling > New measure.
@@ -29,9 +29,15 @@ document.addEventListener('DOMContentLoaded', () => {
     running: 'الإجمالي التراكمي من أول تاريخ حتى التاريخ المحدد.',
     share: 'النسبة من الإجمالي للفترة المعروضة، مثل حصة كل علامة تجارية من المبيعات.',
     ramLY: 'نفس أيام رمضان من السنة الهجرية الماضية. ضع Ramadan Day على المحور للمقارنة يومًا بيوم. يحتاج جدول تقويم داتا أركوس.',
-    ramPct: 'نسبة نمو أيام رمضان المعروضة مقارنة بنفس الأيام من رمضان الماضي. الأيام خارج رمضان لا تُحسب، لذلك تقارن البطاقة المفلترة على سنة بين رمضانين.'
+    ramPct: 'نسبة نمو أيام رمضان المعروضة مقارنة بنفس الأيام من رمضان الماضي. الأيام خارج رمضان لا تُحسب، لذلك تقارن البطاقة المفلترة على سنة بين رمضانين.',
+    eidFitr: 'إجمالي الأيام السبعة قبل عيد الفطر وأيامه الثلاثة، لكل عيد يقع أول أيامه ضمن التواريخ المعروضة.',
+    eidFitrLY: 'نفس نافذة عيد الفطر من السنة الهجرية الماضية، لكل عيد ضمن التواريخ المعروضة.',
+    eidFitrPct: 'نسبة نمو نافذة عيد الفطر مقارنة بنافذة عيد الفطر الماضي.',
+    eidAdha: 'إجمالي الأيام السبعة قبل عيد الأضحى وأيامه الأربعة (10 إلى 13 ذو الحجة)، لكل عيد يقع أول أيامه ضمن التواريخ المعروضة.',
+    eidAdhaLY: 'نفس نافذة عيد الأضحى من السنة الهجرية الماضية، لكل عيد ضمن التواريخ المعروضة.',
+    eidAdhaPct: 'نسبة نمو نافذة عيد الأضحى مقارنة بنافذة عيد الأضحى الماضي.'
   };
-  const GROUP_AR = { 'To date': 'حتى تاريخه', 'Compare': 'مقارنة', 'Rolling': 'متحرك وتراكمي', 'Ramadan': 'رمضان (يحتاج تقويم داتا أركوس)' };
+  const GROUP_AR = { 'To date': 'حتى تاريخه', 'Compare': 'مقارنة', 'Rolling': 'متحرك وتراكمي', 'Ramadan': 'رمضان (يحتاج تقويم داتا أركوس)', 'Eid': 'العيد (يحتاج تقويم داتا أركوس)' };
 
   const DEFAULTS = {
     mode: 'column', agg: 'SUM', fact: 'Sales', column: 'Amount', base: 'Total Sales', existing: 'Total Sales', home: 'Sales',
@@ -56,6 +62,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const home = () => name(state.mode === 'column' ? 'fact' : 'home');
   const dateRef = () => colRef(name('cal'), name('dateCol'));
   const fyEndArg = () => { const [mm, dd] = state.fyEnd.split('-').map(Number); return mm === 12 && dd === 31 ? '' : `, "${mm}/${dd}"`; };
+
+  // Eid windows: the days before each Eid plus the Eid days (Eid al-Fitr: 1-3 Shawwal, Eid al-Adha: 10-13 Dhu al-Hijjah,
+  // as the calendar's flags), for the Eids whose first day is in view, so a month or a year shows the Eid it holds.
+  // Last year: the Eid of the previous Hijri year of each Eid in view, looked up in the whole calendar.
+  const eidDax = (b, month, day, eidDays, lastYear) => {
+    const c = tbl(name('cal')), d = dateRef(), hm = `${c}[Hijri Month Number] = ${month}`, hd = `${c}[Hijri Day] = ${day}`;
+    const eids = lastYear
+      ? `VAR _Years =\n    SELECTCOLUMNS (\n        FILTER ( ${c}, ${hm} && ${hd} ),\n        "@Year", ${c}[Hijri Year] - 1\n    )\nVAR _Eids =\n    SELECTCOLUMNS (\n        FILTER ( ALL ( ${c} ), ${hm} && ${hd} && ${c}[Hijri Year] IN _Years ),\n        "@Eid", ${d}\n    )`
+      : `VAR _Eids =\n    SELECTCOLUMNS (\n        FILTER ( ${c}, ${hm} && ${hd} ),\n        "@Eid", ${d}\n    )`;
+    return `VAR _DaysBefore = 7\nVAR _EidDays = ${eidDays}\n${eids}\nVAR _Window =\n    FILTER (\n        ALL ( ${d} ),\n        VAR _Day = ${d}\n        RETURN\n            NOT ISEMPTY (\n                FILTER ( _Eids, _Day >= [@Eid] - _DaysBefore && _Day <= [@Eid] + _EidDays - 1 )\n            )\n    )\nRETURN\n    IF (\n        NOT ISEMPTY ( ${lastYear ? '_Years' : '_Eids'} ),\n        CALCULATE ( ${b}, REMOVEFILTERS ( ${c} ), _Window )\n    )`;
+  };
+  const eidPct = (e) => () => { const w = mRef(`${baseName()} ${e} Window`), ly = mRef(`${baseName()} ${e} Window Last Year`); return `DIVIDE ( ${w} - ${ly}, ${ly} )`; };
 
   // Each pattern: id, group, name suffix, what it does, expression builder, format hint, needs other patterns
   const PATTERNS = [
@@ -95,7 +113,23 @@ document.addEventListener('DOMContentLoaded', () => {
     { id: 'ramPct', g: 'Ramadan', suffix: 'vs Last Ramadan %', pct: true, ramadan: true, needs: ['ramLY'],
       what: 'Growth of the Ramadan days in view vs the same days of last Ramadan. Days outside Ramadan are left out, so a card filtered to a year compares the two Ramadans.',
       // only the Ramadan days count on this side too, or a year card divides the whole year by one Ramadan
-      dax: (b) => `VAR _ThisRamadan = CALCULATE ( ${b}, KEEPFILTERS ( ${tbl(name('cal'))}[Is Ramadan] = TRUE () ) )\nVAR _LastRamadan = ${mRef(baseName() + ' Last Ramadan')}\nRETURN\n    DIVIDE ( _ThisRamadan - _LastRamadan, _LastRamadan )` }
+      dax: (b) => `VAR _ThisRamadan = CALCULATE ( ${b}, KEEPFILTERS ( ${tbl(name('cal'))}[Is Ramadan] = TRUE () ) )\nVAR _LastRamadan = ${mRef(baseName() + ' Last Ramadan')}\nRETURN\n    DIVIDE ( _ThisRamadan - _LastRamadan, _LastRamadan )` },
+    { id: 'eidFitr', g: 'Eid', suffix: 'Eid al-Fitr Window', ramadan: true,
+      what: 'The 7 days before Eid al-Fitr and its 3 days, for each Eid whose first day is in view. Needs the DataArcus calendar table.',
+      dax: (b) => eidDax(b, 10, 1, 3, false) },
+    { id: 'eidFitrLY', g: 'Eid', suffix: 'Eid al-Fitr Window Last Year', ramadan: true,
+      what: 'The same Eid al-Fitr window in the previous Hijri year, for each Eid in view.',
+      dax: (b) => eidDax(b, 10, 1, 3, true) },
+    { id: 'eidFitrPct', g: 'Eid', suffix: 'Eid al-Fitr Window vs Last Year %', pct: true, ramadan: true, needs: ['eidFitr', 'eidFitrLY'],
+      what: 'Growth of the Eid al-Fitr window vs last year’s.', dax: eidPct('Eid al-Fitr') },
+    { id: 'eidAdha', g: 'Eid', suffix: 'Eid al-Adha Window', ramadan: true,
+      what: 'The 7 days before Eid al-Adha and its 4 days (10 to 13 Dhu al-Hijjah), for each Eid whose first day is in view. Needs the DataArcus calendar table.',
+      dax: (b) => eidDax(b, 12, 10, 4, false) },
+    { id: 'eidAdhaLY', g: 'Eid', suffix: 'Eid al-Adha Window Last Year', ramadan: true,
+      what: 'The same Eid al-Adha window in the previous Hijri year, for each Eid in view.',
+      dax: (b) => eidDax(b, 12, 10, 4, true) },
+    { id: 'eidAdhaPct', g: 'Eid', suffix: 'Eid al-Adha Window vs Last Year %', pct: true, ramadan: true, needs: ['eidAdha', 'eidAdhaLY'],
+      what: 'Growth of the Eid al-Adha window vs last year’s.', dax: eidPct('Eid al-Adha') }
   ];
   const val = (x) => (typeof x === 'function' ? x() : x);
   // rolling months and average days: whole numbers within the same limits as the number boxes (max="36", max="365")
@@ -154,7 +188,7 @@ EVALUATE
       const m = ms[+btn.dataset.i]; copy(`${m.name} =\n${m.expr}`, btn.closest('.mb-card').querySelector('pre'));
       track('measure_copy_one', { pattern: m.name.replace(baseName(), '').trim() || 'base' });
     }));
-    $('ramNote').style.display = ms.some((m) => /Ramadan/.test(m.name)) ? '' : 'none';
+    $('ramNote').style.display = ms.some((m) => /Ramadan|Eid al-/.test(m.name)) ? '' : 'none';
     save();
   };
   const escapeHtml = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -180,7 +214,7 @@ EVALUATE
   });
   // pattern checkboxes grouped
   const groups = [...new Set(PATTERNS.map((p) => p.g))];
-  const renderPatterns = () => { $('patterns').innerHTML = groups.map((g) => `<div class="mb-group"><span class="tg-label">${isAr() ? GROUP_AR[g] : (g === 'Ramadan' ? 'Ramadan (needs the DataArcus calendar)' : g)}</span>${PATTERNS.filter((p) => p.g === g).map((p) =>
+  const renderPatterns = () => { $('patterns').innerHTML = groups.map((g) => `<div class="mb-group"><span class="tg-label">${isAr() ? GROUP_AR[g] : ({ Ramadan: 'Ramadan (needs the DataArcus calendar)', Eid: 'Eid (needs the DataArcus calendar)' }[g] || g)}</span>${PATTERNS.filter((p) => p.g === g).map((p) =>
     `<label class="mb-check"><input type="checkbox" value="${p.id}" ${state.pick.includes(p.id) ? 'checked' : ''}><span>${escapeHtml(val(p.suffix))}</span></label>`).join('')}</div>`).join(''); };
   renderPatterns();
   $('patterns').addEventListener('change', (e) => {

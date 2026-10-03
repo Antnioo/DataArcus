@@ -1,0 +1,162 @@
+[
+ {
+  "name": "C01 rows in the calendar",
+  "expected": 4748
+ },
+ {
+  "name": "C02 Ramadan days in 2018",
+  "expected": 29
+ },
+ {
+  "name": "C03 first Ramadan day of 2018, days after 1 January",
+  "expected": 136
+ },
+ {
+  "name": "C04 Ramadan Day on 2026-03-19",
+  "expected": 30
+ },
+ {
+  "name": "C05 Eid al-Fitr days in 2025",
+  "expected": 3
+ },
+ {
+  "name": "C06 Eid al-Adha days in 2026",
+  "expected": 4
+ },
+ {
+  "name": "C07 estimated dates in 2026",
+  "expected": 0
+ },
+ {
+  "name": "C08 estimated dates in 2027",
+  "expected": 36
+ },
+ {
+  "name": "C09 weekend days in 2021 (Fri-Sat)",
+  "expected": 105
+ },
+ {
+  "name": "C10 weekend days in 2022 (Sat-Sun)",
+  "expected": 105
+ },
+ {
+  "name": "C11 Friday 2021-12-31 is a weekend day",
+  "expected": 1
+ },
+ {
+  "name": "C12 Friday 2022-01-07 is a working day",
+  "expected": 1
+ },
+ {
+  "name": "C13 days after the UAE weekend change in 2021",
+  "expected": 0
+ },
+ {
+  "name": "C14 days after the UAE weekend change in 2022",
+  "expected": 365
+ },
+ {
+  "name": "C15 Ramadan 1446 length",
+  "expected": 29
+ },
+ {
+  "name": "R01 Ramadan 1447 day 1: sales",
+  "expected": 257
+ },
+ {
+  "name": "R02 Ramadan 1447 day 1: last Ramadan",
+  "expected": 263
+ },
+ {
+  "name": "R03 Ramadan 1447 day 15: last Ramadan",
+  "expected": 277
+ },
+ {
+  "name": "R04 Ramadan 1447 day 30: last Ramadan had 29 days",
+  "expected": null
+ },
+ {
+  "name": "R05 Ramadan 1447 day 10: vs last Ramadan %",
+  "expected": -0.024291497975708502
+ },
+ {
+  "name": "R06 year 2026 card: last Ramadan",
+  "expected": 7233
+ },
+ {
+  "name": "R07 year 2026 card: vs last Ramadan %",
+  "expected": 0.0322134660583437
+ },
+ {
+  "name": "R08 year 2030 (two Ramadans): last Ramadan",
+  "expected": 8667
+ },
+ {
+  "name": "R09 Hijri year 1444: last Ramadan",
+  "expected": 7217
+ },
+ {
+  "name": "R10 year 2018: no Ramadan before it in the calendar",
+  "expected": null
+ },
+ {
+  "name": "E01 2026: Eid al-Fitr window",
+  "expected": 2460
+ },
+ {
+  "name": "E02 March 2026: Eid al-Fitr window",
+  "expected": 2460
+ },
+ {
+  "name": "E03 February 2026: no Eid starts in it",
+  "expected": null
+ },
+ {
+  "name": "E04 March 2025: window runs into April",
+  "expected": 2526
+ },
+ {
+  "name": "E05 April 2025: Eid days but not its first day",
+  "expected": null
+ },
+ {
+  "name": "E06 2026: Eid al-Fitr window last year",
+  "expected": 2526
+ },
+ {
+  "name": "E07 2018: no Eid al-Fitr before it in the calendar",
+  "expected": null
+ },
+ {
+  "name": "E08 2026: Eid al-Fitr window vs last year %",
+  "expected": -0.026128266033254157
+ },
+ {
+  "name": "E09 2026: Eid al-Adha window",
+  "expected": 2775
+ },
+ {
+  "name": "E10 2026: Eid al-Adha window last year",
+  "expected": 2735
+ },
+ {
+  "name": "E11 2026: Eid al-Adha window vs last year %",
+  "expected": 0.014625228519195612
+ },
+ {
+  "name": "E12 2030: Eid al-Fitr window",
+  "expected": 2466
+ },
+ {
+  "name": "E13 whole calendar: every Eid al-Fitr window",
+  "expected": 32196
+ },
+ {
+  "name": "E14 Hijri year 1447: Eid al-Adha window",
+  "expected": 2775
+ },
+ {
+  "name": "E15 Hijri year 1447: Eid al-Adha window last year",
+  "expected": 2735
+ }
+]

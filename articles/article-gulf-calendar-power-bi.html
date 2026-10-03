@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
+  <style>html.i18n-pending body{visibility:hidden}</style>
+
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://dataarcus.com/articles/article-gulf-calendar-power-bi.html" />
+
+  <title>A Gulf Calendar in Power BI: Hijri, Ramadan, Eid, Weekends</title>
+  <meta name="description" content="A Power BI date table for the Gulf in DAX: Hijri dates, announced Ramadan and Eid days, each country's weekend and the 2022 UAE change." />
+  <meta name="author" content="DataArcus" />
+  <meta name="keywords" content="Gulf calendar Power BI, Hijri calendar DAX, Ramadan Power BI, Eid al-Fitr Power BI, UAE weekend Power BI, GCC weekend DAX, Umm al-Qura Power BI, DAX calendar table, DataArcus" />
+
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="A Gulf Calendar in Power BI: Hijri, Ramadan, Eid, Weekends" />
+  <meta property="og:description" content="A Power BI date table for the Gulf in DAX: Hijri dates, announced Ramadan and Eid days, each country's weekend and the 2022 UAE change." />
+  <meta property="og:url" content="https://dataarcus.com/articles/article-gulf-calendar-power-bi.html" />
+  <meta property="og:site_name" content="DataArcus" />
+  <meta property="og:image" content="https://dataarcus.com/assets/img/og/gulf-calendar.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:type" content="image/jpeg" />
+  <meta property="og:image:alt" content="A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and the Right Weekend" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="article:published_time" content="2026-10-03T09:00:00Z" />
+  <meta property="article:author" content="Abdelrahman M." />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="A Gulf Calendar in Power BI: Hijri, Ramadan, Eid, Weekends" />
+  <meta name="twitter:description" content="A Power BI date table for the Gulf in DAX: Hijri dates, announced Ramadan and Eid days, each country's weekend and the 2022 UAE change." />
+  <meta name="twitter:image" content="https://dataarcus.com/assets/img/og/gulf-calendar.jpg" />
+  <meta name="twitter:image:alt" content="A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and the Right Weekend" />
+
+  <link rel="icon" href="../assets/img/favicon.svg"/>
+  <link rel="apple-touch-icon" href="../assets/img/apple-touch-icon.png" />
+
+  <script>
+    // Analytics only with consent: visitors in Europe (by time zone) opt in; elsewhere analytics run unless the visitor rejects.
+    // The choice is saved by the cookie banner (main.js, section 9).
+    (function(){
+      var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
+      try{choice=localStorage.getItem(KEY)}catch(e){}
+      try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+      var eu=/^Europe\//.test(tz)||/^Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)$/.test(tz);
+      function load(){ if(loaded) return; loaded=true;
+        window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
+        gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
+        var s=document.createElement('script'); s.async=true; s.src='https://www.googletagmanager.com/gtag/js?id=G-RC3MRC4JZH'; document.head.appendChild(s);
+        (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","sy2681b9al");
+      }
+      window.daConsent={key:KEY,choice:choice,eu:eu,load:load};
+      if(choice==='granted'||(choice!=='denied'&&!eu)) load();
+    })();
+  </script>
+
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="../assets/css/vendor/bootstrap.min.css" rel="stylesheet">
+  <link href="../assets/css/style.min.css" rel="stylesheet">
+
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+  </noscript>
+
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and the Right Weekend",
+    "description": "A Power BI date table for the Gulf in DAX: Hijri dates, announced Ramadan and Eid days, each country's weekend and the 2022 UAE change.",
+    "url": "https://dataarcus.com/articles/article-gulf-calendar-power-bi.html",
+    "mainEntityOfPage": "https://dataarcus.com/articles/article-gulf-calendar-power-bi.html",
+    "author": { "@type": "Person", "name": "Abdelrahman M." },
+    "publisher": {
+      "@type": "Organization",
+      "name": "DataArcus",
+      "logo": { "@type": "ImageObject", "url": "https://dataarcus.com/assets/img/logo.svg" }
+    },
+    "datePublished": "2026-10-03",
+    "dateModified": "2026-10-03",
+    "image": "https://dataarcus.com/assets/img/og/gulf-calendar.jpg"
+  }
+  </script>
+</head>
+<body>
+
+  <div class="interactive-bg" id="interactiveBg"></div>
+
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-dark fixed-top">
+    <div class="container">
+      <a class="navbar-brand" href="../index.html#hero">
+        <img src="../assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
+      </a>
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navmenu" aria-label="Toggle navigation" data-i18n-aria-label="nav.toggle">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navmenu">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="../index.html#services" data-i18n="nav.services">Services</a></li>
+          <li class="nav-item"><a class="nav-link" href="../portfolio.html" data-i18n="nav.portfolio">Showcases</a></li>
+          <li class="nav-item"><a class="nav-link" href="../tools/index.html" data-i18n="nav.tools">Free Tools</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#about" data-i18n="nav.about">About</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#contact" data-i18n="nav.contact">Contact</a></li>
+        </ul>
+        <a href="../index.html#contact" class="btn btn-accent ms-lg-3" data-i18n="nav.consultation">Book a Free Call</a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="article-section">
+      <div class="container">
+        <div class="row">
+          <div class="col-lg-8 mx-auto">
+
+            <header class="article-header">
+              <span class="badge bg-info mb-3" data-i18n="header.badge">GULF CALENDAR</span>
+              <h1 class="display-5 fw-bold" data-i18n="header.title">A Gulf Calendar in Power BI: Hijri Dates, Ramadan, Eid and the Right Weekend</h1>
+              <p class="lead text-white-50" data-i18n="header.subtitle">Posted on October 3, 2026</p>
+            </header>
+
+            <article class="article-body">
+              <p data-i18n-html="content.p1">A standard Power BI date table knows January to December and one weekend. A Gulf business runs on more than that: <strong>Ramadan and Eid move every year, the Hijri month decides the season, and the weekend depends on the country and the year.</strong> Miss one of these and the report shows trends that are really the calendar.</p>
+              <p data-i18n-html="content.p2">This guide builds one calendar table that gets all of it right, in DAX, in about a minute, and three measures that use it.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h1">Four things a standard calendar gets wrong in the Gulf</h2>
+              <ul>
+                <li data-i18n-html="content.list1_1"><strong>Ramadan moves.</strong> It started on 1 March in 2025 and on 18 February in 2026, and is expected around 8 February in 2027: about 11 days earlier each year. March 2026 against March 2025 compares two different seasons.</li>
+                <li data-i18n-html="content.list1_2"><strong>Eid is a window, not a day.</strong> Shopping builds up in the days before Eid al-Fitr and Eid al-Adha, and those days fall in a different Gregorian month from one year to the next.</li>
+                <li data-i18n-html="content.list1_3"><strong>The weekend changed.</strong> The UAE moved its government weekend from Friday-Saturday to Saturday-Sunday on 1 January 2022 (<a href='https://www.aljazeera.com/economy/2021/12/7/uae-announces-changes-to-workweek-for-employees-of-govt-sector' class='text-accent' target='_blank' rel='noopener'>announced by WAM</a>). Saudi Arabia, Kuwait, Qatar, Bahrain and Oman keep Friday-Saturday. Whichever fixed weekend a UAE calendar uses, one side of 2022 is wrong: Saturday-Sunday makes Friday 31 December 2021 a working day, Friday-Saturday makes Friday 7 January 2022 a day off.</li>
+                <li data-i18n-html="content.list1_4"><strong>Names sort alphabetically.</strong> April comes before January, Friday before Monday, and the Hijri months in an order nobody uses, unless each name is sorted by its number.</li>
+              </ul>
+              <h2 class="mt-5 mb-3" data-i18n="content.h2">Announced dates or the calculated calendar?</h2>
+              <p data-i18n-html="content.p3">Power BI has no Hijri functions, so the calendar table has to carry the Hijri dates. The usual source is Umm al-Qura, Saudi Arabia's official calculated calendar. But Ramadan and the two Eids are set by moon sighting, and an announcement can differ from the calculation by a day.</p>
+              <p data-i18n-html="content.p4">We checked every UAE announcement from 2018 to 2026: 27 dates (the first day of Ramadan, Eid al-Fitr and Eid al-Adha in each year). <strong>26 matched Umm al-Qura. One did not:</strong> Ramadan 2018 started on Thursday 17 May, not Wednesday 16 May. Every date and its source is in our <a href='https://github.com/Antnioo/DataArcus/blob/main/scripts/gulf-calendar/DATES-SOURCES.md' class='text-accent' target='_blank' rel='noopener'>sources file</a>.</p>
+              <p data-i18n-html="content.p5">Dates from 2027 on are not announced yet. They are estimates, and a sighting can still move each one by a day, so the calendar flags them.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h3">Build the calendar in a minute</h2>
+              <p data-i18n-html="content.p6">Open the free <a href='../tools/dax-calendar-table-generator.html' class='text-accent'>DAX Calendar Table Generator</a> and set three things:</p>
+              <ul>
+                <li data-i18n-html="content.list2_1"><strong>Hijri dates, Ramadan and Eid</strong>: on.</li>
+                <li data-i18n-html="content.list2_2"><strong>Announced Ramadan and Eid dates (UAE)</strong>: on. Ramadan, Shawwal and Dhu al-Hijjah start on the announced dates; every other month follows Umm al-Qura.</li>
+                <li data-i18n-html="content.list2_3"><strong>Weekend</strong>: your country. Each country's option knows the date its weekend changed.</li>
+              </ul>
+              <p data-i18n-html="content.p7">Copy the DAX, then in Power BI Desktop choose <strong>Modeling → New table</strong> and paste it. Next to the usual year, quarter, month and fiscal columns, the table has these Gulf columns:</p>
+              <ul>
+                <li data-i18n-html="content.list3_1"><strong>Hijri Year, Hijri Month Number, Hijri Day, Hijri Month Name, Hijri Date</strong>: the Hijri date of every day.</li>
+                <li data-i18n-html="content.list3_2"><strong>Is Ramadan</strong> and <strong>Ramadan Day</strong> (1 to 30), to compare Ramadan day by day.</li>
+                <li data-i18n-html="content.list3_3"><strong class='text-nowrap'>Is Eid al-Fitr</strong> (1 to 3 Shawwal) and <strong class='text-nowrap'>Is Eid al-Adha</strong> (10 to 13 Dhu al-Hijjah).</li>
+                <li data-i18n-html="content.list3_4"><strong>Is Estimated Date</strong>: TRUE on Ramadan and Eid days that are not announced yet.</li>
+                <li data-i18n-html="content.list3_5"><strong>Is Weekend</strong> and <strong>Is Working Day</strong>: the right weekend for each date.</li>
+                <li data-i18n-html="content.list3_6"><strong>Is After UAE Weekend Change</strong> (UAE only): TRUE from 1 January 2022, to split working-day trends at the change.</li>
+              </ul>
+              <p data-i18n-html="content.p8">The weekend column is a plain IF on the date, so you can read it and change it. For the UAE:</p>
+              <pre><code>Is Weekend =
+IF (
+    [Date] &gt;= DATE ( 2022, 1, 1 ),
+    WEEKDAY ( [Date], 1 ) IN { 7, 1 },        -- Saturday, Sunday
+    IF (
+        [Date] &gt;= DATE ( 2006, 9, 1 ),
+        WEEKDAY ( [Date], 1 ) IN { 6, 7 },    -- Friday, Saturday
+        WEEKDAY ( [Date], 1 ) IN { 5, 6 }     -- Thursday, Friday
+    )
+)</code></pre>
+              <h2 class="mt-5 mb-3" data-i18n="content.h4">Sort the names</h2>
+              <p data-i18n-html="content.p9">Select <strong>Month Name</strong> and choose <strong>Column tools → Sort by column → Month Number</strong>. Do the same for <strong>Day Name</strong> with <strong>Day of Week</strong>, and for <strong>Hijri Month Name</strong> with <strong>Hijri Month Number</strong>. Then mark the table as a date table on <strong>Date</strong> and relate it to your fact table.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h5">Three measures that use it</h2>
+              <p data-i18n-html="content.p10"><strong>1. Ramadan day N against last year.</strong> The <em>Last Ramadan</em> measure from our <a href='article-ramadan-sales-power-bi.html' class='text-accent'>Ramadan sales guide</a> moves each Ramadan day in view one Hijri year back. Put Ramadan Day on the axis and day 5 meets day 5.</p>
+              <p data-i18n-html="content.p11"><strong>2. This Ramadan against last Ramadan.</strong> On a card filtered to a year, <em>vs Last Ramadan %</em> compares that year's Ramadan days with the same days of the Ramadan before. When a 30-day Ramadan follows a 29-day one, day 30 has no partner and adds nothing to last year's side.</p>
+              <p data-i18n-html="content.p12"><strong>3. The Eid window.</strong> The days before Eid often matter more than Eid itself. This measure adds up the 7 days before each Eid al-Fitr and its 3 days, for every Eid whose first day is in view:</p>
+              <pre><code>Sales Eid al-Fitr Window =
+VAR _DaysBefore = 7
+VAR _EidDays = 3
+VAR _Eids =
+    SELECTCOLUMNS (
+        FILTER ( &#x27;Calendar&#x27;, &#x27;Calendar&#x27;[Hijri Month Number] = 10 &amp;&amp; &#x27;Calendar&#x27;[Hijri Day] = 1 ),
+        &quot;@Eid&quot;, &#x27;Calendar&#x27;[Date]
+    )
+VAR _Window =
+    FILTER (
+        ALL ( &#x27;Calendar&#x27;[Date] ),
+        VAR _Day = &#x27;Calendar&#x27;[Date]
+        RETURN
+            NOT ISEMPTY (
+                FILTER ( _Eids, _Day &gt;= [@Eid] - _DaysBefore &amp;&amp; _Day &lt;= [@Eid] + _EidDays - 1 )
+            )
+    )
+RETURN
+    IF (
+        NOT ISEMPTY ( _Eids ),
+        CALCULATE ( [Total Sales], REMOVEFILTERS ( &#x27;Calendar&#x27; ), _Window )
+    )</code></pre>
+              <p data-i18n-html="content.p13">Eid al-Fitr 2025 fell on Sunday 30 March, so its window runs from 23 March to 1 April and belongs to March: a visual by month shows the whole window in March and a blank in April. The <a href='../tools/dax-measure-builder.html' class='text-accent'>DAX Measure Builder</a> writes this measure with your own table and column names, together with the same for Eid al-Adha, last year's window and the % change.</p>
+              <p data-i18n-html="content.p14">We test these measures on a made-up model (two stores, amounts from a formula, no real data). Its 40 checks, each with the number worked out beforehand, are <a href='https://github.com/Antnioo/DataArcus/tree/main/scripts/gulf-calendar/test-model' class='text-accent' target='_blank' rel='noopener'>on GitHub</a>, so you can run them in your own Power BI Desktop.</p>
+              <h2 class="mt-5 mb-3" data-i18n="content.h6">Three things to watch</h2>
+              <ul>
+                <li data-i18n-html="content.list4_1"><strong>Your company's weekend.</strong> The country options follow the official government weekend. Many private companies keep another one, and Sharjah's government has had a Friday-to-Sunday weekend since 2022. If yours differs, pick the fixed weekend that matches it.</li>
+                <li data-i18n-html="content.list4_2"><strong>Update after each announcement.</strong> When Ramadan 2027 is announced, generate the table again: the announced dates replace the estimates.</li>
+                <li data-i18n-html="content.list4_3"><strong>Other countries' sightings.</strong> The announced dates are the UAE's. A country that relies on its own sighting can start a day apart, so check the official announcement where you report.</li>
+              </ul>
+              <p data-i18n-html="content.p15">Ramadan 1448 is expected around 8 February 2027. Build the calendar now, and the first comparison is ready on day one.</p>
+            </article>
+
+            <div class="text-center block">
+              <div class="glass-card p-4 p-md-5 d-inline-block" data-aos="fade-up">
+                <h3 class="h4 mb-3" data-i18n="exploreMore.title">Build your Gulf calendar in a minute</h3>
+                <p class="text-white-50 mb-4" data-i18n="exploreMore.subtitle">Free, in your browser: Hijri dates, announced Ramadan and Eid, and your country's weekend.</p>
+                <a href="../tools/dax-calendar-table-generator.html" class="btn btn-accent m-1"><i class="bi bi-calendar3 me-2"></i><span data-i18n="exploreMore.button1">Open the Calendar Generator</span></a>
+                <a href="../tools/dax-measure-builder.html" class="btn btn-glass m-1"><i class="bi bi-calculator me-2"></i><span data-i18n="exploreMore.button2">Build the Eid measures</span></a>
+              </div>
+            </div>
+
+            <div class="text-center">
+              <hr class="divider">
+              <h3 class="h4 mb-3" data-i18n="finalCta.title">Want a Gulf-ready dashboard before Ramadan?</h3>
+              <p class="text-white-50 mb-4" data-i18n="finalCta.subtitle">DataArcus builds Power BI reports that understand the Gulf calendar, in English and Arabic.</p>
+              <a href="../index.html#contact" class="btn btn-accent btn-lg">
+                  <i class="bi bi-calendar3 me-2"></i><span data-i18n="finalCta.button">Book a Free Call</span>
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+  </main>
+
+  <footer class="py-5">
+      <div class="container">
+        <div class="row g-4">
+          <div class="col-lg-4">
+            <a href="../index.html#hero" class="d-flex align-items-center gap-2 mb-3 text-decoration-none">
+              <img src="../assets/img/logo.svg" alt="DataArcus logo" data-i18n-alt="nav.logoAlt" width="173" height="40">
+            </a>
+            <p class="text-white-50 mb-3" data-i18n="footer.tagline">Custom-built Power BI solutions for businesses across the MENA region, turning complex data into a clear strategic advantage.</p>
+            <div class="d-flex gap-2 mt-1">
+              <a href="https://www.linkedin.com/in/abdelrahman-i-mohammed" class="text-white-50 hover-accent" aria-label="LinkedIn" target="_blank" rel="noopener"><i class="bi bi-linkedin fs-5"></i></a>
+            </div>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.services">Services</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.powerbi">Power BI</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.dataengineering">Data Engineering</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.analytics">Analytics</a></li>
+              <li class="mb-2"><a href="../index.html#services" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.consulting">Consulting</a></li>
+              <li class="mb-2"><a href="../tools/index.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.tools">Free Power BI &amp; Fabric Tools</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-2 col-md-3">
+            <h3 class="mb-3" data-i18n="footer.company">Company</h3>
+            <ul class="list-unstyled">
+              <li class="mb-2"><a href="../index.html#about" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.about">About</a></li>
+              <li class="mb-2"><a href="../portfolio.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.portfolio">Showcases</a></li>
+              <li class="mb-2"><a href="../index.html#contact" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.contact">Contact</a></li>
+              <li class="mb-2"><a href="../blog.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.blog">Blog</a></li>
+              <li class="mb-2"><a href="../privacy.html" class="text-white-50 text-decoration-none hover-accent" data-i18n="footer.links.privacy">Privacy</a></li>
+            </ul>
+          </div>
+          <div class="col-lg-4 col-md-6">
+            <h3 class="mb-3" data-i18n="footer.contact">Contact Info</h3>
+            <div class="d-flex flex-column gap-2">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:hello@DataArcus.com" class="text-white-50 text-decoration-none">hello@DataArcus.com</a>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-whatsapp"></i>
+                <a href="https://wa.me/971506583577" class="text-white-50 text-decoration-none" target="_blank" rel="noopener" dir="ltr">+971 50 658 3577</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr class="my-4">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <div class="text-white-50">&copy; <span id="year"></span> DataArcus. <span data-i18n="footer.copyright">All rights reserved.</span></div>
+          <div class="small text-white-50 mt-2 mt-md-0" data-i18n="footer.built">Made in Dubai</div>
+        </div>
+      </div>
+  </footer>
+
+  <script src="../assets/js/translations/common.min.js" defer></script>
+  <script src="../assets/js/translations/article-gulf-calendar-power-bi.min.js" defer></script>
+  <script src="../assets/js/lang-manager.min.js" defer></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
+  <script src="../assets/js/main.min.js" defer></script>
+</body>
+</html>
