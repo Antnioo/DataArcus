@@ -307,7 +307,20 @@
         });
       });
       collectReportRefs(layout.filters, refs, {});
-      collectReportRefs(layout.config, refs, {});
+      // the report's config holds its bookmarks (in groups, too): a field used there is told by its bookmark's name
+      let cfg0 = null;
+      try { cfg0 = typeof layout.config === 'string' ? JSON.parse(layout.config) : layout.config; } catch (e) { /* unreadable config */ }
+      if (cfg0 && typeof cfg0 === 'object' && Array.isArray(cfg0.bookmarks)) {
+        const marks = (list) => (list || []).forEach((b) => {
+          if (!b || typeof b !== 'object') return;
+          if (Array.isArray(b.children)) { marks(b.children); return; }
+          const r = []; collectReportRefs(b, r, {});
+          r.forEach((x) => { x.bookmark = b.displayName || b.name || ''; });
+          refs.push.apply(refs, r);
+        });
+        marks(cfg0.bookmarks);
+        collectReportRefs(Object.assign({}, cfg0, { bookmarks: undefined }), refs, {});
+      } else collectReportRefs(layout.config, refs, {});
       collectReportRefs(layout.pods, refs, {});
       try {
         const cfg = typeof layout.config === 'string' ? JSON.parse(layout.config) : (layout.config || {});
@@ -330,6 +343,7 @@
         const isVisual = /\/visuals\/[^/]+\/visual\.json$/.test(f.path);
         const label = isVisual ? visualLabel(f.json && f.json.visual) : /\/page\.json$/.test(f.path) ? 'page filter' : '';
         if (pm) r.forEach((x) => { x.page = pageTitle[pm[1]] || pm[1]; if (label) x.visual = label; });
+        else if (/(^|\/)bookmarks\/[^/]+\.bookmark\.json$/i.test(f.path)) r.forEach((x) => { x.bookmark = (f.json && (f.json.displayName || f.json.name)) || ''; });
         refs.push.apply(refs, r);
         const vm = f.path.match(/pages\/([^/]+)\/visuals\/[^/]+\/visual\.json$/);
         if (vm) { visuals++; perVisual.push({ page: pageTitle[vm[1]] || vm[1], refs: r }); }
@@ -531,7 +545,7 @@
       const k = lc(r.entity) + '|' + lc(r.prop);
       if (!broken.has(k)) broken.set(k, { obj: r.entity + '[' + r.prop + ']', pages: new Set(), n: 0 });
       const b = broken.get(k); b.n++;
-      b.pages.add(r.page ? r.page + (r.visual ? ' › ' + r.visual : '') : 'report filter');
+      b.pages.add(r.page ? r.page + (r.visual ? ' › ' + r.visual : '') : r.bookmark != null ? 'bookmark "' + r.bookmark + '"' : 'report filter');
     };
     if (rep) {
       rep.ext.forEach((x) => { extNames.add(lc(x.name)); daxRefs(x.expr, null, IX).refs.forEach((n) => roots.add(n)); });

@@ -12,13 +12,49 @@ export const Pbip = require('../../assets/js/pbip-export.js');
 const Tmdl = require('../../assets/js/tmdl-model.js');
 export const Fix = require('../../assets/js/model-health-tmdl.js');
 
-// Every path the tools read or write must sit inside this folder (DATAARCUS_ROOT, or where the server was started)
-export const ROOT = path.resolve(process.env.DATAARCUS_ROOT || process.cwd());
-export function inside(p) {
-  const full = path.resolve(ROOT, String(p || '.'));
-  const rel = path.relative(ROOT, full);
-  if (rel.startsWith('..') || path.isAbsolute(rel)) throw new Error(`"${p}" is outside the allowed folder ${ROOT}`);
+// Every path the tools read or write must sit inside the working folder, DATAARCUS_ROOT. Not set, empty, blank or
+// still a placeholder ("${user_config.working_folder}": what an app's settings leave when nothing was chosen) means
+// no working folder: the server never falls back to the folder it happens to start in, every tool refuses instead.
+// A developer who wants the current folder sets DATAARCUS_ROOT=. on purpose.
+const rawRoot = process.env.DATAARCUS_ROOT;
+export const ROOT = rawRoot == null || !String(rawRoot).trim() || /\$\{[^}]*\}/.test(String(rawRoot)) ? null : path.resolve(String(rawRoot).trim());
+const isDir = (p) => { try { return fs.statSync(p).isDirectory(); } catch (e) { return false; } };
+// On start: a working folder that doesn't exist yet is made when the folder above it exists (the app's default,
+// Documents\DataArcus, on a new machine). Never a chain of folders: a mistyped path is not created.
+export function prepareRoot() {
+  if (ROOT && !fs.existsSync(ROOT) && isDir(path.dirname(ROOT))) { try { fs.mkdirSync(ROOT); } catch (e) { /* told by rootProblem */ } }
+}
+// Why no tool can work, in words for the user; null when the working folder is there
+export function rootProblem() {
+  if (!ROOT) return 'No working folder is set, so DataArcus reads and writes nothing. Choose the working folder in the DataArcus settings of your AI app (the setting DATAARCUS_ROOT): the folder that holds your Power BI projects (.pbip). DataArcus then works only inside that folder.';
+  if (!isDir(ROOT)) return `Your working folder ${ROOT} doesn't exist yet: create it and put a Power BI project (.pbip) in it.`;
+  return null;
+}
+const within = (root, p) => { const rel = path.relative(root, p); return !(rel.startsWith('..') || path.isAbsolute(rel)); };
+const linkError = (p) => new Error(`"${p}" leads outside the working folder ${ROOT} through a link (a symbolic link or a junction). DataArcus reads and writes only inside the working folder.`);
+const isLink = (p) => { try { return fs.lstatSync(p).isSymbolicLink(); } catch (e) { return false; } };
+// Where a path really is: the real path of its deepest part that exists (links followed), plus the part that
+// doesn't exist yet. A link whose target is missing counts as leading outside.
+function realOf(full) {
+  let cur = full; const rest = [];
+  while (!fs.existsSync(cur)) {
+    if (isLink(cur)) return null;
+    const up = path.dirname(cur); if (up === cur) break;
+    rest.unshift(path.basename(cur)); cur = up;
+  }
+  return path.join(fs.realpathSync.native(cur), ...rest);
+}
+// A full path that is, by name, inside the working folder: refused when a link on the way leads outside it
+export function real(full, shown) {
+  const r = realOf(full);
+  if (!r || !within(fs.realpathSync.native(ROOT), r)) throw linkError(shown == null ? path.relative(ROOT, full) || full : shown);
   return full;
+}
+export function inside(p) {
+  const problem = rootProblem(); if (problem) throw new Error(problem);
+  const full = path.resolve(ROOT, String(p || '.'));
+  if (!within(ROOT, full)) throw new Error(`"${p}" is outside the allowed folder ${ROOT}`);
+  return real(full, p);
 }
 
 const decode = (buf) => {
@@ -46,10 +82,12 @@ function unzip(buf) {
   return out;
 }
 
-const walk = (dir, depth = 0) => (depth > 4 ? [] : fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
+// Links (symbolic links, junctions) are never followed: they are left out, and listed in `links` when given
+const walk = (dir, depth = 0, links = null) => (depth > 4 ? [] : fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
   const full = path.join(dir, e.name);
   if (e.name === 'node_modules' || e.name === '.git') return [];
-  return e.isDirectory() ? [full, ...walk(full, depth + 1)] : [full];
+  if (e.isSymbolicLink()) { if (links) links.push(full); return []; }
+  return e.isDirectory() ? [full, ...walk(full, depth + 1, links)] : [full];
 }));
 
 // The model a path points at: a project folder (nearest .SemanticModel or older .Dataset), a model folder,
@@ -73,28 +111,42 @@ export function loadModel(p) {
     return { source: path.basename(full), folder: null, tmsl, tables: Bind.fromTmsl(tmsl), report: null };
   }
   // a folder: the model folder nearest to the top wins (a backup copy deeper down never does)
-  const dirs = [full, ...walk(full).filter((f) => fs.statSync(f).isDirectory())].filter((d) => /\.(SemanticModel|Dataset)$/i.test(d));
-  if (!dirs.length) throw new Error(`No .SemanticModel folder in ${p}. Point at a Power BI project folder saved from Desktop.`);
+  const links = [];
+  const dirs = [full, ...walk(full, 0, links).filter((f) => fs.statSync(f).isDirectory())].filter((d) => /\.(SemanticModel|Dataset)$/i.test(d));
+  if (!dirs.length) {
+    // a model folder that is a link is not followed: say so when it leads outside the working folder
+    const linked = links.find((l) => /\.(SemanticModel|Dataset)$/i.test(l));
+    if (linked) real(linked);
+    if (full === ROOT && !fs.readdirSync(ROOT).length) throw new Error(`Your working folder ${ROOT} is empty: put a Power BI project (a .pbip file with its folders, saved from Power BI Desktop) in it.`);
+    throw new Error(`No .SemanticModel folder in ${p}. Point at a Power BI project folder saved from Desktop.`);
+  }
   dirs.sort((a, b) => a.split(path.sep).length - b.split(path.sep).length);
   const folder = dirs[0], bim = path.join(folder, 'model.bim');
+  if (isLink(bim)) real(bim);
   let tmsl = null, tables;
   if (fs.existsSync(bim)) { tmsl = json(fs.readFileSync(bim)); tables = Bind.fromTmsl(tmsl); }
   else {
     const tdir = path.join(folder, 'definition', 'tables');
     if (!fs.existsSync(tdir)) throw new Error(`No model.bim and no definition/tables in ${folder}`);
-    tables = fs.readdirSync(tdir).filter((f) => /\.tmdl$/i.test(f)).flatMap((f) => Bind.parseTmdl(decode(fs.readFileSync(path.join(tdir, f)))));
+    if (isLink(path.join(folder, 'definition'))) real(path.join(folder, 'definition'));
+    if (isLink(tdir)) real(tdir);
+    tables = fs.readdirSync(tdir, { withFileTypes: true }).filter((e) => !e.isSymbolicLink() && /\.tmdl$/i.test(e.name)).flatMap((e) => Bind.parseTmdl(decode(fs.readFileSync(path.join(tdir, e.name)))));
     // the whole model (expressions, relationships, roles...) in model.bim form, for the health check
     const def = path.join(folder, 'definition');
-    tmsl = Tmdl.fromFiles(walk(def).filter((f) => /\.tmdl$/i.test(f)).map((f) => ({ path: path.relative(folder, f).replace(/\\/g, '/'), text: decode(fs.readFileSync(f)) })));
+    // (lineage tags kept: the fix scripts write each object back with its own tag, so Desktop doesn't give it a new one)
+    tmsl = Tmdl.fromFiles(walk(def).filter((f) => /\.tmdl$/i.test(f)).map((f) => ({ path: path.relative(folder, f).replace(/\\/g, '/'), text: decode(fs.readFileSync(f)) })), { lineageTags: true });
   }
   tables = tables.filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name));
   // the project's own reports (PBIR), for the health check and for choosing a report name that is free
-  const projectDir = path.dirname(folder);
-  const reports = fs.readdirSync(projectDir).filter((n) => /\.Report$/i.test(n));
-  const pbir = reports.flatMap((r) => { const d = path.join(projectDir, r, 'definition'); return fs.existsSync(d) ? walk(d).filter((f) => f.endsWith('.json')) : []; });
+  // When the working folder is the model folder itself, the project folder is outside it: nothing there is read
+  // (no reports, no names in use) and create_report refuses (projectDir null).
+  const projectDir = within(ROOT, path.dirname(folder)) ? path.dirname(folder) : null;
+  const beside = projectDir ? fs.readdirSync(projectDir, { withFileTypes: true }).filter((e) => !e.isSymbolicLink()).map((e) => e.name) : [];
+  const reports = beside.filter((n) => /\.Report$/i.test(n));
+  const pbir = reports.flatMap((r) => { const d = path.join(projectDir, r, 'definition'); return !isLink(d) && fs.existsSync(d) ? walk(d).filter((f) => f.endsWith('.json')) : []; });
   const report = pbir.length ? { format: 'pbir', files: pbir.map((f) => { try { return { path: f.replace(/\\/g, '/'), json: json(fs.readFileSync(f)) }; } catch (e) { return null; } }).filter(Boolean) } : null;
   // report names in use: an X.Report folder and its X.pbip count once
-  const taken = [...new Set(fs.readdirSync(projectDir).filter((n) => /\.(Report|pbip)$/i.test(n)).map((n) => n.replace(/\.(Report|pbip)$/i, '')))];
+  const taken = [...new Set((projectDir ? fs.readdirSync(projectDir) : []).filter((n) => /\.(Report|pbip)$/i.test(n)).map((n) => n.replace(/\.(Report|pbip)$/i, '')))];
   return { source: path.relative(ROOT, folder) || folder, folder, projectDir, taken, tmsl, tables, report };
 }
 

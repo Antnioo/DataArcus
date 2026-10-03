@@ -147,6 +147,13 @@ export default async function run() {
     ''].join('\r\n');
   let m = model({ 'tables/Sales Data.tmdl': sales }), t = m.model.tables[0];
   eq(m.model.tables.map((x) => x.name), ['Sales Data'], 'table name');
+  // round 3: lineage tags are left out unless asked for (the fix scripts ask, so Desktop keeps each object's tag)
+  {
+    const files = [{ path: 'X.SemanticModel/definition/tables/Sales Data.tmdl', text: sales }], tagged = T.fromFiles(files, { lineageTags: true }).model.tables[0];
+    check(t.lineageTag === undefined && t.measures[0].lineageTag === undefined && tagged.lineageTag === '0b1c' && tagged.measures[0].lineageTag === '11aa'
+      && canon(Object.assign({}, tagged, { lineageTag: undefined, measures: undefined, columns: undefined })) === canon(Object.assign({}, t, { measures: undefined, columns: undefined })),
+      `lineage tags: default ${t.lineageTag}/${t.measures[0].lineageTag}, asked ${tagged.lineageTag}/${tagged.measures[0].lineageTag}`);
+  }
   eq([t.description, t.dataCategory], ['Sales facts', 'Regular'], 'table description and category');
   eq(t.measures.map((x) => x.name), ["Total 'Net' Sales", 'Fenced'], 'measure names (quoted, with a doubled quote)');
   const ms = t.measures[0];

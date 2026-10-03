@@ -127,6 +127,18 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
   - On a DAX calendar every column is untyped in TMDL, so a number column named like a name ("Day of Week") is listed
     by the sort check too: the fix builder drops a column that another listed name is sorted by.
 
+- Round 3 (safety), measured in Desktop 2.158 and on Windows:
+  - A measure or column rewritten by a TMDL script keeps its `lineageTag` only when the script carries it; without
+    it Desktop writes a new tag. The fix scripts carry it (the TMDL reader keeps tags with `{ lineageTags: true }`).
+  - TMDL view's editor can't be filled through UI Automation's ValuePattern (the text arrives mangled: "Problems 2");
+    it needs a real paste, so `tmdl-apply.ps1` uses the keyboard and the clipboard: only when the laptop is free
+    (`idle.ps1` tells the seconds since the last input).
+  - A Windows junction shows as a symbolic link to Node (`Dirent.isSymbolicLink()`, `lstat`), and
+    `fs.realpathSync.native` resolves it; compare real paths of both the path and the working folder (a temp folder's
+    short name, `ABDELR~1`, is expanded by `.native` on both).
+  - The `gulf-calendar` suite fails on a Windows checkout (3 checks): Git writes the `.dax` files with CRLF and the
+    suite compares bytes. It passes on CI (Linux).
+
 ## Writing prompts for another agent or session
 Start with the request itself ("Run this test now"). Name every file. List the steps. Add the rules: scope folder, don't
 change test files or expected numbers, stop and report on failure. Give the exact report format. Compare with expected

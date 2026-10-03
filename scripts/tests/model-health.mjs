@@ -162,6 +162,15 @@ export default async function ({ browser, url }) {
     const am = { model: { tables: [sales(), { name: 'التقويم', columns: [dcol('Date', 'dateTime'), dcol('اسم الشهر', 'string'), dcol('اسم اليوم', 'string'), dcol('رقم الشهر', 'int64')], partitions: mpart('التقويم') }] } };
     const found = ((E.analyze(am, null).findings.find((x) => x.id === 'MONTH_SORT') || {}).items || []).map((i) => i.obj).sort();
     check(JSON.stringify(found) === JSON.stringify(['التقويم[اسم الشهر]', 'التقويم[اسم اليوم]'].sort()), `Arabic month and day names without a sort column: found ${JSON.stringify(found)}`);
+    // round 3: a broken field used inside a bookmark is told as that bookmark; a report's own filter stays "report filter"
+    const gone = (p) => ({ Column: { Expression: { SourceRef: { Entity: 'Sales' } }, Property: p } }), bm = (name) => ({ name: 'b1', displayName: name, explorationState: { filters: { byExpr: [{ name: 'f', expression: gone('Gone In Bookmark') }] } } });
+    const detail = (rep) => Object.fromEntries(((E.analyze({ model: { tables: [sales()] } }, rep).findings.find((x) => x.id === 'BROKEN_REF') || {}).items || []).map((i) => [i.obj, i.detail]));
+    const pbir = detail({ format: 'pbir', files: [{ path: 'X.Report/definition/pages/p1/page.json', json: { name: 'p1', displayName: 'Page 1' } }, { path: 'X.Report/definition/report.json', json: { filterConfig: { filters: [{ name: 'rf', field: gone('Gone In Filter') }] } } },
+      { path: 'X.Report/definition/bookmarks/b1.bookmark.json', json: bm('Q1 view') }, { path: 'X.Report/definition/bookmarks/bookmarks.json', json: { items: [{ name: 'b1' }] } }] });
+    check(pbir['Sales[Gone In Bookmark]'] === 'bookmark "Q1 view"' && pbir['Sales[Gone In Filter]'] === 'report filter', `a broken field in a bookmark (PBIR): ${JSON.stringify(pbir)}`);
+    const legacy = detail({ format: 'legacy', files: [{ path: 'Report/Layout', json: { sections: [{ name: 's1', displayName: 'Page 1', visualContainers: [] }], filters: JSON.stringify([{ expression: gone('Gone In Filter') }]),
+      config: JSON.stringify({ version: '5.1', bookmarks: [{ displayName: 'Group', name: 'g', children: [bm('Old view')] }] }) } }] });
+    check(legacy['Sales[Gone In Bookmark]'] === 'bookmark "Old view"' && legacy['Sales[Gone In Filter]'] === 'report filter', `a broken field in a bookmark (older report format): ${JSON.stringify(legacy)}`);
   }
 
   {

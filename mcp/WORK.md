@@ -75,6 +75,111 @@ date). The plan is in `mcp/ROADMAP.md`, "Plan of 2026-10-02".
 - **The validator:** a representative set of exports on every push, the full matrix nightly (reviewer, after round 2).
 - **Dated:** the Gulf Calendar pack and its free lead-magnet download, ready by 2026-12-01.
 
+## Round 3 in progress: safety before the first beta build (owner's go 2026-10-03, in advance for every step; branch `fix/round-3-safety`, from main `a261f65`)
+Ten items: the 3 privacy gaps (`mcp/PRIVACY.md`), the 4 server fixes required before the first build
+(`packaging/PACKAGING.md` in dataarcus-engine), the bookmark label, and the two fixes found in round 2's Desktop
+sitting. Not in this round: the large-model summary and fewer KPI cards (round 4), the validator sweep (reviewer),
+zod 4 (PR #5), the Gulf calendar in the MCP, round 2's "Seen, not in scope", the split.
+
+**State (2026-10-03): all ten items built, pushed, Desktop checked for 8-10; waiting for the reviewer.** Plan
+`74e1e1a`; tests first `1ab0993` (22 of the 25 new MCP checks failed before the code; 3 describe behaviour that
+already held); item 8 `294d8a1`; item 10's reader `e52745f`; item 3 `251637f`; items 1, 2, 4, 5, 6, 7, 9 and 10's
+MCP side `d19d8ed` (one commit: they share `mcp/lib/model.mjs` and `mcp/server.mjs`).
+- **Tests:** MCP 149 → 174; website `model-health` 48 → 50, `tmdl-model` 69 → 70; the full website run on this
+  laptop: 16 of 17 pass; `gulf-calendar` fails 3 checks here for a reason that is not this round's (the `.dax` files
+  are checked out with CRLF on Windows and compared byte for byte; it passes on CI). No fixture changed.
+- **Desktop (items 8-10):** as expected, in `scripts/tests/DESKTOP-TESTS.md` ("round 3, safety").
+- **Docs:** `mcp/PRIVACY.md` (no open gaps; sections 3 and 4), `mcp/README.md`, `mcp/PRODUCT_SPEC.md`,
+  `mcp/CLAUDE.md` (lessons).
+- **For the packaging repo (not changed here):** PACKAGING.md's "refuses to start" is now "starts and every tool
+  refuses" (the decision to confirm); the build script sets the version in `mcp/package.json` only.
+- **Next step:** the reviewer's review, CI, merge; then zod 4 (PR #5), round 4 (large-model summary, fewer KPI
+  cards).
+
+**Method:** failing tests first for every item (all behaviour), then the code; the suites each item touches; the
+full website run and `npm test` once at the end; Desktop only for 8, 9, 10. Item 10 is measured in Desktop before any
+code. No fixture may change (if one would: stop for the owner's go).
+
+### The three design decisions (to report)
+- **Item 2, a working folder that is itself a model folder: refuse, don't write inside.** A report written inside
+  `X.SemanticModel` would not be a project Desktop can open (the report must sit next to the model, and the `.pbip`
+  beside both). So `create_report` refuses with: the working folder is the model folder itself; choose the project
+  folder (the one that holds `X.SemanticModel`). `read_model`, `suggest_fields` and `check_model_health` keep working
+  on it, but no longer look at the folder above (today they list and read the reports next to the model, which are
+  outside the working folder): `existingReports` is empty and the health check runs without a report.
+- **Item 4, an empty or missing `DATAARCUS_ROOT`: the server starts, and every tool refuses with one clear message;
+  no file is touched.** Not set, empty, blank, or still a placeholder (`${...}`, what a manifest leaves when the
+  setting is empty) all count as missing. The server does not exit, because a server that fails to start shows only
+  "disconnected" in the AI app and the reason stays in a log; a tool answer is read out to the user. (PACKAGING.md
+  says "refuses to start": this is the one decision to confirm.) **Tests and dev runs keep working without a flag:**
+  `mcp/test.mjs`, `mcp/test-models/golden-baseline.mjs` and the README's `claude mcp add ... --env DATAARCUS_ROOT=`
+  already set it; a developer who wants the current folder sets `DATAARCUS_ROOT=.` on purpose.
+- **Item 5, a missing working folder: create it on start when its parent exists; otherwise answer.** The manifest's
+  default `Documents\DataArcus` doesn't exist on a clean machine and the user chose it in the install screen, so the
+  server makes that one folder (never a chain of folders: a mistyped path is not created). If it can't (no parent,
+  no permission), every tool answers "Your working folder X doesn't exist yet: create it and put a Power BI project
+  (.pbip) in it." A working folder with nothing in it answers "... is empty: put a Power BI project (.pbip) in it"
+  instead of "No .SemanticModel folder in .".
+
+### The items (file; what changes; the failing checks written first)
+1. **Links leading outside** (`mcp/lib/model.mjs`, `mcp/lib/design.mjs`). `inside()` resolves the real path
+   (`fs.realpathSync` of the deepest part that exists, against the working folder's own real path) before the folder
+   check, for reads and writes; the model search never follows a link (symbolic link or junction), and the model
+   folder, the project folder and `model.bim` are checked the same way. Message: `"<path>" leads outside the working
+   folder <root> through a link (a symbolic link or a junction). DataArcus reads and writes only inside the working
+   folder.` **4 checks:** `read_model` through a junction to a folder outside: refused with that message;
+   a project whose `.SemanticModel` is a link to outside: not read; `generate_theme` with `folder` a link to outside:
+   refused and nothing written there; `create_report` with a `logo` behind a link: refused.
+2. **The working folder is a model folder** (`mcp/lib/model.mjs`, `mcp/server.mjs`). As decided above. **3 checks**
+   (a second server whose root is `...\X.SemanticModel`): `read_model .` answers with the tables and no
+   `existingReports`; `create_report` is refused with the message naming the project folder; nothing is written above
+   the working folder.
+3. **The skill asks first** (`mcp/skills/report-design/SKILL.md`). Steps 7 ("open and look") and 8 ("check the
+   numbers"), and the existing-report section, ask the user before a page screenshot or a DAX query and say that what
+   the report shows (its numbers) goes to the AI app; without a yes the skill stops at "open the file yourself" and
+   reports the checks as not done. **2 checks** (`mcp/test.mjs` reads the skill): step 7 and step 8 each say to ask
+   first and that it goes to the AI app.
+4. **No working folder set** (`mcp/lib/model.mjs`, `mcp/server.mjs`). As decided above. **4 checks** (servers started
+   in an empty temporary folder): without the variable the server starts and lists 6 tools; each of the 6 tools
+   answers the message; nothing is written in the folder it started in; the same for `""` and
+   `${user_config.working_folder}`.
+5. **A missing working folder** (same files). As decided above. **3 checks:** root = `<temp>\new` is created on start
+   and `read_model .` says the folder is empty; root = `<temp>\a\b\c` (no parent) is not created and the tools say it
+   doesn't exist yet; neither answer contains `ENOENT`.
+6. **The version in one place** (`mcp/server.mjs`). Read from `mcp/package.json`. **2 checks:** the server's version
+   (MCP `initialize`) equals `package.json`'s; `server.mjs` holds no version literal.
+7. **Tool annotations** (`mcp/server.mjs`). `readOnlyHint: true` on `read_model`, `suggest_fields`,
+   `check_model_health`, `plan_layout`; `readOnlyHint: false, destructiveHint: false` on `generate_theme` and
+   `create_report`. **2 checks** on `tools/list`.
+8. **"bookmark", not "report filter"** (`assets/js/model-health-engine.js`, shared). A broken field used inside a
+   bookmark is listed as `bookmark "<name>"` (PBIR: `definition/bookmarks/*.bookmark.json`; older reports: the
+   bookmarks in the layout's config); "report filter" stays for the report's own filters. Scores and counts don't
+   move. **1 MCP check + 2 in the website's `model-health` suite** (a PBIR report and an older-format report, each
+   with a broken field only in a bookmark, and one in a report filter that must still say "report filter").
+9. **"Refresh now" after the sort script** (`mcp/server.mjs`). When the sort script adds a column, `howToApply` ends
+   with: after Apply press "Refresh now" in the yellow bar (until then every visual shows an error). **2 checks:**
+   that sentence is there when a column is added; it is not on the format script.
+10. **Fix scripts keep `lineageTag`** (`assets/js/tmdl-model.js`, shared; `mcp/lib/model.mjs`; the website's worker).
+    **Measured in Desktop first:** on a copy of `5-tmdl-sample`, a format script with each measure's existing
+    `lineageTag` and one without: read the tags before and after Apply (`INFO.MEASURES()`). Expected: with the tag in
+    the script it stays; without it Desktop writes a new one. If the tag does not survive even when given: stop this
+    item and report. Then: the TMDL reader keeps `lineageTag` and `sourceLineageTag` when asked (an option; without
+    it the result is unchanged, so the reader's existing tests don't move), and the MCP and the website ask for it.
+    **2 MCP checks** (the format script and the sort script on a TMDL project with tags carry each rewritten
+    object's tag) **+ 1 in `tmdl-model`** (the option keeps the tags; the default result is as before).
+
+### Expected results (written before any run)
+| What | Before | After |
+|---|---|---|
+| MCP `npm test` | 149 | **174** (4 + 3 + 2 + 4 + 3 + 2 + 2 + 1 + 2 + 2 new, each failing first) |
+| website `model-health` | 48 | **50** |
+| website `tmdl-model` | as on main | **+ 1** |
+| the other website suites | pass | pass, counts unchanged; 17 of 17 |
+| fixtures | | none changed |
+| Desktop, item 8 | | the website's health page and the MCP show `bookmark "<name>"` for a broken field in a bookmark (no Desktop change: the finding is text; checked on the page) |
+| Desktop, item 9 | | following `howToApply` to the letter on `6-sort-sample` ends with tables and slicers in order and no error |
+| Desktop, item 10 | | the script from the TMDL project shows no `lineageTag` line removed in Preview, and the measures' tags are the same before and after Apply |
+
 ## Next step (queued, approved 2026-10-03; builder; plan first, then go)
 1. The 3 privacy gaps in `mcp/PRIVACY.md` ("Known gaps"): a link inside the working folder leading outside it; a
    working folder that is itself a model folder; the report-design skill's screenshots and DAX checks without asking.
