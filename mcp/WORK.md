@@ -108,6 +108,27 @@ down with its cause and a proposed fix. State after each part:
        helpful "folder is empty" text (the tool returns it as an error). *Proposed:* decide whether this answer
        should be a normal result instead of an error.
   - The permission "Always allow" given to a tool survived uninstalling and reinstalling the extension.
+- **Part 4, the images for findings 001 and 002: done** (branch `findings/001-capture`, `9d66742`, the record in
+  `scripts/tests/DESKTOP-TESTS.md` there). The DAX check gave 101914, 74675, 0.3377971208570472, as expected; the
+  cards 101.914K, 74.675K, 0.34. Images: `C:\DataArcus\tests\6-ms-plugin\_shots\f001-1-page.png`,
+  `f001-2-topband.png`, `f001-3-numbers.png` and `C:\DataArcus\tests\phase2-try\shots-r2\f002-1-before-after.png`.
+  Image 3 is stacked, not side by side (the query was unreadable side by side at 1200 wide), and its result grid
+  rounds to 0.34 while the caption says 0.3378: the owner's choice whether to change the query.
+- **Part 5, the 11 golden tasks at agent level: done. 4 of 11 pass** (7, 8, 9, 10); validator 0 errors on all 9
+  reports written; nothing overwritten anywhere. The table, every check and the answers given are in
+  `mcp/GOLDEN-TASKS.md`, "Agent level, 2026-10-04". The findings that repeat, each with a proposed fix there:
+  1. the agent never shows a plan or waits for "go" (the package has no report-design skill, and the tool
+     descriptions don't ask for it);
+  2. `read_model` with a model's plain name fails first ("Ramadan Test" is not found, the folder name is);
+  3. the agent translates, shortens and in task 3 mislabels fields through `displayNames` on its own;
+  4. "(old)" measures on cards; a `modelNotes` example ("0.34 instead of 34%") repeated as a fact on a model
+     without rows;
+  5. task 11: the agent wrote its own DAX for the Saudi weekend instead of pointing to the Calendar Generator;
+  6. task 9 (watched closely): nothing written, no false claim; the closest supported visuals were not offered.
+     Task 7 (watched closely): no report written, five measures with formats and the sort fix proposed.
+  The agent had only DataArcus: Microsoft's authoring MCP and the Desktop bridge are not in Claude Desktop chats
+  here, so opening the reports and the DAX checks were done by the builder afterwards. Task 3's first two chats
+  were taken over by the owner's own skill and memories; the rest ran in incognito chats with that skill off.
 
 ## Next step (owner's go 2026-10-02, after reviews by ChatGPT and Gemini): users and a first paid client sooner
 **The goal that decides everything: by 15 November 2026, 5 beta users have used DataArcus on their own work and 1
