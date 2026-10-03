@@ -163,10 +163,13 @@
     const first = P.rows[0].map((col, i) => col.slice());
     if (hasMain(P)) { const rest = first.slice(1).reduce((a, col) => a + col[0], 0); first[0][0] = rest * z.mainW / (100 - z.mainW); }
     const flex = hasSplit(P) ? [z.split, 100 - z.split] : P.flex.slice();
-    const flexSum = flex.reduce((a, b) => a + b, 0), free = PH - M - top - G * P.rows.length - z.kpiH;
+    // KPI cards: the layout's count, or fewer when the report has fewer measures to show (kpiCards, set by the MCP:
+    // 0 leaves the KPI row out and the charts take its room). The website's designs have no kpiCards.
+    const nK = c.kpiCards != null && +c.kpiCards >= 0 ? Math.min(c.kpis, Math.floor(+c.kpiCards)) : c.kpis;
+    const flexSum = flex.reduce((a, b) => a + b, 0), free = nK ? PH - M - top - G * P.rows.length - z.kpiH : PH - M - top - G * (P.rows.length - 1);
     // no chart row shorter than 90: move the split back if needed
     if (hasSplit(P) && free >= 180) { const h0 = free * flex[0] / flexSum; if (h0 < 90) flex[0] = flexSum * 90 / free; else if (free - h0 < 90) flex[0] = flexSum * (free - 90) / free; flex[1] = flexSum - flex[0]; }
-    const rows = [{ fixed: z.kpiH, cols: Array.from({ length: c.kpis }, (_, i) => [1, 'kpi', [`KPI ${i + 1}`, `مؤشر ${i + 1}`]]) }]
+    const rows = (nK ? [{ fixed: z.kpiH, cols: Array.from({ length: nK }, (_, i) => [1, 'kpi', [`KPI ${i + 1}`, `مؤشر ${i + 1}`]]) }] : [])
       .concat([first].concat(P.rows.slice(1)).map((cols, i) => ({ flex: flex[i], cols })));
     let y = top;
     rows.forEach((r, ri) => {
