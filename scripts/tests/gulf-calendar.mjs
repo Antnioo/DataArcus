@@ -274,5 +274,29 @@ export default async function ({ browser, url }) {
     }
   }
 
+  // ---------- 7. The MCP's Gulf check (assets/js/gulf-health.js) reads the generator's calendars as the generator means them ----------
+  {
+    let GH = null;
+    try { GH = require('../../assets/js/gulf-health.js'); } catch (e) { /* not there yet */ }
+    const wrap = (dax) => ({ model: { tables: [{ name: 'Calendar', columns: [], partitions: [{ name: 'Calendar', source: { type: 'calculated', expression: dax.replace(/^Calendar =\n/, '') } }] }] } });
+    const days = (dax, country) => { const r = GH.analyze(wrap(dax), { country, asOf: '2026-10-03' }), f = r.findings.find((x) => x.id === 'GC_WEEKEND'); return r.cantTell.some((x) => x.check === 'weekend') ? 'cannot tell' : f ? f.count : 0; };
+    const model = fs.readFileSync(path.join(ROOT, 'scripts/gulf-calendar/test-model/calendar.dax'), 'utf8').replace(/\r\n/g, '\n');
+    check(!!GH && days(model, 'uae') === 0 && days(model, 'ksa') === 939, `gulf-health on the test model's calendar: UAE ${GH ? days(model, 'uae') : 'no gulf-health.js'}, Saudi Arabia ${GH ? days(model, 'ksa') : ''} mismatched days (want 0 and 939)`);
+    // a calendar the generator makes with a country's weekend agrees with that country's rule on every day, and the
+    // weekend options the fixes name are the page's own
+    const off = [], v = await visitor(browser, { viewport: [1280, 900] });
+    await v.pg.goto(`${url}${CG}?lang=en`, { waitUntil: 'networkidle' });
+    const labels = await v.pg.evaluate(() => Object.fromEntries([...document.querySelectorAll('#cgWeekend option')].map((o) => [o.value, o.textContent.trim()])));
+    await v.ctx.close();
+    for (const c of Object.keys(G.weekends)) {
+      const cg = await read(browser, url, CG, 'dataarcus-calendar-generator', { weekend: c, start: '2000-01-01', end: '2030-12-31' });
+      const n = GH ? days(cg.dax, c) : 'no gulf-health.js';
+      if (n !== 0 || !GH || GH.COUNTRIES[c].weekendOption !== labels[c]) off.push(`${c}: ${n} days, option "${GH && GH.COUNTRIES[c].weekendOption}" / page "${labels[c]}"`);
+    }
+    check(!off.length, `gulf-health and the generator disagree: ${off.join('; ')}`);
+    const other = model.replace(/"Is Weekend", .*,\n/, '"Is Weekend", WEEKDAY ( [Date], 2 ) > 5,\n');
+    check(!!GH && other !== model && days(other, 'uae') === 'cannot tell', `gulf-health on another form of Is Weekend: ${GH ? days(other, 'uae') : 'no gulf-health.js'} (want "cannot tell")`);
+  }
+
   return { checks, problems };
 }

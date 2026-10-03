@@ -139,6 +139,14 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
   - The `gulf-calendar` suite fails on a Windows checkout (3 checks): Git writes the `.dax` files with CRLF and the
     suite compares bytes. It passes on CI (Linux).
 
+- The Gulf calendar check (`assets/js/gulf-health.js`, beta cut): its own section in `check_model_health`, never
+  scored, read from the files only. It can read the dates and the weekend only of a calendar our generator made (from
+  the comment, the `CALENDAR` range, the `DATATABLE` month starts and the `Is Weekend` forms the generator writes);
+  everything else is `cantTell`. When the generator's DAX changes shape (`calendar-generator.js`), this reader must
+  follow: the `gulf-calendar` suite generates a calendar per country and checks the two agree on every day, and that
+  the weekend option labels the fixes name are the page's own. Packaging must carry `gulf-health.js` and
+  `gulf-dates.js` with the engines.
+
 ## Writing prompts for another agent or session
 Start with the request itself ("Run this test now"). Name every file. List the steps. Add the rules: scope folder, don't
 change test files or expected numbers, stop and report on failure. Give the exact report format. Compare with expected

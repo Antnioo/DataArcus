@@ -739,6 +739,96 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   }
 }
 
+// ---------- the Gulf calendar beta cut: an unscored gulfCalendar section in check_model_health ----------
+{
+  const ask = async (args) => { try { return await call('check_model_health', Object.assign({ maxItems: 50 }, args)); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const ASOF = '2026-10-03';
+  const ids = (x) => (x.j && x.j.gulfCalendar ? x.j.gulfCalendar.findings.map((f) => f.id) : null), find = (x, id) => (x.j && x.j.gulfCalendar ? x.j.gulfCalendar.findings.find((f) => f.id === id) : null);
+  const short = (x) => (x.err ? x.t.slice(0, 200) : JSON.stringify(x.j.gulfCalendar || 'no gulfCalendar section').slice(0, 500));
+  // made-up models, written from the repo's own files: the pack's test model; the generator's 2018-2030 calendar from
+  // before the pack (no announced dates); imported calendars; no calendar; our calendar with another weekend form
+  const dax = (file) => fs.readFileSync(path.join(REPO, 'scripts/gulf-calendar/test-model', file), 'utf8').replace(/\r\n/g, '\n');
+  const calc = (name, expr) => ({ name, columns: [], partitions: [{ name, mode: 'import', source: { type: 'calculated', expression: expr } }] });
+  const mq = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Date"}, {}) in Source' } }];
+  const col = (name, dataType) => ({ name, dataType, sourceColumn: name });
+  const packMeasures = dax('measures.dax').split(/\n(?=    MEASURE 'Sales'\[)/).slice(1).map((b) => { const m = b.match(/MEASURE 'Sales'\[([^\]]+)\] =\n([\s\S]*?)(?=\nEVALUATE|$)/); return { name: m[1], expression: m[2] }; });
+  const salesT = (measures) => ({ name: 'Sales', columns: [col('Date', 'dateTime'), col('Amount', 'double')], partitions: mq('Sales'), measures });
+  const write = (file, tables) => fs.writeFileSync(path.join(ROOT, file), JSON.stringify({ compatibilityLevel: 1567, model: { tables, relationships: tables.length > 1 ? [{ name: 'r', fromTable: 'Sales', fromColumn: 'Date', toTable: tables[0].name, toColumn: 'Date' }] : [] } }));
+  const packCal = dax('calendar.dax').replace(/^Calendar =\n/, '');
+  write('gulf-pack.bim', [calc('Calendar', packCal), salesT(packMeasures)]);
+  const base = JSON.parse(fs.readFileSync(path.join(REPO, 'scripts/tests/fixtures/gulf-calendar/baseline.json'), 'utf8')).cg['10'].dax.replace(/^Calendar =\n/, '');
+  write('gulf-2018.bim', [calc('Calendar', base), salesT([{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }])]);
+  const imported = (cols) => ({ name: 'Calendar', columns: [col('Date', 'dateTime')].concat(cols.map((c) => col(c, /^Is /.test(c) ? 'boolean' : 'int64'))), partitions: mq('Calendar') });
+  write('gulf-imported.bim', [imported(['Hijri Year', 'Hijri Month Number', 'Hijri Day', 'Is Ramadan', 'Ramadan Day', 'Is Eid al-Fitr', 'Is Eid al-Adha', 'Is Weekend']), salesT([{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }])]);
+  write('gulf-hijri-only.bim', [imported(['Hijri Year', 'Hijri Month Number', 'Hijri Day']), salesT([{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }])]);
+  write('gulf-none.bim', [{ name: 'Sales', columns: [col('Amount', 'double'), col('Region', 'string')], partitions: mq('Sales'), measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }]);
+  const weekendLine = packCal.split('\n').find((l) => l.trim().startsWith('"Is Weekend", '));
+  write('gulf-other-weekend.bim', [calc('Calendar', packCal.replace(weekendLine, '        "Is Weekend", WEEKDAY ( [Date], 2 ) > 5,')), salesT(packMeasures)]);
+
+  // the generator's own calendar 2022-2027 (Umm al-Qura, fixed Saturday-Sunday), with the Ramadan measures
+  const uae = await ask({ path: 'dax-project', country: 'uae', asOf: ASOF }), had = !!(uae.j && uae.j.gulfCalendar), g = had ? uae.j.gulfCalendar : { country: {}, calendar: {}, datesComparedWith: {}, fixes: {} }, est = find(uae, 'GC_ESTIMATES') || { items: [], ar: {} };
+  check(!uae.err && had && g.scored === false && g.country.code === 'uae' && g.calendar.table === 'Calendar' && g.calendar.kind === 'dataarcus-dax' && JSON.stringify(ids(uae)) === '["GC_ESTIMATES"]' && est.count === 3 && est.items.length === 3
+    && est.items.map((i) => i.event).join() === 'Ramadan 1448,Eid al-Fitr 1448,Eid al-Adha 1448' && est.source === 'files' && /[؀-ۿ]/.test(est.ar.title),
+    `gulfCalendar, the generator's calendar, UAE: ${short(uae)}`);
+  const cgf = g.fixes.calendarGenerator, mbf = g.fixes.measureBuilder;
+  check(!!cgf && /dataarcus\.com\/tools\/dax-calendar-table-generator\.html/.test(cgf.tool) && cgf.settings.firstDate === '2022-01-01' && cgf.settings.lastDate === '2027-12-31' && cgf.settings.weekend === 'UAE: Sat + Sun since 2022'
+    && cgf.settings.announcedDates === 'on' && !!mbf && /dax-measure-builder\.html/.test(mbf.tool) && mbf.tick.length === 6 && mbf.tick.every((n) => /^Eid al-(Fitr|Adha) Window/.test(n))
+    && !/VAR |CALENDAR \(|DEFINE/.test(JSON.stringify(g.fixes)), `gulfCalendar fixes must point to the website tools with the settings, and hold no DAX: ${JSON.stringify(g.fixes).slice(0, 600)}`);
+  const ksa = await ask({ path: 'dax-project', country: 'ksa', asOf: ASOF }), wk = find(ksa, 'GC_WEEKEND');
+  check(!!wk && wk.count === 626 && wk.items.length > 0 && wk.items.length <= 50 && wk.items[0].date === '2022-01-02' && /Saudi Arabia/.test(wk.title) && /626/.test(wk.why),
+    `gulfCalendar, Saudi Arabia on a Saturday-Sunday calendar: ${wk ? wk.count + ' days, first ' + JSON.stringify(wk.items[0]) : short(ksa)}`);
+  // (owner 2026-10-03: Saudi Arabia's announced dates 2018-2026 are sourced and match the UAE's, so Saudi Arabia is
+  // compared with the announced dates too; before, every country but the UAE was compared with Umm al-Qura)
+  check(!ksa.err && !!ksa.j.gulfCalendar && !find(ksa, 'GC_DATES_DIFFER') && !find(ksa, 'GC_DATES_NOTE') && ksa.j.gulfCalendar.datesComparedWith.with === 'uae-announced' && /match Saudi Arabia's for 2018-2026/.test(ksa.j.gulfCalendar.datesComparedWith.note) && g.datesComparedWith.with === 'uae-announced',
+    `gulfCalendar, Saudi Arabia's dates are compared with the announced ones: ${short(ksa)}`);
+  const none = await ask({ path: 'dax-project', asOf: ASOF });
+  check(!none.err && !!none.j.gulfCalendar && none.j.gulfCalendar.country.code === 'uae' && had && JSON.stringify(none.j.gulfCalendar.findings) === JSON.stringify(g.findings), `gulfCalendar without a country, on a model with Hijri columns: ${short(none)}`);
+  const late = await ask({ path: 'dax-project', country: 'uae', asOf: '2027-06-01' }), early = find(late, 'GC_ENDS_EARLY');
+  check(!!early && early.items[0].calendarEnds === '2027-12-31' && early.items[0].ramadanFrom === '2028-01-28' && early.items[0].hijriYear === 1449 && !find(uae, 'GC_ENDS_EARLY'), `gulfCalendar, a calendar that ends before the next Ramadan: ${short(late)}`);
+  // the pack's test model: clean for the UAE; Saudi Arabia: the Fridays and Sundays from 2022 on
+  const pack = await ask({ path: 'gulf-pack.bim', country: 'uae', asOf: ASOF });
+  check(!pack.err && !!pack.j.gulfCalendar && JSON.stringify(ids(pack)) === '[]' && pack.j.gulfCalendar.calendar.kind === 'dataarcus-dax' && pack.j.gulfCalendar.cantTell.length === 0, `gulfCalendar, the pack's test model, UAE: ${short(pack)}`);
+  const packKsa = await ask({ path: 'gulf-pack.bim', country: 'ksa', asOf: ASOF });
+  check(!!find(packKsa, 'GC_WEEKEND') && find(packKsa, 'GC_WEEKEND').count === 939, `gulfCalendar, the pack's test model, Saudi Arabia: ${find(packKsa, 'GC_WEEKEND') ? find(packKsa, 'GC_WEEKEND').count : short(packKsa)}`);
+  // the dates per country: Saudi Arabia as the UAE (announced); Qatar, Kuwait, Bahrain, Oman have no sourced dates,
+  // so a start that differs from Umm al-Qura is only a low note, never a "wrong" finding
+  const kAnn = ((packKsa.j && packKsa.j.gulfCalendar && packKsa.j.gulfCalendar.fixes.calendarGenerator) || { settings: {} }).settings.announcedDates;
+  check(!packKsa.err && !!packKsa.j.gulfCalendar && JSON.stringify(ids(packKsa)) === '["GC_WEEKEND"]' && /^on\b/.test(String(kAnn)) && /match Saudi Arabia's for 2018-2026/.test(String(kAnn)),
+    `gulfCalendar, the pack's test model, Saudi Arabia: only the weekend, and announced dates on with the reason: ${JSON.stringify(ids(packKsa))} / ${kAnn}`);
+  const packQat = await ask({ path: 'gulf-pack.bim', country: 'qat', asOf: ASOF }), qn = find(packQat, 'GC_DATES_NOTE');
+  const qAnn = ((packQat.j && packQat.j.gulfCalendar && packQat.j.gulfCalendar.fixes.calendarGenerator) || { settings: {} }).settings.announcedDates;
+  check(!!qn && qn.level === 'low' && qn.count === 1 && JSON.stringify(qn.items[0]) === JSON.stringify({ event: 'Ramadan 1439', model: '2018-05-17', ummAlQura: '2018-05-16' }) && /official announcement/.test(qn.title + qn.why + qn.fix) && /[\u0600-\u06FF]/.test(qn.ar.title)
+    && !find(packQat, 'GC_DATES_DIFFER') && find(packQat, 'GC_WEEKEND').count === 939 && /^your choice/.test(String(qAnn)) && /official announcement/.test(String(qAnn)) && packQat.j.gulfCalendar.datesComparedWith.with === 'umm-al-qura',
+    `gulfCalendar, the pack's test model, Qatar: a low note, not a finding: ${short(packQat)} / ${qAnn}`);
+  const k18 = await ask({ path: 'gulf-2018.bim', country: 'ksa', asOf: ASOF }), kd = find(k18, 'GC_DATES_DIFFER');
+  check(!!kd && kd.count === 1 && JSON.stringify(kd.items[0]) === JSON.stringify({ event: 'Ramadan 1439', model: '2018-05-16', announced: '2018-05-17' }), `gulfCalendar, a calendar without the announced dates, Saudi Arabia: ${kd ? JSON.stringify(kd.items) : short(k18)}`);
+  const y18 = await ask({ path: 'gulf-2018.bim', country: 'uae', asOf: ASOF }), dd = find(y18, 'GC_DATES_DIFFER');
+  check(!!dd && dd.count === 1 && JSON.stringify(dd.items[0]) === JSON.stringify({ event: 'Ramadan 1439', model: '2018-05-16', announced: '2018-05-17' }), `gulfCalendar, a calendar without the announced dates: ${dd ? JSON.stringify(dd.items) : short(y18)}`);
+  // an imported calendar with no Hijri columns: no section unless a country is given
+  const bimNo = await ask({ path: 'bim-project', asOf: ASOF }), bimUae = await ask({ path: 'bim-project', country: 'uae', asOf: ASOF });
+  check(!bimNo.err && !('gulfCalendar' in bimNo.j), `no gulfCalendar section without a country on a model without Hijri columns: ${short(bimNo)}`);
+  check(!!ids(bimUae) && JSON.stringify(ids(bimUae)) === '["GC_NO_HIJRI"]' && bimUae.j.gulfCalendar.calendar.kind === 'imported', `gulfCalendar, an imported calendar without Hijri columns: ${short(bimUae)}`);
+  const imp = await ask({ path: 'gulf-imported.bim', asOf: ASOF });
+  check(JSON.stringify(ids(imp)) === '["GC_NO_MEASURES"]' && ['weekend', 'dates'].every((c) => imp.j.gulfCalendar.cantTell.some((x) => x.check === c)), `gulfCalendar, an imported calendar with Hijri and weekend columns: ${short(imp)}`);
+  const ho = await ask({ path: 'gulf-hijri-only.bim', country: 'uae', asOf: ASOF });
+  check(JSON.stringify(ids(ho)) === '["GC_NO_FLAGS","GC_NO_MEASURES"]', `gulfCalendar, Hijri columns only: ${short(ho)}`);
+  const nc = await ask({ path: 'gulf-none.bim', country: 'uae', asOf: ASOF });
+  check(JSON.stringify(ids(nc)) === '["GC_NO_CALENDAR"]', `gulfCalendar, no calendar: ${short(nc)}`);
+  const ow = await ask({ path: 'gulf-other-weekend.bim', country: 'ksa', asOf: ASOF });
+  check(!ow.err && !!ow.j.gulfCalendar && !find(ow, 'GC_WEEKEND') && ow.j.gulfCalendar.cantTell.some((x) => x.check === 'weekend'), `gulfCalendar, another form of Is Weekend must be "can't tell", not a finding: ${short(ow)}`);
+  const egy = await ask({ path: 'dax-project', country: 'egy' });
+  check(egy.err && ['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn'].every((c) => egy.t.includes(c)), `gulfCalendar, an unknown country must be refused with the list: ${egy.t.slice(0, 200)}`);
+  // the country never changes round 2's week start, the score or any finding
+  const s0 = await ask({ path: 'sort.bim' }), s1 = await ask({ path: 'sort.bim', country: 'uae', asOf: ASOF });
+  check(!s0.err && !s1.err && !!s0.j.fixes.MONTH_SORT.fixScript && JSON.stringify(s0.j.fixes) === JSON.stringify(s1.j.fixes), `gulfCalendar: the country changed the sort or format fixes, or was refused: ${s1.err ? s1.t.slice(0, 120) : ''}`);
+  const same = [];
+  for (const p of ['dax-project', 'bim-project', 'tmdl-project', 'sample.pbit']) {
+    const a = await ask({ path: p }), b = await ask({ path: p, country: 'ksa', asOf: ASOF });
+    if (a.err || b.err || JSON.stringify([a.j.score, a.j.stats, a.j.findings, a.j.skipped]) !== JSON.stringify([b.j.score, b.j.stats, b.j.findings, b.j.skipped])) same.push(p);
+  }
+  check(!same.length, `gulfCalendar: the score or the findings moved with a country on: ${same}`);
+}
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);

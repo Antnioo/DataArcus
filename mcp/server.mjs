@@ -7,7 +7,7 @@ import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { Bind, Fix, Health, Pbip, ROOT, applyColumnTypes, inside, loadModel, prepareRoot, rootProblem, summary } from './lib/model.mjs';
+import { Bind, Fix, Gulf, Health, Pbip, ROOT, applyColumnTypes, inside, loadModel, prepareRoot, rootProblem, summary } from './lib/model.mjs';
 import { E, themeDesign, planLayout, pageOf, contrastReport, freeFile } from './lib/design.mjs';
 
 // the version is in one place: mcp/package.json
@@ -63,10 +63,12 @@ server.registerTool('check_model_health', {
   inputSchema: {
     path: modelPath, maxItems: z.number().int().min(1).max(200).default(15).describe('Objects listed per finding'),
     weekStart: z.enum(['sunday', 'monday', 'saturday']).default('sunday').describe('The first day of the week, used only when a fix script has to add a weekday number column to sort day names: sunday (default: Saudi Arabia and most of the Gulf), monday (a Saturday-Sunday weekend, as in the UAE since 2022), or saturday'),
+    country: z.enum(['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn']).optional().describe('For a Gulf model: the country whose official weekend the calendar is checked against (uae, ksa, qat, kwt, bhr, omn). Giving it adds the gulfCalendar section (not part of the score): Hijri, Ramadan and Eid columns, the weekend, the Ramadan and Eid dates, the range of the calendar. Without it the section appears only when the model already has Hijri or Ramadan columns, checked for the UAE. It never changes weekStart'),
+    asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('The date the gulfCalendar section counts as today (YYYY-MM-DD; default: today). For tests'),
     columnTypes: z.record(z.string(), z.union([z.string(), z.number()])).optional()
       .describe('Only when a TMDL project skipped checks: column types read from the same model open in Power BI Desktop, as { "Table[Column]": type }. The type is a model.bim name (string, int64, double, decimal, dateTime, boolean) or the number INFO.COLUMNS returns (2, 6, 8, 10, 9, 11), also as text. Fills only columns the files leave without a type.')
   }, annotations: READS
-}, safe(async ({ path: p, maxItems, columnTypes, weekStart }) => {
+}, safe(async ({ path: p, maxItems, columnTypes, weekStart, country, asOf }) => {
   const m = loadModel(p);
   const typed = columnTypes ? applyColumnTypes(m.tmsl, columnTypes) : undefined;
   const r = Health.analyze(m.tmsl, m.report);
@@ -90,9 +92,13 @@ server.registerTool('check_model_health', {
       fixes[id] = Object.assign({ suggested: s.suggested, byHand: s.byHand }, s.script ? { fixScript: s.script, howToApply } : {});
     }
   }
+  // the Gulf calendar check: its own section, never scored; shown when a country is given or the model already has
+  // Hijri or Ramadan columns. Read from the model files only; its fixes name the website tools and their settings.
+  const gulfCalendar = country || Gulf.hasGulfColumns(m.tmsl) ? Gulf.analyze(m.tmsl, { country: country || 'uae', asOf, maxItems }) : undefined;
   return text({
     source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report,
     fixes: Object.keys(fixes).length ? fixes : undefined,
+    gulfCalendar,
     // what was done with columnTypes: types used, types the files already had (kept), names and types that could not be used
     columnTypes: typed,
     findings: r.findings.map((f) => { const rule = Health.RULES[f.id] || {}; const en = rule.en || [f.id, '', ''];
