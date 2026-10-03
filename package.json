@@ -11,7 +11,7 @@
   "devDependencies": {
     "@fontsource/inter": "^5.3.0",
     "aos": "2.3.4",
-    "bootstrap": "5.3.3",
+    "bootstrap": "5.3.8",
     "bootstrap-icons": "1.13.1",
     "playwright-core": "1.63.0",
     "pngjs": "^7.0.0",
