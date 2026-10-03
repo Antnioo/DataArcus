@@ -39,13 +39,37 @@ Court's announcement, used where the WAM page was not found. Umm al-Qura is the 
 
 Checks that hold for every row (the generator's test suite `gulf-calendar` checks them): Eid al-Fitr is 29 or 30
 days after Ramadan's first day; each announced date is within one day of Umm al-Qura; every estimate equals
-Umm al-Qura; the weekday printed above is the date's weekday. Where the reports above mention Saudi Arabia, it
-announced the same date as the UAE; Saudi dates are not sourced separately here.
+Umm al-Qura; the weekday printed above is the date's weekday. Saudi Arabia's dates are sourced separately below
+(all the same as the UAE's, 2018-2026).
 
 **How the generator uses them:** with the option on, the Hijri month starts of Ramadan (9), Shawwal (10) and Dhu
 al-Hijjah (12) in its embedded table are replaced by these dates (Dhu al-Hijjah starts 9 days before Eid al-Adha),
 so every Hijri column (month, day, Ramadan Day, the flags) follows the announcement. Other months, and years outside
 2018-2030, stay on Umm al-Qura.
+
+## Ramadan and Eid in Saudi Arabia, 2018-2026
+Sourced 2026-10-03 (owner's decision D2). In Saudi Arabia the Supreme Court's moon-sighting committee decides, and
+the Royal Court or the Supreme Court announces it through SPA (the Saudi Press Agency). "**SPA**" is that official
+announcement; "report" is Arab News or Saudi Gazette reporting it, used where no SPA page with the date in its title
+or text could be read (SPA's pages load their text by script, so only titles and search excerpts were readable).
+9 of the 27 dates are SPA, 18 reports.
+
+| Hijri year | Ramadan, 1st day | Eid al-Fitr (1 Shawwal) | Eid al-Adha (10 Dhu al-Hijjah) | Same as the UAE? | Umm al-Qura differs? |
+|---|---|---|---|---|---|
+| 1439 | Thu 2018-05-17: report, [Saudi Gazette](https://saudigazette.com.sa/article/534941/SAUDI-ARABIA/Ramadan-to-begin-on-Thursday) | Fri 2018-06-15: report, [Arab News](https://www.arabnews.com/saudi-arabia/saudi-arabia-celebrates-eid-al-fitr-on-friday-1320956) | Tue 2018-08-21: report, [Saudi Gazette](https://saudigazette.com.sa/article/540960) | Yes | **Yes: Ramadan 2018-05-16** |
+| 1440 | Mon 2019-05-06: report, [Saudi Gazette](https://saudigazette.com.sa/article/565624) | Tue 2019-06-04: report, [Saudi Gazette](https://saudigazette.com.sa/article/568007/SAUDI-ARABIA/Eid-Al-Fitr-in-Gulf-on-Tuesday) | Sun 2019-08-11: report, [Arab News](https://www.arabnews.com/node/1534151/saudi-arabia) | Yes | No |
+| 1441 | Fri 2020-04-24: report, [Arab News](https://www.arabnews.com/node/1660636/saudi-arabia) | Sun 2020-05-24: report, [Arab News](https://www.arabnews.com/node/1678461/saudi-arabia) | Fri 2020-07-31: report, [Saudi Gazette](https://saudigazette.com.sa/article/595750/SAUDI-ARABIA/Saudi-Arabia-announces-July-31-as-first-day-of-Eid-Al-Adha) | Yes | No |
+| 1442 | Tue 2021-04-13: report, [Arab News](https://www.arabnews.com/node/1841176/amp) | Thu 2021-05-13: **SPA**, [Royal Court: Tomorrow is Last Day of Ramadan and Thursday is First Day of Eid Al-Fitr](https://www.spa.gov.sa/w1556858) | Tue 2021-07-20: report, [Saudi Gazette](https://saudigazette.com.sa/article/608660/SAUDI-ARABIA/Supreme-Court-Arafat-day-on-July-19-first-day-of-Eid-Al-Adha-on-July-20) | Yes | No |
+| 1443 | Sat 2022-04-02: report, [Arab News](https://www.arabnews.com/node/2055161/saudi-arabia) | Mon 2022-05-02: report, [Arab News](https://www.arabnews.com/node/2073716/saudi-arabia) | Sat 2022-07-09: report, [Saudi Gazette](https://saudigazette.com.sa/article/622394) | Yes | No |
+| 1444 | Thu 2023-03-23: report, [Arab News](https://www.arabnews.com/node/2272956/saudi-arabia) | Fri 2023-04-21: report, [Saudi Gazette](https://saudigazette.com.sa/article/631803/SAUDI-ARABIA/Eid-Al-Fitr-to-begin-on-Friday-in-Saudi-Arabia) | Wed 2023-06-28: report, [Saudi Gazette](https://saudigazette.com.sa/article/633482/SAUDI-ARABIA/Supreme-Court-Arafat-Day-falls-on-June-27-Eid-Al-Adha-on-June-28) | Yes | No |
+| 1445 | Mon 2024-03-11: **SPA**, [Royal Court: Ramadan Begins in Saudi Arabia Tomorrow, March 11](https://www.spa.gov.sa/en/N2062566) | Wed 2024-04-10: **SPA**, [Supreme Court: Tomorrow is the Last Day of Ramadan and Wednesday is the First Day of Eid Al-Fitr 1445 Hijri](https://www.spa.gov.sa/en/N2080637) | Sun 2024-06-16: **SPA**, [Supreme Court: Friday is the start of Dhul-Hijjah, Arafat on Saturday 15/06/2024 (French edition)](https://spa.gov.sa/fr/N2118059) | Yes | No |
+| 1446 | Sat 2025-03-01: **SPA**, [Royal Court: Ramadan Begins in Saudi Arabia Tomorrow, March 1, 2025](https://spa.gov.sa/en/N2272538) | Sun 2025-03-30: report, [Saudi Gazette](https://saudigazette.com.sa/article/650534/SAUDI-ARABIA/Saudi-Arabia-announces-Sunday-as-first-day-of-Eid-Al-Fitr) | Fri 2025-06-06: **SPA**, [Supreme Court: Wednesday Marks Start of Dhul-Hijjah, Arafat Day on Thursday, June 5](https://www.spa.gov.sa/en/N2327792) | Yes | No |
+| 1447 | Wed 2026-02-18: **SPA**, [Royal Court: Ramadan Begins in Saudi Arabia Tomorrow, February 18, 2026](https://www.spa.gov.sa/en/N2516805) | Fri 2026-03-20: **SPA**, [Supreme Court Announces Friday First Day of Eid Al-Fitr](https://www.spa.gov.sa/en/N2541040) | Wed 2026-05-27: **SPA**, [Supreme Court: Monday Marks Start of Dhul-Hijjah, Arafat Day on Tuesday, May 26](https://www.spa.gov.sa/en/N2587986) | Yes | No |
+
+**Every Saudi date is the UAE's date**, and only one differs from Umm al-Qura: Ramadan 1439 started on Thursday 17
+May 2018 after the crescent was not seen on 15 May (Sha'ban completed 30 days), while Umm al-Qura's 1 Ramadan 1439
+is Wednesday 16 May 2018, as in the UAE. The Saudi dates are **not** in `assets/js/gulf-dates.js`: its `events` list has
+no country, so a second country needs a change to the file's structure (see "Open").
 
 ## Official weekends in the GCC
 Government (public sector) weekends. Private companies may keep a different one, and Sharjah's government has had a
@@ -68,3 +92,7 @@ checked, so a calendar that starts before it shows that weekend for every earlie
 - The Bahrain, Kuwait and Qatar weekend sources are news reports of the decision, not the decrees themselves.
 - Several past Ramadan and Eid dates are sourced to a newspaper's report of the official announcement; the WAM
   pages for those years were not found in this check.
+- Saudi Arabia's 2018-2026 dates are in this file only. To use them in the generator or the MCP, `gulf-dates.js`
+  needs a country for its dates (decision for the owner), for example `announced: { uae: [...], ksa: [...] }`
+  beside the current `events`, which stays the UAE's so the generator's output does not change. 18 of the 27 Saudi
+  dates are newspaper reports; the SPA pages for those years were not found or not readable.
