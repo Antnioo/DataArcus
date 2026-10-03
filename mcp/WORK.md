@@ -6,7 +6,7 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 
 ## Where things stand
 - **Merged 2026-10-03 (reviewer):** round 1 (`80d3a00`); the Microsoft plugin test (`bc05275`); privacy statement and
-  product spec (`515409d`: `mcp/PRIVACY.md`, `mcp/PRODUCT_SPEC.md`); the 10 golden tasks and test models (`39b5ab7`);
+  product spec (`515409d`: `mcp/PRIVACY.md`, `mcp/PRODUCT_SPEC.md`); the golden tasks (10 then, 11 now) and test models (`39b5ab7`);
   employer-sector details off the public site and the Health Check case study on Microsoft's public sample
   (`0a328b5`); round 2 (`ada2942`: right-to-left page buttons, month/day order in charts, Arabic display names, sort
   and format fixes as health findings with `weekStart`, the tooltip's base measure, KPI title padding; Desktop: 60
@@ -68,7 +68,7 @@ date). The plan is in `mcp/ROADMAP.md`, "Plan of 2026-10-02".
    (Anthropic) sees through the tool results; return metadata only, never data values, unless the user asks; the
    privacy note and `mcp/PRODUCT_SPEC.md`.
 4. **Minimum packaging** (clean-machine install: Claude + DataArcus + a sample project + a finished report) and the
-   **10 golden tasks** (permanent real requests, including a large model of hundreds of tables), run before every release.
+   **11 golden tasks** (permanent real requests, including a large model of hundreds of tables), run before every release.
 5. **Private beta and free before/after case studies** (owner's outreach starts the week of 4 October).
 - **The split of `pbip-export.js` is deferred until after the beta**, unless the overnight plan (branch
   `plan/split-pbip-export`) shows it takes about one evening; the owner decides when he reads it.
@@ -179,6 +179,109 @@ code. No fixture may change (if one would: stop for the owner's go).
 | Desktop, item 8 | | the website's health page and the MCP show `bookmark "<name>"` for a broken field in a bookmark (no Desktop change: the finding is text; checked on the page) |
 | Desktop, item 9 | | following `howToApply` to the letter on `6-sort-sample` ends with tables and slicers in order and no error |
 | Desktop, item 10 | | the script from the TMDL project shows no `lineageTag` line removed in Preview, and the measures' tags are the same before and after Apply |
+
+## Round 4 in progress: large models and missing measures (owner's go 2026-10-03, in advance for every step; branch `fix/round-4-models`, from main `b76bbbf`)
+Owner's decisions: large models get a summary first, details on request; a model with fewer measures than KPI cards
+gets fewer cards and is told why (never an empty card). Not in this round: task 9's raw schema message, zod 4, the
+packaging build, the Gulf calendar's later items, the /ar/ pages.
+
+**State (2026-10-03): built, pushed, Desktop checked; waiting for the reviewer.**
+Plan `4309775`; tests first `f83c169`; item 3's engine `162a24a`; item 4 `5763719`; items 1, 2, 3 in the MCP
+`eacbb00`; docs, golden baselines and item 5 in the commit after.
+- **Every expected number came out**, with two corrections to my own plan: the checks are 216, not 213; and the
+  summary's "other tables" are 235 (the calendar is one), not 234.
+- **Sizes on Large Synthetic:** `read_model` 178,303 → **10,380** characters; `check_model_health` 162,909 →
+  **17,997**; the five Logistics tables in full: 4,827.
+- **Existing expectations this decision changed** (old → new, why), all on Health Test, which has 2 measures:
+  the Arabic design report had a visual at each of the design's 3 and 4 KPI slots → 2 cards per page at the engine's
+  2-card slots; its "mirrored" check looked for the first of 3 cards at x 1388, 508 wide → the first of 2 at 1125,
+  771 wide; the slide-in panel report the same. Why: no card is written without a field any more.
+- **Not in the plan, built because the first run showed it:** with no measures at all the charts had no value
+  either (4 more validator errors), so they are left out and named (`kpiCards.leftOutVisuals`); the report then has
+  its header, filters and table only. The decision to confirm: this, or refuse the report on a model without
+  measures.
+- **Tests:** MCP 195 → 216; the full website run 17 of 17 with the engine and picker changes (design-engine 598,
+  pbip 71, both theme generators 883, layout 512: counts unchanged; no fixture changed).
+- **Golden tasks (tool level):** 7 FAIL → PASS (validator 11 → 0); 8 FAIL → PASS (3 → 0); 10 FAIL → PASS when the
+  agent gives the focus. `mcp/GOLDEN-TASKS.md` has the new baselines.
+- **Desktop:** two 2-card reports (English and Arabic, 1080), both pages each: as expected
+  (`scripts/tests/DESKTOP-TESTS.md`, "round 4"); validator 0.
+- **CI:** the first push failed on my new "small answers unchanged" check (the answer's path separator differs on
+  Linux); the check now normalises it (`044d709`), green.
+- **Next step:** the reviewer's review and merge; then zod 4, the
+  findings image, the packaging build.
+
+### Measured before planning (main `b76bbbf`, `mcp/test-models/golden-baseline.mjs` and a one-off probe)
+- Task 10: `read_model` on Large Synthetic **178,303 characters**; `suggest_fields` picks AR Invoices and Bookings
+  (the first tables by file name); `create_report` validator 0.
+- **Also over the limit, not in the brief: `check_model_health` on Large Synthetic is now 162,909 characters** (it was
+  8,127 when the golden baseline was written). 146,965 of them are round 2's `fixes.NO_FORMAT` (the script for every
+  measure without a format: 83,814; the suggestion list: 54,753). Same decision (a summary first, details on
+  request), so it is capped here as item 1b; said in the report.
+- Task 7: 11 validator errors, all `cardVisual` without a field (the KPI cards of both pages and the tooltip pages'
+  cards). Task 8: 3 (the model has 2 measures for 4 cards).
+
+### What "large" means (one rule for the three tools)
+A model is large when its full `read_model` answer would be longer than **40,000 characters**: about 10,000 tokens,
+the line where Claude Code starts warning, and far below Desktop's 150,000. Every small fixture is under 6,000, so
+their answers don't change.
+
+### The items
+1. **`read_model` on a large model** (`mcp/lib/model.mjs`, `mcp/server.mjs`). The default answer is a summary:
+   counts (tables, columns, measures, relationships), the date tables, the measure display folders with their
+   tables ("areas": what a user would name), every table that has measures with its numbers of measures, visible
+   columns and related tables, the other tables' names, and how to ask for details. **`tables: ["Shipments",
+   "Carrier"]`** returns those tables in full (today's shape), on any model; names that don't exist are listed
+   back; an answer that would still pass 40,000 characters stops at a table boundary and names the tables left out.
+   **1b. `check_model_health`:** a fix script and its suggestion list cover at most `maxItems` objects (15 by
+   default, as the findings do) and at most 30,000 characters, and say how many they cover of how many.
+2. **`suggest_fields` on a large model** (same files; the picker itself, `pbip-bind.js`, is unchanged). New inputs
+   `focus` (a word the user said: "logistics") and `tables`. The scope is: the tables whose name, or whose measures'
+   display folder, contains the focus word (or the named tables), the tables related to them, and the date tables,
+   in the model's own order. The picker then runs on the scope. On a large model without a focus the tool picks
+   nothing and says it needs one, listing the areas. A focus that matches nothing is told, with the areas.
+   `create_report` takes the same two inputs and follows the same rule (on a large model it refuses without one).
+3. **Fewer measures than KPI cards** (`assets/js/design-engine.js`: `computeSlots` and `projectPages` take a card
+   count, additive, so no design fixture moves; `assets/js/pbip-export.js`: no tooltip page when there is no measure
+   for its card; `mcp/lib/design.mjs`, `mcp/server.mjs`). `plan_layout` takes `kpis` 0 to 6 (it refused under 3).
+   `create_report` builds as many KPI cards as the model has measures a card can show, on every page (none: no KPI
+   row, and the charts take its room), and says in `kpiCards` and `reportNotes` how many were asked, how many were
+   built, which measures were used and why the rest are missing. Hand-placed pages: KPI slots beyond the measures
+   are left out, and named. No card without a field is ever written.
+4. **"Margin" is not a percentage by its name alone** (`assets/js/pbip-bind.js`, shared; `mcp/server.mjs`'s
+   `modelNotes`). A measure named margin or share counts as a percentage only when its format has %, or it has no
+   format and its expression divides (DIVIDE or /); a name with %, pct, percent, ratio or rate still does.
+5. **"10 golden tasks" → 11** in `mcp/WORK.md` and `mcp/ROADMAP.md`. (The reviewer: `packaging/PACKAGING.md` in
+   dataarcus-engine says 10 too; not edited from here.)
+
+### Expected results (written before any run)
+| What | Expected |
+|---|---|
+| `read_model`, Large Synthetic | a summary under **20,000** characters (178,303 today): 300 tables, 3,000 columns, 975 measures, 416 relationships; date table Calendar; 65 tables with measures; an area "Logistics" |
+| `read_model`, `tables: ["Shipments", "Carrier", "Nope"]` | exactly Shipments and Carrier in full, `notFound: ["Nope"]`, under 40,000 characters |
+| `read_model` on the small fixtures (tmdl-project, bim-project, dax-project, sample.pbit) | byte for byte today's answers |
+| `suggest_fields`, Large Synthetic, no focus | no picks; `needsFocus`, the areas listed (Logistics among them) |
+| `suggest_fields`, `focus: "logistics"`, 4 KPIs (worked out with today's picker on the scope chosen by hand: the 5 Logistics facts, the 17 tables they relate to besides the calendar, the calendar) | scope **23 tables**; KPIs `Shipments[Shipments Total Net Amount]`, `Deliveries[Deliveries Total Tax Amount]`, `Freight Costs[Freight Costs Total Tax Amount]`, `Freight Costs[Freight Costs Units Share %]`; time axis `Calendar[Month Name]`; categories `Carrier[Carrier Group]` and `Route[Route Group]`; slicers `Calendar[Year]`, `Carrier[Carrier Group]`, `Route[Route Group]` |
+| `suggest_fields`, `focus: "zzz"` | no picks; told that nothing matches, with the areas |
+| `create_report`, Large Synthetic | without a focus: refused, asking for one; with `focus: "logistics"`: the KPI cards carry the four measures above, validator 0 |
+| `check_model_health`, Large Synthetic | under **40,000** characters (162,909 today); `fixes.NO_FORMAT` covers 15 measures and says of how many; score and findings unchanged |
+| `plan_layout`, `kpis` 0, 1, 2 | accepted: 0, 1 and 2 KPI slots; 7 still refused |
+| `create_report` on Health Test (2 measures), a 4-card design | 2 KPI cards on each page; `kpiCards` asked 4, built 2, the two measures named; no visual without a field; **validator 0** (3 today) |
+| `create_report` on Plain Orders (no measures) | no KPI card and no tooltip page; the notes say the model has no measures; **validator 0** (11 today) |
+| hand-placed page with 4 KPI slots on Health Test | 2 cards written, 2 slots named as left out |
+| a made-up model: Total Margin = SUM, no format; Net Margin = SUM, `#,0`; Gross Margin = DIVIDE, no format; Margin % = DIVIDE, no format | `modelNotes` flags Gross Margin and Margin % only; Total Margin is not picked as the ratio card |
+| Large Synthetic, "Bookings Total Margin" (golden task 10's note) | not flagged as a percentage |
+
+- **Tests:** MCP `npm test` 195 → **216** (21 new checks: the plan first said 18, a miscount of the three plan_layout checks and two others; 18 fail first, and "small answers unchanged", "small fixes whole" and "7 cards refused"
+  hold before and after). Website suites: no count changes expected; `design-engine` (598), `pbip` (71), both
+  theme generator suites and `layout` must pass unchanged, since the engine and the writer are only added to.
+- **Fixtures:** none may change (`cases.json`, `project-pages.json`): proved by the suites; if one would, stop.
+- **Golden tasks at tool level, expected:** 7 FAIL → PASS on the validator (0 errors, no empty card; the agent-level
+  part stays not run); 8 FAIL → PASS (0 errors); 10 FAIL → PASS at tool level when the agent gives the focus
+  (`read_model` under 20,000, KPIs from Logistics, no margin flagged, every answer under 40,000).
+- **Desktop:** one report with 2 KPI cards (Health Test's model has no data, so the made-up `5-tmdl-sample` with a
+  2-card design), English and Arabic at 1080, through the bridge only: the two cards fill the KPI row with the usual
+  gaps, titles and numbers as on a 4-card report.
 
 ## The Gulf calendar beta cut in progress (owner's go 2026-10-03, in advance for every step; branch `feat/gulf-calendar-mcp-cut`, from main `87d9b33`)
 Only "The beta cut" of `mcp/plans/GULF-CALENDAR-MCP.md`: items **1a** (detection from the model files) and **5**

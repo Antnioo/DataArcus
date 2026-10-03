@@ -304,11 +304,15 @@ const gs = await tryCall('generate_theme', { name: 'Gulf Sales', brand: '#0F4C5C
 const gp = gs.err ? gs : await tryCall('plan_layout', { design: gs.j.design, layout: 'analysis', filters: 'end', lang: 'ar' });
 r = gp.err ? gp : await tryCall('create_report', { path: 'bim-project', name: 'Gulf Sales', design: gp.j.design, lang: 'ar' });
 if (!r.err) {
-  const dir = path.join(ROOT, 'bim-project', r.j.report), pages = readReport(dir), want = E.projectPages(gp.j.design.layout, 'ar', { second: true, panel: false });
+  // (round 4, owner 2026-10-03: this model has 2 measures a card can show, so every page has 2 KPI cards, not the
+  // design's 3 and 4 with the extra ones empty)
+  const dir = path.join(ROOT, 'bim-project', r.j.report), pages = readReport(dir), want = E.projectPages(Object.assign({}, gp.j.design.layout, { kpiCards: 2 }), 'ar', { second: true, panel: false });
   const shown = pages.filter((p) => !p.hidden), bad = slotsPlaced(shown, want);
   // (round 1: the model has a month column, so the report has two tooltip pages: by category and the monthly trend)
   check(shown.length === 2 && pages.length === 4 && !bad.length, `create_report design: ${shown.length} pages; ${bad.slice(0, 4).join(' | ')}`);
-  check(shown[0].visuals.some((v) => v.x === 1388 && v.w === 508) && JSON.stringify(shown.map((p) => p.name)) === '["تحليل","نظرة عامة"]', 'create_report design: not mirrored or page names not Arabic');
+  // (round 4: the first of 2 cards, on the right half; it was the first of 3, at 1388, 508 wide)
+  const k1 = want[0].slots.find((s) => s.kind === 'kpi');
+  check(k1.x === 1125 && k1.w === 771 && shown[0].visuals.some((v) => v.x === k1.x && v.w === k1.w) && JSON.stringify(shown.map((p) => p.name)) === '["تحليل","نظرة عامة"]', `create_report design: not mirrored or page names not Arabic (first KPI slot ${k1.x}, ${k1.w})`);
   // the Arabic labels from the engine
   const all1 = shown.map((p) => p.visuals.map((v) => v.text).join('')).join('');
   check(all1.includes('إعادة ضبط الفلاتر') && all1.includes('شعارك') && !all1.includes('Reset filters'), 'create_report design: the report labels are not Arabic');
@@ -324,7 +328,7 @@ if (!r.err) {
 // one page, and filters as a slide-in panel: a hidden group at the panel's box, the page without the rail
 r = gp.err ? gp : await tryCall('create_report', { path: 'bim-project', name: 'Gulf Panel', design: gp.j.design, lang: 'ar', secondPage: false, slidePanel: true });
 if (!r.err) {
-  const pages = readReport(path.join(ROOT, 'bim-project', r.j.report)).filter((p) => !p.hidden), want = E.projectPages(gp.j.design.layout, 'ar', { second: false, panel: true });
+  const pages = readReport(path.join(ROOT, 'bim-project', r.j.report)).filter((p) => !p.hidden), want = E.projectPages(Object.assign({}, gp.j.design.layout, { kpiCards: 2 }), 'ar', { second: false, panel: true });
   const panel = want[0].panel, bad = slotsPlaced(pages, want);
   check(pages.length === 1 && !bad.length && panel && pages[0].visuals.some((v) => v.type === 'group' && v.hidden && v.x === panel.x && v.y === panel.y && v.w === panel.w && v.h === panel.h),
     `create_report slide-in panel: ${pages.length} pages, panel ${JSON.stringify(panel)}; ${bad.slice(0, 3).join(' | ')}`);
@@ -827,6 +831,100 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     if (a.err || b.err || JSON.stringify([a.j.score, a.j.stats, a.j.findings, a.j.skipped]) !== JSON.stringify([b.j.score, b.j.stats, b.j.findings, b.j.skipped])) same.push(p);
   }
   check(!same.length, `gulfCalendar: the score or the findings moved with a country on: ${same}`);
+}
+
+// ---------- round 4: large models (a summary first, details on request) and fewer measures than KPI cards ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + e.message; } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  fs.cpSync(path.join(HERE, 'test-models/large-synthetic/Large Synthetic.SemanticModel'), path.join(ROOT, 'large/Large Synthetic.SemanticModel'), { recursive: true });
+  fs.cpSync(path.join(HERE, 'test-models/no-measures'), path.join(ROOT, 'plain'), { recursive: true });
+  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
+  const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnostics || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run'; } };
+  const f = (x) => (x ? `${x.t}[${x.m != null ? x.m : x.c}]` : null);
+  const LOGISTICS = ['Shipments[Shipments Total Net Amount]', 'Deliveries[Deliveries Total Tax Amount]', 'Freight Costs[Freight Costs Total Tax Amount]', 'Freight Costs[Freight Costs Units Share %]'];
+
+  // 1. read_model: a large model gets a summary; named tables come in full; small models answer as before
+  const big = await ask('read_model', { path: 'large' }), s = big.j || {};
+  chk(() => !big.err && big.t.length < 20000 && s.summary === true && s.counts.tables === 300 && s.counts.columns === 3000 && s.counts.measures === 975 && s.counts.relationships === 416 && JSON.stringify(s.dateTables) === '["Calendar"]'
+    && s.tablesWithMeasures.length === 65 && s.otherTables.length === 235 && s.areas.some((a) => a.area === 'Logistics' && ['Shipments', 'Shipment Legs', 'Deliveries', 'Freight Costs', 'Returns'].every((t) => a.tables.includes(t))) && /tables/.test(String(s.details)) && !('tables' in s), () => `read_model on a large model must be a summary under 20,000 characters: ${big.err ? big.t.slice(0, 200) : big.t.length + ' characters, keys ' + Object.keys(s)}`);
+  const two = await ask('read_model', { path: 'large', tables: ['Shipments', 'carrier', 'Nope'] });
+  chk(() => !two.err && two.t.length < 40000 && two.j.tables.map((t) => t.table).join() === 'Shipments,Carrier' && two.j.tables[0].measures.length === 15 && two.j.tables[0].columns.length > 0 && two.j.tables[0].columns.every((c) => /\((string|int64|double|decimal|dateTime|boolean)\)$/.test(c)) && JSON.stringify(two.j.notFound) === '["Nope"]', () => `read_model with tables must return exactly the named tables in full: ${two.err ? two.t.slice(0, 200) : two.j.tables.map((t) => t.table) + ' / notFound ' + JSON.stringify(two.j.notFound)}`);
+  const allFacts = big.j && big.j.tablesWithMeasures ? await ask('read_model', { path: 'large', tables: big.j.tablesWithMeasures.map((t) => t.table) }) : { err: true, t: 'no summary' };
+  chk(() => !allFacts.err && allFacts.t.length <= 40000 && allFacts.j.tables.length > 10 && allFacts.j.tables.length < 65 && allFacts.j.notShown.length === 65 - allFacts.j.tables.length && /40,000/.test(String(allFacts.j.note)), () => `read_model with more tables than fit must stop at a table and name the rest: ${allFacts.err ? allFacts.t.slice(0, 200) : allFacts.t.length + ' characters, ' + allFacts.j.tables.length + ' tables, notShown ' + (allFacts.j.notShown || []).length}`);
+  // read_model's answers on the small fixtures, as main gives them before round 4 (md5 start and length, with the path separator in source as /: Windows writes it as a backslash)
+  const SMALL_ANSWERS = { 'tmdl-project': '63cfd0805729:893', 'bim-project': 'ccbcc917fc9e:1344', 'dax-project': '4502344299d5:2099', 'sample.pbit': '7d20d9242374:4518' };
+  const small = {};
+  for (const p of ['tmdl-project', 'bim-project', 'dax-project', 'sample.pbit']) { const x = await ask('read_model', { path: p }); const t = x.t.split(String.fromCharCode(92, 92)).join('/'); small[p] = x.err ? 'error' : crypto.createHash('md5').update(t).digest('hex').slice(0, 12) + ':' + t.length; }
+  chk(() => JSON.stringify(small) === JSON.stringify(SMALL_ANSWERS), () => `read_model on the small fixtures changed: ${JSON.stringify(small)}`);
+
+  // 1b. check_model_health on a large model fits too: a fix script and its list cover maxItems objects, and say so
+  const hl = await ask('check_model_health', { path: 'large' }), nf = (hl.j && hl.j.fixes && hl.j.fixes.NO_FORMAT) || {};
+  chk(() => !hl.err && hl.t.length < 40000 && nf.suggested.length === 15 && nf.covers && nf.covers.measures === 15 && nf.covers.of > 100 && (nf.fixScript.match(/^\t\tmeasure /gm) || []).length === 15 && /maxItems/.test(String(nf.covers.note)), () => `check_model_health on a large model must stay under 40,000 characters: ${hl.err ? hl.t.slice(0, 200) : hl.t.length + ' characters, covers ' + JSON.stringify(nf.covers)}`);
+  const hs = await ask('check_model_health', { path: 'dax-project' });
+  chk(() => !hs.err && hs.j.fixes.NO_FORMAT.suggested.length === 5 && !hs.j.fixes.NO_FORMAT.covers, () => `check_model_health on a small model: the fixes must be whole, with no "covers": ${hs.err ? hs.t.slice(0, 200) : JSON.stringify(hs.j.fixes.NO_FORMAT.covers)}`);
+
+  // 2. suggest_fields on a large model: a focus, or nothing is picked
+  const noFocus = await ask('suggest_fields', { path: 'large', kpis: 4 });
+  chk(() => !noFocus.err && noFocus.j.needsFocus === true && !noFocus.j.kpis && noFocus.j.areas.some((a) => a.area === 'Logistics') && /focus/.test(noFocus.j.why), () => `suggest_fields on a large model without a focus must pick nothing and ask for one: ${noFocus.t.slice(0, 240)}`);
+  const lg = await ask('suggest_fields', { path: 'large', kpis: 4, focus: 'logistics' });
+  chk(() => !lg.err && JSON.stringify(lg.j.kpis.map(f)) === JSON.stringify(LOGISTICS) && f(lg.j.date) === 'Calendar[Month Name]' && f(lg.j.cats.bar) === 'Carrier[Carrier Group]' && f(lg.j.cats.column) === 'Route[Route Group]'
+    && lg.j.slicers.map(f).join() === 'Calendar[Year],Carrier[Carrier Group],Route[Route Group]' && lg.j.scope.tables === 23 && lg.j.scope.focus === 'logistics', () => `suggest_fields with focus "logistics": ${lg.err ? lg.t.slice(0, 200) : JSON.stringify({ kpis: lg.j.kpis.map(f), date: f(lg.j.date), bar: f(lg.j.cats.bar), column: f(lg.j.cats.column), slicers: lg.j.slicers.map(f), scope: lg.j.scope })}`);
+  const zz = await ask('suggest_fields', { path: 'large', kpis: 4, focus: 'zzz' });
+  chk(() => !zz.err && zz.j.needsFocus === true && !zz.j.kpis && /zzz/.test(zz.j.why) && zz.j.areas.length > 5, () => `suggest_fields with a focus that matches nothing: ${zz.t.slice(0, 240)}`);
+
+  // create_report on a large model follows the same rule
+  const th = await ask('generate_theme', { name: 'Round4', preset: 'Corporate', folder: 'themes/r4' }), design = th.j && th.j.design;
+  const refused = await ask('create_report', { path: 'large', name: 'Large no focus', design });
+  chk(() => refused.err && /focus/.test(refused.t) && !fs.existsSync(path.join(ROOT, 'large', 'Large no focus.Report')), () => `create_report on a large model without a focus must be refused: ${refused.t.slice(0, 200)}`);
+  const lr = await ask('create_report', { path: 'large', name: 'Large logistics', design, focus: 'logistics' });
+  {
+    const dir = lr.err ? null : path.join(ROOT, 'large', lr.j.report), cards = dir ? readReport(dir)[0].visuals.filter((v) => v.type === 'cardVisual').sort((a, b) => a.x - b.x) : [];
+    const on = cards.map((v) => { const p = JSON.parse(v.text).visual.query.queryState.Data.projections[0]; return p.queryRef.replace('.', '[') + ']'; });
+    chk(() => !lr.err && JSON.stringify(on) === JSON.stringify(LOGISTICS) && errors(dir) === '0' && !(lr.j.modelNotes || []).some((n) => /Margin\]$/.test(n.field)), () => `create_report on a large model with focus "logistics": ${lr.err ? lr.t.slice(0, 200) : 'cards ' + JSON.stringify(on) + ', validator ' + errors(dir)}`);
+  }
+
+  // 3. fewer measures than KPI cards: fewer cards, never an empty one
+  for (const [n, slots] of [[0, 0], [1, 1], [2, 2]]) {
+    const p = await ask('plan_layout', { design, layout: 'exec', kpis: n });
+    chk(() => !p.err && p.j.slots.filter((x) => x.kind === 'kpi').length === slots && p.j.slots.every((x) => x.w > 0 && x.h > 0 && x.y + x.h <= p.j.page.h + 1), () => `plan_layout with ${n} KPI cards: ${p.err ? p.t.slice(0, 160) : p.j.slots.filter((x) => x.kind === 'kpi').length + ' KPI slots'}`);
+  }
+  const seven = await ask('plan_layout', { design, kpis: 7 });
+  chk(() => seven.err && /kpis/.test(seven.t), () => `plan_layout with 7 KPI cards must still be refused: ${seven.t.slice(0, 160)}`);
+  const cardsOf = (dir) => readReport(dir).map((pg) => pg.visuals.filter((v) => v.type === 'cardVisual'));
+  const noField = (dir) => readReport(dir).reduce((l, pg) => l.concat(pg.visuals.filter((v) => /^(cardVisual|card|kpi)$/.test(v.type) && !/"queryState"/.test(v.text)).map((v) => v.type)), []);
+  const two4 = await ask('create_report', { path: 'bim-project', name: 'Two cards', design, layout: 'exec', kpis: 4 });
+  {
+    const dir = two4.err ? null : path.join(ROOT, 'bim-project', two4.j.report), per = dir ? cardsOf(dir).slice(0, 2).map((c) => c.length) : [], k = (two4.j && two4.j.kpiCards) || {};
+    chk(() => !two4.err && per.join() === '2,2' && k.asked === 4 && k.built === 2 && k.measures.length === 2 && /2 measures/.test(k.why) && (two4.j.reportNotes || []).some((x) => /KPI/.test(x)), () => `a model with 2 measures and a 4-card design: cards per page ${per}, kpiCards ${JSON.stringify(two4.j ? two4.j.kpiCards : two4.t.slice(0, 200))}`);
+    chk(() => !two4.err && noField(dir).length === 0 && errors(dir) === '0', () => `a model with 2 measures: ${dir ? noField(dir).length + ' cards without a field, validator ' + errors(dir) : two4.t.slice(0, 200)}`);
+  }
+  const zero = await ask('create_report', { path: 'plain', name: 'No measures', design, layout: 'exec', kpis: 4 });
+  {
+    const dir = zero.err ? null : path.join(ROOT, 'plain', zero.j.report), k = (zero.j && zero.j.kpiCards) || {};
+    chk(() => !zero.err && cardsOf(dir).every((c) => c.length === 0) && noField(dir).length === 0 && errors(dir) === '0' && k.asked === 4 && k.built === 0 && /no measures/.test(k.why) && k.leftOutVisuals.length > 0
+      && readReport(dir).every((pg) => pg.visuals.every((v) => !/Chart$|^gauge$|^funnel$|^treemap$|^map$/.test(v.type))), () => `a model with no measures: ${zero.err ? zero.t.slice(0, 200) : 'cards ' + cardsOf(dir).map((c) => c.length) + ', validator ' + errors(dir) + ', kpiCards ' + JSON.stringify(zero.j.kpiCards)}`);
+  }
+  const hand = await ask('create_report', { path: 'bim-project', name: 'Hand cards', pages: [{ name: 'P', slots: [0, 1, 2, 3].map((i) => ({ kind: 'kpi', title: 'K' + (i + 1), x: 24 + i * 300, y: 24, w: 280, h: 120 })).concat([{ kind: 'bar', x: 24, y: 170, w: 900, h: 400 }]) }] });
+  {
+    const dir = hand.err ? null : path.join(ROOT, 'bim-project', hand.j.report), k = (hand.j && hand.j.kpiCards) || {};
+    chk(() => !hand.err && cardsOf(dir)[0].length === 2 && noField(dir).length === 0 && k.asked === 4 && k.built === 2 && JSON.stringify(k.leftOut) === '["K3","K4"]', () => `hand-placed KPI slots beyond the measures: ${hand.err ? hand.t.slice(0, 200) : cardsOf(dir)[0].length + ' cards, kpiCards ' + JSON.stringify(hand.j.kpiCards)}`);
+  }
+
+  // 4. a money measure named "Margin" is not a percentage; one that divides, or says %, is
+  {
+    const mq = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Date"}, {}) in Source' } }], col = (name, dataType) => ({ name, dataType, sourceColumn: name });
+    fs.mkdirSync(path.join(ROOT, 'margin-project/Margin.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, 'margin-project/Margin.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [
+      { name: 'Sales', columns: [col('Region', 'string'), col('Amount', 'double'), col('Margin', 'double')], partitions: mq('Sales'),
+        measures: [{ name: 'Total Margin', expression: 'SUM ( Sales[Margin] )' }, { name: 'Net Margin', expression: 'SUM ( Sales[Margin] )', formatString: '#,0' }, { name: 'Gross Margin', expression: 'DIVIDE ( SUM ( Sales[Margin] ), SUM ( Sales[Amount] ) )' },
+          { name: 'Margin %', expression: ['DIVIDE (', '    [Total Margin],', '    SUM ( Sales[Amount] )', ')'] }] }] } }));
+    const mr = await ask('create_report', { path: 'margin-project', name: 'Margins', design, layout: 'exec', kpis: 4 });
+    const flagged = mr.err ? null : (mr.j.modelNotes || []).filter((n) => /percentage/.test(n.issue)).map((n) => n.field).sort();
+    chk(() => !mr.err && JSON.stringify(flagged) === JSON.stringify(['Sales[Gross Margin]', 'Sales[Margin %]']), () => `"Margin" as a percentage: flagged ${mr.err ? mr.t.slice(0, 200) : JSON.stringify(flagged)} (want Gross Margin and Margin % only)`);
+    const ms = await ask('suggest_fields', { path: 'margin-project', kpis: 3 });
+    chk(() => !ms.err && ms.j.kpis.slice(0, 2).map(f).join() === 'Sales[Total Margin],Sales[Net Margin]' && /Gross Margin|Margin %/.test(f(ms.j.kpis[2])) && /Gross Margin|Margin %/.test(f(ms.j.y.gauge)), () => `"Margin" as a percentage, the picks: ${ms.err ? ms.t.slice(0, 200) : JSON.stringify({ kpis: ms.j.kpis.map(f), gauge: f(ms.j.y.gauge) })} (want the two money margins first, a ratio third and on the gauge)`);
+  }
 }
 
 await client.close();

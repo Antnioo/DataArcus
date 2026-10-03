@@ -96,7 +96,8 @@ export function planLayout(a) {
   const design = withDefaults(a.design), l = design.layout;
   // choosing a layout, as on the website: its own KPI count and filters, and the size sliders back to its defaults
   if (a.layout) { l.preset = a.layout; l.kpis = E.LAYOUTS[a.layout].kpis; l.filters = E.LAYOUTS[a.layout].filters; delete l.kpiH; delete l.mainW; delete l.split; }
-  if (a.kpis != null) l.kpis = a.kpis;
+  // fewer than 3 KPI cards (the engine's own minimum): the layout keeps its 3 and the page shows kpiCards of them
+  if (a.kpis != null) { l.kpis = Math.max(3, a.kpis); if (a.kpis < 3) l.kpiCards = a.kpis; else delete l.kpiCards; }
   if (a.filters != null) { l.filters = a.filters !== 'none'; if (l.filters) l.fpos = a.filters; }
   Object.assign(design.layout, layoutFrom({ page: a.page, header: a.header, dir: a.dir }, l, () => {}));
   E.repairState(design);

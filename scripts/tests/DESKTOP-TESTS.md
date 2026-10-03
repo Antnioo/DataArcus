@@ -971,6 +971,25 @@ were checked afterwards and show only Power BI with the test report.
 checked out with CRLF and compared byte for byte; green on CI); `6-sort-sample` has no lineage tags (written by
 hand), so the sort script's tag-keeping is covered by the automated check only.
 
+## 2026-10-03: round 4 (`fix/round-4-models`), Power BI Desktop 2.158.1177: a report with 2 KPI cards
+
+Two test reports from the branch's MCP on the made-up sample model (`tests/5-tmdl-sample`), built with
+`builder-scripts\r4-build.mjs` (`plan_layout` with `kpis: 2`, then `create_report`): "Gulf Sales R4 EN 2 cards" and
+"Gulf Sales R4 AR 2 cards", 1920 x 1080, solid design. Both pages of each captured at 2x through the bridge only (no
+mouse, no keyboard), after the owner said the laptop was free; closed without saving. Captures:
+`tests/phase2-try/shots-r4/`. Validator: 0 errors on both.
+
+| Expected | Result |
+|---|---|
+| the two cards fill the KPI row with the usual gap; titles and numbers as on a 4-card report | **as expected**, English and Arabic: page 1 has two cards, each half of the row (927 wide), "Total Sales" 101.914K and "Total Sales Last Ramadan" 74.675K, titles at the reading start with the margin, numbers centred; the charts and the table below are where they are on a 4-card report |
+| page 2 (its layout has 3 cards) also shows 2 | **as expected**: two cards beside the filter rail, the same gap |
+| Arabic: first card on the right | **as expected** (Total Sales rightmost), page buttons right to left |
+
+**Seen, not in scope:** as on every report of this model: slicers say "All", the tables list days A to Z, Arabic
+chart titles mix "حسب" with English field names (no display names given), the Arabic table's total row has no
+"Total" word. On a 927-wide card the number sits in the middle with a lot of empty card around it (a look, not a
+fault).
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.

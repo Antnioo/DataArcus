@@ -1,4 +1,4 @@
-// The tool-level part of the 10 golden tasks (mcp/GOLDEN-TASKS.md): for each, the tool calls an agent is expected to
+// The tool-level part of the golden tasks 1 to 10 (mcp/GOLDEN-TASKS.md): for each, the tool calls an agent is expected to
 // make, run over stdio like an agent would, on copies of the input models in a temporary folder (nothing in the repo
 // changes). Checks: the expected pages and visuals, nothing overwritten, Microsoft's validator, the measured size rules
 // (scripts/tests/report-check.mjs), right to left mirrored where asked, and the size of every answer.
@@ -116,14 +116,14 @@ await task(7, 'A model missing measures and formats', async () => {
   const th = await call('generate_theme', { name: 'Golden Plain', preset: 'DataArcus', folder: 'themes' });
   const b = await build('plain', 'Golden Plain', th, { layout: 'exec', kpis: 4, lang: 'en' });
   return { measures: m.j.tables.reduce((n, t) => n + t.measures.length, 0), dateTables: m.j.tables.filter((t) => t.dateTable).length, kpis: f.err ? f.t.slice(0, 120) : (f.j.kpis || []).map((k) => k && (k.m || k.c)).join(' | '),
-    health: h.j && `${h.j.score.overall}: ${h.j.findings.map((x) => x.id).join(' ')}`, ...(b.facts || b), overwritten: b.overwritten, modelNotes: b.modelNotes };
+    health: h.j && `${h.j.score.overall}: ${h.j.findings.map((x) => x.id).join(' ')}`, ...(b.facts || b), overwritten: b.overwritten, modelNotes: b.modelNotes, kpiCards: b.r && b.r.j.kpiCards };
 });
 await task(8, '"Redesign this" (an existing report)', async () => {
   const m = await call('read_model', { path: 'existing' });
   const th = await call('generate_theme', { name: 'Golden Redesign', preset: 'Corporate', folder: 'themes' });
   const b = await build('existing', m.j.existingReports[0], th, { layout: 'exec', lang: 'en' });
   const b2 = await build('existing', `${m.j.existingReports[0]} redesign`, th, { layout: 'exec', lang: 'en' });
-  return { existing: m.j.existingReports.join(), sameName: b.create || `written as ${b.report}`, newName: b2.facts ? `${b2.r.j.report}, ${b2.facts.validator} validator errors` : b2.create, overwritten: (b.overwritten || 0) + (b2.overwritten || 0) };
+  return { existing: m.j.existingReports.join(), sameName: b.create || `written as ${b.report}, ${b.facts.validator} validator errors`, newName: b2.facts ? `${b2.r.j.report}, ${b2.facts.validator} validator errors` : b2.create, overwritten: (b.overwritten || 0) + (b2.overwritten || 0), kpiCards: b2.r && b2.r.j.kpiCards && { asked: b2.r.j.kpiCards.asked, built: b2.r.j.kpiCards.built, measures: b2.r.j.kpiCards.measures } };
 });
 await task(9, 'An unsupported visual', async () => {
   const before = hashes(path.join(ROOT, 'ramadan'));
@@ -131,10 +131,15 @@ await task(9, 'An unsupported visual', async () => {
   return { refused: r.err, message: r.t.slice(0, 160).replace(/\s+/g, ' '), written: fs.existsSync(path.join(ROOT, 'ramadan', 'Golden Sankey.pbip')), overwritten: unchanged(before).length };
 });
 await task(10, 'A large model (300 tables, 3,000 columns)', async () => {
-  const m = await call('read_model', { path: 'large' }), f = await call('suggest_fields', { path: 'large', kpis: 4 }), h = await call('check_model_health', { path: 'large' });
+  // (round 4) the summary first; without a focus nothing is picked; then the user's words, "logistics", as the focus
+  const m = await call('read_model', { path: 'large' }), none = await call('suggest_fields', { path: 'large', kpis: 4 }), h = await call('check_model_health', { path: 'large' });
+  const area = ((m.j.areas || []).find((a) => a.area === 'Logistics') || { tables: [] }).tables, d = await call('read_model', { path: 'large', tables: area });
+  const f = await call('suggest_fields', { path: 'large', kpis: 4, focus: 'logistics' });
   const th = await call('generate_theme', { name: 'Golden Large', preset: 'Corporate', folder: 'themes' });
-  const b = await build('large', 'Golden Large', th, { layout: 'exec', kpis: 4, lang: 'en' });
-  return { readModelChars: m.t.length, suggestChars: f.t.length, healthChars: h.t.length, kpis: f.j.kpis.map((k) => `${k.t}[${k.m}]`).join(' | '), category: `${f.j.cats.bar.t}[${f.j.cats.bar.c}]`, ...b.facts, overwritten: b.overwritten };
+  const noFocus = await build('large', 'Golden Large no focus', th, { layout: 'exec', kpis: 4, lang: 'en' });
+  const b = await build('large', 'Golden Large', th, { layout: 'exec', kpis: 4, lang: 'en' }, { focus: 'logistics' });
+  return { readModelChars: m.t.length, summary: !!m.j.summary, detailChars: d.t.length, detailTables: (d.j.tables || []).length, noFocus: none.j.needsFocus ? 'asks for a focus' : 'picked ' + (none.j.kpis || []).length, createNoFocus: noFocus.create ? 'refused' : 'written',
+    suggestChars: f.t.length, healthChars: h.t.length, kpis: f.j.kpis.map((k) => `${k.t}[${k.m}]`).join(' | '), category: `${f.j.cats.bar.t}[${f.j.cats.bar.c}]`, ...b.facts, overwritten: b.overwritten, modelNotes: b.modelNotes };
 });
 
 await client.close();
