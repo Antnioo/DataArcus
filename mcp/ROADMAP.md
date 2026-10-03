@@ -60,6 +60,17 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
   18-31 Oct packaging, clean install, golden tasks (owner: first 2-3 free case studies); 1-15 Nov private beta
   (owner: turn a case study into a paid pilot); 16-30 Nov Gulf Calendar pack and article; December: calendar launch
   for Ramadan, then the post-beta work.
+- **Research of 2026-10-03 ("AI opportunities beside DataArcus", private repo):** Microsoft's free
+  `powerbi-authoring` plugin now plans, designs, builds and screenshot-checks a report from a model, so generic
+  "a report from your model" is no longer what people pay for. Its docs don't mention right-to-left, the Gulf calendar
+  or number checks. **Right after round 1, the builder tests Microsoft's plugin on an Arabic model** (layout mirroring,
+  Arabic titles and fonts, a Hijri/Ramadan calendar, any check that numbers are right) and records the result in
+  `scripts/tests/DESKTOP-TESTS.md`. **If confirmed**, DataArcus is repositioned as the Gulf localisation and
+  verification layer that works with Microsoft's tools (Arabic/RTL mirroring, the Gulf calendar, a number check that
+  proves every visual's values before and after a change), and Pro is built around those, not generic generation.
+  If not, the edge narrows to verification and Gulf business logic. Decided by the owner after the test.
+- **Service, now:** the Copilot-readiness audit is added next to report design (private repo
+  `business/SERVICE-OFFER.md`); outreach to Microsoft partners and in-house BI teams first.
 - **Positioning by audience:** website headline, universal: "DataArcus turns your real Power BI model into a
   professionally designed, validated report, with Arabic and Gulf-ready reporting when you need it." Outreach to
   Gulf companies, Saudi and government contacts leads with Arabic/right to left and the Gulf calendar. No research
