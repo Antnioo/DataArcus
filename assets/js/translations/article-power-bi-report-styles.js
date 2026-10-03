@@ -480,7 +480,7 @@ window.reportStylesArticleTranslations = {
       "og:url": "https://dataarcus.com/articles/article-power-bi-report-styles.html",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/report-styles.jpg",
-      "og:locale": "ar_AR",
+      "og:locale": "ar_AE",
       "twitter:card": "summary_large_image",
       "twitter:title": "تصميم لوحات Power BI حسب القسم: 7 أنماط للتقارير",
       "twitter:description": "تقارير الإدارة والمبيعات والمالية والتسويق والعمليات والموارد البشرية وخدمة العملاء تحتاج تصاميم مختلفة. 7 أنماط بأمثلة، وكيف تختار نمطك.",

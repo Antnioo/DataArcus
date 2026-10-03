@@ -81,7 +81,7 @@ window.licensingGuideTranslations = {
       "og:url": "https://dataarcus.com/articles/article-power-bi-licensing-guide.html",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/licensing-guide.jpg",
-      "og:locale": "ar_AR",
+      "og:locale": "ar_AE",
       "twitter:card": "summary_large_image",
       "twitter:title": "Power BI Pro مقابل PPU مقابل Fabric F64: دليل التكلفة 2026",
       "twitter:description": "Pro أم Premium Per User أم سعة Fabric؟ رقم واحد يحسم القرار: عدد من يشاهدون التقارير فقط. الأسعار ونقطة التعادل لـ F64 ومثال عملي.",

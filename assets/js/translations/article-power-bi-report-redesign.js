@@ -87,7 +87,7 @@ window.reportRedesignArticleTranslations = {
       "og:url": "https://dataarcus.com/articles/article-power-bi-report-redesign.html",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/report-redesign.jpg",
-      "og:locale": "ar_AR",
+      "og:locale": "ar_AE",
       "twitter:card": "summary_large_image",
       "twitter:title": "نفس العناصر، تصميم جديد: إعادة تصميم تقرير Power BI",
       "twitter:description": "تقرير Power BI بالعناصر الصحيحة لكن بألوان خاطئة وتخطيط فوضوي. ما الذي غيّرناه، ولماذا ينجح، وكيف تفعله في 5 دقائق.",
