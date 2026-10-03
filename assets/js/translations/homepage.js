@@ -8,7 +8,7 @@ window.homepageTranslations = {
       azure: "Azure icon",
       python: "Python icon",
       fabric: "Fabric icon",
-      pulse: "A preview of the DataArcus Pulse automotive CRM intelligence dashboard",
+      pulse: "A preview of the DataArcus Pulse sales CRM dashboard",
       fintech: "A preview of the Fintech Portfolio Risk dashboard",
       repeatiq: "A preview of the RepeatIQ Commerce Analytics dashboard",
       founder: "A photo of Abdelrahman M., Founder of DataArcus",
@@ -40,7 +40,7 @@ window.homepageTranslations = {
     // Hero Section
     hero: {
       title: "From Scattered Business Data to Decisions You Can Trust",
-      subtitle: "I design and build production-grade Power BI systems that turn messy operational data into numbers your team can actually rely on: dealership CRMs, project risk tracking, subscription retention and more.",
+      subtitle: "I design and build production-grade Power BI systems that turn messy operational data into numbers your team can actually rely on: sales CRMs, project risk tracking, subscription retention and more.",
       buttonWork: "Explore My Work",
       buttonDiscuss: "Book a Free Data Clarity Call",
       badgeSecurity: "Enterprise Security",
@@ -54,7 +54,7 @@ window.homepageTranslations = {
         "Custom Visual Development"
       ],
       proofBadges: ["Microsoft Certified Power BI Data Analyst", "Every number validated against the source", "Arabic & English"],
-      proof: {"live": "Production model", "subtitle": "Automotive dealership CRM, anonymized", "kpis": ["leads", "calls", "call journeys", "DAX measures"], "caption": "Three disconnected systems, one model, every lead resolved once and matched against the source.", "link": "See the live dashboard"}
+      proof: {"live": "Production model", "subtitle": "Sales CRM, anonymized", "caption": "Three disconnected systems, one model, every lead resolved once and matched against the source.", "link": "See the live dashboard"}
     },
 
     // Tech Stack Section
@@ -96,9 +96,9 @@ portfolio: {
       title: "Solution Showcases",
       subtitle: "Explore our proof-of-concept dashboards, engineered to solve common business challenges. See what's possible for your data.",
       cardPulse: {
-        badge: "AUTOMOTIVE CRM",
+        badge: "SALES CRM",
         title: "DataArcus Pulse: CRM Intelligence",
-        desc: "A production-grade dealership CRM command center: 54K leads, 113K calls and 72K call journeys resolved into one model with 410 measures and daily pacing targets."
+        desc: "A production-grade sales CRM command center: leads, calls and call journeys resolved into one documented model with daily pacing targets."
       },
       cardFintech: {
         badge: "FINTECH & RISK",
@@ -133,8 +133,8 @@ portfolio: {
       statsTitle: "The Track Record So Far",
       statsSubtitle: "Real numbers from real production models, not agency metrics.",
       stats: [
-        { title: "Leads Resolved in One Production Model" },
-        { title: "DAX Measures in Production" },
+        { title: "Articles Published on the Blog" },
+        { title: "Languages: English and Arabic" },
         { title: "End-to-End Dashboard Builds" },
         { title: "Free Power BI & Fabric Tools Published" }
       ],
@@ -192,7 +192,7 @@ portfolio: {
           }
         ]
       },
-    latest: {"title": "Latest from the Blog", "subtitle": "Playbooks from real models: the patterns, the mistakes, and the fixes.", "button": "All articles", "posts": {"aiReady": {"badge": "COPILOT & AI", "title": "Is Your Power BI Model Ready for AI? A 7-Point Check", "date": "October 2, 2026", "excerpt": "Copilot, data agents and the new Power BI apps all answer from your semantic model. The 7 things to fix first, from names and descriptions to Prep data for AI.", "button": "Read Playbook"}, "reportStyles": {"badge": "REPORT DESIGN", "title": "One Design Doesn’t Fit All: 7 Power BI Report Styles", "date": "September 29, 2026", "excerpt": "Executive, sales, finance, marketing, operations, HR and customer service reports each answer a different question. The 7 styles with example pages, and a 3-question quiz to pick yours.", "button": "Read Playbook"}, "reportRedesign": {"badge": "REPORT DESIGN", "title": "Same Visuals, New Design: How We Redesigned a Power BI Report in 5 Minutes", "date": "September 28, 2026", "excerpt": "A leads report with the right visuals but loud colours and a messy layout. The five design changes that fixed it, and how to make them in 5 minutes with a free tool.", "button": "Read Playbook"}, "modelHealth": {"badge": "BEST PRACTICE", "title": "We Ran a Health Check on Our Own Power BI Model. It Scored 67.", "date": "September 25, 2026", "excerpt": "A real 410-measure model, checked in under a second: 100 unused columns, 23 visuals pointing at deleted measures and 15 slow filters. Here is what we found and how to check yours.", "button": "Read Playbook"}, "ramadanSales": {"badge": "POWER BI", "title": "Ramadan Sales in Power BI: Compare This Ramadan With Last Ramadan", "date": "September 23, 2026", "excerpt": "SAMEPERIODLASTYEAR compares March with March, but Ramadan moved 11 days. The Hijri calendar and the one DAX measure that line up every Ramadan day by day.", "button": "Read Playbook"}, "licensingGuide": {"badge": "STRATEGY", "title": "Power BI Pro, Premium Per User or Fabric: Which License Do You Actually Need?", "date": "September 23, 2026", "excerpt": "One number decides your Power BI license: how many people only view reports. Current prices, the F64 break-even point and a worked example.", "button": "Read Playbook"}, "journeyAttribution": {"badge": "DATA ENGINEERING", "title": "Resolve Once, Hydrate Many: A DAX Pattern for Lead Attribution", "date": "September 1, 2026", "excerpt": "Why matching the same lead five times produces disagreeing KPIs, and the single-resolution DAX pattern that validated 54,403/54,403 leads before replacing scattered join logic.", "button": "Read Playbook"}}},
+    latest: {"title": "Latest from the Blog", "subtitle": "Playbooks from real models: the patterns, the mistakes, and the fixes.", "button": "All articles", "posts": {"aiReady": {"badge": "COPILOT & AI", "title": "Is Your Power BI Model Ready for AI? A 7-Point Check", "date": "October 2, 2026", "excerpt": "Copilot, data agents and the new Power BI apps all answer from your semantic model. The 7 things to fix first, from names and descriptions to Prep data for AI.", "button": "Read Playbook"}, "reportStyles": {"badge": "REPORT DESIGN", "title": "One Design Doesn’t Fit All: 7 Power BI Report Styles", "date": "September 29, 2026", "excerpt": "Executive, sales, finance, marketing, operations, HR and customer service reports each answer a different question. The 7 styles with example pages, and a 3-question quiz to pick yours.", "button": "Read Playbook"}, "reportRedesign": {"badge": "REPORT DESIGN", "title": "Same Visuals, New Design: How We Redesigned a Power BI Report in 5 Minutes", "date": "September 28, 2026", "excerpt": "A leads report with the right visuals but loud colours and a messy layout. The five design changes that fixed it, and how to make them in 5 minutes with a free tool.", "button": "Read Playbook"}, "modelHealth": {"badge": "BEST PRACTICE", "title": "We Ran a Health Check on a Microsoft Power BI Sample. It Scored 84.", "date": "September 25, 2026", "excerpt": "Microsoft's public COVID-19 sample, checked in under a second: a quarter of its columns unused, two bookmarks pointing at a deleted column and auto date/time left on. What we found and how to check yours.", "button": "Read Playbook"}, "ramadanSales": {"badge": "POWER BI", "title": "Ramadan Sales in Power BI: Compare This Ramadan With Last Ramadan", "date": "September 23, 2026", "excerpt": "SAMEPERIODLASTYEAR compares March with March, but Ramadan moved 11 days. The Hijri calendar and the one DAX measure that line up every Ramadan day by day.", "button": "Read Playbook"}, "licensingGuide": {"badge": "STRATEGY", "title": "Power BI Pro, Premium Per User or Fabric: Which License Do You Actually Need?", "date": "September 23, 2026", "excerpt": "One number decides your Power BI license: how many people only view reports. Current prices, the F64 break-even point and a worked example.", "button": "Read Playbook"}, "journeyAttribution": {"badge": "DATA ENGINEERING", "title": "Resolve Once, Hydrate Many: A DAX Pattern for Lead Attribution", "date": "September 1, 2026", "excerpt": "Why matching the same lead five times produces disagreeing KPIs, and the single-resolution DAX pattern that matched every lead exactly before replacing scattered join logic.", "button": "Read Playbook"}}},
 
     // FAQ Section
     faq: {
@@ -221,7 +221,7 @@ portfolio: {
         },
         {
           q: "Why work with an independent specialist instead of a large agency?",
-          a: "<strong>You get direct access to the person actually building your model.</strong> No account manager relaying requests to a junior analyst. I built <a href='dashboards/dataarcus-pulse.html' class='text-accent'>DataArcus Pulse</a>, a production-grade automotive CRM model with 410 measures, entirely myself, and that's the level of hands-on ownership every project gets.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);\">What you lose versus a big firm is overhead. What you gain is speed, direct communication, and someone personally accountable for every number in your dashboard.</div>"
+          a: "<strong>You get direct access to the person actually building your model.</strong> No account manager relaying requests to a junior analyst. I built <a href='dashboards/dataarcus-pulse.html' class='text-accent'>DataArcus Pulse</a>, a production-grade sales CRM model, entirely myself, and that's the level of hands-on ownership every project gets.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);\">What you lose versus a big firm is overhead. What you gain is speed, direct communication, and someone personally accountable for every number in your dashboard.</div>"
         },
         {
           q: "What if we're not sure what we need?",
@@ -306,7 +306,7 @@ portfolio: {
       azure: "أيقونة Azure",
       python: "أيقونة Python",
       fabric: "أيقونة Fabric",
-      pulse: "معاينة للوحة DataArcus Pulse لتحليلات CRM في قطاع السيارات",
+      pulse: "معاينة للوحة DataArcus Pulse لتحليلات CRM للمبيعات",
       fintech: "معاينة للوحة مخاطر محفظة مشاريع Fintech",
       repeatiq: "معاينة للوحة تحليلات التجارة RepeatIQ",
       founder: "صورة عبدالرحمن م.، مؤسس DataArcus",
@@ -338,7 +338,7 @@ portfolio: {
     // Hero Section
     hero: {
       title: "من بيانات أعمال مشتتة إلى قرارات يمكنك الوثوق بها",
-      subtitle: "أصمم وأبني أنظمة Power BI بمستوى الإنتاج تحوّل بياناتك التشغيلية المشتتة إلى أرقام يمكن لفريقك الاعتماد عليها فعليًا: أنظمة CRM لدى الوكلاء، وتتبع مخاطر المشاريع، وتحليلات الاحتفاظ بالعملاء، وأكثر.",
+      subtitle: "أصمم وأبني أنظمة Power BI بمستوى الإنتاج تحوّل بياناتك التشغيلية المشتتة إلى أرقام يمكن لفريقك الاعتماد عليها فعليًا: أنظمة CRM للمبيعات، وتتبع مخاطر المشاريع، وتحليلات الاحتفاظ بالعملاء، وأكثر.",
       buttonWork: "استكشف أعمالي",
       buttonDiscuss: "احجز مكالمة وضوح بيانات مجانية",
       badgeSecurity: "أمان على مستوى الشركات",
@@ -352,7 +352,7 @@ portfolio: {
         "تطوير واجهات مرئية مخصصة"
       ],
       proofBadges: ["محلل بيانات Power BI معتمد من Microsoft", "كل رقم مُطابق مع المصدر", "العربية والإنجليزية"],
-      proof: {"live": "نموذج إنتاج حقيقي", "subtitle": "نظام CRM لوكيل سيارات، ببيانات مجهولة الهوية", "kpis": ["عميل محتمل", "مكالمة", "رحلة اتصال", "مقياس DAX"], "caption": "ثلاثة أنظمة منفصلة، نموذج واحد، وكل عميل محتمل يُحل مرة واحدة ويُطابق مع المصدر.", "link": "شاهد لوحة التحكم"}
+      proof: {"live": "نموذج إنتاج حقيقي", "subtitle": "نظام CRM للمبيعات، ببيانات مجهولة الهوية", "caption": "ثلاثة أنظمة منفصلة، نموذج واحد، وكل عميل محتمل يُحل مرة واحدة ويُطابق مع المصدر.", "link": "شاهد لوحة التحكم"}
     },
 
     // Tech Stack Section
@@ -394,9 +394,9 @@ portfolio: {
       title: "نماذج الحلول",
       subtitle: "استكشف لوحات التحكم التجريبية لدينا. شاهد ما هو ممكن لبياناتك.",
       cardPulse: {
-        badge: "CRM لقطاع السيارات",
+        badge: "CRM للمبيعات",
         title: "داتا أركوس بالس: ذكاء إدارة علاقات العملاء",
-        desc: "مركز قيادة CRM لوكالة سيارات بمستوى الإنتاج: 54 ألف عميل محتمل، 113 ألف مكالمة و72 ألف رحلة اتصال في نموذج واحد يضم 410 مقياس وأهداف وتيرة يومية."
+        desc: "مركز قيادة CRM للمبيعات بمستوى الإنتاج: العملاء المحتملون والمكالمات ورحلات الاتصال في نموذج واحد موثّق مع أهداف وتيرة يومية."
       },
       cardFintech: {
         badge: "التكنولوجيا المالية والمخاطر",
@@ -431,8 +431,8 @@ portfolio: {
       statsTitle: "السجل حتى الآن",
       statsSubtitle: "أرقام حقيقية من نماذج إنتاج حقيقية، لا مقاييس وكالات مصطنعة.",
       stats: [
-        { title: "عميل محتمل تم حله في نموذج إنتاج واحد" },
-        { title: "مقياس DAX في الإنتاج" },
+        { title: "مقالًا منشورًا في المدونة" },
+        { title: "لغتان: العربية والإنجليزية" },
         { title: "لوحة تحكم متكاملة تم بناؤها" },
         { title: "أدوات Power BI و Fabric مجانية منشورة" }
       ],
@@ -490,7 +490,7 @@ portfolio: {
           }
         ]
       },
-    latest: {"title": "أحدث المقالات", "subtitle": "أدلة عملية من نماذج حقيقية: الأنماط والأخطاء والحلول.", "button": "كل المقالات", "posts": {"aiReady": {"badge": "Copilot والذكاء الاصطناعي", "title": "هل نموذج Power BI جاهز للذكاء الاصطناعي؟ فحص من 7 نقاط", "date": "2 أكتوبر 2026", "excerpt": "Copilot ووكلاء البيانات وتطبيقات Power BI الجديدة كلها تجيب من نموذجك الدلالي. سبعة أمور تصلحها أولًا، من الأسماء والأوصاف إلى Prep data for AI.", "button": "اقرأ الدليل"}, "reportStyles": {"badge": "تصميم التقارير", "title": "تصميم واحد لا يناسب الجميع: 7 أنماط لتقارير Power BI", "date": "29 سبتمبر 2026", "excerpt": "تقارير الإدارة والمبيعات والمالية والتسويق والعمليات والموارد البشرية وخدمة العملاء تجيب كل منها عن سؤال مختلف. الأنماط السبعة بصفحات أمثلة، واختبار من 3 أسئلة لاختيار نمطك.", "button": "اقرأ الدليل"}, "reportRedesign": {"badge": "تصميم التقارير", "title": "نفس العناصر، تصميم جديد: كيف أعدنا تصميم تقرير Power BI في 5 دقائق", "date": "28 سبتمبر 2026", "excerpt": "تقرير عملاء محتملين بالعناصر الصحيحة لكن بألوان صاخبة وتخطيط فوضوي. خمسة تغييرات في التصميم أصلحته، وكيف تطبقها في 5 دقائق بأداة مجانية.", "button": "اقرأ الدليل"}, "modelHealth": {"badge": "أفضل الممارسات", "title": "فحصنا صحة نموذج Power BI الخاص بنا. النتيجة: 67 من 100.", "date": "25 سبتمبر 2026", "excerpt": "نموذج حقيقي فيه 410 مقاييس فُحص في أقل من ثانية: 100 عمود غير مستخدم و23 visual تشير إلى مقاييس محذوفة و15 فلترًا بطيئًا. هذا ما وجدناه وكيف تفحص نموذجك.", "button": "اقرأ الدليل"}, "ramadanSales": {"badge": "Power BI", "title": "مبيعات رمضان في Power BI: قارن رمضان هذا العام برمضان الماضي", "date": "23 سبتمبر 2026", "excerpt": "تقارن SAMEPERIODLASTYEAR مارس بمارس، لكن رمضان تحرّك 11 يومًا. التقويم الهجري ومقياس DAX الذي يطابق كل رمضان يومًا بيوم.", "button": "اقرأ الدليل"}, "licensingGuide": {"badge": "استراتيجية", "title": "Power BI Pro أم Premium Per User أم Fabric: أي ترخيص تحتاجه فعلًا؟", "date": "23 سبتمبر 2026", "excerpt": "رقم واحد يحسم ترخيص Power BI: عدد من يشاهدون التقارير فقط. الأسعار الحالية ونقطة التعادل لـ F64 ومثال عملي.", "button": "اقرأ الدليل"}, "journeyAttribution": {"badge": "هندسة البيانات", "title": "حلّ مرة واحدة، غذِّ كل مكان: نمط DAX لعزو العملاء المحتملين", "date": "1 سبتمبر 2026", "excerpt": "لماذا تُنتج مطابقة نفس العميل المحتمل خمس مرات مؤشرات أداء متضاربة، ونمط DAX الذي وثّق تطابق 54,403 من أصل 54,403 عميل محتمل قبل استبدال منطق الربط المتناثر.", "button": "اقرأ الدليل"}}},
+    latest: {"title": "أحدث المقالات", "subtitle": "أدلة عملية من نماذج حقيقية: الأنماط والأخطاء والحلول.", "button": "كل المقالات", "posts": {"aiReady": {"badge": "Copilot والذكاء الاصطناعي", "title": "هل نموذج Power BI جاهز للذكاء الاصطناعي؟ فحص من 7 نقاط", "date": "2 أكتوبر 2026", "excerpt": "Copilot ووكلاء البيانات وتطبيقات Power BI الجديدة كلها تجيب من نموذجك الدلالي. سبعة أمور تصلحها أولًا، من الأسماء والأوصاف إلى Prep data for AI.", "button": "اقرأ الدليل"}, "reportStyles": {"badge": "تصميم التقارير", "title": "تصميم واحد لا يناسب الجميع: 7 أنماط لتقارير Power BI", "date": "29 سبتمبر 2026", "excerpt": "تقارير الإدارة والمبيعات والمالية والتسويق والعمليات والموارد البشرية وخدمة العملاء تجيب كل منها عن سؤال مختلف. الأنماط السبعة بصفحات أمثلة، واختبار من 3 أسئلة لاختيار نمطك.", "button": "اقرأ الدليل"}, "reportRedesign": {"badge": "تصميم التقارير", "title": "نفس العناصر، تصميم جديد: كيف أعدنا تصميم تقرير Power BI في 5 دقائق", "date": "28 سبتمبر 2026", "excerpt": "تقرير عملاء محتملين بالعناصر الصحيحة لكن بألوان صاخبة وتخطيط فوضوي. خمسة تغييرات في التصميم أصلحته، وكيف تطبقها في 5 دقائق بأداة مجانية.", "button": "اقرأ الدليل"}, "modelHealth": {"badge": "أفضل الممارسات", "title": "فحصنا صحة نموذج Power BI تجريبي من Microsoft. النتيجة: 84 من 100.", "date": "25 سبتمبر 2026", "excerpt": "نموذج COVID-19 التجريبي العام من Microsoft فُحص في أقل من ثانية: ربع الأعمدة غير مستخدمة، وإشارتان مرجعيتان تشيران إلى عمود محذوف، وخيار Auto date/time مفعّل. هذا ما وجدناه وكيف تفحص نموذجك.", "button": "اقرأ الدليل"}, "ramadanSales": {"badge": "Power BI", "title": "مبيعات رمضان في Power BI: قارن رمضان هذا العام برمضان الماضي", "date": "23 سبتمبر 2026", "excerpt": "تقارن SAMEPERIODLASTYEAR مارس بمارس، لكن رمضان تحرّك 11 يومًا. التقويم الهجري ومقياس DAX الذي يطابق كل رمضان يومًا بيوم.", "button": "اقرأ الدليل"}, "licensingGuide": {"badge": "استراتيجية", "title": "Power BI Pro أم Premium Per User أم Fabric: أي ترخيص تحتاجه فعلًا؟", "date": "23 سبتمبر 2026", "excerpt": "رقم واحد يحسم ترخيص Power BI: عدد من يشاهدون التقارير فقط. الأسعار الحالية ونقطة التعادل لـ F64 ومثال عملي.", "button": "اقرأ الدليل"}, "journeyAttribution": {"badge": "هندسة البيانات", "title": "حلّ مرة واحدة، غذِّ كل مكان: نمط DAX لعزو العملاء المحتملين", "date": "1 سبتمبر 2026", "excerpt": "لماذا تُنتج مطابقة نفس العميل المحتمل خمس مرات مؤشرات أداء متضاربة، ونمط DAX الذي وثّق تطابق كل عميل محتمل قبل استبدال منطق الربط المتناثر.", "button": "اقرأ الدليل"}}},
 
     // FAQ Section
     faq: {
@@ -519,7 +519,7 @@ portfolio: {
         },
         {
           q: "لماذا العمل مع متخصص مستقل بدلاً من شركة استشارات كبرى؟",
-          a: "<strong>تحصل على وصول مباشر للشخص الذي يبني نموذجك فعليًا.</strong> بلا مدير حسابات ينقل الطلبات إلى محلل مبتدئ. لقد بنيت <a href='dashboards/dataarcus-pulse.html' class='text-accent'>داتا أركوس بلس</a>، نموذج ذكاء CRM لقطاع السيارات بمستوى الإنتاج ويضم 410 مقياسًا، بنفسي بالكامل، وهذا هو مستوى الملكية العملية الذي يحصل عليه كل مشروع.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);\">ما تخسره مقارنة بشركة كبرى هو التكاليف الإضافية. وما تكسبه هو السرعة والتواصل المباشر وشخص مسؤول شخصيًا عن كل رقم في لوحة تحكمك.</div>"
+          a: "<strong>تحصل على وصول مباشر للشخص الذي يبني نموذجك فعليًا.</strong> بلا مدير حسابات ينقل الطلبات إلى محلل مبتدئ. لقد بنيت <a href='dashboards/dataarcus-pulse.html' class='text-accent'>داتا أركوس بلس</a>، نموذج CRM للمبيعات بمستوى الإنتاج، بنفسي بالكامل، وهذا هو مستوى الملكية العملية الذي يحصل عليه كل مشروع.<div class=\"mt-3 p-3 rounded\" style=\"background: rgba(0, 212, 255, 0.1); border: 1px solid var(--accent);\">ما تخسره مقارنة بشركة كبرى هو التكاليف الإضافية. وما تكسبه هو السرعة والتواصل المباشر وشخص مسؤول شخصيًا عن كل رقم في لوحة تحكمك.</div>"
         },
         {
           q: "ماذا لو لم نكن متأكدين مما نحتاجه؟",

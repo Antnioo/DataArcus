@@ -68,7 +68,7 @@ const DASH = [
   ['adventureworks', 'Retail · Power BI dashboard', 'AdventureWorks Sales & Operations', ['6 pages', 'Sales, customers, products', 'What-if analysis'], 'adventureworks-preview.jpg'],
   ['call-center', 'E-commerce · Power BI dashboard', 'E-commerce Customer Service', ['Agent performance', 'Resolution rates', 'Satisfaction'], 'call-center-preview.jpg'],
   ['cfpb', 'Finance · Power BI dashboard', 'U.S. Consumer Financial Complaints', ['4 pages', '7 years of data', 'Company accountability'], 'cfpb-preview.jpg'],
-  ['pulse', 'Automotive CRM · Anonymized', 'DataArcus Pulse: Automotive CRM', ['54K leads', '113K calls', '410 DAX measures'], 'pulse-preview.jpg'],
+  ['pulse', 'Sales CRM · Anonymized', 'DataArcus Pulse: Sales CRM', ['Leads to invoices', 'Journey resolution', 'Daily pacing'], 'pulse-preview.jpg'],
   ['er-health', 'Healthcare · Power BI dashboard', 'ER Health: Patient Flow Analytics', ['Patient flow', 'Wait times', 'Satisfaction'], 'er-health-preview.jpg'],
   ['fintech', 'Fintech · Power BI dashboard', 'Fintech Portfolio Risk Engine', ['72 projects', 'EVM risk signals', 'ZoomCharts'], 'fintech-preview.jpg'],
   ['maven-market', 'Retail · Power BI dashboard', 'Maven Market Retail Sales', ['Sales trends', 'Product performance', 'Customer behavior'], 'maven-market-preview.jpg'],
@@ -131,15 +131,14 @@ const arrow = `<svg width="46" height="24" viewBox="0 0 46 24"><path d="M2 12h38
 const JOURNEY = `<div class="card" style="padding:26px 22px;display:flex;align-items:center;justify-content:space-between">
   <div style="display:flex;flex-direction:column;gap:10px">${node('Lead form')}${node('Calls')}${node('Statuses')}${node('Invoice')}</div>${arrow}
   <div style="display:flex;flex-direction:column;align-items:center;gap:8px">${pill('Resolve once')}${node('Matched<br>Journey Key', '#00d4ff', 140)}</div>${arrow}
-  <div style="display:flex;flex-direction:column;align-items:center;gap:10px">${pill('Hydrate many', '#a29bfe')}${node('Status', 0, 120)}${node('Outcome', 0, 120)}${node('Agent', 0, 120)}</div></div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">${[['54,574', 'leads'], ['113,321', 'calls'], ['72,013', 'journeys']].map(([n, l]) => `<div class="card" style="padding:12px;text-align:center"><div style="font-size:26px;font-weight:800">${n}</div><div style="font-size:14px;color:#94a3b8">${l}</div></div>`).join('')}</div>`;
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px">${pill('Hydrate many', '#a29bfe')}${node('Status', 0, 120)}${node('Outcome', 0, 120)}${node('Agent', 0, 120)}</div></div>`;
 const price = (n, v, d, best) => `<div class="card" style="padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px${best ? ';border-color:#00d4ff;background:rgba(0,212,255,.08)' : ''}"><div><div style="font-size:22px;font-weight:800">${n}</div><div style="font-size:16px;color:#94a3b8;margin-top:3px">${d}</div></div><div style="font-size:30px;font-weight:800;color:${best ? '#00d4ff' : '#f8fafc'};white-space:nowrap">${v}</div></div>`;
 const LICENSING = price('Pro', '$14', 'per user a month', 0) + price('Premium Per User', '$24', 'per user a month', 0) + price('Fabric F64', '~$5,004', 'a month reserved · viewers free', 1) +
   `<div class="card" style="padding:14px 20px;font-size:18px;font-weight:700;text-align:center">The number that decides it: how many people only view</div>`;
 const ring = (score, c) => { const C = 2 * Math.PI * 70; return `<svg width="180" height="180" viewBox="0 0 180 180"><circle cx="90" cy="90" r="70" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="16"/><circle cx="90" cy="90" r="70" fill="none" stroke="${c}" stroke-width="16" stroke-linecap="round" stroke-dasharray="${C * score / 100} ${C}" transform="rotate(-90 90 90)"/><text x="90" y="100" text-anchor="middle" font-family="Inter" font-size="54" font-weight="800" fill="#f8fafc">${score}</text><text x="90" y="126" text-anchor="middle" font-family="Inter" font-size="13" font-weight="700" fill="#94a3b8" letter-spacing="2">OUT OF 100</text></svg>`; };
-const HEALTH = `<div class="card" style="padding:22px;display:flex;align-items:center;gap:22px">${ring(67, '#f59e0b')}<div style="display:flex;flex-direction:column;gap:12px;flex:1">${[['41%', 'of columns never used (100 of 245)'], ['127', 'measures feed no visual'], ['23', 'visuals point at deleted fields'], ['15', 'measures FILTER a whole table']]
-  .map(([n, t]) => `<div style="display:flex;align-items:baseline;gap:12px"><b style="font-size:26px;font-weight:800;color:#f59e0b;min-width:62px">${n}</b><span style="font-size:17px;font-weight:600">${t}</span></div>`).join('')}</div></div>
-  <div class="card" style="padding:14px 20px;font-size:17px;font-weight:600;text-align:center;color:#cbd5e1">A real CRM model: 24 tables, 410 measures, 292 visuals</div>`;
+const HEALTH = `<div class="card" style="padding:22px;display:flex;align-items:center;gap:22px">${ring(84, '#84cc16')}<div style="display:flex;flex-direction:column;gap:12px;flex:1">${[['25%', 'of columns never used (4 of 16)'], ['2', 'bookmarks point at a deleted column'], ['1', 'hidden auto date/time table'], ['4', 'calculated columns on imported tables']]
+  .map(([n, t]) => `<div style="display:flex;align-items:baseline;gap:12px"><b style="font-size:26px;font-weight:800;color:#84cc16;min-width:62px">${n}</b><span style="font-size:17px;font-weight:600">${t}</span></div>`).join('')}</div></div>
+  <div class="card" style="padding:14px 20px;font-size:17px;font-weight:600;text-align:center;color:#cbd5e1">Microsoft's COVID-19 sample (MIT): 4 tables, 67 visuals</div>`;
 const ramPts = (base, amp, ph) => Array.from({ length: 30 }, (_, i) => `${50 + i * 16.5},${Math.round(210 - (base + amp * Math.sin(i / 4.2 + ph) + i * 1.6))}`).join(' ');
 // the redesign article: the same report before and after, as in the article
 const REDESIGN = (() => {   // one screenshot split diagonally: before on the left, after on the right
@@ -162,7 +161,7 @@ const RAMADAN = `<div class="card" style="padding:22px 24px"><div style="display
   <div style="display:flex;gap:22px;margin-top:6px;font-size:16px;font-weight:600"><span style="color:#00d4ff">━ This Ramadan</span><span style="color:#a29bfe">┅ Last Ramadan</span></div></div>`;
 
 const PAGES = [
-  ['portfolio', 'Power BI showcases', 'Dashboards Built for Real Business Problems', { chips: ['8 dashboards', 'Automotive to healthcare', 'Real models'] }, PORTFOLIO, '470px 1fr'],
+  ['portfolio', 'Power BI showcases', 'Dashboards Built for Real Business Problems', { chips: ['8 dashboards', 'Retail to healthcare', 'Real models'] }, PORTFOLIO, '470px 1fr'],
   ['blog', 'Blog · Power BI & e-commerce', 'Power BI and E‑commerce Analytics Blog', { sub: 'Practical guides with real models, real DAX and real numbers.' }, BLOG, '500px 1fr'],
   ['clv', 'E-commerce · Power BI', 'Customer Lifetime Value: The Metric That Defines Growth', { sub: 'Why CLV, not revenue, is the north-star KPI, and how to track it in Power BI.', size: 46 }, CLV, '520px 1fr'],
   ['etl-vs-power-query', 'E-commerce data strategy', 'ETL vs Power Query: Where Should Your Data Work Happen?', { size: 46, sub: 'Scale and governance, or speed and analyst autonomy.' }, ETL, '480px 1fr'],
@@ -171,7 +170,7 @@ const PAGES = [
   ['licensing-guide', 'Power BI licensing · 2026', 'Pro, PPU or Fabric: Which License Do You Need?', { size: 46, sub: 'Real prices and the F64 break-even point.' }, LICENSING, '480px 1fr'],
   ['report-styles', 'Report design · 7 styles', 'One Design Doesn’t Fit All: 7 Power BI Report Styles', { size: 44, sub: 'Every department asks a different question.' }, STYLES, '470px 1fr'],
   ['report-redesign', 'Case study · Report design', 'Same Visuals, New Design: A Power BI Report in 5 Minutes', { size: 44, sub: 'One brand colour, one grid, KPIs first.' }, REDESIGN, '470px 1fr'],
-  ['health-check-article', 'Case study · Power BI', 'We Ran a Health Check on Our Own Model. It Scored 67.', { size: 44, sub: 'What a real 410-measure model was hiding.' }, HEALTH, '470px 1fr'],
+  ['health-check-article', 'Case study · Power BI', 'We Ran a Health Check on a Microsoft Sample. It Scored 84.', { size: 44, sub: 'What a small, published model was hiding.' }, HEALTH, '470px 1fr'],
   ['ramadan-sales', 'Ramadan · DAX · Hijri calendar', 'Compare This Ramadan With Last Ramadan', { sub: 'SAMEPERIODLASTYEAR gets it wrong. A Hijri calendar and one DAX measure fix it.' }, RAMADAN, '470px 1fr']
 ];
 

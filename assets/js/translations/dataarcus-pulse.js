@@ -1,4 +1,4 @@
-// translations/dataarcus-pulse.js - DataArcus Pulse (Automotive CRM Intelligence) Showcase
+// translations/dataarcus-pulse.js - DataArcus Pulse (Sales CRM Intelligence) Showcase
 window.dataarcusPulseTranslations = {
   en: {
     attrs: {
@@ -6,15 +6,15 @@ window.dataarcusPulseTranslations = {
     },
     // Page Meta
     meta: {
-      title: "DataArcus Pulse: Automotive CRM Intelligence in Power BI",
+      title: "DataArcus Pulse: Sales CRM Intelligence in Power BI",
       description:
-        "54K leads, 113K calls, 72K journeys: a production-grade automotive CRM dashboard in Power BI with 410 DAX measures and PII-safe anonymization.",
+        "A production-grade sales CRM dashboard in Power BI: lead forms, calls and sales resolved into one documented model, with PII-safe anonymization.",
       keywords:
-        "Automotive CRM analytics, dealership lead management, Power BI call center, lead qualification, Keyloop analytics, DAX semantic model, data anonymization, DataArcus",
+        "CRM analytics, lead management, Power BI call center, lead qualification, DAX semantic model, data anonymization, DataArcus",
       author: "DataArcus",
-      "og:title": "DataArcus Pulse: Automotive CRM Intelligence",
+      "og:title": "DataArcus Pulse: Sales CRM Intelligence",
       "og:description":
-        "From raw lead forms and call logs to a single source of truth. A 12-month, production-grade dealership CRM model, fully anonymized for public demo."
+        "From raw lead forms and call logs to a single source of truth: a production-grade sales CRM model, fully anonymized for public demo."
     },
 
     // Page Header
@@ -22,23 +22,15 @@ window.dataarcusPulseTranslations = {
       badge: "PRODUCTION-GRADE · ANONYMIZED",
       title: "Showcase: DataArcus Pulse",
       subtitle:
-        "An automotive CRM command center built on twelve months of real dealership operations: every lead form, every call, every enquiry and every invoice resolved into one semantic model, then fully anonymized for public demonstration."
+        "A sales CRM command center: every lead form, every call, every enquiry and every invoice resolved into one semantic model, then fully anonymized for public demonstration."
     },
-
-    // Stats Row
-    stats: [
-      "Lead Submissions",
-      "Logged Calls",
-      "Resolved Call Journeys",
-      "Documented DAX Measures"
-    ],
 
     // Case Study Introduction
     intro: {
       challenge: {
-        title: "The Dealership CRM Challenge",
+        title: "The Sales CRM Challenge",
         content:
-          "A multi-brand dealership receives thousands of digital leads a month from Meta and Google campaigns. Those leads are called by a CRM team, handed to sales executives as enquiries in the dealer management system, routed to sub-dealers in other emirates, or declined. Each step lives in a different system: lead sheets, call logs, SE task exports, sales invoices. Nobody could answer the simplest question: of the leads we paid for, how many did we actually reach, qualify, and sell?"
+          "A sales team receives digital leads every day from paid campaigns. Those leads are called by a CRM team, handed to sales executives as enquiries, passed to partners, or declined. Each step lives in a different system: lead sheets, call logs, task exports, sales invoices. Nobody could answer the simplest question: of the leads we paid for, how many did we actually reach, qualify, and sell?"
       },
       skills: {
         title: "What Makes This Different",
@@ -58,17 +50,16 @@ window.dataarcusPulseTranslations = {
       title: "Key Features & Technologies",
       tags: [
         "Microsoft Fabric Lakehouse",
-        "Advanced DAX (410 measures)",
+        "Advanced DAX",
         "Power Query Anonymization",
         "Journey Clustering",
         "Run-Rate Forecasting",
         "Period-Aware Time Intelligence",
         "Dual Calendars",
-        "Wilson Score Ranking",
-        "Keyloop DMS"
+        "Wilson Score Ranking"
       ],
       note:
-        "Fully interactive. All customers, staff, brands, branches, campaigns and task codes are pseudonymized (Brand 01, Agent 07, TC-25...). Counts, rates and timings are the real production figures for the September to August window."
+        "Fully interactive. All customers, staff, brands, branches, campaigns and task codes are pseudonymized (Brand 01, Agent 07, TC-25...)."
     },
 
     // Capabilities Section
@@ -77,8 +68,8 @@ window.dataarcusPulseTranslations = {
       subtitle:
         "Built for the CRM manager, the sales director and the agent on the phone, each with their own view of the same truth.",
       list: [
-        "<strong>Executive Overview:</strong> total leads, qualified, sub-dealer, invoiced and retail sales with month-over-month arrows on every KPI card. Every comparison is period-aware: select a month and it compares to last month; select a quarter and it compares to last quarter.",
-        "<strong>Lead Source Report:</strong> leads, qualification tiers (Qualified / + Sub Dealer / + Unqualified) and decline reasons by campaign, ad set and lead source bucket, with a three-tier qualification taxonomy so marketing and CRM finally count the same thing.",
+        "<strong>Executive Overview:</strong> total leads, qualified, passed to partners, invoiced and sales with month-over-month arrows on every KPI card. Every comparison is period-aware: select a month and it compares to last month; select a quarter and it compares to last quarter.",
+        "<strong>Lead Source Report:</strong> leads, qualification tiers and decline reasons by campaign, ad set and lead source bucket, with a three-tier qualification taxonomy so marketing and CRM finally count the same thing.",
         "<strong>Agent Performance:</strong> calls made, connected rate, qualified rate, average journey duration, open retries and invoiced attribution per agent, colour-coded against team thresholds and trended month-over-month.",
         "<strong>Journey Intelligence:</strong> how many calls it takes to resolve a lead, percentage resolved on the first call, average lag from lead to first contact, and the age of leads never contacted.",
         "<strong>Qualification Pacing & Workload Forecast:</strong> a live \"are we on track\" engine. Last month's conversion rate becomes this month's target; the gap is spread across agents by fair share; each agent sees a fixed plan for today and a projected requirement for tomorrow that accounts for retry backlog, new-lead intake and expected inbound interruptions.",
@@ -94,12 +85,12 @@ window.dataarcusPulseTranslations = {
         {
           title: "Resolve Once, Hydrate Many",
           desc:
-            "Lead Status used to be a 150-line independent matching engine, and so was Terminal Reason. Both were rebuilt as thin wrappers reading off a single Matched Journey Key with outcome-priority tie-breaking. Validated row-for-row against the old logic (54,403 of 54,403 exact) before going live."
+            "Lead Status used to be a long, independent matching engine, and so was Terminal Reason. Both were rebuilt as thin wrappers reading off a single Matched Journey Key with outcome-priority tie-breaking. Validated row-for-row against the old logic (every lead an exact match) before going live."
         },
         {
           title: "Anonymization That Survived an Audit",
           desc:
-            "Fourteen mapping expressions and two helper functions pseudonymize every identifier at the end of each table's M partition. A final sweep of calculated-column expressions caught a hidden column that had bypassed the mapping and two measures hard-coding real names as SWITCH keys. Both fixed; zero real identifiers remain outside the sealed raw tables."
+            "Mapping expressions and helper functions pseudonymize every identifier at the end of each table's M partition. A final sweep of calculated-column expressions caught a hidden column that had bypassed the mapping and measures hard-coding real names as SWITCH keys. All fixed; zero real identifiers remain outside the sealed raw tables."
         },
         {
           title: "Two Calendars, One Answer",
@@ -109,7 +100,7 @@ window.dataarcusPulseTranslations = {
         {
           title: "Measures as Documentation",
           desc:
-            "All 410 measures carry a written description of what they count, what they exclude and why, including the date and reason of every fix. Each KPI follows one pattern: base value, period-aware last-period sibling, MoM change, arrow text, and a colour measure for conditional formatting."
+            "All measures carry a written description of what they count, what they exclude and why, including the date and reason of every fix. Each KPI follows one pattern: base value, period-aware last-period sibling, MoM change, arrow text, and a colour measure for conditional formatting."
         }
       ]
     },
@@ -123,9 +114,9 @@ window.dataarcusPulseTranslations = {
 
     // Final CTA
     finalCta: {
-      title: "Running a dealership or a call center on spreadsheets?",
+      title: "Running a sales team or a call center on spreadsheets?",
       subtitle:
-        "We connect your lead sources, call logs and DMS into one model your team can act on every morning. Let's start with your data.",
+        "We connect your lead sources, call logs and sales system into one model your team can act on every morning. Let's start with your data.",
       button: "Book a Strategy Call"
     }
   },
@@ -136,15 +127,15 @@ window.dataarcusPulseTranslations = {
     },
     // Page Meta
     meta: {
-      title: "داتا أركوس بالس: ذكاء CRM للسيارات في Power BI",
+      title: "داتا أركوس بالس: ذكاء CRM للمبيعات في Power BI",
       description:
-        "لوحة CRM لقطاع السيارات بمستوى الإنتاج في Power BI: 54 ألف عميل محتمل و113 ألف مكالمة و72 ألف رحلة، مع 410 مقاييس DAX وإخفاء آمن للبيانات الشخصية.",
+        "لوحة CRM للمبيعات بمستوى الإنتاج في Power BI: نماذج العملاء المحتملين والمكالمات والمبيعات في نموذج واحد موثّق، مع إخفاء آمن للبيانات الشخصية.",
       keywords:
-        "تحليلات CRM للسيارات, إدارة العملاء المحتملين للوكالات, Power BI مركز اتصال, تأهيل العملاء المحتملين, تحليلات Keyloop, نموذج دلالي DAX, إخفاء هوية البيانات, داتا أركوس",
+        "تحليلات CRM, إدارة العملاء المحتملين, Power BI مركز اتصال, تأهيل العملاء المحتملين, نموذج دلالي DAX, إخفاء هوية البيانات, داتا أركوس",
       author: "داتا أركوس",
-      "og:title": "داتا أركوس بالس: ذكاء إدارة علاقات العملاء للسيارات",
+      "og:title": "داتا أركوس بالس: ذكاء إدارة علاقات العملاء للمبيعات",
       "og:description":
-        "من نماذج العملاء المحتملين وسجلات المكالمات الخام إلى مصدر واحد للحقيقة. نموذج CRM لوكالة سيارات على مدار 12 شهرًا بمستوى الإنتاج، مُخفى الهوية بالكامل للعرض العام."
+        "من نماذج العملاء المحتملين وسجلات المكالمات الخام إلى مصدر واحد للحقيقة: نموذج CRM للمبيعات بمستوى الإنتاج، مُخفى الهوية بالكامل للعرض العام."
     },
 
     // Page Header
@@ -152,23 +143,15 @@ window.dataarcusPulseTranslations = {
       badge: "بمستوى الإنتاج · مُخفى الهوية",
       title: "نموذج: داتا أركوس بالس",
       subtitle:
-        "مركز قيادة لإدارة علاقات العملاء في قطاع السيارات مبني على اثني عشر شهرًا من عمليات وكالة حقيقية: كل نموذج عميل محتمل، كل مكالمة، كل استفسار وكل فاتورة تم حلها في نموذج دلالي واحد، ثم إخفاء هويتها بالكامل للعرض العام."
+        "مركز قيادة لإدارة علاقات العملاء في المبيعات: كل نموذج عميل محتمل، كل مكالمة، كل استفسار وكل فاتورة تم حلها في نموذج دلالي واحد، ثم إخفاء هويتها بالكامل للعرض العام."
     },
-
-    // Stats Row
-    stats: [
-      "طلبات العملاء المحتملين",
-      "المكالمات المسجلة",
-      "رحلات الاتصال المحلولة",
-      "مقاييس DAX الموثقة"
-    ],
 
     // Case Study Introduction
     intro: {
       challenge: {
-        title: "تحدي CRM في وكالات السيارات",
+        title: "تحدي CRM في المبيعات",
         content:
-          "تستقبل وكالة متعددة العلامات التجارية آلاف العملاء المحتملين الرقميين شهريًا من حملات Meta وGoogle. يتصل فريق CRM بهؤلاء العملاء، ثم يُحالون إلى مندوبي المبيعات كاستفسارات في نظام إدارة الوكالة، أو يوجَّهون إلى وكلاء فرعيين في إمارات أخرى، أو يُرفضون. كل خطوة تعيش في نظام مختلف: جداول العملاء المحتملين، سجلات المكالمات، تصديرات مهام مندوبي المبيعات، فواتير المبيعات. لم يستطع أحد الإجابة على أبسط سؤال: من بين العملاء المحتملين الذين دفعنا ثمنهم، كم منهم وصلنا إليه فعلًا وأهّلناه وبعنا له؟"
+          "يستقبل فريق مبيعات عملاء محتملين رقميين كل يوم من حملات مدفوعة. يتصل فريق CRM بهؤلاء العملاء، ثم يُحالون إلى مندوبي المبيعات كاستفسارات، أو يُحوَّلون إلى شركاء، أو يُرفضون. كل خطوة تعيش في نظام مختلف: جداول العملاء المحتملين، سجلات المكالمات، تصديرات المهام، فواتير المبيعات. لم يستطع أحد الإجابة على أبسط سؤال: من بين العملاء المحتملين الذين دفعنا ثمنهم، كم منهم وصلنا إليه فعلًا وأهّلناه وبعنا له؟"
       },
       skills: {
         title: "ما الذي يميز هذا المشروع",
@@ -188,17 +171,16 @@ window.dataarcusPulseTranslations = {
       title: "أهم الميزات والتقنيات",
       tags: [
         "Microsoft Fabric Lakehouse",
-        "DAX متقدم (410 مقياس)",
+        "DAX متقدم",
         "إخفاء الهوية في Power Query",
         "تجميع الرحلات",
         "تنبؤ معدل الإنجاز",
         "ذكاء زمني واعٍ بالفترة",
         "تقويمان مزدوجان",
-        "ترتيب Wilson Score",
-        "نظام Keyloop DMS"
+        "ترتيب Wilson Score"
       ],
       note:
-        "تفاعلي بالكامل. جميع العملاء والموظفين والعلامات التجارية والفروع والحملات ورموز المهام بأسماء مستعارة (Brand 01، Agent 07، TC-25...). الأعداد والنسب والتوقيتات هي الأرقام الإنتاجية الحقيقية لفترة سبتمبر إلى أغسطس."
+        "تفاعلي بالكامل. جميع العملاء والموظفين والعلامات التجارية والفروع والحملات ورموز المهام بأسماء مستعارة (Brand 01، Agent 07، TC-25...)."
     },
 
     // Capabilities Section
@@ -207,8 +189,8 @@ window.dataarcusPulseTranslations = {
       subtitle:
         "مبني لمدير CRM ومدير المبيعات والوكيل على الهاتف، لكل منهم رؤيته الخاصة للحقيقة نفسها.",
       list: [
-        "<strong>النظرة التنفيذية:</strong> إجمالي العملاء المحتملين، المؤهلين، الوكلاء الفرعيين، المفوترين ومبيعات التجزئة مع أسهم شهرية على كل بطاقة مؤشر. كل مقارنة واعية بالفترة: اختر شهرًا فيُقارن بالشهر الماضي؛ اختر ربعًا فيُقارن بالربع الماضي.",
-        "<strong>تقرير مصادر العملاء المحتملين:</strong> العملاء المحتملون، مستويات التأهيل (مؤهل / + وكيل فرعي / + غير مؤهل) وأسباب الرفض حسب الحملة ومجموعة الإعلانات ومصدر العميل، مع تصنيف تأهيل ثلاثي المستويات ليعدّ التسويق وCRM الشيء نفسه أخيرًا.",
+        "<strong>النظرة التنفيذية:</strong> إجمالي العملاء المحتملين، المؤهلين، المحالين إلى الشركاء، المفوترين والمبيعات مع أسهم شهرية على كل بطاقة مؤشر. كل مقارنة واعية بالفترة: اختر شهرًا فيُقارن بالشهر الماضي؛ اختر ربعًا فيُقارن بالربع الماضي.",
+        "<strong>تقرير مصادر العملاء المحتملين:</strong> العملاء المحتملون، مستويات التأهيل وأسباب الرفض حسب الحملة ومجموعة الإعلانات ومصدر العميل، مع تصنيف تأهيل ثلاثي المستويات ليعدّ التسويق وCRM الشيء نفسه أخيرًا.",
         "<strong>أداء الوكلاء:</strong> المكالمات المنجزة، نسبة الاتصال الناجح، نسبة التأهيل، متوسط مدة الرحلة، إعادة المحاولات المفتوحة وإسناد الفواتير لكل وكيل، مُلوّنة وفق عتبات الفريق ومتتبعة شهريًا.",
         "<strong>ذكاء الرحلات:</strong> كم مكالمة يلزم لحل عميل محتمل، نسبة المحلولين من المكالمة الأولى، متوسط التأخير من العميل المحتمل إلى أول اتصال، وعمر العملاء الذين لم يُتصل بهم قط.",
         "<strong>وتيرة التأهيل وتوقع عبء العمل:</strong> محرك حي يجيب \"هل نحن على المسار؟\". يصبح معدل تحويل الشهر الماضي هدف هذا الشهر؛ تُوزع الفجوة على الوكلاء بالحصة العادلة؛ يرى كل وكيل خطة ثابتة لليوم ومتطلبًا متوقعًا للغد يراعي تراكم إعادة المحاولات وتدفق العملاء الجدد والمكالمات الواردة المتوقعة.",
@@ -224,12 +206,12 @@ window.dataarcusPulseTranslations = {
         {
           title: "حلّ مرة واحدة، غذِّ الكثير",
           desc:
-            "كانت حالة العميل المحتمل محرك مطابقة مستقلًا من 150 سطرًا، وكذلك سبب الإنهاء. أُعيد بناء كليهما كأغلفة خفيفة تقرأ من مفتاح رحلة مطابق واحد مع كسر التعادل بأولوية النتيجة. تم التحقق صفًا بصف مقابل المنطق القديم (54,403 من 54,403 مطابقة تامة) قبل الإطلاق."
+            "كانت حالة العميل المحتمل محرك مطابقة مستقلًا طويلًا، وكذلك سبب الإنهاء. أُعيد بناء كليهما كأغلفة خفيفة تقرأ من مفتاح رحلة مطابق واحد مع كسر التعادل بأولوية النتيجة. تم التحقق صفًا بصف مقابل المنطق القديم (كل عميل محتمل مطابق تمامًا) قبل الإطلاق."
         },
         {
           title: "إخفاء هوية صمد أمام التدقيق",
           desc:
-            "أربعة عشر تعبير تعيين ودالتان مساعدتان تستبدل كل مُعرّف بأسماء مستعارة في نهاية قسم M لكل جدول. كشف مسح نهائي لتعبيرات الأعمدة المحسوبة عمودًا مخفيًا تجاوز التعيين ومقياسين يُدرجان أسماء حقيقية كمفاتيح SWITCH. تم إصلاحهما؛ لا يتبقى أي مُعرّف حقيقي خارج الجداول الخام المُحكمة."
+            "تعبيرات تعيين ودوال مساعدة تستبدل كل مُعرّف بأسماء مستعارة في نهاية قسم M لكل جدول. كشف مسح نهائي لتعبيرات الأعمدة المحسوبة عمودًا مخفيًا تجاوز التعيين ومقاييس تُدرج أسماء حقيقية كمفاتيح SWITCH. تم إصلاحها كلها؛ لا يتبقى أي مُعرّف حقيقي خارج الجداول الخام المُحكمة."
         },
         {
           title: "تقويمان، إجابة واحدة",
@@ -239,7 +221,7 @@ window.dataarcusPulseTranslations = {
         {
           title: "المقاييس كتوثيق",
           desc:
-            "تحمل جميع المقاييس الـ410 وصفًا مكتوبًا لما تعدّه وما تستثنيه ولماذا، بما في ذلك تاريخ وسبب كل إصلاح. يتبع كل مؤشر نمطًا واحدًا: القيمة الأساسية، نظير الفترة السابقة الواعي بالفترة، التغير الشهري، نص السهم، ومقياس لون للتنسيق الشرطي."
+            "تحمل جميع المقاييس وصفًا مكتوبًا لما تعدّه وما تستثنيه ولماذا، بما في ذلك تاريخ وسبب كل إصلاح. يتبع كل مؤشر نمطًا واحدًا: القيمة الأساسية، نظير الفترة السابقة الواعي بالفترة، التغير الشهري، نص السهم، ومقياس لون للتنسيق الشرطي."
         }
       ]
     },
@@ -253,9 +235,9 @@ window.dataarcusPulseTranslations = {
 
     // Final CTA
     finalCta: {
-      title: "هل تدير وكالة أو مركز اتصال على جداول البيانات؟",
+      title: "هل تدير فريق مبيعات أو مركز اتصال على جداول البيانات؟",
       subtitle:
-        "نربط مصادر عملائك المحتملين وسجلات المكالمات ونظام إدارة الوكالة في نموذج واحد يستطيع فريقك العمل عليه كل صباح. لنبدأ ببياناتك.",
+        "نربط مصادر عملائك المحتملين وسجلات المكالمات ونظام المبيعات في نموذج واحد يستطيع فريقك العمل عليه كل صباح. لنبدأ ببياناتك.",
       button: "احجز مكالمة استراتيجية"
     }
   }

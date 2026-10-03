@@ -13,7 +13,7 @@ window.journeyAttributionTranslations = {
       "og:url": "https://dataarcus.com/articles/article-journey-attribution.html",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/journey-attribution.jpg",
-      "og:image:alt": "A preview of the DataArcus Pulse automotive CRM intelligence dashboard.",
+      "og:image:alt": "A diagram of the Resolve Once, Hydrate Many pattern: lead forms, calls, statuses and invoices resolved to one journey key.",
       "og:locale": "en_US",
       "og:article:published_time": "2026-09-01T09:00:00Z",
       "og:article:author": "Abdelrahman M.",
@@ -34,22 +34,22 @@ window.journeyAttributionTranslations = {
     content: {
       p1: "Ask three different reports \"how many leads did Campaign X actually convert?\" and you'll often get three different numbers. Nobody lied. Each report matched the same lead to a call, an outcome, and an invoice using slightly different logic.",
       p2: "This is the <strong>Attribution Gap</strong>: the same customer journey gets re-resolved independently every time a new measure needs to know \"what happened to this lead.\" Small differences in matching logic (a different date window, a different tie-breaker) compound into KPIs that quietly disagree with each other.",
-      p3: "This is the exact problem we solved while building <a href='../dashboards/dataarcus-pulse.html' class='text-accent'>DataArcus Pulse</a>, our anonymized automotive CRM intelligence model. The fix is a pattern we call <strong>Resolve Once, Hydrate Many</strong>, and it changed how every downstream measure in the model behaves.",
+      p3: "This is the exact problem we solved while building <a href='../dashboards/dataarcus-pulse.html' class='text-accent'>DataArcus Pulse</a>, our anonymized sales CRM model. The fix is a pattern we call <strong>Resolve Once, Hydrate Many</strong>, and it changed how every downstream measure in the model behaves.",
 
       h_sec1: "The Problem: Five Reports, Five Different Answers",
-      p_sec1_1: "In a dealership CRM, a single lead can touch dozens of records: multiple calls, several statuses, and maybe, eventually, an invoice. The natural instinct is to let every report answer its own question independently: the Sales report looks up the invoice, the Call report looks up the last call, the Qualification report looks up the latest status.",
+      p_sec1_1: "In a sales CRM, a single lead can touch dozens of records: multiple calls, several statuses, and maybe, eventually, an invoice. The natural instinct is to let every report answer its own question independently: the Sales report looks up the invoice, the Call report looks up the last call, the Qualification report looks up the latest status.",
       p_sec1_2: "The problem is that <strong>\"independently\" means inconsistently</strong>. If the Sales report resolves a lead to its journey using one join condition, and the Qualification report uses a slightly different one, the two reports can disagree on whether the same lead is even the same journey, especially once a lead has multiple call attempts spread across days.",
-      p_sec1_3: "Multiply this by 410 measures and 24 tables, and you get a dashboard where every page is individually correct but collectively untrustworthy. Executives stop asking \"what's the number\" and start asking \"which report's number.\"",
+      p_sec1_3: "Multiply this across every measure and table in a model, and you get a dashboard where every page is individually correct but collectively untrustworthy. Executives stop asking \"what's the number\" and start asking \"which report's number.\"",
 
       h_sec2: "Resolve Once: A Single Source of Truth for Every Lead",
       p_sec2_1: "The fix isn't a smarter join. It's fewer joins. We built one column, a <strong>Matched Journey Key</strong>, whose only job is to resolve each lead to exactly one call journey, using one consistent set of tie-breaking rules.",
-      p_sec2_2: "Before replacing the old, scattered logic, we validated the new key against every existing measure that depended on lead-to-journey matching: <strong>54,403 out of 54,403 leads</strong> resolved to an identical journey under both the old and new logic. Only after that exact match did the old logic get retired.",
+      p_sec2_2: "Before replacing the old, scattered logic, we validated the new key against every existing measure that depended on lead-to-journey matching: <strong>every lead</strong> resolved to an identical journey under both the old and new logic. Only after that exact match did the old logic get retired.",
       p_sec2_3: "That single validation pass is what makes the pattern trustworthy, for us and for anyone reading the model later. One resolved key, proven correct once, is worth more than a dozen independently \"probably correct\" joins.",
 
       h_sec3: "Hydrate Many: Reusing the Resolution Everywhere",
       p_sec3_1: "Once a lead's journey is resolved, every other measure that needs to know something about that journey (status, terminal reason, invoice, agent, outcome) becomes a thin <strong>LOOKUPVALUE</strong> read off the Matched Journey Key, instead of its own independent matching logic.",
       p_sec3_2: "This has a second benefit beyond correctness: it turns 400+ measures into <strong>documentation</strong>. Reading a downstream measure's DAX tells you exactly which single source of truth it depends on, instead of hiding a re-derivation of matching logic inside every formula.",
-      p_sec3_3: "The result in DataArcus Pulse: 54,574 leads, 113,321 calls, and 72,013 call journeys that agree with each other on every page, from Executive Overview to Sales &amp; Attribution, because they all trace back to the same resolved key."
+      p_sec3_3: "The result in DataArcus Pulse: leads, calls and call journeys that agree with each other on every page, from Executive Overview to Sales &amp; Attribution, because they all trace back to the same resolved key."
     },
 
     // Explore More & Final CTA
@@ -78,7 +78,7 @@ window.journeyAttributionTranslations = {
       "og:url": "https://dataarcus.com/articles/article-journey-attribution.html",
       "og:site_name": "داتا أركوس",
       "og:image": "https://dataarcus.com/assets/img/og/journey-attribution.jpg",
-      "og:image:alt": "معاينة للوحة تحكم داتا أركوس بلس لذكاء CRM لقطاع السيارات.",
+      "og:image:alt": "مخطط لنمط حلّ مرة واحدة، غذِّ كل مكان: نماذج العملاء المحتملين والمكالمات والحالات والفواتير تُحل إلى مفتاح رحلة واحد.",
       "og:locale": "ar_EG",
       "og:article:published_time": "2026-09-01T09:00:00Z",
       "og:article:author": "عبد الرحمن م.",
@@ -99,22 +99,22 @@ window.journeyAttributionTranslations = {
     content: {
       p1: "اسأل ثلاثة تقارير مختلفة \"كم عدد العملاء المحتملين الذين حوّلتهم الحملة X فعليًا؟\" وستحصل غالبًا على ثلاثة أرقام مختلفة. لم يكذب أحد. كل تقرير طابق نفس العميل المحتمل بمكالمة ونتيجة وفاتورة باستخدام منطق مختلف قليلاً.",
       p2: "هذه هي <strong>فجوة العزو</strong>: يُعاد حل رحلة العميل نفسها بشكل مستقل في كل مرة يحتاج فيها مقياس جديد لمعرفة \"ماذا حدث لهذا العميل المحتمل\". الفروقات الصغيرة في منطق المطابقة، مثل نافذة تاريخ مختلفة أو قاعدة ترجيح مختلفة، تتراكم لتنتج مؤشرات أداء تتعارض مع بعضها بصمت.",
-      p3: "هذه هي المشكلة بالضبط التي حللناها أثناء بناء <a href='../dashboards/dataarcus-pulse.html' class='text-accent'>داتا أركوس بلس</a>، نموذج ذكاء CRM لقطاع السيارات المخفي الهوية. الحل هو نمط نسميه <strong>حلّ مرة واحدة، غذِّ كل مكان</strong>، وقد غيّر طريقة عمل كل مقياس تابع في النموذج.",
+      p3: "هذه هي المشكلة بالضبط التي حللناها أثناء بناء <a href='../dashboards/dataarcus-pulse.html' class='text-accent'>داتا أركوس بلس</a>، نموذج CRM للمبيعات المخفي الهوية. الحل هو نمط نسميه <strong>حلّ مرة واحدة، غذِّ كل مكان</strong>، وقد غيّر طريقة عمل كل مقياس تابع في النموذج.",
 
       h_sec1: "المشكلة: خمسة تقارير، خمس إجابات مختلفة",
-      p_sec1_1: "في نظام CRM لوكالة سيارات، يمكن لعميل محتمل واحد أن يلامس عشرات السجلات: مكالمات متعددة، عدة حالات، وربما في النهاية فاتورة. الغريزة الطبيعية هي ترك كل تقرير يجيب على سؤاله بشكل مستقل: تقرير المبيعات يبحث عن الفاتورة، تقرير المكالمات يبحث عن آخر مكالمة، تقرير التأهيل يبحث عن أحدث حالة.",
+      p_sec1_1: "في نظام CRM للمبيعات، يمكن لعميل محتمل واحد أن يلامس عشرات السجلات: مكالمات متعددة، عدة حالات، وربما في النهاية فاتورة. الغريزة الطبيعية هي ترك كل تقرير يجيب على سؤاله بشكل مستقل: تقرير المبيعات يبحث عن الفاتورة، تقرير المكالمات يبحث عن آخر مكالمة، تقرير التأهيل يبحث عن أحدث حالة.",
       p_sec1_2: "المشكلة أن <strong>\"بشكل مستقل\" تعني بشكل غير متسق</strong>. إذا حلّ تقرير المبيعات رحلة العميل باستخدام شرط ربط واحد، واستخدم تقرير التأهيل شرطًا مختلفًا قليلاً، يمكن أن يختلف التقريران حول ما إذا كان نفس العميل المحتمل هو نفس الرحلة أصلاً، خاصة عندما يكون لدى العميل محاولات اتصال متعددة موزعة على عدة أيام.",
-      p_sec1_3: "اضرب هذا في 410 مقياسًا و24 جدولاً، وستحصل على لوحة تحكم كل صفحة فيها صحيحة على حدة لكنها غير موثوقة مجتمعة. يتوقف المديرون التنفيذيون عن سؤال \"ما هو الرقم\" ويبدؤون بسؤال \"رقم أي تقرير\".",
+      p_sec1_3: "اضرب هذا في كل مقياس وجدول في النموذج، وستحصل على لوحة تحكم كل صفحة فيها صحيحة على حدة لكنها غير موثوقة مجتمعة. يتوقف المديرون التنفيذيون عن سؤال \"ما هو الرقم\" ويبدؤون بسؤال \"رقم أي تقرير\".",
 
       h_sec2: "حلّ مرة واحدة: مصدر حقيقة واحد لكل عميل محتمل",
       p_sec2_1: "الحل ليس ربطًا أذكى، بل عدد أقل من الربط. بنينا عمودًا واحدًا، <strong>مفتاح الرحلة المطابقة</strong>، وظيفته الوحيدة هي حل كل عميل محتمل إلى رحلة اتصال واحدة بالضبط، باستخدام مجموعة واحدة ثابتة من قواعد الترجيح.",
-      p_sec2_2: "قبل استبدال المنطق القديم المتناثر، تحققنا من المفتاح الجديد مقابل كل مقياس موجود كان يعتمد على مطابقة العميل المحتمل بالرحلة: <strong>54,403 من أصل 54,403 عميل محتمل</strong> تم حلّهم إلى نفس الرحلة تمامًا تحت المنطقين القديم والجديد. لم يُلغَ المنطق القديم إلا بعد هذه المطابقة الكاملة.",
+      p_sec2_2: "قبل استبدال المنطق القديم المتناثر، تحققنا من المفتاح الجديد مقابل كل مقياس موجود كان يعتمد على مطابقة العميل المحتمل بالرحلة: <strong>كل عميل محتمل</strong> تم حلّه إلى نفس الرحلة تمامًا تحت المنطقين القديم والجديد. لم يُلغَ المنطق القديم إلا بعد هذه المطابقة الكاملة.",
       p_sec2_3: "عملية التحقق الواحدة هذه هي ما يجعل النمط موثوقًا، لنا ولأي شخص يقرأ النموذج لاحقًا. مفتاح واحد تم حله وإثبات صحته مرة واحدة يساوي أكثر من عشرات الروابط المستقلة \"الصحيحة على الأرجح\".",
 
       h_sec3: "غذِّ كل مكان: إعادة استخدام الحل في كل مكان",
       p_sec3_1: "بمجرد حل رحلة العميل المحتمل، يصبح كل مقياس آخر يحتاج لمعرفة شيء عن تلك الرحلة (الحالة، سبب الإنهاء، الفاتورة، الوكيل، النتيجة) قراءة بسيطة عبر <strong>LOOKUPVALUE</strong> من مفتاح الرحلة المطابقة، بدلاً من منطق مطابقة مستقل خاص به.",
       p_sec3_2: "لهذا فائدة ثانية إلى جانب الدقة: إنه يحوّل أكثر من 400 مقياس إلى <strong>توثيق</strong>. قراءة كود DAX لمقياس تابع تخبرك بالضبط بمصدر الحقيقة الوحيد الذي يعتمد عليه، بدلاً من إخفاء إعادة اشتقاق منطق المطابقة داخل كل معادلة.",
-      p_sec3_3: "النتيجة في داتا أركوس بلس: 54,574 عميلاً محتملاً، و113,321 مكالمة، و72,013 رحلة اتصال تتفق جميعها مع بعضها في كل صفحة، من النظرة التنفيذية العامة إلى المبيعات والعزو، لأنها جميعًا تعود إلى نفس المفتاح المحلول."
+      p_sec3_3: "النتيجة في داتا أركوس بلس: عملاء محتملون ومكالمات ورحلات اتصال تتفق جميعها مع بعضها في كل صفحة، من النظرة التنفيذية العامة إلى المبيعات والعزو، لأنها جميعًا تعود إلى نفس المفتاح المحلول."
     },
 
     // Explore More & Final CTA

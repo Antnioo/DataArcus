@@ -2,7 +2,7 @@
 window.portfolioTranslations = {
   en: {
     attrs: {
-      pulse: "A preview of the DataArcus Pulse automotive CRM intelligence dashboard",
+      pulse: "A preview of the DataArcus Pulse sales CRM dashboard",
       fintech: "A preview of the Fintech Portfolio Risk dashboard",
       repeatiq: "A preview of the RepeatIQ Commerce Analytics dashboard",
       cfpb: "A preview of the Consumer Financial Complaints Analysis dashboard",
@@ -48,9 +48,9 @@ window.portfolioTranslations = {
       projects: {
 
         pulse: {
-          badge: "AUTOMOTIVE CRM",
+          badge: "SALES CRM",
           title: "DataArcus Pulse: CRM Intelligence",
-          description: "A production-grade dealership CRM command center: 54K leads, 113K calls and 72K call journeys resolved into one model with 410 measures, daily pacing targets and PII-safe anonymization.",
+          description: "A production-grade sales CRM command center: leads, calls and call journeys resolved into one documented model, with daily pacing targets and PII-safe anonymization.",
           button: "View Showcase"
         },
         fintech: {
@@ -107,9 +107,9 @@ window.portfolioTranslations = {
     // Hero Project Section
     heroProject: {
       badge: "LIVE & INTERACTIVE",
-      title: "Hero Showcase: DataArcus Pulse (Automotive CRM Intelligence)",
+      title: "Hero Showcase: DataArcus Pulse (Sales CRM Intelligence)",
       featuresTitle: "Key Features & Technologies Used:",
-      tags: ["Fabric Lakehouse", "Advanced DAX (410 measures)", "Journey Clustering", "Run-Rate Forecasting", "PII-Safe Anonymization"],
+      tags: ["Fabric Lakehouse", "Advanced DAX", "Journey Clustering", "Run-Rate Forecasting", "PII-Safe Anonymization"],
       button: "View Full Showcase"
     },
     
@@ -126,7 +126,7 @@ window.portfolioTranslations = {
 
   ar: {
     attrs: {
-      pulse: "معاينة للوحة DataArcus Pulse لتحليلات CRM في قطاع السيارات",
+      pulse: "معاينة للوحة DataArcus Pulse لتحليلات CRM للمبيعات",
       fintech: "معاينة للوحة مخاطر محفظة مشاريع Fintech",
       repeatiq: "معاينة للوحة تحليلات التجارة RepeatIQ",
       cfpb: "معاينة للوحة تحليل الشكاوى المالية للمستهلكين",
@@ -172,9 +172,9 @@ window.portfolioTranslations = {
       projects: {
 
         pulse: {
-          badge: "CRM لقطاع السيارات",
+          badge: "CRM للمبيعات",
           title: "داتا أركوس بالس: ذكاء إدارة علاقات العملاء",
-          description: "مركز قيادة CRM لوكالة سيارات بمستوى الإنتاج: 54 ألف عميل محتمل، 113 ألف مكالمة و72 ألف رحلة اتصال في نموذج واحد يضم 410 مقياس، وأهداف وتيرة يومية، وإخفاء هوية آمن للبيانات الشخصية.",
+          description: "مركز قيادة CRM للمبيعات بمستوى الإنتاج: العملاء المحتملون والمكالمات ورحلات الاتصال في نموذج واحد موثّق، مع أهداف وتيرة يومية وإخفاء هوية آمن للبيانات الشخصية.",
           button: "عرض النموذج"
         },
         fintech: {
@@ -231,9 +231,9 @@ window.portfolioTranslations = {
     // Hero Project Section Arabic
     heroProject: {
       badge: "تفاعلي ومباشر",
-      title: "النموذج المميّز: داتا أركوس بالس (ذكاء CRM لقطاع السيارات)",
+      title: "النموذج المميّز: داتا أركوس بالس (ذكاء CRM للمبيعات)",
       featuresTitle: "أهم المزايا والتقنيات المستخدمة:",
-      tags: ["Fabric Lakehouse", "DAX متقدّم (410 مقياس)", "تجميع الرحلات", "تنبؤ معدل الإنجاز", "إخفاء هوية آمن للبيانات"],
+      tags: ["Fabric Lakehouse", "DAX متقدّم", "تجميع الرحلات", "تنبؤ معدل الإنجاز", "إخفاء هوية آمن للبيانات"],
       button: "عرض النموذج الكامل"
     },
 

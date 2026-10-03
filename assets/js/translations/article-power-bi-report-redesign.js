@@ -30,7 +30,7 @@ window.reportRedesignArticleTranslations = {
     },
     "content": {
       "p1": "Monday, 8:47. The CEO needs the sales dashboard in the company colours, and the board meeting starts at 9:00. The data is ready. The design is not. Most Power BI reports don't fail because of the numbers. They fail because nobody can read them in the ten seconds a manager gives them.",
-      "p2": "This is a leads report from a car dealer: campaigns, why leads are declined, where they come from, and who is still waiting for a call. (The brands NOVA and KAIRO and all the numbers are fictional.) Every visual is the right one. The problem is everything around them.",
+      "p2": "This is a leads report: campaigns, why leads are declined, where they come from, and who is still waiting for a call. (The brands NOVA and KAIRO and all the numbers are fictional.) Every visual is the right one. The problem is everything around them.",
       "fig1": "Before: the right visuals, but loud colours, uneven gaps and no clear place to start reading.",
       "h1": "What was wrong",
       "l1_1": "<strong>Too many colours.</strong> Blue, orange, pink, yellow and green all compete, so none of them means anything.",
@@ -101,7 +101,7 @@ window.reportRedesignArticleTranslations = {
     },
     "content": {
       "p1": "الاثنين، الساعة 8:47. المدير التنفيذي يريد لوحة المبيعات بألوان الشركة، واجتماع مجلس الإدارة يبدأ الساعة 9:00. البيانات جاهزة، لكن التصميم لا. معظم تقارير Power BI لا تفشل بسبب الأرقام، بل لأن أحدًا لا يستطيع قراءتها في الثواني العشر التي يمنحها لها المدير.",
-      "p2": "هذا تقرير عملاء محتملين لدى وكيل سيارات: الحملات، وأسباب رفض العملاء، ومصادرهم، ومن ما زال ينتظر اتصالًا. (العلامتان NOVA وKAIRO وكل الأرقام وهمية.) كل عنصر مرئي هو العنصر الصحيح، لكن المشكلة في كل ما حوله.",
+      "p2": "هذا تقرير عملاء محتملين: الحملات، وأسباب رفض العملاء، ومصادرهم، ومن ما زال ينتظر اتصالًا. (العلامتان NOVA وKAIRO وكل الأرقام وهمية.) كل عنصر مرئي هو العنصر الصحيح، لكن المشكلة في كل ما حوله.",
       "fig1": "قبل: العناصر الصحيحة، لكن بألوان صاخبة ومسافات غير متساوية وبلا نقطة واضحة لبدء القراءة.",
       "h1": "ما المشكلة؟",
       "l1_1": "<strong>ألوان كثيرة جدًا.</strong> الأزرق والبرتقالي والوردي والأصفر والأخضر تتنافس، فلا يعني أي منها شيئًا.",

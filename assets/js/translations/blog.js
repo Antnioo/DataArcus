@@ -67,9 +67,9 @@ window.blogTranslations = {
       },
       modelHealth: {
         badge: "BEST PRACTICE",
-        title: "We Ran a Health Check on Our Own Power BI Model. It Scored 67.",
+        title: "We Ran a Health Check on a Microsoft Power BI Sample. It Scored 84.",
         date: "September 25, 2026",
-        excerpt: "A real 410-measure model, checked in under a second: 100 unused columns, 23 visuals pointing at deleted measures and 15 slow filters. Here is what we found and how to check yours.",
+        excerpt: "Microsoft's public COVID-19 sample, checked in under a second: a quarter of its columns unused, two bookmarks pointing at a deleted column and auto date/time left on. What we found and how to check yours.",
         button: "Read Playbook"
       },
       ramadanSales: {
@@ -90,7 +90,7 @@ window.blogTranslations = {
         badge: "DATA ENGINEERING",
         title: "Resolve Once, Hydrate Many: A DAX Pattern for Lead Attribution",
         date: "September 1, 2026",
-        excerpt: "Why matching the same lead five times produces disagreeing KPIs, and the single-resolution DAX pattern that validated 54,403/54,403 leads before replacing scattered join logic.",
+        excerpt: "Why matching the same lead five times produces disagreeing KPIs, and the single-resolution DAX pattern that matched every lead exactly before replacing scattered join logic.",
         button: "Read Playbook"
       },
       evm: {
@@ -206,9 +206,9 @@ window.blogTranslations = {
       },
       modelHealth: {
         badge: "أفضل الممارسات",
-        title: "فحصنا صحة نموذج Power BI الخاص بنا. النتيجة: 67 من 100.",
+        title: "فحصنا صحة نموذج Power BI تجريبي من Microsoft. النتيجة: 84 من 100.",
         date: "25 سبتمبر 2026",
-        excerpt: "نموذج حقيقي فيه 410 مقاييس فُحص في أقل من ثانية: 100 عمود غير مستخدم و23 visual تشير إلى مقاييس محذوفة و15 فلترًا بطيئًا. هذا ما وجدناه وكيف تفحص نموذجك.",
+        excerpt: "نموذج COVID-19 التجريبي العام من Microsoft فُحص في أقل من ثانية: ربع الأعمدة غير مستخدمة، وإشارتان مرجعيتان تشيران إلى عمود محذوف، وخيار Auto date/time مفعّل. هذا ما وجدناه وكيف تفحص نموذجك.",
         button: "اقرأ الدليل"
       },
       ramadanSales: {
@@ -229,7 +229,7 @@ window.blogTranslations = {
         badge: "هندسة البيانات",
         title: "حلّ مرة واحدة، غذِّ كل مكان: نمط DAX لعزو العملاء المحتملين",
         date: "1 سبتمبر 2026",
-        excerpt: "لماذا تُنتج مطابقة نفس العميل المحتمل خمس مرات مؤشرات أداء متضاربة، ونمط DAX الذي وثّق تطابق 54,403 من أصل 54,403 عميل محتمل قبل استبدال منطق الربط المتناثر.",
+        excerpt: "لماذا تُنتج مطابقة نفس العميل المحتمل خمس مرات مؤشرات أداء متضاربة، ونمط DAX الذي وثّق تطابق كل عميل محتمل قبل استبدال منطق الربط المتناثر.",
         button: "اقرأ الدليل"
       },
       evm: {

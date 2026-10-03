@@ -55,17 +55,18 @@ The memory for the blog. Read it before planning or writing an article; update i
 - **Lead with the Gulf business logic** (useful in English too); present Arabic as quality done properly, not just
   "dashboards in Arabic".
 
-## To fix (owner confirmed 2026-10-02, not urgent)
-- **`article-power-bi-model-health-check.html` describes the owner's employer's CRM model** ("one of our own
-  production models: a CRM model we built and still maintain": 24 tables, 410 measures, 292 visuals, and example
-  columns such as customer names, phone numbers and notes). This breaks the rule of no employer data. Plan, with the
-  owner's go when there's time: (A) remove every identifying detail (no "our own", no "CRM", no example columns,
-  rounded numbers); then (B) re-run the Model Health Check on a public sample model (e.g. AdventureWorks or our test
-  model) and rewrite the case study with those numbers, in English and Arabic.
+## To fix
+- **Done 2026-10-03 (branch `content/health-check-rewrite`, waiting for the reviewer):** the Health Check article no
+  longer describes the owner's employer's model. The case study is now Microsoft's public COVID-19 US Tracking Sample
+  (`powerbi-service-samples` in github.com/microsoft/powerbi-desktop-samples, MIT licence), run through our engine
+  (`assets/js/model-health-engine.js`) in Node: score 84; 4 tables, 16 columns, 10 measures, 2 relationships, 2 pages,
+  67 visuals; 4 of 16 columns unused, 2 of 12 bookmarks pointing at a deleted column, auto date/time on, 4 calculated
+  columns on imported tables. Title, description, share image, blog card, home page texts and the tool page's link
+  updated in English and Arabic; `dateModified` 2026-10-03.
 
 ## Where ideas come from
 Questions people ask in LinkedIn comments and messages, Microsoft's monthly Power BI updates (only what matters to
-our readers), and problems found while building the tools (the model health check found 41% unused columns: that
+our readers), and problems found while building the tools (the model health check finds unused columns: that
 became a post). Add ideas here with the date and where they came from:
 - (none yet)
 
@@ -93,7 +94,7 @@ became a post). Add ideas here with the date and where they came from:
 | 2026-09-01 | Resolve once, hydrate many: a DAX attribution pattern | Craft | - |
 | 2026-09-23 | Compare Ramadan sales year over year (DAX) | Gulf | Calendar generator |
 | 2026-09-23 | Power BI Pro vs PPU vs Fabric F64: 2026 cost guide | Cost | Licensing calculator |
-| 2026-09-25 | We checked a real Power BI model: 41% of columns unused | Craft | Model Health Check |
+| 2026-09-25 | Health check on a Microsoft Power BI sample: it scored 84 (rewritten 2026-10-03; was the employer's model) | Craft | Model Health Check |
 | 2026-09-28 | Same visuals, new design: a report redesign in 5 minutes | Design | Theme Generator |
 | 2026-09-29 | Power BI dashboard design by department: 7 report styles | Design | Theme Generator |
 | 2026-10-02 | Is your Power BI model ready for AI? A 7-point check | Craft (AI-ready models) | Model Health Check, Calendar Generator |
