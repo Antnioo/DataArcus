@@ -531,7 +531,211 @@ website's sample download (transparent theme, background image) in English and A
   months and days sorted alphabetically, 0.34 and 101914 (round 2); the title and logo at the top of their boxes
   (round 1).
 
+## 2026-10-03: round 1 measurements (branch `fix/round-1-visible`, no code changed), Power BI Desktop 2.158.1177
+
+Test reports only, built from the repo's code with `builder-scripts\m1-build.mjs` into `tests/phase2-try/m1/` (the
+website's sample data; "Gulf Sales M1 ..."), opened and captured by `m1-run.ps1` (page screenshots at 2x through the
+bridge; the phone layout through UI Automation, `phone-check.ps1`), closed without saving. English (Segoe UI) and Arabic
+(Tahoma). Numbers are read from the screenshots' pixels (`m1-analyze.mjs`, `m1-buttons.mjs`, `m1-header.mjs`; a page
+unit is 1.17 pixels on the 1080 pages and 0.59 on the 2160 page, so readings are within about 1 unit on 1080 and 2 on
+2160); what is whole or cut is judged from full-size crops (`tests/phase2-try/shots-m1/`, `c-*.png`).
+
+**1. The Reset icon and a button's text width (the "Buttons" page: 8, 10, 12, 15, 20, 30pt; the icon coloured red).**
+
+| Measured | English ("Reset filters", 13) | Arabic ("إعادة ضبط الفلاتر", 17) |
+|---|---|---|
+| text width, em per character | 0.38 at every size (a 26-character sentence: 0.42) | 0.40-0.41 (a 26-character sentence: 0.38) |
+| the icon in a 40-high button | 26.5 wide, 29 high, starting 8 from the edge: it ends at 34 | the same |
+| the icon in 60- and 80-high buttons | 41 x 46 and 55.5 x 63, ending at 52 and 71 | the same |
+| the icon follows | the button's height at every text size (0.73-0.81 of it high, 0.66-0.70 wide, ending at 0.86-0.88 of it) | the same |
+| the text beside an icon | at the far end, about 3 from the edge; without an icon it is centred | the same |
+| too little room | the text is drawn over the icon (30pt in 220 wide), or loses words without "..." (30pt in 200: "Reset") | the same |
+
+So: the icon needs **0.88 x the button's height** from the start edge, whatever the text size. The code's `iconH`,
+2.25 x pt, is the same number only for the default button (15pt in a 40-high button: 34); it was never a measured
+rule. The width rule in `resetFit`, text at 0.45 em per character plus the button's height plus 6, is on the safe side
+of both (0.38-0.42 measured; the icon ends at 0.88 of the height). Nothing here asks for a code change.
+
+**2. Page buttons (the "Gulf Sales M1 Nav" reports: two pages, "Executive summary" and "Details", "ملخص تنفيذي" and
+"التفاصيل"; navigators as exported, in Segoe UI and in Tahoma).** A page button puts a long name on two lines only when
+two lines fit its height; otherwise it stays on one line and cuts it with "...".
+
+| Text size | Segoe UI: two lines from a height of | Tahoma: two lines from |
+|---|---|---|
+| 14pt | 50 (one line, cut, at 38-48) | 46 (cut at 38, 42) |
+| 13pt | 46 (cut at 38, 42) | 42 (cut at 38) |
+| 12pt | 42 (cut at 38) | 42 (cut at 38) |
+| 11pt | 42 (cut at 38) | 38 |
+
+The same in English and Arabic. So two lines need about **3.5 x pt in Segoe UI (1.77 a line) and 3.2 x pt in Tahoma
+(1.61 a line)**; the code's 1.6 x pt a line plus 2 is Tahoma's. This is the cut "Executive..." on the website's 1080
+download: 14pt in a 48-high header, Segoe UI: the code counts on two lines (46 / 22.4), Desktop gives one, and the 140
+wide button cuts it; Tahoma (the MCP's reports) wraps. On one line at 14pt, 48 high, both fonts: "Executive summary" is
+cut in a navigator 200-320 wide for two pages and whole at 360 and 400 (a button about 174 wide). At 10pt, 32 high (the
+720 page): whole on one line from 267 for two pages, as today's 299. Seen: in the Arabic report the first page's button
+is still the leftmost.
+
+**3. The header's text and logo in their boxes (the "Header" page, 3840 x 2160; "Gulf Sales Hg" bold, "مبيعات الخليج
+Hg"; boxes of the text-box rule's height, 96 and 140 high).** The text always starts at the same distance from the top
+of its box, whatever the box's height: it is top-aligned, and a text box has no vertical alignment setting (Microsoft's
+CLI lists none). The ink (top of "H" to the bottom of "g"):
+
+| Size | Segoe UI: top, height | Tahoma: top, height |
+|---|---|---|
+| 20pt | 13.9, 27.3 | 8.7, 27.3 |
+| 30pt | 19.9, 37.6 | 14.7, 39.3 |
+| 40pt | 25.9, 51.3 | 19.1, 51.3 |
+| 47pt | 28.5, 63.2 | 21.6, 59.8 |
+
+So the middle of the text is about **1.2 x pt below the box's top** (Segoe UI 3 + 1.19 x pt, Tahoma 1.12 x pt). The
+title's size is 0.42 x its box, which puts its middle at 0.50 of the box: **the title is already centred within about
+3**, on 1080 and on 2160 (40pt in 96: middle at 51.5 of 96). It sits high only when the 60pt limit holds it back (a
+header slot over 143 high). **"Your logo" is 0.3 x its box, so its middle is at 0.36: 7 above the centre on 1080 and 10
+on 2160 (29pt in 96: ink from 21 to 58, 38 free below).** The logos (wide, square, tall; `image.fit` `'Fit'`) are
+centred in their boxes already, in both directions.
+
+**4. Month labels at tooltip size (the "Tip" page: 296 x 184, the size of today's tooltip chart; English with full
+month names, the longest labels; Arabic month names).**
+
+| Chart | English | Arabic |
+|---|---|---|
+| column, axis text 8pt, value axis on (8pt) | **all 12 names whole**, slanted | **all 12 whole**, slanted |
+| column or line or area, 8pt, value axis off | 12 names, the first cut ("Janu...") | 12, the first shown as "..." |
+| line, 8pt, value axis on | upright names, cut ("Febru...", "Septe..."), and a scrollbar | upright, one cut, a scrollbar |
+| line, 9pt, value axis off | upright, cut | 12 whole, slanted |
+| line as the theme gives it (15pt) | cut, scrollbar | cut, scrollbar |
+| bar (today's tooltip chart) by month | 6 of 12 rows, then a scrollbar | the same |
+
+So a monthly trend in the tooltip is a **column chart with the axis text at 8pt and the value axis left on at 8pt**:
+the value axis gives the first slanted name the room it needs.
+
+**5. Text sizes in the phone layout ("Gulf Sales M1 Phone ..." on 1920 x 1080 and 3840 x 2160, English and Arabic:
+pages whose phone layout holds one visual of each type; A and D as exported, B and E with sizes written in
+`mobile.json` without a selector, C and F with the `default` selector).** As exported, every text keeps the page's size
+on the phone: on the 2160 report the title, slicer names, Reset, the chart and table titles, the axis text and the
+table's cells are all several times too big and cut; on 1080 the slicer and the page buttons are cut. A size written in
+`mobile.json` is used when it is written the way `visual.json` needs it:
+
+| In `mobile.json` | Without a selector | With `default` |
+|---|---|---|
+| text box: `objects.general` with the paragraph at 14pt | **used** | ignored |
+| slicer: `header.textSize`, `items.textSize` 10 | **used** | ignored |
+| button: `text.fontSize` 10 | ignored | **used** |
+| page buttons: `text.fontSize` 10 on `default`, `hover`, `selected` | (per state) **used** | |
+| chart and table title: `visualContainerObjects.title.fontSize` 12 | **used** | ignored |
+| column, bar and line charts: `categoryAxis.fontSize`, `valueAxis.fontSize` 8 | **used** | ignored |
+| table: `columnHeaders.fontSize`, `values.fontSize`, `total.fontSize` 8 | **used** | ignored |
+| card: container `padding` (a top of 30 on one card) | **used** (the title moves down) | ignored |
+
+With these sizes everything is whole in its phone slot in both languages and on both page sizes: title 14pt in 56, page
+buttons 10pt in 44 (long names on two lines, five buttons across), slicer 10pt in 64, Reset 10pt in 40 with its icon,
+titles 12pt, a table 110 high showing its header and rows. Not measured: data labels, legends, and the text of donut,
+funnel, treemap, map and gauge on the phone. The card padding: today's `mobile.json` writes it under `default`, so
+it is ignored and the page's padding stays (on 2160 with a side accent bar: 52 at the side, which cuts "Avg Order V..."
+in the 157.5-wide phone card).
+**The phone canvas:** a strip 323 wide spans the canvas's grid exactly; one 340 wide sticks out past its right edge. So
+323 is the canvas's width (1.25 screen pixels a unit in Desktop's view). Its gap of 8 and the slot heights are our own
+layout numbers, not Power BI's.
+
+**6. A rounded panel with a shadow behind the header and the filter rail of a solid design ("Gulf Sales M1 Solid": EN,
+AR, EN dark on 1920 x 1080, EN on 1280 x 720; both pages, so a top filter strip and a side rail; the two groups'
+backgrounds switched off and one visual put behind each group, at the group's box).**
+
+| Option | Result |
+|---|---|
+| today (the group's own background) | a band with square corners and no shadow, beside rounded panels with shadows |
+| A: an empty text box left to the theme (nothing written for its background, border or shadow) | **the theme's panel: the cards' colour, corners and shadow**, in English and Arabic (rail on the right), light and dark, 1080 and 720; behind the title, page buttons, logo text, slicers and Reset |
+| B: a shape (`rectangleRoundedByPixel`, `roundEdge` 12) with its own fill, outline and shadow | square corners, a thin offset shadow: not like the panels |
+| C: a rectangle shape with its own fill and outline off, left to the theme | the same as A |
+
+A and C look the same; A is the visual the slide-in panel's card already uses. The panel has no `mobile.json`, so it
+is not in the phone layout. Seen: the header's group starts at 36 and the rail at 24, so the header's panel is 12
+narrower on each side than the rail's and the cards'.
+
+**Seen, not in scope:** every test report opens with "One or more calculated tables need to be manually refreshed"
+(the sample download; round 2 item 2.3), the data shows all the same. A page navigator in Desktop also shows hidden
+pages as buttons. The slicers of the Arabic reports show "All" in English (Power BI's own text). Microsoft's validator
+warns on our exports (no errors): a 20pt title in a 46-high text box "may be too small (min 48)", and theme text sizes
+over 45 on the 3840 x 2160 theme (54, 60).
+
+## 2026-10-03: round 1 built (`fix/round-1-visible`, `d286ded`), Power BI Desktop 2.158.1177: eighteen reports
+
+Test reports only, built from the branch by `builder-scripts\r1-build.mjs`, closed without saving: twelve as the
+website's sample download (`tests/phase2-try/r1/`: English and Arabic at 1920 x 1080 and 1280 x 720 light, 1920 x 1080
+dark, 3840 x 2160, and four with the slide-in filter panel) and six through the branch's MCP server over stdio on our
+sample model (`tests/5-tmdl-sample/`: English and Arabic at 1080 and 720 light, 1080 dark; solid designs). For each
+(`r1-run.ps1`): both pages and the tooltip pages captured at 2x, every chart hovered and the slide-in panel worked with
+Ctrl+click by `r1-desk.ps1` (the page's place on the screen read through UI Automation), the phone layout by
+`phone-check.ps1`. Captures and full-size crops: `tests/phase2-try/shots-r1/`. Expected results were written in
+`mcp/WORK.md` before the run.
+
+| # | Checked | Expected | Seen | |
+|---|---|---|---|---|
+| 4a | page buttons | "Executive summary" whole on one line on the English 1080 download and on 2160; Arabic and 720 as before; the MCP's whole | whole on one line on every report: English 1080 (website and MCP, light and dark, with and without the panel), 2160, 720; "ملخص تنفيذي" whole | PASS |
+| 4b | "Your logo" and the title | "Your logo" in the middle of the header's height on 1080, 720 and 2160; the title where it was | "Your logo" and "شعارك" level with the page buttons' text and the title on 1080, 720 and 2160, website and MCP; the title unchanged | PASS |
+| 5 | every chart hovered | bar and column charts show the card and the measure by month with 12 names whole; the line chart the card and the bar chart by category | the right tooltip page shows on each chart (trend on bar and column charts, filtered to the hovered item; the category page on the line chart). **English: the trend shows 11 months, upright, and a scrollbar hides December.** Arabic website: 12 names whole, slanted | **FAIL** |
+| 6 | phone layout (top of each page: the capture doesn't scroll) | title, page buttons, slicers, Reset, cards whole | whole on every report, 1080, 720 and 2160, English and Arabic, website and MCP: title 14pt, page buttons on one line, three slicers, Reset with its icon, cards with whole titles ("Avg Order Value" on 2160) | PASS (top) |
+| 7 | solid design (the MCP) | header and filter rail rounded panels with the cards' shadow, lined up with the cards; the website's download unchanged | so on all six MCP reports: English and Arabic (rail on the right), light and dark, 1080 and 720, both pages (top strip and side rail); the website's reports as before | PASS |
+| 8 | the slide-in panel (website download, English and Arabic, 1080 and 720) | Filters whole in the header; the panel opens over the page with its card, title, Close whole, three slicers, Reset; a choice stays after Close; mirrored in Arabic | so on all four: Ctrl+click on Filters opens it (on the logo's side; on the left in Arabic with Close at its left), Ctrl+click on Close hides it, a region picked in the first slicer filters the page, stays after Close and is still picked when the panel opens again | PASS |
+| all | Microsoft's validator | 0 errors | 0 errors on all eighteen. Warnings on the 720 reports (text box height under its floor x4, slicer header may clip x6) and on 2160 (theme text sizes over 45, x3), as before this round | PASS |
+
+**The failure (item 5), its cause, and what was measured for the fix.** The round's measurement used a measure whose
+axis labels are short ("1K"): there the column chart with its value axis on shows 12 slanted names. With the report's
+own measure the labels are wider ("100K", "0.4M"), the plot is narrower, and Desktop turns the names upright and puts
+the last month behind a scrollbar, which can't be used in a tooltip. Measured again on the "Gulf Sales M1 Tip2 / Tip3"
+reports (296 x 184, the main measure and the percentage measure, full and short English month names, Arabic):
+
+| Chart | Result |
+|---|---|
+| as written: column, value axis on | 12 slanted names only while the axis labels are short ("200", "1K"); 11 upright names and a scrollbar with "0.4M" or "40%" |
+| the same with a category width of 16 or 12, no inner padding, or display units off | the same: a scrollbar |
+| column, value axis off | 12 slanted names, no scrollbar, **the first always cut**: "J...", "Janu...", "..." for "يناير" |
+| column or line, value axis off, 28 of left padding | upright names, cut |
+| **bar chart by month, 296 x 310** (today's tooltip chart's settings: axis text 8, 40% for the names, value axis off, data labels on at 8) | **12 names whole and horizontal, each bar's value beside it**, English (short and full names) and Arabic, both measures |
+
+So no column or line chart shows 12 month names whole at 296 x 184 for every measure; the bar chart does, and needs the
+trend tooltip page to be 320 x 410 instead of 320 x 284. Nothing was changed after the failure was seen (the rule:
+stop when a failure could change what Desktop shows); the decision is the owner's.
+
+**Not done in this check:** the phone layout below the first screen (charts and tables on the real pages): the capture
+doesn't scroll the phone canvas. Their sizes were measured on the round's own phone pages ("Phone E", above).
+
+**Seen, not in scope:** every sample download opens with "One or more calculated tables need to be manually
+refreshed" (round 2). On the MCP's reports: English field names in the Arabic reports, months and days sorted by the
+alphabet, "0.34" and "101914" without formats (round 2); on the line chart's tooltip the bar chart "Total Sales Last
+Ramadan" is empty for the hovered month (the measure gives nothing there). The slicers of Arabic reports show "All" in
+English (Power BI's own text). In Arabic reports the first page's button is the leftmost. On the MCP's solid reports
+the KPI titles start close to the panel's edge. In Desktop a page navigator also shows hidden pages. The first page
+of a report is sometimes captured before it has drawn (three captures were taken again).
+
+## 2026-10-03: round 1, the trend tooltip as a bar chart (`fix/round-1-visible`, `9b0ceed`), Power BI Desktop 2.158.1177: twelve reports
+
+The owner's choice after the check above: the trend tooltip page is 320 x 410 and its chart a bar chart by month,
+310 high, with the category tooltip's settings. Test reports built from the branch by `builder-scripts\r1t-build.mjs`
+("Gulf Sales R1T ..."), closed without saving: the website's download in English and Arabic at 1920 x 1080 and 1280 x 720,
+light and dark (eight); two more whose trend page shows Total Orders (values like "1.0K") instead of Total Revenue
+("0.24M"); and the MCP's on our sample model in English and Arabic ("22K", "0K"; full month names). Both tooltip pages
+of each captured at 2x through the bridge (`tests/phase2-try/shots-r1t/`; all twelve trend pages side by side in
+`c-trend-12.png`).
+
+| Checked | Expected | Seen | |
+|---|---|---|---|
+| the trend tooltip page, twelve reports | 320 x 410: the card, and 12 months, each name whole and horizontal with its value beside the bar; no scrollbar | so on all twelve: "Jan" to "Dec", "يناير" to "ديسمبر", "April" to "September" (the MCP's model: full names), with "0.24M"-"0.33M", "1.0K"-"1.4K", "22K" / "0K"; light and dark | PASS |
+| the category tooltip page | unchanged (320 x 284, the card and the bar chart by category) | unchanged | PASS |
+| every chart hovered, Arabic 1080 website | bar and column charts show the trend page filtered to the hovered item; the line chart the category page | bar chart: the card and 12 months ("42K"-"69K"); column chart: 870K and 12 months ("0.05M"-"0.10M"); line chart: the category page | PASS |
+| every chart hovered, the other eleven reports | the same | **not done**: another app was in front on the laptop's screen, so the screen captures showed that app and were deleted, and the hover script was stopped. The links are the same in every report (tests) and hovering passed on four reports in the check above | not checked |
+
+Microsoft's validator: 0 errors on the twelve. **Seen, not in scope:** on the MCP's reports the months are in
+alphabetical order (round 2); the hover script must not run while someone is using the laptop (it moves the mouse and
+captures the screen); the bridge's page screenshots are safe then.
+
 ## Lessons
+- **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
+- **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
+- **`mobile.json` follows the same selector rules as `visual.json` (2.158, round 1):** a text size or padding written there is used only with the selector that property needs on the page (none for a text box, slicer, titles, axes, table text and the card's container padding; `default` for a button's text; each state for page buttons).
+- **A page button wraps to two lines only when two lines fit its height** (3.5 x pt in Segoe UI, 3.2 x pt in Tahoma); otherwise it cuts the name with "...". Line heights differ by font.
+- **A text box is top-aligned** (its text's middle is about 1.2 x pt below the box's top); an image with `image.fit` `'Fit'` is centred.
+- **An empty text box left to the theme is a panel** (the theme's card colour, corners and shadow); a shape with its own rounded fill is not drawn rounded.
 - **Prompts for the laptop agent:** start with the request itself, name every file, forbid changing the test files or the expected numbers, and say "stop and report on failure". Give the exact report format.
 - **What the agent can do alone:** create tables, relationships and measures, run DAX, mark date tables, refresh, screenshot one page at a time.
 - **What still needs a person:** applying TMDL scripts in TMDL view (no tool for it), Power Query edits that remove columns (the MCP updates the M but not the column mappings; Desktop's Close & Apply does), saving files.

@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
-import { layoutProblems, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems } from '../scripts/tests/report-check.mjs';
+import { layoutProblems, phoneTextProblems, headerProblems, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems } from '../scripts/tests/report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-mcp-'));
@@ -255,7 +255,9 @@ const slotsPlaced = (pages, want) => {   // every slot except the filter rail ha
     if (got.name !== wp.name || got.w !== wp.page.w || got.h !== wp.page.h) bad.push(`page ${i + 1}: ${got.name} ${got.w}x${got.h}, want ${wp.name} ${wp.page.w}x${wp.page.h}`);
     wp.slots.forEach((s) => {
       if (s.rail) { const sl = got.visuals.filter((v) => v.type === 'slicer'); if (!sl.length || sl.some((v) => v.x < s.x || v.y < s.y || v.x + v.w > s.x + s.w || v.y + v.h > s.y + s.h)) bad.push(`page ${i + 1}: slicers not inside the rail ${JSON.stringify(s)}`); }
-      else if (!got.visuals.some((v) => v.type !== 'group' && v.x === s.x && v.y === s.y && v.w === s.w && v.h === s.h)) bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
+      // (round 1: a header text box, the title or "Your logo", may start lower in its slot so its text is centred in the
+      // header: the same x, width and bottom edge)
+      else if (!got.visuals.some((v) => v.type !== 'group' && v.x === s.x && v.w === s.w && (v.y === s.y && v.h === s.h || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h)))) bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
     });
   });
   return bad;
@@ -266,7 +268,8 @@ r = gp.err ? gp : await tryCall('create_report', { path: 'bim-project', name: 'G
 if (!r.err) {
   const dir = path.join(ROOT, 'bim-project', r.j.report), pages = readReport(dir), want = E.projectPages(gp.j.design.layout, 'ar', { second: true, panel: false });
   const shown = pages.filter((p) => !p.hidden), bad = slotsPlaced(shown, want);
-  check(shown.length === 2 && pages.length === 3 && !bad.length, `create_report design: ${shown.length} pages; ${bad.slice(0, 4).join(' | ')}`);
+  // (round 1: the model has a month column, so the report has two tooltip pages: by category and the monthly trend)
+  check(shown.length === 2 && pages.length === 4 && !bad.length, `create_report design: ${shown.length} pages; ${bad.slice(0, 4).join(' | ')}`);
   check(shown[0].visuals.some((v) => v.x === 1388 && v.w === 508) && JSON.stringify(shown.map((p) => p.name)) === '["تحليل","نظرة عامة"]', 'create_report design: not mirrored or page names not Arabic');
   // the Arabic labels from the engine
   const all1 = shown.map((p) => p.visuals.map((v) => v.text).join('')).join('');
@@ -411,8 +414,8 @@ const cardProblems = (dir, rtl) => {
     const plan = t2.err ? t2 : await tryCall('plan_layout', { design: t2.j.design, layout, kpis, filters: layout === 'exec' ? 'none' : 'end', lang });
     const res = plan.err ? plan : await tryCall('create_report', { path: 'dax-project', name, design: plan.j.design, lang });
     const { cards, bad } = res.err ? { cards: 0, bad: [res.t.slice(0, 200)] } : cardProblems(path.join(ROOT, 'dax-project', res.j.report), lang === 'ar');
-    // every KPI card on both pages, and the tooltip card
-    const want = plan.err ? -1 : E.projectPages(plan.j.design.layout, lang, { second: true, panel: false }).reduce((a, p) => a + p.slots.filter((s) => s.kind === 'kpi').length, 0) + 1;
+    // every KPI card on both pages, and the card of each of the two tooltip pages (round 1: by category, and the monthly trend)
+    const want = plan.err ? -1 : E.projectPages(plan.j.design.layout, lang, { second: true, panel: false }).reduce((a, p) => a + p.slots.filter((s) => s.kind === 'kpi').length, 0) + 2;
     check(cards === want && !bad.length, `${name}: ${cards} cardVisual, want ${want}; ${bad.slice(0, 6).join('; ')}`);
   }
 }
@@ -454,12 +457,18 @@ const cardProblems = (dir, rtl) => {
     if (res.err) { check(false, `${name}: ${res.t.slice(0, 200)}`); continue; }
     const files = filesOf(path.join(ROOT, 'dax-project', res.j.report)), rtl = lang === 'ar'; made[lang] = plan;
     const a = tooltipProblems(files), t = tooltipPageProblems(files), tb = tableProblems(files, rtl), cd = cardStyleProblems(files, rtl), sh = projectProblems(files);
-    // the default two-page report: 4 charts (page 1 line, bar, column; page 2 column), 2 tables, 7 KPI cards and the tooltip card
-    check(a.charts === 4 && !a.bad.length, `${name}: ${a.bad.length} of ${a.charts} charts without the Canvas tooltip link (4 charts expected): ${a.bad.slice(0, 2).join('; ')}`);
-    check(t.pages === 1 && t.charts === 1 && !t.bad.length, `${name}: tooltip page: ${t.bad.slice(0, 2).join('; ') || t.charts + ' charts'}`);
+    // the default two-page report: 4 charts (page 1 line, bar, column; page 2 column), 2 tables, 7 KPI cards and the two tooltip
+    // cards (round 1: the bar and column charts show the monthly trend on hover, the line chart the bar chart by category)
+    check(a.charts === 4 && a.trend === 3 && !a.bad.length, `${name}: ${a.bad.length} of ${a.charts} charts with a wrong tooltip link, ${a.trend} linked to the monthly trend (4 charts, 3 to the trend expected): ${a.bad.slice(0, 2).join('; ')}`);
+    check(t.pages === 2 && t.charts === 2 && t.trend === 1 && !t.bad.length, `${name}: tooltip pages: ${t.bad.slice(0, 2).join('; ') || `${t.pages} pages, ${t.charts} charts, ${t.trend} trend`}`);
     check(tb.columns >= 6 && !tb.bad.length, `${name}: ${tb.bad.length} of ${tb.columns} table columns without header alignment: ${tb.bad.slice(0, 2).join('; ')}`);
-    check(cd.cards === 8 && !cd.bad.length, `${name}: ${new Set(cd.bad.map((x) => x.split(':')[0])).size} of ${cd.cards} cards with their own fill or ignored padding (8 cards expected): ${cd.bad.slice(0, 2).join('; ')}`);
+    check(cd.cards === 9 && !cd.bad.length, `${name}: ${new Set(cd.bad.map((x) => x.split(':')[0])).size} of ${cd.cards} cards with their own fill or ignored padding (9 cards expected): ${cd.bad.slice(0, 2).join('; ')}`);
     check(!sh.length, `${name}: ${sh.join('; ')}`);
+    // round 1: "Your logo" and the title are centred in the header's height
+    const hd = headerProblems(files), ph = phoneTextProblems(files);
+    // round 1: every text in the phone layout fits its phone box
+    check(ph.visuals > 10 && !ph.bad.length, `${name}: phone text: ${ph.bad.slice(0, 2).join('; ')} (${ph.bad.length} of ${ph.visuals} visuals)`);
+    check(hd.boxes >= 2 && !hd.bad.length, `${name}: header text not centred: ${hd.bad.slice(0, 2).join('; ')} (${hd.boxes} boxes)`);
     // a solid design shows its panels: 13 visuals (7 KPI cards, 4 charts, 2 tables) are left to the theme, the group
     // around the KPI cards draws no band, and the header, slicers and buttons keep theirs off
     const pp = panelProblems(files);

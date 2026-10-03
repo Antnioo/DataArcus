@@ -29,6 +29,9 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Every .min.js is built from its source
+        run: node scripts/check-min.mjs
+
       - name: Install Chromium
         run: npx playwright-core install --with-deps chromium
 

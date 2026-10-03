@@ -65,7 +65,9 @@ export function layoutProblems(files) {
         const t = font(id(x), parseFloat((run.textStyle || {}).fontSize)), text = run.value || '';
         if (BOX(t) > h || CH(t) * text.length > w) sizes.push(`${id(x)}: "${text}" at ${t}pt doesn't fit ${w}x${h}`);
       } else if (v.visualType === 'pageNavigator') {
-        const t = font(id(x), num(look((v.objects || {}).text).fontSize)), lines = Math.min(2, Math.floor((h - 2) / (1.6 * t)));
+        // a page button puts a long name on two lines only when two lines fit its height: 3.5 x pt in Segoe UI, 3.2 x pt
+        // in Tahoma (measured in Desktop 2.158, DESKTOP-TESTS.md round 1); otherwise it cuts it with "..."
+        const t = font(id(x), num(look((v.objects || {}).text).fontSize)), lines = Math.min(2, Math.floor(h / (1.8 * t)));
         const longest = Math.max(...pageNames.map((s) => s.length)), each = w / pageNames.length;
         if (!(lines >= 1) || CH(t) * Math.ceil(longest / Math.max(1, lines)) > each) sizes.push(`${id(x)}: page names at ${t}pt don't fit ${pageNames.length} buttons in ${w}x${h}`);
         const per = ['hover', 'selected'].map((k) => num(state((v.objects || {}).text, k).fontSize));
@@ -99,6 +101,84 @@ export function headerAndRail(files) {
   return { title: pt(title), logo: pt(logo), nav: nav ? nav.position.width : null, slicer: slicer ? slicer.position.height : null, reset: reset ? reset.position.height : null };
 }
 
+// The header's text boxes (the title, "Your logo") are centred in the header's height. A text box is top-aligned and has
+// no vertical alignment: the middle of its text is about 1.2 x pt below the box's top (measured in Desktop 2.158,
+// DESKTOP-TESTS.md round 1), so a box whose text would sit high is moved down. Each must have its text's middle within
+// 3 of the header group's middle, unless the box is already as short as its text allows (10 + 1.8 x pt) or its text's
+// middle is at or below the group's (the title at 0.42 x its box). Returns { boxes, bad }.
+export function headerProblems(files) {
+  const bad = []; let boxes = 0;
+  pagesOf(files).filter((p) => p.page.type !== 'Tooltip').forEach((p) => {
+    const byName = Object.fromEntries(p.visuals.map((v) => [v.name, v]));
+    p.visuals.filter((v) => v.visual && v.visual.visualType === 'textbox' && v.parentGroupName).forEach((v) => {
+      const g = byName[v.parentGroupName];
+      if (!g || g.isHidden) return;   // the slide-in panel's card
+      boxes++;
+      const run = ((((v.visual.objects || {}).general || [{}])[0].properties || {}).paragraphs || [{ textRuns: [{}] }])[0].textRuns[0];
+      const t = parseFloat((run.textStyle || {}).fontSize), H = g.position.height, y = v.position.y, h = v.position.height, mid = y + 1.2 * t;
+      const id = `${p.page.displayName}/"${run.value}" ${t}pt`;
+      if (y < -0.5 || y + h > H + 0.5) bad.push(`${id}: box ${y}..${y + h} outside the header's ${H}`);
+      else if (mid < H / 2 - 3 && h > BOX(t) + 0.5) bad.push(`${id}: text's middle at ${mid.toFixed(1)} of ${H} (box y ${y}, ${h} high), ${(H / 2 - mid).toFixed(1)} above the centre`);
+    });
+  });
+  return { boxes, bad };
+}
+
+// The phone layout's text (round 1; measured in Desktop 2.158, DESKTOP-TESTS.md round 1). On the phone every text keeps
+// the page's size unless mobile.json gives its own, and a size there is used only with the selector that property needs
+// on the page: none for a text box's paragraph, a slicer's header and items, a container title, a chart's axes, a
+// table's text and the card's container padding; "default" for a button's text; each state for page buttons. For every
+// visual in the phone layout the size in force (mobile.json's when written that way, else the page's) must fit its phone
+// box: a text box 10 + 1.8 x pt high and 0.55 em a character wide (8pt is the floor), a dropdown slicer 16 + 4 x pt, a
+// button 6 + 1.6 x pt (and its text and icon side by side), page buttons one or two lines at 1.8 x pt with the longest
+// name's widest line at 0.45 em a character; a shown title at most 12pt; the axis text of line, bar and column charts
+// and a table's text at most 10pt; a card's container padding without a selector, the same on every side.
+// Returns { visuals, bad }.
+export function phoneTextProblems(files) {
+  const J = (p) => JSON.parse(String(files[p])), bad = [];
+  const themeFile = Object.keys(files).find((p) => /StaticResources\/RegisteredResources\/[^/]*\.json$/.test(p));
+  const theme = themeFile ? J(themeFile) : {};
+  const slicerTheme = ((((theme.visualStyles || {}).slicer || {})['*'] || {}).header || [{}])[0].textSize, titleTheme = +((theme.textClasses || {}).title || {}).fontSize || 12, labelTheme = +((theme.textClasses || {}).label || {}).fontSize || 10;
+  const pageNames = Object.keys(files).filter((p) => p.endsWith('/page.json')).map(J).filter((pg) => pg.type !== 'Tooltip').map((pg) => pg.displayName || '');
+  const plain = (list) => ((list || []).find((x) => !x.selector) || {}).properties || {};   // the entry without a selector
+  let visuals = 0;
+  Object.keys(files).filter((p) => p.endsWith('/mobile.json')).forEach((mp) => {
+    const m = J(mp), v = J(mp.replace(/mobile\.json$/, 'visual.json'));
+    if (!v.visual) return;
+    visuals++;
+    const t = v.visual.visualType, o = v.visual.objects || {}, c = v.visual.visualContainerObjects || {}, mo = m.objects || {}, mc = m.visualContainerObjects || {}, w = m.position.width, h = m.position.height;
+    const id = `${mp.split('/pages/')[1].slice(0, 6)}/${v.name.slice(0, 6)} ${t}`, say = (x) => bad.push(`${id}: ${x}`);
+    if (t === 'cardVisual') {
+      const pads = mc.padding || [], pd = plain(pads), sides = ['top', 'bottom', 'left', 'right'].map((k) => num(pd[k]));
+      if (pads.length !== 1 || pads[0].selector || sides.some((x) => !(x >= 0) || x !== sides[0])) say(`the card's phone padding ${JSON.stringify(pads).slice(0, 160)}`);
+      return;
+    }
+    // a title that shows on the page: at most 12pt on the phone
+    if (lit(plain(c.title).show) === 'true') { const ts = num(plain(mc.title).fontSize); if (!(ts <= 12)) say(`title ${isNaN(ts) ? titleTheme + 'pt (the page\'s)' : ts + 'pt'} on the phone, want 12 at most`); }
+    if (t === 'textbox' && v.parentGroupName) {
+      const para = (plain(mo.general).paragraphs || plain(o.general).paragraphs || [{ textRuns: [{}] }])[0].textRuns[0], size = parseFloat((para.textStyle || {}).fontSize), text = para.value || '';
+      if (BOX(size) > h || (size > 8 && CH(size) * text.length > w)) say(`"${text}" at ${size}pt doesn't fit the phone's ${w}x${h}`);
+    } else if (t === 'pageNavigator') {
+      const sizes = ['default', 'hover', 'selected'].map((k) => { const a = num(state(mo.text, k).fontSize); return isNaN(a) ? num(state(o.text, k).fontSize) : a; }), size = sizes[0];
+      const lines = Math.min(2, Math.floor(h / (1.8 * size))), longest = Math.max(...pageNames.map((x) => x.length));
+      if (sizes.some((x) => x !== size) || !(lines >= 1) || 0.45 * 4 / 3 * size * Math.ceil(longest / Math.max(1, lines)) > w / pageNames.length) say(`page buttons at ${sizes.join('/')}pt don't fit ${pageNames.length} in the phone's ${w}x${h}`);
+    } else if (t === 'slicer') {
+      const a = num(plain(mo.header).textSize), b = num(plain(mo.items).textSize), size = Math.max(isNaN(a) ? slicerTheme || labelTheme : a, isNaN(b) ? slicerTheme || labelTheme : b);
+      if (SLICER(size) > h) say(`a ${size}pt dropdown slicer needs ${SLICER(size)}, the phone box is ${h}`);
+    } else if (t === 'actionButton') {
+      const a = num(state(mo.text, 'default').fontSize), tx = look(o.text), size = isNaN(a) ? num(tx.fontSize) : a, text = str(tx.text), hasIcon = str(look(o.icon).shapeType) !== 'blank';
+      if (RESET(size) > h || TW(size, text.length) + (hasIcon ? h + 6 : 0) > w) say(`"${text}" at ${size}pt doesn't fit the phone's ${w}x${h}`);
+    } else if (['lineChart', 'clusteredBarChart', 'clusteredColumnChart'].includes(t)) {
+      const a = num(plain(mo.categoryAxis).fontSize), b = num(plain(mo.valueAxis).fontSize);
+      if (!(a <= 10) || !(b <= 10)) say(`axis text on the phone: category ${isNaN(a) ? 'the page\'s' : a}, value ${isNaN(b) ? 'the page\'s' : b}, want 10 at most`);
+    } else if (t === 'tableEx') {
+      const s3 = ['columnHeaders', 'values', 'total'].map((k) => num(plain(mo[k]).fontSize));
+      if (s3.some((x) => !(x <= 10))) say(`table text on the phone: header, values, total ${s3.map((x) => (isNaN(x) ? 'the page\'s' : x)).join(', ')}, want 10 at most`);
+    }
+  });
+  return { visuals, bad };
+}
+
 // ---------- round 0 (2026-10-01): what Power BI Desktop 2.158 was measured to need (DESKTOP-TESTS.md, "round 0") ----------
 const pagesOf = (files) => {
   const J = (p) => JSON.parse(String(files[p])), pages = {};
@@ -109,12 +189,18 @@ const pagesOf = (files) => {
 };
 const CHART_TYPES = ['lineChart', 'clusteredBarChart', 'clusteredColumnChart', 'donutChart', 'funnel', 'treemap', 'map'];
 
-// Every chart on every main page is linked to the tooltip page: visualTooltip { show, type 'Canvas', section }; the type
+// Every chart on every main page is linked to a tooltip page: visualTooltip { show, type 'Canvas', section }; the type
 // Desktop knows is 'Canvas' ('ReportPage' is not a value: it falls back to the default tooltip). Nothing else is linked.
-// Returns { charts, bad }.
+// Round 1: when the report has a trend tooltip page (the taller one, 320 x 410: the measure by month), a chart that is
+// itself by that month field is linked to the other tooltip page (the bar chart by category; its own trend would be
+// one bar), and every other chart to the trend page. Returns { charts, trend (charts linked to the trend page), bad }.
+const tipChart = (p) => p.visuals.find((v) => v.visual && /Chart$/.test(v.visual.visualType));
+const isTrend = (p) => p.page.height === 410;
+const catRef = (v) => { const q = ((v.visual.query || {}).queryState || {}), r = q.Category || q.Group; return r && r.projections[0] ? r.projections[0].queryRef : null; };
 export function tooltipProblems(files) {
-  const pages = pagesOf(files), tips = pages.filter((p) => p.page.type === 'Tooltip').map((p) => p.page.name), bad = [];
-  let charts = 0;
+  const pages = pagesOf(files), tipPages = pages.filter((p) => p.page.type === 'Tooltip'), tips = tipPages.map((p) => p.page.name), bad = [];
+  const trendPage = tipPages.find(isTrend), month = trendPage && tipChart(trendPage) ? catRef(tipChart(trendPage)) : null;
+  let charts = 0, trend = 0;
   pages.filter((p) => p.page.type !== 'Tooltip').forEach((p) => p.visuals.forEach((v) => {
     if (!v.visual) return;
     const tt = ((v.visual.visualContainerObjects || {}).visualTooltip || [])[0], id = `${p.page.displayName}/${v.visual.visualType}`;
@@ -122,30 +208,43 @@ export function tooltipProblems(files) {
     charts++;
     if (!tt) { bad.push(`${id}: no tooltip link`); return; }
     const pr = tt.properties;
-    if (lit(pr.show) !== 'true' || lit(pr.type) !== "'Canvas'" || !tips.includes(str(pr.section)) || tt.selector) bad.push(`${id}: tooltip link type ${lit(pr.type)}, page ${tips.includes(str(pr.section)) ? 'ok' : 'not a tooltip page'}`);
+    if (lit(pr.show) !== 'true' || lit(pr.type) !== "'Canvas'" || !tips.includes(str(pr.section)) || tt.selector) { bad.push(`${id}: tooltip link type ${lit(pr.type)}, page ${tips.includes(str(pr.section)) ? 'ok' : 'not a tooltip page'}`); return; }
+    if (!trendPage) return;
+    const toTrend = str(pr.section) === trendPage.page.name, byMonth = catRef(v) === month;
+    if (toTrend) trend++;
+    if (toTrend === byMonth) bad.push(`${id}: ${byMonth ? 'by month, linked to the monthly trend (one bar)' : 'not linked to the monthly trend'}`);
   }));
-  return { charts, bad };
+  return { charts, trend, bad };
 }
 
-// The tooltip page is 320 x 284, and its chart is a bar chart (names always horizontal) with its own sizes: axis text 8,
-// 40% axis room, no axis titles, the value axis off and data labels on at 8; a bar row takes 22 and the chart's
-// title and padding 46 (measured), so its 184 show 6 rows. Returns { pages, charts, bad }.
+// A tooltip page holds one chart, a bar chart (names always horizontal) with its own sizes: axis text 8, 40% axis room,
+// no axis titles, the value axis off and data labels on at 8. A bar row takes 22 and the chart's title and padding 46
+// (measured in Desktop 2.158). The page by category is 320 x 284, its chart 184 high: 6 rows. The trend page (round 1,
+// the owner's choice 2026-10-03) is 320 x 410, its chart 310 high: 12 rows, one a month, each name whole with its value
+// beside the bar, whatever the measure (a column or line chart of this width loses a month behind a scrollbar when the
+// value axis's labels are wide, or cuts the first name without that axis: DESKTOP-TESTS.md, "round 1 built").
+// Returns { pages, charts, trend, bad }.
 export function tooltipPageProblems(files) {
-  const bad = []; let charts = 0;
+  const bad = []; let charts = 0, trend = 0;
   const tips = pagesOf(files).filter((p) => p.page.type === 'Tooltip');
   tips.forEach((p) => {
-    if (p.page.width !== 320 || p.page.height !== 284) bad.push(`tooltip page is ${p.page.width} x ${p.page.height}, want 320 x 284`);
-    p.visuals.filter((v) => v.visual && /Chart$/.test(v.visual.visualType)).forEach((v) => {
+    const isT = isTrend(p), wantH = isT ? 410 : 284;
+    if (isT) trend++;
+    if (p.page.width !== 320 || p.page.height !== wantH) bad.push(`tooltip page is ${p.page.width} x ${p.page.height}, want 320 x 284, or 320 x 410 for the trend`);
+    const cs = p.visuals.filter((v) => v.visual && /Chart$/.test(v.visual.visualType));
+    if (cs.length > 1 || (isT && cs.length !== 1)) bad.push(`tooltip page "${p.page.displayName}" has ${cs.length} charts`);
+    cs.forEach((v) => {
       charts++;
       const o = v.visual.objects || {}, P = (k) => ((o[k] || [])[0] || {}).properties || {}, c = P('categoryAxis'), y = P('valueAxis'), l = P('labels');
       const rows = Math.floor((v.position.height - 46) / 22);
       const got = { type: v.visual.visualType, text: lit(c.fontSize), room: lit(c.maxMarginFactor), axisTitle: lit(c.showAxisTitle), valueAxis: lit(y.show), labels: lit(l.show), labelText: lit(l.fontSize), rows };
-      const want = { type: 'clusteredBarChart', text: '8D', room: '40L', axisTitle: 'false', valueAxis: 'false', labels: 'true', labelText: '8D', rows: 6 };
+      const want = { type: 'clusteredBarChart', text: '8D', room: '40L', axisTitle: 'false', valueAxis: 'false', labels: 'true', labelText: '8D', rows: isT ? 12 : 6 };
       if (JSON.stringify(got) !== JSON.stringify(want)) bad.push(`tooltip chart ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
       if (v.position.y + v.position.height > p.page.height || v.position.x + v.position.width > p.page.width) bad.push('tooltip chart outside its page');
     });
   });
-  return { pages: tips.length, charts, bad };
+  if (trend > 1) bad.push(`${trend} trend tooltip pages`);
+  return { pages: tips.length, charts, trend, bad };
 }
 
 // Each column of every table has one columnFormatting entry (selector: the column's queryRef) that aligns its values
@@ -235,12 +334,37 @@ export function panelProblems(files) {
   pagesOf(files).forEach((p) => {
     const tip = p.page.type === 'Tooltip', byName = Object.fromEntries(p.visuals.map((v) => [v.name, v]));
     const kpiGroups = new Set(p.visuals.filter((v) => v.visual && v.visual.visualType === 'cardVisual' && v.parentGroupName).map((v) => v.parentGroupName));
-    p.visuals.forEach((v) => {
+    // the bands (round 1): empty text boxes outside every group
+    const emptyText = (v) => { const ps = ((((v.visual.objects || {}).general || [{}])[0].properties || {}).paragraphs || []); return ps.every((x) => (x.textRuns || []).every((r) => !r.value)); };
+    const bands = p.visuals.filter((v) => v.visual && v.visual.visualType === 'textbox' && !v.parentGroupName && emptyText(v)), used = new Set();
+    // groups first, so each band is matched to its group before the bands themselves are looked at
+    p.visuals.slice().sort((a, b) => (a.visualGroup ? 0 : 1) - (b.visualGroup ? 0 : 1)).forEach((v) => {
       const id = `${p.page.displayName}/${v.visual ? v.visual.visualType : 'group ' + v.visualGroup.displayName}`;
       if (v.visualGroup) {
         const gb = ((((v.visualGroup.objects || {}).background || [])[0] || {}).properties || {}).show;
         if (solid && !tip && kpiGroups.has(v.name)) { if (lit(gb) !== 'false') bad.push(`${id}: the group around the KPI cards must draw no band (background ${lit(gb)})`); }
-        else if (v.visualGroup.objects) bad.push(`${id}: group objects ${JSON.stringify(v.visualGroup.objects)}`);
+        else if (solid && !tip && !v.isHidden) {
+          // round 1: the header and the filter rail are panels like the cards. A group has no border or shadow, so its
+          // own background is off and one empty text box left to the theme lies behind it (measured in Desktop 2.158,
+          // DESKTOP-TESTS.md round 1: it shows the theme's card colour, corners and shadow): at the group's box for the
+          // rail; for the header grown by 12k at each side and 6k above and below (k = page height / 1080), which lines
+          // it up with the rail and the cards
+          if (lit(gb) !== 'false') bad.push(`${id}: the group's own band must be off on a solid design (background ${lit(gb)})`);
+          const isHeader = p.visuals.some((c) => c.parentGroupName === v.name && c.visual && ['textbox', 'image'].includes(c.visual.visualType));
+          const k = p.page.height / 1080, dx = isHeader ? Math.round(12 * k) : 0, dy = isHeader ? Math.round(6 * k) : 0, g = v.position;
+          const want = { x: Math.max(0, g.x - dx), y: Math.max(0, g.y - dy) }; want.w = g.x + g.width + dx - want.x; want.h = g.y + g.height + dy - want.y;
+          const mine = bands.filter((b) => b.position.x === want.x && b.position.y === want.y && b.position.width === want.w && b.position.height === want.h);
+          if (mine.length !== 1) bad.push(`${id}: ${mine.length} panels behind it at ${want.x},${want.y} ${want.w}x${want.h} (the page has ${bands.map((b) => `${b.position.x},${b.position.y} ${b.position.width}x${b.position.height}`).join(' | ') || 'none'})`);
+          else { used.add(mine[0].name); if (!(mine[0].position.z < g.z)) bad.push(`${id}: its panel is not under it in the layer order (${mine[0].position.z}, the group ${g.z})`); }
+        } else if (v.visualGroup.objects) bad.push(`${id}: group objects ${JSON.stringify(v.visualGroup.objects)}`);
+        return;
+      }
+      if (bands.includes(v)) {
+        // a band: nothing written but the title's switch, so the theme draws it; never on a transparent design or a tooltip page
+        const c = v.visual.visualContainerObjects || {};
+        if (!solid || tip) bad.push(`${id}: an empty panel text box on a ${tip ? 'tooltip page' : 'transparent design'}`);
+        else if (JSON.stringify(Object.keys(c)) !== '["title"]' || lit(c.title[0].properties.show) !== 'false') bad.push(`${id}: the panel's container objects ${JSON.stringify(Object.keys(c))}`);
+        else if (!used.has(v.name)) bad.push(`${id}: a panel at ${v.position.x},${v.position.y} with no group over it`);
         return;
       }
       const c = v.visual.visualContainerObjects || {}, parent = v.parentGroupName ? byName[v.parentGroupName] : null;

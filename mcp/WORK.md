@@ -1,9 +1,10 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). Last updated 2026-10-02
-by the builder: stopped for today with nothing in progress. Main is at `e8fe171`. After the owner's usage limit resets
-on Sunday 2026-10-04: (1) the reviewer's split of `pbip-export.js`, (2) the reviewer: the validator on every export in CI,
-(3) round 1. See "Next step".
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). Last updated 2026-10-03
+by the builder: **round 1 is complete on `fix/round-1-visible` and waits for the reviewer to merge** (all eight items;
+item 5 rebuilt as the owner chose and checked in Desktop). State: "Round 1 in progress". Next: the test of
+Microsoft's `powerbi-authoring` plugin on an Arabic report (one Desktop sitting, no code), then round 2. Main is at
+`7a57a4e`.
 
 ## Where things stand
 - **Now (2026-10-02, main `e8fe171`):** 6 MCP tools (`read_model`, `suggest_fields`, `check_model_health`,
@@ -60,6 +61,174 @@ date). The plan is in `mcp/ROADMAP.md`, "Plan of 2026-10-02".
   `plan/split-pbip-export`) shows it takes about one evening; the owner decides when he reads it.
 - **The validator:** a representative set of exports on every push, the full matrix nightly (reviewer, after round 2).
 - **Dated:** the Gulf Calendar pack and its free lead-magnet download, ready by 2026-12-01.
+
+## Round 1 in progress (owner's go 2026-10-03, in advance for every step; branch `fix/round-1-visible`)
+The owner approved the round in advance: work through it without waiting between steps; stop only when a measurement
+contradicts the plan, a failure could change what Desktop shows, or a decision is his. The split of `pbip-export.js`
+is deferred until after the beta (`plan/split-pbip-export` is kept, not merged; when it happens: the Node build
+script, the hash check kept in CI, no Desktop check; the dead code stays until then). Code goes into
+`assets/js/pbip-export.js` as it is today.
+
+**State (2026-10-03, branch tip after this update; CI green on every pushed commit up to `d286ded`):**
+- Step 0: branches deleted on the owner's word that they are merged: `fix/generators`, `fix/report-quality`,
+  `docs/desktop-check-phase2`, `docs/session-memory`, `feature/foldable-steps`, `content/ai-ready-article` (each
+  checked first: every file's content is in main's history, or the branch is an ancestor of main). **Not deleted,
+  waiting for the owner:** `fix/site-tools` (tip `9f2a7a0`) and `docs/phase2-spec` (tip `6273621`): they hold file
+  versions that are not in main's history (7 files and 1 file), so "merged" could not be confirmed.
+- Item 1 done: `e1efb7f` (terser 5.51.2 pinned for the website; `scripts/check-min.mjs` in CI; all 51 `.min.js`
+  reproduce).
+- Item 2 done: measured in Desktop 2.158.1177 (`scripts/tests/DESKTOP-TESTS.md`, "round 1 measurements"), `5e515d2`.
+- Item 3 done: this plan, `5e515d2`.
+- Item 4 done: tests `3774f5a`, code `a0e1213`. Desktop: PASS.
+- Item 5 built: tests `d9afcf7`, code `39cb269`. **Desktop: FAIL, stopped for the owner** (below).
+- Item 6 done: tests `9053bd8`, code `64eeaf8`.
+  Desktop: PASS for the top of every phone page; the part below the first screen was not captured.
+- Item 7 done: tests `9ab1d71`, code `d286ded`. Desktop: PASS.
+- Item 8 done (no code): the slide-in panel PASSES on the website download, English and Arabic, 1080 and 720.
+- Microsoft's validator: 0 errors on all eighteen reports of the check.
+- Tests, before -> after: pbip 67 -> 70 checks pass; MCP 120 -> 124 pass; design-engine 598, theme-generator and
+  theme-generator-lab 883, model-health 37 pass. No fixture recaptured. Expectations changed, each because the change
+  requires it: the guard's navigator width on 1080 (320 -> 422); the MCP's "a visual at exactly each slot's box" lets a
+  header text box start lower; a report on a model with a month has 2 tooltip pages, 4 entries in `pages.json` and 9
+  cards in the default report; on a solid design the Header and Filters groups have their background off.
+- `pbip-export.min.js?v=20261003d`, `pbip-bind.min.js?v=20261003a`, `theme-generator.min.js?v=20261003d`.
+
+**The owner's decisions on the report (2026-10-03):** (1) item 5: the bar chart by month on a 320 x 410 trend tooltip
+page: tests `18e8382`, code `9b0ceed`; then a Desktop check of the tooltip on every chart (English and Arabic,
+1080 and 720, light and dark, wide and narrow measures). (2) `fix/site-tools` and `docs/phase2-spec` deleted (the
+reviewer checked: main has newer versions of both). (3) The phone layout below the first screen and the unmeasured
+phone text: after the beta (open items). (4) Four seen items added to round 2 (2.4). When item 5 passes and CI is
+green the reviewer merges round 1. **Right after round 1 (ROADMAP, research of 2026-10-03):** one Desktop sitting
+testing Microsoft's own `powerbi-authoring` plugin on an Arabic model, recorded in `DESKTOP-TESTS.md`; no code.
+
+**Item 5 done (2026-10-03):** the trend tooltip is a bar chart by month on a 320 x 410 page. pbip 70 and MCP 124
+checks pass; design-engine 598 and theme-generator 883 (twice) pass; no fixture change. Desktop 2.158.1177, twelve
+reports (`DESKTOP-TESTS.md`, "the trend tooltip as a bar chart"): 12 months whole with their values on every one,
+English and Arabic, 1080 and 720, light and dark, with "0.24M", "1.0K" and "22K" values: PASS. Hovering every chart
+passed on the Arabic 1080 report; on the other eleven it was not done (the laptop's screen was in use), which the
+report says. **Round 1 is complete and waits for the reviewer to merge.** `pbip-export.min.js?v=20261003e`,
+`theme-generator.min.js?v=20261003e`.
+
+(The block below is the state the owner decided on; kept for the record.)
+
+**Stopped on item 5 (the rule: a failure that could change what Desktop shows; and the fix is the owner's choice).**
+The trend tooltip works (the right page on each chart, filtered to the hovered item), but its column chart shows all
+12 months only while the value axis's labels are short. With the reports' real measures ("100K", "0.4M", "40%") it
+shows 11 upright names and hides the last month behind a scrollbar (English website download; `DESKTOP-TESTS.md`,
+"round 1 built"). My measurement for the plan used a measure with short labels, so it missed this. Measured after the
+failure: no column or line chart shows 12 month names whole at 296 x 184 for every measure (value axis off: no
+scrollbar, but the first name is always cut, "J..." and "..." for "يناير"). A bar chart by month does, at 296 x 310.
+**The owner's choice:**
+1. **(proposed) The trend as a bar chart by month** (today's tooltip chart's settings), the trend tooltip page
+   320 x 410 instead of 320 x 284: 12 names whole, each value beside its bar, English and Arabic.
+2. A column chart with the value axis off, 320 x 284: 12 months, no scrollbar, the first month's name always cut.
+3. Take the trend out again (the tooltip as before round 1: the card and the bar chart by category).
+Nothing was changed after the failure was seen: the branch still has the column chart with its value axis on.
+
+**The exact next step:** the owner picks 1, 2 or 3. Then, on this branch: the test first (`tooltipPageProblems`: the
+trend chart's type, settings and the page's size), the code in `pbip-export.js` (the trend chart, and for 1 the trend
+page's height), `pbip` and `npm test` in `mcp/`, the `.min.js` and `?v=`, and one Desktop pass on four reports
+(website and MCP, English and Arabic, 1080) hovering every chart: 12 months whole. Also open, for the owner:
+`fix/site-tools` and `docs/phase2-spec` (delete or keep), and whether the phone layout below the first screen needs
+its own check (the capture script would have to scroll the phone canvas). Then the reviewer reads the branch; nobody
+merges their own work.
+
+### What the measurements changed in the plan
+- **"Executive..."** is not a width problem alone: a page button wraps to two lines only when two lines fit its
+  height, and Segoe UI needs 3.5 x pt for two lines (Tahoma 3.2); the code assumed 1.6 x pt a line. So the fix is the
+  line rule (1.8 x pt a line), which makes the 1080 button one line and as wide as its name needs.
+- **The title is already centred** (within 3) wherever its size is 0.42 x its box; it is "Your logo" that sits high
+  (7 on 1080, 10 on 2160), and a title held at the 60pt limit. Logos are centred already. The fix moves only those.
+- **The monthly trend in the tooltip is a column chart with its value axis on**, axis text 8pt: the only form that
+  shows all 12 month names whole at 296 x 184 in English and Arabic.
+- **Phone:** sizes in `mobile.json` work for every visual, each with the selector its property needs on the page; the
+  axis text of charts and the text of tables need them too (not in the earlier plan).
+- **Header and rail on a solid design:** an empty text box left to the theme, behind each group.
+- The three unrecorded rules: the Reset icon follows the button's height (0.88 x it), not the text size; a button's
+  text is 0.38-0.42 em a character (0.45 in the code is safe); the phone canvas is 323 wide. No code change.
+
+### Item 4: page buttons whole, and the header's text centred (`pbip-export.js`; tests in `report-check.mjs`)
+- **4a, change:** in the page-button rule the number of lines is `min(2, max(1, floor(h / (1.8 x pt))))` instead of
+  `floor((h - 2) / (1.6 x pt))`. Nothing else in the rule changes.
+- **Expected numbers (two pages, default header):** 1920 x 1080 English: 14pt, one line, the navigator **422** wide
+  (today 320: 2 x max(140, ceil(10.27 x 17 + 16) = 191) + 40); Arabic: 320 as today ("ملخص تنفيذي" needs 129, under
+  140); 1280 x 720: 299 as today; 3840 x 2160: 29pt, one line, 868 (today two lines were assumed in 96, which need
+  102).
+- **Tests first:** `layoutProblems` counts a page button's lines by the measured rule; before the code it fails on
+  every English design at 1080 and up ("page names don't fit"). The guard test's pinned `nav: 320` on 1920 x 1080
+  becomes 422: the one expected number this fix exists to change.
+- **4b, change:** a header text box whose text's middle (1.2 x pt below the box's top) is above the middle of its
+  slot is moved down and made shorter by `min(round(h / 2 - 1.2 x pt), h - (10 + 1.8 x pt))` when that is positive;
+  its slot in the engine and the header group's box are unchanged.
+- **Expected numbers:** "Your logo": 1080: 14pt, down 7 (48 -> 41 high); 720: 10pt, down 4 (32 -> 28); 2160: 29pt,
+  down 13 (96 -> 83). The title: unchanged on all three (0); moved only where the 60pt limit holds its size.
+- **Tests first:** `headerProblems(files)` in `report-check.mjs`: each text box in the header group has its text's
+  middle within 3 of the group's middle, or can't move (the box is as short as its text allows). Before: every design
+  with a header and no logo fails on "Your logo".
+- **Fixtures:** none change (positions are written by the report writer; `cases.json` and `project-pages.json` hold
+  the engine's slots).
+
+### Item 5: the tooltip shows the hovered item's trend by month (`pbip-export.js`, `pbip-bind.js`)
+- **Change:** the bind's `tip` gets `date`: the month field (the sample's Month; in a user's model the time axis when
+  it is a month column, otherwise none). With it the report has two tooltip pages, both 320 x 284 with the card on
+  top: the **trend** page, a column chart of the card's measure by month (axis text 8pt, value axis on at 8pt, no axis
+  titles), linked from every chart that is not itself by the time axis; and today's page (the bar chart by the second
+  category), linked from the charts that are by the time axis (the line chart), where a monthly trend would be one
+  column. Without `tip.date` the report is as today.
+- **Expected numbers (the default two-page sample report):** 4 charts: the line chart linked to the category page,
+  the bar chart and the two column charts to the trend page; 2 tooltip pages; the trend chart 296 x 184 at 12, 92.
+- **Tests first:** `tooltipPageProblems` accepts the two kinds of tooltip chart and checks each one's settings;
+  `tooltipProblems` checks that a chart by the time axis is linked to the bar page and the others to the trend page;
+  `pbip.mjs` (54 designs, both languages) and `mcp/test.mjs` (the report on the sample model has 4 pages in
+  `pages.json`, today 3). Before: no trend page anywhere.
+- **Fixtures:** none change (the sample's bind is made inside the writer; the page's build input is the same).
+
+### Item 6: the phone layout's text (`pbip-export.js`, `mobile.json`)
+- **Change, per visual on the phone (the same on every page size):** header title: its paragraph at 14pt, or the
+  largest size down to 8 whose text fits 323 at 0.55 em a character; page buttons 10pt on the three states; slicer
+  header and items 10; buttons 10 (under `default`); chart, table, gauge and text-slot titles 12; the axis text of
+  line, bar and column charts 8; a table's header, values and total 8; cards as today (value 20, title 10) with the
+  container padding written **without** the selector, 5 on every side, so the page's padding (and its accent-bar
+  side, 52 on 2160) no longer applies on the phone.
+- **Tests first:** `phoneTextProblems(files)` in `report-check.mjs`: for every visual in the phone layout the size in
+  force (the `mobile.json` entry with the selector that works, else the page's) fits its phone box by the measured
+  rules (text box 10 + 1.8 x pt, slicer 16 + 4 x pt, button 6 + 1.6 x pt, page buttons two lines at 1.8 x pt), titles
+  at most 12, axis and table text at most 10, the card's padding without a selector. On the 54 designs plus the 16
+  layouts on 640 x 360 and 3840 x 2160 (`pbip.mjs`) and the MCP's reports. Before: every design with a slicer fails at
+  1080 and up, every 2160 design on everything.
+- **Not covered (not measured):** data labels, legends and the text inside donut, funnel, treemap, map and gauge.
+- **Fixtures:** none change.
+
+### Item 7: the header and the filter rail as panels on a solid design (`pbip-export.js`)
+- **Change (solid designs only; a transparent design is untouched):** the Header and Filters groups get
+  `background: show false`, and behind each an empty text box left to the theme (no background, border or shadow
+  entry; title off; no `mobile.json`): for the rail at the group's box; for the header at the group's box grown by 12k
+  at each side and 6k above and below, so it lines up with the rail and the cards (24 from the page's edge on 1080).
+- **Tests first:** `panelProblems`: on a solid design each of the two groups has its background off and exactly one
+  panel text box at that box, under the group in the layer order; on a transparent design there is none. The check's
+  old expectation (those groups carry no objects on a solid design) changes with the change.
+- **Fixtures:** none change (the website's download is always transparent: byte for byte as before, proved by
+  building the 60 project fixtures with the writer before and after).
+
+### Item 8: the slide-in panel in Desktop (no code unless it fails)
+The website download with the panel, English and Arabic, 1080 and 720: Filters whole in the header, the panel opens
+with Ctrl+click, Close whole, three slicers and Reset whole, a slicer choice stays after Close, mirrored in Arabic.
+Expected sizes: the table under "1.2" in the round 1 plan below.
+
+### The Desktop check at the end (expected results, written before the run)
+Reports built from the branch: the website's sample download (transparent) and the MCP on `5-tmdl-sample` (solid), at
+1920 x 1080 and 1280 x 720, English and Arabic, light and dark; one 3840 x 2160 English and Arabic; the phone layout
+of each through `phone-check.ps1`.
+
+| # | Checked | Expected |
+|---|---|---|
+| 4a | page buttons | "Executive summary" whole on one line on the English 1080 download (navigator 422 wide) and on 2160; Arabic and 720 as before; the MCP's (Tahoma) whole |
+| 4b | "Your logo" and the title | "Your logo" in the middle of the header's height (within 3) on 1080, 720 and 2160; the title where it was |
+| 5 | every chart hovered | bar and column charts show the card and the measure by month, 12 names whole (English and Arabic); the line chart shows the card and the bar chart by category as before |
+| 6 | phone layout, every page | title, page buttons, slicers, Reset, chart and table titles, axis text and table text whole, no "..." from size, no overlap; cards whole with "Avg Order Value" whole on 2160 |
+| 7 | solid design (the MCP) | header and filter rail are rounded panels with the cards' shadow, lined up with the cards; nothing else moved; the website's download unchanged |
+| 8 | the slide-in panel | as item 8 above |
+| all | Microsoft's validator | 0 errors on every export |
 
 ## The rounds: what was built, and the plans for rounds 1 and 2 (builder)
 Rounds 1 and 2 below are plans: nothing in them is built. Each round starts with the owner's go, on its own branch
@@ -586,6 +755,17 @@ A transparent design (the website's download) is not to change: there the backgr
 project can carry what Desktop needs; otherwise add one line of instructions to the download (the README already
 says to refresh once; put it where the visitor sees it). Measure in Desktop first: what removes the banner.
 
+**2.4 Seen in round 1, added to round 2 (owner 2026-10-03).** Each is measured in Desktop first, then planned:
+- **The slicers of Arabic reports show "All" in English** (Power BI's own text for no selection): find out whether a
+  report can change it (a slicer setting, the report's or the model's language), or say so in the report notes.
+- **In an Arabic report the first page's button is the leftmost**; it should be the rightmost, so the page buttons read
+  right to left like the rest of the header. Measure what orders a page navigator offers.
+- **KPI titles start close to the panel's edge on the MCP's solid reports** (the card's side padding there is the small
+  default; the website's download has the accent bar's inset).
+- **The tooltip shows a measure that is empty for one month**: on the line chart's tooltip the bar chart of a
+  "Last Ramadan"-type measure is blank for the hovered month. Choose the tooltip's second measure so it has values
+  in that context, or leave the chart out when it would be empty.
+
 #### The owner's answers (2026-10-01), applied above
 1. `b931ecd` is tagged `round-phone-and-sizes` (pushed); `fix/phone-and-sizes` is deleted, locally and on GitHub.
 2. `create_report` gets a `logo` input (a file inside the working folder): round 0.2.
@@ -614,6 +794,9 @@ card title margins 12k and the bar-side padding; the table's fill stays. No deci
     Saturday or Sunday. The model is still never changed without the user.
   - **Measures without a format string**, as model health findings: the % card shows 0.34 (Sales[Total Sales vs Last
     Ramadan %]); the table shows 101914 while the cards show 101.914K.
+- **Phone layout, after the beta (owner 2026-10-03):** check the phone layout below the first screen in Desktop (the
+  charts and tables of the real pages; `phone-check.ps1` has to scroll the phone canvas), and measure the phone text
+  that round 1 did not: data labels, legends, and the text inside donut, funnel, treemap, map and gauge.
 - **Small-page round, with the 640 x 360 cards (after the beta, owner 2026-10-01):**
   - **KPI cards cut at 640 x 360** (already on main): the numbers in the 42- and 48-high cards are cut at the bottom.
     Measured (2.158, `scripts/tests/DESKTOP-TESTS.md`): 8pt title / value 12 needs 48, value 14 needs 56 on 640 x 360,

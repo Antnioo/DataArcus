@@ -45,7 +45,7 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
 ## Tests
 - MCP: `cd mcp && npm install && npm test` (starts the server over stdio and calls every tool on copies of the fixtures). The MCP must stay self-contained: its code and tests use only its own `mcp/package.json` packages, never the website's `node_modules`, so it can be packaged on its own.
 - Website: `node scripts/tests/run-all.mjs` from the repo root (13 suites, 3 at a time; `tmdl-model` runs in Node alone too: `node scripts/tests/tmdl-model.mjs`). Needs `npm install` in the repo root and Chromium (`npx playwright-core install chromium` if Chrome isn't found).
-- After editing a file in `assets/js/`, rebuild its `.min.js` (`npx terser file.js -c -m -o file.min.js`); for `assets/css/style.css` use `npx lightningcss-cli --minify style.css -o style.min.css`. Where a page loads a file with `?v=...`, bump that version.
+- After editing a file in `assets/js/`, rebuild its `.min.js` (`npm run build:min` in the repo root: terser, pinned to 5.51.2 in the root `package.json`, rebuilds every stale one; CI fails when a committed `.min.js` is not what its source gives); for `assets/css/style.css` use `npx lightningcss-cli --minify style.css -o style.min.css`. Where a page loads a file with `?v=...`, bump that version.
 - Power BI Desktop checks: `scripts/tests/DESKTOP-TESTS.md` has what was proven in Desktop, how, and the quirks. Add every new Desktop result there.
 
 ## The live loop on this laptop
@@ -100,6 +100,18 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
   sit on a panel when the theme has solid visuals, and switches them off when the theme is transparent (the page's
   background image draws the panels then). A group can have its background switched off
   (`visualGroup.objects.background`), but has no border or shadow.
+
+- Round 1, measured in Desktop 2.158 (`scripts/tests/DESKTOP-TESTS.md`):
+  - `mobile.json` follows the same selector rules as `visual.json`: a size or padding written there is used only with
+    the selector that property needs on the page (none for a text box, a slicer, titles, axes, table text and the
+    card's container padding; `default` for a button's text; each state for page buttons).
+  - A page button wraps a long name only when two lines fit its height (3.5 x pt in Segoe UI, 3.2 x pt in Tahoma);
+    otherwise it cuts it with "...". A text box is top-aligned (its text's middle is about 1.2 x pt below its top).
+  - The Reset icon follows the button's height (it ends at 0.88 x the height), not the text size.
+  - An empty text box left to the theme is a panel (the theme's card colour, corners and shadow); a group has
+    neither border nor shadow, and a shape with its own rounded fill is not drawn rounded.
+  - Measure a chart with the measure it will show: the value axis's label width changes the plot, and a column
+    chart that fits 12 month names with "1K" labels loses one behind a scrollbar with "0.4M".
 
 ## Writing prompts for another agent or session
 Start with the request itself ("Run this test now"). Name every file. List the steps. Add the rules: scope folder, don't
