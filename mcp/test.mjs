@@ -304,11 +304,15 @@ const gs = await tryCall('generate_theme', { name: 'Gulf Sales', brand: '#0F4C5C
 const gp = gs.err ? gs : await tryCall('plan_layout', { design: gs.j.design, layout: 'analysis', filters: 'end', lang: 'ar' });
 r = gp.err ? gp : await tryCall('create_report', { path: 'bim-project', name: 'Gulf Sales', design: gp.j.design, lang: 'ar' });
 if (!r.err) {
-  const dir = path.join(ROOT, 'bim-project', r.j.report), pages = readReport(dir), want = E.projectPages(gp.j.design.layout, 'ar', { second: true, panel: false });
+  // (round 4, owner 2026-10-03: this model has 2 measures a card can show, so every page has 2 KPI cards, not the
+  // design's 3 and 4 with the extra ones empty)
+  const dir = path.join(ROOT, 'bim-project', r.j.report), pages = readReport(dir), want = E.projectPages(Object.assign({}, gp.j.design.layout, { kpiCards: 2 }), 'ar', { second: true, panel: false });
   const shown = pages.filter((p) => !p.hidden), bad = slotsPlaced(shown, want);
   // (round 1: the model has a month column, so the report has two tooltip pages: by category and the monthly trend)
   check(shown.length === 2 && pages.length === 4 && !bad.length, `create_report design: ${shown.length} pages; ${bad.slice(0, 4).join(' | ')}`);
-  check(shown[0].visuals.some((v) => v.x === 1388 && v.w === 508) && JSON.stringify(shown.map((p) => p.name)) === '["تحليل","نظرة عامة"]', 'create_report design: not mirrored or page names not Arabic');
+  // (round 4: the first of 2 cards, on the right half; it was the first of 3, at 1388, 508 wide)
+  const k1 = want[0].slots.find((s) => s.kind === 'kpi');
+  check(k1.x === 1125 && k1.w === 771 && shown[0].visuals.some((v) => v.x === k1.x && v.w === k1.w) && JSON.stringify(shown.map((p) => p.name)) === '["تحليل","نظرة عامة"]', `create_report design: not mirrored or page names not Arabic (first KPI slot ${k1.x}, ${k1.w})`);
   // the Arabic labels from the engine
   const all1 = shown.map((p) => p.visuals.map((v) => v.text).join('')).join('');
   check(all1.includes('إعادة ضبط الفلاتر') && all1.includes('شعارك') && !all1.includes('Reset filters'), 'create_report design: the report labels are not Arabic');
@@ -324,7 +328,7 @@ if (!r.err) {
 // one page, and filters as a slide-in panel: a hidden group at the panel's box, the page without the rail
 r = gp.err ? gp : await tryCall('create_report', { path: 'bim-project', name: 'Gulf Panel', design: gp.j.design, lang: 'ar', secondPage: false, slidePanel: true });
 if (!r.err) {
-  const pages = readReport(path.join(ROOT, 'bim-project', r.j.report)).filter((p) => !p.hidden), want = E.projectPages(gp.j.design.layout, 'ar', { second: false, panel: true });
+  const pages = readReport(path.join(ROOT, 'bim-project', r.j.report)).filter((p) => !p.hidden), want = E.projectPages(Object.assign({}, gp.j.design.layout, { kpiCards: 2 }), 'ar', { second: false, panel: true });
   const panel = want[0].panel, bad = slotsPlaced(pages, want);
   check(pages.length === 1 && !bad.length && panel && pages[0].visuals.some((v) => v.type === 'group' && v.hidden && v.x === panel.x && v.y === panel.y && v.w === panel.w && v.h === panel.h),
     `create_report slide-in panel: ${pages.length} pages, panel ${JSON.stringify(panel)}; ${bad.slice(0, 3).join(' | ')}`);
@@ -843,9 +847,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   // 1. read_model: a large model gets a summary; named tables come in full; small models answer as before
   const big = await ask('read_model', { path: 'large' }), s = big.j || {};
   chk(() => !big.err && big.t.length < 20000 && s.summary === true && s.counts.tables === 300 && s.counts.columns === 3000 && s.counts.measures === 975 && s.counts.relationships === 416 && JSON.stringify(s.dateTables) === '["Calendar"]'
-    && s.tablesWithMeasures.length === 65 && s.otherTables.length === 234 && s.areas.some((a) => a.area === 'Logistics' && ['Shipments', 'Shipment Legs', 'Deliveries', 'Freight Costs', 'Returns'].every((t) => a.tables.includes(t))) && /tables/.test(String(s.details)) && !('tables' in s), () => `read_model on a large model must be a summary under 20,000 characters: ${big.err ? big.t.slice(0, 200) : big.t.length + ' characters, keys ' + Object.keys(s)}`);
+    && s.tablesWithMeasures.length === 65 && s.otherTables.length === 235 && s.areas.some((a) => a.area === 'Logistics' && ['Shipments', 'Shipment Legs', 'Deliveries', 'Freight Costs', 'Returns'].every((t) => a.tables.includes(t))) && /tables/.test(String(s.details)) && !('tables' in s), () => `read_model on a large model must be a summary under 20,000 characters: ${big.err ? big.t.slice(0, 200) : big.t.length + ' characters, keys ' + Object.keys(s)}`);
   const two = await ask('read_model', { path: 'large', tables: ['Shipments', 'carrier', 'Nope'] });
-  chk(() => !two.err && two.t.length < 40000 && two.j.tables.map((t) => t.table).join() === 'Shipments,Carrier' && two.j.tables[0].measures.length === 15 && two.j.tables[0].columns.some((c) => /^Quantity \(/.test(c)) && JSON.stringify(two.j.notFound) === '["Nope"]', () => `read_model with tables must return exactly the named tables in full: ${two.err ? two.t.slice(0, 200) : two.j.tables.map((t) => t.table) + ' / notFound ' + JSON.stringify(two.j.notFound)}`);
+  chk(() => !two.err && two.t.length < 40000 && two.j.tables.map((t) => t.table).join() === 'Shipments,Carrier' && two.j.tables[0].measures.length === 15 && two.j.tables[0].columns.length > 0 && two.j.tables[0].columns.every((c) => /\((string|int64|double|decimal|dateTime|boolean)\)$/.test(c)) && JSON.stringify(two.j.notFound) === '["Nope"]', () => `read_model with tables must return exactly the named tables in full: ${two.err ? two.t.slice(0, 200) : two.j.tables.map((t) => t.table) + ' / notFound ' + JSON.stringify(two.j.notFound)}`);
   const allFacts = big.j && big.j.tablesWithMeasures ? await ask('read_model', { path: 'large', tables: big.j.tablesWithMeasures.map((t) => t.table) }) : { err: true, t: 'no summary' };
   chk(() => !allFacts.err && allFacts.t.length <= 40000 && allFacts.j.tables.length > 10 && allFacts.j.tables.length < 65 && allFacts.j.notShown.length === 65 - allFacts.j.tables.length && /40,000/.test(String(allFacts.j.note)), () => `read_model with more tables than fit must stop at a table and name the rest: ${allFacts.err ? allFacts.t.slice(0, 200) : allFacts.t.length + ' characters, ' + allFacts.j.tables.length + ' tables, notShown ' + (allFacts.j.notShown || []).length}`);
   // read_model's answers on the small fixtures, as main gives them before round 4 (md5 start and length)
@@ -875,7 +879,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   chk(() => refused.err && /focus/.test(refused.t) && !fs.existsSync(path.join(ROOT, 'large', 'Large no focus.Report')), () => `create_report on a large model without a focus must be refused: ${refused.t.slice(0, 200)}`);
   const lr = await ask('create_report', { path: 'large', name: 'Large logistics', design, focus: 'logistics' });
   {
-    const dir = lr.err ? null : path.join(ROOT, 'large', lr.j.report), cards = dir ? readReport(dir)[0].visuals.filter((v) => v.type === 'cardVisual') : [];
+    const dir = lr.err ? null : path.join(ROOT, 'large', lr.j.report), cards = dir ? readReport(dir)[0].visuals.filter((v) => v.type === 'cardVisual').sort((a, b) => a.x - b.x) : [];
     const on = cards.map((v) => { const p = JSON.parse(v.text).visual.query.queryState.Data.projections[0]; return p.queryRef.replace('.', '[') + ']'; });
     chk(() => !lr.err && JSON.stringify(on) === JSON.stringify(LOGISTICS) && errors(dir) === '0' && !(lr.j.modelNotes || []).some((n) => /Margin\]$/.test(n.field)), () => `create_report on a large model with focus "logistics": ${lr.err ? lr.t.slice(0, 200) : 'cards ' + JSON.stringify(on) + ', validator ' + errors(dir)}`);
   }
@@ -898,7 +902,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const zero = await ask('create_report', { path: 'plain', name: 'No measures', design, layout: 'exec', kpis: 4 });
   {
     const dir = zero.err ? null : path.join(ROOT, 'plain', zero.j.report), k = (zero.j && zero.j.kpiCards) || {};
-    chk(() => !zero.err && cardsOf(dir).every((c) => c.length === 0) && noField(dir).length === 0 && errors(dir) === '0' && k.asked === 4 && k.built === 0 && /no measures/.test(k.why), () => `a model with no measures: ${zero.err ? zero.t.slice(0, 200) : 'cards ' + cardsOf(dir).map((c) => c.length) + ', validator ' + errors(dir) + ', kpiCards ' + JSON.stringify(zero.j.kpiCards)}`);
+    chk(() => !zero.err && cardsOf(dir).every((c) => c.length === 0) && noField(dir).length === 0 && errors(dir) === '0' && k.asked === 4 && k.built === 0 && /no measures/.test(k.why) && k.leftOutVisuals.length > 0
+      && readReport(dir).every((pg) => pg.visuals.every((v) => !/Chart$|^gauge$|^funnel$|^treemap$|^map$/.test(v.type))), () => `a model with no measures: ${zero.err ? zero.t.slice(0, 200) : 'cards ' + cardsOf(dir).map((c) => c.length) + ', validator ' + errors(dir) + ', kpiCards ' + JSON.stringify(zero.j.kpiCards)}`);
   }
   const hand = await ask('create_report', { path: 'bim-project', name: 'Hand cards', pages: [{ name: 'P', slots: [0, 1, 2, 3].map((i) => ({ kind: 'kpi', title: 'K' + (i + 1), x: 24 + i * 300, y: 24, w: 280, h: 120 })).concat([{ kind: 'bar', x: 24, y: 170, w: 900, h: 400 }]) }] });
   {
