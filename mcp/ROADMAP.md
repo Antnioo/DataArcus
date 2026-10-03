@@ -52,7 +52,7 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
 
 ## Plan of 2026-10-02 (owner's go, after reviews by ChatGPT and Gemini; supersedes "Next, in order" where they differ)
 - **Goal:** by 15 November 2026, 5 beta users have used DataArcus on their own work and 1 client has paid.
-- **Order:** round 1 (visible fixes) -> round 2 (Arabic basics) -> data privacy -> minimum packaging + 10 golden tasks
+- **Order:** round 1 (visible fixes) -> round 2 (Arabic basics) -> data privacy -> minimum packaging + 11 golden tasks
   -> private beta + free before/after case studies -> first paid pilots. Gulf Calendar pack by 1 December. After the
   beta: the `pbip-export.js` split (sooner only if its plan shows about one evening), the nightly full validator
   matrix, small pages, backgrounds.

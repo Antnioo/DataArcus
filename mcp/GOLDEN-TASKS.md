@@ -119,6 +119,10 @@ Each: the model, the request word for word, the expected tool calls, the checks,
   SUMMARIZE_KEYS, FK_VISIBLE, DOUBLE, NO_RLS). `suggest_fields` returns 4 empty KPI picks without saying why, and
   `create_report` writes the report anyway: **11 validator errors** (`PBIR_QUERY_STATE_MISSING`: KPI cards with no
   field), `modelNotes` names Month Name only. The agent-level part (proposing measures) is not run yet.
+- **Baseline after round 4 (2026-10-03, `fix/round-4-models`): PASS at tool level.** `create_report` writes no KPI
+  card and no chart (19 visuals: header, filters, tables), **validator 0**, and says why: `kpiCards` asked 4, built 0,
+  "The model has no measures...", `leftOutVisuals` Main trend, Breakdown, Comparison, Main chart. `suggest_fields`
+  still returns 4 empty KPI picks without saying why (seen, not in this round). Agent level: not run.
 
 ### 8. "Redesign this"
 - **Model:** Health Test, with its report. **Request:** "Redesign this report, it looks dated."
@@ -129,6 +133,9 @@ Each: the model, the request word for word, the expected tool calls, the checks,
 - **Baseline: FAIL on the validator.** The existing report is untouched (0 files changed) and a request for the same
   name is written as "Health Test Report - New design"; but the new report has **3 validator errors** (the same empty
   KPI cards as task 7: the model has 2 measures for 4 cards).
+- **Baseline after round 4 (2026-10-03): PASS.** Both new reports have **0 validator errors**; 2 KPI cards per page
+  instead of 4 and 3; `kpiCards` asked 4, built 2, measures Total and Unused One (the picker takes a measure named
+  "Unused One": seen, not in this round). The existing report is untouched.
 
 ### 9. An unsupported visual
 - **Model:** Ramadan Test. **Request:** "Add a Sankey chart of sales flows and a decomposition tree."
@@ -150,6 +157,16 @@ Each: the model, the request word for word, the expected tool calls, the checks,
   `suggest_fields` picks AR Invoices' "Total Tax Amount" and Bookings measures (the first fact tables by name, not
   Logistics) and "ABC Class" as the category; `create_report` flags "Bookings Total Margin" as a percentage (a money
   margin). The report itself builds: 35 visuals, validator 0, 0 overwritten.
+- **Expected calls since round 4:** `read_model` (a summary) -> the agent reads the areas and takes the user's word
+  ("logistics") -> optionally `read_model` with `tables` -> `suggest_fields` with `focus: "logistics"` -> theme, layout,
+  plan, "go" -> `create_report` with the same `focus`.
+- **Baseline after round 4 (2026-10-03): PASS at tool level.** `read_model` **10,380 characters** (a summary);
+  the five Logistics tables in full: 4,827; `suggest_fields` without a focus picks nothing and asks; with
+  `focus: "logistics"` the KPIs are Shipments Total Net Amount, Deliveries Total Tax Amount, Freight Costs Total Tax
+  Amount and Freight Costs Units Share %, the category Carrier Group; `create_report` without a focus is refused, with
+  it: 35 visuals, validator 0; no money margin flagged (`modelNotes`: Freight Costs Units Share %, a real percentage
+  without a format); `check_model_health` **17,997 characters** (it had grown to 162,909 with round 2's fix scripts).
+  Largest answer of the whole run: 17,997 characters.
 
 ### 11. A Gulf model's calendar checked (added 2026-10-03 with the Gulf calendar beta cut; owner's decision)
 - **Model:** Gulf Calendar Test. **Request:** "We're a UAE retailer. Is our calendar right for Ramadan, Eid and the
@@ -175,12 +192,12 @@ Each: the model, the request word for word, the expected tool calls, the checks,
 | 4 | 16:9 and 4:3 | PASS | |
 | 5 | Small page | PASS (Desktop expected FAIL) | known 640 x 360 items |
 | 6 | Long Arabic names | PASS (Desktop not measured) | |
-| 7 | Missing measures | FAIL | empty KPI cards, 11 validator errors |
-| 8 | "Redesign this" | FAIL | empty KPI cards, 3 validator errors |
+| 7 | Missing measures | PASS since round 4 (was FAIL) | was: empty KPI cards, 11 validator errors. Agent level not run |
+| 8 | "Redesign this" | PASS since round 4 (was FAIL) | was: empty KPI cards, 3 validator errors |
 | 9 | Unsupported visual | PASS | |
-| 10 | Large model | FAIL | `read_model` 178,302 characters; field picks by name order |
+| 10 | Large model | PASS since round 4 (was FAIL), when the agent gives the focus | was: `read_model` 178,302 characters; field picks by name order |
 
-## The large model: what the tools return, and a proposal (no MCP code changed)
+## The large model: what the tools returned before round 4, and the proposal (built in round 4: items 1, 2 and 4 of it; `search`, compact JSON everywhere and the 40,000 cap on the whole health answer are not built)
 **Measured on Large Synthetic** (300 tables, 3,000 columns, 975 measures, 416 relationships), on main `bc05275`,
 with `mcp/test-models/golden-baseline.mjs` and a one-off run of each tool:
 
