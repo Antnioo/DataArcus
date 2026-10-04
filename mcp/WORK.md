@@ -82,6 +82,13 @@ Shared engines changed: `pbip-export.js`, `svg-kpi-compiler.js`: `.min.js` rebui
   separator gets no entry; a percent is untouched; two page filters with no "every Ramadan" note). Engine build test:
   9 of 9 (the list test failed first: 19 -> 20 files, eight -> nine engines, because the SVG compiler ships now).
   Locally: `scripts/test-svg-kpi.mjs` 786 of 786, the `pbip` suite 71 of 71. Website: CI (below).
+- **CI on `112196f` (run 37208910785): mcp success (340); website success on the third attempt, all 17 suites.** The
+  first attempt failed on two checks of pages this branch does not touch: "tools/power-bi-licensing-cost-calculator.html
+  1440px: the Inter swap shifts the page 0.126 (want 0.1 or less)" (the check that failed once in rounds 7 and 8) and
+  "articles/article-power-bi-report-styles.html 390px click #style-sales: top at -464px, hidden under bars ending at
+  67px" (`anchors`); the second attempt failed on the first of them only; the third passed. Main `3af6657` has one
+  failed and one passed run too. The suites of this round's engines (`pbip`, `svg-kpi`, `theme-generator`,
+  `design-engine`) passed in every attempt.
 - **Changed after the first run of the new tests, each in a test of this round, never an old one:** the two made-up
   fixtures got a month column and more text columns (see "Seen, not in scope": a report on a model with too few
   columns is written with a slicer or a line chart that has no field, and Microsoft's validator counts it; that is
