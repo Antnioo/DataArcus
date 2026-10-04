@@ -425,6 +425,16 @@
       };
     });
 
+    // Report-level measures (o.svgColumns: [{ page, t, m, expression }]): definition/reportExtensions.json, in the shape
+    // Desktop accepted in D-P1: one entity per model table, each measure a text with the data category Image URL.
+    // The model is not touched: these measures exist only in the report.
+    const svgDone = {};
+    if ((o.svgColumns || []).length) {
+      const entities = [];
+      o.svgColumns.forEach((c) => { let e = entities.find((x) => x.name === c.t); if (!e) entities.push(e = { name: c.t, measures: [] }); e.measures.push({ name: c.m, dataType: 'Text', dataCategory: 'ImageUrl', expression: c.expression }); });
+      add(D + '/reportExtensions.json', json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities }));
+    }
+
     PAGES.forEach((pg, pageIndex) => {
       const pageName = pg.id, filters = pageFilters();
       add(D + '/pages/' + pageName + '/page.json', json(Object.assign({
@@ -587,6 +597,12 @@
           if (type === 'cardVisual') {
             const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: (s.kind === 'kpi' && pg.kpiInset) || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) });
             visual.objects = cardObjects(c); cardFrame(visual.visualContainerObjects, c, TITLE);
+            // A number format on the report side (measured in Desktop 2.158, D8, 2026-10-04): where the bound measure
+            // carries cardFormat (the server sets it for a measure whose model format has no thousand separator),
+            // the card gets the entry Desktop itself writes for Display units "Custom" with a format code: a second
+            // entry of "value", selected by the field's query reference. Only cards: tables and tooltips not measured.
+            const cf = query && B ? (s.kind === 'kpi' ? B.kpis[kpiIndex - 1] : B.measure) : null;
+            if (cf && cf.m != null && cf.cardFormat) visual.objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(cf.cardFormat) }, selector: { metadata: cf.t + '.' + cf.m } });
           }
           // tables fill their visual (grow to fit), instead of shrinking to their content and leaving the rest empty
           // (on a right-to-left page the title sat on the right and the table on the left)
@@ -596,6 +612,13 @@
           if (s.kind === 'table' && query) visual.objects.columnFormatting = tableFields(B, rtl).map((f) => ({
             properties: { alignment: str(f.m != null || f.num ? (rtl ? 'Left' : 'Right') : (rtl ? 'Right' : 'Left')), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) },
             selector: { metadata: f.t + '.' + fname(f) } }));
+          // SVG columns (experimental; measured in Desktop 2.158, D-P1, 2026-10-04): report-level measures of
+          // reportExtensions.json, shown as the last columns of the page's first table (the reading end: on a
+          // right-to-left page that is the left, where the table's first projection sits)
+          if (s.kind === 'table' && query && !svgDone[pageIndex]) {
+            const cols = (o.svgColumns || []).filter((c) => c.page === pageIndex).map((c) => ({ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: c.t } }, Property: c.m } }, queryRef: c.t + '.' + c.m, nativeQueryRef: c.m }));
+            if (cols.length) { const ps = query.queryState.Values.projections; query.queryState.Values.projections = rtl ? cols.reverse().concat(ps) : ps.concat(cols); svgDone[pageIndex] = true; }
+          }
         }
         const v = container({ x: s.x, y: box.y, w: s.w, h: box.h, z, parent, visual, kind: s.kind });
         if (CHARTS.includes(s.kind)) charts.push({ v, byMonth: !!trend && same(s.kind === 'line' ? B.date : (B.cats || {})[s.kind], tip.date) });
