@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, Svg, applyColumnTypes, inside, loadModel, nothingAt, prepareRoot, rootProblem, summary, writeNew } from './lib/model.mjs';
 import { E, themeDesign, planLayout, pageOf, contrastReport, freeFile } from './lib/design.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
+import { addGulfCalendar, gulfFixInputs } from './lib/gulf-calendar.mjs';
 
 // the version is in one place: mcp/package.json
 const VERSION = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
@@ -277,7 +278,7 @@ server.registerTool('suggest_fields', {
 
 server.registerTool('check_model_health', {
   title: 'Check model health',
-  description: 'Runs the DataArcus Model Health Check: score, and every finding with the objects it concerns (unused columns and measures, risky relationships, slow DAX, date tables...). Reads a project saved by Power BI Desktop (TMDL or model.bim), a model.bim or a .pbit. The model is never changed. Ready fix scripts (sort order, number formats) are written to new files next to the project and named in the answer with how to apply them; a script is never returned as text and never applied. With a country, the gulfCalendar section is not part of the score, and say so: for its fixes point to the Calendar Generator settings the answer gives and never write calendar DAX yourself.' + UNTRUSTED,
+  description: 'Runs the DataArcus Model Health Check: score, and every finding with the objects it concerns (unused columns and measures, risky relationships, slow DAX, date tables...). Reads a project saved by Power BI Desktop (TMDL or model.bim), a model.bim or a .pbit. The model is never changed. Ready fix scripts (sort order, number formats) are written to new files next to the project and named in the answer with how to apply them; a script is never returned as text and never applied. With a country, the gulfCalendar section is not part of the score, and say so: for its fixes point to the Calendar Generator settings the answer gives, or offer add_gulf_calendar with the inputs in fixes.addGulfCalendar (it writes the table as a script file), and never write calendar DAX yourself.' + UNTRUSTED,
   inputSchema: {
     path: modelPath, maxItems: z.number().int().min(1).max(200).default(15).describe('Objects listed per finding'),
     weekStart: z.enum(['sunday', 'monday', 'saturday']).default('sunday').describe('The first day of the week, used only when a fix script has to add a weekday number column to sort day names: sunday (default: Saudi Arabia and most of the Gulf), monday (a Saturday-Sunday weekend, as in the UAE since 2022), or saturday'),
@@ -337,6 +338,9 @@ server.registerTool('check_model_health', {
   // the Gulf calendar check: its own section, never scored; shown when a country is given or the model already has
   // Hijri or Ramadan columns. Read from the model files only; its fixes name the website tools and their settings.
   const gulfCalendar = country || Gulf.hasGulfColumns(m.tmsl) ? Gulf.analyze(m.tmsl, { country: country || 'uae', asOf, maxItems }) : undefined;
+  // the same fix as add_gulf_calendar's inputs (the tool writes the generator's table as a script file)
+  const addGulf = gulfFixInputs(gulfCalendar);
+  if (addGulf) gulfCalendar.fixes.addGulfCalendar = addGulf;
   return text({
     source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report,
     fixes: Object.keys(fixes).length ? fixes : undefined,
@@ -676,6 +680,31 @@ server.registerTool('plan_layout', {
   const r = planLayout(a), { page, fitted } = pageOf(r.design.layout);
   const unknown = a.design ? unknownKeys(a.design) : null;
   return text(Object.assign({ page, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, unknown ? { ignored: unknown } : {}, { design: r.design }));
+}));
+
+server.registerTool('add_gulf_calendar', {
+  title: 'Add a Gulf calendar table',
+  description: 'Writes the DataArcus Calendar Generator\'s date table for a Gulf model (Hijri year, month and day, Ramadan and Eid flags and Ramadan Day, the UAE\'s announced Ramadan and Eid dates with later ones marked as estimates, and the official weekend of the chosen country with the dates it changed) as a TMDL script in a new file next to the project. The user applies it in Power BI Desktop\'s TMDL view after checking Preview; this tool never writes into the model, never returns the DAX and never overwrites a file. firstYear and lastYear are required: ask the user which years their data covers (the tool reads no data). It refuses, writing nothing, when the model already has a table, measure or column with the table\'s name, when a relateTo column is missing or is not a date, and when the years are outside Power BI\'s dates or more than 60. Relationships are written only for the relateTo columns the user names; marking the date table and the sort-by columns are steps by hand in the answer. Tell the user every step and note.' + UNTRUSTED,
+  inputSchema: {
+    path: modelPath.describe('The model the table is for (read for name clashes and the relateTo columns); the script file goes next to it'),
+    firstYear: z.number().int().describe('First year of the calendar (1 January). Ask the user: the years their data covers'),
+    lastYear: z.number().int().describe('Last year of the calendar (31 December); at most 60 years in all'),
+    country: z.enum(['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn']).default('uae').describe('The country whose official weekend the table uses (with the dates it changed) and that the answer names'),
+    weekend: z.enum(['country', 'sat-sun', 'fri-sat', 'fri', 'sun']).default('country').describe('country (default): the country\'s official weekend; or a fixed weekend for a company whose weekend differs'),
+    announced: z.boolean().default(true).describe('Ramadan, Shawwal and Dhu al-Hijjah on the UAE\'s announced dates (later ones are Umm al-Qura estimates); false: Umm al-Qura only'),
+    lang: z.enum(['en', 'ar']).default('en').describe('Language of the month, day and Hijri month names in the table (the column names stay English)'),
+    name: z.string().max(80).default('Gulf Calendar').describe('The new table\'s name: letters, digits, spaces and _, at most 40 characters. Never the name of a table, measure or column the model has'),
+    weekStart: z.enum(['sunday', 'monday', 'saturday']).default('sunday').describe('The first day of the week for Day of Week and Week Start'),
+    fiscalStart: z.number().int().min(1).max(12).default(1).describe('The month the fiscal year starts'),
+    relateTo: z.array(z.string()).max(5).optional().describe('Date columns of the user\'s fact tables to relate to the new table\'s Date, as "Table[Column]" (many to one, single direction). Only columns the user names'),
+    asOf: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe('The date the self-check counts as today (YYYY-MM-DD; default: today). For tests')
+  }, annotations: ADDS
+}, safe(async (a) => {
+  const m = loadModel(a.path);
+  // the script's place, as check_model_health's fix scripts: next to the project, never inside the model folder
+  const scriptDir = m.folder ? m.projectDir : path.dirname(inside(a.path));
+  const scriptBase = m.folder ? path.basename(m.folder).replace(/\.(SemanticModel|Dataset)$/i, '') : path.basename(inside(a.path)).replace(/\.[^.]+$/, '');
+  return text(addGulfCalendar(m, a, { Gulf, Fix, writeScript, scriptDir, scriptBase }));
 }));
 
 prepareRoot();
