@@ -101,8 +101,35 @@ const walk = (dir, depth = 0, links = null) => (depth > 4 ? [] : fs.readdirSync(
 // The model a path points at: a project folder (nearest .SemanticModel or older .Dataset), a model folder,
 // a model.bim or a .pbit. Returns { source, folder, tables (field-picker shape), tmsl (full model JSON, built from the TMDL files when there is no model.bim),
 // report (for the health check, when the file has one) }.
+// A model asked for by its plain name ("Ramadan Test", "Ramadan Test.pbip"), when no file or folder of that path
+// exists: the one model folder, .pbip or project folder of that name inside the working folder (any letter case;
+// links are not followed). None, or more than one: an error that says what is there, never a guess.
+function byName(p) {
+  const strip = (n) => String(n).replace(/\.(pbip|SemanticModel|Dataset)$/i, ''), want = strip(p).trim().toLowerCase(), isModel = (n) => /\.(SemanticModel|Dataset)$/i.test(n);
+  const hits = new Set(), models = [];
+  const visit = (dir, depth) => { let list = []; try { list = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return; }
+    for (const e of list) {
+      if (e.isSymbolicLink() || e.name === 'node_modules' || e.name === '.git') continue;
+      const full = path.join(dir, e.name), same = strip(e.name).toLowerCase() === want;
+      if (e.isDirectory() && isModel(e.name)) { models.push(full); if (same) hits.add(full); continue; }
+      if (e.isDirectory() && /\.Report$/i.test(e.name)) continue;
+      // a .pbip: the model folder of the same name beside it, else its folder (the nearest model in it)
+      if (!e.isDirectory() && /\.pbip$/i.test(e.name) && same) { const m = list.find((x) => x.isDirectory() && isModel(x.name) && strip(x.name).toLowerCase() === want); hits.add(m ? path.join(dir, m.name) : dir); }
+      if (e.isDirectory()) { if (same && fs.readdirSync(full).some((n) => isModel(n))) hits.add(full); if (depth < 3) visit(full, depth + 1); }
+    } };
+  visit(ROOT, 0);
+  const rel = (f) => path.relative(ROOT, f) || '.';
+  if (hits.size === 1) return [...hits][0];
+  if (hits.size > 1) throw new Error(`More than one model in the working folder is named "${p}": ${[...hits].map(rel).join('; ')}. Give read_model the path of the one you mean.`);
+  throw new Error(`No model named "${p}" in the working folder ${ROOT}. ${models.length ? 'Models there: ' + models.slice(0, 12).map(rel).join('; ') + (models.length > 12 ? '; and ' + (models.length - 12) + ' more' : '') + '. Give read_model one of these paths, or "." for the working folder itself.' : 'Give read_model the path of a project folder, or "." for the working folder itself.'}`);
+}
 export function loadModel(p) {
-  const full = inside(p), st = fs.statSync(full);
+  let full = inside(p);
+  // not a path that exists, and written without a slash: a model's name
+  if (!fs.existsSync(full) && !/[\\/]/.test(String(p))) full = byName(p);
+  // a .pbip file is the project's shortcut, not a model: the model folder of its name beside it, else its folder
+  else if (/\.pbip$/i.test(full) && fs.existsSync(full) && fs.statSync(full).isFile()) { const beside = full.replace(/\.pbip$/i, '.SemanticModel'); full = fs.existsSync(beside) ? beside : path.dirname(full); }
+  const st = fs.statSync(full);
   if (st.isFile()) {
     const buf = fs.readFileSync(full);
     if (buf[0] === 0x50 && buf[1] === 0x4b) {
@@ -125,7 +152,7 @@ export function loadModel(p) {
     // a model folder that is a link is not followed: say so when it leads outside the working folder
     const linked = links.find((l) => /\.(SemanticModel|Dataset)$/i.test(l));
     if (linked) real(linked);
-    if (full === ROOT && !fs.readdirSync(ROOT).length) throw new Notice('empty', `Your working folder ${ROOT} is empty: put a Power BI project (a .pbip file with its folders, saved from Power BI Desktop) in it.`);
+    if (path.resolve(full) === ROOT && !fs.readdirSync(ROOT).length) throw new Notice('empty', `Your working folder ${ROOT} is empty: put a Power BI project (a .pbip file with its folders, saved from Power BI Desktop) in it.`);
     throw new Error(`No .SemanticModel folder in ${p}. Point at a Power BI project folder saved from Desktop.`);
   }
   dirs.sort((a, b) => a.split(path.sep).length - b.split(path.sep).length);

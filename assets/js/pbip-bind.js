@@ -134,6 +134,9 @@
   const PCT = (x) => /%/.test(x.formatString || '') || /%|ratio|rate|نسبة/i.test(x.name) || (/margin|share|هامش/i.test(x.name) && !x.formatString && !!x.divides);
   // time intelligence variants (MTD, PY, YoY %...) are not the headline number
   const VARIANT = /\b(PY|LY|YoY|MoM|QoQ|MTD|QTD|YTD|PYTD|PM|Prior|Previous|Prev|Last|vs|Rolling|Running|Avg|Average|\d+D)\b/i;
+  // a measure someone left behind: the whole word old, test, unused, backup or temp in its name ("Sales (old)", "Test
+  // margin", "TEMP total"; not "Oldham", "Latest" or "Contest"). It is picked only when no other measure is left.
+  const STALE = /(^|[^A-Za-z])(old|test|unused|backup|temp)([^A-Za-z]|$)/i;
   const MAIN = /revenue|sales|amount|income|profit|value|bookings|orders|leads|deals|calls|visits|spend|cost|الإيرادات|المبيعات|الأرباح|الطلبات/i;
   const COUNTISH = /total|count|number|#|qty|quantity|units|customers|clients|tickets|إجمالي|عدد/i;
   const CAT = /category|product|brand|region|country|city|emirate|segment|channel|type|status|department|store|branch|source|platform|model|team|group|class|stage|agent|rep|salesperson|campaign|الفئة|المنتج|العلامة|المنطقة|المدينة|القناة|الفرع|المصدر/i;
@@ -173,7 +176,7 @@
     const shown = tables.filter((t) => !t.hidden);
     const measures = [], columns = [];
     shown.forEach((t) => {
-      t.measures.filter((m) => !m.isHidden).forEach((m) => measures.push({ t: t.name, m: m.name, pct: PCT(m), variant: VARIANT.test(m.name) }));
+      t.measures.filter((m) => !m.isHidden).forEach((m) => measures.push({ t: t.name, m: m.name, pct: PCT(m), variant: VARIANT.test(m.name), stale: STALE.test(m.name) }));
       t.columns.filter((c) => !c.isHidden).forEach((c) => { const by = c.sortBy ? null : sortColumnFor(t.columns, c.name);
         columns.push(Object.assign({ t: t.name, c: c.name, type: String(c.dataType || 'string').toLowerCase(), dateTable: t.date || DATE_TABLE.test(t.name), cat: c.dataCategory }, by ? { sortBy: { t: t.name, c: by.name } } : {})); });
     });
@@ -182,11 +185,14 @@
   function suggest(tables, nKpis) {
     const { measures, columns } = catalog(tables);
     const score = (x) => (MAIN.test(x.m) ? 3 : 0) + (COUNTISH.test(x.m) ? 2 : 0) - (x.variant ? 4 : 0) - (x.pct ? 1 : 0);
-    const ranked = measures.slice().sort((a, b) => score(b) - score(a));
+    // (measures left behind, see STALE, come after every other one)
+    const ranked = measures.slice().sort((a, b) => (a.stale ? 1 : 0) - (b.stale ? 1 : 0) || score(b) - score(a));
     const main = ranked.find((x) => !x.pct) || ranked[0] || null;
-    // KPIs: the strongest base measures, with one ratio among them when the model has one
-    const kpis = ranked.filter((x) => !x.pct && !x.variant).slice(0, Math.max(0, nKpis - 1));
-    const ratio = ranked.find((x) => x.pct && !x.variant);
+    // KPIs: the strongest base measures, with one ratio among them when the model has one; a measure left behind only
+    // when the cards outnumber the other measures
+    const current = ranked.filter((x) => !x.stale);
+    const kpis = current.filter((x) => !x.pct && !x.variant).slice(0, Math.max(0, nKpis - 1));
+    const ratio = current.find((x) => x.pct && !x.variant);
     if (ratio && kpis.length < nKpis) kpis.push(ratio);
     ranked.forEach((x) => { if (kpis.length < nKpis && !kpis.includes(x)) kpis.push(x); });
     while (kpis.length < nKpis) kpis.push(null);   // more cards than measures: the rest stay empty
@@ -205,7 +211,11 @@
     const catA = cats[0] || null, catB = cats.find((c) => c !== catA && c.t !== (catA && catA.t)) || cats[1] || catA;
     // three different slicers: the year, then the categories, then the time axis
     const sl = [year, catA, catB, date].filter((x, i, l) => x && l.indexOf(x) === i);
-    return build({ kpis, main, date, catA, catB, slicers: [sl[0] || null, sl[1] || null, sl[2] || null] });
+    const out = build({ kpis, main, date, catA, catB, slicers: [sl[0] || null, sl[1] || null, sl[2] || null] });
+    // the measures left behind that were not picked, so the caller can say so (none: no such key)
+    const skipped = ranked.filter((x) => x.stale && !kpis.includes(x) && x !== main).map((x) => ({ t: x.t, m: x.m }));
+    if (skipped.length) out.skipped = skipped;
+    return out;
   }
   // the visual-by-visual binding the exporter reads, from the few choices the user makes
   function build(ch) {

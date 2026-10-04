@@ -27,7 +27,10 @@ report files are written by `create_report` for a new report, or by Microsoft's 
 5. **Show the plan and wait for "go":** the pages, the visuals and the fields on each, the page size, the colours, the contrast checks (with every warning), anything under
    `repaired`, the layout with its three reasons, and the slot table (name, suggested visual, x, y, width, height).
    Never call `create_report` in the same turn as the request: the user's "go" comes first.
-6. **Build.** `create_report` with the design (and the same layout choices). It writes a new report next to their
+6. **Build.** `create_report` with the design (and the same layout choices) and the approved plan's fields in
+   `fields` (`kpis`, `measure`, `timeAxis`, `category`, `category2`, `table`, `slicers`, each as `Table[Field]`): what
+   is given is bound as given, what is left out is picked automatically. Read `boundFields` in the answer and tell
+   the user anything that differs from the plan. It writes a new report next to their
    model, never changing the model or an existing report: the pages (by default a second page in a complementary
    layout; `slidePanel: true` for filters as a slide-in panel), the labels in the report's language, and the theme.
    If the result has `themeChanged`, tell the user what changed and why.

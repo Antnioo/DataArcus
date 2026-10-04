@@ -1061,6 +1061,204 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   }
 }
 
+// ---------- round 6: the fields of the approved plan, the picker, names; thousand separators; the header logo ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 240) : x.t.slice(0, 240));
+  const f = (x) => (x ? `${x.t}[${x.c != null ? x.c : x.m}]` : null);
+  const plan = await ask('plan_layout', { layout: 'exec', kpis: 4, filters: 'end' }), design = plan.j && plan.j.design;
+  // every visual of a written report: page name, type, and the fields of its query in role order
+  const visualsOf = (dir) => { const def = path.join(dir, 'definition', 'pages'), order = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder;
+    return order.flatMap((id) => { const pg = JSON.parse(fs.readFileSync(path.join(def, id, 'page.json'), 'utf8'));
+      return fs.readdirSync(path.join(def, id, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, id, 'visuals', v, 'visual.json'), 'utf8'))).filter((v) => v.visual && v.visual.query)
+        .map((v) => ({ page: pg.displayName, type: v.visual.visualType, x: v.position.x, fields: Object.values(v.visual.query.queryState).flatMap((r) => (r.projections || []).map((p) => p.queryRef)).filter((q) => !/^Min\(/.test(q)) })); }); };
+  const SALES = (m) => `Sales[${m}]`, RAM = { kpis: ['Total Sales', 'Total Sales Last Ramadan', 'Total Sales vs Last Ramadan %'].map(SALES) };
+
+  // 1. create_report takes the approved plan's fields: bound as given, nothing re-picked, and the answer says what was bound
+  {
+    const fields = { kpis: RAM.kpis, measure: SALES('Total Sales Last Ramadan'), timeAxis: 'Calendar[Hijri Month Name]', category: 'Calendar[Day Name]', category2: 'Calendar[Quarter]',
+      table: ['Calendar[Quarter]', SALES('Total Sales'), SALES('Total Sales vs Last Ramadan %')], slicers: ['Calendar[Hijri Year]', 'Calendar[Is Ramadan]'] };
+    const x = await ask('create_report', { path: 'dax-project', name: 'R6 Fields', design, fields });
+    const vs = x.err ? [] : visualsOf(path.join(ROOT, 'dax-project', x.j.report)), p1 = vs.filter((v) => v.page === 'Executive summary');
+    const cards = p1.filter((v) => v.type === 'cardVisual').sort((a, b) => a.x - b.x).map((v) => v.fields.join());
+    chk(() => cards.join('|') === 'Sales.Total Sales|Sales.Total Sales Last Ramadan|Sales.Total Sales vs Last Ramadan %', () => `fields.kpis: the cards must be the three given, in order (3 cards for 3 fields): ${cards.join(' | ')} ${short(x)}`);
+    chk(() => !vs.some((v) => v.fields.some((q) => /\(old\)/.test(q))), () => `fields given: an "(old)" measure was still bound: ${JSON.stringify(vs.filter((v) => v.fields.some((q) => /\(old\)/.test(q))).slice(0, 2))}`);
+    const one = (type) => (p1.find((v) => v.type === type) || { fields: [] }).fields.join();
+    chk(() => one('lineChart') === 'Calendar.Hijri Month Name,Sales.Total Sales Last Ramadan' && one('clusteredBarChart') === 'Calendar.Day Name,Sales.Total Sales Last Ramadan' && one('clusteredColumnChart') === 'Calendar.Quarter,Sales.Total Sales Last Ramadan',
+      () => `fields.measure, timeAxis, category, category2: line ${one('lineChart')}; bar ${one('clusteredBarChart')}; column ${one('clusteredColumnChart')}`);
+    chk(() => one('tableEx') === 'Calendar.Quarter,Sales.Total Sales,Sales.Total Sales vs Last Ramadan %', () => `fields.table: ${one('tableEx')}`);
+    const sl = vs.filter((v) => v.page === 'Executive summary' && v.type === 'slicer').map((v) => v.fields.join());
+    chk(() => sl.length === 3 && sl.includes('Calendar.Hijri Year') && sl.includes('Calendar.Is Ramadan'), () => `fields.slicers: the two given must be slicers (the third is picked as before): ${sl}`);
+    // the answer lists the bound fields per visual, and they are what the files hold
+    const bf = x.err ? [] : x.j.boundFields || [], b1 = (bf.find((p) => p.page === 'Executive summary') || {}).visuals || [];
+    chk(() => b1.filter((v) => v.visual === 'KPI card').map((v) => v.fields.join()).join('|') === RAM.kpis.join('|') && b1.find((v) => v.visual === 'Table').fields.join() === fields.table.join()
+      && b1.find((v) => v.visual === 'Line chart').fields.join() === 'Calendar[Hijri Month Name],Sales[Total Sales Last Ramadan]' && b1.filter((v) => v.visual === 'Slicer').length === 3,
+      () => `boundFields must list each visual's fields as written: ${JSON.stringify(bf).slice(0, 500)}`);
+    // a name that is not in the model, or of the wrong kind, refuses the call: nothing is written
+    const before = fs.readdirSync(path.join(ROOT, 'dax-project')).length;
+    const bad = await ask('create_report', { path: 'dax-project', name: 'R6 Bad', design, fields: { kpis: [SALES('Total Sales'), SALES('No Such Measure')], timeAxis: SALES('Total Sales'), category: 'Calendar[Nope]' } });
+    chk(() => bad.err && /No Such Measure/.test(bad.t) && /Calendar\[Nope\]/.test(bad.t) && /timeAxis/.test(bad.t) && /column/.test(bad.t) && fs.readdirSync(path.join(ROOT, 'dax-project')).length === before,
+      () => `fields with unknown or wrong-kind names must be refused, naming each, with nothing written: ${short(bad)}`);
+    // hand-placed pages take the fields too
+    const hand = await ask('create_report', { path: 'dax-project', name: 'R6 Hand', fields: { kpis: [SALES('Total Sales vs Last Ramadan %')] }, pages: [{ name: 'P', slots: [{ kind: 'kpi', title: 'K1', x: 0, y: 0, w: 400, h: 140 }, { kind: 'kpi', title: 'K2', x: 420, y: 0, w: 400, h: 140 }] }] });
+    const hv = hand.err ? [] : visualsOf(path.join(ROOT, 'dax-project', hand.j.report)).filter((v) => v.page === 'P' && v.type === 'cardVisual');
+    chk(() => hv.length === 1 && hv[0].fields.join() === 'Sales.Total Sales vs Last Ramadan %', () => `hand-placed pages with fields.kpis (1 field, 2 slots): one card with that field: ${JSON.stringify(hv)} ${short(hand)}`);
+    // without fields nothing changes: the picks are the picker's
+    const no = await ask('create_report', { path: 'tmdl-project', name: 'R6 No fields', design });
+    chk(() => !no.err && Array.isArray(no.j.boundFields) && no.j.boundFields[0].visuals.find((v) => v.visual === 'KPI card').fields.join() === 'Sales[Total Sales]', () => `without fields: ${short(no)}`);
+  }
+
+  // 2. the texts tell the agent to pass the plan's fields
+  {
+    const ins = String(client.getInstructions() || ''), tl = Object.fromEntries((await client.listTools()).tools.map((t) => [t.name, t]));
+    const skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8').replace(/\r\n/g, '\n');
+    chk(() => /fields/.test(ins) && /approved/i.test(ins), () => 'the server\'s instructions must say to pass the approved plan\'s fields to create_report');
+    chk(() => /`fields`/.test(skill) && /approved/i.test(skill), () => 'the skill must say to pass the approved plan\'s fields in `fields`');
+    chk(() => /fields/.test(tl.create_report.description) && /approved plan/i.test(tl.create_report.description) && !!tl.create_report.inputSchema.properties.fields, () => `create_report's description must say to pass the approved plan's fields: ${tl.create_report.description.slice(0, 200)}`);
+    chk(() => ins.length < 2800, () => `the server's instructions are ${ins.length} characters`);
+  }
+
+  // 3. a model without measures: suggest_fields says so, and says to propose measures with format strings
+  {
+    const x = await ask('suggest_fields', { path: 'plain', kpis: 4 });
+    chk(() => !x.err && /no measures/i.test(x.j.noMeasures) && /format string/i.test(x.j.noMeasures) && /#,0/.test(x.j.noMeasures) && /0\.0%/.test(x.j.noMeasures), () => `suggest_fields on a model without measures: ${short(x)}`);
+    const y = await ask('suggest_fields', { path: 'tmdl-project', kpis: 3 });
+    chk(() => !y.err && !('noMeasures' in y.j), () => 'suggest_fields on a model with measures must not carry the no-measures note');
+  }
+
+  // 4. the picker: a measure named old, test, unused, backup or temp only when no other is left; the skipped are named
+  {
+    const s3 = await ask('suggest_fields', { path: 'dax-project', kpis: 3 }), s4 = await ask('suggest_fields', { path: 'dax-project', kpis: 4 }), s5 = await ask('suggest_fields', { path: 'dax-project', kpis: 5 });
+    chk(() => s3.j.kpis.map(f).join('|') === RAM.kpis.join('|') && s3.j.table.map(f).every((k) => !/\(old\)/.test(k)), () => `3 KPI cards on the Ramadan model: ${s3.err ? s3.t.slice(0, 200) : s3.j.kpis.map(f)} / table ${s3.err ? '' : s3.j.table.map(f)}`);
+    chk(() => JSON.stringify(s3.j.skipped.measures) === JSON.stringify(['Sales[Total Sales Last Ramadan (old)]', 'Sales[Total Sales vs Last Ramadan % (old)]']) && /old/.test(s3.j.skipped.why), () => `the skipped measures must be named: ${JSON.stringify(s3.j && s3.j.skipped)}`);
+    chk(() => s4.j.kpis.map(f).slice(0, 3).join('|') === RAM.kpis.join('|') && /\(old\)/.test(f(s4.j.kpis[3])) && s4.j.skipped.measures.length === 1, () => `4 cards, 3 current measures: the fourth is an old one because nothing else is left: ${s4.err ? s4.t.slice(0, 200) : s4.j.kpis.map(f)}`);
+    chk(() => s5.j.kpis.filter(Boolean).length === 5 && !s5.j.skipped, () => `5 cards, 5 measures: all used, nothing skipped: ${s5.err ? s5.t.slice(0, 200) : JSON.stringify(s5.j.skipped)}`);
+    fs.writeFileSync(path.join(ROOT, 'stale.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', columns: [{ name: 'Amount', dataType: 'double', sourceColumn: 'Amount' }, { name: 'Region', dataType: 'string', sourceColumn: 'Region' }],
+      measures: ['Sales Test', 'Backup Revenue', 'TEMP total', 'Unused Sales', 'Oldham Sales', 'Latest Orders', 'Contest Wins'].map((name) => ({ name, expression: 'SUM ( Sales[Amount] )', formatString: '#,0' })) }] } }));
+    const st = await ask('suggest_fields', { path: 'stale.bim', kpis: 3 });
+    chk(() => st.j.kpis.map((k) => k.m).sort().join() === 'Contest Wins,Latest Orders,Oldham Sales' && st.j.skipped.measures.length === 4 && st.j.measure.m !== 'Sales Test',
+      () => `whole words only (Oldham, Latest, Contest are not old or test): ${st.err ? st.t.slice(0, 200) : st.j.kpis.map((k) => k.m) + ' skipped ' + JSON.stringify(st.j.skipped)}`);
+  }
+
+  // 5a. read_model finds a model by its plain name
+  {
+    for (const p of ['Ramadan Test', 'ramadan test', 'Ramadan Test.pbip', 'Ramadan Test.SemanticModel']) {
+      const x = await ask('read_model', { path: p }), want = 'Calendar,Sales';
+      chk(() => !x.err && x.j.tables.map((t) => t.table).join().startsWith(want), () => `read_model by the plain name "${p}": ${short(x)}`);
+    }
+    const none = await ask('read_model', { path: 'No Such Model' });
+    chk(() => none.err && /No Such Model/.test(none.t) && /working folder/.test(none.t) && /read_model/.test(none.t) && !/ENOENT/.test(none.t), () => `read_model by a name nothing has must say what is there, not a raw error: ${short(none)}`);
+    fs.cpSync(path.join(ROOT, 'dax-project'), path.join(ROOT, 'dax-project-copy'), { recursive: true });
+    const two = await ask('read_model', { path: 'Ramadan Test' });
+    chk(() => two.err && /dax-project/.test(two.t) && /dax-project-copy/.test(two.t), () => `a name two projects have must be refused, naming both: ${short(two)}`);
+    fs.rmSync(path.join(ROOT, 'dax-project-copy'), { recursive: true, force: true });
+  }
+
+  // 5b. a key of a design that is not known is named, not ignored without a word
+  {
+    const odd = Object.assign({}, design, { fields: { kpis: RAM.kpis }, layout: Object.assign({}, design.layout, { foo: 1 }) });
+    const p = await ask('plan_layout', { design: odd }), c = await ask('create_report', { path: 'dax-project', name: 'R6 Odd keys', design: odd });
+    for (const [n, x] of [['plan_layout', p], ['create_report', c]]) chk(() => !x.err && JSON.stringify(x.j.ignored.keys) === JSON.stringify(['fields', 'layout.foo']) && /fields/.test(x.j.ignored.why), () => `${n}: unknown design keys must be named in "ignored": ${x.err ? x.t.slice(0, 200) : JSON.stringify(x.j.ignored)}`);
+    const ok = await ask('plan_layout', { design });
+    chk(() => !ok.err && !('ignored' in ok.j), () => 'a design as the tools return it must have nothing ignored');
+  }
+
+  // 5c. a long report name is cut at a space, never in the middle of a word
+  {
+    const long = 'التقرير التنفيذي للمبيعات - الأسماء الأصلية', x = await ask('create_report', { path: 'tmdl-project', name: long, design, lang: 'ar' });
+    chk(() => !x.err && x.j.report === 'التقرير التنفيذي للمبيعات.Report', () => `a long Arabic name must end at a whole word: ${x.err ? x.t.slice(0, 200) : x.j.report}`);
+    const en = await ask('create_report', { path: 'tmdl-project', name: 'Quarterly Executive Sales Overview Northern Region', design });
+    chk(() => !en.err && en.j.report === 'Quarterly Executive Sales.Report', () => `a long English name must end at a whole word: ${en.err ? en.t.slice(0, 200) : en.j.report}`);
+    const word = await ask('create_report', { path: 'tmdl-project', name: 'Supercalifragilisticexpialidocious2026', design });
+    chk(() => !word.err && word.j.report === 'Supercalifragilisticexpialidoc.Report', () => `one word longer than the limit is still cut at 30: ${word.err ? word.t.slice(0, 200) : word.j.report}`);
+    chk(() => [x, en].every((r) => /shortened/i.test(JSON.stringify(r.j.reportNotes || []))), () => 'a shortened report name must be said in reportNotes');
+  }
+
+  // 6. thousand separators: every number format DataArcus suggests or writes has one; where the model decides, the
+  //    answers name the fields without one and the fix script adds it
+  {
+    const req = (await import('node:module')).createRequire(import.meta.url), Tm = req('../assets/js/model-health-tmdl.js'), Px = req('../assets/js/pbip-export.js'), En = req('../assets/js/design-engine.js');
+    // the formats the health check suggests for a measure without one
+    const sug = [['Total', 'SUM ( Sales[Amount] )'], ['Orders', 'COUNTROWS ( Sales )'], ['Avg', 'AVERAGE ( Sales[Amount] )'], ['Margin %', 'DIVIDE ( 1, 2 )']].map(([name, expression]) => Tm.suggestFormat({ name, expression }, []).format);
+    chk(() => sug.every((fm) => /%/.test(fm) || /#,0/.test(fm)), () => `a suggested number format has no thousand separator: ${sug}`);
+    // the rule itself
+    const cases = { '0': '#,0', '0.00': '#,0.00', '#': '#,0', '$0.00': '$#,0.00', '0;(0)': '#,0;(#,0)', '0.0 "km"': '#,0.0 "km"' };
+    chk(() => Object.entries(cases).every(([from, to]) => Tm.lacksSeparator(from) && Tm.withSeparator(from) === to), () => `withSeparator: ${Object.keys(cases).map((k) => k + ' -> ' + Tm.withSeparator(k)).join(', ')}`);
+    chk(() => ['#,0', '#,##0.00', '0.0%', '0%', 'dd/mm/yyyy', 'General Date', '"Yes";"No"', '', null, '0.00E+00', 'Standard', 'Currency'].every((fm) => !Tm.lacksSeparator(fm)), () => 'lacksSeparator is true for a format that has a separator, a percentage, a date or text');
+    // the website's sample model (the project download): every number format has a separator
+    for (const lang of ['en', 'ar']) {
+      const d = En.fresh(); d.layout = Object.assign({}, d.layout || {}, { preset: 'exec', kpis: 4, samples: true }); En.repairState(d);
+      const pages = En.projectPages(d.layout, lang, { second: false, panel: false }).map((p) => ({ name: p.name, page: p.page, slots: p.slots, panel: null, png: new Uint8Array([1]) }));
+      const built = Px.build({ name: 'Sep ' + lang, title: 'Sep', pageName: pages[0].name, lang, rtl: lang === 'ar', font: d.font, ui: d.ui, pages, theme: En.buildTheme(d, lang), logo: null, sample: true, texts: En.REPORT_TEXTS[lang] });
+      const bim = JSON.parse(String(built.files.find((x) => /model\.bim$/.test(x.path)).data)), t = bim.model.tables[0];
+      const fmts = t.measures.map((x) => x.name + ': ' + x.formatString).concat(t.columns.filter((c) => /int64|double|decimal/.test(c.dataType) && c.summarizeBy !== 'none').map((c) => c.name + ': ' + c.formatString));
+      chk(() => fmts.length >= 8 && fmts.every((s) => /#,0|%/.test(s.split(': ')[1] || '')), () => `the website's sample model (${lang}) has a number without a thousand separator format: ${fmts.join('; ')}`);
+    }
+    // check_model_health: measures and summed number columns whose format has no separator (or columns with none)
+    const col = (name, dataType, extra) => Object.assign({ name, dataType, sourceColumn: name, lineageTag: 'c-' + name }, extra || {}), mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Date"}, {}) in Source' } }];
+    fs.writeFileSync(path.join(ROOT, 'sep.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'),
+      columns: [col('Amount', 'double'), col('Qty', 'int64', { formatString: '0' }), col('Price', 'decimal', { formatString: '#,0.00' }), col('Year', 'int64'), col('Customer Key', 'int64'), col('Cost', 'double', { isHidden: true }), col('Rank', 'int64', { summarizeBy: 'none' }), col('Region', 'string')],
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '0' }, { name: 'Avg Price', expression: 'AVERAGE ( Sales[Price] )', formatString: '0.00', description: 'SECRET-DESCRIPTION' },
+        { name: 'Units', expression: 'SUM ( Sales[Qty] )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }, { name: 'Last Date', expression: 'MAX ( Sales[Amount] )', formatString: 'dd/mm/yyyy' }] }] } }));
+    const h = await ask('check_model_health', { path: 'sep.bim' }), th = h.err ? {} : (h.j.fixes || {}).THOUSANDS || {};
+    chk(() => JSON.stringify(th.measures) === JSON.stringify([{ measure: '[Total Sales]', from: '0', to: '#,0' }, { measure: '[Avg Price]', from: '0.00', to: '#,0.00' }]), () => `fixes.THOUSANDS.measures: ${JSON.stringify(th.measures)} ${short(h)}`);
+    chk(() => JSON.stringify(th.columns) === JSON.stringify([{ column: 'Sales[Amount]', from: null, to: '#,0.00' }, { column: 'Sales[Qty]', from: '0', to: '#,0' }]), () => `fixes.THOUSANDS.columns (summed number columns only: not Year, a key, a hidden column, or one that is not summed): ${JSON.stringify(th.columns)}`);
+    const script = scriptOf(th);
+    chk(() => /^createOrReplace/.test(script) && /measure 'Total Sales'[\s\S]*?formatString: #,0\n/.test(script) && /measure 'Avg Price'[\s\S]*?formatString: #,0\.00/.test(script) && /column Amount[\s\S]*?formatString: #,0\.00/.test(script) && /column Qty[\s\S]*?formatString: #,0\n/.test(script)
+      && !/Units|Margin %|Last Date|column Year|Customer Key|column Price/.test(script), () => `the thousand-separator script: ${script.slice(0, 600)}`);
+    chk(() => !/SECRET-DESCRIPTION|AVERAGE \(/.test(h.t) && /SECRET-DESCRIPTION/.test(script) && /not .*score/i.test(String(th.note)) && /TMDL view/.test(String(th.howToApply)), () => `THOUSANDS: the script is a file (nothing of it in the answer), with a note that it is not scored: ${JSON.stringify(th).slice(0, 300)}`);
+    fs.writeFileSync(path.join(ROOT, 'sepok.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double', { formatString: '#,0.00' }), col('Year', 'int64'), col('Region', 'string')],
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'No Format', expression: 'SUM ( Sales[Amount] )' }] }] } }));
+    const again = await ask('check_model_health', { path: 'sepok.bim' });
+    chk(() => !again.err && !(again.j.fixes || {}).THOUSANDS, () => `a model whose formats all have separators (or none: NO_FORMAT's job) must have no THOUSANDS: ${JSON.stringify((again.j.fixes || {}).THOUSANDS).slice(0, 200)}`);
+    // the score and the findings are untouched by it
+    chk(() => !h.err && !h.j.findings.some((x) => /THOUSANDS/.test(x.id)), () => 'THOUSANDS must not be a finding');
+    // create_report names the fields the report shows as numbers that have no separator in the model
+    const cr = await ask('create_report', { path: 'dax-project', name: 'R6 Sep', design, fields: { kpis: RAM.kpis } });
+    const nf = cr.err ? {} : cr.j.numberFormats || {};
+    chk(() => nf.noThousandSeparator.includes('Sales[Total Sales]') && nf.noThousandSeparator.includes('Sales[Total Sales Last Ramadan]') && !nf.noThousandSeparator.includes('Sales[Total Sales vs Last Ramadan %]') && /13857|13,857/.test(nf.why) && /check_model_health/.test(nf.fix),
+      () => `create_report must name the measures that will show without a thousand separator: ${short(cr)} ${JSON.stringify(nf).slice(0, 300)}`);
+    const ok = await ask('create_report', { path: 'tmdl-project', name: 'R6 Sep ok', design });
+    chk(() => !ok.err && !('numberFormats' in ok.j), () => `a model whose measures have separator formats: no numberFormats: ${JSON.stringify(ok.j && ok.j.numberFormats)}`);
+  }
+
+  // 7. the header logo is in the middle of the header's height: every page size, English and Arabic, a wide, a square
+  //    and a tall logo and the "Your logo" text, on a solid design (the header is a panel) and a transparent one (a band
+  //    of the background image). Computed from the files. A text box is top-aligned: the middle of its text is
+  //    3 + 1.19 x pt below the box's top in Segoe UI and 1.12 x pt in Tahoma (measured in Desktop 2.158,
+  //    DESKTOP-TESTS.md round 1), so the "Your logo" text is placed with the font's own number.
+  {
+    const req = (await import('node:module')).createRequire(import.meta.url), Px = req('../assets/js/pbip-export.js'), En = req('../assets/js/design-engine.js');
+    const textMid = (font, pt) => (/tahoma/i.test(font) ? 1.12 * pt : 3 + 1.19 * pt), off = { image: [], text: [], title: [] };
+    for (const solid of [true, false]) for (const page of ['1920x1080', '1280x720', '960x720', [640, 360], [3840, 2160]]) for (const lang of ['en', 'ar']) for (const logoName of ['none', 'wide', 'square', 'tall']) {
+      const d = En.fresh(); if (lang === 'ar') d.font = 'Tahoma';
+      d.layout = Object.assign({ preset: 'exec', kpis: 4, filters: false, header: true, transparent: !solid, headLine: 'short' }, Array.isArray(page) ? { page: 'custom', pageW: page[0], pageH: page[1] } : { page }); En.repairState(d);
+      const bytes = logoName === 'none' ? null : new Uint8Array(fs.readFileSync(path.join(REPO, 'scripts/tests/fixtures/logos', logoName + '.png'))), size = bytes && En.imageSize(bytes);
+      const specs = En.projectPages(d.layout, lang, { second: false, panel: false, logoRatio: size ? size.w / size.h : undefined });
+      const built = Px.build({ name: 'L', title: 'Gulf Sales', pageName: specs[0].name, lang, rtl: En.rtl(d.layout, lang), font: d.font, ui: d.ui, theme: En.buildTheme(d, lang), sample: true, logo: bytes ? { bytes, ext: 'png' } : null,
+        texts: En.REPORT_TEXTS[lang], pages: specs.map((sp) => ({ name: sp.name, page: sp.page, slots: sp.slots, panel: sp.panel, png: new Uint8Array([1]) })) });
+      const vis = built.files.filter((x) => /\/visuals\/[^/]+\/visual\.json$/.test(x.path)).map((x) => JSON.parse(String(x.data)));
+      const abs = (v) => { const g = v.parentGroupName && vis.find((x) => x.name === v.parentGroupName); return { y: v.position.y + (g ? g.position.y : 0), h: v.position.height }; };
+      const alt = (v) => { try { return v.visual.visualContainerObjects.general[0].properties.altText.expr.Literal.Value; } catch (e) { return ''; } };
+      const logo = vis.find((v) => v.visual && /Logo|الشعار/.test(alt(v))), title = vis.find((v) => v.visual && v.visual.visualType === 'textbox' && /Gulf Sales/.test(JSON.stringify(v.visual.objects)));
+      const panel = vis.find((v) => v.visual && v.visual.visualType === 'textbox' && JSON.stringify(v.visual.objects).includes('"value":""') && v.position.y < specs[0].page.h * 0.1);
+      const hh = En.sizes(specs[0].layout, En.pw(specs[0].layout)).hh * specs[0].page.h / 720;
+      const mid = solid && panel ? panel.position.y + panel.position.height / 2 : hh / 2, ptOf = (v) => parseFloat(JSON.stringify(v.visual.objects).match(/"fontSize":"([\d.]+)pt"/)[1]);
+      const id = `${solid ? 'solid' : 'transparent'} ${specs[0].page.w}x${specs[0].page.h} ${lang} ${logoName}`, L = abs(logo), T = abs(title);
+      if (logo.visual.visualType === 'image') off.image.push([id, L.y + L.h / 2 - mid]);
+      // a text box as short as its text allows (10 + 1.8 x pt) can't be moved: the small pages
+      else off.text.push([id, L.y + textMid(d.font, ptOf(logo)) - mid, L.h <= Math.ceil(10 + 1.8 * ptOf(logo))]);
+      off.title.push([id, T.y + textMid(d.font, ptOf(title)) - mid]);
+    }
+    const far = (list, by) => list.filter((x) => !x[2] && Math.abs(x[1]) > by).map((x) => `${x[0]}: ${x[1].toFixed(1)}`);
+    chk(() => off.image.length === 60 && !far(off.image, 0.5).length, () => `a logo image is not in the middle of the header (${far(off.image, 0.5).length} of ${off.image.length}): ${far(off.image, 0.5).slice(0, 4).join('; ')}`);
+    chk(() => off.text.length === 20 && !far(off.text, 1).length, () => `the "Your logo" text's middle is more than 1 from the header's middle (${far(off.text, 1).length} of ${off.text.length}; + is lower): ${far(off.text, 1).slice(0, 6).join('; ')}`);
+    // the title: never further from the middle than before round 6 (it sits at the top of its slot and has no room to move up)
+    chk(() => !far(off.title, 3.6).length, () => `the title's middle moved away from the header's middle: ${far(off.title, 3.6).slice(0, 4).join('; ')}`);
+  }
+}
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);

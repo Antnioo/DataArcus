@@ -267,7 +267,71 @@
     return { script: count ? out.join('\n').replace(/\n+$/, '\n') : null, count, suggested, byHand };
   }
 
-  const api = { measure, column, columnFixes, moveMeasures, name, sortColumnFor, noSortColumn, sortKind, sortFixes, formatFixes, suggestFormat };
+  // ---------- round 6: thousand separators ----------
+  // A number format without a thousand separator shows 13857, not 13,857. lacksSeparator(format): a custom number
+  // format (digit placeholders 0 or #) with no "," before the decimal point. Never true for a percentage, a date or
+  // time format, scientific notation, text, a named format, or no format at all (a measure without a format is the
+  // NO_FORMAT finding's; a column without one is asked about separately, see separatorFixes).
+  const unquoted = (f) => String(f).replace(/"[^"]*"/g, '').replace(/\\./g, '');
+  function lacksSeparator(format) {
+    if (format == null || !String(format).trim()) return false;
+    const f = unquoted(format);
+    if (!/[0#]/.test(f) || /%/.test(f) || /e[+-]/i.test(f) || /[dmyhs]/i.test(f) || /^[a-z ]+$/i.test(f.trim())) return false;
+    return f.split(';').some((sec) => /[0#]/.test(sec) && !/,/.test(sec.split('.')[0]));
+  }
+  // the same format with the separator: each section's whole-number part becomes #,0 ("0.00" -> "#,0.00")
+  function withSeparator(format) {
+    let quoted = false;
+    // split into sections at ";" outside quotes, then replace the first run of digit placeholders of each
+    const secs = []; let cur = '';
+    for (const ch of String(format)) { if (ch === '"') quoted = !quoted; if (ch === ';' && !quoted) { secs.push(cur); cur = ''; } else cur += ch; }
+    secs.push(cur);
+    return secs.map((sec) => {
+      if (/,/.test(unquoted(sec).split('.')[0]) || !/[0#]/.test(unquoted(sec))) return sec;
+      let q = false, done = false, out = '';
+      for (let i = 0; i < sec.length; i++) {
+        const ch = sec[i];
+        if (ch === '"') q = !q;
+        if (!q && !done && (ch === '0' || ch === '#')) { let j = i; while (j < sec.length && (sec[j] === '0' || sec[j] === '#')) j++; out += '#,0'; i = j - 1; done = true; } else out += ch;
+      }
+      return out;
+    }).join(';');
+  }
+  // Columns that are identifiers or parts of a date, by name: a separator would be wrong on them (2,026)
+  const NOT_A_QUANTITY = /year|month|day|week|quarter|hijri|(^|[\s_-])(id|key|code|no|num|number|index|sort|order|rank|zip|postal|phone|mobile)s?$|[a-z]ID$|Key$|السنة|الشهر|اليوم|رقم/i;
+  // Measures whose format has no separator, and visible number columns that are summed (summarizeBy not "none", not
+  // an identifier or a date part by name) whose format has none or that have no format: each with the format to
+  // give it, and a script that does. A percentage by name is left to the percentage check. max: objects of each kind.
+  // Returns { script, count, measures: [{ measure, from, to }], columns: [{ column, from, to }], byHand, more }.
+  function separatorFixes(rawTables, opts) {
+    const max = (opts && opts.max) || 200, out = ['createOrReplace', ''], measures = [], columns = [], byHand = [];
+    let count = 0, more = 0;
+    (rawTables || []).forEach((t) => {
+      const block = [];
+      (t.measures || []).forEach((m0) => {
+        if (m0.formatStringDefinition || !lacksSeparator(m0.formatString) || PCT_NAME.test(m0.name)) return;
+        if (measures.length >= max) { more++; return; }
+        const to = withSeparator(m0.formatString), lines = measure(Object.assign({}, m0, { formatString: to }), 2);
+        if (lines) { block.push.apply(block, lines); block.push(''); count++; measures.push({ measure: '[' + m0.name + ']', from: m0.formatString, to }); }
+        else byHand.push({ measure: '[' + m0.name + ']', why: 'has a property this script builder does not know', steps: 'Select the measure in Power BI Desktop, then Measure tools > Format: ' + to + '.' });
+      });
+      (t.columns || []).forEach((c0) => {
+        if (c0.type === 'rowNumber' || c0.isHidden || !/^(int64|double|decimal)$/.test(String(c0.dataType)) || c0.summarizeBy === 'none' || NOT_A_QUANTITY.test(c0.name)) return;
+        if (c0.formatString && !lacksSeparator(c0.formatString)) return;
+        const to = c0.formatString ? withSeparator(c0.formatString) : c0.dataType === 'int64' ? '#,0' : '#,0.00', obj = t.name + '[' + c0.name + ']';
+        if (columns.length >= max) { more++; return; }
+        // a DAX table's column can't be rewritten by a script (see sortFixes)
+        if (c0.type === 'calculatedTableColumn') { byHand.push({ column: obj, why: 'a column of a DAX table: a script can\'t change it', steps: 'Select ' + obj + ' in Power BI Desktop, then Column tools > Format: ' + to + ' (the thousands separator button).' }); return; }
+        const lines = column(Object.assign({}, c0, { formatString: to }), 2);
+        if (lines) { block.push.apply(block, lines); block.push(''); count++; columns.push({ column: obj, from: c0.formatString || null, to }); }
+        else byHand.push({ column: obj, why: 'has a property this script builder does not know', steps: 'Select ' + obj + ' in Power BI Desktop, then Column tools > Format: ' + to + '.' });
+      });
+      if (block.length) out.push(ind(1) + 'ref table ' + name(t.name), '', ...block);
+    });
+    return { script: count ? out.join('\n').replace(/\n+$/, '\n') : null, count, measures, columns, byHand, more };
+  }
+
+  const api = { measure, column, columnFixes, moveMeasures, name, sortColumnFor, noSortColumn, sortKind, sortFixes, formatFixes, suggestFormat, lacksSeparator, withSeparator, separatorFixes, notAQuantity: (n) => NOT_A_QUANTITY.test(String(n)) };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MHTmdl = api;
 })(typeof self !== 'undefined' ? self : this);
