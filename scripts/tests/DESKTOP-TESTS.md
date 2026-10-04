@@ -1058,19 +1058,18 @@ three named sizes are text), and the website's engine only as `page: 'custom'`: 
 
 The made-up Ramadan sample with data (`<tests folder>\5-tmdl-sample`); the reports written by the MCP server of main
 (`builder-scripts\d14-build.mjs`); pages captured through the Desktop bridge at scale 1 (the canvas and its Filters
-pane, nothing else), in `<tests folder>\desk-1004`. The laptop was free (the owner's word; `idle.ps1` run first). 19
-minutes of the 30 were used on Desktop; Desktop was closed at the end.
+pane, nothing else), in `<tests folder>\desk-1004`. The laptop was free (the owner's word; `idle.ps1` run first). About 23
+minutes of the 30 were used; Desktop was closed at the end.
 
-### D14, the page filter: PASS on what was run; two parts not run
+### D14, the page filter: PASS on what was run; one part not run
 | Step | Expected | Seen |
 |---|---|---|
 | Golden task 3's report with `pageFilters: [{ field: "Calendar[Is Ramadan]", values: [true] }]`, opened | the Filters pane shows the page filter, no error mark | **"Filters on this page": Is Ramadan, "is True"**, no error mark; "Filters on all pages" empty (`d14-filter-p1.png`) |
 | The three cards with the filter | Ramadan only | **Total Sales 99.9K**, Total Sales Last Ramadan 74.675K, Total Sales vs Last Ramadan % 0.34. The line chart shows February, March, April, May only |
 | Without the filter | the cards change | the same report built without `pageFilters` (`d14-none-p1.png`): **Total Sales 101.914K**, 74.675K, 0.34; the chart shows all twelve months; "Filters on this page" empty |
+| Cleared by the mouse: the eraser on the filter card in the Filters pane (it shows when the card is hovered) | the cards change, the filter stays in the pane | the card in the pane reads **"Is Ramadan is (All)"**; **Total Sales 101.914K**, 74.675K, 0.34; the chart shows all twelve months (`d14-cleared.png`). Not saved |
 | The tooltip pages | no filter | their captures are the same bytes in both reports (35,688 and 43,094) |
 
-- **Not run: clearing the filter with the mouse in the Filters pane.** "Cleared" above is the same report written
-  without the filter, not a click on the eraser. Still open in D14.
 - **Not run: the text filter with an apostrophe and the decimal filter.** Still open in D14.
 - **As told in round 8:** the filter keeps every Ramadan of the calendar (99.9K over February to May), not one. "This
   Ramadan only" needs a Hijri year as well; the two Ramadan measures do not change with the filter.
