@@ -1368,6 +1368,37 @@ Desktop). The report: `create_report` of main, executive layout, four cards, 192
   projection is a column, not a measure and not a picture. The right-to-left tables written since round 2 put a
   measure first (the reversed order), so they have had no "Total" word either: not from round 9.
 
+- **The card's image by mouse ("Select from data"): Desktop's own JSON.** On the third card of "DC SVG": Format >
+  Visual > Callout > Image: On > Image type (Upload image, Enter URL, **Select from data**) > Data: "+Add data"; the
+  field picker lists the report-level measure **Dot SVG under Sales**; ticked, Ctrl+S. Desktop wrote **one** entry:
+```json
+"image": [
+  { "properties": {
+      "show": { "expr": { "Literal": { "Value": "true" } } },
+      "imageType": { "expr": { "Literal": { "Value": "'imageData'" } } },
+      "imageData": { "expr": { "Measure": { "Expression": { "SourceRef": { "Schema": "extension", "Entity": "Sales" } }, "Property": "Dot SVG" } } } },
+    "selector": { "id": "default" } }
+]
+```
+  The picture draws on that card too. So Desktop's own form is `imageType: 'imageData'` with `imageData`; the
+  hand-written `'imageUrl'` with `imageUrl` (check 3) also draws. **For the engine: write Desktop's form.**
+
+### Seen, not in scope (third sitting)
+- Selecting the table by a click also selects the row under the mouse (the cards showed that row's values until
+  the report was reopened); the selection is not saved.
+- The table with six pictures of 64,000 to 2,000,000 characters made the page slow to open (the canvas stayed empty
+  for more than 20 seconds after the window was ready).
+- A right-to-left table has no "Total" word since round 2 (a measure is its first projection).
+- In the Arabic reports the chart titles mix English field names and Arabic ("Total Sales حسب Day Name"): no
+  display names were given in these tests.
+- "Your logo" and "What it means" placeholders; month and day names in the model's order where the sample has no
+  sort-by column: as before.
+- The six-card pages cut the KPI titles too ("Total Sales Last R...", "Sales per ..."): known from the 960 x 720
+  check of the first sitting's list, not new.
+- Left in the test folders: "DC SVG", "DP1b SVG AR 3", "DP1b SVG AR 4" (5-tmdl-sample; "DP1b SVG EN", "EN 2" and
+  "AR 2" were changed and saved), and the new folder `9-format-sample` with "D16 formats", "D16 formats 720" and
+  "D16 formats 960".
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
