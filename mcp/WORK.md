@@ -54,6 +54,101 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 - **Website dropdowns fixed** (merged): the open list was white on white on every tool page; form fields now use
   `color-scheme: dark` with dark option colours (`assets/css/style.css`), checked on every tool page in `tools.mjs`.
 
+## Laptop sitting 2026-10-04 (owner's go, in advance for every part; results branch `test/golden-agent-level`; nothing merged)
+Seven parts in order, each independent. No product code is changed in this sitting: every product problem is written
+down with its cause and a proposed fix. State after each part:
+
+- **Part 1, zod 4 (Dependabot PR #5): automated half done.** The PR's branch is on an old base (before rounds 3 and
+  4), so the bump was put on top of main locally (`local/zod4-on-main` in the worktree `C:\DataArcus\zod4-check`, not
+  pushed). `npm ci`, `npm test`: **216 of 216** with zod 4.6.5. `builder-scripts\zod4-compare.mjs` runs the same 14
+  calls on main's server and on the zod 4 server over stdio: **every tool answer and every written file is the
+  same** (23 comparisons). Two differences, neither in an answer:
+  - the wording of refusals: "Invalid enum value. Expected 'uae' | 'ksa'..., received 'egy'" becomes "Invalid option:
+    expected one of "uae"|"ksa"..." (the rejected value is no longer echoed); "Required at path" becomes "Invalid
+    input: expected string, received undefined at path"; "Number must be less than or equal to 6" becomes "Too big:
+    expected number to be <=6";
+  - the tools' input schemas as the AI app sees them: `additionalProperties: false` is gone from every object, whole
+    numbers gain safe-integer `minimum`/`maximum`, records gain `propertyNames`. No name, type, default or description
+    changed.
+  The Claude Desktop half follows after Part 2 (it needs a package of that server).
+- **Part 2, the build script: done.** dataarcus-engine, branch `packaging/build`, `862943a`:
+  `packaging/build.mjs` and `packaging/build.test.mjs` (5 tests). First build from main `19c5408`:
+  `dist/dataarcus-0.2.0.mcpb`, 3,319,052 bytes, unsigned, 18 staged files, 91 production packages.
+- **Part 1, the Claude Desktop half: done. zod 4: same results.** A package built from the zod 4 worktree
+  (`dataarcus-zod4-0.2.0.mcpb`, test only) was installed in Claude Desktop; in a new chat the agent listed the tools
+  and ran `read_model`, `check_model_health` (country uae), `generate_theme` and `create_report` on the made-up
+  Ramadan model: all succeeded. The report it wrote has the same 76 files with the same sizes (188,977 bytes) as the
+  same calls on main's server (`builder-scripts\zod4-desktop-compare.mjs`). The test package was uninstalled
+  afterwards. **Recommendation for PR #5: mergeable after a rebase on main** (its branch is from before round 3); the
+  only visible change is the wording of refusals.
+- **Part 3, install and first check: done, with findings.** `dataarcus-0.2.0.mcpb` installed in Claude Desktop
+  (Store version 2.19675, built-in Node 24.21.0). Captures in `C:\DataArcus\tests\beta-sitting\` (`shot-*.png`).
+  - Empty working folder `C:\DataArcus\beta-check`: the agent says the folder is empty and how to save a project into
+    it. **As expected.**
+  - Golden task 1 from a new chat: a report was written, **validator 0**, opens in Desktop, cards 101.914K and
+    74.675K as in the golden task (details under Part 5).
+  - **What Claude Desktop shows for the unsigned package** (for `INSTALL.md`):
+    1. Double-clicking the `.mcpb` does nothing useful: Windows asks "How do you want to open this file?" (the Store
+       version of Claude registers no file type). Install through **Settings > Extensions > Advanced settings >
+       Install extension**, or drag the file onto the Extensions page.
+    2. "Advanced settings" shows a red "Developer tools warning" above the Install button.
+    3. The install screen: a red box "Installing will grant this extension access to everything on your computer.
+       Any developer information shown has not been verified by Anthropic. Ensure you trust the source of this
+       extension before installation." Then a Windows dialog "Do you want to install DataArcus for Power BI?".
+    4. The working-folder field shows the text `${DOCUMENTS}/DataArcus` as it is written in the manifest (the
+       variable is not filled in) and **Save stays disabled** until the tester types or browses to a folder.
+       *Cause:* this Claude version does not expand `${DOCUMENTS}` in a `user_config` default. *Proposed fix:* drop
+       the `default` from the manifest (an empty field and Browse), and say in `INSTALL.md` to pick a folder.
+    5. After Save the extension is **installed but Disabled** (Claude's log: "has missing required configuration,
+       not enabling automatically"): the tester must switch it on (the toggle on the same screen). *Proposed:* a
+       line and a picture in `INSTALL.md`; nothing in our files can change it.
+    6. Every tool asks "Claude wants to use ... Decline / Always allow / Allow once" the first time (the four
+       read-only tools are grouped as "Read-only tools", so the annotations work).
+    7. On the empty folder the first tool call is labelled "Failed" in red in the chat, although the answer is the
+       helpful "folder is empty" text (the tool returns it as an error). *Proposed:* decide whether this answer
+       should be a normal result instead of an error.
+  - The permission "Always allow" given to a tool survived uninstalling and reinstalling the extension.
+- **Part 4, the images for findings 001 and 002: done** (branch `findings/001-capture`, `9d66742`, the record in
+  `scripts/tests/DESKTOP-TESTS.md` there). The DAX check gave 101914, 74675, 0.3377971208570472, as expected; the
+  cards 101.914K, 74.675K, 0.34. Images: `C:\DataArcus\tests\6-ms-plugin\_shots\f001-1-page.png`,
+  `f001-2-topband.png`, `f001-3-numbers.png` and `C:\DataArcus\tests\phase2-try\shots-r2\f002-1-before-after.png`.
+  Image 3 is stacked, not side by side (the query was unreadable side by side at 1200 wide), and its result grid
+  rounds to 0.34 while the caption says 0.3378: the owner's choice whether to change the query.
+- **Part 5, the 11 golden tasks at agent level: done. 4 of 11 pass** (7, 8, 9, 10); validator 0 errors on all 9
+  reports written; nothing overwritten anywhere. The table, every check and the answers given are in
+  `mcp/GOLDEN-TASKS.md`, "Agent level, 2026-10-04". The findings that repeat, each with a proposed fix there:
+  1. the agent never shows a plan or waits for "go" (the package has no report-design skill, and the tool
+     descriptions don't ask for it);
+  2. `read_model` with a model's plain name fails first ("Ramadan Test" is not found, the folder name is);
+  3. the agent translates, shortens and in task 3 mislabels fields through `displayNames` on its own;
+  4. "(old)" measures on cards; a `modelNotes` example ("0.34 instead of 34%") repeated as a fact on a model
+     without rows;
+  5. task 11: the agent wrote its own DAX for the Saudi weekend instead of pointing to the Calendar Generator;
+  6. task 9 (watched closely): nothing written, no false claim; the closest supported visuals were not offered.
+     Task 7 (watched closely): no report written, five measures with formats and the sort fix proposed.
+  The agent had only DataArcus: Microsoft's authoring MCP and the Desktop bridge are not in Claude Desktop chats
+  here, so opening the reports and the DAX checks were done by the builder afterwards. Task 3's first two chats
+  were taken over by the owner's own skill and memories; the rest ran in incognito chats with that skill off.
+- **Part 6, Desktop regression sweep on main: done.** Sixteen reports (MCP and website download; English and Arabic;
+  1920 x 1080 light and dark, 1280 x 720, 640 x 360), validator 0 errors on all; header, filter rail, page buttons,
+  hover tooltips, phone layout as last recorded at 1080 and 720. Four new findings, each with a proposed fix in
+  `scripts/tests/DESKTOP-TESTS.md` ("2026-10-04: regression sweep"): the Arabic page button "ملخص تنفيذي" is cut at
+  640 x 360; Arabic MCP reports with a side filter rail cut two of four KPI titles at 1080 (Tahoma bold, long English
+  names); a scroll thumb beside "Your logo" at 640 x 360 on the MCP's English report (cause not found); reports with
+  display names open as "unsaved" in Desktop (Desktop's own behaviour: its own saved copy does the same).
+- **Part 7, a newer Microsoft plugin: nothing to test.** The latest release of microsoft/skills-for-fabric is
+  v0.3.18 (2026-09-25), the version already tested; the repository's last commit is that release (2026-09-24).
+- **End of the sitting: the laptop put back.** "DataArcus for Power BI" uninstalled from Claude Desktop (its folder
+  and its settings file under Claude's data are gone; no server process of the extension is left; the four
+  `node ... mcp\server.mjs` processes still running belong to Claude Code sessions started on 2 and 3 October).
+  The owner's skill `powerbi-mcp-workflow` and the connectors "MCP Engine for Power BI" and "Claude in Chrome",
+  switched off for the agent-level run, are on again (the connector was never used). Power BI Desktop closed without
+  saving. Left behind on purpose: the empty test folder `C:\DataArcus\beta-check`, the evidence in
+  `C:\DataArcus\tests\beta-sitting` and `tests\phase2-try\shots-s6`, the sixteen "Gulf Sales S6" test reports, the
+  worktrees `zod4-check` and `engine-build`, and five normal chats in the owner's Claude history (the smoke tests
+  and golden tasks 1, 2 and 4). "Always allow" for the DataArcus tools may still be remembered by Claude Desktop
+  (it survived a reinstall earlier).
+
 ## Next step (owner's go 2026-10-02, after reviews by ChatGPT and Gemini): users and a first paid client sooner
 **The goal that decides everything: by 15 November 2026, 5 beta users have used DataArcus on their own work and 1
 client has paid.** Anything that doesn't serve it waits (the Gulf Calendar pack is the exception: Ramadan sets its
