@@ -46,7 +46,7 @@ const hash = (f) => crypto.createHash('md5').update(fs.readFileSync(f)).digest('
 const scriptOf = (fix) => { try { return fix && fix.fixScriptFile ? fs.readFileSync(fix.fixScriptFile, 'utf8') : ''; } catch (e) { return ''; } };
 
 const tools = (await client.listTools()).tools.map((t) => t.name).sort();
-check(tools.join() === 'check_model_health,create_report,generate_theme,plan_layout,read_model,suggest_fields', `tools: ${tools}`);
+check(tools.join() === 'add_gulf_calendar,check_model_health,create_report,generate_theme,plan_layout,read_model,suggest_fields', `tools: ${tools}`);
 
 // read_model: a TMDL project, automatic date tables left out
 let r = await call('read_model', { path: 'tmdl-project' });
@@ -663,7 +663,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const NOT_SET = /No working folder is set/, calls = [['read_model', { path: '.' }], ['suggest_fields', { path: '.' }], ['check_model_health', { path: '.' }], ['generate_theme', { name: 'No root' }], ['plan_layout', {}], ['create_report', { path: '.', name: 'No root', design: design || {} }]];
     const s = await start({}, CWD);
     const listed = s.dead ? [] : (await s.c.listTools()).tools.map((t) => t.name);
-    check(!s.dead && listed.length === 6, `no DATAARCUS_ROOT: the server must start and list its 6 tools: ${s.dead || listed}`);
+    check(!s.dead && listed.length === 7, `no DATAARCUS_ROOT: the server must start and list its 7 tools: ${s.dead || listed}`);
     const answers = []; for (const [n, a] of calls) answers.push([n, await s.call(n, a)]);
     const wrong = answers.filter(([, x]) => !(x.err && NOT_SET.test(x.t) && /DATAARCUS_ROOT/.test(x.t)));
     check(!wrong.length, `no DATAARCUS_ROOT: ${wrong.length} of 6 tools did not refuse with the reason, e.g. ${wrong[0] && wrong[0][0]}: ${wrong[0] && wrong[0][1].t.slice(0, 120)}`);
@@ -1557,6 +1557,74 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
         && Svg.toMeasure(d0).dax === own && ms[0].expression === own, () => `validator: ${dir ? errors(dir) : 'not written'}, Arabic ${adir ? errors(adir) : short(ar)}; toMeasure equals the Designer's DAX without comments: ${Svg.toMeasure ? Svg.toMeasure(d0).dax === own : 'no toMeasure'}`);
     }
   }
+}
+
+// ---------- add_gulf_calendar: the Calendar Generator's table as a TMDL script file (round 10, cloud part) ----------
+{
+  const add = (a) => call('add_gulf_calendar', a);
+  const filesIn = (dir) => fs.readdirSync(path.join(ROOT, dir)).sort().join('|');
+  const short = (x) => (x.err ? x.t.slice(0, 200) : JSON.stringify(x.j).slice(0, 400));
+  const ann = ((await client.listTools()).tools.find((t) => t.name === 'add_gulf_calendar') || {}).annotations || {};
+  check(ann.readOnlyHint === false && ann.destructiveHint === false, `add_gulf_calendar annotations: ${JSON.stringify(ann)}`);
+  // the full table on the health project: 2018-2030, UAE, announced dates, related to Sales[Date]
+  const before = filesIn('bim-project');
+  const g = await add({ path: 'bim-project', firstYear: 2018, lastYear: 2030, country: 'uae', relateTo: ['Sales[Date]'], asOf: '2026-10-04' });
+  const file = g.err ? '' : g.j.scriptFile, sc = file && fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
+  check(!g.err && path.basename(file) === 'Health Test - add Gulf calendar.tmdl' && path.dirname(file) === path.join(ROOT, 'bim-project'), `add_gulf_calendar file: ${short(g)}`);
+  check((sc.match(/^createOrReplace$/gm) || []).length === 1 && (sc.match(/^\ttable /gm) || []).length === 1 && /^\ttable 'Gulf Calendar'$/m.test(sc), `add_gulf_calendar script: one createOrReplace and one table 'Gulf Calendar': ${sc.slice(0, 200)}`);
+  check((sc.match(/^\trelationship /gm) || []).length === 1 && /^\t\tfromColumn: Sales\.Date$/m.test(sc) && /^\t\ttoColumn: 'Gulf Calendar'\.Date$/m.test(sc), `add_gulf_calendar relationship: ${(sc.match(/\trelationship[\s\S]*/) || [''])[0]}`);
+  check((sc.match(/\{ "\d{4}-\d{2}-\d{2}", \d+, \d+ \}/g) || []).length === 162, `add_gulf_calendar: Hijri month starts ${(sc.match(/\{ "\d{4}-\d{2}-\d{2}", \d+, \d+ \}/g) || []).length} (want 162)`);
+  check(!g.err && g.j.rows === 4748 && g.j.columns.length === 36 && g.j.table === 'Gulf Calendar', `add_gulf_calendar rows and columns: ${short(g)}`);
+  check(!g.err && g.j.announced.on === true && g.j.announced.checkedTo === '2026-05-27' && g.j.announced.estimatesFrom === '2027-02-08', `add_gulf_calendar announced: ${short(g)}`);
+  check(!g.err && Array.isArray(g.j.selfCheck.findings) && g.j.selfCheck.findings.length === 0 && g.j.selfCheck.calendar === 'dataarcus-dax', `add_gulf_calendar selfCheck: ${g.err ? '' : JSON.stringify(g.j.selfCheck)}`);
+  check(!g.err && !/DATATABLE|ADDCOLUMNS|CALENDAR \(/.test(g.t), 'add_gulf_calendar: the answer holds DAX');
+  check(!g.err && g.j.byHand.length === 4 && /Mark as date table/.test(g.j.byHand.join(' ')) && ['Month Name', 'Day Name', 'Hijri Month Name'].every((n) => g.j.byHand.some((s) => s.includes(n))), `add_gulf_calendar byHand: ${g.err ? '' : JSON.stringify(g.j.byHand)}`);
+  check(!g.err && /TMDL view/.test(g.j.howToApply) && /Preview/.test(g.j.howToApply) && /nothing (is )?(changed|replaced)/i.test(g.j.howToApply), `add_gulf_calendar howToApply: ${g.err ? '' : g.j.howToApply}`);
+  // asked again: the same file named, no second copy
+  const again = await add({ path: 'bim-project', firstYear: 2018, lastYear: 2030, country: 'uae', relateTo: ['Sales[Date]'], asOf: '2026-10-04' });
+  const after = filesIn('bim-project');
+  check(!again.err && again.j.scriptFile === file && after.split('|').length === before.split('|').length + 1, `add_gulf_calendar again: ${short(again)} files ${before} -> ${after}`);
+  // clashes and bad names: refused, nothing written, a free name offered
+  const dBefore = filesIn('dax-project');
+  const clash = await Promise.all(['Calendar', 'CALENDAR', ' calendar ', 'Total Sales'].map((name) => add({ path: 'dax-project', firstYear: 2022, lastYear: 2027, name })));
+  check(clash.every((x) => x.err && /Nothing was written/.test(x.t) && /Gulf Calendar/.test(x.t)), `add_gulf_calendar clashes: ${clash.map(short).join(' | ')}`);
+  const bad = await Promise.all([{ relateTo: ['Sales[Nope]'] }, { name: "Gulf'Cal" }, { name: 'Gulf\nCal' }, { name: 'LocalDateTable_1' }].map((o) => add(Object.assign({ path: 'dax-project', firstYear: 2022, lastYear: 2027 }, o))));
+  check(bad.every((x) => x.err && /Nothing was written/.test(x.t)) && /Sales\[Nope\]/.test(bad[0].t), `add_gulf_calendar bad inputs: ${bad.map(short).join(' | ')}`);
+  check(filesIn('dax-project') === dBefore, `add_gulf_calendar refusals wrote files: ${dBefore} -> ${filesIn('dax-project')}`);
+  // the website's default table: 2022-2027, Saturday-Sunday, Umm al-Qura only
+  const d = await add({ path: 'dax-project', firstYear: 2022, lastYear: 2027, weekend: 'sat-sun', announced: false, name: 'Plain Calendar' });
+  const dsc = d.err ? '' : fs.readFileSync(d.j.scriptFile, 'utf8');
+  const daxOf = (script) => { const m = script.match(/\n\t\t\tsource =\n((?:\t\t\t\t\t.*\n?)+)/); return m ? m[1].split('\n').map((l) => l.replace(/^\t{5}/, '')).join('\n').replace(/\n+$/, '') : ''; };
+  const webDefault = JSON.parse(fs.readFileSync(path.join(REPO, 'scripts/tests/fixtures/gulf-calendar/baseline.json'), 'utf8')).cg[0].dax.split('\n').slice(1).join('\n');
+  check(!d.err && d.j.rows === 2191 && d.j.columns.length === 34, `add_gulf_calendar default range: ${short(d)}`);
+  check(!d.err && daxOf(dsc) === webDefault, `add_gulf_calendar: the partition's DAX is not the website's default table: ${daxOf(dsc).slice(0, 200)}`);
+  // ranges Power BI or the generator can't take: refused, no file
+  const rBefore = filesIn('dax-project');
+  const ranges = await Promise.all([[1900, 1910], [9990, 10000], [2000, 2060], [2027, 2022]].map(([firstYear, lastYear]) => add({ path: 'dax-project', firstYear, lastYear, name: 'Range Calendar' })));
+  check(ranges.every((x) => x.err) && ranges.filter((x) => /Nothing was written/.test(x.t)).length >= 3 && filesIn('dax-project') === rBefore, `add_gulf_calendar ranges: ${ranges.map(short).join(' | ')}`);
+  // check_model_health reads the calendar the script makes as the DataArcus one (the model.bim with the table added)
+  const bim = JSON.parse(fs.readFileSync(path.join(ROOT, 'bim-project/Health Test.SemanticModel/model.bim'), 'utf8').replace(/^﻿/, ''));
+  bim.model.tables.push({ name: 'Gulf Calendar', columns: (g.err ? [] : g.j.columns).map((name) => ({ name, sourceColumn: name, type: 'calculatedTableColumn', isNameInferred: true })),
+    partitions: [{ name: 'Gulf Calendar', mode: 'import', source: { type: 'calculated', expression: daxOf(sc) } }] });
+  fs.mkdirSync(path.join(ROOT, 'gulf-added'), { recursive: true });
+  fs.writeFileSync(path.join(ROOT, 'gulf-added/model.bim'), JSON.stringify(bim));
+  const hu = await call('check_model_health', { path: 'gulf-added/model.bim', country: 'uae', asOf: '2026-10-04' });
+  const ids = (x) => (x.j && x.j.gulfCalendar ? x.j.gulfCalendar.findings.map((f) => f.id) : ['no section']);
+  check(!hu.err && hu.j.gulfCalendar.calendar.kind === 'dataarcus-dax' && hu.j.gulfCalendar.calendar.table === 'Gulf Calendar' && !ids(hu).some((id) => ['GC_WEEKEND', 'GC_DATES_DIFFER', 'GC_ESTIMATES', 'GC_ENDS_EARLY'].includes(id)), `check_model_health on the added calendar, UAE: ${ids(hu)} ${hu.err ? hu.t.slice(0, 200) : JSON.stringify(hu.j.gulfCalendar.calendar)}`);
+  const hk = await call('check_model_health', { path: 'gulf-added/model.bim', country: 'ksa', asOf: '2026-10-04' });
+  const wk = hk.j && hk.j.gulfCalendar ? hk.j.gulfCalendar.findings.find((f) => f.id === 'GC_WEEKEND') : null;
+  check(!!wk && wk.count === 939, `check_model_health on the added calendar, Saudi Arabia: ${wk ? wk.count : ids(hk)}`);
+  // check_model_health's Gulf fix names the new tool with the same settings
+  const fx = await call('check_model_health', { path: 'dax-project', country: 'uae', asOf: '2026-10-03' });
+  const ag = fx.j && fx.j.gulfCalendar && fx.j.gulfCalendar.fixes ? fx.j.gulfCalendar.fixes.addGulfCalendar : null;
+  check(!!ag && ag.tool === 'add_gulf_calendar' && ag.inputs.firstYear === 2022 && ag.inputs.lastYear === 2027 && ag.inputs.country === 'uae' && ag.inputs.weekend === 'country' && ag.inputs.announced === true && !/VAR |CALENDAR \(|DEFINE/.test(JSON.stringify(ag)),
+    `check_model_health's Gulf fix must name add_gulf_calendar with the settings: ${JSON.stringify(ag)}`);
+  // the description shown to users: the file, TMDL view, never the model, untrusted names, refusals
+  const desc = ((await client.listTools()).tools.find((t) => t.name === 'add_gulf_calendar') || {}).description || '';
+  check(/new file/i.test(desc) && /TMDL view/.test(desc) && /never/i.test(desc) && /untrusted/i.test(desc) && /refus/i.test(desc) && /firstYear/.test(desc), `add_gulf_calendar description: ${desc}`);
+  // the years are required: the AI asks the user (the tool reads no data)
+  const ny = await add({ path: 'bim-project', country: 'uae' });
+  check(ny.err && /firstYear|lastYear/.test(ny.t), `add_gulf_calendar without years: ${short(ny)}`);
 }
 
 await client.close();
