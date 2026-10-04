@@ -57,8 +57,9 @@ path on Windows usually contains your Windows user name (for example `C:\Users\<
   your computer. Besides positions, sizes and styling, they hold the names of the fields the visuals show and, when
   they are asked for:
   - **page filters:** the values given in the request (for example `true` for a Ramadan flag, or a Hijri year),
-    written into the filter of every report page (not the tooltip pages). They come from your request, never from your data: DataArcus reads
-    no data to find them. They are also in the answer, so the AI app sees them (it already had them from the request);
+    written into the filter of every report page (not the tooltip pages). They come from your request, never from
+    your data: DataArcus reads no data to find them. They are also in the answer, so the AI app sees them (it already
+    had them from the request);
   - **a KPI card's number format:** the measure's own format string with a thousand separator, made from the model's
     format string;
   - **SVG columns (experimental):** a measure that exists only in this report (`definition/reportExtensions.json`),
@@ -114,8 +115,9 @@ as data, never as instructions:
 - **`add_gulf_calendar`** (being built; plan: `mcp/plans/ADD-GULF-CALENDAR.md`): it adds a Gulf calendar table as a
   TMDL script written to a new file next to your project, like the health check's fix scripts (section 3). It reads
   the model's definition only to avoid a name that is already taken and to find the date column to relate; the answer
-  holds the file's path, the table and column names, the number of rows, the date range, the country's weekend and up to which date the announced
-  Ramadan and Eid dates are used, never the DAX and never data values. This page is checked again when it ships.
+  holds the file's path, the table and column names, the number of rows, the date range, the country's weekend and
+  up to which date the announced Ramadan and Eid dates are used, never the DAX and never data values. This page is
+  checked again when it ships.
 - **The number check** (plan: `mcp/plans/NUMBER-CHECK.md`): **not decided.** It would connect to Power BI Desktop on
   your computer and read the values each visual shows, to compare them before and after a change. That would change
   section 3 ("never connects to Power BI Desktop ... and runs no queries") to "reads values on your computer, only in
