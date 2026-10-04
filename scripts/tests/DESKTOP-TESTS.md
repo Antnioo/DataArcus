@@ -1192,6 +1192,39 @@ Calendar[Hijri Day], a `column` value).
 - In the Arabic report the chart titles mix English field names and Arabic ("Total Sales حسب Day Name"): no display
   names were given in this test.
 
+## 2026-10-04 (third sitting): main (`7a6d133`), Power BI Desktop 2.158.1177: SVG picture size, D8 tables, D-P1 the rest, D-P2, D-P3
+
+A one-hour sitting on the made-up Ramadan sample with data (`<tests folder>\5-tmdl-sample`). Pages captured through
+the Desktop bridge at double size (the canvas only), in `<tests folder>\desk-1004c`; window captures were used only to
+find the Format pane's controls and are deleted. Scripts: `builder-scripts\dc-build.mjs`, `cap.sh`. No code changed.
+
+### 1. The SVG picture's size in a table: set by `grid.imageHeight` and `grid.imageWidth`
+On "DP1b SVG EN 2" (two SVG columns, 160 x 24 and 180 x 20): the table selected, Format > Visual, the search box
+"image": the card **"Image size"** with **Height 75 px** and **Width 75 px** (the default, as the second sitting
+inferred). Set to Height 24 and Width 160, Ctrl+S.
+- **The exact JSON Desktop wrote** into the table's `visual.json` (`visual.objects.grid`, no selector):
+```json
+"grid": [
+  { "properties": {
+      "imageHeight": { "expr": { "Literal": { "Value": "24D" } } },
+      "imageWidth":  { "expr": { "Literal": { "Value": "160D" } } } } }
+]
+```
+- **Seen (measured on the capture, 150 px for the 160-wide picture):** the bar is drawn **160 x 24**, the strip
+  (180 x 20) is fitted into the box: 160 wide, about 18 tall. **The row is 29 page units tall** (was 77), so seven
+  rows and the total fit where two did; the "135%" text inside the bar is readable.
+- One setting for the whole table: every picture column shares the height and the width.
+- **Arabic ("DP1b SVG AR 2"), the same JSON written by hand:** the same result: pictures 160 wide, rows about 27
+  to 29 tall, eight rows and the total.
+- **The total row's "Total" word in a right-to-left table:** with the pictures as the first projections (what round
+  9 writes: the left end) the total row has **no "Total"**. With the text column first ("DP1b SVG AR 3":
+  Hijri Day, the two pictures, Total Sales) **"Total" is back**, under Hijri Day, but that column is then at the
+  left end and no longer at the reading start. Power BI writes "Total" in the first projection's column.
+- **Proposed for round 10 (no code changed here):** `create_report` writes `grid.imageHeight` and `grid.imageWidth`
+  from the designs (the tallest height, the widest width, within 8 to 512); in a right-to-left table the pictures
+  go after the table's own first projection, never before it, so "Total" keeps a text or number column (to check:
+  which column gets the word when the first projection is a measure).
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
