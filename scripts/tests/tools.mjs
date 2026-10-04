@@ -113,6 +113,30 @@ export default async function ({ browser, url }) {
     await v.ctx.close();
   }
 
+  // Licensing calculator: each option's line adds up to its total (beta prep 2026-10-04). A per-user price converted to
+  // AED or SAR has cents (Pro $14 = AED 51.415): shown as a whole "AED 51", 825 users x 617 a year came to AED 520,607
+  // beside a total of AED 520,590. The shown parts must give the shown total, within their rounding (half a unit for
+  // the capacity and the total, half a fil or halala per user).
+  for (const lang of ['en', 'ar']) for (const [currency, period, creators, viewers, extra] of [['AED', 'month', 10, 150, {}], ['AED', 'year', 25, 800, { fabric: true, billing: 'payg' }],
+    ['SAR', 'month', 10, 150, { premium: true }], ['SAR', 'year', 40, 2000, { premium: true, e5: true }], ['USD', 'month', 10, 150, { premium: true }]]) {
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.ctx.addInitScript((s) => localStorage.setItem('dataarcus-licensing-calculator', JSON.stringify(s)), { currency, period, creators, viewers, ...extra });
+    await v.pg.goto(`${url}/tools/power-bi-licensing-cost-calculator.html?lang=${lang}`, { waitUntil: 'networkidle' });
+    const rows = await v.pg.$$eval('#bars .lc-row:not(.invalid)', (rs) => rs.map((r) => ({ cost: r.querySelector('.lc-cost').firstChild.textContent, detail: r.querySelector('.lc-detail').textContent })));
+    const num = (s) => +s.replace(/,/g, '');
+    for (const r of rows) {
+      const total = num(r.cost.match(/\d[\d,]*(?:\.\d+)?/)[0]);
+      let sum = 0, users = 0;
+      for (const part of r.detail.split('+')) {
+        const n = part.match(/\d[\d,]*(?:\.\d+)?/g).map(num);
+        if (part.includes('×')) { users += n[0]; sum += n[0] * n[n.length - 1]; } else sum += n[n.length - 1];
+      }
+      check(Math.abs(sum - total) <= 1 + users * 0.005, `licensing ${lang} ${currency} per ${period}: "${r.detail.trim()}" makes ${Math.round(sum).toLocaleString('en-US')}, the total shows ${r.cost.trim()}`);
+    }
+    check(rows.length >= 2, `licensing ${lang} ${currency}: ${rows.length} options read`);
+    await v.ctx.close();
+  }
+
   // Exam simulators: moving to the next question from lower down scrolls back to the question
   for (const page of ['dp-600-practice-exam', 'pl-300-practice-exam']) {
     const v = await visitor(browser, { viewport: [1440, 900] });
