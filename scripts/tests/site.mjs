@@ -103,5 +103,36 @@ export default async function ({ browser, url }) {
     }
     await v.ctx.close();
   }
+
+  // The web-font swap doesn't move the page (audit AUD-002, 2026-10-04). The suites block web fonts, so here the
+  // pages get Inter from @fontsource (the same font) half a second late, as on a real connection: English pages
+  // shift at most 0.1 when it arrives. On Arabic pages the text waits for the Arabic font (IBM Plex Sans Arabic,
+  // stood in for by a font served late), so it never re-wraps in front of the reader; never longer than 1.5 s.
+  {
+    const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+    const fontFile = (w) => path.join(ROOT, `node_modules/@fontsource/inter/files/inter-latin-${w}-normal.woff2`);
+    const css = (family) => [400, 500, 600, 700, 800].map((w) => `@font-face{font-family:'${family}';font-weight:${w};font-display:swap;src:url(https://fonts.gstatic.com/x/inter-${w >= 600 ? 700 : 400}.woff2) format('woff2')}`).join('\n');
+    const lateFonts = async (v, delay) => {
+      await v.ctx.route(/fonts\.googleapis\.com\/css2/, (r) => r.fulfill({ status: 200, contentType: 'text/css', headers: { 'access-control-allow-origin': '*' }, body: css(/Arabic/.test(r.request().url()) ? 'IBM Plex Sans Arabic' : 'Inter') }));
+      await v.ctx.route(/fonts\.gstatic\.com\/x\//, async (r) => { await new Promise((ok) => setTimeout(ok, delay)); r.fulfill({ status: 200, contentType: 'font/woff2', headers: { 'access-control-allow-origin': '*' }, body: fs.readFileSync(fontFile(/700/.test(r.request().url()) ? 700 : 400)) }); });
+    };
+    for (const page of ['tools/power-bi-theme-generator.html', 'articles/article-power-bi-model-ai-ready.html', 'tools/power-bi-licensing-cost-calculator.html']) for (const vp of [[1440, 900], [390, 844]]) {
+      const v = await visitor(browser, { viewport: vp }); await lateFonts(v, 500);
+      await v.ctx.addInitScript(() => { window.__cls = 0; new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: 'layout-shift', buffered: true }); });
+      await v.pg.goto(`${url}/${page}?lang=en`, { waitUntil: 'load' }); await v.pg.waitForTimeout(2500);
+      const r = await v.pg.evaluate(() => ({ cls: +window.__cls.toFixed(3), inter: document.fonts.check('400 16px Inter') }));
+      check(r.inter && r.cls <= 0.1, `${page} ${vp[0]}px: the Inter swap shifts the page ${r.cls}${r.inter ? '' : ' (Inter never loaded)'} (want 0.1 or less)`);
+      await v.ctx.close();
+    }
+    for (const [page, delay] of [['articles/article-gulf-calendar-power-bi.html', 700], ['articles/article-power-bi-licensing-guide.html', 700], ['tools/power-bi-theme-generator.html', 5000]]) {
+      const v = await visitor(browser, { viewport: [390, 844] }); await lateFonts(v, delay);
+      await v.ctx.addInitScript(() => { window.__shown = 0; const t0 = performance.now(); new MutationObserver(() => { if (!window.__shown && !document.documentElement.classList.contains('i18n-pending')) { window.__shown = performance.now() - t0; window.__fontAtShow = document.fonts.check('400 16px "IBM Plex Sans Arabic"', 'ع'); } }).observe(document, { attributes: true, subtree: true, attributeFilter: ['class'] }); });
+      await v.pg.goto(`${url}/${page}?lang=ar`, { waitUntil: 'load' }); await v.pg.waitForTimeout(Math.min(delay, 2500) + 500);
+      const r = await v.pg.evaluate(() => ({ shown: Math.round(window.__shown), font: window.__fontAtShow, pending: document.documentElement.classList.contains('i18n-pending') }));
+      const ok = delay < 1500 ? r.font === true && !r.pending : !r.pending && r.shown > 0 && r.shown < 2100;
+      check(ok, `${page} ar, Arabic font ${delay} ms late: shown at ${r.shown} ms with the Arabic font ${r.font ? 'loaded' : 'not loaded'}${r.pending ? ', still hidden' : ''}`);
+      await v.ctx.close();
+    }
+  }
   return { checks, problems };
 }
