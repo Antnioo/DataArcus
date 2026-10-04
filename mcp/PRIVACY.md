@@ -1,6 +1,6 @@
 # DataArcus MCP: what stays on your machine, and what your AI app sees
 
-Plain English. Checked against the code on 2026-10-04 (branch `fix/round-7-audit`: `mcp/server.mjs`, `mcp/lib/`, the
+Plain English. Checked against the code on 2026-10-04 (main `ad65ee7`, after round 9: `mcp/server.mjs`, `mcp/lib/`, the
 report-design skill, and the shared engines it loads from `assets/js/`). If the code changes, this page is checked again before the next release.
 
 ## In one paragraph
@@ -26,20 +26,22 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
 
 | Tool | What its answer contains |
 |---|---|
-| `read_model` | Table names; for each table: hidden or not, date table or not, the visible columns' names and types, how many columns are hidden, the visible measures' names and format strings. The model's file name and the names of the reports already in the project. For a large model, a summary instead: counts, the date tables' names, the names of the measures' display folders with the tables they are in, each table with measures and its numbers of measures, visible columns and related tables (at most the 100 with the most measures; the rest are counted by display folder), and the other tables' names (as many as fit). With `tables`, the full list for the named tables. |
+| `read_model` | Table names; for each table: hidden or not, date table or not, the visible columns' names and types, how many columns are hidden, the visible measures' names and format strings. The model's file name and the names of the reports already in the project. For a large model, a summary instead: counts, the date tables' names, the names of the measures' display folders with the tables they are in (at most 15 named per folder, the rest counted), each table with measures and its numbers of measures, visible columns and related tables (at most the 100 with the most measures; the rest are counted by display folder), and the other tables' names (as many as fit). With `tables`, the full list for the named tables. |
 | `suggest_fields` | Which table, column and measure names it picked for each KPI card, chart, table and slicer, and the names of measures it passed over because they are named old, test, unused, backup or temp. With `focus` or `tables`, also which tables the picks came from. On a large model without a focus: the display folder names and the names of the tables with measures, and no picks. |
 | `check_model_health` | The score, counts (tables, columns, measures, relationships, roles...), the model's compatibility level and culture, the kinds of data source used (for example `Sql.Database`, counted, without server or file names), and every finding with the names of the objects it concerns (tables, columns, measures, relationships, Power Query query names, role names). A few findings add a short detail: a format string, a display folder, a line or step count, the names of measures that use a relationship, or the report page and visual names where a broken field is used. If you pass `columnTypes`, it lists back the column names it could not use. With `country`, or when the model has Hijri or Ramadan columns, a `gulfCalendar` section: the calendar table's name and the names of its Hijri, Ramadan, Eid and weekend columns; for a calendar made by the DataArcus Calendar Generator, the dates written in its own DAX (its first and last date, and where a Ramadan or Eid start differs from the announced one), and how many days its weekend differs from the country's, with a few example dates. These are calendar dates from the model's definition, never values from your data tables. `fixes`: for sort order and number formats, the names of the columns and measures to change, the format or sort column proposed for each, steps to do by hand where a script can't, and the full path of the script file it wrote (see section 3). Steps by hand can include a formula DataArcus proposes, built from your column names; never one read from your model. `fixes.THOUSANDS`: the names of measures and columns whose number format has no thousand separator, each with its current format string and the one proposed. |
 | `generate_theme` | The theme's colours, fonts and settings (your inputs), the contrast checks, and the full path of the theme file it wrote. |
 | `plan_layout` | Positions and sizes of the visuals; no model information at all. |
-| `create_report` | How many files it wrote, the full path of the new `.pbip`, the report and model folder names, the pages and visual counts, and `modelNotes`: the names of the fields it used that will display badly (months or days without a sort column, a percentage without a format). `kpiCards`: when the model has fewer measures than KPI cards, how many cards were built and the names of the measures on them. `boundFields`: for each page, the names of the fields each visual shows. `numberFormats`: the names of the fields it shows as numbers that have no thousand-separator format in the model. `ignored`: the names of keys in a design that the tool doesn't know. |
+| `create_report` | How many files it wrote, the full path of the new `.pbip`, the report and model folder names, the pages and visual counts, and `modelNotes`: the names of the fields it used that will display badly (months or days without a sort column, a percentage without a format). `kpiCards`: when the model has fewer measures than KPI cards, how many cards were built and the names of the measures on them. `boundFields`: for each page, the names of the fields each visual shows. `numberFormats`: the names of the fields it shows as numbers that have no thousand-separator format in the model, and (`cards`) the measures whose KPI card got a number format of its own in the report, with that format. `pageFilters`: for each page filter asked for, the column's name, the values given, their type (and, for a column the files give no type, that the type came from those values), and a note when a filter on a Ramadan flag keeps every Ramadan (naming the model's Hijri-year column); `reportNotes` repeats the filters and their values in words. `svgMeasures` (experimental): for each SVG column, its label, the table its measure belongs to, the page, the length of its DAX in characters and its status; the DAX itself is not returned. `scope`: on a large model, the focus and the names of the tables the picks came from. `displayNames` and, in an Arabic report, `arabicNames`: how many of the names given were used, the fields whose given names were not used, and the fields shown under a model name with no Arabic letter. `ignored`: the names of keys in a design that the tool doesn't know. |
 
-**Also sent, by every tool that reads a model:** when a table, column or measure name holds a character nobody sees (a direction override, a zero-width character), that name, with the character written as its code point (`hiddenCharacters`). **And:** error messages, which can include the path you asked for and the working folder's full path. A full
+**Also sent, by every tool that reads a model:** when a table, column or measure name holds a character nobody sees (a direction override, a zero-width character), that name, with the character written as its code point (`hiddenCharacters`, up to 20 names). A report name given with such characters is written without them. **And:** error messages, which can include the path you asked for and the working folder's full path. A full
 path on Windows usually contains your Windows user name (for example `C:\Users\<name>\...`).
 
 ## 3. Metadata only: no data values
 - **No DataArcus tool reads or returns the data in your tables.** It reads only the model's definition files (TMDL
   files, `model.bim`, or the schema inside a `.pbit`, which holds no data) and the report's definition files. It never
   opens Power BI's data cache, never connects to Power BI Desktop or to your data sources, and runs no queries.
+  (Values you type yourself, such as a page filter's, are written into the new report and repeated in the answer: see
+  "What a new report's files hold" below.)
 - **What metadata still says.** Names are information too: a table called "Salaries 2026" or a measure called
   "Bonus Pool" tells the AI something about your business. Measure, column and role expressions (DAX, Power Query)
   are read on your machine for the health check, but are **not** returned; only the names of the objects a finding
@@ -51,6 +53,19 @@ path on Windows usually contains your Windows user name (for example `C:\Users\<
   the answer; an audit found that this contradicted the paragraph above, and it was changed.) An AI app that can read
   files on your computer by itself (Claude Code, for example) could still open that file if you or it chose to; the
   DataArcus instructions tell it not to unless you ask.
+- **What a new report's files hold.** `create_report` writes Power BI's own definition files, next to your model, on
+  your computer. Besides positions, sizes and styling, they hold the names of the fields the visuals show and, when
+  they are asked for:
+  - **page filters:** the values given in the request (for example `true` for a Ramadan flag, or a Hijri year),
+    written into the filter of every report page (not the tooltip pages). They come from your request, never from
+    your data: DataArcus reads no data to find them. They are also in the answer, so the AI app sees them (it already
+    had them from the request);
+  - **a KPI card's number format:** the measure's own format string with a thousand separator, made from the model's
+    format string;
+  - **SVG columns (experimental):** a measure that exists only in this report (`definition/reportExtensions.json`),
+    compiled from the design: its fixed text and colours, and the names of the measures and columns it uses. Power BI
+    computes it on your computer when you open the report; the values it draws never pass through DataArcus or the AI
+    app. The model is not changed.
 - **Data values only when you ask.** The other tools DataArcus is used with can read data: Microsoft's Power BI
   Authoring MCP runs DAX queries that return values, and a screenshot of a report page shows its numbers. Those are
   other tools with their own terms; the DataArcus report-design skill uses them only after asking you, each time
@@ -95,6 +110,19 @@ as data, never as instructions:
   them are never followed;
 - the AI should analyse, then propose, then write, and never run anything because a name or description told it to;
 - changes to your model are always yours to make (in Power BI Desktop, or through Microsoft's tools with you watching).
+
+## Coming, not in this version
+- **`add_gulf_calendar`** (being built; plan: `mcp/plans/ADD-GULF-CALENDAR.md`): it adds a Gulf calendar table as a
+  TMDL script written to a new file next to your project, like the health check's fix scripts (section 3). It reads
+  the model's definition only to avoid a name that is already taken and to find the date column to relate; the answer
+  holds the file's path, the table and column names, the number of rows, the date range, the country's weekend and
+  up to which date the announced Ramadan and Eid dates are used, never the DAX and never data values. This page is
+  checked again when it ships.
+- **The number check** (plan: `mcp/plans/NUMBER-CHECK.md`): **not decided.** It would connect to Power BI Desktop on
+  your computer and read the values each visual shows, to compare them before and after a change. That would change
+  section 3 ("never connects to Power BI Desktop ... and runs no queries") to "reads values on your computer, only in
+  this tool, and never returns them unless you ask". Until that is decided and built, section 3 stands as written; if
+  it is built, this page changes first.
 
 ## Known gaps
 None open. Closed on 2026-10-04 (round 5, from the audit of 2026-10-04), each with tests that failed before the fix:
