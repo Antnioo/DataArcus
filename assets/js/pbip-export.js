@@ -211,11 +211,17 @@
     const own = !!(o.model && (o.model.byPath || o.model.byConnection));
     const sample = !!o.sample && !own;
     const B = own ? (o.bind || null) : sample ? sampleBind(t) : null;
+    // (a name over the limit ends at its last whole word: cut at the last space before the limit, and a dash or
+    // other joining mark left at the end goes too; one word longer than the limit is cut at the limit)
     // cut by characters, not UTF-16 units, so an emoji at the cut is never split into a broken file name; at most 30,
     // because the name appears up to three times in a path and Windows limits paths to 260 characters
     // no dots or spaces at either end: ".." would climb out of the folder, and Windows drops a trailing dot or space
     const tidy = (s) => s.replace(/^[.\s]+|[.\s]+$/g, '');
-    let base = tidy(Array.from(tidy((o.name || 'Power BI Report').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' '))).slice(0, 30).join('')) || 'Power BI Report';
+    const whole = Array.from(tidy((o.name || 'Power BI Report').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ')));
+    let cut = whole.slice(0, 30).join('');
+    if (whole.length > 30 && whole[30] !== ' ' && cut.lastIndexOf(' ') > 0) cut = cut.slice(0, cut.lastIndexOf(' '));
+    if (whole.length > 30) cut = cut.replace(/[\s\-\u2013\u2014\u00b7:,;&+]+$/, '');
+    let base = tidy(cut) || 'Power BI Report';
     // next to someone's project: never the name of a report already there (o.model.taken: their X.Report folders and
     // X.pbip files), nor the model's own name, which their first report usually has
     const theirs = o.model && o.model.byPath ? String(o.model.byPath).replace(/^.*\//, '').replace(/\.(SemanticModel|Dataset)$/i, '') : null;

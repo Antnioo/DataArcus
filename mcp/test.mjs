@@ -1061,6 +1061,121 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   }
 }
 
+// ---------- round 6: the fields of the approved plan, the picker, names; thousand separators; the header logo ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 240) : x.t.slice(0, 240));
+  const f = (x) => (x ? `${x.t}[${x.c != null ? x.c : x.m}]` : null);
+  const plan = await ask('plan_layout', { layout: 'exec', kpis: 4, filters: 'end' }), design = plan.j && plan.j.design;
+  // every visual of a written report: page name, type, and the fields of its query in role order
+  const visualsOf = (dir) => { const def = path.join(dir, 'definition', 'pages'), order = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder;
+    return order.flatMap((id) => { const pg = JSON.parse(fs.readFileSync(path.join(def, id, 'page.json'), 'utf8'));
+      return fs.readdirSync(path.join(def, id, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, id, 'visuals', v, 'visual.json'), 'utf8'))).filter((v) => v.visual && v.visual.query)
+        .map((v) => ({ page: pg.displayName, type: v.visual.visualType, x: v.position.x, fields: Object.values(v.visual.query.queryState).flatMap((r) => (r.projections || []).map((p) => p.queryRef)).filter((q) => !/^Min\(/.test(q)) })); }); };
+  const SALES = (m) => `Sales[${m}]`, RAM = { kpis: ['Total Sales', 'Total Sales Last Ramadan', 'Total Sales vs Last Ramadan %'].map(SALES) };
+
+  // 1. create_report takes the approved plan's fields: bound as given, nothing re-picked, and the answer says what was bound
+  {
+    const fields = { kpis: RAM.kpis, measure: SALES('Total Sales Last Ramadan'), timeAxis: 'Calendar[Hijri Month Name]', category: 'Calendar[Day Name]', category2: 'Calendar[Quarter]',
+      table: ['Calendar[Quarter]', SALES('Total Sales'), SALES('Total Sales vs Last Ramadan %')], slicers: ['Calendar[Hijri Year]', 'Calendar[Is Ramadan]'] };
+    const x = await ask('create_report', { path: 'dax-project', name: 'R6 Fields', design, fields });
+    const vs = x.err ? [] : visualsOf(path.join(ROOT, 'dax-project', x.j.report)), p1 = vs.filter((v) => v.page === 'Executive summary');
+    const cards = p1.filter((v) => v.type === 'cardVisual').sort((a, b) => a.x - b.x).map((v) => v.fields.join());
+    chk(() => cards.join('|') === 'Sales.Total Sales|Sales.Total Sales Last Ramadan|Sales.Total Sales vs Last Ramadan %', () => `fields.kpis: the cards must be the three given, in order (3 cards for 3 fields): ${cards.join(' | ')} ${short(x)}`);
+    chk(() => !vs.some((v) => v.fields.some((q) => /\(old\)/.test(q))), () => `fields given: an "(old)" measure was still bound: ${JSON.stringify(vs.filter((v) => v.fields.some((q) => /\(old\)/.test(q))).slice(0, 2))}`);
+    const one = (type) => (p1.find((v) => v.type === type) || { fields: [] }).fields.join();
+    chk(() => one('lineChart') === 'Calendar.Hijri Month Name,Sales.Total Sales Last Ramadan' && one('clusteredBarChart') === 'Calendar.Day Name,Sales.Total Sales Last Ramadan' && one('clusteredColumnChart') === 'Calendar.Quarter,Sales.Total Sales Last Ramadan',
+      () => `fields.measure, timeAxis, category, category2: line ${one('lineChart')}; bar ${one('clusteredBarChart')}; column ${one('clusteredColumnChart')}`);
+    chk(() => one('tableEx') === 'Calendar.Quarter,Sales.Total Sales,Sales.Total Sales vs Last Ramadan %', () => `fields.table: ${one('tableEx')}`);
+    const sl = vs.filter((v) => v.page === 'Executive summary' && v.type === 'slicer').map((v) => v.fields.join());
+    chk(() => sl.length === 3 && sl.includes('Calendar.Hijri Year') && sl.includes('Calendar.Is Ramadan'), () => `fields.slicers: the two given must be slicers (the third is picked as before): ${sl}`);
+    // the answer lists the bound fields per visual, and they are what the files hold
+    const bf = x.err ? [] : x.j.boundFields || [], b1 = (bf.find((p) => p.page === 'Executive summary') || {}).visuals || [];
+    chk(() => b1.filter((v) => v.visual === 'KPI card').map((v) => v.fields.join()).join('|') === RAM.kpis.join('|') && b1.find((v) => v.visual === 'Table').fields.join() === fields.table.join()
+      && b1.find((v) => v.visual === 'Line chart').fields.join() === 'Calendar[Hijri Month Name],Sales[Total Sales Last Ramadan]' && b1.filter((v) => v.visual === 'Slicer').length === 3,
+      () => `boundFields must list each visual's fields as written: ${JSON.stringify(bf).slice(0, 500)}`);
+    // a name that is not in the model, or of the wrong kind, refuses the call: nothing is written
+    const before = fs.readdirSync(path.join(ROOT, 'dax-project')).length;
+    const bad = await ask('create_report', { path: 'dax-project', name: 'R6 Bad', design, fields: { kpis: [SALES('Total Sales'), SALES('No Such Measure')], timeAxis: SALES('Total Sales'), category: 'Calendar[Nope]' } });
+    chk(() => bad.err && /No Such Measure/.test(bad.t) && /Calendar\[Nope\]/.test(bad.t) && /timeAxis/.test(bad.t) && /column/.test(bad.t) && fs.readdirSync(path.join(ROOT, 'dax-project')).length === before,
+      () => `fields with unknown or wrong-kind names must be refused, naming each, with nothing written: ${short(bad)}`);
+    // hand-placed pages take the fields too
+    const hand = await ask('create_report', { path: 'dax-project', name: 'R6 Hand', fields: { kpis: [SALES('Total Sales vs Last Ramadan %')] }, pages: [{ name: 'P', slots: [{ kind: 'kpi', title: 'K1', x: 0, y: 0, w: 400, h: 140 }, { kind: 'kpi', title: 'K2', x: 420, y: 0, w: 400, h: 140 }] }] });
+    const hv = hand.err ? [] : visualsOf(path.join(ROOT, 'dax-project', hand.j.report)).filter((v) => v.page === 'P' && v.type === 'cardVisual');
+    chk(() => hv.length === 1 && hv[0].fields.join() === 'Sales.Total Sales vs Last Ramadan %', () => `hand-placed pages with fields.kpis (1 field, 2 slots): one card with that field: ${JSON.stringify(hv)} ${short(hand)}`);
+    // without fields nothing changes: the picks are the picker's
+    const no = await ask('create_report', { path: 'tmdl-project', name: 'R6 No fields', design });
+    chk(() => !no.err && Array.isArray(no.j.boundFields) && no.j.boundFields[0].visuals.find((v) => v.visual === 'KPI card').fields.join() === 'Sales[Total Sales]', () => `without fields: ${short(no)}`);
+  }
+
+  // 2. the texts tell the agent to pass the plan's fields
+  {
+    const ins = String(client.getInstructions() || ''), tl = Object.fromEntries((await client.listTools()).tools.map((t) => [t.name, t]));
+    const skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8').replace(/\r\n/g, '\n');
+    chk(() => /fields/.test(ins) && /approved/i.test(ins), () => 'the server\'s instructions must say to pass the approved plan\'s fields to create_report');
+    chk(() => /`fields`/.test(skill) && /approved/i.test(skill), () => 'the skill must say to pass the approved plan\'s fields in `fields`');
+    chk(() => /fields/.test(tl.create_report.description) && /approved plan/i.test(tl.create_report.description) && !!tl.create_report.inputSchema.properties.fields, () => `create_report's description must say to pass the approved plan's fields: ${tl.create_report.description.slice(0, 200)}`);
+    chk(() => ins.length < 2800, () => `the server's instructions are ${ins.length} characters`);
+  }
+
+  // 3. a model without measures: suggest_fields says so, and says to propose measures with format strings
+  {
+    const x = await ask('suggest_fields', { path: 'plain', kpis: 4 });
+    chk(() => !x.err && /no measures/i.test(x.j.noMeasures) && /format string/i.test(x.j.noMeasures) && /#,0/.test(x.j.noMeasures) && /0\.0%/.test(x.j.noMeasures), () => `suggest_fields on a model without measures: ${short(x)}`);
+    const y = await ask('suggest_fields', { path: 'tmdl-project', kpis: 3 });
+    chk(() => !y.err && !('noMeasures' in y.j), () => 'suggest_fields on a model with measures must not carry the no-measures note');
+  }
+
+  // 4. the picker: a measure named old, test, unused, backup or temp only when no other is left; the skipped are named
+  {
+    const s3 = await ask('suggest_fields', { path: 'dax-project', kpis: 3 }), s4 = await ask('suggest_fields', { path: 'dax-project', kpis: 4 }), s5 = await ask('suggest_fields', { path: 'dax-project', kpis: 5 });
+    chk(() => s3.j.kpis.map(f).join('|') === RAM.kpis.join('|') && s3.j.table.map(f).every((k) => !/\(old\)/.test(k)), () => `3 KPI cards on the Ramadan model: ${s3.err ? s3.t.slice(0, 200) : s3.j.kpis.map(f)} / table ${s3.err ? '' : s3.j.table.map(f)}`);
+    chk(() => JSON.stringify(s3.j.skipped.measures) === JSON.stringify(['Sales[Total Sales Last Ramadan (old)]', 'Sales[Total Sales vs Last Ramadan % (old)]']) && /old/.test(s3.j.skipped.why), () => `the skipped measures must be named: ${JSON.stringify(s3.j && s3.j.skipped)}`);
+    chk(() => s4.j.kpis.map(f).slice(0, 3).join('|') === RAM.kpis.join('|') && /\(old\)/.test(f(s4.j.kpis[3])) && s4.j.skipped.measures.length === 1, () => `4 cards, 3 current measures: the fourth is an old one because nothing else is left: ${s4.err ? s4.t.slice(0, 200) : s4.j.kpis.map(f)}`);
+    chk(() => s5.j.kpis.filter(Boolean).length === 5 && !s5.j.skipped, () => `5 cards, 5 measures: all used, nothing skipped: ${s5.err ? s5.t.slice(0, 200) : JSON.stringify(s5.j.skipped)}`);
+    fs.writeFileSync(path.join(ROOT, 'stale.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', columns: [{ name: 'Amount', dataType: 'double', sourceColumn: 'Amount' }, { name: 'Region', dataType: 'string', sourceColumn: 'Region' }],
+      measures: ['Sales Test', 'Backup Revenue', 'TEMP total', 'Unused Sales', 'Oldham Sales', 'Latest Orders', 'Contest Wins'].map((name) => ({ name, expression: 'SUM ( Sales[Amount] )', formatString: '#,0' })) }] } }));
+    const st = await ask('suggest_fields', { path: 'stale.bim', kpis: 3 });
+    chk(() => st.j.kpis.map((k) => k.m).sort().join() === 'Contest Wins,Latest Orders,Oldham Sales' && st.j.skipped.measures.length === 4 && st.j.measure.m !== 'Sales Test',
+      () => `whole words only (Oldham, Latest, Contest are not old or test): ${st.err ? st.t.slice(0, 200) : st.j.kpis.map((k) => k.m) + ' skipped ' + JSON.stringify(st.j.skipped)}`);
+  }
+
+  // 5a. read_model finds a model by its plain name
+  {
+    for (const p of ['Ramadan Test', 'ramadan test', 'Ramadan Test.pbip', 'Ramadan Test.SemanticModel']) {
+      const x = await ask('read_model', { path: p }), want = 'Calendar,Sales';
+      chk(() => !x.err && x.j.tables.map((t) => t.table).join().startsWith(want), () => `read_model by the plain name "${p}": ${short(x)}`);
+    }
+    const none = await ask('read_model', { path: 'No Such Model' });
+    chk(() => none.err && /No Such Model/.test(none.t) && /working folder/.test(none.t) && /read_model/.test(none.t) && !/ENOENT/.test(none.t), () => `read_model by a name nothing has must say what is there, not a raw error: ${short(none)}`);
+    fs.cpSync(path.join(ROOT, 'dax-project'), path.join(ROOT, 'dax-project-copy'), { recursive: true });
+    const two = await ask('read_model', { path: 'Ramadan Test' });
+    chk(() => two.err && /dax-project/.test(two.t) && /dax-project-copy/.test(two.t), () => `a name two projects have must be refused, naming both: ${short(two)}`);
+    fs.rmSync(path.join(ROOT, 'dax-project-copy'), { recursive: true, force: true });
+  }
+
+  // 5b. a key of a design that is not known is named, not ignored without a word
+  {
+    const odd = Object.assign({}, design, { fields: { kpis: RAM.kpis }, layout: Object.assign({}, design.layout, { foo: 1 }) });
+    const p = await ask('plan_layout', { design: odd }), c = await ask('create_report', { path: 'dax-project', name: 'R6 Odd keys', design: odd });
+    for (const [n, x] of [['plan_layout', p], ['create_report', c]]) chk(() => !x.err && JSON.stringify(x.j.ignored.keys) === JSON.stringify(['fields', 'layout.foo']) && /fields/.test(x.j.ignored.why), () => `${n}: unknown design keys must be named in "ignored": ${x.err ? x.t.slice(0, 200) : JSON.stringify(x.j.ignored)}`);
+    const ok = await ask('plan_layout', { design });
+    chk(() => !ok.err && !('ignored' in ok.j), () => 'a design as the tools return it must have nothing ignored');
+  }
+
+  // 5c. a long report name is cut at a space, never in the middle of a word
+  {
+    const long = 'التقرير التنفيذي للمبيعات - الأسماء الأصلية', x = await ask('create_report', { path: 'tmdl-project', name: long, design, lang: 'ar' });
+    chk(() => !x.err && x.j.report === 'التقرير التنفيذي للمبيعات.Report', () => `a long Arabic name must end at a whole word: ${x.err ? x.t.slice(0, 200) : x.j.report}`);
+    const en = await ask('create_report', { path: 'tmdl-project', name: 'Quarterly Executive Sales Overview Northern Region', design });
+    chk(() => !en.err && en.j.report === 'Quarterly Executive Sales.Report', () => `a long English name must end at a whole word: ${en.err ? en.t.slice(0, 200) : en.j.report}`);
+    const word = await ask('create_report', { path: 'tmdl-project', name: 'Supercalifragilisticexpialidocious2026', design });
+    chk(() => !word.err && word.j.report === 'Supercalifragilisticexpialidoc.Report', () => `one word longer than the limit is still cut at 30: ${word.err ? word.t.slice(0, 200) : word.j.report}`);
+    chk(() => [x, en].every((r) => /shortened/i.test(JSON.stringify(r.j.reportNotes || []))), () => 'a shortened report name must be said in reportNotes');
+  }
+}
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);

@@ -17,7 +17,7 @@ const VERSION = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta
 // same at length; a desktop extension carries no skill the app loads, so the essentials are here and in the tool texts)
 const INSTRUCTIONS = [
   'DataArcus designs Power BI reports on the user\'s own model, inside one working folder. Rules for the assistant:',
-  '1. Plan first. Before create_report, show the user the plan (pages, visuals, the fields on each, page size, theme) and wait for the user\'s "go". Never write a report in the same turn as the request.',
+  '1. Plan first. Before create_report, show the user the plan (pages, visuals, the fields on each, page size, theme) and wait for the user\'s "go". Never write a report in the same turn as the request. Then pass the approved plan\'s fields to create_report in "fields": what you leave out is picked automatically, and its answer (boundFields) says what each visual shows; tell the user any difference from the plan.',
   '2. Display names come only from the user (or are the model\'s own names). Never translate, shorten or relabel a field yourself: list the fields that have no name in the report\'s language and ask the user for them.',
   '3. A card\'s label must say what its value really is. A KPI card shows a measure as the model defines it, with no filter added: never label an unfiltered total "This Ramadan", "This year" or the like. If the model has no measure for what was asked, say so and propose the measure for the user to add.',
   '4. Gulf calendar (the gulfCalendar section of check_model_health): it is not scored, and say so. For a fix, point to the Calendar Generator settings the answer gives; never write calendar DAX yourself.',
@@ -78,6 +78,64 @@ const themeColors = (t) => {
   return Object.fromEntries(Object.entries(out).filter(([, v]) => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v)));
 };
 
+// ---------- the fields of an approved plan (create_report's fields) ----------
+// "Table[Field]" or "'Table'[Field]" as read_model lists them. Each is looked up in the whole model (hidden fields
+// too: the user may want one); wanted: 'm' a measure, 'c' a column, 'any'. Returns the picker's own shapes, so the
+// report writer binds a given field exactly as it binds a picked one. Every problem is collected and told at once.
+function resolveFields(tables, fields) {
+  if (!fields || !Object.keys(fields).length) return null;
+  const problems = [];
+  const one = (ref, wanted, where) => {
+    const mk = String(ref).trim().match(/^'?(.+?)'?\[(.+)\]$/);
+    if (!mk) { problems.push(`${where}: "${ref}" is not written as Table[Field]`); return null; }
+    const t = tables.find((x) => x.name === mk[1]) || tables.find((x) => x.name.toLowerCase() === mk[1].toLowerCase());
+    const meas = t && (t.measures.find((x) => x.name === mk[2]) || t.measures.find((x) => x.name.toLowerCase() === mk[2].toLowerCase()));
+    const col = t && (t.columns.find((x) => x.name === mk[2]) || t.columns.find((x) => x.name.toLowerCase() === mk[2].toLowerCase()));
+    if (!t) { problems.push(`${where}: no table "${mk[1]}" in the model (${ref})`); return null; }
+    if (!meas && !col) { problems.push(`${where}: ${ref} is not in the model`); return null; }
+    if (wanted === 'm' && !meas) { problems.push(`${where}: ${ref} is a column; a measure is needed here`); return null; }
+    if (wanted === 'c' && !col) { problems.push(`${where}: ${ref} is a measure; a column is needed here`); return null; }
+    if (meas && wanted !== 'c') return { t: t.name, m: meas.name, pct: Bind.isPercent(meas.name, meas.formatString), variant: false };
+    const by = col.sortBy ? null : Bind.sortColumnFor(t.columns, col.name);
+    return Object.assign({ t: t.name, c: col.name, type: String(col.dataType || 'string').toLowerCase() }, by ? { sortBy: { t: t.name, c: by.name } } : {});
+  };
+  const out = {};
+  if (fields.kpis) out.kpis = fields.kpis.map((r, i) => one(r, 'm', `fields.kpis[${i}]`));
+  if (fields.measure) out.measure = one(fields.measure, 'm', 'fields.measure');
+  for (const k of ['timeAxis', 'category', 'category2']) if (fields[k]) out[k] = one(fields[k], 'c', 'fields.' + k);
+  if (fields.table) out.table = fields.table.map((r, i) => one(r, 'any', `fields.table[${i}]`));
+  if (fields.slicers) out.slicers = fields.slicers.map((r, i) => one(r, 'c', `fields.slicers[${i}]`));
+  if (problems.length) throw new Error(`Nothing was written. ${problems.length} of the fields can't be used: ${problems.join('; ')}. Use the names exactly as read_model lists them (Table[Field]).`);
+  return out;
+}
+// What each visual of the written pages shows, by name: the answer's boundFields
+const VISUAL_NAMES = { kpi: 'KPI card', card: 'Card', line: 'Line chart', bar: 'Bar chart', column: 'Column chart', donut: 'Donut chart', table: 'Table', gauge: 'Gauge', funnel: 'Funnel', treemap: 'Treemap', map: 'Map', slicer: 'Slicer' };
+function boundOf(pages, B) {
+  const key = (f) => (f ? `${f.t}[${f.c != null ? f.c : f.m}]` : null), list = (...fs2) => fs2.map(key).filter(Boolean);
+  return (pages || []).map((p) => { let k = 0; const visuals = [];
+    (p.slots || []).slice().sort((s1, s2) => (s1.y - s2.y) || (s1.x - s2.x)).forEach((s) => {
+      const cat = (B.cats || {})[s.kind], y = (B.y || {})[s.kind] || B.measure;
+      if (s.kind === 'kpi') visuals.push({ visual: VISUAL_NAMES.kpi, fields: list((B.kpis || [])[k++]) });
+      else if (s.kind === 'card') visuals.push({ visual: VISUAL_NAMES.card, fields: list(B.measure) });
+      else if (s.kind === 'line') visuals.push({ visual: VISUAL_NAMES.line, fields: list(B.date, B.measure) });
+      else if (['bar', 'column', 'donut', 'funnel', 'treemap', 'map'].includes(s.kind)) visuals.push({ visual: VISUAL_NAMES[s.kind], fields: list(cat, y) });
+      else if (s.kind === 'gauge') visuals.push({ visual: VISUAL_NAMES.gauge, fields: list(y) });
+      else if (s.kind === 'table') visuals.push({ visual: VISUAL_NAMES.table, fields: list(...(B.table || [])) });
+      else if (s.kind === 'slicer') (B.slicers || []).slice(0, 3).forEach((f) => visuals.push({ visual: VISUAL_NAMES.slicer, fields: list(f) }));
+    });
+    return { page: p.name, visuals }; });
+}
+// The keys of a design the tools know. Another key (a typing slip, or an input that doesn't exist, like "fields"
+// inside a design) is named in the answer's "ignored", never dropped without a word.
+const DESIGN_KEYS = ['preset', 'name', 'font', 'data', 'ui', 'chart', 'layout'];
+const LAYOUT_KEYS = ['v', 'page', 'preset', 'kpis', 'filters', 'dir', 'radius', 'shadow', 'header', 'kpiBar', 'headLine', 'samples', 'transparent', 'kpiCards', 'fpos', 'pageW', 'pageH',
+  'hh', 'logoW', 'fw', 'fh', 'kpiH', 'mainW', 'split', 'kpiBarW', 'headLineW', 'kpiBarC', 'headLineC'];
+function unknownKeys(design) {
+  const keys = Object.keys(design || {}).filter((k) => !DESIGN_KEYS.includes(k))
+    .concat(Object.keys((design && typeof design.layout === 'object' && design.layout) || {}).filter((k) => !LAYOUT_KEYS.includes(k)).map((k) => 'layout.' + k));
+  return keys.length ? { keys, why: 'These keys of the design are not ones the tools know, so they changed nothing. Fields go in create_report\'s own "fields" input, not inside the design; layout choices are the inputs of plan_layout.' } : null;
+}
+
 server.registerTool('read_model', {
   title: 'Read a Power BI model',
   description: 'Lists the tables, visible columns (with types), measures (with formats) and date tables of a model, without changing it.' + UNTRUSTED + ' A large model (a full list over 40,000 characters) gets a summary first: counts, the date tables, the areas (measure display folders), the tables with measures and the other tables\' names; ask for the tables you need with tables.',
@@ -97,7 +155,11 @@ server.registerTool('suggest_fields', {
   // a large model without a focus, or a focus that matches nothing: no picks, and what to ask the user
   if (sc.needsFocus) return text(sc);
   const b = Bind.suggest(sc.tables, kpis); delete b.choices;
-  return text(sc.scope ? Object.assign({ scope: sc.scope }, b) : b);
+  // measures left behind (old, test, unused, backup, temp in the name) are picked only when nothing else is left: said here
+  if (b.skipped) b.skipped = { measures: b.skipped.map((x) => `${x.t}[${x.m}]`), why: 'Not picked: the name has the word old, test, unused, backup or temp, and other measures were there. Ask the user before using one; to use it anyway, name it in create_report\'s fields.' };
+  // no measures at all: said, with what to propose (a card or a chart shows a measure, never a bare column)
+  const none = sc.tables.every((t) => !(t.measures || []).some((x) => !x.isHidden)) ? { noMeasures: 'This model has no measures, so no KPI card or chart can be bound (the picks are empty). Propose measures to the user, each with its DAX and its format string, for the user to add in Power BI Desktop: #,0 for whole numbers and counts, #,0.00 for amounts with decimals, 0.0% for ratios and rates. Nothing is written until the measures exist.' } : {};
+  return text(Object.assign(sc.scope ? { scope: sc.scope } : {}, none, b));
 }));
 
 server.registerTool('check_model_health', {
@@ -179,7 +241,7 @@ const slot = z.object({
 });
 server.registerTool('create_report', {
   title: 'Create a report project for an existing model',
-  description: 'Before calling this, show the user the plan (pages, visuals, the fields on each, sizes, theme) and wait for their "go". Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme applied; each KPI card, chart and table on its own panel (drawn by the theme\'s solid visuals, or by a page\'s background image when one is given). The model and any existing report are never touched; the new report gets a free name. Every report also gets a hidden tooltip page, shown when a chart is hovered. An optional logo (a PNG or JPG in the DataArcus folder) goes in the header at its own shape. Give either pages (hand-placed slots) or a design (from generate_theme or plan_layout): with a design the pages, positions, second page, slide-in filter panel, labels and theme are exactly the DataArcus Theme Generator\'s project download. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge). A KPI card shows a measure as the model defines it (no filter is added): its label must say what the value really is. A visual outside the list of kinds is not supported: write nothing and offer the closest supported ones.' + UNTRUSTED,
+  description: 'Before calling this, show the user the plan (pages, visuals, the fields on each, sizes, theme) and wait for their "go"; then pass the approved plan\'s fields in fields, so the report shows exactly what the user approved. Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme applied; each KPI card, chart and table on its own panel (drawn by the theme\'s solid visuals, or by a page\'s background image when one is given). The model and any existing report are never touched; the new report gets a free name. Every report also gets a hidden tooltip page, shown when a chart is hovered. An optional logo (a PNG or JPG in the DataArcus folder) goes in the header at its own shape. Give either pages (hand-placed slots) or a design (from generate_theme or plan_layout): with a design the pages, positions, second page, slide-in filter panel, labels and theme are exactly the DataArcus Theme Generator\'s project download. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge). A KPI card shows a measure as the model defines it (no filter is added): its label must say what the value really is. A visual outside the list of kinds is not supported: write nothing and offer the closest supported ones.' + UNTRUSTED,
   inputSchema: {
     path: modelPath.describe('The project folder or .SemanticModel folder the report will use'),
     name: z.string().min(1).max(60).describe('Report name'),
@@ -193,6 +255,15 @@ server.registerTool('create_report', {
     secondPage: z.boolean().default(true).describe('With a design: a second page in a complementary layout (details after an overview, an overview after analysis), with page buttons'),
     slidePanel: z.boolean().default(false).describe('With a design: filters as a slide-in panel opened from a Filters button in the header, instead of a filter rail'),
     theme: z.string().optional().describe('Theme JSON file (e.g. from the DataArcus theme generator), inside the DataArcus folder'),
+    fields: z.object({
+      kpis: z.array(z.string()).max(6).describe('The KPI cards\' measures, in card order; the row gets one card per measure'),
+      measure: z.string().describe('The measure the charts show'),
+      timeAxis: z.string().describe('The column of the line chart\'s axis (a month or date column)'),
+      category: z.string().describe('The column of the bar chart (also donut, funnel, treemap)'),
+      category2: z.string().describe('The column of the column chart (also map)'),
+      table: z.array(z.string()).min(1).max(8).describe('The table\'s columns and measures, in order'),
+      slicers: z.array(z.string()).max(3).describe('The slicers\' columns; a slot left over is picked automatically')
+    }).partial().strict().optional().describe('The fields of the approved plan, each written as Table[Field] exactly as read_model lists it. What is given is bound as given and nothing is re-picked for it; what is left out is picked as suggest_fields does. A name that is not in the model, or a column where a measure is needed, refuses the call and nothing is written. The answer\'s boundFields lists the fields of every visual'),
     displayNames: z.record(z.string(), z.string()).optional().describe('Names to show instead of the model\'s field names, as { "Table[Field]": "name" } (for example Arabic names for an Arabic report). Only names the user gave or approved: never translate, shorten or relabel a field yourself; when names are missing, list the fields and ask the user. The report shows the name wherever it shows the field: KPI titles, chart titles, axis and legend, table headers, slicer headers, the tooltip pages. The model is never renamed. Give names only for fields you know the right name of: nothing is translated automatically'),
     logo: z.string().optional().describe('Logo image for the header: a PNG or JPG file inside the DataArcus folder, 2 MB at most. It is copied into the new report (the file itself is not changed) and shown at its own shape, never stretched; a horizontal logo reads best'),
     lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().default(false), font: z.string().default('Segoe UI'),
@@ -207,7 +278,25 @@ server.registerTool('create_report', {
   if (sc.needsFocus) throw new Error(`Nothing was written. ${sc.why} ${sc.how} Areas in this model: ${sc.areas.map((x) => x.area).join(', ') || 'none (no measure display folders)'}.`);
   const pickFrom = sc.tables;
   // KPI cards: never more than the measures a card can show (no card is ever written without a field)
-  const usable = Bind.suggest(pickFrom, 8).kpis.filter(Boolean).map((k) => k.m);
+  // the approved plan's fields (a.fields): each name checked against the model, then bound as given
+  const F = resolveFields(m.tables, a.fields);
+  const usable = F && F.kpis ? F.kpis.map((k) => k.m) : Bind.suggest(pickFrom, 8).kpis.filter(Boolean).map((k) => k.m);
+  // the binding for n KPI cards: the picker's, with every given field in its place
+  const bindFor = (n) => {
+    const b = Bind.suggest(pickFrom, n);
+    if (!F) return b;
+    const ch = Object.assign({}, b.choices);
+    if (F.kpis) ch.kpis = F.kpis;
+    if (F.measure) ch.main = F.measure;
+    if (F.timeAxis) ch.date = F.timeAxis;
+    if (F.category) ch.catA = F.category;
+    if (F.category2) ch.catB = F.category2;
+    // the given slicers first; a slot left over keeps the picker's (never a slicer without a field)
+    if (F.slicers) { const same = (x, y) => x && y && x.t === y.t && x.c === y.c, rest = (b.choices.slicers || []).filter((s) => s && !F.slicers.some((g) => same(g, s))); ch.slicers = F.slicers.concat(rest).slice(0, 3); while (ch.slicers.length < 3) ch.slicers.push(null); }
+    const nb = Bind.build(ch);
+    if (F.table) nb.table = F.table.map((x) => (x.m != null ? { t: x.t, m: x.m } : Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {})));
+    return nb;
+  };
   const cardNote = (asked, built, leftOut) => (built >= asked ? null : Object.assign({ asked, built, measures: usable.slice(0, built),
     why: usable.length ? `The model has ${usable.length} measure${usable.length === 1 ? '' : 's'} a KPI card can show${sc.scope ? ' in this part of the model' : ''}, so ${built} of ${asked} KPI cards were built. Add measures to the model (in Power BI Desktop) for more cards, then create the report again.`
       : 'The model has no measures, so no KPI card was built, and the charts were left out too (they have no value to show; see leftOutVisuals). The report has its header, filters and table only. Propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again.' }, leftOut ? { leftOut } : {}));
@@ -247,7 +336,8 @@ server.registerTool('create_report', {
     logo = { bytes, ext }; logoRatio = size.w / size.h;
     if (size.h > size.w) reportNotes.push('This logo is tall; a horizontal version will read much better in the header.');
   }
-  let r, bind, extra = {}, written;
+  let r, bind, extra = {}, written, boundPages = null;
+  const unknown = a.design ? unknownKeys(a.design) : null;
   if (a.design) {
     // the website's project download for this design: its pages (second page, slide-in panel), labels and theme
     let design = planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang }).design;
@@ -257,15 +347,18 @@ server.registerTool('create_report', {
         why: 'Transparent visuals are meant to sit on panels drawn in a background image. This report has no background image, so its theme has solid visuals instead: each KPI card, chart and table shows on its own panel (the card colour, rounded corners, a shadow when the design has one).' });
       design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { transparent: false }) });
     }
+    // fields.kpis decides the number of cards (one per measure given)
+    if (F && F.kpis) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: Math.max(3, Math.min(6, F.kpis.length)), kpiCards: F.kpis.length }) });
     const askedCards = design.layout.kpiCards != null ? Math.min(design.layout.kpis, design.layout.kpiCards) : design.layout.kpis;
     if (usable.length < 6) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpiCards: Math.min(design.layout.kpiCards != null ? design.layout.kpiCards : 6, usable.length) }) });
     kpiCards = cardNote(askedCards, Math.min(askedCards, usable.length));
     const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel, logoRatio }).map((p) => Object.assign({}, p, { slots: withValues(p.slots) }));
     r = Pbip.build({
       name: a.name, title: E.themeName(design.name), pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = named(Bind.suggest(pickFrom, kpisOf(pages)))),
+      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = named(bindFor(kpisOf(pages)))),
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel }))
     });
+    boundPages = pages;
     extra = { pages: pages.map((p) => ({ name: p.name, width: p.page.w, height: p.page.h, slots: p.slots.length, slideInPanel: !!p.panel })), theme: E.themeName(design.name),
       ...(themeChanged.length ? { themeChanged } : {}) };
   } else {
@@ -279,11 +372,14 @@ server.registerTool('create_report', {
     r = Pbip.build({
       name: a.name, title: a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = named(Bind.suggest(pickFrom, kpisOf(a.pages)))),
+      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = named(bindFor(kpisOf(a.pages)))),
       texts: { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' },
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
     });
   }
+  if (!boundPages) boundPages = a.pages;
+  // the name as written: a long one is shortened at a whole word (the report writer), and the user is told
+  if (Array.from(String(a.name).trim()).length > 30) reportNotes.push(`The report name was shortened to "${r.base}": a report name is 30 characters at most (Windows limits the length of a path), cut at a whole word.`);
   // write next to the model; refuse to replace anything that already exists
   // (anything at a name counts, a link whose target is missing included; each file is created with 'wx')
   const clash = r.files.map((f) => path.join(m.projectDir, f.path)).filter((f) => !nothingAt(f));
@@ -305,6 +401,7 @@ server.registerTool('create_report', {
   const arabic = a.lang === 'ar' ? { arabicNames: { shownFields: shown.length, missing,
     how: missing.length ? 'These fields show under their model names. To show Arabic names, call create_report again with displayNames: { "Table[Field]": "الاسم" } for each (ask the user for the names: nothing is translated automatically). The model is not renamed.' : 'Every field the report shows has an Arabic name.' } } : {};
   return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
+    { boundFields: boundOf(boundPages, bind) }, unknown ? { ignored: unknown } : {},
     sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, reportNotes.length ? { reportNotes } : {}));
 }));
 
@@ -384,7 +481,8 @@ server.registerTool('plan_layout', {
   }, annotations: READS
 }, safe(async (a) => {
   const r = planLayout(a), { page, fitted } = pageOf(r.design.layout);
-  return text({ page, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring, design: r.design });
+  const unknown = a.design ? unknownKeys(a.design) : null;
+  return text(Object.assign({ page, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, unknown ? { ignored: unknown } : {}, { design: r.design }));
 }));
 
 prepareRoot();
