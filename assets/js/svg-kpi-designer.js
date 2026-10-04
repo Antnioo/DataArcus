@@ -682,13 +682,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'kd-tour-btn';
     const label = () => { btn.innerHTML = `<i class="bi bi-mortarboard"></i> ${L('Tutorial', 'درس تفاعلي')}`; };
     label(); btn.addEventListener('click', start); document.querySelector('.kd-actions').prepend(btn);
-    const banner = document.createElement('div'); banner.className = 'kd-banner';
+    // the first-visit banner is in the page's HTML (so nothing jumps when it appears); returning visitors never see it
+    const banner = $('kdBanner');
     const drawBanner = () => { banner.innerHTML = `<i class="bi bi-mortarboard"></i><div><b>${L('New here? Build your first KPI card in 2 minutes.', 'جديد هنا؟ ابنِ أول بطاقة مؤشر في دقيقتين.')}</b><span>${L('A short, guided tutorial. No Power BI needed until the last step.', 'درس قصير موجّه. لا تحتاج Power BI حتى الخطوة الأخيرة.')}</span></div><button type="button" class="btn btn-accent btn-sm" data-b="go">${L('Start tutorial', 'ابدأ الدرس')}</button><button type="button" class="kd-link" data-b="no">${L('No thanks', 'لا، شكرًا')}</button>`; };
-    function hideBanner() { banner.remove(); }
-    banner.addEventListener('click', (e) => { const b = e.target.closest('[data-b]'); if (!b) return; if (b.dataset.b === 'go') start(); else { store.set(KEY, { seen: true }); hideBanner(); } });
+    function hideBanner() { if (banner) banner.remove(); }
+    if (banner) banner.addEventListener('click', (e) => { const b = e.target.closest('[data-b]'); if (!b) return; if (b.dataset.b === 'go') start(); else { store.set(KEY, { seen: true }); hideBanner(); } });
     const st = store.get(KEY, null);
-    if (!st) { drawBanner(); $('kdApp').querySelector('.kd-panel').before(banner); }
-    new MutationObserver(() => { label(); if (banner.isConnected) drawBanner(); if (step >= 0 || (panel && step >= STEPS.length)) draw(false); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+    if (st) hideBanner();
+    new MutationObserver(() => { label(); if (banner && banner.isConnected) drawBanner(); if (step >= 0 || (panel && step >= STEPS.length)) draw(false); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
     return { check: check, place: place, blank: blank, copied: copied, start: start };
   })();
 

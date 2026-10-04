@@ -6,6 +6,7 @@ window.svgKpiTranslations = {
     },
     "kd": {
       "badge": "Free tool · No sign-up · Nothing uploaded",
+      "banner": { "title": "New here? Build your first KPI card in 2 minutes.", "text": "A short, guided tutorial. No Power BI needed until the last step.", "go": "Start tutorial", "no": "No thanks" },
       "title": "SVG KPI Designer for Power BI",
       "subtitle": "Draw a KPI visual, link any part of it to your measures, and copy a DAX measure that draws it in Power BI. No code, nothing uploaded.",
       "startFrom": "Start from",
@@ -63,6 +64,7 @@ window.svgKpiTranslations = {
     },
     "kd": {
       "badge": "أداة مجانية · بدون تسجيل · لا يُرفع أي شيء",
+      "banner": { "title": "جديد هنا؟ ابنِ أول بطاقة مؤشر في دقيقتين.", "text": "درس قصير موجّه. لا تحتاج Power BI حتى الخطوة الأخيرة.", "go": "ابدأ الدرس", "no": "لا، شكرًا" },
       "title": "مصمم بطاقات KPI بصيغة SVG لـ Power BI",
       "subtitle": "ارسم بطاقة مؤشر، واربط أي جزء منها بمقاييسك، وانسخ مقياس DAX يرسمها داخل Power BI. بدون برمجة وبدون رفع أي بيانات.",
       "startFrom": "ابدأ من",

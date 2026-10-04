@@ -135,5 +135,29 @@ export default async function ({ browser, url }) {
   check(r.hidden === 0 && r.banner && r.smooth, `AOS blocked: ${JSON.stringify(r)}`);
   check(!v.errs.some((e) => /AOS/.test(e)), `AOS blocked: ${v.errs.join(' | ')}`);
   await v.ctx.close();
+
+  // Pages don't jump once they load (audit AUD-001, 2026-10-04): the tools' first view takes the place reserved for
+  // it, and the SVG KPI Designer's first-visit banner is there from the start. Layout shift (CLS) over the first 3 s,
+  // first visit, phone and desktop, English and Arabic: at most 0.1 ("good"). Web fonts are not loaded in the tests
+  // (lib.mjs), so this is the script-caused part; the font swap is measured with Lighthouse.
+  for (const page of ['svg-kpi-designer', 'pl-300-practice-exam', 'dp-600-practice-exam', 'power-bi-model-health-check']) for (const lang of ['en', 'ar']) for (const vp of [[1440, 900], [390, 844]]) {
+    const v = await visitor(browser, { viewport: vp });
+    await v.ctx.addInitScript(() => { window.__cls = 0; new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: 'layout-shift', buffered: true }); });
+    await v.pg.goto(`${url}/tools/${page}.html?lang=${lang}`, { waitUntil: 'load' }); await v.pg.waitForTimeout(3000);
+    const cls = await v.pg.evaluate(() => +window.__cls.toFixed(3));
+    check(cls <= 0.1, `${page} ${lang} ${vp[0]}px: layout shift ${cls} after loading (want 0.1 or less)`);
+    await v.ctx.close();
+  }
+  // a returning visitor (tutorial seen) never sees the SVG KPI Designer's banner, not even for a moment
+  {
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.ctx.addInitScript(() => { try { localStorage.setItem('dataarcus-svg-kpi-tour', '{"seen":true}'); } catch (e) { /* ignore */ } });
+    await v.pg.goto(`${url}/tools/svg-kpi-designer.html?lang=en`, { waitUntil: 'domcontentloaded' });
+    const early = await v.pg.evaluate(() => [...document.querySelectorAll('.kd-banner')].some((b) => b.getClientRects().length));
+    await v.pg.waitForLoadState('networkidle');
+    const late = await v.pg.evaluate(() => [...document.querySelectorAll('.kd-banner')].some((b) => b.getClientRects().length));
+    check(!early && !late, `SVG KPI Designer, tutorial seen: the banner shows (${early ? 'while loading' : 'after loading'})`);
+    await v.ctx.close();
+  }
   return { checks, problems };
 }

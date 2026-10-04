@@ -4,7 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
-  <style>html.i18n-pending body{visibility:hidden}</style>
+  <style>html.i18n-pending body{visibility:hidden}html.kd-seen #kdBanner{display:none}</style>
+  <script>try{if(localStorage.getItem('dataarcus-svg-kpi-tour'))document.documentElement.classList.add('kd-seen')}catch(e){}</script>
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://dataarcus.com/tools/svg-kpi-designer.html" />
   <title>Free SVG KPI Designer for Power BI: DAX Image Measures - DataArcus</title>
@@ -135,6 +136,12 @@
     .kd-label { font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; font-weight: 700; margin: 0 0 10px; display: block; }
     .kd-top { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
     .kd-starters { display: flex; flex-wrap: wrap; gap: 8px; }
+    /* the starters row is filled by the script: it takes its full line and its rendered height from the start, so the
+       buttons and panels below don't jump (measured 2026-10-04: one row of starters from 992px, two from 576px) */
+    .kd-top > div:first-child { flex: 1 1 100%; }
+    .kd-starters:empty { min-height: 123px; }
+    @media (min-width: 576px) { .kd-starters:empty { min-height: 80px; } }
+    @media (min-width: 992px) { .kd-starters:empty { min-height: 36px; } }
     .kd-starter { background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 30px; padding: 6px 14px; font-size: .85rem; }
     .kd-starter:hover { border-color: var(--accent); }
     .kd-starter.kd-pro { border-color: rgba(253, 203, 110, .45); }
@@ -276,6 +283,7 @@
         <p class="lead text-white-50 mb-0" data-i18n="kd.subtitle">Draw a KPI visual, link any part of it to your measures, and copy a DAX measure that draws it in Power BI. No code, nothing uploaded.</p>
       </header>
 
+      <div class="kd-banner" id="kdBanner"><i class="bi bi-mortarboard"></i><div><b data-i18n="kd.banner.title">New here? Build your first KPI card in 2 minutes.</b><span data-i18n="kd.banner.text">A short, guided tutorial. No Power BI needed until the last step.</span></div><button type="button" class="btn btn-accent btn-sm" data-b="go" data-i18n="kd.banner.go">Start tutorial</button><button type="button" class="kd-link" data-b="no" data-i18n="kd.banner.no">No thanks</button></div>
       <div class="kd-panel mb-3">
         <div class="kd-top">
           <div>

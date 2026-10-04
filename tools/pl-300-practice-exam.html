@@ -389,6 +389,12 @@
       .dp-revq { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
     }
 
+    /* the loading box keeps the place of the start view that replaces it, so nothing below jumps (measured
+       2026-10-04, the smaller of English and Arabic at each width) */
+    .dp-boot { min-height: 1351px; }
+    @media (min-width: 768px) { .dp-boot { min-height: 1117px; } }
+    @media (min-width: 992px) { .dp-boot { min-height: 704px; } }
+    @media (min-width: 1200px) { .dp-boot { min-height: 683px; } }
   </style>
 </head>
 <body>
@@ -424,7 +430,7 @@
         <p class="lead text-white-50 mb-2" data-i18n="dp.subtitle">Get ready for Microsoft Power BI Data Analyst (PL-300), or your yearly renewal, with timed mock exams, case studies and an explanation for every option.</p>
         <div class="dp-pills"><span><i class="bi bi-calendar-check"></i> <span data-i18n="dp.pill.outline">Skills outline of 20 Apr 2026</span></span><span><i class="bi bi-book"></i> <span data-i18n="dp.pill.learn">Every answer linked to Microsoft Learn</span></span><span><i class="bi bi-translate"></i> <span data-i18n="dp.pill.ar">Arabic takeaway on every question</span></span></div>
       </header>
-      <div id="dpApp" aria-live="polite"><div class="dp-panel dp-note">Loading…</div></div>
+      <div id="dpApp" aria-live="polite"><div class="dp-panel dp-note dp-boot">Loading…</div></div>
       <noscript><p class="text-warning">The simulator needs JavaScript.</p></noscript>
       <p class="dp-outline mt-4" id="dpOutline"></p>
       <p class="dp-disclaimer" data-i18n-html="dp.disclaimer">Independent practice tool by DataArcus. <b>Not affiliated with or endorsed by Microsoft.</b> All questions are original, written from the public <a href="https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/pl-300" target="_blank" rel="noopener">PL-300 study guide</a> and Microsoft Learn documentation. They are not real exam questions. Microsoft and Power BI are trademarks of the Microsoft group of companies. Your progress is saved only in this browser. <button type="button" id="dpReset" class="dp-link">Reset progress</button></p>
