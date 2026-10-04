@@ -1222,6 +1222,41 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const ok = await ask('create_report', { path: 'tmdl-project', name: 'R6 Sep ok', design });
     chk(() => !ok.err && !('numberFormats' in ok.j), () => `a model whose measures have separator formats: no numberFormats: ${JSON.stringify(ok.j && ok.j.numberFormats)}`);
   }
+
+  // 7. the header logo is in the middle of the header's height: every page size, English and Arabic, a wide, a square
+  //    and a tall logo and the "Your logo" text, on a solid design (the header is a panel) and a transparent one (a band
+  //    of the background image). Computed from the files. A text box is top-aligned: the middle of its text is
+  //    3 + 1.19 x pt below the box's top in Segoe UI and 1.12 x pt in Tahoma (measured in Desktop 2.158,
+  //    DESKTOP-TESTS.md round 1), so the "Your logo" text is placed with the font's own number.
+  {
+    const req = (await import('node:module')).createRequire(import.meta.url), Px = req('../assets/js/pbip-export.js'), En = req('../assets/js/design-engine.js');
+    const textMid = (font, pt) => (/tahoma/i.test(font) ? 1.12 * pt : 3 + 1.19 * pt), off = { image: [], text: [], title: [] };
+    for (const solid of [true, false]) for (const page of ['1920x1080', '1280x720', '960x720', [640, 360], [3840, 2160]]) for (const lang of ['en', 'ar']) for (const logoName of ['none', 'wide', 'square', 'tall']) {
+      const d = En.fresh(); if (lang === 'ar') d.font = 'Tahoma';
+      d.layout = Object.assign({ preset: 'exec', kpis: 4, filters: false, header: true, transparent: !solid, headLine: 'short' }, Array.isArray(page) ? { page: 'custom', pageW: page[0], pageH: page[1] } : { page }); En.repairState(d);
+      const bytes = logoName === 'none' ? null : new Uint8Array(fs.readFileSync(path.join(REPO, 'scripts/tests/fixtures/logos', logoName + '.png'))), size = bytes && En.imageSize(bytes);
+      const specs = En.projectPages(d.layout, lang, { second: false, panel: false, logoRatio: size ? size.w / size.h : undefined });
+      const built = Px.build({ name: 'L', title: 'Gulf Sales', pageName: specs[0].name, lang, rtl: En.rtl(d.layout, lang), font: d.font, ui: d.ui, theme: En.buildTheme(d, lang), sample: true, logo: bytes ? { bytes, ext: 'png' } : null,
+        texts: En.REPORT_TEXTS[lang], pages: specs.map((sp) => ({ name: sp.name, page: sp.page, slots: sp.slots, panel: sp.panel, png: new Uint8Array([1]) })) });
+      const vis = built.files.filter((x) => /\/visuals\/[^/]+\/visual\.json$/.test(x.path)).map((x) => JSON.parse(String(x.data)));
+      const abs = (v) => { const g = v.parentGroupName && vis.find((x) => x.name === v.parentGroupName); return { y: v.position.y + (g ? g.position.y : 0), h: v.position.height }; };
+      const alt = (v) => { try { return v.visual.visualContainerObjects.general[0].properties.altText.expr.Literal.Value; } catch (e) { return ''; } };
+      const logo = vis.find((v) => v.visual && /Logo|الشعار/.test(alt(v))), title = vis.find((v) => v.visual && v.visual.visualType === 'textbox' && /Gulf Sales/.test(JSON.stringify(v.visual.objects)));
+      const panel = vis.find((v) => v.visual && v.visual.visualType === 'textbox' && JSON.stringify(v.visual.objects).includes('"value":""') && v.position.y < specs[0].page.h * 0.1);
+      const hh = En.sizes(specs[0].layout, En.pw(specs[0].layout)).hh * specs[0].page.h / 720;
+      const mid = solid && panel ? panel.position.y + panel.position.height / 2 : hh / 2, ptOf = (v) => parseFloat(JSON.stringify(v.visual.objects).match(/"fontSize":"([\d.]+)pt"/)[1]);
+      const id = `${solid ? 'solid' : 'transparent'} ${specs[0].page.w}x${specs[0].page.h} ${lang} ${logoName}`, L = abs(logo), T = abs(title);
+      if (logo.visual.visualType === 'image') off.image.push([id, L.y + L.h / 2 - mid]);
+      // a text box as short as its text allows (10 + 1.8 x pt) can't be moved: the small pages
+      else off.text.push([id, L.y + textMid(d.font, ptOf(logo)) - mid, L.h <= Math.ceil(10 + 1.8 * ptOf(logo))]);
+      off.title.push([id, T.y + textMid(d.font, ptOf(title)) - mid]);
+    }
+    const far = (list, by) => list.filter((x) => !x[2] && Math.abs(x[1]) > by).map((x) => `${x[0]}: ${x[1].toFixed(1)}`);
+    chk(() => off.image.length === 60 && !far(off.image, 0.5).length, () => `a logo image is not in the middle of the header (${far(off.image, 0.5).length} of ${off.image.length}): ${far(off.image, 0.5).slice(0, 4).join('; ')}`);
+    chk(() => off.text.length === 20 && !far(off.text, 1).length, () => `the "Your logo" text's middle is more than 1 from the header's middle (${far(off.text, 1).length} of ${off.text.length}; + is lower): ${far(off.text, 1).slice(0, 6).join('; ')}`);
+    // the title: never further from the middle than before round 6 (it sits at the top of its slot and has no room to move up)
+    chk(() => !far(off.title, 3.6).length, () => `the title's middle moved away from the header's middle: ${far(off.title, 3.6).slice(0, 4).join('; ')}`);
+  }
 }
 
 await client.close();
