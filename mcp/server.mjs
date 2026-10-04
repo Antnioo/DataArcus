@@ -78,6 +78,20 @@ const themeColors = (t) => {
   return Object.fromEntries(Object.entries(out).filter(([, v]) => typeof v === 'string' && /^#[0-9a-f]{6}$/i.test(v)));
 };
 
+// Names with characters nobody sees (Unicode category Cf: direction overrides and marks, zero-width characters, the
+// byte order mark): a name can then read as another one, or two names can look the same (audit AUD-017). The model
+// is never renamed; the tables, columns and measures named so are listed, with those characters written as code
+// points, so the AI app and the user can see them. Up to 20 names.
+const visible = (s) => String(s).replace(/\p{Cf}/gu, (ch) => '\\u' + ch.codePointAt(0).toString(16).padStart(4, '0'));
+function hiddenOf(m) {
+  const names = [], has = (s) => /\p{Cf}/u.test(String(s));
+  (m.tables || []).forEach((t) => {
+    if (has(t.name)) names.push(visible(t.name));
+    (t.columns || []).concat(t.measures || []).forEach((x) => { if (has(x.name) || has(t.name)) names.push(`${visible(t.name)}[${visible(x.name)}]`); });
+  });
+  return names.length ? { hiddenCharacters: { note: 'Names with hidden direction or zero-width characters (shown here as code points, like \\u202e): such a name can look like another one. They are in the model as they are; tell the user, who may want to rename them in Power BI Desktop.', names: names.slice(0, 20), ...(names.length > 20 ? { more: names.length - 20 } : {}) } } : {};
+}
+
 // ---------- the fields of an approved plan (create_report's fields) ----------
 // "Table[Field]" or "'Table'[Field]" as read_model lists them. Each is looked up in the whole model (hidden fields
 // too: the user may want one); wanted: 'm' a measure, 'c' a column, 'any'. Returns the picker's own shapes, so the
@@ -142,8 +156,8 @@ server.registerTool('read_model', {
   inputSchema: { path: modelPath, tables: z.array(z.string()).min(1).max(100).optional().describe('Only these tables, in full (names as read_model lists them). For a large model, after its summary') }, annotations: READS
 }, safe(async ({ path: p, tables }) => {
   const m = loadModel(p);
-  if (tables) return text(namedTables(m, tables));
-  return isLarge(m) ? compact(largeSummary(m)) : text(fullAnswer(m));
+  if (tables) return text(Object.assign(namedTables(m, tables), hiddenOf(m)));
+  return isLarge(m) ? compact(Object.assign(largeSummary(m), hiddenOf(m))) : text(Object.assign(fullAnswer(m), hiddenOf(m)));
 }));
 
 server.registerTool('suggest_fields', {
@@ -159,7 +173,7 @@ server.registerTool('suggest_fields', {
   if (b.skipped) b.skipped = { measures: b.skipped.map((x) => `${x.t}[${x.m}]`), why: 'Not picked: the name has the word old, test, unused, backup or temp, and other measures were there. Ask the user before using one; to use it anyway, name it in create_report\'s fields.' };
   // no measures at all: said, with what to propose (a card or a chart shows a measure, never a bare column)
   const none = sc.tables.every((t) => !(t.measures || []).some((x) => !x.isHidden)) ? { noMeasures: 'This model has no measures, so no KPI card or chart can be bound (the picks are empty). Propose measures to the user, each with its DAX and its format string, for the user to add in Power BI Desktop: #,0 for whole numbers and counts, #,0.00 for amounts with decimals, 0.0% for ratios and rates. Nothing is written until the measures exist.' } : {};
-  return text(Object.assign(sc.scope ? { scope: sc.scope } : {}, none, b));
+  return text(Object.assign(sc.scope ? { scope: sc.scope } : {}, none, b, hiddenOf(m)));
 }));
 
 server.registerTool('check_model_health', {
@@ -228,6 +242,7 @@ server.registerTool('check_model_health', {
     source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report,
     fixes: Object.keys(fixes).length ? fixes : undefined,
     gulfCalendar,
+    ...hiddenOf(m),
     // what was done with columnTypes: types used, types the files already had (kept), names and types that could not be used
     columnTypes: typed,
     findings: r.findings.map((f) => { const rule = Health.RULES[f.id] || {}; const en = rule.en || [f.id, '', ''];
@@ -428,7 +443,7 @@ server.registerTool('create_report', {
   const arabic = a.lang === 'ar' ? { arabicNames: { shownFields: shown.length, missing,
     how: missing.length ? 'These fields show under their model names. To show Arabic names, call create_report again with displayNames: { "Table[Field]": "الاسم" } for each (ask the user for the names: nothing is translated automatically). The model is not renamed.' : 'Every field the report shows has an Arabic name.' } } : {};
   return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
-    { boundFields: boundOf(boundPages, bind) }, unknown ? { ignored: unknown } : {},
+    { boundFields: boundOf(boundPages, bind) }, unknown ? { ignored: unknown } : {}, hiddenOf(m),
     sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {}));
 }));
 
