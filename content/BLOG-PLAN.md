@@ -6,8 +6,8 @@ The memory for the blog. Read it before planning or writing an article; update i
 ## Who we write for, and how we sound
 - **Our identity:** Power BI reports designed right, in minutes, and checked in Power BI, not just generated.
   **Our position (owner 2026-10-04):** the Gulf localisation and verification layer next to Microsoft's tools: they
-  generate reports; we check them (numbers against the model, Microsoft's validator, sizes measured in Desktop, the
-  model before Copilot reads it) and add what the Gulf needs. **Our edge:** built for how the Gulf does business
+  generate reports; we check them (sizes measured in Desktop, our report files tested against Microsoft's validator,
+  the model checked before Copilot reads it; a number check is planned) and add what the Gulf needs. **Our edge:** built for how the Gulf does business
   (Ramadan, Eid, Hijri, the weekend, VAT), in English or Arabic. **Our premium:** Arabic and right to left done
   properly where it is required. Never "the only", never "Microsoft can't"; a planned feature is called planned.
 - **For:** people who build Power BI reports every day, above all in the Gulf: analysts, BI developers, finance and
