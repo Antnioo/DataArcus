@@ -1293,6 +1293,35 @@ Three pictures, 200 x 24, shown 300 x 36 in a table:
 - **To note for the designs:** a number after an Arabic word moves to its left. A label that must keep "word then
   number" in a left-to-right picture needs the two as separate `<text>` elements.
 
+### 2. D8, the table half: a report-side format on a table column is `format` on the projection, and it shows 13,857
+On "DP1b SVG EN" (its model has no format on Total Sales): the table selected, Format > **Properties** (this
+Desktop's name for the General tab) > Data format > "Apply settings to" Total Sales > Format options > Format:
+**Custom** (the list: General, Whole number, Decimal number, Currency, Percentage, Scientific, Custom) > Format code
+`#,0`, Ctrl+S.
+- **The exact JSON Desktop wrote:** nothing in `objects`; one key on the column's **projection** in the table's query:
+```json
+{
+  "field": { "Measure": { "Expression": { "SourceRef": { "Entity": "Sales" } }, "Property": "Total Sales" } },
+  "queryRef": "Sales.Total Sales",
+  "nativeQueryRef": "Total Sales",
+  "format": "#,0"
+}
+```
+- **Seen:** the Total Sales column shows **13,857**, 15,173 and 101,914 in the total row; the next column, left
+  alone, still shows 10298 and 74675. So a model with no format shows the separator in a table when the report
+  gives the format.
+- **Tooltips (our report page tooltips), written by hand and reloaded:**
+  - the tooltip page's **card** with D8's card entry (`labelDisplayUnits` `-1D`, `customFormatString` `'#,0'`,
+    selector metadata): **101,914** (was 101.914K). It is the same card visual, on the 320 x 240 page; the number fits.
+  - `format: "#,0"` on a **bar chart's** Y projection (the tooltip page's chart and the main page's): **no change**
+    to the data labels (65K, 10K) or the axis (0K to 80K): those are scaled by their display units, and the
+    projection's format does not change that.
+- Not run: Desktop's default hover tooltip on a chart (our charts show the report page tooltip instead); a column of
+  the model (not a measure); the matrix.
+- **Proposed for round 10:** `create_report` writes `format` on a table projection for each measure of
+  `numberFormats` (the same `withSeparator` code as the cards, `#,0.##` for no format), and D8's card entry on the
+  tooltip cards; chart labels stay as they are (scaled).
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
