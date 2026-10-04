@@ -1,6 +1,6 @@
 # DataArcus
 
-**Power BI reports designed right, and checked in Power BI. Built for how the Gulf does business.**
+**Power BI reports designed right, and checked in Power BI, not just generated. Arabic, right to left and the Gulf calendar, next to Microsoft's tools.**
 
 Website: **[dataarcus.com](https://dataarcus.com)** · Contact: [hello@dataarcus.com](mailto:hello@dataarcus.com)
 

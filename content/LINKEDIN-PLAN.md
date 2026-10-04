@@ -9,9 +9,9 @@ Last updated 2026-10-01 by the reviewer.
   repost of the Theme Generator post got 10 impressions in 4 days (2026-10).
 - **Growing the page:** use the page's monthly "Invite to follow" credits on Power BI and data connections, a few at
   a time.
-- **Profile basics (once):** headline "Power BI reports designed right, in minutes | Built for how the Gulf does business | dataarcus.com";
-  the website in the profile's link; a featured section with the Theme Generator, the Model Health Check and the
-  best-performing article.
+- **Profile basics (once):** headline "I check what AI builds in Power BI, before you trust it | Arabic, right to left and the Gulf calendar, next to Microsoft's tools | Free tools at dataarcus.com" (draft 2026-10-04, the Gulf localisation and verification position;
+  the full kit: dataarcus-engine `business/marketing/PROFILE.md`); the website in the profile's link; a featured
+  section with the Copilot-readiness audit, the Gulf calendar guide and the best finding post.
 
 ## Rhythm
 - **From week 3: one public finding a week on Tuesday** (owner 2026-10-03, the one-year direction): a real, reproducible test, in his own words; test notes in `findings/` of this repo.
