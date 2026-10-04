@@ -86,7 +86,7 @@ checks: no field input); agent level 6 of 11.
   golden baseline with fields) and the records. dataarcus-engine: the 0.2.2 version only.
 - **Tests:** `npm test` 257 -> **306 of 306**. The new tests were written before the code; those of items 1 to 6
   were first run after it (they passed at once), item 7's was run before and failed as expected. Website suites
-  (`node scripts/tests/run-all.mjs`): **17 of 17** (7,854 checks); `check:min`: all 54 `.min.js` files match their
+  (`node scripts/tests/run-all.mjs`): **17 of 17** (6,854 checks); `check:min`: all 54 `.min.js` files match their
   sources. The first website run failed in 14 suites for a reason outside this round: the laptop's root
   `node_modules` still had Bootstrap 5.3.3, the tests serve the CDN files from there, and the pages on main ask for
   5.3.8 with an integrity hash; after `npm ci` in the repo root the run passed.
