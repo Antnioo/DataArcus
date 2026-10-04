@@ -186,6 +186,40 @@ export default async function ({ browser, url }) {
     check(!bad.size, `jsDelivr files without the right integrity: ${[...bad].slice(0, 4).join('; ')}${bad.size > 4 ? ` and ${bad.size - 4} more` : ''}`);
   }
 
+  // Every page carries a Content Security Policy that allows exactly what it loads (audit AUD-011, 2026-10-04): the
+  // policy in each page is the one scripts/csp.mjs computes from it now (an edited inline script changes its hash),
+  // and every page opens in English and Arabic without a single violation. The Power BI facade's live report
+  // (the only frame) still opens after the click. The tools' own suites and the consent suite run under the policy too:
+  // a blocked script, style, font, frame or request is a console error there.
+  {
+    const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+    const { apply, files } = await import('../csp.mjs');
+    const stale = files().filter((f) => apply(fs.readFileSync(path.join(ROOT, f), 'utf8')) !== fs.readFileSync(path.join(ROOT, f), 'utf8'));
+    check(!stale.length, `${stale.length} pages without their current Content Security Policy (node scripts/csp.mjs --write): ${stale.slice(0, 5).join(', ')}`);
+    for (const lang of ['en', 'ar']) {
+      const v = await visitor(browser);
+      await v.ctx.addInitScript(() => { window.__csp = []; document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(`${e.violatedDirective} ${e.blockedURI || '(inline)'}`)); });
+      const bad = [];
+      for (const p of pages()) {
+        await v.pg.goto(`${url}/${p}?lang=${lang}`, { waitUntil: 'networkidle' });
+        const r = await v.pg.evaluate(() => ({ meta: !!document.querySelector('meta[http-equiv="Content-Security-Policy"]'), csp: window.__csp }));
+        if (!r.meta) bad.push(`${p}: no policy`);
+        if (r.csp.length) bad.push(`${p}: ${[...new Set(r.csp)].slice(0, 3).join(' | ')}`);
+      }
+      check(!bad.length, `Content Security Policy ${lang}: ${bad.slice(0, 6).join('; ')}${bad.length > 6 ? ` and ${bad.length - 6} more` : ''}`);
+      check(!v.errs.length, `Content Security Policy ${lang}: console errors: ${v.errs.slice(0, 3).join(' | ')}`);
+      await v.ctx.close();
+    }
+    const v = await visitor(browser);
+    await v.ctx.addInitScript(() => { window.__csp = []; document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(`${e.violatedDirective} ${e.blockedURI}`)); });
+    await v.pg.goto(`${url}/dashboards/fintech-dashboard.html?lang=en`, { waitUntil: 'networkidle' });
+    await v.pg.click('.pbi-load');
+    await v.pg.waitForTimeout(1500);
+    const f = await v.pg.evaluate(() => ({ src: (document.querySelector('.pbi-facade iframe') || {}).src || '', csp: window.__csp }));
+    check(f.src.startsWith('https://app.powerbi.com/') && !f.csp.length, `Content Security Policy: the live report after the facade click: ${f.src.slice(0, 50) || 'no frame'} ${f.csp.join(' | ')}`);
+    await v.ctx.close();
+  }
+
   // The SVG KPI Designer's title and description fit what search results show (audit AUD-019, 2026-10-04): at most
   // 60 and 155 characters, in English and in Arabic, as the page sets them after loading its language.
   {
