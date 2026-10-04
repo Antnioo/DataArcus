@@ -54,6 +54,30 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 - **Website dropdowns fixed** (merged): the open list was white on white on every tool page; form fields now use
   `color-scheme: dark` with dark option colours (`assets/css/style.css`), checked on every tool page in `tools.mjs`.
 
+## Next step: round 7, four small fixes from the night audit and the manifest text (owner's go 2026-10-04; TERMINAL ONLY; branch `fix/round-7-audit` from main `ed13112`; dataarcus-engine: the same branch name, the packaging only)
+Beta prep works in parallel on `fix/audit-site-2`: its files (among them `scripts/tests/model-health.mjs`,
+`tools.mjs`, `site.mjs`, `assets/js/model-health.js`, `model-health-worker.js`, the tool pages) are left alone. New
+checks go in `mcp/test.mjs`. A `?v=` bump in a file that branch also touches is named in the report.
+
+**Before (main `ed13112`):** `npm test` 306 of 306; website 17 suites; `read_model` on the 300-table golden model
+10,380 characters on Windows (10,379 on Linux: see item 4).
+
+| # | Item | Change | Expected |
+|---|---|---|---|
+| 1 | AUD-015 | `model-health-engine.js`, the key-like rule of SUMMARIZE_KEYS: also a lower-case letter directly followed by `ID`, `Id`, `Key`, `Code` or `No` at the end of the name (the capital matters) | flagged when summed: OrderID, CustomerKey, ProductKey, ProductCode, InvoiceNo; not flagged: Paid, Monkey, Barcode, Casino, Turkey; every existing case as before; the website's sample numbers unchanged (if one changes: listed, old -> new and the column, before any expectation is touched) |
+| 2 | AUD-016 | `mcp/lib/scope.mjs`: the summary lists the 100 tables with the most measures; the rest are counted (by area, and "other tables"); the other tables' names and each area's table list are cut to what fits; the answer says how to reach the rest (`focus`, `tables`) | generated models with 500 and 3,000 tables with measures: under 40,000 characters; says how many were left out; `tables` and `focus` still reach a table left out. The 300-table model: 10,380 before; after: the same if nothing of it is cut (65 tables with measures) |
+| 3 | AUD-017 | `pbip-export.js`: format characters (`\p{Cf}`) are taken out of the report name before anything else. MCP answers: a table, column or measure whose name has such a character is listed under `hiddenCharacters` with the code points escaped (`‮`); the model is never renamed | "Report‮xbp.exe" -> a file name without U+202E; an Arabic name with the Arabic comma and an emoji name unchanged; the note for a measure named with U+202E; no note on a normal model; the website's exports byte-identical for normal names (its suites) |
+| 4 | AUD-008 | First: what round 6 already re-recorded. Then only what is still stale, each changed number with its cause in `mcp/GOLDEN-TASKS.md`; task 11 added to the runner | tasks 2 and 6: +2 visuals from round 2's page buttons (an Arabic report has one button per page instead of one navigator); task 10: -1 character on Linux (the path separator in `source`); nothing unexplained |
+| 5 | Manifest | dataarcus-engine `packaging/manifest.json`: `create_report`'s one-sentence text says the report is bound to the fields the approved plan gives, checked against the model; `plugin.json` only if it carries the text | the build test passes |
+| 6 | Package 0.2.3 | `packaging/build.mjs` after the tests pass; not installed, not signed | name, bytes, SHA-256 |
+
+**Expected test counts:** `npm test` 306 -> 317 (item 1: 3 checks; item 2: 4; item 3: 4). Website: 17 suites, the
+same checks (6,854 on this laptop in round 6), unless a sample model really has a CamelCase key that sums.
+
+**Still open, not in this round:** the Desktop checks D1 to D13 and the agent-level re-run of the 11 golden tasks on
+0.2.2 / 0.2.3 (next free laptop evening); the four round 6 decisions (the title at 18pt, report-side separators after
+D8, task 3's page filter, the platform plan's v1 and a public schema).
+
 ## Round 6 in progress: fields, thousand separators, the header logo, the platform plan (owner's go 2026-10-04; TERMINAL ONLY: no mouse, keyboard, UI Automation, Power BI Desktop, Claude Desktop or screenshots; branch `fix/round-6-fields`, from main `4d86788`)
 Owner's decisions: an identical fix-script file is named again, never copied (round 5 as built); anything that
 changes what Desktop shows is built and tested from the files now and its Desktop check is listed for the next free
