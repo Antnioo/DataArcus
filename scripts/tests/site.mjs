@@ -167,5 +167,23 @@ export default async function ({ browser, url }) {
       await v.ctx.close();
     }
   }
+
+  // Every file from jsDelivr carries Subresource Integrity (audit AUD-010, 2026-10-04): integrity="sha384-..." equal
+  // to the hash of the very file (node_modules holds the same versions, byte for byte), and crossorigin="anonymous".
+  {
+    const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+    const crypto = await import('node:crypto');
+    const sri = (f) => 'sha384-' + crypto.createHash('sha384').update(fs.readFileSync(f)).digest('base64');
+    const bad = new Set();
+    for (const p of pages()) {
+      const html = fs.readFileSync(path.join(ROOT, p), 'utf8');
+      for (const m of html.matchAll(/<(script|link)\b[^>]*\b(?:src|href)="https:\/\/cdn\.jsdelivr\.net\/npm\/((?:@[^/]+\/)?[^@/]+)@[^/]+\/([^"]+)"[^>]*>/g)) {
+        const file = path.join(ROOT, 'node_modules', m[2], m[3]), want = fs.existsSync(file) ? sri(file) : '(no file in node_modules)';
+        const got = (m[0].match(/integrity="([^"]+)"/) || [])[1];
+        if (got !== want || !/crossorigin="anonymous"/.test(m[0])) bad.add(`${m[2]}/${m[3]}: ${got ? 'integrity ' + got.slice(0, 20) + '...' : 'no integrity'}${/crossorigin/.test(m[0]) ? '' : ', no crossorigin'} (${p})`);
+      }
+    }
+    check(!bad.size, `jsDelivr files without the right integrity: ${[...bad].slice(0, 4).join('; ')}${bad.size > 4 ? ` and ${bad.size - 4} more` : ''}`);
+  }
   return { checks, problems };
 }
