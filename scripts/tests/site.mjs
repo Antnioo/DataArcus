@@ -185,5 +185,20 @@ export default async function ({ browser, url }) {
     }
     check(!bad.size, `jsDelivr files without the right integrity: ${[...bad].slice(0, 4).join('; ')}${bad.size > 4 ? ` and ${bad.size - 4} more` : ''}`);
   }
+
+  // The SVG KPI Designer's title and description fit what search results show (audit AUD-019, 2026-10-04): at most
+  // 60 and 155 characters, in English and in Arabic, as the page sets them after loading its language.
+  {
+    const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+    for (const lang of ['en', 'ar']) {
+      const v = await visitor(browser);
+      await v.pg.goto(`${url}/tools/svg-kpi-designer.html?lang=${lang}`, { waitUntil: 'networkidle' });
+      const m = await v.pg.evaluate(() => ({ title: document.title, description: document.querySelector('meta[name="description"]').content, lang: document.documentElement.lang }));
+      check(m.lang === lang, `svg-kpi-designer ${lang}: the page is in ${m.lang}`);
+      check([...m.title].length <= 60, `svg-kpi-designer ${lang}: the title has ${[...m.title].length} characters (at most 60): ${m.title}`);
+      check([...m.description].length <= 155, `svg-kpi-designer ${lang}: the description has ${[...m.description].length} characters (at most 155): ${m.description}`);
+      await v.ctx.close();
+    }
+  }
   return { checks, problems };
 }

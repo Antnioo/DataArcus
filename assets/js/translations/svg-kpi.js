@@ -2,7 +2,7 @@
 window.svgKpiTranslations = {
   "en": {
     "meta": {
-      "title": "Free SVG KPI Designer for Power BI: DAX Image Measures - DataArcus", "description": "Design KPI cards, progress rings, sparklines and trend arrows for Power BI, linked to your measures, and copy the DAX instantly. Free, no sign-up, English and Arabic."
+      "title": "SVG KPI Designer: Power BI DAX Image Measures - DataArcus", "description": "Design KPI cards, progress rings, sparklines and trend arrows linked to your Power BI measures, and copy the DAX. Free, no sign-up, English and Arabic."
     },
     "kd": {
       "a11yBox": "The DAX measure",
