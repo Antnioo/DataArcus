@@ -1225,6 +1225,74 @@ inferred). Set to Height 24 and Width 160, Ctrl+S.
   go after the table's own first projection, never before it, so "Total" keeps a text or number column (to check:
   which column gets the word when the first projection is a measure).
 
+### 3. D-P1, the rest: the new card's image and a matrix both draw the report-level SVG measure
+"DC SVG": a copy of "D16 cards" with `definition/reportExtensions.json` (entity Sales; "Dot SVG" as in D-P1 and the
+measures of checks 4 and 5), written by hand (`dc-build.mjs dc`). Microsoft's validator: 0 errors, 0 warnings.
+- **The new card's image: draws.** The picture sits right of the number (101,914), filling the card's height. The
+  JSON was **written by hand** from Microsoft's property list for `cardVisual.image` (`formatting describe-object`),
+  not saved by Desktop ("Select from data" was not clicked):
+```json
+"image": [
+  { "properties": { "show": { "expr": { "Literal": { "Value": "true" } } } } },
+  { "properties": {
+      "imageType": { "expr": { "Literal": { "Value": "'imageUrl'" } } },
+      "imageUrl": { "expr": { "Measure": { "Expression": { "SourceRef": { "Schema": "extension", "Entity": "Sales" } }, "Property": "Dot SVG" } } } },
+    "selector": { "id": "default" } }
+]
+```
+- **A matrix (`pivotTable`): draws**, in every row, two picture columns:
+```json
+{ "visualType": "pivotTable",
+  "query": { "queryState": {
+    "Rows":   { "projections": [ { "field": { "Column": { "Expression": { "SourceRef": { "Entity": "Calendar" } }, "Property": "Quarter" } }, "queryRef": "Calendar.Quarter", "nativeQueryRef": "Quarter" } ] },
+    "Values": { "projections": [
+      { "field": { "Measure": { "Expression": { "SourceRef": { "Schema": "extension", "Entity": "Sales" } }, "Property": "Dot SVG" } }, "queryRef": "Sales.Dot SVG", "nativeQueryRef": "Dot SVG" },
+      { "field": { "Measure": { "Expression": { "SourceRef": { "Schema": "extension", "Entity": "Sales" } }, "Property": "Ar mixed" } }, "queryRef": "Sales.Ar mixed", "nativeQueryRef": "Ar mixed" } ] } } },
+  "drillFilterOtherVisuals": true }
+```
+  The matrix was left at its default image size: its rows are about 70 tall, as the table's were. Its own image
+  size setting was not looked for.
+- Not run: the image visual; the card's image position, size and alt text; "Select from data" by mouse (to compare
+  Desktop's own JSON with the hand-written one).
+
+### 4. D-P2, the length limit: none found up to 2,000,000 characters
+The D-P1 picture padded inside the SVG with invisible `<rect>`s (`REPT`) and spaces to an exact total length, the
+visible shapes written **after** the padding, so a cut text would not draw. In a table, per quarter and in the total:
+
+| Total characters returned by the measure | Draws |
+|---|---|
+| 8,000 | yes |
+| 16,000 | yes |
+| 32,000 | yes |
+| 32,766, 32,767, 32,768 | yes, all three |
+| 64,000 | yes |
+| 128,000 | yes |
+| 256,000 | yes |
+| 512,000 | yes |
+| 1,000,000 | yes |
+| 2,000,000 | yes |
+
+- So the 32,767 limit of a stored text does not cut a measure's text result in Desktop's table, and round 9's cap of
+  8,000 characters is far below anything Desktop needs. The page with six pictures of 64,000 to 2,000,000
+  characters per row took under 40 seconds to show after a reload (not timed more closely).
+- **Limits of this check:** the padding is ASCII and repeats one element (a real long SVG has many different
+  shapes); only a table, an import model and Desktop were tried; the service, the phone and exports were not. The
+  cap is about what is sensible to send to a viewer, not about a Desktop limit.
+- **Proposed for round 10:** raise the cap (for example to 32,000 characters) and say why it is there (size and
+  speed), instead of "until Desktop measures the limit".
+
+### 5. D-P3, Arabic text inside the SVG: shaped and right to left
+Three pictures, 200 x 24, shown 300 x 36 in a table:
+| Picture | The `<text>` | Seen |
+|---|---|---|
+| Ar rtl | `direction='rtl'`, `x='194'`, Segoe UI, "رمضان ١٤٤٧" | letters joined; the word at the right, the Arabic-Indic digits to its left; the text ends at the right edge |
+| Ar end Tahoma | `text-anchor='end'`, `x='194'`, Tahoma, the same text | the same: joined, right to left, at the right edge |
+| Ar mixed | `text-anchor='middle'`, Segoe UI, "Ramadan رمضان 2026" | drawn "Ramadan 2026 رمضان" read left to right: the Arabic word joined, and the number placed left of the Arabic word (the browser's own bidirectional order for a number after Arabic) |
+- Both ways of anchoring at the right work; Segoe UI and Tahoma both draw Arabic.
+- Not run: sizes 10 and 22, a `%`-escaped Arabic text coming from a column value, Arabic in the card image.
+- **To note for the designs:** a number after an Arabic word moves to its left. A label that must keep "word then
+  number" in a left-to-right picture needs the two as separate `<text>` elements.
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
