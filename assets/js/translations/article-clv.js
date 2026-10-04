@@ -44,7 +44,7 @@ window.clvTranslations = {
       p8: "Our process is built on enterprise-grade expertise:",
       list1: [
           "<strong>We Connect Your Data:</strong> We build secure bridges to your data sources, whether it's Shopify, WooCommerce, Meta Ads, SQL databases, or simple Excel files.",
-          "<strong>We Engineer a Reliable Pipeline:</strong> Raw data is always messy. We use powerful tools to clean and shape your data, ensuring the numbers you see are 100% accurate.",
+          "<strong>We Engineer a Reliable Pipeline:</strong> Raw data is always messy. We clean and shape your data in steps you can follow, so every number can be checked back to its source.",
           "<strong>We Build the \"Brains\":</strong> Using advanced DAX in Power BI, we create calculations that not only show your overall CLV but also segment it by marketing channel, product line, and country.",
           "<strong>We Visualize the Story:</strong> We transform these calculations into an intuitive, interactive dashboard. No more spreadsheets-just clear, visual answers to your most important business questions."
       ],
@@ -117,7 +117,7 @@ window.clvTranslations = {
       p8: "عمليتنا مبنية على خبرة على مستوى الشركات:",
       list1: [
           "<strong>نقوم بتوصيل بياناتك:</strong> نبني جسورًا آمنة لمصادر بياناتك، سواء كانت Shopify، WooCommerce، إعلانات Meta، قواعد بيانات SQL، أو ملفات Excel بسيطة.",
-          "<strong>نهندس خط بيانات موثوقًا به:</strong> البيانات الأولية دائمًا فوضوية. نستخدم أدوات قوية لتنظيف وتشكيل بياناتك، مما يضمن أن الأرقام التي تراها دقيقة بنسبة 100%.",
+          "<strong>نهندس خط بيانات موثوقًا به:</strong> البيانات الأولية دائمًا فوضوية. ننظّف بياناتك ونشكّلها بخطوات يمكنك متابعتها، بحيث يمكن تتبّع كل رقم حتى مصدره.",
           "<strong>نبني 'العقل' التحليلي:</strong> باستخدام DAX المتقدم في Power BI، ننشئ العمليات الحسابية التي لا تعرض فقط القيمة الإجمالية لعملائك، بل تقسمها أيضًا حسب القناة التسويقية وخط الإنتاج والبلد.",
           "<strong>نعرض القصة بصريًا:</strong> نحوّل هذه الحسابات إلى لوحة تحكم بديهية وتفاعلية. لا مزيد من جداول البيانات، فقط إجابات مرئية وواضحة لأهم أسئلة عملك."
       ],

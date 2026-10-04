@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const list = design.layers.map((l, i) => ({ l, i })).reverse(); // top layer first, like design tools
     $('layers').innerHTML = list.length ? list.map(({ l, i }) => {
       const t = TYPES[l.type], linked = l.bind && Object.keys(l.bind).length;
-      return `<li class="kd-layer${i === sel ? ' active' : ''}" data-i="${i}"><button type="button" class="kd-lname" data-act="sel" data-i="${i}"><i class="bi ${t.icon}"></i><span>${esc(l.name || L(t.en, t.ar))}</span>${linked ? `<i class="bi bi-link-45deg kd-linked" title="${L('Linked to data', 'مرتبط بالبيانات')}"></i>` : ''}</button>
+      return `<li class="kd-layer${i === sel ? ' active' : ''}" data-i="${i}"><button type="button" class="kd-lname" data-act="sel" data-i="${i}" aria-pressed="${i === sel}"><i class="bi ${t.icon}"></i><span>${esc(l.name || L(t.en, t.ar))}</span>${linked ? `<i class="bi bi-link-45deg kd-linked" title="${L('Linked to data', 'مرتبط بالبيانات')}"></i>` : ''}</button>
         <span class="kd-lbtns"><button type="button" data-act="up" data-i="${i}" aria-label="${L('Bring forward', 'تقديم للأمام')}" ${i === design.layers.length - 1 ? 'disabled' : ''}><i class="bi bi-arrow-up"></i></button><button type="button" data-act="down" data-i="${i}" aria-label="${L('Send backward', 'إرجاع للخلف')}" ${i === 0 ? 'disabled' : ''}><i class="bi bi-arrow-down"></i></button><button type="button" data-act="dup" data-i="${i}" aria-label="${L('Duplicate', 'تكرار')}"><i class="bi bi-copy"></i></button><button type="button" data-act="del" data-i="${i}" aria-label="${L('Delete', 'حذف')}"><i class="bi bi-trash"></i></button></span></li>`;
     }).join('') : `<li class="kd-empty">${L('No layers yet. Add one above.', 'لا توجد طبقات بعد. أضف واحدة من الأعلى.')}</li>`;
   }
@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const num = (label, path, v, step) => `<label class="kd-f"><span>${label}</span><input type="number" step="${step || 'any'}" data-p="${path}" value="${esc(v == null ? '' : v)}"></label>`;
   const col = (label, path, v) => `<label class="kd-f"><span>${label}</span><input type="color" data-p="${path}" value="${esc(/^#[0-9a-f]{6}$/i.test(v || '') ? v : '#000000')}"></label>`;
   const txt = (label, path, v, extra) => `<label class="kd-f kd-wide"><span>${label}</span><input type="text" data-p="${path}" value="${esc(v == null ? '' : v)}" ${extra || ''}></label>`;
-  const sel_ = (label, path, v, opts) => `<label class="kd-f"><span>${label}</span><select data-p="${path}">${opts.map(([k, t]) => `<option value="${esc(k)}"${String(k) === String(v) ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label>`;
+  const sel_ = (label, path, v, opts, wide) => `<label class="kd-f${wide ? ' kd-wide' : ''}"><span>${label}</span><select data-p="${path}">${opts.map(([k, t]) => `<option value="${esc(k)}"${String(k) === String(v) ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label>`;
   const toggle = (label, bindKey, on, hint) => `<label class="kd-toggle"><input type="checkbox" data-bind-toggle="${bindKey}"${on ? ' checked' : ''}> <span>${label}</span>${hint ? `<small>${hint}</small>` : ''}</label>`;
   const OPS = K.OPS.map((o) => [o, o]);
 
@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${hasBg ? col(L('Background', 'الخلفية'), 'card.bg', design.bg) + num(L('Corner radius', 'استدارة الزوايا'), 'card.radius', design.radius || 0, 1) : ''}
         ${design.layers.some((l) => l.type === 'spark') ? `${txt(L('Date column for sparklines', 'عمود التاريخ لخطوط الاتجاه'), 'card.dateCol', design.dateCol || "'Date'[Date]", 'maxlength="100" spellcheck="false"')}
         <label class="kd-toggle kd-wide"><input type="checkbox" data-p="card.clearDateFilters"${design.clearDateFilters !== false ? ' checked' : ''}> <span>${L('Ignore date slicers inside the sparkline', 'تجاهل فلاتر التاريخ داخل خط الاتجاه')}</span><small>${L('Keeps the full trend when a Year or Month slicer is set. Turn off if your dates are not in a separate date table.', 'يحافظ على الاتجاه كاملًا عند اختيار سنة أو شهر. أوقفه إذا لم تكن التواريخ في جدول تاريخ منفصل.')}</small></label>` : ''}
-        ${sel_(L('Show nothing when this is blank', 'لا تعرض شيئًا عندما تكون هذه فارغة'), 'card.hideIfBlank', design.hideIfBlank || '', [['', L('(always show)', '(اعرض دائمًا)')]].concat(design.values.filter((v) => v.kind === 'measure').map((v) => [v.id, v.label || v.measure])))}</div>
+        ${sel_(L('Show nothing when this is blank', 'لا تعرض شيئًا عندما تكون هذه فارغة'), 'card.hideIfBlank', design.hideIfBlank || '', [['', L('(always show)', '(اعرض دائمًا)')]].concat(design.values.filter((v) => v.kind === 'measure').map((v) => [v.id, v.label || v.measure])), true)}</div>
         <p class="kd-hint mt-2">${L('Click a layer on the canvas to edit it.', 'اضغط على أي طبقة في اللوحة لتعديلها.')}</p>`;
       return;
     }
@@ -427,7 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <input type="range" class="kd-slider" data-v="${i}" data-vk="sample" min="${Math.min(0, -max)}" max="${max}" step="${max / 200}" value="${s}" aria-label="${L('Test value slider', 'شريط قيمة التجربة')}"></div>`;
       }
       return `<div class="kd-val"><div class="kd-val-h"><input class="kd-vlabel" data-v="${i}" data-vk="label" value="${esc(v.label)}" aria-label="${L('Label', 'التسمية')}" maxlength="30"><span class="kd-tag kd-tag2">${L('Formula', 'معادلة')}</span>${del}</div>
-        <div class="kd-rule"><select data-v="${i}" data-vk="a">${valOpts(v.a, i)}</select><select data-v="${i}" data-vk="kind">${Object.entries(KINDS).map(([k, t]) => `<option value="${k}"${k === v.kind ? ' selected' : ''}>${L(t[0], t[1])}</option>`).join('')}</select><select data-v="${i}" data-vk="b">${valOpts(v.b, i)}</select></div>
+        <div class="kd-rule"><select data-v="${i}" data-vk="a" aria-label="${L('First value', 'القيمة الأولى')}">${valOpts(v.a, i)}</select><select data-v="${i}" data-vk="kind" aria-label="${L('Formula', 'المعادلة')}">${Object.entries(KINDS).map(([k, t]) => `<option value="${k}"${k === v.kind ? ' selected' : ''}>${L(t[0], t[1])}</option>`).join('')}</select><select data-v="${i}" data-vk="b" aria-label="${L('Second value', 'القيمة الثانية')}">${valOpts(v.b, i)}</select></div>
         <div class="kd-hint">= ${esc(fmtVal(vals[v.id]))}${isFraction(v.id) && vals[v.id] != null ? ' (' + r1(vals[v.id] * 100) + '%)' : ''}</div></div>`;
     }).join('');
   }
@@ -682,13 +682,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'kd-tour-btn';
     const label = () => { btn.innerHTML = `<i class="bi bi-mortarboard"></i> ${L('Tutorial', 'درس تفاعلي')}`; };
     label(); btn.addEventListener('click', start); document.querySelector('.kd-actions').prepend(btn);
-    const banner = document.createElement('div'); banner.className = 'kd-banner';
+    // the first-visit banner is in the page's HTML (so nothing jumps when it appears); returning visitors never see it
+    const banner = $('kdBanner');
     const drawBanner = () => { banner.innerHTML = `<i class="bi bi-mortarboard"></i><div><b>${L('New here? Build your first KPI card in 2 minutes.', 'جديد هنا؟ ابنِ أول بطاقة مؤشر في دقيقتين.')}</b><span>${L('A short, guided tutorial. No Power BI needed until the last step.', 'درس قصير موجّه. لا تحتاج Power BI حتى الخطوة الأخيرة.')}</span></div><button type="button" class="btn btn-accent btn-sm" data-b="go">${L('Start tutorial', 'ابدأ الدرس')}</button><button type="button" class="kd-link" data-b="no">${L('No thanks', 'لا، شكرًا')}</button>`; };
-    function hideBanner() { banner.remove(); }
-    banner.addEventListener('click', (e) => { const b = e.target.closest('[data-b]'); if (!b) return; if (b.dataset.b === 'go') start(); else { store.set(KEY, { seen: true }); hideBanner(); } });
+    function hideBanner() { if (banner) banner.remove(); }
+    if (banner) banner.addEventListener('click', (e) => { const b = e.target.closest('[data-b]'); if (!b) return; if (b.dataset.b === 'go') start(); else { store.set(KEY, { seen: true }); hideBanner(); } });
     const st = store.get(KEY, null);
-    if (!st) { drawBanner(); $('kdApp').querySelector('.kd-panel').before(banner); }
-    new MutationObserver(() => { label(); if (banner.isConnected) drawBanner(); if (step >= 0 || (panel && step >= STEPS.length)) draw(false); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+    if (st) hideBanner();
+    new MutationObserver(() => { label(); if (banner && banner.isConnected) drawBanner(); if (step >= 0 || (panel && step >= STEPS.length)) draw(false); }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
     return { check: check, place: place, blank: blank, copied: copied, start: start };
   })();
 

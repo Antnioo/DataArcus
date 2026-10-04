@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-locLhE3U+D+js0yXMNrOe0L56AGxa5rcVJFsKPXxmc4=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
   <style>html.i18n-pending body{visibility:hidden}</style>
@@ -52,10 +53,10 @@
   <link href="../assets/css/style.min.css" rel="stylesheet">
 
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" as="style" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous">
-    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
   </noscript>
   
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -148,6 +149,7 @@
     .tg-btn2.btn-sm { padding: 6px 14px; font-size: .85rem; }
     .tg-faq h3 { font-size: 1.05rem; color: var(--lt); margin-top: 1.2rem; }
     .tg-faq p { color: #94a3b8; }
+    .tg-faq p a { color: var(--accent-2); }
     .tg-cta { background: linear-gradient(135deg, rgba(0, 212, 255, .12), rgba(0,132,255,.12)); border: 1px solid var(--glass-border); border-radius: 16px; padding: 24px; }
     .tg-cta > a.btn, .tg-cta > a.tg-btn2 { margin: 6px 4px !important; }
     .mb-seg { display: inline-flex; background: var(--dk-3); border: 1px solid var(--glass-border); border-radius: 30px; padding: 3px; }
@@ -389,6 +391,12 @@
       .dp-revq { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
     }
 
+    /* the loading box keeps the place of the start view that replaces it, so nothing below jumps (measured
+       2026-10-04, the smaller of English and Arabic at each width) */
+    .dp-boot { min-height: 1351px; }
+    @media (min-width: 768px) { .dp-boot { min-height: 1117px; } }
+    @media (min-width: 992px) { .dp-boot { min-height: 704px; } }
+    @media (min-width: 1200px) { .dp-boot { min-height: 683px; } }
   </style>
 </head>
 <body>
@@ -424,7 +432,7 @@
         <p class="lead text-white-50 mb-2" data-i18n="dp.subtitle">Get ready for Microsoft Power BI Data Analyst (PL-300), or your yearly renewal, with timed mock exams, case studies and an explanation for every option.</p>
         <div class="dp-pills"><span><i class="bi bi-calendar-check"></i> <span data-i18n="dp.pill.outline">Skills outline of 20 Apr 2026</span></span><span><i class="bi bi-book"></i> <span data-i18n="dp.pill.learn">Every answer linked to Microsoft Learn</span></span><span><i class="bi bi-translate"></i> <span data-i18n="dp.pill.ar">Arabic takeaway on every question</span></span></div>
       </header>
-      <div id="dpApp" aria-live="polite"><div class="dp-panel dp-note">Loading…</div></div>
+      <div id="dpApp" aria-live="polite"><div class="dp-panel dp-note dp-boot">Loading…</div></div>
       <noscript><p class="text-warning">The simulator needs JavaScript.</p></noscript>
       <p class="dp-outline mt-4" id="dpOutline"></p>
       <p class="dp-disclaimer" data-i18n-html="dp.disclaimer">Independent practice tool by DataArcus. <b>Not affiliated with or endorsed by Microsoft.</b> All questions are original, written from the public <a href="https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/pl-300" target="_blank" rel="noopener">PL-300 study guide</a> and Microsoft Learn documentation. They are not real exam questions. Microsoft and Power BI are trademarks of the Microsoft group of companies. Your progress is saved only in this browser. <button type="button" id="dpReset" class="dp-link">Reset progress</button></p>
@@ -510,7 +518,7 @@
   <script src="../assets/js/translations/pl300.min.js" defer></script>
   <script src="../assets/js/lang-manager.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
   <script src="../assets/js/main.min.js" defer></script>
   <script src="../assets/data/pl300-questions.js" defer></script>
   <script src="../assets/js/dp600-sim.min.js" defer></script>

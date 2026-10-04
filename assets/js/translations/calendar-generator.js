@@ -2,6 +2,7 @@
 window.calendarGeneratorTranslations = {
   "en": {
     "cg": {
+      "a11yBox": "The DAX code",
       "badge": "Free tool · No sign-up",
       "title": "DAX Calendar Table Generator",
       "subtitle": "A complete Power BI date table in one paste: fiscal years, GCC weekends, and Hijri dates with Ramadan and Eid flags that no built-in function gives you.",
@@ -93,6 +94,7 @@ window.calendarGeneratorTranslations = {
   },
   "ar": {
     "cg": {
+      "a11yBox": "كود DAX",
       "badge": "أداة مجانية · بدون تسجيل",
       "title": "مولّد جدول التقويم في DAX",
       "subtitle": "جدول تواريخ Power BI كامل بلصقة واحدة: السنة المالية، وعطلات نهاية الأسبوع الخليجية، والتاريخ الهجري مع علامات رمضان والعيد التي لا توفرها أي دالة مدمجة.",

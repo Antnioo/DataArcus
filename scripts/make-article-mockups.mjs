@@ -1,11 +1,11 @@
-// Article mockups (made-up data): the redesign article's before/after and three of the report-styles mockups.
+// Article mockups (made-up data): the redesign article's before/after and four of the report-styles mockups.
 // HTML rendered by Chromium at 1600 x 900, saved as .jpg and .webp next to the old files. Every text element is checked:
 // nothing may overflow its box or the page (the script stops with the element if it does).
 //
 // Run from the repo root:
 //   npm i --no-save playwright-core @fontsource/inter @fontsource/ibm-plex-sans-arabic @fontsource/roboto-condensed
 //   node scripts/make-article-mockups.mjs                       (all)
-//   node scripts/make-article-mockups.mjs redesign executive    (only some: redesign, executive, sales, marketing)
+//   node scripts/make-article-mockups.mjs redesign executive    (only some: redesign, executive, sales, marketing, service)
 // Uses Chrome/Chromium: set CHROME_PATH if it is not found automatically.
 import fs from 'fs';
 import path from 'path';
@@ -342,6 +342,62 @@ h2{font:700 17.5px Inter}[dir=rtl] h2{font:700 17.5px 'Plex Arabic'}.h2s{font-si
   }, ar) };
 };
 
+// Customer service, rebuilt from the published picture (2026-10-04: its source wasn't kept). Same layout, numbers
+// and colours, in English and Arabic. Fixes the Arabic picture's numbers that ran the wrong way: "< 1 day" lost its
+// 1, "1-3 days", "3-7 days" and "> 7 days" read backwards, and "target 85%" showed its % at the start of the line.
+// The bar and table labels are HTML, so Arabic runs right to left; the numbers are isolated (.num).
+const SERVICE = (lang) => {
+  const ar = lang === 'ar', dir = ar ? 'rtl' : 'ltr', N = (v) => `<span class="num">${v}</span>`;
+  const T = ar ? { title: 'خدمة العملاء · هل نفي بوعدنا؟', meta: 'اليوم · كل القنوات', sl: 'مستوى الخدمة', slS: `ضمن اتفاقية الخدمة · الهدف ${N('85%')}`,
+    open: 'تذاكر مفتوحة', openS: `${N('+36')} اليوم`, fr: 'أول رد', frS: 'الهدف ساعتان', cs: 'رضا العملاء', csV: `${N('4.4')} من ${N('5')}`, csS: `${N('1,120')} تقييمًا`,
+    age: 'التذاكر المفتوحة حسب العمر', ageS: 'العمود الأحمر هو الوعد الذي نخلفه', ages: ['أقل من يوم', `${N('1-3')} أيام`, `${N('3-7')} أيام`, `أكثر من ${N('7')} أيام`],
+    frt: 'زمن أول رد (بالساعات) · الهدف ساعتان', agents: 'الموظفون اليوم', cols: ['الموظف', 'مغلقة', 'أول رد', 'التقييم'],
+    people: ['نور ك.', 'علي م.', 'مريم س.', 'طارق ه.', 'رنا ت.', 'لينا ف.', 'حمزة ب.', 'زياد ن.'], note: 'اللون يوضح أول رد مقارنة بوعد الساعتين، وليس ترتيبًا للأشخاص.' }
+    : { title: 'Customer service · are we keeping our promise?', meta: 'Today · all channels', sl: 'Service level', slS: 'answered within SLA · target 85%',
+      open: 'Open tickets', openS: '+36 today', fr: 'First response', frS: 'Target 2h', cs: 'Customer satisfaction', csV: '4.4 / 5', csS: '1,120 ratings',
+      age: 'Open tickets by age', ageS: 'The red bar is the promise we\'re breaking', ages: ['&lt; 1 day', '1-3 days', '3-7 days', '&gt; 7 days'],
+      frt: 'First response time (hours) · target 2h', agents: 'Agents today', cols: ['Agent', 'Closed', 'First response', 'Rating'],
+      people: ['Noor K.', 'Ali M.', 'Mariam S.', 'Tariq H.', 'Rana T.', 'Leena F.', 'Hamza B.', 'Ziad N.'], note: 'Colour shows the first response against the 2-hour promise, not a ranking of people.' };
+  const top = ar ? 82 : 74, green = '#16a34a', ink = '#0f172a';
+  const css = `body{background:#f4f7fc;color:${ink}}
+.top{position:absolute;left:26px;right:26px;top:${ar ? 22 : 20}px;display:flex;justify-content:space-between;align-items:center}
+h1{font:800 28.5px Inter;letter-spacing:-.01em}[dir=rtl] h1{font:700 28px 'Plex Arabic'}.meta{font-size:15px;color:#64748b}
+.card{position:absolute;top:${top}px;background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:${ar ? 22 : 18}px 22px}
+h2{font:700 18px Inter;line-height:22px}[dir=rtl] h2{font:700 18px 'Plex Arabic';line-height:24px}.h2s{font-size:13px;color:#64748b;margin-top:4px}
+.big{position:absolute;width:300px;top:${ar ? 150 : 142}px;text-align:center;font:800 60px Inter;line-height:1}
+.gs{position:absolute;width:300px;top:${ar ? 214 : 212}px;text-align:center;font-size:13px;color:#475569}
+.stats{position:absolute;left:22px;right:22px;top:${ar ? 246 : 240}px}.kv{padding:${ar ? 12 : 11}px 0 ${ar ? 14 : 14}px;border-bottom:1px solid #e2e8f0}
+.kv label{display:block;font-size:14.5px;font-weight:600;color:#475569}.kv b{display:block;text-align:${ar ? 'right' : 'left'};font:800 30px Inter;line-height:1.1;margin-top:${ar ? 6 : 2}px}.kv small{display:block;font-size:13px;color:#64748b;margin-top:${ar ? 8 : 4}px}
+.bar{position:absolute;width:122px;border-radius:2px}.bv{position:absolute;width:122px;text-align:center;font-size:12.5px;font-weight:700;color:#475569}
+.tx,.h2s{font-variant-numeric:normal}.bl{font-variant-numeric:normal;position:absolute;width:122px;text-align:center;font-size:12.5px;color:#64748b;white-space:nowrap}
+.gl{position:absolute;left:22px;right:22px;height:1px;background:#e5e7eb}
+.row{display:grid;grid-template-columns:133px 87px ${ar ? 145 : 159}px 1fr;align-items:center;height:${ar ? 56 : 53}px;border-bottom:1px solid #e2e8f0;font-size:15px}
+.row>*{text-align:${ar ? 'right' : 'left'}}.row>:first-child{padding-${ar ? 'right' : 'left'}:6px}.hd{height:auto;padding-bottom:7px;margin-top:13px;font-size:13px;font-weight:600;color:#64748b;border-color:#cbd5e1}
+.chip{justify-self:start;font-size:12px;font-weight:700;padding:2px 7px;border-radius:5px}`;
+  const card = (x, w, h, inner, extra = '') => `<div class="card" style="${ar ? 'right' : 'left'}:${x}px;width:${w}px;height:${h}px${extra}">${inner}</div>`;
+  // the gauge: a half circle, 87% of it green from the start
+  const R = 140, cx = 150, cy = ar ? 205 : 200, side = ar ? 'right' : 'left', a = Math.PI * (1 - 0.87), ex = cx + R * Math.cos(a), ey = cy - R * Math.sin(a);
+  const gauge = `<svg width="300" height="240" style="position:absolute;${side}:22px;top:0;direction:ltr"><path d="M${cx - R} ${cy} A${R} ${R} 0 0 1 ${cx + R} ${cy}" fill="none" stroke="#e2e8f0" stroke-width="18" stroke-linecap="round"/>`
+    + `<path d="M${cx - R} ${cy} A${R} ${R} 0 0 1 ${ex.toFixed(1)} ${ey.toFixed(1)}" fill="none" stroke="${green}" stroke-width="18" stroke-linecap="round"/></svg>`;
+  const stats = [[T.open, '428', T.openS], [T.fr, '1h 42m', T.frS], [T.cs, T.csV, T.csS]].map(([l, v, s]) => `<div class="kv"><label>${l}</label><b${v.includes('span') ? '' : ' class="num"'}>${v}</b><small>${s}</small></div>`).join('');
+  const sl = card(26, 410, 790, `<h2>${T.sl}</h2>${gauge}<div class="big num" style="${side}:22px">87%</div><div class="gs" style="${side}:22px">${T.slS}</div><div class="stats">${stats}</div>`);
+  // open tickets by age: 1.2 px per ticket, bars on a left-to-right age axis in both languages (as in Power BI)
+  const base = ar ? 336 : 328, bars = [[190, green], [142, '#2563eb'], [64, '#d97706'], [32, '#dc2626']];
+  const ages = [0, 1, 2, 3].map((g) => `<div class="gl" style="top:${base - 256 + g * 85.3}px"></div>`).join('')
+    + bars.map(([v, c], i) => { const x = 36 + i * 136.7, h = Math.round(v * 1.2);
+      return `<div class="bar" style="left:${x}px;top:${base - h}px;height:${h}px;background:${c}"></div><div class="bv num" style="left:${x}px;top:${base - h - 19}px">${v}</div><div class="bl" style="left:${x}px;top:${base + 8}px">${T.ages[i]}</div>`; }).join('');
+  const age = card(452, 606, 387, `<h2>${T.age}</h2><div class="h2s">${T.ageS}</div>${ages}`);
+  const chart = lineChart({ w: 560, h: 311, rtl: false, months: ar ? AR_MONTHS : EN_MONTHS, labelEvery: 2, max: 2.73, min: 1.53, grid: 3, dashed: 2, padTop: 10, font: ar ? 'Plex Arabic' : 'Inter',
+    series: [{ pts: [2.6, 2.4, 2.5, 2.2, 2.1, 2.3, 1.9, 1.8, 1.9, 1.7, 1.8, 1.7], color: '#2563eb', width: 2.6, dot: true }] });   // December 1.7 h = 1h 42m
+  const frt = card(452, 606, 387, `<h2>${T.frt}</h2><div style="position:absolute;left:22px;top:${ar ? 49 : 44}px">${chart}</div>`, `;top:${top + 403}px`);
+  const chip = (m) => { const c = m <= 120 ? ['#dcfce7', green] : m <= 180 ? ['#ffedd5', '#d97706'] : ['#fee2e2', '#dc2626'];
+    return `<span class="chip num" style="background:${c[0]};color:${c[1]}">${Math.floor(m / 60)}h ${String(m % 60).padStart(2, '0')}m</span>`; };
+  const AG = [[64, 72, '4.7'], [58, 90, '4.5'], [61, 101, '4.6'], [55, 115, '4.4'], [71, 138, '4.1'], [47, 152, '4.2'], [49, 185, '3.8'], [38, 220, '3.6']];
+  const rows = AG.map(([c, m, r], i) => `<div class="row"><span>${T.people[i]}</span><span class="num">${c}</span>${chip(m)}<span class="num">${r}</span></div>`).join('');
+  const agents = card(1074, 500, 790, `<h2>${T.agents}</h2><div class="row hd">${T.cols.map((c) => `<span>${c}</span>`).join('')}</div>${rows}<p class="tx" style="margin-top:16px;font-size:13px;line-height:20px;color:#64748b">${T.note}</p>`);
+  return doc(css, `<div class="top"><h1>${T.title}</h1><div class="meta">${T.meta}</div></div>${sl}${age}${frt}${agents}`, dir);
+};
+
 // ---------------------------------------------------------------------------------------------------------------
 const JOBS = [
   { id: 'redesign', out: 'assets/img/articles/power-bi-redesign-before', html: BEFORE },
@@ -349,7 +405,8 @@ const JOBS = [
   ...['en', 'ar'].flatMap((l) => [
     { id: 'executive', out: `assets/img/articles/styles/executive-${l}`, html: EXECUTIVE(l) },
     { id: 'sales', out: `assets/img/articles/styles/sales-${l}`, ...SALES(l) },
-    { id: 'marketing', out: `assets/img/articles/styles/marketing-${l}`, ...MARKETING(l) }])];
+    { id: 'marketing', out: `assets/img/articles/styles/marketing-${l}`, ...MARKETING(l) },
+    { id: 'service', out: `assets/img/articles/styles/service-${l}`, html: SERVICE(l) }])];
 
 const only = process.argv.slice(2);
 const exe = process.env.CHROME_PATH || ['/opt/pw-browsers/chromium', 'C:/Program Files/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome'].find((p) => fs.existsSync(p));
