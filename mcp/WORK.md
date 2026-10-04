@@ -203,7 +203,7 @@ down with its cause and a proposed fix. State after each part:
      Task 7 (watched closely): no report written, five measures with formats and the sort fix proposed.
   The agent had only DataArcus: Microsoft's authoring MCP and the Desktop bridge are not in Claude Desktop chats
   here, so opening the reports and the DAX checks were done by the builder afterwards. Task 3's first two chats
-  were taken over by the owner's own skill and memories; the rest ran in incognito chats with that skill off.
+  were taken over by the tester's own skills and memories; the rest ran in incognito chats with them off.
 - **Part 6, Desktop regression sweep on main: done.** Sixteen reports (MCP and website download; English and Arabic;
   1920 x 1080 light and dark, 1280 x 720, 640 x 360), validator 0 errors on all; header, filter rail, page buttons,
   hover tooltips, phone layout as last recorded at 1080 and 720. Four new findings, each with a proposed fix in
@@ -216,8 +216,7 @@ down with its cause and a proposed fix. State after each part:
 - **End of the sitting: the laptop put back.** "DataArcus for Power BI" uninstalled from Claude Desktop (its folder
   and its settings file under Claude's data are gone; no server process of the extension is left; the four
   `node ... mcp\server.mjs` processes still running belong to Claude Code sessions started on 2 and 3 October).
-  The owner's skill `powerbi-mcp-workflow` and the connectors "MCP Engine for Power BI" and "Claude in Chrome",
-  switched off for the agent-level run, are on again (the connector was never used). Power BI Desktop closed without
+  The tester's other skills and connectors, switched off for the agent-level run, are on again. Power BI Desktop closed without
   saving. Left behind on purpose: the empty test folder `C:\DataArcus\beta-check`, the evidence in
   `C:\DataArcus\tests\beta-sitting` and `tests\phase2-try\shots-s6`, the sixteen "Gulf Sales S6" test reports, the
   worktrees `zod4-check` and `engine-build`, and five normal chats in the owner's Claude history (the smoke tests
