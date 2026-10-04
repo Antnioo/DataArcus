@@ -4,7 +4,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
-import { inside } from './model.mjs';
+import { inside, nothingAt } from './model.mjs';
 
 const require = createRequire(import.meta.url);
 export const E = require('../../assets/js/design-engine.js');
@@ -126,12 +126,13 @@ export function contrastReport(design) {
   return { contrast: c, warnings };
 }
 
-// A file inside the DataArcus folder that doesn't exist yet: name.ext, name-2.ext, name-3.ext...
+// A file inside the DataArcus folder that doesn't exist yet: name.ext, name-2.ext, name-3.ext... (a name held by
+// anything, a link included, is skipped)
 export function freeFile(folder, base, ext) {
   const dir = inside(folder || '.');
   fs.mkdirSync(dir, { recursive: true });
   for (let n = 1; ; n++) {
     const f = path.join(dir, base + (n > 1 ? '-' + n : '') + ext);
-    if (!fs.existsSync(f)) return f;
+    if (nothingAt(f)) return f;
   }
 }

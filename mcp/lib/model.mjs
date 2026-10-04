@@ -31,6 +31,13 @@ export function rootProblem() {
   if (!isDir(ROOT)) return `Your working folder ${ROOT} doesn't exist yet: create it and put a Power BI project (.pbip) in it.`;
   return null;
 }
+// A working folder that is there but can't be used yet (empty), as a message for the user: a normal answer, not an error
+export class Notice extends Error { constructor(state, message) { super(message); this.state = state; } }
+// A name is free only when nothing at all is there. lstat, not existsSync: a link whose target is missing "doesn't
+// exist" to existsSync, and writing at its name would create the target, outside the working folder (audit AUD-005)
+export const nothingAt = (f) => { try { fs.lstatSync(f); return false; } catch (e) { return e.code === 'ENOENT'; } };
+// A new file: 'wx' fails when anything is at the name (a link included), so nothing is ever written over or through
+export const writeNew = (f, data) => { fs.writeFileSync(f, data, { flag: 'wx' }); };
 const within = (root, p) => { const rel = path.relative(root, p); return !(rel.startsWith('..') || path.isAbsolute(rel)); };
 const linkError = (p) => new Error(`"${p}" leads outside the working folder ${ROOT} through a link (a symbolic link or a junction). DataArcus reads and writes only inside the working folder.`);
 const isLink = (p) => { try { return fs.lstatSync(p).isSymbolicLink(); } catch (e) { return false; } };
@@ -118,7 +125,7 @@ export function loadModel(p) {
     // a model folder that is a link is not followed: say so when it leads outside the working folder
     const linked = links.find((l) => /\.(SemanticModel|Dataset)$/i.test(l));
     if (linked) real(linked);
-    if (full === ROOT && !fs.readdirSync(ROOT).length) throw new Error(`Your working folder ${ROOT} is empty: put a Power BI project (a .pbip file with its folders, saved from Power BI Desktop) in it.`);
+    if (full === ROOT && !fs.readdirSync(ROOT).length) throw new Notice('empty', `Your working folder ${ROOT} is empty: put a Power BI project (a .pbip file with its folders, saved from Power BI Desktop) in it.`);
     throw new Error(`No .SemanticModel folder in ${p}. Point at a Power BI project folder saved from Desktop.`);
   }
   dirs.sort((a, b) => a.split(path.sep).length - b.split(path.sep).length);

@@ -42,6 +42,8 @@ const client = new Client({ name: 'test', version: '1' });
 await client.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: { ...process.env, DATAARCUS_ROOT: ROOT }, stderr: 'ignore' }));
 const call = async (name, args) => { const r = await client.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; };
 const hash = (f) => crypto.createHash('md5').update(fs.readFileSync(f)).digest('hex');
+// round 5: a fix script is in a new file in the working folder, never in the answer; the tests read the file
+const scriptOf = (fix) => { try { return fix && fix.fixScriptFile ? fs.readFileSync(fix.fixScriptFile, 'utf8') : ''; } catch (e) { return ''; } };
 
 const tools = (await client.listTools()).tools.map((t) => t.name).sort();
 check(tools.join() === 'check_model_health,create_report,generate_theme,plan_layout,read_model,suggest_fields', `tools: ${tools}`);
@@ -108,15 +110,15 @@ check(!r.err && JSON.stringify(r.j.columnTypes && r.j.columnTypes.alreadyTyped) 
     relationships: [{ name: 'r1', fromTable: 'Sales', fromColumn: 'Date', toTable: 'Calendar', toColumn: 'Date' }] } }));
   const plainRun = await call('check_model_health', { path: 'sort.bim' });
   const fx = plainRun.err ? {} : plainRun.j.fixes || {}, ms = fx.MONTH_SORT || {}, nf = fx.NO_FORMAT || {}, pf = fx.PCT_FORMAT || {};
-  check(!plainRun.err && /sortByColumn: 'Month Number'/.test(ms.fixScript || '') && /WEEKDAY \( 'Calendar'\[Date\], 1 \)/.test(ms.fixScript || '') && ms.weekStart === 'sunday' && /TMDL view/.test(String(ms.howToApply))
+  check(!plainRun.err && /sortByColumn: 'Month Number'/.test(scriptOf(ms)) && /WEEKDAY \( 'Calendar'\[Date\], 1 \)/.test(scriptOf(ms)) && ms.weekStart === 'sunday' && /TMDL view/.test(String(ms.howToApply))
     && (ms.byHand || []).length === 1 && ms.byHand[0].column === 'Calendar[Hijri Month Name]', `health fixes, sort: ${plainRun.err ? plainRun.t.slice(0, 200) : JSON.stringify(ms).slice(0, 500)}`);
   check(JSON.stringify((nf.suggested || []).map((x) => [x.measure, x.format])) === JSON.stringify([['[Total Sales]', '#,0.00'], ['[Units]', '#,0'], ['[Orders]', '#,0'], ['[Margin %]', '0.0%']]) && (nf.suggested || []).every((x) => x.reason)
-    && !/Has Format|Return Rate/.test(nf.fixScript || '') && /never applied/i.test(String(nf.howToApply)), `health fixes, formats: ${JSON.stringify(nf).slice(0, 500)}`);
+    && !!scriptOf(nf) && !/Has Format|Return Rate/.test(scriptOf(nf)) && /never applied/i.test(String(nf.howToApply)), `health fixes, formats: ${JSON.stringify(nf).slice(0, 500)}`);
   check((pf.suggested || []).length === 1 && pf.suggested[0].measure === '[Return Rate]' && pf.suggested[0].format === '0.0%', `health fixes, a rate formatted as a number: ${JSON.stringify(pf).slice(0, 300)}`);
   // the week start is a choice: Monday (the UAE's Saturday-Sunday weekend) and Saturday change the weekday expression only
   for (const [ws, want] of [['monday', "WEEKDAY ( 'Calendar'[Date], 2 )"], ['saturday', "MOD ( WEEKDAY ( 'Calendar'[Date], 1 ), 7 ) + 1"]]) {
     const o = await call('check_model_health', { path: 'sort.bim', weekStart: ws });
-    const a = String(((o.j || {}).fixes || {}).MONTH_SORT ? o.j.fixes.MONTH_SORT.fixScript : '').split('\n'), b = String(ms.fixScript || '').split('\n'), diff = a.filter((l, i) => l !== b[i]);
+    const a = scriptOf(((o.j || {}).fixes || {}).MONTH_SORT).split('\n'), b = scriptOf(ms).split('\n'), diff = a.filter((l, i) => l !== b[i]);
     check(!o.err && a.length === b.length && diff.length === 1 && diff[0].trim() === want && o.j.fixes.MONTH_SORT.weekStart === ws, `health fixes, week starting ${ws}: ${o.err ? o.t.slice(0, 200) : JSON.stringify(diff).slice(0, 200)}`);
     check(!o.err && JSON.stringify([o.j.score, o.j.findings]) === JSON.stringify([plainRun.j.score, plainRun.j.findings]), `health fixes, week starting ${ws}: the score or the findings moved`);
   }
@@ -124,7 +126,7 @@ check(!r.err && JSON.stringify(r.j.columnTypes && r.j.columnTypes.alreadyTyped) 
   const dx = await call('check_model_health', { path: 'dax-project', maxItems: 200 });
   const dms = dx.err ? {} : (dx.j.fixes || {}).MONTH_SORT || {};
   const skippedSort = dx.err ? [] : (((dx.j.skipped || {}).checks || []).find((c) => c.id === 'MONTH_SORT') || {}).items || [];
-  check(!dx.err && !dms.fixScript && (dms.byHand || []).some((h) => h.column === 'Calendar[Month Name]' && /Sort by column > Month Number/.test(h.steps)) && (dms.byHand || []).some((h) => h.column === 'Calendar[Day Name]' && /Sort by column > Day of Week/.test(h.steps)),
+  check(!dx.err && !dms.fixScriptFile && (dms.byHand || []).some((h) => h.column === 'Calendar[Month Name]' && /Sort by column > Month Number/.test(h.steps)) && (dms.byHand || []).some((h) => h.column === 'Calendar[Day Name]' && /Sort by column > Day of Week/.test(h.steps)),
     `health fixes on DAX tables: ${dx.err ? dx.t.slice(0, 200) : JSON.stringify(dms).slice(0, 400)} (skipped: ${skippedSort.length})`);
   // the report writer's rule for the sort column and the health check's are the same
   const req = (await import('node:module')).createRequire(import.meta.url), Bn = req('../assets/js/pbip-bind.js'), Tm = req('../assets/js/model-health-tmdl.js');
@@ -681,10 +683,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   {
     const BASE = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-newroot-'));
     const a = await start({ DATAARCUS_ROOT: path.join(BASE, 'new') }, BASE), ra = await a.call('read_model', { path: '.' });
-    check(fs.existsSync(path.join(BASE, 'new')) && ra.err && /is empty/.test(ra.t) && /\.pbip/.test(ra.t), `a new working folder: made on start (${fs.existsSync(path.join(BASE, 'new'))}), read_model: ${ra.t.slice(0, 200)}`);
+    check(fs.existsSync(path.join(BASE, 'new')) && !ra.err && /is empty/.test(ra.t) && /\.pbip/.test(ra.t), `a new working folder: made on start (${fs.existsSync(path.join(BASE, 'new'))}), read_model: ${ra.t.slice(0, 200)}`);
     await a.close();
     const b = await start({ DATAARCUS_ROOT: path.join(BASE, 'a', 'b', 'c') }, BASE), rb = await b.call('read_model', { path: '.' }), tb = await b.call('generate_theme', { name: 'Missing' });
-    check(!fs.existsSync(path.join(BASE, 'a')) && rb.err && /doesn't exist yet/.test(rb.t) && /\.pbip/.test(rb.t) && tb.err && /doesn't exist yet/.test(tb.t), `a working folder with no parent: made anyway (${fs.existsSync(path.join(BASE, 'a'))}), read_model: ${rb.t.slice(0, 160)}; generate_theme: ${tb.t.slice(0, 120)}`);
+    check(!fs.existsSync(path.join(BASE, 'a')) && !rb.err && /doesn't exist yet/.test(rb.t) && /\.pbip/.test(rb.t) && !tb.err && /doesn't exist yet/.test(tb.t), `a working folder with no parent: made anyway (${fs.existsSync(path.join(BASE, 'a'))}), read_model: ${rb.t.slice(0, 160)}; generate_theme: ${tb.t.slice(0, 120)}`);
     check(!/ENOENT/.test(ra.t + rb.t + tb.t), `a missing working folder answered with a raw error: ${(ra.t + ' | ' + rb.t).slice(0, 240)}`);
     await b.close();
     fs.rmSync(BASE, { recursive: true, force: true });
@@ -697,12 +699,12 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     check(!/version:\s*['"]\d/.test(src) && /package\.json/.test(src), 'server.mjs still holds a version of its own (it must read mcp/package.json)');
   }
 
-  // 7. tool annotations: four tools only read; the two that write only add files
+  // 7. tool annotations: three tools only read; the three that write only add files (round 5: check_model_health writes its fix scripts)
   {
     const ann = Object.fromEntries((await client.listTools()).tools.map((t) => [t.name, t.annotations || {}]));
-    const ro = ['read_model', 'suggest_fields', 'check_model_health', 'plan_layout'].filter((n) => ann[n].readOnlyHint !== true);
+    const ro = ['read_model', 'suggest_fields', 'plan_layout'].filter((n) => ann[n].readOnlyHint !== true);
     check(!ro.length, `readOnlyHint true is missing on: ${ro}`);
-    const wr = ['generate_theme', 'create_report'].filter((n) => !(ann[n].readOnlyHint === false && ann[n].destructiveHint === false));
+    const wr = ['generate_theme', 'create_report', 'check_model_health'].filter((n) => !(ann[n].readOnlyHint === false && ann[n].destructiveHint === false));
     check(!wr.length, `readOnlyHint false with destructiveHint false is missing on: ${wr} (${JSON.stringify(wr.map((n) => ann[n]))})`);
   }
 
@@ -734,10 +736,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const x = await one('check_model_health', { path: 'tag-project', maxItems: 200 }), fx = x.err ? {} : x.j.fixes || {}, nf = fx.NO_FORMAT || {}, ms = fx.MONTH_SORT || {};
     // the lines of one object in a script: from its header to the next blank line
     const block = (script, head) => { const l = String(script || '').split('\n'), i = l.findIndex((s) => s.trim().startsWith(head)); return i < 0 ? [] : l.slice(i, l.findIndex((s, j) => j > i && !s.trim()) < 0 ? undefined : l.findIndex((s, j) => j > i && !s.trim())).map((s) => s.trim()); };
-    check(block(nf.fixScript, "measure 'Total Sales'").includes('lineageTag: m-total-sales') && block(nf.fixScript, "measure 'Margin %'").includes('lineageTag: m-margin'),
-      `the format script from a TMDL project must keep each measure's lineageTag: ${x.err ? x.t.slice(0, 200) : String(nf.fixScript).slice(0, 300)}`);
-    check(block(ms.fixScript, "column 'Month Name'").includes('lineageTag: c-month-name') && block(ms.fixScript, "column 'Day Name'").includes('lineageTag: c-day-name') && !block(ms.fixScript, "column 'Month Number'").some((s) => /^lineageTag/.test(s)),
-      `the sort script from a TMDL project must keep each column's lineageTag (a new column has none): ${String(ms.fixScript).slice(0, 400)}`);
+    check(block(scriptOf(nf), "measure 'Total Sales'").includes('lineageTag: m-total-sales') && block(scriptOf(nf), "measure 'Margin %'").includes('lineageTag: m-margin'),
+      `the format script from a TMDL project must keep each measure's lineageTag: ${x.err ? x.t.slice(0, 200) : scriptOf(nf).slice(0, 300)}`);
+    check(block(scriptOf(ms), "column 'Month Name'").includes('lineageTag: c-month-name') && block(scriptOf(ms), "column 'Day Name'").includes('lineageTag: c-day-name') && !block(scriptOf(ms), "column 'Month Number'").some((s) => /^lineageTag/.test(s)),
+      `the sort script from a TMDL project must keep each column's lineageTag (a new column has none): ${scriptOf(ms).slice(0, 400)}`);
     check((ms.sorts || []).some((s) => s.added) && /TMDL view/.test(String(ms.howToApply)) && /Refresh now/.test(String(ms.howToApply)), `the sort script adds columns: howToApply must say to press "Refresh now" after Apply: ${ms.howToApply}`);
     check(!!nf.howToApply && !/Refresh now/.test(String(nf.howToApply)), `the format script adds no column: howToApply must not ask for a refresh: ${nf.howToApply}`);
   }
@@ -824,7 +826,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   check(egy.err && ['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn'].every((c) => egy.t.includes(c)), `gulfCalendar, an unknown country must be refused with the list: ${egy.t.slice(0, 200)}`);
   // the country never changes round 2's week start, the score or any finding
   const s0 = await ask({ path: 'sort.bim' }), s1 = await ask({ path: 'sort.bim', country: 'uae', asOf: ASOF });
-  check(!s0.err && !s1.err && !!s0.j.fixes.MONTH_SORT.fixScript && JSON.stringify(s0.j.fixes) === JSON.stringify(s1.j.fixes), `gulfCalendar: the country changed the sort or format fixes, or was refused: ${s1.err ? s1.t.slice(0, 120) : ''}`);
+  check(!s0.err && !s1.err && !!scriptOf(s0.j.fixes.MONTH_SORT) && JSON.stringify(s0.j.fixes) === JSON.stringify(s1.j.fixes), `gulfCalendar: the country changed the sort or format fixes, or was refused: ${s1.err ? s1.t.slice(0, 120) : ''}`);
   const same = [];
   for (const p of ['dax-project', 'bim-project', 'tmdl-project', 'sample.pbit']) {
     const a = await ask({ path: p }), b = await ask({ path: p, country: 'ksa', asOf: ASOF });
@@ -860,7 +862,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 
   // 1b. check_model_health on a large model fits too: a fix script and its list cover maxItems objects, and say so
   const hl = await ask('check_model_health', { path: 'large' }), nf = (hl.j && hl.j.fixes && hl.j.fixes.NO_FORMAT) || {};
-  chk(() => !hl.err && hl.t.length < 40000 && nf.suggested.length === 15 && nf.covers && nf.covers.measures === 15 && nf.covers.of > 100 && (nf.fixScript.match(/^\t\tmeasure /gm) || []).length === 15 && /maxItems/.test(String(nf.covers.note)), () => `check_model_health on a large model must stay under 40,000 characters: ${hl.err ? hl.t.slice(0, 200) : hl.t.length + ' characters, covers ' + JSON.stringify(nf.covers)}`);
+  chk(() => !hl.err && hl.t.length < 40000 && nf.suggested.length === 15 && nf.covers && nf.covers.measures === 15 && nf.covers.of > 100 && (scriptOf(nf).match(/^\t\tmeasure /gm) || []).length === 15 && /maxItems/.test(String(nf.covers.note)), () => `check_model_health on a large model must stay under 40,000 characters: ${hl.err ? hl.t.slice(0, 200) : hl.t.length + ' characters, covers ' + JSON.stringify(nf.covers)}`);
   const hs = await ask('check_model_health', { path: 'dax-project' });
   chk(() => !hs.err && hs.j.fixes.NO_FORMAT.suggested.length === 5 && !hs.j.fixes.NO_FORMAT.covers, () => `check_model_health on a small model: the fixes must be whole, with no "covers": ${hs.err ? hs.t.slice(0, 200) : JSON.stringify(hs.j.fixes.NO_FORMAT.covers)}`);
 
@@ -924,6 +926,138 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => !mr.err && JSON.stringify(flagged) === JSON.stringify(['Sales[Gross Margin]', 'Sales[Margin %]']), () => `"Margin" as a percentage: flagged ${mr.err ? mr.t.slice(0, 200) : JSON.stringify(flagged)} (want Gross Margin and Margin % only)`);
     const ms = await ask('suggest_fields', { path: 'margin-project', kpis: 3 });
     chk(() => !ms.err && ms.j.kpis.slice(0, 2).map(f).join() === 'Sales[Total Margin],Sales[Net Margin]' && /Gross Margin|Margin %/.test(f(ms.j.kpis[2])) && /Gross Margin|Margin %/.test(f(ms.j.y.gauge)), () => `"Margin" as a percentage, the picks: ${ms.err ? ms.t.slice(0, 200) : JSON.stringify({ kpis: ms.j.kpis.map(f), gauge: f(ms.j.y.gauge) })} (want the two money margins first, a ratio third and on the gauge)`);
+  }
+}
+
+// ---------- round 5: the audit's fixes (AUD-006, AUD-005, AUD-007), the agent's guidance (AUD-023), the install answers ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const start = async (env, cwd) => {
+    const c = new Client({ name: 'test-r5', version: '1' }), e = { ...process.env }; delete e.DATAARCUS_ROOT; Object.assign(e, env);
+    await c.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: e, cwd, stderr: 'ignore' }));
+    return { c, close: () => c.close(), call: async (name, args) => { try { const r = await c.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; } catch (err) { return { err: true, t: 'call failed: ' + String(err && err.message || err), j: null }; } } };
+  };
+  // a link whose target is missing: a symbolic link where the system allows one (Linux, CI), otherwise a junction
+  const dangling = (target, at) => { try { fs.symlinkSync(target, at); return 'symlink'; } catch (e) { fs.symlinkSync(target, at, 'junction'); return 'junction'; } };
+  const unlink = (p) => { try { fs.unlinkSync(p); } catch (e) { try { fs.rmdirSync(p); } catch (e2) { /* already gone */ } } };
+  const filesIn = (d) => fs.readdirSync(d).sort();
+
+  // 1. AUD-006: no expression, literal or description of the user's model in any answer; a fix script goes to a new
+  //    file next to the project and the answer names the file
+  {
+    const d = path.join(ROOT, 'priv-project');
+    fs.mkdirSync(d); fs.cpSync(path.join(ROOT, 'tmdl-project', 'Sales.SemanticModel'), path.join(d, 'Sales.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(d, 'Sales.SemanticModel/definition/tables/Targets.tmdl'), ['table Targets', '',
+      '\t/// Confidential: board target for FY27 is AED 4.2M; owner Jane Example, jane@example.com',
+      "\tmeasure 'Key Client Sales' = CALCULATE ( 42000, Targets[Client] = \"Fictional Client LLC\" )",
+      '\t\tlineageTag: 11111111-2222-3333-4444-555555555555', '', '\tcolumn Client', '\t\tdataType: string', '\t\tsourceColumn: Client', ''].join('\n'));
+    const SECRET = /Fictional Client LLC|42000|Jane Example|AED 4\.2M/;
+    const answers = {}; for (const tool of ['read_model', 'suggest_fields', 'check_model_health']) answers[tool] = await ask(tool, { path: 'priv-project' });
+    const leaks = Object.entries(answers).filter(([, x]) => x.err || SECRET.test(x.t)).map(([n]) => n);
+    chk(() => !leaks.length, () => `an answer carries the model's expression, literal or description text: ${leaks} (${(answers.check_model_health.t.match(SECRET) || [''])[0]})`);
+    const h = answers.check_model_health, nf = h.j && h.j.fixes && h.j.fixes.NO_FORMAT || {};
+    chk(() => !/"fixScript"\s*:/.test(h.t) && !/createOrReplace/.test(h.t), () => 'check_model_health still returns a script\'s text (fixScript)');
+    chk(() => path.dirname(nf.fixScriptFile) === d && /\.tmdl$/.test(nf.fixScriptFile) && fs.lstatSync(nf.fixScriptFile).isFile() && SECRET.test(scriptOf(nf)) && /^createOrReplace/.test(scriptOf(nf)),
+      () => `the format script must be in a new .tmdl file next to the project, holding the script: ${JSON.stringify(nf).slice(0, 300)}`);
+    chk(() => nf.suggested.some((x) => x.measure === '[Key Client Sales]') && nf.howToApply.includes(path.basename(nf.fixScriptFile)) && /TMDL view/.test(nf.howToApply) && /never applied/i.test(nf.howToApply),
+      () => `the answer must name the measures and say how to apply the file: ${JSON.stringify(nf).slice(0, 400)}`);
+    // asked again: the same file (its content is the same), not a second copy; a file of the user's at a name is never replaced
+    const before = filesIn(d), again = await ask('check_model_health', { path: 'priv-project' });
+    chk(() => again.j.fixes.NO_FORMAT.fixScriptFile === nf.fixScriptFile && filesIn(d).join() === before.join(), () => `asked again, the same script must not be written twice: ${filesIn(d)}`);
+    const d2 = path.join(ROOT, 'priv-project-2'); fs.cpSync(d, d2, { recursive: true });
+    for (const f of filesIn(d2).filter((n) => /\.tmdl$/.test(n))) fs.writeFileSync(path.join(d2, f), 'the user\'s own file');
+    const mine = filesIn(d2).filter((n) => /\.tmdl$/.test(n)), other = await ask('check_model_health', { path: 'priv-project-2' });
+    chk(() => mine.length > 0 && mine.every((f) => fs.readFileSync(path.join(d2, f), 'utf8') === 'the user\'s own file') && !mine.includes(path.basename(other.j.fixes.NO_FORMAT.fixScriptFile)) && /^createOrReplace/.test(scriptOf(other.j.fixes.NO_FORMAT)),
+      () => `a file already at the script's name must be left as it is, and the script written under a free name: ${filesIn(d2)}`);
+    // the working folder is the model folder itself: nothing may be written next to the model, so no file, and the answer says why
+    const s = await start({ DATAARCUS_ROOT: path.join(d, 'Sales.SemanticModel') }, ROOT), inModel = filesIn(path.join(d, 'Sales.SemanticModel')), hm = await s.call('check_model_health', { path: '.' });
+    chk(() => !hm.err && !SECRET.test(hm.t) && !hm.j.fixes.NO_FORMAT.fixScriptFile && /project folder/.test(hm.j.fixes.NO_FORMAT.scriptNotWritten) && filesIn(path.join(d, 'Sales.SemanticModel')).join() === inModel.join() && filesIn(d).join() === before.join(),
+      () => `the working folder is the model folder: no script file, and the reason: ${hm.err ? hm.t.slice(0, 200) : JSON.stringify(hm.j.fixes.NO_FORMAT).slice(0, 300)}`);
+    await s.close();
+  }
+
+  // 2. AUD-005: a name is free only when nothing is there, a link included (even one whose target is missing); new
+  //    files are written so that an existing name is never written through
+  {
+    const OUT = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-outside5-'));
+    const kind = dangling(path.join(OUT, 'stolen-theme.json'), path.join(ROOT, 'dangling-theme.json'));
+    const th = await ask('generate_theme', { name: 'Dangling Theme' });
+    chk(() => !th.err && th.j.file === 'dangling-theme-2.json' && fs.lstatSync(th.j.path).isFile() && fs.readdirSync(OUT).length === 0,
+      () => `generate_theme at a name held by a dangling ${kind}: ${th.err ? th.t.slice(0, 200) : th.j.file}; outside now holds ${fs.readdirSync(OUT)}`);
+    // the fix script's name held by a dangling link
+    const d = path.join(ROOT, 'link5-project'); fs.mkdirSync(d); fs.cpSync(path.join(ROOT, 'priv-project', 'Sales.SemanticModel'), path.join(d, 'Sales.SemanticModel'), { recursive: true });
+    const firstRun = await ask('check_model_health', { path: 'priv-project' }), first = path.basename(String((((firstRun.j || {}).fixes || {}).NO_FORMAT || {}).fixScriptFile || 'no-script-file.tmdl'));
+    dangling(path.join(OUT, 'stolen-script.tmdl'), path.join(d, first));
+    const h = await ask('check_model_health', { path: 'link5-project' });
+    chk(() => !h.err && path.basename(h.j.fixes.NO_FORMAT.fixScriptFile) !== first && path.dirname(h.j.fixes.NO_FORMAT.fixScriptFile) === d && fs.readdirSync(OUT).length === 0,
+      () => `a fix script at a name held by a dangling ${kind}: ${h.err ? h.t.slice(0, 200) : h.j.fixes.NO_FORMAT.fixScriptFile}; outside now holds ${fs.readdirSync(OUT)}`);
+    // create_report: a dangling link at the report's .pbip name
+    dangling(path.join(OUT, 'stolen.pbip'), path.join(d, 'Linked Five.pbip'));
+    const plan = await ask('plan_layout', {}), cr = await ask('create_report', { path: 'link5-project', name: 'Linked Five', design: (plan.j || {}).design });
+    chk(() => !cr.err && cr.j.report !== 'Linked Five.Report' && fs.lstatSync(cr.j.open).isFile() && fs.lstatSync(path.join(d, 'Linked Five.pbip')).isSymbolicLink() && fs.readdirSync(OUT).length === 0,
+      () => `create_report at a name held by a dangling ${kind}: ${cr.err ? cr.t.slice(0, 200) : cr.j.report}; outside now holds ${fs.readdirSync(OUT)}`);
+    // every new file is opened so that it fails when the name exists ('wx'): no plain writeFileSync of a new file in the server
+    const src = ['server.mjs', 'lib/design.mjs', 'lib/model.mjs'].map((f) => fs.readFileSync(path.join(HERE, f), 'utf8')).join('\n');
+    chk(() => !/fs\.writeFileSync\(/.test(src.replace(/fs\.writeFileSync\([^;]*flag: 'wx'[^;]*;/g, '')) && /flag: 'wx'/.test(src) && !/existsSync\(f\)\) return f/.test(src),
+      () => 'a new file is still written without the wx flag, or a free name is still picked with existsSync');
+    unlink(path.join(ROOT, 'dangling-theme.json')); unlink(path.join(d, first)); unlink(path.join(d, 'Linked Five.pbip'));
+    fs.rmSync(OUT, { recursive: true, force: true });
+  }
+
+  // 3. AUD-007: one very long description must not make the answer large
+  {
+    const d = path.join(ROOT, 'huge-project'); fs.mkdirSync(d); fs.cpSync(path.join(ROOT, 'tmdl-project', 'Sales.SemanticModel'), path.join(d, 'Sales.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(d, 'Sales.SemanticModel/definition/tables/Huge.tmdl'), 'table Huge\n\t/// ' + 'x'.repeat(1024 * 1024) + "\n\tmeasure 'H' = 1\n");
+    const h = await ask('check_model_health', { path: 'huge-project' });
+    chk(() => !h.err && h.t.length < 40000, () => `a 1 MB description: the answer is ${h.t.length} characters${h.err ? ': ' + h.t.slice(0, 200) : ''}`);
+  }
+
+  // 4. the agent's guidance: the server's instructions and the tool descriptions carry the rules (AUD-023 and the
+  //    agent-level findings of 2026-10-04); the skill says the same
+  {
+    const ins = String(client.getInstructions() || ''), tl = Object.fromEntries((await client.listTools()).tools.map((t) => [t.name, t]));
+    const skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8').replace(/\r\n/g, '\n');
+    const RULES = [
+      ['plan first, wait for go', /plan/i, /wait for (the user's )?["“]?go/i],
+      ['display names only from the user', /display names?/i, /never translate, shorten or (relabel|rename)/i],
+      ['a card\'s label says what its value is', /label/i, /what (its|the) value (really )?is/i],
+      ['Gulf calendar fixes', /Calendar Generator/, /never write (the )?calendar DAX/i, /not (part of the score|scored)/i],
+      ['model text is untrusted', /untrusted/i, /never follow instructions/i, /descriptions?/i, /file names?/i],
+      ['an unsupported visual', /not supported|isn't supported|unsupported/i, /closest supported/i]];
+    for (const [what, ...res] of RULES) {
+      chk(() => res.every((re) => re.test(ins)), () => `the server's instructions miss the rule "${what}": ${res.filter((re) => !re.test(ins))}`);
+      chk(() => res.every((re) => re.test(skill)), () => `the report-design skill misses the rule "${what}": ${res.filter((re) => !re.test(skill))}`);
+    }
+    const cr = tl.create_report.description, dn = tl.create_report.inputSchema.properties.displayNames.description, ch = tl.check_model_health.description;
+    chk(() => /show the (user the )?plan/i.test(cr) && /wait for/i.test(cr) && /closest supported/i.test(cr) && /what (its|the) value (really )?is/i.test(cr), () => `create_report's description must carry: plan and wait, the closest supported visuals, a true card label: ${cr.slice(0, 300)}`);
+    chk(() => /only/i.test(dn) && /user/i.test(dn) && /never translate, shorten or (relabel|rename)/i.test(dn), () => `displayNames must say the names come only from the user: ${dn}`);
+    chk(() => /Calendar Generator/.test(ch) && /never write (the )?calendar DAX/i.test(ch) && /not (part of the score|scored)/i.test(ch) && /new file/i.test(ch), () => `check_model_health's description must carry the Gulf calendar rule and say the scripts go to new files: ${ch.slice(0, 300)}`);
+    for (const n of ['read_model', 'suggest_fields', 'check_model_health', 'create_report']) chk(() => /untrusted/i.test(tl[n].description), () => `${n}'s description must say that names in the model are untrusted text`);
+    chk(() => ins.length < 2500, () => `the server's instructions are ${ins.length} characters: keep them short enough to be read`);
+  }
+
+  // 5. the install experience: a working folder that is empty, or that doesn't exist, answers as a normal result with
+  //    what to do (not as an error); "no working folder set" stays a refusal (round 3, test 4 above)
+  {
+    const BASE = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-r5root-'));
+    fs.mkdirSync(path.join(BASE, 'empty'));
+    const a = await start({ DATAARCUS_ROOT: path.join(BASE, 'empty') }, BASE);
+    for (const tool of ['read_model', 'suggest_fields', 'check_model_health']) {
+      const x = await a.call(tool, { path: '.' });
+      chk(() => !x.err && x.j.workingFolder === path.join(BASE, 'empty') && x.j.state === 'empty' && /is empty/.test(x.j.whatToDo) && /\.pbip/.test(x.j.whatToDo), () => `${tool} on an empty working folder must be a normal result with what to do: ${x.err ? 'error: ' : ''}${x.t.slice(0, 200)}`);
+    }
+    chk(() => fs.readdirSync(path.join(BASE, 'empty')).length === 0, () => `an empty working folder was written to: ${fs.readdirSync(path.join(BASE, 'empty'))}`);
+    await a.close();
+    const b = await start({ DATAARCUS_ROOT: path.join(BASE, 'no', 'such', 'folder') }, BASE);
+    const plan = await ask('plan_layout', {});
+    for (const [tool, args] of [['read_model', { path: '.' }], ['check_model_health', { path: '.' }], ['generate_theme', { name: 'Missing' }], ['create_report', { path: '.', name: 'Missing', design: (plan.j || {}).design }]]) {
+      const x = await b.call(tool, args);
+      chk(() => !x.err && x.j.state === 'missing' && /doesn't exist yet/.test(x.j.whatToDo) && /\.pbip/.test(x.j.whatToDo) && !/ENOENT/.test(x.t), () => `${tool} on a working folder that doesn't exist must be a normal result with what to do: ${x.err ? 'error: ' : ''}${x.t.slice(0, 200)}`);
+    }
+    chk(() => !fs.existsSync(path.join(BASE, 'no')), () => 'a working folder with no parent was made');
+    await b.close();
+    fs.rmSync(BASE, { recursive: true, force: true });
   }
 }
 
