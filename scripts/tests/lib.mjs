@@ -67,6 +67,11 @@ export async function visitor(browser, { viewport = [1440, 900], timezone = 'Asi
   const hits = [];
   await ctx.route(/googletagmanager\.com|clarity\.ms/, (rt) => { hits.push(new URL(rt.request().url()).host); rt.fulfill({ status: 200, contentType: 'text/javascript', body: '' }); });
   await ctx.route(/fonts\.googleapis|fonts\.gstatic|app\.powerbi|web3forms/, (rt) => rt.fulfill({ status: 200, body: '' }));
+  // whether the page itself is scrolling: from a scroll event of the page to its scrollend (fired when a smooth scroll
+  // finishes, however long a busy machine takes); settle() waits for it. Scrolls inside elements don't count.
+  await ctx.addInitScript(() => { window.__scrolling = false;
+    document.addEventListener('scroll', () => { window.__scrolling = true; }, { passive: true });
+    document.addEventListener('scrollend', () => { window.__scrolling = false; }); });
   if (consent) await ctx.addInitScript((c) => { try { if (!localStorage.getItem('dataarcus-consent')) localStorage.setItem('dataarcus-consent', c); } catch (e) { /* ignore */ } }, consent);
   const pg = await ctx.newPage();
   // --slow N in run-all: pages run N times slower (Chrome's CPU throttling), to reproduce a busy machine
@@ -96,14 +101,18 @@ export async function ready(pg) {
   }
 }
 
-// Waits until the page stops scrolling (smooth scrolls take a moment)
 // Waits until the page stops scrolling. A smooth scroll can start a moment after a click (later still on a busy
 // machine), so one unchanged reading is not enough: the position must hold for 4 readings in a row (about 320 ms).
+// On a busy machine a smooth scroll can also stall mid-way for longer than that, so while the browser says a scroll is
+// under way (a scroll event without its scrollend yet) the readings don't count; a scrollend that never comes stops
+// the wait after about 3 s without movement.
 export async function settle(pg) {
-  let last = -1, same = 0;
-  for (let i = 0; i < 60; i++) {
-    const y = await pg.evaluate(() => scrollY);
-    same = y === last ? same + 1 : 0;
+  let last = -1, same = 0, still = 0;
+  const end = Date.now() + WAIT;
+  while (Date.now() < end) {
+    const [y, busy] = await pg.evaluate(() => [scrollY, !!window.__scrolling]);
+    still = y === last ? still + 1 : 0;
+    same = y === last && (!busy || still >= 36) ? same + 1 : 0;
     if (same >= 3) return y;
     last = y; await pg.waitForTimeout(80);
   }

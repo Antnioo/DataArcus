@@ -2,7 +2,7 @@
 // in the address, the target sits just below the navbar and any pinned bar, never hidden under them.
 // Full-width sections land flush under the bars, with nothing of the section above showing.
 // This is what style.css (--top-offset, section[id]) and main.js section 2 promise.
-import { pages, visitor, settle, ready } from './lib.mjs';
+import { pages, visitor, settle, ready, WAIT } from './lib.mjs';
 
 const landing = (pg, id) => pg.evaluate((id) => {
   const el = document.getElementById(id), nav = document.getElementById('navbar');
@@ -34,7 +34,16 @@ export default async function ({ browser, url }) {
       .map((a) => a.getAttribute('href').slice(1)))]);
     for (const id of ids) {
       await v.pg.evaluate(() => scrollTo(0, 0)); await settle(v.pg);
-      await v.pg.locator(`a[href="#${id}"]:visible`).first().click();
+      // the link in view first, so the only scroll after the click is the page's own
+      const link = v.pg.locator(`a[href="#${id}"]:visible`).first();
+      await link.scrollIntoViewIfNeeded(); await settle(v.pg);
+      // on a busy machine the click's smooth scroll can start a few frames late: wait for its first scroll event, or
+      // for 10 frames without one (the target was already in place), then for it to end
+      await v.pg.evaluate(() => { const s = window.__click = { moved: false, frames: 0 };
+        document.addEventListener('click', () => { document.addEventListener('scroll', () => { s.moved = true; }, { once: true });
+          const f = () => { if (++s.frames < 10) requestAnimationFrame(f); }; requestAnimationFrame(f); }, { once: true, capture: true }); });
+      await link.click();
+      await v.pg.waitForFunction(() => window.__click.moved || window.__click.frames >= 10, null, { timeout: WAIT });
       await settle(v.pg);
       judge(await landing(v.pg, id), `${p} ${vp[0]}px click`, id, problems); checks++;
       // arriving from another page with #id in the address
