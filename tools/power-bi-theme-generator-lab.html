@@ -32,7 +32,7 @@
       var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
       try{choice=localStorage.getItem(KEY)}catch(e){}
       try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
-      var eu=/^Europe\//.test(tz)||/^Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)$/.test(tz);
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
       function load(){ if(loaded) return; loaded=true;
         window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
         gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
@@ -303,7 +303,7 @@
         <a href="#download" data-step="download"><b>3</b><span data-i18n="tg.nav.download">Download</span></a>
       </nav>
 
-      <div class="tg-panel" id="colors" role="region" aria-labelledby="colTitle">
+      <div class="tg-panel" id="colors" role="region" data-clarity-mask="true" aria-labelledby="colTitle">
         <h2 class="h4 fw-bold mb-1" id="colTitle"><span class="tg-step d-block mb-1" data-i18n="tg.step1">1 · Colors</span><span data-i18n="tg.colTitle">Brand colors and font</span></h2>
         <p class="text-white-50 mb-4" data-i18n="tg.colSub">Start from a preset or your brand color. The preview shows how a real report looks with it.</p>
         <div class="row g-4">
@@ -381,7 +381,7 @@
         </div>
       </div>
 
-      <div class="tg-panel tg-lay mt-4" id="layout" role="region" aria-labelledby="layTitle">
+      <div class="tg-panel tg-lay mt-4" id="layout" role="region" data-clarity-mask="true" aria-labelledby="layTitle">
         <h2 class="h4 fw-bold mb-1" id="layTitle"><span class="tg-step d-block mb-1" data-i18n="tg.step2">2 · Layout</span><span data-i18n="tg.layout.title">Page size and layout</span> <span class="tg-new" data-i18n="tg.layout.new">New</span></h2>
         <p class="text-white-50 mb-4" data-i18n="tg.layout.subtitle">A full report background in your theme colors, with a place for every visual. Layouts follow dashboard design principles from Stephen Few, the IBCS standards and Microsoft's report design guidance.</p>
         <div class="tg-pagesize mb-4" id="pageSize"></div>
@@ -401,7 +401,7 @@
         </div>
       </div>
 
-      <div class="tg-panel mt-4" id="download" role="region" aria-labelledby="dlTitle">
+      <div class="tg-panel mt-4" id="download" role="region" data-clarity-mask="true" aria-labelledby="dlTitle">
         <h2 class="h4 fw-bold mb-1" id="dlTitle"><span class="tg-step d-block mb-1" data-i18n="tg.step3">3 · Download</span><span data-i18n="tg.dl.title">Your Power BI design</span></h2>
         <p class="text-white-50 mb-4" data-i18n="tg.dl.subtitle">Three files, one design. They use every choice above; if you change something after downloading, you'll see which file to download again.</p>
         <div id="dlVis" class="mb-3"></div>
@@ -458,7 +458,7 @@
           <div class="col-lg-7">
             <span class="tg-label" data-i18n="tg.layout.howTitle">How to use it in Power BI</span>
             <ol class="tg-how mb-0">
-              <li data-i18n-html="tg.layout.how1"><strong>Download the files</strong> above, with visual backgrounds set to <strong>Transparent</strong>.</li>
+              <li data-i18n-html="tg.layout.how1">Set visual backgrounds to <strong>Transparent</strong> (above), then download the files.</li>
               <li data-i18n-html="tg.layout.how2">Import the theme: <strong>View › Themes › Browse for themes</strong>.</li>
               <li data-i18n-html="tg.layout.how3">Set the background: <strong>Format page › Canvas background › Image</strong>, Image fit <strong>Stretch</strong>, Transparency <strong>0%</strong>.</li>
               <li data-i18n-html="tg.layout.how4">Add each visual, then type its numbers from the table into <strong>Format › General › Properties</strong> (Size and Position). It lands exactly on its panel.</li>
@@ -564,6 +564,6 @@
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
   <script src="../assets/js/main.min.js" defer></script>
   <script src="../assets/js/design-engine.min.js?v=20261003a" defer></script>
-  <script src="../assets/js/theme-generator.min.js?v=20261003m" defer></script>
+  <script src="../assets/js/theme-generator.min.js?v=20261004a" defer></script>
 </body>
 </html>

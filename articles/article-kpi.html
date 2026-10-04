@@ -43,7 +43,7 @@
       var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
       try{choice=localStorage.getItem(KEY)}catch(e){}
       try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
-      var eu=/^Europe\//.test(tz)||/^Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)$/.test(tz);
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
       function load(){ if(loaded) return; loaded=true;
         window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
         gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');

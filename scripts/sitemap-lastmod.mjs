@@ -1,7 +1,8 @@
 // Sets every <lastmod> in sitemap.xml to the date of the page's last commit: the page's HTML and the translation
 // scripts it loads (its text lives there too), whichever changed last. Google uses lastmod only when it is accurate.
-// Commits that only change boilerplate (CDN versions and their integrity hashes, ?v= cache bumps) don't count: a
-// library update on every page is not a change to any page's content. Dates are Dubai dates (the site's time zone).
+// Commits that only change boilerplate (CDN versions and their integrity hashes, ?v= cache bumps, the analytics and
+// consent loader in each page's head, Clarity's masking attribute) don't count: a library or privacy update on every
+// page is not a change to any page's content. Dates are Dubai dates (the site's time zone).
 //   node scripts/sitemap-lastmod.mjs           check; exit code 1 and the list when a date is out of step
 //   node scripts/sitemap-lastmod.mjs --write   rewrite the stale dates
 // Run after committing page changes (uncommitted edits don't count: the date is the commit's).
@@ -23,16 +24,21 @@ export const dubaiDate = (secs) => DUBAI.format(new Date(secs * 1000));
 const strip = (line) => line
   .replace(/(cdn\.jsdelivr\.net\/npm\/(?:@[^/@"]+\/)?[^/@"]+)@[^/"]+/g, '$1')
   .replace(/\s+integrity="[^"]*"/g, '').replace(/\s+crossorigin="[^"]*"/g, '')
-  .replace(/\?v=[^"'&\s]*/g, '')
+  .replace(/\?v=[^"'&\s]*/g, '').replace(/\s+data-clarity-mask="[^"]*"/g, '')
   .trim();
+// lines of the analytics and consent loader in each page's head (the EU time zones, Google Analytics, Clarity), and
+// lines that are only a script comment: not what the page says
+const loader = (line) => /var eu=|clarity\.ms\/tag|googletagmanager\.com\/gtag|gtag\('config'/.test(line) || /^\/\//.test(line);
 // true when every line the diff removes comes back, boilerplate aside, as a line it adds (and the other way round)
 export function boilerplateOnly(diff) {
   const minus = [], plus = [];
   for (const l of diff.split('\n')) {
     if (/^(---|\+\+\+) /.test(l)) continue;
-    if (l[0] === '-') minus.push(strip(l.slice(1))); else if (l[0] === '+') plus.push(strip(l.slice(1)));
+    const t = strip(l.slice(1));
+    if (loader(t)) continue;
+    if (l[0] === '-') minus.push(t); else if (l[0] === '+') plus.push(t);
   }
-  if (!minus.length && !plus.length) return false;
+  if (!minus.length && !plus.length) return /^[-+](?![-+]{2} )/m.test(diff);   // only loader lines changed: boilerplate
   const key = (a) => a.filter((x) => x !== '').sort().join('\n');
   return key(minus) === key(plus);
 }
@@ -41,17 +47,19 @@ export function boilerplateOnly(diff) {
 const pageFile = (loc) => { const p = loc.slice(SITE.length); return !p ? 'index.html' : p.endsWith('/') ? p + 'index.html' : p; };
 // the page's own translation sources (translations/x.min.js -> translations/x.js); common.js (menu and footer on
 // every page) is left out: a menu change is not a change to the page's content
-const translations = (file) => {
-  const html = fs.readFileSync(path.join(ROOT, file), 'utf8');
+const translations = (file, rev) => {
+  const html = rev ? git(['show', `${rev}:${file}`]) : fs.readFileSync(path.join(ROOT, file), 'utf8');
   const dir = path.dirname(file);
+  const exists = (f) => { if (!rev) return fs.existsSync(path.join(ROOT, f)); try { git(['cat-file', '-e', `${rev}:${f}`]); return true; } catch (e) { return false; } };
   return [...html.matchAll(/src="([^"?]*translations\/[^"?]+?)(?:\.min)?\.js(?:\?[^"]*)?"/g)]
-    .map((m) => path.normalize(path.join(dir, m[1] + '.js')))
-    .filter((f) => !/translations[\\/]common\.js$/.test(f) && fs.existsSync(path.join(ROOT, f)));
+    .map((m) => path.posix.normalize(path.posix.join(dir, m[1] + '.js')))
+    .filter((f) => !/translations[\\/]common\.js$/.test(f) && exists(f));
 };
-// the Dubai date of the last commit that changed the page's content (its HTML or its translations)
-export function pageDate(page) {
-  const files = [page, ...translations(page)];
-  for (const row of git(['log', '--format=%H %ct', '--', ...files]).trim().split('\n').filter(Boolean)) {
+// the Dubai date of the last commit that changed the page's content (its HTML or its translations), as of rev
+// (default: the files on disk and the current history)
+export function pageDate(page, rev) {
+  const files = [page, ...translations(page, rev)];
+  for (const row of git(['log', '--format=%H %ct', ...(rev ? [rev] : []), '--', ...files]).trim().split('\n').filter(Boolean)) {
     const [sha, secs] = row.split(' ');
     if (!boilerplateOnly(git(['show', '--format=', '-U0', '--no-color', sha, '--', ...files]))) return dubaiDate(+secs);
   }

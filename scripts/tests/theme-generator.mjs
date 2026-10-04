@@ -85,6 +85,9 @@ export default async function ({ browser, url, page = PAGE }) {
   // 3. The theme JSON carries the corner radius in page units, and transparent visuals when chosen
   v = await open('en');
   const json = () => v.pg.evaluate(() => JSON.parse(document.getElementById('json').textContent));
+  // the corner checks below are about solid visuals: pick Solid, since a layout change now switches a visitor who
+  // hasn't chosen to Transparent (section 6)
+  await v.pg.click('#dlVis [data-l=transparent][data-v="0"]');
   for (const [size, r, want] of [['1280x720', '16', 16], ['1920x1080', '16', 24], ['1920x1080', '8', 12], ['960x720', '0', 0]]) {
     await v.pg.click(`[data-l=page][data-v="${size}"]`); await v.pg.click(`[data-l=radius][data-v="${r}"]`);
     // every visual (*) and every visual type, since Power BI's base theme sets corners per type;
@@ -143,9 +146,10 @@ export default async function ({ browser, url, page = PAGE }) {
     await v.pg.click('[data-l=kpis][data-v="6"]');                // changes the table too
     s = await st();
     check(s.stale.join() === 'json,png,csv', `${lang}: after changing KPI count: ${JSON.stringify(s)}`);
-    await v.pg.click('#dlStatus [data-dl=transparent]');
+    // changing the corners (a layout change) already switched the visuals to Transparent (section 6), which clears
+    // the solid-visuals hint without its button
     s = await st();
-    check(!s.notes.includes('transparent'), `${lang}: Switch to transparent did not clear the hint`);
+    check(!s.notes.includes('transparent'), `${lang}: the layout change did not switch to transparent and clear the hint`);
     const names = []; v.pg.on('download', (d) => names.push(d.suggestedFilename()));
     await v.pg.click('#dlStatus [data-dl=stale]'); await v.pg.waitForTimeout(1500);
     s = await st();
@@ -354,6 +358,33 @@ export default async function ({ browser, url, page = PAGE }) {
     await v.pg.goto(`${url}${page}?lang=${lang}#download`, { waitUntil: 'networkidle' });
     check(!(await st())[2].folded, `${lang}: a #download link did not open Download`);
     if (v.errs.length) problems.push(`folds ${lang}: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
+
+  // 6. Visual backgrounds follow what the visitor uses (owner 2026-10-04): a colour-only visitor keeps Solid; the first
+  //    change in the Layout step switches to Transparent and says so; the visitor's own choice always wins
+  for (const lang of ['en', 'ar']) {
+    v = await open(lang);
+    const vis = () => v.pg.evaluate(() => ({ t: document.querySelector('#dlVis button[data-l=transparent].active')?.dataset.v,
+      bg: JSON.parse(document.getElementById('json').textContent).visualStyles['*']['*'].background[0].show, note: document.querySelector('#dlVis [data-auto]')?.textContent || '' }));
+    await v.pg.click('.tg-preset[data-p="Midnight"]');
+    let r = await vis();
+    check(r.t === '0' && r.bg === true && !r.note, `${lang}: a colour change switched visual backgrounds: ${JSON.stringify(r)}`);
+    await v.pg.click('[data-l=kpis][data-v="5"]');
+    r = await vis();
+    check(r.t === '1' && r.bg === false && r.note.length > 20, `${lang}: a layout change did not switch to Transparent and say so: ${JSON.stringify(r)}`);
+    await v.pg.click('#dlVis [data-l=transparent][data-v="0"]');
+    await v.pg.click('[data-l=kpis][data-v="6"]');
+    const cb = await v.pg.$('input[data-l=shadow]'); await cb.click();
+    r = await vis();
+    check(r.t === '0' && r.bg === true && !r.note, `${lang}: the visitor chose Solid, then a layout change switched it back: ${JSON.stringify(r)}`);
+    await v.pg.reload({ waitUntil: 'networkidle' }); await v.pg.click('[data-l=kpis][data-v="4"]');
+    r = await vis();
+    check(r.t === '0', `${lang}: after a reload the visitor's Solid choice was not kept: ${JSON.stringify(r)}`);
+    // the Power BI steps start with the setting, then the downloads
+    const how1 = await v.pg.evaluate(() => document.querySelector('[data-i18n-html="tg.layout.how1"]').textContent.trim());
+    check(lang === 'en' ? how1 === 'Set visual backgrounds to Transparent (above), then download the files.' : /شفافة/.test(how1) && /ثم نزّل/.test(how1), `${lang}: how-to step 1 reads "${how1}"`);
+    if (v.errs.length) problems.push(`${lang} visuals: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
   return { checks, problems };
