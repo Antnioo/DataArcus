@@ -107,6 +107,55 @@ English (Segoe UI), where the title sits low, leaving Arabic as it is except 640
 One header height per page size for both languages is also possible (the larger of the two: 90, 62, 62, 45), at the
 cost of the Arabic 1080 title sitting about 3 high.
 
+### Results (2026-10-04; nothing merged by the builder; terminal only)
+- **Commits** (`fix/round-8`): `9cc15bd` the plan; `deede58` the page filter (tests, code, the skill, golden task
+  3, the `.min.js`); `e36200b` the paths, D14 and D15; then this record. dataarcus-engine `fix/round-8`: `56d1def`
+  (the manifest's `create_report` text, its test, version 0.2.4).
+- **Tests:** `npm test` 317 -> **324 of 324** (as planned: 7 new checks, all 7 failed on the old code: run before
+  the code, 324 checks with 7 failures). Engine build test 8 -> 9 (the new one is false on the old manifest).
+  `pbip` suite locally: 71 of 71. **CI on `e36200b` (run 37203120928): mcp success (324), website success, all 17
+  suites.** CI on the plan's commit `9cc15bd` (text only): mcp success, website failed on the one check that failed
+  once in round 7 too ("tools/power-bi-licensing-cost-calculator.html 1440px: the Inter swap shifts the page 0.126
+  (want 0.1 or less)"), on a page this branch does not touch; it passed on the next commit.
+- **Item 1, the page filter:** as expected. `create_report` takes `pageFilters` (`[{ field, values }]`, 8 at most,
+  50 values each). In `page.json` of every report page (not the tooltip pages): `filterConfig.filters`, one
+  `Categorical` filter per field with an `In` condition, in the shape of Microsoft's report-authoring reference
+  (their plugin 0.3.18, `references/authoring/filters.md` and `expressions.md`; literals as their CLI encodes them:
+  `true`, `'text'`, `2025L`, `5.5D`; a `'` in a text is doubled, which their encoder does not do: D14 checks it).
+  Refused, named, nothing written: an unknown table or column, a measure, a date column, a fixed-decimal column,
+  a value of the wrong type, a field given twice. A column the files give no type (a DAX table's, like the Ramadan
+  model's Calendar[Is Ramadan]) is typed by the value given, and the answer says so (`typedBy`). The answer lists
+  the filters (`pageFilters`) and `reportNotes` says in words what the pages are limited to and that the Filters
+  pane changes or clears it. Microsoft's validator: 0 errors on both test reports. The tool's description and the
+  skill say when to pass one. **One thing changed against my first code, not against a test:** the test gives six
+  filters in one call and my first limit was five; the limit was mine and not in the plan, so the limit went to 8.
+- **Golden task 3 with the filter:** expected and actual in `mcp/GOLDEN-TASKS.md` ("Task 3 with a page filter"):
+  PASS at tool level; one page with the filter, two tooltip pages without, 20 visuals, validator 0.
+- **Item 2, the taller header:** the table above, nothing built. The script: `builder-scripts\r8-header.mjs`.
+  One line differs from the script's print: 640 x 360 English, where the script's rounding up gives 38 (26) and
+  moves a title that is in the middle today by 0.5; the table says "no change".
+- **Item 3, the paths:** 37 hits before in 10 files. 28 changed (`mcp/GOLDEN-TASKS.md` 9, `mcp/WORK.md` 11,
+  `scripts/tests/DESKTOP-TESTS.md` 6, `mcp/README.md` 2 lines, `mcp/PHASE2-SPEC.md` 2, `mcp/ROADMAP.md` 1; the
+  count is 31 with the README's three on two lines). **Not changed, 6 lines of the 37, and why:** `mcp/PRIVACY.md`
+  37 and 62 (made-up examples of a path, no laptop folder); `scripts/tests/pbip.mjs` 110 (a comment about Windows'
+  path limit, with `<name>`); `CLAUDE.md` 21, `mcp/CLAUDE.md` 15 and 60 (**the builder's own rules**: "work only
+  inside ...", where the repo and the scripts are; a neutral name there would lose the rule's meaning, and the root
+  file is outside `mcp/` and `scripts/tests/`: the reviewer's call). New since: this section's plan line names what
+  is searched for. **Expected differed here:** the plan said only the generic examples and the comment would stay;
+  the three rule lines stay too. Folder names without the drive (`tests\phase2-try\...`, `builder-scripts\...`)
+  were left: they hold no personal path and the session memory needs them.
+- **Shared engine:** `assets/js/pbip-export.js` (page filters; a report without them is written byte for byte as
+  before: every website suite passes untouched). `pbip-export.min.js?v=20261004d`,
+  `theme-generator.min.js?v=20261004d` (both Theme Generator pages). `check:min`: all 55 match. `scripts/csp.mjs`:
+  "All 52 pages carry their current policy", on the commit's files as git stores them (LF).
+- **Package:** `dist/dataarcus-0.2.4.mcpb`, built from `fix/round-8` at `e36200b`, **4,023,641 bytes**, SHA-256
+  `541cc7a4306725e7a1a66a83f0dbe6b7bc878b578a11145cb7c5742df235e427`, unsigned, not installed, 19 staged files, 91
+  packages.
+
+**Still open, not in this round:** the Desktop checks D1 to D15 and the agent-level re-run of the 11 golden tasks on
+0.2.4 (the next free laptop evening); report-side thousand separators after D8; the platform plan (the owner reads
+it on 10 October); the owner's choice on the header (a, b or c above) after D15.
+
 ## Next step: round 7, four small fixes from the night audit and the manifest text (owner's go 2026-10-04; TERMINAL ONLY; branch `fix/round-7-audit` from main `ed13112`; dataarcus-engine: the same branch name, the packaging only)
 Beta prep works in parallel on `fix/audit-site-2`: its files (among them `scripts/tests/model-health.mjs`,
 `tools.mjs`, `site.mjs`, `assets/js/model-health.js`, `model-health-worker.js`, the tool pages) are left alone. New
