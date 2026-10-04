@@ -990,6 +990,70 @@ chart titles mix "حسب" with English field names (no display names given), the
 "Total" word. On a 927-wide card the number sits in the middle with a lot of empty card around it (a look, not a
 fault).
 
+## 2026-10-04: regression sweep on main (`19c5408`, no code changed), Power BI Desktop 2.158.1177: sixteen reports
+
+Part 6 of the laptop sitting (the owner's go in advance; `idle.ps1` read before every mouse step: 111 s or more each
+time). Test reports only, built from main's code by `builder-scripts\s6-build.mjs` ("Gulf Sales S6 ..."), closed
+without saving:
+- **eight through the MCP server** over stdio on our sample model (`tests/5-tmdl-sample`; solid designs):
+  `generate_theme` -> `plan_layout` (exec, 4 KPI cards) -> `create_report`;
+- **eight as the website's sample download** (`tests/phase2-try/s6/`), with the functions the theme generator lab page
+  calls (`design-engine.js`, `pbip-export.js`), as in rounds 1 and 2; **the page itself was not clicked through in a
+  browser** (the automated suite `scripts/tests/pbip.mjs` does that part).
+
+Each path, English (Segoe UI) and Arabic (Tahoma): 1920 x 1080 light with the filter rail at the end side,
+1280 x 720 light with the filter strip on top, 640 x 360 light with the strip on top, 1920 x 1080 dark with the rail
+at the start side. For each (`s6-run.ps1`): every page and tooltip page captured at 2x through the bridge, every chart
+hovered and, on the Arabic reports, the page buttons Ctrl+clicked (`r2-desk.ps1`), the phone layout captured
+(`phone-check.ps1`). 208 captures in `tests/phase2-try/shots-s6/`. **Looked at in full size:** page 1 of all sixteen,
+page 2 of six, a tooltip page of two, four hovers, five phone captures; the rest were not opened one by one.
+
+| Checked | Last recorded | Seen now | |
+|---|---|---|---|
+| Header: title, logo text | whole, level with the page buttons (round 1) | the same on 1080 and 720, both paths, light and dark | same |
+| Filter rail (side) and strip (top) | rounded panel with the cards' shadow on the MCP's solid designs; three slicers and Reset whole | the same; in Arabic the rail is on the left for "end" and on the right for "start" | same |
+| Page buttons | English whole on one line; Arabic right to left, the current one filled, Ctrl+click opens the page | the same at 1080 and 720; Ctrl+click opened the other page and came back on all eight Arabic reports (the selected page tab read back). **At 640 x 360 the Arabic "ملخص تنفيذي" is cut to "...ملخص"**, both paths | **new at 640 x 360** (finding 1) |
+| KPI cards | titles whole at 1080 and 720; numbers right; the known cuts at 640 x 360 | English: the same. **Arabic MCP reports with a side rail (1080 light and dark): two of four titles end in "..."** ("Total Sales vs Last Ramada...", "Total Sales Last Ramadan (..."); the same reports with the strip on top (720) are whole; the website's Arabic sample names are short and whole | **new** (finding 2) |
+| Tooltip on hover | bar and column charts show the card and the months of the hovered item; the line chart the card and the category chart | the same (English MCP 1080, Arabic MCP 1080 dark, Arabic website 1080: twelve Arabic months with values) | same |
+| Phone layout (top of the page) | title, page buttons, three slicers, Reset, cards | the same. The MCP's cards end in "..." ("Total Sales Last Rama..."), **as they already did in round 1's capture** (`shots-r1/mcp-en1080-phone-p1.png`); round 1's record says "cards with whole titles", which was true of the website's reports only | same (the record corrected) |
+| 640 x 360 | cut card numbers, "..." KPI titles, slanted and cut labels, Q4 behind a scrollbar, a two-row table (the small-page round) | all of them still there. With the strip on top and four cards it is worse than recorded: the weekday column chart has no room for its bars (a line at the top of the plot), the quarter chart shows one bar of four, the detail table shows its header and total only. **A grey scroll thumb stands next to "Your logo" on the MCP's English report** (finding 3) | known, one new item |
+| Microsoft's validator | 0 errors; 10 warnings on 720 | 0 errors on all sixteen; 10 warnings on the 720 and the 640 x 360 reports | same |
+| Unsaved changes right after opening | not recorded before | false on all sixteen | |
+
+**New findings (nothing changed; cause and proposed fix for the owner):**
+1. **Arabic page button cut at 640 x 360** ("...ملخص" for "ملخص تنفيذي"), website and MCP. *Cause:* the button is
+   sized for the names measured at 1080 and 720; the earlier 640 x 360 checks used the analysis layout's shorter names
+   ("تحليل", "نظرة عامة"). *Proposed:* put it with the small-page round; measure the width "ملخص تنفيذي" needs at 8pt
+   in Tahoma and widen the button or shorten the logo slot on small pages.
+2. **Arabic report, side filter rail, English measure names: KPI titles cut** on 1920 x 1080 (MCP). *Cause:* with
+   the rail each of the four cards is about 376 wide; the title is bold Tahoma in an Arabic report, wider than
+   Segoe UI, so names of 28 characters and more don't fit (the English report with the same widths is whole).
+   *Proposed:* let `cardFit` choose the title size from the name's length and the font (measure Tahoma bold first),
+   or allow the title two lines when the card is 4-up beside a rail; tell the agent in `reportNotes` when a title
+   will be cut. Display names (round 2) avoid it when they are short.
+3. **A scroll thumb beside "Your logo" at 640 x 360** on the MCP's English report (also on the agent's task 5
+   report). The text box is 75 x 25 with 8pt Segoe UI in both paths, and the website's report shows no thumb, so the
+   font alone is not the cause; the earlier measurement (24 high enough) was made in Tahoma. *Cause: not found.*
+   *Proposed:* measure the logo text box in Segoe UI on a solid design at 640 x 360 (heights 24 to 32) before
+   changing anything; small-page round.
+4. **Reports with display names open as "unsaved"** (seen on the agent's reports of golden tasks 2, 3 and 6; none
+   of the 22 reports without display names does). Checked on a copy of task 3's report
+   (`tests/beta-sitting/unsaved/`, `builder-scripts\unsaved-check.ps1`, `json-diff.mjs`): saved with Ctrl+S, Desktop
+   rewrites the files (newer schema versions, `active: true` on a category, `pageBinding.parameters: []`, the phone
+   position of the two visual groups removed, resource order) and keeps every display name as written; **the copy
+   Desktop saved itself opens as "unsaved" again.** So nothing DataArcus writes is being repaired: Desktop 2.158
+   treats a report with renamed fields as changed when it loads. *Effect:* the user is asked to save when closing a
+   report they only looked at. *Proposed:* no code change; one line in `create_report`'s notes when display names are
+   used. (That display names are the trigger rests on 3 of 3 against 0 of 22, not on a controlled pair.)
+
+**Seen, not in scope:** Desktop removes the phone position of visual groups on save (`mobile.json` on the two
+groups), so those two files do nothing; every sample download still opens with "One or more calculated tables need
+to be manually refreshed"; "(old)" on a KPI card, 0.34 without a format, months and days A to Z in tables, English
+field names and "All" in the Arabic MCP reports (all known); on the Arabic 640 x 360 page 2 the Reset button has no
+icon (as measured on 2026-10-01); `plan_layout` takes 640 x 360 only as `{ w, h }`, not as the text "640x360" (the
+three named sizes are text), and the website's engine only as `page: 'custom'`: the first build of this sweep made
+1920 x 1080 pages for the two website "360" reports and was rebuilt.
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
