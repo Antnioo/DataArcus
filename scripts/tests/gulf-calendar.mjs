@@ -366,5 +366,23 @@ export default async function ({ browser, url }) {
     check(r.min === '1900-03-01' && r.max === '9999-12-31', `calendar ${lang}: date fields don't say the range (min ${r.min}, max ${r.max})`);
     await done(v, `calendar years ${lang}`);
   }
+  // ---------- 8. The generator as a shared module (assets/js/calendar-generator.js): in Node it writes the page's table ----------
+  // (the MCP's add_gulf_calendar uses it; one generator, never a copy)
+  {
+    let Cal = null;
+    try { delete require.cache[require.resolve('../../assets/js/calendar-generator.js')]; Cal = require('../../assets/js/calendar-generator.js'); } catch (e) { /* not a module yet */ }
+    check(!!Cal && typeof Cal.build === 'function', 'calendar-generator.js is not a module with build() in Node');
+    const DEF = { name: 'Calendar', start: '2022-01-01', end: '2027-12-31', fy: 1, week: 'sun', weekend: 'sat-sun', lang: 'en', hijri: true, fiscal: true, relative: true, observed: false };
+    const cols = (stats) => +((String(stats).match(/(\d+) (columns|عمود)/) || [])[1]);
+    for (const b of BASE.cg) {
+      const out = Cal && typeof Cal.build === 'function' ? Cal.build(Object.assign({}, DEF, b.saved)) : null;
+      check(!!out && out.dax === b.dax && out.columns.length === cols(b.stats), `shared generator ${JSON.stringify(b.saved)} ${b.lang}: ${out ? (out.dax === b.dax ? 'columns ' + out.columns.length + ' vs ' + cols(b.stats) : 'DAX differs from the page') : 'no build()'}`);
+    }
+    const { MODEL_CG } = await import('../gulf-calendar/test-model/make-test-model.mjs');
+    const model = fs.readFileSync(path.join(ROOT, 'scripts/gulf-calendar/test-model/calendar.dax'), 'utf8').replace(/\r\n/g, '\n');
+    const mo = Cal && typeof Cal.build === 'function' ? Cal.build(Object.assign({}, DEF, MODEL_CG)) : null;
+    check(!!mo && mo.dax + '\n' === model && mo.columns.length === 36, `shared generator on the test model's options: ${mo ? (mo.dax + '\n' === model ? 'columns ' + mo.columns.length : 'DAX differs from calendar.dax') : 'no build()'}`);
+  }
+
   return { checks, problems };
 }

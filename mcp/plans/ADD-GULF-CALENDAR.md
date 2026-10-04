@@ -163,3 +163,25 @@ tool's script for `name: 'Calendar'`, 2018-2030, UAE, announced, `relateTo: ['Sa
    *Recommended: `Gulf Calendar`;* the Measure Builder's measures then take that name.
 3. **Relationships in the script:** write them for `relateTo` columns (one Preview, one Apply), or always leave them
    to the user's clicks? *Recommended: in the script, only for the columns the user names.*
+
+## Build, cloud part (2026-10-04, branch `feat/add-gulf-calendar`): expected numbers written before any run
+The owner's answers: years required, default name `Gulf Calendar`, relationships only for `relateTo` columns. No
+Desktop here: what Desktop has not measured (G2 mark as date table, G3 sort by column) stays **by hand** in the
+answer, never in the script; the Desktop rows are D-GC1 to D-GC6 in `mcp/WORK.md`.
+- **Website (`gulf-calendar` suite, new section 8):** `DataArcusCalendar.build()` in Node equals the page's DAX and
+  column count for the 16 saved outputs and the test model's options: **17 equal**, plus 1 check that `build` exists:
+  788 -> **806** checks (main had 788); every other website suite unchanged.
+- **MCP (`npm test`): 340 -> 363.** Two existing expectations change because the request adds a tool: the tool list
+  (7 names) and "lists its 7 tools" (was 6). New checks (23): the tool's annotations (adds files, never destructive);
+  on `bim-project` (health-project) 2018-2030, UAE, announced, `relateTo: ['Sales[Date]']`: the file
+  `Health Test - add Gulf calendar.tmdl`, 1 `createOrReplace`, 1 `table 'Gulf Calendar'`, 1 `relationship` from
+  `Sales.Date` to `'Gulf Calendar'.Date`, **162** month starts, the answer's **4748 rows** and **36 columns**,
+  `checkedTo` 2026-05-27, `estimatesFrom` 2027-02-08, `selfCheck` with no findings, no DAX in the answer, the
+  mark-as-date-table and the 3 sort-by steps by hand; asked again: the same file, no second one; on `dax-project`
+  (a `Calendar` and a `Total Sales` measure): `Calendar`, `CALENDAR`, ` calendar ` and `Total Sales` refused with
+  "Nothing was written" and `Gulf Calendar` suggested, no file added; `Sales[Nope]`, a name with `'` or a new line,
+  `LocalDateTable_1` refused; 2022-2027 with `sat-sun` and announced off: **2191 rows, 34 columns**, the partition's
+  DAX equal to the website's default; 1900, 10000, 2000-2060 (61 years) and last before first refused, no file;
+  `check_model_health` on `bim-project` with the script's table added: the calendar is the DataArcus one, no
+  `GC_WEEKEND`, `GC_DATES_DIFFER`, `GC_ESTIMATES` or `GC_ENDS_EARLY` for the UAE, **939** weekend days for Saudi
+  Arabia; and its `gulfCalendar.fixes.addGulfCalendar` names the tool with the same settings.
