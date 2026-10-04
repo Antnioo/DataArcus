@@ -16,7 +16,7 @@ It works next to Microsoft's Power BI Authoring MCP server (model edits, DAX que
 What stays on the machine and what the AI app sees: `PRIVACY.md`. What DataArcus promises: `PRODUCT_SPEC.md`.
 - Every path must be inside one folder, the working folder: `DATAARCUS_ROOT`. Anything outside is refused, also when a link (symbolic link or junction) inside the folder leads outside it.
 - `DATAARCUS_ROOT` must be set: without it (or empty) the server starts but every tool refuses and says why; it never uses the folder it starts in. For the current folder set `DATAARCUS_ROOT=.` on purpose. A folder that doesn't exist yet is created on start when its parent exists.
-- The version is read from `mcp/package.json`. Tools declare what they do to files: four only read (`readOnlyHint`), `generate_theme` and `create_report` only add files (`destructiveHint: false`).
+- The version is read from `mcp/package.json`. Tools declare what they do to files: three only read (`readOnlyHint`: `read_model`, `suggest_fields`, `plan_layout`); `generate_theme`, `create_report` and `check_model_health` (its fix scripts) only add files (`destructiveHint: false`).
 - Nothing is overwritten: `create_report` refuses to write if any file already exists.
 - Keep employer or client files you may not share out of that folder.
 
