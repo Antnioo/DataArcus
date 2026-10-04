@@ -212,6 +212,8 @@
     .kd-dax, .kd-f input, .kd-rule input, [data-vk="measure"] { direction: ltr; unicode-bidi: plaintext; }
     /* rule operator: "<" must not mirror to ">" on the Arabic page; give the threshold room */
     .kd-rule { flex-wrap: wrap; } .kd-rule select[data-p$=".v"] { flex: 1 1 calc(100% - 40px); }
+    /* a formula reads on its own line ("% change of A vs B"), then its two values; the full text fits (audit AUD-013) */
+    .kd-rule select[data-vk="kind"] { flex: 1 1 100%; order: -1; }
     .kd-rule select[data-p$=".op"] { direction: ltr; flex: 0 0 56px; } .kd-rule input[type=number] { flex: 1; }
     .kd-dax { text-align: left; }
     .kd-route { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 18px 20px; }

@@ -94,8 +94,11 @@
     .tg { padding: var(--page-top) 0 var(--page-bottom); }
     .tg h1 { color: var(--accent); }
     .tg-panel { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; }
-    .tg-chart { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+    .tg-chart { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
     .tg-chart label { display: flex; flex-direction: column; gap: 4px; font-size: .8rem; color: #cbd5e1; margin: 0; }
+    /* a little less padding, so "افتراضي Power BI" fits whole (the arrow still has its 28 px) */
+    .tg-chart .form-select { padding-left: 8px; padding-right: 30px; }
+    html[dir="rtl"] .tg-chart .form-select { padding-left: 30px; padding-right: 8px; }
     .tg-label { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: #94a3b8; font-weight: 600; margin-bottom: 8px; display: block; }
     .tg-presets { display: flex; flex-wrap: wrap; gap: 8px; }
     .tg-preset { display: flex; align-items: center; gap: 8px; background: var(--dk-3); border: 1px solid var(--glass-border); color: var(--lt); border-radius: 30px; padding: 6px 12px 6px 8px; font-size: .85rem; cursor: pointer; }
@@ -327,7 +330,7 @@
                 <label class="tg-label" for="themeName" data-i18n="tg.themeName">Theme name</label>
                 <input id="themeName" class="form-control" value="My Brand Theme" maxlength="60">
               </div>
-              <div style="flex:1;min-width:150px">
+              <div style="flex:1;min-width:190px"><!-- room for "Segoe UI Semibold" (audit AUD-013) -->
                 <label class="tg-label" for="font" data-i18n="tg.font">Font</label>
                 <select id="font" class="form-select">
                   <option>Segoe UI</option><option>Segoe UI Semibold</option><option>DIN</option><option>Arial</option>

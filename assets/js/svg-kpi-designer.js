@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const num = (label, path, v, step) => `<label class="kd-f"><span>${label}</span><input type="number" step="${step || 'any'}" data-p="${path}" value="${esc(v == null ? '' : v)}"></label>`;
   const col = (label, path, v) => `<label class="kd-f"><span>${label}</span><input type="color" data-p="${path}" value="${esc(/^#[0-9a-f]{6}$/i.test(v || '') ? v : '#000000')}"></label>`;
   const txt = (label, path, v, extra) => `<label class="kd-f kd-wide"><span>${label}</span><input type="text" data-p="${path}" value="${esc(v == null ? '' : v)}" ${extra || ''}></label>`;
-  const sel_ = (label, path, v, opts) => `<label class="kd-f"><span>${label}</span><select data-p="${path}">${opts.map(([k, t]) => `<option value="${esc(k)}"${String(k) === String(v) ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label>`;
+  const sel_ = (label, path, v, opts, wide) => `<label class="kd-f${wide ? ' kd-wide' : ''}"><span>${label}</span><select data-p="${path}">${opts.map(([k, t]) => `<option value="${esc(k)}"${String(k) === String(v) ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select></label>`;
   const toggle = (label, bindKey, on, hint) => `<label class="kd-toggle"><input type="checkbox" data-bind-toggle="${bindKey}"${on ? ' checked' : ''}> <span>${label}</span>${hint ? `<small>${hint}</small>` : ''}</label>`;
   const OPS = K.OPS.map((o) => [o, o]);
 
@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${hasBg ? col(L('Background', 'الخلفية'), 'card.bg', design.bg) + num(L('Corner radius', 'استدارة الزوايا'), 'card.radius', design.radius || 0, 1) : ''}
         ${design.layers.some((l) => l.type === 'spark') ? `${txt(L('Date column for sparklines', 'عمود التاريخ لخطوط الاتجاه'), 'card.dateCol', design.dateCol || "'Date'[Date]", 'maxlength="100" spellcheck="false"')}
         <label class="kd-toggle kd-wide"><input type="checkbox" data-p="card.clearDateFilters"${design.clearDateFilters !== false ? ' checked' : ''}> <span>${L('Ignore date slicers inside the sparkline', 'تجاهل فلاتر التاريخ داخل خط الاتجاه')}</span><small>${L('Keeps the full trend when a Year or Month slicer is set. Turn off if your dates are not in a separate date table.', 'يحافظ على الاتجاه كاملًا عند اختيار سنة أو شهر. أوقفه إذا لم تكن التواريخ في جدول تاريخ منفصل.')}</small></label>` : ''}
-        ${sel_(L('Show nothing when this is blank', 'لا تعرض شيئًا عندما تكون هذه فارغة'), 'card.hideIfBlank', design.hideIfBlank || '', [['', L('(always show)', '(اعرض دائمًا)')]].concat(design.values.filter((v) => v.kind === 'measure').map((v) => [v.id, v.label || v.measure])))}</div>
+        ${sel_(L('Show nothing when this is blank', 'لا تعرض شيئًا عندما تكون هذه فارغة'), 'card.hideIfBlank', design.hideIfBlank || '', [['', L('(always show)', '(اعرض دائمًا)')]].concat(design.values.filter((v) => v.kind === 'measure').map((v) => [v.id, v.label || v.measure])), true)}</div>
         <p class="kd-hint mt-2">${L('Click a layer on the canvas to edit it.', 'اضغط على أي طبقة في اللوحة لتعديلها.')}</p>`;
       return;
     }

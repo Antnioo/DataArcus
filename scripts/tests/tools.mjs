@@ -197,5 +197,26 @@ export default async function ({ browser, url }) {
       `svg-kpi-designer ${lang}, keyboard: layer "${names[1]}" ${reached ? 'reached' : 'not reached by Tab'}; after Enter ${JSON.stringify(after)}`);
     await v.ctx.close();
   }
+
+  // Every drop-down on the tools shows its whole option text (audit AUD-013, 2026-10-04; the Calendar Generator's own
+  // check is in gulf-calendar): each option's width in the drop-down's font against the room inside it, EN and AR,
+  // phone to wide desktop. The SVG KPI Designer starts from a design with formula values, so its formula drop-downs
+  // are measured too.
+  for (const lang of ['en', 'ar']) for (const w of [390, 768, 1024, 1440]) for (const page of ['power-bi-theme-generator', 'dax-measure-builder', 'svg-kpi-designer', 'power-bi-licensing-cost-calculator']) {
+    const v = await visitor(browser, { viewport: [w, 900] });
+    await v.pg.goto(`${url}/tools/${page}.html?lang=${lang}`, { waitUntil: 'networkidle' });
+    const cut = await v.pg.evaluate(() => {
+      const c = document.createElement('canvas').getContext('2d'), out = [];
+      for (const s of document.querySelectorAll('main select')) {
+        if (!s.getClientRects().length) continue;
+        const cs = getComputedStyle(s), room = s.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        c.font = cs.font;
+        for (const o of s.options) { const need = Math.ceil(c.measureText(o.textContent.trim()).width); if (need > room + 0.5) out.push(`${s.id || s.dataset.vk || 'select'} "${o.textContent.trim()}" ${need}px in ${Math.floor(room)}px`); }
+      }
+      return [...new Set(out)];
+    });
+    check(!cut.length, `${page} ${lang} ${w}px: drop-down text cut: ${cut.slice(0, 6).join('; ')}${cut.length > 6 ? ` and ${cut.length - 6} more` : ''}`);
+    await v.ctx.close();
+  }
   return { checks, problems };
 }
