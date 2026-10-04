@@ -48,8 +48,9 @@ the tool itself. A separate skill file only reaches it if it was installed.
 ## What it does not show
 - **A rate.** One run per task per version: 8 of 8 is a count, and agent behaviour varies from run to run.
 - **Any other agent app or model.** One app, one model (not pinned in the record).
-- **That the product is done.** Five tasks still fail for product reasons, listed in `GOLDEN-TASKS.md`; for example,
-  the page in task 3 has no "this Ramadan" measure or filter.
+- **That the product is done.** In the round 5 run, five tasks failed for product reasons, listed in
+  `GOLDEN-TASKS.md`; for example, task 3's page had no "this Ramadan" measure or filter. Since then, rounds 6 and 8
+  added the plan's fields and page filters to `create_report`, checked at tool level only.
 - **A later run.** A tool-level run on 2026-10-04 ("Tool level, round 6") checks the tools without an agent, so its
   numbers are not mixed in here. The agent-level re-run after round 6 hasn't been done yet.
 
