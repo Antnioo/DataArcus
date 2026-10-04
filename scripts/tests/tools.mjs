@@ -159,5 +159,43 @@ export default async function ({ browser, url }) {
     check(!early && !late, `SVG KPI Designer, tutorial seen: the banner shows (${early ? 'while loading' : 'after loading'})`);
     await v.ctx.close();
   }
+
+  // Accessibility of the tools (audit AUD-018, 2026-10-04), EN and AR: every drop-down has a name, a tab list holds
+  // tabs that say which one is selected, a code or table box that scrolls can be reached and scrolled by keyboard,
+  // and the SVG KPI Designer's layers can be picked and edited without a mouse.
+  for (const lang of ['en', 'ar']) {
+    for (const page of ['power-bi-theme-generator', 'dax-calendar-table-generator', 'dax-measure-builder', 'svg-kpi-designer', 'power-bi-licensing-cost-calculator', 'power-bi-model-health-check']) {
+      const v = await visitor(browser, { viewport: [1440, 900] });
+      await v.pg.goto(`${url}/tools/${page}.html?lang=${lang}`, { waitUntil: 'networkidle' });
+      if (page === 'power-bi-model-health-check') { await v.pg.click('#mhSample'); await v.pg.waitForSelector('#mhTab', { timeout: 20000 }); }
+      const r = await v.pg.evaluate(() => {
+        const named = (e) => (e.getAttribute('aria-label') || '').trim() || (e.getAttribute('aria-labelledby') && document.getElementById(e.getAttribute('aria-labelledby'))?.textContent.trim()) || (e.id && document.querySelector(`label[for="${e.id}"]`)?.textContent.trim()) || e.closest('label')?.textContent.trim();
+        const what = (e) => e.id ? '#' + e.id : e.tagName.toLowerCase() + [...e.attributes].filter((a) => a.name.startsWith('data-')).map((a) => `[${a.name}="${a.value}"]`).join('');
+        const selects = [...document.querySelectorAll('main select')].filter((e) => e.getClientRects().length && !named(e)).map(what);
+        const tablists = [...document.querySelectorAll('[role=tablist]')].filter((t) => { const tabs = t.querySelectorAll('[role=tab]'); return !tabs.length || [...tabs].filter((x) => x.getAttribute('aria-selected') === 'true').length !== 1; }).map(what);
+        const scroll = [...document.querySelectorAll('main pre, main table, main [id="slotTable"], main code')].map((e) => e.closest('[id]') && getComputedStyle(e).overflow === 'visible' ? e.parentElement : e)
+          .filter((e) => e.getClientRects().length && (e.scrollHeight > e.clientHeight + 2 || e.scrollWidth > e.clientWidth + 2) && /(auto|scroll)/.test(getComputedStyle(e).overflow + getComputedStyle(e).overflowX + getComputedStyle(e).overflowY))
+          .filter((e) => e.tabIndex < 0 && !e.querySelector('a, button, input, select, textarea, [tabindex]')).map(what);
+        return { selects, tablists, scroll };
+      });
+      check(!r.selects.length, `${page} ${lang}: drop-downs without a name: ${r.selects.join(', ')}`);
+      check(!r.tablists.length, `${page} ${lang}: tab lists without tabs or without one selected tab: ${r.tablists.join(', ')}`);
+      check(!r.scroll.length, `${page} ${lang}: scrolling boxes a keyboard can't reach: ${r.scroll.join(', ')}`);
+      if (v.errs.length) problems.push(`${page} ${lang} a11y: ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+    // keyboard only: Tab to the second layer, Enter picks it (announced as pressed), its properties open and can be
+    // changed from the keyboard
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/tools/svg-kpi-designer.html?lang=${lang}`, { waitUntil: 'networkidle' });
+    const names = await v.pg.$$eval('#layers .kd-lname', (bs) => bs.map((b) => b.textContent.trim()));
+    let reached = false;
+    for (let k = 0; k < 120 && !reached; k++) { await v.pg.keyboard.press('Tab'); reached = await v.pg.evaluate((n) => document.activeElement?.classList.contains('kd-lname') && document.activeElement.textContent.trim() === n, names[1]); }
+    await v.pg.keyboard.press('Enter');
+    const after = await v.pg.evaluate(() => ({ pressed: [...document.querySelectorAll('#layers .kd-lname')].map((b) => b.getAttribute('aria-pressed')), active: document.querySelector('#layers li.active .kd-lname')?.textContent.trim(), field: !!document.querySelector('#props input, #props select') }));
+    check(reached && after.active === names[1] && after.pressed.filter((x) => x === 'true').length === 1 && after.pressed[1] === 'true' && after.field,
+      `svg-kpi-designer ${lang}, keyboard: layer "${names[1]}" ${reached ? 'reached' : 'not reached by Tab'}; after Enter ${JSON.stringify(after)}`);
+    await v.ctx.close();
+  }
   return { checks, problems };
 }

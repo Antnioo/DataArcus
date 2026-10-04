@@ -594,7 +594,9 @@ document.addEventListener('DOMContentLoaded', () => {
     a.title = t.label || 'WhatsApp';
   };
   texts();
-  document.body.appendChild(a);
+  // inside a landmark (an aside), so screen-reader users find it with the page's regions
+  const box = document.createElement('aside'); box.setAttribute('aria-label', 'WhatsApp'); box.appendChild(a);
+  document.body.appendChild(box);
   new MutationObserver(texts).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 })();
 

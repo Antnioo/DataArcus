@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const list = design.layers.map((l, i) => ({ l, i })).reverse(); // top layer first, like design tools
     $('layers').innerHTML = list.length ? list.map(({ l, i }) => {
       const t = TYPES[l.type], linked = l.bind && Object.keys(l.bind).length;
-      return `<li class="kd-layer${i === sel ? ' active' : ''}" data-i="${i}"><button type="button" class="kd-lname" data-act="sel" data-i="${i}"><i class="bi ${t.icon}"></i><span>${esc(l.name || L(t.en, t.ar))}</span>${linked ? `<i class="bi bi-link-45deg kd-linked" title="${L('Linked to data', 'مرتبط بالبيانات')}"></i>` : ''}</button>
+      return `<li class="kd-layer${i === sel ? ' active' : ''}" data-i="${i}"><button type="button" class="kd-lname" data-act="sel" data-i="${i}" aria-pressed="${i === sel}"><i class="bi ${t.icon}"></i><span>${esc(l.name || L(t.en, t.ar))}</span>${linked ? `<i class="bi bi-link-45deg kd-linked" title="${L('Linked to data', 'مرتبط بالبيانات')}"></i>` : ''}</button>
         <span class="kd-lbtns"><button type="button" data-act="up" data-i="${i}" aria-label="${L('Bring forward', 'تقديم للأمام')}" ${i === design.layers.length - 1 ? 'disabled' : ''}><i class="bi bi-arrow-up"></i></button><button type="button" data-act="down" data-i="${i}" aria-label="${L('Send backward', 'إرجاع للخلف')}" ${i === 0 ? 'disabled' : ''}><i class="bi bi-arrow-down"></i></button><button type="button" data-act="dup" data-i="${i}" aria-label="${L('Duplicate', 'تكرار')}"><i class="bi bi-copy"></i></button><button type="button" data-act="del" data-i="${i}" aria-label="${L('Delete', 'حذف')}"><i class="bi bi-trash"></i></button></span></li>`;
     }).join('') : `<li class="kd-empty">${L('No layers yet. Add one above.', 'لا توجد طبقات بعد. أضف واحدة من الأعلى.')}</li>`;
   }
@@ -427,7 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <input type="range" class="kd-slider" data-v="${i}" data-vk="sample" min="${Math.min(0, -max)}" max="${max}" step="${max / 200}" value="${s}" aria-label="${L('Test value slider', 'شريط قيمة التجربة')}"></div>`;
       }
       return `<div class="kd-val"><div class="kd-val-h"><input class="kd-vlabel" data-v="${i}" data-vk="label" value="${esc(v.label)}" aria-label="${L('Label', 'التسمية')}" maxlength="30"><span class="kd-tag kd-tag2">${L('Formula', 'معادلة')}</span>${del}</div>
-        <div class="kd-rule"><select data-v="${i}" data-vk="a">${valOpts(v.a, i)}</select><select data-v="${i}" data-vk="kind">${Object.entries(KINDS).map(([k, t]) => `<option value="${k}"${k === v.kind ? ' selected' : ''}>${L(t[0], t[1])}</option>`).join('')}</select><select data-v="${i}" data-vk="b">${valOpts(v.b, i)}</select></div>
+        <div class="kd-rule"><select data-v="${i}" data-vk="a" aria-label="${L('First value', 'القيمة الأولى')}">${valOpts(v.a, i)}</select><select data-v="${i}" data-vk="kind" aria-label="${L('Formula', 'المعادلة')}">${Object.entries(KINDS).map(([k, t]) => `<option value="${k}"${k === v.kind ? ' selected' : ''}>${L(t[0], t[1])}</option>`).join('')}</select><select data-v="${i}" data-vk="b" aria-label="${L('Second value', 'القيمة الثانية')}">${valOpts(v.b, i)}</select></div>
         <div class="kd-hint">= ${esc(fmtVal(vals[v.id]))}${isFraction(v.id) && vals[v.id] != null ? ' (' + r1(vals[v.id] * 100) + '%)' : ''}</div></div>`;
     }).join('');
   }

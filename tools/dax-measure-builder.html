@@ -226,9 +226,9 @@
           <div class="tg-panel d-flex flex-column gap-3">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
               <div class="mb-seg" role="tablist" aria-label="Output format" data-i18n-aria-label="mb.attrs.output">
-                <button type="button" class="active" data-tab-out="all" data-i18n="mb.allAtOnce">All at once</button>
-                <button type="button" data-tab-out="tmdl" data-i18n="mb.tmdlTab">With formats (TMDL)</button>
-                <button type="button" data-tab-out="one" data-i18n="mb.oneByOne">One by one</button>
+                <button type="button" role="tab" aria-selected="true" class="active" data-tab-out="all" data-i18n="mb.allAtOnce">All at once</button>
+                <button type="button" role="tab" aria-selected="false" data-tab-out="tmdl" data-i18n="mb.tmdlTab">With formats (TMDL)</button>
+                <button type="button" role="tab" aria-selected="false" data-tab-out="one" data-i18n="mb.oneByOne">One by one</button>
               </div>
               <span class="small text-white-50" id="count"></span>
             </div>
@@ -237,7 +237,7 @@
                 <button class="tg-btn2" id="dlBtn" type="button"><i class="bi bi-download me-1"></i><span data-i18n="mb.download">Download</span></button>
                 <button class="btn btn-accent" id="copyAll" type="button"><i class="bi bi-clipboard me-1"></i><span data-i18n="mb.copyAll">Copy all measures</span></button>
               </div>
-              <pre class="tg-json" id="script" style="max-height:520px"></pre>
+              <pre class="tg-json" id="script" style="max-height:520px" tabindex="0" aria-label="The DAX measures" data-i18n-aria-label="mb.a11yBox"></pre>
               <p class="small text-white-50 mb-0" data-i18n-html="mb.allHow">In Power BI Desktop open <strong>DAX query view</strong> (left toolbar), paste, and click <strong>Update model with changes</strong>. Every measure is added in one go.</p>
             </div>
             <div id="outTmdl" class="d-flex flex-column gap-3 d-none">
