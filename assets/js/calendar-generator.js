@@ -6,14 +6,13 @@
  * in the DAX as a small DATATABLE, so the result needs no external data.
  * Options from the Gulf Calendar pack (gulf-dates.js): the UAE's announced Ramadan and Eid dates, and each GCC
  * country's weekend with the dates it changed. With them off, the table is what it was before.
+ * The table's rules are a shared module (DataArcusCalendar in the browser, require() in Node): the MCP's
+ * add_gulf_calendar builds the same table from it; the page below only wires the form.
  */
-document.addEventListener('DOMContentLoaded', () => {
-  const $ = (id) => document.getElementById(id);
-  const track = (name, params) => { if (typeof window.dataArcusTrack === 'function') window.dataArcusTrack(name, params); };
-  const STORE = 'dataarcus-calendar-generator';
-  const isAr = () => document.documentElement.lang === 'ar';
-  const L = (en, ar) => (isAr() ? ar : en);
-
+(function (root, factory) {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./gulf-dates.js'));
+  else root.DataArcusCalendar = factory(root.DataArcusGulfDates || null);
+})(typeof self !== 'undefined' ? self : this, function (GD) {
   const MONTHS = {
     en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
     ar: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر']
@@ -27,9 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
     ar: ['محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة']
   };
   const WEEKENDS = { 'sat-sun': [7, 1], 'fri-sat': [6, 7], 'fri': [6], 'sun': [1] }; // WEEKDAY type 1 numbers
-  // sourced dates and country weekends (scripts/gulf-calendar/DATES-SOURCES.md); the page works without them
-  const GD = window.DataArcusGulfDates || null;
   const COUNTRY = (GD && GD.weekends) || {};
+  const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
 
   // ---------- Hijri (Umm al-Qura) via Intl ----------
   let hijriFmt = null;
@@ -45,10 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Power BI's DATE takes 1 March 1900 to 31 December 9999 (Microsoft Learn, DATE function)
   const MIN_DATE = Date.UTC(1900, 2, 1), MAX_DATE = Date.UTC(9999, 11, 31);
   const addYears = (t, n) => { const d = new Date(t); return Date.UTC(d.getUTCFullYear() + n, d.getUTCMonth(), d.getUTCDate()); };
-  const hijriMonthStarts = (from, to) => {
+  const hijriMonthStarts = (st, from, to) => {
     const out = [];
     for (let t = from - 40 * DAY; t <= to; t += DAY) { const h = hijri(t); if (h.day === 1) out.push({ t, y: h.year, m: h.month }); }
-    if (!observedOn()) return out;
+    if (!observedOn(st)) return out;
     // Ramadan, Shawwal and Dhu al-Hijjah start on the announced dates (Dhu al-Hijjah 9 days before Eid al-Adha)
     const moved = {};
     GD.events.forEach((ev) => {
@@ -65,52 +63,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const s = starts[lo]; return { year: s.y, month: s.m, day: Math.round((t - s.t) / DAY) + 1, start: s.t };
   };
 
-  // ---------- state ----------
+  // ---------- settings: the page's state, or the MCP's add_gulf_calendar ----------
   const DEFAULTS = { name: 'Calendar', start: '2022-01-01', end: '2027-12-31', fy: 1, week: 'sun', weekend: 'sat-sun', lang: 'en', hijri: true, fiscal: true, relative: true, observed: false };
-  let state;
-  let saved = null;
-  try { saved = JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { saved = null; }
-  // keep only saved values of the right type and range, so an old or hand-edited save cannot break the page
-  const own = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
-  if (saved && typeof saved === 'object') {
-    const ok = { start: (v) => /^\d{4}-\d{2}-\d{2}$/.test(v), end: (v) => /^\d{4}-\d{2}-\d{2}$/.test(v), fy: (v) => Number.isInteger(v) && v >= 1 && v <= 12,
-      week: (v) => ['sun', 'mon', 'sat'].includes(v), weekend: (v) => own(WEEKENDS, v) || own(COUNTRY, v), lang: (v) => own(MONTHS, v) };
-    saved = Object.fromEntries(Object.entries(saved).filter(([k, v]) => own(DEFAULTS, k) && typeof v === typeof DEFAULTS[k] && (!ok[k] || ok[k](v))));
-  } else saved = null;
-  // First visit in Arabic: default the month and day names to Arabic too
-  state = { ...DEFAULTS, ...(saved ? {} : { lang: (isAr() || (() => { try { return localStorage.getItem('dataarcus-lang') === 'ar'; } catch (e) { return false; } })()) ? 'ar' : 'en' }), ...(saved || {}) };
-  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* private mode */ } };
   // the announced dates apply only to the Hijri columns
-  const observedOn = () => !!(state.observed && state.hijri && hijriFmt && GD);
+  const observedOn = (st) => !!(st.observed && st.hijri && hijriFmt && GD);
   const dateDax = (s) => `DATE ( ${s.split('-').map(Number).join(', ')} )`;
   // the weekend days of a date (WEEKDAY type 1 numbers): a country's rule for that date, or the fixed weekend
-  const weekendDays = (t) => {
-    if (!own(COUNTRY, state.weekend)) return WEEKENDS[state.weekend];
-    let days = null; COUNTRY[state.weekend].forEach((r) => { if (r.from === null || parse(r.from) <= t) days = r.days; });
+  const weekendDays = (st, t) => {
+    if (!own(COUNTRY, st.weekend)) return WEEKENDS[st.weekend];
+    let days = null; COUNTRY[st.weekend].forEach((r) => { if (r.from === null || parse(r.from) <= t) days = r.days; });
     return days;
   };
   // the same in DAX: the newest rule first, each older one in the IF's else branch
-  const weekendDax = () => {
+  const weekendDax = (st) => {
     const inDays = (d) => `WEEKDAY ( [Date], 1 ) IN { ${d.join(', ')} }`;
-    if (!own(COUNTRY, state.weekend)) return inDays(WEEKENDS[state.weekend]);
+    if (!own(COUNTRY, st.weekend)) return inDays(WEEKENDS[st.weekend]);
     const nest = (rules) => (rules.length === 1 ? inDays(rules[0].days)
       : `IF ( [Date] >= ${dateDax(rules[rules.length - 1].from)}, ${inDays(rules[rules.length - 1].days)}, ${nest(rules.slice(0, -1))} )`);
-    return nest(COUNTRY[state.weekend]);
+    return nest(COUNTRY[st.weekend]);
   };
 
   const q = (s) => '"' + String(s).replace(/"/g, '""') + '"';
   const sw = (expr, list, offset = 1) => `SWITCH ( ${expr}, ${list.map((v, i) => `${i + offset}, ${q(v)}`).join(', ')} )`;
   // letters and digits of any script (an Arabic name like تقويم is a valid table name), spaces and _
-  const tableName = () => (state.name || 'Calendar').replace(/[^\p{L}\p{M}\p{N}_ ]/gu, '').trim() || 'Calendar';
+  const tableName = (st) => (st.name || 'Calendar').replace(/[^\p{L}\p{M}\p{N}_ ]/gu, '').trim() || 'Calendar';
 
   // ---------- DAX builder ----------
-  let colCount = 0;
-  const buildDax = () => {
-    const s = parse(state.start), e = parse(state.end);
-    const lang = state.lang, fy = +state.fy;
-    const L = []; const col = (name, expr) => L.push(`        ${q(name)}, ${expr}`);
+  // the table for these settings: its DAX (as the page shows it), its column names in order, and its row count
+  const build = (st) => {
+    const s = parse(st.start), e = parse(st.end);
+    const lang = st.lang, fy = +st.fy;
+    const L = [], names = []; const col = (name, expr) => { names.push(name); L.push(`        ${q(name)}, ${expr}`); };
     // day-of-week number depending on week start (1 = first day of the week)
-    const dow = state.week === 'mon' ? 'WEEKDAY ( [Date], 2 )' : state.week === 'sat' ? 'MOD ( WEEKDAY ( [Date], 1 ), 7 ) + 1' : 'WEEKDAY ( [Date], 1 )';
+    const dow = st.week === 'mon' ? 'WEEKDAY ( [Date], 2 )' : st.week === 'sat' ? 'MOD ( WEEKDAY ( [Date], 1 ), 7 ) + 1' : 'WEEKDAY ( [Date], 1 )';
 
     col('Year', 'YEAR ( [Date] )');
     col('Quarter', '"Q" & ROUNDUP ( MONTH ( [Date] ) / 3, 0 )');
@@ -125,19 +110,19 @@ document.addEventListener('DOMContentLoaded', () => {
     col('Day Name', sw('WEEKDAY ( [Date], 1 )', DAYS[lang]));
     col('Week Start', `[Date] - ( ${dow} ) + 1`);
     col('ISO Week', 'WEEKNUM ( [Date], 21 )');
-    col('Is Weekend', weekendDax());
-    col('Is Working Day', `NOT ( ${weekendDax()} )`);
-    if (state.weekend === 'uae' && GD) col('Is After UAE Weekend Change', `[Date] >= ${dateDax(GD.uaeWeekendChange)}`);
-    if (state.fiscal && fy !== 1) {
+    col('Is Weekend', weekendDax(st));
+    col('Is Working Day', `NOT ( ${weekendDax(st)} )`);
+    if (st.weekend === 'uae' && GD) col('Is After UAE Weekend Change', `[Date] >= ${dateDax(GD.uaeWeekendChange)}`);
+    if (st.fiscal && fy !== 1) {
       col('Fiscal Year', `"FY" & ( YEAR ( [Date] ) + IF ( MONTH ( [Date] ) >= ${fy}, 1, 0 ) )`);
       col('Fiscal Month Number', `MOD ( MONTH ( [Date] ) - ${fy}, 12 ) + 1`);
       col('Fiscal Quarter', `"FQ" & ROUNDUP ( ( MOD ( MONTH ( [Date] ) - ${fy}, 12 ) + 1 ) / 3, 0 )`);
-    } else if (state.fiscal) {
+    } else if (st.fiscal) {
       col('Fiscal Year', '"FY" & YEAR ( [Date] )');
       col('Fiscal Month Number', 'MONTH ( [Date] )');
       col('Fiscal Quarter', '"FQ" & ROUNDUP ( MONTH ( [Date] ) / 3, 0 )');
     }
-    if (state.relative) {
+    if (st.relative) {
       col('Day Offset', 'INT ( [Date] - TODAY () )');
       col('Month Offset', '( YEAR ( [Date] ) - YEAR ( TODAY () ) ) * 12 + MONTH ( [Date] ) - MONTH ( TODAY () )');
       col('Year Offset', 'YEAR ( [Date] ) - YEAR ( TODAY () )');
@@ -145,9 +130,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     let hijriVar = '', hijriLayer = '', hijriCols = 0;
-    if (state.hijri && hijriFmt) {
-      const starts = hijriMonthStarts(s, e);
-      hijriVar = `${observedOn() ? `-- Hijri month starts: Umm al-Qura, with Ramadan, Shawwal and Dhu al-Hijjah moved to the dates the UAE announced
+    if (st.hijri && hijriFmt) {
+      const starts = hijriMonthStarts(st, s, e);
+      hijriVar = `${observedOn(st) ? `-- Hijri month starts: Umm al-Qura, with Ramadan, Shawwal and Dhu al-Hijjah moved to the dates the UAE announced
 -- (checked to ${GD.checked}; later ones are Umm al-Qura estimates). Sources: github.com/Antnioo/DataArcus, scripts/gulf-calendar/DATES-SOURCES.md` : '-- Umm al-Qura Hijri month starts, generated by dataarcus.com'}
 VAR _HijriMonths =
     DATATABLE (
@@ -178,25 +163,61 @@ ${starts.map((h) => `            { "${iso(h.t)}", ${h.y}, ${h.m} }`).join(',\n')
       col('Is Eid al-Fitr', `${hm} = 10 && ${hd} <= 3`);
       col('Is Eid al-Adha', `${hm} = 12 && ${hd} >= 10 && ${hd} <= 13`);
       // Ramadan and Eid days whose month starts after the last checked announcement: Umm al-Qura's estimate
-      if (observedOn()) col('Is Estimated Date', `( ${hm} = 9 || ( ${hm} = 10 && ${hd} <= 3 ) || ( ${hm} = 12 && ${hd} >= 10 && ${hd} <= 13 ) ) && [Hijri Month Start] > ${dateDax(GD.checked)}`);
+      if (observedOn(st)) col('Is Estimated Date', `( ${hm} = 9 || ( ${hm} = 10 && ${hd} <= 3 ) || ( ${hm} = 12 && ${hd} >= 10 && ${hd} <= 13 ) ) && [Hijri Month Start] > ${dateDax(GD.checked)}`);
     }
 
     const src = hijriLayer ? '_WithHijri' : '_Dates';
-    colCount = L.length + 1 + hijriCols;
-    return `${tableName()} =
+    const dax = `${tableName(st)} =
 -- DAX calendar table generated by dataarcus.com/tools/dax-calendar-table-generator.html
--- ${iso(s)} to ${iso(e)} · week starts ${ {sun: 'Sunday', mon: 'Monday', sat: 'Saturday'}[state.week] } · weekend ${state.weekend}${state.fiscal ? ' · fiscal year starts month ' + fy : ''}${observedOn() ? ' · Ramadan and Eid as announced in the UAE' : ''}
-VAR _Dates = CALENDAR ( DATE ( ${state.start.split('-').map(Number).join(', ')} ), DATE ( ${state.end.split('-').map(Number).join(', ')} ) )
+-- ${iso(s)} to ${iso(e)} · week starts ${ {sun: 'Sunday', mon: 'Monday', sat: 'Saturday'}[st.week] } · weekend ${st.weekend}${st.fiscal ? ' · fiscal year starts month ' + fy : ''}${observedOn(st) ? ' · Ramadan and Eid as announced in the UAE' : ''}
+VAR _Dates = CALENDAR ( DATE ( ${st.start.split('-').map(Number).join(', ')} ), DATE ( ${st.end.split('-').map(Number).join(', ')} ) )
 ${hijriVar}${hijriLayer}RETURN
     ADDCOLUMNS (
         ${src},
 ${L.join(',\n')}
     )`;
+    const columns = ['Date'].concat(hijriCols ? ['Hijri Month Start', 'Hijri Year', 'Hijri Month Number', 'Hijri Day'] : [], names);
+    return { dax, columns, rows: Math.round((e - s) / DAY) + 1 };
   };
 
-  // ---------- preview (same logic in JS) ----------
   // the Hijri date the preview shows: the browser's Umm al-Qura, or the table's month starts with announced dates
-  const hijriFor = () => (observedOn() ? hijriFrom(hijriMonthStarts(parse(state.start), parse(state.end))) : hijri);
+  const hijriFor = (st) => (observedOn(st) ? hijriFrom(hijriMonthStarts(st, parse(st.start), parse(st.end))) : hijri);
+
+  return { MONTHS, DAYS, HIJRI, WEEKENDS, COUNTRY, GD, DAY, DEFAULTS, MIN_DATE, MAX_DATE, own, iso, parse, addYears, hijriFmt, hijri, hijriFrom, hijriMonthStarts, hijriFor,
+    observedOn, weekendDays, tableName, build };
+});
+
+if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded', () => {
+  const $ = (id) => document.getElementById(id);
+  const track = (name, params) => { if (typeof window.dataArcusTrack === 'function') window.dataArcusTrack(name, params); };
+  const STORE = 'dataarcus-calendar-generator';
+  const isAr = () => document.documentElement.lang === 'ar';
+  const L = (en, ar) => (isAr() ? ar : en);
+
+  const C = window.DataArcusCalendar;
+  const { MONTHS, DAYS, HIJRI, WEEKENDS, COUNTRY, GD, DAY, MIN_DATE, MAX_DATE, own, iso, parse, addYears, hijriFmt } = C;
+
+  // ---------- state ----------
+  const DEFAULTS = C.DEFAULTS;
+  let state;
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(STORE) || 'null'); } catch (e) { saved = null; }
+  // keep only saved values of the right type and range, so an old or hand-edited save cannot break the page
+  if (saved && typeof saved === 'object') {
+    const ok = { start: (v) => /^\d{4}-\d{2}-\d{2}$/.test(v), end: (v) => /^\d{4}-\d{2}-\d{2}$/.test(v), fy: (v) => Number.isInteger(v) && v >= 1 && v <= 12,
+      week: (v) => ['sun', 'mon', 'sat'].includes(v), weekend: (v) => own(WEEKENDS, v) || own(COUNTRY, v), lang: (v) => own(MONTHS, v) };
+    saved = Object.fromEntries(Object.entries(saved).filter(([k, v]) => own(DEFAULTS, k) && typeof v === typeof DEFAULTS[k] && (!ok[k] || ok[k](v))));
+  } else saved = null;
+  // First visit in Arabic: default the month and day names to Arabic too
+  state = { ...DEFAULTS, ...(saved ? {} : { lang: (isAr() || (() => { try { return localStorage.getItem('dataarcus-lang') === 'ar'; } catch (e) { return false; } })()) ? 'ar' : 'en' }), ...(saved || {}) };
+  const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* private mode */ } };
+  // the table's rules live in the shared module (the MCP's add_gulf_calendar builds the same table)
+  const observedOn = () => C.observedOn(state);
+  const weekendDays = (t) => C.weekendDays(state, t);
+  const tableName = () => C.tableName(state);
+
+  // ---------- preview (same logic in JS) ----------
+  const hijriFor = () => C.hijriFor(state);
   const previewRows = () => {
     const s = parse(state.start), e = parse(state.end), hijri = hijriFor();
     // Show the first Ramadan in range if Hijri is on, otherwise the first days
@@ -239,8 +260,8 @@ ${L.join(',\n')}
       $('preview').innerHTML = `<p class="cg-err mb-0">${msg}</p>`;
       return;
     }
-    const dax = buildDax();
-    $('dax').textContent = dax;
+    const table = C.build(state), colCount = table.columns.length;
+    $('dax').textContent = table.dax;
     $('stats').textContent = L(`${Math.round((e - s) / DAY) + 1} rows · ${colCount} columns`, `${Math.round((e - s) / DAY) + 1} صف · ${colCount} عمود`);
     const rows = previewRows();
     $('preview').innerHTML = `<table class="tg-table"><tr><th>${L('Date', 'التاريخ')}</th><th>${L('Day', 'اليوم')}</th>${state.hijri ? `<th>${L('Hijri date', 'التاريخ الهجري')}</th><th>${L('Ramadan', 'رمضان')}</th>` : ''}<th>${L('Weekend', 'عطلة')}</th></tr>${rows.map((r) =>
