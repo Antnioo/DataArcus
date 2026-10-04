@@ -1192,6 +1192,213 @@ Calendar[Hijri Day], a `column` value).
 - In the Arabic report the chart titles mix English field names and Arabic ("Total Sales حسب Day Name"): no display
   names were given in this test.
 
+## 2026-10-04 (third sitting): main (`7a6d133`), Power BI Desktop 2.158.1177: SVG picture size, D8 tables, D-P1 the rest, D-P2, D-P3
+
+A one-hour sitting on the made-up Ramadan sample with data (`<tests folder>\5-tmdl-sample`). Pages captured through
+the Desktop bridge at double size (the canvas only), in `<tests folder>\desk-1004c`; window captures were used only to
+find the Format pane's controls and are deleted. Scripts: `builder-scripts\dc-build.mjs`, `cap.sh`. No code changed.
+
+### 1. The SVG picture's size in a table: set by `grid.imageHeight` and `grid.imageWidth`
+On "DP1b SVG EN 2" (two SVG columns, 160 x 24 and 180 x 20): the table selected, Format > Visual, the search box
+"image": the card **"Image size"** with **Height 75 px** and **Width 75 px** (the default, as the second sitting
+inferred). Set to Height 24 and Width 160, Ctrl+S.
+- **The exact JSON Desktop wrote** into the table's `visual.json` (`visual.objects.grid`, no selector):
+```json
+"grid": [
+  { "properties": {
+      "imageHeight": { "expr": { "Literal": { "Value": "24D" } } },
+      "imageWidth":  { "expr": { "Literal": { "Value": "160D" } } } } }
+]
+```
+- **Seen (measured on the capture, 150 px for the 160-wide picture):** the bar is drawn **160 x 24**, the strip
+  (180 x 20) is fitted into the box: 160 wide, about 18 tall. **The row is 29 page units tall** (was 77), so seven
+  rows and the total fit where two did; the "135%" text inside the bar is readable.
+- One setting for the whole table: every picture column shares the height and the width.
+- **Arabic ("DP1b SVG AR 2"), the same JSON written by hand:** the same result: pictures 160 wide, rows about 27
+  to 29 tall, eight rows and the total.
+- **The total row's "Total" word in a right-to-left table:** with the pictures as the first projections (what round
+  9 writes: the left end) the total row has **no "Total"**. With the text column first ("DP1b SVG AR 3":
+  Hijri Day, the two pictures, Total Sales) **"Total" is back**, under Hijri Day, but that column is then at the
+  left end and no longer at the reading start. Power BI writes "Total" in the first projection's column.
+- **Proposed for round 10 (no code changed here):** `create_report` writes `grid.imageHeight` and `grid.imageWidth`
+  from the designs (the tallest height, the widest width, within 8 to 512); in a right-to-left table the pictures
+  go after the table's own first projection, never before it, so "Total" keeps a text or number column (to check:
+  which column gets the word when the first projection is a measure).
+
+### 3. D-P1, the rest: the new card's image and a matrix both draw the report-level SVG measure
+"DC SVG": a copy of "D16 cards" with `definition/reportExtensions.json` (entity Sales; "Dot SVG" as in D-P1 and the
+measures of checks 4 and 5), written by hand (`dc-build.mjs dc`). Microsoft's validator: 0 errors, 0 warnings.
+- **The new card's image: draws.** The picture sits right of the number (101,914), filling the card's height. The
+  JSON was **written by hand** from Microsoft's property list for `cardVisual.image` (`formatting describe-object`),
+  not saved by Desktop ("Select from data" was not clicked):
+```json
+"image": [
+  { "properties": { "show": { "expr": { "Literal": { "Value": "true" } } } } },
+  { "properties": {
+      "imageType": { "expr": { "Literal": { "Value": "'imageUrl'" } } },
+      "imageUrl": { "expr": { "Measure": { "Expression": { "SourceRef": { "Schema": "extension", "Entity": "Sales" } }, "Property": "Dot SVG" } } } },
+    "selector": { "id": "default" } }
+]
+```
+- **A matrix (`pivotTable`): draws**, in every row, two picture columns:
+```json
+{ "visualType": "pivotTable",
+  "query": { "queryState": {
+    "Rows":   { "projections": [ { "field": { "Column": { "Expression": { "SourceRef": { "Entity": "Calendar" } }, "Property": "Quarter" } }, "queryRef": "Calendar.Quarter", "nativeQueryRef": "Quarter" } ] },
+    "Values": { "projections": [
+      { "field": { "Measure": { "Expression": { "SourceRef": { "Schema": "extension", "Entity": "Sales" } }, "Property": "Dot SVG" } }, "queryRef": "Sales.Dot SVG", "nativeQueryRef": "Dot SVG" },
+      { "field": { "Measure": { "Expression": { "SourceRef": { "Schema": "extension", "Entity": "Sales" } }, "Property": "Ar mixed" } }, "queryRef": "Sales.Ar mixed", "nativeQueryRef": "Ar mixed" } ] } } },
+  "drillFilterOtherVisuals": true }
+```
+  The matrix was left at its default image size: its rows are about 70 tall, as the table's were. Its own image
+  size setting was not looked for.
+- Not run: the image visual; the card's image position, size and alt text; "Select from data" by mouse (to compare
+  Desktop's own JSON with the hand-written one).
+
+### 4. D-P2, the length limit: none found up to 2,000,000 characters
+The D-P1 picture padded inside the SVG with invisible `<rect>`s (`REPT`) and spaces to an exact total length, the
+visible shapes written **after** the padding, so a cut text would not draw. In a table, per quarter and in the total:
+
+| Total characters returned by the measure | Draws |
+|---|---|
+| 8,000 | yes |
+| 16,000 | yes |
+| 32,000 | yes |
+| 32,766, 32,767, 32,768 | yes, all three |
+| 64,000 | yes |
+| 128,000 | yes |
+| 256,000 | yes |
+| 512,000 | yes |
+| 1,000,000 | yes |
+| 2,000,000 | yes |
+
+- So the 32,767 limit of a stored text does not cut a measure's text result in Desktop's table, and round 9's cap of
+  8,000 characters is far below anything Desktop needs. The page with six pictures of 64,000 to 2,000,000
+  characters per row took under 40 seconds to show after a reload (not timed more closely).
+- **Limits of this check:** the padding is ASCII and repeats one element (a real long SVG has many different
+  shapes); only a table, an import model and Desktop were tried; the service, the phone and exports were not. The
+  cap is about what is sensible to send to a viewer, not about a Desktop limit.
+- **Proposed for round 10:** raise the cap (for example to 32,000 characters) and say why it is there (size and
+  speed), instead of "until Desktop measures the limit".
+
+### 5. D-P3, Arabic text inside the SVG: shaped and right to left
+Three pictures, 200 x 24, shown 300 x 36 in a table:
+| Picture | The `<text>` | Seen |
+|---|---|---|
+| Ar rtl | `direction='rtl'`, `x='194'`, Segoe UI, "رمضان ١٤٤٧" | letters joined; the word at the right, the Arabic-Indic digits to its left; the text ends at the right edge |
+| Ar end Tahoma | `text-anchor='end'`, `x='194'`, Tahoma, the same text | the same: joined, right to left, at the right edge |
+| Ar mixed | `text-anchor='middle'`, Segoe UI, "Ramadan رمضان 2026" | drawn "Ramadan 2026 رمضان" read left to right: the Arabic word joined, and the number placed left of the Arabic word (the browser's own bidirectional order for a number after Arabic) |
+- Both ways of anchoring at the right work; Segoe UI and Tahoma both draw Arabic.
+- Not run: sizes 10 and 22, a `%`-escaped Arabic text coming from a column value, Arabic in the card image.
+- **To note for the designs:** a number after an Arabic word moves to its left. A label that must keep "word then
+  number" in a left-to-right picture needs the two as separate `<text>` elements.
+
+### 2. D8, the table half: a report-side format on a table column is `format` on the projection, and it shows 13,857
+On "DP1b SVG EN" (its model has no format on Total Sales): the table selected, Format > **Properties** (this
+Desktop's name for the General tab) > Data format > "Apply settings to" Total Sales > Format options > Format:
+**Custom** (the list: General, Whole number, Decimal number, Currency, Percentage, Scientific, Custom) > Format code
+`#,0`, Ctrl+S.
+- **The exact JSON Desktop wrote:** nothing in `objects`; one key on the column's **projection** in the table's query:
+```json
+{
+  "field": { "Measure": { "Expression": { "SourceRef": { "Entity": "Sales" } }, "Property": "Total Sales" } },
+  "queryRef": "Sales.Total Sales",
+  "nativeQueryRef": "Total Sales",
+  "format": "#,0"
+}
+```
+- **Seen:** the Total Sales column shows **13,857**, 15,173 and 101,914 in the total row; the next column, left
+  alone, still shows 10298 and 74675. So a model with no format shows the separator in a table when the report
+  gives the format.
+- **Tooltips (our report page tooltips), written by hand and reloaded:**
+  - the tooltip page's **card** with D8's card entry (`labelDisplayUnits` `-1D`, `customFormatString` `'#,0'`,
+    selector metadata): **101,914** (was 101.914K). It is the same card visual, on the 320 x 240 page; the number fits.
+  - `format: "#,0"` on a **bar chart's** Y projection (the tooltip page's chart and the main page's): **no change**
+    to the data labels (65K, 10K) or the axis (0K to 80K): those are scaled by their display units, and the
+    projection's format does not change that.
+- Not run: Desktop's default hover tooltip on a chart (our charts show the report page tooltip instead); a column of
+  the model (not a measure); the matrix.
+- **Proposed for round 10:** `create_report` writes `format` on a table projection for each measure of
+  `numberFormats` (the same `withSeparator` code as the cards, `#,0.##` for no format), and D8's card entry on the
+  tooltip cards; chart labels stay as they are (scaled).
+
+### 6. D16 with the formats `0` and `0.00`: 101,914 and 74,675.00
+A made-up model with data and those formats: a **copy** of the Ramadan sample's model in its own folder
+(`<tests folder>\9-format-sample`, "Format Test"; the sample is not changed), with `formatString: 0` on Total Sales,
+`formatString: 0.00` on Total Sales Last Ramadan, and a new measure with decimals and no format ("Sales per Day" =
+Total Sales / 7), written into the copy's TMDL files (`builder-scripts\d16-formats.mjs`; no script was applied in
+Desktop). The report: `create_report` of main, executive layout, four cards, 1920 x 1080.
+| Card | Model format | Written by `create_report` | Expected | Seen |
+|---|---|---|---|---|
+| Total Sales | `0` | `#,0` | 101,914 | **101,914** |
+| Total Sales Last Ramadan | `0.00` | `#,0.00` | 74,675.00 (the D16 row said 101,914.00: the same format on this measure's value) | **74,675.00** |
+| Sales per Day | none | `#,0.##` | the separator and its decimals | **14,559.14** |
+| Total Sales vs Last Ramadan % | none; a percent by name | no entry | as before | 0.34 |
+- No card cuts its number with four cards beside the filter rail at 1920 x 1080 (the longest, 74,675.00, fits).
+- So `#,0.##` (round 9's choice for a measure with no format) keeps the decimals a measure has: measured now.
+
+- **FAIL on narrow cards: a formatted card cuts a long number.** The same model with **six** cards (the two "(old)"
+  measures added), built by `create_report` on smaller pages:
+  | Page | Total Sales Last Ramadan (`#,0.00`) | Total Sales (`#,0`) | Sales per Day (`#,0.##`) | the others |
+  |---|---|---|---|---|
+  | 1280 x 720, six cards | **"74,675...."** (cut) | 101,914 | **"14,559...."** (cut) | 0.34, 23,635, 3.31 |
+  | 960 x 720, six cards | **"74,675..."** (cut) | 101,914 | **"14,559..."** (cut) | 0.34, 23,635, 3.31 |
+  A number of seven characters fits; nine characters (74,675.00, 14,559.14) do not. Before round 9 these cards
+  showed a scaled number (74.675K), which is seven characters. **Cause:** the card's value size is fitted to the
+  card (`cardFit`), not to the text, and the report-side format (round 9, R9.1) makes the text longer than the
+  scaled one. This is in main and in package 0.2.5.
+  **Proposed fix (no code changed here):** when a card carries the format, size its value for the longest text
+  the format can give (measure the width per character at the value's font first), or drop the decimals on a card
+  (`#,0`) when the card is too narrow, or keep the scaled number on cards narrower than a measured width. Until
+  then: the four-card and three-card layouts at 1920 x 1080 are safe (measured above); six cards or smaller pages
+  are not, for values of nine characters or more.
+
+### 7. Extras (hand-written, on the same test reports)
+- **The engine's run-time escape, with a hostile text, in Desktop.** A measure "Esc text": the compiler's own output
+  for a text bound to a column (`fmt: "text"`), with the column replaced by the literal
+  `<b>"x"&'#% </text><script>`, so the same `SUBSTITUTE` chain runs. **Seen:** the picture draws and shows the
+  characters as text (`<b>"x"&'#% </text><scr`, then the column's edge); nothing is interpreted as markup and the
+  picture is not broken. Not run with a real column value (the sample has no such text).
+- **A matrix takes the same image size:** `grid.imageHeight` 24 and `imageWidth` 300 written by hand on the
+  `pivotTable`: its rows became about 29 tall and the pictures up to 300 wide.
+- **Arabic text in the new card's image:** the "Ar rtl" picture as the second card's image draws shaped, right of
+  the number.
+- **"Total" in a right-to-left table, a measure first** ("DP1b SVG AR 4": Total Sales, the two pictures, Hijri Day):
+  **no "Total" word** (the first column shows its own total, 101914). So the word is written only when the first
+  projection is a column, not a measure and not a picture. The right-to-left tables written since round 2 put a
+  measure first (the reversed order), so they have had no "Total" word either: not from round 9.
+
+- **The card's image by mouse ("Select from data"): Desktop's own JSON.** On the third card of "DC SVG": Format >
+  Visual > Callout > Image: On > Image type (Upload image, Enter URL, **Select from data**) > Data: "+Add data"; the
+  field picker lists the report-level measure **Dot SVG under Sales**; ticked, Ctrl+S. Desktop wrote **one** entry:
+```json
+"image": [
+  { "properties": {
+      "show": { "expr": { "Literal": { "Value": "true" } } },
+      "imageType": { "expr": { "Literal": { "Value": "'imageData'" } } },
+      "imageData": { "expr": { "Measure": { "Expression": { "SourceRef": { "Schema": "extension", "Entity": "Sales" } }, "Property": "Dot SVG" } } } },
+    "selector": { "id": "default" } }
+]
+```
+  The picture draws on that card too. So Desktop's own form is `imageType: 'imageData'` with `imageData`; the
+  hand-written `'imageUrl'` with `imageUrl` (check 3) also draws. **For the engine: write Desktop's form.**
+
+### Seen, not in scope (third sitting)
+- Selecting the table by a click also selects the row under the mouse (the cards showed that row's values until
+  the report was reopened); the selection is not saved.
+- The table with six pictures of 64,000 to 2,000,000 characters made the page slow to open (the canvas stayed empty
+  for more than 20 seconds after the window was ready).
+- A right-to-left table has no "Total" word since round 2 (a measure is its first projection).
+- In the Arabic reports the chart titles mix English field names and Arabic ("Total Sales حسب Day Name"): no
+  display names were given in these tests.
+- "Your logo" and "What it means" placeholders; month and day names in the model's order where the sample has no
+  sort-by column: as before.
+- The six-card pages cut the KPI titles too ("Total Sales Last R...", "Sales per ..."): known from the 960 x 720
+  check of the first sitting's list, not new.
+- Left in the test folders: "DC SVG", "DP1b SVG AR 3", "DP1b SVG AR 4" (5-tmdl-sample; "DP1b SVG EN", "EN 2" and
+  "AR 2" were changed and saved), and the new folder `9-format-sample` with "D16 formats", "D16 formats 720" and
+  "D16 formats 960".
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
