@@ -62,6 +62,11 @@ const mirrored = (en, ar) => {
   return `${en.j.slots.length - bad.length}/${en.j.slots.length} slots mirrored`;
 };
 const results = [];
+// round 6: the fields an approved plan names are passed to create_report (fields), as an agent now does; the cards of
+// the first page are read back from the answer (boundFields)
+const RAMADAN_KPIS = ['Sales[Total Sales]', 'Sales[Total Sales Last Ramadan]', 'Sales[Total Sales vs Last Ramadan %]'];
+const cardsOf = (b) => ((((b.r || {}).j || {}).boundFields || [])[0] || { visuals: [] }).visuals.filter((v) => v.visual === 'KPI card').map((v) => v.fields.join()).join(' | ');
+const slicersOf = (b) => ((((b.r || {}).j || {}).boundFields || [])[0] || { visuals: [] }).visuals.filter((v) => v.visual === 'Slicer').map((v) => v.fields.join()).join(' | ');
 const task = async (id, title, fn) => { const out = { id, title }; try { Object.assign(out, await fn()); } catch (e) { out.error = String(e.message || e).slice(0, 200); } results.push(out); console.log(JSON.stringify(out)); };
 const build = async (project, name, theme, layoutArgs, extra = {}) => {
   const before = hashes(path.join(ROOT, project));
@@ -75,33 +80,34 @@ const build = async (project, name, theme, layoutArgs, extra = {}) => {
 await task(1, 'English executive report', async () => {
   const m = await call('read_model', { path: 'ramadan' }), f = await call('suggest_fields', { path: 'ramadan', kpis: 4 });
   const th = await call('generate_theme', { name: 'Golden Exec', brand: '#0F6CBD', lang: 'en', folder: 'themes' });
-  const b = await build('ramadan', 'Golden Exec', th, { layout: 'exec', kpis: 4, filters: 'end', page: '1920x1080', lang: 'en' });
-  return { tables: m.j.tables.map((t) => t.table).join(), kpis: f.j.kpis.map((k) => k.m).join(' | '), contrastWarnings: th.j.warnings.length, ...b.facts, overwritten: b.overwritten, modelNotes: b.modelNotes };
+  const b = await build('ramadan', 'Golden Exec', th, { layout: 'exec', kpis: 4, filters: 'end', page: '1920x1080', lang: 'en' }, { fields: { kpis: RAMADAN_KPIS } });
+  return { cards: cardsOf(b), tables: m.j.tables.map((t) => t.table).join(), kpis: f.j.kpis.map((k) => k.m).join(' | '), contrastWarnings: th.j.warnings.length, ...b.facts, overwritten: b.overwritten, modelNotes: b.modelNotes };
 });
 await task(2, 'Arabic report, mirrored', async () => {
   const th = await call('generate_theme', { name: 'Golden Arabic', brand: '#0F6CBD', font: 'Tahoma', lang: 'ar', folder: 'themes' });
   const en = await call('plan_layout', { design: th.j.design, layout: 'analysis', kpis: 4, filters: 'end', page: '1920x1080', lang: 'en', dir: 'ltr' });
   const ar = await call('plan_layout', { design: th.j.design, layout: 'analysis', kpis: 4, filters: 'end', page: '1920x1080', lang: 'ar' });
-  const b = await build('ramadan', 'Golden Arabic', th, { layout: 'analysis', kpis: 4, filters: 'end', page: '1920x1080', lang: 'ar' });
-  return { fontWarnings: th.j.warnings.filter((w) => /Arabic/.test(w)).length, mirror: mirrored(en, ar), ...b.facts, overwritten: b.overwritten, modelNotes: b.modelNotes };
+  const b = await build('ramadan', 'Golden Arabic', th, { layout: 'analysis', kpis: 4, filters: 'end', page: '1920x1080', lang: 'ar' }, { fields: { kpis: RAMADAN_KPIS } });
+  return { cards: cardsOf(b), fontWarnings: th.j.warnings.filter((w) => /Arabic/.test(w)).length, mirror: mirrored(en, ar), ...b.facts, overwritten: b.overwritten, modelNotes: b.modelNotes };
 });
 await task(3, 'Ramadan vs last Ramadan', async () => {
   const f = await call('suggest_fields', { path: 'ramadan', kpis: 3 });
   const th = await call('generate_theme', { name: 'Golden Ramadan', preset: 'Desert Gulf', lang: 'en', folder: 'themes' });
-  const b = await build('ramadan', 'Golden Ramadan', th, { layout: 'focus', kpis: 3, filters: 'none', lang: 'en' });
+  // the plan: the three Ramadan measures on the cards, and slicers on the Hijri year and Is Ramadan so the page can be set to one Ramadan
+  const b = await build('ramadan', 'Golden Ramadan', th, { layout: 'focus', kpis: 3, filters: 'top', lang: 'en' }, { secondPage: false, fields: { kpis: RAMADAN_KPIS, slicers: ['Calendar[Hijri Year]', 'Calendar[Is Ramadan]'] } });
   const ramadanOnCards = f.j.kpis.filter((k) => /ramadan/i.test(k.m)).length;
-  return { kpis: f.j.kpis.map((k) => k.m).join(' | '), ramadanMeasuresOnCards: `${ramadanOnCards}/3`, ...b.facts, overwritten: b.overwritten, modelNotes: b.modelNotes };
+  return { cards: cardsOf(b), slicers: slicersOf(b), kpis: f.j.kpis.map((k) => k.m).join(' | '), ramadanMeasuresOnCards: `${ramadanOnCards}/3`, ...b.facts, overwritten: b.overwritten, modelNotes: b.modelNotes };
 });
 await task(4, '16:9 and 4:3 pages', async () => {
   const th = await call('generate_theme', { name: 'Golden Ratio', preset: 'Corporate', folder: 'themes' });
-  const wide = await build('ramadan', 'Golden 16x9', th, { layout: 'exec', page: '1280x720', lang: 'en' });
-  const square = await build('ramadan', 'Golden 4x3', th, { layout: 'exec', page: '960x720', lang: 'en' });
-  return { wide: wide.facts, square: square.facts, overwritten: wide.overwritten + square.overwritten };
+  const wide = await build('ramadan', 'Golden 16x9', th, { layout: 'exec', page: '1280x720', lang: 'en' }, { fields: { kpis: RAMADAN_KPIS } });
+  const square = await build('ramadan', 'Golden 4x3', th, { layout: 'exec', page: '960x720', lang: 'en' }, { fields: { kpis: RAMADAN_KPIS } });
+  return { cards: cardsOf(wide), wide: wide.facts, square: square.facts, overwritten: wide.overwritten + square.overwritten };
 });
 await task(5, 'A small page (640 x 360)', async () => {
   const th = await call('generate_theme', { name: 'Golden Small', preset: 'DataArcus', folder: 'themes' });
-  const b = await build('ramadan', 'Golden Small', th, { layout: 'exec', kpis: 3, filters: 'none', page: { w: 640, h: 360 }, lang: 'en' });
-  return { ...b.facts, overwritten: b.overwritten };
+  const b = await build('ramadan', 'Golden Small', th, { layout: 'exec', kpis: 3, filters: 'none', page: { w: 640, h: 360 }, lang: 'en' }, { fields: { kpis: RAMADAN_KPIS } });
+  return { cards: cardsOf(b), ...b.facts, overwritten: b.overwritten };
 });
 await task(6, 'Long Arabic names', async () => {
   const m = await call('read_model', { path: 'arabic' }), f = await call('suggest_fields', { path: 'arabic', kpis: 4 });

@@ -643,3 +643,38 @@ Test 9,981 (9,698), Large Synthetic 15,372 (17,997), Gulf Calendar Test 6,647 (1
 ("التقرير التنفيذي للمبيعات - ال"); the agent's first `read_model` on "Ramadan Test.pbip" answers with no tables
 instead of finding the model beside it; in task 10 and task 4 the agent's wording of the missing-format note
 ("shows 1", "something like 0.34") is its own guess on what a card shows.
+
+## Tool level, round 6 (2026-10-04, `fix/round-6-fields`)
+
+The tool-level run again (`node test-models/golden-baseline.mjs`, tasks 1 to 10; task 11 by two `check_model_health`
+calls on the made-up Gulf model), now passing the fields an approved plan names to `create_report` in `fields`, as
+the agent is told to since this round. Nothing in the tasks, the models or the checks was changed. The script's
+calls did change, and only so: tasks 1, 2, 4 and 5 pass `fields.kpis` (Total Sales, Total Sales Last Ramadan,
+Total Sales vs Last Ramadan %); task 3 passes the same and `fields.slicers` (Hijri Year, Is Ramadan), with the
+filter strip on top and one page. No Desktop and no agent in this run: the agent-level re-run waits for a free laptop.
+
+| # | Task | Tool level | Facts |
+|---|---|---|---|
+| 1 | English executive | PASS | cards Total Sales, Total Sales Last Ramadan, Total Sales vs Last Ramadan % (was "(old)" third); 40 visuals; validator 0; 0 size, 0 phone problems; 0 overwritten; `modelNotes` Month Name, Day Name and now the % measure |
+| 2 | Arabic, mirrored | PASS | the same three cards; 9/9 slots mirrored; 36 visuals; validator 0; table headers 0 |
+| 3 | Ramadan vs last Ramadan | **PASS (was FAIL)**, with a limit | cards as planned, "(old)" nowhere, the % told in `modelNotes`; slicers Hijri Year, Is Ramadan, Year on the page; 20 visuals; validator 0. **The limit:** the page is not set to a Ramadan until the user picks Is Ramadan and a Hijri year in the slicers; DataArcus writes no default selection and no page filter, and the first card is "Total Sales", not a "this Ramadan" measure (the model has none) |
+| 4 | 16:9 and 4:3 | PASS | the same three cards on both; 34 visuals each; validator 0 and 0; 0 problems (in Desktop the 960 x 720 titles were cut with four cards: with three they are wider; to be looked at) |
+| 5 | Small page | PASS (Desktop expected FAIL) | the same three cards; 34 visuals; validator 0 |
+| 6 | Long Arabic names | PASS | 43 visuals; validator 0; no `fields` (the picks are the plan) |
+| 7 | Missing measures | PASS | 19 visuals, no card and no chart, validator 0; `suggest_fields` now says the model has no measures and to propose them with format strings (`noMeasures`) |
+| 8 | "Redesign this" | PASS | both new reports validator 0; 2 cards (Total, Unused One: "Unused One" is used because nothing else is left); the existing report untouched |
+| 9 | Unsupported visual | PASS | refused, nothing written |
+| 10 | Large model | PASS | `read_model` 10,380 characters; the four Logistics KPIs; 35 visuals; validator 0; `check_model_health` 18,271 characters (15,383 before this round: the thousand-separator list) |
+| 11 | Gulf calendar | PASS | UAE: no findings; Saudi Arabia: `GC_WEEKEND` 939 days, no date finding; `scored: false`; answers 8,399 and 12,320 characters |
+
+Largest answer of the run: `check_model_health` on the large model, 18,271 characters.
+
+**What changed in the picks without `fields`** (the picker's new rule, `suggest_fields` on the Ramadan model): 3
+cards Total Sales, Total Sales Last Ramadan, Total Sales vs Last Ramadan % (was Total Sales, Total Sales Last
+Ramadan, Total Sales Last Ramadan (old)); 4 cards add "(old)" last (nothing else is left), and `skipped` names the
+measures passed over.
+
+**Seen, not in scope:** task 3 still has no "this Ramadan" measure or filter (a page or report filter is in the
+platform plan, `mcp/plans/DESIGN-ENGINE-PLATFORM.md`); task 8's second card is "Unused One", a measure the agent at
+agent level left out on its own judgment; task 10's fourth KPI is a share that reads 100% on an unfiltered card
+(the agent said so in round 5).

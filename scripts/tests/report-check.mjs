@@ -106,6 +106,9 @@ export function headerAndRail(files) {
 // DESKTOP-TESTS.md round 1), so a box whose text would sit high is moved down. Each must have its text's middle within
 // 3 of the header group's middle, unless the box is already as short as its text allows (10 + 1.8 x pt) or its text's
 // middle is at or below the group's (the title at 0.42 x its box). Returns { boxes, bad }.
+// Round 6: the text's middle by the font's own measured number (the same measurement: Segoe UI 3 + 1.19 x pt, Tahoma
+// 1.12 x pt; 1.2 x pt for a font that was not measured), as the report writer now places it; before, 1.2 x pt for all.
+const TEXT_MID = (font, t) => (/^segoe ui/i.test(String(font)) ? 3 + 1.19 * t : /^tahoma/i.test(String(font)) ? 1.12 * t : 1.2 * t);
 export function headerProblems(files) {
   const bad = []; let boxes = 0;
   pagesOf(files).filter((p) => p.page.type !== 'Tooltip').forEach((p) => {
@@ -115,7 +118,7 @@ export function headerProblems(files) {
       if (!g || g.isHidden) return;   // the slide-in panel's card
       boxes++;
       const run = ((((v.visual.objects || {}).general || [{}])[0].properties || {}).paragraphs || [{ textRuns: [{}] }])[0].textRuns[0];
-      const t = parseFloat((run.textStyle || {}).fontSize), H = g.position.height, y = v.position.y, h = v.position.height, mid = y + 1.2 * t;
+      const t = parseFloat((run.textStyle || {}).fontSize), H = g.position.height, y = v.position.y, h = v.position.height, mid = y + TEXT_MID((run.textStyle || {}).fontFamily, t);
       const id = `${p.page.displayName}/"${run.value}" ${t}pt`;
       if (y < -0.5 || y + h > H + 0.5) bad.push(`${id}: box ${y}..${y + h} outside the header's ${H}`);
       else if (mid < H / 2 - 3 && h > BOX(t) + 0.5) bad.push(`${id}: text's middle at ${mid.toFixed(1)} of ${H} (box y ${y}, ${h} high), ${(H / 2 - mid).toFixed(1)} above the centre`);

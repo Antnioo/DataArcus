@@ -211,11 +211,17 @@
     const own = !!(o.model && (o.model.byPath || o.model.byConnection));
     const sample = !!o.sample && !own;
     const B = own ? (o.bind || null) : sample ? sampleBind(t) : null;
+    // (a name over the limit ends at its last whole word: cut at the last space before the limit, and a dash or
+    // other joining mark left at the end goes too; one word longer than the limit is cut at the limit)
     // cut by characters, not UTF-16 units, so an emoji at the cut is never split into a broken file name; at most 30,
     // because the name appears up to three times in a path and Windows limits paths to 260 characters
     // no dots or spaces at either end: ".." would climb out of the folder, and Windows drops a trailing dot or space
     const tidy = (s) => s.replace(/^[.\s]+|[.\s]+$/g, '');
-    let base = tidy(Array.from(tidy((o.name || 'Power BI Report').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' '))).slice(0, 30).join('')) || 'Power BI Report';
+    const whole = Array.from(tidy((o.name || 'Power BI Report').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ')));
+    let cut = whole.slice(0, 30).join('');
+    if (whole.length > 30 && whole[30] !== ' ' && cut.lastIndexOf(' ') > 0) cut = cut.slice(0, cut.lastIndexOf(' '));
+    if (whole.length > 30) cut = cut.replace(/[\s\-\u2013\u2014\u00b7:,;&+]+$/, '');
+    let base = tidy(cut) || 'Power BI Report';
     // next to someone's project: never the name of a report already there (o.model.taken: their X.Report folders and
     // X.pbip files), nor the model's own name, which their first report usually has
     const theirs = o.model && o.model.byPath ? String(o.model.byPath).replace(/^.*\//, '').replace(/\.(SemanticModel|Dataset)$/i, '') : null;
@@ -359,7 +365,11 @@
     // top (measured in Desktop 2.158, DESKTOP-TESTS.md round 1: Segoe UI 3 + 1.19 x pt, Tahoma 1.12 x pt). centred(s, t):
     // the slot's y and height with the box moved down so the text's middle is the slot's, as far as the text's own height
     // allows; unchanged when the text is already there (the title at 0.42 x its box).
-    const centred = (s, t) => { const d = Math.min(Math.round(s.h / 2 - 1.2 * t), s.h - boxH(t)); return d > 0 ? { y: s.y + d, h: s.h - d } : { y: s.y, h: s.h }; };
+    // (round 6: the font's own number, not one rule for both. With 1.2 x pt for every font the header's text sat about 3
+    // below the middle in Segoe UI and up to 3 above it in Tahoma: the logo placeholder "drifted downwards". A font that
+    // was not measured keeps 1.2 x pt.)
+    const textMid = (t) => (/^segoe ui/i.test(font) ? 3 + 1.19 * t : /^tahoma/i.test(font) ? 1.12 * t : 1.2 * t);
+    const centred = (s, t) => { const d = Math.min(Math.round(s.h / 2 - textMid(t)), s.h - boxH(t)); return d > 0 ? { y: s.y + d, h: s.h - d } : { y: s.y, h: s.h }; };
     const LABEL = +(TH.label || {}).fontSize || 10;
     const SLICER_TEXT = +((((((o.theme || {}).visualStyles || {}).slicer || {})['*'] || {}).header || [{}])[0].textSize) || LABEL;
     // The card's value, label, padding, layout and outline need the "default" selector, or Power BI ignores them; the
