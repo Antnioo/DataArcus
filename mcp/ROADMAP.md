@@ -11,18 +11,39 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
   "an MCP for Claude": MCP is an open standard, and the engine must outlive any one AI app. Keep the engines shared
   between the website and the MCP. Only `pbip-export.js` writes Microsoft's report files (PBIR), so a format change
   stays in that one file.
-- **Position (reframed 2026-10-01, owner's go; research on Arabic demand pending):** three layers.
-  - **Identity, for everyone:** "Power BI reports designed right, in minutes, and checked in Power BI, not just
-    generated." Speed plus trust (measured, tested, nothing broken). Microsoft's Copilot and authoring tools create
-    reports but don't do styling and formatting well.
-  - **Edge, across the Gulf: built for how the Gulf does business.** Ramadan vs last Ramadan (it moves about 11 days
-    a year), Eid peaks, Hijri months, the Saturday-Sunday weekend, VAT, in English or Arabic reports. Every Gulf
-    retailer, distributor, bank and telecom needs this even in English-only reports, and generic tools don't do it.
-  - **Premium: Arabic and right to left done properly**, for the clients who need it (government, semi-government,
-    Saudi Arabia). Arabic alone is too narrow to be the identity (most private-sector Gulf reports are in English),
-    but it is tedious in Power BI (no right-to-left setting), so it is worth paying for where it is required.
-  - Don't claim nobody else serves Arabic: articles and tools on it exist; the moat is all three together in real,
-    checked report files.
+- **Position (2026-10-04, owner's go after the Desktop test of 2026-10-03; replaces the three layers of 2026-10-01):
+  the Gulf localisation and verification layer next to Microsoft's tools.**
+  - **Why:** generating a Power BI report with AI is now free and official. Microsoft's `powerbi-authoring` plugin
+    plans, builds and screenshot-checks a report from a model through an AI agent, and Copilot builds on Power BI
+    too: Microsoft 365 Copilot answers from Power BI reports and semantic models, and "This feature is enabled by
+    default" (Microsoft Learn, "Use Power BI data in Microsoft Copilot", updated 2026-09-24). Generating the report is
+    no longer what people pay for. Knowing that it is right, and that it works for the Gulf, is.
+  - **What our test showed** (`scripts/tests/DESKTOP-TESTS.md`, "2026-10-03: Microsoft's `powerbi-authoring` plugin on
+    an Arabic report"):
+    - The setup: plugin 0.3.18 with its CLI 0.4.0, Power BI Desktop 2.158.1177, a made-up model, the request "build an
+      Arabic sales report".
+    - What it did well: a clean page on the first pass, and every number on it right.
+    - What it didn't do: no right-to-left layout; no Hijri or Ramadan logic of its own (it used the model's); no check
+      of the numbers on the page (schema and screenshots only). Its starter theme failed its own validator (6 errors on
+      the card).
+    - The limits: one page, one pass, and a tester that isn't neutral. That is enough to show the gaps in its rules and
+      its default result. It doesn't show how a careful user with a good prompt would do. The plugin changes often, so
+      the test is re-run before it is quoted again.
+  - **What DataArcus does, beside Microsoft's tools (not instead of them):**
+    1. **Verification.** Microsoft's validator on every report we write; text, button and card sizes measured in Power
+       BI Desktop, not estimated; the Model Health Check before AI touches a model (the Copilot-readiness check). A
+       number check that proves every visual's values before and after a change is planned, not built.
+    2. **The Gulf's business logic.** Ramadan vs last Ramadan (it moves about 11 days a year), Eid, Hijri months, the
+       weekend by Gulf country, in English or Arabic reports.
+    3. **Arabic and right to left done properly**, where it is required: mirrored layout, Arabic display names the
+       user approves, sizes measured for Arabic text.
+  - **The identity line stays:** "Power BI reports designed right, in minutes, and checked in Power BI, not just generated."
+  - **Honesty, kept:**
+    - Don't claim nobody else serves Arabic: articles and tools on it exist. The moat is all three together, in real,
+      checked report files.
+    - Don't claim Microsoft's tools "can't". Say what was tested, in which version, on what data, and when, and re-test
+      when the version moves.
+    - Never "the only" or "the first".
 - **Research (2026-10-01, "Gulf Arabic Power BI demand", in the private repo `Antnioo/dataarcus-engine`,
   `research/`; medium confidence, much from search snippets).** It supports the three layers with three refinements:
   - **Lead with the Gulf business logic** (the need is real in English too: Ramadan is about 19% of yearly MENA FMCG
@@ -69,6 +90,7 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
   verification layer that works with Microsoft's tools (Arabic/RTL mirroring, the Gulf calendar, a number check that
   proves every visual's values before and after a change), and Pro is built around those, not generic generation.
   If not, the edge narrows to verification and Gulf business logic. Decided by the owner after the test.
+  **Confirmed by the test of 2026-10-03 (`bc05275`); the owner's go on 2026-10-04: see "Position" above.**
 - **Service, now:** the Copilot-readiness audit is added next to report design (private repo
   `business/SERVICE-OFFER.md`); outreach to Microsoft partners and in-house BI teams first.
 - **Positioning by audience:** website headline, universal: "DataArcus turns your real Power BI model into a
