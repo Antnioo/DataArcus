@@ -398,6 +398,198 @@ h2{font:700 18px Inter;line-height:22px}[dir=rtl] h2{font:700 18px 'Plex Arabic'
   return doc(css, `<div class="top"><h1>${T.title}</h1><div class="meta">${T.meta}</div></div>${sl}${age}${frt}${agents}`, dir);
 };
 
+// HR, rebuilt from the published picture (2026-10-04: its source wasn't kept): the same cards, bars, numbers and
+// colours, measured from the pixels. Joiners and leavers are drawn at their published heights (px).
+const HR = (lang) => {
+  const ar = lang === 'ar', dir = ar ? 'rtl' : 'ltr', dy = ar ? 8 : 0;
+  const T = ar ? { title: 'الموارد البشرية · نظرة على القوى العاملة', meta: 'حتى 30 سبتمبر · المجموعات الأقل من 5 أشخاص مخفية',
+    k: [['عدد الموظفين', '1,246', '+49 هذا الربع'], ['نسبة ترك العمل (12 شهرًا)', '13.2%', 'غادر 164 · متوسط القطاع 14%'], ['متوسط مدة الخدمة', '4.3 سنة', 'الوسيط 3.1'], ['وظائف شاغرة', '42', 'متوسط 34 يومًا للتعيين']],
+    flow: 'المنضمون والمغادرون شهريًا', flowS: 'الفرق بين الأعمدة هو صافي النمو', joined: '▲ انضموا', left: '▼ غادروا', months: AR_MONTHS,
+    why: '<b>لماذا يغادر الموظفون (مقابلات الخروج):</b> التطور الوظيفي 38%، الراتب 27%، المدير 19%، أخرى 16%',
+    attr: 'ترك العمل حسب القسم (12 شهرًا)', depts: ['المبيعات', 'خدمة العملاء', 'العمليات', 'المالية', 'تقنية المعلومات'], gold: 'الذهبي: أعلى من متوسط القطاع 14%', years: 'سنوات الخدمة' }
+    : { title: 'People · workforce overview', meta: 'As of 30 September · groups under 5 people are hidden',
+      k: [['Headcount', '1,246', '+49 this quarter'], ['Attrition (12 months)', '13.2%', '164 left · industry 14%'], ['Avg. tenure', '4.3 yrs', 'Median 3.1'], ['Open roles', '42', 'Avg. 34 days to fill']],
+      flow: 'People joining and leaving, by month', flowS: 'The gap between the bars is net growth', joined: '▲ Joined', left: '▼ Left', months: EN_MONTHS,
+      why: '<b>Why people leave (exit interviews):</b> career growth 38%, pay 27%, manager 19%, other 16%',
+      attr: 'Attrition by department (12 months)', depts: ['Sales', 'Customer service', 'Operations', 'Finance', 'IT'], gold: 'Gold: above the 14% industry average', years: 'Years of service' };
+  const green = '#2e855a', gold = '#d69e2f', ink = '#16211c', mute = '#5b6660';
+  const css = `body{background:#f4f6f5;color:${ink}}
+.top{position:absolute;left:26px;right:26px;top:${ar ? 22 : 21}px;display:flex;justify-content:space-between;align-items:center}
+h1{font:800 28.5px Inter;letter-spacing:-.01em}[dir=rtl] h1{font:700 28px 'Plex Arabic'}.meta{font-size:14px;color:${mute};margin-top:5px}[dir=rtl] .meta{font-size:13.8px;margin-top:3px}
+.card{position:absolute;background:#fff;border-radius:16px}
+.kpi{top:${74 + dy}px;width:375px;height:130px;padding:18px 22px}.kpi label{display:block;font-size:14.5px;font-weight:500;color:${mute}}
+.kpi b{display:block;text-align:${ar ? 'right' : 'left'};font:800 ${ar ? 35 : 36}px Inter;margin-top:${ar ? 13 : 9}px;line-height:1.1}[dir=rtl] .kpi b{font-family:Inter,'Plex Arabic'}.kpi small{display:block;margin-top:${ar ? 16 : 10}px;font-size:13px;font-weight:600;color:${mute}}
+h2{font:700 17px Inter;line-height:22px;margin-top:-3px}[dir=rtl] h2{font:700 17px 'Plex Arabic';line-height:26px}.h2s{font-size:12px;color:${mute};margin-top:5px}
+.ab{position:absolute}.lab{position:absolute;font-size:12.5px;color:${mute};text-align:center;width:60px}
+.tag{position:absolute;font-size:12px;font-weight:700;direction:ltr}`;
+  const side = ar ? 'right' : 'left';
+  const kpis = T.k.map(([l, v, s], i) => `<div class="card kpi" style="${side}:${26 + i * 391}px"><label>${l}</label><b class="${v.includes('سنة') ? '' : 'num'}">${v}</b><small>${s}</small></div>`).join('');
+  // joiners (up) and leavers (down) from the axis; time runs left to right in both languages
+  const J = [99, 81, 113, 135, 85, 76, 126, 154, 117, 94, 108, 131], Lv = [67, 53, 62, 49, 72, 90, 58, 53, 62, 44, 53, 67];
+  const fx = ar ? 844 - 718 : 80 - 26, axis = ar ? 498 - 228 : 482 - 220;   // first bar's x and the axis' y inside the card
+  const bars = J.map((h, i) => { const x = fx + Math.round(i * 59.82);
+    return `<div class="ab" style="left:${x}px;top:${axis - h}px;width:26px;height:${h}px;background:${green}"></div><div class="ab" style="left:${x}px;top:${axis + 2}px;width:26px;height:${Lv[i]}px;background:${gold}"></div><div class="lab" style="left:${x - 17}px;top:${ar ? 442 : 436}px">${T.months[i]}</div>`; }).join('');
+  const ax0 = ar ? 812 - 718 : 48 - 26;
+  const flow = `<h2>${T.flow}</h2><div class="h2s">${T.flowS}</div><div class="tag" style="left:${ar ? 96 : 24}px;top:${ar ? 84 : 77}px;color:${green}">${T.joined}</div>
+    <div class="ab" style="left:${ax0}px;top:${axis}px;width:740px;height:2px;background:#929493"></div>${bars}
+    <div class="tag" style="left:${ar ? 96 : 24}px;top:${ar ? 424 : 417}px;color:${gold}">${T.left}</div>
+    <div class="ab" style="left:22px;right:22px;top:${ar ? 490 : 480}px;height:${ar ? 49 : 47}px;border-radius:10px;background:#f0f6f2;padding:15px 16px;font-size:${ar ? 13.65 : 13.8}px">${T.why}</div>`;
+  const attrV = [18.4, 16.1, 10.2, 6.3, 5.1], attrW = [340, 297, 188, 116, 94];   // bar widths as published (18.48 px per %)
+  const attr = `<h2>${T.attr}</h2>${attrV.map((v, i) => { const y = (ar ? 287 - 228 : 274 - 220) + i * 38, bx = ar ? 270 - 26 : 1070 - 898, w = attrW[i];
+    return `<div class="ab" style="left:0;width:${bx}px;top:${y}px;height:26px;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;font-size:14.5px;box-sizing:border-box;direction:ltr"><span dir="${dir}">${T.depts[i]}</span></div>
+      <div class="ab" style="left:${bx}px;top:${y}px;width:${w}px;height:26px;background:${v > 14 ? gold : green}"></div>
+      <div class="ab num" style="left:${bx + w + 8}px;top:${y + 5}px;font-size:12.5px;font-weight:700">${v}%</div>`; }).join('')}
+    <div class="ab" style="${side}:22px;top:${ar ? 258 : 251}px;font-size:${ar ? 11.8 : 12}px;color:${mute}">${T.gold}</div>`;
+  const Y = [190, 260, 310, 280, 130, 76], cats = ['<1', '1-2', '2-4', '4-7', '7-10', '10+'];
+  const yx = ar ? 134 - 26 : 934 - 898, base = ar ? 825 - 556 : 812 - 548;
+  const years = `<h2>${T.years}</h2>${[0, 1, 2, 3].map((g) => `<div class="ab" style="left:${yx - 14}px;width:560px;top:${base - 215 + g * 71.7}px;height:1px;background:#eceeed"></div>`).join('')}
+    ${Y.map((v, i) => { const h = Math.round(v * 0.6226), x = yx + i * 91;
+      return `<div class="ab" style="left:${x}px;top:${base - h}px;width:77px;height:${h}px;background:${green}"></div><div class="ab num" style="left:${x}px;width:77px;text-align:center;top:${base - h - 18}px;font-size:11px;font-weight:700;color:#555f5a">${v}</div><div class="ab num" style="left:${x}px;width:77px;text-align:center;top:${base + 6}px;font-size:11.5px;color:${mute}">${cats[i].replace('<', '&lt;')}</div>`; }).join('')}`;
+  const body = `<div class="top"><h1>${T.title}</h1><div class="meta">${T.meta}</div></div>${kpis}
+  <div class="card" style="left:${ar ? 718 : 26}px;top:${220 + dy}px;width:856px;height:640px;padding:20px 22px">${flow}</div>
+  <div class="card" style="left:${ar ? 26 : 898}px;top:${220 + dy}px;width:676px;height:312px;padding:20px 22px">${attr}</div>
+  <div class="card" style="left:${ar ? 26 : 898}px;top:${548 + dy}px;width:676px;height:312px;padding:20px 22px">${years}</div>`;
+  return doc(css, body, dir);
+};
+
+// Finance, rebuilt from the published picture (2026-10-04: its source wasn't kept): the P&L table, the budget-to-actual
+// bridge (28.47 px per AED million; 7.2 +1.4 +0.8 -0.5 -1.6 = 7.3) and monthly revenue against budget (bars at their
+// published heights), measured from the pixels. The Arabic picture keeps its layout as published (the charts run left
+// to right, signs after the numbers).
+const FINANCE = (lang) => {
+  const ar = lang === 'ar', dir = ar ? 'rtl' : 'ltr';
+  const G = ar ? { rule: 71, head: 124, row0: 125, pitch: 39, dbl: 514, tblL: 726, tblW: 844, dbarR: 1011, wfX: 159, wfBase: 423, mX: 173, mBase: 732, box: [722, 568, 852, 93] }
+    : { rule: 63, head: 113, row0: 114, pitch: 36, dbl: 473, tblL: 26, tblW: 851, dbarL: 597, wfX: 905, wfBase: 412, mX: 919, mBase: 715, box: [26, 524, 851, 110] };
+  const T = ar ? { title: 'الأرباح والخسائر · حتى سبتمبر 2026', meta: 'غير مدققة · مليون درهم · الأرقام بين قوسين تكاليف',
+    cols: ['مليون درهم، منذ بداية العام', 'الفعلي', 'الموازنة', 'Δ الموازنة', 'Δ %', 'العام السابق'],
+    rows: ['الإيرادات', 'مبيعات المنتجات', 'الخدمات', 'تكلفة المبيعات', 'إجمالي الربح', 'المصاريف التشغيلية', 'الرواتب', 'التسويق', 'الإيجار وأخرى', 'صافي الربح'],
+    legend: ['الفعلي', 'الموازنة', 'أفضل من الموازنة', 'أسوأ من الموازنة'], com: 'التعليق',
+    comT: 'صافي الربح أعلى من الموازنة بـ 0.1 مليون درهم: الحجم (+1.4) والسعر (+0.8) غطّيا ضعف المزيج وتكاليف أعلى بـ 1.6 مليون، منها زيادة إنفاق تسويقي بـ 0.4 مليون (حملة الخريف قُدّمت من الربع الرابع). الخدمات أقل من الموازنة بـ 1.7% بسبب عقدين متأخرين.',
+    bridge: 'جسر صافي الربح: من الموازنة إلى الفعلي', steps: ['الموازنة', 'الحجم', 'السعر', 'المزيج', 'التكاليف', 'الفعلي'], month: 'الإيرادات شهريًا: الفعلي مقابل الموازنة', months: AR_MONTHS }
+    : { title: 'Profit & loss · YTD September 2026', meta: 'Unaudited · AED million · figures in brackets are costs',
+      cols: ['AED million, year to date', 'Actual', 'Budget', 'Δ Budget', 'Δ %', 'Prior year'],
+      rows: ['Revenue', 'Product sales', 'Services', 'Cost of sales', 'Gross profit', 'Operating expenses', 'Salaries', 'Marketing', 'Rent & other', 'Net profit'],
+      legend: ['Actual', 'Budget', 'Better than budget', 'Worse than budget'], com: 'Commentary',
+      comT: 'Net profit AED 0.1M above budget: volume (+1.4) and price (+0.8) covered a weaker mix and AED 1.6M of higher costs, including a AED 0.4M marketing overspend (autumn campaign moved from Q4). Services 1.7% below budget on two delayed contracts.',
+      bridge: 'Net profit bridge: budget to actual', steps: ['Budget', 'Volume', 'Price', 'Mix', 'Costs', 'Actual'], month: 'Revenue by month: actual vs budget', months: EN_MONTHS };
+  const green = '#2e7d32', red = '#c62828', ink = '#111', dark = '#404040';
+  // label, actual, budget, Δ budget, Δ %, prior year, bold, Δ% bar width (px, as published), better than budget
+  const R = [[0, '48.2', '46.5', '+1.7', '+3.7%', '44.1', 1, 22, 1], [1, '36.9', '35.0', '+1.9', '+5.4%', '33.8', 0, 33, 1], [2, '11.3', '11.5', '−0.2', '−1.7%', '10.3', 0, 10, 0],
+    [3, '(31.8)', '(30.7)', '−1.1', '−3.6%', '(29.6)', 1, 21, 0], [4, '16.4', '15.8', '+0.6', '+3.8%', '14.5', 1, 23, 1], [5, '(9.1)', '(8.6)', '−0.5', '−5.8%', '(8.4)', 1, 35, 0],
+    [6, '(5.6)', '(5.4)', '−0.2', '−3.7%', '(5.2)', 0, 21, 0], [7, '(1.9)', '(1.5)', '−0.4', '−26.7%', '(1.6)', 0, 59, 0], [8, '(1.6)', '(1.7)', '+0.1', '+5.9%', '(1.6)', 0, 35, 1], [9, '7.3', '7.2', '+0.1', '+1.4%', '6.1', 1, 8, 1]];
+  const css = `body{background:#fff;color:${ink}}
+.top{position:absolute;left:26px;right:26px;top:${ar ? 26 : 17}px;display:flex;justify-content:space-between;align-items:flex-end;height:36px}
+h1{font:800 26.25px Inter;letter-spacing:-.01em}[dir=rtl] h1{font:700 25.7px 'Plex Arabic',Inter}.meta{font-size:14px;color:#555;padding-bottom:2px}
+.ab{position:absolute}.c{position:absolute;white-space:nowrap}
+.hd{font-size:12.5px;font-weight:600;color:#555}.hd0{font-size:13px}.rw{font-size:15px}.b{font-weight:700}
+.h3{position:absolute;font:700 14.5px Inter;letter-spacing:.058em;text-transform:uppercase}[dir=rtl] .h3{font:700 15px 'Plex Arabic';letter-spacing:0;margin-top:-2px}
+.lg{position:absolute;font-size:13px;color:#555;display:flex;gap:20.67px;align-items:center}.lg i{display:inline-block;width:12px;height:10px;margin-${ar ? 'left' : 'right'}:6px;vertical-align:-1px}`;
+  const S = ar ? 'right' : 'left', X = (x, w = 0) => ar ? `right:${1600 - x - w}px` : `left:${x}px`;   // x as measured on the English picture's side
+  // the table: right edges of the number columns, measured (EN from the left; AR mirrored)
+  const colR = ar ? [1564, 1236, 1140, 1031, 1011, 733] : [36, 366, 462, 577, 597, 866];   // AR: the numbers' left edges, as published
+  const cell = (txt, i, y, cls, color) => {
+    if (i === 0) return `<div class="c ${cls}" style="${ar ? `right:${1600 - colR[0]}px` : `left:${colR[0]}px`};top:${y}px">${txt}</div>`;
+    if (i === 4) return '';
+    const right = ar ? colR[i] : colR[i];
+    return ar ? `<div class="c ${cls}" style="left:${right}px;top:${y}px;${color ? `color:${color}` : ''}">${txt}</div>` : `<div class="c ${cls}" style="right:${1600 - right}px;top:${y}px;${color ? `color:${color}` : ''}">${txt}</div>`;
+  };
+  let tbl = `<div class="ab" style="left:${G.tblL}px;width:${G.tblW}px;top:${G.head}px;height:1px;background:#141414"></div>`;
+  tbl += T.cols.map((c, i) => i === 0 ? cell(c, 0, G.head - (ar ? 26 : 22), 'hd hd0') : i === 4 ? `<div class="c hd" style="${ar ? `right:${1600 - G.dbarR}px` : `left:${G.dbarL}px`};top:${G.head - 22}px">${c}</div>` : cell(c, i, G.head - (ar ? 27 : 22), 'hd')).join('');
+  R.forEach(([li, a, bu, d, p, py, bold, bw, good], k) => {
+    const y = G.row0 + k * G.pitch, ty = y + (G.pitch - 20) / 2, col = good ? green : red, cls = 'rw' + (bold ? ' b' : '');
+    tbl += cell(`<span style="${!bold ? `margin-${S}:16px` : ''}">${T.rows[li]}</span>`, 0, ty - (ar ? 2 : 0), cls) + cell(a, 1, ty, cls) + cell(bu, 2, ty, cls) + cell(d, 3, ty, cls + ' b', col) + cell(py, 5, ty, cls, '#555');
+    const by = y + Math.round((G.pitch - 12) / 2);
+    tbl += `<div class="ab" style="${ar ? `left:${G.dbarR - bw}px` : `left:${G.dbarL}px`};top:${by}px;width:${bw}px;height:12px;background:${col}"></div>`
+      + `<div class="c b" style="${ar ? `right:${1600 - (G.dbarR - bw - 6)}px` : `left:${G.dbarL + bw + 6}px`};top:${by - 2}px;font-size:12.5px;color:${col}">${p}</div>`;
+    if (k < 9) tbl += `<div class="ab" style="left:${G.tblL}px;width:${G.tblW}px;top:${y + G.pitch - 1}px;height:1px;background:#ddd"></div>`;
+  });
+  tbl += `<div class="ab" style="left:${G.tblL}px;width:${G.tblW}px;top:${G.dbl}px;height:1px;background:#141414"></div><div class="ab" style="left:${G.tblL + (ar ? 2 : 6)}px;width:${G.tblW - (ar ? 0 : 8)}px;top:${G.dbl + 2}px;height:1px;background:#131313"></div>`;
+  const lgc = [dark, '#fff', green, red];
+  tbl += `<div class="lg" style="${S}:26px;top:${G.dbl + (ar ? 15 : 14)}px">${T.legend.map((l, i) => `<span><i style="background:${lgc[i]};${i === 1 ? 'outline:1px solid #222;outline-offset:-1px' : ''}"></i>${l}</span>`).join('')}</div>`;
+  const [bxL, bxT, bxW, bxH] = G.box;
+  tbl += `<div class="ab" style="left:${bxL}px;top:${bxT}px;width:${bxW}px;height:${bxH}px;background:#f6f6f6;border-${S}:4px solid #111;padding:${ar ? '11px 16px' : '8px 16px'};font-size:${ar ? 13.7 : 13.82}px;line-height:22.5px;color:#333"><b style="color:${ink};display:block;margin-bottom:2px">${T.com}</b>${T.comT}</div>`;
+  // the bridge, left to right in both languages
+  const k = 28.47, wf = [[0, 7.2, dark, '7.2'], [7.2, 8.6, green, '+1.4'], [8.6, 9.4, green, '+0.8'], [9.4, 8.9, red, '-0.5'], [8.9, 7.3, red, '-1.6'], [0, 7.3, dark, '7.3']];
+  const wfPx = [[205, 205], [245, 39], [268, 23], [268, 14], [253, 45], [208, 208]];   // [top above the base, height] as published
+  let ch = `<div class="h3" style="${S}:${ar ? 893 : 893}px;top:${ar ? 92 : 84}px">${T.bridge}</div>`;
+  const cx0 = G.wfX - 12;
+  [0, 1, 2, 3].forEach((g) => { ch += `<div class="ab" style="left:${cx0}px;width:560px;top:${G.wfBase - 300 + g * 100}px;height:1px;background:${g === 3 ? '#ddd' : '#eee'}"></div>`; });
+  wf.forEach(([from, to, c, lab], i) => { const x = G.wfX + Math.round(i * 91.4), top = G.wfBase - wfPx[i][0], h = wfPx[i][1];
+    ch += `<div class="ab" style="left:${x}px;top:${top}px;width:79px;height:${h}px;background:${c}"></div><div class="c" style="left:${x}px;width:79px;text-align:center;top:${top - 18}px;font:700 11.5px Inter;direction:ltr">${lab}</div>`
+      + `<div class="c" style="left:${x - 6}px;width:91px;text-align:center;top:${G.wfBase + (ar ? 6 : 8)}px;font-size:12.5px;color:#333">${T.steps[i]}</div>`;
+    if (i < 5) { const y = G.wfBase - Math.round(to * k); ch += `<div class="ab" style="left:${x + 79}px;width:12px;top:${y}px;border-top:1.5px dotted #888"></div>`; } });
+  ch += `<div class="h3" style="${S}:${ar ? 893 : 893}px;top:${ar ? 478 : 463}px">${T.month}</div>`;
+  const act = [169, 176, 186, 179, 190, 193, 183, 190, 196], bud = [170, 173, 177, 177, 180, 184, 180, 184, 187];
+  act.forEach((h, i) => { const x = G.mX + Math.round(i * 60.375);
+    ch += `<div class="ab" style="left:${x + 11}px;top:${G.mBase - bud[i]}px;width:24px;height:${bud[i]}px;border:2px solid #222;background:#fff;box-sizing:border-box"></div><div class="ab" style="left:${x}px;top:${G.mBase - h}px;width:22px;height:${h}px;background:${dark}"></div>`
+      + `<div class="c" style="left:${x - (ar ? 12 : 14)}px;width:50px;text-align:center;top:${G.mBase + (ar ? 4 : 6)}px;font-size:12.5px;color:#555">${T.months[i]}</div>`; });
+  const body = `<div class="top"><h1>${T.title}</h1><div class="meta">${T.meta}</div></div><div class="ab" style="left:26px;right:26px;top:${G.rule}px;height:2px;background:#111"></div>${tbl}${ch}`;
+  return doc(css, body, dir);
+};
+
+// Operations, rebuilt from the published picture (2026-10-04: its source wasn't kept): the KPI tiles with their limit
+// colours, the queue line (y at each hour as published), the 48 heatmap cells (colours sampled from the picture) and
+// the action list, measured from the pixels.
+// the Arabic operations picture was drawn with IBM Plex Sans Arabic's own Latin digits and letters
+const PLEX_LATIN = [400, 700].map((w) => `@font-face{font-family:'Plex Latin';font-weight:${w};src:url(${font('ibm-plex-sans-arabic', `ibm-plex-sans-arabic-latin-${w}-normal.woff2`)})}`).join('');
+const OPERATIONS = (lang) => {
+  const ar = lang === 'ar', dir = ar ? 'rtl' : 'ltr', dy = ar ? 7 : 0;
+  const T = ar ? { title: 'المستودع والتوصيل · مباشر', live: 'مباشر · تحديث 08:42:10',
+    k: [['طلبات في الانتظار', '312', 'الحد 400'], ['شحنات متأخرة', '27', 'الحد 15'], ['الإرسال في الوقت', '93.8%', 'الهدف 95%'], ['معدل التجهيز/ساعة', '1,140', 'الهدف 1,000'], ['شاحنات على الطريق', '46', 'من 52'], ['حوادث مفتوحة', '3', '1 حرجة']],
+    queue: 'الطلبات في الانتظار اليوم · الحد 400', heat: 'نشاط التحميل حسب الرصيف والساعة', dock: (n) => `رصيف ${n}`, act: 'يحتاج إجراء الآن', foot: 'مرتبة حسب التأخير · فقط ما تجاوز حدّه',
+    items: ['عطل شاحنة، القوز', 'فات الموعد، العميل مغلق', 'بانتظار المخزون', 'العنوان غير موجود', 'تأخير تحميل، رصيف 3', 'العميل طلب تغيير الموعد', 'السائق تجاوز ساعات الوردية', 'فاتورة ناقصة'], min: (m) => `${m} د` }
+    : { title: 'Warehouse & delivery · live', live: 'Live · refreshed 08:42:10',
+      k: [['Orders in queue', '312', 'limit 400'], ['Late shipments', '27', 'limit 15'], ['On-time dispatch', '93.8%', 'target 95%'], ['Pick rate / hour', '1,140', 'target 1,000'], ['Trucks on road', '46', 'of 52'], ['Open incidents', '3', '1 critical']],
+      queue: 'Orders in queue today · limit 400', heat: 'Loading activity by dock and hour', dock: (n) => `Dock ${n}`, act: 'Needs action now', foot: 'Sorted by delay · only items over their limit',
+      items: ['Truck breakdown, Al Quoz', 'Missed slot, customer closed', 'Waiting for stock', 'Address not found', 'Loading delay, dock 3', 'Customer asked to reschedule', 'Driver over shift hours', 'Missing invoice'], min: (m) => `${m} min` };
+  const G = '#2ebe67', Rd = '#e5484d', A = '#f59e0b', bg = '#0a111b', card = '#141c27', line = '#38bdf8', mute = '#9ca6b5';
+  const css = `${ar ? PLEX_LATIN : ''}body{background:${bg};color:#f3f6f9}
+.top{position:absolute;left:26px;right:26px;top:22px;display:flex;justify-content:space-between;align-items:center}
+h1{font:700 24px Inter}[dir=rtl] h1{font:700 24px 'Plex Arabic',Inter}.live{font-size:14px;font-weight:700;color:#22c55e;display:flex;align-items:center;gap:7px}.live i{width:8px;height:8px;border-radius:50%;background:#22c55e}
+.card{position:absolute;background:${card};border:1px solid #232c39;border-radius:8px}
+.kpi{top:${64 + dy}px;width:248px;height:118px;padding:16px 14px;overflow:hidden}.kpi::before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:var(--c)}
+.kpi label{display:block;font-size:13px;font-weight:600;color:#9aa8bd;font-variant-numeric:normal}.kpi b{display:block;font:800 34px Inter;color:#eff7fd;margin-top:6px;line-height:1.1}.kpi small{display:block;margin-top:10px;font-size:11.5px;color:${mute}}
+[dir=rtl] .kpi b{text-align:right;font:700 34px/1.1 'Plex Latin';margin-top:12px}[dir=rtl] .kpi small{margin-top:15px}
+.hh{position:absolute;font:700 12.6px Inter;letter-spacing:.08em;text-transform:uppercase;color:#9ba4af}[dir=rtl] .hh{font:700 13px 'Plex Arabic';letter-spacing:0}
+.ab{position:absolute}[dir=rtl] .pl,[dir=rtl] .live{font-family:'Plex Latin','Plex Arabic'}.t{position:absolute;white-space:nowrap}`;
+  const side = ar ? 'right' : 'left';
+  const kc = [G, Rd, A, G, G, Rd];
+  const kpis = T.k.map(([l, v, s], i) => `<div class="card kpi" style="${side}:${26 + i * 260}px;--c:${kc[i]}"><label>${l}</label><b class="num">${v}</b><small>${s}</small></div>`).join('');
+  // the queue line: hourly from 06 to 23, y as published (the picture's pixels)
+  const ys = ar ? [331, 376.5, 410, 431, 397.5, 352, 295.5, 274.5, 319.5, 342.5, 364.5, 386.5, 410, 432.5, 443, 449, 452.5, 465.5] : [320.5, 365.5, 399, 421, 388.5, 342.5, 286.5, 264.5, 308.5, 331.5, 354.5, 376.5, 399.5, 421.5, 433, 438.5, 442.5, 456];
+  const lx = ar ? 757 : 48, ly = ar ? 10 : 0;
+  const pts = ys.map((y, i) => `${(lx + i * 46.765).toFixed(1)},${y}`).join(' ');
+  let svg = `<svg class="ab" style="left:0;top:0;overflow:visible" width="1600" height="900">`;
+  [238, 322, 406, 490].forEach((y) => { svg += `<line x1="${lx - 7}" x2="${lx + 803}" y1="${y + ly + 0.5}" y2="${y + ly + 0.5}" stroke="#1f2836"/>`; });
+  svg += `<line x1="${lx - (ar ? 8 : 7)}" x2="${lx + (ar ? 802 : 803)}" y1="${343 + ly}" y2="${343 + ly}" stroke="#8a94a3" stroke-width="1.3" stroke-dasharray="6 5"/>`;
+  svg += `<polyline points="${pts}" fill="none" stroke="${line}" stroke-width="2.4" stroke-linejoin="round"/><circle cx="${(lx + 17 * 46.765).toFixed(1)}" cy="${ys[17]}" r="4.6" fill="${line}"/></svg>`;
+  const hours = ['06', '09', '12', '15', '18', '21'].map((h, i) => `<div class="t num" style="left:${lx - 20 + i * 140.3}px;width:40px;text-align:center;top:${496 + ly}px;font-size:11.5px;color:${mute}">${h}</div>`).join('');
+  // heatmap: 12 hours x 4 docks, colours and cell edges as published
+  const HC = [['#1c4968', '#1e5979', '#257097', '#2d8fbe', '#32a5db', '#2b88b4', '#2678a0', '#23688f', '#287fac', '#2e97c7', '#2678a0', '#1e5979'],
+    ['#1a415e', '#1e5071', '#2678a0', '#309ed1', '#38bdf8', '#35aee5', '#2d8fbe', '#2678a0', '#2b88b4', '#32a5db', '#287fac', '#215f84'],
+    ['#1c4968', '#215f84', '#23688f', '#2b88b4', '#309ed1', '#2d8fbe', '#287fac', '#257097', '#2678a0', '#2d8fbe', '#257097', '#1e5071'],
+    ['#183a55', '#1c4968', '#215f84', '#2678a0', '#2d8fbe', '#287fac', '#257097', '#23688f', '#257097', '#287fac', '#23688f', '#1c4968']];
+  const hx = ar ? 810 : 102, hy = ar ? 615 : 605;
+  let heat = '';
+  HC.forEach((row, j) => row.forEach((c, i) => { heat += `<div class="ab" style="left:${Math.floor(hx + i * 62.5)}px;top:${Math.round(hy + j * 59.3)}px;width:61px;height:58px;border-radius:2px;background:${c}"></div>`; }));
+  ['08', '10', '12', '14', '16', '18'].forEach((h, i) => { heat += `<div class="t num" style="left:${hx + i * 125}px;width:61px;text-align:center;top:${hy - 19}px;font-size:11.5px;color:${mute}">${h}</div>`; });
+  [1, 2, 3, 4].forEach((n, j) => { heat += `<div class="t" style="left:${hx - 90}px;width:${ar ? 80 : 81}px;text-align:right;top:${Math.round(hy + j * 59.3) + 22}px;font-size:11.5px;color:${mute}">${T.dock(n)}</div>`; });
+  // the action list
+  const codes = ['DXB-4471', 'AUH-2210', 'SHJ-0934', 'DXB-4502', 'DXB-4519', 'AUH-2231', 'SHJ-0951', 'DXB-4533'], mins = [52, 38, 24, 19, 12, 11, 9, 7];
+  const ax = ar ? 41 : 893, aw = 665, ay0 = ar ? 242 : 232;
+  let acts = '';
+  codes.forEach((c, k) => { const y = ay0 + k * (ar ? 51 : 48), col = mins[k] >= 30 ? Rd : A;
+    acts += `<div class="ab" style="left:${ax}px;width:${aw}px;top:${y}px;height:${ar ? 51 : 48}px;border-bottom:1px solid #222b38;display:flex;align-items:center;font-size:15px;direction:${dir}">`
+      + `<i style="width:11px;height:11px;border-radius:50%;background:${col};margin-${ar ? 'left' : 'right'}:${ar ? 4 : 7}px;margin-${ar ? 'right' : 'left'}:5px"></i><span class="num pl" style="width:${ar ? 203 : 158}px;color:#edf2f7;font-variant-numeric:normal;text-align:${ar ? 'right' : 'left'}">${c}</span>`
+      + `<span style="flex:1;color:#97a2b1">${T.items[k]}</span><b class="num pl" style="color:${col};font-size:15px;font-variant-numeric:normal;direction:${dir};margin-${ar ? 'left' : 'right'}:${ar ? 7 : 5}px">${T.min(mins[k])}</b></div>`; });
+  const body = `<div class="top"><h1>${T.title}</h1><div class="live"><i></i>${T.live}</div></div>${kpis}
+  <div class="card" style="left:${ar ? 735 : 26}px;top:${194 + (ar ? 9 : 0)}px;width:${ar ? 838 : 840}px;height:${ar ? 336 : 339}px"><div class="hh" style="${side}:14px;top:${ar ? 11 : 14}px">${T.queue}</div></div>
+  <div class="card" style="left:${ar ? 735 : 26}px;top:${545 + (ar ? 8 : 0)}px;width:${ar ? 838 : 840}px;height:${ar ? 310 : 311}px"><div class="hh" style="${side}:14px;top:11px">${T.heat}</div></div>
+  <div class="card" style="left:${ar ? 26 : 878}px;top:${194 + (ar ? 9 : 0)}px;width:${ar ? 696 : 698}px;height:${ar ? 661 : 663}px"><div class="hh" style="${side}:14px;top:${ar ? 11 : 14}px">${T.act}</div></div>
+  ${svg}${hours}${heat}${acts}<div class="t" style="${side}:${ar ? 893 : 893}px;top:${ar ? 660 : 626}px;font-size:12px;color:${mute}">${T.foot}</div>`;
+  return doc(css, body, dir);
+};
+
 // ---------------------------------------------------------------------------------------------------------------
 const JOBS = [
   { id: 'redesign', out: 'assets/img/articles/power-bi-redesign-before', html: BEFORE },
@@ -406,7 +598,10 @@ const JOBS = [
     { id: 'executive', out: `assets/img/articles/styles/executive-${l}`, html: EXECUTIVE(l) },
     { id: 'sales', out: `assets/img/articles/styles/sales-${l}`, ...SALES(l) },
     { id: 'marketing', out: `assets/img/articles/styles/marketing-${l}`, ...MARKETING(l) },
-    { id: 'service', out: `assets/img/articles/styles/service-${l}`, html: SERVICE(l) }])];
+    { id: 'service', out: `assets/img/articles/styles/service-${l}`, html: SERVICE(l) },
+    { id: 'hr', out: `assets/img/articles/styles/hr-${l}`, html: HR(l) },
+    { id: 'finance', out: `assets/img/articles/styles/finance-${l}`, html: FINANCE(l) },
+    { id: 'operations', out: `assets/img/articles/styles/operations-${l}`, html: OPERATIONS(l) }])];
 
 const only = process.argv.slice(2);
 const exe = process.env.CHROME_PATH || ['/opt/pw-browsers/chromium', 'C:/Program Files/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome'].find((p) => fs.existsSync(p));
