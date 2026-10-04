@@ -1337,6 +1337,22 @@ Desktop). The report: `create_report` of main, executive layout, four cards, 192
 - No card cuts its number with four cards beside the filter rail at 1920 x 1080 (the longest, 74,675.00, fits).
 - So `#,0.##` (round 9's choice for a measure with no format) keeps the decimals a measure has: measured now.
 
+- **FAIL on narrow cards: a formatted card cuts a long number.** The same model with **six** cards (the two "(old)"
+  measures added), built by `create_report` on smaller pages:
+  | Page | Total Sales Last Ramadan (`#,0.00`) | Total Sales (`#,0`) | Sales per Day (`#,0.##`) | the others |
+  |---|---|---|---|---|
+  | 1280 x 720, six cards | **"74,675...."** (cut) | 101,914 | **"14,559...."** (cut) | 0.34, 23,635, 3.31 |
+  | 960 x 720, six cards | **"74,675..."** (cut) | 101,914 | **"14,559..."** (cut) | 0.34, 23,635, 3.31 |
+  A number of seven characters fits; nine characters (74,675.00, 14,559.14) do not. Before round 9 these cards
+  showed a scaled number (74.675K), which is seven characters. **Cause:** the card's value size is fitted to the
+  card (`cardFit`), not to the text, and the report-side format (round 9, R9.1) makes the text longer than the
+  scaled one. This is in main and in package 0.2.5.
+  **Proposed fix (no code changed here):** when a card carries the format, size its value for the longest text
+  the format can give (measure the width per character at the value's font first), or drop the decimals on a card
+  (`#,0`) when the card is too narrow, or keep the scaled number on cards narrower than a measured width. Until
+  then: the four-card and three-card layouts at 1920 x 1080 are safe (measured above); six cards or smaller pages
+  are not, for values of nine characters or more.
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
