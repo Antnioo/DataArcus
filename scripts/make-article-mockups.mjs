@@ -452,6 +452,81 @@ h2{font:700 17px Inter;line-height:22px;margin-top:-3px}[dir=rtl] h2{font:700 17
   return doc(css, body, dir);
 };
 
+// Finance, rebuilt from the published picture (2026-10-04: its source wasn't kept): the P&L table, the budget-to-actual
+// bridge (28.47 px per AED million; 7.2 +1.4 +0.8 -0.5 -1.6 = 7.3) and monthly revenue against budget (bars at their
+// published heights), measured from the pixels. The Arabic picture keeps its layout as published (the charts run left
+// to right, signs after the numbers).
+const FINANCE = (lang) => {
+  const ar = lang === 'ar', dir = ar ? 'rtl' : 'ltr';
+  const G = ar ? { rule: 71, head: 124, row0: 125, pitch: 39, dbl: 514, tblL: 726, tblW: 844, dbarR: 1011, wfX: 159, wfBase: 423, mX: 173, mBase: 732, box: [722, 568, 852, 93] }
+    : { rule: 63, head: 113, row0: 114, pitch: 36, dbl: 473, tblL: 26, tblW: 851, dbarL: 597, wfX: 905, wfBase: 412, mX: 919, mBase: 715, box: [26, 524, 851, 110] };
+  const T = ar ? { title: 'الأرباح والخسائر · حتى سبتمبر 2026', meta: 'غير مدققة · مليون درهم · الأرقام بين قوسين تكاليف',
+    cols: ['مليون درهم، منذ بداية العام', 'الفعلي', 'الموازنة', 'Δ الموازنة', 'Δ %', 'العام السابق'],
+    rows: ['الإيرادات', 'مبيعات المنتجات', 'الخدمات', 'تكلفة المبيعات', 'إجمالي الربح', 'المصاريف التشغيلية', 'الرواتب', 'التسويق', 'الإيجار وأخرى', 'صافي الربح'],
+    legend: ['الفعلي', 'الموازنة', 'أفضل من الموازنة', 'أسوأ من الموازنة'], com: 'التعليق',
+    comT: 'صافي الربح أعلى من الموازنة بـ 0.1 مليون درهم: الحجم (+1.4) والسعر (+0.8) غطّيا ضعف المزيج وتكاليف أعلى بـ 1.6 مليون، منها زيادة إنفاق تسويقي بـ 0.4 مليون (حملة الخريف قُدّمت من الربع الرابع). الخدمات أقل من الموازنة بـ 1.7% بسبب عقدين متأخرين.',
+    bridge: 'جسر صافي الربح: من الموازنة إلى الفعلي', steps: ['الموازنة', 'الحجم', 'السعر', 'المزيج', 'التكاليف', 'الفعلي'], month: 'الإيرادات شهريًا: الفعلي مقابل الموازنة', months: AR_MONTHS }
+    : { title: 'Profit & loss · YTD September 2026', meta: 'Unaudited · AED million · figures in brackets are costs',
+      cols: ['AED million, year to date', 'Actual', 'Budget', 'Δ Budget', 'Δ %', 'Prior year'],
+      rows: ['Revenue', 'Product sales', 'Services', 'Cost of sales', 'Gross profit', 'Operating expenses', 'Salaries', 'Marketing', 'Rent & other', 'Net profit'],
+      legend: ['Actual', 'Budget', 'Better than budget', 'Worse than budget'], com: 'Commentary',
+      comT: 'Net profit AED 0.1M above budget: volume (+1.4) and price (+0.8) covered a weaker mix and AED 1.6M of higher costs, including a AED 0.4M marketing overspend (autumn campaign moved from Q4). Services 1.7% below budget on two delayed contracts.',
+      bridge: 'Net profit bridge: budget to actual', steps: ['Budget', 'Volume', 'Price', 'Mix', 'Costs', 'Actual'], month: 'Revenue by month: actual vs budget', months: EN_MONTHS };
+  const green = '#2e7d32', red = '#c62828', ink = '#111', dark = '#404040';
+  // label, actual, budget, Δ budget, Δ %, prior year, bold, Δ% bar width (px, as published), better than budget
+  const R = [[0, '48.2', '46.5', '+1.7', '+3.7%', '44.1', 1, 22, 1], [1, '36.9', '35.0', '+1.9', '+5.4%', '33.8', 0, 33, 1], [2, '11.3', '11.5', '−0.2', '−1.7%', '10.3', 0, 10, 0],
+    [3, '(31.8)', '(30.7)', '−1.1', '−3.6%', '(29.6)', 1, 21, 0], [4, '16.4', '15.8', '+0.6', '+3.8%', '14.5', 1, 23, 1], [5, '(9.1)', '(8.6)', '−0.5', '−5.8%', '(8.4)', 1, 35, 0],
+    [6, '(5.6)', '(5.4)', '−0.2', '−3.7%', '(5.2)', 0, 21, 0], [7, '(1.9)', '(1.5)', '−0.4', '−26.7%', '(1.6)', 0, 59, 0], [8, '(1.6)', '(1.7)', '+0.1', '+5.9%', '(1.6)', 0, 35, 1], [9, '7.3', '7.2', '+0.1', '+1.4%', '6.1', 1, 8, 1]];
+  const css = `body{background:#fff;color:${ink}}
+.top{position:absolute;left:26px;right:26px;top:${ar ? 26 : 17}px;display:flex;justify-content:space-between;align-items:flex-end;height:36px}
+h1{font:800 26.25px Inter;letter-spacing:-.01em}[dir=rtl] h1{font:700 25.7px 'Plex Arabic',Inter}.meta{font-size:14px;color:#555;padding-bottom:2px}
+.ab{position:absolute}.c{position:absolute;white-space:nowrap}
+.hd{font-size:12.5px;font-weight:600;color:#555}.hd0{font-size:13px}.rw{font-size:15px}.b{font-weight:700}
+.h3{position:absolute;font:700 14.5px Inter;letter-spacing:.058em;text-transform:uppercase}[dir=rtl] .h3{font:700 15px 'Plex Arabic';letter-spacing:0;margin-top:-2px}
+.lg{position:absolute;font-size:13px;color:#555;display:flex;gap:20.67px;align-items:center}.lg i{display:inline-block;width:12px;height:10px;margin-${ar ? 'left' : 'right'}:6px;vertical-align:-1px}`;
+  const S = ar ? 'right' : 'left', X = (x, w = 0) => ar ? `right:${1600 - x - w}px` : `left:${x}px`;   // x as measured on the English picture's side
+  // the table: right edges of the number columns, measured (EN from the left; AR mirrored)
+  const colR = ar ? [1564, 1236, 1140, 1031, 1011, 733] : [36, 366, 462, 577, 597, 866];   // AR: the numbers' left edges, as published
+  const cell = (txt, i, y, cls, color) => {
+    if (i === 0) return `<div class="c ${cls}" style="${ar ? `right:${1600 - colR[0]}px` : `left:${colR[0]}px`};top:${y}px">${txt}</div>`;
+    if (i === 4) return '';
+    const right = ar ? colR[i] : colR[i];
+    return ar ? `<div class="c ${cls}" style="left:${right}px;top:${y}px;${color ? `color:${color}` : ''}">${txt}</div>` : `<div class="c ${cls}" style="right:${1600 - right}px;top:${y}px;${color ? `color:${color}` : ''}">${txt}</div>`;
+  };
+  let tbl = `<div class="ab" style="left:${G.tblL}px;width:${G.tblW}px;top:${G.head}px;height:1px;background:#141414"></div>`;
+  tbl += T.cols.map((c, i) => i === 0 ? cell(c, 0, G.head - (ar ? 26 : 22), 'hd hd0') : i === 4 ? `<div class="c hd" style="${ar ? `right:${1600 - G.dbarR}px` : `left:${G.dbarL}px`};top:${G.head - 22}px">${c}</div>` : cell(c, i, G.head - (ar ? 27 : 22), 'hd')).join('');
+  R.forEach(([li, a, bu, d, p, py, bold, bw, good], k) => {
+    const y = G.row0 + k * G.pitch, ty = y + (G.pitch - 20) / 2, col = good ? green : red, cls = 'rw' + (bold ? ' b' : '');
+    tbl += cell(`<span style="${!bold ? `margin-${S}:16px` : ''}">${T.rows[li]}</span>`, 0, ty - (ar ? 2 : 0), cls) + cell(a, 1, ty, cls) + cell(bu, 2, ty, cls) + cell(d, 3, ty, cls + ' b', col) + cell(py, 5, ty, cls, '#555');
+    const by = y + Math.round((G.pitch - 12) / 2);
+    tbl += `<div class="ab" style="${ar ? `left:${G.dbarR - bw}px` : `left:${G.dbarL}px`};top:${by}px;width:${bw}px;height:12px;background:${col}"></div>`
+      + `<div class="c b" style="${ar ? `right:${1600 - (G.dbarR - bw - 6)}px` : `left:${G.dbarL + bw + 6}px`};top:${by - 2}px;font-size:12.5px;color:${col}">${p}</div>`;
+    if (k < 9) tbl += `<div class="ab" style="left:${G.tblL}px;width:${G.tblW}px;top:${y + G.pitch - 1}px;height:1px;background:#ddd"></div>`;
+  });
+  tbl += `<div class="ab" style="left:${G.tblL}px;width:${G.tblW}px;top:${G.dbl}px;height:1px;background:#141414"></div><div class="ab" style="left:${G.tblL + (ar ? 2 : 6)}px;width:${G.tblW - (ar ? 0 : 8)}px;top:${G.dbl + 2}px;height:1px;background:#131313"></div>`;
+  const lgc = [dark, '#fff', green, red];
+  tbl += `<div class="lg" style="${S}:26px;top:${G.dbl + (ar ? 15 : 14)}px">${T.legend.map((l, i) => `<span><i style="background:${lgc[i]};${i === 1 ? 'outline:1px solid #222;outline-offset:-1px' : ''}"></i>${l}</span>`).join('')}</div>`;
+  const [bxL, bxT, bxW, bxH] = G.box;
+  tbl += `<div class="ab" style="left:${bxL}px;top:${bxT}px;width:${bxW}px;height:${bxH}px;background:#f6f6f6;border-${S}:4px solid #111;padding:${ar ? '11px 16px' : '8px 16px'};font-size:${ar ? 13.7 : 13.82}px;line-height:22.5px;color:#333"><b style="color:${ink};display:block;margin-bottom:2px">${T.com}</b>${T.comT}</div>`;
+  // the bridge, left to right in both languages
+  const k = 28.47, wf = [[0, 7.2, dark, '7.2'], [7.2, 8.6, green, '+1.4'], [8.6, 9.4, green, '+0.8'], [9.4, 8.9, red, '-0.5'], [8.9, 7.3, red, '-1.6'], [0, 7.3, dark, '7.3']];
+  const wfPx = [[205, 205], [245, 39], [268, 23], [268, 14], [253, 45], [208, 208]];   // [top above the base, height] as published
+  let ch = `<div class="h3" style="${S}:${ar ? 893 : 893}px;top:${ar ? 92 : 84}px">${T.bridge}</div>`;
+  const cx0 = G.wfX - 12;
+  [0, 1, 2, 3].forEach((g) => { ch += `<div class="ab" style="left:${cx0}px;width:560px;top:${G.wfBase - 300 + g * 100}px;height:1px;background:${g === 3 ? '#ddd' : '#eee'}"></div>`; });
+  wf.forEach(([from, to, c, lab], i) => { const x = G.wfX + Math.round(i * 91.4), top = G.wfBase - wfPx[i][0], h = wfPx[i][1];
+    ch += `<div class="ab" style="left:${x}px;top:${top}px;width:79px;height:${h}px;background:${c}"></div><div class="c" style="left:${x}px;width:79px;text-align:center;top:${top - 18}px;font:700 11.5px Inter;direction:ltr">${lab}</div>`
+      + `<div class="c" style="left:${x - 6}px;width:91px;text-align:center;top:${G.wfBase + (ar ? 6 : 8)}px;font-size:12.5px;color:#333">${T.steps[i]}</div>`;
+    if (i < 5) { const y = G.wfBase - Math.round(to * k); ch += `<div class="ab" style="left:${x + 79}px;width:12px;top:${y}px;border-top:1.5px dotted #888"></div>`; } });
+  ch += `<div class="h3" style="${S}:${ar ? 893 : 893}px;top:${ar ? 478 : 463}px">${T.month}</div>`;
+  const act = [169, 176, 186, 179, 190, 193, 183, 190, 196], bud = [170, 173, 177, 177, 180, 184, 180, 184, 187];
+  act.forEach((h, i) => { const x = G.mX + Math.round(i * 60.375);
+    ch += `<div class="ab" style="left:${x + 11}px;top:${G.mBase - bud[i]}px;width:24px;height:${bud[i]}px;border:2px solid #222;background:#fff;box-sizing:border-box"></div><div class="ab" style="left:${x}px;top:${G.mBase - h}px;width:22px;height:${h}px;background:${dark}"></div>`
+      + `<div class="c" style="left:${x - (ar ? 12 : 14)}px;width:50px;text-align:center;top:${G.mBase + (ar ? 4 : 6)}px;font-size:12.5px;color:#555">${T.months[i]}</div>`; });
+  const body = `<div class="top"><h1>${T.title}</h1><div class="meta">${T.meta}</div></div><div class="ab" style="left:26px;right:26px;top:${G.rule}px;height:2px;background:#111"></div>${tbl}${ch}`;
+  return doc(css, body, dir);
+};
+
 // ---------------------------------------------------------------------------------------------------------------
 const JOBS = [
   { id: 'redesign', out: 'assets/img/articles/power-bi-redesign-before', html: BEFORE },
@@ -461,7 +536,8 @@ const JOBS = [
     { id: 'sales', out: `assets/img/articles/styles/sales-${l}`, ...SALES(l) },
     { id: 'marketing', out: `assets/img/articles/styles/marketing-${l}`, ...MARKETING(l) },
     { id: 'service', out: `assets/img/articles/styles/service-${l}`, html: SERVICE(l) },
-    { id: 'hr', out: `assets/img/articles/styles/hr-${l}`, html: HR(l) }])];
+    { id: 'hr', out: `assets/img/articles/styles/hr-${l}`, html: HR(l) },
+    { id: 'finance', out: `assets/img/articles/styles/finance-${l}`, html: FINANCE(l) }])];
 
 const only = process.argv.slice(2);
 const exe = process.env.CHROME_PATH || ['/opt/pw-browsers/chromium', 'C:/Program Files/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome'].find((p) => fs.existsSync(p));
