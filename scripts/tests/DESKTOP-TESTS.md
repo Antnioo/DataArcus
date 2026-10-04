@@ -1322,6 +1322,21 @@ Desktop's name for the General tab) > Data format > "Apply settings to" Total Sa
   `numberFormats` (the same `withSeparator` code as the cards, `#,0.##` for no format), and D8's card entry on the
   tooltip cards; chart labels stay as they are (scaled).
 
+### 6. D16 with the formats `0` and `0.00`: 101,914 and 74,675.00
+A made-up model with data and those formats: a **copy** of the Ramadan sample's model in its own folder
+(`<tests folder>\9-format-sample`, "Format Test"; the sample is not changed), with `formatString: 0` on Total Sales,
+`formatString: 0.00` on Total Sales Last Ramadan, and a new measure with decimals and no format ("Sales per Day" =
+Total Sales / 7), written into the copy's TMDL files (`builder-scripts\d16-formats.mjs`; no script was applied in
+Desktop). The report: `create_report` of main, executive layout, four cards, 1920 x 1080.
+| Card | Model format | Written by `create_report` | Expected | Seen |
+|---|---|---|---|---|
+| Total Sales | `0` | `#,0` | 101,914 | **101,914** |
+| Total Sales Last Ramadan | `0.00` | `#,0.00` | 74,675.00 (the D16 row said 101,914.00: the same format on this measure's value) | **74,675.00** |
+| Sales per Day | none | `#,0.##` | the separator and its decimals | **14,559.14** |
+| Total Sales vs Last Ramadan % | none; a percent by name | no entry | as before | 0.34 |
+- No card cuts its number with four cards beside the filter rail at 1920 x 1080 (the longest, 74,675.00, fits).
+- So `#,0.##` (round 9's choice for a measure with no format) keeps the decimals a measure has: measured now.
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
