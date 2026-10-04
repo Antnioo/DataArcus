@@ -98,7 +98,11 @@ export function headerAndRail(files) {
   const nav = vs.find((v) => v.visual.visualType === 'pageNavigator');
   const slicer = vs.find((v) => v.visual.visualType === 'slicer'), reset = vs.find((v) => v.visual.visualType === 'actionButton' && /'reset'/.test(JSON.stringify(v.visual.objects.icon)));
   const pt = (v) => (v ? parseFloat(runs(v).textStyle.fontSize) : null);
-  return { title: pt(title), logo: pt(logo), nav: nav ? nav.position.width : null, slicer: slicer ? slicer.position.height : null, reset: reset ? reset.position.height : null };
+  // (round 10: the navigator is tab buttons, each as wide as its own name: "nav" is their text size, or the width of
+  // Power BI's navigator where that is still used)
+  const tab = vs.find((v) => v.visual.visualType === 'actionButton' && /PageNavigation/.test(JSON.stringify(v.visual.visualContainerObjects.visualLink || '')));
+  const tabPt = tab ? parseFloat(tab.visual.objects.text.find((e) => e.selector && e.selector.id === 'default').properties.fontSize.expr.Literal.Value) : null;
+  return { title: pt(title), logo: pt(logo), nav: nav ? nav.position.width : tabPt, slicer: slicer ? slicer.position.height : null, reset: reset ? reset.position.height : null };
 }
 
 // The header's text boxes (the title, "Your logo") are centred in the header's height. A text box is top-aligned and has
@@ -266,7 +270,21 @@ export function navProblems(files, rtl) {
     const btns = p.visuals.filter((v) => v.visual && v.visual.visualType === 'actionButton' && lit(link(v).type) === "'PageNavigation'");
     const navs = p.visuals.filter((v) => v.visual && v.visual.visualType === 'pageNavigator'), id = p.page.displayName;
     buttons += btns.length; navigators += navs.length;
-    if (!rtl) { if (btns.length) bad.push(`${id}: ${btns.length} single page buttons in a left-to-right report`); return; }
+    // Round 10 (the owner's design note R10.6a, measured in Desktop 2.158): the navigator is single buttons in both
+    // directions: tabs without boxes, each as wide as its own name needs, the first page at the reading start
+    // (leftmost in English, rightmost in Arabic), the current page's bold. A left-to-right report is checked the same
+    // way as a right-to-left one, mirrored. (Before round 10 a left-to-right report kept Power BI's navigator, and a
+    // single button there was a failure.)
+    if (!rtl) {
+      if (!btns.length) return;   // a page without a header, or where even 8pt tabs don't fit (then Power BI's navigator stays)
+      if (navs.length) bad.push(`${id}: page buttons and a navigator`);
+      const byP = ids.map((pid) => btns.filter((v) => str(link(v).navigationSection) === pid));
+      if (btns.length !== ids.length || byP.some((l) => l.length !== 1)) { bad.push(`${id}: ${btns.length} page buttons for ${ids.length} pages, or not one each`); return; }
+      for (let i = 1; i < byP.length; i++) { const a = byP[i - 1][0].position, b = byP[i][0].position; if (Math.abs(a.y - b.y) < 2 && !(a.x + a.width <= b.x + 0.5)) bad.push(`${id}: page ${i + 1}'s button at ${b.x} is not to the right of page ${i}'s`); }
+      byP.forEach((l, i) => { const o = l[0].visual.objects || {}, bold = lit(look(o.text).bold) === 'true', current = ids[i] === p.page.name;
+        if (lit(link(l[0]).show) !== 'true' || bold !== current) bad.push(`${id}: the button of page ${i + 1} ${current ? "is the current page's and not bold" : "is bold but not the current page's"}`); });
+      return;
+    }
     const longest = Math.max(...pages.map((x) => String(x.page.displayName || '').length)), k = p.page.height / 1080;
     const roomFor8 = (v) => v.position.height >= 19 && Math.ceil(TW(8, longest) + 16 * k) <= (v.position.width - 40 * k) / ids.length;
     if (!btns.length) { if (navs.some(roomFor8)) bad.push(`${id}: a page navigator in a right-to-left report (the first page's button is on the left)`); return; }
@@ -274,7 +292,8 @@ export function navProblems(files, rtl) {
     const byPage = ids.map((pid) => btns.filter((v) => str(link(v).navigationSection) === pid));
     if (btns.length !== ids.length || byPage.some((l) => l.length !== 1)) { bad.push(`${id}: ${btns.length} page buttons for ${ids.length} pages, or not one each`); return; }
     const xs = byPage.map((l) => l[0].position.x), ws = byPage.map((l) => l[0].position.width);
-    for (let i = 1; i < xs.length; i++) if (!(xs[i] + ws[i] <= xs[i - 1] + 0.5)) bad.push(`${id}: page ${i + 1}'s button at ${xs[i]} is not to the left of page ${i}'s at ${xs[i - 1]}`);
+    const ys = byPage.map((l) => l[0].position.y);   // (round 10: the buttons may wrap to a second row; the order is checked within a row)
+    for (let i = 1; i < xs.length; i++) if (Math.abs(ys[i] - ys[i - 1]) < 2 && !(xs[i] + ws[i] <= xs[i - 1] + 0.5)) bad.push(`${id}: page ${i + 1}'s button at ${xs[i]} is not to the left of page ${i}'s at ${xs[i - 1]}`);
     byPage.forEach((l, i) => {
       const o = l[0].visual.objects || {}, bold = lit(look(o.text).bold) === 'true', current = ids[i] === p.page.name;
       if (lit(link(l[0]).show) !== 'true' || bold !== current) bad.push(`${id}: the button of page ${i + 1} ${current ? 'is the current page\'s and not bold' : 'is bold but not the current page\'s'}`);

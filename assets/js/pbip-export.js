@@ -42,6 +42,27 @@
     h[12] = '4'; h[16] = '89ab'[parseInt(h[16], 16) % 4];
     return [h.slice(0, 8), h.slice(8, 12), h.slice(12, 16), h.slice(16, 20), h.slice(20, 32)].map((p) => p.join('')).join('-');
   };
+  // The width of one line of text in page units (measured in Power BI Desktop 2.158, DESKTOP-TESTS.md round 10): the
+  // width depends on the letters, not on their count ("Executive summary" 0.49 em a character, "Reset filters" 0.38),
+  // so Latin text is added up from Segoe UI's letter widths (within 5% of the measured widths, on the safe side), bold
+  // is 1.09 x, and an Arabic letter counts 0.55 em (0.62 bold; Tahoma measured 0.53 and up to 0.60). 3% is added.
+  const LETTER = { a: 0.51, b: 0.59, c: 0.46, d: 0.59, e: 0.52, f: 0.31, g: 0.59, h: 0.57, i: 0.24, j: 0.24, k: 0.5, l: 0.24, m: 0.86, n: 0.57, o: 0.59, p: 0.59, q: 0.59, r: 0.35, s: 0.42, t: 0.34, u: 0.57, v: 0.48, w: 0.72, x: 0.46, y: 0.48, z: 0.45,
+    A: 0.65, B: 0.57, C: 0.62, D: 0.7, E: 0.51, F: 0.49, G: 0.69, H: 0.71, I: 0.27, J: 0.36, K: 0.58, L: 0.47, M: 0.9, N: 0.75, O: 0.75, P: 0.56, Q: 0.75, R: 0.6, S: 0.53, T: 0.52, U: 0.69, V: 0.62, W: 0.93, X: 0.59, Y: 0.55, Z: 0.57,
+    ' ': 0.27, '.': 0.22, ',': 0.22, ':': 0.22, ';': 0.22, '\'': 0.2, '!': 0.28, '|': 0.24, '-': 0.4, '(': 0.3, ')': 0.3, '/': 0.39, '&': 0.8, '%': 0.82, '+': 0.68, '·': 0.22 };
+  function textWidth(text, t, bold, font) {
+    let em = 0;
+    for (const ch of String(text == null ? '' : text)) {
+      const c = ch.codePointAt(0);
+      if ((c >= 0x0600 && c <= 0x06FF) || (c >= 0xFB50 && c <= 0xFEFF)) em += bold ? 0.62 : 0.55;
+      else if (c >= 0x30 && c <= 0x39) em += 0.54 * (bold ? 1.09 : 1);
+      else if (LETTER[ch] != null) em += LETTER[ch] * (bold ? 1.09 : 1);
+      else em += (c < 0x2000 ? 0.62 : 1) * (bold ? 1.09 : 1);
+    }
+    return em * t * 4 / 3 * 1.03;
+  }
+  // contrast of two colours (WCAG): the page's marks keep the accent colour only where it can be read on the card
+  const lum = (hex) => { const v = [1, 3, 5].map((i) => parseInt(String(hex).slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4))); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+  const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
   const mixHex = (a, b, t) => {
     const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
     const A = p(a), B = p(b);
@@ -130,12 +151,13 @@
   // here. The model is not renamed, and queryRef stays the field's own.
   const fname = (f) => (f.m != null ? f.m : f.c);
   const proj = (f) => Object.assign(f.m != null ? fieldMea(f.t, f.m) : fieldCol(f.t, f.c), f.name ? { displayName: String(f.name) } : {});
+  const tproj = (f) => Object.assign(proj(f), f.tableFormat ? { format: String(f.tableFormat) } : {});
   const label = (f) => (f ? (f.name ? String(f.name) : fname(f)) : null);
 
   // what each slot becomes in Power BI, and the sample fields it shows; cards are the card visual (cardVisual): Microsoft
   // deprecates the legacy "card"
   const TYPES = { kpi: 'cardVisual', card: 'cardVisual', line: 'lineChart', bar: 'clusteredBarChart', column: 'clusteredColumnChart', donut: 'donutChart', table: 'tableEx',
-    gauge: 'gauge', funnel: 'funnel', treemap: 'treemap', map: 'map', text: 'textbox', slicer: 'slicer', title: 'textbox', logo: 'image' };
+    gauge: 'gauge', funnel: 'funnel', treemap: 'treemap', map: 'map', text: 'textbox', slicer: 'slicer', title: 'textbox', logo: 'image', matrix: 'pivotTable' };
   // Which fields each kind of visual shows. The sample data and a user's own model both come in this shape:
   // { kpis: [f], measure: f, date: f, cats: { bar, column, donut, funnel, treemap, map }, y: { funnel, gauge },
   //   table: [f], slicers: [f], tip: { card, cat, y, date } }, where f is a bound field (see proj above); tip.date is the
@@ -181,7 +203,11 @@
       case 'line': return need(B.date, B.measure) ? sorted(q({ Category: [proj(B.date)], Y: [proj(B.measure)] }), B.date) : null;
       case 'bar': case 'column': return need(cat, y) ? sorted(q({ Category: [proj(cat)], Y: [proj(y)] }), cat) : null;
       case 'donut': case 'funnel': return need(cat, y) ? q({ Category: [proj(cat)], Y: [proj(y)] }) : null;
-      case 'table': { const fs = tableFields(B, rtl); return fs.length ? q({ Values: fs.map(proj) }) : null; }
+      // a table column's number format on the report side is "format" on its projection (measured in Desktop 2.158,
+      // third sitting of 2026-10-04: 13857 became 13,857); the field carries it as tableFormat
+      case 'table': { const fs = tableFields(B, rtl); return fs.length ? q({ Values: fs.map(tproj) }) : null; }
+      // a matrix: rows by the table's first text column, its measures as the values
+      case 'matrix': { const fs = (B.table || []).filter(Boolean), row = fs.find((f) => f.c != null), vals = fs.filter((f) => f.m != null); return row && vals.length ? q({ Rows: [proj(row)], Values: vals.map(tproj) }) : null; }
       case 'gauge': return need(y) ? q({ Y: [proj(y)] }) : null;
       case 'treemap': return need(cat, y) ? q({ Group: [proj(cat)], Values: [proj(y)] }) : null;
       case 'map': return need(cat, y) ? q({ Category: [proj(cat)], Size: [proj(y)] }) : null;
@@ -211,6 +237,7 @@
     const own = !!(o.model && (o.model.byPath || o.model.byConnection));
     const sample = !!o.sample && !own;
     const B = own ? (o.bind || null) : sample ? sampleBind(t) : null;
+    const leftOut = [];   // data visuals not written because the model has no field for them: { page, kind, title }
     // (a name over the limit ends at its last whole word: cut at the last space before the limit, and a dash or
     // other joining mark left at the end goes too; one word longer than the limit is cut at the limit)
     // cut by characters, not UTF-16 units, so an emoji at the cut is never split into a broken file name; at most 30,
@@ -335,10 +362,15 @@
     // still fits; the top margin gives way to P when even an 8pt number would not fit under it. On a solid design, where
     // the theme draws the card's panel with rounded corners and no accent bar, the side is round(16k): at P the title
     // touches the panel's corner (measured in Desktop 2.158, DESKTOP-TESTS.md round 2).
-    const cardFit = (w, h, s, title, callout, m) => {
+    // em: the width of the widest text the value can show, in em (round 10, measured: a digit 0.54, a separator 0.21,
+    // "-888.88bn" 4.4). An automatic value (units and 2 decimals) is 4.4 em at most; a full number is sized for nine
+    // digits with its separators and decimals (valueEm). Before round 10 this was 7 x 0.55 = 3.85, and "74,675.00" was cut.
+    const AUTO_EM = 4.4, FULL = o.kpiValues === 'full';
+    const valueEm = (f) => (FULL && f && f.cardFormat ? 9 * 0.54 + 2 * 0.21 + (/\./.test(f.cardFormat) ? 0.21 + 2 * 0.54 : 0) : AUTO_EM);
+    const cardFit = (w, h, s, title, callout, m, em) => {
       const P = Math.round(8 * s / 1.5), line = (f) => Math.ceil(f * 1.5), S = (m && m.side) || P;
       const T = m && m.top > P && Math.floor((h - m.top - P - line(title)) / 1.5) >= 8 ? m.top : P;
-      const fit = (I) => Math.min(callout, Math.floor((h - T - P - 2 * I - line(title)) / 1.5), Math.floor((w - S - P - 2 * I) / (7 * 0.55 * 4 / 3)));
+      const fit = (I) => Math.min(callout, Math.floor((h - T - P - 2 * I - line(title)) / 1.5), Math.floor((w - S - P - 2 * I) / ((em || AUTO_EM) * 4 / 3)));
       let I = P, V = fit(I);
       if (V < 8) { I = 0; V = Math.max(8, fit(0)); }
       return { P, I, V, T, S };
@@ -358,10 +390,15 @@
     const pt = (t) => Math.max(8, Math.min(60, Math.round(t))), charW = (t) => t * 0.55 * 4 / 3;
     const boxH = (t, n) => Math.ceil(10 + 1.8 * t * (n || 1)), buttonH = (t, n) => Math.ceil(2 + 1.6 * t * (n || 1));
     const iconH = (t) => Math.ceil(2.25 * t), slicerH = (t) => Math.ceil(16 + 4 * t);
+    // Round 10: the text's width is taken from its letters (textWidth), and the button needs the text + 10 beside the icon.
     const resetFit = (text, w, k) => {
       const h = Math.ceil(Math.max(40 * k, 6 + 1.6 * LABEL));
-      return { h, icon: 0.45 * 4 / 3 * LABEL * String(text).length + h + 6 <= w };
+      return { h, icon: textWidth(text, LABEL, false, font) + 10 + h <= w };
     };
+    // Reset is an icon button without a box (round 10, to match the navigator): no outline, no fill until it is hovered
+    // (a light tint of the accent colour), the reset icon in the accent colour, and a tooltip that says what it does.
+    const resetFill = () => [{ properties: { show: bool(true) } }, { properties: { fillColor: color(u.accent || u.text), transparency: num(100) }, selector: { id: 'default' } }, { properties: { fillColor: color(u.accent || u.text), transparency: num(88) }, selector: { id: 'hover' } }];
+    const resetTip = W.resetTip || (o.lang === 'ar' ? 'مسح الفلاتر في هذه الصفحة' : 'Clear the filters on this page');
     // the largest text size within 8-60 whose one line fits a text box h high (8 at least)
     const boxFit = (h) => Math.max(8, Math.floor((h - 10) / 1.8));
     // A text box is top-aligned and has no vertical alignment: the middle of its text is about 1.2 x pt below the box's
@@ -381,8 +418,12 @@
     // its accent bar show: that switch works only WITHOUT a selector (measured in Desktop 2.158, DESKTOP-TESTS.md round 0;
     // with "default" it is ignored).
     const DEF = { id: 'default' };
+    // The value: automatic units with 2 decimals ("3.43M", "14.81K", "231.50"), one setting for every card: Desktop's
+    // "Value decimal places" is labelPrecision, and it works in the card's default entry (measured in Desktop 2.158,
+    // round 10). With o.kpiValues "full" the cards keep Power BI's own default and a card whose measure carries
+    // cardFormat gets the full number with separators (round 9's entry) instead.
     const cardObjects = (c) => ({
-      value: obj({ fontSize: num(c.V), horizontalAlignment: str('center') }, DEF),
+      value: obj(Object.assign({ fontSize: num(c.V), horizontalAlignment: str('center') }, FULL ? {} : { labelPrecision: lit('2L') }), DEF),
       label: obj({ show: bool(false) }, DEF),
       padding: obj({ paddingUniform: num(c.I) }, DEF),
       layout: obj({ paddingUniform: num(0) }, DEF),
@@ -429,9 +470,9 @@
     // Desktop accepted in D-P1: one entity per model table, each measure a text with the data category Image URL.
     // The model is not touched: these measures exist only in the report.
     const svgDone = {};
-    if ((o.svgColumns || []).length) {
+    if ((o.svgColumns || []).length || (o.svgCards || []).length) {
       const entities = [];
-      o.svgColumns.forEach((c) => { let e = entities.find((x) => x.name === c.t); if (!e) entities.push(e = { name: c.t, measures: [] }); e.measures.push({ name: c.m, dataType: 'Text', dataCategory: 'ImageUrl', expression: c.expression }); });
+      (o.svgColumns || []).concat(o.svgCards || []).forEach((c) => { let e = entities.find((x) => x.name === c.t); if (!e) entities.push(e = { name: c.t, measures: [] }); e.measures.push({ name: c.m, dataType: 'Text', dataCategory: 'ImageUrl', expression: c.expression }); });
       add(D + '/reportExtensions.json', json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities }));
     }
 
@@ -493,7 +534,7 @@
 
       // page navigation between the title and the logo, when the report has more than one page
       const title = pg.slots.find((s) => s.kind === 'title'), logo = pg.slots.find((s) => s.kind === 'logo');
-      let nav = null, openBtn = null;
+      let nav = null, openBtn = null, tabs = null;
       const panel = pg.panel && title && logo ? pg.panel : null, k = pg.page.h / 1080;
       if (title && logo) {
         const gap = 24 * k, openText = '☰  ' + (W.filters || 'Filters');
@@ -506,7 +547,34 @@
         }
         // page buttons: 140 each on 1920 x 1080, or what the longest page name needs (two lines when the header holds
         // them); squeezed into the room left, with smaller text if needed; left out when even 8pt doesn't fit
+        // Round 10 (the owner's design note; looks and widths measured in Desktop 2.158, DESKTOP-TESTS.md round 10):
+        // the navigator is tabs without boxes, one button per page in both directions: the current page's name bold in
+        // the accent colour with a line under it, the others in a quieter text colour. Each button is as wide as its
+        // own name needs (a button cuts its text when it is narrower than the text + 10), so no name is cut; they sit
+        // at the logo's side of the room between the end of the title's text and the logo, at the largest size (down
+        // to 8pt) that fits on one row, then on two or three rows if the header is high enough. Only when even that
+        // does not fit does the page keep Power BI's own navigator (below), which cuts names.
         if (PAGES.length > 1) {
+          const names = PAGES.map((p) => String(p.name || base)), titleSize = Math.min(pt(title.h * 0.42), boxFit(title.h));
+          const titleNeed = Math.min(title.w, Math.ceil(textWidth(o.title || base, titleSize, true, font) + 24 * k));
+          // the room: between the end of the title's text and the logo (or the Filters button). The title's text is at the
+          // reading start of its box, so room inside the box is taken only where the box's free end faces the logo
+          const titleLeft = title.x < logo.x;
+          const a0 = titleLeft ? (rtl ? title.x + title.w + gap : title.x + titleNeed + gap) : (rtl ? x0 : logo.x + logo.w + gap);
+          const a1 = titleLeft ? (rtl ? logo.x - gap : x1) : (rtl ? title.x + title.w - titleNeed - gap : title.x - gap);
+          const room = a1 - a0, padX = 8 * k, gapB = Math.round(12 * k), lineH = Math.max(2, Math.round(3 * k));
+          const rowH = (t) => Math.ceil(6 + 1.6 * t) + (/^segoe ui/i.test(font) ? 0 : 4) + lineH;
+          const lay = (t, maxRows) => {
+            const ws = names.map((nm) => Math.ceil(textWidth(nm, t, true, font) + 10 + 2 * padX));
+            if (ws.some((w) => w > room)) return null;
+            let row = [], used = 0; const rows = [row];
+            ws.forEach((w, i) => { const need = (row.length ? gapB : 0) + w; if (row.length && used + need > room) { row = [i]; rows.push(row); used = w; } else { row.push(i); used += need; } });
+            return rows.length <= maxRows && rows.length * rowH(t) <= title.h ? { t, ws, rows } : null;
+          };
+          for (const maxRows of [1, 2, 3]) { for (let t = pt(title.h * 0.3); t >= 8 && !tabs; t--) tabs = lay(t, maxRows); if (tabs) break; }
+          if (tabs) Object.assign(tabs, { a0, a1, gapB, lineH, rowH: rowH(tabs.t), toLogo: titleLeft ? 'right' : 'left' });
+        }
+        if (PAGES.length > 1 && !tabs) {
           const n = PAGES.length, longest = Math.max(...PAGES.map((p) => String(p.name || base).length));
           // (a page button puts a long name on two lines only when two lines fit its height, 3.5 x pt in Segoe UI and
           // 3.2 x pt in Tahoma, and cuts it with "..." otherwise: measured in Desktop 2.158, DESKTOP-TESTS.md round 1)
@@ -536,9 +604,11 @@
           // the filter panel holds several dropdown slicers and a Reset button:
           // stacked in a side panel, side by side in a top strip
           // (sizes from 1920 x 1080 scaled by k; Reset as wide or as high as its text needs, slicers the height a dropdown needs)
-          const fields = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null), pad = 10 * k, gap = 8 * k, n = fields.length;
+          // (on a user's own model a slicer the model has no column for is left out and told, and the others share the room)
+          const all3 = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null), fields = B && own ? all3.filter(Boolean) : all3, pad = 10 * k, gap = 8 * k, n = Math.max(1, fields.length);
+          all3.forEach((f, i) => { if (B && own && !f) leftOut.push({ page: pg.name || base, kind: 'slicer', title: (W.slicer || 'Slicer') + ' ' + (i + 1) }); });
           const resetText = W.reset || 'Reset filters', across = s.w > s.h;
-          const bw = across ? Math.max(Math.min(160 * k, Math.round(s.w * 0.14)), Math.ceil(charW(LABEL) * resetText.length) + iconH(LABEL) + 24 * k) : s.w - 2 * pad;
+          const bw = across ? Math.max(Math.min(160 * k, Math.round(s.w * 0.14)), Math.ceil(textWidth(resetText, LABEL, false, font) + 10 + Math.max(40 * k, 6 + 1.6 * LABEL) + 8 * k)) : s.w - 2 * pad;
           const reset = resetFit(resetText, bw, k), bh = reset.h;
           const room = across ? s.w - 2 * pad - bw - gap : s.w - 2 * pad;
           const sw = across ? (room - gap * (n - 1)) / n : room;
@@ -559,8 +629,8 @@
           container({ x: Math.round(bx), y: Math.round(by), w: Math.round(bw), h: Math.round(bh), z, parent, kind: 'button',
             visual: { visualType: 'actionButton',
               objects: { icon: def({ shapeType: str(reset.icon ? 'reset' : 'blank'), lineColor: color(u.accent || u.text) }), text: def({ show: bool(true), text: str(resetText), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL) }),
-                fill: def({ show: bool(true), fillColor: color(mixHex(u.card, u.text, 0.06)), transparency: num(0) }), outline: def({ show: bool(true), lineColor: color(edge) }) },
-              visualContainerObjects: Object.assign(frame(null, resetText), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(bm) }) }) } });
+                fill: resetFill(), outline: def({ show: bool(false) }) },
+              visualContainerObjects: Object.assign(frame(null, resetText), { visualLink: obj({ show: bool(true), type: str('Bookmark'), enabledTooltip: str(resetTip), bookmark: str(bm) }) }) } });
           z += 1000;
           bookmarks.push({ name: bm, page: pageName, targets: slicerNames.slice(), label: (W.reset || 'Reset filters') + (PAGES.length > 1 ? ' · ' + (pg.name || '') : '') });
           return;
@@ -591,18 +661,27 @@
           if (s.kind === 'kpi') { if (B && query) ttl = label(B.kpis[kpiIndex]); kpiIndex++; }
           // KPI names read as labels: semibold, so the number below stays the hero
           if (s.kind === 'kpi') extra.title = obj({ show: bool(true), text: str(ttl), alignment: str(align), bold: bool(true) });
+          // a visual that shows data is never written without its fields (Microsoft's validator: PBIR_QUERY_STATE_MISSING;
+          // Desktop shows an empty box): on a user's own model it is left out and told (leftOut). The KPI cards are
+          // counted by the caller.
+          if (B && own && !query && (CHARTS.includes(s.kind) || ['table', 'matrix', 'gauge', 'card'].includes(s.kind))) { leftOut.push({ page: pg.name || base, kind: s.kind, title: s.title || null }); return; }
           visual = { visualType: type, visualContainerObjects: frame(ttl, ttl, extra, true), drillFilterOtherVisuals: true };
           if (query) visual.query = query;
           // the title already names the KPI, so the card's own label under the number is not repeated
           if (type === 'cardVisual') {
-            const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: (s.kind === 'kpi' && pg.kpiInset) || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) });
+            const cf0 = query && B ? (s.kind === 'kpi' ? B.kpis[kpiIndex - 1] : B.measure) : null;
+            const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: (s.kind === 'kpi' && pg.kpiInset) || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) }, valueEm(cf0));
             visual.objects = cardObjects(c); cardFrame(visual.visualContainerObjects, c, TITLE);
+            // an SVG design on the card's image (o.svgCards; the JSON Desktop writes for "Select from data", measured in
+            // Desktop 2.158, third sitting of 2026-10-04): the nth KPI card of every page
+            const sc = s.kind === 'kpi' ? (o.svgCards || []).find((x) => x.card === kpiIndex - 1) : null;
+            if (sc) visual.objects.image = [{ properties: { show: bool(true), imageType: str('imageData'), imageData: { expr: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: sc.t } }, Property: sc.m } } } }, selector: { id: 'default' } }];
             // A number format on the report side (measured in Desktop 2.158, D8, 2026-10-04): where the bound measure
             // carries cardFormat (the server sets it for a measure whose model format has no thousand separator),
             // the card gets the entry Desktop itself writes for Display units "Custom" with a format code: a second
             // entry of "value", selected by the field's query reference. Only cards: tables and tooltips not measured.
             const cf = query && B ? (s.kind === 'kpi' ? B.kpis[kpiIndex - 1] : B.measure) : null;
-            if (cf && cf.m != null && cf.cardFormat) visual.objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(cf.cardFormat) }, selector: { metadata: cf.t + '.' + cf.m } });
+            if (FULL && cf && cf.m != null && cf.cardFormat) visual.objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(cf.cardFormat) }, selector: { metadata: cf.t + '.' + cf.m } });
           }
           // tables fill their visual (grow to fit), instead of shrinking to their content and leaving the rest empty
           // (on a right-to-left page the title sat on the right and the table on the left)
@@ -615,9 +694,22 @@
           // SVG columns (experimental; measured in Desktop 2.158, D-P1, 2026-10-04): report-level measures of
           // reportExtensions.json, shown as the last columns of the page's first table (the reading end: on a
           // right-to-left page that is the left, where the table's first projection sits)
-          if (s.kind === 'table' && query && !svgDone[pageIndex]) {
-            const cols = (o.svgColumns || []).filter((c) => c.page === pageIndex).map((c) => ({ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: c.t } }, Property: c.m } }, queryRef: c.t + '.' + c.m, nativeQueryRef: c.m }));
-            if (cols.length) { const ps = query.queryState.Values.projections; query.queryState.Values.projections = rtl ? cols.reverse().concat(ps) : ps.concat(cols); svgDone[pageIndex] = true; }
+          // Round 10 (measured in Desktop 2.158, third sitting of 2026-10-04): a picture is never the first projection.
+          // Power BI writes the total row's "Total" in the first projection's column, and only when that is a column of
+          // text, so in a right-to-left table with pictures the text column comes first, then the pictures, then the
+          // measures. The picture's size is the table's grid.imageHeight and imageWidth (75 x 75 by default, which made
+          // a 160 x 24 bar 11 tall in a row 77 tall): the tallest and the widest design, within Power BI's 8 to 512.
+          if ((s.kind === 'table' || s.kind === 'matrix') && query && !svgDone[pageIndex]) {
+            const mine = (o.svgColumns || []).filter((c) => c.page === pageIndex);
+            const cols = mine.map((c) => ({ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: c.t } }, Property: c.m } }, queryRef: c.t + '.' + c.m, nativeQueryRef: c.m }));
+            if (cols.length) {
+              const ps = query.queryState.Values.projections, isText = (p) => !!p.field.Column;
+              if (rtl && s.kind === 'table') { const text = ps.filter(isText), rest = ps.filter((p) => !isText(p)); query.queryState.Values.projections = text.length ? [text[text.length - 1]].concat(cols.slice().reverse(), rest, text.slice(0, -1)) : rest.concat(cols); }
+              else query.queryState.Values.projections = ps.concat(cols);
+              const size = (k) => Math.max(8, Math.min(512, Math.round(Math.max(...mine.map((c) => +c[k] || 0)) || 75)));
+              visual.objects = Object.assign(visual.objects || {}, { grid: [{ properties: { imageHeight: num(size('h')), imageWidth: num(size('w')) } }] });
+              svgDone[pageIndex] = true;
+            }
           }
         }
         const v = container({ x: s.x, y: box.y, w: s.w, h: box.h, z, parent, visual, kind: s.kind });
@@ -625,7 +717,35 @@
         z += 1000;
         // the page navigator follows the title in the reading order; its text size is set for the default, hover and
         // selected states (the current page's button is the selected one, and would otherwise show Power BI's own size)
-        if (s.kind === 'title' && nav && nav.buttons) {
+        if (s.kind === 'title' && tabs) {
+          const total = tabs.rows.length * tabs.rowH, y0 = title.y + (title.h - total) / 2, accent = u.accent || u.text;
+          // the mark keeps the accent colour only where it can be read on the card (3:1 for bold text and a line)
+          const mark = contrast(accent, u.card) >= 3 ? accent : u.text, muted = mixHex(u.text, u.card, 0.3);
+          tabs.rows.forEach((row, r) => {
+            const w = row.reduce((a, i) => a + tabs.ws[i], 0) + tabs.gapB * (row.length - 1);
+            // the row sits at the logo's side of the room; in it the first page is at the reading start: leftmost in
+            // English, rightmost in Arabic
+            const left = tabs.toLogo === 'right' ? tabs.a1 - w : tabs.a0;
+            let x = rtl ? left + w : left;
+            row.forEach((i) => {
+              const p = PAGES[i], bw = tabs.ws[i], bx = Math.round(rtl ? x - bw : x), current = i === pageIndex, name = String(p.name || base), by = Math.round(y0 + r * tabs.rowH), bh = tabs.rowH - tabs.lineH;
+              container({ x: bx, y: by, w: bw, h: bh, z, parent: groups.header.name, kind: 'navbtn',
+                visual: { visualType: 'actionButton',
+                  objects: { icon: def({ shapeType: str('blank') }),
+                    text: def({ show: bool(true), text: str(name), fontColor: color(current ? mark : muted), fontFamily: str(font), fontSize: num(tabs.t), bold: bool(current) }).concat(current ? [] : [{ properties: { fontColor: color(mark) }, selector: { id: 'hover' } }]),
+                    fill: def({ show: bool(false) }), outline: def({ show: bool(false) }) },
+                  visualContainerObjects: Object.assign(frame(null, name), { visualLink: obj({ show: bool(true), type: str('PageNavigation'), navigationSection: str(p.id) }) }) } });
+              z += 1000;
+              if (current) {
+                container({ x: Math.round(bx + 4 * k), y: by + bh, w: Math.max(4, Math.round(bw - 8 * k)), h: tabs.lineH, z, parent: groups.header.name, kind: 'navline', noPhone: true,
+                  visual: { visualType: 'shape', objects: { shape: [{ properties: { tileShape: str('rectangle') } }], fill: def({ show: bool(true), fillColor: color(mark), transparency: num(0) }), outline: def({ show: bool(false) }) },
+                    visualContainerObjects: frame(null, '') } });
+                z += 1000;
+              }
+              x = rtl ? x - bw - tabs.gapB : x + bw + tabs.gapB;
+            });
+          });
+        } else if (s.kind === 'title' && nav && nav.buttons) {
           // one button per page, in the navigator's box, first page at the right; the current page's filled in the text
           // colour with bold text in the card colour, the others outlined (the navigator's own look)
           const n = PAGES.length, gap = 8 * k, bw = (nav.w - gap * (n - 1)) / n;
@@ -694,8 +814,8 @@
         const rb = rnd();
         add1({ x: Math.round(P.x + pad), y: Math.round(P.y + P.h - pad - bh), w: Math.round(sw), h: bh, kind: 'button', visual: { visualType: 'actionButton',
           objects: { icon: def({ shapeType: str(reset.icon ? 'reset' : 'blank'), lineColor: color(u.accent || u.text) }), text: def({ show: bool(true), text: str(resetText), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL) }),
-            fill: def({ show: bool(true), fillColor: color(mixHex(u.card, u.text, 0.06)), transparency: num(0) }), outline: def({ show: bool(true), lineColor: color(edge) }) },
-          visualContainerObjects: Object.assign(frame(null, resetText), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(rb) }) }) } });
+            fill: resetFill(), outline: def({ show: bool(false) }) },
+          visualContainerObjects: Object.assign(frame(null, resetText), { visualLink: obj({ show: bool(true), type: str('Bookmark'), enabledTooltip: str(resetTip), bookmark: str(rb) }) }) } });
         bookmarks.push({ name: rb, page: pageName, targets: names, label: (W.reset || 'Reset filters') + (PAGES.length > 1 ? ' · ' + (pg.name || '') : '') });
         const suffix = PAGES.length > 1 ? ' · ' + (pg.name || '') : '';
         bookmarks.push({ name: pg.openBm, page: pageName, targets: [gname].concat(kids), group: gname, hidden: false, label: (W.filtersOpen || 'Filters open') + suffix });
@@ -716,11 +836,19 @@
         const k = m.kind, half = k === 'kpi' || k === 'card';
         const h = SIZE[k] || 190;
         if (k === 'navbtn') {
-          // the single page buttons of a right-to-left report: one row, shared equally, the first page's at the right
-          const n = navBtns.length, i = navBtns.indexOf(m), w = (PW - GAP * (n - 1)) / n;
-          if (col) { y += 100 + GAP; col = 0; }
-          pos[m.v.name] = { x: PW - (i + 1) * w - i * GAP, y, w, h: SIZE.nav };
-          if (i === n - 1) y += SIZE.nav + GAP;
+          // the page buttons: rows of the 323-wide canvas, each button at least as wide as its name needs at the phone's
+          // text size (so two pages share one row, and many pages wrap instead of being cut), the rest of a row shared
+          // equally; the first page at the reading start
+          const i = navBtns.indexOf(m);
+          if (i === 0) {
+            if (col) { y += 100 + GAP; col = 0; }
+            const need = navBtns.map((b) => Math.min(PW, Math.ceil(textWidth(String(b.v.visual.objects.text[1].properties.text.expr.Literal.Value).slice(1, -1), 10, true, font) + 10)));
+            let row = [], used = 0; const rows = [row];
+            need.forEach((w, j) => { const add = (row.length ? GAP : 0) + w; if (row.length && used + add > PW) { row = [j]; rows.push(row); used = w; } else { row.push(j); used += add; } });
+            rows.forEach((r) => { const spare = (PW - r.reduce((a, j) => a + need[j], 0) - GAP * (r.length - 1)) / r.length; let x = 0;
+              r.forEach((j) => { const w = need[j] + spare; pos[navBtns[j].v.name] = { x: rtl ? PW - x - w : x, y, w, h: SIZE.nav }; x += w + GAP; });
+              y += SIZE.nav + GAP; });
+          }
           return;
         }
         if (half) {
@@ -816,7 +944,10 @@
     const tipFrame = (t) => { const f = frame(t, t); f.title = obj({ show: bool(true), text: str(t), alignment: str(align), fontSize: num(TIP_TITLE) }); return f; };
     // the theme's text sizes are made for the report's full page; on this small page the card value and the titles get
     // their own, so the value isn't cut off and the titles fit
-    const tipCardVisual = () => ({ x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(tip.card)] }), objects: cardObjects(tipCard), visualContainerObjects: cardFrame(tipFrame(label(tip.card)), tipCard, TIP_TITLE) } });
+    // (the tooltip's card follows the KPI cards: automatic units with 2 decimals, or the full number with kpiValues "full")
+    const tipCardVisual = () => { const objects = cardObjects(tipCard);
+      if (FULL && tip.card && tip.card.m != null && tip.card.cardFormat) objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(tip.card.cardFormat) }, selector: { metadata: tip.card.t + '.' + tip.card.m } });
+      return { x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(tip.card)] }), objects, visualContainerObjects: cardFrame(tipFrame(label(tip.card)), tipCard, TIP_TITLE) } }; };
     tipPage(tipName, tipBinding, W.tooltipPage || 'Tooltip', tip
       ? [tipCardVisual(),
         // a bar chart writes its category names horizontally (a column chart slants or cuts them); its own sizes, as
@@ -842,9 +973,9 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files) };
+    return { base, files, zip: () => zip(files), leftOut };
   }
 
-  const api = { build, zip, crc32 };
+  const api = { build, zip, crc32, textWidth };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbip = api;
 })(typeof self !== 'undefined' ? self : this);

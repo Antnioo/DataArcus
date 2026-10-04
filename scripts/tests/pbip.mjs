@@ -167,7 +167,10 @@ export default async function ({ browser, url }) {
     const base = cases.find((c) => c.id === 'preset-1').state;
     // (round 1: the 1080 page buttons are one line each and as wide as "Executive summary" needs, 422 for the two:
     // Segoe UI can't put 14pt on two lines in the 48-high header, so the 320 of before cut the name; measured in Desktop 2.158)
-    for (const [page, want] of [['1920x1080', { title: 20, logo: 14, nav: 422, slicer: 76, reset: 40 }], ['1280x720', { title: 12, logo: 10, nav: 299, slicer: 56, reset: 27 }]]) {
+    // (round 10, the owner's design note R10.6a: the page navigator is tab buttons now, each as wide as its own name, so
+    // "nav" is no longer one box's width (422 and 299 before) but the tabs' text size: 14pt and 10pt, the sizes the
+    // navigator's text had)
+    for (const [page, want] of [['1920x1080', { title: 20, logo: 14, nav: 14, slicer: 76, reset: 40 }], ['1280x720', { title: 12, logo: 10, nav: 10, slicer: 56, reset: 27 }]]) {
       const d = Object.assign({}, base, { layout: Object.assign({}, base.layout, { preset: 'exec', page, header: true, kpis: 4, filters: false }) });
       const got = headerAndRail(build(d, 'en', { second: true, panel: false }));
       check(JSON.stringify(got) === JSON.stringify(want), `sizes on ${page}: ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
