@@ -54,6 +54,32 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 - **Website dropdowns fixed** (merged): the open list was white on white on every tool page; form fields now use
   `color-scheme: dark` with dark option colours (`assets/css/style.css`), checked on every tool page in `tools.mjs`.
 
+## Round 6 in progress: fields, thousand separators, the header logo, the platform plan (owner's go 2026-10-04; TERMINAL ONLY: no mouse, keyboard, UI Automation, Power BI Desktop, Claude Desktop or screenshots; branch `fix/round-6-fields`, from main `4d86788`)
+Owner's decisions: an identical fix-script file is named again, never copied (round 5 as built); anything that
+changes what Desktop shows is built and tested from the files now and its Desktop check is listed for the next free
+evening (a rule that needs a measurement we don't have is built only on the values already measured, and what must
+be measured is listed); the agent-level re-run waits for a free laptop. Tests first for every code change.
+
+**Before (main `4d86788`):** `npm test` 257 of 257. Golden tasks: tool level 10 of 10 run (task 3 FAIL by its
+checks: no field input); agent level 6 of 11.
+
+### Plan and expected results (written before any code)
+| # | Item | Change | Expected |
+|---|---|---|---|
+| 1 | `fields` for `create_report` | An input `fields`: `kpis` (measures, in card order), `measure` (the charts' value), `timeAxis` (line chart), `category` (bar, donut, funnel, treemap), `category2` (column, map), `table` (columns in order), `slicers` (up to 3), each as `Table[Field]`. Every name is checked against the model (a measure where a measure is needed, a column where a column is); an unknown or wrong-kind name refuses the call and nothing is written. What is given is bound as given, nothing re-picked; what is left out is picked as before. The KPI row has as many cards as `fields.kpis`. The answer gets `boundFields`: per visual of each page, the fields bound | tests: the Ramadan model with kpis Total Sales, Total Sales Last Ramadan, Total Sales vs Last Ramadan % -> those three cards, "(old)" nowhere; a wrong name refused; `boundFields` equals what the files hold; without `fields` every existing answer and file as before |
+| 2 | Texts | `create_report`'s description, the server's instructions and the skill: pass the approved plan's fields in `fields` | tests on the three texts |
+| 3 | No measures | `suggest_fields` on a model without measures says so and says to propose measures with format strings (examples of formats) | test on Plain Orders |
+| 4 | Picker | A measure whose name has the word old, test, unused, backup or temp (also "(old)") is picked for a card or a chart only when no other measure is left; the answer names the ones skipped (`skipped`). Shared engine `pbip-bind.js`: the website's picker gets the same rule | Ramadan model, 3 and 4 cards: Total Sales, Last Ramadan, vs Last Ramadan % (was "(old)" third); Health Test: "Unused One" not on a card. Expected numbers that change are listed below |
+| 5a | `read_model` by name | A path that doesn't exist, without a slash: the one project in the working folder whose model folder, `.pbip` or folder is named so (any case; with or without `.SemanticModel` / `.pbip`); none or several: the error names what is there | "Ramadan Test", "ramadan test.pbip" find the model |
+| 5b | Unknown design keys | `create_report` and `plan_layout` name the keys of a design (top level and `layout`) they don't know, in `ignored` | a design with `fields` and `layout.foo` -> both named |
+| 5c | Long names | A report name over 30 characters is cut at the last space before the limit (shared engine `pbip-export.js`) | "التقرير التنفيذي للمبيعات - الأسماء الأصلية" -> "التقرير التنفيذي للمبيعات -" trimmed to "التقرير التنفيذي للمبيعات"; a 40-letter single word still cut at 30 |
+| 6 | Thousand separators | (a) `check_model_health` gets `fixes.THOUSANDS` (not a finding, not in the score): measures and summed number columns whose format string is a number format without a thousand separator, or columns with none, with a fix script that adds it ("0" -> "#,0", "0.00" -> "#,0.00"); (b) `create_report` answers `numberFormats`: the fields the report shows as numbers that have no separator in the model, with where the fix is; (c) a test that every format the health check suggests, and every format in the website's sample model, has a separator; (d) written down per visual type: where the format comes from. No visual-level or element-level format string is written into reports: none has been measured in Desktop | tests for a, b, c; the Desktop list says what to measure before a report-side format is built |
+| 7 | The header logo | Tests first on the computed positions (logo box centre against the header band or panel, every page size, EN and AR, square, wide, tall, placeholder text, solid and transparent); the cause is what those tests show. Known from the measurements: Segoe UI's text middle is 3 + 1.19 x pt below the box top, the code places text by 1.2 x pt, so Segoe UI text sits about 3 low | the fix follows the failing tests, on measured values only |
+| 8 | Platform plan | `mcp/plans/DESIGN-ENGINE-PLATFORM.md`, no code | |
+| 9 | Golden tasks, tool level, with `fields` as the plan would give them | `mcp/GOLDEN-TASKS.md`, "Tool level, round 6" | task 3's cards as planned (the Ramadan filter still missing) |
+| 10 | Package 0.2.2 | built with the build script, not installed | size, SHA-256 |
+| 11 | Desktop check, next free evening | a list here, with expected results | |
+
 ## Round 5 in progress: the audit's MCP fixes, the agent's guidance, the install experience (owner's go 2026-10-04, in advance for every step; branch `fix/round-5-agent`, from main `a5707fd`; dataarcus-engine branch `fix/round-5-agent`, from its main `f716775`)
 Sources: dataarcus-engine `business/audit/REPORT-2026-10-04.md` (AUD-006, AUD-005, AUD-023, AUD-007, evidence in
 `evidence/2026-10-03/area3/`), `mcp/GOLDEN-TASKS.md` "Agent level, 2026-10-04", `packaging/PACKAGING.md`. Tests first
