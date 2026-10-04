@@ -156,6 +156,12 @@
     .lc-rec b { color: var(--accent); }
     .lc-note { font-size: .78rem; color: #94a3b8; }
     .lc-note:empty { display: none; } /* an empty note must not add a gap */
+    /* until the script fills them, the results keep the place of the first view (3 options for a first visit), so
+       nothing jumps when they arrive; measured 2026-10-04, the smaller of English and Arabic in each width range */
+    #bars:empty { min-height: 424px; } #rec:empty { min-height: 106px; }
+    @media (min-width: 768px) { #bars:empty { min-height: 396px; } #rec:empty { min-height: 81px; } }
+    @media (min-width: 992px) { #bars:empty { min-height: 424px; } #rec:empty { min-height: 106px; } }
+    @media (min-width: 1200px) { #bars:empty { min-height: 396px; } #rec:empty { min-height: 81px; } }
   </style>
 </head>
 <body>
@@ -214,7 +220,8 @@
               <label><input type="checkbox" id="fabric"><span><span data-i18n="lc.fabric">Fabric data workloads</span><small data-i18n="lc.fabricNote">Lakehouses, warehouses, dataflows Gen2, pipelines or notebooks.</small></span></label>
               <label><input type="checkbox" id="e5"><span><span data-i18n="lc.e5">We have Microsoft 365 E5</span><small data-i18n="lc.e5Note">E5 already includes Power BI Pro for every user.</small></span></label>
             </div>
-            <div id="smallWrap">
+            <!-- shown by the script only when Premium or Fabric is ticked, so a first visit starts without it -->
+            <div id="smallWrap" style="display:none">
               <label class="tg-label" for="small" data-i18n="lc.smallSku">Smaller capacity to compare</label>
               <select id="small" class="form-select" style="background:var(--dk-3);color:var(--lt);border-color:var(--glass-border)"></select>
             </div>
