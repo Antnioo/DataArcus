@@ -134,9 +134,8 @@ cost of the Arabic 1080 title sitting about 3 high.
 - **Item 2, the taller header:** the table above, nothing built. The script: `builder-scripts\r8-header.mjs`.
   One line differs from the script's print: 640 x 360 English, where the script's rounding up gives 38 (26) and
   moves a title that is in the middle today by 0.5; the table says "no change".
-- **Item 3, the paths:** 37 hits before in 10 files. 28 changed (`mcp/GOLDEN-TASKS.md` 9, `mcp/WORK.md` 11,
-  `scripts/tests/DESKTOP-TESTS.md` 6, `mcp/README.md` 2 lines, `mcp/PHASE2-SPEC.md` 2, `mcp/ROADMAP.md` 1; the
-  count is 31 with the README's three on two lines). **Not changed, 6 lines of the 37, and why:** `mcp/PRIVACY.md`
+- **Item 3, the paths:** 37 lines before in 10 files. **31 changed** (`mcp/GOLDEN-TASKS.md` 9, `mcp/WORK.md` 11,
+  `scripts/tests/DESKTOP-TESTS.md` 6, `mcp/README.md` 2 lines, `mcp/PHASE2-SPEC.md` 2, `mcp/ROADMAP.md` 1). **Not changed, 6 lines of the 37, and why:** `mcp/PRIVACY.md`
   37 and 62 (made-up examples of a path, no laptop folder); `scripts/tests/pbip.mjs` 110 (a comment about Windows'
   path limit, with `<name>`); `CLAUDE.md` 21, `mcp/CLAUDE.md` 15 and 60 (**the builder's own rules**: "work only
   inside ...", where the repo and the scripts are; a neutral name there would lose the rule's meaning, and the root
