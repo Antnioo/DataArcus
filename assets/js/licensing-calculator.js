@@ -45,9 +45,12 @@ document.addEventListener('DOMContentLoaded', () => {
   try { state = { ...DEFAULTS, ...JSON.parse(localStorage.getItem(STORE) || '{}') }; } catch (e) { state = { ...DEFAULTS }; }
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* private mode */ } };
 
-  const money = (usd) => {
+  // Totals in whole units; a per-user price keeps its cents when it has any (Pro $14 = AED 51.415 a month shows as
+  // AED 51.42, not AED 51), so "users x price" in each option's line adds up to its total.
+  const money = (usd, perUser) => {
     const v = usd * FX[state.currency] * (state.period === 'year' ? 12 : 1);
-    return new Intl.NumberFormat(isAr() ? 'ar-u-nu-latn' : 'en-US', { style: 'currency', currency: state.currency, maximumFractionDigits: 0 }).format(v);
+    const cents = perUser && Math.round(v * 100) % 100 !== 0 ? 2 : 0;
+    return new Intl.NumberFormat(isAr() ? 'ar-u-nu-latn' : 'en-US', { style: 'currency', currency: state.currency, minimumFractionDigits: cents, maximumFractionDigits: cents }).format(v);
   };
   const perPeriod = () => L(state.period === 'year' ? '/ year' : '/ month', state.period === 'year' ? '/ سنويًا' : '/ شهريًا');
 
@@ -62,17 +65,17 @@ document.addEventListener('DOMContentLoaded', () => {
       { id: 'pro', name: L('Pro for everyone', 'Pro لكل المستخدمين'), cost: all * pro,
         ok: !state.premium && !state.fabric,
         why: !state.premium && !state.fabric ? '' : L('Pro alone has no Premium features or Fabric workloads.', 'Pro وحده لا يشمل مزايا Premium أو أحمال Fabric.'),
-        detail: L(`${all} users × ${money(pro)}`, `${all} مستخدم × ${money(pro)}`) },
+        detail: L(`${all} users × ${money(pro, true)}`, `${all} مستخدم × ${money(pro, true)}`) },
       { id: 'ppu', name: L('Premium Per User for everyone', 'Premium Per User لكل المستخدمين'), cost: all * ppu,
         ok: !state.fabric,
         why: state.fabric ? L('PPU does not include Fabric workloads like lakehouses and pipelines.', 'PPU لا يشمل أحمال Fabric مثل Lakehouse وخطوط البيانات.') : '',
-        detail: L(`${all} users × ${money(ppu)}`, `${all} مستخدم × ${money(ppu)}`) },
+        detail: L(`${all} users × ${money(ppu, true)}`, `${all} مستخدم × ${money(ppu, true)}`) },
       { id: 'small', name: L(`Fabric F${state.small} + Pro for everyone`, `Fabric F${state.small} + Pro لكل المستخدمين`), cost: fSmall + all * pro,
         ok: true, hidden: !state.premium && !state.fabric,
-        detail: L(`F${state.small} ${bill} ${money(fSmall)} + ${all} × ${money(pro)}`, `F${state.small} ${bill} ${money(fSmall)} + ${all} × ${money(pro)}`) },
+        detail: L(`F${state.small} ${bill} ${money(fSmall)} + ${all} × ${money(pro, true)}`, `F${state.small} ${bill} ${money(fSmall)} + ${all} × ${money(pro, true)}`) },
       { id: 'f64', name: L('Fabric F64 + Pro for creators only', 'Fabric F64 + Pro للمنشئين فقط'), cost: f64 + c * pro,
         ok: true,
-        detail: L(`F64 ${bill} ${money(f64)} + ${c} creators × ${money(pro)}. Viewers are free.`, `F64 ${bill} ${money(f64)} + ${c} منشئ × ${money(pro)}. المشاهدون مجانًا.`) }
+        detail: L(`F64 ${bill} ${money(f64)} + ${c} creators × ${money(pro, true)}. Viewers are free.`, `F64 ${bill} ${money(f64)} + ${c} منشئ × ${money(pro, true)}. المشاهدون مجانًا.`) }
     ];
     return list.filter((o) => !o.hidden);
   };
