@@ -1,7 +1,10 @@
 // Tool pages: scrolling inside the tools lands below the navbar (model health results,
 // exam navigation), the call-to-action buttons are spaced in both directions, the FAQ
 // sits right after them, and the site still works when the AOS library fails to load.
-import { visitor, settle } from './lib.mjs';
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+import { visitor, settle, ROOT } from './lib.mjs';
 
 const below = (pg, id) => pg.evaluate((id) => {
   const el = document.getElementById(id), nav = document.getElementById('navbar');
@@ -12,6 +15,40 @@ export default async function ({ browser, url }) {
   const problems = []; let checks = 0;
   const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
   const landed = (r, what) => check(r.top >= r.covered - 1 && r.top <= r.covered + 40, `${what}: top at ${r.top}px, navbar ends at ${r.covered}px`);
+
+  // The exam banks (audit AUD-024 to AUD-028, 2026-10-04). Answers are revealed with each option's own explanation,
+  // so on a single-answer question the one empty explanation must sit on the correct option. Yes/no statements aren't
+  // shuffled and earn partial credit, so answering "Yes" to everything must not pay: between 40% and 60% of each
+  // bank's statements are true, and no question is all Yes. Explanations that open with "Yes."/"No." agree with the
+  // key. PBIP and PBIR are generally available (not "preview"), and no question keys a Q&A experience (Microsoft
+  // retires Q&A in February 2027).
+  for (const [file, name] of [['dp600-questions.js', 'DP600'], ['pl300-questions.js', 'PL300']]) {
+    const ctx = { window: {} };
+    vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'assets/data', file), 'utf8'), ctx);
+    const bank = ctx.window[name], all = [...bank.q, ...bank.cases.flatMap((c) => c.questions)];
+    let yes = 0, no = 0;
+    const bad = { why: [], qa: [], allYes: [], said: [], preview: [] };
+    for (const q of all) {
+      if (q.type === 'single') {
+        const empty = q.why.map((w, i) => (w ? -1 : i)).filter((i) => i >= 0);
+        if (!(empty.length === 1 && empty[0] === q.ans)) bad.why.push(`${q.id} (empty on ${empty.join(', ')}, answer ${q.ans})`);
+        if (/\bQ&A\b/.test(q.opts[q.ans])) bad.qa.push(q.id);
+      }
+      if (q.type === 'yesno') {
+        q.ans.forEach((a) => (a ? yes++ : no++));
+        if (q.ans.every((a) => a)) bad.allYes.push(q.id);
+        q.why.forEach((w, i) => { const m = /^(Yes|No)\./.exec(w); if (m && (m[1] === 'Yes') !== q.ans[i]) bad.said.push(`${q.id} #${i + 1}`); });
+      }
+      if (/(PBIR|Power BI (Desktop )?projects?)[^.]*\bpreview\b/i.test([q.exp, ...(q.why || [])].join(' '))) bad.preview.push(q.id);
+    }
+    check(!bad.why.length, `${name}: the empty explanation isn't on the correct option: ${bad.why.join('; ')}`);
+    check(!bad.qa.length, `${name}: the answer is a Q&A experience, which retires in February 2027: ${bad.qa.join(', ')}`);
+    check(!bad.allYes.length, `${name}: every statement is Yes: ${bad.allYes.join(', ')}`);
+    check(!bad.said.length, `${name}: an explanation's "Yes."/"No." disagrees with the key: ${bad.said.join(', ')}`);
+    check(!bad.preview.length, `${name}: calls PBIP or PBIR a preview: ${bad.preview.join(', ')}`);
+    const share = yes / (yes + no);
+    check(share >= 0.4 && share <= 0.6, `${name}: ${yes} of ${yes + no} yes/no statements are Yes (${Math.round(share * 100)}%), outside 40% to 60%`);
+  }
 
   // Model health check: the sample model's results scroll into view below the navbar
   for (const vp of [[1440, 900], [390, 844]]) {
@@ -135,5 +172,88 @@ export default async function ({ browser, url }) {
   check(r.hidden === 0 && r.banner && r.smooth, `AOS blocked: ${JSON.stringify(r)}`);
   check(!v.errs.some((e) => /AOS/.test(e)), `AOS blocked: ${v.errs.join(' | ')}`);
   await v.ctx.close();
+
+  // Pages don't jump once they load (audit AUD-001, 2026-10-04): the tools' first view takes the place reserved for
+  // it, and the SVG KPI Designer's first-visit banner is there from the start. Layout shift (CLS) over the first 3 s,
+  // first visit, phone and desktop, English and Arabic: at most 0.1 ("good"). Web fonts are not loaded in the tests
+  // (lib.mjs), so this is the script-caused part; the font swap is measured with Lighthouse.
+  for (const page of ['svg-kpi-designer', 'pl-300-practice-exam', 'dp-600-practice-exam', 'power-bi-model-health-check']) for (const lang of ['en', 'ar']) for (const vp of [[1440, 900], [390, 844]]) {
+    const v = await visitor(browser, { viewport: vp });
+    await v.ctx.addInitScript(() => { window.__cls = 0; new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: 'layout-shift', buffered: true }); });
+    await v.pg.goto(`${url}/tools/${page}.html?lang=${lang}`, { waitUntil: 'load' }); await v.pg.waitForTimeout(3000);
+    const cls = await v.pg.evaluate(() => +window.__cls.toFixed(3));
+    check(cls <= 0.1, `${page} ${lang} ${vp[0]}px: layout shift ${cls} after loading (want 0.1 or less)`);
+    await v.ctx.close();
+  }
+  // a returning visitor (tutorial seen) never sees the SVG KPI Designer's banner, not even for a moment
+  {
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.ctx.addInitScript(() => { try { localStorage.setItem('dataarcus-svg-kpi-tour', '{"seen":true}'); } catch (e) { /* ignore */ } });
+    await v.pg.goto(`${url}/tools/svg-kpi-designer.html?lang=en`, { waitUntil: 'domcontentloaded' });
+    const early = await v.pg.evaluate(() => [...document.querySelectorAll('.kd-banner')].some((b) => b.getClientRects().length));
+    await v.pg.waitForLoadState('networkidle');
+    const late = await v.pg.evaluate(() => [...document.querySelectorAll('.kd-banner')].some((b) => b.getClientRects().length));
+    check(!early && !late, `SVG KPI Designer, tutorial seen: the banner shows (${early ? 'while loading' : 'after loading'})`);
+    await v.ctx.close();
+  }
+
+  // Accessibility of the tools (audit AUD-018, 2026-10-04), EN and AR: every drop-down has a name, a tab list holds
+  // tabs that say which one is selected, a code or table box that scrolls can be reached and scrolled by keyboard,
+  // and the SVG KPI Designer's layers can be picked and edited without a mouse.
+  for (const lang of ['en', 'ar']) {
+    for (const page of ['power-bi-theme-generator', 'dax-calendar-table-generator', 'dax-measure-builder', 'svg-kpi-designer', 'power-bi-licensing-cost-calculator', 'power-bi-model-health-check']) {
+      const v = await visitor(browser, { viewport: [1440, 900] });
+      await v.pg.goto(`${url}/tools/${page}.html?lang=${lang}`, { waitUntil: 'networkidle' });
+      if (page === 'power-bi-model-health-check') { await v.pg.click('#mhSample'); await v.pg.waitForSelector('#mhTab', { timeout: 20000 }); }
+      const r = await v.pg.evaluate(() => {
+        const named = (e) => (e.getAttribute('aria-label') || '').trim() || (e.getAttribute('aria-labelledby') && document.getElementById(e.getAttribute('aria-labelledby'))?.textContent.trim()) || (e.id && document.querySelector(`label[for="${e.id}"]`)?.textContent.trim()) || e.closest('label')?.textContent.trim();
+        const what = (e) => e.id ? '#' + e.id : e.tagName.toLowerCase() + [...e.attributes].filter((a) => a.name.startsWith('data-')).map((a) => `[${a.name}="${a.value}"]`).join('');
+        const selects = [...document.querySelectorAll('main select')].filter((e) => e.getClientRects().length && !named(e)).map(what);
+        const tablists = [...document.querySelectorAll('[role=tablist]')].filter((t) => { const tabs = t.querySelectorAll('[role=tab]'); return !tabs.length || [...tabs].filter((x) => x.getAttribute('aria-selected') === 'true').length !== 1; }).map(what);
+        const scroll = [...document.querySelectorAll('main pre, main table, main [id="slotTable"], main code')].map((e) => e.closest('[id]') && getComputedStyle(e).overflow === 'visible' ? e.parentElement : e)
+          .filter((e) => e.getClientRects().length && (e.scrollHeight > e.clientHeight + 2 || e.scrollWidth > e.clientWidth + 2) && /(auto|scroll)/.test(getComputedStyle(e).overflow + getComputedStyle(e).overflowX + getComputedStyle(e).overflowY))
+          .filter((e) => e.tabIndex < 0 && !e.querySelector('a, button, input, select, textarea, [tabindex]')).map(what);
+        return { selects, tablists, scroll };
+      });
+      check(!r.selects.length, `${page} ${lang}: drop-downs without a name: ${r.selects.join(', ')}`);
+      check(!r.tablists.length, `${page} ${lang}: tab lists without tabs or without one selected tab: ${r.tablists.join(', ')}`);
+      check(!r.scroll.length, `${page} ${lang}: scrolling boxes a keyboard can't reach: ${r.scroll.join(', ')}`);
+      if (v.errs.length) problems.push(`${page} ${lang} a11y: ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+    // keyboard only: Tab to the second layer, Enter picks it (announced as pressed), its properties open and can be
+    // changed from the keyboard
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/tools/svg-kpi-designer.html?lang=${lang}`, { waitUntil: 'networkidle' });
+    const names = await v.pg.$$eval('#layers .kd-lname', (bs) => bs.map((b) => b.textContent.trim()));
+    let reached = false;
+    for (let k = 0; k < 120 && !reached; k++) { await v.pg.keyboard.press('Tab'); reached = await v.pg.evaluate((n) => document.activeElement?.classList.contains('kd-lname') && document.activeElement.textContent.trim() === n, names[1]); }
+    await v.pg.keyboard.press('Enter');
+    const after = await v.pg.evaluate(() => ({ pressed: [...document.querySelectorAll('#layers .kd-lname')].map((b) => b.getAttribute('aria-pressed')), active: document.querySelector('#layers li.active .kd-lname')?.textContent.trim(), field: !!document.querySelector('#props input, #props select') }));
+    check(reached && after.active === names[1] && after.pressed.filter((x) => x === 'true').length === 1 && after.pressed[1] === 'true' && after.field,
+      `svg-kpi-designer ${lang}, keyboard: layer "${names[1]}" ${reached ? 'reached' : 'not reached by Tab'}; after Enter ${JSON.stringify(after)}`);
+    await v.ctx.close();
+  }
+
+  // Every drop-down on the tools shows its whole option text (audit AUD-013, 2026-10-04; the Calendar Generator's own
+  // check is in gulf-calendar): each option's width in the drop-down's font against the room inside it, EN and AR,
+  // phone to wide desktop. The SVG KPI Designer starts from a design with formula values, so its formula drop-downs
+  // are measured too.
+  for (const lang of ['en', 'ar']) for (const w of [390, 768, 1024, 1440]) for (const page of ['power-bi-theme-generator', 'dax-measure-builder', 'svg-kpi-designer', 'power-bi-licensing-cost-calculator']) {
+    const v = await visitor(browser, { viewport: [w, 900] });
+    await v.pg.goto(`${url}/tools/${page}.html?lang=${lang}`, { waitUntil: 'networkidle' });
+    const cut = await v.pg.evaluate(() => {
+      const c = document.createElement('canvas').getContext('2d'), out = [];
+      for (const s of document.querySelectorAll('main select')) {
+        if (!s.getClientRects().length) continue;
+        const cs = getComputedStyle(s), room = s.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        c.font = cs.font;
+        for (const o of s.options) { const need = Math.ceil(c.measureText(o.textContent.trim()).width); if (need > room + 0.5) out.push(`${s.id || s.dataset.vk || 'select'} "${o.textContent.trim()}" ${need}px in ${Math.floor(room)}px`); }
+      }
+      return [...new Set(out)];
+    });
+    check(!cut.length, `${page} ${lang} ${w}px: drop-down text cut: ${cut.slice(0, 6).join('; ')}${cut.length > 6 ? ` and ${cut.length - 6} more` : ''}`);
+    await v.ctx.close();
+  }
   return { checks, problems };
 }

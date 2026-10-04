@@ -2,6 +2,7 @@
 window.themeGeneratorTranslations = {
   "en": {
     "tg": {
+      "a11yBox": "Layout table: the size and position of every visual",
       "attrs": { "brand": "Brand color", "palette": "Palette style" },
       "badge": "Free tool · No sign-up",
       "title": "Power BI Theme & Layout Generator",
@@ -112,6 +113,7 @@ window.themeGeneratorTranslations = {
   },
   "ar": {
     "tg": {
+      "a11yBox": "جدول التخطيط: مقاس كل عنصر وموضعه",
       "attrs": { "brand": "لون العلامة التجارية", "palette": "نمط لوحة الألوان" },
       "badge": "أداة مجانية · بدون تسجيل",
       "title": "مولّد السمات والتخطيطات لـ Power BI",

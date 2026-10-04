@@ -33,8 +33,35 @@
   box-sizing: border-box;
 }
 
+/* Until Inter arrives, the page is drawn in Arial (Liberation Sans on Linux, same metrics) sized and spaced like
+   Inter, so lines don't re-wrap when Inter swaps in (audit AUD-002). Measured in Chromium on 2026-10-04 with the
+   Google Fonts Inter, weight by weight: the width of a long English sample in Inter against Arial (600 and up against
+   Arial Bold), and Inter's ascent and descent (0.96875 and 0.2421875 em). Latin only: Arial also has Arabic letters on
+   Windows, and Arabic text must keep going to IBM Plex Sans Arabic. */
+@font-face { font-family: 'Inter Fallback'; font-weight: 100 349; src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans');
+  size-adjust: 104.99%; ascent-override: 92.27%; descent-override: 23.07%; line-gap-override: 0%;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Inter Fallback'; font-weight: 350 449; src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans');
+  size-adjust: 106.83%; ascent-override: 90.68%; descent-override: 22.67%; line-gap-override: 0%;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Inter Fallback'; font-weight: 450 549; src: local('Arial'), local('ArialMT'), local('Liberation Sans'), local('LiberationSans');
+  size-adjust: 107.84%; ascent-override: 89.83%; descent-override: 22.46%; line-gap-override: 0%;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Inter Fallback'; font-weight: 550 649; src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('LiberationSans-Bold');
+  size-adjust: 101.33%; ascent-override: 95.60%; descent-override: 23.90%; line-gap-override: 0%;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Inter Fallback'; font-weight: 650 749; src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('LiberationSans-Bold');
+  size-adjust: 102.25%; ascent-override: 94.74%; descent-override: 23.69%; line-gap-override: 0%;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Inter Fallback'; font-weight: 750 849; src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('LiberationSans-Bold');
+  size-adjust: 103.39%; ascent-override: 93.70%; descent-override: 23.42%; line-gap-override: 0%;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: 'Inter Fallback'; font-weight: 850 900; src: local('Arial Bold'), local('Arial-BoldMT'), local('Liberation Sans Bold'), local('LiberationSans-Bold');
+  size-adjust: 104.64%; ascent-override: 92.58%; descent-override: 23.14%; line-gap-override: 0%;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+
 html, body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Inter', 'Inter Fallback', -apple-system, BlinkMacSystemFont, sans-serif;
   line-height: 1.6;
   overflow-x: hidden;
   overflow-x: clip; /* blocks sideways scroll like hidden, but keeps position: sticky working */
@@ -1337,10 +1364,10 @@ html[dir="rtl"] .article-body ol,html[dir="rtl"] .article-body ul{padding-left:0
 
 /* ===== Premium polish (update 12) ===== */
 /* Arabic typography: Inter keeps the Latin words, IBM Plex Sans Arabic draws the Arabic */
-html[lang="ar"] body{font-family:'Inter','IBM Plex Sans Arabic',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,sans-serif}
+html[lang="ar"] body{font-family:'Inter','Inter Fallback','IBM Plex Sans Arabic',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,sans-serif}
 /* Arabic words on an English page (the language switcher's label, any lang="ar" snippet) use the same Arabic font as
    Arabic pages. Without it the phone draws them in its system Arabic font; lang-manager loads just those letters. */
-:lang(ar){font-family:'Inter','IBM Plex Sans Arabic',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,sans-serif}
+:lang(ar){font-family:'Inter','Inter Fallback','IBM Plex Sans Arabic',-apple-system,BlinkMacSystemFont,'Segoe UI',Tahoma,sans-serif}
 /* The switcher's Arabic label next to the globe: most letters of "عربي" hang below the line, so a centred box still
    reads low. Lift it by the measured amount (both labels land within 1px of the icon's centre). */
 .lang-btn .lang-text:lang(ar){position:relative;top:-.3em}
@@ -1407,3 +1434,14 @@ html[dir="rtl"] .accordion-button::after { margin-left: 0; margin-right: auto; }
 .cc-open .wa-float { bottom: calc(var(--cc-h, 0px) + 32px); }
 @media (max-width: 575.98px) { .cc-bar { flex-direction: column; align-items: stretch; gap: 12px; padding: 14px 16px; } .cc-btns .btn { flex: 1; } .cc-open .wa-float { bottom: calc(var(--cc-h, 0px) + 28px); } }
 @media print { .cc-bar { display: none; } }
+
+/* Showcases: a preview picture and a button until the visitor loads the live Power BI report (audit AUD-020) */
+.pbi-facade iframe { width: 100%; height: 100%; border: 0; }
+.pbi-load { position: relative; display: block; width: 100%; height: 100%; padding: 0; border: 0; background: #0a0f1c; cursor: pointer; overflow: hidden; border-radius: inherit; }
+.pbi-load img { width: 100%; height: 100%; object-fit: cover; opacity: .8; transition: opacity .2s; }
+.pbi-load:hover img, .pbi-load:focus-visible img { opacity: .55; }
+.pbi-cta { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 50px; background: var(--accent); color: #051018; font-weight: 700; white-space: nowrap; box-shadow: 0 8px 30px rgba(0, 0, 0, .45); }
+.pbi-cta i { font-size: 1.3rem; }
+.pbi-note { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); max-width: calc(100% - 24px); padding: 4px 12px; border-radius: 20px; background: rgba(5, 16, 24, .82); color: #e2e8f0; font-size: .8rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 575.98px) { .pbi-cta { padding: 8px 16px; font-size: .9rem; } .pbi-cta i { font-size: 1.1rem; } .pbi-note { display: none; } }
+.pbi-load:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }

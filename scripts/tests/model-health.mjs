@@ -249,5 +249,49 @@ export default async function ({ browser, url }) {
     if (v.errs.length) problems.push(`${tag}: ${v.errs.join(' | ')}`);
     await v.ctx.close();
   }
+
+  // ---- zipped PBIP projects saved as TMDL (Power BI Desktop's default; audit AUD-003) ----
+  // each of the repository's TMDL models, zipped the way a project folder is (Name.SemanticModel/definition/...,
+  // UTF-8 files, deflated), gives in the page the result the engine gives for the same files read by tmdl-model.js,
+  // the MCP's reader
+  {
+    const T = load('tmdl-model.js');
+    const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(path.join(d, e.name)) : [path.join(d, e.name)]));
+    const zipOf = (files) => {   // [[name, Buffer]], deflated like Windows' "Compress to ZIP"
+      const parts = [], dir = []; let off = 0;
+      for (const [name, raw] of files) {
+        const data = zlib.deflateRawSync(raw), nb = Buffer.from(name), crc = zlib.crc32(raw);
+        const h = Buffer.alloc(30); h.writeUInt32LE(0x04034b50, 0); h.writeUInt16LE(20, 4); h.writeUInt16LE(8, 8); h.writeUInt32LE(crc, 14); h.writeUInt32LE(data.length, 18); h.writeUInt32LE(raw.length, 22); h.writeUInt16LE(nb.length, 26);
+        const c = Buffer.alloc(46); c.writeUInt32LE(0x02014b50, 0); c.writeUInt16LE(20, 4); c.writeUInt16LE(20, 6); c.writeUInt16LE(8, 10); c.writeUInt32LE(crc, 16); c.writeUInt32LE(data.length, 20); c.writeUInt32LE(raw.length, 24); c.writeUInt16LE(nb.length, 28); c.writeUInt32LE(off, 42);
+        parts.push(h, nb, data); dir.push(c, nb); off += 30 + nb.length + data.length;
+      }
+      const cd = Buffer.concat(dir), e = Buffer.alloc(22);
+      e.writeUInt32LE(0x06054b50, 0); e.writeUInt16LE(files.length, 8); e.writeUInt16LE(files.length, 10); e.writeUInt32LE(cd.length, 12); e.writeUInt32LE(off, 16);
+      return Buffer.concat([...parts, cd, e]);
+    };
+    const MODELS = [['tmdl-ramadan', 'scripts/tests/fixtures/model-health/tmdl-ramadan'], ['tmdl-health', 'scripts/tests/fixtures/model-health/tmdl-health'],
+      ['bridge-project', 'scripts/tests/fixtures/bridge-project/Sales.SemanticModel'], ['arabic-long-names', 'mcp/test-models/arabic-long-names/Arabic Long Names.SemanticModel'],
+      ['no-measures', 'mcp/test-models/no-measures/Plain Orders.SemanticModel'], ['large-synthetic', 'mcp/test-models/large-synthetic/Large Synthetic.SemanticModel']];
+    for (const [name, dirRel] of MODELS) {
+      const dir = path.join(ROOT, dirRel), files = walk(dir).filter((f) => /\.tmdl$/i.test(f));
+      const rel = (f) => `${name}.SemanticModel/` + path.relative(dir, f).split(path.sep).join('/');
+      const want = E.analyze(T.fromFiles(files.map((f) => ({ path: rel(f), text: fs.readFileSync(f, 'utf8').replace(/^﻿/, '') })), { lineageTags: true }), null);
+      const zip = zipOf([[`${name}.pbip`, Buffer.from('{"version":"1.0"}')], ...files.map((f) => [rel(f), fs.readFileSync(f)])]);
+      const v = await visitor(browser, { viewport: [1440, 900] });
+      await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });
+      await v.pg.setInputFiles('#mhFile', { name: `${name}.zip`, mimeType: 'application/zip', buffer: zip });
+      const got = await v.pg.waitForSelector('#mhTab, .mh-error', { timeout: 30000 }).then(() => v.pg.evaluate(() => ({
+        error: (document.querySelector('.mh-error b') || {}).textContent || '', score: +((document.querySelector('.mh-scorecard .mh-ring b') || {}).textContent || NaN) }))).catch((e) => ({ error: 'timeout ' + e.message.slice(0, 60) }));
+      check(!got.error && got.score === want.score.overall, `TMDL project ${name}: ${got.error || `score ${got.score}`}, want score ${want.score.overall} (${want.stats.tables} tables, ${want.stats.measures} measures)`);
+      if (v.errs.length) problems.push(`TMDL project ${name}: ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+    // the drop zone says what really works
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });
+    const drop = await v.pg.$eval('#mhDrop small', (e) => e.textContent);
+    check(/TMDL/.test(drop) && /model\.bim/.test(drop) && /PBIP/.test(drop), `drop zone: "${drop}" doesn't say a zipped PBIP project works in TMDL and model.bim`);
+    await v.ctx.close();
+  }
   return { checks, problems };
 }

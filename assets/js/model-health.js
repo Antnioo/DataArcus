@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let worker = null;
   function run(buffer, fileName, size) {
     if (worker) worker.terminate();
-    try { worker = new Worker('../assets/js/model-health-worker.min.js?v=20261003b'); } catch (e) { return showError('WORKER'); }
+    try { worker = new Worker('../assets/js/model-health-worker.min.js?v=20261004a'); } catch (e) { return showError('WORKER'); }
     worker.onmessage = (ev) => {
       const d = ev.data;
       if (d.type === 'progress') setStep(d.step);
@@ -82,7 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function showError(code, msg) {
     const T = {
       PBIX: [L('This is a .pbix file', 'هذا ملف ‎.pbix'), L('A .pbix holds your data in a compressed format that browsers cannot read. Export a template instead: in Power BI Desktop, File > Export > Power BI template. It takes a few seconds and contains no data.', 'ملف pbix يحتوي بياناتك بصيغة مضغوطة لا يقرأها المتصفح. صدّر قالبًا بدلًا منه: في Power BI Desktop اختر File > Export > Power BI template. يستغرق ثوانٍ ولا يحتوي أي بيانات.')],
-      TMDL_ONLY: [L('TMDL project found', 'تم العثور على مشروع TMDL'), L('This project saves the model as TMDL files, which this version does not read yet. Open it in Power BI Desktop and export a .pbit, or save the project with the model.bim format.', 'هذا المشروع يحفظ النموذج كملفات TMDL ولا يدعمها هذا الإصدار بعد. افتحه في Power BI Desktop وصدّر ملف .pbit.')],
       NO_MODEL: [L('No model found in this file', 'لم يتم العثور على نموذج في هذا الملف'), L('Use a .pbit (File > Export > Power BI template), a model.bim, or a zipped PBIP project folder.', 'استخدم ملف .pbit أو model.bim أو مجلد مشروع PBIP مضغوط.')],
       NOT_ZIP: [L('Could not open this file', 'تعذر فتح الملف'), L('It does not look like a Power BI template. Try exporting it again.', 'لا يبدو كقالب Power BI. جرّب تصديره مرة أخرى.')],
       TOO_BIG: [L('This file is very large', 'الملف كبير جدًا'), L('A template without data is usually under 20 MB. If this is a .pbix, export a .pbit instead.', 'القالب بدون بيانات عادة أقل من 20 ميجابايت. إن كان ملف pbix فصدّر .pbit بدلًا منه.')],
@@ -103,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
       '<div class="mh-drop" id="mhDrop" tabindex="0" role="button" aria-label="' + L('Choose a Power BI file', 'اختر ملف Power BI') + '">' +
       '<i class="bi bi-cloud-arrow-up"></i><b>' + L('Drop your .pbit here', 'أسقط ملف .pbit هنا') + '</b>' +
       '<span>' + L('or click to choose a file', 'أو اضغط لاختيار ملف') + '</span>' +
-      '<small>' + L('Also works with model.bim or a zipped PBIP project', 'يعمل أيضًا مع model.bim أو مشروع PBIP مضغوط') + '</small>' +
+      '<small>' + L('Also works with model.bim or a zipped PBIP project (TMDL or model.bim)', 'يعمل أيضًا مع model.bim أو مشروع PBIP مضغوط (TMDL أو model.bim)') + '</small>' +
       '<input type="file" id="mhFile" accept=".pbit,.bim,.json,.zip" hidden></div>' +
       '<div class="mh-under"><button type="button" class="tg-btn2 btn-sm" id="mhSample"><i class="bi bi-play-circle"></i> ' + L('Try it with a sample model', 'جرّب على نموذج تجريبي') + '</button>' +
       '<span class="mh-note"><i class="bi bi-shield-lock"></i> ' + L('Your file never leaves your computer. It is read and checked inside this browser tab.', 'ملفك لا يغادر جهازك أبدًا. تتم قراءته وفحصه داخل هذه الصفحة فقط.') + '</span></div>' +

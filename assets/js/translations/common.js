@@ -1,6 +1,8 @@
 // translations/common.js - Shared across all pages
 window.commonTranslations = {
   en: {
+    // Showcases: the live Power BI report loads when the visitor asks (a preview picture until then)
+    pbi: { load: "Load the live report", note: "Opens the interactive Power BI report (about 6 MB)" },
     // Navigation
     nav: {
       services: "Services",
@@ -88,6 +90,7 @@ window.commonTranslations = {
   },
 
   ar: {
+    pbi: { load: "تحميل التقرير التفاعلي", note: "يفتح تقرير Power BI التفاعلي (حوالي 6 ميجابايت)" },
     // Navigation Arabic
     nav: {
       services: "الخدمات",

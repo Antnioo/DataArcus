@@ -32,6 +32,12 @@ ok(boilerplateOnly(diff([CLARITY], ['        // no Microsoft Clarity on this pag
 ok(boilerplateOnly(diff(['      <div class="row g-4">'], ['      <div class="row g-4" data-clarity-mask="true">'])), 'data-clarity-mask on a tool area is boilerplate');
 ok(!boilerplateOnly(diff([EU_OLD, '<p>Visitors in Europe see a banner.</p>'], [EU_NEW, '<p>Visitors in the EU and EEA see a banner.</p>'])), 'a loader change together with a text change is content');
 ok(!boilerplateOnly(diff(['<p>Old text</p>'], ['<p>New text</p> // not a comment line'])), 'text with // inside is still content');
+// the Content Security Policy in each page's head (audit AUD-011, 2026-10-04) is boilerplate: adding it, or a new hash
+// after an inline script changed, is not a change to what the page says
+const CSP = (h) => `  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-${h}'">`;
+ok(boilerplateOnly(diff([], [CSP('abc=')])), 'a Content Security Policy added to the head is boilerplate');
+ok(boilerplateOnly(diff([CSP('abc=')], [CSP('xyz=')])), 'a Content Security Policy with a new hash is boilerplate');
+ok(!boilerplateOnly(diff([CSP('abc=')], [CSP('xyz='), '<p>A new paragraph.</p>'])), 'a policy change together with a text change is content');
 
 // ---------- Dubai dates ----------
 eq(dubaiDate(Date.parse('2026-10-03T20:39:35Z') / 1000), '2026-10-04', 'a commit at 20:39 UTC is on 4 October in Dubai');

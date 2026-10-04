@@ -1,8 +1,8 @@
 // Sets every <lastmod> in sitemap.xml to the date of the page's last commit: the page's HTML and the translation
 // scripts it loads (its text lives there too), whichever changed last. Google uses lastmod only when it is accurate.
 // Commits that only change boilerplate (CDN versions and their integrity hashes, ?v= cache bumps, the analytics and
-// consent loader in each page's head, Clarity's masking attribute) don't count: a library or privacy update on every
-// page is not a change to any page's content. Dates are Dubai dates (the site's time zone).
+// consent loader in each page's head, the Content Security Policy, Clarity's masking attribute) don't count: a library
+// or privacy update on every page is not a change to any page's content. Dates are Dubai dates (the site's time zone).
 //   node scripts/sitemap-lastmod.mjs           check; exit code 1 and the list when a date is out of step
 //   node scripts/sitemap-lastmod.mjs --write   rewrite the stale dates
 // Run after committing page changes (uncommitted edits don't count: the date is the commit's).
@@ -26,9 +26,9 @@ const strip = (line) => line
   .replace(/\s+integrity="[^"]*"/g, '').replace(/\s+crossorigin="[^"]*"/g, '')
   .replace(/\?v=[^"'&\s]*/g, '').replace(/\s+data-clarity-mask="[^"]*"/g, '')
   .trim();
-// lines of the analytics and consent loader in each page's head (the EU time zones, Google Analytics, Clarity), and
-// lines that are only a script comment: not what the page says
-const loader = (line) => /var eu=|clarity\.ms\/tag|googletagmanager\.com\/gtag|gtag\('config'/.test(line) || /^\/\//.test(line);
+// lines of the analytics and consent loader in each page's head (the EU time zones, Google Analytics, Clarity), the
+// Content Security Policy (scripts/csp.mjs), and lines that are only a script comment: not what the page says
+const loader = (line) => /var eu=|clarity\.ms\/tag|googletagmanager\.com\/gtag|gtag\('config'|^<meta http-equiv="Content-Security-Policy"/.test(line) || /^\/\//.test(line);
 // true when every line the diff removes comes back, boilerplate aside, as a line it adds (and the other way round)
 export function boilerplateOnly(diff) {
   const minus = [], plus = [];
