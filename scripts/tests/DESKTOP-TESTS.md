@@ -1399,6 +1399,59 @@ Desktop). The report: `create_report` of main, executive layout, four cards, 192
   "AR 2" were changed and saved), and the new folder `9-format-sample` with "D16 formats", "D16 formats 720" and
   "D16 formats 960".
 
+## 2026-10-04, round 10 (overnight): measurements before the code, Power BI Desktop 2.158.1177
+
+Made-up test reports in `<tests folder>\10-r10` (a copy of the Ramadan sample's model; cards bound to report-level
+number measures, so the text a card shows is known without touching a model). Captures through the bridge at double
+size in `<tests folder>\desk-r10`; ink measured with `builder-scripts\ink.ps1` (1.172 capture pixels per page unit).
+Scripts: `r10-make.mjs`, `r10-m1.mjs`, `r10-nav-proto.mjs`, `r10-btn-measure.mjs`, `capx.sh`.
+
+### M1. A card's "automatic units, 2 decimals" (R10.6b)
+- By mouse on a card: Callout > "Apply settings to" one card > Value > **Value decimal places: 2** (Display units
+  left at Auto), Ctrl+S. **Desktop wrote** a second entry in `visual.objects.value`:
+```json
+{ "properties": { "labelPrecision": { "expr": { "Literal": { "Value": "2L" } } } }, "selector": { "metadata": "<queryRef>" } }
+```
+- **The same property in the card's default entry** (`selector: { id: "default" }`, written by hand) works too: one
+  setting for the whole card.
+- Seen, cards bound to known numbers: 3,430,000 -> **3.43M**; 14,810 -> **14.81K**; 231.5 -> **231.50**; 999,999 ->
+  1.00M; -1,234.5 -> -1.23K; 0.3421 -> 0.34; 888,880,000,000 -> 888.88bn.
+
+### M2. The width of a card's value text (R10.1), Segoe UI, measured at 42pt
+| Text | Ink width (page units) | In em |
+|---|---|---|
+| 8888888888 (ten digits) | 298 | 0.54 a digit |
+| 8,888,888,888 | 334 | each comma 0.21 |
+| 88.88 | 128 | the point 0.21 |
+| 888.88K | 193 | K 0.58 |
+| 888.88M | 206 | M 0.81 |
+| 888.88bn | 222 | bn 1.10 |
+So the widest automatic value, "-888.88bn", is about 4.4 em; "74,675.00" is 4.21 em and "101,914" 3.45 em. The
+card's value size was made for 7 x 0.55 = 3.85 em: that is why 74,675.00 was cut and 101,914 was not (third sitting).
+
+### M3. How wide a button must be for its text (R10.6a, c), 14pt
+- **A button cuts its text when it is narrower than the text + 10** (5 a side): "Executive summary" bold is 168 wide,
+  cut at 172, whole at 178; the Arabic "ملخص تنفيذي" bold (Tahoma) is 124 wide, cut at 128, whole at 134.
+- **The width depends on the letters, not their count:** "Executive summary" 155 (0.49 em a character), "Reset
+  filters" 92 (0.38 em), "Details" bold 57 (0.44 em). A per-letter table of Segoe UI's widths gives 157, 95 and 60:
+  within 5%, on the safe side. Bold is 1.084 x regular. Sizes scale with the point size (10, 14, 20pt measured).
+- Arabic in Tahoma: 0.53 em a character regular, 0.49 to 0.60 bold (three texts).
+
+### M4. Three navigator looks (R10.6a), written by hand into copies, captured (`nav-looks.png`)
+- Today: boxes (the current page filled dark, the others outlined).
+- **A, underline tabs:** no fill, no outline; the current page bold in the accent colour with a 3-high accent line
+  under it; the others in a muted text colour. **Chosen:** it marks the page without a box, is the quietest next to
+  the title and the logo, needs no rounded shape, and mirrors as it is.
+- B, filled pill: the current page filled in the accent colour with white text. The `shape` entry written by hand
+  (`tileShape: 'pill'`) was **not drawn rounded**: it showed a filled rectangle, heavier than today's.
+- C, soft pill: the current page on a light tint of the accent. Also a rectangle; lighter than B, less clear than A.
+
+### M5. Desktop upgrades the schema versions of what it saves (R10.4)
+After Ctrl+S on a report written by the engine (report 2.1.0, page 2.0.0, visualContainer 2.1.0, bookmark 1.4.0),
+the page that was changed and the shared files were rewritten as **report 3.3.0, page 2.1.0, visualContainer 2.13.0,
+bookmark 2.1.0**; the pages not touched kept 2.0.0 / 2.1.0. Desktop opened the mixed report with no message.
+Microsoft's validator 0.4.0 then warns `PBIR_SCHEMA_UNREACHABLE` for 2.13.0 (0 errors).
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
