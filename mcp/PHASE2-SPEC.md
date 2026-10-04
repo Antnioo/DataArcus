@@ -102,7 +102,7 @@ exist in the model are bound; fonts within 8-60 on 3840x2160 and 640x360.
 - Always report failing contrast checks and anything `repaired`.
 
 ## Desktop check (expected results written before the run)
-On the Health Test and Ramadan Test models in `C:\DataArcus\tests`:
+On the Health Test and Ramadan Test models in `<tests folder>`:
 1. `generate_theme` (brand #0F4C5C, analogous) + `plan_layout` (exec, 1920x1080) + `create_report`: opens without errors;
    the menu import of the same theme is accepted (no 8-60 error); each visual's position in Desktop equals the slot table.
 2. The same with `analysis`, filters `end`, `dir: rtl`, `lang: ar`: x positions mirrored, Arabic slot titles shown.
@@ -126,5 +126,5 @@ Next: (d) the project's second page and panel geometry into the engine, then `cr
 
 ## Rules
 As in `mcp/CLAUDE.md`: plan first, tests first, fix causes in the shared engine, never change fixtures or expected numbers
-without approval, the MCP stays self-contained (its own `package.json`), work only inside `C:\DataArcus`, and only
+without approval, the MCP stays self-contained (its own `package.json`), work only inside the laptop's DataArcus folder, and only
 Microsoft's Power BI Authoring MCP for Power BI work.

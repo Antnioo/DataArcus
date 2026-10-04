@@ -293,6 +293,8 @@ Made-up models only (`tests/5-tmdl-sample` with data; a copy for anything a scri
 | D11 | 960 x 720 with three cards | golden task 4's 4:3 report | card titles whole (they were cut with four cards) |
 | D12 | The website's picker | the Theme Generator's project download on our own model (the Ramadan sample) | the third KPI is "Total Sales vs Last Ramadan %", not "(old)" |
 | D13 | Agent level | install `dataarcus-0.2.2.mcpb`, the 11 golden tasks and the hostile-model test in incognito chats | the plans' fields are what the reports show (`boundFields`); before: 6 of 11 |
+| D14 | The page filter (round 8) | golden task 3's report on the Ramadan sample with data, built with `pageFilters: [{ field: "Calendar[Is Ramadan]", values: [true] }]`; open it, open the Filters pane; then clear the filter; then a text filter with an apostrophe in a value and a decimal-number filter (the literals `'Ha''il'` and `5.5D` are written as Microsoft's reference gives them, not yet seen in Desktop) | the Filters pane shows "Is Ramadan is True" under "Filters on this page", with no error mark; the cards show Ramadan only (with one Hijri year picked in the slicer: this Ramadan only) and equal DAX with the same filter; clearing the filter brings the unfiltered totals back; the tooltip pages have no filter; the text and decimal filters select their rows |
+| D15 | The taller header (round 8, plan only) | **before any code:** by hand-edited copies of one report, set the header to the proposed heights on 2 sizes x 2 languages (1920 x 1080 and 1280 x 720; English Segoe UI and Arabic Tahoma), the title's size unchanged, and measure the title's ink against the header's middle as in round 1 | the title's middle within 1 of the header's middle (computed: -0.2 English, +0.4 Arabic); the logo and the page buttons still centred; nothing in the body cut. The owner decides from the table in round 8's plan and these numbers |
 
 ## Round 5 in progress: the audit's MCP fixes, the agent's guidance, the install experience (owner's go 2026-10-04, in advance for every step; branch `fix/round-5-agent`, from main `a5707fd`; dataarcus-engine branch `fix/round-5-agent`, from its main `f716775`)
 Sources: dataarcus-engine `business/audit/REPORT-2026-10-04.md` (AUD-006, AUD-005, AUD-023, AUD-007, evidence in
@@ -300,7 +302,7 @@ Sources: dataarcus-engine `business/audit/REPORT-2026-10-04.md` (AUD-006, AUD-00
 for every code change. Not merged by the builder.
 
 **Before (main `a5707fd`, this laptop):** `npm test` 216 of 216. The audit's scripts (copies with Windows paths in
-`C:\DataArcus\tests\round5\audit`): `priv.mjs`: `check_model_health` returns the literal, the number 42000 and the
+`<tests folder>\round5\audit`): `priv.mjs`: `check_model_health` returns the literal, the number 42000 and the
 description text inside `fixes.NO_FORMAT.fixScript`; `raw.mjs 1`: one 1 MB description makes the answer 1,053,024
 characters; `adv.mjs`: this laptop can't make symbolic links (EPERM), so the copy uses junctions: `generate_theme`
 on a dangling link at its default name answers a raw `ENOENT` (on Linux, in the audit: the file is written outside).
@@ -335,7 +337,7 @@ a normal result); `check_model_health`'s read-only annotation (true -> false). N
   gets no script": `!fixScript` -> `!fixScriptFile`. (3) Round 3's two working-folder checks: `err` true -> a normal
   result with the same sentences ("is empty", "doesn't exist yet"). (4) The annotations check: `check_model_health`
   moves from the read-only tools to the tools that only add files.
-- **The audit's scripts** (copies with Windows paths, `C:\DataArcus\tests\round5\audit`):
+- **The audit's scripts** (copies with Windows paths, `<tests folder>\round5\audit`):
   | Script | Before | After |
   |---|---|---|
   | `priv.mjs` | `check_model_health` carries the literal, 42000 and the description | none of the three in any answer |
@@ -351,7 +353,7 @@ a normal result); `check_model_health`'s read-only annotation (true -> false). N
 - **Package:** `dist/dataarcus-0.2.1.mcpb`, 3,326,309 bytes, SHA-256
   `a06ac470a831eb4b2862977239e0de0be4c399d9b8055d9dd41733e877d2cc69`, unsigned, 19 staged files, 91 packages.
 - **Install (Claude Desktop 2.19675):** the working-folder field is now empty with the placeholder "Directory
-  path" (captures `C:\DataArcus\tests\round5\shot-*.png`); after Save the extension is still **Disabled** until
+  path" (captures `<tests folder>\round5\shot-*.png`); after Save the extension is still **Disabled** until
   switched on (Claude's own behaviour, for `INSTALL.md`).
 - **Golden tasks at agent level: 4 of 11 -> 6 of 11** (`mcp/GOLDEN-TASKS.md`, "Agent level after round 5"). Pass:
   1, 6, 8, 9, 10, 11. Fail: 2 (exec layout instead of analysis), 3 (no fields input, no Ramadan measure), 4 (cut
@@ -374,7 +376,7 @@ Seven parts in order, each independent. No product code is changed in this sitti
 down with its cause and a proposed fix. State after each part:
 
 - **Part 1, zod 4 (Dependabot PR #5): automated half done.** The PR's branch is on an old base (before rounds 3 and
-  4), so the bump was put on top of main locally (`local/zod4-on-main` in the worktree `C:\DataArcus\zod4-check`, not
+  4), so the bump was put on top of main locally (`local/zod4-on-main` in the worktree `<zod4 worktree>`, not
   pushed). `npm ci`, `npm test`: **216 of 216** with zod 4.6.5. `builder-scripts\zod4-compare.mjs` runs the same 14
   calls on main's server and on the zod 4 server over stdio: **every tool answer and every written file is the
   same** (23 comparisons). Two differences, neither in an answer:
@@ -397,8 +399,8 @@ down with its cause and a proposed fix. State after each part:
   afterwards. **Recommendation for PR #5: mergeable after a rebase on main** (its branch is from before round 3); the
   only visible change is the wording of refusals.
 - **Part 3, install and first check: done, with findings.** `dataarcus-0.2.0.mcpb` installed in Claude Desktop
-  (Store version 2.19675, built-in Node 24.21.0). Captures in `C:\DataArcus\tests\beta-sitting\` (`shot-*.png`).
-  - Empty working folder `C:\DataArcus\beta-check`: the agent says the folder is empty and how to save a project into
+  (Store version 2.19675, built-in Node 24.21.0). Captures in `<tests folder>\beta-sitting\` (`shot-*.png`).
+  - Empty working folder `<working folder>`: the agent says the folder is empty and how to save a project into
     it. **As expected.**
   - Golden task 1 from a new chat: a report was written, **validator 0**, opens in Desktop, cards 101.914K and
     74.675K as in the golden task (details under Part 5).
@@ -425,8 +427,8 @@ down with its cause and a proposed fix. State after each part:
   - The permission "Always allow" given to a tool survived uninstalling and reinstalling the extension.
 - **Part 4, the images for findings 001 and 002: done** (branch `findings/001-capture`, `9d66742`, the record in
   `scripts/tests/DESKTOP-TESTS.md` there). The DAX check gave 101914, 74675, 0.3377971208570472, as expected; the
-  cards 101.914K, 74.675K, 0.34. Images: `C:\DataArcus\tests\6-ms-plugin\_shots\f001-1-page.png`,
-  `f001-2-topband.png`, `f001-3-numbers.png` and `C:\DataArcus\tests\phase2-try\shots-r2\f002-1-before-after.png`.
+  cards 101.914K, 74.675K, 0.34. Images: `<tests folder>\6-ms-plugin\_shots\f001-1-page.png`,
+  `f001-2-topband.png`, `f001-3-numbers.png` and `<tests folder>\phase2-try\shots-r2\f002-1-before-after.png`.
   Image 3 is stacked, not side by side (the query was unreadable side by side at 1200 wide), and its result grid
   rounds to 0.34 while the caption says 0.3378: the owner's choice whether to change the query.
 - **Part 5, the 11 golden tasks at agent level: done. 4 of 11 pass** (7, 8, 9, 10); validator 0 errors on all 9
@@ -457,8 +459,8 @@ down with its cause and a proposed fix. State after each part:
   and its settings file under Claude's data are gone; no server process of the extension is left; the four
   `node ... mcp\server.mjs` processes still running belong to Claude Code sessions started on 2 and 3 October).
   The tester's other skills and connectors, switched off for the agent-level run, are on again. Power BI Desktop closed without
-  saving. Left behind on purpose: the empty test folder `C:\DataArcus\beta-check`, the evidence in
-  `C:\DataArcus\tests\beta-sitting` and `tests\phase2-try\shots-s6`, the sixteen "Gulf Sales S6" test reports, the
+  saving. Left behind on purpose: the empty test folder `<working folder>`, the evidence in
+  `<tests folder>\beta-sitting` and `tests\phase2-try\shots-s6`, the sixteen "Gulf Sales S6" test reports, the
   worktrees `zod4-check` and `engine-build`, and five normal chats in the owner's Claude history (the smoke tests
   and golden tasks 1, 2 and 4). "Always allow" for the DataArcus tools may still be remembered by Claude Desktop
   (it survived a reinstall earlier).
@@ -1116,7 +1118,7 @@ split merges all of them are still `assets/js/pbip-export.js`. Every round: meas
 first; only the suites the change touches (`pbip`, `design-engine`, `theme-generator`, `model-health`, `npm test` in
 `mcp/`); reports built with the branch's `mcp/server.mjs` over stdio; Desktop 2.158.1177 on 1920 x 1080 and
 1280 x 720, English and Arabic, plus what the round touches, judged from full-size crops; results into
-`scripts/tests/DESKTOP-TESTS.md`; only our own sample model (`C:\DataArcus\tests\5-tmdl-sample`) and the website's
+`scripts/tests/DESKTOP-TESTS.md`; only our own sample model (`<tests folder>\5-tmdl-sample`) and the website's
 sample data. Stop when a failure could change what Desktop shows; otherwise note it and continue (root `CLAUDE.md`).
 
 #### `fix/mcp-visual-style`: merged into main as `e8fe171`; how it was built
