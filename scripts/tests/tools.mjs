@@ -1,7 +1,10 @@
 // Tool pages: scrolling inside the tools lands below the navbar (model health results,
 // exam navigation), the call-to-action buttons are spaced in both directions, the FAQ
 // sits right after them, and the site still works when the AOS library fails to load.
-import { visitor, settle } from './lib.mjs';
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+import { visitor, settle, ROOT } from './lib.mjs';
 
 const below = (pg, id) => pg.evaluate((id) => {
   const el = document.getElementById(id), nav = document.getElementById('navbar');
@@ -12,6 +15,40 @@ export default async function ({ browser, url }) {
   const problems = []; let checks = 0;
   const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
   const landed = (r, what) => check(r.top >= r.covered - 1 && r.top <= r.covered + 40, `${what}: top at ${r.top}px, navbar ends at ${r.covered}px`);
+
+  // The exam banks (audit AUD-024 to AUD-028, 2026-10-04). Answers are revealed with each option's own explanation,
+  // so on a single-answer question the one empty explanation must sit on the correct option. Yes/no statements aren't
+  // shuffled and earn partial credit, so answering "Yes" to everything must not pay: between 40% and 60% of each
+  // bank's statements are true, and no question is all Yes. Explanations that open with "Yes."/"No." agree with the
+  // key. PBIP and PBIR are generally available (not "preview"), and no question keys a Q&A experience (Microsoft
+  // retires Q&A in February 2027).
+  for (const [file, name] of [['dp600-questions.js', 'DP600'], ['pl300-questions.js', 'PL300']]) {
+    const ctx = { window: {} };
+    vm.runInNewContext(fs.readFileSync(path.join(ROOT, 'assets/data', file), 'utf8'), ctx);
+    const bank = ctx.window[name], all = [...bank.q, ...bank.cases.flatMap((c) => c.questions)];
+    let yes = 0, no = 0;
+    const bad = { why: [], qa: [], allYes: [], said: [], preview: [] };
+    for (const q of all) {
+      if (q.type === 'single') {
+        const empty = q.why.map((w, i) => (w ? -1 : i)).filter((i) => i >= 0);
+        if (!(empty.length === 1 && empty[0] === q.ans)) bad.why.push(`${q.id} (empty on ${empty.join(', ')}, answer ${q.ans})`);
+        if (/\bQ&A\b/.test(q.opts[q.ans])) bad.qa.push(q.id);
+      }
+      if (q.type === 'yesno') {
+        q.ans.forEach((a) => (a ? yes++ : no++));
+        if (q.ans.every((a) => a)) bad.allYes.push(q.id);
+        q.why.forEach((w, i) => { const m = /^(Yes|No)\./.exec(w); if (m && (m[1] === 'Yes') !== q.ans[i]) bad.said.push(`${q.id} #${i + 1}`); });
+      }
+      if (/(PBIR|Power BI (Desktop )?projects?)[^.]*\bpreview\b/i.test([q.exp, ...(q.why || [])].join(' '))) bad.preview.push(q.id);
+    }
+    check(!bad.why.length, `${name}: the empty explanation isn't on the correct option: ${bad.why.join('; ')}`);
+    check(!bad.qa.length, `${name}: the answer is a Q&A experience, which retires in February 2027: ${bad.qa.join(', ')}`);
+    check(!bad.allYes.length, `${name}: every statement is Yes: ${bad.allYes.join(', ')}`);
+    check(!bad.said.length, `${name}: an explanation's "Yes."/"No." disagrees with the key: ${bad.said.join(', ')}`);
+    check(!bad.preview.length, `${name}: calls PBIP or PBIR a preview: ${bad.preview.join(', ')}`);
+    const share = yes / (yes + no);
+    check(share >= 0.4 && share <= 0.6, `${name}: ${yes} of ${yes + no} yes/no statements are Yes (${Math.round(share * 100)}%), outside 40% to 60%`);
+  }
 
   // Model health check: the sample model's results scroll into view below the navbar
   for (const vp of [[1440, 900], [390, 844]]) {
