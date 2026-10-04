@@ -1138,6 +1138,60 @@ The table's `visual` (position unchanged):
 - The bridge's page capture includes the Filters pane, which is what made D14 readable without a window capture.
 - The scripts that open a report return late (minutes after the captures are written); the cause was not looked for.
 
+## 2026-10-04 (second sitting): main (`58adf6f`), Power BI Desktop 2.158.1177: D16 (cards), D-P1b (SVG columns)
+
+A 15-minute sitting; about 7 minutes were used and Desktop was closed at the end. The made-up Ramadan sample with data
+(`<tests folder>\5-tmdl-sample`); reports written by main's MCP server (`builder-scripts\d16-build.mjs`); pages
+captured through the Desktop bridge (the canvas and its Filters pane only), in `<tests folder>\desk-1004b`.
+
+### D16, thousand separators on cards: PASS for the format the sample can show; `0` and `0.00` not run
+Golden task 3's report (focus layout, the three Ramadan cards) and the executive layout.
+| Card | Model format | Written | Seen |
+|---|---|---|---|
+| Total Sales | none | `#,0.##` | **101,914** (was 101.914K) |
+| Total Sales Last Ramadan | none | `#,0.##` | **74,675** (was 74.675K) |
+| Total Sales vs Last Ramadan % | none; a percent by its name | no entry | 0.34, as before |
+- **No card cuts its number**, on the focus page (3 wide cards) and the executive page (3 cards beside the filter rail)
+  at 1920 x 1080.
+- So `#,0.##`, the code round 9 chose for a measure with no format and had not measured, works: the separator
+  shows and a whole number has no decimals. A value **with** decimals was not seen (both measures are whole numbers).
+- **Not run: a measure with the format `0` (expected 101,914) and `0.00` (expected 101,914.00).** The sample's
+  measures have no format, and the model is not changed for a test. It needs a made-up model with data and those
+  formats. Also not looked at: the card's Format pane, the phone layout, a card at 1280 x 720 or smaller.
+- The table on the executive page still shows 13857 and 101914 (tables are not formatted: D8, tables).
+
+### D-P1b, SVG columns from create_report: the pictures draw in every row and the total, English and Arabic; they are small
+"DP1b SVG EN 2" and "DP1b SVG AR 2": the executive layout, the table with Calendar[Hijri Day] and Total Sales, and two
+`svgColumns`: "vs last Ramadan" (160 x 24: a track, a bar bound to Total Sales / Total Sales Last Ramadan over 0 to 2,
+the ratio as text) and "Ramadan days" (180 x 20: a 30-step strip with 29 tick lines, its fill bound to the row's
+Calendar[Hijri Day], a `column` value).
+- **Both pictures draw in every row and in the total row**, with the labels as column headers. Desktop opened both
+  reports with no error.
+- **The strip follows the row's column value:** day 1 fills one step, day 2 two steps; the total row (no single day)
+  is the empty strip. The bar is the same length in the rows seen (the ratio is above the bar's range there).
+- **Size (measured on a double-size capture, 1.17 px per page unit):** each picture is **76 page units wide** (89 px),
+  so the 160 x 24 design is about 11 tall and the 180 x 20 one about 8, at the top of a row about 77 tall. Desktop
+  fits the picture into its default image box (about 75 x 75) and makes every row that tall. **The pictures are too
+  small to read** (the "135%" text inside the bar is about 3 units high) **and the rows too tall** (two rows and the
+  total fit the table). So the image height and width must be set by the engine (`grid.imageHeight` and the
+  column width, to measure) before this is useful.
+- **With the plan's default table (four fields) the two pictures are off the table's right edge**, behind a
+  horizontal scrollbar (the first capture, "DP1b SVG EN"): only the first pixels of the first picture show. The
+  two-field table was built to see them.
+- **Arabic (right-to-left):** the two SVG columns sit at the left end, headers in Arabic, pictures in every row and
+  the total. **Off:** the total row has no "Total" word: Power BI writes it in the table's first column, which is now
+  a picture. The pictures are not mirrored (the bar and the strip grow from the left).
+- Not run: a text bound with `fmt: "text"` holding `<`, `&` or a quote; the first design (strip bound to the ratio).
+
+### Seen, not in scope
+- Table numbers without a separator (13857, 101914) next to cards with one (101,914): the same page now shows both.
+- The first capture after opening was taken while the visuals were still loading (empty cards): a capture needs
+  about 20 seconds more than the script's wait on this laptop.
+- "Your logo" placeholder text, the "What it means" placeholder, month and day names in the model's order where the
+  sample has no sort-by column (as `modelNotes` says): all as before.
+- In the Arabic report the chart titles mix English field names and Arabic ("Total Sales حسب Day Name"): no display
+  names were given in this test.
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
