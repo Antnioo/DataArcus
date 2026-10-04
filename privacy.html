@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-locLhE3U+D+js0yXMNrOe0L56AGxa5rcVJFsKPXxmc4=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
   <style>html.i18n-pending body{visibility:hidden}</style>
@@ -43,10 +44,10 @@
   <link href="assets/css/style.min.css" rel="stylesheet">
 
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" as="style" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous">
-    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
   </noscript>
   
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -97,7 +98,7 @@
         <article class="pv-card">
         <p class="pv-kicker" data-i18n="pv.kicker">Privacy</p>
         <h1 class="display-5 fw-bold" data-i18n="pv.title">Privacy policy</h1>
-        <p class="text-white-50 small" data-i18n="pv.updated">Last updated: 27 September 2026</p>
+        <p class="text-white-50 small" data-i18n="pv.updated">Last updated: 4 October 2026</p>
         <p class="lead" data-i18n="pv.intro">DataArcus (dataarcus.com) is run by Abdelrahman Mohammed in Dubai, UAE. This page explains, in plain language, what information the website collects, why, and what you can do about it.</p>
         <div class="pv-short mt-4">
         <h2 data-i18n="pv.shortTitle">The short version</h2>
@@ -106,13 +107,13 @@
         <h2 data-i18n="pv.toolsTitle">The free tools</h2>
         <p data-i18n-html="pv.tools">The Power BI and Fabric tools (theme and layout generator, KPI designer, calendar and measure builders, model health check, licensing calculator and exam simulators) run entirely in your browser. Your colors, measure names, test values, model files and exam answers stay on your device. To keep your work between visits, the tools save it in your browser's local storage. You can clear it at any time from your browser settings. Share links from the KPI designer contain the design inside the link itself, so only people you send the link to can see it.</p>
         <h2 data-i18n="pv.analyticsTitle">Analytics: Google Analytics and Microsoft Clarity</h2>
-        <p data-i18n-html="pv.analytics"><strong>Google Analytics</strong> tells us which pages are visited, roughly where visitors come from (country and city level), the device and browser, how people found the site, and which tool features are used (for example, downloading a theme or starting a practice exam). Search words typed into the blog search may be recorded to improve the articles.<br><br><strong>Microsoft Clarity</strong> shows how pages are used through heatmaps and session replays: clicks, scrolling and mouse movement. It helps us find confusing parts of the site.<br><br>Both services use cookies and receive your IP address as part of normal web traffic. They process this data under their own privacy policies (Google and Microsoft).</p>
+        <p data-i18n-html="pv.analytics"><strong>Google Analytics</strong> tells us which pages are visited, roughly where visitors come from (country and city level), the device and browser, how people found the site, and which tool features are used (for example, downloading a theme or starting a practice exam). Search words typed into the blog search may be recorded to improve the articles.<br><br><strong>Microsoft Clarity</strong> shows how pages are used through heatmaps and session replays: clicks, scrolling and mouse movement. It helps us find confusing parts of the site. On the tools, Clarity masks the areas where you enter or open your own data, and it isn't loaded at all on the SVG KPI Designer, whose share links carry your design in the page address.<br><br>Both services use cookies and receive your IP address as part of normal web traffic. They process this data under their own privacy policies (Google and Microsoft).</p>
         <h2 data-i18n="pv.contactTitle">Contact form and WhatsApp</h2>
         <p data-i18n-html="pv.contact">When you send the contact form, your name, email address, company, the options you pick and your message are delivered to our email through <strong>Web3Forms</strong>, a form delivery service. We use them only to reply to you and to follow up on your request. The WhatsApp buttons open WhatsApp, which is run by Meta under its own privacy policy. We only see what you choose to send there.</p>
         <h2 data-i18n="pv.hostTitle">Hosting and content delivery</h2>
         <p data-i18n-html="pv.host">The website is hosted on <strong>GitHub Pages</strong>. Fonts come from <strong>Google Fonts</strong>, and some scripts and icons come from the <strong>jsDelivr</strong> network. Like any website server, these services receive your IP address and basic browser details when your browser loads files from them.</p>
         <h2 data-i18n="pv.cookiesTitle">Cookies and browser storage</h2>
-        <div data-i18n-html="pv.cookies"><ul><li><strong>Analytics cookies</strong> from Google Analytics and Microsoft Clarity, to count visits and understand usage.</li><li><strong>Browser storage</strong> on your own device: your language choice, and your work in the tools.</li></ul>You can block or delete cookies and clear site data in your browser settings. The site and all tools keep working without analytics cookies. Visitors in Europe see a banner, and analytics only start after they accept. Elsewhere, analytics run unless you turn them off with the button below, where you can change your choice at any time.</div>
+        <div data-i18n-html="pv.cookies"><ul><li><strong>Analytics cookies</strong> from Google Analytics and Microsoft Clarity, to count visits and understand usage.</li><li><strong>Browser storage</strong> on your own device: your language choice, and your work in the tools.</li></ul>You can block or delete cookies and clear site data in your browser settings. The site and all tools keep working without analytics cookies. Visitors in the EU and EEA see a banner, and analytics only start after they accept. The site tells by your device's time zone, so visitors elsewhere in Europe see the banner too. Elsewhere, analytics run unless you turn them off with the button below, where you can change your choice at any time.</div>
         <button type="button" class="btn btn-glass mt-2" data-cc-open><i class="bi bi-sliders me-2"></i><span data-i18n="pv.ccButton">Cookie settings</span></button>
         <h2 data-i18n="pv.notTitle">What we do not do</h2>
         <p data-i18n-html="pv.not">We do not sell or rent personal information. We do not use it for advertising. We do not ask you to create an account.</p>
@@ -188,7 +189,7 @@
   <script src="assets/js/lang-manager.min.js" defer></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
   <script src="assets/js/main.min.js" defer></script>
 </body>
 </html>

@@ -2,6 +2,7 @@
 window.measureBuilderTranslations = {
   "en": {
     "mb": {
+      "a11yBox": "The DAX measures",
       "attrs": { "source": "Base measure source", "months": "Rolling months", "days": "Average days", "output": "Output format" },
       "badge": "Free tool · No sign-up",
       "title": "DAX Measure Builder",
@@ -64,6 +65,7 @@ window.measureBuilderTranslations = {
   },
   "ar": {
     "mb": {
+      "a11yBox": "مقاييس DAX",
       "attrs": { "source": "مصدر المقياس الأساسي", "months": "عدد الأشهر المتحركة", "days": "عدد أيام المتوسط", "output": "صيغة المخرجات" },
       "badge": "أداة مجانية · بدون تسجيل",
       "title": "منشئ مقاييس DAX",

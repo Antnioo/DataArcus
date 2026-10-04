@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'sha256-locLhE3U+D+js0yXMNrOe0L56AGxa5rcVJFsKPXxmc4=' 'sha256-bS4ERnlDKBlTdnz/t9eMcs0AuW/IZTC2Q8Bll3ohkmU=' 'unsafe-hashes' 'sha256-1jAmyYXcRq6zFldLe/GCgIDJBiOONdXjTLgEFMDnDSM=' https://cdn.jsdelivr.net https://www.googletagmanager.com https://*.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://*.clarity.ms https://c.bing.com; connect-src 'self' https://www.googletagmanager.com https://*.google-analytics.com https://*.google.com https://*.g.doubleclick.net https://pagead2.googlesyndication.com https://*.clarity.ms https://c.bing.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <script>(function(){try{var d=document.documentElement,q=new URLSearchParams(location.search).get("lang"),s=localStorage.getItem("dataarcus-lang"),l=(q==="ar"||q==="en")?q:(s==="ar"||s==="en")?s:((navigator.language||"").slice(0,2)==="ar"?"ar":"en");if(l!=="ar")return;d.lang="ar";d.dir="rtl";d.classList.add("i18n-pending");var f=document.createElement("link");f.id="ar-font";f.rel="stylesheet";f.href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap";document.head.appendChild(f);setTimeout(function(){d.classList.remove("i18n-pending")},2000)}catch(e){}})();</script>
   <style>html.i18n-pending body{visibility:hidden}</style>
@@ -52,10 +53,10 @@
   <link href="../assets/css/style.min.css" rel="stylesheet">
 
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" as="style" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
-  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
   <noscript>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" rel="stylesheet" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous">
-    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous">
   </noscript>
   
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -192,7 +193,7 @@
                 <button type="button" data-mode="existing" data-i18n="mb.haveOne">I already have one</button>
               </div>
               <div id="modeColumn" class="cg-form">
-                <div><label class="tg-label" for="agg" data-i18n="mb.calc">Calculation</label>
+                <div style="grid-column:1/-1"><label class="tg-label" for="agg" data-i18n="mb.calc">Calculation</label>
                   <select id="agg" class="form-select"><option>SUM</option><option>AVERAGE</option><option>DISTINCTCOUNT</option><option>COUNT</option><option>MIN</option><option>MAX</option><option value="COUNTROWS" data-i18n="mb.countrows">COUNTROWS (count rows)</option></select></div>
                 <div><label class="tg-label" for="base" data-i18n="mb.measureName">Measure name</label><input id="base" translate="no" class="form-control" maxlength="60"></div>
                 <div><label class="tg-label" for="fact" data-i18n="mb.fact">Fact table</label><input id="fact" translate="no" class="form-control" maxlength="60"></div>
@@ -226,9 +227,9 @@
           <div class="tg-panel d-flex flex-column gap-3">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
               <div class="mb-seg" role="tablist" aria-label="Output format" data-i18n-aria-label="mb.attrs.output">
-                <button type="button" class="active" data-tab-out="all" data-i18n="mb.allAtOnce">All at once</button>
-                <button type="button" data-tab-out="tmdl" data-i18n="mb.tmdlTab">With formats (TMDL)</button>
-                <button type="button" data-tab-out="one" data-i18n="mb.oneByOne">One by one</button>
+                <button type="button" role="tab" aria-selected="true" class="active" data-tab-out="all" data-i18n="mb.allAtOnce">All at once</button>
+                <button type="button" role="tab" aria-selected="false" data-tab-out="tmdl" data-i18n="mb.tmdlTab">With formats (TMDL)</button>
+                <button type="button" role="tab" aria-selected="false" data-tab-out="one" data-i18n="mb.oneByOne">One by one</button>
               </div>
               <span class="small text-white-50" id="count"></span>
             </div>
@@ -237,7 +238,7 @@
                 <button class="tg-btn2" id="dlBtn" type="button"><i class="bi bi-download me-1"></i><span data-i18n="mb.download">Download</span></button>
                 <button class="btn btn-accent" id="copyAll" type="button"><i class="bi bi-clipboard me-1"></i><span data-i18n="mb.copyAll">Copy all measures</span></button>
               </div>
-              <pre class="tg-json" id="script" style="max-height:520px"></pre>
+              <pre class="tg-json" id="script" style="max-height:520px" tabindex="0" aria-label="The DAX measures" data-i18n-aria-label="mb.a11yBox"></pre>
               <p class="small text-white-50 mb-0" data-i18n-html="mb.allHow">In Power BI Desktop open <strong>DAX query view</strong> (left toolbar), paste, and click <strong>Update model with changes</strong>. Every measure is added in one go.</p>
             </div>
             <div id="outTmdl" class="d-flex flex-column gap-3 d-none">
@@ -345,7 +346,7 @@
   <script src="../assets/js/translations/measure-builder.min.js" defer></script>
   <script src="../assets/js/lang-manager.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
   <script src="../assets/js/main.min.js" defer></script>
   <script src="../assets/js/measure-builder.min.js" defer></script>
 </body>

@@ -555,8 +555,14 @@ class LanguageManager {
     this.updateDirection();
     this.applyLanguage();
     this.initialized = true;
-    // Translations are in place: show the page (hidden by the early script in <head>)
-    document.documentElement.classList.remove('i18n-pending');
+    // Translations are in place: show the page (hidden by the early script in <head>). An Arabic page also waits for
+    // its Arabic font (the head script loads it), at most 1.5 s, so its lines don't re-wrap in front of the reader
+    // when the font arrives (audit AUD-002); the head script's 2 s limit stays as the safety net.
+    const show = () => document.documentElement.classList.remove('i18n-pending');
+    const link = this.currentLang === 'ar' && document.fonts && document.getElementById('ar-font');
+    if (!link) { show(); return; }
+    const css = link.sheet ? Promise.resolve() : new Promise((done) => { link.addEventListener('load', done); link.addEventListener('error', done); });
+    Promise.race([css.then(() => document.fonts.load('400 1em "IBM Plex Sans Arabic"', 'عربي')), new Promise((done) => setTimeout(done, 1500))]).then(show, show);
   }
 }
 

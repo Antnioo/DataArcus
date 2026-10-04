@@ -4,8 +4,9 @@
  * finds the model and report definitions, and runs the analysis engine.
  * (c) DataArcus. All rights reserved.
  */
-/* global MHEngine */
-importScripts('model-health-engine.min.js?v=20261004c');
+/* global MHEngine, TmdlModel */
+// the engine, and the TMDL reader the MCP uses for projects saved as TMDL (Power BI Desktop's default)
+importScripts('model-health-engine.min.js?v=20261004c', 'tmdl-model.min.js?v=20261004a');
 
 const post = (type, data) => self.postMessage(Object.assign({ type }, data || {}));
 
@@ -84,14 +85,21 @@ async function fromZip(buf, fileName) {
   const zip = readZip(buf);
   const byName = (re) => zip.entries.filter((e) => re.test(e.name));
   let modelEntry = byName(/(^|\/)DataModelSchema$/)[0] || byName(/(^|\/)model\.bim$/i)[0];
-  const tmdl = byName(/\.tmdl$/i).filter((e) => !/TMDLScripts\//i.test(e.name));
-  if (!modelEntry) {
+  // a project saved as TMDL: the .tmdl files of its (first) semantic model's definition folder
+  const tmdl = byName(/(^|\/)definition\/.*\.tmdl$/i).filter((e) => !/TMDLScripts\//i.test(e.name));
+  const root = tmdl.length ? tmdl[0].name.slice(0, tmdl[0].name.search(/(^|\/)definition\//) + 1) : '';
+  if (!modelEntry && !tmdl.length) {
     if (byName(/(^|\/)DataModel$/).length) throw new Error('PBIX');
-    if (tmdl.length) throw new Error('TMDL_ONLY');
     throw new Error('NO_MODEL');
   }
   post('progress', { step: 'model' });
-  const model = parseJson(await zip.read(modelEntry));
+  let model;
+  if (modelEntry) model = parseJson(await zip.read(modelEntry));
+  else {
+    const files = [];
+    for (const e of tmdl.filter((x) => x.name.startsWith(root))) files.push({ path: e.name, text: decodeText(await zip.read(e)) });
+    model = TmdlModel.fromFiles(files, { lineageTags: true });
+  }
 
   // report: legacy single Layout file, or PBIR folder of JSON files
   post('progress', { step: 'report' });

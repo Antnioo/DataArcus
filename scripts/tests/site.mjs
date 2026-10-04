@@ -103,5 +103,136 @@ export default async function ({ browser, url }) {
     }
     await v.ctx.close();
   }
+
+  // The web-font swap doesn't move the page (audit AUD-002, 2026-10-04). The suites block web fonts, so here the
+  // pages get Inter from @fontsource (the same font) half a second late, as on a real connection: English pages
+  // shift at most 0.1 when it arrives. On Arabic pages the text waits for the Arabic font (IBM Plex Sans Arabic,
+  // stood in for by a font served late), so it never re-wraps in front of the reader; never longer than 1.5 s.
+  {
+    const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+    const fontFile = (w) => path.join(ROOT, `node_modules/@fontsource/inter/files/inter-latin-${w}-normal.woff2`);
+    const css = (family) => [400, 500, 600, 700, 800].map((w) => `@font-face{font-family:'${family}';font-weight:${w};font-display:swap;src:url(https://fonts.gstatic.com/x/inter-${w >= 600 ? 700 : 400}.woff2) format('woff2')}`).join('\n');
+    const lateFonts = async (v, delay) => {
+      await v.ctx.route(/fonts\.googleapis\.com\/css2/, (r) => r.fulfill({ status: 200, contentType: 'text/css', headers: { 'access-control-allow-origin': '*' }, body: css(/Arabic/.test(r.request().url()) ? 'IBM Plex Sans Arabic' : 'Inter') }));
+      await v.ctx.route(/fonts\.gstatic\.com\/x\//, async (r) => { await new Promise((ok) => setTimeout(ok, delay)); r.fulfill({ status: 200, contentType: 'font/woff2', headers: { 'access-control-allow-origin': '*' }, body: fs.readFileSync(fontFile(/700/.test(r.request().url()) ? 700 : 400)) }); });
+    };
+    for (const page of ['tools/power-bi-theme-generator.html', 'articles/article-power-bi-model-ai-ready.html', 'tools/power-bi-licensing-cost-calculator.html']) for (const vp of [[1440, 900], [390, 844]]) {
+      const v = await visitor(browser, { viewport: vp }); await lateFonts(v, 500);
+      await v.ctx.addInitScript(() => { window.__cls = 0; new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: 'layout-shift', buffered: true }); });
+      await v.pg.goto(`${url}/${page}?lang=en`, { waitUntil: 'load' }); await v.pg.waitForTimeout(2500);
+      const r = await v.pg.evaluate(() => ({ cls: +window.__cls.toFixed(3), inter: document.fonts.check('400 16px Inter') }));
+      check(r.inter && r.cls <= 0.1, `${page} ${vp[0]}px: the Inter swap shifts the page ${r.cls}${r.inter ? '' : ' (Inter never loaded)'} (want 0.1 or less)`);
+      await v.ctx.close();
+    }
+    for (const [page, delay] of [['articles/article-gulf-calendar-power-bi.html', 700], ['articles/article-power-bi-licensing-guide.html', 700], ['tools/power-bi-theme-generator.html', 5000]]) {
+      const v = await visitor(browser, { viewport: [390, 844] }); await lateFonts(v, delay);
+      await v.ctx.addInitScript(() => { window.__shown = 0; const t0 = performance.now(); new MutationObserver(() => { if (!window.__shown && !document.documentElement.classList.contains('i18n-pending')) { window.__shown = performance.now() - t0; window.__fontAtShow = document.fonts.check('400 16px "IBM Plex Sans Arabic"', 'ع'); } }).observe(document, { attributes: true, subtree: true, attributeFilter: ['class'] }); });
+      await v.pg.goto(`${url}/${page}?lang=ar`, { waitUntil: 'load' }); await v.pg.waitForTimeout(Math.min(delay, 2500) + 500);
+      const r = await v.pg.evaluate(() => ({ shown: Math.round(window.__shown), font: window.__fontAtShow, pending: document.documentElement.classList.contains('i18n-pending') }));
+      const ok = delay < 1500 ? r.font === true && !r.pending : !r.pending && r.shown > 0 && r.shown < 2100;
+      check(ok, `${page} ar, Arabic font ${delay} ms late: shown at ${r.shown} ms with the Arabic font ${r.font ? 'loaded' : 'not loaded'}${r.pending ? ', still hidden' : ''}`);
+      await v.ctx.close();
+    }
+  }
+
+  // The live Power BI reports load only when the visitor asks (audit AUD-020, 2026-10-04): each showcase opens with
+  // a preview picture and a "Load the live report" button, no request to Power BI before the click (about 6 MB),
+  // and the click shows the same report as before (the addresses below are the ones the pages embedded until then).
+  {
+    const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+    const REPORTS = {
+      "dashboards/adventureworks-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiNWM0ZTJmMjgtMDMyOS00OGM4LTg1YzYtZWZlODE0OGFjZGUyIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&pageName=b1001ce2d5a628ad47b5&language=en",
+      "dashboards/call-center-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiZDljNDRmMzItYWZkZS00ZGZiLWFkOGMtOWY3ODNhMDAxNTA2IiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
+      "dashboards/consumer-financial-complaints.html": "https://app.powerbi.com/view?r=eyJrIjoiMTliODc1NjktOTM5Yy00OTM2LWIwNzYtMDY1MjE0ZWNiOTVlIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
+      "dashboards/dataarcus-pulse.html": "https://app.powerbi.com/view?r=eyJrIjoiYTc3ZWNmYjEtYjQzNS00ZTU3LWJkNDQtMGU5Y2Y5MGQxMjA3IiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&pageName=fd8c012f45535b521bba",
+      "dashboards/er-health-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiNWU2MmMzNGUtMjU4NS00YTZiLWIyYzYtYTE3MTY3NjQ5NjhiIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
+      "dashboards/fintech-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiNDlhY2I0YjgtZGI4Mi00NzU4LThhYWMtNGVhNGUzMDBlYTE5IiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
+      "dashboards/maven-market-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiZGJjZmJjYzMtOWQzYi00MzE0LWIwMjktMDJhZjQzZjExZWMxIiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
+      "dashboards/repeatiq-dashboard.html": "https://app.powerbi.com/view?r=eyJrIjoiMmVmYWFiMDgtNmY5Yy00NDJjLWIwM2ItMjk0MWUwYTlkMzM5IiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&language=en",
+      "portfolio.html": "https://app.powerbi.com/view?r=eyJrIjoiYTc3ZWNmYjEtYjQzNS00ZTU3LWJkNDQtMGU5Y2Y5MGQxMjA3IiwidCI6ImJjYzMzYWFhLTU0YmUtNDdkNy05YTcwLTJmMzJhNWM0ZDg4ZiJ9&pageName=fd8c012f45535b521bba"
+    };
+    for (const [page, src] of Object.entries(REPORTS)) for (const lang of ['en', 'ar']) {
+      const v = await visitor(browser, { viewport: [1440, 900] }); const pbi = [];
+      v.pg.on('request', (r) => { if (/powerbi\.com|powerapps\.com|analysis\.windows\.net/.test(r.url())) pbi.push(r.url()); });
+      await v.pg.goto(`${url}/${page}?lang=${lang}`, { waitUntil: 'networkidle' });
+      const f = await v.pg.evaluate(() => { const w = document.querySelector('[data-pbi-src]'), img = w && w.querySelector('img'), b = w && w.querySelector('button');
+        return w ? { img: !!(img && img.complete && img.naturalWidth > 0 && img.alt), button: (b && b.innerText.trim()) || '', iframe: !!document.querySelector('iframe') } : null; });
+      check(f && f.img && f.button && !f.iframe && !pbi.length, `${page} ${lang}: before the click ${JSON.stringify(f)}, ${pbi.length} requests to Power BI`);
+      if (f) {
+        await v.pg.click('[data-pbi-src] button');
+        const r = await v.pg.evaluate(() => { const i = document.querySelector('[data-pbi-src] iframe'); return i ? { src: i.getAttribute('src'), title: i.title, focused: document.activeElement === i } : null; });
+        check(r && r.src === src && r.title.length > 5, `${page} ${lang}: after the click the report is ${r ? r.src.slice(0, 60) + '... "' + r.title + '"' : 'missing'}`);
+      }
+      if (v.errs.length) problems.push(`${page} ${lang}: ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+  }
+
+  // Every file from jsDelivr carries Subresource Integrity (audit AUD-010, 2026-10-04): integrity="sha384-..." equal
+  // to the hash of the very file (node_modules holds the same versions, byte for byte), and crossorigin="anonymous".
+  {
+    const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+    const crypto = await import('node:crypto');
+    const sri = (f) => 'sha384-' + crypto.createHash('sha384').update(fs.readFileSync(f)).digest('base64');
+    const bad = new Set();
+    for (const p of pages()) {
+      const html = fs.readFileSync(path.join(ROOT, p), 'utf8');
+      for (const m of html.matchAll(/<(script|link)\b[^>]*\b(?:src|href)="https:\/\/cdn\.jsdelivr\.net\/npm\/((?:@[^/]+\/)?[^@/]+)@[^/]+\/([^"]+)"[^>]*>/g)) {
+        const file = path.join(ROOT, 'node_modules', m[2], m[3]), want = fs.existsSync(file) ? sri(file) : '(no file in node_modules)';
+        const got = (m[0].match(/integrity="([^"]+)"/) || [])[1];
+        if (got !== want || !/crossorigin="anonymous"/.test(m[0])) bad.add(`${m[2]}/${m[3]}: ${got ? 'integrity ' + got.slice(0, 20) + '...' : 'no integrity'}${/crossorigin/.test(m[0]) ? '' : ', no crossorigin'} (${p})`);
+      }
+    }
+    check(!bad.size, `jsDelivr files without the right integrity: ${[...bad].slice(0, 4).join('; ')}${bad.size > 4 ? ` and ${bad.size - 4} more` : ''}`);
+  }
+
+  // Every page carries a Content Security Policy that allows exactly what it loads (audit AUD-011, 2026-10-04): the
+  // policy in each page is the one scripts/csp.mjs computes from it now (an edited inline script changes its hash),
+  // and every page opens in English and Arabic without a single violation. The Power BI facade's live report
+  // (the only frame) still opens after the click. The tools' own suites and the consent suite run under the policy too:
+  // a blocked script, style, font, frame or request is a console error there.
+  {
+    const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+    const { apply, files } = await import('../csp.mjs');
+    const stale = files().filter((f) => apply(fs.readFileSync(path.join(ROOT, f), 'utf8')) !== fs.readFileSync(path.join(ROOT, f), 'utf8'));
+    check(!stale.length, `${stale.length} pages without their current Content Security Policy (node scripts/csp.mjs --write): ${stale.slice(0, 5).join(', ')}`);
+    for (const lang of ['en', 'ar']) {
+      const v = await visitor(browser);
+      await v.ctx.addInitScript(() => { window.__csp = []; document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(`${e.violatedDirective} ${e.blockedURI || '(inline)'}`)); });
+      const bad = [];
+      for (const p of pages()) {
+        await v.pg.goto(`${url}/${p}?lang=${lang}`, { waitUntil: 'networkidle' });
+        const r = await v.pg.evaluate(() => ({ meta: !!document.querySelector('meta[http-equiv="Content-Security-Policy"]'), csp: window.__csp }));
+        if (!r.meta) bad.push(`${p}: no policy`);
+        if (r.csp.length) bad.push(`${p}: ${[...new Set(r.csp)].slice(0, 3).join(' | ')}`);
+      }
+      check(!bad.length, `Content Security Policy ${lang}: ${bad.slice(0, 6).join('; ')}${bad.length > 6 ? ` and ${bad.length - 6} more` : ''}`);
+      check(!v.errs.length, `Content Security Policy ${lang}: console errors: ${v.errs.slice(0, 3).join(' | ')}`);
+      await v.ctx.close();
+    }
+    const v = await visitor(browser);
+    await v.ctx.addInitScript(() => { window.__csp = []; document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(`${e.violatedDirective} ${e.blockedURI}`)); });
+    await v.pg.goto(`${url}/dashboards/fintech-dashboard.html?lang=en`, { waitUntil: 'networkidle' });
+    await v.pg.click('.pbi-load');
+    await v.pg.waitForTimeout(1500);
+    const f = await v.pg.evaluate(() => ({ src: (document.querySelector('.pbi-facade iframe') || {}).src || '', csp: window.__csp }));
+    check(f.src.startsWith('https://app.powerbi.com/') && !f.csp.length, `Content Security Policy: the live report after the facade click: ${f.src.slice(0, 50) || 'no frame'} ${f.csp.join(' | ')}`);
+    await v.ctx.close();
+  }
+
+  // The SVG KPI Designer's title and description fit what search results show (audit AUD-019, 2026-10-04): at most
+  // 60 and 155 characters, in English and in Arabic, as the page sets them after loading its language.
+  {
+    const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+    for (const lang of ['en', 'ar']) {
+      const v = await visitor(browser);
+      await v.pg.goto(`${url}/tools/svg-kpi-designer.html?lang=${lang}`, { waitUntil: 'networkidle' });
+      const m = await v.pg.evaluate(() => ({ title: document.title, description: document.querySelector('meta[name="description"]').content, lang: document.documentElement.lang }));
+      check(m.lang === lang, `svg-kpi-designer ${lang}: the page is in ${m.lang}`);
+      check([...m.title].length <= 60, `svg-kpi-designer ${lang}: the title has ${[...m.title].length} characters (at most 60): ${m.title}`);
+      check([...m.description].length <= 155, `svg-kpi-designer ${lang}: the description has ${[...m.description].length} characters (at most 155): ${m.description}`);
+      await v.ctx.close();
+    }
+  }
   return { checks, problems };
 }

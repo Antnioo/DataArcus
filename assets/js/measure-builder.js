@@ -242,7 +242,7 @@ EVALUATE
   $('dlBtn').addEventListener('click', () => download('script', 'dax', 'measure_download'));
   $('dlTmdl').addEventListener('click', () => download('tmdl', 'tmdl', 'measure_download_tmdl'));
   document.querySelectorAll('[data-tab-out]').forEach((b) => b.addEventListener('click', () => {
-    document.querySelectorAll('[data-tab-out]').forEach((x) => x.classList.toggle('active', x === b));
+    document.querySelectorAll('[data-tab-out]').forEach((x) => { x.classList.toggle('active', x === b); x.setAttribute('aria-selected', x === b); });
     // d-none, not style.display: the output boxes are d-flex, whose !important beats an inline display
     [['outAll', 'all'], ['outTmdl', 'tmdl'], ['outOne', 'one']].forEach(([id, tab]) => $(id).classList.toggle('d-none', b.dataset.tabOut !== tab));
   }));

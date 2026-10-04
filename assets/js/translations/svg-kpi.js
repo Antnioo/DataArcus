@@ -2,10 +2,12 @@
 window.svgKpiTranslations = {
   "en": {
     "meta": {
-      "title": "Free SVG KPI Designer for Power BI: DAX Image Measures - DataArcus", "description": "Design KPI cards, progress rings, sparklines and trend arrows for Power BI, linked to your measures, and copy the DAX instantly. Free, no sign-up, English and Arabic."
+      "title": "SVG KPI Designer: Power BI DAX Image Measures - DataArcus", "description": "Design KPI cards, progress rings, sparklines and trend arrows linked to your Power BI measures, and copy the DAX. Free, no sign-up, English and Arabic."
     },
     "kd": {
+      "a11yBox": "The DAX measure",
       "badge": "Free tool · No sign-up · Nothing uploaded",
+      "banner": { "title": "New here? Build your first KPI card in 2 minutes.", "text": "A short, guided tutorial. No Power BI needed until the last step.", "go": "Start tutorial", "no": "No thanks" },
       "title": "SVG KPI Designer for Power BI",
       "subtitle": "Draw a KPI visual, link any part of it to your measures, and copy a DAX measure that draws it in Power BI. No code, nothing uploaded.",
       "startFrom": "Start from",
@@ -62,7 +64,9 @@ window.svgKpiTranslations = {
       "title": "مصمم بطاقات KPI بصيغة SVG لـ Power BI مجانًا - DataArcus", "description": "صمّم بطاقات KPI وحلقات التقدم والخطوط المصغرة وأسهم الاتجاه لـ Power BI، واربطها بمقاييسك وانسخ DAX فورًا. مجانًا وبدون تسجيل وبالعربية والإنجليزية."
     },
     "kd": {
+      "a11yBox": "مقياس DAX",
       "badge": "أداة مجانية · بدون تسجيل · لا يُرفع أي شيء",
+      "banner": { "title": "جديد هنا؟ ابنِ أول بطاقة مؤشر في دقيقتين.", "text": "درس قصير موجّه. لا تحتاج Power BI حتى الخطوة الأخيرة.", "go": "ابدأ الدرس", "no": "لا، شكرًا" },
       "title": "مصمم بطاقات KPI بصيغة SVG لـ Power BI",
       "subtitle": "ارسم بطاقة مؤشر، واربط أي جزء منها بمقاييسك، وانسخ مقياس DAX يرسمها داخل Power BI. بدون برمجة وبدون رفع أي بيانات.",
       "startFrom": "ابدأ من",
