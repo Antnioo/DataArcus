@@ -270,11 +270,10 @@ rules) and opened in Power BI Desktop (`builder-scripts\agent-desk.ps1`; capture
   value" is scored from my own captures.
 - **The package has no report-design skill.** The rule "analyse, propose, show the plan, wait for go" lives in the
   skill, which the `.mcpb` does not carry; the agent only has the tools' descriptions.
-- **Tasks 1, 2 and 4 ran in normal chats (the owner's memory on), tasks 3 and 5 to 11 in incognito chats.** In task
-  3's first two attempts the agent loaded the owner's personal skill and memories and never called DataArcus; those
-  two chats were deleted, the skill was switched off for the sitting and the connectors "MCP Engine for Power BI"
-  and "Claude in Chrome" were switched off in the chat menu (all put back at the end). A tester with their own
-  skills or memories can hit the same.
+- **Tasks 1, 2 and 4 ran in normal chats, tasks 3 and 5 to 11 in incognito chats.** In task 3's first two attempts
+  the tester's own skills and memories took the chat over and DataArcus was never called; those chats were deleted
+  and the tester's other skills and connectors were switched off for the sitting (put back at the end). A tester
+  with their own skills or memories can hit the same: use an incognito chat.
 - Times are the main turn only, from sending the request to "Claude finished the response".
 
 ### Results
@@ -468,9 +467,8 @@ SHA-256 `a06ac470a831eb4b2862977239e0de0be4c399d9b8055d9dd41733e877d2cc69`; 19 s
 among them), installed in Claude Desktop (Store version 2.19675). Nothing in the tasks, the models or the expected
 results was changed.
 
-**How it was run.** As on the first run, with these differences: **every task in an incognito chat**; the owner's
-skill and the connectors "MCP Engine for Power BI" and "Claude in Chrome" switched off for the run and put back
-after it; the agent now stops for a "go", so each task has two to three turns, and every answer given is written in
+**How it was run.** As on the first run, with these differences: **every task in an incognito chat**; the tester's
+other skills and connectors switched off for the run and put back after it; the agent now stops for a "go", so each task has two to three turns, and every answer given is written in
 `C:\DataArcus\tests\round5\agent\tNN-answers.txt` (also below). Requests, transcripts, each task's folder and the
 Desktop captures: `C:\DataArcus\tests\round5\` (`agent`, `out\tNN`, `desk`). The agent again had only DataArcus
 (no Microsoft authoring MCP, no Desktop bridge in Claude Desktop chats): opening the reports was done afterwards
