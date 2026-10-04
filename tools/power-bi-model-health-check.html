@@ -32,7 +32,7 @@
       var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
       try{choice=localStorage.getItem(KEY)}catch(e){}
       try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
-      var eu=/^Europe\//.test(tz)||/^Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)$/.test(tz);
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
       function load(){ if(loaded) return; loaded=true;
         window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
         gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
@@ -327,7 +327,7 @@
         <p class="lead text-white-50 mb-2" data-i18n="mh.subtitle">Drop a .pbit and get a health score, the columns and measures nobody uses, risky relationships and slow DAX, with a clear fix for each. Plus full model documentation in one click.</p>
         <div class="mh-hpills"><span><i class="bi bi-shield-lock"></i> <span data-i18n="mh.pill.private">Your file stays on your computer</span></span><span><i class="bi bi-list-check"></i> <span data-i18n="mh.pill.rules">30+ checks</span></span><span><i class="bi bi-file-earmark-text"></i> <span data-i18n="mh.pill.docs">Documentation export</span></span></div>
       </header>
-      <div id="mhApp" aria-live="polite"><div class="mh-panel mh-note">Loading…</div></div>
+      <div id="mhApp" aria-live="polite" data-clarity-mask="true"><div class="mh-panel mh-note">Loading…</div></div>
       <noscript><p class="text-warning">This tool needs JavaScript.</p></noscript>
       <div class="row mt-5 justify-content-center">
         <div class="col-lg-8">

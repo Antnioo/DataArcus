@@ -22,7 +22,7 @@ window.aiReadyArticleTranslations = {
     "header": {
       "badge": "COPILOT & AI",
       "title": "Is Your Power BI Model Ready for AI? A 7-Point Check",
-      "subtitle": "Posted on October 2, 2026"
+      "subtitle": "Posted on October 2, 2026 · Updated October 4, 2026"
     },
     "content": {
       "p1": "Microsoft has just set out Power BI's next chapter: a new experience in Power BI Desktop that builds data apps from your semantic model in plain language, and Copilot answers grounded in the definitions inside your models (<a href='https://community.fabric.microsoft.com/blog/fbc_pbiupdatesblog/power-bi%e2%80%99s-next-chapter-the-evolution-of-business-intelligence/5369131' class='text-accent' target='_blank' rel='noopener'>Microsoft's announcement</a>). Every one of these features starts from the same place: <strong>your semantic model</strong>.",
@@ -38,7 +38,7 @@ window.aiReadyArticleTranslations = {
       "h5": "5. A clean star schema, without ambiguous paths",
       "p7": "Fact tables in the middle, dimension tables around them, one clear path between any two tables. Ambiguous or many-to-many relationships make a person hesitate, and they make the AI guess. Microsoft's guidance is the same as for any good model: follow star-schema design and avoid ambiguous relationships.",
       "h6": "6. Formats and sort orders, because the AI repeats them",
-      "p8": "If a margin measure has no format, every answer shows <code>0.34</code> instead of <code>34%</code>. If month names have no sort-by column, a chart by month runs April, August, December. AI answers inherit these mistakes from your model, in front of whoever asked. The <a href='../tools/power-bi-model-health-check.html' class='text-accent'>Model Health Check</a> flags month and day names without a sort column and measures without a format.",
+      "p8": "If a margin measure has no format, every answer shows <code>0.34</code> for a margin of <code>33.8%</code> (0.3378): no percent sign, and two decimals that round the value. If month names have no sort-by column, a chart by month runs April, August, December. AI answers inherit these mistakes from your model, in front of whoever asked. The <a href='../tools/power-bi-model-health-check.html' class='text-accent'>Model Health Check</a> flags month and day names without a sort column and measures without a format.",
       "h7": "7. Use Prep data for AI",
       "p9": "Power BI now has a <strong>Prep data for AI</strong> button on the Home ribbon, in Desktop and in the service (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-prepare-data-ai' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>). It has three parts:",
       "list1_1": "<strong>AI data schema:</strong> choose which tables, columns and measures the AI should use, and leave the rest out.",
@@ -86,7 +86,7 @@ window.aiReadyArticleTranslations = {
     "header": {
       "badge": "Copilot والذكاء الاصطناعي",
       "title": "هل نموذج Power BI جاهز للذكاء الاصطناعي؟ فحص من 7 نقاط",
-      "subtitle": "نُشر في 2 أكتوبر 2026"
+      "subtitle": "نُشر في 2 أكتوبر 2026 · حُدّث في 4 أكتوبر 2026"
     },
     "content": {
       "p1": "أعلنت Microsoft للتو عن المرحلة التالية من Power BI: تجربة جديدة في Power BI Desktop تبني تطبيقات بيانات من نموذجك الدلالي بلغة عادية، وإجابات من Copilot تستند إلى التعريفات الموجودة في نماذجك (<a href='https://community.fabric.microsoft.com/blog/fbc_pbiupdatesblog/power-bi%e2%80%99s-next-chapter-the-evolution-of-business-intelligence/5369131' class='text-accent' target='_blank' rel='noopener'>إعلان Microsoft</a>). وكل هذه الميزات تبدأ من المكان نفسه: <strong>نموذجك الدلالي</strong>.",
@@ -102,7 +102,7 @@ window.aiReadyArticleTranslations = {
       "h5": "5. نموذج نجمي نظيف بلا مسارات ملتبسة",
       "p7": "جداول الحقائق في المنتصف وجداول الأبعاد حولها، ومسار واحد واضح بين أي جدولين. العلاقات الملتبسة أو متعددة الأطراف تجعل الإنسان يتردد وتجعل الذكاء الاصطناعي يخمّن. وإرشاد Microsoft هو نفسه لأي نموذج جيد: اتبع تصميم النموذج النجمي وتجنّب العلاقات الملتبسة.",
       "h6": "6. التنسيقات وترتيب الفرز، لأن الذكاء الاصطناعي يكررها",
-      "p8": "إذا لم يكن لمقياس الهامش تنسيق، ستظهر كل إجابة <code>0.34</code> بدل <code>34%</code>. وإذا لم يكن لأسماء الأشهر عمود ترتيب، سيظهر الرسم حسب الشهر بترتيب أبريل، أغسطس، ديسمبر. إجابات الذكاء الاصطناعي ترث هذه الأخطاء من نموذجك أمام من سأل. أداة <a href='../tools/power-bi-model-health-check.html' class='text-accent'>فحص صحة النموذج</a> تنبّهك إلى أسماء الأشهر والأيام بلا عمود ترتيب وإلى المقاييس بلا تنسيق.",
+      "p8": "إذا لم يكن لمقياس الهامش تنسيق، ستظهر كل إجابة <code>0.34</code> لهامش قيمته <code>33.8%</code> (0.3378): بلا علامة النسبة المئوية، وبمنزلتين عشريتين تقرّبان القيمة. وإذا لم يكن لأسماء الأشهر عمود ترتيب، سيظهر الرسم حسب الشهر بترتيب أبريل، أغسطس، ديسمبر. إجابات الذكاء الاصطناعي ترث هذه الأخطاء من نموذجك أمام من سأل. أداة <a href='../tools/power-bi-model-health-check.html' class='text-accent'>فحص صحة النموذج</a> تنبّهك إلى أسماء الأشهر والأيام بلا عمود ترتيب وإلى المقاييس بلا تنسيق.",
       "h7": "7. استخدم Prep data for AI",
       "p9": "أصبح في Power BI زر <strong>Prep data for AI</strong> في شريط Home، في Desktop وفي الخدمة (<a href='https://learn.microsoft.com/power-bi/create-reports/copilot-prepare-data-ai' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>). وله ثلاثة أجزاء:",
       "list1_1": "<strong>مخطط بيانات للذكاء الاصطناعي (AI data schema):</strong> اختر الجداول والأعمدة والمقاييس التي يستخدمها الذكاء الاصطناعي واستبعد الباقي.",

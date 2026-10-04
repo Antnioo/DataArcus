@@ -32,7 +32,7 @@
       var KEY='dataarcus-consent',choice=null,tz='',loaded=false;
       try{choice=localStorage.getItem(KEY)}catch(e){}
       try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
-      var eu=/^Europe\//.test(tz)||/^Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)$/.test(tz);
+      var eu=/^Europe\//.test(tz)||/^(Atlantic\/(Reykjavik|Canary|Madeira|Azores|Faroe)|Asia\/(Nicosia|Famagusta)|Africa\/Ceuta|America\/(Guadeloupe|Martinique|Cayenne|Marigot)|Indian\/(Reunion|Mayotte)|Arctic\/Longyearbyen)$/.test(tz);
       function load(){ if(loaded) return; loaded=true;
         window.dataLayer=window.dataLayer||[]; window.gtag=function(){dataLayer.push(arguments);};
         gtag('js',new Date()); gtag('config','G-RC3MRC4JZH');
@@ -182,7 +182,7 @@
         <p class="lead text-white-50 mb-0" data-i18n="mb.subtitle">One base measure in, a full set of time intelligence out: YTD, prior year, YoY %, rolling months, running totals, even Ramadan vs last Ramadan. Add them all to Power BI in one click.</p>
       </header>
 
-      <div class="row g-4">
+      <div class="row g-4" data-clarity-mask="true">
         <div class="col-lg-5">
           <div class="tg-panel d-flex flex-column gap-4">
             <div>

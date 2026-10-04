@@ -61,5 +61,48 @@ export default async function ({ browser, url }) {
     check(overlap === false, `phone ${lang}: banner and WhatsApp button overlap (${overlap})`);
     await v.ctx.close();
   }
+
+  // EU/EEA time zones outside Europe/* (audit AUD-021, 2026-10-04): Cyprus, Spain's Ceuta and Melilla, France's
+  // outermost regions, Svalbard; each gets the banner and no analytics before Accept. Others still don't.
+  const EU_OUTSIDE = ['Asia/Nicosia', 'Asia/Famagusta', 'Africa/Ceuta', 'America/Guadeloupe', 'America/Martinique', 'America/Cayenne', 'America/Marigot',
+    'Indian/Reunion', 'Indian/Mayotte', 'Arctic/Longyearbyen', 'Atlantic/Canary', 'Atlantic/Madeira', 'Atlantic/Azores', 'Atlantic/Reykjavik'];
+  for (const tz of [...EU_OUTSIDE, 'Asia/Riyadh', 'America/New_York', 'Africa/Cairo', 'Asia/Karachi']) {
+    v = await first(tz);
+    await v.pg.goto(`${url}/?lang=en`, { waitUntil: 'networkidle' });
+    const r = { banner: (await state(v.pg)).banner, eu: await v.pg.evaluate(() => window.daConsent.eu), hits: v.hits.length };
+    const want = EU_OUTSIDE.includes(tz);
+    check(r.banner === want && r.eu === want && (want ? r.hits === 0 : r.hits > 0), `${tz}: ${JSON.stringify(r)} (want ${want ? 'the banner and no analytics' : 'no banner'})`);
+    await v.ctx.close();
+  }
+
+  // Microsoft Clarity records pages as they look (audit AUD-022, 2026-10-04): on the tools, everything the visitor
+  // types or drops in and everything the tool writes back sits inside data-clarity-mask="true", so recordings show
+  // it masked; FAQ, headings and calls to action stay readable. The SVG KPI Designer puts the design in the address
+  // (#d=), which masking can't hide, so that page never loads Clarity.
+  const MASKED = [['power-bi-model-health-check', async (pg) => { await pg.click('#mhSample'); await pg.waitForSelector('#mhTab', { timeout: 20000 }); }, ['#mhApp']],
+    ['dax-measure-builder', null, []], ['dax-calendar-table-generator', null, ['#dax', '#preview', '#ramadan', '#stats']],
+    ['power-bi-theme-generator', null, ['#json', '#layCanvas', '#slotTable', '#preview']], ['power-bi-theme-generator-lab', null, ['#json', '#layCanvas', '#slotTable', '#preview']],
+    ['power-bi-licensing-cost-calculator', null, []]];
+  for (const [name, run, ids] of MASKED) {
+    v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/tools/${name}.html?lang=en`, { waitUntil: 'networkidle' });
+    if (run) await run(v.pg);
+    const open = await v.pg.evaluate((ids) => {
+      const masked = (e) => !!e.closest('[data-clarity-mask="true"]'), main = document.querySelector('main');
+      const what = (e) => e.id ? '#' + e.id : e.tagName.toLowerCase() + (e.className && typeof e.className === 'string' ? '.' + e.className.trim().split(/\s+/)[0] : '');
+      const fields = [...main.querySelectorAll('input:not([type=hidden]), textarea, select, pre, code, table, output, svg')]
+        .filter((e) => !e.closest('.tg-faq, .tg-cta, header'));
+      const results = ids.map((id) => document.querySelector(id)).filter(Boolean);
+      return [...new Set([...fields, ...results].filter((e) => !masked(e)).map(what))];
+    }, ids);
+    check(!open.length, `${name}: not masked from Clarity: ${open.slice(0, 8).join(', ')}${open.length > 8 ? ` and ${open.length - 8} more` : ''}`);
+    if (v.errs.length) problems.push(`${name}: ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
+  v = await visitor(browser, { timezone: 'Asia/Dubai', consent: 'granted' });
+  await v.pg.goto(`${url}/tools/svg-kpi-designer.html?lang=en`, { waitUntil: 'networkidle' });
+  const kd = { clarity: v.hits.filter((h) => /clarity/.test(h)).length, google: v.hits.filter((h) => /google/.test(h)).length, fn: await v.pg.evaluate(() => typeof window.clarity) };
+  check(kd.clarity === 0 && kd.fn === 'undefined' && kd.google > 0, `SVG KPI Designer: Clarity must not load there (Google Analytics still does): ${JSON.stringify(kd)}`);
+  await v.ctx.close();
   return { checks, problems };
 }

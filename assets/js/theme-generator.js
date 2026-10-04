@@ -350,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
     else if (k === 'page') { if (v === 'custom' && c.page !== 'custom') { const p = page(c); c.pageW = p.w; c.pageH = p.h; } c.page = v; pageMsg = ''; track('theme_page_size', { size: v }); }
     else c[k] = ['dir', 'fpos', 'kpiBar', 'kpiBarC', 'headLine', 'headLineC'].includes(k) ? v : +v;
     if (['kpiBar', 'kpiBarC', 'headLine', 'headLineC'].includes(k)) track('theme_accent', { option: k, value: v });
-    renderLayout(); save();
+    layoutChanged(); renderLayout(); save();
   });
   // sliders redraw the preview while dragging, without rebuilding the controls
   step2.addEventListener('input', (e) => {
@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // the exact radius slider keeps the Square/Soft/Round buttons in step
     if (el.dataset.l === 'radius') $('layControls').querySelectorAll('button[data-l="radius"]').forEach((b) => { const on = +b.dataset.v === lay().radius; b.classList.toggle('active', on); b.setAttribute('aria-pressed', on); });
     if (el.dataset.l === 'radius') renderJson();
-    renderLayoutPreview(); save();
+    layoutChanged(); renderLayoutPreview(); save();
   });
   step2.addEventListener('change', (e) => {
     const num = e.target.closest('input[type="number"][data-l]');
@@ -370,11 +370,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const v = Math.round(+num.value), kept = within(v, lim);
       pageMsg = kept !== v ? (isW ? L(`Width set to ${kept} (allowed ${lim[0]} to ${lim[1]}).`, `تم ضبط العرض على ${kept} (المسموح من ${lim[0]} إلى ${lim[1]}).`) : L(`Height set to ${kept} (allowed ${lim[0]} to ${lim[1]}).`, `تم ضبط الارتفاع على ${kept} (المسموح من ${lim[0]} إلى ${lim[1]}).`)) : '';
       c[k] = kept; const [w, h] = fitCustom(c.pageW, c.pageH); track('theme_page_size', { size: w + 'x' + h });
-      renderLayout(); save(); return;
+      layoutChanged(); renderLayout(); save(); return;
     }
     const el = e.target.closest('input[type="checkbox"][data-l]'); if (!el) return;
     lay()[el.dataset.l] = el.checked;
-    renderLayout(); save();
+    layoutChanged(); renderLayout(); save();
   });
   // remember whether Advanced options is open when the controls are rebuilt (toggle does not bubble)
   $('layControls').addEventListener('toggle', (e) => { if (e.target.classList && e.target.classList.contains('tg-adv')) advOpen = e.target.open; }, true);
@@ -589,14 +589,23 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastJson = null, lastPng = null, lastCsv = null;
   function pngKey() { return bgSvg(computeSlots(lay()), {}); }
   function csvKey() { return JSON.stringify(computeSlots(lay()).map((s) => [s.kind, boxOf(s)])); }
+  // Visual backgrounds follow what the visitor uses (owner 2026-10-04): Solid for a colour-only visitor, Transparent
+  // from the first change in the Layout step (they are making a background), unless they picked one themselves
+  let autoSwitched = false;
+  function layoutChanged() {
+    const c = lay(); if (c.transparent || c.visPicked) return;
+    c.transparent = true; autoSwitched = true; renderVis(); renderJson();
+    toast(L('Visual backgrounds set to Transparent, to sit on the background image', 'أصبحت خلفيات العناصر شفافة، لتجلس على صورة الخلفية'));
+  }
   function renderVis() {
     const t = !!lay().transparent;
     $('dlVis').innerHTML = `<span class="tg-label">${L('Visual backgrounds in the theme', 'خلفيات العناصر في السمة')}</span>${seg('transparent', [[1, L('Transparent (use with the background)', 'شفافة (مع الخلفية)')], [0, L('Solid (theme only)', 'مصمتة (السمة فقط)')]], t ? 1 : 0)}
+      ${t && autoSwitched ? `<small class="d-block mt-1 tg-warn" data-auto>${L('Switched to Transparent because you changed the layout. Choose Solid if you only use the theme.', 'تحوّلت إلى شفافة لأنك غيّرت التخطيط. اختر مصمتة إن كنت تستخدم السمة فقط.')}</small>` : ''}
       <small class="d-block mt-1 text-white-50">${t ? L('Visuals have no fill, so each one sits on its panel in the background image.', 'العناصر بلا تعبئة، فيجلس كل عنصر على لوحته في صورة الخلفية.') : L('Each visual gets its own card color. Choose this if you only use the theme, without the background image.', 'يأخذ كل عنصر لون بطاقة خاصًا به. اختره إذا كنت تستخدم السمة فقط دون صورة الخلفية.')}</small>`;
   }
   $('dlVis').addEventListener('click', (e) => {
     const b = e.target.closest('button[data-l="transparent"]'); if (!b) return;
-    lay().transparent = b.dataset.v === '1'; renderVis(); renderJson(); save();
+    lay().transparent = b.dataset.v === '1'; lay().visPicked = true; autoSwitched = false; renderVis(); renderJson(); save();
     track('theme_visuals', { transparent: lay().transparent });
   });
   function updateStatus() {
@@ -622,7 +631,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // several files one after another, so the browser does not merge or block them
     if (a === 'stale') [['json', lastJson !== null && lastJson !== JSON.stringify(buildTheme(), null, 2)], ['png', lastPng !== null && lastPng !== pngKey()], ['csv', lastCsv !== null && lastCsv !== csvKey()]]
       .filter((f) => f[1]).forEach((f, i) => setTimeout(DL[f[0]], i * 400));
-    else if (a === 'transparent') { lay().transparent = true; renderVis(); renderJson(); save(); toast(L('Visuals are transparent. Download the theme again', 'أصبحت العناصر شفافة. نزّل السمة من جديد')); }
+    else if (a === 'transparent') { lay().transparent = true; lay().visPicked = true; renderVis(); renderJson(); save(); toast(L('Visuals are transparent. Download the theme again', 'أصبحت العناصر شفافة. نزّل السمة من جديد')); }
   });
 
   // ---------- steps bar: pinned under the navbar, highlights the step in view ----------
