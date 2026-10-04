@@ -78,6 +78,54 @@ same checks (6,854 on this laptop in round 6), unless a sample model really has 
 0.2.2 / 0.2.3 (next free laptop evening); the four round 6 decisions (the title at 18pt, report-side separators after
 D8, task 3's page filter, the platform plan's v1 and a public schema).
 
+### Results (2026-10-04; nothing merged by the builder; terminal only)
+- **Commits** (`fix/round-7-audit`): `5764417` the plan; `1c889d6` AUD-015 (with the tests of items 1 to 3); `eeab72c`
+  AUD-016; `88f8dcc` AUD-017; `0bd9004` AUD-008; `3b02571` PRIVACY.md; `7e55c57` main (`536b60a`, Beta prep's audit
+  batch 2) merged in; then this record. dataarcus-engine `fix/round-7-audit`: the manifest's `create_report` text,
+  its test, version 0.2.3.
+- **Tests:** `npm test` 306 -> **317 of 317** (as planned: 3 + 4 + 4 new checks; seven of them failed before the
+  fixes), also on the merged branch. Engine build test 7 -> 8. **CI on the merge commit `7e55c57`
+  (run 37199728340): mcp success, website success** on the second attempt. The first attempt failed on one check
+  that is not this round's: `site`, "tools/power-bi-licensing-cost-calculator.html 1440px: the Inter swap shifts the
+  page 0.126 (want 0.1 or less)", a check that came with Beta prep's batch, on a page this branch does not differ
+  from main in; the same job passed when run again. CI on `3b02571`, before the merge: website and mcp success.
+- **Not test results: the local website runs on this laptop.** While the owner was working on it, a full local run
+  produced nothing in 30 minutes and was stopped; a second took 48 minutes (the `site` suite alone 46) and three
+  suites crashed on timeouts (`anchors`, `theme-generator`, `design-engine`); those three passed when run alone.
+  Laptop load, not failures of the code: CI is the record. After the merge only `model-health` (57), `tools` (297)
+  and `tmdl-model` (70) were run locally: all passed.
+- **Item 1, AUD-015:** as expected. OrderID, CustomerKey, ProductKey, ProductCode, InvoiceNo (and OrderId) are
+  flagged when they sum; Paid, Monkey, Barcode, Casino, Turkey are not; the names the rule knew are still flagged.
+  The website's sample numbers did not change (its suites pass with their expectations untouched).
+- **Item 2, AUD-016:** as expected. The audit's models: 500 tables with measures 46,996 -> 12,741 characters; 3,000
+  tables 281,008 -> 13,056. The 300-table golden model: **10,380 before, 10,380 after** (nothing of it is cut).
+  The summary lists the 100 tables with the most measures and counts the rest by area (`notListed`); an area names at
+  most 15 of its tables; `tables` and `focus` reach a table that is not listed. The same cut applies to the areas in
+  the "needs a focus" answer of `suggest_fields`.
+- **Item 3, AUD-017:** as expected. "Report" + U+202E + "xcod.exe" gives `Reportxcod.exe.pbip`; the Arabic name with
+  the Arabic comma, the emoji name and the accented name are unchanged; `hiddenCharacters` lists `Sales[Total‮Sales]`
+  and `Sales[Zero​Width]` in `read_model`, `suggest_fields`, `check_model_health` (and `create_report`); no note
+  on a normal model; the model is not renamed.
+- **Item 4, AUD-008:** round 6 had re-recorded the numbers but not their causes. Every number that differs from the
+  first baseline is now in `mcp/GOLDEN-TASKS.md` with a cause counted from the files; the runner runs 11 tasks and
+  counts characters the same on Windows and Linux (`read_model` on the large model: 10,379 in the runner, the audit's
+  Linux number). Nothing unexplained.
+- **Item 5:** the manifest's text: "Writes a new Power BI report (PBIR) next to the model under a free name, bound to
+  the fields the approved plan gives (checked against the model), never touching the model or an existing report."
+  `plugin.json` carries no tool text, so nothing to mirror.
+- **Item 6, package:** `dist/dataarcus-0.2.3.mcpb`, built from the merged branch `7e55c57`, **4,021,373 bytes**,
+  SHA-256 `2b6e073debb05455826ee4e71207b6677d4eba82b643decb4dca23f53729c00f`, unsigned, not installed, 19 staged
+  files, 91 packages. (0.2.2 was 3,333,472 bytes: main has moved to zod 4 since.)
+- **The merge:** one real conflict, `assets/js/model-health-worker.js` (main added the TMDL reader to its
+  `importScripts`; this branch had bumped the engine's stamp on the same line): main's line with the newer stamp
+  `20261004c`; its `.min.js` taken from main and rebuilt. `check:min`: all match. `scripts/csp.mjs`: "All 52 pages
+  carry their current policy", **checked on the merge commit's files as git stores them (LF)**. On this laptop's
+  checkout (CRLF) the same script reports all 52 pages as out of date, on main too: it compares the text with line
+  endings, so it can't be trusted here, and `--write` was not run.
+- **Files this round shares with Beta prep's branch:** `assets/js/model-health-worker.js` and its `.min.js`,
+  `tools/power-bi-model-health-check.html` (the engine's `?v=`), `tools/power-bi-theme-generator.html` and
+  `-lab.html` (`theme-generator.min.js?v=20261004c`).
+
 ## Round 6 in progress: fields, thousand separators, the header logo, the platform plan (owner's go 2026-10-04; TERMINAL ONLY: no mouse, keyboard, UI Automation, Power BI Desktop, Claude Desktop or screenshots; branch `fix/round-6-fields`, from main `4d86788`)
 Owner's decisions: an identical fix-script file is named again, never copied (round 5 as built); anything that
 changes what Desktop shows is built and tested from the files now and its Desktop check is listed for the next free
