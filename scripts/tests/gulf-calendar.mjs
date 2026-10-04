@@ -298,5 +298,54 @@ export default async function ({ browser, url }) {
     check(!!GH && other !== model && days(other, 'uae') === 'cannot tell', `gulf-health on another form of Is Weekend: ${GH ? days(other, 'uae') : 'no gulf-health.js'} (want "cannot tell")`);
   }
 
+  // ---------- 8. The Calendar Generator reads right in Arabic (live-site reports of 2026-10-04) ----------
+  // every option of every drop-down fits its box, in both languages, from phone to wide desktop
+  for (const lang of ['en', 'ar']) for (const w of [1440, 1280, 1024, 992, 768, 390]) {
+    const v = await visitor(browser, { viewport: [w, 900] });
+    await v.pg.goto(`${url}${CG}?lang=${lang}`, { waitUntil: 'networkidle' });
+    const cut = await v.pg.evaluate(() => {
+      const c = document.createElement('canvas').getContext('2d'), out = [];
+      for (const s of document.querySelectorAll('.cg-form select')) {
+        const cs = getComputedStyle(s), room = s.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+        c.font = cs.font;
+        for (const o of s.options) { const need = Math.ceil(c.measureText(o.textContent.trim()).width); if (need > room) out.push(`${s.id} "${o.textContent.trim()}" needs ${need}px, has ${Math.floor(room)}px`); }
+      }
+      return out;
+    });
+    check(!cut.length, `calendar generator ${lang} ${w}px: drop-down text cut: ${cut.join('; ')}`);
+    await done(v, `drop-downs ${lang} ${w}px`);
+  }
+  // with English month names on the Arabic page, a Hijri date reads "28 Sha'ban 1443" (day first, as in English);
+  // with Arabic names it stays right to left (day on the right)
+  for (const names of ['en', 'ar']) {
+    const v = await open(CG, cgSaved({ hijri: true, lang: names, start: '2022-03-25', end: '2022-04-30' }), 'ar');
+    const r = await v.pg.evaluate(() => {
+      const cell = document.querySelectorAll('#preview tr')[1].cells[2], txt = cell.textContent, node = document.createTreeWalker(cell, NodeFilter.SHOW_TEXT).nextNode();
+      const rect = (a, b) => { const g = document.createRange(); g.setStart(node, a); g.setEnd(node, b); return g.getBoundingClientRect(); };
+      const day = txt.indexOf(' '), month = [day + 1, txt.lastIndexOf(' ')];
+      return { txt, day: rect(0, day), month: rect(month[0], month[1]) };
+    });
+    const ok = names === 'en' ? r.day.right <= r.month.left + 1 : r.day.left >= r.month.right - 1;
+    check(ok, `calendar preview, Arabic page, ${names} names: "${r.txt}" shows the day on the ${r.day.left < r.month.left ? 'left' : 'right'} of the month`);
+    await done(v, `preview order ${names}`);
+  }
+  // the Arabic note of the announced-dates option ends on an Arabic word, so its full stop sits after Arabic text and
+  // not next to the English column name (at desktop width, where the sentence ends on the name's line)
+  {
+    const v = await open(CG, null, 'ar');
+    const r = await v.pg.evaluate(() => {
+      const small = document.querySelector('#cgObserved + span small'), txt = small.textContent.trim();
+      const walker = document.createTreeWalker(small, NodeFilter.SHOW_TEXT); let last = null, n; while ((n = walker.nextNode())) if (n.textContent.trim()) last = n;
+      const s = last.textContent, end = s.lastIndexOf('.');
+      const g = document.createRange(); g.setStart(last, end); g.setEnd(last, end + 1); const dot = g.getBoundingClientRect();
+      const before = s.slice(0, end).trimEnd(), wordStart = before.search(/\S+$/);
+      const h = document.createRange(); h.setStart(last, Math.max(0, wordStart)); h.setEnd(last, before.length); const word = h.getBoundingClientRect();
+      return { txt, word: before.slice(wordStart), dot: { l: dot.left, r: dot.right, t: dot.top }, wb: { l: word.left, r: word.right, t: word.top } };
+    });
+    check(/[؀-ۿ]$/.test(r.word) && Math.abs(r.dot.t - r.wb.t) < 4 && r.wb.l >= r.dot.r - 1,
+      `calendar note in Arabic: the full stop follows "${r.word}" (${JSON.stringify(r.dot)} vs ${JSON.stringify(r.wb)}): ${r.txt.slice(-60)}`);
+    await done(v, 'note full stop');
+  }
+
   return { checks, problems };
 }

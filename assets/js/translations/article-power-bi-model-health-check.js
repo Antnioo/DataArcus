@@ -22,7 +22,7 @@ window.modelHealthArticleTranslations = {
     "header": {
       "badge": "BEST PRACTICE",
       "title": "We Ran a Health Check on a Microsoft Power BI Sample. It Scored 84.",
-      "subtitle": "Posted on September 25, 2026 · Updated October 3, 2026"
+      "subtitle": "Posted on September 25, 2026 · Updated October 4, 2026"
     },
     "content": {
       "p1": "Power BI models rarely break in one day. They grow. A measure is copied to test an idea, a column is imported just in case, a page is duplicated for a meeting. Nobody deletes anything, because nobody knows what is safe to delete. A year later the model is slow to refresh, hard to change and full of things no one can explain.",
@@ -48,7 +48,7 @@ window.modelHealthArticleTranslations = {
       "list2_1": "<strong>Calculated columns on imported tables.</strong> Four of them: a county label built with RELATED, daily cases and daily deaths worked out from the day before, and a column that always says \"USA\". Microsoft's guidance prefers columns added in Power Query or at the source, which typically compress better and don't wait for every table to load; a column that needs measures or DAX-only functions can still be the better choice in DAX.",
       "list2_2": "<strong>Visible keys and a text key.</strong> Two key columns on the \"many\" side are visible in the field list, where report authors drag them in by mistake, and one relationship joins on a text code instead of a number.",
       "list2_3": "<strong>A measure nothing uses.</strong> One of the 10 measures feeds no visual, directly or through other measures. The check follows these chains, which is almost impossible to do by hand.",
-      "list2_4": "<strong>Measures without a format string.</strong> Four here, but all four return text (notes and button labels), so in this model they are harmless. On a number, a missing format is what makes a card show 0.34 instead of 34%.",
+      "list2_4": "<strong>Measures without a format string.</strong> Four here, but all four return text (notes and button labels), so in this model they are harmless. On a number, a missing format is what makes a card show 0.34 for a margin of 33.8% (0.3378): no percent sign, and two decimals that round the value.",
       "p12": "<strong>What it did not find: FILTER over a whole table.</strong> This sample has none, but we see the pattern often, because it is the first way most of us learned to write a filtered measure:",
       "h6": "How the check works, and why your file stays with you",
       "p10": "The tool reads a <strong>Power BI template (.pbit)</strong>. A template has your model and report layout but <strong>no data rows</strong>, so it stays small even for very large models. The file is opened inside your browser tab and never uploaded. The tool maps every measure to the columns and measures it depends on, then follows every visual, filter, relationship and security rule to see what is really used.",
@@ -91,7 +91,7 @@ window.modelHealthArticleTranslations = {
     "header": {
       "badge": "أفضل الممارسات",
       "title": "فحصنا صحة نموذج Power BI تجريبي من Microsoft. النتيجة: 84 من 100.",
-      "subtitle": "نُشر في 25 سبتمبر 2026 · حُدّث في 3 أكتوبر 2026"
+      "subtitle": "نُشر في 25 سبتمبر 2026 · حُدّث في 4 أكتوبر 2026"
     },
     "content": {
       "p1": "نماذج Power BI نادرًا ما تنكسر في يوم واحد، بل تكبر تدريجيًا. يُنسخ مقياس لتجربة فكرة، ويُستورد عمود احتياطًا، وتُكرر صفحة من أجل اجتماع. لا أحد يحذف شيئًا لأن لا أحد يعرف ما الذي يمكن حذفه بأمان. وبعد سنة يصبح النموذج بطيئًا في التحديث وصعب التعديل ومليئًا بأشياء لا يستطيع أحد شرحها.",
@@ -117,7 +117,7 @@ window.modelHealthArticleTranslations = {
       "list2_1": "<strong>أعمدة محسوبة على جداول مستوردة.</strong> أربعة: اسم مقاطعة مبني بـ RELATED، والحالات والوفيات اليومية محسوبة من اليوم السابق، وعمود قيمته دائمًا \"USA\". تفضّل إرشادات Microsoft إضافة الأعمدة في Power Query أو في المصدر، فهي عادة تُضغط بشكل أفضل ولا تنتظر تحميل كل الجداول، لكن العمود الذي يحتاج مقاييس أو دوال لا توجد إلا في DAX قد يبقى الخيار الأفضل في DAX.",
       "list2_2": "<strong>مفاتيح ظاهرة ومفتاح نصي.</strong> عمودا مفتاح في جهة \"many\" ظاهران في قائمة الحقول فيسحبهما معدّو التقارير بالخطأ، وعلاقة واحدة تربط على رمز نصي بدل رقم.",
       "list2_3": "<strong>مقياس لا يستخدمه شيء.</strong> واحد من المقاييس العشرة لا يغذي أي visual، لا مباشرة ولا عبر مقاييس أخرى. والأداة تتبع هذه السلاسل، وهو أمر شبه مستحيل يدويًا.",
-      "list2_4": "<strong>مقاييس بلا تنسيق.</strong> أربعة هنا، لكنها كلها تُرجع نصًا (ملاحظات ونصوص أزرار)، فلا ضرر منها في هذا النموذج. أما في مقياس رقمي فغياب التنسيق هو ما يجعل البطاقة تعرض 0.34 بدل 34%.",
+      "list2_4": "<strong>مقاييس بلا تنسيق.</strong> أربعة هنا، لكنها كلها تُرجع نصًا (ملاحظات ونصوص أزرار)، فلا ضرر منها في هذا النموذج. أما في مقياس رقمي فغياب التنسيق هو ما يجعل البطاقة تعرض 0.34 لهامش قيمته 33.8% (0.3378): بلا علامة النسبة المئوية، وبمنزلتين عشريتين تقرّبان القيمة.",
       "p12": "<strong>ما لم تجده الأداة: FILTER على جدول كامل.</strong> لا يوجد في هذا النموذج، لكننا نراه كثيرًا لأنه أول طريقة يتعلمها معظمنا لكتابة مقياس مفلتر:",
       "h6": "كيف يعمل الفحص، ولماذا يبقى ملفك معك",
       "p10": "تقرأ الأداة <strong>قالب Power BI (.pbit)</strong>. يحتوي القالب نموذجك وتصميم تقريرك لكن <strong>بدون أي صفوف بيانات</strong>، لذلك يبقى صغيرًا حتى للنماذج الضخمة. يُفتح الملف داخل صفحة المتصفح ولا يُرفع أبدًا. ترسم الأداة خريطة لكل مقياس والأعمدة والمقاييس التي يعتمد عليها، ثم تتبع كل visual وفلتر وعلاقة وقاعدة أمان لتعرف ما المستخدم فعلًا.",

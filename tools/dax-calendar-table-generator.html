@@ -127,6 +127,7 @@
     .cg-checks { display: flex; flex-direction: column; gap: 8px; }
     .cg-checks label { display: flex; gap: 10px; align-items: flex-start; font-size: .9rem; color: var(--lt); cursor: pointer; }
     .cg-checks small { display: block; color: #94a3b8; }
+    .cg-checks bdi { white-space: nowrap; }   /* a column name (Is Estimated Date) never breaks across lines */
     .cg-checks input { margin-top: 4px; accent-color: var(--accent); width: 16px; height: 16px; }
     .cg-quick { display: flex; flex-wrap: wrap; gap: 8px; }
     .cg-chip { display: inline-block; background: rgba(0, 212, 255, .08); border: 1px solid rgba(0, 212, 255, .3); color: var(--accent-2); border-radius: 30px; padding: 5px 12px; font-size: .8rem; margin: 0 6px 6px 0; }
@@ -136,6 +137,9 @@
     @media (max-width: 767px) { .cg-form { grid-template-columns: 1fr; } }
     /* Code and hex values always read left to right, even on the Arabic page */
     .tg-json, .tg-color input[type=text], .mb-pre, #cgStart, #cgEnd { direction: ltr; text-align: left; unicode-bidi: plaintext; }
+    /* The preview's Hijri date takes its reading order from its own words: "28 Sha'ban 1443" with English month
+       names on the Arabic page, "28 شعبان 1443" right to left with Arabic names */
+    #preview td:nth-child(3) { unicode-bidi: plaintext; }
   </style>
 </head>
 <body>
@@ -187,9 +191,9 @@
               <div style="grid-column:1/-1"><label class="tg-label" for="cgName" data-i18n="cg.tableName">Table name</label><input id="cgName" class="form-control" maxlength="40"></div>
               <div><label class="tg-label" for="cgStart" data-i18n="cg.start">Start date</label><input id="cgStart" type="date" class="form-control"></div>
               <div><label class="tg-label" for="cgEnd" data-i18n="cg.end">End date</label><input id="cgEnd" type="date" class="form-control"></div>
-              <div><label class="tg-label" for="cgWeek" data-i18n="cg.weekStart">Week starts on</label>
+              <div style="grid-column:1/-1"><label class="tg-label" for="cgWeek" data-i18n="cg.weekStart">Week starts on</label>
                 <select id="cgWeek" class="form-select"><option value="sun" data-i18n="cg.day.sun">Sunday</option><option value="mon" data-i18n="cg.day.mon">Monday</option><option value="sat" data-i18n="cg.day.sat">Saturday</option></select></div>
-              <div><label class="tg-label" for="cgWeekend" data-i18n="cg.weekend">Weekend</label>
+              <div style="grid-column:1/-1"><label class="tg-label" for="cgWeekend" data-i18n="cg.weekend">Weekend</label>
                 <select id="cgWeekend" class="form-select"><option value="sat-sun" data-i18n="cg.we.satsun">Saturday + Sunday</option><option value="fri-sat" data-i18n="cg.we.frisat">Friday + Saturday</option><option value="fri" data-i18n="cg.we.fri">Friday only</option><option value="sun" data-i18n="cg.we.sun">Sunday only</option><option value="uae" data-i18n="cg.we.uae">UAE: Sat + Sun since 2022</option><option value="ksa" data-i18n="cg.we.ksa">Saudi Arabia: Fri + Sat since 2013</option><option value="kwt" data-i18n="cg.we.kwt">Kuwait: Fri + Sat since 2007</option><option value="qat" data-i18n="cg.we.qat">Qatar: Fri + Sat since 2003</option><option value="bhr" data-i18n="cg.we.bhr">Bahrain: Fri + Sat since 2006</option><option value="omn" data-i18n="cg.we.omn">Oman: Fri + Sat since 2013</option></select></div>
               <div><label class="tg-label" for="cgFy" data-i18n="cg.fyStart">Fiscal year starts</label>
                 <select id="cgFy" class="form-select"><option value="1" data-i18n="cg.m.1">January</option><option value="2" data-i18n="cg.m.2">February</option><option value="3" data-i18n="cg.m.3">March</option><option value="4" data-i18n="cg.m.4">April</option><option value="5" data-i18n="cg.m.5">May</option><option value="6" data-i18n="cg.m.6">June</option><option value="7" data-i18n="cg.m.7">July</option><option value="8" data-i18n="cg.m.8">August</option><option value="9" data-i18n="cg.m.9">September</option><option value="10" data-i18n="cg.m.10">October</option><option value="11" data-i18n="cg.m.11">November</option><option value="12" data-i18n="cg.m.12">December</option></select></div>
