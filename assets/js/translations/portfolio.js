@@ -106,6 +106,7 @@ window.portfolioTranslations = {
     
     // Hero Project Section
     heroProject: {
+      embedAlt: "DataArcus Pulse CRM Intelligence Dashboard",
       badge: "LIVE & INTERACTIVE",
       title: "Hero Showcase: DataArcus Pulse (Sales CRM Intelligence)",
       featuresTitle: "Key Features & Technologies Used:",
@@ -230,6 +231,7 @@ window.portfolioTranslations = {
 
     // Hero Project Section Arabic
     heroProject: {
+      embedAlt: "لوحة DataArcus Pulse لذكاء مبيعات CRM",
       badge: "تفاعلي ومباشر",
       title: "النموذج المميّز: داتا أركوس بالس (ذكاء CRM للمبيعات)",
       featuresTitle: "أهم المزايا والتقنيات المستخدمة:",

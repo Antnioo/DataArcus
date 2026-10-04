@@ -507,9 +507,22 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (err) { /* ignore bad URLs */ }
   }, { capture: true });
 
+  // --- Showcases: the live Power BI report (about 6 MB) loads when the visitor clicks its preview (audit AUD-020);
+  //     the iframe gets the preview's alt text as its title and takes the focus.
+  document.querySelectorAll('[data-pbi-src]').forEach((f) => {
+    const b = f.querySelector('button'); if (!b) return;
+    b.addEventListener('click', () => {
+      const img = f.querySelector('img'), frame = document.createElement('iframe');
+      frame.src = f.dataset.pbiSrc; frame.title = (img && img.alt) || 'Power BI report';
+      frame.setAttribute('allowfullscreen', 'true'); frame.setAttribute('frameborder', '0');
+      f.replaceChildren(frame); frame.focus();
+      trackOnce('dash_live', 'dashboard_live_load', { dashboard: document.title.replace(/\s*-\s*DataArcus\s*$/, '') });
+    });
+  });
+
   // --- Dashboards: a click into the Power BI iframe blurs the window.
   //     Page loads alone don't count; this means someone actually used it.
-  const pbiFrames = document.querySelectorAll('iframe[src*="powerbi.com"]');
+  const pbiFrames = document.querySelectorAll('iframe[src*="powerbi.com"], [data-pbi-src]');
   if (pbiFrames.length) {
     const title = document.title.replace(/\s*-\s*DataArcus\s*$/, '');
     trackOnce('dash_view', 'dashboard_view', { dashboard: title });
