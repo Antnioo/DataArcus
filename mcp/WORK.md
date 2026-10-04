@@ -54,6 +54,59 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 - **Website dropdowns fixed** (merged): the open list was white on white on every tool page; form fields now use
   `color-scheme: dark` with dark option colours (`assets/css/style.css`), checked on every tool page in `tools.mjs`.
 
+## Next step: round 8, a page filter, the taller header (plan only), the laptop paths (owner's go 2026-10-04; TERMINAL ONLY; branch `fix/round-8` from main `3564fe7`)
+The owner's decisions (2026-10-04): golden task 3's page filter: yes, this round. The title 2.8 below the header's
+middle in Segoe UI: leave it; a taller header box is a **plan only** here, with numbers, because Desktop can't be
+used today. The laptop paths in the public `mcp/GOLDEN-TASKS.md`: trim. Report-side thousand separators: after D8,
+not in this round. The platform plan: not touched (the owner reads it on 10 October).
+
+**Before (main `3564fe7`):** `npm test` 317 of 317. Website: CI is the record (the laptop's full run times out
+under load).
+
+| # | Item | Change | Expected |
+|---|---|---|---|
+| 1 | A page filter | `create_report` gets `pageFilters`: `[{ field: "Table[Column]", values: [...] }]`. The field is a column of the model, checked like `fields` (unknown, or a measure: refused and named, nothing written). Values are typed by the column: boolean (`true` / `false`), text, whole or decimal number; where the files give the column no type (a DAX table's column), by the value given, and the answer says so. No DAX, no measures, no dates in this round. Written into every report page's `page.json` as `filterConfig.filters`, a `Categorical` filter with an `In` condition, as Microsoft's report-authoring reference gives it (`field` with `Entity`; `filter.Version 2`, `From` with an alias, `Where` with `SourceRef.Source`; `howCreated: "User"`; literals `true`, `'text'`, `5L`, `5D`). Not on the tooltip pages. The answer lists them (`pageFilters`) with a sentence for the user; the skill and the tool's description say when to pass one | tests first: Calendar[Is Ramadan] = true and a text column in `page.json`; an unknown column and a measure refused; a model without the column: a clear message; Microsoft's validator 0 on a report with filters; `pageFilters` in the answer. Golden task 3 at tool level with the filter: the check "the page is limited to Ramadan" met by the filter; 20 visuals as before (a filter is not a visual); validator 0 |
+| 2 | The taller header | plan only: the table below, from `builder-scripts\r8-header.mjs` | the owner decides; D15 measures first |
+| 3 | The laptop paths | `C:\DataArcus\...` in the public files becomes a neutral name ("the repo folder", `<tests folder>`, `<working folder>`); every `git grep -n -F 'C:\'` hit listed in the report, fixed or not | 37 hits before; after: only the generic examples (`C:\Users\<name>\...`, `C:\Other`) and one comment about Windows' path limit |
+
+**Expected test count:** `npm test` 317 -> 324 (item 1: 7 checks). The shared engine `pbip-export.js` changes
+(the page filters are written there): `.min.js` rebuilt, `?v=` bumped, `check:min`, `csp.mjs` on the files as git
+stores them (the laptop's checkout has CRLF, where that script can't be trusted).
+
+### Item 2: the header that centres the title (computed, nothing built)
+What the measurements say (DESKTOP-TESTS.md, round 1): a text box is top-aligned; the middle of its text is
+3 + 1.19 x pt below the box's top in Segoe UI and 1.12 x pt in Tahoma; a one-line box needs 10 + 1.8 x pt. The title's
+size is 0.42 of its box, so in Segoe UI its middle is always about 3 below the box's middle **whatever the height**:
+a taller header alone changes nothing if the title grows with it. So the proposal is: **keep today's title size and
+make the header as tall as that text needs to sit in the middle** (Segoe UI: slot = 2 x (3 + 1.19 x pt); Tahoma, where
+the text sits above the middle and the box must move down: slot = 2 x (10 + 1.8 x pt - 1.12 x pt)). The logo image is
+centred at any height (measured); the page buttons centre their own text; "Your logo" has room to move.
+
+| Page | Language, font | Title | Header today (title slot) | Proposed header (slot) | Title offset today -> after (+ is lower) | Body height lost | KPI card | Line chart | Table | Size and phone problems |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1920 x 1080 | English, Segoe UI | 20pt | 84 (48) | 90 (54) | +2.8 -> -0.2 | 6 | 144 -> 144 | 440 -> 437 | 331 -> 328 | 0 -> 0 |
+| 1920 x 1080 | Arabic, Tahoma | 20pt | 84 (48) | 84 (48) | +0.4 -> +0.4 | 0 | 144 -> 144 | 440 -> 440 | 331 -> 331 | 0 -> 0 |
+| 1280 x 720 | English, Segoe UI | 12pt | 56 (32) | 59 (35) | +1.3 -> -0.2 | 3 | 96 -> 96 | 293 -> 291 | 221 -> 220 | 0 -> 0 |
+| 1280 x 720 | Arabic, Tahoma | 12pt | 56 (32) | 62 (38) | -2.6 -> +0.4 | 6 | 96 -> 96 | 293 -> 290 | 221 -> 218 | 0 -> 0 |
+| 960 x 720 | English, Segoe UI | 12pt | 56 (32) | 59 (35) | +1.3 -> -0.2 | 3 | 96 -> 96 | 293 -> 291 | 221 -> 220 | 0 -> 0 |
+| 960 x 720 | Arabic, Tahoma | 12pt | 56 (32) | 62 (38) | -2.6 -> +0.4 | 6 | 96 -> 96 | 293 -> 290 | 221 -> 218 | 0 -> 0 |
+| 640 x 360 | English, Segoe UI | 8pt | 37 (25) | 37 (25): no change, it is in the middle today | 0 -> 0 | 0 | 48 -> 48 | 142 -> 142 | 106 -> 106 | 0 -> 0 |
+| 640 x 360 | Arabic, Tahoma | 8pt | 37 (25) | 45 (33) | -3.5 -> +0.5 | 8 | 48 -> 48 | 142 -> 137 | 106 -> 103 | 0 -> 0 |
+
+All numbers are page units (pixels of the page). "Offset" is the title text's middle against its slot's middle,
+computed with the measured rule. The body numbers are the exec layout with 4 cards and no filter rail, written by the
+engine with the proposed header height (its `hh` setting: 56 -> 60 on 1080 English; 56 -> 59 and 62 on 720; 74 -> 90
+on 640 x 360 Arabic). **What the body loses:** at most 6 on 1080 and 720 and 8 on 640 x 360; the KPI cards keep
+their height, the charts and the table lose 1 to 5; no measured minimum is crossed (0 size and phone problems before
+and after; the checks of `report-check.mjs`).
+**What is not known without Desktop (D15):** that the title's ink really lands in the middle at the new heights
+(the rule was measured at 20 to 47pt on a 2160 page: 8pt and 12pt are extrapolated); whether the header looks too
+tall on 640 x 360 Arabic (45 of 360); the 640 x 360 chart that loses 5 of 142.
+**Choices for the owner:** (a) the taller header as in the table, the title's size unchanged; (b) the same only for
+English (Segoe UI), where the title sits low, leaving Arabic as it is except 640 x 360 and 720; (c) leave everything.
+One header height per page size for both languages is also possible (the larger of the two: 90, 62, 62, 45), at the
+cost of the Arabic 1080 title sitting about 3 high.
+
 ## Next step: round 7, four small fixes from the night audit and the manifest text (owner's go 2026-10-04; TERMINAL ONLY; branch `fix/round-7-audit` from main `ed13112`; dataarcus-engine: the same branch name, the packaging only)
 Beta prep works in parallel on `fix/audit-site-2`: its files (among them `scripts/tests/model-health.mjs`,
 `tools.mjs`, `site.mjs`, `assets/js/model-health.js`, `model-health-worker.js`, the tool pages) are left alone. New
