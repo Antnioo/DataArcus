@@ -30,13 +30,20 @@ way to a first public release (estimate). Current work: `mcp/WORK.md`.
       its default result. It doesn't show how a careful user with a good prompt would do. The plugin changes often, so
       the test is re-run before it is quoted again.
   - **What DataArcus does, beside Microsoft's tools (not instead of them):**
-    1. **Verification.** Microsoft's validator on every report we write; text, button and card sizes measured in Power
-       BI Desktop, not estimated; the Model Health Check before AI touches a model (the Copilot-readiness check). A
-       number check that proves every visual's values before and after a change is planned, not built.
-    2. **The Gulf's business logic.** Ramadan vs last Ramadan (it moves about 11 days a year), Eid, Hijri months, the
-       weekend by Gulf country, in English or Arabic reports.
-    3. **Arabic and right to left done properly**, where it is required: mirrored layout, Arabic display names the
-       user approves, sizes measured for Arabic text.
+    1. **Verification.** Microsoft's validator runs on our report exports in every test run (the MCP's tests, on every
+       push); a report the MCP writes for a user is not validated at run time. The size rules our reports use for
+       text, buttons and cards come from measurements in Power BI Desktop, not estimates (small pages still have open
+       items). The free Model Health Check finds model problems (unused and broken fields, missing formats and sort
+       columns, risky relationships, slow DAX patterns), and the Copilot-readiness audit starts from it;
+       Copilot-specific checks in it are planned. A number check that proves every visual's values before and after a
+       change is planned, not built.
+    2. **The Gulf's business logic.** Ramadan moves about 11 days a year. The free Calendar Generator writes a DAX
+       calendar with Hijri dates, the announced Ramadan and Eid dates (each with its source) and each Gulf country's
+       weekend; the Measure Builder adds Ramadan vs last Ramadan and Eid window measures; the health check has a Gulf
+       calendar section (Hijri, Ramadan and Eid columns, the weekend by country, not part of the score).
+    3. **Arabic and right to left done properly**, where it is required: the DataArcus MCP writes mirrored Arabic
+       reports, uses Arabic display names only when the user gives or approves them, and sizes buttons with rules
+       measured on Arabic text in Desktop.
   - **The identity line stays:** "Power BI reports designed right, in minutes, and checked in Power BI, not just generated."
   - **Honesty, kept:**
     - Don't claim nobody else serves Arabic: articles and tools on it exist. The moat is all three together, in real,
