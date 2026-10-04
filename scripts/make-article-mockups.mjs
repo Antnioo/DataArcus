@@ -398,6 +398,60 @@ h2{font:700 18px Inter;line-height:22px}[dir=rtl] h2{font:700 18px 'Plex Arabic'
   return doc(css, `<div class="top"><h1>${T.title}</h1><div class="meta">${T.meta}</div></div>${sl}${age}${frt}${agents}`, dir);
 };
 
+// HR, rebuilt from the published picture (2026-10-04: its source wasn't kept): the same cards, bars, numbers and
+// colours, measured from the pixels. Joiners and leavers are drawn at their published heights (px).
+const HR = (lang) => {
+  const ar = lang === 'ar', dir = ar ? 'rtl' : 'ltr', dy = ar ? 8 : 0;
+  const T = ar ? { title: 'الموارد البشرية · نظرة على القوى العاملة', meta: 'حتى 30 سبتمبر · المجموعات الأقل من 5 أشخاص مخفية',
+    k: [['عدد الموظفين', '1,246', '+49 هذا الربع'], ['نسبة ترك العمل (12 شهرًا)', '13.2%', 'غادر 164 · متوسط القطاع 14%'], ['متوسط مدة الخدمة', '4.3 سنة', 'الوسيط 3.1'], ['وظائف شاغرة', '42', 'متوسط 34 يومًا للتعيين']],
+    flow: 'المنضمون والمغادرون شهريًا', flowS: 'الفرق بين الأعمدة هو صافي النمو', joined: '▲ انضموا', left: '▼ غادروا', months: AR_MONTHS,
+    why: '<b>لماذا يغادر الموظفون (مقابلات الخروج):</b> التطور الوظيفي 38%، الراتب 27%، المدير 19%، أخرى 16%',
+    attr: 'ترك العمل حسب القسم (12 شهرًا)', depts: ['المبيعات', 'خدمة العملاء', 'العمليات', 'المالية', 'تقنية المعلومات'], gold: 'الذهبي: أعلى من متوسط القطاع 14%', years: 'سنوات الخدمة' }
+    : { title: 'People · workforce overview', meta: 'As of 30 September · groups under 5 people are hidden',
+      k: [['Headcount', '1,246', '+49 this quarter'], ['Attrition (12 months)', '13.2%', '164 left · industry 14%'], ['Avg. tenure', '4.3 yrs', 'Median 3.1'], ['Open roles', '42', 'Avg. 34 days to fill']],
+      flow: 'People joining and leaving, by month', flowS: 'The gap between the bars is net growth', joined: '▲ Joined', left: '▼ Left', months: EN_MONTHS,
+      why: '<b>Why people leave (exit interviews):</b> career growth 38%, pay 27%, manager 19%, other 16%',
+      attr: 'Attrition by department (12 months)', depts: ['Sales', 'Customer service', 'Operations', 'Finance', 'IT'], gold: 'Gold: above the 14% industry average', years: 'Years of service' };
+  const green = '#2e855a', gold = '#d69e2f', ink = '#16211c', mute = '#5b6660';
+  const css = `body{background:#f4f6f5;color:${ink}}
+.top{position:absolute;left:26px;right:26px;top:${ar ? 22 : 21}px;display:flex;justify-content:space-between;align-items:center}
+h1{font:800 28.5px Inter;letter-spacing:-.01em}[dir=rtl] h1{font:700 28px 'Plex Arabic'}.meta{font-size:14px;color:${mute};margin-top:5px}[dir=rtl] .meta{font-size:13.8px;margin-top:3px}
+.card{position:absolute;background:#fff;border-radius:16px}
+.kpi{top:${74 + dy}px;width:375px;height:130px;padding:18px 22px}.kpi label{display:block;font-size:14.5px;font-weight:500;color:${mute}}
+.kpi b{display:block;text-align:${ar ? 'right' : 'left'};font:800 ${ar ? 35 : 36}px Inter;margin-top:${ar ? 13 : 9}px;line-height:1.1}[dir=rtl] .kpi b{font-family:Inter,'Plex Arabic'}.kpi small{display:block;margin-top:${ar ? 16 : 10}px;font-size:13px;font-weight:600;color:${mute}}
+h2{font:700 17px Inter;line-height:22px;margin-top:-3px}[dir=rtl] h2{font:700 17px 'Plex Arabic';line-height:26px}.h2s{font-size:12px;color:${mute};margin-top:5px}
+.ab{position:absolute}.lab{position:absolute;font-size:12.5px;color:${mute};text-align:center;width:60px}
+.tag{position:absolute;font-size:12px;font-weight:700;direction:ltr}`;
+  const side = ar ? 'right' : 'left';
+  const kpis = T.k.map(([l, v, s], i) => `<div class="card kpi" style="${side}:${26 + i * 391}px"><label>${l}</label><b class="${v.includes('سنة') ? '' : 'num'}">${v}</b><small>${s}</small></div>`).join('');
+  // joiners (up) and leavers (down) from the axis; time runs left to right in both languages
+  const J = [99, 81, 113, 135, 85, 76, 126, 154, 117, 94, 108, 131], Lv = [67, 53, 62, 49, 72, 90, 58, 53, 62, 44, 53, 67];
+  const fx = ar ? 844 - 718 : 80 - 26, axis = ar ? 498 - 228 : 482 - 220;   // first bar's x and the axis' y inside the card
+  const bars = J.map((h, i) => { const x = fx + Math.round(i * 59.82);
+    return `<div class="ab" style="left:${x}px;top:${axis - h}px;width:26px;height:${h}px;background:${green}"></div><div class="ab" style="left:${x}px;top:${axis + 2}px;width:26px;height:${Lv[i]}px;background:${gold}"></div><div class="lab" style="left:${x - 17}px;top:${ar ? 442 : 436}px">${T.months[i]}</div>`; }).join('');
+  const ax0 = ar ? 812 - 718 : 48 - 26;
+  const flow = `<h2>${T.flow}</h2><div class="h2s">${T.flowS}</div><div class="tag" style="left:${ar ? 96 : 24}px;top:${ar ? 84 : 77}px;color:${green}">${T.joined}</div>
+    <div class="ab" style="left:${ax0}px;top:${axis}px;width:740px;height:2px;background:#929493"></div>${bars}
+    <div class="tag" style="left:${ar ? 96 : 24}px;top:${ar ? 424 : 417}px;color:${gold}">${T.left}</div>
+    <div class="ab" style="left:22px;right:22px;top:${ar ? 490 : 480}px;height:${ar ? 49 : 47}px;border-radius:10px;background:#f0f6f2;padding:15px 16px;font-size:${ar ? 13.65 : 13.8}px">${T.why}</div>`;
+  const attrV = [18.4, 16.1, 10.2, 6.3, 5.1], attrW = [340, 297, 188, 116, 94];   // bar widths as published (18.48 px per %)
+  const attr = `<h2>${T.attr}</h2>${attrV.map((v, i) => { const y = (ar ? 287 - 228 : 274 - 220) + i * 38, bx = ar ? 270 - 26 : 1070 - 898, w = attrW[i];
+    return `<div class="ab" style="left:0;width:${bx}px;top:${y}px;height:26px;display:flex;align-items:center;justify-content:flex-end;padding-right:10px;font-size:14.5px;box-sizing:border-box;direction:ltr"><span dir="${dir}">${T.depts[i]}</span></div>
+      <div class="ab" style="left:${bx}px;top:${y}px;width:${w}px;height:26px;background:${v > 14 ? gold : green}"></div>
+      <div class="ab num" style="left:${bx + w + 8}px;top:${y + 5}px;font-size:12.5px;font-weight:700">${v}%</div>`; }).join('')}
+    <div class="ab" style="${side}:22px;top:${ar ? 258 : 251}px;font-size:${ar ? 11.8 : 12}px;color:${mute}">${T.gold}</div>`;
+  const Y = [190, 260, 310, 280, 130, 76], cats = ['<1', '1-2', '2-4', '4-7', '7-10', '10+'];
+  const yx = ar ? 134 - 26 : 934 - 898, base = ar ? 825 - 556 : 812 - 548;
+  const years = `<h2>${T.years}</h2>${[0, 1, 2, 3].map((g) => `<div class="ab" style="left:${yx - 14}px;width:560px;top:${base - 215 + g * 71.7}px;height:1px;background:#eceeed"></div>`).join('')}
+    ${Y.map((v, i) => { const h = Math.round(v * 0.6226), x = yx + i * 91;
+      return `<div class="ab" style="left:${x}px;top:${base - h}px;width:77px;height:${h}px;background:${green}"></div><div class="ab num" style="left:${x}px;width:77px;text-align:center;top:${base - h - 18}px;font-size:11px;font-weight:700;color:#555f5a">${v}</div><div class="ab num" style="left:${x}px;width:77px;text-align:center;top:${base + 6}px;font-size:11.5px;color:${mute}">${cats[i].replace('<', '&lt;')}</div>`; }).join('')}`;
+  const body = `<div class="top"><h1>${T.title}</h1><div class="meta">${T.meta}</div></div>${kpis}
+  <div class="card" style="left:${ar ? 718 : 26}px;top:${220 + dy}px;width:856px;height:640px;padding:20px 22px">${flow}</div>
+  <div class="card" style="left:${ar ? 26 : 898}px;top:${220 + dy}px;width:676px;height:312px;padding:20px 22px">${attr}</div>
+  <div class="card" style="left:${ar ? 26 : 898}px;top:${548 + dy}px;width:676px;height:312px;padding:20px 22px">${years}</div>`;
+  return doc(css, body, dir);
+};
+
 // ---------------------------------------------------------------------------------------------------------------
 const JOBS = [
   { id: 'redesign', out: 'assets/img/articles/power-bi-redesign-before', html: BEFORE },
@@ -406,7 +460,8 @@ const JOBS = [
     { id: 'executive', out: `assets/img/articles/styles/executive-${l}`, html: EXECUTIVE(l) },
     { id: 'sales', out: `assets/img/articles/styles/sales-${l}`, ...SALES(l) },
     { id: 'marketing', out: `assets/img/articles/styles/marketing-${l}`, ...MARKETING(l) },
-    { id: 'service', out: `assets/img/articles/styles/service-${l}`, html: SERVICE(l) }])];
+    { id: 'service', out: `assets/img/articles/styles/service-${l}`, html: SERVICE(l) },
+    { id: 'hr', out: `assets/img/articles/styles/hr-${l}`, html: HR(l) }])];
 
 const only = process.argv.slice(2);
 const exe = process.env.CHROME_PATH || ['/opt/pw-browsers/chromium', 'C:/Program Files/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome'].find((p) => fs.existsSync(p));
