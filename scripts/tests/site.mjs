@@ -220,17 +220,26 @@ export default async function ({ browser, url }) {
     await v.ctx.close();
   }
 
-  // The SVG KPI Designer's title and description fit what search results show (audit AUD-019, 2026-10-04): at most
-  // 60 and 155 characters, in English and in Arabic, as the page sets them after loading its language.
+  // Every page in the sitemap has a title and a description that fit what search results show (audit AUD-019 and the
+  // leftovers of 2026-10-04): at most 60 and 155 characters, in English and in Arabic, as the page sets them after
+  // loading its language. (The go/ short links are redirects, not in the sitemap.)
   {
     const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+    const inMap = [...fs.readFileSync(path.join(ROOT, 'sitemap.xml'), 'utf8').matchAll(/<loc>https:\/\/dataarcus\.com\/([^<]*)<\/loc>/g)]
+      .map((m) => (!m[1] ? 'index.html' : m[1].endsWith('/') ? m[1] + 'index.html' : m[1]));
     for (const lang of ['en', 'ar']) {
       const v = await visitor(browser);
-      await v.pg.goto(`${url}/tools/svg-kpi-designer.html?lang=${lang}`, { waitUntil: 'networkidle' });
-      const m = await v.pg.evaluate(() => ({ title: document.title, description: document.querySelector('meta[name="description"]').content, lang: document.documentElement.lang }));
-      check(m.lang === lang, `svg-kpi-designer ${lang}: the page is in ${m.lang}`);
-      check([...m.title].length <= 60, `svg-kpi-designer ${lang}: the title has ${[...m.title].length} characters (at most 60): ${m.title}`);
-      check([...m.description].length <= 155, `svg-kpi-designer ${lang}: the description has ${[...m.description].length} characters (at most 155): ${m.description}`);
+      const wrongLang = [], longTitle = [], longDesc = [];
+      for (const p of inMap) {
+        await v.pg.goto(`${url}/${p}?lang=${lang}`, { waitUntil: 'networkidle' });
+        const m = await v.pg.evaluate(() => ({ title: document.title, description: (document.querySelector('meta[name="description"]') || {}).content || '', lang: document.documentElement.lang }));
+        if (m.lang !== lang) wrongLang.push(`${p} (${m.lang})`);
+        if ([...m.title].length > 60) longTitle.push(`${p}: ${[...m.title].length} "${m.title}"`);
+        if (![...m.description].length || [...m.description].length > 155) longDesc.push(`${p}: ${[...m.description].length}`);
+      }
+      check(!wrongLang.length, `titles ${lang}: pages not in ${lang}: ${wrongLang.join(', ')}`);
+      check(!longTitle.length, `titles ${lang}: over 60 characters: ${longTitle.join('; ')}`);
+      check(!longDesc.length, `descriptions ${lang}: empty or over 155 characters: ${longDesc.join('; ')}`);
       await v.ctx.close();
     }
   }

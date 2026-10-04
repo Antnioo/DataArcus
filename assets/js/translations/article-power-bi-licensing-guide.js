@@ -3,19 +3,19 @@ window.licensingGuideTranslations = {
   "en": {
     "meta": {
       "title": "Power BI Pro vs PPU vs Fabric F64: 2026 Cost Guide",
-      "description": "Pro, Premium Per User or a Fabric capacity? One number decides it: how many people only view reports. Prices, the F64 break-even point and a worked example.",
+      "description": "Pro, Premium Per User or a Fabric capacity? One number decides it: how many people only view reports. Prices, the F64 break-even and a worked example.",
       "keywords": "Power BI licensing, Power BI Pro vs Premium Per User, Fabric F64 cost, Power BI pricing 2026, Fabric capacity pricing, Power BI free viewers, DataArcus",
       "author": "DataArcus",
       "og:type": "article",
       "og:title": "Power BI Pro vs PPU vs Fabric F64: 2026 Cost Guide",
-      "og:description": "Pro, Premium Per User or a Fabric capacity? One number decides it: how many people only view reports. Prices, the F64 break-even point and a worked example.",
+      "og:description": "Pro, Premium Per User or a Fabric capacity? One number decides it: how many people only view reports. Prices, the F64 break-even and a worked example.",
       "og:url": "https://dataarcus.com/articles/article-power-bi-licensing-guide.html",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/licensing-guide.jpg",
       "og:locale": "en_US",
       "twitter:card": "summary_large_image",
       "twitter:title": "Power BI Pro vs PPU vs Fabric F64: 2026 Cost Guide",
-      "twitter:description": "Pro, Premium Per User or a Fabric capacity? One number decides it: how many people only view reports. Prices, the F64 break-even point and a worked example.",
+      "twitter:description": "Pro, Premium Per User or a Fabric capacity? One number decides it: how many people only view reports. Prices, the F64 break-even and a worked example.",
       "twitter:image": "https://dataarcus.com/assets/img/og/licensing-guide.jpg",
       "canonical": "https://dataarcus.com/articles/article-power-bi-licensing-guide.html"
     },

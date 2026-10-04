@@ -8,7 +8,7 @@ window.cfpbComplaintsTranslations = {
     meta: {
       title: "Consumer Financial Complaints Power BI Dashboard - DataArcus",
       description:
-        "Explore our 4-page Power BI dashboard analyzing U.S. consumer financial complaints (2017–2023): trends, issues, company accountability, and regional fairness.",
+        "Explore our 4-page Power BI dashboard on U.S. consumer financial complaints (2017–2023): trends, issues, company accountability and regional fairness.",
       keywords:
         "consumer financial complaints dashboard, Power BI, CFPB dataset, customer experience analytics, response time, reputation, enforcement history, DataArcus",
       author: "DataArcus",
