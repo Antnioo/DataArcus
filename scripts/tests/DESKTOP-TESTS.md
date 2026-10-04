@@ -1054,6 +1054,91 @@ icon (as measured on 2026-10-01); `plan_layout` takes 640 x 360 only as `{ w, h 
 three named sizes are text), and the website's engine only as `page: 'custom'`: the first build of this sweep made
 1920 x 1080 pages for the two website "360" reports and was rebuilt.
 
+## 2026-10-04: a 30-minute sitting on main (`38f9230`), Power BI Desktop 2.158.1177: D14, D8 (the card half), D-P1 (the table half)
+
+The made-up Ramadan sample with data (`<tests folder>\5-tmdl-sample`); the reports written by the MCP server of main
+(`builder-scripts\d14-build.mjs`); pages captured through the Desktop bridge at scale 1 (the canvas and its Filters
+pane, nothing else), in `<tests folder>\desk-1004`. The laptop was free (the owner's word; `idle.ps1` run first). 19
+minutes of the 30 were used on Desktop; Desktop was closed at the end.
+
+### D14, the page filter: PASS on what was run; two parts not run
+| Step | Expected | Seen |
+|---|---|---|
+| Golden task 3's report with `pageFilters: [{ field: "Calendar[Is Ramadan]", values: [true] }]`, opened | the Filters pane shows the page filter, no error mark | **"Filters on this page": Is Ramadan, "is True"**, no error mark; "Filters on all pages" empty (`d14-filter-p1.png`) |
+| The three cards with the filter | Ramadan only | **Total Sales 99.9K**, Total Sales Last Ramadan 74.675K, Total Sales vs Last Ramadan % 0.34. The line chart shows February, March, April, May only |
+| Without the filter | the cards change | the same report built without `pageFilters` (`d14-none-p1.png`): **Total Sales 101.914K**, 74.675K, 0.34; the chart shows all twelve months; "Filters on this page" empty |
+| The tooltip pages | no filter | their captures are the same bytes in both reports (35,688 and 43,094) |
+
+- **Not run: clearing the filter with the mouse in the Filters pane.** "Cleared" above is the same report written
+  without the filter, not a click on the eraser. Still open in D14.
+- **Not run: the text filter with an apostrophe and the decimal filter.** Still open in D14.
+- **As told in round 8:** the filter keeps every Ramadan of the calendar (99.9K over February to May), not one. "This
+  Ramadan only" needs a Hijri year as well; the two Ramadan measures do not change with the filter.
+
+### D8, a report-side number format: the card done, the table column not run
+On "D14 no filter" (its model has no format on Total Sales): the Total Sales card selected inside its group, Format >
+Visual > Callout > "Apply settings to" Total Sales > Value > **Display units: Custom**, **Format code: `#,0`**, Ctrl+S.
+- Display units offers: Auto, None, Thousands, Millions, Billions, Trillions, Custom. The format code field appears
+  only with **Custom**, and only when one card is chosen in "Apply settings to" (with "All" the Value section has no
+  Display units at all).
+- **The card: 101.914K (Auto) -> 101914 (Custom, code "Auto") -> 101,914 (code `#,0`)** (`d8-card.png`). So a model with
+  no format does show the separator when the report gives the code.
+- **The exact JSON Desktop wrote** into the card's `visual.json`, a second entry in `visual.objects.value` after ours:
+```json
+{
+  "properties": {
+    "labelDisplayUnits": { "expr": { "Literal": { "Value": "-1D" } } },
+    "customFormatString": { "expr": { "Literal": { "Value": "'#,0'" } } }
+  },
+  "selector": { "metadata": "Sales.Total Sales" }
+}
+```
+  The selector is the field's query reference (`metadata`), not `id: default`; Custom is written as `-1D`.
+- **Not run: Format > General > Data format on a table column** (this report has no table, and the time went to
+  the card). Whether a table cell and a tooltip can take a report-side format is still unknown. Still open in D8.
+- Not tried: writing this entry by hand and opening it (only Desktop's own write was read).
+
+### D-P1, an SVG measure that lives in the report: the table shows the picture; the card image not run
+"DP1 SVG": a copy of "D14 Ramadan filter" (`builder-scripts\dp1-build.mjs`), its "What it means" text box replaced by
+a table. Microsoft's validator: 0 errors, 0 warnings. **The exact JSON used:**
+
+`definition/reportExtensions.json`:
+```json
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json",
+  "name": "extension",
+  "entities": [
+    { "name": "Sales", "measures": [
+      { "name": "Dot SVG", "dataType": "Text", "dataCategory": "ImageUrl",
+        "expression": "\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 20'><rect width='40' height='20' fill='%230f4c5c'/><circle cx='10' cy='10' r='6' fill='%23e9c46a'/></svg>\"" }
+    ] }
+  ]
+}
+```
+The table's `visual` (position unchanged):
+```json
+{ "visualType": "tableEx",
+  "query": { "queryState": { "Values": { "projections": [
+    { "field": { "Column": { "Expression": { "SourceRef": { "Entity": "Calendar" } }, "Property": "Month Name" } }, "queryRef": "Calendar.Month Name", "nativeQueryRef": "Month Name" },
+    { "field": { "Measure": { "Expression": { "SourceRef": { "Schema": "extension", "Entity": "Sales" } }, "Property": "Dot SVG" } }, "queryRef": "Sales.Dot SVG", "nativeQueryRef": "Dot SVG" }
+  ] } } },
+  "drillFilterOtherVisuals": true }
+```
+- **Result: the picture shows.** Desktop opened the report with no error; the table has the columns Month Name and
+  Dot SVG, and every row (April, February, March, May) and the Total row draw the dark rectangle with the yellow
+  circle (`dp1-p1.png`). The model was not touched: the measure exists only in the report's files.
+- The colours are written `%23...` (a `#` inside a data URL); a plain `#` was not tried. The only address in the SVG is
+  the XML namespace, which is a name and is not fetched.
+- **Not run: the new card's image** ("Select from data"), a matrix and an image visual. Still open in D-P1.
+
+### Seen, not in scope
+- The months in the SVG table are in alphabetical order (April, February, March, May): the sample's Month Name has no
+  sort-by column, as `modelNotes` already tells.
+- Selecting a KPI card takes two clicks (the first selects the KPI group); with the Format pane open the canvas zooms
+  from 47% to 37%.
+- The bridge's page capture includes the Filters pane, which is what made D14 readable without a window capture.
+- The scripts that open a report return late (minutes after the captures are written); the cause was not looked for.
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
