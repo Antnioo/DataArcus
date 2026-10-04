@@ -707,3 +707,27 @@ the two tooltip pages; today 16 and 4).
 
 **Not explained by a count here, and so not claimed:** nothing. Every number that differs from the first baseline is
 in the table with its cause.
+
+## Task 3 with a page filter (round 8, 2026-10-04; tool level)
+
+The owner's decision: the page of task 3 gets a page filter. The runner now passes
+`pageFilters: [{ field: "Calendar[Is Ramadan]", values: [true] }]` next to the plan's fields; nothing else in the
+task, the model or the checks changed.
+
+**Expected (written before the run):** the check "the page is limited to Ramadan (a filter or a slicer on Is
+Ramadan)" is met by the filter: the one report page's `page.json` holds one filter, Calendar[Is Ramadan] is true,
+and the two tooltip pages hold none; the answer lists it in `pageFilters` and says so in `reportNotes`. The rest as
+before: the three planned cards, slicers Hijri Year, Is Ramadan, Year, **20 visuals** (a filter is not a visual),
+validator 0, 0 overwritten, the % told in `modelNotes`.
+
+**Actual (the runner, `node test-models/golden-baseline.mjs`, task 3):** as expected. `filtersOnPages`: "page
+Calendar[Is Ramadan] In true | tooltip none | tooltip none"; `pageFilters` in the answer: Calendar[Is Ramadan],
+values [true], with `typedBy` (the Ramadan model's Calendar is a DAX table, so its files give the column no type and
+the value's own type is used); one note about the filter in `reportNotes`; cards Total Sales, Total Sales Last
+Ramadan, Total Sales vs Last Ramadan %; slicers Hijri Year, Is Ramadan, Year; **20 visuals**; validator 0; 0 size
+and 0 phone problems; 0 overwritten; `modelNotes` Month Name, the % measure, Day Name.
+
+**Tool level: PASS.** What stays true and is told, not hidden: the filter keeps every Ramadan of the calendar, so the
+"Total Sales" card is one Ramadan only once a Hijri year is picked in the slicer (or given as a second page filter);
+the model still has no "this Ramadan" measure. Whether Desktop shows the filter in the Filters pane, filters the
+cards and lets the user clear it is Desktop check D14: not run.

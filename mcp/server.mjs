@@ -122,6 +122,53 @@ function resolveFields(tables, fields) {
   if (problems.length) throw new Error(`Nothing was written. ${problems.length} of the fields can't be used: ${problems.join('; ')}. Use the names exactly as read_model lists them (Table[Field]).`);
   return out;
 }
+// ---------- page filters (create_report's pageFilters) ----------
+// [{ field: "Table[Column]", values: [...] }]: a column of the model (never a measure), looked up as the plan's fields
+// are; each value written as a literal of the column's type. Where the files give the column no type (a DAX table's
+// column), the value's own type is used and the answer says so. No dates and no DAX. Every problem is told at once.
+function resolvePageFilters(tables, list) {
+  if (!list || !list.length) return null;
+  const problems = [], seen = new Set();
+  const KINDS = { boolean: 'boolean', string: 'text', int64: 'whole', double: 'decimal' };
+  const out = list.map((f, i) => {
+    const where = `pageFilters[${i}]`, ref = String(f.field).trim(), mk = ref.match(/^'?(.+?)'?\[(.+)\]$/);
+    if (!mk) { problems.push(`${where}: "${f.field}" is not written as Table[Column]`); return null; }
+    const t = tables.find((x) => x.name === mk[1]) || tables.find((x) => x.name.toLowerCase() === mk[1].toLowerCase());
+    if (!t) { problems.push(`${where}: no table "${mk[1]}" in the model (${ref})`); return null; }
+    const col = t.columns.find((x) => x.name === mk[2]) || t.columns.find((x) => x.name.toLowerCase() === mk[2].toLowerCase());
+    const meas = t.measures.find((x) => x.name === mk[2]) || t.measures.find((x) => x.name.toLowerCase() === mk[2].toLowerCase());
+    if (!col && meas) { problems.push(`${where}: ${ref} is a measure, and a page filter takes a column`); return null; }
+    if (!col) { problems.push(`${where}: ${ref} is not in the model`); return null; }
+    const key = `${t.name}[${col.name}]`;
+    if (seen.has(key)) { problems.push(`${where}: ${key} is given twice: give one filter with all its values`); return null; }
+    seen.add(key);
+    const type = String(col.dataType || 'unknown').toLowerCase(), known = KINDS[type];
+    if (/^date/.test(type)) { problems.push(`${where}: ${key} is a date column, and a page filter on a date is not supported yet (filter a year, month or flag column instead)`); return null; }
+    if (!known && type !== 'unknown') { problems.push(`${where}: ${key} has the type ${type}, and a page filter takes a true/false, text, whole number or decimal number column`); return null; }
+    const values = [], literals = [];
+    for (const v of f.values) {
+      // the kind of this value: the column's, or (no type in the files) the value's own
+      const kind = known || (typeof v === 'boolean' ? 'boolean' : typeof v === 'number' ? (Number.isInteger(v) ? 'whole' : 'decimal') : 'text');
+      if (kind === 'boolean') {
+        const b = typeof v === 'boolean' ? v : /^true$/i.test(String(v).trim()) ? true : /^false$/i.test(String(v).trim()) ? false : null;
+        if (b == null) { problems.push(`${where}: ${key} is a true/false column: the value ${JSON.stringify(v)} must be true or false`); return null; }
+        values.push(b); literals.push(String(b));
+      } else if (kind === 'text') {
+        if (typeof v !== 'string') { problems.push(`${where}: ${key} is a text column: the value ${JSON.stringify(v)} must be a text`); return null; }
+        values.push(v); literals.push("'" + v.replace(/'/g, "''") + "'");
+      } else {
+        const n = typeof v === 'number' ? v : typeof v === 'string' && /^-?\d+(\.\d+)?$/.test(v.trim()) ? Number(v) : NaN;
+        if (!Number.isFinite(n) || /e/i.test(String(n))) { problems.push(`${where}: ${key} is a number column: the value ${JSON.stringify(v)} must be a plain number`); return null; }
+        if (kind === 'whole' && !Number.isSafeInteger(n)) { problems.push(`${where}: ${key} is a whole number column: the value ${JSON.stringify(v)} must be a whole number`); return null; }
+        values.push(n); literals.push(String(n) + (kind === 'whole' ? 'L' : 'D'));
+      }
+    }
+    return Object.assign({ t: t.name, c: col.name, key, type, values, literals }, known ? {} : { typedBy: 'the values given: the model\'s files give this column no type' });
+  });
+  if (problems.length) throw new Error(`Nothing was written. ${problems.length} of the page filters can't be used: ${problems.join('; ')}. A page filter takes a column of the model, written exactly as read_model lists it (Table[Column]), and values of the column's type.`);
+  return out;
+}
+
 // What each visual of the written pages shows, by name: the answer's boundFields
 const VISUAL_NAMES = { kpi: 'KPI card', card: 'Card', line: 'Line chart', bar: 'Bar chart', column: 'Column chart', donut: 'Donut chart', table: 'Table', gauge: 'Gauge', funnel: 'Funnel', treemap: 'Treemap', map: 'Map', slicer: 'Slicer' };
 function boundOf(pages, B) {
@@ -266,7 +313,7 @@ const slot = z.object({
 });
 server.registerTool('create_report', {
   title: 'Create a report project for an existing model',
-  description: 'Before calling this, show the user the plan (pages, visuals, the fields on each, sizes, theme) and wait for their "go"; then pass the approved plan\'s fields in fields, so the report shows exactly what the user approved. Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme applied; each KPI card, chart and table on its own panel (drawn by the theme\'s solid visuals, or by a page\'s background image when one is given). The model and any existing report are never touched; the new report gets a free name. Every report also gets a hidden tooltip page, shown when a chart is hovered. An optional logo (a PNG or JPG in the DataArcus folder) goes in the header at its own shape. Give either pages (hand-placed slots) or a design (from generate_theme or plan_layout): with a design the pages, positions, second page, slide-in filter panel, labels and theme are exactly the DataArcus Theme Generator\'s project download. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge). A KPI card shows a measure as the model defines it (no filter is added): its label must say what the value really is. A visual outside the list of kinds is not supported: write nothing and offer the closest supported ones.' + UNTRUSTED,
+  description: 'Before calling this, show the user the plan (pages, visuals, the fields on each, sizes, theme) and wait for their "go"; then pass the approved plan\'s fields in fields, so the report shows exactly what the user approved. Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme applied; each KPI card, chart and table on its own panel (drawn by the theme\'s solid visuals, or by a page\'s background image when one is given). The model and any existing report are never touched; the new report gets a free name. Every report also gets a hidden tooltip page, shown when a chart is hovered. An optional logo (a PNG or JPG in the DataArcus folder) goes in the header at its own shape. Give either pages (hand-placed slots) or a design (from generate_theme or plan_layout): with a design the pages, positions, second page, slide-in filter panel, labels and theme are exactly the DataArcus Theme Generator\'s project download. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge). A KPI card shows a measure as the model defines it (no filter is added): its label must say what the value really is. When the request limits the report to part of the data (for example "Ramadan only"), pass a page filter in pageFilters and show it in the plan: it filters every visual on the pages, the cards included. A visual outside the list of kinds is not supported: write nothing and offer the closest supported ones.' + UNTRUSTED,
   inputSchema: {
     path: modelPath.describe('The project folder or .SemanticModel folder the report will use'),
     name: z.string().min(1).max(60).describe('Report name'),
@@ -289,6 +336,10 @@ server.registerTool('create_report', {
       table: z.array(z.string()).min(1).max(8).describe('The table\'s columns and measures, in order'),
       slicers: z.array(z.string()).max(3).describe('The slicers\' columns; a slot left over is picked automatically')
     }).partial().strict().optional().describe('The fields of the approved plan, each written as Table[Field] exactly as read_model lists it. What is given is bound as given and nothing is re-picked for it; what is left out is picked as suggest_fields does. A name that is not in the model, or a column where a measure is needed, refuses the call and nothing is written. The answer\'s boundFields lists the fields of every visual'),
+    pageFilters: z.array(z.object({
+      field: z.string().describe('The column to filter, written as Table[Column] exactly as read_model lists it (a column, never a measure)'),
+      values: z.array(z.union([z.string(), z.number(), z.boolean()])).min(1).max(50).describe('The values the pages keep, in the column\'s type: true or false, texts, or numbers')
+    }).strict()).max(8).optional().describe('Page filters, for a request that limits the report to part of the data (for example "Ramadan only": [{ "field": "Calendar[Is Ramadan]", "values": [true] }]; one Ramadan needs the year as a second filter). Each keeps only the rows where the column is one of the values, on every page of the report, and shows in Power BI\'s Filters pane, where the user can change or clear it. Only columns of the model and plain values: no measures, no dates, no DAX. A column that is not in the model, or a value of the wrong type, refuses the call and nothing is written. Show the filters in the plan the user approves; the answer\'s pageFilters lists what was written'),
     displayNames: z.record(z.string(), z.string()).optional().describe('Names to show instead of the model\'s field names, as { "Table[Field]": "name" } (for example Arabic names for an Arabic report). Only names the user gave or approved: never translate, shorten or relabel a field yourself; when names are missing, list the fields and ask the user. The report shows the name wherever it shows the field: KPI titles, chart titles, axis and legend, table headers, slicer headers, the tooltip pages. The model is never renamed. Give names only for fields you know the right name of: nothing is translated automatically'),
     logo: z.string().optional().describe('Logo image for the header: a PNG or JPG file inside the DataArcus folder, 2 MB at most. It is copied into the new report (the file itself is not changed) and shown at its own shape, never stretched; a horizontal logo reads best'),
     lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().default(false), font: z.string().default('Segoe UI'),
@@ -305,6 +356,8 @@ server.registerTool('create_report', {
   // KPI cards: never more than the measures a card can show (no card is ever written without a field)
   // the approved plan's fields (a.fields): each name checked against the model, then bound as given
   const F = resolveFields(m.tables, a.fields);
+  // the page filters: each column checked against the model, each value typed by its column
+  const PF = resolvePageFilters(m.tables, a.pageFilters);
   const usable = F && F.kpis ? F.kpis.map((k) => k.m) : Bind.suggest(pickFrom, 8).kpis.filter(Boolean).map((k) => k.m);
   // the binding for n KPI cards: the picker's, with every given field in its place
   const bindFor = (n) => {
@@ -380,7 +433,7 @@ server.registerTool('create_report', {
     const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel, logoRatio }).map((p) => Object.assign({}, p, { slots: withValues(p.slots) }));
     r = Pbip.build({
       name: a.name, title: E.themeName(design.name), pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = named(bindFor(kpisOf(pages)))),
+      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = named(bindFor(kpisOf(pages)))), pageFilters: PF,
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel }))
     });
     boundPages = pages;
@@ -397,7 +450,7 @@ server.registerTool('create_report', {
     r = Pbip.build({
       name: a.name, title: a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = named(bindFor(kpisOf(a.pages)))),
+      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = named(bindFor(kpisOf(a.pages)))), pageFilters: PF,
       texts: { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' },
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
     });
@@ -417,6 +470,9 @@ server.registerTool('create_report', {
     : 'The visuals have no panels of their own (the theme\'s visuals are transparent): they show on the page\'s background image where one is given, otherwise straight on the page. For panels, use a design or a theme with solid visuals.';
   if (kpiCards && leftOutVisuals.length) kpiCards.leftOutVisuals = leftOutVisuals;
   if (kpiCards) reportNotes.push(`KPI cards: ${kpiCards.built} of ${kpiCards.asked} built. ${kpiCards.why}`);
+  // the page filters, in words: the user must see that the pages show part of the data
+  const shownValue = (v) => (typeof v === 'string' ? `"${v}"` : String(v));
+  if (PF) reportNotes.push(`${PF.length === 1 ? 'A page filter is' : PF.length + ' page filters are'} set on every page of the report: ${PF.map((f) => `${f.key} is ${f.values.map(shownValue).join(' or ')}`).join('; ')}. Every visual shows only that part of the data. The user sees, changes or clears ${PF.length === 1 ? 'it' : 'them'} in the Filters pane of Power BI.`);
   const notes = modelNotes(m.tmsl, bind);
   // numbers the report shows whose format in the model has no thousand separator (or that have no format): Power BI
   // takes the format of a table cell, a tooltip and an unscaled card from the model, so the report can't add it
@@ -443,7 +499,7 @@ server.registerTool('create_report', {
   const arabic = a.lang === 'ar' ? { arabicNames: { shownFields: shown.length, missing,
     how: missing.length ? 'These fields show under their model names. To show Arabic names, call create_report again with displayNames: { "Table[Field]": "الاسم" } for each (ask the user for the names: nothing is translated automatically). The model is not renamed.' : 'Every field the report shows has an Arabic name.' } } : {};
   return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
-    { boundFields: boundOf(boundPages, bind) }, unknown ? { ignored: unknown } : {}, hiddenOf(m),
+    { boundFields: boundOf(boundPages, bind) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {})) } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
     sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {}));
 }));
 

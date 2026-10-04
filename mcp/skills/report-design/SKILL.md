@@ -30,7 +30,9 @@ report files are written by `create_report` for a new report, or by Microsoft's 
 6. **Build.** `create_report` with the design (and the same layout choices) and the approved plan's fields in
    `fields` (`kpis`, `measure`, `timeAxis`, `category`, `category2`, `table`, `slicers`, each as `Table[Field]`): what
    is given is bound as given, what is left out is picked automatically. Read `boundFields` in the answer and tell
-   the user anything that differs from the plan. It writes a new report next to their
+   the user anything that differs from the plan. When the request limits the report to part of the data ("Ramadan
+   only", "the UAE only"), pass a page filter in `pageFilters` (`[{ field: "Calendar[Is Ramadan]", values: [true] }]`: a
+   column and its values, never a measure), show it in the plan, and tell the user it is in the Filters pane. It writes a new report next to their
    model, never changing the model or an existing report: the pages (by default a second page in a complementary
    layout; `slidePanel: true` for filters as a slide-in panel), the labels in the report's language, and the theme.
    If the result has `themeChanged`, tell the user what changed and why.
