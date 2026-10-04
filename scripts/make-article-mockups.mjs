@@ -527,6 +527,69 @@ h1{font:800 26.25px Inter;letter-spacing:-.01em}[dir=rtl] h1{font:700 25.7px 'Pl
   return doc(css, body, dir);
 };
 
+// Operations, rebuilt from the published picture (2026-10-04: its source wasn't kept): the KPI tiles with their limit
+// colours, the queue line (y at each hour as published), the 48 heatmap cells (colours sampled from the picture) and
+// the action list, measured from the pixels.
+// the Arabic operations picture was drawn with IBM Plex Sans Arabic's own Latin digits and letters
+const PLEX_LATIN = [400, 700].map((w) => `@font-face{font-family:'Plex Latin';font-weight:${w};src:url(${font('ibm-plex-sans-arabic', `ibm-plex-sans-arabic-latin-${w}-normal.woff2`)})}`).join('');
+const OPERATIONS = (lang) => {
+  const ar = lang === 'ar', dir = ar ? 'rtl' : 'ltr', dy = ar ? 7 : 0;
+  const T = ar ? { title: 'المستودع والتوصيل · مباشر', live: 'مباشر · تحديث 08:42:10',
+    k: [['طلبات في الانتظار', '312', 'الحد 400'], ['شحنات متأخرة', '27', 'الحد 15'], ['الإرسال في الوقت', '93.8%', 'الهدف 95%'], ['معدل التجهيز/ساعة', '1,140', 'الهدف 1,000'], ['شاحنات على الطريق', '46', 'من 52'], ['حوادث مفتوحة', '3', '1 حرجة']],
+    queue: 'الطلبات في الانتظار اليوم · الحد 400', heat: 'نشاط التحميل حسب الرصيف والساعة', dock: (n) => `رصيف ${n}`, act: 'يحتاج إجراء الآن', foot: 'مرتبة حسب التأخير · فقط ما تجاوز حدّه',
+    items: ['عطل شاحنة، القوز', 'فات الموعد، العميل مغلق', 'بانتظار المخزون', 'العنوان غير موجود', 'تأخير تحميل، رصيف 3', 'العميل طلب تغيير الموعد', 'السائق تجاوز ساعات الوردية', 'فاتورة ناقصة'], min: (m) => `${m} د` }
+    : { title: 'Warehouse & delivery · live', live: 'Live · refreshed 08:42:10',
+      k: [['Orders in queue', '312', 'limit 400'], ['Late shipments', '27', 'limit 15'], ['On-time dispatch', '93.8%', 'target 95%'], ['Pick rate / hour', '1,140', 'target 1,000'], ['Trucks on road', '46', 'of 52'], ['Open incidents', '3', '1 critical']],
+      queue: 'Orders in queue today · limit 400', heat: 'Loading activity by dock and hour', dock: (n) => `Dock ${n}`, act: 'Needs action now', foot: 'Sorted by delay · only items over their limit',
+      items: ['Truck breakdown, Al Quoz', 'Missed slot, customer closed', 'Waiting for stock', 'Address not found', 'Loading delay, dock 3', 'Customer asked to reschedule', 'Driver over shift hours', 'Missing invoice'], min: (m) => `${m} min` };
+  const G = '#2ebe67', Rd = '#e5484d', A = '#f59e0b', bg = '#0a111b', card = '#141c27', line = '#38bdf8', mute = '#9ca6b5';
+  const css = `${ar ? PLEX_LATIN : ''}body{background:${bg};color:#f3f6f9}
+.top{position:absolute;left:26px;right:26px;top:22px;display:flex;justify-content:space-between;align-items:center}
+h1{font:700 24px Inter}[dir=rtl] h1{font:700 24px 'Plex Arabic',Inter}.live{font-size:14px;font-weight:700;color:#22c55e;display:flex;align-items:center;gap:7px}.live i{width:8px;height:8px;border-radius:50%;background:#22c55e}
+.card{position:absolute;background:${card};border:1px solid #232c39;border-radius:8px}
+.kpi{top:${64 + dy}px;width:248px;height:118px;padding:16px 14px;overflow:hidden}.kpi::before{content:'';position:absolute;left:0;right:0;top:0;height:4px;background:var(--c)}
+.kpi label{display:block;font-size:13px;font-weight:600;color:#9aa8bd;font-variant-numeric:normal}.kpi b{display:block;font:800 34px Inter;color:#eff7fd;margin-top:6px;line-height:1.1}.kpi small{display:block;margin-top:10px;font-size:11.5px;color:${mute}}
+[dir=rtl] .kpi b{text-align:right;font:700 34px/1.1 'Plex Latin';margin-top:12px}[dir=rtl] .kpi small{margin-top:15px}
+.hh{position:absolute;font:700 12.6px Inter;letter-spacing:.08em;text-transform:uppercase;color:#9ba4af}[dir=rtl] .hh{font:700 13px 'Plex Arabic';letter-spacing:0}
+.ab{position:absolute}[dir=rtl] .pl,[dir=rtl] .live{font-family:'Plex Latin','Plex Arabic'}.t{position:absolute;white-space:nowrap}`;
+  const side = ar ? 'right' : 'left';
+  const kc = [G, Rd, A, G, G, Rd];
+  const kpis = T.k.map(([l, v, s], i) => `<div class="card kpi" style="${side}:${26 + i * 260}px;--c:${kc[i]}"><label>${l}</label><b class="num">${v}</b><small>${s}</small></div>`).join('');
+  // the queue line: hourly from 06 to 23, y as published (the picture's pixels)
+  const ys = ar ? [331, 376.5, 410, 431, 397.5, 352, 295.5, 274.5, 319.5, 342.5, 364.5, 386.5, 410, 432.5, 443, 449, 452.5, 465.5] : [320.5, 365.5, 399, 421, 388.5, 342.5, 286.5, 264.5, 308.5, 331.5, 354.5, 376.5, 399.5, 421.5, 433, 438.5, 442.5, 456];
+  const lx = ar ? 757 : 48, ly = ar ? 10 : 0;
+  const pts = ys.map((y, i) => `${(lx + i * 46.765).toFixed(1)},${y}`).join(' ');
+  let svg = `<svg class="ab" style="left:0;top:0;overflow:visible" width="1600" height="900">`;
+  [238, 322, 406, 490].forEach((y) => { svg += `<line x1="${lx - 7}" x2="${lx + 803}" y1="${y + ly + 0.5}" y2="${y + ly + 0.5}" stroke="#1f2836"/>`; });
+  svg += `<line x1="${lx - (ar ? 8 : 7)}" x2="${lx + (ar ? 802 : 803)}" y1="${343 + ly}" y2="${343 + ly}" stroke="#8a94a3" stroke-width="1.3" stroke-dasharray="6 5"/>`;
+  svg += `<polyline points="${pts}" fill="none" stroke="${line}" stroke-width="2.4" stroke-linejoin="round"/><circle cx="${(lx + 17 * 46.765).toFixed(1)}" cy="${ys[17]}" r="4.6" fill="${line}"/></svg>`;
+  const hours = ['06', '09', '12', '15', '18', '21'].map((h, i) => `<div class="t num" style="left:${lx - 20 + i * 140.3}px;width:40px;text-align:center;top:${496 + ly}px;font-size:11.5px;color:${mute}">${h}</div>`).join('');
+  // heatmap: 12 hours x 4 docks, colours and cell edges as published
+  const HC = [['#1c4968', '#1e5979', '#257097', '#2d8fbe', '#32a5db', '#2b88b4', '#2678a0', '#23688f', '#287fac', '#2e97c7', '#2678a0', '#1e5979'],
+    ['#1a415e', '#1e5071', '#2678a0', '#309ed1', '#38bdf8', '#35aee5', '#2d8fbe', '#2678a0', '#2b88b4', '#32a5db', '#287fac', '#215f84'],
+    ['#1c4968', '#215f84', '#23688f', '#2b88b4', '#309ed1', '#2d8fbe', '#287fac', '#257097', '#2678a0', '#2d8fbe', '#257097', '#1e5071'],
+    ['#183a55', '#1c4968', '#215f84', '#2678a0', '#2d8fbe', '#287fac', '#257097', '#23688f', '#257097', '#287fac', '#23688f', '#1c4968']];
+  const hx = ar ? 810 : 102, hy = ar ? 615 : 605;
+  let heat = '';
+  HC.forEach((row, j) => row.forEach((c, i) => { heat += `<div class="ab" style="left:${Math.floor(hx + i * 62.5)}px;top:${Math.round(hy + j * 59.3)}px;width:61px;height:58px;border-radius:2px;background:${c}"></div>`; }));
+  ['08', '10', '12', '14', '16', '18'].forEach((h, i) => { heat += `<div class="t num" style="left:${hx + i * 125}px;width:61px;text-align:center;top:${hy - 19}px;font-size:11.5px;color:${mute}">${h}</div>`; });
+  [1, 2, 3, 4].forEach((n, j) => { heat += `<div class="t" style="left:${hx - 90}px;width:${ar ? 80 : 81}px;text-align:right;top:${Math.round(hy + j * 59.3) + 22}px;font-size:11.5px;color:${mute}">${T.dock(n)}</div>`; });
+  // the action list
+  const codes = ['DXB-4471', 'AUH-2210', 'SHJ-0934', 'DXB-4502', 'DXB-4519', 'AUH-2231', 'SHJ-0951', 'DXB-4533'], mins = [52, 38, 24, 19, 12, 11, 9, 7];
+  const ax = ar ? 41 : 893, aw = 665, ay0 = ar ? 242 : 232;
+  let acts = '';
+  codes.forEach((c, k) => { const y = ay0 + k * (ar ? 51 : 48), col = mins[k] >= 30 ? Rd : A;
+    acts += `<div class="ab" style="left:${ax}px;width:${aw}px;top:${y}px;height:${ar ? 51 : 48}px;border-bottom:1px solid #222b38;display:flex;align-items:center;font-size:15px;direction:${dir}">`
+      + `<i style="width:11px;height:11px;border-radius:50%;background:${col};margin-${ar ? 'left' : 'right'}:${ar ? 4 : 7}px;margin-${ar ? 'right' : 'left'}:5px"></i><span class="num pl" style="width:${ar ? 203 : 158}px;color:#edf2f7;font-variant-numeric:normal;text-align:${ar ? 'right' : 'left'}">${c}</span>`
+      + `<span style="flex:1;color:#97a2b1">${T.items[k]}</span><b class="num pl" style="color:${col};font-size:15px;font-variant-numeric:normal;direction:${dir};margin-${ar ? 'left' : 'right'}:${ar ? 7 : 5}px">${T.min(mins[k])}</b></div>`; });
+  const body = `<div class="top"><h1>${T.title}</h1><div class="live"><i></i>${T.live}</div></div>${kpis}
+  <div class="card" style="left:${ar ? 735 : 26}px;top:${194 + (ar ? 9 : 0)}px;width:${ar ? 838 : 840}px;height:${ar ? 336 : 339}px"><div class="hh" style="${side}:14px;top:${ar ? 11 : 14}px">${T.queue}</div></div>
+  <div class="card" style="left:${ar ? 735 : 26}px;top:${545 + (ar ? 8 : 0)}px;width:${ar ? 838 : 840}px;height:${ar ? 310 : 311}px"><div class="hh" style="${side}:14px;top:11px">${T.heat}</div></div>
+  <div class="card" style="left:${ar ? 26 : 878}px;top:${194 + (ar ? 9 : 0)}px;width:${ar ? 696 : 698}px;height:${ar ? 661 : 663}px"><div class="hh" style="${side}:14px;top:${ar ? 11 : 14}px">${T.act}</div></div>
+  ${svg}${hours}${heat}${acts}<div class="t" style="${side}:${ar ? 893 : 893}px;top:${ar ? 660 : 626}px;font-size:12px;color:${mute}">${T.foot}</div>`;
+  return doc(css, body, dir);
+};
+
 // ---------------------------------------------------------------------------------------------------------------
 const JOBS = [
   { id: 'redesign', out: 'assets/img/articles/power-bi-redesign-before', html: BEFORE },
@@ -537,7 +600,8 @@ const JOBS = [
     { id: 'marketing', out: `assets/img/articles/styles/marketing-${l}`, ...MARKETING(l) },
     { id: 'service', out: `assets/img/articles/styles/service-${l}`, html: SERVICE(l) },
     { id: 'hr', out: `assets/img/articles/styles/hr-${l}`, html: HR(l) },
-    { id: 'finance', out: `assets/img/articles/styles/finance-${l}`, html: FINANCE(l) }])];
+    { id: 'finance', out: `assets/img/articles/styles/finance-${l}`, html: FINANCE(l) },
+    { id: 'operations', out: `assets/img/articles/styles/operations-${l}`, html: OPERATIONS(l) }])];
 
 const only = process.argv.slice(2);
 const exe = process.env.CHROME_PATH || ['/opt/pw-browsers/chromium', 'C:/Program Files/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome'].find((p) => fs.existsSync(p));
