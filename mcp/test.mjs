@@ -1406,6 +1406,159 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   }
 }
 
+// ---------- round 9: separators on cards (D8), "this Ramadan only", SVG columns in tables (D-P1; experimental) ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 300));
+  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
+  const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnosticsByCode || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run: ' + String(p.stderr || p.error || p.stdout).slice(0, 200); } };
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
+  const col = (name, dataType) => ({ name, dataType, sourceColumn: name });
+  // every page of a written report: { name, tooltip, filters, visuals }
+  const report = (dir) => { const def = path.join(dir, 'definition', 'pages'), order = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder;
+    return order.map((id) => { const pg = JSON.parse(fs.readFileSync(path.join(def, id, 'page.json'), 'utf8'));
+      return { name: pg.displayName, tooltip: pg.type === 'Tooltip', filters: (pg.filterConfig && pg.filterConfig.filters) || [],
+        visuals: fs.readdirSync(path.join(def, id, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, id, 'visuals', v, 'visual.json'), 'utf8'))).filter((v) => v.visual) }; }); };
+  const reportsIn = (proj) => fs.readdirSync(path.join(ROOT, proj)).filter((n) => /\.Report$/.test(n)).length;
+  const hashDir = (dir) => { const h = crypto.createHash('sha256'); const walk = (d) => fs.readdirSync(d).sort().forEach((n) => { const f = path.join(d, n); if (fs.statSync(f).isDirectory()) walk(f); else { h.update(n); h.update(fs.readFileSync(f)); } }); walk(dir); return h.digest('hex'); };
+  const lit = (s) => ({ expr: { Literal: { Value: s } } });
+  // the report-level measures of a written report (null when it has none)
+  const extOf = (dir) => { const f = path.join(dir, 'definition', 'reportExtensions.json'); return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : null; };
+  const exec = (await ask('plan_layout', { layout: 'exec', kpis: 5, filters: 'end' })).j.design, focus = (await ask('plan_layout', { layout: 'focus', kpis: 3, filters: 'top' })).j.design;
+
+  // ----- R9.1: a KPI card whose measure has no thousand separator in the model gets Desktop's own entry (D8, 2026-10-04) -----
+  {
+    fs.mkdirSync(path.join(ROOT, 'sep-project/Sep Test.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, 'sep-project/Sep Test.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'),
+      columns: [col('Amount', 'double'), col('Region', 'string'), col('Month', 'string'), col('Channel', 'string'), col('City', 'string')],   // enough text columns for every slicer slot
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '0' }, { name: 'Avg Price', expression: 'AVERAGE ( Sales[Amount] )', formatString: '0.00' },
+        { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }, { name: 'No Format', expression: 'SUM ( Sales[Amount] ) + 1' }] }] } }));
+    const x = await ask('create_report', { path: 'sep-project', name: 'R9 Cards', design: exec, fields: { kpis: ['Total Sales', 'Avg Price', 'Orders', 'Margin %', 'No Format'].map((m) => `Sales[${m}]`) } });
+    const dir = x.err ? null : path.join(ROOT, 'sep-project', x.j.report), pages = dir ? report(dir) : [];
+    const cardsOf = (m, tooltip) => pages.filter((p) => p.tooltip === tooltip).flatMap((p) => p.visuals).filter((v) => v.visual.visualType === 'cardVisual' && v.visual.query && v.visual.query.queryState.Data.projections[0].queryRef === 'Sales.' + m);
+    const entry = (code) => ({ properties: { labelDisplayUnits: lit('-1D'), customFormatString: lit(`'${code}'`) } });
+    const has = (m, code) => { const cs = cardsOf(m, false); return cs.length >= 1 && cs.every((v) => v.visual.objects.value.length === 2 && JSON.stringify(v.visual.objects.value[1]) === JSON.stringify(Object.assign(entry(code), { selector: { metadata: 'Sales.' + m } }))
+      && JSON.stringify(v.visual.objects.value[0].selector) === '{"id":"default"}'); };
+    const none = (m) => { const cs = cardsOf(m, false); return cs.length >= 1 && cs.every((v) => v.visual.objects.value.length === 1); };
+    chk(() => has('Total Sales', '#,0'), () => `a card on a measure with the format "0" must carry Desktop's own entry (labelDisplayUnits -1D, customFormatString '#,0', selector metadata): ${JSON.stringify(cardsOf('Total Sales', false).map((v) => v.visual.objects.value)).slice(0, 500)} ${short(x)}`);
+    chk(() => has('Avg Price', '#,0.00'), () => `a card on a "0.00" measure: customFormatString '#,0.00': ${JSON.stringify(cardsOf('Avg Price', false).map((v) => v.visual.objects.value[1]))}`);
+    chk(() => none('Orders'), () => `a measure that has a separator gets no entry: ${JSON.stringify(cardsOf('Orders', false).map((v) => v.visual.objects.value)).slice(0, 300)}`);
+    chk(() => none('Margin %'), () => `a percent measure is untouched: ${JSON.stringify(cardsOf('Margin %', false).map((v) => v.visual.objects.value)).slice(0, 300)}`);
+    const nf = (x.j && x.j.numberFormats) || {};
+    chk(() => has('No Format', '#,0.##') && pages.filter((p) => p.tooltip).flatMap((p) => p.visuals).filter((v) => v.visual.visualType === 'cardVisual').every((v) => v.visual.objects.value.length === 1)
+      && JSON.stringify(nf.cards.formatted) === JSON.stringify([{ field: 'Sales[Total Sales]', format: '#,0' }, { field: 'Sales[Avg Price]', format: '#,0.00' }, { field: 'Sales[No Format]', format: '#,0.##' }])
+      && /101,914/.test(nf.cards.note) && /Desktop check \(D8, tables\)/.test(nf.tablesAndTooltips) && nf.noThousandSeparator.includes('Sales[Total Sales]') && errors(dir) === '0',
+      () => `a measure with no format gets '#,0.##'; the tooltip card is not touched; the answer lists the formatted cards and says tables need a Desktop check; validator 0: ${JSON.stringify(nf).slice(0, 700)} validator ${dir ? errors(dir) : ''}`);
+  }
+
+  // ----- R9.2: "this Ramadan only" is two page filters: the Ramadan flag and the Hijri year the user gives -----
+  {
+    const both = await ask('create_report', { path: 'dax-project', name: 'R9 This Ramadan', design: focus, secondPage: false, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1447] }] });
+    const pg = both.err ? [] : report(path.join(ROOT, 'dax-project', both.j.report)).filter((p) => !p.tooltip);
+    const lits = (f) => f.filter.Where[0].Condition.In.Values.map((v) => v[0].Literal.Value).join();
+    chk(() => pg.length === 1 && pg[0].filters.length === 2 && pg[0].filters[0].field.Column.Property === 'Is Ramadan' && lits(pg[0].filters[0]) === 'true' && pg[0].filters[1].field.Column.Property === 'Hijri Year' && lits(pg[0].filters[1]) === '1447L'
+      && !(both.j.reportNotes || []).some((n) => /every Ramadan/i.test(n)), () => `Is Ramadan = true and Hijri Year = 1447 on the page, with no "every Ramadan" note: ${JSON.stringify(pg.map((p) => p.filters.map(lits)))} ${JSON.stringify(both.j && both.j.reportNotes)} ${short(both)}`);
+    const one = await ask('create_report', { path: 'dax-project', name: 'R9 Every Ramadan', design: focus, secondPage: false, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }] });
+    chk(() => !one.err && (one.j.reportNotes || []).some((n) => /every Ramadan/i.test(n) && /Calendar\[Hijri Year\]/.test(n) && /ask the user/i.test(n)) && /every Ramadan/i.test(one.j.pageFilters[0].note),
+      () => `a filter on Is Ramadan alone must say it keeps every Ramadan, name Calendar[Hijri Year] and say to ask the user for the year: ${JSON.stringify(one.j && [one.j.reportNotes, one.j.pageFilters])} ${short(one)}`);
+    const other = await ask('create_report', { path: 'filter-project', name: 'R9 Open', design: focus, secondPage: false, pageFilters: [{ field: 'Shop Sales[Is Open]', values: [true] }] });
+    const tools = await client.listTools(), cr = tools.tools.find((t) => t.name === 'create_report'), skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8');
+    chk(() => !other.err && !(other.j.reportNotes || []).some((n) => /every Ramadan/i.test(n)) && !('note' in other.j.pageFilters[0]) && /Hijri year/i.test(cr.inputSchema.properties.pageFilters.description) && /Hijri year/i.test(skill) && /ask the user/i.test(skill),
+      () => `a flag that is not Ramadan gets no such note; the tool and the skill say one Ramadan needs the Hijri year, asked from the user: ${JSON.stringify(other.j && other.j.reportNotes)} ${short(other)}`);
+  }
+
+  // ----- R9.3: SVG columns in tables (experimental): a design compiled to a report-level measure, as D-P1 measured -----
+  {
+    const require2 = (await import('node:module')).createRequire(import.meta.url), Svg = require2(path.join(REPO, 'assets/js/svg-kpi-compiler.js'));
+    const bar = (m2) => ({ w: 160, h: 24, values: [{ id: 'a', label: 'Sales', kind: 'measure', measure: 'Total Sales' }, { id: 'b', label: 'LY', kind: 'measure', measure: m2 }, { id: 'r', label: 'Ratio', kind: 'ratio', a: 'a', b: 'b' }],
+      layers: [{ type: 'rect', x: 0, y: 6, w: 160, h: 12, rx: 6, fill: '#e5e7eb' }, { type: 'rect', x: 0, y: 6, w: 0, h: 12, rx: 6, fill: '#0f6cbd', bind: { w: { v: 'r', d0: 0, d1: 1, r0: 0, r1: 160 } } }] });
+    const day = (column) => ({ w: 160, h: 24, values: [{ id: 'd', label: 'Day', kind: 'column', column }], layers: [{ type: 'text', x: 4, y: 16, size: 12, fill: '#111827', bind: { text: { v: 'd', fmt: 'text' } } }] });
+    const modelDir = path.join(ROOT, 'dax-project/Ramadan Test.SemanticModel'), before = hashDir(modelDir);
+    const x = await ask('create_report', { path: 'dax-project', name: 'R9 SVG', design: exec, svgColumns: [{ label: 'Progress', design: bar('Sales[Total Sales Last Ramadan]') }, { label: 'Day', design: day('Calendar[Day Name]') }] });
+    const dir = x.err ? null : path.join(ROOT, 'dax-project', x.j.report), extFile = dir && path.join(dir, 'definition', 'reportExtensions.json');
+    const ext = extFile && fs.existsSync(extFile) ? JSON.parse(fs.readFileSync(extFile, 'utf8')) : null, ms = ext ? ext.entities[0].measures : [];
+    const tables = dir ? report(dir).filter((p) => !p.tooltip).flatMap((p) => p.visuals).filter((v) => v.visual.visualType === 'tableEx') : [];
+    const svgProj = tables.length ? tables[0].visual.query.queryState.Values.projections.filter((p) => p.field.Measure && p.field.Measure.Expression.SourceRef.Schema) : [];
+    const plain = await ask('create_report', { path: 'dax-project', name: 'R9 No SVG', design: exec });
+    // 1. the files are D-P1's: one report-level measure per column (Text, ImageUrl) on the entity of its first measure, the last columns of the first table
+    chk(() => ext.$schema === 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json' && ext.name === 'extension' && ext.entities.length === 1 && ext.entities[0].name === 'Sales'
+      && ms.length === 2 && ms[0].name === 'Progress' && ms[1].name === 'Day' && ms.every((m) => m.dataType === 'Text' && m.dataCategory === 'ImageUrl' && Object.keys(m).sort().join() === 'dataCategory,dataType,expression,name')
+      && svgProj.length === 2 && JSON.stringify(svgProj[0]) === JSON.stringify({ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: 'Sales' } }, Property: 'Progress' } }, queryRef: 'Sales.Progress', nativeQueryRef: 'Progress' })
+      && tables[0].visual.query.queryState.Values.projections.slice(-2).map((p) => p.queryRef).join() === 'Sales.Progress,Sales.Day' && tables.slice(1).every((t) => !/extension/.test(JSON.stringify(t)))
+      && x.j.svgMeasures.length === 2 && x.j.svgMeasures[0].label === 'Progress' && x.j.svgMeasures[0].entity === 'Sales' && /experimental: tables only; card, matrix, image, phone and PDF need Desktop checks/.test(x.j.svgMeasures[0].status)
+      && hashDir(modelDir) === before && !plain.err && !('svgMeasures' in plain.j) && !fs.existsSync(path.join(ROOT, 'dax-project', plain.j.report, 'definition', 'reportExtensions.json')),
+      () => `svgColumns must write D-P1's reportExtensions.json and project the measures as the table's last columns, the model untouched: ${JSON.stringify(ext).slice(0, 500)} ${JSON.stringify(svgProj).slice(0, 300)} ${JSON.stringify(x.j && x.j.svgMeasures).slice(0, 300)} ${short(x)}`);
+    // 2. only a data:image/svg+xml text comes out: the expression ends in the prefix & _svg, has no comment line and no other address
+    chk(() => ms.every((m) => /RETURN\n\s+"data:image\/svg\+xml;utf8," & _svg$/.test(m.expression) && !/^\s*--/m.test(m.expression) && (m.expression.match(/data:/g) || []).length === 1
+        && m.expression.replace("xmlns='http://www.w3.org/2000/svg'", '').search(/https?:|javascript:|href/i) < 0)
+      && /\[Total Sales Last Ramadan\]/.test(ms[0].expression) && !/Sales\[Total Sales Last Ramadan\]/.test(ms[0].expression)
+      && Svg.toImageUrl(bar('Total Sales Last Ramadan'), { 'Total Sales': 50, 'Total Sales Last Ramadan': 100 }).url.startsWith("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='24'")
+      && /width='80\.00'/.test(Svg.toImageUrl(bar('Total Sales Last Ramadan'), { 'Total Sales': 50, 'Total Sales Last Ramadan': 100 }).url),
+      () => `the measure must return only a data:image/svg+xml text: ${ms.map((m) => m.expression.slice(-200)).join(' | ')}`);
+    // 3. a hostile design: its texts are escaped, a colour that is not #rrggbb becomes black, nothing of a raw key is written; an unknown layer is refused
+    {
+      const bad = { w: 200, h: 30, raw: '<svg onload="x()">', name: 'N\n-- x', values: [], layers: [{ type: 'text', name: 'a\n-- b', x: 2, y: 20, anchor: 'x\' onload=\'y', fill: 'red"/><script>', text: '</text><script>alert("1")</script>\'#%&' }] };
+      const h = await ask('create_report', { path: 'dax-project', name: 'R9 Hostile design', design: exec, svgColumns: [{ label: 'H', design: bad }] });
+      const he = h.err ? null : extOf(path.join(ROOT, 'dax-project', h.j.report)), e = he ? he.entities[0].measures[0].expression : '';
+      const before2 = reportsIn('dax-project');
+      const unk = await ask('create_report', { path: 'dax-project', name: 'R9 Unknown layer', design: exec, svgColumns: [{ label: 'U', design: { w: 40, h: 20, values: [], layers: [{ type: 'raw', svg: '<script/>' }] } }] });
+      chk(() => e && !/<script|onload|alert\("|-- /.test(e) && e.includes('&lt;/text&gt;&lt;script&gt;alert(&quot;1&quot;)&lt;/script&gt;&apos;%23%25&amp;') && /fill='%23000000'/.test(e) && /text-anchor='start'/.test(e)
+        && unk.err && /Nothing was written/.test(unk.t) && /svgColumns\[0\]/.test(unk.t) && /Unknown layer type: raw/.test(unk.t) && reportsIn('dax-project') === before2,
+        () => `a hostile design must be escaped (no script, no handler, no comment), an unknown layer refused: ${e.slice(0, 600)} | ${short(h)} | ${short(unk)}`);
+    }
+    // 4. a field's value is escaped when the measure runs: in the DAX (SUBSTITUTE for & < > ' " % #) and the same in the preview
+    {
+      const e = ms.length > 1 ? ms[1].expression : '', key = "'Calendar'[Day Name]";
+      const url = Svg.toImageUrl(day(key), {}, { columns: { [key]: '<script>"x"&\'#%' } }).url, num = Object.assign(day(key), {}); num.layers = [{ type: 'text', x: 4, y: 16, fill: '#111827', bind: { text: { v: 'd', fmt: 'n0' } } }];
+      chk(() => e.includes("SELECTEDVALUE ( 'Calendar'[Day Name] )") && (e.match(/SUBSTITUTE \(/g) || []).length === 7 && ['"&", "&amp;"', '"<", "&lt;"', '">", "&gt;"', '"\'", "&apos;"', '"""", "&quot;"', '"%", "%25"', '"#", "%23"'].every((p) => e.includes(p))
+        && e.indexOf('"&", "&amp;"') < e.indexOf('"<", "&lt;"') && e.indexOf('"<", "&lt;"') < e.indexOf('"%", "%25"') && e.indexOf('"%", "%25"') < e.indexOf('"#", "%23"')
+        && url.includes('>&lt;script&gt;&quot;x&quot;&amp;&apos;%23%25</text>') && !/<script/.test(url) && (Svg.toMeasure(num).dax.match(/SUBSTITUTE \(/g) || []).length === 7,
+        () => `a column's value must be escaped at run time (DAX and preview), also behind a number format: ${e.slice(0, 700)} | ${url}`);
+    }
+    // 5. model names are untrusted: quotes, angle brackets, "--" and "]" in a table, a measure and a column break neither the DAX nor the SVG
+    {
+      const T = "T'--<x>", M = 'Sales "x" <b> -- ]y', C = 'C "q" ]<';
+      fs.mkdirSync(path.join(ROOT, 'names-project/Names Test.SemanticModel'), { recursive: true });
+      fs.writeFileSync(path.join(ROOT, 'names-project/Names Test.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: T, partitions: mp(T),
+        columns: [col(C, 'string'), col('Amount', 'double'), col('Region', 'string'), col('Month', 'string'), col('Channel', 'string'), col('City', 'string')],   // a month for the line chart and enough text columns for every slicer slot
+        measures: [{ name: M, expression: `SUM ( '${T.replace(/'/g, "''")}'[Amount] )`, formatString: '#,0' }, { name: 'Total Sales', expression: '1', formatString: '#,0' }] }] } }));
+      const d1 = bar(`${T}[${M}]`), d2 = day(`${T}[${C}]`);
+      const n = await ask('create_report', { path: 'names-project', name: 'R9 Names', design: exec, svgColumns: [{ label: 'Bar', design: d1 }, { label: 'Name', design: d2 }] });
+      const ndir = n.err ? null : path.join(ROOT, 'names-project', n.j.report), ne = ndir ? extOf(ndir) : null;
+      const es = ne ? ne.entities[0].measures.map((m) => m.expression) : [];
+      // what is left of the DAX when its bracketed names, quoted table names and strings are taken out: no "--", no "<"
+      const bare = (e) => e.replace(/\[(?:[^\]]|\]\])*\]/g, '[]').replace(/"(?:[^"]|"")*"/g, '""').replace(/'(?:[^']|'')*'/g, "''");
+      chk(() => ne.entities[0].name === T && es[0].includes('[Sales "x" <b> -- ]]y]') && es[1].includes("SELECTEDVALUE ( 'T''--<x>'[C \"q\" ]]<] )") && es.every((e) => !/--|<|>/.test(bare(e)) && (bare(e).match(/"/g) || []).length % 2 === 0)
+        && errors(ndir) === '0', () => `names with quotes, angle brackets, "--" and "]" must be written as DAX names: ${es.map((e) => e.slice(0, 300)).join(' | ')} validator ${ndir ? errors(ndir) : ''} ${short(n)}`);
+    }
+    // 6. the length cap: a measure longer than 8,000 characters is refused and named (until D-P2 measures the real limit)
+    {
+      const before3 = reportsIn('dax-project');
+      const long = { w: 400, h: 400, values: [], layers: Array.from({ length: 60 }, (_, i) => ({ type: 'text', x: 2, y: 6 * i, size: 5, fill: '#111827', text: 'A long line of text number ' + i + ' ' + 'x'.repeat(110) })) };
+      const l = await ask('create_report', { path: 'dax-project', name: 'R9 Long', design: exec, svgColumns: [{ label: 'Long one', design: long }] });
+      chk(() => l.err && /Nothing was written/.test(l.t) && /svgColumns\[0\]/.test(l.t) && /"Long one"/.test(l.t) && /8,000/.test(l.t) && reportsIn('dax-project') === before3, () => `a measure over 8,000 characters must be refused and named: ${short(l)}`);
+    }
+    // 7. refused and named, nothing written: an unknown measure, a label that is a measure of the model, a label with a bracket, a page without a table, five columns
+    {
+      const before4 = reportsIn('dax-project'), one = (name, svgColumns, design) => ask('create_report', { path: 'dax-project', name, design: design || exec, svgColumns });
+      const a = await one('R9 r1', [{ label: 'P', design: bar('Sales[Nope]') }]), b = await one('R9 r2', [{ label: 'Total Sales', design: bar('Total Sales Last Ramadan') }]), c = await one('R9 r3', [{ label: 'P]x', design: bar('Total Sales Last Ramadan') }]);
+      // (the focus design alone: its second page has a table, so the report is asked for without it)
+      const d = await ask('create_report', { path: 'dax-project', name: 'R9 r4', design: focus, secondPage: false, svgColumns: [{ label: 'P', design: bar('Total Sales Last Ramadan') }] }), e = await one('R9 r5', Array.from({ length: 5 }, (_, i) => ({ label: 'P' + i, design: bar('Total Sales Last Ramadan') })));
+      chk(() => a.err && /svgColumns\[0\]/.test(a.t) && /Sales\[Nope\] is not in the model/.test(a.t) && b.err && /"Total Sales" is a measure of the model/.test(b.t) && c.err && /label/.test(c.t) && d.err && /no table/i.test(d.t) && e.err
+        && [a, b, c, d].every((r) => /Nothing was written/.test(r.t)) && reportsIn('dax-project') === before4, () => `svgColumns refusals: ${[a, b, c, d, e].map(short).join(' | ')}`);
+    }
+    // 8. Microsoft's validator: 0 errors with two SVG columns, also in an Arabic right-to-left report; the expression is the Designer's own DAX without its comment lines
+    {
+      const ar = await ask('create_report', { path: 'dax-project', name: 'R9 SVG AR', design: exec, lang: 'ar', svgColumns: [{ label: 'التقدم', design: bar('Total Sales Last Ramadan') }, { label: 'اليوم', design: day('Calendar[Day Name]') }] });
+      const adir = ar.err ? null : path.join(ROOT, 'dax-project', ar.j.report), d0 = bar('Total Sales Last Ramadan');
+      const own = Svg.toDax(d0).dax.split('\n').slice(1).filter((l) => !/^--/.test(l)).join('\n');
+      chk(() => dir && errors(dir) === '0' && adir && errors(adir) === '0' && extOf(adir).entities[0].measures[0].name === 'التقدم'
+        && Svg.toMeasure(d0).dax === own && ms[0].expression === own, () => `validator: ${dir ? errors(dir) : 'not written'}, Arabic ${adir ? errors(adir) : short(ar)}; toMeasure equals the Designer's DAX without comments: ${Svg.toMeasure ? Svg.toMeasure(d0).dax === own : 'no toMeasure'}`);
+    }
+  }
+}
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);

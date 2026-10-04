@@ -731,3 +731,28 @@ and 0 phone problems; 0 overwritten; `modelNotes` Month Name, the % measure, Day
 "Total Sales" card is one Ramadan only once a Hijri year is picked in the slicer (or given as a second page filter);
 the model still has no "this Ramadan" measure. Whether Desktop shows the filter in the Filters pane, filters the
 cards and lets the user clear it is Desktop check D14: not run.
+
+## Task 3, "this Ramadan only" (round 9, 2026-10-04; tool level)
+
+Desktop showed on 4 October (D14) that the filter on Is Ramadan alone keeps every Ramadan of the calendar (Total
+Sales 99.9K over February to May). The choice in round 9: a second page filter on the calendar's Hijri year, with the
+year given by the user (the tools read no data values, so the agent asks; in the runner the year stands for the
+user's answer: 1447). Nothing else in the task, the model or the checks changed.
+
+**Expected (written before the run):** the one report page holds two filters, Calendar[Is Ramadan] In true and
+Calendar[Hijri Year] In 1447L; the two tooltip pages hold none; the answer lists both in `pageFilters`, with one
+filter note in `reportNotes` and **no** "every Ramadan" note (the year is given). The rest as in round 8: the three
+planned cards, slicers Hijri Year, Is Ramadan, Year, 20 visuals, validator 0, 0 overwritten. New from R9.1: the cards
+of Total Sales and Total Sales Last Ramadan carry the report-side number format (the sample's measures have no
+separator format); that adds no visual.
+
+**Actual (the runner, task 3):** as expected. `filtersOnPages`: "page Calendar[Is Ramadan] In true; Calendar[Hijri
+Year] In 1447L | tooltip none | tooltip none"; both filters in `pageFilters` (each `typedBy` the value, because the
+sample's Calendar is a DAX table with no types in its files); one filter note, no "every Ramadan" note; cards Total
+Sales, Total Sales Last Ramadan, Total Sales vs Last Ramadan %; `numberFormats.cards.formatted`: Total Sales and
+Total Sales Last Ramadan with `#,0.##` (the sample's measures have no format at all); slicers Hijri Year, Is Ramadan,
+Year; **20 visuals**; validator 0; 0 problems; 0 overwritten.
+
+**Tool level: PASS.** Not known without Desktop (D14's new step): that the sample's Hijri Year column holds the
+number 1447 (and not a text), which Hijri year is the latest in its data, and that the three cards then show one
+Ramadan. The year is the user's to give: the tools read no data values.
