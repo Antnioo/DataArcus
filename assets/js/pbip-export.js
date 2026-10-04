@@ -409,16 +409,32 @@
       return out;
     };
 
+    // Page filters (o.pageFilters: [{ t, c, literals }], the literals already written as Power BI writes them: true,
+    // 'text', 5L, 5.5D). Each is a basic filter (Categorical, "is one of") on a column, in the shape Microsoft's report
+    // authoring reference gives: the field by its table, the condition by the alias of From. Written on every report
+    // page, each with its own name; not on the tooltip pages. The user sees and clears them in the Filters pane.
+    const pageFilters = () => (o.pageFilters || []).map((f) => {
+      const alias = (/^[A-Za-z]/.test(f.t) ? f.t[0] : 't').toLowerCase();
+      return {
+        name: 'Filter' + rnd() + rnd().slice(0, 4),
+        field: { Column: { Expression: { SourceRef: { Entity: f.t } }, Property: f.c } },
+        type: 'Categorical',
+        filter: { Version: 2, From: [{ Name: alias, Entity: f.t, Type: 0 }],
+          Where: [{ Condition: { In: { Expressions: [{ Column: { Expression: { SourceRef: { Source: alias } }, Property: f.c } }], Values: f.literals.map((v) => [{ Literal: { Value: v } }]) } } }] },
+        howCreated: 'User'
+      };
+    });
+
     PAGES.forEach((pg, pageIndex) => {
-      const pageName = pg.id;
-      add(D + '/pages/' + pageName + '/page.json', json({
+      const pageName = pg.id, filters = pageFilters();
+      add(D + '/pages/' + pageName + '/page.json', json(Object.assign({
         $schema: SCHEMA.page, name: pageName, displayName: pg.name || base, displayOption: 'FitToPage', width: pg.page.w, height: pg.page.h,
         objects: Object.assign({
           background: obj({ image: { image: { name: str(pg.bgFile), url: resource(pg.bgFile), scaling: str('Fit') } }, transparency: num(0) }),
           outspace: obj({ color: color(u.background) }),
           displayArea: obj({ verticalAlignment: str('Middle') })
         }, paneObjects)
-      }));
+      }, filters.length ? { filterConfig: { filters } } : {})));
 
       // visuals, in reading order: z and tab order follow it, so keyboard users move through the page the way it reads
       const visuals = [], mob = [], slicerNames = [];

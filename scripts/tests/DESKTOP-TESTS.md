@@ -378,7 +378,7 @@ background PNG drawn by Chromium as on the page), the website's default layout (
 20-character name ("Ras Al Khaimah North", "رأس الخيمة الشمالية"). A copy of each got measurement pages written by
 script: copies of page 1 with the candidate settings, the same pages on flat magenta (any fill of a visual's own shows
 as a box), a page of tooltip-sized charts, tables and logos, pages of card candidates. Scripts:
-`C:\DataArcus\tests\phase2-try\builder-scripts\m0-*` (`m0-base.mjs`, `m0-measure.mjs`, `m0-cards.mjs`, `m0-charts.mjs`,
+`<tests folder>\phase2-try\builder-scripts\m0-*` (`m0-base.mjs`, `m0-measure.mjs`, `m0-cards.mjs`, `m0-charts.mjs`,
 `m0-pad.mjs`, `m0-open.ps1`, `m0-shot.ps1`, `m0-hover.ps1`, `m0-crop.ps1`, `m0-run.ps1`); reports in
 `...\phase2-try\m0\`; screenshots in `...\phase2-try\shots-m0\`, pages at 2x (about 1.17 screen pixels per page unit
 on 1920 x 1080, 1.76 on 1280 x 720), hovers from the screen at 1x; judged from full-size crops (`c-*.png`).
@@ -429,7 +429,7 @@ the side accent bar, and "EN 1080 dark", "AR 1080 dark" (accent bar on top, no l
 stdio on our sample model: "R0 MCP EN 1080 tall", "R0 MCP AR 720 squar" (square logo), "R0 MCP EN 1080", "R0 MCP AR
 1080". Expected results were written in `mcp/WORK.md` first. Pages at 2x; hovers from the screen with `m0-hover.ps1`
 (a flat magenta page is added to the copy after the page screenshots, only to find the page on the screen);
-screenshots and crops in `C:\DataArcus\tests\phase2-try\shots-r0\`, run log `...\r0\run.log`, what was built
+screenshots and crops in `<tests folder>\phase2-try\shots-r0\`, run log `...\r0\run.log`, what was built
 `...\r0\built.json`. No clicks from the owner.
 
 | # | Checked | Expected | Seen | Result |
@@ -456,7 +456,7 @@ screenshots and crops in `C:\DataArcus\tests\phase2-try\shots-r0\`, run log `...
 Microsoft's validator rejected every theme with solid visuals: "Unknown theme property border.radius for cardVisual"
 (inside a theme the card visual's `border` is the card's own border). Test reports only, on our sample model, closed
 without saving; scripts `builder-scripts\ctr-measure.mjs`, `ctr-check.mjs`, `png-diff.ps1`; screenshots in
-`C:\DataArcus\tests\phase2-try\shots-ctr\`, pages at 2x.
+`<tests folder>\phase2-try\shots-ctr\`, pages at 2x.
 
 **Measured before any code.** Two reports through the MCP (light: preset Corporate; dark: the default), each in two
 copies: A with the theme as written then, B with `radius` removed from `visualStyles.cardVisual["*"].border[0]`. Each
@@ -496,7 +496,7 @@ Arabic, 1920 x 1080, light and dark). Expected: the cards and everything else as
 On the MCP's reports no visual had a panel: `pbip-export.js` switched every visual's container background, border and
 shadow off in `visual.json`, which outranks the theme's solid visuals. Test reports only, on our sample model and the
 website's sample data, closed without saving; scripts `builder-scripts\mvs-measure.mjs`, `mvs-check.mjs`,
-`mvs-proof.mjs`, `png-diff.ps1`; screenshots in `C:\DataArcus\tests\phase2-try\shots-mvs\`, pages at 2x.
+`mvs-proof.mjs`, `png-diff.ps1`; screenshots in `<tests folder>\phase2-try\shots-mvs\`, pages at 2x.
 
 **Measured before any code** (a solid design through the MCP, English and Arabic, 1920 x 1080, light: preset
 Corporate, dark: the default design; A as written then, B and C candidates edited by script):
@@ -921,14 +921,14 @@ run: `check.dax` returns 40 rows, every one Pass = TRUE (15 C, 10 R, 15 E).**
 **Result: 40 rows, 40 Pass = TRUE (15 C, 10 R, 15 E). No row failed.**
 
 How it was run (no hand typing of DAX, so nothing could be changed on the way):
-- Steps 1 and 3: `builder-scripts\gc-model.mjs` wrote a project (`C:\DataArcus\tests\7-gulf-calendar\Gulf Calendar
+- Steps 1 and 3: `builder-scripts\gc-model.mjs` wrote a project (`<tests folder>\7-gulf-calendar\Gulf Calendar
   Test.pbip`) with `calendar.dax` and `sales.dax` as DAX tables and the nine `MEASURE` blocks of `measures.dax` as
   the Sales table's measures; the script checks that the tables' DAX in the project equals the files byte for byte.
   Opened in Desktop, "Refresh now": Calendar 4,748 rows, Sales 9,496 rows.
 - Step 2: the relationship `Sales[Date]` to `Calendar[Date]`, many to one, single direction, through Microsoft's
   Power BI modelling MCP on the open model, then a Calculate refresh.
 - Step 4: `check.dax` run from the file on Desktop's local model (`builder-scripts\gc-check.ps1`, the ADOMD client
-  that ships with Desktop). Rows saved in `C:\DataArcus\tests\7-gulf-calendar\check-result.json`.
+  that ships with Desktop). Rows saved in `<tests folder>\7-gulf-calendar\check-result.json`.
 - Closed without saving.
 
 Not the same as the README's clicks: the tables and measures came in through project files instead of "New table" and

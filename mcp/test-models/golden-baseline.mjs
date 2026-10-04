@@ -99,9 +99,14 @@ await task(3, 'Ramadan vs last Ramadan', async () => {
   const f = await call('suggest_fields', { path: 'ramadan', kpis: 3 });
   const th = await call('generate_theme', { name: 'Golden Ramadan', preset: 'Desert Gulf', lang: 'en', folder: 'themes' });
   // the plan: the three Ramadan measures on the cards, and slicers on the Hijri year and Is Ramadan so the page can be set to one Ramadan
-  const b = await build('ramadan', 'Golden Ramadan', th, { layout: 'focus', kpis: 3, filters: 'top', lang: 'en' }, { secondPage: false, fields: { kpis: RAMADAN_KPIS, slicers: ['Calendar[Hijri Year]', 'Calendar[Is Ramadan]'] } });
+  const b = await build('ramadan', 'Golden Ramadan', th, { layout: 'focus', kpis: 3, filters: 'top', lang: 'en' }, { secondPage: false, fields: { kpis: RAMADAN_KPIS, slicers: ['Calendar[Hijri Year]', 'Calendar[Is Ramadan]'] },
+    // round 8: the page is limited to Ramadan by a page filter (the owner's decision 2026-10-04)
+    pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }] });
+  const pagesDir = path.join(ROOT, 'ramadan', b.report, 'definition', 'pages');
+  const filtersOnPages = fs.readdirSync(pagesDir).filter((n) => fs.existsSync(path.join(pagesDir, n, 'page.json'))).map((n) => JSON.parse(fs.readFileSync(path.join(pagesDir, n, 'page.json'), 'utf8')))
+    .map((pg) => `${pg.type === 'Tooltip' ? 'tooltip' : 'page'} ${((pg.filterConfig || {}).filters || []).map((x) => x.field.Column.Expression.SourceRef.Entity + '[' + x.field.Column.Property + '] In ' + x.filter.Where[0].Condition.In.Values.map((v) => v[0].Literal.Value).join()).join('; ') || 'none'}`).sort().join(' | ');
   const ramadanOnCards = f.j.kpis.filter((k) => /ramadan/i.test(k.m)).length;
-  return { cards: cardsOf(b), slicers: slicersOf(b), kpis: f.j.kpis.map((k) => k.m).join(' | '), ramadanMeasuresOnCards: `${ramadanOnCards}/3`, ...b.facts, overwritten: b.overwritten, modelNotes: b.modelNotes };
+  return { cards: cardsOf(b), slicers: slicersOf(b), pageFilters: JSON.stringify(b.r.j.pageFilters), filtersOnPages, filterNote: (b.r.j.reportNotes || []).filter((n) => /page filter/i.test(n)).length, kpis: f.j.kpis.map((k) => k.m).join(' | '), ramadanMeasuresOnCards: `${ramadanOnCards}/3`, ...b.facts, overwritten: b.overwritten, modelNotes: b.modelNotes };
 });
 await task(4, '16:9 and 4:3 pages', async () => {
   const th = await call('generate_theme', { name: 'Golden Ratio', preset: 'Corporate', folder: 'themes' });

@@ -221,7 +221,7 @@ merged and before the private beta, with a plan in `WORK.md` and the owner's go 
 - **Rule from then on:** anything that should stay secret (the premium Arabic/Gulf pack) never goes into the
   website's browser code; it lives only in the MCP.
 - Already-pushed history stays readable in the public repo; the move protects the work from then on.
-- The laptop clones the new repo next to the public one in `C:\DataArcus`.
+- The laptop clones the new repo next to the public one, in the same parent folder.
 
 ## Safety model (keep it)
 - One working folder; every path checked against it.

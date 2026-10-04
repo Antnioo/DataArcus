@@ -54,6 +54,107 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 - **Website dropdowns fixed** (merged): the open list was white on white on every tool page; form fields now use
   `color-scheme: dark` with dark option colours (`assets/css/style.css`), checked on every tool page in `tools.mjs`.
 
+## Next step: round 8, a page filter, the taller header (plan only), the laptop paths (owner's go 2026-10-04; TERMINAL ONLY; branch `fix/round-8` from main `3564fe7`)
+The owner's decisions (2026-10-04): golden task 3's page filter: yes, this round. The title 2.8 below the header's
+middle in Segoe UI: leave it; a taller header box is a **plan only** here, with numbers, because Desktop can't be
+used today. The laptop paths in the public `mcp/GOLDEN-TASKS.md`: trim. Report-side thousand separators: after D8,
+not in this round. The platform plan: not touched (the owner reads it on 10 October).
+
+**Before (main `3564fe7`):** `npm test` 317 of 317. Website: CI is the record (the laptop's full run times out
+under load).
+
+| # | Item | Change | Expected |
+|---|---|---|---|
+| 1 | A page filter | `create_report` gets `pageFilters`: `[{ field: "Table[Column]", values: [...] }]`. The field is a column of the model, checked like `fields` (unknown, or a measure: refused and named, nothing written). Values are typed by the column: boolean (`true` / `false`), text, whole or decimal number; where the files give the column no type (a DAX table's column), by the value given, and the answer says so. No DAX, no measures, no dates in this round. Written into every report page's `page.json` as `filterConfig.filters`, a `Categorical` filter with an `In` condition, as Microsoft's report-authoring reference gives it (`field` with `Entity`; `filter.Version 2`, `From` with an alias, `Where` with `SourceRef.Source`; `howCreated: "User"`; literals `true`, `'text'`, `5L`, `5D`). Not on the tooltip pages. The answer lists them (`pageFilters`) with a sentence for the user; the skill and the tool's description say when to pass one | tests first: Calendar[Is Ramadan] = true and a text column in `page.json`; an unknown column and a measure refused; a model without the column: a clear message; Microsoft's validator 0 on a report with filters; `pageFilters` in the answer. Golden task 3 at tool level with the filter: the check "the page is limited to Ramadan" met by the filter; 20 visuals as before (a filter is not a visual); validator 0 |
+| 2 | The taller header | plan only: the table below, from `builder-scripts\r8-header.mjs` | the owner decides; D15 measures first |
+| 3 | The laptop paths | `C:\DataArcus\...` in the public files becomes a neutral name ("the repo folder", `<tests folder>`, `<working folder>`); every `git grep -n -F 'C:\'` hit listed in the report, fixed or not | 37 hits before; after: only the generic examples (`C:\Users\<name>\...`, `C:\Other`) and one comment about Windows' path limit |
+
+**Expected test count:** `npm test` 317 -> 324 (item 1: 7 checks). The shared engine `pbip-export.js` changes
+(the page filters are written there): `.min.js` rebuilt, `?v=` bumped, `check:min`, `csp.mjs` on the files as git
+stores them (the laptop's checkout has CRLF, where that script can't be trusted).
+
+### Item 2: the header that centres the title (computed, nothing built)
+What the measurements say (DESKTOP-TESTS.md, round 1): a text box is top-aligned; the middle of its text is
+3 + 1.19 x pt below the box's top in Segoe UI and 1.12 x pt in Tahoma; a one-line box needs 10 + 1.8 x pt. The title's
+size is 0.42 of its box, so in Segoe UI its middle is always about 3 below the box's middle **whatever the height**:
+a taller header alone changes nothing if the title grows with it. So the proposal is: **keep today's title size and
+make the header as tall as that text needs to sit in the middle** (Segoe UI: slot = 2 x (3 + 1.19 x pt); Tahoma, where
+the text sits above the middle and the box must move down: slot = 2 x (10 + 1.8 x pt - 1.12 x pt)). The logo image is
+centred at any height (measured); the page buttons centre their own text; "Your logo" has room to move.
+
+| Page | Language, font | Title | Header today (title slot) | Proposed header (slot) | Title offset today -> after (+ is lower) | Body height lost | KPI card | Line chart | Table | Size and phone problems |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 1920 x 1080 | English, Segoe UI | 20pt | 84 (48) | 90 (54) | +2.8 -> -0.2 | 6 | 144 -> 144 | 440 -> 437 | 331 -> 328 | 0 -> 0 |
+| 1920 x 1080 | Arabic, Tahoma | 20pt | 84 (48) | 84 (48) | +0.4 -> +0.4 | 0 | 144 -> 144 | 440 -> 440 | 331 -> 331 | 0 -> 0 |
+| 1280 x 720 | English, Segoe UI | 12pt | 56 (32) | 59 (35) | +1.3 -> -0.2 | 3 | 96 -> 96 | 293 -> 291 | 221 -> 220 | 0 -> 0 |
+| 1280 x 720 | Arabic, Tahoma | 12pt | 56 (32) | 62 (38) | -2.6 -> +0.4 | 6 | 96 -> 96 | 293 -> 290 | 221 -> 218 | 0 -> 0 |
+| 960 x 720 | English, Segoe UI | 12pt | 56 (32) | 59 (35) | +1.3 -> -0.2 | 3 | 96 -> 96 | 293 -> 291 | 221 -> 220 | 0 -> 0 |
+| 960 x 720 | Arabic, Tahoma | 12pt | 56 (32) | 62 (38) | -2.6 -> +0.4 | 6 | 96 -> 96 | 293 -> 290 | 221 -> 218 | 0 -> 0 |
+| 640 x 360 | English, Segoe UI | 8pt | 37 (25) | 37 (25): no change, it is in the middle today | 0 -> 0 | 0 | 48 -> 48 | 142 -> 142 | 106 -> 106 | 0 -> 0 |
+| 640 x 360 | Arabic, Tahoma | 8pt | 37 (25) | 45 (33) | -3.5 -> +0.5 | 8 | 48 -> 48 | 142 -> 137 | 106 -> 103 | 0 -> 0 |
+
+All numbers are page units (pixels of the page). "Offset" is the title text's middle against its slot's middle,
+computed with the measured rule. The body numbers are the exec layout with 4 cards and no filter rail, written by the
+engine with the proposed header height (its `hh` setting: 56 -> 60 on 1080 English; 56 -> 59 and 62 on 720; 74 -> 90
+on 640 x 360 Arabic). **What the body loses:** at most 6 on 1080 and 720 and 8 on 640 x 360; the KPI cards keep
+their height, the charts and the table lose 1 to 5; no measured minimum is crossed (0 size and phone problems before
+and after; the checks of `report-check.mjs`).
+**What is not known without Desktop (D15):** that the title's ink really lands in the middle at the new heights
+(the rule was measured at 20 to 47pt on a 2160 page: 8pt and 12pt are extrapolated); whether the header looks too
+tall on 640 x 360 Arabic (45 of 360); the 640 x 360 chart that loses 5 of 142.
+**Choices for the owner:** (a) the taller header as in the table, the title's size unchanged; (b) the same only for
+English (Segoe UI), where the title sits low, leaving Arabic as it is except 640 x 360 and 720; (c) leave everything.
+One header height per page size for both languages is also possible (the larger of the two: 90, 62, 62, 45), at the
+cost of the Arabic 1080 title sitting about 3 high.
+
+### Results (2026-10-04; nothing merged by the builder; terminal only)
+- **Commits** (`fix/round-8`): `9cc15bd` the plan; `deede58` the page filter (tests, code, the skill, golden task
+  3, the `.min.js`); `e36200b` the paths, D14 and D15; then this record. dataarcus-engine `fix/round-8`: `56d1def`
+  (the manifest's `create_report` text, its test, version 0.2.4).
+- **Tests:** `npm test` 317 -> **324 of 324** (as planned: 7 new checks, all 7 failed on the old code: run before
+  the code, 324 checks with 7 failures). Engine build test 8 -> 9 (the new one is false on the old manifest).
+  `pbip` suite locally: 71 of 71. **CI on `e36200b` (run 37203120928): mcp success (324), website success, all 17
+  suites.** CI on the plan's commit `9cc15bd` (text only): mcp success, website failed on the one check that failed
+  once in round 7 too ("tools/power-bi-licensing-cost-calculator.html 1440px: the Inter swap shifts the page 0.126
+  (want 0.1 or less)"), on a page this branch does not touch; it passed on the next commit.
+- **Item 1, the page filter:** as expected. `create_report` takes `pageFilters` (`[{ field, values }]`, 8 at most,
+  50 values each). In `page.json` of every report page (not the tooltip pages): `filterConfig.filters`, one
+  `Categorical` filter per field with an `In` condition, in the shape of Microsoft's report-authoring reference
+  (their plugin 0.3.18, `references/authoring/filters.md` and `expressions.md`; literals as their CLI encodes them:
+  `true`, `'text'`, `2025L`, `5.5D`; a `'` in a text is doubled, which their encoder does not do: D14 checks it).
+  Refused, named, nothing written: an unknown table or column, a measure, a date column, a fixed-decimal column,
+  a value of the wrong type, a field given twice. A column the files give no type (a DAX table's, like the Ramadan
+  model's Calendar[Is Ramadan]) is typed by the value given, and the answer says so (`typedBy`). The answer lists
+  the filters (`pageFilters`) and `reportNotes` says in words what the pages are limited to and that the Filters
+  pane changes or clears it. Microsoft's validator: 0 errors on both test reports. The tool's description and the
+  skill say when to pass one. **One thing changed against my first code, not against a test:** the test gives six
+  filters in one call and my first limit was five; the limit was mine and not in the plan, so the limit went to 8.
+- **Golden task 3 with the filter:** expected and actual in `mcp/GOLDEN-TASKS.md` ("Task 3 with a page filter"):
+  PASS at tool level; one page with the filter, two tooltip pages without, 20 visuals, validator 0.
+- **Item 2, the taller header:** the table above, nothing built. The script: `builder-scripts\r8-header.mjs`.
+  One line differs from the script's print: 640 x 360 English, where the script's rounding up gives 38 (26) and
+  moves a title that is in the middle today by 0.5; the table says "no change".
+- **Item 3, the paths:** 37 lines before in 10 files. **31 changed** (`mcp/GOLDEN-TASKS.md` 9, `mcp/WORK.md` 11,
+  `scripts/tests/DESKTOP-TESTS.md` 6, `mcp/README.md` 2 lines, `mcp/PHASE2-SPEC.md` 2, `mcp/ROADMAP.md` 1). **Not changed, 6 lines of the 37, and why:** `mcp/PRIVACY.md`
+  37 and 62 (made-up examples of a path, no laptop folder); `scripts/tests/pbip.mjs` 110 (a comment about Windows'
+  path limit, with `<name>`); `CLAUDE.md` 21, `mcp/CLAUDE.md` 15 and 60 (**the builder's own rules**: "work only
+  inside ...", where the repo and the scripts are; a neutral name there would lose the rule's meaning, and the root
+  file is outside `mcp/` and `scripts/tests/`: the reviewer's call). New since: this section's plan line names what
+  is searched for. **Expected differed here:** the plan said only the generic examples and the comment would stay;
+  the three rule lines stay too. Folder names without the drive (`tests\phase2-try\...`, `builder-scripts\...`)
+  were left: they hold no personal path and the session memory needs them.
+- **Shared engine:** `assets/js/pbip-export.js` (page filters; a report without them is written byte for byte as
+  before: every website suite passes untouched). `pbip-export.min.js?v=20261004d`,
+  `theme-generator.min.js?v=20261004d` (both Theme Generator pages). `check:min`: all 55 match. `scripts/csp.mjs`:
+  "All 52 pages carry their current policy", on the commit's files as git stores them (LF).
+- **Package:** `dist/dataarcus-0.2.4.mcpb`, built from `fix/round-8` at `e36200b`, **4,023,641 bytes**, SHA-256
+  `541cc7a4306725e7a1a66a83f0dbe6b7bc878b578a11145cb7c5742df235e427`, unsigned, not installed, 19 staged files, 91
+  packages.
+
+**Still open, not in this round:** the Desktop checks D1 to D15 and the agent-level re-run of the 11 golden tasks on
+0.2.4 (the next free laptop evening); report-side thousand separators after D8; the platform plan (the owner reads
+it on 10 October); the owner's choice on the header (a, b or c above) after D15.
+
 ## Next step: round 7, four small fixes from the night audit and the manifest text (owner's go 2026-10-04; TERMINAL ONLY; branch `fix/round-7-audit` from main `ed13112`; dataarcus-engine: the same branch name, the packaging only)
 Beta prep works in parallel on `fix/audit-site-2`: its files (among them `scripts/tests/model-health.mjs`,
 `tools.mjs`, `site.mjs`, `assets/js/model-health.js`, `model-health-worker.js`, the tool pages) are left alone. New
@@ -240,6 +341,8 @@ Made-up models only (`tests/5-tmdl-sample` with data; a copy for anything a scri
 | D11 | 960 x 720 with three cards | golden task 4's 4:3 report | card titles whole (they were cut with four cards) |
 | D12 | The website's picker | the Theme Generator's project download on our own model (the Ramadan sample) | the third KPI is "Total Sales vs Last Ramadan %", not "(old)" |
 | D13 | Agent level | install `dataarcus-0.2.2.mcpb`, the 11 golden tasks and the hostile-model test in incognito chats | the plans' fields are what the reports show (`boundFields`); before: 6 of 11 |
+| D14 | The page filter (round 8) | golden task 3's report on the Ramadan sample with data, built with `pageFilters: [{ field: "Calendar[Is Ramadan]", values: [true] }]`; open it, open the Filters pane; then clear the filter; then a text filter with an apostrophe in a value and a decimal-number filter (the literals `'Ha''il'` and `5.5D` are written as Microsoft's reference gives them, not yet seen in Desktop) | the Filters pane shows "Is Ramadan is True" under "Filters on this page", with no error mark; the cards show Ramadan only (with one Hijri year picked in the slicer: this Ramadan only) and equal DAX with the same filter; clearing the filter brings the unfiltered totals back; the tooltip pages have no filter; the text and decimal filters select their rows |
+| D15 | The taller header (round 8, plan only) | **before any code:** by hand-edited copies of one report, set the header to the proposed heights on 2 sizes x 2 languages (1920 x 1080 and 1280 x 720; English Segoe UI and Arabic Tahoma), the title's size unchanged, and measure the title's ink against the header's middle as in round 1 | the title's middle within 1 of the header's middle (computed: -0.2 English, +0.4 Arabic); the logo and the page buttons still centred; nothing in the body cut. The owner decides from the table in round 8's plan and these numbers |
 
 ## Round 5 in progress: the audit's MCP fixes, the agent's guidance, the install experience (owner's go 2026-10-04, in advance for every step; branch `fix/round-5-agent`, from main `a5707fd`; dataarcus-engine branch `fix/round-5-agent`, from its main `f716775`)
 Sources: dataarcus-engine `business/audit/REPORT-2026-10-04.md` (AUD-006, AUD-005, AUD-023, AUD-007, evidence in
@@ -247,7 +350,7 @@ Sources: dataarcus-engine `business/audit/REPORT-2026-10-04.md` (AUD-006, AUD-00
 for every code change. Not merged by the builder.
 
 **Before (main `a5707fd`, this laptop):** `npm test` 216 of 216. The audit's scripts (copies with Windows paths in
-`C:\DataArcus\tests\round5\audit`): `priv.mjs`: `check_model_health` returns the literal, the number 42000 and the
+`<tests folder>\round5\audit`): `priv.mjs`: `check_model_health` returns the literal, the number 42000 and the
 description text inside `fixes.NO_FORMAT.fixScript`; `raw.mjs 1`: one 1 MB description makes the answer 1,053,024
 characters; `adv.mjs`: this laptop can't make symbolic links (EPERM), so the copy uses junctions: `generate_theme`
 on a dangling link at its default name answers a raw `ENOENT` (on Linux, in the audit: the file is written outside).
@@ -282,7 +385,7 @@ a normal result); `check_model_health`'s read-only annotation (true -> false). N
   gets no script": `!fixScript` -> `!fixScriptFile`. (3) Round 3's two working-folder checks: `err` true -> a normal
   result with the same sentences ("is empty", "doesn't exist yet"). (4) The annotations check: `check_model_health`
   moves from the read-only tools to the tools that only add files.
-- **The audit's scripts** (copies with Windows paths, `C:\DataArcus\tests\round5\audit`):
+- **The audit's scripts** (copies with Windows paths, `<tests folder>\round5\audit`):
   | Script | Before | After |
   |---|---|---|
   | `priv.mjs` | `check_model_health` carries the literal, 42000 and the description | none of the three in any answer |
@@ -298,7 +401,7 @@ a normal result); `check_model_health`'s read-only annotation (true -> false). N
 - **Package:** `dist/dataarcus-0.2.1.mcpb`, 3,326,309 bytes, SHA-256
   `a06ac470a831eb4b2862977239e0de0be4c399d9b8055d9dd41733e877d2cc69`, unsigned, 19 staged files, 91 packages.
 - **Install (Claude Desktop 2.19675):** the working-folder field is now empty with the placeholder "Directory
-  path" (captures `C:\DataArcus\tests\round5\shot-*.png`); after Save the extension is still **Disabled** until
+  path" (captures `<tests folder>\round5\shot-*.png`); after Save the extension is still **Disabled** until
   switched on (Claude's own behaviour, for `INSTALL.md`).
 - **Golden tasks at agent level: 4 of 11 -> 6 of 11** (`mcp/GOLDEN-TASKS.md`, "Agent level after round 5"). Pass:
   1, 6, 8, 9, 10, 11. Fail: 2 (exec layout instead of analysis), 3 (no fields input, no Ramadan measure), 4 (cut
@@ -321,7 +424,7 @@ Seven parts in order, each independent. No product code is changed in this sitti
 down with its cause and a proposed fix. State after each part:
 
 - **Part 1, zod 4 (Dependabot PR #5): automated half done.** The PR's branch is on an old base (before rounds 3 and
-  4), so the bump was put on top of main locally (`local/zod4-on-main` in the worktree `C:\DataArcus\zod4-check`, not
+  4), so the bump was put on top of main locally (`local/zod4-on-main` in the worktree `<zod4 worktree>`, not
   pushed). `npm ci`, `npm test`: **216 of 216** with zod 4.6.5. `builder-scripts\zod4-compare.mjs` runs the same 14
   calls on main's server and on the zod 4 server over stdio: **every tool answer and every written file is the
   same** (23 comparisons). Two differences, neither in an answer:
@@ -344,8 +447,8 @@ down with its cause and a proposed fix. State after each part:
   afterwards. **Recommendation for PR #5: mergeable after a rebase on main** (its branch is from before round 3); the
   only visible change is the wording of refusals.
 - **Part 3, install and first check: done, with findings.** `dataarcus-0.2.0.mcpb` installed in Claude Desktop
-  (Store version 2.19675, built-in Node 24.21.0). Captures in `C:\DataArcus\tests\beta-sitting\` (`shot-*.png`).
-  - Empty working folder `C:\DataArcus\beta-check`: the agent says the folder is empty and how to save a project into
+  (Store version 2.19675, built-in Node 24.21.0). Captures in `<tests folder>\beta-sitting\` (`shot-*.png`).
+  - Empty working folder `<working folder>`: the agent says the folder is empty and how to save a project into
     it. **As expected.**
   - Golden task 1 from a new chat: a report was written, **validator 0**, opens in Desktop, cards 101.914K and
     74.675K as in the golden task (details under Part 5).
@@ -372,8 +475,8 @@ down with its cause and a proposed fix. State after each part:
   - The permission "Always allow" given to a tool survived uninstalling and reinstalling the extension.
 - **Part 4, the images for findings 001 and 002: done** (branch `findings/001-capture`, `9d66742`, the record in
   `scripts/tests/DESKTOP-TESTS.md` there). The DAX check gave 101914, 74675, 0.3377971208570472, as expected; the
-  cards 101.914K, 74.675K, 0.34. Images: `C:\DataArcus\tests\6-ms-plugin\_shots\f001-1-page.png`,
-  `f001-2-topband.png`, `f001-3-numbers.png` and `C:\DataArcus\tests\phase2-try\shots-r2\f002-1-before-after.png`.
+  cards 101.914K, 74.675K, 0.34. Images: `<tests folder>\6-ms-plugin\_shots\f001-1-page.png`,
+  `f001-2-topband.png`, `f001-3-numbers.png` and `<tests folder>\phase2-try\shots-r2\f002-1-before-after.png`.
   Image 3 is stacked, not side by side (the query was unreadable side by side at 1200 wide), and its result grid
   rounds to 0.34 while the caption says 0.3378: the owner's choice whether to change the query.
 - **Part 5, the 11 golden tasks at agent level: done. 4 of 11 pass** (7, 8, 9, 10); validator 0 errors on all 9
@@ -404,8 +507,8 @@ down with its cause and a proposed fix. State after each part:
   and its settings file under Claude's data are gone; no server process of the extension is left; the four
   `node ... mcp\server.mjs` processes still running belong to Claude Code sessions started on 2 and 3 October).
   The tester's other skills and connectors, switched off for the agent-level run, are on again. Power BI Desktop closed without
-  saving. Left behind on purpose: the empty test folder `C:\DataArcus\beta-check`, the evidence in
-  `C:\DataArcus\tests\beta-sitting` and `tests\phase2-try\shots-s6`, the sixteen "Gulf Sales S6" test reports, the
+  saving. Left behind on purpose: the empty test folder `<working folder>`, the evidence in
+  `<tests folder>\beta-sitting` and `tests\phase2-try\shots-s6`, the sixteen "Gulf Sales S6" test reports, the
   worktrees `zod4-check` and `engine-build`, and five normal chats in the owner's Claude history (the smoke tests
   and golden tasks 1, 2 and 4). "Always allow" for the DataArcus tools may still be remembered by Claude Desktop
   (it survived a reinstall earlier).
@@ -1063,7 +1166,7 @@ split merges all of them are still `assets/js/pbip-export.js`. Every round: meas
 first; only the suites the change touches (`pbip`, `design-engine`, `theme-generator`, `model-health`, `npm test` in
 `mcp/`); reports built with the branch's `mcp/server.mjs` over stdio; Desktop 2.158.1177 on 1920 x 1080 and
 1280 x 720, English and Arabic, plus what the round touches, judged from full-size crops; results into
-`scripts/tests/DESKTOP-TESTS.md`; only our own sample model (`C:\DataArcus\tests\5-tmdl-sample`) and the website's
+`scripts/tests/DESKTOP-TESTS.md`; only our own sample model (`<tests folder>\5-tmdl-sample`) and the website's
 sample data. Stop when a failure could change what Desktop shows; otherwise note it and continue (root `CLAUDE.md`).
 
 #### `fix/mcp-visual-style`: merged into main as `e8fe171`; how it was built

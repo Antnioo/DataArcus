@@ -1319,6 +1319,93 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   }
 }
 
+// ---------- round 8: a page filter in create_report (golden task 3: "the page is limited to Ramadan") ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 300) : x.t.slice(0, 300));
+  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
+  const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnosticsByCode || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run: ' + String(p.stderr || p.error || p.stdout).slice(0, 200); } };
+  // every page.json of a written report: { tooltip, filters }
+  const pagesOf = (dir) => { const def = path.join(dir, 'definition', 'pages');
+    return fs.readdirSync(def).filter((n) => fs.existsSync(path.join(def, n, 'page.json'))).map((n) => JSON.parse(fs.readFileSync(path.join(def, n, 'page.json'), 'utf8')))
+      .map((pg) => ({ name: pg.displayName, tooltip: pg.type === 'Tooltip', filters: (pg.filterConfig && pg.filterConfig.filters) || [] })); };
+  // a filter as written, in short: Table[Column] In (literals), and whether it has the shape Microsoft's reference gives
+  const lit = (f) => f.filter.Where[0].Condition.In.Values.map((v) => v[0].Literal.Value);
+  const wellFormed = (f) => { const col = f.field.Column, w = f.filter.Where[0].Condition.In, from = f.filter.From[0];
+    return /^Filter[0-9a-f]{20,24}$/.test(f.name) && f.type === 'Categorical' && f.howCreated === 'User' && f.filter.Version === 2 && f.filter.From.length === 1 && from.Type === 0 && from.Entity === col.Expression.SourceRef.Entity
+      && f.filter.Where.length === 1 && w.Expressions.length === 1 && w.Expressions[0].Column.Expression.SourceRef.Source === from.Name && !('Entity' in w.Expressions[0].Column.Expression.SourceRef) && w.Expressions[0].Column.Property === col.Property
+      && w.Values.every((v) => v.length === 1 && typeof v[0].Literal.Value === 'string'); };
+  const plan = await ask('plan_layout', { layout: 'focus', kpis: 3, filters: 'top' }), design = plan.j && plan.j.design;
+  const reportsIn = (proj) => fs.readdirSync(path.join(ROOT, proj)).filter((n) => /\.Report$/.test(n)).length;
+  // a model with a column of every type (made up)
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
+  fs.mkdirSync(path.join(ROOT, 'filter-project/Filter Test.SemanticModel'), { recursive: true });
+  fs.writeFileSync(path.join(ROOT, 'filter-project/Filter Test.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Shop Sales', partitions: mp('Shop Sales'),
+    columns: [['Is Open', 'boolean'], ['City', 'string'], ['Year', 'int64'], ['Rate', 'double'], ['Price', 'decimal'], ['Day', 'dateTime']].map(([name, dataType]) => ({ name, dataType, sourceColumn: name })),
+    measures: [{ name: 'Total', expression: 'SUM ( \'Shop Sales\'[Rate] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( \'Shop Sales\' )', formatString: '#,0' }] }] } }));
+
+  // 1. a boolean column: Calendar[Is Ramadan] = true on every report page (not on the tooltip pages), in Microsoft's shape.
+  //    The Ramadan model's Calendar is a DAX table, so its files give the column no type: the value's own type is used
+  const ram = await ask('create_report', { path: 'dax-project', name: 'R8 Ramadan', design, secondPage: false, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }] });
+  const ramDir = ram.err ? null : path.join(ROOT, 'dax-project', ram.j.report), ramPages = ramDir ? pagesOf(ramDir) : [];
+  chk(() => ramPages.filter((p) => !p.tooltip).length >= 1 && ramPages.filter((p) => !p.tooltip).every((p) => p.filters.length === 1 && wellFormed(p.filters[0]) && p.filters[0].field.Column.Expression.SourceRef.Entity === 'Calendar'
+      && p.filters[0].field.Column.Property === 'Is Ramadan' && lit(p.filters[0]).join() === 'true') && ramPages.some((p) => p.tooltip) && ramPages.filter((p) => p.tooltip).every((p) => p.filters.length === 0),
+    () => `pageFilters Calendar[Is Ramadan] = true: every report page must hold the filter and no tooltip page: ${JSON.stringify(ramPages).slice(0, 500)} ${short(ram)}`);
+
+  // 2. a text column (an apostrophe in the column's name and in a value), with a whole number and a decimal number:
+  //    each literal typed by its column, on both pages of a two-page report
+  const txt = await ask('create_report', { path: 'tmdl-project', name: 'R8 Text', design, pageFilters: [{ field: "Customer[Customer's City]", values: ['Riyadh', "Ha'il"] }, { field: 'Calendar[Year]', values: [2025, 2026] }, { field: 'Sales[Amount]', values: [5.5] }] });
+  const txtDir = txt.err ? null : path.join(ROOT, 'tmdl-project', txt.j.report), txtPages = txtDir ? pagesOf(txtDir).filter((p) => !p.tooltip) : [];
+  chk(() => txtPages.length === 2 && txtPages.every((p) => p.filters.length === 3 && p.filters.every(wellFormed) && p.filters[0].field.Column.Property === "Customer's City" && JSON.stringify(lit(p.filters[0])) === JSON.stringify(["'Riyadh'", "'Ha''il'"])
+      && lit(p.filters[1]).join() === '2025L,2026L' && lit(p.filters[2]).join() === '5.5D') && new Set(txtPages.flatMap((p) => p.filters.map((f) => f.name))).size === 6,
+    () => `pageFilters on a text, a whole-number and a decimal column: ${JSON.stringify(txtPages.map((p) => p.filters.map((f) => { try { return lit(f); } catch (e) { return 'not readable'; } })))} ${short(txt)}`);
+
+  // 3. an unknown column is refused and named, and nothing is written
+  {
+    const before = reportsIn('tmdl-project');
+    const x = await ask('create_report', { path: 'tmdl-project', name: 'R8 Unknown', design, pageFilters: [{ field: 'Nope[Region]', values: ['East'] }, { field: 'Sales[Amount]', values: [1] }] });
+    chk(() => x.err && /Nothing was written/.test(x.t) && /pageFilters\[0\]/.test(x.t) && /no table "Nope"/.test(x.t) && !/pageFilters\[1\]/.test(x.t) && reportsIn('tmdl-project') === before, () => `an unknown table in pageFilters must be refused and named, nothing written: ${short(x)}`);
+  }
+
+  // 4. a model with no such column: the answer says the model has no column of that name and what to do, nothing written
+  {
+    const before = reportsIn('tmdl-project');
+    const x = await ask('create_report', { path: 'tmdl-project', name: 'R8 No column', design, pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }] });
+    chk(() => x.err && /Nothing was written/.test(x.t) && /Calendar\[Is Ramadan\] is not in the model/.test(x.t) && /read_model/.test(x.t) && /page filter/i.test(x.t) && reportsIn('tmdl-project') === before, () => `a page filter on a column the model has not must give a clear message: ${short(x)}`);
+  }
+
+  // 5. only a column, and only values of its type: a measure, a text for a boolean column, a fraction for a whole-number
+  //    column, a date column and a field given twice are each refused and named, all in one answer
+  {
+    const before = reportsIn('filter-project');
+    const x = await ask('create_report', { path: 'filter-project', name: 'R8 Refused', design, pageFilters: [{ field: 'Shop Sales[Total]', values: [1] }, { field: 'Shop Sales[Is Open]', values: ['yes'] },
+      { field: 'Shop Sales[Year]', values: [2025.5] }, { field: 'Shop Sales[Day]', values: ['2026-01-01'] }, { field: 'Shop Sales[City]', values: ['Riyadh'] }, { field: 'Shop Sales[City]', values: ['Jeddah'] }] });
+    chk(() => x.err && /Nothing was written/.test(x.t) && /pageFilters\[0\][^;]*is a measure/.test(x.t) && /pageFilters\[1\][^;]*true or false/.test(x.t) && /pageFilters\[2\][^;]*whole number/.test(x.t) && /pageFilters\[3\][^;]*date/.test(x.t)
+      && !/pageFilters\[4\]/.test(x.t) && /pageFilters\[5\][^;]*twice/.test(x.t) && reportsIn('filter-project') === before, () => `a measure, a wrong value, a date column and a repeated field in pageFilters must each be refused and named: ${short(x)}`);
+  }
+
+  // 6. the answer shows every filter (pageFilters) and tells the user the page is filtered; a typed boolean column
+  //    takes true and "false"; without pageFilters the answer has no such key and no page has a filter
+  {
+    const typed = await ask('create_report', { path: 'filter-project', name: 'R8 Typed', design, secondPage: false, pageFilters: [{ field: "'shop sales'[is open]", values: [true, 'False'] }, { field: 'Shop Sales[Rate]', values: [2] }] });
+    const tp = typed.err ? [] : pagesOf(path.join(ROOT, 'filter-project', typed.j.report)).filter((p) => !p.tooltip), pf = (typed.j && typed.j.pageFilters) || [], rp = (ram.j && ram.j.pageFilters) || [];
+    const none = await ask('create_report', { path: 'filter-project', name: 'R8 None', design, secondPage: false });
+    chk(() => tp.length === 1 && lit(tp[0].filters[0]).join() === 'true,false' && lit(tp[0].filters[1]).join() === '2D' && pf.length === 2 && pf[0].field === 'Shop Sales[Is Open]' && JSON.stringify(pf[0].values) === '[true,false]' && pf[0].type === 'boolean'
+      && pf[1].field === 'Shop Sales[Rate]' && pf[1].type === 'double' && rp.length === 1 && rp[0].field === 'Calendar[Is Ramadan]' && rp[0].values[0] === true && /value/.test(rp[0].typedBy || '')
+      && (typed.j.reportNotes || []).some((n) => /filter/i.test(n) && /Shop Sales\[Is Open\]/.test(n) && /Filters pane/.test(n))
+      && !none.err && !('pageFilters' in none.j) && pagesOf(path.join(ROOT, 'filter-project', none.j.report)).every((p) => p.filters.length === 0) && !(none.j.reportNotes || []).some((n) => /page filter/i.test(n)),
+      () => `the answer must list the page filters and say the page is filtered: ${JSON.stringify(pf)} ${JSON.stringify(rp)} ${JSON.stringify(typed.j && typed.j.reportNotes)} ${short(typed)} | none: ${short(none)}`);
+  }
+
+  // 7. Microsoft's validator finds no error in the reports with page filters; the tool and the skill say when to pass one
+  {
+    const tools = await client.listTools(), cr = tools.tools.find((t) => t.name === 'create_report'), skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8');
+    chk(() => ramDir && txtDir && errors(ramDir) === '0' && errors(txtDir) === '0' && /pageFilters/.test(cr.description) && cr.inputSchema.properties.pageFilters && /pageFilters/.test(skill),
+      () => `Microsoft's validator on the reports with page filters: ${ramDir ? errors(ramDir) : 'not written'}, ${txtDir ? errors(txtDir) : 'not written'}; pageFilters in the tool's description ${/pageFilters/.test(cr.description)}, in its inputs ${!!cr.inputSchema.properties.pageFilters}, in the skill ${/pageFilters/.test(skill)}`);
+  }
+}
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);

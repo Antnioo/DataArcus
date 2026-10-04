@@ -22,10 +22,11 @@ What stays on the machine and what the AI app sees: `PRIVACY.md`. What DataArcus
 
 ## Install (Windows, in the DataArcus folder)
 ```
-cd C:\DataArcus\DataArcus\mcp
+cd <repo folder>\mcp
 npm install
-claude mcp add dataarcus --env DATAARCUS_ROOT=C:\DataArcus -- node C:\DataArcus\DataArcus\mcp\server.mjs
+claude mcp add dataarcus --env DATAARCUS_ROOT=<working folder> -- node <repo folder>\mcp\server.mjs
 ```
+`<repo folder>` is where this repository is cloned; `<working folder>` is the folder that holds your Power BI projects.
 Then in Claude Code: `/mcp` should list `dataarcus` with 6 tools.
 
 ## Test
