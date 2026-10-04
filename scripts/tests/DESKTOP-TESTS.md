@@ -1353,6 +1353,21 @@ Desktop). The report: `create_report` of main, executive layout, four cards, 192
   then: the four-card and three-card layouts at 1920 x 1080 are safe (measured above); six cards or smaller pages
   are not, for values of nine characters or more.
 
+### 7. Extras (hand-written, on the same test reports)
+- **The engine's run-time escape, with a hostile text, in Desktop.** A measure "Esc text": the compiler's own output
+  for a text bound to a column (`fmt: "text"`), with the column replaced by the literal
+  `<b>"x"&'#% </text><script>`, so the same `SUBSTITUTE` chain runs. **Seen:** the picture draws and shows the
+  characters as text (`<b>"x"&'#% </text><scr`, then the column's edge); nothing is interpreted as markup and the
+  picture is not broken. Not run with a real column value (the sample has no such text).
+- **A matrix takes the same image size:** `grid.imageHeight` 24 and `imageWidth` 300 written by hand on the
+  `pivotTable`: its rows became about 29 tall and the pictures up to 300 wide.
+- **Arabic text in the new card's image:** the "Ar rtl" picture as the second card's image draws shaped, right of
+  the number.
+- **"Total" in a right-to-left table, a measure first** ("DP1b SVG AR 4": Total Sales, the two pictures, Hijri Day):
+  **no "Total" word** (the first column shows its own total, 101914). So the word is written only when the first
+  projection is a column, not a measure and not a picture. The right-to-left tables written since round 2 put a
+  measure first (the reversed order), so they have had no "Total" word either: not from round 9.
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
