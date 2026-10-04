@@ -54,6 +54,97 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 - **Website dropdowns fixed** (merged): the open list was white on white on every tool page; form fields now use
   `color-scheme: dark` with dark option colours (`assets/css/style.css`), checked on every tool page in `tools.mjs`.
 
+## Next step: round 9, separators on cards, "this Ramadan only", SVG columns (experimental), the capability map (owner's go 2026-10-04; TERMINAL ONLY; branch `fix/round-9` from main `3af6657`; dataarcus-engine: the same branch name, for the package)
+The owner's words: "I want the engine to expand and be able to do all sorts of manipulation in Power BI ... more room
+for creativity ... a tool used all the time to build other tools." Three items to build and one plan. Built only on
+what the sitting of 4 October measured (DESKTOP-TESTS.md): D8 on a card, D14, D-P1 in a table.
+
+**Before (main `3af6657`):** `npm test` 324 of 324. Website: CI is the record.
+
+| # | Item | Change | Expected |
+|---|---|---|---|
+| R9.1 | Thousand separators on cards | where a KPI card (or the single card slot) shows a measure of round 6's `numberFormats` list, `create_report` writes Desktop's own D8 entry as a second entry of the card's `objects.value`: `labelDisplayUnits` `-1D` (Custom), `customFormatString` the measure's format with the separator (`0` -> `#,0`, `0.00` -> `#,0.00`; the model's helper `withSeparator`), selector `{ metadata: <the card's queryRef> }`. A percent format is untouched; a measure that has a separator gets no entry. **A measure with no format at all** (D8's own case) gets `#,0.##`: D8 measured `#,0` on a whole number; `#,0.##` is the same code that also keeps decimals where a measure has them (not measured: D16). Only cards: the tooltip card, tables and tooltips are not touched and stay in `numberFormats` with "needs a Desktop check (D8, tables)". The answer says which cards were formatted and that such a card now shows the full number (101,914), not a scaled one (101.914K) | tests first (5 checks): the exact D8 JSON for a `0` measure; `0.00`; a measure with a separator: no entry; a percent: no entry; the answer and Microsoft's validator 0. The website's download has no such entry (byte for byte as before). D16 added |
+| R9.2 | "This Ramadan only" | **The choice: a second page filter on the calendar's Hijri year, with the year given by the user.** `pageFilters` already takes several filters, both are plain columns, nothing new is written into PBIR, and it is true to D14 (Is Ramadan alone keeps every Ramadan). **How the agent learns the year without data:** it can't from the tools (they return no data values, by design), so it asks the user in the plan ("Which Ramadan? Give the Hijri year as your calendar writes it, for example 1447") and shows both filters in the plan. Not chosen: a Top N or relative filter (Power BI has no Top N at page level, and "latest" would need a measure), a default slicer selection (it stores a data value the tools never read), a new measure (the model is never touched). The engine helps: when a page filter keeps the `true` rows of a column whose name says Ramadan and no filter is on a Hijri-year column, the answer says that this keeps every Ramadan, names the Hijri-year column it found in the model, and tells the agent to ask the user for the year. The skill and the tool's description say the same | tests first (3 checks): both filters on the page (`true`, `1447L`); the note with the column's name when only Is Ramadan is given; no note with both. Golden task 3 at tool level with both filters: expected vs actual in GOLDEN-TASKS.md. D14 gets the Desktop step |
+| R9.3 | SVG columns in tables (EXPERIMENTAL) | `create_report` takes `svgColumns: [{ label, design, page? }]`. The design is the SVG KPI Designer's own format (values + layers; `assets/js/svg-kpi-compiler.js`): no raw SVG, no script. The shared compiler gets (a) `toMeasure(design)`: the DAX expression alone, without comments; (b) a value kind `column` (the row's value of a model column) and the text format `text`; (c) a run-time escape: any text that comes from a column is passed through `SUBSTITUTE` for `&`, `<`, `>`, `'`, `"`, `%`, `#` in DAX (and the same in the JS preview). Designs without these compile byte for byte as before. The server checks every measure and column of the design against the model (bare names are written as DAX names: `]` doubled, a table's `'` doubled), compiles, and writes a report-level measure into `definition/reportExtensions.json` exactly as D-P1 (schema reportExtension 1.0.0, `name: "extension"`, the entity = the table of the design's first measure, `dataType: Text`, `dataCategory: ImageUrl`), projected as the last column of the page's table with `SourceRef { Schema: "extension", Entity }`. Refused, named, nothing written: a design the compiler reports an error for, an unknown measure or column, a label that is a measure of the model or holds brackets or hidden characters, a page without a table, a measure longer than **8,000 characters** (the cap until D-P2), more than 4 SVG columns. The model is never touched. The answer lists `svgMeasures` with "experimental: tables only; card, matrix, image, phone and PDF need Desktop checks". "A new table" is not built: the column goes into a table the layout has | tests first (8 checks): the D-P1 shape in the files and the answer; only `data:image/svg+xml`; a hostile design (script text, bad colours, unknown layer) is escaped or refused; run-time escape of a column's value (DAX text and JS result); model names with quotes, angle brackets, `--` and `]`; the 8,000 cap; the refusals; validator 0 with two SVG columns. The website's SVG KPI suite (786 checks) passes untouched: CI. D-P1b added |
+| R9.4 | The capability map | `mcp/plans/CAPABILITY-MAP.md`, plan only | every kind of change, with support today, files and schema, what it unlocks, risks, Desktop checks, effort; an order for rounds 10 to 14; the owner's decisions |
+
+**Expected test count:** `npm test` 324 -> **340** (5 + 3 + 8). Engine build test: the staged list goes from 19 to 20
+files (the SVG compiler ships in the package: a new file, so that expectation changes, with this cause).
+Shared engines changed: `pbip-export.js`, `svg-kpi-compiler.js`: `.min.js` rebuilt, `?v=` bumped, `check:min`,
+`csp.mjs` on the files as git stores them.
+
+### Results (2026-10-04; nothing merged by the builder; terminal only)
+- **Commits** (`fix/round-9`): `99b1dc4` the plan; `af104b8` the three items (tests, code, the skill, golden task 3,
+  D14's step, D16, D-P1b, the `.min.js`); `438ca68` the capability map; then this record. dataarcus-engine
+  `fix/round-9`: `d36d2c8` (the build's list with the SVG compiler, its test, version 0.2.5).
+- **Tests:** `npm test` 324 -> **340 of 340** (as planned: 5 + 3 + 8). Run against the old code first: 340 checks, 13
+  failing. The 3 that passed before the code are checks of things that must stay as they are (a measure with a
+  separator gets no entry; a percent is untouched; two page filters with no "every Ramadan" note). Engine build test:
+  9 of 9 (the list test failed first: 19 -> 20 files, eight -> nine engines, because the SVG compiler ships now).
+  Locally: `scripts/test-svg-kpi.mjs` 786 of 786, the `pbip` suite 71 of 71. Website: CI (below).
+- **CI on `112196f` (run 37208910785): mcp success (340); website success on the third attempt, all 17 suites.** The
+  first attempt failed on two checks of pages this branch does not touch: "tools/power-bi-licensing-cost-calculator.html
+  1440px: the Inter swap shifts the page 0.126 (want 0.1 or less)" (the check that failed once in rounds 7 and 8) and
+  "articles/article-power-bi-report-styles.html 390px click #style-sales: top at -464px, hidden under bars ending at
+  67px" (`anchors`); the second attempt failed on the first of them only; the third passed. Main `3af6657` has one
+  failed and one passed run too. The suites of this round's engines (`pbip`, `svg-kpi`, `theme-generator`,
+  `design-engine`) passed in every attempt.
+- **Changed after the first run of the new tests, each in a test of this round, never an old one:** the two made-up
+  fixtures got a month column and more text columns (see "Seen, not in scope": a report on a model with too few
+  columns is written with a slicer or a line chart that has no field, and Microsoft's validator counts it; that is
+  old behaviour, not this round's); the "page without a table" refusal is asked for with `secondPage: false`,
+  because the focus design's second page has a table and the plan says the column goes to the first page that has
+  one; the test file's own reads of `reportExtensions.json` were guarded so the old code fails a check instead of
+  stopping the run.
+- **R9.1, separators on cards:** as expected. A KPI card on a measure of `numberFormats` carries, as a second entry
+  of `objects.value`, exactly D8's JSON: `labelDisplayUnits` `-1D`, `customFormatString` `'#,0'` (from `0`),
+  `'#,0.00'` (from `0.00`), selector `{ metadata: "Sales.Total Sales" }`. No format at all: `'#,0.##'` (**not
+  measured**: D16). A percent and a measure with a separator: no entry. The tooltip card, tables and tooltips: not
+  touched. The answer: `numberFormats.cards.formatted` (field and format), a note that such a card shows the full
+  number (101,914), not a scaled one (101.914K), and `tablesAndTooltips`: "needs a Desktop check (D8, tables)".
+  Validator 0. The website's download is as before (no `cardFormat` there; its suites pass).
+- **R9.2, "this Ramadan only":** the choice and why are in the plan above (a second page filter on the Hijri year,
+  the year asked from the user; no Top N at page level, no stored selection, no measure). Built: the answer to a
+  filter on a Ramadan flag alone says it keeps every Ramadan, names the Hijri-year column found in the model
+  (Calendar[Hijri Year]) and says to ask the user; the tool's description and the skill say the same. Golden task 3
+  with both filters: expected and actual in GOLDEN-TASKS.md: PASS at tool level (two filters on the page, none on
+  the tooltip pages, 20 visuals, validator 0).
+- **R9.3, SVG columns (experimental):** as expected. `svgColumns: [{ label, design, page? }]`, 4 at most. The shared
+  compiler got `toMeasure`, the value kind `column` with the text format `text`, and the run-time escape (`&`, `<`,
+  `>`, `'`, `"`, `%`, `#` through `SUBSTITUTE`, the same in the preview); a design without them compiles byte for
+  byte as before (the website's 786 checks pass). The files are D-P1's: `definition/reportExtensions.json`
+  (reportExtension 1.0.0, `extension`, the entity of the design's first measure, `Text`, `ImageUrl`), the measures as
+  the last columns of the page's first table (in a right-to-left report: the first, at the left end; not measured).
+  A hostile design is escaped (no script, no handler, a colour that is not `#rrggbb` becomes black) and an unknown
+  layer refused; names with quotes, angle brackets, `--` and `]` are written as DAX names; over 8,000 characters:
+  refused and named; validator 0 in English and Arabic. The answer: `svgMeasures` with the status text.
+  **Not built: "a new table".** The column goes into a table the layout already has; a report with no table is
+  refused with that reason.
+- **R9.4:** `mcp/plans/CAPABILITY-MAP.md`: 13 capabilities and 7 smaller ones, each with today's support, files and
+  schema, what it unlocks, risks, Desktop checks and effort; an order for rounds 10 to 14; 7 decisions.
+- **Shared engines:** `pbip-export.js`, `svg-kpi-compiler.js`. `pbip-export.min.js?v=20261004e`,
+  `theme-generator.min.js?v=20261004e`; the SVG KPI Designer's page loads its scripts with no `?v=` (nothing to
+  bump). `check:min`: all 55 match. `scripts/csp.mjs`: "All 52 pages carry their current policy" (on `438ca68` as
+  git stores it).
+- **Package:** `dist/dataarcus-0.2.5.mcpb`, built from `fix/round-9` at `438ca68`, **4,039,272 bytes**, SHA-256
+  `03239023b8eada1095e9c8a1714e506eadd1362f8aa113041a7ceb7f218b5157`, unsigned, not installed, 20 staged files, 91
+  packages. The manifest's tool texts are unchanged (only inputs' descriptions changed); the version is 0.2.5.
+
+**Seen, not in scope (round 9):**
+- **A visual is written without its field when the model has too few columns:** a third slicer with no field on a
+  model with two text columns, and a line chart with no field on a model with no month or date column. Microsoft's
+  validator calls each `PBIR_QUERY_STATE_MISSING` (2 and 3 errors on two made-up models). Round 4 fixed this for KPI
+  cards only. Old behaviour; it could change what Desktop shows (an empty slicer and an empty chart).
+- The server's rule 3 still says a KPI card shows a measure "with no filter added"; with a page filter it is filtered.
+- A formatted card stops scaling (101,914, not 101.914K): on a narrow card a long number may not fit. D16.
+- The SVG picture's size in a table row is Desktop's default (`grid.imageHeight` is not written). D-P1b.
+- A `column` value used for a size or a colour rule (not a text) is not checked for being a number: on a text column
+  the measure would give an error in Desktop, not a wrong picture.
+- The SVG KPI Designer's page loads its three scripts with no `?v=`: a returning visitor may keep an old compiler.
+
+**Still open, not in this round:** the Desktop checks D1 to D16, D-P1b, D-P2 to D-P7 and D15 (the header), and the
+agent-level re-run of the golden tasks (the next free laptop evening); the platform decisions (the owner, 10 October).
+
 ## Next step: round 8, a page filter, the taller header (plan only), the laptop paths (owner's go 2026-10-04; TERMINAL ONLY; branch `fix/round-8` from main `3564fe7`)
 The owner's decisions (2026-10-04): golden task 3's page filter: yes, this round. The title 2.8 below the header's
 middle in Segoe UI: leave it; a taller header box is a **plan only** here, with numbers, because Desktop can't be
@@ -341,9 +432,11 @@ Made-up models only (`tests/5-tmdl-sample` with data; a copy for anything a scri
 | D11 | 960 x 720 with three cards | golden task 4's 4:3 report | card titles whole (they were cut with four cards) |
 | D12 | The website's picker | the Theme Generator's project download on our own model (the Ramadan sample) | the third KPI is "Total Sales vs Last Ramadan %", not "(old)" |
 | D13 | Agent level | install `dataarcus-0.2.2.mcpb`, the 11 golden tasks and the hostile-model test in incognito chats | the plans' fields are what the reports show (`boundFields`); before: 6 of 11 |
-| D14 | The page filter (round 8) | golden task 3's report on the Ramadan sample with data, built with `pageFilters: [{ field: "Calendar[Is Ramadan]", values: [true] }]`; open it, open the Filters pane; then clear the filter; then a text filter with an apostrophe in a value and a decimal-number filter (the literals `'Ha''il'` and `5.5D` are written as Microsoft's reference gives them, not yet seen in Desktop) | the Filters pane shows "Is Ramadan is True" under "Filters on this page", with no error mark; the cards show Ramadan only (with one Hijri year picked in the slicer: this Ramadan only) and equal DAX with the same filter; clearing the filter brings the unfiltered totals back; the tooltip pages have no filter; the text and decimal filters select their rows **2026-10-04, PASS on what was run:** the Filters pane shows "Is Ramadan is True" under "Filters on this page"; Total Sales 99.9K with the filter, 101.914K in the same report written without it; the other two cards 74.675K and 0.34 in both; the tooltip pages unchanged; cleared with the eraser in the pane: "Is Ramadan is (All)" and 101.914K. **Not run:** the text filter with an apostrophe, the decimal filter |
+| D14 | The page filter (round 8) | golden task 3's report on the Ramadan sample with data, built with `pageFilters: [{ field: "Calendar[Is Ramadan]", values: [true] }]`; open it, open the Filters pane; then clear the filter; then a text filter with an apostrophe in a value and a decimal-number filter (the literals `'Ha''il'` and `5.5D` are written as Microsoft's reference gives them, not yet seen in Desktop) | the Filters pane shows "Is Ramadan is True" under "Filters on this page", with no error mark; the cards show Ramadan only (with one Hijri year picked in the slicer: this Ramadan only) and equal DAX with the same filter; clearing the filter brings the unfiltered totals back; the tooltip pages have no filter; the text and decimal filters select their rows **2026-10-04, PASS on what was run:** the Filters pane shows "Is Ramadan is True" under "Filters on this page"; Total Sales 99.9K with the filter, 101.914K in the same report written without it; the other two cards 74.675K and 0.34 in both; the tooltip pages unchanged; cleared with the eraser in the pane: "Is Ramadan is (All)" and 101.914K. **Not run:** the text filter with an apostrophe, the decimal filter **Added in round 9 ("this Ramadan only"):** build task 3 with the two filters, Is Ramadan = true and Hijri Year = the latest Hijri year the Hijri Year slicer lists; expected: the pane shows both filters with no error mark, the chart shows that one Ramadan's months only, the three cards show one Ramadan (write the values down), and clearing the year filter brings 99.9K back. Also write down whether the sample's Hijri Year is a number (the filter is written `1447L`) or a text |
 | D15 | The taller header (round 8, plan only) | **before any code:** by hand-edited copies of one report, set the header to the proposed heights on 2 sizes x 2 languages (1920 x 1080 and 1280 x 720; English Segoe UI and Arabic Tahoma), the title's size unchanged, and measure the title's ink against the header's middle as in round 1 | the title's middle within 1 of the header's middle (computed: -0.2 English, +0.4 Arabic); the logo and the page buttons still centred; nothing in the body cut. The owner decides from the table in round 8's plan and these numbers |
 | D-P1 | An SVG measure that lives in the report (dataarcus-engine `research/ENGINE-POSSIBILITIES.md`, section 5) | a report-level measure in `definition/reportExtensions.json` returning a `data:image/svg+xml;utf8,` text, `dataCategory: ImageUrl`, in a table column and on the new card's image | **2026-10-04, half done:** the table column draws the picture in every row and the total; validator 0; the model untouched. **Not run:** the new card's image, a matrix, an image visual. Record: DESKTOP-TESTS.md, 2026-10-04 sitting |
+| D16 | Thousand separators on cards (round 9, R9.1) | a report from `create_report` on a made-up model with data whose measures have the formats `0` and `0.00` and one with no format (and the Ramadan sample: Total Sales has no format); open it | the cards show the full number with the separator: **101,914** (`0` -> `#,0`), **101,914.00** (`0.00` -> `#,0.00`), and the no-format measure 101,914 with `#,0.##` (a measure with decimals keeps them: not measured before); a percent card and a card whose measure has a separator are as before; the card's Format pane shows Display units Custom and the code; the phone layout and the tooltip card are unchanged |
+| D-P1b | SVG columns from `create_report` (round 9, R9.3; experimental) | one report on the made-up sample with two `svgColumns`: a progress bar per row (a track and a bar bound to a ratio of two measures) and a Ramadan-day strip (a 30-step bar bound to a day-of-Ramadan measure, with tick lines), English and Arabic (right-to-left); open both | every row and the total draw both pictures; the bar's width follows the ratio; the column headers are the labels; in the Arabic report the SVG columns sit at the left end; write down the picture's size in the row (the table's image height is left to Desktop's default: decide from the capture whether `grid.imageHeight` must be set), and that a column value with `<`, `&` or a quote (a text bound with `fmt: "text"`) is drawn as text. Not in this check: card, matrix, image visual, phone, PDF |
 
 ## Round 5 in progress: the audit's MCP fixes, the agent's guidance, the install experience (owner's go 2026-10-04, in advance for every step; branch `fix/round-5-agent`, from main `a5707fd`; dataarcus-engine branch `fix/round-5-agent`, from its main `f716775`)
 Sources: dataarcus-engine `business/audit/REPORT-2026-10-04.md` (AUD-006, AUD-005, AUD-023, AUD-007, evidence in

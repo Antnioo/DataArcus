@@ -7,7 +7,7 @@ import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, applyColumnTypes, inside, loadModel, nothingAt, prepareRoot, rootProblem, summary, writeNew } from './lib/model.mjs';
+import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, Svg, applyColumnTypes, inside, loadModel, nothingAt, prepareRoot, rootProblem, summary, writeNew } from './lib/model.mjs';
 import { E, themeDesign, planLayout, pageOf, contrastReport, freeFile } from './lib/design.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 
@@ -166,6 +166,58 @@ function resolvePageFilters(tables, list) {
     return Object.assign({ t: t.name, c: col.name, key, type, values, literals }, known ? {} : { typedBy: 'the values given: the model\'s files give this column no type' });
   });
   if (problems.length) throw new Error(`Nothing was written. ${problems.length} of the page filters can't be used: ${problems.join('; ')}. A page filter takes a column of the model, written exactly as read_model lists it (Table[Column]), and values of the column's type.`);
+  return out;
+}
+
+// ---------- SVG columns (create_report's svgColumns; experimental) ----------
+// [{ label, design, page? }]: a design in the SVG KPI Designer's own format (values + layers; no raw SVG, no script),
+// compiled by the shared compiler to a DAX expression that returns a data:image/svg+xml text. Every measure and column
+// the design names is looked up in the model and written back as a DAX name (model names are untrusted text). The
+// length is capped until Desktop measures the real limit (D-P2). Every problem is told at once.
+const SVG_CAP = 8000, SVG_STATUS = 'experimental: tables only; card, matrix, image, phone and PDF need Desktop checks';
+function resolveSvgColumns(tables, list) {
+  if (!list || !list.length) return null;
+  const problems = [], labels = new Set();
+  const find = (ref, kind) => {
+    const text = String(ref == null ? '' : ref).trim(), mk = text.match(/^'?(.+?)'?\[(.+)\]$/);
+    const pick = (l, n) => l.find((x) => x.name === n) || l.find((x) => x.name.toLowerCase() === n.toLowerCase());
+    if (mk) { const t = pick(tables, mk[1]), o = t && pick(kind === 'm' ? t.measures : t.columns, mk[2]); return o ? { t, o } : null; }
+    if (kind !== 'm' || !text) return null;
+    for (const t of tables) { const o = t.measures.find((x) => x.name === text); if (o) return { t, o }; }
+    for (const t of tables) { const o = pick(t.measures, text); if (o) return { t, o }; }
+    return null;
+  };
+  const daxColumn = (t, c) => "'" + t.replace(/'/g, "''") + "'[" + c.replace(/\]/g, ']]') + ']';
+  const out = list.map((sc, i) => {
+    const where = `svgColumns[${i}]`, label = String(sc.label).trim(), before = problems.length;
+    if (!label || /[\[\]]|\p{Cc}|\p{Cf}/u.test(label)) problems.push(`${where}: the label ${JSON.stringify(sc.label)} can't be used (a label has no brackets and no hidden characters)`);
+    else if (tables.some((t) => t.measures.some((x) => x.name.toLowerCase() === label.toLowerCase()))) problems.push(`${where}: "${label}" is a measure of the model; give the SVG column another label`);
+    else if (labels.has(label.toLowerCase())) problems.push(`${where}: the label "${label}" is given twice`);
+    labels.add(label.toLowerCase());
+    let d;
+    try { d = JSON.parse(JSON.stringify(sc.design)); } catch (e) { d = null; }
+    if (!d || typeof d !== 'object' || Array.isArray(d) || JSON.stringify(d).length > 20000 || !Array.isArray(d.layers) || d.layers.length > 60 || (d.values != null && (!Array.isArray(d.values) || d.values.length > 20))) {
+      problems.push(`${where} ("${label}"): the design must be an object with layers (60 at most) and values (20 at most), as the SVG KPI Designer writes it`); return null; }
+    let entity = null;
+    d.values = (d.values || []).map((v) => {
+      if (!v || typeof v !== 'object') return v;
+      if (v.kind === 'measure') { const f = find(v.measure, 'm'); if (!f) { problems.push(`${where} ("${label}"): ${v.measure} is not in the model (a measure is needed)`); return v; } entity = entity || f.t.name; return Object.assign({}, v, { measure: f.o.name }); }
+      if (v.kind === 'column') { const f = find(v.column, 'c'); if (!f) { problems.push(`${where} ("${label}"): ${v.column} is not in the model (a column is needed, written as Table[Column])`); return v; } return Object.assign({}, v, { column: daxColumn(f.t.name, f.o.name) }); }
+      return v;
+    });
+    if (d.layers.some((l) => l && l.type === 'spark')) { const f = find(d.dateCol, 'c'); if (!f) problems.push(`${where} ("${label}"): a sparkline needs dateCol, a date column of the model written as Table[Column]`); else d.dateCol = daxColumn(f.t.name, f.o.name); }
+    else delete d.dateCol;
+    d.name = label;
+    if (problems.length > before) return null;
+    let c;
+    try { c = Svg.toMeasure(d); } catch (e) { c = { dax: '', errors: ['the design can\'t be compiled: ' + String(e && e.message || e).slice(0, 120)] }; }
+    if (c.errors.length) { problems.push(`${where} ("${label}"): ${[...new Set(c.errors)].slice(0, 5).join('; ')}`); return null; }
+    if (c.dax.length > SVG_CAP) { problems.push(`${where} ("${label}"): the measure is ${c.dax.length.toLocaleString('en-US')} characters; the limit is ${SVG_CAP.toLocaleString('en-US')} until the real limit is measured in Power BI Desktop (use fewer or shorter layers)`); return null; }
+    if (!/RETURN\n\s+(IF \( ISBLANK \( \w+ \), BLANK \(\), )?"data:image\/svg\+xml;utf8," & _svg( \))?$/.test(c.dax)) { problems.push(`${where} ("${label}"): the compiled measure does not end in a data:image/svg+xml text`); return null; }
+    const withMeasures = tables.find((t) => t.measures.length) || tables[0];
+    return { label, t: entity || (withMeasures && withMeasures.name), expression: c.dax, page: sc.page != null ? sc.page : null };
+  });
+  if (problems.length) throw new Error(`Nothing was written. ${problems.length} of the SVG columns can't be used: ${problems.join('; ')}. An SVG column takes a design in the SVG KPI Designer's format (values and layers), with measures and columns named exactly as read_model lists them.`);
   return out;
 }
 
@@ -339,7 +391,12 @@ server.registerTool('create_report', {
     pageFilters: z.array(z.object({
       field: z.string().describe('The column to filter, written as Table[Column] exactly as read_model lists it (a column, never a measure)'),
       values: z.array(z.union([z.string(), z.number(), z.boolean()])).min(1).max(50).describe('The values the pages keep, in the column\'s type: true or false, texts, or numbers')
-    }).strict()).max(8).optional().describe('Page filters, for a request that limits the report to part of the data (for example "Ramadan only": [{ "field": "Calendar[Is Ramadan]", "values": [true] }]; one Ramadan needs the year as a second filter). Each keeps only the rows where the column is one of the values, on every page of the report, and shows in Power BI\'s Filters pane, where the user can change or clear it. Only columns of the model and plain values: no measures, no dates, no DAX. A column that is not in the model, or a value of the wrong type, refuses the call and nothing is written. Show the filters in the plan the user approves; the answer\'s pageFilters lists what was written'),
+    }).strict()).max(8).optional().describe('Page filters, for a request that limits the report to part of the data (for example "Ramadan only": [{ "field": "Calendar[Is Ramadan]", "values": [true] }]. That keeps every Ramadan of the calendar: for "this Ramadan" add a second filter on the calendar\'s Hijri year, { "field": "Calendar[Hijri Year]", "values": [<year>] }, and ask the user which Hijri year, because the tools read no data values). Each keeps only the rows where the column is one of the values, on every page of the report, and shows in Power BI\'s Filters pane, where the user can change or clear it. Only columns of the model and plain values: no measures, no dates, no DAX. A column that is not in the model, or a value of the wrong type, refuses the call and nothing is written. Show the filters in the plan the user approves; the answer\'s pageFilters lists what was written'),
+    svgColumns: z.array(z.object({
+      label: z.string().min(1).max(40).describe('The column\'s header (also the name of the report-level measure); not the name of a measure of the model'),
+      design: z.record(z.any()).describe('The design, in the SVG KPI Designer\'s format: { w, h, bg?, values: [{ id, label, kind: "measure", measure: "Table[Measure]" } | { id, label, kind: "column", column: "Table[Column]" } | { id, label, kind: "ratio" | "diff" | "pct", a, b }], layers: [{ type: "rect" | "circle" | "line" | "text" | "ring" | "arrow" | "spark", ...its sizes and colours (#rrggbb), bind?: { w | x | fill | text | p | dir | show | ...: { v: <value id>, ... } } }] }. For a text bound to a column use bind.text { v, fmt: "text" }. No raw SVG and no script: only these layers'),
+      page: z.number().int().min(1).optional().describe('The page (1 = the first) whose table gets the column; left out: the first page that has a table')
+    }).strict()).max(4).optional().describe('EXPERIMENTAL. Small pictures drawn per row of a table (a progress bar, a ring, an arrow, a sparkline, a label), from a declarative design. Each is compiled to a report-level measure that exists only in the report (the model is never touched) and shown as the last column of the page\'s table. Checked in Power BI Desktop only in a table: card, matrix, image visual, phone and PDF are not checked yet. A design naming a measure or column that is not in the model, an unknown layer, or a measure over 8,000 characters refuses the call and nothing is written. Show the columns in the plan the user approves; the answer\'s svgMeasures lists what was written'),
     displayNames: z.record(z.string(), z.string()).optional().describe('Names to show instead of the model\'s field names, as { "Table[Field]": "name" } (for example Arabic names for an Arabic report). Only names the user gave or approved: never translate, shorten or relabel a field yourself; when names are missing, list the fields and ask the user. The report shows the name wherever it shows the field: KPI titles, chart titles, axis and legend, table headers, slicer headers, the tooltip pages. The model is never renamed. Give names only for fields you know the right name of: nothing is translated automatically'),
     logo: z.string().optional().describe('Logo image for the header: a PNG or JPG file inside the DataArcus folder, 2 MB at most. It is copied into the new report (the file itself is not changed) and shown at its own shape, never stretched; a horizontal logo reads best'),
     lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().default(false), font: z.string().default('Segoe UI'),
@@ -358,6 +415,39 @@ server.registerTool('create_report', {
   const F = resolveFields(m.tables, a.fields);
   // the page filters: each column checked against the model, each value typed by its column
   const PF = resolvePageFilters(m.tables, a.pageFilters);
+  // a filter that keeps the true rows of a Ramadan flag keeps every Ramadan (measured in Desktop, D14): without a
+  // filter on a Hijri-year column the answer says so and names that column; the year itself comes from the user
+  if (PF) {
+    const isHijriYear = (c) => /hijri/i.test(c) && /year/i.test(c);
+    PF.filter((f) => /ramadan/i.test(f.c) && f.values.length && f.values.every((v) => v === true)).forEach((f) => {
+      if (PF.some((g) => isHijriYear(g.c))) return;
+      const own = m.tables.find((t) => t.name === f.t), t = [own].concat(m.tables).filter(Boolean).find((x) => x.columns.some((c) => isHijriYear(c.name))), c = t && t.columns.find((x) => isHijriYear(x.name));
+      f.note = `${f.key} is true keeps every Ramadan of the calendar, not one. For one Ramadan ("this Ramadan") add a second page filter on the Hijri year${c ? ` (${t.name}[${c.name}])` : ' (no Hijri year column was found by name in this model: ask the user which column holds it)'}, with the year the user gives: ask the user which Hijri year, because the tools read no data values.`;
+    });
+  }
+  // SVG columns: each design checked against the model and compiled (nothing is written when one can't be used)
+  const SV = resolveSvgColumns(m.tables, a.svgColumns);
+  // the page (by its place in the report) whose first table takes each SVG column: the one asked for, or the first with a table
+  const svgFor = (pages, b) => {
+    if (!SV) return undefined;
+    const hasTable = pages.map((p) => p.slots.some((s) => s.kind === 'table') && (b.table || []).filter(Boolean).length > 0), first = hasTable.indexOf(true);
+    if (first < 0) throw new Error('Nothing was written. svgColumns need a table, and this report has no table on any page: use a layout with a table (plan_layout shows the slots), or hand-placed pages with a table slot.');
+    return SV.map((c, i) => { if (c.page != null && !hasTable[c.page - 1]) throw new Error(`Nothing was written. svgColumns[${i}]: page ${c.page} has no table (pages with a table: ${hasTable.map((h, k) => (h ? k + 1 : 0)).filter(Boolean).join(', ')}).`);
+      return (c.at = { page: c.page != null ? c.page - 1 : first, t: c.t, m: c.label, expression: c.expression }); });
+  };
+  // a KPI card's number format on the report side (D8): the measure's own format with the separator, where the model's
+  // has none; a measure with no format gets "#,0.##". A percentage, or a format that has the separator: nothing
+  const cardFormats = [];
+  const cardFormatOf = (f) => {
+    if (!f || f.m == null) return null;
+    const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t), o = t && (t.measures || []).find((x) => x.name === f.m);
+    if (!o || o.formatStringDefinition || Bind.isPercent(f.m, o.formatString, o.expression)) return null;
+    return !o.formatString ? '#,0.##' : Fix.lacksSeparator(o.formatString) ? Fix.withSeparator(o.formatString) : null;
+  };
+  const withCardFormats = (b) => {
+    const one = (f) => { const code = cardFormatOf(f); if (!code) return f; if (!cardFormats.some((x) => x.field === keyOf(f))) cardFormats.push({ field: keyOf(f), format: code }); return Object.assign({}, f, { cardFormat: code }); };
+    return Object.assign({}, b, { kpis: (b.kpis || []).map(one) });
+  };
   const usable = F && F.kpis ? F.kpis.map((k) => k.m) : Bind.suggest(pickFrom, 8).kpis.filter(Boolean).map((k) => k.m);
   // the binding for n KPI cards: the picker's, with every given field in its place
   const bindFor = (n) => {
@@ -433,7 +523,7 @@ server.registerTool('create_report', {
     const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel, logoRatio }).map((p) => Object.assign({}, p, { slots: withValues(p.slots) }));
     r = Pbip.build({
       name: a.name, title: E.themeName(design.name), pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = named(bindFor(kpisOf(pages)))), pageFilters: PF,
+      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(pages))))), pageFilters: PF, svgColumns: svgFor(pages, bind),
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel }))
     });
     boundPages = pages;
@@ -450,7 +540,7 @@ server.registerTool('create_report', {
     r = Pbip.build({
       name: a.name, title: a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = named(bindFor(kpisOf(a.pages)))), pageFilters: PF,
+      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(a.pages))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind),
       texts: { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' },
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
     });
@@ -489,8 +579,13 @@ server.registerTool('create_report', {
     return out;
   })();
   const numberFormats = noSep.length ? { numberFormats: { noThousandSeparator: noSep,
-    why: 'These fields have no format with a thousand separator in the model, so the report\'s tables and tooltips show 13857, not 13,857 (a KPI card shows them scaled, like 13.86K). Power BI takes this format from the model: the report can\'t add it.',
+    ...(cardFormats.length ? { cards: { formatted: cardFormats, note: 'The KPI cards of these measures carry a number format of their own in the report (the measure\'s format with the thousand separator), so a card shows the full number with the separator, like 101,914, not a scaled one like 101.914K. The model is not changed.' } } : {}),
+    tablesAndTooltips: 'Not formatted by the report: a report-side format for table cells and tooltips needs a Desktop check (D8, tables) before it is built.',
+    why: 'These fields have no format with a thousand separator in the model, so the report\'s tables and tooltips show 13857, not 13,857. Power BI takes that format from the model.',
     fix: 'check_model_health writes ready scripts that add the formats (fixes.NO_FORMAT for measures without a format, fixes.THOUSANDS for formats without a separator), or in Power BI Desktop select each measure, then Measure tools > the thousands separator button.' } } : {};
+  if (PF) PF.filter((f) => f.note).forEach((f) => reportNotes.push(f.note));
+  const svgMeasures = SV ? { svgMeasures: SV.map((c) => ({ label: c.label, entity: c.t, page: boundPages[c.at.page].name, shownAs: 'the last column of that page\'s table', characters: c.expression.length, status: SVG_STATUS })) } : {};
+  if (SV) reportNotes.push(`${SV.length === 1 ? 'An SVG column was' : SV.length + ' SVG columns were'} added (${SV.map((c) => c.label).join(', ')}): each is a measure that exists only in this report (definition/reportExtensions.json); the model was not changed. This is ${SVG_STATUS}.`);
   // what was done with the display names; and in an Arabic report, the fields it shows under a model name that has no
   // Arabic letter (no name is ever made up for them)
   const shown = [...new Set(fieldsOf(bind).map(keyOf))];
@@ -499,7 +594,7 @@ server.registerTool('create_report', {
   const arabic = a.lang === 'ar' ? { arabicNames: { shownFields: shown.length, missing,
     how: missing.length ? 'These fields show under their model names. To show Arabic names, call create_report again with displayNames: { "Table[Field]": "الاسم" } for each (ask the user for the names: nothing is translated automatically). The model is not renamed.' : 'Every field the report shows has an Arabic name.' } } : {};
   return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
-    { boundFields: boundOf(boundPages, bind) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {})) } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
+    { boundFields: boundOf(boundPages, bind) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, unknown ? { ignored: unknown } : {}, hiddenOf(m),
     sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {}));
 }));
 

@@ -36,8 +36,14 @@
     sparkEnd: (o) => Object.assign({ k: 'sparkEnd' }, o),   // the last date of the series
     aggx: (f, t, e) => ({ k: 'aggx', f: f, t: t, e: e }),   // MINX MAXX COUNTROWS
     filt: (t, c) => ({ k: 'filt', t: t, c: c }),
-    concatx: (t, e, by) => ({ k: 'concatx', t: t, e: e, by: by })
+    concatx: (t, e, by) => ({ k: 'concatx', t: t, e: e, by: by }),
+    // the value of a model column in the current row (SELECTEDVALUE), for an SVG shown per row of a table
+    colval: (col) => ({ k: 'colval', col: col }),
+    // text that comes from the model's data, made safe for the SVG and the data URL when the measure runs
+    esc: (a) => ({ k: 'esc', a: a })
   };
+  // what esc replaces, in this order: & first (the others write an &), then the URL characters % and #
+  const ESCAPES = [['&', '&amp;'], ['<', '&lt;'], ['>', '&gt;'], ["'", '&apos;'], ['"', '&quot;'], ['%', '%25'], ['#', '%23']];
   // "0.00" (not "0.##") for SVG numbers: Excel-style formatting can print "12." for "0.##", which some SVG attributes reject
   const PATTERNS = { '0.00': [2, 2, false], '#,0': [0, 0, true], '#,0.0': [1, 1, true], '#,0.00': [2, 2, true] };
 
@@ -72,6 +78,8 @@
       case 'blank': return null;
       case 'ref': return env.vars[n.name];
       case 'measure': return Object.prototype.hasOwnProperty.call(env.measures, n.name) ? env.measures[n.name] : null;
+      case 'colval': return env.columns && Object.prototype.hasOwnProperty.call(env.columns, n.col) ? env.columns[n.col] : null;
+      case 'esc': { const v = evalNode(n.a, env); return ESCAPES.reduce((s, e) => s.split(e[0]).join(e[1]), v == null ? '' : String(v)); }
       case 'isblank': return evalNode(n.a, env) == null;
       case 'op': {
         const a = evalNode(n.a, env), b = evalNode(n.b, env);
@@ -147,6 +155,8 @@
       case 'blank': return 'BLANK ()';
       case 'ref': return n.name;
       case 'measure': return daxMeasure(n.name);
+      case 'colval': return 'SELECTEDVALUE ( ' + n.col + ' )';
+      case 'esc': return ESCAPES.reduce((s, e) => 'SUBSTITUTE ( ' + s + ', ' + daxStr(e[0]) + ', ' + daxStr(e[1]) + ' )', dax(n.a) + ' & ""');
       case 'isblank': return 'ISBLANK ( ' + dax(n.a) + ' )';
       case 'op': return '( ' + dax(n.a) + ' ' + n.o + ' ' + dax(n.b) + ' )';
       case 'fn': return n.f + ' ( ' + n.args.map(dax).join(', ') + ' )';
@@ -190,6 +200,7 @@
   // A value is a measure, or a formula of two other values. Each becomes one VAR.
   const VALUE_KINDS = {
     measure: (v) => N.measure(v.measure),
+    column: (v) => N.colval(v._col),
     ratio: (v, R) => N.fn('DIVIDE', [R(v.a), R(v.b)]),
     diff: (v, R) => N.op('-', R(v.a), R(v.b)),
     pct: (v, R) => N.fn('DIVIDE', [N.op('-', R(v.a), R(v.b)), R(v.b)])
@@ -227,6 +238,16 @@
   };
   const OPS = ['<', '<=', '>', '>=', '=', '<>'];
 
+  // 'Date'[Date] or Date[Date] -> table and column, always quoted. DAX doubles a ' inside a quoted table name
+  // and a ] inside a column name ('Date''s'[Date], 'Cal'[Da]]te]), so those are read and written back the same way.
+  function columnRef(text) {
+    const m = /^\s*(?:'((?:[^']|'')+)'|([^'\[\]]+?))\s*\[((?:[^\]]|\]\])+)\]\s*$/.exec(String(text == null ? '' : text));
+    if (!m) return null;
+    const t = (m[1] !== undefined ? m[1].replace(/''/g, "'") : m[2]).trim(), c = m[3].replace(/\]\]/g, ']').trim();
+    const table = "'" + t.replace(/'/g, "''") + "'";
+    return t && c ? { table, col: table + '[' + c.replace(/\]/g, ']]') + ']' } : null;
+  }
+
   // ---------- compile ----------
   function compile(design, opts) {
     const d = design || {};
@@ -240,9 +261,16 @@
     const R = (id) => { if (!valueIds.has(id)) { errors.push('Unknown value: ' + id); return N.num(0); } return N.ref(varName(id)); };
     const Z = (id) => N.fn('COALESCE', [R(id), N.num(0)]);
 
+    // values that hold (or are worked out from) a column's value: their text is escaped when the measure runs
+    const fromColumn = new Set();
     (d.values || []).forEach((v) => {
       const make = VALUE_KINDS[v.kind];
       if (!make) { errors.push('Unknown value kind: ' + v.kind); return; }
+      if (v.kind === 'column') {
+        const c = columnRef(v.column);
+        if (!c) { errors.push('Value "' + (v.label || v.id) + '" needs a column written as Table[Column]'); return; }
+        v = Object.assign({}, v, { _col: c.col }); fromColumn.add(v.id);
+      } else if (fromColumn.has(v.a) || fromColumn.has(v.b)) fromColumn.add(v.id);
       if (v.kind === 'measure' && !String(v.measure || '').trim()) { errors.push('Value "' + (v.label || v.id) + '" needs a measure name'); return; }
       vars.push({ name: varName(v.id), node: make(v, R), comment: null });
       valueIds.add(v.id);
@@ -256,13 +284,7 @@
     };
     // 'Date'[Date] or Date[Date] -> table and column, always quoted. DAX doubles a ' inside a quoted table name
     // and a ] inside a column name ('Date''s'[Date], 'Cal'[Da]]te]), so those are read and written back the same way.
-    const dateCol = (() => {
-      const m = /^\s*(?:'((?:[^']|'')+)'|([^'\[\]]+?))\s*\[((?:[^\]]|\]\])+)\]\s*$/.exec(d.dateCol || "'Date'[Date]");
-      if (!m) return null;
-      const t = (m[1] !== undefined ? m[1].replace(/''/g, "'") : m[2]).trim(), c = m[3].replace(/\]\]/g, ']').trim();
-      const table = "'" + t.replace(/'/g, "''") + "'";
-      return t && c ? { table, col: table + '[' + c.replace(/\]/g, ']]') + ']' } : null;
-    })();
+    const dateCol = columnRef(d.dateCol || "'Date'[Date]");
 
     // Bound numeric prop: range r0..r1 driven by value v across d0..d1 (clamped)
     const scale = (b) => {
@@ -336,8 +358,10 @@
           colA('fill', 'fill', el.fill); common(); lit(out, '>');
           if (b.text && b.text.v) {
             const f = FORMATS[b.text.fmt] || FORMATS.auto;
-            let node = f(Z(b.text.v));
-            if (b.text.sign) node = N.cat([N.iff(N.op('>', Z(b.text.v), N.num(0)), N.str('+'), N.str('')), node]);
+            // "text": the value as it is (a column's text). Anything that comes from a column is escaped at run time:
+            // FORMAT returns a text value unchanged, so a number format is no protection.
+            let node = b.text.fmt === 'text' ? N.esc(R(b.text.v)) : fromColumn.has(b.text.v) ? N.esc(f(Z(b.text.v))) : f(Z(b.text.v));
+            if (b.text.sign && b.text.fmt !== 'text') node = N.cat([N.iff(N.op('>', Z(b.text.v), N.num(0)), N.str('+'), N.str('')), node]);
             const r = hoist(el, 'text', N.cat([N.str(safe(b.text.prefix || '')), node, N.str(safe(b.text.suffix || ''))]), note());
             out.push(r);
           } else lit(out, safe(el.text || ''));
@@ -467,16 +491,31 @@
     return { dax: L.join('\n'), errors: c.errors };
   }
 
+  // The measure's expression alone (no name line, no comment lines): for a report-level measure, where the name and
+  // the data category are fields of their own. The same VARs and the same RETURN as toDax.
+  function toMeasure(design) {
+    const c = compile(design);
+    const L = c.vars.map((v) => 'VAR ' + v.name + ' = ' + dax(v.node));
+    L.push('VAR _svg =');
+    const pieces = (c.svg.k === 'cat' ? c.svg.parts : [c.svg]).map(dax);
+    L.push('    ' + pieces[0]);
+    pieces.slice(1).forEach((p) => L.push('        & ' + p));
+    L.push('RETURN');
+    if (c.hideIf) L.push('    IF ( ISBLANK ( ' + c.hideIf + ' ), BLANK (), ' + daxStr(PREFIX) + ' & _svg )');
+    else L.push('    ' + daxStr(PREFIX) + ' & _svg');
+    return { dax: L.join('\n'), errors: c.errors, name: c.name };
+  }
+
   // measures: { "Sales": 1240000, ... } keyed by measure name; returns the image URL (or '' when hidden)
   function toImageUrl(design, measures, opts) {
     const c = compile(design, opts);
-    const env = { measures: measures || {}, vars: {}, series: (opts && opts.series) || {} };
+    const env = { measures: measures || {}, vars: {}, series: (opts && opts.series) || {}, columns: (opts && opts.columns) || {} };
     c.vars.forEach((v) => { env.vars[v.name] = evalNode(v.node, env); });
     if (c.hideIf && env.vars[c.hideIf] == null) return { url: '', errors: c.errors };
     return { url: PREFIX + evalNode(c.svg, env), errors: c.errors };
   }
 
-  const api = { compile: compile, toDax: toDax, toImageUrl: toImageUrl, formatNumber: formatNumber, FORMATS: Object.keys(FORMATS), OPS: OPS, PREFIX: PREFIX, version: 1 };
+  const api = { compile: compile, toDax: toDax, toMeasure: toMeasure, toImageUrl: toImageUrl, columnRef: columnRef, formatNumber: formatNumber, FORMATS: Object.keys(FORMATS), OPS: OPS, PREFIX: PREFIX, version: 1 };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.SVGKPI = api;
 })(typeof self !== 'undefined' ? self : this);
