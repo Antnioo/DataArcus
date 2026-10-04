@@ -6,7 +6,7 @@ on main `bc05275`. **Never change a task, its model or its expected results to m
 the owner's go and a reason written here.
 
 ## How to run them
-1. **Tool level (automatic, any machine):** `cd mcp && npm install && node test-models/golden-baseline.mjs`. It makes
+1. **Tool level (automatic, any machine):** `cd mcp && npm install && node test-models/golden-baseline.mjs` (all 11 tasks since round 7). It makes
    the tool calls each task expects over stdio, on copies of the input models in a temporary folder, and checks what
    a script can: pages and visuals, nothing overwritten (a SHA-256 of every file before and after), Microsoft's
    validator, the measured size rules (`scripts/tests/report-check.mjs`), right to left mirrored, answer sizes.
@@ -678,3 +678,32 @@ measures passed over.
 platform plan, `mcp/plans/DESIGN-ENGINE-PLATFORM.md`); task 8's second card is "Unused One", a measure the agent at
 agent level left out on its own judgment; task 10's fourth KPI is a share that reads 100% on an unfiltered card
 (the agent said so in round 5).
+
+## The baseline numbers today, and the cause of every one that changed (round 7, 2026-10-04; audit AUD-008)
+
+The audit found three stale numbers in the first baseline's lines above (tasks 2 and 6: 2 visuals more than
+written; task 10: one character fewer) and that task 11 was not in the runner. Round 6 had already re-recorded
+today's numbers ("Tool level, round 6") without naming every cause; this table does. Nothing in a task, a model or a
+check was changed. The runner (`node test-models/golden-baseline.mjs`) now runs **11 tasks**.
+
+| # | Number | First baseline (`bc05275`) | Today | Cause of each change |
+|---|---|---|---|---|
+| 1 | visuals | 41 | 40 | round 6: the runner passes the plan's three KPI fields, so the first page has 3 cards, not 4 (-1) |
+| 2 | visuals | 36 | 36 | round 2: an Arabic report has one button per page instead of one page navigator, 2 pages (+2 = 38, the audit's number); round 6: three KPI fields, one card fewer on each of the two pages (-2) |
+| 3 | visuals | 32 | 20 | round 6: the runner asks for one page with the filter strip on top and the plan's fields. The details page is gone (-17); on the focus page the page navigator is gone (-1) and the filter strip is there: its group, its panel, three slicers and Reset (+6). 32 - 17 - 1 + 6 = 20 |
+| 4 | visuals, each | 35 | 34 | round 6: three KPI fields, one card fewer on the first page (-1) |
+| 5 | visuals | 34 | 34 | none (three cards before and after) |
+| 6 | visuals | 41 | 43 | round 2: the Arabic page buttons, one per page instead of one navigator, 2 pages (+2) |
+| 7 | visuals | 19 (after round 4) | 19 | none |
+| 10 | `read_model` | 10,380 | 10,379 | the runner now counts a path's backslash as one character, as on Linux (JSON writes it as two on Windows): the answer's `source` holds one. The audit's Linux run had 10,379 |
+| 10 | the five Logistics tables in full | 4,827 | 4,826 | the same |
+| 10 | `check_model_health` | 17,997 | about 18,250 | round 5: the fix scripts went to files (-2,614: 15,383); round 6: the thousand-separator list (+2,888: 18,271). The answer names its script files by their full path, so it changes by a few characters with the temporary folder's name (18,243 to 18,271 seen) |
+| 10 | visuals | 35 | 35 | none |
+| 11 | findings | UAE none; Saudi Arabia `GC_WEEKEND` 939 | the same | now in the runner; `scored` false; the score the same with both countries |
+
+**Counted, not estimated:** each difference above was counted from the written files, page by page and kind by
+kind, with and without the plan's fields (first baseline, task 3: 11 on the focus page, 17 on the details page, 4 on
+the two tooltip pages; today 16 and 4).
+
+**Not explained by a count here, and so not claimed:** nothing. Every number that differs from the first baseline is
+in the table with its cause.

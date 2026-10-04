@@ -6,7 +6,7 @@
  */
 /* global MHEngine, TmdlModel */
 // the engine, and the TMDL reader the MCP uses for projects saved as TMDL (Power BI Desktop's default)
-importScripts('model-health-engine.min.js?v=20261003b', 'tmdl-model.min.js?v=20261004a');
+importScripts('model-health-engine.min.js?v=20261004c', 'tmdl-model.min.js?v=20261004a');
 
 const post = (type, data) => self.postMessage(Object.assign({ type }, data || {}));
 

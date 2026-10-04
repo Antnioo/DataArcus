@@ -217,7 +217,10 @@
     // because the name appears up to three times in a path and Windows limits paths to 260 characters
     // no dots or spaces at either end: ".." would climb out of the folder, and Windows drops a trailing dot or space
     const tidy = (s) => s.replace(/^[.\s]+|[.\s]+$/g, '');
-    const whole = Array.from(tidy((o.name || 'Power BI Report').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ')));
+    // format characters first (Unicode category Cf: direction overrides and marks, zero-width characters, the byte
+    // order mark): nobody sees them, and one can make a file name read as another ("Report" + U+202E + "xcod.exe"
+    // shows as "Reportexe.docx"). They are taken out of the name before anything else.
+    const whole = Array.from(tidy(String(o.name || 'Power BI Report').replace(/\p{Cf}/gu, '').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ')));
     let cut = whole.slice(0, 30).join('');
     if (whole.length > 30 && whole[30] !== ' ' && cut.lastIndexOf(' ') > 0) cut = cut.slice(0, cut.lastIndexOf(' '));
     if (whole.length > 30) cut = cut.replace(/[\s\-\u2013\u2014\u00b7:,;&+]+$/, '');
