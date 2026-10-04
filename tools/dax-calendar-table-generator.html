@@ -189,8 +189,8 @@
             </div>
             <div class="cg-form">
               <div style="grid-column:1/-1"><label class="tg-label" for="cgName" data-i18n="cg.tableName">Table name</label><input id="cgName" class="form-control" maxlength="40"></div>
-              <div><label class="tg-label" for="cgStart" data-i18n="cg.start">Start date</label><input id="cgStart" type="date" class="form-control"></div>
-              <div><label class="tg-label" for="cgEnd" data-i18n="cg.end">End date</label><input id="cgEnd" type="date" class="form-control"></div>
+              <div><label class="tg-label" for="cgStart" data-i18n="cg.start">Start date</label><input id="cgStart" type="date" class="form-control" min="1900-03-01" max="9999-12-31"></div>
+              <div><label class="tg-label" for="cgEnd" data-i18n="cg.end">End date</label><input id="cgEnd" type="date" class="form-control" min="1900-03-01" max="9999-12-31"></div>
               <div style="grid-column:1/-1"><label class="tg-label" for="cgWeek" data-i18n="cg.weekStart">Week starts on</label>
                 <select id="cgWeek" class="form-select"><option value="sun" data-i18n="cg.day.sun">Sunday</option><option value="mon" data-i18n="cg.day.mon">Monday</option><option value="sat" data-i18n="cg.day.sat">Saturday</option></select></div>
               <div style="grid-column:1/-1"><label class="tg-label" for="cgWeekend" data-i18n="cg.weekend">Weekend</label>

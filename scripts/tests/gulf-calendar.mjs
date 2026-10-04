@@ -347,5 +347,24 @@ export default async function ({ browser, url }) {
     await done(v, 'note full stop');
   }
 
+
+  // Years Power BI can't take are refused with a message (audit AUD-004, 2026-10-04): a two-digit year typed in the
+  // date field (0025) was read as 1925 here and 2025 by DAX's DATE, and years before 1900 aren't DAX dates at all
+  // (DATE supports 1 March 1900 on). Copy and Download are off and no DAX is shown until the dates are fixed.
+  for (const lang of ['en', 'ar']) {
+    const v = await open(CG, null, lang);
+    const state = () => v.pg.evaluate(() => ({ err: document.getElementById('err').textContent.trim(), dax: document.getElementById('dax').textContent, copy: document.getElementById('copyBtn').disabled, min: document.getElementById('cgStart').min, max: document.getElementById('cgEnd').max }));
+    for (const [start, end, ok] of [['0025-01-01', '0030-12-31', false], ['1899-12-30', '1905-12-31', false], ['1900-02-28', '1905-12-31', false], ['2025-01-01', '0030-12-31', false],
+      ['1900-03-01', '1905-12-31', true], ['9990-01-01', '9999-12-31', true], ['2025-01-01', '2030-12-31', true]]) {
+      await v.pg.fill('#cgStart', start); await v.pg.fill('#cgEnd', end); await v.pg.waitForTimeout(150);
+      const r = await state();
+      const good = ok ? !r.err && /CALENDAR \( DATE \(/.test(r.dax) && !r.copy && new RegExp(`DATE \\( ${+start.slice(0, 4)}, `).test(r.dax)
+        : r.err.length > 10 && /1900/.test(r.err) && !r.dax && r.copy;
+      check(good, `calendar ${lang} ${start} to ${end}: ${ok ? 'refused or wrong' : 'accepted'} (${JSON.stringify({ err: r.err.slice(0, 80), dax: r.dax.slice(0, 40), copy: r.copy })})`);
+    }
+    const r = await state();
+    check(r.min === '1900-03-01' && r.max === '9999-12-31', `calendar ${lang}: date fields don't say the range (min ${r.min}, max ${r.max})`);
+    await done(v, `calendar years ${lang}`);
+  }
   return { checks, problems };
 }

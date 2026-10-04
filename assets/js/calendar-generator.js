@@ -40,7 +40,10 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   const DAY = 864e5;
   const iso = (t) => new Date(t).toISOString().slice(0, 10);
-  const parse = (s) => { const [y, m, d] = s.split('-').map(Number); return Date.UTC(y, m - 1, d); };
+  // the year as typed: Date.UTC alone would read 0025 as 1925, while DAX's DATE reads 25 as 2025
+  const parse = (s) => { const [y, m, d] = String(s).split('-').map(Number); const t = new Date(Date.UTC(2000, m - 1, d)); t.setUTCFullYear(y); return t.getTime(); };
+  // Power BI's DATE takes 1 March 1900 to 31 December 9999 (Microsoft Learn, DATE function)
+  const MIN_DATE = Date.UTC(1900, 2, 1), MAX_DATE = Date.UTC(9999, 11, 31);
   const addYears = (t, n) => { const d = new Date(t); return Date.UTC(d.getUTCFullYear() + n, d.getUTCMonth(), d.getUTCDate()); };
   const hijriMonthStarts = (from, to) => {
     const out = [];
@@ -223,8 +226,10 @@ ${L.join(',\n')}
   const render = () => {
     const s = parse(state.start), e = parse(state.end);
     // 1970-01-01 is timestamp 0, so test for NaN rather than falsy; 60 calendar years, leap days included
-    const bad = Number.isNaN(s) || Number.isNaN(e) || e < s || e >= addYears(s, 60);
-    const msg = bad ? L('End date must be after the start date (max 60 years).', 'يجب أن يكون تاريخ النهاية بعد تاريخ البداية (بحد أقصى 60 عامًا).') : '';
+    const outside = !Number.isNaN(s) && !Number.isNaN(e) && (s < MIN_DATE || e < MIN_DATE || s > MAX_DATE || e > MAX_DATE);
+    const bad = Number.isNaN(s) || Number.isNaN(e) || outside || e < s || e >= addYears(s, 60);
+    const msg = outside ? L('Use four-digit years: Power BI dates run from 1 March 1900 to 31 December 9999 (a year typed as 25 would be read as 2025 by Power BI).', 'استخدم سنوات من أربعة أرقام: تواريخ Power BI من 1 مارس 1900 إلى 31 ديسمبر 9999 (السنة المكتوبة 25 يقرؤها Power BI على أنها 2025).')
+      : bad ? L('End date must be after the start date (max 60 years).', 'يجب أن يكون تاريخ النهاية بعد تاريخ البداية (بحد أقصى 60 عامًا).') : '';
     $('err').textContent = msg;
     ['copyBtn', 'dlBtn'].forEach((id) => { $(id).disabled = bad; });
     if (bad) {
