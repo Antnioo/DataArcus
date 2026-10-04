@@ -125,6 +125,8 @@ class LanguageManager {
      return window.licensingGuideTranslations;
     } else if (path.includes('copilot-readiness-audit')) {
      return window.copilotAuditTranslations;
+    } else if (path.includes('/beta')) {
+     return window.betaPageTranslations;
     } else if (path.includes('privacy')) {
      return window.privacyTranslations;
     }
