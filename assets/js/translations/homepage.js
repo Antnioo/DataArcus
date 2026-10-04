@@ -17,21 +17,21 @@ window.homepageTranslations = {
     },
     // Page Meta
     meta: {
-      title: "DataArcus - Power BI & Data Modeling for Growing Businesses",
-      description: "Production-grade Power BI dashboards and data models for businesses across the MENA region: CRM intelligence, project risk and retention analytics.",
+      title: "DataArcus - Power BI, Checked and Made for the Gulf",
+      description: "Check your Power BI model free, add Ramadan, Eid and Hijri calendars with Gulf weekends, and get report design and model audits from an analyst in Dubai.",
       keywords: "Power BI consultant, data modeling, DAX, business intelligence dashboards, MENA, CRM analytics, Power BI specialist",
       author: "DataArcus",
       "og:type": "website",
-      "og:title": "DataArcus - Power BI & Data Modeling for Growing Businesses",
-      "og:description": "I build production-grade Power BI dashboards and data models for businesses across the MENA region, from CRM intelligence to project risk to retention analytics.",
+      "og:title": "DataArcus - Power BI, Checked and Made for the Gulf",
+      "og:description": "Check your Power BI model free, add Ramadan, Eid and Hijri calendars with Gulf weekends, and get report design and model audits from an analyst in Dubai.",
       "og:url": "https://dataarcus.com/",
       "og:site_name": "DataArcus",
       "og:image": "https://dataarcus.com/assets/img/og/home.jpg",
       "og:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
       "og:locale": "en_US",
       "twitter:card": "summary_large_image",
-      "twitter:title": "DataArcus - Power BI & Data Modeling for Growing Businesses",
-      "twitter:description": "I build production-grade Power BI dashboards and data models for businesses across the MENA region, from CRM intelligence to project risk to retention analytics.",
+      "twitter:title": "DataArcus - Power BI, Checked and Made for the Gulf",
+      "twitter:description": "Check your Power BI model free, add Ramadan, Eid and Hijri calendars with Gulf weekends, and get report design and model audits from an analyst in Dubai.",
       "twitter:image": "https://dataarcus.com/assets/img/og/home.jpg",
       "twitter:image:alt": "The DataArcus logo showing animated data bars and the brand name.",
       canonical: "https://dataarcus.com/",
@@ -39,8 +39,8 @@ window.homepageTranslations = {
 
     // Hero Section
     hero: {
-      title: "From Scattered Business Data to Decisions You Can Trust",
-      subtitle: "I design and build production-grade Power BI systems that turn messy operational data into numbers your team can actually rely on: sales CRMs, project risk tracking, subscription retention and more.",
+      title: "Power BI reports checked in Power BI, not just generated",
+      subtitle: "AI can now build a Power BI report in minutes. DataArcus works beside Microsoft's tools to check yours and fit it to the Gulf: a free model health check, Ramadan, Eid and Hijri calendars with each country's weekend, and Arabic reports laid out right to left (in private beta).",
       buttonWork: "Explore My Work",
       buttonDiscuss: "Book a Free Data Clarity Call",
       badgeSecurity: "Enterprise Security",
@@ -121,10 +121,10 @@ portfolio: {
 
     // About Section
     about: {
-      title: "A Partner in Your Success",
-      subtitle: "DataArcus isn't a dashboard factory. It's one person building the same kind of production-grade models you'd get from an internal data team, without the internal data team price tag.",
+      title: "Generating is easy. Checking is the work.",
+      subtitle: "Generating a Power BI report with AI is now free and official. What still takes care is knowing that the numbers hold, that the model behind them is sound, and that Ramadan, Eid and the Gulf weekend are handled. DataArcus is built around that.",
       quote: "\"My name is Abdelrahman M. I've spent 2 years working in CRM and data-driven operations, and I got tired of waiting for someone else to build the reporting I actually needed, so I started building it myself in Power BI. DataArcus is where that work lives: real, production-grade models, not templates.\"",
-      p1: "I'm not running a large consultancy. I'm one person who builds every model personally. That means direct access to whoever's actually doing the work, no account-manager layer between you and your dashboard, and what you see in the portfolio is exactly what you'd get.",
+      p1: "Behind DataArcus is one person, me, building every tool and checking every report myself. Alongside the free tools I take paid work: designing Power BI reports and auditing models, including a Copilot-readiness audit. You deal directly with the person doing the work, and what you see in the portfolio is what you get.",
       founder: "Abdelrahman M., Founder & Lead Data Architect",
       certification: {
         title: "Industry Certified",
@@ -316,21 +316,21 @@ portfolio: {
     },
     // Page Meta
     meta: {
-      title: "داتا أركوس - حلول Power BI ونمذجة البيانات للأعمال النامية",
-      description: "لوحات تحكم Power BI ونماذج بيانات بمستوى الإنتاج للشركات في الشرق الأوسط: ذكاء علاقات العملاء ومخاطر المشاريع وتحليلات الاحتفاظ بالعملاء.",
+      title: "داتا أركوس - Power BI مُتحقَّق منه ومهيّأ للخليج",
+      description: "افحص نموذج Power BI مجانًا، وأضف تقويم رمضان والعيد والتاريخ الهجري مع عطلات الخليج، واطلب تصميم التقارير وتدقيق النماذج من محلل بيانات في دبي.",
       keywords: "استشاري Power BI, نمذجة البيانات, DAX, لوحات تحكم ذكاء الأعمال, الشرق الأوسط, تحليلات CRM, متخصص Power BI",
       author: "داتا أركوس",
       "og:type": "website",
-      "og:title": "داتا أركوس - حلول Power BI ونمذجة البيانات للأعمال النامية",
-      "og:description": "أبني لوحات تحكم Power BI ونماذج بيانات بمستوى الإنتاج للشركات في منطقة الشرق الأوسط، من ذكاء إدارة علاقات العملاء إلى مخاطر المشاريع وتحليلات الاحتفاظ بالعملاء.",
+      "og:title": "داتا أركوس - Power BI مُتحقَّق منه ومهيّأ للخليج",
+      "og:description": "افحص نموذج Power BI مجانًا، وأضف تقويم رمضان والعيد والتاريخ الهجري مع عطلات الخليج، واطلب تصميم التقارير وتدقيق النماذج من محلل بيانات في دبي.",
       "og:url": "https://dataarcus.com/",
       "og:site_name": "داتا أركوس",
       "og:image": "https://dataarcus.com/assets/img/og/home.jpg",
       "og:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       "og:locale": "ar_EG",
       "twitter:card": "summary_large_image",
-      "twitter:title": "داتا أركوس - حلول Power BI ونمذجة البيانات للأعمال النامية",
-      "twitter:description": "أبني لوحات تحكم Power BI ونماذج بيانات بمستوى الإنتاج للشركات في منطقة الشرق الأوسط، من ذكاء إدارة علاقات العملاء إلى مخاطر المشاريع وتحليلات الاحتفاظ بالعملاء.",
+      "twitter:title": "داتا أركوس - Power BI مُتحقَّق منه ومهيّأ للخليج",
+      "twitter:description": "افحص نموذج Power BI مجانًا، وأضف تقويم رمضان والعيد والتاريخ الهجري مع عطلات الخليج، واطلب تصميم التقارير وتدقيق النماذج من محلل بيانات في دبي.",
       "twitter:image": "https://dataarcus.com/assets/img/og/home.jpg",
       "twitter:image:alt": "شعار داتا أركوس مع أعمدة بيانات متحركة واسم العلامة التجارية.",
       canonical: "https://dataarcus.com/",
@@ -338,8 +338,8 @@ portfolio: {
 
     // Hero Section
     hero: {
-      title: "من بيانات أعمال مشتتة إلى قرارات يمكنك الوثوق بها",
-      subtitle: "أصمم وأبني أنظمة Power BI بمستوى الإنتاج تحوّل بياناتك التشغيلية المشتتة إلى أرقام يمكن لفريقك الاعتماد عليها فعليًا: أنظمة CRM للمبيعات، وتتبع مخاطر المشاريع، وتحليلات الاحتفاظ بالعملاء، وأكثر.",
+      title: "تقارير Power BI نتحقق منها في Power BI نفسه، ولا نكتفي بتوليدها",
+      subtitle: "صار بإمكان الذكاء الاصطناعي بناء تقرير Power BI في دقائق. يعمل داتا أركوس إلى جانب أدوات Microsoft ليفحص تقريرك ويهيّئه لطبيعة العمل في الخليج: فحص مجاني لنموذج البيانات، وتقويم برمضان والعيد والتاريخ الهجري مع عطلة نهاية الأسبوع في كل دولة، وتقارير عربية مصمَّمة من اليمين إلى اليسار (في تجربة خاصة).",
       buttonWork: "استكشف أعمالي",
       buttonDiscuss: "احجز مكالمة وضوح بيانات مجانية",
       badgeSecurity: "أمان على مستوى الشركات",
@@ -420,10 +420,10 @@ portfolio: {
 
     // About Section
     about: {
-      title: "شريك في نجاحك",
-      subtitle: "داتا أركوس ليست مصنعًا للوحات التحكم، بل شخص واحد يبني نفس نوع النماذج بمستوى الإنتاج التي كنت لتحصل عليها من فريق بيانات داخلي، دون تكلفة فريق داخلي كامل.",
+      title: "توليد التقرير سهل، والتحقق منه هو العمل الحقيقي",
+      subtitle: "أصبح توليد تقارير Power BI بالذكاء الاصطناعي مجانيًا، ومن Microsoft نفسها. ويبقى الأهم أن تعرف أن الأرقام صحيحة، وأن النموذج وراءها سليم، وأن رمضان والعيد وعطلة الخليج محسوبة كما يجب. وحول هذا بُني داتا أركوس.",
       quote: "\"اسمي عبد الرحمن م. أمضيت سنتين في العمل ضمن إدارة علاقات العملاء والعمليات القائمة على البيانات، ثم مللت من انتظار شخص آخر ليبني التقارير التي أحتاجها فعليًا، فبدأت ببنائها بنفسي في Power BI. داتا أركوس هي المكان الذي يعيش فيه هذا العمل: نماذج حقيقية بمستوى الإنتاج، لا قوالب جاهزة.\"",
-      p1: "أنا لا أدير استشارة كبرى. أنا شخص واحد يبني كل نموذج بنفسه. هذا يعني وصولاً مباشرًا لمن يقوم بالعمل فعليًا، دون طبقة مدير حسابات بينك وبين لوحة تحكمك، وما تراه في المعرض هو بالضبط ما ستحصل عليه.",
+      p1: "وراء داتا أركوس شخص واحد، هو أنا، أبني كل أداة وأراجع كل تقرير بنفسي. وإلى جانب الأدوات المجانية أقبل أعمالًا مدفوعة: تصميم تقارير Power BI وتدقيق النماذج، ومنها تدقيق الجاهزية لـ Copilot. تتعامل مباشرة مع من يقوم بالعمل، وما تراه في المعرض هو ما ستحصل عليه.",
       founder: "عبد الرحمن م.، المؤسس وكبير مهندسي البيانات",
       certification: {
         title: "شهادات معتمدة",
