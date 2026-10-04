@@ -1174,6 +1174,54 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => !word.err && word.j.report === 'Supercalifragilisticexpialidoc.Report', () => `one word longer than the limit is still cut at 30: ${word.err ? word.t.slice(0, 200) : word.j.report}`);
     chk(() => [x, en].every((r) => /shortened/i.test(JSON.stringify(r.j.reportNotes || []))), () => 'a shortened report name must be said in reportNotes');
   }
+
+  // 6. thousand separators: every number format DataArcus suggests or writes has one; where the model decides, the
+  //    answers name the fields without one and the fix script adds it
+  {
+    const req = (await import('node:module')).createRequire(import.meta.url), Tm = req('../assets/js/model-health-tmdl.js'), Px = req('../assets/js/pbip-export.js'), En = req('../assets/js/design-engine.js');
+    // the formats the health check suggests for a measure without one
+    const sug = [['Total', 'SUM ( Sales[Amount] )'], ['Orders', 'COUNTROWS ( Sales )'], ['Avg', 'AVERAGE ( Sales[Amount] )'], ['Margin %', 'DIVIDE ( 1, 2 )']].map(([name, expression]) => Tm.suggestFormat({ name, expression }, []).format);
+    chk(() => sug.every((fm) => /%/.test(fm) || /#,0/.test(fm)), () => `a suggested number format has no thousand separator: ${sug}`);
+    // the rule itself
+    const cases = { '0': '#,0', '0.00': '#,0.00', '#': '#,0', '$0.00': '$#,0.00', '0;(0)': '#,0;(#,0)', '0.0 "km"': '#,0.0 "km"' };
+    chk(() => Object.entries(cases).every(([from, to]) => Tm.lacksSeparator(from) && Tm.withSeparator(from) === to), () => `withSeparator: ${Object.keys(cases).map((k) => k + ' -> ' + Tm.withSeparator(k)).join(', ')}`);
+    chk(() => ['#,0', '#,##0.00', '0.0%', '0%', 'dd/mm/yyyy', 'General Date', '"Yes";"No"', '', null, '0.00E+00', 'Standard', 'Currency'].every((fm) => !Tm.lacksSeparator(fm)), () => 'lacksSeparator is true for a format that has a separator, a percentage, a date or text');
+    // the website's sample model (the project download): every number format has a separator
+    for (const lang of ['en', 'ar']) {
+      const d = En.fresh(); d.layout = Object.assign({}, d.layout || {}, { preset: 'exec', kpis: 4, samples: true }); En.repairState(d);
+      const pages = En.projectPages(d.layout, lang, { second: false, panel: false }).map((p) => ({ name: p.name, page: p.page, slots: p.slots, panel: null, png: new Uint8Array([1]) }));
+      const built = Px.build({ name: 'Sep ' + lang, title: 'Sep', pageName: pages[0].name, lang, rtl: lang === 'ar', font: d.font, ui: d.ui, pages, theme: En.buildTheme(d, lang), logo: null, sample: true, texts: En.REPORT_TEXTS[lang] });
+      const bim = JSON.parse(String(built.files.find((x) => /model\.bim$/.test(x.path)).data)), t = bim.model.tables[0];
+      const fmts = t.measures.map((x) => x.name + ': ' + x.formatString).concat(t.columns.filter((c) => /int64|double|decimal/.test(c.dataType) && c.summarizeBy !== 'none').map((c) => c.name + ': ' + c.formatString));
+      chk(() => fmts.length >= 8 && fmts.every((s) => /#,0|%/.test(s.split(': ')[1] || '')), () => `the website's sample model (${lang}) has a number without a thousand separator format: ${fmts.join('; ')}`);
+    }
+    // check_model_health: measures and summed number columns whose format has no separator (or columns with none)
+    const col = (name, dataType, extra) => Object.assign({ name, dataType, sourceColumn: name, lineageTag: 'c-' + name }, extra || {}), mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Date"}, {}) in Source' } }];
+    fs.writeFileSync(path.join(ROOT, 'sep.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'),
+      columns: [col('Amount', 'double'), col('Qty', 'int64', { formatString: '0' }), col('Price', 'decimal', { formatString: '#,0.00' }), col('Year', 'int64'), col('Customer Key', 'int64'), col('Cost', 'double', { isHidden: true }), col('Rank', 'int64', { summarizeBy: 'none' }), col('Region', 'string')],
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '0' }, { name: 'Avg Price', expression: 'AVERAGE ( Sales[Price] )', formatString: '0.00', description: 'SECRET-DESCRIPTION' },
+        { name: 'Units', expression: 'SUM ( Sales[Qty] )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }, { name: 'Last Date', expression: 'MAX ( Sales[Amount] )', formatString: 'dd/mm/yyyy' }] }] } }));
+    const h = await ask('check_model_health', { path: 'sep.bim' }), th = h.err ? {} : (h.j.fixes || {}).THOUSANDS || {};
+    chk(() => JSON.stringify(th.measures) === JSON.stringify([{ measure: '[Total Sales]', from: '0', to: '#,0' }, { measure: '[Avg Price]', from: '0.00', to: '#,0.00' }]), () => `fixes.THOUSANDS.measures: ${JSON.stringify(th.measures)} ${short(h)}`);
+    chk(() => JSON.stringify(th.columns) === JSON.stringify([{ column: 'Sales[Amount]', from: null, to: '#,0.00' }, { column: 'Sales[Qty]', from: '0', to: '#,0' }]), () => `fixes.THOUSANDS.columns (summed number columns only: not Year, a key, a hidden column, or one that is not summed): ${JSON.stringify(th.columns)}`);
+    const script = scriptOf(th);
+    chk(() => /^createOrReplace/.test(script) && /measure 'Total Sales'[\s\S]*?formatString: #,0\n/.test(script) && /measure 'Avg Price'[\s\S]*?formatString: #,0\.00/.test(script) && /column Amount[\s\S]*?formatString: #,0\.00/.test(script) && /column Qty[\s\S]*?formatString: #,0\n/.test(script)
+      && !/Units|Margin %|Last Date|column Year|Customer Key|column Price/.test(script), () => `the thousand-separator script: ${script.slice(0, 600)}`);
+    chk(() => !/SECRET-DESCRIPTION|AVERAGE \(/.test(h.t) && /SECRET-DESCRIPTION/.test(script) && /not .*score/i.test(String(th.note)) && /TMDL view/.test(String(th.howToApply)), () => `THOUSANDS: the script is a file (nothing of it in the answer), with a note that it is not scored: ${JSON.stringify(th).slice(0, 300)}`);
+    fs.writeFileSync(path.join(ROOT, 'sepok.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double', { formatString: '#,0.00' }), col('Year', 'int64'), col('Region', 'string')],
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'No Format', expression: 'SUM ( Sales[Amount] )' }] }] } }));
+    const again = await ask('check_model_health', { path: 'sepok.bim' });
+    chk(() => !again.err && !(again.j.fixes || {}).THOUSANDS, () => `a model whose formats all have separators (or none: NO_FORMAT's job) must have no THOUSANDS: ${JSON.stringify((again.j.fixes || {}).THOUSANDS).slice(0, 200)}`);
+    // the score and the findings are untouched by it
+    chk(() => !h.err && !h.j.findings.some((x) => /THOUSANDS/.test(x.id)), () => 'THOUSANDS must not be a finding');
+    // create_report names the fields the report shows as numbers that have no separator in the model
+    const cr = await ask('create_report', { path: 'dax-project', name: 'R6 Sep', design, fields: { kpis: RAM.kpis } });
+    const nf = cr.err ? {} : cr.j.numberFormats || {};
+    chk(() => nf.noThousandSeparator.includes('Sales[Total Sales]') && nf.noThousandSeparator.includes('Sales[Total Sales Last Ramadan]') && !nf.noThousandSeparator.includes('Sales[Total Sales vs Last Ramadan %]') && /13857|13,857/.test(nf.why) && /check_model_health/.test(nf.fix),
+      () => `create_report must name the measures that will show without a thousand separator: ${short(cr)} ${JSON.stringify(nf).slice(0, 300)}`);
+    const ok = await ask('create_report', { path: 'tmdl-project', name: 'R6 Sep ok', design });
+    chk(() => !ok.err && !('numberFormats' in ok.j), () => `a model whose measures have separator formats: no numberFormats: ${JSON.stringify(ok.j && ok.j.numberFormats)}`);
+  }
 }
 
 await client.close();

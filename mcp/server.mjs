@@ -211,6 +211,16 @@ server.registerTool('check_model_health', {
       fixes[id] = Object.assign({ suggested: s.suggested, byHand: s.byHand }, covers, scriptAnswer(percent ? 'percentage formats' : 'number formats', s.script, false));
     }
   }
+  // thousand separators (round 6): not a finding and not in the score. Measures and summed number columns whose format
+  // has no separator (13857, not 13,857), with the script that adds it. A table, a tooltip and a card with display
+  // units off take a number's format from the model, so this is where it is fixed.
+  {
+    const s = Fix.separatorFixes(raw, { max: maxItems });
+    if (s.measures.length || s.columns.length || s.byHand.length) fixes.THOUSANDS = Object.assign({
+      note: 'Not a finding and not part of the score. These numbers show without a thousand separator (13857, not 13,857) wherever Power BI takes the format from the model: tables, tooltips, cards and labels with display units off.',
+      measures: s.measures, columns: s.columns, byHand: s.byHand },
+      s.more ? { covers: { note: `${s.more} more are not listed. Call again with a larger maxItems (up to 200).` } } : {}, scriptAnswer('thousand separators', s.script, false));
+  }
   // the Gulf calendar check: its own section, never scored; shown when a country is given or the model already has
   // Hijri or Ramadan columns. Read from the model files only; its fixes name the website tools and their settings.
   const gulfCalendar = country || Gulf.hasGulfColumns(m.tmsl) ? Gulf.analyze(m.tmsl, { country: country || 'uae', asOf, maxItems }) : undefined;
@@ -393,6 +403,23 @@ server.registerTool('create_report', {
   if (kpiCards && leftOutVisuals.length) kpiCards.leftOutVisuals = leftOutVisuals;
   if (kpiCards) reportNotes.push(`KPI cards: ${kpiCards.built} of ${kpiCards.asked} built. ${kpiCards.why}`);
   const notes = modelNotes(m.tmsl, bind);
+  // numbers the report shows whose format in the model has no thousand separator (or that have no format): Power BI
+  // takes the format of a table cell, a tooltip and an unscaled card from the model, so the report can't add it
+  const noSep = (() => {
+    const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, seen = new Set(), out = [];
+    // (measures wherever they are shown; number columns only in the table, and never an identifier or a date part)
+    fieldsOf(bind).filter((f) => f.m != null).concat((bind.table || []).filter((f) => f && f.c != null && f.num && !Fix.notAQuantity(f.c))).forEach((f) => {
+      const k = keyOf(f); if (seen.has(k)) return; seen.add(k);
+      const t = (model.tables || []).find((x) => x.name === f.t), o = t && (f.m != null ? (t.measures || []).find((x) => x.name === f.m) : f.num ? (t.columns || []).find((x) => x.name === f.c) : null);
+      if (!o || o.formatStringDefinition) return;
+      if (f.m != null && Bind.isPercent(f.m, o.formatString, o.expression)) return;
+      if (!o.formatString || Fix.lacksSeparator(o.formatString)) out.push(k);
+    });
+    return out;
+  })();
+  const numberFormats = noSep.length ? { numberFormats: { noThousandSeparator: noSep,
+    why: 'These fields have no format with a thousand separator in the model, so the report\'s tables and tooltips show 13857, not 13,857 (a KPI card shows them scaled, like 13.86K). Power BI takes this format from the model: the report can\'t add it.',
+    fix: 'check_model_health writes ready scripts that add the formats (fixes.NO_FORMAT for measures without a format, fixes.THOUSANDS for formats without a separator), or in Power BI Desktop select each measure, then Measure tools > the thousands separator button.' } } : {};
   // what was done with the display names; and in an Arabic report, the fields it shows under a model name that has no
   // Arabic letter (no name is ever made up for them)
   const shown = [...new Set(fieldsOf(bind).map(keyOf))];
@@ -402,7 +429,7 @@ server.registerTool('create_report', {
     how: missing.length ? 'These fields show under their model names. To show Arabic names, call create_report again with displayNames: { "Table[Field]": "الاسم" } for each (ask the user for the names: nothing is translated automatically). The model is not renamed.' : 'Every field the report shows has an Arabic name.' } } : {};
   return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
     { boundFields: boundOf(boundPages, bind) }, unknown ? { ignored: unknown } : {},
-    sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, reportNotes.length ? { reportNotes } : {}));
+    sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {}));
 }));
 
 // Things in the user's model that make the new report look wrong, for the fields it uses. The report never changes the
