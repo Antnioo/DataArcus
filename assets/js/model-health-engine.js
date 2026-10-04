@@ -682,7 +682,10 @@
         if (isUnused(t, c)) return; // already reported as unused, do not count it twice
         if (!c.hidden && manySide.has(lc(t.name) + '|' + lc(c.name))) fkVisible.push({ obj: `${t.name}[${c.name}]` });
         const cn = c.name.trim();
-        const keyLike = !c.hidden && (c.summarizeBy === 'default' || c.summarizeBy === 'sum') && /((^|[\s_])(id|key|code|no|index)$|_id$|^(year|month|week|day|quarter)(\s*(no|num|number))?$|^(fiscal\s*)?year$|(month|week|day|quarter)\s*(no|num|number|of year)$|sort\s*(order|key)?$)/i.test(cn);
+        // (a key written in CamelCase: a lower-case letter directly followed by ID, Id, Key, Code or No at the end of the
+        // name, as in OrderID, CustomerKey, ProductCode, InvoiceNo. The capital matters: Paid, Monkey, Barcode, Casino
+        // and Turkey are not keys)
+        const keyLike = !c.hidden && (c.summarizeBy === 'default' || c.summarizeBy === 'sum') && (/[a-z](ID|Id|Key|Code|No)$/.test(cn) || /((^|[\s_])(id|key|code|no|index)$|_id$|^(year|month|week|day|quarter)(\s*(no|num|number))?$|^(fiscal\s*)?year$|(month|week|day|quarter)\s*(no|num|number|of year)$|sort\s*(order|key)?$)/i.test(cn));
         if (keyLike && /^(int64|double|decimal)$/.test(c.dataType)) sumKeys.push({ obj: `${t.name}[${c.name}]` });
         if (keyLike && untyped(c)) skip('SUMMARIZE_KEYS', `${t.name}[${c.name}]`);
         const monthLike = /(^|\s|_)(month|day|weekday)\s*_?(name|short)$|^(day of week|weekday|mmm|mmmm)$|short\s*month|month\s*-?\s*year|^month\s*year$|^(اسم\s*)?(الشهر|اليوم)$/i.test(cn) || (c.kind === 'calculated' && /FORMAT\s*\([^)]*"\s*(mmm|mmmm|ddd|dddd)\s*"/i.test(c.expr));

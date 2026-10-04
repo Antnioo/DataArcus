@@ -1,4 +1,4 @@
-// The tool-level part of the golden tasks 1 to 10 (mcp/GOLDEN-TASKS.md): for each, the tool calls an agent is expected to
+// The tool-level part of the golden tasks 1 to 11 (mcp/GOLDEN-TASKS.md): for each, the tool calls an agent is expected to
 // make, run over stdio like an agent would, on copies of the input models in a temporary folder (nothing in the repo
 // changes). Checks: the expected pages and visuals, nothing overwritten, Microsoft's validator, the measured size rules
 // (scripts/tests/report-check.mjs), right to left mirrored where asked, and the size of every answer.
@@ -28,9 +28,14 @@ copy('mcp/test-models/large-synthetic/Large Synthetic.SemanticModel', 'large/Lar
 const client = new Client({ name: 'golden', version: '1' });
 await client.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(MCP, 'server.mjs')], env: { ...process.env, DATAARCUS_ROOT: ROOT }, stderr: 'ignore' }));
 const sizes = [];
+// An answer's size, the same on Windows and Linux: a path in an answer has a backslash on Windows, which JSON writes
+// as two characters, and a slash on Linux (round 7: read_model on the large model was 10,380 here and 10,379 there).
+// Every backslash pair is counted as one character. (An answer that holds the temporary folder's own path, like
+// check_model_health's script files, still varies with that folder's name.)
+const chars = (t) => t.split('\\\\').join('/').length;
 const call = async (name, args) => {
   const r = await client.callTool({ name, arguments: args }), t = r.content[0].text;
-  sizes.push({ tool: name, chars: t.length });
+  sizes.push({ tool: name, chars: chars(t) });
   return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) };
 };
 const hashes = (dir) => { const out = {}; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else out[f] = crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex'); }); walk(dir); return out; };
@@ -144,8 +149,24 @@ await task(10, 'A large model (300 tables, 3,000 columns)', async () => {
   const th = await call('generate_theme', { name: 'Golden Large', preset: 'Corporate', folder: 'themes' });
   const noFocus = await build('large', 'Golden Large no focus', th, { layout: 'exec', kpis: 4, lang: 'en' });
   const b = await build('large', 'Golden Large', th, { layout: 'exec', kpis: 4, lang: 'en' }, { focus: 'logistics' });
-  return { readModelChars: m.t.length, summary: !!m.j.summary, detailChars: d.t.length, detailTables: (d.j.tables || []).length, noFocus: none.j.needsFocus ? 'asks for a focus' : 'picked ' + (none.j.kpis || []).length, createNoFocus: noFocus.create ? 'refused' : 'written',
-    suggestChars: f.t.length, healthChars: h.t.length, kpis: f.j.kpis.map((k) => `${k.t}[${k.m}]`).join(' | '), category: `${f.j.cats.bar.t}[${f.j.cats.bar.c}]`, ...b.facts, overwritten: b.overwritten, modelNotes: b.modelNotes };
+  return { readModelChars: chars(m.t), summary: !!m.j.summary, detailChars: chars(d.t), detailTables: (d.j.tables || []).length, noFocus: none.j.needsFocus ? 'asks for a focus' : 'picked ' + (none.j.kpis || []).length, createNoFocus: noFocus.create ? 'refused' : 'written',
+    suggestChars: chars(f.t), healthChars: chars(h.t), kpis: f.j.kpis.map((k) => `${k.t}[${k.m}]`).join(' | '), category: `${f.j.cats.bar.t}[${f.j.cats.bar.c}]`, ...b.facts, overwritten: b.overwritten, modelNotes: b.modelNotes };
+});
+
+await task(11, 'A Gulf model\'s calendar checked', async () => {
+  // the Gulf calendar pack's test model, written from the repo's own files (scripts/gulf-calendar/test-model), as
+  // mcp/test.mjs builds it: the generator's calendar 2018-2030 with the UAE weekend and the announced dates
+  const dax = (file) => fs.readFileSync(path.join(REPO, 'scripts/gulf-calendar/test-model', file), 'utf8').replace(/\r\n/g, '\n');
+  const measures = dax('measures.dax').split(/\n(?=    MEASURE 'Sales'\[)/).slice(1).map((b) => { const m = b.match(/MEASURE 'Sales'\[([^\]]+)\] =\n([\s\S]*?)(?=\nEVALUATE|$)/); return { name: m[1], expression: m[2] }; });
+  fs.mkdirSync(path.join(ROOT, 'gulf'));
+  fs.writeFileSync(path.join(ROOT, 'gulf/gulf-pack.bim'), JSON.stringify({ compatibilityLevel: 1567, model: {
+    tables: [{ name: 'Calendar', columns: [], partitions: [{ name: 'Calendar', mode: 'import', source: { type: 'calculated', expression: dax('calendar.dax').replace(/^Calendar =\n/, '') } }] },
+      { name: 'Sales', columns: [{ name: 'Date', dataType: 'dateTime', sourceColumn: 'Date' }, { name: 'Amount', dataType: 'double', sourceColumn: 'Amount' }], partitions: [{ name: 'Sales', mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Date"}, {}) in Source' } }], measures }],
+    relationships: [{ name: 'r', fromTable: 'Sales', fromColumn: 'Date', toTable: 'Calendar', toColumn: 'Date' }] } }));
+  const before = hashes(path.join(ROOT, 'gulf'));
+  const uae = await call('check_model_health', { path: 'gulf/gulf-pack.bim', country: 'uae', asOf: '2026-10-04' }), ksa = await call('check_model_health', { path: 'gulf/gulf-pack.bim', country: 'ksa', asOf: '2026-10-04' });
+  const found = (x) => x.j.gulfCalendar.findings.map((f) => `${f.id} ${f.count}`).join(', ') || 'none';
+  return { uae: found(uae), ksa: found(ksa), scored: uae.j.gulfCalendar.scored, sameScore: uae.j.score.overall === ksa.j.score.overall, overwritten: unchanged(before).length };
 });
 
 await client.close();

@@ -1259,6 +1259,66 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   }
 }
 
+// ---------- round 7: the night audit's AUD-015 (CamelCase keys), AUD-016 (the summary's ceiling), AUD-017 (hidden characters) ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Date"}, {}) in Source' } }];
+  const col = (name, dataType, extra) => Object.assign({ name, dataType, sourceColumn: name }, extra || {});
+
+  // 1. AUD-015: a key column written in CamelCase (OrderID, CustomerKey...) that sums is a SUMMARIZE_KEYS finding;
+  //    a word that only ends in the same letters (Paid, Monkey...) is not
+  {
+    const KEYS = ['OrderID', 'CustomerKey', 'ProductKey', 'ProductCode', 'InvoiceNo'], FRIENDS = ['Paid', 'Monkey', 'Barcode', 'Casino', 'Turkey'], OLD = ['Customer ID', 'order_id', 'Sort Key', 'Year', 'Month Number', 'Store Code'];
+    fs.writeFileSync(path.join(ROOT, 'camel.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Orders', partitions: mp('Orders'),
+      columns: KEYS.concat(FRIENDS, OLD).map((n) => col(n, 'int64')).concat([col('Amount', 'double'), col('OrderId', 'int64'), col('HiddenKey', 'int64', { isHidden: true }), col('RegionKey', 'int64', { summarizeBy: 'none' }), col('NameCode', 'string')]),
+      measures: [{ name: 'Total', expression: KEYS.concat(FRIENDS, OLD, ['Amount', 'OrderId', 'HiddenKey', 'RegionKey', 'NameCode']).map((n) => `SUM ( Orders[${n}] )`).join(' + '), formatString: '#,0' }] }] } }));
+    const h = await ask('check_model_health', { path: 'camel.bim', maxItems: 200 }), found = h.err ? [] : (((h.j.findings.find((x) => x.id === 'SUMMARIZE_KEYS') || {}).items) || []).map((i) => i.obj.replace(/^Orders\[|\]$/g, ''));
+    chk(() => KEYS.concat(['OrderId']).every((n) => found.includes(n)), () => `CamelCase keys that sum must be flagged (SUMMARIZE_KEYS); not flagged: ${KEYS.concat(['OrderId']).filter((n) => !found.includes(n))} ${h.err ? h.t.slice(0, 200) : ''}`);
+    chk(() => !h.err && FRIENDS.concat(['Amount', 'HiddenKey', 'RegionKey', 'NameCode']).every((n) => !found.includes(n)), () => `words that only end in the same letters, a hidden key, a key that is not summed and a text column must not be flagged; flagged: ${FRIENDS.concat(['Amount', 'HiddenKey', 'RegionKey', 'NameCode']).filter((n) => found.includes(n))}`);
+    chk(() => OLD.every((n) => found.includes(n)), () => `the names the rule already knew must still be flagged; missing: ${OLD.filter((n) => !found.includes(n))}`);
+  }
+
+  // 2. AUD-016: read_model's summary of a large model has a ceiling, whatever the number of tables with measures
+  {
+    const make = (n, dir) => { const d = path.join(ROOT, dir, 'Big.SemanticModel/definition/tables'); fs.mkdirSync(d, { recursive: true });
+      for (let i = 0; i < n; i++) fs.writeFileSync(path.join(d, `T${i}.tmdl`), [`table 'Table number ${i}'`, ...Array.from({ length: 1 + (i % 7) }, (_, k) => `\tmeasure 'Measure ${i} ${k}' = 1\n\t\tformatString: #,0\n\t\tdisplayFolder: Area ${i % 12}`), ...Array.from({ length: 10 }, (_, k) => `\tcolumn 'Column ${k}'\n\t\tdataType: string\n\t\tsourceColumn: Column ${k}`), ''].join('\n')); };
+    make(500, 'm500'); make(3000, 'm3000');
+    const a = await ask('read_model', { path: 'm500' }), b = await ask('read_model', { path: 'm3000' });
+    chk(() => !a.err && a.j.summary === true && a.t.length < 40000, () => `read_model on 500 tables with measures: ${a.err ? a.t.slice(0, 200) : a.t.length + ' characters'}`);
+    chk(() => !b.err && b.j.summary === true && b.t.length < 40000, () => `read_model on 3,000 tables with measures: ${b.err ? b.t.slice(0, 200) : b.t.length + ' characters'}`);
+    chk(() => [[a, 500], [b, 3000]].every(([x, n]) => x.j.counts.tables === n && x.j.tablesWithMeasures.length === 100 && x.j.tablesWithMeasures[0].measures === 7 && x.j.notListed.tablesWithMeasures === n - 100
+      && x.j.notListed.byArea.reduce((s, y) => s + y.tables, 0) === n - 100 && /focus/.test(x.j.notListed.how) && /tables/.test(x.j.notListed.how)),
+      () => `the summary must list the 100 tables with the most measures and count the rest by area: ${JSON.stringify((b.j || {}).notListed).slice(0, 300)} / listed ${((b.j || {}).tablesWithMeasures || []).length}`);
+    // a table that was left out is still reached by name, and by a focus
+    const left = 'Table number 2996', listed = new Set(((b.j || {}).tablesWithMeasures || []).map((t) => t.table));
+    const byName = await ask('read_model', { path: 'm3000', tables: [left] }), byFocus = await ask('suggest_fields', { path: 'm3000', focus: 'number 2996', kpis: 1 });
+    chk(() => !listed.has(left) && !byName.err && byName.j.tables.length === 1 && byName.j.tables[0].table === left && byName.j.tables[0].measures.length === 1 + (2996 % 7) && !byFocus.err && byFocus.j.kpis[0].t === left,
+      () => `a table left out of the summary must be reached with tables and with a focus: listed ${listed.has(left)}; ${byName.err ? byName.t.slice(0, 120) : byName.j.tables.length} / ${byFocus.err ? byFocus.t.slice(0, 160) : JSON.stringify(byFocus.j.kpis || byFocus.j.why).slice(0, 160)}`);
+  }
+
+  // 3. AUD-017: characters nobody sees (direction overrides, zero-width) never reach a report's file name, and a
+  //    model object named with one is pointed out; the model itself is never renamed
+  {
+    const plan = await ask('plan_layout', {}), design = plan.j && plan.j.design;
+    const evil = await ask('create_report', { path: 'tmdl-project', name: 'Report‮xcod.exe', design });
+    chk(() => !evil.err && evil.j.report === 'Reportxcod.exe.Report' && !/\p{Cf}/u.test(evil.j.open) && fs.existsSync(path.join(ROOT, 'tmdl-project', 'Reportxcod.exe.pbip')) && !fs.readdirSync(path.join(ROOT, 'tmdl-project')).some((n) => /\p{Cf}/u.test(n)),
+      () => `a report name with U+202E must give a file name without it: ${evil.err ? evil.t.slice(0, 200) : JSON.stringify(evil.j.report)}`);
+    const names = ['مبيعات، الربع الأول', 'Sales 📊 2026', 'Ventas año'], made = [];
+    for (const n of names) made.push(await ask('create_report', { path: 'tmdl-project', name: n, design }));
+    chk(() => made.every((x, i) => !x.err && x.j.report === names[i] + '.Report'), () => `an Arabic name with the Arabic comma, an emoji name and an accented name must stay as they are: ${made.map((x) => (x.err ? x.t.slice(0, 80) : x.j.report))}`);
+    // a model whose measure and column are named with hidden characters
+    const d = path.join(ROOT, 'hidden-project'); fs.mkdirSync(d); fs.cpSync(path.join(ROOT, 'tmdl-project', 'Sales.SemanticModel'), path.join(d, 'Sales.SemanticModel'), { recursive: true });
+    fs.appendFileSync(path.join(d, 'Sales.SemanticModel/definition/tables/Sales.tmdl'), "\n\tmeasure 'Total‮Sales' = 1\n\t\tformatString: #,0\n\n\tcolumn 'Zero​Width'\n\t\tdataType: string\n\t\tsourceColumn: Zero\n");
+    const rm = await ask('read_model', { path: 'hidden-project' }), sf = await ask('suggest_fields', { path: 'hidden-project' }), hc = await ask('check_model_health', { path: 'hidden-project' });
+    chk(() => [rm, sf, hc].every((x) => !x.err && x.j.hiddenCharacters.names.includes('Sales[Total\\u202eSales]') && x.j.hiddenCharacters.names.includes('Sales[Zero\\u200bWidth]') && /direction|zero-width/.test(x.j.hiddenCharacters.note)),
+      () => `a measure and a column named with hidden characters must be listed, escaped, in read_model, suggest_fields and check_model_health: ${[rm, sf, hc].map((x) => (x.err ? x.t.slice(0, 80) : JSON.stringify(x.j.hiddenCharacters))).join(' | ').slice(0, 400)}`);
+    const clean = await ask('read_model', { path: 'tmdl-project' }), cleanH = await ask('check_model_health', { path: 'tmdl-project' });
+    chk(() => !clean.err && !('hiddenCharacters' in clean.j) && !cleanH.err && !('hiddenCharacters' in cleanH.j) && fs.readFileSync(path.join(d, 'Sales.SemanticModel/definition/tables/Sales.tmdl'), 'utf8').includes('Total‮Sales'),
+      () => 'a normal model must carry no hiddenCharacters note, and the model with hidden characters must not be renamed');
+  }
+}
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);
