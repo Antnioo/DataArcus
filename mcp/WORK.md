@@ -54,6 +54,41 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 - **Website dropdowns fixed** (merged): the open list was white on white on every tool page; form fields now use
   `color-scheme: dark` with dark option colours (`assets/css/style.css`), checked on every tool page in `tools.mjs`.
 
+## Next step: round 10, the overnight sitting (owner's go 2026-10-04: "make sure everything falls in place and looks like a world-class dashboard"; 6 hours from 21:32; branch `fix/round-10` in both repos, from main `8f6d2c3`)
+Desktop, mouse, keyboard and UI Automation are allowed; the owner is asleep, so anything that needs a person is
+skipped and noted. Made-up and sample models only. Pushed every hour. Not merged.
+
+**Before (main `8f6d2c3`):** `npm test` 363 of 363 (7 tools). Website: CI is the record.
+
+**Built only on what the three sittings of 4 October measured** (DESKTOP-TESTS.md): the table's `grid.imageHeight` /
+`imageWidth`; `format` on a table projection; the card image as Desktop writes it (`imageType: 'imageData'`); no SVG
+length limit up to 2,000,000 characters; Arabic in SVG; "Total" in a right-to-left table only with a text column
+first; `#,0.##`; and the FAIL: a nine-character card value is cut on six-card pages at 1280 x 720 and 960 x 720.
+
+### Order of work
+1. **Measure first (Desktop, before any code):** (a) the width of a card's value text per point size, for digits,
+   separators and the unit letters, in Segoe UI and Tahoma, so "fits" is computed and not guessed; (b) the JSON
+   Desktop writes for a card with Display units Auto and Value decimal places 2; (c) two or three navigator looks,
+   written by hand into a copy, captured, and put into this plan with the choice and why; (d) "before" captures
+   of the default report (exec and analysis, English and Arabic, 1920 x 1080 and 1280 x 720) for R10.7's score.
+2. Code, tests first, in this order: R10.1 with R10.6(b); R10.6(a) and (c); R10.2; R10.3; R10.5; R10.7; R10.4.
+3. Desktop proof (part B), then part C only if A and B are green.
+
+| # | Item | Change | Expected |
+|---|---|---|---|
+| R10.1 + R10.6(b) | KPI values | **One setting for every KPI card: automatic units with 2 decimals ("3.43M", "14.81K", "231.50")**, the default; a percent stays a percent. It replaces round 9's Custom format on cards as the default, because that is what cut the numbers: an automatic value is 7 characters at most ("999.99K"), which is what the card's value size was made for. The full number with separators (round 9) stays as a choice (`kpiValues: 'full'`), and then the value is sized for the longest text the format can give, from the measured widths. The JSON is Desktop's own (measured in step 1b) | tests first: the default entry on every KPI card; a percent untouched; `full` gives round 9's entry and a smaller value where the card is narrow; for 3 to 6 cards x 1920 x 1080, 1280 x 720, 960 x 720, English and Arabic: the computed text width of the worst value fits the card (the measured rule), in both modes. 6 checks |
+| R10.6(a) | Page navigation | a modern navigator in the header: no boxes; the current page marked in the theme's accent (look chosen from Desktop captures in step 1c); each button as wide as its own name needs (measured text widths), so no name is cut; when the names don't fit the header's free width the size goes down to the minimum, then the names wrap to the next row of the header; mirrored in Arabic (first page at the right). The same in English and Arabic (single buttons, as the right-to-left reports have had since round 2), for 2 to 8 pages | tests first: no button narrower than its text (2, 4, 8 pages; long names; both languages); the current page's mark; mirrored order; the website's two-page download; the phone layout unchanged. 5 checks |
+| R10.6(c) | Reset filters | an icon button that matches the navigator (no box, the reset icon in the accent colour, the text beside it where there is room), with a tooltip, mirrored in Arabic, by the measured button size rules | tests first: the look entries; the tooltip text; the icon never over the text. 3 checks |
+| R10.2 | SVG columns usable | `grid.imageHeight` and `imageWidth` from the designs (the tallest and the widest, 8 to 512); the pictures never the first projection (in a right-to-left table they follow the table's own first column, and that column is a text column so "Total" shows); a design is mirrored in a right-to-left report (`mirror` on by default there; texts keep their direction); the cap 8,000 -> 32,000, described as a size and speed limit; `svgCards` (the new card's image, Desktop's JSON) and SVG columns in a matrix slot | tests first. 6 checks |
+| R10.3 | Separators in tables | `format` on the projection of every measure of `numberFormats` in tables; the tooltip card gets the card entry; the `numberFormats` notes say what is formatted now | tests first. 3 checks |
+| R10.4 | PBIR schema versions | read each CHANGELOG; one report both ways; validator; both opened in Desktop; does Desktop rewrite ours on save. **Upgrade only with evidence of a stability gain**; otherwise keep and write the evidence | a decision with its evidence in this file; no test unless the versions move |
+| R10.5 | Round 9 leftovers | a visual that would be written without its field is left out and named (`leftOutVisuals`), for slicers and charts as for cards; server rule 3 with page filters; `?v=` on the SVG KPI Designer's and the Calendar Generator's scripts; a column bound to an SVG size or colour rule must be a number column | tests first. 5 checks |
+| R10.7 | The design pass | a checklist (grid and spacing, type hierarchy, edges, gutters, radius and shadow, contrast, no cut text, chart titles, KPI emphasis, Arabic as polished as English); today's report scored from Desktop captures; the gaps fixed in the shared engines; scored again; before and after side by side. Taste calls are proposed, not imposed | checks for each fixed gap. 3 checks planned; the number is corrected here, with its cause, if the score finds more |
+
+**Expected test count:** `npm test` 363 -> **394** (6 + 5 + 3 + 6 + 3 + 5 + 3). Shared engines change
+(`pbip-export.js`, `design-engine.js`, `svg-kpi-compiler.js`): `.min.js`, `?v=`, `check:min`, `csp.mjs`; the design
+fixtures are recaptured only where the design engine's own output changes, each with its cause written here.
+
 ## Next step: round 9, separators on cards, "this Ramadan only", SVG columns (experimental), the capability map (owner's go 2026-10-04; TERMINAL ONLY; branch `fix/round-9` from main `3af6657`; dataarcus-engine: the same branch name, for the package)
 The owner's words: "I want the engine to expand and be able to do all sorts of manipulation in Power BI ... more room
 for creativity ... a tool used all the time to build other tools." Three items to build and one plan. Built only on
