@@ -511,6 +511,14 @@
       const groupOf = (kind) => (kind === 'title' || kind === 'logo' ? 'header' : kind === 'kpi' ? 'kpis' : kind === 'slicer' ? 'filters' : null);
       const GROUP_NAMES = { header: W.header || 'Header', kpis: W.kpis || 'KPI cards', filters: W.filters || 'Filters' };
       let z = 1000, kpiIndex = 0;
+      // The KPI titles of a page share one size (seen in Desktop on 2026-10-05: 12pt beside 8pt in one row looked
+      // wrong): the largest, down to 8pt, at which the longest title of the row fits its card.
+      let kpiTitle = TITLE;
+      sorted.filter((s) => s.kind === 'kpi').forEach((s, i) => {
+        const f = B && B.kpis ? B.kpis[i] : null, text = f ? label(f) : s.title;
+        const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: pg.kpiInset || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) }, valueEm(f));
+        while (kpiTitle > 8 && text != null && textWidth(text, kpiTitle, true, font) > s.w - c.S - c.P) kpiTitle--;
+      });
       const charts = [];
       sorted.forEach((s) => {
         const g = groupOf(s.kind);
@@ -677,7 +685,7 @@
           if (type === 'cardVisual') {
             const cf0 = query && B ? (s.kind === 'kpi' ? B.kpis[kpiIndex - 1] : B.measure) : null;
             const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: (s.kind === 'kpi' && pg.kpiInset) || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) }, valueEm(cf0));
-            visual.objects = cardObjects(c); cardFrame(visual.visualContainerObjects, c, TITLE, s.kind === 'kpi' ? ttl : null, s.w);
+            visual.objects = cardObjects(c); cardFrame(visual.visualContainerObjects, c, s.kind === 'kpi' ? kpiTitle : TITLE);
             // an SVG design on the card's image (o.svgCards; the JSON Desktop writes for "Select from data", measured in
             // Desktop 2.158, third sitting of 2026-10-04): the nth KPI card of every page
             const sc = s.kind === 'kpi' ? (o.svgCards || []).find((x) => x.card === kpiIndex - 1) : null;

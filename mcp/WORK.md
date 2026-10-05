@@ -127,6 +127,13 @@ started, and no package 0.2.6 was built.**
 | Part B: D-GC1 to D-GC6, the 11 golden tasks opened, the schema experiment | **not run** | |
 | Part C and package 0.2.6 | **not started** | |
 
+**Added at 10:16 (after this record was first written):** a six-card page at 1280 x 720 built with the current code
+was opened (`b3-six-720`): the values are whole (101.91K, 74.68K, 23.64K) and "Total Sales Last Ramadan" is whole at
+8pt, but the fitted titles had mixed sizes in one row (12pt beside 8pt), and "Total Sales vs Last Ramada..." is still
+cut at the 8pt minimum. So the titles of a page now share one size, the largest at which the longest fits (the check
+was changed for this, with its cause; it failed first). `npm test` 394 of 394, `pbip` 71 of 71, `check:min` clean.
+**The one-size row was not opened in Desktop again.** A title too long for 8pt is still cut: left.
+
 **R10.7, the checklist, scored from the eight Desktop pairs** (0 = missing, 1 = partly, 2 = right; before -> after):
 | # | Check | Before | After | Why |
 |---|---|---|---|---|

@@ -1903,17 +1903,26 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => en.filter((t) => / by /.test(t)).length >= 4 && !en.some((t) => /^(Main trend|Breakdown|Comparison)$/.test(t)) && ar.filter((t) => / حسب /.test(t)).length >= 4 && !ar.some((t) => /^(الاتجاه الرئيسي|التوزيع|المقارنة)$/.test(t)),
       () => `the sample download's chart titles must name their fields ("Total Revenue by Month"): ${JSON.stringify(en)} ${JSON.stringify(ar)}`);
   }
-  // 2. a KPI title is not cut where a smaller size fits it: its size goes down (to 8pt at least) until the bold text fits
-  //    the card's width; a title that fits keeps the theme's size
+  // 2. a KPI title is not cut where a smaller size fits it: the size goes down (to 8pt at least) until the bold text fits
+  //    the card's width; a row whose titles all fit keeps the theme's size. (Changed on 2026-10-05 after Desktop showed
+  //    a six-card row with 12pt and 8pt titles side by side: the titles of one page now share ONE size, the largest at
+  //    which the longest of them fits. Before, each title had its own size.)
   {
-    const bad = [], seen = { small: 0, kept: 0 };
+    const bad = [], seen = { small: 0, kept: 0 }, ref = {};
     for (const page of ['1920x1080', '1280x720', '960x720']) for (const k of [3, 6]) for (const lang of ['en', 'ar']) {
       const { vs } = site(lang, (d) => { d.layout = Object.assign({}, d.layout, { preset: 'exec', kpis: k, page, filters: false }); });
       const cards = vs.filter((v) => v.visual.visualType === 'cardVisual' && v.parentGroupName), top = Math.max(...cards.map((v) => titleOf(v).size));
+      // the theme's size on this page: what the three-card row has (its titles all fit)
+      if (k === 3) ref[page + lang] = top; const themeSize = ref[page + lang];
       cards.forEach((v) => { const t = titleOf(v), pad = v.visual.visualContainerObjects.padding[0].properties, avail = v.position.width - N(pad.left) - N(pad.right), need = tw(t.text, t.size, true, lang === 'ar' ? 'Tahoma' : 'Segoe UI');
-        if (t.size < top) seen.small++; else seen.kept++;
+        if (t.size < themeSize) seen.small++; else seen.kept++;
+        const rowTop = Math.max(...cards.filter((x) => x.parentGroupName === v.parentGroupName).map((x) => titleOf(x).size));   // a row: the cards of one page's KPI group
+        if (t.size !== rowTop) bad.push(`${page} ${k} ${lang}: "${t.text}" is ${t.size}pt beside a ${rowTop}pt title`);
         if (t.size < 8 || (need > avail + 0.5 && t.size > 8)) bad.push(`${page} ${k} ${lang}: "${t.text}" ${t.size}pt needs ${need.toFixed(0)} of ${avail}`);
-        if (t.size < top && tw(t.text, t.size + 1, true, lang === 'ar' ? 'Tahoma' : 'Segoe UI') <= avail) bad.push(`${page} ${k} ${lang}: "${t.text}" is ${t.size}pt though ${t.size + 1}pt fits`); });
+      });
+      // the shared size is not smaller than it must be: one size up, some title of the row would not fit
+      [...new Set(cards.map((v) => v.parentGroupName))].forEach((g) => { const row = cards.filter((v) => v.parentGroupName === g), size = titleOf(row[0]).size;
+        if (size < themeSize && row.every((v) => { const t = titleOf(v), pad = v.visual.visualContainerObjects.padding[0].properties; return tw(t.text, size + 1, true, lang === 'ar' ? 'Tahoma' : 'Segoe UI') <= v.position.width - N(pad.left) - N(pad.right); })) bad.push(`${page} ${k} ${lang}: the titles are ${size}pt though ${size + 1}pt fits them all`); });
     }
     chk(() => bad.length === 0 && seen.small > 0 && seen.kept > 0, () => `a KPI title must fit its card or be at the 8pt minimum, and keep the theme's size where it fits: ${bad.slice(0, 5).join(' | ')} (${JSON.stringify(seen)})`);
   }
