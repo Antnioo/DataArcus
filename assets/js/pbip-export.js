@@ -208,6 +208,20 @@
     const r = fs.slice().reverse(), first = fs.find(isTextField);
     return first ? [first].concat(r.filter((f) => f !== first)) : r;
   };
+  // Round 11 (seen in Desktop 2.158, 5 Oct 2026: on a 960 x 720 page a table of a text column and three measures was
+  // wider than its box, a header cut and a column off the box behind a scrollbar; at 1920 x 1080 too with four long
+  // measure names). A table holds only the fields its width has room for, by the rule its pictures already follow
+  // (columnRoom): the first text column and the first measure always, then the others in their order while they fit;
+  // the first that does not fit and every field after it are left out of that table (and told: tableColumns).
+  const tableFit = (fields, width, t, font) => {
+    const fs = (fields || []).filter(Boolean);
+    if (fs.length <= 2) return { kept: fs, leftOut: [] };
+    const room = (f) => columnRoom(tproj(f), t, font), must = [fs.find(isTextField), fs.find((f) => f.m != null)].filter(Boolean);
+    let used = must.reduce((a, f) => a + room(f), 0), full = false;
+    const kept = [], leftOut = [];
+    fs.forEach((f) => { if (must.includes(f)) return void kept.push(f); if (!full && used + room(f) <= width) { used += room(f); kept.push(f); } else { full = true; leftOut.push(f); } });
+    return { kept, leftOut };
+  };
   // the query of one visual, or null when a field it needs is not bound
   // rtl: a right-to-left report reverses a table's columns, so its first column (the category) sits on the right,
   // where an Arabic reader starts; Power BI doesn't mirror tables itself
@@ -262,6 +276,7 @@
     const own = !!(o.model && (o.model.byPath || o.model.byConnection));
     const sample = !!o.sample && !own;
     const B = own ? (o.bind || null) : sample ? sampleBind(t) : null;
+    const tableColumns = [];   // tables that hold fewer fields than given, for lack of room: { page, pageIndex, x, y, kept, leftOut } (round 11)
     const noPageButtons = [];   // pages whose header has no room for the page names even at 8pt: { page } (round 11)
     const leftOut = [];   // data visuals not written because the model has no field for them: { page, kind, title }
     const kpiTitles = { wrapped: [], shortened: [] };
@@ -735,7 +750,13 @@
         } else if (s.kind === 'text') {
           visual = { visualType: 'textbox', objects: textbox(W.textHere || 'Explain what the main chart shows and what to do about it.', 11, false, u.text), visualContainerObjects: frame(s.title, s.title, null, true) };
         } else {
-          const query = B ? bindQuery(s.kind, B, kpiIndex, rtl) : null;
+          // a table keeps only the fields its width has room for (tableFit); Bt is the bind this table is written from
+          let Bt = B;
+          if (B && s.kind === 'table') {
+            const tf = tableFit(B.table, s.w, +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10, font);
+            if (tf.leftOut.length) { Bt = Object.assign({}, B, { table: tf.kept }); tableColumns.push({ page: pg.name || base, pageIndex, x: s.x, y: s.y, kept: tf.kept, leftOut: tf.leftOut }); }
+          }
+          const query = B ? bindQuery(s.kind, Bt, kpiIndex, rtl) : null;
           let ttl = s.title;
           const extra = {};
           // (round 10: the sample download names its charts by their fields too, "Total Revenue by Month", as a report on a
@@ -787,7 +808,7 @@
           if (s.kind === 'table') visual.objects = { columnHeaders: obj({ columnAdjustment: str('growToFit'), autoSizeColumnWidth: bool(true) }) };
           // each column's header sits over its own values: text on the reading-start side, numbers (measures, and columns
           // the model types as numbers) on the other; "Apply to header" (styleHeader) makes the header follow
-          if (s.kind === 'table' && query) visual.objects.columnFormatting = tableFields(B, rtl).map((f) => ({
+          if (s.kind === 'table' && query) visual.objects.columnFormatting = tableFields(Bt, rtl).map((f) => ({
             properties: { alignment: str(f.m != null || f.num ? (rtl ? 'Left' : 'Right') : (rtl ? 'Right' : 'Left')), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) },
             selector: { metadata: f.t + '.' + fname(f) } }));
           // SVG columns (experimental; measured in Desktop 2.158, D-P1, 2026-10-04): report-level measures of
@@ -1081,7 +1102,7 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, svgSizes, noPageButtons };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, svgSizes, noPageButtons, tableColumns };
   }
 
   const api = { build, zip, crc32, textWidth, columnRoom };

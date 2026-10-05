@@ -2156,6 +2156,36 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       if (!(x.j.svgMeasures || []).every((m) => m.imageWidth === W) || !(x.j.reportNotes || []).some((n) => /narrowed/.test(n) && new RegExp(String(W)).test(n))) bad.push(`${lang}: the answer must give the pictures' width and say they were narrowed: ${JSON.stringify(x.j.svgMeasures)}`);
     }
     chk(() => bad.length === 0 && capped.length === 2, () => `the pictures must be capped by the table's room: ${bad.slice(0, 4).join(' | ')} (capped: ${capped})`);
+    // (round 11, seen in Desktop on 5 Oct: on a 960 x 720 page the table of a text column and three measures was wider
+    // than its box in English and in Arabic, a header cut and a column off the box, behind a scrollbar; at 1920 x 1080
+    // too with four long measure names.) A table never holds more columns than its width has room for (columnRoom, the
+    // rule the pictures already follow): the fields are kept in order while they fit, the first text column and one
+    // measure always; what does not fit is left out of that table, named in tableColumns and in one reportNotes line,
+    // and boundFields lists what the table really shows. A table with the room keeps every field and says nothing.
+    {
+      const FIVE = ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin %]', 'Sales[Avg Price]'], tbad = [];
+      for (const lang of ['en', 'ar']) {
+        const x = await ask('create_report', { path: 'd5-project', name: 'D5 table fit ' + lang, lang, design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', page: '960x720', lang }), fields: { kpis: KPIS, table: FIVE } });
+        if (x.err) { tbad.push(`${lang}: ${short(x)}`); continue; }
+        const pgs = report(path.join(ROOT, 'd5-project', x.j.report)).filter((p) => !p.tooltip), size = tableText(x, 'd5-project'), font = lang === 'ar' ? 'Tahoma' : 'Segoe UI';
+        const told = x.j.tableColumns || [];
+        pgs.forEach((pg, pi) => pg.visuals.filter((v) => type(v) === 'tableEx').forEach((t) => {
+          const ps = t.visual.query.queryState.Values.projections, need = ps.reduce((a, p) => a + Pb.columnRoom(p, size, font), 0), refs = ps.map((p) => p.queryRef);
+          if (need > t.at.w + 0.5 && ps.length > 2) tbad.push(`${lang} ${pg.name}: ${ps.length} columns need ${need.toFixed(0)} of ${t.at.w}`);
+          if (!refs.includes('Sales.Region') || !refs.includes('Sales.Total Sales')) tbad.push(`${lang} ${pg.name}: the text column and the first measure must stay: ${refs}`);
+          if (JSON.stringify((t.visual.objects.columnFormatting || []).map((e) => e.selector.metadata).sort()) !== JSON.stringify(refs.slice().sort())) tbad.push(`${lang} ${pg.name}: columnFormatting must follow the kept columns`);
+          const mine = told.find((c) => c.page === pg.name), bf = (x.j.boundFields.find((b) => b.page === pg.name) || { visuals: [] }).visuals.find((v) => v.visual === 'Table');
+          if (ps.length < FIVE.length && !(mine && mine.leftOut.length === FIVE.length - ps.length && mine.shown === ps.length)) tbad.push(`${lang} ${pg.name}: tableColumns must name what was left out: ${JSON.stringify(mine)}`);
+          if (!bf || bf.fields.length !== ps.length) tbad.push(`${lang} ${pg.name}: boundFields must list the ${ps.length} shown columns: ${JSON.stringify(bf)}`);
+        }));
+        if (!told.length || (x.j.reportNotes || []).filter((n) => /table/i.test(n) && /left out|room/i.test(n)).length !== 1) tbad.push(`${lang}: a narrow table must be told in tableColumns and one reportNotes line: ${JSON.stringify(told)} ${JSON.stringify(x.j.reportNotes)}`.slice(0, 400));
+      }
+      const roomy = await ask('create_report', { path: 'd5-project', name: 'D5 table roomy', fields: { table: FIVE },
+        pages: [{ name: 'W', slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'table', title: 'Wide', x: 36, y: 90, w: 1800, h: 600 }] }] });
+      const rt = pageVisuals(roomy, 'd5-project').find((v) => type(v) === 'tableEx');
+      chk(() => tbad.length === 0 && !roomy.err && rt.visual.query.queryState.Values.projections.length === 5 && !roomy.j.tableColumns && !(roomy.j.reportNotes || []).some((n) => /left out of the table/i.test(n)),
+        () => `a table must hold only the columns its width has room for, and say what it left out; a wide one keeps all: ${tbad.slice(0, 4).join(' | ')} | roomy: ${roomy.err ? short(roomy) : rt.visual.query.queryState.Values.projections.length + ' columns, ' + JSON.stringify(roomy.j.tableColumns)}`.slice(0, 900));
+    }
     const wide = await ask('create_report', { path: 'd5-project', name: 'D5 SVG wide', fields: { table: ['Sales[Region]', 'Sales[Total Sales]'] }, svgColumns: pics,
       pages: [{ name: 'W', slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'table', title: 'Wide', x: 36, y: 90, w: 1200, h: 600 }] }] });
     const wt = pageVisuals(wide, 'd5-project').find((v) => type(v) === 'tableEx');

@@ -35,7 +35,7 @@ from main `3803b7a`; dataarcus-engine main pulled (`d8d3341`).
 | 4 | Gulf calendar D-GC1 to D-GC6 | `add_gulf_calendar` (Calendar, 2018-2030, UAE, announced, `relateTo` Sales[Date]) on the pack's test model; applied in TMDL view (keyboard paste, the laptop is free); checks by DAX through Microsoft's Authoring MCP | D-GC1: Preview one new table and one relationship; Apply with Problems 0; **4748 rows, 36 columns**. D-GC4: Sales[Date] many-to-one Calendar[Date], single, active. Hijri: **1 March 2026 = Ramadan 1447** (Hijri Month Number 9, Hijri Year 1447, Is Ramadan true); `gulf-dates.js` (read 21:13, before the run) has Ramadan 1447 from **18 February 2026**, Eid al-Fitr 20 March 2026, so 1 March 2026 is **12 Ramadan 1447** (Hijri Day 12, Ramadan Day 12), 17 February is not Ramadan, 20-22 March 2026 Is Eid al-Fitr; 2018: 16 May "30 Sha'ban 1439", 17 May "1 Ramadan 1439", 29 Ramadan days, Eid al-Fitr 15-17 June, Eid al-Adha 21-24 August. D-GC3: with the sort columns, slicers run January-December, the week in order, Muharram-Dhu al-Hijjah. D-GC6: `check.dax` 40 of 40. A refresh ends with no error. D-GC2, D-GC5: write down what Desktop shows |
 | 5a | A report with left-out visuals | `create_report` on `no-measures` (and a slicer or chart with no field) | the answer names the visuals in `leftOutVisuals`; the report opens with no error box and **no empty frame** where a visual was left out; validator 0 errors |
 | 5b | The 11 golden tasks' reports, English and Arabic | each task's tool-level call(s) from `GOLDEN-TASKS.md` / `golden-baseline.mjs`, built in English and in Arabic, each opened and every page captured | each opens in under 60 s with no error box; nothing cut or overlapping on 1920 x 1080 and 1280 x 720 pages; the known limits are expected and written, not hidden: task 5 (640 x 360) cut labels; task 6 long Arabic names wrap or shorten with "…"; task 9 writes nothing; task 10 needs `focus`; task 11 is a health answer (no report) |
-| 6 | Part C | D-P4 (an SVG measure in a tooltip), D-P5 (a `data:` image inside a theme), D-P7 (SVG pictures on the phone layout), D14 (a text filter with an apostrophe, a decimal filter), D15 (the taller header, hand-edited copies, 2 sizes x 2 languages) | D-P4, D-P5, D-P7: not known, write down what draws. D14: the Filters pane shows both filters with no error mark and the visuals show only the matching rows (the made-up value with an apostrophe; the decimal 5.5). D15: the title's middle within 1 of the header's middle (computed -0.2 English, +0.4 Arabic), logo and tabs centred, nothing in the body cut. Code only for a FAIL, tests first |
+| 6 | Part C | D-P4 (an SVG measure in a tooltip), D-P5 (a `data:` image inside a theme), D-P7 (SVG pictures on the phone layout), D14 (a text filter with an apostrophe, a decimal filter), D15 (the taller header, hand-edited copies, 2 sizes x 2 languages) | **(corrected 23:20, before any of these runs: I had D-P4 wrong. The rows are the ones in dataarcus-engine `research/ENGINE-POSSIBILITIES.md`, section 5.)** D-P4: an SVG measure with a `<script>` that would change a fill, and an `<image href>` to a logging server on this laptop only (127.0.0.1:8765): **expected: the script does not run (the fill is unchanged) and the server logs no request**; if either happens, stop and report. D-P5: a theme whose page background is a `data:image/png;base64` URL, inside the project (and through View > Themes if the dialog can be driven): recorded as it is, drawn or not. D-P7: an SVG-column page in the phone layout (and File > Export > PDF if it can be driven without the owner): recorded as it is. D14: the Filters pane shows both filters with no error mark and the visuals show only the matching rows (the made-up value with an apostrophe; the decimal 5.5). D15: the title's middle within 1 of the header's middle (computed -0.2 English, +0.4 Arabic), logo and tabs centred, nothing in the body cut. Code only for a FAIL, tests first |
 | 7 | `check_report` (read-only), after 1-6 | a separate worktree of `feat/check-report` (not merged, not changed); run over every report opened tonight | a table in DESKTOP-TESTS.md: per report, its findings beside what Desktop showed (agree / disagree / it missed / it raised wrongly) |
 
 **The design eye:** every captured page is also read as a designer; findings in "Round 11, design findings" below,
@@ -111,7 +111,39 @@ never fixed tonight (only a FAIL of items 1-6, tests first).
   **FAIL: the table is wider than its box** on the 4:3 page (both languages) and with long measure names at
   1920 x 1080 (tasks 6 and 10). Next: fix it, a test first (the table keeps only the measures its width holds, and
   says which were left out), then item 6.
-- **Scripts (laptop, `builder-scripts\`):** `r11-golden.mjs` (builds the 20 golden reports into
+- **23:32, item 6 so far** (DESKTOP-TESTS.md, "Item 6, part C"): **D-P4 PASS** (a script and an onload in an SVG
+  measure do not run; the local logger got no request from Power BI). **D-P5: drawn** (a `data:` URL page
+  background in the project's theme); the View > Themes way not run. **D15 measured: round 8's computed offsets do
+  not hold** for a capitals-and-digits title: the title is 0.6 to 1.7 above the header's middle today, not below
+  ("for the owner" 6). No code.
+  **D14, expected (written 23:32, before the run):** on a copy of the sample with one more made-up column
+  (`11-r11\d14`, Sales[Rate] = 0, 5.5, 11 or 16.5): a page filter Calendar[Hijri Month Name] = "Sha'ban" (an
+  apostrophe) and, in a second report, Sales[Rate] = 5.5 (a decimal; the column's type is unknown in the files, so
+  the value's own type decides): the Filters pane lists each under "Filters on this page" with no error mark; the
+  Total Sales card equals DAX with the same filter (the Sha'ban days of the calendar, 1 a day; the Rate-5.5 rows);
+  the tooltip pages have no filter.
+  **D-P7, expected: not known** (do the SVG pictures of a table show in the phone layout?): recorded as it is.
+- **23:54, items 5 (the fix), 6 and 7 done.**
+  - **The table fix:** red 421 checks / 1 failing ("5 columns need 422 of 354"), green **421 of 421**; `check:min`
+    clean. Rebuilt and opened: the 4:3 page in English and Arabic now has three whole columns and no horizontal
+    scrollbar; `tableColumns` and a note name the field left out; the wide Details table keeps all four.
+  - **Item 6:** D14 PASS (text with an apostrophe: 179 = DAX; decimal 5.5: 25.73K, 18.65K, 0.35 = DAX; both in the
+    Filters pane with no error mark). D-P7: the SVG pictures draw on the phone; the table is wider than the phone
+    canvas (finding 29); the PDF half not run. D-P4 PASS, D-P5 drawn (in a project), D15 measured (above).
+  - **Item 7:** `check_report` (`feat/check-report` `c8be567`, worktree `C:\DataArcus\r11-check-report`, not
+    changed) on all 63 reports of tonight: 250 warnings, 2 errors (both on the fixture's hand-made report), the
+    validator 0 errors on the engine's 62. Against Desktop: four kinds of warning raised where Desktop shows
+    nothing wrong (Reset "needs 163 of 155", the 46-high Arabic title, slicers and text boxes at 1280 x 720), one
+    right (the scroll thumb at 640 x 360), and no rule for the six things Desktop showed as cut or misplaced
+    (DESKTOP-TESTS.md, "Item 7").
+  - Website suites that the shared engine touches (`pbip`, `design-engine`, `layout`, `theme-generator`): started
+    23:46 through `run-all.mjs`; result in the next entry (CI is the record).
+  - **Next:** the 00:09 push; then the Claude Desktop install of 0.2.6 (item 1's last part); then the stop report.
+- **The table that is wider than its box: the fix is written** (`tableFit` in `pbip-export.js`, `tableColumns` in
+  the answer; +1 check, 421 expected); the red run (the fix set aside) is running at 23:32; then the green run, the
+  4:3 report rebuilt and opened.
+- **Scripts (laptop, `builder-scripts\`):** `r11-dp4.mjs`, `r11-logserver.mjs`, `r11-dp5.mjs`, `r11-d15.mjs`,
+  `r11-header.ps1` (the title's ink against the header panel), `r11-d14.cjs`; `r11-golden.mjs` (builds the 20 golden reports into
   `11-r11\golden\<model>`; `golden\built.json`), `gshot.ps1 -Project <model folder> -Name <report> -Tag <tag>` (open,
   time, capture pages 1 and 2, an overview); `r11-gc-model.mjs`, `r11-gc-patch.cjs`, `r11-gc-types.cjs` (the Gulf
   test models), `r11-call.mjs <root> <tool> <json>` (one call on the working copy's server), `tmdl-apply.ps1`,
@@ -159,6 +191,22 @@ never fixed tonight (only a FAIL of items 1-6, tests first).
    unknown type with a note ("its type could not be read; make sure it is a date column"); or take `columnTypes`
    as `check_model_health` does. **Recommended: accept with the note** (the relationship fails loudly in Preview
    if the column is not a date).
+5. **A table that has no room for all its fields (fixed tonight; your say on the rule).** The table now keeps the
+   first text column and as many of the following fields as its width holds, in their order, and names the rest in
+   `tableColumns` and a note. That also drops a field the approved plan named in `fields.table` when the slot is
+   too narrow (the answer says so, and `boundFields` shows what is there). Options: (a) keep this; (b) for fields
+   the plan named, write nothing and ask for fewer fields or a wider slot; (c) shrink the table's text first (down
+   to 8pt) and drop a column only then. **Recommended: (a) now, (c) as the next step** (a number is rarely worth
+   less than a readable one).
+6. **The taller header (round 8's plan, D15): the measurement does not support it.** The title's ink is 0.6 to 1.7
+   above the header's middle today (capitals and digits; a title with lowercase letters sits lower), not 2.8
+   below. Options: (a) leave the header as it is; (b) centre by the capital height (move the title box down by
+   about 1 at 1280 x 720 and 1.5 at 1920 x 1080: one or two page units, a small change); (c) the taller header as
+   planned. **Recommended: (a)**, and fix the Arabic logo placeholder instead, which sits 2.6 to 3.4 low
+   (design finding 30).
+7. **Not run tonight, each needs a person or a tool the builder should not drive alone:** the theme through
+   View > Themes > Browse (D-P5's second way; the file is `<tests folder>\11-r11\dp5-theme.json`); File > Export >
+   PDF of an SVG page (D-P7's second half); the ribbon's "Mark as date table" state (item 4b).
 
 ### Round 11, design findings
 | # | Page and visual | What is off or could be better | Crop | Severity | Proposed fix | What it would change in the code |
@@ -190,6 +238,11 @@ never fixed tonight (only a FAIL of items 1-6, tests first).
 | 25 | A report on a model without measures (task 7) | page 1 is a header and one small table in the bottom corner: four fifths of the page are empty | `g7-en-view.png` | high | when nothing but tables and slicers can be built, use a layout made for them (the table full width under the header), or write nothing and return the proposal only | `create_report`: re-plan the page when `kpiCards.built` is 0 and the charts are left out |
 | 26 | A KPI card on a text measure (task 8) | the card shows "Yes" (the measure "Unused One" returns a text) | `g8-en-view.png` | medium | the picker takes only measures with a number format or a number type for a KPI card | `pbip-bind.js` KPI picks: skip measures whose format string is a text pattern or whose type is text |
 | 27 | Models without rows | Desktop's banner "Some of the tables have incomplete or no data" pushes into the capture and covers the header | `g6-ar-view.png` | low | nothing in the report; for demos use models with rows | - |
+| 28 | KPI cards: a whole number under a thousand | "179.00" for a count (two decimals on every automatic value); 0.34 and 3.31 read fine, 179.00 reads like money | `d14-text-view.png` | medium | no decimals when the measure's own format has none (or its type is a whole number); keep two for the rest | `cardObjects`: `labelPrecision` by the bound measure's format (the server knows it: `pct`, `cardFormat`) |
+| 29 | The phone layout of a table with SVG pictures | wider than the phone canvas: the first picture is cut at the edge, the second is behind a scrollbar | `p7-phone-p1-s4.png` | medium | a phone size for the pictures (`grid.imageWidth` in `mobile.json`, to measure that Desktop honours it), capped by the 323-wide canvas | `phoneLook` for `tableEx` in `pbip-export.js` |
+| 30 | The header, Arabic: the logo placeholder | "شعارك" sits 2.6 (1920 x 1080) and 3.4 (1280 x 720) below the header's middle, and starts 150 page units in from the edge where "Your logo" hugs its side | `h-1280-head.png` | medium | centre the placeholder's box by the measured Tahoma offset and align it to the header's edge | the logo placeholder's box in `pbip-export.js` (`fitText` for the logo text; the Arabic x) |
+| 31 | The header's title | always the design's name (the theme's name: "R10" on a report called "D14 text") | `d14-text-view.png` | medium | the report's name when no title is given; a `title` input | `create_report`: `title: a.title || a.name` instead of the design's name |
+| 32 | The 4:3 and 16:9 executive page, English | the table shows six of seven days with a vertical scrollbar after the fix too | `g4s-fit-tables.png` | medium | as finding 23 (tighter rows or a taller slot) | as finding 23 |
 <!-- r11 findings -->
 
 ## Round 11, small fixes (2026-10-05, cloud; branch `fix/round-11-small` from main `850b0a0`; not merged)

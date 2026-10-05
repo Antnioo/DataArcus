@@ -1807,6 +1807,123 @@ full-size crops of what looked off. No report showed an error dialog; none was s
   the first text column and every KPI measure, whatever the slot's width; round 10's `columnRoom` knows what each
   column needs but is used only to cap SVG pictures. Fixed below (a test first).
 
+### Item 6, part C: D-P4, no script and no fetch from an SVG image
+"DP4 SVG" (`r11-dp4.mjs`): a copy of "TB EN" whose first table shows Day Name and four report-level SVG measures:
+a green box (the control); the same box with a `<script>` that would turn it red; the same box with an `onload`
+that would turn it red; a green box with an `<image>` whose address is a logging server on this laptop only
+(`r11-logserver.mjs`, 127.0.0.1:8765; `href` and `xlink:href`). The server ran for four minutes around the open and
+the capture; its log is `desk-r11\dp4-server.log`.
+| Expected | Seen | Result |
+|---|---|---|
+| the script does not run (the fill is unchanged) | "Script SVG" and "Onload SVG" are green in every row, like the control (`dp4-table.png`) | PASS |
+| the local server logs no request | the log holds one request, the builder's own self-test (`GET /selftest` from PowerShell, which proves the logger works), and **none from Power BI** from the open to four minutes later | PASS |
+- The picture with the `<image>` draws its green box with a broken-image mark where the linked image would be:
+  Desktop shows that the image was not loaded. So a design must never rely on a linked image.
+- Seen through the bridge's capture and with the report open on screen for the four minutes; not tried: the
+  Service, the phone app, PDF.
+
+### Item 6, part C: D-P5, a theme's page background as a `data:` URL
+"DP5 theme" (`r11-dp5.mjs`): a copy of "TB EN"; the pages' own background entries taken out; the theme inside the
+project given `visualStyles.page["*"].background: [{ image: { name, scaling: "Fit", url: "data:image/png;base64,…" },
+transparency: 0 }]` with a 64 x 36 striped PNG (906 characters).
+- **Inside the project: drawn.** The stripes fill the page behind the visuals, scaled to fit (`dp5-view.png`).
+  Desktop opened the report without a message.
+- **Through View > Themes > Browse: not run** (it needs the file dialog; the theme is ready at
+  `<tests folder>\11-r11\dp5-theme.json`).
+
+### Item 6, part C: D15, the title against the header's middle (measured; no code changed)
+Round 8's plan computed that the header's title sits 2.8 below the middle at 1920 x 1080 in English (1.3 at
+1280 x 720) and proposed a taller header. Measured tonight on today's header: the exec layout, 4 cards, no rail,
+Corporate (white panels), built by the server (`r11-d15.mjs`); the header panel's edges and the title's ink read
+from the capture (`r11-header.ps1`); page units, + is lower.
+| Report | Title | Header panel | The title's ink middle against the panel's middle | Round 8 computed | "Your logo" / "شعارك" |
+|---|---|---|---|---|---|
+| "H EN 1920" | 20pt Segoe UI bold | 58.9 high | **-1.3** (above) | +2.8 | +0.4 |
+| "H AR 1920" | 20pt Tahoma bold | 58.9 | **-1.7** | +0.4 | +2.6 |
+| "H EN 1280" | 12pt Segoe UI bold | 39.8 | **-0.6** | +1.3 | +0.3 |
+| "H AR 1280" | 12pt Tahoma bold | 39.8 | **-1.7** | -2.6 | **+3.4** |
+- **The computed offsets are not what Desktop draws for these titles.** Every title sits a little above the
+  middle (0.6 to 1.7), none below. The titles here are capitals and digits ("H EN 1920"), whose ink is the capital
+  height; a title with lowercase letters that hang below the line has its ink's middle lower (by about half the
+  hanging part: some 2.5 at 20pt), which is where round 8's +2.8 would come from. So where the title "sits" depends
+  on its letters, and a header made taller for English would push a capitals-only title further above the middle
+  (to about -4.3 at 1920 x 1080).
+- **The Arabic logo placeholder is what sits off:** "شعارك" is 2.6 and 3.4 below the middle (`h-1280-head.png`).
+- **The engine's `hh` setting is not the proposal:** with `hh` 60, 59 and 62 the title box grows and the title's
+  size grows with it (20 -> 23pt, 12 -> 13pt, 12 -> 15pt: "H EN 1920 hh60", "H EN 1280 hh59", "H AR 1280 hh62",
+  read from the files, not opened). A header that is taller with the title's size unchanged would need new code.
+- Not done as written in the plan: hand-edited copies with the taller slot. A text box is top-aligned (round 1),
+  so the taller slot leaves the ink where it is and moves only the middle; the numbers above give the result.
+
+### Item 5, after the fix: a table holds only the columns its width has room for
+Tests first (red: 421 checks, 1 failing, "5 columns need 422 of 354"; green: 421 of 421). `tableFit` in
+`pbip-export.js`: the first text column and the first measure always, then the other fields in their order while
+`columnRoom` says they fit the slot's width; the first that does not fit and those after it are left out of that
+table; the answer names them (`tableColumns`, one `reportNotes` line) and `boundFields` lists what the table shows.
+| Report | Before | After (rebuilt with the same call) |
+|---|---|---|
+| "G4 4x3 fit EN" (960 x 720) | four columns, the fourth header cut, a horizontal scrollbar | **three columns** (Day Name, Total Sales, Total Sales Last Ramadan), every header whole, no horizontal scrollbar; `tableColumns`: "Executive summary", shown 3, left out Sales[Total Sales vs Last Ramadan %]. The Details page's wide table keeps all four. Six of the seven rows and a vertical scrollbar, as at 1280 x 720 (`g4s-fit-tables.png`) |
+| "G4 4x3 fit AR" | the "Total Sales" column off the box | three columns, all whole, all seven rows, "Total" shown |
+| "G10 fit EN" (1920 x 1080, long names) | "Freight Costs Total Tax Amou", a scrollbar | built: three columns on page 1 (Route Group, Shipments Total Net Amount, Deliveries Total Tax Amount), the fourth named in `tableColumns`; **not opened** |
+- The rule's width is the slot's own; tonight's measurement says the grid is 15.4 narrower than the visual (7.7 a
+  side). `columnRoom` is generous (a measure's value is taken as nine digits), which covers it here; the two were
+  not tightened together.
+
+### Item 6, part C: D14, a text filter with an apostrophe and a decimal filter
+A copy of the sample with one more made-up column (`<tests folder>\11-r11\d14`, `r11-d14.cjs`): Sales[Rate] =
+MOD ( DAY ( Date ), 4 ) x 5.5. Two reports from `create_report` (exec, 1280 x 720, three cards), each with one page
+filter. Expected values by DAX on the open model (`desk-r11\gc\q-d14.dax`).
+| Filter | In the page's file | The Filters pane | The cards against DAX | Result |
+|---|---|---|---|---|
+| `Calendar[Hijri Month Name]` = "Sha'ban" | `'Sha''ban'` | "Hijri Month N... is Sha'ban" under "Filters on this page", no error mark (`d14-text-view.png`) | Total Sales **179.00** (DAX 179: the 179 Sha'ban days of the calendar, 1 a day); Total Sales Last Ramadan blank (DAX blank) | PASS |
+| `Sales[Rate]` = 5.5 (the column's type is unknown in the files) | `5.5D` | "Rate is 5.5", no error mark (`d14-dec-view.png`) | **25.73K, 18.65K, 0.35** (DAX 25731, 18647, 0.3517) | PASS |
+- The tooltip pages of both reports have no filter (read from the files).
+- Seen: a whole number under a thousand shows as "179.00" on a card (automatic units with two decimals, round 10's
+  setting): a count reads like money. A design finding.
+
+### Item 6, part C: D-P7, SVG pictures in the phone layout
+"P7 SVG EN" (round 10's two-picture table: Hijri Day, Total Sales, Total Sales Last Ramadan, a bar and a strip);
+Mobile layout by UI Automation, the phone canvas scrolled with the mouse wheel to the table (`r11-phone-scroll.ps1`;
+`p7-phone-p1-s4.png`).
+- **The pictures draw on the phone**: the bar shows in every row and in the total.
+- **The table is wider than the phone's canvas**: three fields and two pictures need more than 323, so the first
+  picture's header is cut ("vs last Ran"), its bars are cut at the canvas's edge and the second picture is behind a
+  horizontal scrollbar. The phone uses the page's own query and picture size; nothing is written for the phone.
+- **Not run: File > Export > PDF** (it opens a viewer outside Desktop and needs a person to read it).
+
+### Item 7, `check_report` (branch `feat/check-report` at `c8be567`, read only) against what Desktop showed
+A separate worktree of the branch (`C:\DataArcus\r11-check-report`; nothing in it changed, only its own
+`npm ci`), its server started over stdio with the round's folder as the working folder, `check_report` called once
+on each of the **63 reports** under `<tests folder>\11-r11` (`r11-check.mjs`; the answers in
+`<tests folder>\desk-r11\check-report\`, `summary.json`). No call failed; 9 to 812 ms a report; the validator ran
+offline (0.4.0) on each; nothing was written into the reports.
+**Totals by rule:** PBIR_TEXTBOX_HEIGHT_BELOW_FLOOR 153, TOOLTIP_SCROLL 112 (notes), PBIR_SLICER_HEADER_MAY_CLIP 42,
+TEXTBOX_FITS 32, BUTTON_ONE_LINE 21, THEME_NAME 2, PBIR_PLATFORM_MISSING 1, PBIR_THEME_FILE_NAME_MISMATCH 1.
+Errors: 2, both on the fixture's own hand-made "Health Test Report" (not a report of tonight's engine).
+| What Desktop showed tonight | `check_report` said | Agree? |
+|---|---|---|
+| "Reset filters" whole on every English report with a rail (arrow and text, one line) | **BUTTON_ONE_LINE, a warning, on every one** (21): "the button is 155 wide; 13 characters at 15pt and its icon (40 wide at this height) need 163" (107 against 111 at 1280 x 720) | **disagree: raised wrongly.** Its rule counts 0.45 em a letter; "Reset filters" is 0.38 em a letter (round 10, M3), and since round 10 the engine sizes the button by the measured letters + 10 + the icon |
+| The Arabic title whole, no scroll thumb, in a 46-high box at 20pt ("G1 Exec AR", "H AR 1920") | PBIR_TEXTBOX_HEIGHT_BELOW_FLOOR (Microsoft's validator): "height 46px may be too small for 20pt font with 8+8px padding (min 48px to avoid scrollbar)" | **disagree: raised wrongly** for these. Desktop showed 20pt whole from 44 (measured 2026-10-01) |
+| The same warning at 1280 x 720 and 960 x 720 on the title and logo text boxes (31 or 32 high at 10 to 12pt; 24 at 8pt) | 4 a report (16 on the eight-page ones) | **disagree** at 1280 x 720 and 960 x 720 (the titles and "Your logo" were whole, no thumb); **agree at 640 x 360**, where Desktop does show a scroll thumb beside "Your logo" ("G5 Small EN") |
+| Dropdown slicers whole (header and box) at 1280 x 720, 56 high with the page's smaller text | PBIR_SLICER_HEADER_MAY_CLIP: "height 56px < 76px full height" (3 a report at 1280 x 720, 960 x 720, 640 x 360) | **disagree** at 1280 x 720 and 960 x 720 (whole in Desktop; the rule assumes the default text size); not looked at closely at 640 x 360 |
+| Not opened: the title box of the 960 x 720 eight-page reports (24 high, 8pt) | TEXTBOX_FITS: "the box is 24 high; 1 line of 8pt need 25" (32) | not comparable tonight; the measurement of 2026-10-01 has 8pt whole at 24, so the rule is one unit stricter than Desktop |
+| Tooltip bar charts (not hovered tonight) | TOOLTIP_SCROLL, a note: "about 6 rows fit in its 184 height ..." (2 a report) | nothing to compare; an honest note (it says the row count depends on data it does not read) |
+| **The table wider than its box** (4:3 both languages; long names at 1920 x 1080; the phone's SVG table) | nothing | **it missed it** (no rule for a table's columns against its width) |
+| **The Arabic card image at the value's side**, a 42pt value touching it | nothing | **it missed it** (no rule for a card's image side) |
+| **Arabic chart titles and a slicer header cut at their beginning** ("G6 Long AR") | nothing | **it missed it** (no rule for a chart title's width) |
+| **A phone card's title cut** ("Total Sales Last Rama...") | nothing (PHONE_OVERLAP ran: no overlap, which is true) | **it missed it** |
+| **No page buttons at all** on the eight-long-name reports with a 32-high header | nothing about navigation (PAGE_BUTTON_WRAP has nothing to look at) | **it missed it** (a multi-page report without page buttons is not told) |
+| 640 x 360: the table one row high with two scrollbars, "Wednes...", Q4 behind a scrollbar | the text-box and slicer warnings above only | **it missed them** (the known small-page items have no rule) |
+| The 16:9 English table: six of seven rows, a scrollbar | nothing | it missed it (it does not read data; a row count cannot be known) |
+| Arabic reports: mirrored; the table's text column first | `notChecked`: "RTL_MIRROR" and "DataArcus layout rules" ("not run on any report"); `builtBy: "unknown"` on every report the engine wrote tonight | it says honestly what it did not check. To note: the header, rail and panel rules run on no report at all, and it does not recognise the engine's own reports |
+| Nothing wrong: "DP4 SVG", "DP5 theme", "TB EN", "T EN 4 1920", "T EN 8 1920", the two-row tab headers | only the tooltip notes | agree |
+- **In one line:** on tonight's 63 reports `check_report` raised 250 warnings. Of the kinds that could be compared
+  with Desktop, four were raised where Desktop shows nothing wrong (the Reset button, the 46-high Arabic title, the
+  slicers and the text boxes at 1280 x 720) and one was right (the scroll thumb at 640 x 360); and it has no rule
+  for any of the six things Desktop showed as really cut or misplaced. Its validator and schema checks found
+  nothing on the engine's reports (0 errors on all 62), which agrees with Desktop opening every one without a
+  message.
+
 ## Lessons
 - **Round 11: a TMDL script may carry `sortByColumn`, `dataCategory: Time` and `isKey` for a DAX calendar table**:
   Desktop applies them (Problems 0), and slicers then run January to December, Sunday to Saturday, Muharram to Dhu

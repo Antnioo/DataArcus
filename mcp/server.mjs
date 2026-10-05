@@ -237,9 +237,9 @@ function resolveSvgColumns(tables, list, opt) {
 
 // What each visual of the written pages shows, by name: the answer's boundFields
 const VISUAL_NAMES = { kpi: 'KPI card', card: 'Card', line: 'Line chart', bar: 'Bar chart', column: 'Column chart', donut: 'Donut chart', table: 'Table', gauge: 'Gauge', funnel: 'Funnel', treemap: 'Treemap', map: 'Map', slicer: 'Slicer' };
-function boundOf(pages, B) {
+function boundOf(pages, B, tableKept) {
   const key = (f) => (f ? `${f.t}[${f.c != null ? f.c : f.m}]` : null), list = (...fs2) => fs2.map(key).filter(Boolean);
-  return (pages || []).map((p) => { let k = 0; const visuals = [];
+  return (pages || []).map((p, pi) => { let k = 0; const visuals = [];
     (p.slots || []).slice().sort((s1, s2) => (s1.y - s2.y) || (s1.x - s2.x)).forEach((s) => {
       const cat = (B.cats || {})[s.kind], y = (B.y || {})[s.kind] || B.measure;
       if (s.kind === 'kpi') visuals.push({ visual: VISUAL_NAMES.kpi, fields: list((B.kpis || [])[k++]) });
@@ -247,7 +247,7 @@ function boundOf(pages, B) {
       else if (s.kind === 'line') visuals.push({ visual: VISUAL_NAMES.line, fields: list(B.date, B.measure) });
       else if (['bar', 'column', 'donut', 'funnel', 'treemap', 'map'].includes(s.kind)) visuals.push({ visual: VISUAL_NAMES[s.kind], fields: list(cat, y) });
       else if (s.kind === 'gauge') visuals.push({ visual: VISUAL_NAMES.gauge, fields: list(y) });
-      else if (s.kind === 'table') visuals.push({ visual: VISUAL_NAMES.table, fields: list(...(B.table || [])) });
+      else if (s.kind === 'table') visuals.push({ visual: VISUAL_NAMES.table, fields: list(...((tableKept && tableKept(pi, s)) || B.table || [])) });
       else if (s.kind === 'slicer') (B.slicers || []).slice(0, 3).forEach((f) => visuals.push({ visual: VISUAL_NAMES.slicer, fields: list(f) }));
     });
     return { page: p.name, visuals }; });
@@ -635,6 +635,11 @@ server.registerTool('create_report', {
   const KIND = { slicer: 'Slicer', line: 'Line chart', bar: 'Bar chart', column: 'Column chart', donut: 'Donut chart', funnel: 'Funnel', treemap: 'Treemap', map: 'Map', table: 'Table', matrix: 'Matrix', gauge: 'Gauge', card: 'Card' };
   const leftOutList = (r.leftOut || []).map((x) => ({ visual: x.kind === 'slicer' ? (x.title || 'Slicer') : `${KIND[x.kind] || x.kind}${x.title ? ` "${x.title}"` : ''}`, page: x.page, why: WHY[x.kind] || 'the model has no text column (a category) or no measure for it' }));
   if (leftOutList.length) reportNotes.push(`${leftOutList.length} visual${leftOutList.length === 1 ? ' was' : 's were'} left out, because a visual is never written without its field: ${leftOutList.map((x) => `${x.visual} on "${x.page}" (${x.why})`).join('; ')}.`);
+  // tables that hold fewer fields than given, for lack of room (round 11): named, and boundFields lists what each shows
+  const TC = r.tableColumns || [], fkey = (f) => `${f.t}[${f.c != null ? f.c : f.m}]`;
+  const tableKept = (pi, s) => { const c = TC.find((x) => x.pageIndex === pi && x.x === s.x && x.y === s.y); return c ? c.kept : null; };
+  const tableColumns = TC.length ? { tableColumns: TC.map((c) => ({ page: c.page, shown: c.kept.length, leftOut: c.leftOut.map(fkey) })) } : {};
+  if (TC.length) reportNotes.push(`Fields were left out of the table on ${TC.map((c) => `"${c.page}" (${c.leftOut.map(fkey).join(', ')})`).join('; ')}: at this page size the table has room for ${[...new Set(TC.map((c) => c.kept.length))].join(' or ')} columns, and a table wider than its box hides columns behind a scrollbar. For the fields left out: a wider table slot, a larger page, shorter display names, or fewer fields in fields.table.`);
   // page buttons that did not fit the header (round 11): never written cut, and never left out without saying so
   const NPB = (r.noPageButtons || []).map((x) => x.page);
   const pageButtons = NPB.length ? { pageButtons: { leftOutOn: NPB, why: 'The page names do not fit the room between the title and the logo, even at 8pt on as many rows as the header is high. A cut name is worse than no button, so these pages have no page buttons; readers still change pages with Power BI\'s own page tabs.' } } : {};
@@ -652,7 +657,7 @@ server.registerTool('create_report', {
   const arabic = a.lang === 'ar' ? { arabicNames: { shownFields: shown.length, missing,
     how: missing.length ? 'These fields show under their model names. To show Arabic names, call create_report again with displayNames: { "Table[Field]": "الاسم" } for each (ask the user for the names: nothing is translated automatically). The model is not renamed.' : 'Every field the report shows has an Arabic name.' } } : {};
   return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
-    { boundFields: boundOf(boundPages, bind) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, kpiTitles, pageButtons, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
+    { boundFields: boundOf(boundPages, bind, tableKept) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, kpiTitles, pageButtons, tableColumns, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
     sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {}));
 }));
 
