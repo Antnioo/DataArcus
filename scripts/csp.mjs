@@ -2,11 +2,14 @@
 // after <meta charset>, allowing exactly what that page loads. GitHub Pages can't send headers, so the policy lives in
 // the page; a <meta> policy can't set frame-ancestors or report-uri.
 //   - scripts: the site's own files, the SHA-256 of each inline script on the page (an edited inline script needs this
-//     script run again: the site tests fail until it is), jsDelivr (Bootstrap, AOS), and on pages with the consent
+//     script run again: the site tests fail until it is), the jsDelivr package folders the page loads scripts from
+//     (npm/<package>@<version>/: never the whole host, which serves any package and any GitHub repository; audit
+//     AUD-029), and on pages with the consent
 //     loader Google Analytics and Microsoft Clarity (they only load after consent; the policy only allows them)
 //   - the async stylesheet pattern's onload="..." handler, by its hash ('unsafe-hashes' allows only that exact text)
-//   - styles: inline styles are allowed (the pages and tools set style attributes); Google Fonts and jsDelivr
-//   - fonts: Google Fonts, jsDelivr (Bootstrap Icons); images: the site, data: and blob: (the tools' previews), the
+//   - styles: inline styles are allowed (the pages and tools set style attributes); Google Fonts and the jsDelivr
+//     package folders the page loads stylesheets from
+//   - fonts: Google Fonts, and the folder of a jsDelivr stylesheet that loads its own fonts (Bootstrap Icons); images: the site, data: and blob: (the tools' previews), the
 //     hosts of the page's own <img> from other sites (the certification badge), and the analytics beacons;
 //     connections: the analytics beacons, and Web3Forms on the page with the contact form
 //   - frames: Power BI only on pages with the "Load the live report" facade, and the Google tag's own frame; nothing else
@@ -28,6 +31,8 @@ const sha = (s) => `'sha256-${crypto.createHash('sha256').update(s, 'utf8').dige
 const GA = { script: ['https://www.googletagmanager.com'], frame: ['https://www.googletagmanager.com'],
   img: ['https://www.googletagmanager.com', 'https://*.google-analytics.com', 'https://*.google.com', 'https://*.g.doubleclick.net'],
   connect: ['https://www.googletagmanager.com', 'https://*.google-analytics.com', 'https://*.google.com', 'https://*.g.doubleclick.net', 'https://pagead2.googlesyndication.com'] };
+// jsDelivr packages whose stylesheet loads font files from its own folder
+const FONT_PACKAGES = ['bootstrap-icons'];
 const CLARITY = { script: ['https://*.clarity.ms'], frame: [], img: ['https://*.clarity.ms', 'https://c.bing.com'], connect: ['https://*.clarity.ms', 'https://c.bing.com'] };
 
 // the policy a page needs, from its HTML
@@ -36,15 +41,20 @@ export function policy(html) {
   const inline = [...new Set(scripts.map((m) => sha(m[2])))];
   const handlers = [...new Set([...html.matchAll(/\son[a-z]+="([^"]*)"/gi)].map((m) => sha(m[1].replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, '&'))))];
   const ga = /googletagmanager\.com\/gtag/.test(html), clarity = /clarity\.ms\/tag/.test(html);
-  const jsd = /https:\/\/cdn\.jsdelivr\.net\//.test(html), gf = /https:\/\/fonts\.googleapis\.com\//.test(html) || /lang-manager/.test(html);
+  // jsDelivr, package by package: the folders of the scripts and of the stylesheets the page loads
+  const jsdIn = (re) => [...new Set([...html.matchAll(re)].map((m) => `https://cdn.jsdelivr.net/npm/${m[1]}/`))];
+  const jsdScripts = jsdIn(/<script\b[^>]*\ssrc="https:\/\/cdn\.jsdelivr\.net\/npm\/((?:@[^/"]+\/)?[^/"@]+@[^/"]+)\//gi);
+  const jsdStyles = jsdIn(/<link\b[^>]*\shref="https:\/\/cdn\.jsdelivr\.net\/npm\/((?:@[^/"]+\/)?[^/"@]+@[^/"]+)\/[^"]*\.css"/gi);
+  const jsdFonts = jsdStyles.filter((u) => FONT_PACKAGES.some((f) => u.startsWith(`https://cdn.jsdelivr.net/npm/${f}@`)));
+  const gf = /https:\/\/fonts\.googleapis\.com\//.test(html) || /lang-manager/.test(html);
   const pbi = /data-pbi-src="https:\/\/app\.powerbi\.com\//.test(html), form = /id="contact-form"/.test(html);
   const imgHosts = [...new Set([...html.matchAll(/<(?:img|source)\b[^>]*\s(?:src|srcset)="(https:\/\/[^/"\s]+)/gi)].map((m) => m[1]))];   // pictures on other sites (a badge)
   const pick = (k) => [...(ga ? GA[k] : []), ...(clarity ? CLARITY[k] : [])];
   const d = [
     ["default-src", "'self'"],
-    ['script-src', "'self'", ...inline, ...(handlers.length ? ["'unsafe-hashes'", ...handlers] : []), ...(jsd ? ['https://cdn.jsdelivr.net'] : []), ...pick('script')],
-    ['style-src', "'self'", "'unsafe-inline'", ...(gf ? ['https://fonts.googleapis.com'] : []), ...(jsd ? ['https://cdn.jsdelivr.net'] : [])],
-    ['font-src', "'self'", ...(gf ? ['https://fonts.gstatic.com'] : []), ...(jsd ? ['https://cdn.jsdelivr.net'] : [])],
+    ['script-src', "'self'", ...inline, ...(handlers.length ? ["'unsafe-hashes'", ...handlers] : []), ...jsdScripts, ...pick('script')],
+    ['style-src', "'self'", "'unsafe-inline'", ...(gf ? ['https://fonts.googleapis.com'] : []), ...jsdStyles],
+    ['font-src', "'self'", ...(gf ? ['https://fonts.gstatic.com'] : []), ...jsdFonts],
     ['img-src', "'self'", 'data:', 'blob:', ...imgHosts, ...pick('img')],
     ['connect-src', "'self'", ...pick('connect'), ...(form ? ['https://api.web3forms.com'] : [])],
     ['frame-src', ...((pbi || ga) ? [...(pbi ? ['https://app.powerbi.com'] : []), ...pick('frame')] : ["'none'"])],
