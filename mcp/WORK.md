@@ -89,6 +89,94 @@ first; `#,0.##`; and the FAIL: a nine-character card value is cut on six-card pa
 (`pbip-export.js`, `design-engine.js`, `svg-kpi-compiler.js`): `.min.js`, `?v=`, `check:min`, `csp.mjs`; the design
 fixtures are recaptured only where the design engine's own output changes, each with its cause written here.
 
+### Where round 10 stands (2026-10-05, 10:00; not merged; nothing installed)
+The overnight session crashed at about 23:25 (during a long background capture run) with two files uncommitted; they
+were recovered and pushed on 5 October, and the sitting went on for two hours in the foreground. **Part C was not
+started, and no package 0.2.6 was built.**
+
+- **Commits** (`fix/round-10`, from main `8f6d2c3`): `45ee7c2` the plan; `d811e38` what Desktop showed before the
+  code; `353bfde` the code and 28 checks; `49c5cbb` recovered after the crash (the design pass's 3 checks, chart
+  titles of the sample download, KPI titles that fit); `c48de82` to `d89654d` the eight before and after pairs, one
+  commit each; `26a1bdc` part B's proof; then this record. dataarcus-engine: branch `fix/round-10` made, **nothing
+  committed in it**.
+- **Tests:** `npm test` 363 -> **394 of 394** (as planned: 6 + 5 + 3 + 6 + 3 + 5 + 3). All 28 of the first batch
+  failed on the old code. Of the design pass's 3, the title-fit check failed before its code; the chart-title check
+  was written after its one-line change (said here, not hidden); the contrast check passed as written. **CI on
+  `353bfde`: mcp success (391), website success (17 suites).** The `pbip` suite locally after the recovery: 71 of 71.
+- **Older checks changed, each with its cause written beside it in the test:** the Reset button's outline (round 0:
+  now off, R10.6c); the page buttons of a left-to-right report (round 2: now 4 single buttons and no navigator,
+  R10.6a; `report-check.mjs` `navProblems` and `pbip.mjs`'s header sizes follow); round 9's card format (asked for
+  with `kpiValues: "full"`, R10.6b); round 9's "tables need a Desktop check" text, SVG status text and 8,000 cap
+  (measured since).
+- **Shared engines changed:** `pbip-export.js`, `svg-kpi-compiler.js` (`mirror`). `pbip-export.min.js?v=20261004f`,
+  `theme-generator.min.js?v=20261004f`; the SVG KPI Designer's and the Calendar Generator's scripts now carry
+  `?v=20261004f`. `check:min`: all 55 match. **No design fixture was recaptured** (the design engine's own output did
+  not change; `design-engine.js` was not touched). `csp.mjs` was **not run** on this branch yet.
+
+| Item | State | What Desktop showed |
+|---|---|---|
+| R10.1 the card cut | **done** | 84 cards with the widest texts (3 and 6 cards automatic in English and Arabic, 4 and 6 full in English, three page sizes): 0 cut |
+| R10.6(b) KPI values | **done** | 3.43M, 14.81K, 231.46, 35.36% on all eight default layouts; 101.91K, 74.68K on the user's-model report. `labelPrecision: 2L` in the card's default entry |
+| R10.6(a) the navigator | **done for two pages** | tabs without boxes, the current page bold in the accent colour with a line under it, mirrored in Arabic, on all eight layouts. 4 and 8 pages and the phone layout: tests only, not opened |
+| R10.6(c) Reset | **built; one thing off** | no box, the icon in the accent colour; in the 274-wide rail button the icon sits at one end and the text at the other. The tooltip and the hover tint were not looked at |
+| R10.2 SVG columns | **built; two things off** | pictures at the design's size (rows about 29 tall), mirrored in Arabic, "Total" shown in Arabic, a matrix draws them. **Off:** the table overflows its box sideways with two pictures; the card image is too large and cut |
+| R10.3 separators in tables | **done** | 3,375 and 101,914 in the table on a model with no format |
+| R10.4 schema versions | **evidence so far: keep** | see below; the "both ways" experiment was not run |
+| R10.5 leftovers | **done (tests)** | not opened in Desktop: a report with a slicer or chart left out |
+| R10.7 the design pass | **scored once**, below | eight before and after pairs |
+| Part B: D-GC1 to D-GC6, the 11 golden tasks opened, the schema experiment | **not run** | |
+| Part C and package 0.2.6 | **not started** | |
+
+**R10.7, the checklist, scored from the eight Desktop pairs** (0 = missing, 1 = partly, 2 = right; before -> after):
+| # | Check | Before | After | Why |
+|---|---|---|---|---|
+| 1 | A consistent grid and spacing | 2 | 2 | unchanged |
+| 2 | Type hierarchy: title > KPI value > visual titles > labels | 2 | 2 | unchanged |
+| 3 | Every edge aligned | 1 | 1 | a KPI's title sits at the reading start and its value in the middle; a table's header starts 4 right of its title |
+| 4 | Equal gutters | 2 | 2 | unchanged |
+| 5 | Consistent radius and shadow | 2 | 2 | unchanged |
+| 6 | Contrast (WCAG AA) | 2 | 2 | the tabs' quiet names and the mark are checked on every preset in `npm test` |
+| 7 | No cut text | 1 | 2 on these pages | nothing was cut on the eight default pages before or after; the cut was on six-card pages (values: fixed and proven; titles: fit written, not captured) |
+| 8 | Chart titles say what they show | 0 | 1 | "Main trend" -> "Total Revenue by Month" in both languages; the tables still carry the layout's name ("Detail") |
+| 9 | A clear KPI emphasis | 1 | 2 | "3M", "15K" -> "3.43M", "14.81K" |
+| 10 | Arabic as polished as English | 1 | 1 | mirrored tabs and Arabic chart titles now; still no "Total" word in a table without pictures, months left to right |
+| 11 | Navigation and buttons look current (the owner's notes) | 0 | 2 for the tabs, 1 for Reset | boxes -> tabs; Reset has no box but its icon and text are far apart in the rail |
+| | **Total** | **14 of 22** | **19 of 22** (Reset counted 1) | |
+
+**Taste calls for the owner (proposed, not imposed; none was built):**
+1. KPI value in the middle of the card (today) or at the reading start under its title.
+2. A percentage with two decimals (35.36%) or as the model formats it (35.4%).
+3. Tables titled by their content instead of "Detail".
+4. Axis labels: "0.0M, 0.5M, 1.0M" as Power BI gives them, or set by the report.
+5. A right-to-left table: the category at the right with no "Total" word (today without pictures), or the text
+   column first so "Total" shows (today with pictures).
+6. The Arabic tooltip of Reset: "مسح الفلاتر في هذه الصفحة" (the engine's wording; please confirm).
+7. Reset in the rail: as wide as the rail (today) or only as wide as its icon and text.
+8. The navigator's line: under the tab (today) or on the header's bottom edge.
+
+**R10.4, the schema versions: the evidence so far says keep them.** (a) The CHANGELOGs (read 2026-10-04): page
+2.0.0 -> 2.1.0, mobile 2.1.0 -> 2.7.0 and visualContainer 2.1.0 -> 2.12.0 are reference updates and new features
+(card GA, modern tooltips, fixed width); bookmark 2.0.0 makes one property optional; report 3.0.0 changes the shape of
+`themeCollection.customTheme.reportVersionAtImport` from a text ("5.61") to an object. None fixes anything the
+engine writes. (b) Desktop 2.158 opens the engine's versions with no message, and **upgrades what it saves itself**:
+after Ctrl+S the changed page and the shared files were report 3.3.0, page 2.1.0, visualContainer 2.13.0 (newer than
+the 2.12.0 in the changelog), bookmark 2.1.0, with the untouched pages left at the old versions. (c) Microsoft's
+validator 0.4.0 can't resolve 2.13.0 (`PBIR_SCHEMA_UNREACHABLE`, a warning), so writing the newest would cost the
+validator's check. **Not run:** one report written both ways and opened. Proposed decision: keep until a feature
+needs a newer schema.
+
+**What is left, in order:** (1) the two things off: cap the pictures' width by the table's room; a size for the card
+image (measure `image.size` / `fixedSize` first); Reset's width in the rail (taste call 7). (2) Desktop: a six-card
+page for the KPI titles; 4 and 8 tabs and the phone layout; the Reset tooltip; a report with left-out visuals; the
+schema experiment; D-GC1 to D-GC6; the 11 golden tasks opened. (3) `csp.mjs` on an LF export; the website suites
+on the last commit (CI). (4) Part C: D-P4, D-P5, D-P7, D14 text and decimal filters, D15. (5) Package 0.2.6: the
+engine's `fix/round-10` has no commit; the manifest needs no text change (only inputs were added), the version does.
+
+**Left on the laptop (outside the repo):** `<tests folder>\10-r10` (test reports and a copy of the sample model),
+`<tests folder>\desk-r10` (captures), the worktree `r10-before` (main, for the "before" builds: remove it with
+`git worktree remove` when round 10 is merged), new builder scripts `r10-*.mjs`, `capx.sh`, `pair.sh`, `fitrun.sh`,
+`crop.ps1`, `ink.ps1`, `caplist.mjs`.
+
 ## Next step: round 9, separators on cards, "this Ramadan only", SVG columns (experimental), the capability map (owner's go 2026-10-04; TERMINAL ONLY; branch `fix/round-9` from main `3af6657`; dataarcus-engine: the same branch name, for the package)
 The owner's words: "I want the engine to expand and be able to do all sorts of manipulation in Power BI ... more room
 for creativity ... a tool used all the time to build other tools." Three items to build and one plan. Built only on
