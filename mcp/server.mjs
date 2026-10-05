@@ -635,6 +635,10 @@ server.registerTool('create_report', {
   const KIND = { slicer: 'Slicer', line: 'Line chart', bar: 'Bar chart', column: 'Column chart', donut: 'Donut chart', funnel: 'Funnel', treemap: 'Treemap', map: 'Map', table: 'Table', matrix: 'Matrix', gauge: 'Gauge', card: 'Card' };
   const leftOutList = (r.leftOut || []).map((x) => ({ visual: x.kind === 'slicer' ? (x.title || 'Slicer') : `${KIND[x.kind] || x.kind}${x.title ? ` "${x.title}"` : ''}`, page: x.page, why: WHY[x.kind] || 'the model has no text column (a category) or no measure for it' }));
   if (leftOutList.length) reportNotes.push(`${leftOutList.length} visual${leftOutList.length === 1 ? ' was' : 's were'} left out, because a visual is never written without its field: ${leftOutList.map((x) => `${x.visual} on "${x.page}" (${x.why})`).join('; ')}.`);
+  // page buttons that did not fit the header (round 11): never written cut, and never left out without saying so
+  const NPB = (r.noPageButtons || []).map((x) => x.page);
+  const pageButtons = NPB.length ? { pageButtons: { leftOutOn: NPB, why: 'The page names do not fit the room between the title and the logo, even at 8pt on as many rows as the header is high. A cut name is worse than no button, so these pages have no page buttons; readers still change pages with Power BI\'s own page tabs.' } } : {};
+  if (NPB.length) reportNotes.push(`${NPB.length === 1 ? 'One page has' : NPB.length + ' pages have'} no page buttons in the header: the page names do not fit the room between the title and the logo, even at 8pt. Readers still change pages with Power BI's own page tabs. For page buttons in the report: shorter page names, fewer pages, or a taller title slot (two rows of names need a title about 44 high).`);
   // KPI titles too long for one line at the 8pt minimum: wrapped to two lines, or shortened with the full name kept
   const KT = r.kpiTitles || { wrapped: [], shortened: [] };
   const kpiTitles = KT.wrapped.length || KT.shortened.length ? { kpiTitles: { wrapped: KT.wrapped, shortened: KT.shortened,
@@ -648,7 +652,7 @@ server.registerTool('create_report', {
   const arabic = a.lang === 'ar' ? { arabicNames: { shownFields: shown.length, missing,
     how: missing.length ? 'These fields show under their model names. To show Arabic names, call create_report again with displayNames: { "Table[Field]": "الاسم" } for each (ask the user for the names: nothing is translated automatically). The model is not renamed.' : 'Every field the report shows has an Arabic name.' } } : {};
   return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
-    { boundFields: boundOf(boundPages, bind) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, kpiTitles, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
+    { boundFields: boundOf(boundPages, bind) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, kpiTitles, pageButtons, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
     sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {}));
 }));
 

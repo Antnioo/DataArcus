@@ -1780,6 +1780,18 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => read(twoAr).concat(read(two)).every((pg) => { const b = navOf(pg), m = b.map((v) => v.mobile && v.mobile.position), line = pg.visuals.filter((v) => type(v) === 'shape');
       return m.every((p) => p && p.x >= 0 && p.x + p.width <= 323.5 && p.height >= 30) && new Set(m.map((p) => p.y)).size === 1 && line.every((v) => !v.mobile); }),
       () => `the phone layout must keep the page buttons in one row and leave the underline out: ${JSON.stringify(read(two).map((pg) => navOf(pg).map((v) => v.mobile && v.mobile.position))).slice(0, 400)}`);
+    // 6. (round 11, seen in Desktop on 5 Oct: eight long page names on a 1280 x 720 page whose header is 32 high got no
+    // page buttons at all, and the answer said nothing.) Page buttons that do not fit are still left out (a cut name is
+    // worse), but the answer says so: pageButtons.leftOutOn names the pages, and reportNotes carries one line with the
+    // cause and what helps. A report whose buttons fit has neither.
+    const LONG = ['Executive overview', 'Sales by region and channel', 'Customers and loyalty', 'Products and categories', 'Returns and refunds', 'Stores and branches', 'Staff and targets', 'Notes and definitions'];
+    const r720 = (v) => Math.round(v * 1280 / 1920);
+    const tight = await ask('create_report', { path: 'r10-project', name: 'R11 Nav tight', pages: LONG.map((name) => ({ name, width: 1280, height: 720, slots: [{ kind: 'title', x: r720(36), y: r720(18), w: r720(840), h: r720(48) }, { kind: 'logo', x: r720(1659), y: r720(18), w: r720(225), h: r720(48) }, { kind: 'kpi', title: 'K', x: r720(36), y: r720(90), w: r720(400), h: r720(140) }] })) });
+    chk(() => !tight.err && read(tight).length === 8 && read(tight).every((pg) => navOf(pg).length === 0 && !pg.visuals.some((v) => type(v) === 'pageNavigator'))
+      && tight.j.pageButtons && tight.j.pageButtons.leftOutOn.length === 8 && tight.j.pageButtons.leftOutOn[0] === 'Executive overview' && /room|fit/.test(tight.j.pageButtons.why)
+      && (tight.j.reportNotes || []).filter((n) => /page buttons/i.test(n)).length === 1 && /shorter|fewer|taller/.test((tight.j.reportNotes || []).find((n) => /page buttons/i.test(n)))
+      && !many['EN 8'].err && !many['EN 8'].j.pageButtons && !(many['EN 8'].j.reportNotes || []).some((n) => /page buttons/i.test(n)) && !two.j.pageButtons,
+      () => `page buttons left out for lack of room must be told (pageButtons.leftOutOn, one reportNotes line), and only then: ${tight.err ? tight.t.slice(0, 200) : JSON.stringify({ pageButtons: tight.j.pageButtons, notes: tight.j.reportNotes, buttons: read(tight).map((pg) => navOf(pg).length), fits: many['EN 8'].j && many['EN 8'].j.pageButtons })}`.slice(0, 700));
   }
 
   // ----- R10.6(c): Reset filters: an icon button without a box, with a tooltip -----
@@ -1851,6 +1863,15 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       chk(() => L(ip.show) === 'true' && L(ip.imageType) === "'imageData'" && JSON.stringify(ip.imageData) === JSON.stringify({ expr: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: 'Sales' } }, Property: 'Card bar' } } }) && JSON.stringify(img[0].selector) === '{"id":"default"}'
         && !cs[0][0].visual.objects.image && !cs[0][2].visual.objects.image && c.j.svgMeasures.some((m) => m.label === 'Card bar' && /card/i.test(m.shownAs)) && errors(path.join(ROOT, 'r10-project', c.j.report)) === '0',
         () => `svgCards must write Desktop's image entry on that card only: ${JSON.stringify(img)} ${short(c)}`);
+      // (round 11, seen in Desktop on 5 Oct, "CI AR 1080 three" and "CI AR 720 six": the card draws its image at the right
+      // by default, so in a right-to-left report it sat at the reading start, between the card's edge and the value, and a
+      // 42pt value touched it. With position 'Left' Desktop drew the image at the left end and the value at the right
+      // under its title.) A right-to-left card's image is at the far end from the value: position 'Left'; a
+      // left-to-right card keeps Desktop's default (no position written).
+      const ca = await ask('create_report', { path: 'r10-project', name: 'R10 SVG card AR', design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', lang: 'ar' }), lang: 'ar', svgCards: [{ card: 1, label: 'Card bar AR', design: bar('Avg Price') }] });
+      const ia = ca.err ? [] : report(path.join(ROOT, 'r10-project', ca.j.report)).filter((p) => !p.tooltip).flatMap((pg) => cards(pg)).map((v) => v.visual.objects.image).filter(Boolean).map((e) => e[0].properties);
+      chk(() => ia.length >= 1 && ia.every((p) => L(p.position) === "'Left'" && L(p.fixedSize) === 'false' && /^\d+D$/.test(L(p.imageAreaSize))) && ip.position === undefined && errors(path.join(ROOT, 'r10-project', ca.j.report)) === '0',
+        () => `a right-to-left card's image must be at the left (position 'Left'), a left-to-right card's left to Desktop's default: AR ${JSON.stringify(ia.map((p) => p.position))} EN ${JSON.stringify(ip.position)} ${short(ca)}`);
     }
     // 6. a matrix slot (hand-placed pages): rows by the table's text column, the measures as values, SVG columns and the image size as in a table
     {

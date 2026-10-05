@@ -262,6 +262,7 @@
     const own = !!(o.model && (o.model.byPath || o.model.byConnection));
     const sample = !!o.sample && !own;
     const B = own ? (o.bind || null) : sample ? sampleBind(t) : null;
+    const noPageButtons = [];   // pages whose header has no room for the page names even at 8pt: { page } (round 11)
     const leftOut = [];   // data visuals not written because the model has no field for them: { page, kind, title }
     const kpiTitles = { wrapped: [], shortened: [] };
     const svgSizes = {};   // the SVG pictures' size in each page's table: { w, h, design (the widest), capped }   // KPI titles too long for one line at 8pt (see kpiTitleFit)
@@ -672,6 +673,9 @@
             if (fits(t1, w1)) nav = { x: x0, y: title.y, w: w1, h: title.h, t: t1, buttons: true };
           }
         }
+        // Round 11 (seen in Desktop, 5 Oct: eight long names on a 1280 x 720 page with a 32-high header): when the names
+        // fit neither as tabs nor in the navigator, the page gets no page buttons (a cut name is worse). That is told.
+        if (PAGES.length > 1 && !tabs && !nav) noPageButtons.push({ page: pg.name || base });
       }
 
       sorted.forEach((s) => {
@@ -766,8 +770,11 @@
             // Desktop 2.158, third sitting of 2026-10-04): the nth KPI card of every page
             // Its size (Desktop 2.158, 2026-10-05): without one the image was drawn 65 wide on a 163-wide card and the value
             // was cut; "Image area size" with fixedSize false sizes it (25 drew 32 wide, 30 drew 40): see imgOf.
+            // Its side (Desktop 2.158, round 11, 2026-10-05): the card draws the image at the right by default, which in a
+            // right-to-left report is the reading start, between the card's edge and the value (a 42pt value touched it);
+            // position 'Left' puts it at the far end, and the value sits at the right under its title.
             const sc = kf && kf.im ? kf.im.sc : null;
-            if (sc) visual.objects.image = [{ properties: { show: bool(true), imageType: str('imageData'), fixedSize: bool(false), imageAreaSize: num(kf.im.pct), imageData: { expr: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: sc.t } }, Property: sc.m } } } }, selector: { id: 'default' } }];
+            if (sc) visual.objects.image = [{ properties: Object.assign({ show: bool(true), imageType: str('imageData'), fixedSize: bool(false), imageAreaSize: num(kf.im.pct) }, rtl ? { position: str('Left') } : {}, { imageData: { expr: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: sc.t } }, Property: sc.m } } } }), selector: { id: 'default' } }];
             // A number format on the report side (measured in Desktop 2.158, D8, 2026-10-04): where the bound measure
             // carries cardFormat (the server sets it for a measure whose model format has no thousand separator),
             // the card gets the entry Desktop itself writes for Display units "Custom" with a format code: a second
@@ -1074,7 +1081,7 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, svgSizes };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, svgSizes, noPageButtons };
   }
 
   const api = { build, zip, crc32, textWidth, columnRoom };
