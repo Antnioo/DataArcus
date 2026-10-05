@@ -22,7 +22,53 @@ from main `3803b7a`; dataarcus-engine main pulled (`d8d3341`).
 | 22:09 | 22:09 | DataArcus `2ab8c74` (items 2 and 3, the records) |
 | 23:09 | 23:07 | DataArcus (the two fixes `9a0b660`, item 4 `f6976aa`, item 5 opened) |
 | 00:09 | 23:54 | DataArcus (the table fix `00b38be`, items 5 to 7) |
+| the stop | 00:15 | DataArcus `fix/round-11` (the stop report); dataarcus-engine `release/0.2.6` `0e32cde` (pushed 21:24, nothing since) |
 <!-- r11 pushes -->
+
+### Round 11, the stop report (00:20, 6 October; 3 h 10 min after the start; every item run)
+**READ FIRST, the next builder session:** package 0.2.6 is **installed and switched on in Claude Desktop** on this
+laptop (Settings > Extensions > "DataArcus for Power BI"; working folder `<tests folder>\11-r11\pkg\work3`). A new
+Claude session on this laptop therefore gets **two** DataArcus servers: the working copy's (`dataarcus`, the one to
+use) and the packaged 0.2.6 (listed as a desktop extension). Uninstall it (Settings > Extensions > DataArcus for
+Power BI > Uninstall) once the owner has made his check ("for the owner" 8).
+
+**Done (tests: `npm test` 418 -> 421 of 421; build tests 17 -> 18; website suites `pbip` 71, `theme-generator` 893,
+`layout` 512, `design-engine` 598: all pass; `check:min` clean):**
+1. Package 0.2.6: built from main `3803b7a`, checked (`--check` same), pushed on `release/0.2.6`; SHA-256
+   `280e86f6e8fceee78823139204157695ed4050dc2973936f92d276c3def91540`; not tagged, no release. Each of the 7 tools
+   called once from the unpacked file. **Installed in Claude Desktop** through Settings > Extensions > Advanced
+   settings > Install extension (00:02 to 00:12): the red developer warning, the install screen with its red box,
+   Windows' "Do you want to install DataArcus for Power BI?", the empty "Directory path" field with Save greyed
+   until a folder is given, "Disabled" after Save, then "Enabled": **every step as INSTALL.md says**. The
+   extension's page lists **7 tools** (add_gulf_calendar, check_model_health, create_report, generate_theme,
+   plan_layout, read_model, suggest_fields), version 0.2.6, licence Proprietary. **Not done: the 7 tools called
+   from a Claude Desktop chat** ("for the owner" 8). Captures: `<tests folder>\desk-r11\cd\s5.png` to `s11.png`
+   (the app's left list cut off).
+2. Phone tabs (4 and 8, both languages): PASS. A wrapped tab row: PASS where the header is high enough; a silent
+   "no page buttons" case fixed (told now).
+3. The table's padding and `rowPadding` measured; the card image at 1920 x 1080 and on three cards PASS; in Arabic
+   it sat at the value's side: fixed.
+4. Gulf calendar D-GC1 to D-GC6: all as expected; `check.dax` 40 of 40.
+5. The 20 golden reports opened (14 to 49 s); the table wider than its box: fixed.
+6. Part C: D-P4 PASS, D-P5 drawn (in a project), D-P7 pictures draw on the phone, D14 PASS, D15 measured.
+7. `check_report` on all 63 reports, compared with Desktop.
+
+**Three fixes tonight, each with a test first** (`fix/round-11`, not merged; **none of them is in package 0.2.6**,
+which is main `3803b7a`): page buttons that don't fit are told (`9a0b660`); a right-to-left card's image is at the
+left (`9a0b660`); a table holds only the columns its width has room for (`00b38be`). Engine repo: a clean build
+stages the packaging files as committed (`f9669cd`).
+
+**Left:**
+- The 7 tools from a Claude Desktop chat; uninstalling the extension afterwards.
+- D-P5 through View > Themes; D-P7's PDF export; the ribbon's "Mark as date table" (D-GC2).
+- "G10 fit EN" and the 960 x 720 eight-page reports were built, not opened.
+- `csp.mjs` on an LF checkout and the full website run: CI on `fix/round-11` is the record.
+- The 32 design findings: none fixed (they wait for the owner's go).
+
+**The top 5 design findings by severity** (rows in "Round 11, design findings"): **24** long Arabic chart titles cut
+at their beginning; **12** the Arabic table reads "Friday 10,298" as one text (text right-aligned beside
+left-aligned numbers); **20** the "What it means" box ships its placeholder sentence; **25** a report on a model
+without measures is four fifths empty; **1** a phone card's title is cut.
 
 ### Round 11, order of work (all approved; each expected result written before its run)
 | # | Item | The run | Expected (written 21:14, before any run) |
@@ -205,6 +251,21 @@ never fixed tonight (only a FAIL of items 1-6, tests first).
    about 1 at 1280 x 720 and 1.5 at 1920 x 1080: one or two page units, a small change); (c) the taller header as
    planned. **Recommended: (a)**, and fix the Arabic logo placeholder instead, which sits 2.6 to 3.4 low
    (design finding 30).
+8. **Package 0.2.6 in Claude Desktop: one check is yours (about 3 minutes), then your decision to tag.** It is
+   installed and enabled, 7 tools listed, version 0.2.6. I did not open a chat: the app shows no named controls to
+   automation, so a chat can only be driven by screen position, in the same app this session runs in, with Enter
+   and "Always allow" keystrokes; a slip there types into the wrong place. In a **new chat** paste: "Using only the
+   DataArcus tools, on the model in the working folder (Ramadan Test): read_model; suggest_fields; check_model_health
+   with country uae; generate_theme named Check 026; plan_layout (exec); show me the plan and wait for my go; then
+   create_report named Check 026; then add_gulf_calendar for 2018 to 2030, UAE, table name Gulf Calendar. Tell me
+   each tool's result in one line." Expected: the plan first, your "go", then 7 results, new files only in
+   `<tests folder>\11-r11\pkg\work3`. The same seven calls passed from the unpacked file tonight. Then **uninstall**
+   (or keep it and remember the builder's sessions will see two DataArcus servers). Also yours: (a) tag 0.2.6 as
+   built (main `3803b7a`, without tonight's three fixes) or wait for round 11's merge and build 0.2.7;
+   **recommended: wait**, the Arabic card image and the table that overflows are things a tester would see; (b) the
+   install screen's sentence "Tools: read a model, suggest fields, check model health, generate a theme, plan a
+   layout, create a report." names six: add "add a Gulf calendar" to the manifest's long description (the tools
+   list under it shows all seven).
 7. **Not run tonight, each needs a person or a tool the builder should not drive alone:** the theme through
    View > Themes > Browse (D-P5's second way; the file is `<tests folder>\11-r11\dp5-theme.json`); File > Export >
    PDF of an SVG page (D-P7's second half); the ribbon's "Mark as date table" state (item 4b).

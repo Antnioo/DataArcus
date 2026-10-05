@@ -1891,6 +1891,27 @@ Mobile layout by UI Automation, the phone canvas scrolled with the mouse wheel t
   horizontal scrollbar. The phone uses the page's own query and picture size; nothing is written for the phone.
 - **Not run: File > Export > PDF** (it opens a viewer outside Desktop and needs a person to read it).
 
+### Item 1, package 0.2.6 installed in Claude Desktop (6 October, 00:02 to 00:12)
+`dataarcus-0.2.6.mcpb` (SHA-256 `280e86f6…1540`, built from main `3803b7a`) installed through Settings >
+Extensions > Advanced settings > Install extension. The app gives UI Automation only 14 unnamed elements, so the
+clicks were by position from captures of the window (its left list cut off); the file dialog and Windows' question
+were answered by window messages to their own controls; no Enter key was sent anywhere.
+| Step (INSTALL.md) | Seen | As the guide says? |
+|---|---|---|
+| Advanced settings: a red "Developer tools warning" above the Install button | yes (`cd\s4.png`); built-in Node.js 24.21.0 | yes |
+| The install screen: the red box "Installing will grant this extension access to everything on your computer ..." | yes; "Requirements: All requirements met" (`cd\s5.png`) | yes |
+| Windows asks "Do you want to install DataArcus for Power BI?" | yes, with "This desktop extension will be installed on your computer and made available to Claude.", Install / Cancel | yes |
+| The working folder field is empty ("Directory path"), Save greyed until a folder is given | yes (`cd\s7.png`, `s8.png`) | yes |
+| After Save: installed but Disabled; a toggle switches it on | yes (`cd\s9.png`, `s10.png`) | yes |
+| The extension's page | **Tools: 7** (add_gulf_calendar, check_model_health, create_report, generate_theme, plan_layout, read_model, suggest_fields); version 0.2.6; licence Proprietary; made by DataArcus (`cd\s11.png`) | - |
+- The description on that page ends "Tools: read a model, suggest fields, check model health, generate a theme,
+  plan a layout, create a report.": six are named in the sentence, seven are listed under it.
+- The file dialog opened in a folder of the owner's; its file names came back in one listing of the dialog's
+  controls. Nothing of it was kept or written down.
+- **Not done:** a chat that calls the 7 tools (a chat can only be driven by screen position and keystrokes in the
+  app this session runs in). The same seven calls were made on the unpacked file (`r11-pkg-smoke.mjs`): all
+  answered. The extension is left installed and enabled, working folder `<tests folder>\11-r11\pkg\work3`.
+
 ### Item 7, `check_report` (branch `feat/check-report` at `c8be567`, read only) against what Desktop showed
 A separate worktree of the branch (`C:\DataArcus\r11-check-report`; nothing in it changed, only its own
 `npm ci`), its server started over stdio with the round's folder as the working folder, `check_report` called once
