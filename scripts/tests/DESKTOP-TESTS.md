@@ -1468,6 +1468,7 @@ background capture run; the captures before the crash are not used except three 
 | Executive, Arabic, 1920 x 1080 | "3M", "15K", "231.5", "35.4%"; boxed page buttons; titles "الاتجاه الرئيسي", "التوزيع", "المقارنة" | **3.43M, 14.81K, 231.46, 35.36%**; tabs mirrored: the first page ("ملخص تنفيذي") rightmost, bold with the line under it; charts named by their fields in Arabic ("إجمالي الإيرادات حسب الشهر") | nothing cut. The table's total row has no "Total" word (so since round 2: a measure is its first projection); the months run left to right; the title "Gulf Sales" is the name given |
 | Executive, Arabic, 1280 x 720 | as Arabic 1920 x 1080: "3M", "15K", boxed buttons, layout names as titles | **3.43M, 14.81K, 231.46, 35.36%**; mirrored tabs, the current page underlined; charts named by their fields | nothing cut; the same notes as Arabic 1920 x 1080 |
 | Analysis, English, 1920 x 1080 | "3M", "15K", "231.5", "35.4%"; boxed "Analysis" and "Overview"; the chart titled "Main chart" | **3.43M, 14.81K, 231.46, 35.36%**; tabs, "Analysis" underlined; the chart titled "Total Revenue by Region" | nothing cut. The table is titled "Detail table" (the layout name) and is two thirds empty with the sample's four rows |
+| Analysis, English, 1280 x 720 | as 1920 x 1080: "3M", "15K", boxes, "Main chart" | **3.43M, 14.81K, 231.46, 35.36%**; tabs, "Analysis" underlined; "Total Revenue by Region" | nothing cut; the same notes as 1920 x 1080 |
 <!-- end of round 10 before and after -->
 
 ## Lessons
