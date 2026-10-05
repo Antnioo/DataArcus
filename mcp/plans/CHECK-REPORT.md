@@ -51,6 +51,30 @@ without it; question 2 (a) always offline with bundled schemas; question 3 (a) u
   (TOOLTIP_SCROLL's) where they required no measured finding at all.
 - `mcp/PRIVACY.md`: the check_report row (marked "not released yet").
 
+**Security fixes from the outside review (2026-10-05, owner's go ~13:15; tests first: 4 checks, all failing before;
+`npm test` 391 -> 395 of 395):**
+- **B-01, sizes and depth:** every report file is measured (`lstat`) before it is read: **8 MB** at most
+  (`REPORT_LIMITS.file`). Evidence: our largest report files are about 7 KB (a visual.json) and 22 KB (a theme); a
+  report's SVG measures can reach 32,000 characters each in reportExtensions.json; 8 MB is hundreds of times those.
+  Folders are walked **12 levels** deep at most (`REPORT_LIMITS.depth`; a PBIR report is 6 levels deep:
+  definition/pages/<page>/visuals/<visual>/visual.json). Over the limits: told in `notChecked` with the size, never a
+  crash; and when any file is over the limit, Microsoft's validator is not run (it reads every file whole), said in
+  `validator.why`.
+- **B-03, every text from the report that reaches the answer:** visual names, visual types, page ids and the folder
+  names in `file` paths now go through the same cleaning as page names (invisible and direction characters as code
+  points, capped at 60); a name that reads like an instruction is **withheld** (`(withheld: reads like an
+  instruction)`) and an INSTRUCTION_TEXT note says it is there, without repeating it; a visual type that is not a
+  plain word comes back as `other (...)`. PHONE_OVERLAP no longer names the other visual.
+- **B-04 (opinion, no code):** check-then-use on write paths. Every file the MCP writes goes through `writeNew`
+  (`mcp/lib/model.mjs`, `fs.writeFileSync(f, data, { flag: 'wx' })`): `create_report`'s files (`server.mjs`, the
+  `r.files.forEach` after the name check), the fix scripts and `add_gulf_calendar`'s script (`writeScript` in
+  `server.mjs`), and `generate_theme`'s theme (`server.mjs`, after `freeFile`). So a name taken between the check
+  (`nothingAt`, `freeFile`) and the write makes the write fail (EEXIST) instead of writing over or through it:
+  `writeScript` tries the next name, `create_report` and `generate_theme` stop with an error. Not exclusive:
+  `fs.mkdirSync(..., { recursive: true })` for folders (`create_report`, `freeFile`); a folder made by someone else
+  in between is used as it is, but every path was resolved inside the working folder (`inside`, `real`) first, and
+  a file is never written through a link (`'wx'` refuses one). `check_report` writes nothing.
+
 **Left, in order:**
 1. Packaging (dataarcus-engine): ship the CLI's library without Playwright (and without `powerbi-client` and the
    bridge CLI if the library entry doesn't load them: to prove), `mcp/schemas/` included; the size measured.

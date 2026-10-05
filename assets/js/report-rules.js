@@ -146,7 +146,7 @@
             boxes.slice(i + 1).forEach((b) => {
               const B = b.mobile.position;
               if (A.x < B.x + B.width - 0.5 && B.x < A.x + A.width - 0.5 && A.y < B.y + B.height - 0.5 && B.y < A.y + A.height - 0.5)
-                out(a, `the phone box at ${A.x},${A.y} (${A.width} x ${A.height}) overlaps the ${b.type} ${b.name.slice(0, 20)} at ${B.x},${B.y}`, 'Move one of them on the phone layout.', { file: a.mobileFile });
+                out(a, `the phone box at ${A.x},${A.y} (${A.width} x ${A.height}) overlaps another visual's phone box at ${B.x},${B.y}`, 'Move one of them on the phone layout.', { file: a.mobileFile });
             });
           });
         });
