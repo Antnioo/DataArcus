@@ -22,6 +22,13 @@ What stays on the machine and what the AI app sees: `PRIVACY.md`. What DataArcus
 - Keep employer or client files you may not share out of that folder.
 
 ## Install (Windows, in the DataArcus folder)
+**First, update Power BI Desktop to its latest version.** The reports DataArcus writes use recent Power BI
+features (the new card visual, the PBIR report format) that older versions lack, and older versions have the old
+file picker: from October 2026, Desktop from March 2026 or earlier can no longer save or
+share to OneDrive or SharePoint (Microsoft's Power BI September 2026 Feature Summary). The Microsoft Store version
+updates itself; the download version shows its version under Help > About, and the newest is on Microsoft's Power BI
+Desktop download page.
+
 ```
 cd <repo folder>\mcp
 npm install

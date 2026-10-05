@@ -4,6 +4,27 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 11, small fixes (2026-10-05, cloud; branch `fix/round-11-small` from main `850b0a0`; not merged)
+On the owner's go of 5 Oct (~12:05), relayed by the reviewer. `npm test` 363 -> **365 of 365**.
+1. **Titles set explicitly** (Microsoft's September 2026 Feature Summary: "title and subtitle are now turned off by
+   default for matrix, table, and card visuals in reports that use the latest base theme"): a guard test over every
+   kind of slot (English and Arabic, hand-placed and the default design, tooltip pages) and the website's download
+   with the slide-in panel: every visual sets its title on or off, tables and cards on. **It passed on main as it is**
+   (the writer already sets every title; nothing changed in the engine): written down, not hidden.
+2. **TMDL and model.bim readers:** `stringIndexingBehavior` and `fullTextIndexingBehavior` (Microsoft Learn, "Configure
+   string indexing" / "Configure full-text indexing in Power BI semantic models", compatibility levels 1707 and 1708),
+   an unknown property and an unknown block: `read_model` and `check_model_health` read the columns with their
+   types. **Also passed on main as it is** (the readers skip what they don't know): a guard test now.
+3. `mcp/README.md`, Install: update Power BI Desktop first, in plain words. (The beta's INSTALL text in
+   dataarcus-engine `packaging/` is in the other repo: not changed here.)
+4. **Not built (the rule: only from Microsoft's own schema or docs):** the axis "Initial scroll position" (Learn,
+   "Customize x-axis and y-axis properties": X-axis > Layout > Initial scroll position, Start or End) has no property
+   name in Microsoft's visual schema (`@microsoft/powerbi-core-visual-schema` 0.1.1, July 2026: lineChart's
+   categoryAxis has no such property); the Dark and Soft dark themes' colours are not published.
+   **For the laptop:** set Initial scroll position to End on a line chart and a column chart, save, and record the
+   JSON Desktop writes (and that the latest month shows first); apply Dark and Soft dark from the Design ribbon,
+   save, and record the theme JSON Desktop writes (colours, text, card and visual background).
+
 ## Where things stand
 - **Merged 2026-10-03 (reviewer):** round 1 (`80d3a00`); the Microsoft plugin test (`bc05275`); privacy statement and
   product spec (`515409d`: `mcp/PRIVACY.md`, `mcp/PRODUCT_SPEC.md`); the golden tasks (10 then, 11 now) and test models (`39b5ab7`);
