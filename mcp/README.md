@@ -1,5 +1,8 @@
 # DataArcus MCP
 
+> **Beta testers:** install the packaged Claude Desktop extension with the beta kit's `INSTALL.md`; the commands below
+> are for developers using Claude Code or another MCP client.
+
 The engines behind dataarcus.com's Power BI tools, as an MCP server for Claude Code (or any MCP client).
 It works next to Microsoft's Power BI Authoring MCP server (model edits, DAX queries) and the Power BI Desktop bridge (reload, screenshots).
 
