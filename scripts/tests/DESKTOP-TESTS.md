@@ -1523,6 +1523,19 @@ three low dots is cut). The value's size is the engine's own.
 - "Your logo" / "شعارك" placeholders; the sample's four table rows leave the analysis table two thirds empty.
 - Desktop draws a report page tooltip into a bridge capture when the mouse pointer rests on a chart.
 
+### Round 10: the KPI titles on a six-card page, before and after the one-size fix (2026-10-05)
+Six cards at 1280 x 720 on the user's-model sample, from the branch's server (`b4-six-crop.png`: the row built at
+`49c5cbb` above, at `1f29ecf` below).
+| | Titles | Values |
+|---|---|---|
+| Each title fitted on its own (`49c5cbb`) | "Total Sales" at 12pt beside 8pt titles; so the two short-titled cards' numbers sat lower than the other four | 101.91K, 74.68K, 0.34, 23.64K, 3.31, whole |
+| One size for the row (`1f29ecf`) | all six at 8pt, on one line; "Total Sales Last Ramadan" whole | the same, and **all six numbers on one line** |
+- **Still cut at the 8pt minimum:** "Total Sales vs Last Ramada...", "Total Sales Last Ramadan (...". A title longer
+  than about 25 characters does not fit a 163-wide card at 8pt. Proposed (not built): two lines for the title where
+  the card is high enough (to measure: the title's wrap and what it takes from the value), or a tooltip with the
+  full name.
+- 8pt for every title is small beside a 23pt value: a taste call (shorter display names read better than smaller text).
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.

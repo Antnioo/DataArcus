@@ -132,7 +132,10 @@ was opened (`b3-six-720`): the values are whole (101.91K, 74.68K, 23.64K) and "T
 8pt, but the fitted titles had mixed sizes in one row (12pt beside 8pt), and "Total Sales vs Last Ramada..." is still
 cut at the 8pt minimum. So the titles of a page now share one size, the largest at which the longest fits (the check
 was changed for this, with its cause; it failed first). `npm test` 394 of 394, `pbip` 71 of 71, `check:min` clean.
-**The one-size row was not opened in Desktop again.** A title too long for 8pt is still cut: left.
+**Opened in Desktop at 10:20 (`b4-six-crop.png`):** all six titles at 8pt on one line and all six numbers on one
+line. A title longer than about 25 characters is still cut at 8pt ("Total Sales vs Last Ramada..."): left, with a
+proposal in DESKTOP-TESTS.md (two lines, to measure first). Taste call 9: 8pt titles on six-card pages, or ask the
+user for shorter display names.
 
 **R10.7, the checklist, scored from the eight Desktop pairs** (0 = missing, 1 = partly, 2 = right; before -> after):
 | # | Check | Before | After | Why |
