@@ -4,6 +4,55 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 11, the long overnight Desktop sitting (2026-10-05, laptop builder; branch `fix/round-11` from main `3803b7a`; dataarcus-engine `release/0.2.6` from its main `d8d3341`; not merged)
+The owner's go (5 Oct, evening): six hours straight, pushed every hour; he is asleep, so anything that needs his
+choice goes under "Round 11, for the owner" and the work moves on. Desktop 2.158.1177. Made-up and sample models only.
+Captures: `<tests folder>\desk-r11\`; test reports: `<tests folder>\11-r11\`; scripts: `builder-scripts\r11-*`.
+
+**Start: 21:09 (laptop time, 5 Oct).** Before: `npm test` on `fix/round-11` = main `3803b7a`: see "where I am".
+Setup done at 21:12: `idle.ps1` 71 s, no Power BI Desktop window open, no capture process left (the node and
+powershell processes running are the sessions' own MCP servers); worktree `r10-before` removed, `r11-before` made
+from main `3803b7a`; dataarcus-engine main pulled (`d8d3341`).
+
+**Hourly pushes (both repos when both changed):** 22:09, 23:09, 00:09, 01:09, 02:09, 03:09 (the stop).
+| Due | Pushed at | What |
+|---|---|---|
+| start | (see below) | this plan |
+<!-- r11 pushes -->
+
+### Round 11, order of work (all approved; each expected result written before its run)
+| # | Item | The run | Expected (written 21:14, before any run) |
+|---|---|---|---|
+| 1 | Package 0.2.6 (dataarcus-engine `release/0.2.6`) | version 0.2.5 -> 0.2.6 in `manifest.json` and `plugin.json`; `node --test packaging/build.test.mjs`; `node packaging/build.mjs --commit 3803b7a --version 0.2.6 --tests "mcp=418"`; installed once in Claude Desktop; each tool called once on the sample model | the build's tests pass; 22 staged files, the same list as 0.2.5's (`mcp/lib/gulf-calendar.mjs`, `gulf-health.js`, `gulf-dates.js`, `calendar-generator.js` among them); the staged server answers version 0.2.6 with **7 tools**; `packaging/releases/0.2.6.json` names DataArcus `3803b7a…`; the package about 3.3 to 3.6 MB, its SHA-256 written here. No tag, no release. In Claude Desktop: 7 tools listed; each of the 7 answers without an error on the Ramadan sample (`create_report` writes a new report, `add_gulf_calendar` a new .tmdl, `generate_theme` a new theme file; nothing overwritten) |
+| 2a | Phone layout, 4 tabs, English and Arabic | hand-placed 4-page reports (`r10-tabs.mjs` names), Mobile layout by UI Automation, the phone canvas captured | computed from the writer's rule (10pt bold names + 10, rows of 323, gap 8): the four names share **one or two rows**, each button 44 high, every name whole (no "..."), no button over another visual (**the files, read 21:14 before any run:** English 2 rows: Overview 95.5 + "Sales by region and channel" 219.5, then Customers 113 + "Products and categories" 202; Arabic **3 rows**: "نظرة عامة" alone at 323, then two, then "المنتجات والفئات" alone at 323; cards from y 168 and 220); English from the left, Arabic from the right (first page rightmost on the first row); the current page marked |
+| 2b | Phone layout, 8 tabs, English and Arabic | the 8-page reports | the names **wrap onto several rows** (the files: English 3 rows, the cards from y 220; Arabic 4 rows, the cards from y 272), each whole, rows 52 apart; the cards start under the last row; reading order header, tabs, cards, chart. FAIL = anything cut, overlapping or out of order |
+| 2c | A tab row that has to wrap (desktop page) | 8 long names on a 1280 x 720 page (and 960 x 720), English and Arabic | the names don't fit one header row at the minimum size, so they wrap to a second row inside the header; every name whole; no tab over the title, the logo or the body; Arabic mirrored (first page at the right of the first row) |
+| 3a | The table's cell padding, `grid.rowPadding` | one table copied four times on a flat page: nothing written, and `grid.rowPadding` 0, 4 and 8 (hand-written); ink measured | not known (to measure): the left/right padding of a cell (the engine assumes 5 a side); the row pitch 20.9 with nothing written; `rowPadding` n expected to add n above and below each row (pitch about 20.9 + 2n at the default 3 if Desktop's default is 3; to be read off the three values) |
+| 3b | The card image at 1920 x 1080, in Arabic, on a three-card page | `svgCards` reports: six cards at 1920 x 1080, six cards Arabic at 1280 x 720, three cards at 1280 x 720 | on every card the image is 25% of the card's inner width at most (inner = card - about 33), keeps its shape, and **every value is whole**; in Arabic the image sits at the far end from the value's reading start and the value is whole. FAIL = a cut value or an image over the text |
+| 4 | Gulf calendar D-GC1 to D-GC6 | `add_gulf_calendar` (Calendar, 2018-2030, UAE, announced, `relateTo` Sales[Date]) on the pack's test model; applied in TMDL view (keyboard paste, the laptop is free); checks by DAX through Microsoft's Authoring MCP | D-GC1: Preview one new table and one relationship; Apply with Problems 0; **4748 rows, 36 columns**. D-GC4: Sales[Date] many-to-one Calendar[Date], single, active. Hijri: **1 March 2026 = Ramadan 1447** (Hijri Month Number 9, Hijri Year 1447, Is Ramadan true); `gulf-dates.js` (read 21:13, before the run) has Ramadan 1447 from **18 February 2026**, Eid al-Fitr 20 March 2026, so 1 March 2026 is **12 Ramadan 1447** (Hijri Day 12, Ramadan Day 12), 17 February is not Ramadan, 20-22 March 2026 Is Eid al-Fitr; 2018: 16 May "30 Sha'ban 1439", 17 May "1 Ramadan 1439", 29 Ramadan days, Eid al-Fitr 15-17 June, Eid al-Adha 21-24 August. D-GC3: with the sort columns, slicers run January-December, the week in order, Muharram-Dhu al-Hijjah. D-GC6: `check.dax` 40 of 40. A refresh ends with no error. D-GC2, D-GC5: write down what Desktop shows |
+| 5a | A report with left-out visuals | `create_report` on `no-measures` (and a slicer or chart with no field) | the answer names the visuals in `leftOutVisuals`; the report opens with no error box and **no empty frame** where a visual was left out; validator 0 errors |
+| 5b | The 11 golden tasks' reports, English and Arabic | each task's tool-level call(s) from `GOLDEN-TASKS.md` / `golden-baseline.mjs`, built in English and in Arabic, each opened and every page captured | each opens in under 60 s with no error box; nothing cut or overlapping on 1920 x 1080 and 1280 x 720 pages; the known limits are expected and written, not hidden: task 5 (640 x 360) cut labels; task 6 long Arabic names wrap or shorten with "…"; task 9 writes nothing; task 10 needs `focus`; task 11 is a health answer (no report) |
+| 6 | Part C | D-P4 (an SVG measure in a tooltip), D-P5 (a `data:` image inside a theme), D-P7 (SVG pictures on the phone layout), D14 (a text filter with an apostrophe, a decimal filter), D15 (the taller header, hand-edited copies, 2 sizes x 2 languages) | D-P4, D-P5, D-P7: not known, write down what draws. D14: the Filters pane shows both filters with no error mark and the visuals show only the matching rows (the made-up value with an apostrophe; the decimal 5.5). D15: the title's middle within 1 of the header's middle (computed -0.2 English, +0.4 Arabic), logo and tabs centred, nothing in the body cut. Code only for a FAIL, tests first |
+| 7 | `check_report` (read-only), after 1-6 | a separate worktree of `feat/check-report` (not merged, not changed); run over every report opened tonight | a table in DESKTOP-TESTS.md: per report, its findings beside what Desktop showed (agree / disagree / it missed / it raised wrongly) |
+
+**The design eye:** every captured page is also read as a designer; findings in "Round 11, design findings" below,
+never fixed tonight (only a FAIL of items 1-6, tests first).
+
+### Round 11, where I am
+- **21:15:** setup done; the plan written. `npm test` at the start: running (the count goes here).
+- **Read at the start:** WORK.md (round 10's sections), DESKTOP-TESTS.md lines 1-400 and 1402-1698 (the first
+  sittings, round 10's records, the lessons) and every heading; the middle (rounds 0 to 4, the three sittings of 4
+  October) by heading only, to be read where an item needs it.
+- **Next:** item 1.
+
+### Round 11, for the owner
+(nothing yet)
+
+### Round 11, design findings
+| # | Page and visual | What is off or could be better | Crop | Severity | Proposed fix | What it would change in the code |
+|---|---|---|---|---|---|---|
+<!-- r11 findings -->
+
 ## Round 11, small fixes (2026-10-05, cloud; branch `fix/round-11-small` from main `850b0a0`; not merged)
 On the owner's go of 5 Oct (~12:05), relayed by the reviewer. `npm test` 363 -> **365 of 365**.
 1. **Titles set explicitly** (Microsoft's September 2026 Feature Summary: "title and subtitle are now turned off by
