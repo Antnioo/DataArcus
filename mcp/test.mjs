@@ -46,7 +46,8 @@ const hash = (f) => crypto.createHash('md5').update(fs.readFileSync(f)).digest('
 const scriptOf = (fix) => { try { return fix && fix.fixScriptFile ? fs.readFileSync(fix.fixScriptFile, 'utf8') : ''; } catch (e) { return ''; } };
 
 const tools = (await client.listTools()).tools.map((t) => t.name).sort();
-check(tools.join() === 'add_gulf_calendar,check_model_health,create_report,generate_theme,plan_layout,read_model,suggest_fields', `tools: ${tools}`);
+// (check_report added 5 Oct 2026: 7 -> 8 tools)
+check(tools.join() === 'add_gulf_calendar,check_model_health,check_report,create_report,generate_theme,plan_layout,read_model,suggest_fields', `tools: ${tools}`);
 
 // read_model: a TMDL project, automatic date tables left out
 let r = await call('read_model', { path: 'tmdl-project' });
@@ -663,7 +664,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const NOT_SET = /No working folder is set/, calls = [['read_model', { path: '.' }], ['suggest_fields', { path: '.' }], ['check_model_health', { path: '.' }], ['generate_theme', { name: 'No root' }], ['plan_layout', {}], ['create_report', { path: '.', name: 'No root', design: design || {} }]];
     const s = await start({}, CWD);
     const listed = s.dead ? [] : (await s.c.listTools()).tools.map((t) => t.name);
-    check(!s.dead && listed.length === 7, `no DATAARCUS_ROOT: the server must start and list its 7 tools: ${s.dead || listed}`);
+    // (8 tools since check_report, 5 Oct 2026)
+    check(!s.dead && listed.length === 8, `no DATAARCUS_ROOT: the server must start and list its 8 tools: ${s.dead || listed}`);
     const answers = []; for (const [n, a] of calls) answers.push([n, await s.call(n, a)]);
     const wrong = answers.filter(([, x]) => !(x.err && NOT_SET.test(x.t) && /DATAARCUS_ROOT/.test(x.t)));
     check(!wrong.length, `no DATAARCUS_ROOT: ${wrong.length} of 6 tools did not refuse with the reason, e.g. ${wrong[0] && wrong[0][0]}: ${wrong[0] && wrong[0][1].t.slice(0, 120)}`);

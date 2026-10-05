@@ -146,7 +146,7 @@
       about: 'a theme inside a project has its own "name" equal to the file name report.json references (with .json), and the report folder has a .platform file',
       run(R, out) {
         if (!R.hasPlatform) out(null, 'the report folder has no .platform file', 'Add the .platform file (Power BI Desktop writes it when it saves the project).', { file: '.platform' });
-        if (R.theme && R.theme.ref && R.theme.json && String(R.theme.json.name || '') + '.json' !== R.theme.ref) out(null, `the theme's own name (${String(R.theme.json.name || '').length} characters) is not its file name`, 'Make the theme\'s "name" its file name, with .json, as report.json references it; otherwise Microsoft\'s validator rejects it and Desktop may not load it.', { file: R.theme.file });
+        if (R.theme && R.theme.ref && R.theme.json && String(R.theme.json.name || '') !== R.theme.ref) out(null, `the theme's own name (${String(R.theme.json.name || '').length} characters) is not its file name`, 'Make the theme\'s "name" its file name, with .json, as report.json references it; otherwise Microsoft\'s validator rejects it and Desktop may not load it.', { file: R.theme.file });
       } }
   ];
   const GROUPS = ['sizes', 'selectors', 'phone', 'tooltips', 'theme'];
