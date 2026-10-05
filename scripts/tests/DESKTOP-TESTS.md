@@ -1464,6 +1464,7 @@ background capture run; the captures before the crash are not used except three 
 | Layout | Before (main) | After (branch) | Anything off in the after page |
 |---|---|---|---|
 | Executive, English, 1920 x 1080 | KPIs "3M", "15K", "231.5", "35.4%"; page buttons in boxes (the current one filled dark); chart titles "Main trend", "Breakdown", "Comparison" | KPIs **3.43M, 14.81K, 231.46, 35.36%**; tabs without boxes, "Executive summary" bold in the accent colour with a line under it, "Details" quiet; chart titles "Total Revenue by Month", "... by Category", "... by Region" | nothing cut. The axis labels read "0.0M, 0.5M, 1.0M"; the table is titled "Detail" (the layout name) |
+| Executive, English, 1280 x 720 | the same as 1920 x 1080: "3M", "15K", boxes, layout names as titles | **3.43M, 14.81K, 231.46, 35.36%**; the tabs fit ("Executive summary" whole, underlined); charts named by their fields | nothing cut |
 <!-- end of round 10 before and after -->
 
 ## Lessons
