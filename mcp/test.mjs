@@ -1619,7 +1619,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   check(!g.err && g.j.announced.on === true && g.j.announced.checkedTo === '2026-05-27' && g.j.announced.estimatesFrom === '2027-02-08', `add_gulf_calendar announced: ${short(g)}`);
   check(!g.err && Array.isArray(g.j.selfCheck.findings) && g.j.selfCheck.findings.length === 0 && g.j.selfCheck.calendar === 'dataarcus-dax', `add_gulf_calendar selfCheck: ${g.err ? '' : JSON.stringify(g.j.selfCheck)}`);
   check(!g.err && !/DATATABLE|ADDCOLUMNS|CALENDAR \(/.test(g.t), 'add_gulf_calendar: the answer holds DAX');
-  check(!g.err && g.j.byHand.length === 4 && /Mark as date table/.test(g.j.byHand.join(' ')) && ['Month Name', 'Day Name', 'Hijri Month Name'].every((n) => g.j.byHand.some((s) => s.includes(n))), `add_gulf_calendar byHand: ${g.err ? '' : JSON.stringify(g.j.byHand)}`);
+  // (changed 6 Oct 2026, round 12, the owner's go on round 11's recommendation 4a: the three sort-by columns are in the
+  // script, as Desktop accepted them in D-GC3, so marking the date table is the one step left by hand; it was 4 steps)
+  check(!g.err && g.j.byHand.length === 1 && /Mark as date table/.test(g.j.byHand[0]) && (sc.match(/^\t\t\tsortByColumn: /gm) || []).length === 3, `add_gulf_calendar byHand: ${g.err ? '' : JSON.stringify(g.j.byHand)}`);
   check(!g.err && /TMDL view/.test(g.j.howToApply) && /Preview/.test(g.j.howToApply) && /nothing (is )?(changed|replaced)/i.test(g.j.howToApply), `add_gulf_calendar howToApply: ${g.err ? '' : g.j.howToApply}`);
   // asked again: the same file named, no second copy
   const again = await add({ path: 'bim-project', firstYear: 2018, lastYear: 2030, country: 'uae', relateTo: ['Sales[Date]'], asOf: '2026-10-04' });
@@ -2220,7 +2222,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
         const pgs = report(path.join(ROOT, 'd5-project', x.j.report)).filter((p) => !p.tooltip), size = tableText(x, 'd5-project'), font = lang === 'ar' ? 'Tahoma' : 'Segoe UI';
         const told = x.j.tableColumns || [];
         pgs.forEach((pg, pi) => pg.visuals.filter((v) => type(v) === 'tableEx').forEach((t) => {
-          const ps = t.visual.query.queryState.Values.projections, need = ps.reduce((a, p) => a + Pb.columnRoom(p, size, font), 0), refs = ps.map((p) => p.queryRef);
+          // (round 12, recommendation 5, the owner's go 6 Oct: a narrow table first takes a smaller text, down to 8pt, and
+          // drops a column only where that doesn't hold it; so its room is measured at the size written on it)
+          const own = t.visual.objects.values ? N(t.visual.objects.values[0].properties.fontSize) : size;
+          const ps = t.visual.query.queryState.Values.projections, need = ps.reduce((a, p) => a + Pb.columnRoom(p, own, font), 0), refs = ps.map((p) => p.queryRef);
           if (need > t.at.w + 0.5 && ps.length > 2) tbad.push(`${lang} ${pg.name}: ${ps.length} columns need ${need.toFixed(0)} of ${t.at.w}`);
           if (!refs.includes('Sales.Region') || !refs.includes('Sales.Total Sales')) tbad.push(`${lang} ${pg.name}: the text column and the first measure must stay: ${refs}`);
           if (JSON.stringify((t.visual.objects.columnFormatting || []).map((e) => e.selector.metadata).sort()) !== JSON.stringify(refs.slice().sort())) tbad.push(`${lang} ${pg.name}: columnFormatting must follow the kept columns`);
@@ -2228,7 +2233,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
           if (ps.length < FIVE.length && !(mine && mine.leftOut.length === FIVE.length - ps.length && mine.shown === ps.length)) tbad.push(`${lang} ${pg.name}: tableColumns must name what was left out: ${JSON.stringify(mine)}`);
           if (!bf || bf.fields.length !== ps.length) tbad.push(`${lang} ${pg.name}: boundFields must list the ${ps.length} shown columns: ${JSON.stringify(bf)}`);
         }));
-        if (!told.length || (x.j.reportNotes || []).filter((n) => /table/i.test(n) && /left out|room/i.test(n)).length !== 1) tbad.push(`${lang}: a narrow table must be told in tableColumns and one reportNotes line: ${JSON.stringify(told)} ${JSON.stringify(x.j.reportNotes)}`.slice(0, 400));
+        // (round 12: told as a smaller text when that holds every field, as left-out fields otherwise)
+        const smaller = (x.j.reportNotes || []).some((n) => /table text is \d+pt/.test(n));
+        if (!(smaller && !told.length) && (!told.length || (x.j.reportNotes || []).filter((n) => /table/i.test(n) && /left out|room/i.test(n)).length !== 1)) tbad.push(`${lang}: a narrow table must be told in tableColumns and one reportNotes line: ${JSON.stringify(told)} ${JSON.stringify(x.j.reportNotes)}`.slice(0, 400));
       }
       const roomy = await ask('create_report', { path: 'd5-project', name: 'D5 table roomy', fields: { table: FIVE },
         pages: [{ name: 'W', slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'table', title: 'Wide', x: 36, y: 90, w: 1800, h: 600 }] }] });
@@ -2719,6 +2726,70 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const p1 = x.err ? null : pagesOf(x, 'r12-project')[0], tabs = p1 ? p1.visuals.filter((v) => type(v) === 'actionButton' && /PageNavigation/.test(JSON.stringify(v.visual.visualContainerObjects.visualLink || []))) : [];
     const rows = [...new Set(tabs.map((v) => v.at.y))].sort((a, b) => a - b), starts = rows.map((y) => Math.min(...tabs.filter((v) => v.at.y === y).map((v) => v.at.x)));
     chk(() => rows.length === 2 && starts[0] === starts[1], () => `#6: two tab rows must start at the same x: rows ${rows} starts ${starts} ${short(x)}`);
+  }
+
+  // D. The accepted recommendations of round 11.
+  // Recommendation 2: in a designed layout a header whose page names don't fit one row of tabs grows by one row; the
+  //   visuals under it move down and the last row is that much shorter (hand-placed pages never grow). Built with the
+  //   writer directly: a design's page names are the engine's, so long names are given here.
+  {
+    const E3 = req(path.join(REPO, 'assets/js/design-engine.js')), d = E3.fresh(); E3.repairState(d); d.layout.page = '1280x720'; d.layout.preset = 'exec'; d.layout.filters = true; E3.repairState(d);
+    const specs = E3.projectPages(d.layout, 'en', { second: true, panel: false });
+    const long = ['Sales by region, channel and branch for this month and last', 'Customers, loyalty programmes and the returns of the season'];
+    const make = (grow) => Pb.build({ name: 'G', title: 'Gulf Sales by region, channel and branch, every month', pageName: long[0], lang: 'en', rtl: false, font: d.font, ui: d.ui, theme: E3.buildTheme(d, 'en'), sample: true, logo: null, texts: {},
+      pages: specs.map((sp, i) => ({ name: long[i], page: sp.page, slots: sp.slots, panel: null, png: new Uint8Array([1]), grow })) });
+    const vis = (r) => { const vs = r.files.filter((x) => /visual\.json$/.test(x.path) && x.path.includes('/pages/') && !/tooltip/i.test(x.path)).map((x) => JSON.parse(String(x.data))), by = Object.fromEntries(vs.map((v) => [v.name, v]));
+      vs.forEach((v) => { const g = v.parentGroupName ? by[v.parentGroupName].position : { x: 0, y: 0 }; v.at = { x: v.position.x + g.x, y: v.position.y + g.y, w: v.position.width, h: v.position.height }; }); return vs.filter((v) => v.visual); };
+    const flat = make(false), tall = make(true), page1 = (r) => { const id = JSON.parse(String(r.files.find((x) => /pages\.json$/.test(x.path)).data)).pageOrder[0]; return vis({ files: r.files.filter((x) => x.path.includes('/pages/' + id + '/')) }); };
+    const tabs = (vs) => vs.filter((v) => v.visual.visualType === 'actionButton' && /PageNavigation/.test(JSON.stringify(v.visual.visualContainerObjects.visualLink || [])));
+    const kpi0 = (vs) => vs.filter((v) => v.visual.visualType === 'cardVisual' && v.parentGroupName).sort((a, b) => a.at.x - b.at.x)[0], low = (vs) => Math.max(...vs.filter((v) => /Chart$|tableEx/.test(v.visual.visualType)).map((v) => v.at.y + v.at.h));
+    const f1 = page1(flat), t1 = page1(tall), grew = (tall.headerGrew || [])[0], rows = [...new Set(tabs(t1).map((v) => v.at.y))];
+    // (without the growth the page falls back to Power BI's own navigator, which cuts long names)
+    chk(() => tabs(f1).length === 0 && f1.some((v) => v.visual.visualType === 'pageNavigator') && tall.noPageButtons.length === 0 && grew && grew.by > 0 && rows.length === 2 && tabs(t1).length === 2
+        && kpi0(t1).at.y === kpi0(f1).at.y + grew.by && low(t1) === low(f1),
+      () => `recommendation 2: the header must grow one row of tabs: flat ${flat.noPageButtons.length} pages without buttons; tall ${JSON.stringify(tall.headerGrew)} rows ${rows} tabs ${tabs(t1).length}; KPI y ${kpi0(f1) && kpi0(f1).at.y} -> ${kpi0(t1) && kpi0(t1).at.y}; bottom ${low(f1)} -> ${low(t1)}`);
+  }
+
+  // Recommendation 4, add_gulf_calendar (D-GC3, D-GC5 and one refusal, round 11): (a) the script carries sortByColumn for
+  //   Month Name, Day Name and Hijri Month Name (Desktop accepted them and the slicers came out in order), so those
+  //   three steps leave byHand; (c) howToApply says Preview will not warn when the name is taken; (d) a relateTo column
+  //   whose type the files don't give (a DAX table's) is accepted with a note; one of a known other type stays refused
+  {
+    bim('r12-gulf', 'R12 Gulf', [{ name: 'Orders', partitions: mp('Orders'), columns: [col('Amount', 'double'), { name: 'Order Day', sourceColumn: 'Order Day' }, col('Region', 'string')] }]);
+    const g = await ask('add_gulf_calendar', { path: 'r12-gulf', firstYear: 2024, lastYear: 2026, country: 'uae', relateTo: ['Orders[Order Day]'], asOf: '2026-10-04' });
+    const sc = g.err ? '' : fs.readFileSync(g.j.scriptFile, 'utf8');
+    const sorts = (sc.match(/^\t\t\tsortByColumn: .*$/gm) || []).map((x) => x.trim());
+    chk(() => !g.err && JSON.stringify(sorts) === JSON.stringify(["sortByColumn: 'Month Number'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Hijri Month Number'"])
+        && g.j.byHand.length === 1 && /Mark as date table/.test(g.j.byHand[0]) && /will not warn|won't warn/i.test(g.j.howToApply)
+        && (sc.match(/^\trelationship /gm) || []).length === 1 && /Order Day/.test(JSON.stringify(g.j.notes || [])) && /type/i.test(JSON.stringify(g.j.notes || [])),
+      () => `recommendation 4: sortByColumn in the script, one step by hand, Preview's silence told, an untyped date column related with a note: ${JSON.stringify(sorts)} ${g.err ? g.t.slice(0, 300) : JSON.stringify({ byHand: g.j.byHand, notes: g.j.notes, how: g.j.howToApply.slice(0, 200) })}`);
+    const txt = await ask('add_gulf_calendar', { path: 'r12-gulf', firstYear: 2024, lastYear: 2026, country: 'uae', relateTo: ['Orders[Region]'], name: 'Gulf Calendar 2' });
+    chk(() => txt.err && /not a date column/.test(txt.t) && /string/.test(txt.t), () => `a text column must still be refused for relateTo: ${txt.t.slice(0, 200)}`);
+  }
+
+  // Recommendation 5: a table too narrow for its fields first takes a smaller text (down to 8pt), and drops a column only
+  //   where even 8pt doesn't hold them; the size is written on the table (values, headers, total) and told
+  {
+    const fields = ['Calendar[Day Name]', 'Sales[Total Sales]', 'Sales[Orders]', 'Sales[Avg Price]', 'Sales[Margin %]', 'Sales[Total Sales Last Ramadan]'];
+    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Narrow', design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', page: '960x720' }), secondPage: false, fields: { table: fields } });
+    const t = pageVisuals(x, 'r12-project').find((v) => type(v) === 'tableEx'), T = x.err ? 10 : +themeOf(x, 'r12-project').visualStyles.tableEx['*'].values[0].fontSize;
+    const size = t && t.visual.objects.values ? N(t.visual.objects.values[0].properties.fontSize) : T;
+    const shown = t ? t.visual.query.queryState.Values.projections.filter((p) => !(p.field.Aggregation && p.displayName === ' ')) : [];
+    // the room each column takes at a size (the writer's own rule, columnRoom), and how many fields fit at the theme's size
+    const fitAt = (sz) => { const ps = fields.map((f) => { const m = f.match(/^(.+)\[(.+)\]$/); return /Total|Orders|Growth|Avg|Margin/.test(m[2]) ? { field: { Measure: {} }, nativeQueryRef: m[2] } : { field: { Column: {} }, nativeQueryRef: m[2] }; });
+      let used = 0, n = 0; for (const p of ps) { const r = Pb.columnRoom(p, sz, 'Segoe UI'); if (n < 2 || used + r <= t.at.w) { used += r; n++; } else break; } return n; };
+    chk(() => !x.err && t && size < T && size >= 8 && shown.length > fitAt(T) && shown.length === fitAt(size) && N(t.visual.objects.columnHeaders[0].properties.fontSize) === size && /text/i.test(JSON.stringify(x.j.reportNotes || [])),
+      () => `recommendation 5: a narrow table's text first, then its columns (${t && t.at.w} wide): ${size}pt (theme ${T}), ${shown.length} shown; ${t && fitAt(T)} fit at ${T}pt, ${t && fitAt(size)} at ${size}pt ${short(x)}`);
+  }
+
+  // E. Round 9's seen-not-in-scope: a visual is never written without its field. The slide-in filter panel wrote its
+  //   three slicers whatever the model had; on a model with one text column it holds one, and the others are named.
+  {
+    bim('r12-few', 'R12 Few', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string')], measures: [{ name: 'Total', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }]);
+    const x = await ask('create_report', { path: 'r12-few', name: 'R12 Few panel', design: await planOf({ layout: 'analysis', kpis: 3 }), secondPage: false, slidePanel: true });
+    const sl = pagesOf(x, 'r12-few').filter((p) => !p.tooltip).flatMap((p) => p.visuals).filter((v) => type(v) === 'slicer');
+    chk(() => !x.err && sl.length >= 1 && sl.every((v) => v.visual.query) && (x.j.leftOutVisuals || []).some((l) => /Slicer/.test(l.visual)),
+      () => `E: no slicer without its field in the slide-in panel: ${sl.length} slicers, ${sl.filter((v) => !v.visual.query).length} without a field; leftOut ${JSON.stringify(x.j && x.j.leftOutVisuals)}`);
   }
 }
 // ---------- end of round 12 ----------

@@ -73,6 +73,17 @@ Started 21:50 UTC (5 Oct). Tests: the round 12 block in `mcp/test.mjs` (checks w
   modelNotes, display names, suggest_fields); the Tahoma logo placeholder's middle (textMid + the measured 3); the
   phone keeps the current tab's line; one value size a row and the measured image padding (round 10's card image);
   tables titled ": detail" beside a chart of the same title.
+- **D and E done** (one commit: the writer's table and header code is shared by both): recommendation 2, a designed
+  header grows one row of tabs when the page names need it (the body moves down, the last row and the rail give up
+  the height; hand-placed pages never grow; a design's two page names always fit today, so this shows with long
+  names: tested through the writer); 3 (in C); 4, `add_gulf_calendar` writes `sortByColumn` for the three names,
+  `byHand` is the date table only, `howToApply` says Preview will not warn, a `relateTo` column of unknown type is
+  accepted with a note; 5, a narrow table first takes a smaller text (the largest size down to 8pt that keeps the
+  most fields), then drops a column; 6 (8b), the manifest's tool sentence names all seven tools (dataarcus-engine
+  `fix/round-12-manifest` `e642bf8`, its packaging test 18 -> 19). E: the slide-in panel holds only slicers with a
+  field, the others named in `leftOutVisuals`; the SVG KPI Designer's three scripts already had `?v=` on main; this
+  round's writer files are stamped `20261006a` (`theme-generator.js`, and `theme-generator.min.js` on both pages).
+  `npm test` 448 -> 453; the full website run: 17 of 17 suites pass.
 - **Not possible from the files (Microsoft's theme schema, 2.157):** a slicer header has no alignment (#19).
 - **Needs a measurement first:** #3, Arabic tab widths (Tahoma per letter): the one figure we have (150 of ink for
   "المبيعات حسب المنطقة والقناة" at 10pt bold on the phone) is one string; Desktop must measure the letters before
@@ -115,6 +126,14 @@ Each item: build with the branch's server (made-up models only), open in Desktop
 19. #2/#4/#5: the phone: the tabs as wide as their names from the reading start, chart and card titles in the text
     colour (or: the mobile view dims what is not selected), the current tab's line under it.
 20. #6: a two-row header (eight long names, 1920 x 1080, a 72-high title): the rows start at the same x.
+21. Recommendation 2: a design with two long page names at 1280 x 720 (built by hand through the writer, or by the
+    next round's longer names): the header 10 taller, two rows of tabs whole, the KPI row 10 lower, the last row
+    ending where it did.
+22. Recommendation 4: `add_gulf_calendar` on "Gulf GC1": Preview with Problems 0 and the three sort-by columns; after
+    Apply and a refresh the slicers in month, day and Hijri month order; a `relateTo` on an untyped DAX-table date
+    column related without a hand edit.
+23. Recommendation 5: golden task 4 at 960 x 720: the table at 8 or 9pt with all its fields, nothing cut.
+24. E: a slide-in panel on a model with one text column: one slicer, no empty slicer.
 
 ### Round 12, for the owner
 1. **Whole numbers on cards: digits or units?** Your rule says counts and whole numbers show no decimals. Built: a
