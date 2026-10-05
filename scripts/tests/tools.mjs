@@ -291,8 +291,13 @@ export default async function ({ browser, url }) {
       const ar = texts.find((t) => t.textContent === 'مبيعات رمضان');
       let rtl = null;
       if (ar) { const n = ar.getNumberOfChars(); rtl = ar.getComputedTextLength() > 20 && ar.getStartPositionOfChar(0).x > ar.getStartPositionOfChar(n - 1).x; }
-      return { vb: svg && svg.getAttribute('viewBox'), rtl, measures: [...document.querySelectorAll('[data-vk="measure"]')].map((i) => i.value) };
+      return { vb: svg && svg.getAttribute('viewBox'), rtl, measures: [...document.querySelectorAll('[data-vk="measure"]')].map((i) => i.value),
+        layers: [...document.querySelectorAll('.kd-layer .kd-lname span')].map((x) => x.textContent) };
     });
+    // the Layers panel lists names that say what each layer draws (owner's go 5 Oct ~15:58); one name per layer, the
+    // same in English and Arabic, because the template format has no per-language layer name
+    const names = ['Ring', 'Percent', 'Of target', 'Title', 'Title (Arabic)', 'Sales value', 'Target', 'Crescent', 'Crescent cut-out', 'Star'];
+    check(JSON.stringify([...got.layers].sort()) === JSON.stringify([...names].sort()), `svg-kpi-designer ${lang}: the Ramadan card's layer names: ${JSON.stringify(got.layers)}`);
     check(label === (lang === 'ar' ? 'بطاقة مبيعات رمضان' : 'Ramadan sales card') && /340 150$/.test(got.vb || '') && got.rtl === true && ['Sales', 'Target', 'Sales LY'].every((m) => got.measures.includes(m)),
       `svg-kpi-designer ${lang}: the Ramadan sales card starter: label "${label}", ${JSON.stringify(got)}`);
     await v.ctx.close();
