@@ -239,7 +239,9 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }, { threshold: 0.9 });
 
-    statsSection.querySelectorAll('[data-count]').forEach((counter) => statsObserver.observe(counter));
+    // The HTML holds the final numbers (what search engines, link previews and a browser without JavaScript show);
+    // with the script running, each starts at 0 and counts up when it comes into view.
+    statsSection.querySelectorAll('[data-count]').forEach((counter) => { counter.textContent = '0'; statsObserver.observe(counter); });
   }
   
   // Scroll-in animations come from AOS only (data-aos attributes, section 1)

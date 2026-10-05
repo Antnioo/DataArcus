@@ -69,11 +69,24 @@ export default async function ({ browser, url }) {
     if (v.errs.length) problems.push(`${tag}: ${v.errs.join(' | ')}`);
     checks++; await v.ctx.close();
   }
+  // animated numbers: the served HTML holds the final number (what search engines, link previews and a browser
+  // without JavaScript show), and the count-up starts from 0 only when the script runs
+  for (const p of pages().filter((p) => fs.readFileSync(path.join(ROOT, p), 'utf8').includes('data-count='))) {
+    for (const lang of ['en', 'ar']) {
+      const html = await (await fetch(`${url}/${p}?lang=${lang}`)).text();
+      const wrong = [...html.matchAll(/<[^>]*\bdata-count="([^"]*)"[^>]*?(?:data-suffix="([^"]*)")?[^>]*>([^<]*)</g)].filter((m) => m[3].trim() !== m[1] + (m[2] || '')).map((m) => `"${m[3].trim()}" (want ${m[1] + (m[2] || '')})`);
+      if (wrong.length) problems.push(`${p} ${lang}: served HTML shows counters as ${wrong.join(', ')}`);
+      checks++;
+    }
+  }
   // animated numbers reach their value once scrolled into view, also on a short screen (a phone held sideways)
   for (const p of pages().filter((p) => fs.readFileSync(path.join(ROOT, p), 'utf8').includes('data-count='))) {
     const v = await visitor(browser, { viewport: [844, 390] });
     await v.pg.goto(`${url}/${p}?lang=en`, { waitUntil: 'networkidle' });
     const n = await v.pg.locator('[data-count]').count();
+    // still out of view: waiting at 0 to count up
+    const early = await v.pg.$$eval('[data-count]', (els) => els.filter((e) => e.getBoundingClientRect().top > innerHeight && e.textContent.trim() !== '0').length);
+    if (early) problems.push(`${p} 844x390: ${early} counter(s) below the screen are not waiting at 0 to count up`);
     for (let i = 0; i < n; i++) { await v.pg.locator('[data-count]').nth(i).scrollIntoViewIfNeeded(); await v.pg.waitForTimeout(150); }
     await v.pg.waitForTimeout(2500);
     const wrong = await v.pg.$$eval('[data-count]', (els) => els.filter((e) => e.textContent.trim() !== e.dataset.count + (e.dataset.suffix || '')).map((e) => `${e.textContent.trim()} (want ${e.dataset.count})`));
