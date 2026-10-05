@@ -2793,6 +2793,40 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   }
 }
 // ---------- end of round 12 ----------
+
+// ---------- round 12b: the night audit's AUD-030 (in test-models/golden-baseline.mjs) and small leftovers of rounds 9 to 12 ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
+  const col = (name, dataType) => ({ name, dataType, sourceColumn: name });
+  // round 9's seen-not-in-scope: create_report's description said a KPI card shows its measure "(no filter is added)";
+  // with a page filter the card is filtered, as the same description says two sentences later
+  {
+    const d = ((await client.listTools()).tools.find((t) => t.name === 'create_report') || {}).description || '';
+    chk(() => !/no filter is added/.test(d) && /page filter/i.test(d) && /cards included/.test(d), () => `create_report's description must not say a card gets no filter: ${d.slice(0, 900)}`);
+  }
+  // round 12: a table is put in calendar order by the report now; modelNotes said "tables and slicers still show months
+  // in alphabetical order": only slicers do
+  fs.mkdirSync(path.join(ROOT, 'r12b-project/R12b.SemanticModel'), { recursive: true });
+  fs.writeFileSync(path.join(ROOT, 'r12b-project/R12b.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [
+    { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Month Name', 'string'), col('Month Number', 'int64'), col('Day Name', 'string'), col('Day of Week', 'int64')] },
+    { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string'), col('Date', 'dateTime')], measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }] } }));
+  {
+    const x = await ask('create_report', { path: 'r12b-project', name: 'R12b', design: (await ask('plan_layout', { layout: 'exec', kpis: 1 })).j.design, fields: { table: ['Calendar[Day Name]', 'Sales[Total Sales]'] } });
+    const notes = (x.j && x.j.modelNotes) || [], day = notes.find((n) => n.field === 'Calendar[Day Name]'), month = notes.find((n) => n.field === 'Calendar[Month Name]');
+    chk(() => !x.err && day && month && [day, month].every((n) => !/tables and slicers still/.test(n.issue) && /slicers/.test(n.issue) && /tables/.test(n.issue)),
+      () => `modelNotes must say tables are in order, slicers are not: ${JSON.stringify(notes)}`);
+  }
+  // round 11 (D-GC1, seen in Desktop): until the new calendar is refreshed, measures that name it show "Field list item
+  // has error" in the Data pane; howToApply says so, so the user doesn't take it for a broken script
+  {
+    fs.mkdirSync(path.join(ROOT, 'r12b-gulf/R12b Gulf.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, 'r12b-gulf/R12b Gulf.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime')] }] } }));
+    const g = await ask('add_gulf_calendar', { path: 'r12b-gulf', firstYear: 2025, lastYear: 2026, country: 'uae', asOf: '2026-10-04' });
+    chk(() => !g.err && /Field list item has error/.test(g.j.howToApply) && /refresh/i.test(g.j.howToApply), () => `howToApply must say the Data pane's errors clear after the refresh: ${g.err ? g.t.slice(0, 200) : g.j.howToApply}`);
+  }
+}
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);

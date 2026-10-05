@@ -4,6 +4,30 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 12b, small non-severe leftovers (2026-10-05 night, cloud builder; branch `fix/round-12b` from `fix/round-12` `26d9c6c`; not merged)
+The owner's rule tonight: a round that finishes early takes the non-severe not-in-scope items; small, clear, tests first.
+`fix/round-12` is no longer pushed to (the laptop builder merges it into `fix/round-13`).
+- **Taken:**
+  1. **AUD-030** (night audit, low): `mcp/test-models/golden-baseline.mjs` compares every task with
+     `mcp/test-models/golden-expected.json` and fails on a difference (`--update` writes new results; their causes go
+     in the file's `why`). Refreshed once from `26d9c6c`; each number changed since round 7's table is explained there,
+     each cause found by running each round's own runner at its merge commit: round 10 (`3803b7a`) +4 on English
+     two-page reports, +2 on Arabic (the navigator as buttons with a line under the current one); round 12 task 3
+     20 -> 17 (#20 the text box left out; #21 no monthly trend tooltip page for one Ramadan) and its slicers (#22);
+     task 7 +16 (#25 counts); task 8's cards 2 -> 1 (#26). Wired into `npm test`. Found on the way: the runner listed a
+     report's pages in folder order (random names): now in the report's own order.
+  2. Round 9: create_report's description said a KPI card shows its measure "(no filter is added)": now "filtered only
+     by the page filters you pass and the user's slicers". (The server's rule 3 was corrected in round 10.) A `column`
+     value used for an SVG size or colour rule: already refused since round 10 (R10.5, its test 5); nothing to do.
+  3. From round 12: `modelNotes` said "tables and slicers still show months in alphabetical order"; tables are in order
+     since round 12, so it says slicers. From round 11 (D-GC1): `add_gulf_calendar`'s `howToApply` says that until the
+     refresh, measures that name the new table show "Field list item has error" and a query on it fails.
+- **Left, with why:** #3 Tahoma widths, D16, D-P1b, #10 (title top-align) and the tooltip covering the ribbon (each
+  needs Desktop); #11 (hand-placed pages get the generated theme's text sizes) and #8's semibold value (taste calls:
+  they change how every hand-placed report looks); #19 (no property in Microsoft's schema); #27 (nothing in the
+  report); the small-page items of golden task 5 ("Wednes...", a scrollbar at 640 x 360: need Desktop); mixed scripts in
+  Arabic titles (the model's own names, rule 2); slicers in month order (only the model's sort-by column does that).
+
 ## Round 12, every small detail fixed in code (2026-10-05 night, cloud builder; branch `fix/round-12` from main `1cef9ac`; not merged)
 The owner's go (6 Oct 01:45): "I want to feel that whatever the builder opens looks amazing and optimized". All eight
 recommendations of "Round 11, for the owner" are accepted, and so is every proposed fix of "Round 11, design findings"
