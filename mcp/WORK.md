@@ -25,6 +25,44 @@ On the owner's go of 5 Oct (~12:05), relayed by the reviewer. `npm test` 363 -> 
    JSON Desktop writes (and that the latest month shows first); apply Dark and Soft dark from the Design ribbon,
    save, and record the theme JSON Desktop writes (colours, text, card and visual background).
 
+## The .pbit limits (2026-10-05, cloud; branch `fix/pbit-limits` from main `1a92be1`; the outside review's F-02; not merged)
+On the owner's go (5 Oct ~12:50), relayed by the reviewer. Before: `mcp/lib/model.mjs` unzip() inflated EVERY part of
+a .pbit with no size limit (images, base themes included), so a crafted zip could exhaust memory or time.
+- **What is read now (both readers, the MCP's `unzipNeeded` and the website's worker):** the zip's directory first;
+  then only the model part (`DataModelSchema`, or a `model.bim`) and the report parts (`Report/Layout`, or the PBIR
+  `definition/` report, pages and bookmarks JSON; the website also the TMDL files of a zipped project, as before).
+  Nothing else is ever unpacked. Callers checked: `loadModel` is the only user of the unzip in the MCP (read_model,
+  suggest_fields, check_model_health, create_report all go through it).
+- **The limits and why** (`PBIT_LIMITS` in `mcp/lib/model.mjs`, `LIMITS` in `assets/js/model-health-worker.js`, the
+  same numbers, a test checks both): the model part 64 MB, any report part 32 MB, the parts read together 128 MB, the
+  file 300 MB on disk (the website's existing limit), 20,000 parts listed. Evidence: the largest real model part we
+  have is 52,620 bytes (`Ramadan Test.pbit`; the sample .pbit 45,212, `Health Test.pbit` 16,324); the 300-table
+  test model (`large-synthetic`) is about 1.2 MB as Desktop's UTF-16 model file; the website already tells users "a
+  template without data is usually under 20 MB". So 64 MB is about 50 times the 300-table model and 3 times a typical
+  template's whole size: generous for real models, small enough to refuse a bomb. A part declared above its limit, or
+  a total above 128 MB, is refused before anything is unpacked; while unpacking, a part may give at most what the
+  directory declares (`maxOutputLength` in Node; a counted stream in the browser), so a lying directory is caught.
+- **Messages:** plain words with the sizes ("its model part would unpack to 80 MB, above the 64 MB DataArcus reads"),
+  never a part's name or content. Also fixed on the way: a model or report part that is not JSON was reported with
+  JSON.parse's own message, which quotes the start of the file's text: now "The model part in this file is not valid
+  JSON, so it was not read." The website shows a new message, EN and AR (`ZIP_LIMIT`), and the theme generator's
+  "your own model" picker names it too.
+- **Tests (first, failing before):** MCP 365 -> 371: a part declaring 2 GB (refused in milliseconds, the planted
+  text not in the answer), a lying header (1,000 declared, 80 MB real), an 80 KB file that unpacks to 80 MB, a
+  301 MB file on disk (sparse: refused before reading), the total cap and the shared limits; 5 failed before, the
+  sixth (a bomb in a part no tool reads, read_model and check_model_health still work) passed before as a guard.
+  Website `model-health` 57 -> 61: the same four cases in the page; 3 failed on the old worker, the guard passed.
+  `?v=20261005c` on model-health, its worker and theme-generator; `check:min` clean; `csp.mjs` clean.
+- **B-02 (the outside review, owner's go ~13:15), the files of a model read from disk:** a model.bim (and a model
+  file given directly) 64 MB, each TMDL file 32 MB and all of them 128 MB, each report JSON of the project 32 MB:
+  measured (`lstat`) before reading, refused in plain words with the sizes. Evidence: the largest TMDL file we have
+  is 46,099 bytes (the 300-table test model), the largest model.bim about 600 KB. Every parsed model and report part
+  is also checked for nesting: more than **256 levels** is refused ("nested more than 256 levels deep"), since
+  JSON.parse takes it but the code that walks it afterwards runs out of stack; real models are 8 or 9 levels deep,
+  reports 12 to 15 (measured on the test models and the sample .pbit files). Tests first: 371 -> 374, all 3 failing
+  before. Not changed (not in the ask, noted): `create_report`'s `theme` file and page `background` images are read
+  without a size limit (the logo has one: 2 MB).
+
 ## Where things stand
 - **Merged 2026-10-03 (reviewer):** round 1 (`80d3a00`); the Microsoft plugin test (`bc05275`); privacy statement and
   product spec (`515409d`: `mcp/PRIVACY.md`, `mcp/PRODUCT_SPEC.md`); the golden tasks (10 then, 11 now) and test models (`39b5ab7`);
