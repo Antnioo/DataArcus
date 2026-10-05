@@ -1653,6 +1653,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const RP = (name) => path.join(ROOT, 'cr-project', name + '.Report');
   const measured = (a) => (a.j.findings || []).filter((f) => /^measured:/.test(f.source));
 
+  // (changed in session 2, 5 Oct: "no measured finding" became "no measured error or warning": TOOLTIP_SCROLL gives
+  //  a note on every tooltip bar chart, the rows that fit, because the number of rows is in the data, never read)
   // 1. the tool is listed, read-only, and its answer has the planned shape; our two golden reports pass: Microsoft's
   //    validator offline 0 errors, the bundled schemas 0 errors, no error from our rules, and nothing changed on disk
   {
@@ -1662,7 +1664,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const before = [hashOf(RP('CR Gold EN')), hashOf(RP('CR Gold AR'))];
     const en = await ask('check_report', { path: 'cr-project/CR Gold EN.pbip' }), ar = await ask('check_report', { path: 'cr-project/CR Gold AR.Report' });
     const ok = (a) => !a.err && a.j.validator.ran === true && a.j.validator.mode === 'offline' && a.j.validator.errors === 0 && /^0\.4\.0$/.test(a.j.validator.version) && a.j.schemas.checked > 20 && a.j.schemas.errors === 0
-      && a.j.report.pages >= 2 && a.j.report.visuals > 20 && a.j.report.schemaVersions.page && !a.j.findings.some((f) => f.severity === 'error') && measured(a).length === 0 && Array.isArray(a.j.notChecked) && a.j.counts && typeof a.j.truncated === 'boolean';
+      && a.j.report.pages >= 2 && a.j.report.visuals > 20 && a.j.report.schemaVersions.page && !a.j.findings.some((f) => f.severity === 'error') && measured(a).filter((f) => f.severity !== 'note').length === 0 && Array.isArray(a.j.notChecked) && a.j.counts && typeof a.j.truncated === 'boolean';
     chk(() => ok(en) && ok(ar) && en.j.lang === 'en' && ar.j.lang === 'ar' && hashOf(RP('CR Gold EN')) === before[0] && hashOf(RP('CR Gold AR')) === before[1],
       () => `our golden reports must pass check_report (validator offline 0 errors, schemas 0, no measured finding) and stay unchanged: EN ${short(en)} | AR ${short(ar)} ${JSON.stringify(ar.j && measured(ar)).slice(0, 400)}`);
     // the findings' shape: every finding has its rule, severity, file inside the report, source and a fix in words
@@ -1769,6 +1771,85 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     fs.mkdirSync(path.join(ROOT, 'cr-project', 'CR Legacy.Report'), { recursive: true }); fs.writeFileSync(path.join(ROOT, 'cr-project', 'CR Legacy.Report', 'report.json'), '{"config":"{}","sections":[]}');
     const l = await ask('check_report', { path: 'cr-project/CR Legacy.Report' }), out = await ask('check_report', { path: '../outside.Report' });
     chk(() => l.err && /PBIR-Legacy/.test(l.t) && /save it once in Power BI Desktop/i.test(l.t) && out.err && /outside/.test(out.t), () => `a PBIR-Legacy report and a path outside the folder must be refused: ${short(l)} | ${short(out)}`);
+  }
+}
+
+// ---------- check_report, session 2: one copy of the measured numbers; RTL_MIRROR, PAGE_BUTTON_WRAP, TOOLTIP_SCROLL,
+// SORT_IN_VISUAL, each from a measured fact in DESKTOP-TESTS.md ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 400));
+  const tree = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? tree(path.join(d, e.name)) : [path.join(d, e.name)]));
+  const J = (f) => JSON.parse(fs.readFileSync(f, 'utf8')), W = (f, j) => fs.writeFileSync(f, JSON.stringify(j, null, 2));
+  const RP = (name) => path.join(ROOT, 'cr-project', name + '.Report');
+  const measured = (a) => (a.j.findings || []).filter((f) => /^measured:/.test(f.source));
+  const lit = (v) => ({ expr: { Literal: { Value: v } } });
+  // 1. the measured numbers live once, in assets/js/report-rules.js: report-check.mjs takes them from there
+  {
+    const src = fs.readFileSync(path.join(REPO, 'scripts/tests/report-check.mjs'), 'utf8'), code = src.split('\n').filter((l) => !/^\s*\/\//.test(l)).join('\n');
+    const Rr = (await import('node:module')).createRequire(import.meta.url)(path.join(REPO, 'assets/js/report-rules.js'));
+    chk(() => /report-rules\.js/.test(src) && !/10 \+ 1\.8 \* t|2 \+ 1\.6 \* t|6 \+ 1\.6 \* t|16 \+ 4 \* t|0\.45 \* 4 \/ 3/.test(code) && Rr.MEASURED && Rr.MEASURED.BOX(10) === 28 && Rr.MEASURED.BTN_H(8) === 19 && Rr.MEASURED.SLICER(10) === 56,
+      () => `report-check.mjs must take the measured numbers from report-rules.js (MEASURED), not define its own: ${Object.keys(Rr.MEASURED || {})}`);
+  }
+  const copyOf = (from, name) => { const dir = path.join(ROOT, 'cr-project', name + '.Report'); fs.cpSync(RP(from), dir, { recursive: true }); return dir; };
+  const visuals = (dir) => tree(path.join(dir, 'definition', 'pages')).filter((f) => f.endsWith('visual.json')).map((f) => ({ f, j: J(f) }));
+  const pageOf = (dir, tooltip) => tree(path.join(dir, 'definition', 'pages')).filter((f) => f.endsWith('page.json')).map((f) => ({ f, j: J(f) })).find((x) => (x.j.type === 'Tooltip') === !!tooltip);
+  const rel = (dir, f) => path.relative(dir, f).split(path.sep).join('/');
+  const one = async (dir, rule, file, extra) => { const a = await ask('check_report', { path: path.relative(ROOT, dir) }); const mine = a.err ? [] : a.j.findings.filter((f) => f.rule === rule), others = a.err ? [] : measured(a).filter((f) => f.rule !== rule && f.severity !== 'note');
+    return { a, mine, others, ok: mine.length === 1 && mine[0].file === file && /^measured: scripts\/tests\/DESKTOP-TESTS\.md, 2026-\d\d-\d\d, Desktop 2\.15\d/.test(mine[0].source) && others.length === 0 && (!extra || extra(mine[0])) }; };
+  // 2. the golden reports stay clean: no error or warning from any measured rule, the new ones included; the Arabic
+  //    report is read as Arabic and RTL_MIRROR ran on it
+  {
+    const en = await ask('check_report', { path: 'cr-project/CR Gold EN.Report' }), ar = await ask('check_report', { path: 'cr-project/CR Gold AR.Report' });
+    const loud = (a) => measured(a).filter((f) => f.severity !== 'note');
+    chk(() => !en.err && !ar.err && loud(en).length === 0 && loud(ar).length === 0 && ar.j.lang === 'ar' && ar.j.rulesRun.includes('RTL_MIRROR') && !en.j.rulesRun.includes('RTL_MIRROR') && ['PAGE_BUTTON_WRAP', 'TOOLTIP_SCROLL', 'SORT_IN_VISUAL'].every((r) => ar.j.rulesRun.includes(r))
+        && !ar.j.notChecked.some((n) => /PAGE_BUTTON_WRAP|SORT_IN_VISUAL/.test(n.rule)),
+      () => `the golden reports must pass the new rules (no error or warning): EN ${JSON.stringify(loud(en)).slice(0, 400)} AR ${JSON.stringify(loud(ar)).slice(0, 400)} ${JSON.stringify(ar.j && ar.j.rulesRun)}`);
+  }
+  // 3. RTL_MIRROR (round 2, 2.158: the page navigator has no order setting, the first page is always at the left): an
+  //    Arabic report with a page navigator gives one finding
+  {
+    const dir = copyOf('CR Gold AR', 'CR2 Navigator'), pg = path.dirname(pageOf(dir).f), id = 'navx0000000000000001';
+    fs.mkdirSync(path.join(pg, 'visuals', id), { recursive: true }); const f = path.join(pg, 'visuals', id, 'visual.json');
+    W(f, { $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json', name: id, position: { x: 1000, y: 900, z: 90000, width: 400, height: 60, tabOrder: 90000 }, visual: { visualType: 'pageNavigator', objects: {} } });
+    const r = await one(dir, 'RTL_MIRROR', rel(dir, f));
+    chk(() => r.ok, () => `RTL_MIRROR: a page navigator in an Arabic report must give 1 finding: ${JSON.stringify(r.mine).slice(0, 400)} others ${JSON.stringify(r.others.map((x) => x.rule))} ${r.a.err ? short(r.a) : ''}`);
+  }
+  // 4. RTL_MIRROR (the 2026-10-03 test of Microsoft's plugin, 2.158: Desktop doesn't mirror titles; a title shown at
+  //    the left of an Arabic page starts away from the reader): a chart title aligned left gives one finding
+  {
+    const dir = copyOf('CR Gold AR', 'CR2 Title'), x = visuals(dir).find((v) => v.j.visual && /Chart$/.test(v.j.visual.visualType) && v.j.visual.visualContainerObjects.title);
+    x.j.visual.visualContainerObjects.title[0].properties.alignment = lit("'left'"); W(x.f, x.j);
+    const r = await one(dir, 'RTL_MIRROR', rel(dir, x.f));
+    chk(() => r.ok, () => `RTL_MIRROR: a left-aligned title in an Arabic report must give 1 finding: ${JSON.stringify(r.mine).slice(0, 400)} others ${JSON.stringify(r.others.map((x) => x.rule))}`);
+  }
+  // 5. PAGE_BUTTON_WRAP (round 1, 2.158: a page button wraps a long name only when two lines fit its height, 3.5 x pt in
+  //    Segoe UI, 3.2 x pt in Tahoma; otherwise it cuts it): a page button too narrow for its name in one line and too
+  //    low for two gives one finding
+  {
+    const dir = copyOf('CR Gold AR', 'CR2 Page button'), x = visuals(dir).find((v) => v.j.visual && v.j.visual.visualType === 'actionButton' && /PageNavigation/.test(JSON.stringify(v.j.visual.visualContainerObjects.visualLink || '')));
+    x.j.position.width = 30; W(x.f, x.j);
+    const r = await one(dir, 'PAGE_BUTTON_WRAP', rel(dir, x.f), (f) => /two lines/.test(f.what) && /\d/.test(f.what));
+    chk(() => r.ok, () => `PAGE_BUTTON_WRAP: a page button too narrow and too low must give 1 finding: ${JSON.stringify(r.mine).slice(0, 400)} others ${JSON.stringify(r.others.map((x) => x.rule))} ${r.a.err ? short(r.a) : ''}`);
+  }
+  // 6. SORT_IN_VISUAL (round 2, 2.158: a chart sorts by a field only when that field is in the visual): a sort by a
+  //    field the chart doesn't hold gives one finding
+  {
+    const dir = copyOf('CR Gold EN', 'CR2 Sort'), x = visuals(dir).find((v) => v.j.visual && /Chart$/.test(v.j.visual.visualType) && v.j.visual.query);
+    x.j.visual.query.sortDefinition = { sort: [{ field: { Column: { Expression: { SourceRef: { Entity: 'Sales' } }, Property: 'Channel' } }, direction: 'Ascending' }], isDefaultSort: true }; W(x.f, x.j);
+    const r = await one(dir, 'SORT_IN_VISUAL', rel(dir, x.f));
+    chk(() => r.ok, () => `SORT_IN_VISUAL: a sort by a field not in the chart must give 1 finding: ${JSON.stringify(r.mine).slice(0, 400)} others ${JSON.stringify(r.others.map((x) => x.rule))}`);
+  }
+  // 7. TOOLTIP_SCROLL (round 0, 2.158: a bar chart without its value axis needs about 22 a row plus 46): how many rows a
+  //    tooltip page's bar chart shows depends on the data, which check_report never reads, so the finding is a note
+  //    with the rows that fit: floor((height - 46) / 22)
+  {
+    const dir = copyOf('CR Gold EN', 'CR2 Tooltip'), tip = path.dirname(pageOf(dir, true).f);
+    const x = tree(tip).filter((f) => f.endsWith('visual.json')).map((f) => ({ f, j: J(f) })).find((v) => v.j.visual && v.j.visual.visualType === 'clusteredBarChart');
+    x.j.position.height = 112; W(x.f, x.j);
+    const a = await ask('check_report', { path: path.relative(ROOT, dir) }), mine = a.err ? [] : a.j.findings.filter((f) => f.rule === 'TOOLTIP_SCROLL' && f.file === rel(dir, x.f));
+    chk(() => mine.length === 1 && mine[0].severity === 'note' && /\b3 rows\b/.test(mine[0].what) && /scrollbar/.test(mine[0].what), () => `TOOLTIP_SCROLL: a 112-high tooltip bar chart must give a note that 3 rows fit: ${JSON.stringify(mine).slice(0, 400)} ${a.err ? short(a) : ''}`);
   }
 }
 
