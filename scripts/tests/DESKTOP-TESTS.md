@@ -1548,6 +1548,111 @@ channel", Customers, "Products and categories", Returns, Stores, Staff, Notes; a
   placeholder of a hand-placed page reads "Your logo" in an Arabic report.
 - Not opened: a row that has to wrap, the phone layout, a click on a tab (the links are checked in `npm test` only).
 
+## 2026-10-05, round 10, the one-hour Desktop proof sitting (`fix/round-10` with main merged in), Power BI Desktop 2.158.1177
+Made-up models only (the Ramadan sample). Captures: the canvas only, in `<tests folder>\desk-r10\`.
+
+### The card image's size (R10.2)
+"C1 card image": six cards 163 x 96 on a 1280 x 720 page, the same 48 x 48 design (a yellow square with an arrow) on
+every card's image, each card with one hand-written variant of the `image` entry (`r10-cimg.mjs`). The image's
+box was measured in the capture by its colour (`yellow.ps1`), in page units.
+| Card | Added to the entry | The image drawn | The value |
+|---|---|---|---|
+| 1 | nothing (what the engine wrote) | 64.9 x 63.7 | **cut: "10..."** (101.91K) |
+| 2 | `fixedSize` true, `size` 24 | 55.8 x 55.2 | **cut: "74...."** |
+| 3 | `fixedSize` true, `size` 48 | 67.1 x 50.1 (not square; a two-line title) | 0.34, whole |
+| 4 | `fixedSize` false, `imageAreaSize` 25 | **32.4 x 32.4** | 23.64K, whole |
+| 5 | `position` 'Left', `fixedSize` true, `size` 32 | 67.1 x 50.1, on the left | 3.31, whole |
+| 6 | `position` 'Right', `fixedSize` false, `imageAreaSize` 30 | **39.8 x 39.3** | **cut: "101...."** |
+- **`imageAreaSize` (with `fixedSize` false) is what sizes the image**: a percent of the card's inner width (25% of a
+  163-wide card drew 32.4; 30% of a 165-wide card 39.8; so the inner width is the card's less about 33). The picture
+  keeps its shape inside that area.
+- **`size` changed nothing that could be measured** (24, 48 and 32 drew like the default: the image takes the height
+  left under the title). `position` 'Left' works.
+- **Without a size the image is too large** (65 wide for a 48-wide design) **and the value is cut**: a FAIL of what the
+  engine wrote until this sitting.
+- Not seen: what Desktop itself writes when the size is set in the Format pane (the entries above were written by
+  hand, with the number as `25D`; Desktop drew them). The names are the ones Microsoft's authoring CLI lists for the
+  card's image (`fixedSize` "Image height", `imageAreaSize` "Image area size", `size`, `position`, `padding`, `fit`).
+
+### DAX FORMAT with Arabic locales
+"H1 format": six report-level measures in one table (`reportExtensions.json`, text), each a FORMAT of
+`DATE ( 2026, 3, 1 )`. **Every result is a Gregorian date; none is a Hijri (Umm al-Qura) one** (1 March 2026 is in
+Ramadan 1447). The exact outputs (`h1fmt-crop.png`):
+| Expression | Result (the characters, in reading order) | As drawn in a left-to-right cell |
+|---|---|---|
+| `FORMAT ( DATE ( 2026, 3, 1 ), "Long Date", "ar-SA" )` | 01 مارس, 2026 | "01 2026 ,مارس" |
+| `FORMAT ( DATE ( 2026, 3, 1 ), "dd/MM/yyyy", "ar-SA" )` | 01/03/2026 | 01/03/2026 |
+| `FORMAT ( DATE ( 2026, 3, 1 ), "Long Date", "ar-AE" )` | 01 مارس, 2026 | "01 2026 ,مارس" |
+| `FORMAT ( DATE ( 2026, 3, 1 ), "dd/MM/yyyy", "ar-AE" )` | 01/03/2026 | 01/03/2026 |
+| `FORMAT ( DATE ( 2026, 3, 1 ), "Long Date", "en-US" )` (control) | Sunday, March 1, 2026 | the same |
+| `FORMAT ( DATE ( 2026, 3, 1 ), "d MMMM yyyy", "ar-SA" )` | 1 مارس 2026 | "1 2026 مارس" |
+- The Arabic locales give the Gregorian month's Arabic name ("مارس"), Latin digits, and no day name in "Long Date";
+  ar-SA and ar-AE give the same text. The reading-order column is read from the drawn text (the cell is left to
+  right, so the Arabic word and the year change places on screen).
+- So a Hijri date in a report still needs the calendar table's Hijri columns. No code changed.
+
+### The card image after the fix (R10.2)
+"C3 card image": the same six cards, written by the engine with the fix (`fixedSize` false, `imageAreaSize` 25, the
+value fitted to the width left of the image).
+| | Before the fix ("C1", card 1) | After ("C3", all six) |
+|---|---|---|
+| The image | 64.9 x 63.7 | **32.4 x 32.4 on every card** (five measured 32.4 x 32.4, one 32.4 x 31.9) |
+| The values | "10...", "74....", "101...." cut | **101.91K, 74.68K, 0.34, 23.64K, 3.31, 101.91K: all whole** |
+| The numbers' height | | within 2 capture pixels (1.1 page units) of each other across the row |
+- The design is 48 wide and is drawn 32.4: the area is capped at 25 percent so that the value keeps its room. A
+  design is not shown at its own size on a narrow card; that is the trade made here (a taste call for the owner).
+- A first build of the fix wrote no size at all (the design's width did not reach the writer; the entry held
+  `NaND`): Desktop opened it without a message, drew the images 40 to 47 wide and cut three values ("C2"). Fixed
+  before the build above.
+- Not seen: a card image at 1920 x 1080, in Arabic, or on a three-card page; the 0.8 (inner width over card width)
+  comes from two cards of one page size only.
+
+### The owner's design choices on one generated report, English and Arabic, 1280 x 720
+"P3 EN" and "P3 AR" (four KPI cards, the default report, a table of Day Name, Total Sales, Total Sales Last
+Ramadan); one capture each (`p3en-p1.png`, `p3ar-p1.png`).
+| Choice | English | Arabic |
+|---|---|---|
+| The KPI value at the reading start | at the left of every card, under its title | at the right of every card, under its title |
+| The values | 101.91K, 74.68K, 0.34, 101.91K, whole | the same, whole |
+| The percent card as the model formats it | 0.34 (the sample's measure has no percent format) | 0.34 |
+| A table titled by its content | "Total Sales by Day Name" | "Total Sales حسب Day Name" (the model's names are English) |
+| "Total" in the table | shown: Total, 101,914, 74,675 | **shown: Total, 74,675, 101,914** |
+| The Arabic table's text column first | | Day Name is the first column; it is drawn at the left (Desktop does not mirror a table), right-aligned; then Total Sales Last Ramadan, then Total Sales |
+| Reset | an arrow and "Reset filters", no box, at the foot of the filter panel | an arrow and "إعادة ضبط الفلاتر", no box, 158 wide in the 250-wide panel |
+| The tabs | "Executive summary" bold with the line under it, "Details" quiet | "ملخص تنفيذي" bold with the line, "التفاصيل" quiet, from the right |
+- **Not seen: the Reset tooltip on screen.** It is written (`visualLink.enabledTooltip`: 'إعادة ضبط الفلاتر'), but a
+  capture cannot hover; no pointer was put on the button in this sitting.
+- In the Arabic capture the Reset arrow sits at the left end of the button and the text at the right, about 60
+  page units apart: the icon is not beside its text. Not fixed here (see "Seen, not in scope").
+- Nothing is cut on either page 1. The second pages were captured, not judged.
+
+### A long KPI title: does it wrap, and do the numbers stay on one line?
+"P4 six" (before the fix) and "P5 six" (after): six cards 163 wide at 1280 x 720, titles "Total Sales", "Total
+Sales Last Ramadan", "Total Sales vs Last Ramadan %", "Total Sales Last Ramadan (old)", "Total Sales vs Last
+Ramadan % (old)", "Total Sales" (`p45six-crop.png`: before above, after below).
+- **`titleWrap` wraps in Desktop**: the three long titles are on two lines, whole, at 8pt; no title is cut and
+  none is shortened. The values are whole (101.91K, 74.68K, 0.34, 23.64K, 3.31, 101.91K).
+- **Before the fix the numbers were not on one line**: the three cards with a wrapped title had their number 11
+  capture pixels (6.3 page units) lower than the three with a one-line title (ink tops at 327 and 338).
+- **After the fix they are**: a card with a one-line title leaves the second line's height free above its title;
+  the ink tops are 337 and 338 (1 capture pixel, 0.6 of a page unit). The one-line titles now sit lower in their
+  cards than the two-line ones start: a taste call.
+
+### The table's rows, measured (no code changed)
+The table of "P3 EN" (the theme's text size; the engine writes no row padding, so this is Desktop's default):
+- row pitch **20.9 page units** (five rows in 184 capture pixels); the text's ink (capital to descender) 12.5;
+  so 8.4 of air between one row's ink and the next.
+- under the header: 10.2 from the header's ink to the line, 6.8 from the line to the first row's ink.
+- Not measured: the cell's left and right padding (the table's edge could not be told from the capture), and
+  what `grid.rowPadding` changes.
+
+### Seen, not in scope
+- The Arabic Reset button: the arrow and the text are at opposite ends of the button.
+- In the Arabic report the charts' titles mix the two scripts ("Total Sales حسب Quarter"); the names are the
+  model's own (rule 2), so this is the model's, not the engine's.
+- `size` on the card's image did nothing in three tries; what it is for was not found.
+- Not reached in the hour: 4 and 8 tabs on the phone layout; a tab row that has to wrap.
+
 ## Lessons
 - **Round 10 (2.158.1177): a card's "Value decimal places" is `labelPrecision`** (`2L`), and it works in the card's
   default value entry: automatic units with 2 decimals for every card (3.43M, 14.81K, 231.50).

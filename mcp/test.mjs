@@ -1840,8 +1840,15 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       const c = await ask('create_report', { path: 'r10-project', name: 'R10 SVG card', design: exec, fields: { kpis: SIX }, svgCards: [{ card: 2, label: 'Card bar', design: bar('Avg Price') }] });
       const cs = c.err ? [] : report(path.join(ROOT, 'r10-project', c.j.report)).filter((p) => !p.tooltip).map((pg) => cards(pg).sort((p, q) => p.at.x - q.at.x));
       const img = cs.length ? cs[0][1].visual.objects.image : null;
-      chk(() => JSON.stringify(img) === JSON.stringify([{ properties: { show: { expr: { Literal: { Value: 'true' } } }, imageType: { expr: { Literal: { Value: "'imageData'" } } },
-          imageData: { expr: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: 'Sales' } }, Property: 'Card bar' } } } }, selector: { id: 'default' } }])
+      // The expectation changed on 2026-10-05 (Desktop proof sitting, DESKTOP-TESTS.md "the card image's size"): with only the
+      // three properties above, Desktop 2.158 drew a 48 x 48 design 65 wide on a 163-wide card and cut the value ("10...").
+      // "imageAreaSize" (with fixedSize false) is what sizes the image: 25 drew it 32 wide, 30 drew it 40 wide; "size" did nothing.
+      // So the entry now also holds fixedSize false and an image area of 10 to 25 percent, and the value is fitted to what is left.
+      const ip = img && img[0] ? img[0].properties : {}, area = N(ip.imageAreaSize), c2 = cs.length ? cs[0][1] : null, c1 = cs.length ? cs[0][0] : null;
+      chk(() => L(ip.fixedSize) === 'false' && /^\d+D$/.test(L(ip.imageAreaSize)) && area >= 10 && area <= 25, () => `an SVG card's image must be sized with fixedSize false and imageAreaSize 10 to 25: ${JSON.stringify(ip)}`);
+      chk(() => { const V = N(c2.visual.objects.value[0].properties.fontSize); return V >= 8 && V < N(c1.visual.objects.value[0].properties.fontSize) && 4.4 * V * 4 / 3 <= c2.at.w * (1 - area / 100) - 8; },
+        () => `the value of a card with an image must fit beside the image ("-888.88bn" is 4.4 em): size ${c2 && N(c2.visual.objects.value[0].properties.fontSize)}pt, card ${c2 && c2.at.w} wide, image area ${area}%, the card beside it ${c1 && N(c1.visual.objects.value[0].properties.fontSize)}pt`);
+      chk(() => L(ip.show) === 'true' && L(ip.imageType) === "'imageData'" && JSON.stringify(ip.imageData) === JSON.stringify({ expr: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: 'Sales' } }, Property: 'Card bar' } } }) && JSON.stringify(img[0].selector) === '{"id":"default"}'
         && !cs[0][0].visual.objects.image && !cs[0][2].visual.objects.image && c.j.svgMeasures.some((m) => m.label === 'Card bar' && /card/i.test(m.shownAs)) && errors(path.join(ROOT, 'r10-project', c.j.report)) === '0',
         () => `svgCards must write Desktop's image entry on that card only: ${JSON.stringify(img)} ${short(c)}`);
     }
@@ -2076,7 +2083,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   //    at a word with "…" and the full name stays the card's alt text (and Power BI's own tooltip shows the field's
   //    name); the answer names both. Swept over 3 to 6 cards x three pages x two languages.
   {
-    const bad = [], seen = { one: 0, wrapped: 0, shortened: 0 }, told = { wrapped: 0, shortened: 0 };
+    const bad = [], seen = { one: 0, wrapped: 0, shortened: 0 }, told = { wrapped: 0, shortened: 0 }, uneven = []; let rows = 0;
     const lines = (text, size, avail, font) => { const out = []; let cur = ''; for (const w of text.split(' ')) { const t = cur ? cur + ' ' + w : w; if (!cur || tw(t, size, true, font) <= avail) cur = t; else { out.push(cur); cur = w; } } out.push(cur); return out; };
     const SIX = ['Total Sales', LONG, 'Orders', LONGER, 'Margin %', 'Avg Price'].map((m) => `Sales[${m}]`);
     for (const page of ['1920x1080', '1280x720', '960x720']) for (const lang of ['en', 'ar']) for (const k of [3, 4, 6]) {
@@ -2084,6 +2091,12 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       if (x.err) { bad.push(`${page} ${lang} ${k}: ${x.t.slice(0, 160)}`); continue; }
       told.wrapped += ((x.j.kpiTitles || {}).wrapped || []).length; told.shortened += ((x.j.kpiTitles || {}).shortened || []).length;
       const font = 'Segoe UI';
+      // Seen in Desktop 2.158 on 2026-10-05 ("a long KPI title"): the title wraps, but the wrapped cards' numbers sat 6
+      // lower than their neighbours'. So in a row where a title wraps, every card's value area starts and ends at the
+      // same height: a card with a one-line title leaves the second line's height free above its title.
+      { const row = pageVisuals(x, 'd5-project').filter(isKpi).map((v) => { const t = titleOf(v), pad = v.visual.visualContainerObjects.padding[0].properties, I = N(lookOf(v, 'padding').paddingUniform);
+          return { wrap: t.wrap, from: N(pad.top) + (t.wrap ? 2 : 1) * Math.ceil(1.5 * t.size) + I, to: v.at.h - N(pad.bottom) - I }; });
+        if (row.some((r) => r.wrap)) { rows++; if (new Set(row.map((r) => r.from + ':' + r.to)).size !== 1) uneven.push(`${page} ${lang} ${k}: ${row.map((r) => (r.wrap ? 'w' : '') + r.from + '-' + r.to).join(' ')}`); } }
       pageVisuals(x, 'd5-project').filter(isKpi).forEach((v) => {
         const t = titleOf(v), full = altOf(v), pad = v.visual.visualContainerObjects.padding[0].properties, avail = v.at.w - N(pad.left) - N(pad.right);
         const I = N(lookOf(v, 'padding').paddingUniform), V = N(valueOf(v).fontSize), room = v.at.h - N(pad.top) - N(pad.bottom) - 2 * I;
@@ -2098,6 +2111,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       });
     }
     chk(() => bad.length === 0 && seen.one > 0 && seen.wrapped > 0, () => `a KPI title must fit, or wrap to two lines where the card is high enough: ${bad.slice(0, 5).join(' | ')} ${JSON.stringify(seen)}`);
+    chk(() => rows > 0 && uneven.length === 0, () => `in a row where a KPI title wraps, every card's value must sit at the same height: ${rows} rows, ${uneven.slice(0, 4).join(' | ')}`);
     chk(() => seen.shortened > 0 && told.shortened === seen.shortened && told.wrapped === seen.wrapped, () => `a KPI title that neither fits nor wraps must be shortened with "…" and named in kpiTitles: seen ${JSON.stringify(seen)}, told ${JSON.stringify(told)}`);
   }
   // 10 and 11. SVG pictures never push a table past its box: every column's room (its header or widest value + 10,
@@ -2126,6 +2140,163 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const wt = pageVisuals(wide, 'd5-project').find((v) => type(v) === 'tableEx');
     chk(() => L(wt.visual.objects.grid[0].properties.imageWidth) === '180D' && L(wt.visual.objects.grid[0].properties.imageHeight) === '24D' && !(wide.j.reportNotes || []).some((n) => /narrowed/.test(n)),
       () => `a table with room must keep the designs' size (180 x 24): ${JSON.stringify(wt && wt.visual.objects.grid)} ${short(wide)}`);
+  }
+}
+
+// ---------- round 11, small fixes (owner's go 5 Oct) ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 300));
+  const tree = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? tree(path.join(d, e.name)) : [path.join(d, e.name)]));
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
+  const col = (name, dataType, extra) => Object.assign({ name, dataType, sourceColumn: name }, extra || {});
+  // 1. Every visual the engine writes sets its title explicitly, on or off (Microsoft's September 2026 Feature Summary:
+  //    "title and subtitle are now turned off by default for matrix, table, and card visuals in reports that use the
+  //    latest base theme"): a designed title is never left to the base theme. Every kind of slot, English and Arabic,
+  //    the default design with its tooltip pages, and the website's download with the slide-in panel.
+  {
+    fs.mkdirSync(path.join(ROOT, 'r11-project/R11 Test.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, 'r11-project/R11 Test.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'),
+      columns: [col('Amount', 'double'), col('Region', 'string'), col('Channel', 'string'), col('Month', 'string')],
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }] }] } }));
+    const kinds = ['kpi', 'line', 'bar', 'column', 'donut', 'table', 'gauge', 'funnel', 'treemap', 'map', 'slicer', 'text'];
+    const slots = [{ kind: 'title', x: 24, y: 12, w: 600, h: 48 }, { kind: 'logo', x: 1100, y: 12, w: 150, h: 48 }].concat(kinds.map((k, i) => ({ kind: k, title: 'Slot ' + k, x: 24 + (i % 4) * 310, y: 80 + Math.floor(i / 4) * 210, w: 290, h: 190 })));
+    const reps = [];
+    for (const lang of ['en', 'ar']) {
+      reps.push(await ask('create_report', { path: 'r11-project', name: 'R11 Kinds ' + lang, lang, pages: [{ name: 'All kinds', slots }] }));
+      reps.push(await ask('create_report', { path: 'r11-project', name: 'R11 Default ' + lang, lang, design: (await ask('plan_layout', { layout: 'analysis', kpis: 4, filters: 'end', lang })).j.design }));
+    }
+    const vis = (x) => (x.err ? [] : tree(path.join(ROOT, 'r11-project', x.j.report, 'definition', 'pages')).filter((f) => f.endsWith('visual.json')).map((f) => JSON.parse(fs.readFileSync(f, 'utf8'))).filter((v) => v.visual));
+    const E2 = (await import('node:module')).createRequire(import.meta.url)(path.join(REPO, 'assets/js/design-engine.js')), Pb = (await import('node:module')).createRequire(import.meta.url)(path.join(REPO, 'assets/js/pbip-export.js'));
+    const site = ['en', 'ar'].flatMap((lang) => { const d = E2.fresh(); d.layout = Object.assign({}, d.layout, { filters: true }); E2.repairState(d); const specs = E2.projectPages(d.layout, lang, { second: true, panel: true });
+      return Pb.build({ name: 'S', title: 'S', pageName: specs[0].name, lang, rtl: E2.rtl(d.layout, lang), font: d.font, ui: d.ui, theme: E2.buildTheme(d, lang), sample: true, logo: null, texts: E2.REPORT_TEXTS[lang], pages: specs.map((sp) => ({ name: sp.name, page: sp.page, slots: sp.slots, panel: sp.panel, png: new Uint8Array([1]) })) })
+        .files.filter((x) => /visual\.json$/.test(x.path)).map((x) => JSON.parse(String(x.data))).filter((v) => v.visual); });
+    const all = reps.flatMap(vis).concat(site), types = new Set(all.map((v) => v.visual.visualType));
+    const show = (v) => { const t = ((v.visual.visualContainerObjects || {}).title || [])[0]; return t && t.properties && t.properties.show && t.properties.show.expr ? t.properties.show.expr.Literal.Value : null; };
+    const loose = all.filter((v) => show(v) !== 'true' && show(v) !== 'false');
+    const titled = all.filter((v) => ['tableEx', 'cardVisual', 'pivotTable'].includes(v.visual.visualType) && v.parentGroupName !== undefined);
+    chk(() => reps.every((x) => !x.err) && ['tableEx', 'cardVisual', 'slicer', 'gauge', 'treemap', 'map', 'funnel', 'donutChart', 'textbox', 'actionButton'].every((t) => types.has(t)) && all.length > 150 && loose.length === 0
+        && all.filter((v) => v.visual.visualType === 'tableEx').every((v) => show(v) === 'true') && all.filter((v) => v.visual.visualType === 'cardVisual').every((v) => show(v) === 'true'),
+      () => `every visual must set its title on or off explicitly (tables and cards on): ${loose.length} without: ${[...new Set(loose.map((v) => v.visual.visualType))].join(', ')}; types ${[...types].join(', ')} ${reps.filter((x) => x.err).map(short).join(' | ')}`);
+  }
+  // 2. The TMDL and model.bim readers skip what they don't know: the new column properties stringIndexingBehavior and
+  //    fullTextIndexingBehavior (Microsoft Learn, "Configure string indexing" and "Configure full-text indexing in Power BI
+  //    semantic models", compatibility levels 1707 and 1708), an unknown property and an unknown block do not break
+  //    read_model or check_model_health, and the column they sit on is still read with its type
+  {
+    fs.cpSync(path.join(REPO, 'scripts/tests/fixtures/bridge-project'), path.join(ROOT, 'idx-project'), { recursive: true });
+    const cal = path.join(ROOT, 'idx-project/Sales.SemanticModel/definition/tables/Calendar.tmdl');
+    let tm = fs.readFileSync(cal, 'utf8').replace(/\r\n/g, '\n');   // the file has CRLF on Windows: without this the properties below were never put in, and the check failed there
+    tm = tm.replace("\tcolumn 'Month Name'\n\t\tdataType: string\n", "\tcolumn 'Month Name'\n\t\tdataType: string\n\t\tstringIndexingBehavior: full\n\t\tfullTextIndexingBehavior: explicit\n\t\tsomeFutureProperty: a value\n")
+      .replace('\tcolumn Year\n', '\tcolumn Year\n\t\tsomeFutureBlock\n\t\t\tinner: 1\n');
+    fs.writeFileSync(cal, tm);
+    fs.mkdirSync(path.join(ROOT, 'idx-bim/Idx.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, 'idx-bim/Idx.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1708, model: { tables: [{ name: 'Reviews', partitions: mp('Reviews'),
+      columns: [col('Comment', 'string', { stringIndexingBehavior: 'full', fullTextIndexingBehavior: 'full', someFutureProperty: { x: 1 } }), col('Score', 'int64')],
+      measures: [{ name: 'Reviews', expression: 'COUNTROWS ( Reviews )', formatString: '#,0' }] }] } }));
+    const r1 = await ask('read_model', { path: 'idx-project' }), h1 = await ask('check_model_health', { path: 'idx-project' });
+    const r2 = await ask('read_model', { path: 'idx-bim' }), h2 = await ask('check_model_health', { path: 'idx-bim' });
+    const colsOf = (x, t) => ((x.j.tables || []).find((y) => y.table === t) || {}).columns || [];
+    chk(() => tm.includes('fullTextIndexingBehavior') && !r1.err && !h1.err && !r2.err && !h2.err && colsOf(r1, 'Calendar').includes('Month Name (string)') && colsOf(r1, 'Calendar').includes('Year (int64)') && colsOf(r2, 'Reviews').includes('Comment (string)') && h2.j.score != null && h1.j.score != null,
+      () => `the readers must skip unknown column properties: ${[r1, h1, r2, h2].map((x) => (x.err ? short(x) : 'ok')).join(' | ')} ${JSON.stringify(r1.j && colsOf(r1, 'Calendar'))} ${JSON.stringify(r2.j && colsOf(r2, 'Reviews'))} ${JSON.stringify(h2.j && h2.j.score)}`);
+  }
+}
+
+// ---------- .pbit limits (owner's go 5 Oct; the outside review's F-02): only the entries the tools use are unpacked,
+// each and all together within limits, refused before unpacking when the zip's directory says too much, and
+// stopped while unpacking when the directory lies ----------
+{
+  const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 200));
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  // a zip: entries [{ name, data, deflate, declared }], declared = the uncompressed size written in the directory
+  // (a lie when given)
+  const zipOf = (entries) => {
+    const parts = [], dir = []; let off = 0;
+    for (const e of entries) {
+      const raw = e.deflate ? zlib.deflateRawSync(e.data) : e.data, nb = Buffer.from(e.name), size = e.declared != null ? e.declared : e.data.length, m = e.deflate ? 8 : 0;
+      const h = Buffer.alloc(30); h.writeUInt32LE(0x04034b50, 0); h.writeUInt16LE(20, 4); h.writeUInt16LE(m, 8); h.writeUInt32LE(raw.length, 18); h.writeUInt32LE(size, 22); h.writeUInt16LE(nb.length, 26);
+      const c = Buffer.alloc(46); c.writeUInt32LE(0x02014b50, 0); c.writeUInt16LE(20, 4); c.writeUInt16LE(20, 6); c.writeUInt16LE(m, 10); c.writeUInt32LE(raw.length, 20); c.writeUInt32LE(size, 24); c.writeUInt16LE(nb.length, 28); c.writeUInt32LE(off, 42);
+      parts.push(h, nb, raw); dir.push(c, nb); off += 30 + nb.length + raw.length;
+    }
+    const cd = Buffer.concat(dir), end = Buffer.alloc(22);
+    end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(entries.length, 8); end.writeUInt16LE(entries.length, 10); end.writeUInt32LE(cd.length, 12); end.writeUInt32LE(off, 16);
+    return Buffer.concat([...parts, cd, end]);
+  };
+  const schema = Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(JSON.stringify({ name: 'x', compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', columns: [{ name: 'Amount', dataType: 'double', sourceColumn: 'Amount' }], measures: [{ name: 'Total', expression: 'SUM ( Sales[Amount] )' }] }] } }), 'utf16le')]);
+  const zeros = Buffer.alloc(80 * 1024 * 1024);   // 80 MB of zeros: about 80 KB deflated
+  fs.mkdirSync(path.join(ROOT, 'pbit-limits'), { recursive: true });
+  const put = (name, entries) => { fs.writeFileSync(path.join(ROOT, 'pbit-limits', name), zipOf(entries)); return 'pbit-limits/' + name; };
+  // 1. the model part says it is 2 GB: refused before anything is unpacked, fast, in plain words, without the content
+  {
+    const f = put('declared.pbit', [{ name: 'DataModelSchema', data: Buffer.from('CANARY-2210 secret text'), deflate: true, declared: 2000 * 1024 * 1024 }]);
+    const t0 = Date.now(), r = await ask('read_model', { path: f }), ms = Date.now() - t0;
+    check(r.err && /MB/.test(r.t) && /not read|refused|too large/i.test(r.t) && !/CANARY-2210/.test(r.t) && ms < 3000, `a .pbit whose model part declares 2 GB must be refused before unpacking: ${short(r)} (${ms} ms)`);
+  }
+  // 2. a lying header: the model part says 1,000 bytes and unpacks to 80 MB: stopped while unpacking
+  {
+    const f = put('lying.pbit', [{ name: 'DataModelSchema', data: zeros, deflate: true, declared: 1000 }]);
+    const t0 = Date.now(), r = await ask('read_model', { path: f }), ms = Date.now() - t0;
+    check(r.err && /not read|refused|larger than/i.test(r.t) && ms < 5000, `a .pbit whose model part unpacks to more than it declares must be refused: ${short(r)} (${ms} ms)`);
+  }
+  // 3. a real expansion above the limit, declared honestly (80 MB of zeros in 80 KB): refused before unpacking
+  {
+    const f = put('bomb.pbit', [{ name: 'DataModelSchema', data: zeros, deflate: true }]);
+    const st = fs.statSync(path.join(ROOT, f)).size, t0 = Date.now(), r = await ask('read_model', { path: f }), ms = Date.now() - t0;
+    check(st < 200 * 1024 && r.err && /80 MB|above/.test(r.t) && ms < 3000, `an 80 KB .pbit that unpacks to 80 MB must be refused: ${st} bytes on disk, ${short(r)} (${ms} ms)`);
+  }
+  // 4. only the parts the tools use are unpacked: a bomb in a part nobody reads (a base theme, an image) changes nothing
+  {
+    const f = put('unused.pbit', [{ name: 'DataModelSchema', data: schema, deflate: true }, { name: 'Report/StaticResources/SharedResources/BaseThemes/Big.json', data: zeros, deflate: true, declared: 1000 },
+      { name: 'Report/StaticResources/RegisteredResources/huge.png', data: Buffer.from('x'), deflate: true, declared: 4000 * 1024 * 1024 }]);
+    const r = await ask('read_model', { path: f }), h = await ask('check_model_health', { path: f });
+    check(!r.err && JSON.stringify(r.j).includes('Sales') && !h.err, `a bomb in a part the tools never read must not stop read_model or check_model_health: ${short(r)} | ${short(h)}`);
+  }
+  // 5. a .pbit file above the limit on disk is refused before it is read (a sparse file: nothing is written)
+  {
+    const big = path.join(ROOT, 'pbit-limits', 'huge.pbit'); fs.writeFileSync(big, zipOf([{ name: 'DataModelSchema', data: schema }])); fs.truncateSync(big, 301 * 1024 * 1024);
+    const t0 = Date.now(), r = await ask('read_model', { path: 'pbit-limits/huge.pbit' }), ms = Date.now() - t0;
+    check(r.err && /301 MB|above/.test(r.t) && ms < 2000, `a .pbit of 301 MB on disk must be refused before it is read: ${short(r)} (${ms} ms)`);
+  }
+  // 6. the total of the parts read is capped too, and the reader's limits are the website's (one rule for both)
+  {
+    const M = await import(new URL('./lib/model.mjs', import.meta.url).href);
+    const z = zipOf([{ name: 'DataModelSchema', data: schema, deflate: true }].concat([1, 2, 3].map((i) => ({ name: `Report/definition/pages/p${i}/page.json`, data: Buffer.alloc(400, 32), deflate: true }))));
+    let err = ''; try { M.unzipNeeded(z, { entry: 1000, model: 1000, total: 900, file: 1e6, entries: 100 }); } catch (e) { err = String(e.message); }
+    const worker = fs.readFileSync(path.join(REPO, 'assets/js/model-health-worker.js'), 'utf8');
+    const L = M.PBIT_LIMITS || {}, MB = 1024 * 1024;
+    check(/total/i.test(err) && L.model === 64 * MB && L.entry === 32 * MB && L.total === 128 * MB && L.file === 300 * MB && new RegExp(`model: 64 \\* MB, entry: 32 \\* MB, total: 128 \\* MB, file: 300 \\* MB, entries: ${L.entries}\\b`).test(worker),
+      `the total of the parts read must be capped, and the website's worker must carry the same limits: "${err}" ${JSON.stringify(L)}`);
+  }
+}
+
+// ---------- the outside review's B-02 (owner's go 5 Oct ~13:15): a model.bim, a TMDL file or a model part is measured
+// before it is read and checked for nesting after it is parsed; over the limits: refused in plain words ----------
+{
+  const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 300) : x.t.slice(0, 200));
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
+  const dir = (n) => { const d = path.join(ROOT, 'b02', n, 'B02.SemanticModel'); fs.mkdirSync(d, { recursive: true }); return d; };
+  // 1. a model.bim of 65 MB (sparse: nothing written) is refused before it is read, by read_model and check_model_health
+  {
+    const f = path.join(dir('huge-bim'), 'model.bim'); fs.writeFileSync(f, '{}'); fs.truncateSync(f, 65 * 1024 * 1024);
+    const t0 = Date.now(), r = await ask('read_model', { path: 'b02/huge-bim' }), h = await ask('check_model_health', { path: 'b02/huge-bim' }), ms = Date.now() - t0;
+    check(r.err && h.err && /65 MB/.test(r.t) && /64 MB/.test(r.t) && ms < 3000, `a 65 MB model.bim must be refused before it is read: ${short(r)} | ${short(h)} (${ms} ms)`);
+  }
+  // 2. a model.bim nested 100,000 levels deep is refused in words (real models are 8 or 9 levels deep), never a crash
+  {
+    const d = 100000, f = path.join(dir('deep-bim'), 'model.bim');
+    fs.writeFileSync(f, JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'T', partitions: mp('T'), columns: [{ name: 'A', dataType: 'string', sourceColumn: 'A' }] }] } }).replace(/\}\}$/, ',"annotations":' + '{"a":'.repeat(d) + '1' + '}'.repeat(d) + '}}'));
+    const r = await ask('read_model', { path: 'b02/deep-bim' }), h = await ask('check_model_health', { path: 'b02/deep-bim' });
+    check(r.err && h.err && /nested/.test(r.t) && /256/.test(r.t) && !/call stack/i.test(r.t + h.t), `a model.bim nested 100,000 deep must be refused in words: ${short(r)} | ${short(h)}`);
+  }
+  // 3. a TMDL file of 33 MB (sparse) is refused before it is read
+  {
+    const d = dir('huge-tmdl'), t = path.join(d, 'definition', 'tables'); fs.mkdirSync(t, { recursive: true });
+    fs.writeFileSync(path.join(t, 'Sales.tmdl'), 'table Sales\n\tcolumn Amount\n\t\tdataType: double\n');
+    const big = path.join(t, 'Big.tmdl'); fs.writeFileSync(big, 'table Big\n'); fs.truncateSync(big, 33 * 1024 * 1024);
+    const t0 = Date.now(), r = await ask('read_model', { path: 'b02/huge-tmdl' }), ms = Date.now() - t0;
+    check(r.err && /33 MB/.test(r.t) && /32 MB/.test(r.t) && /TMDL/.test(r.t) && ms < 3000, `a 33 MB TMDL file must be refused before it is read: ${short(r)} (${ms} ms)`);
   }
 }
 

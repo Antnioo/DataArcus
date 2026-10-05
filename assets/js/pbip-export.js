@@ -394,11 +394,11 @@
     // digits with its separators and decimals (valueEm). Before round 10 this was 7 x 0.55 = 3.85, and "74,675.00" was cut.
     const AUTO_EM = 4.4, FULL = o.kpiValues === 'full';
     const valueEm = (f) => (FULL && f && f.cardFormat ? 9 * 0.54 + 2 * 0.21 + (/\./.test(f.cardFormat) ? 0.21 + 2 * 0.54 : 0) : AUTO_EM);
-    // n: the title's lines (1, or 2 for a KPI title that wraps, see kpiTitleFit)
-    const cardFit = (w, h, s, title, callout, m, em, n) => {
+    // n: the title's lines (1, or 2 for a KPI title that wraps, see kpiTitleFit); img: the width an image beside the value takes
+    const cardFit = (w, h, s, title, callout, m, em, n, img) => {
       const P = Math.round(8 * s / 1.5), line = (f) => Math.ceil(f * 1.5) * (n || 1), S = (m && m.side) || P;
       const T = m && m.top > P && Math.floor((h - m.top - P - line(title)) / 1.5) >= 8 ? m.top : P;
-      const fit = (I) => Math.min(callout, Math.floor((h - T - P - 2 * I - line(title)) / 1.5), Math.floor((w - S - P - 2 * I) / ((em || AUTO_EM) * 4 / 3)));
+      const fit = (I) => Math.min(callout, Math.floor((h - T - P - 2 * I - line(title)) / 1.5), Math.floor((w - S - P - 2 * I - (img || 0)) / ((em || AUTO_EM) * 4 / 3)));
       let I = P, V = fit(I);
       if (V < 8) { I = 0; V = Math.max(8, fit(0)); }
       return { P, I, V, T, S };
@@ -555,6 +555,17 @@
         const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: pg.kpiInset || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) }, valueEm(f));
         while (kpiTitle > 8 && text != null && textWidth(text, kpiTitle, true, font) > s.w - c.S - c.P) kpiTitle--;
       });
+      // An SVG design on a card's image (o.svgCards): the image area is a percent of the card's inner width, which was
+      // 0.8 of the card's width on the two cards measured (163 and 165 wide, 1280 x 720). The design is shown at its own
+      // width where that is 10 to 25 percent, and the value is fitted to the width left (take: the area and a gap of 8).
+      const imgOf = (s, i) => { const sc = (o.svgCards || []).find((x) => x.card === i); if (!sc) return null;
+        const pct = Math.max(10, Math.min(25, Math.round(100 * (+sc.w || 48) / (0.8 * s.w)))); return { sc, pct, take: Math.ceil(s.w * pct / 100) + 8 }; };
+      const KPI_M = { top: Math.round(12 * pg.page.h / 1080), side: pg.kpiInset || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) };
+      // one KPI card's fit: on one title line (c), on two (two), its image, and how its title is shown (fit)
+      const kpiFits = (s, i, text, f) => { const im = imgOf(s, i), take = im ? im.take : 0, c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, KPI_M, valueEm(f), 1, take), two = cardFit(s.w, s.h, pg.page.h / 720, kpiTitle, CALLOUT, KPI_M, valueEm(f), 2, take);
+        return { c, two, im, fit: kpiTitleFit(text, kpiTitle, s.w - c.S - c.P, c, two) }; };
+      let rowWrap = null;
+      const rowWraps = () => (rowWrap == null ? (rowWrap = sorted.filter((s) => s.kind === 'kpi').some((s, i) => { const f = B && B.kpis ? B.kpis[i] : null; return kpiFits(s, i, f ? label(f) : s.title, f).fit.mode === 'wrapped'; })) : rowWrap);
       // "Never cut" for a KPI title (the owner's rule, 5 Oct 2026). A title that doesn't fit one line even at the 8pt
       // minimum wraps to two lines (titleWrap) where the card has the height for both lines and its value at the size
       // the row's other cards have (a line is 1.5 x the size, Microsoft's card sizing, as in cardFit); otherwise it is shortened at a word, with
@@ -738,19 +749,25 @@
           // the title already names the KPI, so the card's own label under the number is not repeated
           if (type === 'cardVisual') {
             const cf0 = query && B ? (s.kind === 'kpi' ? B.kpis[kpiIndex - 1] : B.measure) : null;
-            const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: (s.kind === 'kpi' && pg.kpiInset) || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) }, valueEm(cf0));
+            const kf = s.kind === 'kpi' ? kpiFits(s, kpiIndex - 1, ttl, cf0) : null;
+            const c = kf ? kf.c : cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: SOLID ? Math.round(16 * pg.page.h / 1080) : 0 }, valueEm(cf0));
             let cc = c;
             if (s.kind === 'kpi') {
-              const fit = kpiTitleFit(ttl, kpiTitle, s.w - c.S - c.P, c, cardFit(s.w, s.h, pg.page.h / 720, kpiTitle, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: pg.kpiInset || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) }, valueEm(cf0), 2));
+              const fit = kf.fit;
               const tp = visual.visualContainerObjects.title[0].properties;
               if (fit.mode === 'wrapped') { cc = fit.c; tp.titleWrap = bool(true); kpiTitles.wrapped.push({ page: pg.name || base, title: ttl }); }
+              // a one-line title in a row where another title wraps: the second line's height stays free above it, so
+              // every value of the row sits at the same height (seen in Desktop 2.158, 2026-10-05: 6 apart without it)
+              else if (rowWraps() && kf.two.V >= c.V) cc = Object.assign({}, kf.two, { V: c.V, T: kf.two.T + Math.ceil(kpiTitle * 1.5) });
               if (fit.mode === 'shortened') { tp.text = str(fit.shown); kpiTitles.shortened.push({ page: pg.name || base, title: ttl, shown: fit.shown }); }
             }
             visual.objects = cardObjects(cc, s.kind === 'kpi' ? align : null, cf0); cardFrame(visual.visualContainerObjects, cc, s.kind === 'kpi' ? kpiTitle : TITLE);
             // an SVG design on the card's image (o.svgCards; the JSON Desktop writes for "Select from data", measured in
             // Desktop 2.158, third sitting of 2026-10-04): the nth KPI card of every page
-            const sc = s.kind === 'kpi' ? (o.svgCards || []).find((x) => x.card === kpiIndex - 1) : null;
-            if (sc) visual.objects.image = [{ properties: { show: bool(true), imageType: str('imageData'), imageData: { expr: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: sc.t } }, Property: sc.m } } } }, selector: { id: 'default' } }];
+            // Its size (Desktop 2.158, 2026-10-05): without one the image was drawn 65 wide on a 163-wide card and the value
+            // was cut; "Image area size" with fixedSize false sizes it (25 drew 32 wide, 30 drew 40): see imgOf.
+            const sc = kf && kf.im ? kf.im.sc : null;
+            if (sc) visual.objects.image = [{ properties: { show: bool(true), imageType: str('imageData'), fixedSize: bool(false), imageAreaSize: num(kf.im.pct), imageData: { expr: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: sc.t } }, Property: sc.m } } } }, selector: { id: 'default' } }];
             // A number format on the report side (measured in Desktop 2.158, D8, 2026-10-04): where the bound measure
             // carries cardFormat (the server sets it for a measure whose model format has no thousand separator),
             // the card gets the entry Desktop itself writes for Display units "Custom" with a format code: a second

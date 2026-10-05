@@ -455,7 +455,7 @@ server.registerTool('create_report', {
   const SC = resolveSvgColumns(m.tables, a.svgCards, { mirror: rtlReport, what: 'svgCards', taken: svgLabels });
   const svgCardsFor = (n) => { if (!SC) return undefined;
     SC.forEach((c, i) => { if (c.card > n) throw new Error(`Nothing was written. svgCards[${i}]: the report has ${n} KPI card${n === 1 ? '' : 's'}, so there is no card ${c.card}.`); });
-    return SC.map((c) => ({ card: c.card - 1, t: c.t, m: c.label, expression: c.expression })); };
+    return SC.map((c) => ({ card: c.card - 1, t: c.t, m: c.label, expression: c.expression, w: c.w, h: c.h })); };
   // the page (by its place in the report) whose first table takes each SVG column: the one asked for, or the first with a table
   const svgFor = (pages, b) => {
     if (!SV) return undefined;

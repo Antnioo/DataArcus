@@ -4,6 +4,65 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 11, small fixes (2026-10-05, cloud; branch `fix/round-11-small` from main `850b0a0`; not merged)
+On the owner's go of 5 Oct (~12:05), relayed by the reviewer. `npm test` 363 -> **365 of 365**.
+1. **Titles set explicitly** (Microsoft's September 2026 Feature Summary: "title and subtitle are now turned off by
+   default for matrix, table, and card visuals in reports that use the latest base theme"): a guard test over every
+   kind of slot (English and Arabic, hand-placed and the default design, tooltip pages) and the website's download
+   with the slide-in panel: every visual sets its title on or off, tables and cards on. **It passed on main as it is**
+   (the writer already sets every title; nothing changed in the engine): written down, not hidden.
+2. **TMDL and model.bim readers:** `stringIndexingBehavior` and `fullTextIndexingBehavior` (Microsoft Learn, "Configure
+   string indexing" / "Configure full-text indexing in Power BI semantic models", compatibility levels 1707 and 1708),
+   an unknown property and an unknown block: `read_model` and `check_model_health` read the columns with their
+   types. **Also passed on main as it is** (the readers skip what they don't know): a guard test now.
+3. `mcp/README.md`, Install: update Power BI Desktop first, in plain words. (The beta's INSTALL text in
+   dataarcus-engine `packaging/` is in the other repo: not changed here.)
+4. **Not built (the rule: only from Microsoft's own schema or docs):** the axis "Initial scroll position" (Learn,
+   "Customize x-axis and y-axis properties": X-axis > Layout > Initial scroll position, Start or End) has no property
+   name in Microsoft's visual schema (`@microsoft/powerbi-core-visual-schema` 0.1.1, July 2026: lineChart's
+   categoryAxis has no such property); the Dark and Soft dark themes' colours are not published.
+   **For the laptop:** set Initial scroll position to End on a line chart and a column chart, save, and record the
+   JSON Desktop writes (and that the latest month shows first); apply Dark and Soft dark from the Design ribbon,
+   save, and record the theme JSON Desktop writes (colours, text, card and visual background).
+
+## The .pbit limits (2026-10-05, cloud; branch `fix/pbit-limits` from main `1a92be1`; the outside review's F-02; not merged)
+On the owner's go (5 Oct ~12:50), relayed by the reviewer. Before: `mcp/lib/model.mjs` unzip() inflated EVERY part of
+a .pbit with no size limit (images, base themes included), so a crafted zip could exhaust memory or time.
+- **What is read now (both readers, the MCP's `unzipNeeded` and the website's worker):** the zip's directory first;
+  then only the model part (`DataModelSchema`, or a `model.bim`) and the report parts (`Report/Layout`, or the PBIR
+  `definition/` report, pages and bookmarks JSON; the website also the TMDL files of a zipped project, as before).
+  Nothing else is ever unpacked. Callers checked: `loadModel` is the only user of the unzip in the MCP (read_model,
+  suggest_fields, check_model_health, create_report all go through it).
+- **The limits and why** (`PBIT_LIMITS` in `mcp/lib/model.mjs`, `LIMITS` in `assets/js/model-health-worker.js`, the
+  same numbers, a test checks both): the model part 64 MB, any report part 32 MB, the parts read together 128 MB, the
+  file 300 MB on disk (the website's existing limit), 20,000 parts listed. Evidence: the largest real model part we
+  have is 52,620 bytes (`Ramadan Test.pbit`; the sample .pbit 45,212, `Health Test.pbit` 16,324); the 300-table
+  test model (`large-synthetic`) is about 1.2 MB as Desktop's UTF-16 model file; the website already tells users "a
+  template without data is usually under 20 MB". So 64 MB is about 50 times the 300-table model and 3 times a typical
+  template's whole size: generous for real models, small enough to refuse a bomb. A part declared above its limit, or
+  a total above 128 MB, is refused before anything is unpacked; while unpacking, a part may give at most what the
+  directory declares (`maxOutputLength` in Node; a counted stream in the browser), so a lying directory is caught.
+- **Messages:** plain words with the sizes ("its model part would unpack to 80 MB, above the 64 MB DataArcus reads"),
+  never a part's name or content. Also fixed on the way: a model or report part that is not JSON was reported with
+  JSON.parse's own message, which quotes the start of the file's text: now "The model part in this file is not valid
+  JSON, so it was not read." The website shows a new message, EN and AR (`ZIP_LIMIT`), and the theme generator's
+  "your own model" picker names it too.
+- **Tests (first, failing before):** MCP 365 -> 371: a part declaring 2 GB (refused in milliseconds, the planted
+  text not in the answer), a lying header (1,000 declared, 80 MB real), an 80 KB file that unpacks to 80 MB, a
+  301 MB file on disk (sparse: refused before reading), the total cap and the shared limits; 5 failed before, the
+  sixth (a bomb in a part no tool reads, read_model and check_model_health still work) passed before as a guard.
+  Website `model-health` 57 -> 61: the same four cases in the page; 3 failed on the old worker, the guard passed.
+  `?v=20261005c` on model-health, its worker and theme-generator; `check:min` clean; `csp.mjs` clean.
+- **B-02 (the outside review, owner's go ~13:15), the files of a model read from disk:** a model.bim (and a model
+  file given directly) 64 MB, each TMDL file 32 MB and all of them 128 MB, each report JSON of the project 32 MB:
+  measured (`lstat`) before reading, refused in plain words with the sizes. Evidence: the largest TMDL file we have
+  is 46,099 bytes (the 300-table test model), the largest model.bim about 600 KB. Every parsed model and report part
+  is also checked for nesting: more than **256 levels** is refused ("nested more than 256 levels deep"), since
+  JSON.parse takes it but the code that walks it afterwards runs out of stack; real models are 8 or 9 levels deep,
+  reports 12 to 15 (measured on the test models and the sample .pbit files). Tests first: 371 -> 374, all 3 failing
+  before. Not changed (not in the ask, noted): `create_report`'s `theme` file and page `background` images are read
+  without a size limit (the logo has one: 2 MB).
+
 ## Where things stand
 - **Merged 2026-10-03 (reviewer):** round 1 (`80d3a00`); the Microsoft plugin test (`bc05275`); privacy statement and
   product spec (`515409d`: `mcp/PRIVACY.md`, `mcp/PRODUCT_SPEC.md`); the golden tasks (10 then, 11 now) and test models (`39b5ab7`);
@@ -90,6 +149,48 @@ first; `#,0.##`; and the FAIL: a nine-character card value is cut on six-card pa
 fixtures are recaptured only where the design engine's own output changes, each with its cause written here.
 
 ### Where round 10 stands (2026-10-05, 10:00; not merged; nothing installed)
+
+**Stop report: the one-hour Desktop proof sitting (2026-10-05, 19:19 to 19:55; builder session; Desktop 2.158.1177).**
+Records: DESKTOP-TESTS.md, "2026-10-05, round 10, the one-hour Desktop proof sitting". Not merged. Desktop is closed
+(nothing saved). `npm test`: **418 of 418** (404 before; main brought 11, this sitting 3).
+- **Step 0, main merged in.** Five conflicts: the two theme generator pages (stamp `20261005d`, one above main's,
+  because the min file now holds both sides' changes), the SVG KPI Designer page (the compiler and the designer keep
+  the branch's `20261004f`, the templates take main's `20261005e`), `theme-generator.min.js` (rebuilt), `mcp/test.mjs`
+  (both blocks kept). One test that came from main crashed the whole run on Windows (`import()` of a path with a
+  drive letter): it now imports by URL. A second one from main failed on Windows only (its fixture edit looked for LF line ends in a file that has CRLF here, so the properties under test were never put in): the file is now read with LF. No expectation changed in either.
+- **Seen (what Desktop showed):**
+  1. The card image: without a size it is drawn 65 wide on a 163-wide card and **cuts the value**; `imageAreaSize`
+     with `fixedSize` false sizes it (25 drew 32.4, 30 drew 39.8); `size` did nothing. What Desktop itself writes
+     from the Format pane was **not** seen (the entries were written by hand and Desktop drew them).
+  2. DAX FORMAT with "ar-SA" and "ar-AE": **Gregorian, not Hijri** ("01 مارس, 2026", "01/03/2026", the same for both).
+  3. The design choices, English and Arabic at 1280 x 720: the value at the reading start, the table titled by its
+     content, "Total" showing in the Arabic table, Reset narrow with "إعادة ضبط الفلاتر": all as chosen. The Reset
+     tooltip is written but was not seen on screen.
+  4. A long KPI title wraps on two lines, whole. The numbers of the row were **not** on one line (6.3 page units
+     apart); after the fix they are (0.6).
+  5. The table's rows: pitch 20.9 page units, 8.4 of air between rows' ink (Desktop's default; nothing written).
+- **Changed (tests written first; the old code's behaviour is what the first captures show, the new tests were not
+  run against the old code for lack of time):**
+  - `assets/js/pbip-export.js`: a card with an SVG image writes `fixedSize` false and `imageAreaSize` (the design's
+    width over the card's inner width, 10 to 25 percent) and fits its value to the width left; in a row where a KPI
+    title wraps, a card with a one-line title leaves the second line's height free, so the numbers sit on one line.
+  - `mcp/server.mjs`: an SVG card's design size is passed to the writer.
+  - `mcp/test.mjs`: the SVG card check now expects the size (the old exact-entry expectation changed; its cause is
+    written beside it) and that the value fits beside the image; a new check that a row with a wrapped title keeps
+    every value at the same height.
+  - `pbip-export.min.js` is loaded by the theme generator with `?v=20261005f` (was `b`); min files rebuilt and checked.
+- **Left:**
+  - The Reset tooltip on screen, and the Arabic Reset button's arrow, which sits at the far end from its text.
+  - What Desktop writes for the card image's size from the Format pane; a card image at 1920 x 1080, in Arabic, on
+    three cards.
+  - 4 and 8 tabs on the phone layout; a tab row that has to wrap; the table's side padding.
+  - From the earlier list, untouched: capped SVG pictures in a table, a report with left-out visuals, the schema
+    experiment both ways, D-GC1 to D-GC6, the 11 golden tasks, fresh "after" pairs and the R10.7 re-score, part C
+    and package 0.2.6.
+- **New on the laptop (outside the repo):** `builder-scripts\r10-cimg.mjs` (the six-card image test), `yellow.ps1`
+  (measures a coloured box in a capture); reports "C1/C2/C3 card image", "H1 format", "P3 EN", "P3 AR", "P4 six",
+  "P5 six" in `<tests folder>\10-r10\`; captures `c1img`, `c3img`, `h1fmt`, `p3en`, `p3ar`, `p4six`, `p5six`,
+  `p45six-crop.png` in `<tests folder>\desk-r10\`.
 
 **The laptop's memory, saved before compacting (2026-10-05, 19:15; builder session).**
 - **State:** the laptop's checkout is `fix/round-10` at the cloud's `c1aa52d` (fast-forwarded; it holds the laptop's
