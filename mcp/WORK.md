@@ -4,6 +4,54 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 12, every small detail fixed in code (2026-10-05 night, cloud builder; branch `fix/round-12` from main `1cef9ac`; not merged)
+The owner's go (6 Oct 01:45): "I want to feel that whatever the builder opens looks amazing and optimized". All eight
+recommendations of "Round 11, for the owner" are accepted, and so is every proposed fix of "Round 11, design findings"
+(32 rows). The owner is asleep: taste calls go to "Round 12, for the owner" with a recommendation, and the work goes
+on. `feat/check-report` is left as it is. Not in this round (the laptop builder owns them tonight): gradient chart
+colours, the SVG-in-KPI blending. Every change that Desktop must confirm goes to "Round 12, for the laptop to prove".
+
+### Round 12, order of work
+Tests first by risk (layout, positions, sizes, anything written into Power BI files); one commit per group; pushed
+at least every hour; `npm test` and the website suites the change touches after each group, the full run once at the
+end, then CI.
+1. **A (high).** #24 long chart titles and slicer headers (Arabic first): never cut at the start; wrap to two lines,
+   else shorten from the reading end with "…" so the measure's name stays. #12 the right-to-left table: numbers
+   never sit against the text column. #20 "What it means" never ships its placeholder (a sentence from the plan, or
+   the box left out and its room given to the chart). #25 a model without measures: a page laid out for what it
+   has (counts, a table, a chart), not four fifths empty. #1 phone KPI titles: two lines in `mobile.json`, "…" only
+   where two lines don't fit.
+2. **B (the owner's asks).** (1) Days and months in calendar order in tables too (#17): the table sorted by the
+   day or month number like the chart; the model's week start; January to December. (2) Percent KPIs as percent
+   without useless decimals: a ratio (format string, or name/expression: %, rate, share, vs, growth, margin) gets
+   "0%" (or "0.0%" for small values); counts and whole numbers no decimals (#28, "179.00" -> "179"); money keeps
+   its format. The rule told in the answer and in `reportNotes`.
+3. **C (medium).** #15 chart and table never share a title; #23/#32 a designed table never hides rows behind a
+   scrollbar; #29 the phone table with pictures fits 323; #31 the header title is the report's name; #30 the Arabic
+   logo placeholder centred at its side; #14 "شعارك" on hand-placed Arabic pages; #13 Arabic names for the
+   tooltip pages; the Arabic Reset's arrow beside its text; #26 no KPI card on a text measure (a note); #22 no
+   slicer on a column a page filter fixes; #21 one Ramadan by Ramadan Day, not a 2-point line; #16 level month and
+   day labels; #9/#7/#8 KPI values one size a row, aligned with the title, equal images; #19 Arabic slicer headers
+   and boxes at the right; #18 the rail's empty space; #2-#6 phone and header tabs.
+4. **D (accepted recommendations).** The header grows one tab row in designed layouts; the card image's percent
+   from the measured padding; `add_gulf_calendar`: `sortByColumn` on Month Name, Day Name, Hijri Month Name,
+   "Preview won't warn" in `howToApply`, a date column of unknown type accepted with a note; a narrow table
+   shrinks its text to 8pt before dropping a column; the manifest's long description names every tool
+   (dataarcus-engine `fix/round-12-manifest`, its packaging test).
+5. **E.** A slicer or chart with no field to bind (too few columns): left out and told; the SVG KPI Designer
+   page's three scripts get `?v=` stamps.
+6. Then: `npm test`, the website suites, CI green; "Round 12, where I am", "for the laptop to prove", "for the
+   owner"; the 5-line report.
+
+### Round 12, where I am
+Started 21:50 UTC (5 Oct). Nothing built yet.
+
+### Round 12, for the laptop to prove
+(filled as each change lands)
+
+### Round 12, for the owner
+(taste calls, each with a recommendation)
+
 ## Round 11, the long overnight Desktop sitting (2026-10-05, laptop builder; branch `fix/round-11` from main `3803b7a`; dataarcus-engine `release/0.2.6` from its main `d8d3341`; not merged)
 The owner's go (5 Oct, evening): six hours straight, pushed every hour; he is asleep, so anything that needs his
 choice goes under "Round 11, for the owner" and the work moves on. Desktop 2.158.1177. Made-up and sample models only.
