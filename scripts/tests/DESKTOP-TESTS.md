@@ -1452,6 +1452,20 @@ the page that was changed and the shared files were rewritten as **report 3.3.0,
 bookmark 2.1.0**; the pages not touched kept 2.0.0 / 2.1.0. Desktop opened the mixed report with no message.
 Microsoft's validator 0.4.0 then warns `PBIR_SCHEMA_UNREACHABLE` for 2.13.0 (0 errors).
 
+## 2026-10-05, round 10, part B: the default report before and after (R10.6, R10.7), Power BI Desktop 2.158.1177
+
+The website's sample-data download (the engines called as the Theme Generator page calls them; Corporate preset, its
+own sample model), built once from main's engines (`8f6d2c3`, "before") and once from this branch's ("after"), each
+opened in Desktop and its first page captured through the bridge at double size (the canvas only). Stacked pairs
+(before above, after below): `<tests folder>\desk-r10\ba2-<layout>.png`. Scripts: `builder-scripts\r10-site.mjs`,
+`pair.sh`, `capx.sh`, `crop.ps1`. One layout per run, in the foreground (the overnight session crashed during a long
+background capture run; the captures before the crash are not used except three "before" pages).
+
+| Layout | Before (main) | After (branch) | Anything off in the after page |
+|---|---|---|---|
+| Executive, English, 1920 x 1080 | KPIs "3M", "15K", "231.5", "35.4%"; page buttons in boxes (the current one filled dark); chart titles "Main trend", "Breakdown", "Comparison" | KPIs **3.43M, 14.81K, 231.46, 35.36%**; tabs without boxes, "Executive summary" bold in the accent colour with a line under it, "Details" quiet; chart titles "Total Revenue by Month", "... by Category", "... by Region" | nothing cut. The axis labels read "0.0M, 0.5M, 1.0M"; the table is titled "Detail" (the layout name) |
+<!-- end of round 10 before and after -->
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
