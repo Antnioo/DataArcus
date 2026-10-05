@@ -19,6 +19,8 @@ from main `3803b7a`; dataarcus-engine main pulled (`d8d3341`).
 |---|---|---|
 | start | 21:17 | DataArcus `c1ac1c1`, the plan |
 | (item 1) | 21:24 | dataarcus-engine `release/0.2.6` `0e32cde` |
+| 22:09 | 22:09 | DataArcus `2ab8c74` (items 2 and 3, the records) |
+| 23:09 | 23:07 | DataArcus (the two fixes `9a0b660`, item 4 `f6976aa`, item 5 opened) |
 <!-- r11 pushes -->
 
 ### Round 11, order of work (all approved; each expected result written before its run)
@@ -103,7 +105,15 @@ never fixed tonight (only a FAIL of items 1-6, tests first).
   accepted and the slicers are in order (seen). D-GC2: `dataCategory: Time` + `isKey` accepted (the ribbon not
   read). D-GC5: Preview shows a replaced table with no warning. One finding about the tool: `relateTo` is refused
   for a DAX fact table's column (type unknown): "for the owner" 4. No code changed.
-- **Scripts (laptop, `builder-scripts\`):** `r11-gc-model.mjs`, `r11-gc-patch.cjs`, `r11-gc-types.cjs` (the Gulf
+- **23:07, item 5, the golden tasks' reports: all 20 opened (10 reports x English and Arabic), task 9 refused as
+  expected, task 11 has no report** (DESKTOP-TESTS.md, "Item 5"). Ready in 14 to 26 s, the 300-table model 49 s
+  and 41 s; no error dialog. The report with left-out visuals (task 7): no error box, no empty frame, as expected.
+  **FAIL: the table is wider than its box** on the 4:3 page (both languages) and with long measure names at
+  1920 x 1080 (tasks 6 and 10). Next: fix it, a test first (the table keeps only the measures its width holds, and
+  says which were left out), then item 6.
+- **Scripts (laptop, `builder-scripts\`):** `r11-golden.mjs` (builds the 20 golden reports into
+  `11-r11\golden\<model>`; `golden\built.json`), `gshot.ps1 -Project <model folder> -Name <report> -Tag <tag>` (open,
+  time, capture pages 1 and 2, an overview); `r11-gc-model.mjs`, `r11-gc-patch.cjs`, `r11-gc-types.cjs` (the Gulf
   test models), `r11-call.mjs <root> <tool> <json>` (one call on the working copy's server), `tmdl-apply.ps1`,
   `uia-refresh-now.ps1`, `uia-refresh.ps1`, `gc-check.ps1 -Query <file>` (window title must start with "Gulf");
   `shot11.ps1` (open one report of `11-r11`, capture the listed pages
@@ -167,6 +177,19 @@ never fixed tonight (only a FAIL of items 1-6, tests first).
 | 12 | The Arabic table (text column first, drawn at the left) | "Friday" (right-aligned) and its first number (left-aligned) are 9 units apart and read as one text, while the two measures are 430 apart | `tb-ar-t1.png` | high | in a right-to-left table keep numbers right-aligned as in English (so the gap after the names is the column's own), or give the text column a wider minimum and pad its right edge | `columnFormatting` alignment for `rtl` in `pbip-export.js` (today numbers are 'Left' in right-to-left) |
 | 13 | Hidden tooltip pages in an Arabic report | their names are English ("Hidden Tooltip", "Hidden Tooltip · Month Name"); an editor sees them in the page tabs | the phone script's page list | low | Arabic names for the two tooltip pages in an Arabic report | `REPORT_TEXTS.ar` (the tooltip page names) |
 | 14 | A hand-placed Arabic report | the logo placeholder reads "Your logo" in an Arabic report | `wrap-ar-1920-head.png` | low | "شعارك" as the designed pages have | the hand-placed path of `create_report` does not pass the Arabic texts |
+| 15 | Every designed page: a chart and the table beside or under it | both carry the same title ("Total Sales by Day Name" twice on one page) | `g1-en-view.png` (both pages), `g2-en-view.png` | medium | title the table by what it adds ("Sales by day: detail") or give the chart and the table different category columns where the model has them | the table's title in `pbip-export.js` (round 10 choice 3) and the field picker (`cats.column` and the table's text column are the same field) |
+| 16 | Page 1 of the executive layout, the line and the column chart | month names slant ("January" ... "December" at an angle) and so do the day names on the narrower column chart | `g1-en-view.png`, `g4w-en-view.png` | medium | short month names where the model has them (the calendar's "Month Short"), or a wider chart; never a slanted label on a 1920 x 1080 page | the field picker prefers a short month column for the line chart's axis; or `categoryAxis` label settings |
+| 17 | The table beside a chart of the same field | the chart runs Sunday to Saturday (sorted through the tooltip trick), the table Friday, Monday, Saturday (A to Z): two orders on one page | `g1-en-view.png` | medium | when the model has no sort-by column, say so louder (it is in `modelNotes`) and sort the table by its first measure, descending, so its order has a reason | a `sortDefinition` on the table by its first measure when its text column has no sort-by column |
+| 18 | The filter rail | three dropdowns at the top, Reset at the very bottom, and 300 page units of empty panel between them | `g1-en-view.png`, `g2-en-view.png` | low | Reset directly under the last slicer; or a rail only as high as its content | the rail's Reset position in `pbip-export.js` (`s.y + s.h - bh`) |
+| 19 | Arabic reports, the slicers | the slicer headers and the "All" boxes are left-aligned in a right-to-left rail (English field names, but also Arabic ones in "G6 Long AR" sit at the right: the header follows the text's own direction, the box does not) | `g1-ar-view.png` | low | right-align the slicer header in a right-to-left report | the slicer's `header` alignment in `pbip-export.js` |
+| 20 | Golden task 3, the "What it means" box | the box ships with its placeholder sentence ("Explain what the main chart shows and what to do about it.") in small text at the top of a large empty panel | `g3-view.png` | high | never ship the placeholder: ask the agent for the text (an input), or leave the box out and give its room to the chart | `create_report`: a `texts` input for text slots; the `focus` layout without the text slot when none is given |
+| 21 | Golden task 3, the line chart | one Ramadan by month is a line with two points (February, March) | `g3-view.png` | medium | by Ramadan Day (1 to 30) when the page is filtered to one Ramadan and the calendar has that column | the field picker: with a page filter on a Ramadan flag, prefer "Ramadan Day" as the time axis |
+| 22 | Golden task 3, the slicers | Hijri Year and Is Ramadan show "All" while the page is filtered to Ramadan 1447: the slicers suggest a choice the page filter has already made | `g3-view.png` | medium | no slicer on a column a page filter fixes; or preset the slicer instead of a page filter | `create_report`: drop a slicer whose column is in `pageFilters`, and say so |
+| 23 | 1280 x 720 executive page, the table | six of seven rows and a scrollbar: the last day is hidden | `g4w-en-view.png` | medium | the table's slot a row higher, or the rows tighter (`rowPadding` 0 saves 2 a row: measured tonight) | `grid.rowPadding` 0 where the rows would otherwise not fit; or the exec layout's row heights at 720 |
+| 24 | **Long Arabic names: chart titles and a slicer header** | cut at their beginning: "...عات حسب اسم الفرع التجاري الرئيسي": the measure's name is gone | `g6-ar-titles2.png`, `g6-ar-titles3.png` | high | wrap a chart's title to two lines (`titleWrap` works on a card's title: measure it on a chart), else shorten at a word with "…" at the reading end, the full title as alt text | the charts' `title` in `frame()` through a fit like `kpiTitleFit` |
+| 25 | A report on a model without measures (task 7) | page 1 is a header and one small table in the bottom corner: four fifths of the page are empty | `g7-en-view.png` | high | when nothing but tables and slicers can be built, use a layout made for them (the table full width under the header), or write nothing and return the proposal only | `create_report`: re-plan the page when `kpiCards.built` is 0 and the charts are left out |
+| 26 | A KPI card on a text measure (task 8) | the card shows "Yes" (the measure "Unused One" returns a text) | `g8-en-view.png` | medium | the picker takes only measures with a number format or a number type for a KPI card | `pbip-bind.js` KPI picks: skip measures whose format string is a text pattern or whose type is text |
+| 27 | Models without rows | Desktop's banner "Some of the tables have incomplete or no data" pushes into the capture and covers the header | `g6-ar-view.png` | low | nothing in the report; for demos use models with rows | - |
 <!-- r11 findings -->
 
 ## Round 11, small fixes (2026-10-05, cloud; branch `fix/round-11-small` from main `850b0a0`; not merged)

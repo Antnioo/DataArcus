@@ -1782,6 +1782,31 @@ client (`gc-check.ps1`), the query files in `<tests folder>\desk-r11\gc\`.
 - The Sales table's measures that name `Calendar` show "Field list item has error" in the Data pane until the
   calendar is applied and refreshed (three of them were listed right after Apply); none after the refresh.
 
+### Item 5, the golden tasks' reports opened, English and Arabic; a report with left-out visuals
+Each golden task's report built by the working copy's server with the calls of `mcp/test-models/golden-baseline.mjs`,
+once in English and once in Arabic (Tahoma) (`r11-golden.mjs`; models in `<tests folder>\11-r11\golden\`: the
+Ramadan sample with data; Arabic Long Names, Plain Orders, Health Test and Large Synthetic have no rows). Each opened
+alone, the time from `open` until the bridge reports the file ready taken, pages 1 and 2 captured
+(`gshot.ps1`; `g<task>-<lang>-p<n>.png` and the overview `-view.png`). "Seen" is from the overviews and from
+full-size crops of what looked off. No report showed an error dialog; none was slow to open by the 60 s mark.
+| Task | Report (pages) | Ready after (EN / AR) | Cut, overlapping or failing |
+|---|---|---|---|
+| 1 English executive | "G1 Exec" (2 x 1920 x 1080; brand #0F6CBD gives a dark design) | 22 s / 26 s | nothing cut. Cards 101.91K, 74.68K, 0.34 (the model's measure has no percent format: `modelNotes`). Month and day labels slant on page 1. The table lists the days A to Z beside a chart that lists them Sunday to Saturday (`modelNotes`: no sort-by column) |
+| 2 Arabic, mirrored | "G2 Analysis" (2 x 1920 x 1080) | 18 s / 18 s | nothing cut; mirrored in Arabic (title right, rail left, the first card rightmost). The analysis table is half empty with seven rows |
+| 3 Ramadan vs last Ramadan | "G3 Ramadan" (1 page; page filters Is Ramadan and Hijri Year 1447) | 19 s / 16 s | nothing cut. Cards **21.47K, 17.84K, 0.20** (one Ramadan: the filters work). The line chart has two points (February, March). The "What it means" box holds its placeholder sentence in small text |
+| 4 16:9 | "G4 16x9" (2 x 1280 x 720) | 21 s / 21 s | English: the page-1 table shows six of the seven days and a scrollbar; Arabic: all seven. Nothing else cut |
+| 4 4:3 | "G4 4x3" (2 x 960 x 720) | 21 s / 14 s | **FAIL, both languages: the table is wider than its box.** English: the fourth header is cut ("Total Sales vs Last R"), a horizontal and a vertical scrollbar, the sixth row half hidden; Arabic: the "Total Sales" column is off the box altogether (`g4s-en-view.png`, `g4s-ar-view.png`). Known at agent level since 4 October; the card titles of that record are whole now |
+| 5 640 x 360 | "G5 Small" | 17 s / 18 s | the known small-page items, as expected: the table shows one row and two scrollbars with its last column cut; "Wednes..." on the column chart; Q4 behind a scrollbar; a scroll thumb beside "Your logo" (English). **The card values are whole now** (101.91K, 74.68K, 0.34) and so are the titles |
+| 6 long Arabic names | "G6 Long" (2 x 1920 x 1080; no rows) | 19 s / 17 s | the four KPI titles are whole (small, 8 to 9pt). **The chart titles and one slicer header are cut at their beginning:** "...عات حسب اسم الفرع التجاري الرئيسي" (the measure's name is lost, the dots stand at the reading start) (`g6-ar-titles2.png`, `g6-ar-titles3.png`); the table is wider than its box (scrollbar). One card shows Desktop's "Something's wrong with one or more fields" (the made-up model's growth measure, known). Desktop's banner "Some of the tables have incomplete or no data" covers the header in the capture |
+| 7 no measures (**the report with left-out visuals**) | "G7 Plain" (2 pages; `kpiCards` 0 of 4, `leftOutVisuals` named in the answer) | 20 s / 18 s | **as expected: no error box and no empty frame** where the cards and the charts were left out. What is left: the header and one table in the page's bottom corner (page 1), the slicers and one table (page 2); four fifths of page 1 are empty (`g7-en-view.png`) |
+| 8 "redesign this" | "G8 Redesign" (2 pages; `kpiCards` 2 of 4) | 24 s / 19 s | nothing cut; the two cards share the row's width. The second card shows "Yes": the picker put a text measure ("Unused One") on a KPI card |
+| 9 an unsupported visual | none | - | `create_report` refused (the input check names the supported kinds); nothing written |
+| 10 the 300-table model (focus logistics) | "G10 Large" (2 x 1920 x 1080) | **49 s / 41 s** | **the page-1 table is wider than its box at 1920 x 1080 too** (four long measure names: "Freight Costs Total Tax Amou", a scrollbar); in Arabic also a chart title ends in "..." ("... حسب Carrier Gr..."). Slower to open than the others, under a minute |
+| 11 a Gulf calendar checked | none (a health answer) | - | see item 4 |
+- **The table that is wider than its box (tasks 4, 6, 10): a FAIL against "nothing cut".** Cause: the table takes
+  the first text column and every KPI measure, whatever the slot's width; round 10's `columnRoom` knows what each
+  column needs but is used only to cap SVG pictures. Fixed below (a test first).
+
 ## Lessons
 - **Round 11: a TMDL script may carry `sortByColumn`, `dataCategory: Time` and `isKey` for a DAX calendar table**:
   Desktop applies them (Problems 0), and slicers then run January to December, Sunday to Saturday, Muharram to Dhu
