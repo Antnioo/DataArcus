@@ -1749,7 +1749,45 @@ server (`r11-cimg.mjs`); the image's box measured by its colour (`yellow.ps1`).
   assumes. So on a wide card the image comes out a little larger than its design (54.6 for 48 on the three-card
   pages) and on a 1920 x 1080 six-card page a little smaller (46.9). No value is cut by it. Not changed.
 
+### Item 3, the Arabic card image after the fix
+"CI AR 720 six fix" and "CI AR 1080 three fix", built by the server with the fix: every image at the left end
+(32.4 / 31.3 wide; 54.6), every value at the right under its title, whole, clear of the image
+(`ci-ar-720-six-before-after.png`, `ci-ar-1080-three-before-after.png`: before above, after below).
+
+### Item 4, the Gulf calendar: D-GC1 to D-GC6 (`add_gulf_calendar`'s script applied in Desktop)
+**The model:** made-up, "Gulf GC1" (`<tests folder>\11-r11\gulf-gc1`; `r11-gc-model.mjs`): the pack's test model
+with `sales.dax` only (a DAX table, two stores, every day of 2018 to 2030) and the nine measures of `measures.dax`
+on it. Two copies, "Gulf GC2" and "Gulf GC3", for the hand-edited scripts. The script: `add_gulf_calendar` with
+`name: "Calendar"`, 2018 to 2030, UAE, announced on, `relateTo: ["Sales[Date]"]`. Applied with `tmdl-apply.ps1`
+(TMDL view, a real paste, Preview, Apply; the laptop was free: 155 s idle). Queries through Desktop's own ADOMD
+client (`gc-check.ps1`), the query files in `<tests folder>\desk-r11\gc\`.
+| Row | Expected | Seen | Result |
+|---|---|---|---|
+| D-GC1, the script applies | Preview: one new table and one relationship; Apply accepted, Problems 0; 4748 rows, 36 columns; types inferred | "Changes applied to the model.", **Problems 0**; after "Refresh now": **4748 rows; 36 columns** (and the hidden RowNumber); Date and Week Start and Hijri Month Start are dates, the flags True/False, the numbers Integer, the names Text. Preview's diff also showed `lineageTag` lines added to the Sales table and its measures: the hand-written test model has none (a known trait of hand-written models, not the script) | PASS |
+| D-GC4, the relationship | Sales[Date] many to one Calendar[Date], single direction, active; does a query need the refresh first? | `'Sales'[Date] *[<-]1 'Calendar'[Date]`, Many to One, active, OneDirection. **Before the refresh a query fails:** "The query referenced calculated table 'Calendar' which does not hold any data because it needs to be recalculated or refreshed." (Desktop shows the banner "... calculated objects need to be manually refreshed", "Refresh now"). After it: sales by year 90917 (2018) ... 90787 (2030), 13 rows, 365 or 366 days each | PASS; **the refresh is needed first** |
+| The Hijri columns on a known date | 1 March 2026 = 12 Ramadan 1447 | Hijri Date "12 Ramadan 1447"; Hijri Year / Month Number / Day 1447 / 9 / 12; Hijri Month Name "Ramadan" | PASS |
+| The Ramadan flag | Ramadan 1447 from 18 February 2026 (`gulf-dates.js`); 17 February not | Is Ramadan TRUE on 1 March 2026, Ramadan Day 12; FALSE on 17 February; 18 February is "1 Ramadan 1447"; Ramadan 1447 runs 2026-02-18 to 2026-03-19, **30 days** | PASS |
+| The Eid flags | Eid al-Fitr 20-22 March 2026; 2018: 15-17 June and 21-24 August | Is Eid al-Fitr on 2026-03-20, 21, 22; Is Eid al-Adha on 2026-05-27 to 30; 2018: 06-15 to 06-17 and 08-21 to 08-24 | PASS |
+| 2018 by hand | 16 May "30 Sha'ban 1439", 17 May "1 Ramadan 1439", 29 Ramadan days | exactly these; weekend days 105 in 2021 and 105 in 2022; estimated dates from 2027-02-08 | PASS |
+| D-GC6, `check.dax` | 40 of 40 | **40 of 40** (C01-C15, E01-E15, R01-R10) | PASS |
+| A refresh with no errors | none | "Refresh now" and then Home > Refresh: no error, no banner left, the queries answer the same (`gc1-after-refresh.png`) | PASS |
+| D-GC3, sort by column written in the script (a copy, by hand: `sortByColumn` on Month Name, Day Name, Hijri Month Name) | write down what happens | Apply accepted, Problems 0; the model shows the three sort columns. Saved (Ctrl+S on this test copy), then three list slicers from `create_report`: **January to December, Sunday to Saturday, Muharram to Dhu al-Hijjah** (`gc3-slicers-crop.png`) | **yes: the script can carry them** |
+| D-GC2, mark as date table from the script (a copy, by hand: `dataCategory: Time` on the table, `isKey` on Date) | write down what happens | Apply accepted, Problems 0; the model holds DataCategory "Time" on Calendar and Date as its key column (`INFO.TABLES`, `INFO.COLUMNS`). **Not read:** the ribbon's "Mark as date table" state (UI Automation found no such element) | **the script is accepted; the ribbon to be looked at by a person** |
+| D-GC5, Preview when the name is taken (the script as written, on the old "Gulf Calendar Test", which has a `Calendar`) | write down exactly what Preview shows | **No error and no warning: Problems 0, Output 0.** The diff shows the existing `table Calendar` on both sides with its changed lines marked: Preview treats the script as a replacement of that table (`gc5-preview-crop.png`). Apply was not pressed; the model was closed unsaved, its files untouched | **nothing stops the user: the "stop" rule in `howToApply` is the only guard** |
+- **A finding about the tool, not Desktop:** `add_gulf_calendar` refused `relateTo: ["Sales[Date]"]` on this model
+  as Desktop saves it ("is not a date column (its type is unknown)"): Sales is a DAX table, and TMDL carries no
+  type for its columns. For the run the three test models' Sales columns were given `dataType` and
+  `isDataTypeInferred` by hand (`r11-gc-types.cjs`); Desktop opened them without a message. A user whose fact
+  table is a DAX table cannot get the relationship from the tool today (`mcp/WORK.md`, "for the owner").
+- The Sales table's measures that name `Calendar` show "Field list item has error" in the Data pane until the
+  calendar is applied and refreshed (three of them were listed right after Apply); none after the refresh.
+
 ## Lessons
+- **Round 11: a TMDL script may carry `sortByColumn`, `dataCategory: Time` and `isKey` for a DAX calendar table**:
+  Desktop applies them (Problems 0), and slicers then run January to December, Sunday to Saturday, Muharram to Dhu
+  al-Hijjah. And Preview does not warn when a script's table name is already in the model: it shows a replacement.
+- **Round 11: `win-shot.ps1` pictures the Claude app unless `-Process PBIDesktop` is given**: one such picture was
+  taken by mistake tonight and deleted unseen.
 - **Round 11: `grid.rowPadding` adds 2 a unit to a table's row pitch, and nothing written draws like 1**; the grid
   starts 7.7 inside the visual and a cell pads its text by 5 to 6 on each side.
 - **Round 11: a card's image is drawn at the right unless `position: 'Left'` is written** (it works with

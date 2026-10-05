@@ -94,7 +94,19 @@ never fixed tonight (only a FAIL of items 1-6, tests first).
     expected), `pbip-export.min.js?v=20261005g` (in `theme-generator.js`), `theme-generator.min.js?v=20261005e` on
     its two pages; `check:min` clean. `csp.mjs` on this CRLF checkout lists pages as always (CI is the record).
   - `npm test` after the fixes: running at 22:06 (the count goes in the next entry).
-- **Scripts (laptop, `builder-scripts\`):** `shot11.ps1` (open one report of `11-r11`, capture the listed pages
+- **22:15:** `npm test` after the two fixes: **420 of 420** (418 + 2). Committed `9a0b660`. The two Arabic
+  card-image reports rebuilt with the fix and captured: the image at the left, the values whole.
+- **22:30, item 4, the Gulf calendar: done, all as expected** (DESKTOP-TESTS.md, "Item 4"). Applied in TMDL view
+  with Problems 0; 4748 rows, 36 columns; the relationship many to one, single, active (a query needs the refresh
+  first); 1 March 2026 = 12 Ramadan 1447; Ramadan 1447 18 Feb to 19 Mar 2026 (30 days); Eid al-Fitr 20-22 March
+  2026; the 2018 dates; `check.dax` **40 of 40**; refresh without errors. D-GC3: `sortByColumn` in the script is
+  accepted and the slicers are in order (seen). D-GC2: `dataCategory: Time` + `isKey` accepted (the ribbon not
+  read). D-GC5: Preview shows a replaced table with no warning. One finding about the tool: `relateTo` is refused
+  for a DAX fact table's column (type unknown): "for the owner" 4. No code changed.
+- **Scripts (laptop, `builder-scripts\`):** `r11-gc-model.mjs`, `r11-gc-patch.cjs`, `r11-gc-types.cjs` (the Gulf
+  test models), `r11-call.mjs <root> <tool> <json>` (one call on the working copy's server), `tmdl-apply.ps1`,
+  `uia-refresh-now.ps1`, `uia-refresh.ps1`, `gc-check.ps1 -Query <file>` (window title must start with "Gulf");
+  `shot11.ps1` (open one report of `11-r11`, capture the listed pages
   into `desk-r11`), `r11-phone.ps1` (phone canvas), `r11-tabs.mjs`, `r11-cimg.mjs`, `r11-table.mjs`,
   `r11-imgleft.mjs` (builders, with `r10-make.mjs "@%TEMP%/<spec>.json"`), `r11-pos.mjs`, `r11-phonepos.mjs`,
   `r11-cardinfo.mjs` (what the files hold), `r11-tbmeasure.ps1` + `r11-tb4.ps1` (table ink), `yellow.ps1`,
@@ -125,6 +137,18 @@ never fixed tonight (only a FAIL of items 1-6, tests first).
    leave it (nothing is cut); (b) compute the percent from the measured padding (25 a side at 1920 x 1080, 17 at
    1280 x 720) so a design is drawn at its own size where it fits. **Recommended: (b)**, a small change with a test;
    it needs your go because it changes what round 10 shipped.
+4. **`add_gulf_calendar` and what the script could carry (from D-GC2, D-GC3, D-GC5 and one refusal).**
+   (a) `sortByColumn` for Month Name, Day Name and Hijri Month Name: Desktop accepts it in the script and the
+   slicers come out in order, so the tool can write it and drop three steps from `byHand`. **Recommended: yes.**
+   (b) `dataCategory: Time` and `isKey` on Date: accepted, the model holds them; whether the ribbon then shows the
+   table as "marked as date table" needs one look by you (Table tools, on "Gulf GC2" after applying
+   `<tests folder>\11-r11\gulf-gc2\GC2 script.tmdl`). **Recommended: write them once you have seen the ribbon.**
+   (c) Preview does not warn when the table name is taken: it shows the old table replaced. The tool already
+   refuses a taken name; keep the "stop" sentence in `howToApply` and say in it that Preview will not warn.
+   (d) `relateTo` on a column of a DAX table (type unknown in TMDL) is refused. Options: keep; or accept an
+   unknown type with a note ("its type could not be read; make sure it is a date column"); or take `columnTypes`
+   as `check_model_health` does. **Recommended: accept with the note** (the relationship fails loudly in Preview
+   if the column is not a date).
 
 ### Round 11, design findings
 | # | Page and visual | What is off or could be better | Crop | Severity | Proposed fix | What it would change in the code |
