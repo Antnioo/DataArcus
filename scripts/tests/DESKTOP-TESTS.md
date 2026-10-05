@@ -1549,6 +1549,19 @@ channel", Customers, "Products and categories", Returns, Stores, Staff, Notes; a
 - Not opened: a row that has to wrap, the phone layout, a click on a tab (the links are checked in `npm test` only).
 
 ## Lessons
+- **Round 10 (2.158.1177): a card's "Value decimal places" is `labelPrecision`** (`2L`), and it works in the card's
+  default value entry: automatic units with 2 decimals for every card (3.43M, 14.81K, 231.50).
+- **Round 10: text width depends on the letters, not their count.** "Executive summary" is 0.49 em a character,
+  "Reset filters" 0.38; a per-letter table of Segoe UI is within 5%. A button cuts its text when it is narrower than
+  the text + 10. A card's value: a digit 0.54 em, a separator 0.21, "-888.88bn" 4.4 em.
+- **Round 10: a button's `shape` entry (`tileShape: 'pill'`) written by hand was not drawn rounded**; an underline
+  under a tab is a thin `shape` visual, which draws.
+- **Round 10: Desktop upgrades the schema versions of what it saves** (the changed page and the shared files; to
+  report 3.3.0, page 2.1.0, visualContainer 2.13.0, bookmark 2.1.0) and opens the mixed report with no message.
+- **Round 10: a bridge capture includes a report page tooltip when the mouse pointer rests on a chart.** Move the
+  pointer off the page first.
+- **Round 10: capture in the foreground, one report per command.** A long background capture run ended with the
+  whole session crashing; and a Windows path built in a bash double-quoted string loses its backslashes.
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
 - **`mobile.json` follows the same selector rules as `visual.json` (2.158, round 1):** a text size or padding written there is used only with the selector that property needs on the page (none for a text box, slicer, titles, axes, table text and the card's container padding; `default` for a button's text; each state for page buttons).

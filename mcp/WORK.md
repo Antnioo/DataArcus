@@ -91,6 +91,48 @@ fixtures are recaptured only where the design engine's own output changes, each 
 
 ### Where round 10 stands (2026-10-05, 10:00; not merged; nothing installed)
 
+**The laptop's memory, saved before compacting (2026-10-05, 19:15; builder session).**
+- **State:** the laptop's checkout is `fix/round-10` at the cloud's `c1aa52d` (fast-forwarded; it holds the laptop's
+  commits up to `12784bb`, main merged in, and the cloud part). **Nothing is uncommitted and nothing is half-done**
+  in either repo. `npm test` on the laptop at `c1aa52d`: **404 of 404**. CI on `c1aa52d`: success (mcp and website).
+  dataarcus-engine: the worktree `engine-build` is on `fix/round-10` with **no commit** (manifest still 0.2.5).
+  Power BI Desktop is closed. Not merged; no package 0.2.6.
+- **What Desktop (2.158.1177) has shown for round 10, all on `12784bb` or earlier** (records in DESKTOP-TESTS.md,
+  "round 10" sections): the measurements M1 to M5; eight before and after pairs of the default report; 84 card
+  values, none cut; SVG columns at the design's size, mirrored in Arabic, "Total" shown, a matrix; separators in a
+  table; the six-card row with one title size; eight tabs with long names in English and in Arabic, whole on one row.
+  **Nothing of the cloud part (`c1aa52d`) has been opened in Desktop**: the value at the reading start, the percent
+  card, tables titled by content, the narrower Reset, wrapped or shortened KPI titles, capped SVG widths. The test
+  reports on the laptop were all built before it and must be rebuilt.
+- **Corrections to the list "Left for the laptop" below:** item 5 is half done (eight tabs seen in both languages;
+  left: a tab row that has to wrap, and the phone layout). Item 10's "before" captures exist and can be reused
+  (`before-<layout>-p1.png`); only the "after" reports need rebuilding (`r10-site.mjs` with a new tag).
+- **Where things are on the laptop (outside the repo; `<tests folder>` is the `tests` folder beside the repo):**
+  - `<tests folder>\phase2-try\builder-scripts\`: the helper scripts. Round 10's: `r10-make.mjs` (one or more
+    reports from the working copy's MCP server; takes a JSON spec or `@file.json`), `r10-site.mjs` (the website's
+    sample download from a given checkout's engines: `node r10-site.mjs <engines dir> <out dir> <tag>`), `pair.sh`
+    (one layout: before and after captured and stacked; edit its "after2" tag for a new build), `capx.sh` (open one
+    report and capture every page), `caplist.mjs` + `capall.sh` (a list of reports), `crop.ps1` (crop or stack
+    captures), `ink.ps1` (ink extents, cut-text detection), `r10-fit.mjs build|check` (the card-fit proof),
+    `fitrun.sh`, `r10-m1.mjs`, `r10-btn-measure.mjs`, `r10-nav-proto.mjs`, `r10-tabs.mjs`, `r10-row.cjs` (adds a
+    row to the before/after table and commits), `r10-b2.json`, `r10-six.json`. Older ones still used: `desk.ps1`
+    (open / close a test report; never closes anything outside the test folders), `idle.ps1`, `win-shot.ps1`,
+    `screen-click.ps1`, `wheel.ps1`, `tmdl-apply.ps1`.
+  - `<tests folder>\10-r10\`: round 10's test reports and a copy of the made-up Ramadan sample's model
+    (`Ramadan Test.SemanticModel`); `10-r10\site\`: the website-style projects ("before ...", "after2 ...").
+  - `<tests folder>\desk-r10\`: round 10's captures (`ba2-<layout>.png` the stacked pairs, `fit-*`, `b2-*`,
+    `b4-six-crop.png`, `b5-tabs-*.png`, `nav-looks.png`).
+  - `<tests folder>\9-format-sample\`: the model copy with the formats `0` and `0.00` (D16).
+  - The worktree `r10-before` beside the repo: main at `8f6d2c3`, used for the "before" builds. Remove it with
+    `git worktree remove` once round 10 is merged.
+  - The card-fit lists were in the temp folder (`fit-list.txt`, `fit-boxes.json`): `r10-fit.mjs build` writes them again.
+- **How to work on this laptop (learned the hard way in round 10):** capture in the foreground, one report or one
+  layout per command (the overnight session died during a long background capture run; a command that waits for a
+  capture that never comes blocks for 5 minutes); never put a Windows path with a variable into a bash double-quoted
+  string (it was mangled four times: write the list with `caplist.mjs` or a script file); move the mouse pointer
+  off the page before a capture (`wheel.ps1 -X 960 -Y 3 -Notches 0`), or a chart's tooltip is drawn over the page;
+  give a report 45 to 60 seconds after opening before the first capture; `npm test` takes 4 to 10 minutes here.
+
 **Cloud sitting, 5 October (the code-only part, on the owner's "Both, one after the other"; no Desktop here).**
 - **Main merged in** (`5ea2d3d`: the night audit fixes, `850b0a0`): no conflict; stamps kept as they were, the newer
   ones from main (`style.min.css?v=20261005a`); `check:min` clean; `npm test` 394 of 394 after the merge.
