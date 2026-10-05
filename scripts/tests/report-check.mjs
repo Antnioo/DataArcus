@@ -323,7 +323,14 @@ export function sortProblems(files) {
     const sd = v.visual.query.sortDefinition, id = `${p.page.displayName}/${v.visual.visualType}`;
     if (!sd) return;
     const s0 = (sd.sort || [])[0] || {}, agg = (s0.field || {}).Aggregation, tips = ((v.visual.query.queryState.Tooltips || {}).projections || []);
-    if ((sd.sort || []).length !== 1 || !agg || agg.Function !== 3 || !agg.Expression.Column || s0.direction !== 'Ascending') { bad.push(`${id}: sort ${JSON.stringify(sd).slice(0, 160)}, want one ascending Min of a column`); return; }
+    // Round 13 (measured in Desktop 2.158, 6 Oct 2026, DESKTOP-TESTS.md "round 13, item 3"): in a right-to-left report a
+    // column or line chart is mirrored: its value axis at the right (valueAxis.switchAxisPosition) and its categories
+    // from the right, which a categorical axis does only through the sort, so there the sort is Descending (January at
+    // the right is still "in order"). And a mirrored chart whose category needs no number column is sorted by the
+    // category's own column (which is in the visual). So: Descending where the chart is mirrored, Ascending elsewhere.
+    const mirrored = (((((v.visual.objects || {}).valueAxis || [])[0] || {}).properties || {}).switchAxisPosition || { expr: { Literal: {} } }).expr.Literal.Value === 'true', want = mirrored ? 'Descending' : 'Ascending';
+    if (mirrored && (sd.sort || []).length === 1 && !agg && JSON.stringify(s0.field) === JSON.stringify(((v.visual.query.queryState.Category || {}).projections || [{}])[0].field) && s0.direction === want) return;
+    if ((sd.sort || []).length !== 1 || !agg || agg.Function !== 3 || !agg.Expression.Column || s0.direction !== want) { bad.push(`${id}: sort ${JSON.stringify(sd).slice(0, 160)}, want one ${want.toLowerCase()} Min of a column`); return; }
     const by = agg.Expression.Column.Expression.SourceRef.Entity + '.' + agg.Expression.Column.Property;
     if (!tips.some((t) => JSON.stringify(t.field) === JSON.stringify(s0.field))) bad.push(`${id}: sorted by Min of ${by}, which is not in its tooltip fields (Desktop ignores the sort)`);
     if (!['lineChart', 'clusteredBarChart', 'clusteredColumnChart'].includes(v.visual.visualType)) bad.push(`${id}: a sort on a visual that is not a line, bar or column chart`);

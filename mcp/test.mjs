@@ -2351,6 +2351,136 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   }
 }
 
+// ---------- round 13 (owner's go 6 Oct): gradient colours in bar and column charts ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 300));
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
+  const col = (name, dataType, extra) => Object.assign({ name, dataType, sourceColumn: name }, extra || {});
+  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
+  const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnostics || d.diagnosticsByCode || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run: ' + String(p.stderr || p.error || p.stdout).slice(0, 200); } };
+  const P = 'r13-project';
+  fs.mkdirSync(path.join(ROOT, P, 'R13 Test.SemanticModel'), { recursive: true });
+  fs.writeFileSync(path.join(ROOT, P, 'R13 Test.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'),
+    columns: [col('Amount', 'double'), col('Region', 'string'), col('Channel', 'string'), col('Month', 'string')],
+    measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }] }] } }));
+  // a report as the test reads it: its theme, and every visual with its page's kind
+  const read = (x) => { if (x.err) return { theme: {}, vis: [] }; const dir = path.join(ROOT, P, x.j.report), def = path.join(dir, 'definition', 'pages'), res = path.join(dir, 'StaticResources', 'RegisteredResources');
+    const theme = JSON.parse(fs.readFileSync(path.join(res, fs.readdirSync(res).find((f) => f.endsWith('.json'))), 'utf8'));
+    const vis = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder.flatMap((id) => { const pg = JSON.parse(fs.readFileSync(path.join(def, id, 'page.json'), 'utf8')), vd = path.join(def, id, 'visuals');
+      return fs.readdirSync(vd).map((v) => JSON.parse(fs.readFileSync(path.join(vd, v, 'visual.json'), 'utf8'))).filter((v) => v.visual).map((v) => Object.assign(v, { tooltipPage: pg.type === 'Tooltip' })); });
+    return { dir, theme, vis }; };
+  const lum = (hex) => { const v = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4))); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+  const ratio = (a, b) => { const p = lum(a), q = lum(b); return (Math.max(p, q) + 0.05) / (Math.min(p, q) + 0.05); };
+  const isBar = (v) => /^clustered(Bar|Column)Chart$/.test(v.visual.visualType), dpOf = (v) => (v.visual.objects || {}).dataPoint;
+  const hexOf = (e) => String(e.color.Literal.Value).slice(1, -1).toLowerCase();
+  const cardOf = (theme) => ((((((theme.visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).color || { solid: { color: '#ffffff' } }).solid.color.toLowerCase();
+  // Measured in Desktop 2.158 on 6 Oct ("GR EN light", "GR EN dark", "GR AR light"; DESKTOP-TESTS.md, round 13): a bar's
+  // colour by its value is dataPoint.fill as a FillRule (linearGradient2) on the chart's own measure, for every data point
+  // (dataViewWildcard, matchingOption 1). With literal ends Desktop drew the smallest bar exactly the low colour and
+  // the largest exactly the high one, the same in English and Arabic. With ThemeDataColor ends "60% lighter" goes
+  // towards white, so on a dark design the smallest bar came out the brightest: the ends are written as colours.
+  // The high end is the theme's first data colour (the bars' colour today); the low end is that colour mixed towards
+  // the card, as far as it still stands 3:1 off the card (so the smallest bar never fades into its panel).
+  const grad = (v) => { const e = dpOf(v)[0], fr = e.properties.fill.solid.color.expr.FillRule; return { input: JSON.stringify(fr.Input), y: JSON.stringify(v.visual.query.queryState.Y.projections[0].field), low: hexOf(fr.FillRule.linearGradient2.min), high: hexOf(fr.FillRule.linearGradient2.max), sel: JSON.stringify(e.selector), n: dpOf(v).length }; };
+  const good = (r, minBars) => { const bars = r.vis.filter((v) => isBar(v) && !v.tooltipPage), card = cardOf(r.theme), d0 = String(r.theme.dataColors[0]).toLowerCase();
+    return bars.length >= minBars && bars.every((v) => { const g = grad(v); return g.n === 1 && g.input === g.y && g.sel === '{"data":[{"dataViewWildcard":{"matchingOption":1}}]}' && g.high === d0 && g.low !== g.high && ratio(g.low, card) >= 3 && ratio(g.low, card) < ratio(g.high, card); })
+      && r.vis.filter((v) => !isBar(v) || v.tooltipPage).every((v) => !dpOf(v)); };
+  const tell = (r) => JSON.stringify(r.vis.filter(isBar).map((v) => [v.visual.visualType, v.tooltipPage, dpOf(v) ? grad(v) : null])).slice(0, 700);
+  for (const [lang, preset] of [['en', 'Corporate'], ['en', 'Midnight'], ['ar', 'Corporate']]) {
+    const th = await ask('generate_theme', { name: 'R13 ' + preset + ' ' + lang, preset, lang, folder: 'r13-themes' });
+    const design = (await ask('plan_layout', { design: th.j.design, layout: 'exec', kpis: 3, filters: 'end', lang })).j.design;
+    // 1. a designed report: every bar and column chart of the report's pages fades by value; lines, donuts and the tooltip pages' charts do not
+    const g = await ask('create_report', { path: P, name: `R13 Grad ${preset} ${lang}`, lang, design }), rg = read(g);
+    chk(() => good(rg, 2) && g.j.chartColors.mode === 'gradient' && g.j.chartColors.charts === rg.vis.filter((v) => isBar(v) && !v.tooltipPage).length && g.j.chartColors.low === grad(rg.vis.find((v) => isBar(v) && !v.tooltipPage)).low && errors(rg.dir) === '0',
+      () => `${preset} ${lang}: a designed report's bar and column charts must carry the gradient rule (the chart's measure, literal ends, 3:1 off the card), told in chartColors: ${tell(rg)} ${JSON.stringify(g.j && g.j.chartColors)} validator ${rg.dir && errors(rg.dir)} ${short(g)}`);
+    // 2. chartColors "solid": nothing is written on any chart (the theme's one colour, as before round 13)
+    const s = await ask('create_report', { path: P, name: `R13 Solid ${preset} ${lang}`, lang, design, chartColors: 'solid' }), rs = read(s);
+    chk(() => rs.vis.filter(isBar).length >= 2 && rs.vis.every((v) => !dpOf(v)) && s.j.chartColors.mode === 'solid', () => `${preset} ${lang}: chartColors "solid" must write no dataPoint entry: ${tell(rs)} ${JSON.stringify(s.j && s.j.chartColors)} ${short(s)}`);
+  }
+  // 3. hand-placed pages: solid unless asked (the caller owns the look); with chartColors "gradient" the same rule
+  {
+    const pages = [{ name: 'Charts', slots: [{ kind: 'title', x: 24, y: 12, w: 600, h: 48 }, { kind: 'bar', x: 24, y: 80, w: 600, h: 300 }, { kind: 'column', x: 640, y: 80, w: 600, h: 300 }, { kind: 'line', x: 24, y: 400, w: 600, h: 300 }] }];
+    const th = await ask('generate_theme', { name: 'R13 hand', preset: 'Corporate', folder: 'r13-themes' });
+    const a = await ask('create_report', { path: P, name: 'R13 Hand', pages, theme: 'r13-themes/' + th.j.file }), ra = read(a);
+    const b = await ask('create_report', { path: P, name: 'R13 Hand grad', pages, theme: 'r13-themes/' + th.j.file, chartColors: 'gradient' }), rb = read(b);
+    chk(() => ra.vis.filter((v) => isBar(v) && !v.tooltipPage).length === 2 && ra.vis.every((v) => !dpOf(v)) && a.j.chartColors.mode === 'solid' && good(rb, 2) && b.j.chartColors.mode === 'gradient' && errors(rb.dir) === '0',
+      () => `hand-placed pages: solid by default, the gradient when asked: default ${tell(ra)} ${JSON.stringify(a.j && a.j.chartColors)} | asked ${tell(rb)} ${JSON.stringify(b.j && b.j.chartColors)} ${short(b)}`);
+    // 4. a bar colour that cannot fade and stay 3:1 off its card (a pale colour on a white card): no rule is written, and the answer says why
+    const c = await ask('create_report', { path: P, name: 'R13 Hand pale', pages, chartColors: 'gradient', colors: { accent: '#fde68a', card: '#ffffff' } }), rc = read(c);
+    chk(() => rc.vis.filter((v) => isBar(v) && !v.tooltipPage).length === 2 && rc.vis.every((v) => !dpOf(v)) && c.j.chartColors.mode === 'solid' && /3:1|contrast/i.test(c.j.chartColors.why || ''),
+      () => `a pale bar colour gets no gradient, and chartColors says why: ${tell(rc)} ${JSON.stringify(c.j && c.j.chartColors)} ${short(c)}`);
+  }
+  // 5. the website's project download is unchanged: its charts carry no colour rule
+  {
+    const E2 = (await import('node:module')).createRequire(import.meta.url)(path.join(REPO, 'assets/js/design-engine.js')), Pb = (await import('node:module')).createRequire(import.meta.url)(path.join(REPO, 'assets/js/pbip-export.js'));
+    const d = E2.fresh(); E2.repairState(d); const specs = E2.projectPages(d.layout, 'en', { second: true });
+    const files = Pb.build({ name: 'Site', title: 'Site', lang: 'en', rtl: false, font: d.font, sample: true, theme: E2.buildTheme(d, 'en'), ui: d.ui, texts: E2.REPORT_TEXTS.en, pages: specs.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: new Uint8Array(8), panel: p.panel })) }).files;
+    const vs = files.filter((f) => /visual\.json$/.test(f.path)).map((f) => JSON.parse(typeof f.data === 'string' ? f.data : Buffer.from(f.data).toString('utf8'))).filter((v) => v.visual);
+    chk(() => vs.filter(isBar).length >= 2 && vs.every((v) => !dpOf(v)), () => `the website's download must not change: ${vs.filter(isBar).length} bar and column charts, with a rule: ${vs.filter((v) => dpOf(v)).length}`);
+  }
+
+  // ----- mirrored chart axes in a right-to-left report (the owner's ask, 5 Oct) -----
+  // Measured in Desktop 2.158 on 6 Oct ("MX AR", "MY AR"; DESKTOP-TESTS.md, round 13, item 3). Desktop does not mirror a
+  // chart in a right-to-left report; what it honours, written by hand:
+  // - valueAxis.switchAxisPosition true puts a column or line chart's value axis at the right;
+  // - a categorical axis ignores categoryAxis.invertAxis (January stayed at the left); it runs right to left when the
+  //   chart is sorted by its category, Descending (by the column itself, which follows the model's sort-by column, or by
+  //   the Min-of-number field the engine already puts in Tooltips for month and day names);
+  // - a continuous axis (a date) ignores the sort and honours categoryAxis.invertAxis; with both written it is
+  //   reversed once;
+  // - a bar chart's bars grow from the right with valueAxis.invertAxis true, and its category names move to the
+  //   right with categoryAxis.switchAxisPosition true; its top-to-bottom order is not changed.
+  {
+    fs.mkdirSync(path.join(ROOT, 'r13-mirror/R13 M.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, 'r13-mirror/R13 M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'),
+      columns: [col('Amount', 'double'), col('Region', 'string'), col('Channel', 'string'), col('Month Name', 'string'), col('Month Number', 'int64'), col('Date', 'dateTime')],
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }] }] } }));
+    const readM = (x) => { if (x.err) return { vis: [] }; const dir = path.join(ROOT, 'r13-mirror', x.j.report), def = path.join(dir, 'definition', 'pages');
+      const vis = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder.flatMap((id) => { const pg = JSON.parse(fs.readFileSync(path.join(def, id, 'page.json'), 'utf8')), vd = path.join(def, id, 'visuals');
+        return fs.readdirSync(vd).map((v) => JSON.parse(fs.readFileSync(path.join(vd, v, 'visual.json'), 'utf8'))).filter((v) => v.visual).map((v) => Object.assign(v, { tooltipPage: pg.type === 'Tooltip' })); });
+      return { dir, vis }; };
+    const P1 = (v, object) => Object.assign({}, ...(((v.visual.objects || {})[object]) || []).map((e) => e.properties)), on = (p) => !!p && p.expr.Literal.Value === 'true';
+    const vt = (v) => v.visual.visualType, upright = (v) => vt(v) === 'clusteredColumnChart' || vt(v) === 'lineChart', lying = (v) => vt(v) === 'clusteredBarChart';
+    const sortOf = (v) => ((v.visual.query.sortDefinition || {}).sort || [])[0] || null, qs = (v) => v.visual.query.queryState;
+    // an upright chart, mirrored: the value axis at the right, the category axis inverted (for a continuous one), and sorted Descending by its category (or by the number that orders it)
+    const mirroredUp = (v) => { const s = sortOf(v), want = qs(v).Tooltips ? qs(v).Tooltips.projections[0].field : qs(v).Category.projections[0].field;
+      return on(P1(v, 'valueAxis').switchAxisPosition) && on(P1(v, 'categoryAxis').invertAxis) && !!s && s.direction === 'Descending' && JSON.stringify(s.field) === JSON.stringify(want); };
+    const mirroredBar = (v) => on(P1(v, 'valueAxis').invertAxis) && on(P1(v, 'categoryAxis').switchAxisPosition) && (!sortOf(v) || sortOf(v).direction === 'Ascending');
+    const plain = (v) => !/invertAxis|switchAxisPosition/.test(JSON.stringify(v.visual.objects || {})) && (!sortOf(v) || sortOf(v).direction === 'Ascending');
+    const tellM = (r) => JSON.stringify(r.vis.filter((v) => upright(v) || lying(v)).map((v) => [vt(v), v.tooltipPage ? 'tip' : 'page', Object.keys(v.visual.objects || {}).join('+'), sortOf(v) && sortOf(v).direction])).slice(0, 800);
+    const arDesign = (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', lang: 'ar' })).j.design, enDesign = (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end' })).j.design;
+    // 6. an Arabic designed report: every column, line and bar chart of its pages is mirrored, the gradient stays, and the tooltip pages' bars grow from the right too
+    const ar = await ask('create_report', { path: 'r13-mirror', name: 'R13 Mirror ar', lang: 'ar', design: arDesign }), ra = readM(ar);
+    const pageCharts = (r) => r.vis.filter((v) => !v.tooltipPage && (upright(v) || lying(v)));
+    chk(() => pageCharts(ra).filter(upright).length >= 2 && pageCharts(ra).filter(lying).length >= 1 && pageCharts(ra).every((v) => (upright(v) ? mirroredUp(v) : mirroredBar(v)))
+        && pageCharts(ra).filter((v) => vt(v) !== 'lineChart').every((v) => !!dpOf(v)) && ar.j.chartAxes.mode === 'mirrored' && ar.j.chartAxes.charts === pageCharts(ra).length && errors(ra.dir) === '0',
+      () => `an Arabic report's column, line and bar charts must be mirrored (and keep the gradient), told in chartAxes: ${tellM(ra)} ${JSON.stringify(ar.j && ar.j.chartAxes)} validator ${ra.dir && errors(ra.dir)} ${short(ar)}`);
+    chk(() => { const tips = ra.vis.filter((v) => v.tooltipPage && lying(v)); return tips.length >= 1 && tips.every((v) => mirroredBar(v) && P1(v, 'valueAxis').show.expr.Literal.Value === 'false' && !!P1(v, 'categoryAxis').fontSize && on(P1(v, 'labels').show)); },
+      () => `the tooltip pages' bar charts of an Arabic report must grow from the right too and keep their own look (no value axis, 8pt names, labels): ${JSON.stringify(ra.vis.filter((v) => v.tooltipPage && lying(v)).map((v) => v.visual.objects)).slice(0, 600)}`);
+    // 7. an English report is not touched, and has no chartAxes in its answer
+    const en = await ask('create_report', { path: 'r13-mirror', name: 'R13 Mirror en', design: enDesign }), re = readM(en);
+    chk(() => re.vis.filter((v) => upright(v) || lying(v)).length >= 4 && re.vis.filter((v) => upright(v) || lying(v)).every(plain) && !('chartAxes' in en.j), () => `an English report's charts must stay as they are: ${tellM(re)} ${JSON.stringify(en.j && en.j.chartAxes)} ${short(en)}`);
+    // 8. chartAxes "standard" keeps an Arabic report's charts left to right (the answer says so)
+    const st = await ask('create_report', { path: 'r13-mirror', name: 'R13 Mirror ar std', lang: 'ar', design: arDesign, chartAxes: 'standard' }), rs = readM(st);
+    chk(() => rs.vis.filter((v) => upright(v) || lying(v)).length >= 4 && rs.vis.filter((v) => upright(v) || lying(v)).every(plain) && st.j.chartAxes.mode === 'standard', () => `chartAxes "standard" must leave an Arabic report's charts as they are: ${tellM(rs)} ${JSON.stringify(st.j && st.j.chartAxes)} ${short(st)}`);
+    // 9. hand-placed right-to-left pages are mirrored too (as their tables already are); a date on the line chart's axis gets both the inverted axis and the Descending sort by the date itself
+    const hp = await ask('create_report', { path: 'r13-mirror', name: 'R13 Mirror hand', lang: 'ar', rtl: true, font: 'Tahoma', fields: { timeAxis: 'Sales[Date]', category: 'Sales[Region]', category2: 'Sales[Channel]', measure: 'Sales[Total Sales]' },
+      pages: [{ name: 'Charts', slots: [{ kind: 'title', x: 640, y: 12, w: 600, h: 48 }, { kind: 'bar', x: 24, y: 80, w: 600, h: 300 }, { kind: 'column', x: 640, y: 80, w: 600, h: 300 }, { kind: 'line', x: 24, y: 400, w: 600, h: 300 }] }] }), rh = readM(hp);
+    chk(() => { const cs = pageCharts(rh), line = cs.find((v) => vt(v) === 'lineChart'); return cs.length === 3 && cs.every((v) => (upright(v) ? mirroredUp(v) : mirroredBar(v))) && qs(line).Category.projections[0].queryRef === 'Sales.Date' && !qs(line).Tooltips && hp.j.chartAxes.mode === 'mirrored' && errors(rh.dir) === '0'; },
+      () => `hand-placed right-to-left pages must be mirrored, a date axis by invertAxis and the sort: ${tellM(rh)} ${JSON.stringify(hp.j && hp.j.chartAxes)} ${short(hp)}`);
+    // 10. the website's Arabic download is unchanged
+    {
+      const E2 = (await import('node:module')).createRequire(import.meta.url)(path.join(REPO, 'assets/js/design-engine.js')), Pb = (await import('node:module')).createRequire(import.meta.url)(path.join(REPO, 'assets/js/pbip-export.js'));
+      const d = E2.fresh(); E2.repairState(d); const specs = E2.projectPages(d.layout, 'ar', { second: true });
+      const files = Pb.build({ name: 'Site', title: 'Site', lang: 'ar', rtl: true, font: d.font, sample: true, theme: E2.buildTheme(d, 'ar'), ui: d.ui, texts: E2.REPORT_TEXTS.ar, pages: specs.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: new Uint8Array(8), panel: p.panel })) }).files;
+      const vs = files.filter((f) => /visual\.json$/.test(f.path)).map((f) => JSON.parse(typeof f.data === 'string' ? f.data : Buffer.from(f.data).toString('utf8'))).filter((v) => v.visual);
+      chk(() => vs.filter((v) => upright(v) || lying(v)).length >= 3 && vs.filter((v) => upright(v) || lying(v)).every(plain), () => `the website's Arabic download must not change: ${JSON.stringify(vs.filter((v) => upright(v) || lying(v)).map((v) => [vt(v), Object.keys(v.visual.objects || {}).join('+')]))}`);
+    }
+  }
+}
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);

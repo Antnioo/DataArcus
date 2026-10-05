@@ -1945,7 +1945,85 @@ Errors: 2, both on the fixture's own hand-made "Health Test Report" (not a repor
   nothing on the engine's reports (0 errors on all 62), which agrees with Desktop opening every one without a
   message.
 
+## 2026-10-06, round 13, the six-hour sitting (`fix/round-13` from main `1cef9ac`), Power BI Desktop 2.158.1177
+Made-up models only (the Ramadan sample, copied to `<tests folder>\13-r13`; `13-r13\sorted` is the same model with a
+sort-by column on Month Name and Day Name). Reports from the working copy's server over stdio
+(`builder-scripts\r13-make.mjs`); captures of the canvas through the bridge at double size in
+`<tests folder>\desk-r13\`, one report per command, in the foreground (`r13-shot.ps1`). Colours are read from the
+capture's pixels along a scan line (`r13-runs.ps1`), never judged by eye. Expected results: `mcp/WORK.md`, "Round 13,
+order of work", written before each run.
+
+### Item 1, gradient ("fading") colours in bar and column charts
+**What Desktop offers:** Microsoft's CLI lists for `dataPoint` of both charts `fill`, `fillRule` ("Color saturation"),
+`fillTransparency` and the border, nothing else. **A bar has no gradient fill of its own** (1b: not available, as
+expected). A bar's colour by its value is the data colour's conditional formatting: `dataPoint.fill` as a `FillRule`
+(`linearGradient2`) on the chart's own measure, selector `dataViewWildcard` `matchingOption` 1.
+
+"GR EN light", "GR EN dark" (Corporate and Midnight), "GR AR light": a hand-placed page of three column charts
+(Total Sales by Month Short) and three bar charts (by Day Name), the rule written by hand (`r13-grad.mjs`): chart 1
+nothing, chart 2 literal ends, chart 3 `ThemeDataColor` ends (ColorId 2, Percent 0.6 and 0).
+| Design | Nothing written | Literal ends (low, high) | `ThemeDataColor` ends |
+|---|---|---|---|
+| Corporate (card `#ffffff`, first data colour `#1f4e79`) | every bar `#1f4e79` | the smallest bar (Friday) **`#7995af`**, the largest (Monday) **`#1f4e79`**, the others between in the order of their values: exactly the two colours written | accepted: the smallest `#a5b8c9` (60% towards white: 2.0:1 on the card), the largest `#1f4e79` |
+| Midnight (card `#15182a`, `#4cc9f0`) | every bar `#4cc9f0` | the smallest `#31718d`, the largest `#4cc9f0`: the small bars fade into the dark card | **the wrong way: the smallest bar is the brightest** (`#b7e9f9`, towards white), the largest `#4cc9f0` |
+| Corporate, Arabic | the same | the same colours as English (`#7995af` to `#1f4e79`) | the same as English |
+- **The rule maps the smallest value shown to the low colour and the largest to the high one** (Desktop's "lowest
+  value" and "highest value"), so seven days between 13.9K and 15.2K use the whole range. With a low end fixed at 0
+  (`min: { color, value: 0D }`, "GR AR light" reloaded, `gr-ar-light-zero-p1.png`) the same seven bars are
+  `#27547e` to `#1f4e79`: almost one colour. Which of the two is the owner's choice (`mcp/WORK.md`).
+- **`ThemeDataColor` works inside the rule's ends** (the colours would follow a later theme change), but "Percent
+  0.6" always goes towards white: right on a light design, backwards on a dark one. So the engine writes the two
+  ends as colours it works out from the theme: the high end the first data colour, the low end that colour mixed
+  towards the card as far as it still stands 3:1 off the card (60% at most): 40% on Corporate (3.12:1), 50% on
+  Midnight (3.24:1).
+- **Built in the engine** (`chartColors`: "gradient" by default with a design, "solid" with hand-placed pages) and
+  proven: "GE EN light" 1920 x 1080 (`ge-en-light-p1.png`, `-p2.png`), "GE EN dark" (`ge-en-dark-p1.png`), "GE AR
+  dark" 1280 x 720 (`ge-ar-dark-p1.png`): the bar chart by Quarter and the column chart by Day Name carry the same
+  colours as the hand-written charts (light: `#7995af` to `#1f4e79`; dark: `#31718d` to `#4cc9f0`, read from the
+  captures); the line chart, the table and the tooltip pages are unchanged; "GE EN light solid" is one colour.
+- Data labels: the designs leave them off; where they are on (the tooltip pages, `my-ar-p1.png` charts 5 and 8) they
+  sit outside the bar, on the card, so the bar's colour does not change their contrast.
+
+### Item 3, mirrored chart axes for an Arabic report
+"MX AR" (`r13-mirror.mjs`: three hand-placed Arabic pages, each chart titled by what was written on it) and "MY AR"
+(`r13-mirror2.mjs`, on the model with sort-by columns). Captures `mx-ar-p1.png` to `-p3.png`, `my-ar-p1.png`.
+| What | Written | Clustered column | Clustered bar | Line | Stacked column / bar | Area | Line and column | Scatter | Waterfall |
+|---|---|---|---|---|---|---|---|---|---|
+| (a) the category order reversed | `categoryAxis.invertAxis` true | **ignored** (Jan stays at the left) | not needed (top to bottom) | **ignored** on month names | ignored / not needed | ignored | ignored | works on its number axis (15,200 at the left) | ignored |
+| (a) the same, by the sort | `sortDefinition` Descending by the category (its own column, or the Min-of-number field in Tooltips) | **works**: Dec ... Jan, January at the right | - | **works** | not run | not run | not run | - | not run |
+| (b) the value axis at the right | `valueAxis.switchAxisPosition` true (bar: `categoryAxis.switchAxisPosition`) | **works** | **works**: the day names at the right | **works** | works / works | works | works | works | works |
+| (c) bars growing right to left | `valueAxis.invertAxis` true | - | **works**: 15K ... 0K, the bars from the right | - | - / works (the stack from the right) | - | - | - | - |
+| (d) the legend at the right | `legend.position` 'TopRight' | **works** (the legend's own items still run left to right: "Quarter", Q1, Q2, Q3, Q4) | - | - | works / works | - | works | - | - |
+| (e) a date axis right to left | `categoryAxis.invertAxis` true on a continuous axis (Calendar[Date]) | - | - | **works**: 2027 at the left, 2022 at the right | - | - | - | - | - |
+- **The sort rules** ("MY AR"): with nothing written a column or line chart runs in its category's own order
+  (January to December where the model has a sort-by column; alphabetical for a text column without one: Dhu
+  al-Hijjah ... Shawwal), not by value. A sort by the category's own column, Descending, reverses that order and
+  follows the model's sort-by column (December ... January). On a continuous date axis the sort is ignored: with
+  the Descending sort **and** `invertAxis` both written the axis is reversed once (2027 ... 2022). So one rule
+  covers both kinds of axis.
+- **Data labels after mirroring:** on a mirrored bar chart they sit at the bars' left ends (14.2K ... 14.8K), on a
+  mirrored column chart above the columns: the right side in both.
+- **Side effect, seen:** a slanted first label is shortened ("Dece…", "Janu…", "Muhar…") when the value axis is at
+  the right, because the axis no longer gives the label room at the chart's left edge (`mx-ar-line-crop.png`). The
+  same happens today with the axis at the left on a 600-wide chart ("Janua…", "MY AR" chart 9), so it is a matter
+  of label length and chart width, made more likely by the axis's side. Level labels (short names) are whole.
+- **Not seen:** drill-down, the tooltip on hover, a scrollbar's starting end (no chart here had more categories than
+  room). A waterfall follows the same axis property; its order was not reversed (the engine writes no waterfall).
+- **Built in the engine** (`chartAxes`: "mirrored" by default in a right-to-left report, "standard" to leave the
+  charts) and proven on "GM AR light 1080" (`gm-ar-light-1080-p1.png` to `-p4.png`): the line chart runs January at
+  the right to December at the left with its value axis at the right; the bar chart by Quarter grows from the right
+  with Q1 to Q4 at the right; the column chart by Day Name runs Sunday at the right to Saturday at the left, axis at
+  the right, and keeps its gradient; the two tooltip pages' bar charts grow from the right with their values at the
+  bars' left ends. The line chart's first label reads "Dece…" (the side effect above).
+
 ## Lessons
+- **Round 13: a categorical axis ignores "Invert axis"; it runs right to left when the chart is sorted by its
+  category, Descending. A continuous axis ignores the sort and honours "Invert axis".** Write both.
+  `switchAxisPosition` moves a value axis to the right (a bar chart's names with the category axis's).
+- **Round 13: `ThemeDataColor` is accepted inside a gradient rule's ends, but "lighter" always means towards white**:
+  on a dark design the smallest bar becomes the brightest. Mix towards the card colour instead.
+- **Round 13: `[IO.File]::ReadAllText` with a relative path reads from the process's folder, not PowerShell's
+  current one**: give it the full path.
 - **Round 11: a TMDL script may carry `sortByColumn`, `dataCategory: Time` and `isKey` for a DAX calendar table**:
   Desktop applies them (Problems 0), and slicers then run January to December, Sunday to Saturday, Muharram to Dhu
   al-Hijjah. And Preview does not warn when a script's table name is already in the model: it shows a replacement.

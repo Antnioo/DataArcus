@@ -419,6 +419,8 @@ server.registerTool('create_report', {
       label: z.string().min(1).max(40).describe('The name of the report-level measure; not the name of a measure of the model'),
       design: z.record(z.any()).describe('The design, in the same format as svgColumns')
     }).strict()).max(6).optional().describe('EXPERIMENTAL. A small picture beside a KPI card\'s number (a ring, an arrow, a sparkline), from a declarative design in the svgColumns format, on the card\'s image. The model is never touched. Checked in Power BI Desktop; phone and PDF are not checked yet'),
+    chartColors: z.enum(['gradient', 'solid']).optional().describe('The bars of bar and column charts. "gradient": each bar fades by its value, from a light tint of the theme\'s first data colour (the smallest value shown) to the colour itself (the largest); the tint always stands 3:1 off the panel, in light and dark designs. "solid": every bar in the theme\'s colour. Left out: "gradient" with a design, "solid" with hand-placed pages. Line charts, donuts and the tooltip pages are not changed. The answer\'s chartColors says what was written'),
+    chartAxes: z.enum(['mirrored', 'standard']).optional().describe('Only for a right-to-left report (Power BI does not mirror charts itself). "mirrored" (the default there): a column or line chart has its value axis at the right and its categories and dates run from the right; a bar chart\'s bars grow from the right, its names at the right. "standard": the charts stay left to right. The answer\'s chartAxes says what was written'),
     kpiValues: z.enum(['auto', 'full']).default('auto').describe('How every KPI card shows its number. "auto" (the default): automatic units with 2 decimals (3.43M, 14.81K, 231.50); a percentage shows as the model formats it (35.4% for 0.0%). "full": the full number with thousand separators (101,914) for measures whose format has none, in a smaller size on narrow cards so it is never cut'),
     displayNames: z.record(z.string(), z.string()).optional().describe('Names to show instead of the model\'s field names, as { "Table[Field]": "name" } (for example Arabic names for an Arabic report). Only names the user gave or approved: never translate, shorten or relabel a field yourself; when names are missing, list the fields and ask the user. The report shows the name wherever it shows the field: KPI titles, chart titles, axis and legend, table headers, slicer headers, the tooltip pages. The model is never renamed. Give names only for fields you know the right name of: nothing is translated automatically'),
     logo: z.string().optional().describe('Logo image for the header: a PNG or JPG file inside the DataArcus folder, 2 MB at most. It is copied into the new report (the file itself is not changed) and shown at its own shape, never stretched; a horizontal logo reads best'),
@@ -558,7 +560,7 @@ server.registerTool('create_report', {
     const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel, logoRatio }).map((p) => Object.assign({}, p, { slots: withValues(p.slots) }));
     r = Pbip.build({
       name: a.name, title: E.themeName(design.name), pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(pages))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues,
+      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(pages))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored',
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel }))
     });
     boundPages = pages;
@@ -575,7 +577,7 @@ server.registerTool('create_report', {
     r = Pbip.build({
       name: a.name, title: a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(a.pages))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues,
+      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(a.pages))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored',
       texts: { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' },
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
     });
@@ -630,6 +632,16 @@ server.registerTool('create_report', {
   const kpiValues = { kpiValues: FULL
     ? { mode: 'full', note: 'The KPI cards show Power BI\'s own default, and the full number with thousand separators (101,914) where the measure\'s format has none; the value is smaller on narrow cards so nine digits fit.' }
     : { mode: 'auto', note: 'Every KPI card shows its number with automatic units and 2 decimals (3.43M, 14.81K, 231.50); a percentage shows as the model formats it (35.4% for 0.0%). For full numbers with separators (101,914) pass kpiValues: "full".' } };
+  // the bars' colours (round 13): what was written, and why not when a gradient was asked and the colour cannot fade
+  const CC = r.chartColors || {};
+  const chartColors = { chartColors: CC.ends && CC.charts
+    ? { mode: 'gradient', charts: CC.charts, low: CC.ends.low, high: CC.ends.high, note: 'The bars of the bar and column charts fade by their value: the smallest value shown is the light tint, the largest the theme\'s own colour (conditional formatting on the data colour, a gradient by the chart\'s measure). The colours are written into each chart: after a change of theme, set them again or pass chartColors: "solid".' }
+    : Object.assign({ mode: 'solid' }, CC.asked && !CC.ends ? { why: `The bars' colour (${CC.base}) cannot fade and still stand 3:1 (contrast) off the panel behind it, so every bar keeps that one colour.` } : {}) };
+  // a right-to-left report's charts (round 13): mirrored, or left as they are when asked
+  const CA = r.chartAxes || {};
+  const chartAxes = CA.rtl ? { chartAxes: CA.asked === 'mirrored'
+    ? { mode: 'mirrored', charts: CA.charts, note: 'Power BI does not mirror charts in a right-to-left report, so the report does: column and line charts have the value axis at the right and their categories and dates run from the right (the chart is sorted by its category, descending, and a date axis is inverted); bar charts grow from the right with their names at the right. For charts left to right pass chartAxes: "standard".' }
+    : { mode: 'standard', note: 'The charts run left to right, as Power BI draws them.' } } : {};
   // visuals left out because the model has no field for them (never written empty)
   const WHY = { slicer: 'the model has no more text columns a slicer can use', line: 'the model has no month or date column for its axis', table: 'no field was found for it', matrix: 'it needs a text column and a measure', gauge: 'the model has no measure for it', card: 'the model has no measure for it' };
   const KIND = { slicer: 'Slicer', line: 'Line chart', bar: 'Bar chart', column: 'Column chart', donut: 'Donut chart', funnel: 'Funnel', treemap: 'Treemap', map: 'Map', table: 'Table', matrix: 'Matrix', gauge: 'Gauge', card: 'Card' };
@@ -657,7 +669,7 @@ server.registerTool('create_report', {
   const arabic = a.lang === 'ar' ? { arabicNames: { shownFields: shown.length, missing,
     how: missing.length ? 'These fields show under their model names. To show Arabic names, call create_report again with displayNames: { "Table[Field]": "الاسم" } for each (ask the user for the names: nothing is translated automatically). The model is not renamed.' : 'Every field the report shows has an Arabic name.' } } : {};
   return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
-    { boundFields: boundOf(boundPages, bind, tableKept) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, kpiTitles, pageButtons, tableColumns, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
+    { boundFields: boundOf(boundPages, bind, tableKept) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, chartColors, chartAxes, kpiTitles, pageButtons, tableColumns, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
     sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {}));
 }));
 

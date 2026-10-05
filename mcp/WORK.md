@@ -23,7 +23,7 @@ BI Desktop window open; `git fetch`; `fix/round-13` made from `origin/main` `1ce
 |---|---|---|
 <!-- r13 pushes -->
 
-### Round 13, order of work (each expected result written at 02:45, before any run)
+### Round 13, order of work (each expected result written at 02:39, before any run)
 | # | Item | The run | Expected (written before the run) |
 |---|---|---|---|
 | 1a | Gradient colours by value, column and bar chart | a hand-placed page on the Ramadan sample: a column and a bar chart of Total Sales by Day Name, each three times: nothing written (the theme's one colour), `dataPoint.fill` as a `FillRule` `linearGradient2` on the chart's own measure with the two ends as literal colours (a light tint of the theme's accent to the accent), and the same with the ends as `ThemeDataColor` (ColorId and Percent); light and dark design, English and Arabic; the bars' colours read from the capture | Microsoft's CLI lists `dataPoint.fill` and `fillRule` ("Color saturation") and no other colour entry. **Expected: the literal gradient draws** (the smallest bar the light end, the largest the accent, the rest between in proportion to their value). **Not known: whether `ThemeDataColor` is accepted inside the rule's ends** (Desktop writes it for a plain fill); if it is, the colours follow a later theme change; if not, the engine writes the theme's colours as literals. Dark design: the light end must still stand 3:1 off the card (computed before writing; measured from the capture). Data labels sit outside the bars, on the card: their contrast is with the card, unchanged. Arabic: the same colours |
@@ -36,15 +36,68 @@ BI Desktop window open; `git fetch`; `fix/round-13` made from `origin/main` `1ce
 | 6 | The 11 golden tasks, English and Arabic | `r11-golden.mjs` on this branch after the merge, `gshot.ps1` | scored before (round 11's captures) and after |
 
 ### Round 13, where I am
-- **02:45:** setup done, the plan written. `npm test` at the start (main `1cef9ac`): running; the count goes in the next entry.
+- **02:39:** setup done, the plan written and pushed (`a6a3e7e`). `npm test` at the start (main `1cef9ac`): **421 of 421**, as expected.
+- **03:07, items 1 and 3: measured in Desktop, built, proven on engine-built reports; the full test run is the
+  last step before their commit** (DESKTOP-TESTS.md, "round 13": "Item 1" and "Item 3").
+  - **Item 1, gradient:** a bar has no gradient fill of its own in Desktop 2.158; a colour by value is the data
+    colour's rule (`dataPoint.fill`, `FillRule` `linearGradient2`). Literal ends draw exactly (light `#7995af` to
+    `#1f4e79`, dark `#31718d` to `#4cc9f0`); `ThemeDataColor` ends are accepted but fade the wrong way on a dark
+    design. Built: `chartColors` ("gradient" by default with a design, "solid" with hand-placed pages; the website's
+    download unchanged); the answer tells the two colours. Red run: 430 checks, 8 failing; first green run: 5
+    failing, all three causes in my new checks' helpers (the validator's file name, the tooltip pages' bars counted
+    as page bars), fixed in the test, not in the expectations.
+  - **Item 3, mirrored axes:** value axis at the right, bars from the right, the legend at the right and a date axis
+    right to left all work; a categorical axis ignores "Invert axis" and is reversed by a Descending sort by its
+    category. Built: `chartAxes` ("mirrored" by default in a right-to-left report: column, line and bar charts and
+    the tooltip pages' bars; "standard" leaves them; the website's Arabic download unchanged).
+  - **Item 2, measured so far** ("SC EN light 720", "SC EN dark 1080", `sc-*-cards.png`): the picture's own
+    background is transparent and no edge is drawn (as expected). **Off today:** (1) the colours are the compiler's
+    built-in ones when a design names none (a ring's track `#1e293b`, near black on a white card and invisible on
+    Midnight; its arc, a sparkline and its area `#00d4ff`; an arrow `#22c55e`): none follows the theme; (2) a
+    square design is sized by the card's width only, so on the 96-high cards of a 1280 x 720 page a 64 x 64 ring
+    is taller than the room under the title and **its top is cut**; (3) a text layer without a colour is black
+    (invisible on a dark card).
+  - **Round 12 is ready** (`origin/fix/round-12` `26d9c6c`: groups A to E, its list of 24 items for the laptop). It
+    changed the card image's sizing (`imgOf`), which item 2 also touches: so the order is: commit items 1 and 3,
+    **merge round 12 now**, then build item 2 on the merged code, then prove round 12's list.
+  - **Left for after the merge:** the `?v=` of `pbip-export.min.js` in `theme-generator.js` and of
+    `theme-generator.min.js` on its two pages (round 12 bumps the same lines: bumped once, after the merge).
+  - **Scripts (laptop, `builder-scripts\`):** `r13-make.mjs` (root `13-r13`, the theme named after the report),
+    `r13-shot.ps1` (shot11 for `13-r13` / `desk-r13`), `r13-runs.ps1` (colours along scan lines), `r13-grad.mjs`,
+    `r13-grad-zero.mjs`, `r13-mirror.mjs`, `r13-mirror2.mjs`, `r13-svgcards.mjs`.
 <!-- r13 where -->
 
 ### Round 13, for the owner
+1. **Gradient bars: on by default with a design; your say on two points.** (a) Default on or off: I judged it
+   clearly better on the designed pages (the largest bar stands out, the small ones step back, the page looks
+   finished) and made it the default for a design; hand-placed pages stay one colour unless asked
+   (`chartColors`). Crops: `desk-r13\ge-en-light-view1.png` (gradient) against `gr-en-light-view.png` (the left
+   chart of each row is one colour); dark: `ge-en-dark-view1.png`. (b) What the fade means: today the smallest bar
+   shown is the light end and the largest the dark end, so seven days within 9% of each other use the whole range
+   (it looks like a big difference). The other way starts the fade at zero: honest, but bars of similar size are
+   then almost one colour (`gr-ar-light-zero-p1.png`, right charts). **Recommended: keep smallest-to-largest** (the
+   bar's length already tells the size; the colour is there to rank), and say so in the plan the user approves.
+   Also: the two colours are written into each chart, so after a change of theme they stay until set again
+   (theme-following colours fade the wrong way on a dark design: measured).
+2. **Mirrored charts in Arabic: built and on by default; one side effect, and the website.** (a) With the value
+   axis at the right a slanted first label is shortened ("Dece…" on the line chart by Month Name,
+   `gm-ar-light-1080-view1.png`); level labels are whole. Options: keep (short month names, which round 12 prefers,
+   cure it); keep a line chart's value axis at the left in Arabic; or shrink the axis text. **Recommended: keep**,
+   and let the short month names of round 12 do the rest. (b) The website's Arabic download is not changed tonight
+   (the engine mirrors only when asked): **recommended: turn it on there too** once you have seen the Arabic pages.
+   (c) The legend: Desktop puts it at the right with 'TopRight'; the engine's charts have no legend, and the theme
+   generator's "Right" legend goes to the left in a right-to-left design (so since the generator was built). Say
+   if a side legend should sit at the right in Arabic.
 <!-- r13 owner -->
 
 ### Round 13, design findings
 | # | Page and visual | What is off or could be better | Crop | Severity | Proposed fix |
 |---|---|---|---|---|---|
+| 1 | Every dark design (Midnight, DataArcus), all charts | the gridlines are solid near-white lines across the dark panel, louder than the data; on a light design they are barely there | `ge-en-dark-view1.png` | medium | write the gridline colour from the theme in the "auto" chart style too (the text colour mixed 85% into the card), not only in "dotted" |
+| 2 | Every dark design, every panel | the drop shadow shows as a pale glow around each panel (a halo), not as depth | `ge-en-dark-view1.png` | medium (taste) | no shadow on a dark design, or a shadow darker than the page |
+| 3 | A line chart whose labels slant, mirrored or narrow | the first label is shortened ("Dece…", "Janua…") | `gm-ar-light-1080-view1.png`, `my-ar-view1.png` chart 9 | medium | short month names where the model has them (round 12's #16); for the owner: item 2a |
+| 4 | KPI card with a ring picture, 1280 x 720 | the ring's top is cut by the card (the picture is sized by width only) | `sc-en-light-720-cards.png` | high | item 2: cap the picture by the height under the title |
+| 5 | KPI card pictures, any design | the picture's colours are the compiler's own (a near-black ring track, cyan, a bright green), not the theme's | `sc-en-light-720-cards.png`, `sc-en-dark-1080-cards.png` | high | item 2: theme colour names and theme defaults |
 <!-- r13 findings -->
 
 ## Round 11, the long overnight Desktop sitting (2026-10-05, laptop builder; branch `fix/round-11` from main `3803b7a`; dataarcus-engine `release/0.2.6` from its main `d8d3341`; not merged)

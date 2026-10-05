@@ -197,6 +197,44 @@
     query.sortDefinition = { sort: [{ field, direction: 'Ascending' }], isDefaultSort: true };
     return query;
   };
+  // Round 13 (the owner's ask, 6 Oct 2026; measured in Desktop 2.158, DESKTOP-TESTS.md "round 13, item 1"): the bars of
+  // a bar or column chart fade by their value. It is the data colour's conditional formatting: dataPoint.fill as a
+  // FillRule (linearGradient2) on the chart's own measure, for every data point. Desktop drew the smallest bar exactly
+  // the low colour and the largest exactly the high one, in English and Arabic alike. The ends are written as colours,
+  // not as ThemeDataColor: "60% lighter" there goes towards white, so on a dark design the smallest bar came out the
+  // brightest. The high end is the bars' colour today (the theme's first data colour); the low end is that colour
+  // mixed towards the card as far as it still stands 3:1 off the card (60% at most), so the smallest bar never fades
+  // into its panel. A colour that cannot fade by 15% and keep 3:1 gets no rule (null). A bar has no gradient fill of
+  // its own in Desktop 2.158 (dataPoint holds fill, fillRule, fillTransparency and the border only).
+  const HEX6 = /^#[0-9a-f]{6}$/i;
+  const gradientEnds = (base, card) => {
+    if (!HEX6.test(String(base)) || !HEX6.test(String(card))) return null;
+    for (let n = 12; n >= 3; n--) { const low = mixHex(base, card, n / 20); if (contrast(low, card) >= 3) return { low, high: String(base).toLowerCase() }; }
+    return null;
+  };
+  const gradientFill = (input, ends) => [{
+    properties: { fill: { solid: { color: { expr: { FillRule: { Input: input, FillRule: { linearGradient2: {
+      min: { color: { Literal: { Value: "'" + ends.low + "'" } } }, max: { color: { Literal: { Value: "'" + ends.high + "'" } } },
+      nullColoringStrategy: { strategy: { Literal: { Value: "'asZero'" } } } } } } } } } } },
+    selector: { data: [{ dataViewWildcard: { matchingOption: 1 } }] } }];
+  // Round 13 (the owner's ask, 5 Oct 2026; measured in Desktop 2.158, DESKTOP-TESTS.md "round 13, item 3"): Desktop does
+  // not mirror a chart in a right-to-left report, so the writer does what Desktop honours.
+  // A column or line chart: the value axis at the right (valueAxis.switchAxisPosition), and the categories from the
+  // right. A categorical axis ignores categoryAxis.invertAxis (January stayed at the left) and follows the sort, so the
+  // chart is sorted by its category, Descending: by the Min-of-number field of "sorted" where the category has one, else
+  // by the category's own column (which follows the model's sort-by column). A continuous axis (a date, a number)
+  // ignores the sort and honours invertAxis: both are written, and Desktop reversed such an axis once.
+  // A bar chart: the bars grow from the right (valueAxis.invertAxis) and the category names sit at the right
+  // (categoryAxis.switchAxisPosition); its top-to-bottom order stays.
+  const mirrorChart = (visual, kind) => {
+    const put = (object, props) => { visual.objects = visual.objects || {}; const e = visual.objects[object] || (visual.objects[object] = [{ properties: {} }]); Object.assign(e[0].properties, props); };
+    if (kind === 'bar') { put('valueAxis', { invertAxis: bool(true) }); put('categoryAxis', { switchAxisPosition: bool(true) }); return visual; }
+    put('valueAxis', { switchAxisPosition: bool(true) }); put('categoryAxis', { invertAxis: bool(true) });
+    const query = visual.query, sd = query.sortDefinition;
+    if (sd && sd.sort && sd.sort[0]) sd.sort[0].direction = 'Descending';
+    else query.sortDefinition = { sort: [{ field: query.queryState.Category.projections[0].field, direction: 'Descending' }], isDefaultSort: true };
+    return visual;
+  };
   // a table's fields in the order they are shown (see bindQuery). Right to left: reversed (Power BI doesn't mirror
   // tables), but the first text column stays first (the owner's design choice 5, 5 Oct 2026): Power BI writes the total
   // row's "Total" only in the first projection's column and only when that is a column of text (measured in Desktop
@@ -280,6 +318,11 @@
     const noPageButtons = [];   // pages whose header has no room for the page names even at 8pt: { page } (round 11)
     const leftOut = [];   // data visuals not written because the model has no field for them: { page, kind, title }
     const kpiTitles = { wrapped: [], shortened: [] };
+    // bars that fade by value (o.chartColors 'gradient', round 13): the two ends, or null when the colour cannot fade
+    const barBase = ((o.theme || {}).dataColors || [])[0] || (u || {}).accent, GRAD = o.chartColors === 'gradient' && u ? gradientEnds(barBase, u.card) : null;
+    const chartColors = { asked: o.chartColors === 'gradient', ends: GRAD, base: barBase, charts: 0 };
+    // charts mirrored for a right-to-left report (o.chartAxes 'mirrored', round 13; see mirrorChart)
+    const MIRROR = rtl && o.chartAxes === 'mirrored', chartAxes = { asked: o.chartAxes || null, rtl, charts: 0 };
     const svgSizes = {};   // the SVG pictures' size in each page's table: { w, h, design (the widest), capped }   // KPI titles too long for one line at 8pt (see kpiTitleFit)
     // (a name over the limit ends at its last whole word: cut at the last space before the limit, and a dash or
     // other joining mark left at the end goes too; one word longer than the limit is cut at the limit)
@@ -771,6 +814,9 @@
           if (B && own && !query && (CHARTS.includes(s.kind) || ['table', 'matrix', 'gauge', 'card'].includes(s.kind))) { leftOut.push({ page: pg.name || base, kind: s.kind, title: s.title || null }); return; }
           visual = { visualType: type, visualContainerObjects: frame(ttl, ttl, extra, true), drillFilterOtherVisuals: true };
           if (query) visual.query = query;
+          // bars that fade by value (gradientFill above): the report's own bar and column charts, never the tooltip pages'
+          if (GRAD && query && (s.kind === 'bar' || s.kind === 'column')) { visual.objects = { dataPoint: gradientFill(query.queryState.Y.projections[0].field, GRAD) }; chartColors.charts++; }
+          if (MIRROR && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { mirrorChart(visual, s.kind); chartAxes.charts++; }
           // the title already names the KPI, so the card's own label under the number is not repeated
           if (type === 'cardVisual') {
             const cf0 = query && B ? (s.kind === 'kpi' ? B.kpis[kpiIndex - 1] : B.measure) : null;
@@ -1077,14 +1123,16 @@
     const tipCardVisual = () => { const objects = cardObjects(tipCard, null, tip.card);
       if (FULL && tip.card && tip.card.m != null && tip.card.cardFormat) objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(tip.card.cardFormat) }, selector: { metadata: tip.card.t + '.' + tip.card.m } });
       return { x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(tip.card)] }), objects, visualContainerObjects: cardFrame(tipFrame(label(tip.card)), tipCard, TIP_TITLE) } }; };
+    // (the tooltip pages' bars grow from the right in a mirrored report too)
+    const tipBar = (vis) => (MIRROR ? mirrorChart(vis, 'bar') : vis);
     tipPage(tipName, tipBinding, W.tooltipPage || 'Tooltip', tip
       ? [tipCardVisual(),
         // a bar chart writes its category names horizontally (a column chart slants or cuts them); its own sizes, as
         // the card has: axis text 8pt, 40% of the width for the names (a 20-character name is whole), no value axis and
         // each bar's value beside it instead, which leaves room for one more row
-        { x: 12, y: 92, w: 296, h: 184, visual: { visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), tip.cat),
+        { x: 12, y: 92, w: 296, h: 184, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), tip.cat),
           objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
-          visualContainerObjects: tipFrame(tip.y.m === tip.card.m && tip.y.t === tip.card.t ? label(tip.y) + ' ' + (W.by || 'by') + ' ' + label(tip.cat) : label(tip.y)) } }]
+          visualContainerObjects: tipFrame(tip.y.m === tip.card.m && tip.y.t === tip.card.t ? label(tip.y) + ' ' + (W.by || 'by') + ' ' + label(tip.cat) : label(tip.y)) }) }]
       : [{ x: 12, y: 12, w: 296, h: 260, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }]);
     // the trend: the card's measure by month, as a bar chart with the same settings, 310 high on a 320 x 410 page: 12
     // rows (22 a row and 46 for the title and padding), so every month's name is whole and horizontal with its value
@@ -1092,9 +1140,9 @@
     // a column or line chart loses the last month behind a scrollbar as soon as the value axis's labels are wide
     // ("100K", "0.4M"), and without that axis the first month's name is cut. The owner's choice, 2026-10-03.
     if (trend) tipPage(trend.name, trend.binding, (W.tooltipPage || 'Tooltip') + ' \u00b7 ' + label(tip.date), [tipCardVisual(),
-      { x: 12, y: 92, w: 296, h: 310, visual: { visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(tip.card)] }), tip.date),
+      { x: 12, y: 92, w: 296, h: 310, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(tip.card)] }), tip.date),
         objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
-        visualContainerObjects: tipFrame(label(tip.card) + ' ' + (W.by || 'by') + ' ' + label(tip.date)) } }], 410);
+        visualContainerObjects: tipFrame(label(tip.card) + ' ' + (W.by || 'by') + ' ' + label(tip.date)) }) }], 410);
 
     // git: keep local and cached files out of source control
     // in someone's project folder these would replace their own files, so they are left out there
@@ -1102,7 +1150,7 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, svgSizes, noPageButtons, tableColumns };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes };
   }
 
   const api = { build, zip, crc32, textWidth, columnRoom };
