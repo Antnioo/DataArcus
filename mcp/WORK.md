@@ -17,7 +17,8 @@ from main `3803b7a`; dataarcus-engine main pulled (`d8d3341`).
 **Hourly pushes (both repos when both changed):** 22:09, 23:09, 00:09, 01:09, 02:09, 03:09 (the stop).
 | Due | Pushed at | What |
 |---|---|---|
-| start | (see below) | this plan |
+| start | 21:17 | DataArcus `c1ac1c1`, the plan |
+| (item 1) | 21:24 | dataarcus-engine `release/0.2.6` `0e32cde` |
 <!-- r11 pushes -->
 
 ### Round 11, order of work (all approved; each expected result written before its run)
@@ -39,11 +40,40 @@ from main `3803b7a`; dataarcus-engine main pulled (`d8d3341`).
 never fixed tonight (only a FAIL of items 1-6, tests first).
 
 ### Round 11, where I am
-- **21:15:** setup done; the plan written. `npm test` at the start: running (the count goes here).
+- **21:15:** setup done; the plan written (pushed 21:17, `c1ac1c1`).
+- **21:19:** `npm test` at the start, `fix/round-11` = main `3803b7a`: **418 of 418** (as expected).
+- **21:27, item 1, package 0.2.6: built, checked, pushed; the install in Claude Desktop is moved to the end of the sitting.**
+  - dataarcus-engine `release/0.2.6` (from main `d8d3341`), pushed 21:24: `dff2343` the version (manifest and plugin
+    0.2.5 -> 0.2.6, no text change), `f9669cd` a build fix (below), `0e32cde` the record
+    `packaging/releases/0.2.6.json`. Not tagged, no release.
+  - **The package:** `dist/dataarcus-0.2.6.mcpb`, **4,069,795 bytes, SHA-256
+    `280e86f6e8fceee78823139204157695ed4050dc2973936f92d276c3def91540`** (certutil gives the same), unsigned, 22
+    staged files (the 0.2.5 list: `mcp/lib/gulf-calendar.mjs`, `gulf-health.js`, `gulf-dates.js`,
+    `calendar-generator.js`, `svg-kpi-compiler.js` among them), 91 packages; the staged server answers version 0.2.6
+    with the manifest's 7 tools; the record names DataArcus `3803b7afa841a4387abdffaf2e2543563aea833d` and packaging
+    `f9669cd`; tests `mcp=418`. Build tests 17 -> 18. **Off from what I expected:** the size (4.07 MB; I wrote 3.3 to
+    3.6 from 0.2.2's 3.3 MB; the engines are 356 KB now).
+  - **A defect found and fixed, a test first (its cause):** the first build's `--check 0.2.6` said "differs
+    LICENSE.md". On this Windows checkout git writes `LICENSE-BETA.md` with CRLF; the build staged the working copy,
+    `--check` reads the commit (LF). So a Windows build was not the package its own record's check rebuilds. Now a
+    clean build stages the packaging files as committed (`packagingBytes`; only `--allow-dirty` reads the working
+    copy). Rebuilt: `--check 0.2.6` same: true, 22 files. (The first build's hash `3debc106…` is dead: never sent.)
+  - **Each of the 7 tools called once on the made-up Ramadan sample, from the unpacked .mcpb** (unpacked under
+    `<tests folder>/11-r11/pkg/unpacked`, started as the manifest starts it: `node mcp/server.mjs` with
+    `DATAARCUS_ROOT` = `.../pkg/work2`; `builder-scripts/r11-pkg-smoke.mjs`): `read_model` ok (Calendar 34 columns,
+    Sales 2 columns and 5 measures); `suggest_fields` ok; `check_model_health` ok (overall 99, 4 findings, the
+    gulfCalendar section, wrote "Ramadan Test - fix number formats.tmdl"); `generate_theme` ok (`smoke-026.json`);
+    `plan_layout` ok (10 slots); `create_report` ok ("Smoke 026", 2 pages, 4 KPI cards); `add_gulf_calendar` ok
+    (4748 rows, 36 columns, "Ramadan Test - add Gulf calendar.tmdl"). My first call of `add_gulf_calendar` used
+    wrong input names and was refused in plain words (my mistake, not the tool's). Nothing was overwritten.
+  - **Not done yet: the install in Claude Desktop itself.** Its config has no `mcpServers` entry and one extension
+    of the owner's (not touched). The install is driven through the same Claude app this session runs in (mouse,
+    keyboard, a new chat), so a slip there could end the session: it is done **last**, after items 2 to 7 are pushed.
 - **Read at the start:** WORK.md (round 10's sections), DESKTOP-TESTS.md lines 1-400 and 1402-1698 (the first
   sittings, round 10's records, the lessons) and every heading; the middle (rounds 0 to 4, the three sittings of 4
   October) by heading only, to be read where an item needs it.
-- **Next:** item 1.
+- **Next:** item 2 (phone layout: "T EN 4 1920", "T AR 4 1920", "T EN 8 1920", "T AR 8 1920" are built in `11-r11`
+  by `r11-tabs.mjs` + `r10-make.mjs`; `r11-phone.ps1` captures the phone canvas; `capx11.sh` captures pages into `desk-r11`).
 
 ### Round 11, for the owner
 (nothing yet)
