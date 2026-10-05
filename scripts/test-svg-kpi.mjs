@@ -345,5 +345,28 @@ const tricky = { name: 'Odd "name"', w: 100, h: 20, values: [{ id: 'a', kind: 'm
   }
   ok(bad === 0, `fuzz: ${bad} problems in 300 random designs x ${cases.length} value sets`);
 }
+
+// the Ramadan sales card (owner's go 5 Oct): the starter is the design the live tool saved at the end of the 6 Oct
+// video (dataarcus-engine main cb6866e, business/posts/2026-10-06-svg-kpi-designer/ramadan-sales.svgkpi.json, copied
+// to scripts/tests/fixtures/svg-kpi/), with the tool's sample measures (Sales, Target, Sales LY)
+{
+  const fs = require('fs'), path = require('path');
+  const file = JSON.parse(fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), 'tests/fixtures/svg-kpi/ramadan-sales.svgkpi.json'), 'utf8'));
+  const t = TEMPLATES.find((x) => x.id === 'ramadan');
+  ok(!!t && t.name === 'Ramadan sales card' && t.nameAr === 'بطاقة مبيعات رمضان' && !t.premium, 'ramadan: the starter is listed with its English and Arabic names');
+  if (t) {
+    ok(JSON.stringify(t.layers) === JSON.stringify(file.layers) && t.w === file.w && t.h === file.h && t.bg === file.bg && t.radius === file.radius,
+      'ramadan: layers, size, background and corners are the exported design\'s');
+    ok(JSON.stringify(t.values.map((v) => [v.id, v.kind, v.measure || null])) === JSON.stringify(file.values.map((v) => [v.id, v.kind, v.measure || null])) && ['Sales', 'Target', 'Sales LY'].every((m) => t.values.some((v) => v.measure === m)),
+      'ramadan: the values and measure names are the tool\'s samples (Sales, Target, Sales LY)');
+    const prog = parse(tokenize(SVGKPI.toDax(t).dax));
+    for (const [label, sales, colour, pct] of [['red', 960000, '#ef4444', '64%'], ['amber', 1335000, '#f59e0b', '89%'], ['green', 1605000, '#22c55e', '107%']]) {
+      const m = { Sales: sales, Target: 1500000, 'Sales LY': 1100000 };
+      const js = SVGKPI.toImageUrl(t, m).url, dx = run(prog, m, NOSERIES), svg = decodeURIComponent(js.slice(SVGKPI.PREFIX.length));
+      ok(js === dx, `ramadan ${label}: preview and DAX differ`);
+      ok(svg.includes(colour) && svg.includes('>' + pct + '<') && svg.includes('مبيعات رمضان') && svg.includes('Target AED 1.5M') && svg.includes('AED '), `ramadan ${label}: want ring ${colour}, "${pct}", the Arabic title and "Target AED 1.5M": ${svg.slice(0, 300)}`);
+    }
+  }
+}
 console.log(`${checks - fails}/${checks} checks passed`);
 process.exit(fails ? 1 : 0);
