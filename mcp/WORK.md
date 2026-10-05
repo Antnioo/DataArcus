@@ -21,6 +21,7 @@ from main `3803b7a`; dataarcus-engine main pulled (`d8d3341`).
 | (item 1) | 21:24 | dataarcus-engine `release/0.2.6` `0e32cde` |
 | 22:09 | 22:09 | DataArcus `2ab8c74` (items 2 and 3, the records) |
 | 23:09 | 23:07 | DataArcus (the two fixes `9a0b660`, item 4 `f6976aa`, item 5 opened) |
+| 00:09 | 23:54 | DataArcus (the table fix `00b38be`, items 5 to 7) |
 <!-- r11 pushes -->
 
 ### Round 11, order of work (all approved; each expected result written before its run)
