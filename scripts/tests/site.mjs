@@ -220,6 +220,56 @@ export default async function ({ browser, url }) {
     await v.ctx.close();
   }
 
+  // jsDelivr only by package (audit AUD-029, 2026-10-05): a policy that allows the whole host lets any package or any
+  // GitHub repository it serves run on the page. Every jsDelivr source is a /npm/<package>@<version>/ folder, an
+  // unrelated package is refused, and the Bootstrap Icons font (loaded by its own stylesheet) still loads.
+  {
+    const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+    const { files } = await import('../csp.mjs');
+    const wide = [];
+    for (const f of files()) {
+      const m = fs.readFileSync(path.join(ROOT, f), 'utf8').match(/<meta http-equiv="Content-Security-Policy" content="([^"]*)"/);
+      for (const src of (m ? m[1] : '').split(/[;\s]+/).filter((x) => /cdn\.jsdelivr\.net/.test(x))) if (!/^https:\/\/cdn\.jsdelivr\.net\/npm\/(@[\w.-]+\/)?[\w.-]+@\d[\w.-]*\/$/.test(src)) wide.push(`${f}: ${src}`);
+    }
+    check(!wide.length, `Content Security Policy allows jsDelivr beyond a package folder: ${wide.slice(0, 4).join('; ')}${wide.length > 4 ? ` and ${wide.length - 4} more` : ''}`);
+    for (const lang of ['en', 'ar']) {
+      const v = await visitor(browser);
+      await v.ctx.addInitScript(() => { window.__csp = []; document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(`${e.violatedDirective} ${e.blockedURI}`)); });
+      await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=${lang}`, { waitUntil: 'networkidle' });
+      const r = await v.pg.evaluate(async () => {
+        const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js'; document.body.appendChild(s);
+        await new Promise((ok) => setTimeout(ok, 800)); await document.fonts.ready;
+        return { refused: window.__csp.some((x) => /^script-src/.test(x) && /canvas-confetti/.test(x)), ran: typeof window.confetti === 'function',
+          icons: [...document.fonts].some((f) => /bootstrap-icons/.test(f.family) && f.status === 'loaded'), other: window.__csp.filter((x) => !/canvas-confetti/.test(x)) };
+      });
+      check(r.refused && !r.ran, `Content Security Policy ${lang}: an unrelated jsDelivr package was ${r.ran ? 'run' : 'not refused'} on the Health Check`);
+      check(r.icons && !r.other.length, `Content Security Policy ${lang}: Bootstrap Icons font ${r.icons ? 'loaded' : 'not loaded'}${r.other.length ? '; other violations: ' + r.other.join(' | ') : ''}`);
+      await v.ctx.close();
+    }
+  }
+
+  // Small text reads at 4.5:1 at least (WCAG AA; night audit 2026-10-05): the card badges of the portfolio and the blog,
+  // and inline code in the articles, on whatever is behind them (the nearest background that isn't transparent)
+  {
+    const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
+    for (const p of ['portfolio.html', 'blog.html', 'articles/article-power-bi-model-ai-ready.html', 'articles/article-power-bi-model-health-check.html']) for (const lang of ['en', 'ar']) {
+      const v = await visitor(browser, { viewport: [1440, 900] });
+      await v.pg.goto(`${url}/${p}?lang=${lang}`, { waitUntil: 'networkidle' }); await ready(v.pg);
+      const low = await v.pg.evaluate(() => {
+        const rgba = (s) => { const m = s.match(/[\d.]+/g) || [0, 0, 0, 0]; return [+m[0], +m[1], +m[2], m[3] == null ? 1 : +m[3]]; };
+        const over = (fg, bg) => [0, 1, 2].map((i) => fg[i] * fg[3] + bg[i] * (1 - fg[3]));
+        const lum = (c) => { const f = (x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }; return 0.2126 * f(c[0]) + 0.7152 * f(c[1]) + 0.0722 * f(c[2]); };
+        const behind = (e) => { const layers = []; for (let n = e; n; n = n.parentElement) { const c = rgba(getComputedStyle(n).backgroundColor); if (c[3] > 0) { layers.push(c); if (c[3] >= 1) break; } } let bg = [255, 255, 255]; layers.reverse().forEach((c) => { bg = over(c, bg); }); return bg; };
+        return [...document.querySelectorAll('.badge, .article-body code')].filter((e) => !e.closest('pre') && e.getClientRects().length && e.textContent.trim()).map((e) => {
+          const bg = behind(e), fg = over(rgba(getComputedStyle(e).color), bg), a = lum(fg), b = lum(bg);
+          return { t: e.textContent.trim().slice(0, 24), r: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) };
+        }).filter((x) => x.r < 4.5).map((x) => `"${x.t}" ${x.r.toFixed(2)}`);
+      });
+      check(!low.length, `${p} ${lang}: small text under 4.5:1: ${[...new Set(low)].slice(0, 4).join(', ')}`);
+      await v.ctx.close();
+    }
+  }
+
   // Every page in the sitemap has a title and a description that fit what search results show (audit AUD-019 and the
   // leftovers of 2026-10-04): at most 60 and 155 characters, in English and in Arabic, as the page sets them after
   // loading its language. (The go/ short links are redirects, not in the sitemap.)
