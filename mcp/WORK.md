@@ -44,6 +44,11 @@ end, then CI.
    owner"; the 5-line report.
 
 ### Round 12, where I am
+**Done in code (5 Oct 21:50 to 23:00 UTC), not merged:** commits `85d54c1` (A, B), `d048c8d` (C), `2954732` (D, E) on
+`fix/round-12`, CI green on each; dataarcus-engine `fix/round-12-manifest` `e642bf8`. `npm test` 421 -> 453 of 453;
+the full website run 17 of 17. Next: the laptop proves the list below in Desktop; the owner answers "for the owner".
+Not done, with the reason: #19 (no alignment in Microsoft's schema), #3 (needs Tahoma measured), #27 (nothing in
+the report: a model without rows). Gradient colours and the SVG-in-KPI blending were the laptop's tonight.
 Started 21:50 UTC (5 Oct). Tests: the round 12 block in `mcp/test.mjs` (checks written first, each red before its code).
 - **A and B done** (one commit: the two groups share the writer's card and table code): #24 titles wrap or end in "…"
   (slicer headers through `header.text`, in Microsoft's theme schema); #12 numbers right-aligned in right-to-left
