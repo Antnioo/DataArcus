@@ -141,7 +141,7 @@
                 <li data-i18n-html="content.list1_4"><strong>Names sort alphabetically.</strong> April comes before January, Friday before Monday, and the Hijri months in an order nobody uses, unless each name is sorted by its number.</li>
               </ul>
               <h2 class="mt-5 mb-3" data-i18n="content.h2">Announced dates or the calculated calendar?</h2>
-              <p data-i18n-html="content.p3">Power BI has no Hijri functions, so the calendar table has to carry the Hijri dates. The usual source is Umm al-Qura, Saudi Arabia's official calculated calendar. But Ramadan and the two Eids are set by moon sighting, and an announcement can differ from the calculation by a day.</p>
+              <p data-i18n-html="content.p3">Power BI's date functions (YEAR, MONTH, DATE) work on the Gregorian calendar and have no Hijri month or Ramadan flag, so the calendar table has to carry the Hijri dates. The usual source is Umm al-Qura, Saudi Arabia's official calculated calendar. But Ramadan and the two Eids are set by moon sighting, and an announcement can differ from the calculation by a day.</p>
               <p data-i18n-html="content.p4">We checked every UAE announcement from 2018 to 2026: 27 dates (the first day of Ramadan, Eid al-Fitr and Eid al-Adha in each year). <strong>26 matched Umm al-Qura. One did not:</strong> Ramadan 2018 started on Thursday 17 May, not Wednesday 16 May. Every date and its source is in our <a href='https://github.com/Antnioo/DataArcus/blob/main/scripts/gulf-calendar/DATES-SOURCES.md' class='text-accent' target='_blank' rel='noopener'>sources file</a>.</p>
               <p data-i18n-html="content.p5">Dates from 2027 on are not announced yet. They are estimates, and a sighting can still move each one by a day, so the calendar flags them.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h3">Build the calendar in a minute</h2>
@@ -288,7 +288,7 @@ RETURN
   </footer>
 
   <script src="../assets/js/translations/common.min.js" defer></script>
-  <script src="../assets/js/translations/article-gulf-calendar-power-bi.min.js" defer></script>
+  <script src="../assets/js/translations/article-gulf-calendar-power-bi.min.js?v=20261005h" defer></script>
   <script src="../assets/js/lang-manager.min.js" defer></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>

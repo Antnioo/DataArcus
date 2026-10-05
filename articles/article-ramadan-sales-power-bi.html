@@ -137,7 +137,7 @@
               <p data-i18n-html="content.p3">SAMEPERIODLASTYEAR, DATEADD and the other time intelligence functions shift dates by Gregorian months. Ask for March 2026 against March 2025 and you compare <strong>19 days of Ramadan plus Eid</strong> against <strong>29 days of Ramadan</strong>. Two different months of behaviour, reported as one growth number.</p>
               <p data-i18n-html="content.p4">For retail, food and telecom in the Gulf, Ramadan and Eid are some of the biggest weeks of the year. When the calendar pushes them from one month into another, your year over year numbers swing for reasons that have nothing to do with performance.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h2">Step 1: add Hijri columns to your calendar</h2>
-              <p data-i18n-html="content.p5">Power BI has no Hijri date functions, so the calendar table has to carry the answer. You need five columns: <strong>Hijri Year</strong>, <strong>Hijri Month Number</strong>, <strong>Hijri Day</strong>, <strong>Is Ramadan</strong> and <strong>Ramadan Day</strong> (1 to 30).</p>
+              <p data-i18n-html="content.p5">Power BI's date functions work on the Gregorian calendar, so the calendar table has to carry the Hijri answer. You need five columns: <strong>Hijri Year</strong>, <strong>Hijri Month Number</strong>, <strong>Hijri Day</strong>, <strong>Is Ramadan</strong> and <strong>Ramadan Day</strong> (1 to 30).</p>
               <p data-i18n-html="content.p6">Our free <a href='../tools/dax-calendar-table-generator.html' class='text-accent'>DAX Calendar Table Generator</a> builds all of them for you, using the official Umm al-Qura calendar. It embeds the Hijri month starts in a small DATATABLE inside the DAX, so there is no Power Query step and no external file. Tick Hijri, pick your date range, copy, and paste it as a new table.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h3">Step 2: the Last Ramadan measure</h2>
               <p data-i18n-html="content.p7">Take the Ramadan days in the current filter as pairs of Hijri year and Ramadan day, move each pair one Hijri year back, and read those days. The pairs are what keep a card or a total row right: a card filtered to 2025 also holds the first weeks of Hijri 1447, so taking the latest Hijri year would point at Ramadan 2025 itself.</p>
@@ -256,7 +256,7 @@ DIVIDE ( [Sales This Ramadan] - [Sales Last Ramadan], [Sales Last Ramadan] )</co
   </footer>
 
   <script src="../assets/js/translations/common.min.js" defer></script>
-  <script src="../assets/js/translations/article-ramadan-sales-power-bi.min.js" defer></script>
+  <script src="../assets/js/translations/article-ramadan-sales-power-bi.min.js?v=20261005h" defer></script>
   <script src="../assets/js/lang-manager.min.js" defer></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
