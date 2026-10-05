@@ -128,8 +128,25 @@ export function unzipNeeded(buf, lim) {
   return out;
 }
 // JSON from a part of the file; a part that is not JSON is told in words, never with its text (an error message from
-// JSON.parse quotes the start of the text)
-const partJson = (buf, what) => { try { return json(buf); } catch (e) { throw new Error(`The ${what} in this file is not valid JSON, so it was not read.`); } };
+// JSON.parse quotes the start of the text). A parsed model nested deeper than 256 levels is refused too (the outside
+// review's B-02): JSON.parse takes it, but the code that walks it afterwards would run out of stack. Real models are
+// 8 or 9 levels deep, reports 12 to 15 (measured on the test models and the sample .pbit files, 2026-10-05).
+const MAX_DEPTH = 256;
+const tooDeep = (o) => { const st = [[o, 1]]; while (st.length) { const [v, d] = st.pop(); if (d > MAX_DEPTH) return true; if (v && typeof v === 'object') for (const k in v) st.push([v[k], d + 1]); } return false; };
+const partJson = (buf, what) => {
+  let j; try { j = json(buf); } catch (e) { throw new Error(`The ${what} in this file is not valid JSON, so it was not read.`); }
+  if (tooDeep(j)) throw new Error(`The ${what} is nested more than ${MAX_DEPTH} levels deep (a real model is about 10), so it was not read.`);
+  return j;
+};
+// A file of the model read from disk (model.bim, a TMDL file, a report's JSON): measured before it is read (B-02), the
+// same limits as the parts of a .pbit: a model file 64 MB, any other file 32 MB, all the TMDL files together 128 MB.
+// The largest TMDL file we have is 46,099 bytes (the 300-table test model's relationships), the largest model.bim
+// about 600 KB as JSON.
+const readCapped = (f, cap, what) => {
+  const size = fs.lstatSync(f).size;
+  if (size > cap) throw refuse(`its ${what} is ${mb(size)}, above the ${mb(cap)} DataArcus reads`);
+  return fs.readFileSync(f);
+};
 
 // Links (symbolic links, junctions) are never followed: they are left out, and listed in `links` when given
 const walk = (dir, depth = 0, links = null) => (depth > 4 ? [] : fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
@@ -172,8 +189,10 @@ export function loadModel(p) {
   else if (/\.pbip$/i.test(full) && fs.existsSync(full) && fs.statSync(full).isFile()) { const beside = full.replace(/\.pbip$/i, '.SemanticModel'); full = fs.existsSync(beside) ? beside : path.dirname(full); }
   const st = fs.statSync(full);
   if (st.isFile()) {
-    // a file above the limit is refused before it is read into memory
-    if (st.size > PBIT_LIMITS.file) throw refuse(`it is ${mb(st.size)}, above the ${mb(PBIT_LIMITS.file)} DataArcus reads`);
+    // a file above the limit is refused before it is read into memory (a .pbit 300 MB; a model.bim given as a file 64 MB)
+    const isZip = (() => { try { const fd = fs.openSync(full, 'r'), b = Buffer.alloc(2); fs.readSync(fd, b, 0, 2, 0); fs.closeSync(fd); return b[0] === 0x50 && b[1] === 0x4b; } catch (e) { return false; } })();
+    const cap = isZip ? PBIT_LIMITS.file : PBIT_LIMITS.model;
+    if (st.size > cap) throw refuse(`it is ${mb(st.size)}, above the ${mb(cap)} DataArcus reads${isZip ? '' : ' for a model file'}`);
     const buf = fs.readFileSync(full);
     if (buf[0] === 0x50 && buf[1] === 0x4b) {
       const z = unzipNeeded(buf), dms = z.DataModelSchema || Object.entries(z).find(([n]) => /(^|\/)model\.bim$/i.test(n))?.[1];
@@ -182,10 +201,10 @@ export function loadModel(p) {
       const tmsl = partJson(dms, 'model part'), layout = z['Report/Layout'];
       const pbir = Object.keys(z).filter((n) => /(^|\/)definition\/(report\.json|reportExtensions\.json|pages\/.*\.json|bookmarks\/.*\.json)$/i.test(n) && !/StaticResources|CustomVisuals/i.test(n));
       const report = layout ? { format: 'legacy', files: [{ path: 'Report/Layout', json: partJson(layout, 'report part') }] }
-        : pbir.length ? { format: 'pbir', files: pbir.map((n) => { try { return { path: n, json: json(z[n]) }; } catch (e) { return null; } }).filter(Boolean) } : null;
+        : pbir.length ? { format: 'pbir', files: pbir.map((n) => { try { return { path: n, json: partJson(z[n], 'report part') }; } catch (e) { return null; } }).filter(Boolean) } : null;
       return { source: path.basename(full), folder: null, tmsl, tables: Bind.fromTmsl(tmsl), report };
     }
-    const tmsl = json(buf);
+    const tmsl = partJson(buf, 'model file');
     return { source: path.basename(full), folder: null, tmsl, tables: Bind.fromTmsl(tmsl), report: null };
   }
   // a folder: the model folder nearest to the top wins (a backup copy deeper down never does)
@@ -202,17 +221,22 @@ export function loadModel(p) {
   const folder = dirs[0], bim = path.join(folder, 'model.bim');
   if (isLink(bim)) real(bim);
   let tmsl = null, tables;
-  if (fs.existsSync(bim)) { tmsl = json(fs.readFileSync(bim)); tables = Bind.fromTmsl(tmsl); }
+  if (fs.existsSync(bim)) { tmsl = partJson(readCapped(bim, PBIT_LIMITS.model, 'model.bim'), 'model.bim'); tables = Bind.fromTmsl(tmsl); }
   else {
     const tdir = path.join(folder, 'definition', 'tables');
     if (!fs.existsSync(tdir)) throw new Error(`No model.bim and no definition/tables in ${folder}`);
     if (isLink(path.join(folder, 'definition'))) real(path.join(folder, 'definition'));
     if (isLink(tdir)) real(tdir);
-    tables = fs.readdirSync(tdir, { withFileTypes: true }).filter((e) => !e.isSymbolicLink() && /\.tmdl$/i.test(e.name)).flatMap((e) => Bind.parseTmdl(decode(fs.readFileSync(path.join(tdir, e.name)))));
+    // every TMDL file measured first, one by one and all together, before any is read
+    const def = path.join(folder, 'definition'), tfiles = walk(def).filter((f) => /\.tmdl$/i.test(f));
+    let total = 0;
+    for (const f of tfiles) { const size = fs.lstatSync(f).size; if (size > PBIT_LIMITS.entry) throw refuse(`one of its TMDL files is ${mb(size)}, above the ${mb(PBIT_LIMITS.entry)} DataArcus reads`); total += size; }
+    if (total > PBIT_LIMITS.total) throw refuse(`its TMDL files are ${mb(total)} together, above the ${mb(PBIT_LIMITS.total)} DataArcus reads`);
+    const text = new Map(tfiles.map((f) => [f, decode(fs.readFileSync(f))]));
+    tables = fs.readdirSync(tdir, { withFileTypes: true }).filter((e) => !e.isSymbolicLink() && /\.tmdl$/i.test(e.name)).flatMap((e) => { const f = path.join(tdir, e.name); return Bind.parseTmdl(text.has(f) ? text.get(f) : decode(readCapped(f, PBIT_LIMITS.entry, 'TMDL file'))); });
     // the whole model (expressions, relationships, roles...) in model.bim form, for the health check
-    const def = path.join(folder, 'definition');
     // (lineage tags kept: the fix scripts write each object back with its own tag, so Desktop doesn't give it a new one)
-    tmsl = Tmdl.fromFiles(walk(def).filter((f) => /\.tmdl$/i.test(f)).map((f) => ({ path: path.relative(folder, f).replace(/\\/g, '/'), text: decode(fs.readFileSync(f)) })), { lineageTags: true });
+    tmsl = Tmdl.fromFiles(tfiles.map((f) => ({ path: path.relative(folder, f).replace(/\\/g, '/'), text: text.get(f) })), { lineageTags: true });
   }
   tables = tables.filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name));
   // the project's own reports (PBIR), for the health check and for choosing a report name that is free
@@ -222,7 +246,7 @@ export function loadModel(p) {
   const beside = projectDir ? fs.readdirSync(projectDir, { withFileTypes: true }).filter((e) => !e.isSymbolicLink()).map((e) => e.name) : [];
   const reports = beside.filter((n) => /\.Report$/i.test(n));
   const pbir = reports.flatMap((r) => { const d = path.join(projectDir, r, 'definition'); return !isLink(d) && fs.existsSync(d) ? walk(d).filter((f) => f.endsWith('.json')) : []; });
-  const report = pbir.length ? { format: 'pbir', files: pbir.map((f) => { try { return { path: f.replace(/\\/g, '/'), json: json(fs.readFileSync(f)) }; } catch (e) { return null; } }).filter(Boolean) } : null;
+  const report = pbir.length ? { format: 'pbir', files: pbir.map((f) => { try { return { path: f.replace(/\\/g, '/'), json: partJson(readCapped(f, PBIT_LIMITS.entry, 'report file'), 'report file') }; } catch (e) { return null; } }).filter(Boolean) } : null;
   // report names in use: an X.Report folder and its X.pbip count once
   const taken = [...new Set((projectDir ? fs.readdirSync(projectDir) : []).filter((n) => /\.(Report|pbip)$/i.test(n)).map((n) => n.replace(/\.(Report|pbip)$/i, '')))];
   return { source: path.relative(ROOT, folder) || folder, folder, projectDir, taken, tmsl, tables, report };

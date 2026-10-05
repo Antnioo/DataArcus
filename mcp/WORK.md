@@ -53,6 +53,15 @@ a .pbit with no size limit (images, base themes included), so a crafted zip coul
   sixth (a bomb in a part no tool reads, read_model and check_model_health still work) passed before as a guard.
   Website `model-health` 57 -> 61: the same four cases in the page; 3 failed on the old worker, the guard passed.
   `?v=20261005c` on model-health, its worker and theme-generator; `check:min` clean; `csp.mjs` clean.
+- **B-02 (the outside review, owner's go ~13:15), the files of a model read from disk:** a model.bim (and a model
+  file given directly) 64 MB, each TMDL file 32 MB and all of them 128 MB, each report JSON of the project 32 MB:
+  measured (`lstat`) before reading, refused in plain words with the sizes. Evidence: the largest TMDL file we have
+  is 46,099 bytes (the 300-table test model), the largest model.bim about 600 KB. Every parsed model and report part
+  is also checked for nesting: more than **256 levels** is refused ("nested more than 256 levels deep"), since
+  JSON.parse takes it but the code that walks it afterwards runs out of stack; real models are 8 or 9 levels deep,
+  reports 12 to 15 (measured on the test models and the sample .pbit files). Tests first: 371 -> 374, all 3 failing
+  before. Not changed (not in the ask, noted): `create_report`'s `theme` file and page `background` images are read
+  without a size limit (the logo has one: 2 MB).
 
 ## Where things stand
 - **Merged 2026-10-03 (reviewer):** round 1 (`80d3a00`); the Microsoft plugin test (`bc05275`); privacy statement and
