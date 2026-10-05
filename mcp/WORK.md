@@ -90,6 +90,66 @@ first; `#,0.##`; and the FAIL: a nine-character card value is cut on six-card pa
 fixtures are recaptured only where the design engine's own output changes, each with its cause written here.
 
 ### Where round 10 stands (2026-10-05, 10:00; not merged; nothing installed)
+
+**Cloud sitting, 5 October (the code-only part, on the owner's "Both, one after the other"; no Desktop here).**
+- **Main merged in** (`5ea2d3d`: the night audit fixes, `850b0a0`): no conflict; stamps kept as they were, the newer
+  ones from main (`style.min.css?v=20261005a`); `check:min` clean; `npm test` 394 of 394 after the merge.
+- **The owner's 8 design choices (answered 5 Oct), tests first** (10 new checks in `mcp/test.mjs`, "round 10, the
+  owner's design choices"; all failed on the old code except the wide-table one, which guards the unchanged case):
+  1 a KPI card's value at the reading start under its title (`horizontalAlignment` left / right; the tooltip's card
+  stays centred); 2 a percent card shows the model's own format (no `labelPrecision`; `pct` is now kept on the bound
+  field by `pbip-bind.js`, and the sample's Margin % carries it), the others automatic units with 2 decimals;
+  3 a table (and a matrix) titled by its content, its first measure by its first text column ("Total Sales by
+  Region", "إجمالي الإيرادات حسب المنطقة"); 4 axis labels: no change; 5 an Arabic table keeps its text column first,
+  then the rest mirrored, so the total row's "Total" shows (`tableFields`; the SVG ordering follows it); 6 the Arabic
+  Reset text and tooltip are both "إعادة ضبط الفلاتر"; 7 Reset is only as wide as its icon and text
+  (`textWidth` + 10 + the icon, as wide as the button is high; measured M3), at the reading start of a rail or the
+  slide-in panel, lined up with the slicers; at the end of a top strip as before; 8 the tab's line: no change.
+- **"Never cut" for a KPI title too long at 8pt (decided by the rule):** wrap to two lines (`titleWrap: true` on the
+  title) where the card has the height for two lines at 8pt (1.5 x pt a line, Microsoft's card sizing, the rule
+  `cardFit` already uses) **and** its value at the size the row's other cards have; otherwise shortened at a word
+  with "…", the full name kept as the card's alt text (and Power BI's own tooltip on a card shows the field's name).
+  **Why wrapping first:** the reader sees the whole name and nothing is lost; shortening only where wrapping would
+  shrink the number or not fit. The titles of a row still share one size (seen in Desktop at 10:20). The answer
+  lists both (`kpiTitles: { wrapped, shortened, note }`, and a `reportNotes` line for shortened titles). Swept in
+  `npm test` over 3, 4 and 6 cards x three pages x two languages with two long names: each title fits, wraps or is
+  shortened, never cut, and both branches occur. **Not proven in Desktop:** whether `titleWrap` wraps a card's title
+  and the line height it takes, whether the row's numbers stay on one line when one title wraps, and the tooltip.
+- **The SVG table overflow:** the pictures' width is capped by the table's room: every other column keeps
+  max(its header, bold; its widest value) + 10, a measure's widest value taken as nine digits with separators (the
+  measured 0.54 / 0.21 em), a column's values as 12 letters at 0.55 em (the writer can't know them); the pictures
+  share the rest, each + 10, 8 at least; the height follows the designs' ratio; with room the designs' own size is
+  kept. `columnRoom` is exported. The answer gives each picture's `imageWidth` / `imageHeight`, and a `reportNotes`
+  line when they were narrowed. **The cell padding is not measured:** the button rule's 5 a side stands in (Desktop).
+  The card image's size is left (needs `image.size` / `fixedSize` measured in Desktop).
+- **Older checks changed, each with its cause beside it:** R10.1 checks 1 and 6 (the Margin % card has no
+  `labelPrecision` now); R10.6c check 2 (the Arabic tooltip is the text now); R10.2 check 1 (the exec table's pictures
+  are capped: at most 180 x 24, was exactly 180 x 24); the right-to-left table order (round 0/2: text column first
+  now); both `cardProblems` (the KPI value at the reading start; a wrapped title counts two lines);
+  `report-check.mjs`'s button width (a button with an icon by the measured per-letter widths + 10 + the icon; one
+  without keeps the old 0.45 em rule, which Desktop showed whole in 91 at 8pt in Arabic).
+- **Tests:** `npm test` 394 -> **404 of 404**. `check:min` clean (55); `pbip-export.min.js`, `pbip-bind.min.js` and
+  `theme-generator.min.js` at `?v=20261005b`. `scripts/csp.mjs` on this Linux checkout (LF): all 52 pages carry
+  their current policy. Website suites locally: all 17 pass (`pbip` 71 of 71); CI is the record.
+
+**Left for the laptop (Desktop proof only; nothing here needs more code first):**
+1. The card image's size (`image.size` / `fixedSize`: what Desktop writes, then the code).
+2. A six-card page for the KPI titles: a long title wrapped (`titleWrap`, its line height, the numbers of the row
+   still on one line), a shortened one with "…", and the card's tooltip showing the full name.
+3. Reset in Desktop: only as wide as its icon and text, in the rail (reading start), the top strip and the
+   slide-in panel, English and Arabic; the tooltip on hover ("إعادة ضبط الفلاتر" in Arabic); the icon and the text
+   side by side.
+4. The table: SVG pictures capped (no scrollbar, no cut header; measure a cell's padding); the title by its content;
+   the Arabic table with its text column first and "Total" shown; a KPI value at the reading start; a percent card
+   as the model formats it (35.4%).
+5. 4 and 8 tabs, a wrapped tab row and the phone layout.
+6. A report with left-out visuals (a slicer or a chart without a field).
+7. The schema experiment both ways (R10.4).
+8. D-GC1 to D-GC6 (`add_gulf_calendar`).
+9. The 11 golden tasks opened.
+10. Fresh before/after pairs and the R10.7 re-score.
+11. Then part C (D-P4, D-P5, D-P7, D14 text and decimal filters, D15) and package 0.2.6 (dataarcus-engine
+    `fix/round-10`, the version only).
 The overnight session crashed at about 23:25 (during a long background capture run) with two files uncommitted; they
 were recovered and pushed on 5 October, and the sitting went on for two hours in the foreground. **Part C was not
 started, and no package 0.2.6 was built.**

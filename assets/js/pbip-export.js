@@ -153,6 +153,15 @@
   const proj = (f) => Object.assign(f.m != null ? fieldMea(f.t, f.m) : fieldCol(f.t, f.c), f.name ? { displayName: String(f.name) } : {});
   const tproj = (f) => Object.assign(proj(f), f.tableFormat ? { format: String(f.tableFormat) } : {});
   const label = (f) => (f ? (f.name ? String(f.name) : fname(f)) : null);
+  // The room a table column takes beside SVG pictures, in page units, at the table's text size t: its header (bold) or
+  // its widest value, + 10 (a cell's padding is not measured yet: the measured button rule, 5 a side, stands in). A
+  // measure's widest value is taken as nine digits with separators ("888,888,888", 0.54 em a digit and 0.21 a
+  // separator, measured in round 10); a column's values are not known to the writer, so 12 letters at 0.55 em.
+  const columnRoom = (p, t, font) => {
+    const head = textWidth(p.displayName || p.nativeQueryRef || '', t, true, font);
+    const value = p.field && p.field.Measure ? (9 * 0.54 + 2 * 0.21) * t * 4 / 3 : 12 * 0.55 * t * 4 / 3;
+    return Math.ceil(Math.max(head, value) + 10);
+  };
 
   // what each slot becomes in Power BI, and the sample fields it shows; cards are the card visual (cardVisual): Microsoft
   // deprecates the legacy "card"
@@ -165,7 +174,8 @@
   function sampleBind(t) {
     const C = (c) => ({ t: t.table, c }), Me = (m) => ({ t: t.table, m }), m = t.m;
     return {
-      kpis: [m.rev, m.ord, m.aov, m.mar, m.cus, m.rpc].map(Me), measure: Me(m.rev), date: C(t.month),
+      // (the margin is a percent, formatted 0.0% in the sample model: its card shows that format, see cardObjects)
+      kpis: [m.rev, m.ord, m.aov, m.mar, m.cus, m.rpc].map((x) => Object.assign(Me(x), x === m.mar ? { pct: true } : {})), measure: Me(m.rev), date: C(t.month),
       cats: { bar: C(t.category), column: C(t.region), donut: C(t.category), funnel: C(t.category), treemap: C(t.category), map: C(t.region) },
       y: { funnel: Me(m.ord), gauge: Me(m.mar) },
       table: [C(t.region), Me(m.rev), Me(m.ord), Me(m.mar)],
@@ -187,8 +197,17 @@
     query.sortDefinition = { sort: [{ field, direction: 'Ascending' }], isDefaultSort: true };
     return query;
   };
-  // a table's fields in the order they are shown (see bindQuery)
-  const tableFields = (B, rtl) => { const fs = (B.table || []).filter(Boolean); if (rtl) fs.reverse(); return fs; };
+  // a table's fields in the order they are shown (see bindQuery). Right to left: reversed (Power BI doesn't mirror
+  // tables), but the first text column stays first (the owner's design choice 5, 5 Oct 2026): Power BI writes the total
+  // row's "Total" only in the first projection's column and only when that is a column of text (measured in Desktop
+  // 2.158, 4 Oct: with a measure first there was no "Total"), so the category sits at the left end and "Total" shows.
+  const isTextField = (f) => f.c != null && !f.num;
+  const tableFields = (B, rtl) => {
+    const fs = (B.table || []).filter(Boolean);
+    if (!rtl) return fs;
+    const r = fs.slice().reverse(), first = fs.find(isTextField);
+    return first ? [first].concat(r.filter((f) => f !== first)) : r;
+  };
   // the query of one visual, or null when a field it needs is not bound
   // rtl: a right-to-left report reverses a table's columns, so its first column (the category) sits on the right,
   // where an Arabic reader starts; Power BI doesn't mirror tables itself
@@ -220,6 +239,12 @@
     if (kind === 'line' && B.date && B.measure) return label(B.measure) + ' ' + by + ' ' + label(B.date);
     if (['bar', 'column', 'donut', 'funnel', 'treemap', 'map'].includes(kind) && cat && y) return label(y) + ' ' + by + ' ' + label(cat);
     if ((kind === 'gauge' || kind === 'card') && y) return label(y);
+    // a table or matrix by its content (the owner's design choice 3, 5 Oct 2026): its first measure by its first text
+    // column, "Total Sales by Region"; the other columns are named by their headers
+    if (kind === 'table' || kind === 'matrix') {
+      const fs = (B.table || []).filter(Boolean), m = fs.find((f) => f.m != null), c = fs.find(isTextField);
+      return m && c ? label(m) + ' ' + by + ' ' + label(c) : m ? label(m) : null;
+    }
     return null;
   }
 
@@ -238,6 +263,8 @@
     const sample = !!o.sample && !own;
     const B = own ? (o.bind || null) : sample ? sampleBind(t) : null;
     const leftOut = [];   // data visuals not written because the model has no field for them: { page, kind, title }
+    const kpiTitles = { wrapped: [], shortened: [] };
+    const svgSizes = {};   // the SVG pictures' size in each page's table: { w, h, design (the widest), capped }   // KPI titles too long for one line at 8pt (see kpiTitleFit)
     // (a name over the limit ends at its last whole word: cut at the last space before the limit, and a dash or
     // other joining mark left at the end goes too; one word longer than the limit is cut at the limit)
     // cut by characters, not UTF-16 units, so an emoji at the cut is never split into a broken file name; at most 30,
@@ -367,8 +394,9 @@
     // digits with its separators and decimals (valueEm). Before round 10 this was 7 x 0.55 = 3.85, and "74,675.00" was cut.
     const AUTO_EM = 4.4, FULL = o.kpiValues === 'full';
     const valueEm = (f) => (FULL && f && f.cardFormat ? 9 * 0.54 + 2 * 0.21 + (/\./.test(f.cardFormat) ? 0.21 + 2 * 0.54 : 0) : AUTO_EM);
-    const cardFit = (w, h, s, title, callout, m, em) => {
-      const P = Math.round(8 * s / 1.5), line = (f) => Math.ceil(f * 1.5), S = (m && m.side) || P;
+    // n: the title's lines (1, or 2 for a KPI title that wraps, see kpiTitleFit)
+    const cardFit = (w, h, s, title, callout, m, em, n) => {
+      const P = Math.round(8 * s / 1.5), line = (f) => Math.ceil(f * 1.5) * (n || 1), S = (m && m.side) || P;
       const T = m && m.top > P && Math.floor((h - m.top - P - line(title)) / 1.5) >= 8 ? m.top : P;
       const fit = (I) => Math.min(callout, Math.floor((h - T - P - 2 * I - line(title)) / 1.5), Math.floor((w - S - P - 2 * I) / ((em || AUTO_EM) * 4 / 3)));
       let I = P, V = fit(I);
@@ -395,10 +423,15 @@
       const h = Math.ceil(Math.max(40 * k, 6 + 1.6 * LABEL));
       return { h, icon: textWidth(text, LABEL, false, font) + 10 + h <= w };
     };
+    // Reset is only as wide as its icon and its text (the owner's design choice 7, 5 Oct 2026; Desktop showed the icon at
+    // one end of a 274-wide rail button and the text at the other): the icon as wide as the button is high, the text
+    // + 10 (measured, M3), within the room it has
+    const resetW = (text, k, room) => Math.min(room, Math.ceil(textWidth(text, LABEL, false, font) + 10 + Math.ceil(Math.max(40 * k, 6 + 1.6 * LABEL))));
     // Reset is an icon button without a box (round 10, to match the navigator): no outline, no fill until it is hovered
     // (a light tint of the accent colour), the reset icon in the accent colour, and a tooltip that says what it does.
     const resetFill = () => [{ properties: { show: bool(true) } }, { properties: { fillColor: color(u.accent || u.text), transparency: num(100) }, selector: { id: 'default' } }, { properties: { fillColor: color(u.accent || u.text), transparency: num(88) }, selector: { id: 'hover' } }];
-    const resetTip = W.resetTip || (o.lang === 'ar' ? 'مسح الفلاتر في هذه الصفحة' : 'Clear the filters on this page');
+    // (the Arabic tooltip is the button's own words, "إعادة ضبط الفلاتر": the owner's design choice 6, 5 Oct 2026)
+    const resetTip = W.resetTip || (o.lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Clear the filters on this page');
     // the largest text size within 8-60 whose one line fits a text box h high (8 at least)
     const boxFit = (h) => Math.max(8, Math.floor((h - 10) / 1.8));
     // A text box is top-aligned and has no vertical alignment: the middle of its text is about 1.2 x pt below the box's
@@ -422,8 +455,11 @@
     // "Value decimal places" is labelPrecision, and it works in the card's default entry (measured in Desktop 2.158,
     // round 10). With o.kpiValues "full" the cards keep Power BI's own default and a card whose measure carries
     // cardFormat gets the full number with separators (round 9's entry) instead.
-    const cardObjects = (c) => ({
-      value: obj(Object.assign({ fontSize: num(c.V), horizontalAlignment: str('center') }, FULL ? {} : { labelPrecision: lit('2L') }), DEF),
+    // (the owner's design choices 1 and 2, 5 Oct 2026: a KPI card's value sits at the reading start under its title,
+    // side = align; other cards stay centred. A percent card (f.pct) shows the model's own format, 35.4% for 0.0%: no
+    // "Value decimal places" on it.)
+    const cardObjects = (c, side, f) => ({
+      value: obj(Object.assign({ fontSize: num(c.V), horizontalAlignment: str(side || 'center') }, FULL || (f && f.pct) ? {} : { labelPrecision: lit('2L') }), DEF),
       label: obj({ show: bool(false) }, DEF),
       padding: obj({ paddingUniform: num(c.I) }, DEF),
       layout: obj({ paddingUniform: num(0) }, DEF),
@@ -519,6 +555,23 @@
         const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: pg.kpiInset || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) }, valueEm(f));
         while (kpiTitle > 8 && text != null && textWidth(text, kpiTitle, true, font) > s.w - c.S - c.P) kpiTitle--;
       });
+      // "Never cut" for a KPI title (the owner's rule, 5 Oct 2026). A title that doesn't fit one line even at the 8pt
+      // minimum wraps to two lines (titleWrap) where the card has the height for both lines and its value at the size
+      // the row's other cards have (a line is 1.5 x the size, Microsoft's card sizing, as in cardFit); otherwise it is shortened at a word, with
+      // "…", and the full name stays the card's alt text and Power BI's own tooltip on the card (the field's name).
+      // Wrapping is preferred: the reader sees the whole name. Both are told in kpiTitles. (The wrap itself and the
+      // tooltip are to be proven in Desktop; titleWrap is the title's "Text wrap", in Microsoft's default theme.)
+      const wrapLines = (text, size, avail) => { const out = []; let cur = ''; String(text).split(' ').forEach((w) => { const t = cur ? cur + ' ' + w : w; if (!cur || textWidth(t, size, true, font) <= avail) cur = t; else { out.push(cur); cur = w; } }); out.push(cur); return out; };
+      const kpiTitleFit = (text, size, avail, c, two) => {
+        if (text == null || textWidth(text, size, true, font) <= avail) return { mode: 'one' };
+        const ls = wrapLines(text, size, avail);
+        if (size === 8 && ls.length === 2 && ls.every((l) => textWidth(l, size, true, font) <= avail) && two && two.V >= c.V) return { mode: 'wrapped', c: Object.assign({}, two, { V: c.V }) };
+        const words = String(text).split(' ');
+        let shown = '';
+        for (let n = words.length - 1; n >= 1 && !shown; n--) { const t = words.slice(0, n).join(' ').replace(/[\s,;:(\-–]+$/, '') + '…'; if (textWidth(t, size, true, font) <= avail) shown = t; }
+        if (!shown) { const ch = [...String(text)]; for (let n = ch.length - 1; n >= 1 && !shown; n--) { const t = ch.slice(0, n).join('').trimEnd() + '…'; if (textWidth(t, size, true, font) <= avail) shown = t; } }
+        return { mode: 'shortened', shown: shown || '…' };
+      };
       const charts = [];
       sorted.forEach((s) => {
         const g = groupOf(s.kind);
@@ -620,7 +673,7 @@
           const all3 = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null), fields = B && own ? all3.filter(Boolean) : all3, pad = 10 * k, gap = 8 * k, n = Math.max(1, fields.length);
           all3.forEach((f, i) => { if (B && own && !f) leftOut.push({ page: pg.name || base, kind: 'slicer', title: (W.slicer || 'Slicer') + ' ' + (i + 1) }); });
           const resetText = W.reset || 'Reset filters', across = s.w > s.h;
-          const bw = across ? Math.max(Math.min(160 * k, Math.round(s.w * 0.14)), Math.ceil(textWidth(resetText, LABEL, false, font) + 10 + Math.max(40 * k, 6 + 1.6 * LABEL) + 8 * k)) : s.w - 2 * pad;
+          const bw = resetW(resetText, k, s.w - 2 * pad);
           const reset = resetFit(resetText, bw, k), bh = reset.h;
           const room = across ? s.w - 2 * pad - bw - gap : s.w - 2 * pad;
           const sw = across ? (room - gap * (n - 1)) / n : room;
@@ -637,7 +690,8 @@
             z += 1000;
           });
           // Reset button: applies a bookmark that clears these slicers
-          const bm = rnd(), bx = across ? (rtl ? s.x + pad : s.x + s.w - pad - bw) : s.x + pad, by = across ? s.y + (s.h - bh) / 2 : s.y + s.h - pad - bh;
+          // (across: at the end of the strip; in a rail: at the reading start, lined up with the slicers)
+          const bm = rnd(), bx = across ? (rtl ? s.x + pad : s.x + s.w - pad - bw) : (rtl ? s.x + s.w - pad - bw : s.x + pad), by = across ? s.y + (s.h - bh) / 2 : s.y + s.h - pad - bh;
           container({ x: Math.round(bx), y: Math.round(by), w: Math.round(bw), h: Math.round(bh), z, parent, kind: 'button',
             visual: { visualType: 'actionButton',
               objects: { icon: def({ shapeType: str(reset.icon ? 'reset' : 'blank'), lineColor: color(u.accent || u.text) }), text: def({ show: bool(true), text: str(resetText), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL) }),
@@ -685,7 +739,14 @@
           if (type === 'cardVisual') {
             const cf0 = query && B ? (s.kind === 'kpi' ? B.kpis[kpiIndex - 1] : B.measure) : null;
             const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: (s.kind === 'kpi' && pg.kpiInset) || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) }, valueEm(cf0));
-            visual.objects = cardObjects(c); cardFrame(visual.visualContainerObjects, c, s.kind === 'kpi' ? kpiTitle : TITLE);
+            let cc = c;
+            if (s.kind === 'kpi') {
+              const fit = kpiTitleFit(ttl, kpiTitle, s.w - c.S - c.P, c, cardFit(s.w, s.h, pg.page.h / 720, kpiTitle, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: pg.kpiInset || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) }, valueEm(cf0), 2));
+              const tp = visual.visualContainerObjects.title[0].properties;
+              if (fit.mode === 'wrapped') { cc = fit.c; tp.titleWrap = bool(true); kpiTitles.wrapped.push({ page: pg.name || base, title: ttl }); }
+              if (fit.mode === 'shortened') { tp.text = str(fit.shown); kpiTitles.shortened.push({ page: pg.name || base, title: ttl, shown: fit.shown }); }
+            }
+            visual.objects = cardObjects(cc, s.kind === 'kpi' ? align : null, cf0); cardFrame(visual.visualContainerObjects, cc, s.kind === 'kpi' ? kpiTitle : TITLE);
             // an SVG design on the card's image (o.svgCards; the JSON Desktop writes for "Select from data", measured in
             // Desktop 2.158, third sitting of 2026-10-04): the nth KPI card of every page
             const sc = s.kind === 'kpi' ? (o.svgCards || []).find((x) => x.card === kpiIndex - 1) : null;
@@ -718,10 +779,19 @@
             const cols = mine.map((c) => ({ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: c.t } }, Property: c.m } }, queryRef: c.t + '.' + c.m, nativeQueryRef: c.m }));
             if (cols.length) {
               const ps = query.queryState.Values.projections, isText = (p) => !!p.field.Column;
-              if (rtl && s.kind === 'table') { const text = ps.filter(isText), rest = ps.filter((p) => !isText(p)); query.queryState.Values.projections = text.length ? [text[text.length - 1]].concat(cols.slice().reverse(), rest, text.slice(0, -1)) : rest.concat(cols); }
+              // (since 5 Oct the table's own order already has its text column first in a right-to-left report: tableFields)
+              if (rtl && s.kind === 'table') query.queryState.Values.projections = ps.length && isText(ps[0]) ? [ps[0]].concat(cols.slice().reverse(), ps.slice(1)) : ps.concat(cols);
               else query.queryState.Values.projections = ps.concat(cols);
-              const size = (k) => Math.max(8, Math.min(512, Math.round(Math.max(...mine.map((c) => +c[k] || 0)) || 75)));
-              visual.objects = Object.assign(visual.objects || {}, { grid: [{ properties: { imageHeight: num(size('h')), imageWidth: num(size('w')) } }] });
+              // The pictures never push the table past its box (Desktop showed a scrollbar and a cut header with three
+              // fields and pictures of 160 and 180 in a 553-wide table, 5 Oct 2026): every other column keeps its room
+              // (columnRoom) and the pictures share what is left, each with + 10 like a column; their width is capped by
+              // that, 8 at least, and the height follows the designs' ratio. With room, the designs' own size is kept.
+              const wide = Math.max(...mine.map((c) => +c.w || 0)) || 75, tt = +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
+              const others = query.queryState.Values.projections.filter((p) => !(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema)).reduce((a, p) => a + columnRoom(p, tt, font), 0);
+              const W = Math.max(8, Math.min(512, wide, Math.floor((s.w - others) / cols.length) - 10));
+              const H = Math.max(8, Math.min(512, Math.round(Math.max(...mine.map((c) => (+c.h || 75) * Math.min(1, W / (+c.w || 75)))))));
+              visual.objects = Object.assign(visual.objects || {}, { grid: [{ properties: { imageHeight: num(H), imageWidth: num(W) } }] });
+              svgSizes[pageIndex] = { w: W, h: H, design: wide, capped: W < wide };
               svgDone[pageIndex] = true;
             }
           }
@@ -796,7 +866,7 @@
         // Close is as high as a button's text needs (Arabic: 6 + 1.6 x pt), and the panel's header holds it above the slicers
         const ch = Math.ceil(Math.max(32 * k, 6 + 1.6 * LABEL)), head = Math.max(44 * k, 12 * k + ch);
         const resetText = W.reset || 'Reset filters', closeText = '✕  ' + (W.close || 'Close');
-        const reset = resetFit(resetText, Math.round(sw), k), bh = reset.h;
+        const rw = resetW(resetText, k, Math.round(sw)), reset = resetFit(resetText, rw, k), bh = reset.h;
         const fields = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null);
         z = Math.max(z, 900000);
         container({ name: gname, x: P.x, y: P.y, w: P.w, h: P.h, z, hidden: true, kind: 'group', groupKey: 'panel', group: { displayName: W.filterPanel || 'Filter panel', groupMode: 'ScaleMode' } });
@@ -826,7 +896,7 @@
           names.push(v.name);
         });
         const rb = rnd();
-        add1({ x: Math.round(P.x + pad), y: Math.round(P.y + P.h - pad - bh), w: Math.round(sw), h: bh, kind: 'button', visual: { visualType: 'actionButton',
+        add1({ x: Math.round(rtl ? P.x + pad + sw - rw : P.x + pad), y: Math.round(P.y + P.h - pad - bh), w: rw, h: bh, kind: 'button', visual: { visualType: 'actionButton',
           objects: { icon: def({ shapeType: str(reset.icon ? 'reset' : 'blank'), lineColor: color(u.accent || u.text) }), text: def({ show: bool(true), text: str(resetText), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL) }),
             fill: resetFill(), outline: def({ show: bool(false) }) },
           visualContainerObjects: Object.assign(frame(null, resetText), { visualLink: obj({ show: bool(true), type: str('Bookmark'), enabledTooltip: str(resetTip), bookmark: str(rb) }) }) } });
@@ -959,7 +1029,7 @@
     // the theme's text sizes are made for the report's full page; on this small page the card value and the titles get
     // their own, so the value isn't cut off and the titles fit
     // (the tooltip's card follows the KPI cards: automatic units with 2 decimals, or the full number with kpiValues "full")
-    const tipCardVisual = () => { const objects = cardObjects(tipCard);
+    const tipCardVisual = () => { const objects = cardObjects(tipCard, null, tip.card);
       if (FULL && tip.card && tip.card.m != null && tip.card.cardFormat) objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(tip.card.cardFormat) }, selector: { metadata: tip.card.t + '.' + tip.card.m } });
       return { x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(tip.card)] }), objects, visualContainerObjects: cardFrame(tipFrame(label(tip.card)), tipCard, TIP_TITLE) } }; };
     tipPage(tipName, tipBinding, W.tooltipPage || 'Tooltip', tip
@@ -987,9 +1057,9 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, svgSizes };
   }
 
-  const api = { build, zip, crc32, textWidth };
+  const api = { build, zip, crc32, textWidth, columnRoom };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbip = api;
 })(typeof self !== 'undefined' ? self : this);

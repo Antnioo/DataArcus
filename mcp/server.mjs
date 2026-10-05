@@ -419,7 +419,7 @@ server.registerTool('create_report', {
       label: z.string().min(1).max(40).describe('The name of the report-level measure; not the name of a measure of the model'),
       design: z.record(z.any()).describe('The design, in the same format as svgColumns')
     }).strict()).max(6).optional().describe('EXPERIMENTAL. A small picture beside a KPI card\'s number (a ring, an arrow, a sparkline), from a declarative design in the svgColumns format, on the card\'s image. The model is never touched. Checked in Power BI Desktop; phone and PDF are not checked yet'),
-    kpiValues: z.enum(['auto', 'full']).default('auto').describe('How every KPI card shows its number. "auto" (the default): automatic units with 2 decimals (3.43M, 14.81K, 231.50); a percentage stays a percentage. "full": the full number with thousand separators (101,914) for measures whose format has none, in a smaller size on narrow cards so it is never cut'),
+    kpiValues: z.enum(['auto', 'full']).default('auto').describe('How every KPI card shows its number. "auto" (the default): automatic units with 2 decimals (3.43M, 14.81K, 231.50); a percentage shows as the model formats it (35.4% for 0.0%). "full": the full number with thousand separators (101,914) for measures whose format has none, in a smaller size on narrow cards so it is never cut'),
     displayNames: z.record(z.string(), z.string()).optional().describe('Names to show instead of the model\'s field names, as { "Table[Field]": "name" } (for example Arabic names for an Arabic report). Only names the user gave or approved: never translate, shorten or relabel a field yourself; when names are missing, list the fields and ask the user. The report shows the name wherever it shows the field: KPI titles, chart titles, axis and legend, table headers, slicer headers, the tooltip pages. The model is never renamed. Give names only for fields you know the right name of: nothing is translated automatically'),
     logo: z.string().optional().describe('Logo image for the header: a PNG or JPG file inside the DataArcus folder, 2 MB at most. It is copied into the new report (the file itself is not changed) and shown at its own shape, never stretched; a horizontal logo reads best'),
     lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().default(false), font: z.string().default('Segoe UI'),
@@ -620,19 +620,26 @@ server.registerTool('create_report', {
     why: 'These fields have no format with a thousand separator in the model. Wherever Power BI takes the format from the model (a visual added by hand, Excel, another report) they show 13857, not 13,857.',
     fix: 'check_model_health writes ready scripts that add the formats (fixes.NO_FORMAT for measures without a format, fixes.THOUSANDS for formats without a separator), or in Power BI Desktop select each measure, then Measure tools > the thousands separator button.' } } : {};
   if (PF) PF.filter((f) => f.note).forEach((f) => reportNotes.push(f.note));
-  const svgList = (SV || []).map((c) => ({ label: c.label, entity: c.t, page: boundPages[c.at.page].name, shownAs: 'a column of that page\'s table, after its own columns (in a right-to-left report after its text column)', characters: c.expression.length, status: SVG_STATUS }))
+  const svgList = (SV || []).map((c) => Object.assign({ label: c.label, entity: c.t, page: boundPages[c.at.page].name, shownAs: 'a column of that page\'s table, after its own columns (in a right-to-left report after its text column)', characters: c.expression.length, status: SVG_STATUS }, (r.svgSizes || {})[c.at.page] ? { imageWidth: r.svgSizes[c.at.page].w, imageHeight: r.svgSizes[c.at.page].h } : {}))
     .concat((SC || []).map((c) => ({ label: c.label, entity: c.t, shownAs: `the image of KPI card ${c.card} on every page`, characters: c.expression.length, status: SVG_STATUS })));
   const svgMeasures = svgList.length ? { svgMeasures: svgList } : {};
+  // pictures narrowed so the table fits its box (never a scrollbar or a cut header)
+  Object.entries(r.svgSizes || {}).filter(([, z]) => z.capped).forEach(([pi, z]) => reportNotes.push(`The SVG pictures in the table on "${boundPages[pi].name}" were narrowed to ${z.w} x ${z.h} (the widest design is ${z.design}) so the table fits its box. For the design's own size, give the table more room or fewer columns.`));
   if (svgList.length) reportNotes.push(`${svgList.length === 1 ? 'An SVG picture was' : svgList.length + ' SVG pictures were'} added (${svgList.map((c) => c.label).join(', ')}): each is a measure that exists only in this report (definition/reportExtensions.json); the model was not changed. This is ${SVG_STATUS}.`);
   // how the KPI cards show their numbers
   const kpiValues = { kpiValues: FULL
     ? { mode: 'full', note: 'The KPI cards show Power BI\'s own default, and the full number with thousand separators (101,914) where the measure\'s format has none; the value is smaller on narrow cards so nine digits fit.' }
-    : { mode: 'auto', note: 'Every KPI card shows its number with automatic units and 2 decimals (3.43M, 14.81K, 231.50); a percentage stays a percentage. For full numbers with separators (101,914) pass kpiValues: "full".' } };
+    : { mode: 'auto', note: 'Every KPI card shows its number with automatic units and 2 decimals (3.43M, 14.81K, 231.50); a percentage shows as the model formats it (35.4% for 0.0%). For full numbers with separators (101,914) pass kpiValues: "full".' } };
   // visuals left out because the model has no field for them (never written empty)
   const WHY = { slicer: 'the model has no more text columns a slicer can use', line: 'the model has no month or date column for its axis', table: 'no field was found for it', matrix: 'it needs a text column and a measure', gauge: 'the model has no measure for it', card: 'the model has no measure for it' };
   const KIND = { slicer: 'Slicer', line: 'Line chart', bar: 'Bar chart', column: 'Column chart', donut: 'Donut chart', funnel: 'Funnel', treemap: 'Treemap', map: 'Map', table: 'Table', matrix: 'Matrix', gauge: 'Gauge', card: 'Card' };
   const leftOutList = (r.leftOut || []).map((x) => ({ visual: x.kind === 'slicer' ? (x.title || 'Slicer') : `${KIND[x.kind] || x.kind}${x.title ? ` "${x.title}"` : ''}`, page: x.page, why: WHY[x.kind] || 'the model has no text column (a category) or no measure for it' }));
   if (leftOutList.length) reportNotes.push(`${leftOutList.length} visual${leftOutList.length === 1 ? ' was' : 's were'} left out, because a visual is never written without its field: ${leftOutList.map((x) => `${x.visual} on "${x.page}" (${x.why})`).join('; ')}.`);
+  // KPI titles too long for one line at the 8pt minimum: wrapped to two lines, or shortened with the full name kept
+  const KT = r.kpiTitles || { wrapped: [], shortened: [] };
+  const kpiTitles = KT.wrapped.length || KT.shortened.length ? { kpiTitles: { wrapped: KT.wrapped, shortened: KT.shortened,
+    note: 'A KPI title never shows cut: one too long for its card at 8pt wraps to two lines where the card is high enough, otherwise it is shortened at a word with "…" (the full name stays the card\'s alt text and its tooltip). A shorter display name (displayNames, from the user) reads better on a small card.' } } : {};
+  if (KT.shortened.length) reportNotes.push(`${KT.shortened.length} KPI title${KT.shortened.length === 1 ? ' was' : 's were'} shortened to fit their cards: ${[...new Set(KT.shortened.map((x) => `"${x.title}" as "${x.shown}"`))].join('; ')}. Ask the user for shorter display names if these read badly.`);
   // what was done with the display names; and in an Arabic report, the fields it shows under a model name that has no
   // Arabic letter (no name is ever made up for them)
   const shown = [...new Set(fieldsOf(bind).map(keyOf))];
@@ -641,7 +648,7 @@ server.registerTool('create_report', {
   const arabic = a.lang === 'ar' ? { arabicNames: { shownFields: shown.length, missing,
     how: missing.length ? 'These fields show under their model names. To show Arabic names, call create_report again with displayNames: { "Table[Field]": "الاسم" } for each (ask the user for the names: nothing is translated automatically). The model is not renamed.' : 'Every field the report shows has an Arabic name.' } } : {};
   return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
-    { boundFields: boundOf(boundPages, bind) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
+    { boundFields: boundOf(boundPages, bind) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, kpiTitles, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
     sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {}));
 }));
 

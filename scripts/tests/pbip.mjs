@@ -54,13 +54,17 @@ function cardProblems(files, rtl) {
     const o = v.objects || {}, c = v.visualContainerObjects || {}, val = def(o.value), pad = def(o.padding), lay = def(o.layout);
     const roles = Object.keys((v.query || {}).queryState || {});
     if (roles.length && roles.join() !== 'Data') bad.push(`${id}: role ${roles}`);
-    if (!val || !(n(val.properties.fontSize) >= 8) || lit(val.properties.horizontalAlignment) !== "'center'") bad.push(`${id}: value ${JSON.stringify(val)}`);
+    // (changed 5 Oct, the owner's design choice 1: a KPI card's value sits at the reading start under its title; other
+    //  cards, such as the tooltip's, stay centred)
+    const side = j.parentGroupName ? (rtl ? "'right'" : "'left'") : "'center'";
+    if (!val || !(n(val.properties.fontSize) >= 8) || lit(val.properties.horizontalAlignment) !== side) bad.push(`${id}: value ${JSON.stringify(val)}`);
     if (lit((def(o.label) || { properties: {} }).properties.show) !== 'false') bad.push(`${id}: label not hidden`);
     if (lit((def(o.outline) || { properties: {} }).properties.show) !== 'false') bad.push(`${id}: inner outline not off`);
     const t = props(c.title), vp = props(c.padding), sp = props(c.spacing);
     if (lit(t.alignment) !== (rtl ? "'right'" : "'left'")) bad.push(`${id}: title alignment ${lit(t.alignment)}`);
     if (lit(sp.customizeSpacing) !== 'true' || n(sp.spaceBelowTitleArea) !== 0) bad.push(`${id}: spacing ${JSON.stringify(sp)}`);
-    const need = n(vp.top) + n(vp.bottom) + (lit(t.show) === 'true' ? Math.ceil(1.5 * n(t.fontSize)) : 0) + 2 * n(pad && pad.properties.paddingUniform) + 2 * n(lay && lay.properties.paddingUniform) + Math.ceil(1.5 * n(val && val.properties.fontSize));
+    // (5 Oct: a KPI title too long for one line at 8pt may wrap to two, titleWrap; then it needs two lines)
+    const need = n(vp.top) + n(vp.bottom) + (lit(t.show) === 'true' ? (lit(t.titleWrap) === 'true' ? 2 : 1) * Math.ceil(1.5 * n(t.fontSize)) : 0) + 2 * n(pad && pad.properties.paddingUniform) + 2 * n(lay && lay.properties.paddingUniform) + Math.ceil(1.5 * n(val && val.properties.fontSize));
     if (!(need <= j.position.height)) bad.push(`${id}: needs ${need} high, box ${j.position.height}`);
     const mf = f.replace(/visual\.json$/, 'mobile.json');
     if (files[mf]) {

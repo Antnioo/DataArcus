@@ -17,6 +17,15 @@
 //    A button needs 6 + 1.6 x pt in height (measured 2026-10-01 on 2.158: "إعادة ضبط الفلاتر" whole from 19 at 8pt
 //    and 30 at 15pt; English from 14).
 // Returns { phone: [...], sizes: [...] }, what is wrong.
+// (changed 5 Oct 2026, with Reset only as wide as its icon and text, the owner's design choice 7: a button's text is
+// measured with the writer's per-letter widths and needs its width + 10, as measured in Desktop 2.158 in round 10, M3,
+// DESKTOP-TESTS.md; the icon as wide as the button is high. The old 0.45 em a character + 6 was an estimate made
+// before that measurement, and it called the measured tight Reset too narrow. A button without an icon keeps the old
+// rule: Desktop showed "إعادة ضبط الفلاتر" whole in a 91-wide button at 8pt (round 1), which the per-letter widths,
+// made on the safe side, would call too narrow.)
+import { createRequire } from 'node:module';
+const { textWidth } = createRequire(import.meta.url)('../../assets/js/pbip-export.js');
+const BTW = (text, t, font) => textWidth(text, t, false, font) + 10;
 const BOX = (t) => Math.ceil(10 + 1.8 * t), BTN = (t) => Math.ceil(2 + 1.6 * t), RESET = (t) => Math.ceil(6 + 1.6 * t), TW = (t, n) => 0.45 * 4 / 3 * t * n;
 const SLICER = (t) => Math.ceil(16 + 4 * t), CH = (t) => t * 0.55 * 4 / 3;
 const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
@@ -78,7 +87,7 @@ export function layoutProblems(files) {
         // every button (Reset, and the slide-in panel's Close and Filters): the height Arabic text needs
         const need = RESET(t);
         if (h < need) sizes.push(`${id(x)}: "${text}" at ${t}pt needs ${need} high, has ${h}`);
-        if (TW(t, text.length) + (hasIcon ? h + 6 : 0) > w) sizes.push(`${id(x)}: "${text}" at ${t}pt${hasIcon ? ` with its icon (${h} wide at this height)` : ''} doesn't fit ${w} on one line`);
+        if (hasIcon ? BTW(text, t, str(tx.fontFamily)) + h > w + 0.5 : TW(t, text.length) > w) sizes.push(`${id(x)}: "${text}" at ${t}pt${hasIcon ? ` with its icon (${h} wide at this height)` : ''} doesn't fit ${w} on one line`);
       } else if (v.visualType === 'slicer' && slicerText) {
         if (h < SLICER(slicerText)) sizes.push(`${id(x)}: ${h} high, a ${slicerText}pt dropdown slicer needs ${SLICER(slicerText)}`);
       }
@@ -174,7 +183,7 @@ export function phoneTextProblems(files) {
       if (SLICER(size) > h) say(`a ${size}pt dropdown slicer needs ${SLICER(size)}, the phone box is ${h}`);
     } else if (t === 'actionButton') {
       const a = num(state(mo.text, 'default').fontSize), tx = look(o.text), size = isNaN(a) ? num(tx.fontSize) : a, text = str(tx.text), hasIcon = str(look(o.icon).shapeType) !== 'blank';
-      if (RESET(size) > h || TW(size, text.length) + (hasIcon ? h + 6 : 0) > w) say(`"${text}" at ${size}pt doesn't fit the phone's ${w}x${h}`);
+      if (RESET(size) > h || (hasIcon ? BTW(text, size, str(tx.fontFamily)) + h > w + 0.5 : TW(size, text.length) > w)) say(`"${text}" at ${size}pt doesn't fit the phone's ${w}x${h}`);
     } else if (['lineChart', 'clusteredBarChart', 'clusteredColumnChart'].includes(t)) {
       const a = num(plain(mo.categoryAxis).fontSize), b = num(plain(mo.valueAxis).fontSize);
       if (!(a <= 10) || !(b <= 10)) say(`axis text on the phone: category ${isNaN(a) ? 'the page\'s' : a}, value ${isNaN(b) ? 'the page\'s' : b}, want 10 at most`);
