@@ -293,5 +293,40 @@ export default async function ({ browser, url }) {
     check(/TMDL/.test(drop) && /model\.bim/.test(drop) && /PBIP/.test(drop), `drop zone: "${drop}" doesn't say a zipped PBIP project works in TMDL and model.bim`);
     await v.ctx.close();
   }
+  // ---- .pbit limits (5 Oct 2026, the outside review's F-02): only the parts the check uses are unpacked, a part
+  //      declared above the limit is refused before unpacking, a part that unpacks to more than it declares is
+  //      stopped, and a bomb in a part nobody reads changes nothing. Same limits as the MCP's reader.
+  {
+    const zipOf = (entries) => {
+      const parts = [], dir = []; let off = 0;
+      for (const e of entries) {
+        const raw = zlib.deflateRawSync(e.data), nb = Buffer.from(e.name), size = e.declared != null ? e.declared : e.data.length;
+        const h = Buffer.alloc(30); h.writeUInt32LE(0x04034b50, 0); h.writeUInt16LE(20, 4); h.writeUInt16LE(8, 8); h.writeUInt32LE(raw.length, 18); h.writeUInt32LE(size, 22); h.writeUInt16LE(nb.length, 26);
+        const c = Buffer.alloc(46); c.writeUInt32LE(0x02014b50, 0); c.writeUInt16LE(20, 4); c.writeUInt16LE(20, 6); c.writeUInt16LE(8, 10); c.writeUInt32LE(raw.length, 20); c.writeUInt32LE(size, 24); c.writeUInt16LE(nb.length, 28); c.writeUInt32LE(off, 42);
+        parts.push(h, nb, raw); dir.push(c, nb); off += 30 + nb.length + raw.length;
+      }
+      const cd = Buffer.concat(dir), end = Buffer.alloc(22);
+      end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(entries.length, 8); end.writeUInt16LE(entries.length, 10); end.writeUInt32LE(cd.length, 12); end.writeUInt32LE(off, 16);
+      return Buffer.concat([...parts, cd, end]);
+    };
+    const schema = Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(JSON.stringify(planModel()), 'utf16le')]), zeros = Buffer.alloc(80 * 1024 * 1024);
+    const cases = [
+      ['declared', zipOf([{ name: 'DataModelSchema', data: Buffer.from('{}'), declared: 2000 * 1024 * 1024 }]), 'limit'],
+      ['lying', zipOf([{ name: 'DataModelSchema', data: zeros, declared: 1000 }]), 'limit'],
+      ['bomb', zipOf([{ name: 'DataModelSchema', data: zeros }]), 'limit'],
+      ['unused', zipOf([{ name: 'DataModelSchema', data: schema }, { name: 'Report/StaticResources/SharedResources/BaseThemes/Big.json', data: zeros, declared: 1000 }]), 'ok']];
+    for (const [name, file, want] of cases) {
+      const v = await visitor(browser, { viewport: [1280, 900] });
+      await v.pg.goto(`${url}/tools/power-bi-model-health-check.html?lang=en`, { waitUntil: 'networkidle' });
+      const t0 = Date.now();
+      await v.pg.setInputFiles('#mhFile', { name: name + '.pbit', mimeType: 'application/octet-stream', buffer: file });
+      const got = await v.pg.waitForSelector('#mhTab, .mh-error', { timeout: 30000 }).then(() => v.pg.evaluate(() => ({ error: (document.querySelector('.mh-error b') || {}).textContent || '', ok: !!document.querySelector('#mhTab') }))).catch((e) => ({ error: 'timeout ' + e.message, ok: false }));
+      const ms = Date.now() - t0;
+      if (want === 'limit') check(!got.ok && /unpacks to more than the check reads/.test(got.error) && ms < 15000, `.pbit limits (${name}): must be refused with the limit message, got ${JSON.stringify(got)} in ${ms} ms`);
+      else check(got.ok && !got.error, `.pbit limits (${name}): a bomb in a part the check never reads must change nothing, got ${JSON.stringify(got)}`);
+      await v.ctx.close();
+    }
+  }
+
   return { checks, problems };
 }

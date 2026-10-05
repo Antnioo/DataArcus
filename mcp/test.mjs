@@ -1687,6 +1687,103 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   }
 }
 
+// ---------- .pbit limits (owner's go 5 Oct; the outside review's F-02): only the entries the tools use are unpacked,
+// each and all together within limits, refused before unpacking when the zip's directory says too much, and
+// stopped while unpacking when the directory lies ----------
+{
+  const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 200));
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  // a zip: entries [{ name, data, deflate, declared }], declared = the uncompressed size written in the directory
+  // (a lie when given)
+  const zipOf = (entries) => {
+    const parts = [], dir = []; let off = 0;
+    for (const e of entries) {
+      const raw = e.deflate ? zlib.deflateRawSync(e.data) : e.data, nb = Buffer.from(e.name), size = e.declared != null ? e.declared : e.data.length, m = e.deflate ? 8 : 0;
+      const h = Buffer.alloc(30); h.writeUInt32LE(0x04034b50, 0); h.writeUInt16LE(20, 4); h.writeUInt16LE(m, 8); h.writeUInt32LE(raw.length, 18); h.writeUInt32LE(size, 22); h.writeUInt16LE(nb.length, 26);
+      const c = Buffer.alloc(46); c.writeUInt32LE(0x02014b50, 0); c.writeUInt16LE(20, 4); c.writeUInt16LE(20, 6); c.writeUInt16LE(m, 10); c.writeUInt32LE(raw.length, 20); c.writeUInt32LE(size, 24); c.writeUInt16LE(nb.length, 28); c.writeUInt32LE(off, 42);
+      parts.push(h, nb, raw); dir.push(c, nb); off += 30 + nb.length + raw.length;
+    }
+    const cd = Buffer.concat(dir), end = Buffer.alloc(22);
+    end.writeUInt32LE(0x06054b50, 0); end.writeUInt16LE(entries.length, 8); end.writeUInt16LE(entries.length, 10); end.writeUInt32LE(cd.length, 12); end.writeUInt32LE(off, 16);
+    return Buffer.concat([...parts, cd, end]);
+  };
+  const schema = Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(JSON.stringify({ name: 'x', compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', columns: [{ name: 'Amount', dataType: 'double', sourceColumn: 'Amount' }], measures: [{ name: 'Total', expression: 'SUM ( Sales[Amount] )' }] }] } }), 'utf16le')]);
+  const zeros = Buffer.alloc(80 * 1024 * 1024);   // 80 MB of zeros: about 80 KB deflated
+  fs.mkdirSync(path.join(ROOT, 'pbit-limits'), { recursive: true });
+  const put = (name, entries) => { fs.writeFileSync(path.join(ROOT, 'pbit-limits', name), zipOf(entries)); return 'pbit-limits/' + name; };
+  // 1. the model part says it is 2 GB: refused before anything is unpacked, fast, in plain words, without the content
+  {
+    const f = put('declared.pbit', [{ name: 'DataModelSchema', data: Buffer.from('CANARY-2210 secret text'), deflate: true, declared: 2000 * 1024 * 1024 }]);
+    const t0 = Date.now(), r = await ask('read_model', { path: f }), ms = Date.now() - t0;
+    check(r.err && /MB/.test(r.t) && /not read|refused|too large/i.test(r.t) && !/CANARY-2210/.test(r.t) && ms < 3000, `a .pbit whose model part declares 2 GB must be refused before unpacking: ${short(r)} (${ms} ms)`);
+  }
+  // 2. a lying header: the model part says 1,000 bytes and unpacks to 80 MB: stopped while unpacking
+  {
+    const f = put('lying.pbit', [{ name: 'DataModelSchema', data: zeros, deflate: true, declared: 1000 }]);
+    const t0 = Date.now(), r = await ask('read_model', { path: f }), ms = Date.now() - t0;
+    check(r.err && /not read|refused|larger than/i.test(r.t) && ms < 5000, `a .pbit whose model part unpacks to more than it declares must be refused: ${short(r)} (${ms} ms)`);
+  }
+  // 3. a real expansion above the limit, declared honestly (80 MB of zeros in 80 KB): refused before unpacking
+  {
+    const f = put('bomb.pbit', [{ name: 'DataModelSchema', data: zeros, deflate: true }]);
+    const st = fs.statSync(path.join(ROOT, f)).size, t0 = Date.now(), r = await ask('read_model', { path: f }), ms = Date.now() - t0;
+    check(st < 200 * 1024 && r.err && /80 MB|above/.test(r.t) && ms < 3000, `an 80 KB .pbit that unpacks to 80 MB must be refused: ${st} bytes on disk, ${short(r)} (${ms} ms)`);
+  }
+  // 4. only the parts the tools use are unpacked: a bomb in a part nobody reads (a base theme, an image) changes nothing
+  {
+    const f = put('unused.pbit', [{ name: 'DataModelSchema', data: schema, deflate: true }, { name: 'Report/StaticResources/SharedResources/BaseThemes/Big.json', data: zeros, deflate: true, declared: 1000 },
+      { name: 'Report/StaticResources/RegisteredResources/huge.png', data: Buffer.from('x'), deflate: true, declared: 4000 * 1024 * 1024 }]);
+    const r = await ask('read_model', { path: f }), h = await ask('check_model_health', { path: f });
+    check(!r.err && JSON.stringify(r.j).includes('Sales') && !h.err, `a bomb in a part the tools never read must not stop read_model or check_model_health: ${short(r)} | ${short(h)}`);
+  }
+  // 5. a .pbit file above the limit on disk is refused before it is read (a sparse file: nothing is written)
+  {
+    const big = path.join(ROOT, 'pbit-limits', 'huge.pbit'); fs.writeFileSync(big, zipOf([{ name: 'DataModelSchema', data: schema }])); fs.truncateSync(big, 301 * 1024 * 1024);
+    const t0 = Date.now(), r = await ask('read_model', { path: 'pbit-limits/huge.pbit' }), ms = Date.now() - t0;
+    check(r.err && /301 MB|above/.test(r.t) && ms < 2000, `a .pbit of 301 MB on disk must be refused before it is read: ${short(r)} (${ms} ms)`);
+  }
+  // 6. the total of the parts read is capped too, and the reader's limits are the website's (one rule for both)
+  {
+    const M = await import(path.join(HERE, 'lib', 'model.mjs'));
+    const z = zipOf([{ name: 'DataModelSchema', data: schema, deflate: true }].concat([1, 2, 3].map((i) => ({ name: `Report/definition/pages/p${i}/page.json`, data: Buffer.alloc(400, 32), deflate: true }))));
+    let err = ''; try { M.unzipNeeded(z, { entry: 1000, model: 1000, total: 900, file: 1e6, entries: 100 }); } catch (e) { err = String(e.message); }
+    const worker = fs.readFileSync(path.join(REPO, 'assets/js/model-health-worker.js'), 'utf8');
+    const L = M.PBIT_LIMITS || {}, MB = 1024 * 1024;
+    check(/total/i.test(err) && L.model === 64 * MB && L.entry === 32 * MB && L.total === 128 * MB && L.file === 300 * MB && new RegExp(`model: 64 \\* MB, entry: 32 \\* MB, total: 128 \\* MB, file: 300 \\* MB, entries: ${L.entries}\\b`).test(worker),
+      `the total of the parts read must be capped, and the website's worker must carry the same limits: "${err}" ${JSON.stringify(L)}`);
+  }
+}
+
+// ---------- the outside review's B-02 (owner's go 5 Oct ~13:15): a model.bim, a TMDL file or a model part is measured
+// before it is read and checked for nesting after it is parsed; over the limits: refused in plain words ----------
+{
+  const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 300) : x.t.slice(0, 200));
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
+  const dir = (n) => { const d = path.join(ROOT, 'b02', n, 'B02.SemanticModel'); fs.mkdirSync(d, { recursive: true }); return d; };
+  // 1. a model.bim of 65 MB (sparse: nothing written) is refused before it is read, by read_model and check_model_health
+  {
+    const f = path.join(dir('huge-bim'), 'model.bim'); fs.writeFileSync(f, '{}'); fs.truncateSync(f, 65 * 1024 * 1024);
+    const t0 = Date.now(), r = await ask('read_model', { path: 'b02/huge-bim' }), h = await ask('check_model_health', { path: 'b02/huge-bim' }), ms = Date.now() - t0;
+    check(r.err && h.err && /65 MB/.test(r.t) && /64 MB/.test(r.t) && ms < 3000, `a 65 MB model.bim must be refused before it is read: ${short(r)} | ${short(h)} (${ms} ms)`);
+  }
+  // 2. a model.bim nested 100,000 levels deep is refused in words (real models are 8 or 9 levels deep), never a crash
+  {
+    const d = 100000, f = path.join(dir('deep-bim'), 'model.bim');
+    fs.writeFileSync(f, JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'T', partitions: mp('T'), columns: [{ name: 'A', dataType: 'string', sourceColumn: 'A' }] }] } }).replace(/\}\}$/, ',"annotations":' + '{"a":'.repeat(d) + '1' + '}'.repeat(d) + '}}'));
+    const r = await ask('read_model', { path: 'b02/deep-bim' }), h = await ask('check_model_health', { path: 'b02/deep-bim' });
+    check(r.err && h.err && /nested/.test(r.t) && /256/.test(r.t) && !/call stack/i.test(r.t + h.t), `a model.bim nested 100,000 deep must be refused in words: ${short(r)} | ${short(h)}`);
+  }
+  // 3. a TMDL file of 33 MB (sparse) is refused before it is read
+  {
+    const d = dir('huge-tmdl'), t = path.join(d, 'definition', 'tables'); fs.mkdirSync(t, { recursive: true });
+    fs.writeFileSync(path.join(t, 'Sales.tmdl'), 'table Sales\n\tcolumn Amount\n\t\tdataType: double\n');
+    const big = path.join(t, 'Big.tmdl'); fs.writeFileSync(big, 'table Big\n'); fs.truncateSync(big, 33 * 1024 * 1024);
+    const t0 = Date.now(), r = await ask('read_model', { path: 'b02/huge-tmdl' }), ms = Date.now() - t0;
+    check(r.err && /33 MB/.test(r.t) && /32 MB/.test(r.t) && /TMDL/.test(r.t) && ms < 3000, `a 33 MB TMDL file must be refused before it is read: ${short(r)} (${ms} ms)`);
+  }
+}
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);
