@@ -117,7 +117,7 @@ started, and no package 0.2.6 was built.**
 |---|---|---|
 | R10.1 the card cut | **done** | 84 cards with the widest texts (3 and 6 cards automatic in English and Arabic, 4 and 6 full in English, three page sizes): 0 cut |
 | R10.6(b) KPI values | **done** | 3.43M, 14.81K, 231.46, 35.36% on all eight default layouts; 101.91K, 74.68K on the user's-model report. `labelPrecision: 2L` in the card's default entry |
-| R10.6(a) the navigator | **done for two pages** | tabs without boxes, the current page bold in the accent colour with a line under it, mirrored in Arabic, on all eight layouts. 4 and 8 pages and the phone layout: tests only, not opened |
+| R10.6(a) the navigator | **done; seen with two and with eight pages (English)** | tabs without boxes, the current page bold in the accent colour with a line under it, mirrored in Arabic, on all eight layouts. Eight long names in English: all whole on one row (opened 10:22). Arabic with eight pages, a wrapped row and the phone layout: tests only, not opened |
 | R10.6(c) Reset | **built; one thing off** | no box, the icon in the accent colour; in the 274-wide rail button the icon sits at one end and the text at the other. The tooltip and the hover tint were not looked at |
 | R10.2 SVG columns | **built; two things off** | pictures at the design's size (rows about 29 tall), mirrored in Arabic, "Total" shown in Arabic, a matrix draws them. **Off:** the table overflows its box sideways with two pictures; the card image is too large and cut |
 | R10.3 separators in tables | **done** | 3,375 and 101,914 in the table on a model with no format |

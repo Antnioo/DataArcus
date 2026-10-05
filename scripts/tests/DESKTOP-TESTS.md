@@ -1536,6 +1536,15 @@ Six cards at 1280 x 720 on the user's-model sample, from the branch's server (`b
   full name.
 - 8pt for every title is small beside a 23pt value: a taste call (shorter display names read better than smaller text).
 
+### Round 10: eight tabs with long names (R10.6a), English, 1920 x 1080 (2026-10-05)
+"B5 tabs EN 8": eight hand-placed pages (`builder-scripts\r10-tabs.mjs`), named Overview, "Sales by region and
+channel", Customers, "Products and categories", Returns, Stores, Staff, Notes; a default theme (accent blue).
+- **All eight names are whole, on one row**, between the title and "Your logo"; none is cut and none overlaps.
+- On page 1 "Overview" is bold in the accent colour with the line under it; on page 2 the mark is on "Sales by
+  region and channel" and "Overview" is quiet again (`b5-tabs-crop.png`).
+- Not opened: eight pages in Arabic, a row that has to wrap, the phone layout, a click on a tab (the links are
+  checked in `npm test` only).
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
