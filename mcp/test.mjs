@@ -1885,6 +1885,54 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   }
 }
 
+// ---------- round 10, R10.7: the design pass (checklist gaps fixed in the shared writer) ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const req = (await import('node:module')).createRequire(import.meta.url), Pb = req(path.join(REPO, 'assets/js/pbip-export.js')), E2 = req(path.join(REPO, 'assets/js/design-engine.js'));
+  const L = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined), N = (p) => parseFloat(L(p));
+  const tw = (...x) => (Pb.textWidth ? Pb.textWidth(...x) : Infinity);
+  const site = (lang, change) => { const d = E2.fresh(); if (lang === 'ar') d.font = 'Tahoma'; if (change) change(d); E2.repairState(d);
+    const specs = E2.projectPages(d.layout, lang, { second: true, panel: false });
+    const r = Pb.build({ name: 'S', title: 'Gulf Sales', pageName: specs[0].name, lang, rtl: E2.rtl(d.layout, lang), font: d.font, ui: d.ui, theme: E2.buildTheme(d, lang), sample: true, logo: null, texts: E2.REPORT_TEXTS[lang], pages: specs.map((sp) => ({ name: sp.name, page: sp.page, slots: sp.slots, panel: sp.panel, kpiInset: E2.kpiInset(sp.layout), png: new Uint8Array([1]) })) });
+    return { ui: d.ui, vs: r.files.filter((x) => /visual\.json$/.test(x.path)).map((x) => JSON.parse(String(x.data))).filter((v) => v.visual) }; };
+  const titleOf = (v) => { const t = ((v.visual.visualContainerObjects || {}).title || [{}])[0].properties || {}; return { text: String(L(t.text) || '').slice(1, -1), size: N(t.fontSize), show: L(t.show) }; };
+  // 1. chart titles say what they show: the sample download names its charts by their fields, in both languages
+  {
+    const en = site('en').vs.filter((v) => /Chart$/.test(v.visual.visualType)).map((v) => titleOf(v).text), ar = site('ar').vs.filter((v) => /Chart$/.test(v.visual.visualType)).map((v) => titleOf(v).text);
+    // (the tooltip page's chart is named by its measure alone, "Total Orders": an older rule, so it is not counted here)
+    chk(() => en.filter((t) => / by /.test(t)).length >= 4 && !en.some((t) => /^(Main trend|Breakdown|Comparison)$/.test(t)) && ar.filter((t) => / حسب /.test(t)).length >= 4 && !ar.some((t) => /^(الاتجاه الرئيسي|التوزيع|المقارنة)$/.test(t)),
+      () => `the sample download's chart titles must name their fields ("Total Revenue by Month"): ${JSON.stringify(en)} ${JSON.stringify(ar)}`);
+  }
+  // 2. a KPI title is not cut where a smaller size fits it: its size goes down (to 8pt at least) until the bold text fits
+  //    the card's width; a title that fits keeps the theme's size
+  {
+    const bad = [], seen = { small: 0, kept: 0 };
+    for (const page of ['1920x1080', '1280x720', '960x720']) for (const k of [3, 6]) for (const lang of ['en', 'ar']) {
+      const { vs } = site(lang, (d) => { d.layout = Object.assign({}, d.layout, { preset: 'exec', kpis: k, page, filters: false }); });
+      const cards = vs.filter((v) => v.visual.visualType === 'cardVisual' && v.parentGroupName), top = Math.max(...cards.map((v) => titleOf(v).size));
+      cards.forEach((v) => { const t = titleOf(v), pad = v.visual.visualContainerObjects.padding[0].properties, avail = v.position.width - N(pad.left) - N(pad.right), need = tw(t.text, t.size, true, lang === 'ar' ? 'Tahoma' : 'Segoe UI');
+        if (t.size < top) seen.small++; else seen.kept++;
+        if (t.size < 8 || (need > avail + 0.5 && t.size > 8)) bad.push(`${page} ${k} ${lang}: "${t.text}" ${t.size}pt needs ${need.toFixed(0)} of ${avail}`);
+        if (t.size < top && tw(t.text, t.size + 1, true, lang === 'ar' ? 'Tahoma' : 'Segoe UI') <= avail) bad.push(`${page} ${k} ${lang}: "${t.text}" is ${t.size}pt though ${t.size + 1}pt fits`); });
+    }
+    chk(() => bad.length === 0 && seen.small > 0 && seen.kept > 0, () => `a KPI title must fit its card or be at the 8pt minimum, and keep the theme's size where it fits: ${bad.slice(0, 5).join(' | ')} (${JSON.stringify(seen)})`);
+  }
+  // 3. contrast (WCAG AA): on every preset of the design engine the navigator's quiet names are at least 4.5:1 on the header's
+  //    card colour, and the current page's mark (bold text and the line) at least 3:1
+  {
+    const lum = (hex) => { const v = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4))); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+    const ratio = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+    const bad = []; let n = 0;
+    for (const name of Object.keys(E2.PRESETS)) {
+      const { ui, vs } = site('en', (d) => { d.preset = name; d.data = E2.PRESETS[name].data.slice(); d.ui = Object.assign({}, E2.PRESETS[name].ui); });
+      const tabs = vs.filter((v) => v.visual.visualType === 'actionButton' && /PageNavigation/.test(JSON.stringify(v.visual.visualContainerObjects.visualLink)));
+      tabs.forEach((v) => { n++; const t = v.visual.objects.text.find((e) => e.selector && e.selector.id === 'default').properties, c = String(L(t.fontColor.solid.color)).slice(1, -1), bold = L(t.bold) === 'true', r = ratio(c, ui.card);
+        if (r < (bold ? 3 : 4.5)) bad.push(`${name}: ${bold ? 'the current page' : 'a page name'} ${c} on ${ui.card} is ${r.toFixed(2)}:1`); });
+    }
+    chk(() => n >= 8 && bad.length === 0, () => `the navigator's text must pass WCAG AA on every preset: ${n} buttons, ${bad.slice(0, 5).join(' | ')}`);
+  }
+}
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);

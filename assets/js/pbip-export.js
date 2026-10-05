@@ -434,8 +434,12 @@
     // under the title; title: the title's size, written so the height worked out above doesn't depend on the theme.
     // Padding and spacing are written WITHOUT a selector: with "default" Desktop 2.158 ignores both and the title sits
     // on the panel's top edge (measured, DESKTOP-TESTS.md round 0). c.T: the top, c.S: the reading-start side.
-    const cardFrame = (f, c, title) => {
-      if (f.title && f.title[0].properties.show && f.title[0].properties.show.expr.Literal.Value === 'true') f.title[0].properties.fontSize = num(title);
+    // Round 10 (the design pass): a KPI title that would be cut ("Total Sales Last R...") gets the largest size, down to
+    // 8pt, at which its bold text fits the card's width (text, w given); a title that fits keeps the theme's size.
+    const cardFrame = (f, c, title, text, w) => {
+      let size = title;
+      if (text != null && w) { const avail = w - c.S - c.P; while (size > 8 && textWidth(text, size, true, font) > avail) size--; }
+      if (f.title && f.title[0].properties.show && f.title[0].properties.show.expr.Literal.Value === 'true') f.title[0].properties.fontSize = num(size);
       f.padding = obj({ top: num(c.T), bottom: num(c.P), left: num(rtl ? c.P : c.S), right: num(rtl ? c.S : c.P) });
       f.spacing = obj({ customizeSpacing: bool(true), spaceBelowTitleArea: num(0), verticalSpacing: num(2) });
       return f;
@@ -657,7 +661,9 @@
           const query = B ? bindQuery(s.kind, B, kpiIndex, rtl) : null;
           let ttl = s.title;
           const extra = {};
-          if (own && B && query) ttl = bindTitle(s.kind, B, W.by || 'by') || ttl;
+          // (round 10: the sample download names its charts by their fields too, "Total Revenue by Month", as a report on a
+          // user's model does; before, it kept the layout's role names, "Main trend")
+          if (B && query) ttl = bindTitle(s.kind, B, W.by || 'by') || ttl;
           if (s.kind === 'kpi') { if (B && query) ttl = label(B.kpis[kpiIndex]); kpiIndex++; }
           // KPI names read as labels: semibold, so the number below stays the hero
           if (s.kind === 'kpi') extra.title = obj({ show: bool(true), text: str(ttl), alignment: str(align), bold: bool(true) });
@@ -671,7 +677,7 @@
           if (type === 'cardVisual') {
             const cf0 = query && B ? (s.kind === 'kpi' ? B.kpis[kpiIndex - 1] : B.measure) : null;
             const c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, { top: Math.round(12 * pg.page.h / 1080), side: (s.kind === 'kpi' && pg.kpiInset) || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) }, valueEm(cf0));
-            visual.objects = cardObjects(c); cardFrame(visual.visualContainerObjects, c, TITLE);
+            visual.objects = cardObjects(c); cardFrame(visual.visualContainerObjects, c, TITLE, s.kind === 'kpi' ? ttl : null, s.w);
             // an SVG design on the card's image (o.svgCards; the JSON Desktop writes for "Select from data", measured in
             // Desktop 2.158, third sitting of 2026-10-04): the nth KPI card of every page
             const sc = s.kind === 'kpi' ? (o.svgCards || []).find((x) => x.card === kpiIndex - 1) : null;
