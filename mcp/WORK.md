@@ -4,6 +4,49 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 13, the laptop's six-hour Desktop sitting (2026-10-06, laptop builder; branch `fix/round-13` from main `1cef9ac`; not merged)
+The owner's go (6 Oct, 01:45): "I want to feel that whatever the builder opens looks amazing and optimized." Six
+hours straight, pushed every hour; he is asleep, so anything that needs his choice goes under "Round 13, for the
+owner" and the work moves on. A cloud builder does round 12 (the code fixes for round 11's 32 design findings) on
+`fix/round-12` at the same time: those findings are not edited here; from about hour 3 its branch is merged into this
+one and its "for the laptop to prove" list is proven in Desktop. Desktop 2.158.1177. Made-up and sample models only.
+Captures: `<tests folder>\desk-r13\`; test reports: `<tests folder>\13-r13\`; scripts: `builder-scripts\r13-*`.
+Package 0.2.6 is installed in Claude Desktop as an extension on this laptop: not used and not touched; every report
+is built by the working copy's server over stdio (`r10-make.mjs`, `r11-call.mjs`).
+
+**Start: 02:37 (laptop time, 6 Oct).** Setup at 02:37: `idle.ps1` 20 s and 29 s (this session's own start), no Power
+BI Desktop window open; `git fetch`; `fix/round-13` made from `origin/main` `1cef9ac`; `origin/fix/round-12` is at
+`d048c8d` (groups A, B and C pushed, no "for the laptop to prove" list read yet).
+
+**Hourly pushes due:** 03:37, 04:37, 05:37, 06:37, 07:37, 08:37 (the stop).
+| Due | Pushed at | What |
+|---|---|---|
+<!-- r13 pushes -->
+
+### Round 13, order of work (each expected result written at 02:45, before any run)
+| # | Item | The run | Expected (written before the run) |
+|---|---|---|---|
+| 1a | Gradient colours by value, column and bar chart | a hand-placed page on the Ramadan sample: a column and a bar chart of Total Sales by Day Name, each three times: nothing written (the theme's one colour), `dataPoint.fill` as a `FillRule` `linearGradient2` on the chart's own measure with the two ends as literal colours (a light tint of the theme's accent to the accent), and the same with the ends as `ThemeDataColor` (ColorId and Percent); light and dark design, English and Arabic; the bars' colours read from the capture | Microsoft's CLI lists `dataPoint.fill` and `fillRule` ("Color saturation") and no other colour entry. **Expected: the literal gradient draws** (the smallest bar the light end, the largest the accent, the rest between in proportion to their value). **Not known: whether `ThemeDataColor` is accepted inside the rule's ends** (Desktop writes it for a plain fill); if it is, the colours follow a later theme change; if not, the engine writes the theme's colours as literals. Dark design: the light end must still stand 3:1 off the card (computed before writing; measured from the capture). Data labels sit outside the bars, on the card: their contrast is with the card, unchanged. Arabic: the same colours |
+| 1b | A gradient inside each bar | the CLI's property list for `dataPoint` of both charts; one try of a gradient fill written by hand if any entry is found | **Expected: not available** (the list has `fill`, `fillRule`, `fillTransparency` and the border only; no gradient-fill entry). Written down as it is |
+| 1c | Built in the engine | tests first; `create_report` option; rebuilt and opened in both languages and designs | the same colours as 1a's hand-written chart, measured |
+| 2 | An SVG picture in a KPI card that blends | `svgCards` built by the server with a design from the SVG KPI compiler's own samples (not the yellow test square), light and dark design, 1280 x 720 and 1920 x 1080, English and Arabic: crops of every card at full size | **Not known, to measure:** (a) the picture's own background (expected transparent where the design paints nothing; a design with a background `rect` shows as a box); (b) its colours (expected: the design's fixed hex colours, so they do not follow a dark theme); (c) an edge or outline (expected none from Desktop; any is the design's); (d) sharpness (a vector: expected sharp at both sizes); (e) its place: at the far end from the value, centred on the value's height within 2 page units, sized as round 10/11 (the percent of the card's inner width). A FAIL is anything that reads as a separate box |
+| 3 | Mirrored chart axes for Arabic | a hand-placed Arabic page per chart type (clustered column, clustered bar, line: the three the engine writes; stacked column, stacked bar, area, line and column, scatter written by hand for the record; waterfall is not written by the engine and is tried only if time allows), each chart twice: as today, and with (a) the category order reversed, (b) the value axis at the right, (c) bars growing right to left, (d) the legend at the right, (e) a date axis right to left | the CLI lists `invertAxis` ("Invert axis") and `switchAxisPosition` on both axes and `legend.position`. **Expected: (b) works** on column, line, area, combo (`valueAxis.switchAxisPosition`); on a bar chart the category names move to the right with `categoryAxis.switchAxisPosition`. **(c) works** on a bar chart (`valueAxis.invertAxis`). **(d) works** (`legend.position` 'Right' or 'TopRight'). **(a) not known:** `categoryAxis.invertAxis` on a categorical axis may be ignored (the setting is "Invert range", made for numbers); the sure way is the sort direction (`sortDefinition` Descending by the sort field), which also reverses a legend's order. **(e) expected to work on a continuous date axis** (`invertAxis`); on a categorical month axis as (a). Side effects to look for: the time order read right to left (wanted), data labels on the wrong side of a bar, the tooltip and drill unchanged, a scrollbar starting at the wrong end |
+| 4 | Round 12's list | from about 05:30: `git fetch`; merge `origin/fix/round-12`; its "Round 12, for the laptop to prove" list, every item, English and Arabic, before (main's worktree) and after | each item as round 12 states it; in particular days and months in calendar order in tables, percent KPIs as percent without useless decimals, counts without decimals, no cut Arabic title, no placeholder text, no empty page on a model without measures, no hidden last table row. A FAIL is fixed here, tests first |
+| 5 | The design eye | every page opened | "Round 13, design findings"; small clear ones may be fixed after items 1 to 4, tests first |
+| 6 | The 11 golden tasks, English and Arabic | `r11-golden.mjs` on this branch after the merge, `gshot.ps1` | scored before (round 11's captures) and after |
+
+### Round 13, where I am
+- **02:45:** setup done, the plan written. `npm test` at the start (main `1cef9ac`): running; the count goes in the next entry.
+<!-- r13 where -->
+
+### Round 13, for the owner
+<!-- r13 owner -->
+
+### Round 13, design findings
+| # | Page and visual | What is off or could be better | Crop | Severity | Proposed fix |
+|---|---|---|---|---|---|
+<!-- r13 findings -->
+
 ## Round 11, the long overnight Desktop sitting (2026-10-05, laptop builder; branch `fix/round-11` from main `3803b7a`; dataarcus-engine `release/0.2.6` from its main `d8d3341`; not merged)
 The owner's go (5 Oct, evening): six hours straight, pushed every hour; he is asleep, so anything that needs his
 choice goes under "Round 11, for the owner" and the work moves on. Desktop 2.158.1177. Made-up and sample models only.
