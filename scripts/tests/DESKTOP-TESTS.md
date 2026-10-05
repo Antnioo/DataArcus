@@ -1542,8 +1542,11 @@ channel", Customers, "Products and categories", Returns, Stores, Staff, Notes; a
 - **All eight names are whole, on one row**, between the title and "Your logo"; none is cut and none overlaps.
 - On page 1 "Overview" is bold in the accent colour with the line under it; on page 2 the mark is on "Sales by
   region and channel" and "Overview" is quiet again (`b5-tabs-crop.png`).
-- Not opened: eight pages in Arabic, a row that has to wrap, the phone layout, a click on a tab (the links are
-  checked in `npm test` only).
+- **Arabic, eight pages ("B5 tabs AR 8", Tahoma):** all eight names whole on one row, the first page rightmost next
+  to the title, the mark on the current page on pages 1 and 2 (`b5-tabs-ar-crop.png`). The Arabic tabs are spaced
+  wider than the English ones (the width rule counts 0.62 em a letter, the measured upper end), and the logo
+  placeholder of a hand-placed page reads "Your logo" in an Arabic report.
+- Not opened: a row that has to wrap, the phone layout, a click on a tab (the links are checked in `npm test` only).
 
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
