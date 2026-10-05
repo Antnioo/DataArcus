@@ -4,6 +4,12 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## check_report, first session (2026-10-05, cloud; branch `feat/check-report` from main `850b0a0`; not merged)
+On the owner's go of 4 Oct ("accept all") and 5 Oct ("Both, one after the other": after round 10's code-only part).
+Built, tests first: the tool, the offline validator, Microsoft's schemas bundled, the rule engine (10 measured rules),
+findings capped, notChecked; `npm test` 363 -> 382 of 382. What is built and the exact list of what is left (including
+the Desktop sitting CR-1 to CR-3) is in `mcp/plans/CHECK-REPORT.md`, "Where it stands". Next: item 1 there.
+
 ## Where things stand
 - **Merged 2026-10-03 (reviewer):** round 1 (`80d3a00`); the Microsoft plugin test (`bc05275`); privacy statement and
   product spec (`515409d`: `mcp/PRIVACY.md`, `mcp/PRODUCT_SPEC.md`); the golden tasks (10 then, 11 now) and test models (`39b5ab7`);

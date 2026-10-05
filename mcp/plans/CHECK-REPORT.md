@@ -4,6 +4,51 @@
 were made for it. Written on `plan/check-report-number-check` from main `2268d6f`. It is the first of the owner's five
 new tools (`business/IDEAS.md` in dataarcus-engine). Sources were read on 2026-10-04 unless a date is given.
 
+## Where it stands (2026-10-05, first session, branch `feat/check-report` from main `850b0a0`; not merged)
+The owner's go (4 Oct, "accept all"): question 1 (a) ship the validator, without Playwright if `validate` runs
+without it; question 2 (a) always offline with bundled schemas; question 3 (a) unmeasured fonts as `note`.
+
+**Built (tests first: 19 checks, all failing before the tool; `npm test` 363 -> 382 of 382):**
+- `check_report` in `mcp/server.mjs` (read-only), `mcp/lib/check-report.mjs`: inputs `path`, `checks`
+  (`validator`, `schemas`, `sizes`, `selectors`, `phone`, `tooltips`, `theme`: `rtl` and `navigation` wait for their
+  rules, and `theme` was added for THEME_NAME), `lang`, `maxFindings` (1-200, 60). The answer as section 1 plans, plus
+  `schemas: { checked, errors }`, `counts.errors/warnings/notes` and `report.pageNames` (cleaned, capped at 60).
+- **Microsoft's validator, offline, in this process:** `runReportValidation` from the CLI's library entry with
+  `skipSchema: true` (what `--no-schema` does). **Playwright is not needed:** the library entry never imports it
+  (proven: test 6 runs with Playwright unloadable). The CLI, `ajv` and `ajv-formats` are dependencies now (were dev).
+  Its messages come back without quoted text or file paths.
+- **The bundled schemas:** `mcp/schemas/` (111 files, 2.7 MB, MIT, `microsoft/json-schemas` `8db0a64`, the same JSON
+  as developer.microsoft.com: `SOURCE.md`), checked with our own `ajv`. A file naming a version not bundled (Desktop's
+  visualContainer 2.13.0) or the theme schema goes to `notChecked`. The licence question of section 2 is answered: MIT.
+- **No network, proven:** test 6 runs the tool in a separate Node with `net`, `tls`, `http`, `https`, `dns` and
+  `child_process` replaced by throwing stubs and Playwright unloadable: the same answer and 0 connections tried
+  (a negative control showed the stubs do block). The tool's source holds no `child_process`, `https.get` or `fetch`.
+- **The rule engine** `assets/js/report-rules.js` (Node and browser): TEXT_SIZE_RANGE, TEXTBOX_FITS, BUTTON_ONE_LINE,
+  SLICER_FITS, SELECTOR_SHOW, SELECTOR_CARD, TOOLTIP_TYPE, IMAGE_FIT, PHONE_OVERLAP, THEME_NAME, each with its source
+  (DESKTOP-TESTS.md, date, Desktop version, section). The numbers are main's (`report-check.mjs`); BUTTON_ONE_LINE
+  keeps 0.45 em a character + icon + 6 until round 10's measured per-letter widths (M3) are merged.
+  Fonts other than Segoe UI and Tahoma: the finding is a `note` marked as an estimate.
+- **Safety:** findings carry numbers and ids only (test 3: planted values in a page filter, a slicer selection, a
+  bookmark and a text box never come back, in five `checks` combinations); instruction-like page names give an
+  `INSTRUCTION_TEXT` note without repeating the name; U+202E comes back as `\u202e`; caps (test 5: 300 findings ->
+  60, counted 300, under 40,000 characters); PBIR-Legacy refused with what to do; nothing written (hashes).
+- **Seen on our own reports:** the Arabic golden export gets 2 validator warnings, `PBIR_TEXTBOX_HEIGHT_BELOW_FLOOR`
+  (the header's 20pt title in a 46-high box: the validator wants 48; our measured rule, 10 + 1.8 x pt, says 46 fits).
+  Not changed: a Desktop look decides which is right.
+
+**Left, in order:**
+1. `report-check.mjs` calling `report-rules.js` (the tests keep the same rules; one copy of the numbers).
+2. The rules not built: RTL_MIRROR, PAGE_BUTTON_WRAP, TOOLTIP_SCROLL, SORT_IN_VISUAL (listed in `notChecked`).
+3. The online-vs-offline comparison on every fixture (which validator codes need the schema download; our bundled
+   check must find them), and test 4 (Microsoft's starter theme: 6 `PBIR_THEME_VISUAL_PROP_UNKNOWN`): needs the
+   starter files from finding 001 (`repro.sh`), on the laptop.
+4. Test 3: Microsoft's plugin report as a fixture (`tests/6-ms-plugin/Arabic Sales`, made-up model; on the laptop).
+5. `mcp/PRIVACY.md`: the check_report row (before release).
+6. Packaging (dataarcus-engine): ship the CLI and its library without Playwright (and without `powerbi-client` and
+   the bridge CLI if the library entry doesn't load them: to prove), `mcp/schemas/` included; the size measured.
+7. **Desktop (a laptop sitting):** CR-1 (every finding of test 3 seen on a full-size crop), CR-2 (Segoe UI Semibold
+   and Arial at 10, 14, 22pt), CR-3 (1366 x 768); and the AR header title above (46 or 48).
+
 ## What it is
 A tool that checks a PBIR report that already exists, whoever built it: our `create_report`, Microsoft's
 `powerbi-authoring` plugin, Copilot, or a person in Desktop. It runs two kinds of checks:
