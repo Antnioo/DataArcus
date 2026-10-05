@@ -123,6 +123,7 @@ portfolio: {
     about: {
       title: "Generating is easy. Checking is the work.",
       subtitle: "Generating a Power BI report with AI is now free and official. What still takes care is knowing that the numbers hold, that the model behind them is sound, and that Ramadan, Eid and the Gulf weekend are handled. DataArcus is built around that.",
+      note: "Microsoft's <a href='https://learn.microsoft.com/power-bi/developer/agentic/power-bi-agentic-overview' class='text-accent' target='_blank' rel='noopener'>report-authoring skills</a> are free, but they run in an AI coding agent such as GitHub Copilot, on its own plan; <a href='https://learn.microsoft.com/power-bi/create-reports/copilot-introduction' class='text-accent' target='_blank' rel='noopener'>Copilot inside Power BI</a> needs a paid Fabric capacity (F2 or higher).",
       quote: "\"My name is Abdelrahman M. I've spent 2 years working in CRM and data-driven operations, and I got tired of waiting for someone else to build the reporting I actually needed, so I started building it myself in Power BI. DataArcus is where that work lives: real, production-grade models, not templates.\"",
       p1: "Behind DataArcus is one person, me, building every tool and checking every report myself. Alongside the free tools I take paid work: designing Power BI reports and auditing models, including a Copilot-readiness audit. You deal directly with the person doing the work, and what you see in the portfolio is what you get.",
       founder: "Abdelrahman M., Founder & Lead Data Architect",
@@ -422,6 +423,7 @@ portfolio: {
     about: {
       title: "توليد التقرير سهل، والتحقق منه هو العمل الحقيقي",
       subtitle: "أصبح توليد تقارير Power BI بالذكاء الاصطناعي مجانيًا، ومن Microsoft نفسها. ويبقى الأهم أن تعرف أن الأرقام صحيحة، وأن النموذج وراءها سليم، وأن رمضان والعيد وعطلة الخليج محسوبة كما يجب. وحول هذا بُني داتا أركوس.",
+      note: "<a href='https://learn.microsoft.com/power-bi/developer/agentic/power-bi-agentic-overview' class='text-accent' target='_blank' rel='noopener'>مهارات Microsoft لكتابة التقارير</a> مجانية، لكنها تعمل داخل وكيل برمجة بالذكاء الاصطناعي مثل GitHub Copilot بخطة اشتراكه الخاصة، أما <a href='https://learn.microsoft.com/power-bi/create-reports/copilot-introduction' class='text-accent' target='_blank' rel='noopener'>Copilot داخل Power BI</a> فيحتاج إلى سعة Fabric مدفوعة (F2 أو أعلى).",
       quote: "\"اسمي عبد الرحمن م. أمضيت سنتين في العمل ضمن إدارة علاقات العملاء والعمليات القائمة على البيانات، ثم مللت من انتظار شخص آخر ليبني التقارير التي أحتاجها فعليًا، فبدأت ببنائها بنفسي في Power BI. داتا أركوس هي المكان الذي يعيش فيه هذا العمل: نماذج حقيقية بمستوى الإنتاج، لا قوالب جاهزة.\"",
       p1: "وراء داتا أركوس شخص واحد، هو أنا، أبني كل أداة وأراجع كل تقرير بنفسي. وإلى جانب الأدوات المجانية أقبل أعمالًا مدفوعة: تصميم تقارير Power BI وتدقيق النماذج، ومنها تدقيق الجاهزية لـ Copilot. تتعامل مباشرة مع من يقوم بالعمل، وما تراه في المعرض هو ما ستحصل عليه.",
       founder: "عبد الرحمن م.، المؤسس وكبير مهندسي البيانات",
