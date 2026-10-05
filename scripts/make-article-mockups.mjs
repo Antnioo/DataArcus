@@ -627,6 +627,13 @@ for (const job of JOBS.filter((j) => !only.length || only.includes(j.id))) {
       if (e.matches('.fn,.st')) { const range = document.createRange(); range.selectNodeContents(e); const t = range.getBoundingClientRect();
         if (t.left - r.left < 12 || r.right - t.right < 12) out.push('text too close to its box edge: ' + e.textContent); }
     }
+    // the rows of a bar panel (.hb: label, bar, value): every bar starts where the others do (a row too long for the
+    // panel used to shrink its label, so its bar started 3 px early); right-to-left rows are measured from the right
+    const panels = new Map();
+    document.querySelectorAll('.hb').forEach((row) => { const bar = row.children[1]; if (!bar) return; const rtl = getComputedStyle(row).direction === 'rtl', r = bar.getBoundingClientRect();
+      if (!panels.has(row.parentElement)) panels.set(row.parentElement, []); panels.get(row.parentElement).push({ x: rtl ? r.right : r.left, label: row.children[0].textContent.trim() }); });
+    for (const rows of panels.values()) { const xs = rows.map((r) => r.x), lo = Math.min(...xs), hi = Math.max(...xs);
+      if (hi - lo > 0.5) out.push(`bars not aligned (start x ${lo.toFixed(1)} to ${hi.toFixed(1)}): ${rows.filter((r) => Math.abs(r.x - xs[0]) > 0.5 || r === rows[0]).map((r) => `${r.label} ${r.x.toFixed(1)}`).join(', ')}`); }
     for (const t of document.querySelectorAll('svg text')) { const r = t.getBoundingClientRect(), s = t.ownerSVGElement.getBoundingClientRect();
       if (r.left < s.left - .5 || r.right > s.right + .5) out.push('axis label clipped: ' + t.textContent); }
     return out;
