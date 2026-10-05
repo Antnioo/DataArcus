@@ -1754,6 +1754,36 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   }
 }
 
+// ---------- the outside review's B-02 (owner's go 5 Oct ~13:15): a model.bim, a TMDL file or a model part is measured
+// before it is read and checked for nesting after it is parsed; over the limits: refused in plain words ----------
+{
+  const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 300) : x.t.slice(0, 200));
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
+  const dir = (n) => { const d = path.join(ROOT, 'b02', n, 'B02.SemanticModel'); fs.mkdirSync(d, { recursive: true }); return d; };
+  // 1. a model.bim of 65 MB (sparse: nothing written) is refused before it is read, by read_model and check_model_health
+  {
+    const f = path.join(dir('huge-bim'), 'model.bim'); fs.writeFileSync(f, '{}'); fs.truncateSync(f, 65 * 1024 * 1024);
+    const t0 = Date.now(), r = await ask('read_model', { path: 'b02/huge-bim' }), h = await ask('check_model_health', { path: 'b02/huge-bim' }), ms = Date.now() - t0;
+    check(r.err && h.err && /65 MB/.test(r.t) && /64 MB/.test(r.t) && ms < 3000, `a 65 MB model.bim must be refused before it is read: ${short(r)} | ${short(h)} (${ms} ms)`);
+  }
+  // 2. a model.bim nested 100,000 levels deep is refused in words (real models are 8 or 9 levels deep), never a crash
+  {
+    const d = 100000, f = path.join(dir('deep-bim'), 'model.bim');
+    fs.writeFileSync(f, JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'T', partitions: mp('T'), columns: [{ name: 'A', dataType: 'string', sourceColumn: 'A' }] }] } }).replace(/\}\}$/, ',"annotations":' + '{"a":'.repeat(d) + '1' + '}'.repeat(d) + '}}'));
+    const r = await ask('read_model', { path: 'b02/deep-bim' }), h = await ask('check_model_health', { path: 'b02/deep-bim' });
+    check(r.err && h.err && /nested/.test(r.t) && /256/.test(r.t) && !/call stack/i.test(r.t + h.t), `a model.bim nested 100,000 deep must be refused in words: ${short(r)} | ${short(h)}`);
+  }
+  // 3. a TMDL file of 33 MB (sparse) is refused before it is read
+  {
+    const d = dir('huge-tmdl'), t = path.join(d, 'definition', 'tables'); fs.mkdirSync(t, { recursive: true });
+    fs.writeFileSync(path.join(t, 'Sales.tmdl'), 'table Sales\n\tcolumn Amount\n\t\tdataType: double\n');
+    const big = path.join(t, 'Big.tmdl'); fs.writeFileSync(big, 'table Big\n'); fs.truncateSync(big, 33 * 1024 * 1024);
+    const t0 = Date.now(), r = await ask('read_model', { path: 'b02/huge-tmdl' }), ms = Date.now() - t0;
+    check(r.err && /33 MB/.test(r.t) && /32 MB/.test(r.t) && /TMDL/.test(r.t) && ms < 3000, `a 33 MB TMDL file must be refused before it is read: ${short(r)} (${ms} ms)`);
+  }
+}
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);
