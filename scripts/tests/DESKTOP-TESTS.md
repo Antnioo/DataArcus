@@ -1473,6 +1473,56 @@ background capture run; the captures before the crash are not used except three 
 | Analysis, Arabic, 1280 x 720 | as Arabic 1920 x 1080 | **3.43M, 14.81K, 231.46, 35.36%**; mirrored tabs, the current page underlined; the chart named by its fields | nothing cut; the same notes |
 <!-- end of round 10 before and after -->
 
+### Round 10, part B: the cards' values fit (R10.1), 84 cards in Desktop, none cut
+One-page reports from the branch's MCP server on the made-up model (`<tests folder>\10-r10`), each card bound to a
+report-level number measure with the widest text its mode can show (`builder-scripts\r10-fit.mjs`), opened in
+Desktop, the first page captured at double size, and every card's value read with `ink.ps1` (a text that ends in
+three low dots is cut). The value's size is the engine's own.
+| Mode | Text on the cards | Pages | Cards per page | Languages | Cards | Cut |
+|---|---|---|---|---|---|---|
+| automatic (the default) | 888.88bn and -888.88M | 1920 x 1080, 1280 x 720, 960 x 720 | 3 and 6 | English, Arabic | 54 | **0** |
+| full (`kpiValues: "full"`) | 888,888,888 and 888,888,888.88 | the same three | 4 and 6 | English | 30 | **0** |
+- The narrowest case, six cards at 960 x 720 (110 wide): 14pt automatic ("888.88bn" takes 152 to 157 of 228
+  capture pixels), 9pt full ("888,888,888.88" 162 of 228). Six cards at 1280 x 720: 23pt and 15pt. Before the fix
+  "74,675.00" was cut there at about 23pt.
+- One capture had to be retaken twice: Desktop showed a report page tooltip over the cards because the mouse
+  pointer rested on a chart. Moving the pointer off the page fixed it.
+- Not captured: 4 and 5 cards in automatic mode, 3 and 5 in full mode, Arabic in full mode (the same rule sizes them;
+  `npm test` computes all 108 cards of 3 to 6 x three pages x two languages in both modes).
+- **Still cut on six-card pages: the KPI titles** ("Total Sales Last ..."). These proof reports were built before the
+  title fit of the recovered commit, so whether it cures them at 8pt is not captured yet.
+
+### Round 10, part B: SVG columns, the card image, a matrix, separators in a table (R10.2, R10.3)
+"B2 SVG EN", "B2 SVG AR" (executive layout, a table of Hijri Day, Total Sales, Total Sales Last Ramadan, two
+`svgColumns`, one `svgCards` in English) and "B2 Matrix" (a hand-placed matrix and a table), from the branch's server.
+| Check | Expected | Seen |
+|---|---|---|
+| The pictures at the design's size | a 160 x 24 bar and a 180 x 20 strip, rows about 29 tall | **yes**: the bar with "135%" readable, the strip filling by the day; eight rows and the total in the table |
+| Separators in the table | 3,375 and 101,914 on a model with no format | **yes**: 3,375, 2,505, total 101,914 and 74,675 |
+| "Total" in the Arabic table | shown, with the text column first | **yes**: "Total" under Hijri Day at the left; then the two pictures, then the measures |
+| Mirrored pictures in Arabic | the bar and the strip grow from the right; the text stays readable | **yes**: both grow from the right, "135%" readable at the left of the bar |
+| The card's image (`svgCards`) | the arrow beside the number | **draws, too large**: the green arrow fills the card's image area and its bottom is cut by the card |
+| A matrix with an SVG column | rows by quarter, the picture in each | **yes**: Q1 to Q4 and Total, the bar at 160 x 24 |
+| KPI values on the user's model | automatic units, 2 decimals | 101.91K, 74.68K, 0.34 |
+| The navigator and Reset | tabs; Reset without a box | tabs in both directions; Reset has no box; **its icon is at one end of the 274-wide button and its text at the other** |
+- **Off, to fix before the SVG features are called usable:** (1) the table is wider than its box in both languages
+  (a horizontal scrollbar; the last header is cut): three fields and two pictures of 160 and 180 need more than the
+  553 the slot has, so the pictures' width should be capped by the room the table has; (2) the card's image needs a
+  size (the card's `image` object has `size` and `fixedSize`: to measure).
+- Not run in this sitting (left): the schema experiment both ways (R10.4), the `add_gulf_calendar` rows D-GC1 to
+  D-GC6, the 11 golden tasks opened in Desktop, the Reset tooltip on hover, the phone layout of the tabs, pages with
+  4 and 8 tabs.
+
+### Seen, not in scope (round 10, both sittings)
+- The table's total row has no "Total" word in right-to-left reports without pictures (a measure is first; so since
+  round 2). With pictures the text column is first and "Total" shows, but the category then sits at the left end.
+- Axis labels read "0.0M, 0.5M, 1.0M"; month labels slant on the user's-model page ("January ... December").
+- The tables are titled by the layout ("Detail", "Detail table", "التفاصيل"), not by their content.
+- In an Arabic report on a model with English names the titles mix both ("Total Sales حسب Quarter").
+- A percentage now shows two decimals too (35.36%, was 35.4%).
+- "Your logo" / "شعارك" placeholders; the sample's four table rows leave the analysis table two thirds empty.
+- Desktop draws a report page tooltip into a bridge capture when the mouse pointer rests on a chart.
+
 ## Lessons
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
