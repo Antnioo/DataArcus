@@ -58,6 +58,21 @@ Started 21:50 UTC (5 Oct). Tests: the round 12 block in `mcp/test.mjs` (checks w
   percent card, round 10's default, tooltip card and the website's download); the Health Test fixture has 1 card, not
   2 ("Unused One" shows text); the model without measures now has cards and charts; the old table and sort readers
   set the calendar helper column aside.
+- **C done** (one commit): #15 a table whose title is a chart's adds ": detail"; #23/#32 a table of days, months or
+  quarters gets `grid.rowPadding` 0 where its rows would scroll, else told; #29 the phone table's pictures capped by
+  323 (`grid` in `mobile.json`); #31 the header shows the report's name or a new `title` input; #30 the logo
+  placeholder at the page's edge (left in Arabic) and 3 higher in Tahoma; #14/#13 hand-placed Arabic pages get the
+  Arabic texts; the Reset's icon `placement` and text alignment at the reading start; #22 no slicer on a column a page
+  filter fixes (the next column instead); #21 one Ramadan's line chart by Ramadan Day; #16 the short month names on
+  the time axis; #9 one value size a row; #7 the value at its title's edge (`paddingIndividual`, start margin 0); #8
+  and recommendation 3 one image percent a row, from the measured padding (25 x the page's scale a side); #18 the
+  rail only as high as its slicers and Reset; #2 phone tabs as wide as their names; #4 phone titles in the text
+  colour; #5 the current tab's line on the phone; #6 two tab rows start at the same x. `npm test` 433 -> 448;
+  `design-engine` 598, `theme-generator` 893, `pbip` 71, `layout` 512.
+- **Expectations changed in C, each with its cause:** the time axis Calendar[Month Short] (round 2's sort checks,
+  modelNotes, display names, suggest_fields); the Tahoma logo placeholder's middle (textMid + the measured 3); the
+  phone keeps the current tab's line; one value size a row and the measured image padding (round 10's card image);
+  tables titled ": detail" beside a chart of the same title.
 - **Not possible from the files (Microsoft's theme schema, 2.157):** a slicer header has no alignment (#19).
 - **Needs a measurement first:** #3, Arabic tab widths (Tahoma per letter): the one figure we have (150 of ink for
   "المبيعات حسب المنطقة والقناة" at 10pt bold on the phone) is one string; Desktop must measure the letters before
@@ -83,9 +98,42 @@ Each item: build with the branch's server (made-up models only), open in Desktop
    percents, Orders "1,234" and Total Sales "101,914" (whole, with separators; `labelDisplayUnits` -1 with a percent
    code was not measured, D8 measured it with "#,0"), Avg Price "231.50"; nothing cut at 1280 x 720 six cards.
 8. #26: golden task 8: no card shows "Yes".
+9. #15: golden task 1: the table beside the column chart titled "...: detail".
+10. #23/#32: golden task 4 (16:9 and 4:3): all seven days and the total, no scrollbar (`grid.rowPadding` 0: measured
+   to give 15.1 at 8pt; the rule's other numbers, the title and the visual's padding, are estimates on the safe side).
+11. #29: "P7 SVG EN" on the phone: the pictures narrower (`grid` in `mobile.json`: never tried there), no scrollbar.
+12. #31: the header shows the report's name ("R12 EN"), not the theme's.
+13. #30: the Arabic header: "شعارك" at the left edge of its slot, its middle within 1 of the header's (moved up 3).
+14. The Arabic Reset: the arrow right beside "إعادة ضبط الفلاتر" (`icon.placement` 'right', text aligned right);
+    English unchanged.
+15. #22/#21: golden task 3: no Hijri Year or Is Ramadan slicer; the line chart by Ramadan Day, 1 to 30.
+16. #16: golden task 1: the line chart's months "Jan" ... "Dec", level.
+17. #9/#7/#8: the six-card rows (English and Arabic, 1280 x 720 and 1920 x 1080): one value size; the value's first
+    digit under the title's first letter (`paddingIndividual`); the six images the same size (`imageAreaSize` from
+    the measured padding: the 48 design drawn about 48 wide).
+18. #18: the rail: Reset right under the last slicer, the rail's panel ending there.
+19. #2/#4/#5: the phone: the tabs as wide as their names from the reading start, chart and card titles in the text
+    colour (or: the mobile view dims what is not selected), the current tab's line under it.
+20. #6: a two-row header (eight long names, 1920 x 1080, a 72-high title): the rows start at the same x.
 
 ### Round 12, for the owner
-(taste calls, each with a recommendation)
+1. **Whole numbers on cards: digits or units?** Your rule says counts and whole numbers show no decimals. Built: a
+   measure whose format has no decimals shows its whole number with separators ("179", "101,914", "3,430,000").
+   The other way: automatic units with no decimals ("179", "102K", "3M"), shorter but rounder. **Recommended: the
+   digits** (exact, and money keeps its own format); a card too narrow for nine digits gets a smaller value, as
+   kpiValues "full" already does.
+2. **A percent: "0.0%" or "0%"?** Built: the model's percent format where it has one decimal or none, else "0.0%".
+   We read no data, so "small values" can't be told apart. **Recommended: keep "0.0%"** (a 0.4% change is real).
+3. **#15, the table beside a chart: ": detail" or other fields?** Built: "Total Sales by Region: detail". The other
+   way: give the table a different category than the chart. **Recommended: keep** (the table shows more measures of
+   the same rows; a different category would answer a question nobody asked).
+4. **#8, a semibold value?** The round 11 finding asked to consider it. Not built (a taste call): the 23pt regular
+   value beside a 9pt bold title reads as the hero already. **Recommended: leave it.**
+5. **#19, Arabic slicer headers at the right:** Microsoft's theme schema gives a slicer header no alignment, so it
+   can't be set from the files. Desktop draws Arabic text from the right already; the English names in an Arabic
+   report stay at the left. **Recommended: Arabic display names** (displayNames), which then sit at the right.
+6. **#3, Arabic tab widths:** needs Tahoma's letters measured in Desktop first (one string is not enough); until then
+   the widths keep the safe upper figure (0.62 em), and Arabic tabs take more room than their ink.
 
 ## Round 11, the long overnight Desktop sitting (2026-10-05, laptop builder; branch `fix/round-11` from main `3803b7a`; dataarcus-engine `release/0.2.6` from its main `d8d3341`; not merged)
 The owner's go (5 Oct, evening): six hours straight, pushed every hour; he is asleep, so anything that needs his

@@ -227,9 +227,13 @@
     while (kpis.length < nKpis) kpis.push(null);   // more cards than measures: the rest stay empty
     // time axis: a month column from the date table, else its date column, else any date column
     const inDate = columns.filter((c) => c.dateTable);
-    const date = inDate.find((c) => /^(month[\s_-]*(name|year)?|year[\s_-]*month|الشهر)$/i.test(c.c)) || inDate.find((c) => /month|الشهر/i.test(c.c))
+    let date = inDate.find((c) => /^(month[\s_-]*(name|year)?|year[\s_-]*month|الشهر)$/i.test(c.c)) || inDate.find((c) => /month|الشهر/i.test(c.c))
       || inDate.find((c) => /date/.test(c.type)) || columns.find((c) => /date/.test(c.type))
       || columns.find((c) => /^(month[\s_-]*(name)?|الشهر)$/i.test(c.c)) || null;   // no date table: a month column anywhere
+    // Round 12 (#16; seen in Desktop 2.158, round 11: "January" ... "December" slanted on the line chart): the time axis
+    // takes the model's short month names ("Jan") where it has them, in the same order
+    const SHORT_MONTH = /^(month\s*(short|abbr|abbreviation)|short\s*month|mmm)$/i;
+    if (date && /month|الشهر/i.test(date.c) && !/date/.test(date.type)) { const sh = columns.find((c) => c.t === date.t && SHORT_MONTH.test(c.c.replace(FAMILY, '').trim()) && family(c.c) === family(date.c)); if (sh) date = sh; }
     const year = inDate.find((c) => /^(year|السنة)$/i.test(c.c)) || null;
     // a category: a text column, or one of unknown type whose name reads as a category (not a number, date or key)
     const textLike = (c) => c.type === 'string' || (c.type === 'unknown' && !NUMBERISH.test(c.c) && !DATEISH.test(c.c));
@@ -241,6 +245,9 @@
     // three different slicers: the year, then the categories, then the time axis
     const sl = [year, catA, catB, date].filter((x, i, l) => x && l.indexOf(x) === i);
     const out = build({ kpis, main, date, catA, catB, slicers: [sl[0] || null, sl[1] || null, sl[2] || null] });
+    // every column a slicer could take, in the order they are picked (round 12, #22: the caller replaces a slicer that
+    // a page filter makes pointless)
+    out.slicerPool = [year].concat(cats, [date]).filter((x, i, l) => x && l.indexOf(x) === i);
     // the measures left behind that were not picked, so the caller can say so (none: no such key)
     const skipped = ranked.filter((x) => x.stale && !kpis.includes(x) && x !== main).map((x) => ({ t: x.t, m: x.m }));
     if (skipped.length) out.skipped = skipped;

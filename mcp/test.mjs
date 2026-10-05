@@ -402,11 +402,14 @@ check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.string
     check(size >= 12, `logo placeholder: ${size}pt`);
     // 4. fields: no number (Amount) or date (Sales[Date]) as a category, axis or slicer; the date table's named parts instead
     const cols = boundFields(dir).filter(([k]) => k === 'Column').map(([, t, c]) => `${t}[${c}]`);
-    check(!cols.includes('Sales[Amount]') && !cols.includes('Sales[Date]') && cols.includes('Calendar[Month Name]') && cols.includes('Calendar[Quarter]') && cols.includes('Calendar[Day Name]'),
+    // (round 12, #16, the owner's go 6 Oct: the time axis takes the model's short month names, Calendar[Month Short],
+    // where it has them, so the labels stay level; it was Calendar[Month Name])
+    check(!cols.includes('Sales[Amount]') && !cols.includes('Sales[Date]') && cols.includes('Calendar[Month Short]') && cols.includes('Calendar[Quarter]') && cols.includes('Calendar[Day Name]'),
       `fields: ${[...new Set(cols)].join(', ')}`);
     // 5. the model's own issues are told, with the fix, and the model is not changed
     const notes = (q.j.modelNotes || []).map((n) => n.field);
-    check(notes.includes('Calendar[Month Name]') && notes.includes('Sales[Total Sales vs Last Ramadan %]'), `modelNotes: ${JSON.stringify(q.j.modelNotes)}`);
+    // (round 12, #16: the note is on the short month names the report now shows; it was on Calendar[Month Name])
+    check(notes.includes('Calendar[Month Short]') && notes.includes('Sales[Total Sales vs Last Ramadan %]'), `modelNotes: ${JSON.stringify(q.j.modelNotes)}`);
   }
 }
 // tables fill their visual (grow to fit); in a right-to-left report the columns are mirrored (since 5 Oct with the text column kept first, so "Total" shows;
@@ -535,8 +538,10 @@ const cardProblems = (dir, rtl) => {
     check(!nv.bad.length && nv.buttons === 4 && nv.navigators === 0, `${name}: page buttons: ${nv.buttons} single buttons, ${nv.navigators} navigators; ${nv.bad.slice(0, 2).join('; ')}`);
     // round 2: the model's Month Name and Day Name have no sort-by column; the charts by them are put in order by the
     // report (Min of Month Number / Day of Week in the tooltip fields, sorted by it), the trend tooltip too
+    // (round 12, #16, the owner's go 6 Oct: the charts' time axis is the model's short month names, Calendar[Month Short],
+    // so their labels stay level; the checks below named Calendar[Month Name] before)
     const sp = sortProblems(files), byOf = (cat) => [...new Set(sp.sorted.filter((x) => x.category === cat).map((x) => x.by))].join();
-    check(!sp.bad.length && byOf('Calendar.Month Name') === 'Calendar.Month Number' && sp.sorted.some((x) => x.tooltip && x.category === 'Calendar.Month Name') && sp.sorted.some((x) => x.type === 'lineChart'),
+    check(!sp.bad.length && byOf('Calendar.Month Short') === 'Calendar.Month Number' && sp.sorted.some((x) => x.tooltip && x.category === 'Calendar.Month Short') && sp.sorted.some((x) => x.type === 'lineChart'),
       `${name}: months not put in order: ${JSON.stringify(sp.sorted).slice(0, 300)} ${sp.bad.slice(0, 2).join('; ')}`);
     check(byOf('Calendar.Day Name') === 'Calendar.Day of Week', `${name}: the chart by Day Name is sorted by "${byOf('Calendar.Day Name')}", want Calendar.Day of Week`);
     // round 2: display names. Without the input nothing carries one; an Arabic report lists the fields it shows under
@@ -544,26 +549,26 @@ const cardProblems = (dir, rtl) => {
     const allText = (fl) => Object.keys(fl).filter((k) => k.endsWith('/visual.json')).map((k) => String(fl[k])).join('\n');
     const projections = (fl) => { const out = []; Object.keys(fl).filter((k) => k.endsWith('/visual.json')).forEach((k) => { const v = JSON.parse(String(fl[k])); Object.values(((v.visual || {}).query || {}).queryState || {}).forEach((r) => (r.projections || []).forEach((p) => out.push(p))); }); return out; };
     // (round 12, #17: the calendar order's helper column carries a blank displayName, its header; not a display name)
-    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ')) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Name]') : !res.j.arabicNames),
+    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ')) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Short]') : !res.j.arabicNames),
       `${name}: without displayNames: a displayName written, or arabicNames ${JSON.stringify(res.j.arabicNames || null).slice(0, 200)}`);
     if (rtl) {
-      const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Month Name]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
+      const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Month Short]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
       const nr = await tryCall('create_report', { path: 'dax-project', name: 'Names AR', design: plan.j.design, lang: 'ar', displayNames: given });
       if (nr.err) check(false, `display names: ${nr.t.slice(0, 200)}`);
       else {
         const nf = filesOf(path.join(ROOT, 'dax-project', nr.j.report)), ps = projections(nf), txt = allText(nf);
         const of = (ref) => ps.filter((p) => p.queryRef === ref);
         // every projection of a named field shows the given name; a field without a name has none; queryRef is untouched
-        check(of('Sales.Total Sales').length >= 4 && of('Sales.Total Sales').every((p) => p.displayName === 'إجمالي المبيعات') && of('Calendar.Month Name').length >= 2 && of('Calendar.Month Name').every((p) => p.displayName === 'الشهر')
+        check(of('Sales.Total Sales').length >= 4 && of('Sales.Total Sales').every((p) => p.displayName === 'إجمالي المبيعات') && of('Calendar.Month Short').length >= 2 && of('Calendar.Month Short').every((p) => p.displayName === 'الشهر')
           && of('Sales.Total Sales Last Ramadan').length >= 1 && of('Sales.Total Sales Last Ramadan').every((p) => p.displayName === undefined),
-          `display names: projections ${JSON.stringify(ps.filter((p) => /Total Sales$|Month Name|Last Ramadan$/.test(p.queryRef)).map((p) => [p.queryRef, p.displayName])).slice(0, 300)}`);
+          `display names: projections ${JSON.stringify(ps.filter((p) => /Total Sales$|Month Short|Last Ramadan$/.test(p.queryRef)).map((p) => [p.queryRef, p.displayName])).slice(0, 300)}`);
         // our own titles use the names: the KPI card's title, "X حسب Y" on the line chart and on the trend tooltip
-        check(txt.includes("'إجمالي المبيعات حسب الشهر'") && txt.includes("'إجمالي المبيعات'") && !txt.includes("'Total Sales حسب Month Name'"), 'display names: titles still use the model names');
+        check(txt.includes("'إجمالي المبيعات حسب الشهر'") && txt.includes("'إجمالي المبيعات'") && !txt.includes("'Total Sales حسب Month Short'"), 'display names: titles still use the model names');
         // the table's column formatting still points at the field (its queryRef), not at the name
         const tp = tableProblems(nf, true);
         check(tp.columns >= 6 && !tp.bad.length, `display names: ${tp.bad.length} of ${tp.columns} table columns lost their header alignment: ${tp.bad.slice(0, 2).join('; ')}`);
         const an = nr.j.arabicNames || {}, dn = nr.j.displayNames || {};
-        check(Array.isArray(an.missing) && an.missing.includes('Sales[Total Sales Last Ramadan]') && !an.missing.includes('Sales[Total Sales]') && !an.missing.includes('Calendar[Month Name]') && !an.missing.includes('Calendar[Quarter]')
+        check(Array.isArray(an.missing) && an.missing.includes('Sales[Total Sales Last Ramadan]') && !an.missing.includes('Sales[Total Sales]') && !an.missing.includes('Calendar[Month Short]') && !an.missing.includes('Calendar[Quarter]')
           && JSON.stringify(dn.notUsed) === '["Nope[X]"]' && dn.used === 3, `display names: arabicNames ${JSON.stringify(an).slice(0, 200)}, displayNames ${JSON.stringify(dn)}`);
         const v2 = validate(path.join(ROOT, 'dax-project', nr.j.report));
         check(v2.errors === 0, `display names: Microsoft's validator: ${v2.errors} errors ${v2.what}`);
@@ -619,7 +624,8 @@ const cardProblems = (dir, rtl) => {
 // suggest_fields on the same project: the same sensible fields
 r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 { const f = (x) => (x ? `${x.t}[${x.c}]` : null), sl = r.err ? [] : r.j.slicers.map(f);
-  check(!r.err && f(r.j.date) === 'Calendar[Month Name]' && !sl.includes('Sales[Amount]') && !sl.includes('Sales[Date]') && sl.every(Boolean), `suggest_fields on dax-project: ${r.t.slice(0, 300)}`); }
+  // (round 12, #16: the short month names, where the model has them; was Calendar[Month Name])
+  check(!r.err && f(r.j.date) === 'Calendar[Month Short]' && !sl.includes('Sales[Amount]') && !sl.includes('Sales[Date]') && sl.every(Boolean), `suggest_fields on dax-project: ${r.t.slice(0, 300)}`); }
 
 // ---------- round 3: safety before the first beta build ----------
 {
@@ -889,7 +895,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const noFocus = await ask('suggest_fields', { path: 'large', kpis: 4 });
   chk(() => !noFocus.err && noFocus.j.needsFocus === true && !noFocus.j.kpis && noFocus.j.areas.some((a) => a.area === 'Logistics') && /focus/.test(noFocus.j.why), () => `suggest_fields on a large model without a focus must pick nothing and ask for one: ${noFocus.t.slice(0, 240)}`);
   const lg = await ask('suggest_fields', { path: 'large', kpis: 4, focus: 'logistics' });
-  chk(() => !lg.err && JSON.stringify(lg.j.kpis.map(f)) === JSON.stringify(LOGISTICS) && f(lg.j.date) === 'Calendar[Month Name]' && f(lg.j.cats.bar) === 'Carrier[Carrier Group]' && f(lg.j.cats.column) === 'Route[Route Group]'
+  // (round 12, #16: the short month names, where the model has them; was Calendar[Month Name])
+  chk(() => !lg.err && JSON.stringify(lg.j.kpis.map(f)) === JSON.stringify(LOGISTICS) && f(lg.j.date) === 'Calendar[Month Short]' && f(lg.j.cats.bar) === 'Carrier[Carrier Group]' && f(lg.j.cats.column) === 'Route[Route Group]'
     && lg.j.slicers.map(f).join() === 'Calendar[Year],Carrier[Carrier Group],Route[Route Group]' && lg.j.scope.tables === 23 && lg.j.scope.focus === 'logistics', () => `suggest_fields with focus "logistics": ${lg.err ? lg.t.slice(0, 200) : JSON.stringify({ kpis: lg.j.kpis.map(f), date: f(lg.j.date), bar: f(lg.j.cats.bar), column: f(lg.j.cats.column), slicers: lg.j.slicers.map(f), scope: lg.j.scope })}`);
   const zz = await ask('suggest_fields', { path: 'large', kpis: 4, focus: 'zzz' });
   chk(() => !zz.err && zz.j.needsFocus === true && !zz.j.kpis && /zzz/.test(zz.j.why) && zz.j.areas.length > 5, () => `suggest_fields with a focus that matches nothing: ${zz.t.slice(0, 240)}`);
@@ -1272,7 +1279,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       const id = `${solid ? 'solid' : 'transparent'} ${specs[0].page.w}x${specs[0].page.h} ${lang} ${logoName}`, L = abs(logo), T = abs(title);
       if (logo.visual.visualType === 'image') off.image.push([id, L.y + L.h / 2 - mid]);
       // a text box as short as its text allows (10 + 1.8 x pt) can't be moved: the small pages
-      else off.text.push([id, L.y + textMid(d.font, ptOf(logo)) - mid, L.h <= Math.ceil(10 + 1.8 * ptOf(logo))]);
+      // (round 12, #30: Desktop draws the Tahoma placeholder 2.6 to 3.4 lower than textMid says, measured in round 11
+      // (D15), and the writer now moves it up 3; so its middle as drawn is textMid's + 3)
+      else off.text.push([id, L.y + textMid(d.font, ptOf(logo)) + (/^tahoma/i.test(d.font) ? 3 : 0) - mid, L.h <= Math.ceil(10 + 1.8 * ptOf(logo))]);
       off.title.push([id, T.y + textMid(d.font, ptOf(title)) - mid]);
     }
     const far = (list, by) => list.filter((x) => !x[2] && Math.abs(x[1]) > by).map((x) => `${x[0]}: ${x[1].toFixed(1)}`);
@@ -1801,9 +1810,11 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => !sv.some((v) => type(v) === 'pageNavigator') && sv.filter((v) => type(v) === 'actionButton' && L(linkOf(v).type) === "'PageNavigation'").length === 4 && sv.filter((v) => type(v) === 'shape').length === 2
       && [two, twoAr, many['EN 8'], many['AR 8']].every((x) => !x.err && errors(path.join(ROOT, 'r10-project', x.j.report)) === '0'),
       () => `the website's download must have the same navigator; validator: ${[two, twoAr, many['EN 8'], many['AR 8']].map((x) => (x.err ? x.t.slice(0, 80) : errors(path.join(ROOT, 'r10-project', x.j.report)))).join(', ')}`);
-    // 5. the phone layout: the page buttons share one row of the 323-wide canvas in the same order; the underline is not on the phone
+    // 5. the phone layout: the page buttons share one row of the 323-wide canvas in the same order
+    //    (changed 6 Oct 2026, round 12, #5, the owner's go: the current tab's line is on the phone too, right under its
+    //    button; it was left out of the phone layout)
     chk(() => read(twoAr).concat(read(two)).every((pg) => { const b = navOf(pg), m = b.map((v) => v.mobile && v.mobile.position), line = pg.visuals.filter((v) => type(v) === 'shape');
-      return m.every((p) => p && p.x >= 0 && p.x + p.width <= 323.5 && p.height >= 30) && new Set(m.map((p) => p.y)).size === 1 && line.every((v) => !v.mobile); }),
+      return m.every((p) => p && p.x >= 0 && p.x + p.width <= 323.5 && p.height >= 30) && new Set(m.map((p) => p.y)).size === 1 && line.every((v) => v.mobile && v.mobile.position.y === m[0].y + m[0].height); }),
       () => `the phone layout must keep the page buttons in one row and leave the underline out: ${JSON.stringify(read(two).map((pg) => navOf(pg).map((v) => v.mobile && v.mobile.position))).slice(0, 400)}`);
     // 6. (round 11, seen in Desktop on 5 Oct: eight long page names on a 1280 x 720 page whose header is 32 high got no
     // page buttons at all, and the answer said nothing.) Page buttons that do not fit are still left out (a cut name is
@@ -1883,7 +1894,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       // So the entry now also holds fixedSize false and an image area of 10 to 25 percent, and the value is fitted to what is left.
       const ip = img && img[0] ? img[0].properties : {}, area = N(ip.imageAreaSize), c2 = cs.length ? cs[0][1] : null, c1 = cs.length ? cs[0][0] : null;
       chk(() => L(ip.fixedSize) === 'false' && /^\d+D$/.test(L(ip.imageAreaSize)) && area >= 10 && area <= 25, () => `an SVG card's image must be sized with fixedSize false and imageAreaSize 10 to 25: ${JSON.stringify(ip)}`);
-      chk(() => { const V = N(c2.visual.objects.value[0].properties.fontSize); return V >= 8 && V < N(c1.visual.objects.value[0].properties.fontSize) && 4.4 * V * 4 / 3 <= c2.at.w * (1 - area / 100) - 8; },
+      // (changed 6 Oct 2026, round 12, the owner's go: #9, one value size for the row, so the card beside it is no larger
+      // (it was larger); and recommendation 3, the image area is a percent of the card less its measured padding, 25 a
+      // side on this 1920 x 1080 page (it was a percent of 0.8 x the card))
+      chk(() => { const V = N(c2.visual.objects.value[0].properties.fontSize); return V >= 8 && V === N(c1.visual.objects.value[0].properties.fontSize) && 4.4 * V * 4 / 3 <= c2.at.w - (c2.at.w - 50) * area / 100 - 8; },
         () => `the value of a card with an image must fit beside the image ("-888.88bn" is 4.4 em): size ${c2 && N(c2.visual.objects.value[0].properties.fontSize)}pt, card ${c2 && c2.at.w} wide, image area ${area}%, the card beside it ${c1 && N(c1.visual.objects.value[0].properties.fontSize)}pt`);
       chk(() => L(ip.show) === 'true' && L(ip.imageType) === "'imageData'" && JSON.stringify(ip.imageData) === JSON.stringify({ expr: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: 'Sales' } }, Property: 'Card bar' } } }) && JSON.stringify(img[0].selector) === '{"id":"default"}'
         && !cs[0][0].visual.objects.image && !cs[0][2].visual.objects.image && c.j.svgMeasures.some((m) => m.label === 'Card bar' && /card/i.test(m.shownAs)) && errors(path.join(ROOT, 'r10-project', c.j.report)) === '0',
@@ -2089,8 +2103,11 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   // 3. tables are titled by their content ("Total Sales by Region"), not by the layout ("Detail", "التفاصيل")
   {
     const tt = (vs) => vs.filter((v) => type(v) === 'tableEx').map((v) => titleOf(v).text);
-    chk(() => tt(enV).length >= 1 && tt(enV).every((t) => t === 'Total Sales by Region') && tt(arV).every((t) => t === 'Total Sales حسب Region')
-        && tt(siteEn).length >= 1 && tt(siteEn).every((t) => t === 'Total Revenue by Region') && tt(siteAr).length >= 1 && tt(siteAr).every((t) => t === 'إجمالي الإيرادات حسب المنطقة'),
+    // (round 12, #15, the owner's go 6 Oct: a table whose title is a chart's on the same page adds ": detail", so the
+    // two never carry the same title; the first measure by the first text column stays its start)
+    const titled = (t, base, detail) => t === base || t === base + ': ' + detail;
+    chk(() => tt(enV).length >= 1 && tt(enV).every((t) => titled(t, 'Total Sales by Region', 'detail')) && tt(arV).every((t) => titled(t, 'Total Sales حسب Region', 'التفاصيل'))
+        && tt(siteEn).length >= 1 && tt(siteEn).every((t) => titled(t, 'Total Revenue by Region', 'detail')) && tt(siteAr).length >= 1 && tt(siteAr).every((t) => titled(t, 'إجمالي الإيرادات حسب المنطقة', 'التفاصيل')),
       () => `a table must be titled by its first measure and its first text column: ${JSON.stringify([tt(enV), tt(arV), tt(siteEn), tt(siteAr)])}`);
   }
   // 5. an Arabic table puts its text column first (Power BI writes "Total" only in a first column of text), then the
@@ -2417,7 +2434,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const wrapLines = (text, size, avail, font) => { const out = []; let cur = ''; String(text).split(' ').forEach((w) => { const t = cur ? cur + ' ' + w : w; if (!cur || tw(t, size, true, font) <= avail) cur = t; else { out.push(cur); cur = w; } }); out.push(cur); return out; };
 
   // the made-up models: a calendar and sales (every kind of measure the rules tell apart), long Arabic names, no measures
-  const CAL = { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Year', 'int64'), col('Month Name', 'string'), col('Month Number', 'int64'),
+  const CAL = { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Year', 'int64'), col('Month Name', 'string'), col('Month Short', 'string'), col('Month Number', 'int64'),
     col('Day Name', 'string'), col('Day of Week', 'int64'), col('Hijri Year', 'int64'), col('Is Ramadan', 'boolean'), col('Ramadan Day', 'int64')] };
   const SALES = { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string'), col('Channel', 'string'), col('Date', 'dateTime')],
     measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' },
@@ -2563,6 +2580,145 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const auto = await ask('create_report', { path: 'r12-project', name: 'R12 Auto', design: enD, secondPage: false });
     chk(() => !auto.err && !pageVisuals(auto, 'r12-project').filter(isKpi).some((v) => /Flag/.test(JSON.stringify(v.visual.query))),
       () => `#26: the picker must never put a text measure on a KPI card: ${pageVisuals(auto, 'r12-project').filter(isKpi).map((v) => JSON.stringify(v.visual.query.queryState.Data.projections[0].field.Measure.Property))}`);
+  }
+
+  // C (medium). Each check names its finding.
+  const kpiRow = (vs) => vs.filter(isKpi);
+  const LTR6 = await ask('create_report', { path: 'r12-project', name: 'R12 Six', design: await planOf({ layout: 'exec', kpis: 6, filters: 'end', page: '1280x720' }), secondPage: false,
+    fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Avg Price]', 'Sales[Margin %]', 'Sales[Conversion Rate]', 'Sales[Total Sales Last Ramadan]'] } });
+  const AR6 = await ask('create_report', { path: 'r12-project', name: 'R12 Six AR', lang: 'ar', design: await planOf({ layout: 'exec', kpis: 6, filters: 'end', page: '1280x720', lang: 'ar' }), secondPage: false,
+    fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Avg Price]', 'Sales[Margin %]', 'Sales[Conversion Rate]', 'Sales[Total Sales Last Ramadan]'] } });
+  // #15: a chart and the table beside it never carry the same title
+  {
+    const dup = [];
+    [[en, 'r12-project'], [ar2, 'r12-project'], [LTR6, 'r12-project'], [ar, 'r12-ar']].forEach(([x, p]) => pagesOf(x, p).filter((pg) => !pg.tooltip).forEach((pg) => {
+      const ts = pg.visuals.filter((v) => DATA.includes(type(v)) && titleOf(v).show).map((v) => altOf(v)); ts.forEach((t, i) => { if (ts.indexOf(t) !== i) dup.push(`${pg.name}: "${t}"`); }); }));
+    chk(() => !en.err && dup.length === 0, () => `#15: two visuals of one page share a title: ${dup.join(' | ')}`);
+  }
+  // #23 / #32: a designed table of days (7 rows, a header and a total) never hides its last rows behind a scrollbar: its
+  //   rows are written tighter (grid.rowPadding 0) where the default pitch would not fit, else the answer says so.
+  //   The pitch (measured in Desktop 2.158, round 11): 1.415 x the text's height in page units + 2 x rowPadding (1
+  //   when none is written); the header row 7 more; the title 1.5 x its size; 16 for the visual's padding.
+  {
+    const tbl = async (page) => { const x = await ask('create_report', { path: 'r12-project', name: 'R12 Rows ' + page, design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', page }), secondPage: false,
+      fields: { table: ['Calendar[Day Name]', 'Sales[Total Sales]', 'Sales[Orders]'] } }); return x; };
+    const bad = [];
+    for (const page of ['1280x720', '1920x1080', '960x720']) {
+      const x = await tbl(page); if (x.err) { bad.push(page + ': ' + x.t.slice(0, 120)); continue; }
+      const th = themeOf(x, 'r12-project'), T = +th.visualStyles.tableEx['*'].values[0].fontSize, TT = th.textClasses.title.fontSize;
+      pageVisuals(x, 'r12-project').filter((v) => type(v) === 'tableEx' && /Day Name/.test(JSON.stringify(v.visual.query))).forEach((v) => {
+        const g = ((v.visual.objects.grid || [{}])[0].properties || {}), pad = g.rowPadding ? N(g.rowPadding) : 1, pitch = 1.415 * T * 4 / 3 + 2 * pad;
+        const need = 1.5 * TT * 4 / 3 + (pitch + 7) + 8 * pitch + 16;
+        if (need > v.at.h + 0.5 && !/scroll/i.test(JSON.stringify(x.j.reportNotes || []))) bad.push(`${page}: a ${v.at.h}-high table needs ${need.toFixed(1)} (rowPadding ${pad}) and the answer says nothing`); });
+    }
+    chk(() => bad.length === 0, () => `#23: a table of days must show its 7 rows: ${bad.join(' | ')}`);
+  }
+  // #29: the phone layout of a table with SVG pictures fits the 323-wide phone: the pictures' width in mobile.json is
+  //   capped by what the table's other columns leave at the phone's 8pt
+  {
+    const bar = { w: 160, h: 24, values: [{ id: 'v', label: 'Sales', kind: 'measure', measure: 'Sales[Total Sales]' }], layers: [{ type: 'rect', x: 0, y: 4, w: 160, h: 16, fill: '#0f6cbd', bind: { w: { v: 'v', d0: 0, d1: 1000, r0: 0, r1: 160 } } }] };
+    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Phone pics', design: enD, secondPage: false, fields: { table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Orders]'] }, svgColumns: [{ label: 'Bar', design: bar }, { label: 'Bar 2', design: bar }] });
+    const t = pageVisuals(x, 'r12-project').find((v) => type(v) === 'tableEx' && v.mobile), g = t && ((t.mobile.objects || {}).grid || [{}])[0].properties || {};
+    const others = t ? t.visual.query.queryState.Values.projections.filter((p) => !(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema)).reduce((a, p) => a + Pb.columnRoom(p, 8, 'Segoe UI'), 0) : 0;
+    chk(() => !x.err && t && N(g.imageWidth) >= 8 && others + 2 * (N(g.imageWidth) + 10) <= 323 - 16 + 0.5,
+      () => `#29: the phone table's pictures must fit 323: imageWidth ${JSON.stringify(g)} others ${others} ${short(x)}`);
+  }
+  // #31: the header's title is the report's name (or create_report's "title"), never the theme's name
+  {
+    const hdr = (x, p) => pageVisuals(x, p).filter((v) => type(v) === 'textbox' && v.parentGroupName).map((v) => JSON.stringify(v.visual.objects));
+    const titled = await ask('create_report', { path: 'r12-project', name: 'R12 Named', design: enD, secondPage: false, title: 'Ramadan 1447 sales' });
+    chk(() => hdr(en, 'r12-project').some((t) => /"R12 EN"/.test(t)) && !hdr(en, 'r12-project').some((t) => /My Brand Theme/.test(t)) && hdr(titled, 'r12-project').some((t) => /"Ramadan 1447 sales"/.test(t)),
+      () => `#31: the header must show the report's name or the given title: ${JSON.stringify(hdr(en, 'r12-project').map((t) => t.slice(0, 120)))}`);
+  }
+  // #30, #14, #13: the Arabic logo placeholder "شعارك" at its side of the header (aligned to the page's edge, left in a
+  //   right-to-left report; right in English); hand-placed Arabic pages get the Arabic placeholder and Arabic tooltip
+  //   page names too
+  {
+    const logo = (x, p) => pageVisuals(x, p).find((v) => type(v) === 'textbox' && /شعارك|Your logo/.test(JSON.stringify(v.visual.objects)));
+    const al = (v) => v && v.visual.objects.general[0].properties.paragraphs[0].horizontalTextAlignment;
+    const hand = await ask('create_report', { path: 'r12-project', name: 'R12 Hand AR', lang: 'ar', rtl: true, font: 'Tahoma', pages: [{ name: 'صفحة', width: 1280, height: 720,
+      slots: [{ kind: 'title', x: 400, y: 12, w: 856, h: 40 }, { kind: 'logo', x: 24, y: 12, w: 160, h: 40 }, { kind: 'bar', x: 24, y: 70, w: 1232, h: 620 }] }] });
+    const tips = hand.err ? [] : pagesOf(hand, 'r12-project').filter((p) => p.tooltip).map((p) => p.name);
+    chk(() => al(logo(ar2, 'r12-project')) === 'left' && al(logo(en, 'r12-project')) === 'right' && /شعارك/.test(JSON.stringify(logo(hand, 'r12-project') && logo(hand, 'r12-project').visual.objects)) && tips.length >= 1 && tips.every((n) => /تلميح/.test(n)),
+      () => `#30/#14/#13: the logo placeholder at the page's edge, Arabic texts on hand-placed pages: AR ${al(logo(ar2, 'r12-project'))} EN ${al(logo(en, 'r12-project'))} hand ${JSON.stringify(logo(hand, 'r12-project') && logo(hand, 'r12-project').visual.objects).slice(0, 120)} tips ${JSON.stringify(tips)} ${short(hand)}`);
+  }
+  // the Arabic Reset: its arrow beside its text (seen in Desktop: at opposite ends): the icon placed at the reading
+  // start ("right" in Arabic) and the text aligned to it; English: the icon left, the text left
+  {
+    const reset = (x, p) => pageVisuals(x, p).find((v) => type(v) === 'actionButton' && /reset/.test(JSON.stringify(v.visual.objects.icon || [])));
+    const look = (v, o) => Object.assign({}, ...((v && v.visual.objects[o]) || []).map((e) => e.properties));
+    const a1 = reset(ar2, 'r12-project'), e1 = reset(en, 'r12-project');
+    chk(() => a1 && e1 && L(look(a1, 'icon').placement) === "'right'" && L(look(a1, 'text').horizontalAlignment) === "'right'" && L(look(e1, 'icon').placement) === "'left'" && L(look(e1, 'text').horizontalAlignment) === "'left'",
+      () => `the Reset's arrow beside its text: AR ${JSON.stringify([look(a1, 'icon').placement, look(a1, 'text').horizontalAlignment])} EN ${JSON.stringify([look(e1, 'icon').placement, look(e1, 'text').horizontalAlignment])}`);
+  }
+  // #22 and #21: one Ramadan (page filters on the Ramadan flag and the Hijri year): no slicer on a column a page filter
+  //   fixes, and the line chart by Ramadan Day (1 to 30), not by month (two points); both told
+  {
+    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Ramadan', design: enD, secondPage: false, fields: { slicers: ['Calendar[Hijri Year]', 'Calendar[Is Ramadan]', 'Sales[Region]'] },
+      pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1447] }] });
+    const vs = pageVisuals(x, 'r12-project'), sl = vs.filter((v) => type(v) === 'slicer').map((v) => v.visual.query.queryState.Values.projections[0].queryRef);
+    const line = vs.find((v) => type(v) === 'lineChart'), notes = JSON.stringify((x.j || {}).reportNotes || []);
+    chk(() => !x.err && sl.length >= 1 && !sl.includes('Calendar.Is Ramadan') && !sl.includes('Calendar.Hijri Year') && /slicer/i.test(notes),
+      () => `#22: no slicer on a column the page filter fixes: ${JSON.stringify(sl)} ${notes.slice(0, 300)}`);
+    chk(() => line && line.visual.query.queryState.Category.projections[0].queryRef === 'Calendar.Ramadan Day' && /Ramadan Day/.test(notes),
+      () => `#21: one Ramadan's line chart by Ramadan Day: ${line && line.visual.query.queryState.Category.projections[0].queryRef}`);
+  }
+  // #16: month labels stay level: the line chart's axis takes the model's short month names ("Jan") where it has them
+  {
+    const line = pageVisuals(en, 'r12-project').find((v) => type(v) === 'lineChart');
+    chk(() => line && line.visual.query.queryState.Category.projections[0].queryRef === 'Calendar.Month Short' && /Month Number/.test(JSON.stringify(line.visual.query.sortDefinition || {})),
+      () => `#16: the line chart by the short month names, in month order: ${line && JSON.stringify(line.visual.query.queryState.Category)}`);
+  }
+  // #9, #7, #8 and the card image (accepted recommendation 3): one value size for the row (the smallest that fits
+  //   every card); the value lined up with its title (the inner padding at the reading start 0: paddingIndividual);
+  //   one image size for the row, its percent from the measured padding (25 a side at 1920 x 1080, scaled)
+  {
+    const bad = [];
+    [[LTR6, false], [AR6, true]].forEach(([x, rtl]) => {
+      const ks = kpiRow(pageVisuals(x, 'r12-project')), sizes = [...new Set(ks.map((v) => N(valueOf(v).fontSize)))];
+      if (sizes.length !== 1) bad.push(`${rtl ? 'AR' : 'EN'} value sizes ${sizes}`);
+      ks.forEach((v) => { const p = Object.assign({}, ...v.visual.objects.padding.map((e) => e.properties));
+        if (L(p.paddingIndividual) !== 'true' || N(rtl ? p.rightMargin : p.leftMargin) !== 0) bad.push(`${rtl ? 'AR' : 'EN'} "${altOf(v)}": padding ${JSON.stringify(p).slice(0, 160)}`); });
+    });
+    const ring = { w: 48, h: 48, values: [{ id: 'v', label: 'Sales', kind: 'measure', measure: 'Sales[Total Sales]' }], layers: [{ type: 'rect', x: 0, y: 0, w: 48, h: 48, fill: '#f5c518' }] };
+    const im = await ask('create_report', { path: 'r12-project', name: 'R12 Images', design: await planOf({ layout: 'exec', kpis: 6, filters: 'end' }), secondPage: false,
+      fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Avg Price]', 'Sales[Margin %]', 'Sales[Conversion Rate]', 'Sales[Total Sales Last Ramadan]'] }, svgCards: [1, 2, 3, 4, 5, 6].map((card) => ({ card, label: 'Ring ' + card, design: ring })) });
+    const ks = kpiRow(pageVisuals(im, 'r12-project')), pcts = [...new Set(ks.map((v) => N(v.visual.objects.image[0].properties.imageAreaSize)))];
+    const minW = Math.min(...ks.map((v) => v.at.w)), want = Math.max(10, Math.min(25, Math.round(100 * 48 / (minW - 50))));
+    chk(() => bad.length === 0 && ks.length === 6 && pcts.length === 1 && pcts[0] === want,
+      () => `#9/#7/#8: one value size a row, the value at its title's edge, one image percent a row (${want}): ${bad.join(' | ')} images ${JSON.stringify(pcts)} ${short(im)}`);
+  }
+  // #18: the filter rail ends under its last slicer: Reset right under it, and the rail's panel only as high as its content
+  {
+    const vs = pageVisuals(en, 'r12-project'), sl = vs.filter((v) => type(v) === 'slicer').sort((p, q) => p.at.y - q.at.y), last = sl[sl.length - 1];
+    const reset = vs.find((v) => type(v) === 'actionButton' && /reset/.test(JSON.stringify(v.visual.objects.icon || [])));
+    const band = vs.find((v) => type(v) === 'textbox' && !v.parentGroupName && v.at.x <= last.at.x && v.at.x + v.at.w >= last.at.x + last.at.w && v.at.h > last.at.h);
+    chk(() => last && reset && reset.at.y > last.at.y + last.at.h && reset.at.y - (last.at.y + last.at.h) <= 24 && (!band || band.at.y + band.at.h <= reset.at.y + reset.at.h + 24),
+      () => `#18: Reset right under the last slicer, the panel no taller than its content: last slicer ends ${last && last.at.y + last.at.h}, Reset at ${reset && reset.at.y}, panel ${band && JSON.stringify(band.at)}`);
+  }
+  // #2, #4, #5: the phone's page tabs each as wide as its name, from the reading start with a fixed gap; chart titles
+  //   in the theme's text colour on the phone; the current tab's line under it on the phone too
+  {
+    const vs = pageVisuals(en, 'r12-project').filter((v) => v.pg === pagesOf(en, 'r12-project')[0] || true), p1 = pagesOf(en, 'r12-project')[0];
+    const tabs = p1.visuals.filter((v) => type(v) === 'actionButton' && /PageNavigation/.test(JSON.stringify(v.visual.visualContainerObjects.visualLink || [])) && v.mobile).sort((a, b) => a.mobile.position.x - b.mobile.position.x);
+    const need = (v) => Math.ceil(tw(S(v.visual.objects.text.find((e) => e.selector).properties.text), 10, true, 'Segoe UI') + 10);
+    const line = p1.visuals.find((v) => type(v) === 'shape' && v.mobile), cur = tabs.find((v) => /'bold'|true/.test(JSON.stringify(v.visual.objects.text.find((e) => e.selector).properties.bold || '')));
+    const th = themeOf(en, 'r12-project'), chartT = p1.visuals.filter((v) => type(v) === 'lineChart' && v.mobile).map((v) => JSON.stringify(((v.mobile.visualContainerObjects || {}).title || [{}])[0].properties.fontColor || null));
+    chk(() => tabs.length === 2 && tabs.every((v) => Math.abs(v.mobile.position.width - need(v)) <= 1) && tabs[0].mobile.position.x === 0 && Math.abs(tabs[1].mobile.position.x - (tabs[0].mobile.position.width + 8)) <= 1,
+      () => `#2: phone tabs as wide as their names, from the reading start: ${JSON.stringify(tabs.map((v) => [v.mobile.position.x, v.mobile.position.width, need(v)]))}`);
+    chk(() => cur && line && Math.abs(line.mobile.position.y - (cur.mobile.position.y + cur.mobile.position.height)) <= 3 && line.mobile.position.x >= cur.mobile.position.x && line.mobile.position.x + line.mobile.position.width <= cur.mobile.position.x + cur.mobile.position.width,
+      () => `#5: the current tab's line on the phone: ${JSON.stringify(line && line.mobile.position)} under ${JSON.stringify(cur && cur.mobile.position)}`);
+    chk(() => chartT.length >= 1 && chartT.every((c) => c.includes(th.textClasses.title.color.toLowerCase()) || c.includes(th.textClasses.title.color)),
+      () => `#4: phone chart titles in the theme's text colour ${th.textClasses.title.color}: ${chartT}`);
+  }
+  // #6: two rows of tabs in the header start at the same x (the reading start), so the names line up in columns
+  {
+    const names = ['Executive overview', 'Sales by region and channel', 'Customers and loyalty', 'Products and categories', 'Returns and refunds', 'Stores and branches', 'Staff and targets', 'Notes and definitions'];
+    const pages = names.map((name) => ({ name, width: 1920, height: 1080, slots: [{ kind: 'title', x: 24, y: 12, w: 560, h: 72 }, { kind: 'logo', x: 1716, y: 12, w: 180, h: 72 }, { kind: 'bar', x: 24, y: 110, w: 1872, h: 940 }] }));
+    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Tabs, a title as long as the slot', pages });
+    const p1 = x.err ? null : pagesOf(x, 'r12-project')[0], tabs = p1 ? p1.visuals.filter((v) => type(v) === 'actionButton' && /PageNavigation/.test(JSON.stringify(v.visual.visualContainerObjects.visualLink || []))) : [];
+    const rows = [...new Set(tabs.map((v) => v.at.y))].sort((a, b) => a - b), starts = rows.map((y) => Math.min(...tabs.filter((v) => v.at.y === y).map((v) => v.at.x)));
+    chk(() => rows.length === 2 && starts[0] === starts[1], () => `#6: two tab rows must start at the same x: rows ${rows} starts ${starts} ${short(x)}`);
   }
 }
 // ---------- end of round 12 ----------

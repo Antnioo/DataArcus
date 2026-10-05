@@ -388,6 +388,7 @@ server.registerTool('create_report', {
   inputSchema: {
     path: modelPath.describe('The project folder or .SemanticModel folder the report will use'),
     name: z.string().min(1).max(60).describe('Report name'),
+    title: z.string().min(1).max(80).optional().describe('The title in the report\'s header; without it the header shows the report\'s name'),
     pages: z.array(z.object({ name: z.string(), width: z.number().int().default(1920), height: z.number().int().default(1080), slots: z.array(slot).min(1),
       background: z.string().optional().describe('PNG file for the page background, inside the DataArcus folder') })).min(1).optional()
       .describe('Hand-placed pages; or give a design instead'),
@@ -501,15 +502,31 @@ server.registerTool('create_report', {
   const bindFor = (n) => {
     if (COUNTS.length) return countBind(n);
     const b = Bind.suggest(pickFrom, n);
-    if (!F) return b;
+    if (!F && !PF) return b;
     const ch = Object.assign({}, b.choices);
+    // Round 12 (#22; seen in Desktop 2.158, golden task 3: Hijri Year and Is Ramadan slicers showed "All" while the page
+    // filter had fixed them): no slicer on a column a page filter fixes; the next column the picker would take instead
+    const unfixed = () => { if (!PF) return;
+      const fixed = (x) => x && PF.some((f) => f.t === x.t && f.c === x.c), keep = (ch.slicers || []).filter((x) => x && !fixed(x));
+      (b.slicerPool || []).forEach((x) => { if (keep.length < 3 && !fixed(x) && !keep.some((k) => k.t === x.t && k.c === x.c)) keep.push(x); });
+      if ((ch.slicers || []).some(fixed)) slicersDropped.push(...ch.slicers.filter(fixed).map((x) => `${x.t}[${x.c}]`));
+      ch.slicers = keep.concat([null, null, null]).slice(0, 3); };
+    if (PF) {
+      unfixed();
+      // #21 (golden task 3: one Ramadan by month was a line of two points): with a page filter on a Ramadan flag the
+      // line chart runs by the calendar's Ramadan Day (1 to 30) where it has one, unless the plan named the axis
+      const flag = PF.find((f) => /ramadan/i.test(f.c) && f.values.length && f.values.every((v) => v === true));
+      const tb = flag && pickFrom.concat(m.tables).find((t) => t.name === flag.t), rd = tb && tb.columns.find((c) => /^ramadan\s*day$/i.test(c.name));
+      if (rd && !(F && F.timeAxis)) { ch.date = { t: tb.name, c: rd.name, type: String(rd.dataType || 'int64').toLowerCase() }; byRamadanDay.push(`${tb.name}[${rd.name}]`); }
+    }
+    if (!F) { const nb = Bind.build(ch); return nb; }
     if (F.kpis) ch.kpis = F.kpis;
     if (F.measure) ch.main = F.measure;
     if (F.timeAxis) ch.date = F.timeAxis;
     if (F.category) ch.catA = F.category;
     if (F.category2) ch.catB = F.category2;
     // the given slicers first; a slot left over keeps the picker's (never a slicer without a field)
-    if (F.slicers) { const same = (x, y) => x && y && x.t === y.t && x.c === y.c, rest = (b.choices.slicers || []).filter((s) => s && !F.slicers.some((g) => same(g, s))); ch.slicers = F.slicers.concat(rest).slice(0, 3); while (ch.slicers.length < 3) ch.slicers.push(null); }
+    if (F.slicers) { const same = (x, y) => x && y && x.t === y.t && x.c === y.c, rest = (ch.slicers || []).filter((s) => s && !F.slicers.some((g) => same(g, s))); ch.slicers = F.slicers.concat(rest).slice(0, 3); while (ch.slicers.length < 3) ch.slicers.push(null); unfixed(); }
     const nb = Bind.build(ch);
     if (F.table) nb.table = F.table.map((x) => (x.m != null ? { t: x.t, m: x.m } : Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {})));
     return nb;
@@ -520,6 +537,7 @@ server.registerTool('create_report', {
     why: usable.length ? `The model has ${usable.length} measure${usable.length === 1 ? '' : 's'} a KPI card can show${sc.scope ? ' in this part of the model' : ''}, so ${built} of ${asked} KPI cards were built. Add measures to the model (in Power BI Desktop) for more cards, then create the report again.`
       : 'The model has no measures, so no KPI card was built, and the charts were left out too (they have no value to show; see leftOutVisuals). The report has its header, filters and table only. Propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again.' }, leftOut ? { leftOut } : {}));
   let kpiCards = null;
+  const slicersDropped = [], byRamadanDay = [];
   // Round 12 (#20; seen in Desktop 2.158, golden task 3: "What it means" shipped its placeholder sentence): a text
   // slot holds the plan's sentence (a.text, or a hand-placed slot's own text), or is left out. In a design the visual
   // beside it (the same row, else the same column) takes its room; hand-placed positions are the caller's.
@@ -591,7 +609,7 @@ server.registerTool('create_report', {
     kpiCards = cardNote(askedCards, Math.min(askedCards, nValues));
     const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel, logoRatio }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
     r = Pbip.build({
-      name: a.name, title: E.themeName(design.name), pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
+      name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
       theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(pages))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues,
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel }))
     });
@@ -608,10 +626,11 @@ server.registerTool('create_report', {
     const theme = a.theme ? JSON.parse(fs.readFileSync(inside(a.theme), 'utf8')) : { name: a.name };
     written = theme;
     r = Pbip.build({
-      name: a.name, title: a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo, theme,
+      name: a.name, title: a.title || a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
       model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(a.pages))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues,
-      texts: { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' },
+      // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
+      texts: Object.assign({}, E.REPORT_TEXTS[a.lang === 'ar' ? 'ar' : 'en'], { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' }),
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
     });
   }
@@ -671,6 +690,10 @@ server.registerTool('create_report', {
     : { mode: 'auto', note: CARD_RULE + ' For full numbers with separators on every card (101,914) pass kpiValues: "full".' } };
   reportNotes.push('How the KPI cards show their numbers: ' + CARD_RULE + (textKpis.length ? '' : ''));
   if (textKpis.length) reportNotes.push(`${textKpis.length === 1 ? 'A KPI card was' : textKpis.length + ' KPI cards were'} left out: ${textKpis.map((k) => `${k.t}[${k.m}]`).join(', ')} ${textKpis.length === 1 ? 'shows' : 'show'} text, not a number (a format of words only, a date format, or DAX that returns text), and a KPI card would show that text. Pick a measure that returns a number for the card.`);
+  if (slicersDropped.length) reportNotes.push(`No slicer on ${[...new Set(slicersDropped)].join(', ')}: a page filter already keeps one value of ${new Set(slicersDropped).size === 1 ? 'it' : 'each'}, so a slicer would only show the choice already made. The next columns took the rail's places.`);
+  if (byRamadanDay.length) reportNotes.push(`The line chart runs by ${byRamadanDay[0]} (the days of Ramadan), not by month: the page filter keeps Ramadan, and one Ramadan by month is a line of two or three points.`);
+  // tables whose known rows don't fit even with tight rows (round 12, #23)
+  (r.tableRows || []).forEach((x) => reportNotes.push(`The table of ${x.field} on "${x.page}" needs about ${x.need} to show its ${x.rows} rows, a header and a total, even with tight rows, and has ${x.h}: its last rows will scroll. A taller table slot, fewer fields or a larger page shows them all.`));
   // days and months put in calendar order in a table by a helper column (round 12, #17)
   if ((r.tableOrder || []).length) reportNotes.push(`${[...new Set(r.tableOrder.map((x) => x.field))].join(', ')} ${r.tableOrder.length === 1 ? 'is' : 'are'} in calendar order in the table${r.tableOrder.length === 1 ? '' : 's'} too (by ${[...new Set(r.tableOrder.map((x) => x.by))].join(', ')}, the same order as the charts): the model gives ${r.tableOrder.length === 1 ? 'it' : 'them'} no sort-by column, so each table carries the number in a narrow column with no header, in the card colour. Setting the sort-by column in the model (check_model_health, fixes.MONTH_SORT) orders slicers too.`);
   // visuals left out because the model has no field for them (never written empty)
