@@ -355,8 +355,17 @@ const tricky = { name: 'Odd "name"', w: 100, h: 20, values: [{ id: 'a', kind: 'm
   const t = TEMPLATES.find((x) => x.id === 'ramadan');
   ok(!!t && t.name === 'Ramadan sales card' && t.nameAr === 'بطاقة مبيعات رمضان' && !t.premium, 'ramadan: the starter is listed with its English and Arabic names');
   if (t) {
-    ok(JSON.stringify(t.layers) === JSON.stringify(file.layers) && t.w === file.w && t.h === file.h && t.bg === file.bg && t.radius === file.radius,
-      'ramadan: layers, size, background and corners are the exported design\'s');
+    // layer names (owner's go 5 Oct ~15:58): the export's "Circle 1", "Text 3 2"... are renamed to say what each layer
+    // draws; everything else in each layer is still the export's. The template format has one name per layer (no
+    // Arabic name), so the names are English in both languages. The DAX comments carry the name ("Layer 1: Ring"), so
+    // the DAX text changes in those comment lines only; the DAX output checked below does not change.
+    const NAMES = ['Ring', 'Percent', 'Of target', 'Title', 'Title (Arabic)', 'Sales value', 'Target', 'Crescent', 'Crescent cut-out', 'Star'];
+    const bare = (ls) => JSON.stringify(ls.map((l) => Object.assign({}, l, { name: undefined })));
+    ok(bare(t.layers) === bare(file.layers) && t.w === file.w && t.h === file.h && t.bg === file.bg && t.radius === file.radius,
+      'ramadan: layers (apart from their names), size, background and corners are the exported design\'s');
+    ok(JSON.stringify(t.layers.map((l) => l.name)) === JSON.stringify(NAMES), `ramadan: layer names say what each draws: ${JSON.stringify(t.layers.map((l) => l.name))}`);
+    const dax = SVGKPI.toDax(t).dax;
+    ok(NAMES.filter((n) => dax.includes(': ' + n)).length > 0 && !/Circle \d|Text \d|Progress ring 1/.test(dax), 'ramadan: the DAX comments use the new layer names');
     ok(JSON.stringify(t.values.map((v) => [v.id, v.kind, v.measure || null])) === JSON.stringify(file.values.map((v) => [v.id, v.kind, v.measure || null])) && ['Sales', 'Target', 'Sales LY'].every((m) => t.values.some((v) => v.measure === m)),
       'ramadan: the values and measure names are the tool\'s samples (Sales, Target, Sales LY)');
     const prog = parse(tokenize(SVGKPI.toDax(t).dax));
