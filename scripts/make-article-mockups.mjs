@@ -74,7 +74,7 @@ td.c{color:#fff;font-weight:700;text-align:right}
 table.tw td{height:21.5px}tr.t td{font-weight:700;border-top:2px solid #9ca3af;border-bottom:0;height:26px}
 .bar{display:inline-block;height:15px;background:#18249c;vertical-align:middle}
 .hb{display:flex;align-items:center;gap:6px;height:33.3px;font-size:13px;white-space:nowrap}
-.hb .lab{width:226px;text-align:right;color:#1f2937;padding-right:2px}
+.hb .lab{width:216px;text-align:right;color:#1f2937;padding-right:2px}.hb .lab,.hb .bar{flex:none}
 .hb .v{font-weight:700}.hb .p{color:#6b7280}
 .tabs{position:absolute;left:532px;top:868px;display:flex;gap:6px;font-size:13px;color:#4b5563}
 .tabs span{padding:5px 12px;border-radius:14px}.tabs .on{background:#1683f0;color:#fff;font-weight:600}`;
@@ -135,7 +135,7 @@ td{padding:0 6px;height:24.2px;line-height:15px;text-align:right;border-bottom:1
 table.tw td{height:21.5px}tr.t td{font-weight:700;border-top:2px solid #9ca3af;border-bottom:0;height:26px}
 .bar{display:inline-block;height:14px;background:#9dc3e6;vertical-align:middle}
 .hb{display:flex;align-items:center;gap:7px;height:33.3px;font-size:13px;white-space:nowrap}
-.hb .lab{width:222px;text-align:right;padding-right:2px}.hb .v{font-weight:700}.hb .p{color:#6b7280}`;
+.hb .lab{width:214px;text-align:right;padding-right:2px}.hb .lab,.hb .bar{flex:none}.hb .v{font-weight:700}.hb .p{color:#6b7280}`;
   const f = (x, label, inner) => `<div class="f" style="left:${x}px"><label>${label}</label>${inner}</div>`;
   const kpis = KPIS.map(([l, v, s, c], i) => { const x = 21 + i * 315;
     const sub = c === 'up' ? `<span class="up">${s.slice(0, s.indexOf(' ', 2))}</span>${s.slice(s.indexOf(' ', 2))}` : c ? `<span class="bad">${s.slice(0, s.indexOf('·'))}</span>${s.slice(s.indexOf('·') - 1)}` : s;
@@ -147,7 +147,7 @@ table.tw td{height:21.5px}tr.t td{font-weight:700;border-top:2px solid #9ca3af;b
     <tr class="t"><td>Total</td><td style="text-align:right">${n(TOTAL[0])}</td><td>${TOTAL[1]}</td><td class="mid">${pct(TOTAL[1], TOTAL[0])}</td><td>${TOTAL[2]}</td><td class="bad">${TOTAL[3]}</td></tr></table></div>`;
   const dShade = (i) => ['#1d4a73', '#2e74b5'][i] || '#9dc3e6';
   const why = `<div class="card" style="left:992px;top:293px;width:587px;height:342px;padding:14px 18px 0"><h3>Why leads are declined</h3><div class="h3s">${decl} declined leads</div><div style="margin-top:10px">
-    ${DECLINED.map(([l, v], i) => `<div class="hb"><span class="lab">${l}</span><span class="bar" style="height:17px;width:${Math.round(v / 301 * 248)}px;background:${dShade(i)}"></span><span class="v">${v}</span><span class="p">· ${pct(v, decl)}</span></div>`).join('')}</div></div>`;
+    ${DECLINED.map(([l, v], i) => `<div class="hb"><span class="lab">${l}</span><span class="bar" style="height:17px;width:${Math.round(v / 301 * 242)}px;background:${dShade(i)}"></span><span class="v">${v}</span><span class="p">· ${pct(v, decl)}</span></div>`).join('')}</div></div>`;
   const sc = [navy, '#9dc3e6', '#f4b183', '#e5e7eb'];
   const src = `<div class="card" style="left:21px;top:652px;width:771px;height:228px;padding:16px 18px 0"><h3>Lead sources</h3>
     <div style="position:absolute;right:18px;top:36px;display:flex;gap:10px;font-size:12px;color:#4b5563">${['Qualified', 'Unqualified', 'Declined', 'Other'].map((t, i) => `<span><i style="display:inline-block;width:9px;height:9px;background:${sc[i]};margin-right:3px"></i>${t}</span>`).join('')}</div>
@@ -632,6 +632,8 @@ for (const job of JOBS.filter((j) => !only.length || only.includes(j.id))) {
     const panels = new Map();
     document.querySelectorAll('.hb').forEach((row) => { const bar = row.children[1]; if (!bar) return; const rtl = getComputedStyle(row).direction === 'rtl', r = bar.getBoundingClientRect();
       if (!panels.has(row.parentElement)) panels.set(row.parentElement, []); panels.get(row.parentElement).push({ x: rtl ? r.right : r.left, label: row.children[0].textContent.trim() }); });
+    // and no row is wider than its panel's content (it would run into the panel's padding, against the card's edge)
+    document.querySelectorAll('.hb').forEach((row) => { if (row.scrollWidth > row.clientWidth + 0.5) out.push(`bar row wider than its panel by ${(row.scrollWidth - row.clientWidth).toFixed(1)} px: ${row.children[0] ? row.children[0].textContent.trim() : ''}`); });
     for (const rows of panels.values()) { const xs = rows.map((r) => r.x), lo = Math.min(...xs), hi = Math.max(...xs);
       if (hi - lo > 0.5) out.push(`bars not aligned (start x ${lo.toFixed(1)} to ${hi.toFixed(1)}): ${rows.filter((r) => Math.abs(r.x - xs[0]) > 0.5 || r === rows[0]).map((r) => `${r.label} ${r.x.toFixed(1)}`).join(', ')}`); }
     for (const t of document.querySelectorAll('svg text')) { const r = t.getBoundingClientRect(), s = t.ownerSVGElement.getBoundingClientRect();
