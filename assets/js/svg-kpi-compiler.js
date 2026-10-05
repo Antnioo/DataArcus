@@ -252,6 +252,7 @@
   function compile(design, opts) {
     const d = design || {};
     const tag = !!(opts && opts.tag);  // preview only: wrap each layer in <g data-l='n'> for the editor
+    const mirror = !!d.mirror;         // a right-to-left report: the picture is mirrored (shapes flipped, texts moved)
     const W = Math.max(8, Math.min(2000, +d.w || 240)), H = Math.max(8, Math.min(2000, +d.h || 80));
     const vars = [];      // { name, node, comment }
     const errors = [];
@@ -351,9 +352,12 @@
           lit(out, '/>');
           break;
         case 'text': {
-          const anchor = ['start', 'middle', 'end'].includes(el.anchor) ? el.anchor : 'start';
+          // mirrored design (a right-to-left report): a text is not flipped, it moves to the mirrored x and its anchor
+          // swaps sides, so it stays readable; a text whose x is bound keeps its place
+          const mx = mirror && !(b.x && b.x.v), a0 = ['start', 'middle', 'end'].includes(el.anchor) ? el.anchor : 'start';
+          const anchor = mx ? { start: 'end', middle: 'middle', end: 'start' }[a0] : a0;
           lit(out, '<text');
-          numA('x', 'x', el.x); lit(out, " y='" + attrNum(el.y) + "'");
+          numA('x', 'x', mx ? W - (+el.x || 0) : el.x); lit(out, " y='" + attrNum(el.y) + "'");
           lit(out, " font-family='Segoe UI, sans-serif' font-size='" + attrNum(el.size || 14) + "' font-weight='" + (+el.weight || 400) + "' text-anchor='" + anchor + "'");
           colA('fill', 'fill', el.fill); common(); lit(out, '>');
           if (b.text && b.text.v) {
@@ -444,6 +448,8 @@
           errors.push('Unknown layer type: ' + el.type);
           return;
       }
+      // a mirrored design flips every shape around the picture's vertical middle (texts are handled above)
+      if (mirror && el.type !== 'text') { out.unshift("<g transform='translate(" + W + " 0) scale(-1 1)'>"); if (typeof out[1] === 'string') { out[1] = out[0] + out[1]; out.shift(); } lit(out, '</g>'); }
       // The editor wraps each layer (outside any "show if") so hidden layers stay selectable
       if (tag) lit(parts, "<g data-l='" + (el._i - 1) + "'>");
       // Show if: the whole layer becomes "" when the condition is false
