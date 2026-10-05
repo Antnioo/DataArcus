@@ -76,6 +76,25 @@
         { type: 'rect', name: 'Bar', x: 16, y: 96, w: 0, h: 6, rx: 3, fill: ACCENT, bind: { w: { v: 'ach', d0: 0, d1: 1, r0: 0, r1: 228 }, fill: achColor() } },
         { type: 'spark', name: 'Trend', x: 164, y: 38, w: 80, h: 42, n: 12, grain: 'month', end: 'data', stroke: ACCENT, sw: 2, area: true, areaColor: ACCENT, areaOpacity: 0.15, dot: true, dotR: 2.5, dotColor: INK, bind: { series: { v: 'sales' } } }
       ]
+    },
+    {
+      // The Ramadan sales card: the design the live tool saved at the end of the 6 Oct video (dataarcus-engine main
+      // cb6866e, business/posts/2026-10-06-svg-kpi-designer/ramadan-sales.svgkpi.json), layer for layer, with the
+      // layers renamed to say what each draws (owner's go 5 Oct); the tool's
+      // sample values (Sales 1,240,000 of Target 1,500,000: 83%, amber, as on the post's cover)
+      id: 'ramadan', name: 'Ramadan sales card', nameAr: 'بطاقة مبيعات رمضان', w: 340, h: 150, bg: '#0f1e3d', radius: 16, values: V(),
+      layers: [
+        {"type": "ring", "name": "Ring", "cx": 76, "cy": 75, "r": 50, "sw": 12, "track": "#1d3157", "fill": "#00d4ff", "cap": "round", "p": 0.75, "bind": {"p": {"v": "ach", "d0": 0, "d1": 1}, "fill": {"rules": [{"v": "ach", "op": "<", "t": 0.7, "c": "#ef4444"}, {"v": "ach", "op": "<", "t": 0.9, "c": "#f59e0b"}], "other": "#22c55e"}}},
+        {"type": "text", "name": "Percent", "x": 76, "y": 83, "size": 26, "weight": 800, "anchor": "middle", "fill": "#f8fafc", "text": "Text", "bind": {"text": {"v": "ach", "fmt": "p0"}}},
+        {"type": "text", "name": "Of target", "x": 76, "y": 100, "size": 10, "weight": 400, "anchor": "middle", "fill": "#94a3b8", "text": "of target"},
+        {"type": "text", "name": "Title", "x": 152, "y": 42, "size": 13, "weight": 600, "anchor": "start", "fill": "#cbd5e1", "text": "Ramadan sales"},
+        {"type": "text", "name": "Title (Arabic)", "x": 152, "y": 62, "size": 13, "weight": 600, "anchor": "start", "fill": "#fbbf24", "text": "مبيعات رمضان"},
+        {"type": "text", "name": "Sales value", "x": 152, "y": 98, "size": 28, "weight": 800, "anchor": "start", "fill": "#f8fafc", "text": "Text", "bind": {"text": {"v": "sales", "fmt": "auto", "prefix": "AED "}}},
+        {"type": "text", "name": "Target", "x": 152, "y": 122, "size": 11, "weight": 400, "anchor": "start", "fill": "#94a3b8", "text": "Text", "bind": {"text": {"v": "target", "fmt": "auto", "prefix": "Target AED "}}},
+        {"type": "circle", "name": "Crescent", "cx": 306, "cy": 36, "r": 13, "fill": "#fbbf24"},
+        {"type": "circle", "name": "Crescent cut-out", "cx": 312, "cy": 31, "r": 11.5, "fill": "#0f1e3d"},
+        {"type": "circle", "name": "Star", "cx": 289, "cy": 24, "r": 2, "fill": "#fbbf24"}
+      ]
     }
   ];
 

@@ -39,11 +39,15 @@
   const BTN_TEXT = (t, n) => Math.ceil(2 + 1.6 * t * (n || 1));    // a button's text, a line (English)
   const BTN_H = (t) => Math.ceil(6 + 1.6 * t);                     // a button's one line (Arabic needs the 6)
   const BTN_TW = (t, n) => 0.45 * 4 / 3 * t * n;                   // a button's text, 0.45 em a character
+  // a button with an icon: its text measured with the report writer's per-letter widths, + 10 (round 10, M3); the
+  // per-letter widths are pbip-export.js's (DAPbip in the browser), so the rule and the writer never disagree
+  const textWidth = () => (typeof module !== 'undefined' && module.exports ? require('./pbip-export.js') : root.DAPbip).textWidth;
+  const BTN_ICON_TW = (text, t, font) => textWidth()(text, t, false, font) + 10;
   const CH = (t) => t * 0.55 * 4 / 3;                              // a text box's character, 0.55 em
   const SLICER = (t) => Math.ceil(16 + 4 * t);                     // a dropdown slicer, title and box
   const PAGE_TWO_LINES = (t, font) => (/^tahoma/i.test(String(font || '')) ? 3.2 : 3.5) * t;   // a page button's two lines
   const TIP_ROWS = (h) => Math.floor((h - 46) / 22);               // a bar chart without its value axis: 22 a row + 46
-  const MEASURED = { BOX, BTN_TEXT, BTN_H, BTN_TW, CH, SLICER, PAGE_TWO_LINES, TIP_ROWS, PHONE_W: 323, TEXT_MIN: 8, TEXT_MAX: 60 };
+  const MEASURED = { BOX, BTN_TEXT, BTN_H, BTN_TW, BTN_ICON_TW, CH, SLICER, PAGE_TWO_LINES, TIP_ROWS, PHONE_W: 323, TEXT_MIN: 8, TEXT_MAX: 60 };
   const isPageButton = (x) => x.type === 'actionButton' && str(plain(((x.json.visual || {}).visualContainerObjects || {}).visualLink).type) === 'PageNavigation';
   const STATES = ['default', 'hover', 'press', 'pressed', 'disabled', 'selected'];
 
@@ -80,13 +84,13 @@
         });
       } },
     { id: 'BUTTON_ONE_LINE', group: 'sizes', severity: 'warning', source: SRC.buttons,
-      about: 'a button\'s text never wraps: one line needs 6 + 1.6 x pt in height; with an icon (as wide as the button is high, drawn at the start) the text (0.45 em a character) + the icon + 6 fit the width',
+      about: 'a button\'s text never wraps: one line needs 6 + 1.6 x pt in height; without an icon the text (0.45 em a character) fits the width; with an icon (as wide as the button is high, drawn at the start) the text measured letter by letter + 10 + the icon fit the width (round 10, M3)',
       run(R, out) {
         R.visuals.filter((x) => x.type === 'actionButton' && !isPageButton(x)).forEach((x) => {   // page buttons: PAGE_BUTTON_WRAP
-          const o = (x.json.visual || {}).objects || {}, tx = look(o.text), t = num(tx.fontSize) || R.labelSize, n = str(tx.text).length;
+          const o = (x.json.visual || {}).objects || {}, tx = look(o.text), t = num(tx.fontSize) || R.labelSize, text = str(tx.text), n = text.length;
           if (!n || lit(plain(o.text).show) === 'false') return;
           const icon = (str(look(o.icon).shapeType) || 'blank') !== 'blank' && lit(plain(o.icon).show) !== 'false';
-          const needH = BTN_H(t), needW = Math.ceil(BTN_TW(t, n) + (icon ? x.h + 6 : 0)), est = measuredFont(str(tx.fontFamily) || R.font) ? null : { estimate: true };
+          const needH = BTN_H(t), needW = Math.ceil(icon ? BTN_ICON_TW(text, t, str(tx.fontFamily)) + x.h : BTN_TW(t, n)), est = measuredFont(str(tx.fontFamily) || R.font) ? null : { estimate: true };
           if (x.h + 0.5 < needH) out(x, `the button is ${x.h} high; one line of ${t}pt needs ${needH}`, `Make it at least ${needH} high: a button never wraps its text, and Arabic text needs the most.`, est);
           else if (x.w + 0.5 < needW) out(x, `the button is ${x.w} wide; ${n} characters at ${t}pt${icon ? ` and its icon (${x.h} wide at this height)` : ''} need ${needW}`, `Make it at least ${needW} wide${icon ? ', or turn the icon off' : ''}: Power BI cuts the text${icon ? ' or draws the icon over it' : ''}.`, est);
         });

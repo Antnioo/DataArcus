@@ -1399,7 +1399,274 @@ Desktop). The report: `create_report` of main, executive layout, four cards, 192
   "AR 2" were changed and saved), and the new folder `9-format-sample` with "D16 formats", "D16 formats 720" and
   "D16 formats 960".
 
+## 2026-10-04, round 10 (overnight): measurements before the code, Power BI Desktop 2.158.1177
+
+Made-up test reports in `<tests folder>\10-r10` (a copy of the Ramadan sample's model; cards bound to report-level
+number measures, so the text a card shows is known without touching a model). Captures through the bridge at double
+size in `<tests folder>\desk-r10`; ink measured with `builder-scripts\ink.ps1` (1.172 capture pixels per page unit).
+Scripts: `r10-make.mjs`, `r10-m1.mjs`, `r10-nav-proto.mjs`, `r10-btn-measure.mjs`, `capx.sh`.
+
+### M1. A card's "automatic units, 2 decimals" (R10.6b)
+- By mouse on a card: Callout > "Apply settings to" one card > Value > **Value decimal places: 2** (Display units
+  left at Auto), Ctrl+S. **Desktop wrote** a second entry in `visual.objects.value`:
+```json
+{ "properties": { "labelPrecision": { "expr": { "Literal": { "Value": "2L" } } } }, "selector": { "metadata": "<queryRef>" } }
+```
+- **The same property in the card's default entry** (`selector: { id: "default" }`, written by hand) works too: one
+  setting for the whole card.
+- Seen, cards bound to known numbers: 3,430,000 -> **3.43M**; 14,810 -> **14.81K**; 231.5 -> **231.50**; 999,999 ->
+  1.00M; -1,234.5 -> -1.23K; 0.3421 -> 0.34; 888,880,000,000 -> 888.88bn.
+
+### M2. The width of a card's value text (R10.1), Segoe UI, measured at 42pt
+| Text | Ink width (page units) | In em |
+|---|---|---|
+| 8888888888 (ten digits) | 298 | 0.54 a digit |
+| 8,888,888,888 | 334 | each comma 0.21 |
+| 88.88 | 128 | the point 0.21 |
+| 888.88K | 193 | K 0.58 |
+| 888.88M | 206 | M 0.81 |
+| 888.88bn | 222 | bn 1.10 |
+So the widest automatic value, "-888.88bn", is about 4.4 em; "74,675.00" is 4.21 em and "101,914" 3.45 em. The
+card's value size was made for 7 x 0.55 = 3.85 em: that is why 74,675.00 was cut and 101,914 was not (third sitting).
+
+### M3. How wide a button must be for its text (R10.6a, c), 14pt
+- **A button cuts its text when it is narrower than the text + 10** (5 a side): "Executive summary" bold is 168 wide,
+  cut at 172, whole at 178; the Arabic "ملخص تنفيذي" bold (Tahoma) is 124 wide, cut at 128, whole at 134.
+- **The width depends on the letters, not their count:** "Executive summary" 155 (0.49 em a character), "Reset
+  filters" 92 (0.38 em), "Details" bold 57 (0.44 em). A per-letter table of Segoe UI's widths gives 157, 95 and 60:
+  within 5%, on the safe side. Bold is 1.084 x regular. Sizes scale with the point size (10, 14, 20pt measured).
+- Arabic in Tahoma: 0.53 em a character regular, 0.49 to 0.60 bold (three texts).
+
+### M4. Three navigator looks (R10.6a), written by hand into copies, captured (`nav-looks.png`)
+- Today: boxes (the current page filled dark, the others outlined).
+- **A, underline tabs:** no fill, no outline; the current page bold in the accent colour with a 3-high accent line
+  under it; the others in a muted text colour. **Chosen:** it marks the page without a box, is the quietest next to
+  the title and the logo, needs no rounded shape, and mirrors as it is.
+- B, filled pill: the current page filled in the accent colour with white text. The `shape` entry written by hand
+  (`tileShape: 'pill'`) was **not drawn rounded**: it showed a filled rectangle, heavier than today's.
+- C, soft pill: the current page on a light tint of the accent. Also a rectangle; lighter than B, less clear than A.
+
+### M5. Desktop upgrades the schema versions of what it saves (R10.4)
+After Ctrl+S on a report written by the engine (report 2.1.0, page 2.0.0, visualContainer 2.1.0, bookmark 1.4.0),
+the page that was changed and the shared files were rewritten as **report 3.3.0, page 2.1.0, visualContainer 2.13.0,
+bookmark 2.1.0**; the pages not touched kept 2.0.0 / 2.1.0. Desktop opened the mixed report with no message.
+Microsoft's validator 0.4.0 then warns `PBIR_SCHEMA_UNREACHABLE` for 2.13.0 (0 errors).
+
+## 2026-10-05, round 10, part B: the default report before and after (R10.6, R10.7), Power BI Desktop 2.158.1177
+
+The website's sample-data download (the engines called as the Theme Generator page calls them; Corporate preset, its
+own sample model), built once from main's engines (`8f6d2c3`, "before") and once from this branch's ("after"), each
+opened in Desktop and its first page captured through the bridge at double size (the canvas only). Stacked pairs
+(before above, after below): `<tests folder>\desk-r10\ba2-<layout>.png`. Scripts: `builder-scripts\r10-site.mjs`,
+`pair.sh`, `capx.sh`, `crop.ps1`. One layout per run, in the foreground (the overnight session crashed during a long
+background capture run; the captures before the crash are not used except three "before" pages).
+
+| Layout | Before (main) | After (branch) | Anything off in the after page |
+|---|---|---|---|
+| Executive, English, 1920 x 1080 | KPIs "3M", "15K", "231.5", "35.4%"; page buttons in boxes (the current one filled dark); chart titles "Main trend", "Breakdown", "Comparison" | KPIs **3.43M, 14.81K, 231.46, 35.36%**; tabs without boxes, "Executive summary" bold in the accent colour with a line under it, "Details" quiet; chart titles "Total Revenue by Month", "... by Category", "... by Region" | nothing cut. The axis labels read "0.0M, 0.5M, 1.0M"; the table is titled "Detail" (the layout name) |
+| Executive, English, 1280 x 720 | the same as 1920 x 1080: "3M", "15K", boxes, layout names as titles | **3.43M, 14.81K, 231.46, 35.36%**; the tabs fit ("Executive summary" whole, underlined); charts named by their fields | nothing cut |
+| Executive, Arabic, 1920 x 1080 | "3M", "15K", "231.5", "35.4%"; boxed page buttons; titles "الاتجاه الرئيسي", "التوزيع", "المقارنة" | **3.43M, 14.81K, 231.46, 35.36%**; tabs mirrored: the first page ("ملخص تنفيذي") rightmost, bold with the line under it; charts named by their fields in Arabic ("إجمالي الإيرادات حسب الشهر") | nothing cut. The table's total row has no "Total" word (so since round 2: a measure is its first projection); the months run left to right; the title "Gulf Sales" is the name given |
+| Executive, Arabic, 1280 x 720 | as Arabic 1920 x 1080: "3M", "15K", boxed buttons, layout names as titles | **3.43M, 14.81K, 231.46, 35.36%**; mirrored tabs, the current page underlined; charts named by their fields | nothing cut; the same notes as Arabic 1920 x 1080 |
+| Analysis, English, 1920 x 1080 | "3M", "15K", "231.5", "35.4%"; boxed "Analysis" and "Overview"; the chart titled "Main chart" | **3.43M, 14.81K, 231.46, 35.36%**; tabs, "Analysis" underlined; the chart titled "Total Revenue by Region" | nothing cut. The table is titled "Detail table" (the layout name) and is two thirds empty with the sample's four rows |
+| Analysis, English, 1280 x 720 | as 1920 x 1080: "3M", "15K", boxes, "Main chart" | **3.43M, 14.81K, 231.46, 35.36%**; tabs, "Analysis" underlined; "Total Revenue by Region" | nothing cut; the same notes as 1920 x 1080 |
+| Analysis, Arabic, 1920 x 1080 | "3M", "15K", boxed buttons, the chart titled "المخطط الرئيسي" | **3.43M, 14.81K, 231.46, 35.36%**; mirrored tabs, "تحليل" underlined at the right; the chart titled "إجمالي الإيرادات حسب المنطقة" | nothing cut. No "Total" word in the table's total row (as before); the table mostly empty with four rows |
+| Analysis, Arabic, 1280 x 720 | as Arabic 1920 x 1080 | **3.43M, 14.81K, 231.46, 35.36%**; mirrored tabs, the current page underlined; the chart named by its fields | nothing cut; the same notes |
+<!-- end of round 10 before and after -->
+
+### Round 10, part B: the cards' values fit (R10.1), 84 cards in Desktop, none cut
+One-page reports from the branch's MCP server on the made-up model (`<tests folder>\10-r10`), each card bound to a
+report-level number measure with the widest text its mode can show (`builder-scripts\r10-fit.mjs`), opened in
+Desktop, the first page captured at double size, and every card's value read with `ink.ps1` (a text that ends in
+three low dots is cut). The value's size is the engine's own.
+| Mode | Text on the cards | Pages | Cards per page | Languages | Cards | Cut |
+|---|---|---|---|---|---|---|
+| automatic (the default) | 888.88bn and -888.88M | 1920 x 1080, 1280 x 720, 960 x 720 | 3 and 6 | English, Arabic | 54 | **0** |
+| full (`kpiValues: "full"`) | 888,888,888 and 888,888,888.88 | the same three | 4 and 6 | English | 30 | **0** |
+- The narrowest case, six cards at 960 x 720 (110 wide): 14pt automatic ("888.88bn" takes 152 to 157 of 228
+  capture pixels), 9pt full ("888,888,888.88" 162 of 228). Six cards at 1280 x 720: 23pt and 15pt. Before the fix
+  "74,675.00" was cut there at about 23pt.
+- One capture had to be retaken twice: Desktop showed a report page tooltip over the cards because the mouse
+  pointer rested on a chart. Moving the pointer off the page fixed it.
+- Not captured: 4 and 5 cards in automatic mode, 3 and 5 in full mode, Arabic in full mode (the same rule sizes them;
+  `npm test` computes all 108 cards of 3 to 6 x three pages x two languages in both modes).
+- **Still cut on six-card pages: the KPI titles** ("Total Sales Last ..."). These proof reports were built before the
+  title fit of the recovered commit, so whether it cures them at 8pt is not captured yet.
+
+### Round 10, part B: SVG columns, the card image, a matrix, separators in a table (R10.2, R10.3)
+"B2 SVG EN", "B2 SVG AR" (executive layout, a table of Hijri Day, Total Sales, Total Sales Last Ramadan, two
+`svgColumns`, one `svgCards` in English) and "B2 Matrix" (a hand-placed matrix and a table), from the branch's server.
+| Check | Expected | Seen |
+|---|---|---|
+| The pictures at the design's size | a 160 x 24 bar and a 180 x 20 strip, rows about 29 tall | **yes**: the bar with "135%" readable, the strip filling by the day; eight rows and the total in the table |
+| Separators in the table | 3,375 and 101,914 on a model with no format | **yes**: 3,375, 2,505, total 101,914 and 74,675 |
+| "Total" in the Arabic table | shown, with the text column first | **yes**: "Total" under Hijri Day at the left; then the two pictures, then the measures |
+| Mirrored pictures in Arabic | the bar and the strip grow from the right; the text stays readable | **yes**: both grow from the right, "135%" readable at the left of the bar |
+| The card's image (`svgCards`) | the arrow beside the number | **draws, too large**: the green arrow fills the card's image area and its bottom is cut by the card |
+| A matrix with an SVG column | rows by quarter, the picture in each | **yes**: Q1 to Q4 and Total, the bar at 160 x 24 |
+| KPI values on the user's model | automatic units, 2 decimals | 101.91K, 74.68K, 0.34 |
+| The navigator and Reset | tabs; Reset without a box | tabs in both directions; Reset has no box; **its icon is at one end of the 274-wide button and its text at the other** |
+- **Off, to fix before the SVG features are called usable:** (1) the table is wider than its box in both languages
+  (a horizontal scrollbar; the last header is cut): three fields and two pictures of 160 and 180 need more than the
+  553 the slot has, so the pictures' width should be capped by the room the table has; (2) the card's image needs a
+  size (the card's `image` object has `size` and `fixedSize`: to measure).
+- Not run in this sitting (left): the schema experiment both ways (R10.4), the `add_gulf_calendar` rows D-GC1 to
+  D-GC6, the 11 golden tasks opened in Desktop, the Reset tooltip on hover, the phone layout of the tabs, pages with
+  4 and 8 tabs.
+
+### Seen, not in scope (round 10, both sittings)
+- The table's total row has no "Total" word in right-to-left reports without pictures (a measure is first; so since
+  round 2). With pictures the text column is first and "Total" shows, but the category then sits at the left end.
+- Axis labels read "0.0M, 0.5M, 1.0M"; month labels slant on the user's-model page ("January ... December").
+- The tables are titled by the layout ("Detail", "Detail table", "التفاصيل"), not by their content.
+- In an Arabic report on a model with English names the titles mix both ("Total Sales حسب Quarter").
+- A percentage now shows two decimals too (35.36%, was 35.4%).
+- "Your logo" / "شعارك" placeholders; the sample's four table rows leave the analysis table two thirds empty.
+- Desktop draws a report page tooltip into a bridge capture when the mouse pointer rests on a chart.
+
+### Round 10: the KPI titles on a six-card page, before and after the one-size fix (2026-10-05)
+Six cards at 1280 x 720 on the user's-model sample, from the branch's server (`b4-six-crop.png`: the row built at
+`49c5cbb` above, at `1f29ecf` below).
+| | Titles | Values |
+|---|---|---|
+| Each title fitted on its own (`49c5cbb`) | "Total Sales" at 12pt beside 8pt titles; so the two short-titled cards' numbers sat lower than the other four | 101.91K, 74.68K, 0.34, 23.64K, 3.31, whole |
+| One size for the row (`1f29ecf`) | all six at 8pt, on one line; "Total Sales Last Ramadan" whole | the same, and **all six numbers on one line** |
+- **Still cut at the 8pt minimum:** "Total Sales vs Last Ramada...", "Total Sales Last Ramadan (...". A title longer
+  than about 25 characters does not fit a 163-wide card at 8pt. Proposed (not built): two lines for the title where
+  the card is high enough (to measure: the title's wrap and what it takes from the value), or a tooltip with the
+  full name.
+- 8pt for every title is small beside a 23pt value: a taste call (shorter display names read better than smaller text).
+
+### Round 10: eight tabs with long names (R10.6a), English, 1920 x 1080 (2026-10-05)
+"B5 tabs EN 8": eight hand-placed pages (`builder-scripts\r10-tabs.mjs`), named Overview, "Sales by region and
+channel", Customers, "Products and categories", Returns, Stores, Staff, Notes; a default theme (accent blue).
+- **All eight names are whole, on one row**, between the title and "Your logo"; none is cut and none overlaps.
+- On page 1 "Overview" is bold in the accent colour with the line under it; on page 2 the mark is on "Sales by
+  region and channel" and "Overview" is quiet again (`b5-tabs-crop.png`).
+- **Arabic, eight pages ("B5 tabs AR 8", Tahoma):** all eight names whole on one row, the first page rightmost next
+  to the title, the mark on the current page on pages 1 and 2 (`b5-tabs-ar-crop.png`). The Arabic tabs are spaced
+  wider than the English ones (the width rule counts 0.62 em a letter, the measured upper end), and the logo
+  placeholder of a hand-placed page reads "Your logo" in an Arabic report.
+- Not opened: a row that has to wrap, the phone layout, a click on a tab (the links are checked in `npm test` only).
+
+## 2026-10-05, round 10, the one-hour Desktop proof sitting (`fix/round-10` with main merged in), Power BI Desktop 2.158.1177
+Made-up models only (the Ramadan sample). Captures: the canvas only, in `<tests folder>\desk-r10\`.
+
+### The card image's size (R10.2)
+"C1 card image": six cards 163 x 96 on a 1280 x 720 page, the same 48 x 48 design (a yellow square with an arrow) on
+every card's image, each card with one hand-written variant of the `image` entry (`r10-cimg.mjs`). The image's
+box was measured in the capture by its colour (`yellow.ps1`), in page units.
+| Card | Added to the entry | The image drawn | The value |
+|---|---|---|---|
+| 1 | nothing (what the engine wrote) | 64.9 x 63.7 | **cut: "10..."** (101.91K) |
+| 2 | `fixedSize` true, `size` 24 | 55.8 x 55.2 | **cut: "74...."** |
+| 3 | `fixedSize` true, `size` 48 | 67.1 x 50.1 (not square; a two-line title) | 0.34, whole |
+| 4 | `fixedSize` false, `imageAreaSize` 25 | **32.4 x 32.4** | 23.64K, whole |
+| 5 | `position` 'Left', `fixedSize` true, `size` 32 | 67.1 x 50.1, on the left | 3.31, whole |
+| 6 | `position` 'Right', `fixedSize` false, `imageAreaSize` 30 | **39.8 x 39.3** | **cut: "101...."** |
+- **`imageAreaSize` (with `fixedSize` false) is what sizes the image**: a percent of the card's inner width (25% of a
+  163-wide card drew 32.4; 30% of a 165-wide card 39.8; so the inner width is the card's less about 33). The picture
+  keeps its shape inside that area.
+- **`size` changed nothing that could be measured** (24, 48 and 32 drew like the default: the image takes the height
+  left under the title). `position` 'Left' works.
+- **Without a size the image is too large** (65 wide for a 48-wide design) **and the value is cut**: a FAIL of what the
+  engine wrote until this sitting.
+- Not seen: what Desktop itself writes when the size is set in the Format pane (the entries above were written by
+  hand, with the number as `25D`; Desktop drew them). The names are the ones Microsoft's authoring CLI lists for the
+  card's image (`fixedSize` "Image height", `imageAreaSize` "Image area size", `size`, `position`, `padding`, `fit`).
+
+### DAX FORMAT with Arabic locales
+"H1 format": six report-level measures in one table (`reportExtensions.json`, text), each a FORMAT of
+`DATE ( 2026, 3, 1 )`. **Every result is a Gregorian date; none is a Hijri (Umm al-Qura) one** (1 March 2026 is in
+Ramadan 1447). The exact outputs (`h1fmt-crop.png`):
+| Expression | Result (the characters, in reading order) | As drawn in a left-to-right cell |
+|---|---|---|
+| `FORMAT ( DATE ( 2026, 3, 1 ), "Long Date", "ar-SA" )` | 01 مارس, 2026 | "01 2026 ,مارس" |
+| `FORMAT ( DATE ( 2026, 3, 1 ), "dd/MM/yyyy", "ar-SA" )` | 01/03/2026 | 01/03/2026 |
+| `FORMAT ( DATE ( 2026, 3, 1 ), "Long Date", "ar-AE" )` | 01 مارس, 2026 | "01 2026 ,مارس" |
+| `FORMAT ( DATE ( 2026, 3, 1 ), "dd/MM/yyyy", "ar-AE" )` | 01/03/2026 | 01/03/2026 |
+| `FORMAT ( DATE ( 2026, 3, 1 ), "Long Date", "en-US" )` (control) | Sunday, March 1, 2026 | the same |
+| `FORMAT ( DATE ( 2026, 3, 1 ), "d MMMM yyyy", "ar-SA" )` | 1 مارس 2026 | "1 2026 مارس" |
+- The Arabic locales give the Gregorian month's Arabic name ("مارس"), Latin digits, and no day name in "Long Date";
+  ar-SA and ar-AE give the same text. The reading-order column is read from the drawn text (the cell is left to
+  right, so the Arabic word and the year change places on screen).
+- So a Hijri date in a report still needs the calendar table's Hijri columns. No code changed.
+
+### The card image after the fix (R10.2)
+"C3 card image": the same six cards, written by the engine with the fix (`fixedSize` false, `imageAreaSize` 25, the
+value fitted to the width left of the image).
+| | Before the fix ("C1", card 1) | After ("C3", all six) |
+|---|---|---|
+| The image | 64.9 x 63.7 | **32.4 x 32.4 on every card** (five measured 32.4 x 32.4, one 32.4 x 31.9) |
+| The values | "10...", "74....", "101...." cut | **101.91K, 74.68K, 0.34, 23.64K, 3.31, 101.91K: all whole** |
+| The numbers' height | | within 2 capture pixels (1.1 page units) of each other across the row |
+- The design is 48 wide and is drawn 32.4: the area is capped at 25 percent so that the value keeps its room. A
+  design is not shown at its own size on a narrow card; that is the trade made here (a taste call for the owner).
+- A first build of the fix wrote no size at all (the design's width did not reach the writer; the entry held
+  `NaND`): Desktop opened it without a message, drew the images 40 to 47 wide and cut three values ("C2"). Fixed
+  before the build above.
+- Not seen: a card image at 1920 x 1080, in Arabic, or on a three-card page; the 0.8 (inner width over card width)
+  comes from two cards of one page size only.
+
+### The owner's design choices on one generated report, English and Arabic, 1280 x 720
+"P3 EN" and "P3 AR" (four KPI cards, the default report, a table of Day Name, Total Sales, Total Sales Last
+Ramadan); one capture each (`p3en-p1.png`, `p3ar-p1.png`).
+| Choice | English | Arabic |
+|---|---|---|
+| The KPI value at the reading start | at the left of every card, under its title | at the right of every card, under its title |
+| The values | 101.91K, 74.68K, 0.34, 101.91K, whole | the same, whole |
+| The percent card as the model formats it | 0.34 (the sample's measure has no percent format) | 0.34 |
+| A table titled by its content | "Total Sales by Day Name" | "Total Sales حسب Day Name" (the model's names are English) |
+| "Total" in the table | shown: Total, 101,914, 74,675 | **shown: Total, 74,675, 101,914** |
+| The Arabic table's text column first | | Day Name is the first column; it is drawn at the left (Desktop does not mirror a table), right-aligned; then Total Sales Last Ramadan, then Total Sales |
+| Reset | an arrow and "Reset filters", no box, at the foot of the filter panel | an arrow and "إعادة ضبط الفلاتر", no box, 158 wide in the 250-wide panel |
+| The tabs | "Executive summary" bold with the line under it, "Details" quiet | "ملخص تنفيذي" bold with the line, "التفاصيل" quiet, from the right |
+- **Not seen: the Reset tooltip on screen.** It is written (`visualLink.enabledTooltip`: 'إعادة ضبط الفلاتر'), but a
+  capture cannot hover; no pointer was put on the button in this sitting.
+- In the Arabic capture the Reset arrow sits at the left end of the button and the text at the right, about 60
+  page units apart: the icon is not beside its text. Not fixed here (see "Seen, not in scope").
+- Nothing is cut on either page 1. The second pages were captured, not judged.
+
+### A long KPI title: does it wrap, and do the numbers stay on one line?
+"P4 six" (before the fix) and "P5 six" (after): six cards 163 wide at 1280 x 720, titles "Total Sales", "Total
+Sales Last Ramadan", "Total Sales vs Last Ramadan %", "Total Sales Last Ramadan (old)", "Total Sales vs Last
+Ramadan % (old)", "Total Sales" (`p45six-crop.png`: before above, after below).
+- **`titleWrap` wraps in Desktop**: the three long titles are on two lines, whole, at 8pt; no title is cut and
+  none is shortened. The values are whole (101.91K, 74.68K, 0.34, 23.64K, 3.31, 101.91K).
+- **Before the fix the numbers were not on one line**: the three cards with a wrapped title had their number 11
+  capture pixels (6.3 page units) lower than the three with a one-line title (ink tops at 327 and 338).
+- **After the fix they are**: a card with a one-line title leaves the second line's height free above its title;
+  the ink tops are 337 and 338 (1 capture pixel, 0.6 of a page unit). The one-line titles now sit lower in their
+  cards than the two-line ones start: a taste call.
+
+### The table's rows, measured (no code changed)
+The table of "P3 EN" (the theme's text size; the engine writes no row padding, so this is Desktop's default):
+- row pitch **20.9 page units** (five rows in 184 capture pixels); the text's ink (capital to descender) 12.5;
+  so 8.4 of air between one row's ink and the next.
+- under the header: 10.2 from the header's ink to the line, 6.8 from the line to the first row's ink.
+- Not measured: the cell's left and right padding (the table's edge could not be told from the capture), and
+  what `grid.rowPadding` changes.
+
+### Seen, not in scope
+- The Arabic Reset button: the arrow and the text are at opposite ends of the button.
+- In the Arabic report the charts' titles mix the two scripts ("Total Sales حسب Quarter"); the names are the
+  model's own (rule 2), so this is the model's, not the engine's.
+- `size` on the card's image did nothing in three tries; what it is for was not found.
+- Not reached in the hour: 4 and 8 tabs on the phone layout; a tab row that has to wrap.
+
 ## Lessons
+- **Round 10 (2.158.1177): a card's "Value decimal places" is `labelPrecision`** (`2L`), and it works in the card's
+  default value entry: automatic units with 2 decimals for every card (3.43M, 14.81K, 231.50).
+- **Round 10: text width depends on the letters, not their count.** "Executive summary" is 0.49 em a character,
+  "Reset filters" 0.38; a per-letter table of Segoe UI is within 5%. A button cuts its text when it is narrower than
+  the text + 10. A card's value: a digit 0.54 em, a separator 0.21, "-888.88bn" 4.4 em.
+- **Round 10: a button's `shape` entry (`tileShape: 'pill'`) written by hand was not drawn rounded**; an underline
+  under a tab is a thin `shape` visual, which draws.
+- **Round 10: Desktop upgrades the schema versions of what it saves** (the changed page and the shared files; to
+  report 3.3.0, page 2.1.0, visualContainer 2.13.0, bookmark 2.1.0) and opens the mixed report with no message.
+- **Round 10: a bridge capture includes a report page tooltip when the mouse pointer rests on a chart.** Move the
+  pointer off the page first.
+- **Round 10: capture in the foreground, one report per command.** A long background capture run ended with the
+  whole session crashing; and a Windows path built in a bash double-quoted string loses its backslashes.
 - **Measure a chart with the measure it will show** (round 1): a column chart that fits 12 month names with "1K" on its value axis loses one behind a scrollbar with "0.4M". Axis label width changes the plot, so a fit measured with one measure does not hold for another.
 - **Ctrl+click follows a button only when nothing is selected** (Desktop, edit mode): click the empty canvas first.
 - **`mobile.json` follows the same selector rules as `visual.json` (2.158, round 1):** a text size or padding written there is used only with the selector that property needs on the page (none for a text box, slicer, titles, axes, table text and the card's container padding; `default` for a button's text; each state for page buttons).

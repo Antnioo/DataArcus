@@ -449,14 +449,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (pbipBtn) {
     let logo = null;
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : new Promise((resolve, reject) => {
-      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20261004e'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
+      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20261005f'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
     }));
     // ---- your own model: a local project (the report points at its .SemanticModel folder) or a published one ----
     // Each choice keeps its own model and the fields picked for it, so switching between them never pairs one
     // model's fields with the other's location: own.local / own.service = { tables, msg, bad, folder, dir, reports, choices }
     const dataIn = $('pbipData'), own = { local: null, service: null, getBind: null };
     const loadBind = () => (window.DABind ? Promise.resolve(window.DABind) : new Promise((resolve, reject) => {
-      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-bind.min.js?v=20261004a'; sc.onload = () => resolve(window.DABind); sc.onerror = reject; document.head.appendChild(sc);
+      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-bind.min.js?v=20261005b'; sc.onload = () => resolve(window.DABind); sc.onerror = reject; document.head.appendChild(sc);
     }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
@@ -504,6 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const code = e && e.message;
       own[m] = { tables: [], bad: true, msg: code === 'NO_SEMANTIC_MODEL' ? L('No .SemanticModel folder here. Choose the folder you saved the Power BI project in.', 'لا يوجد مجلد .SemanticModel هنا. اختر المجلد الذي حفظت فيه مشروع Power BI.')
         : code === 'PBIX' ? L('A .pbix keeps its model in a format only Power BI reads. Use File › Export › Power BI template (.pbit).', 'ملف .pbix يحفظ النموذج بصيغة لا يقرؤها إلا Power BI. استخدم File › Export › Power BI template (.pbit).')
+          : code === 'ZIP_LIMIT' || code === 'TOO_BIG' ? L('This file is larger than a Power BI template without data (usually under 20 MB), or unpacks to more than it says, so it was not read. Export a fresh .pbit from Power BI Desktop.', 'هذا الملف أكبر من قالب Power BI بدون بيانات (عادة أقل من 20 ميجابايت)، أو يتجاوز عند فك ضغطه ما يذكره، لذا لم يُقرأ. صدّر ملف ‎.pbit‎ جديدًا من Power BI Desktop.')
           : code === 'TMDL_ONLY' ? L('This file has the model as TMDL. Choose the project folder instead, on the other option.', 'هذا الملف يحفظ النموذج بصيغة TMDL. اختر مجلد المشروع بدلًا منه.')
             : L('Could not read the model in this file.', 'تعذّرت قراءة النموذج في هذا الملف.') };
       if (mode() === m) { own.getBind = null; loadBind().then(showPicker).catch(() => ownMsg(own[m].msg, true)); }
@@ -522,7 +523,7 @@ document.addEventListener('DOMContentLoaded', () => {
       $('pbipModelFile').addEventListener('change', (e) => {
         const f = e.target.files && e.target.files[0]; if (!f) return;
         ownMsg(L('Reading the model…', 'جارٍ قراءة النموذج…'));
-        loadBind().then((DB) => DB.fromFile(f, '../assets/js/model-health-worker.min.js?v=20261003a')).then((res) => loaded('service', res, f.name)).catch((err) => failed('service', err));
+        loadBind().then((DB) => DB.fromFile(f, '../assets/js/model-health-worker.min.js?v=20261005c')).then((res) => loaded('service', res, f.name)).catch((err) => failed('service', err));
       });
     }
     const logoIn = $('pbipLogo');

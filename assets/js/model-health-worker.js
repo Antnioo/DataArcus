@@ -11,6 +11,26 @@ importScripts('model-health-engine.min.js?v=20261004c', 'tmdl-model.min.js?v=202
 const post = (type, data) => self.postMessage(Object.assign({ type }, data || {}));
 
 // ---------- minimal ZIP reader (stored + deflate) ----------
+// A zip can be built to unpack to far more than it weighs (a "zip bomb"), so only the parts the check uses are read,
+// each and all together within these limits, refused before unpacking when the zip's directory says more, and stopped
+// while unpacking when the directory lies (the declared size is the most a part may give). The same numbers as the
+// MCP's reader (mcp/lib/model.mjs, PBIT_LIMITS; the evidence is in mcp/WORK.md, "The .pbit limits").
+const MB = 1024 * 1024;
+const LIMITS = { model: 64 * MB, entry: 32 * MB, total: 128 * MB, file: 300 * MB, entries: 20000 };
+async function inflateCapped(data, max) {
+  const reader = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw')).getReader();
+  const chunks = []; let n = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    n += value.length;
+    if (n > max) { try { await reader.cancel(); } catch (e) { /* already stopped */ } throw new Error('ZIP_LIMIT'); }
+    chunks.push(value);
+  }
+  const out = new Uint8Array(n); let o = 0;
+  for (const c of chunks) { out.set(c, o); o += c.length; }
+  return out;
+}
 function readZip(buf) {
   const dv = new DataView(buf);
   const u8 = new Uint8Array(buf);
@@ -19,6 +39,7 @@ function readZip(buf) {
     if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
   }
   if (eocd < 0) throw new Error('NOT_ZIP');
+  if (u8.length > LIMITS.file) throw new Error('TOO_BIG');
   let count = dv.getUint16(eocd + 10, true);
   let cdOff = dv.getUint32(eocd + 16, true);
   // ZIP64 end of central directory
@@ -30,6 +51,7 @@ function readZip(buf) {
       cdOff = Number(dv.getBigUint64(z64 + 48, true));
     }
   }
+  if (count > LIMITS.entries) throw new Error('ZIP_LIMIT');
   const entries = [];
   let p = cdOff;
   const dec = new TextDecoder('utf-8');
@@ -58,16 +80,17 @@ function readZip(buf) {
   }
   return {
     entries,
-    async read(entry) {
+    // cap: the most this part may unpack to (LIMITS.model or LIMITS.entry)
+    async read(entry, cap) {
+      const max = cap || LIMITS.entry;
+      if (entry.usize > max) throw new Error('ZIP_LIMIT');
       const l = entry.lho;
-      if (dv.getUint32(l, true) !== 0x04034b50) throw new Error('BAD_ENTRY');
+      if (l + 30 > u8.length || dv.getUint32(l, true) !== 0x04034b50) throw new Error('BAD_ENTRY');
       const start = l + 30 + dv.getUint16(l + 26, true) + dv.getUint16(l + 28, true);
       const data = u8.subarray(start, start + entry.csize);
-      if (entry.method === 0) return data;
+      if (entry.method === 0) return data.subarray(0, entry.usize);
       if (entry.method !== 8) throw new Error('UNSUPPORTED_COMPRESSION');
-      const ds = new DecompressionStream('deflate-raw');
-      const out = new Response(new Blob([data]).stream().pipeThrough(ds));
-      return new Uint8Array(await out.arrayBuffer());
+      return inflateCapped(data, Math.max(1, entry.usize));
     }
   };
 }
@@ -92,9 +115,15 @@ async function fromZip(buf, fileName) {
     if (byName(/(^|\/)DataModel$/).length) throw new Error('PBIX');
     throw new Error('NO_MODEL');
   }
+  // the parts this check reads, all together within the limit, before any is unpacked
+  const layout = byName(/(^|\/)Report\/Layout$/)[0];
+  const legacyPbip = byName(/\.Report\/report\.json$/i)[0];
+  const pbir = byName(/(^|\/)definition\/(report\.json|reportExtensions\.json|pages\/.*\.json|bookmarks\/.*\.json)$/i).filter((e) => !/StaticResources|CustomVisuals/i.test(e.name));
+  const needed = (modelEntry ? [modelEntry] : tmdl.filter((x) => x.name.startsWith(root))).concat(layout ? [layout] : pbir.length ? pbir : legacyPbip ? [legacyPbip] : []);
+  if (needed.reduce((a, e) => a + e.usize, 0) > LIMITS.total) throw new Error('ZIP_LIMIT');
   post('progress', { step: 'model' });
   let model;
-  if (modelEntry) model = parseJson(await zip.read(modelEntry));
+  if (modelEntry) model = parseJson(await zip.read(modelEntry, LIMITS.model));
   else {
     const files = [];
     for (const e of tmdl.filter((x) => x.name.startsWith(root))) files.push({ path: e.name, text: decodeText(await zip.read(e)) });
@@ -104,13 +133,10 @@ async function fromZip(buf, fileName) {
   // report: legacy single Layout file, or PBIR folder of JSON files
   post('progress', { step: 'report' });
   let report = null;
-  const layout = byName(/(^|\/)Report\/Layout$/)[0];
-  const legacyPbip = byName(/\.Report\/report\.json$/i)[0];
-  const pbir = byName(/(^|\/)definition\/(report\.json|reportExtensions\.json|pages\/.*\.json|bookmarks\/.*\.json)$/i).filter((e) => !/StaticResources|CustomVisuals/i.test(e.name));
   if (layout) report = { format: 'legacy', files: [{ path: 'Report/Layout', json: parseJson(await zip.read(layout)) }] };
   else if (pbir.length) {
     const files = [];
-    for (const e of pbir) { try { files.push({ path: e.name, json: parseJson(await zip.read(e)) }); } catch (err) { /* skip unreadable file */ } }
+    for (const e of pbir) { try { files.push({ path: e.name, json: parseJson(await zip.read(e)) }); } catch (err) { if (err.message === 'ZIP_LIMIT') throw err; /* skip unreadable file */ } }
     report = { format: 'pbir', files };
   } else if (legacyPbip) {
     const j = parseJson(await zip.read(legacyPbip));
