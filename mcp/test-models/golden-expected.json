@@ -1,0 +1,276 @@
+{
+  "note": "The golden tasks' expected results at tool level (round 12b, the night audit's AUD-030). node test-models/golden-baseline.mjs compares every task with these and fails on a difference (npm test runs it). A change made on purpose: run it with --update, then write its cause in \"why\", beside the number. Refreshed once on 2026-10-05 from fix/round-12 (26d9c6c); every number that differs from GOLDEN-TASKS.md's round 7 table is explained below, each cause found by running each round's own runner at its merge commit.",
+  "why": {
+    "1": {
+      "visuals": "40 -> 44: round 10 (3803b7a), the owner's design note R10.6a: the page navigator became one button per page with a line under the current one, in both directions (on each of the 2 pages: 1 navigator -> 2 buttons + 1 line, +2)",
+      "modelNotes": "Calendar[Month Name] -> Calendar[Month Short]: round 12 (d048c8d), #16: the time axis takes the short month names, so the note is on them"
+    },
+    "2": {
+      "visuals": "36 -> 38: round 10 (3803b7a): the line under the current page's button (+1 on each page; an Arabic report had one button per page since round 2)",
+      "modelNotes": "Month Short: round 12, #16 (see task 1)"
+    },
+    "3": {
+      "visuals": "20 -> 19 -> 17: round 12 (85d54c1), #20: the 'What it means' box is left out when no text is given (-1); round 12 (d048c8d), #21: one Ramadan's line chart runs by Ramadan Day, so the monthly trend tooltip page and its card and bar chart are not written (-2)",
+      "hidden": "2 -> 1: the trend tooltip page (#21)",
+      "slicers": "Hijri Year and Is Ramadan -> Year, Quarter, Day Name: round 12 (d048c8d), #22: no slicer on a column a page filter fixes; the picker's next columns instead"
+    },
+    "4": {
+      "wide": "visuals 34 -> 38: round 10 (3803b7a), the navigator as buttons with a line (see task 1)",
+      "square": "visuals 34 -> 38: round 10 (3803b7a), as wide"
+    },
+    "5": {
+      "visuals": "34 -> 38: round 10 (3803b7a), the navigator as buttons with a line (see task 1)"
+    },
+    "6": {
+      "visuals": "43 -> 45: round 10 (3803b7a), the line under the current page's button (see task 2)"
+    },
+    "7": {
+      "visuals": "19 -> 23 -> 39: round 10 (3803b7a), the navigator as buttons with a line (+4); round 12 (85d54c1), #25: a model without measures gets KPI cards, charts and a table that count and sum its columns (+16)",
+      "kpiCards": "built 0 -> 4, with the counted fields: round 12, #25"
+    },
+    "8": {
+      "kpiCards": "built 2 -> 1: round 12 (85d54c1), #26: 'Unused One' shows text (its format is \"Yes\";\"Yes\";\"No\") and is never a KPI card"
+    },
+    "10": {
+      "visuals": "35 -> 39: round 10 (3803b7a), the navigator as buttons with a line (see task 1)"
+    }
+  },
+  "tasks": {
+    "1": {
+      "id": 1,
+      "cards": "Sales[Total Sales] | Sales[Total Sales Last Ramadan] | Sales[Total Sales vs Last Ramadan %]",
+      "tables": "Calendar,Sales",
+      "kpis": "Total Sales | Total Sales Last Ramadan | Total Sales vs Last Ramadan % | Total Sales Last Ramadan (old)",
+      "contrastWarnings": 1,
+      "pages": [
+        "Executive summary 1920x1080",
+        "Details 1920x1080"
+      ],
+      "hidden": 2,
+      "visuals": 44,
+      "validator": 0,
+      "sizeProblems": 0,
+      "phoneProblems": 0,
+      "project": 0,
+      "tableHeaders": 0,
+      "firstProblems": [],
+      "overwritten": 0,
+      "modelNotes": [
+        "Calendar[Month Short]",
+        "Sales[Total Sales vs Last Ramadan %]",
+        "Calendar[Day Name]"
+      ]
+    },
+    "2": {
+      "id": 2,
+      "cards": "Sales[Total Sales] | Sales[Total Sales Last Ramadan] | Sales[Total Sales vs Last Ramadan %]",
+      "fontWarnings": 0,
+      "mirror": "9/9 slots mirrored",
+      "pages": [
+        "تحليل 1920x1080",
+        "نظرة عامة 1920x1080"
+      ],
+      "hidden": 2,
+      "visuals": 38,
+      "validator": 0,
+      "sizeProblems": 0,
+      "phoneProblems": 0,
+      "project": 0,
+      "tableHeaders": 0,
+      "firstProblems": [],
+      "overwritten": 0,
+      "modelNotes": [
+        "Calendar[Month Short]",
+        "Sales[Total Sales vs Last Ramadan %]",
+        "Calendar[Day Name]"
+      ]
+    },
+    "3": {
+      "id": 3,
+      "cards": "Sales[Total Sales] | Sales[Total Sales Last Ramadan] | Sales[Total Sales vs Last Ramadan %]",
+      "slicers": "Calendar[Year] | Calendar[Quarter] | Calendar[Day Name]",
+      "pageFilters": "[{\"field\":\"Calendar[Is Ramadan]\",\"values\":[true],\"type\":\"unknown\",\"typedBy\":\"the values given: the model's files give this column no type\"},{\"field\":\"Calendar[Hijri Year]\",\"values\":[1447],\"type\":\"unknown\",\"typedBy\":\"the values given: the model's files give this column no type\"}]",
+      "filtersOnPages": "page Calendar[Is Ramadan] In true; Calendar[Hijri Year] In 1447L | tooltip none",
+      "filterNote": 3,
+      "everyRamadanNote": 0,
+      "kpis": "Total Sales | Total Sales Last Ramadan | Total Sales vs Last Ramadan %",
+      "ramadanMeasuresOnCards": "2/3",
+      "pages": [
+        "Single focus 1920x1080"
+      ],
+      "hidden": 1,
+      "visuals": 17,
+      "validator": 0,
+      "sizeProblems": 0,
+      "phoneProblems": 0,
+      "project": 0,
+      "tableHeaders": 0,
+      "firstProblems": [],
+      "overwritten": 0,
+      "modelNotes": [
+        "Sales[Total Sales vs Last Ramadan %]",
+        "Calendar[Day Name]"
+      ]
+    },
+    "4": {
+      "id": 4,
+      "cards": "Sales[Total Sales] | Sales[Total Sales Last Ramadan] | Sales[Total Sales vs Last Ramadan %]",
+      "wide": {
+        "pages": [
+          "Executive summary 1280x720",
+          "Details 1280x720"
+        ],
+        "hidden": 2,
+        "visuals": 38,
+        "validator": 0,
+        "sizeProblems": 0,
+        "phoneProblems": 0,
+        "project": 0,
+        "tableHeaders": 0,
+        "firstProblems": []
+      },
+      "square": {
+        "pages": [
+          "Executive summary 960x720",
+          "Details 960x720"
+        ],
+        "hidden": 2,
+        "visuals": 38,
+        "validator": 0,
+        "sizeProblems": 0,
+        "phoneProblems": 0,
+        "project": 0,
+        "tableHeaders": 0,
+        "firstProblems": []
+      },
+      "overwritten": 0
+    },
+    "5": {
+      "id": 5,
+      "cards": "Sales[Total Sales] | Sales[Total Sales Last Ramadan] | Sales[Total Sales vs Last Ramadan %]",
+      "pages": [
+        "Executive summary 640x360",
+        "Details 640x360"
+      ],
+      "hidden": 2,
+      "visuals": 38,
+      "validator": 0,
+      "sizeProblems": 0,
+      "phoneProblems": 0,
+      "project": 0,
+      "tableHeaders": 0,
+      "firstProblems": [],
+      "overwritten": 0
+    },
+    "6": {
+      "id": 6,
+      "measures": 5,
+      "kpis": "إجمالي صافي المبيعات بعد الخصومات والمرتجعات | عدد الفواتير الصادرة خلال الفترة المحددة | إجمالي الكمية المباعة من جميع الأصناف | نسبة النمو مقارنة بنفس الفترة من العام الماضي",
+      "longTitleUses": 61,
+      "pages": [
+        "ملخص تنفيذي 1920x1080",
+        "التفاصيل 1920x1080"
+      ],
+      "hidden": 2,
+      "visuals": 45,
+      "validator": 0,
+      "sizeProblems": 0,
+      "phoneProblems": 0,
+      "project": 0,
+      "tableHeaders": 0,
+      "firstProblems": [],
+      "overwritten": 0
+    },
+    "7": {
+      "id": 7,
+      "measures": 0,
+      "dateTables": 0,
+      "kpis": " |  |  | ",
+      "health": "93: MONTH_SORT DATE_NOT_MARKED SUMMARIZE_KEYS FK_VISIBLE DOUBLE NO_RLS",
+      "pages": [
+        "Executive summary 1920x1080",
+        "Details 1920x1080"
+      ],
+      "hidden": 2,
+      "visuals": 39,
+      "validator": 0,
+      "sizeProblems": 0,
+      "phoneProblems": 0,
+      "project": 0,
+      "tableHeaders": 0,
+      "firstProblems": [],
+      "overwritten": 0,
+      "modelNotes": [
+        "Dates[Month Name]"
+      ],
+      "kpiCards": {
+        "asked": 4,
+        "built": 4,
+        "counted": [
+          "Count of Order Id",
+          "Sum of Amount",
+          "Sum of Quantity",
+          "Count of Region"
+        ],
+        "why": "The model has no measures, so the KPI cards, the charts and the table show counts and sums of its columns, made by the visuals themselves (Count of Order Id, Sum of Amount, Sum of Quantity, Count of Region); the model is not changed. For real KPIs, propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again."
+      }
+    },
+    "8": {
+      "id": 8,
+      "existing": "Health Test Report",
+      "sameName": "written as Health Test Report - New design.Report, 0 validator errors",
+      "newName": "Health Test Report redesign.Report, 0 validator errors",
+      "overwritten": 0,
+      "kpiCards": {
+        "asked": 4,
+        "built": 1,
+        "measures": [
+          "Total"
+        ]
+      }
+    },
+    "9": {
+      "id": 9,
+      "refused": true,
+      "message": "MCP error -32602: Input validation error: Invalid arguments for tool create_report: Invalid option: expected one of \"title\"|\"logo\"|\"kpi\"|\"card\"|\"line\"|\"bar\"|\"co",
+      "written": false,
+      "overwritten": 0
+    },
+    "10": {
+      "id": 10,
+      "readModelChars": 10379,
+      "summary": true,
+      "detailChars": 4826,
+      "detailTables": 5,
+      "noFocus": "asks for a focus",
+      "createNoFocus": "refused",
+      "suggestChars": 14410,
+      "kpis": "Shipments[Shipments Total Net Amount] | Deliveries[Deliveries Total Tax Amount] | Freight Costs[Freight Costs Total Tax Amount] | Freight Costs[Freight Costs Units Share %]",
+      "category": "Carrier[Carrier Group]",
+      "pages": [
+        "Executive summary 1920x1080",
+        "Details 1920x1080"
+      ],
+      "hidden": 2,
+      "visuals": 39,
+      "validator": 0,
+      "sizeProblems": 0,
+      "phoneProblems": 0,
+      "project": 0,
+      "tableHeaders": 0,
+      "firstProblems": [],
+      "overwritten": 0,
+      "modelNotes": [
+        "Freight Costs[Freight Costs Units Share %]"
+      ]
+    },
+    "11": {
+      "id": 11,
+      "uae": "none",
+      "ksa": "GC_WEEKEND 939",
+      "scored": false,
+      "sameScore": true,
+      "overwritten": 0
+    }
+  }
+}
