@@ -1854,6 +1854,66 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   }
 }
 
+// ---------- round 11, small fixes (owner's go 5 Oct) ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 300));
+  const tree = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? tree(path.join(d, e.name)) : [path.join(d, e.name)]));
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
+  const col = (name, dataType, extra) => Object.assign({ name, dataType, sourceColumn: name }, extra || {});
+  // 1. Every visual the engine writes sets its title explicitly, on or off (Microsoft's September 2026 Feature Summary:
+  //    "title and subtitle are now turned off by default for matrix, table, and card visuals in reports that use the
+  //    latest base theme"): a designed title is never left to the base theme. Every kind of slot, English and Arabic,
+  //    the default design with its tooltip pages, and the website's download with the slide-in panel.
+  {
+    fs.mkdirSync(path.join(ROOT, 'r11-project/R11 Test.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, 'r11-project/R11 Test.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'),
+      columns: [col('Amount', 'double'), col('Region', 'string'), col('Channel', 'string'), col('Month', 'string')],
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }] }] } }));
+    const kinds = ['kpi', 'line', 'bar', 'column', 'donut', 'table', 'gauge', 'funnel', 'treemap', 'map', 'slicer', 'text'];
+    const slots = [{ kind: 'title', x: 24, y: 12, w: 600, h: 48 }, { kind: 'logo', x: 1100, y: 12, w: 150, h: 48 }].concat(kinds.map((k, i) => ({ kind: k, title: 'Slot ' + k, x: 24 + (i % 4) * 310, y: 80 + Math.floor(i / 4) * 210, w: 290, h: 190 })));
+    const reps = [];
+    for (const lang of ['en', 'ar']) {
+      reps.push(await ask('create_report', { path: 'r11-project', name: 'R11 Kinds ' + lang, lang, pages: [{ name: 'All kinds', slots }] }));
+      reps.push(await ask('create_report', { path: 'r11-project', name: 'R11 Default ' + lang, lang, design: (await ask('plan_layout', { layout: 'analysis', kpis: 4, filters: 'end', lang })).j.design }));
+    }
+    const vis = (x) => (x.err ? [] : tree(path.join(ROOT, 'r11-project', x.j.report, 'definition', 'pages')).filter((f) => f.endsWith('visual.json')).map((f) => JSON.parse(fs.readFileSync(f, 'utf8'))).filter((v) => v.visual));
+    const E2 = (await import('node:module')).createRequire(import.meta.url)(path.join(REPO, 'assets/js/design-engine.js')), Pb = (await import('node:module')).createRequire(import.meta.url)(path.join(REPO, 'assets/js/pbip-export.js'));
+    const site = ['en', 'ar'].flatMap((lang) => { const d = E2.fresh(); d.layout = Object.assign({}, d.layout, { filters: true }); E2.repairState(d); const specs = E2.projectPages(d.layout, lang, { second: true, panel: true });
+      return Pb.build({ name: 'S', title: 'S', pageName: specs[0].name, lang, rtl: E2.rtl(d.layout, lang), font: d.font, ui: d.ui, theme: E2.buildTheme(d, lang), sample: true, logo: null, texts: E2.REPORT_TEXTS[lang], pages: specs.map((sp) => ({ name: sp.name, page: sp.page, slots: sp.slots, panel: sp.panel, png: new Uint8Array([1]) })) })
+        .files.filter((x) => /visual\.json$/.test(x.path)).map((x) => JSON.parse(String(x.data))).filter((v) => v.visual); });
+    const all = reps.flatMap(vis).concat(site), types = new Set(all.map((v) => v.visual.visualType));
+    const show = (v) => { const t = ((v.visual.visualContainerObjects || {}).title || [])[0]; return t && t.properties && t.properties.show && t.properties.show.expr ? t.properties.show.expr.Literal.Value : null; };
+    const loose = all.filter((v) => show(v) !== 'true' && show(v) !== 'false');
+    const titled = all.filter((v) => ['tableEx', 'cardVisual', 'pivotTable'].includes(v.visual.visualType) && v.parentGroupName !== undefined);
+    chk(() => reps.every((x) => !x.err) && ['tableEx', 'cardVisual', 'slicer', 'gauge', 'treemap', 'map', 'funnel', 'donutChart', 'textbox', 'actionButton'].every((t) => types.has(t)) && all.length > 150 && loose.length === 0
+        && all.filter((v) => v.visual.visualType === 'tableEx').every((v) => show(v) === 'true') && all.filter((v) => v.visual.visualType === 'cardVisual').every((v) => show(v) === 'true'),
+      () => `every visual must set its title on or off explicitly (tables and cards on): ${loose.length} without: ${[...new Set(loose.map((v) => v.visual.visualType))].join(', ')}; types ${[...types].join(', ')} ${reps.filter((x) => x.err).map(short).join(' | ')}`);
+  }
+  // 2. The TMDL and model.bim readers skip what they don't know: the new column properties stringIndexingBehavior and
+  //    fullTextIndexingBehavior (Microsoft Learn, "Configure string indexing" and "Configure full-text indexing in Power BI
+  //    semantic models", compatibility levels 1707 and 1708), an unknown property and an unknown block do not break
+  //    read_model or check_model_health, and the column they sit on is still read with its type
+  {
+    fs.cpSync(path.join(REPO, 'scripts/tests/fixtures/bridge-project'), path.join(ROOT, 'idx-project'), { recursive: true });
+    const cal = path.join(ROOT, 'idx-project/Sales.SemanticModel/definition/tables/Calendar.tmdl');
+    let tm = fs.readFileSync(cal, 'utf8');
+    tm = tm.replace("\tcolumn 'Month Name'\n\t\tdataType: string\n", "\tcolumn 'Month Name'\n\t\tdataType: string\n\t\tstringIndexingBehavior: full\n\t\tfullTextIndexingBehavior: explicit\n\t\tsomeFutureProperty: a value\n")
+      .replace('\tcolumn Year\n', '\tcolumn Year\n\t\tsomeFutureBlock\n\t\t\tinner: 1\n');
+    fs.writeFileSync(cal, tm);
+    fs.mkdirSync(path.join(ROOT, 'idx-bim/Idx.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, 'idx-bim/Idx.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1708, model: { tables: [{ name: 'Reviews', partitions: mp('Reviews'),
+      columns: [col('Comment', 'string', { stringIndexingBehavior: 'full', fullTextIndexingBehavior: 'full', someFutureProperty: { x: 1 } }), col('Score', 'int64')],
+      measures: [{ name: 'Reviews', expression: 'COUNTROWS ( Reviews )', formatString: '#,0' }] }] } }));
+    const r1 = await ask('read_model', { path: 'idx-project' }), h1 = await ask('check_model_health', { path: 'idx-project' });
+    const r2 = await ask('read_model', { path: 'idx-bim' }), h2 = await ask('check_model_health', { path: 'idx-bim' });
+    const colsOf = (x, t) => ((x.j.tables || []).find((y) => y.table === t) || {}).columns || [];
+    chk(() => tm.includes('fullTextIndexingBehavior') && !r1.err && !h1.err && !r2.err && !h2.err && colsOf(r1, 'Calendar').includes('Month Name (string)') && colsOf(r1, 'Calendar').includes('Year (int64)') && colsOf(r2, 'Reviews').includes('Comment (string)') && h2.j.score != null && h1.j.score != null,
+      () => `the readers must skip unknown column properties: ${[r1, h1, r2, h2].map((x) => (x.err ? short(x) : 'ok')).join(' | ')} ${JSON.stringify(r1.j && colsOf(r1, 'Calendar'))} ${JSON.stringify(r2.j && colsOf(r2, 'Reviews'))} ${JSON.stringify(h2.j && h2.j.score)}`);
+  }
+}
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);
