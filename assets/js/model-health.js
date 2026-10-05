@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let worker = null;
   function run(buffer, fileName, size) {
     if (worker) worker.terminate();
-    try { worker = new Worker('../assets/js/model-health-worker.min.js?v=20261004a'); } catch (e) { return showError('WORKER'); }
+    try { worker = new Worker('../assets/js/model-health-worker.min.js?v=20261005c'); } catch (e) { return showError('WORKER'); }
     worker.onmessage = (ev) => {
       const d = ev.data;
       if (d.type === 'progress') setStep(d.step);
@@ -84,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
       PBIX: [L('This is a .pbix file', 'هذا ملف ‎.pbix'), L('A .pbix holds your data in a compressed format that browsers cannot read. Export a template instead: in Power BI Desktop, File > Export > Power BI template. It takes a few seconds and contains no data.', 'ملف pbix يحتوي بياناتك بصيغة مضغوطة لا يقرأها المتصفح. صدّر قالبًا بدلًا منه: في Power BI Desktop اختر File > Export > Power BI template. يستغرق ثوانٍ ولا يحتوي أي بيانات.')],
       NO_MODEL: [L('No model found in this file', 'لم يتم العثور على نموذج في هذا الملف'), L('Use a .pbit (File > Export > Power BI template), a model.bim, or a zipped PBIP project folder.', 'استخدم ملف .pbit أو model.bim أو مجلد مشروع PBIP مضغوط.')],
       NOT_ZIP: [L('Could not open this file', 'تعذر فتح الملف'), L('It does not look like a Power BI template. Try exporting it again.', 'لا يبدو كقالب Power BI. جرّب تصديره مرة أخرى.')],
+      ZIP_LIMIT: [L('This file unpacks to more than the check reads', 'هذا الملف يتجاوز عند فك ضغطه الحجم الذي يقرؤه الفحص'), L('A part of it would unpack to more than 64 MB (the model) or 32 MB (a report file), or to more than it says. A Power BI template without data is usually under 20 MB: export a fresh .pbit from Power BI Desktop and try again. Nothing was uploaded.', 'جزء منه يتجاوز عند فك ضغطه 64 ميجابايت (النموذج) أو 32 ميجابايت (ملف تقرير)، أو أكبر مما يذكره الملف. القالب بدون بيانات عادة أقل من 20 ميجابايت: صدّر ملف ‎.pbit‎ جديدًا من Power BI Desktop وحاول مرة أخرى. لم يُرفع أي شيء.')],
       TOO_BIG: [L('This file is very large', 'الملف كبير جدًا'), L('A template without data is usually under 20 MB. If this is a .pbix, export a .pbit instead.', 'القالب بدون بيانات عادة أقل من 20 ميجابايت. إن كان ملف pbix فصدّر .pbit بدلًا منه.')],
       WORKER: [L('Your browser blocked the analysis', 'المتصفح منع التحليل'), L('Please open the page from dataarcus.com in an up-to-date Chrome, Edge, Firefox or Safari.', 'افتح الصفحة من dataarcus.com في متصفح حديث.')]
     }[code] || [L('Something went wrong', 'حدث خطأ'), L('The file could not be analysed. If it opens in Power BI Desktop, try exporting a fresh .pbit.', 'تعذر تحليل الملف. إن كان يفتح في Power BI Desktop فجرّب تصدير .pbit جديد.')];
