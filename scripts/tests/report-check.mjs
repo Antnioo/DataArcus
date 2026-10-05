@@ -323,6 +323,15 @@ export function sortProblems(files) {
     const sd = v.visual.query.sortDefinition, id = `${p.page.displayName}/${v.visual.visualType}`;
     if (!sd) return;
     const s0 = (sd.sort || [])[0] || {}, agg = (s0.field || {}).Aggregation, tips = ((v.visual.query.queryState.Tooltips || {}).projections || []);
+    // (round 12, #17, the owner's ask: a table is put in calendar order too, by a field it holds: the helper column, the
+    // Min of the model's number, or the name itself where the model sorts it; a table sorts only by a field it holds)
+    if (v.visual.visualType === 'tableEx') {
+      const vals = v.visual.query.queryState.Values.projections, held = vals.find((x) => JSON.stringify(x.field) === JSON.stringify(s0.field)), text = vals.find((x) => x.field.Column);
+      if ((sd.sort || []).length !== 1 || !held || s0.direction !== 'Ascending' || !(agg ? agg.Function === 3 && held.displayName === ' ' : s0.field.Column)) { bad.push(`${id}: a table sorted by ${JSON.stringify(sd).slice(0, 160)}, want one ascending sort by a field it holds`); return; }
+      const col = agg ? agg.Expression.Column : s0.field.Column;
+      sorted.push({ page: p.page.displayName, tooltip: false, type: 'tableEx', category: text ? text.queryRef : null, by: col.Expression.SourceRef.Entity + '.' + col.Property });
+      return;
+    }
     // Round 13 (measured in Desktop 2.158, 6 Oct 2026, DESKTOP-TESTS.md "round 13, item 3"): in a right-to-left report a
     // column or line chart is mirrored: its value axis at the right (valueAxis.switchAxisPosition) and its categories
     // from the right, which a categorical axis does only through the sort, so there the sort is Descending (January at
@@ -347,16 +356,18 @@ export function tooltipMeasures(files) {
 }
 
 // Each column of every table has one columnFormatting entry (selector: the column's queryRef) that aligns its values
-// and its header together: text columns on the reading-start side (Left; Right in a right-to-left report), numbers on
-// the other. numbers: queryRefs of columns that are numbers (measures always are). Returns { columns, bad }.
+// and its header together: text columns on the reading-start side (Left; Right in a right-to-left report), numbers
+// Right in both directions. numbers: queryRefs of columns that are numbers (measures always are). Returns { columns, bad }.
+// (Changed 6 Oct 2026, round 12, design finding #12, the owner's go: numbers were Left in a right-to-left report, and
+// Desktop showed "Friday" and its first number 9 apart, read as one text; right-aligned they end at their column's edge.)
 export function tableProblems(files, rtl, numbers) {
   const bad = []; let columns = 0;
   pagesOf(files).forEach((p) => p.visuals.filter((v) => v.visual && v.visual.visualType === 'tableEx' && v.visual.query).forEach((v) => {
     const list = (v.visual.objects || {}).columnFormatting || [];
     v.visual.query.queryState.Values.projections.forEach((pr) => {
       columns++;
-      const mine = list.filter((x) => x.selector && x.selector.metadata === pr.queryRef), isNum = !!pr.field.Measure || (numbers || []).includes(pr.queryRef);
-      const want = "'" + (isNum ? (rtl ? 'Left' : 'Right') : (rtl ? 'Right' : 'Left')) + "'", id = `${p.page.displayName}/${pr.queryRef}`;
+      const mine = list.filter((x) => x.selector && x.selector.metadata === pr.queryRef), isNum = !!pr.field.Measure || !!pr.field.Aggregation || (numbers || []).includes(pr.queryRef);
+      const want = "'" + (isNum ? 'Right' : (rtl ? 'Right' : 'Left')) + "'", id = `${p.page.displayName}/${pr.queryRef}`;
       if (mine.length !== 1) { bad.push(`${id}: ${mine.length} columnFormatting entries`); return; }
       const x = mine[0].properties;
       if (lit(x.alignment) !== want || lit(x.styleHeader) !== 'true' || lit(x.styleValues) !== 'true' || lit(x.styleTotal) !== 'true') bad.push(`${id}: alignment ${lit(x.alignment)} (want ${want}), header ${lit(x.styleHeader)}, values ${lit(x.styleValues)}, total ${lit(x.styleTotal)}`);

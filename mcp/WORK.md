@@ -99,6 +99,160 @@ BI Desktop window open; `git fetch`; `fix/round-13` made from `origin/main` `1ce
 | 4 | KPI card with a ring picture, 1280 x 720 | the ring's top is cut by the card (the picture is sized by width only) | `sc-en-light-720-cards.png` | high | item 2: cap the picture by the height under the title |
 | 5 | KPI card pictures, any design | the picture's colours are the compiler's own (a near-black ring track, cyan, a bright green), not the theme's | `sc-en-light-720-cards.png`, `sc-en-dark-1080-cards.png` | high | item 2: theme colour names and theme defaults |
 <!-- r13 findings -->
+## Round 12, every small detail fixed in code (2026-10-05 night, cloud builder; branch `fix/round-12` from main `1cef9ac`; not merged)
+The owner's go (6 Oct 01:45): "I want to feel that whatever the builder opens looks amazing and optimized". All eight
+recommendations of "Round 11, for the owner" are accepted, and so is every proposed fix of "Round 11, design findings"
+(32 rows). The owner is asleep: taste calls go to "Round 12, for the owner" with a recommendation, and the work goes
+on. `feat/check-report` is left as it is. Not in this round (the laptop builder owns them tonight): gradient chart
+colours, the SVG-in-KPI blending. Every change that Desktop must confirm goes to "Round 12, for the laptop to prove".
+
+### Round 12, order of work
+Tests first by risk (layout, positions, sizes, anything written into Power BI files); one commit per group; pushed
+at least every hour; `npm test` and the website suites the change touches after each group, the full run once at the
+end, then CI.
+1. **A (high).** #24 long chart titles and slicer headers (Arabic first): never cut at the start; wrap to two lines,
+   else shorten from the reading end with "…" so the measure's name stays. #12 the right-to-left table: numbers
+   never sit against the text column. #20 "What it means" never ships its placeholder (a sentence from the plan, or
+   the box left out and its room given to the chart). #25 a model without measures: a page laid out for what it
+   has (counts, a table, a chart), not four fifths empty. #1 phone KPI titles: two lines in `mobile.json`, "…" only
+   where two lines don't fit.
+2. **B (the owner's asks).** (1) Days and months in calendar order in tables too (#17): the table sorted by the
+   day or month number like the chart; the model's week start; January to December. (2) Percent KPIs as percent
+   without useless decimals: a ratio (format string, or name/expression: %, rate, share, vs, growth, margin) gets
+   "0%" (or "0.0%" for small values); counts and whole numbers no decimals (#28, "179.00" -> "179"); money keeps
+   its format. The rule told in the answer and in `reportNotes`.
+3. **C (medium).** #15 chart and table never share a title; #23/#32 a designed table never hides rows behind a
+   scrollbar; #29 the phone table with pictures fits 323; #31 the header title is the report's name; #30 the Arabic
+   logo placeholder centred at its side; #14 "شعارك" on hand-placed Arabic pages; #13 Arabic names for the
+   tooltip pages; the Arabic Reset's arrow beside its text; #26 no KPI card on a text measure (a note); #22 no
+   slicer on a column a page filter fixes; #21 one Ramadan by Ramadan Day, not a 2-point line; #16 level month and
+   day labels; #9/#7/#8 KPI values one size a row, aligned with the title, equal images; #19 Arabic slicer headers
+   and boxes at the right; #18 the rail's empty space; #2-#6 phone and header tabs.
+4. **D (accepted recommendations).** The header grows one tab row in designed layouts; the card image's percent
+   from the measured padding; `add_gulf_calendar`: `sortByColumn` on Month Name, Day Name, Hijri Month Name,
+   "Preview won't warn" in `howToApply`, a date column of unknown type accepted with a note; a narrow table
+   shrinks its text to 8pt before dropping a column; the manifest's long description names every tool
+   (dataarcus-engine `fix/round-12-manifest`, its packaging test).
+5. **E.** A slicer or chart with no field to bind (too few columns): left out and told; the SVG KPI Designer
+   page's three scripts get `?v=` stamps.
+6. Then: `npm test`, the website suites, CI green; "Round 12, where I am", "for the laptop to prove", "for the
+   owner"; the 5-line report.
+
+### Round 12, where I am
+**Done in code (5 Oct 21:50 to 23:00 UTC), not merged:** commits `85d54c1` (A, B), `d048c8d` (C), `2954732` (D, E) on
+`fix/round-12`, CI green on each; dataarcus-engine `fix/round-12-manifest` `e642bf8`. `npm test` 421 -> 453 of 453;
+the full website run 17 of 17. Next: the laptop proves the list below in Desktop; the owner answers "for the owner".
+Not done, with the reason: #19 (no alignment in Microsoft's schema), #3 (needs Tahoma measured), #27 (nothing in
+the report: a model without rows). Gradient colours and the SVG-in-KPI blending were the laptop's tonight.
+Started 21:50 UTC (5 Oct). Tests: the round 12 block in `mcp/test.mjs` (checks written first, each red before its code).
+- **A and B done** (one commit: the two groups share the writer's card and table code): #24 titles wrap or end in "…"
+  (slicer headers through `header.text`, in Microsoft's theme schema); #12 numbers right-aligned in right-to-left
+  tables; #20 a text slot holds `text` or is left out, the chart taking its room; #25 a model without measures counts
+  and sums its columns (`Bind.counts`; aggregation numbers from Microsoft's semantic query schema: 0 Sum, 2 Distinct
+  count); #1 phone KPI titles wrap or shorten; B1 days and months in calendar order in tables (a helper column);
+  B2 the card rule (percent "0.0%" or the model's one-decimal percent, whole numbers "#,0", the rest 2L), told in
+  `kpiValues` and `reportNotes`; #26 a text measure never on a card. `npm test` 421 -> 433; `pbip` 71, `layout` 512,
+  `design-engine` 598.
+- **Expectations changed, each with its cause beside it in the test:** numbers Right in right-to-left tables
+  (`report-check.mjs` `tableProblems`, test 5 of the design choices); 2L only on cards with decimals (round 9's
+  percent card, round 10's default, tooltip card and the website's download); the Health Test fixture has 1 card, not
+  2 ("Unused One" shows text); the model without measures now has cards and charts; the old table and sort readers
+  set the calendar helper column aside.
+- **C done** (one commit): #15 a table whose title is a chart's adds ": detail"; #23/#32 a table of days, months or
+  quarters gets `grid.rowPadding` 0 where its rows would scroll, else told; #29 the phone table's pictures capped by
+  323 (`grid` in `mobile.json`); #31 the header shows the report's name or a new `title` input; #30 the logo
+  placeholder at the page's edge (left in Arabic) and 3 higher in Tahoma; #14/#13 hand-placed Arabic pages get the
+  Arabic texts; the Reset's icon `placement` and text alignment at the reading start; #22 no slicer on a column a page
+  filter fixes (the next column instead); #21 one Ramadan's line chart by Ramadan Day; #16 the short month names on
+  the time axis; #9 one value size a row; #7 the value at its title's edge (`paddingIndividual`, start margin 0); #8
+  and recommendation 3 one image percent a row, from the measured padding (25 x the page's scale a side); #18 the
+  rail only as high as its slicers and Reset; #2 phone tabs as wide as their names; #4 phone titles in the text
+  colour; #5 the current tab's line on the phone; #6 two tab rows start at the same x. `npm test` 433 -> 448;
+  `design-engine` 598, `theme-generator` 893, `pbip` 71, `layout` 512.
+- **Expectations changed in C, each with its cause:** the time axis Calendar[Month Short] (round 2's sort checks,
+  modelNotes, display names, suggest_fields); the Tahoma logo placeholder's middle (textMid + the measured 3); the
+  phone keeps the current tab's line; one value size a row and the measured image padding (round 10's card image);
+  tables titled ": detail" beside a chart of the same title.
+- **D and E done** (one commit: the writer's table and header code is shared by both): recommendation 2, a designed
+  header grows one row of tabs when the page names need it (the body moves down, the last row and the rail give up
+  the height; hand-placed pages never grow; a design's two page names always fit today, so this shows with long
+  names: tested through the writer); 3 (in C); 4, `add_gulf_calendar` writes `sortByColumn` for the three names,
+  `byHand` is the date table only, `howToApply` says Preview will not warn, a `relateTo` column of unknown type is
+  accepted with a note; 5, a narrow table first takes a smaller text (the largest size down to 8pt that keeps the
+  most fields), then drops a column; 6 (8b), the manifest's tool sentence names all seven tools (dataarcus-engine
+  `fix/round-12-manifest` `e642bf8`, its packaging test 18 -> 19). E: the slide-in panel holds only slicers with a
+  field, the others named in `leftOutVisuals`; the SVG KPI Designer's three scripts already had `?v=` on main; this
+  round's writer files are stamped `20261006a` (`theme-generator.js`, and `theme-generator.min.js` on both pages).
+  `npm test` 448 -> 453; the full website run: 17 of 17 suites pass.
+- **Not possible from the files (Microsoft's theme schema, 2.157):** a slicer header has no alignment (#19).
+- **Needs a measurement first:** #3, Arabic tab widths (Tahoma per letter): the one figure we have (150 of ink for
+  "المبيعات حسب المنطقة والقناة" at 10pt bold on the phone) is one string; Desktop must measure the letters before
+  the 0.62 em upper figure changes.
+
+### Round 12, for the laptop to prove
+Each item: build with the branch's server (made-up models only), open in Desktop 2.158, look at full-size crops.
+1. #24: G6 Long (Arabic) and a 1280 x 720 exec page with long names: every chart and table title whole on two lines
+   (`titleWrap` on a chart's title: measured on cards only), or ending in "…" at its end; the slicer header shows its
+   `header.text` ("…" at the end) and the full name is the alt text.
+2. #12: the Arabic table: numbers right-aligned, header over them; "Friday" no longer reads into its first number.
+3. #20: golden task 3 without `text`: no "What it means" box, the line chart the row's whole width; with `text`: the
+   sentence in the box at 11pt.
+4. #25: golden task 7 (no measures): the cards show Count of the ID column and the sums (Desktop accepts the
+   aggregated projections: `Count(...)` / `Sum(...)` query references, functions 2 and 0), the chart and the table
+   count too; the page is full; no "Something's wrong" mark.
+5. #1: the phone layout of a report with "Total Sales Last Ramadan": the title on two lines in `mobile.json`
+   (`titleWrap` and `text` there: never tried in `mobile.json`), the value whole under it.
+6. B1: a table of Day Name (no sort-by column): Sunday to Saturday (the model's Day of Week order); the helper column
+   (`columnWidth` 1, text in the card colour, a blank header, " ") invisible, and not widened by "grow to fit"; the
+   total row shows "Total" in the first column; a Month Name the model sorts: January to December.
+7. B2: cards: Margin % "35.4%" (or the model's own one-decimal percent), Conversion Rate and Growth vs Last Year as
+   percents, Orders "1,234" and Total Sales "101,914" (whole, with separators; `labelDisplayUnits` -1 with a percent
+   code was not measured, D8 measured it with "#,0"), Avg Price "231.50"; nothing cut at 1280 x 720 six cards.
+8. #26: golden task 8: no card shows "Yes".
+9. #15: golden task 1: the table beside the column chart titled "...: detail".
+10. #23/#32: golden task 4 (16:9 and 4:3): all seven days and the total, no scrollbar (`grid.rowPadding` 0: measured
+   to give 15.1 at 8pt; the rule's other numbers, the title and the visual's padding, are estimates on the safe side).
+11. #29: "P7 SVG EN" on the phone: the pictures narrower (`grid` in `mobile.json`: never tried there), no scrollbar.
+12. #31: the header shows the report's name ("R12 EN"), not the theme's.
+13. #30: the Arabic header: "شعارك" at the left edge of its slot, its middle within 1 of the header's (moved up 3).
+14. The Arabic Reset: the arrow right beside "إعادة ضبط الفلاتر" (`icon.placement` 'right', text aligned right);
+    English unchanged.
+15. #22/#21: golden task 3: no Hijri Year or Is Ramadan slicer; the line chart by Ramadan Day, 1 to 30.
+16. #16: golden task 1: the line chart's months "Jan" ... "Dec", level.
+17. #9/#7/#8: the six-card rows (English and Arabic, 1280 x 720 and 1920 x 1080): one value size; the value's first
+    digit under the title's first letter (`paddingIndividual`); the six images the same size (`imageAreaSize` from
+    the measured padding: the 48 design drawn about 48 wide).
+18. #18: the rail: Reset right under the last slicer, the rail's panel ending there.
+19. #2/#4/#5: the phone: the tabs as wide as their names from the reading start, chart and card titles in the text
+    colour (or: the mobile view dims what is not selected), the current tab's line under it.
+20. #6: a two-row header (eight long names, 1920 x 1080, a 72-high title): the rows start at the same x.
+21. Recommendation 2: a design with two long page names at 1280 x 720 (built by hand through the writer, or by the
+    next round's longer names): the header 10 taller, two rows of tabs whole, the KPI row 10 lower, the last row
+    ending where it did.
+22. Recommendation 4: `add_gulf_calendar` on "Gulf GC1": Preview with Problems 0 and the three sort-by columns; after
+    Apply and a refresh the slicers in month, day and Hijri month order; a `relateTo` on an untyped DAX-table date
+    column related without a hand edit.
+23. Recommendation 5: golden task 4 at 960 x 720: the table at 8 or 9pt with all its fields, nothing cut.
+24. E: a slide-in panel on a model with one text column: one slicer, no empty slicer.
+
+### Round 12, for the owner
+1. **Whole numbers on cards: digits or units?** Your rule says counts and whole numbers show no decimals. Built: a
+   measure whose format has no decimals shows its whole number with separators ("179", "101,914", "3,430,000").
+   The other way: automatic units with no decimals ("179", "102K", "3M"), shorter but rounder. **Recommended: the
+   digits** (exact, and money keeps its own format); a card too narrow for nine digits gets a smaller value, as
+   kpiValues "full" already does.
+2. **A percent: "0.0%" or "0%"?** Built: the model's percent format where it has one decimal or none, else "0.0%".
+   We read no data, so "small values" can't be told apart. **Recommended: keep "0.0%"** (a 0.4% change is real).
+3. **#15, the table beside a chart: ": detail" or other fields?** Built: "Total Sales by Region: detail". The other
+   way: give the table a different category than the chart. **Recommended: keep** (the table shows more measures of
+   the same rows; a different category would answer a question nobody asked).
+4. **#8, a semibold value?** The round 11 finding asked to consider it. Not built (a taste call): the 23pt regular
+   value beside a 9pt bold title reads as the hero already. **Recommended: leave it.**
+5. **#19, Arabic slicer headers at the right:** Microsoft's theme schema gives a slicer header no alignment, so it
+   can't be set from the files. Desktop draws Arabic text from the right already; the English names in an Arabic
+   report stay at the left. **Recommended: Arabic display names** (displayNames), which then sit at the right.
+6. **#3, Arabic tab widths:** needs Tahoma's letters measured in Desktop first (one string is not enough); until then
+   the widths keep the safe upper figure (0.62 em), and Arabic tabs take more room than their ink.
 
 ## Round 11, the long overnight Desktop sitting (2026-10-05, laptop builder; branch `fix/round-11` from main `3803b7a`; dataarcus-engine `release/0.2.6` from its main `d8d3341`; not merged)
 The owner's go (5 Oct, evening): six hours straight, pushed every hour; he is asleep, so anything that needs his

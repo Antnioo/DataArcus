@@ -308,13 +308,16 @@ r = gp.err ? gp : await tryCall('create_report', { path: 'bim-project', name: 'G
 if (!r.err) {
   // (round 4, owner 2026-10-03: this model has 2 measures a card can show, so every page has 2 KPI cards, not the
   // design's 3 and 4 with the extra ones empty)
-  const dir = path.join(ROOT, 'bim-project', r.j.report), pages = readReport(dir), want = E.projectPages(Object.assign({}, gp.j.design.layout, { kpiCards: 2 }), 'ar', { second: true, panel: false });
+  // (changed 6 Oct 2026, round 12, design finding #26: "Unused One" shows text, its format being "Yes";"Yes";"No", and
+  // golden task 8 showed "Yes" on its card; a measure that shows text is never a card now, so this model has 1)
+  const dir = path.join(ROOT, 'bim-project', r.j.report), pages = readReport(dir), want = E.projectPages(Object.assign({}, gp.j.design.layout, { kpiCards: 1 }), 'ar', { second: true, panel: false });
   const shown = pages.filter((p) => !p.hidden), bad = slotsPlaced(shown, want);
   // (round 1: the model has a month column, so the report has two tooltip pages: by category and the monthly trend)
   check(shown.length === 2 && pages.length === 4 && !bad.length, `create_report design: ${shown.length} pages; ${bad.slice(0, 4).join(' | ')}`);
   // (round 4: the first of 2 cards, on the right half; it was the first of 3, at 1388, 508 wide)
-  const k1 = want[0].slots.find((s) => s.kind === 'kpi');
-  check(k1.x === 1125 && k1.w === 771 && shown[0].visuals.some((v) => v.x === k1.x && v.w === k1.w) && JSON.stringify(shown.map((p) => p.name)) === '["تحليل","نظرة عامة"]', `create_report design: not mirrored or page names not Arabic (first KPI slot ${k1.x}, ${k1.w})`);
+  // (round 12, #26: one card, the whole row, right of the mirrored rail; it was the first of 2, at 1125, 771 wide)
+  const k1 = want[0].slots.find((s) => s.kind === 'kpi'), rail1 = want[0].slots.find((s) => s.rail);
+  check(rail1 && k1.x > rail1.x && k1.w > 1500 && shown[0].visuals.some((v) => v.x === k1.x && v.w === k1.w) && JSON.stringify(shown.map((p) => p.name)) === '["تحليل","نظرة عامة"]', `create_report design: not mirrored or page names not Arabic (first KPI slot ${k1.x}, ${k1.w})`);
   // the Arabic labels from the engine
   const all1 = shown.map((p) => p.visuals.map((v) => v.text).join('')).join('');
   check(all1.includes('إعادة ضبط الفلاتر') && all1.includes('شعارك') && !all1.includes('Reset filters'), 'create_report design: the report labels are not Arabic');
@@ -330,7 +333,8 @@ if (!r.err) {
 // one page, and filters as a slide-in panel: a hidden group at the panel's box, the page without the rail
 r = gp.err ? gp : await tryCall('create_report', { path: 'bim-project', name: 'Gulf Panel', design: gp.j.design, lang: 'ar', secondPage: false, slidePanel: true });
 if (!r.err) {
-  const pages = readReport(path.join(ROOT, 'bim-project', r.j.report)).filter((p) => !p.hidden), want = E.projectPages(Object.assign({}, gp.j.design.layout, { kpiCards: 2 }), 'ar', { second: false, panel: true });
+  // (round 12, #26: 1 card, see above)
+  const pages = readReport(path.join(ROOT, 'bim-project', r.j.report)).filter((p) => !p.hidden), want = E.projectPages(Object.assign({}, gp.j.design.layout, { kpiCards: 1 }), 'ar', { second: false, panel: true });
   const panel = want[0].panel, bad = slotsPlaced(pages, want);
   check(pages.length === 1 && !bad.length && panel && pages[0].visuals.some((v) => v.type === 'group' && v.hidden && v.x === panel.x && v.y === panel.y && v.w === panel.w && v.h === panel.h),
     `create_report slide-in panel: ${pages.length} pages, panel ${JSON.stringify(panel)}; ${bad.slice(0, 3).join(' | ')}`);
@@ -398,11 +402,14 @@ check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.string
     check(size >= 12, `logo placeholder: ${size}pt`);
     // 4. fields: no number (Amount) or date (Sales[Date]) as a category, axis or slicer; the date table's named parts instead
     const cols = boundFields(dir).filter(([k]) => k === 'Column').map(([, t, c]) => `${t}[${c}]`);
-    check(!cols.includes('Sales[Amount]') && !cols.includes('Sales[Date]') && cols.includes('Calendar[Month Name]') && cols.includes('Calendar[Quarter]') && cols.includes('Calendar[Day Name]'),
+    // (round 12, #16, the owner's go 6 Oct: the time axis takes the model's short month names, Calendar[Month Short],
+    // where it has them, so the labels stay level; it was Calendar[Month Name])
+    check(!cols.includes('Sales[Amount]') && !cols.includes('Sales[Date]') && cols.includes('Calendar[Month Short]') && cols.includes('Calendar[Quarter]') && cols.includes('Calendar[Day Name]'),
       `fields: ${[...new Set(cols)].join(', ')}`);
     // 5. the model's own issues are told, with the fix, and the model is not changed
     const notes = (q.j.modelNotes || []).map((n) => n.field);
-    check(notes.includes('Calendar[Month Name]') && notes.includes('Sales[Total Sales vs Last Ramadan %]'), `modelNotes: ${JSON.stringify(q.j.modelNotes)}`);
+    // (round 12, #16: the note is on the short month names the report now shows; it was on Calendar[Month Name])
+    check(notes.includes('Calendar[Month Short]') && notes.includes('Sales[Total Sales vs Last Ramadan %]'), `modelNotes: ${JSON.stringify(q.j.modelNotes)}`);
   }
 }
 // tables fill their visual (grow to fit); in a right-to-left report the columns are mirrored (since 5 Oct with the text column kept first, so "Total" shows;
@@ -412,7 +419,9 @@ check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.string
   const en = t1.err ? t1 : await tryCall('create_report', { path: 'dax-project', name: 'Table EN', design: t1.j.design, layout: 'analysis', filters: 'end', lang: 'en' });
   const ar = t1.err ? t1 : await tryCall('create_report', { path: 'dax-project', name: 'Table AR', design: t1.j.design, layout: 'analysis', filters: 'end', lang: 'ar' });
   const tables = (res) => res.err ? [] : readReport(path.join(ROOT, 'dax-project', res.j.report)).flatMap((p) => p.visuals).filter((v) => v.type === 'tableEx').map((v) => JSON.parse(v.text).visual);
-  const cols = (v) => v.query.queryState.Values.projections.map((x) => (x.field.Column ? 'C:' + x.field.Column.Property : 'M:' + x.field.Measure.Property));
+  // (round 12, #17: a day or month name without a sort-by column is followed by a helper column, the minimum of its
+  //  number, that puts the table in calendar order; it is not one of the table's own fields, so it is set aside here)
+  const cols = (v) => v.query.queryState.Values.projections.filter((x) => !(x.field.Aggregation && x.displayName === ' ')).map((x) => (x.field.Column ? 'C:' + x.field.Column.Property : 'M:' + x.field.Measure.Property));
   const grow = (v) => /growToFit/.test(JSON.stringify(v.objects || {})) && /autoSizeColumnWidth/.test(JSON.stringify(v.objects || {}));
   const te = tables(en), ta = tables(ar);
   check(te.length && ta.length && te.concat(ta).every(grow), `tables must grow to fit: ${te.length} EN, ${ta.length} AR, ${JSON.stringify((te[0] || {}).objects)}`);
@@ -529,34 +538,37 @@ const cardProblems = (dir, rtl) => {
     check(!nv.bad.length && nv.buttons === 4 && nv.navigators === 0, `${name}: page buttons: ${nv.buttons} single buttons, ${nv.navigators} navigators; ${nv.bad.slice(0, 2).join('; ')}`);
     // round 2: the model's Month Name and Day Name have no sort-by column; the charts by them are put in order by the
     // report (Min of Month Number / Day of Week in the tooltip fields, sorted by it), the trend tooltip too
+    // (round 12, #16, the owner's go 6 Oct: the charts' time axis is the model's short month names, Calendar[Month Short],
+    // so their labels stay level; the checks below named Calendar[Month Name] before)
     const sp = sortProblems(files), byOf = (cat) => [...new Set(sp.sorted.filter((x) => x.category === cat).map((x) => x.by))].join();
-    check(!sp.bad.length && byOf('Calendar.Month Name') === 'Calendar.Month Number' && sp.sorted.some((x) => x.tooltip && x.category === 'Calendar.Month Name') && sp.sorted.some((x) => x.type === 'lineChart'),
+    check(!sp.bad.length && byOf('Calendar.Month Short') === 'Calendar.Month Number' && sp.sorted.some((x) => x.tooltip && x.category === 'Calendar.Month Short') && sp.sorted.some((x) => x.type === 'lineChart'),
       `${name}: months not put in order: ${JSON.stringify(sp.sorted).slice(0, 300)} ${sp.bad.slice(0, 2).join('; ')}`);
     check(byOf('Calendar.Day Name') === 'Calendar.Day of Week', `${name}: the chart by Day Name is sorted by "${byOf('Calendar.Day Name')}", want Calendar.Day of Week`);
     // round 2: display names. Without the input nothing carries one; an Arabic report lists the fields it shows under
     // their model names (none has an Arabic letter here); an English report has no such list
     const allText = (fl) => Object.keys(fl).filter((k) => k.endsWith('/visual.json')).map((k) => String(fl[k])).join('\n');
     const projections = (fl) => { const out = []; Object.keys(fl).filter((k) => k.endsWith('/visual.json')).forEach((k) => { const v = JSON.parse(String(fl[k])); Object.values(((v.visual || {}).query || {}).queryState || {}).forEach((r) => (r.projections || []).forEach((p) => out.push(p))); }); return out; };
-    check(projections(files).every((p) => p.displayName === undefined) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Name]') : !res.j.arabicNames),
+    // (round 12, #17: the calendar order's helper column carries a blank displayName, its header; not a display name)
+    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ')) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Short]') : !res.j.arabicNames),
       `${name}: without displayNames: a displayName written, or arabicNames ${JSON.stringify(res.j.arabicNames || null).slice(0, 200)}`);
     if (rtl) {
-      const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Month Name]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
+      const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Month Short]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
       const nr = await tryCall('create_report', { path: 'dax-project', name: 'Names AR', design: plan.j.design, lang: 'ar', displayNames: given });
       if (nr.err) check(false, `display names: ${nr.t.slice(0, 200)}`);
       else {
         const nf = filesOf(path.join(ROOT, 'dax-project', nr.j.report)), ps = projections(nf), txt = allText(nf);
         const of = (ref) => ps.filter((p) => p.queryRef === ref);
         // every projection of a named field shows the given name; a field without a name has none; queryRef is untouched
-        check(of('Sales.Total Sales').length >= 4 && of('Sales.Total Sales').every((p) => p.displayName === 'إجمالي المبيعات') && of('Calendar.Month Name').length >= 2 && of('Calendar.Month Name').every((p) => p.displayName === 'الشهر')
+        check(of('Sales.Total Sales').length >= 4 && of('Sales.Total Sales').every((p) => p.displayName === 'إجمالي المبيعات') && of('Calendar.Month Short').length >= 2 && of('Calendar.Month Short').every((p) => p.displayName === 'الشهر')
           && of('Sales.Total Sales Last Ramadan').length >= 1 && of('Sales.Total Sales Last Ramadan').every((p) => p.displayName === undefined),
-          `display names: projections ${JSON.stringify(ps.filter((p) => /Total Sales$|Month Name|Last Ramadan$/.test(p.queryRef)).map((p) => [p.queryRef, p.displayName])).slice(0, 300)}`);
+          `display names: projections ${JSON.stringify(ps.filter((p) => /Total Sales$|Month Short|Last Ramadan$/.test(p.queryRef)).map((p) => [p.queryRef, p.displayName])).slice(0, 300)}`);
         // our own titles use the names: the KPI card's title, "X حسب Y" on the line chart and on the trend tooltip
-        check(txt.includes("'إجمالي المبيعات حسب الشهر'") && txt.includes("'إجمالي المبيعات'") && !txt.includes("'Total Sales حسب Month Name'"), 'display names: titles still use the model names');
+        check(txt.includes("'إجمالي المبيعات حسب الشهر'") && txt.includes("'إجمالي المبيعات'") && !txt.includes("'Total Sales حسب Month Short'"), 'display names: titles still use the model names');
         // the table's column formatting still points at the field (its queryRef), not at the name
         const tp = tableProblems(nf, true);
         check(tp.columns >= 6 && !tp.bad.length, `display names: ${tp.bad.length} of ${tp.columns} table columns lost their header alignment: ${tp.bad.slice(0, 2).join('; ')}`);
         const an = nr.j.arabicNames || {}, dn = nr.j.displayNames || {};
-        check(Array.isArray(an.missing) && an.missing.includes('Sales[Total Sales Last Ramadan]') && !an.missing.includes('Sales[Total Sales]') && !an.missing.includes('Calendar[Month Name]') && !an.missing.includes('Calendar[Quarter]')
+        check(Array.isArray(an.missing) && an.missing.includes('Sales[Total Sales Last Ramadan]') && !an.missing.includes('Sales[Total Sales]') && !an.missing.includes('Calendar[Month Short]') && !an.missing.includes('Calendar[Quarter]')
           && JSON.stringify(dn.notUsed) === '["Nope[X]"]' && dn.used === 3, `display names: arabicNames ${JSON.stringify(an).slice(0, 200)}, displayNames ${JSON.stringify(dn)}`);
         const v2 = validate(path.join(ROOT, 'dax-project', nr.j.report));
         check(v2.errors === 0, `display names: Microsoft's validator: ${v2.errors} errors ${v2.what}`);
@@ -612,7 +624,8 @@ const cardProblems = (dir, rtl) => {
 // suggest_fields on the same project: the same sensible fields
 r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 { const f = (x) => (x ? `${x.t}[${x.c}]` : null), sl = r.err ? [] : r.j.slicers.map(f);
-  check(!r.err && f(r.j.date) === 'Calendar[Month Name]' && !sl.includes('Sales[Amount]') && !sl.includes('Sales[Date]') && sl.every(Boolean), `suggest_fields on dax-project: ${r.t.slice(0, 300)}`); }
+  // (round 12, #16: the short month names, where the model has them; was Calendar[Month Name])
+  check(!r.err && f(r.j.date) === 'Calendar[Month Short]' && !sl.includes('Sales[Amount]') && !sl.includes('Sales[Date]') && sl.every(Boolean), `suggest_fields on dax-project: ${r.t.slice(0, 300)}`); }
 
 // ---------- round 3: safety before the first beta build ----------
 {
@@ -882,7 +895,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const noFocus = await ask('suggest_fields', { path: 'large', kpis: 4 });
   chk(() => !noFocus.err && noFocus.j.needsFocus === true && !noFocus.j.kpis && noFocus.j.areas.some((a) => a.area === 'Logistics') && /focus/.test(noFocus.j.why), () => `suggest_fields on a large model without a focus must pick nothing and ask for one: ${noFocus.t.slice(0, 240)}`);
   const lg = await ask('suggest_fields', { path: 'large', kpis: 4, focus: 'logistics' });
-  chk(() => !lg.err && JSON.stringify(lg.j.kpis.map(f)) === JSON.stringify(LOGISTICS) && f(lg.j.date) === 'Calendar[Month Name]' && f(lg.j.cats.bar) === 'Carrier[Carrier Group]' && f(lg.j.cats.column) === 'Route[Route Group]'
+  // (round 12, #16: the short month names, where the model has them; was Calendar[Month Name])
+  chk(() => !lg.err && JSON.stringify(lg.j.kpis.map(f)) === JSON.stringify(LOGISTICS) && f(lg.j.date) === 'Calendar[Month Short]' && f(lg.j.cats.bar) === 'Carrier[Carrier Group]' && f(lg.j.cats.column) === 'Route[Route Group]'
     && lg.j.slicers.map(f).join() === 'Calendar[Year],Carrier[Carrier Group],Route[Route Group]' && lg.j.scope.tables === 23 && lg.j.scope.focus === 'logistics', () => `suggest_fields with focus "logistics": ${lg.err ? lg.t.slice(0, 200) : JSON.stringify({ kpis: lg.j.kpis.map(f), date: f(lg.j.date), bar: f(lg.j.cats.bar), column: f(lg.j.cats.column), slicers: lg.j.slicers.map(f), scope: lg.j.scope })}`);
   const zz = await ask('suggest_fields', { path: 'large', kpis: 4, focus: 'zzz' });
   chk(() => !zz.err && zz.j.needsFocus === true && !zz.j.kpis && /zzz/.test(zz.j.why) && zz.j.areas.length > 5, () => `suggest_fields with a focus that matches nothing: ${zz.t.slice(0, 240)}`);
@@ -910,19 +924,24 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const two4 = await ask('create_report', { path: 'bim-project', name: 'Two cards', design, layout: 'exec', kpis: 4 });
   {
     const dir = two4.err ? null : path.join(ROOT, 'bim-project', two4.j.report), per = dir ? cardsOf(dir).slice(0, 2).map((c) => c.length) : [], k = (two4.j && two4.j.kpiCards) || {};
-    chk(() => !two4.err && per.join() === '2,2' && k.asked === 4 && k.built === 2 && k.measures.length === 2 && /2 measures/.test(k.why) && (two4.j.reportNotes || []).some((x) => /KPI/.test(x)), () => `a model with 2 measures and a 4-card design: cards per page ${per}, kpiCards ${JSON.stringify(two4.j ? two4.j.kpiCards : two4.t.slice(0, 200))}`);
+    // (changed 6 Oct 2026, round 12, #26: "Unused One" shows text and is never a card, so 1 of the 2 measures; were 2)
+    chk(() => !two4.err && per.join() === '1,1' && k.asked === 4 && k.built === 1 && k.measures.length === 1 && /1 measure/.test(k.why) && (two4.j.reportNotes || []).some((x) => /KPI/.test(x)), () => `a model with 2 measures and a 4-card design: cards per page ${per}, kpiCards ${JSON.stringify(two4.j ? two4.j.kpiCards : two4.t.slice(0, 200))}`);
     chk(() => !two4.err && noField(dir).length === 0 && errors(dir) === '0', () => `a model with 2 measures: ${dir ? noField(dir).length + ' cards without a field, validator ' + errors(dir) : two4.t.slice(0, 200)}`);
   }
   const zero = await ask('create_report', { path: 'plain', name: 'No measures', design, layout: 'exec', kpis: 4 });
   {
     const dir = zero.err ? null : path.join(ROOT, 'plain', zero.j.report), k = (zero.j && zero.j.kpiCards) || {};
-    chk(() => !zero.err && cardsOf(dir).every((c) => c.length === 0) && noField(dir).length === 0 && errors(dir) === '0' && k.asked === 4 && k.built === 0 && /no measures/.test(k.why) && k.leftOutVisuals.length > 0
-      && readReport(dir).every((pg) => pg.visuals.every((v) => !/Chart$|^gauge$|^funnel$|^treemap$|^map$/.test(v.type))), () => `a model with no measures: ${zero.err ? zero.t.slice(0, 200) : 'cards ' + cardsOf(dir).map((c) => c.length) + ', validator ' + errors(dir) + ', kpiCards ' + JSON.stringify(zero.j.kpiCards)}`);
+    // (changed 6 Oct 2026, round 12, design finding #25, the owner's go: a model without measures got no cards and no
+    // charts, and Desktop showed a page four fifths empty; now its cards, charts and table count and sum its columns,
+    // still never a visual without its field, and still 0 errors from Microsoft's validator)
+    chk(() => !zero.err && cardsOf(dir)[0].length === 4 && noField(dir).length === 0 && errors(dir) === '0' && k.asked === 4 && k.built === 4 && /no measures/.test(k.why) && k.counted.length === 4
+      && !k.counted.some((c) => /Rate/.test(c)) && readReport(dir)[0].visuals.some((v) => /Chart$/.test(v.type)), () => `a model with no measures: ${zero.err ? zero.t.slice(0, 200) : 'cards ' + cardsOf(dir).map((c) => c.length) + ', validator ' + errors(dir) + ', kpiCards ' + JSON.stringify(zero.j.kpiCards)}`);
   }
   const hand = await ask('create_report', { path: 'bim-project', name: 'Hand cards', pages: [{ name: 'P', slots: [0, 1, 2, 3].map((i) => ({ kind: 'kpi', title: 'K' + (i + 1), x: 24 + i * 300, y: 24, w: 280, h: 120 })).concat([{ kind: 'bar', x: 24, y: 170, w: 900, h: 400 }]) }] });
   {
     const dir = hand.err ? null : path.join(ROOT, 'bim-project', hand.j.report), k = (hand.j && hand.j.kpiCards) || {};
-    chk(() => !hand.err && cardsOf(dir)[0].length === 2 && noField(dir).length === 0 && k.asked === 4 && k.built === 2 && JSON.stringify(k.leftOut) === '["K3","K4"]', () => `hand-placed KPI slots beyond the measures: ${hand.err ? hand.t.slice(0, 200) : cardsOf(dir)[0].length + ' cards, kpiCards ' + JSON.stringify(hand.j.kpiCards)}`);
+    // (changed 6 Oct 2026, round 12, #26: 1 card for this model, see above; were 2 and K3, K4 left out)
+    chk(() => !hand.err && cardsOf(dir)[0].length === 1 && noField(dir).length === 0 && k.asked === 4 && k.built === 1 && JSON.stringify(k.leftOut) === '["K2","K3","K4"]', () => `hand-placed KPI slots beyond the measures: ${hand.err ? hand.t.slice(0, 200) : cardsOf(dir)[0].length + ' cards, kpiCards ' + JSON.stringify(hand.j.kpiCards)}`);
   }
 
   // 4. a money measure named "Margin" is not a percentage; one that divides, or says %, is
@@ -1260,7 +1279,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       const id = `${solid ? 'solid' : 'transparent'} ${specs[0].page.w}x${specs[0].page.h} ${lang} ${logoName}`, L = abs(logo), T = abs(title);
       if (logo.visual.visualType === 'image') off.image.push([id, L.y + L.h / 2 - mid]);
       // a text box as short as its text allows (10 + 1.8 x pt) can't be moved: the small pages
-      else off.text.push([id, L.y + textMid(d.font, ptOf(logo)) - mid, L.h <= Math.ceil(10 + 1.8 * ptOf(logo))]);
+      // (round 12, #30: Desktop draws the Tahoma placeholder 2.6 to 3.4 lower than textMid says, measured in round 11
+      // (D15), and the writer now moves it up 3; so its middle as drawn is textMid's + 3)
+      else off.text.push([id, L.y + textMid(d.font, ptOf(logo)) + (/^tahoma/i.test(d.font) ? 3 : 0) - mid, L.h <= Math.ceil(10 + 1.8 * ptOf(logo))]);
       off.title.push([id, T.y + textMid(d.font, ptOf(title)) - mid]);
     }
     const far = (list, by) => list.filter((x) => !x[2] && Math.abs(x[1]) > by).map((x) => `${x[0]}: ${x[1].toFixed(1)}`);
@@ -1458,7 +1479,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => has('Total Sales', '#,0'), () => `a card on a measure with the format "0" must carry Desktop's own entry (labelDisplayUnits -1D, customFormatString '#,0', selector metadata): ${JSON.stringify(cardsOf('Total Sales', false).map((v) => v.visual.objects.value)).slice(0, 500)} ${short(x)}`);
     chk(() => has('Avg Price', '#,0.00'), () => `a card on a "0.00" measure: customFormatString '#,0.00': ${JSON.stringify(cardsOf('Avg Price', false).map((v) => v.visual.objects.value[1]))}`);
     chk(() => none('Orders'), () => `a measure that has a separator gets no entry: ${JSON.stringify(cardsOf('Orders', false).map((v) => v.visual.objects.value)).slice(0, 300)}`);
-    chk(() => none('Margin %'), () => `a percent measure is untouched: ${JSON.stringify(cardsOf('Margin %', false).map((v) => v.visual.objects.value)).slice(0, 300)}`);
+    // (changed 6 Oct 2026, round 12, the owner's ask: a percent shows as a percent without useless decimals, the model's
+    // own percent format where it has one decimal or none; before, a percent card had no entry at all)
+    chk(() => has('Margin %', '0.0%'), () => `a percent measure shows its own percent format: ${JSON.stringify(cardsOf('Margin %', false).map((v) => v.visual.objects.value)).slice(0, 300)}`);
     const nf = (x.j && x.j.numberFormats) || {};
     chk(() => has('No Format', '#,0.##') && pages.filter((p) => p.tooltip).flatMap((p) => p.visuals).filter((v) => v.visual.visualType === 'cardVisual').every((v) => v.visual.objects.value.length === 2)
       && JSON.stringify(nf.cards.formatted) === JSON.stringify([{ field: 'Sales[Total Sales]', format: '#,0' }, { field: 'Sales[Avg Price]', format: '#,0.00' }, { field: 'Sales[No Format]', format: '#,0.##' }])
@@ -1596,7 +1619,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   check(!g.err && g.j.announced.on === true && g.j.announced.checkedTo === '2026-05-27' && g.j.announced.estimatesFrom === '2027-02-08', `add_gulf_calendar announced: ${short(g)}`);
   check(!g.err && Array.isArray(g.j.selfCheck.findings) && g.j.selfCheck.findings.length === 0 && g.j.selfCheck.calendar === 'dataarcus-dax', `add_gulf_calendar selfCheck: ${g.err ? '' : JSON.stringify(g.j.selfCheck)}`);
   check(!g.err && !/DATATABLE|ADDCOLUMNS|CALENDAR \(/.test(g.t), 'add_gulf_calendar: the answer holds DAX');
-  check(!g.err && g.j.byHand.length === 4 && /Mark as date table/.test(g.j.byHand.join(' ')) && ['Month Name', 'Day Name', 'Hijri Month Name'].every((n) => g.j.byHand.some((s) => s.includes(n))), `add_gulf_calendar byHand: ${g.err ? '' : JSON.stringify(g.j.byHand)}`);
+  // (changed 6 Oct 2026, round 12, the owner's go on round 11's recommendation 4a: the three sort-by columns are in the
+  // script, as Desktop accepted them in D-GC3, so marking the date table is the one step left by hand; it was 4 steps)
+  check(!g.err && g.j.byHand.length === 1 && /Mark as date table/.test(g.j.byHand[0]) && (sc.match(/^\t\t\tsortByColumn: /gm) || []).length === 3, `add_gulf_calendar byHand: ${g.err ? '' : JSON.stringify(g.j.byHand)}`);
   check(!g.err && /TMDL view/.test(g.j.howToApply) && /Preview/.test(g.j.howToApply) && /nothing (is )?(changed|replaced)/i.test(g.j.howToApply), `add_gulf_calendar howToApply: ${g.err ? '' : g.j.howToApply}`);
   // asked again: the same file named, no second copy
   const again = await add({ path: 'bim-project', firstYear: 2018, lastYear: 2030, country: 'uae', relateTo: ['Sales[Date]'], asOf: '2026-10-04' });
@@ -1693,17 +1718,22 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     // 1. the default: every card (KPI and tooltip) shows automatic units with 2 decimals: labelPrecision 2L in its default value entry, and nothing else
     //    (changed 5 Oct, the owner's design choice 2: a percent shows as the model formats it, so the Margin % card has
     //    no labelPrecision; checked in the design choices' block below)
-    const notPct = all.filter((v) => !/Margin %/.test(JSON.stringify(v.visual.query)));
-    chk(() => notPct.length >= 8 && notPct.every((v) => v.visual.objects.value.length === 1 && L(v.visual.objects.value[0].properties.labelPrecision) === '2L' && v.visual.objects.value[0].selector.id === 'default'
-        && !/customFormatString|labelDisplayUnits/.test(JSON.stringify(v.visual.objects.value))) && errors(path.join(ROOT, 'r10-project', d.j.report)) === '0',
-      () => `every card must carry labelPrecision 2L in its default value entry (automatic units, 2 decimals) and no custom format: ${JSON.stringify(all.slice(0, 2).map((v) => v.visual.objects.value)).slice(0, 500)} ${short(d)}`);
+    //    (changed 6 Oct 2026, round 12, the owner's ask: a measure whose format has no decimals, here Total Sales "0",
+    //    Orders and Units "#,0", shows its whole number with separators, "#,0", not 2 decimals ("179.00" read like money);
+    //    a percent as a percent; so 2L stays on Avg Price "0.00" and No Format, the measures with decimals)
+    const notPct = all.filter((v) => /Avg Price|No Format/.test(JSON.stringify(v.visual.query))), whole = all.filter((v) => /Total Sales|Orders|Units/.test(JSON.stringify(v.visual.query)));
+    chk(() => notPct.length >= 3 && notPct.every((v) => v.visual.objects.value.length === 1 && L(v.visual.objects.value[0].properties.labelPrecision) === '2L' && v.visual.objects.value[0].selector.id === 'default'
+        && !/customFormatString|labelDisplayUnits/.test(JSON.stringify(v.visual.objects.value))) && errors(path.join(ROOT, 'r10-project', d.j.report)) === '0'
+        && whole.length >= 4 && whole.every((v) => v.visual.objects.value.length === 2 && L(v.visual.objects.value[1].properties.customFormatString) === "'#,0'" && !('labelPrecision' in v.visual.objects.value[0].properties)),
+      () => `every card must carry labelPrecision 2L in its default value entry (automatic units, 2 decimals) and no custom format: ${JSON.stringify(all.map((v) => [v.visual.query.queryState.Data.projections[0].nativeQueryRef, v.visual.objects.value.length, L(v.visual.objects.value[0].properties.labelPrecision), v.visual.objects.value[1] && L(v.visual.objects.value[1].properties.customFormatString)])).slice(0, 900)} validator ${errors(path.join(ROOT, 'r10-project', d.j.report))}`);
     // 2. a percent stays a percent, and the answer says how the cards show their values
-    chk(() => all.filter((v) => /Margin %/.test(JSON.stringify(v.visual.query))).every((v) => v.visual.objects.value.length === 1) && d.j.kpiValues.mode === 'auto' && /3\.43M/.test(d.j.kpiValues.note) && /14\.81K/.test(d.j.kpiValues.note) && /231\.50/.test(d.j.kpiValues.note)
+    //    (round 12: the percent card carries its own percent format, "0.0%"; the note states the whole rule)
+    chk(() => all.filter((v) => /Margin %/.test(JSON.stringify(v.visual.query))).every((v) => v.visual.objects.value.length === 2 && L(v.visual.objects.value[1].properties.customFormatString) === "'0.0%'") && d.j.kpiValues.mode === 'auto' && /3\.43M/.test(d.j.kpiValues.note) && /14\.81K/.test(d.j.kpiValues.note) && /101,914/.test(d.j.kpiValues.note) && /0\.0%/.test(d.j.kpiValues.note)
         && !((d.j.numberFormats || {}).cards), () => `the answer must say the cards show automatic units with 2 decimals: ${JSON.stringify(d.j && [d.j.kpiValues, d.j.numberFormats]).slice(0, 500)}`);
     // 3. kpiValues "full": round 9's entry (the measure's format with the separator), per card
     const f = await ask('create_report', { path: 'r10-project', name: 'R10 Full', design: exec, kpiValues: 'full', fields: { kpis: SIX } });
     const fp = f.err ? [] : report(path.join(ROOT, 'r10-project', f.j.report)).filter((p) => !p.tooltip).flatMap(cards), codeOf = (m) => fp.filter((v) => v.visual.query.queryState.Data.projections[0].queryRef === 'Sales.' + m).map((v) => v.visual.objects.value.length === 2 ? L(v.visual.objects.value[1].properties.customFormatString) : 'none');
-    chk(() => [...new Set(codeOf('Total Sales'))].join() === "'#,0'" && [...new Set(codeOf('Avg Price'))].join() === "'#,0.00'" && [...new Set(codeOf('No Format'))].join() === "'#,0.##'" && [...new Set(codeOf('Orders'))].join() === 'none' && [...new Set(codeOf('Margin %'))].join() === 'none'
+    chk(() => [...new Set(codeOf('Total Sales'))].join() === "'#,0'" && [...new Set(codeOf('Avg Price'))].join() === "'#,0.00'" && [...new Set(codeOf('No Format'))].join() === "'#,0.##'" && [...new Set(codeOf('Orders'))].join() === 'none' && [...new Set(codeOf('Margin %'))].join() === "'0.0%'" /* (round 12: a percent shows its percent format in both modes) */
         && fp.every((v) => !('labelPrecision' in v.visual.objects.value[0].properties) || v.visual.objects.value.length === 1) && f.j.kpiValues.mode === 'full' && f.j.numberFormats.cards.formatted.length === 3,
       () => `kpiValues "full" must write round 9's format entry per card: ${['Total Sales', 'Avg Price', 'No Format', 'Orders', 'Margin %'].map((m) => m + ' ' + codeOf(m).join('/')).join('; ')} ${short(f)}`);
     // 4 and 5. the value fits its card in every layout: 3 to 6 cards x three pages x two languages. The widest automatic
@@ -1716,7 +1746,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
         report(path.join(ROOT, 'r10-project', r.j.report)).filter((p) => !p.tooltip).flatMap(cards).forEach((v) => { n++;
           const V = N(v.visual.objects.value[0].properties.fontSize), I = N(v.visual.objects.padding[0].properties.paddingUniform), pad = (v.visual.visualContainerObjects.padding || [{ properties: {} }])[0].properties;
           const inner = v.at.w - (N(pad.left) || 0) - (N(pad.right) || 0) - 2 * I, code = v.visual.objects.value.length === 2 ? String(L(v.visual.objects.value[1].properties.customFormatString)).slice(1, -1) : null;
-          const em = code ? 9 * 0.54 + 2 * 0.21 + (/\./.test(code) ? 0.21 + 2 * 0.54 : 0) : 4.4;
+          // (round 12: a percent format is as wide as an automatic value, "-888.8%"; a whole or full number nine digits)
+          const em = code && !/%/.test(code) ? 9 * 0.54 + 2 * 0.21 + (/\./.test(code) ? 0.21 + 2 * 0.54 : 0) : 4.4;
           if (em * V * 4 / 3 > inner + 0.5 || V < 8) bad.push(`${page} ${lang} ${k} cards: ${v.visual.query.queryState.Data.projections[0].nativeQueryRef} ${V}pt needs ${(em * V * 4 / 3).toFixed(0)} of ${inner}`); });
       }
       return { bad, n }; };
@@ -1730,7 +1761,12 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const site = Pb.build({ name: 'S', title: 'S', pageName: specs[0].name, lang: 'en', rtl: false, font: dd.font, ui: dd.ui, theme: E2.buildTheme(dd, 'en'), sample: true, logo: null, texts: E2.REPORT_TEXTS.en, pages: specs.map((sp) => ({ name: sp.name, page: sp.page, slots: sp.slots, panel: sp.panel, png: new Uint8Array([1]) })) });
     const siteCards = site.files.filter((x) => /visual\.json$/.test(x.path)).map((x) => JSON.parse(String(x.data))).filter((v) => v.visual && v.visual.visualType === 'cardVisual');
     // (changed 5 Oct, the owner's design choice 2: the sample's "Margin %" card shows the model's own format, 0.0%)
-    chk(() => siteCards.length >= 5 && siteCards.filter((v) => !/Margin %/.test(JSON.stringify(v.visual.query))).every((v) => L(v.visual.objects.value[0].properties.labelPrecision) === '2L' && v.visual.objects.value.length === 1), () => `the website's download must show automatic units with 2 decimals too: ${JSON.stringify(siteCards[0] && siteCards[0].visual.objects.value)}`);
+    // (changed 6 Oct 2026, round 12, the owner's ask: the sample's "#,0" measures show their whole numbers, "#,0"; its
+    // "#,0.0" average keeps automatic units with 2 decimals; the margin its "0.0%". Before: 2L on every card but the margin)
+    const code = (v) => (v.visual.objects.value.length === 2 ? L(v.visual.objects.value[1].properties.customFormatString) : undefined);
+    chk(() => siteCards.length >= 5 && siteCards.every((v) => { const q = JSON.stringify(v.visual.query), p0 = v.visual.objects.value[0].properties;
+      return /Margin %/.test(q) ? code(v) === "'0.0%'" : /Avg Order Value/.test(q) ? L(p0.labelPrecision) === '2L' && code(v) === undefined : code(v) === "'#,0'" && !('labelPrecision' in p0); }),
+      () => `the website's download must follow the same rule: ${JSON.stringify(siteCards.map((v) => [v.visual.query.queryState.Data.projections[0].nativeQueryRef, L(v.visual.objects.value[0].properties.labelPrecision), code(v)]))}`);
   }
 
   // ----- R10.6(a): the navigator: tabs without boxes, the current page underlined in the accent colour -----
@@ -1776,9 +1812,11 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => !sv.some((v) => type(v) === 'pageNavigator') && sv.filter((v) => type(v) === 'actionButton' && L(linkOf(v).type) === "'PageNavigation'").length === 4 && sv.filter((v) => type(v) === 'shape').length === 2
       && [two, twoAr, many['EN 8'], many['AR 8']].every((x) => !x.err && errors(path.join(ROOT, 'r10-project', x.j.report)) === '0'),
       () => `the website's download must have the same navigator; validator: ${[two, twoAr, many['EN 8'], many['AR 8']].map((x) => (x.err ? x.t.slice(0, 80) : errors(path.join(ROOT, 'r10-project', x.j.report)))).join(', ')}`);
-    // 5. the phone layout: the page buttons share one row of the 323-wide canvas in the same order; the underline is not on the phone
+    // 5. the phone layout: the page buttons share one row of the 323-wide canvas in the same order
+    //    (changed 6 Oct 2026, round 12, #5, the owner's go: the current tab's line is on the phone too, right under its
+    //    button; it was left out of the phone layout)
     chk(() => read(twoAr).concat(read(two)).every((pg) => { const b = navOf(pg), m = b.map((v) => v.mobile && v.mobile.position), line = pg.visuals.filter((v) => type(v) === 'shape');
-      return m.every((p) => p && p.x >= 0 && p.x + p.width <= 323.5 && p.height >= 30) && new Set(m.map((p) => p.y)).size === 1 && line.every((v) => !v.mobile); }),
+      return m.every((p) => p && p.x >= 0 && p.x + p.width <= 323.5 && p.height >= 30) && new Set(m.map((p) => p.y)).size === 1 && line.every((v) => v.mobile && v.mobile.position.y === m[0].y + m[0].height); }),
       () => `the phone layout must keep the page buttons in one row and leave the underline out: ${JSON.stringify(read(two).map((pg) => navOf(pg).map((v) => v.mobile && v.mobile.position))).slice(0, 400)}`);
     // 6. (round 11, seen in Desktop on 5 Oct: eight long page names on a 1280 x 720 page whose header is 32 high got no
     // page buttons at all, and the answer said nothing.) Page buttons that do not fit are still left out (a cut name is
@@ -1858,7 +1896,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       // So the entry now also holds fixedSize false and an image area of 10 to 25 percent, and the value is fitted to what is left.
       const ip = img && img[0] ? img[0].properties : {}, area = N(ip.imageAreaSize), c2 = cs.length ? cs[0][1] : null, c1 = cs.length ? cs[0][0] : null;
       chk(() => L(ip.fixedSize) === 'false' && /^\d+D$/.test(L(ip.imageAreaSize)) && area >= 10 && area <= 25, () => `an SVG card's image must be sized with fixedSize false and imageAreaSize 10 to 25: ${JSON.stringify(ip)}`);
-      chk(() => { const V = N(c2.visual.objects.value[0].properties.fontSize); return V >= 8 && V < N(c1.visual.objects.value[0].properties.fontSize) && 4.4 * V * 4 / 3 <= c2.at.w * (1 - area / 100) - 8; },
+      // (changed 6 Oct 2026, round 12, the owner's go: #9, one value size for the row, so the card beside it is no larger
+      // (it was larger); and recommendation 3, the image area is a percent of the card less its measured padding, 25 a
+      // side on this 1920 x 1080 page (it was a percent of 0.8 x the card))
+      chk(() => { const V = N(c2.visual.objects.value[0].properties.fontSize); return V >= 8 && V === N(c1.visual.objects.value[0].properties.fontSize) && 4.4 * V * 4 / 3 <= c2.at.w - (c2.at.w - 50) * area / 100 - 8; },
         () => `the value of a card with an image must fit beside the image ("-888.88bn" is 4.4 em): size ${c2 && N(c2.visual.objects.value[0].properties.fontSize)}pt, card ${c2 && c2.at.w} wide, image area ${area}%, the card beside it ${c1 && N(c1.visual.objects.value[0].properties.fontSize)}pt`);
       chk(() => L(ip.show) === 'true' && L(ip.imageType) === "'imageData'" && JSON.stringify(ip.imageData) === JSON.stringify({ expr: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: 'Sales' } }, Property: 'Card bar' } } }) && JSON.stringify(img[0].selector) === '{"id":"default"}'
         && !cs[0][0].visual.objects.image && !cs[0][2].visual.objects.image && c.j.svgMeasures.some((m) => m.label === 'Card bar' && /card/i.test(m.shownAs)) && errors(path.join(ROOT, 'r10-project', c.j.report)) === '0',
@@ -1894,7 +1935,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       () => `a table's measure columns must carry "format" on their projections (the measure's format with the separator), and charts none: ${JSON.stringify(tables.map(fmt))} ${short(t)}`);
     const full = await ask('create_report', { path: 'r10-project', name: 'R10 Table full', design: exec, kpiValues: 'full', fields: { kpis: SIX } });
     const tip = (x) => (x.err ? [] : report(path.join(ROOT, 'r10-project', x.j.report)).filter((p) => p.tooltip).flatMap(cards));
-    chk(() => tip(t).length >= 1 && tip(t).every((v) => L(v.visual.objects.value[0].properties.labelPrecision) === '2L') && tip(full).length >= 1 && tip(full).every((v) => v.visual.objects.value.length === 2 && L(v.visual.objects.value[1].properties.customFormatString) === "'#,0'" && v.visual.objects.value[1].selector.metadata === 'Sales.Total Sales'),
+    // (changed 6 Oct 2026, round 12, the owner's ask: the tooltip card's Total Sales has the format "0", no decimals, so it
+    // shows its whole number with separators, "#,0", in the automatic mode too; it showed 2 decimals before)
+    chk(() => tip(t).length >= 1 && tip(t).every((v) => !('labelPrecision' in v.visual.objects.value[0].properties) && L(v.visual.objects.value[1].properties.customFormatString) === "'#,0'") && tip(full).length >= 1 && tip(full).every((v) => v.visual.objects.value.length === 2 && L(v.visual.objects.value[1].properties.customFormatString) === "'#,0'" && v.visual.objects.value[1].selector.metadata === 'Sales.Total Sales'),
       () => `the tooltip card follows the KPI cards (automatic units by default; the format entry with kpiValues "full"): ${JSON.stringify(tip(full).map((v) => v.visual.objects.value)).slice(0, 400)}`);
     const nf = (t.j && t.j.numberFormats) || {};
     chk(() => JSON.stringify(nf.tables.formatted) === JSON.stringify([{ field: 'Sales[Total Sales]', format: '#,0' }, { field: 'Sales[Avg Price]', format: '#,0.00' }, { field: 'Sales[No Format]', format: '#,0.##' }]) && /13,857/.test(nf.tables.note)
@@ -2048,17 +2091,25 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   {
     const pct = (v) => /Margin %|هامش الربح %/.test(JSON.stringify(v.visual.query || {}));
     const bad = [];
+    // (changed 6 Oct 2026, round 12, the owner's ask: a percent card carries its percent format, "0.0%", and a measure
+    // whose format has no decimals, "#,0", its whole number; the averages with decimals keep 2L. Before: the percent
+    // card had no entry, and every other card 2L)
+    const avg = (v) => /Avg Price|Avg Order Value|متوسط قيمة الطلب/.test(JSON.stringify(v.visual.query || {}));
     [enV, arV, siteEn, siteAr].forEach((vs, i) => vs.filter((v) => type(v) === 'cardVisual' && v.visual.query).forEach((v) => {
-      const p = valueOf(v), want = pct(v) ? undefined : '2L';
-      if (L(p.labelPrecision) !== want || v.visual.objects.value.length !== 1) bad.push(`${['EN', 'AR', 'site EN', 'site AR'][i]} ${titleOf(v).text}: ${L(p.labelPrecision)}`); }));
-    chk(() => [enV, siteEn].every((vs) => vs.filter((v) => type(v) === 'cardVisual' && pct(v)).length >= 1) && bad.length === 0 && /as the model formats it/.test(en.j.kpiValues.note),
+      const p = valueOf(v), code = v.visual.objects.value.length === 2 ? L(v.visual.objects.value[1].properties.customFormatString) : undefined;
+      const ok = pct(v) ? code === "'0.0%'" && !('labelPrecision' in p) : avg(v) ? L(p.labelPrecision) === '2L' && code === undefined : code === "'#,0'" && !('labelPrecision' in p);
+      if (!ok) bad.push(`${['EN', 'AR', 'site EN', 'site AR'][i]} ${titleOf(v).text}: ${L(p.labelPrecision)} ${code}`); }));
+    chk(() => [enV, siteEn].every((vs) => vs.filter((v) => type(v) === 'cardVisual' && pct(v)).length >= 1) && bad.length === 0 && /0\.0%/.test(en.j.kpiValues.note),
       () => `a percent card must show the model's own format (no labelPrecision), the others 2L: ${bad.slice(0, 6).join(' | ')} ${JSON.stringify(en.j && en.j.kpiValues)}`);
   }
   // 3. tables are titled by their content ("Total Sales by Region"), not by the layout ("Detail", "التفاصيل")
   {
     const tt = (vs) => vs.filter((v) => type(v) === 'tableEx').map((v) => titleOf(v).text);
-    chk(() => tt(enV).length >= 1 && tt(enV).every((t) => t === 'Total Sales by Region') && tt(arV).every((t) => t === 'Total Sales حسب Region')
-        && tt(siteEn).length >= 1 && tt(siteEn).every((t) => t === 'Total Revenue by Region') && tt(siteAr).length >= 1 && tt(siteAr).every((t) => t === 'إجمالي الإيرادات حسب المنطقة'),
+    // (round 12, #15, the owner's go 6 Oct: a table whose title is a chart's on the same page adds ": detail", so the
+    // two never carry the same title; the first measure by the first text column stays its start)
+    const titled = (t, base, detail) => t === base || t === base + ': ' + detail;
+    chk(() => tt(enV).length >= 1 && tt(enV).every((t) => titled(t, 'Total Sales by Region', 'detail')) && tt(arV).every((t) => titled(t, 'Total Sales حسب Region', 'التفاصيل'))
+        && tt(siteEn).length >= 1 && tt(siteEn).every((t) => titled(t, 'Total Revenue by Region', 'detail')) && tt(siteAr).length >= 1 && tt(siteAr).every((t) => titled(t, 'إجمالي الإيرادات حسب المنطقة', 'التفاصيل')),
       () => `a table must be titled by its first measure and its first text column: ${JSON.stringify([tt(enV), tt(arV), tt(siteEn), tt(siteAr)])}`);
   }
   // 5. an Arabic table puts its text column first (Power BI writes "Total" only in a first column of text), then the
@@ -2067,7 +2118,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const refs = (vs) => vs.filter((v) => type(v) === 'tableEx').map((v) => v.visual.query.queryState.Values.projections.map((p) => p.queryRef).join(' | '));
     const fmt = (vs) => vs.filter((v) => type(v) === 'tableEx').map((v) => v.visual.objects.columnFormatting.map((e) => e.selector.metadata + '=' + S(e.properties.alignment)).join(' | '));
     chk(() => refs(enV).every((r) => r === 'Sales.Region | Sales.Total Sales | Sales.Orders') && refs(arV).length >= 1 && refs(arV).every((r) => r === 'Sales.Region | Sales.Orders | Sales.Total Sales')
-        && fmt(arV).every((f) => f === 'Sales.Region=Right | Sales.Orders=Left | Sales.Total Sales=Left') && siteAr.filter((v) => type(v) === 'tableEx').every((v) => !!v.visual.query.queryState.Values.projections[0].field.Column),
+        // (round 12, #12, the owner's go 6 Oct: numbers right-aligned in a right-to-left table too; they were Left)
+        && fmt(arV).every((f) => f === 'Sales.Region=Right | Sales.Orders=Right | Sales.Total Sales=Right') && siteAr.filter((v) => type(v) === 'tableEx').every((v) => !!v.visual.query.queryState.Values.projections[0].field.Column),
       () => `an Arabic table's first projection must be its text column: EN ${JSON.stringify(refs(enV))} AR ${JSON.stringify(refs(arV))} ${JSON.stringify(fmt(arV))}`);
   }
   // 6. the Arabic Reset: text and tooltip "إعادة ضبط الفلاتر" (the owner's wording); English unchanged
@@ -2170,7 +2222,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
         const pgs = report(path.join(ROOT, 'd5-project', x.j.report)).filter((p) => !p.tooltip), size = tableText(x, 'd5-project'), font = lang === 'ar' ? 'Tahoma' : 'Segoe UI';
         const told = x.j.tableColumns || [];
         pgs.forEach((pg, pi) => pg.visuals.filter((v) => type(v) === 'tableEx').forEach((t) => {
-          const ps = t.visual.query.queryState.Values.projections, need = ps.reduce((a, p) => a + Pb.columnRoom(p, size, font), 0), refs = ps.map((p) => p.queryRef);
+          // (round 12, recommendation 5, the owner's go 6 Oct: a narrow table first takes a smaller text, down to 8pt, and
+          // drops a column only where that doesn't hold it; so its room is measured at the size written on it)
+          const own = t.visual.objects.values ? N(t.visual.objects.values[0].properties.fontSize) : size;
+          const ps = t.visual.query.queryState.Values.projections, need = ps.reduce((a, p) => a + Pb.columnRoom(p, own, font), 0), refs = ps.map((p) => p.queryRef);
           if (need > t.at.w + 0.5 && ps.length > 2) tbad.push(`${lang} ${pg.name}: ${ps.length} columns need ${need.toFixed(0)} of ${t.at.w}`);
           if (!refs.includes('Sales.Region') || !refs.includes('Sales.Total Sales')) tbad.push(`${lang} ${pg.name}: the text column and the first measure must stay: ${refs}`);
           if (JSON.stringify((t.visual.objects.columnFormatting || []).map((e) => e.selector.metadata).sort()) !== JSON.stringify(refs.slice().sort())) tbad.push(`${lang} ${pg.name}: columnFormatting must follow the kept columns`);
@@ -2178,7 +2233,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
           if (ps.length < FIVE.length && !(mine && mine.leftOut.length === FIVE.length - ps.length && mine.shown === ps.length)) tbad.push(`${lang} ${pg.name}: tableColumns must name what was left out: ${JSON.stringify(mine)}`);
           if (!bf || bf.fields.length !== ps.length) tbad.push(`${lang} ${pg.name}: boundFields must list the ${ps.length} shown columns: ${JSON.stringify(bf)}`);
         }));
-        if (!told.length || (x.j.reportNotes || []).filter((n) => /table/i.test(n) && /left out|room/i.test(n)).length !== 1) tbad.push(`${lang}: a narrow table must be told in tableColumns and one reportNotes line: ${JSON.stringify(told)} ${JSON.stringify(x.j.reportNotes)}`.slice(0, 400));
+        // (round 12: told as a smaller text when that holds every field, as left-out fields otherwise)
+        const smaller = (x.j.reportNotes || []).some((n) => /table text is \d+pt/.test(n));
+        if (!(smaller && !told.length) && (!told.length || (x.j.reportNotes || []).filter((n) => /table/i.test(n) && /left out|room/i.test(n)).length !== 1)) tbad.push(`${lang}: a narrow table must be told in tableColumns and one reportNotes line: ${JSON.stringify(told)} ${JSON.stringify(x.j.reportNotes)}`.slice(0, 400));
       }
       const roomy = await ask('create_report', { path: 'd5-project', name: 'D5 table roomy', fields: { table: FIVE },
         pages: [{ name: 'W', slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'table', title: 'Wide', x: 36, y: 90, w: 1800, h: 600 }] }] });
@@ -2481,6 +2538,391 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   }
 }
 
+
+// ---------- round 12: every small detail fixed in code (owner's go 6 Oct 01:45; WORK.md "Round 12") ----------
+// The design findings of round 11 (WORK.md "Round 11, design findings", by number) and the eight accepted
+// recommendations, each with its check written before the code. What Desktop must confirm is listed in WORK.md,
+// "Round 12, for the laptop to prove".
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 500) : x.t.slice(0, 300));
+  const req = (await import('node:module')).createRequire(import.meta.url), Pb = req(path.join(REPO, 'assets/js/pbip-export.js'));
+  const L = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined), N = (p) => parseFloat(L(p)), S = (p) => String(L(p)).slice(1, -1).replace(/''/g, "'");
+  const tw = (t, size, bold, font) => Pb.textWidth(t, size, bold, font);
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
+  const col = (name, dataType) => ({ name, dataType, sourceColumn: name });
+  const report = (dir) => { const def = path.join(dir, 'definition', 'pages'), order = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder;
+    return order.map((id) => { const pg = JSON.parse(fs.readFileSync(path.join(def, id, 'page.json'), 'utf8'));
+      const all = fs.readdirSync(path.join(def, id, 'visuals')).map((v) => { const vd = path.join(def, id, 'visuals', v), j = JSON.parse(fs.readFileSync(path.join(vd, 'visual.json'), 'utf8'));
+        if (fs.existsSync(path.join(vd, 'mobile.json'))) Object.defineProperty(j, 'mobile', { value: JSON.parse(fs.readFileSync(path.join(vd, 'mobile.json'), 'utf8')) }); return j; });
+      const by = Object.fromEntries(all.map((v) => [v.name, v]));
+      all.forEach((v) => { const g = v.parentGroupName ? by[v.parentGroupName].position : { x: 0, y: 0 }; v.at = { x: v.position.x + g.x, y: v.position.y + g.y, w: v.position.width, h: v.position.height }; });
+      return { id, name: pg.displayName, tooltip: pg.type === 'Tooltip', w: pg.width, h: pg.height, page: pg, visuals: all.filter((v) => v.visual) }; }); };
+  const pagesOf = (x, proj) => (x.err ? [] : report(path.join(ROOT, proj, x.j.report)));
+  const pageVisuals = (x, proj) => pagesOf(x, proj).filter((p) => !p.tooltip).flatMap((p) => p.visuals.map((v) => Object.assign(v, { pg: p })));
+  const type = (v) => v.visual.visualType, isKpi = (v) => type(v) === 'cardVisual' && !!v.parentGroupName;
+  const titleOf = (v) => { const t = ((v.visual.visualContainerObjects || {}).title || [{}])[0].properties || {}; return { text: L(t.text) === undefined ? '' : S(t.text), size: N(t.fontSize), wrap: L(t.titleWrap) === 'true', show: L(t.show) === 'true' }; };
+  const altOf = (v) => S(((v.visual.visualContainerObjects || {}).general || [{ properties: {} }])[0].properties.altText);
+  const valueOf = (v) => (v.visual.objects.value || []).find((e) => e.selector && e.selector.id === 'default').properties;
+  const DATA = ['lineChart', 'clusteredBarChart', 'clusteredColumnChart', 'donutChart', 'tableEx', 'pivotTable', 'gauge', 'funnel', 'treemap', 'map'];
+  const planOf = async (args) => (await ask('plan_layout', args)).j.design;
+  const themeOf = (x, proj) => { const res = path.join(ROOT, proj, x.j.report, 'StaticResources', 'RegisteredResources'), f = fs.readdirSync(res).find((n) => /\.json$/.test(n)); return JSON.parse(fs.readFileSync(path.join(res, f), 'utf8')); };
+  const wrapLines = (text, size, avail, font) => { const out = []; let cur = ''; String(text).split(' ').forEach((w) => { const t = cur ? cur + ' ' + w : w; if (!cur || tw(t, size, true, font) <= avail) cur = t; else { out.push(cur); cur = w; } }); out.push(cur); return out; };
+
+  // the made-up models: a calendar and sales (every kind of measure the rules tell apart), long Arabic names, no measures
+  const CAL = { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Year', 'int64'), col('Month Name', 'string'), col('Month Short', 'string'), col('Month Number', 'int64'),
+    col('Day Name', 'string'), col('Day of Week', 'int64'), col('Hijri Year', 'int64'), col('Is Ramadan', 'boolean'), col('Ramadan Day', 'int64')] };
+  const SALES = { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string'), col('Channel', 'string'), col('Date', 'dateTime')],
+    measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' },
+      { name: 'Avg Price', expression: 'AVERAGE ( Sales[Amount] )', formatString: '#,0.00' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 3 )', formatString: '0.00%' },
+      { name: 'Conversion Rate', expression: 'DIVIDE ( [Orders], 100 )' }, { name: 'Growth vs Last Year', expression: 'DIVIDE ( [Total Sales] - 90, 90 )' },
+      { name: 'Flag', expression: '1', formatString: '"Yes";"Yes";"No"' }, { name: 'Total Sales Last Ramadan', expression: 'SUM ( Sales[Amount] ) * 0.9', formatString: '#,0' }] };
+  const bim = (dir, name, tables) => { fs.mkdirSync(path.join(ROOT, dir, name + '.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, dir, name + '.SemanticModel', 'model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { culture: 'en-US', tables } })); };
+  bim('r12-project', 'R12 Test', [CAL, SALES]);
+  const AR_M = 'إجمالي المبيعات الصافية بعد الخصومات والمرتجعات', AR_C = 'اسم الفرع التجاري الرئيسي في المنطقة', AR_C2 = 'المنطقة الجغرافية للفرع الرئيسي';
+  bim('r12-ar', 'R12 AR', [{ name: 'المبيعات', partitions: mp('المبيعات'), columns: [col(AR_C, 'string'), col(AR_C2, 'string'), col('التاريخ', 'dateTime'), col('المبلغ', 'double')],
+    measures: [{ name: AR_M, expression: 'SUM ( \'المبيعات\'[المبلغ] )', formatString: '#,0' }, { name: 'عدد الطلبات', expression: 'COUNTROWS ( \'المبيعات\' )', formatString: '#,0' }] }]);
+  bim('r12-plain', 'R12 Plain', [{ name: 'Orders', partitions: mp('Orders'), columns: [col('Order ID', 'string'), col('Customer', 'string'), col('Region', 'string'), col('Product', 'string'), col('Order Date', 'dateTime'), col('Quantity', 'int64')] }]);
+
+  // A. #24: a chart's or table's title too long for one line is never cut at its start: it wraps to two lines, else it
+  //    is shortened at its end with "…" (the measure's name, at the start, stays); the full title is the alt text.
+  //    The room: the visual's width less 16 at each side on a 1920 x 1080 page (scaled); the theme's title size, bold.
+  //    A slicer's header too long for its slicer is shortened the same way (its header's own text, header.text).
+  const arD = await planOf({ layout: 'exec', kpis: 2, filters: 'end', lang: 'ar' });
+  const ar = await ask('create_report', { path: 'r12-ar', name: 'R12 AR', lang: 'ar', design: arD });
+  {
+    const vs = pageVisuals(ar, 'r12-ar'), bad = [], seen = [];
+    const T = ar.err ? 18 : themeOf(ar, 'r12-ar').textClasses.title.fontSize;
+    vs.filter((v) => DATA.includes(type(v)) && titleOf(v).show).forEach((v) => {
+      const t = titleOf(v), full = altOf(v), room = v.at.w - 2 * Math.round(16 * v.pg.h / 1080), font = 'Tahoma';
+      const lines = t.wrap ? wrapLines(t.text, T, room, font) : [t.text];
+      seen.push(`${type(v)} "${t.text}"${t.wrap ? ' (2 lines)' : ''}`);
+      if (lines.length > 2 || lines.some((l) => tw(l, T, true, font) > room + 0.5)) bad.push(`${type(v)} "${t.text}" does not fit ${room} at ${T}pt${t.wrap ? ' on two lines' : ''}`);
+      if (!full.startsWith(t.text.replace(/…$/, '').trim())) bad.push(`${type(v)} "${t.text}" is not the start of "${full}"`);
+    });
+    vs.filter((v) => type(v) === 'slicer').forEach((v) => { const p = v.visual.query.queryState.Values.projections[0], shown = p.displayName || p.nativeQueryRef, size = 10, room = v.at.w - 2 * Math.round(8 * v.pg.h / 1080);
+      seen.push(`slicer "${shown}"`); });
+    chk(() => !ar.err && vs.filter((v) => DATA.includes(type(v))).length >= 3 && bad.length === 0 && vs.some((v) => DATA.includes(type(v)) && (titleOf(v).wrap || /…$/.test(titleOf(v).text))),
+      () => `#24: long titles must wrap or end in "…", never be cut at their start: ${bad.slice(0, 5).join(' | ')} [${seen.join('; ')}] ${short(ar)}`);
+  }
+  // #24, the slicer header: shortened at its end to the slicer's width (its header size), the full name as alt text
+  {
+    const vs = pageVisuals(ar, 'r12-ar').filter((v) => type(v) === 'slicer'), bad = [];
+    const SL = ar.err ? 15 : +themeOf(ar, 'r12-ar').visualStyles.slicer['*'].header[0].textSize;
+    vs.forEach((v) => { const p = v.visual.query.queryState.Values.projections[0], ht = v.visual.objects.header[0].properties.text, shown = ht ? S(ht) : p.displayName || p.nativeQueryRef, room = v.at.w - 2 * Math.round(8 * v.pg.h / 1080);
+      if (tw(shown, SL, true, 'Tahoma') > room + 0.5) bad.push(`"${shown}" needs ${Math.round(tw(shown, SL, true, 'Tahoma'))} of ${room}`);
+      if (!altOf(v).startsWith(shown.replace(/…$/, '').trim())) bad.push(`"${shown}" is not the start of "${altOf(v)}"`); });
+    chk(() => vs.length >= 2 && bad.length === 0, () => `#24: a slicer header must fit its slicer: ${bad.join(' | ')}`);
+  }
+
+  // #12: in a right-to-left table the numbers are right-aligned as in English, so the text column's values (right-
+  //      aligned at the left end) never sit against the first number; text stays right-aligned. English unchanged.
+  const enD = await planOf({ layout: 'exec', kpis: 4, filters: 'end' });
+  const en = await ask('create_report', { path: 'r12-project', name: 'R12 EN', design: enD, fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin %]', 'Sales[Total Sales Last Ramadan]'], table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Orders]'] } });
+  const ar2 = await ask('create_report', { path: 'r12-project', name: 'R12 AR2', lang: 'ar', design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', lang: 'ar' }), fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin %]', 'Sales[Avg Price]'], table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Orders]'] } });
+  {
+    const fmt = (x, p) => pageVisuals(x, p).filter((v) => type(v) === 'tableEx').map((v) => v.visual.objects.columnFormatting.map((e) => e.selector.metadata + '=' + S(e.properties.alignment)).join(' | '));
+    chk(() => fmt(ar2, 'r12-project').length >= 1 && fmt(ar2, 'r12-project').every((f) => f === 'Sales.Region=Right | Sales.Orders=Right | Sales.Total Sales=Right') && fmt(en, 'r12-project').every((f) => f === 'Sales.Region=Left | Sales.Total Sales=Right | Sales.Orders=Right'),
+      () => `#12: numbers right-aligned in both directions, text at the reading start: AR ${JSON.stringify(fmt(ar2, 'r12-project'))} EN ${JSON.stringify(fmt(en, 'r12-project'))}`);
+  }
+
+  // #20: "What it means" never ships its placeholder sentence: given a text (create_report's "text"), the box holds it;
+  //      without one the box is left out and the chart beside it takes its room (the row's full width)
+  {
+    const fD = await planOf({ layout: 'focus', kpis: 3 });
+    const none = await ask('create_report', { path: 'r12-project', name: 'R12 Focus', design: fD, secondPage: false });
+    const given = await ask('create_report', { path: 'r12-project', name: 'R12 Focus T', design: fD, secondPage: false, text: 'Sales rose 12% in Ramadan; the north region led.' });
+    const PH = /Explain what the main chart shows|اشرح ما يعرضه/;
+    const boxes = (x) => pageVisuals(x, 'r12-project').filter((v) => type(v) === 'textbox').map((v) => JSON.stringify(v.visual.objects));
+    const line = (x) => pageVisuals(x, 'r12-project').find((v) => type(v) === 'lineChart'), kpiRow = (x) => pageVisuals(x, 'r12-project').filter(isKpi);
+    const rowW = (x) => { const k = kpiRow(x); return k.length ? Math.max(...k.map((v) => v.at.x + v.at.w)) - Math.min(...k.map((v) => v.at.x)) : 0; };
+    chk(() => !none.err && !boxes(none).some((b) => PH.test(b)) && line(none) && Math.abs(line(none).at.w - rowW(none)) <= 2 && /text/i.test(JSON.stringify(none.j.reportNotes || [])),
+      () => `#20: without a text the box must be left out and the chart take the row (${line(none) && line(none).at.w} of ${rowW(none)}), and the answer say so: ${JSON.stringify(boxes(none))} ${short(none)}`);
+    chk(() => !given.err && boxes(given).some((b) => /Sales rose 12% in Ramadan/.test(b)) && !boxes(given).some((b) => PH.test(b)),
+      () => `#20: with a text the box must hold it: ${JSON.stringify(boxes(given))} ${short(given)}`);
+  }
+
+  // #25: a model without measures: KPI cards that count (a distinct count of the ID column, of the other text columns,
+  //      the sum of a number column), a chart and a table from the same counts, laid out on the page as a designed
+  //      report is: no data visual written without its field, and no page four fifths empty
+  {
+    const pl = await ask('create_report', { path: 'r12-plain', name: 'R12 Plain', design: await planOf({ layout: 'exec', kpis: 4, filters: 'end' }), secondPage: false });
+    const vs = pageVisuals(pl, 'r12-plain'), page1 = pl.err ? null : pagesOf(pl, 'r12-plain')[0];
+    const data = vs.filter((v) => DATA.includes(type(v)) || isKpi(v));
+    const area = data.reduce((a, v) => a + v.at.w * v.at.h, 0), body = page1 ? page1.w * page1.h * 0.7 : 1;
+    const aggs = data.flatMap((v) => Object.values((v.visual.query || {}).queryState || {}).flatMap((r) => r.projections)).filter((p) => p.field.Aggregation).map((p) => p.field.Aggregation.Function + ':' + p.field.Aggregation.Expression.Column.Property);
+    chk(() => !pl.err && vs.filter(isKpi).length >= 3 && vs.some((v) => ['clusteredBarChart', 'clusteredColumnChart', 'lineChart'].includes(type(v))) && vs.some((v) => type(v) === 'tableEx')
+        && aggs.includes('2:Order ID') && aggs.some((a) => a === '0:Quantity') && data.every((v) => v.visual.query) && area >= 0.5 * body && /count/i.test(JSON.stringify(pl.j.reportNotes || [])),
+      () => `#25: a model without measures must give counts, a chart and a table that fill the page: ${data.length} data visuals, ${Math.round(100 * area / body)}% of the body; aggregations ${JSON.stringify(aggs)} ${short(pl)}`);
+  }
+
+  // #1: the phone's KPI title wraps to two lines when one line at 10pt is too long for the 157.5-wide card (titleWrap
+  //     in mobile.json), and is shortened with "…" only where two lines don't fit; the value keeps a size that fits
+  {
+    const bad = [], wrapped = [];
+    pageVisuals(en, 'r12-project').concat(pageVisuals(ar2, 'r12-project'), pageVisuals(ar, 'r12-ar')).filter((v) => isKpi(v) && v.mobile).forEach((v) => {
+      const t = ((v.mobile.visualContainerObjects || {}).title || [{}])[0].properties || {}, size = N(t.fontSize) || 10, room = v.mobile.position.width - 2 * 5;
+      const text = L(t.text) !== undefined ? S(t.text) : altOf(v), font = /[؀-ۿ]/.test(text) ? 'Tahoma' : 'Segoe UI', wrap = L(t.titleWrap) === 'true';
+      const lines = wrap ? wrapLines(text, size, room, font) : [text];
+      if (wrap) wrapped.push(text);
+      if (lines.length > 2 || lines.some((l) => tw(l, size, true, font) > room + 0.5)) bad.push(`"${text}" at ${size}pt in ${room}${wrap ? ' (2 lines)' : ''}`);
+    });
+    chk(() => wrapped.length >= 1 && bad.length === 0, () => `#1: phone KPI titles must fit (two lines where needed): ${bad.join(' | ')}; wrapped ${JSON.stringify(wrapped)}`);
+  }
+
+  // B (1), the owner's ask (#17): days and months in calendar order in tables too, the same order as the chart. A day or
+  //    month name the model gives no sort-by column is followed in the table by its number column (the minimum of the
+  //    model's Day of Week or Month Number, as the charts do), sorted by it ascending; that helper column is written as
+  //    narrow as Desktop allows, with no header and its text in the card colour. A name the model already sorts gets a
+  //    sort by itself (the model's order). The week starts where the model's day number starts.
+  bim('r12-sorted', 'R12 Sorted', [Object.assign({}, CAL, { columns: CAL.columns.map((c) => (c.name === 'Month Name' ? Object.assign({}, c, { sortByColumn: 'Month Number' }) : c)) }), SALES]);
+  {
+    const day = await ask('create_report', { path: 'r12-project', name: 'R12 Days', design: enD, secondPage: false, fields: { table: ['Calendar[Day Name]', 'Sales[Total Sales]', 'Sales[Orders]'], category: 'Calendar[Day Name]' } });
+    const mon = await ask('create_report', { path: 'r12-sorted', name: 'R12 Months', design: enD, secondPage: false, fields: { table: ['Calendar[Month Name]', 'Sales[Total Sales]'] } });
+    const tb = (x, p) => pageVisuals(x, p).find((v) => type(v) === 'tableEx'), refs = (v) => v ? v.visual.query.queryState.Values.projections.map((q) => q.queryRef) : [];
+    const sortOf = (v) => v && v.visual.query.sortDefinition ? v.visual.query.sortDefinition.sort.map((x) => JSON.stringify(x.field) + ':' + x.direction) : [];
+    const t1 = tb(day, 'r12-project'), helper = t1 && t1.visual.query.queryState.Values.projections.find((q) => q.field.Aggregation && q.field.Aggregation.Expression.Column.Property === 'Day of Week');
+    const look = t1 ? (t1.visual.objects.columnFormatting || []).find((e) => helper && e.selector.metadata === helper.queryRef) : null;
+    chk(() => !day.err && helper && helper.field.Aggregation.Function === 3 && refs(t1)[0] === 'Calendar.Day Name' && sortOf(t1).length === 1 && /Day of Week/.test(sortOf(t1)[0]) && /Ascending/.test(sortOf(t1)[0])
+        && (helper.displayName || '').trim() === '' && look && /'#/.test(JSON.stringify(look.properties.fontColor || {})) && (t1.visual.objects.columnWidth || []).some((e) => e.selector.metadata === helper.queryRef),
+      () => `#17: the day table must be sorted by the model's day number (a hidden helper column), Sunday to Saturday: ${JSON.stringify(refs(t1))} ${JSON.stringify(sortOf(t1))} ${JSON.stringify(t1 && t1.visual.objects.columnWidth)} ${short(day)}`);
+    const t2 = tb(mon, 'r12-sorted');
+    chk(() => !mon.err && refs(t2).length === 2 && sortOf(t2).length === 1 && /Month Name/.test(sortOf(t2)[0]) && /Ascending/.test(sortOf(t2)[0]),
+      () => `#17: a month name the model sorts must be sorted by itself, January to December, no helper: ${JSON.stringify(refs(t2))} ${JSON.stringify(sortOf(t2))} ${short(mon)}`);
+  }
+
+  // B (2), the owner's ask (#28): percent KPIs as percent without useless decimals; counts and whole numbers without
+  //    decimals; money and the rest keep the automatic units. A ratio (a % in its format or name; rate, ratio; or a
+  //    margin, share, vs, growth whose DAX divides and that has no format) shows "0.0%" (the model's own percent format
+  //    where it has one decimal or none); a measure whose format has no decimals (or a count without a format) shows its
+  //    whole number with separators ("179", "101,914"); the rest automatic units with 2 decimals (14.81K). Each as a
+  //    custom format on the card (Desktop's "Custom" display units, as measured in D8). Told in the answer and reportNotes.
+  {
+    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Formats', design: await planOf({ layout: 'exec', kpis: 6, filters: 'end' }), secondPage: false,
+      fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Avg Price]', 'Sales[Margin %]', 'Sales[Conversion Rate]', 'Sales[Growth vs Last Year]'] } });
+    const want = { 'Total Sales': '#,0', Orders: '#,0', 'Avg Price': null, 'Margin %': '0.0%', 'Conversion Rate': '0.0%', 'Growth vs Last Year': '0.0%' }, bad = [];
+    pageVisuals(x, 'r12-project').filter(isKpi).forEach((v) => {
+      const m = v.visual.query.queryState.Data.projections[0].field.Measure.Property, vs = v.visual.objects.value, d = valueOf(v), cust = vs.find((e) => e.selector && e.selector.metadata);
+      const got = cust ? S(cust.properties.customFormatString) : null;
+      if (got !== want[m] || (want[m] === null ? L(d.labelPrecision) !== '2L' : 'labelPrecision' in d) || (cust && cust.selector.metadata !== 'Sales.' + m)) bad.push(`${m}: ${got} ${L(d.labelPrecision)}`);
+    });
+    chk(() => !x.err && pageVisuals(x, 'r12-project').filter(isKpi).length === 6 && bad.length === 0 && /0\.0%/.test(x.j.kpiValues.note) && /whole/.test(x.j.kpiValues.note) && /percent/i.test(JSON.stringify(x.j.reportNotes || [])),
+      () => `B2: percent cards "0.0%", whole numbers "#,0", the rest 2 decimals: ${bad.join(' | ')} ${JSON.stringify(x.j && x.j.kpiValues)}`);
+    // the text measure ("Flag", a number with a text-only format) is never a KPI card (#26): left out with a note
+    const t = await ask('create_report', { path: 'r12-project', name: 'R12 Text', design: enD, secondPage: false, fields: { kpis: ['Sales[Total Sales]', 'Sales[Flag]'] } });
+    chk(() => !t.err && pageVisuals(t, 'r12-project').filter(isKpi).length === 1 && /Flag/.test(JSON.stringify(t.j.reportNotes || [])) && /text/i.test(JSON.stringify(t.j.reportNotes || [])),
+      () => `#26: a KPI card on a text measure must be left out with a note: ${pageVisuals(t, 'r12-project').filter(isKpi).length} cards ${short(t)}`);
+    const auto = await ask('create_report', { path: 'r12-project', name: 'R12 Auto', design: enD, secondPage: false });
+    chk(() => !auto.err && !pageVisuals(auto, 'r12-project').filter(isKpi).some((v) => /Flag/.test(JSON.stringify(v.visual.query))),
+      () => `#26: the picker must never put a text measure on a KPI card: ${pageVisuals(auto, 'r12-project').filter(isKpi).map((v) => JSON.stringify(v.visual.query.queryState.Data.projections[0].field.Measure.Property))}`);
+  }
+
+  // C (medium). Each check names its finding.
+  const kpiRow = (vs) => vs.filter(isKpi);
+  const LTR6 = await ask('create_report', { path: 'r12-project', name: 'R12 Six', design: await planOf({ layout: 'exec', kpis: 6, filters: 'end', page: '1280x720' }), secondPage: false,
+    fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Avg Price]', 'Sales[Margin %]', 'Sales[Conversion Rate]', 'Sales[Total Sales Last Ramadan]'] } });
+  const AR6 = await ask('create_report', { path: 'r12-project', name: 'R12 Six AR', lang: 'ar', design: await planOf({ layout: 'exec', kpis: 6, filters: 'end', page: '1280x720', lang: 'ar' }), secondPage: false,
+    fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Avg Price]', 'Sales[Margin %]', 'Sales[Conversion Rate]', 'Sales[Total Sales Last Ramadan]'] } });
+  // #15: a chart and the table beside it never carry the same title
+  {
+    const dup = [];
+    [[en, 'r12-project'], [ar2, 'r12-project'], [LTR6, 'r12-project'], [ar, 'r12-ar']].forEach(([x, p]) => pagesOf(x, p).filter((pg) => !pg.tooltip).forEach((pg) => {
+      const ts = pg.visuals.filter((v) => DATA.includes(type(v)) && titleOf(v).show).map((v) => altOf(v)); ts.forEach((t, i) => { if (ts.indexOf(t) !== i) dup.push(`${pg.name}: "${t}"`); }); }));
+    chk(() => !en.err && dup.length === 0, () => `#15: two visuals of one page share a title: ${dup.join(' | ')}`);
+  }
+  // #23 / #32: a designed table of days (7 rows, a header and a total) never hides its last rows behind a scrollbar: its
+  //   rows are written tighter (grid.rowPadding 0) where the default pitch would not fit, else the answer says so.
+  //   The pitch (measured in Desktop 2.158, round 11): 1.415 x the text's height in page units + 2 x rowPadding (1
+  //   when none is written); the header row 7 more; the title 1.5 x its size; 16 for the visual's padding.
+  {
+    const tbl = async (page) => { const x = await ask('create_report', { path: 'r12-project', name: 'R12 Rows ' + page, design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', page }), secondPage: false,
+      fields: { table: ['Calendar[Day Name]', 'Sales[Total Sales]', 'Sales[Orders]'] } }); return x; };
+    const bad = [];
+    for (const page of ['1280x720', '1920x1080', '960x720']) {
+      const x = await tbl(page); if (x.err) { bad.push(page + ': ' + x.t.slice(0, 120)); continue; }
+      const th = themeOf(x, 'r12-project'), T = +th.visualStyles.tableEx['*'].values[0].fontSize, TT = th.textClasses.title.fontSize;
+      pageVisuals(x, 'r12-project').filter((v) => type(v) === 'tableEx' && /Day Name/.test(JSON.stringify(v.visual.query))).forEach((v) => {
+        const g = ((v.visual.objects.grid || [{}])[0].properties || {}), pad = g.rowPadding ? N(g.rowPadding) : 1, pitch = 1.415 * T * 4 / 3 + 2 * pad;
+        const need = 1.5 * TT * 4 / 3 + (pitch + 7) + 8 * pitch + 16;
+        if (need > v.at.h + 0.5 && !/scroll/i.test(JSON.stringify(x.j.reportNotes || []))) bad.push(`${page}: a ${v.at.h}-high table needs ${need.toFixed(1)} (rowPadding ${pad}) and the answer says nothing`); });
+    }
+    chk(() => bad.length === 0, () => `#23: a table of days must show its 7 rows: ${bad.join(' | ')}`);
+  }
+  // #29: the phone layout of a table with SVG pictures fits the 323-wide phone: the pictures' width in mobile.json is
+  //   capped by what the table's other columns leave at the phone's 8pt
+  {
+    const bar = { w: 160, h: 24, values: [{ id: 'v', label: 'Sales', kind: 'measure', measure: 'Sales[Total Sales]' }], layers: [{ type: 'rect', x: 0, y: 4, w: 160, h: 16, fill: '#0f6cbd', bind: { w: { v: 'v', d0: 0, d1: 1000, r0: 0, r1: 160 } } }] };
+    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Phone pics', design: enD, secondPage: false, fields: { table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Orders]'] }, svgColumns: [{ label: 'Bar', design: bar }, { label: 'Bar 2', design: bar }] });
+    const t = pageVisuals(x, 'r12-project').find((v) => type(v) === 'tableEx' && v.mobile), g = t && ((t.mobile.objects || {}).grid || [{}])[0].properties || {};
+    const others = t ? t.visual.query.queryState.Values.projections.filter((p) => !(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema)).reduce((a, p) => a + Pb.columnRoom(p, 8, 'Segoe UI'), 0) : 0;
+    chk(() => !x.err && t && N(g.imageWidth) >= 8 && others + 2 * (N(g.imageWidth) + 10) <= 323 - 16 + 0.5,
+      () => `#29: the phone table's pictures must fit 323: imageWidth ${JSON.stringify(g)} others ${others} ${short(x)}`);
+  }
+  // #31: the header's title is the report's name (or create_report's "title"), never the theme's name
+  {
+    const hdr = (x, p) => pageVisuals(x, p).filter((v) => type(v) === 'textbox' && v.parentGroupName).map((v) => JSON.stringify(v.visual.objects));
+    const titled = await ask('create_report', { path: 'r12-project', name: 'R12 Named', design: enD, secondPage: false, title: 'Ramadan 1447 sales' });
+    chk(() => hdr(en, 'r12-project').some((t) => /"R12 EN"/.test(t)) && !hdr(en, 'r12-project').some((t) => /My Brand Theme/.test(t)) && hdr(titled, 'r12-project').some((t) => /"Ramadan 1447 sales"/.test(t)),
+      () => `#31: the header must show the report's name or the given title: ${JSON.stringify(hdr(en, 'r12-project').map((t) => t.slice(0, 120)))}`);
+  }
+  // #30, #14, #13: the Arabic logo placeholder "شعارك" at its side of the header (aligned to the page's edge, left in a
+  //   right-to-left report; right in English); hand-placed Arabic pages get the Arabic placeholder and Arabic tooltip
+  //   page names too
+  {
+    const logo = (x, p) => pageVisuals(x, p).find((v) => type(v) === 'textbox' && /شعارك|Your logo/.test(JSON.stringify(v.visual.objects)));
+    const al = (v) => v && v.visual.objects.general[0].properties.paragraphs[0].horizontalTextAlignment;
+    const hand = await ask('create_report', { path: 'r12-project', name: 'R12 Hand AR', lang: 'ar', rtl: true, font: 'Tahoma', pages: [{ name: 'صفحة', width: 1280, height: 720,
+      slots: [{ kind: 'title', x: 400, y: 12, w: 856, h: 40 }, { kind: 'logo', x: 24, y: 12, w: 160, h: 40 }, { kind: 'bar', x: 24, y: 70, w: 1232, h: 620 }] }] });
+    const tips = hand.err ? [] : pagesOf(hand, 'r12-project').filter((p) => p.tooltip).map((p) => p.name);
+    chk(() => al(logo(ar2, 'r12-project')) === 'left' && al(logo(en, 'r12-project')) === 'right' && /شعارك/.test(JSON.stringify(logo(hand, 'r12-project') && logo(hand, 'r12-project').visual.objects)) && tips.length >= 1 && tips.every((n) => /تلميح/.test(n)),
+      () => `#30/#14/#13: the logo placeholder at the page's edge, Arabic texts on hand-placed pages: AR ${al(logo(ar2, 'r12-project'))} EN ${al(logo(en, 'r12-project'))} hand ${JSON.stringify(logo(hand, 'r12-project') && logo(hand, 'r12-project').visual.objects).slice(0, 120)} tips ${JSON.stringify(tips)} ${short(hand)}`);
+  }
+  // the Arabic Reset: its arrow beside its text (seen in Desktop: at opposite ends): the icon placed at the reading
+  // start ("right" in Arabic) and the text aligned to it; English: the icon left, the text left
+  {
+    const reset = (x, p) => pageVisuals(x, p).find((v) => type(v) === 'actionButton' && /reset/.test(JSON.stringify(v.visual.objects.icon || [])));
+    const look = (v, o) => Object.assign({}, ...((v && v.visual.objects[o]) || []).map((e) => e.properties));
+    const a1 = reset(ar2, 'r12-project'), e1 = reset(en, 'r12-project');
+    chk(() => a1 && e1 && L(look(a1, 'icon').placement) === "'right'" && L(look(a1, 'text').horizontalAlignment) === "'right'" && L(look(e1, 'icon').placement) === "'left'" && L(look(e1, 'text').horizontalAlignment) === "'left'",
+      () => `the Reset's arrow beside its text: AR ${JSON.stringify([look(a1, 'icon').placement, look(a1, 'text').horizontalAlignment])} EN ${JSON.stringify([look(e1, 'icon').placement, look(e1, 'text').horizontalAlignment])}`);
+  }
+  // #22 and #21: one Ramadan (page filters on the Ramadan flag and the Hijri year): no slicer on a column a page filter
+  //   fixes, and the line chart by Ramadan Day (1 to 30), not by month (two points); both told
+  {
+    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Ramadan', design: enD, secondPage: false, fields: { slicers: ['Calendar[Hijri Year]', 'Calendar[Is Ramadan]', 'Sales[Region]'] },
+      pageFilters: [{ field: 'Calendar[Is Ramadan]', values: [true] }, { field: 'Calendar[Hijri Year]', values: [1447] }] });
+    const vs = pageVisuals(x, 'r12-project'), sl = vs.filter((v) => type(v) === 'slicer').map((v) => v.visual.query.queryState.Values.projections[0].queryRef);
+    const line = vs.find((v) => type(v) === 'lineChart'), notes = JSON.stringify((x.j || {}).reportNotes || []);
+    chk(() => !x.err && sl.length >= 1 && !sl.includes('Calendar.Is Ramadan') && !sl.includes('Calendar.Hijri Year') && /slicer/i.test(notes),
+      () => `#22: no slicer on a column the page filter fixes: ${JSON.stringify(sl)} ${notes.slice(0, 300)}`);
+    chk(() => line && line.visual.query.queryState.Category.projections[0].queryRef === 'Calendar.Ramadan Day' && /Ramadan Day/.test(notes),
+      () => `#21: one Ramadan's line chart by Ramadan Day: ${line && line.visual.query.queryState.Category.projections[0].queryRef}`);
+  }
+  // #16: month labels stay level: the line chart's axis takes the model's short month names ("Jan") where it has them
+  {
+    const line = pageVisuals(en, 'r12-project').find((v) => type(v) === 'lineChart');
+    chk(() => line && line.visual.query.queryState.Category.projections[0].queryRef === 'Calendar.Month Short' && /Month Number/.test(JSON.stringify(line.visual.query.sortDefinition || {})),
+      () => `#16: the line chart by the short month names, in month order: ${line && JSON.stringify(line.visual.query.queryState.Category)}`);
+  }
+  // #9, #7, #8 and the card image (accepted recommendation 3): one value size for the row (the smallest that fits
+  //   every card); the value lined up with its title (the inner padding at the reading start 0: paddingIndividual);
+  //   one image size for the row, its percent from the measured padding (25 a side at 1920 x 1080, scaled)
+  {
+    const bad = [];
+    [[LTR6, false], [AR6, true]].forEach(([x, rtl]) => {
+      const ks = kpiRow(pageVisuals(x, 'r12-project')), sizes = [...new Set(ks.map((v) => N(valueOf(v).fontSize)))];
+      if (sizes.length !== 1) bad.push(`${rtl ? 'AR' : 'EN'} value sizes ${sizes}`);
+      ks.forEach((v) => { const p = Object.assign({}, ...v.visual.objects.padding.map((e) => e.properties));
+        if (L(p.paddingIndividual) !== 'true' || N(rtl ? p.rightMargin : p.leftMargin) !== 0) bad.push(`${rtl ? 'AR' : 'EN'} "${altOf(v)}": padding ${JSON.stringify(p).slice(0, 160)}`); });
+    });
+    const ring = { w: 48, h: 48, values: [{ id: 'v', label: 'Sales', kind: 'measure', measure: 'Sales[Total Sales]' }], layers: [{ type: 'rect', x: 0, y: 0, w: 48, h: 48, fill: '#f5c518' }] };
+    const im = await ask('create_report', { path: 'r12-project', name: 'R12 Images', design: await planOf({ layout: 'exec', kpis: 6, filters: 'end' }), secondPage: false,
+      fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Avg Price]', 'Sales[Margin %]', 'Sales[Conversion Rate]', 'Sales[Total Sales Last Ramadan]'] }, svgCards: [1, 2, 3, 4, 5, 6].map((card) => ({ card, label: 'Ring ' + card, design: ring })) });
+    const ks = kpiRow(pageVisuals(im, 'r12-project')), pcts = [...new Set(ks.map((v) => N(v.visual.objects.image[0].properties.imageAreaSize)))];
+    const minW = Math.min(...ks.map((v) => v.at.w)), want = Math.max(10, Math.min(25, Math.round(100 * 48 / (minW - 50))));
+    chk(() => bad.length === 0 && ks.length === 6 && pcts.length === 1 && pcts[0] === want,
+      () => `#9/#7/#8: one value size a row, the value at its title's edge, one image percent a row (${want}): ${bad.join(' | ')} images ${JSON.stringify(pcts)} ${short(im)}`);
+  }
+  // #18: the filter rail ends under its last slicer: Reset right under it, and the rail's panel only as high as its content
+  {
+    const vs = pageVisuals(en, 'r12-project'), sl = vs.filter((v) => type(v) === 'slicer').sort((p, q) => p.at.y - q.at.y), last = sl[sl.length - 1];
+    const reset = vs.find((v) => type(v) === 'actionButton' && /reset/.test(JSON.stringify(v.visual.objects.icon || [])));
+    const band = vs.find((v) => type(v) === 'textbox' && !v.parentGroupName && v.at.x <= last.at.x && v.at.x + v.at.w >= last.at.x + last.at.w && v.at.h > last.at.h);
+    chk(() => last && reset && reset.at.y > last.at.y + last.at.h && reset.at.y - (last.at.y + last.at.h) <= 24 && (!band || band.at.y + band.at.h <= reset.at.y + reset.at.h + 24),
+      () => `#18: Reset right under the last slicer, the panel no taller than its content: last slicer ends ${last && last.at.y + last.at.h}, Reset at ${reset && reset.at.y}, panel ${band && JSON.stringify(band.at)}`);
+  }
+  // #2, #4, #5: the phone's page tabs each as wide as its name, from the reading start with a fixed gap; chart titles
+  //   in the theme's text colour on the phone; the current tab's line under it on the phone too
+  {
+    const vs = pageVisuals(en, 'r12-project').filter((v) => v.pg === pagesOf(en, 'r12-project')[0] || true), p1 = pagesOf(en, 'r12-project')[0];
+    const tabs = p1.visuals.filter((v) => type(v) === 'actionButton' && /PageNavigation/.test(JSON.stringify(v.visual.visualContainerObjects.visualLink || [])) && v.mobile).sort((a, b) => a.mobile.position.x - b.mobile.position.x);
+    const need = (v) => Math.ceil(tw(S(v.visual.objects.text.find((e) => e.selector).properties.text), 10, true, 'Segoe UI') + 10);
+    const line = p1.visuals.find((v) => type(v) === 'shape' && v.mobile), cur = tabs.find((v) => /'bold'|true/.test(JSON.stringify(v.visual.objects.text.find((e) => e.selector).properties.bold || '')));
+    const th = themeOf(en, 'r12-project'), chartT = p1.visuals.filter((v) => type(v) === 'lineChart' && v.mobile).map((v) => JSON.stringify(((v.mobile.visualContainerObjects || {}).title || [{}])[0].properties.fontColor || null));
+    chk(() => tabs.length === 2 && tabs.every((v) => Math.abs(v.mobile.position.width - need(v)) <= 1) && tabs[0].mobile.position.x === 0 && Math.abs(tabs[1].mobile.position.x - (tabs[0].mobile.position.width + 8)) <= 1,
+      () => `#2: phone tabs as wide as their names, from the reading start: ${JSON.stringify(tabs.map((v) => [v.mobile.position.x, v.mobile.position.width, need(v)]))}`);
+    chk(() => cur && line && Math.abs(line.mobile.position.y - (cur.mobile.position.y + cur.mobile.position.height)) <= 3 && line.mobile.position.x >= cur.mobile.position.x && line.mobile.position.x + line.mobile.position.width <= cur.mobile.position.x + cur.mobile.position.width,
+      () => `#5: the current tab's line on the phone: ${JSON.stringify(line && line.mobile.position)} under ${JSON.stringify(cur && cur.mobile.position)}`);
+    chk(() => chartT.length >= 1 && chartT.every((c) => c.includes(th.textClasses.title.color.toLowerCase()) || c.includes(th.textClasses.title.color)),
+      () => `#4: phone chart titles in the theme's text colour ${th.textClasses.title.color}: ${chartT}`);
+  }
+  // #6: two rows of tabs in the header start at the same x (the reading start), so the names line up in columns
+  {
+    const names = ['Executive overview', 'Sales by region and channel', 'Customers and loyalty', 'Products and categories', 'Returns and refunds', 'Stores and branches', 'Staff and targets', 'Notes and definitions'];
+    const pages = names.map((name) => ({ name, width: 1920, height: 1080, slots: [{ kind: 'title', x: 24, y: 12, w: 560, h: 72 }, { kind: 'logo', x: 1716, y: 12, w: 180, h: 72 }, { kind: 'bar', x: 24, y: 110, w: 1872, h: 940 }] }));
+    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Tabs, a title as long as the slot', pages });
+    const p1 = x.err ? null : pagesOf(x, 'r12-project')[0], tabs = p1 ? p1.visuals.filter((v) => type(v) === 'actionButton' && /PageNavigation/.test(JSON.stringify(v.visual.visualContainerObjects.visualLink || []))) : [];
+    const rows = [...new Set(tabs.map((v) => v.at.y))].sort((a, b) => a - b), starts = rows.map((y) => Math.min(...tabs.filter((v) => v.at.y === y).map((v) => v.at.x)));
+    chk(() => rows.length === 2 && starts[0] === starts[1], () => `#6: two tab rows must start at the same x: rows ${rows} starts ${starts} ${short(x)}`);
+  }
+
+  // D. The accepted recommendations of round 11.
+  // Recommendation 2: in a designed layout a header whose page names don't fit one row of tabs grows by one row; the
+  //   visuals under it move down and the last row is that much shorter (hand-placed pages never grow). Built with the
+  //   writer directly: a design's page names are the engine's, so long names are given here.
+  {
+    const E3 = req(path.join(REPO, 'assets/js/design-engine.js')), d = E3.fresh(); E3.repairState(d); d.layout.page = '1280x720'; d.layout.preset = 'exec'; d.layout.filters = true; E3.repairState(d);
+    const specs = E3.projectPages(d.layout, 'en', { second: true, panel: false });
+    const long = ['Sales by region, channel and branch for this month and last', 'Customers, loyalty programmes and the returns of the season'];
+    const make = (grow) => Pb.build({ name: 'G', title: 'Gulf Sales by region, channel and branch, every month', pageName: long[0], lang: 'en', rtl: false, font: d.font, ui: d.ui, theme: E3.buildTheme(d, 'en'), sample: true, logo: null, texts: {},
+      pages: specs.map((sp, i) => ({ name: long[i], page: sp.page, slots: sp.slots, panel: null, png: new Uint8Array([1]), grow })) });
+    const vis = (r) => { const vs = r.files.filter((x) => /visual\.json$/.test(x.path) && x.path.includes('/pages/') && !/tooltip/i.test(x.path)).map((x) => JSON.parse(String(x.data))), by = Object.fromEntries(vs.map((v) => [v.name, v]));
+      vs.forEach((v) => { const g = v.parentGroupName ? by[v.parentGroupName].position : { x: 0, y: 0 }; v.at = { x: v.position.x + g.x, y: v.position.y + g.y, w: v.position.width, h: v.position.height }; }); return vs.filter((v) => v.visual); };
+    const flat = make(false), tall = make(true), page1 = (r) => { const id = JSON.parse(String(r.files.find((x) => /pages\.json$/.test(x.path)).data)).pageOrder[0]; return vis({ files: r.files.filter((x) => x.path.includes('/pages/' + id + '/')) }); };
+    const tabs = (vs) => vs.filter((v) => v.visual.visualType === 'actionButton' && /PageNavigation/.test(JSON.stringify(v.visual.visualContainerObjects.visualLink || [])));
+    const kpi0 = (vs) => vs.filter((v) => v.visual.visualType === 'cardVisual' && v.parentGroupName).sort((a, b) => a.at.x - b.at.x)[0], low = (vs) => Math.max(...vs.filter((v) => /Chart$|tableEx/.test(v.visual.visualType)).map((v) => v.at.y + v.at.h));
+    const f1 = page1(flat), t1 = page1(tall), grew = (tall.headerGrew || [])[0], rows = [...new Set(tabs(t1).map((v) => v.at.y))];
+    // (without the growth the page falls back to Power BI's own navigator, which cuts long names)
+    chk(() => tabs(f1).length === 0 && f1.some((v) => v.visual.visualType === 'pageNavigator') && tall.noPageButtons.length === 0 && grew && grew.by > 0 && rows.length === 2 && tabs(t1).length === 2
+        && kpi0(t1).at.y === kpi0(f1).at.y + grew.by && low(t1) === low(f1),
+      () => `recommendation 2: the header must grow one row of tabs: flat ${flat.noPageButtons.length} pages without buttons; tall ${JSON.stringify(tall.headerGrew)} rows ${rows} tabs ${tabs(t1).length}; KPI y ${kpi0(f1) && kpi0(f1).at.y} -> ${kpi0(t1) && kpi0(t1).at.y}; bottom ${low(f1)} -> ${low(t1)}`);
+  }
+
+  // Recommendation 4, add_gulf_calendar (D-GC3, D-GC5 and one refusal, round 11): (a) the script carries sortByColumn for
+  //   Month Name, Day Name and Hijri Month Name (Desktop accepted them and the slicers came out in order), so those
+  //   three steps leave byHand; (c) howToApply says Preview will not warn when the name is taken; (d) a relateTo column
+  //   whose type the files don't give (a DAX table's) is accepted with a note; one of a known other type stays refused
+  {
+    bim('r12-gulf', 'R12 Gulf', [{ name: 'Orders', partitions: mp('Orders'), columns: [col('Amount', 'double'), { name: 'Order Day', sourceColumn: 'Order Day' }, col('Region', 'string')] }]);
+    const g = await ask('add_gulf_calendar', { path: 'r12-gulf', firstYear: 2024, lastYear: 2026, country: 'uae', relateTo: ['Orders[Order Day]'], asOf: '2026-10-04' });
+    const sc = g.err ? '' : fs.readFileSync(g.j.scriptFile, 'utf8');
+    const sorts = (sc.match(/^\t\t\tsortByColumn: .*$/gm) || []).map((x) => x.trim());
+    chk(() => !g.err && JSON.stringify(sorts) === JSON.stringify(["sortByColumn: 'Month Number'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Hijri Month Number'"])
+        && g.j.byHand.length === 1 && /Mark as date table/.test(g.j.byHand[0]) && /will not warn|won't warn/i.test(g.j.howToApply)
+        && (sc.match(/^\trelationship /gm) || []).length === 1 && /Order Day/.test(JSON.stringify(g.j.notes || [])) && /type/i.test(JSON.stringify(g.j.notes || [])),
+      () => `recommendation 4: sortByColumn in the script, one step by hand, Preview's silence told, an untyped date column related with a note: ${JSON.stringify(sorts)} ${g.err ? g.t.slice(0, 300) : JSON.stringify({ byHand: g.j.byHand, notes: g.j.notes, how: g.j.howToApply.slice(0, 200) })}`);
+    const txt = await ask('add_gulf_calendar', { path: 'r12-gulf', firstYear: 2024, lastYear: 2026, country: 'uae', relateTo: ['Orders[Region]'], name: 'Gulf Calendar 2' });
+    chk(() => txt.err && /not a date column/.test(txt.t) && /string/.test(txt.t), () => `a text column must still be refused for relateTo: ${txt.t.slice(0, 200)}`);
+  }
+
+  // Recommendation 5: a table too narrow for its fields first takes a smaller text (down to 8pt), and drops a column only
+  //   where even 8pt doesn't hold them; the size is written on the table (values, headers, total) and told
+  {
+    const fields = ['Calendar[Day Name]', 'Sales[Total Sales]', 'Sales[Orders]', 'Sales[Avg Price]', 'Sales[Margin %]', 'Sales[Total Sales Last Ramadan]'];
+    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Narrow', design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', page: '960x720' }), secondPage: false, fields: { table: fields } });
+    const t = pageVisuals(x, 'r12-project').find((v) => type(v) === 'tableEx'), T = x.err ? 10 : +themeOf(x, 'r12-project').visualStyles.tableEx['*'].values[0].fontSize;
+    const size = t && t.visual.objects.values ? N(t.visual.objects.values[0].properties.fontSize) : T;
+    const shown = t ? t.visual.query.queryState.Values.projections.filter((p) => !(p.field.Aggregation && p.displayName === ' ')) : [];
+    // the room each column takes at a size (the writer's own rule, columnRoom), and how many fields fit at the theme's size
+    const fitAt = (sz) => { const ps = fields.map((f) => { const m = f.match(/^(.+)\[(.+)\]$/); return /Total|Orders|Growth|Avg|Margin/.test(m[2]) ? { field: { Measure: {} }, nativeQueryRef: m[2] } : { field: { Column: {} }, nativeQueryRef: m[2] }; });
+      let used = 0, n = 0; for (const p of ps) { const r = Pb.columnRoom(p, sz, 'Segoe UI'); if (n < 2 || used + r <= t.at.w) { used += r; n++; } else break; } return n; };
+    chk(() => !x.err && t && size < T && size >= 8 && shown.length > fitAt(T) && shown.length === fitAt(size) && N(t.visual.objects.columnHeaders[0].properties.fontSize) === size && /text/i.test(JSON.stringify(x.j.reportNotes || [])),
+      () => `recommendation 5: a narrow table's text first, then its columns (${t && t.at.w} wide): ${size}pt (theme ${T}), ${shown.length} shown; ${t && fitAt(T)} fit at ${T}pt, ${t && fitAt(size)} at ${size}pt ${short(x)}`);
+  }
+
+  // E. Round 9's seen-not-in-scope: a visual is never written without its field. The slide-in filter panel wrote its
+  //   three slicers whatever the model had; on a model with one text column it holds one, and the others are named.
+  {
+    bim('r12-few', 'R12 Few', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string')], measures: [{ name: 'Total', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }]);
+    const x = await ask('create_report', { path: 'r12-few', name: 'R12 Few panel', design: await planOf({ layout: 'analysis', kpis: 3 }), secondPage: false, slidePanel: true });
+    const sl = pagesOf(x, 'r12-few').filter((p) => !p.tooltip).flatMap((p) => p.visuals).filter((v) => type(v) === 'slicer');
+    chk(() => !x.err && sl.length >= 1 && sl.every((v) => v.visual.query) && (x.j.leftOutVisuals || []).some((l) => /Slicer/.test(l.visual)),
+      () => `E: no slicer without its field in the slide-in panel: ${sl.length} slicers, ${sl.filter((v) => !v.visual.query).length} without a field; leftOut ${JSON.stringify(x.j && x.j.leftOutVisuals)}`);
+  }
+}
+// ---------- end of round 12 ----------
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);
