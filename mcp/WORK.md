@@ -72,15 +72,77 @@ never fixed tonight (only a FAIL of items 1-6, tests first).
 - **Read at the start:** WORK.md (round 10's sections), DESKTOP-TESTS.md lines 1-400 and 1402-1698 (the first
   sittings, round 10's records, the lessons) and every heading; the middle (rounds 0 to 4, the three sittings of 4
   October) by heading only, to be read where an item needs it.
-- **Next:** item 2 (phone layout: "T EN 4 1920", "T AR 4 1920", "T EN 8 1920", "T AR 8 1920" are built in `11-r11`
-  by `r11-tabs.mjs` + `r10-make.mjs`; `r11-phone.ps1` captures the phone canvas; `capx11.sh` captures pages into `desk-r11`).
+- **22:06, items 2 and 3: run; two FAILs fixed with tests first; records in DESKTOP-TESTS.md ("round 11, the long
+  overnight sitting").**
+  - **Item 2, phone tabs:** 4 and 8 tabs, English and Arabic: every name whole, in reading order, nothing over
+    anything (PASS x 4). Cut on those phone pages, not a tab: a card's title ("Total Sales Last Rama...", known
+    since 1 Oct): see "for the owner".
+  - **Item 2, a wrapped tab row:** wraps on two rows where the title slot is high enough (English 1280 x 720 with a
+    48-high title; English and Arabic 1920 x 1080 with 72): every name whole, the mark in either row (PASS x 3).
+    **FAIL:** with the usual header height (32 at 1280 x 720, 24 at 960 x 720) eight long names got **no page
+    button at all and no word in the answer**. Fixed (a test first, red 419 checks / 1 failing): the answer now has
+    `pageButtons.leftOutOn` and a `reportNotes` line. The buttons are still left out there.
+  - **Item 3, the table:** `grid.rowPadding` adds 2 a unit to the row pitch (15.1 / 17.1 nothing written / 22.8 /
+    30.7 for 0 / - / 4 / 8 at 8pt text); the grid starts 7.7 inside the visual; a cell pads its text 5 to 6 a side
+    (round 10's stand-in of 5 holds). No code changed.
+  - **Item 3, the card image:** English at 1920 x 1080 (six cards) and on three cards: values whole, images 46.9 to
+    54.6 (PASS x 2). **FAIL in Arabic (six cards at 1280 x 720, three at 1920 x 1080):** the image sat at the
+    right, at the value's side, and a 42pt value touched it. `position: 'Left'` measured by hand first, then fixed
+    (a test first): a right-to-left card's image is at the left.
+  - **Code changed (uncommitted until the full run ends):** `assets/js/pbip-export.js` (`noPageButtons`; the image's
+    `position` in a right-to-left card), `mcp/server.mjs` (`pageButtons`, the note), `mcp/test.mjs` (+2 checks: 420
+    expected), `pbip-export.min.js?v=20261005g` (in `theme-generator.js`), `theme-generator.min.js?v=20261005e` on
+    its two pages; `check:min` clean. `csp.mjs` on this CRLF checkout lists pages as always (CI is the record).
+  - `npm test` after the fixes: running at 22:06 (the count goes in the next entry).
+- **Scripts (laptop, `builder-scripts\`):** `shot11.ps1` (open one report of `11-r11`, capture the listed pages
+  into `desk-r11`), `r11-phone.ps1` (phone canvas), `r11-tabs.mjs`, `r11-cimg.mjs`, `r11-table.mjs`,
+  `r11-imgleft.mjs` (builders, with `r10-make.mjs "@%TEMP%/<spec>.json"`), `r11-pos.mjs`, `r11-phonepos.mjs`,
+  `r11-cardinfo.mjs` (what the files hold), `r11-tbmeasure.ps1` + `r11-tb4.ps1` (table ink), `yellow.ps1`,
+  `crop.ps1`, `r11-pkg-smoke.mjs`, `r11-pkg-one.mjs` (the unpacked package).
+- **Learned:** Desktop is opened from the PowerShell tool, not from bash (`desk.ps1` printed nothing and opened
+  nothing when started through bash with a path argument); a capture is 2750 x 1490 with the Filters pane, the page
+  is the left 2250; never estimate the clock, read it (`date`); edit WORK.md with the editor, not with `node -e`
+  (shell quoting ate backslashes three times).
+- **Next:** the full `npm test` result, commit; rebuild "CI AR ..." with the fix and capture them (the "after");
+  then item 4 (Gulf calendar), 5, 6, 7; the Claude Desktop install last.
 
 ### Round 11, for the owner
-(nothing yet)
+1. **A phone card's title is cut ("Total Sales Last Rama...").** On every phone page a KPI title longer than about
+   20 characters ends in "..." (157.5-wide card, 10pt title); known since 1 October, and round 10's "never cut" rule
+   covers the page's cards only. Options: (a) wrap to two lines on the phone as on the page (`titleWrap` in
+   `mobile.json`: to measure first that Desktop honours it there, and that two 10pt lines and a 20pt value fit the
+   100-high card); (b) shorten with "…" as on the page; (c) a smaller title (8pt) on the phone; (d) leave it.
+   **Recommended: (a), then (b) where two lines don't fit**, the same rule as the page. Crop:
+   `desk-r11\t-en-4-phone-p1.png`. Not fixed tonight: it is a new rule for the phone, not a slip of an existing one.
+2. **Page buttons that don't fit the header.** Eight long page names on a 1280 x 720 page (header 32 high) get no
+   page buttons; since tonight the answer says so. Options: (a) keep (tell, and leave them out); (b) let the header
+   grow by one row of tabs when the names need it (the body's visuals move down by about 21 to 25); (c) put the tabs
+   on a row of their own under the header; (d) shorten names with "…" and keep the full name in the tooltip.
+   **Recommended: (b) for designed layouts** (the engine owns the positions), (a) for hand-placed pages (the caller
+   owns them). Crops: `desk-r11\wrap-en-1280-head.png` (the two rows when the header is 48 high).
+3. **The card image's size is a little off its design** (54.6 for 48 on wide cards, 46.9 on a 1920 x 1080 six-card
+   page), because the image area is a percent of the card less its padding, not of 0.8 x the card. Options: (a)
+   leave it (nothing is cut); (b) compute the percent from the measured padding (25 a side at 1920 x 1080, 17 at
+   1280 x 720) so a design is drawn at its own size where it fits. **Recommended: (b)**, a small change with a test;
+   it needs your go because it changes what round 10 shipped.
 
 ### Round 11, design findings
 | # | Page and visual | What is off or could be better | Crop | Severity | Proposed fix | What it would change in the code |
 |---|---|---|---|---|---|---|
+| 1 | Phone layout, the KPI cards (all four tab reports) | the second card's title is cut: "Total Sales Last Rama..." | `t-en-4-phone-p1.png` | high | wrap to two lines on the phone, else shorten with "…" (owner item 1) | `pbip-export.js` `phoneLook`: the card's phone title through `kpiTitleFit` with the phone card's size |
+| 2 | Phone layout, the tabs | each name is centred in a button stretched to share the row, so the names look scattered and none lines up with the title's edge above ("Overview" starts 13 units right of the title; Arabic "نظرة عامة" floats in the middle of a row of its own) | `t-en-4-phone-p1.png`, `t-ar-4-phone-p1.png` | medium | keep each button as wide as its name and start the row at the reading start (left in English, right in Arabic), with the gap between them fixed | `pbip-export.js`, the phone `navbtn` rows: no `spare` shared out; x from the reading start |
+| 3 | Phone layout, Arabic tabs | Arabic names are given more width than they use (240 for a name whose ink is about 150), so four names take three rows where two would do, and eight take four | `t-ar-4-phone-p1.png`, `t-ar-8-phone-p1.png` | medium | measure Tahoma's widths per letter as was done for Segoe UI (round 10 used one upper figure, 0.62 em) | `textWidth` for Tahoma / Arabic in `pbip-export.js`; the tabs' widths on the page follow (they are spaced wide there too) |
+| 4 | Phone layout, card and chart titles | the titles are a pale grey on the white phone canvas, far fainter than the values and than the same titles on the page; "Total Sales by Quarter" is hard to read | `t-en-4-phone-p1.png` | medium | check the colour the phone title gets (it looks like the muted label colour at reduced opacity); use the theme's title colour | `phoneLook` in `pbip-export.js` (the title entry in `mobile.json`); to confirm in Desktop first: the mobile layout view may dim what is not selected |
+| 5 | Phone layout, the current tab | on the phone the current page is only bold and coloured; the line under it (the page's mark) is left out | `t-en-4-phone-p2.png` | low | a 2-high line under the current tab on the phone too | the underline `shape` gets a `mobile.json` position under its button |
+| 6 | The page header with two rows of tabs | both rows end at the logo's side, so the second row starts further right than the first and the names do not line up in columns | `wrap-en-1280-head.png`, `wrap-en-1920-head.png` | low | start both rows at the same x (the reading start of the room), or spread each row over the same width | the `tabs.rows` x in `pbip-export.js` (`left = ...`) |
+| 7 | KPI cards with an image, English, 1920 x 1080 six cards | the value starts about 9 page units right of its title's first letter (title at 47 px, value at 58 px in the crop); the number looks indented under its label | `ci-en-1080-six-cards.png`, `ci-en-720-three-cards.png` | medium | line the value's left edge up with the title's (the card's value has an inner padding the title has not) | the card's `value` padding or the title's left padding in `cardObjects` / `cardFrame`; measure which one Desktop honours |
+| 8 | KPI cards with an image, six cards | the values are light and small (23pt regular beside a 9pt bold title) and the images alternate between 46.9 and 48.6 wide (24 and 25 percent on cards one unit apart) | `ci-en-1080-six-cards.png` | low | one image percent for the row (the smallest card decides); consider a semibold value | `imgOf` / `kf.im.pct` per row, not per card |
+| 9 | KPI cards, Arabic six cards at 1280 x 720 | the first card's value is 15pt and the other five 14pt (the first card is 2 units wider), so one number in the row is bigger | `ci-ar-720-six-cards.png` | medium | one value size for the row, the smallest that fits every card (as round 10 did for the titles) | `cardFit`: the row's minimum value size |
+| 10 | KPI cards, Arabic, one-line and two-line titles in one row | the one-line titles sit lower than the first line of the wrapped ones (round 10's choice to keep the numbers level); the row's titles look uneven | `ci-ar-720-six-cards.png` | low | top-align every title and keep the numbers level by the title box's height, if Desktop allows the title a fixed height | the title's height in `cardFrame` (to measure) |
+| 11 | A hand-placed table 900 wide with three columns (default theme) | the text is 8pt on a 1920 x 1080 page and the three columns are spread over the whole width: a day and its two numbers are 400 units apart, hard to read across | `tb-en-t1.png` | medium | hand-placed pages get the generated theme's text sizes too (the designed pages have 15pt); for a table much wider than its columns need, cap the columns' width or centre the block | `create_report` with `pages` passes no theme unless given; `columnAdjustment` / column widths in the table's objects |
+| 12 | The Arabic table (text column first, drawn at the left) | "Friday" (right-aligned) and its first number (left-aligned) are 9 units apart and read as one text, while the two measures are 430 apart | `tb-ar-t1.png` | high | in a right-to-left table keep numbers right-aligned as in English (so the gap after the names is the column's own), or give the text column a wider minimum and pad its right edge | `columnFormatting` alignment for `rtl` in `pbip-export.js` (today numbers are 'Left' in right-to-left) |
+| 13 | Hidden tooltip pages in an Arabic report | their names are English ("Hidden Tooltip", "Hidden Tooltip · Month Name"); an editor sees them in the page tabs | the phone script's page list | low | Arabic names for the two tooltip pages in an Arabic report | `REPORT_TEXTS.ar` (the tooltip page names) |
+| 14 | A hand-placed Arabic report | the logo placeholder reads "Your logo" in an Arabic report | `wrap-ar-1920-head.png` | low | "شعارك" as the designed pages have | the hand-placed path of `create_report` does not pass the Arabic texts |
 <!-- r11 findings -->
 
 ## Round 11, small fixes (2026-10-05, cloud; branch `fix/round-11-small` from main `850b0a0`; not merged)

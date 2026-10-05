@@ -1653,7 +1653,109 @@ The table of "P3 EN" (the theme's text size; the engine writes no row padding, s
 - `size` on the card's image did nothing in three tries; what it is for was not found.
 - Not reached in the hour: 4 and 8 tabs on the phone layout; a tab row that has to wrap.
 
+## 2026-10-05, round 11, the long overnight sitting (`fix/round-11` from main `3803b7a`), Power BI Desktop 2.158.1177
+Made-up models only (the Ramadan sample, copied to `<tests folder>\11-r11`). Reports from the working copy's server
+over stdio (`builder-scripts\r10-make.mjs`); captures of the canvas through the bridge at double size in
+`<tests folder>\desk-r11\` (1.1719 capture pixels per page unit on a 1920 x 1080 page, 1.7578 on 1280 x 720; the page
+starts 115 pixels down); one report per command, in the foreground (`shot11.ps1`). The phone layout: "Mobile layout"
+pressed by UI Automation, the phone canvas captured from the window (`r11-phone.ps1`; 1.25 screen pixels per phone
+unit; the top 510 units of the canvas, it is not scrolled). Expected results: `mcp/WORK.md`, "Round 11, order of
+work", written before each run.
+
+### Item 2, the phone layout: 4 and 8 tabs, English and Arabic
+Hand-placed reports "T EN 4 1920", "T AR 4 1920", "T EN 8 1920", "T AR 8 1920" (`r11-tabs.mjs`: a title, a logo, two
+KPI cards and a bar chart on every page; the round 10 page names). The phone positions in the files were read first
+(`r11-phonepos.mjs`), then each report was opened and the phone canvas of pages 1 and 2 captured
+(`t-<lang>-<n>-phone-p1.png`, `-p2.png`).
+| Report | In the files | Seen on the phone canvas | Result |
+|---|---|---|---|
+| English, 4 tabs | 2 rows (y 64 and 116): Overview 95.5 wide + "Sales by region and channel" 219.5; Customers 113 + "Products and categories" 202; cards from y 168 | two rows, each name whole on one line, 52 apart (65 screen pixels), under the title and above the cards; "Overview" bold in the accent colour on page 1, "Sales by region and channel" on page 2; no line under the current tab (the underline is not on the phone, as the test says) | PASS |
+| Arabic, 4 tabs | **3 rows**: "نظرة عامة" alone (323 wide); "المبيعات حسب المنطقة والقناة" 240 at the right + "العملاء" 75 at the left; "المنتجات والفئات" alone; cards from y 220 | three rows, each name whole; the first page at the right of its row, the second page right of the third: right to left; the current page bold in the accent colour | PASS (whole, in order, nothing over anything). One row more than the names need: see the design findings |
+| English, 8 tabs | 3 rows (2, 2 and 4 names); cards from y 220 | three rows, every name whole; Returns, Stores, Staff, Notes share the third row | PASS |
+| Arabic, 8 tabs | 4 rows (1, 2, 3 and 2 names); cards from y 272 | four rows, every name whole, each row from the right; the cards and the chart follow | PASS |
+- Reading order on all four: title, tabs, the two cards side by side (Arabic: the first card at the right), the chart.
+- **Cut on every one of these phone pages, and not a tab: the second card's title, "Total Sales Last Rama..."** (a
+  157.5-wide phone card, its title at 10pt). Known since 2026-10-01 ("long card titles end in ..." on the phone);
+  round 10's wrap-or-shorten rule is applied to the page's cards only, not to the phone's. Not fixed tonight
+  (`mcp/WORK.md`, "Round 11, for the owner").
+- On the phone the titles of the cards and of the chart are drawn in a pale grey (the theme's label colour on a
+  white canvas), much fainter than on the page: see the design findings.
+
+### Item 2, a tab row that has to wrap (the page, not the phone)
+Eight long names ("Executive overview", "Sales by region and channel", "Customers and loyalty", "Products and
+categories", "Returns and refunds", "Stores and branches", "Staff and targets", "Notes and definitions"; and the
+Arabic ones in `r11-tabs.mjs`). The tabs wrap only when the title slot is high enough for two rows (each row is
+6 + 1.6 x pt + the line: 21 at 8pt in Segoe UI, 25 in Tahoma), so the header's height decides:
+| Report | Title slot | In the files | Seen in Desktop | Result |
+|---|---|---|---|---|
+| English 1280 x 720, "T EN 8 1280 long h48" | 48 high | two rows of four, 8pt, the rows 24 apart, both ending at the logo's side | two rows, every name whole; the mark (bold, accent colour, the line) on "Executive overview" on page 1 and on "Returns and refunds" in the second row on page 5 (`wrap-en-1280-head.png`) | PASS |
+| English 1920 x 1080, "T EN 8 1920 long h72" | 72 high | two rows of four, the rows 35 apart | two rows, every name whole, the mark in either row (`wrap-en-1920-head.png`) | PASS |
+| Arabic 1920 x 1080, "T AR 8 1920 long h72" | 72 high | two rows of four from the right | two rows, mirrored (the first page rightmost in the first row), every name whole, the mark in either row (`wrap-ar-1920-head.png`) | PASS |
+| English and Arabic 1280 x 720 and 960 x 720 with the header at its usual height ("T EN 8 1280 long", "T AR 8 1280 long", "T EN 8 960 long", "T AR 8 960 long"); and Arabic 1280 x 720 with a 48-high title | 32, 24; 48 | **no page button at all** on any page, and the answer said nothing (`reportNotes` empty in English) | not opened (there is nothing to see: no tab is written) | **FAIL** against the expected "they wrap to a second row" |
+- **Cause of the FAIL:** two rows need a title slot of 42 (Segoe UI) or 50 (Tahoma) at the 8pt minimum; a 32-high
+  header holds one row, eight long names don't fit one row, the fallback navigator doesn't fit either, so the writer
+  leaves the buttons out (by design: a cut name is worse), **silently**.
+- **Fixed, a test first (red: 419 checks, 1 failing):** the buttons are still left out, and the answer now says so:
+  `pageButtons: { leftOutOn: [the pages], why }` and one `reportNotes` line with what helps (shorter names, fewer
+  pages, a taller title slot). A report whose buttons fit has neither. Whether the header should grow by itself for a
+  second row is the owner's choice (`mcp/WORK.md`).
+- In the two-row headers the second row starts further right than the first (both rows end at the logo's side), so
+  the tabs do not line up in columns: a design finding, not a fault.
+
+### Item 3, the table: cell padding and `grid.rowPadding` (measured, no code changed)
+"TB EN" and "TB AR": four tables 900 x 440 on one hand-placed page (Day Name, Total Sales, Total Sales Last
+Ramadan; the default theme's 8pt table text), each given a magenta border by hand so its edge shows; the first
+with nothing written, the others with `grid.rowPadding` 0, 4 and 8 written by hand (`r11-table.mjs`). Measured with
+`r11-tbmeasure.ps1` (the border's box, each line of dark ink, the first and last pixel that is not white on that
+line), in page units.
+| `grid.rowPadding` | Row pitch | From the header's ink to the first row's ink | 
+|---|---|---|
+| nothing written | **17.1** | 23.9 |
+| 0 | **15.1** | 22.2 |
+| 4 | **22.8** | 30.7 |
+| 8 | **30.7** | 38.4 |
+- **Each unit of `rowPadding` adds 2 to the row pitch** (1 above and 1 below): 15.1 + 2 x the value at 8pt text
+  (ink 10.2 high from capital to descender). **With nothing written Desktop draws the rows as with 1.** Round 10's
+  20.9 was the generated theme's larger table text with nothing written; the same rule fits it (about 1.5 x the
+  ink + 2 x the padding).
+- **The grid starts 7.7 inside the visual's edge** on the left and on the right (the shaded rows and the rules end
+  there): that is the visual's own padding, not the cell's.
+- **A cell's padding, left and right: about 5 to 6.** The first column's text starts 12.8 to 13.7 from the visual's
+  edge (5.1 to 6.0 from the grid's edge); the last column's numbers end 13.7 from it (6.0). So the stand-in of
+  5 a side in `columnRoom` (round 10) is right within 1 page unit; `rowPadding` does not change it.
+- Arabic ("TB AR"): the same pitch (17.1 with nothing written). The text column is the first projection, drawn at
+  the left and right-aligned, the numbers left-aligned beside it; so "Friday" and "10,298" sit 9 page units apart
+  while 430 separate the two measures (`tb-ar-t1.png`): a design finding.
+
+### Item 3, the card image at 1920 x 1080, in Arabic and on a three-card page
+`svgCards` on every card (the round 10 test design, a 48 x 48 yellow square with an arrow), exec layout, built by the
+server (`r11-cimg.mjs`); the image's box measured by its colour (`yellow.ps1`).
+| Report | Card (w x h), the value | `imageAreaSize` written | The image drawn | Values | Result |
+|---|---|---|---|---|---|
+| "CI EN 1080 six", 1920 x 1080 | 244 to 247 x 144, 23pt | 24 or 25 | 46.9 x 46.9 (24) and 48.6 x 48.6 (25) | 101.91K, 74.68K, 0.34, 23.64K, 3.31, 101.91K: all whole, the image at the right end (`ci-en-1080-six-cards.png`) | PASS |
+| "CI EN 720 three", 1280 x 720 | 338 x 96, 28pt | 18 | 54.6 x 54.6 | 101.91K, 74.68K, 0.34 whole (`ci-en-720-three-cards.png`) | PASS |
+| "CI AR 720 six", 1280 x 720, Arabic | 163 x 96, 14pt (15pt on the 165-wide first card) | 25 | 32.4 x 32.4 (33.0 on the first) | whole; **but the image is at the right end, between the card's edge and the value** (`ci-ar-720-six-cards.png`) | **FAIL** (expected: the image at the far end from the value) |
+| "CI AR 1080 three", 1920 x 1080, Arabic | 507 x 144, 42pt | 12 | 54.6 x 54.6 | whole, **and the 42pt value touches the image** (`ci-ar-1080-three-cards.png`) | **FAIL** |
+- **Cause:** the card draws its image at the right by default; in a right-to-left card the value is at the right
+  too (round 10's design choice 1), so the image took the reading start.
+- **Measured before the code:** the same two reports with `position: 'Left'` added to the image entry by hand
+  (`r11-imgleft.mjs`, "... left"): the image at the left end at the same size (54.6; 31.3 to 32.4), the value at the
+  right under its title with clear air (`ci-ar-1080-three-left-cards.png`, `ci-ar-720-six-left-cards.png`).
+- **Fixed, a test first:** a right-to-left card's image entry carries `position: 'Left'`; a left-to-right card's is
+  unchanged. (The test was not run red on its own: the red evidence is the four reports above, built before the
+  fix, whose entries have no position.)
+- **The image area is a percent of the card's width less its padding on both sides** (about 50 on a 1920 x 1080
+  page: 245 -> 195; about 33 to 36 on 1280 x 720: 163 -> 130, 339 -> 303), not of 0.8 x the card as the writer
+  assumes. So on a wide card the image comes out a little larger than its design (54.6 for 48 on the three-card
+  pages) and on a 1920 x 1080 six-card page a little smaller (46.9). No value is cut by it. Not changed.
+
 ## Lessons
+- **Round 11: `grid.rowPadding` adds 2 a unit to a table's row pitch, and nothing written draws like 1**; the grid
+  starts 7.7 inside the visual and a cell pads its text by 5 to 6 on each side.
+- **Round 11: a card's image is drawn at the right unless `position: 'Left'` is written** (it works with
+  `imageAreaSize`); in a right-to-left card write it.
+- **Round 11: PowerShell ignores case in names (again):** a measuring script that kept the bitmap in `$b` and the
+  border's bottom in `$B` wrote 64 MB of errors. And `python -` in a shell command waits for input for ever.
 - **Round 10 (2.158.1177): a card's "Value decimal places" is `labelPrecision`** (`2L`), and it works in the card's
   default value entry: automatic units with 2 decimals for every card (3.43M, 14.81K, 231.50).
 - **Round 10: text width depends on the letters, not their count.** "Executive summary" is 0.49 em a character,
