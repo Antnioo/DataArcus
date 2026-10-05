@@ -60,6 +60,18 @@
   "expected": 29
  },
  {
+  "name": "A01 Day Name (Arabic) on 2026-03-01 is الأحد",
+  "expected": 1
+ },
+ {
+  "name": "A02 Month Name (Arabic) on 2026-03-01 is مارس",
+  "expected": 1
+ },
+ {
+  "name": "A03 Hijri Month Name (Arabic) on 2026-03-01 is رمضان",
+  "expected": 1
+ },
+ {
   "name": "R01 Ramadan 1447 day 1: sales",
   "expected": 257
  },

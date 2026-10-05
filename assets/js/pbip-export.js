@@ -227,7 +227,7 @@
   // row's "Total" only in the first projection's column and only when that is a column of text (measured in Desktop
   // 2.158, 4 Oct: with a measure first there was no "Total"), so the category sits at the left end and "Total" shows.
   const isTextField = (f) => f.c != null && !f.num && f.agg == null;
-  const Bind_nameLike = (name) => /(^|\s|_)(month|day|weekday)\s*_?(name|short)$|^(day of week|weekday|mmm|mmmm)$|short\s*month|^(اسم\s*)?(الشهر|اليوم)$/i.test(String(name).replace(/hijri|fiscal|هجري|مالي/i, '').trim());
+  const Bind_nameLike = (name) => /(^|\s|_)(month|day|weekday)\s*_?(name|short)$|^(day of week|weekday|mmm|mmmm)$|short\s*month|^(اسم\s*)?(الشهر|اليوم)$/i.test(String(name).replace(/\s*\((arabic|عربي)\)\s*$/i, '').replace(/hijri|fiscal|هجري|مالي/i, '').trim());
   const tableFields = (B, rtl) => {
     const fs = (B.table || []).filter(Boolean);
     if (!rtl) return fs;

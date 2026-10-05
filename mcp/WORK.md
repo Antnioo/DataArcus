@@ -22,6 +22,22 @@ The owner's rule tonight: a round that finishes early takes the non-severe not-i
   3. From round 12: `modelNotes` said "tables and slicers still show months in alphabetical order"; tables are in order
      since round 12, so it says slicers. From round 11 (D-GC1): `add_gulf_calendar`'s `howToApply` says that until the
      refresh, measures that name the new table show "Field list item has error" and a query on it fails.
+  4. **Arabic name columns in the Gulf calendar** (owner, 6 Oct 03:20). The Calendar Generator (option "Add Arabic name
+     columns", on by default, EN and AR text; off and greyed when the table's names are Arabic already; a saved state
+     without the option keeps its old table) and `add_gulf_calendar` (`arabicNames`, default true) write
+     `Day Name (Arabic)`, `Month Name (Arabic)` and `Hijri Month Name (Arabic)` from the generator's Arabic lists; the
+     MCP's script sorts each by Day of Week / Month Number / Hijri Month Number. Existing columns unchanged.
+     `create_report` on an Arabic report shows the (Arabic) column in place of Day Name, Month Name / Month Short and Hijri
+     Month Name (axis, table, slicer, tooltip) where the same table has it, with its sort; otherwise a reportNotes line:
+     "add the Gulf calendar's Arabic name columns to show Arabic day and month names". `pbip-bind` / the writer treat a
+     name with "(Arabic)" as the same kind of name. Test model: A01-A03 added (43 checks; the article says 43).
+     The laptop builder's `fix/round-13` (Arabic display names, reversed table columns) was not touched.
+- **Round 12b, for the laptop to prove:**
+  1. Apply `add_gulf_calendar`'s script (defaults) in TMDL view: the three (Arabic) columns are there, and slicers on
+     them list الأحد…السبت, يناير…ديسمبر and محرم…ذو الحجة in order (sort-by from the script).
+  2. `create_report` with `lang: "ar"` on that model: the axis, table and slicer show الأحد…السبت and يناير…ديسمبر in
+     calendar order; on a model without the columns the reportNotes line is there.
+  3. Run `scripts/gulf-calendar/test-model/check.dax` on the rebuilt test model: 43 of 43 pass (A01-A03 new).
 - **Left, with why:** #3 Tahoma widths, D16, D-P1b, #10 (title top-align) and the tooltip covering the ribbon (each
   needs Desktop); #11 (hand-placed pages get the generated theme's text sizes) and #8's semibold value (taste calls:
   they change how every hand-placed report looks); #19 (no property in Microsoft's schema); #27 (nothing in the

@@ -188,7 +188,9 @@
   };
   const FAMILY = /hijri|fiscal|هجري|مالي/i;
   const family = (n) => (String(n).match(FAMILY) || [''])[0].toLowerCase();
-  const nameLike = (name) => NAME_LIKE.test(String(name).replace(FAMILY, '').trim());
+  // the Gulf calendar's Arabic name columns ("Day Name (Arabic)") are the same kind of name as their English ones
+  const ARABIC_SUFFIX = /\s*\((arabic|عربي)\)\s*$/i;
+  const nameLike = (name) => NAME_LIKE.test(String(name).replace(ARABIC_SUFFIX, '').replace(FAMILY, '').trim());
   function sortColumnFor(columns, name) {
     if (!nameLike(name)) return null;
     const kind = sortKind(name), fam = family(name);

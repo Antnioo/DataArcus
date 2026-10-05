@@ -576,6 +576,30 @@ server.registerTool('create_report', {
   const fieldsOf = (b) => (b ? [b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean) : []);
   const keyOf = (f) => `${f.t}[${f.c != null ? f.c : f.m}]`;
   const named = (b) => { fieldsOf(b).forEach((f) => { const g = given.get(keyOf(f)); if (g) { f.name = g.name; g.used = true; } }); return b; };
+  // Owner 2026-10-06: an Arabic report shows the Gulf calendar's Arabic name columns (Day Name (Arabic), Month Name
+  // (Arabic), Hijri Month Name (Arabic)) in place of the English ones wherever the same table has them (axis, table,
+  // slicer, tooltip), with their own sort; without them the reportNotes say how to get them
+  const ARABIC_OF = [[/^day\s*name$/i, 'Day Name (Arabic)'], [/^month\s*(name|short)$/i, 'Month Name (Arabic)'], [/^hijri\s*month\s*name$/i, 'Hijri Month Name (Arabic)']];
+  const englishNames = new Set();
+  const inArabic = (b) => {
+    if (a.lang !== 'ar' || !b) return b;
+    const done = new Map();
+    const swap = (f) => {
+      if (!f || typeof f !== 'object' || f.c == null || f.t == null) return f;
+      if (done.has(f)) return done.get(f);
+      const rule = ARABIC_OF.find(([re]) => re.test(String(f.c).trim()));
+      const t = rule && m.tables.find((x) => x.name === f.t), col = t && t.columns.find((c) => c.name === rule[1]);
+      let out = f;
+      if (col) {
+        const by = col.sortBy ? null : Bind.sortColumnFor(t.columns, col.name);
+        out = Object.assign({}, f, { c: col.name }); delete out.sortBy; delete out.ordered;
+        Object.assign(out, by ? { sortBy: { t: t.name, c: by.name } } : {}, col.sortBy && Bind.nameLike(col.name) ? { ordered: true } : {});
+      } else if (rule) englishNames.add(keyOf(f));
+      done.set(f, out); return out;
+    };
+    const each = (v) => (Array.isArray(v) ? v.map(swap) : v && typeof v === 'object' && v.c == null && v.m == null ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, swap(x)])) : swap(v));
+    return Object.fromEntries(Object.entries(b).map(([k, v]) => [k, k === 'choices' ? v : each(v)]));
+  };
   // the logo, as the website takes it: a PNG or JPG, 2 MB at most; its size is read so its box can take its shape
   const reportNotes = [];
   // Power BI's own words can't be set by a report (measured: no slicer property holds "All")
@@ -610,7 +634,7 @@ server.registerTool('create_report', {
     const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel, logoRatio }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(pages))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues,
+      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(inArabic(named(bindFor(kpisOf(pages)))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues,
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
@@ -628,7 +652,7 @@ server.registerTool('create_report', {
     r = Pbip.build({
       name: a.name, title: a.title || a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(a.pages))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues,
+      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(inArabic(named(bindFor(kpisOf(a.pages)))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues,
       // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
       texts: Object.assign({}, E.REPORT_TEXTS[a.lang === 'ar' ? 'ar' : 'en'], { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' }),
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
@@ -688,6 +712,7 @@ server.registerTool('create_report', {
   const kpiValues = { kpiValues: FULL
     ? { mode: 'full', note: 'The KPI cards show Power BI\'s own default, and the full number with thousand separators (101,914) where the measure\'s format has none; the value is smaller on narrow cards so nine digits fit.' }
     : { mode: 'auto', note: CARD_RULE + ' For full numbers with separators on every card (101,914) pass kpiValues: "full".' } };
+  if (englishNames.size) reportNotes.push(`${[...englishNames].join(', ')} ${englishNames.size === 1 ? 'shows' : 'show'} the calendar's own names, English unless the calendar was made in Arabic: add the Gulf calendar's Arabic name columns to show Arabic day and month names (add_gulf_calendar writes them, as does the Calendar Generator's "Add Arabic name columns"), then create the report again.`);
   reportNotes.push('How the KPI cards show their numbers: ' + CARD_RULE + (textKpis.length ? '' : ''));
   if (textKpis.length) reportNotes.push(`${textKpis.length === 1 ? 'A KPI card was' : textKpis.length + ' KPI cards were'} left out: ${textKpis.map((k) => `${k.t}[${k.m}]`).join(', ')} ${textKpis.length === 1 ? 'shows' : 'show'} text, not a number (a format of words only, a date format, or DAX that returns text), and a KPI card would show that text. Pick a measure that returns a number for the card.`);
   if (slicersDropped.length) reportNotes.push(`No slicer on ${[...new Set(slicersDropped)].join(', ')}: a page filter already keeps one value of ${new Set(slicersDropped).size === 1 ? 'it' : 'each'}, so a slicer would only show the choice already made. The next columns took the rail's places.`);
@@ -817,7 +842,7 @@ server.registerTool('plan_layout', {
 
 server.registerTool('add_gulf_calendar', {
   title: 'Add a Gulf calendar table',
-  description: 'Writes the DataArcus Calendar Generator\'s date table for a Gulf model (Hijri year, month and day, Ramadan and Eid flags and Ramadan Day, the UAE\'s announced Ramadan and Eid dates with later ones marked as estimates, and the official weekend of the chosen country with the dates it changed) as a TMDL script in a new file next to the project. The user applies it in Power BI Desktop\'s TMDL view after checking Preview; this tool never writes into the model, never returns the DAX and never overwrites a file. firstYear and lastYear are required: ask the user which years their data covers (the tool reads no data). It refuses, writing nothing, when the model already has a table, measure or column with the table\'s name, when a relateTo column is missing or is not a date, and when the years are outside Power BI\'s dates or more than 60. Relationships are written only for the relateTo columns the user names (a column whose type the files don\'t give is accepted with a note); Month Name, Day Name and Hijri Month Name are sorted by their numbers in the script; marking the date table is a step by hand in the answer. Tell the user every step and note.' + UNTRUSTED,
+  description: 'Writes the DataArcus Calendar Generator\'s date table for a Gulf model (Hijri year, month and day, Ramadan and Eid flags and Ramadan Day, the UAE\'s announced Ramadan and Eid dates with later ones marked as estimates, and the official weekend of the chosen country with the dates it changed) as a TMDL script in a new file next to the project. The user applies it in Power BI Desktop\'s TMDL view after checking Preview; this tool never writes into the model, never returns the DAX and never overwrites a file. firstYear and lastYear are required: ask the user which years their data covers (the tool reads no data). It refuses, writing nothing, when the model already has a table, measure or column with the table\'s name, when a relateTo column is missing or is not a date, and when the years are outside Power BI\'s dates or more than 60. Relationships are written only for the relateTo columns the user names (a column whose type the files don\'t give is accepted with a note); Month Name, Day Name and Hijri Month Name (and their (Arabic) columns) are sorted by their numbers in the script; marking the date table is a step by hand in the answer. Tell the user every step and note.' + UNTRUSTED,
   inputSchema: {
     path: modelPath.describe('The model the table is for (read for name clashes and the relateTo columns); the script file goes next to it'),
     firstYear: z.number().int().describe('First year of the calendar (1 January). Ask the user: the years their data covers'),
@@ -826,6 +851,7 @@ server.registerTool('add_gulf_calendar', {
     weekend: z.enum(['country', 'sat-sun', 'fri-sat', 'fri', 'sun']).default('country').describe('country (default): the country\'s official weekend; or a fixed weekend for a company whose weekend differs'),
     announced: z.boolean().default(true).describe('Ramadan, Shawwal and Dhu al-Hijjah on the UAE\'s announced dates (later ones are Umm al-Qura estimates); false: Umm al-Qura only'),
     lang: z.enum(['en', 'ar']).default('en').describe('Language of the month, day and Hijri month names in the table (the column names stay English)'),
+    arabicNames: z.boolean().default(true).describe('Also write Day Name (Arabic), Month Name (Arabic) and Hijri Month Name (Arabic), sorted by their numbers, so an Arabic report can show Arabic names (an English table only: with lang "ar" the names are Arabic already)'),
     name: z.string().max(80).default('Gulf Calendar').describe('The new table\'s name: letters, digits, spaces and _, at most 40 characters. Never the name of a table, measure or column the model has'),
     weekStart: z.enum(['sunday', 'monday', 'saturday']).default('sunday').describe('The first day of the week for Day of Week and Week Start'),
     fiscalStart: z.number().int().min(1).max(12).default(1).describe('The month the fiscal year starts'),

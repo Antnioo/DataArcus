@@ -1615,13 +1615,15 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   check((sc.match(/^createOrReplace$/gm) || []).length === 1 && (sc.match(/^\ttable /gm) || []).length === 1 && /^\ttable 'Gulf Calendar'$/m.test(sc), `add_gulf_calendar script: one createOrReplace and one table 'Gulf Calendar': ${sc.slice(0, 200)}`);
   check((sc.match(/^\trelationship /gm) || []).length === 1 && /^\t\tfromColumn: Sales\.Date$/m.test(sc) && /^\t\ttoColumn: 'Gulf Calendar'\.Date$/m.test(sc), `add_gulf_calendar relationship: ${(sc.match(/\trelationship[\s\S]*/) || [''])[0]}`);
   check((sc.match(/\{ "\d{4}-\d{2}-\d{2}", \d+, \d+ \}/g) || []).length === 162, `add_gulf_calendar: Hijri month starts ${(sc.match(/\{ "\d{4}-\d{2}-\d{2}", \d+, \d+ \}/g) || []).length} (want 162)`);
-  check(!g.err && g.j.rows === 4748 && g.j.columns.length === 36 && g.j.table === 'Gulf Calendar', `add_gulf_calendar rows and columns: ${short(g)}`);
+  // 36 -> 39 (owner 2026-10-06): the three Arabic name columns are on by default
+  check(!g.err && g.j.rows === 4748 && g.j.columns.length === 39 && g.j.table === 'Gulf Calendar', `add_gulf_calendar rows and columns: ${short(g)}`);
   check(!g.err && g.j.announced.on === true && g.j.announced.checkedTo === '2026-05-27' && g.j.announced.estimatesFrom === '2027-02-08', `add_gulf_calendar announced: ${short(g)}`);
   check(!g.err && Array.isArray(g.j.selfCheck.findings) && g.j.selfCheck.findings.length === 0 && g.j.selfCheck.calendar === 'dataarcus-dax', `add_gulf_calendar selfCheck: ${g.err ? '' : JSON.stringify(g.j.selfCheck)}`);
   check(!g.err && !/DATATABLE|ADDCOLUMNS|CALENDAR \(/.test(g.t), 'add_gulf_calendar: the answer holds DAX');
   // (changed 6 Oct 2026, round 12, the owner's go on round 11's recommendation 4a: the three sort-by columns are in the
   // script, as Desktop accepted them in D-GC3, so marking the date table is the one step left by hand; it was 4 steps)
-  check(!g.err && g.j.byHand.length === 1 && /Mark as date table/.test(g.j.byHand[0]) && (sc.match(/^\t\t\tsortByColumn: /gm) || []).length === 3, `add_gulf_calendar byHand: ${g.err ? '' : JSON.stringify(g.j.byHand)}`);
+  // 3 -> 6 sortByColumn (owner 2026-10-06): each Arabic name column is sorted by the same number as its English one
+  check(!g.err && g.j.byHand.length === 1 && /Mark as date table/.test(g.j.byHand[0]) && (sc.match(/^\t\t\tsortByColumn: /gm) || []).length === 6, `add_gulf_calendar byHand: ${g.err ? '' : JSON.stringify(g.j.byHand)}`);
   check(!g.err && /TMDL view/.test(g.j.howToApply) && /Preview/.test(g.j.howToApply) && /nothing (is )?(changed|replaced)/i.test(g.j.howToApply), `add_gulf_calendar howToApply: ${g.err ? '' : g.j.howToApply}`);
   // asked again: the same file named, no second copy
   const again = await add({ path: 'bim-project', firstYear: 2018, lastYear: 2030, country: 'uae', relateTo: ['Sales[Date]'], asOf: '2026-10-04' });
@@ -1635,7 +1637,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   check(bad.every((x) => x.err && /Nothing was written/.test(x.t)) && /Sales\[Nope\]/.test(bad[0].t), `add_gulf_calendar bad inputs: ${bad.map(short).join(' | ')}`);
   check(filesIn('dax-project') === dBefore, `add_gulf_calendar refusals wrote files: ${dBefore} -> ${filesIn('dax-project')}`);
   // the website's default table: 2022-2027, Saturday-Sunday, Umm al-Qura only
-  const d = await add({ path: 'dax-project', firstYear: 2022, lastYear: 2027, weekend: 'sat-sun', announced: false, name: 'Plain Calendar' });
+  // arabicNames: false (owner 2026-10-06): the website's saved baseline tables predate the Arabic name columns
+  const d = await add({ path: 'dax-project', firstYear: 2022, lastYear: 2027, weekend: 'sat-sun', announced: false, arabicNames: false, name: 'Plain Calendar' });
   const dsc = d.err ? '' : fs.readFileSync(d.j.scriptFile, 'utf8');
   const daxOf = (script) => { const m = script.match(/\n\t\t\tsource =\n((?:\t\t\t\t\t.*\n?)+)/); return m ? m[1].split('\n').map((l) => l.replace(/^\t{5}/, '')).join('\n').replace(/\n+$/, '') : ''; };
   const webDefault = JSON.parse(fs.readFileSync(path.join(REPO, 'scripts/tests/fixtures/gulf-calendar/baseline.json'), 'utf8')).cg[0].dax.split('\n').slice(1).join('\n');
@@ -2759,7 +2762,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const g = await ask('add_gulf_calendar', { path: 'r12-gulf', firstYear: 2024, lastYear: 2026, country: 'uae', relateTo: ['Orders[Order Day]'], asOf: '2026-10-04' });
     const sc = g.err ? '' : fs.readFileSync(g.j.scriptFile, 'utf8');
     const sorts = (sc.match(/^\t\t\tsortByColumn: .*$/gm) || []).map((x) => x.trim());
-    chk(() => !g.err && JSON.stringify(sorts) === JSON.stringify(["sortByColumn: 'Month Number'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Hijri Month Number'"])
+    // each name twice (owner 2026-10-06): the English column and its Arabic one, sorted by the same number
+    chk(() => !g.err && JSON.stringify(sorts) === JSON.stringify(["sortByColumn: 'Month Number'", "sortByColumn: 'Month Number'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Hijri Month Number'", "sortByColumn: 'Hijri Month Number'"])
         && g.j.byHand.length === 1 && /Mark as date table/.test(g.j.byHand[0]) && /will not warn|won't warn/i.test(g.j.howToApply)
         && (sc.match(/^\trelationship /gm) || []).length === 1 && /Order Day/.test(JSON.stringify(g.j.notes || [])) && /type/i.test(JSON.stringify(g.j.notes || [])),
       () => `recommendation 4: sortByColumn in the script, one step by hand, Preview's silence told, an untyped date column related with a note: ${JSON.stringify(sorts)} ${g.err ? g.t.slice(0, 300) : JSON.stringify({ byHand: g.j.byHand, notes: g.j.notes, how: g.j.howToApply.slice(0, 200) })}`);
@@ -2826,7 +2830,44 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const g = await ask('add_gulf_calendar', { path: 'r12b-gulf', firstYear: 2025, lastYear: 2026, country: 'uae', asOf: '2026-10-04' });
     chk(() => !g.err && /Field list item has error/.test(g.j.howToApply) && /refresh/i.test(g.j.howToApply), () => `howToApply must say the Data pane's errors clear after the refresh: ${g.err ? g.t.slice(0, 200) : g.j.howToApply}`);
   }
+
+  // Round 12b, the owner's ask (6 Oct 03:20): Arabic name columns in the Gulf calendar, beside the English ones, so a
+  // bilingual model shows Arabic day and month names on Arabic pages. add_gulf_calendar writes "Day Name (Arabic)",
+  // "Month Name (Arabic)" and "Hijri Month Name (Arabic)", each sorted by its number column in the script
+  {
+    const g = await ask('add_gulf_calendar', { path: 'r12b-gulf', firstYear: 2025, lastYear: 2026, country: 'uae', asOf: '2026-10-04', name: 'Gulf Calendar AR' });
+    const sc = g.err ? '' : fs.readFileSync(g.j.scriptFile, 'utf8');
+    const sortOf = (c) => { const m = sc.match(new RegExp(`\\tcolumn '${c.replace(/[()]/g, '\\$&')}'\\n(?:\\t\\t\\t.*\\n)*?\\t\\t\\tsortByColumn: (.*)`)); return m ? m[1] : null; };
+    chk(() => !g.err && ['Day Name (Arabic)', 'Month Name (Arabic)', 'Hijri Month Name (Arabic)'].every((c) => g.j.columns.includes(c))
+        && sortOf('Day Name (Arabic)') === "'Day of Week'" && sortOf('Month Name (Arabic)') === "'Month Number'" && sortOf('Hijri Month Name (Arabic)') === "'Hijri Month Number'"
+        && /"الأحد"/.test(sc) && /"يناير"/.test(sc) && /"رمضان"/.test(sc) && g.j.columns.includes('Day Name') && g.j.columns.includes('Month Name'),
+      () => `add_gulf_calendar must write the three Arabic name columns, sorted: ${g.err ? g.t.slice(0, 200) : JSON.stringify(g.j.columns)} ${['Day Name (Arabic)', 'Month Name (Arabic)', 'Hijri Month Name (Arabic)'].map(sortOf)}`);
+    const off = await ask('add_gulf_calendar', { path: 'r12b-gulf', firstYear: 2025, lastYear: 2026, country: 'uae', asOf: '2026-10-04', name: 'Gulf Calendar EN', arabicNames: false });
+    chk(() => !off.err && !off.j.columns.some((c) => /\(Arabic\)/.test(c)), () => `arabicNames: false must leave them out: ${off.err ? off.t.slice(0, 200) : JSON.stringify(off.j.columns)}`);
+  }
+  // ... and an Arabic report shows the Arabic column instead of the English one (axis, table, slicer), in its order;
+  // without them it says how to get them
+  {
+    const cal = (ar) => ({ name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Year', 'int64'), col('Month Name', 'string'), col('Month Number', 'int64'),
+      col('Day Name', 'string'), col('Day of Week', 'int64')].concat(ar ? [Object.assign(col('Month Name (Arabic)', 'string'), { sortByColumn: 'Month Number' }), Object.assign(col('Day Name (Arabic)', 'string'), { sortByColumn: 'Day of Week' })] : []) });
+    const sales = { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime')], measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] };
+    for (const [dir, ar] of [['r12b-ar', true], ['r12b-en', false]]) { fs.mkdirSync(path.join(ROOT, dir, 'M.SemanticModel'), { recursive: true }); fs.writeFileSync(path.join(ROOT, dir, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [cal(ar), sales] } })); }
+    const plan = async (lang) => (await ask('plan_layout', { layout: 'exec', kpis: 1, filters: 'end', lang })).j.design;
+    const fields = { table: ['Calendar[Day Name]', 'Sales[Total Sales]'], category: 'Calendar[Day Name]', slicers: ['Calendar[Month Name]'] };
+    const a = await ask('create_report', { path: 'r12b-ar', name: 'AR names', lang: 'ar', design: await plan('ar'), fields });
+    const e = await ask('create_report', { path: 'r12b-ar', name: 'EN names', design: await plan('en'), fields });
+    const n = await ask('create_report', { path: 'r12b-en', name: 'AR no names', lang: 'ar', design: await plan('ar'), fields });
+    const refs = (x, p) => { const dir = path.join(ROOT, p, x.j.report, 'definition', 'pages'); const out = [];
+      const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((f) => { const q = path.join(d, f.name); if (f.isDirectory()) walk(q); else if (f.name === 'visual.json') out.push(fs.readFileSync(q, 'utf8')); }); walk(dir); return out.join('\n'); };
+    const ra = a.err ? '' : refs(a, 'r12b-ar'), re = e.err ? '' : refs(e, 'r12b-ar');
+    chk(() => !a.err && /"Property": "Day Name \(Arabic\)"/.test(ra) && /"Property": "Month Name \(Arabic\)"/.test(ra) && !/"Property": "Day Name"/.test(ra) && !/"Property": "Month Name"/.test(ra)
+        && /"Property": "Day Name"/.test(re) && !/\(Arabic\)/.test(re) && !/Arabic name columns/.test(JSON.stringify(a.j.reportNotes)),
+      () => `an Arabic report must show the Arabic name columns where the model has them, an English one the English: AR ${a.err ? a.t.slice(0, 200) : (ra.match(/"Property": "[^"]*Name[^"]*"/g) || []).join(',')} EN ${(re.match(/"Property": "[^"]*Name[^"]*"/g) || []).join(',')}`);
+    chk(() => !n.err && (n.j.reportNotes || []).some((x) => /add the Gulf calendar's Arabic name columns/i.test(x)),
+      () => `without them an Arabic report must say how to get them: ${JSON.stringify(n.j && n.j.reportNotes)}`);
+  }
 }
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);
