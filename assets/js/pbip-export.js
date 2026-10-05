@@ -25,6 +25,7 @@
   // ---------- small helpers ----------
   const lit = (v) => ({ expr: { Literal: { Value: v } } });
   const str = (s) => lit("'" + String(s).replace(/'/g, "''") + "'");
+  const S0 = (p) => (p && p.expr && p.expr.Literal ? String(p.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") : '');
   const bool = (b) => lit(b ? 'true' : 'false');
   const num = (n) => lit(n + 'D');
   const color = (hex) => ({ solid: { color: str(hex) } });
@@ -150,7 +151,14 @@
   // the projection's displayName; measured in Desktop 2.158, DESKTOP-TESTS.md round 2) and in the titles written
   // here. The model is not renamed, and queryRef stays the field's own.
   const fname = (f) => (f.m != null ? f.m : f.c);
-  const proj = (f) => Object.assign(f.m != null ? fieldMea(f.t, f.m) : fieldCol(f.t, f.c), f.name ? { displayName: String(f.name) } : {});
+  // Round 12 (#25): a model without measures still gets numbers: a column counted or summed by the visual itself (what
+  // Desktop writes when a column is dropped on a value well), f.agg being Microsoft's QueryAggregateFunction (semantic
+  // query schema: 0 Sum, 2 Distinct count, 5 Count of the non-null values). Such a field is a value, like a measure.
+  const AGG = { 0: ['Sum', 'Sum of '], 2: ['Count', 'Count of '], 5: ['CountNonNull', 'Count of '] };
+  const fieldAgg = (t, c, fn) => ({ field: { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Entity: t } }, Property: c } }, Function: fn } },
+    queryRef: (AGG[fn] || ['Agg'])[0] + '(' + t + '.' + c + ')', nativeQueryRef: (AGG[fn] || ['', ''])[1] + c });
+  const isValue = (f) => !!f && (f.m != null || f.agg != null);
+  const proj = (f) => Object.assign(f.agg != null ? fieldAgg(f.t, f.c, f.agg) : f.m != null ? fieldMea(f.t, f.m) : fieldCol(f.t, f.c), f.name ? { displayName: String(f.name) } : {});
   const tproj = (f) => Object.assign(proj(f), f.tableFormat ? { format: String(f.tableFormat) } : {});
   const label = (f) => (f ? (f.name ? String(f.name) : fname(f)) : null);
   // The room a table column takes beside SVG pictures, in page units, at the table's text size t: its header (bold) or
@@ -159,7 +167,7 @@
   // separator, measured in round 10); a column's values are not known to the writer, so 12 letters at 0.55 em.
   const columnRoom = (p, t, font) => {
     const head = textWidth(p.displayName || p.nativeQueryRef || '', t, true, font);
-    const value = p.field && p.field.Measure ? (9 * 0.54 + 2 * 0.21) * t * 4 / 3 : 12 * 0.55 * t * 4 / 3;
+    const value = p.field && (p.field.Measure || p.field.Aggregation) ? (9 * 0.54 + 2 * 0.21) * t * 4 / 3 : 12 * 0.55 * t * 4 / 3;
     return Math.ceil(Math.max(head, value) + 10);
   };
 
@@ -174,13 +182,14 @@
   function sampleBind(t) {
     const C = (c) => ({ t: t.table, c }), Me = (m) => ({ t: t.table, m }), m = t.m;
     return {
-      // (the margin is a percent, formatted 0.0% in the sample model: its card shows that format, see cardObjects)
-      kpis: [m.rev, m.ord, m.aov, m.mar, m.cus, m.rpc].map((x) => Object.assign(Me(x), x === m.mar ? { pct: true } : {})), measure: Me(m.rev), date: C(t.month),
+      // (the margin is a percent, formatted 0.0% in the sample model: its card shows that format, see cardObjects; round
+      // 12, the owner's rule: the "#,0" measures show their whole numbers, the "#,0.0" average automatic units)
+      kpis: [m.rev, m.ord, m.aov, m.mar, m.cus, m.rpc].map((x) => Object.assign(Me(x), x === m.mar ? { pct: true, pctFormat: '0.0%' } : x === m.aov ? {} : { wholeFormat: '#,0' })), measure: Me(m.rev), date: C(t.month),
       cats: { bar: C(t.category), column: C(t.region), donut: C(t.category), funnel: C(t.category), treemap: C(t.category), map: C(t.region) },
       y: { funnel: Me(m.ord), gauge: Me(m.mar) },
       table: [C(t.region), Me(m.rev), Me(m.ord), Me(m.mar)],
       slicers: [C(t.region), C(t.category), C(t.month)],
-      tip: { card: Me(m.rev), cat: C(t.category), y: Me(m.ord), date: C(t.month) }
+      tip: { card: Object.assign(Me(m.rev), { wholeFormat: '#,0' }), cat: C(t.category), y: Me(m.ord), date: C(t.month) }
     };
   }
   // the kinds of slot that are charts (they show the tooltip page on hover)
@@ -197,11 +206,27 @@
     query.sortDefinition = { sort: [{ field, direction: 'Ascending' }], isDefaultSort: true };
     return query;
   };
+  // Round 12, the owner's ask (#17; seen in Desktop 2.158, round 11: the chart ran Sunday to Saturday, the table beside
+  // it Friday, Monday, Saturday): days and months in calendar order in tables too. A day or month name that the model
+  // gives no sort-by column (f.sortBy, from the field picker: the number column that orders it) is followed by a helper
+  // column, the minimum of that number (as the charts carry it in their tooltips), and the table is sorted by it
+  // ascending; the helper is written without a header, as narrow as Desktop draws a column, in the card colour, so it
+  // does not show (see the table's objects). A name the model sorts itself (f.ordered) gets a sort by itself. The week
+  // starts where the model's day number starts. (A table sorts only by a field it holds, as a chart does: round 2.)
+  const orderHelper = (f) => ({ field: { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Entity: f.sortBy.t } }, Property: f.sortBy.c } }, Function: 3 } },
+    queryRef: 'Min(' + f.sortBy.t + '.' + f.sortBy.c + ')', nativeQueryRef: 'Min of ' + f.sortBy.c, displayName: ' ' });
+  const orderedBy = (fs) => fs.find((f) => isTextField(f) && (f.sortBy || f.ordered)) || null;
+  const inOrder = (query, fs) => {
+    const f = orderedBy(fs); if (!f) return query;
+    if (f.sortBy) { const h = orderHelper(f); query.queryState.Values.projections.push(h); query.sortDefinition = { sort: [{ field: h.field, direction: 'Ascending' }], isDefaultSort: true }; }
+    else query.sortDefinition = { sort: [{ field: proj(f).field, direction: 'Ascending' }], isDefaultSort: true };
+    return query;
+  };
   // a table's fields in the order they are shown (see bindQuery). Right to left: reversed (Power BI doesn't mirror
   // tables), but the first text column stays first (the owner's design choice 5, 5 Oct 2026): Power BI writes the total
   // row's "Total" only in the first projection's column and only when that is a column of text (measured in Desktop
   // 2.158, 4 Oct: with a measure first there was no "Total"), so the category sits at the left end and "Total" shows.
-  const isTextField = (f) => f.c != null && !f.num;
+  const isTextField = (f) => f.c != null && !f.num && f.agg == null;
   const tableFields = (B, rtl) => {
     const fs = (B.table || []).filter(Boolean);
     if (!rtl) return fs;
@@ -216,7 +241,7 @@
   const tableFit = (fields, width, t, font) => {
     const fs = (fields || []).filter(Boolean);
     if (fs.length <= 2) return { kept: fs, leftOut: [] };
-    const room = (f) => columnRoom(tproj(f), t, font), must = [fs.find(isTextField), fs.find((f) => f.m != null)].filter(Boolean);
+    const room = (f) => columnRoom(tproj(f), t, font), must = [fs.find(isTextField), fs.find(isValue)].filter(Boolean);
     let used = must.reduce((a, f) => a + room(f), 0), full = false;
     const kept = [], leftOut = [];
     fs.forEach((f) => { if (must.includes(f)) return void kept.push(f); if (!full && used + room(f) <= width) { used += room(f); kept.push(f); } else { full = true; leftOut.push(f); } });
@@ -238,9 +263,9 @@
       case 'donut': case 'funnel': return need(cat, y) ? q({ Category: [proj(cat)], Y: [proj(y)] }) : null;
       // a table column's number format on the report side is "format" on its projection (measured in Desktop 2.158,
       // third sitting of 2026-10-04: 13857 became 13,857); the field carries it as tableFormat
-      case 'table': { const fs = tableFields(B, rtl); return fs.length ? q({ Values: fs.map(tproj) }) : null; }
+      case 'table': { const fs = tableFields(B, rtl); return fs.length ? inOrder(q({ Values: fs.map(tproj) }), fs) : null; }
       // a matrix: rows by the table's first text column, its measures as the values
-      case 'matrix': { const fs = (B.table || []).filter(Boolean), row = fs.find((f) => f.c != null), vals = fs.filter((f) => f.m != null); return row && vals.length ? q({ Rows: [proj(row)], Values: vals.map(tproj) }) : null; }
+      case 'matrix': { const fs = (B.table || []).filter(Boolean), row = fs.find(isTextField), vals = fs.filter(isValue); return row && vals.length ? q({ Rows: [proj(row)], Values: vals.map(tproj) }) : null; }
       case 'gauge': return need(y) ? q({ Y: [proj(y)] }) : null;
       case 'treemap': return need(cat, y) ? q({ Group: [proj(cat)], Values: [proj(y)] }) : null;
       case 'map': return need(cat, y) ? q({ Category: [proj(cat)], Size: [proj(y)] }) : null;
@@ -256,7 +281,7 @@
     // a table or matrix by its content (the owner's design choice 3, 5 Oct 2026): its first measure by its first text
     // column, "Total Sales by Region"; the other columns are named by their headers
     if (kind === 'table' || kind === 'matrix') {
-      const fs = (B.table || []).filter(Boolean), m = fs.find((f) => f.m != null), c = fs.find(isTextField);
+      const fs = (B.table || []).filter(Boolean), m = fs.find(isValue), c = fs.find(isTextField);
       return m && c ? label(m) + ' ' + by + ' ' + label(c) : m ? label(m) : null;
     }
     return null;
@@ -280,6 +305,8 @@
     const noPageButtons = [];   // pages whose header has no room for the page names even at 8pt: { page } (round 11)
     const leftOut = [];   // data visuals not written because the model has no field for them: { page, kind, title }
     const kpiTitles = { wrapped: [], shortened: [] };
+    const titles = { wrapped: [], shortened: [], slicers: [] };   // chart and table titles, slicer headers (round 12, #24)
+    const tableOrder = [];   // tables put in calendar order by a helper column (round 12, #17)
     const svgSizes = {};   // the SVG pictures' size in each page's table: { w, h, design (the widest), capped }   // KPI titles too long for one line at 8pt (see kpiTitleFit)
     // (a name over the limit ends at its last whole word: cut at the last space before the limit, and a dash or
     // other joining mark left at the end goes too; one word longer than the limit is cut at the limit)
@@ -409,7 +436,7 @@
     // "-888.88bn" 4.4). An automatic value (units and 2 decimals) is 4.4 em at most; a full number is sized for nine
     // digits with its separators and decimals (valueEm). Before round 10 this was 7 x 0.55 = 3.85, and "74,675.00" was cut.
     const AUTO_EM = 4.4, FULL = o.kpiValues === 'full';
-    const valueEm = (f) => (FULL && f && f.cardFormat ? 9 * 0.54 + 2 * 0.21 + (/\./.test(f.cardFormat) ? 0.21 + 2 * 0.54 : 0) : AUTO_EM);
+    const valueEm = (f) => (FULL && f && f.cardFormat ? 9 * 0.54 + 2 * 0.21 + (/\./.test(f.cardFormat) ? 0.21 + 2 * 0.54 : 0) : !FULL && f && f.wholeFormat ? 9 * 0.54 + 2 * 0.21 : AUTO_EM);
     // n: the title's lines (1, or 2 for a KPI title that wraps, see kpiTitleFit); img: the width an image beside the value takes
     const cardFit = (w, h, s, title, callout, m, em, n, img) => {
       const P = Math.round(8 * s / 1.5), line = (f) => Math.ceil(f * 1.5) * (n || 1), S = (m && m.side) || P;
@@ -474,8 +501,15 @@
     // (the owner's design choices 1 and 2, 5 Oct 2026: a KPI card's value sits at the reading start under its title,
     // side = align; other cards stay centred. A percent card (f.pct) shows the model's own format, 35.4% for 0.0%: no
     // "Value decimal places" on it.)
+    // Round 12, the owner's ask (6 Oct 2026): a percent shows as a percent without useless decimals (f.pctFormat: the
+    // model's percent format with one decimal or none, else "0.0%"), a number whose format has no decimals as its whole
+    // number with separators (f.wholeFormat: "179", "101,914"; not with kpiValues "full", which has its own), the rest
+    // with automatic units and 2 decimals. The format is a second entry of "value", selected by the field's query
+    // reference, with Desktop's "Custom" display units (measured in Desktop 2.158, D8, for the full number).
+    const cardCode = (f) => (f ? f.pctFormat || (!FULL && f.wholeFormat) || null : null);
     const cardObjects = (c, side, f) => ({
-      value: obj(Object.assign({ fontSize: num(c.V), horizontalAlignment: str(side || 'center') }, FULL || (f && f.pct) ? {} : { labelPrecision: lit('2L') }), DEF),
+      value: obj(Object.assign({ fontSize: num(c.V), horizontalAlignment: str(side || 'center') }, FULL || (f && (f.pct || cardCode(f))) ? {} : { labelPrecision: lit('2L') }), DEF)
+        .concat(cardCode(f) ? [{ properties: { labelDisplayUnits: num(-1), customFormatString: str(cardCode(f)) }, selector: { metadata: proj(f).queryRef } }] : []),
       label: obj({ show: bool(false) }, DEF),
       padding: obj({ paddingUniform: num(c.I) }, DEF),
       layout: obj({ paddingUniform: num(0) }, DEF),
@@ -599,6 +633,34 @@
         if (!shown) { const ch = [...String(text)]; for (let n = ch.length - 1; n >= 1 && !shown; n--) { const t = ch.slice(0, n).join('').trimEnd() + '…'; if (textWidth(t, size, true, font) <= avail) shown = t; } }
         return { mode: 'shortened', shown: shown || '…' };
       };
+      // Round 12 (#24; seen in Desktop 2.158, 5 Oct 2026: long Arabic chart titles and a slicer header were cut at their
+      // start, "...عات حسب اسم الفرع التجاري الرئيسي", so the measure's name was lost). A chart's or table's title too
+      // long for one line wraps to two (titleWrap, as a KPI title does), and one too long for two lines is shortened at a
+      // word with "…" at its end, so it still begins with the measure's name; the full title stays the alt text. The
+      // room: the visual's width less 16 a side (1920 x 1080, scaled); the theme's title size, measured as bold.
+      const titleFit = (text, size, avail) => {
+        if (text == null || textWidth(text, size, true, font) <= avail) return { mode: 'one', shown: text };
+        const two = (t) => { const ls = wrapLines(t, size, avail); return ls.length <= 2 && ls.every((l) => textWidth(l, size, true, font) <= avail); };
+        if (two(text)) return { mode: 'wrapped', shown: text };
+        const words = String(text).split(' ');
+        for (let n = words.length - 1; n >= 1; n--) { const t = words.slice(0, n).join(' ').replace(/[\s,;:(\-–]+$/, '') + '…'; if (two(t)) return { mode: 'shortened', shown: t }; }
+        const ch = [...String(text)];
+        for (let n = ch.length - 1; n >= 1; n--) { const t = ch.slice(0, n).join('').trimEnd() + '…'; if (textWidth(t, size, true, font) <= avail) return { mode: 'shortened', shown: t, one: true }; }
+        return { mode: 'shortened', shown: '…', one: true };
+      };
+      // one line only, shortened at its end (a slicer's header, a phone title that two lines don't hold)
+      const oneLine = (text, size, avail) => {
+        if (text == null || textWidth(text, size, true, font) <= avail) return text;
+        const words = String(text).split(' ');
+        for (let n = words.length - 1; n >= 1; n--) { const t = words.slice(0, n).join(' ').replace(/[\s,;:(\-–]+$/, '') + '…'; if (textWidth(t, size, true, font) <= avail) return t; }
+        const ch = [...String(text)];
+        for (let n = ch.length - 1; n >= 1; n--) { const t = ch.slice(0, n).join('').trimEnd() + '…'; if (textWidth(t, size, true, font) <= avail) return t; }
+        return '…';
+      };
+      // a slicer's header, shortened to the slicer's width: the header's own text (header.text, in Microsoft's theme
+      // schema), so the field keeps its name everywhere else; the full name stays the slicer's alt text
+      const slicerHeader = (f, w) => { const out = { show: bool(true), fontFamily: str(font) }; if (!f) return obj(out); const full = label(f), shown = oneLine(full, SLICER_TEXT, w - 2 * Math.round(8 * k));
+        if (shown !== full) { titles.slicers.push({ page: pg.name || base, field: full, shown }); out.text = str(shown); } return obj(out); };
       const charts = [];
       sorted.forEach((s) => {
         const g = groupOf(s.kind);
@@ -714,7 +776,7 @@
             const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
             const v = container({ x: Math.round(x), y: Math.round(y), w: Math.round(sw), h: Math.round(sh), z: z, parent, kind: 'slicer',
               visual: { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
-                objects: { data: obj({ mode: str('Dropdown') }), header: obj({ show: bool(true), fontFamily: str(font) }) },
+                objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, Math.round(sw)) },
                 visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true } });
             slicerNames.push(v.name);
             z += 1000;
@@ -748,7 +810,9 @@
             // the placeholder until a logo is added: sized to the header slot, in the secondary text colour so it reads
             : { visualType: 'textbox', objects: textbox(W.logoHere || 'Your logo', size, false, mixHex(u.text, u.card, 0.3)), visualContainerObjects: frame(null, W.logo || 'Logo') };
         } else if (s.kind === 'text') {
-          visual = { visualType: 'textbox', objects: textbox(W.textHere || 'Explain what the main chart shows and what to do about it.', 11, false, u.text), visualContainerObjects: frame(s.title, s.title, null, true) };
+          // (round 12, #20: the slot's own text when the caller gives one, s.text; the placeholder is for the website's
+          // template download only: create_report leaves the box out when it has no text for it)
+          visual = { visualType: 'textbox', objects: textbox(s.text != null ? String(s.text) : W.textHere || 'Explain what the main chart shows and what to do about it.', 11, false, u.text), visualContainerObjects: frame(s.title, s.title, null, true) };
         } else {
           // a table keeps only the fields its width has room for (tableFit); Bt is the bind this table is written from
           let Bt = B;
@@ -771,6 +835,10 @@
           if (B && own && !query && (CHARTS.includes(s.kind) || ['table', 'matrix', 'gauge', 'card'].includes(s.kind))) { leftOut.push({ page: pg.name || base, kind: s.kind, title: s.title || null }); return; }
           visual = { visualType: type, visualContainerObjects: frame(ttl, ttl, extra, true), drillFilterOtherVisuals: true };
           if (query) visual.query = query;
+          if (s.kind !== 'kpi' && s.kind !== 'card' && ttl) {
+            const tf = titleFit(ttl, TITLE, s.w - 2 * Math.round(16 * pg.page.h / 1080)), tp = visual.visualContainerObjects.title[0].properties;
+            if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); titles[tf.mode].push({ page: pg.name || base, title: ttl, shown: tf.shown }); }
+          }
           // the title already names the KPI, so the card's own label under the number is not repeated
           if (type === 'cardVisual') {
             const cf0 = query && B ? (s.kind === 'kpi' ? B.kpis[kpiIndex - 1] : B.measure) : null;
@@ -801,16 +869,25 @@
             // the card gets the entry Desktop itself writes for Display units "Custom" with a format code: a second
             // entry of "value", selected by the field's query reference. Only cards: tables and tooltips not measured.
             const cf = query && B ? (s.kind === 'kpi' ? B.kpis[kpiIndex - 1] : B.measure) : null;
-            if (FULL && cf && cf.m != null && cf.cardFormat) visual.objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(cf.cardFormat) }, selector: { metadata: cf.t + '.' + cf.m } });
+            if (FULL && cf && cf.m != null && cf.cardFormat && !cardCode(cf)) visual.objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(cf.cardFormat) }, selector: { metadata: cf.t + '.' + cf.m } });
           }
           // tables fill their visual (grow to fit), instead of shrinking to their content and leaving the rest empty
           // (on a right-to-left page the title sat on the right and the table on the left)
           if (s.kind === 'table') visual.objects = { columnHeaders: obj({ columnAdjustment: str('growToFit'), autoSizeColumnWidth: bool(true) }) };
           // each column's header sits over its own values: text on the reading-start side, numbers (measures, and columns
-          // the model types as numbers) on the other; "Apply to header" (styleHeader) makes the header follow
+          // the model types as numbers) right-aligned in both directions; "Apply to header" (styleHeader) makes the header
+          // follow. (Round 12, #12; seen in Desktop 2.158, 5 Oct 2026: in a right-to-left table with left-aligned numbers,
+          // "Friday", right-aligned at the left end, and its first number were 9 apart and read as one text, while 430
+          // separated the two measures. Right-aligned, a number ends at its column's far edge, as in English.)
           if (s.kind === 'table' && query) visual.objects.columnFormatting = tableFields(Bt, rtl).map((f) => ({
-            properties: { alignment: str(f.m != null || f.num ? (rtl ? 'Left' : 'Right') : (rtl ? 'Right' : 'Left')), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) },
-            selector: { metadata: f.t + '.' + fname(f) } }));
+            properties: { alignment: str(isValue(f) || f.num ? 'Right' : (rtl ? 'Right' : 'Left')), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) },
+            selector: { metadata: proj(f).queryRef } }));
+          // the calendar order's helper column (see inOrder): its text in the card colour and as narrow as Desktop allows
+          const oh = s.kind === 'table' && query ? orderedBy(tableFields(Bt, rtl)) : null;
+          if (oh && oh.sortBy) { const ref = orderHelper(oh).queryRef;
+            visual.objects.columnFormatting.push({ properties: { fontColor: color(u.card), alignment: str('Right'), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) }, selector: { metadata: ref } });
+            visual.objects.columnWidth = [{ properties: { value: num(1) }, selector: { metadata: ref } }];
+            tableOrder.push({ page: pg.name || base, field: oh.t + '[' + oh.c + ']', by: oh.sortBy.t + '[' + oh.sortBy.c + ']' }); }
           // SVG columns (experimental; measured in Desktop 2.158, D-P1, 2026-10-04): report-level measures of
           // reportExtensions.json, shown as the last columns of the page's first table (the reading end: on a
           // right-to-left page that is the left, where the table's first projection sits)
@@ -832,7 +909,7 @@
               // (columnRoom) and the pictures share what is left, each with + 10 like a column; their width is capped by
               // that, 8 at least, and the height follows the designs' ratio. With room, the designs' own size is kept.
               const wide = Math.max(...mine.map((c) => +c.w || 0)) || 75, tt = +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
-              const others = query.queryState.Values.projections.filter((p) => !(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema)).reduce((a, p) => a + columnRoom(p, tt, font), 0);
+              const others = query.queryState.Values.projections.filter((p) => !(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema) && p.displayName !== ' ').reduce((a, p) => a + columnRoom(p, tt, font), 0);
               const W = Math.max(8, Math.min(512, wide, Math.floor((s.w - others) / cols.length) - 10));
               const H = Math.max(8, Math.min(512, Math.round(Math.max(...mine.map((c) => (+c.h || 75) * Math.min(1, W / (+c.w || 75)))))));
               visual.objects = Object.assign(visual.objects || {}, { grid: [{ properties: { imageHeight: num(H), imageWidth: num(W) } }] });
@@ -936,7 +1013,7 @@
           const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
           const v = add1({ x: Math.round(P.x + pad), y: Math.round(P.y + head + 8 * k + i * (sh + gap)), w: Math.round(sw), h: Math.round(sh), kind: 'slicer',
             visual: { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
-              objects: { data: obj({ mode: str('Dropdown') }), header: obj({ show: bool(true), fontFamily: str(font) }) },
+              objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, Math.round(sw)) },
               visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true } });
           names.push(v.name);
         });
@@ -1015,9 +1092,18 @@
         const ttl = (vis.visualContainerObjects || {}).title, shown = !!(ttl && ttl[0].properties.show && ttl[0].properties.show.expr.Literal.Value === 'true');
         if (t === 'cardVisual') {
           // a card on the phone (157.5 x 100) gets its own sizes, as on the small tooltip page: the page's 42 would not fit
-          const c = cardFit(p.w, p.h, 1, TIP_TITLE, TIP_VALUE);
+          // Round 12 (#1; seen in Desktop 2.158, round 11: "Total Sales Last Rama..." on every phone page): a title too
+          // long for one line at 10pt wraps to two (titleWrap, as on the page) where two lines and the value fit the card,
+          // otherwise it is shortened at a word with "…"; the phone shows the full name where the page shortened it.
+          let c = cardFit(p.w, p.h, 1, TIP_TITLE, TIP_VALUE);
+          const tl = { fontSize: num(TIP_TITLE) }, full = S0(((vis.visualContainerObjects || {}).general || [{ properties: {} }])[0].properties.altText), room = p.w - 2 * c.P;
+          if (shown && full && textWidth(full, TIP_TITLE, true, font) > room) {
+            const ls = wrapLines(full, TIP_TITLE, room), two = cardFit(p.w, p.h, 1, TIP_TITLE, TIP_VALUE, null, undefined, 2);
+            if (ls.length <= 2 && ls.every((l) => textWidth(l, TIP_TITLE, true, font) <= room) && two.V >= 8) { c = two; Object.assign(tl, { text: str(full), titleWrap: bool(true) }); }
+            else tl.text = str(oneLine(full, TIP_TITLE, room));
+          }
           return { objects: { value: obj({ fontSize: num(c.V) }, DEF), padding: obj({ paddingUniform: num(c.I) }, DEF) },
-            visualContainerObjects: { title: obj({ fontSize: num(TIP_TITLE) }), padding: obj({ top: num(c.P), bottom: num(c.P), left: num(c.P), right: num(c.P) }) } };
+            visualContainerObjects: { title: obj(tl), padding: obj({ top: num(c.P), bottom: num(c.P), left: num(c.P), right: num(c.P) }) } };
         }
         if (shown) vco.title = obj({ fontSize: num(PHONE.heading) });
         if (t === 'textbox' && kindOf[v.name] === 'title') {
@@ -1075,7 +1161,7 @@
     // their own, so the value isn't cut off and the titles fit
     // (the tooltip's card follows the KPI cards: automatic units with 2 decimals, or the full number with kpiValues "full")
     const tipCardVisual = () => { const objects = cardObjects(tipCard, null, tip.card);
-      if (FULL && tip.card && tip.card.m != null && tip.card.cardFormat) objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(tip.card.cardFormat) }, selector: { metadata: tip.card.t + '.' + tip.card.m } });
+      if (FULL && tip.card && tip.card.m != null && tip.card.cardFormat && !cardCode(tip.card)) objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(tip.card.cardFormat) }, selector: { metadata: tip.card.t + '.' + tip.card.m } });
       return { x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(tip.card)] }), objects, visualContainerObjects: cardFrame(tipFrame(label(tip.card)), tipCard, TIP_TITLE) } }; };
     tipPage(tipName, tipBinding, W.tooltipPage || 'Tooltip', tip
       ? [tipCardVisual(),
@@ -1102,7 +1188,7 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, svgSizes, noPageButtons, tableColumns };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, svgSizes, noPageButtons, tableColumns };
   }
 
   const api = { build, zip, crc32, textWidth, columnRoom };

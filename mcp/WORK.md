@@ -44,10 +44,45 @@ end, then CI.
    owner"; the 5-line report.
 
 ### Round 12, where I am
-Started 21:50 UTC (5 Oct). Nothing built yet.
+Started 21:50 UTC (5 Oct). Tests: the round 12 block in `mcp/test.mjs` (checks written first, each red before its code).
+- **A and B done** (one commit: the two groups share the writer's card and table code): #24 titles wrap or end in "…"
+  (slicer headers through `header.text`, in Microsoft's theme schema); #12 numbers right-aligned in right-to-left
+  tables; #20 a text slot holds `text` or is left out, the chart taking its room; #25 a model without measures counts
+  and sums its columns (`Bind.counts`; aggregation numbers from Microsoft's semantic query schema: 0 Sum, 2 Distinct
+  count); #1 phone KPI titles wrap or shorten; B1 days and months in calendar order in tables (a helper column);
+  B2 the card rule (percent "0.0%" or the model's one-decimal percent, whole numbers "#,0", the rest 2L), told in
+  `kpiValues` and `reportNotes`; #26 a text measure never on a card. `npm test` 421 -> 433; `pbip` 71, `layout` 512,
+  `design-engine` 598.
+- **Expectations changed, each with its cause beside it in the test:** numbers Right in right-to-left tables
+  (`report-check.mjs` `tableProblems`, test 5 of the design choices); 2L only on cards with decimals (round 9's
+  percent card, round 10's default, tooltip card and the website's download); the Health Test fixture has 1 card, not
+  2 ("Unused One" shows text); the model without measures now has cards and charts; the old table and sort readers
+  set the calendar helper column aside.
+- **Not possible from the files (Microsoft's theme schema, 2.157):** a slicer header has no alignment (#19).
+- **Needs a measurement first:** #3, Arabic tab widths (Tahoma per letter): the one figure we have (150 of ink for
+  "المبيعات حسب المنطقة والقناة" at 10pt bold on the phone) is one string; Desktop must measure the letters before
+  the 0.62 em upper figure changes.
 
 ### Round 12, for the laptop to prove
-(filled as each change lands)
+Each item: build with the branch's server (made-up models only), open in Desktop 2.158, look at full-size crops.
+1. #24: G6 Long (Arabic) and a 1280 x 720 exec page with long names: every chart and table title whole on two lines
+   (`titleWrap` on a chart's title: measured on cards only), or ending in "…" at its end; the slicer header shows its
+   `header.text` ("…" at the end) and the full name is the alt text.
+2. #12: the Arabic table: numbers right-aligned, header over them; "Friday" no longer reads into its first number.
+3. #20: golden task 3 without `text`: no "What it means" box, the line chart the row's whole width; with `text`: the
+   sentence in the box at 11pt.
+4. #25: golden task 7 (no measures): the cards show Count of the ID column and the sums (Desktop accepts the
+   aggregated projections: `Count(...)` / `Sum(...)` query references, functions 2 and 0), the chart and the table
+   count too; the page is full; no "Something's wrong" mark.
+5. #1: the phone layout of a report with "Total Sales Last Ramadan": the title on two lines in `mobile.json`
+   (`titleWrap` and `text` there: never tried in `mobile.json`), the value whole under it.
+6. B1: a table of Day Name (no sort-by column): Sunday to Saturday (the model's Day of Week order); the helper column
+   (`columnWidth` 1, text in the card colour, a blank header, " ") invisible, and not widened by "grow to fit"; the
+   total row shows "Total" in the first column; a Month Name the model sorts: January to December.
+7. B2: cards: Margin % "35.4%" (or the model's own one-decimal percent), Conversion Rate and Growth vs Last Year as
+   percents, Orders "1,234" and Total Sales "101,914" (whole, with separators; `labelDisplayUnits` -1 with a percent
+   code was not measured, D8 measured it with "#,0"), Avg Price "231.50"; nothing cut at 1280 x 720 six cards.
+8. #26: golden task 8: no card shows "Yes".
 
 ### Round 12, for the owner
 (taste calls, each with a recommendation)
