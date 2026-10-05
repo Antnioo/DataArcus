@@ -4,6 +4,309 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 11, the long overnight Desktop sitting (2026-10-05, laptop builder; branch `fix/round-11` from main `3803b7a`; dataarcus-engine `release/0.2.6` from its main `d8d3341`; not merged)
+The owner's go (5 Oct, evening): six hours straight, pushed every hour; he is asleep, so anything that needs his
+choice goes under "Round 11, for the owner" and the work moves on. Desktop 2.158.1177. Made-up and sample models only.
+Captures: `<tests folder>\desk-r11\`; test reports: `<tests folder>\11-r11\`; scripts: `builder-scripts\r11-*`.
+
+**Start: 21:09 (laptop time, 5 Oct).** Before: `npm test` on `fix/round-11` = main `3803b7a`: see "where I am".
+Setup done at 21:12: `idle.ps1` 71 s, no Power BI Desktop window open, no capture process left (the node and
+powershell processes running are the sessions' own MCP servers); worktree `r10-before` removed, `r11-before` made
+from main `3803b7a`; dataarcus-engine main pulled (`d8d3341`).
+
+**Hourly pushes (both repos when both changed):** 22:09, 23:09, 00:09, 01:09, 02:09, 03:09 (the stop).
+| Due | Pushed at | What |
+|---|---|---|
+| start | 21:17 | DataArcus `c1ac1c1`, the plan |
+| (item 1) | 21:24 | dataarcus-engine `release/0.2.6` `0e32cde` |
+| 22:09 | 22:09 | DataArcus `2ab8c74` (items 2 and 3, the records) |
+| 23:09 | 23:07 | DataArcus (the two fixes `9a0b660`, item 4 `f6976aa`, item 5 opened) |
+| 00:09 | 23:54 | DataArcus (the table fix `00b38be`, items 5 to 7) |
+| the stop | 00:15 | DataArcus `fix/round-11` (the stop report); dataarcus-engine `release/0.2.6` `0e32cde` (pushed 21:24, nothing since) |
+<!-- r11 pushes -->
+
+### Round 11, the stop report (00:20, 6 October; 3 h 10 min after the start; every item run)
+**READ FIRST, the next builder session:** package 0.2.6 is **installed and switched on in Claude Desktop** on this
+laptop (Settings > Extensions > "DataArcus for Power BI"; working folder `<tests folder>\11-r11\pkg\work3`). A new
+Claude session on this laptop therefore gets **two** DataArcus servers: the working copy's (`dataarcus`, the one to
+use) and the packaged 0.2.6 (listed as a desktop extension). Uninstall it (Settings > Extensions > DataArcus for
+Power BI > Uninstall) once the owner has made his check ("for the owner" 8).
+
+**Done (tests: `npm test` 418 -> 421 of 421; build tests 17 -> 18; website suites `pbip` 71, `theme-generator` 893,
+`layout` 512, `design-engine` 598: all pass; `check:min` clean):**
+1. Package 0.2.6: built from main `3803b7a`, checked (`--check` same), pushed on `release/0.2.6`; SHA-256
+   `280e86f6e8fceee78823139204157695ed4050dc2973936f92d276c3def91540`; not tagged, no release. Each of the 7 tools
+   called once from the unpacked file. **Installed in Claude Desktop** through Settings > Extensions > Advanced
+   settings > Install extension (00:02 to 00:12): the red developer warning, the install screen with its red box,
+   Windows' "Do you want to install DataArcus for Power BI?", the empty "Directory path" field with Save greyed
+   until a folder is given, "Disabled" after Save, then "Enabled": **every step as INSTALL.md says**. The
+   extension's page lists **7 tools** (add_gulf_calendar, check_model_health, create_report, generate_theme,
+   plan_layout, read_model, suggest_fields), version 0.2.6, licence Proprietary. **Not done: the 7 tools called
+   from a Claude Desktop chat** ("for the owner" 8). Captures: `<tests folder>\desk-r11\cd\s5.png` to `s11.png`
+   (the app's left list cut off).
+2. Phone tabs (4 and 8, both languages): PASS. A wrapped tab row: PASS where the header is high enough; a silent
+   "no page buttons" case fixed (told now).
+3. The table's padding and `rowPadding` measured; the card image at 1920 x 1080 and on three cards PASS; in Arabic
+   it sat at the value's side: fixed.
+4. Gulf calendar D-GC1 to D-GC6: all as expected; `check.dax` 40 of 40.
+5. The 20 golden reports opened (14 to 49 s); the table wider than its box: fixed.
+6. Part C: D-P4 PASS, D-P5 drawn (in a project), D-P7 pictures draw on the phone, D14 PASS, D15 measured.
+7. `check_report` on all 63 reports, compared with Desktop.
+
+**Three fixes tonight, each with a test first** (`fix/round-11`, not merged; **none of them is in package 0.2.6**,
+which is main `3803b7a`): page buttons that don't fit are told (`9a0b660`); a right-to-left card's image is at the
+left (`9a0b660`); a table holds only the columns its width has room for (`00b38be`). Engine repo: a clean build
+stages the packaging files as committed (`f9669cd`).
+
+**Left:**
+- The 7 tools from a Claude Desktop chat; uninstalling the extension afterwards.
+- D-P5 through View > Themes; D-P7's PDF export; the ribbon's "Mark as date table" (D-GC2).
+- "G10 fit EN" and the 960 x 720 eight-page reports were built, not opened.
+- `csp.mjs` on an LF checkout and the full website run: CI on `fix/round-11` is the record.
+- The 32 design findings: none fixed (they wait for the owner's go).
+
+**The top 5 design findings by severity** (rows in "Round 11, design findings"): **24** long Arabic chart titles cut
+at their beginning; **12** the Arabic table reads "Friday 10,298" as one text (text right-aligned beside
+left-aligned numbers); **20** the "What it means" box ships its placeholder sentence; **25** a report on a model
+without measures is four fifths empty; **1** a phone card's title is cut.
+
+### Round 11, order of work (all approved; each expected result written before its run)
+| # | Item | The run | Expected (written 21:14, before any run) |
+|---|---|---|---|
+| 1 | Package 0.2.6 (dataarcus-engine `release/0.2.6`) | version 0.2.5 -> 0.2.6 in `manifest.json` and `plugin.json`; `node --test packaging/build.test.mjs`; `node packaging/build.mjs --commit 3803b7a --version 0.2.6 --tests "mcp=418"`; installed once in Claude Desktop; each tool called once on the sample model | the build's tests pass; 22 staged files, the same list as 0.2.5's (`mcp/lib/gulf-calendar.mjs`, `gulf-health.js`, `gulf-dates.js`, `calendar-generator.js` among them); the staged server answers version 0.2.6 with **7 tools**; `packaging/releases/0.2.6.json` names DataArcus `3803b7a…`; the package about 3.3 to 3.6 MB, its SHA-256 written here. No tag, no release. In Claude Desktop: 7 tools listed; each of the 7 answers without an error on the Ramadan sample (`create_report` writes a new report, `add_gulf_calendar` a new .tmdl, `generate_theme` a new theme file; nothing overwritten) |
+| 2a | Phone layout, 4 tabs, English and Arabic | hand-placed 4-page reports (`r10-tabs.mjs` names), Mobile layout by UI Automation, the phone canvas captured | computed from the writer's rule (10pt bold names + 10, rows of 323, gap 8): the four names share **one or two rows**, each button 44 high, every name whole (no "..."), no button over another visual (**the files, read 21:14 before any run:** English 2 rows: Overview 95.5 + "Sales by region and channel" 219.5, then Customers 113 + "Products and categories" 202; Arabic **3 rows**: "نظرة عامة" alone at 323, then two, then "المنتجات والفئات" alone at 323; cards from y 168 and 220); English from the left, Arabic from the right (first page rightmost on the first row); the current page marked |
+| 2b | Phone layout, 8 tabs, English and Arabic | the 8-page reports | the names **wrap onto several rows** (the files: English 3 rows, the cards from y 220; Arabic 4 rows, the cards from y 272), each whole, rows 52 apart; the cards start under the last row; reading order header, tabs, cards, chart. FAIL = anything cut, overlapping or out of order |
+| 2c | A tab row that has to wrap (desktop page) | 8 long names on a 1280 x 720 page (and 960 x 720), English and Arabic | the names don't fit one header row at the minimum size, so they wrap to a second row inside the header; every name whole; no tab over the title, the logo or the body; Arabic mirrored (first page at the right of the first row) |
+| 3a | The table's cell padding, `grid.rowPadding` | one table copied four times on a flat page: nothing written, and `grid.rowPadding` 0, 4 and 8 (hand-written); ink measured | not known (to measure): the left/right padding of a cell (the engine assumes 5 a side); the row pitch 20.9 with nothing written; `rowPadding` n expected to add n above and below each row (pitch about 20.9 + 2n at the default 3 if Desktop's default is 3; to be read off the three values) |
+| 3b | The card image at 1920 x 1080, in Arabic, on a three-card page | `svgCards` reports: six cards at 1920 x 1080, six cards Arabic at 1280 x 720, three cards at 1280 x 720 | on every card the image is 25% of the card's inner width at most (inner = card - about 33), keeps its shape, and **every value is whole**; in Arabic the image sits at the far end from the value's reading start and the value is whole. FAIL = a cut value or an image over the text |
+| 4 | Gulf calendar D-GC1 to D-GC6 | `add_gulf_calendar` (Calendar, 2018-2030, UAE, announced, `relateTo` Sales[Date]) on the pack's test model; applied in TMDL view (keyboard paste, the laptop is free); checks by DAX through Microsoft's Authoring MCP | D-GC1: Preview one new table and one relationship; Apply with Problems 0; **4748 rows, 36 columns**. D-GC4: Sales[Date] many-to-one Calendar[Date], single, active. Hijri: **1 March 2026 = Ramadan 1447** (Hijri Month Number 9, Hijri Year 1447, Is Ramadan true); `gulf-dates.js` (read 21:13, before the run) has Ramadan 1447 from **18 February 2026**, Eid al-Fitr 20 March 2026, so 1 March 2026 is **12 Ramadan 1447** (Hijri Day 12, Ramadan Day 12), 17 February is not Ramadan, 20-22 March 2026 Is Eid al-Fitr; 2018: 16 May "30 Sha'ban 1439", 17 May "1 Ramadan 1439", 29 Ramadan days, Eid al-Fitr 15-17 June, Eid al-Adha 21-24 August. D-GC3: with the sort columns, slicers run January-December, the week in order, Muharram-Dhu al-Hijjah. D-GC6: `check.dax` 40 of 40. A refresh ends with no error. D-GC2, D-GC5: write down what Desktop shows |
+| 5a | A report with left-out visuals | `create_report` on `no-measures` (and a slicer or chart with no field) | the answer names the visuals in `leftOutVisuals`; the report opens with no error box and **no empty frame** where a visual was left out; validator 0 errors |
+| 5b | The 11 golden tasks' reports, English and Arabic | each task's tool-level call(s) from `GOLDEN-TASKS.md` / `golden-baseline.mjs`, built in English and in Arabic, each opened and every page captured | each opens in under 60 s with no error box; nothing cut or overlapping on 1920 x 1080 and 1280 x 720 pages; the known limits are expected and written, not hidden: task 5 (640 x 360) cut labels; task 6 long Arabic names wrap or shorten with "…"; task 9 writes nothing; task 10 needs `focus`; task 11 is a health answer (no report) |
+| 6 | Part C | D-P4 (an SVG measure in a tooltip), D-P5 (a `data:` image inside a theme), D-P7 (SVG pictures on the phone layout), D14 (a text filter with an apostrophe, a decimal filter), D15 (the taller header, hand-edited copies, 2 sizes x 2 languages) | **(corrected 23:20, before any of these runs: I had D-P4 wrong. The rows are the ones in dataarcus-engine `research/ENGINE-POSSIBILITIES.md`, section 5.)** D-P4: an SVG measure with a `<script>` that would change a fill, and an `<image href>` to a logging server on this laptop only (127.0.0.1:8765): **expected: the script does not run (the fill is unchanged) and the server logs no request**; if either happens, stop and report. D-P5: a theme whose page background is a `data:image/png;base64` URL, inside the project (and through View > Themes if the dialog can be driven): recorded as it is, drawn or not. D-P7: an SVG-column page in the phone layout (and File > Export > PDF if it can be driven without the owner): recorded as it is. D14: the Filters pane shows both filters with no error mark and the visuals show only the matching rows (the made-up value with an apostrophe; the decimal 5.5). D15: the title's middle within 1 of the header's middle (computed -0.2 English, +0.4 Arabic), logo and tabs centred, nothing in the body cut. Code only for a FAIL, tests first |
+| 7 | `check_report` (read-only), after 1-6 | a separate worktree of `feat/check-report` (not merged, not changed); run over every report opened tonight | a table in DESKTOP-TESTS.md: per report, its findings beside what Desktop showed (agree / disagree / it missed / it raised wrongly) |
+
+**The design eye:** every captured page is also read as a designer; findings in "Round 11, design findings" below,
+never fixed tonight (only a FAIL of items 1-6, tests first).
+
+### Round 11, where I am
+- **21:15:** setup done; the plan written (pushed 21:17, `c1ac1c1`).
+- **21:19:** `npm test` at the start, `fix/round-11` = main `3803b7a`: **418 of 418** (as expected).
+- **21:27, item 1, package 0.2.6: built, checked, pushed; the install in Claude Desktop is moved to the end of the sitting.**
+  - dataarcus-engine `release/0.2.6` (from main `d8d3341`), pushed 21:24: `dff2343` the version (manifest and plugin
+    0.2.5 -> 0.2.6, no text change), `f9669cd` a build fix (below), `0e32cde` the record
+    `packaging/releases/0.2.6.json`. Not tagged, no release.
+  - **The package:** `dist/dataarcus-0.2.6.mcpb`, **4,069,795 bytes, SHA-256
+    `280e86f6e8fceee78823139204157695ed4050dc2973936f92d276c3def91540`** (certutil gives the same), unsigned, 22
+    staged files (the 0.2.5 list: `mcp/lib/gulf-calendar.mjs`, `gulf-health.js`, `gulf-dates.js`,
+    `calendar-generator.js`, `svg-kpi-compiler.js` among them), 91 packages; the staged server answers version 0.2.6
+    with the manifest's 7 tools; the record names DataArcus `3803b7afa841a4387abdffaf2e2543563aea833d` and packaging
+    `f9669cd`; tests `mcp=418`. Build tests 17 -> 18. **Off from what I expected:** the size (4.07 MB; I wrote 3.3 to
+    3.6 from 0.2.2's 3.3 MB; the engines are 356 KB now).
+  - **A defect found and fixed, a test first (its cause):** the first build's `--check 0.2.6` said "differs
+    LICENSE.md". On this Windows checkout git writes `LICENSE-BETA.md` with CRLF; the build staged the working copy,
+    `--check` reads the commit (LF). So a Windows build was not the package its own record's check rebuilds. Now a
+    clean build stages the packaging files as committed (`packagingBytes`; only `--allow-dirty` reads the working
+    copy). Rebuilt: `--check 0.2.6` same: true, 22 files. (The first build's hash `3debc106…` is dead: never sent.)
+  - **Each of the 7 tools called once on the made-up Ramadan sample, from the unpacked .mcpb** (unpacked under
+    `<tests folder>/11-r11/pkg/unpacked`, started as the manifest starts it: `node mcp/server.mjs` with
+    `DATAARCUS_ROOT` = `.../pkg/work2`; `builder-scripts/r11-pkg-smoke.mjs`): `read_model` ok (Calendar 34 columns,
+    Sales 2 columns and 5 measures); `suggest_fields` ok; `check_model_health` ok (overall 99, 4 findings, the
+    gulfCalendar section, wrote "Ramadan Test - fix number formats.tmdl"); `generate_theme` ok (`smoke-026.json`);
+    `plan_layout` ok (10 slots); `create_report` ok ("Smoke 026", 2 pages, 4 KPI cards); `add_gulf_calendar` ok
+    (4748 rows, 36 columns, "Ramadan Test - add Gulf calendar.tmdl"). My first call of `add_gulf_calendar` used
+    wrong input names and was refused in plain words (my mistake, not the tool's). Nothing was overwritten.
+  - **Not done yet: the install in Claude Desktop itself.** Its config has no `mcpServers` entry and one extension
+    of the owner's (not touched). The install is driven through the same Claude app this session runs in (mouse,
+    keyboard, a new chat), so a slip there could end the session: it is done **last**, after items 2 to 7 are pushed.
+- **Read at the start:** WORK.md (round 10's sections), DESKTOP-TESTS.md lines 1-400 and 1402-1698 (the first
+  sittings, round 10's records, the lessons) and every heading; the middle (rounds 0 to 4, the three sittings of 4
+  October) by heading only, to be read where an item needs it.
+- **22:06, items 2 and 3: run; two FAILs fixed with tests first; records in DESKTOP-TESTS.md ("round 11, the long
+  overnight sitting").**
+  - **Item 2, phone tabs:** 4 and 8 tabs, English and Arabic: every name whole, in reading order, nothing over
+    anything (PASS x 4). Cut on those phone pages, not a tab: a card's title ("Total Sales Last Rama...", known
+    since 1 Oct): see "for the owner".
+  - **Item 2, a wrapped tab row:** wraps on two rows where the title slot is high enough (English 1280 x 720 with a
+    48-high title; English and Arabic 1920 x 1080 with 72): every name whole, the mark in either row (PASS x 3).
+    **FAIL:** with the usual header height (32 at 1280 x 720, 24 at 960 x 720) eight long names got **no page
+    button at all and no word in the answer**. Fixed (a test first, red 419 checks / 1 failing): the answer now has
+    `pageButtons.leftOutOn` and a `reportNotes` line. The buttons are still left out there.
+  - **Item 3, the table:** `grid.rowPadding` adds 2 a unit to the row pitch (15.1 / 17.1 nothing written / 22.8 /
+    30.7 for 0 / - / 4 / 8 at 8pt text); the grid starts 7.7 inside the visual; a cell pads its text 5 to 6 a side
+    (round 10's stand-in of 5 holds). No code changed.
+  - **Item 3, the card image:** English at 1920 x 1080 (six cards) and on three cards: values whole, images 46.9 to
+    54.6 (PASS x 2). **FAIL in Arabic (six cards at 1280 x 720, three at 1920 x 1080):** the image sat at the
+    right, at the value's side, and a 42pt value touched it. `position: 'Left'` measured by hand first, then fixed
+    (a test first): a right-to-left card's image is at the left.
+  - **Code changed (uncommitted until the full run ends):** `assets/js/pbip-export.js` (`noPageButtons`; the image's
+    `position` in a right-to-left card), `mcp/server.mjs` (`pageButtons`, the note), `mcp/test.mjs` (+2 checks: 420
+    expected), `pbip-export.min.js?v=20261005g` (in `theme-generator.js`), `theme-generator.min.js?v=20261005e` on
+    its two pages; `check:min` clean. `csp.mjs` on this CRLF checkout lists pages as always (CI is the record).
+  - `npm test` after the fixes: running at 22:06 (the count goes in the next entry).
+- **22:15:** `npm test` after the two fixes: **420 of 420** (418 + 2). Committed `9a0b660`. The two Arabic
+  card-image reports rebuilt with the fix and captured: the image at the left, the values whole.
+- **22:30, item 4, the Gulf calendar: done, all as expected** (DESKTOP-TESTS.md, "Item 4"). Applied in TMDL view
+  with Problems 0; 4748 rows, 36 columns; the relationship many to one, single, active (a query needs the refresh
+  first); 1 March 2026 = 12 Ramadan 1447; Ramadan 1447 18 Feb to 19 Mar 2026 (30 days); Eid al-Fitr 20-22 March
+  2026; the 2018 dates; `check.dax` **40 of 40**; refresh without errors. D-GC3: `sortByColumn` in the script is
+  accepted and the slicers are in order (seen). D-GC2: `dataCategory: Time` + `isKey` accepted (the ribbon not
+  read). D-GC5: Preview shows a replaced table with no warning. One finding about the tool: `relateTo` is refused
+  for a DAX fact table's column (type unknown): "for the owner" 4. No code changed.
+- **23:07, item 5, the golden tasks' reports: all 20 opened (10 reports x English and Arabic), task 9 refused as
+  expected, task 11 has no report** (DESKTOP-TESTS.md, "Item 5"). Ready in 14 to 26 s, the 300-table model 49 s
+  and 41 s; no error dialog. The report with left-out visuals (task 7): no error box, no empty frame, as expected.
+  **FAIL: the table is wider than its box** on the 4:3 page (both languages) and with long measure names at
+  1920 x 1080 (tasks 6 and 10). Next: fix it, a test first (the table keeps only the measures its width holds, and
+  says which were left out), then item 6.
+- **23:32, item 6 so far** (DESKTOP-TESTS.md, "Item 6, part C"): **D-P4 PASS** (a script and an onload in an SVG
+  measure do not run; the local logger got no request from Power BI). **D-P5: drawn** (a `data:` URL page
+  background in the project's theme); the View > Themes way not run. **D15 measured: round 8's computed offsets do
+  not hold** for a capitals-and-digits title: the title is 0.6 to 1.7 above the header's middle today, not below
+  ("for the owner" 6). No code.
+  **D14, expected (written 23:32, before the run):** on a copy of the sample with one more made-up column
+  (`11-r11\d14`, Sales[Rate] = 0, 5.5, 11 or 16.5): a page filter Calendar[Hijri Month Name] = "Sha'ban" (an
+  apostrophe) and, in a second report, Sales[Rate] = 5.5 (a decimal; the column's type is unknown in the files, so
+  the value's own type decides): the Filters pane lists each under "Filters on this page" with no error mark; the
+  Total Sales card equals DAX with the same filter (the Sha'ban days of the calendar, 1 a day; the Rate-5.5 rows);
+  the tooltip pages have no filter.
+  **D-P7, expected: not known** (do the SVG pictures of a table show in the phone layout?): recorded as it is.
+- **23:54, items 5 (the fix), 6 and 7 done.**
+  - **The table fix:** red 421 checks / 1 failing ("5 columns need 422 of 354"), green **421 of 421**; `check:min`
+    clean. Rebuilt and opened: the 4:3 page in English and Arabic now has three whole columns and no horizontal
+    scrollbar; `tableColumns` and a note name the field left out; the wide Details table keeps all four.
+  - **Item 6:** D14 PASS (text with an apostrophe: 179 = DAX; decimal 5.5: 25.73K, 18.65K, 0.35 = DAX; both in the
+    Filters pane with no error mark). D-P7: the SVG pictures draw on the phone; the table is wider than the phone
+    canvas (finding 29); the PDF half not run. D-P4 PASS, D-P5 drawn (in a project), D15 measured (above).
+  - **Item 7:** `check_report` (`feat/check-report` `c8be567`, worktree `C:\DataArcus\r11-check-report`, not
+    changed) on all 63 reports of tonight: 250 warnings, 2 errors (both on the fixture's hand-made report), the
+    validator 0 errors on the engine's 62. Against Desktop: four kinds of warning raised where Desktop shows
+    nothing wrong (Reset "needs 163 of 155", the 46-high Arabic title, slicers and text boxes at 1280 x 720), one
+    right (the scroll thumb at 640 x 360), and no rule for the six things Desktop showed as cut or misplaced
+    (DESKTOP-TESTS.md, "Item 7").
+  - Website suites that the shared engine touches (`pbip`, `design-engine`, `layout`, `theme-generator`): started
+    23:46 through `run-all.mjs`; result in the next entry (CI is the record).
+  - **Next:** the 00:09 push; then the Claude Desktop install of 0.2.6 (item 1's last part); then the stop report.
+- **The table that is wider than its box: the fix is written** (`tableFit` in `pbip-export.js`, `tableColumns` in
+  the answer; +1 check, 421 expected); the red run (the fix set aside) is running at 23:32; then the green run, the
+  4:3 report rebuilt and opened.
+- **Scripts (laptop, `builder-scripts\`):** `r11-dp4.mjs`, `r11-logserver.mjs`, `r11-dp5.mjs`, `r11-d15.mjs`,
+  `r11-header.ps1` (the title's ink against the header panel), `r11-d14.cjs`; `r11-golden.mjs` (builds the 20 golden reports into
+  `11-r11\golden\<model>`; `golden\built.json`), `gshot.ps1 -Project <model folder> -Name <report> -Tag <tag>` (open,
+  time, capture pages 1 and 2, an overview); `r11-gc-model.mjs`, `r11-gc-patch.cjs`, `r11-gc-types.cjs` (the Gulf
+  test models), `r11-call.mjs <root> <tool> <json>` (one call on the working copy's server), `tmdl-apply.ps1`,
+  `uia-refresh-now.ps1`, `uia-refresh.ps1`, `gc-check.ps1 -Query <file>` (window title must start with "Gulf");
+  `shot11.ps1` (open one report of `11-r11`, capture the listed pages
+  into `desk-r11`), `r11-phone.ps1` (phone canvas), `r11-tabs.mjs`, `r11-cimg.mjs`, `r11-table.mjs`,
+  `r11-imgleft.mjs` (builders, with `r10-make.mjs "@%TEMP%/<spec>.json"`), `r11-pos.mjs`, `r11-phonepos.mjs`,
+  `r11-cardinfo.mjs` (what the files hold), `r11-tbmeasure.ps1` + `r11-tb4.ps1` (table ink), `yellow.ps1`,
+  `crop.ps1`, `r11-pkg-smoke.mjs`, `r11-pkg-one.mjs` (the unpacked package).
+- **Learned:** Desktop is opened from the PowerShell tool, not from bash (`desk.ps1` printed nothing and opened
+  nothing when started through bash with a path argument); a capture is 2750 x 1490 with the Filters pane, the page
+  is the left 2250; never estimate the clock, read it (`date`); edit WORK.md with the editor, not with `node -e`
+  (shell quoting ate backslashes three times).
+- **Next:** the full `npm test` result, commit; rebuild "CI AR ..." with the fix and capture them (the "after");
+  then item 4 (Gulf calendar), 5, 6, 7; the Claude Desktop install last.
+
+### Round 11, for the owner
+1. **A phone card's title is cut ("Total Sales Last Rama...").** On every phone page a KPI title longer than about
+   20 characters ends in "..." (157.5-wide card, 10pt title); known since 1 October, and round 10's "never cut" rule
+   covers the page's cards only. Options: (a) wrap to two lines on the phone as on the page (`titleWrap` in
+   `mobile.json`: to measure first that Desktop honours it there, and that two 10pt lines and a 20pt value fit the
+   100-high card); (b) shorten with "…" as on the page; (c) a smaller title (8pt) on the phone; (d) leave it.
+   **Recommended: (a), then (b) where two lines don't fit**, the same rule as the page. Crop:
+   `desk-r11\t-en-4-phone-p1.png`. Not fixed tonight: it is a new rule for the phone, not a slip of an existing one.
+2. **Page buttons that don't fit the header.** Eight long page names on a 1280 x 720 page (header 32 high) get no
+   page buttons; since tonight the answer says so. Options: (a) keep (tell, and leave them out); (b) let the header
+   grow by one row of tabs when the names need it (the body's visuals move down by about 21 to 25); (c) put the tabs
+   on a row of their own under the header; (d) shorten names with "…" and keep the full name in the tooltip.
+   **Recommended: (b) for designed layouts** (the engine owns the positions), (a) for hand-placed pages (the caller
+   owns them). Crops: `desk-r11\wrap-en-1280-head.png` (the two rows when the header is 48 high).
+3. **The card image's size is a little off its design** (54.6 for 48 on wide cards, 46.9 on a 1920 x 1080 six-card
+   page), because the image area is a percent of the card less its padding, not of 0.8 x the card. Options: (a)
+   leave it (nothing is cut); (b) compute the percent from the measured padding (25 a side at 1920 x 1080, 17 at
+   1280 x 720) so a design is drawn at its own size where it fits. **Recommended: (b)**, a small change with a test;
+   it needs your go because it changes what round 10 shipped.
+4. **`add_gulf_calendar` and what the script could carry (from D-GC2, D-GC3, D-GC5 and one refusal).**
+   (a) `sortByColumn` for Month Name, Day Name and Hijri Month Name: Desktop accepts it in the script and the
+   slicers come out in order, so the tool can write it and drop three steps from `byHand`. **Recommended: yes.**
+   (b) `dataCategory: Time` and `isKey` on Date: accepted, the model holds them; whether the ribbon then shows the
+   table as "marked as date table" needs one look by you (Table tools, on "Gulf GC2" after applying
+   `<tests folder>\11-r11\gulf-gc2\GC2 script.tmdl`). **Recommended: write them once you have seen the ribbon.**
+   (c) Preview does not warn when the table name is taken: it shows the old table replaced. The tool already
+   refuses a taken name; keep the "stop" sentence in `howToApply` and say in it that Preview will not warn.
+   (d) `relateTo` on a column of a DAX table (type unknown in TMDL) is refused. Options: keep; or accept an
+   unknown type with a note ("its type could not be read; make sure it is a date column"); or take `columnTypes`
+   as `check_model_health` does. **Recommended: accept with the note** (the relationship fails loudly in Preview
+   if the column is not a date).
+5. **A table that has no room for all its fields (fixed tonight; your say on the rule).** The table now keeps the
+   first text column and as many of the following fields as its width holds, in their order, and names the rest in
+   `tableColumns` and a note. That also drops a field the approved plan named in `fields.table` when the slot is
+   too narrow (the answer says so, and `boundFields` shows what is there). Options: (a) keep this; (b) for fields
+   the plan named, write nothing and ask for fewer fields or a wider slot; (c) shrink the table's text first (down
+   to 8pt) and drop a column only then. **Recommended: (a) now, (c) as the next step** (a number is rarely worth
+   less than a readable one).
+6. **The taller header (round 8's plan, D15): the measurement does not support it.** The title's ink is 0.6 to 1.7
+   above the header's middle today (capitals and digits; a title with lowercase letters sits lower), not 2.8
+   below. Options: (a) leave the header as it is; (b) centre by the capital height (move the title box down by
+   about 1 at 1280 x 720 and 1.5 at 1920 x 1080: one or two page units, a small change); (c) the taller header as
+   planned. **Recommended: (a)**, and fix the Arabic logo placeholder instead, which sits 2.6 to 3.4 low
+   (design finding 30).
+8. **Package 0.2.6 in Claude Desktop: one check is yours (about 3 minutes), then your decision to tag.** It is
+   installed and enabled, 7 tools listed, version 0.2.6. I did not open a chat: the app shows no named controls to
+   automation, so a chat can only be driven by screen position, in the same app this session runs in, with Enter
+   and "Always allow" keystrokes; a slip there types into the wrong place. In a **new chat** paste: "Using only the
+   DataArcus tools, on the model in the working folder (Ramadan Test): read_model; suggest_fields; check_model_health
+   with country uae; generate_theme named Check 026; plan_layout (exec); show me the plan and wait for my go; then
+   create_report named Check 026; then add_gulf_calendar for 2018 to 2030, UAE, table name Gulf Calendar. Tell me
+   each tool's result in one line." Expected: the plan first, your "go", then 7 results, new files only in
+   `<tests folder>\11-r11\pkg\work3`. The same seven calls passed from the unpacked file tonight. Then **uninstall**
+   (or keep it and remember the builder's sessions will see two DataArcus servers). Also yours: (a) tag 0.2.6 as
+   built (main `3803b7a`, without tonight's three fixes) or wait for round 11's merge and build 0.2.7;
+   **recommended: wait**, the Arabic card image and the table that overflows are things a tester would see; (b) the
+   install screen's sentence "Tools: read a model, suggest fields, check model health, generate a theme, plan a
+   layout, create a report." names six: add "add a Gulf calendar" to the manifest's long description (the tools
+   list under it shows all seven).
+7. **Not run tonight, each needs a person or a tool the builder should not drive alone:** the theme through
+   View > Themes > Browse (D-P5's second way; the file is `<tests folder>\11-r11\dp5-theme.json`); File > Export >
+   PDF of an SVG page (D-P7's second half); the ribbon's "Mark as date table" state (item 4b).
+
+### Round 11, design findings
+| # | Page and visual | What is off or could be better | Crop | Severity | Proposed fix | What it would change in the code |
+|---|---|---|---|---|---|---|
+| 1 | Phone layout, the KPI cards (all four tab reports) | the second card's title is cut: "Total Sales Last Rama..." | `t-en-4-phone-p1.png` | high | wrap to two lines on the phone, else shorten with "…" (owner item 1) | `pbip-export.js` `phoneLook`: the card's phone title through `kpiTitleFit` with the phone card's size |
+| 2 | Phone layout, the tabs | each name is centred in a button stretched to share the row, so the names look scattered and none lines up with the title's edge above ("Overview" starts 13 units right of the title; Arabic "نظرة عامة" floats in the middle of a row of its own) | `t-en-4-phone-p1.png`, `t-ar-4-phone-p1.png` | medium | keep each button as wide as its name and start the row at the reading start (left in English, right in Arabic), with the gap between them fixed | `pbip-export.js`, the phone `navbtn` rows: no `spare` shared out; x from the reading start |
+| 3 | Phone layout, Arabic tabs | Arabic names are given more width than they use (240 for a name whose ink is about 150), so four names take three rows where two would do, and eight take four | `t-ar-4-phone-p1.png`, `t-ar-8-phone-p1.png` | medium | measure Tahoma's widths per letter as was done for Segoe UI (round 10 used one upper figure, 0.62 em) | `textWidth` for Tahoma / Arabic in `pbip-export.js`; the tabs' widths on the page follow (they are spaced wide there too) |
+| 4 | Phone layout, card and chart titles | the titles are a pale grey on the white phone canvas, far fainter than the values and than the same titles on the page; "Total Sales by Quarter" is hard to read | `t-en-4-phone-p1.png` | medium | check the colour the phone title gets (it looks like the muted label colour at reduced opacity); use the theme's title colour | `phoneLook` in `pbip-export.js` (the title entry in `mobile.json`); to confirm in Desktop first: the mobile layout view may dim what is not selected |
+| 5 | Phone layout, the current tab | on the phone the current page is only bold and coloured; the line under it (the page's mark) is left out | `t-en-4-phone-p2.png` | low | a 2-high line under the current tab on the phone too | the underline `shape` gets a `mobile.json` position under its button |
+| 6 | The page header with two rows of tabs | both rows end at the logo's side, so the second row starts further right than the first and the names do not line up in columns | `wrap-en-1280-head.png`, `wrap-en-1920-head.png` | low | start both rows at the same x (the reading start of the room), or spread each row over the same width | the `tabs.rows` x in `pbip-export.js` (`left = ...`) |
+| 7 | KPI cards with an image, English, 1920 x 1080 six cards | the value starts about 9 page units right of its title's first letter (title at 47 px, value at 58 px in the crop); the number looks indented under its label | `ci-en-1080-six-cards.png`, `ci-en-720-three-cards.png` | medium | line the value's left edge up with the title's (the card's value has an inner padding the title has not) | the card's `value` padding or the title's left padding in `cardObjects` / `cardFrame`; measure which one Desktop honours |
+| 8 | KPI cards with an image, six cards | the values are light and small (23pt regular beside a 9pt bold title) and the images alternate between 46.9 and 48.6 wide (24 and 25 percent on cards one unit apart) | `ci-en-1080-six-cards.png` | low | one image percent for the row (the smallest card decides); consider a semibold value | `imgOf` / `kf.im.pct` per row, not per card |
+| 9 | KPI cards, Arabic six cards at 1280 x 720 | the first card's value is 15pt and the other five 14pt (the first card is 2 units wider), so one number in the row is bigger | `ci-ar-720-six-cards.png` | medium | one value size for the row, the smallest that fits every card (as round 10 did for the titles) | `cardFit`: the row's minimum value size |
+| 10 | KPI cards, Arabic, one-line and two-line titles in one row | the one-line titles sit lower than the first line of the wrapped ones (round 10's choice to keep the numbers level); the row's titles look uneven | `ci-ar-720-six-cards.png` | low | top-align every title and keep the numbers level by the title box's height, if Desktop allows the title a fixed height | the title's height in `cardFrame` (to measure) |
+| 11 | A hand-placed table 900 wide with three columns (default theme) | the text is 8pt on a 1920 x 1080 page and the three columns are spread over the whole width: a day and its two numbers are 400 units apart, hard to read across | `tb-en-t1.png` | medium | hand-placed pages get the generated theme's text sizes too (the designed pages have 15pt); for a table much wider than its columns need, cap the columns' width or centre the block | `create_report` with `pages` passes no theme unless given; `columnAdjustment` / column widths in the table's objects |
+| 12 | The Arabic table (text column first, drawn at the left) | "Friday" (right-aligned) and its first number (left-aligned) are 9 units apart and read as one text, while the two measures are 430 apart | `tb-ar-t1.png` | high | in a right-to-left table keep numbers right-aligned as in English (so the gap after the names is the column's own), or give the text column a wider minimum and pad its right edge | `columnFormatting` alignment for `rtl` in `pbip-export.js` (today numbers are 'Left' in right-to-left) |
+| 13 | Hidden tooltip pages in an Arabic report | their names are English ("Hidden Tooltip", "Hidden Tooltip · Month Name"); an editor sees them in the page tabs | the phone script's page list | low | Arabic names for the two tooltip pages in an Arabic report | `REPORT_TEXTS.ar` (the tooltip page names) |
+| 14 | A hand-placed Arabic report | the logo placeholder reads "Your logo" in an Arabic report | `wrap-ar-1920-head.png` | low | "شعارك" as the designed pages have | the hand-placed path of `create_report` does not pass the Arabic texts |
+| 15 | Every designed page: a chart and the table beside or under it | both carry the same title ("Total Sales by Day Name" twice on one page) | `g1-en-view.png` (both pages), `g2-en-view.png` | medium | title the table by what it adds ("Sales by day: detail") or give the chart and the table different category columns where the model has them | the table's title in `pbip-export.js` (round 10 choice 3) and the field picker (`cats.column` and the table's text column are the same field) |
+| 16 | Page 1 of the executive layout, the line and the column chart | month names slant ("January" ... "December" at an angle) and so do the day names on the narrower column chart | `g1-en-view.png`, `g4w-en-view.png` | medium | short month names where the model has them (the calendar's "Month Short"), or a wider chart; never a slanted label on a 1920 x 1080 page | the field picker prefers a short month column for the line chart's axis; or `categoryAxis` label settings |
+| 17 | The table beside a chart of the same field | the chart runs Sunday to Saturday (sorted through the tooltip trick), the table Friday, Monday, Saturday (A to Z): two orders on one page | `g1-en-view.png` | medium | when the model has no sort-by column, say so louder (it is in `modelNotes`) and sort the table by its first measure, descending, so its order has a reason | a `sortDefinition` on the table by its first measure when its text column has no sort-by column |
+| 18 | The filter rail | three dropdowns at the top, Reset at the very bottom, and 300 page units of empty panel between them | `g1-en-view.png`, `g2-en-view.png` | low | Reset directly under the last slicer; or a rail only as high as its content | the rail's Reset position in `pbip-export.js` (`s.y + s.h - bh`) |
+| 19 | Arabic reports, the slicers | the slicer headers and the "All" boxes are left-aligned in a right-to-left rail (English field names, but also Arabic ones in "G6 Long AR" sit at the right: the header follows the text's own direction, the box does not) | `g1-ar-view.png` | low | right-align the slicer header in a right-to-left report | the slicer's `header` alignment in `pbip-export.js` |
+| 20 | Golden task 3, the "What it means" box | the box ships with its placeholder sentence ("Explain what the main chart shows and what to do about it.") in small text at the top of a large empty panel | `g3-view.png` | high | never ship the placeholder: ask the agent for the text (an input), or leave the box out and give its room to the chart | `create_report`: a `texts` input for text slots; the `focus` layout without the text slot when none is given |
+| 21 | Golden task 3, the line chart | one Ramadan by month is a line with two points (February, March) | `g3-view.png` | medium | by Ramadan Day (1 to 30) when the page is filtered to one Ramadan and the calendar has that column | the field picker: with a page filter on a Ramadan flag, prefer "Ramadan Day" as the time axis |
+| 22 | Golden task 3, the slicers | Hijri Year and Is Ramadan show "All" while the page is filtered to Ramadan 1447: the slicers suggest a choice the page filter has already made | `g3-view.png` | medium | no slicer on a column a page filter fixes; or preset the slicer instead of a page filter | `create_report`: drop a slicer whose column is in `pageFilters`, and say so |
+| 23 | 1280 x 720 executive page, the table | six of seven rows and a scrollbar: the last day is hidden | `g4w-en-view.png` | medium | the table's slot a row higher, or the rows tighter (`rowPadding` 0 saves 2 a row: measured tonight) | `grid.rowPadding` 0 where the rows would otherwise not fit; or the exec layout's row heights at 720 |
+| 24 | **Long Arabic names: chart titles and a slicer header** | cut at their beginning: "...عات حسب اسم الفرع التجاري الرئيسي": the measure's name is gone | `g6-ar-titles2.png`, `g6-ar-titles3.png` | high | wrap a chart's title to two lines (`titleWrap` works on a card's title: measure it on a chart), else shorten at a word with "…" at the reading end, the full title as alt text | the charts' `title` in `frame()` through a fit like `kpiTitleFit` |
+| 25 | A report on a model without measures (task 7) | page 1 is a header and one small table in the bottom corner: four fifths of the page are empty | `g7-en-view.png` | high | when nothing but tables and slicers can be built, use a layout made for them (the table full width under the header), or write nothing and return the proposal only | `create_report`: re-plan the page when `kpiCards.built` is 0 and the charts are left out |
+| 26 | A KPI card on a text measure (task 8) | the card shows "Yes" (the measure "Unused One" returns a text) | `g8-en-view.png` | medium | the picker takes only measures with a number format or a number type for a KPI card | `pbip-bind.js` KPI picks: skip measures whose format string is a text pattern or whose type is text |
+| 27 | Models without rows | Desktop's banner "Some of the tables have incomplete or no data" pushes into the capture and covers the header | `g6-ar-view.png` | low | nothing in the report; for demos use models with rows | - |
+| 28 | KPI cards: a whole number under a thousand | "179.00" for a count (two decimals on every automatic value); 0.34 and 3.31 read fine, 179.00 reads like money | `d14-text-view.png` | medium | no decimals when the measure's own format has none (or its type is a whole number); keep two for the rest | `cardObjects`: `labelPrecision` by the bound measure's format (the server knows it: `pct`, `cardFormat`) |
+| 29 | The phone layout of a table with SVG pictures | wider than the phone canvas: the first picture is cut at the edge, the second is behind a scrollbar | `p7-phone-p1-s4.png` | medium | a phone size for the pictures (`grid.imageWidth` in `mobile.json`, to measure that Desktop honours it), capped by the 323-wide canvas | `phoneLook` for `tableEx` in `pbip-export.js` |
+| 30 | The header, Arabic: the logo placeholder | "شعارك" sits 2.6 (1920 x 1080) and 3.4 (1280 x 720) below the header's middle, and starts 150 page units in from the edge where "Your logo" hugs its side | `h-1280-head.png` | medium | centre the placeholder's box by the measured Tahoma offset and align it to the header's edge | the logo placeholder's box in `pbip-export.js` (`fitText` for the logo text; the Arabic x) |
+| 31 | The header's title | always the design's name (the theme's name: "R10" on a report called "D14 text") | `d14-text-view.png` | medium | the report's name when no title is given; a `title` input | `create_report`: `title: a.title || a.name` instead of the design's name |
+| 32 | The 4:3 and 16:9 executive page, English | the table shows six of seven days with a vertical scrollbar after the fix too | `g4s-fit-tables.png` | medium | as finding 23 (tighter rows or a taller slot) | as finding 23 |
+<!-- r11 findings -->
+
 ## Round 11, small fixes (2026-10-05, cloud; branch `fix/round-11-small` from main `850b0a0`; not merged)
 On the owner's go of 5 Oct (~12:05), relayed by the reviewer. `npm test` 363 -> **365 of 365**.
 1. **Titles set explicitly** (Microsoft's September 2026 Feature Summary: "title and subtitle are now turned off by

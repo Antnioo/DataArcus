@@ -1653,7 +1653,310 @@ The table of "P3 EN" (the theme's text size; the engine writes no row padding, s
 - `size` on the card's image did nothing in three tries; what it is for was not found.
 - Not reached in the hour: 4 and 8 tabs on the phone layout; a tab row that has to wrap.
 
+## 2026-10-05, round 11, the long overnight sitting (`fix/round-11` from main `3803b7a`), Power BI Desktop 2.158.1177
+Made-up models only (the Ramadan sample, copied to `<tests folder>\11-r11`). Reports from the working copy's server
+over stdio (`builder-scripts\r10-make.mjs`); captures of the canvas through the bridge at double size in
+`<tests folder>\desk-r11\` (1.1719 capture pixels per page unit on a 1920 x 1080 page, 1.7578 on 1280 x 720; the page
+starts 115 pixels down); one report per command, in the foreground (`shot11.ps1`). The phone layout: "Mobile layout"
+pressed by UI Automation, the phone canvas captured from the window (`r11-phone.ps1`; 1.25 screen pixels per phone
+unit; the top 510 units of the canvas, it is not scrolled). Expected results: `mcp/WORK.md`, "Round 11, order of
+work", written before each run.
+
+### Item 2, the phone layout: 4 and 8 tabs, English and Arabic
+Hand-placed reports "T EN 4 1920", "T AR 4 1920", "T EN 8 1920", "T AR 8 1920" (`r11-tabs.mjs`: a title, a logo, two
+KPI cards and a bar chart on every page; the round 10 page names). The phone positions in the files were read first
+(`r11-phonepos.mjs`), then each report was opened and the phone canvas of pages 1 and 2 captured
+(`t-<lang>-<n>-phone-p1.png`, `-p2.png`).
+| Report | In the files | Seen on the phone canvas | Result |
+|---|---|---|---|
+| English, 4 tabs | 2 rows (y 64 and 116): Overview 95.5 wide + "Sales by region and channel" 219.5; Customers 113 + "Products and categories" 202; cards from y 168 | two rows, each name whole on one line, 52 apart (65 screen pixels), under the title and above the cards; "Overview" bold in the accent colour on page 1, "Sales by region and channel" on page 2; no line under the current tab (the underline is not on the phone, as the test says) | PASS |
+| Arabic, 4 tabs | **3 rows**: "نظرة عامة" alone (323 wide); "المبيعات حسب المنطقة والقناة" 240 at the right + "العملاء" 75 at the left; "المنتجات والفئات" alone; cards from y 220 | three rows, each name whole; the first page at the right of its row, the second page right of the third: right to left; the current page bold in the accent colour | PASS (whole, in order, nothing over anything). One row more than the names need: see the design findings |
+| English, 8 tabs | 3 rows (2, 2 and 4 names); cards from y 220 | three rows, every name whole; Returns, Stores, Staff, Notes share the third row | PASS |
+| Arabic, 8 tabs | 4 rows (1, 2, 3 and 2 names); cards from y 272 | four rows, every name whole, each row from the right; the cards and the chart follow | PASS |
+- Reading order on all four: title, tabs, the two cards side by side (Arabic: the first card at the right), the chart.
+- **Cut on every one of these phone pages, and not a tab: the second card's title, "Total Sales Last Rama..."** (a
+  157.5-wide phone card, its title at 10pt). Known since 2026-10-01 ("long card titles end in ..." on the phone);
+  round 10's wrap-or-shorten rule is applied to the page's cards only, not to the phone's. Not fixed tonight
+  (`mcp/WORK.md`, "Round 11, for the owner").
+- On the phone the titles of the cards and of the chart are drawn in a pale grey (the theme's label colour on a
+  white canvas), much fainter than on the page: see the design findings.
+
+### Item 2, a tab row that has to wrap (the page, not the phone)
+Eight long names ("Executive overview", "Sales by region and channel", "Customers and loyalty", "Products and
+categories", "Returns and refunds", "Stores and branches", "Staff and targets", "Notes and definitions"; and the
+Arabic ones in `r11-tabs.mjs`). The tabs wrap only when the title slot is high enough for two rows (each row is
+6 + 1.6 x pt + the line: 21 at 8pt in Segoe UI, 25 in Tahoma), so the header's height decides:
+| Report | Title slot | In the files | Seen in Desktop | Result |
+|---|---|---|---|---|
+| English 1280 x 720, "T EN 8 1280 long h48" | 48 high | two rows of four, 8pt, the rows 24 apart, both ending at the logo's side | two rows, every name whole; the mark (bold, accent colour, the line) on "Executive overview" on page 1 and on "Returns and refunds" in the second row on page 5 (`wrap-en-1280-head.png`) | PASS |
+| English 1920 x 1080, "T EN 8 1920 long h72" | 72 high | two rows of four, the rows 35 apart | two rows, every name whole, the mark in either row (`wrap-en-1920-head.png`) | PASS |
+| Arabic 1920 x 1080, "T AR 8 1920 long h72" | 72 high | two rows of four from the right | two rows, mirrored (the first page rightmost in the first row), every name whole, the mark in either row (`wrap-ar-1920-head.png`) | PASS |
+| English and Arabic 1280 x 720 and 960 x 720 with the header at its usual height ("T EN 8 1280 long", "T AR 8 1280 long", "T EN 8 960 long", "T AR 8 960 long"); and Arabic 1280 x 720 with a 48-high title | 32, 24; 48 | **no page button at all** on any page, and the answer said nothing (`reportNotes` empty in English) | not opened (there is nothing to see: no tab is written) | **FAIL** against the expected "they wrap to a second row" |
+- **Cause of the FAIL:** two rows need a title slot of 42 (Segoe UI) or 50 (Tahoma) at the 8pt minimum; a 32-high
+  header holds one row, eight long names don't fit one row, the fallback navigator doesn't fit either, so the writer
+  leaves the buttons out (by design: a cut name is worse), **silently**.
+- **Fixed, a test first (red: 419 checks, 1 failing):** the buttons are still left out, and the answer now says so:
+  `pageButtons: { leftOutOn: [the pages], why }` and one `reportNotes` line with what helps (shorter names, fewer
+  pages, a taller title slot). A report whose buttons fit has neither. Whether the header should grow by itself for a
+  second row is the owner's choice (`mcp/WORK.md`).
+- In the two-row headers the second row starts further right than the first (both rows end at the logo's side), so
+  the tabs do not line up in columns: a design finding, not a fault.
+
+### Item 3, the table: cell padding and `grid.rowPadding` (measured, no code changed)
+"TB EN" and "TB AR": four tables 900 x 440 on one hand-placed page (Day Name, Total Sales, Total Sales Last
+Ramadan; the default theme's 8pt table text), each given a magenta border by hand so its edge shows; the first
+with nothing written, the others with `grid.rowPadding` 0, 4 and 8 written by hand (`r11-table.mjs`). Measured with
+`r11-tbmeasure.ps1` (the border's box, each line of dark ink, the first and last pixel that is not white on that
+line), in page units.
+| `grid.rowPadding` | Row pitch | From the header's ink to the first row's ink | 
+|---|---|---|
+| nothing written | **17.1** | 23.9 |
+| 0 | **15.1** | 22.2 |
+| 4 | **22.8** | 30.7 |
+| 8 | **30.7** | 38.4 |
+- **Each unit of `rowPadding` adds 2 to the row pitch** (1 above and 1 below): 15.1 + 2 x the value at 8pt text
+  (ink 10.2 high from capital to descender). **With nothing written Desktop draws the rows as with 1.** Round 10's
+  20.9 was the generated theme's larger table text with nothing written; the same rule fits it (about 1.5 x the
+  ink + 2 x the padding).
+- **The grid starts 7.7 inside the visual's edge** on the left and on the right (the shaded rows and the rules end
+  there): that is the visual's own padding, not the cell's.
+- **A cell's padding, left and right: about 5 to 6.** The first column's text starts 12.8 to 13.7 from the visual's
+  edge (5.1 to 6.0 from the grid's edge); the last column's numbers end 13.7 from it (6.0). So the stand-in of
+  5 a side in `columnRoom` (round 10) is right within 1 page unit; `rowPadding` does not change it.
+- Arabic ("TB AR"): the same pitch (17.1 with nothing written). The text column is the first projection, drawn at
+  the left and right-aligned, the numbers left-aligned beside it; so "Friday" and "10,298" sit 9 page units apart
+  while 430 separate the two measures (`tb-ar-t1.png`): a design finding.
+
+### Item 3, the card image at 1920 x 1080, in Arabic and on a three-card page
+`svgCards` on every card (the round 10 test design, a 48 x 48 yellow square with an arrow), exec layout, built by the
+server (`r11-cimg.mjs`); the image's box measured by its colour (`yellow.ps1`).
+| Report | Card (w x h), the value | `imageAreaSize` written | The image drawn | Values | Result |
+|---|---|---|---|---|---|
+| "CI EN 1080 six", 1920 x 1080 | 244 to 247 x 144, 23pt | 24 or 25 | 46.9 x 46.9 (24) and 48.6 x 48.6 (25) | 101.91K, 74.68K, 0.34, 23.64K, 3.31, 101.91K: all whole, the image at the right end (`ci-en-1080-six-cards.png`) | PASS |
+| "CI EN 720 three", 1280 x 720 | 338 x 96, 28pt | 18 | 54.6 x 54.6 | 101.91K, 74.68K, 0.34 whole (`ci-en-720-three-cards.png`) | PASS |
+| "CI AR 720 six", 1280 x 720, Arabic | 163 x 96, 14pt (15pt on the 165-wide first card) | 25 | 32.4 x 32.4 (33.0 on the first) | whole; **but the image is at the right end, between the card's edge and the value** (`ci-ar-720-six-cards.png`) | **FAIL** (expected: the image at the far end from the value) |
+| "CI AR 1080 three", 1920 x 1080, Arabic | 507 x 144, 42pt | 12 | 54.6 x 54.6 | whole, **and the 42pt value touches the image** (`ci-ar-1080-three-cards.png`) | **FAIL** |
+- **Cause:** the card draws its image at the right by default; in a right-to-left card the value is at the right
+  too (round 10's design choice 1), so the image took the reading start.
+- **Measured before the code:** the same two reports with `position: 'Left'` added to the image entry by hand
+  (`r11-imgleft.mjs`, "... left"): the image at the left end at the same size (54.6; 31.3 to 32.4), the value at the
+  right under its title with clear air (`ci-ar-1080-three-left-cards.png`, `ci-ar-720-six-left-cards.png`).
+- **Fixed, a test first:** a right-to-left card's image entry carries `position: 'Left'`; a left-to-right card's is
+  unchanged. (The test was not run red on its own: the red evidence is the four reports above, built before the
+  fix, whose entries have no position.)
+- **The image area is a percent of the card's width less its padding on both sides** (about 50 on a 1920 x 1080
+  page: 245 -> 195; about 33 to 36 on 1280 x 720: 163 -> 130, 339 -> 303), not of 0.8 x the card as the writer
+  assumes. So on a wide card the image comes out a little larger than its design (54.6 for 48 on the three-card
+  pages) and on a 1920 x 1080 six-card page a little smaller (46.9). No value is cut by it. Not changed.
+
+### Item 3, the Arabic card image after the fix
+"CI AR 720 six fix" and "CI AR 1080 three fix", built by the server with the fix: every image at the left end
+(32.4 / 31.3 wide; 54.6), every value at the right under its title, whole, clear of the image
+(`ci-ar-720-six-before-after.png`, `ci-ar-1080-three-before-after.png`: before above, after below).
+
+### Item 4, the Gulf calendar: D-GC1 to D-GC6 (`add_gulf_calendar`'s script applied in Desktop)
+**The model:** made-up, "Gulf GC1" (`<tests folder>\11-r11\gulf-gc1`; `r11-gc-model.mjs`): the pack's test model
+with `sales.dax` only (a DAX table, two stores, every day of 2018 to 2030) and the nine measures of `measures.dax`
+on it. Two copies, "Gulf GC2" and "Gulf GC3", for the hand-edited scripts. The script: `add_gulf_calendar` with
+`name: "Calendar"`, 2018 to 2030, UAE, announced on, `relateTo: ["Sales[Date]"]`. Applied with `tmdl-apply.ps1`
+(TMDL view, a real paste, Preview, Apply; the laptop was free: 155 s idle). Queries through Desktop's own ADOMD
+client (`gc-check.ps1`), the query files in `<tests folder>\desk-r11\gc\`.
+| Row | Expected | Seen | Result |
+|---|---|---|---|
+| D-GC1, the script applies | Preview: one new table and one relationship; Apply accepted, Problems 0; 4748 rows, 36 columns; types inferred | "Changes applied to the model.", **Problems 0**; after "Refresh now": **4748 rows; 36 columns** (and the hidden RowNumber); Date and Week Start and Hijri Month Start are dates, the flags True/False, the numbers Integer, the names Text. Preview's diff also showed `lineageTag` lines added to the Sales table and its measures: the hand-written test model has none (a known trait of hand-written models, not the script) | PASS |
+| D-GC4, the relationship | Sales[Date] many to one Calendar[Date], single direction, active; does a query need the refresh first? | `'Sales'[Date] *[<-]1 'Calendar'[Date]`, Many to One, active, OneDirection. **Before the refresh a query fails:** "The query referenced calculated table 'Calendar' which does not hold any data because it needs to be recalculated or refreshed." (Desktop shows the banner "... calculated objects need to be manually refreshed", "Refresh now"). After it: sales by year 90917 (2018) ... 90787 (2030), 13 rows, 365 or 366 days each | PASS; **the refresh is needed first** |
+| The Hijri columns on a known date | 1 March 2026 = 12 Ramadan 1447 | Hijri Date "12 Ramadan 1447"; Hijri Year / Month Number / Day 1447 / 9 / 12; Hijri Month Name "Ramadan" | PASS |
+| The Ramadan flag | Ramadan 1447 from 18 February 2026 (`gulf-dates.js`); 17 February not | Is Ramadan TRUE on 1 March 2026, Ramadan Day 12; FALSE on 17 February; 18 February is "1 Ramadan 1447"; Ramadan 1447 runs 2026-02-18 to 2026-03-19, **30 days** | PASS |
+| The Eid flags | Eid al-Fitr 20-22 March 2026; 2018: 15-17 June and 21-24 August | Is Eid al-Fitr on 2026-03-20, 21, 22; Is Eid al-Adha on 2026-05-27 to 30; 2018: 06-15 to 06-17 and 08-21 to 08-24 | PASS |
+| 2018 by hand | 16 May "30 Sha'ban 1439", 17 May "1 Ramadan 1439", 29 Ramadan days | exactly these; weekend days 105 in 2021 and 105 in 2022; estimated dates from 2027-02-08 | PASS |
+| D-GC6, `check.dax` | 40 of 40 | **40 of 40** (C01-C15, E01-E15, R01-R10) | PASS |
+| A refresh with no errors | none | "Refresh now" and then Home > Refresh: no error, no banner left, the queries answer the same (`gc1-after-refresh.png`) | PASS |
+| D-GC3, sort by column written in the script (a copy, by hand: `sortByColumn` on Month Name, Day Name, Hijri Month Name) | write down what happens | Apply accepted, Problems 0; the model shows the three sort columns. Saved (Ctrl+S on this test copy), then three list slicers from `create_report`: **January to December, Sunday to Saturday, Muharram to Dhu al-Hijjah** (`gc3-slicers-crop.png`) | **yes: the script can carry them** |
+| D-GC2, mark as date table from the script (a copy, by hand: `dataCategory: Time` on the table, `isKey` on Date) | write down what happens | Apply accepted, Problems 0; the model holds DataCategory "Time" on Calendar and Date as its key column (`INFO.TABLES`, `INFO.COLUMNS`). **Not read:** the ribbon's "Mark as date table" state (UI Automation found no such element) | **the script is accepted; the ribbon to be looked at by a person** |
+| D-GC5, Preview when the name is taken (the script as written, on the old "Gulf Calendar Test", which has a `Calendar`) | write down exactly what Preview shows | **No error and no warning: Problems 0, Output 0.** The diff shows the existing `table Calendar` on both sides with its changed lines marked: Preview treats the script as a replacement of that table (`gc5-preview-crop.png`). Apply was not pressed; the model was closed unsaved, its files untouched | **nothing stops the user: the "stop" rule in `howToApply` is the only guard** |
+- **A finding about the tool, not Desktop:** `add_gulf_calendar` refused `relateTo: ["Sales[Date]"]` on this model
+  as Desktop saves it ("is not a date column (its type is unknown)"): Sales is a DAX table, and TMDL carries no
+  type for its columns. For the run the three test models' Sales columns were given `dataType` and
+  `isDataTypeInferred` by hand (`r11-gc-types.cjs`); Desktop opened them without a message. A user whose fact
+  table is a DAX table cannot get the relationship from the tool today (`mcp/WORK.md`, "for the owner").
+- The Sales table's measures that name `Calendar` show "Field list item has error" in the Data pane until the
+  calendar is applied and refreshed (three of them were listed right after Apply); none after the refresh.
+
+### Item 5, the golden tasks' reports opened, English and Arabic; a report with left-out visuals
+Each golden task's report built by the working copy's server with the calls of `mcp/test-models/golden-baseline.mjs`,
+once in English and once in Arabic (Tahoma) (`r11-golden.mjs`; models in `<tests folder>\11-r11\golden\`: the
+Ramadan sample with data; Arabic Long Names, Plain Orders, Health Test and Large Synthetic have no rows). Each opened
+alone, the time from `open` until the bridge reports the file ready taken, pages 1 and 2 captured
+(`gshot.ps1`; `g<task>-<lang>-p<n>.png` and the overview `-view.png`). "Seen" is from the overviews and from
+full-size crops of what looked off. No report showed an error dialog; none was slow to open by the 60 s mark.
+| Task | Report (pages) | Ready after (EN / AR) | Cut, overlapping or failing |
+|---|---|---|---|
+| 1 English executive | "G1 Exec" (2 x 1920 x 1080; brand #0F6CBD gives a dark design) | 22 s / 26 s | nothing cut. Cards 101.91K, 74.68K, 0.34 (the model's measure has no percent format: `modelNotes`). Month and day labels slant on page 1. The table lists the days A to Z beside a chart that lists them Sunday to Saturday (`modelNotes`: no sort-by column) |
+| 2 Arabic, mirrored | "G2 Analysis" (2 x 1920 x 1080) | 18 s / 18 s | nothing cut; mirrored in Arabic (title right, rail left, the first card rightmost). The analysis table is half empty with seven rows |
+| 3 Ramadan vs last Ramadan | "G3 Ramadan" (1 page; page filters Is Ramadan and Hijri Year 1447) | 19 s / 16 s | nothing cut. Cards **21.47K, 17.84K, 0.20** (one Ramadan: the filters work). The line chart has two points (February, March). The "What it means" box holds its placeholder sentence in small text |
+| 4 16:9 | "G4 16x9" (2 x 1280 x 720) | 21 s / 21 s | English: the page-1 table shows six of the seven days and a scrollbar; Arabic: all seven. Nothing else cut |
+| 4 4:3 | "G4 4x3" (2 x 960 x 720) | 21 s / 14 s | **FAIL, both languages: the table is wider than its box.** English: the fourth header is cut ("Total Sales vs Last R"), a horizontal and a vertical scrollbar, the sixth row half hidden; Arabic: the "Total Sales" column is off the box altogether (`g4s-en-view.png`, `g4s-ar-view.png`). Known at agent level since 4 October; the card titles of that record are whole now |
+| 5 640 x 360 | "G5 Small" | 17 s / 18 s | the known small-page items, as expected: the table shows one row and two scrollbars with its last column cut; "Wednes..." on the column chart; Q4 behind a scrollbar; a scroll thumb beside "Your logo" (English). **The card values are whole now** (101.91K, 74.68K, 0.34) and so are the titles |
+| 6 long Arabic names | "G6 Long" (2 x 1920 x 1080; no rows) | 19 s / 17 s | the four KPI titles are whole (small, 8 to 9pt). **The chart titles and one slicer header are cut at their beginning:** "...عات حسب اسم الفرع التجاري الرئيسي" (the measure's name is lost, the dots stand at the reading start) (`g6-ar-titles2.png`, `g6-ar-titles3.png`); the table is wider than its box (scrollbar). One card shows Desktop's "Something's wrong with one or more fields" (the made-up model's growth measure, known). Desktop's banner "Some of the tables have incomplete or no data" covers the header in the capture |
+| 7 no measures (**the report with left-out visuals**) | "G7 Plain" (2 pages; `kpiCards` 0 of 4, `leftOutVisuals` named in the answer) | 20 s / 18 s | **as expected: no error box and no empty frame** where the cards and the charts were left out. What is left: the header and one table in the page's bottom corner (page 1), the slicers and one table (page 2); four fifths of page 1 are empty (`g7-en-view.png`) |
+| 8 "redesign this" | "G8 Redesign" (2 pages; `kpiCards` 2 of 4) | 24 s / 19 s | nothing cut; the two cards share the row's width. The second card shows "Yes": the picker put a text measure ("Unused One") on a KPI card |
+| 9 an unsupported visual | none | - | `create_report` refused (the input check names the supported kinds); nothing written |
+| 10 the 300-table model (focus logistics) | "G10 Large" (2 x 1920 x 1080) | **49 s / 41 s** | **the page-1 table is wider than its box at 1920 x 1080 too** (four long measure names: "Freight Costs Total Tax Amou", a scrollbar); in Arabic also a chart title ends in "..." ("... حسب Carrier Gr..."). Slower to open than the others, under a minute |
+| 11 a Gulf calendar checked | none (a health answer) | - | see item 4 |
+- **The table that is wider than its box (tasks 4, 6, 10): a FAIL against "nothing cut".** Cause: the table takes
+  the first text column and every KPI measure, whatever the slot's width; round 10's `columnRoom` knows what each
+  column needs but is used only to cap SVG pictures. Fixed below (a test first).
+
+### Item 6, part C: D-P4, no script and no fetch from an SVG image
+"DP4 SVG" (`r11-dp4.mjs`): a copy of "TB EN" whose first table shows Day Name and four report-level SVG measures:
+a green box (the control); the same box with a `<script>` that would turn it red; the same box with an `onload`
+that would turn it red; a green box with an `<image>` whose address is a logging server on this laptop only
+(`r11-logserver.mjs`, 127.0.0.1:8765; `href` and `xlink:href`). The server ran for four minutes around the open and
+the capture; its log is `desk-r11\dp4-server.log`.
+| Expected | Seen | Result |
+|---|---|---|
+| the script does not run (the fill is unchanged) | "Script SVG" and "Onload SVG" are green in every row, like the control (`dp4-table.png`) | PASS |
+| the local server logs no request | the log holds one request, the builder's own self-test (`GET /selftest` from PowerShell, which proves the logger works), and **none from Power BI** from the open to four minutes later | PASS |
+- The picture with the `<image>` draws its green box with a broken-image mark where the linked image would be:
+  Desktop shows that the image was not loaded. So a design must never rely on a linked image.
+- Seen through the bridge's capture and with the report open on screen for the four minutes; not tried: the
+  Service, the phone app, PDF.
+
+### Item 6, part C: D-P5, a theme's page background as a `data:` URL
+"DP5 theme" (`r11-dp5.mjs`): a copy of "TB EN"; the pages' own background entries taken out; the theme inside the
+project given `visualStyles.page["*"].background: [{ image: { name, scaling: "Fit", url: "data:image/png;base64,…" },
+transparency: 0 }]` with a 64 x 36 striped PNG (906 characters).
+- **Inside the project: drawn.** The stripes fill the page behind the visuals, scaled to fit (`dp5-view.png`).
+  Desktop opened the report without a message.
+- **Through View > Themes > Browse: not run** (it needs the file dialog; the theme is ready at
+  `<tests folder>\11-r11\dp5-theme.json`).
+
+### Item 6, part C: D15, the title against the header's middle (measured; no code changed)
+Round 8's plan computed that the header's title sits 2.8 below the middle at 1920 x 1080 in English (1.3 at
+1280 x 720) and proposed a taller header. Measured tonight on today's header: the exec layout, 4 cards, no rail,
+Corporate (white panels), built by the server (`r11-d15.mjs`); the header panel's edges and the title's ink read
+from the capture (`r11-header.ps1`); page units, + is lower.
+| Report | Title | Header panel | The title's ink middle against the panel's middle | Round 8 computed | "Your logo" / "شعارك" |
+|---|---|---|---|---|---|
+| "H EN 1920" | 20pt Segoe UI bold | 58.9 high | **-1.3** (above) | +2.8 | +0.4 |
+| "H AR 1920" | 20pt Tahoma bold | 58.9 | **-1.7** | +0.4 | +2.6 |
+| "H EN 1280" | 12pt Segoe UI bold | 39.8 | **-0.6** | +1.3 | +0.3 |
+| "H AR 1280" | 12pt Tahoma bold | 39.8 | **-1.7** | -2.6 | **+3.4** |
+- **The computed offsets are not what Desktop draws for these titles.** Every title sits a little above the
+  middle (0.6 to 1.7), none below. The titles here are capitals and digits ("H EN 1920"), whose ink is the capital
+  height; a title with lowercase letters that hang below the line has its ink's middle lower (by about half the
+  hanging part: some 2.5 at 20pt), which is where round 8's +2.8 would come from. So where the title "sits" depends
+  on its letters, and a header made taller for English would push a capitals-only title further above the middle
+  (to about -4.3 at 1920 x 1080).
+- **The Arabic logo placeholder is what sits off:** "شعارك" is 2.6 and 3.4 below the middle (`h-1280-head.png`).
+- **The engine's `hh` setting is not the proposal:** with `hh` 60, 59 and 62 the title box grows and the title's
+  size grows with it (20 -> 23pt, 12 -> 13pt, 12 -> 15pt: "H EN 1920 hh60", "H EN 1280 hh59", "H AR 1280 hh62",
+  read from the files, not opened). A header that is taller with the title's size unchanged would need new code.
+- Not done as written in the plan: hand-edited copies with the taller slot. A text box is top-aligned (round 1),
+  so the taller slot leaves the ink where it is and moves only the middle; the numbers above give the result.
+
+### Item 5, after the fix: a table holds only the columns its width has room for
+Tests first (red: 421 checks, 1 failing, "5 columns need 422 of 354"; green: 421 of 421). `tableFit` in
+`pbip-export.js`: the first text column and the first measure always, then the other fields in their order while
+`columnRoom` says they fit the slot's width; the first that does not fit and those after it are left out of that
+table; the answer names them (`tableColumns`, one `reportNotes` line) and `boundFields` lists what the table shows.
+| Report | Before | After (rebuilt with the same call) |
+|---|---|---|
+| "G4 4x3 fit EN" (960 x 720) | four columns, the fourth header cut, a horizontal scrollbar | **three columns** (Day Name, Total Sales, Total Sales Last Ramadan), every header whole, no horizontal scrollbar; `tableColumns`: "Executive summary", shown 3, left out Sales[Total Sales vs Last Ramadan %]. The Details page's wide table keeps all four. Six of the seven rows and a vertical scrollbar, as at 1280 x 720 (`g4s-fit-tables.png`) |
+| "G4 4x3 fit AR" | the "Total Sales" column off the box | three columns, all whole, all seven rows, "Total" shown |
+| "G10 fit EN" (1920 x 1080, long names) | "Freight Costs Total Tax Amou", a scrollbar | built: three columns on page 1 (Route Group, Shipments Total Net Amount, Deliveries Total Tax Amount), the fourth named in `tableColumns`; **not opened** |
+- The rule's width is the slot's own; tonight's measurement says the grid is 15.4 narrower than the visual (7.7 a
+  side). `columnRoom` is generous (a measure's value is taken as nine digits), which covers it here; the two were
+  not tightened together.
+
+### Item 6, part C: D14, a text filter with an apostrophe and a decimal filter
+A copy of the sample with one more made-up column (`<tests folder>\11-r11\d14`, `r11-d14.cjs`): Sales[Rate] =
+MOD ( DAY ( Date ), 4 ) x 5.5. Two reports from `create_report` (exec, 1280 x 720, three cards), each with one page
+filter. Expected values by DAX on the open model (`desk-r11\gc\q-d14.dax`).
+| Filter | In the page's file | The Filters pane | The cards against DAX | Result |
+|---|---|---|---|---|
+| `Calendar[Hijri Month Name]` = "Sha'ban" | `'Sha''ban'` | "Hijri Month N... is Sha'ban" under "Filters on this page", no error mark (`d14-text-view.png`) | Total Sales **179.00** (DAX 179: the 179 Sha'ban days of the calendar, 1 a day); Total Sales Last Ramadan blank (DAX blank) | PASS |
+| `Sales[Rate]` = 5.5 (the column's type is unknown in the files) | `5.5D` | "Rate is 5.5", no error mark (`d14-dec-view.png`) | **25.73K, 18.65K, 0.35** (DAX 25731, 18647, 0.3517) | PASS |
+- The tooltip pages of both reports have no filter (read from the files).
+- Seen: a whole number under a thousand shows as "179.00" on a card (automatic units with two decimals, round 10's
+  setting): a count reads like money. A design finding.
+
+### Item 6, part C: D-P7, SVG pictures in the phone layout
+"P7 SVG EN" (round 10's two-picture table: Hijri Day, Total Sales, Total Sales Last Ramadan, a bar and a strip);
+Mobile layout by UI Automation, the phone canvas scrolled with the mouse wheel to the table (`r11-phone-scroll.ps1`;
+`p7-phone-p1-s4.png`).
+- **The pictures draw on the phone**: the bar shows in every row and in the total.
+- **The table is wider than the phone's canvas**: three fields and two pictures need more than 323, so the first
+  picture's header is cut ("vs last Ran"), its bars are cut at the canvas's edge and the second picture is behind a
+  horizontal scrollbar. The phone uses the page's own query and picture size; nothing is written for the phone.
+- **Not run: File > Export > PDF** (it opens a viewer outside Desktop and needs a person to read it).
+
+### Item 1, package 0.2.6 installed in Claude Desktop (6 October, 00:02 to 00:12)
+`dataarcus-0.2.6.mcpb` (SHA-256 `280e86f6…1540`, built from main `3803b7a`) installed through Settings >
+Extensions > Advanced settings > Install extension. The app gives UI Automation only 14 unnamed elements, so the
+clicks were by position from captures of the window (its left list cut off); the file dialog and Windows' question
+were answered by window messages to their own controls; no Enter key was sent anywhere.
+| Step (INSTALL.md) | Seen | As the guide says? |
+|---|---|---|
+| Advanced settings: a red "Developer tools warning" above the Install button | yes (`cd\s4.png`); built-in Node.js 24.21.0 | yes |
+| The install screen: the red box "Installing will grant this extension access to everything on your computer ..." | yes; "Requirements: All requirements met" (`cd\s5.png`) | yes |
+| Windows asks "Do you want to install DataArcus for Power BI?" | yes, with "This desktop extension will be installed on your computer and made available to Claude.", Install / Cancel | yes |
+| The working folder field is empty ("Directory path"), Save greyed until a folder is given | yes (`cd\s7.png`, `s8.png`) | yes |
+| After Save: installed but Disabled; a toggle switches it on | yes (`cd\s9.png`, `s10.png`) | yes |
+| The extension's page | **Tools: 7** (add_gulf_calendar, check_model_health, create_report, generate_theme, plan_layout, read_model, suggest_fields); version 0.2.6; licence Proprietary; made by DataArcus (`cd\s11.png`) | - |
+- The description on that page ends "Tools: read a model, suggest fields, check model health, generate a theme,
+  plan a layout, create a report.": six are named in the sentence, seven are listed under it.
+- The file dialog opened in a folder of the owner's; its file names came back in one listing of the dialog's
+  controls. Nothing of it was kept or written down.
+- **Not done:** a chat that calls the 7 tools (a chat can only be driven by screen position and keystrokes in the
+  app this session runs in). The same seven calls were made on the unpacked file (`r11-pkg-smoke.mjs`): all
+  answered. The extension is left installed and enabled, working folder `<tests folder>\11-r11\pkg\work3`.
+
+### Item 7, `check_report` (branch `feat/check-report` at `c8be567`, read only) against what Desktop showed
+A separate worktree of the branch (`C:\DataArcus\r11-check-report`; nothing in it changed, only its own
+`npm ci`), its server started over stdio with the round's folder as the working folder, `check_report` called once
+on each of the **63 reports** under `<tests folder>\11-r11` (`r11-check.mjs`; the answers in
+`<tests folder>\desk-r11\check-report\`, `summary.json`). No call failed; 9 to 812 ms a report; the validator ran
+offline (0.4.0) on each; nothing was written into the reports.
+**Totals by rule:** PBIR_TEXTBOX_HEIGHT_BELOW_FLOOR 153, TOOLTIP_SCROLL 112 (notes), PBIR_SLICER_HEADER_MAY_CLIP 42,
+TEXTBOX_FITS 32, BUTTON_ONE_LINE 21, THEME_NAME 2, PBIR_PLATFORM_MISSING 1, PBIR_THEME_FILE_NAME_MISMATCH 1.
+Errors: 2, both on the fixture's own hand-made "Health Test Report" (not a report of tonight's engine).
+| What Desktop showed tonight | `check_report` said | Agree? |
+|---|---|---|
+| "Reset filters" whole on every English report with a rail (arrow and text, one line) | **BUTTON_ONE_LINE, a warning, on every one** (21): "the button is 155 wide; 13 characters at 15pt and its icon (40 wide at this height) need 163" (107 against 111 at 1280 x 720) | **disagree: raised wrongly.** Its rule counts 0.45 em a letter; "Reset filters" is 0.38 em a letter (round 10, M3), and since round 10 the engine sizes the button by the measured letters + 10 + the icon |
+| The Arabic title whole, no scroll thumb, in a 46-high box at 20pt ("G1 Exec AR", "H AR 1920") | PBIR_TEXTBOX_HEIGHT_BELOW_FLOOR (Microsoft's validator): "height 46px may be too small for 20pt font with 8+8px padding (min 48px to avoid scrollbar)" | **disagree: raised wrongly** for these. Desktop showed 20pt whole from 44 (measured 2026-10-01) |
+| The same warning at 1280 x 720 and 960 x 720 on the title and logo text boxes (31 or 32 high at 10 to 12pt; 24 at 8pt) | 4 a report (16 on the eight-page ones) | **disagree** at 1280 x 720 and 960 x 720 (the titles and "Your logo" were whole, no thumb); **agree at 640 x 360**, where Desktop does show a scroll thumb beside "Your logo" ("G5 Small EN") |
+| Dropdown slicers whole (header and box) at 1280 x 720, 56 high with the page's smaller text | PBIR_SLICER_HEADER_MAY_CLIP: "height 56px < 76px full height" (3 a report at 1280 x 720, 960 x 720, 640 x 360) | **disagree** at 1280 x 720 and 960 x 720 (whole in Desktop; the rule assumes the default text size); not looked at closely at 640 x 360 |
+| Not opened: the title box of the 960 x 720 eight-page reports (24 high, 8pt) | TEXTBOX_FITS: "the box is 24 high; 1 line of 8pt need 25" (32) | not comparable tonight; the measurement of 2026-10-01 has 8pt whole at 24, so the rule is one unit stricter than Desktop |
+| Tooltip bar charts (not hovered tonight) | TOOLTIP_SCROLL, a note: "about 6 rows fit in its 184 height ..." (2 a report) | nothing to compare; an honest note (it says the row count depends on data it does not read) |
+| **The table wider than its box** (4:3 both languages; long names at 1920 x 1080; the phone's SVG table) | nothing | **it missed it** (no rule for a table's columns against its width) |
+| **The Arabic card image at the value's side**, a 42pt value touching it | nothing | **it missed it** (no rule for a card's image side) |
+| **Arabic chart titles and a slicer header cut at their beginning** ("G6 Long AR") | nothing | **it missed it** (no rule for a chart title's width) |
+| **A phone card's title cut** ("Total Sales Last Rama...") | nothing (PHONE_OVERLAP ran: no overlap, which is true) | **it missed it** |
+| **No page buttons at all** on the eight-long-name reports with a 32-high header | nothing about navigation (PAGE_BUTTON_WRAP has nothing to look at) | **it missed it** (a multi-page report without page buttons is not told) |
+| 640 x 360: the table one row high with two scrollbars, "Wednes...", Q4 behind a scrollbar | the text-box and slicer warnings above only | **it missed them** (the known small-page items have no rule) |
+| The 16:9 English table: six of seven rows, a scrollbar | nothing | it missed it (it does not read data; a row count cannot be known) |
+| Arabic reports: mirrored; the table's text column first | `notChecked`: "RTL_MIRROR" and "DataArcus layout rules" ("not run on any report"); `builtBy: "unknown"` on every report the engine wrote tonight | it says honestly what it did not check. To note: the header, rail and panel rules run on no report at all, and it does not recognise the engine's own reports |
+| Nothing wrong: "DP4 SVG", "DP5 theme", "TB EN", "T EN 4 1920", "T EN 8 1920", the two-row tab headers | only the tooltip notes | agree |
+- **In one line:** on tonight's 63 reports `check_report` raised 250 warnings. Of the kinds that could be compared
+  with Desktop, four were raised where Desktop shows nothing wrong (the Reset button, the 46-high Arabic title, the
+  slicers and the text boxes at 1280 x 720) and one was right (the scroll thumb at 640 x 360); and it has no rule
+  for any of the six things Desktop showed as really cut or misplaced. Its validator and schema checks found
+  nothing on the engine's reports (0 errors on all 62), which agrees with Desktop opening every one without a
+  message.
+
 ## Lessons
+- **Round 11: a TMDL script may carry `sortByColumn`, `dataCategory: Time` and `isKey` for a DAX calendar table**:
+  Desktop applies them (Problems 0), and slicers then run January to December, Sunday to Saturday, Muharram to Dhu
+  al-Hijjah. And Preview does not warn when a script's table name is already in the model: it shows a replacement.
+- **Round 11: `win-shot.ps1` pictures the Claude app unless `-Process PBIDesktop` is given**: one such picture was
+  taken by mistake tonight and deleted unseen.
+- **Round 11: `grid.rowPadding` adds 2 a unit to a table's row pitch, and nothing written draws like 1**; the grid
+  starts 7.7 inside the visual and a cell pads its text by 5 to 6 on each side.
+- **Round 11: a card's image is drawn at the right unless `position: 'Left'` is written** (it works with
+  `imageAreaSize`); in a right-to-left card write it.
+- **Round 11: PowerShell ignores case in names (again):** a measuring script that kept the bitmap in `$b` and the
+  border's bottom in `$B` wrote 64 MB of errors. And `python -` in a shell command waits for input for ever.
 - **Round 10 (2.158.1177): a card's "Value decimal places" is `labelPrecision`** (`2L`), and it works in the card's
   default value entry: automatic units with 2 decimals for every card (3.43M, 14.81K, 231.50).
 - **Round 10: text width depends on the letters, not their count.** "Executive summary" is 0.49 em a character,

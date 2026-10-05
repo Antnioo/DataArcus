@@ -1780,6 +1780,18 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => read(twoAr).concat(read(two)).every((pg) => { const b = navOf(pg), m = b.map((v) => v.mobile && v.mobile.position), line = pg.visuals.filter((v) => type(v) === 'shape');
       return m.every((p) => p && p.x >= 0 && p.x + p.width <= 323.5 && p.height >= 30) && new Set(m.map((p) => p.y)).size === 1 && line.every((v) => !v.mobile); }),
       () => `the phone layout must keep the page buttons in one row and leave the underline out: ${JSON.stringify(read(two).map((pg) => navOf(pg).map((v) => v.mobile && v.mobile.position))).slice(0, 400)}`);
+    // 6. (round 11, seen in Desktop on 5 Oct: eight long page names on a 1280 x 720 page whose header is 32 high got no
+    // page buttons at all, and the answer said nothing.) Page buttons that do not fit are still left out (a cut name is
+    // worse), but the answer says so: pageButtons.leftOutOn names the pages, and reportNotes carries one line with the
+    // cause and what helps. A report whose buttons fit has neither.
+    const LONG = ['Executive overview', 'Sales by region and channel', 'Customers and loyalty', 'Products and categories', 'Returns and refunds', 'Stores and branches', 'Staff and targets', 'Notes and definitions'];
+    const r720 = (v) => Math.round(v * 1280 / 1920);
+    const tight = await ask('create_report', { path: 'r10-project', name: 'R11 Nav tight', pages: LONG.map((name) => ({ name, width: 1280, height: 720, slots: [{ kind: 'title', x: r720(36), y: r720(18), w: r720(840), h: r720(48) }, { kind: 'logo', x: r720(1659), y: r720(18), w: r720(225), h: r720(48) }, { kind: 'kpi', title: 'K', x: r720(36), y: r720(90), w: r720(400), h: r720(140) }] })) });
+    chk(() => !tight.err && read(tight).length === 8 && read(tight).every((pg) => navOf(pg).length === 0 && !pg.visuals.some((v) => type(v) === 'pageNavigator'))
+      && tight.j.pageButtons && tight.j.pageButtons.leftOutOn.length === 8 && tight.j.pageButtons.leftOutOn[0] === 'Executive overview' && /room|fit/.test(tight.j.pageButtons.why)
+      && (tight.j.reportNotes || []).filter((n) => /page buttons/i.test(n)).length === 1 && /shorter|fewer|taller/.test((tight.j.reportNotes || []).find((n) => /page buttons/i.test(n)))
+      && !many['EN 8'].err && !many['EN 8'].j.pageButtons && !(many['EN 8'].j.reportNotes || []).some((n) => /page buttons/i.test(n)) && !two.j.pageButtons,
+      () => `page buttons left out for lack of room must be told (pageButtons.leftOutOn, one reportNotes line), and only then: ${tight.err ? tight.t.slice(0, 200) : JSON.stringify({ pageButtons: tight.j.pageButtons, notes: tight.j.reportNotes, buttons: read(tight).map((pg) => navOf(pg).length), fits: many['EN 8'].j && many['EN 8'].j.pageButtons })}`.slice(0, 700));
   }
 
   // ----- R10.6(c): Reset filters: an icon button without a box, with a tooltip -----
@@ -1851,6 +1863,15 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       chk(() => L(ip.show) === 'true' && L(ip.imageType) === "'imageData'" && JSON.stringify(ip.imageData) === JSON.stringify({ expr: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: 'Sales' } }, Property: 'Card bar' } } }) && JSON.stringify(img[0].selector) === '{"id":"default"}'
         && !cs[0][0].visual.objects.image && !cs[0][2].visual.objects.image && c.j.svgMeasures.some((m) => m.label === 'Card bar' && /card/i.test(m.shownAs)) && errors(path.join(ROOT, 'r10-project', c.j.report)) === '0',
         () => `svgCards must write Desktop's image entry on that card only: ${JSON.stringify(img)} ${short(c)}`);
+      // (round 11, seen in Desktop on 5 Oct, "CI AR 1080 three" and "CI AR 720 six": the card draws its image at the right
+      // by default, so in a right-to-left report it sat at the reading start, between the card's edge and the value, and a
+      // 42pt value touched it. With position 'Left' Desktop drew the image at the left end and the value at the right
+      // under its title.) A right-to-left card's image is at the far end from the value: position 'Left'; a
+      // left-to-right card keeps Desktop's default (no position written).
+      const ca = await ask('create_report', { path: 'r10-project', name: 'R10 SVG card AR', design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', lang: 'ar' }), lang: 'ar', svgCards: [{ card: 1, label: 'Card bar AR', design: bar('Avg Price') }] });
+      const ia = ca.err ? [] : report(path.join(ROOT, 'r10-project', ca.j.report)).filter((p) => !p.tooltip).flatMap((pg) => cards(pg)).map((v) => v.visual.objects.image).filter(Boolean).map((e) => e[0].properties);
+      chk(() => ia.length >= 1 && ia.every((p) => L(p.position) === "'Left'" && L(p.fixedSize) === 'false' && /^\d+D$/.test(L(p.imageAreaSize))) && ip.position === undefined && errors(path.join(ROOT, 'r10-project', ca.j.report)) === '0',
+        () => `a right-to-left card's image must be at the left (position 'Left'), a left-to-right card's left to Desktop's default: AR ${JSON.stringify(ia.map((p) => p.position))} EN ${JSON.stringify(ip.position)} ${short(ca)}`);
     }
     // 6. a matrix slot (hand-placed pages): rows by the table's text column, the measures as values, SVG columns and the image size as in a table
     {
@@ -2135,6 +2156,36 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       if (!(x.j.svgMeasures || []).every((m) => m.imageWidth === W) || !(x.j.reportNotes || []).some((n) => /narrowed/.test(n) && new RegExp(String(W)).test(n))) bad.push(`${lang}: the answer must give the pictures' width and say they were narrowed: ${JSON.stringify(x.j.svgMeasures)}`);
     }
     chk(() => bad.length === 0 && capped.length === 2, () => `the pictures must be capped by the table's room: ${bad.slice(0, 4).join(' | ')} (capped: ${capped})`);
+    // (round 11, seen in Desktop on 5 Oct: on a 960 x 720 page the table of a text column and three measures was wider
+    // than its box in English and in Arabic, a header cut and a column off the box, behind a scrollbar; at 1920 x 1080
+    // too with four long measure names.) A table never holds more columns than its width has room for (columnRoom, the
+    // rule the pictures already follow): the fields are kept in order while they fit, the first text column and one
+    // measure always; what does not fit is left out of that table, named in tableColumns and in one reportNotes line,
+    // and boundFields lists what the table really shows. A table with the room keeps every field and says nothing.
+    {
+      const FIVE = ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin %]', 'Sales[Avg Price]'], tbad = [];
+      for (const lang of ['en', 'ar']) {
+        const x = await ask('create_report', { path: 'd5-project', name: 'D5 table fit ' + lang, lang, design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', page: '960x720', lang }), fields: { kpis: KPIS, table: FIVE } });
+        if (x.err) { tbad.push(`${lang}: ${short(x)}`); continue; }
+        const pgs = report(path.join(ROOT, 'd5-project', x.j.report)).filter((p) => !p.tooltip), size = tableText(x, 'd5-project'), font = lang === 'ar' ? 'Tahoma' : 'Segoe UI';
+        const told = x.j.tableColumns || [];
+        pgs.forEach((pg, pi) => pg.visuals.filter((v) => type(v) === 'tableEx').forEach((t) => {
+          const ps = t.visual.query.queryState.Values.projections, need = ps.reduce((a, p) => a + Pb.columnRoom(p, size, font), 0), refs = ps.map((p) => p.queryRef);
+          if (need > t.at.w + 0.5 && ps.length > 2) tbad.push(`${lang} ${pg.name}: ${ps.length} columns need ${need.toFixed(0)} of ${t.at.w}`);
+          if (!refs.includes('Sales.Region') || !refs.includes('Sales.Total Sales')) tbad.push(`${lang} ${pg.name}: the text column and the first measure must stay: ${refs}`);
+          if (JSON.stringify((t.visual.objects.columnFormatting || []).map((e) => e.selector.metadata).sort()) !== JSON.stringify(refs.slice().sort())) tbad.push(`${lang} ${pg.name}: columnFormatting must follow the kept columns`);
+          const mine = told.find((c) => c.page === pg.name), bf = (x.j.boundFields.find((b) => b.page === pg.name) || { visuals: [] }).visuals.find((v) => v.visual === 'Table');
+          if (ps.length < FIVE.length && !(mine && mine.leftOut.length === FIVE.length - ps.length && mine.shown === ps.length)) tbad.push(`${lang} ${pg.name}: tableColumns must name what was left out: ${JSON.stringify(mine)}`);
+          if (!bf || bf.fields.length !== ps.length) tbad.push(`${lang} ${pg.name}: boundFields must list the ${ps.length} shown columns: ${JSON.stringify(bf)}`);
+        }));
+        if (!told.length || (x.j.reportNotes || []).filter((n) => /table/i.test(n) && /left out|room/i.test(n)).length !== 1) tbad.push(`${lang}: a narrow table must be told in tableColumns and one reportNotes line: ${JSON.stringify(told)} ${JSON.stringify(x.j.reportNotes)}`.slice(0, 400));
+      }
+      const roomy = await ask('create_report', { path: 'd5-project', name: 'D5 table roomy', fields: { table: FIVE },
+        pages: [{ name: 'W', slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'table', title: 'Wide', x: 36, y: 90, w: 1800, h: 600 }] }] });
+      const rt = pageVisuals(roomy, 'd5-project').find((v) => type(v) === 'tableEx');
+      chk(() => tbad.length === 0 && !roomy.err && rt.visual.query.queryState.Values.projections.length === 5 && !roomy.j.tableColumns && !(roomy.j.reportNotes || []).some((n) => /left out of the table/i.test(n)),
+        () => `a table must hold only the columns its width has room for, and say what it left out; a wide one keeps all: ${tbad.slice(0, 4).join(' | ')} | roomy: ${roomy.err ? short(roomy) : rt.visual.query.queryState.Values.projections.length + ' columns, ' + JSON.stringify(roomy.j.tableColumns)}`.slice(0, 900));
+    }
     const wide = await ask('create_report', { path: 'd5-project', name: 'D5 SVG wide', fields: { table: ['Sales[Region]', 'Sales[Total Sales]'] }, svgColumns: pics,
       pages: [{ name: 'W', slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'table', title: 'Wide', x: 36, y: 90, w: 1200, h: 600 }] }] });
     const wt = pageVisuals(wide, 'd5-project').find((v) => type(v) === 'tableEx');
