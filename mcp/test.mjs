@@ -1696,7 +1696,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     for (const [rule, change] of CASES) {
       const dir = copy('CR ' + rule), changed = path.relative(dir, change(dir)).split(path.sep).join('/');
       const a = await ask('check_report', { path: path.relative(ROOT, dir) });
-      const mine = a.err ? [] : a.j.findings.filter((f) => f.rule === rule), others = a.err ? [] : measured(a).filter((f) => f.rule !== rule);
+      // (session 2, 5 Oct: notes no longer count as "other findings": TOOLTIP_SCROLL gives one on every tooltip bar chart)
+      const mine = a.err ? [] : a.j.findings.filter((f) => f.rule === rule), others = a.err ? [] : measured(a).filter((f) => f.rule !== rule && f.severity !== 'note');
       chk(() => mine.length === 1 && mine[0].file === changed && (rule === 'SCHEMA' ? /bundled/.test(mine[0].source) && /page\/\d+\.\d+\.\d+/.test(mine[0].source) : /^measured: scripts\/tests\/DESKTOP-TESTS\.md, 2026-\d\d-\d\d, Desktop 2\.15\d/.test(mine[0].source)) && others.length === 0,
         () => `${rule}: one broken copy must give exactly 1 ${rule} finding in ${changed}: ${JSON.stringify(mine).slice(0, 500)}; others ${JSON.stringify(others.map((f) => f.rule))} ${a.err ? short(a) : ''}`);
     }
@@ -1837,7 +1838,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   //    field the chart doesn't hold gives one finding
   {
     const dir = copyOf('CR Gold EN', 'CR2 Sort'), x = visuals(dir).find((v) => v.j.visual && /Chart$/.test(v.j.visual.visualType) && v.j.visual.query);
-    x.j.visual.query.sortDefinition = { sort: [{ field: { Column: { Expression: { SourceRef: { Entity: 'Sales' } }, Property: 'Channel' } }, direction: 'Ascending' }], isDefaultSort: true }; W(x.f, x.j);
+    x.j.visual.query.sortDefinition = { sort: [{ field: { Column: { Expression: { SourceRef: { Entity: 'Sales' } }, Property: 'Amount' } }, direction: 'Ascending' }], isDefaultSort: true }; W(x.f, x.j);
     const r = await one(dir, 'SORT_IN_VISUAL', rel(dir, x.f));
     chk(() => r.ok, () => `SORT_IN_VISUAL: a sort by a field not in the chart must give 1 finding: ${JSON.stringify(r.mine).slice(0, 400)} others ${JSON.stringify(r.others.map((x) => x.rule))}`);
   }

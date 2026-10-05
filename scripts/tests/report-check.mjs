@@ -17,8 +17,11 @@
 //    A button needs 6 + 1.6 x pt in height (measured 2026-10-01 on 2.158: "إعادة ضبط الفلاتر" whole from 19 at 8pt
 //    and 30 at 15pt; English from 14).
 // Returns { phone: [...], sizes: [...] }, what is wrong.
-const BOX = (t) => Math.ceil(10 + 1.8 * t), BTN = (t) => Math.ceil(2 + 1.6 * t), RESET = (t) => Math.ceil(6 + 1.6 * t), TW = (t, n) => 0.45 * 4 / 3 * t * n;
-const SLICER = (t) => Math.ceil(16 + 4 * t), CH = (t) => t * 0.55 * 4 / 3;
+// The measured numbers live once, in assets/js/report-rules.js (MEASURED), which check_report uses too (5 Oct 2026).
+import { createRequire } from 'node:module';
+const { MEASURED } = createRequire(import.meta.url)('../../assets/js/report-rules.js');
+const BOX = (t) => MEASURED.BOX(t), BTN = (t) => MEASURED.BTN_TEXT(t), RESET = MEASURED.BTN_H, TW = MEASURED.BTN_TW;
+const SLICER = MEASURED.SLICER, CH = MEASURED.CH;
 const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
 const num = (p) => parseFloat(lit(p)), str = (p) => String(lit(p) || '').replace(/^'|'$/g, '').replace(/''/g, "'");
 const state = (list, id) => ((list || []).find((x) => x.selector && x.selector.id === id) || {}).properties || {};
@@ -164,7 +167,7 @@ export function phoneTextProblems(files) {
     } else if (t === 'pageNavigator') {
       const sizes = ['default', 'hover', 'selected'].map((k) => { const a = num(state(mo.text, k).fontSize); return isNaN(a) ? num(state(o.text, k).fontSize) : a; }), size = sizes[0];
       const lines = Math.min(2, Math.floor(h / (1.8 * size))), longest = Math.max(...pageNames.map((x) => x.length));
-      if (sizes.some((x) => x !== size) || !(lines >= 1) || 0.45 * 4 / 3 * size * Math.ceil(longest / Math.max(1, lines)) > w / pageNames.length) say(`page buttons at ${sizes.join('/')}pt don't fit ${pageNames.length} in the phone's ${w}x${h}`);
+      if (sizes.some((x) => x !== size) || !(lines >= 1) || TW(size, Math.ceil(longest / Math.max(1, lines))) > w / pageNames.length) say(`page buttons at ${sizes.join('/')}pt don't fit ${pageNames.length} in the phone's ${w}x${h}`);
     } else if (t === 'slicer') {
       const a = num(plain(mo.header).textSize), b = num(plain(mo.items).textSize), size = Math.max(isNaN(a) ? slicerTheme || labelTheme : a, isNaN(b) ? slicerTheme || labelTheme : b);
       if (SLICER(size) > h) say(`a ${size}pt dropdown slicer needs ${SLICER(size)}, the phone box is ${h}`);

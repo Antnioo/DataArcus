@@ -36,18 +36,31 @@ without it; question 2 (a) always offline with bundled schemas; question 3 (a) u
   (the header's 20pt title in a 46-high box: the validator wants 48; our measured rule, 10 + 1.8 x pt, says 46 fits).
   Not changed: a Desktop look decides which is right.
 
+**Session 2 (2026-10-05, cloud; tests first: 7 checks, all failing before; `npm test` 382 -> 389 of 389):**
+- **One copy of the numbers:** `report-rules.js` exports `MEASURED` (text box, button, slicer, page button, tooltip
+  rows); `scripts/tests/report-check.mjs` takes its numbers from there. The website's `pbip` suite: 71 of 71, as before.
+- **The four rules, each from a measured fact:** PAGE_BUTTON_WRAP (round 1, 2026-10-03: two lines only when 3.5 x pt
+  in Segoe UI / 3.2 x pt in Tahoma fit the height; BUTTON_ONE_LINE now leaves page buttons to it); SORT_IN_VISUAL
+  (round 2, 2026-10-03: a chart sorts only by a field it holds); TOOLTIP_SCROLL (round 0: 22 a row + 46): a **note**
+  with the rows that fit, because the row count is in the data, which the tool never reads; RTL_MIRROR (Arabic
+  reports only): a page navigator (round 2: no order setting) and a shown title not aligned right (the 2026-10-03
+  plugin test: Desktop does not mirror titles). The answer lists `rulesRun`.
+- **Not judged, in `notChecked`:** which column a right-to-left table puts first: since the owner's choice of 5 Oct
+  (round 10) the text column comes first so "Total" shows, so the category at the left can be right.
+- **Two older checks changed, causes beside them:** test 1 and the broken-copy checks now allow measured *notes*
+  (TOOLTIP_SCROLL's) where they required no measured finding at all.
+- `mcp/PRIVACY.md`: the check_report row (marked "not released yet").
+
 **Left, in order:**
-1. `report-check.mjs` calling `report-rules.js` (the tests keep the same rules; one copy of the numbers).
-2. The rules not built: RTL_MIRROR, PAGE_BUTTON_WRAP, TOOLTIP_SCROLL, SORT_IN_VISUAL (listed in `notChecked`).
-3. The online-vs-offline comparison on every fixture (which validator codes need the schema download; our bundled
-   check must find them), and test 4 (Microsoft's starter theme: 6 `PBIR_THEME_VISUAL_PROP_UNKNOWN`): needs the
-   starter files from finding 001 (`repro.sh`), on the laptop.
-4. Test 3: Microsoft's plugin report as a fixture (`tests/6-ms-plugin/Arabic Sales`, made-up model; on the laptop).
-5. `mcp/PRIVACY.md`: the check_report row (before release).
-6. Packaging (dataarcus-engine): ship the CLI and its library without Playwright (and without `powerbi-client` and
-   the bridge CLI if the library entry doesn't load them: to prove), `mcp/schemas/` included; the size measured.
-7. **Desktop (a laptop sitting):** CR-1 (every finding of test 3 seen on a full-size crop), CR-2 (Segoe UI Semibold
-   and Arial at 10, 14, 22pt), CR-3 (1366 x 768); and the AR header title above (46 or 48).
+1. Packaging (dataarcus-engine): ship the CLI's library without Playwright (and without `powerbi-client` and the
+   bridge CLI if the library entry doesn't load them: to prove), `mcp/schemas/` included; the size measured.
+2. When round 10 is merged: BUTTON_ONE_LINE to round 10's measured per-letter widths + 10 (M3), in `MEASURED`.
+3. **For the laptop:** the online-vs-offline comparison on every fixture (which validator codes need the schema
+   download; our bundled check must find them); Microsoft's starter theme fixture (test 4: 6
+   `PBIR_THEME_VISUAL_PROP_UNKNOWN`, from finding 001's `repro.sh`); Microsoft's plugin report as a fixture (test 3);
+   the AR header title box, 46 or 48 high (the validator's floor against our measured rule); CR-1 (every finding of
+   test 3 seen on a full-size crop), CR-2 (Segoe UI Semibold and Arial at 10, 14, 22pt), CR-3 (1366 x 768); and
+   TOOLTIP_SCROLL with the value axis on (not measured: the note says so).
 
 ## What it is
 A tool that checks a PBIR report that already exists, whoever built it: our `create_report`, Microsoft's
