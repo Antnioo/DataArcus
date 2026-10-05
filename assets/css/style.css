@@ -1100,6 +1100,17 @@ html[dir="rtl"] .navbar-brand {
   color: #0a0f1c;
 }
 
+/* Bootstrap's green badge with white text is 4.53:1, so close to the 4.5 floor that a card still fading in reads under
+   it; a shade darker keeps the look at 4.96:1 */
+.badge.bg-success {
+  background-color: #17804e !important;
+}
+
+/* inline code in articles: Bootstrap's pink (#d63384) is 4.25:1 on the page background; a touch lighter is 4.61:1 */
+.article-body {
+  --bs-code-color: #d9408c;
+}
+
 .glass-card .badge {
   font-size: 0.8rem;
   font-weight: 600;
