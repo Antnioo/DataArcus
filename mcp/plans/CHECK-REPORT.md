@@ -75,11 +75,17 @@ without it; question 2 (a) always offline with bundled schemas; question 3 (a) u
   in between is used as it is, but every path was resolved inside the working folder (`inside`, `real`) first, and
   a file is never written through a link (`'wx'` refuses one). `check_report` writes nothing.
 
-**Left, in order:**
-1. Packaging (dataarcus-engine): ship the CLI's library without Playwright (and without `powerbi-client` and the
-   bridge CLI if the library entry doesn't load them: to prove), `mcp/schemas/` included; the size measured.
-2. When round 10 is merged: BUTTON_ONE_LINE to round 10's measured per-letter widths + 10 (M3), in `MEASURED`.
-3. **For the laptop:** the online-vs-offline comparison on every fixture (which validator codes need the schema
+**Ready for 0.2.7 (2026-10-05 evening; the owner: it merges after 0.2.6):**
+- Main `3803b7a` (round 10) merged in. BUTTON_ONE_LINE now uses round 10's measurement for a button with an icon
+  (the text letter by letter with `pbip-export.js`'s widths, + 10, + the icon; DESKTOP-TESTS.md round 10, M3) as
+  `MEASURED.BTN_ICON_TW`, which `scripts/tests/report-check.mjs` uses too; without an icon, 0.45 em a character as
+  before. Cause: main's Reset is 155 wide at 15pt, measured whole in Desktop, and the estimate called it too narrow.
+- F-05: README (8 tools, a `check_report` row, four read-only tools), PRIVACY.md (released, section 1 says it reads
+  report files locally and runs the validator offline), tests that every listed tool is in both tables (`npm test`
+  448 -> 451). Packaging on dataarcus-engine `feat/check-report-package`.
+
+**Left:**
+1. **For the laptop:** the online-vs-offline comparison on every fixture (which validator codes need the schema
    download; our bundled check must find them); Microsoft's starter theme fixture (test 4: 6
    `PBIR_THEME_VISUAL_PROP_UNKNOWN`, from finding 001's `repro.sh`); Microsoft's plugin report as a fixture (test 3);
    the AR header title box, 46 or 48 high (the validator's floor against our measured rule); CR-1 (every finding of

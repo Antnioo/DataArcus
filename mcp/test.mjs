@@ -48,6 +48,15 @@ const scriptOf = (fix) => { try { return fix && fix.fixScriptFile ? fs.readFileS
 const tools = (await client.listTools()).tools.map((t) => t.name).sort();
 // (check_report added 5 Oct 2026: 7 -> 8 tools)
 check(tools.join() === 'add_gulf_calendar,check_model_health,check_report,create_report,generate_theme,plan_layout,read_model,suggest_fields', `tools: ${tools}`);
+// F-05 (5 Oct 2026, check_report for 0.2.7): every tool the server lists is in the README's table and PRIVACY.md's
+// table, the README's install line gives the count, and PRIVACY.md no longer calls check_report unreleased
+{
+  const readme = fs.readFileSync(new URL('./README.md', import.meta.url), 'utf8'), privacy = fs.readFileSync(new URL('./PRIVACY.md', import.meta.url), 'utf8');
+  const row = (doc, n) => new RegExp('^\\| `' + n + '`', 'm').test(doc);
+  check(tools.every((n) => row(readme, n)) && new RegExp('with ' + tools.length + ' tools').test(readme), `README must list every tool and say "with ${tools.length} tools": missing ${tools.filter((n) => !row(readme, n))}`);
+  check(tools.every((n) => row(privacy, n)) && !/not yet in a released package/.test(privacy), `PRIVACY.md must list every tool, check_report as released: missing ${tools.filter((n) => !row(privacy, n))}`);
+  check(/check_report/.test((readme.match(/^- The version is read.*$/m) || [''])[0]), 'README: the read-only tools must include check_report');
+}
 
 // read_model: a TMDL project, automatic date tables left out
 let r = await call('read_model', { path: 'tmdl-project' });
@@ -716,7 +725,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   // 7. tool annotations: three tools only read; the three that write only add files (round 5: check_model_health writes its fix scripts)
   {
     const ann = Object.fromEntries((await client.listTools()).tools.map((t) => [t.name, t.annotations || {}]));
-    const ro = ['read_model', 'suggest_fields', 'plan_layout'].filter((n) => ann[n].readOnlyHint !== true);
+    const ro = ['read_model', 'suggest_fields', 'plan_layout', 'check_report'].filter((n) => ann[n].readOnlyHint !== true);
     check(!ro.length, `readOnlyHint true is missing on: ${ro}`);
     const wr = ['generate_theme', 'create_report', 'check_model_health'].filter((n) => !(ann[n].readOnlyHint === false && ann[n].destructiveHint === false));
     check(!wr.length, `readOnlyHint false with destructiveHint false is missing on: ${wr} (${JSON.stringify(wr.map((n) => ann[n]))})`);
