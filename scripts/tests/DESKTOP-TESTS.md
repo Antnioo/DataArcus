@@ -1470,6 +1470,7 @@ background capture run; the captures before the crash are not used except three 
 | Analysis, English, 1920 x 1080 | "3M", "15K", "231.5", "35.4%"; boxed "Analysis" and "Overview"; the chart titled "Main chart" | **3.43M, 14.81K, 231.46, 35.36%**; tabs, "Analysis" underlined; the chart titled "Total Revenue by Region" | nothing cut. The table is titled "Detail table" (the layout name) and is two thirds empty with the sample's four rows |
 | Analysis, English, 1280 x 720 | as 1920 x 1080: "3M", "15K", boxes, "Main chart" | **3.43M, 14.81K, 231.46, 35.36%**; tabs, "Analysis" underlined; "Total Revenue by Region" | nothing cut; the same notes as 1920 x 1080 |
 | Analysis, Arabic, 1920 x 1080 | "3M", "15K", boxed buttons, the chart titled "المخطط الرئيسي" | **3.43M, 14.81K, 231.46, 35.36%**; mirrored tabs, "تحليل" underlined at the right; the chart titled "إجمالي الإيرادات حسب المنطقة" | nothing cut. No "Total" word in the table's total row (as before); the table mostly empty with four rows |
+| Analysis, Arabic, 1280 x 720 | as Arabic 1920 x 1080 | **3.43M, 14.81K, 231.46, 35.36%**; mirrored tabs, the current page underlined; the chart named by its fields | nothing cut; the same notes |
 <!-- end of round 10 before and after -->
 
 ## Lessons
