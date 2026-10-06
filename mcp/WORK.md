@@ -4,6 +4,45 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 16, round 13's design leftovers (2026-10-06, 12:06-13:05 UTC, cloud builder; branch `fix/round-16` from `fix/round-15b` `ead6106`; not merged)
+On the reviewer's list of non-severe "Seen, not in scope" items. Tests first, one commit each.
+
+### Round 16, done
+- Item 7: `consent.mjs` reads every page after `ready()` (it failed once under load); what it checks is unchanged.
+- Item 8: `main.min.js?v=20261006r16` on all 37 pages; `test-site-config.mjs` checks every page's `main.min.js`
+  carries a stamp (red before on 37 pages).
+- Item 2 (#16): a gauge on a percent measure shows the percent format on its projection; a funnel takes an amount, never
+  a percent measure, or is left out and told.
+- Item 3 (#18): each chart of a page by a different category where the model has more (the picker's `catPool`); the
+  plan's own categories kept as given; `suggest_fields` leaves the pool out.
+- Item 4 (#14): a model without measures: no count of a category column on a KPI card; fewer cards, and
+  `kpiCards.why` says why. Two older checks and golden task 7 (39 -> 38 visuals, 4 -> 3 cards) changed, with the cause.
+- Item 6 (#23): the slide-in panel's Filters button has the tab look (no fill, no outline; the text colour).
+- Item 1 (#15): a hand-placed matrix gets the table's rules (calendar order by the helper column, the fit to its
+  box, tight rows).
+- Item 5 (#13), **not changed, with the reason:** the tabs already take the largest size that fits one row by the
+  measured widths, from the header's own size down to 8pt; eight long names in that width fit only at 8pt. Two
+  rows at a larger size would read better, which is a taste call (for the owner, below).
+- Tests: `npm test` 514 -> 520, golden PASS; config checks PASS; website suites pbip 73, theme-generator 893, layout 512,
+  consent 38, site 265 PASS.
+
+### Round 16, for the laptop to prove (after round 15's six)
+7. A gauge on a percent measure (hand-placed page): the value and min/max read as percents (33.8%), not 0.34.
+8. A hand-placed funnel on a model with only percent measures: no funnel, the answer says why; with an amount: the
+   funnel shows it.
+9. The operations layout on a model with several text columns: the two bar charts and the donut each by a different
+   category.
+10. A model without measures (golden task 7): three cards (Count of Order Id, Sum of Amount, Sum of Quantity), no
+    "Count of Region".
+11. The slide-in panel's Filters button: no box, no outline, looks like a tab (English and Arabic).
+12. A hand-placed matrix of Day Name and four long measures in a 420 x 220 slot: Sunday to Saturday, no horizontal
+    scrollbar, no hidden last row (the helper column not visible).
+
+### Round 16, for the owner
+1. **Eight tabs in a 72-high header (#13):** they already take the largest one-row size (8pt there). Options: keep; or
+   prefer two rows at a larger size when one row only fits at 8pt. **Recommended:** two rows when the header is high
+   enough, since the names read better.
+
 ## The 1-hour round (2026-10-06, 11:26-12:26 UTC, cloud builder; nothing merged)
 - **A:** `fix/round-15b` from `origin/main` `aa95841` with only round 15's six commits (cherry-picked; one `.min.js`
   conflict, rebuilt) and `theme-generator.min.js?v=20261006h` (main had already used `g`). `fix/round-15` kept.
@@ -376,17 +415,17 @@ and the cards' rules; **3** slanted first labels are shortened (day names have n
 | 10 | The "What it means" box with its sentence | 11pt text at the top of a 450-high panel on a 1920 x 1080 page: it reads like a footnote | `r12-text-en-view.png` | medium | the theme's body size for the page (15pt at 1920 x 1080), as the slicers and the table have |
 | 11 | A page whose filter rail ends under Reset (round 12's #18) | the rest of the rail's side is bare page: on the Details page a third of the page's height is empty beside the table | `ba-g4w-en.png` (bottom right), `ba-g7-en.png` | medium (taste) | let the table or the chart take the freed corner, or keep the rail's panel the page's height with Reset under the slicers |
 | 12 | The Arabic table with the helper column (round 12's B1) | a hair-thin light line down the grey rows where the hidden helper column sits | `g4s-ar-table-crop.png` | low | the helper's cell background follows the row's banding, or the helper goes last |
-| 13 | Eight tabs in a 72-high header | the names are 8pt beside a very large title: the row shrinks instead of using its height | `r12-tabs-ar-head.png` | low | grow the tab text to the largest size that still fits one row (up to the theme's label size) |
-| 14 | A model without measures (round 12's #25) | "Count of Region" as a KPI card: the count of a text column is rarely a KPI | `ba-g7-en.png` | low | prefer counts of ID-like columns and sums; fewer cards rather than a count of a category |
-| 15 | A hand-placed matrix | days A to Z, wider than its box (a scrollbar), rows scroll: the table's rules (calendar order, the fit, tight rows) do not reach a matrix | `ak-en-light-view.png` | medium | give `matrix` the table's order and fit |
-| 16 | A gauge or a funnel on a percent measure | the gauge reads 0.34 between 0.00 and 0.68; the funnel is drawn on a ratio (0.19, 1.31, "681.9%") | `ak-en-light-view.png` | medium | the gauge takes the card's percent format; the funnel takes an amount, never a ratio (the picker) |
+| 13 | Eight tabs in a 72-high header | the names are 8pt beside a very large title: the row shrinks instead of using its height | `r12-tabs-ar-head.png` | low | **done in round 16 (no change: largest one-row size already; two rows for the owner)** (grow the tab text to the largest size that still fits one row (up to the theme's label size)) |
+| 14 | A model without measures (round 12's #25) | "Count of Region" as a KPI card: the count of a text column is rarely a KPI | `ba-g7-en.png` | low | **done in round 16** (prefer counts of ID-like columns and sums; fewer cards rather than a count of a category) |
+| 15 | A hand-placed matrix | days A to Z, wider than its box (a scrollbar), rows scroll: the table's rules (calendar order, the fit, tight rows) do not reach a matrix | `ak-en-light-view.png` | medium | **done in round 16** (give `matrix` the table's order and fit) |
+| 16 | A gauge or a funnel on a percent measure | the gauge reads 0.34 between 0.00 and 0.68; the funnel is drawn on a ratio (0.19, 1.31, "681.9%") | `ak-en-light-view.png` | medium | **done in round 16** (the gauge takes the card's percent format; the funnel takes an amount, never a ratio (the picker)) |
 | 17 | A hand-placed slicer slot | a 444-wide slot is split into three dropdowns whose headers are cut ("Q…", "Da…"; in Arabic "…" alone) | `ak-en-light-view.png`, `ak-ar-dark-view.png` | medium | **partly fixed here:** a slot too narrow for 160 a dropdown stacks them where its height holds three (`sl-en-crop.png`); that page's 310-high slot is 2 short at the theme's 15pt, so it stays as it was: left: fewer dropdowns, told, when neither way fits |
-| 18 | The operations layout | two bar charts and a donut all show the measure by the same column (Quarter) | `ops-ar-view.png` | medium | the picker gives each chart of a page a different category where the model has more |
+| 18 | The operations layout | two bar charts and a donut all show the measure by the same column (Quarter) | `ops-ar-view.png` | medium | **done in round 16** (the picker gives each chart of a page a different category where the model has more) |
 | 19 | Arabic reports with English field names: slicer headers | "Year", "Quarter" sit at the left of a right-to-left rail (round 11's #19, still so); Arabic names sit at the right by themselves (`arn-1080-view1.png`) | `ba-f-g4w-ar.png` | low | a slicer's header has no alignment (Microsoft's list: show, text, font, size, colour, background, outline): it would take the visual's own title in place of the header |
 | 20 | 640 x 360 pages (task 5) | page 2's KPI values are cut at their bottom; "Wednes…" on the column chart; the table scrolls (the answer says so) | `ba-f-g5-en.png` | medium (a known limit of that size) | a smaller value on a 36-high card; or refuse pages under 800 wide for the executive layout |
 | 21 | The Reset button on the phone | the arrow (three quarters of a 40-high button) is large beside 10pt words | `r12-p7-en-phone-p1.png` | low | the phone's own `iconSize` in `mobile.json` (to measure that Desktop honours it there) |
 | 22 | The phone layout of an Arabic table with four long-named fields | wider than the phone canvas: the last header is cut at the edge | `f-g4w-ar-s-phone-p1-s1.png` | medium | the phone's table keeps the fields its 323 hold (the page's rule, at the phone's width), or wraps its headers |
-| 23 | The slide-in panel's "Filters" button in the header | the only boxed control in a header of boxless tabs (a grey fill and an outline) | `panel-en-view.png` | low | the tab look: no box, the icon and the word in the text colour, a tint on hover |
+| 23 | The slide-in panel's "Filters" button in the header | the only boxed control in a header of boxless tabs (a grey fill and an outline) | `panel-en-view.png` | low | **done in round 16** (the tab look: no box, the icon and the word in the text colour, a tint on hover) |
 <!-- r13 findings -->
 
 ## Round 12b, small non-severe leftovers (2026-10-05 night, cloud builder; branch `fix/round-12b` from `fix/round-12` `26d9c6c`; not merged)
