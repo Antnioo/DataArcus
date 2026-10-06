@@ -43,6 +43,9 @@ jobs:
       - name: The site's config files (robots, sitemap, icons, manifest, security.txt, llms.txt, every page's head)
         run: node scripts/test-site-config.mjs
 
+      - name: Analytics events follow GA4 rules (no parameter GA4 reads as the traffic source)
+        run: node scripts/test-analytics-events.mjs
+
       - name: Install Chromium
         run: npx playwright-core install --with-deps chromium
 

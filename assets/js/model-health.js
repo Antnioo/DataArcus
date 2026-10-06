@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
         worker.terminate(); worker = null;
         render();
         root.scrollIntoView({ behavior: 'smooth', block: 'start' }); // lands below the navbar (scroll-padding-top in style.css)
-        track('mh_analyze', { source: R.meta.source, tables: R.stats.tables, measures: R.stats.measures, score: R.score.overall, has_report: R.meta.hasReport, size_kb: Math.round((size || 0) / 1024), sample: fileName === 'Contoso-Sales-Demo.pbit' });
+        track('mh_analyze', { file_type: R.meta.source, tables: R.stats.tables, measures: R.stats.measures, score: R.score.overall, has_report: R.meta.hasReport, size_kb: Math.round((size || 0) / 1024), sample: fileName === 'Contoso-Sales-Demo.pbit' });
       }
     };
     worker.onerror = () => showError('PARSE');
