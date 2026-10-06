@@ -25,9 +25,43 @@ BI Desktop window open; `git fetch`; `fix/round-13` made from `origin/main` `1ce
 | (items 1 and 3) | 03:18 | `1729596` |
 | 03:37 | 03:29 | `76a98b6`, the merge of round 12 (468 of 468) |
 | (items 2 and 4) | 04:08 | `98eb0e4` (480 of 480) |
-| 04:37 | 04:42 | this note (the small fixes' code waits for its green run) |
+| 04:37 | 04:41 | `0e78c84`, a note (the small fixes' code waited for its green run) |
+| (item 5) | 04:51 | `5fc172f` (485 of 485) |
+| 05:37 | 05:27 | the scores, the stop report so far |
 <!-- r13 pushes -->
 
+### Round 13, the stop report (written 05:26, 2 h 49 min after the start; kept current until the stop)
+**Done (tests: `npm test` 421 -> 485 of 485; `check:min` clean; website suites `pbip` 71, `theme-generator` 893,
+`layout` 512, `design-engine` 598, `tools` 339 and nine more PASS; `site`, `consent` and `svg-kpi` fail on this
+Windows checkout for reasons outside this branch: see "where I am", 04:41):**
+1. **Gradient bars** (`chartColors`; on by default with a design): a rule on the chart's own measure, the two ends
+   worked out from the theme (3:1 off the card in light and dark). Measured first (a bar has no gradient fill of its
+   own; theme-following ends fade the wrong way on dark), proven from the engine in English, Arabic, light, dark.
+2. **SVG pictures that blend** (`svgCards`, `svgColumns`): a design takes the theme (`theme:<name>` colours, and
+   the theme's where it names none); the picture never taller than the room under the title. Before: a near-black
+   ring cut at its top; after: whole, in the theme's colours, on light and dark, both languages.
+3. **Mirrored charts in Arabic** (`chartAxes`; on by default in a right-to-left report): value axis at the right,
+   categories and dates from the right, bars from the right, the tooltip pages too. Every chart type measured.
+4. **Round 12 merged (`76a98b6`) and its list proven: 20 of 24 items seen, 17 PASS, 3 FAIL fixed here with tests**
+   (the "…" of a shortened Arabic text at the wrong end; the Reset arrow tiny and tight; a Latin KPI title cut in
+   Tahoma); 1 not exercised (20), 3 not run (24, and the two-row and one-slicer cases).
+5. **The design eye:** 21 findings; 3 small ones fixed (quiet gridlines, percents in tables, the text box's size)
+   besides the 3 FAILs above.
+6. **The golden reports, before and after:** English 4.6 -> 8.5, Arabic 3.3 -> 8.5 (of 10; DESKTOP-TESTS.md).
+
+**Left:** round 12's items 20 (a wrapped tab row: not produced) and 24 (one slicer in a slide-in panel: no made-up
+model with one text column); the hover tooltip and drill on a mirrored chart; the mirrored charts on the phone
+(the phone's own axis sizes may replace the page's axis entry: not looked at); the website's Arabic download is
+not mirrored (the owner's call); `csp.mjs`, `consent` and `svg-kpi` on Linux (CI is the record).
+
+**For the owner:** 5 items below ("Round 13, for the owner"): the gradient's default and what the fade means; the
+mirrored charts' one side effect and the website; a brand colour that cannot fade; the Reset button; what of round
+12 is not proven.
+
+**The top 5 design findings** (rows in "Round 13, design findings"): **2** the shadow on dark designs is a pale
+glow round every panel; **18** the operations layout shows one thing three times; **11** the page beside a short
+filter rail is bare; **15/16/17** a hand-placed matrix, gauge, funnel and slicer slot are not held to the table's
+and the cards' rules; **3** slanted first labels are shortened (day names have no short form in the model).
 ### Round 13, order of work (each expected result written at 02:39, before any run)
 | # | Item | The run | Expected (written before the run) |
 |---|---|---|---|
@@ -105,6 +139,19 @@ BI Desktop window open; `git fetch`; `fix/round-13` made from `origin/main` `1ce
     `fields.table` lost its percent format on the way (`bindFor`): fixed, run again.
   - **The 20 golden reports rebuilt with the final code** in `13-r13\golden2` and being opened one by one
     (`r13-final.ps1`; pairs `desk-r13\ba-f-<tag>.png`, round 11's capture at the left).
+- **04:58:** the three small fixes committed (`5fc172f`, `npm test` **485 of 485**, `check:min` clean). Round 12's
+  item 22 (the Gulf calendar's sort-by columns and `relateTo` on an untyped column) **proven: PASS** (Problems 0;
+  the three sort-by columns and the relationship read by DAX). Round 12's list now: 18 of 24 seen, 15 PASS, 3 FAIL
+  fixed; not run: 11, 21, 24 (20 not exercised). Next: pages with every kind of visual and the other layouts, in
+  both languages, for the design eye; then the scores and the stop report.
+- **05:26:** all 20 golden reports opened with the final code and scored (English 4.6 -> 8.5, Arabic 3.3 -> 8.5);
+  round 12's items 11 (the pictures on the phone), 19 in Arabic and 21 (the header that grows, through the writer)
+  proven: PASS; pages with every kind of visual and the operations layout opened for the design eye (findings 15
+  to 21). The stop report is written and kept current. Scripts added: `r13-golden.mjs`, `r13-golden2.mjs`,
+  `r13-gshot.ps1`, `r13-gshot2.ps1`, `r13-final.ps1`, `r13-r12proof.mjs`, `r13-kinds.mjs`, `r13-grow.mjs`,
+  `r13-reset2.mjs`, `r13-rlm.mjs`, `r13-grid.mjs`, `r13-cutat.mjs`, `r13-small.mjs`, `r13-resolve12.mjs`.
+  **Lesson:** piping a capture script to `Select-Object -First 1` stops it after its first line (ten pair images
+  were not made and had to be made after).
 <!-- r13 where -->
 
 ### Round 13, for the owner
@@ -124,7 +171,7 @@ BI Desktop window open; `git fetch`; `fix/round-13` made from `origin/main` `1ce
    `gm-ar-light-1080-view1.png`); level labels are whole. Options: keep (short month names, which round 12 prefers,
    cure it); keep a line chart's value axis at the left in Arabic; or shrink the axis text. **Recommended: keep**,
    and let the short month names of round 12 do the rest. (b) The website's Arabic download is not changed tonight
-   (the engine mirrors only when asked): **recommended: turn it on there too** once you have seen the Arabic pages.
+   (the engine mirrors only when asked): **recommended: turn it on there too** once you have seen the Arabic pages (`desk-r13\grow-ar-720-view.png` is the website's own sample, in Arabic, built with the mirror and the gradient on).
    (c) The legend: Desktop puts it at the right with 'TopRight'; the engine's charts have no legend, and the theme
    generator's "Right" legend goes to the left in a right-to-left design (so since the generator was built). Say
    if a side legend should sit at the right in Arabic.
@@ -138,10 +185,8 @@ BI Desktop window open; `git fetch`; `fix/round-13` made from `origin/main` `1ce
    English too); fixed here (the arrow at three quarters of the button's height, a gap before the words). Have a
    look at `desk-r13\r12-text-en-view.png` (after) against `ba-g3-en-reset.png` (before round 12 above, round 12
    below).
-5. **Round 12 not proven tonight (5 items):** the SVG pictures on the phone (11), the header that grows by a tab
-   row (21), the Gulf calendar's sort-by columns in TMDL view (22), the one-slicer slide-in panel (24), a wrapped
-   two-row tab header (20: the names fit one row since round 12's Tahoma widths). They are covered by `npm test`
-   only.
+5. **Round 12 not proven tonight (2 items):** the one-slicer slide-in panel (24) and a wrapped two-row tab
+   header on a hand-placed page (20: the names fit one row since round 12's Tahoma widths). They are covered by `npm test` only.
 <!-- r13 owner -->
 
 ### Round 13, design findings
@@ -161,6 +206,13 @@ BI Desktop window open; `git fetch`; `fix/round-13` made from `origin/main` `1ce
 | 12 | The Arabic table with the helper column (round 12's B1) | a hair-thin light line down the grey rows where the hidden helper column sits | `g4s-ar-table-crop.png` | low | the helper's cell background follows the row's banding, or the helper goes last |
 | 13 | Eight tabs in a 72-high header | the names are 8pt beside a very large title: the row shrinks instead of using its height | `r12-tabs-ar-head.png` | low | grow the tab text to the largest size that still fits one row (up to the theme's label size) |
 | 14 | A model without measures (round 12's #25) | "Count of Region" as a KPI card: the count of a text column is rarely a KPI | `ba-g7-en.png` | low | prefer counts of ID-like columns and sums; fewer cards rather than a count of a category |
+| 15 | A hand-placed matrix | days A to Z, wider than its box (a scrollbar), rows scroll: the table's rules (calendar order, the fit, tight rows) do not reach a matrix | `ak-en-light-view.png` | medium | give `matrix` the table's order and fit |
+| 16 | A gauge or a funnel on a percent measure | the gauge reads 0.34 between 0.00 and 0.68; the funnel is drawn on a ratio (0.19, 1.31, "681.9%") | `ak-en-light-view.png` | medium | the gauge takes the card's percent format; the funnel takes an amount, never a ratio (the picker) |
+| 17 | A hand-placed slicer slot | a 444-wide slot is split into three dropdowns whose headers are cut ("Q…", "Da…"; in Arabic "…" alone) | `ak-en-light-view.png`, `ak-ar-dark-view.png` | medium | as many dropdowns as fit whole (each as wide as its header and "All" need), one at least |
+| 18 | The operations layout | two bar charts and a donut all show the measure by the same column (Quarter) | `ops-ar-view.png` | medium | the picker gives each chart of a page a different category where the model has more |
+| 19 | Arabic reports with English field names: slicer headers | "Year", "Quarter" sit at the left of a right-to-left rail (round 11's #19, still so) | `ba-f-g4w-ar.png` | low | right-align a slicer's header in a right-to-left report (the property is to find and measure) |
+| 20 | 640 x 360 pages (task 5) | page 2's KPI values are cut at their bottom; "Wednes…" on the column chart; the table scrolls (the answer says so) | `ba-f-g5-en.png` | medium (a known limit of that size) | a smaller value on a 36-high card; or refuse pages under 800 wide for the executive layout |
+| 21 | The Reset button on the phone | the arrow (three quarters of a 40-high button) is large beside 10pt words | `r12-p7-en-phone-p1.png` | low | the phone's own `iconSize` in `mobile.json` (to measure that Desktop honours it there) |
 <!-- r13 findings -->
 ## Round 12, every small detail fixed in code (2026-10-05 night, cloud builder; branch `fix/round-12` from main `1cef9ac`; not merged)
 The owner's go (6 Oct 01:45): "I want to feel that whatever the builder opens looks amazing and optimized". All eight

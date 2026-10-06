@@ -2047,7 +2047,7 @@ capture of the same report (`desk-r11\`); pairs are `desk-r13\ba-<report>.png` (
 | 8 | #26 no text measure on a card | "G8 Redesign EN": one card (Total); no "Yes" (`ba-g8-en.png`) | PASS |
 | 9 | #15 the table's title | "Total Sales by Day Name: detail" / ": التفاصيل" | PASS |
 | 10 | #23/#32 the last row | "G4 16x9 EN" and "G4 4x3 AR": seven days and the total, no scrollbar (`ba-g4w-en.png`, `g4s-ar-table-crop.png`) | PASS |
-| 11 | #29 the pictures on the phone | not run | - |
+| 11 | #29 the pictures on the phone | "R12 P7 EN" (a bar and a sparkline column in the theme's colours), phone layout scrolled to the table (`r12-p7-en-s-phone-p1-s2.png`): both pictures narrower and whole, the four columns inside the canvas, no horizontal scrollbar, the days Sunday to Saturday | PASS |
 | 12 | #31 the header's title | the report's name on every report ("G1 Exec EN", "R12 text EN") | PASS |
 | 13 | #30 the Arabic logo placeholder | "شعارك" at the left edge of its slot, level with the title to the eye (`r12-tabs-ar-head.png`); its middle not measured | PASS to the eye |
 | 14 | The Reset button | **the arrow is half its old size and tight against the text, in English too** ("↶Reset filters", `ba-g3-en-reset.png`); in Arabic it sits at the right of the words, as wanted, but as small and as tight (`g1-ar-reset-crop.png`) | **FAIL, fixed here**: `iconSize` three quarters of the button's height and two no-break spaces before the text (measured by hand: `reset-a` to `reset-d-crop.png`; the icon's and the text's margins did nothing); proven on "R12 text EN" |
@@ -2055,10 +2055,10 @@ capture of the same report (`desk-r11\`); pairs are `desk-r13\ba-<report>.png` (
 | 16 | #16 short months | "Jan" to "Dec", level, on "G1" and "G4" in both languages | PASS |
 | 17 | #9/#7/#8 the six-card rows | "R12 B2 EN 720", "R12 CI EN 720", "R12 CI AR 1080": one value size; each value starts under its title's first letter; six pictures 33.6 to 34.1 (1280 x 720) and 50.3 to 52.1 (1920 x 1080). **In the Arabic row the title "Growth vs Last Year" was cut by Desktop ("Growth vs Last Y…")** | PASS for the three points; **the cut title: FAIL, fixed here** (Tahoma's Latin letters are wider than the Segoe UI table: 6% added, from five titles measured on that row) |
 | 18 | #18 Reset under the last slicer | the rail ends under Reset on every report | PASS (the page under a short rail is empty: design finding, taste) |
-| 19 | #2/#4/#5 the phone tabs | "G1 Exec EN" phone: the tabs as wide as their names from the left, the titles in the text colour, the line under the current tab | PASS (Arabic phone not run) |
+| 19 | #2/#4/#5 the phone tabs | "G1 Exec EN" and "G1 Exec AR" phone: the tabs as wide as their names from the reading start (Arabic: from the right), the titles in the text colour, the line under the current tab (`g1-en-phone-p1.png`, `f-g1-ar-phone-p1.png`) | PASS |
 | 20 | #6 a two-row header | "R12 tabs AR" (eight long names, 1920 x 1080, a 72-high title): the names now fit **one** row at 8pt, whole, mirrored, the mark on pages 1 and 5 (`r12-tabs-ar-head.png`); two rows were not produced | not exercised (the tabs are small beside a 72-high title: design finding) |
-| 21 | The header that grows | not run (needs a design with two long page names) | - |
-| 22 | The Gulf calendar's sort-by columns | not run (a keyboard paste into TMDL view) | - |
+| 21 | The header that grows | built through the writer as the website builds its download (`r13-grow.mjs`: the sample model, 1280 x 720, a long title and two long page names, `grow`): in English the names still fit one row; **in Arabic the header grew by 18**: two rows of tabs, both names whole, the current one marked, the KPI row and the charts moved down, nothing cut (`grow-ar-720-view.png`). The background picture of that hand-made build still has its panels at the old height (a sliver shows above each card): the website does not ask for a growing header, and the server's reports have no background picture | PASS for the server's path |
+| 22 | The Gulf calendar's sort-by columns | "Gulf GC1" copied to `13-r13\gulf`; `add_gulf_calendar` (Calendar, 2018 to 2030, UAE, `relateTo` Sales[Date], a DAX table's untyped column) wrote the script with three `sortByColumn` lines and the relationship; applied in TMDL view (`tmdl-apply.ps1`, the laptop idle 145 s): "Changes applied to the model", **Problems 0**; after a refresh, by DAX (`desk-r13\gc\cols.json`, `rel.json`): Month Name sorted by Month Number, Day Name by Day of Week, Hijri Month Name by Hijri Month Number; Sales[Date] many to one Calendar[Date], active, one direction; 37 columns | PASS (the slicers were not opened: the model's sort-by columns are read instead) |
 | 23 | A narrow table's smaller text | "G4 4x3": the table keeps three of its four fields and the answer names the one left out; "G1": 13pt for 15pt with all four | as the answer says |
 | 24 | One slicer in a slide-in panel | not run (no made-up model with a single text column at hand) | - |
 - **Three FAILs, each fixed on this branch with a test:** the "…" of a shortened Arabic text (1), the Reset
@@ -2077,6 +2077,39 @@ capture of the same report (`desk-r11\`); pairs are `desk-r13\ba-<report>.png` (
   Arabic "…" at the line's end from the engine (`f-g6-ar-top-crop.png`); the Arabic Reset with its arrow at the
   right of the words. On "G6 Long" the fourth card shows Desktop's "Something's wrong with one or more fields":
   the test model's own growth measure fails (so in round 11 too).
+### Item 6, the golden tasks' reports again, scored before and after
+All 20 reports (10 tasks' reports x English and Arabic) rebuilt with the final code (`13-r13\golden2`) and opened
+one by one: no error dialog, ready in 11 to 21 s (the 300-table model 37 and 48 s). Task 9 is refused as expected
+and task 11 has no report. **The score:** 10 less 1 for each kind of thing visibly wrong on the report's two pages
+(a cut text; a wrong order; a number in the wrong form; a placeholder or an empty page; a scrollbar or a hidden
+row; two visuals with one title; slanted labels; loud gridlines; in Arabic also charts left to right and numbers
+reading into names). "Before" is round 11's capture (main `3803b7a`), read with round 11's findings; "after" is
+tonight's capture. A judgement from overviews and crops, not a measurement; the pairs are
+`desk-r13\ba-f-<tag>.png` (before at the left).
+| Task, report | Before | After | What is still off after |
+|---|---|---|---|
+| 1 Exec, 1920 x 1080, a brand colour on dark: English / Arabic | 3 / 2 | 9 / 9 | the day names slant on page 1's column chart; no gradient (the brand colour stands only 3.2:1 off the card) |
+| 2 Analysis: English / Arabic | 5 / 3 | 10 / 10 | - |
+| 3 Ramadan focus: English / Arabic | 6 / 5 | 10 / 10 | - |
+| 4 16:9, 1280 x 720: English / Arabic | 5 / 3 | 10 / 10 | - |
+| 4 4:3, 960 x 720: English / Arabic | 5 / 3 | 8 / 8 | page 1's table keeps three of four fields (told); day names slant |
+| 5 640 x 360: English / Arabic | 3 / 2 | 6 / 6 | "Wednes…", page 2's card values cut at the bottom, the table and the bar chart scroll (the Arabic one not read at full size) |
+| 6 long Arabic names: English / Arabic | 5 / 3 | 8 / 8 | the model's own growth measure fails in its card; no rows (the English one not read at full size) |
+| 7 no measures: English / Arabic | 2 / 2 | 8 / 8 | no rows ("--"); a count of a text column as a card |
+| 8 redesign: English / Arabic | 6 / 5 | 8 / 8 | no rows; one card for four slots (the Arabic one not read at full size) |
+| 10 300 tables: English / Arabic | 6 / 5 | 8 / 8 | no rows (the Arabic one not read at full size) |
+| **Mean** | **4.6 / 3.3** | **8.5 / 8.5** | |
+### Pages with every kind of visual, and the operations layout (the design eye)
+"AK EN light" and "AK AR dark" (a hand-placed page of twelve slots: two KPI cards, line, bar, column, donut, table,
+gauge, funnel, treemap, matrix, slicer; `chartColors` "gradient"), "OPS AR" (the operations layout, Earthy).
+- Line, bar and column: the gradient, the quiet gridlines and, in Arabic, the mirrored axes, on both
+  (`ak-en-light-view.png`, `ak-ar-dark-view.png`, `ops-ar-view.png`). The table: calendar order, percents, "Total".
+- **Off on the all-kinds page (hand-placed; not fixed):** the matrix lists the days A to Z, is wider than its box
+  (a horizontal scrollbar) and scrolls its rows (the table's rules do not reach a matrix); the gauge shows the
+  percent measure as 0.34 between 0.00 and 0.68; the funnel is drawn on the percent measure ("0.19", "1.31",
+  "681.9%"); a 444-wide slicer slot holds three dropdowns whose headers are cut to "Q…", "Da…" (in Arabic to "…"
+  alone); the donut, gauge, funnel and treemap are not mirrored in Arabic (nothing in them has a side).
+- **Off on the operations page:** two bar charts and a donut all show Total Sales by Quarter.
 ## Lessons
 - **Round 13: a button's `iconSize` is honoured; its icon and text margins did nothing (8L, 20L, 20D).** With
   `icon.placement` written the arrow is drawn small and tight against the text: write the size, and a gap as two
