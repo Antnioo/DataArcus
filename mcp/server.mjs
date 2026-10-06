@@ -499,7 +499,10 @@ server.registerTool('create_report', {
   const FULL = a.kpiValues === 'full', tableFormats = [];
   const withCardFormats = (b) => {
     const one = (f) => { const code = FULL && cardFormatOf(f); if (!code) return f; if (!cardFormats.some((x) => x.field === keyOf(f))) cardFormats.push({ field: keyOf(f), format: code }); return Object.assign({}, f, { cardFormat: code }); };
-    const cell = (f) => { const code = f && f.m != null && cardFormatOf(f); if (!code) return f; if (!tableFormats.some((x) => x.field === keyOf(f))) tableFormats.push({ field: keyOf(f), format: code }); return Object.assign({}, f, { tableFormat: code }); };
+    // (round 13, seen in Desktop on 6 Oct: a card said 33.8% and the table's column of the same measure 0.34: where the
+    // report gives a measure's card a percent format the model does not have, its table column carries the same)
+    const pctCell = (f) => { if (!f || f.m == null || !f.pctFormat) return null; const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t), o = t && (t.measures || []).find((x) => x.name === f.m); return o && !o.formatStringDefinition && o.formatString !== f.pctFormat ? f.pctFormat : null; };
+    const cell = (f) => { const code = f && f.m != null && (cardFormatOf(f) || pctCell(f)); if (!code) return f; if (!tableFormats.some((x) => x.field === keyOf(f))) tableFormats.push({ field: keyOf(f), format: code }); return Object.assign({}, f, { tableFormat: code }); };
     const tip = b.tip && b.tip.card ? Object.assign({}, b.tip, { card: (() => { const code = FULL && cardFormatOf(b.tip.card); return code ? Object.assign({}, b.tip.card, { cardFormat: code }) : b.tip.card; })() }) : b.tip;
     return Object.assign({}, b, { kpis: (b.kpis || []).map(one), table: (b.table || []).map(cell) }, b.tip ? { tip } : {});
   };
@@ -541,7 +544,7 @@ server.registerTool('create_report', {
     // the given slicers first; a slot left over keeps the picker's (never a slicer without a field)
     if (F.slicers) { const same = (x, y) => x && y && x.t === y.t && x.c === y.c, rest = (ch.slicers || []).filter((s) => s && !F.slicers.some((g) => same(g, s))); ch.slicers = F.slicers.concat(rest).slice(0, 3); while (ch.slicers.length < 3) ch.slicers.push(null); unfixed(); }
     const nb = Bind.build(ch);
-    if (F.table) nb.table = F.table.map((x) => (x.m != null ? { t: x.t, m: x.m } : Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {})));
+    if (F.table) nb.table = F.table.map((x) => (x.m != null ? Object.assign({ t: x.t, m: x.m }, x.pctFormat ? { pctFormat: x.pctFormat } : {}) :Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {})));
     return nb;
   };
   const cardNote = (asked, built, leftOut) => (COUNTS.length ? Object.assign({ asked, built, counted: COUNTS.slice(0, built).map((f) => f.name),
@@ -623,7 +626,7 @@ server.registerTool('create_report', {
     const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel, logoRatio }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(pages))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored',
+      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(pages))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', quietGrid: true,
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
@@ -641,7 +644,7 @@ server.registerTool('create_report', {
     r = Pbip.build({
       name: a.name, title: a.title || a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(a.pages))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored',
+      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(a.pages))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', quietGrid: true,
       // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
       texts: Object.assign({}, E.REPORT_TEXTS[a.lang === 'ar' ? 'ar' : 'en'], { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' }),
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))

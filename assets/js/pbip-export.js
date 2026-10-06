@@ -362,6 +362,12 @@
     const chartColors = { asked: o.chartColors === 'gradient', ends: GRAD, base: barBase, charts: 0 };
     // charts mirrored for a right-to-left report (o.chartAxes 'mirrored', round 13; see mirrorChart)
     const MIRROR = rtl && o.chartAxes === 'mirrored', chartAxes = { asked: o.chartAxes || null, rtl, charts: 0 };
+    // Quiet gridlines (o.quietGrid, round 13; seen in Desktop 2.158 on 6 Oct, "GE EN dark": on a dark design the value
+    // axis's gridlines were near-white lines across the panel, louder than the data; with valueAxis.gridlineColor written
+    // on the chart they are quiet): the text colour mixed 85% into the card, on the report's line, bar and column
+    // charts, unless the theme sets its own gridlines (its chart style "dotted" or "off").
+    const themeGrid = ['lineChart', 'clusteredBarChart', 'clusteredColumnChart'].some((t) => { const va = (((((o.theme || {}).visualStyles || {})[t] || {})['*'] || {}).valueAxis || [])[0]; return !!va && ('gridlineShow' in va || 'gridlineColor' in va); });
+    const GRID = o.quietGrid && u && HEX6.test(String(u.text)) && HEX6.test(String(u.card)) && !themeGrid ? mixHex(u.text, u.card, 0.85) : null;
     const titles = { wrapped: [], shortened: [], slicers: [] };   // chart and table titles, slicer headers (round 12, #24)
     const tableOrder = [];   // tables put in calendar order by a helper column (round 12, #17)
     const tableRows = [];   // tables whose known rows don't fit even with tight rows (round 12, #23)
@@ -940,9 +946,11 @@
             // "شعارك" started 150 in from the edge, seen in Desktop 2.158, round 11)
             : { visualType: 'textbox', objects: textbox(W.logoHere || 'Your logo', size, false, mixHex(u.text, u.card, 0.3), rtl ? 'left' : 'right'), visualContainerObjects: frame(null, W.logo || 'Logo') };
         } else if (s.kind === 'text') {
+          // (round 13, seen in Desktop on 6 Oct, "R12 text EN": the sentence at 11pt on a 1920 x 1080 page read like a
+          // footnote at the top of a tall panel: a given text is written at the theme's label size for the page, 11 at least)
           // (round 12, #20: the slot's own text when the caller gives one, s.text; the placeholder is for the website's
           // template download only: create_report leaves the box out when it has no text for it)
-          visual = { visualType: 'textbox', objects: textbox(s.text != null ? String(s.text) : W.textHere || 'Explain what the main chart shows and what to do about it.', 11, false, u.text), visualContainerObjects: frame(s.title, s.title, null, true) };
+          visual = { visualType: 'textbox', objects: textbox(s.text != null ? String(s.text) : W.textHere || 'Explain what the main chart shows and what to do about it.', s.text != null ? Math.max(11, LABEL) : 11, false, u.text), visualContainerObjects: frame(s.title, s.title, null, true) };
         } else {
           // a table keeps only the fields its width has room for (tableFit); Bt is the bind this table is written from
           let Bt = B, tableText = null;
@@ -975,6 +983,7 @@
           // bars that fade by value (gradientFill above): the report's own bar and column charts, never the tooltip pages'
           if (GRAD && query && (s.kind === 'bar' || s.kind === 'column')) { visual.objects = { dataPoint: gradientFill(query.queryState.Y.projections[0].field, GRAD) }; chartColors.charts++; }
           if (MIRROR && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { mirrorChart(visual, s.kind); chartAxes.charts++; }
+          if (GRID && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.gridlineColor = color(GRID); }
           if (s.kind !== 'kpi' && s.kind !== 'card' && ttl) {
             const tf = titleFit(ttl, TITLE, s.w - 2 * Math.round(16 * pg.page.h / 1080)), tp = visual.visualContainerObjects.title[0].properties;
             if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); titles[tf.mode].push({ page: pg.name || base, title: ttl, shown: tf.shown }); }

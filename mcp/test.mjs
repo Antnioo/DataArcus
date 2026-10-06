@@ -2646,6 +2646,53 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
         && Math.abs(Pb4.textWidth('Total Sales', 17, true, 'Segoe UI') - 119.4) < 0.1 && Pb4.textWidth('إجمالي', 17, true, 'Tahoma') === Pb4.textWidth('إجمالي', 17, true, 'Segoe UI'),
       () => `Tahoma's Latin text must be worked out at least 2 over its measured ink, and Segoe UI stay: ${JSON.stringify(Object.keys(ink).map((s) => [s, +Pb4.textWidth(s, 17, true, 'Tahoma').toFixed(1), ink[s]]))} growth ${Pb4.textWidth('Growth vs Last Year', 17, true, 'Tahoma').toFixed(1)} segoe ${Pb4.textWidth('Total Sales', 17, true, 'Segoe UI').toFixed(1)}`);
   }
+
+  // ----- three small design fixes (round 13, item 5), each from what Desktop showed on 6 Oct -----
+  {
+    const mixT = (a, b, t) => '#' + [1, 3, 5].map((i) => { const p = parseInt(a.slice(i, i + 2), 16), q = parseInt(b.slice(i, i + 2), 16); return Math.round(p + (q - p) * t).toString(16).padStart(2, '0'); }).join('');
+    const axisCharts = (r) => r.vis.filter((v) => !v.tooltipPage && /^(lineChart|clusteredBarChart|clusteredColumnChart)$/.test(v.visual.visualType));
+    const gridOf = (v) => { const e = (((v.visual.objects || {}).valueAxis || [])[0] || {}).properties || {}; return e.gridlineColor ? String(e.gridlineColor.solid.color.expr.Literal.Value).slice(1, -1) : null; };
+    // 16. Quiet gridlines ("GE EN dark": on Midnight the value axis's gridlines were near-white lines across the dark
+    //     panel, louder than the data; with valueAxis.gridlineColor written on the chart, the text colour mixed 85% into
+    //     the card, Desktop drew them quiet: `ba-ge-en-dark-grid.png`). Written on a report's line, bar and column charts
+    //     unless the theme sets its own gridlines (chart.grid "dotted" or "off").
+    for (const preset of ['Midnight', 'Corporate']) {
+      const th = await ask('generate_theme', { name: 'R13 grid ' + preset, preset, folder: 'r13-themes' }), ui = th.j.design.ui;
+      const g = await ask('create_report', { path: P, name: 'R13 Grid ' + preset, design: (await ask('plan_layout', { design: th.j.design, layout: 'exec', kpis: 3, filters: 'end' })).j.design }), rg = read(g);
+      chk(() => axisCharts(rg).length >= 3 && axisCharts(rg).every((v) => gridOf(v) === mixT(ui.text.toLowerCase(), ui.card.toLowerCase(), 0.85)) && errors(rg.dir) === '0',
+        () => `${preset}: every line, bar and column chart must carry valueAxis.gridlineColor ${mixT(ui.text.toLowerCase(), ui.card.toLowerCase(), 0.85)}: ${JSON.stringify(axisCharts(rg).map((v) => [v.visual.visualType, gridOf(v)]))} ${short(g)}`);
+    }
+    {
+      const th = await ask('generate_theme', { name: 'R13 grid dotted', preset: 'Midnight', chart: { grid: 'dotted' }, folder: 'r13-themes' });
+      const g = await ask('create_report', { path: P, name: 'R13 Grid dotted', design: (await ask('plan_layout', { design: th.j.design, layout: 'exec', kpis: 3, filters: 'end' })).j.design }), rg = read(g);
+      chk(() => axisCharts(rg).length >= 3 && axisCharts(rg).every((v) => gridOf(v) === null), () => `a theme with its own gridlines keeps them (nothing written on the charts): ${JSON.stringify(axisCharts(rg).map((v) => [v.visual.visualType, gridOf(v)]))} ${short(g)}`);
+    }
+    // 17. The focus layout's sentence ("R12 text EN": 11pt at the top of a tall panel on a 1920 x 1080 page read like a
+    //     footnote): a text the caller gives is written at the theme's label size for the page (15pt at 1920 x 1080),
+    //     11pt at least. (Round 12 wrote 11pt; its check asks only that the sentence is in the box.)
+    {
+      const th = await ask('generate_theme', { name: 'R13 text', preset: 'Corporate', folder: 'r13-themes' });
+      const x = await ask('create_report', { path: P, name: 'R13 Text', secondPage: false, text: 'Sales peak in week two: plan for it.', design: (await ask('plan_layout', { design: th.j.design, layout: 'focus', kpis: 3, filters: 'top' })).j.design }), rx = read(x);
+      chk(() => { const box = rx.vis.find((v) => v.visual.visualType === 'textbox' && JSON.stringify(v.visual.objects).includes('Sales peak in week two')); const size = parseFloat(JSON.stringify(box.visual.objects).match(/"fontSize":"([\d.]+)pt"/)[1]), label = +rx.theme.textClasses.label.fontSize;
+          return label > 11 && size === label; },
+        () => `the given sentence must be written at the theme's label size: ${x.err ? short(x) : JSON.stringify((rx.vis.find((v) => v.visual.visualType === 'textbox' && JSON.stringify(v.visual.objects).includes('Sales peak')) || {}).visual).slice(0, 400)} label ${rx.theme && rx.theme.textClasses && rx.theme.textClasses.label.fontSize}`);
+    }
+    // 18. A percent in a table reads as on its card ("G1 Exec EN": the card said 33.8%, the table's column 0.34): where
+    //     the card of a measure gets a percent format from the report (the model gives it none), the table's column of
+    //     that measure carries the same format on its projection (as round 10's separators do).
+    {
+      fs.mkdirSync(path.join(ROOT, 'r13-pct/R13 Pct.SemanticModel'), { recursive: true });
+      fs.writeFileSync(path.join(ROOT, 'r13-pct/R13 Pct.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string'), col('Channel', 'string')],
+        measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Sales vs Target %', expression: 'DIVIDE ( SUM ( Sales[Amount] ), 100 )' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }] }] } }));
+      const x = await ask('create_report', { path: 'r13-pct', name: 'R13 Pct', design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end' })).j.design, fields: { kpis: ['Sales[Total Sales]', 'Sales[Sales vs Target %]', 'Sales[Margin %]'], table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Sales vs Target %]', 'Sales[Margin %]'] } });
+      const def = x.err ? null : path.join(ROOT, 'r13-pct', x.j.report, 'definition', 'pages');
+      const vis = def ? JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder.flatMap((id) => fs.readdirSync(path.join(def, id, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, id, 'visuals', v, 'visual.json'), 'utf8')))).filter((v) => v.visual) : [];
+      const fmt = (v) => Object.fromEntries(v.visual.query.queryState.Values.projections.map((p) => [p.nativeQueryRef, p.format || null])), tables = vis.filter((v) => v.visual.visualType === 'tableEx');
+      const cardCode = (() => { const c = vis.find((v) => v.visual.visualType === 'cardVisual' && /Sales vs Target %/.test(JSON.stringify(v.visual.query))); const e = c && (c.visual.objects.value || []).find((y) => y.properties.customFormatString); return e ? String(e.properties.customFormatString.expr.Literal.Value).slice(1, -1) : null; })();
+      chk(() => tables.length >= 1 && /%$/.test(cardCode || '') && tables.every((v) => fmt(v)['Sales vs Target %'] === cardCode && fmt(v)['Margin %'] === null),
+        () => `a table's percent column must carry the card's percent format (${cardCode}), and a measure the model formats none: ${JSON.stringify(tables.map(fmt))} ${short(x)}`);
+    }
+  }
 }
 
 // ---------- round 12: every small detail fixed in code (owner's go 6 Oct 01:45; WORK.md "Round 12") ----------

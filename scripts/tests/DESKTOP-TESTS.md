@@ -2064,6 +2064,19 @@ capture of the same report (`desk-r11\`); pairs are `desk-r13\ba-<report>.png` (
 - **Three FAILs, each fixed on this branch with a test:** the "…" of a shortened Arabic text (1), the Reset
   button's arrow (14), a Latin title cut in a Tahoma report (17).
 
+### Item 5, three small design fixes (each from a page opened in this sitting)
+| What was off | Measured | Fixed | Proven |
+|---|---|---|---|
+| On a dark design the gridlines are near-white lines across the panel, louder than the data ("GE EN dark") | `valueAxis.gridlineColor` written on the chart by hand (`#35374a`, the text colour mixed 85% into the card): the lines drawn quiet (`ba-ge-en-dark-grid.png`: before above, after below) | the report's line, bar and column charts carry that colour, unless the theme sets its own gridlines | "G2 Analysis EN/AR" built with the final code (`ba-f-g2-en.png`, `ba-f-g2-ar.png`, right halves) |
+| A card says 33.8% and the table's column of the same measure 0.34 ("G1 Exec EN") | - (round 10 measured `format` on a table's projection) | the table's column carries the card's percent format where the model gives the measure none | `ba-f-g2-en.png`: 34.7%, 30.2% ... total 33.8% |
+| The "What it means" sentence at 11pt on a 1920 x 1080 page reads like a footnote ("R12 text EN") | - | a given sentence is written at the theme's label size for the page | in the files (test); not opened again |
+- **The golden reports with the final code** (`13-r13\golden2`, `r13-final.ps1`; pairs `ba-f-<tag>.png`, round 11's
+  capture at the left): opened: G1 EN and AR, G2 EN and AR, G3 AR, G4 16:9 AR, G4 4:3 EN, G5 EN and AR, G6 EN and AR,
+  G10 EN; no error dialog, each ready in 18 to 21 s (the 300-table model 48 s). Seen on them: a continuous number
+  axis (Ramadan Day) in Arabic runs 0 at the right to 30 at the left (reversed once, as measured by hand); an
+  Arabic "…" at the line's end from the engine (`f-g6-ar-top-crop.png`); the Arabic Reset with its arrow at the
+  right of the words. On "G6 Long" the fourth card shows Desktop's "Something's wrong with one or more fields":
+  the test model's own growth measure fails (so in round 11 too).
 ## Lessons
 - **Round 13: a button's `iconSize` is honoured; its icon and text margins did nothing (8L, 20L, 20D).** With
   `icon.placement` written the arrow is drawn small and tight against the text: write the size, and a gap as two
