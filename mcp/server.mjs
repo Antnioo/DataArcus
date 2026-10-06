@@ -959,7 +959,10 @@ server.registerTool('plan_layout', {
   }
   const r = planLayout(a), { page, fitted } = pageOf(r.design.layout);
   const unknown = a.design ? unknownKeys(a.design) : null;
-  return text(Object.assign(formats, arabicNames, { page, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, unknown ? { ignored: unknown } : {}, { design: r.design }));
+  // round 15 (the owner's go on round 13's recommendation 1): gradient bars are the default for designed pages, and the
+  // plan the user approves says so
+  const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a light tint and the largest in the theme\'s colour (the bar\'s length tells the size; the colour ranks). For one colour, create_report takes chartColors "solid".' } };
+  return text(Object.assign(formats, arabicNames, { page, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
 }));
 
 server.registerTool('add_gulf_calendar', {

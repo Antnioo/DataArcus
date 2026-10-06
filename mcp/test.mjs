@@ -3427,6 +3427,15 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => !x.err && rules.length >= 2 && rules.every((r) => r && r.low === '#0f6cbd' && r.high !== r.low && cr(r.high, card) > cr(r.low, card) && cr(r.high, text) < cr(r.low, text)) && cc.mode === 'gradient' && cc.reversed === true && /brighter/i.test(cc.note),
       () => `a brand colour that cannot fade towards the card fades towards the text colour, told: ${JSON.stringify(rules)} card ${card} text ${text} ${JSON.stringify(cc)} ${x.err ? x.t.slice(0, 200) : ''}`);
   }
+
+  // Round 13, recommendation 1: gradient bars stay on by default for designed pages (smallest -> largest), and the plan
+  // the user approves says so (plan_layout's answer)
+  {
+    const pl = await ask('plan_layout', { layout: 'exec', kpis: 3 });
+    const c = pl.j && pl.j.chartColors;
+    chk(() => !pl.err && c && c.mode === 'gradient' && /smallest/i.test(c.sayInPlan) && /largest/i.test(c.sayInPlan) && /solid/.test(c.sayInPlan),
+      () => `plan_layout must say the bars fade (smallest to largest) and how to ask for one colour: ${JSON.stringify(c)} ${pl.err ? pl.t.slice(0, 200) : ''}`);
+  }
 }
 
 await client.close();
