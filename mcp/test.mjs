@@ -412,8 +412,8 @@ check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.string
     check(notes.includes('Calendar[Month Short]') && notes.includes('Sales[Total Sales vs Last Ramadan %]'), `modelNotes: ${JSON.stringify(q.j.modelNotes)}`);
   }
 }
-// tables fill their visual (grow to fit); in a right-to-left report the columns are mirrored (since 5 Oct with the text column kept first, so "Total" shows;
-// before, the category came last, on the right; Power BI doesn't mirror tables); day names without a sort column are told
+// tables fill their visual (grow to fit); in a right-to-left report the columns are mirrored (since round 14 with the text column last, at the right edge;
+// from 5 Oct to round 14 the text column was kept first, so "Total" shows; Power BI doesn't mirror tables); day names without a sort column are told
 {
   const t1 = await tryCall('generate_theme', { name: 'Quality AR', brand: '#0F4C5C', folder: 'themes/q' });
   const en = t1.err ? t1 : await tryCall('create_report', { path: 'dax-project', name: 'Table EN', design: t1.j.design, layout: 'analysis', filters: 'end', lang: 'en' });
@@ -3334,6 +3334,40 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const fill = (expr.match(/<text[^>]*fill='%23([0-9a-f]{6})'/) || [])[1];
     chk(() => !x.err && /\* 100/.test(expr) && /%25/.test(expr) && fill && fill.toLowerCase() === th.j.design.ui.text.replace('#', '').toLowerCase(),
       () => `create_report's ring label must be a percent in the theme's text colour: fill ${fill} vs text ${th.j && th.j.design.ui.text} ${x.err ? x.t.slice(0, 300) : expr.slice(0, 600)}`);
+  }
+
+  // 5. Mirrored SVG pictures in Arabic (owner, 6 Oct; the compiler's d.mirror since round 10, set by create_report on a
+  // right-to-left report): a ring starts at the top and fills counter-clockwise (clockwise in English), a bar fills from
+  // the right, a sparkline's newest point is at the left (dates run from the right, round 13's chartAxes), texts are
+  // never flipped (they move to the mirrored place, their anchor swapped)
+  {
+    const req = (await import('node:module')).createRequire(import.meta.url), Svg = req('../assets/js/svg-kpi-compiler.js');
+    const svgOf = (d, m) => decodeURIComponent(Svg.toImageUrl(d, m).url.replace(/^data:image\/svg\+xml;utf8,/, ''));
+    const design = (mirror) => ({ name: 'M', w: 200, h: 120, mirror, values: [{ id: 'm', label: 'M', kind: 'measure', measure: 'M' }],
+      layers: [{ type: 'ring', name: 'Ring', cx: 50, cy: 60, r: 40, sw: 8, bind: { p: { v: 'm', d0: 0, d1: 1 } } },
+        { type: 'rect', name: 'Bar', x: 100, y: 20, w: 0, h: 10, fill: '#00d4ff', bind: { w: { v: 'm', d0: 0, d1: 1, r0: 0, r1: 80 } } },
+        { type: 'text', name: 'Label', x: 100, y: 100, size: 12, anchor: 'start', fill: '#111111', text: 'نص' }] });
+    // where the stroke starts and which way it goes: the circle's own start (3 o'clock) turned by rotate(-90), then the
+    // mirror group's translate(W 0) scale(-1 1) when the circle sits inside it
+    const ringPath = (svg, W) => { const i = svg.indexOf("transform='rotate(-90"), g = svg.lastIndexOf('<g', i), inMirror = g >= 0 && /^<g transform='translate\(\d+ 0\) scale\(-1 1\)'>/.test(svg.slice(g)) && svg.indexOf('</g>', g) > i;
+      const at = (t) => { const x = 50 + 40 * Math.cos(t - Math.PI / 2), y = 60 + 40 * Math.sin(t - Math.PI / 2); return inMirror ? [W - x, y] : [x, y]; };
+      return { start: at(0).map((v) => Math.round(v)), next: at(0.2) }; };
+    const en = svgOf(design(false), { M: 0.5 }), ar = svgOf(design(true), { M: 0.5 });
+    const re = ringPath(en, 200), ra = ringPath(ar, 200);
+    const barX = (svg, W) => { const m = svg.match(/<rect x='([\d.]+)'[^>]*width='([\d.]+)'/); const g = svg.lastIndexOf('<g', svg.indexOf('<rect')), inM = g >= 0 && /^<g transform='translate/.test(svg.slice(g)) && svg.indexOf('</g>', g) > svg.indexOf('<rect');
+      return m ? (inM ? [W - +m[1] - +m[2], W - +m[1]] : [+m[1], +m[1] + +m[2]]) : null; };
+    const txt = (svg) => { const m = svg.match(/<text x='([\d.]+)'[^>]*text-anchor='(\w+)'/); const i = svg.indexOf('<text'), g = svg.lastIndexOf("<g transform='translate", i); return m ? { x: +m[1], a: m[2], flipped: g >= 0 && svg.indexOf('</g>', g) > i } : null; };
+    chk(() => JSON.stringify(re.start) === '[50,20]' && JSON.stringify(ra.start) === '[150,20]' && re.next[0] > 50 && ra.next[0] < 150
+        && JSON.stringify(barX(en, 200)) === '[100,140]' && JSON.stringify(barX(ar, 200)) === '[60,100]'
+        && txt(en).a === 'start' && txt(ar).a === 'end' && txt(ar).x === 100 && !txt(ar).flipped,
+      () => `mirrored pictures: ring EN ${JSON.stringify(re)} AR ${JSON.stringify(ra)}; bar EN ${barX(en, 200)} AR ${barX(ar, 200)}; text EN ${JSON.stringify(txt(en))} AR ${JSON.stringify(txt(ar))}`);
+    // through create_report: an Arabic report mirrors the picture, an English one does not
+    const ring1 = { name: 'Ring', w: 120, h: 120, values: [{ id: 'm', label: 'M', kind: 'measure', measure: 'Sales[Margin %]' }], layers: [{ type: 'ring', cx: 60, cy: 60, r: 46, sw: 12, bind: { p: { v: 'm', d0: 0, d1: 1 } } }] };
+    const exprOf = async (lang, name) => { const dz = (await ask('plan_layout', { layout: 'exec', kpis: 2, lang })).j.design;
+      const x = await ask('create_report', { path: 'r14', name, lang, design: dz, secondPage: false, fields: { kpis: ['Sales[Margin %]', 'Sales[Total Sales]'] }, svgCards: [{ card: 1, label: 'Ring ' + lang, design: ring1 }] });
+      return x.err ? x.t : JSON.parse(fs.readFileSync(path.join(ROOT, 'r14', x.j.report, 'definition', 'reportExtensions.json'), 'utf8')).entities.flatMap((e) => e.measures || []).map((mm) => mm.expression).join('\n'); };
+    const ea = await exprOf('ar', 'R14 mirror ar'), ee = await exprOf('en', 'R14 mirror en');
+    chk(() => /scale\(-1 1\)/.test(ea) && !/scale\(-1 1\)/.test(ee), () => `create_report must mirror the picture on an Arabic report only: AR ${ea.slice(0, 200)} EN ${ee.slice(0, 200)}`);
   }
 }
 
