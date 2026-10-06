@@ -2156,6 +2156,18 @@ no Desktop window open. The Arabic page of this morning built again ("R14b AR da
 - `npm test` on `4386d9b`: **509 of 509**.
 - Desktop closed at the end without saving. The Gulf test copy (`13-r13\gulf`) was saved twice on purpose (the
   calendar this morning, the formats now), so that reports could be built on the changed model.
+## Round 14, last re-check (2026-10-06, from 10:04, `fix/round-14` at `7be2f22`), Power BI Desktop 2.158.1177
+"R14c AR dark 720" and "R14c EN dark 720": the same page as the laptop finish (the sample, exec layout, 1280 x 720,
+Midnight, a ring on the percent card), built with `7be2f22`. Captures in `<tests folder>\desk-r14\`.
+| Check | Seen | Result |
+|---|---|---|
+| Total Sales Last Ramadan in the table | **10,310 ... 10,819, total 74,675: no ".00"**, Arabic and English (`ba-r14c-table-crop.png`: the laptop finish above, now below; `r14c-en-crop.png`) | PASS |
+| Total Sales in the table | 14,178 ... 14,781, total 101,914 | PASS |
+| The percent (a DIVIDE measure) | 34.7% ... 34.0%, total 33.8% in the table; 33.8% on the card and in the ring: its decimal kept | PASS |
+| The cards | 101,914; 74.68K; 33.8%: as in the laptop finish | PASS (unchanged) |
+| The tooltip pages (Arabic) | the card 101,914; the bars' labels in units (65K, 10K; 25K, 53K, 22K), bars from the right (`r14c-ar-tooltips-crop.png`) | PASS (no ".00" anywhere) |
+| Anything else on the page | 7,211 (Arabic) and 7,201 (English) pixels differ from the laptop finish's captures, all in the table's second number column | nothing else changed |
+- `npm test` on `7be2f22`: **510 of 510**. Desktop closed without saving.
 ## Lessons
 - **Round 13: a capture of the whole Desktop window shows the title bar with the signed-in account.** One such picture was made tonight and deleted; cut the canvas out (`crop.ps1`) and keep only that.
 - **Round 13: a button's `iconSize` is honoured; its icon and text margins did nothing (8L, 20L, 20D).** With
