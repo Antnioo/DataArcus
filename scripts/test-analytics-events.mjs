@@ -13,6 +13,8 @@ const ok = (cond, msg) => { if (!cond) fails.push(msg); };
 
 // Parameter names GA4 takes as the visit's campaign/traffic source (they overwrite attribution), and its reserved prefixes
 const ATTRIBUTION = ['source', 'medium', 'campaign', 'term', 'content', 'campaign_id', 'gclid', 'dclid', 'srsltid'];
+// GA4 reads these as money and e-commerce (Event value, revenue, items); the site sells nothing through GA4 (finding 1, 2026-10-06)
+const MONEY = ['value', 'currency', 'items', 'transaction_id', 'price', 'quantity', 'tax', 'shipping', 'coupon'];
 const RESERVED_PREFIX = /^(google_|ga_|firebase_|utm_|_)/;
 const NAME = /^[A-Za-z][A-Za-z0-9_]*$/;   // GA4: letters, digits, underscores; starts with a letter
 const MAX_NAME = 40, MAX_PARAMS = 25;
@@ -85,12 +87,40 @@ for (const f of files) {
       const k = keyOf(p);
       if (!k) continue;
       ok(!ATTRIBUTION.includes(k), `${where}: parameter "${k}" is read by GA4 as the visit's traffic source; rename it (e.g. file_type)`);
+      ok(!MONEY.includes(k), `${where}: parameter "${k}" is read by GA4 as money or e-commerce; rename it (e.g. accent_value)`);
       ok(!RESERVED_PREFIX.test(k), `${where}: parameter "${k}" uses a GA4 reserved prefix`);
       ok(NAME.test(k) && k.length <= MAX_NAME, `${where}: parameter "${k}" must be letters, digits and _ (max ${MAX_NAME})`);
     }
   }
 }
+// Typed text never reaches GA4 when it looks like an email address or a phone number (Google's terms forbid personal data)
+const main = fs.readFileSync(path.join(ROOT, 'assets/js/main.js'), 'utf8');
+ok(/track\('search', \{ search_term: safeTerm\(/.test(main), "main.js: the blog search must send safeTerm(...), not the raw text");
+
+// European visitors who click Accept: Clarity gets its consent signal (it is enforced for the EEA, UK and Switzerland)
+ok(/clarity\('consentv2', \{ ad_Storage: 'denied', analytics_Storage: 'granted' \}\)/.test(main), "main.js: an explicit Accept must send Clarity consentv2 (analytics granted, ads denied)");
+
+// Short links: one tagging rule (ANALYTICS.md section 7) so every visit lands in a named channel, never Unassigned
+const MEDIUMS = ['social', 'paid', 'email', 'video', 'referral'];   // GA4 default channel rules recognise all five
+const NOT_A_PLATFORM = ['groups', 'post', 'social', 'group'];
+let links = 0;
+for (const dir of fs.readdirSync(path.join(ROOT, 'go'))) {
+  const f = path.join('go', dir, 'index.html');
+  if (!fs.existsSync(path.join(ROOT, f))) continue;
+  const html = fs.readFileSync(path.join(ROOT, f), 'utf8').replace(/&amp;/g, '&');
+  const targets = [...html.matchAll(/https:\/\/dataarcus\.com\/[^'"\s]*utm_[^'"\s]*/g)].map((m) => m[0].replace(/;$/, ''));
+  ok(targets.length >= 3, `${f}: the refresh, the script and the link must all carry the tagged address`);
+  ok(new Set(targets).size === 1, `${f}: the refresh, the script and the link point to different addresses`);
+  const q = new URL(targets[0]).searchParams;
+  for (const k of ['utm_source', 'utm_medium', 'utm_campaign']) ok(q.get(k), `${f}: ${k} missing`);
+  for (const [k, v] of q) if (k.startsWith('utm_')) ok(/^[a-z0-9-]+$/.test(v), `${f}: ${k}=${v} must be lowercase letters, digits and hyphens`);
+  ok(MEDIUMS.includes(q.get('utm_medium')), `${f}: utm_medium=${q.get('utm_medium')} is not one GA4 recognises (${MEDIUMS.join(', ')})`);
+  ok(!NOT_A_PLATFORM.includes(q.get('utm_source')), `${f}: utm_source=${q.get('utm_source')} must be the platform (put the placement in utm_content)`);
+  links++;
+}
+ok(links >= 10, `only ${links} short links found: the scan is broken`);
+
 ok(calls > 50, `only ${calls} tracking calls found: the scan is broken`);
 
 if (fails.length) { console.error(`Analytics events: ${fails.length} problem(s)\n  ` + fails.join('\n  ')); process.exit(1); }
-console.log(`Analytics events: ${calls} tracking calls follow GA4's naming rules.`);
+console.log(`Analytics events: ${calls} tracking calls follow GA4's naming rules; ${links} short links follow the tagging rule.`);
