@@ -24,6 +24,8 @@ BI Desktop window open; `git fetch`; `fix/round-13` made from `origin/main` `1ce
 | start | 02:39 | `a6a3e7e`, the plan |
 | (items 1 and 3) | 03:18 | `1729596` |
 | 03:37 | 03:29 | `76a98b6`, the merge of round 12 (468 of 468) |
+| (items 2 and 4) | 04:08 | `98eb0e4` (480 of 480) |
+| 04:37 | 04:42 | this note (the small fixes' code waits for its green run) |
 <!-- r13 pushes -->
 
 ### Round 13, order of work (each expected result written at 02:39, before any run)
@@ -88,6 +90,21 @@ BI Desktop window open; `git fetch`; `fix/round-13` made from `origin/main` `1ce
     before it: five shortened texts without the mark). The full run with the Tahoma width is running.
   - **Seen on G1 (a brand colour on a dark design):** no gradient: `#0f6cbd` stands only 3.2:1 off the card, so it
     cannot fade towards the card and keep 3:1; the answer says so. For the owner (item 3).
+- **04:41, item 5 (small design fixes) and item 6 (the golden reports again) under way.**
+  - **Website suites on `98eb0e4`** (`run-all.mjs`, 17 suites): `pbip` 71, `theme-generator` 893 (and `-lab`),
+    `layout` 512 (and `-lab`), `design-engine` 598, `tools` 339, `anchors`, `spacing`, `dax`, `model-health`,
+    `lang-switcher`, `tmdl-model`, `gulf-calendar` 806: PASS. Three FAIL, none from this branch's changes: `site` (52
+    pages "without their current Content Security Policy": the CRLF checkout, as in round 11; and one page's font
+    swap 0.105 for 0.1 under load), `consent` (one time zone, Asia/Nicosia, under load), `svg-kpi` (0 checks: the
+    script builds a path `C:\C:\...` on Windows and stops; the same with this branch's changes set aside). CI on
+    Linux is the record for those three.
+  - **Three small fixes, tests first (red 485 checks / 4 failing):** quiet gridlines written on the report's line,
+    bar and column charts (the text colour mixed 85% into the card; measured: `ba-ge-en-dark-grid.png`), unless the
+    theme sets its own; a given "What it means" sentence at the theme's label size (was 11pt); a table's percent
+    column in the card's percent format (33.8%, not 0.34). First green run: 484 of 485: a measure named in
+    `fields.table` lost its percent format on the way (`bindFor`): fixed, run again.
+  - **The 20 golden reports rebuilt with the final code** in `13-r13\golden2` and being opened one by one
+    (`r13-final.ps1`; pairs `desk-r13\ba-f-<tag>.png`, round 11's capture at the left).
 <!-- r13 where -->
 
 ### Round 13, for the owner
