@@ -85,6 +85,12 @@ round 18's "seen, not in scope" (items 8-10). Scoring rule: DESKTOP-TESTS.md, "I
 5. Round 18's 12b, S2b, S3b (above).
 
 #### Round 19, for the owner
+**Answered (owner, 6 Oct ~23:40 Dubai, via the reviewer):** 1. "No data" by default: **on once the laptop proves it in
+Desktop** (all of check 2 below PASS), with the older checks taught to tell message cards from KPI cards; if any part
+FAILS it stays opt-in. 2. Task 8's single card: **(a)**, a quarter of the row at the reading start. 3. Task 4:3's
+table: **(a)**, the table takes the wider share of its row on 4:3 pages, measured on the laptop first. 4. Test models
+as DAX tables: **yes, next round**. Items 2 and 3 are decided, so the laptop night sitting may build them in its block C
+(tests first), after blocks A and B.
 1. **"No data" by default?** Recommended: keep it opt-in until the laptop proves it, then on by default with the older
    checks taught to tell message cards from KPI cards (about 20 places).
 2. **Task 8's single wide card:** (a) the card at a quarter of the row, at the reading start; (b) the card and a text
