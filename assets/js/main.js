@@ -474,6 +474,8 @@ document.addEventListener('DOMContentLoaded', () => {
     try { if (typeof window.clarity === 'function') window.clarity('event', name); } catch (e) { /* ignore */ }
   };
   window.dataArcusTrack = track; // lets tool pages send their own events
+  // Typed text that looks like an email address or a phone number never reaches GA4 (no personal data in analytics)
+  const safeTerm = (q) => (q.includes('@') || (q.match(/\d/g) || []).length >= 9 ? '(redacted)' : q.slice(0, 50));
 
   const once = new Set();
   const trackOnce = (key, name, params) => { if (once.has(key)) return; once.add(key); track(name, params); };
@@ -566,7 +568,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let t;
     blogSearch.addEventListener('input', () => {
       clearTimeout(t);
-      t = setTimeout(() => { const q = blogSearch.value.trim(); if (q.length >= 3) track('search', { search_term: q.slice(0, 50) }); }, 1500);
+      t = setTimeout(() => { const q = blogSearch.value.trim(); if (q.length >= 3) track('search', { search_term: safeTerm(q) }); }, 1500);
     });
   }
   document.querySelectorAll('[data-filter]').forEach((btn) => {
@@ -621,6 +623,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const privacyLink = document.querySelector('[data-i18n="footer.links.privacy"]');
   const privacyHref = privacyLink ? privacyLink.getAttribute('href') : '/privacy.html';
   let bar = null;
+  // An explicit Accept tells Clarity, which needs the signal for visitors in the EEA, UK and Switzerland to follow a visit
+  // across pages. Ads stay denied: the site runs no Microsoft ads. Visitors who never saw the banner send nothing (as before).
+  const clarityGranted = () => { try { if (typeof window.clarity === 'function') window.clarity('consentv2', { ad_Storage: 'denied', analytics_Storage: 'granted' }); } catch (e) { /* ignore */ } };
 
   const save = (v) => { C.choice = v; try { localStorage.setItem(C.key, v); } catch (e) { /* private mode: asks again next visit */ } };
   const clearCookies = () => {
@@ -654,7 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.style.setProperty('--cc-h', bar.offsetHeight + 'px');   // lifts the WhatsApp button above the bar
     bar.addEventListener('click', (e) => {
       const b = e.target.closest('[data-cc]'); if (!b) return;
-      if (b.dataset.cc === 'accept') { save('granted'); C.load(); }
+      if (b.dataset.cc === 'accept') { save('granted'); C.load(); clarityGranted(); }
       else {
         save('denied');
         try { if (typeof window.gtag === 'function') window.gtag('consent', 'update', { analytics_storage: 'denied' }); } catch (err) { /* ignore */ }
@@ -665,6 +670,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
   C.open = show;   // "Cookie settings" on the privacy page
+  if (C.choice === 'granted') clarityGranted();   // a visitor who accepted on an earlier page
   if (C.eu && C.choice !== 'granted' && C.choice !== 'denied') show();
   document.querySelectorAll('[data-cc-open]').forEach((b) => b.addEventListener('click', show));
   new MutationObserver(fill).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
