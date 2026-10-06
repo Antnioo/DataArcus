@@ -2119,6 +2119,25 @@ gauge, funnel, treemap, matrix, slicer; `chartColors` "gradient"), "OPS AR" (the
   "681.9%"); a 444-wide slicer slot holds three dropdowns whose headers are cut to "Q…", "Da…" (in Arabic to "…"
   alone); the donut, gauge, funnel and treemap are not mirrored in Arabic (nothing in them has a side).
 - **Off on the operations page:** two bar charts and a donut all show Total Sales by Quarter.
+## Round 14, laptop proof (2026-10-06, 08:09 to 08:25, `fix/round-14` at `1dd7f4e`), Power BI Desktop 2.158.1177
+Thirty minutes; made-up models only; nothing fixed (a FAIL is recorded with its crop). Reports from the working
+copy's server (`r13-make.mjs`, `r14-build.mjs`); captures in `<tests folder>\desk-r14\`. `idle.ps1` 141 s at the
+start; Desktop closed at the end without saving (the Gulf test copy was saved once, on purpose, so that the report
+could be built on the applied calendar).
+
+**The page the owner asked for, before and after: `desk-r14\ba-r13-main-vs-r14-ar-dark-720.png`** (above: "GM AR
+dark 720", round 13; below: "R14 AR dark 720", round 14: the same sample model, exec layout, 1280 x 720, Midnight,
+Arabic, with made-up approved Arabic display names and a ring picture on the percent card). Full size:
+`desk-r13\gm-ar-dark-720-p1.png` and `desk-r14\r14-ar-dark-720-p1.png`.
+
+| # | Item | Seen | Result |
+|---|---|---|---|
+| 5 | The Arabic table | the text column (اسم اليوم) is the last column, at the right edge; the three measures to its left; every column right-aligned under its header; Sunday to Saturday; no helper column to be seen. The total row shows its three numbers and **no "Total" word**. **The numbers now carry two decimals (14,178.00, 10,310.00; the total 101,914.00)**, where round 13 showed 14,178 (`r14-table-crop.png`) | PASS for the order, the edge and the alignment; **FAIL: ".00" on whole numbers in the table** (also on the Gulf report: 591,015.00) |
+| 2 + 1 | Arabic day and month names | `add_gulf_calendar`'s script applied on "Gulf GC1" in TMDL view: "Changes applied to the model", Problems 0; by DAX (`gc-cols.json`): Month Name (Arabic) sorted by Month Number, Day Name (Arabic) by Day of Week, Hijri Month Name (Arabic) by Hijri Month Number. "R14 Gulf AR dark 720" built on it: the line chart's axis reads يناير ... ديسمبر in calendar order from the right, and a slicer is on Month Name (Arabic) (`r14-gulf-ar-dark-720-view.png`) | PASS for the months (they slant on the 1280 x 720 page). **Not seen: the Arabic day names** (that model's charts are by Store, not by day) and the opened slicer lists |
+| 6 | Arabic titles and slicer headers | with the names given: every chart and table title fully Arabic ("إجمالي المبيعات حسب اسم اليوم"), the KPI titles and the slicer headers Arabic; without names (the Gulf report): English titles with "by", none mixed | PASS. The Arabic slicer headers sit at the left of their boxes; the day and month values stay English on the sample (it has no Arabic columns) |
+| 8 + 9 | The ring on the percent card | the label reads 33.8% in the light text colour, inside the ring; the arc is about a third of the circle and runs **counter-clockwise from the top** (`r14-ring-crop.png`); the card's own value 33.8% | PASS (English direction and the bar picture not opened) |
+| 7 | The softer slicer outline | the dropdown boxes look as in round 13: a bright, square outline (`ba-r14-slicers-crop.png`: round 13 left, round 14 right) | **FAIL to the eye: no softer outline on the dropdown box** (where else it might show was not looked for) |
+| 3, 4 | `check.dax` 43 of 43; the formats script | not run (no time) | - |
 ## Lessons
 - **Round 13: a capture of the whole Desktop window shows the title bar with the signed-in account.** One such picture was made tonight and deleted; cut the canvas out (`crop.ps1`) and keep only that.
 - **Round 13: a button's `iconSize` is honoured; its icon and text margins did nothing (8L, 20L, 20D).** With
