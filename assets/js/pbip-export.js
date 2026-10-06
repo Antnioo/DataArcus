@@ -1182,7 +1182,9 @@
           container({ x: openBtn.x, y: openBtn.y, w: openBtn.w, h: openBtn.h, z, parent: groups.header.name, kind: 'button', noPhone: true,
             visual: { visualType: 'actionButton',
               objects: { icon: def({ shapeType: str('blank') }), text: def({ show: bool(true), text: str(openBtn.text), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL) }),
-                fill: def({ show: bool(true), fillColor: color(mixHex(u.card, u.text, 0.06)), transparency: num(0) }), outline: def({ show: bool(true), lineColor: color(edge) }) },
+                // (round 16, design finding #23: it was the only boxed control in a header of boxless tabs: no box, no outline;
+                // the icon and the word in the text colour, as the tabs)
+                fill: def({ show: bool(false) }), outline: def({ show: bool(false) }) },
               visualContainerObjects: Object.assign(frame(null, W.openFilters || 'Open the filter panel'), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(pg.openBm) }) }) } });
           z += 1000;
         }

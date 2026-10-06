@@ -3523,6 +3523,20 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => !x.err && JSON.stringify(kc.counted) === JSON.stringify(['Count of Order Id', 'Sum of Amount', 'Sum of Quantity']) && kc.built === 3 && kc.asked === 4 && /categor/i.test(kc.why),
       () => `no count of a category on a KPI card, fewer cards and why: ${JSON.stringify(kc)} ${x.err ? x.t.slice(0, 300) : ''}`);
   }
+
+  // 6. #23: the slide-in panel's "Filters" button in the header has the tab look: no box, no outline (switched off
+  // outside the state selector, as Desktop needs), the icon and the word in the text colour; English and Arabic
+  {
+    const btn = async (lang) => { const dz = (await ask('plan_layout', { layout: 'exec', kpis: 2, filters: 'end', lang })).j.design;
+      const x = await ask('create_report', { path: 'r16-g', name: 'R16 panel ' + lang, lang, design: dz, slidePanel: true, secondPage: false });
+      if (x.err) return { err: x.t.slice(0, 200) };
+      const b = visuals('r16-g', x.j.report).find((v) => v.visual && v.visual.visualType === 'actionButton' && /bookmark/i.test(JSON.stringify(v.visual.visualContainerObjects || {})) && /☰/.test(JSON.stringify(v.visual.objects || {})));
+      const o = (b && b.visual.objects) || {}, off = (card) => (o[card] || []).some((e) => !e.selector && e.properties.show && e.properties.show.expr.Literal.Value === 'false');
+      const shownOn = (card) => (o[card] || []).some((e) => e.properties.show && e.properties.show.expr.Literal.Value === 'true');
+      return { found: !!b, fillOff: off('fill') && !shownOn('fill'), outlineOff: off('outline') && !shownOn('outline'), text: JSON.stringify(o.text || []).includes(dz.ui.text.toLowerCase()) || JSON.stringify(o.text || []).includes(dz.ui.text) }; };
+    const en = await btn('en'), ar = await btn('ar');
+    chk(() => [en, ar].every((r) => r.found && r.fillOff && r.outlineOff && r.text), () => `the header's Filters button must look like a tab (no box, no outline): EN ${JSON.stringify(en)} AR ${JSON.stringify(ar)}`);
+  }
 }
 
 await client.close();
