@@ -3,6 +3,7 @@
 // Pairs with Microsoft's Power BI Authoring MCP server (model edits, DAX) and the Desktop bridge (reload, screenshots).
 // Every path stays inside the working folder (DATAARCUS_ROOT; without it every tool refuses), and nothing is ever overwritten.
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
@@ -32,15 +33,27 @@ const server = new McpServer({ name: 'dataarcus', version: VERSION }, { instruct
 // What a tool does to the user's files, for the AI app: four tools only read; the two that write only add new files
 // (never change or delete one) and stay inside the working folder. check_model_health adds files too: its fix scripts
 const READS = { readOnlyHint: true, openWorldHint: false }, ADDS = { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false };
-const text = (o) => ({ content: [{ type: 'text', text: typeof o === 'string' ? o : JSON.stringify(o, null, 2) }] });
-const compact = (o) => ({ content: [{ type: 'text', text: JSON.stringify(o) }] });
+// Round 17 (the outside review's G-02, privacy): no answer or error sends an absolute local path to the AI. Paths in the
+// working folder become relative to it, the working folder itself is named by its last folder name, and the user's home
+// folder becomes "~" (a Windows path holds the user name). The local log (stderr) keeps full paths.
+const scrub = (str) => {
+  let s = String(str);
+  const forms = (p) => (p ? [...new Set([p, p.replace(/\\/g, '/'), p.replace(/\\/g, '\\\\')])].sort((a, b) => b.length - a.length) : []);
+  const roots = ROOT ? [...new Set([ROOT, (() => { try { return fs.realpathSync.native(ROOT); } catch (e) { return ROOT; } })()])] : [];
+  for (const r of roots) for (const f of forms(r)) { s = s.split(f + '/').join('').split(f + '\\\\').join('').split(f + '\\').join('').split(f).join(path.basename(r)); }
+  const home = os.homedir();
+  if (home && home.length > 3) for (const f of forms(home)) s = s.split(f).join('~');
+  return s;
+};
+const text = (o) => ({ content: [{ type: 'text', text: scrub(typeof o === 'string' ? o : JSON.stringify(o, null, 2)) }] });
+const compact = (o) => ({ content: [{ type: 'text', text: scrub(JSON.stringify(o)) }] });
 // the part of a large model a request is about (see lib/scope.mjs)
 const focusInput = z.string().min(1).max(80).optional().describe('On a large model: the part of the model the user asked about, in their words ("logistics", "sales"). The picks then come from the tables whose name or whose measures\' display folder contains it, the tables related to them and the date table. A large model needs a focus or tables');
 const tablesInput = z.array(z.string()).min(1).max(60).optional().describe('Instead of a focus: the tables to pick from, by name (the tables related to them and the date table are added)');
-const fail = (e) => ({ isError: true, content: [{ type: 'text', text: String(e && e.message || e) }] });
+const fail = (e) => ({ isError: true, content: [{ type: 'text', text: scrub(String(e && e.message || e)) }] });
 // A working folder that is chosen but can't be used yet (it doesn't exist, or it is empty): a normal answer with what
 // to do, not an error (an AI app shows an error as "Failed" in red, though nothing went wrong). Nothing is read or written.
-const notice = (state, whatToDo) => text({ workingFolder: ROOT, state, done: 'Nothing was read or written.', whatToDo });
+const notice = (state, whatToDo) => text({ workingFolder: ROOT ? path.basename(ROOT) : ROOT, state, done: 'Nothing was read or written.', whatToDo });
 // no working folder set: every tool refuses with the reason and touches no file
 const safe = (fn) => async (args) => { try { const problem = rootProblem(); if (problem) return ROOT ? notice('missing', problem) : fail(problem); return await fn(args); } catch (e) { return e instanceof Notice ? notice(e.state, e.message) : fail(e); } };
 // A fix script goes to a new file, never into an answer: a script rewrites whole objects, so it holds the user's own

@@ -13,6 +13,13 @@ import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerPro
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-mcp-'));
+// (round 17, the outside review's G-02: answers give paths relative to the working folder, never absolute. The checks
+// open the files the answers name, so a relative path that is not a file here is read from the working folder)
+fs.__exists = ((e) => (p) => { try { return e(p); } catch (x) { return false; } })(fs.existsSync.bind(fs));
+for (const fn of ['readFileSync', 'existsSync', 'statSync', 'lstatSync', 'readdirSync']) {
+  const orig = fs[fn].bind(fs);
+  fs[fn] = (p, ...rest) => (typeof p === 'string' && !path.isAbsolute(p) && !fs.__exists(p) && fs.__exists(path.join(ROOT, p)) ? orig(path.join(ROOT, p), ...rest) : orig(p, ...rest));
+}
 fs.cpSync(path.join(REPO, 'scripts/tests/fixtures/bridge-project'), path.join(ROOT, 'tmdl-project'), { recursive: true });
 fs.cpSync(path.join(HERE, 'fixtures/health-project'), path.join(ROOT, 'bim-project'), { recursive: true });
 fs.copyFileSync(path.join(REPO, 'assets/data/model-health-sample.pbit'), path.join(ROOT, 'sample.pbit'));
@@ -199,7 +206,8 @@ let themeOk = 0; const themeBad = [];
 for (const c of DESIGNS) {
   r = await tryCall('generate_theme', themeInput(c));
   const want = path.join(ROOT, 'themes', c.id, c.file.replace(/-background-(exec|analysis|ops|focus)\.png$/, '.json'));
-  const ok = !r.err && r.j.path === want && fs.existsSync(want) && fs.readFileSync(want, 'utf8') === c.theme && !r.j.repaired.length;
+  // round 17 (G-02): answers give paths relative to the working folder, so the check joins them to it
+  const ok = !r.err && path.join(ROOT, r.j.path) === want && fs.existsSync(want) && fs.readFileSync(want, 'utf8') === c.theme && !r.j.repaired.length;
   if (ok) themeOk++; else themeBad.push(`${c.id}: ${r.err ? r.t.slice(0, 120) : `path ${r.j.path}, same JSON ${fs.existsSync(want) && fs.readFileSync(want, 'utf8') === c.theme}, repaired ${JSON.stringify(r.j.repaired).slice(0, 120)}`}`);
 }
 check(themeOk === DESIGNS.length, `generate_theme parity: ${themeOk} of ${DESIGNS.length}; ${themeBad.slice(0, 3).join(' | ')}`);
@@ -995,7 +1003,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => !leaks.length, () => `an answer carries the model's expression, literal or description text: ${leaks} (${(answers.check_model_health.t.match(SECRET) || [''])[0]})`);
     const h = answers.check_model_health, nf = h.j && h.j.fixes && h.j.fixes.NO_FORMAT || {};
     chk(() => !/"fixScript"\s*:/.test(h.t) && !/createOrReplace/.test(h.t), () => 'check_model_health still returns a script\'s text (fixScript)');
-    chk(() => path.dirname(nf.fixScriptFile) === d && /\.tmdl$/.test(nf.fixScriptFile) && fs.lstatSync(nf.fixScriptFile).isFile() && SECRET.test(scriptOf(nf)) && /^createOrReplace/.test(scriptOf(nf)),
+    // round 17 (G-02): answers give paths relative to the working folder, so the check joins them to it
+    chk(() => path.dirname(path.join(ROOT, String(nf.fixScriptFile))) === d && /\.tmdl$/.test(nf.fixScriptFile) && fs.lstatSync(nf.fixScriptFile).isFile() && SECRET.test(scriptOf(nf)) && /^createOrReplace/.test(scriptOf(nf)),
       () => `the format script must be in a new .tmdl file next to the project, holding the script: ${JSON.stringify(nf).slice(0, 300)}`);
     chk(() => nf.suggested.some((x) => x.measure === '[Key Client Sales]') && nf.howToApply.includes(path.basename(nf.fixScriptFile)) && /TMDL view/.test(nf.howToApply) && /never applied/i.test(nf.howToApply),
       () => `the answer must name the measures and say how to apply the file: ${JSON.stringify(nf).slice(0, 400)}`);
@@ -1027,7 +1036,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const firstRun = await ask('check_model_health', { path: 'priv-project' }), first = path.basename(String((((firstRun.j || {}).fixes || {}).NO_FORMAT || {}).fixScriptFile || 'no-script-file.tmdl'));
     dangling(path.join(OUT, 'stolen-script.tmdl'), path.join(d, first));
     const h = await ask('check_model_health', { path: 'link5-project' });
-    chk(() => !h.err && path.basename(h.j.fixes.NO_FORMAT.fixScriptFile) !== first && path.dirname(h.j.fixes.NO_FORMAT.fixScriptFile) === d && fs.readdirSync(OUT).length === 0,
+    // round 17 (G-02): answers give paths relative to the working folder, so the check joins them to it
+    chk(() => !h.err && path.basename(h.j.fixes.NO_FORMAT.fixScriptFile) !== first && path.dirname(path.join(ROOT, h.j.fixes.NO_FORMAT.fixScriptFile)) === d && fs.readdirSync(OUT).length === 0,
       () => `a fix script at a name held by a dangling ${kind}: ${h.err ? h.t.slice(0, 200) : h.j.fixes.NO_FORMAT.fixScriptFile}; outside now holds ${fs.readdirSync(OUT)}`);
     // create_report: a dangling link at the report's .pbip name
     dangling(path.join(OUT, 'stolen.pbip'), path.join(d, 'Linked Five.pbip'));
@@ -1082,7 +1092,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const a = await start({ DATAARCUS_ROOT: path.join(BASE, 'empty') }, BASE);
     for (const tool of ['read_model', 'suggest_fields', 'check_model_health']) {
       const x = await a.call(tool, { path: '.' });
-      chk(() => !x.err && x.j.workingFolder === path.join(BASE, 'empty') && x.j.state === 'empty' && /is empty/.test(x.j.whatToDo) && /\.pbip/.test(x.j.whatToDo), () => `${tool} on an empty working folder must be a normal result with what to do: ${x.err ? 'error: ' : ''}${x.t.slice(0, 200)}`);
+      // round 17 (G-02): answers give paths relative to the working folder, so the check joins them to it
+      chk(() => !x.err && x.j.workingFolder === 'empty' && x.j.state === 'empty' && /is empty/.test(x.j.whatToDo) && /\.pbip/.test(x.j.whatToDo), () => `${tool} on an empty working folder must be a normal result with what to do: ${x.err ? 'error: ' : ''}${x.t.slice(0, 200)}`);
     }
     chk(() => fs.readdirSync(path.join(BASE, 'empty')).length === 0, () => `an empty working folder was written to: ${fs.readdirSync(path.join(BASE, 'empty'))}`);
     await a.close();
@@ -1617,7 +1628,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const before = filesIn('bim-project');
   const g = await add({ path: 'bim-project', firstYear: 2018, lastYear: 2030, country: 'uae', relateTo: ['Sales[Date]'], asOf: '2026-10-04' });
   const file = g.err ? '' : g.j.scriptFile, sc = file && fs.existsSync(file) ? fs.readFileSync(file, 'utf8') : '';
-  check(!g.err && path.basename(file) === 'Health Test - add Gulf calendar.tmdl' && path.dirname(file) === path.join(ROOT, 'bim-project'), `add_gulf_calendar file: ${short(g)}`);
+  // round 17 (G-02): answers give paths relative to the working folder, so the check joins them to it
+  check(!g.err && path.basename(file) === 'Health Test - add Gulf calendar.tmdl' && path.dirname(path.join(ROOT, file)) === path.join(ROOT, 'bim-project'), `add_gulf_calendar file: ${short(g)}`);
   check((sc.match(/^createOrReplace$/gm) || []).length === 1 && (sc.match(/^\ttable /gm) || []).length === 1 && /^\ttable 'Gulf Calendar'$/m.test(sc), `add_gulf_calendar script: one createOrReplace and one table 'Gulf Calendar': ${sc.slice(0, 200)}`);
   check((sc.match(/^\trelationship /gm) || []).length === 1 && /^\t\tfromColumn: Sales\.Date$/m.test(sc) && /^\t\ttoColumn: 'Gulf Calendar'\.Date$/m.test(sc), `add_gulf_calendar relationship: ${(sc.match(/\trelationship[\s\S]*/) || [''])[0]}`);
   check((sc.match(/\{ "\d{4}-\d{2}-\d{2}", \d+, \d+ \}/g) || []).length === 162, `add_gulf_calendar: Hijri month starts ${(sc.match(/\{ "\d{4}-\d{2}-\d{2}", \d+, \d+ \}/g) || []).length} (want 162)`);
@@ -3592,6 +3604,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 
 // ---------- round 17: the outside review's fixes (6 Oct) ----------
 {
+  const os = (await import('node:os')).default;
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
@@ -3609,6 +3622,29 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => r.err && /report/i.test(r.t) && /together/.test(r.t) && /128 MB/.test(r.t),
       () => `report files above 128 MB together must be refused before reading: ${r.err ? r.t.slice(0, 300) : 'not refused'}`);
     fs.rmSync(path.join(ROOT, 'r17-big', 'Big.Report'), { recursive: true, force: true });
+  }
+
+  // 2. G-02: no answer or error sends an absolute local path: a working folder under a made-up home
+  // (<tmp>/Users/TestUser/work), every tool's answer and its errors
+  {
+    const home = fs.mkdtempSync(path.join(os.tmpdir(), 'r17home-')), userHome = path.join(home, 'Users', 'TestUser'), wroot = path.join(userHome, 'work');
+    fs.mkdirSync(path.join(wroot, 'Shop', 'Shop.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(wroot, 'Shop', 'Shop.SemanticModel', 'model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [Object.assign({}, sales, { measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )' }] })] } }));
+    const c2 = new Client({ name: 'r17', version: '1' });
+    await c2.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: { ...process.env, DATAARCUS_ROOT: wroot, HOME: userHome, USERPROFILE: userHome }, stderr: 'ignore' }));
+    const call2 = async (name, args) => { try { const r = await c2.callTool({ name, arguments: args }); return { name, err: !!r.isError, t: r.content[0].text }; } catch (e) { return { name, err: true, t: String(e && e.message || e) }; } };
+    const out = [];
+    out.push(await call2('read_model', { path: 'Shop' }), await call2('read_model', { path: 'Nope' }), await call2('read_model', { path: '../outside' }), await call2('read_model', { path: wroot + '/../x' }));
+    out.push(await call2('suggest_fields', { path: 'Shop', kpis: 2 }), await call2('check_model_health', { path: 'Shop' }), await call2('check_model_health', { path: 'Shop/Shop.SemanticModel' }));
+    const th = await call2('generate_theme', { name: 'R17' }); out.push(th);
+    const pl = await call2('plan_layout', { layout: 'exec', kpis: 2, path: 'Shop' }); out.push(pl);
+    out.push(await call2('create_report', { path: 'Shop', name: 'R17', design: JSON.parse(pl.t).design, secondPage: false }));
+    out.push(await call2('create_report', { path: 'Shop/Shop.SemanticModel', name: 'R17b', design: JSON.parse(pl.t).design }));
+    out.push(await call2('add_gulf_calendar', { path: 'Shop', firstYear: 2025, lastYear: 2026, asOf: '2026-10-06' }), await call2('add_gulf_calendar', { path: 'Shop', firstYear: 2025 }));
+    await c2.close();
+    const leaks = out.filter((o) => [wroot, userHome, home, 'TestUser', wroot.replace(/\\/g, '\\\\')].some((x) => o.t.includes(x))).map((o) => o.name + ': ' + o.t.slice(0, 160));
+    chk(() => out.length === 13 && !leaks.length && out.some((o) => o.err) && out.some((o) => /"R17\.pbip"|R17\.pbip/.test(o.t)),
+      () => `no answer may hold the absolute working folder or the home folder: ${JSON.stringify(leaks).slice(0, 900)}`);
   }
 }
 
