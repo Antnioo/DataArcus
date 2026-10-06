@@ -694,7 +694,7 @@
       const origin = {};
       const container = (spec) => {
         const o0 = spec.parent ? origin[spec.parent] : { x: 0, y: 0 };
-        const v = { $schema: SCHEMA.visual, name: spec.name || rnd(), position: { x: spec.x - o0.x, y: spec.y - o0.y, z: spec.z, height: spec.h, width: spec.w, tabOrder: spec.z } };
+        const v = { $schema: SCHEMA.visual, name: spec.name || rnd(), position: Object.assign({ x: spec.x - o0.x, y: spec.y - o0.y, z: spec.z, height: spec.h, width: spec.w }, spec.kind === 'nodata' ? {} : { tabOrder: spec.z }) };   // (a "No data" message card is no tab stop: seen in Desktop, 6-7 Oct, a card with a tabOrder was an unnamed stop before its chart)
         if (spec.group) origin[v.name] = { x: spec.x, y: spec.y };
         if (spec.group) v.visualGroup = spec.group; else v.visual = spec.visual;
         if (spec.parent) v.parentGroupName = spec.parent;

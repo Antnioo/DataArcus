@@ -3897,12 +3897,15 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
         // (night sitting 6-7 Oct, seen in Desktop: the card's inner outline drew a grey box inside every chart, with and
         // without data, the message sat at the left in Arabic too, and a chart with its border and shadow switched off
         // drew about 5 nearer its box's edge than the same chart without the option)
+        // (the same night: a message card with a tabOrder was an unnamed Tab stop before its chart; without one it is none)
+        noTab: pairs.filter((p) => p.m && !('tabOrder' in p.m.position) && p.c.position.tabOrder != null).length,
         plain: pairs.filter((p) => p.m && JSON.stringify((p.m.visual.objects.outline || [])[0] || '') === JSON.stringify({ properties: { show: { expr: { Literal: { Value: 'false' } } } }, selector: { id: 'default' } }) && JSON.stringify(p.m.visual.objects.value[0].properties.horizontalAlignment || '').includes("'center'") && JSON.stringify((p.m.visual.visualContainerObjects || {}).dropShadow || '').includes('false')).length,
         boxes: charts.map((c) => { const o = Object.assign({}, c.visual.visualContainerObjects || {}); delete o.background; delete o.visualTooltip;   /* the tooltip page's id is each report's own */ return ty(c) + ' ' + pos(c).x + ',' + pos(c).y + ' ' + JSON.stringify(o); }).sort() }; };
     const en = await one('en', true), ar = await one('ar', true), off = await one('en', false);
     chk(() => en.charts >= 3 && en.paired === en.charts && en.seeThrough === en.charts && en.tipOff === en.charts && en.ext && en.en && en.phone === 0, () => `English: every chart and table has its "No data" card below it: ${JSON.stringify(en)}`);
     chk(() => ar.paired === ar.charts && ar.charts >= 3 && ar.ar, () => `Arabic: the message in Arabic: ${JSON.stringify(ar)}`);
     chk(() => off.charts >= 3 && off.paired === 0, () => `without noDataMessage: true no message cards: ${JSON.stringify(off)}`);
+    chk(() => en.noTab === en.charts && ar.noTab === ar.charts, () => `no message card is a Tab stop (no tabOrder), and every chart and table keeps its own: ${en.noTab} of ${en.charts}, Arabic ${ar.noTab} of ${ar.charts}`);
     chk(() => en.plain === en.charts && ar.plain === ar.charts, () => `each message card: no inner outline (the default selector), its text centred, no shadow of its own: ${en.plain} of ${en.charts}, Arabic ${ar.plain} of ${ar.charts}`);
     chk(() => JSON.stringify(en.boxes) === JSON.stringify(off.boxes), () => `a chart above a message card differs from the same chart without the option only by its background (its border, shadow and padding as the theme's): ${JSON.stringify(en.boxes).slice(0, 500)} against ${JSON.stringify(off.boxes).slice(0, 500)}`);
   }

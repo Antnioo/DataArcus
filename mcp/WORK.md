@@ -30,7 +30,7 @@ scope) and G (research: `mcp/research/POWERBI-HIDDEN-CAPABILITIES.md`). Reports 
 - **The golden scores:** round 19's table below (about 9.3); the target is 9.5 in both languages.
 
 ### Night sitting, where I am (kept current; times UTC)
-**22:10: blocks A, B, C and G done. Tests: `npm test` 564 -> **583 of 583**, golden PASS (11 tasks; no golden expectation changed); website suites design-engine 598, theme-generator 893, theme-generator-lab 893, layout 512, layout-lab 512, pbip 73, svg-kpi 846: PASS; `check:min`, `test-site-config`, `test-analytics-events` PASS; `?v=` pbip-export 20261007a, theme-generator 20261007a, design-engine 20261007a. Red first: 566 checks 2 failing, then 580 checks 7 failing (all tonight's). Four older checks changed, each with its cause beside it: plan_layout's parity with the website (a 4:3 page's table row is the plan's on purpose), the one-card report (a quarter of the row, it was the whole row), and the two narrow-table checks (their design keeps the half-width table with `layout.wideTable: false`).**
+**22:50: blocks A, B, C, D and G done. Tests: `npm test` 564 -> **584 of 584** (583 before the Tab fix), golden PASS (11 tasks; no golden expectation changed); website suites design-engine 598, theme-generator 893, theme-generator-lab 893, layout 512, layout-lab 512, pbip 73, svg-kpi 846: PASS; `check:min`, `test-site-config`, `test-analytics-events` PASS; `?v=` pbip-export 20261007b, theme-generator 20261007b, design-engine 20261007a. Red first: 566 checks 2 failing, then 580 checks 7 failing (all tonight's). Four older checks changed, each with its cause beside it: plan_layout's parity with the website (a 4:3 page's table row is the plan's on purpose), the one-card report (a quarter of the row, it was the whole row), and the two narrow-table checks (their design keeps the half-width table with `layout.wideTable: false`).**
 Records with every measured number and crop: `scripts/tests/DESKTOP-TESTS.md`, "2026-10-06 night".
 
 #### Block A, the Desktop proof
@@ -42,12 +42,9 @@ Records with every measured number and crop: `scripts/tests/DESKTOP-TESTS.md`, "
 | Round 19 item 10, the 420 x 220 table | PASS (9pt, seven days and the total) |
 | Round 19 item 2, the day chart as bars | **FAIL as built, fixed tonight**: it took the bar chart's category (Quarter twice, no chart by day), and at 1280 x 720 its seventh bar was behind a scrollbar |
 | Task 5's single-focus page | the layout PASS; the card values touch the card's bottom and "Your logo" is cut (for the owner) |
-| "No data" | as built **FAIL** (a grey box in every chart, charts shifted); fixed tonight and proven again: empty, with data, clicks, tooltips, Arabic, phone PASS; **Tab FAILS** (each message card is an unnamed tab stop) |
+| "No data" | as built **FAIL** (a grey box in every chart, charts shifted; each message card an unnamed Tab stop). Fixed tonight in two steps, each proven again in Desktop: **every part now PASSES** (empty, with data, clicks, tooltips, Tab, Arabic, phone by the files) |
 
-**The "No data" default: still OFF (opt-in), by the owner's rule.** One part fails: a keyboard or screen-reader user
-meets an unnamed stop before every chart, and how to take a visual out of Desktop's tab order was not found (a card
-without `tabOrder` was still a stop). With data the page now matches the page without the option to the eye (at most
-19 of 255 on the panels' edges), not pixel for pixel.
+**The "No data" default: still OFF tonight, and why.** The owner's rule: on by default once every part passes. Every part passed at 22:36 UTC, after the second fix (a message card is written without `tabOrder`: measured in Desktop, Tab then stops where the plain page stops). **The switch itself was not made, for time and for what it touches, and is the next sitting's first job:** it puts four more visuals on every page of every report, so (1) 32 places of `mcp/test.mjs` and the shared `scripts/tests/report-check.mjs` count or read card visuals and must tell a message card from a KPI card (round 19 counted about 20 failing checks); (2) `golden-expected.json`'s visual counts change for every task, each needing its cause; (3) `feat/check-report-2`'s rules will meet the message cards in our own reports (not tried); (4) all 20 golden reports must be opened again, and a full `npm test` takes 11 to 30 minutes here. With data the page matches the page without the option to the eye (at most 19 of 255 on the panels' edges), not pixel for pixel.
 
 #### Block B, the golden scores (10 less 1 per kind of visible problem)
 | Task | Round 13 EN / AR | As built tonight | After tonight's fixes |
@@ -69,8 +66,9 @@ in Arabic three charts with one title), task 10 (no rows), task 6 English (a hor
 quotes), not the date table. Fixed in the test model: 215.4%.
 
 #### Block C, the fixes (tests first: red run 580 checks, 7 failing, all tonight's; then the code)
-1. **No data** (`pbip-export.js`): the message card has no inner outline, its text centred, no shadow of its own; the
-   chart above keeps the theme's border and shadow and only its background is off. Default unchanged (off).
+1. **No data** (`pbip-export.js`): the message card has no inner outline, its text centred, no shadow of its own, and
+   no `tabOrder` (it is no Tab stop); the chart above keeps the theme's border and shadow and only its background is
+   off. Default unchanged (off): see above.
 2. **One KPI card of a row planned for more takes a quarter of the row at the reading start** (`design-engine.js`,
    the owner's 2a). Two or three cards of four still share the row; a row planned for one card keeps it across.
    Seen in Desktop on task 8, English (left) and Arabic (right), both pages.
@@ -122,11 +120,7 @@ column. No preview feature was switched on. Not done: Desktop's preview-features
 keyboard shortcuts, the TMDL features (field parameters, calculation groups, visual calculations).
 
 #### Night sitting, for the owner (options and a recommendation each)
-1. **"No data" by default.** (a) Keep it opt-in until the tab stop is solved; (b) on by default as it is, with the
-   unnamed tab stops; (c) drop the message cards and use the card's own blank text on KPI cards (research, top 5,
-   item 1), leaving charts and tables empty as Power BI draws them. **Recommended: (a) for charts and tables, and (c)'s
-   blank text on the KPI cards in the next round** (one property, no extra visual; needs its own Desktop proof in
-   Arabic).
+1. **"No data" by default.** Every part now passes in Desktop, so by your rule it goes on; the switch was not made tonight (above). (a) The next sitting makes it, with the checks, the golden counts and the 20 reports opened again; (b) the same, and the KPI cards get the card's own blank text (research, top 5, item 1: "No data" instead of "--", one property) so cards and charts say the same; (c) keep it opt-in. **Recommended: (b)**, the cards' text proven in Arabic at a smaller size first (at the value's size its dots touch the card's edge).
 2. **The website's 4:3 layouts.** (a) Leave equal shares on the website (as now); (b) the website follows the MCP
    (the table three fifths), with its layout fixtures recorded again. **Recommended: (b) next round**, so both give
    the same page.
@@ -152,7 +146,7 @@ keyboard shortcuts, the TMDL features (field parameters, calculation groups, vis
 | English day, month and KPI names in Arabic reports on the sample | told in the notes; the sample has no Arabic columns |
 | Task 8's "Total by Note" is one bar; its customer table scrolls | the test model's own columns |
 | The Gulf model's bar chart by Store has number-like names | the test model's |
-| The message cards of "No data" are tab stops | for the owner, 1 |
+| The message cards of "No data" were tab stops | fixed tonight (no `tabOrder`), proven in Desktop |
 | A full `npm test` takes 13 to 30 minutes on this laptop and fails with "Request timed out" when Desktop and the browser suites run beside it | open: a way to run one block of `test.mjs` would save most of a sitting |
 | Round 18 and 19's own lists | the matrix's measures (no change needed, round 19 item 9), the script paths (done, item 8), the table's rows (done, item 10), the Arabic ☰ (done, S1), the tall ring (done, S2), slanted day names (done: Day Short, and bars since tonight) |
 ## Round 17, the outside review's fixes (2026-10-06, 13:19-14:19 UTC, cloud builder; branch `fix/round-17` from `fix/round-16` `26ba7ef`; item 6 on `feat/check-report-2`; not merged)

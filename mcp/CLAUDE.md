@@ -164,6 +164,8 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
     is not plain Latin letters.
   - A visual whose border is switched off in `visual.json` draws about 5 nearer its box's edges than one that leaves
     the border to a solid theme: to let something below show through, switch off only the background.
+  - A visual written without `tabOrder` is not a Tab stop (Desktop's Tab from the chart before it goes where the page
+    without that visual goes); with one, a card under a chart was an unnamed stop.
   - A bar chart at the theme's 10pt needs 22.2 a row, 45 above the first row and 8 under the last, and 38 more for
     its value axis (1280 x 720; scaled with the page).
   - The new card's `value.showBlankAs` (default selector) replaces "--" with a text of ours; `subTitle`, `divider`,
