@@ -2016,7 +2016,61 @@ nothing, chart 2 literal ends, chart 3 `ThemeDataColor` ends (ColorId 2, Percent
   the right, and keeps its gradient; the two tooltip pages' bar charts grow from the right with their values at the
   bars' left ends. The line chart's first label reads "Dece…" (the side effect above).
 
+### Item 2, an SVG picture in a KPI card that blends
+"SC EN light 720", "SC EN dark 1080", "SC AR light 1080", "SC AR dark 720" (`r13-svgcards.mjs`: three cards with a
+64 x 64 ring, a 120 x 40 sparkline and a 48 x 48 arrow, the designs naming no colour), built before the fix and
+again after it ("... fix": the same designs with the theme's colour names; "... def": no colours at all).
+| Looked at | Before the fix (`sc-*-cards.png`) | After (`ba-sc-en-light-720.png`, `ba-sc-ar-dark-720.png`: before above, after below) |
+|---|---|---|
+| The picture's own background, an edge | transparent, no box, no edge drawn by Desktop (as expected) | the same |
+| Colours | the compiler's own, whatever the theme: the ring's track `#1e293b` (a heavy near-black ring on the white Corporate card; gone on Midnight's `#15182a`), its arc and the sparkline `#00d4ff`, the arrow `#22c55e`, a text without a colour black (unreadable on a dark card) | the theme's: the track a quiet tint (the text colour mixed 85% into the card), the arc and the sparkline the accent, the text the text colour, the arrow the theme's "good" green; the same designs on Midnight are light on dark |
+| Size and place | a 64 x 64 ring on the 96-high cards of a 1280 x 720 page was sized by the card's width alone (18 percent, 54.6 high) and **its top was cut by the card**, in English and Arabic; at 1920 x 1080 (144-high cards) it was whole | the picture is capped by the room under the title (15 percent on that page: about 46 high): **whole on every card**; at the far end from the value, on the value's line |
+| Sharpness | sharp at both page sizes (a vector) | the same |
+- A text bound with a format the compiler does not know ("pct0", my design's slip) shows 0; the formats are n0, n1,
+  n2, k1, m1, auto, p0, p1.
+- On a six-card row every picture is the same size (round 12's "one percent for the row"): 33.6 to 34.1 at
+  1280 x 720 ("R12 CI EN 720"), 50.3 to 52.1 at 1920 x 1080 in Arabic ("R12 CI AR 1080"), read with `yellow.ps1`.
+
+### Item 4, round 12's list for the laptop (merged at `76a98b6`), each item in Desktop
+Built with the merged code: the 20 golden reports (`r13-golden.mjs`, `13-r13\golden`), and `r13-r12proof.mjs`'s
+reports ("R12 ..."; `13-r13\b2` is the sample with made-up measures of several formats). "Before" is round 11's
+capture of the same report (`desk-r11\`); pairs are `desk-r13\ba-<report>.png` (before left or above).
+| # | Item | Seen in Desktop | Result |
+|---|---|---|---|
+| 1 | #24 long Arabic titles | "G6 Long AR": chart and table titles whole on two lines, or shortened at their end; the slicer headers shortened. **But the "…" was drawn at the right end of the line (the reading start)**, so "...والمرتجعات حسب اسم الفرع" looked cut at its beginning | **FAIL, fixed here**: a right-to-left mark after the "…" (tried by hand first: `ba-g6-ar-ellipsis.png`, the "…" then at the left) |
+| 2 | #12 the Arabic table | numbers right-aligned under their headers; "Sunday" no longer reads into a number (`g4s-ar-table-crop.png`, `ba-g1-ar.png`) | PASS |
+| 3 | #20 the text box | "G3 Ramadan EN/AR" without `text`: no box, the line chart the row's whole width; "R12 text EN" with `text`: the sentence in the box (`r12-text-en-view.png`) | PASS (the sentence is small, 11pt, at the top of a tall panel: design finding) |
+| 4 | #25 a model without measures | "G7 Plain EN": four cards (Count of Order Id, Sum of Amount, Sum of Quantity, Count of Region), three charts and the table; no "Something's wrong" mark; the page is full (`ba-g7-en.png`) | PASS (the model has no rows: the values show "--") |
+| 5 | #1 the phone KPI title | "G1 Exec EN" phone: "Total Sales Last / Ramadan" on two lines, the value whole under it (`g1-en-phone-p1.png`) | PASS |
+| 6 | B1 days in calendar order in a table | Sunday to Saturday in every table of "G1", "G4" (English and Arabic), "Total" in the first column; the helper column does not show, except as a hair-thin light line across the grey rows in the Arabic table | PASS (the thin line: design finding). A Month Name that the model sorts, in a table: not run |
+| 7 | B2 the KPI number rule | "R12 B2 EN 720" (six cards): Margin % **35.4%**, Conversion Rate **12.3%**, Orders **2,191**, Avg Price **231.50**, Total Sales 101.91K (no format in the model: automatic units, as the rule says), Growth vs Last Year 0.05 (my made-up measure does not divide, so the rule does not call it a percent); nothing cut | PASS |
+| 8 | #26 no text measure on a card | "G8 Redesign EN": one card (Total); no "Yes" (`ba-g8-en.png`) | PASS |
+| 9 | #15 the table's title | "Total Sales by Day Name: detail" / ": التفاصيل" | PASS |
+| 10 | #23/#32 the last row | "G4 16x9 EN" and "G4 4x3 AR": seven days and the total, no scrollbar (`ba-g4w-en.png`, `g4s-ar-table-crop.png`) | PASS |
+| 11 | #29 the pictures on the phone | not run | - |
+| 12 | #31 the header's title | the report's name on every report ("G1 Exec EN", "R12 text EN") | PASS |
+| 13 | #30 the Arabic logo placeholder | "شعارك" at the left edge of its slot, level with the title to the eye (`r12-tabs-ar-head.png`); its middle not measured | PASS to the eye |
+| 14 | The Reset button | **the arrow is half its old size and tight against the text, in English too** ("↶Reset filters", `ba-g3-en-reset.png`); in Arabic it sits at the right of the words, as wanted, but as small and as tight (`g1-ar-reset-crop.png`) | **FAIL, fixed here**: `iconSize` three quarters of the button's height and two no-break spaces before the text (measured by hand: `reset-a` to `reset-d-crop.png`; the icon's and the text's margins did nothing); proven on "R12 text EN" |
+| 15 | #22/#21 golden task 3 | no Hijri Year or Is Ramadan slicer; the line by Ramadan Day, 0 to 30 (`ba-g3-en.png`) | PASS |
+| 16 | #16 short months | "Jan" to "Dec", level, on "G1" and "G4" in both languages | PASS |
+| 17 | #9/#7/#8 the six-card rows | "R12 B2 EN 720", "R12 CI EN 720", "R12 CI AR 1080": one value size; each value starts under its title's first letter; six pictures 33.6 to 34.1 (1280 x 720) and 50.3 to 52.1 (1920 x 1080). **In the Arabic row the title "Growth vs Last Year" was cut by Desktop ("Growth vs Last Y…")** | PASS for the three points; **the cut title: FAIL, fixed here** (Tahoma's Latin letters are wider than the Segoe UI table: 6% added, from five titles measured on that row) |
+| 18 | #18 Reset under the last slicer | the rail ends under Reset on every report | PASS (the page under a short rail is empty: design finding, taste) |
+| 19 | #2/#4/#5 the phone tabs | "G1 Exec EN" phone: the tabs as wide as their names from the left, the titles in the text colour, the line under the current tab | PASS (Arabic phone not run) |
+| 20 | #6 a two-row header | "R12 tabs AR" (eight long names, 1920 x 1080, a 72-high title): the names now fit **one** row at 8pt, whole, mirrored, the mark on pages 1 and 5 (`r12-tabs-ar-head.png`); two rows were not produced | not exercised (the tabs are small beside a 72-high title: design finding) |
+| 21 | The header that grows | not run (needs a design with two long page names) | - |
+| 22 | The Gulf calendar's sort-by columns | not run (a keyboard paste into TMDL view) | - |
+| 23 | A narrow table's smaller text | "G4 4x3": the table keeps three of its four fields and the answer names the one left out; "G1": 13pt for 15pt with all four | as the answer says |
+| 24 | One slicer in a slide-in panel | not run (no made-up model with a single text column at hand) | - |
+- **Three FAILs, each fixed on this branch with a test:** the "…" of a shortened Arabic text (1), the Reset
+  button's arrow (14), a Latin title cut in a Tahoma report (17).
+
 ## Lessons
+- **Round 13: a button's `iconSize` is honoured; its icon and text margins did nothing (8L, 20L, 20D).** With
+  `icon.placement` written the arrow is drawn small and tight against the text: write the size, and a gap as two
+  no-break spaces in the text.
+- **Round 13: a "…" after Arabic words is drawn at the reading start of the line unless a right-to-left mark
+  (U+200F) follows it** (a title is a left-to-right paragraph).
+- **Round 13: Latin letters in Tahoma are up to 4% wider than the Segoe UI width table gives.**
 - **Round 13: a categorical axis ignores "Invert axis"; it runs right to left when the chart is sorted by its
   category, Descending. A continuous axis ignores the sort and honours "Invert axis".** Write both.
   `switchAxisPosition` moves a value axis to the right (a bar chart's names with the category axis's).

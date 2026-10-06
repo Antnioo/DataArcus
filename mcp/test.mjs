@@ -2127,7 +2127,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const resets = (vs) => vs.filter((v) => type(v) === 'actionButton' && L(linkOf(v).type) === "'Bookmark'" && !/^[✕☰]/.test(S(lookOf(v, 'text').text)));
     const panelAr = site('ar', (d) => { d.layout = Object.assign({}, d.layout, { filters: true }); }, { panel: true }).vs;
     const arAll = resets(arV).concat(resets(siteAr), resets(panelAr));
-    chk(() => resets(arV).length >= 1 && arAll.every((v) => S(linkOf(v).enabledTooltip) === 'إعادة ضبط الفلاتر' && S(lookOf(v, 'text').text) === 'إعادة ضبط الفلاتر') && resets(enV).every((v) => S(linkOf(v).enabledTooltip) === 'Clear the filters on this page'),
+    // (round 13: the shown text now starts with two no-break spaces, the gap between the arrow and the words that Desktop
+    // needs since round 12 put the arrow beside the text (measured 6 Oct, DESKTOP-TESTS.md round 13); the words are the same)
+    chk(() => resets(arV).length >= 1 && arAll.every((v) => S(linkOf(v).enabledTooltip) === 'إعادة ضبط الفلاتر' && S(lookOf(v, 'text').text).replace(/^\u00a0+/, '') === 'إعادة ضبط الفلاتر') && resets(enV).every((v) => S(linkOf(v).enabledTooltip) === 'Clear the filters on this page'),
       () => `the Arabic Reset's text and tooltip must be "إعادة ضبط الفلاتر": ${JSON.stringify(arAll.map((v) => [S(lookOf(v, 'text').text), S(linkOf(v).enabledTooltip)]))}`);
   }
   // 7. Reset is only as wide as its icon (as wide as the button is high) and its text + 10 (the measured button rule),
@@ -2536,8 +2538,115 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       chk(() => vs.filter((v) => upright(v) || lying(v)).length >= 3 && vs.filter((v) => upright(v) || lying(v)).every(plain), () => `the website's Arabic download must not change: ${JSON.stringify(vs.filter((v) => upright(v) || lying(v)).map((v) => [vt(v), Object.keys(v.visual.objects || {}).join('+')]))}`);
     }
   }
-}
 
+  // ----- SVG pictures on KPI cards that blend into the card (the owner's ask, 6 Oct) -----
+  // Seen in Desktop 2.158 on 6 Oct ("SC EN light 720", "SC EN dark 1080", "SC AR dark 720", "SC AR light 1080";
+  // DESKTOP-TESTS.md, round 13, item 2): the picture's own background is transparent and Desktop draws no edge, but
+  // (1) a design that names no colour was drawn in the compiler's own colours (a ring's track #1e293b: near black on a
+  // white card, gone on a dark one; arcs and sparklines #00d4ff; an arrow #22c55e; text black), whatever the theme;
+  // (2) a 64 x 64 ring on the 96-high cards of a 1280 x 720 page was sized by the card's width only (18 percent: 54.6
+  // wide and high) and its top was cut by the card.
+  {
+    const Svg2 = (await import('node:module')).createRequire(import.meta.url)(path.join(REPO, 'assets/js/svg-kpi-compiler.js'));
+    const pctV = { id: 'p', label: 'Margin', kind: 'measure', measure: 'Sales[Margin %]' };
+    const ring = (extra) => ({ w: 64, h: 64, values: [pctV], layers: [Object.assign({ type: 'ring', cx: 32, cy: 32, r: 24, sw: 8, bind: { p: { v: 'p', d0: 0, d1: 1 } } }, extra || {}), { type: 'text', x: 32, y: 37, size: 14, anchor: 'middle', bind: { text: { v: 'p', fmt: 'auto' } } }] });
+    const arrow = { w: 48, h: 48, values: [pctV], layers: [{ type: 'arrow', x: 8, y: 8, size: 32, bind: { dir: { v: 'p' } } }] };
+    const ext = (x) => { const f = path.join(ROOT, P, x.j.report, 'definition', 'reportExtensions.json'); return JSON.parse(fs.readFileSync(f, 'utf8')).entities.flatMap((e) => e.measures); };
+    const hexes = (x, name) => [...new Set((ext(x).find((m) => m.name === name).expression.match(/%23[0-9a-f]{6}/g) || []).map((h) => '#' + h.slice(3)))];
+    const mixT = (a, b, t) => '#' + [1, 3, 5].map((i) => { const p = parseInt(a.slice(i, i + 2), 16), q = parseInt(b.slice(i, i + 2), 16); return Math.round(p + (q - p) * t).toString(16).padStart(2, '0'); }).join('');
+    for (const preset of ['Corporate', 'Midnight']) {
+      const th = await ask('generate_theme', { name: 'R13 svg ' + preset, preset, folder: 'r13-themes' }), ui = th.j.design.ui;
+      const design = (await ask('plan_layout', { design: th.j.design, layout: 'exec', kpis: 3, filters: 'end', page: '1280x720' })).j.design;
+      // 11. a design that names no colour takes the theme's: the ring's track a quiet tint of the text on the card, its arc the accent, the text the text colour, the arrow the theme's good, bad and neutral
+      const c = await ask('create_report', { path: P, name: 'R13 SVG ' + preset, design, secondPage: false, svgCards: [{ card: 1, label: 'Ring ' + preset, design: ring() }, { card: 2, label: 'Arrow ' + preset, design: arrow }] });
+      chk(() => { const r = hexes(c, 'Ring ' + preset), a = hexes(c, 'Arrow ' + preset), track = mixT(ui.text.toLowerCase(), ui.card.toLowerCase(), 0.85);
+          return r.length === 3 && r.includes(track) && r.includes(ui.accent.toLowerCase()) && r.includes(ui.text.toLowerCase()) && a.length === 3 && [ui.good, ui.bad, ui.neutral].every((h) => a.includes(h.toLowerCase())) && !/1e293b|00d4ff|22c55e|ef4444|94a3b8/.test(r.concat(a).join()); },
+        () => `${preset}: a design without colours must be drawn in the theme's (track ${mixT(ui.text.toLowerCase(), ui.card.toLowerCase(), 0.85)}, accent ${ui.accent}, text ${ui.text}; good ${ui.good}, bad ${ui.bad}, neutral ${ui.neutral}): ${c.err ? short(c) : JSON.stringify([hexes(c, 'Ring ' + preset), hexes(c, 'Arrow ' + preset)])}`);
+      // 12. the picture never stands taller than the room under the card's title (what is written for the card: its height less the container's padding, the title's line, the value's padding and the 2 between them)
+      chk(() => { const cards = read(c).vis.filter((v) => v.visual.visualType === 'cardVisual' && !v.tooltipPage && (v.visual.objects || {}).image); const Nn = (e) => parseFloat(e.expr.Literal.Value);
+          return cards.length === 2 && cards.every((v) => { const pad = v.visual.visualContainerObjects.padding[0].properties, t = v.visual.visualContainerObjects.title[0].properties, lines = t.titleWrap ? 2 : 1;
+            const room = v.position.height - Nn(pad.top) - Nn(pad.bottom) - Math.ceil(Nn(t.fontSize) * 1.5) * lines - 2 * Nn(v.visual.objects.padding[0].properties.paddingUniform) - 2;
+            const area = Nn(v.visual.objects.image[0].properties.imageAreaSize), drawn = area / 100 * (v.position.width - 50 * 720 / 1080);   // a square design: as high as wide
+            return area >= 5 && drawn <= room; }); },
+        () => `${preset}: a square picture must fit the height under the title: ${c.err ? short(c) : JSON.stringify(read(c).vis.filter((v) => v.visual.visualType === 'cardVisual' && (v.visual.objects || {}).image).map((v) => [v.position, v.visual.objects.image[0].properties.imageAreaSize, v.visual.visualContainerObjects.padding[0].properties, v.visual.visualContainerObjects.title[0].properties.fontSize]))}`);
+    }
+    // 13. colours by the theme's names, and a colour given as #rrggbb kept; a name the theme has not is refused and nothing is written
+    {
+      const th = await ask('generate_theme', { name: 'R13 svg names', preset: 'Corporate', folder: 'r13-themes' }), ui = th.j.design.ui, data = th.j.design.data;
+      const design = (await ask('plan_layout', { design: th.j.design, layout: 'exec', kpis: 3, filters: 'end' })).j.design;
+      const n = await ask('create_report', { path: P, name: 'R13 SVG names', design, secondPage: false, svgCards: [{ card: 1, label: 'Named', design: ring({ track: 'theme:muted', fill: 'theme:data2' }) }, { card: 2, label: 'Fixed', design: ring({ track: '#ABCDEF', fill: '#123456' }) }] });
+      chk(() => { const a = hexes(n, 'Named'), b = hexes(n, 'Fixed'); return a.includes(mixT(ui.text.toLowerCase(), ui.card.toLowerCase(), 0.4)) && a.includes(data[1].toLowerCase()) && b.includes('#abcdef') && b.includes('#123456') && !b.includes(ui.accent.toLowerCase()); },
+        () => `"theme:muted" and "theme:data2" must become the theme's colours, and #rrggbb stay: ${n.err ? short(n) : JSON.stringify([hexes(n, 'Named'), hexes(n, 'Fixed')])}`);
+      const before = fs.readdirSync(path.join(ROOT, P)).length;
+      const bad = await ask('create_report', { path: P, name: 'R13 SVG bad name', design, secondPage: false, svgCards: [{ card: 1, label: 'Bad', design: ring({ fill: 'theme:pink' }) }] });
+      chk(() => bad.err && /theme:pink/.test(bad.t) && /theme:accent/.test(bad.t) && /Nothing was written|nothing was written/.test(bad.t) && fs.readdirSync(path.join(ROOT, P)).length === before, () => `a colour name the theme has not must refuse the call and name the names: ${short(bad)}`);
+      // 14. svgColumns take the theme the same way (one rule for both)
+      const t = await ask('create_report', { path: P, name: 'R13 SVG column', design, secondPage: false, fields: { table: ['Sales[Region]', 'Sales[Total Sales]'] }, svgColumns: [{ label: 'Ring col', design: ring() }] });
+      chk(() => hexes(t, 'Ring col').includes(ui.accent.toLowerCase()) && !hexes(t, 'Ring col').includes('#00d4ff'), () => `an SVG column without colours must take the theme's too: ${t.err ? short(t) : JSON.stringify(hexes(t, 'Ring col'))}`);
+    }
+    // 15. the designer's own compile (no theme given) is unchanged: its built-in colours
+    chk(() => { const d = Svg2.toMeasure(ring()).dax; return /%231e293b/.test(d) && /%2300d4ff/.test(d) && Svg2.themed(ring(), null).design.layers[0].track === undefined; }, () => 'without a palette the compiler must keep its built-in colours (the website\'s designer)');
+  }
+
+  // ----- the Reset button's arrow (a FAIL of round 12's item 14 in Desktop, 6 Oct) -----
+  // Seen in Desktop 2.158 ("G3 Ramadan EN", "G1 Exec AR" on the merged code; DESKTOP-TESTS.md, round 13, item 4): with
+  // icon.placement written (round 12, so the Arabic arrow sits beside its text) Desktop draws the icon at its own
+  // small default size and tight against the text, in English too ("↶Reset filters", the arrow half its old size).
+  // Measured by hand on that button (40 high): iconSize is honoured (30 drew the arrow as before round 12); the
+  // icon's and the text's margins did nothing (8L, 20L, 20D tried); two no-break spaces before the text give the gap
+  // the old button had. So: iconSize = three quarters of the button's height, and the text starts with two no-break
+  // spaces (the button is as wide as that text needs; the tooltip and the bookmark keep the plain words).
+  {
+    const Pb3 = (await import('node:module')).createRequire(import.meta.url)(path.join(REPO, 'assets/js/pbip-export.js'));
+    const Nn = (e) => parseFloat(e.expr.Literal.Value), Sx = (e) => String(e.expr.Literal.Value).slice(1, -1);
+    const bad = []; let n = 0;
+    for (const [lang, filters] of [['en', 'end'], ['ar', 'end'], ['en', 'top'], ['ar', 'top']]) {
+      const x = await ask('create_report', { path: P, name: `R13 Reset ${lang} ${filters}`, lang, design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters, lang })).j.design });
+      read(x).vis.filter((v) => v.visual.visualType === 'actionButton' && /'reset'/.test(JSON.stringify((v.visual.objects || {}).icon || ''))).forEach((v) => { n++;
+        const ic = Object.assign({}, ...v.visual.objects.icon.map((e) => e.properties)), tx = Object.assign({}, ...v.visual.objects.text.map((e) => e.properties)), link = v.visual.visualContainerObjects.visualLink[0].properties;
+        const text = Sx(tx.text), need = Math.ceil(Pb3.textWidth(text, Nn(tx.fontSize), false, Sx(tx.fontFamily)) + 10 + v.position.height);
+        if (!ic.iconSize || Nn(ic.iconSize) !== Math.round(0.75 * v.position.height)) bad.push(`${lang} ${filters}: iconSize ${ic.iconSize && Nn(ic.iconSize)} on a ${v.position.height}-high button`);
+        if (!/^\u00a0\u00a0\S/.test(text)) bad.push(`${lang} ${filters}: text ${JSON.stringify(text)} does not start with two no-break spaces`);
+        if (v.position.width < need - 1) bad.push(`${lang} ${filters}: ${v.position.width} wide, the text with its gap needs ${need}`);
+        if (/\u00a0/.test(Sx(link.enabledTooltip))) bad.push(`${lang} ${filters}: the tooltip carries the gap`); });
+    }
+    chk(() => n >= 4 && bad.length === 0, () => `Reset's arrow must be three quarters of the button's height with a gap before the text (${n} buttons): ${bad.slice(0, 6).join(' | ')}`);
+  }
+
+  // ----- a shortened Arabic text ends with its "…" at the line's end (a FAIL of round 12's item 1 in Desktop, 6 Oct) -----
+  // Seen in Desktop 2.158 ("G6 Long AR" on the merged code, `ba-g6-ar-ellipsis.png`): a title shortened to
+  // "...والمرتجعات حسب اسم الفرع" showed its "…" at the right end of the line, the reading start, so it looked cut at
+  // its beginning; the five such texts of that report had no direction mark. With U+200F written after the "…" (by
+  // hand, reloaded) Desktop drew it at the left, the line's end, in the chart's title and in the slicer's header.
+  {
+    fs.mkdirSync(path.join(ROOT, 'r13-long/R13 Long.SemanticModel'), { recursive: true });
+    const M1 = 'إجمالي صافي المبيعات بعد الخصومات والمرتجعات والضرائب المستحقة', C1 = 'اسم الفرع التجاري الرئيسي في المنطقة الشرقية والغربية', C2 = 'قناة البيع المستخدمة في إتمام العملية التجارية النهائية';
+    fs.writeFileSync(path.join(ROOT, 'r13-long/R13 Long.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'),
+      columns: [col('Amount', 'double'), col(C1, 'string'), col(C2, 'string'), col('Region with a very long English name that cannot fit', 'string')],
+      measures: [{ name: M1, expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Total net sales after discounts, returns and all the taxes that are due', expression: 'SUM ( Sales[Amount] ) + 1', formatString: '#,0' }] }] } }));
+    const texts = (x) => { const dir = path.join(ROOT, 'r13-long', x.j.report, 'definition', 'pages'); const out = [];
+      const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const p = path.join(d, e.name); if (e.isDirectory()) walk(p); else if (e.name === 'visual.json') (fs.readFileSync(p, 'utf8').match(/'[^'\n]*\u2026[^'\n]*'/g) || []).forEach((s) => out.push(s.slice(1, -1))); }); walk(dir); return out; };
+    const ar = await ask('create_report', { path: 'r13-long', name: 'R13 Long ar', lang: 'ar', design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', page: '1280x720', lang: 'ar' })).j.design });
+    const en = await ask('create_report', { path: 'r13-long', name: 'R13 Long en', design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', page: '1280x720' })).j.design, fields: { kpis: ['Sales[Total net sales after discounts, returns and all the taxes that are due]'], measure: 'Sales[Total net sales after discounts, returns and all the taxes that are due]', category: 'Sales[Region with a very long English name that cannot fit]', category2: 'Sales[Region with a very long English name that cannot fit]' } });
+    const isAr = (s) => /[\u0600-\u06FF]/.test(s);
+    chk(() => { const a = texts(ar).filter(isAr); return a.length >= 2 && a.every((s) => /\u2026\u200f$/.test(s)); }, () => `every shortened Arabic text must end with "…" and a right-to-left mark: ${ar.err ? short(ar) : JSON.stringify(texts(ar).map((s) => s.slice(-12).split('').map((ch) => ch.charCodeAt(0).toString(16)).slice(-3)))}`);
+    chk(() => { const e = texts(en).filter((s) => !isAr(s)); return e.length >= 1 && e.every((s) => /\u2026$/.test(s) && !/\u200f/.test(s)); }, () => `a shortened Latin text must end with "…" alone: ${en.err ? short(en) : JSON.stringify(texts(en).slice(0, 4))}`);
+  }
+
+  // ----- Latin text in Tahoma is wider than in Segoe UI (seen in Desktop, 6 Oct: a KPI title cut in an Arabic report) -----
+  // "R12 CI AR 1080" (six cards 244 wide, Tahoma, titles bold at 17pt): Desktop cut "Growth vs Last Y…" although the
+  // writer had worked out 219.9 for it in the 220 the card has. Ink measured on the same row, in page units: "Conversion
+  // Rate" 185.2 (worked out 183.0), "Total Sales" 123.7 (119.4), "Margin %" 110.9 (108.2), "Avg Price" 105.8 (104.8),
+  // "Orders" 75.1 (75.8): the letter widths are Segoe UI's, and Tahoma's are up to 3.6% over the result. So Latin
+  // text in Tahoma counts 6% more; Segoe UI is unchanged.
+  {
+    const Pb4 = (await import('node:module')).createRequire(import.meta.url)(path.join(REPO, 'assets/js/pbip-export.js'));
+    const ink = { 'Conversion Rate': 185.2, 'Total Sales': 123.7, 'Margin %': 110.9, 'Avg Price': 105.8, Orders: 75.1 };
+    chk(() => Object.entries(ink).every(([s, w]) => Pb4.textWidth(s, 17, true, 'Tahoma') >= w + 2) && Pb4.textWidth('Growth vs Last Year', 17, true, 'Tahoma') > 220
+        && Math.abs(Pb4.textWidth('Total Sales', 17, true, 'Segoe UI') - 119.4) < 0.1 && Pb4.textWidth('إجمالي', 17, true, 'Tahoma') === Pb4.textWidth('إجمالي', 17, true, 'Segoe UI'),
+      () => `Tahoma's Latin text must be worked out at least 2 over its measured ink, and Segoe UI stay: ${JSON.stringify(Object.keys(ink).map((s) => [s, +Pb4.textWidth(s, 17, true, 'Tahoma').toFixed(1), ink[s]]))} growth ${Pb4.textWidth('Growth vs Last Year', 17, true, 'Tahoma').toFixed(1)} segoe ${Pb4.textWidth('Total Sales', 17, true, 'Segoe UI').toFixed(1)}`);
+  }
+}
 
 // ---------- round 12: every small detail fixed in code (owner's go 6 Oct 01:45; WORK.md "Round 12") ----------
 // The design findings of round 11 (WORK.md "Round 11, design findings", by number) and the eight accepted
@@ -2600,11 +2709,13 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       const lines = t.wrap ? wrapLines(t.text, T, room, font) : [t.text];
       seen.push(`${type(v)} "${t.text}"${t.wrap ? ' (2 lines)' : ''}`);
       if (lines.length > 2 || lines.some((l) => tw(l, T, true, font) > room + 0.5)) bad.push(`${type(v)} "${t.text}" does not fit ${room} at ${T}pt${t.wrap ? ' on two lines' : ''}`);
-      if (!full.startsWith(t.text.replace(/…$/, '').trim())) bad.push(`${type(v)} "${t.text}" is not the start of "${full}"`);
+      // (round 13: after Arabic words the "…" is followed by a right-to-left mark, U+200F, so Desktop draws it at the line's
+      // end and not at its start: seen in Desktop 2.158 on 6 Oct, DESKTOP-TESTS.md round 13; the words before it are unchanged)
+      if (!full.startsWith(t.text.replace(/…\u200f?$/, '').trim())) bad.push(`${type(v)} "${t.text}" is not the start of "${full}"`);
     });
     vs.filter((v) => type(v) === 'slicer').forEach((v) => { const p = v.visual.query.queryState.Values.projections[0], shown = p.displayName || p.nativeQueryRef, size = 10, room = v.at.w - 2 * Math.round(8 * v.pg.h / 1080);
       seen.push(`slicer "${shown}"`); });
-    chk(() => !ar.err && vs.filter((v) => DATA.includes(type(v))).length >= 3 && bad.length === 0 && vs.some((v) => DATA.includes(type(v)) && (titleOf(v).wrap || /…$/.test(titleOf(v).text))),
+    chk(() => !ar.err && vs.filter((v) => DATA.includes(type(v))).length >= 3 && bad.length === 0 && vs.some((v) => DATA.includes(type(v)) && (titleOf(v).wrap || /…‏?$/.test(titleOf(v).text))),
       () => `#24: long titles must wrap or end in "…", never be cut at their start: ${bad.slice(0, 5).join(' | ')} [${seen.join('; ')}] ${short(ar)}`);
   }
   // #24, the slicer header: shortened at its end to the slicer's width (its header size), the full name as alt text
@@ -2613,7 +2724,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const SL = ar.err ? 15 : +themeOf(ar, 'r12-ar').visualStyles.slicer['*'].header[0].textSize;
     vs.forEach((v) => { const p = v.visual.query.queryState.Values.projections[0], ht = v.visual.objects.header[0].properties.text, shown = ht ? S(ht) : p.displayName || p.nativeQueryRef, room = v.at.w - 2 * Math.round(8 * v.pg.h / 1080);
       if (tw(shown, SL, true, 'Tahoma') > room + 0.5) bad.push(`"${shown}" needs ${Math.round(tw(shown, SL, true, 'Tahoma'))} of ${room}`);
-      if (!altOf(v).startsWith(shown.replace(/…$/, '').trim())) bad.push(`"${shown}" is not the start of "${altOf(v)}"`); });
+      if (!altOf(v).startsWith(shown.replace(/…\u200f?$/, '').trim())) bad.push(`"${shown}" is not the start of "${altOf(v)}"`); });
     chk(() => vs.length >= 2 && bad.length === 0, () => `#24: a slicer header must fit its slicer: ${bad.join(' | ')}`);
   }
 

@@ -217,6 +217,8 @@ function resolveSvgColumns(tables, list, opt) {
     // a size, a position, a colour rule or "show if" needs a number: a text column there would be an error in Power BI
     d.layers.forEach((l) => Object.entries((l && l.bind) || {}).forEach(([prop, b]) => { if (prop === 'text' || !b) return;
       [b.v].concat((b.rules || []).map((r) => r.v)).filter((id) => textColumns.has(id)).forEach((id) => problems.push(`${where} ("${label}"): ${textColumns.get(id)} is not a number column; a size, a position or a colour rule needs a number (a number column or a measure). A text column can only be shown as a text (bind.text with fmt "text")`)); }));
+    // the report's theme in the design (round 13): "theme:<name>" colours, and the theme's colours where a layer names none
+    if (opt && opt.palette) { const t = Svg.themed(d, opt.palette); if (t.errors.length) { problems.push(`${where} ("${label}"): ${[...new Set(t.errors)].slice(0, 3).join('; ')}`); return null; } d = t.design; }
     if (opt && opt.mirror && d.mirror !== false) d.mirror = true;
     if (d.layers.some((l) => l && l.type === 'spark')) { const f = find(d.dateCol, 'c'); if (!f) problems.push(`${where} ("${label}"): a sparkline needs dateCol, a date column of the model written as Table[Column]`); else d.dateCol = daxColumn(f.t.name, f.o.name); }
     else delete d.dateCol;
@@ -414,7 +416,7 @@ server.registerTool('create_report', {
     }).strict()).max(8).optional().describe('Page filters, for a request that limits the report to part of the data (for example "Ramadan only": [{ "field": "Calendar[Is Ramadan]", "values": [true] }]. That keeps every Ramadan of the calendar: for "this Ramadan" add a second filter on the calendar\'s Hijri year, { "field": "Calendar[Hijri Year]", "values": [<year>] }, and ask the user which Hijri year, because the tools read no data values). Each keeps only the rows where the column is one of the values, on every page of the report, and shows in Power BI\'s Filters pane, where the user can change or clear it. Only columns of the model and plain values: no measures, no dates, no DAX. A column that is not in the model, or a value of the wrong type, refuses the call and nothing is written. Show the filters in the plan the user approves; the answer\'s pageFilters lists what was written'),
     svgColumns: z.array(z.object({
       label: z.string().min(1).max(40).describe('The column\'s header (also the name of the report-level measure); not the name of a measure of the model'),
-      design: z.record(z.any()).describe('The design, in the SVG KPI Designer\'s format: { w, h, bg?, values: [{ id, label, kind: "measure", measure: "Table[Measure]" } | { id, label, kind: "column", column: "Table[Column]" } | { id, label, kind: "ratio" | "diff" | "pct", a, b }], layers: [{ type: "rect" | "circle" | "line" | "text" | "ring" | "arrow" | "spark", ...its sizes and colours (#rrggbb), bind?: { w | x | fill | text | p | dir | show | ...: { v: <value id>, ... } } }] }. For a text bound to a column use bind.text { v, fmt: "text" }. No raw SVG and no script: only these layers'),
+      design: z.record(z.any()).describe('The design, in the SVG KPI Designer\'s format: { w, h, bg?, values: [{ id, label, kind: "measure", measure: "Table[Measure]" } | { id, label, kind: "column", column: "Table[Column]" } | { id, label, kind: "ratio" | "diff" | "pct", a, b }], layers: [{ type: "rect" | "circle" | "line" | "text" | "ring" | "arrow" | "spark", ...its sizes and colours (#rrggbb, or a colour of the report\'s theme by name: "theme:accent", "theme:text", "theme:muted", "theme:track", "theme:card", "theme:good", "theme:bad", "theme:neutral", "theme:data1" to "theme:data8"; a colour left out is the theme\'s, so the picture looks part of its card in light and dark designs), bind?: { w | x | fill | text | p | dir | show | ...: { v: <value id>, ... } } }] }. For a text bound to a column use bind.text { v, fmt: "text" }. No raw SVG and no script: only these layers'),
       page: z.number().int().min(1).optional().describe('The page (1 = the first) whose table gets the column; left out: the first page that has a table')
     }).strict()).max(4).optional().describe('EXPERIMENTAL. Small pictures drawn per row of a table (a progress bar, a ring, an arrow, a sparkline, a label), from a declarative design. Each is compiled to a report-level measure that exists only in the report (the model is never touched) and shown as the last column of the page\'s table. Checked in Power BI Desktop only in a table: card, matrix, image visual, phone and PDF are not checked yet. A design naming a measure or column that is not in the model, an unknown layer, or a measure over 8,000 characters refuses the call and nothing is written. Show the columns in the plan the user approves; the answer\'s svgMeasures lists what was written'),
     svgCards: z.array(z.object({
@@ -460,8 +462,17 @@ server.registerTool('create_report', {
   // SVG columns: each design checked against the model and compiled (nothing is written when one can't be used)
   // (a right-to-left report mirrors a design, unless the design says mirror: false; a text keeps its direction)
   const rtlReport = a.pages ? !!a.rtl : a.dir ? a.dir === 'rtl' : a.lang === 'ar', svgLabels = new Set();
-  const SV = resolveSvgColumns(m.tables, a.svgColumns, { mirror: rtlReport, what: 'svgColumns', taken: svgLabels });
-  const SC = resolveSvgColumns(m.tables, a.svgCards, { mirror: rtlReport, what: 'svgCards', taken: svgLabels });
+  // The colours an SVG design takes from the report's theme (round 13; seen in Desktop 2.158, 6 Oct: a design without
+  // colours was drawn in the compiler's own, a near-black ring and cyan on a white Corporate card): the design's own
+  // colours as the report will have them, or the theme file's and the colours given with hand-placed pages.
+  const svgPalette = (() => {
+    if (!(a.svgColumns || []).length && !(a.svgCards || []).length) return null;
+    if (a.design) { const d = planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang }).design; return Svg.themePalette(d.ui, d.data); }
+    const t = a.theme ? JSON.parse(fs.readFileSync(inside(a.theme), 'utf8')) : {};
+    return Svg.themePalette(Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd', good: t.good, bad: t.bad, neutral: t.neutral }, themeColors(t), a.colors || {}), t.dataColors);
+  })();
+  const SV = resolveSvgColumns(m.tables, a.svgColumns, { mirror: rtlReport, what: 'svgColumns', taken: svgLabels, palette: svgPalette });
+  const SC = resolveSvgColumns(m.tables, a.svgCards, { mirror: rtlReport, what: 'svgCards', taken: svgLabels, palette: svgPalette });
   const svgCardsFor = (n) => { if (!SC) return undefined;
     SC.forEach((c, i) => { if (c.card > n) throw new Error(`Nothing was written. svgCards[${i}]: the report has ${n} KPI card${n === 1 ? '' : 's'}, so there is no card ${c.card}.`); });
     return SC.map((c) => ({ card: c.card - 1, t: c.t, m: c.label, expression: c.expression, w: c.w, h: c.h })); };

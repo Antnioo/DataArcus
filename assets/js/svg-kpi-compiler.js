@@ -196,6 +196,49 @@
   const color = (c) => (c === 'none' ? 'none' : hexOk(c) ? urlEsc(c.toLowerCase()) : '%23000000');
   const attrNum = (n) => { const v = Math.round((+n || 0) * 100) / 100; return String(Object.is(v, -0) ? 0 : v); };
 
+  // ---------- the report's theme in a design (round 13, the owner's ask: a picture that looks part of its card) ----------
+  // Seen in Desktop 2.158 on 6 Oct 2026 ("SC EN light 720", "SC EN dark 1080", "SC AR dark 720"): a design that names
+  // no colours was drawn in this compiler's own (a ring's track #1e293b, near black on a white card and gone on a dark
+  // one; cyan arcs and sparklines; a bright green arrow; black text), whatever the report's theme. So a caller that
+  // knows the theme passes its colours: themePalette(ui, dataColors) makes the names, and themed(design, palette)
+  // returns a copy of the design in which (1) a colour written as "theme:<name>" is that colour and (2) a colour the
+  // layer leaves out is the theme's (text: the text colour; a ring's track: "track", its arc: the accent; an arrow:
+  // good, bad, neutral; a sparkline: the accent). A colour given as #rrggbb is kept. A name that is not in the
+  // palette is an error (never a silent black). Without a palette nothing changes: the designer's page and its
+  // downloads compile as before.
+  const mixHex = (a, b, t) => '#' + [1, 3, 5].map((i) => { const x = parseInt(a.slice(i, i + 2), 16), y = parseInt(b.slice(i, i + 2), 16); return Math.round(x + (y - x) * t).toString(16).padStart(2, '0'); }).join('');
+  const themePalette = (ui, data) => {
+    const u = ui || {}, text = hexOk(u.text) ? u.text : '#1f2937', card = hexOk(u.card) ? u.card : '#ffffff', accent = hexOk(u.accent) ? u.accent : '#0f6cbd';
+    const p = { text: text, card: card, background: hexOk(u.background) ? u.background : card, accent: accent, good: hexOk(u.good) ? u.good : '#2e7d32', bad: hexOk(u.bad) ? u.bad : '#c62828', neutral: hexOk(u.neutral) ? u.neutral : mixHex(text, card, 0.5),
+      muted: mixHex(text, card, 0.4), track: mixHex(text, card, 0.85) };
+    (data || []).slice(0, 8).forEach((c, i) => { if (hexOk(c)) p['data' + (i + 1)] = c; });
+    Object.keys(p).forEach((k) => { p[k] = p[k].toLowerCase(); });
+    return p;
+  };
+  const COLOR_PROPS = ['fill', 'stroke', 'track', 'good', 'bad', 'neutral', 'areaColor', 'dotColor'];
+  const THEME_DEFAULTS = { text: { fill: 'text' }, ring: { track: 'track', fill: 'accent' }, arrow: { good: 'good', bad: 'bad', neutral: 'neutral' }, spark: { stroke: 'accent' } };
+  function themed(design, palette) {
+    const d = JSON.parse(JSON.stringify(design || {})), errors = [];
+    if (!palette) return { design: d, errors: errors };
+    const one = (v, where) => {
+      const m = typeof v === 'string' ? v.match(/^theme:(.+)$/) : null;
+      if (!m) return v;
+      if (!Object.prototype.hasOwnProperty.call(palette, m[1])) { errors.push('"' + v + '" (' + where + ') is not a colour of the theme; the names are: ' + Object.keys(palette).map((k) => 'theme:' + k).join(', ')); return v; }
+      return palette[m[1]];
+    };
+    if (d.bg != null) d.bg = one(d.bg, 'bg');
+    (Array.isArray(d.layers) ? d.layers : []).forEach((l, i) => {
+      if (!l || typeof l !== 'object') return;
+      const where = 'layer ' + (i + 1), defs = THEME_DEFAULTS[l.type] || {};
+      Object.keys(defs).forEach((prop) => { const ruled = l.bind && l.bind[prop === 'track' ? '' : prop] && l.bind[prop].rules; if (l[prop] == null && !ruled) l[prop] = palette[defs[prop]]; });
+      COLOR_PROPS.forEach((prop) => { if (l[prop] != null) l[prop] = one(l[prop], where + ', ' + prop); });
+      Object.keys(l.bind || {}).forEach((prop) => { const b = l.bind[prop]; if (!b || typeof b !== 'object') return;
+        if (b.other != null) b.other = one(b.other, where + ', ' + prop + ' rule');
+        (Array.isArray(b.rules) ? b.rules : []).forEach((r) => { if (r && r.c != null) r.c = one(r.c, where + ', ' + prop + ' rule'); }); });
+    });
+    return { design: d, errors: errors };
+  }
+
   // ---------- values ----------
   // A value is a measure, or a formula of two other values. Each becomes one VAR.
   const VALUE_KINDS = {
@@ -521,7 +564,7 @@
     return { url: PREFIX + evalNode(c.svg, env), errors: c.errors };
   }
 
-  const api = { compile: compile, toDax: toDax, toMeasure: toMeasure, toImageUrl: toImageUrl, columnRef: columnRef, formatNumber: formatNumber, FORMATS: Object.keys(FORMATS), OPS: OPS, PREFIX: PREFIX, version: 1 };
+  const api = { compile: compile, toDax: toDax, toMeasure: toMeasure, toImageUrl: toImageUrl, themed: themed, themePalette: themePalette, columnRef: columnRef, formatNumber: formatNumber, FORMATS: Object.keys(FORMATS), OPS: OPS, PREFIX: PREFIX, version: 1 };
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.SVGKPI = api;
 })(typeof self !== 'undefined' ? self : this);

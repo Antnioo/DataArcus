@@ -50,17 +50,30 @@
   const LETTER = { a: 0.51, b: 0.59, c: 0.46, d: 0.59, e: 0.52, f: 0.31, g: 0.59, h: 0.57, i: 0.24, j: 0.24, k: 0.5, l: 0.24, m: 0.86, n: 0.57, o: 0.59, p: 0.59, q: 0.59, r: 0.35, s: 0.42, t: 0.34, u: 0.57, v: 0.48, w: 0.72, x: 0.46, y: 0.48, z: 0.45,
     A: 0.65, B: 0.57, C: 0.62, D: 0.7, E: 0.51, F: 0.49, G: 0.69, H: 0.71, I: 0.27, J: 0.36, K: 0.58, L: 0.47, M: 0.9, N: 0.75, O: 0.75, P: 0.56, Q: 0.75, R: 0.6, S: 0.53, T: 0.52, U: 0.69, V: 0.62, W: 0.93, X: 0.59, Y: 0.55, Z: 0.57,
     ' ': 0.27, '.': 0.22, ',': 0.22, ':': 0.22, ';': 0.22, '\'': 0.2, '!': 0.28, '|': 0.24, '-': 0.4, '(': 0.3, ')': 0.3, '/': 0.39, '&': 0.8, '%': 0.82, '+': 0.68, '·': 0.22 };
+  // Round 13 (measured in Desktop 2.158, 6 Oct 2026, "R12 CI AR 1080": bold 17pt titles in Tahoma, ink in page units):
+  // Latin text in Tahoma is wider than the Segoe UI table gives ("Total Sales" 123.7 for 119.4 worked out, "Conversion
+  // Rate" 185.2 for 183.0), and "Growth vs Last Year", worked out at 219.9 for a room of 220, was cut by Desktop. So
+  // Latin letters, digits and marks count 6% more in Tahoma (TAHOMA_LATIN); Arabic letters were measured in Tahoma.
+  const TAHOMA_LATIN = 1.06;
   function textWidth(text, t, bold, font) {
     let em = 0;
+    const wide = /tahoma/i.test(String(font || '')) ? TAHOMA_LATIN : 1;
     for (const ch of String(text == null ? '' : text)) {
       const c = ch.codePointAt(0);
+      if (c === 0x200E || c === 0x200F) continue;   // direction marks have no width
       if ((c >= 0x0600 && c <= 0x06FF) || (c >= 0xFB50 && c <= 0xFEFF)) em += bold ? 0.62 : 0.55;
-      else if (c >= 0x30 && c <= 0x39) em += 0.54 * (bold ? 1.09 : 1);
-      else if (LETTER[ch] != null) em += LETTER[ch] * (bold ? 1.09 : 1);
-      else em += (c < 0x2000 ? 0.62 : 1) * (bold ? 1.09 : 1);
+      else if (c >= 0x30 && c <= 0x39) em += 0.54 * (bold ? 1.09 : 1) * wide;
+      else if (LETTER[ch] != null) em += LETTER[ch] * (bold ? 1.09 : 1) * wide;
+      else em += (c < 0x2000 ? 0.62 : 1) * (bold ? 1.09 : 1) * wide;
     }
     return em * t * 4 / 3 * 1.03;
   }
+  // A text shortened with "…" (KPI, chart and table titles, slicer headers). Round 13 (seen in Desktop 2.158, 6 Oct
+  // 2026, "G6 Long AR" on round 12's titles): after Arabic words the "…" was drawn at the right end of the line, the
+  // reading start, so the title looked cut at its beginning (a visual's title is a left-to-right paragraph, and a
+  // closing mark with no direction of its own goes to that paragraph's end). With a right-to-left mark (U+200F)
+  // after it the "…" was drawn at the left, where the Arabic line ends. Latin text gets none.
+  const cutAt = (s) => s + '…' + (/[\u0590-\u08FF\uFB1D-\uFEFC]/.test(s) ? '\u200F' : '');
   // contrast of two colours (WCAG): the page's marks keep the accent colour only where it can be read on the card
   const lum = (hex) => { const v = [1, 3, 5].map((i) => parseInt(String(hex).slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4))); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
   const contrast = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
@@ -509,22 +522,29 @@
     const boxH = (t, n) => Math.ceil(10 + 1.8 * t * (n || 1)), buttonH = (t, n) => Math.ceil(2 + 1.6 * t * (n || 1));
     const iconH = (t) => Math.ceil(2.25 * t), slicerH = (t) => Math.ceil(16 + 4 * t);
     // Round 10: the text's width is taken from its letters (textWidth), and the button needs the text + 10 beside the icon.
+    // Round 13 (seen in Desktop 2.158, 6 Oct 2026, on round 12's buttons: with icon.placement written Desktop draws the
+    // arrow at its own small size, tight against the text, in English too). Measured by hand on a 40-high button:
+    // iconSize is honoured (30 drew the arrow as large as before round 12); the icon's and the text's margins did
+    // nothing (8L, 20L and 20D tried); two no-break spaces before the text give the gap the old button had. So the
+    // arrow is three quarters of the button's height and the shown text starts with RESET_GAP (the button is as wide
+    // as that text needs); the tooltip, the alt text and the bookmark keep the plain words.
+    const RESET_GAP = '  ';
     const resetFit = (text, w, k) => {
       const h = Math.ceil(Math.max(40 * k, 6 + 1.6 * LABEL));
-      return { h, icon: textWidth(text, LABEL, false, font) + 10 + h <= w };
+      return { h, icon: textWidth(RESET_GAP + text, LABEL, false, font) + 10 + h <= w };
     };
     // Reset is only as wide as its icon and its text (the owner's design choice 7, 5 Oct 2026; Desktop showed the icon at
     // one end of a 274-wide rail button and the text at the other): the icon as wide as the button is high, the text
     // + 10 (measured, M3), within the room it has
-    const resetW = (text, k, room) => Math.min(room, Math.ceil(textWidth(text, LABEL, false, font) + 10 + Math.ceil(Math.max(40 * k, 6 + 1.6 * LABEL))));
+    const resetW = (text, k, room) => Math.min(room, Math.ceil(textWidth(RESET_GAP + text, LABEL, false, font) + 10 + Math.ceil(Math.max(40 * k, 6 + 1.6 * LABEL))));
     // Reset is an icon button without a box (round 10, to match the navigator): no outline, no fill until it is hovered
     // (a light tint of the accent colour), the reset icon in the accent colour, and a tooltip that says what it does.
     const resetFill = () => [{ properties: { show: bool(true) } }, { properties: { fillColor: color(u.accent || u.text), transparency: num(100) }, selector: { id: 'default' } }, { properties: { fillColor: color(u.accent || u.text), transparency: num(88) }, selector: { id: 'hover' } }];
     // Round 12 (seen in Desktop 2.158, round 10: in Arabic the Reset's arrow and its text were at opposite ends): the icon
     // at the reading start (placement, in Microsoft's theme schema) and the text aligned to the same side, so they sit
     // together in a button only as wide as both
-    const resetIcon = (on) => ({ shapeType: str(on ? 'reset' : 'blank'), lineColor: color(u.accent || u.text), placement: str(rtl ? 'right' : 'left') });
-    const resetLook = (text) => ({ show: bool(true), text: str(text), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL), horizontalAlignment: str(rtl ? 'right' : 'left') });
+    const resetIcon = (r) => Object.assign({ shapeType: str(r.icon ? 'reset' : 'blank'), lineColor: color(u.accent || u.text), placement: str(rtl ? 'right' : 'left') }, r.icon ? { iconSize: num(Math.round(0.75 * r.h)) } : {});
+    const resetLook = (text, r) => ({ show: bool(true), text: str((r && r.icon ? RESET_GAP : '') + text), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL), horizontalAlignment: str(rtl ? 'right' : 'left') });
     // (the Arabic tooltip is the button's own words, "إعادة ضبط الفلاتر": the owner's design choice 6, 5 Oct 2026)
     const resetTip = W.resetTip || (o.lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Clear the filters on this page');
     // the largest text size within 8-60 whose one line fits a text box h high (8 at least)
@@ -718,7 +738,16 @@
       // page's scale), not of 0.8 x the card; and one percent for the row, from its narrowest card, so the images are equal.
       const kpiSlots = sorted.filter((s) => s.kind === 'kpi'), rowMinW = kpiSlots.length ? Math.min(...kpiSlots.map((s) => s.w)) : 0, imgPad = 50 * pg.page.h / 1080;
       const imgOf = (s, i) => { const sc = (o.svgCards || []).find((x) => x.card === i); if (!sc) return null;
-        const pct = Math.max(10, Math.min(25, Math.round(100 * (+sc.w || 48) / Math.max(1, rowMinW - imgPad)))); return { sc, pct, take: Math.ceil((s.w - imgPad) * pct / 100) + 8 }; };
+        // Round 13 (seen in Desktop 2.158, 6 Oct 2026, "SC EN light 720": a 64 x 64 ring on a 96-high card, sized by the
+        // width alone, was drawn 54.6 high and its top was cut by the card): the picture is never taller than the
+        // room under the card's title (the card less its top and bottom padding, the title's lines, the value's own
+        // padding and the 2 between them: imgRoom), on the row's widest card; 5 percent at least.
+        const byWidth = Math.max(10, Math.min(25, Math.round(100 * (+sc.w || 48) / Math.max(1, rowMinW - imgPad))));
+        const byHeight = Math.floor(100 * imgRoom(s) * ((+sc.w || 48) / (+sc.h || 48)) / Math.max(1, rowMaxW - imgPad));
+        const pct = Math.max(5, Math.min(byWidth, byHeight)); return { sc, pct, take: Math.ceil((s.w - imgPad) * pct / 100) + 8 }; };
+      // (the title takes one line at the theme's size or two at 8pt, whichever is higher, so the room holds in both)
+      const rowMaxW = kpiSlots.length ? Math.max(...kpiSlots.map((s) => s.w)) : 0;
+      const imgRoom = (s) => { const c0 = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, KPI_M, AUTO_EM); return s.h - c0.T - c0.P - 2 * c0.I - Math.max(Math.ceil(TITLE * 1.5), 2 * Math.ceil(8 * 1.5)) - 2; };
       const KPI_M = { top: Math.round(12 * pg.page.h / 1080), side: pg.kpiInset || (SOLID ? Math.round(16 * pg.page.h / 1080) : 0) };
       // one KPI card's fit: on one title line (c), on two (two), its image, and how its title is shown (fit)
       const kpiFits = (s, i, text, f) => { const im = imgOf(s, i), take = im ? im.take : 0, c = cardFit(s.w, s.h, pg.page.h / 720, TITLE, CALLOUT, KPI_M, valueEm(f), 1, take), two = cardFit(s.w, s.h, pg.page.h / 720, kpiTitle, CALLOUT, KPI_M, valueEm(f), 2, take);
@@ -742,8 +771,8 @@
         if (size === 8 && ls.length === 2 && ls.every((l) => textWidth(l, size, true, font) <= avail) && two && two.V >= c.V) return { mode: 'wrapped', c: Object.assign({}, two, { V: c.V }) };
         const words = String(text).split(' ');
         let shown = '';
-        for (let n = words.length - 1; n >= 1 && !shown; n--) { const t = words.slice(0, n).join(' ').replace(/[\s,;:(\-–]+$/, '') + '…'; if (textWidth(t, size, true, font) <= avail) shown = t; }
-        if (!shown) { const ch = [...String(text)]; for (let n = ch.length - 1; n >= 1 && !shown; n--) { const t = ch.slice(0, n).join('').trimEnd() + '…'; if (textWidth(t, size, true, font) <= avail) shown = t; } }
+        for (let n = words.length - 1; n >= 1 && !shown; n--) { const t = cutAt(words.slice(0, n).join(' ').replace(/[\s,;:(\-–]+$/, '')); if (textWidth(t, size, true, font) <= avail) shown = t; }
+        if (!shown) { const ch = [...String(text)]; for (let n = ch.length - 1; n >= 1 && !shown; n--) { const t = cutAt(ch.slice(0, n).join('').trimEnd()); if (textWidth(t, size, true, font) <= avail) shown = t; } }
         return { mode: 'shortened', shown: shown || '…' };
       };
       // Round 12 (#24; seen in Desktop 2.158, 5 Oct 2026: long Arabic chart titles and a slicer header were cut at their
@@ -756,18 +785,18 @@
         const two = (t) => { const ls = wrapLines(t, size, avail); return ls.length <= 2 && ls.every((l) => textWidth(l, size, true, font) <= avail); };
         if (two(text)) return { mode: 'wrapped', shown: text };
         const words = String(text).split(' ');
-        for (let n = words.length - 1; n >= 1; n--) { const t = words.slice(0, n).join(' ').replace(/[\s,;:(\-–]+$/, '') + '…'; if (two(t)) return { mode: 'shortened', shown: t }; }
+        for (let n = words.length - 1; n >= 1; n--) { const t = cutAt(words.slice(0, n).join(' ').replace(/[\s,;:(\-–]+$/, '')); if (two(t)) return { mode: 'shortened', shown: t }; }
         const ch = [...String(text)];
-        for (let n = ch.length - 1; n >= 1; n--) { const t = ch.slice(0, n).join('').trimEnd() + '…'; if (textWidth(t, size, true, font) <= avail) return { mode: 'shortened', shown: t, one: true }; }
+        for (let n = ch.length - 1; n >= 1; n--) { const t = cutAt(ch.slice(0, n).join('').trimEnd()); if (textWidth(t, size, true, font) <= avail) return { mode: 'shortened', shown: t, one: true }; }
         return { mode: 'shortened', shown: '…', one: true };
       };
       // one line only, shortened at its end (a slicer's header, a phone title that two lines don't hold)
       const oneLine = (text, size, avail) => {
         if (text == null || textWidth(text, size, true, font) <= avail) return text;
         const words = String(text).split(' ');
-        for (let n = words.length - 1; n >= 1; n--) { const t = words.slice(0, n).join(' ').replace(/[\s,;:(\-–]+$/, '') + '…'; if (textWidth(t, size, true, font) <= avail) return t; }
+        for (let n = words.length - 1; n >= 1; n--) { const t = cutAt(words.slice(0, n).join(' ').replace(/[\s,;:(\-–]+$/, '')); if (textWidth(t, size, true, font) <= avail) return t; }
         const ch = [...String(text)];
-        for (let n = ch.length - 1; n >= 1; n--) { const t = ch.slice(0, n).join('').trimEnd() + '…'; if (textWidth(t, size, true, font) <= avail) return t; }
+        for (let n = ch.length - 1; n >= 1; n--) { const t = cutAt(ch.slice(0, n).join('').trimEnd()); if (textWidth(t, size, true, font) <= avail) return t; }
         return '…';
       };
       // a slicer's header, shortened to the slicer's width: the header's own text (header.text, in Microsoft's theme
@@ -883,7 +912,7 @@
           const bm = rnd(), bx = across ? (rtl ? s.x + pad : s.x + s.w - pad - bw) : (rtl ? s.x + s.w - pad - bw : s.x + pad), by = across ? s.y + (s.h - bh) / 2 : s.y + s.h - pad - bh;
           container({ x: Math.round(bx), y: Math.round(by), w: Math.round(bw), h: Math.round(bh), z, parent, kind: 'button',
             visual: { visualType: 'actionButton',
-              objects: { icon: def(resetIcon(reset.icon)), text: def(resetLook(resetText)),
+              objects: { icon: def(resetIcon(reset)), text: def(resetLook(resetText, reset)),
                 fill: resetFill(), outline: def({ show: bool(false) }) },
               visualContainerObjects: Object.assign(frame(null, resetText), { visualLink: obj({ show: bool(true), type: str('Bookmark'), enabledTooltip: str(resetTip), bookmark: str(bm) }) }) } });
           z += 1000;
@@ -1154,7 +1183,7 @@
         });
         const rb = rnd();
         add1({ x: Math.round(rtl ? P.x + pad + sw - rw : P.x + pad), y: Math.round(P.y + P.h - pad - bh), w: rw, h: bh, kind: 'button', visual: { visualType: 'actionButton',
-          objects: { icon: def(resetIcon(reset.icon)), text: def(resetLook(resetText)),
+          objects: { icon: def(resetIcon(reset)), text: def(resetLook(resetText, reset)),
             fill: resetFill(), outline: def({ show: bool(false) }) },
           visualContainerObjects: Object.assign(frame(null, resetText), { visualLink: obj({ show: bool(true), type: str('Bookmark'), enabledTooltip: str(resetTip), bookmark: str(rb) }) }) } });
         bookmarks.push({ name: rb, page: pageName, targets: names, label: (W.reset || 'Reset filters') + (PAGES.length > 1 ? ' · ' + (pg.name || '') : '') });

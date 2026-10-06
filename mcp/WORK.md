@@ -21,6 +21,9 @@ BI Desktop window open; `git fetch`; `fix/round-13` made from `origin/main` `1ce
 **Hourly pushes due:** 03:37, 04:37, 05:37, 06:37, 07:37, 08:37 (the stop).
 | Due | Pushed at | What |
 |---|---|---|
+| start | 02:39 | `a6a3e7e`, the plan |
+| (items 1 and 3) | 03:18 | `1729596` |
+| 03:37 | 03:29 | `76a98b6`, the merge of round 12 (468 of 468) |
 <!-- r13 pushes -->
 
 ### Round 13, order of work (each expected result written at 02:39, before any run)
@@ -65,6 +68,26 @@ BI Desktop window open; `git fetch`; `fix/round-13` made from `origin/main` `1ce
   - **Scripts (laptop, `builder-scripts\`):** `r13-make.mjs` (root `13-r13`, the theme named after the report),
     `r13-shot.ps1` (shot11 for `13-r13` / `desk-r13`), `r13-runs.ps1` (colours along scan lines), `r13-grad.mjs`,
     `r13-grad-zero.mjs`, `r13-mirror.mjs`, `r13-mirror2.mjs`, `r13-svgcards.mjs`.
+- **04:05, round 12 merged (03:29, `76a98b6`, `npm test` 468 of 468), item 2 built, round 12's list proven
+  (DESKTOP-TESTS.md, "Item 2" and "Item 4").**
+  - **Item 2 (SVG pictures that blend):** the server now gives a design the report's theme: a colour may be written
+    `theme:accent`, `theme:text`, `theme:muted`, `theme:track`, `theme:card`, `theme:good`, `theme:bad`,
+    `theme:neutral`, `theme:data1` to `theme:data8`, and a colour a layer leaves out is the theme's
+    (`svg-kpi-compiler.js` `themePalette`, `themed`; the website's designer compiles as before); a name the theme
+    has not refuses the call. The picture is capped by the room under the card's title (`imgRoom`). Proven: the
+    ring whole and in the theme's colours, light and dark, English and Arabic.
+  - **Round 12's list: 17 of 24 items seen, 14 PASS, 3 FAIL fixed here with tests** (the "…" of a shortened Arabic
+    text at the wrong end: a right-to-left mark; the Reset arrow tiny and tight: `iconSize` and a gap; a Latin KPI
+    title cut in Tahoma: 6% more width), 1 not exercised (two-row tabs: the names fit one row now), **5 not run**
+    (11 the pictures on the phone, 21 the header that grows, 22 the Gulf calendar's sort-by, 24 the one-slicer
+    panel; 20 as said; the Arabic phone).
+  - **Tests:** red 477 checks / 8 failing (item 2 and Reset, before the code); then 476 of 477 and 477 of 479: three
+    of round 12's expectations compared a shown text with its plain words (the Arabic Reset text; a shortened title
+    and a slicer header as "the start of the full name"); each now allows the gap or the mark, with the cause
+    written beside it. The ellipsis mark's code was written before its test (the red evidence is the report built
+    before it: five shortened texts without the mark). The full run with the Tahoma width is running.
+  - **Seen on G1 (a brand colour on a dark design):** no gradient: `#0f6cbd` stands only 3.2:1 off the card, so it
+    cannot fade towards the card and keep 3:1; the answer says so. For the owner (item 3).
 <!-- r13 where -->
 
 ### Round 13, for the owner
@@ -88,6 +111,20 @@ BI Desktop window open; `git fetch`; `fix/round-13` made from `origin/main` `1ce
    (c) The legend: Desktop puts it at the right with 'TopRight'; the engine's charts have no legend, and the theme
    generator's "Right" legend goes to the left in a right-to-left design (so since the generator was built). Say
    if a side legend should sit at the right in Arabic.
+3. **A brand colour that cannot fade (golden task 1: `#0F6CBD` on the dark DataArcus card).** The gradient needs
+   the bars' colour to stand well over 3:1 off the card, so that a lighter end still shows; this one stands 3.2:1,
+   so the bars stay one colour and the answer says why. Options: (a) keep; (b) fade the other way there: the
+   smallest bar the brand colour, the largest a brighter tint of it (towards the text colour); (c) lower the
+   floor to 2:1 for the small bars. **Recommended: (b)**; it changes the largest bar's colour away from the brand
+   colour, so it is yours to say. Crop: `desk-r13\ba-g1-en.png` (right half).
+4. **Round 12's Reset button looked worse in Desktop than before round 12** (a tiny arrow glued to the text, in
+   English too); fixed here (the arrow at three quarters of the button's height, a gap before the words). Have a
+   look at `desk-r13\r12-text-en-view.png` (after) against `ba-g3-en-reset.png` (before round 12 above, round 12
+   below).
+5. **Round 12 not proven tonight (5 items):** the SVG pictures on the phone (11), the header that grows by a tab
+   row (21), the Gulf calendar's sort-by columns in TMDL view (22), the one-slicer slide-in panel (24), a wrapped
+   two-row tab header (20: the names fit one row since round 12's Tahoma widths). They are covered by `npm test`
+   only.
 <!-- r13 owner -->
 
 ### Round 13, design findings
@@ -98,6 +135,15 @@ BI Desktop window open; `git fetch`; `fix/round-13` made from `origin/main` `1ce
 | 3 | A line chart whose labels slant, mirrored or narrow | the first label is shortened ("Dece…", "Janua…") | `gm-ar-light-1080-view1.png`, `my-ar-view1.png` chart 9 | medium | short month names where the model has them (round 12's #16); for the owner: item 2a |
 | 4 | KPI card with a ring picture, 1280 x 720 | the ring's top is cut by the card (the picture is sized by width only) | `sc-en-light-720-cards.png` | high | item 2: cap the picture by the height under the title |
 | 5 | KPI card pictures, any design | the picture's colours are the compiler's own (a near-black ring track, cyan, a bright green), not the theme's | `sc-en-light-720-cards.png`, `sc-en-dark-1080-cards.png` | high | item 2: theme colour names and theme defaults |
+| 6 | Arabic reports with Latin names: a KPI title | "Growth vs Last Y…": cut by Desktop (Tahoma is wider than the width table) | `r12-ci-ar-1080-cards.png` | high | fixed here (item 4): Tahoma's Latin letters count 6% more |
+| 7 | A shortened Arabic title or slicer header | the "…" at the reading start of the line | `ba-g6-ar-ellipsis.png` | high | fixed here: a right-to-left mark after the "…" |
+| 8 | The Reset button after round 12 | the arrow half its size and tight against the words | `ba-g3-en-reset.png` | high | fixed here: `iconSize` and a gap |
+| 9 | A table with a percent measure beside a card of the same measure | the card says 33.8%, the table's column 0.34 | `ba-g1-en.png` | medium | the table's percent columns take the card's percent format (`format` on the projection, as round 10's separators) |
+| 10 | The "What it means" box with its sentence | 11pt text at the top of a 450-high panel on a 1920 x 1080 page: it reads like a footnote | `r12-text-en-view.png` | medium | the theme's body size for the page (15pt at 1920 x 1080), as the slicers and the table have |
+| 11 | A page whose filter rail ends under Reset (round 12's #18) | the rest of the rail's side is bare page: on the Details page a third of the page's height is empty beside the table | `ba-g4w-en.png` (bottom right), `ba-g7-en.png` | medium (taste) | let the table or the chart take the freed corner, or keep the rail's panel the page's height with Reset under the slicers |
+| 12 | The Arabic table with the helper column (round 12's B1) | a hair-thin light line down the grey rows where the hidden helper column sits | `g4s-ar-table-crop.png` | low | the helper's cell background follows the row's banding, or the helper goes last |
+| 13 | Eight tabs in a 72-high header | the names are 8pt beside a very large title: the row shrinks instead of using its height | `r12-tabs-ar-head.png` | low | grow the tab text to the largest size that still fits one row (up to the theme's label size) |
+| 14 | A model without measures (round 12's #25) | "Count of Region" as a KPI card: the count of a text column is rarely a KPI | `ba-g7-en.png` | low | prefer counts of ID-like columns and sums; fewer cards rather than a count of a category |
 <!-- r13 findings -->
 ## Round 12, every small detail fixed in code (2026-10-05 night, cloud builder; branch `fix/round-12` from main `1cef9ac`; not merged)
 The owner's go (6 Oct 01:45): "I want to feel that whatever the builder opens looks amazing and optimized". All eight
