@@ -323,6 +323,12 @@ export default async function ({ browser, url }) {
       cd.bad.slice(0, 1).map((x) => `cards (${cd.bad.length} on ${cd.cards}): ${x}`), projectProblems(files),
       pp.solid || pp.bad.length ? [`panels: the download's theme is ${pp.solid ? 'solid' : 'transparent'}, ${pp.bad.length} visuals wrong: ${pp.bad[0] || ''}`] : []);
   };
+  // each bar, column or line chart of a download: mirrored (round 13's mirrorChart: a bar's value axis inverted, a column
+  // or line chart's value axis switched to the right) or not
+  const mirrorOf = (files) => Object.entries(files).filter(([n]) => /\/visual\.json$/.test(n)).map(([, t]) => { try { return JSON.parse(t); } catch (e) { return null; } })
+    .filter((v) => v && v.visual && /^(clusteredBarChart|clusteredColumnChart|lineChart)$/.test(v.visual.visualType))
+    .map((v) => { const va = (((v.visual.objects || {}).valueAxis || [])[0] || {}).properties || {}, on = (x) => !!x && x.expr && x.expr.Literal && x.expr.Literal.Value === 'true';
+      return { type: v.visual.visualType, mirrored: v.visual.visualType === 'clusteredBarChart' ? on(va.invertAxis) : on(va.switchAxisPosition) }; });
   const picker = async (pg) => {
     await pg.waitForFunction(() => document.querySelectorAll('#pbipMap select').length > 0, null, { timeout: 15000 });
     return pg.$$eval('#pbipMap select', (ss) => ss.map((s) => (s.value ? s.options[s.selectedIndex].text.replace(/[\u2068\u2069]/g, '') : '')));
@@ -361,6 +367,8 @@ export default async function ({ browser, url }) {
     // round 0, on the page's own download: chart tooltips, the tooltip page, table headers, cards, the project shell
     const r0 = round0(files, false);
     check(!r0.length, `local, round 0: ${r0.slice(0, 4).join(' | ')}`);
+    const charts = mirrorOf(files);
+    check(charts.length >= 2 && charts.every((c) => !c.mirrored), `local (English): charts mirrored ${JSON.stringify(charts)}`);
   }
 
   // 2. Published model, Arabic page: live connection, fields read from a .pbit
@@ -383,6 +391,10 @@ export default async function ({ browser, url }) {
     check(!lp.phone.length && !lp.sizes.length, `service (Arabic): phone ${lp.phone.slice(0, 2).join('; ')} | sizes ${lp.sizes.slice(0, 2).join('; ')}`);
     const r0 = round0(files, true);
     check(!r0.length, `service (Arabic), round 0: ${r0.slice(0, 4).join(' | ')}`);
+    // round 15 (the owner's go on round 13's recommendation 2b): the Arabic download's charts are mirrored too (the
+    // engine's chartAxes "mirrored": value axis at the right, bars from the right)
+    const charts = mirrorOf(files);
+    check(charts.length >= 2 && charts.every((c) => c.mirrored), `service (Arabic): charts not mirrored ${JSON.stringify(charts)}`);
   }
 
   // 4. A copy of the model with the same name further down (a backup): the report and its fields come from the

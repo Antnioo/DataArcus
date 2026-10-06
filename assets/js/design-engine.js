@@ -169,15 +169,23 @@
     const flexSum = flex.reduce((a, b) => a + b, 0), free = nK ? PH - M - top - G * P.rows.length - z.kpiH : PH - M - top - G * (P.rows.length - 1);
     // no chart row shorter than 90: move the split back if needed
     if (hasSplit(P) && free >= 180) { const h0 = free * flex[0] / flexSum; if (h0 < 90) flex[0] = flexSum * 90 / free; else if (free - h0 < 90) flex[0] = flexSum * (free - 90) / free; flex[1] = flexSum - flex[0]; }
-    const rows = (nK ? [{ fixed: z.kpiH, cols: Array.from({ length: nK }, (_, i) => [1, 'kpi', [`KPI ${i + 1}`, `مؤشر ${i + 1}`]]) }] : [])
-      .concat([first].concat(P.rows.slice(1)).map((cols, i) => ({ flex: flex[i], cols })));
+    // (the owner, 6 Oct 2026) One card where the row was planned for more (a model with one measure: kpiCards 1): the
+    // card takes a quarter of the row at the reading start, not the whole row (quarter). Two or three cards of four
+    // still share the row.
+    // (the owner, 6 Oct 2026) For the MCP's reports (wideTable, set by the MCP: the website's designs never have it, as
+    // kpiCards): on a 4:3 page (narrower than 3:2 on the design grid) a table beside a chart takes the
+    // wider share of its row, 3 to 2: measured, a table of a day column and three measures needs 463 at 8pt in Segoe UI
+    // and 483 in Tahoma, and half of a 960 x 720 page's row is 458.
+    const narrow = !!c.wideTable && PW < 1080, share = (cols) => (narrow && cols.length > 1 ? cols.map((col) => (col[1] === 'table' ? [col[0] * 1.5, col[1], col[2]] : col)) : cols);
+    const rows = (nK ? [{ fixed: z.kpiH, quarter: nK === 1 && c.kpis > 1, cols: Array.from({ length: nK }, (_, i) => [1, 'kpi', [`KPI ${i + 1}`, `مؤشر ${i + 1}`]]) }] : [])
+      .concat([first].concat(P.rows.slice(1)).map((cols, i) => ({ flex: flex[i], cols: share(cols) })));
     let y = top;
     rows.forEach((r, ri) => {
       const h = r.fixed || (ri === rows.length - 1 ? PH - M - y : Math.round(free * r.flex / flexSum));
       const wsum = r.cols.reduce((a, col) => a + col[0], 0), avail = cw - G * (r.cols.length - 1);
       let x = x0;
       r.cols.forEach((col, ci) => {
-        const w = ci === r.cols.length - 1 ? x0 + cw - x : Math.round(avail * col[0] / wsum);
+        const w = r.quarter ? Math.round((cw - 3 * G) / 4) : ci === r.cols.length - 1 ? x0 + cw - x : Math.round(avail * col[0] / wsum);
         slots.push({ kind: col[1], role: col[2], x, y, w, h }); x += w + G;
       });
       y += h + G;
@@ -267,7 +275,9 @@
     }
     // "Side" is stored as Right; in a right-to-left design it goes to the left, mirrored like the rest of the layout
     if (c.legend !== 'auto') add(AXIS_CHARTS.concat('scatterChart', 'pieChart', 'donutChart', 'treemap'), 'legend', c.legend === 'off' ? { show: false }
-      : { show: true, position: c.legend === 'Right' && rtl(d.layout, lang) ? 'Left' : c.legend });
+      // (round 15, the owner's go on round 13's recommendation 2c: a side legend sits at the right in Arabic too; it
+      // went to the left in a right-to-left design before)
+      : { show: true, position: c.legend });
     if (c.axis === 'off') ['valueAxis', 'categoryAxis'].forEach((a) => add(AXIS_CHARTS.concat('scatterChart'), a, { showAxisTitle: false }));
     if (c.table !== 'auto') {
       const line = { solid: { color: mix(u.text, u.card, 0.85) } };
@@ -285,7 +295,7 @@
     return vs;
   };
   // d: the design { name, font, data, ui, chart, layout }; lang: the page's language ('ar' or 'en'), for the reading
-  // direction when the layout has none (the legend's side follows it)
+  // direction when the layout has none
   const buildTheme = (d, lang) => {
     const u = d.ui, l = d.layout, sec = mix(u.text, u.card, 0.35), ter = mix(u.text, u.card, 0.6), f = d.font;
     return {

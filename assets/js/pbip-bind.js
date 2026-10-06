@@ -250,6 +250,9 @@
     // every column a slicer could take, in the order they are picked (round 12, #22: the caller replaces a slicer that
     // a page filter makes pointless)
     out.slicerPool = [year].concat(cats, [date]).filter((x, i, l) => x && l.indexOf(x) === i);
+    // the categories a page's charts can take, in the picker's order (round 16, design finding #18: the operations
+    // layout drew two bar charts and a donut all by Quarter): the writer gives each chart of a page one not used there yet
+    out.catPool = cats.slice(0, 8).map((c) => Object.assign({ t: c.t, c: c.c }, c.sortBy ? { sortBy: c.sortBy } : {}, c.ordered ? { ordered: true } : {}));
     // the measures left behind that were not picked, so the caller can say so (none: no such key)
     const skipped = ranked.filter((x) => x.stale && !kpis.includes(x) && x !== main).map((x) => ({ t: x.t, m: x.m }));
     if (skipped.length) out.skipped = skipped;
@@ -275,7 +278,8 @@
     const texts = cs.filter((c) => c !== id && (c.type === 'string' || (c.type === 'unknown' && !NUMBERISH.test(c.c) && !DATEISH.test(c.c))) && !NOT_CAT.test(c.c));
     return [].concat(id ? [{ t: main, c: id.c, agg: 2, num: true, name: nm.count(id.c), wholeFormat: '#,0' }] : [],
       nums.map((c) => ({ t: main, c: c.c, agg: 0, num: true, name: nm.sum(c.c), wholeFormat: '#,0' })),
-      texts.map((c) => ({ t: main, c: c.c, agg: 2, num: true, name: nm.count(c.c), wholeFormat: '#,0' })));
+      // (round 16, design finding #14: a count of a category column, "Count of Region", is marked: never a KPI card)
+      texts.map((c) => ({ t: main, c: c.c, agg: 2, num: true, name: nm.count(c.c), wholeFormat: '#,0', category: true })));
   }
   // the visual-by-visual binding the exporter reads, from the few choices the user makes
   function build(ch) {
@@ -293,7 +297,9 @@
       choices: ch,
       kpis, measure: main, date: f(ch.date),   // an empty KPI choice leaves that card empty
       cats: { bar: A, donut: A, funnel: A, treemap: A, column: Bc, map: Bc },
-      y: { funnel: second, gauge: f(ratio) || main },
+      // (round 16, design finding #16: a funnel drawn on a ratio read 0.19, 1.31, "681.9%"): a funnel shows an amount,
+      // never a percent; with none, it has no measure and is left out (and told)
+      y: { funnel: [second, main].concat(kpis).find((k) => k && !k.pct) || null, gauge: f(ratio) || main },
       table: uniq([Bc || A, main, second, kpis[2]]),
       slicers: (ch.slicers || []).map(f),
       // the category tooltip's chart shows a base measure other than the main one, else the main one: never a variant

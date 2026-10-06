@@ -314,6 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${hasBg ? col(L('Background', 'الخلفية'), 'card.bg', design.bg) + num(L('Corner radius', 'استدارة الزوايا'), 'card.radius', design.radius || 0, 1) : ''}
         ${design.layers.some((l) => l.type === 'spark') ? `${txt(L('Date column for sparklines', 'عمود التاريخ لخطوط الاتجاه'), 'card.dateCol', design.dateCol || "'Date'[Date]", 'maxlength="100" spellcheck="false"')}
         <label class="kd-toggle kd-wide"><input type="checkbox" data-p="card.clearDateFilters"${design.clearDateFilters !== false ? ' checked' : ''}> <span>${L('Ignore date slicers inside the sparkline', 'تجاهل فلاتر التاريخ داخل خط الاتجاه')}</span><small>${L('Keeps the full trend when a Year or Month slicer is set. Turn off if your dates are not in a separate date table.', 'يحافظ على الاتجاه كاملًا عند اختيار سنة أو شهر. أوقفه إذا لم تكن التواريخ في جدول تاريخ منفصل.')}</small></label>` : ''}
+        <label class="kd-toggle kd-wide"><input type="checkbox" data-p="card.mirror"${design.mirror ? ' checked' : ''}> <span>${L('Right to left', 'من اليمين إلى اليسار')}</span><small>${L('For Arabic reports: shapes are mirrored (a ring fills counter-clockwise, a bar from the right); text is never flipped.', 'للتقارير العربية: تنعكس الأشكال (تمتلئ الحلقة عكس عقارب الساعة والشريط من اليمين)، ولا ينعكس النص أبدًا.')}</small></label>
         ${sel_(L('Show nothing when this is blank', 'لا تعرض شيئًا عندما تكون هذه فارغة'), 'card.hideIfBlank', design.hideIfBlank || '', [['', L('(always show)', '(اعرض دائمًا)')]].concat(design.values.filter((v) => v.kind === 'measure').map((v) => [v.id, v.label || v.measure])), true)}</div>
         <p class="kd-hint mt-2">${L('Click a layer on the canvas to edit it.', 'اضغط على أي طبقة في اللوحة لتعديلها.')}</p>`;
       return;
@@ -372,7 +373,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (path.startsWith('card.')) {
       const k = path.slice(5);
       if (k === 'w' || k === 'h') v = Math.max(8, Math.min(1200, v));
-      if (k === 'hideIfBlank' && !v) delete design.hideIfBlank; else design[k] = v;
+      // (round 15: the "Right to left" switch sets the compiler's mirror; off removes it, so a saved design stays as before)
+      if ((k === 'hideIfBlank' || k === 'mirror') && !v) delete design[k]; else design[k] = v;
     } else {
       const l = design.layers[sel]; if (!l) return;
       if (path === 'bind.dir.v') { l.bind = l.bind || {}; if (v) l.bind.dir = { v: v }; else delete l.bind.dir; }

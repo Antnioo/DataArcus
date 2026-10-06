@@ -197,6 +197,7 @@ RETURN
         "Day", DAY ( [Date] ),
         "Day of Week", WEEKDAY ( [Date], 1 ),
         "Day Name", SWITCH ( WEEKDAY ( [Date], 1 ), 1, "Sunday", 2, "Monday", 3, "Tuesday", 4, "Wednesday", 5, "Thursday", 6, "Friday", 7, "Saturday" ),
+        "Day Short", SWITCH ( WEEKDAY ( [Date], 1 ), 1, "Sun", 2, "Mon", 3, "Tue", 4, "Wed", 5, "Thu", 6, "Fri", 7, "Sat" ),
         "Day Name (Arabic)", SWITCH ( WEEKDAY ( [Date], 1 ), 1, "الأحد", 2, "الاثنين", 3, "الثلاثاء", 4, "الأربعاء", 5, "الخميس", 6, "الجمعة", 7, "السبت" ),
         "Week Start", [Date] - ( WEEKDAY ( [Date], 1 ) ) + 1,
         "ISO Week", WEEKNUM ( [Date], 21 ),

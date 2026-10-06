@@ -115,6 +115,9 @@
     col('Day', 'DAY ( [Date] )');
     col('Day of Week', dow);
     col('Day Name', sw('WEEKDAY ( [Date], 1 )', DAYS[lang]));
+    // (round 18, the owner's yes, 6 Oct 2026: "Sun" ... "Sat" for column charts, whose full day names slant; English
+    // only: the Arabic day names are short already)
+    if (lang === 'en') col('Day Short', sw('WEEKDAY ( [Date], 1 )', DAYS.en.map((d) => d.slice(0, 3))));
     if (arabicOn(st)) col(ARABIC.day, sw('WEEKDAY ( [Date], 1 )', DAYS.ar));
     col('Week Start', `[Date] - ( ${dow} ) + 1`);
     col('ISO Week', 'WEEKNUM ( [Date], 21 )');

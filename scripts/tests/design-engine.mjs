@@ -135,15 +135,15 @@ export default async function ({ browser, url }) {
   // a name of only symbols keeps its own name in the theme; its files fall back to power-bi-theme
   check(E.buildTheme(Object.assign(copy(base), { name: '***' })).name === '***' && E.fileBase('***') === 'power-bi-theme', 'name "***" changed');
 
-  // the legend's "Side" (Right) follows the reading direction like the rest of the layout: Left in right-to-left designs
-  // (the chosen direction, or the page's language when none is chosen), on every visual type that has a legend
+  // the legend's "Side" (Right) is at the right in every direction, on every visual type that has a legend
+  // (round 15, the owner's go on round 13's recommendation 2c: a side legend sits at the right in right-to-left designs too; it was Left)
   const LEGEND_TYPES = E.AXIS_CHARTS.concat('scatterChart', 'pieChart', 'donutChart', 'treemap');
   const legendOf = (dir, lang, legend) => {
     const d = copy(base); d.chart = { legend }; d.layout = Object.assign({}, d.layout, { dir });
     const vs = E.buildTheme(d, lang).visualStyles;
     return [...new Set(LEGEND_TYPES.map((t) => vs[t]['*'].legend[0].position))].join(',');
   };
-  for (const [dir, lang, want] of [['rtl', 'en', 'Left'], ['rtl', 'ar', 'Left'], ['', 'ar', 'Left'], ['ltr', 'en', 'Right'], ['ltr', 'ar', 'Right'], ['', 'en', 'Right']])
+  for (const [dir, lang, want] of [['rtl', 'en', 'Right'], ['rtl', 'ar', 'Right'], ['', 'ar', 'Right'], ['ltr', 'en', 'Right'], ['ltr', 'ar', 'Right'], ['', 'en', 'Right']])
     check(legendOf(dir, lang, 'Right') === want, `legend "Side", direction ${JSON.stringify(dir)}, page ${lang}: ${legendOf(dir, lang, 'Right')}, want ${want}`);
   check(legendOf('rtl', 'ar', 'Top') === 'Top' && legendOf('rtl', 'ar', 'Bottom') === 'Bottom', 'legend Top/Bottom changed in a right-to-left design');
 
@@ -188,10 +188,10 @@ export default async function ({ browser, url }) {
     await v.ctx.close();
   }
 
-  // on both pages: legend "Side" is Left in the theme on the Arabic page (no direction chosen) and with Right to left
-  // chosen on the English page, and Right with Left to right
+  // on both pages: legend "Side" is Right in the theme on the Arabic page (no direction chosen), with Right to left
+  // chosen on the English page, and with Left to right (round 15, the owner's go on round 13's recommendation 2c: a side legend sits at the right in right-to-left designs too; it was Left)
   for (const [name, page] of Object.entries(PAGES_TO_CHECK)) {
-    for (const [lang, dir, want] of [['ar', null, 'Left'], ['en', 'rtl', 'Left'], ['en', 'ltr', 'Right']]) {
+    for (const [lang, dir, want] of [['ar', null, 'Right'], ['en', 'rtl', 'Right'], ['en', 'ltr', 'Right']]) {
       const v = await visitor(browser);
       await v.pg.goto(`${url}${page}?lang=${lang}`, { waitUntil: 'networkidle' });
       if (dir) await v.pg.click(`#layout button[data-l="dir"][data-v="${dir}"]`);
@@ -205,7 +205,7 @@ export default async function ({ browser, url }) {
   // on both pages: the colour step's preview puts the "Side" legend on the same side as the theme, whatever the page's
   // own writing direction (English or Arabic page, with the design read left to right or right to left)
   for (const [name, page] of Object.entries(PAGES_TO_CHECK)) {
-    for (const [lang, dir, want] of [['en', 'rtl', 'Left'], ['en', 'ltr', 'Right'], ['ar', null, 'Left'], ['ar', 'ltr', 'Right']]) {
+    for (const [lang, dir, want] of [['en', 'rtl', 'Right'], ['en', 'ltr', 'Right'], ['ar', null, 'Right'], ['ar', 'ltr', 'Right']] /* (round 15, the owner's go on round 13's recommendation 2c: a side legend sits at the right in right-to-left designs too; it was Left) */) {
       const v = await visitor(browser);
       await v.pg.goto(`${url}${page}?lang=${lang}`, { waitUntil: 'networkidle' });
       if (dir) await v.pg.click(`#layout button[data-l="dir"][data-v="${dir}"]`);

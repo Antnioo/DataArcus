@@ -9,10 +9,11 @@
 import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright-core');
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(ROOT, 'assets/img/og');
 const MAX_BYTES = 280 * 1024;
 const font = (w) => 'data:font/woff2;base64,' + fs.readFileSync(require.resolve('@fontsource/inter/files/inter-latin-' + w + '-normal.woff2')).toString('base64');
