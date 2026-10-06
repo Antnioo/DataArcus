@@ -30,38 +30,104 @@ scope) and G (research: `mcp/research/POWERBI-HIDDEN-CAPABILITIES.md`). Reports 
 - **The golden scores:** round 19's table below (about 9.3); the target is 9.5 in both languages.
 
 ### Night sitting, where I am (kept current; times UTC)
-- **20:25, block A so far** (crops in `<tests folder>\night-1006\shots\`):
-  - **12b PASS** ("N12b hand EN", 1920 x 1080): the matrix at 9pt, Day Name and two measures, Sunday to Saturday and
-    the total, no scrollbar either way (`n12b-1080-matrix-crop.png`; about 283 of 420 wide, 200 of 220 high).
-  - **Item 10 PASS** ("N10 table EN"): 9pt, seven days and the total, no scrollbar (`n10-table-crop.png`).
-  - **S2b PASS for the ring and the rows** ("NS2b ring EN"): the ring 28 high with no number, Sunday to Wednesday and
-    the total. Seen: this table has no column with the ring's percent, so the note's "the table's value column
-    carries it" is not true for it.
-  - **No data: FAIL on part 2, so it stays opt-in.** With data, every message card's own inner outline is drawn as
-    a grey box inside its chart, and each chart sits about 5 nearer its box's edges than without the option (its
-    border and shadow are switched off): 212,533 pixels differ from the same page without the option
-    (`ba-nd-off-on-en.png`). With an empty selection the message shows in all four boxes, in Arabic too (shaped, whole),
-    but at the left in both languages and inside the same grey box (`nd-empty-en-crop.png`, `nd-empty-ar-crop.png`).
-    **Found by hand on copies ("ND x1"):** the card without its outline, centred, without its own shadow, and the
-    chart above keeping the theme's border and shadow (only its background off): with data 10,930 pixels differ by at
-    most 19 of 255 (edges), nothing to see; empty, the message is centred and clean. Tests written first (red: 566
-    checks, 2 failing); the writer's change comes after the red run of all tonight's checks.
-  - **Round 19's item 2: FAIL.** The column chart written as a bar chart takes the BAR chart's category: golden task 1,
-    task 4 16:9 Arabic and task 4:3 show "Total Sales by Quarter" twice and no chart by day (the round 19 check's model
-    has one text column, so it could not see it). Test written (a model with Quarter and Day Name).
-  - **Round 19's item 1: the made-up rows were untyped** (`#table({names}, {rows})`): after Refresh every column is
-    text and Desktop says "The function SUM cannot work with values of type String" in every chart (it shows as "This
-    might be caused by a capacity or license issue"). Fixed in the two test models: `#table(type table [...], rows)`
-    with bare type names (`type text` inside `type table` stops Desktop opening the project: "Issues were found").
-  - **Task 6's growth card, the cause:** "The following syntax error occurred during parsing: Invalid token, Line 1,
-    Offset 92": the test model's measure names the Arabic calendar table without quotes
-    (`SAMEPERIODLASTYEAR ( التقويم[التاريخ] )`); DAX needs `'التقويم'[التاريخ]`. Not the date table. Fixed in the test
-    model; the card then shows 215.4%.
-- **Measured for the 4:3 table:** the four fields need 463 (Segoe UI) or 483 (Tahoma) at 8pt; the table's half of a
-  960 x 720 page is 458. Three fifths of the row (about 550) holds them.
-- **Running:** the golden captures (8 of 20 started 20:16), the red run of the new checks (a full `npm test` takes
-  20 minutes on this laptop). **Not yet:** S3b, the No-data clicks/tooltips/Tab, B's scores, C, D, F, G.
+**21:30: blocks A, B and C done in Desktop; the code of block C is NOT committed yet: its full test run is in progress (the result is in the next commit's line here; website suites pass: design-engine 598, theme-generator 893, theme-generator-lab 893, layout 512, layout-lab 512, pbip 73).**
+Records with every measured number and crop: `scripts/tests/DESKTOP-TESTS.md`, "2026-10-06 night".
 
+#### Block A, the Desktop proof
+| Check | Result |
+|---|---|
+| 12b, the matrix fit | PASS (9pt, seven days and the total, no scrollbar; 1920 x 1080 and 1280 x 720) |
+| S2b, no number in a small table ring | PASS |
+| S3b, Day Short on a column chart | PASS (Sun ... Sat level, Sunday first; the table keeps the full names) |
+| Round 19 item 10, the 420 x 220 table | PASS (9pt, seven days and the total) |
+| Round 19 item 2, the day chart as bars | **FAIL as built, fixed tonight**: it took the bar chart's category (Quarter twice, no chart by day), and at 1280 x 720 its seventh bar was behind a scrollbar |
+| Task 5's single-focus page | the layout PASS; the card values touch the card's bottom and "Your logo" is cut (for the owner) |
+| "No data" | as built **FAIL** (a grey box in every chart, charts shifted); fixed tonight and proven again: empty, with data, clicks, tooltips, Arabic, phone PASS; **Tab FAILS** (each message card is an unnamed tab stop) |
+
+**The "No data" default: still OFF (opt-in), by the owner's rule.** One part fails: a keyboard or screen-reader user
+meets an unnamed stop before every chart, and how to take a visual out of Desktop's tab order was not found (a card
+without `tabOrder` was still a stop). With data the page now matches the page without the option to the eye (at most
+19 of 255 on the panels' edges), not pixel for pixel.
+
+#### Block B, the golden scores (10 less 1 per kind of visible problem)
+| Task | Round 13 EN / AR | As built tonight | After tonight's fixes |
+|---|---|---|---|
+| 1 Exec 1920 | 9 / 9 | 9 / 9 | 10 / 10 |
+| 2 Analysis | 10 / 10 | 10 / 10 | 10 / 10 |
+| 3 Ramadan | 10 / 10 | 10 / 10 | 10 / 10 |
+| 4 16:9 | 10 / 10 | 10 / 9 | 10 / 10 |
+| 4 4:3 | 8 / 8 | 8 / 8 | 10 / 10 |
+| 5 640 x 360 | 6 / 6 | 8 / 8 | 8 / 8 |
+| 6 long Arabic | 8 / 8 | 8 / 9 | 9 / 10 |
+| 7 no measures | 8 / 8 | 9 / 8 | 9 / 8 |
+| 8 redesign | 8 / 8 | 9 / 9 | 10 / 10 |
+| 10 300 tables | 8 / 8 | 8 / 8 | 8 / 8 |
+| **Mean** | **8.5 / 8.5** | **8.9 / 8.8** | **9.4 / 9.4** (target 9.5) |
+What keeps it under 9.5: task 5 (cut card values and logo text, page 2's table scrolls), task 7 (one month of rows;
+in Arabic three charts with one title), task 10 (no rows), task 6 English (a horizontal scrollbar in the table).
+**Task 6's growth card, the cause:** a syntax error in the test model's own measure (the Arabic table name without
+quotes), not the date table. Fixed in the test model: 215.4%.
+
+#### Block C, the fixes (tests first: red run 580 checks, 7 failing, all tonight's; then the code)
+1. **No data** (`pbip-export.js`): the message card has no inner outline, its text centred, no shadow of its own; the
+   chart above keeps the theme's border and shadow and only its background is off. Default unchanged (off).
+2. **One KPI card of a row planned for more takes a quarter of the row at the reading start** (`design-engine.js`,
+   the owner's 2a). Two or three cards of four still share the row; a row planned for one card keeps it across.
+   Seen in Desktop on task 8, English (left) and Arabic (right), both pages.
+3. **On a 4:3 page the table takes three fifths of its row** (the owner's 3a; measured first: four fields need 463 in
+   Segoe UI and 483 in Tahoma at 8pt, the half was 458). It is an option only the MCP sets (`layout.wideTable`, like
+   `kpiCards`): written into the shared engine without the option it changed the website's 960 x 720 layouts, which
+   the website's `design-engine` suite compares with its fixtures (15 differences), and the owner's answer was about
+   the MCP's report. **For the owner:** the website's Theme Generator keeps equal shares on 4:3; say if it should follow.
+4. **A column chart written as a bar chart keeps its own category and title** (round 19's item 2 took the bar
+   chart's), and where its rows and a value axis do not fit its height it has no value axis and each bar's value
+   beside it (measured: 22.2 a row, 45 above, 8 below, 38 for the axis). The table by the same column is "...: detail".
+5. **The golden test models' made-up rows are typed tables** (untyped, every column loaded as text and every chart
+   failed after Refresh), **the long-names model's rows run over seven months** (they were all in January: a chart
+   by month was one dot) **and its growth measure quotes the table name.**
+6. **The ring note** no longer says a column carries the value when the table has none (`server.mjs`).
+
+#### Block G, research (nothing shipped): `mcp/research/POWERBI-HIDDEN-CAPABILITIES.md`
+24 capabilities with the exact property each, 13 opened in Desktop on a made-up report, saved by Desktop and read
+back. Top 5: the card's `value.showBlankAs` ("No data" instead of "--" on KPI cards, drawn in Desktop), a subtitle and
+divider under chart titles, a constant line with its label, the look moved into the theme, data bars in a table
+column. No preview feature was switched on. Not done: Desktop's preview-features list, the format pane by hand,
+keyboard shortcuts, the TMDL features (field parameters, calculation groups, visual calculations).
+
+#### Night sitting, for the owner (options and a recommendation each)
+1. **"No data" by default.** (a) Keep it opt-in until the tab stop is solved; (b) on by default as it is, with the
+   unnamed tab stops; (c) drop the message cards and use the card's own blank text on KPI cards (research, top 5,
+   item 1), leaving charts and tables empty as Power BI draws them. **Recommended: (a) for charts and tables, and (c)'s
+   blank text on the KPI cards in the next round** (one property, no extra visual; needs its own Desktop proof in
+   Arabic).
+2. **The website's 4:3 layouts.** (a) Leave equal shares on the website (as now); (b) the website follows the MCP
+   (the table three fifths), with its layout fixtures recorded again. **Recommended: (b) next round**, so both give
+   the same page.
+3. **Task 7 in Arabic: three charts titled "عدد Order Id".** Round 14's rule drops an English column name from an
+   Arabic title. (a) Keep the rule and add the column in brackets when two titles on a page would be the same
+   ("عدد Order Id (Region)"); (b) allow the mixed title there; (c) leave it. **Recommended: (a).**
+4. **Task 5, 640 x 360.** The card values touch the card's bottom, "Your logo" is cut, and page 2 (Details) cuts its
+   card values and scrolls its table. (a) Under 800 wide, no second page and cards one step higher; (b) leave it for
+   the small-page round. **Recommended: (a)**, measured in Desktop first.
+5. **Task 6 in English: Arabic column names in an English report** make the table's headers wider than the fit
+   counts (a horizontal scrollbar). (a) Measure Arabic letters in Segoe UI and count them; (b) leave it (an English
+   report on an Arabic model is rare). **Recommended: (a) when the Arabic width table is next touched.**
+
+#### Night sitting, seen, not in scope (each with its status)
+| Item | Status |
+|---|---|
+| The ring note said "the table's value column carries it" for a table without that column | fixed tonight (wording) |
+| The health check cannot tell that a measure's DAX does not parse (task 6) | open: the tools read files only; a note for check_model_health's limits |
+| The Arabic table has no "Total" word | open since round 14 (Desktop writes it only in a first column that is text) |
+| The Arabic Reset arrow touches the last letter | open, small; needs a Desktop measure of the gap |
+| A table title at 18pt above 9pt rows in a small hand-placed slot | open, taste |
+| A theme from `generate_theme` alone carries the 1920 x 1080 text sizes on a smaller hand-placed page | open: `create_report` with `pages` and `theme` does not scale the theme; clear, not small |
+| English day, month and KPI names in Arabic reports on the sample | told in the notes; the sample has no Arabic columns |
+| Task 8's "Total by Note" is one bar; its customer table scrolls | the test model's own columns |
+| The Gulf model's bar chart by Store has number-like names | the test model's |
+| The message cards of "No data" are tab stops | for the owner, 1 |
+| A full `npm test` takes 13 to 30 minutes on this laptop and fails with "Request timed out" when Desktop and the browser suites run beside it | open: a way to run one block of `test.mjs` would save most of a sitting |
+| Round 18 and 19's own lists | the matrix's measures (no change needed, round 19 item 9), the script paths (done, item 8), the table's rows (done, item 10), the Arabic ☰ (done, S1), the tall ring (done, S2), slanted day names (done: Day Short, and bars since tonight) |
 ## Round 17, the outside review's fixes (2026-10-06, 13:19-14:19 UTC, cloud builder; branch `fix/round-17` from `fix/round-16` `26ba7ef`; item 6 on `feat/check-report-2`; not merged)
 
 Source: dataarcus-engine `business/audit/OUTSIDE-REVIEW-2026-10-06.md`. Out of scope: G-10, G-07 (owner decisions), G-06, G-09, G-11, Arabic indexing.

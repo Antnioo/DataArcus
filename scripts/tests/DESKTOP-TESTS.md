@@ -2205,7 +2205,97 @@ with the new code and opened again; crops in the same folder.
 **Seen, not in scope:** the Arabic Filters button has its ☰ at the left of the word (the reading end); a 64-high
 ring as a table picture makes rows so tall that one and a half show (`p4-table-crop.png`); the day names slant on
 the 1920 x 1080 pages' column charts; the Arabic table has no "Total" word; the model without rows shows "--".
+## 2026-10-06 night, the laptop sitting (`fix/round-17` from `d774780`), Power BI Desktop 2.158.1177
+The owner asleep; nothing waited for a person. Made-up models only (the Ramadan sample, the golden fixtures, the
+round 13 Gulf test model with tonight's calendar script). Reports from the working copy's server
+(`builder-scripts\n1-make.mjs`, `n1-golden.mjs`, `n1-gulf.mjs`), each opened by `n1-shot.ps1` (the bridge's capture
+is the canvas and the Filters pane: no title bar). Crops (not committed): `<tests folder>\night-1006\shots\`.
+`idle.ps1` 6,470 s at the start, no Desktop window open.
+
+### Block A, what was still unproven
+| # | Check | Seen (measured) | Result | Crop |
+|---|---|---|---|---|
+| 12b | The hand-placed matrix's fit | "N12b hand EN" (1920 x 1080, Day Name and four long measures in 420 x 220): 9pt on values, headers, row headers and total (the files), Day Name and two measures, **Sunday to Saturday and the total, no scrollbar either way, every header whole**; the content about 283 of 420 wide and 200 of 220 high (from the crop). The same slots on a 1280 x 720 page with the same theme file (a theme from `generate_theme` alone carries 15pt): 9pt again, the same four things true | PASS | `n12b-1080-matrix-crop.png`, `n12b-720-matrix-crop.png` |
+| S2b | No number in a table ring under 40 | "NS2b ring EN" (the 221-high table at 1280 x 720): the ring 28 high (`grid.imageHeight` 28), **no number inside**, Sunday to Wednesday and the total, a vertical scrollbar for the rest; the note is in reportNotes. This table has no column with the ring's percent, so the note's "the table's value column carries it" is not true for it | PASS (the note's last words: seen, not in scope) | `ns2b-table-crop.png` |
+| 19.10 | A 420 x 220 table of Day Name at 1920 x 1080 | "N10 table EN": 9pt, seven days and the total, no scrollbar | PASS | `n10-table-crop.png` |
+| 19.2 | The chart by day as a bar chart | golden task 1 (both), task 4 16:9 Arabic and task 4:3 (both): the chart that was the column chart is a bar chart, but **by Quarter**, the bar chart's own category: "Total Sales by Quarter" twice on the page and no chart by day. Cause: the slot's kind is changed to "bar" before the page's categories are given out, and they are given out by kind. The round 19 check's model has one text column | **FAIL** (fixed tonight, below) | `g1-en-p1-L.png`, `g4s-ar-p1-crop.png` |
+| ND 1 | "No data", an empty selection | "ND empty EN" / "ND empty AR" (the sample, exec, 1280 x 720, a page filter on Hijri year 1400): the message in all four boxes (three charts, the table), whole; **inside a grey box (the card's own inner outline) and at the left in both languages** | shows; the look FAILS | `nd-empty-en-crop.png`, `nd-empty-ar-crop.png` |
+| ND 2 | "No data", with data | "ND on EN" against "ND off EN": **the card's grey outline shows inside every chart and the table, and each chart sits about 5 nearer its box's edges** (its border and shadow are switched off): 212,533 of 4,097,500 pixels differ | **FAIL** | `ba-nd-off-on-en.png` |
+| ND 4 | The Arabic text | «لا توجد بيانات لهذا الاختيار» shaped, right to left, whole | PASS | `nd-empty-ar-crop.png` |
+| ND, by hand | What draws right (copies, `n1-ndx.mjs`) | the card with `outline.show` false (the default selector), its value centred, its own shadow off; the chart above keeps the theme's border and shadow and has only its background off: **with data 10,930 pixels differ from the page without the option, by at most 19 of 255 (the panels' edges), nothing to be seen; empty, the message is centred in a clean panel**, Arabic too. The same card changes with the chart's border and shadow still off: 183,883 pixels (the shift stays) | the recipe for the fix | `ba-nd-off-x1-corner.png`, `nd-x1-empty-ar-crop.png` |
+| S3b | Day Short on a column chart | "NS3b gulf EN" (round 13's made-up Gulf model with tonight's `add_gulf_calendar` script written into its TMDL files, 40 columns with Day Short; exec, 1920 x 1080, the column chart by Day Name): **Sun, Mon ... Sat, level, Sunday first**; the table beside it Sunday to Saturday in full; reportNotes: "The column chart by day ... shows Day Short (Sun ... Sat)" | PASS | `ns3b-crop.png` |
+| 5 | Task 5's single-focus page | "G5 Small" (640 x 360): page 1 is three cards and the line chart by month, months level, no table. **The card values touch the card's bottom edge (the comma of 101,914 reads as a point), and "Your logo" is cut ("Your log" with a marker)**, English; the Arabic page the same values | PASS for the layout; **the cut value and logo text: FAIL (for the owner, the small-page round)** | `g5-en-top-crop.png`, `g5-ar-pair.png` |
+
+**"No data" after the writer's fix (`ND ...` rebuilt; `ndb-*`):**
+| Part | Seen (measured) | Result | Crop |
+|---|---|---|---|
+| 1. An empty selection | the message once in each of the four boxes, centred, in a clean panel, English and Arabic | PASS | `ndb-empty-pair.png` |
+| 2. With data | against the same page without the option: 14,475 of 2,610,000 pixels differ, **by at most 19 of 255** (the panels' edges, where the card's panel and the chart's border are drawn over each other); none above a tolerance of 20; nothing to be seen at full size | PASS to the eye (the expected "under 1,000 pixels" was written for exact equality: not met; the cause and the size are as said) | `ndb-on-pair.png` |
+| 3a. A click | a click in the line chart's plot puts the keyboard focus on that chart's "Plot area" (UI Automation), not on a card | PASS | - |
+| 3b. A tooltip | hovering the line chart shows the chart's report page tooltip (April, 22,381); no tooltip of a card | PASS | `ndb-hover-line.png` |
+| 3c. Tab | **FAIL.** In the files every message card has its own `tabOrder` (one step before its chart) and an empty alt text; in Desktop, Tab from the line chart lands on a visual without a name before the next chart. A copy whose message cards carry no `tabOrder` still gave an unnamed stop (`ND tab EN`): how to take a visual out of the tab order was not found tonight | **FAIL** | - |
+| 4. Arabic | «لا توجد بيانات لهذا الاختيار» shaped, right to left, whole, centred | PASS | `ndb-empty-pair.png` |
+| 5. The phone layout | no message card has a `mobile.json` (the files; the test checks it); the phone view itself was not opened | PASS by the files | - |
+
+**So the "No data" default stays off (opt-in):** part 3c fails (a keyboard or screen-reader user meets an unnamed
+stop before every chart), and part 2 is equal to the eye but not pixel for pixel. Options are in `mcp/WORK.md`.
+
+### Block B, the golden tasks' reports again
+All 20 rebuilt by the working copy's server with the calls of `mcp/test-models/golden-baseline.mjs`
+(`n1-golden.mjs`, English and Arabic), each opened, **Home > Refresh pressed once** (UI Automation), both pages
+captured; ready in 25 to 29 s (the 300-table model 56 and 65 s). The same scoring rule (10 less 1 for each kind of
+thing visibly wrong). "Round 13" is the last score; "as built" is the branch at `d774780` with the test models' rows
+made loadable (they were not: see the lessons); "after" is with tonight's fixes, the nine changed reports opened again
+(`*-b-*`). Page 1 was read at full size for tasks 1 and 5 and from 0.62 pairs for the others (text at 8pt and larger
+is readable there); a full-size crop was cut wherever something looked off. Pairs against round 13:
+`ba-n-<tag>.png` (round 13 left).
+| Task, report | Round 13 | As built | After | What is still off after |
+|---|---|---|---|---|
+| 1 Exec, 1920 x 1080: English / Arabic | 9 / 9 | 9 / 9 | **10 / 10** | - (as built: "Total Sales by Quarter" twice, no chart by day) |
+| 2 Analysis | 10 / 10 | 10 / 10 | 10 / 10 | - |
+| 3 Ramadan focus | 10 / 10 | 10 / 10 | 10 / 10 | - |
+| 4 16:9, 1280 x 720 | 10 / 10 | 10 / 9 | **10 / 10** | - (as built, Arabic: the Quarter chart twice) |
+| 4 4:3, 960 x 720 | 8 / 8 | 8 / 8 | **10 / 10** | - (the table 550 wide holds its four fields; the day chart is bars with the values beside them) |
+| 5 640 x 360 | 6 / 6 | 8 / 8 | 8 / 8 | cut text (the card values' bottoms, "Your log", page 2's values cut in half, a shortened card title in Arabic); page 2's table scrolls |
+| 6 long Arabic names | 8 / 8 | 8 / 9 | **9 / 10** | English: the table has a horizontal scrollbar (Arabic headers in an English report are wider than the fit counts). The growth card shows 215.4% and the line runs over seven months (the test model's rows and measure were fixed) |
+| 7 no measures | 8 / 8 | 9 / 8 | 9 / 8 | the chart by month is one dot (the test model's rows are one month and it has no month number to sort by); Arabic also: three charts titled "عدد Order Id" (round 14's rule drops the English column name from an Arabic title) |
+| 8 redesign | 8 / 8 | 9 / 9 | **10 / 10** | - (the one card takes a quarter of the row, left in English, right in Arabic, on both pages) |
+| 10 300 tables | 8 / 8 | 8 / 8 | 8 / 8 | no rows (the generated model has none); page 2 was captured before it drew and not read |
+| **Mean** | **8.5 / 8.5** | **8.9 / 8.8** | **9.4 / 9.4** | the target was 9.5 |
+**Why not 9.5:** tasks 5, 7 and 10 keep 2 points each off. Task 10 needs rows in the generated model (next round's DAX
+tables); task 5 is the small-page round; task 7's Arabic titles need the owner's word (`mcp/WORK.md`).
+
+**Task 6's growth card, the cause (found in Desktop):** the card's "See details" says "The following syntax error
+occurred during parsing: Invalid token, Line 1, Offset 92": the test model's measure names the Arabic calendar table
+without quotes. It is not the date table and not the missing rows. With `'التقويم'[التاريخ]` the card shows 215.4%.
+
+**Seen, not in scope (the whole night):** the Arabic table has no "Total" word (round 14: Desktop writes it only in a
+first column that is text); Arabic Reset: the arrow touches the last letter (English has a gap); English day and month
+names and KPI names in Arabic reports (the sample has no Arabic columns; told in the notes); a table title at 18pt
+above 9pt rows on a hand-placed 420 x 220 slot; a theme from `generate_theme` alone carries the 1920 x 1080 sizes
+whatever the hand-placed page's size; "Refresh now" banner on every DAX-table model; the Gulf model's bar chart by
+Store has number-like names (1, 2) on a wide axis; task 8's "Total by Note" is one bar (the model's own column) and its
+customer table scrolls (12 rows); the health check cannot tell that a measure's DAX does not parse (task 6's cause).
+
 ## Lessons
+- **Night of 6-7 Oct: a bar chart at the theme's 10pt (1280 x 720) needs 22.2 a row, 45 above the first row and 8
+  under the last, and 38 more for its value axis.** Round 0's "22 a row + 46" was the tooltip page's chart without a
+  value axis: seven day names in a 221-high slot with the axis lost Saturday behind a scrollbar.
+- **Night of 6-7 Oct: three heavy things at once (Desktop opening reports, the MCP test, the browser suites) made an
+  MCP request pass its 60 s limit**: the run ended in "Request timed out", not in a failing check. Run the full test
+  with Desktop idle.
+- **Night of 6-7 Oct: an untyped Power Query table (`#table({"A", "B"}, {rows})`) loads every column as text on
+  Refresh, whatever the TMDL column's `dataType` says**; SUM then fails ("The function SUM cannot work with values of
+  type String"), and the visual shows "This might be caused by a capacity or license issue". Write
+  `#table(type table [#"A" = datetime, #"B" = Int64.Type, #"C" = number, #"D" = text, #"E" = logical], {rows})`:
+  bare type names; `type text` inside `type table [...]` stops Desktop opening the project ("Issues were found").
+- **Night of 6-7 Oct: DAX needs quotes around a table name that is not plain Latin letters**: `التقويم[التاريخ]` is
+  "Invalid token"; `'التقويم'[التاريخ]` parses. The card shows "Something's wrong with one or more fields".
+- **Night of 6-7 Oct: a visual's error text is behind its "See details" link, which UI Automation can press**
+  (`n1-texts.ps1` then reads it); a dialog such as "Issues were found" is its own window and its text is not exposed.
+- **Night of 6-7 Oct: a visual whose border is switched off in `visual.json` draws its content about 5 nearer the
+  box's edges than one that leaves the border to a solid theme.** To let something below show through, switch off
+  only the background.
 - **Round 13: a capture of the whole Desktop window shows the title bar with the signed-in account.** One such picture was made tonight and deleted; cut the canvas out (`crop.ps1`) and keep only that.
 - **Round 13: a button's `iconSize` is honoured; its icon and text margins did nothing (8L, 20L, 20D).** With
   `icon.placement` written the arrow is drawn small and tight against the text: write the size, and a gap as two
