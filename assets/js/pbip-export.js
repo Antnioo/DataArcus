@@ -267,9 +267,10 @@
   const orderHelper = (f) => ({ field: { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Entity: f.sortBy.t } }, Property: f.sortBy.c } }, Function: 3 } },
     queryRef: 'Min(' + f.sortBy.t + '.' + f.sortBy.c + ')', nativeQueryRef: 'Min of ' + f.sortBy.c, displayName: ' ' });
   const orderedBy = (fs) => fs.find((f) => isTextField(f) && (f.sortBy || f.ordered)) || null;
-  const inOrder = (query, fs) => {
+  const inOrder = (query, fs, rtl) => {
     const f = orderedBy(fs); if (!f) return query;
-    if (f.sortBy) { const h = orderHelper(f); query.queryState.Values.projections.push(h); query.sortDefinition = { sort: [{ field: h.field, direction: 'Ascending' }], isDefaultSort: true }; }
+    // (round 14: in a right-to-left table the helper goes at the left end, away from the text column at the right)
+    if (f.sortBy) { const h = orderHelper(f); query.queryState.Values.projections[rtl ? 'unshift' : 'push'](h); query.sortDefinition = { sort: [{ field: h.field, direction: 'Ascending' }], isDefaultSort: true }; }
     else query.sortDefinition = { sort: [{ field: proj(f).field, direction: 'Ascending' }], isDefaultSort: true };
     return query;
   };
@@ -279,11 +280,15 @@
   // 2.158, 4 Oct: with a measure first there was no "Total"), so the category sits at the left end and "Total" shows.
   const isTextField = (f) => f.c != null && !f.num && f.agg == null;
   const Bind_nameLike = (name) => /(^|\s|_)(month|day|weekday)\s*_?(name|short)$|^(day of week|weekday|mmm|mmmm)$|short\s*month|^(اسم\s*)?(الشهر|اليوم)$/i.test(String(name).replace(/\s*\((arabic|عربي)\)\s*$/i, '').replace(/hijri|fiscal|هجري|مالي/i, '').trim());
+  // Round 14, the owner's ask (6 Oct 2026; his capture "GM AR dark 720" had Day Name at the left of an Arabic table):
+  // the text column is the LAST projection in a right-to-left report, so Desktop draws it at the right edge, and the
+  // measures sit to its left in reading order. This replaces design choice 5 (text first, for the total row's "Total",
+  // which Power BI writes only in the first projection's column when it is text): the reading order comes first.
   const tableFields = (B, rtl) => {
     const fs = (B.table || []).filter(Boolean);
     if (!rtl) return fs;
     const r = fs.slice().reverse(), first = fs.find(isTextField);
-    return first ? [first].concat(r.filter((f) => f !== first)) : r;
+    return first ? r.filter((f) => f !== first).concat([first]) : r;
   };
   // Round 11 (seen in Desktop 2.158, 5 Oct 2026: on a 960 x 720 page a table of a text column and three measures was
   // wider than its box, a header cut and a column off the box behind a scrollbar; at 1920 x 1080 too with four long
@@ -315,7 +320,7 @@
       case 'donut': case 'funnel': return need(cat, y) ? q({ Category: [proj(cat)], Y: [proj(y)] }) : null;
       // a table column's number format on the report side is "format" on its projection (measured in Desktop 2.158,
       // third sitting of 2026-10-04: 13857 became 13,857); the field carries it as tableFormat
-      case 'table': { const fs = tableFields(B, rtl); return fs.length ? inOrder(q({ Values: fs.map(tproj) }), fs) : null; }
+      case 'table': { const fs = tableFields(B, rtl); return fs.length ? inOrder(q({ Values: fs.map(tproj) }), fs, rtl) : null; }
       // a matrix: rows by the table's first text column, its measures as the values
       case 'matrix': { const fs = (B.table || []).filter(Boolean), row = fs.find(isTextField), vals = fs.filter(isValue); return row && vals.length ? q({ Rows: [proj(row)], Values: vals.map(tproj) }) : null; }
       case 'gauge': return need(y) ? q({ Y: [proj(y)] }) : null;
@@ -1074,9 +1079,10 @@
             const mine = (o.svgColumns || []).filter((c) => c.page === pageIndex);
             const cols = mine.map((c) => ({ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: c.t } }, Property: c.m } }, queryRef: c.t + '.' + c.m, nativeQueryRef: c.m }));
             if (cols.length) {
-              const ps = query.queryState.Values.projections, isText = (p) => !!p.field.Column;
-              // (since 5 Oct the table's own order already has its text column first in a right-to-left report: tableFields)
-              if (rtl && s.kind === 'table') query.queryState.Values.projections = ps.length && isText(ps[0]) ? [ps[0]].concat(cols.slice().reverse(), ps.slice(1)) : ps.concat(cols);
+              const ps = query.queryState.Values.projections;
+              // (round 14: a right-to-left table ends with its text column, so the pictures, the reading end, go at the
+              // left, after the order's helper column where there is one)
+              if (rtl && s.kind === 'table') { const lead = ps.length && /^Min\(/.test(ps[0].queryRef) && ps[0].displayName === ' ' ? 1 : 0; query.queryState.Values.projections = ps.slice(0, lead).concat(cols.slice().reverse(), ps.slice(lead)); }
               else query.queryState.Values.projections = ps.concat(cols);
               // The pictures never push the table past its box (Desktop showed a scrollbar and a cut header with three
               // fields and pictures of 160 and 180 in a 553-wide table, 5 Oct 2026): every other column keeps its room

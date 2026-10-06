@@ -428,7 +428,8 @@ check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.string
   // (changed 5 Oct 2026, the owner's design choice 5: the Arabic table keeps its text column first, so the total row's
   //  "Total" shows (Power BI writes it only in a first column of text), and the rest follow in the mirrored order.
   //  Before, the whole order was reversed and the category sat last, on the right.)
-  check(te.length && ta.length && cols(te[0])[0].startsWith('C:') && cols(ta[0])[0] === cols(te[0])[0] && JSON.stringify(cols(ta[0]).slice(1)) === JSON.stringify(cols(te[0]).slice(1).reverse()),
+  // (changed 6 Oct 2026, round 14, the owner's ask: an Arabic table ends with its text column, drawn at the right edge, the measures to its left in reading order; this replaces design choice 5, text first)
+  check(te.length && ta.length && cols(te[0])[0].startsWith('C:') && JSON.stringify(cols(ta[0])) === JSON.stringify(cols(te[0]).slice().reverse()),
     `right-to-left table column order: EN ${te.length ? cols(te[0]) : '-'} / AR ${ta.length ? cols(ta[0]) : '-'}`);
   check(!ar.err && (ar.j.modelNotes || []).some((n) => n.field === 'Calendar[Day Name]'), `modelNotes should tell Day Name has no sort column: ${JSON.stringify(ar.j && ar.j.modelNotes)}`);
 }
@@ -1872,8 +1873,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => Object.keys(te.visual.objects.grid[0].properties).join() === 'imageHeight,imageWidth' && gW(te) >= 8 && gW(te) <= 180 && gH(te) >= 8 && gH(te) <= 24 && en.j.svgMeasures[0].imageWidth === gW(te) && gW(ta) >= 8 && gW(ta) <= 180,
       () => `the table must carry grid.imageHeight 24D and imageWidth 180D (the tallest and the widest design): ${JSON.stringify(te && te.visual.objects.grid)} ${short(en)}`);
     // 2. a picture is never the first projection, and the first is a text column in both directions (so "Total" shows)
-    chk(() => [te, ta].every((t) => { const ps = t.visual.query.queryState.Values.projections; return ps[0].field.Column && ps.filter(isPic).length === 2; }) && te.visual.query.queryState.Values.projections.slice(-2).every(isPic),
-      () => `the first projection must be a text column, never a picture: EN ${te && te.visual.query.queryState.Values.projections.map((p) => p.queryRef).join(' | ')}; AR ${ta && ta.visual.query.queryState.Values.projections.map((p) => p.queryRef).join(' | ')}`);
+    // (changed 6 Oct 2026, round 14, the owner's ask: an Arabic table ends with its text column, drawn at the right edge, the measures to its left in reading order; this replaces design choice 5, text first): the Arabic table's pictures sit at its left end, its text column last
+    chk(() => [te, ta].every((t) => t.visual.query.queryState.Values.projections.filter(isPic).length === 2) && te.visual.query.queryState.Values.projections[0].field.Column && te.visual.query.queryState.Values.projections.slice(-2).every(isPic)
+        && ta.visual.query.queryState.Values.projections.slice(-1)[0].field.Column && ta.visual.query.queryState.Values.projections.filter((p) => p.displayName !== ' ').slice(0, 2).every(isPic),
+      () => `the English table's first projection must be a text column, the Arabic table's last, never a picture: EN ${te && te.visual.query.queryState.Values.projections.map((p) => p.queryRef).join(' | ')}; AR ${ta && ta.visual.query.queryState.Values.projections.map((p) => p.queryRef).join(' | ')}`);
     // 3. a right-to-left report mirrors the design: shapes flipped, texts kept readable at the mirrored place
     {
       const ee = extOf(path.join(ROOT, 'r10-project', en.j.report)).entities[0].measures[0].expression, ae = extOf(path.join(ROOT, 'r10-project', ar.j.report)).entities[0].measures[0].expression;
@@ -2123,10 +2126,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   {
     const refs = (vs) => vs.filter((v) => type(v) === 'tableEx').map((v) => v.visual.query.queryState.Values.projections.map((p) => p.queryRef).join(' | '));
     const fmt = (vs) => vs.filter((v) => type(v) === 'tableEx').map((v) => v.visual.objects.columnFormatting.map((e) => e.selector.metadata + '=' + S(e.properties.alignment)).join(' | '));
-    chk(() => refs(enV).every((r) => r === 'Sales.Region | Sales.Total Sales | Sales.Orders') && refs(arV).length >= 1 && refs(arV).every((r) => r === 'Sales.Region | Sales.Orders | Sales.Total Sales')
+    chk(() => refs(enV).every((r) => r === 'Sales.Region | Sales.Total Sales | Sales.Orders') && refs(arV).length >= 1 && refs(arV).every((r) => r === 'Sales.Orders | Sales.Total Sales | Sales.Region') /* (changed 6 Oct 2026, round 14, the owner's ask: an Arabic table ends with its text column, drawn at the right edge, the measures to its left in reading order; this replaces design choice 5, text first) */
         // (round 12, #12, the owner's go 6 Oct: numbers right-aligned in a right-to-left table too; they were Left)
-        && fmt(arV).every((f) => f === 'Sales.Region=Right | Sales.Orders=Right | Sales.Total Sales=Right') && siteAr.filter((v) => type(v) === 'tableEx').every((v) => !!v.visual.query.queryState.Values.projections[0].field.Column),
-      () => `an Arabic table's first projection must be its text column: EN ${JSON.stringify(refs(enV))} AR ${JSON.stringify(refs(arV))} ${JSON.stringify(fmt(arV))}`);
+        && fmt(arV).every((f) => f === 'Sales.Orders=Right | Sales.Total Sales=Right | Sales.Region=Right') && siteAr.filter((v) => type(v) === 'tableEx').every((v) => !!v.visual.query.queryState.Values.projections.filter((p) => p.displayName !== ' ').slice(-1)[0].field.Column),
+      () => `an Arabic table's last projection must be its text column: EN ${JSON.stringify(refs(enV))} AR ${JSON.stringify(refs(arV))} ${JSON.stringify(fmt(arV))}`);
   }
   // 6. the Arabic Reset: text and tooltip "إعادة ضبط الفلاتر" (the owner's wording); English unchanged
   {
@@ -2803,7 +2806,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const ar2 = await ask('create_report', { path: 'r12-project', name: 'R12 AR2', lang: 'ar', design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', lang: 'ar' }), fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin %]', 'Sales[Avg Price]'], table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Orders]'] } });
   {
     const fmt = (x, p) => pageVisuals(x, p).filter((v) => type(v) === 'tableEx').map((v) => v.visual.objects.columnFormatting.map((e) => e.selector.metadata + '=' + S(e.properties.alignment)).join(' | '));
-    chk(() => fmt(ar2, 'r12-project').length >= 1 && fmt(ar2, 'r12-project').every((f) => f === 'Sales.Region=Right | Sales.Orders=Right | Sales.Total Sales=Right') && fmt(en, 'r12-project').every((f) => f === 'Sales.Region=Left | Sales.Total Sales=Right | Sales.Orders=Right'),
+    chk(() => fmt(ar2, 'r12-project').length >= 1 && fmt(ar2, 'r12-project').every((f) => f === 'Sales.Orders=Right | Sales.Total Sales=Right | Sales.Region=Right') /* (changed 6 Oct 2026, round 14, the owner's ask: an Arabic table ends with its text column, drawn at the right edge, the measures to its left in reading order; this replaces design choice 5, text first) */ && fmt(en, 'r12-project').every((f) => f === 'Sales.Region=Left | Sales.Total Sales=Right | Sales.Orders=Right'),
       () => `#12: numbers right-aligned in both directions, text at the reading start: AR ${JSON.stringify(fmt(ar2, 'r12-project'))} EN ${JSON.stringify(fmt(en, 'r12-project'))}`);
   }
 
@@ -3212,6 +3215,39 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
         && cardOf('Return Rate').length && cardOf('Return Rate').every((o) => /0\.0%/.test(o)) && cardOf('Orders').length && cardOf('Orders').every((o) => /#,0'/.test(o) && !/0\.00/.test(o))
         && fs.readFileSync(path.join(ROOT, 'r12b-fmt/Fmt.SemanticModel/model.bim'), 'utf8') === bim,
       () => `create_report must say the formats first and show them right (table, cards) without touching the model: ${cr.err ? cr.t.slice(0, 300) : JSON.stringify(Object.keys(cr.j).slice(0, 3))} table ${JSON.stringify(['Sales.Return Rate', 'Sales.Orders', 'Sales.Order Date', 'Sales.Qty'].map(fmtOf))} cards ${JSON.stringify(cardOf('Return Rate')).slice(0, 300)} | ${JSON.stringify(cardOf('Orders')).slice(0, 300)}`);
+  }
+}
+
+// ---------- round 14: the owner's late Arabic asks (6 Oct 03:20-03:44) ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
+  const col = (name, dataType) => ({ name, dataType, sourceColumn: name });
+  const visuals = (p, report) => { const out = []; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((f) => { const q = path.join(d, f.name); if (f.isDirectory()) walk(q); else if (f.name === 'visual.json') out.push(JSON.parse(fs.readFileSync(q, 'utf8'))); }); walk(path.join(ROOT, p, report, 'definition', 'pages')); return out; };
+  fs.mkdirSync(path.join(ROOT, 'r14/R14.SemanticModel'), { recursive: true });
+  fs.writeFileSync(path.join(ROOT, 'r14/R14.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [
+    { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Year', 'int64'), col('Quarter', 'string'), col('Day Name', 'string'), col('Day of Week', 'int64')] },
+    { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime'), col('Region', 'string')],
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }] }] } }));
+
+  // 1. The Arabic table reads right to left (owner, 6 Oct): Desktop does not mirror a table, so on an Arabic report the
+  // text column is the LAST projection (drawn at the right edge) and the measures are to its left in reading order;
+  // text and numbers right-aligned. Designed and hand-placed pages alike; English unchanged
+  {
+    const fields = { table: ['Calendar[Day Name]', 'Sales[Total Sales]', 'Sales[Orders]'], kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin %]'] };
+    const design = async (lang) => (await ask('plan_layout', { layout: 'analysis', kpis: 3, lang })).j.design;
+    const ar = await ask('create_report', { path: 'r14', name: 'R14 AR table', lang: 'ar', design: await design('ar'), fields, secondPage: false });
+    const en = await ask('create_report', { path: 'r14', name: 'R14 EN table', design: await design('en'), fields, secondPage: false });
+    const hand = await ask('create_report', { path: 'r14', name: 'R14 AR hand', lang: 'ar', rtl: true, font: 'Tahoma', fields,
+      pages: [{ name: 'صفحة', slots: [{ kind: 'title', x: 1044, y: 18, w: 840, h: 48 }, { kind: 'table', x: 36, y: 100, w: 1000, h: 600 }] }] });
+    const order = (x, p) => (x.err ? [] : visuals(p, x.j.report)).filter((v) => v.visual && v.visual.visualType === 'tableEx' && !/tooltip/i.test(JSON.stringify(v.visual.visualContainerObjects || {})))
+      .map((v) => ({ refs: v.visual.query.queryState.Values.projections.map((q) => q.queryRef), align: Object.fromEntries((v.visual.objects.columnFormatting || []).map((c) => [c.selector.metadata, c.properties.alignment && c.properties.alignment.expr.Literal.Value])) }));
+    const real = (refs) => refs.filter((r) => !/^Min\(/.test(r));
+    const rtlOk = (t) => { const r = real(t.refs); return r[r.length - 1] === 'Calendar.Day Name' && r.indexOf('Sales.Total Sales') > r.indexOf('Sales.Orders') && Object.values(t.align).every((a) => a === "'Right'") && (t.refs.findIndex((q) => /^Min\(/.test(q)) <= 0); };
+    const A = order(ar, 'r14'), E = order(en, 'r14'), H = order(hand, 'r14');
+    chk(() => A.length >= 1 && A.every(rtlOk) && H.length === 1 && H.every(rtlOk) && E.length >= 1 && E.every((t) => real(t.refs)[0] === 'Calendar.Day Name'),
+      () => `the Arabic table must end with its text column (right edge), measures to its left in reading order, all right-aligned; English unchanged: AR ${JSON.stringify(A)} HAND ${JSON.stringify(H)} EN ${JSON.stringify(E.map((t) => t.refs))} ${ar.err ? ar.t.slice(0, 200) : ''}${hand.err ? hand.t.slice(0, 200) : ''}`);
   }
 }
 
