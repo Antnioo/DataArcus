@@ -400,7 +400,7 @@
     const headerGrew = [];   // pages whose header grew one row of tabs (round 12)
     const tableSmaller = [];   // tables given a smaller text so more fields fit (round 12)
     const noData = [];   // round 19: the "No data" measures, { t, m, expression }
-    const NODATA = own && o.noDataMessage !== false;
+    const NODATA = own && o.noDataMessage === true;   // (opt-in for now: see WORK.md, round 19, for the owner)
     const barCharts = [];   // round 19: column charts by day or month names written as bar charts
     const shortDays = [];   // round 18, S3: column charts that show Day Short
     const ringsSmall = [];   // round 18: ring pictures drawn under 40 high, written without their number

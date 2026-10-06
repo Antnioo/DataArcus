@@ -3804,10 +3804,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   //     a report-level measure (reportExtensions, the model untouched) IF ( ISBLANK ( [m] ), text, "" ) on a card in the
   //     same box one layer below the chart (lower z), its tooltip off, not on the phone; the chart above it see-through
   //     (no background, border or shadow of its own) so the card's panel shows; Arabic text in Arabic; noDataMessage: false
-  //     writes none
+  //     writes none (round 19: opt-in, noDataMessage: true, until proven in Desktop; without it none is written)
   {
     mk('r19-nodata', ['Region', 'Channel']);
-    const one = async (lang, on) => { const x = await ask('create_report', { path: 'r19-nodata', name: `R19 nodata ${lang} ${on}`, lang, secondPage: false, ...(on ? {} : { noDataMessage: false }), design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', lang })).j.design });
+    const one = async (lang, on) => { const x = await ask('create_report', { path: 'r19-nodata', name: `R19 nodata ${lang} ${on}`, lang, secondPage: false, ...(on ? { noDataMessage: true } : {}), design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', lang })).j.design });
       if (x.err) return { err: x.t.slice(0, 300) };
       const vs = vis('r19-nodata', x), ext = (() => { try { return fs.readFileSync(path.join(ROOT, 'r19-nodata', x.j.report, 'definition', 'reportExtensions.json'), 'utf8'); } catch (e) { return ''; } })();
       const charts = vs.filter((v) => ['clusteredBarChart', 'clusteredColumnChart', 'lineChart', 'donutChart', 'tableEx'].includes(ty(v)));
@@ -3822,7 +3822,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const en = await one('en', true), ar = await one('ar', true), off = await one('en', false);
     chk(() => en.charts >= 3 && en.paired === en.charts && en.seeThrough === en.charts && en.tipOff === en.charts && en.ext && en.en && en.phone === 0, () => `English: every chart and table has its "No data" card below it: ${JSON.stringify(en)}`);
     chk(() => ar.paired === ar.charts && ar.charts >= 3 && ar.ar, () => `Arabic: the message in Arabic: ${JSON.stringify(ar)}`);
-    chk(() => off.charts >= 3 && off.paired === 0, () => `noDataMessage: false writes no message cards: ${JSON.stringify(off)}`);
+    chk(() => off.charts >= 3 && off.paired === 0, () => `without noDataMessage: true no message cards: ${JSON.stringify(off)}`);
   }
   // 4. (check 12, FAIL in Desktop: "P7 hand EN", a hand-placed matrix of Day Name and four long measures in a 420 x 220
   //    slot, had a horizontal scrollbar, the third header cut, and showed three of the seven days and the total.) Cause:
