@@ -100,6 +100,15 @@ export function planLayout(a) {
   if (a.kpis != null) { l.kpis = Math.max(3, a.kpis); if (a.kpis < 3) l.kpiCards = a.kpis; else delete l.kpiCards; }
   if (a.filters != null) { l.filters = a.filters !== 'none'; if (l.filters) l.fpos = a.filters; }
   Object.assign(design.layout, layoutFrom({ page: a.page, header: a.header, dir: a.dir }, l, () => {}));
+  // Round 19 (the owner's choice B, 6 Oct 2026; golden task 5 at 640 x 360 in Desktop: cut card values, "Wednes...", a
+  // scrolling table): below 800 wide the executive layout's four charts do not fit, so the plan takes the single-focus
+  // layout: the KPI cards and one large chart (the text box beside it only when the report is given its text)
+  let smallPage = null;
+  const pw0 = E.page(design.layout).w;
+  if (pw0 < 800 && design.layout.preset === 'exec') {
+    const L = design.layout; L.preset = 'focus'; L.filters = E.LAYOUTS.focus.filters; delete L.kpiH; delete L.mainW; delete L.split;
+    smallPage = { from: 'exec', to: 'focus', say: `The page is ${pw0} wide, under 800: the executive layout's four charts and table would be cut or scroll there, so this plan uses the single-focus layout (the KPI cards and one large chart). Say so in the plan; a page 800 wide or more takes the executive layout.` };
+  }
   E.repairState(design);
   const lang = a.lang, nm = (pair) => (lang === 'ar' ? pair[1] : pair[0]), layout = design.layout;
   // one row per visual, as the website's slot table: its name, the suggested visual, and x, y, w, h in page units
@@ -109,7 +118,7 @@ export function planLayout(a) {
   const right = E.rtl(layout, lang);
   const forAuthoring = slots.slice().sort((p, q) => (p.y - q.y) || (right ? q.x - p.x : p.x - q.x))
     .map((s, i) => ({ role: s.role, kind: s.kind, position: { x: s.x, y: s.y, z: (i + 1) * 1000, width: s.w, height: s.h, tabOrder: (i + 1) * 1000 } }));
-  return { design, slots, forAuthoring, why: E.LAYOUTS[layout.preset].why.map(nm) };
+  return Object.assign({ design, slots, forAuthoring, why: E.LAYOUTS[layout.preset].why.map(nm) }, smallPage ? { smallPage } : {});
 }
 
 // The page size a layout really gets, and whether a custom size had to be fitted (as the website does)

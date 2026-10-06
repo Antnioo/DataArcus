@@ -3789,6 +3789,15 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => low.types.join() === 'clusteredColumnChart', () => `no Day Short, a slot too low for seven bars (150): the column chart stays: ${JSON.stringify(low.types)} ${low.err}`);
     chk(() => withShort.types.join() === 'clusteredColumnChart' && catOf(withShort.cat) === 'Calendar.Day Short', () => `with Day Short: the column chart by Day Short (round 18): ${JSON.stringify(withShort.types)} ${withShort.err}`);
   }
+  // Round 19, item 3 (the owner's choice B, 6 Oct; golden task 5 at 640 x 360: cut card values, "Wednes...", a scrolling
+  //     table): below 800 wide the executive layout is not used: the plan takes the single-focus layout (one large
+  //     chart, no table) and says so; at 800 or more nothing changes
+  {
+    const small = await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'none', page: { w: 640, h: 360 } }), wide = await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'none', page: { w: 960, h: 720 } });
+    const kinds = (x) => x.err ? [] : x.j.slots.map((s) => s.kind);
+    chk(() => !small.err && small.j.design.layout.preset === 'focus' && !kinds(small).includes('table') && /under 800/.test(JSON.stringify(small.j.smallPage || '')), () => `640 x 360: the single-focus layout, told: ${JSON.stringify(kinds(small))} ${small.err ? small.t.slice(0, 200) : JSON.stringify(small.j.smallPage || null)}`);
+    chk(() => !wide.err && wide.j.design.layout.preset === 'exec' && kinds(wide).includes('table') && !wide.j.smallPage, () => `960 x 720: the executive layout as asked: ${JSON.stringify(kinds(wide))}`);
+  }
   // 4. (check 12, FAIL in Desktop: "P7 hand EN", a hand-placed matrix of Day Name and four long measures in a 420 x 220
   //    slot, had a horizontal scrollbar, the third header cut, and showed three of the seven days and the total.) Cause:
   //    the fit chose a smaller text to keep more measures and counted the rows at that size, but wrote the size only on a

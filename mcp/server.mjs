@@ -866,6 +866,8 @@ server.registerTool('create_report', {
   const svgMeasures = svgList.length ? { svgMeasures: svgList } : {};
   // pictures narrowed so the table fits its box (never a scrollbar or a cut header)
   Object.entries(r.svgSizes || {}).filter(([, z]) => z.capped).forEach(([pi, z]) => reportNotes.push(`The SVG pictures in the table on "${boundPages[pi].name}" were narrowed to ${z.w} x ${z.h} (the widest design is ${z.design}) so the table fits its box. For the design's own size, give the table more room or fewer columns.`));
+  // round 19 (the owner's choice B): a page under 800 wide was planned with the single-focus layout
+  if (a.design && a.design.layout && a.design.layout.preset === 'focus' && E.page(a.design.layout).w < 800) reportNotes.push(`The page is ${E.page(a.design.layout).w} wide, under 800, so it uses the single-focus layout (the KPI cards and one large chart): the executive layout's four charts and table would be cut or scroll on it.`);
   if ((r.barCharts || []).length) reportNotes.push(`The chart${r.barCharts.length === 1 ? '' : 's'} by ${[...new Set(r.barCharts.map((x) => x.field))].join(', ')} on ${[...new Set(r.barCharts.map((x) => `"${x.page}"`))].join(', ')} ${r.barCharts.length === 1 ? 'is a bar chart' : 'are bar charts'} instead of a column chart: the names would not fit side by side and would slant; as bars they read level. A short name column in the model (the Gulf calendar's Day Short) keeps a column chart.`);
   if ((r.shortDays || []).length) reportNotes.push(`The column chart${r.shortDays.length === 1 ? '' : 's'} by day on ${[...new Set(r.shortDays.map((x) => `"${x.page}"`))].join(', ')} ${r.shortDays.length === 1 ? 'shows' : 'show'} Day Short (Sun ... Sat), in the calendar's order: the full day names would not fit side by side and would slant. Tables and slicers keep Day Name.`);
   if ((r.ringsSmall || []).length) reportNotes.push(`The ring${r.ringsSmall.length === 1 ? '' : 's'} in the table (${[...new Set(r.ringsSmall.map((x) => x.label))].join(', ')}) ${r.ringsSmall.length === 1 ? 'is' : 'are'} drawn ${Math.max(...r.ringsSmall.map((x) => x.h))} high, too small for a number to be read, so ${r.ringsSmall.length === 1 ? 'it has' : 'they have'} no number inside: the table's value column carries it.`);
@@ -1043,7 +1045,7 @@ server.registerTool('plan_layout', {
   // round 15 (the owner's go on round 13's recommendation 1): gradient bars are the default for designed pages, and the
   // plan the user approves says so
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a light tint and the largest in the theme\'s colour (the bar\'s length tells the size; the colour ranks). For one colour, create_report takes chartColors "solid".' } };
-  return text(Object.assign(formats, arabicNames, { page, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
+  return text(Object.assign(formats, arabicNames, { page, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.smallPage ? { smallPage: r.smallPage } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
 }));
 
 server.registerTool('add_gulf_calendar', {
