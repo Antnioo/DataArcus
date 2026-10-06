@@ -3769,11 +3769,25 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const mkRep = (dir) => ask('create_report', { path: dir, name: 'R18 days', fields: { kpis: ['Sales[Total Sales]'], measure: 'Sales[Total Sales]', category: 'Calendar[Day Name]', table: ['Calendar[Day Name]', 'Sales[Total Sales]'] },
       pages: [{ name: 'P', slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'column', x: 36, y: 100, w: 600, h: 400, title: 'C' }, { kind: 'table', x: 700, y: 100, w: 600, h: 400, title: 'T' }] }] });
     const a = await mkRep(sdir), b = await mkRep(sdir + '-none');
-    const look = (dir, x) => { if (x.err) return {}; const vs = vis(dir, x), c = vs.find((v) => ty(v) === 'clusteredColumnChart'), t = vs.find((v) => ty(v) === 'tableEx');
-      return { col: c && catOf(c), sort: c && JSON.stringify(c.visual.query.sortDefinition || null), table: t && t.visual.query.queryState.Values.projections.map((p) => p.queryRef), note: /Day Short \(Sun/.test(JSON.stringify(x.j)) }; };
+    const look = (dir, x) => { if (x.err) return {}; const vs = vis(dir, x), c = vs.find((v) => ty(v) === 'clusteredColumnChart' || ty(v) === 'clusteredBarChart'), t = vs.find((v) => ty(v) === 'tableEx');
+      return { col: c && catOf(c), type: c && ty(c), sort: c && JSON.stringify(c.visual.query.sortDefinition || null), table: t && t.visual.query.queryState.Values.projections.map((p) => p.queryRef), note: /Day Short \(Sun/.test(JSON.stringify(x.j)) }; };
     const la = look(sdir, a), lb = look(sdir + '-none', b);
-    chk(() => la.col === 'Calendar.Day Short' && la.table.includes('Calendar.Day Name') && !la.table.includes('Calendar.Day Short') && la.note, () => `with Day Short: the column chart by Day Short, the table by Day Name, told: ${JSON.stringify(la)} ${a.err ? a.t.slice(0, 300) : ''}`);
-    chk(() => lb.col === 'Calendar.Day Name' && !lb.note, () => `without Day Short: unchanged (Day Name): ${JSON.stringify(lb)} ${b.err ? b.t.slice(0, 300) : ''}`);
+    chk(() => la.col === 'Calendar.Day Short' && la.type === 'clusteredColumnChart' && la.table.includes('Calendar.Day Name') && !la.table.includes('Calendar.Day Short') && la.note, () => `with Day Short: the column chart by Day Short, the table by Day Name, told: ${JSON.stringify(la)} ${a.err ? a.t.slice(0, 300) : ''}`);
+    // (round 19, item 2: without Day Short the slanting chart is now a bar chart by Day Name; before, a column chart)
+    chk(() => lb.col === 'Calendar.Day Name' && lb.type === 'clusteredBarChart' && !lb.note, () => `without Day Short: by Day Name, as a bar chart since round 19: ${JSON.stringify(lb)} ${b.err ? b.t.slice(0, 300) : ''}`);
+  }
+  // Round 19, item 2 (seen in Desktop, golden tasks 1 and 4:3: day names slant on the column charts of models without a
+  //     "Day Short"): where a column chart's day or month names would slant (the widest name at the label size wider
+  //     than a seventh/twelfth of the plot) and the slot is tall enough for one bar per name (22 + 46 at 1280 x 720,
+  //     measured in round 0), the chart is drawn as a bar chart, whose names are level; told in reportNotes
+  {
+    const run = async (dir, short, h) => { const x = await ask('create_report', { path: dir, name: 'R19 bars ' + h, fields: { kpis: ['Sales[Total Sales]'], measure: 'Sales[Total Sales]', category: 'Calendar[Day Name]', table: ['Calendar[Day Name]', 'Sales[Total Sales]'] },
+      pages: [{ name: 'P', slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'column', x: 36, y: 100, w: 600, h, title: 'C' }] }] });
+      const vs = vis(dir, x); return { types: vs.map(ty).filter((t) => /Chart$/.test(t)), cat: (vs.find((v) => /Chart$/.test(ty(v))) || null), note: /bar chart/.test(JSON.stringify(x.err ? '' : x.j.reportNotes || '')), err: x.err ? x.t.slice(0, 200) : '' }; };
+    const tall = await run('r18-short-none', false, 500), low = await run('r18-short-none', false, 150), withShort = await run('r18-short', true, 500);
+    chk(() => tall.types.join() === 'clusteredBarChart' && catOf(tall.cat) === 'Calendar.Day Name' && tall.note, () => `no Day Short, a tall slot: a bar chart by Day Name, told: ${JSON.stringify(tall.types)} ${tall.note} ${tall.err}`);
+    chk(() => low.types.join() === 'clusteredColumnChart', () => `no Day Short, a slot too low for seven bars (150): the column chart stays: ${JSON.stringify(low.types)} ${low.err}`);
+    chk(() => withShort.types.join() === 'clusteredColumnChart' && catOf(withShort.cat) === 'Calendar.Day Short', () => `with Day Short: the column chart by Day Short (round 18): ${JSON.stringify(withShort.types)} ${withShort.err}`);
   }
   // 4. (check 12, FAIL in Desktop: "P7 hand EN", a hand-placed matrix of Day Name and four long measures in a 420 x 220
   //    slot, had a horizontal scrollbar, the third header cut, and showed three of the seven days and the total.) Cause:

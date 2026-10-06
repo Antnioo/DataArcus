@@ -399,6 +399,7 @@
     const tableRows = [];   // tables whose known rows don't fit even with tight rows (round 12, #23)
     const headerGrew = [];   // pages whose header grew one row of tabs (round 12)
     const tableSmaller = [];   // tables given a smaller text so more fields fit (round 12)
+    const barCharts = [];   // round 19: column charts by day or month names written as bar charts
     const shortDays = [];   // round 18, S3: column charts that show Day Short
     const ringsSmall = [];   // round 18: ring pictures drawn under 40 high, written without their number
     const svgSizes = {};   // the SVG pictures' size in each page's table: { w, h, design (the widest), capped }   // KPI titles too long for one line at 8pt (see kpiTitleFit)
@@ -765,7 +766,23 @@
         return Object.assign({}, s, { h: Math.min(s.h, Math.ceil(2 * pad + n * sh + gap * n + bh)) });
       };
       pg = Object.assign({}, pg, { slots: grown(pg.slots) });
-      const sorted = pg.slots.map(railFit).sort((a, b) => (a.y - b.y) || (rtl ? b.x - a.x : a.x - b.x));
+      // Round 19 (seen in Desktop, golden tasks 1 and 4:3: day names slant on the column charts of models without a short
+      // day column): a column chart by day or month names whose widest name, at the label size, is wider than its share
+      // of the plot (as S3 works it out) is written as a bar chart, whose names are level, where the slot holds one bar
+      // per name (22 each + 46, measured in round 0 at 1280 x 720, scaled with the page). A model's "Day Short"
+      // (round 18) is used first, so such a chart stays a column chart.
+      const NAMES = { day: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], month: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] };
+      const asBar = (s) => {
+        const f = B && s.kind === 'column' && (B.cats || {}).column;
+        if (!f || f.short || f.c == null) return s;
+        const list = /(^|\s)(day|weekday)\s*name|اسم اليوم/i.test(f.c) ? NAMES.day : /(^|\s)month\s*name|اسم الشهر/i.test(f.c) ? NAMES.month : null;
+        if (!list) return s;
+        const k = pg.page.h / 720, room = (s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40) / list.length, widest = Math.max(...list.map((d) => textWidth(d, LABEL, false, font)));
+        if (widest + 6 <= room || s.h < (list.length * 22 + 46) * k) return s;
+        barCharts.push({ page: pg.name || base, field: label(f) });
+        return Object.assign({}, s, { kind: 'bar', wasColumn: true });
+      };
+      const sorted = pg.slots.map(railFit).map(asBar).sort((a, b) => (a.y - b.y) || (rtl ? b.x - a.x : a.x - b.x));
       const groups = {};
       const groupOf = (kind) => (kind === 'title' || kind === 'logo' ? 'header' : kind === 'kpi' ? 'kpis' : kind === 'slicer' ? 'filters' : null);
       const GROUP_NAMES = { header: W.header || 'Header', kpis: W.kpis || 'KPI cards', filters: W.filters || 'Filters' };
@@ -1479,7 +1496,7 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall, shortDays };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts };
   }
 
   const api = { build, zip, crc32, textWidth, columnRoom };
