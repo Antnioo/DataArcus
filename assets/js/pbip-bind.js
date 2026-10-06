@@ -278,7 +278,8 @@
     const texts = cs.filter((c) => c !== id && (c.type === 'string' || (c.type === 'unknown' && !NUMBERISH.test(c.c) && !DATEISH.test(c.c))) && !NOT_CAT.test(c.c));
     return [].concat(id ? [{ t: main, c: id.c, agg: 2, num: true, name: nm.count(id.c), wholeFormat: '#,0' }] : [],
       nums.map((c) => ({ t: main, c: c.c, agg: 0, num: true, name: nm.sum(c.c), wholeFormat: '#,0' })),
-      texts.map((c) => ({ t: main, c: c.c, agg: 2, num: true, name: nm.count(c.c), wholeFormat: '#,0' })));
+      // (round 16, design finding #14: a count of a category column, "Count of Region", is marked: never a KPI card)
+      texts.map((c) => ({ t: main, c: c.c, agg: 2, num: true, name: nm.count(c.c), wholeFormat: '#,0', category: true })));
   }
   // the visual-by-visual binding the exporter reads, from the few choices the user makes
   function build(ch) {

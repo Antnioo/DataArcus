@@ -585,8 +585,11 @@ server.registerTool('create_report', {
   // (Bind.counts), so the report has cards, charts and a table instead of a page four fifths empty
   const COUNTS = usable.length ? [] : Bind.counts(pickFrom, a.lang === 'ar' ? { count: (c) => 'عدد ' + c, sum: (c) => 'مجموع ' + c } : null);
   const nValues = usable.length || COUNTS.length;
-  const countBind = (n) => { const b = Bind.suggest(pickFrom, n), C = COUNTS, cat = b.cats.bar || b.cats.column;
-    return Object.assign({}, b, { kpis: Array.from({ length: n }, (_, i) => C[i] || null), measure: C[0], y: { funnel: C[1] || C[0], gauge: C[0] },
+  // (round 16, design finding #14: "Count of Region" made a weak KPI): the cards take counts of ID-like columns and sums
+  // only; a count of a category column still feeds a chart or the table, never a card: fewer cards, and told
+  const KPI_COUNTS = COUNTS.filter((c) => !c.category), nCards = usable.length || KPI_COUNTS.length;
+  const countBind = (n) => { const b = Bind.suggest(pickFrom, n), C = COUNTS, K = KPI_COUNTS, cat = b.cats.bar || b.cats.column;
+    return Object.assign({}, b, { kpis: Array.from({ length: n }, (_, i) => K[i] || null), measure: C[0], y: { funnel: C[1] || C[0], gauge: C[0] },
       table: [b.cats.column || cat, C[0], C[1]].filter((x, i, l) => x && l.indexOf(x) === i), tip: { card: C[0], cat, y: C[1] || C[0], date: b.tip.date } }); };
   // the binding for n KPI cards: the picker's, with every given field in its place
   const bindFor = (n) => {
@@ -623,8 +626,8 @@ server.registerTool('create_report', {
     if (F.table) nb.table = F.table.map((x) => (x.m != null ? Object.assign({ t: x.t, m: x.m }, x.pctFormat ? { pctFormat: x.pctFormat } : {}) :Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {})));
     return nb;
   };
-  const cardNote = (asked, built, leftOut) => (COUNTS.length ? Object.assign({ asked, built, counted: COUNTS.slice(0, built).map((f) => f.name),
-    why: `The model has no measures, so the KPI cards, the charts and the table show counts and sums of its columns, made by the visuals themselves (${COUNTS.slice(0, 4).map((f) => f.name).join(', ')}); the model is not changed. For real KPIs, propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again.` }, leftOut ? { leftOut } : {})
+  const cardNote = (asked, built, leftOut) => (COUNTS.length ? Object.assign({ asked, built, counted: KPI_COUNTS.slice(0, built).map((f) => f.name),
+    why: `The model has no measures, so the KPI cards, the charts and the table show counts and sums of its columns, made by the visuals themselves (${COUNTS.slice(0, 4).map((f) => f.name).join(', ')}); the model is not changed.${built < asked && COUNTS.some((c) => c.category) ? ` Fewer cards than asked: a count of a category column (${COUNTS.filter((c) => c.category).slice(0, 3).map((f) => f.name).join(', ')}) is not a KPI, so it is shown in a chart or the table, never on a card.` : ''} For real KPIs, propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again.` }, leftOut ? { leftOut } : {})
     : built >= asked ? null : Object.assign({ asked, built, measures: usable.slice(0, built),
     why: usable.length ? `The model has ${usable.length} measure${usable.length === 1 ? '' : 's'} a KPI card can show${sc.scope ? ' in this part of the model' : ''}, so ${built} of ${asked} KPI cards were built. Add measures to the model (in Power BI Desktop) for more cards, then create the report again.`
       : 'The model has no measures, so no KPI card was built, and the charts were left out too (they have no value to show; see leftOutVisuals). The report has its header, filters and table only. Propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again.' }, leftOut ? { leftOut } : {}));
@@ -721,8 +724,8 @@ server.registerTool('create_report', {
     // fields.kpis decides the number of cards (one per measure given)
     if (F && F.kpis) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: Math.max(3, Math.min(6, F.kpis.length)), kpiCards: F.kpis.length }) });
     const askedCards = design.layout.kpiCards != null ? Math.min(design.layout.kpis, design.layout.kpiCards) : design.layout.kpis;
-    if (nValues < 6) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpiCards: Math.min(design.layout.kpiCards != null ? design.layout.kpiCards : 6, nValues) }) });
-    kpiCards = cardNote(askedCards, Math.min(askedCards, nValues));
+    if (nCards < 6) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpiCards: Math.min(design.layout.kpiCards != null ? design.layout.kpiCards : 6, nCards) }) });
+    kpiCards = cardNote(askedCards, Math.min(askedCards, nCards));
     const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel, logoRatio }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
@@ -735,7 +738,7 @@ server.registerTool('create_report', {
   } else {
     // hand-placed pages: KPI slots beyond the measures are left out, and named
     const leftOut = [];
-    a.pages = a.pages.map((p) => { let k = 0; return Object.assign({}, p, { slots: p.slots.filter((s) => { if (s.kind !== 'kpi') return true; k++; if (k <= nValues) return true; leftOut.push(s.title || `KPI ${k}`); return false; }) }); });
+    a.pages = a.pages.map((p) => { let k = 0; return Object.assign({}, p, { slots: p.slots.filter((s) => { if (s.kind !== 'kpi') return true; k++; if (k <= nCards) return true; leftOut.push(s.title || `KPI ${k}`); return false; }) }); });
     a.pages = a.pages.map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots), true) }));
     if (COUNTS.length && !leftOut.length) kpiCards = cardNote(kpisOf(a.pages), kpisOf(a.pages));
     if (leftOut.length) { const asked = kpisOf(a.pages) === 1 && !usable.length ? leftOut.length : Math.max(...a.pages.map((p) => p.slots.filter((s) => s.kind === 'kpi').length)) + leftOut.length; kpiCards = cardNote(asked, asked - leftOut.length, leftOut); }

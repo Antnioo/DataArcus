@@ -26,8 +26,8 @@
       "longTitleUses": "61 -> 64: round 13 (6f54d6a, measured: its own runner gives 64): the gradient bars (chartColors) name the chart's measure once more in each bar and column chart's colour rule (FillRule input), three charts on this report"
     },
     "7": {
-      "visuals": "19 -> 23 -> 39: round 10 (3803b7a), the navigator as buttons with a line (+4); round 12 (85d54c1), #25: a model without measures gets KPI cards, charts and a table that count and sum its columns (+16)",
-      "kpiCards": "built 0 -> 4, with the counted fields: round 12, #25"
+      "visuals": "39 -> 38: round 16, design finding #14 (the owner's go): Count of Region is no longer a KPI card (one card fewer)",
+      "kpiCards": "4 -> 3 cards: round 16, design finding #14: a count of a category column is never a KPI card; fewer cards, and the answer says why"
     },
     "8": {
       "kpiCards": "built 2 -> 1: round 12 (85d54c1), #26: 'Unused One' shows text (its format is \"Yes\";\"Yes\";\"No\") and is never a KPI card"
@@ -193,7 +193,7 @@
         "Details 1920x1080"
       ],
       "hidden": 2,
-      "visuals": 39,
+      "visuals": 38,
       "validator": 0,
       "sizeProblems": 0,
       "phoneProblems": 0,
@@ -206,14 +206,13 @@
       ],
       "kpiCards": {
         "asked": 4,
-        "built": 4,
+        "built": 3,
         "counted": [
           "Count of Order Id",
           "Sum of Amount",
-          "Sum of Quantity",
-          "Count of Region"
+          "Sum of Quantity"
         ],
-        "why": "The model has no measures, so the KPI cards, the charts and the table show counts and sums of its columns, made by the visuals themselves (Count of Order Id, Sum of Amount, Sum of Quantity, Count of Region); the model is not changed. For real KPIs, propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again."
+        "why": "The model has no measures, so the KPI cards, the charts and the table show counts and sums of its columns, made by the visuals themselves (Count of Order Id, Sum of Amount, Sum of Quantity, Count of Region); the model is not changed. Fewer cards than asked: a count of a category column (Count of Region, Count of Product) is not a KPI, so it is shown in a chart or the table, never on a card. For real KPIs, propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again."
       }
     },
     "8": {

@@ -939,7 +939,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     // (changed 6 Oct 2026, round 12, design finding #25, the owner's go: a model without measures got no cards and no
     // charts, and Desktop showed a page four fifths empty; now its cards, charts and table count and sum its columns,
     // still never a visual without its field, and still 0 errors from Microsoft's validator)
-    chk(() => !zero.err && cardsOf(dir)[0].length === 4 && noField(dir).length === 0 && errors(dir) === '0' && k.asked === 4 && k.built === 4 && /no measures/.test(k.why) && k.counted.length === 4
+    // (changed 6 Oct 2026, round 16, design finding #14, the owner's go: a count of a category column is never a KPI card; fewer cards, and the answer says why)
+    chk(() => !zero.err && cardsOf(dir)[0].length === 3 && noField(dir).length === 0 && errors(dir) === '0' && k.asked === 4 && k.built === 3 && /no measures/.test(k.why) && /category/.test(k.why) && k.counted.length === 3 && !k.counted.some((c) => /^Count of (Region|Product)$/.test(c))
       && !k.counted.some((c) => /Rate/.test(c)) && readReport(dir)[0].visuals.some((v) => /Chart$/.test(v.type)), () => `a model with no measures: ${zero.err ? zero.t.slice(0, 200) : 'cards ' + cardsOf(dir).map((c) => c.length) + ', validator ' + errors(dir) + ', kpiCards ' + JSON.stringify(zero.j.kpiCards)}`);
   }
   const hand = await ask('create_report', { path: 'bim-project', name: 'Hand cards', pages: [{ name: 'P', slots: [0, 1, 2, 3].map((i) => ({ kind: 'kpi', title: 'K' + (i + 1), x: 24 + i * 300, y: 24, w: 280, h: 120 })).concat([{ kind: 'bar', x: 24, y: 170, w: 900, h: 400 }]) }] });
@@ -2840,7 +2841,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const data = vs.filter((v) => DATA.includes(type(v)) || isKpi(v));
     const area = data.reduce((a, v) => a + v.at.w * v.at.h, 0), body = page1 ? page1.w * page1.h * 0.7 : 1;
     const aggs = data.flatMap((v) => Object.values((v.visual.query || {}).queryState || {}).flatMap((r) => r.projections)).filter((p) => p.field.Aggregation).map((p) => p.field.Aggregation.Function + ':' + p.field.Aggregation.Expression.Column.Property);
-    chk(() => !pl.err && vs.filter(isKpi).length >= 3 && vs.some((v) => ['clusteredBarChart', 'clusteredColumnChart', 'lineChart'].includes(type(v))) && vs.some((v) => type(v) === 'tableEx')
+    // (changed 6 Oct 2026, round 16, design finding #14, the owner's go: a count of a category column is never a KPI card; fewer cards, and the answer says why): two cards here (Count of Order ID, Sum of Quantity)
+    chk(() => !pl.err && vs.filter(isKpi).length >= 2 && vs.some((v) => ['clusteredBarChart', 'clusteredColumnChart', 'lineChart'].includes(type(v))) && vs.some((v) => type(v) === 'tableEx')
         && aggs.includes('2:Order ID') && aggs.some((a) => a === '0:Quantity') && data.every((v) => v.visual.query) && area >= 0.5 * body && /count/i.test(JSON.stringify(pl.j.reportNotes || [])),
       () => `#25: a model without measures must give counts, a chart and a table that fill the page: ${data.length} data visuals, ${Math.round(100 * area / body)}% of the body; aggregations ${JSON.stringify(aggs)} ${short(pl)}`);
   }
@@ -3509,6 +3511,17 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const many = await catsOn('r16-c'), one = await catsOn('r16-c1');
     chk(() => Array.isArray(many) && many.length >= 3 && new Set(many.map((x) => x.split(':')[1])).size === many.length && Array.isArray(one) && one.length >= 2,
       () => `each chart of the page by a different category where the model has more: ${JSON.stringify(many)} one category: ${JSON.stringify(one)}`);
+  }
+
+  // 4. #14: a model without measures: KPI cards from counts of ID-like columns and sums of number columns, never a count
+  // of a category (Region); fewer cards rather than a weak one, and the answer says why
+  {
+    model('r16-n', [{ name: 'Orders', partitions: mp('Orders'), columns: [col('Order Id', 'int64'), col('Amount', 'double'), col('Quantity', 'int64'), col('Region', 'string'), col('Channel', 'string')] }]);
+    const dz = (await ask('plan_layout', { layout: 'exec', kpis: 4 })).j.design;
+    const x = await ask('create_report', { path: 'r16-n', name: 'R16 no measures', design: dz, secondPage: false });
+    const kc = x.j && x.j.kpiCards;
+    chk(() => !x.err && JSON.stringify(kc.counted) === JSON.stringify(['Count of Order Id', 'Sum of Amount', 'Sum of Quantity']) && kc.built === 3 && kc.asked === 4 && /categor/i.test(kc.why),
+      () => `no count of a category on a KPI card, fewer cards and why: ${JSON.stringify(kc)} ${x.err ? x.t.slice(0, 300) : ''}`);
   }
 }
 
