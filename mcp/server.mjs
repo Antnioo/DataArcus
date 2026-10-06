@@ -316,8 +316,15 @@ function resolveSvgColumns(tables, list, opt) {
     if (c.errors.length) { problems.push(`${where} ("${label}"): ${[...new Set(c.errors)].slice(0, 5).join('; ')}`); return null; }
     if (c.dax.length > SVG_CAP) { problems.push(`${where} ("${label}"): the measure is ${c.dax.length.toLocaleString('en-US')} characters; the limit is ${SVG_CAP.toLocaleString('en-US')}, to keep the report's size and its speed (Power BI draws longer pictures, slowly): use fewer or shorter layers`); return null; }
     if (!/RETURN\n\s+(IF \( ISBLANK \( \w+ \), BLANK \(\), )?"data:image\/svg\+xml;utf8," & _svg( \))?$/.test(c.dax)) { problems.push(`${where} ("${label}"): the compiled measure does not end in a data:image/svg+xml text`); return null; }
+    // round 18 (the owner's answer, 6 Oct ~20:51 Dubai: "yes drop the number under 40"): a ring as a table picture
+    // drawn under 40 high has no number inside (its number could not be read at 28); the writer picks this version
+    // where the picture comes out that small, and the table's own value column carries the number
+    let small = null;
+    if (WHAT === 'svgColumns') { const rings = d.layers.filter((l) => l && l.type === 'ring');
+      const inside = (l) => l && l.type === 'text' && l.bind && l.bind.text && l.bind.text.v && rings.some((r) => Math.hypot((+l.x || 0) - (+r.cx || 0), (+l.y || 0) - (+r.cy || 0)) < (+r.r || 20));
+      if (d.layers.some(inside)) { try { const c2 = Svg.toMeasure(Object.assign({}, d, { layers: d.layers.filter((l) => !inside(l)) })); if (!c2.errors.length) small = c2.dax; } catch (e) { small = null; } } }
     const withMeasures = tables.find((t) => t.measures.length) || tables[0];
-    return { label, t: entity || (withMeasures && withMeasures.name), expression: c.dax, page: sc.page != null ? sc.page : null, card: sc.card != null ? sc.card : null,
+    return { label, t: entity || (withMeasures && withMeasures.name), expression: c.dax, ...(small ? { expressionNoNumber: small } : {}), page: sc.page != null ? sc.page : null, card: sc.card != null ? sc.card : null,
       w: Math.max(8, Math.min(2000, +d.w || 240)), h: Math.max(8, Math.min(2000, +d.h || 80)) };
   });
   if (problems.length) throw new Error(`Nothing was written. ${problems.length} of the SVG ${WHAT === 'svgCards' ? 'cards' : 'columns'} can't be used: ${problems.join('; ')}. An SVG column takes a design in the SVG KPI Designer's format (values and layers), with measures and columns named exactly as read_model lists them.`);
@@ -576,7 +583,7 @@ server.registerTool('create_report', {
     const hasTable = pages.map((p) => p.slots.some((s) => s.kind === 'table' || s.kind === 'matrix') && (b.table || []).filter(Boolean).length > 0), first = hasTable.indexOf(true);
     if (first < 0) throw new Error('Nothing was written. svgColumns need a table, and this report has no table on any page: use a layout with a table (plan_layout shows the slots), or hand-placed pages with a table slot.');
     return SV.map((c, i) => { if (c.page != null && !hasTable[c.page - 1]) throw new Error(`Nothing was written. svgColumns[${i}]: page ${c.page} has no table (pages with a table: ${hasTable.map((h, k) => (h ? k + 1 : 0)).filter(Boolean).join(', ')}).`);
-      return (c.at = { page: c.page != null ? c.page - 1 : first, t: c.t, m: c.label, expression: c.expression, w: c.w, h: c.h }); });
+      return (c.at = Object.assign({ page: c.page != null ? c.page - 1 : first, t: c.t, m: c.label, expression: c.expression, w: c.w, h: c.h }, c.expressionNoNumber ? { expressionNoNumber: c.expressionNoNumber } : {})); });
   };
   // a KPI card's number format on the report side (D8): the measure's own format with the separator, where the model's
   // has none; a measure with no format gets "#,0.##". A percentage, or a format that has the separator: nothing
@@ -851,6 +858,7 @@ server.registerTool('create_report', {
   const svgMeasures = svgList.length ? { svgMeasures: svgList } : {};
   // pictures narrowed so the table fits its box (never a scrollbar or a cut header)
   Object.entries(r.svgSizes || {}).filter(([, z]) => z.capped).forEach(([pi, z]) => reportNotes.push(`The SVG pictures in the table on "${boundPages[pi].name}" were narrowed to ${z.w} x ${z.h} (the widest design is ${z.design}) so the table fits its box. For the design's own size, give the table more room or fewer columns.`));
+  if ((r.ringsSmall || []).length) reportNotes.push(`The ring${r.ringsSmall.length === 1 ? '' : 's'} in the table (${[...new Set(r.ringsSmall.map((x) => x.label))].join(', ')}) ${r.ringsSmall.length === 1 ? 'is' : 'are'} drawn ${Math.max(...r.ringsSmall.map((x) => x.h))} high, too small for a number to be read, so ${r.ringsSmall.length === 1 ? 'it has' : 'they have'} no number inside: the table's value column carries it.`);
   if (ringNumbers.length) reportNotes.push(`The ring${ringNumbers.length === 1 ? '' : 's'} on the KPI card${ringNumbers.length === 1 ? '' : 's'} (${ringNumbers.join(', ')}) ${ringNumbers.length === 1 ? 'has' : 'have'} no number inside: the card already shows the value, and two numbers read as two facts. A table picture keeps its number.`);
   if (svgList.length) reportNotes.push(`${svgList.length === 1 ? 'An SVG picture was' : svgList.length + ' SVG pictures were'} added (${svgList.map((c) => c.label).join(', ')}): each is a measure that exists only in this report (definition/reportExtensions.json); the model was not changed. This is ${SVG_STATUS}.`);
   // how the KPI cards show their numbers

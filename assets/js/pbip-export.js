@@ -399,6 +399,7 @@
     const tableRows = [];   // tables whose known rows don't fit even with tight rows (round 12, #23)
     const headerGrew = [];   // pages whose header grew one row of tabs (round 12)
     const tableSmaller = [];   // tables given a smaller text so more fields fit (round 12)
+    const ringsSmall = [];   // round 18: ring pictures drawn under 40 high, written without their number
     const svgSizes = {};   // the SVG pictures' size in each page's table: { w, h, design (the widest), capped }   // KPI titles too long for one line at 8pt (see kpiTitleFit)
     // (a name over the limit ends at its last whole word: cut at the last space before the limit, and a dash or
     // other joining mark left at the end goes too; one word longer than the limit is cut at the limit)
@@ -664,10 +665,12 @@
     // Desktop accepted in D-P1: one entity per model table, each measure a text with the data category Image URL.
     // The model is not touched: these measures exist only in the report.
     const svgDone = {};
+    let extFile = null;   // reportExtensions.json, written again after the pages when a ring picture drops its number (round 18)
     if ((o.svgColumns || []).length || (o.svgCards || []).length) {
       const entities = [];
       (o.svgColumns || []).concat(o.svgCards || []).forEach((c) => { let e = entities.find((x) => x.name === c.t); if (!e) entities.push(e = { name: c.t, measures: [] }); e.measures.push({ name: c.m, dataType: 'Text', dataCategory: 'ImageUrl', expression: c.expression }); });
       add(D + '/reportExtensions.json', json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities }));
+      extFile = { entry: files[files.length - 1], entities };
     }
 
     PAGES.forEach((pg, pageIndex) => {
@@ -1161,6 +1164,10 @@
               const H = Math.min(H0, Math.max(24, Math.floor((s.h - 68 * pg.page.h / 720) / 5) - 2));
               visual.objects = Object.assign(visual.objects || {}, { grid: [{ properties: { imageHeight: num(H), imageWidth: num(W) } }] });
               svgSizes[pageIndex] = { w: W, h: H, design: wide, capped: W < wide };
+              // Round 18 (the owner's answer, 6 Oct 2026: "yes drop the number under 40"; a 28-high ring's number could not
+              // be read in Desktop): a ring drawn under 40 high takes its version without the number inside (the server's
+              // expressionNoNumber); the table's value column carries the number
+              if (H < 40 && extFile) mine.forEach((c) => { if (!c.expressionNoNumber) return; const e = extFile.entities.find((x) => x.name === c.t), me = e && e.measures.find((x) => x.name === c.m); if (me) { me.expression = c.expressionNoNumber; extFile.changed = true; ringsSmall.push({ page: pg.name || base, label: c.m, h: H }); } });
               svgDone[pageIndex] = true;
             }
           }
@@ -1398,6 +1405,8 @@
       });
     });
 
+    if (extFile && extFile.changed) extFile.entry.data = json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: extFile.entities });
+
     // Reset buttons: one data-only bookmark per page that brings that page's slicers back to "All"
     if (bookmarks.length) {
       bookmarks.forEach((b) => add(D + '/bookmarks/' + b.name + '.bookmark.json', json(b.group
@@ -1461,7 +1470,7 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall };
   }
 
   const api = { build, zip, crc32, textWidth, columnRoom };

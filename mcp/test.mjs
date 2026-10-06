@@ -3739,6 +3739,22 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const t = vis('r18-pic', x).find((v) => ty(v) === 'tableEx'), H = t ? parseFloat(t.visual.objects.grid[0].properties.imageHeight.expr.Literal.Value) : NaN;
     chk(() => H >= 24 && 68 + 5 * (H + 2) <= t.position.height, () => `a table picture must leave room for four rows and the total: imageHeight ${H} in a table ${t && t.position.height} high (68 + 5 x (H + 2) = ${68 + 5 * (H + 2)}) ${x.err ? x.t.slice(0, 200) : ''}`);
   }
+  // 2b. The owner's answer (6 Oct ~20:51 Dubai, "yes drop the number under 40"; S2 in Desktop: the number inside a 28-high
+  //     ring could not be read): a ring drawn under 40 high in a table has no number inside; at 40 or more it keeps it.
+  //     (KPI-card rings have had none since round 15: their checks stand unchanged.)
+  {
+    mk('r18-ring', ['Region', 'Channel']);
+    const ring = { w: 64, h: 64, values: [{ id: 'p', label: 'Margin', kind: 'measure', measure: 'Sales[Margin %]' }], layers: [{ type: 'ring', cx: 32, cy: 32, r: 24, sw: 8, bind: { p: { v: 'p', d0: 0, d1: 1 } } },
+      { type: 'text', x: 32, y: 36, size: 12, anchor: 'middle', bind: { text: { v: 'p' } } }] };
+    const ext = (x) => x.err ? '' : fs.readFileSync(path.join(ROOT, 'r18-ring', x.j.report, 'definition', 'reportExtensions.json'), 'utf8');
+    const small = await ask('create_report', { path: 'r18-ring', name: 'R18 ring small', secondPage: false, design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', page: '1280x720' })).j.design, fields: { table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Margin %]'] }, svgColumns: [{ label: 'Ring col', design: ring }] });
+    const big = await ask('create_report', { path: 'r18-ring', name: 'R18 ring big', fields: { kpis: ['Sales[Total Sales]'], table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Margin %]'] }, svgColumns: [{ label: 'Ring col', design: ring }],
+      pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'table', x: 36, y: 100, w: 800, h: 560, title: 'T' }] }] });
+    const hOf = (x, dir) => { if (x.err) return NaN; const t = vis(dir, x).find((v) => ty(v) === 'tableEx'); return t ? parseFloat(t.visual.objects.grid[0].properties.imageHeight.expr.Literal.Value) : NaN; };
+    const hs = hOf(small, 'r18-ring'), hb = hOf(big, 'r18-ring');
+    chk(() => hs < 40 && !/<text/.test(ext(small)) && /<circle/.test(ext(small)) && /no number inside/.test(JSON.stringify(small.j)), () => `a ring drawn ${hs} high in a table must have no number inside (and be told): ${ext(small).slice(0, 200)} ${small.err ? small.t.slice(0, 300) : ''}`);
+    chk(() => hb >= 40 && /<text/.test(ext(big)), () => `a ring drawn ${hb} high in a table keeps its number: ${big.err ? big.t.slice(0, 300) : ext(big).slice(0, 200)}`);
+  }
   // 4. (check 12, FAIL in Desktop: "P7 hand EN", a hand-placed matrix of Day Name and four long measures in a 420 x 220
   //    slot, had a horizontal scrollbar, the third header cut, and showed three of the seven days and the total.) Cause:
   //    the fit chose a smaller text to keep more measures and counted the rows at that size, but wrote the size only on a
