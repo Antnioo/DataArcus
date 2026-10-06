@@ -59,6 +59,18 @@ function writeScript(dir, base, script) {
 // same rule everywhere) written to the same file by check_model_health, plan_layout and create_report, next to the
 // project (never into the model). keys: the report's fields ("Table[Field]") to name; without keys, every object.
 const FORMAT_HOW = 'Save a copy of the Power BI file first; open the script file in Notepad, select all and copy; in Power BI Desktop open TMDL view, paste, choose Preview (only the formats of the listed objects change), then Apply. The script is never applied by DataArcus: the model\'s files are not changed until the user applies it. It holds the model\'s own definitions of the objects it changes, which is why it is in a file: don\'t read the file into the conversation unless the user asks.';
+// The format a report writes for a field (round 14, the laptop's finish on 6 Oct: "Total Sales Last Ramadan", built with
+// variables and no format in the model, showed 10,310.00 in tables where round 13 showed 10,310). The report never adds
+// decimals the model did not ask for: where the shared rule proposes "#,0.00" for a field the model leaves unformatted,
+// the report writes "#,0.##" (the separator, and decimals only where the value has them), unless the measure's DAX
+// divides or averages. The health check's fix script still proposes the rule's own format, for the user to approve.
+const DIVIDES_OR_AVERAGES = /\bDIVIDE\s*\(|(^|[^/])\/(?!\/)|\bAVERAGE[AX]?\s*\(/i;
+function reportFormatOf(o, kind, tables) {
+  const r = Fix.formatOf(o, kind, tables);
+  if (!r || r.format !== '#,0.00' || (o.formatString && String(o.formatString).trim())) return r;
+  const expr = Array.isArray(o.expression) ? o.expression.join('\n') : String(o.expression == null ? '' : o.expression);
+  return kind === 'measure' && DIVIDES_OR_AVERAGES.test(expr.replace(/\/\/.*$/gm, '').replace(/--.*$/gm, '')) ? r : Object.assign({}, r, { format: '#,0.##', reason: 'no format in the model: the separator, and decimals only where the value has them' });
+}
 function formatsAnswer(m, p, keys, maxItems) {
   const raw = ((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).tables || [], s = Fix.formatReview(raw);
   const all = s.items.concat(s.byHand), mine = keys ? all.filter((i) => keys.has(i.object)) : all;
@@ -519,7 +531,7 @@ server.registerTool('create_report', {
     const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t), o = t && (t.measures || []).find((x) => x.name === f.m);
     if (!o || o.formatStringDefinition || Bind.isPercent(f.m, o.formatString, o.expression)) return null;
     // the shared format rule first (formats fixed at the source, 6 Oct 2026): a count #,0, a number #,0.00
-    const right = Fix.formatOf(o, 'measure', model.tables || []);
+    const right = reportFormatOf(o, 'measure', model.tables || []);
     if (right) return /%/.test(right.format) ? null : right.format;
     return !o.formatString ? '#,0.##' : Fix.lacksSeparator(o.formatString) ? Fix.withSeparator(o.formatString) : null;
   };
@@ -530,7 +542,7 @@ server.registerTool('create_report', {
   const rightOf = (f) => {
     const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t);
     const o = t && (f.m != null ? (t.measures || []).find((x) => x.name === f.m) : (t.columns || []).find((x) => x.name === f.c));
-    return o ? Fix.formatOf(o, f.m != null ? 'measure' : 'column', model.tables || []) : null;
+    return o ? reportFormatOf(o, f.m != null ? 'measure' : 'column', model.tables || []) : null;
   };
   const withRightFormats = (b) => {
     if (!b) return b;

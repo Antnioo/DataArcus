@@ -1488,12 +1488,12 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     // own percent format where it has one decimal or none; before, a percent card had no entry at all)
     chk(() => has('Margin %', '0.0%'), () => `a percent measure shows its own percent format: ${JSON.stringify(cardsOf('Margin %', false).map((v) => v.visual.objects.value)).slice(0, 300)}`);
     const nf = (x.j && x.j.numberFormats) || {};
-    chk(() => /* (6 Oct 2026, the owner's rule "formats fixed at the source": a number without a format is #,0.00, was #,0.##) */ has('No Format', '#,0.00') && pages.filter((p) => p.tooltip).flatMap((p) => p.visuals).filter((v) => v.visual.visualType === 'cardVisual').every((v) => v.visual.objects.value.length === 2)
-      && JSON.stringify(nf.cards.formatted) === JSON.stringify([{ field: 'Sales[Total Sales]', format: '#,0' }, { field: 'Sales[Avg Price]', format: '#,0.00' }, { field: 'Sales[No Format]', format: '#,0.00' }])
+    chk(() => /* (round 14's last fix, the laptop's finish on 6 Oct: the report never adds decimals the model did not ask for: an unformatted measure that does not divide or average is #,0.## again, as before 12b); before: (6 Oct 2026, the owner's rule "formats fixed at the source": a number without a format is #,0.00, was #,0.##) */ has('No Format', '#,0.##') && pages.filter((p) => p.tooltip).flatMap((p) => p.visuals).filter((v) => v.visual.visualType === 'cardVisual').every((v) => v.visual.objects.value.length === 2)
+      && JSON.stringify(nf.cards.formatted) === JSON.stringify([{ field: 'Sales[Total Sales]', format: '#,0' }, { field: 'Sales[Avg Price]', format: '#,0.00' }, { field: 'Sales[No Format]', format: '#,0.##' }])
       // (round 10: tables were measured in Desktop on 2026-10-04 and are formatted now, so the "needs a Desktop check"
       // text is gone and numberFormats.tables lists them; the tooltip's card follows kpiValues: see round 10's checks)
       && /101,914/.test(nf.cards.note) && nf.tables.formatted.length >= 1 && nf.noThousandSeparator.includes('Sales[Total Sales]') && errors(dir) === '0',
-      () => `a measure with no format gets '#,0.00'; the tooltip card is not touched; the answer lists the formatted cards and says tables need a Desktop check; validator 0: ${JSON.stringify(nf).slice(0, 700)} validator ${dir ? errors(dir) : ''}`);
+      () => `a measure with no format gets '#,0.##'; the tooltip card is not touched; the answer lists the formatted cards and says tables need a Desktop check; validator 0: ${JSON.stringify(nf).slice(0, 700)} validator ${dir ? errors(dir) : ''}`);
   }
 
   // ----- R9.2: "this Ramadan only" is two page filters: the Ramadan flag and the Hijri year the user gives -----
@@ -1741,7 +1741,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     // 3. kpiValues "full": round 9's entry (the measure's format with the separator), per card
     const f = await ask('create_report', { path: 'r10-project', name: 'R10 Full', design: exec, kpiValues: 'full', fields: { kpis: SIX } });
     const fp = f.err ? [] : report(path.join(ROOT, 'r10-project', f.j.report)).filter((p) => !p.tooltip).flatMap(cards), codeOf = (m) => fp.filter((v) => v.visual.query.queryState.Data.projections[0].queryRef === 'Sales.' + m).map((v) => v.visual.objects.value.length === 2 ? L(v.visual.objects.value[1].properties.customFormatString) : 'none');
-    chk(() => [...new Set(codeOf('Total Sales'))].join() === "'#,0'" && [...new Set(codeOf('Avg Price'))].join() === "'#,0.00'" && [...new Set(codeOf('No Format'))].join() === "'#,0.00'" /* (6 Oct 2026, the owner's rule "formats fixed at the source": a number without a format is #,0.00, was #,0.##) */ && [...new Set(codeOf('Orders'))].join() === 'none' && [...new Set(codeOf('Margin %'))].join() === "'0.0%'" /* (round 12: a percent shows its percent format in both modes) */
+    chk(() => [...new Set(codeOf('Total Sales'))].join() === "'#,0'" && [...new Set(codeOf('Avg Price'))].join() === "'#,0.00'" && [...new Set(codeOf('No Format'))].join() === "'#,0.##'" /* (round 14's last fix, the laptop's finish on 6 Oct: the report never adds decimals the model did not ask for: an unformatted measure that does not divide or average is #,0.## again, as before 12b); before: (6 Oct 2026, the owner's rule "formats fixed at the source": a number without a format is #,0.00, was #,0.##) */ && [...new Set(codeOf('Orders'))].join() === 'none' && [...new Set(codeOf('Margin %'))].join() === "'0.0%'" /* (round 12: a percent shows its percent format in both modes) */
         && fp.every((v) => !('labelPrecision' in v.visual.objects.value[0].properties) || v.visual.objects.value.length === 1) && f.j.kpiValues.mode === 'full' && f.j.numberFormats.cards.formatted.length === 3,
       () => `kpiValues "full" must write round 9's format entry per card: ${['Total Sales', 'Avg Price', 'No Format', 'Orders', 'Margin %'].map((m) => m + ' ' + codeOf(m).join('/')).join('; ')} ${short(f)}`);
     // 4 and 5. the value fits its card in every layout: 3 to 6 cards x three pages x two languages. The widest automatic
@@ -1940,7 +1940,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const t = await ask('create_report', { path: 'r10-project', name: 'R10 Table', design: exec, fields: { kpis: SIX, table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Avg Price]', 'Sales[Orders]', 'Sales[Margin %]', 'Sales[No Format]'] } });
     const pages = t.err ? [] : report(path.join(ROOT, 'r10-project', t.j.report)), tables = pages.flatMap((p) => p.visuals).filter((v) => type(v) === 'tableEx');
     const fmt = (v) => Object.fromEntries(v.visual.query.queryState.Values.projections.map((p) => [p.nativeQueryRef, p.format]));
-    chk(() => tables.length >= 1 && tables.every((v) => { const f = fmt(v); return f['Total Sales'] === '#,0' && f['Avg Price'] === '#,0.00' && f['No Format'] === '#,0.00' /* (6 Oct 2026, the owner's rule "formats fixed at the source": a number without a format is #,0.00, was #,0.##) */ && !('Orders' in f && f.Orders) && !f['Margin %'] && !f.Region; })
+    chk(() => tables.length >= 1 && tables.every((v) => { const f = fmt(v); return f['Total Sales'] === '#,0' && f['Avg Price'] === '#,0.00' && f['No Format'] === '#,0.##' /* (round 14's last fix, the laptop's finish on 6 Oct: the report never adds decimals the model did not ask for: an unformatted measure that does not divide or average is #,0.## again, as before 12b); before: (6 Oct 2026, the owner's rule "formats fixed at the source": a number without a format is #,0.00, was #,0.##) */ && !('Orders' in f && f.Orders) && !f['Margin %'] && !f.Region; })
         && pages.flatMap((p) => p.visuals).filter((v) => /Chart$/.test(type(v))).every((v) => !/"format"/.test(JSON.stringify(v.visual.query))) && errors(path.join(ROOT, 'r10-project', t.j.report)) === '0',
       () => `a table's measure columns must carry "format" on their projections (the measure's format with the separator), and charts none: ${JSON.stringify(tables.map(fmt))} ${short(t)}`);
     const full = await ask('create_report', { path: 'r10-project', name: 'R10 Table full', design: exec, kpiValues: 'full', fields: { kpis: SIX } });
@@ -1950,7 +1950,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => tip(t).length >= 1 && tip(t).every((v) => !('labelPrecision' in v.visual.objects.value[0].properties) && L(v.visual.objects.value[1].properties.customFormatString) === "'#,0'") && tip(full).length >= 1 && tip(full).every((v) => v.visual.objects.value.length === 2 && L(v.visual.objects.value[1].properties.customFormatString) === "'#,0'" && v.visual.objects.value[1].selector.metadata === 'Sales.Total Sales'),
       () => `the tooltip card follows the KPI cards (automatic units by default; the format entry with kpiValues "full"): ${JSON.stringify(tip(full).map((v) => v.visual.objects.value)).slice(0, 400)}`);
     const nf = (t.j && t.j.numberFormats) || {};
-    chk(() => JSON.stringify(nf.tables.formatted) === JSON.stringify([{ field: 'Sales[Total Sales]', format: '#,0' }, { field: 'Sales[Avg Price]', format: '#,0.00' }, { field: 'Sales[No Format]', format: '#,0.00' }]) /* (6 Oct 2026, the owner's rule "formats fixed at the source": a number without a format is #,0.00, was #,0.##) */ && /13,857/.test(nf.tables.note)
+    chk(() => JSON.stringify(nf.tables.formatted) === JSON.stringify([{ field: 'Sales[Total Sales]', format: '#,0' }, { field: 'Sales[Avg Price]', format: '#,0.00' }, { field: 'Sales[No Format]', format: '#,0.##' }]) /* (round 14's last fix, the laptop's finish on 6 Oct: the report never adds decimals the model did not ask for: an unformatted measure that does not divide or average is #,0.## again, as before 12b); before: (6 Oct 2026, the owner's rule "formats fixed at the source": a number without a format is #,0.00, was #,0.##) */ && /13,857/.test(nf.tables.note)
         && !('tablesAndTooltips' in nf) && /chart/i.test(nf.charts) && nf.noThousandSeparator.includes('Sales[Total Sales]'), () => `numberFormats must say what the report formats now (tables) and what it leaves (chart labels): ${JSON.stringify(nf).slice(0, 700)}`);
   }
 
@@ -3373,6 +3373,30 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const cardCodes = vs.filter((v) => v.visual && v.visual.visualType === 'cardVisual' && JSON.stringify(v.visual.query || {}).includes('"Property":"Total Sales"')).map((v) => JSON.stringify(v.visual.objects.value || []));
     chk(() => !x.err && tableFmt.length >= 1 && tableFmt.every((f) => f === '#,0') && cardCodes.length >= 2 && cardCodes.every((c) => /'#,0'/.test(c) && !/0\.00/.test(c)),
       () => `the sample's Total Sales must show no decimals in its table, cards and tooltip card: table ${JSON.stringify(tableFmt)} cards ${cardCodes.map((c) => c.slice(0, 160)).join(' | ')} ${x.err ? x.t.slice(0, 300) : ''}`);
+  }
+
+  // Round 14, last fix (the laptop's finish, 6 Oct: "Total Sales Last Ramadan", built with variables and no format in
+  // the model, showed 10,310.00 in tables where round 13 showed 10,310): the report never adds decimals the model did not
+  // ask for. An unformatted measure gets no ".00" from the report in tables, cards or the tooltip's card; "#,0.00" only
+  // when its DAX divides or averages. (The health check's fix script may still propose a format: the user approves it.)
+  {
+    const dz = (await ask('plan_layout', { layout: 'exec', kpis: 3 })).j.design;
+    const x = await ask('create_report', { path: 'r14-sample', name: 'R14 sample LR', design: dz, secondPage: false, kpiValues: 'full',
+      fields: { kpis: ['Sales[Total Sales Last Ramadan]', 'Sales[Total Sales]', 'Sales[Total Sales vs Last Ramadan %]'], table: ['Calendar[Day Name]', 'Sales[Total Sales Last Ramadan]', 'Sales[Total Sales]'] } });
+    const vs = x.err ? [] : (() => { const out = []; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((f) => { const q = path.join(d, f.name); if (f.isDirectory()) walk(q); else if (f.name === 'visual.json') out.push(JSON.parse(fs.readFileSync(q, 'utf8'))); }); walk(path.join(ROOT, 'r14-sample', x.j.report, 'definition', 'pages')); return out; })();
+    const tf = (ref) => vs.filter((v) => v.visual && v.visual.visualType === 'tableEx').flatMap((v) => v.visual.query.queryState.Values.projections.filter((p) => p.queryRef === ref).map((p) => p.format || null));
+    const cards = (m) => vs.filter((v) => v.visual && v.visual.visualType === 'cardVisual' && JSON.stringify(v.visual.query || {}).includes(`"Property":"${m}"`)).map((v) => JSON.stringify(v.visual.objects.value || []));
+    const noAdded = (f) => f == null || !/\.0/.test(f);
+    // a DIVIDE measure without a format keeps its two decimals
+    fs.mkdirSync(path.join(ROOT, 'r14-div/Div.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, 'r14-div/Div.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string')],
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Avg Ticket', expression: 'DIVIDE ( [Total Sales], COUNTROWS ( Sales ) )' }] }] } }));
+    const y = await ask('create_report', { path: 'r14-div', name: 'R14 div', design: dz, secondPage: false, fields: { kpis: ['Sales[Total Sales]', 'Sales[Avg Ticket]'], table: ['Sales[Region]', 'Sales[Avg Ticket]'] } });
+    const yt = y.err ? [] : (() => { const out = []; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((f) => { const q = path.join(d, f.name); if (f.isDirectory()) walk(q); else if (f.name === 'visual.json') out.push(JSON.parse(fs.readFileSync(q, 'utf8'))); }); walk(path.join(ROOT, 'r14-div', y.j.report, 'definition', 'pages')); return out; })()
+      .filter((v) => v.visual && v.visual.visualType === 'tableEx').flatMap((v) => v.visual.query.queryState.Values.projections.filter((p) => p.queryRef === 'Sales.Avg Ticket').map((p) => p.format || null));
+    chk(() => !x.err && tf('Sales.Total Sales Last Ramadan').length >= 1 && tf('Sales.Total Sales Last Ramadan').every(noAdded) && cards('Total Sales Last Ramadan').length >= 1 && cards('Total Sales Last Ramadan').every((c) => !/\.00/.test(c))
+        && tf('Sales.Total Sales').every((f) => f === '#,0') && !y.err && yt.length >= 1 && yt.every((f) => f === '#,0.00'),
+      () => `the report must not add decimals to an unformatted measure (a DIVIDE keeps them): LR table ${JSON.stringify(tf('Sales.Total Sales Last Ramadan'))} cards ${cards('Total Sales Last Ramadan').map((c) => c.slice(0, 200)).join(' | ')} TS ${JSON.stringify(tf('Sales.Total Sales'))} DIV ${JSON.stringify(yt)} ${x.err ? x.t.slice(0, 200) : ''}${y.err ? y.t.slice(0, 200) : ''}`);
   }
 }
 

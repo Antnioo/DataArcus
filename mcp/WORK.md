@@ -40,6 +40,12 @@ round 13). The owner is asleep: taste calls are below, the work went on. Not mer
     radius); none is the dropdown box. Only the newer theme schema's `slicer.dropdown` (borderColor, borderRadius)
     is, and the validator refuses it in visual.json and in a theme. So the change is **removed** (`general` no longer
     written; its check removed with it). For the owner, 2.
+  - **Last fix (the laptop's finish, `39884d1`): "Total Sales Last Ramadan" (variables, no format) still showed
+    10,310.00.** The report never adds decimals the model did not ask for: where the shared rule proposes "#,0.00" for
+    a field the model leaves unformatted, the report writes "#,0.##" (round 13's), unless the DAX divides or averages
+    (`reportFormatOf` in server.mjs, for tables, cards and the tooltip's card); the health check's script still
+    proposes the rule's format for the user to approve. Tests first on the sample model and a DIVIDE measure; four
+    of 12b's checks back to "#,0.##" with the cause.
 - Item 3 `71d7553` (removed after the proof, above): **softer slicer outlines.** `general.outlineColor` (the text colour mixed 75% into the card) and
   `outlineWeight` 1 on every slicer, light and dark; the slicer keeps the theme's rounded corners. A rounded dropdown
   box (`slicer.dropdown.borderRadius`, theme schema 2.157) is refused by Microsoft's validator in visual.json and in a
@@ -58,7 +64,9 @@ round 13). The owner is asleep: taste calls are below, the work went on. Not mer
 - Tests: `npm test` 499 -> 506 of 506, golden PASS; the full website run at the end (below).
 
 ### Round 14, for the owner
-1. **The Arabic table's total row (seen on the laptop: no "Total" word).** Before/after:
+1. **CLOSED (tried on the laptop, 6 Oct, "Round 14, laptop finish" 2a): `total.label` 'الإجمالي' drew no label with the
+   text column last. Kept as it is: a total row without its word; the reading order wins (the owner's call).** What
+   was asked: **The Arabic table's total row (seen on the laptop: no "Total" word).** Before/after:
    `desk-r14\ba-r13-main-vs-r14-ar-dark-720.png` (above, round 13: Day Name at the LEFT, "Total" under it; below,
    round 14: Day Name at the right edge in reading order, the total row's three numbers with no word). Power BI writes
    "Total" only in the first column and only when it is text (measured 4 Oct), and the first column is now a measure.
@@ -67,7 +75,8 @@ round 13). The owner is asleep: taste calls are below, the work went on. Not mer
    capabilities: the validator accepts it) as "الإجمالي" and see where Desktop draws it. **Recommended: (c) tried once
    on the laptop; if Desktop draws it nowhere, (a)**: the reading order matters more than the word, and a reader sees
    the bold total row at the bottom.
-2. **Softer, rounded slicer dropdown boxes: nothing writable reaches them.** The outline change did nothing on the
+2. **CLOSED (tried on the laptop, 6 Oct, 2b): `visualStyles.slicer['*'].dropdown` in the theme loads, and Desktop
+   ignores it: nothing to write.** What was asked: **Softer, rounded slicer dropdown boxes: nothing writable reaches them.** The outline change did nothing on the
    box (laptop, FAIL) and is removed. The only properties for the box are the newer theme schema's `slicer.dropdown`
    (borderColor, borderRadius), refused by Microsoft's validator in visual.json and in a theme (one unknown theme
    property can make Desktop refuse the whole theme). Options: leave the boxes as Desktop draws them; or the laptop
@@ -98,6 +107,9 @@ round 13). The owner is asleep: taste calls are below, the work went on. Not mer
 7. (Re-check after `9d2a9ff`) The sample report, Arabic, Midnight, 1280 x 720: the table's whole numbers with no
    decimals (14,178; the total 101,914), the cards and the tooltip's card too; the Gulf report 591,015; an average
    or a ratio keeps its decimals or percent.
+7c. (Re-check after the last fix) The sample, English and Arabic: "Total Sales Last Ramadan" (variables, no format)
+   10,310 in the table and the tooltip, no ".00" (round 13's "#,0.##" again); Total Sales 14,178; a DIVIDE measure
+   without a format keeps two decimals.
 7b. (Re-check) The slicers look as in round 13 (the outline change is removed); optionally the owner's item 2 try.
 8. A ring card on a percent measure (Midnight): the label 33.8% in the text colour, the arc a third; the 7 starters
    on the website's designer.
