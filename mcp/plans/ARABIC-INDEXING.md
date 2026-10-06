@@ -4,8 +4,9 @@
 - Arabic is a switch in the page: `assets/js/lang-manager.js` reads `?lang=ar`, then `localStorage`
   (`dataarcus-lang`), then the browser's language, and fills the page from `assets/js/translations/*` (36 files:
   `data-i18n`, `data-i18n-html`, attributes, and the `meta` block: title, description, Open Graph, canonical).
-- The HTML Google downloads is English. Every page's Arabic `meta.canonical` is the English URL, so even a rendered
-  `?lang=ar` page tells Google "the English page is the real one".
+- The HTML Google downloads is English. Where a translation sets `meta.canonical` (22 of the 36 files), the Arabic
+  one is the English URL, so even a rendered `?lang=ar` page tells Google "the English page is the real one"; the
+  others keep the page's own English canonical.
 - No `hreflang` anywhere; `sitemap.xml` lists 35 English URLs; 37 pages (`scripts/test-site-config.mjs`).
 - So Google indexes English only. An Arabic search can't find an Arabic page, because to Google there isn't one.
 
@@ -33,7 +34,7 @@
 - **SEO effect:** possible, not sure. Google renders JavaScript, but later (a queue), and only if it keeps `?lang=ar`
   as its own URL. It lists parameters as "not recommended", and the English canonical must be fixed first, or the
   Arabic page is folded into the English one. Other engines and AI crawlers that don't run JavaScript see English.
-- **Effort:** about 1 builder session (36 translation files' canonicals, the head links, sitemap, tests).
+- **Effort:** about 1 builder session (the translations' canonicals, the head links, sitemap, tests).
 - **Risks:** low on the site (no new files), high on the result: we may wait weeks and learn it didn't take. The
   `localStorage` switch also means a returning visitor's plain URL shows Arabic, so the same URL serves two languages.
 
