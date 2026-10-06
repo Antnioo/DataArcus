@@ -4,6 +4,44 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 15, the owner's accepted recommendations of rounds 13 and 14 (2026-10-06, cloud builder; branch `fix/round-15` from `fix/round-14` `7be2f22`; not merged)
+The owner's answer on the cards (6 Oct 09:56-09:58): accept all recommendations of "Round 13, for the owner" and
+"Round 14, for the owner". One commit each, tests first.
+
+### Round 15, done
+- `ee473cc` (round 13, rec. 3): **a brand colour too dark to fade on its card fades the other way**: the smallest
+  bar the colour itself, the largest a brighter tint (40% towards the text colour); `chartColors.reversed` and both
+  colours in the answer. A colour under 3:1 itself still stays one colour.
+- `33b6910` (round 13, rec. 1): **gradient bars stay the default for designed pages** (smallest light, largest the
+  theme's colour), and the plan says so: `plan_layout`'s `chartColors.sayInPlan`, and the report-design skill.
+- `6130ac6` (round 13, rec. 2): **the website's Arabic download is mirrored** (the Theme Generator passes chartAxes
+  "mirrored" for a right-to-left design), and **a side legend sits at the right in Arabic** (the theme and the colour
+  step's preview). Design-engine fixtures refreshed with the owner's go (only "arabic-legend-side" and chartAxes on
+  the right-to-left project cases); the legend checks changed with the cause.
+- `1263569` (round 14, rec. 3): **a ring on a KPI card has no number inside** (the card shows the value; told in
+  reportNotes); table pictures keep their number.
+- `4ac5408` (round 14, rec. 4): **a "Right to left" switch in the SVG KPI Designer** (EN and AR), setting the
+  compiler's mirror.
+- Round 14, rec. 5: **the Arabic name glossary is approved as built** (`mcp/lib/arabic-names.mjs`); nothing to change.
+- Round 14, rec. 6: **dates "dd mmm yyyy" (05 Oct 2026)** in the shared format rule: approved; already so since 12b
+  (`formatOf`, with its test); nothing to change.
+- **Package 0.2.7: ship the 9 MB package with Microsoft's validator (no trimming)** (the owner's decision, 6 Oct): the
+  size question is closed.
+- Rounds 13 and 14's "for the owner" lists are all answered (round 14's items 1 and 2 were tried on the laptop and
+  closed).
+
+### Round 15, for the laptop to prove
+1. A dark design with a dark brand colour (`brand: '#0F6CBD'`, DataArcus): the bars fade from the brand colour (the
+   smallest) to a brighter tint (the largest), every bar visible on the card.
+2. The website's Theme Generator, Arabic page, Power BI download (sample): the charts mirrored (value axis at the
+   right, categories from the right, bars from the right), as the MCP's reports.
+3. A design with a "Side" legend in Arabic (a donut or a chart with a legend): the legend at the right.
+4. A KPI card with a ring picture: no number inside the ring; a table picture with the same ring: its number shown.
+5. The SVG KPI Designer: "Right to left" ticked, the measure pasted into a report: the ring fills counter-clockwise,
+   the bar from the right, texts readable (EN and AR pages).
+6. A plan from `plan_layout` read out by the AI: it says the bars fade by their value.
+<!-- r15 -->
+
 ## Round 14, the owner's late Arabic asks (2026-10-06 morning, cloud builder; branch `fix/round-14` from `origin/fix/round-13` `6f54d6a`; dataarcus-engine `fix/round-14` from its main `51f82c6`; not merged)
 The owner's asks of 03:20-03:44 that the laptop builder never received (its session failed at 05:56 after pushing
 round 13). The owner is asleep: taste calls are below, the work went on. Not merged; never main.
