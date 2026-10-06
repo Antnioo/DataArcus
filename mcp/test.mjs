@@ -3739,6 +3739,45 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const t = vis('r18-pic', x).find((v) => ty(v) === 'tableEx'), H = t ? parseFloat(t.visual.objects.grid[0].properties.imageHeight.expr.Literal.Value) : NaN;
     chk(() => H >= 24 && 68 + 5 * (H + 2) <= t.position.height, () => `a table picture must leave room for four rows and the total: imageHeight ${H} in a table ${t && t.position.height} high (68 + 5 x (H + 2) = ${68 + 5 * (H + 2)}) ${x.err ? x.t.slice(0, 200) : ''}`);
   }
+  // 4. (check 12, FAIL in Desktop: "P7 hand EN", a hand-placed matrix of Day Name and four long measures in a 420 x 220
+  //    slot, had a horizontal scrollbar, the third header cut, and showed three of the seven days and the total.) Cause:
+  //    the fit chose a smaller text to keep more measures and counted the rows at that size, but wrote the size only on a
+  //    table, so the matrix drew at the theme's size: wider than its box, and its rows taller than counted. The matrix
+  //    now gets the table's rules in full: the size the fit chose on its values, headers, row headers and total; only the
+  //    measures its width holds (the others named in tableColumns); tight rows where seven rows and the total need them;
+  //    and the answer says so when even that does not fit. At 1280 x 720 and 1920 x 1080, English and Arabic.
+  {
+    const req = (await import('node:module')).createRequire(import.meta.url), Px = req('../assets/js/pbip-export.js');
+    const visuals = (p, report) => { const out = []; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((f) => { const q = path.join(d, f.name); if (f.isDirectory()) walk(q); else if (f.name === 'visual.json') out.push(JSON.parse(fs.readFileSync(q, 'utf8'))); }); walk(path.join(ROOT, p, report, 'definition', 'pages')); return out; };
+    const dir = 'r18-matrix', base = path.join(ROOT, dir, 'M.SemanticModel');
+    fs.mkdirSync(base, { recursive: true });
+    fs.writeFileSync(path.join(base, 'model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [
+      { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Day Name', 'string'), col('Day of Week', 'int64')] },
+      { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime')], measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' },
+        { name: 'Total Sales Last Ramadan', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Total Sales This Ramadan To Date', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' },
+        { name: 'Average Daily Sales In Ramadan', expression: 'DIVIDE ( 1, 2 )', formatString: '#,0.00' }] }] } }));
+    const lit = (o, k) => { const e = ((o || {})[k] || [])[0]; return e && e.properties.fontSize ? parseFloat(e.properties.fontSize.expr.Literal.Value) : null; };
+    const themeOf = (rep) => { let th = null; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((f) => { const q = path.join(d, f.name); if (f.isDirectory()) walk(q); else if (!th && /\.json$/.test(f.name)) { const j = JSON.parse(fs.readFileSync(q, 'utf8')); if (j && j.textClasses && j.visualStyles) th = j; } }); walk(rep); return th; };
+    // the theme's sizes for each page, as the design engine writes them (x 1.5 on 1920 x 1080: tables 15, titles 18);
+    // "P7 hand EN" drew 15pt rows: three days and the total in 220 is 36 + 16 + 37 + a scrollbar + 4 x 30
+    const sz = (k) => { const g = { values: [{ fontSize: 10 * k }], columnHeaders: [{ fontSize: 10 * k }], total: [{ fontSize: 10 * k }] };
+      return { textClasses: { title: { fontSize: 12 * k }, label: { fontSize: 10 * k }, callout: { fontSize: 28 * k } }, visualStyles: { tableEx: { '*': g }, pivotTable: { '*': Object.assign({ rowHeaders: [{ fontSize: 10 * k }] }, g) } } }; };
+    for (const k of [1, 1.5]) fs.writeFileSync(path.join(ROOT, dir, `theme-${k}.json`), JSON.stringify(Object.assign({ name: `theme-${k}.json` }, sz(k))));
+    for (const [W, H, lang] of [[1280, 720, 'en'], [1280, 720, 'ar'], [1920, 1080, 'en'], [1920, 1080, 'ar']]) {
+      const x = await ask('create_report', { path: dir, name: `R18 matrix ${lang} ${W}`, lang, rtl: lang === 'ar', theme: `${dir}/theme-${W === 1920 ? 1.5 : 1}.json`, fields: { kpis: ['Sales[Total Sales]'], table: ['Calendar[Day Name]', 'Sales[Total Sales]', 'Sales[Total Sales Last Ramadan]', 'Sales[Total Sales This Ramadan To Date]', 'Sales[Average Daily Sales In Ramadan]'] },
+        pages: [{ name: 'P', width: W, height: H, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'matrix', x: 36, y: 100, w: 420, h: 220, title: 'M' }] }] });
+      const m = x.err ? null : visuals(dir, x.j.report).find((v) => v.visual && v.visual.visualType === 'pivotTable'), o = (m && m.visual.objects) || {};
+      const th = x.err ? null : themeOf(path.join(ROOT, dir, x.j.report)), T0 = th ? +(((th.visualStyles.pivotTable || {})['*'] || {}).values || [{}])[0].fontSize || 10 : 10, TITLE = th ? +(th.textClasses.title || {}).fontSize || 12 : 12;
+      const sizes = ['values', 'columnHeaders', 'rowHeaders', 'total'].map((k) => lit(o, k)), T = sizes[0] || T0;
+      const ps = m ? m.visual.query.queryState.Rows.projections.concat(m.visual.query.queryState.Values.projections).filter((p) => !/^Min\(/.test(p.queryRef)) : [];
+      const wide = ps.reduce((a, p) => a + Px.columnRoom(p, T, 'Segoe UI'), 0);
+      const pad = ((o.grid || [])[0] || {}).properties && o.grid[0].properties.rowPadding ? 0 : 1, pitch = 1.415 * T * 4 / 3 + 2 * pad, need = 1.5 * TITLE * 4 / 3 + pitch + 7 + 8 * pitch + 16;
+      const at8 = 1.5 * TITLE * 4 / 3 + 9 * (1.415 * 8 * 4 / 3) + 7 + 16;   // the rows at Power BI's smallest text, tight
+      const notes = x.err ? '' : JSON.stringify(x.j), told = /needs about \d+ to show its 7 rows/.test(notes), named = x.err ? [] : ((x.j.tableColumns || [])[0] || {}).leftOut || [];
+      chk(() => m && sizes.every((s) => s === sizes[0]) && (sizes[0] == null || sizes[0] < T0) && wide <= 420 && (need <= 220 || (told && at8 > 220)) && ps.length - 1 + named.length === 4,
+        () => `${lang} ${W} x ${H}: the matrix must draw at the size its fit chose (values, headers, row headers, total: ${JSON.stringify(sizes)}, the theme's ${T0}), its kept columns within 420 (${Math.round(wide)}), seven rows and the total within 220, or told when even 8pt does not hold them (need ${Math.round(need)}, at 8pt ${Math.round(at8)}, told ${told}), the left-out measures named (${JSON.stringify(named)}, kept ${ps.length - 1}) ${x.err ? x.t.slice(0, 300) : ''}`);
+    }
+  }
 }
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });

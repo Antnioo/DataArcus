@@ -1001,7 +1001,7 @@
           visual = { visualType: 'textbox', objects: textbox(s.text != null ? String(s.text) : W.textHere || 'Explain what the main chart shows and what to do about it.', s.text != null ? Math.max(11, LABEL) : 11, false, u.text), visualContainerObjects: frame(s.title, s.title, null, true) };
         } else {
           // a table keeps only the fields its width has room for (tableFit); Bt is the bind this table is written from
-          let Bt = B, tableText = null;
+          let Bt = B, tableText = null, smallEntry = null;
           if (B && (s.kind === 'table' || s.kind === 'matrix')) {   // (a matrix too: round 16, #15)
             // Round 12 (the owner's go on round 11's recommendation 5): a table too narrow for its fields first takes a
             // smaller text, down to 8pt: the largest size that keeps the most fields; a field is left out only where even
@@ -1009,7 +1009,7 @@
             const T0 = +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
             let tf = tableFit(B.table, s.w, T0, font);
             if (tf.leftOut.length) { for (let t2 = Math.ceil(T0) - 1; t2 >= 8; t2--) { const f2 = tableFit(B.table, s.w, t2, font); if (f2.kept.length > tf.kept.length) { tf = f2; tableText = t2; } if (!f2.leftOut.length) break; } }
-            if (tableText) tableSmaller.push({ page: pg.name || base, size: tableText, from: T0 });
+            if (tableText) tableSmaller.push(smallEntry = { page: pg.name || base, size: tableText, from: T0 });
             if (tf.leftOut.length) { Bt = Object.assign({}, B, { table: tf.kept }); tableColumns.push({ page: pg.name || base, pageIndex, x: s.x, y: s.y, kept: tf.kept, leftOut: tf.leftOut }); }
           }
           // Round 16 (design finding #18): each chart of a page by a category not used on the page yet, from the picker's
@@ -1089,6 +1089,11 @@
           // (on a right-to-left page the title sat on the right and the table on the left)
           if (s.kind === 'table') visual.objects = { columnHeaders: obj(Object.assign({ columnAdjustment: str('growToFit'), autoSizeColumnWidth: bool(true) }, tableText ? { fontSize: num(tableText) } : {})) };
           if (s.kind === 'table' && tableText) Object.assign(visual.objects, { values: obj({ fontSize: num(tableText) }), total: obj({ fontSize: num(tableText) }) });
+          // Round 18 (seen in Desktop, 6 Oct 2026, "P7 hand EN": a 420 x 220 matrix of Day Name and four long measures had
+          // a horizontal scrollbar and showed three of seven days): the fit had chosen a smaller text and counted the rows
+          // at it, but only a table was given that size, so the matrix drew at the theme's. A matrix gets it on its values,
+          // headers, row headers and total.
+          if (s.kind === 'matrix' && tableText) visual.objects = Object.assign(visual.objects || {}, { values: obj({ fontSize: num(tableText) }), columnHeaders: obj({ fontSize: num(tableText) }), rowHeaders: obj({ fontSize: num(tableText) }), total: obj({ fontSize: num(tableText) }) });
           // each column's header sits over its own values: text on the reading-start side, numbers (measures, and columns
           // the model types as numbers) right-aligned in both directions; "Apply to header" (styleHeader) makes the header
           // follow. (Round 12, #12; seen in Desktop 2.158, 5 Oct 2026: in a right-to-left table with left-aligned numbers,
@@ -1105,8 +1110,16 @@
           if ((s.kind === 'table' || s.kind === 'matrix') && query) {   // (a matrix too: round 16, #15)
             const tf = tableFields(Bt, rtl).find(isTextField), n = tf ? (/(^|\s)(day|weekday)|اليوم/i.test(tf.c) && Bind_nameLike(tf.c) ? 7 : /quarter|الربع/i.test(tf.c) ? 4 : /month|الشهر/i.test(tf.c) && Bind_nameLike(tf.c) ? 12 : 0) : 0;
             if (n) {
-              const T = tableText || +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
-              const need = (pad) => { const pitch = 1.415 * T * 4 / 3 + 2 * pad; return 1.5 * TITLE * 4 / 3 + pitch + 7 + (n + 1) * pitch + 16; };
+              let T = tableText || +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
+              const need = (pad, t = T) => { const pitch = 1.415 * t * 4 / 3 + 2 * pad; return 1.5 * TITLE * 4 / 3 + pitch + 7 + (n + 1) * pitch + 16; };
+              // Round 18 (FAIL 12: a 420 x 220 matrix at 1920 x 1080 showed three of seven days): a matrix whose rows do not
+              // fit even tight takes the largest smaller text, down to Power BI's 8pt, that holds them (and told,
+              // tableSmaller); only where even 8pt does not is it told that its last rows scroll (tableRows)
+              if (s.kind === 'matrix' && need(0) > s.h) {
+                let t2 = Math.ceil(T) - 1; while (t2 > 8 && need(0, t2) > s.h) t2--;
+                if (t2 >= 8 && need(0, t2) <= s.h) { const from = T; T = t2; ['values', 'columnHeaders', 'rowHeaders', 'total'].forEach((k) => { visual.objects = visual.objects || {}; visual.objects[k] = obj({ fontSize: num(t2) }); });
+                  if (smallEntry) Object.assign(smallEntry, { size: t2, rows: true }); else tableSmaller.push({ page: pg.name || base, size: t2, from, rows: true }); }
+              }
               if (need(1) > s.h) { visual.objects = visual.objects || {}; visual.objects.grid = [{ properties: { rowPadding: num(0) } }]; if (need(0) > s.h) tableRows.push({ page: pg.name || base, field: label(tf), rows: n, need: Math.ceil(need(0)), h: s.h }); }
             }
           }
