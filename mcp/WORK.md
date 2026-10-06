@@ -8,7 +8,18 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 
 Source: dataarcus-engine `business/audit/OUTSIDE-REVIEW-2026-10-06.md`. Out of scope: G-10, G-07 (owner decisions), G-06, G-09, G-11, Arabic indexing.
 
-### Rounds 15-17, the laptop proof (6 Oct evening; `fix/round-17` at `5cf5d6e`; the owner away)
+### Round 18 (6 Oct night, laptop; `fix/round-17` on top of `b343f27`; hard stop 20:40 laptop time)
+Started 19:41 (`idle.ps1` 196 s, no Desktop window). Order: FAIL 9, FAIL 12, S1 (the Arabic ☰), S2 (a tall table
+picture), S3 (slanted day names). Records: DESKTOP-TESTS.md, rows 9b, 12b, S1.. under "2026-10-06 evening".
+- **19:43:** tests written first for 9 (the category plan), S1 and S2 (`mcp/test.mjs`, "round 18"); the red run is
+  running; the code is written (`pbip-export.js`: `catPlan`, `openText`, the picture's height cap). Cause of FAIL 9:
+  the column chart, earlier in the reading order, took the third column before the second bar chart. Measured for
+  S2 on "P4 ring EN": a 64-high picture gives rows 66 apart, the first 68 under the table's top (1280 x 720).
+  **Not started: FAIL 12 (the matrix's fit) and S3.**
+- **20:08:** red run: 534 checks, 3 failing (the three new ones). Proven in Desktop with the new code: 9b PASS (`p9b-view.png`), S1 PASS (`ba-p11b-ar-head-crop.png`), S2 PASS for the rows (`ba-p4b-table-crop.png`; the number inside a 28-high ring is too small to read: for the owner). The green run is running; `check:min` clean; `?v=` bumped (pbip-export h, theme-generator i). `scripts/test-site-config.mjs` stops on this Windows checkout with a path of its own (`C:\C:\...`), with and without these changes: CI is the record; `test-analytics-events.mjs` passes.
+- **Not reached, in order:** FAIL 12 (the matrix: the table's fit rules, tight rows, the answer when seven rows cannot fit), S3 (a short day-name column on the column chart), the touched website suites.
+- **For the owner:** a ring as a table picture is 28 high when the table is small, and its number then cannot be read. Options: drop the number inside a table ring under about 40 high (the column beside it can carry it); keep the ring larger and show fewer rows; leave it. Recommended: drop the number under 40.
+## Rounds 15-17, the laptop proof (6 Oct evening; `fix/round-17` at `5cf5d6e`; the owner away)
 Started 19:13 (laptop time), hard stop 20:11. Records: `scripts/tests/DESKTOP-TESTS.md`, "2026-10-06 evening, rounds
 15-17". Reports: `<tests folder>\desk-r15-17\`; scripts: `builder-scripts\r15-*`.
 - **19:35: checks 1 to 13, 15 and 16 run: 13 PASS, 2 FAIL (9, 12), 14 skipped; nothing not reached. No code changed; `npm test` not run again (530 on CI). Desktop closed.**

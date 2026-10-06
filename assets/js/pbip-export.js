@@ -850,6 +850,7 @@
       // Round 12 (#15; seen in Desktop 2.158, round 11: "Total Sales by Day Name" twice on one page): a table whose title
       // is a chart's title on the same page is titled by what it adds, "...: detail"
       const pageCats = new Set();   // the categories this page's charts already show (round 16, #18)
+      let catPlan = null;   // each categorical chart slot's category, given out once for the page (round 18)
       const chartTitles = new Set(B ? sorted.filter((s) => CHARTS.includes(s.kind)).map((s) => bindTitle(s.kind, B, W.by || 'by')).filter(Boolean) : []);
       const charts = [];
       sorted.forEach((s) => {
@@ -881,7 +882,9 @@
       let nav = null, openBtn = null, tabs = null;
       const panel = pg.panel && title && logo ? pg.panel : null, k = pg.page.h / 1080;
       if (title && logo) {
-        const gap = 24 * k, openText = '☰  ' + (W.filters || 'Filters');
+        // (round 18, seen in Desktop on 6 Oct 2026: with the ☰ written first, an Arabic button drew it at the left of the
+        // word, the reading end; written after the word, the left-to-right button draws it at the right)
+        const gap = 24 * k, openText = rtl ? (W.filters || 'Filters') + '  ☰' : '☰  ' + (W.filters || 'Filters');
         let x0 = rtl ? logo.x + logo.w + gap : title.x + title.w + gap, x1 = rtl ? title.x - gap : logo.x - gap;
         // slide-in filters: the Filters button sits next to the logo, the page buttons use what is left
         if (panel) {
@@ -1011,10 +1014,15 @@
           }
           // Round 16 (design finding #18): each chart of a page by a category not used on the page yet, from the picker's
           // pool (B.catPool), where the model has more than one; the same category only when it has no other
+          // Round 18 (seen in Desktop, 6 Oct 2026: on a model with three text columns the operations layout's two bar
+          // charts were both by the first one, because the column chart, earlier in the reading order, had taken the
+          // third): the page's categories are given out once, the bar charts and the donut first in reading order,
+          // then the column chart and the map; a chart repeats a category only when the pool has no unused one.
           if (B && CAT_KINDS.includes(s.kind) && (B.cats || {})[s.kind]) {
-            const k0 = (f) => f.t + '\u0001' + f.c, cur = B.cats[s.kind];
-            if (pageCats.has(k0(cur))) { const alt = (B.catPool || []).find((f) => !pageCats.has(k0(f))); if (alt) Bt = Object.assign({}, Bt, { cats: Object.assign({}, Bt.cats, { [s.kind]: alt }) }); }
-            pageCats.add(k0(Bt.cats[s.kind]));
+            const k0 = (f) => f.t + '\u0001' + f.c;
+            if (!catPlan) { catPlan = new Map(); const last = (x) => x.kind === 'column' || x.kind === 'map', all = sorted.filter((x) => CAT_KINDS.includes(x.kind) && (B.cats || {})[x.kind]);
+              all.filter((x) => !last(x)).concat(all.filter(last)).forEach((x) => { let c = B.cats[x.kind]; if (pageCats.has(k0(c))) { const alt = (B.catPool || []).find((f) => !pageCats.has(k0(f))); if (alt) c = alt; } pageCats.add(k0(c)); catPlan.set(x, c); }); }
+            const c = catPlan.get(s); if (c && c !== B.cats[s.kind]) Bt = Object.assign({}, Bt, { cats: Object.assign({}, Bt.cats, { [s.kind]: c }) });
           }
           const query = B ? bindQuery(s.kind, Bt, kpiIndex, rtl) : null;
           let ttl = s.title;
@@ -1133,7 +1141,11 @@
               const wide = Math.max(...mine.map((c) => +c.w || 0)) || 75, tt = +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
               const others = query.queryState.Values.projections.filter((p) => !(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema) && p.displayName !== ' ').reduce((a, p) => a + columnRoom(p, tt, font), 0);
               const W = Math.max(8, Math.min(512, wide, Math.floor((s.w - others) / cols.length) - 10));
-              const H = Math.max(8, Math.min(512, Math.round(Math.max(...mine.map((c) => (+c.h || 75) * Math.min(1, W / (+c.w || 75)))))));
+              const H0 = Math.max(8, Math.min(512, Math.round(Math.max(...mine.map((c) => (+c.h || 75) * Math.min(1, W / (+c.w || 75)))))));
+              // Round 18 (measured in Desktop 2.158, 6 Oct 2026, "P4 ring EN": a 64-high picture in a 221-high table at
+              // 1280 x 720: the rows 66 apart (the picture + 2), the first 68 under the table's top; one and a half rows
+              // showed): a table picture is no taller than lets four rows and the total show, 24 at least.
+              const H = Math.min(H0, Math.max(24, Math.floor((s.h - 68 * pg.page.h / 720) / 5) - 2));
               visual.objects = Object.assign(visual.objects || {}, { grid: [{ properties: { imageHeight: num(H), imageWidth: num(W) } }] });
               svgSizes[pageIndex] = { w: W, h: H, design: wide, capped: W < wide };
               svgDone[pageIndex] = true;

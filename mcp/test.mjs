@@ -3693,6 +3693,51 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   check(dirs.length > 50 && !bad.length, `every created report must validate with 0 errors (${dirs.length} reports): ${bad.map(([d, e]) => d + ': ' + e).join('; ').slice(0, 1500)}`);
 }
 
+// ---------- round 18 (6 Oct night, the laptop): three things Desktop showed in the rounds 15-17 proof ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }], col = (name, dataType) => ({ name, dataType, sourceColumn: name });
+  const mk = (dir, cols) => { fs.mkdirSync(path.join(ROOT, dir, 'M.SemanticModel'), { recursive: true }); fs.writeFileSync(path.join(ROOT, dir, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double')].concat(cols.map((n) => col(n, 'string'))),
+    measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }] }] } })); };
+  const vis = (dir, x) => { if (x.err) return []; const def = path.join(ROOT, dir, x.j.report, 'definition', 'pages'), o = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder[0];
+    return fs.readdirSync(path.join(def, o, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, o, 'visuals', v, 'visual.json'), 'utf8'))).filter((v) => v.visual); };
+  const catOf = (v) => v.visual.query.queryState.Category.projections[0].queryRef, ty = (v) => v.visual.visualType;
+  // 1. (check 9, FAIL in Desktop: on a model with Region, Channel and Product the operations layout's two bar charts were
+  //    both by Region, the donut by Channel and the column chart by Product: the column chart took the third column
+  //    before the second bar chart had its turn.) The bar charts and the donut come first, in reading order, each by
+  //    a category the page has not used; the column chart takes what is left and repeats only when nothing is.
+  {
+    mk('r18-three', ['Region', 'Channel', 'Product']); mk('r18-two', ['Region', 'Channel']);
+    const ops = async (dir) => ask('create_report', { path: dir, name: 'R18 ops', secondPage: false, design: (await ask('plan_layout', { layout: 'ops', kpis: 3, filters: 'top' })).j.design });
+    const three = vis('r18-three', await ops('r18-three')), two = vis('r18-two', await ops('r18-two'));
+    const pick = (vs) => ({ bars: vs.filter((v) => ty(v) === 'clusteredBarChart').sort((p, q) => p.position.y - q.position.y).map(catOf), donut: vs.filter((v) => ty(v) === 'donutChart').map(catOf), column: vs.filter((v) => ty(v) === 'clusteredColumnChart').map(catOf) });
+    chk(() => { const p = pick(three); return p.bars.length === 2 && new Set(p.bars.concat(p.donut)).size === 3 && p.bars[0] === 'Sales.Region' && p.donut[0] === 'Sales.Channel' && p.bars[1] === 'Sales.Product' && p.column.length === 1; },
+      () => `three text columns: the two bar charts and the donut must each take a different one (Region, Channel, Product): ${JSON.stringify(pick(three))}`);
+    chk(() => { const p = pick(two); return p.bars[0] === 'Sales.Region' && p.donut[0] === 'Sales.Channel' && p.bars.length === 2; }, () => `two text columns: bar by Region, donut by Channel, as before: ${JSON.stringify(pick(two))}`);
+  }
+  // 2. (seen in Desktop: the Arabic slide-in panel's Filters button read "الفلاتر ☰" with the ☰ at the left of the word, the
+  //    reading end.) In a right-to-left report the ☰ is written after the word, so the left-to-right button draws it at
+  //    the right, the reading start; English keeps "☰  Filters".
+  {
+    mk('r18-panel', ['Region', 'Channel']);
+    const btn = async (lang) => { const x = await ask('create_report', { path: 'r18-panel', name: 'R18 panel ' + lang, lang, slidePanel: true, secondPage: false, design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', lang })).j.design });
+      return vis('r18-panel', x).filter((v) => ty(v) === 'actionButton').map((v) => JSON.stringify(v.visual.objects.text)).map((s) => (s.match(/'([^']*\u2630[^']*)'/) || [])[1]).filter(Boolean); };
+    const en = await btn('en'), ar = await btn('ar');
+    chk(() => en.length === 1 && /^\u2630\s+Filters$/.test(en[0]) && ar.length === 1 && /^[\u0600-\u06FF]+\s+\u2630$/.test(ar[0]), () => `the Filters button: "☰  Filters" in English, the word then ☰ in Arabic: ${JSON.stringify([en, ar])}`);
+  }
+  // 3. (seen in Desktop, "P4 ring EN": a 64 x 64 ring as a table picture in a 221-high table at 1280 x 720: the rows
+  //    came 66 apart (the picture + 2), the first 68 under the table's top, so one and a half rows showed.) A table
+  //    picture is no taller than lets four rows and the total show: (the table's height - 68 x the page's scale) / 5 - 2,
+  //    24 at least.
+  {
+    mk('r18-pic', ['Region', 'Channel']);
+    const ring = { w: 64, h: 64, values: [{ id: 'p', label: 'Margin', kind: 'measure', measure: 'Sales[Margin %]' }], layers: [{ type: 'ring', cx: 32, cy: 32, r: 24, sw: 8, bind: { p: { v: 'p', d0: 0, d1: 1 } } }] };
+    const x = await ask('create_report', { path: 'r18-pic', name: 'R18 pic', secondPage: false, design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', page: '1280x720' })).j.design, fields: { table: ['Sales[Region]', 'Sales[Total Sales]'] }, svgColumns: [{ label: 'Ring col', design: ring }] });
+    const t = vis('r18-pic', x).find((v) => ty(v) === 'tableEx'), H = t ? parseFloat(t.visual.objects.grid[0].properties.imageHeight.expr.Literal.Value) : NaN;
+    chk(() => H >= 24 && 68 + 5 * (H + 2) <= t.position.height, () => `a table picture must leave room for four rows and the total: imageHeight ${H} in a table ${t && t.position.height} high (68 + 5 x (H + 2) = ${68 + 5 * (H + 2)}) ${x.err ? x.t.slice(0, 200) : ''}`);
+  }
+}
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);
