@@ -21,6 +21,43 @@ picture), S3 (slanted day names). Records: DESKTOP-TESTS.md, rows 9b, 12b, S1.. 
 - **20:37, the stop:** the run started at 20:24 had not finished by 20:36 and was stopped for the hard stop, so **the last full result on this laptop is 533 of 534, before the check's update; the full count after it is CI's to give**. Stopping it also stopped the other `server.mjs` processes of the working copy on this laptop (a session's own DataArcus server among them: a new session starts it again). Desktop closed; no capture process left.
 - **Not reached, in order:** FAIL 12 (the matrix: the table's fit rules, tight rows, the answer when seven rows cannot fit), S3 (a short day-name column on the column chart), the touched website suites.
 - **For the owner:** a ring as a table picture is 28 high when the table is small, and its number then cannot be read. Options: drop the number inside a table ring under about 40 high (the column beside it can carry it); keep the ring larger and show fewer rows; leave it. Recommended: drop the number under 40.
+### Round 18, finished (cloud; 6 Oct, 16:49-17:48 UTC; `fix/round-17` on top of `e3067ff`; not merged)
+- **Intact first:** `npm ci` (root and mcp); `npm test` on `e3067ff`: **534 of 534, golden PASS** (11 tasks); the website's 17 suites: **all PASS**;
+  `test-site-config`, `test-analytics-events`, `check:min`: all pass.
+- **FAIL 12, the matrix (`1342636`): done.** Cause, reproduced in the test: on a 1920 x 1080 page the fit chose a
+  smaller text to hold the measures and counted the rows at it, but only a table was given that size, so the matrix
+  drew at the theme's 15pt: 519 wide in 420 (the scrollbar, "Total Sales Last Ran"), 314 needed in 220 (three days
+  and the total). Now the matrix writes the chosen size on values, column headers, row headers and total; where seven
+  rows and the total still do not fit tight it takes the largest smaller text down to 8pt that holds them (told in
+  reportNotes); only where 8pt does not is it told that its rows scroll; left-out measures named in `tableColumns`.
+  Test (round 18, 4.): 1280 x 720 and 1920 x 1080, English and Arabic; red at 1920 (2 failing), green after.
+- **Item 4 (`845f73c`): done.** `test-site-config.mjs` takes its root from `fileURLToPath` (as `check-min.mjs`).
+- **S3, slanted day names: not built (a taste call, below).** The Gulf calendar has no short day-name column (only
+  "Day Name" and "Day Name (Arabic)"), and the tools read metadata only, so "a column whose values are 3-letter day
+  names" cannot be told.
+- **After:** `npm test` **538 of 538** (534 + the 4 new), golden PASS; touched suites pbip 73, theme-generator 893, theme-generator-lab 893: PASS; `check:min`, `test-site-config`, `test-analytics-events` PASS; CI green on `845f73c` (both jobs); the docs commit after it: CI to confirm.
+- **Seen, not in scope:** the matrix keeps the measures chosen at the width's size (11pt at 1920 x 1080) and then takes 9pt for its rows, where a third measure may now fit (kept as is: fewer columns is the safe side); the same `new URL(import.meta.url).pathname` root in `scripts/make-share-images.mjs`, `make-article-mockups.mjs` and `test-svg-kpi.mjs` (the last is a website suite: it may stop on a Windows checkout too); a table (not a matrix) still does not take a smaller text for its rows (the brief asked it for the matrix only).
+
+#### Round 18, for the laptop to prove
+- **12b** (the hand-placed matrix): rebuild "P7 hand EN" (1920 x 1080, Day Name and four long measures, 420 x 220).
+  Expected, from the test's fixture of the same shape: the matrix's text 9pt (values, headers, row headers, total;
+  the theme's 15pt), Day Name and the first two measures kept, the other two named in `tableColumns`, tight rows;
+  worked out 324 wide of 420 and 212 high of 220. **On screen: no horizontal scrollbar, every header whole, Sunday to
+  Saturday and the total all shown, no vertical scrollbar.** The answer's reportNotes: "The table text is 9pt (the
+  theme's is 15pt) ... and, in a matrix, its rows and total fit its height". Also at 1280 x 720 (10pt, unchanged,
+  356 of 420, 217 of 220 tight): the same four things true.
+- **S3b:** not built; nothing to prove until the owner picks an option.
+
+#### Round 18, for the owner
+1. **A ring as a table picture in a small table is 28 high and its number cannot be read.** Options: drop the number
+   inside a table ring under about 40 high (the measure's column beside it can carry it); keep the ring larger and show
+   fewer rows; leave it. **Recommended (the laptop's): drop the number under 40.**
+2. **S3, day names slant on the 1920 x 1080 column charts.** Options: (a) the Gulf calendar gets a short day-name
+   column ("Day Name Short": Sun ... Sat, sorted by Day of Week; Arabic day names are short already) and a column
+   chart by days uses it when the model has it, matched by name; (b) a chart by day names becomes a bar chart (days
+   down the side, never slanted); (c) leave it and add a modelNotes line. **Recommended: (a)**, with (c)'s line when
+   the model has no short column. Either needs a Desktop look before it ships.
+
 ## Rounds 15-17, the laptop proof (6 Oct evening; `fix/round-17` at `5cf5d6e`; the owner away)
 Started 19:13 (laptop time), hard stop 20:11. Records: `scripts/tests/DESKTOP-TESTS.md`, "2026-10-06 evening, rounds
 15-17". Reports: `<tests folder>\desk-r15-17\`; scripts: `builder-scripts\r15-*`.
