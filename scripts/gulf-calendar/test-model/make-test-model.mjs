@@ -16,7 +16,7 @@ import { createRequire } from 'node:module';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const G = createRequire(import.meta.url)('../../../assets/js/gulf-dates.js');
 
-export const MODEL_CG = { name: 'Calendar', start: '2018-01-01', end: '2030-12-31', week: 'sun', weekend: 'uae', lang: 'en', fy: 1, hijri: true, fiscal: true, relative: true, observed: true };
+export const MODEL_CG = { name: 'Calendar', start: '2018-01-01', end: '2030-12-31', week: 'sun', weekend: 'uae', lang: 'en', fy: 1, hijri: true, fiscal: true, relative: true, observed: true, arabicNames: true };
 export const MODEL_MB = { mode: 'column', agg: 'SUM', fact: 'Sales', column: 'Amount', base: 'Total Sales', cal: 'Calendar', dateCol: 'Date',
   pick: ['ramLY', 'ramPct', 'eidFitr', 'eidFitrLY', 'eidFitrPct', 'eidAdha', 'eidAdhaLY', 'eidAdhaPct'] };
 export const SALES_DAX = `Sales =
@@ -104,6 +104,10 @@ export function expected() {
     ['C13 days after the UAE weekend change in 2021', rows([`${C}[Is After UAE Weekend Change] = TRUE ()`, yr(2021)]), 0],
     ['C14 days after the UAE weekend change in 2022', rows([`${C}[Is After UAE Weekend Change] = TRUE ()`, yr(2022)]), 365],
     ['C15 Ramadan 1446 length', rows([`${C}[Is Ramadan] = TRUE ()`, hy(1446)]), ramadanLen(1446)],
+    // the Arabic name columns (owner 2026-10-06): 2026-03-01 is a Sunday in March, in Ramadan 1447
+    ['A01 Day Name (Arabic) on 2026-03-01 is الأحد', rows([`${C}[Day Name (Arabic)] = "الأحد"`, dt('2026-03-01')]), 1],
+    ['A02 Month Name (Arabic) on 2026-03-01 is مارس', rows([`${C}[Month Name (Arabic)] = "مارس"`, dt('2026-03-01')]), 1],
+    ['A03 Hijri Month Name (Arabic) on 2026-03-01 is رمضان', rows([`${C}[Hijri Month Name (Arabic)] = "رمضان"`, dt('2026-03-01')]), 1],
     // Ramadan day N vs last year, and this Ramadan vs last Ramadan (the Measure Builder's existing measures)
     ['R01 Ramadan 1447 day 1: sales', ctx('[Total Sales]', hy(1447), rd(1)), sum(ram(1447, 1))],
     ['R02 Ramadan 1447 day 1: last Ramadan', ctx('[Total Sales Last Ramadan]', hy(1447), rd(1)), ramadanDay(1446, 1).sales],

@@ -64,7 +64,13 @@
   };
 
   // ---------- settings: the page's state, or the MCP's add_gulf_calendar ----------
-  const DEFAULTS = { name: 'Calendar', start: '2022-01-01', end: '2027-12-31', fy: 1, week: 'sun', weekend: 'sat-sun', lang: 'en', hijri: true, fiscal: true, relative: true, observed: false };
+  // arabicNames (round 12b, the owner's ask, 6 Oct 2026): "Day Name (Arabic)", "Month Name (Arabic)" and "Hijri Month
+  // Name (Arabic)" beside the English names, so a bilingual model shows Arabic names on Arabic pages. On for a new
+  // table; a table saved before the option keeps its columns (the page reads a save without it as off).
+  const DEFAULTS = { name: 'Calendar', start: '2022-01-01', end: '2027-12-31', fy: 1, week: 'sun', weekend: 'sat-sun', lang: 'en', hijri: true, fiscal: true, relative: true, observed: false, arabicNames: true };
+  // the Arabic name columns: written when the names are not Arabic already
+  const ARABIC = { day: 'Day Name (Arabic)', month: 'Month Name (Arabic)', hijri: 'Hijri Month Name (Arabic)' };
+  const arabicOn = (st) => !!st.arabicNames && st.lang !== 'ar';
   // the announced dates apply only to the Hijri columns
   const observedOn = (st) => !!(st.observed && st.hijri && hijriFmt && GD);
   const dateDax = (s) => `DATE ( ${s.split('-').map(Number).join(', ')} )`;
@@ -102,12 +108,14 @@
     col('Year Quarter', 'YEAR ( [Date] ) & " Q" & ROUNDUP ( MONTH ( [Date] ) / 3, 0 )');
     col('Month Number', 'MONTH ( [Date] )');
     col('Month Name', sw('MONTH ( [Date] )', MONTHS[lang]));
+    if (arabicOn(st)) col(ARABIC.month, sw('MONTH ( [Date] )', MONTHS.ar));
     col('Month Short', lang === 'en' ? sw('MONTH ( [Date] )', MONTHS.en.map((m) => m.slice(0, 3))) : sw('MONTH ( [Date] )', MONTHS.ar));
     col('Year Month', 'FORMAT ( [Date], "YYYY-MM" )');
     col('Year Month Sort', 'YEAR ( [Date] ) * 100 + MONTH ( [Date] )');
     col('Day', 'DAY ( [Date] )');
     col('Day of Week', dow);
     col('Day Name', sw('WEEKDAY ( [Date], 1 )', DAYS[lang]));
+    if (arabicOn(st)) col(ARABIC.day, sw('WEEKDAY ( [Date], 1 )', DAYS.ar));
     col('Week Start', `[Date] - ( ${dow} ) + 1`);
     col('ISO Week', 'WEEKNUM ( [Date], 21 )');
     col('Is Weekend', weekendDax(st));
@@ -156,6 +164,7 @@ ${starts.map((h) => `            { "${iso(h.t)}", ${h.y}, ${h.m} }`).join(',\n')
       const hm = '[Hijri Month Number]', hy = '[Hijri Year]', hd = '[Hijri Day]';
       hijriCols = 4;
       col('Hijri Month Name', sw(hm, HIJRI[lang]));
+      if (arabicOn(st)) col(ARABIC.hijri, sw(hm, HIJRI.ar));
       col('Hijri Date', `${hd} & " " & ${sw(hm, HIJRI[lang])} & " " & ${hy}`);
       col('Hijri Year Month Sort', `${hy} * 100 + ${hm}`);
       col('Is Ramadan', `${hm} = 9`);
@@ -183,7 +192,7 @@ ${L.join(',\n')}
   // the Hijri date the preview shows: the browser's Umm al-Qura, or the table's month starts with announced dates
   const hijriFor = (st) => (observedOn(st) ? hijriFrom(hijriMonthStarts(st, parse(st.start), parse(st.end))) : hijri);
 
-  return { MONTHS, DAYS, HIJRI, WEEKENDS, COUNTRY, GD, DAY, DEFAULTS, MIN_DATE, MAX_DATE, own, iso, parse, addYears, hijriFmt, hijri, hijriFrom, hijriMonthStarts, hijriFor,
+  return { MONTHS, DAYS, HIJRI, ARABIC, arabicOn, WEEKENDS, COUNTRY, GD, DAY, DEFAULTS, MIN_DATE, MAX_DATE, own, iso, parse, addYears, hijriFmt, hijri, hijriFrom, hijriMonthStarts, hijriFor,
     observedOn, weekendDays, tableName, build };
 });
 
@@ -210,6 +219,8 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
   } else saved = null;
   // First visit in Arabic: default the month and day names to Arabic too
   state = { ...DEFAULTS, ...(saved ? {} : { lang: (isAr() || (() => { try { return localStorage.getItem('dataarcus-lang') === 'ar'; } catch (e) { return false; } })()) ? 'ar' : 'en' }), ...(saved || {}) };
+  // a table saved before the Arabic name columns existed keeps its columns (round 12b)
+  if (saved && !own(saved, 'arabicNames')) state.arabicNames = false;
   const save = () => { try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* private mode */ } };
   // the table's rules live in the shared module (the MCP's add_gulf_calendar builds the same table)
   const observedOn = () => C.observedOn(state);
@@ -271,6 +282,8 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
     $('ramadan').innerHTML = state.hijri ? (rl.length ? rl.map((r) => `<span class="cg-chip">${L(`Ramadan ${r.y}: ${fmt(r.a)} to ${fmt(r.b)}`, `رمضان ${r.y}: من ${fmt(r.a)} إلى ${fmt(r.b)}`)}${est(r)}</span>`).join('') : `<span class="text-white-50 small">${L('No Ramadan in this range.', 'لا يوجد رمضان ضمن هذا النطاق.')}</span>`) : '';
     $('ramWrap').style.display = state.hijri ? '' : 'none';
     if ($('cgObserved')) $('cgObserved').disabled = !state.hijri || !hijriFmt || !GD;
+    // the names are Arabic already: the Arabic name columns would repeat them
+    if ($('cgArabic')) $('cgArabic').disabled = state.lang === 'ar';
     save();
   };
 
@@ -282,7 +295,7 @@ if (typeof document !== 'undefined') document.addEventListener('DOMContentLoaded
   };
   bind('cgName', 'name'); bind('cgStart', 'start'); bind('cgEnd', 'end'); bind('cgFy', 'fy', Number);
   bind('cgWeek', 'week'); bind('cgWeekend', 'weekend'); bind('cgLang', 'lang');
-  bind('cgHijri', 'hijri'); bind('cgFiscal', 'fiscal'); bind('cgRel', 'relative'); bind('cgObserved', 'observed');
+  bind('cgHijri', 'hijri'); bind('cgFiscal', 'fiscal'); bind('cgRel', 'relative'); bind('cgObserved', 'observed'); bind('cgArabic', 'arabicNames');
   if (!hijriFmt) { $('cgHijri').checked = false; $('cgHijri').disabled = true; state.hijri = false; $('hijriNote').textContent = L('Your browser does not support Hijri dates. Try Chrome, Edge or Safari.', 'متصفحك لا يدعم التاريخ الهجري. جرّب Chrome أو Edge أو Safari.'); }
 
   const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.style.opacity = 1; clearTimeout(toast.h); toast.h = setTimeout(() => { t.style.opacity = 0; }, 1800); };

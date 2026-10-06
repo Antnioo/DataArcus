@@ -153,9 +153,9 @@ export default async function ({ browser, url }) {
     const st = Object.assign(sales(), { measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )' }, { name: 'Units', expression: "SUM ( 'Sales'[Qty] )" }, { name: 'Orders', expression: 'COUNTROWS ( Sales )' },
       { name: 'Margin %', expression: 'DIVIDE ( [Total Sales] - 1, [Total Sales] )' }, { name: 'نسبة النمو', expression: 'DIVIDE ( 1, 2 )' }, { name: 'Has Format', expression: 'SUM ( Sales[Amount] )', formatString: '0' }] });
     const f = typeof T.formatFixes === 'function' ? T.formatFixes([st], ['Total Sales', 'Units', 'Orders', 'Margin %', 'نسبة النمو', 'Has Format']) : { suggested: [], script: '' };
-    check(JSON.stringify(f.suggested.map((x) => [x.measure, x.format])) === JSON.stringify([['[Total Sales]', '#,0.00'], ['[Units]', '#,0'], ['[Orders]', '#,0'], ['[Margin %]', '0.0%'], ['[نسبة النمو]', '0.0%']]) && f.suggested.every((x) => x.reason),
+    check(JSON.stringify(f.suggested.map((x) => [x.measure, x.format])) === JSON.stringify([['[Total Sales]', '#,0'] /* (round 14, the laptop's proof on 6 Oct: an unformatted SUM shows no decimals, #,0; was #,0.00) */, ['[Units]', '#,0'], ['[Orders]', '#,0'], ['[Margin %]', '0.0%'], ['[نسبة النمو]', '0.0%']]) && f.suggested.every((x) => x.reason),
       `format script: suggestions ${JSON.stringify(f.suggested)}`);
-    check(f.count === 5 && !/Has Format/.test(f.script || '') && (f.script || '').split('\n').includes('\t\t\tformatString: 0.0%') && (f.script || '').split('\n').includes('\t\t\tformatString: #,0.00'), `format script: ${(f.script || '').slice(0, 300)}`);
+    check(f.count === 5 && !/Has Format/.test(f.script || '') && (f.script || '').split('\n').includes('\t\t\tformatString: 0.0%') && (f.script || '').split('\n').includes('\t\t\tformatString: #,0') /* (round 14, the laptop's proof on 6 Oct: an unformatted SUM shows no decimals, #,0; was #,0.00) */, `format script: ${(f.script || '').slice(0, 300)}`);
     const pf = typeof T.formatFixes === 'function' ? T.formatFixes([Object.assign(sales(), { measures: [{ name: 'Return Rate', expression: 'DIVIDE ( 1, 2 )', formatString: '0.00' }] })], ['Return Rate'], { percent: true }) : { suggested: [] };
     check(pf.count === 1 && pf.suggested[0].format === '0.0%' && /formatString: 0\.0%/.test(pf.script), `format script, a rate formatted as a number: ${JSON.stringify(pf.suggested)}`);
     // the engine finds Arabic month and day name columns too
@@ -223,7 +223,8 @@ export default async function ({ browser, url }) {
       pq: [...document.querySelectorAll('.mh-script')].map((s) => [s.querySelector('.mh-sh b').textContent, [...s.querySelector('pre').textContent.matchAll(/"((?:[^"]|"")*)"/g)].map((x) => x[1]).filter((x) => x !== 'Previous step')]),
       quick: (document.querySelector('.mh-qf') || {}).textContent || '',
       kept: [...document.querySelectorAll('.mh-kept li')].map((li) => li.textContent),
-      calc: [...document.querySelectorAll('.mh-clean .mh-tags code')].map((c) => c.textContent)
+      calc: [...document.querySelectorAll('.mh-clean .mh-tags code')].map((c) => c.textContent),
+      formats: [...document.querySelectorAll('.mh-formats li')].map((li) => li.textContent), formatsBtn: !!document.querySelector('[data-script="tmdl:formats"]')
     }));
     const removed = plan.pq.flatMap(([t, cols]) => cols.map((c) => t + '[' + c + ']'));
     const sorts = [...plan.quick.matchAll(/Columns\["([^"]+)"\]\.SortByColumn = Model\.Tables\["([^"]+)"\]\.Columns\["([^"]+)"\]/g)].map((x) => ({ col: x[1], table: x[2], by: x[3] }));
@@ -234,6 +235,9 @@ export default async function ({ browser, url }) {
     check(!removed.includes('_Measures[Column1]') && !/Column1/.test(unusedTab), `${tag}: the only column of _Measures is listed as unused or removed`);
     if (plan.steps.includes('calc') && plan.steps.includes('columns')) check(plan.steps.indexOf('calc') < plan.steps.indexOf('columns'), `${tag}: Power Query columns are removed before the calculated columns that read them`);
     if (name === 'plan.pbit') {
+      // formats fixed at the source (owner 2026-10-06): the page lists the same fixes as the shared rule (and the MCP)
+      const FR = load('model-health-tmdl.min.js').formatReview((planModel().model || planModel()).tables), fr = FR.items.concat(FR.byHand).map((i) => i.object + ': ' + (i.from || 'no format') + ' → ' + i.to);
+      check(fr.length > 0 && JSON.stringify(plan.formats) === JSON.stringify(fr.slice(0, 50)) && plan.formatsBtn === !!FR.script, `${tag}: the formats listed (${JSON.stringify(plan.formats)}) are not the shared rule's (${JSON.stringify(fr)})`);
       check(JSON.stringify(removed) === JSON.stringify(['Sales[Note]']), `${tag}: removes ${JSON.stringify(removed)}, expected only Sales[Note]`);
       check(sorts.some((s) => s.col === 'Month Year' && s.by === 'Year Month') && sorts.some((s) => s.col === 'Month Name' && s.by === 'Month Number'), `${tag}: sorts ${JSON.stringify(sorts)}`);
       for (const k of ['Sales[Qty]', 'Sales[Code]', 'Calendar[Month Number]', 'Calendar[Year Month]', 'Old[A]']) check(plan.kept.some((x) => x.startsWith(k)), `${tag}: ${k} is not listed as kept`);

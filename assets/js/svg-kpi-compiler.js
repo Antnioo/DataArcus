@@ -207,6 +207,8 @@
   // palette is an error (never a silent black). Without a palette nothing changes: the designer's page and its
   // downloads compile as before.
   const mixHex = (a, b, t) => '#' + [1, 3, 5].map((i) => { const x = parseInt(a.slice(i, i + 2), 16), y = parseInt(b.slice(i, i + 2), 16); return Math.round(x + (y - x) * t).toString(16).padStart(2, '0'); }).join('');
+  const lumOf = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4))).reduce((a, x, i) => a + x * [0.2126, 0.7152, 0.0722][i], 0);
+  const contrastOf = (a, b) => { const x = lumOf(a), y = lumOf(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
   const themePalette = (ui, data) => {
     const u = ui || {}, text = hexOk(u.text) ? u.text : '#1f2937', card = hexOk(u.card) ? u.card : '#ffffff', accent = hexOk(u.accent) ? u.accent : '#0f6cbd';
     const p = { text: text, card: card, background: hexOk(u.background) ? u.background : card, accent: accent, good: hexOk(u.good) ? u.good : '#2e7d32', bad: hexOk(u.bad) ? u.bad : '#c62828', neutral: hexOk(u.neutral) ? u.neutral : mixHex(text, card, 0.5),
@@ -232,6 +234,8 @@
       const where = 'layer ' + (i + 1), defs = THEME_DEFAULTS[l.type] || {};
       Object.keys(defs).forEach((prop) => { const ruled = l.bind && l.bind[prop === 'track' ? '' : prop] && l.bind[prop].rules; if (l[prop] == null && !ruled) l[prop] = palette[defs[prop]]; });
       COLOR_PROPS.forEach((prop) => { if (l[prop] != null) l[prop] = one(l[prop], where + ', ' + prop); });
+      // (round 14: a text too faint on what it sits on, under 3:1 (a dark grey label on a dark card), takes the theme's text)
+      if (l.type === 'text' && hexOk(l.fill)) { const under = hexOk(d.bg) ? d.bg : palette.card; if (hexOk(under) && contrastOf(l.fill, under) < 3) l.fill = palette.text; }
       Object.keys(l.bind || {}).forEach((prop) => { const b = l.bind[prop]; if (!b || typeof b !== 'object') return;
         if (b.other != null) b.other = one(b.other, where + ', ' + prop + ' rule');
         (Array.isArray(b.rules) ? b.rules : []).forEach((r) => { if (r && r.c != null) r.c = one(r.c, where + ', ' + prop + ' rule'); }); });
@@ -280,6 +284,7 @@
     p1: (a) => N.cat([N.fmt(zeroSmall(N.op('*', a, N.num(100)), 1), '#,0.0'), N.str('%25')])
   };
   const OPS = ['<', '<=', '>', '>=', '=', '<>'];
+  const NUMBER_FMTS = ['auto', 'n0', 'n1', 'n2', 'k1', 'm1'];
 
   // 'Date'[Date] or Date[Date] -> table and column, always quoted. DAX doubles a ' inside a quoted table name
   // and a ] inside a column name ('Date''s'[Date], 'Cal'[Da]]te]), so those are read and written back the same way.
@@ -349,6 +354,12 @@
     };
     const rules = (b) => ((b.rules || []).length ? N.sw(b.rules.map((r) => [cond(r), N.str(color(r.c))]), N.str(color(b.other))) : N.str(color(b.other)));
 
+    // a value that is a ratio (round 14): see the text layer
+    const valueOf = (id) => (d.values || []).find((v) => v && v.id === id);
+    const isRatio = (id) => { const v = valueOf(id); return !!v && (v.kind === 'ratio' || v.kind === 'pct' || (v.kind === 'measure' && (v.percent === true || /%/.test(String(v.format || '').replace(/"[^"]*"/g, ''))))); };
+    // "100.0%" (six characters, about 0.6 em each, 5% more when bold) inside the ring whose middle the text sits in
+    const pctFits = (el) => { const ring = (d.layers || []).find((l) => l && l.type === 'ring' && Math.hypot((+el.x || 0) - (+l.cx || 0), (+el.y || 0) - (+l.cy || 0)) < (+l.r || 20));
+      return !ring || 6 * 0.6 * (+el.size || 14) * ((+el.weight || 400) >= 600 ? 1.05 : 1) <= 2 * ((+ring.r || 20) - (+ring.sw || 6)); };
     const parts = [];     // top-level SVG pieces: string or node
     const lit = (arr, s) => { const last = arr[arr.length - 1]; if (typeof last === 'string') arr[arr.length - 1] = last + s; else arr.push(s); };
     const hoist = (el, prop, node, list) => { const name = '_L' + el._i + '_' + prop; vars.push({ name: name, node: node, comment: list }); return N.ref(name); };
@@ -395,6 +406,11 @@
           lit(out, '/>');
           break;
         case 'text': {
+          // Round 14, the owner's ask (6 Oct 2026; a card read 33.8% and its ring's label "0"): a text that shows a ratio
+          // (a ratio or % value, or a measure marked percent: its format has a %, or the caller's format rule says so) in a
+          // number format shows it as a percent: "0.0%", or "0%" where "100.0%" does not fit inside the ring around it
+          const tb = b.text && b.text.v ? Object.assign({}, b.text) : null;
+          if (tb && NUMBER_FMTS.includes(tb.fmt || 'auto') && isRatio(tb.v)) tb.fmt = pctFits(el) ? 'p1' : 'p0';
           // mirrored design (a right-to-left report): a text is not flipped, it moves to the mirrored x and its anchor
           // swaps sides, so it stays readable; a text whose x is bound keeps its place
           const mx = mirror && !(b.x && b.x.v), a0 = ['start', 'middle', 'end'].includes(el.anchor) ? el.anchor : 'start';
@@ -403,13 +419,13 @@
           numA('x', 'x', mx ? W - (+el.x || 0) : el.x); lit(out, " y='" + attrNum(el.y) + "'");
           lit(out, " font-family='Segoe UI, sans-serif' font-size='" + attrNum(el.size || 14) + "' font-weight='" + (+el.weight || 400) + "' text-anchor='" + anchor + "'");
           colA('fill', 'fill', el.fill); common(); lit(out, '>');
-          if (b.text && b.text.v) {
-            const f = FORMATS[b.text.fmt] || FORMATS.auto;
+          if (tb) {
+            const f = FORMATS[tb.fmt] || FORMATS.auto;
             // "text": the value as it is (a column's text). Anything that comes from a column is escaped at run time:
             // FORMAT returns a text value unchanged, so a number format is no protection.
-            let node = b.text.fmt === 'text' ? N.esc(R(b.text.v)) : fromColumn.has(b.text.v) ? N.esc(f(Z(b.text.v))) : f(Z(b.text.v));
-            if (b.text.sign && b.text.fmt !== 'text') node = N.cat([N.iff(N.op('>', Z(b.text.v), N.num(0)), N.str('+'), N.str('')), node]);
-            const r = hoist(el, 'text', N.cat([N.str(safe(b.text.prefix || '')), node, N.str(safe(b.text.suffix || ''))]), note());
+            let node = tb.fmt === 'text' ? N.esc(R(tb.v)) : fromColumn.has(tb.v) ? N.esc(f(Z(tb.v))) : f(Z(tb.v));
+            if (tb.sign && tb.fmt !== 'text') node = N.cat([N.iff(N.op('>', Z(tb.v), N.num(0)), N.str('+'), N.str('')), node]);
+            const r = hoist(el, 'text', N.cat([N.str(safe(tb.prefix || '')), node, N.str(safe(tb.suffix || ''))]), note());
             out.push(r);
           } else lit(out, safe(el.text || ''));
           lit(out, '</text>');

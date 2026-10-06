@@ -235,16 +235,9 @@
   // COUNTROWS, DISTINCTCOUNT...) or a sum of a whole-number column gets #,0; every other measure #,0.00. A suggestion,
   // shown with its reason and never applied by itself.
   const PCT_NAME = /(%|\bpct\b|\bpercent(age)?\b|\brate\b|\bratio\b|\bshare\b|\bmargin\b|نسبة|هامش)/i;
+  // (6 Oct 2026: the shared rule, formatOf, decides; a measure it leaves alone gets the plain number format)
   function suggestFormat(m, rawTables) {
-    const expr = text(m.expression).replace(/\/\/.*$/gm, '').replace(/--.*$/gm, '').trim();
-    if (PCT_NAME.test(m.name)) return { format: '0.0%', reason: 'the name reads as a percentage' };
-    if (/^(COUNT|COUNTA|COUNTAX|COUNTBLANK|COUNTROWS|COUNTX|DISTINCTCOUNT|DISTINCTCOUNTNOBLANK)\s*\(/i.test(expr)) return { format: '#,0', reason: 'it counts rows or values' };
-    const sum = expr.match(/^SUM\s*\(\s*'?([^'\[\]]+?)'?\s*\[\s*([^\]]+)\]\s*\)$/i);
-    if (sum) {
-      const t = (rawTables || []).find((x) => x.name.toLowerCase() === sum[1].trim().toLowerCase()), c = t && (t.columns || []).find((x) => x.name.toLowerCase() === sum[2].trim().toLowerCase());
-      if (c && c.dataType === 'int64') return { format: '#,0', reason: 'a sum of a whole-number column' };
-    }
-    return { format: '#,0.00', reason: 'a number: thousands separator and two decimals' };
+    return formatOf(Object.assign({}, m, { formatString: '' }), 'measure', rawTables) || { format: '#,0.00', reason: 'a number: thousands separator and two decimals' };
   }
   // names: the measures to give a format (the NO_FORMAT finding), or to change to a percentage (PCT_FORMAT: percent true).
   // Returns { script, count, suggested: [{ measure, format, reason }], byHand: [{ measure, why, steps }] }.
@@ -331,7 +324,89 @@
     return { script: count ? out.join('\n').replace(/\n+$/, '\n') : null, count, measures, columns, byHand, more };
   }
 
-  const api = { measure, column, columnFixes, moveMeasures, name, sortColumnFor, noSortColumn, sortKind, sortFixes, formatFixes, suggestFormat, lacksSeparator, withSeparator, separatorFixes, notAQuantity: (n) => NOT_A_QUANTITY.test(String(n)) };
+  // ---------- the owner's ask, 6 Oct 2026: formats fixed at the source ----------
+  // ONE rule for the right format of a measure or a column, used by the health check's format script, plan_layout and
+  // create_report (and the report's own formats until the script is applied). formatOf(obj, kind, rawTables) returns
+  // null when the object is left alone (already well formatted, a format expression, text, or not a number or date),
+  // else { format, reason }:
+  //   a percentage (a % in the format or the name, ratio, rate, pct, percent; or margin, share, vs, growth, change
+  //     when the DAX divides and the format is not money): "0.0%", unless its format already has a %
+  //   a whole number or a count (COUNT..., a sum of a whole-number column, a whole-number column): "#,0"
+  //   money (a currency in the format): the model's own format, with the thousand separator added where it lacks one;
+  //     a currency is never invented
+  //   a sum without a format: "#,0" (round 14); any other number: "#,0.00" without a format; its own format with the
+  //     separator where it lacks one
+  //   a date column: "dd mmm yyyy" without a format or with "General Date" (which shows a time of 12:00:00 AM)
+  const DIVIDES = /\bDIVIDE\s*\(|(^|[^/])\/(?!\/)/i;
+  const PCT_HARD = /%|\bpct\b|\bpercent(age)?\b|\bratio\b|\brate\b|نسبة/i, PCT_SOFT = /margin|share|\bvs\b|growth|change|هامش|نمو/i;
+  const NOT_PCT = /hourly|exchange|run\s*rate|\bper\b|colou?r|icon|label|title|arrow/i;
+  const MONEY = /[$€£¥₹]|\[\$|\bcurrency\b|"[^"]*(AED|SAR|QAR|KWD|BHD|OMR|USD|EUR|GBP|د\.إ|ر\.س|ر\.ق|د\.ك)[^"]*"/i;
+  const COUNT_EXPR = /^(COUNT|COUNTA|COUNTAX|COUNTBLANK|COUNTROWS|COUNTX|DISTINCTCOUNT|DISTINCTCOUNTNOBLANK)\s*\(/i;
+  const isTextFormat = (f) => { if (!f) return false; if (/^\s*(yes\/no|true\/false|on\/off)\s*$/i.test(f)) return true; if (/^\s*(general( number)?|currency|fixed|standard|percent|scientific)\s*$/i.test(f)) return false;
+    return !/[0#%]/.test(unquoted(f)); };
+  const TEXT_EXPR = /^\s*"|^\s*(FORMAT|CONCATENATEX?|UNICHAR|UPPER|LOWER|LEFT|RIGHT|MID|SUBSTITUTE|REPT|COMBINEVALUES)\s*\(|"\s*&|&\s*"/i;
+  const hasDecimals = (f) => /\.[0#]/.test(unquoted(f));
+  const sumOfWhole = (expr, rawTables) => {
+    const sum = expr.match(/^SUM\s*\(\s*'?([^'\[\]]+?)'?\s*\[\s*([^\]]+)\]\s*\)$/i); if (!sum) return false;
+    const t = (rawTables || []).find((x) => x.name.toLowerCase() === sum[1].trim().toLowerCase()), c = t && (t.columns || []).find((x) => x.name.toLowerCase() === sum[2].trim().toLowerCase());
+    return !!(c && c.dataType === 'int64');
+  };
+  // the right format of a number whose kind is known: whole (a count) or not
+  // (round 14, the laptop's proof on 6 Oct: the sample's unformatted SUM showed 14,178.00 in its table, where round 13
+  // showed 14,178): a sum the model leaves without a format shows no decimals, as a count does; only a real decimal
+  // (an average, a division, any other DAX) gets two; a sum the model formats with decimals keeps them
+  const numberFix = (f, whole, sum) => {
+    if (MONEY.test(f || '')) return lacksSeparator(f) ? { format: withSeparator(f), reason: 'money: the model\'s own currency format, with the thousand separator' } : null;
+    if (whole) return !f || hasDecimals(f) || lacksSeparator(f) || /^\s*general( number)?\s*$/i.test(f) ? { format: '#,0', reason: f && hasDecimals(f) ? 'a count or whole number shown with decimals (' + f + ')' : 'a count or whole number: thousand separator, no decimals' } : null;
+    if (!f && sum) return { format: '#,0', reason: 'a sum without a format: thousand separator, no decimals' };
+    if (!f) return { format: '#,0.00', reason: 'a number without a format: thousand separator and two decimals' };
+    return lacksSeparator(f) ? { format: withSeparator(f), reason: 'the format has no thousand separator (' + f + ')' } : null;
+  };
+  function formatOf(obj, kind, rawTables) {
+    if (!obj) return null;
+    const f = obj.formatString == null ? '' : String(obj.formatString).trim(), nm = String(obj.name || '');
+    if (kind === 'column') {
+      const type = String(obj.dataType || '').toLowerCase();
+      if (obj.isHidden || obj.type === 'rowNumber') return null;
+      if (type === 'datetime') return /time|stamp|hour/i.test(nm) || (f && !/^\s*general date\s*$/i.test(f)) ? null : { format: 'dd mmm yyyy', reason: f ? 'a date shown with a time (General Date)' : 'a date without a format' };
+      if (!/^(int64|double|decimal)$/.test(type) || obj.summarizeBy === 'none' || NOT_A_QUANTITY.test(nm) || PCT_HARD.test(nm) || isTextFormat(f)) return null;
+      return numberFix(f, type === 'int64');
+    }
+    if (obj.formatStringDefinition) return null;
+    const expr = text(obj.expression).replace(/\/\/.*$/gm, '').replace(/--.*$/gm, '').trim();
+    if (isTextFormat(f) || TEXT_EXPR.test(expr)) return null;
+    const pct = /%/.test(unquoted(f)) || (PCT_HARD.test(nm) && !NOT_PCT.test(nm)) || (PCT_SOFT.test(nm) && DIVIDES.test(expr) && !MONEY.test(f));
+    if (pct) return /%/.test(unquoted(f)) ? null : { format: '0.0%', reason: f ? 'a ratio (by its name or its DAX) formatted as ' + f : 'a ratio (by its name or its DAX) without a format' };
+    return numberFix(f, COUNT_EXPR.test(expr) || sumOfWhole(expr, rawTables), /^SUM\s*\(\s*'?[^'\[\]()]+'?\s*\[[^\]]+\]\s*\)$/i.test(expr));
+  }
+  // Every measure and column the rule would change, with one script that does it (createOrReplace, each object
+  // written in full with only its format changed). The health check, plan_layout and create_report write this same
+  // script to the same file. max: objects in the script; maxChars: its length (a large model's script stays readable).
+  // Returns { script, count, items: [{ object, kind, from, to, reason }], byHand, more }.
+  function formatReview(rawTables, opts) {
+    const max = (opts && opts.max) || 200, maxChars = (opts && opts.maxChars) || 30000, out = ['createOrReplace', ''], items = [], byHand = [];
+    let count = 0, more = 0, size = 0;
+    (rawTables || []).forEach((t) => {
+      const block = [];
+      const add = (o, kind) => {
+        const r = formatOf(o, kind, rawTables); if (!r) return;
+        const object = kind === 'measure' ? t.name + '[' + o.name + ']' : t.name + '[' + o.name + ']', item = { object, kind, from: o.formatString || null, to: r.format, reason: r.reason };
+        if (count + byHand.length >= max) { more++; return; }
+        if (kind === 'column' && o.type === 'calculatedTableColumn') { byHand.push(Object.assign(item, { why: 'a column of a DAX table: a script can\'t change it', steps: 'Select ' + object + ' in Power BI Desktop, then Column tools > Format: ' + r.format + '.' })); return; }
+        const lines = kind === 'measure' ? measure(Object.assign({}, o, { formatString: r.format }), 2) : column(Object.assign({}, o, { formatString: r.format }), 2);
+        if (!lines) { byHand.push(Object.assign(item, { why: 'has a property this script builder does not know', steps: 'Select ' + object + ' in Power BI Desktop, then ' + (kind === 'measure' ? 'Measure' : 'Column') + ' tools > Format: ' + r.format + '.' })); return; }
+        const len = lines.join('\n').length;
+        if (size + len > maxChars) { more++; return; }
+        size += len; block.push.apply(block, lines); block.push(''); count++; items.push(item);
+      };
+      (t.measures || []).forEach((m0) => add(m0, 'measure'));
+      (t.columns || []).forEach((c0) => add(c0, 'column'));
+      if (block.length) out.push(ind(1) + 'ref table ' + name(t.name), '', ...block);
+    });
+    return { script: count ? out.join('\n').replace(/\n+$/, '\n') : null, count, items, byHand, more };
+  }
+
+  const api = { measure, column, columnFixes, moveMeasures, name, sortColumnFor, noSortColumn, sortKind, sortFixes, formatFixes, suggestFormat, lacksSeparator, withSeparator, separatorFixes, formatOf, formatReview, notAQuantity: (n) => NOT_A_QUANTITY.test(String(n)) };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.MHTmdl = api;
 })(typeof self !== 'undefined' ? self : this);
