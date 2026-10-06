@@ -21,6 +21,6 @@ table 'الفروع والمناطق الإدارية'
 		mode: import
 		source =
 				let
-				    Source = #table({"رمز الفرع", "اسم الفرع التجاري الرئيسي", "المنطقة الإدارية والمحافظة التابعة لها", "فئة الفرع حسب حجم المساحة التجارية"}, {{1, "Branch A", "Region 1", "Small"}, {2, "Branch B", "Region 1", "Large"}, {3, "Branch C", "Region 2", "Small"}, {4, "Branch D", "Region 2", "Large"}})
+				    Source = #table(type table [#"رمز الفرع" = Int64.Type, #"اسم الفرع التجاري الرئيسي" = text, #"المنطقة الإدارية والمحافظة التابعة لها" = text, #"فئة الفرع حسب حجم المساحة التجارية" = text], {{1, "Branch A", "Region 1", "Small"}, {2, "Branch B", "Region 1", "Large"}, {3, "Branch C", "Region 2", "Small"}, {4, "Branch D", "Region 2", "Large"}})
 				in
 				    Source
