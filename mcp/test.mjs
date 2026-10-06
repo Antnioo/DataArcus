@@ -3491,6 +3491,25 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => !y.err && !fu2 && (y.j.reportNotes || []).some((n) => /funnel/i.test(n) && /amount/i.test(n)),
       () => `a funnel without an amount must be left out and told: ${fu2 ? 'written' : 'not written'} ${JSON.stringify(y.j && (y.j.reportNotes || []).filter((n) => /funnel|left out/i.test(n)))} ${y.err ? y.t.slice(0, 300) : ''}`);
   }
+
+  // 3. #18: each chart of a page by a different category where the model has more than one (the operations layout:
+  // two bar charts and a donut all by Quarter); the same category only when the model has no other
+  {
+    model('r16-c', [cal, { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string'), col('Channel', 'string'), col('Category', 'string'), col('Store', 'string'), col('Date', 'dateTime')],
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }] }]);
+    model('r16-c1', [cal, { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string'), col('Date', 'dateTime')],
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }]);
+    const catsOn = async (dir) => { const dz = (await ask('plan_layout', { layout: 'ops', kpis: 3 })).j.design;
+      const x = await ask('create_report', { path: dir, name: 'R16 ops ' + dir, design: dz, secondPage: false });
+      if (x.err) return { err: x.t.slice(0, 300) };
+      const pagesDir = path.join(ROOT, dir, x.j.report, 'definition', 'pages'), main = fs.readdirSync(pagesDir).filter((d) => fs.existsSync(path.join(pagesDir, d, 'page.json')) && !/"Tooltip"/.test(fs.readFileSync(path.join(pagesDir, d, 'page.json'), 'utf8')));
+      const vsMain = main.flatMap((d) => { const vd = path.join(pagesDir, d, 'visuals'); return fs.existsSync(vd) ? fs.readdirSync(vd).map((n) => JSON.parse(fs.readFileSync(path.join(vd, n, 'visual.json'), 'utf8'))) : []; });
+      return vsMain.filter((v) => v.visual && /^(clusteredBarChart|clusteredColumnChart|donutChart|pieChart|funnel|treemap)$/.test(v.visual.visualType) && v.visual.query && v.visual.query.queryState.Category)
+        .map((v) => v.visual.visualType + ':' + v.visual.query.queryState.Category.projections[0].queryRef); };
+    const many = await catsOn('r16-c'), one = await catsOn('r16-c1');
+    chk(() => Array.isArray(many) && many.length >= 3 && new Set(many.map((x) => x.split(':')[1])).size === many.length && Array.isArray(one) && one.length >= 2,
+      () => `each chart of the page by a different category where the model has more: ${JSON.stringify(many)} one category: ${JSON.stringify(one)}`);
+  }
 }
 
 await client.close();

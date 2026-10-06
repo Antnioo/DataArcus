@@ -312,6 +312,7 @@
   // the query of one visual, or null when a field it needs is not bound
   // rtl: a right-to-left report reverses a table's columns, so its first column (the category) sits on the right,
   // where an Arabic reader starts; Power BI doesn't mirror tables itself
+  const CAT_KINDS = ['bar', 'column', 'donut', 'funnel', 'treemap', 'map'];
   function bindQuery(kind, B, kpiIndex, rtl) {
     const cat = (B.cats || {})[kind], y = kind === 'funnel' && B.y && 'funnel' in B.y ? B.y.funnel : (B.y || {})[kind] || B.measure, need = (...fs) => fs.every(Boolean);
     // one field per card: a card past the end of the list stays empty rather than repeating the first KPI
@@ -833,6 +834,7 @@
         if (shown !== full) { titles.slicers.push({ page: pg.name || base, field: full, shown }); out.text = str(shown); } return obj(out); };
       // Round 12 (#15; seen in Desktop 2.158, round 11: "Total Sales by Day Name" twice on one page): a table whose title
       // is a chart's title on the same page is titled by what it adds, "...: detail"
+      const pageCats = new Set();   // the categories this page's charts already show (round 16, #18)
       const chartTitles = new Set(B ? sorted.filter((s) => CHARTS.includes(s.kind)).map((s) => bindTitle(s.kind, B, W.by || 'by')).filter(Boolean) : []);
       const charts = [];
       sorted.forEach((s) => {
@@ -992,12 +994,19 @@
             if (tableText) tableSmaller.push({ page: pg.name || base, size: tableText, from: T0 });
             if (tf.leftOut.length) { Bt = Object.assign({}, B, { table: tf.kept }); tableColumns.push({ page: pg.name || base, pageIndex, x: s.x, y: s.y, kept: tf.kept, leftOut: tf.leftOut }); }
           }
+          // Round 16 (design finding #18): each chart of a page by a category not used on the page yet, from the picker's
+          // pool (B.catPool), where the model has more than one; the same category only when it has no other
+          if (B && CAT_KINDS.includes(s.kind) && (B.cats || {})[s.kind]) {
+            const k0 = (f) => f.t + '\u0001' + f.c, cur = B.cats[s.kind];
+            if (pageCats.has(k0(cur))) { const alt = (B.catPool || []).find((f) => !pageCats.has(k0(f))); if (alt) Bt = Object.assign({}, Bt, { cats: Object.assign({}, Bt.cats, { [s.kind]: alt }) }); }
+            pageCats.add(k0(Bt.cats[s.kind]));
+          }
           const query = B ? bindQuery(s.kind, Bt, kpiIndex, rtl) : null;
           let ttl = s.title;
           const extra = {};
           // (round 10: the sample download names its charts by their fields too, "Total Revenue by Month", as a report on a
           // user's model does; before, it kept the layout's role names, "Main trend")
-          if (B && query) ttl = bindTitle(s.kind, B, W.by || 'by') || ttl;
+          if (B && query) ttl = bindTitle(s.kind, Bt, W.by || 'by') || ttl;
           if ((s.kind === 'table' || s.kind === 'matrix') && ttl && chartTitles.has(ttl)) ttl = ttl + ': ' + (AR_LETTERS.test(ttl) ? (W.detail && AR_LETTERS.test(W.detail) ? W.detail : 'التفاصيل') : (W.detail && !AR_LETTERS.test(W.detail) ? W.detail : 'detail'));   // (round 14: in the title's own script)
           if (s.kind === 'kpi') { if (B && query) ttl = label(B.kpis[kpiIndex]); kpiIndex++; }
           // KPI names read as labels: semibold, so the number below stays the hero

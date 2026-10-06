@@ -250,6 +250,9 @@
     // every column a slicer could take, in the order they are picked (round 12, #22: the caller replaces a slicer that
     // a page filter makes pointless)
     out.slicerPool = [year].concat(cats, [date]).filter((x, i, l) => x && l.indexOf(x) === i);
+    // the categories a page's charts can take, in the picker's order (round 16, design finding #18: the operations
+    // layout drew two bar charts and a donut all by Quarter): the writer gives each chart of a page one not used there yet
+    out.catPool = cats.slice(0, 8).map((c) => Object.assign({ t: c.t, c: c.c }, c.sortBy ? { sortBy: c.sortBy } : {}, c.ordered ? { ordered: true } : {}));
     // the measures left behind that were not picked, so the caller can say so (none: no such key)
     const skipped = ranked.filter((x) => x.stale && !kpis.includes(x) && x !== main).map((x) => ({ t: x.t, m: x.m }));
     if (skipped.length) out.skipped = skipped;

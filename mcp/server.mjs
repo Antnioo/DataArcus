@@ -322,7 +322,7 @@ server.registerTool('suggest_fields', {
   const m = loadModel(p), sc = scopeOf(m, { focus, tables });
   // a large model without a focus, or a focus that matches nothing: no picks, and what to ask the user
   if (sc.needsFocus) return text(sc);
-  const b = Bind.suggest(sc.tables, kpis); delete b.choices;
+  const b = Bind.suggest(sc.tables, kpis); delete b.choices; delete b.catPool;
   // measures left behind (old, test, unused, backup, temp in the name) are picked only when nothing else is left: said here
   if (b.skipped) b.skipped = { measures: b.skipped.map((x) => `${x.t}[${x.m}]`), why: 'Not picked: the name has the word old, test, unused, backup or temp, and other measures were there. Ask the user before using one; to use it anyway, name it in create_report\'s fields.' };
   // no measures at all: said, with what to propose (a card or a chart shows a measure, never a bare column)
@@ -618,6 +618,8 @@ server.registerTool('create_report', {
     // the given slicers first; a slot left over keeps the picker's (never a slicer without a field)
     if (F.slicers) { const same = (x, y) => x && y && x.t === y.t && x.c === y.c, rest = (ch.slicers || []).filter((s) => s && !F.slicers.some((g) => same(g, s))); ch.slicers = F.slicers.concat(rest).slice(0, 3); while (ch.slicers.length < 3) ch.slicers.push(null); unfixed(); }
     const nb = Bind.build(ch);
+    // (round 16: categories the approved plan names are kept as given: no other category is put on its charts)
+    if (F.category || F.category2) delete nb.catPool;
     if (F.table) nb.table = F.table.map((x) => (x.m != null ? Object.assign({ t: x.t, m: x.m }, x.pctFormat ? { pctFormat: x.pctFormat } : {}) :Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {})));
     return nb;
   };
