@@ -42,6 +42,6 @@ table التقويم
 		mode: import
 		source =
 				let
-				    Source = #table({"التاريخ", "السنة", "رقم الشهر", "اسم الشهر", "رقم اليوم في الأسبوع", "اسم اليوم", "السنة الهجرية", "هل هو شهر رمضان"}, {})
+				    Source = #table({"التاريخ", "السنة", "رقم الشهر", "اسم الشهر", "رقم اليوم في الأسبوع", "اسم اليوم", "السنة الهجرية", "هل هو شهر رمضان"}, {{#datetime(2025, 1, 1, 0, 0, 0), 2025, 1, "January", 4, "Wednesday", 1446, false}, {#datetime(2025, 1, 2, 0, 0, 0), 2025, 1, "January", 5, "Thursday", 1446, false}, {#datetime(2025, 1, 3, 0, 0, 0), 2025, 1, "January", 6, "Friday", 1446, false}, {#datetime(2025, 1, 4, 0, 0, 0), 2025, 1, "January", 7, "Saturday", 1446, false}, {#datetime(2025, 1, 5, 0, 0, 0), 2025, 1, "January", 1, "Sunday", 1446, false}, {#datetime(2025, 1, 6, 0, 0, 0), 2025, 1, "January", 2, "Monday", 1446, false}, {#datetime(2025, 1, 7, 0, 0, 0), 2025, 1, "January", 3, "Tuesday", 1446, false}, {#datetime(2026, 1, 1, 0, 0, 0), 2026, 1, "January", 5, "Thursday", 1447, false}, {#datetime(2026, 1, 2, 0, 0, 0), 2026, 1, "January", 6, "Friday", 1447, false}, {#datetime(2026, 1, 3, 0, 0, 0), 2026, 1, "January", 7, "Saturday", 1447, false}, {#datetime(2026, 1, 4, 0, 0, 0), 2026, 1, "January", 1, "Sunday", 1447, false}, {#datetime(2026, 1, 5, 0, 0, 0), 2026, 1, "January", 2, "Monday", 1447, false}, {#datetime(2026, 1, 6, 0, 0, 0), 2026, 1, "January", 3, "Tuesday", 1447, false}, {#datetime(2026, 1, 7, 0, 0, 0), 2026, 1, "January", 4, "Wednesday", 1447, false}})
 				in
 				    Source
