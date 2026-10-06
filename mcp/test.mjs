@@ -2149,9 +2149,11 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
         && fmt(arV).every((f) => f === 'Sales.Orders=Right | Sales.Total Sales=Right | Sales.Region=Right') && siteAr.filter((v) => type(v) === 'tableEx').every((v) => !!v.visual.query.queryState.Values.projections.filter((p) => p.displayName !== ' ').slice(-1)[0].field.Column),
       () => `an Arabic table's last projection must be its text column: EN ${JSON.stringify(refs(enV))} AR ${JSON.stringify(refs(arV))} ${JSON.stringify(fmt(arV))}`);
   }
+  // (round 18: a Reset button is told from the panel's Filters and Close buttons by their sign, which an Arabic Filters
+  // button now carries at its end, "الفلاتر  ☰", so that Desktop draws it at the reading start: the sign counts at either end)
   // 6. the Arabic Reset: text and tooltip "إعادة ضبط الفلاتر" (the owner's wording); English unchanged
   {
-    const resets = (vs) => vs.filter((v) => type(v) === 'actionButton' && L(linkOf(v).type) === "'Bookmark'" && !/^[✕☰]/.test(S(lookOf(v, 'text').text)));
+    const resets = (vs) => vs.filter((v) => type(v) === 'actionButton' && L(linkOf(v).type) === "'Bookmark'" && !/^[✕☰]|[✕☰]$/.test(S(lookOf(v, 'text').text)));
     const panelAr = site('ar', (d) => { d.layout = Object.assign({}, d.layout, { filters: true }); }, { panel: true }).vs;
     const arAll = resets(arV).concat(resets(siteAr), resets(panelAr));
     // (round 13: the shown text now starts with two no-break spaces, the gap between the arrow and the words that Desktop
