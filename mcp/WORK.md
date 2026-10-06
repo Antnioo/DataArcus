@@ -849,6 +849,12 @@ never fixed tonight (only a FAIL of items 1-6, tests first).
 | 32 | The 4:3 and 16:9 executive page, English | the table shows six of seven days with a vertical scrollbar after the fix too | `g4s-fit-tables.png` | medium | as finding 23 (tighter rows or a taller slot) | as finding 23 |
 <!-- r11 findings -->
 
+
+## check_report, first session (2026-10-05, cloud; branch `feat/check-report` from main `850b0a0`; not merged)
+On the owner's go of 4 Oct ("accept all") and 5 Oct ("Both, one after the other": after round 10's code-only part).
+Built, tests first: the tool, the offline validator, Microsoft's schemas bundled, the rule engine (10 measured rules),
+findings capped, notChecked; `npm test` 363 -> 382 of 382. What is built and the exact list of what is left (including
+the Desktop sitting CR-1 to CR-3) is in `mcp/plans/CHECK-REPORT.md`, "Where it stands". Session 2 done (389 of 389 before main was merged in): the next steps are "Left, in order" there.
 ## Round 11, small fixes (2026-10-05, cloud; branch `fix/round-11-small` from main `850b0a0`; not merged)
 On the owner's go of 5 Oct (~12:05), relayed by the reviewer. `npm test` 363 -> **365 of 365**.
 1. **Titles set explicitly** (Microsoft's September 2026 Feature Summary: "title and subtitle are now turned off by

@@ -1,6 +1,6 @@
 # DataArcus MCP: what stays on your machine, and what your AI app sees
 
-Plain English. Checked against the code on 2026-10-05 (main `1a92be1`, after round 11: `mcp/server.mjs`, `mcp/lib/`,
+Plain English. Checked against the code on 2026-10-05 (`feat/check-report` with main `3803b7a` merged in, after round 10 and 11: `mcp/server.mjs`, `mcp/lib/`,
 the report-design skill, and the shared engines it loads from `assets/js/`). If the code changes, this page is checked again before the next release.
 
 ## In one paragraph
@@ -14,7 +14,9 @@ data in your tables.
 - It is a Node.js program your AI app starts on your computer. It talks only to that app, over standard input and
   output (stdio). It opens no network connection and has no server, account, telemetry or analytics of its own.
   (Checked: no network call in `mcp/server.mjs`, `mcp/lib/` or the engines it loads. The `https://` addresses in the
-  report files it writes are Microsoft's schema names, which Power BI reads; nothing is downloaded from them.)
+  report files it writes are Microsoft's schema names, which Power BI reads; nothing is downloaded from them.
+  `check_report` reads report files on your computer and runs Microsoft's report validator offline, in the same
+  process: the schemas the validator would download are read from Microsoft's copies bundled in `mcp/schemas/`.)
 - It reads and writes files only inside one working folder that you choose (`DATAARCUS_ROOT`; see section 4).
 - It writes one line to the app's local log when it starts ("DataArcus MCP ready. Folder: ..."), which your AI app
   keeps on your computer.
@@ -33,6 +35,7 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
 | `generate_theme` | The theme's colours, fonts and settings (your inputs), the contrast checks, and the full path of the theme file it wrote. |
 | `plan_layout` | Positions and sizes of the visuals; no model information at all. |
 | `create_report` | How many files it wrote, the full path of the new `.pbip`, the report and model folder names, the pages and visual counts, and `modelNotes`: the names of the fields it used that will display badly (months or days without a sort column, a percentage without a format). `kpiCards`: when the model has fewer measures than KPI cards, how many cards were built and the names of the measures on them. `boundFields`: for each page, the names of the fields each visual shows. `numberFormats`: the names of the fields it shows as numbers that have no thousand-separator format in the model, and (`cards`) the measures whose KPI card got a number format of its own in the report, with that format. `pageFilters`: for each page filter asked for, the column's name, the values given, their type (and, for a column the files give no type, that the type came from those values), and a note when a filter on a Ramadan flag keeps every Ramadan (naming the model's Hijri-year column); `reportNotes` repeats the filters and their values in words. `svgMeasures` (experimental): for each SVG column, its label, the table its measure belongs to, the page, the length of its DAX in characters and its status; the DAX itself is not returned. `scope`: on a large model, the focus and the names of the tables the picks came from. `displayNames` and, in an Arabic report, `arabicNames`: how many of the names given were used, the fields whose given names were not used, and the fields shown under a model name with no Arabic letter. `ignored`: the names of keys in a design that the tool doesn't know. |
+| `check_report` | About the report it checks: page and visual counts, the page names (capped at 60 characters, invisible characters written as code points), the schema versions, the language it read (from counting letters, never the text) and Microsoft's validator's counts. Each finding: the rule, its severity, the file's path inside the report, the visual's name (an id), type and position, the problem in numbers ("the box is 28 high; 2 lines of 14pt need 61"), a fix in words and the rule's source. **Never** the report's own text (titles, text boxes, alt text), filter values, slicer selections or bookmark states: those are counted, not read into the answer (a test plants made-up values in each and checks none comes back). It reads only, writes nothing, and opens no network connection: Microsoft's validator runs offline in the same process, and the schemas it would download are checked against Microsoft's copies bundled in `mcp/schemas`. |
 
 **Also sent, by every tool that reads a model:** when a table, column or measure name holds a character nobody sees (a direction override, a zero-width character), that name, with the character written as its code point (`hiddenCharacters`, up to 20 names). A report name given with such characters is written without them. **And:** error messages, which can include the path you asked for and the working folder's full path. A full
 path on Windows usually contains your Windows user name (for example `C:\Users\<name>\...`).
@@ -101,7 +104,7 @@ path on Windows usually contains your Windows user name (for example `C:\Users\<
     is the model folder itself it writes no script (nothing is ever written inside a model folder) and says so.
   - A name counts as taken when anything at all is there, including a link whose target is missing, and every new
     file is created in a way that fails if the name exists: nothing is written over a file or through a link.
-  - `read_model`, `suggest_fields` and `plan_layout` only read.
+  - `read_model`, `suggest_fields`, `plan_layout` and `check_report` only read.
   - Your logo and background images are copied into the new report; the originals are not changed.
 - **Nothing is deleted.** No tool deletes a file.
 - **Keep the folder clean.** Put in it only the models you are allowed to share with your AI app. Don't put employer
