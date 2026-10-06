@@ -10,10 +10,11 @@
 import fs from 'fs';
 import path from 'path';
 import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
 const require = createRequire(import.meta.url);
 const { chromium } = require('playwright-core');
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')), '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const font = (pkg, file) => 'data:font/woff2;base64,' + fs.readFileSync(require.resolve(`@fontsource/${pkg}/files/${file}`)).toString('base64');
 const FONTS = [400, 500, 600, 700, 800].map((w) => `@font-face{font-family:Inter;font-weight:${w};src:url(${font('inter', `inter-latin-${w}-normal.woff2`)})}`).join('')
   + [400, 500, 600, 700].map((w) => `@font-face{font-family:'Plex Arabic';font-weight:${w};src:url(${font('ibm-plex-sans-arabic', `ibm-plex-sans-arabic-arabic-${w}-normal.woff2`)});unicode-range:U+0600-06FF,U+0750-077F,U+08A0-08FF,U+FB50-FDFF,U+FE70-FEFF,U+200C-200F}`).join('')

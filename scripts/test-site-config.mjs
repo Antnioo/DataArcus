@@ -79,5 +79,9 @@ for (const u of locs) {
   ok(/property="og:image"/.test(h), `${local(u)}: no og:image`);
 }
 
+// (round 19: a script's folder from a URL's pathname is "/C:/..." and %-encoded on Windows: fileURLToPath, as here)
+const scriptsWith = (dir) => fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap((f) => f.isDirectory() ? (f.name === 'node_modules' ? [] : scriptsWith(path.join(dir, f.name))) : /\.m?js$/.test(f.name) && !/\.min\.js$/.test(f.name) ? [path.join(dir, f.name)] : []);
+for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\)\.pathname/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')), `${f}: builds a path from the module URL's pathname (use fileURLToPath)`);
+
 if (fails.length) { console.error(`FAIL  site config: ${fails.length} problem(s)\n- ` + fails.join('\n- ')); process.exit(1); }
 console.log(`PASS  site config: _config, CNAME, robots, sitemap (${locs.length} URLs), icons, manifest, security.txt, llms.txt, ${pages.length} pages`);
