@@ -60,7 +60,9 @@ window.calendarGeneratorTranslations = {
         "fiscal": "Fiscal year, quarter and month",
         "fiscalNote": "Labels like FY2026 and FQ1, based on your fiscal start month.",
         "rel": "Relative offsets",
-        "relNote": "Day, month and year offsets from today, for \"last 3 months\" slicers that never need updating."
+        "relNote": "Day, month and year offsets from today, for \"last 3 months\" slicers that never need updating.",
+        "arabic": "Add Arabic name columns",
+        "arabicNote": "Day Name (Arabic), Month Name (Arabic) and Hijri Month Name (Arabic) beside the English names, for Arabic report pages. Sort each by Day of Week, Month Number or Hijri Month Number."
       },
       "preview": "Preview",
       "ramadanRange": "Ramadan in your date range",
@@ -152,7 +154,9 @@ window.calendarGeneratorTranslations = {
         "fiscal": "السنة والربع والشهر المالي",
         "fiscalNote": "تسميات مثل FY2026 و FQ1 حسب شهر بداية سنتك المالية.",
         "rel": "الإزاحات النسبية",
-        "relNote": "إزاحة اليوم والشهر والسنة عن اليوم الحالي، لفلاتر مثل \"آخر 3 أشهر\" التي لا تحتاج أي تحديث."
+        "relNote": "إزاحة اليوم والشهر والسنة عن اليوم الحالي، لفلاتر مثل \"آخر 3 أشهر\" التي لا تحتاج أي تحديث.",
+        "arabic": "إضافة أعمدة الأسماء العربية",
+        "arabicNote": "أعمدة Day Name (Arabic) وMonth Name (Arabic) وHijri Month Name (Arabic) بجانب الأسماء الإنجليزية، لصفحات التقارير العربية. رتّب كلًا منها حسب Day of Week أو Month Number أو Hijri Month Number."
       },
       "preview": "معاينة",
       "ramadanRange": "رمضان ضمن نطاق التواريخ",

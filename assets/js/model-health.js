@@ -315,7 +315,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const fixes = qe.edits.length ? window.MHTmdl.columnFixes(R.rawTables, qe.edits) : null;
     const unused = R.meta.hasReport ? R.measures.filter((m) => m.used === false).map((m) => m.name) : [];
     const move = unused.length ? window.MHTmdl.moveMeasures(R.rawTables, unused, '_Unused (review)') : null;
-    return { fixes, move, dates: qe.dates, notes: qe.notes };
+    // formats fixed at the source (6 Oct 2026): the same rule and the same script as the MCP's check_model_health
+    const formats = window.MHTmdl.formatReview ? window.MHTmdl.formatReview(R.rawTables) : null;
+    return { fixes, move, formats: formats && (formats.items.length || formats.byHand.length) ? formats : null, dates: qe.dates, notes: qe.notes };
   }
 
   function quickFixScript() {
@@ -394,6 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tm = tmdlScripts();
     if (tm && tm.fixes && tm.fixes.script) scripts['tmdl:fixes'] = tm.fixes.script;
     if (tm && tm.move && tm.move.script) scripts['tmdl:move'] = tm.move.script;
+    if (tm && tm.formats && tm.formats.script) scripts['tmdl:formats'] = tm.formats.script;
     el.querySelectorAll('[data-step]').forEach((c) => c.onchange = () => {
       if (c.checked) done.add(c.dataset.step); else done.delete(c.dataset.step);
       plans[key] = Array.from(done); store.set('dataarcus-mh-plan', plans);
@@ -406,12 +409,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function tmdlPanel() {
     const tm = tmdlScripts();
-    if (!tm || (!(tm.fixes && tm.fixes.script) && !(tm.move && tm.move.script) && !tm.dates.length)) return '';
+    if (!tm || (!(tm.fixes && tm.fixes.script) && !(tm.move && tm.move.script) && !tm.formats && !tm.dates.length)) return '';
     const btn = (k, label, n) => '<button type="button" class="btn btn-accent btn-sm" data-script="' + k + '"><i class="bi bi-clipboard"></i> ' + label + ' <small>(' + num(n) + ')</small></button>';
     let h = '<div class="mh-panel mt-4 mh-premium"><div class="mh-h"><b><i class="bi bi-stars"></i> ' + L('Apply in Power BI Desktop, no install', 'طبّق داخل Power BI Desktop بدون تثبيت أي أداة') + '</b><span class="mh-prem">' + L('Premium preview', 'نسخة مميزة تجريبية') + '</span></div>' +
       '<p class="mh-note">' + L('TMDL scripts that run in Power BI Desktop\'s own TMDL view. Each object is written out in full, the way Power BI writes it, with only the fix changed.', 'سكربتات TMDL تعمل داخل TMDL view في Power BI Desktop نفسه. كل عنصر مكتوب بالكامل بنفس طريقة Power BI مع تغيير الإصلاح فقط.') + '</p>' +
       '<ol class="mh-steps"><li>' + L('Export a fresh .pbit of the exact file you will change, and check it here.', 'صدّر ملف .pbit جديدًا من نفس الملف الذي ستعدّله وافحصه هنا.') + '</li><li>' + L('In Power BI Desktop open TMDL view, add a new tab and paste the script.', 'في Power BI Desktop افتح TMDL view وأضف تبويبًا جديدًا والصق السكربت.') + '</li><li>' + L('Click <b>Preview</b> and read the diff: only the listed properties should change.', 'اضغط <b>Preview</b> وراجع الفروقات: يجب أن تتغير الخصائص المذكورة فقط.') + '</li><li>' + L('Click <b>Apply</b>, check your report, then save.', 'اضغط <b>Apply</b> وراجع تقريرك ثم احفظ.') + '</li></ol>' +
-      '<div class="mh-sbtns">' + (tm.fixes && tm.fixes.script ? btn('tmdl:fixes', L('Copy quick fixes', 'نسخ الإصلاحات السريعة'), tm.fixes.count) : '') + (tm.move && tm.move.script ? btn('tmdl:move', L('Copy: move unused measures', 'نسخ: نقل المقاييس غير المستخدمة'), tm.move.count) : '') + '</div>';
+      '<div class="mh-sbtns">' + (tm.fixes && tm.fixes.script ? btn('tmdl:fixes', L('Copy quick fixes', 'نسخ الإصلاحات السريعة'), tm.fixes.count) : '') + (tm.move && tm.move.script ? btn('tmdl:move', L('Copy: move unused measures', 'نسخ: نقل المقاييس غير المستخدمة'), tm.move.count) : '') + (tm.formats && tm.formats.script ? btn('tmdl:formats', L('Copy: right number formats', 'نسخ: تنسيقات الأرقام الصحيحة'), tm.formats.count) : '') + '</div>';
+    if (tm.formats) h += '<span class="tg-label mt-3">' + L('Number and date formats', 'تنسيقات الأرقام والتواريخ') + '</span><p class="mh-note">' + L('A ratio shows as 0.0%, a count or whole number as #,0, money in its own currency format, other numbers as #,0.00, a date as dd mmm yyyy. Formats already right are left alone.', 'النسبة تظهر بتنسيق 0.0%، والعدد أو الرقم الصحيح بتنسيق #,0، والمبالغ بتنسيق عملتها نفسه، وبقية الأرقام بتنسيق #,0.00، والتاريخ بتنسيق dd mmm yyyy. التنسيقات الصحيحة تبقى كما هي.') + '</p><ul class="mh-manual mh-formats">' +
+      tm.formats.items.concat(tm.formats.byHand).slice(0, 50).map((i) => '<li dir="auto">' + esc(i.object + ': ' + (i.from || L('no format', 'بلا تنسيق')) + ' → ' + i.to) + '</li>').join('') + '</ul>' + (tm.formats.more ? '<p class="mh-help">' + L(num(tm.formats.more) + ' more: apply this script, then check again.', num(tm.formats.more) + ' أخرى: طبّق هذا السكربت ثم افحص مجددًا.') + '</p>' : '');
     const manual = [];
     tm.dates.forEach((d) => manual.push(L('Mark ' + d.table + ' as a date table (Table tools > Mark as date table > ' + d.column + ')', 'علّم ' + d.table + ' كجدول تاريخ (Table tools > Mark as date table > ' + d.column + ')')));
     tm.notes.forEach((n) => manual.push(n));

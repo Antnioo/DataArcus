@@ -4,6 +4,119 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 14, the owner's late Arabic asks (2026-10-06 morning, cloud builder; branch `fix/round-14` from `origin/fix/round-13` `6f54d6a`; dataarcus-engine `fix/round-14` from its main `51f82c6`; not merged)
+The owner's asks of 03:20-03:44 that the laptop builder never received (its session failed at 05:56 after pushing
+round 13). The owner is asleep: taste calls are below, the work went on. Not merged; never main.
+
+### Round 14, where I am
+- `6811e07`: `origin/fix/round-12b` merged into round 13 (conflicts kept both: the table cell takes the shared format
+  rule first, then round 13's percent cell; bindings through `inArabic` and `withRightFormats`; the answer keeps
+  `chartColors` and `chartAxes` and says `formats` first). Golden task 6 `longTitleUses` 61 -> 64: round 13's gradient
+  rule names the measure in each bar and column chart (measured on `6f54d6a` alone: 64); the cause is in the file.
+  `npm test` 499 of 499; website suites touched PASS.
+- Item 1 `b0b9fb4`: **the Arabic table reads right to left.** The text column is the last projection (Desktop draws it
+  at the right edge), the measures to its left in reading order, all right-aligned; the order's helper column and the
+  SVG pictures at the left end; designed and hand-placed pages; English unchanged. This replaces design choice 5
+  (text first, for the total row's "Total"): 4 old checks changed with the cause beside each.
+- Item 2 `48a39ec`: **less English on Arabic pages.** `plan_layout` with `path` and `lang: "ar"` proposes Arabic display
+  names (`arabicNames.suggestedDisplayNames`, from a fixed glossary of report words and patterns in
+  `mcp/lib/arabic-names.mjs`, never a free translation; `needNames` for the rest; `displayNames` input skips names
+  already given) and says to have them approved before `create_report`. Titles never mix scripts: two Arabic names
+  are joined by "حسب", two English names by "by" (on an Arabic report too), one of each gives the measure's name
+  alone; a table's ": detail" follows its title's script. Slicer headers take the approved names. Power BI's own
+  "All" follows the viewer's Power BI language (round 2): nothing in a report changes it.
+- **After the laptop's proof (`fb80b1c`, DESKTOP-TESTS.md "Round 14, laptop proof"; 5 PASS, 2 FAIL):**
+  - `9d2a9ff` **FAIL 1 fixed: whole numbers in tables showed ".00"** (14,178.00, the total 101,914.00; 591,015.00 on the
+    Gulf report; round 13 showed 14,178). Cause: 12b's shared format rule gave every unformatted number that is not a
+    count "#,0.00", and since 12b that rule also sets the tables', cards' and tooltip card's formats; the sample's
+    Total Sales is `SUM ( 'Sales'[Amount] )` with no format (round 13 wrote "#,0.##"). The rule now gives an
+    unformatted single SUM of a column "#,0" (as a count); a real decimal (an average, a division, other DAX) keeps
+    "#,0.00"; a SUM the model formats with decimals is left alone; the health check suggests the same. Tests first:
+    the rule's cases and a report on the sample model (table, cards, tooltip card). 3 old checks changed, cause
+    beside each.
+  - **FAIL 2: the softer slicer outline did nothing on the dropdown box.** Microsoft's lists, checked: the slicer
+    visual's capabilities (the validator's) have `general` (outlineColor, outlineWeight: the items' outline),
+    `items.outlineStyle`, `header.outlineStyle`, `searchBox.borderColor`, and the container's `border` (colour,
+    radius); none is the dropdown box. Only the newer theme schema's `slicer.dropdown` (borderColor, borderRadius)
+    is, and the validator refuses it in visual.json and in a theme. So the change is **removed** (`general` no longer
+    written; its check removed with it). For the owner, 2.
+  - **Last fix (the laptop's finish, `39884d1`): "Total Sales Last Ramadan" (variables, no format) still showed
+    10,310.00.** The report never adds decimals the model did not ask for: where the shared rule proposes "#,0.00" for
+    a field the model leaves unformatted, the report writes "#,0.##" (round 13's), unless the DAX divides or averages
+    (`reportFormatOf` in server.mjs, for tables, cards and the tooltip's card); the health check's script still
+    proposes the rule's format for the user to approve. Tests first on the sample model and a DIVIDE measure; four
+    of 12b's checks back to "#,0.##" with the cause.
+- Item 3 `71d7553` (removed after the proof, above): **softer slicer outlines.** `general.outlineColor` (the text colour mixed 75% into the card) and
+  `outlineWeight` 1 on every slicer, light and dark; the slicer keeps the theme's rounded corners. A rounded dropdown
+  box (`slicer.dropdown.borderRadius`, theme schema 2.157) is refused by Microsoft's validator in visual.json and in a
+  theme: not written (for the owner, 2).
+- Item 4 `c6f9bac`: **the SVG ring's label.** A text bound to a ratio (a ratio or % value, or a measure marked percent
+  by the card rule or the shared format rule) in a number format shows "0.0%", or "0%" where "100.0%" does not fit
+  inside its ring; the arc is the true ratio capped at 0 and 1 (the text stays true, 125.0%); with a theme, a text
+  under 3:1 on what it sits on takes the theme's text colour. All 7 starters checked (none prints a ratio bare).
+- Item 5 `eed0059`: **mirrored SVG pictures** already existed (round 10, `d.mirror`, set by `create_report` on a
+  right-to-left report): new checks pin the ring's start (top) and direction (counter-clockwise in Arabic), the bar's
+  side (from the right), texts never flipped, and the report-level switch.
+- Item 6 (dataarcus-engine `fix/round-14` `75cf5f6`): `fix/round-12-manifest` merged (clean); `mcp/lib/arabic-names.mjs`
+  added to the bundle's list (the test counts five lib files, 23 entries); plan_layout's manifest line no longer
+  says "Writes nothing". Packaging tests 19 of 19 against DataArcus `fix/round-14`. `feat/check-report-package` edits
+  the same "Tools:" sentence: a conflict for whoever merges it.
+- Tests: `npm test` 499 -> 506 of 506, golden PASS; the full website run at the end (below).
+
+### Round 14, for the owner
+1. **CLOSED (tried on the laptop, 6 Oct, "Round 14, laptop finish" 2a): `total.label` 'الإجمالي' drew no label with the
+   text column last. Kept as it is: a total row without its word; the reading order wins (the owner's call).** What
+   was asked: **The Arabic table's total row (seen on the laptop: no "Total" word).** Before/after:
+   `desk-r14\ba-r13-main-vs-r14-ar-dark-720.png` (above, round 13: Day Name at the LEFT, "Total" under it; below,
+   round 14: Day Name at the right edge in reading order, the total row's three numbers with no word). Power BI writes
+   "Total" only in the first column and only when it is text (measured 4 Oct), and the first column is now a measure.
+   Options: (a) keep, a total row without its word; (b) text first again (design choice 5: "Total" shows, but the
+   table reads left to right, your complaint); (c) write `total.label` ("Total label", text, in Microsoft's table
+   capabilities: the validator accepts it) as "الإجمالي" and see where Desktop draws it. **Recommended: (c) tried once
+   on the laptop; if Desktop draws it nowhere, (a)**: the reading order matters more than the word, and a reader sees
+   the bold total row at the bottom.
+2. **CLOSED (tried on the laptop, 6 Oct, 2b): `visualStyles.slicer['*'].dropdown` in the theme loads, and Desktop
+   ignores it: nothing to write.** What was asked: **Softer, rounded slicer dropdown boxes: nothing writable reaches them.** The outline change did nothing on the
+   box (laptop, FAIL) and is removed. The only properties for the box are the newer theme schema's `slicer.dropdown`
+   (borderColor, borderRadius), refused by Microsoft's validator in visual.json and in a theme (one unknown theme
+   property can make Desktop refuse the whole theme). Options: leave the boxes as Desktop draws them; or the laptop
+   tries `visualStyles.slicer['*'].dropdown` in a copy of a theme once, by hand. **Recommended:** the one try; write it
+   only if Desktop draws it and a validator version accepts it.
+3. **A number inside the ring when the card already shows it** (svgCards). **Recommended: on a KPI card, the ring
+   without its number** (the card's value is the number; two numbers read as two facts); keep the number in table
+   pictures (svgColumns), where nothing else shows it. Not changed tonight.
+4. **The website's SVG KPI Designer has no right-to-left option.** **Recommended:** a "Right to left" switch that sets
+   the same `mirror` (one rule, the compiler's). There are no sideways ("forward") arrows in the compiler: its arrows
+   point up or down, which mirroring does not change.
+5. **The Arabic name glossary** (`mcp/lib/arabic-names.mjs`): about 60 report words and 9 patterns; anything else is
+   asked of the user. Approve the approach, or send words to add.
+6. Open from 12b: the date format "dd mmm yyyy" (05 Oct 2026) for "a clear date format".
+
+### Round 14, for the laptop to prove (12b's list folded in)
+1. (12b) Apply `add_gulf_calendar`'s script (defaults) in TMDL view: the three (Arabic) columns are there, and slicers
+   on them list الأحد…السبت, يناير…ديسمبر and محرم…ذو الحجة in order.
+2. (12b) `create_report` with `lang: "ar"` on that model: axis, table and slicer show الأحد…السبت and يناير…ديسمبر in
+   calendar order; on a model without the columns the reportNotes line is there.
+3. (12b) `scripts/gulf-calendar/test-model/check.dax` on the rebuilt test model: 43 of 43 (A01-A03 new).
+4. (12b) The "fix formats" script in TMDL view (Preview shows only formatString changes); the percent as 12.3% in a
+   card, a table and the tooltip, the count with no decimals everywhere, before and after the script.
+5. The Arabic table (designed and hand-placed, 1280 x 720 and 1920 x 1080, light and dark): Day Name at the right
+   edge, measures to its left, all right-aligned, no visible helper column; what the total row shows (owner item 1).
+6. An Arabic plan with `path`: the proposed names; a report built with them: titles fully Arabic ("إجمالي المبيعات
+   حسب اسم اليوم"), slicer headers Arabic; a report without them: English titles with "by", none mixed.
+7. (Re-check after `9d2a9ff`) The sample report, Arabic, Midnight, 1280 x 720: the table's whole numbers with no
+   decimals (14,178; the total 101,914), the cards and the tooltip's card too; the Gulf report 591,015; an average
+   or a ratio keeps its decimals or percent.
+7c. (Re-check after the last fix) The sample, English and Arabic: "Total Sales Last Ramadan" (variables, no format)
+   10,310 in the table and the tooltip, no ".00" (round 13's "#,0.##" again); Total Sales 14,178; a DIVIDE measure
+   without a format keeps two decimals.
+7b. (Re-check) The slicers look as in round 13 (the outline change is removed); optionally the owner's item 2 try.
+8. A ring card on a percent measure (Midnight): the label 33.8% in the text colour, the arc a third; the 7 starters
+   on the website's designer.
+9. An Arabic report with a ring and a bar picture: the ring fills counter-clockwise from the top, the bar from the
+   right, texts readable.
+<!-- r14 -->
+
 ## Round 13, the laptop's six-hour Desktop sitting (2026-10-06, laptop builder; branch `fix/round-13` from main `1cef9ac`; not merged)
 The owner's go (6 Oct, 01:45): "I want to feel that whatever the builder opens looks amazing and optimized." Six
 hours straight, pushed every hour; he is asleep, so anything that needs his choice goes under "Round 13, for the
@@ -222,6 +335,62 @@ and the cards' rules; **3** slanted first labels are shortened (day names have n
 | 22 | The phone layout of an Arabic table with four long-named fields | wider than the phone canvas: the last header is cut at the edge | `f-g4w-ar-s-phone-p1-s1.png` | medium | the phone's table keeps the fields its 323 hold (the page's rule, at the phone's width), or wraps its headers |
 | 23 | The slide-in panel's "Filters" button in the header | the only boxed control in a header of boxless tabs (a grey fill and an outline) | `panel-en-view.png` | low | the tab look: no box, the icon and the word in the text colour, a tint on hover |
 <!-- r13 findings -->
+
+## Round 12b, small non-severe leftovers (2026-10-05 night, cloud builder; branch `fix/round-12b` from `fix/round-12` `26d9c6c`; not merged)
+The owner's rule tonight: a round that finishes early takes the non-severe not-in-scope items; small, clear, tests first.
+`fix/round-12` is no longer pushed to (the laptop builder merges it into `fix/round-13`).
+- **Taken:**
+  1. **AUD-030** (night audit, low): `mcp/test-models/golden-baseline.mjs` compares every task with
+     `mcp/test-models/golden-expected.json` and fails on a difference (`--update` writes new results; their causes go
+     in the file's `why`). Refreshed once from `26d9c6c`; each number changed since round 7's table is explained there,
+     each cause found by running each round's own runner at its merge commit: round 10 (`3803b7a`) +4 on English
+     two-page reports, +2 on Arabic (the navigator as buttons with a line under the current one); round 12 task 3
+     20 -> 17 (#20 the text box left out; #21 no monthly trend tooltip page for one Ramadan) and its slicers (#22);
+     task 7 +16 (#25 counts); task 8's cards 2 -> 1 (#26). Wired into `npm test`. Found on the way: the runner listed a
+     report's pages in folder order (random names): now in the report's own order.
+  2. Round 9: create_report's description said a KPI card shows its measure "(no filter is added)": now "filtered only
+     by the page filters you pass and the user's slicers". (The server's rule 3 was corrected in round 10.) A `column`
+     value used for an SVG size or colour rule: already refused since round 10 (R10.5, its test 5); nothing to do.
+  3. From round 12: `modelNotes` said "tables and slicers still show months in alphabetical order"; tables are in order
+     since round 12, so it says slicers. From round 11 (D-GC1): `add_gulf_calendar`'s `howToApply` says that until the
+     refresh, measures that name the new table show "Field list item has error" and a query on it fails.
+  4. **Arabic name columns in the Gulf calendar** (owner, 6 Oct 03:20). The Calendar Generator (option "Add Arabic name
+     columns", on by default, EN and AR text; off and greyed when the table's names are Arabic already; a saved state
+     without the option keeps its old table) and `add_gulf_calendar` (`arabicNames`, default true) write
+     `Day Name (Arabic)`, `Month Name (Arabic)` and `Hijri Month Name (Arabic)` from the generator's Arabic lists; the
+     MCP's script sorts each by Day of Week / Month Number / Hijri Month Number. Existing columns unchanged.
+     `create_report` on an Arabic report shows the (Arabic) column in place of Day Name, Month Name / Month Short and Hijri
+     Month Name (axis, table, slicer, tooltip) where the same table has it, with its sort; otherwise a reportNotes line:
+     "add the Gulf calendar's Arabic name columns to show Arabic day and month names". `pbip-bind` / the writer treat a
+     name with "(Arabic)" as the same kind of name. Test model: A01-A03 added (43 checks; the article says 43).
+     The laptop builder's `fix/round-13` (Arabic display names, reversed table columns) was not touched.
+  5. **Formats fixed at the source** (owner, 6 Oct 03:28). One rule, `model-health-tmdl.js` `formatOf` (the old
+     `suggestFormat` / `formatFixes` / `separatorFixes` agree with it): a ratio by format, name or DAX (%, rate, ratio,
+     pct, percent; margin, share, vs, growth, change when the DAX divides) "0.0%"; a count or whole number "#,0" (also
+     over "0.00"); money keeps the model's currency format (separator added; a currency is never invented); other
+     numbers "#,0.00" or their own format with the separator; a date column "dd mmm yyyy" (none or General Date);
+     well formatted, a format expression or text: left alone. A percent-like column name is left alone (its values may
+     be 5 for 5%). `formatReview` writes one script. `check_model_health` `fixes.FORMATS`, `plan_layout` (new optional
+     `path`, `fields`, `focus`, `tables`; `formats` first in the answer) and `create_report` (`formats` first) hand over
+     the same file "<model> - fix formats.tmdl" next to the project; nothing is applied. Until it is applied the report
+     shows the rule's format: cards and the tooltip's card (pctFormat / wholeFormat), table projections (format), and
+     kpiValues "full" cards. The website Health Check lists the same fixes with a "Copy: right number formats" button.
+     Decision for the owner: the date format "dd mmm yyyy" (05 Oct 2026) was my choice for "a clear date format".
+- **Round 12b, for the laptop to prove:**
+  1. Apply `add_gulf_calendar`'s script (defaults) in TMDL view: the three (Arabic) columns are there, and slicers on
+     them list الأحد…السبت, يناير…ديسمبر and محرم…ذو الحجة in order (sort-by from the script).
+  2. `create_report` with `lang: "ar"` on that model: the axis, table and slicer show الأحد…السبت and يناير…ديسمبر in
+     calendar order; on a model without the columns the reportNotes line is there.
+  3. Run `scripts/gulf-calendar/test-model/check.dax` on the rebuilt test model: 43 of 43 pass (A01-A03 new).
+  4. Formats: run check_model_health on a model with a ratio without a format and a count formatted "0.00"; apply the
+     "fix formats" script in TMDL view (Preview shows only formatString changes); the percent shows as 12.3% in a card,
+     a table and the tooltip, and the count with no decimals everywhere (before and after the script).
+- **Left, with why:** #3 Tahoma widths, D16, D-P1b, #10 (title top-align) and the tooltip covering the ribbon (each
+  needs Desktop); #11 (hand-placed pages get the generated theme's text sizes) and #8's semibold value (taste calls:
+  they change how every hand-placed report looks); #19 (no property in Microsoft's schema); #27 (nothing in the
+  report); the small-page items of golden task 5 ("Wednes...", a scrollbar at 640 x 360: need Desktop); mixed scripts in
+  Arabic titles (the model's own names, rule 2); slicers in month order (only the model's sort-by column does that).
+
 ## Round 12, every small detail fixed in code (2026-10-05 night, cloud builder; branch `fix/round-12` from main `1cef9ac`; not merged)
 The owner's go (6 Oct 01:45): "I want to feel that whatever the builder opens looks amazing and optimized". All eight
 recommendations of "Round 11, for the owner" are accepted, and so is every proposed fix of "Round 11, design findings"

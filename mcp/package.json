@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node server.mjs",
-    "test": "node test.mjs"
+    "test": "node test.mjs && node test-models/golden-baseline.mjs"
   },
   "engines": {
     "node": ">=18"

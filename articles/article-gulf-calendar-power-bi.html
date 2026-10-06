@@ -159,6 +159,7 @@
                 <li data-i18n-html="content.list3_4"><strong>Is Estimated Date</strong>: TRUE on Ramadan and Eid days that are not announced yet.</li>
                 <li data-i18n-html="content.list3_5"><strong>Is Weekend</strong> and <strong>Is Working Day</strong>: the right weekend for each date.</li>
                 <li data-i18n-html="content.list3_6"><strong>Is After UAE Weekend Change</strong> (UAE only): TRUE from 1 January 2022, to split working-day trends at the change.</li>
+                <li data-i18n-html="content.list3_7"><strong>Day Name (Arabic), Month Name (Arabic), Hijri Month Name (Arabic)</strong>: the same names in Arabic, for Arabic report pages (the option <strong>Add Arabic name columns</strong>).</li>
               </ul>
               <p data-i18n-html="content.p8">The weekend column is a plain IF on the date, so you can read it and change it. For the UAE:</p>
               <pre><code>Is Weekend =
@@ -172,7 +173,7 @@ IF (
     )
 )</code></pre>
               <h2 class="mt-5 mb-3" data-i18n="content.h4">Sort the names</h2>
-              <p data-i18n-html="content.p9">Select <strong>Month Name</strong> and choose <strong>Column tools → Sort by column → Month Number</strong>. Do the same for <strong>Day Name</strong> with <strong>Day of Week</strong>, and for <strong>Hijri Month Name</strong> with <strong>Hijri Month Number</strong>. Then mark the table as a date table on <strong>Date</strong> and relate it to your fact table.</p>
+              <p data-i18n-html="content.p9">Select <strong>Month Name</strong> and choose <strong>Column tools → Sort by column → Month Number</strong>. Do the same for <strong>Day Name</strong> with <strong>Day of Week</strong>, and for <strong>Hijri Month Name</strong> with <strong>Hijri Month Number</strong>; each (Arabic) column takes the same number as its English one. Then mark the table as a date table on <strong>Date</strong> and relate it to your fact table.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h5">Three measures that use it</h2>
               <p data-i18n-html="content.p10"><strong>1. Ramadan day N against last year.</strong> The <em>Last Ramadan</em> measure from our <a href='article-ramadan-sales-power-bi.html' class='text-accent'>Ramadan sales guide</a> moves each Ramadan day in view one Hijri year back. Put Ramadan Day on the axis and day 5 meets day 5.</p>
               <p data-i18n-html="content.p11"><strong>2. This Ramadan against last Ramadan.</strong> On a card filtered to a year, <em>vs Last Ramadan %</em> compares that year's Ramadan days with the same days of the Ramadan before. When a 30-day Ramadan follows a 29-day one, day 30 has no partner and adds nothing to last year's side.</p>
@@ -200,7 +201,7 @@ RETURN
         CALCULATE ( [Total Sales], REMOVEFILTERS ( &#x27;Calendar&#x27; ), _Window )
     )</code></pre>
               <p data-i18n-html="content.p13">Eid al-Fitr 2025 fell on Sunday 30 March, so its window runs from 23 March to 1 April and belongs to March: a visual by month shows the whole window in March and a blank in April. The <a href='../tools/dax-measure-builder.html' class='text-accent'>DAX Measure Builder</a> writes this measure with your own table and column names, together with the same for Eid al-Adha, last year's window and the % change.</p>
-              <p data-i18n-html="content.p14">We test these measures on a made-up model (two stores, amounts from a formula, no real data). Its 40 checks, each with the number worked out beforehand, are <a href='https://github.com/Antnioo/DataArcus/tree/main/scripts/gulf-calendar/test-model' class='text-accent' target='_blank' rel='noopener'>on GitHub</a>, so you can run them in your own Power BI Desktop.</p>
+              <p data-i18n-html="content.p14">We test these measures on a made-up model (two stores, amounts from a formula, no real data). Its 43 checks, each with the number worked out beforehand, are <a href='https://github.com/Antnioo/DataArcus/tree/main/scripts/gulf-calendar/test-model' class='text-accent' target='_blank' rel='noopener'>on GitHub</a>, so you can run them in your own Power BI Desktop.</p>
               <h2 class="mt-5 mb-3" data-i18n="content.h6">Three things to watch</h2>
               <ul>
                 <li data-i18n-html="content.list4_1"><strong>Your company's weekend.</strong> The country options follow the official government weekend. Many private companies keep another one, and Sharjah's government has had a Friday-to-Sunday weekend since 2022. If yours differs, pick the fixed weekend that matches it.</li>
@@ -288,7 +289,7 @@ RETURN
   </footer>
 
   <script src="../assets/js/translations/common.min.js" defer></script>
-  <script src="../assets/js/translations/article-gulf-calendar-power-bi.min.js?v=20261005h" defer></script>
+  <script src="../assets/js/translations/article-gulf-calendar-power-bi.min.js?v=20261006a" defer></script>
   <script src="../assets/js/lang-manager.min.js" defer></script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
