@@ -822,11 +822,6 @@
       };
       // a slicer's header, shortened to the slicer's width: the header's own text (header.text, in Microsoft's theme
       // schema), so the field keeps its name everywhere else; the full name stays the slicer's alt text
-      // Round 14, the owner's ask (6 Oct 2026): softer slicer borders, the text colour mixed 75% into the card, 1 wide
-      // (general.outlineColor and outlineWeight, in the slicer visual's own capabilities), light and dark; the slicer's
-      // box keeps the theme's rounded corners. A rounded dropdown box (slicer.dropdown.borderRadius, theme schema 2.157)
-      // is refused by Microsoft's validator in visual.json and in a theme alike, so it is not written (WORK.md, round 14)
-      const slicerOutline = () => (u && HEX6.test(String(u.text)) && HEX6.test(String(u.card)) ? obj({ outlineColor: color(mixHex(u.text, u.card, 0.75)), outlineWeight: num(1) }) : undefined);
       const slicerHeader = (f, w) => { const out = { show: bool(true), fontFamily: str(font) }; if (!f) return obj(out); const full = label(f), shown = oneLine(full, SLICER_TEXT, w - 2 * Math.round(8 * k));
         if (shown !== full) { titles.slicers.push({ page: pg.name || base, field: full, shown }); out.text = str(shown); } return obj(out); };
       // Round 12 (#15; seen in Desktop 2.158, round 11: "Total Sales by Day Name" twice on one page): a table whose title
@@ -934,7 +929,7 @@
             const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
             const v = container({ x: Math.round(x), y: Math.round(y), w: Math.round(sw), h: Math.round(sh), z: z, parent, kind: 'slicer',
               visual: { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
-                objects: Object.assign({ data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, Math.round(sw)) }, slicerOutline() ? { general: slicerOutline() } : {}),
+                objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, Math.round(sw)) },
                 visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true } });
             slicerNames.push(v.name);
             z += 1000;
@@ -1213,7 +1208,7 @@
           const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
           const v = add1({ x: Math.round(P.x + pad), y: Math.round(P.y + head + 8 * k + i * (sh + gap)), w: Math.round(sw), h: Math.round(sh), kind: 'slicer',
             visual: { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
-              objects: Object.assign({ data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, Math.round(sw)) }, slicerOutline() ? { general: slicerOutline() } : {}),
+              objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, Math.round(sw)) },
               visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true } });
           names.push(v.name);
         });

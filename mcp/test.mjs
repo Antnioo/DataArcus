@@ -3282,28 +3282,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       () => `titles must never mix Arabic and English, and slicers take the Arabic names: ALL ${JSON.stringify(TA)} HALF ${JSON.stringify(TH)} SLICERS ${JSON.stringify(slicerNames)} ${all.err ? all.t.slice(0, 200) : ''}`);
   }
 
-  // 3. Slicers with smoother borders (owner, 6 Oct): the slicer keeps the theme's rounded corners and gets a softer
-  // outline (the text colour mixed into the card, 1 wide: general.outlineColor and outlineWeight), light and dark. A
-  // rounded dropdown box (slicer.dropdown) is refused by Microsoft's validator, in visual.json and in a theme alike
-  {
-    const lit = (x) => x && x.expr && x.expr.Literal ? x.expr.Literal.Value : null;
-    const colorOf = (x) => x && x.solid && x.solid.color && lit(x.solid.color);
-    const L = (h) => { const v = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4))); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
-    const cr = (a, b) => (Math.max(L(a), L(b)) + 0.05) / (Math.min(L(a), L(b)) + 0.05);
-    const out = [];
-    for (const [preset, lang] of [['Corporate', 'en'], ['Midnight', 'ar']]) {
-      const th = await ask('generate_theme', { name: 'R14 ' + preset, preset, lang, layout: { radius: 12 } });
-      const design = (await ask('plan_layout', { design: th.j.design, layout: 'exec', kpis: 2, filters: 'end', lang })).j.design;
-      const x = await ask('create_report', { path: 'r14', name: 'R14 slicers ' + preset, lang, design, fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]'], slicers: ['Calendar[Quarter]', 'Calendar[Year]'] }, secondPage: false });
-      const themeFile = (() => { if (x.err) return null; const out2 = []; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((f) => { const q = path.join(d, f.name); if (f.isDirectory()) walk(q); else if (/RegisteredResources/.test(q) && f.name.endsWith('.json')) out2.push(q); }); walk(path.join(ROOT, 'r14', x.j.report)); return out2[0]; })();
-      const theme = themeFile ? JSON.parse(fs.readFileSync(themeFile, 'utf8')) : {}, st = (((theme.visualStyles || {}).slicer || {})['*'] || {}), b = (st.border || [])[0] || {};
-      const sl = (x.err ? [] : visuals('r14', x.j.report)).filter((v) => v.visual && v.visual.visualType === 'slicer');
-      out.push({ preset, n: sl.length, card: design.ui.card, text: design.ui.text, err: x.err ? x.t.slice(0, 200) : null, dd: sl.map((v) => { const g = ((v.visual.objects.general || [])[0] || {}).properties || {}; return { r: b.radius != null ? b.radius + 'D' : null, w: g.outlineWeight && g.outlineWeight.expr.Literal.Value, c: String(colorOf(g.outlineColor) || '').replace(/'/g, '') }; }) });
-    }
-    chk(() => out.every((o) => o.n >= 2 && o.dd.every((d) => /^\d+D$/.test(d.r) && parseInt(d.r) >= 4 && d.w === '1D' && /^#[0-9a-f]{6}$/i.test(d.c) && d.c.toLowerCase() !== o.text.toLowerCase() && cr(d.c, o.card) >= 1.3 && cr(d.c, o.card) < cr(o.text, o.card))),
-      () => `every slicer must keep the theme's rounded corners and get a softer outline (general.outlineColor, 1 wide) than the text: ${JSON.stringify(out)}`);
-  }
-
+  // 3. (Slicers with softer borders: removed after the laptop's proof of 6 Oct. Desktop drew the dropdown box as before
+  // with general.outlineColor written, and nothing the validator accepts reaches the box: mcp/WORK.md, round 14.)
   const tplCount = (T) => T.TEMPLATES.length;
   // 4. The SVG ring's label (owner, 6 Oct: the card read 33.8%, its ring's label "0", dark grey on the dark card): a
   // text that shows a ratio (a ratio or % value, or a measure the shared format rule calls a percent) in a number format

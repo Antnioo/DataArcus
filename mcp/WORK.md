@@ -25,7 +25,22 @@ round 13). The owner is asleep: taste calls are below, the work went on. Not mer
   are joined by "حسب", two English names by "by" (on an Arabic report too), one of each gives the measure's name
   alone; a table's ": detail" follows its title's script. Slicer headers take the approved names. Power BI's own
   "All" follows the viewer's Power BI language (round 2): nothing in a report changes it.
-- Item 3 `71d7553`: **softer slicer outlines.** `general.outlineColor` (the text colour mixed 75% into the card) and
+- **After the laptop's proof (`fb80b1c`, DESKTOP-TESTS.md "Round 14, laptop proof"; 5 PASS, 2 FAIL):**
+  - `9d2a9ff` **FAIL 1 fixed: whole numbers in tables showed ".00"** (14,178.00, the total 101,914.00; 591,015.00 on the
+    Gulf report; round 13 showed 14,178). Cause: 12b's shared format rule gave every unformatted number that is not a
+    count "#,0.00", and since 12b that rule also sets the tables', cards' and tooltip card's formats; the sample's
+    Total Sales is `SUM ( 'Sales'[Amount] )` with no format (round 13 wrote "#,0.##"). The rule now gives an
+    unformatted single SUM of a column "#,0" (as a count); a real decimal (an average, a division, other DAX) keeps
+    "#,0.00"; a SUM the model formats with decimals is left alone; the health check suggests the same. Tests first:
+    the rule's cases and a report on the sample model (table, cards, tooltip card). 3 old checks changed, cause
+    beside each.
+  - **FAIL 2: the softer slicer outline did nothing on the dropdown box.** Microsoft's lists, checked: the slicer
+    visual's capabilities (the validator's) have `general` (outlineColor, outlineWeight: the items' outline),
+    `items.outlineStyle`, `header.outlineStyle`, `searchBox.borderColor`, and the container's `border` (colour,
+    radius); none is the dropdown box. Only the newer theme schema's `slicer.dropdown` (borderColor, borderRadius)
+    is, and the validator refuses it in visual.json and in a theme. So the change is **removed** (`general` no longer
+    written; its check removed with it). For the owner, 2.
+- Item 3 `71d7553` (removed after the proof, above): **softer slicer outlines.** `general.outlineColor` (the text colour mixed 75% into the card) and
   `outlineWeight` 1 on every slicer, light and dark; the slicer keeps the theme's rounded corners. A rounded dropdown
   box (`slicer.dropdown.borderRadius`, theme schema 2.157) is refused by Microsoft's validator in visual.json and in a
   theme: not written (for the owner, 2).
@@ -43,15 +58,21 @@ round 13). The owner is asleep: taste calls are below, the work went on. Not mer
 - Tests: `npm test` 499 -> 506 of 506, golden PASS; the full website run at the end (below).
 
 ### Round 14, for the owner
-1. **The Arabic table's total row.** With the text column last (your ask), Power BI writes "Total" only in the first
-   projection's column and only when it is text (measured 4 Oct), so the total row may show its numbers with no
-   label. Options: (a) keep (reading order first); (b) text first again (design choice 5: "Total" shows, Day Name at
-   the left); (c) `total.label` (in Microsoft's list) set to "الإجمالي" if Desktop draws it in a measure column.
-   **Recommended: (a)**, and the laptop tries (c) once.
-2. **Rounded dropdown boxes.** Not written: Microsoft's validator refuses `slicer.dropdown` in visual.json and in a
-   theme, and one unknown theme property can make Desktop refuse the whole theme. Options: keep the softer outline
-   only; or the laptop tries `visualStyles.slicer['*'].dropdown.borderRadius` in a copy of a theme once.
-   **Recommended:** the one try on the laptop; write it only if Desktop takes it and the validator is updated.
+1. **The Arabic table's total row (seen on the laptop: no "Total" word).** Before/after:
+   `desk-r14\ba-r13-main-vs-r14-ar-dark-720.png` (above, round 13: Day Name at the LEFT, "Total" under it; below,
+   round 14: Day Name at the right edge in reading order, the total row's three numbers with no word). Power BI writes
+   "Total" only in the first column and only when it is text (measured 4 Oct), and the first column is now a measure.
+   Options: (a) keep, a total row without its word; (b) text first again (design choice 5: "Total" shows, but the
+   table reads left to right, your complaint); (c) write `total.label` ("Total label", text, in Microsoft's table
+   capabilities: the validator accepts it) as "الإجمالي" and see where Desktop draws it. **Recommended: (c) tried once
+   on the laptop; if Desktop draws it nowhere, (a)**: the reading order matters more than the word, and a reader sees
+   the bold total row at the bottom.
+2. **Softer, rounded slicer dropdown boxes: nothing writable reaches them.** The outline change did nothing on the
+   box (laptop, FAIL) and is removed. The only properties for the box are the newer theme schema's `slicer.dropdown`
+   (borderColor, borderRadius), refused by Microsoft's validator in visual.json and in a theme (one unknown theme
+   property can make Desktop refuse the whole theme). Options: leave the boxes as Desktop draws them; or the laptop
+   tries `visualStyles.slicer['*'].dropdown` in a copy of a theme once, by hand. **Recommended:** the one try; write it
+   only if Desktop draws it and a validator version accepts it.
 3. **A number inside the ring when the card already shows it** (svgCards). **Recommended: on a KPI card, the ring
    without its number** (the card's value is the number; two numbers read as two facts); keep the number in table
    pictures (svgColumns), where nothing else shows it. Not changed tonight.
@@ -74,8 +95,10 @@ round 13). The owner is asleep: taste calls are below, the work went on. Not mer
    edge, measures to its left, all right-aligned, no visible helper column; what the total row shows (owner item 1).
 6. An Arabic plan with `path`: the proposed names; a report built with them: titles fully Arabic ("إجمالي المبيعات
    حسب اسم اليوم"), slicer headers Arabic; a report without them: English titles with "by", none mixed.
-7. Slicers on Corporate (light) and Midnight (dark): the softer outline drawn (`general.outlineColor`); if Desktop
-   ignores it on the dropdown box, say where it shows.
+7. (Re-check after `9d2a9ff`) The sample report, Arabic, Midnight, 1280 x 720: the table's whole numbers with no
+   decimals (14,178; the total 101,914), the cards and the tooltip's card too; the Gulf report 591,015; an average
+   or a ratio keeps its decimals or percent.
+7b. (Re-check) The slicers look as in round 13 (the outline change is removed); optionally the owner's item 2 try.
 8. A ring card on a percent measure (Midnight): the label 33.8% in the text colour, the arc a third; the 7 starters
    on the website's designer.
 9. An Arabic report with a ring and a bar picture: the ring fills counter-clockwise from the top, the bar from the
