@@ -3099,7 +3099,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const sc = g.err ? '' : fs.readFileSync(g.j.scriptFile, 'utf8');
     const sorts = (sc.match(/^\t\t\tsortByColumn: .*$/gm) || []).map((x) => x.trim());
     // each name twice (owner 2026-10-06): the English column and its Arabic one, sorted by the same number
-    chk(() => !g.err && JSON.stringify(sorts) === JSON.stringify(["sortByColumn: 'Month Number'", "sortByColumn: 'Month Number'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Hijri Month Number'", "sortByColumn: 'Hijri Month Number'"])
+    chk(() => !g.err && JSON.stringify(sorts) === JSON.stringify(["sortByColumn: 'Month Number'", "sortByColumn: 'Month Number'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Day of Week'", "sortByColumn: 'Hijri Month Number'", "sortByColumn: 'Hijri Month Number'"]) /* round 18, S3 (the owner's yes): one more Day of Week, for Day Short */
         && g.j.byHand.length === 1 && /Mark as date table/.test(g.j.byHand[0]) && /will not warn|won't warn/i.test(g.j.howToApply)
         && (sc.match(/^\trelationship /gm) || []).length === 1 && /Order Day/.test(JSON.stringify(g.j.notes || [])) && /type/i.test(JSON.stringify(g.j.notes || [])),
       () => `recommendation 4: sortByColumn in the script, one step by hand, Preview's silence told, an untyped date column related with a note: ${JSON.stringify(sorts)} ${g.err ? g.t.slice(0, 300) : JSON.stringify({ byHand: g.j.byHand, notes: g.j.notes, how: g.j.howToApply.slice(0, 200) })}`);

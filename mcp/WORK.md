@@ -50,7 +50,12 @@ picture), S3 (slanted day names). Records: DESKTOP-TESTS.md, rows 9b, 12b, S1.. 
   with **no number inside**, at least four rows and the total shown (Sunday to Wednesday and the total, as S2), the
   margin readable in its own value column; the answer's reportNotes: "The ring in the table (...) is drawn 28 high, too
   small for a number to be read, so it has no number inside". A table where the ring is 40 high or more keeps it.
-- **S3b:** not built; nothing to prove until the owner picks an option.
+- **S3b** (short day names): a Gulf-calendar model (made with the new generator or `add_gulf_calendar`), a 1920 x 1080
+  report with a column chart by Day Name. Expected: the chart shows **Sun ... Sat level (not slanted)**, in the
+  calendar's order (Sunday first with the default week); a table on the same page still shows the full names; the
+  answer's reportNotes: "The column chart by day ... shows Day Short (Sun ... Sat)". The switch is worked out from the
+  measured letter widths (the widest full name at the label size wider than a seventh of the chart, less 40 for the
+  value axis), not seen in Desktop yet: note any column chart that switched but had room, or slanted and did not.
 
 #### Round 18, for the owner
 1. **A ring as a table picture in a small table is 28 high and its number cannot be read.** **Answered (6 Oct ~20:51
@@ -59,7 +64,15 @@ picture), S3 (slanted day names). Records: DESKTOP-TESTS.md, rows 9b, 12b, S1.. 
    so in reportNotes; at 40 or more the number stays; KPI-card rings unchanged (none since round 15). Test first (round
    18, 2b): red 1 failing (the 28-high ring kept its number), green after. Not covered: the phone layout shrinks the
    pictures further but shares the measure, so a ring 40+ on the canvas keeps its number on the phone.
-2. **S3, day names slant on the 1920 x 1080 column charts.** Options: (a) the Gulf calendar gets a short day-name
+2. **S3, day names slant on the 1920 x 1080 column charts. Answered (6 Oct ~21:38 Dubai): "yes add the short day name
+   column". Done (S3, `9327407`):** the Calendar Generator (and so `add_gulf_calendar`) writes "Day Short" (Sun ...
+   Sat, English calendars only: the Arabic day names are short already) after "Day Name", sorted by Day of Week in the
+   TMDL script; a column chart by Day Name uses it where the model has it (by name) and the full names would slant
+   (told once in reportNotes); bar charts (level names already), tables and slicers keep Day Name. Tests: red 3
+   failing, green after. Expectations changed with their cause beside them: add_gulf_calendar's columns 39 -> 40 and
+   34 -> 35, sortByColumn 6 -> 7, and the website's before-the-pack baseline comparisons take the Day Short line out
+   (one column less in "N columns"), and the round 12 check of the script's sort lines has one more Day of Week. The Gulf test model's `calendar.dax` was rebuilt (one line more); no Desktop
+   check was added for the column (its 43 checks stand). Earlier options, for the record: (a) the Gulf calendar gets a short day-name
    column ("Day Name Short": Sun ... Sat, sorted by Day of Week; Arabic day names are short already) and a column
    chart by days uses it when the model has it, matched by name; (b) a chart by day names becomes a bar chart (days
    down the side, never slanted); (c) leave it and add a modelNotes line. **Recommended: (a)**, with (c)'s line when
