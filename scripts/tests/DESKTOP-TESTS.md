@@ -1945,7 +1945,195 @@ Errors: 2, both on the fixture's own hand-made "Health Test Report" (not a repor
   nothing on the engine's reports (0 errors on all 62), which agrees with Desktop opening every one without a
   message.
 
+## 2026-10-06, round 13, the six-hour sitting (`fix/round-13` from main `1cef9ac`), Power BI Desktop 2.158.1177
+Made-up models only (the Ramadan sample, copied to `<tests folder>\13-r13`; `13-r13\sorted` is the same model with a
+sort-by column on Month Name and Day Name). Reports from the working copy's server over stdio
+(`builder-scripts\r13-make.mjs`); captures of the canvas through the bridge at double size in
+`<tests folder>\desk-r13\`, one report per command, in the foreground (`r13-shot.ps1`). Colours are read from the
+capture's pixels along a scan line (`r13-runs.ps1`), never judged by eye. Expected results: `mcp/WORK.md`, "Round 13,
+order of work", written before each run.
+
+### Item 1, gradient ("fading") colours in bar and column charts
+**What Desktop offers:** Microsoft's CLI lists for `dataPoint` of both charts `fill`, `fillRule` ("Color saturation"),
+`fillTransparency` and the border, nothing else. **A bar has no gradient fill of its own** (1b: not available, as
+expected). A bar's colour by its value is the data colour's conditional formatting: `dataPoint.fill` as a `FillRule`
+(`linearGradient2`) on the chart's own measure, selector `dataViewWildcard` `matchingOption` 1.
+
+"GR EN light", "GR EN dark" (Corporate and Midnight), "GR AR light": a hand-placed page of three column charts
+(Total Sales by Month Short) and three bar charts (by Day Name), the rule written by hand (`r13-grad.mjs`): chart 1
+nothing, chart 2 literal ends, chart 3 `ThemeDataColor` ends (ColorId 2, Percent 0.6 and 0).
+| Design | Nothing written | Literal ends (low, high) | `ThemeDataColor` ends |
+|---|---|---|---|
+| Corporate (card `#ffffff`, first data colour `#1f4e79`) | every bar `#1f4e79` | the smallest bar (Friday) **`#7995af`**, the largest (Monday) **`#1f4e79`**, the others between in the order of their values: exactly the two colours written | accepted: the smallest `#a5b8c9` (60% towards white: 2.0:1 on the card), the largest `#1f4e79` |
+| Midnight (card `#15182a`, `#4cc9f0`) | every bar `#4cc9f0` | the smallest `#31718d`, the largest `#4cc9f0`: the small bars fade into the dark card | **the wrong way: the smallest bar is the brightest** (`#b7e9f9`, towards white), the largest `#4cc9f0` |
+| Corporate, Arabic | the same | the same colours as English (`#7995af` to `#1f4e79`) | the same as English |
+- **The rule maps the smallest value shown to the low colour and the largest to the high one** (Desktop's "lowest
+  value" and "highest value"), so seven days between 13.9K and 15.2K use the whole range. With a low end fixed at 0
+  (`min: { color, value: 0D }`, "GR AR light" reloaded, `gr-ar-light-zero-p1.png`) the same seven bars are
+  `#27547e` to `#1f4e79`: almost one colour. Which of the two is the owner's choice (`mcp/WORK.md`).
+- **`ThemeDataColor` works inside the rule's ends** (the colours would follow a later theme change), but "Percent
+  0.6" always goes towards white: right on a light design, backwards on a dark one. So the engine writes the two
+  ends as colours it works out from the theme: the high end the first data colour, the low end that colour mixed
+  towards the card as far as it still stands 3:1 off the card (60% at most): 40% on Corporate (3.12:1), 50% on
+  Midnight (3.24:1).
+- **Built in the engine** (`chartColors`: "gradient" by default with a design, "solid" with hand-placed pages) and
+  proven: "GE EN light" 1920 x 1080 (`ge-en-light-p1.png`, `-p2.png`), "GE EN dark" (`ge-en-dark-p1.png`), "GE AR
+  dark" 1280 x 720 (`ge-ar-dark-p1.png`): the bar chart by Quarter and the column chart by Day Name carry the same
+  colours as the hand-written charts (light: `#7995af` to `#1f4e79`; dark: `#31718d` to `#4cc9f0`, read from the
+  captures); the line chart, the table and the tooltip pages are unchanged; "GE EN light solid" is one colour.
+- Data labels: the designs leave them off; where they are on (the tooltip pages, `my-ar-p1.png` charts 5 and 8) they
+  sit outside the bar, on the card, so the bar's colour does not change their contrast.
+
+### Item 3, mirrored chart axes for an Arabic report
+"MX AR" (`r13-mirror.mjs`: three hand-placed Arabic pages, each chart titled by what was written on it) and "MY AR"
+(`r13-mirror2.mjs`, on the model with sort-by columns). Captures `mx-ar-p1.png` to `-p3.png`, `my-ar-p1.png`.
+| What | Written | Clustered column | Clustered bar | Line | Stacked column / bar | Area | Line and column | Scatter | Waterfall |
+|---|---|---|---|---|---|---|---|---|---|
+| (a) the category order reversed | `categoryAxis.invertAxis` true | **ignored** (Jan stays at the left) | not needed (top to bottom) | **ignored** on month names | ignored / not needed | ignored | ignored | works on its number axis (15,200 at the left) | ignored |
+| (a) the same, by the sort | `sortDefinition` Descending by the category (its own column, or the Min-of-number field in Tooltips) | **works**: Dec ... Jan, January at the right | - | **works** | not run | not run | not run | - | not run |
+| (b) the value axis at the right | `valueAxis.switchAxisPosition` true (bar: `categoryAxis.switchAxisPosition`) | **works** | **works**: the day names at the right | **works** | works / works | works | works | works | works |
+| (c) bars growing right to left | `valueAxis.invertAxis` true | - | **works**: 15K ... 0K, the bars from the right | - | - / works (the stack from the right) | - | - | - | - |
+| (d) the legend at the right | `legend.position` 'TopRight' | **works** (the legend's own items still run left to right: "Quarter", Q1, Q2, Q3, Q4) | - | - | works / works | - | works | - | - |
+| (e) a date axis right to left | `categoryAxis.invertAxis` true on a continuous axis (Calendar[Date]) | - | - | **works**: 2027 at the left, 2022 at the right | - | - | - | - | - |
+- **The sort rules** ("MY AR"): with nothing written a column or line chart runs in its category's own order
+  (January to December where the model has a sort-by column; alphabetical for a text column without one: Dhu
+  al-Hijjah ... Shawwal), not by value. A sort by the category's own column, Descending, reverses that order and
+  follows the model's sort-by column (December ... January). On a continuous date axis the sort is ignored: with
+  the Descending sort **and** `invertAxis` both written the axis is reversed once (2027 ... 2022). So one rule
+  covers both kinds of axis.
+- **Data labels after mirroring:** on a mirrored bar chart they sit at the bars' left ends (14.2K ... 14.8K), on a
+  mirrored column chart above the columns: the right side in both.
+- **Side effect, seen:** a slanted first label is shortened ("Dece…", "Janu…", "Muhar…") when the value axis is at
+  the right, because the axis no longer gives the label room at the chart's left edge (`mx-ar-line-crop.png`). The
+  same happens today with the axis at the left on a 600-wide chart ("Janua…", "MY AR" chart 9), so it is a matter
+  of label length and chart width, made more likely by the axis's side. Level labels (short names) are whole.
+- **Not seen:** drill-down, the tooltip on hover, a scrollbar's starting end (no chart here had more categories than
+  room). A waterfall follows the same axis property; its order was not reversed (the engine writes no waterfall).
+- **Built in the engine** (`chartAxes`: "mirrored" by default in a right-to-left report, "standard" to leave the
+  charts) and proven on "GM AR light 1080" (`gm-ar-light-1080-p1.png` to `-p4.png`): the line chart runs January at
+  the right to December at the left with its value axis at the right; the bar chart by Quarter grows from the right
+  with Q1 to Q4 at the right; the column chart by Day Name runs Sunday at the right to Saturday at the left, axis at
+  the right, and keeps its gradient; the two tooltip pages' bar charts grow from the right with their values at the
+  bars' left ends. The line chart's first label reads "Dece…" (the side effect above).
+
+### Item 2, an SVG picture in a KPI card that blends
+"SC EN light 720", "SC EN dark 1080", "SC AR light 1080", "SC AR dark 720" (`r13-svgcards.mjs`: three cards with a
+64 x 64 ring, a 120 x 40 sparkline and a 48 x 48 arrow, the designs naming no colour), built before the fix and
+again after it ("... fix": the same designs with the theme's colour names; "... def": no colours at all).
+| Looked at | Before the fix (`sc-*-cards.png`) | After (`ba-sc-en-light-720.png`, `ba-sc-ar-dark-720.png`: before above, after below) |
+|---|---|---|
+| The picture's own background, an edge | transparent, no box, no edge drawn by Desktop (as expected) | the same |
+| Colours | the compiler's own, whatever the theme: the ring's track `#1e293b` (a heavy near-black ring on the white Corporate card; gone on Midnight's `#15182a`), its arc and the sparkline `#00d4ff`, the arrow `#22c55e`, a text without a colour black (unreadable on a dark card) | the theme's: the track a quiet tint (the text colour mixed 85% into the card), the arc and the sparkline the accent, the text the text colour, the arrow the theme's "good" green; the same designs on Midnight are light on dark |
+| Size and place | a 64 x 64 ring on the 96-high cards of a 1280 x 720 page was sized by the card's width alone (18 percent, 54.6 high) and **its top was cut by the card**, in English and Arabic; at 1920 x 1080 (144-high cards) it was whole | the picture is capped by the room under the title (15 percent on that page: about 46 high): **whole on every card**; at the far end from the value, on the value's line |
+| Sharpness | sharp at both page sizes (a vector) | the same |
+- A text bound with a format the compiler does not know ("pct0", my design's slip) shows 0; the formats are n0, n1,
+  n2, k1, m1, auto, p0, p1.
+- On a six-card row every picture is the same size (round 12's "one percent for the row"): 33.6 to 34.1 at
+  1280 x 720 ("R12 CI EN 720"), 50.3 to 52.1 at 1920 x 1080 in Arabic ("R12 CI AR 1080"), read with `yellow.ps1`.
+
+### Item 4, round 12's list for the laptop (merged at `76a98b6`), each item in Desktop
+Built with the merged code: the 20 golden reports (`r13-golden.mjs`, `13-r13\golden`), and `r13-r12proof.mjs`'s
+reports ("R12 ..."; `13-r13\b2` is the sample with made-up measures of several formats). "Before" is round 11's
+capture of the same report (`desk-r11\`); pairs are `desk-r13\ba-<report>.png` (before left or above).
+| # | Item | Seen in Desktop | Result |
+|---|---|---|---|
+| 1 | #24 long Arabic titles | "G6 Long AR": chart and table titles whole on two lines, or shortened at their end; the slicer headers shortened. **But the "…" was drawn at the right end of the line (the reading start)**, so "...والمرتجعات حسب اسم الفرع" looked cut at its beginning | **FAIL, fixed here**: a right-to-left mark after the "…" (tried by hand first: `ba-g6-ar-ellipsis.png`, the "…" then at the left) |
+| 2 | #12 the Arabic table | numbers right-aligned under their headers; "Sunday" no longer reads into a number (`g4s-ar-table-crop.png`, `ba-g1-ar.png`) | PASS |
+| 3 | #20 the text box | "G3 Ramadan EN/AR" without `text`: no box, the line chart the row's whole width; "R12 text EN" with `text`: the sentence in the box (`r12-text-en-view.png`) | PASS (the sentence is small, 11pt, at the top of a tall panel: design finding) |
+| 4 | #25 a model without measures | "G7 Plain EN": four cards (Count of Order Id, Sum of Amount, Sum of Quantity, Count of Region), three charts and the table; no "Something's wrong" mark; the page is full (`ba-g7-en.png`) | PASS (the model has no rows: the values show "--") |
+| 5 | #1 the phone KPI title | "G1 Exec EN" phone: "Total Sales Last / Ramadan" on two lines, the value whole under it (`g1-en-phone-p1.png`) | PASS |
+| 6 | B1 days in calendar order in a table | Sunday to Saturday in every table of "G1", "G4" (English and Arabic), "Total" in the first column; the helper column does not show, except as a hair-thin light line across the grey rows in the Arabic table | PASS (the thin line: design finding). A Month Name that the model sorts, in a table: not run |
+| 7 | B2 the KPI number rule | "R12 B2 EN 720" (six cards): Margin % **35.4%**, Conversion Rate **12.3%**, Orders **2,191**, Avg Price **231.50**, Total Sales 101.91K (no format in the model: automatic units, as the rule says), Growth vs Last Year 0.05 (my made-up measure does not divide, so the rule does not call it a percent); nothing cut | PASS |
+| 8 | #26 no text measure on a card | "G8 Redesign EN": one card (Total); no "Yes" (`ba-g8-en.png`) | PASS |
+| 9 | #15 the table's title | "Total Sales by Day Name: detail" / ": التفاصيل" | PASS |
+| 10 | #23/#32 the last row | "G4 16x9 EN" and "G4 4x3 AR": seven days and the total, no scrollbar (`ba-g4w-en.png`, `g4s-ar-table-crop.png`) | PASS |
+| 11 | #29 the pictures on the phone | "R12 P7 EN" (a bar and a sparkline column in the theme's colours), phone layout scrolled to the table (`r12-p7-en-s-phone-p1-s2.png`): both pictures narrower and whole, the four columns inside the canvas, no horizontal scrollbar, the days Sunday to Saturday | PASS |
+| 12 | #31 the header's title | the report's name on every report ("G1 Exec EN", "R12 text EN") | PASS |
+| 13 | #30 the Arabic logo placeholder | "شعارك" at the left edge of its slot, level with the title to the eye (`r12-tabs-ar-head.png`); its middle not measured | PASS to the eye |
+| 14 | The Reset button | **the arrow is half its old size and tight against the text, in English too** ("↶Reset filters", `ba-g3-en-reset.png`); in Arabic it sits at the right of the words, as wanted, but as small and as tight (`g1-ar-reset-crop.png`) | **FAIL, fixed here**: `iconSize` three quarters of the button's height and two no-break spaces before the text (measured by hand: `reset-a` to `reset-d-crop.png`; the icon's and the text's margins did nothing); proven on "R12 text EN" |
+| 15 | #22/#21 golden task 3 | no Hijri Year or Is Ramadan slicer; the line by Ramadan Day, 0 to 30 (`ba-g3-en.png`) | PASS |
+| 16 | #16 short months | "Jan" to "Dec", level, on "G1" and "G4" in both languages | PASS |
+| 17 | #9/#7/#8 the six-card rows | "R12 B2 EN 720", "R12 CI EN 720", "R12 CI AR 1080": one value size; each value starts under its title's first letter; six pictures 33.6 to 34.1 (1280 x 720) and 50.3 to 52.1 (1920 x 1080). **In the Arabic row the title "Growth vs Last Year" was cut by Desktop ("Growth vs Last Y…")** | PASS for the three points; **the cut title: FAIL, fixed here** (Tahoma's Latin letters are wider than the Segoe UI table: 6% added, from five titles measured on that row) |
+| 18 | #18 Reset under the last slicer | the rail ends under Reset on every report | PASS (the page under a short rail is empty: design finding, taste) |
+| 19 | #2/#4/#5 the phone tabs | "G1 Exec EN" and "G1 Exec AR" phone: the tabs as wide as their names from the reading start (Arabic: from the right), the titles in the text colour, the line under the current tab (`g1-en-phone-p1.png`, `f-g1-ar-phone-p1.png`) | PASS |
+| 20 | #6 a two-row header | "R12 tabs AR" (eight long names, 1920 x 1080, a 72-high title): the names now fit **one** row at 8pt, whole, mirrored, the mark on pages 1 and 5 (`r12-tabs-ar-head.png`); two rows were not produced | not exercised (the tabs are small beside a 72-high title: design finding) |
+| 21 | The header that grows | built through the writer as the website builds its download (`r13-grow.mjs`: the sample model, 1280 x 720, a long title and two long page names, `grow`): in English the names still fit one row; **in Arabic the header grew by 18**: two rows of tabs, both names whole, the current one marked, the KPI row and the charts moved down, nothing cut (`grow-ar-720-view.png`). The background picture of that hand-made build still has its panels at the old height (a sliver shows above each card): the website does not ask for a growing header, and the server's reports have no background picture | PASS for the server's path |
+| 22 | The Gulf calendar's sort-by columns | "Gulf GC1" copied to `13-r13\gulf`; `add_gulf_calendar` (Calendar, 2018 to 2030, UAE, `relateTo` Sales[Date], a DAX table's untyped column) wrote the script with three `sortByColumn` lines and the relationship; applied in TMDL view (`tmdl-apply.ps1`, the laptop idle 145 s): "Changes applied to the model", **Problems 0**; after a refresh, by DAX (`desk-r13\gc\cols.json`, `rel.json`): Month Name sorted by Month Number, Day Name by Day of Week, Hijri Month Name by Hijri Month Number; Sales[Date] many to one Calendar[Date], active, one direction; 37 columns | PASS (the slicers were not opened: the model's sort-by columns are read instead) |
+| 23 | A narrow table's smaller text | "G4 4x3": the table keeps three of its four fields and the answer names the one left out; "G1": 13pt for 15pt with all four | as the answer says |
+| 24 | One slicer in a slide-in panel | not run (no made-up model with a single text column at hand) | - |
+- **Three FAILs, each fixed on this branch with a test:** the "…" of a shortened Arabic text (1), the Reset
+  button's arrow (14), a Latin title cut in a Tahoma report (17).
+
+### Item 5, three small design fixes (each from a page opened in this sitting)
+| What was off | Measured | Fixed | Proven |
+|---|---|---|---|
+| On a dark design the gridlines are near-white lines across the panel, louder than the data ("GE EN dark") | `valueAxis.gridlineColor` written on the chart by hand (`#35374a`, the text colour mixed 85% into the card): the lines drawn quiet (`ba-ge-en-dark-grid.png`: before above, after below) | the report's line, bar and column charts carry that colour, unless the theme sets its own gridlines | "G2 Analysis EN/AR" built with the final code (`ba-f-g2-en.png`, `ba-f-g2-ar.png`, right halves) |
+| A card says 33.8% and the table's column of the same measure 0.34 ("G1 Exec EN") | - (round 10 measured `format` on a table's projection) | the table's column carries the card's percent format where the model gives the measure none | `ba-f-g2-en.png`: 34.7%, 30.2% ... total 33.8% |
+| The "What it means" sentence at 11pt on a 1920 x 1080 page reads like a footnote ("R12 text EN") | - | a given sentence is written at the theme's label size for the page | in the files (test); not opened again |
+- **The golden reports with the final code** (`13-r13\golden2`, `r13-final.ps1`; pairs `ba-f-<tag>.png`, round 11's
+  capture at the left): opened: G1 EN and AR, G2 EN and AR, G3 AR, G4 16:9 AR, G4 4:3 EN, G5 EN and AR, G6 EN and AR,
+  G10 EN; no error dialog, each ready in 18 to 21 s (the 300-table model 48 s). Seen on them: a continuous number
+  axis (Ramadan Day) in Arabic runs 0 at the right to 30 at the left (reversed once, as measured by hand); an
+  Arabic "…" at the line's end from the engine (`f-g6-ar-top-crop.png`); the Arabic Reset with its arrow at the
+  right of the words. On "G6 Long" the fourth card shows Desktop's "Something's wrong with one or more fields":
+  the test model's own growth measure fails (so in round 11 too).
+### Item 3, the side effects looked at afterwards: the hover tooltip and the phone
+- **Hover on a mirrored column chart** ("G4 16x9 AR" built with the final code; the pointer put on Monday's column,
+  the canvas cut out of a window capture: `hover-ar-column.png`): the report page tooltip opens with Monday's value
+  (15.17K) and its trend by month, the tooltip's own bars growing from the right with their values at the bars'
+  left ends, January to December from the top. So the Descending sort and the moved axis do not disturb the tooltip.
+- **The phone layout of the same report** (`f-g4w-ar-s-phone-p1-s1.png`): the bar and column charts keep the mirror
+  and the gradient. The Arabic table (four fields with long names) is wider than the phone canvas: its last header
+  is cut at the edge (design finding 22).
+- Drill-down: not tried (the engine's charts have one level).
+### Item 6, the golden tasks' reports again, scored before and after
+All 20 reports (10 tasks' reports x English and Arabic) rebuilt with the final code (`13-r13\golden2`) and opened
+one by one: no error dialog, ready in 11 to 21 s (the 300-table model 37 and 48 s). Task 9 is refused as expected
+and task 11 has no report. **The score:** 10 less 1 for each kind of thing visibly wrong on the report's two pages
+(a cut text; a wrong order; a number in the wrong form; a placeholder or an empty page; a scrollbar or a hidden
+row; two visuals with one title; slanted labels; loud gridlines; in Arabic also charts left to right and numbers
+reading into names). "Before" is round 11's capture (main `3803b7a`), read with round 11's findings; "after" is
+tonight's capture. A judgement from overviews and crops, not a measurement; the pairs are
+`desk-r13\ba-f-<tag>.png` (before at the left).
+| Task, report | Before | After | What is still off after |
+|---|---|---|---|
+| 1 Exec, 1920 x 1080, a brand colour on dark: English / Arabic | 3 / 2 | 9 / 9 | the day names slant on page 1's column chart; no gradient (the brand colour stands only 3.2:1 off the card) |
+| 2 Analysis: English / Arabic | 5 / 3 | 10 / 10 | - |
+| 3 Ramadan focus: English / Arabic | 6 / 5 | 10 / 10 | - |
+| 4 16:9, 1280 x 720: English / Arabic | 5 / 3 | 10 / 10 | - |
+| 4 4:3, 960 x 720: English / Arabic | 5 / 3 | 8 / 8 | page 1's table keeps three of four fields (told); day names slant |
+| 5 640 x 360: English / Arabic | 3 / 2 | 6 / 6 | "Wednes…", page 2's card values cut at the bottom, the table and the bar chart scroll (the Arabic one not read at full size) |
+| 6 long Arabic names: English / Arabic | 5 / 3 | 8 / 8 | the model's own growth measure fails in its card; no rows (the English one not read at full size) |
+| 7 no measures: English / Arabic | 2 / 2 | 8 / 8 | no rows ("--"); a count of a text column as a card |
+| 8 redesign: English / Arabic | 6 / 5 | 8 / 8 | no rows; one card for four slots (the Arabic one not read at full size) |
+| 10 300 tables: English / Arabic | 6 / 5 | 8 / 8 | no rows (the Arabic one not read at full size) |
+| **Mean** | **4.6 / 3.3** | **8.5 / 8.5** | |
+### Pages with every kind of visual, and the operations layout (the design eye)
+"AK EN light" and "AK AR dark" (a hand-placed page of twelve slots: two KPI cards, line, bar, column, donut, table,
+gauge, funnel, treemap, matrix, slicer; `chartColors` "gradient"), "OPS AR" (the operations layout, Earthy).
+- Line, bar and column: the gradient, the quiet gridlines and, in Arabic, the mirrored axes, on both
+  (`ak-en-light-view.png`, `ak-ar-dark-view.png`, `ops-ar-view.png`). The table: calendar order, percents, "Total".
+- **Off on the all-kinds page (hand-placed; not fixed):** the matrix lists the days A to Z, is wider than its box
+  (a horizontal scrollbar) and scrolls its rows (the table's rules do not reach a matrix); the gauge shows the
+  percent measure as 0.34 between 0.00 and 0.68; the funnel is drawn on the percent measure ("0.19", "1.31",
+  "681.9%"); a 444-wide slicer slot holds three dropdowns whose headers are cut to "Q…", "Da…" (in Arabic to "…"
+  alone); the donut, gauge, funnel and treemap are not mirrored in Arabic (nothing in them has a side).
+- **Off on the operations page:** two bar charts and a donut all show Total Sales by Quarter.
 ## Lessons
+- **Round 13: a capture of the whole Desktop window shows the title bar with the signed-in account.** One such picture was made tonight and deleted; cut the canvas out (`crop.ps1`) and keep only that.
+- **Round 13: a button's `iconSize` is honoured; its icon and text margins did nothing (8L, 20L, 20D).** With
+  `icon.placement` written the arrow is drawn small and tight against the text: write the size, and a gap as two
+  no-break spaces in the text.
+- **Round 13: a "…" after Arabic words is drawn at the reading start of the line unless a right-to-left mark
+  (U+200F) follows it** (a title is a left-to-right paragraph).
+- **Round 13: Latin letters in Tahoma are up to 4% wider than the Segoe UI width table gives.**
+- **Round 13: a categorical axis ignores "Invert axis"; it runs right to left when the chart is sorted by its
+  category, Descending. A continuous axis ignores the sort and honours "Invert axis".** Write both.
+  `switchAxisPosition` moves a value axis to the right (a bar chart's names with the category axis's).
+- **Round 13: `ThemeDataColor` is accepted inside a gradient rule's ends, but "lighter" always means towards white**:
+  on a dark design the smallest bar becomes the brightest. Mix towards the card colour instead.
+- **Round 13: `[IO.File]::ReadAllText` with a relative path reads from the process's folder, not PowerShell's
+  current one**: give it the full path.
 - **Round 11: a TMDL script may carry `sortByColumn`, `dataCategory: Time` and `isKey` for a DAX calendar table**:
   Desktop applies them (Problems 0), and slicers then run January to December, Sunday to Saturday, Muharram to Dhu
   al-Hijjah. And Preview does not warn when a script's table name is already in the model: it shows a replacement.

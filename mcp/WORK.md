@@ -4,6 +4,379 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 13, the laptop's six-hour Desktop sitting (2026-10-06, laptop builder; branch `fix/round-13` from main `1cef9ac`; not merged)
+The owner's go (6 Oct, 01:45): "I want to feel that whatever the builder opens looks amazing and optimized." Six
+hours straight, pushed every hour; he is asleep, so anything that needs his choice goes under "Round 13, for the
+owner" and the work moves on. A cloud builder does round 12 (the code fixes for round 11's 32 design findings) on
+`fix/round-12` at the same time: those findings are not edited here; from about hour 3 its branch is merged into this
+one and its "for the laptop to prove" list is proven in Desktop. Desktop 2.158.1177. Made-up and sample models only.
+Captures: `<tests folder>\desk-r13\`; test reports: `<tests folder>\13-r13\`; scripts: `builder-scripts\r13-*`.
+Package 0.2.6 is installed in Claude Desktop as an extension on this laptop: not used and not touched; every report
+is built by the working copy's server over stdio (`r10-make.mjs`, `r11-call.mjs`).
+
+**Start: 02:37 (laptop time, 6 Oct).** Setup at 02:37: `idle.ps1` 20 s and 29 s (this session's own start), no Power
+BI Desktop window open; `git fetch`; `fix/round-13` made from `origin/main` `1cef9ac`; `origin/fix/round-12` is at
+`d048c8d` (groups A, B and C pushed, no "for the laptop to prove" list read yet).
+
+**Hourly pushes due:** 03:37, 04:37, 05:37, 06:37, 07:37, 08:37 (the stop).
+| Due | Pushed at | What |
+|---|---|---|
+| start | 02:39 | `a6a3e7e`, the plan |
+| (items 1 and 3) | 03:18 | `1729596` |
+| 03:37 | 03:29 | `76a98b6`, the merge of round 12 (468 of 468) |
+| (items 2 and 4) | 04:08 | `98eb0e4` (480 of 480) |
+| 04:37 | 04:41 | `0e78c84`, a note (the small fixes' code waited for its green run) |
+| (item 5) | 04:51 | `5fc172f` (485 of 485) |
+| 05:37 | 05:25 | `c22a542`, the scores, the stop report so far |
+| (the slicer slot) | 05:47 | 487 of 487 |
+<!-- r13 pushes -->
+
+### Round 13, the stop report (first written 05:24, 2 h 47 min after the start; kept current until the stop)
+**Done (tests: `npm test` 421 -> 485 of 485; `check:min` clean; website suites `pbip` 71, `theme-generator` 893,
+`layout` 512, `design-engine` 598, `tools` 339 and nine more PASS; `site`, `consent` and `svg-kpi` fail on this
+Windows checkout for reasons outside this branch: see "where I am", 04:41):**
+1. **Gradient bars** (`chartColors`; on by default with a design): a rule on the chart's own measure, the two ends
+   worked out from the theme (3:1 off the card in light and dark). Measured first (a bar has no gradient fill of its
+   own; theme-following ends fade the wrong way on dark), proven from the engine in English, Arabic, light, dark.
+2. **SVG pictures that blend** (`svgCards`, `svgColumns`): a design takes the theme (`theme:<name>` colours, and
+   the theme's where it names none); the picture never taller than the room under the title. Before: a near-black
+   ring cut at its top; after: whole, in the theme's colours, on light and dark, both languages.
+3. **Mirrored charts in Arabic** (`chartAxes`; on by default in a right-to-left report): value axis at the right,
+   categories and dates from the right, bars from the right, the tooltip pages too. Every chart type measured.
+4. **Round 12 merged (`76a98b6`) and its list proven: 22 of 24 items seen in Desktop; 20 PASS; 2 FAIL (items 1
+   and 14: the "…" of a shortened Arabic text at the wrong end; the Reset arrow tiny and tight) and one more defect
+   found on item 17's page (a Latin KPI title cut in Tahoma): all three fixed here with tests.** Not exercised: 20
+   (the names fit one row now); not run: 24 (one slicer in a slide-in panel).
+5. **The design eye:** 21 findings; 3 small ones fixed (quiet gridlines, percents in tables, the text box's size)
+   besides the 3 FAILs above.
+6. **The golden reports, before and after:** English 4.6 -> 8.5, Arabic 3.3 -> 8.5 (of 10; DESKTOP-TESTS.md).
+
+**Left:** round 12's items 20 (a wrapped tab row: not produced) and 24 (one slicer in a slide-in panel: no made-up
+model with one text column); drill on a mirrored chart (the hover tooltip and the phone were looked at: both
+fine); the website's Arabic download is not mirrored (the owner's call); `csp.mjs`, `consent` and `svg-kpi` on Linux (CI is the record).
+
+**For the owner:** 5 items below ("Round 13, for the owner"): the gradient's default and what the fade means; the
+mirrored charts' one side effect and the website; a brand colour that cannot fade; the Reset button; what of round
+12 is not proven.
+
+**The top 5 design findings** (rows in "Round 13, design findings"): **2** the shadow on dark designs is a pale
+glow round every panel; **18** the operations layout shows one thing three times; **11** the page beside a short
+filter rail is bare; **15/16/17** a hand-placed matrix, gauge, funnel and slicer slot are not held to the table's
+and the cards' rules; **3** slanted first labels are shortened (day names have no short form in the model).
+### Round 13, order of work (each expected result written at 02:39, before any run)
+| # | Item | The run | Expected (written before the run) |
+|---|---|---|---|
+| 1a | Gradient colours by value, column and bar chart | a hand-placed page on the Ramadan sample: a column and a bar chart of Total Sales by Day Name, each three times: nothing written (the theme's one colour), `dataPoint.fill` as a `FillRule` `linearGradient2` on the chart's own measure with the two ends as literal colours (a light tint of the theme's accent to the accent), and the same with the ends as `ThemeDataColor` (ColorId and Percent); light and dark design, English and Arabic; the bars' colours read from the capture | Microsoft's CLI lists `dataPoint.fill` and `fillRule` ("Color saturation") and no other colour entry. **Expected: the literal gradient draws** (the smallest bar the light end, the largest the accent, the rest between in proportion to their value). **Not known: whether `ThemeDataColor` is accepted inside the rule's ends** (Desktop writes it for a plain fill); if it is, the colours follow a later theme change; if not, the engine writes the theme's colours as literals. Dark design: the light end must still stand 3:1 off the card (computed before writing; measured from the capture). Data labels sit outside the bars, on the card: their contrast is with the card, unchanged. Arabic: the same colours |
+| 1b | A gradient inside each bar | the CLI's property list for `dataPoint` of both charts; one try of a gradient fill written by hand if any entry is found | **Expected: not available** (the list has `fill`, `fillRule`, `fillTransparency` and the border only; no gradient-fill entry). Written down as it is |
+| 1c | Built in the engine | tests first; `create_report` option; rebuilt and opened in both languages and designs | the same colours as 1a's hand-written chart, measured |
+| 2 | An SVG picture in a KPI card that blends | `svgCards` built by the server with a design from the SVG KPI compiler's own samples (not the yellow test square), light and dark design, 1280 x 720 and 1920 x 1080, English and Arabic: crops of every card at full size | **Not known, to measure:** (a) the picture's own background (expected transparent where the design paints nothing; a design with a background `rect` shows as a box); (b) its colours (expected: the design's fixed hex colours, so they do not follow a dark theme); (c) an edge or outline (expected none from Desktop; any is the design's); (d) sharpness (a vector: expected sharp at both sizes); (e) its place: at the far end from the value, centred on the value's height within 2 page units, sized as round 10/11 (the percent of the card's inner width). A FAIL is anything that reads as a separate box |
+| 3 | Mirrored chart axes for Arabic | a hand-placed Arabic page per chart type (clustered column, clustered bar, line: the three the engine writes; stacked column, stacked bar, area, line and column, scatter written by hand for the record; waterfall is not written by the engine and is tried only if time allows), each chart twice: as today, and with (a) the category order reversed, (b) the value axis at the right, (c) bars growing right to left, (d) the legend at the right, (e) a date axis right to left | the CLI lists `invertAxis` ("Invert axis") and `switchAxisPosition` on both axes and `legend.position`. **Expected: (b) works** on column, line, area, combo (`valueAxis.switchAxisPosition`); on a bar chart the category names move to the right with `categoryAxis.switchAxisPosition`. **(c) works** on a bar chart (`valueAxis.invertAxis`). **(d) works** (`legend.position` 'Right' or 'TopRight'). **(a) not known:** `categoryAxis.invertAxis` on a categorical axis may be ignored (the setting is "Invert range", made for numbers); the sure way is the sort direction (`sortDefinition` Descending by the sort field), which also reverses a legend's order. **(e) expected to work on a continuous date axis** (`invertAxis`); on a categorical month axis as (a). Side effects to look for: the time order read right to left (wanted), data labels on the wrong side of a bar, the tooltip and drill unchanged, a scrollbar starting at the wrong end |
+| 4 | Round 12's list | from about 05:30: `git fetch`; merge `origin/fix/round-12`; its "Round 12, for the laptop to prove" list, every item, English and Arabic, before (main's worktree) and after | each item as round 12 states it; in particular days and months in calendar order in tables, percent KPIs as percent without useless decimals, counts without decimals, no cut Arabic title, no placeholder text, no empty page on a model without measures, no hidden last table row. A FAIL is fixed here, tests first |
+| 5 | The design eye | every page opened | "Round 13, design findings"; small clear ones may be fixed after items 1 to 4, tests first |
+| 6 | The 11 golden tasks, English and Arabic | `r11-golden.mjs` on this branch after the merge, `gshot.ps1` | scored before (round 11's captures) and after |
+
+### Round 13, where I am
+- **02:39:** setup done, the plan written and pushed (`a6a3e7e`). `npm test` at the start (main `1cef9ac`): **421 of 421**, as expected.
+- **03:07, items 1 and 3: measured in Desktop, built, proven on engine-built reports; the full test run is the
+  last step before their commit** (DESKTOP-TESTS.md, "round 13": "Item 1" and "Item 3").
+  - **Item 1, gradient:** a bar has no gradient fill of its own in Desktop 2.158; a colour by value is the data
+    colour's rule (`dataPoint.fill`, `FillRule` `linearGradient2`). Literal ends draw exactly (light `#7995af` to
+    `#1f4e79`, dark `#31718d` to `#4cc9f0`); `ThemeDataColor` ends are accepted but fade the wrong way on a dark
+    design. Built: `chartColors` ("gradient" by default with a design, "solid" with hand-placed pages; the website's
+    download unchanged); the answer tells the two colours. Red run: 430 checks, 8 failing; first green run: 5
+    failing, all three causes in my new checks' helpers (the validator's file name, the tooltip pages' bars counted
+    as page bars), fixed in the test, not in the expectations.
+  - **Item 3, mirrored axes:** value axis at the right, bars from the right, the legend at the right and a date axis
+    right to left all work; a categorical axis ignores "Invert axis" and is reversed by a Descending sort by its
+    category. Built: `chartAxes` ("mirrored" by default in a right-to-left report: column, line and bar charts and
+    the tooltip pages' bars; "standard" leaves them; the website's Arabic download unchanged).
+  - **Item 2, measured so far** ("SC EN light 720", "SC EN dark 1080", `sc-*-cards.png`): the picture's own
+    background is transparent and no edge is drawn (as expected). **Off today:** (1) the colours are the compiler's
+    built-in ones when a design names none (a ring's track `#1e293b`, near black on a white card and invisible on
+    Midnight; its arc, a sparkline and its area `#00d4ff`; an arrow `#22c55e`): none follows the theme; (2) a
+    square design is sized by the card's width only, so on the 96-high cards of a 1280 x 720 page a 64 x 64 ring
+    is taller than the room under the title and **its top is cut**; (3) a text layer without a colour is black
+    (invisible on a dark card).
+  - **Round 12 is ready** (`origin/fix/round-12` `26d9c6c`: groups A to E, its list of 24 items for the laptop). It
+    changed the card image's sizing (`imgOf`), which item 2 also touches: so the order is: commit items 1 and 3,
+    **merge round 12 now**, then build item 2 on the merged code, then prove round 12's list.
+  - **Left for after the merge:** the `?v=` of `pbip-export.min.js` in `theme-generator.js` and of
+    `theme-generator.min.js` on its two pages (round 12 bumps the same lines: bumped once, after the merge).
+  - **Scripts (laptop, `builder-scripts\`):** `r13-make.mjs` (root `13-r13`, the theme named after the report),
+    `r13-shot.ps1` (shot11 for `13-r13` / `desk-r13`), `r13-runs.ps1` (colours along scan lines), `r13-grad.mjs`,
+    `r13-grad-zero.mjs`, `r13-mirror.mjs`, `r13-mirror2.mjs`, `r13-svgcards.mjs`.
+- **04:05, round 12 merged (03:29, `76a98b6`, `npm test` 468 of 468), item 2 built, round 12's list proven
+  (DESKTOP-TESTS.md, "Item 2" and "Item 4").**
+  - **Item 2 (SVG pictures that blend):** the server now gives a design the report's theme: a colour may be written
+    `theme:accent`, `theme:text`, `theme:muted`, `theme:track`, `theme:card`, `theme:good`, `theme:bad`,
+    `theme:neutral`, `theme:data1` to `theme:data8`, and a colour a layer leaves out is the theme's
+    (`svg-kpi-compiler.js` `themePalette`, `themed`; the website's designer compiles as before); a name the theme
+    has not refuses the call. The picture is capped by the room under the card's title (`imgRoom`). Proven: the
+    ring whole and in the theme's colours, light and dark, English and Arabic.
+  - **Round 12's list: 17 of 24 items seen, 14 PASS, 3 FAIL fixed here with tests** (the "…" of a shortened Arabic
+    text at the wrong end: a right-to-left mark; the Reset arrow tiny and tight: `iconSize` and a gap; a Latin KPI
+    title cut in Tahoma: 6% more width), 1 not exercised (two-row tabs: the names fit one row now), **5 not run**
+    (11 the pictures on the phone, 21 the header that grows, 22 the Gulf calendar's sort-by, 24 the one-slicer
+    panel; 20 as said; the Arabic phone).
+  - **Tests:** red 477 checks / 8 failing (item 2 and Reset, before the code); then 476 of 477 and 477 of 479: three
+    of round 12's expectations compared a shown text with its plain words (the Arabic Reset text; a shortened title
+    and a slicer header as "the start of the full name"); each now allows the gap or the mark, with the cause
+    written beside it. The ellipsis mark's code was written before its test (the red evidence is the report built
+    before it: five shortened texts without the mark). The full run with the Tahoma width is running.
+  - **Seen on G1 (a brand colour on a dark design):** no gradient: `#0f6cbd` stands only 3.2:1 off the card, so it
+    cannot fade towards the card and keep 3:1; the answer says so. For the owner (item 3).
+- **04:41, item 5 (small design fixes) and item 6 (the golden reports again) under way.**
+  - **Website suites on `98eb0e4`** (`run-all.mjs`, 17 suites): `pbip` 71, `theme-generator` 893 (and `-lab`),
+    `layout` 512 (and `-lab`), `design-engine` 598, `tools` 339, `anchors`, `spacing`, `dax`, `model-health`,
+    `lang-switcher`, `tmdl-model`, `gulf-calendar` 806: PASS. Three FAIL, none from this branch's changes: `site` (52
+    pages "without their current Content Security Policy": the CRLF checkout, as in round 11; and one page's font
+    swap 0.105 for 0.1 under load), `consent` (one time zone, Asia/Nicosia, under load), `svg-kpi` (0 checks: the
+    script builds a path `C:\C:\...` on Windows and stops; the same with this branch's changes set aside). CI on
+    Linux is the record for those three.
+  - **Three small fixes, tests first (red 485 checks / 4 failing):** quiet gridlines written on the report's line,
+    bar and column charts (the text colour mixed 85% into the card; measured: `ba-ge-en-dark-grid.png`), unless the
+    theme sets its own; a given "What it means" sentence at the theme's label size (was 11pt); a table's percent
+    column in the card's percent format (33.8%, not 0.34). First green run: 484 of 485: a measure named in
+    `fields.table` lost its percent format on the way (`bindFor`): fixed, run again.
+  - **The 20 golden reports rebuilt with the final code** in `13-r13\golden2` and being opened one by one
+    (`r13-final.ps1`; pairs `desk-r13\ba-f-<tag>.png`, round 11's capture at the left).
+- **04:58:** the three small fixes committed (`5fc172f`, `npm test` **485 of 485**, `check:min` clean). Round 12's
+  item 22 (the Gulf calendar's sort-by columns and `relateTo` on an untyped column) **proven: PASS** (Problems 0;
+  the three sort-by columns and the relationship read by DAX). Round 12's list now: 18 of 24 seen, 15 PASS, 3 FAIL
+  fixed; not run: 11, 21, 24 (20 not exercised). Next: pages with every kind of visual and the other layouts, in
+  both languages, for the design eye; then the scores and the stop report.
+- **05:26:** all 20 golden reports opened with the final code and scored (English 4.6 -> 8.5, Arabic 3.3 -> 8.5);
+  round 12's items 11 (the pictures on the phone), 19 in Arabic and 21 (the header that grows, through the writer)
+  proven: PASS; pages with every kind of visual and the operations layout opened for the design eye (findings 15
+  to 21). The stop report is written and kept current. Scripts added: `r13-golden.mjs`, `r13-golden2.mjs`,
+  `r13-gshot.ps1`, `r13-gshot2.ps1`, `r13-final.ps1`, `r13-r12proof.mjs`, `r13-kinds.mjs`, `r13-grow.mjs`,
+  `r13-reset2.mjs`, `r13-rlm.mjs`, `r13-grid.mjs`, `r13-cutat.mjs`, `r13-small.mjs`, `r13-resolve12.mjs`.
+  **Lesson:** piping a capture script to `Select-Object -First 1` stops it after its first line (ten pair images
+  were not made and had to be made after).
+- **05:47:** a hand-placed slicer slot too narrow for its dropdowns side by side stacks them (tests first: red 487
+  checks / 1 failing, green **487 of 487**; proven on "SL EN"). Looked at afterwards: the hover tooltip on a
+  mirrored chart (fine: `hover-ar-column.png`), the mirrored charts on the phone (fine), the slide-in panel page,
+  and **a fully Arabic report** (the sample with Arabic display names, "ARN 1080": `arn-1080-view1.png`): titles,
+  slicer headers and table headers in Arabic from the right, the charts mirrored, nothing cut.
+<!-- r13 where -->
+
+### Round 13, for the owner
+1. **Gradient bars: on by default with a design; your say on two points.** (a) Default on or off: I judged it
+   clearly better on the designed pages (the largest bar stands out, the small ones step back, the page looks
+   finished) and made it the default for a design; hand-placed pages stay one colour unless asked
+   (`chartColors`). Crops: `desk-r13\ge-en-light-view1.png` (gradient) against `gr-en-light-view.png` (the left
+   chart of each row is one colour); dark: `ge-en-dark-view1.png`. (b) What the fade means: today the smallest bar
+   shown is the light end and the largest the dark end, so seven days within 9% of each other use the whole range
+   (it looks like a big difference). The other way starts the fade at zero: honest, but bars of similar size are
+   then almost one colour (`gr-ar-light-zero-p1.png`, right charts). **Recommended: keep smallest-to-largest** (the
+   bar's length already tells the size; the colour is there to rank), and say so in the plan the user approves.
+   Also: the two colours are written into each chart, so after a change of theme they stay until set again
+   (theme-following colours fade the wrong way on a dark design: measured).
+2. **Mirrored charts in Arabic: built and on by default; one side effect, and the website.** (a) With the value
+   axis at the right a slanted first label is shortened ("Dece…" on the line chart by Month Name,
+   `gm-ar-light-1080-view1.png`); level labels are whole. Options: keep (short month names, which round 12 prefers,
+   cure it); keep a line chart's value axis at the left in Arabic; or shrink the axis text. **Recommended: keep**,
+   and let the short month names of round 12 do the rest. (b) The website's Arabic download is not changed tonight
+   (the engine mirrors only when asked): **recommended: turn it on there too** once you have seen the Arabic pages (`desk-r13\grow-ar-720-view.png` is the website's own sample, in Arabic, built with the mirror and the gradient on).
+   (c) The legend: Desktop puts it at the right with 'TopRight'; the engine's charts have no legend, and the theme
+   generator's "Right" legend goes to the left in a right-to-left design (so since the generator was built). Say
+   if a side legend should sit at the right in Arabic.
+3. **A brand colour that cannot fade (golden task 1: `#0F6CBD` on the dark DataArcus card).** The gradient needs
+   the bars' colour to stand well over 3:1 off the card, so that a lighter end still shows; this one stands 3.2:1,
+   so the bars stay one colour and the answer says why. Options: (a) keep; (b) fade the other way there: the
+   smallest bar the brand colour, the largest a brighter tint of it (towards the text colour); (c) lower the
+   floor to 2:1 for the small bars. **Recommended: (b)**; it changes the largest bar's colour away from the brand
+   colour, so it is yours to say. Crop: `desk-r13\ba-g1-en.png` (right half).
+4. **Round 12's Reset button looked worse in Desktop than before round 12** (a tiny arrow glued to the text, in
+   English too); fixed here (the arrow at three quarters of the button's height, a gap before the words). Have a
+   look at `desk-r13\r12-text-en-view.png` (after) against `ba-g3-en-reset.png` (before round 12 above, round 12
+   below).
+5. **Round 12 not proven tonight (2 items):** the one-slicer slide-in panel (24) and a wrapped two-row tab
+   header on a hand-placed page (20: the names fit one row since round 12's Tahoma widths). They are covered by `npm test` only.
+<!-- r13 owner -->
+
+### Round 13, design findings
+| # | Page and visual | What is off or could be better | Crop | Severity | Proposed fix |
+|---|---|---|---|---|---|
+| 1 | Every dark design (Midnight, DataArcus), all charts | the gridlines are solid near-white lines across the dark panel, louder than the data; on a light design they are barely there | `ge-en-dark-view1.png` | medium | write the gridline colour from the theme in the "auto" chart style too (the text colour mixed 85% into the card), not only in "dotted" |
+| 2 | Every dark design, every panel | the drop shadow shows as a pale glow around each panel (a halo), not as depth | `ge-en-dark-view1.png` | medium (taste) | no shadow on a dark design, or a shadow darker than the page |
+| 3 | A line chart whose labels slant, mirrored or narrow | the first label is shortened ("Dece…", "Janua…") | `gm-ar-light-1080-view1.png`, `my-ar-view1.png` chart 9 | medium | short month names where the model has them (round 12's #16); for the owner: item 2a |
+| 4 | KPI card with a ring picture, 1280 x 720 | the ring's top is cut by the card (the picture is sized by width only) | `sc-en-light-720-cards.png` | high | item 2: cap the picture by the height under the title |
+| 5 | KPI card pictures, any design | the picture's colours are the compiler's own (a near-black ring track, cyan, a bright green), not the theme's | `sc-en-light-720-cards.png`, `sc-en-dark-1080-cards.png` | high | item 2: theme colour names and theme defaults |
+| 6 | Arabic reports with Latin names: a KPI title | "Growth vs Last Y…": cut by Desktop (Tahoma is wider than the width table) | `r12-ci-ar-1080-cards.png` | high | fixed here (item 4): Tahoma's Latin letters count 6% more |
+| 7 | A shortened Arabic title or slicer header | the "…" at the reading start of the line | `ba-g6-ar-ellipsis.png` | high | fixed here: a right-to-left mark after the "…" |
+| 8 | The Reset button after round 12 | the arrow half its size and tight against the words | `ba-g3-en-reset.png` | high | fixed here: `iconSize` and a gap |
+| 9 | A table with a percent measure beside a card of the same measure | the card says 33.8%, the table's column 0.34 | `ba-g1-en.png` | medium | the table's percent columns take the card's percent format (`format` on the projection, as round 10's separators) |
+| 10 | The "What it means" box with its sentence | 11pt text at the top of a 450-high panel on a 1920 x 1080 page: it reads like a footnote | `r12-text-en-view.png` | medium | the theme's body size for the page (15pt at 1920 x 1080), as the slicers and the table have |
+| 11 | A page whose filter rail ends under Reset (round 12's #18) | the rest of the rail's side is bare page: on the Details page a third of the page's height is empty beside the table | `ba-g4w-en.png` (bottom right), `ba-g7-en.png` | medium (taste) | let the table or the chart take the freed corner, or keep the rail's panel the page's height with Reset under the slicers |
+| 12 | The Arabic table with the helper column (round 12's B1) | a hair-thin light line down the grey rows where the hidden helper column sits | `g4s-ar-table-crop.png` | low | the helper's cell background follows the row's banding, or the helper goes last |
+| 13 | Eight tabs in a 72-high header | the names are 8pt beside a very large title: the row shrinks instead of using its height | `r12-tabs-ar-head.png` | low | grow the tab text to the largest size that still fits one row (up to the theme's label size) |
+| 14 | A model without measures (round 12's #25) | "Count of Region" as a KPI card: the count of a text column is rarely a KPI | `ba-g7-en.png` | low | prefer counts of ID-like columns and sums; fewer cards rather than a count of a category |
+| 15 | A hand-placed matrix | days A to Z, wider than its box (a scrollbar), rows scroll: the table's rules (calendar order, the fit, tight rows) do not reach a matrix | `ak-en-light-view.png` | medium | give `matrix` the table's order and fit |
+| 16 | A gauge or a funnel on a percent measure | the gauge reads 0.34 between 0.00 and 0.68; the funnel is drawn on a ratio (0.19, 1.31, "681.9%") | `ak-en-light-view.png` | medium | the gauge takes the card's percent format; the funnel takes an amount, never a ratio (the picker) |
+| 17 | A hand-placed slicer slot | a 444-wide slot is split into three dropdowns whose headers are cut ("Q…", "Da…"; in Arabic "…" alone) | `ak-en-light-view.png`, `ak-ar-dark-view.png` | medium | **partly fixed here:** a slot too narrow for 160 a dropdown stacks them where its height holds three (`sl-en-crop.png`); that page's 310-high slot is 2 short at the theme's 15pt, so it stays as it was: left: fewer dropdowns, told, when neither way fits |
+| 18 | The operations layout | two bar charts and a donut all show the measure by the same column (Quarter) | `ops-ar-view.png` | medium | the picker gives each chart of a page a different category where the model has more |
+| 19 | Arabic reports with English field names: slicer headers | "Year", "Quarter" sit at the left of a right-to-left rail (round 11's #19, still so); Arabic names sit at the right by themselves (`arn-1080-view1.png`) | `ba-f-g4w-ar.png` | low | a slicer's header has no alignment (Microsoft's list: show, text, font, size, colour, background, outline): it would take the visual's own title in place of the header |
+| 20 | 640 x 360 pages (task 5) | page 2's KPI values are cut at their bottom; "Wednes…" on the column chart; the table scrolls (the answer says so) | `ba-f-g5-en.png` | medium (a known limit of that size) | a smaller value on a 36-high card; or refuse pages under 800 wide for the executive layout |
+| 21 | The Reset button on the phone | the arrow (three quarters of a 40-high button) is large beside 10pt words | `r12-p7-en-phone-p1.png` | low | the phone's own `iconSize` in `mobile.json` (to measure that Desktop honours it there) |
+| 22 | The phone layout of an Arabic table with four long-named fields | wider than the phone canvas: the last header is cut at the edge | `f-g4w-ar-s-phone-p1-s1.png` | medium | the phone's table keeps the fields its 323 hold (the page's rule, at the phone's width), or wraps its headers |
+| 23 | The slide-in panel's "Filters" button in the header | the only boxed control in a header of boxless tabs (a grey fill and an outline) | `panel-en-view.png` | low | the tab look: no box, the icon and the word in the text colour, a tint on hover |
+<!-- r13 findings -->
+## Round 12, every small detail fixed in code (2026-10-05 night, cloud builder; branch `fix/round-12` from main `1cef9ac`; not merged)
+The owner's go (6 Oct 01:45): "I want to feel that whatever the builder opens looks amazing and optimized". All eight
+recommendations of "Round 11, for the owner" are accepted, and so is every proposed fix of "Round 11, design findings"
+(32 rows). The owner is asleep: taste calls go to "Round 12, for the owner" with a recommendation, and the work goes
+on. `feat/check-report` is left as it is. Not in this round (the laptop builder owns them tonight): gradient chart
+colours, the SVG-in-KPI blending. Every change that Desktop must confirm goes to "Round 12, for the laptop to prove".
+
+### Round 12, order of work
+Tests first by risk (layout, positions, sizes, anything written into Power BI files); one commit per group; pushed
+at least every hour; `npm test` and the website suites the change touches after each group, the full run once at the
+end, then CI.
+1. **A (high).** #24 long chart titles and slicer headers (Arabic first): never cut at the start; wrap to two lines,
+   else shorten from the reading end with "…" so the measure's name stays. #12 the right-to-left table: numbers
+   never sit against the text column. #20 "What it means" never ships its placeholder (a sentence from the plan, or
+   the box left out and its room given to the chart). #25 a model without measures: a page laid out for what it
+   has (counts, a table, a chart), not four fifths empty. #1 phone KPI titles: two lines in `mobile.json`, "…" only
+   where two lines don't fit.
+2. **B (the owner's asks).** (1) Days and months in calendar order in tables too (#17): the table sorted by the
+   day or month number like the chart; the model's week start; January to December. (2) Percent KPIs as percent
+   without useless decimals: a ratio (format string, or name/expression: %, rate, share, vs, growth, margin) gets
+   "0%" (or "0.0%" for small values); counts and whole numbers no decimals (#28, "179.00" -> "179"); money keeps
+   its format. The rule told in the answer and in `reportNotes`.
+3. **C (medium).** #15 chart and table never share a title; #23/#32 a designed table never hides rows behind a
+   scrollbar; #29 the phone table with pictures fits 323; #31 the header title is the report's name; #30 the Arabic
+   logo placeholder centred at its side; #14 "شعارك" on hand-placed Arabic pages; #13 Arabic names for the
+   tooltip pages; the Arabic Reset's arrow beside its text; #26 no KPI card on a text measure (a note); #22 no
+   slicer on a column a page filter fixes; #21 one Ramadan by Ramadan Day, not a 2-point line; #16 level month and
+   day labels; #9/#7/#8 KPI values one size a row, aligned with the title, equal images; #19 Arabic slicer headers
+   and boxes at the right; #18 the rail's empty space; #2-#6 phone and header tabs.
+4. **D (accepted recommendations).** The header grows one tab row in designed layouts; the card image's percent
+   from the measured padding; `add_gulf_calendar`: `sortByColumn` on Month Name, Day Name, Hijri Month Name,
+   "Preview won't warn" in `howToApply`, a date column of unknown type accepted with a note; a narrow table
+   shrinks its text to 8pt before dropping a column; the manifest's long description names every tool
+   (dataarcus-engine `fix/round-12-manifest`, its packaging test).
+5. **E.** A slicer or chart with no field to bind (too few columns): left out and told; the SVG KPI Designer
+   page's three scripts get `?v=` stamps.
+6. Then: `npm test`, the website suites, CI green; "Round 12, where I am", "for the laptop to prove", "for the
+   owner"; the 5-line report.
+
+### Round 12, where I am
+**Done in code (5 Oct 21:50 to 23:00 UTC), not merged:** commits `85d54c1` (A, B), `d048c8d` (C), `2954732` (D, E) on
+`fix/round-12`, CI green on each; dataarcus-engine `fix/round-12-manifest` `e642bf8`. `npm test` 421 -> 453 of 453;
+the full website run 17 of 17. Next: the laptop proves the list below in Desktop; the owner answers "for the owner".
+Not done, with the reason: #19 (no alignment in Microsoft's schema), #3 (needs Tahoma measured), #27 (nothing in
+the report: a model without rows). Gradient colours and the SVG-in-KPI blending were the laptop's tonight.
+Started 21:50 UTC (5 Oct). Tests: the round 12 block in `mcp/test.mjs` (checks written first, each red before its code).
+- **A and B done** (one commit: the two groups share the writer's card and table code): #24 titles wrap or end in "…"
+  (slicer headers through `header.text`, in Microsoft's theme schema); #12 numbers right-aligned in right-to-left
+  tables; #20 a text slot holds `text` or is left out, the chart taking its room; #25 a model without measures counts
+  and sums its columns (`Bind.counts`; aggregation numbers from Microsoft's semantic query schema: 0 Sum, 2 Distinct
+  count); #1 phone KPI titles wrap or shorten; B1 days and months in calendar order in tables (a helper column);
+  B2 the card rule (percent "0.0%" or the model's one-decimal percent, whole numbers "#,0", the rest 2L), told in
+  `kpiValues` and `reportNotes`; #26 a text measure never on a card. `npm test` 421 -> 433; `pbip` 71, `layout` 512,
+  `design-engine` 598.
+- **Expectations changed, each with its cause beside it in the test:** numbers Right in right-to-left tables
+  (`report-check.mjs` `tableProblems`, test 5 of the design choices); 2L only on cards with decimals (round 9's
+  percent card, round 10's default, tooltip card and the website's download); the Health Test fixture has 1 card, not
+  2 ("Unused One" shows text); the model without measures now has cards and charts; the old table and sort readers
+  set the calendar helper column aside.
+- **C done** (one commit): #15 a table whose title is a chart's adds ": detail"; #23/#32 a table of days, months or
+  quarters gets `grid.rowPadding` 0 where its rows would scroll, else told; #29 the phone table's pictures capped by
+  323 (`grid` in `mobile.json`); #31 the header shows the report's name or a new `title` input; #30 the logo
+  placeholder at the page's edge (left in Arabic) and 3 higher in Tahoma; #14/#13 hand-placed Arabic pages get the
+  Arabic texts; the Reset's icon `placement` and text alignment at the reading start; #22 no slicer on a column a page
+  filter fixes (the next column instead); #21 one Ramadan's line chart by Ramadan Day; #16 the short month names on
+  the time axis; #9 one value size a row; #7 the value at its title's edge (`paddingIndividual`, start margin 0); #8
+  and recommendation 3 one image percent a row, from the measured padding (25 x the page's scale a side); #18 the
+  rail only as high as its slicers and Reset; #2 phone tabs as wide as their names; #4 phone titles in the text
+  colour; #5 the current tab's line on the phone; #6 two tab rows start at the same x. `npm test` 433 -> 448;
+  `design-engine` 598, `theme-generator` 893, `pbip` 71, `layout` 512.
+- **Expectations changed in C, each with its cause:** the time axis Calendar[Month Short] (round 2's sort checks,
+  modelNotes, display names, suggest_fields); the Tahoma logo placeholder's middle (textMid + the measured 3); the
+  phone keeps the current tab's line; one value size a row and the measured image padding (round 10's card image);
+  tables titled ": detail" beside a chart of the same title.
+- **D and E done** (one commit: the writer's table and header code is shared by both): recommendation 2, a designed
+  header grows one row of tabs when the page names need it (the body moves down, the last row and the rail give up
+  the height; hand-placed pages never grow; a design's two page names always fit today, so this shows with long
+  names: tested through the writer); 3 (in C); 4, `add_gulf_calendar` writes `sortByColumn` for the three names,
+  `byHand` is the date table only, `howToApply` says Preview will not warn, a `relateTo` column of unknown type is
+  accepted with a note; 5, a narrow table first takes a smaller text (the largest size down to 8pt that keeps the
+  most fields), then drops a column; 6 (8b), the manifest's tool sentence names all seven tools (dataarcus-engine
+  `fix/round-12-manifest` `e642bf8`, its packaging test 18 -> 19). E: the slide-in panel holds only slicers with a
+  field, the others named in `leftOutVisuals`; the SVG KPI Designer's three scripts already had `?v=` on main; this
+  round's writer files are stamped `20261006a` (`theme-generator.js`, and `theme-generator.min.js` on both pages).
+  `npm test` 448 -> 453; the full website run: 17 of 17 suites pass.
+- **Not possible from the files (Microsoft's theme schema, 2.157):** a slicer header has no alignment (#19).
+- **Needs a measurement first:** #3, Arabic tab widths (Tahoma per letter): the one figure we have (150 of ink for
+  "المبيعات حسب المنطقة والقناة" at 10pt bold on the phone) is one string; Desktop must measure the letters before
+  the 0.62 em upper figure changes.
+
+### Round 12, for the laptop to prove
+Each item: build with the branch's server (made-up models only), open in Desktop 2.158, look at full-size crops.
+1. #24: G6 Long (Arabic) and a 1280 x 720 exec page with long names: every chart and table title whole on two lines
+   (`titleWrap` on a chart's title: measured on cards only), or ending in "…" at its end; the slicer header shows its
+   `header.text` ("…" at the end) and the full name is the alt text.
+2. #12: the Arabic table: numbers right-aligned, header over them; "Friday" no longer reads into its first number.
+3. #20: golden task 3 without `text`: no "What it means" box, the line chart the row's whole width; with `text`: the
+   sentence in the box at 11pt.
+4. #25: golden task 7 (no measures): the cards show Count of the ID column and the sums (Desktop accepts the
+   aggregated projections: `Count(...)` / `Sum(...)` query references, functions 2 and 0), the chart and the table
+   count too; the page is full; no "Something's wrong" mark.
+5. #1: the phone layout of a report with "Total Sales Last Ramadan": the title on two lines in `mobile.json`
+   (`titleWrap` and `text` there: never tried in `mobile.json`), the value whole under it.
+6. B1: a table of Day Name (no sort-by column): Sunday to Saturday (the model's Day of Week order); the helper column
+   (`columnWidth` 1, text in the card colour, a blank header, " ") invisible, and not widened by "grow to fit"; the
+   total row shows "Total" in the first column; a Month Name the model sorts: January to December.
+7. B2: cards: Margin % "35.4%" (or the model's own one-decimal percent), Conversion Rate and Growth vs Last Year as
+   percents, Orders "1,234" and Total Sales "101,914" (whole, with separators; `labelDisplayUnits` -1 with a percent
+   code was not measured, D8 measured it with "#,0"), Avg Price "231.50"; nothing cut at 1280 x 720 six cards.
+8. #26: golden task 8: no card shows "Yes".
+9. #15: golden task 1: the table beside the column chart titled "...: detail".
+10. #23/#32: golden task 4 (16:9 and 4:3): all seven days and the total, no scrollbar (`grid.rowPadding` 0: measured
+   to give 15.1 at 8pt; the rule's other numbers, the title and the visual's padding, are estimates on the safe side).
+11. #29: "P7 SVG EN" on the phone: the pictures narrower (`grid` in `mobile.json`: never tried there), no scrollbar.
+12. #31: the header shows the report's name ("R12 EN"), not the theme's.
+13. #30: the Arabic header: "شعارك" at the left edge of its slot, its middle within 1 of the header's (moved up 3).
+14. The Arabic Reset: the arrow right beside "إعادة ضبط الفلاتر" (`icon.placement` 'right', text aligned right);
+    English unchanged.
+15. #22/#21: golden task 3: no Hijri Year or Is Ramadan slicer; the line chart by Ramadan Day, 1 to 30.
+16. #16: golden task 1: the line chart's months "Jan" ... "Dec", level.
+17. #9/#7/#8: the six-card rows (English and Arabic, 1280 x 720 and 1920 x 1080): one value size; the value's first
+    digit under the title's first letter (`paddingIndividual`); the six images the same size (`imageAreaSize` from
+    the measured padding: the 48 design drawn about 48 wide).
+18. #18: the rail: Reset right under the last slicer, the rail's panel ending there.
+19. #2/#4/#5: the phone: the tabs as wide as their names from the reading start, chart and card titles in the text
+    colour (or: the mobile view dims what is not selected), the current tab's line under it.
+20. #6: a two-row header (eight long names, 1920 x 1080, a 72-high title): the rows start at the same x.
+21. Recommendation 2: a design with two long page names at 1280 x 720 (built by hand through the writer, or by the
+    next round's longer names): the header 10 taller, two rows of tabs whole, the KPI row 10 lower, the last row
+    ending where it did.
+22. Recommendation 4: `add_gulf_calendar` on "Gulf GC1": Preview with Problems 0 and the three sort-by columns; after
+    Apply and a refresh the slicers in month, day and Hijri month order; a `relateTo` on an untyped DAX-table date
+    column related without a hand edit.
+23. Recommendation 5: golden task 4 at 960 x 720: the table at 8 or 9pt with all its fields, nothing cut.
+24. E: a slide-in panel on a model with one text column: one slicer, no empty slicer.
+
+### Round 12, for the owner
+1. **Whole numbers on cards: digits or units?** Your rule says counts and whole numbers show no decimals. Built: a
+   measure whose format has no decimals shows its whole number with separators ("179", "101,914", "3,430,000").
+   The other way: automatic units with no decimals ("179", "102K", "3M"), shorter but rounder. **Recommended: the
+   digits** (exact, and money keeps its own format); a card too narrow for nine digits gets a smaller value, as
+   kpiValues "full" already does.
+2. **A percent: "0.0%" or "0%"?** Built: the model's percent format where it has one decimal or none, else "0.0%".
+   We read no data, so "small values" can't be told apart. **Recommended: keep "0.0%"** (a 0.4% change is real).
+3. **#15, the table beside a chart: ": detail" or other fields?** Built: "Total Sales by Region: detail". The other
+   way: give the table a different category than the chart. **Recommended: keep** (the table shows more measures of
+   the same rows; a different category would answer a question nobody asked).
+4. **#8, a semibold value?** The round 11 finding asked to consider it. Not built (a taste call): the 23pt regular
+   value beside a 9pt bold title reads as the hero already. **Recommended: leave it.**
+5. **#19, Arabic slicer headers at the right:** Microsoft's theme schema gives a slicer header no alignment, so it
+   can't be set from the files. Desktop draws Arabic text from the right already; the English names in an Arabic
+   report stay at the left. **Recommended: Arabic display names** (displayNames), which then sit at the right.
+6. **#3, Arabic tab widths:** needs Tahoma's letters measured in Desktop first (one string is not enough); until then
+   the widths keep the safe upper figure (0.62 em), and Arabic tabs take more room than their ink.
+
 ## Round 11, the long overnight Desktop sitting (2026-10-05, laptop builder; branch `fix/round-11` from main `3803b7a`; dataarcus-engine `release/0.2.6` from its main `d8d3341`; not merged)
 The owner's go (5 Oct, evening): six hours straight, pushed every hour; he is asleep, so anything that needs his
 choice goes under "Round 11, for the owner" and the work moves on. Desktop 2.158.1177. Made-up and sample models only.
