@@ -259,6 +259,24 @@ export default async function ({ browser, url }) {
     await v.ctx.close();
   }
 
+  // Round 15 (the owner's go on round 14's recommendation 4): the SVG KPI Designer has a "Right to left" switch in the
+  // card's settings that sets the compiler's mirror: the DAX draws the shapes mirrored (a ring counter-clockwise, a bar
+  // from the right), texts unflipped; EN and AR text
+  for (const lang of ['en', 'ar']) {
+    const v = await visitor(browser, { viewport: [1440, 900] });
+    await v.pg.goto(`${url}/tools/svg-kpi-designer.html?lang=${lang}`, { waitUntil: 'networkidle' });
+    const r = await v.pg.evaluate(async () => {
+      const box = document.querySelector('input[data-p="card.mirror"]'); if (!box) return { box: false };
+      const before = document.getElementById('dax').textContent, label = box.closest('label').textContent.replace(/\s+/g, ' ').trim();
+      box.click(); box.dispatchEvent(new Event('input', { bubbles: true }));
+      await new Promise((res) => setTimeout(res, 300));
+      return { box: true, label, before: /scale\(-1 1\)/.test(before), after: /scale\(-1 1\)/.test(document.getElementById('dax').textContent) };
+    });
+    check(r.box && !r.before && r.after && (lang === 'ar' ? /[\u0600-\u06FF]/.test(r.label) : /Right to left/i.test(r.label)) && !v.errs.length,
+      `svg-kpi-designer ${lang}: the "Right to left" switch must mirror the DAX: ${JSON.stringify(r)} ${v.errs.join(' | ')}`);
+    await v.ctx.close();
+  }
+
   // Every drop-down on the tools shows its whole option text (audit AUD-013, 2026-10-04; the Calendar Generator's own
   // check is in gulf-calendar): each option's width in the drop-down's font against the room inside it, EN and AR,
   // phone to wide desktop. The SVG KPI Designer starts from a design with formula values, so its formula drop-downs

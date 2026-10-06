@@ -96,15 +96,22 @@ export default async function ({ browser, url }) {
   }
 
   // ---------- 2. Nothing changes with the new options off ----------
+  // (round 18, the owner's yes, 6 Oct 2026: an English calendar has one column more since, "Day Short" (Sun ... Sat)
+  // after "Day Name"; the comparison with before the pack takes that line out and counts one column less, and
+  // checks the line is exactly the new column)
+  const SHORT = '        "Day Short", SWITCH ( WEEKDAY ( [Date], 1 ), 1, "Sun", 2, "Mon", 3, "Tue", 4, "Wed", 5, "Thu", 6, "Fri", 7, "Sat" ),\n';
+  const lessShort = (k, v) => { if (typeof v !== 'string') return v; if (k === 'dax') return v.replace(SHORT, ''); if (k === 'stats' && shortIn) return v.replace(/(\d+)(?!.*\d)/, (n) => String(+n - 1)); return v; };
+  let shortIn = false;
   for (const [i, c] of CG_CONFIGS.entries()) for (const lang of ['en', 'ar']) {
     const want = BASE.cg.find((b) => JSON.stringify(b.saved) === JSON.stringify(c) && b.lang === lang);
     const got = await read(browser, url, CG, 'dataarcus-calendar-generator', c, lang);
-    for (const k of ['dax', 'stats', 'preview', 'ramadan']) check(got[k] === want[k], `calendar ${JSON.stringify(c)} ${lang}: ${k} differs from before the pack`);
+    shortIn = typeof got.dax === 'string' && got.dax.includes(SHORT);
+    for (const k of ['dax', 'stats', 'preview', 'ramadan']) check(lessShort(k, got[k]) === want[k], `calendar ${JSON.stringify(c)} ${lang}: ${k} differs from before the pack`);
     if (got.errs.length) problems.push(`calendar config ${i} ${lang}: ${got.errs.join(' | ')}`);
     // an old save with the new options in their "off" state gives the same table too
     if (lang === 'en') {
       const off = await read(browser, url, CG, 'dataarcus-calendar-generator', { ...c, observed: false }, lang);
-      check(off.dax === want.dax, `calendar ${JSON.stringify(c)} with observed: false differs from before the pack`);
+      check(lessShort('dax', off.dax) === want.dax, `calendar ${JSON.stringify(c)} with observed: false differs from before the pack`);
     }
   }
   for (const c of MB_CONFIGS) {
@@ -150,7 +157,7 @@ export default async function ({ browser, url }) {
     check(/-- Hijri month starts: Umm al-Qura, with Ramadan, Shawwal and Dhu al-Hijjah moved to the dates the UAE announced/.test(r.dax), 'announced dates: the DAX does not say where its dates come from');
     check(/Ramadan 1439: 17 May 2018 to 14 Jun 2018/.test(r.chips), `announced dates: the Ramadan list shows ${r.chips.slice(0, 60)}`);
     check(/Ramadan 1448: 8 Feb 2027 to 8 Mar 2027 \(estimate\)/.test(r.chips), `announced dates: Ramadan 2027 is not shown as an estimate: ${(r.chips.match(/Ramadan 1448[^R]*/) || [''])[0]}`);
-    check(/ · 35 columns$/.test(r.stats), `announced dates: stats ${r.stats} (34 columns before, plus Is Estimated Date)`);
+    check(/ · 36 columns$/.test(r.stats), `announced dates: stats ${r.stats} (34 columns before, plus Is Estimated Date and, since round 18, Day Short)`);
     // the preview shows the moved date too
     const p = await v.pg.evaluate(() => [...document.querySelectorAll('#preview tr')].map((tr) => tr.textContent));
     check(p.some((row) => /^2018-05-17Thursday1 Ramadan 1439✓/.test(row)) && p.some((row) => /^2018-05-1630 Sha'ban 1439|^2018-05-16Wednesday30 Sha'ban 1439/.test(row)),
@@ -213,7 +220,7 @@ export default async function ({ browser, url }) {
   for (const bad of [{ observed: 'yes' }, { observed: 1 }, { weekend: 'uae ' }, { weekend: 'hasOwnProperty' }]) {
     const v = await open(CG, cgSaved(bad));
     const d = await dax(v);
-    check(d === BASE.cg[0].dax, `calendar saved ${JSON.stringify(bad)}: the table is not the default one`);
+    check(lessShort('dax', d) === BASE.cg[0].dax, `calendar saved ${JSON.stringify(bad)}: the table is not the default one`);
     await done(v, `calendar saved ${JSON.stringify(bad)}`);
   }
 
@@ -398,13 +405,15 @@ export default async function ({ browser, url }) {
     const cols = (stats) => +((String(stats).match(/(\d+) (columns|عمود)/) || [])[1]);
     for (const b of BASE.cg) {
       const out = Cal && typeof Cal.build === 'function' ? Cal.build(Object.assign({}, DEF, b.saved)) : null;
-      check(!!out && out.dax === b.dax && out.columns.length === cols(b.stats), `shared generator ${JSON.stringify(b.saved)} ${b.lang}: ${out ? (out.dax === b.dax ? 'columns ' + out.columns.length + ' vs ' + cols(b.stats) : 'DAX differs from the page') : 'no build()'}`);
+      // (round 18, S3: an English calendar has "Day Short" since; the baseline predates it: its line out, one column less)
+      const sh = !!out && out.dax.includes(SHORT);
+      check(!!out && lessShort('dax', out.dax) === b.dax && out.columns.length - (sh ? 1 : 0) === cols(b.stats), `shared generator ${JSON.stringify(b.saved)} ${b.lang}: ${out ? (lessShort('dax', out.dax) === b.dax ? 'columns ' + out.columns.length + ' vs ' + cols(b.stats) : 'DAX differs from the page') : 'no build()'}`);
     }
     const { MODEL_CG } = await import('../gulf-calendar/test-model/make-test-model.mjs');
     const model = fs.readFileSync(path.join(ROOT, 'scripts/gulf-calendar/test-model/calendar.dax'), 'utf8').replace(/\r\n/g, '\n');
     const mo = Cal && typeof Cal.build === 'function' ? Cal.build(Object.assign({}, DEF, MODEL_CG)) : null;
     // 36 -> 39 (owner 2026-10-06): the test model's options have the three Arabic name columns on
-    check(!!mo && mo.dax + '\n' === model && mo.columns.length === 39, `shared generator on the test model's options: ${mo ? (mo.dax + '\n' === model ? 'columns ' + mo.columns.length : 'DAX differs from calendar.dax') : 'no build()'}`);
+    check(!!mo && mo.dax + '\n' === model && mo.columns.length === 40, /* 39 -> 40: round 18, S3 (the owner's yes): Day Short */ `shared generator on the test model's options: ${mo ? (mo.dax + '\n' === model ? 'columns ' + mo.columns.length : 'DAX differs from calendar.dax') : 'no build()'}`);
   }
 
   return { checks, problems };

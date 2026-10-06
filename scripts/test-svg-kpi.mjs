@@ -4,6 +4,7 @@
 // for every starter design and a set of edge-case values.
 // Run: node scripts/test-svg-kpi.mjs
 import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
 const require = createRequire(import.meta.url);
 const SVGKPI = require('../assets/js/svg-kpi-compiler.js');
 const { TEMPLATES } = require('../assets/js/svg-kpi-templates.js');
@@ -351,7 +352,7 @@ const tricky = { name: 'Odd "name"', w: 100, h: 20, values: [{ id: 'a', kind: 'm
 // to scripts/tests/fixtures/svg-kpi/), with the tool's sample measures (Sales, Target, Sales LY)
 {
   const fs = require('fs'), path = require('path');
-  const file = JSON.parse(fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), 'tests/fixtures/svg-kpi/ramadan-sales.svgkpi.json'), 'utf8'));
+  const file = JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'tests/fixtures/svg-kpi/ramadan-sales.svgkpi.json'), 'utf8'));
   const t = TEMPLATES.find((x) => x.id === 'ramadan');
   ok(!!t && t.name === 'Ramadan sales card' && t.nameAr === 'بطاقة مبيعات رمضان' && !t.premium, 'ramadan: the starter is listed with its English and Arabic names');
   if (t) {

@@ -229,9 +229,14 @@
   // into its panel. A colour that cannot fade by 15% and keep 3:1 gets no rule (null). A bar has no gradient fill of
   // its own in Desktop 2.158 (dataPoint holds fill, fillRule, fillTransparency and the border only).
   const HEX6 = /^#[0-9a-f]{6}$/i;
-  const gradientEnds = (base, card) => {
+  // Round 15 (the owner's go on round 13's recommendation 3, 6 Oct 2026): a colour too close to its card to fade
+  // towards it (golden task 1: #0F6CBD on the dark DataArcus card, 3.2:1) fades the other way: the smallest bar is the
+  // colour itself and the largest a brighter tint of it, mixed 40% towards the text colour (further off the card), so
+  // every bar still stands 3:1 off the card (reversed: true). A colour under 3:1 itself gets no rule (null).
+  const gradientEnds = (base, card, text) => {
     if (!HEX6.test(String(base)) || !HEX6.test(String(card))) return null;
     for (let n = 12; n >= 3; n--) { const low = mixHex(base, card, n / 20); if (contrast(low, card) >= 3) return { low, high: String(base).toLowerCase() }; }
+    if (HEX6.test(String(text)) && contrast(base, card) >= 3) { const high = mixHex(base, text, 0.4); if (contrast(high, card) > contrast(base, card)) return { low: String(base).toLowerCase(), high, reversed: true }; }
     return null;
   };
   const gradientFill = (input, ends) => [{
@@ -307,8 +312,9 @@
   // the query of one visual, or null when a field it needs is not bound
   // rtl: a right-to-left report reverses a table's columns, so its first column (the category) sits on the right,
   // where an Arabic reader starts; Power BI doesn't mirror tables itself
+  const CAT_KINDS = ['bar', 'column', 'donut', 'funnel', 'treemap', 'map'];
   function bindQuery(kind, B, kpiIndex, rtl) {
-    const cat = (B.cats || {})[kind], y = (B.y || {})[kind] || B.measure, need = (...fs) => fs.every(Boolean);
+    const cat = (B.cats || {})[kind], y = kind === 'funnel' && B.y && 'funnel' in B.y ? B.y.funnel : (B.y || {})[kind] || B.measure, need = (...fs) => fs.every(Boolean);
     // one field per card: a card past the end of the list stays empty rather than repeating the first KPI
     const kpi = (B.kpis || [])[kpiIndex] || null;
     switch (kind) {
@@ -322,8 +328,12 @@
       // third sitting of 2026-10-04: 13857 became 13,857); the field carries it as tableFormat
       case 'table': { const fs = tableFields(B, rtl); return fs.length ? inOrder(q({ Values: fs.map(tproj) }), fs, rtl) : null; }
       // a matrix: rows by the table's first text column, its measures as the values
-      case 'matrix': { const fs = (B.table || []).filter(Boolean), row = fs.find(isTextField), vals = fs.filter(isValue); return row && vals.length ? q({ Rows: [proj(row)], Values: vals.map(tproj) }) : null; }
-      case 'gauge': return need(y) ? q({ Y: [proj(y)] }) : null;
+      // (round 16, design finding #15: a hand-placed matrix showed days A to Z: it is put in calendar order as a table is,
+      // by the helper column or the model's own sort)
+      case 'matrix': { const fs = (B.table || []).filter(Boolean), row = fs.find(isTextField), vals = fs.filter(isValue); return row && vals.length ? inOrder(q({ Rows: [proj(row)], Values: vals.map(tproj) }), fs, false) : null; }
+      // (round 16, design finding #16: a gauge on a percent measure read 0.34 between 0.00 and 0.68; it shows the card's
+      // percent format through its projection's format, as tables do)
+      case 'gauge': return need(y) ? q({ Y: [Object.assign(proj(y), y.pctFormat ? { format: String(y.pctFormat) } : {})] }) : null;
       case 'treemap': return need(cat, y) ? q({ Group: [proj(cat)], Values: [proj(y)] }) : null;
       case 'map': return need(cat, y) ? q({ Category: [proj(cat)], Size: [proj(y)] }) : null;
       default: return null;
@@ -341,7 +351,7 @@
     return a + ' ' + (ar ? (AR_LETTERS.test(by) ? by : 'حسب') : (AR_LETTERS.test(by) ? 'by' : by)) + ' ' + b;
   };
   function bindTitle(kind, B, by) {
-    const cat = (B.cats || {})[kind], y = (B.y || {})[kind] || B.measure;
+    const cat = (B.cats || {})[kind], y = kind === 'funnel' && B.y && 'funnel' in B.y ? B.y.funnel : (B.y || {})[kind] || B.measure;
     if (kind === 'line' && B.date && B.measure) return byTitle(label(B.measure), by, label(B.date));
     if (['bar', 'column', 'donut', 'funnel', 'treemap', 'map'].includes(kind) && cat && y) return byTitle(label(y), by, label(cat));
     if ((kind === 'gauge' || kind === 'card') && y) return label(y);
@@ -369,11 +379,12 @@
     const sample = !!o.sample && !own;
     const B = own ? (o.bind || null) : sample ? sampleBind(t) : null;
     const tableColumns = [];   // tables that hold fewer fields than given, for lack of room: { page, pageIndex, x, y, kept, leftOut } (round 11)
+    const tabRows = [];   // pages whose page tabs take two or three rows: { page, rows, size } (round 16)
     const noPageButtons = [];   // pages whose header has no room for the page names even at 8pt: { page } (round 11)
     const leftOut = [];   // data visuals not written because the model has no field for them: { page, kind, title }
     const kpiTitles = { wrapped: [], shortened: [] };
     // bars that fade by value (o.chartColors 'gradient', round 13): the two ends, or null when the colour cannot fade
-    const barBase = ((o.theme || {}).dataColors || [])[0] || (u || {}).accent, GRAD = o.chartColors === 'gradient' && u ? gradientEnds(barBase, u.card) : null;
+    const barBase = ((o.theme || {}).dataColors || [])[0] || (u || {}).accent, GRAD = o.chartColors === 'gradient' && u ? gradientEnds(barBase, u.card, u.text) : null;
     const chartColors = { asked: o.chartColors === 'gradient', ends: GRAD, base: barBase, charts: 0 };
     // charts mirrored for a right-to-left report (o.chartAxes 'mirrored', round 13; see mirrorChart)
     const MIRROR = rtl && o.chartAxes === 'mirrored', chartAxes = { asked: o.chartAxes || null, rtl, charts: 0 };
@@ -388,6 +399,11 @@
     const tableRows = [];   // tables whose known rows don't fit even with tight rows (round 12, #23)
     const headerGrew = [];   // pages whose header grew one row of tabs (round 12)
     const tableSmaller = [];   // tables given a smaller text so more fields fit (round 12)
+    const noData = [];   // round 19: the "No data" measures, { t, m, expression }
+    const NODATA = own && o.noDataMessage === true;   // (opt-in for now: see WORK.md, round 19, for the owner)
+    const barCharts = [];   // round 19: column charts by day or month names written as bar charts
+    const shortDays = [];   // round 18, S3: column charts that show Day Short
+    const ringsSmall = [];   // round 18: ring pictures drawn under 40 high, written without their number
     const svgSizes = {};   // the SVG pictures' size in each page's table: { w, h, design (the widest), capped }   // KPI titles too long for one line at 8pt (see kpiTitleFit)
     // (a name over the limit ends at its last whole word: cut at the last space before the limit, and a dash or
     // other joining mark left at the end goes too; one word longer than the limit is cut at the limit)
@@ -653,10 +669,12 @@
     // Desktop accepted in D-P1: one entity per model table, each measure a text with the data category Image URL.
     // The model is not touched: these measures exist only in the report.
     const svgDone = {};
+    let extFile = null;   // reportExtensions.json, written again after the pages when a ring picture drops its number (round 18)
     if ((o.svgColumns || []).length || (o.svgCards || []).length) {
       const entities = [];
       (o.svgColumns || []).concat(o.svgCards || []).forEach((c) => { let e = entities.find((x) => x.name === c.t); if (!e) entities.push(e = { name: c.t, measures: [] }); e.measures.push({ name: c.m, dataType: 'Text', dataCategory: 'ImageUrl', expression: c.expression }); });
       add(D + '/reportExtensions.json', json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities }));
+      extFile = { entry: files[files.length - 1], entities };
     }
 
     PAGES.forEach((pg, pageIndex) => {
@@ -676,7 +694,7 @@
       const origin = {};
       const container = (spec) => {
         const o0 = spec.parent ? origin[spec.parent] : { x: 0, y: 0 };
-        const v = { $schema: SCHEMA.visual, name: spec.name || rnd(), position: { x: spec.x - o0.x, y: spec.y - o0.y, z: spec.z, height: spec.h, width: spec.w, tabOrder: spec.z } };
+        const v = { $schema: SCHEMA.visual, name: spec.name || rnd(), position: Object.assign({ x: spec.x - o0.x, y: spec.y - o0.y, z: spec.z, height: spec.h, width: spec.w }, spec.kind === 'nodata' ? {} : { tabOrder: spec.z }) };   // (a "No data" message card is no tab stop: seen in Desktop, 6-7 Oct, a card with a tabOrder was an unnamed stop before its chart)
         if (spec.group) origin[v.name] = { x: spec.x, y: spec.y };
         if (spec.group) v.visualGroup = spec.group; else v.visual = spec.visual;
         if (spec.parent) v.parentGroupName = spec.parent;
@@ -709,6 +727,18 @@
         };
         let out = null;
         for (const maxRows of [1, 2, 3]) { for (let t = pt(th * 0.3); t >= 8 && !out; t--) out = lay(t, maxRows); if (out) break; }
+        // Round 16 (the owner's yes, 6 Oct 2026, design finding #13: eight names at 8pt on one row beside a large title):
+        // names that fit one row only at 8pt take two balanced rows, in reading order, at the largest size both rows
+        // hold (by the measured widths), where the header is high enough; otherwise the one row stays
+        if (out && out.rows.length === 1 && out.t <= 8 && names.length > 2) {
+          for (let t = pt(th * 0.3); t > out.t; t--) {
+            if (2 * rowH(t) > H) continue;
+            const ws = names.map((nm) => Math.ceil(textWidth(nm, t, true, font) + 10 + 2 * padX)), sum = (a, b) => ws.slice(a, b).reduce((x, w) => x + w, 0) + gapB * (b - a - 1);
+            let best = null;
+            for (let cut = 1; cut < names.length; cut++) { const w = Math.max(sum(0, cut), sum(cut, names.length)); if (!best || w < best.w) best = { cut, w }; }
+            if (best.w <= room) { out = { t, ws, rows: [names.slice(0, best.cut).map((_, i) => i), names.slice(best.cut).map((_, i) => best.cut + i)] }; break; }
+          }
+        }
         return out ? Object.assign(out, { a0, a1, gapB, lineH, rowH: rowH(out.t), toLogo: titleLeft ? 'right' : 'left' }) : null;
       };
       // Round 12 (the owner's go on round 11's recommendation 2): in a designed layout (pg.grow: the engine owns the
@@ -738,7 +768,27 @@
         return Object.assign({}, s, { h: Math.min(s.h, Math.ceil(2 * pad + n * sh + gap * n + bh)) });
       };
       pg = Object.assign({}, pg, { slots: grown(pg.slots) });
-      const sorted = pg.slots.map(railFit).sort((a, b) => (a.y - b.y) || (rtl ? b.x - a.x : a.x - b.x));
+      // Round 19 (seen in Desktop, golden tasks 1 and 4:3: day names slant on the column charts of models without a short
+      // day column): a column chart by day or month names whose widest name, at the label size, is wider than its share
+      // of the plot (as S3 works it out) is written as a bar chart, whose names are level, where the slot holds one bar
+      // per name (22 each + 46, measured in round 0 at 1280 x 720, scaled with the page). A model's "Day Short"
+      // (round 18) is used first, so such a chart stays a column chart.
+      const NAMES = { day: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], month: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] };
+      const asBar = (s) => {
+        const f = B && s.kind === 'column' && (B.cats || {}).column;
+        if (!f || f.short || f.c == null) return s;
+        const list = /(^|\s)(day|weekday)\s*name|اسم اليوم/i.test(f.c) ? NAMES.day : /(^|\s)month\s*name|اسم الشهر/i.test(f.c) ? NAMES.month : null;
+        if (!list) return s;
+        const k = pg.page.h / 720, room = (s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40) / list.length, widest = Math.max(...list.map((d) => textWidth(d, LABEL, false, font)));
+        // (night sitting 6-7 Oct, measured in Desktop 2.158 on a 221-high slot at 1280 x 720, names at the theme's 10pt: a
+        // row is 22.2, the first starts 45 under the box's top and 8 stay under the last; the value axis and its room
+        // take 38 more, and with it Saturday went behind a scrollbar. So: 23 a row + 54, and where the axis's 38 do not
+        // fit as well the chart is written without its value axis, each bar's value beside it (rows, below).)
+        if (widest + 6 <= room || s.h < (list.length * 23 + 54) * k) return s;
+        barCharts.push({ page: pg.name || base, field: label(f) });
+        return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows: list.length });
+      };
+      const sorted = pg.slots.map(railFit).map(asBar).sort((a, b) => (a.y - b.y) || (rtl ? b.x - a.x : a.x - b.x));
       const groups = {};
       const groupOf = (kind) => (kind === 'title' || kind === 'logo' ? 'header' : kind === 'kpi' ? 'kpis' : kind === 'slicer' ? 'filters' : null);
       const GROUP_NAMES = { header: W.header || 'Header', kpis: W.kpis || 'KPI cards', filters: W.filters || 'Filters' };
@@ -826,7 +876,9 @@
         if (shown !== full) { titles.slicers.push({ page: pg.name || base, field: full, shown }); out.text = str(shown); } return obj(out); };
       // Round 12 (#15; seen in Desktop 2.158, round 11: "Total Sales by Day Name" twice on one page): a table whose title
       // is a chart's title on the same page is titled by what it adds, "...: detail"
-      const chartTitles = new Set(B ? sorted.filter((s) => CHARTS.includes(s.kind)).map((s) => bindTitle(s.kind, B, W.by || 'by')).filter(Boolean) : []);
+      const pageCats = new Set();   // the categories this page's charts already show (round 16, #18)
+      let catPlan = null;   // each categorical chart slot's category, given out once for the page (round 18)
+      const chartTitles = new Set(B ? sorted.filter((s) => CHARTS.includes(s.kind)).map((s) => bindTitle(s.wasColumn ? 'column' : s.kind, B, W.by || 'by')).filter(Boolean) : []);   // (wasColumn: a column chart written as a bar chart keeps its own title)
       const charts = [];
       sorted.forEach((s) => {
         const g = groupOf(s.kind);
@@ -857,7 +909,9 @@
       let nav = null, openBtn = null, tabs = null;
       const panel = pg.panel && title && logo ? pg.panel : null, k = pg.page.h / 1080;
       if (title && logo) {
-        const gap = 24 * k, openText = '☰  ' + (W.filters || 'Filters');
+        // (round 18, seen in Desktop on 6 Oct 2026: with the ☰ written first, an Arabic button drew it at the left of the
+        // word, the reading end; written after the word, the left-to-right button draws it at the right)
+        const gap = 24 * k, openText = rtl ? (W.filters || 'Filters') + '  ☰' : '☰  ' + (W.filters || 'Filters');
         let x0 = rtl ? logo.x + logo.w + gap : title.x + title.w + gap, x1 = rtl ? title.x - gap : logo.x - gap;
         // slide-in filters: the Filters button sits next to the logo, the page buttons use what is left
         if (panel) {
@@ -974,23 +1028,46 @@
           visual = { visualType: 'textbox', objects: textbox(s.text != null ? String(s.text) : W.textHere || 'Explain what the main chart shows and what to do about it.', s.text != null ? Math.max(11, LABEL) : 11, false, u.text), visualContainerObjects: frame(s.title, s.title, null, true) };
         } else {
           // a table keeps only the fields its width has room for (tableFit); Bt is the bind this table is written from
-          let Bt = B, tableText = null;
-          if (B && s.kind === 'table') {
+          let Bt = B, tableText = null, smallEntry = null;
+          if (B && (s.kind === 'table' || s.kind === 'matrix')) {   // (a matrix too: round 16, #15)
             // Round 12 (the owner's go on round 11's recommendation 5): a table too narrow for its fields first takes a
             // smaller text, down to 8pt: the largest size that keeps the most fields; a field is left out only where even
             // that doesn't hold it. The size is written on the table (values, headers, total) and told.
             const T0 = +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
             let tf = tableFit(B.table, s.w, T0, font);
             if (tf.leftOut.length) { for (let t2 = Math.ceil(T0) - 1; t2 >= 8; t2--) { const f2 = tableFit(B.table, s.w, t2, font); if (f2.kept.length > tf.kept.length) { tf = f2; tableText = t2; } if (!f2.leftOut.length) break; } }
-            if (tableText) tableSmaller.push({ page: pg.name || base, size: tableText, from: T0 });
+            if (tableText) tableSmaller.push(smallEntry = { page: pg.name || base, size: tableText, from: T0 });
             if (tf.leftOut.length) { Bt = Object.assign({}, B, { table: tf.kept }); tableColumns.push({ page: pg.name || base, pageIndex, x: s.x, y: s.y, kept: tf.kept, leftOut: tf.leftOut }); }
+          }
+          // Round 16 (design finding #18): each chart of a page by a category not used on the page yet, from the picker's
+          // pool (B.catPool), where the model has more than one; the same category only when it has no other
+          // Round 18 (seen in Desktop, 6 Oct 2026: on a model with three text columns the operations layout's two bar
+          // charts were both by the first one, because the column chart, earlier in the reading order, had taken the
+          // third): the page's categories are given out once, the bar charts and the donut first in reading order,
+          // then the column chart and the map; a chart repeats a category only when the pool has no unused one.
+          // (night sitting 6-7 Oct, seen in Desktop: a column chart written as a bar chart, round 19, took the bar chart's
+          // category: the page showed the same chart twice. It keeps the column chart's own: kindOf.)
+          const kindOf = (x) => (x.wasColumn ? 'column' : x.kind);
+          if (B && CAT_KINDS.includes(s.kind) && (B.cats || {})[kindOf(s)]) {
+            const k0 = (f) => f.t + '\u0001' + f.c;
+            if (!catPlan) { catPlan = new Map(); const last = (x) => kindOf(x) === 'column' || x.kind === 'map', all = sorted.filter((x) => CAT_KINDS.includes(x.kind) && (B.cats || {})[kindOf(x)]);
+              all.filter((x) => !last(x)).concat(all.filter(last)).forEach((x) => { let c = B.cats[kindOf(x)]; if (pageCats.has(k0(c))) { const alt = (B.catPool || []).find((f) => !pageCats.has(k0(f))); if (alt) c = alt; } pageCats.add(k0(c)); catPlan.set(x, c); }); }
+            const c = catPlan.get(s); if (c && c !== B.cats[s.kind]) Bt = Object.assign({}, Bt, { cats: Object.assign({}, Bt.cats, { [s.kind]: c }) });
+          }
+          // Round 18, S3 (the owner's yes, 6 Oct 2026; seen in Desktop: the day names slant on the 1920 x 1080 column
+          // charts): a column chart by Day Name takes the calendar's Day Short where the model has it (c.short) and the
+          // full names, at the label size, are wider than a seventh of the chart's plot (the value axis about 40)
+          if (B && s.kind === 'column' && ((Bt.cats || {}).column || {}).short) {
+            const c0 = Bt.cats.column, room = (s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40) / 7;
+            const widest = Math.max(...['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((d) => textWidth(d, LABEL, false, font)));
+            if (widest + 6 > room) { Bt = Object.assign({}, Bt, { cats: Object.assign({}, Bt.cats, { column: Object.assign({}, c0.short, { name: label(c0) }) }) }); shortDays.push({ page: pg.name || base }); }
           }
           const query = B ? bindQuery(s.kind, Bt, kpiIndex, rtl) : null;
           let ttl = s.title;
           const extra = {};
           // (round 10: the sample download names its charts by their fields too, "Total Revenue by Month", as a report on a
           // user's model does; before, it kept the layout's role names, "Main trend")
-          if (B && query) ttl = bindTitle(s.kind, B, W.by || 'by') || ttl;
+          if (B && query) ttl = bindTitle(s.kind, Bt, W.by || 'by') || ttl;
           if ((s.kind === 'table' || s.kind === 'matrix') && ttl && chartTitles.has(ttl)) ttl = ttl + ': ' + (AR_LETTERS.test(ttl) ? (W.detail && AR_LETTERS.test(W.detail) ? W.detail : 'التفاصيل') : (W.detail && !AR_LETTERS.test(W.detail) ? W.detail : 'detail'));   // (round 14: in the title's own script)
           if (s.kind === 'kpi') { if (B && query) ttl = label(B.kpis[kpiIndex]); kpiIndex++; }
           // KPI names read as labels: semibold, so the number below stays the hero
@@ -1005,6 +1082,9 @@
           if (GRAD && query && (s.kind === 'bar' || s.kind === 'column')) { visual.objects = { dataPoint: gradientFill(query.queryState.Y.projections[0].field, GRAD) }; chartColors.charts++; }
           if (MIRROR && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { mirrorChart(visual, s.kind); chartAxes.charts++; }
           if (GRID && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.gridlineColor = color(GRID); }
+          // a column chart written as a bar chart (asBar) in a slot too low for its rows and a value axis: no value axis,
+          // each bar's value beside it (the tooltip pages' bar chart, measured in round 0)
+          if (s.wasColumn && query && s.h < (s.rows * 23 + 92) * (pg.page.h / 720)) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.show = bool(false); visual.objects.labels = obj({ show: bool(true) }); }
           if (s.kind !== 'kpi' && s.kind !== 'card' && ttl) {
             const tf = titleFit(ttl, TITLE, s.w - 2 * Math.round(16 * pg.page.h / 1080)), tp = visual.visualContainerObjects.title[0].properties;
             if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); titles[tf.mode].push({ page: pg.name || base, title: ttl, shown: tf.shown }); }
@@ -1050,6 +1130,11 @@
           // (on a right-to-left page the title sat on the right and the table on the left)
           if (s.kind === 'table') visual.objects = { columnHeaders: obj(Object.assign({ columnAdjustment: str('growToFit'), autoSizeColumnWidth: bool(true) }, tableText ? { fontSize: num(tableText) } : {})) };
           if (s.kind === 'table' && tableText) Object.assign(visual.objects, { values: obj({ fontSize: num(tableText) }), total: obj({ fontSize: num(tableText) }) });
+          // Round 18 (seen in Desktop, 6 Oct 2026, "P7 hand EN": a 420 x 220 matrix of Day Name and four long measures had
+          // a horizontal scrollbar and showed three of seven days): the fit had chosen a smaller text and counted the rows
+          // at it, but only a table was given that size, so the matrix drew at the theme's. A matrix gets it on its values,
+          // headers, row headers and total.
+          if (s.kind === 'matrix' && tableText) visual.objects = Object.assign(visual.objects || {}, { values: obj({ fontSize: num(tableText) }), columnHeaders: obj({ fontSize: num(tableText) }), rowHeaders: obj({ fontSize: num(tableText) }), total: obj({ fontSize: num(tableText) }) });
           // each column's header sits over its own values: text on the reading-start side, numbers (measures, and columns
           // the model types as numbers) right-aligned in both directions; "Apply to header" (styleHeader) makes the header
           // follow. (Round 12, #12; seen in Desktop 2.158, 5 Oct 2026: in a right-to-left table with left-aligned numbers,
@@ -1063,16 +1148,26 @@
           // would not fit (grid.rowPadding 0); one that still does not fit is told. Measured (round 11): a row's pitch is
           // 1.415 x the text's height + 2 x rowPadding (1 when none is written), the header 7 more; the title 1.5 x its
           // size; 16 for the visual's own padding.
-          if (s.kind === 'table' && query) {
+          if ((s.kind === 'table' || s.kind === 'matrix') && query) {   // (a matrix too: round 16, #15)
             const tf = tableFields(Bt, rtl).find(isTextField), n = tf ? (/(^|\s)(day|weekday)|اليوم/i.test(tf.c) && Bind_nameLike(tf.c) ? 7 : /quarter|الربع/i.test(tf.c) ? 4 : /month|الشهر/i.test(tf.c) && Bind_nameLike(tf.c) ? 12 : 0) : 0;
             if (n) {
-              const T = tableText || +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
-              const need = (pad) => { const pitch = 1.415 * T * 4 / 3 + 2 * pad; return 1.5 * TITLE * 4 / 3 + pitch + 7 + (n + 1) * pitch + 16; };
-              if (need(1) > s.h) { visual.objects.grid = [{ properties: { rowPadding: num(0) } }]; if (need(0) > s.h) tableRows.push({ page: pg.name || base, field: label(tf), rows: n, need: Math.ceil(need(0)), h: s.h }); }
+              let T = tableText || +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
+              const need = (pad, t = T) => { const pitch = 1.415 * t * 4 / 3 + 2 * pad; return 1.5 * TITLE * 4 / 3 + pitch + 7 + (n + 1) * pitch + 16; };
+              // Round 18 (FAIL 12: a 420 x 220 matrix at 1920 x 1080 showed three of seven days): a matrix whose rows do not
+              // fit even tight takes the largest smaller text, down to Power BI's 8pt, that holds them (and told,
+              // tableSmaller); only where even 8pt does not is it told that its last rows scroll (tableRows)
+              // (round 19, item 10: a table too, with the same limits; its header keeps its grow-to-fit, the size is merged in)
+              if (need(0) > s.h) {
+                let t2 = Math.ceil(T) - 1; while (t2 > 8 && need(0, t2) > s.h) t2--;
+                if (t2 >= 8 && need(0, t2) <= s.h) { const from = T; T = t2; (s.kind === 'matrix' ? ['values', 'columnHeaders', 'rowHeaders', 'total'] : ['values', 'columnHeaders', 'total']).forEach((k) => { visual.objects = visual.objects || {}; const e = (visual.objects[k] || [])[0]; if (e && e.properties) e.properties.fontSize = num(t2); else visual.objects[k] = obj({ fontSize: num(t2) }); });
+                  if (smallEntry) Object.assign(smallEntry, { size: t2, rows: true }); else tableSmaller.push({ page: pg.name || base, size: t2, from, rows: true }); }
+              }
+              if (need(1) > s.h) { visual.objects = visual.objects || {}; visual.objects.grid = [{ properties: { rowPadding: num(0) } }]; if (need(0) > s.h) tableRows.push({ page: pg.name || base, field: label(tf), rows: n, need: Math.ceil(need(0)), h: s.h }); }
             }
           }
           // the calendar order's helper column (see inOrder): its text in the card colour and as narrow as Desktop allows
-          const oh = s.kind === 'table' && query ? orderedBy(tableFields(Bt, rtl)) : null;
+          const oh = (s.kind === 'table' || s.kind === 'matrix') && query ? orderedBy(s.kind === 'matrix' ? (Bt.table || []).filter(Boolean) : tableFields(Bt, rtl)) : null;
+          if (oh && oh.sortBy && s.kind === 'matrix') { visual.objects = visual.objects || {}; visual.objects.columnFormatting = visual.objects.columnFormatting || []; }
           if (oh && oh.sortBy) { const ref = orderHelper(oh).queryRef;
             visual.objects.columnFormatting.push({ properties: { fontColor: color(u.card), alignment: str('Right'), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) }, selector: { metadata: ref } });
             visual.objects.columnWidth = [{ properties: { value: num(1) }, selector: { metadata: ref } }];
@@ -1101,11 +1196,41 @@
               const wide = Math.max(...mine.map((c) => +c.w || 0)) || 75, tt = +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
               const others = query.queryState.Values.projections.filter((p) => !(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema) && p.displayName !== ' ').reduce((a, p) => a + columnRoom(p, tt, font), 0);
               const W = Math.max(8, Math.min(512, wide, Math.floor((s.w - others) / cols.length) - 10));
-              const H = Math.max(8, Math.min(512, Math.round(Math.max(...mine.map((c) => (+c.h || 75) * Math.min(1, W / (+c.w || 75)))))));
+              const H0 = Math.max(8, Math.min(512, Math.round(Math.max(...mine.map((c) => (+c.h || 75) * Math.min(1, W / (+c.w || 75)))))));
+              // Round 18 (measured in Desktop 2.158, 6 Oct 2026, "P4 ring EN": a 64-high picture in a 221-high table at
+              // 1280 x 720: the rows 66 apart (the picture + 2), the first 68 under the table's top; one and a half rows
+              // showed): a table picture is no taller than lets four rows and the total show, 24 at least.
+              const H = Math.min(H0, Math.max(24, Math.floor((s.h - 68 * pg.page.h / 720) / 5) - 2));
               visual.objects = Object.assign(visual.objects || {}, { grid: [{ properties: { imageHeight: num(H), imageWidth: num(W) } }] });
               svgSizes[pageIndex] = { w: W, h: H, design: wide, capped: W < wide };
+              // Round 18 (the owner's answer, 6 Oct 2026: "yes drop the number under 40"; a 28-high ring's number could not
+              // be read in Desktop): a ring drawn under 40 high takes its version without the number inside (the server's
+              // expressionNoNumber); the table's value column carries the number
+              if (H < 40 && extFile) mine.forEach((c) => { if (!c.expressionNoNumber) return; const e = extFile.entities.find((x) => x.name === c.t), me = e && e.measures.find((x) => x.name === c.m); if (me) { me.expression = c.expressionNoNumber; extFile.changed = true; ringsSmall.push({ page: pg.name || base, label: c.m, h: H }); } });
               svgDone[pageIndex] = true;
             }
+          }
+        }
+        // Round 19 (the owner's idea, 6 Oct 2026): "No data for this selection" where the visual's measure is blank. A
+        // report-level measure (reportExtensions.json, the model untouched) gives the text only when the measure is blank,
+        // and "" otherwise; a card shows it in the same box one layer below (a lower z), with the panel's look (the theme's
+        // card style), its tooltip off and not on the phone; the visual above it is see-through, so the card's panel is
+        // what shows, and its message only when the visual is empty. Charts and tables with a measure of the model.
+        if (NODATA && visual && visual.query && ['bar', 'column', 'line', 'donut', 'table'].includes(s.kind)) {
+          const st = visual.query.queryState, pr = [].concat((st.Y || {}).projections || [], (st.Values || {}).projections || []).find((p) => p.field && p.field.Measure && !p.field.Measure.Expression.SourceRef.Schema);
+          if (pr) {
+            const ent = pr.field.Measure.Expression.SourceRef.Entity, mm = pr.field.Measure.Property, nm = (W.noDataName || 'No data: ') + mm;
+            if (!noData.some((x) => x.t === ent && x.m === nm)) noData.push({ t: ent, m: nm, expression: 'IF ( ISBLANK ( ' + "'" + ent.replace(/'/g, "''") + "'" + '[' + mm.replace(/\]/g, ']]') + '] ), "' + (lang === 'ar' ? 'لا توجد بيانات لهذا الاختيار' : 'No data for this selection').replace(/"/g, '""') + '", "" )' });
+            container({ x: s.x, y: box.y, w: s.w, h: box.h, z: z - 500, parent, kind: 'nodata', noPhone: true, visual: { visualType: 'cardVisual',
+              query: q({ Data: [{ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: ent } }, Property: nm } }, queryRef: ent + '.' + nm, nativeQueryRef: nm }] }),
+              objects: { value: [{ properties: { fontSize: num(LABEL), fontColor: color(mixHex(u.text, u.card, 0.3)), horizontalAlignment: str('center') }, selector: { id: 'default' } }], label: [{ properties: { show: bool(false) }, selector: { id: 'default' } }], outline: [{ properties: { show: bool(false) }, selector: { id: 'default' } }], fillCustom: [{ properties: { show: bool(false) } }] },
+              visualContainerObjects: { title: obj({ show: bool(false) }), visualTooltip: obj({ show: bool(false) }), general: obj({ altText: str('') }), dropShadow: obj({ show: bool(false) }) } } });
+            // Night sitting 6-7 Oct (seen in Desktop 2.158): the card's own inner outline drew a grey box inside every chart,
+            // and a chart whose border and shadow were switched off drew about 5 nearer its box's edges than without the
+            // option. So the card has no outline, its text centred, and no shadow of its own; the chart keeps the theme's
+            // border and shadow and only its background is off (with data the page then differs from one without the option
+            // by the panels' edge pixels only, at most 19 of 255).
+            visual.visualContainerObjects.background = obj({ show: bool(false) });
           }
         }
         const v = container({ x: s.x, y: box.y, w: s.w, h: box.h, z, parent, visual, kind: s.kind });
@@ -1120,6 +1245,7 @@
           // (round 12, #6; seen in Desktop 2.158, round 11: two rows both ending at the logo's side did not line up):
           // the rows share one block, as wide as the widest row, at the logo's side; every row starts at its reading start
           const rowW = (row) => row.reduce((a, i) => a + tabs.ws[i], 0) + tabs.gapB * (row.length - 1), maxW = Math.max(...tabs.rows.map(rowW));
+          if (tabs.rows.length > 1 && !tabRows.some((x) => x.page === (pg.name || base))) tabRows.push({ page: pg.name || base, rows: tabs.rows.length, size: tabs.t });
           tabs.rows.forEach((row, r) => {
             // the block sits at the logo's side of the room; in it the first page is at the reading start: leftmost in
             // English, rightmost in Arabic
@@ -1166,7 +1292,9 @@
           container({ x: openBtn.x, y: openBtn.y, w: openBtn.w, h: openBtn.h, z, parent: groups.header.name, kind: 'button', noPhone: true,
             visual: { visualType: 'actionButton',
               objects: { icon: def({ shapeType: str('blank') }), text: def({ show: bool(true), text: str(openBtn.text), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL) }),
-                fill: def({ show: bool(true), fillColor: color(mixHex(u.card, u.text, 0.06)), transparency: num(0) }), outline: def({ show: bool(true), lineColor: color(edge) }) },
+                // (round 16, design finding #23: it was the only boxed control in a header of boxless tabs: no box, no outline;
+                // the icon and the word in the text colour, as the tabs)
+                fill: def({ show: bool(false) }), outline: def({ show: bool(false) }) },
               visualContainerObjects: Object.assign(frame(null, W.openFilters || 'Open the filter panel'), { visualLink: obj({ show: bool(true), type: str('Bookmark'), bookmark: str(pg.openBm) }) }) } });
           z += 1000;
         }
@@ -1338,6 +1466,14 @@
       });
     });
 
+    // the "No data" measures (round 19): into the report's extensions, beside the SVG measures where there are some
+    if (noData.length) {
+      const ents = extFile ? extFile.entities : [];
+      noData.forEach((c) => { let e = ents.find((x) => x.name === c.t); if (!e) ents.push(e = { name: c.t, measures: [] }); e.measures.push({ name: c.m, dataType: 'Text', expression: c.expression }); });
+      if (extFile) extFile.changed = true; else add(D + '/reportExtensions.json', json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: ents }));
+    }
+    if (extFile && extFile.changed) extFile.entry.data = json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: extFile.entities });
+
     // Reset buttons: one data-only bookmark per page that brings that page's slicers back to "All"
     if (bookmarks.length) {
       bookmarks.forEach((b) => add(D + '/bookmarks/' + b.name + '.bookmark.json', json(b.group
@@ -1401,7 +1537,7 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts };
   }
 
   const api = { build, zip, crc32, textWidth, columnRoom };

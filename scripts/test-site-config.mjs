@@ -2,8 +2,10 @@
 // on all site config files). No network: it reads the repo as GitHub Pages publishes it.
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
+// (fileURLToPath, as check-min.mjs: a URL's pathname is "/C:/..." on Windows, which resolved to "C:\C:\...")
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const fails = [];
 const ok = (cond, msg) => { if (!cond) fails.push(msg); };
 const read = (p) => fs.readFileSync(path.join(ROOT, p), 'utf8');
@@ -64,12 +66,22 @@ for (const p of pages) {
   ok(/rel="icon"[^>]*favicon-48\.png/.test(h), `${p}: no 48 px PNG icon`);
   ok(/rel="manifest" href="\/site\.webmanifest"/.test(h), `${p}: no manifest link`);
   ok(/name="theme-color"/.test(h), `${p}: no theme-color`);
+  // (round 16: main.min.js is cached like every script, so a page loads it with its version stamp, as the others)
+  ok(!/main\.min\.js"/.test(h) || /main\.min\.js\?v=[0-9a-z]+"/.test(h), `${p}: main.min.js without a ?v= stamp`);
 }
 for (const u of locs) {
   const h = read(local(u));
   ok(/rel="canonical"/.test(h), `${local(u)}: no canonical`);
+  // (round 17, the outside review's G-08: a canonical must name the page itself, or search engines index another one)
+  const own = SITE + local(u).replace(/\\/g, '/').replace(/(^|\/)index\.html$/, '$1');
+  const canon = (h.match(/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/) || h.match(/<link[^>]*href="([^"]+)"[^>]*rel="canonical"/) || [])[1];
+  ok(!canon || canon === own, `${local(u)}: canonical is ${canon}, not the page's own URL ${own}`);
   ok(/property="og:image"/.test(h), `${local(u)}: no og:image`);
 }
+
+// (round 19: a script's folder from a URL's pathname is "/C:/..." and %-encoded on Windows: fileURLToPath, as here)
+const scriptsWith = (dir) => fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap((f) => f.isDirectory() ? (f.name === 'node_modules' ? [] : scriptsWith(path.join(dir, f.name))) : /\.m?js$/.test(f.name) && !/\.min\.js$/.test(f.name) ? [path.join(dir, f.name)] : []);
+for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\)\.pathname/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')), `${f}: builds a path from the module URL's pathname (use fileURLToPath)`);
 
 if (fails.length) { console.error(`FAIL  site config: ${fails.length} problem(s)\n- ` + fails.join('\n- ')); process.exit(1); }
 console.log(`PASS  site config: _config, CNAME, robots, sitemap (${locs.length} URLs), icons, manifest, security.txt, llms.txt, ${pages.length} pages`);

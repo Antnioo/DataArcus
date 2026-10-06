@@ -26,6 +26,8 @@ report files are written by `create_report` for a new report, or by Microsoft's 
 4. **Layout.** `plan_layout` with that design: the layout (exec, analysis, ops, focus), KPI cards, filters, page size.
 5. **Show the plan and wait for "go":** the pages, the visuals and the fields on each, the page size, the colours, the contrast checks (with every warning), anything under
    `repaired`, the layout with its three reasons, and the slot table (name, suggested visual, x, y, width, height).
+   Say that the bars of the bar and column charts fade by their value (`plan_layout`'s `chartColors.sayInPlan`), and
+   say first what `plan_layout` puts first (`formats`, `arabicNames`) when it was given the model.
    Never call `create_report` in the same turn as the request: the user's "go" comes first.
 6. **Build.** `create_report` with the design (and the same layout choices) and the approved plan's fields in
    `fields` (`kpis`, `measure`, `timeAxis`, `category`, `category2`, `table`, `slicers`, each as `Table[Field]`): what

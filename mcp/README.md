@@ -1,7 +1,29 @@
 # DataArcus MCP
 
-> **Beta testers:** install the packaged Claude Desktop extension with the beta kit's `INSTALL.md`; the commands below
-> are for developers using Claude Code or another MCP client.
+## Claude Desktop (beta)
+
+For testers on Windows, no command line needed.
+
+1. **Update Power BI Desktop** to the latest version (Microsoft Store, or Help > Check for updates), and save your
+   reports as Power BI projects (File > Save as > `.pbip`).
+2. **Get the extension:** download the `.mcpb` file from https://github.com/Antnioo/DataArcus/releases (the beta
+   release is shared with testers), or use the file you were sent.
+3. **Install it:** with Claude Desktop installed, double-click the `.mcpb` file and choose Install. Settings >
+   Extensions then shows "DataArcus for Power BI".
+4. **Choose the working folder** when asked (the setting is called **Working folder**): the folder that holds your
+   `.pbip` projects. DataArcus reads and writes only inside it; put in it only models whose names, types and formats
+   you may share with Claude.
+5. **Check it:** in a new chat, ask "list your DataArcus tools". Claude lists 7 tools (`read_model`, `suggest_fields`,
+   `check_model_health`, `plan_layout`, `create_report`, `generate_theme`, `add_gulf_calendar`).
+6. **First prompt:** "Read the model in <folder> and suggest a report", with `<folder>` the name of a project folder
+   inside the working folder.
+7. **Where reports go:** a new report is written next to its model, inside the working folder, as `<name>.pbip` plus
+   `<name>.Report`; it never writes over an existing report. Open the `.pbip` in Power BI Desktop.
+8. **Remove it:** Settings > Extensions > DataArcus for Power BI > Uninstall. Your reports stay where they were written.
+
+## Claude Code and other MCP clients (developers)
+
+The commands below are for developers using Claude Code or another MCP client.
 
 The engines behind dataarcus.com's Power BI tools, as an MCP server for Claude Code (or any MCP client).
 It works next to Microsoft's Power BI Authoring MCP server (model edits, DAX queries) and the Power BI Desktop bridge (reload, screenshots).
