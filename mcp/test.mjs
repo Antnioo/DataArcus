@@ -3590,6 +3590,28 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   }
 }
 
+// ---------- round 17: the outside review's fixes (6 Oct) ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
+  const col = (name, dataType) => ({ name, dataType, sourceColumn: name });
+  const model = (dir, tables) => { fs.mkdirSync(path.join(ROOT, dir, 'M.SemanticModel'), { recursive: true }); fs.writeFileSync(path.join(ROOT, dir, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables } })); };
+  const sales = { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string')], measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] };
+
+  // 1. G-05: a project's report JSON files are measured together before any is read: above 128 MB together, refused
+  {
+    model('r17-big', [sales]);
+    const d = path.join(ROOT, 'r17-big', 'Big.Report', 'definition', 'pages', 'p1');
+    fs.mkdirSync(d, { recursive: true });
+    for (let i = 0; i < 5; i++) { const fd = fs.openSync(path.join(d, `part${i}.json`), 'w'); fs.ftruncateSync(fd, 30 * 1024 * 1024); fs.closeSync(fd); }   // sparse: 150 MB on paper
+    const r = await ask('read_model', { path: 'r17-big' });
+    chk(() => r.err && /report/i.test(r.t) && /together/.test(r.t) && /128 MB/.test(r.t),
+      () => `report files above 128 MB together must be refused before reading: ${r.err ? r.t.slice(0, 300) : 'not refused'}`);
+    fs.rmSync(path.join(ROOT, 'r17-big', 'Big.Report'), { recursive: true, force: true });
+  }
+}
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);
