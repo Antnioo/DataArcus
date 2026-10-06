@@ -4,6 +4,31 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Night sitting 6-7 Oct (laptop builder 2)
+Started 19:43 UTC on 6 Oct (23:43 Dubai), `fix/round-17` at `d774780`; hard stop 00:40 UTC on 7 Oct. The owner is
+asleep: nothing waits for a person. `idle.ps1` 6,470 s at the start, no Desktop window open. Blocks in order: A (Desktop
+proof), B (the 20 golden reports re-scored), C (fixes), D (the 0.2.7 candidate, local only), then F (seen, not in
+scope) and G (research: `mcp/research/POWERBI-HIDDEN-CAPABILITIES.md`). Reports and crops (not committed):
+`<tests folder>\night-1006\`; scripts: `builder-scripts\n1-*`. Records: DESKTOP-TESTS.md, "2026-10-06 night".
+
+### Night sitting, expected (written 19:50 UTC, before any run)
+- **12b, S2b, S3b; round 19's items 2 and 10:** as written under "Round 18, for the laptop to prove" and "Round 19, for
+  the laptop to prove" below; nothing added.
+- **Task 5's single-focus page** (640 x 360, English and Arabic): page 1 has the three KPI cards and one chart, no
+  table and no chart by day; every card value and title whole, no "…", no scrollbar; the chart's axis names level.
+- **No data** (`noDataMessage: true`, the Ramadan sample, exec layout, 1280 x 720, English and Arabic; a page filter on
+  a Hijri year the sample has no rows for makes the empty selection):
+  1. empty: each chart box and the table box shows the message once, inside its panel, not cut;
+  2. with data: no message text and no card outline, fill or title shows through any chart or the table; the page
+     differs from the same report built without the option by drawing noise only (under 1,000 pixels by `png-diff.ps1`);
+  3. a click on a chart selects the chart (the selection pane or the format pane names the chart, not a card); the
+     chart's tooltip appears on hover and no tooltip appears from the message card; the tab order lists no message
+     card before or between the charts (the card is not a tab stop a reader lands on);
+  4. Arabic: «لا توجد بيانات لهذا الاختيار», shaped and right to left, whole;
+  5. the phone layout (`mobile.json` of each message card: none) shows no message card.
+  **The owner's rule:** all five PASS -> `noDataMessage` on by default in block C; any FAIL -> it stays opt-in, why written.
+- **The golden scores:** round 19's table below (about 9.3); the target is 9.5 in both languages.
+
 ## Round 17, the outside review's fixes (2026-10-06, 13:19-14:19 UTC, cloud builder; branch `fix/round-17` from `fix/round-16` `26ba7ef`; item 6 on `feat/check-report-2`; not merged)
 
 Source: dataarcus-engine `business/audit/OUTSIDE-REVIEW-2026-10-06.md`. Out of scope: G-10, G-07 (owner decisions), G-06, G-09, G-11, Arabic indexing.
