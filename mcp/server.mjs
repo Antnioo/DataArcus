@@ -352,7 +352,7 @@ function boundOf(pages, B, tableKept) {
 // The keys of a design the tools know. Another key (a typing slip, or an input that doesn't exist, like "fields"
 // inside a design) is named in the answer's "ignored", never dropped without a word.
 const DESIGN_KEYS = ['preset', 'name', 'font', 'data', 'ui', 'chart', 'layout'];
-const LAYOUT_KEYS = ['v', 'page', 'preset', 'kpis', 'filters', 'dir', 'radius', 'shadow', 'header', 'kpiBar', 'headLine', 'samples', 'transparent', 'kpiCards', 'fpos', 'pageW', 'pageH',
+const LAYOUT_KEYS = ['v', 'page', 'preset', 'kpis', 'filters', 'dir', 'radius', 'shadow', 'header', 'kpiBar', 'headLine', 'samples', 'transparent', 'kpiCards', 'wideTable', 'fpos', 'pageW', 'pageH',
   'hh', 'logoW', 'fw', 'fh', 'kpiH', 'mainW', 'split', 'kpiBarW', 'headLineW', 'kpiBarC', 'headLineC'];
 function unknownKeys(design) {
   const keys = Object.keys(design || {}).filter((k) => !DESIGN_KEYS.includes(k))
@@ -787,6 +787,8 @@ server.registerTool('create_report', {
       design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { transparent: false }) });
     }
     // fields.kpis decides the number of cards (one per measure given)
+    // (the owner, 6 Oct 2026: on a 4:3 page the table takes the wider share of its row; the MCP's own, see the design engine)
+    design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { wideTable: design.layout.wideTable !== false }) });   // (a design that says wideTable false keeps equal shares)
     if (F && F.kpis) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: Math.max(3, Math.min(6, F.kpis.length)), kpiCards: F.kpis.length }) });
     const askedCards = design.layout.kpiCards != null ? Math.min(design.layout.kpis, design.layout.kpiCards) : design.layout.kpis;
     if (nCards < 6) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpiCards: Math.min(design.layout.kpiCards != null ? design.layout.kpiCards : 6, nCards) }) });
@@ -871,7 +873,7 @@ server.registerTool('create_report', {
   if (a.design && a.design.layout && a.design.layout.preset === 'focus' && E.page(a.design.layout).w < 800) reportNotes.push(`The page is ${E.page(a.design.layout).w} wide, under 800, so it uses the single-focus layout (the KPI cards and one large chart): the executive layout's four charts and table would be cut or scroll on it.`);
   if ((r.barCharts || []).length) reportNotes.push(`The chart${r.barCharts.length === 1 ? '' : 's'} by ${[...new Set(r.barCharts.map((x) => x.field))].join(', ')} on ${[...new Set(r.barCharts.map((x) => `"${x.page}"`))].join(', ')} ${r.barCharts.length === 1 ? 'is a bar chart' : 'are bar charts'} instead of a column chart: the names would not fit side by side and would slant; as bars they read level. A short name column in the model (the Gulf calendar's Day Short) keeps a column chart.`);
   if ((r.shortDays || []).length) reportNotes.push(`The column chart${r.shortDays.length === 1 ? '' : 's'} by day on ${[...new Set(r.shortDays.map((x) => `"${x.page}"`))].join(', ')} ${r.shortDays.length === 1 ? 'shows' : 'show'} Day Short (Sun ... Sat), in the calendar's order: the full day names would not fit side by side and would slant. Tables and slicers keep Day Name.`);
-  if ((r.ringsSmall || []).length) reportNotes.push(`The ring${r.ringsSmall.length === 1 ? '' : 's'} in the table (${[...new Set(r.ringsSmall.map((x) => x.label))].join(', ')}) ${r.ringsSmall.length === 1 ? 'is' : 'are'} drawn ${Math.max(...r.ringsSmall.map((x) => x.h))} high, too small for a number to be read, so ${r.ringsSmall.length === 1 ? 'it has' : 'they have'} no number inside: the table's value column carries it.`);
+  if ((r.ringsSmall || []).length) reportNotes.push(`The ring${r.ringsSmall.length === 1 ? '' : 's'} in the table (${[...new Set(r.ringsSmall.map((x) => x.label))].join(', ')}) ${r.ringsSmall.length === 1 ? 'is' : 'are'} drawn ${Math.max(...r.ringsSmall.map((x) => x.h))} high, too small for a number to be read, so ${r.ringsSmall.length === 1 ? 'it has' : 'they have'} no number inside: the measure's own column in the table carries the value (add it to fields.table where the table does not have it).`);   // (night of 6-7 Oct, seen in Desktop: a table without that column showed the value nowhere, and the note said it did)
   if (ringNumbers.length) reportNotes.push(`The ring${ringNumbers.length === 1 ? '' : 's'} on the KPI card${ringNumbers.length === 1 ? '' : 's'} (${ringNumbers.join(', ')}) ${ringNumbers.length === 1 ? 'has' : 'have'} no number inside: the card already shows the value, and two numbers read as two facts. A table picture keeps its number.`);
   if (svgList.length) reportNotes.push(`${svgList.length === 1 ? 'An SVG picture was' : svgList.length + ' SVG pictures were'} added (${svgList.map((c) => c.label).join(', ')}): each is a measure that exists only in this report (definition/reportExtensions.json); the model was not changed. This is ${SVG_STATUS}.`);
   // how the KPI cards show their numbers

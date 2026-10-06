@@ -30,7 +30,7 @@ scope) and G (research: `mcp/research/POWERBI-HIDDEN-CAPABILITIES.md`). Reports 
 - **The golden scores:** round 19's table below (about 9.3); the target is 9.5 in both languages.
 
 ### Night sitting, where I am (kept current; times UTC)
-**21:30: blocks A, B and C done in Desktop; the code of block C is NOT committed yet: its full test run is in progress (the result is in the next commit's line here; website suites pass: design-engine 598, theme-generator 893, theme-generator-lab 893, layout 512, layout-lab 512, pbip 73).**
+**22:10: blocks A, B, C and G done. Tests: `npm test` 564 -> **583 of 583**, golden PASS (11 tasks; no golden expectation changed); website suites design-engine 598, theme-generator 893, theme-generator-lab 893, layout 512, layout-lab 512, pbip 73, svg-kpi 846: PASS; `check:min`, `test-site-config`, `test-analytics-events` PASS; `?v=` pbip-export 20261007a, theme-generator 20261007a, design-engine 20261007a. Red first: 566 checks 2 failing, then 580 checks 7 failing (all tonight's). Four older checks changed, each with its cause beside it: plan_layout's parity with the website (a 4:3 page's table row is the plan's on purpose), the one-card report (a quarter of the row, it was the whole row), and the two narrow-table checks (their design keeps the half-width table with `layout.wideTable: false`).**
 Records with every measured number and crop: `scripts/tests/DESKTOP-TESTS.md`, "2026-10-06 night".
 
 #### Block A, the Desktop proof

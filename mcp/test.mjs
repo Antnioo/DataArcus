@@ -261,6 +261,12 @@ for (const c of DESIGNS) {
   // (round 19, the owner's choice B: below 800 wide the MCP plans the single-focus layout instead of the executive one,
   // and says so (smallPage); the website still shows the executive layout there, so that case is the plan's on purpose)
   if (!r.err && r.j.smallPage && r.j.design.layout.preset === 'focus' && r.j.page.w < 800) { slotOk++; continue; }
+  // (night of 6-7 Oct, the owner's answer 3a: on a 4:3 page the MCP's plan gives the table the wider share of its row, three
+  // fifths; the website keeps equal shares there. So on such a page the row that holds the table is the plan's on
+  // purpose: every other slot must still be the website's, and the table must be wider than the website's.)
+  const tRow = rows && r.j.design.layout.wideTable && r.j.page.w / r.j.page.h < 1.5 ? (c.slots.find((s) => /^Table/.test(s[1])) || [])[3] : null;
+  const mine = rows && rows.find((s) => /^Table/.test(s[1])), theirs = c.slots.find((s) => /^Table/.test(s[1]));
+  if (tRow != null && rows.length === c.slots.length && rows.some((s) => s[3] === tRow && s !== mine) && JSON.stringify(rows.filter((s) => s[3] !== tRow)) === JSON.stringify(c.slots.filter((s) => s[3] !== tRow)) && +mine[4] > +theirs[4]) { slotOk++; continue; }
   if (rows && JSON.stringify(rows) === JSON.stringify(c.slots)) slotOk++;
   else slotBad.push(`${c.id}: ${r.err ? r.t.slice(0, 120) : JSON.stringify(rows).slice(0, 160) + ' vs ' + JSON.stringify(c.slots).slice(0, 160)}`);
 }
@@ -334,7 +340,10 @@ if (!r.err) {
   // (round 4: the first of 2 cards, on the right half; it was the first of 3, at 1388, 508 wide)
   // (round 12, #26: one card, the whole row, right of the mirrored rail; it was the first of 2, at 1125, 771 wide)
   const k1 = want[0].slots.find((s) => s.kind === 'kpi'), rail1 = want[0].slots.find((s) => s.rail);
-  check(rail1 && k1.x > rail1.x && k1.w > 1500 && shown[0].visuals.some((v) => v.x === k1.x && v.w === k1.w) && JSON.stringify(shown.map((p) => p.name)) === '["تحليل","نظرة عامة"]', `create_report design: not mirrored or page names not Arabic (first KPI slot ${k1.x}, ${k1.w})`);
+  // (night of 6-7 Oct, the owner's answer 2a: one card of a row planned for more takes a quarter of the row at the reading
+  // start, the right in Arabic; it was the whole row, more than 1500 wide. Now 376 wide, its right edge the row's.)
+  const rowEnd = Math.max(...want[0].slots.filter((s) => !s.rail && s.kind !== 'title' && s.kind !== 'logo').map((s) => s.x + s.w));
+  check(rail1 && k1.x > rail1.x && k1.w > 300 && k1.w < 500 && k1.x + k1.w === rowEnd && shown[0].visuals.some((v) => v.x === k1.x && v.w === k1.w) && JSON.stringify(shown.map((p) => p.name)) === '["تحليل","نظرة عامة"]', `create_report design: not mirrored or page names not Arabic (first KPI slot ${k1.x}, ${k1.w})`);
   // the Arabic labels from the engine
   const all1 = shown.map((p) => p.visuals.map((v) => v.text).join('')).join('');
   check(all1.includes('إعادة ضبط الفلاتر') && all1.includes('شعارك') && !all1.includes('Reset filters'), 'create_report design: the report labels are not Arabic');
@@ -2255,7 +2264,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     {
       const FIVE = ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin %]', 'Sales[Avg Price]'], tbad = [];
       for (const lang of ['en', 'ar']) {
-        const x = await ask('create_report', { path: 'd5-project', name: 'D5 table fit ' + lang, lang, design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', page: '960x720', lang }), fields: { kpis: KPIS, table: FIVE } });
+        // (night of 6-7 Oct: since the owner's answer 3a a 4:3 page gives the table three fifths of its row; this check is about
+        // a table too narrow for its fields, so its design keeps the half-width table: layout.wideTable false)
+        const narrowPlan = await planOf({ layout: 'exec', kpis: 4, filters: 'end', page: '960x720', lang }); narrowPlan.layout.wideTable = false;
+        const x = await ask('create_report', { path: 'd5-project', name: 'D5 table fit ' + lang, lang, design: narrowPlan, fields: { kpis: KPIS, table: FIVE } });
         if (x.err) { tbad.push(`${lang}: ${short(x)}`); continue; }
         const pgs = report(path.join(ROOT, 'd5-project', x.j.report)).filter((p) => !p.tooltip), size = tableText(x, 'd5-project'), font = lang === 'ar' ? 'Tahoma' : 'Segoe UI';
         const told = x.j.tableColumns || [];
@@ -3116,7 +3128,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   //   where even 8pt doesn't hold them; the size is written on the table (values, headers, total) and told
   {
     const fields = ['Calendar[Day Name]', 'Sales[Total Sales]', 'Sales[Orders]', 'Sales[Avg Price]', 'Sales[Margin %]', 'Sales[Total Sales Last Ramadan]'];
-    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Narrow', design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', page: '960x720' }), secondPage: false, fields: { table: fields } });
+    // (night of 6-7 Oct: the half-width table of before the owner's answer 3a, as the check above: layout.wideTable false)
+    const narrowPlan = await planOf({ layout: 'exec', kpis: 4, filters: 'end', page: '960x720' }); narrowPlan.layout.wideTable = false;
+    const x = await ask('create_report', { path: 'r12-project', name: 'R12 Narrow', design: narrowPlan, secondPage: false, fields: { table: fields } });
     const t = pageVisuals(x, 'r12-project').find((v) => type(v) === 'tableEx'), T = x.err ? 10 : +themeOf(x, 'r12-project').visualStyles.tableEx['*'].values[0].fontSize;
     const size = t && t.visual.objects.values ? N(t.visual.objects.values[0].properties.fontSize) : T;
     const shown = t ? t.visual.query.queryState.Values.projections.filter((p) => !(p.field.Aggregation && p.displayName === ' ')) : [];
@@ -3793,6 +3807,64 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => tall.types.join() === 'clusteredBarChart' && catOf(tall.cat) === 'Calendar.Day Name' && tall.note, () => `no Day Short, a tall slot: a bar chart by Day Name, told: ${JSON.stringify(tall.types)} ${tall.note} ${tall.err}`);
     chk(() => low.types.join() === 'clusteredColumnChart', () => `no Day Short, a slot too low for seven bars (150): the column chart stays: ${JSON.stringify(low.types)} ${low.err}`);
     chk(() => withShort.types.join() === 'clusteredColumnChart' && catOf(withShort.cat) === 'Calendar.Day Short', () => `with Day Short: the column chart by Day Short (round 18): ${JSON.stringify(withShort.types)} ${withShort.err}`);
+    // (night sitting 6-7 Oct, seen in Desktop on golden tasks 1, 4 16:9 Arabic and 4:3: the column chart written as a bar
+    // chart took the BAR chart's category, so the page showed "Total Sales by Quarter" twice and no chart by day; the
+    // check above could not see it: its model has one text column. Here the bar chart is by Quarter and the column chart by
+    // Day Name: the chart that becomes a bar chart keeps Day Name, in the week's order.)
+    {
+      fs.mkdirSync(path.join(ROOT, 'n1-bars', 'M.SemanticModel'), { recursive: true });
+      fs.writeFileSync(path.join(ROOT, 'n1-bars', 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Day of Week', 'int64'), col('Day Name', 'string'), col('Quarter', 'string')] },
+        { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime')], measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }] } }));
+      const x = await ask('create_report', { path: 'n1-bars', name: 'N1 bars', fields: { kpis: ['Sales[Total Sales]'], measure: 'Sales[Total Sales]', category: 'Calendar[Quarter]', category2: 'Calendar[Day Name]', table: ['Calendar[Day Name]', 'Sales[Total Sales]'] },
+        pages: [{ name: 'P', slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w: 600, h: 400 }, { kind: 'column', x: 700, y: 100, w: 600, h: 500 }, { kind: 'table', x: 36, y: 620, w: 600, h: 300 }] }] });
+      const cs = x.err ? [] : vis('n1-bars', x).filter((v) => /Chart$/.test(ty(v))), day = cs.find((c) => catOf(c) === 'Calendar.Day Name');
+      chk(() => cs.length === 2 && cs.map(catOf).sort().join() === 'Calendar.Day Name,Calendar.Quarter' && day && ty(day) === 'clusteredBarChart' && /Day of Week/.test(JSON.stringify(day.visual.query.sortDefinition || '')),
+        () => `a column chart by Day Name written as a bar chart keeps Day Name (not the bar chart's Quarter), sorted by Day of Week: ${JSON.stringify(cs.map((c) => [ty(c), catOf(c), c.visual.query.sortDefinition || null]))} ${x.err ? x.t.slice(0, 300) : ''}`);
+      // (and the table by the same column is titled "...: detail", as beside a column chart: no two visuals with one title)
+      const titles = x.err ? [] : vis('n1-bars', x).filter((v) => /Chart$|tableEx/.test(ty(v))).map((v) => (((v.visual.visualContainerObjects || {}).title || [{ properties: {} }])[0].properties.text || { expr: { Literal: { Value: '' } } }).expr.Literal.Value);
+      // (and, measured in Desktop the same night: in a 221-high slot at 1280 x 720 the seven bars and a value axis do not
+      // fit, Saturday went behind a scrollbar; such a chart has no value axis and each bar's value beside it; a slot
+      // with room for the axis, 253 and more, keeps it)
+      for (const [h, noAxis] of [[221, true], [300, false]]) { const y = await ask('create_report', { path: 'n1-bars', name: 'N1 bars ' + h, fields: { kpis: ['Sales[Total Sales]'], measure: 'Sales[Total Sales]', category2: 'Calendar[Day Name]' }, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 16, y: 12, w: 600, h: 40 }, { kind: 'column', x: 16, y: 100, w: 514, h }] }] });
+        const c = y.err ? null : vis('n1-bars', y).find((v) => /Chart$/.test(ty(v))), o = (c && c.visual.objects) || {}, off = JSON.stringify(((o.valueAxis || [{ properties: {} }])[0].properties.show) || '').includes('false'), lab = JSON.stringify(o.labels || '').includes('true');
+        chk(() => c && ty(c) === 'clusteredBarChart' && off === noAxis && lab === noAxis, () => `a chart by day written as bars in a ${h}-high slot at 1280 x 720: ${noAxis ? 'no value axis, the values beside the bars' : 'its value axis kept'}: ${c ? ty(c) : 'none'}, axis off ${off}, labels ${lab} ${y.err ? y.t.slice(0, 200) : ''}`); }
+      chk(() => titles.length === 3 && new Set(titles).size === 3 && titles.some((t) => /: detail'$/.test(t)), () => `the bar chart, the chart by day and the table by day each have their own title: ${JSON.stringify(titles)}`);
+    }
+    // Night sitting 6-7 Oct, the owner's answers to round 19 (6 Oct ~23:40 Dubai):
+    // (2a) golden task 8: a model with ONE measure for a row planned for more cards: the single card takes a quarter of
+    //      the row at the reading start (left in English, right in Arabic), not the whole row; two or three cards of
+    //      four still share the whole row (as before); a row planned for one card is unchanged
+    // (3a) golden task 4:3: on a 4:3 page the table takes the wider share of its row (3 to 2), so the four fields of
+    //      the task fit (measured: Day Name and the three measures need 463 at 8pt in Segoe UI, 483 in Tahoma, and the
+    //      table's half of a 960 x 720 page was 458); a 16:9 page keeps equal shares
+    {
+      const model = (dir, ms) => { fs.mkdirSync(path.join(ROOT, dir, 'M.SemanticModel'), { recursive: true });
+        fs.writeFileSync(path.join(ROOT, dir, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Day of Week', 'int64'), col('Day Name', 'string'), col('Quarter', 'string'), col('Month Short', 'string'), col('Month Number', 'int64')] },
+          { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime')], measures: ms.map((n) => ({ name: n, expression: /%/.test(n) ? 'DIVIDE ( SUM ( Sales[Amount] ), 2 )' : 'SUM ( Sales[Amount] )', formatString: /%/.test(n) ? '0.0%' : '#,0' })) }] } })); };
+      const MS = ['Total Sales', 'Total Sales Last Ramadan', 'Total Sales vs Last Ramadan %'];
+      model('n1-one', MS.slice(0, 1)); model('n1-two', MS.slice(0, 2)); model('n1-three', MS);
+      const all = (dir, x) => { if (x.err) return []; const def = path.join(ROOT, dir, x.j.report, 'definition', 'pages'), pg = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder[0];
+        const vs = fs.readdirSync(path.join(def, pg, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, pg, 'visuals', v, 'visual.json'), 'utf8')));
+        return vs.map((v) => { const g = v.parentGroupName && vs.find((q) => q.name === v.parentGroupName); return { t: v.visual ? v.visual.visualType : 'group', x: Math.round(v.position.x + (g ? g.position.x : 0)), w: Math.round(v.position.width), y: Math.round(v.position.y + (g ? g.position.y : 0)), ext: JSON.stringify(v.visual && v.visual.query || '').includes('"Schema":"extension"'), v }; }); };
+      const rep = async (dir, lang, page, kpis, extra) => { const plan = await ask('plan_layout', { layout: 'exec', kpis, filters: 'none', page, lang }); const x = await ask('create_report', Object.assign({ path: dir, name: `N1 ${dir} ${lang} ${page} ${kpis}`, lang, secondPage: false, design: plan.j.design }, extra || {})); return { x, vs: all(dir, x) }; };
+      for (const lang of ['en', 'ar']) {
+        const one = await rep('n1-one', lang, '1920x1080', 4), cards = one.vs.filter((v) => v.t === 'cardVisual' && !v.ext), line = one.vs.find((v) => v.t === 'lineChart'), others = one.vs.filter((v) => /Chart$/.test(v.t) && line && v.y === line.y);
+        const x0 = Math.min(...others.map((v) => v.x)), x1 = Math.max(...others.map((v) => v.x + v.w)), gap = others.length === 2 ? Math.max(...others.map((v) => v.x)) - Math.min(...others.map((v) => v.x + v.w)) : 0;
+        const quarter = (x1 - x0 - 3 * gap) / 4, c = cards[0];
+        chk(() => cards.length === 1 && line && Math.abs(c.w - quarter) <= 2 && (lang === 'ar' ? Math.abs(c.x + c.w - x1) <= 1 : Math.abs(c.x - x0) <= 1),
+          () => `${lang}: one KPI card of four takes a quarter of the row at the reading start: the card ${c ? c.x + ' wide ' + c.w : 'none'} (${cards.length} cards), the row ${x0} to ${x1}, a quarter ${Math.round(quarter)} ${one.x.err ? one.x.t.slice(0, 300) : ''}`);
+        for (const [dir, n] of [['n1-two', 2], ['n1-three', 3]]) { const r = await rep(dir, lang, '1920x1080', 4), cs = r.vs.filter((v) => v.t === 'cardVisual' && !v.ext), a = Math.min(...cs.map((v) => v.x)), b = Math.max(...cs.map((v) => v.x + v.w));
+          chk(() => cs.length === n && Math.abs(a - x0) <= 1 && Math.abs(b - x1) <= 1, () => `${lang}: ${n} KPI cards of four still share the whole row (${x0} to ${x1}): ${cs.length} cards from ${a} to ${b} ${r.x.err ? r.x.t.slice(0, 300) : ''}`); }
+        const asked1 = await rep('n1-one', lang, '1920x1080', 1), c1 = asked1.vs.filter((v) => v.t === 'cardVisual' && !v.ext);
+        // (a plan asked for one card is the same case: plan_layout keeps the layout's three slots and shows one, kpiCards 1)
+        chk(() => c1.length === 1 && Math.abs(c1[0].w - quarter) <= 2 && (lang === 'ar' ? Math.abs(c1[0].x + c1[0].w - x1) <= 1 : Math.abs(c1[0].x - x0) <= 1), () => `${lang}: a plan asked for one card gives the quarter card too: ${JSON.stringify(c1.map((v) => [v.x, v.w]))}`);
+        const F = { fields: { kpis: MS.map((n) => `Sales[${n}]`), table: ['Calendar[Day Name]'].concat(MS.map((n) => `Sales[${n}]`)) } };
+        for (const [page, wider] of [['960x720', true], ['1280x720', false]]) { const r = await rep('n1-three', lang, page, 3, F), tb = r.vs.find((v) => v.t === 'tableEx'), beside = tb && r.vs.find((v) => /Chart$/.test(v.t) && v.y === tb.y);
+          const shown = tb ? tb.v.visual.query.queryState.Values.projections.map((p) => p.queryRef).filter((q) => !/^Min\(/.test(q) && !/\.Ring|extension/.test(q)) : [], left = r.x.err ? [] : (r.x.j.tableColumns || []).flatMap((c) => c.leftOut || []);
+          chk(() => tb && beside && shown.length === 4 && !left.length && (wider ? Math.abs(tb.w / beside.w - 1.5) < 0.03 : Math.abs(tb.w - beside.w) <= 1),
+            () => `${lang} ${page}: ${wider ? 'on a 4:3 page the table takes three fifths of its row' : 'on a 16:9 page the table and the chart beside it stay equal'}, and the table holds its four fields: the table ${tb ? tb.w : 'none'}, the chart ${beside ? beside.w : 'none'}, shown ${JSON.stringify(shown)}, left out ${JSON.stringify(left)} ${r.x.err ? r.x.t.slice(0, 300) : ''}`); }
+      }
+    }
   }
   // Round 19, item 3 (the owner's choice B, 6 Oct; golden task 5 at 640 x 360: cut card values, "Wednes...", a scrolling
   //     table): below 800 wide the executive layout is not used: the plan takes the single-focus layout (one large
@@ -3821,11 +3893,18 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       const def = path.join(ROOT, 'r19-nodata', x.j.report, 'definition', 'pages'), pg = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder[0];
       const mobile = fs.readdirSync(path.join(def, pg, 'visuals')).filter((d) => fs.existsSync(path.join(def, pg, 'visuals', d, 'mobile.json')));
       return { charts: charts.length, paired: pairs.filter((p) => p.m).length, seeThrough: pairs.filter((p) => p.m && seeThrough(p.c)).length, tipOff: pairs.filter((p) => tipOff(p.m)).length,
-        ext: /IF \( ISBLANK \(/.test(ext), en: ext.includes('No data for this selection'), ar: ext.includes('لا توجد بيانات لهذا الاختيار'), phone: pairs.filter((p) => p.m && mobile.includes(p.m.name)).length }; };
+        ext: /IF \( ISBLANK \(/.test(ext), en: ext.includes('No data for this selection'), ar: ext.includes('لا توجد بيانات لهذا الاختيار'), phone: pairs.filter((p) => p.m && mobile.includes(p.m.name)).length,
+        // (night sitting 6-7 Oct, seen in Desktop: the card's inner outline drew a grey box inside every chart, with and
+        // without data, the message sat at the left in Arabic too, and a chart with its border and shadow switched off
+        // drew about 5 nearer its box's edge than the same chart without the option)
+        plain: pairs.filter((p) => p.m && JSON.stringify((p.m.visual.objects.outline || [])[0] || '') === JSON.stringify({ properties: { show: { expr: { Literal: { Value: 'false' } } } }, selector: { id: 'default' } }) && JSON.stringify(p.m.visual.objects.value[0].properties.horizontalAlignment || '').includes("'center'") && JSON.stringify((p.m.visual.visualContainerObjects || {}).dropShadow || '').includes('false')).length,
+        boxes: charts.map((c) => { const o = Object.assign({}, c.visual.visualContainerObjects || {}); delete o.background; delete o.visualTooltip;   /* the tooltip page's id is each report's own */ return ty(c) + ' ' + pos(c).x + ',' + pos(c).y + ' ' + JSON.stringify(o); }).sort() }; };
     const en = await one('en', true), ar = await one('ar', true), off = await one('en', false);
     chk(() => en.charts >= 3 && en.paired === en.charts && en.seeThrough === en.charts && en.tipOff === en.charts && en.ext && en.en && en.phone === 0, () => `English: every chart and table has its "No data" card below it: ${JSON.stringify(en)}`);
     chk(() => ar.paired === ar.charts && ar.charts >= 3 && ar.ar, () => `Arabic: the message in Arabic: ${JSON.stringify(ar)}`);
     chk(() => off.charts >= 3 && off.paired === 0, () => `without noDataMessage: true no message cards: ${JSON.stringify(off)}`);
+    chk(() => en.plain === en.charts && ar.plain === ar.charts, () => `each message card: no inner outline (the default selector), its text centred, no shadow of its own: ${en.plain} of ${en.charts}, Arabic ${ar.plain} of ${ar.charts}`);
+    chk(() => JSON.stringify(en.boxes) === JSON.stringify(off.boxes), () => `a chart above a message card differs from the same chart without the option only by its background (its border, shadow and padding as the theme's): ${JSON.stringify(en.boxes).slice(0, 500)} against ${JSON.stringify(off.boxes).slice(0, 500)}`);
   }
   // 4. (check 12, FAIL in Desktop: "P7 hand EN", a hand-placed matrix of Day Name and four long measures in a 420 x 220
   //    slot, had a horizontal scrollbar, the third header cut, and showed three of the seven days and the total.) Cause:
@@ -3886,6 +3965,15 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => T && T < 15 && fz('columnHeaders') === T && fz('total') === T && need <= 220 && JSON.stringify(o.columnHeaders).includes('growToFit') && !/needs about \d+ to show its 7 rows/.test(JSON.stringify(x.j)),
       () => `a 420 x 220 table of Day Name at 15pt must take a smaller text so seven rows and the total fit: values ${T}, headers ${fz('columnHeaders')}, total ${fz('total')}, need ${Math.round(need)} ${x.err ? x.t.slice(0, 200) : ''}`);
   }
+}
+// Night sitting 6-7 Oct (seen in Desktop, golden tasks 6 and 7 after Refresh: "The function SUM cannot work with values
+// of type String"): the made-up rows of the golden test models are TYPED Power Query tables. An untyped
+// #table({names}, {rows}) loads every column as text on Refresh, whatever the TMDL column declares.
+{
+  const dirs = ['test-models/arabic-long-names/Arabic Long Names.SemanticModel/definition/tables', 'test-models/no-measures/Plain Orders.SemanticModel/definition/tables'].map((d) => path.join(path.dirname(fileURLToPath(import.meta.url)), d));
+  const parts = dirs.flatMap((d) => fs.readdirSync(d).map((f) => ({ f, t: fs.readFileSync(path.join(d, f), 'utf8') }))).filter((x) => /#table\(/.test(x.t));
+  const untyped = parts.filter((x) => !/Source = #table\(type table \[/.test(x.t)).map((x) => x.f);
+  checks++; if (!(parts.length === 5 && !untyped.length)) problems.push(`the golden test models' made-up rows must be typed tables (#table(type table [...], rows)): ${parts.length} partitions with rows, untyped: ${untyped.join(', ')}`);
 }
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });

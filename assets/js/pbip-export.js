@@ -780,9 +780,13 @@
         const list = /(^|\s)(day|weekday)\s*name|اسم اليوم/i.test(f.c) ? NAMES.day : /(^|\s)month\s*name|اسم الشهر/i.test(f.c) ? NAMES.month : null;
         if (!list) return s;
         const k = pg.page.h / 720, room = (s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40) / list.length, widest = Math.max(...list.map((d) => textWidth(d, LABEL, false, font)));
-        if (widest + 6 <= room || s.h < (list.length * 22 + 46) * k) return s;
+        // (night sitting 6-7 Oct, measured in Desktop 2.158 on a 221-high slot at 1280 x 720, names at the theme's 10pt: a
+        // row is 22.2, the first starts 45 under the box's top and 8 stay under the last; the value axis and its room
+        // take 38 more, and with it Saturday went behind a scrollbar. So: 23 a row + 54, and where the axis's 38 do not
+        // fit as well the chart is written without its value axis, each bar's value beside it (rows, below).)
+        if (widest + 6 <= room || s.h < (list.length * 23 + 54) * k) return s;
         barCharts.push({ page: pg.name || base, field: label(f) });
-        return Object.assign({}, s, { kind: 'bar', wasColumn: true });
+        return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows: list.length });
       };
       const sorted = pg.slots.map(railFit).map(asBar).sort((a, b) => (a.y - b.y) || (rtl ? b.x - a.x : a.x - b.x));
       const groups = {};
@@ -874,7 +878,7 @@
       // is a chart's title on the same page is titled by what it adds, "...: detail"
       const pageCats = new Set();   // the categories this page's charts already show (round 16, #18)
       let catPlan = null;   // each categorical chart slot's category, given out once for the page (round 18)
-      const chartTitles = new Set(B ? sorted.filter((s) => CHARTS.includes(s.kind)).map((s) => bindTitle(s.kind, B, W.by || 'by')).filter(Boolean) : []);
+      const chartTitles = new Set(B ? sorted.filter((s) => CHARTS.includes(s.kind)).map((s) => bindTitle(s.wasColumn ? 'column' : s.kind, B, W.by || 'by')).filter(Boolean) : []);   // (wasColumn: a column chart written as a bar chart keeps its own title)
       const charts = [];
       sorted.forEach((s) => {
         const g = groupOf(s.kind);
@@ -1041,10 +1045,13 @@
           // charts were both by the first one, because the column chart, earlier in the reading order, had taken the
           // third): the page's categories are given out once, the bar charts and the donut first in reading order,
           // then the column chart and the map; a chart repeats a category only when the pool has no unused one.
-          if (B && CAT_KINDS.includes(s.kind) && (B.cats || {})[s.kind]) {
+          // (night sitting 6-7 Oct, seen in Desktop: a column chart written as a bar chart, round 19, took the bar chart's
+          // category: the page showed the same chart twice. It keeps the column chart's own: kindOf.)
+          const kindOf = (x) => (x.wasColumn ? 'column' : x.kind);
+          if (B && CAT_KINDS.includes(s.kind) && (B.cats || {})[kindOf(s)]) {
             const k0 = (f) => f.t + '\u0001' + f.c;
-            if (!catPlan) { catPlan = new Map(); const last = (x) => x.kind === 'column' || x.kind === 'map', all = sorted.filter((x) => CAT_KINDS.includes(x.kind) && (B.cats || {})[x.kind]);
-              all.filter((x) => !last(x)).concat(all.filter(last)).forEach((x) => { let c = B.cats[x.kind]; if (pageCats.has(k0(c))) { const alt = (B.catPool || []).find((f) => !pageCats.has(k0(f))); if (alt) c = alt; } pageCats.add(k0(c)); catPlan.set(x, c); }); }
+            if (!catPlan) { catPlan = new Map(); const last = (x) => kindOf(x) === 'column' || x.kind === 'map', all = sorted.filter((x) => CAT_KINDS.includes(x.kind) && (B.cats || {})[kindOf(x)]);
+              all.filter((x) => !last(x)).concat(all.filter(last)).forEach((x) => { let c = B.cats[kindOf(x)]; if (pageCats.has(k0(c))) { const alt = (B.catPool || []).find((f) => !pageCats.has(k0(f))); if (alt) c = alt; } pageCats.add(k0(c)); catPlan.set(x, c); }); }
             const c = catPlan.get(s); if (c && c !== B.cats[s.kind]) Bt = Object.assign({}, Bt, { cats: Object.assign({}, Bt.cats, { [s.kind]: c }) });
           }
           // Round 18, S3 (the owner's yes, 6 Oct 2026; seen in Desktop: the day names slant on the 1920 x 1080 column
@@ -1075,6 +1082,9 @@
           if (GRAD && query && (s.kind === 'bar' || s.kind === 'column')) { visual.objects = { dataPoint: gradientFill(query.queryState.Y.projections[0].field, GRAD) }; chartColors.charts++; }
           if (MIRROR && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { mirrorChart(visual, s.kind); chartAxes.charts++; }
           if (GRID && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.gridlineColor = color(GRID); }
+          // a column chart written as a bar chart (asBar) in a slot too low for its rows and a value axis: no value axis,
+          // each bar's value beside it (the tooltip pages' bar chart, measured in round 0)
+          if (s.wasColumn && query && s.h < (s.rows * 23 + 92) * (pg.page.h / 720)) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.show = bool(false); visual.objects.labels = obj({ show: bool(true) }); }
           if (s.kind !== 'kpi' && s.kind !== 'card' && ttl) {
             const tf = titleFit(ttl, TITLE, s.w - 2 * Math.round(16 * pg.page.h / 1080)), tp = visual.visualContainerObjects.title[0].properties;
             if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); titles[tf.mode].push({ page: pg.name || base, title: ttl, shown: tf.shown }); }
@@ -1213,10 +1223,14 @@
             if (!noData.some((x) => x.t === ent && x.m === nm)) noData.push({ t: ent, m: nm, expression: 'IF ( ISBLANK ( ' + "'" + ent.replace(/'/g, "''") + "'" + '[' + mm.replace(/\]/g, ']]') + '] ), "' + (lang === 'ar' ? 'لا توجد بيانات لهذا الاختيار' : 'No data for this selection').replace(/"/g, '""') + '", "" )' });
             container({ x: s.x, y: box.y, w: s.w, h: box.h, z: z - 500, parent, kind: 'nodata', noPhone: true, visual: { visualType: 'cardVisual',
               query: q({ Data: [{ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: ent } }, Property: nm } }, queryRef: ent + '.' + nm, nativeQueryRef: nm }] }),
-              objects: { value: [{ properties: { fontSize: num(LABEL), fontColor: color(mixHex(u.text, u.card, 0.3)) }, selector: { id: 'default' } }], label: [{ properties: { show: bool(false) }, selector: { id: 'default' } }], fillCustom: [{ properties: { show: bool(false) } }] },
-              visualContainerObjects: { title: obj({ show: bool(false) }), visualTooltip: obj({ show: bool(false) }), general: obj({ altText: str('') }) } } });
-            if (SOLID) Object.assign(visual.visualContainerObjects, { background: obj({ show: bool(false) }), border: obj({ show: bool(false) }), dropShadow: obj({ show: bool(false) }) });
-            else visual.visualContainerObjects.background = obj({ show: bool(false) });
+              objects: { value: [{ properties: { fontSize: num(LABEL), fontColor: color(mixHex(u.text, u.card, 0.3)), horizontalAlignment: str('center') }, selector: { id: 'default' } }], label: [{ properties: { show: bool(false) }, selector: { id: 'default' } }], outline: [{ properties: { show: bool(false) }, selector: { id: 'default' } }], fillCustom: [{ properties: { show: bool(false) } }] },
+              visualContainerObjects: { title: obj({ show: bool(false) }), visualTooltip: obj({ show: bool(false) }), general: obj({ altText: str('') }), dropShadow: obj({ show: bool(false) }) } } });
+            // Night sitting 6-7 Oct (seen in Desktop 2.158): the card's own inner outline drew a grey box inside every chart,
+            // and a chart whose border and shadow were switched off drew about 5 nearer its box's edges than without the
+            // option. So the card has no outline, its text centred, and no shadow of its own; the chart keeps the theme's
+            // border and shadow and only its background is off (with data the page then differs from one without the option
+            // by the panels' edge pixels only, at most 19 of 255).
+            visual.visualContainerObjects.background = obj({ show: bool(false) });
           }
         }
         const v = container({ x: s.x, y: box.y, w: s.w, h: box.h, z, parent, visual, kind: s.kind });

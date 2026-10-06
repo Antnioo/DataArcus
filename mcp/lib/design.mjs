@@ -98,6 +98,7 @@ export function planLayout(a) {
   if (a.layout) { l.preset = a.layout; l.kpis = E.LAYOUTS[a.layout].kpis; l.filters = E.LAYOUTS[a.layout].filters; delete l.kpiH; delete l.mainW; delete l.split; }
   // fewer than 3 KPI cards (the engine's own minimum): the layout keeps its 3 and the page shows kpiCards of them
   if (a.kpis != null) { l.kpis = Math.max(3, a.kpis); if (a.kpis < 3) l.kpiCards = a.kpis; else delete l.kpiCards; }
+  if (l.wideTable !== false) l.wideTable = true;   // (a design that says false keeps equal shares) the owner, 6 Oct 2026: on a 4:3 page the table takes the wider share of its row (the design engine, computeSlots)
   if (a.filters != null) { l.filters = a.filters !== 'none'; if (l.filters) l.fpos = a.filters; }
   Object.assign(design.layout, layoutFrom({ page: a.page, header: a.header, dir: a.dir }, l, () => {}));
   // Round 19 (the owner's choice B, 6 Oct 2026; golden task 5 at 640 x 360 in Desktop: cut card values, "Wednes...", a
