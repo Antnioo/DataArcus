@@ -225,7 +225,10 @@ function resolveSvgColumns(tables, list, opt) {
     const textColumns = new Map();   // value id -> the text column it holds (or is worked out from)
     d.values = (d.values || []).map((v) => {
       if (!v || typeof v !== 'object') return v;
-      if (v.kind === 'measure') { const f = find(v.measure, 'm'); if (!f) { problems.push(`${where} ("${label}"): ${v.measure} is not in the model (a measure is needed)`); return v; } entity = entity || f.t.name; return Object.assign({}, v, { measure: f.o.name }); }
+      if (v.kind === 'measure') { const f = find(v.measure, 'm'); if (!f) { problems.push(`${where} ("${label}"): ${v.measure} is not in the model (a measure is needed)`); return v; } entity = entity || f.t.name;
+        // (round 14: a percent by the card rule or the shared format rule is marked, so a text bound to it shows a percent)
+        const right = Fix.formatOf(Object.assign({}, f.o, { expression: f.o.expr != null ? f.o.expr : f.o.expression }), 'measure', []);
+        return Object.assign({}, v, { measure: f.o.name, percent: !!(Bind.measureCard(f.o).pct || (right && /%/.test(right.format))) }, f.o.formatString ? { format: String(f.o.formatString) } : {}); }
       if (v.kind === 'column') { const f = find(v.column, 'c'); if (!f) { problems.push(`${where} ("${label}"): ${v.column} is not in the model (a column is needed, written as Table[Column])`); return v; }
         if (/^(string|boolean|date)/i.test(String(f.o.dataType || ''))) textColumns.set(v.id, `${f.t.name}[${f.o.name}]`);
         return Object.assign({}, v, { column: daxColumn(f.t.name, f.o.name) }); }

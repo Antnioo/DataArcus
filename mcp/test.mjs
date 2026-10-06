@@ -3302,6 +3302,39 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => out.every((o) => o.n >= 2 && o.dd.every((d) => /^\d+D$/.test(d.r) && parseInt(d.r) >= 4 && d.w === '1D' && /^#[0-9a-f]{6}$/i.test(d.c) && d.c.toLowerCase() !== o.text.toLowerCase() && cr(d.c, o.card) >= 1.3 && cr(d.c, o.card) < cr(o.text, o.card))),
       () => `every slicer must keep the theme's rounded corners and get a softer outline (general.outlineColor, 1 wide) than the text: ${JSON.stringify(out)}`);
   }
+
+  const tplCount = (T) => T.TEMPLATES.length;
+  // 4. The SVG ring's label (owner, 6 Oct: the card read 33.8%, its ring's label "0", dark grey on the dark card): a
+  // text that shows a ratio (a ratio or % value, or a measure the shared format rule calls a percent) in a number format
+  // shows it as a percent, "0.0%", or "0%" where "100.0%" does not fit inside its ring; the arc from the true ratio,
+  // capped at 0 and 1 (the text still true); on a themed card a text too faint on its background takes the theme's text
+  {
+    const req = (await import('node:module')).createRequire(import.meta.url), Svg = req('../assets/js/svg-kpi-compiler.js'), Tpl = req('../assets/js/svg-kpi-templates.js');
+    const url = (d, m) => decodeURIComponent(Svg.toImageUrl(d, m).url.replace(/^data:image\/svg\+xml;utf8,/, ''));
+    const samples = { Sales: 1240000, Target: 1500000, 'Sales LY': 1100000 };
+    // every starter: no bound text shows a ratio as a bare number (83% is never "1")
+    const bad = Tpl.TEMPLATES.filter((t) => { const svg = url(t, samples); return !/83%|82\.7%/.test(svg) && t.layers.some((l) => l.bind && l.bind.text && l.bind.text.v === 'ach'); }).map((t) => t.id);
+    const ring = (size, fmt, extra) => ({ name: 'R', w: 120, h: 120, values: [Object.assign({ id: 'm', label: 'Margin', kind: 'measure', measure: 'Margin %' }, extra || {})],
+      layers: [{ type: 'ring', cx: 60, cy: 60, r: 46, sw: 12, bind: { p: { v: 'm', d0: 0, d1: 1 } } }, { type: 'text', x: 60, y: 66, size, weight: 700, anchor: 'middle', fill: '#334155', bind: { text: { v: 'm', fmt } } }] });
+    const small = url(ring(16, 'auto', { percent: true }), { 'Margin %': 0.338 }), big = url(ring(22, 'auto', { percent: true }), { 'Margin %': 0.338 });
+    const over = url(ring(16, 'auto', { percent: true }), { 'Margin %': 1.25 }), plain = url(ring(16, 'auto'), { 'Margin %': 0.338 });
+    const dash = (svg) => +((svg.match(/stroke-dasharray='([\d.]+) /) || [])[1]);
+    const C = 2 * Math.PI * 46;
+    chk(() => tplCount(Tpl) === 7 && !bad.length && />33\.8%</.test(small) && />34%</.test(big) && />125\.0%</.test(over) && Math.abs(dash(small) - 0.338 * C) < 0.05 && Math.abs(dash(over) - C) < 0.05 && />0</.test(plain),
+      () => `a ring's label must show the ratio as a percent (0.0%, or 0% where it does not fit), the arc capped: starters ${JSON.stringify(bad)} | ${small.match(/<text[^>]*>[^<]*/g)} | ${big.match(/<text[^>]*>[^<]*/g)} | ${over.match(/<text[^>]*>[^<]*/g)} dash ${dash(small)} ${dash(over)} of ${C.toFixed(2)}`);
+    // through create_report: the measure's own percent format makes it a percent; the dark grey label on a dark card
+    // takes the theme's text colour
+    const th = await ask('generate_theme', { name: 'R14 Midnight', preset: 'Midnight' });
+    const design = (await ask('plan_layout', { design: th.j.design, layout: 'exec', kpis: 3 })).j.design;
+    const x = await ask('create_report', { path: 'r14', name: 'R14 ring', design, secondPage: false, fields: { kpis: ['Sales[Margin %]', 'Sales[Total Sales]', 'Sales[Orders]'] },
+      svgCards: [{ card: 1, label: 'Margin ring', design: { name: 'Margin ring', w: 120, h: 120, values: [{ id: 'm', label: 'Margin', kind: 'measure', measure: 'Sales[Margin %]' }],
+        layers: [{ type: 'ring', cx: 60, cy: 60, r: 46, sw: 12, bind: { p: { v: 'm', d0: 0, d1: 1 } } }, { type: 'text', x: 60, y: 66, size: 16, weight: 700, anchor: 'middle', fill: '#334155', bind: { text: { v: 'm', fmt: 'auto' } } }] } }] });
+    const ext = x.err ? '' : fs.readFileSync(path.join(ROOT, 'r14', x.j.report, 'definition', 'reportExtensions.json'), 'utf8');
+    const expr = ext ? JSON.parse(ext).entities.flatMap((e) => e.measures || []).map((mm) => mm.expression).join('\n') : '';
+    const fill = (expr.match(/<text[^>]*fill='%23([0-9a-f]{6})'/) || [])[1];
+    chk(() => !x.err && /\* 100/.test(expr) && /%25/.test(expr) && fill && fill.toLowerCase() === th.j.design.ui.text.replace('#', '').toLowerCase(),
+      () => `create_report's ring label must be a percent in the theme's text colour: fill ${fill} vs text ${th.j && th.j.design.ui.text} ${x.err ? x.t.slice(0, 300) : expr.slice(0, 600)}`);
+  }
 }
 
 await client.close();
