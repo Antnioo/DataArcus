@@ -88,7 +88,7 @@ quotes), not the date table. Fixed in the test model: 215.4%.
 #### Package 0.2.7 candidate (night of 6-7 Oct)
 **No release, nothing pushed or committed of it, no version bump, nothing installed in Claude Desktop.**
 - **The trial merge (local only, in a worktree of its own, branch `local/night-trial`, never pushed):** `fix/round-17`
-  at `46c225a` with `origin/feat/check-report-2` at `e597761`. **Two conflicts the reviewer will meet:**
+  at `3daa07c` (made first at `46c225a`, then again after the Tab fix) with `origin/feat/check-report-2` at `e597761`. **Two conflicts the reviewer will meet:**
   1. `mcp/test.mjs`: both branches added their checks at the end of the file, just before `await client.close()`.
      Keep both, round 17's first, then check_report's block (round 17 follow-up G-04).
   2. `mcp/PRIVACY.md`, the tools table: keep round 17's `create_report` row ("the path of the new `.pbip` (relative
@@ -97,12 +97,13 @@ quotes), not the date table. Fixed in the test model: 215.4%.
      "full path" wording left in it would be wrong.
   `mcp/README.md`, `mcp/WORK.md`, `mcp/server.mjs` merged by themselves; the server registers 8 tools (read_model,
   suggest_fields, check_model_health, create_report, generate_theme, check_report, plan_layout, add_gulf_calendar).
-- **`npm test` on the trial tree (this Windows laptop):** **618 checks, 1 failing**, and the one is not the merge's: check_report's own offline check ("check_report must run with the network blocked and Playwright unloadable") starts a child process that imports `mcp/lib/check-report.mjs` by its Windows path, and Node refuses a `C:\...` path as a module (`ERR_UNSUPPORTED_ESM_URL_SCHEME`; it needs `pathToFileURL`, as round 19's item 8 did for three scripts). On Linux the path is a valid specifier, so CI is the record for that check; the fix belongs on `feat/check-report-2`. The other 617 pass, among them every report the test client creates validated by Microsoft's validator with 0 errors. The trial tree's golden baseline, run by itself: PASS, 11 tasks.
+- **`npm test` on the trial tree (this Windows laptop; run on the first trial, `46c225a`; the second differs by the Tab fix and its one check):** **618 checks, 1 failing**, and the one is not the merge's: check_report's own offline check ("check_report must run with the network blocked and Playwright unloadable") starts a child process that imports `mcp/lib/check-report.mjs` by its Windows path, and Node refuses a `C:\...` path as a module (`ERR_UNSUPPORTED_ESM_URL_SCHEME`; it needs `pathToFileURL`, as round 19's item 8 did for three scripts). On Linux the path is a valid specifier, so CI is the record for that check; the fix belongs on `feat/check-report-2`. The other 617 pass, among them every report the test client creates validated by Microsoft's validator with 0 errors. The trial tree's golden baseline, run by itself: PASS, 11 tasks.
 - **The package**, built in the engine repo's `feat/check-report-package-2` (`352db47`) the way `packaging/build.mjs`
   does, `--commit <the trial commit> --version 0.2.7 --dry` (so no committed release record; the two version files the
-  build writes were put back): `dataarcus-0.2.7.mcpb`, **8,968,692 bytes, SHA-256
-  `72461c479243b16bc628058a718caf3180e8410a95a8e71ffa125b143b0a590f`**, unsigned, 105 packages, staged files
-  3,481,784 bytes (engines 453,403). It is in the engine worktree's git-ignored `dist/` on the laptop only. The
+  build writes were put back): `dataarcus-0.2.7.mcpb`, **8,968,763 bytes, SHA-256
+  `2e4fd7cd23f7fd96154e32205e20c662580e528a9cebb750a2c42fd483f5998b`**, unsigned, 105 packages, staged files
+  3,481,967 bytes (engines 453,586). (The first build of the night, from the trial on `46c225a`: 8,968,692 bytes,
+  `72461c47...0a590f`.) It is in the engine worktree's git-ignored `dist/` on the laptop only. The
   SHA-256 is of this build: a build from the real merge commit will differ (the record holds the commit).
 - **From the unpacked file** (started as Claude Desktop starts it, working folder with the made-up Ramadan sample):
   server 0.2.7, 8 tools, each called once, all `ok`: read_model (2 tables), suggest_fields, check_model_health (score
@@ -119,6 +120,34 @@ divider under chart titles, a constant line with its label, the look moved into 
 column. No preview feature was switched on. Not done: Desktop's preview-features list, the format pane by hand,
 keyboard shortcuts, the TMDL features (field parameters, calculation groups, visual calculations).
 
+#### Night sitting, the blocks at the stop
+| Block | State |
+|---|---|
+| A, Desktop proof | done; every check has its row in DESKTOP-TESTS.md |
+| B, the 20 golden reports | done: 8.5 / 8.5 -> 9.4 / 9.4 (target 9.5 not reached, by 0.1 in both) |
+| C, fixes | done and pushed, CI green on `46c225a`; the No-data default: not switched (above) |
+| D, the 0.2.7 candidate | done, local only |
+| E, check 14 | the owner's; nothing installed in Claude Desktop |
+| F, seen, not in scope | the list below; one fixed (the ring note), the rest open with their status |
+| G, research | written; 13 settings opened in Desktop; the preview-features list, the format pane by hand and keyboard shortcuts not done |
+
+#### The next sitting starts with (in order)
+1. **The No-data default ON** (the owner's rule; every part passes): the switch in `pbip-export.js` and `server.mjs`
+   (round 19's commit `1d7d57c` shows the two lines), the checks that read card visuals taught to skip a card whose
+   query is a report-level `No data: ` measure (never weakened), `golden-expected.json`'s counts with their cause,
+   the website's `report-check.mjs`, then the 20 golden reports opened and scored again, and a look at what
+   `check_report` (the other branch) says about a report with message cards.
+2. **The owner's answers** to the five questions below (the KPI cards' blank text; the website's 4:3; task 7's
+   Arabic titles; the small page; Arabic names in an English report).
+3. **Test models as DAX tables** (the owner's yes of 6 Oct): tasks 6, 7 and 10 then open with data and no Refresh;
+   task 10 gets rows (worth 2 points in each language); give task 7's model a month number so a chart by month can
+   run over several months in order.
+4. **`feat/check-report-2`:** its offline check must import by `pathToFileURL` (it fails on Windows); then the real
+   merge with the two conflicts as written under the package candidate.
+5. Research's top 5, as the owner picks; reference labels need one card made by hand in Desktop and its saved JSON.
+Left on the laptop for whoever continues: the reports and crops in `<tests folder>\night-1006\`, the scripts
+`builder-scripts\n1-*`, the engine worktree with the candidate in its git-ignored `dist\` (`C:\DataArcus\night-engine`).
+The trial-merge worktree and its local branch were removed at the stop.
 #### Night sitting, for the owner (options and a recommendation each)
 1. **"No data" by default.** Every part now passes in Desktop, so by your rule it goes on; the switch was not made tonight (above). (a) The next sitting makes it, with the checks, the golden counts and the 20 reports opened again; (b) the same, and the KPI cards get the card's own blank text (research, top 5, item 1: "No data" instead of "--", one property) so cards and charts say the same; (c) keep it opt-in. **Recommended: (b)**, the cards' text proven in Arabic at a smaller size first (at the value's size its dots touch the card's edge).
 2. **The website's 4:3 layouts.** (a) Leave equal shares on the website (as now); (b) the website follows the MCP
