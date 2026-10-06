@@ -466,6 +466,8 @@ document.addEventListener('DOMContentLoaded', () => {
     : page.includes('/tools/') ? 'tool'
     : page.replace(/^\//, '').replace('.html', '') || 'home';
 
+  // Never name a parameter source, medium, campaign, term or content: GA4 reads those as the visit's traffic source
+  // and overwrites where the visitor came from (R-003). scripts/test-analytics-events.mjs checks every call.
   const track = (name, params = {}) => {
     const payload = { page_type: pageType, ...params };
     try { if (typeof window.gtag === 'function') window.gtag('event', name, payload); } catch (e) { /* ignore */ }
