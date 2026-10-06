@@ -35,7 +35,7 @@ picture), S3 (slanted day names). Records: DESKTOP-TESTS.md, rows 9b, 12b, S1.. 
 - **S3, slanted day names: not built (a taste call, below).** The Gulf calendar has no short day-name column (only
   "Day Name" and "Day Name (Arabic)"), and the tools read metadata only, so "a column whose values are 3-letter day
   names" cannot be told.
-- **After:** `npm test` **538 of 538** (534 + the 4 new), golden PASS; touched suites pbip 73, theme-generator 893, theme-generator-lab 893: PASS; `check:min`, `test-site-config`, `test-analytics-events` PASS; CI green on `845f73c` (both jobs); the docs commit after it: CI to confirm.
+- **After:** `npm test` **540 of 540** (534 + 4 matrix + 2 ring), golden PASS (538 after the matrix alone); touched suites pbip 73, theme-generator 893, theme-generator-lab 893: PASS; `check:min`, `test-site-config`, `test-analytics-events` PASS; CI green on `845f73c` and on `f91de94` (both jobs); this docs-only commit: CI to confirm.
 - **Seen, not in scope:** the matrix keeps the measures chosen at the width's size (11pt at 1920 x 1080) and then takes 9pt for its rows, where a third measure may now fit (kept as is: fewer columns is the safe side); the same `new URL(import.meta.url).pathname` root in `scripts/make-share-images.mjs`, `make-article-mockups.mjs` and `test-svg-kpi.mjs` (the last is a website suite: it may stop on a Windows checkout too); a table (not a matrix) still does not take a smaller text for its rows (the brief asked it for the matrix only).
 
 #### Round 18, for the laptop to prove
@@ -46,12 +46,19 @@ picture), S3 (slanted day names). Records: DESKTOP-TESTS.md, rows 9b, 12b, S1.. 
   Saturday and the total all shown, no vertical scrollbar.** The answer's reportNotes: "The table text is 9pt (the
   theme's is 15pt) ... and, in a matrix, its rows and total fit its height". Also at 1280 x 720 (10pt, unchanged,
   356 of 420, 217 of 220 tight): the same four things true.
+- **S2b** (the small table's ring): rebuild "P4 ring EN" (the 221-high table at 1280 x 720). Expected: the ring 28 high
+  with **no number inside**, at least four rows and the total shown (Sunday to Wednesday and the total, as S2), the
+  margin readable in its own value column; the answer's reportNotes: "The ring in the table (...) is drawn 28 high, too
+  small for a number to be read, so it has no number inside". A table where the ring is 40 high or more keeps it.
 - **S3b:** not built; nothing to prove until the owner picks an option.
 
 #### Round 18, for the owner
-1. **A ring as a table picture in a small table is 28 high and its number cannot be read.** Options: drop the number
-   inside a table ring under about 40 high (the measure's column beside it can carry it); keep the ring larger and show
-   fewer rows; leave it. **Recommended (the laptop's): drop the number under 40.**
+1. **A ring as a table picture in a small table is 28 high and its number cannot be read.** **Answered (6 Oct ~20:51
+   Dubai): "yes drop the number under 40". Done (item 2b, `f91de94`):** the server compiles a ring column's
+   version without the number inside; the writer uses it where the table's picture comes out under 40 high, and says
+   so in reportNotes; at 40 or more the number stays; KPI-card rings unchanged (none since round 15). Test first (round
+   18, 2b): red 1 failing (the 28-high ring kept its number), green after. Not covered: the phone layout shrinks the
+   pictures further but shares the measure, so a ring 40+ on the canvas keeps its number on the phone.
 2. **S3, day names slant on the 1920 x 1080 column charts.** Options: (a) the Gulf calendar gets a short day-name
    column ("Day Name Short": Sun ... Sat, sorted by Day of Week; Arabic day names are short already) and a column
    chart by days uses it when the model has it, matched by name; (b) a chart by day names becomes a bar chart (days
