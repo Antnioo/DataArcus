@@ -2559,7 +2559,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   {
     const Svg2 = (await import('node:module')).createRequire(import.meta.url)(path.join(REPO, 'assets/js/svg-kpi-compiler.js'));
     const pctV = { id: 'p', label: 'Margin', kind: 'measure', measure: 'Sales[Margin %]' };
-    const ring = (extra) => ({ w: 64, h: 64, values: [pctV], layers: [Object.assign({ type: 'ring', cx: 32, cy: 32, r: 24, sw: 8, bind: { p: { v: 'p', d0: 0, d1: 1 } } }, extra || {}), { type: 'text', x: 32, y: 37, size: 14, anchor: 'middle', bind: { text: { v: 'p', fmt: 'auto' } } }] });
+    // (round 15: the text inside the ring is a fixed word: a KPI card's ring no longer draws a number bound to a value
+    // (the owner's go on round 14's recommendation 3), and this check is about the theme's text colour)
+    const ring = (extra) => ({ w: 64, h: 64, values: [pctV], layers: [Object.assign({ type: 'ring', cx: 32, cy: 32, r: 24, sw: 8, bind: { p: { v: 'p', d0: 0, d1: 1 } } }, extra || {}), { type: 'text', x: 32, y: 37, size: 14, anchor: 'middle', text: 'MTD' }] });
     const arrow = { w: 48, h: 48, values: [pctV], layers: [{ type: 'arrow', x: 8, y: 8, size: 32, bind: { dir: { v: 'p' } } }] };
     const ext = (x) => { const f = path.join(ROOT, P, x.j.report, 'definition', 'reportExtensions.json'); return JSON.parse(fs.readFileSync(f, 'utf8')).entities.flatMap((e) => e.measures); };
     const hexes = (x, name) => [...new Set((ext(x).find((m) => m.name === name).expression.match(/%23[0-9a-f]{6}/g) || []).map((h) => '#' + h.slice(3)))];
@@ -3307,8 +3309,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     // takes the theme's text colour
     const th = await ask('generate_theme', { name: 'R14 Midnight', preset: 'Midnight' });
     const design = (await ask('plan_layout', { design: th.j.design, layout: 'exec', kpis: 3 })).j.design;
-    const x = await ask('create_report', { path: 'r14', name: 'R14 ring', design, secondPage: false, fields: { kpis: ['Sales[Margin %]', 'Sales[Total Sales]', 'Sales[Orders]'] },
-      svgCards: [{ card: 1, label: 'Margin ring', design: { name: 'Margin ring', w: 120, h: 120, values: [{ id: 'm', label: 'Margin', kind: 'measure', measure: 'Sales[Margin %]' }],
+    // (round 15: a table picture, since a KPI card's ring no longer draws its number: round 14's recommendation 3)
+    const x = await ask('create_report', { path: 'r14', name: 'R14 ring', design, secondPage: false, fields: { kpis: ['Sales[Margin %]', 'Sales[Total Sales]', 'Sales[Orders]'], table: ['Sales[Region]', 'Sales[Total Sales]'] },
+      svgColumns: [{ label: 'Margin ring', design: { name: 'Margin ring', w: 120, h: 120, values: [{ id: 'm', label: 'Margin', kind: 'measure', measure: 'Sales[Margin %]' }],
         layers: [{ type: 'ring', cx: 60, cy: 60, r: 46, sw: 12, bind: { p: { v: 'm', d0: 0, d1: 1 } } }, { type: 'text', x: 60, y: 66, size: 16, weight: 700, anchor: 'middle', fill: '#334155', bind: { text: { v: 'm', fmt: 'auto' } } }] } }] });
     const ext = x.err ? '' : fs.readFileSync(path.join(ROOT, 'r14', x.j.report, 'definition', 'reportExtensions.json'), 'utf8');
     const expr = ext ? JSON.parse(ext).entities.flatMap((e) => e.measures || []).map((mm) => mm.expression).join('\n') : '';
@@ -3444,6 +3447,20 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       const t = JSON.parse(fs.readFileSync(th.j.path, 'utf8')); return [...new Set(Object.values(t.visualStyles || {}).map((v) => ((((v['*'] || {}).legend || [])[0]) || {}).position).filter(Boolean))].join(); };
     const ar = await pos('ar'), en = await pos('en');
     chk(() => ar === 'Right' && en === 'Right', () => `a "Right" legend must sit at the right in both directions: AR ${ar} EN ${en}`);
+  }
+
+  // Round 14, recommendation 3: a ring on a KPI card has no number inside (the card already shows the value); a table
+  // picture keeps its number
+  {
+    const ring = { name: 'Ring', w: 120, h: 120, values: [{ id: 'm', label: 'M', kind: 'measure', measure: 'Sales[Margin %]' }],
+      layers: [{ type: 'ring', cx: 60, cy: 60, r: 46, sw: 12, bind: { p: { v: 'm', d0: 0, d1: 1 } } }, { type: 'text', x: 60, y: 66, size: 16, weight: 700, anchor: 'middle', bind: { text: { v: 'm', fmt: 'p1' } } }] };
+    const dz = (await ask('plan_layout', { layout: 'analysis', kpis: 2 })).j.design;
+    const x = await ask('create_report', { path: 'r15', name: 'R15 ring', design: dz, secondPage: false, fields: { kpis: ['Sales[Margin %]', 'Sales[Total Sales]'], table: ['Sales[Region]', 'Sales[Total Sales]'] },
+      svgCards: [{ card: 1, label: 'Ring card', design: ring }], svgColumns: [{ label: 'Ring column', design: ring }] });
+    const ms = x.err ? [] : JSON.parse(fs.readFileSync(path.join(ROOT, 'r15', x.j.report, 'definition', 'reportExtensions.json'), 'utf8')).entities.flatMap((e) => e.measures || []);
+    const card = (ms.find((m) => m.name === 'Ring card') || {}).expression || '', column = (ms.find((m) => m.name === 'Ring column') || {}).expression || '';
+    chk(() => !x.err && /<circle/.test(card) && !/<text/.test(card) && /<text/.test(column) && (x.j.reportNotes || []).some((n) => /number inside/i.test(n)),
+      () => `a KPI card's ring has no number inside, a table picture keeps it, told: card text ${/<text/.test(card)} column text ${/<text/.test(column)} ${JSON.stringify((x.j && x.j.reportNotes || []).filter((n) => /ring|number/i.test(n)))} ${x.err ? x.t.slice(0, 300) : ''}`);
   }
 }
 

@@ -252,6 +252,11 @@ function resolveSvgColumns(tables, list, opt) {
       [b.v].concat((b.rules || []).map((r) => r.v)).filter((id) => textColumns.has(id)).forEach((id) => problems.push(`${where} ("${label}"): ${textColumns.get(id)} is not a number column; a size, a position or a colour rule needs a number (a number column or a measure). A text column can only be shown as a text (bind.text with fmt "text")`)); }));
     // the report's theme in the design (round 13): "theme:<name>" colours, and the theme's colours where a layer names none
     if (opt && opt.palette) { const t = Svg.themed(d, opt.palette); if (t.errors.length) { problems.push(`${where} ("${label}"): ${[...new Set(t.errors)].slice(0, 3).join('; ')}`); return null; } d = t.design; }
+    // round 15 (the owner's go on round 14's recommendation 3): on a KPI card the card shows the value, so a ring there
+    // has no number inside it (a text bound to a value whose place is inside a ring is left out); a table picture keeps it
+    if (WHAT === 'svgCards') { const rings = d.layers.filter((l) => l && l.type === 'ring');
+      const inside = (l) => l && l.type === 'text' && l.bind && l.bind.text && l.bind.text.v && rings.some((r) => Math.hypot((+l.x || 0) - (+r.cx || 0), (+l.y || 0) - (+r.cy || 0)) < (+r.r || 20));
+      const n0 = d.layers.length; d.layers = d.layers.filter((l) => !inside(l)); if (d.layers.length < n0 && opt.ringNumbers) opt.ringNumbers.push(label); }
     if (opt && opt.mirror && d.mirror !== false) d.mirror = true;
     if (d.layers.some((l) => l && l.type === 'spark')) { const f = find(d.dateCol, 'c'); if (!f) problems.push(`${where} ("${label}"): a sparkline needs dateCol, a date column of the model written as Table[Column]`); else d.dateCol = daxColumn(f.t.name, f.o.name); }
     else delete d.dateCol;
@@ -511,7 +516,8 @@ server.registerTool('create_report', {
     return Svg.themePalette(Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd', good: t.good, bad: t.bad, neutral: t.neutral }, themeColors(t), a.colors || {}), t.dataColors);
   })();
   const SV = resolveSvgColumns(m.tables, a.svgColumns, { mirror: rtlReport, what: 'svgColumns', taken: svgLabels, palette: svgPalette });
-  const SC = resolveSvgColumns(m.tables, a.svgCards, { mirror: rtlReport, what: 'svgCards', taken: svgLabels, palette: svgPalette });
+  const ringNumbers = [];
+  const SC = resolveSvgColumns(m.tables, a.svgCards, { mirror: rtlReport, what: 'svgCards', taken: svgLabels, palette: svgPalette, ringNumbers });
   const svgCardsFor = (n) => { if (!SC) return undefined;
     SC.forEach((c, i) => { if (c.card > n) throw new Error(`Nothing was written. svgCards[${i}]: the report has ${n} KPI card${n === 1 ? '' : 's'}, so there is no card ${c.card}.`); });
     return SC.map((c) => ({ card: c.card - 1, t: c.t, m: c.label, expression: c.expression, w: c.w, h: c.h })); };
@@ -791,6 +797,7 @@ server.registerTool('create_report', {
   const svgMeasures = svgList.length ? { svgMeasures: svgList } : {};
   // pictures narrowed so the table fits its box (never a scrollbar or a cut header)
   Object.entries(r.svgSizes || {}).filter(([, z]) => z.capped).forEach(([pi, z]) => reportNotes.push(`The SVG pictures in the table on "${boundPages[pi].name}" were narrowed to ${z.w} x ${z.h} (the widest design is ${z.design}) so the table fits its box. For the design's own size, give the table more room or fewer columns.`));
+  if (ringNumbers.length) reportNotes.push(`The ring${ringNumbers.length === 1 ? '' : 's'} on the KPI card${ringNumbers.length === 1 ? '' : 's'} (${ringNumbers.join(', ')}) ${ringNumbers.length === 1 ? 'has' : 'have'} no number inside: the card already shows the value, and two numbers read as two facts. A table picture keeps its number.`);
   if (svgList.length) reportNotes.push(`${svgList.length === 1 ? 'An SVG picture was' : svgList.length + ' SVG pictures were'} added (${svgList.map((c) => c.label).join(', ')}): each is a measure that exists only in this report (definition/reportExtensions.json); the model was not changed. This is ${SVG_STATUS}.`);
   // how the KPI cards show their numbers
   const kpiValues = { kpiValues: FULL
