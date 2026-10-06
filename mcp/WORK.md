@@ -29,6 +29,39 @@ scope) and G (research: `mcp/research/POWERBI-HIDDEN-CAPABILITIES.md`). Reports 
   **The owner's rule:** all five PASS -> `noDataMessage` on by default in block C; any FAIL -> it stays opt-in, why written.
 - **The golden scores:** round 19's table below (about 9.3); the target is 9.5 in both languages.
 
+### Night sitting, where I am (kept current; times UTC)
+- **20:25, block A so far** (crops in `<tests folder>\night-1006\shots\`):
+  - **12b PASS** ("N12b hand EN", 1920 x 1080): the matrix at 9pt, Day Name and two measures, Sunday to Saturday and
+    the total, no scrollbar either way (`n12b-1080-matrix-crop.png`; about 283 of 420 wide, 200 of 220 high).
+  - **Item 10 PASS** ("N10 table EN"): 9pt, seven days and the total, no scrollbar (`n10-table-crop.png`).
+  - **S2b PASS for the ring and the rows** ("NS2b ring EN"): the ring 28 high with no number, Sunday to Wednesday and
+    the total. Seen: this table has no column with the ring's percent, so the note's "the table's value column
+    carries it" is not true for it.
+  - **No data: FAIL on part 2, so it stays opt-in.** With data, every message card's own inner outline is drawn as
+    a grey box inside its chart, and each chart sits about 5 nearer its box's edges than without the option (its
+    border and shadow are switched off): 212,533 pixels differ from the same page without the option
+    (`ba-nd-off-on-en.png`). With an empty selection the message shows in all four boxes, in Arabic too (shaped, whole),
+    but at the left in both languages and inside the same grey box (`nd-empty-en-crop.png`, `nd-empty-ar-crop.png`).
+    **Found by hand on copies ("ND x1"):** the card without its outline, centred, without its own shadow, and the
+    chart above keeping the theme's border and shadow (only its background off): with data 10,930 pixels differ by at
+    most 19 of 255 (edges), nothing to see; empty, the message is centred and clean. Tests written first (red: 566
+    checks, 2 failing); the writer's change comes after the red run of all tonight's checks.
+  - **Round 19's item 2: FAIL.** The column chart written as a bar chart takes the BAR chart's category: golden task 1,
+    task 4 16:9 Arabic and task 4:3 show "Total Sales by Quarter" twice and no chart by day (the round 19 check's model
+    has one text column, so it could not see it). Test written (a model with Quarter and Day Name).
+  - **Round 19's item 1: the made-up rows were untyped** (`#table({names}, {rows})`): after Refresh every column is
+    text and Desktop says "The function SUM cannot work with values of type String" in every chart (it shows as "This
+    might be caused by a capacity or license issue"). Fixed in the two test models: `#table(type table [...], rows)`
+    with bare type names (`type text` inside `type table` stops Desktop opening the project: "Issues were found").
+  - **Task 6's growth card, the cause:** "The following syntax error occurred during parsing: Invalid token, Line 1,
+    Offset 92": the test model's measure names the Arabic calendar table without quotes
+    (`SAMEPERIODLASTYEAR ( التقويم[التاريخ] )`); DAX needs `'التقويم'[التاريخ]`. Not the date table. Fixed in the test
+    model; the card then shows 215.4%.
+- **Measured for the 4:3 table:** the four fields need 463 (Segoe UI) or 483 (Tahoma) at 8pt; the table's half of a
+  960 x 720 page is 458. Three fifths of the row (about 550) holds them.
+- **Running:** the golden captures (8 of 20 started 20:16), the red run of the new checks (a full `npm test` takes
+  20 minutes on this laptop). **Not yet:** S3b, the No-data clicks/tooltips/Tab, B's scores, C, D, F, G.
+
 ## Round 17, the outside review's fixes (2026-10-06, 13:19-14:19 UTC, cloud builder; branch `fix/round-17` from `fix/round-16` `26ba7ef`; item 6 on `feat/check-report-2`; not merged)
 
 Source: dataarcus-engine `business/audit/OUTSIDE-REVIEW-2026-10-06.md`. Out of scope: G-10, G-07 (owner decisions), G-06, G-09, G-11, Arabic indexing.
