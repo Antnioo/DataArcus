@@ -110,9 +110,9 @@ function resolveFields(tables, fields) {
     if (!meas && !col) { problems.push(`${where}: ${ref} is not in the model`); return null; }
     if (wanted === 'm' && !meas) { problems.push(`${where}: ${ref} is a column; a measure is needed here`); return null; }
     if (wanted === 'c' && !col) { problems.push(`${where}: ${ref} is a measure; a column is needed here`); return null; }
-    if (meas && wanted !== 'c') return { t: t.name, m: meas.name, pct: Bind.isPercent(meas.name, meas.formatString), variant: false };
+    if (meas && wanted !== 'c') { const k = Bind.measureCard(meas); return Object.assign({ t: t.name, m: meas.name, pct: k.pct, variant: false }, k.text ? { text: true } : {}, k.pctFormat ? { pctFormat: k.pctFormat } : {}, k.wholeFormat ? { wholeFormat: k.wholeFormat } : {}); }
     const by = col.sortBy ? null : Bind.sortColumnFor(t.columns, col.name);
-    return Object.assign({ t: t.name, c: col.name, type: String(col.dataType || 'string').toLowerCase() }, by ? { sortBy: { t: t.name, c: by.name } } : {});
+    return Object.assign({ t: t.name, c: col.name, type: String(col.dataType || 'string').toLowerCase() }, by ? { sortBy: { t: t.name, c: by.name } } : {}, col.sortBy && Bind.nameLike(col.name) ? { ordered: true } : {});
   };
   const out = {};
   if (fields.kpis) out.kpis = fields.kpis.map((r, i) => one(r, 'm', `fields.kpis[${i}]`));
@@ -217,6 +217,8 @@ function resolveSvgColumns(tables, list, opt) {
     // a size, a position, a colour rule or "show if" needs a number: a text column there would be an error in Power BI
     d.layers.forEach((l) => Object.entries((l && l.bind) || {}).forEach(([prop, b]) => { if (prop === 'text' || !b) return;
       [b.v].concat((b.rules || []).map((r) => r.v)).filter((id) => textColumns.has(id)).forEach((id) => problems.push(`${where} ("${label}"): ${textColumns.get(id)} is not a number column; a size, a position or a colour rule needs a number (a number column or a measure). A text column can only be shown as a text (bind.text with fmt "text")`)); }));
+    // the report's theme in the design (round 13): "theme:<name>" colours, and the theme's colours where a layer names none
+    if (opt && opt.palette) { const t = Svg.themed(d, opt.palette); if (t.errors.length) { problems.push(`${where} ("${label}"): ${[...new Set(t.errors)].slice(0, 3).join('; ')}`); return null; } d = t.design; }
     if (opt && opt.mirror && d.mirror !== false) d.mirror = true;
     if (d.layers.some((l) => l && l.type === 'spark')) { const f = find(d.dateCol, 'c'); if (!f) problems.push(`${where} ("${label}"): a sparkline needs dateCol, a date column of the model written as Table[Column]`); else d.dateCol = daxColumn(f.t.name, f.o.name); }
     else delete d.dateCol;
@@ -238,7 +240,8 @@ function resolveSvgColumns(tables, list, opt) {
 // What each visual of the written pages shows, by name: the answer's boundFields
 const VISUAL_NAMES = { kpi: 'KPI card', card: 'Card', line: 'Line chart', bar: 'Bar chart', column: 'Column chart', donut: 'Donut chart', table: 'Table', gauge: 'Gauge', funnel: 'Funnel', treemap: 'Treemap', map: 'Map', slicer: 'Slicer' };
 function boundOf(pages, B, tableKept) {
-  const key = (f) => (f ? `${f.t}[${f.c != null ? f.c : f.m}]` : null), list = (...fs2) => fs2.map(key).filter(Boolean);
+  const AGGN = { 0: 'Sum', 2: 'DistinctCount', 5: 'Count' };
+  const key = (f) => (f ? (f.agg != null ? `${AGGN[f.agg] || 'Agg'}(${f.t}[${f.c}])` : `${f.t}[${f.c != null ? f.c : f.m}]`) : null), list = (...fs2) => fs2.map(key).filter(Boolean);
   return (pages || []).map((p, pi) => { let k = 0; const visuals = [];
     (p.slots || []).slice().sort((s1, s2) => (s1.y - s2.y) || (s1.x - s2.x)).forEach((s) => {
       const cat = (B.cats || {})[s.kind], y = (B.y || {})[s.kind] || B.measure;
@@ -378,7 +381,8 @@ const pageInput = z.union([z.enum(['1920x1080', '1280x720', '960x720']), z.objec
 const langInput = z.enum(['en', 'ar']).default('en').describe('Language of the report: names in it, and right to left when dir is not given');
 const slot = z.object({
   kind: z.enum(['title', 'logo', 'kpi', 'card', 'line', 'bar', 'column', 'donut', 'table', 'matrix', 'gauge', 'funnel', 'treemap', 'map', 'slicer', 'text']),
-  title: z.string().optional(), x: z.number(), y: z.number(), w: z.number().positive(), h: z.number().positive()
+  title: z.string().optional(), x: z.number(), y: z.number(), w: z.number().positive(), h: z.number().positive(),
+  text: z.string().min(1).max(400).optional().describe('A text slot\'s sentence (from the approved plan); a text slot without one is left out')
 });
 server.registerTool('create_report', {
   title: 'Create a report project for an existing model',
@@ -386,6 +390,7 @@ server.registerTool('create_report', {
   inputSchema: {
     path: modelPath.describe('The project folder or .SemanticModel folder the report will use'),
     name: z.string().min(1).max(60).describe('Report name'),
+    title: z.string().min(1).max(80).optional().describe('The title in the report\'s header; without it the header shows the report\'s name'),
     pages: z.array(z.object({ name: z.string(), width: z.number().int().default(1920), height: z.number().int().default(1080), slots: z.array(slot).min(1),
       background: z.string().optional().describe('PNG file for the page background, inside the DataArcus folder') })).min(1).optional()
       .describe('Hand-placed pages; or give a design instead'),
@@ -411,7 +416,7 @@ server.registerTool('create_report', {
     }).strict()).max(8).optional().describe('Page filters, for a request that limits the report to part of the data (for example "Ramadan only": [{ "field": "Calendar[Is Ramadan]", "values": [true] }]. That keeps every Ramadan of the calendar: for "this Ramadan" add a second filter on the calendar\'s Hijri year, { "field": "Calendar[Hijri Year]", "values": [<year>] }, and ask the user which Hijri year, because the tools read no data values). Each keeps only the rows where the column is one of the values, on every page of the report, and shows in Power BI\'s Filters pane, where the user can change or clear it. Only columns of the model and plain values: no measures, no dates, no DAX. A column that is not in the model, or a value of the wrong type, refuses the call and nothing is written. Show the filters in the plan the user approves; the answer\'s pageFilters lists what was written'),
     svgColumns: z.array(z.object({
       label: z.string().min(1).max(40).describe('The column\'s header (also the name of the report-level measure); not the name of a measure of the model'),
-      design: z.record(z.any()).describe('The design, in the SVG KPI Designer\'s format: { w, h, bg?, values: [{ id, label, kind: "measure", measure: "Table[Measure]" } | { id, label, kind: "column", column: "Table[Column]" } | { id, label, kind: "ratio" | "diff" | "pct", a, b }], layers: [{ type: "rect" | "circle" | "line" | "text" | "ring" | "arrow" | "spark", ...its sizes and colours (#rrggbb), bind?: { w | x | fill | text | p | dir | show | ...: { v: <value id>, ... } } }] }. For a text bound to a column use bind.text { v, fmt: "text" }. No raw SVG and no script: only these layers'),
+      design: z.record(z.any()).describe('The design, in the SVG KPI Designer\'s format: { w, h, bg?, values: [{ id, label, kind: "measure", measure: "Table[Measure]" } | { id, label, kind: "column", column: "Table[Column]" } | { id, label, kind: "ratio" | "diff" | "pct", a, b }], layers: [{ type: "rect" | "circle" | "line" | "text" | "ring" | "arrow" | "spark", ...its sizes and colours (#rrggbb, or a colour of the report\'s theme by name: "theme:accent", "theme:text", "theme:muted", "theme:track", "theme:card", "theme:good", "theme:bad", "theme:neutral", "theme:data1" to "theme:data8"; a colour left out is the theme\'s, so the picture looks part of its card in light and dark designs), bind?: { w | x | fill | text | p | dir | show | ...: { v: <value id>, ... } } }] }. For a text bound to a column use bind.text { v, fmt: "text" }. No raw SVG and no script: only these layers'),
       page: z.number().int().min(1).optional().describe('The page (1 = the first) whose table gets the column; left out: the first page that has a table')
     }).strict()).max(4).optional().describe('EXPERIMENTAL. Small pictures drawn per row of a table (a progress bar, a ring, an arrow, a sparkline, a label), from a declarative design. Each is compiled to a report-level measure that exists only in the report (the model is never touched) and shown as the last column of the page\'s table. Checked in Power BI Desktop only in a table: card, matrix, image visual, phone and PDF are not checked yet. A design naming a measure or column that is not in the model, an unknown layer, or a measure over 8,000 characters refuses the call and nothing is written. Show the columns in the plan the user approves; the answer\'s svgMeasures lists what was written'),
     svgCards: z.array(z.object({
@@ -419,6 +424,9 @@ server.registerTool('create_report', {
       label: z.string().min(1).max(40).describe('The name of the report-level measure; not the name of a measure of the model'),
       design: z.record(z.any()).describe('The design, in the same format as svgColumns')
     }).strict()).max(6).optional().describe('EXPERIMENTAL. A small picture beside a KPI card\'s number (a ring, an arrow, a sparkline), from a declarative design in the svgColumns format, on the card\'s image. The model is never touched. Checked in Power BI Desktop; phone and PDF are not checked yet'),
+    chartColors: z.enum(['gradient', 'solid']).optional().describe('The bars of bar and column charts. "gradient": each bar fades by its value, from a light tint of the theme\'s first data colour (the smallest value shown) to the colour itself (the largest); the tint always stands 3:1 off the panel, in light and dark designs. "solid": every bar in the theme\'s colour. Left out: "gradient" with a design, "solid" with hand-placed pages. Line charts, donuts and the tooltip pages are not changed. The answer\'s chartColors says what was written'),
+    chartAxes: z.enum(['mirrored', 'standard']).optional().describe('Only for a right-to-left report (Power BI does not mirror charts itself). "mirrored" (the default there): a column or line chart has its value axis at the right and its categories and dates run from the right; a bar chart\'s bars grow from the right, its names at the right. "standard": the charts stay left to right. The answer\'s chartAxes says what was written'),
+    text: z.string().min(1).max(400).optional().describe('The sentence for the design\'s text box ("What it means" in the focus layout), from the approved plan: what the main chart shows and what to do about it, in the report\'s language. Without it the box is left out and the chart beside it takes its room: a placeholder is never written'),
     kpiValues: z.enum(['auto', 'full']).default('auto').describe('How every KPI card shows its number. "auto" (the default): automatic units with 2 decimals (3.43M, 14.81K, 231.50); a percentage shows as the model formats it (35.4% for 0.0%). "full": the full number with thousand separators (101,914) for measures whose format has none, in a smaller size on narrow cards so it is never cut'),
     displayNames: z.record(z.string(), z.string()).optional().describe('Names to show instead of the model\'s field names, as { "Table[Field]": "name" } (for example Arabic names for an Arabic report). Only names the user gave or approved: never translate, shorten or relabel a field yourself; when names are missing, list the fields and ask the user. The report shows the name wherever it shows the field: KPI titles, chart titles, axis and legend, table headers, slicer headers, the tooltip pages. The model is never renamed. Give names only for fields you know the right name of: nothing is translated automatically'),
     logo: z.string().optional().describe('Logo image for the header: a PNG or JPG file inside the DataArcus folder, 2 MB at most. It is copied into the new report (the file itself is not changed) and shown at its own shape, never stretched; a horizontal logo reads best'),
@@ -436,6 +444,9 @@ server.registerTool('create_report', {
   // KPI cards: never more than the measures a card can show (no card is ever written without a field)
   // the approved plan's fields (a.fields): each name checked against the model, then bound as given
   const F = resolveFields(m.tables, a.fields);
+  // Round 12 (#26): a measure that shows text ("Yes", a date) is never a KPI card, even when the plan names it: left out, and told
+  const textKpis = F && F.kpis ? F.kpis.filter((k) => k.text) : [];
+  if (textKpis.length) F.kpis = F.kpis.filter((k) => !k.text);
   // the page filters: each column checked against the model, each value typed by its column
   const PF = resolvePageFilters(m.tables, a.pageFilters);
   // a filter that keeps the true rows of a Ramadan flag keeps every Ramadan (measured in Desktop, D14): without a
@@ -451,8 +462,17 @@ server.registerTool('create_report', {
   // SVG columns: each design checked against the model and compiled (nothing is written when one can't be used)
   // (a right-to-left report mirrors a design, unless the design says mirror: false; a text keeps its direction)
   const rtlReport = a.pages ? !!a.rtl : a.dir ? a.dir === 'rtl' : a.lang === 'ar', svgLabels = new Set();
-  const SV = resolveSvgColumns(m.tables, a.svgColumns, { mirror: rtlReport, what: 'svgColumns', taken: svgLabels });
-  const SC = resolveSvgColumns(m.tables, a.svgCards, { mirror: rtlReport, what: 'svgCards', taken: svgLabels });
+  // The colours an SVG design takes from the report's theme (round 13; seen in Desktop 2.158, 6 Oct: a design without
+  // colours was drawn in the compiler's own, a near-black ring and cyan on a white Corporate card): the design's own
+  // colours as the report will have them, or the theme file's and the colours given with hand-placed pages.
+  const svgPalette = (() => {
+    if (!(a.svgColumns || []).length && !(a.svgCards || []).length) return null;
+    if (a.design) { const d = planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang }).design; return Svg.themePalette(d.ui, d.data); }
+    const t = a.theme ? JSON.parse(fs.readFileSync(inside(a.theme), 'utf8')) : {};
+    return Svg.themePalette(Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd', good: t.good, bad: t.bad, neutral: t.neutral }, themeColors(t), a.colors || {}), t.dataColors);
+  })();
+  const SV = resolveSvgColumns(m.tables, a.svgColumns, { mirror: rtlReport, what: 'svgColumns', taken: svgLabels, palette: svgPalette });
+  const SC = resolveSvgColumns(m.tables, a.svgCards, { mirror: rtlReport, what: 'svgCards', taken: svgLabels, palette: svgPalette });
   const svgCardsFor = (n) => { if (!SC) return undefined;
     SC.forEach((c, i) => { if (c.card > n) throw new Error(`Nothing was written. svgCards[${i}]: the report has ${n} KPI card${n === 1 ? '' : 's'}, so there is no card ${c.card}.`); });
     return SC.map((c) => ({ card: c.card - 1, t: c.t, m: c.label, expression: c.expression, w: c.w, h: c.h })); };
@@ -479,35 +499,83 @@ server.registerTool('create_report', {
   const FULL = a.kpiValues === 'full', tableFormats = [];
   const withCardFormats = (b) => {
     const one = (f) => { const code = FULL && cardFormatOf(f); if (!code) return f; if (!cardFormats.some((x) => x.field === keyOf(f))) cardFormats.push({ field: keyOf(f), format: code }); return Object.assign({}, f, { cardFormat: code }); };
-    const cell = (f) => { const code = f && f.m != null && cardFormatOf(f); if (!code) return f; if (!tableFormats.some((x) => x.field === keyOf(f))) tableFormats.push({ field: keyOf(f), format: code }); return Object.assign({}, f, { tableFormat: code }); };
+    // (round 13, seen in Desktop on 6 Oct: a card said 33.8% and the table's column of the same measure 0.34: where the
+    // report gives a measure's card a percent format the model does not have, its table column carries the same)
+    const pctCell = (f) => { if (!f || f.m == null || !f.pctFormat) return null; const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t), o = t && (t.measures || []).find((x) => x.name === f.m); return o && !o.formatStringDefinition && o.formatString !== f.pctFormat ? f.pctFormat : null; };
+    const cell = (f) => { const code = f && f.m != null && (cardFormatOf(f) || pctCell(f)); if (!code) return f; if (!tableFormats.some((x) => x.field === keyOf(f))) tableFormats.push({ field: keyOf(f), format: code }); return Object.assign({}, f, { tableFormat: code }); };
     const tip = b.tip && b.tip.card ? Object.assign({}, b.tip, { card: (() => { const code = FULL && cardFormatOf(b.tip.card); return code ? Object.assign({}, b.tip.card, { cardFormat: code }) : b.tip.card; })() }) : b.tip;
     return Object.assign({}, b, { kpis: (b.kpis || []).map(one), table: (b.table || []).map(cell) }, b.tip ? { tip } : {});
   };
   const usable = F && F.kpis ? F.kpis.map((k) => k.m) : Bind.suggest(pickFrom, 8).kpis.filter(Boolean).map((k) => k.m);
+  // Round 12 (#25): a model without measures gets its numbers from its columns, counted or summed by the visuals
+  // (Bind.counts), so the report has cards, charts and a table instead of a page four fifths empty
+  const COUNTS = usable.length ? [] : Bind.counts(pickFrom, a.lang === 'ar' ? { count: (c) => 'عدد ' + c, sum: (c) => 'مجموع ' + c } : null);
+  const nValues = usable.length || COUNTS.length;
+  const countBind = (n) => { const b = Bind.suggest(pickFrom, n), C = COUNTS, cat = b.cats.bar || b.cats.column;
+    return Object.assign({}, b, { kpis: Array.from({ length: n }, (_, i) => C[i] || null), measure: C[0], y: { funnel: C[1] || C[0], gauge: C[0] },
+      table: [b.cats.column || cat, C[0], C[1]].filter((x, i, l) => x && l.indexOf(x) === i), tip: { card: C[0], cat, y: C[1] || C[0], date: b.tip.date } }); };
   // the binding for n KPI cards: the picker's, with every given field in its place
   const bindFor = (n) => {
+    if (COUNTS.length) return countBind(n);
     const b = Bind.suggest(pickFrom, n);
-    if (!F) return b;
+    if (!F && !PF) return b;
     const ch = Object.assign({}, b.choices);
+    // Round 12 (#22; seen in Desktop 2.158, golden task 3: Hijri Year and Is Ramadan slicers showed "All" while the page
+    // filter had fixed them): no slicer on a column a page filter fixes; the next column the picker would take instead
+    const unfixed = () => { if (!PF) return;
+      const fixed = (x) => x && PF.some((f) => f.t === x.t && f.c === x.c), keep = (ch.slicers || []).filter((x) => x && !fixed(x));
+      (b.slicerPool || []).forEach((x) => { if (keep.length < 3 && !fixed(x) && !keep.some((k) => k.t === x.t && k.c === x.c)) keep.push(x); });
+      if ((ch.slicers || []).some(fixed)) slicersDropped.push(...ch.slicers.filter(fixed).map((x) => `${x.t}[${x.c}]`));
+      ch.slicers = keep.concat([null, null, null]).slice(0, 3); };
+    if (PF) {
+      unfixed();
+      // #21 (golden task 3: one Ramadan by month was a line of two points): with a page filter on a Ramadan flag the
+      // line chart runs by the calendar's Ramadan Day (1 to 30) where it has one, unless the plan named the axis
+      const flag = PF.find((f) => /ramadan/i.test(f.c) && f.values.length && f.values.every((v) => v === true));
+      const tb = flag && pickFrom.concat(m.tables).find((t) => t.name === flag.t), rd = tb && tb.columns.find((c) => /^ramadan\s*day$/i.test(c.name));
+      if (rd && !(F && F.timeAxis)) { ch.date = { t: tb.name, c: rd.name, type: String(rd.dataType || 'int64').toLowerCase() }; byRamadanDay.push(`${tb.name}[${rd.name}]`); }
+    }
+    if (!F) { const nb = Bind.build(ch); return nb; }
     if (F.kpis) ch.kpis = F.kpis;
     if (F.measure) ch.main = F.measure;
     if (F.timeAxis) ch.date = F.timeAxis;
     if (F.category) ch.catA = F.category;
     if (F.category2) ch.catB = F.category2;
     // the given slicers first; a slot left over keeps the picker's (never a slicer without a field)
-    if (F.slicers) { const same = (x, y) => x && y && x.t === y.t && x.c === y.c, rest = (b.choices.slicers || []).filter((s) => s && !F.slicers.some((g) => same(g, s))); ch.slicers = F.slicers.concat(rest).slice(0, 3); while (ch.slicers.length < 3) ch.slicers.push(null); }
+    if (F.slicers) { const same = (x, y) => x && y && x.t === y.t && x.c === y.c, rest = (ch.slicers || []).filter((s) => s && !F.slicers.some((g) => same(g, s))); ch.slicers = F.slicers.concat(rest).slice(0, 3); while (ch.slicers.length < 3) ch.slicers.push(null); unfixed(); }
     const nb = Bind.build(ch);
-    if (F.table) nb.table = F.table.map((x) => (x.m != null ? { t: x.t, m: x.m } : Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {})));
+    if (F.table) nb.table = F.table.map((x) => (x.m != null ? Object.assign({ t: x.t, m: x.m }, x.pctFormat ? { pctFormat: x.pctFormat } : {}) :Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {})));
     return nb;
   };
-  const cardNote = (asked, built, leftOut) => (built >= asked ? null : Object.assign({ asked, built, measures: usable.slice(0, built),
+  const cardNote = (asked, built, leftOut) => (COUNTS.length ? Object.assign({ asked, built, counted: COUNTS.slice(0, built).map((f) => f.name),
+    why: `The model has no measures, so the KPI cards, the charts and the table show counts and sums of its columns, made by the visuals themselves (${COUNTS.slice(0, 4).map((f) => f.name).join(', ')}); the model is not changed. For real KPIs, propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again.` }, leftOut ? { leftOut } : {})
+    : built >= asked ? null : Object.assign({ asked, built, measures: usable.slice(0, built),
     why: usable.length ? `The model has ${usable.length} measure${usable.length === 1 ? '' : 's'} a KPI card can show${sc.scope ? ' in this part of the model' : ''}, so ${built} of ${asked} KPI cards were built. Add measures to the model (in Power BI Desktop) for more cards, then create the report again.`
       : 'The model has no measures, so no KPI card was built, and the charts were left out too (they have no value to show; see leftOutVisuals). The report has its header, filters and table only. Propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again.' }, leftOut ? { leftOut } : {}));
   let kpiCards = null;
+  const slicersDropped = [], byRamadanDay = [];
+  // Round 12 (#20; seen in Desktop 2.158, golden task 3: "What it means" shipped its placeholder sentence): a text
+  // slot holds the plan's sentence (a.text, or a hand-placed slot's own text), or is left out. In a design the visual
+  // beside it (the same row, else the same column) takes its room; hand-placed positions are the caller's.
+  const textLeftOut = [];
+  const withText = (slots, own) => {
+    const ts = slots.filter((x) => x.kind === 'text'); if (!ts.length) return slots;
+    let out = slots.filter((x) => x.kind !== 'text' || x.text || a.text).map((x) => (x.kind === 'text' && !x.text ? Object.assign({}, x, { text: a.text }) : x));
+    ts.filter((t) => !t.text && !a.text).forEach((t) => {
+      textLeftOut.push(t.title || 'Text');
+      if (own) return;
+      const near = (list) => list.sort((p, q) => Math.abs(p.x - t.x) + Math.abs(p.y - t.y) - Math.abs(q.x - t.x) - Math.abs(q.y - t.y))[0];
+      const row = near(out.filter((x) => !['title', 'logo', 'text'].includes(x.kind) && Math.abs(x.y - t.y) <= 1 && Math.abs(x.h - t.h) <= 1));
+      const colm = row ? null : near(out.filter((x) => !['title', 'logo', 'text'].includes(x.kind) && Math.abs(x.x - t.x) <= 1 && Math.abs(x.w - t.w) <= 1));
+      if (row) { const x0 = Math.min(row.x, t.x), x1 = Math.max(row.x + row.w, t.x + t.w); out = out.map((x) => (x === row ? Object.assign({}, x, { x: x0, w: x1 - x0 }) : x)); }
+      else if (colm) { const y0 = Math.min(colm.y, t.y), y1 = Math.max(colm.y + colm.h, t.y + t.h); out = out.map((x) => (x === colm ? Object.assign({}, x, { y: y0, h: y1 - y0 }) : x)); }
+    });
+    return out;
+  };
   // a model with no measures at all: the visuals that need one (charts, gauges, cards) are left out too, and named:
   // no visual is ever written without its fields
   const NEEDS_MEASURE = ['kpi', 'card', 'line', 'bar', 'column', 'donut', 'gauge', 'funnel', 'treemap', 'map'], leftOutVisuals = [];
-  const withValues = (slots) => (usable.length ? slots : slots.filter((s) => { if (!NEEDS_MEASURE.includes(s.kind)) return true; if (s.kind !== 'kpi') leftOutVisuals.push(s.title || s.kind); return false; }));
+  const withValues = (slots) => (nValues ? slots : slots.filter((s) => { if (!NEEDS_MEASURE.includes(s.kind)) return true; if (s.kind !== 'kpi') leftOutVisuals.push(s.title || s.kind); return false; }));
   // a report is written next to its model; when the working folder is the model folder, that is outside it
   if (!m.projectDir) throw new Error(`Nothing was written: the working folder is the model folder itself (${path.basename(m.folder)}). A report is written next to its model, which would be outside the working folder. Choose the project folder (the folder that holds ${path.basename(m.folder)}) as the working folder, then ask again.`);
   // no background image given: a fully transparent pixel, so the page colour from the theme shows
@@ -553,13 +621,13 @@ server.registerTool('create_report', {
     // fields.kpis decides the number of cards (one per measure given)
     if (F && F.kpis) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: Math.max(3, Math.min(6, F.kpis.length)), kpiCards: F.kpis.length }) });
     const askedCards = design.layout.kpiCards != null ? Math.min(design.layout.kpis, design.layout.kpiCards) : design.layout.kpis;
-    if (usable.length < 6) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpiCards: Math.min(design.layout.kpiCards != null ? design.layout.kpiCards : 6, usable.length) }) });
-    kpiCards = cardNote(askedCards, Math.min(askedCards, usable.length));
-    const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel, logoRatio }).map((p) => Object.assign({}, p, { slots: withValues(p.slots) }));
+    if (nValues < 6) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpiCards: Math.min(design.layout.kpiCards != null ? design.layout.kpiCards : 6, nValues) }) });
+    kpiCards = cardNote(askedCards, Math.min(askedCards, nValues));
+    const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel, logoRatio }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
     r = Pbip.build({
-      name: a.name, title: E.themeName(design.name), pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(pages))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues,
-      texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel }))
+      name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
+      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(pages))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', quietGrid: true,
+      texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
     extra = { pages: pages.map((p) => ({ name: p.name, width: p.page.w, height: p.page.h, slots: p.slots.length, slideInPanel: !!p.panel })), theme: E.themeName(design.name),
@@ -567,16 +635,18 @@ server.registerTool('create_report', {
   } else {
     // hand-placed pages: KPI slots beyond the measures are left out, and named
     const leftOut = [];
-    a.pages = a.pages.map((p) => { let k = 0; return Object.assign({}, p, { slots: p.slots.filter((s) => { if (s.kind !== 'kpi') return true; k++; if (k <= usable.length) return true; leftOut.push(s.title || `KPI ${k}`); return false; }) }); });
-    a.pages = a.pages.map((p) => Object.assign({}, p, { slots: withValues(p.slots) }));
+    a.pages = a.pages.map((p) => { let k = 0; return Object.assign({}, p, { slots: p.slots.filter((s) => { if (s.kind !== 'kpi') return true; k++; if (k <= nValues) return true; leftOut.push(s.title || `KPI ${k}`); return false; }) }); });
+    a.pages = a.pages.map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots), true) }));
+    if (COUNTS.length && !leftOut.length) kpiCards = cardNote(kpisOf(a.pages), kpisOf(a.pages));
     if (leftOut.length) { const asked = kpisOf(a.pages) === 1 && !usable.length ? leftOut.length : Math.max(...a.pages.map((p) => p.slots.filter((s) => s.kind === 'kpi').length)) + leftOut.length; kpiCards = cardNote(asked, asked - leftOut.length, leftOut); }
     const theme = a.theme ? JSON.parse(fs.readFileSync(inside(a.theme), 'utf8')) : { name: a.name };
     written = theme;
     r = Pbip.build({
-      name: a.name, title: a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo, theme,
+      name: a.name, title: a.title || a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(a.pages))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues,
-      texts: { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' },
+      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(a.pages))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', quietGrid: true,
+      // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
+      texts: Object.assign({}, E.REPORT_TEXTS[a.lang === 'ar' ? 'ar' : 'en'], { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' }),
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
     });
   }
@@ -595,6 +665,10 @@ server.registerTool('create_report', {
     : 'The visuals have no panels of their own (the theme\'s visuals are transparent): they show on the page\'s background image where one is given, otherwise straight on the page. For panels, use a design or a theme with solid visuals.';
   if (kpiCards && leftOutVisuals.length) kpiCards.leftOutVisuals = leftOutVisuals;
   if (kpiCards) reportNotes.push(`KPI cards: ${kpiCards.built} of ${kpiCards.asked} built. ${kpiCards.why}`);
+  if (textLeftOut.length) reportNotes.push(`The text box${textLeftOut.length === 1 ? '' : 'es'} ${[...new Set(textLeftOut)].map((x) => `"${x}"`).join(', ')} ${textLeftOut.length === 1 ? 'was' : 'were'} left out: create_report was given no text for ${textLeftOut.length === 1 ? 'it' : 'them'}, and a placeholder is never written${a.design ? '; the chart beside it takes its room' : ''}. For the box, pass the plan's sentence in "text" (what the main chart shows and what to do about it, in the report's language).`);
+  // chart and table titles too long for one line (round 12, #24): wrapped to two, or shortened at the end with "…"
+  const TT = r.titles || { wrapped: [], shortened: [], slicers: [] };
+  if (TT.shortened.length || TT.slicers.length) reportNotes.push(`${TT.shortened.length + TT.slicers.length} title${TT.shortened.length + TT.slicers.length === 1 ? ' was' : 's were'} shortened at the end with "…" to fit (the full name stays the visual's alt text): ${[...new Set(TT.shortened.map((x) => `"${x.title}" as "${x.shown}"`).concat(TT.slicers.map((x) => `the slicer "${x.field}" as "${x.shown}"`)))].slice(0, 8).join('; ')}. Shorter display names (displayNames, from the user) read better.`);
   // the page filters, in words: the user must see that the pages show part of the data
   const shownValue = (v) => (typeof v === 'string' ? `"${v}"` : String(v));
   if (PF) reportNotes.push(`${PF.length === 1 ? 'A page filter is' : PF.length + ' page filters are'} set on every page of the report: ${PF.map((f) => `${f.key} is ${f.values.map(shownValue).join(' or ')}`).join('; ')}. Every visual shows only that part of the data. The user sees, changes or clears ${PF.length === 1 ? 'it' : 'them'} in the Filters pane of Power BI.`);
@@ -629,7 +703,29 @@ server.registerTool('create_report', {
   // how the KPI cards show their numbers
   const kpiValues = { kpiValues: FULL
     ? { mode: 'full', note: 'The KPI cards show Power BI\'s own default, and the full number with thousand separators (101,914) where the measure\'s format has none; the value is smaller on narrow cards so nine digits fit.' }
-    : { mode: 'auto', note: 'Every KPI card shows its number with automatic units and 2 decimals (3.43M, 14.81K, 231.50); a percentage shows as the model formats it (35.4% for 0.0%). For full numbers with separators (101,914) pass kpiValues: "full".' } };
+    : { mode: 'auto', note: CARD_RULE + ' For full numbers with separators on every card (101,914) pass kpiValues: "full".' } };
+  // the bars' colours (round 13): what was written, and why not when a gradient was asked and the colour cannot fade
+  const CC = r.chartColors || {};
+  const chartColors = { chartColors: CC.ends && CC.charts
+    ? { mode: 'gradient', charts: CC.charts, low: CC.ends.low, high: CC.ends.high, note: 'The bars of the bar and column charts fade by their value: the smallest value shown is the light tint, the largest the theme\'s own colour (conditional formatting on the data colour, a gradient by the chart\'s measure). The colours are written into each chart: after a change of theme, set them again or pass chartColors: "solid".' }
+    : Object.assign({ mode: 'solid' }, CC.asked && !CC.ends ? { why: `The bars' colour (${CC.base}) cannot fade and still stand 3:1 (contrast) off the panel behind it, so every bar keeps that one colour.` } : {}) };
+  // a right-to-left report's charts (round 13): mirrored, or left as they are when asked
+  const CA = r.chartAxes || {};
+  const chartAxes = CA.rtl ? { chartAxes: CA.asked === 'mirrored'
+    ? { mode: 'mirrored', charts: CA.charts, note: 'Power BI does not mirror charts in a right-to-left report, so the report does: column and line charts have the value axis at the right and their categories and dates run from the right (the chart is sorted by its category, descending, and a date axis is inverted); bar charts grow from the right with their names at the right. For charts left to right pass chartAxes: "standard".' }
+    : { mode: 'standard', note: 'The charts run left to right, as Power BI draws them.' } } : {};
+  reportNotes.push('How the KPI cards show their numbers: ' + CARD_RULE + (textKpis.length ? '' : ''));
+  if (textKpis.length) reportNotes.push(`${textKpis.length === 1 ? 'A KPI card was' : textKpis.length + ' KPI cards were'} left out: ${textKpis.map((k) => `${k.t}[${k.m}]`).join(', ')} ${textKpis.length === 1 ? 'shows' : 'show'} text, not a number (a format of words only, a date format, or DAX that returns text), and a KPI card would show that text. Pick a measure that returns a number for the card.`);
+  if (slicersDropped.length) reportNotes.push(`No slicer on ${[...new Set(slicersDropped)].join(', ')}: a page filter already keeps one value of ${new Set(slicersDropped).size === 1 ? 'it' : 'each'}, so a slicer would only show the choice already made. The next columns took the rail's places.`);
+  if (byRamadanDay.length) reportNotes.push(`The line chart runs by ${byRamadanDay[0]} (the days of Ramadan), not by month: the page filter keeps Ramadan, and one Ramadan by month is a line of two or three points.`);
+  // tables given a smaller text so more of their fields fit (round 12, recommendation 5)
+  if ((r.tableSmaller || []).length) reportNotes.push(`The table text is ${[...new Set(r.tableSmaller.map((x) => x.size + 'pt'))].join(' or ')} (the theme's is ${r.tableSmaller[0].from}pt) on ${r.tableSmaller.map((x) => `"${x.page}"`).join(', ')}, so more of its fields fit its width; a field is left out only where even 8pt doesn't hold it.`);
+  // a header that grew one row so the page names fit as tabs (round 12)
+  if ((r.headerGrew || []).length) reportNotes.push(`The header is ${r.headerGrew[0].by} taller on ${r.headerGrew.map((x) => `"${x.page}"`).join(', ')}, so the page names fit as two rows of tabs; the visuals under it moved down and the last row is that much shorter.`);
+  // tables whose known rows don't fit even with tight rows (round 12, #23)
+  (r.tableRows || []).forEach((x) => reportNotes.push(`The table of ${x.field} on "${x.page}" needs about ${x.need} to show its ${x.rows} rows, a header and a total, even with tight rows, and has ${x.h}: its last rows will scroll. A taller table slot, fewer fields or a larger page shows them all.`));
+  // days and months put in calendar order in a table by a helper column (round 12, #17)
+  if ((r.tableOrder || []).length) reportNotes.push(`${[...new Set(r.tableOrder.map((x) => x.field))].join(', ')} ${r.tableOrder.length === 1 ? 'is' : 'are'} in calendar order in the table${r.tableOrder.length === 1 ? '' : 's'} too (by ${[...new Set(r.tableOrder.map((x) => x.by))].join(', ')}, the same order as the charts): the model gives ${r.tableOrder.length === 1 ? 'it' : 'them'} no sort-by column, so each table carries the number in a narrow column with no header, in the card colour. Setting the sort-by column in the model (check_model_health, fixes.MONTH_SORT) orders slicers too.`);
   // visuals left out because the model has no field for them (never written empty)
   const WHY = { slicer: 'the model has no more text columns a slicer can use', line: 'the model has no month or date column for its axis', table: 'no field was found for it', matrix: 'it needs a text column and a measure', gauge: 'the model has no measure for it', card: 'the model has no measure for it' };
   const KIND = { slicer: 'Slicer', line: 'Line chart', bar: 'Bar chart', column: 'Column chart', donut: 'Donut chart', funnel: 'Funnel', treemap: 'Treemap', map: 'Map', table: 'Table', matrix: 'Matrix', gauge: 'Gauge', card: 'Card' };
@@ -646,6 +742,8 @@ server.registerTool('create_report', {
   if (NPB.length) reportNotes.push(`${NPB.length === 1 ? 'One page has' : NPB.length + ' pages have'} no page buttons in the header: the page names do not fit the room between the title and the logo, even at 8pt. Readers still change pages with Power BI's own page tabs. For page buttons in the report: shorter page names, fewer pages, or a taller title slot (two rows of names need a title about 44 high).`);
   // KPI titles too long for one line at the 8pt minimum: wrapped to two lines, or shortened with the full name kept
   const KT = r.kpiTitles || { wrapped: [], shortened: [] };
+  const chartTitles = TT.wrapped.length || TT.shortened.length || TT.slicers.length ? { chartTitles: { wrapped: TT.wrapped, shortened: TT.shortened, slicerHeaders: TT.slicers,
+    note: 'A chart\'s or table\'s title never shows cut at its start: one too long for one line wraps to two lines, and one too long for two is shortened at its end with "…", so it still begins with the measure\'s name; a slicer\'s header is shortened the same way on one line. The full names stay the visuals\' alt text.' } } : {};
   const kpiTitles = KT.wrapped.length || KT.shortened.length ? { kpiTitles: { wrapped: KT.wrapped, shortened: KT.shortened,
     note: 'A KPI title never shows cut: one too long for its card at 8pt wraps to two lines where the card is high enough, otherwise it is shortened at a word with "…" (the full name stays the card\'s alt text and its tooltip). A shorter display name (displayNames, from the user) reads better on a small card.' } } : {};
   if (KT.shortened.length) reportNotes.push(`${KT.shortened.length} KPI title${KT.shortened.length === 1 ? ' was' : 's were'} shortened to fit their cards: ${[...new Set(KT.shortened.map((x) => `"${x.title}" as "${x.shown}"`))].join('; ')}. Ask the user for shorter display names if these read badly.`);
@@ -657,10 +755,12 @@ server.registerTool('create_report', {
   const arabic = a.lang === 'ar' ? { arabicNames: { shownFields: shown.length, missing,
     how: missing.length ? 'These fields show under their model names. To show Arabic names, call create_report again with displayNames: { "Table[Field]": "الاسم" } for each (ask the user for the names: nothing is translated automatically). The model is not renamed.' : 'Every field the report shows has an Arabic name.' } } : {};
   return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
-    { boundFields: boundOf(boundPages, bind, tableKept) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, kpiTitles, pageButtons, tableColumns, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
+    { boundFields: boundOf(boundPages, bind, tableKept) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, chartColors, chartAxes, kpiTitles, chartTitles, pageButtons, tableColumns, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
     sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {}));
 }));
 
+// The KPI cards' number rule (round 12, the owner's ask of 6 Oct 2026), as the answer and reportNotes state it
+const CARD_RULE = 'a percentage (a % in its format or name; a rate or ratio; a margin, share, growth or "vs" measure whose DAX divides and that has no format) shows as a percent without useless decimals: the model\'s percent format where it has one decimal or none, otherwise 0.0%; a measure whose format has no decimals (or a count without a format) shows its whole number with thousand separators (179, 101,914); money and every other measure keep automatic units with 2 decimals (14.81K, 3.43M). A measure that shows text is never put on a card.';
 // Things in the user's model that make the new report look wrong, for the fields it uses. The report never changes the
 // model: these are told to the user, with the fix, to make in Power BI Desktop (or through Microsoft's MCP, with the
 // user's go). A month or day name without a sort column shows them A to Z; a ratio without a format string shows 0.34, not 34%.
@@ -743,7 +843,7 @@ server.registerTool('plan_layout', {
 
 server.registerTool('add_gulf_calendar', {
   title: 'Add a Gulf calendar table',
-  description: 'Writes the DataArcus Calendar Generator\'s date table for a Gulf model (Hijri year, month and day, Ramadan and Eid flags and Ramadan Day, the UAE\'s announced Ramadan and Eid dates with later ones marked as estimates, and the official weekend of the chosen country with the dates it changed) as a TMDL script in a new file next to the project. The user applies it in Power BI Desktop\'s TMDL view after checking Preview; this tool never writes into the model, never returns the DAX and never overwrites a file. firstYear and lastYear are required: ask the user which years their data covers (the tool reads no data). It refuses, writing nothing, when the model already has a table, measure or column with the table\'s name, when a relateTo column is missing or is not a date, and when the years are outside Power BI\'s dates or more than 60. Relationships are written only for the relateTo columns the user names; marking the date table and the sort-by columns are steps by hand in the answer. Tell the user every step and note.' + UNTRUSTED,
+  description: 'Writes the DataArcus Calendar Generator\'s date table for a Gulf model (Hijri year, month and day, Ramadan and Eid flags and Ramadan Day, the UAE\'s announced Ramadan and Eid dates with later ones marked as estimates, and the official weekend of the chosen country with the dates it changed) as a TMDL script in a new file next to the project. The user applies it in Power BI Desktop\'s TMDL view after checking Preview; this tool never writes into the model, never returns the DAX and never overwrites a file. firstYear and lastYear are required: ask the user which years their data covers (the tool reads no data). It refuses, writing nothing, when the model already has a table, measure or column with the table\'s name, when a relateTo column is missing or is not a date, and when the years are outside Power BI\'s dates or more than 60. Relationships are written only for the relateTo columns the user names (a column whose type the files don\'t give is accepted with a note); Month Name, Day Name and Hijri Month Name are sorted by their numbers in the script; marking the date table is a step by hand in the answer. Tell the user every step and note.' + UNTRUSTED,
   inputSchema: {
     path: modelPath.describe('The model the table is for (read for name clashes and the relateTo columns); the script file goes next to it'),
     firstYear: z.number().int().describe('First year of the calendar (1 January). Ask the user: the years their data covers'),

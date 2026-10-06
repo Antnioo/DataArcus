@@ -12,7 +12,9 @@ const GD = require('../../assets/js/gulf-dates.js');
 const COUNTRY_CODES = ['uae', 'ksa', 'qat', 'kwt', 'bhr', 'omn'];
 const FIXED = { 'sat-sun': 'Saturday + Sunday', 'fri-sat': 'Friday + Saturday', fri: 'Friday only', sun: 'Sunday only' };
 const WEEK = { sunday: 'sun', monday: 'mon', saturday: 'sat' };
-// the generator's names that sort by a number: shown as steps until Desktop is measured with sortByColumn in the script
+// the generator's names that sort by a number. Round 12 (the owner's go on round 11's recommendation 4a): written in the
+// script as sortByColumn, since Desktop 2.158 applied a script with them, Problems 0, and three slicers came out January
+// to December, Sunday to Saturday and Muharram to Dhu al-Hijjah (DESKTOP-TESTS.md round 11, D-GC3)
 const SORTS = [['Month Name', 'Month Number'], ['Day Name', 'Day of Week'], ['Hijri Month Name', 'Hijri Month Number']];
 // the gulfCalendar findings about the calendar itself (not the model's measures)
 const CALENDAR_IDS = ['GC_NO_HIJRI', 'GC_NO_FLAGS', 'GC_WEEKEND', 'GC_DATES_DIFFER', 'GC_DATES_NOTE', 'GC_ESTIMATES', 'GC_ENDS_EARLY'];
@@ -35,11 +37,11 @@ function takenNames(raw) {
 const freeNames = (taken) => { const out = []; for (let n = 1; out.length < 2 && n < 100; n++) { const s = 'Gulf Calendar' + (n > 1 ? ' ' + n : ''); if (!taken.has(key(s))) out.push(s); } return out; };
 
 // The script: one createOrReplace with the new table (its columns as Power BI Desktop saves a DAX table's columns,
-// its DAX as the partition) and one relationship per relateTo column. Mark-as-date-table and sort-by stay by hand
-// until Desktop is measured with them in a script (mcp/WORK.md, D-GC2 and D-GC3).
+// its DAX as the partition, the three names sorted by their numbers) and one relationship per relateTo column.
+// Mark-as-date-table stays by hand until a person has seen the ribbon with it in a script (mcp/WORK.md, D-GC2).
 function scriptOf(Fix, table, columns, body, rels) {
-  const out = ['createOrReplace', '', `\ttable ${Fix.name(table)}`, ''];
-  columns.forEach((c) => out.push(`\t\tcolumn ${Fix.name(c)}`, '\t\t\tisNameInferred', `\t\t\tsourceColumn: [${c.replace(/]/g, ']]')}]`, ''));
+  const out = ['createOrReplace', '', `\ttable ${Fix.name(table)}`, ''], sortBy = new Map(SORTS.filter(([n, by]) => columns.includes(n) && columns.includes(by)));
+  columns.forEach((c) => out.push(`\t\tcolumn ${Fix.name(c)}`, '\t\t\tisNameInferred', `\t\t\tsourceColumn: [${c.replace(/]/g, ']]')}]`, ...(sortBy.has(c) ? [`\t\t\tsortByColumn: ${Fix.name(sortBy.get(c))}`] : []), ''));
   out.push(`\t\tpartition ${Fix.name(table)} = calculated`, '\t\t\tmode: import', '\t\t\tsource =', ...body.split('\n').map((l) => '\t\t\t\t\t' + l), '');
   rels.forEach((r) => out.push(`\trelationship ${Fix.name(r.name)}`, `\t\tfromColumn: ${Fix.name(r.table)}.${Fix.name(r.column)}`, `\t\ttoColumn: ${Fix.name(table)}.Date`, ''));
   return out.join('\n').replace(/\n+$/, '\n');
@@ -75,7 +77,7 @@ export function addGulfCalendar(m, a, env) {
   const relateTo = a.relateTo || [];
   if (relateTo.length > 5) refuse('relateTo takes at most 5 columns.');
   const relNames = new Set((((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).relationships || []).map((r) => key(r.name)));
-  const rels = [], seen = new Set();
+  const rels = [], seen = new Set(), untyped = [];
   relateTo.forEach((x, i) => {
     const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/);
     if (!mk) refuse(`relateTo[${i}] ${JSON.stringify(String(x))} is not written as Table[Column].`);
@@ -83,7 +85,10 @@ export function addGulfCalendar(m, a, env) {
     const c = t && (t.columns || []).find((y) => y.type !== 'rowNumber' && key(y.name) === key(mk[2]));
     if (!t || !c) refuse(`relateTo[${i}] ${JSON.stringify(String(x))} is not a column of the model.`);
     const type = String(c.dataType || '').toLowerCase();
-    if (!(type === 'datetime' || (!type && /date|time|تاريخ/i.test(String(c.name))))) refuse(`relateTo[${i}] ${JSON.stringify(`${t.name}[${c.name}]`)} is not a date column${type ? ' (its type is ' + type + ')' : ''}.`);
+    // (round 12, the owner's go on round 11's recommendation 4d: a column whose type the files don't give, a DAX table's,
+    // is accepted with a note: the relationship fails loudly in Preview if it is not a date; seen in Desktop, round 11)
+    if (type && type !== 'datetime' && type !== 'unknown') refuse(`relateTo[${i}] ${JSON.stringify(`${t.name}[${c.name}]`)} is not a date column (its type is ${type}).`);
+    if (!type || type === 'unknown') untyped.push(`${t.name}[${c.name}]`);
     const k = key(t.name) + '|' + key(c.name);
     if (seen.has(k)) refuse(`relateTo names ${JSON.stringify(`${t.name}[${c.name}]`)} twice.`);
     seen.add(k);
@@ -109,6 +114,7 @@ export function addGulfCalendar(m, a, env) {
   const before = Gulf.analyze(m.tmsl, { country, asOf: a.asOf, maxItems: 1 });
   const notes = [];
   if (before.calendar && before.calendar.kind === 'dataarcus-dax') notes.push(`The model already has a calendar made by the DataArcus generator (${JSON.stringify(before.calendar.table)}). This adds a second one; use one of them for the relationships.`);
+  if (untyped.length) notes.push(`The type of ${untyped.join(', ')} is not in the model's files (a DAX table's column), so it could not be checked: make sure ${untyped.length === 1 ? 'it is a date column' : 'they are date columns'}. If not, Preview shows the relationship as an error and nothing should be applied.`);
   if (st.observed && country !== 'uae' && country !== 'ksa') notes.push(`The announced dates are the UAE's; none are sourced for ${C.name} yet. Where ${C.name} announces another date, it shows in check_model_health's gulfCalendar section.`);
 
   // the file: next to the project, a free name, never over another file; the same script asked again names its file
@@ -119,8 +125,8 @@ export function addGulfCalendar(m, a, env) {
   const later = st.observed ? GD.events.flatMap((e) => [['ramadan', e.ramadan, 0], ['fitr', e.fitr, 0], ['adha', e.adha, 9]].filter(([, d]) => d)
     .filter(([, d, back]) => T(d) - back * 864e5 > T(GD.checked) && T(d) >= T(start) && T(d) <= T(end)).map(([, d]) => d)).sort()[0] || null : null;
   const q = JSON.stringify(table);
-  const byHand = [`Mark ${q} as the date table: in Data view select it, then Table tools > Mark as date table > Date.`,
-    ...SORTS.map(([n, by]) => `Select ${q}[${n}], then Column tools > Sort by column > ${by}.`)];
+  // (round 12: the sort-by columns are in the script now, so marking the date table is the one step by hand)
+  const byHand = [`Mark ${q} as the date table: in Data view select it, then Table tools > Mark as date table > Date.`];
   if (!rels.length) byHand.push(`Relate your fact tables' date columns to ${q}[Date] (Model view: drag each date column onto Date; many to one, single direction).`);
   return {
     scriptFile: file, table, rows: built.rows, columns: built.columns, range: { from: start, to: end },
@@ -129,7 +135,7 @@ export function addGulfCalendar(m, a, env) {
       : { on: false, why: 'Umm al-Qura for every month, as the website does with the option off.' },
     relationships: rels.map((r) => `${r.table}[${r.column}] -> ${table}[Date] (many to one, single direction)`),
     byHand,
-    howToApply: `The script is in the file "${file.split(/[\\/]/).pop()}", next to the project. Save a copy of your file first. In Power BI Desktop open TMDL view, open a new tab and paste the file's text, then choose Preview: it must show one new table ${q}${rels.length ? ' and ' + rels.length + ' new relationship' + (rels.length > 1 ? 's' : '') : ''}, and nothing changed or replaced. If Preview shows a change to a table you already have, stop: the model changed since the files were read. Then Apply, refresh the table (Home > Refresh) and do the steps by hand. The script is never applied by this tool.`,
+    howToApply: `The script is in the file "${file.split(/[\\/]/).pop()}", next to the project. Save a copy of your file first. In Power BI Desktop open TMDL view, open a new tab and paste the file's text, then choose Preview: it must show one new table ${q}${rels.length ? ' and ' + rels.length + ' new relationship' + (rels.length > 1 ? 's' : '') : ''}, and nothing changed or replaced. If Preview shows a change to a table you already have, stop: the model changed since the files were read. Preview will not warn about it: it shows a table of the same name as replaced, without an error (seen in Desktop). Then Apply, refresh the table (Home > Refresh) and do the steps by hand. The script is never applied by this tool.`,
     selfCheck,
     ...(notes.length ? { notes } : {})
   };
