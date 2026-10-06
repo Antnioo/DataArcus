@@ -3848,8 +3848,11 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const sz = (k) => { const g = { values: [{ fontSize: 10 * k }], columnHeaders: [{ fontSize: 10 * k }], total: [{ fontSize: 10 * k }] };
       return { textClasses: { title: { fontSize: 12 * k }, label: { fontSize: 10 * k }, callout: { fontSize: 28 * k } }, visualStyles: { tableEx: { '*': g }, pivotTable: { '*': Object.assign({ rowHeaders: [{ fontSize: 10 * k }] }, g) } } }; };
     for (const k of [1, 1.5]) fs.writeFileSync(path.join(ROOT, dir, `theme-${k}.json`), JSON.stringify(Object.assign({ name: `theme-${k}.json` }, sz(k))));
-    for (const [W, H, lang] of [[1280, 720, 'en'], [1280, 720, 'ar'], [1920, 1080, 'en'], [1920, 1080, 'ar']]) {
-      const x = await ask('create_report', { path: dir, name: `R18 matrix ${lang} ${W}`, lang, rtl: lang === 'ar', theme: `${dir}/theme-${W === 1920 ? 1.5 : 1}.json`, fields: { kpis: ['Sales[Total Sales]'], table: ['Calendar[Day Name]', 'Sales[Total Sales]', 'Sales[Total Sales Last Ramadan]', 'Sales[Total Sales This Ramadan To Date]', 'Sales[Average Daily Sales In Ramadan]'] },
+    // (round 19, item 9: a second set of four shorter measure names, where the drawn size holds more than the width's)
+    const SETS = [['Sales[Total Sales]', 'Sales[Total Sales Last Ramadan]', 'Sales[Total Sales This Ramadan To Date]', 'Sales[Average Daily Sales In Ramadan]'], ['Sales[Total Sales]', 'Sales[Sales LY]', 'Sales[Sales Growth]', 'Sales[Sales Target]']];
+    const mdl = JSON.parse(fs.readFileSync(path.join(base, 'model.bim'), 'utf8')); mdl.model.tables[1].measures.push(...['Sales LY', 'Sales Growth', 'Sales Target'].map((n) => ({ name: n, expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }))); fs.writeFileSync(path.join(base, 'model.bim'), JSON.stringify(mdl));
+    for (const [si, set] of SETS.entries()) for (const [W, H, lang] of [[1280, 720, 'en'], [1280, 720, 'ar'], [1920, 1080, 'en'], [1920, 1080, 'ar']]) {
+      const x = await ask('create_report', { path: dir, name: `R18 matrix ${lang} ${W} ${si}`, lang, rtl: lang === 'ar', theme: `${dir}/theme-${W === 1920 ? 1.5 : 1}.json`, fields: { kpis: ['Sales[Total Sales]'], table: ['Calendar[Day Name]'].concat(set) },
         pages: [{ name: 'P', width: W, height: H, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'matrix', x: 36, y: 100, w: 420, h: 220, title: 'M' }] }] });
       const m = x.err ? null : visuals(dir, x.j.report).find((v) => v.visual && v.visual.visualType === 'pivotTable'), o = (m && m.visual.objects) || {};
       const th = x.err ? null : themeOf(path.join(ROOT, dir, x.j.report)), T0 = th ? +(((th.visualStyles.pivotTable || {})['*'] || {}).values || [{}])[0].fontSize || 10 : 10, TITLE = th ? +(th.textClasses.title || {}).fontSize || 12 : 12;
@@ -3859,6 +3862,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       const pad = ((o.grid || [])[0] || {}).properties && o.grid[0].properties.rowPadding ? 0 : 1, pitch = 1.415 * T * 4 / 3 + 2 * pad, need = 1.5 * TITLE * 4 / 3 + pitch + 7 + 8 * pitch + 16;
       const at8 = 1.5 * TITLE * 4 / 3 + 9 * (1.415 * 8 * 4 / 3) + 7 + 16;   // the rows at Power BI's smallest text, tight
       const notes = x.err ? '' : JSON.stringify(x.j), told = /needs about \d+ to show its 7 rows/.test(notes), named = x.err ? [] : ((x.j.tableColumns || [])[0] || {}).leftOut || [];
+      // (round 19, item 9: the measures are picked at the size the rows are drawn at: no left-out measure would have fit)
+      const leftRoom = named.length ? Px.columnRoom({ displayName: named[0].replace(/^.*\[|\]$/g, ''), field: { Measure: {} } }, T, 'Segoe UI') : 0;
+      chk(() => !named.length || wide + leftRoom > 420, () => `${lang} ${W} x ${H}: the first left-out measure (${named[0]}, ${Math.round(leftRoom)}) would fit beside the kept ones (${Math.round(wide)}) at the drawn ${T}pt`);
       chk(() => m && sizes.every((s) => s === sizes[0]) && (sizes[0] == null || sizes[0] < T0) && wide <= 420 && (need <= 220 || (told && at8 > 220)) && ps.length - 1 + named.length === 4,
         () => `${lang} ${W} x ${H}: the matrix must draw at the size its fit chose (values, headers, row headers, total: ${JSON.stringify(sizes)}, the theme's ${T0}), its kept columns within 420 (${Math.round(wide)}), seven rows and the total within 220, or told when even 8pt does not hold them (need ${Math.round(need)}, at 8pt ${Math.round(at8)}, told ${told}), the left-out measures named (${JSON.stringify(named)}, kept ${ps.length - 1}) ${x.err ? x.t.slice(0, 300) : ''}`);
     }
