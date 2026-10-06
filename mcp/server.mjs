@@ -54,6 +54,23 @@ function writeScript(dir, base, script) {
   }
   throw new Error('no free file name');
 }
+// The owner's ask (6 Oct 2026), formats fixed at the source: one script (model-health-tmdl.js's formatReview, the
+// same rule everywhere) written to the same file by check_model_health, plan_layout and create_report, next to the
+// project (never into the model). keys: the report's fields ("Table[Field]") to name; without keys, every object.
+const FORMAT_HOW = 'Save a copy of the Power BI file first; open the script file in Notepad, select all and copy; in Power BI Desktop open TMDL view, paste, choose Preview (only the formats of the listed objects change), then Apply. The script is never applied by DataArcus: the model\'s files are not changed until the user applies it. It holds the model\'s own definitions of the objects it changes, which is why it is in a file: don\'t read the file into the conversation unless the user asks.';
+function formatsAnswer(m, p, keys, maxItems) {
+  const raw = ((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).tables || [], s = Fix.formatReview(raw);
+  const all = s.items.concat(s.byHand), mine = keys ? all.filter((i) => keys.has(i.object)) : all;
+  if (!mine.length) return null;
+  const cap = maxItems || 50, list = mine.slice(0, cap).map((i) => Object.assign({ object: i.object, kind: i.kind, from: i.from, to: i.to, why: i.reason }, i.steps ? { byHand: i.steps } : {}));
+  const scriptDir = m.folder ? m.projectDir : path.dirname(inside(p));
+  const scriptBase = m.folder ? path.basename(m.folder).replace(/\.(SemanticModel|Dataset)$/i, '') : path.basename(inside(p)).replace(/\.[^.]+$/, '');
+  let file = {};
+  if (s.script && !scriptDir) file = { scriptNotWritten: 'The working folder is the model folder itself, and a script is never written inside a model folder. Choose the project folder as the working folder and ask again; until then set the formats by hand in Power BI Desktop (Measure tools or Column tools > Format).' };
+  else if (s.script) { try { const f = writeScript(scriptDir, scriptBase + ' - fix formats', s.script); file = { fixScriptFile: f, howToApply: 'The script is in the file "' + path.basename(f) + '", next to the project; it sets the right format of ' + s.count + ' object' + (s.count === 1 ? '' : 's') + ' of the model (the same file check_model_health writes). ' + FORMAT_HOW }; }
+    catch (e) { file = { scriptNotWritten: 'The script could not be written to ' + scriptDir + ' (' + String((e && e.code) || (e && e.message) || e) + '). Set the formats by hand in Power BI Desktop.' }; } }
+  return Object.assign({ fields: list }, mine.length > cap ? { more: mine.length - cap } : {}, s.more ? { scriptCovers: `The script covers ${s.count} objects; ${s.more} more need the same fix (a script is kept under 30,000 characters): apply it, then check the model again.` } : {}, file);
+}
 // The DAX query that reads every column's type from the model open in Power BI Desktop (run it with Microsoft's
 // Power BI Authoring MCP). INFO.COLUMNS gives the Tabular DataType numbers; a column Power BI names or types from DAX
 // has them in InferredName / InferredDataType. Its rows go into check_model_health's columnTypes as Table[Column]: type.
@@ -351,6 +368,12 @@ server.registerTool('check_model_health', {
       measures: s.measures, columns: s.columns, byHand: s.byHand },
       s.more ? { covers: { note: `${s.more} more are not listed. Call again with a larger maxItems (up to 200).` } } : {}, scriptAnswer('thousand separators', s.script, false));
   }
+  // formats fixed at the source (the owner's ask, 6 Oct 2026): every measure and column whose format is not the right
+  // one by the shared rule, in one script; plan_layout and create_report hand over this same file
+  {
+    const f = formatsAnswer(m, p, null, maxItems);
+    if (f) fixes.FORMATS = Object.assign({ note: 'Not a finding and not part of the score. The right format of each measure and column by one rule: a ratio 0.0%, a count or whole number #,0, money its own currency format, other numbers #,0.00, a date dd mmm yyyy; anything already well formatted is left alone. plan_layout and create_report name the same fixes and hand over the same file.' }, f);
+  }
   // the Gulf calendar check: its own section, never scored; shown when a country is given or the model already has
   // Hijri or Ramadan columns. Read from the model files only; its fixes name the website tools and their settings.
   const gulfCalendar = country || Gulf.hasGulfColumns(m.tmsl) ? Gulf.analyze(m.tmsl, { country: country || 'uae', asOf, maxItems }) : undefined;
@@ -386,7 +409,7 @@ const slot = z.object({
 });
 server.registerTool('create_report', {
   title: 'Create a report project for an existing model',
-  description: 'Before calling this, show the user the plan (pages, visuals, the fields on each, sizes, theme) and wait for their "go"; then pass the approved plan\'s fields in fields, so the report shows exactly what the user approved. Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme applied; each KPI card, chart and table on its own panel (drawn by the theme\'s solid visuals, or by a page\'s background image when one is given). The model and any existing report are never touched; the new report gets a free name. Every report also gets a hidden tooltip page, shown when a chart is hovered. An optional logo (a PNG or JPG in the DataArcus folder) goes in the header at its own shape. Give either pages (hand-placed slots) or a design (from generate_theme or plan_layout): with a design the pages, positions, second page, slide-in filter panel, labels and theme are exactly the DataArcus Theme Generator\'s project download. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge). A KPI card shows a measure as the model defines it (no filter is added): its label must say what the value really is. When the request limits the report to part of the data (for example "Ramadan only"), pass a page filter in pageFilters and show it in the plan: it filters every visual on the pages, the cards included. A visual outside the list of kinds is not supported: write nothing and offer the closest supported ones.' + UNTRUSTED,
+  description: 'Before calling this, show the user the plan (pages, visuals, the fields on each, sizes, theme) and wait for their "go"; then pass the approved plan\'s fields in fields, so the report shows exactly what the user approved. When the answer has formats (first), tell the user that first: the fields without their right number or date format and the script file that sets them in the model (never applied by this tool; the report already shows them right). Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme applied; each KPI card, chart and table on its own panel (drawn by the theme\'s solid visuals, or by a page\'s background image when one is given). The model and any existing report are never touched; the new report gets a free name. Every report also gets a hidden tooltip page, shown when a chart is hovered. An optional logo (a PNG or JPG in the DataArcus folder) goes in the header at its own shape. Give either pages (hand-placed slots) or a design (from generate_theme or plan_layout): with a design the pages, positions, second page, slide-in filter panel, labels and theme are exactly the DataArcus Theme Generator\'s project download. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge). A KPI card shows a measure as the model defines it, filtered only by the page filters you pass and the user\'s slicers: its label must say what the value really is. When the request limits the report to part of the data (for example "Ramadan only"), pass a page filter in pageFilters and show it in the plan: it filters every visual on the pages, the cards included. A visual outside the list of kinds is not supported: write nothing and offer the closest supported ones.' + UNTRUSTED,
   inputSchema: {
     path: modelPath.describe('The project folder or .SemanticModel folder the report will use'),
     name: z.string().min(1).max(60).describe('Report name'),
@@ -491,7 +514,35 @@ server.registerTool('create_report', {
     if (!f || f.m == null) return null;
     const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t), o = t && (t.measures || []).find((x) => x.name === f.m);
     if (!o || o.formatStringDefinition || Bind.isPercent(f.m, o.formatString, o.expression)) return null;
+    // the shared format rule first (formats fixed at the source, 6 Oct 2026): a count #,0, a number #,0.00
+    const right = Fix.formatOf(o, 'measure', model.tables || []);
+    if (right) return /%/.test(right.format) ? null : right.format;
     return !o.formatString ? '#,0.##' : Fix.lacksSeparator(o.formatString) ? Fix.withSeparator(o.formatString) : null;
+  };
+  // Formats fixed at the source (the owner's ask, 6 Oct 2026): until the user applies the format script, the report
+  // shows each field in its right format by the same rule: a ratio as a percent and a count without decimals on the
+  // cards and the tooltip's card (the card rule's pctFormat and wholeFormat), and every field of a table in the rule's
+  // format on its own projection (tableFormat). Fields the visuals count or sum themselves are left as they are.
+  const rightOf = (f) => {
+    const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t);
+    const o = t && (f.m != null ? (t.measures || []).find((x) => x.name === f.m) : (t.columns || []).find((x) => x.name === f.c));
+    return o ? Fix.formatOf(o, f.m != null ? 'measure' : 'column', model.tables || []) : null;
+  };
+  const withRightFormats = (b) => {
+    if (!b) return b;
+    const fix = (f, inTable) => {
+      if (!f || typeof f !== 'object' || f.t == null || f.agg != null) return f;
+      const r = rightOf(f); if (!r) return f;
+      const out = Object.assign({}, f);
+      if (f.m != null) {
+        if (/%/.test(r.format)) { out.pct = true; out.pctFormat = r.format; delete out.wholeFormat; }
+        else { delete out.pct; delete out.pctFormat; if (r.format === '#,0') out.wholeFormat = '#,0'; }
+      }
+      if (inTable) out.tableFormat = r.format;
+      return out;
+    };
+    const each = (v) => (Array.isArray(v) ? v.map((x) => fix(x, false)) : v && typeof v === 'object' && v.c == null && v.m == null ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fix(x, false)])) : fix(v, false));
+    return Object.fromEntries(Object.entries(b).map(([k, v]) => [k, k === 'choices' ? v : k === 'table' ? (v || []).map((x) => fix(x, true)) : k === 'slicers' ? v : each(v)]));
   };
   // Round 10: the cards show automatic units with 2 decimals by default (kpiValues "auto"), so a card's own format is
   // written only with kpiValues "full" (and then on the tooltip's card too). A table's measure column gets the same
@@ -502,7 +553,8 @@ server.registerTool('create_report', {
     // (round 13, seen in Desktop on 6 Oct: a card said 33.8% and the table's column of the same measure 0.34: where the
     // report gives a measure's card a percent format the model does not have, its table column carries the same)
     const pctCell = (f) => { if (!f || f.m == null || !f.pctFormat) return null; const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t), o = t && (t.measures || []).find((x) => x.name === f.m); return o && !o.formatStringDefinition && o.formatString !== f.pctFormat ? f.pctFormat : null; };
-    const cell = (f) => { const code = f && f.m != null && (cardFormatOf(f) || pctCell(f)); if (!code) return f; if (!tableFormats.some((x) => x.field === keyOf(f))) tableFormats.push({ field: keyOf(f), format: code }); return Object.assign({}, f, { tableFormat: code }); };
+    const cell = (f) => { if (f && f.m != null && f.tableFormat) { if (!tableFormats.some((x) => x.field === keyOf(f))) tableFormats.push({ field: keyOf(f), format: f.tableFormat }); return f; }
+      const code = f && f.m != null && (cardFormatOf(f) || pctCell(f)); if (!code) return f; if (!tableFormats.some((x) => x.field === keyOf(f))) tableFormats.push({ field: keyOf(f), format: code }); return Object.assign({}, f, { tableFormat: code }); };
     const tip = b.tip && b.tip.card ? Object.assign({}, b.tip, { card: (() => { const code = FULL && cardFormatOf(b.tip.card); return code ? Object.assign({}, b.tip.card, { cardFormat: code }) : b.tip.card; })() }) : b.tip;
     return Object.assign({}, b, { kpis: (b.kpis || []).map(one), table: (b.table || []).map(cell) }, b.tip ? { tip } : {});
   };
@@ -592,6 +644,30 @@ server.registerTool('create_report', {
   const fieldsOf = (b) => (b ? [b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean) : []);
   const keyOf = (f) => `${f.t}[${f.c != null ? f.c : f.m}]`;
   const named = (b) => { fieldsOf(b).forEach((f) => { const g = given.get(keyOf(f)); if (g) { f.name = g.name; g.used = true; } }); return b; };
+  // Owner 2026-10-06: an Arabic report shows the Gulf calendar's Arabic name columns (Day Name (Arabic), Month Name
+  // (Arabic), Hijri Month Name (Arabic)) in place of the English ones wherever the same table has them (axis, table,
+  // slicer, tooltip), with their own sort; without them the reportNotes say how to get them
+  const ARABIC_OF = [[/^day\s*name$/i, 'Day Name (Arabic)'], [/^month\s*(name|short)$/i, 'Month Name (Arabic)'], [/^hijri\s*month\s*name$/i, 'Hijri Month Name (Arabic)']];
+  const englishNames = new Set();
+  const inArabic = (b) => {
+    if (a.lang !== 'ar' || !b) return b;
+    const done = new Map();
+    const swap = (f) => {
+      if (!f || typeof f !== 'object' || f.c == null || f.t == null) return f;
+      if (done.has(f)) return done.get(f);
+      const rule = ARABIC_OF.find(([re]) => re.test(String(f.c).trim()));
+      const t = rule && m.tables.find((x) => x.name === f.t), col = t && t.columns.find((c) => c.name === rule[1]);
+      let out = f;
+      if (col) {
+        const by = col.sortBy ? null : Bind.sortColumnFor(t.columns, col.name);
+        out = Object.assign({}, f, { c: col.name }); delete out.sortBy; delete out.ordered;
+        Object.assign(out, by ? { sortBy: { t: t.name, c: by.name } } : {}, col.sortBy && Bind.nameLike(col.name) ? { ordered: true } : {});
+      } else if (rule) englishNames.add(keyOf(f));
+      done.set(f, out); return out;
+    };
+    const each = (v) => (Array.isArray(v) ? v.map(swap) : v && typeof v === 'object' && v.c == null && v.m == null ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, swap(x)])) : swap(v));
+    return Object.fromEntries(Object.entries(b).map(([k, v]) => [k, k === 'choices' ? v : each(v)]));
+  };
   // the logo, as the website takes it: a PNG or JPG, 2 MB at most; its size is read so its box can take its shape
   const reportNotes = [];
   // Power BI's own words can't be set by a report (measured: no slicer property holds "All")
@@ -626,7 +702,7 @@ server.registerTool('create_report', {
     const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel, logoRatio }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(pages))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', quietGrid: true,
+      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bindFor(kpisOf(pages))))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', quietGrid: true,
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
@@ -644,7 +720,7 @@ server.registerTool('create_report', {
     r = Pbip.build({
       name: a.name, title: a.title || a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(named(bindFor(kpisOf(a.pages))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', quietGrid: true,
+      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bindFor(kpisOf(a.pages))))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', quietGrid: true,
       // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
       texts: Object.assign({}, E.REPORT_TEXTS[a.lang === 'ar' ? 'ar' : 'en'], { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' }),
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
@@ -714,6 +790,7 @@ server.registerTool('create_report', {
   const chartAxes = CA.rtl ? { chartAxes: CA.asked === 'mirrored'
     ? { mode: 'mirrored', charts: CA.charts, note: 'Power BI does not mirror charts in a right-to-left report, so the report does: column and line charts have the value axis at the right and their categories and dates run from the right (the chart is sorted by its category, descending, and a date axis is inverted); bar charts grow from the right with their names at the right. For charts left to right pass chartAxes: "standard".' }
     : { mode: 'standard', note: 'The charts run left to right, as Power BI draws them.' } } : {};
+  if (englishNames.size) reportNotes.push(`${[...englishNames].join(', ')} ${englishNames.size === 1 ? 'shows' : 'show'} the calendar's own names, English unless the calendar was made in Arabic: add the Gulf calendar's Arabic name columns to show Arabic day and month names (add_gulf_calendar writes them, as does the Calendar Generator's "Add Arabic name columns"), then create the report again.`);
   reportNotes.push('How the KPI cards show their numbers: ' + CARD_RULE + (textKpis.length ? '' : ''));
   if (textKpis.length) reportNotes.push(`${textKpis.length === 1 ? 'A KPI card was' : textKpis.length + ' KPI cards were'} left out: ${textKpis.map((k) => `${k.t}[${k.m}]`).join(', ')} ${textKpis.length === 1 ? 'shows' : 'show'} text, not a number (a format of words only, a date format, or DAX that returns text), and a KPI card would show that text. Pick a measure that returns a number for the card.`);
   if (slicersDropped.length) reportNotes.push(`No slicer on ${[...new Set(slicersDropped)].join(', ')}: a page filter already keeps one value of ${new Set(slicersDropped).size === 1 ? 'it' : 'each'}, so a slicer would only show the choice already made. The next columns took the rail's places.`);
@@ -754,7 +831,10 @@ server.registerTool('create_report', {
   const missing = a.lang === 'ar' ? fieldsOf(bind).filter((f) => !f.name && !/[\u0600-\u06FF]/.test(f.c != null ? f.c : f.m)).map(keyOf).filter((k, i, l) => l.indexOf(k) === i) : null;
   const arabic = a.lang === 'ar' ? { arabicNames: { shownFields: shown.length, missing,
     how: missing.length ? 'These fields show under their model names. To show Arabic names, call create_report again with displayNames: { "Table[Field]": "الاسم" } for each (ask the user for the names: nothing is translated automatically). The model is not renamed.' : 'Every field the report shows has an Arabic name.' } } : {};
-  return text(Object.assign({ written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
+  // formats fixed at the source: said first, with the script (the report already shows the right formats)
+  const fmt = formatsAnswer(m, a.path, new Set(fieldsOf(bind).filter((f) => f.agg == null).map(keyOf)));
+  const formats = fmt ? { formats: Object.assign({ sayFirst: `Tell the user first: ${fmt.fields.length} of the report's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). The report already shows them right: the cards, the tooltip's card and the tables carry the right format of their own. Applying the script sets them in the model too, so every other visual, Excel and other reports show them right.` }, fmt) } : {};
+  return text(Object.assign(formats, { written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
     { boundFields: boundOf(boundPages, bind, tableKept) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, chartColors, chartAxes, kpiTitles, chartTitles, pageButtons, tableColumns, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
     sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {}));
 }));
@@ -774,10 +854,10 @@ function modelNotes(tmsl, bind) {
     if (f.c != null) {
       const c = find(f, 'columns');
       if (c && !c.sortByColumn && /month|الشهر/i.test(f.c) && !/number|num|no|sort|key|offset|start|date/i.test(f.c))
-        notes.push({ field: key, issue: f.sortBy ? 'This column has no sort-by column in the model. The report\'s charts are put in month order by the report itself; tables and slicers still show months in alphabetical order.' : 'Months will show in alphabetical order: this column has no sort-by column.',
+        notes.push({ field: key, issue: f.sortBy ? 'This column has no sort-by column in the model. The report\'s charts and tables are put in month order by the report itself (round 12); slicers still show months in alphabetical order.' : 'Months will show in alphabetical order: this column has no sort-by column.',
           fix: `In Power BI Desktop select ${key}, then Column tools > Sort by column > ${f.sortBy ? f.sortBy.c : 'the month number column'}. check_model_health gives the steps or a ready script (fixes.MONTH_SORT).` });
       if (c && !c.sortByColumn && /(day|weekday)\s*name|اسم اليوم/i.test(f.c))
-        notes.push({ field: key, issue: f.sortBy ? 'This column has no sort-by column in the model. The report\'s charts are put in weekday order by the report itself; tables and slicers still show days in alphabetical order (Friday, Monday, ...).' : 'Days will show in alphabetical order (Friday, Monday, ...): this column has no sort-by column.',
+        notes.push({ field: key, issue: f.sortBy ? 'This column has no sort-by column in the model. The report\'s charts and tables are put in weekday order by the report itself (round 12); slicers still show days in alphabetical order (Friday, Monday, ...).' : 'Days will show in alphabetical order (Friday, Monday, ...): this column has no sort-by column.',
           fix: `In Power BI Desktop select ${key}, then Column tools > Sort by column > ${f.sortBy ? f.sortBy.c : 'the day-of-week number column'}. check_model_health gives the steps or a ready script (fixes.MONTH_SORT).` });
     } else {
       const ms = find(f, 'measures');
@@ -824,7 +904,7 @@ server.registerTool('generate_theme', {
 
 server.registerTool('plan_layout', {
   title: 'Plan a report page layout',
-  description: 'The exact position of every visual on a Power BI page, as the DataArcus Theme Generator lays it out: one row per visual with its name, the suggested visual, and x, y, width, height in the page\'s own units (Format > General > Properties). Right-to-left designs are mirrored. forAuthoring gives the same numbers as PBIR visual.json positions for editing an existing report: use them exactly, never snap them to multiples of 8, so every visual lands on its panel. Nothing is written.',
+  description: 'The exact position of every visual on a Power BI page, as the DataArcus Theme Generator lays it out: one row per visual with its name, the suggested visual, and x, y, width, height in the page\'s own units (Format > General > Properties). Right-to-left designs are mirrored. With path (the model), the fields that lack their right number or date format come first in the answer, with a ready TMDL script written next to the project (never applied, the model is not changed): tell the user that first. forAuthoring gives the same numbers as PBIR visual.json positions for editing an existing report: use them exactly, never snap them to multiples of 8, so every visual lands on its panel. Nothing else is written.' + UNTRUSTED,
   inputSchema: {
     design: z.record(z.any()).optional().describe('The design from generate_theme (its layout is the starting point); the other inputs change it'),
     layout: z.enum(['exec', 'analysis', 'ops', 'focus']).optional().describe('Executive summary, analysis (filters and a wide table), operations monitor, or single focus'),
@@ -833,17 +913,30 @@ server.registerTool('plan_layout', {
     header: z.boolean().optional().describe('A header band with the page title and a logo (default on)'),
     page: pageInput.optional(),
     dir: z.enum(['ltr', 'rtl']).optional().describe('Reading direction; by default the language decides'),
-    lang: langInput
-  }, annotations: READS
+    lang: langInput,
+    path: modelPath.optional().describe('The model the report is for: its fields are checked for the right number and date formats, said first in the answer with a ready script file'),
+    fields: z.array(z.string()).max(40).optional().describe('With path: the plan\'s fields as "Table[Field]" (default: the fields suggest_fields picks)'),
+    focus: focusInput, tables: tablesInput
+  }, annotations: ADDS
 }, safe(async (a) => {
+  // formats fixed at the source (the owner's ask, 6 Oct 2026): with the model, the fields that lack their right format
+  // come first, with the script (the same file check_model_health writes)
+  let formats = {};
+  if (a.path) {
+    const m = loadModel(a.path), sc = scopeOf(m, { focus: a.focus, tables: a.tables });
+    const keys = a.fields ? new Set(a.fields.map((x) => { const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(x); }))
+      : sc.needsFocus ? null : (() => { const b = Bind.suggest(sc.tables, Math.max(1, a.kpis == null ? 4 : a.kpis)); return new Set([b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean).map((f) => `${f.t}[${f.c != null ? f.c : f.m}]`)); })();
+    const fmt = keys && formatsAnswer(m, a.path, keys);
+    if (fmt) formats = { formats: Object.assign({ sayFirst: `Tell the user first, before the layout: ${fmt.fields.length} of the plan's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). create_report shows them right in the report's cards, tooltip and tables anyway; the script sets them in the model too.` }, fmt) };
+  }
   const r = planLayout(a), { page, fitted } = pageOf(r.design.layout);
   const unknown = a.design ? unknownKeys(a.design) : null;
-  return text(Object.assign({ page, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, unknown ? { ignored: unknown } : {}, { design: r.design }));
+  return text(Object.assign(formats, { page, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, unknown ? { ignored: unknown } : {}, { design: r.design }));
 }));
 
 server.registerTool('add_gulf_calendar', {
   title: 'Add a Gulf calendar table',
-  description: 'Writes the DataArcus Calendar Generator\'s date table for a Gulf model (Hijri year, month and day, Ramadan and Eid flags and Ramadan Day, the UAE\'s announced Ramadan and Eid dates with later ones marked as estimates, and the official weekend of the chosen country with the dates it changed) as a TMDL script in a new file next to the project. The user applies it in Power BI Desktop\'s TMDL view after checking Preview; this tool never writes into the model, never returns the DAX and never overwrites a file. firstYear and lastYear are required: ask the user which years their data covers (the tool reads no data). It refuses, writing nothing, when the model already has a table, measure or column with the table\'s name, when a relateTo column is missing or is not a date, and when the years are outside Power BI\'s dates or more than 60. Relationships are written only for the relateTo columns the user names (a column whose type the files don\'t give is accepted with a note); Month Name, Day Name and Hijri Month Name are sorted by their numbers in the script; marking the date table is a step by hand in the answer. Tell the user every step and note.' + UNTRUSTED,
+  description: 'Writes the DataArcus Calendar Generator\'s date table for a Gulf model (Hijri year, month and day, Ramadan and Eid flags and Ramadan Day, the UAE\'s announced Ramadan and Eid dates with later ones marked as estimates, and the official weekend of the chosen country with the dates it changed) as a TMDL script in a new file next to the project. The user applies it in Power BI Desktop\'s TMDL view after checking Preview; this tool never writes into the model, never returns the DAX and never overwrites a file. firstYear and lastYear are required: ask the user which years their data covers (the tool reads no data). It refuses, writing nothing, when the model already has a table, measure or column with the table\'s name, when a relateTo column is missing or is not a date, and when the years are outside Power BI\'s dates or more than 60. Relationships are written only for the relateTo columns the user names (a column whose type the files don\'t give is accepted with a note); Month Name, Day Name and Hijri Month Name (and their (Arabic) columns) are sorted by their numbers in the script; marking the date table is a step by hand in the answer. Tell the user every step and note.' + UNTRUSTED,
   inputSchema: {
     path: modelPath.describe('The model the table is for (read for name clashes and the relateTo columns); the script file goes next to it'),
     firstYear: z.number().int().describe('First year of the calendar (1 January). Ask the user: the years their data covers'),
@@ -852,6 +945,7 @@ server.registerTool('add_gulf_calendar', {
     weekend: z.enum(['country', 'sat-sun', 'fri-sat', 'fri', 'sun']).default('country').describe('country (default): the country\'s official weekend; or a fixed weekend for a company whose weekend differs'),
     announced: z.boolean().default(true).describe('Ramadan, Shawwal and Dhu al-Hijjah on the UAE\'s announced dates (later ones are Umm al-Qura estimates); false: Umm al-Qura only'),
     lang: z.enum(['en', 'ar']).default('en').describe('Language of the month, day and Hijri month names in the table (the column names stay English)'),
+    arabicNames: z.boolean().default(true).describe('Also write Day Name (Arabic), Month Name (Arabic) and Hijri Month Name (Arabic), sorted by their numbers, so an Arabic report can show Arabic names (an English table only: with lang "ar" the names are Arabic already)'),
     name: z.string().max(80).default('Gulf Calendar').describe('The new table\'s name: letters, digits, spaces and _, at most 40 characters. Never the name of a table, measure or column the model has'),
     weekStart: z.enum(['sunday', 'monday', 'saturday']).default('sunday').describe('The first day of the week for Day of Week and Week Start'),
     fiscalStart: z.number().int().min(1).max(12).default(1).describe('The month the fiscal year starts'),

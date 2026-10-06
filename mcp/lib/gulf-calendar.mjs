@@ -15,7 +15,8 @@ const WEEK = { sunday: 'sun', monday: 'mon', saturday: 'sat' };
 // the generator's names that sort by a number. Round 12 (the owner's go on round 11's recommendation 4a): written in the
 // script as sortByColumn, since Desktop 2.158 applied a script with them, Problems 0, and three slicers came out January
 // to December, Sunday to Saturday and Muharram to Dhu al-Hijjah (DESKTOP-TESTS.md round 11, D-GC3)
-const SORTS = [['Month Name', 'Month Number'], ['Day Name', 'Day of Week'], ['Hijri Month Name', 'Hijri Month Number']];
+const SORTS = [['Month Name', 'Month Number'], ['Day Name', 'Day of Week'], ['Hijri Month Name', 'Hijri Month Number'],
+  ['Month Name (Arabic)', 'Month Number'], ['Day Name (Arabic)', 'Day of Week'], ['Hijri Month Name (Arabic)', 'Hijri Month Number']];
 // the gulfCalendar findings about the calendar itself (not the model's measures)
 const CALENDAR_IDS = ['GC_NO_HIJRI', 'GC_NO_FLAGS', 'GC_WEEKEND', 'GC_DATES_DIFFER', 'GC_DATES_NOTE', 'GC_ESTIMATES', 'GC_ENDS_EARLY'];
 const NOTHING = ' Nothing was written.';
@@ -102,7 +103,7 @@ export function addGulfCalendar(m, a, env) {
   const weekend = a.weekend === 'country' || a.weekend == null ? country : a.weekend;
   if (!(COUNTRY_CODES.includes(weekend) || FIXED[weekend])) refuse(`Unknown weekend "${a.weekend}".`);
   const st = Object.assign({}, Cal.DEFAULTS, { name: table, start, end, fy: a.fiscalStart || 1, week: WEEK[a.weekStart || 'sunday'], weekend, lang: a.lang || 'en',
-    hijri: true, fiscal: true, relative: true, observed: a.announced !== false });
+    hijri: true, fiscal: true, relative: true, observed: a.announced !== false, arabicNames: a.arabicNames !== false });
   if (!Cal.hijriFmt) refuse('This Node.js has no Umm al-Qura calendar (it needs full ICU), so the Hijri dates can\'t be worked out.');
   const built = Cal.build(st), body = built.dax.split('\n').slice(1).join('\n');
 
@@ -135,7 +136,7 @@ export function addGulfCalendar(m, a, env) {
       : { on: false, why: 'Umm al-Qura for every month, as the website does with the option off.' },
     relationships: rels.map((r) => `${r.table}[${r.column}] -> ${table}[Date] (many to one, single direction)`),
     byHand,
-    howToApply: `The script is in the file "${file.split(/[\\/]/).pop()}", next to the project. Save a copy of your file first. In Power BI Desktop open TMDL view, open a new tab and paste the file's text, then choose Preview: it must show one new table ${q}${rels.length ? ' and ' + rels.length + ' new relationship' + (rels.length > 1 ? 's' : '') : ''}, and nothing changed or replaced. If Preview shows a change to a table you already have, stop: the model changed since the files were read. Preview will not warn about it: it shows a table of the same name as replaced, without an error (seen in Desktop). Then Apply, refresh the table (Home > Refresh) and do the steps by hand. The script is never applied by this tool.`,
+    howToApply: `The script is in the file "${file.split(/[\\/]/).pop()}", next to the project. Save a copy of your file first. In Power BI Desktop open TMDL view, open a new tab and paste the file's text, then choose Preview: it must show one new table ${q}${rels.length ? ' and ' + rels.length + ' new relationship' + (rels.length > 1 ? 's' : '') : ''}, and nothing changed or replaced. If Preview shows a change to a table you already have, stop: the model changed since the files were read. Preview will not warn about it: it shows a table of the same name as replaced, without an error (seen in Desktop). Then Apply, refresh the table (Home > Refresh) and do the steps by hand. Until that refresh, measures that name the new table show "Field list item has error" in the Data pane, and a query on the table fails: the refresh clears both (seen in Desktop). The script is never applied by this tool.`,
     selfCheck,
     ...(notes.length ? { notes } : {})
   };

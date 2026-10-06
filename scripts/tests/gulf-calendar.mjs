@@ -348,6 +348,28 @@ export default async function ({ browser, url }) {
   }
 
 
+  // The Arabic name columns (owner 2026-10-06): on by default on a fresh page with English names, in both page languages; off with the
+  // box unticked; the box is off and the columns left out when the names are Arabic already
+  for (const lang of ['en', 'ar']) {
+    const v = await open(CG, null, lang);
+    const look = () => v.pg.evaluate(() => { const b = document.getElementById('cgArabic'), d = document.getElementById('dax').textContent;
+      return { on: !!b && b.checked, off: !!b && b.disabled, label: b ? b.closest('label').textContent.replace(/\s+/g, ' ').trim() : '',
+        cols: ['Day Name (Arabic)', 'Month Name (Arabic)', 'Hijri Month Name (Arabic)'].filter((c) => d.includes('"' + c + '"')).length,
+        ar: /"الأحد"/.test(d) && /"يناير"/.test(d) && /"رمضان"/.test(d) }; });
+    // the Arabic page writes Arabic names by default: the box is off there until the names are English
+    if (lang === 'ar') { const z = await look(); check(z.off && z.cols === 0, `calendar ar: Arabic names by default, yet the Arabic name columns are written (${JSON.stringify(z)})`);
+      await v.pg.selectOption('#cgLang', 'en'); await v.pg.waitForTimeout(150); }
+    const a = await look();
+    check(a.on && !a.off && a.cols === 3 && a.ar && (lang === 'ar' ? /[؀-ۿ]/.test(a.label) : /Arabic name columns/i.test(a.label)), `calendar ${lang}: Arabic name columns not on by default (${JSON.stringify(a)})`);
+    await v.pg.evaluate(() => document.getElementById('cgArabic').click()); await v.pg.waitForTimeout(150);
+    const b = await look();
+    check(!b.on && b.cols === 0, `calendar ${lang}: Arabic name columns still written with the box off (${JSON.stringify(b)})`);
+    await v.pg.evaluate(() => document.getElementById('cgArabic').click()); await v.pg.selectOption('#cgLang', 'ar'); await v.pg.waitForTimeout(150);
+    const c = await look();
+    check(c.off && c.cols === 0, `calendar ${lang}: Arabic names in the table, yet the Arabic name columns are written or the box is on (${JSON.stringify(c)})`);
+    await done(v, `arabic names ${lang}`);
+  }
+
   // Years Power BI can't take are refused with a message (audit AUD-004, 2026-10-04): a two-digit year typed in the
   // date field (0025) was read as 1925 here and 2025 by DAX's DATE, and years before 1900 aren't DAX dates at all
   // (DATE supports 1 March 1900 on). Copy and Download are off and no DAX is shown until the dates are fixed.
@@ -381,7 +403,8 @@ export default async function ({ browser, url }) {
     const { MODEL_CG } = await import('../gulf-calendar/test-model/make-test-model.mjs');
     const model = fs.readFileSync(path.join(ROOT, 'scripts/gulf-calendar/test-model/calendar.dax'), 'utf8').replace(/\r\n/g, '\n');
     const mo = Cal && typeof Cal.build === 'function' ? Cal.build(Object.assign({}, DEF, MODEL_CG)) : null;
-    check(!!mo && mo.dax + '\n' === model && mo.columns.length === 36, `shared generator on the test model's options: ${mo ? (mo.dax + '\n' === model ? 'columns ' + mo.columns.length : 'DAX differs from calendar.dax') : 'no build()'}`);
+    // 36 -> 39 (owner 2026-10-06): the test model's options have the three Arabic name columns on
+    check(!!mo && mo.dax + '\n' === model && mo.columns.length === 39, `shared generator on the test model's options: ${mo ? (mo.dax + '\n' === model ? 'columns ' + mo.columns.length : 'DAX differs from calendar.dax') : 'no build()'}`);
   }
 
   return { checks, problems };

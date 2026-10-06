@@ -10,6 +10,10 @@ the owner's go and a reason written here.
    the tool calls each task expects over stdio, on copies of the input models in a temporary folder, and checks what
    a script can: pages and visuals, nothing overwritten (a SHA-256 of every file before and after), Microsoft's
    validator, the measured size rules (`scripts/tests/report-check.mjs`), right to left mirrored, answer sizes.
+   **Since round 12b (the night audit's AUD-030, 5 Oct 2026) it compares every result with
+   `test-models/golden-expected.json` and fails on a difference; `npm test` runs it.** That file is the current
+   baseline: the per-round tables further down are history. A change made on purpose: `--update`, then the cause
+   beside the number in the file's `why` (each number changed since round 7 is explained there).
 2. **Agent level (a person scores):** a fresh Claude session with only DataArcus, Microsoft's Power BI Authoring MCP
    and the Desktop bridge installed (the release's package, not the repo), the working folder holding the input
    model, the request typed exactly as written. Score the tool calls (which, in what order, with what inputs), whether

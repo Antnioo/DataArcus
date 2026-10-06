@@ -3,7 +3,12 @@
 // changes). Checks: the expected pages and visuals, nothing overwritten, Microsoft's validator, the measured size rules
 // (scripts/tests/report-check.mjs), right to left mirrored where asked, and the size of every answer.
 // It does not replace the golden task: the agent's own choices, the Desktop look and the numbers are checked by a person.
-//   cd mcp && node test-models/golden-baseline.mjs
+//   cd mcp && node test-models/golden-baseline.mjs            (part of npm test: fails when a result moves)
+//   cd mcp && node test-models/golden-baseline.mjs --update   (writes the new results; then explain each change in
+//                                                               golden-expected.json's "why", beside the number)
+// Round 12b (the night audit's AUD-030, 5 Oct 2026: the runner printed its numbers and checked none, so they drifted
+// from round 7 to round 12 unnoticed): every task's result is compared with golden-expected.json, and a difference
+// fails the run, naming the task, the field, the expected and the new value.
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -51,7 +56,9 @@ const validate = (dir) => {
 // a written report: pages (without tooltip pages), visuals, validator errors, measured size and phone problems
 const reportFacts = (project, report, rtl) => {
   const dir = path.join(ROOT, project, report), files = filesOf(dir, path.dirname(dir));
-  const pages = Object.keys(files).filter((f) => /\/pages\/[^/]+\/page\.json$/.test(f)).map((f) => JSON.parse(String(files[f])));
+  // (round 12b: in the report's own page order, pages.json; the folders' order follows their random names)
+  const order = JSON.parse(String(files[Object.keys(files).find((f) => /\/pages\/pages\.json$/.test(f))])).pageOrder;
+  const pages = Object.keys(files).filter((f) => /\/pages\/[^/]+\/page\.json$/.test(f)).map((f) => JSON.parse(String(files[f]))).sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
   const lp = layoutProblems(filesOf(dir, dir));
   return { pages: pages.filter((p) => p.visibility !== 'HiddenInViewMode' && !/tooltip/i.test(p.type || '')).map((p) => `${p.displayName} ${p.width}x${p.height}`),
     hidden: pages.filter((p) => p.visibility === 'HiddenInViewMode' || /tooltip/i.test(p.type || '')).length,
@@ -179,3 +186,22 @@ await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 const big = sizes.reduce((a, s) => (s.chars > a.chars ? s : a), { chars: 0 });
 console.log(`\n${results.length} golden tasks run (tool level). Largest answer: ${big.tool}, ${big.chars} characters.`);
+
+// The expected results (round 12b, AUD-030). Not compared: the health answer's size on the large model, which holds the
+// temporary folder's path (its length differs between Windows and Linux).
+const EXPECTED = path.join(HERE, 'golden-expected.json'), VOLATILE = ['healthChars'];
+const comparable = (r) => Object.fromEntries(Object.entries(r).filter(([k]) => k !== 'title' && !VOLATILE.includes(k)));
+const want = fs.existsSync(EXPECTED) ? JSON.parse(fs.readFileSync(EXPECTED, 'utf8')) : { tasks: {}, why: {} };
+if (process.argv.includes('--update')) {
+  want.tasks = Object.fromEntries(results.map((r) => [r.id, comparable(r)]));
+  fs.writeFileSync(EXPECTED, JSON.stringify(want, null, 2) + '\n');
+  console.log(`Written ${path.relative(MCP, EXPECTED)}: explain every changed number in its "why", beside the number.`);
+} else {
+  const diffs = [];
+  results.forEach((r) => { const got = comparable(r), exp = want.tasks[r.id];
+    if (!exp) return void diffs.push(`task ${r.id}: no expected result`);
+    [...new Set(Object.keys(got).concat(Object.keys(exp)))].forEach((k) => { if (JSON.stringify(got[k]) !== JSON.stringify(exp[k])) diffs.push(`task ${r.id} ${k}: expected ${JSON.stringify(exp[k])}, got ${JSON.stringify(got[k])}`.slice(0, 600)); }); });
+  if (Object.keys(want.tasks).length !== results.length) diffs.push(`${results.length} tasks run, ${Object.keys(want.tasks).length} expected`);
+  console.log(diffs.length ? `FAIL  golden  ${results.length} tasks, ${diffs.length} differences from golden-expected.json (a change on purpose: --update, then explain it in "why"):\n` + diffs.map((d) => '      - ' + d).join('\n') : `PASS  golden  ${results.length} tasks match golden-expected.json`);
+  process.exit(diffs.length ? 1 : 0);
+}
