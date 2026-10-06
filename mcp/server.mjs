@@ -799,7 +799,8 @@ server.registerTool('create_report', {
   // the bars' colours (round 13): what was written, and why not when a gradient was asked and the colour cannot fade
   const CC = r.chartColors || {};
   const chartColors = { chartColors: CC.ends && CC.charts
-    ? { mode: 'gradient', charts: CC.charts, low: CC.ends.low, high: CC.ends.high, note: 'The bars of the bar and column charts fade by their value: the smallest value shown is the light tint, the largest the theme\'s own colour (conditional formatting on the data colour, a gradient by the chart\'s measure). The colours are written into each chart: after a change of theme, set them again or pass chartColors: "solid".' }
+    ? CC.ends.reversed ? { mode: 'gradient', reversed: true, charts: CC.charts, low: CC.ends.low, high: CC.ends.high, note: `The bars of the bar and column charts fade by their value, the other way round: the bars' colour (${CC.ends.low}) stands too close to the panel behind it to fade towards it and keep 3:1 (contrast), so the smallest value shown is that colour and the largest a brighter tint of it (${CC.ends.high}, towards the text colour). The colours are written into each chart.` }
+      : { mode: 'gradient', charts: CC.charts, low: CC.ends.low, high: CC.ends.high, note: 'The bars of the bar and column charts fade by their value: the smallest value shown is the light tint, the largest the theme\'s own colour (conditional formatting on the data colour, a gradient by the chart\'s measure). The colours are written into each chart: after a change of theme, set them again or pass chartColors: "solid".' }
     : Object.assign({ mode: 'solid' }, CC.asked && !CC.ends ? { why: `The bars' colour (${CC.base}) cannot fade and still stand 3:1 (contrast) off the panel behind it, so every bar keeps that one colour.` } : {}) };
   // a right-to-left report's charts (round 13): mirrored, or left as they are when asked
   const CA = r.chartAxes || {};

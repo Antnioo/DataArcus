@@ -3400,6 +3400,35 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   }
 }
 
+// ---------- round 15: the owner's accepted recommendations of rounds 13 and 14 (6 Oct 09:56) ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
+  const col = (name, dataType) => ({ name, dataType, sourceColumn: name });
+  const visuals = (p, report) => { const out = []; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((f) => { const q = path.join(d, f.name); if (f.isDirectory()) walk(q); else if (f.name === 'visual.json') out.push(JSON.parse(fs.readFileSync(q, 'utf8'))); }); walk(path.join(ROOT, p, report, 'definition', 'pages')); return out; };
+  const L = (h) => { const v = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255).map((x) => (x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4))); return 0.2126 * v[0] + 0.7152 * v[1] + 0.0722 * v[2]; };
+  const cr = (a, b) => (Math.max(L(a), L(b)) + 0.05) / (Math.min(L(a), L(b)) + 0.05);
+  fs.mkdirSync(path.join(ROOT, 'r15/R15.SemanticModel'), { recursive: true });
+  fs.writeFileSync(path.join(ROOT, 'r15/R15.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [
+    { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Year', 'int64'), col('Quarter', 'string'), col('Day Name', 'string'), col('Day of Week', 'int64')] },
+    { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime'), col('Region', 'string'), col('Channel', 'string')],
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }] }] } }));
+  const lit = (x) => x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value).replace(/^'|'$/g, '') : null;
+
+  // Round 13, recommendation 3: a brand colour too dark to fade on its card (under the 3:1 floor) fades the other way:
+  // the smallest bar the brand colour, the largest a brighter tint towards the text colour, told in the answer
+  {
+    const th = await ask('generate_theme', { name: 'R15 brand dark', brand: '#0F6CBD', preset: 'DataArcus' });
+    const dz = (await ask('plan_layout', { design: th.j.design, layout: 'exec', kpis: 2 })).j.design;
+    const x = await ask('create_report', { path: 'r15', name: 'R15 brand', design: dz, secondPage: false, fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]'], category: 'Sales[Region]', measure: 'Sales[Total Sales]' } });
+    const rules = (x.err ? [] : visuals('r15', x.j.report)).filter((v) => v.visual && /Bar|Column/.test(v.visual.visualType)).map((v) => { const fr = (((((v.visual.objects || {}).dataPoint || [])[0] || {}).properties || {}).fill || {}).solid; const g = fr && fr.color && fr.color.expr && fr.color.expr.FillRule && fr.color.expr.FillRule.FillRule.linearGradient2; const v2 = (c) => String(c.Literal.Value).replace(/^'|'$/g, ''); return g ? { low: v2(g.min.color), high: v2(g.max.color) } : null; }).filter(Boolean);
+    const card = dz.ui.card, text = dz.ui.text, cc = x.j && x.j.chartColors;
+    chk(() => !x.err && rules.length >= 2 && rules.every((r) => r && r.low === '#0f6cbd' && r.high !== r.low && cr(r.high, card) > cr(r.low, card) && cr(r.high, text) < cr(r.low, text)) && cc.mode === 'gradient' && cc.reversed === true && /brighter/i.test(cc.note),
+      () => `a brand colour that cannot fade towards the card fades towards the text colour, told: ${JSON.stringify(rules)} card ${card} text ${text} ${JSON.stringify(cc)} ${x.err ? x.t.slice(0, 200) : ''}`);
+  }
+}
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);

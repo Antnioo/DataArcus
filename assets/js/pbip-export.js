@@ -229,9 +229,14 @@
   // into its panel. A colour that cannot fade by 15% and keep 3:1 gets no rule (null). A bar has no gradient fill of
   // its own in Desktop 2.158 (dataPoint holds fill, fillRule, fillTransparency and the border only).
   const HEX6 = /^#[0-9a-f]{6}$/i;
-  const gradientEnds = (base, card) => {
+  // Round 15 (the owner's go on round 13's recommendation 3, 6 Oct 2026): a colour too close to its card to fade
+  // towards it (golden task 1: #0F6CBD on the dark DataArcus card, 3.2:1) fades the other way: the smallest bar is the
+  // colour itself and the largest a brighter tint of it, mixed 40% towards the text colour (further off the card), so
+  // every bar still stands 3:1 off the card (reversed: true). A colour under 3:1 itself gets no rule (null).
+  const gradientEnds = (base, card, text) => {
     if (!HEX6.test(String(base)) || !HEX6.test(String(card))) return null;
     for (let n = 12; n >= 3; n--) { const low = mixHex(base, card, n / 20); if (contrast(low, card) >= 3) return { low, high: String(base).toLowerCase() }; }
+    if (HEX6.test(String(text)) && contrast(base, card) >= 3) { const high = mixHex(base, text, 0.4); if (contrast(high, card) > contrast(base, card)) return { low: String(base).toLowerCase(), high, reversed: true }; }
     return null;
   };
   const gradientFill = (input, ends) => [{
@@ -373,7 +378,7 @@
     const leftOut = [];   // data visuals not written because the model has no field for them: { page, kind, title }
     const kpiTitles = { wrapped: [], shortened: [] };
     // bars that fade by value (o.chartColors 'gradient', round 13): the two ends, or null when the colour cannot fade
-    const barBase = ((o.theme || {}).dataColors || [])[0] || (u || {}).accent, GRAD = o.chartColors === 'gradient' && u ? gradientEnds(barBase, u.card) : null;
+    const barBase = ((o.theme || {}).dataColors || [])[0] || (u || {}).accent, GRAD = o.chartColors === 'gradient' && u ? gradientEnds(barBase, u.card, u.text) : null;
     const chartColors = { asked: o.chartColors === 'gradient', ends: GRAD, base: barBase, charts: 0 };
     // charts mirrored for a right-to-left report (o.chartAxes 'mirrored', round 13; see mirrorChart)
     const MIRROR = rtl && o.chartAxes === 'mirrored', chartAxes = { asked: o.chartAxes || null, rtl, charts: 0 };
