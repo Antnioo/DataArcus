@@ -1146,9 +1146,10 @@
               // Round 18 (FAIL 12: a 420 x 220 matrix at 1920 x 1080 showed three of seven days): a matrix whose rows do not
               // fit even tight takes the largest smaller text, down to Power BI's 8pt, that holds them (and told,
               // tableSmaller); only where even 8pt does not is it told that its last rows scroll (tableRows)
-              if (s.kind === 'matrix' && need(0) > s.h) {
+              // (round 19, item 10: a table too, with the same limits; its header keeps its grow-to-fit, the size is merged in)
+              if (need(0) > s.h) {
                 let t2 = Math.ceil(T) - 1; while (t2 > 8 && need(0, t2) > s.h) t2--;
-                if (t2 >= 8 && need(0, t2) <= s.h) { const from = T; T = t2; ['values', 'columnHeaders', 'rowHeaders', 'total'].forEach((k) => { visual.objects = visual.objects || {}; visual.objects[k] = obj({ fontSize: num(t2) }); });
+                if (t2 >= 8 && need(0, t2) <= s.h) { const from = T; T = t2; (s.kind === 'matrix' ? ['values', 'columnHeaders', 'rowHeaders', 'total'] : ['values', 'columnHeaders', 'total']).forEach((k) => { visual.objects = visual.objects || {}; const e = (visual.objects[k] || [])[0]; if (e && e.properties) e.properties.fontSize = num(t2); else visual.objects[k] = obj({ fontSize: num(t2) }); });
                   if (smallEntry) Object.assign(smallEntry, { size: t2, rows: true }); else tableSmaller.push({ page: pg.name || base, size: t2, from, rows: true }); }
               }
               if (need(1) > s.h) { visual.objects = visual.objects || {}; visual.objects.grid = [{ properties: { rowPadding: num(0) } }]; if (need(0) > s.h) tableRows.push({ page: pg.name || base, field: label(tf), rows: n, need: Math.ceil(need(0)), h: s.h }); }

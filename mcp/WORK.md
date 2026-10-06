@@ -48,7 +48,7 @@ picture), S3 (slanted day names). Records: DESKTOP-TESTS.md, rows 9b, 12b, S1.. 
   the theme's 15pt), Day Name and the first two measures kept, the other two named in `tableColumns`, tight rows;
   worked out 324 wide of 420 and 212 high of 220. **On screen: no horizontal scrollbar, every header whole, Sunday to
   Saturday and the total all shown, no vertical scrollbar.** The answer's reportNotes: "The table text is 9pt (the
-  theme's is 15pt) ... and, in a matrix, its rows and total fit its height". Also at 1280 x 720 (10pt, unchanged,
+  theme's is 15pt) ... and its rows and total fit its height". Also at 1280 x 720 (10pt, unchanged,
   356 of 420, 217 of 220 tight): the same four things true.
 - **S2b** (the small table's ring): rebuild "P4 ring EN" (the 221-high table at 1280 x 720). Expected: the ring 28 high
   with **no number inside**, at least four rows and the total shown (Sunday to Wednesday and the total, as S2), the

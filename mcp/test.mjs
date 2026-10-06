@@ -3869,6 +3869,20 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
         () => `${lang} ${W} x ${H}: the matrix must draw at the size its fit chose (values, headers, row headers, total: ${JSON.stringify(sizes)}, the theme's ${T0}), its kept columns within 420 (${Math.round(wide)}), seven rows and the total within 220, or told when even 8pt does not hold them (need ${Math.round(need)}, at 8pt ${Math.round(at8)}, told ${told}), the left-out measures named (${JSON.stringify(named)}, kept ${ps.length - 1}) ${x.err ? x.t.slice(0, 300) : ''}`);
     }
   }
+  // Round 19, item 10: a table takes the matrix's row rule (round 18): where seven rows and the total do not fit even with
+  //     tight rows at the theme's size, the largest smaller text down to 8pt that holds them, on its values, headers and
+  //     total; the header keeps its grow-to-fit
+  {
+    const dir = 'r18-matrix';
+    const x = await ask('create_report', { path: dir, name: 'R19 table rows', theme: `${dir}/theme-1.5.json`, fields: { kpis: ['Sales[Total Sales]'], table: ['Calendar[Day Name]', 'Sales[Total Sales]'] },
+      pages: [{ name: 'P', width: 1920, height: 1080, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'table', x: 36, y: 100, w: 420, h: 220, title: 'T' }] }] });
+    const vs = x.err ? [] : (() => { const def = path.join(ROOT, dir, x.j.report, 'definition', 'pages'), pg = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder[0]; return fs.readdirSync(path.join(def, pg, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, pg, 'visuals', v, 'visual.json'), 'utf8'))); })();
+    const t = vs.find((v) => v.visual && v.visual.visualType === 'tableEx'), o = (t && t.visual.objects) || {};
+    const fz = (k) => { const e = (o[k] || [])[0]; return e && e.properties.fontSize ? parseFloat(e.properties.fontSize.expr.Literal.Value) : null; };
+    const T = fz('values'), pitch = 1.415 * T * 4 / 3, need = 1.5 * 18 * 4 / 3 + pitch + 7 + 8 * pitch + 16;
+    chk(() => T && T < 15 && fz('columnHeaders') === T && fz('total') === T && need <= 220 && JSON.stringify(o.columnHeaders).includes('growToFit') && !/needs about \d+ to show its 7 rows/.test(JSON.stringify(x.j)),
+      () => `a 420 x 220 table of Day Name at 15pt must take a smaller text so seven rows and the total fit: values ${T}, headers ${fz('columnHeaders')}, total ${fz('total')}, need ${Math.round(need)} ${x.err ? x.t.slice(0, 200) : ''}`);
+  }
 }
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
