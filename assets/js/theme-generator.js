@@ -56,9 +56,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // legend of the bar chart, where the theme puts it (Power BI's default is top left)
     const legendItems = [L('Online', 'أونلاين'), L('Stores', 'المتاجر'), L('Partners', 'الشركاء')].map((n, i) => `<span style="display:inline-flex;align-items:center;gap:4px"><i style="width:8px;height:8px;border-radius:50%;background:${d[i]};display:inline-block"></i>${n}</span>`).join('');
     const side = cs.legend === 'Right';
-    // a "Side" legend goes where the theme puts it: left when the design reads right to left (the same rtl() as the
-    // theme), whatever the page's own writing direction, so the row is reversed when the two differ
-    const row = side && rtl() !== isAr() ? 'row-reverse' : 'row';
+    // a "Side" legend goes where the theme puts it: at the right in both directions (round 15, the owner's go on round
+    // 13's recommendation 2c), whatever the page's own writing direction, so the row is reversed on an Arabic page
+    const row = side && isAr() ? 'row-reverse' : 'row';
     const legend = cs.legend === 'off' ? '' : `<div class="tg-legend" style="display:flex;${side ? 'flex-direction:column;justify-content:center;' : ''}gap:${side ? 4 : 10}px;font-size:.68rem;color:${sec};justify-content:${cs.legend === 'TopCenter' ? 'center' : side ? 'center' : 'flex-start'};margin:${side ? '0' : '4px 0'}">${legendItems}</div>`;
     const barSvg = (g, b) => `<svg viewBox="0 0 390 172" role="img" aria-label="Clustered bar chart preview"${side ? ' style="flex:1;min-width:0"' : ''}>${g}${b}</svg>`;
     const barChart = (g, b) => (side ? `<div style="display:flex;flex-direction:${row};gap:8px">${barSvg(g, b)}${legend}</div>` : cs.legend === 'Bottom' ? barSvg(g, b) + legend : legend + barSvg(g, b));
@@ -449,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (pbipBtn) {
     let logo = null;
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : new Promise((resolve, reject) => {
-      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20261006f'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
+      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20261006g'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
     }));
     // ---- your own model: a local project (the report points at its .SemanticModel folder) or a published one ----
     // Each choice keeps its own model and the fields picked for it, so switching between them never pairs one
@@ -567,6 +567,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const r = P.build({
           name: state.name || 'Power BI Report', title: state.name || L('Sales overview', 'نظرة عامة على المبيعات'), pageName: nm(LAYOUTS[c.preset].name),
           lang: isAr() ? 'ar' : 'en', rtl: rtl(), font: state.font, ui: state.ui, pages, theme, logo, sample, model, bind,
+          // round 15 (the owner's go on round 13's recommendation 2b): a right-to-left download has its charts mirrored, as the MCP's
+          ...(rtl() ? { chartAxes: 'mirrored' } : {}),
           // the report's labels come from the design engine (the MCP uses the same); the readme stays here
           texts: Object.assign({}, E.REPORT_TEXTS[isAr() ? 'ar' : 'en'], {
             readme: m === 'service' ? L('# {name}\n\nMade with the DataArcus Power BI Theme & Layout Generator: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## Open it\n1. Unzip this folder.\n2. Open **{name}.pbip** in Power BI Desktop and sign in. The report connects live to your published semantic model.\n3. Check each visual, then publish the report to the same workspace.\n\n## Check it in Power BI (2 minutes)\n1. On every page, each visual sits on its panel in the background and shows data.\n2. If the colours look off: **View > Themes > Browse for themes** and pick the theme file in **{name}.Report/StaticResources/RegisteredResources**.\n3. Hover any chart: the tooltip page shows.\n4. Ctrl+click the page buttons and **Reset filters** (and the **Filters** button if you chose the slide-in panel).\n5. **View > Mobile layout**: the phone version is already laid out.\n\nSomething looks wrong? Send a screenshot to hello@dataarcus.com.\n',
