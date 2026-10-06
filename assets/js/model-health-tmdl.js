@@ -334,7 +334,8 @@
   //   a whole number or a count (COUNT..., a sum of a whole-number column, a whole-number column): "#,0"
   //   money (a currency in the format): the model's own format, with the thousand separator added where it lacks one;
   //     a currency is never invented
-  //   any other number: "#,0.00" without a format; its own format with the separator where it lacks one
+  //   a sum without a format: "#,0" (round 14); any other number: "#,0.00" without a format; its own format with the
+  //     separator where it lacks one
   //   a date column: "dd mmm yyyy" without a format or with "General Date" (which shows a time of 12:00:00 AM)
   const DIVIDES = /\bDIVIDE\s*\(|(^|[^/])\/(?!\/)/i;
   const PCT_HARD = /%|\bpct\b|\bpercent(age)?\b|\bratio\b|\brate\b|نسبة/i, PCT_SOFT = /margin|share|\bvs\b|growth|change|هامش|نمو/i;
@@ -351,9 +352,13 @@
     return !!(c && c.dataType === 'int64');
   };
   // the right format of a number whose kind is known: whole (a count) or not
-  const numberFix = (f, whole) => {
+  // (round 14, the laptop's proof on 6 Oct: the sample's unformatted SUM showed 14,178.00 in its table, where round 13
+  // showed 14,178): a sum the model leaves without a format shows no decimals, as a count does; only a real decimal
+  // (an average, a division, any other DAX) gets two; a sum the model formats with decimals keeps them
+  const numberFix = (f, whole, sum) => {
     if (MONEY.test(f || '')) return lacksSeparator(f) ? { format: withSeparator(f), reason: 'money: the model\'s own currency format, with the thousand separator' } : null;
     if (whole) return !f || hasDecimals(f) || lacksSeparator(f) || /^\s*general( number)?\s*$/i.test(f) ? { format: '#,0', reason: f && hasDecimals(f) ? 'a count or whole number shown with decimals (' + f + ')' : 'a count or whole number: thousand separator, no decimals' } : null;
+    if (!f && sum) return { format: '#,0', reason: 'a sum without a format: thousand separator, no decimals' };
     if (!f) return { format: '#,0.00', reason: 'a number without a format: thousand separator and two decimals' };
     return lacksSeparator(f) ? { format: withSeparator(f), reason: 'the format has no thousand separator (' + f + ')' } : null;
   };
@@ -372,7 +377,7 @@
     if (isTextFormat(f) || TEXT_EXPR.test(expr)) return null;
     const pct = /%/.test(unquoted(f)) || (PCT_HARD.test(nm) && !NOT_PCT.test(nm)) || (PCT_SOFT.test(nm) && DIVIDES.test(expr) && !MONEY.test(f));
     if (pct) return /%/.test(unquoted(f)) ? null : { format: '0.0%', reason: f ? 'a ratio (by its name or its DAX) formatted as ' + f : 'a ratio (by its name or its DAX) without a format' };
-    return numberFix(f, COUNT_EXPR.test(expr) || sumOfWhole(expr, rawTables));
+    return numberFix(f, COUNT_EXPR.test(expr) || sumOfWhole(expr, rawTables), /^SUM\s*\(\s*'?[^'\[\]()]+'?\s*\[[^\]]+\]\s*\)$/i.test(expr));
   }
   // Every measure and column the rule would change, with one script that does it (createOrReplace, each object
   // written in full with only its format changed). The health check, plan_layout and create_report write this same

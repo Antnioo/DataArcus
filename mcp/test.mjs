@@ -112,7 +112,7 @@ check(!r.err && JSON.stringify(r.j.columnTypes && r.j.columnTypes.alreadyTyped) 
   const fx = plainRun.err ? {} : plainRun.j.fixes || {}, ms = fx.MONTH_SORT || {}, nf = fx.NO_FORMAT || {}, pf = fx.PCT_FORMAT || {};
   check(!plainRun.err && /sortByColumn: 'Month Number'/.test(scriptOf(ms)) && /WEEKDAY \( 'Calendar'\[Date\], 1 \)/.test(scriptOf(ms)) && ms.weekStart === 'sunday' && /TMDL view/.test(String(ms.howToApply))
     && (ms.byHand || []).length === 1 && ms.byHand[0].column === 'Calendar[Hijri Month Name]', `health fixes, sort: ${plainRun.err ? plainRun.t.slice(0, 200) : JSON.stringify(ms).slice(0, 500)}`);
-  check(JSON.stringify((nf.suggested || []).map((x) => [x.measure, x.format])) === JSON.stringify([['[Total Sales]', '#,0.00'], ['[Units]', '#,0'], ['[Orders]', '#,0'], ['[Margin %]', '0.0%']]) && (nf.suggested || []).every((x) => x.reason)
+  check(JSON.stringify((nf.suggested || []).map((x) => [x.measure, x.format])) === JSON.stringify([['[Total Sales]', '#,0'], ['[Units]', '#,0'], ['[Orders]', '#,0'], ['[Margin %]', '0.0%']]) /* (round 14, the laptop's proof on 6 Oct: an unformatted SUM shows no decimals, #,0; it was #,0.00 since 12b, which put 14,178.00 in the sample's tables) */ && (nf.suggested || []).every((x) => x.reason)
     && !!scriptOf(nf) && !/Has Format|Return Rate/.test(scriptOf(nf)) && /never applied/i.test(String(nf.howToApply)), `health fixes, formats: ${JSON.stringify(nf).slice(0, 500)}`);
   check((pf.suggested || []).length === 1 && pf.suggested[0].measure === '[Return Rate]' && pf.suggested[0].format === '0.0%', `health fixes, a rate formatted as a number: ${JSON.stringify(pf).slice(0, 300)}`);
   // the week start is a choice: Monday (the UAE's Saturday-Sunday weekend) and Saturday change the weekday expression only
@@ -395,7 +395,8 @@ check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.string
     check(on('text') && on('fill') && offOutside('outline'), `Reset button: text and fill must be switched on, and the outline off, outside the state (${JSON.stringify(reset).slice(0, 300)})`);
     // 2. tooltip page: its own text sizes (the theme's are made for the full page): value 20, titles 10
     const tipPage = pages.find((p) => p.hidden), tipText = tipPage ? tipPage.visuals.map((v) => v.text).join('') : '';
-    check(/"value":\[\{"properties":\{"fontSize":\{"expr":\{"Literal":\{"Value":"20D"\}\}\}[^\]]*"selector":\{"id":"default"\}\}\]/.test(tipText.replace(/\s/g, '')) && (tipText.replace(/\s/g, '').match(/"fontSize":\{"expr":\{"Literal":\{"Value":"10D"\}\}\}/g) || []).length === 2,
+    // (round 14, the laptop's proof on 6 Oct: an unformatted SUM shows no decimals, #,0; it was #,0.00 since 12b, which put 14,178.00 in the sample's tables): the tooltip card of that SUM also carries its whole-number format entry after its size entry
+    check(/"value":\[\{"properties":\{"fontSize":\{"expr":\{"Literal":\{"Value":"20D"\}\}\}[^\]]*"selector":\{"id":"default"\}\}(\]|,\{"properties":\{"labelDisplayUnits"[^\]]*"customFormatString":\{"expr":\{"Literal":\{"Value":"'#,0'"\}\}\}[^\]]*\])/.test(tipText.replace(/\s/g, '')) && (tipText.replace(/\s/g, '').match(/"fontSize":\{"expr":\{"Literal":\{"Value":"10D"\}\}\}/g) || []).length === 2,
       'tooltip page: the card value must be 20 and both titles 10');
     // 3. logo placeholder: readable (at least 12pt in a 48-high header slot)
     const logo = all.find((v) => v.type === 'textbox' && /Your logo/.test(v.text)), size = logo && +((logo.text.match(/"fontSize":\s*"(\d+)pt"/) || [])[1]);
@@ -3368,6 +3369,30 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       return x.err ? x.t : JSON.parse(fs.readFileSync(path.join(ROOT, 'r14', x.j.report, 'definition', 'reportExtensions.json'), 'utf8')).entities.flatMap((e) => e.measures || []).map((mm) => mm.expression).join('\n'); };
     const ea = await exprOf('ar', 'R14 mirror ar'), ee = await exprOf('en', 'R14 mirror en');
     chk(() => /scale\(-1 1\)/.test(ea) && !/scale\(-1 1\)/.test(ee), () => `create_report must mirror the picture on an Arabic report only: AR ${ea.slice(0, 200)} EN ${ee.slice(0, 200)}`);
+  }
+
+  // Round 14 fix (the laptop's proof, 6 Oct: the sample's table showed 14,178.00 and a total of 101,914.00 where round 13
+  // showed 14,178): a sum or a count the model leaves unformatted, or formats with no decimals, shows no decimals in the
+  // tables, the cards and the tooltip's card; only a real decimal (an average, a division) keeps two. The sample model's
+  // Total Sales is SUM ( 'Sales'[Amount] ) with no format, on a DAX table's column with no type in the files
+  {
+    const req = (await import('node:module')).createRequire(import.meta.url), T = req('../assets/js/model-health-tmdl.js');
+    const of = (o) => { const r = T.formatOf(o, 'measure', []); return r ? r.format : null; };
+    const unit = [of({ name: 'Total Sales', expression: "SUM ( 'Sales'[Amount] )" }), of({ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '0' }),
+      of({ name: 'Avg Price', expression: 'AVERAGE ( Sales[Price] )' }), of({ name: 'Per Order', expression: 'DIVIDE ( [Total Sales], [Orders] )' }),
+      of({ name: 'Cost', expression: 'SUM ( Sales[Cost] )', formatString: '#,0.00' }), of({ name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '0.00' })];
+    chk(() => JSON.stringify(unit) === JSON.stringify(['#,0', '#,0', '#,0.00', '#,0.00', null, '#,0']),
+      () => `the format rule: an unformatted or no-decimal sum #,0, a real decimal #,0.00, a sum formatted with decimals left alone, a count #,0: ${JSON.stringify(unit)}`);
+    const src = path.join(REPO, 'scripts/tests/fixtures/model-health/tmdl-ramadan/definition'), dst = path.join(ROOT, 'r14-sample/Ramadan Test.SemanticModel');
+    fs.mkdirSync(dst, { recursive: true }); fs.cpSync(src, path.join(dst, 'definition'), { recursive: true }); fs.writeFileSync(path.join(dst, 'definition.pbism'), '{ "version": "4.0", "settings": {} }');
+    const dz = (await ask('plan_layout', { layout: 'exec', kpis: 3, lang: 'ar' })).j.design;
+    const x = await ask('create_report', { path: 'r14-sample', name: 'R14 sample', lang: 'ar', design: dz, secondPage: false,
+      fields: { kpis: ['Sales[Total Sales]', 'Sales[Total Sales Last Ramadan]', 'Sales[Total Sales vs Last Ramadan %]'], table: ['Calendar[Day Name]', 'Sales[Total Sales]'] } });
+    const vs = x.err ? [] : (() => { const out = []; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((f) => { const q = path.join(d, f.name); if (f.isDirectory()) walk(q); else if (f.name === 'visual.json') out.push(JSON.parse(fs.readFileSync(q, 'utf8'))); }); walk(path.join(ROOT, 'r14-sample', x.j.report, 'definition', 'pages')); return out; })();
+    const tableFmt = vs.filter((v) => v.visual && v.visual.visualType === 'tableEx').flatMap((v) => v.visual.query.queryState.Values.projections.filter((p) => p.queryRef === 'Sales.Total Sales').map((p) => p.format || null));
+    const cardCodes = vs.filter((v) => v.visual && v.visual.visualType === 'cardVisual' && JSON.stringify(v.visual.query || {}).includes('"Property":"Total Sales"')).map((v) => JSON.stringify(v.visual.objects.value || []));
+    chk(() => !x.err && tableFmt.length >= 1 && tableFmt.every((f) => f === '#,0') && cardCodes.length >= 2 && cardCodes.every((c) => /'#,0'/.test(c) && !/0\.00/.test(c)),
+      () => `the sample's Total Sales must show no decimals in its table, cards and tooltip card: table ${JSON.stringify(tableFmt)} cards ${cardCodes.map((c) => c.slice(0, 160)).join(' | ')} ${x.err ? x.t.slice(0, 300) : ''}`);
   }
 }
 
