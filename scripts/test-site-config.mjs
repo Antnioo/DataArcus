@@ -70,6 +70,10 @@ for (const p of pages) {
 for (const u of locs) {
   const h = read(local(u));
   ok(/rel="canonical"/.test(h), `${local(u)}: no canonical`);
+  // (round 17, the outside review's G-08: a canonical must name the page itself, or search engines index another one)
+  const own = SITE + local(u).replace(/\\/g, '/').replace(/(^|\/)index\.html$/, '$1');
+  const canon = (h.match(/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/) || h.match(/<link[^>]*href="([^"]+)"[^>]*rel="canonical"/) || [])[1];
+  ok(!canon || canon === own, `${local(u)}: canonical is ${canon}, not the page's own URL ${own}`);
   ok(/property="og:image"/.test(h), `${local(u)}: no og:image`);
 }
 
