@@ -282,7 +282,7 @@ function boundOf(pages, B, tableKept) {
   const key = (f) => (f ? (f.agg != null ? `${AGGN[f.agg] || 'Agg'}(${f.t}[${f.c}])` : `${f.t}[${f.c != null ? f.c : f.m}]`) : null), list = (...fs2) => fs2.map(key).filter(Boolean);
   return (pages || []).map((p, pi) => { let k = 0; const visuals = [];
     (p.slots || []).slice().sort((s1, s2) => (s1.y - s2.y) || (s1.x - s2.x)).forEach((s) => {
-      const cat = (B.cats || {})[s.kind], y = (B.y || {})[s.kind] || B.measure;
+      const cat = (B.cats || {})[s.kind], y = s.kind === 'funnel' && B.y && 'funnel' in B.y ? B.y.funnel : (B.y || {})[s.kind] || B.measure;
       if (s.kind === 'kpi') visuals.push({ visual: VISUAL_NAMES.kpi, fields: list((B.kpis || [])[k++]) });
       else if (s.kind === 'card') visuals.push({ visual: VISUAL_NAMES.card, fields: list(B.measure) });
       else if (s.kind === 'line') visuals.push({ visual: VISUAL_NAMES.line, fields: list(B.date, B.measure) });
@@ -828,7 +828,7 @@ server.registerTool('create_report', {
   // days and months put in calendar order in a table by a helper column (round 12, #17)
   if ((r.tableOrder || []).length) reportNotes.push(`${[...new Set(r.tableOrder.map((x) => x.field))].join(', ')} ${r.tableOrder.length === 1 ? 'is' : 'are'} in calendar order in the table${r.tableOrder.length === 1 ? '' : 's'} too (by ${[...new Set(r.tableOrder.map((x) => x.by))].join(', ')}, the same order as the charts): the model gives ${r.tableOrder.length === 1 ? 'it' : 'them'} no sort-by column, so each table carries the number in a narrow column with no header, in the card colour. Setting the sort-by column in the model (check_model_health, fixes.MONTH_SORT) orders slicers too.`);
   // visuals left out because the model has no field for them (never written empty)
-  const WHY = { slicer: 'the model has no more text columns a slicer can use', line: 'the model has no month or date column for its axis', table: 'no field was found for it', matrix: 'it needs a text column and a measure', gauge: 'the model has no measure for it', card: 'the model has no measure for it' };
+  const WHY = { funnel: 'a funnel shows an amount, and the model has no measure that is not a ratio or a percent', slicer: 'the model has no more text columns a slicer can use', line: 'the model has no month or date column for its axis', table: 'no field was found for it', matrix: 'it needs a text column and a measure', gauge: 'the model has no measure for it', card: 'the model has no measure for it' };
   const KIND = { slicer: 'Slicer', line: 'Line chart', bar: 'Bar chart', column: 'Column chart', donut: 'Donut chart', funnel: 'Funnel', treemap: 'Treemap', map: 'Map', table: 'Table', matrix: 'Matrix', gauge: 'Gauge', card: 'Card' };
   const leftOutList = (r.leftOut || []).map((x) => ({ visual: x.kind === 'slicer' ? (x.title || 'Slicer') : `${KIND[x.kind] || x.kind}${x.title ? ` "${x.title}"` : ''}`, page: x.page, why: WHY[x.kind] || 'the model has no text column (a category) or no measure for it' }));
   if (leftOutList.length) reportNotes.push(`${leftOutList.length} visual${leftOutList.length === 1 ? ' was' : 's were'} left out, because a visual is never written without its field: ${leftOutList.map((x) => `${x.visual} on "${x.page}" (${x.why})`).join('; ')}.`);

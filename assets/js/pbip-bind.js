@@ -293,7 +293,9 @@
       choices: ch,
       kpis, measure: main, date: f(ch.date),   // an empty KPI choice leaves that card empty
       cats: { bar: A, donut: A, funnel: A, treemap: A, column: Bc, map: Bc },
-      y: { funnel: second, gauge: f(ratio) || main },
+      // (round 16, design finding #16: a funnel drawn on a ratio read 0.19, 1.31, "681.9%"): a funnel shows an amount,
+      // never a percent; with none, it has no measure and is left out (and told)
+      y: { funnel: [second, main].concat(kpis).find((k) => k && !k.pct) || null, gauge: f(ratio) || main },
       table: uniq([Bc || A, main, second, kpis[2]]),
       slicers: (ch.slicers || []).map(f),
       // the category tooltip's chart shows a base measure other than the main one, else the main one: never a variant

@@ -3464,6 +3464,35 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   }
 }
 
+// ---------- round 16: round 13's design findings left over (non-severe; 6 Oct) ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
+  const col = (name, dataType) => ({ name, dataType, sourceColumn: name });
+  const visuals = (p, report) => { const out = []; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((f) => { const q = path.join(d, f.name); if (f.isDirectory()) walk(q); else if (f.name === 'visual.json') out.push(JSON.parse(fs.readFileSync(q, 'utf8'))); }); walk(path.join(ROOT, p, report, 'definition', 'pages')); return out; };
+  const model = (dir, tables) => { fs.mkdirSync(path.join(ROOT, dir, 'M.SemanticModel'), { recursive: true }); fs.writeFileSync(path.join(ROOT, dir, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables } })); };
+  const cal = { name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Year', 'int64'), col('Quarter', 'string'), col('Day Name', 'string'), col('Day of Week', 'int64')] };
+
+  // 2. #16: a gauge on a percent measure shows the card's percent format (the projection's format, as tables); a funnel
+  // is never drawn on a ratio: it takes an amount, or is left out and told when the model has none
+  {
+    model('r16-g', [cal, { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string'), col('Channel', 'string'), col('Date', 'dateTime')],
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }] }]);
+    const hand = (kinds) => [{ name: 'P', slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }].concat(kinds.map((k, i) => ({ kind: k, x: 36 + i * 600, y: 100, w: 560, h: 400, title: k }))) }];
+    const x = await ask('create_report', { path: 'r16-g', name: 'R16 gauge', fields: { kpis: ['Sales[Total Sales]', 'Sales[Margin %]', 'Sales[Orders]'] }, pages: hand(['gauge', 'funnel']) });
+    const vs = x.err ? [] : visuals('r16-g', x.j.report), g = vs.find((v) => v.visual && v.visual.visualType === 'gauge'), fu = vs.find((v) => v.visual && v.visual.visualType === 'funnel');
+    const gy = g && g.visual.query.queryState.Y.projections[0], fy = fu && fu.visual.query.queryState.Y.projections[0];
+    chk(() => !x.err && gy.queryRef === 'Sales.Margin %' && gy.format === '0.0%' && fy && !/Margin/.test(fy.queryRef),
+      () => `the gauge must show the percent format, the funnel an amount: gauge ${JSON.stringify(gy)} funnel ${JSON.stringify(fy)} ${x.err ? x.t.slice(0, 300) : ''}`);
+    model('r16-g2', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string')], measures: [{ name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }, { name: 'Return Rate', expression: 'DIVIDE ( 1, 3 )', formatString: '0.0%' }] }]);
+    const y = await ask('create_report', { path: 'r16-g2', name: 'R16 funnel', fields: { kpis: ['Sales[Margin %]'] }, pages: hand(['funnel']) });
+    const fu2 = y.err ? null : visuals('r16-g2', y.j.report).find((v) => v.visual && v.visual.visualType === 'funnel');
+    chk(() => !y.err && !fu2 && (y.j.reportNotes || []).some((n) => /funnel/i.test(n) && /amount/i.test(n)),
+      () => `a funnel without an amount must be left out and told: ${fu2 ? 'written' : 'not written'} ${JSON.stringify(y.j && (y.j.reportNotes || []).filter((n) => /funnel|left out/i.test(n)))} ${y.err ? y.t.slice(0, 300) : ''}`);
+  }
+}
+
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);

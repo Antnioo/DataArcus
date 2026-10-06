@@ -313,7 +313,7 @@
   // rtl: a right-to-left report reverses a table's columns, so its first column (the category) sits on the right,
   // where an Arabic reader starts; Power BI doesn't mirror tables itself
   function bindQuery(kind, B, kpiIndex, rtl) {
-    const cat = (B.cats || {})[kind], y = (B.y || {})[kind] || B.measure, need = (...fs) => fs.every(Boolean);
+    const cat = (B.cats || {})[kind], y = kind === 'funnel' && B.y && 'funnel' in B.y ? B.y.funnel : (B.y || {})[kind] || B.measure, need = (...fs) => fs.every(Boolean);
     // one field per card: a card past the end of the list stays empty rather than repeating the first KPI
     const kpi = (B.kpis || [])[kpiIndex] || null;
     switch (kind) {
@@ -328,7 +328,9 @@
       case 'table': { const fs = tableFields(B, rtl); return fs.length ? inOrder(q({ Values: fs.map(tproj) }), fs, rtl) : null; }
       // a matrix: rows by the table's first text column, its measures as the values
       case 'matrix': { const fs = (B.table || []).filter(Boolean), row = fs.find(isTextField), vals = fs.filter(isValue); return row && vals.length ? q({ Rows: [proj(row)], Values: vals.map(tproj) }) : null; }
-      case 'gauge': return need(y) ? q({ Y: [proj(y)] }) : null;
+      // (round 16, design finding #16: a gauge on a percent measure read 0.34 between 0.00 and 0.68; it shows the card's
+      // percent format through its projection's format, as tables do)
+      case 'gauge': return need(y) ? q({ Y: [Object.assign(proj(y), y.pctFormat ? { format: String(y.pctFormat) } : {})] }) : null;
       case 'treemap': return need(cat, y) ? q({ Group: [proj(cat)], Values: [proj(y)] }) : null;
       case 'map': return need(cat, y) ? q({ Category: [proj(cat)], Size: [proj(y)] }) : null;
       default: return null;
@@ -346,7 +348,7 @@
     return a + ' ' + (ar ? (AR_LETTERS.test(by) ? by : 'حسب') : (AR_LETTERS.test(by) ? 'by' : by)) + ' ' + b;
   };
   function bindTitle(kind, B, by) {
-    const cat = (B.cats || {})[kind], y = (B.y || {})[kind] || B.measure;
+    const cat = (B.cats || {})[kind], y = kind === 'funnel' && B.y && 'funnel' in B.y ? B.y.funnel : (B.y || {})[kind] || B.measure;
     if (kind === 'line' && B.date && B.measure) return byTitle(label(B.measure), by, label(B.date));
     if (['bar', 'column', 'donut', 'funnel', 'treemap', 'map'].includes(kind) && cat && y) return byTitle(label(y), by, label(cat));
     if ((kind === 'gauge' || kind === 'card') && y) return label(y);
