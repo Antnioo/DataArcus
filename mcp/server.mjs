@@ -144,7 +144,7 @@ const SUSPICIOUS = [
   [/\b(ignore|disregard|forget)\s+(the\s+|your\s+)?(previous|above|all|prior)\b.*\binstructions?\b/i, 'asks to ignore instructions'],
   [/system\s+prompt/i, 'names a system prompt'], [/\byou\s+are\b/i, 'speaks to the AI ("you are")'],
   [/\bassistant\s*:/i, 'speaks as the assistant'], [/\bact\s+as\b/i, 'asks the AI to act as someone'],
-  [/\bdo\s+not\s+tell\b/i, 'asks to hide something from the user'], [/\brun\s/i, 'asks to run something'],
+  [/\bdo\s+not\s+tell\b/i, 'asks to hide something from the user'], [/\brun\s+(cmd|powershell|bash|shell|script|code|command|this|the\s+following)\b/i, 'asks to run something'],
   [/\bexecute\b/i, 'asks to execute something'], [/https?:\/\//i, 'holds a web address'], [/<script/i, 'holds a script tag'],
 ];
 const suspiciousWhy = (name) => {
