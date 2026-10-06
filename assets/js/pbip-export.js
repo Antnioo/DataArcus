@@ -399,6 +399,8 @@
     const tableRows = [];   // tables whose known rows don't fit even with tight rows (round 12, #23)
     const headerGrew = [];   // pages whose header grew one row of tabs (round 12)
     const tableSmaller = [];   // tables given a smaller text so more fields fit (round 12)
+    const noData = [];   // round 19: the "No data" measures, { t, m, expression }
+    const NODATA = own && o.noDataMessage !== false;
     const barCharts = [];   // round 19: column charts by day or month names written as bar charts
     const shortDays = [];   // round 18, S3: column charts that show Day Short
     const ringsSmall = [];   // round 18: ring pictures drawn under 40 high, written without their number
@@ -1198,6 +1200,24 @@
             }
           }
         }
+        // Round 19 (the owner's idea, 6 Oct 2026): "No data for this selection" where the visual's measure is blank. A
+        // report-level measure (reportExtensions.json, the model untouched) gives the text only when the measure is blank,
+        // and "" otherwise; a card shows it in the same box one layer below (a lower z), with the panel's look (the theme's
+        // card style), its tooltip off and not on the phone; the visual above it is see-through, so the card's panel is
+        // what shows, and its message only when the visual is empty. Charts and tables with a measure of the model.
+        if (NODATA && visual && visual.query && ['bar', 'column', 'line', 'donut', 'table'].includes(s.kind)) {
+          const st = visual.query.queryState, pr = [].concat((st.Y || {}).projections || [], (st.Values || {}).projections || []).find((p) => p.field && p.field.Measure && !p.field.Measure.Expression.SourceRef.Schema);
+          if (pr) {
+            const ent = pr.field.Measure.Expression.SourceRef.Entity, mm = pr.field.Measure.Property, nm = (W.noDataName || 'No data: ') + mm;
+            if (!noData.some((x) => x.t === ent && x.m === nm)) noData.push({ t: ent, m: nm, expression: 'IF ( ISBLANK ( ' + "'" + ent.replace(/'/g, "''") + "'" + '[' + mm.replace(/\]/g, ']]') + '] ), "' + (lang === 'ar' ? 'لا توجد بيانات لهذا الاختيار' : 'No data for this selection').replace(/"/g, '""') + '", "" )' });
+            container({ x: s.x, y: box.y, w: s.w, h: box.h, z: z - 500, parent, kind: 'nodata', noPhone: true, visual: { visualType: 'cardVisual',
+              query: q({ Data: [{ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: ent } }, Property: nm } }, queryRef: ent + '.' + nm, nativeQueryRef: nm }] }),
+              objects: { value: [{ properties: { fontSize: num(LABEL), fontColor: color(mixHex(u.text, u.card, 0.3)) }, selector: { id: 'default' } }], label: [{ properties: { show: bool(false) }, selector: { id: 'default' } }], fillCustom: [{ properties: { show: bool(false) } }] },
+              visualContainerObjects: { title: obj({ show: bool(false) }), visualTooltip: obj({ show: bool(false) }), general: obj({ altText: str('') }) } } });
+            if (SOLID) Object.assign(visual.visualContainerObjects, { background: obj({ show: bool(false) }), border: obj({ show: bool(false) }), dropShadow: obj({ show: bool(false) }) });
+            else visual.visualContainerObjects.background = obj({ show: bool(false) });
+          }
+        }
         const v = container({ x: s.x, y: box.y, w: s.w, h: box.h, z, parent, visual, kind: s.kind });
         if (CHARTS.includes(s.kind)) charts.push({ v, byMonth: !!trend && same(s.kind === 'line' ? B.date : (B.cats || {})[s.kind], tip.date) });
         z += 1000;
@@ -1431,6 +1451,12 @@
       });
     });
 
+    // the "No data" measures (round 19): into the report's extensions, beside the SVG measures where there are some
+    if (noData.length) {
+      const ents = extFile ? extFile.entities : [];
+      noData.forEach((c) => { let e = ents.find((x) => x.name === c.t); if (!e) ents.push(e = { name: c.t, measures: [] }); e.measures.push({ name: c.m, dataType: 'Text', expression: c.expression }); });
+      if (extFile) extFile.changed = true; else add(D + '/reportExtensions.json', json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: ents }));
+    }
     if (extFile && extFile.changed) extFile.entry.data = json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: extFile.entities });
 
     // Reset buttons: one data-only bookmark per page that brings that page's slicers back to "All"

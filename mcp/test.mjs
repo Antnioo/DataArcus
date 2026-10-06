@@ -167,9 +167,10 @@ if (!r.err) {
   const pbir = JSON.parse(fs.readFileSync(path.join(dir, 'definition.pbir'), 'utf8'));
   check(pbir.datasetReference.byPath.path === '../Health Test.SemanticModel', `pbir: ${JSON.stringify(pbir.datasetReference)}`);
   const model = JSON.parse(fs.readFileSync(bim, 'utf8')).model.tables;
+  // (round 19: report-level measures, Schema "extension", are skipped below: they are the report's, not the model's)
   const has = (k, t, n) => model.some((x) => x.name === t && (k === 'Measure' ? x.measures || [] : x.columns).some((c) => c.name === n));
   const refs = [];
-  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression) refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); });
+  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension') refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); });
   walk(dir);
   check(refs.length >= 4, `create_report bound only ${refs.length} fields`);
   // with no background given, the page background is fully transparent (the theme's page colour shows)
@@ -298,7 +299,8 @@ const readReport = (dir) => {
   });
 };
 const bimModel = JSON.parse(fs.readFileSync(path.join(ROOT, 'bim-project/Health Test.SemanticModel/model.bim'), 'utf8')).model.tables;
-const boundFields = (dir) => { const refs = []; const w = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) w(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Entity) refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); }); w(dir); return refs; };
+// (round 19: the "No data" measures live in the report (Schema "extension"), as the SVG measures: they are not model fields)
+const boundFields = (dir) => { const refs = []; const w = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) w(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Entity && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension') refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); }); w(dir); return refs; };
 const inModel = ([k, t, n]) => bimModel.some((x) => x.name === t && (k === 'Measure' ? x.measures || [] : x.columns).some((c) => c.name === n));
 const slotsPlaced = (pages, want) => {   // every slot except the filter rail has a visual at exactly its box; slicers sit in the rail
   const bad = [];
@@ -3797,6 +3799,30 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const kinds = (x) => x.err ? [] : x.j.slots.map((s) => s.kind);
     chk(() => !small.err && small.j.design.layout.preset === 'focus' && !kinds(small).includes('table') && /under 800/.test(JSON.stringify(small.j.smallPage || '')), () => `640 x 360: the single-focus layout, told: ${JSON.stringify(kinds(small))} ${small.err ? small.t.slice(0, 200) : JSON.stringify(small.j.smallPage || null)}`);
     chk(() => !wide.err && wide.j.design.layout.preset === 'exec' && kinds(wide).includes('table') && !wide.j.smallPage, () => `960 x 720: the executive layout as asked: ${JSON.stringify(kinds(wide))}`);
+  }
+  // Round 19, item 7 (the owner's idea, 6 Oct): "No data for this selection" where a chart's or table's measure is blank:
+  //     a report-level measure (reportExtensions, the model untouched) IF ( ISBLANK ( [m] ), text, "" ) on a card in the
+  //     same box one layer below the chart (lower z), its tooltip off, not on the phone; the chart above it see-through
+  //     (no background, border or shadow of its own) so the card's panel shows; Arabic text in Arabic; noDataMessage: false
+  //     writes none
+  {
+    mk('r19-nodata', ['Region', 'Channel']);
+    const one = async (lang, on) => { const x = await ask('create_report', { path: 'r19-nodata', name: `R19 nodata ${lang} ${on}`, lang, secondPage: false, ...(on ? {} : { noDataMessage: false }), design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', lang })).j.design });
+      if (x.err) return { err: x.t.slice(0, 300) };
+      const vs = vis('r19-nodata', x), ext = (() => { try { return fs.readFileSync(path.join(ROOT, 'r19-nodata', x.j.report, 'definition', 'reportExtensions.json'), 'utf8'); } catch (e) { return ''; } })();
+      const charts = vs.filter((v) => ['clusteredBarChart', 'clusteredColumnChart', 'lineChart', 'donutChart', 'tableEx'].includes(ty(v)));
+      const pos = (v) => v.position, under = (c) => vs.find((v) => v !== c && ty(v) === 'cardVisual' && JSON.stringify(v.visual.query || '').includes('"Schema":"extension"') && pos(v).x === pos(c).x && pos(v).y === pos(c).y && pos(v).width === pos(c).width && pos(v).height === pos(c).height && pos(v).z < pos(c).z);
+      const pairs = charts.map((c) => ({ c, m: under(c) }));
+      const seeThrough = (c) => JSON.stringify((c.visual.visualContainerObjects || {}).background || '').includes('false');
+      const tipOff = (m) => m && JSON.stringify((m.visual.visualContainerObjects || {}).visualTooltip || '').includes('false');
+      const def = path.join(ROOT, 'r19-nodata', x.j.report, 'definition', 'pages'), pg = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder[0];
+      const mobile = fs.readdirSync(path.join(def, pg, 'visuals')).filter((d) => fs.existsSync(path.join(def, pg, 'visuals', d, 'mobile.json')));
+      return { charts: charts.length, paired: pairs.filter((p) => p.m).length, seeThrough: pairs.filter((p) => p.m && seeThrough(p.c)).length, tipOff: pairs.filter((p) => tipOff(p.m)).length,
+        ext: /IF \( ISBLANK \(/.test(ext), en: ext.includes('No data for this selection'), ar: ext.includes('لا توجد بيانات لهذا الاختيار'), phone: pairs.filter((p) => p.m && mobile.includes(p.m.name)).length }; };
+    const en = await one('en', true), ar = await one('ar', true), off = await one('en', false);
+    chk(() => en.charts >= 3 && en.paired === en.charts && en.seeThrough === en.charts && en.tipOff === en.charts && en.ext && en.en && en.phone === 0, () => `English: every chart and table has its "No data" card below it: ${JSON.stringify(en)}`);
+    chk(() => ar.paired === ar.charts && ar.charts >= 3 && ar.ar, () => `Arabic: the message in Arabic: ${JSON.stringify(ar)}`);
+    chk(() => off.charts >= 3 && off.paired === 0, () => `noDataMessage: false writes no message cards: ${JSON.stringify(off)}`);
   }
   // 4. (check 12, FAIL in Desktop: "P7 hand EN", a hand-placed matrix of Day Name and four long measures in a 420 x 220
   //    slot, had a horizontal scrollbar, the third header cut, and showed three of the seven days and the total.) Cause:
