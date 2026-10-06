@@ -1,2 +1,3 @@
 # GitHub Pages: internal notes, plans, tests and the MCP code stay in the repo but are not published on dataarcus.com
 exclude: [mcp, content, scripts, CLAUDE.md, README.md, package.json, package-lock.json]
+include: [.well-known]

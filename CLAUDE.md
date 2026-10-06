@@ -52,6 +52,13 @@ collecting every point decided so far, so nothing is lost between sessions. Chec
 Before a session is compacted or ends: write the current state, every decision and the next step into
 `mcp/WORK.md` (or the file that owns it), commit and push.
 
+## Website changes (owner's rule 2026-10-06)
+Any change to the website runs the check of all its config files: `node scripts/test-site-config.mjs` (in CI on every
+push, before the suites). It covers `_config.yml`, `CNAME`, `robots.txt`, `sitemap.xml` (every URL has its file),
+`favicon.ico` and the PNG icons, `site.webmanifest`, `.well-known/security.txt` (Expires renewed before it lapses),
+`llms.txt` (every link exists) and every page's head (icon, manifest, theme colour; canonical and preview image for
+sitemap pages). A new page gets the same head lines and, if public, a sitemap entry and an `llms.txt` line.
+
 ## Commit attribution (owner's decision 2026-10-01)
 End every commit message with exactly these two lines, never a model name or version:
 `Co-Authored-By: Claude <noreply@anthropic.com>` and the `Claude-Session: ...` link your environment gives you
