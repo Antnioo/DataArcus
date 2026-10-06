@@ -15,7 +15,7 @@ Source: dataarcus-engine `business/audit/OUTSIDE-REVIEW-2026-10-06.md`. Out of s
 - Item 4, G-08 (`ba6fea7`): `scripts/test-site-config.mjs` checks each sitemap page's canonical is the page's own URL. Red first on a temp copy (blog.html); all 35 live pages pass.
 - Item 5, G-13 (`56648eb`): every report the main test client creates is validated once at the end: 247 reports, 0 errors each.
 - Item 7, G-01 (`7224b10`): `mcp/README.md` top section "Claude Desktop (beta)" (setting name "Working folder" from the engine manifest; 7 tools); developer install in its own section.
-- Item 6, G-04 (check_report on `feat/check-report-2`): see below (done only if a commit is named here).
+- Item 6, G-04 (check_report on `feat/check-report-2`): **not done.** check_report already replaces an instruction-like name with a withheld placeholder (`safeName`) and adds an INSTRUCTION_TEXT note; a suspiciousNames list carrying the names would send back what it now withholds. Decision for the owner (below).
 
 ### Round 17, for the laptop to prove (after round 16's 13)
 14. Follow the README's "Claude Desktop (beta)" section as a stranger on Windows with the .mcpb: every step true (setting name, 7 tools, where reports go, uninstall).
@@ -24,6 +24,7 @@ Source: dataarcus-engine `business/audit/OUTSIDE-REVIEW-2026-10-06.md`. Out of s
 
 ### Round 17, for the owner
 - G-03's "run " rule also flags ordinary names such as "Run Rate": keep, or narrow to "run " followed by a command word?
+- G-04 (check_report): keep withholding instruction-like names and add `suspiciousNames` entries with kind and reason but the name withheld (proposed), or show the names as G-03 does for model names?
 - G-02: the full paths stay in the local stderr log (Claude Desktop's MCP log on the user's machine). Fine?
 
 ## Round 16, round 13's design leftovers (2026-10-06, 12:06-13:05 UTC, cloud builder; branch `fix/round-16` from `fix/round-15b` `ead6106`; not merged)
