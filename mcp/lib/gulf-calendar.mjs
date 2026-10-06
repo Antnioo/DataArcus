@@ -15,7 +15,7 @@ const WEEK = { sunday: 'sun', monday: 'mon', saturday: 'sat' };
 // the generator's names that sort by a number. Round 12 (the owner's go on round 11's recommendation 4a): written in the
 // script as sortByColumn, since Desktop 2.158 applied a script with them, Problems 0, and three slicers came out January
 // to December, Sunday to Saturday and Muharram to Dhu al-Hijjah (DESKTOP-TESTS.md round 11, D-GC3)
-const SORTS = [['Month Name', 'Month Number'], ['Day Name', 'Day of Week'], ['Hijri Month Name', 'Hijri Month Number'],
+const SORTS = [['Month Name', 'Month Number'], ['Day Name', 'Day of Week'], ['Day Short', 'Day of Week'], ['Hijri Month Name', 'Hijri Month Number'],
   ['Month Name (Arabic)', 'Month Number'], ['Day Name (Arabic)', 'Day of Week'], ['Hijri Month Name (Arabic)', 'Hijri Month Number']];
 // the gulfCalendar findings about the calendar itself (not the model's measures)
 const CALENDAR_IDS = ['GC_NO_HIJRI', 'GC_NO_FLAGS', 'GC_WEEKEND', 'GC_DATES_DIFFER', 'GC_DATES_NOTE', 'GC_ESTIMATES', 'GC_ENDS_EARLY'];

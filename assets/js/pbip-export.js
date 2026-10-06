@@ -399,6 +399,7 @@
     const tableRows = [];   // tables whose known rows don't fit even with tight rows (round 12, #23)
     const headerGrew = [];   // pages whose header grew one row of tabs (round 12)
     const tableSmaller = [];   // tables given a smaller text so more fields fit (round 12)
+    const shortDays = [];   // round 18, S3: column charts that show Day Short
     const ringsSmall = [];   // round 18: ring pictures drawn under 40 high, written without their number
     const svgSizes = {};   // the SVG pictures' size in each page's table: { w, h, design (the widest), capped }   // KPI titles too long for one line at 8pt (see kpiTitleFit)
     // (a name over the limit ends at its last whole word: cut at the last space before the limit, and a dash or
@@ -1027,6 +1028,14 @@
               all.filter((x) => !last(x)).concat(all.filter(last)).forEach((x) => { let c = B.cats[x.kind]; if (pageCats.has(k0(c))) { const alt = (B.catPool || []).find((f) => !pageCats.has(k0(f))); if (alt) c = alt; } pageCats.add(k0(c)); catPlan.set(x, c); }); }
             const c = catPlan.get(s); if (c && c !== B.cats[s.kind]) Bt = Object.assign({}, Bt, { cats: Object.assign({}, Bt.cats, { [s.kind]: c }) });
           }
+          // Round 18, S3 (the owner's yes, 6 Oct 2026; seen in Desktop: the day names slant on the 1920 x 1080 column
+          // charts): a column chart by Day Name takes the calendar's Day Short where the model has it (c.short) and the
+          // full names, at the label size, are wider than a seventh of the chart's plot (the value axis about 40)
+          if (B && s.kind === 'column' && ((Bt.cats || {}).column || {}).short) {
+            const c0 = Bt.cats.column, room = (s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40) / 7;
+            const widest = Math.max(...['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((d) => textWidth(d, LABEL, false, font)));
+            if (widest + 6 > room) { Bt = Object.assign({}, Bt, { cats: Object.assign({}, Bt.cats, { column: Object.assign({}, c0.short, { name: label(c0) }) }) }); shortDays.push({ page: pg.name || base }); }
+          }
           const query = B ? bindQuery(s.kind, Bt, kpiIndex, rtl) : null;
           let ttl = s.title;
           const extra = {};
@@ -1470,7 +1479,7 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall, shortDays };
   }
 
   const api = { build, zip, crc32, textWidth, columnRoom };

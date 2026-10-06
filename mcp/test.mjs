@@ -1638,14 +1638,15 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   check((sc.match(/^\trelationship /gm) || []).length === 1 && /^\t\tfromColumn: Sales\.Date$/m.test(sc) && /^\t\ttoColumn: 'Gulf Calendar'\.Date$/m.test(sc), `add_gulf_calendar relationship: ${(sc.match(/\trelationship[\s\S]*/) || [''])[0]}`);
   check((sc.match(/\{ "\d{4}-\d{2}-\d{2}", \d+, \d+ \}/g) || []).length === 162, `add_gulf_calendar: Hijri month starts ${(sc.match(/\{ "\d{4}-\d{2}-\d{2}", \d+, \d+ \}/g) || []).length} (want 162)`);
   // 36 -> 39 (owner 2026-10-06): the three Arabic name columns are on by default
-  check(!g.err && g.j.rows === 4748 && g.j.columns.length === 39 && g.j.table === 'Gulf Calendar', `add_gulf_calendar rows and columns: ${short(g)}`);
+  check(!g.err && g.j.rows === 4748 && g.j.columns.length === 40 && g.j.table === 'Gulf Calendar', `add_gulf_calendar rows and columns: ${short(g)}`);   /* 39 -> 40: round 18, S3 (the owner's yes): the calendar's new "Day Short" column */
+  check(!g.err && g.j.columns.includes('Day Short') && /^\t\tcolumn 'Day Short'\n\t\t\tisNameInferred\n\t\t\tsourceColumn: \[Day Short\]\n\t\t\tsortByColumn: 'Day of Week'$/m.test(sc), `add_gulf_calendar: "Day Short" in the columns and the script, sorted by Day of Week: ${short(g)}`);
   check(!g.err && g.j.announced.on === true && g.j.announced.checkedTo === '2026-05-27' && g.j.announced.estimatesFrom === '2027-02-08', `add_gulf_calendar announced: ${short(g)}`);
   check(!g.err && Array.isArray(g.j.selfCheck.findings) && g.j.selfCheck.findings.length === 0 && g.j.selfCheck.calendar === 'dataarcus-dax', `add_gulf_calendar selfCheck: ${g.err ? '' : JSON.stringify(g.j.selfCheck)}`);
   check(!g.err && !/DATATABLE|ADDCOLUMNS|CALENDAR \(/.test(g.t), 'add_gulf_calendar: the answer holds DAX');
   // (changed 6 Oct 2026, round 12, the owner's go on round 11's recommendation 4a: the three sort-by columns are in the
   // script, as Desktop accepted them in D-GC3, so marking the date table is the one step left by hand; it was 4 steps)
   // 3 -> 6 sortByColumn (owner 2026-10-06): each Arabic name column is sorted by the same number as its English one
-  check(!g.err && g.j.byHand.length === 1 && /Mark as date table/.test(g.j.byHand[0]) && (sc.match(/^\t\t\tsortByColumn: /gm) || []).length === 6, `add_gulf_calendar byHand: ${g.err ? '' : JSON.stringify(g.j.byHand)}`);
+  check(!g.err && g.j.byHand.length === 1 && /Mark as date table/.test(g.j.byHand[0]) && (sc.match(/^\t\t\tsortByColumn: /gm) || []).length === 7, /* 6 -> 7: round 18, S3 (the owner's yes): Day Short sorted by Day of Week */ `add_gulf_calendar byHand: ${g.err ? '' : JSON.stringify(g.j.byHand)}`);
   check(!g.err && /TMDL view/.test(g.j.howToApply) && /Preview/.test(g.j.howToApply) && /nothing (is )?(changed|replaced)/i.test(g.j.howToApply), `add_gulf_calendar howToApply: ${g.err ? '' : g.j.howToApply}`);
   // asked again: the same file named, no second copy
   const again = await add({ path: 'bim-project', firstYear: 2018, lastYear: 2030, country: 'uae', relateTo: ['Sales[Date]'], asOf: '2026-10-04' });
@@ -1664,8 +1665,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const dsc = d.err ? '' : fs.readFileSync(d.j.scriptFile, 'utf8');
   const daxOf = (script) => { const m = script.match(/\n\t\t\tsource =\n((?:\t\t\t\t\t.*\n?)+)/); return m ? m[1].split('\n').map((l) => l.replace(/^\t{5}/, '')).join('\n').replace(/\n+$/, '') : ''; };
   const webDefault = JSON.parse(fs.readFileSync(path.join(REPO, 'scripts/tests/fixtures/gulf-calendar/baseline.json'), 'utf8')).cg[0].dax.split('\n').slice(1).join('\n');
-  check(!d.err && d.j.rows === 2191 && d.j.columns.length === 34, `add_gulf_calendar default range: ${short(d)}`);
-  check(!d.err && daxOf(dsc) === webDefault, `add_gulf_calendar: the partition's DAX is not the website's default table: ${daxOf(dsc).slice(0, 200)}`);
+  check(!d.err && d.j.rows === 2191 && d.j.columns.length === 35, /* 34 -> 35: round 18, S3: the new Day Short column */ `add_gulf_calendar default range: ${short(d)}`);
+  // (round 18, S3: the baseline predates "Day Short": its line is taken out before comparing)
+  check(!d.err && daxOf(dsc).replace('        "Day Short", SWITCH ( WEEKDAY ( [Date], 1 ), 1, "Sun", 2, "Mon", 3, "Tue", 4, "Wed", 5, "Thu", 6, "Fri", 7, "Sat" ),\n', '') === webDefault && /"Day Short"/.test(daxOf(dsc)), `add_gulf_calendar: the partition's DAX is not the website's default table: ${daxOf(dsc).slice(0, 200)}`);
   // ranges Power BI or the generator can't take: refused, no file
   const rBefore = filesIn('dax-project');
   const ranges = await Promise.all([[1900, 1910], [9990, 10000], [2000, 2060], [2027, 2022]].map(([firstYear, lastYear]) => add({ path: 'dax-project', firstYear, lastYear, name: 'Range Calendar' })));
@@ -3754,6 +3756,24 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const hs = hOf(small, 'r18-ring'), hb = hOf(big, 'r18-ring');
     chk(() => hs < 40 && !/<text/.test(ext(small)) && /<circle/.test(ext(small)) && /no number inside/.test(JSON.stringify(small.j)), () => `a ring drawn ${hs} high in a table must have no number inside (and be told): ${ext(small).slice(0, 200)} ${small.err ? small.t.slice(0, 300) : ''}`);
     chk(() => hb >= 40 && /<text/.test(ext(big)), () => `a ring drawn ${hb} high in a table keeps its number: ${big.err ? big.t.slice(0, 300) : ext(big).slice(0, 200)}`);
+  }
+  // S3 (the owner's yes, 6 Oct ~21:38 Dubai: "add the short day name column"; seen in Desktop: day names slant on the
+  //     1920 x 1080 column charts): the Gulf calendar has "Day Short" (Sun ... Sat, sorted by Day of Week); a column chart
+  //     by Day Name takes it where the model has it and the full names would slant; a table keeps Day Name; a model
+  //     without it is unchanged
+  {
+    const sdir = 'r18-short', calOf = (short) => ({ name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Day of Week', 'int64'), Object.assign(col('Day Name', 'string'), { sortByColumn: 'Day of Week' })]
+      .concat(short ? [Object.assign(col('Day Short', 'string'), { sortByColumn: 'Day of Week' })] : []) });
+    for (const [dir, short] of [[sdir, true], [sdir + '-none', false]]) { fs.mkdirSync(path.join(ROOT, dir, 'M.SemanticModel'), { recursive: true });
+      fs.writeFileSync(path.join(ROOT, dir, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [calOf(short), { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime')], measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }] } })); }
+    const mkRep = (dir) => ask('create_report', { path: dir, name: 'R18 days', fields: { kpis: ['Sales[Total Sales]'], measure: 'Sales[Total Sales]', category: 'Calendar[Day Name]', table: ['Calendar[Day Name]', 'Sales[Total Sales]'] },
+      pages: [{ name: 'P', slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'column', x: 36, y: 100, w: 600, h: 400, title: 'C' }, { kind: 'table', x: 700, y: 100, w: 600, h: 400, title: 'T' }] }] });
+    const a = await mkRep(sdir), b = await mkRep(sdir + '-none');
+    const look = (dir, x) => { if (x.err) return {}; const vs = vis(dir, x), c = vs.find((v) => ty(v) === 'clusteredColumnChart'), t = vs.find((v) => ty(v) === 'tableEx');
+      return { col: c && catOf(c), sort: c && JSON.stringify(c.visual.query.sortDefinition || null), table: t && t.visual.query.queryState.Values.projections.map((p) => p.queryRef), note: /Day Short \(Sun/.test(JSON.stringify(x.j)) }; };
+    const la = look(sdir, a), lb = look(sdir + '-none', b);
+    chk(() => la.col === 'Calendar.Day Short' && la.table.includes('Calendar.Day Name') && !la.table.includes('Calendar.Day Short') && la.note, () => `with Day Short: the column chart by Day Short, the table by Day Name, told: ${JSON.stringify(la)} ${a.err ? a.t.slice(0, 300) : ''}`);
+    chk(() => lb.col === 'Calendar.Day Name' && !lb.note, () => `without Day Short: unchanged (Day Name): ${JSON.stringify(lb)} ${b.err ? b.t.slice(0, 300) : ''}`);
   }
   // 4. (check 12, FAIL in Desktop: "P7 hand EN", a hand-placed matrix of Day Name and four long measures in a 420 x 220
   //    slot, had a horizontal scrollbar, the third header cut, and showed three of the seven days and the total.) Cause:

@@ -634,7 +634,15 @@ server.registerTool('create_report', {
     const cell = (f) => { if (f && f.m != null && f.tableFormat) { if (!tableFormats.some((x) => x.field === keyOf(f))) tableFormats.push({ field: keyOf(f), format: f.tableFormat }); return f; }
       const code = f && f.m != null && (cardFormatOf(f) || pctCell(f)); if (!code) return f; if (!tableFormats.some((x) => x.field === keyOf(f))) tableFormats.push({ field: keyOf(f), format: code }); return Object.assign({}, f, { tableFormat: code }); };
     const tip = b.tip && b.tip.card ? Object.assign({}, b.tip, { card: (() => { const code = FULL && cardFormatOf(b.tip.card); return code ? Object.assign({}, b.tip.card, { cardFormat: code }) : b.tip.card; })() }) : b.tip;
-    return Object.assign({}, b, { kpis: (b.kpis || []).map(one), table: (b.table || []).map(cell) }, b.tip ? { tip } : {});
+    // round 18, S3 (the owner's yes, 6 Oct ~21:38 Dubai: "add the short day name column"): a chart category "Day Name"
+    // whose table has "Day Short" (the Gulf calendar's, by name: metadata only) carries it, sorted as the calendar sorts
+    // it; the writer uses it on a column chart where the full names would slant
+    const model0 = (m.tmsl && (m.tmsl.model || m.tmsl)) || {};
+    const short = (f) => { if (!f || f.c !== 'Day Name' || f.short) return f; const t = (model0.tables || []).find((x) => x.name === f.t), cs = (t && t.columns) || [], sc = cs.find((c) => c.name === 'Day Short');
+      if (!sc) return f; const by = sc.sortByColumn ? null : cs.find((c) => c.name === 'Day of Week');
+      return Object.assign({}, f, { short: Object.assign({ t: f.t, c: 'Day Short', type: 'string' }, sc.sortByColumn ? { ordered: true } : by ? { sortBy: { t: f.t, c: by.name } } : {}) }); };
+    const cats = b.cats ? Object.fromEntries(Object.entries(b.cats).map(([k, f]) => [k, short(f)])) : b.cats;
+    return Object.assign({}, b, { kpis: (b.kpis || []).map(one), table: (b.table || []).map(cell) }, b.tip ? { tip } : {}, b.cats ? { cats } : {}, b.catPool ? { catPool: b.catPool.map(short) } : {});
   };
   const usable = F && F.kpis ? F.kpis.map((k) => k.m) : Bind.suggest(pickFrom, 8).kpis.filter(Boolean).map((k) => k.m);
   // Round 12 (#25): a model without measures gets its numbers from its columns, counted or summed by the visuals
@@ -858,6 +866,7 @@ server.registerTool('create_report', {
   const svgMeasures = svgList.length ? { svgMeasures: svgList } : {};
   // pictures narrowed so the table fits its box (never a scrollbar or a cut header)
   Object.entries(r.svgSizes || {}).filter(([, z]) => z.capped).forEach(([pi, z]) => reportNotes.push(`The SVG pictures in the table on "${boundPages[pi].name}" were narrowed to ${z.w} x ${z.h} (the widest design is ${z.design}) so the table fits its box. For the design's own size, give the table more room or fewer columns.`));
+  if ((r.shortDays || []).length) reportNotes.push(`The column chart${r.shortDays.length === 1 ? '' : 's'} by day on ${[...new Set(r.shortDays.map((x) => `"${x.page}"`))].join(', ')} ${r.shortDays.length === 1 ? 'shows' : 'show'} Day Short (Sun ... Sat), in the calendar's order: the full day names would not fit side by side and would slant. Tables and slicers keep Day Name.`);
   if ((r.ringsSmall || []).length) reportNotes.push(`The ring${r.ringsSmall.length === 1 ? '' : 's'} in the table (${[...new Set(r.ringsSmall.map((x) => x.label))].join(', ')}) ${r.ringsSmall.length === 1 ? 'is' : 'are'} drawn ${Math.max(...r.ringsSmall.map((x) => x.h))} high, too small for a number to be read, so ${r.ringsSmall.length === 1 ? 'it has' : 'they have'} no number inside: the table's value column carries it.`);
   if (ringNumbers.length) reportNotes.push(`The ring${ringNumbers.length === 1 ? '' : 's'} on the KPI card${ringNumbers.length === 1 ? '' : 's'} (${ringNumbers.join(', ')}) ${ringNumbers.length === 1 ? 'has' : 'have'} no number inside: the card already shows the value, and two numbers read as two facts. A table picture keeps its number.`);
   if (svgList.length) reportNotes.push(`${svgList.length === 1 ? 'An SVG picture was' : svgList.length + ' SVG pictures were'} added (${svgList.map((c) => c.label).join(', ')}): each is a measure that exists only in this report (definition/reportExtensions.json); the model was not changed. This is ${SVG_STATUS}.`);
