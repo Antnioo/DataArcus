@@ -11,7 +11,7 @@ Source: dataarcus-engine `business/audit/OUTSIDE-REVIEW-2026-10-06.md`. Out of s
 ### Rounds 15-17, the laptop proof (6 Oct evening; `fix/round-17` at `5cf5d6e`; the owner away)
 Started 19:13 (laptop time), hard stop 20:11. Records: `scripts/tests/DESKTOP-TESTS.md`, "2026-10-06 evening, rounds
 15-17". Reports: `<tests folder>\desk-r15-17\`; scripts: `builder-scripts\r15-*`.
-- **19:33: checks 1 to 4, 6 to 13, 15 and 16 run: 12 PASS, 2 FAIL (9, 12), 14 skipped, 5 not reached.**
+- **19:35: checks 1 to 13, 15 and 16 run: 13 PASS, 2 FAIL (9, 12), 14 skipped; nothing not reached. No code changed; `npm test` not run again (530 on CI). Desktop closed.**
 - **FAIL 9 (one category per chart):** on a model with three text columns the operations layout's two bar charts are
   both by the first column and the donut by the second; the third column is not used. Not fixed (not found in the
   minutes there were). Proposed: the second bar slot takes the next free text column after the donut's.
