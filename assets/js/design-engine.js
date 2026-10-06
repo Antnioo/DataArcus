@@ -267,7 +267,9 @@
     }
     // "Side" is stored as Right; in a right-to-left design it goes to the left, mirrored like the rest of the layout
     if (c.legend !== 'auto') add(AXIS_CHARTS.concat('scatterChart', 'pieChart', 'donutChart', 'treemap'), 'legend', c.legend === 'off' ? { show: false }
-      : { show: true, position: c.legend === 'Right' && rtl(d.layout, lang) ? 'Left' : c.legend });
+      // (round 15, the owner's go on round 13's recommendation 2c: a side legend sits at the right in Arabic too; it
+      // went to the left in a right-to-left design before)
+      : { show: true, position: c.legend });
     if (c.axis === 'off') ['valueAxis', 'categoryAxis'].forEach((a) => add(AXIS_CHARTS.concat('scatterChart'), a, { showAxisTitle: false }));
     if (c.table !== 'auto') {
       const line = { solid: { color: mix(u.text, u.card, 0.85) } };
@@ -285,7 +287,7 @@
     return vs;
   };
   // d: the design { name, font, data, ui, chart, layout }; lang: the page's language ('ar' or 'en'), for the reading
-  // direction when the layout has none (the legend's side follows it)
+  // direction when the layout has none
   const buildTheme = (d, lang) => {
     const u = d.ui, l = d.layout, sec = mix(u.text, u.card, 0.35), ter = mix(u.text, u.card, 0.6), f = d.font;
     return {

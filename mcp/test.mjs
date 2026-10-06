@@ -3436,6 +3436,15 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => !pl.err && c && c.mode === 'gradient' && /smallest/i.test(c.sayInPlan) && /largest/i.test(c.sayInPlan) && /solid/.test(c.sayInPlan),
       () => `plan_layout must say the bars fade (smallest to largest) and how to ask for one colour: ${JSON.stringify(c)} ${pl.err ? pl.t.slice(0, 200) : ''}`);
   }
+
+  // Round 13, recommendation 2c: a side legend sits at the right in Arabic too (the theme generator's "Right" legend in a
+  // right-to-left design went to the left)
+  {
+    const pos = async (lang) => { const th = await ask('generate_theme', { name: 'R15 legend ' + lang, lang, chart: { legend: 'Right' } }); if (th.err) return th.t.slice(0, 200);
+      const t = JSON.parse(fs.readFileSync(th.j.path, 'utf8')); return [...new Set(Object.values(t.visualStyles || {}).map((v) => ((((v['*'] || {}).legend || [])[0]) || {}).position).filter(Boolean))].join(); };
+    const ar = await pos('ar'), en = await pos('en');
+    chk(() => ar === 'Right' && en === 'Right', () => `a "Right" legend must sit at the right in both directions: AR ${ar} EN ${en}`);
+  }
 }
 
 await client.close();
