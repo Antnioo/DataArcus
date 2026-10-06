@@ -3554,6 +3554,40 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
         && ((o.grid || [])[0] || {}).properties && o.grid[0].properties.rowPadding,
       () => `the matrix must take the table's rules (order, fit, tight rows): values ${JSON.stringify(vals)} sort ${JSON.stringify(sd)} objects ${JSON.stringify(Object.keys(o))} ${x.err ? x.t.slice(0, 300) : ''}`);
   }
+
+  // Round 16, the owner's yes (6 Oct, "two rows"): page tabs that fit one row only at 8pt take two balanced rows at the
+  // largest size both rows hold, where the header is high enough; else one row as today; 2 and 4 tabs unchanged
+  {
+    const req = (await import('node:module')).createRequire(import.meta.url), Px = req('../assets/js/pbip-export.js');
+    const NAMES8 = ['Executive summary overview', 'Regional sales performance', 'Product category analysis', 'Customer retention trends', 'Channel profitability view', 'Monthly targets and actuals', 'Store operations dashboard', 'Inventory and supply chain'];
+    const NAMES8AR = ['ملخص تنفيذي شامل للأداء', 'أداء المبيعات حسب المنطقة', 'تحليل فئات المنتجات', 'اتجاهات الاحتفاظ بالعملاء', 'ربحية قنوات البيع', 'الأهداف الشهرية والمحقق', 'لوحة عمليات المتاجر', 'المخزون وسلسلة التوريد'];
+    const tabsOf = async (W, H, hh, names, lang) => {
+      const rtl = lang === 'ar', tw = Math.round(W * 0.72), lw = Math.round(W * 0.12);
+      const slots = [{ kind: 'title', x: rtl ? W - 24 - tw : 24, y: 12, w: tw, h: hh }, { kind: 'logo', x: rtl ? 24 : W - 24 - lw, y: 12, w: lw, h: hh }, { kind: 'kpi', title: 'K', x: 24, y: hh + 40, w: 300, h: 120 }];
+      const x = await ask('create_report', { path: 'r16-g', name: `R16 tabs ${W} ${hh} ${names.length} ${lang}`, lang, rtl, font: rtl ? 'Tahoma' : 'Segoe UI', title: rtl ? 'تقرير' : 'Report', fields: { kpis: ['Sales[Total Sales]'] },
+        pages: names.map((n) => ({ name: n, width: W, height: H, slots })) });
+      if (x.err) return { err: x.t.slice(0, 200) };
+      const pagesDir = path.join(ROOT, 'r16-g', x.j.report, 'definition', 'pages'), order = JSON.parse(fs.readFileSync(path.join(pagesDir, 'pages.json'), 'utf8')).pageOrder;
+      const vd = path.join(pagesDir, order[0], 'visuals'), vs = fs.readdirSync(vd).map((n) => JSON.parse(fs.readFileSync(path.join(vd, n, 'visual.json'), 'utf8')));
+      const btns = vs.filter((v) => v.visual && v.visual.visualType === 'actionButton' && /PageNavigation/.test(JSON.stringify(v.visual.visualContainerObjects || {})))
+        .map((v) => { const t = (v.visual.objects.text || []).find((e) => e.selector) || {}; const pr = t.properties || {}; return { x: v.position.x, y: v.position.y, w: v.position.width, size: parseFloat(pr.fontSize.expr.Literal.Value), name: String(pr.text.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") }; });
+      const logo = slots[1], rows = [...new Set(btns.map((b) => b.y))].sort((a, b) => a - b);
+      const fitText = btns.every((b) => b.w >= Px.textWidth(b.name, b.size, true, rtl ? 'Tahoma' : 'Segoe UI') + 10);
+      // (positions inside the header group are relative to the group: the logo's own visual is in the same frame)
+      const lv = vs.find((v) => v.visual && /Your logo|شعارك/.test(JSON.stringify(v.visual.objects || {}))), lp = lv ? lv.position : null;
+      const inRoom = !!lp && btns.every((b) => (rtl ? b.x >= lp.x + lp.width : b.x + b.w <= lp.x));
+      const first = btns.find((b) => b.name === names[0]), row0 = btns.filter((b) => b.y === rows[0]);
+      const firstAtStart = first && first.y === rows[0] && (rtl ? first.x === Math.max(...row0.map((b) => b.x)) : first.x === Math.min(...row0.map((b) => b.x)));
+      return { n: btns.length, rows: rows.length, size: btns[0] && btns[0].size, fitText, inRoom, firstAtStart, notes: (x.j.reportNotes || []).filter((n) => /two rows/i.test(n)).length };
+    };
+    const cases = { en1920: await tabsOf(1920, 1080, 72, NAMES8, 'en'), ar1920: await tabsOf(1920, 1080, 72, NAMES8AR, 'ar'), en1280: await tabsOf(1280, 720, 72, NAMES8, 'en'), ar1280: await tabsOf(1280, 720, 72, NAMES8AR, 'ar') };
+    const low = await tabsOf(1920, 1080, 30, NAMES8, 'en'), two = await tabsOf(1920, 1080, 72, NAMES8.slice(0, 2), 'en'), four = await tabsOf(1920, 1080, 72, NAMES8.slice(0, 4), 'en');
+    console.log('R16 tabs sizes', JSON.stringify(Object.fromEntries(Object.entries(cases).map(([k, v]) => [k, v.size]))));
+    chk(() => Object.values(cases).every((c) => c.n === 8 && c.rows === 2 && c.size > 8 && c.fitText && c.inRoom && c.firstAtStart && c.notes >= 1),
+      () => `8 long names in a 72-high header: two rows at more than 8pt, nothing cut, in order: ${JSON.stringify(cases)}`);
+    chk(() => low.rows <= 1 && two.rows === 1 && four.rows === 1 && two.notes === 0 && four.notes === 0,
+      () => `a low header keeps one row; 2 and 4 tabs one row: low ${JSON.stringify(low)} two ${JSON.stringify(two)} four ${JSON.stringify(four)}`);
+  }
 }
 
 await client.close();

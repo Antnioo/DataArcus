@@ -379,6 +379,7 @@
     const sample = !!o.sample && !own;
     const B = own ? (o.bind || null) : sample ? sampleBind(t) : null;
     const tableColumns = [];   // tables that hold fewer fields than given, for lack of room: { page, pageIndex, x, y, kept, leftOut } (round 11)
+    const tabRows = [];   // pages whose page tabs take two or three rows: { page, rows, size } (round 16)
     const noPageButtons = [];   // pages whose header has no room for the page names even at 8pt: { page } (round 11)
     const leftOut = [];   // data visuals not written because the model has no field for them: { page, kind, title }
     const kpiTitles = { wrapped: [], shortened: [] };
@@ -719,6 +720,18 @@
         };
         let out = null;
         for (const maxRows of [1, 2, 3]) { for (let t = pt(th * 0.3); t >= 8 && !out; t--) out = lay(t, maxRows); if (out) break; }
+        // Round 16 (the owner's yes, 6 Oct 2026, design finding #13: eight names at 8pt on one row beside a large title):
+        // names that fit one row only at 8pt take two balanced rows, in reading order, at the largest size both rows
+        // hold (by the measured widths), where the header is high enough; otherwise the one row stays
+        if (out && out.rows.length === 1 && out.t <= 8 && names.length > 2) {
+          for (let t = pt(th * 0.3); t > out.t; t--) {
+            if (2 * rowH(t) > H) continue;
+            const ws = names.map((nm) => Math.ceil(textWidth(nm, t, true, font) + 10 + 2 * padX)), sum = (a, b) => ws.slice(a, b).reduce((x, w) => x + w, 0) + gapB * (b - a - 1);
+            let best = null;
+            for (let cut = 1; cut < names.length; cut++) { const w = Math.max(sum(0, cut), sum(cut, names.length)); if (!best || w < best.w) best = { cut, w }; }
+            if (best.w <= room) { out = { t, ws, rows: [names.slice(0, best.cut).map((_, i) => i), names.slice(best.cut).map((_, i) => best.cut + i)] }; break; }
+          }
+        }
         return out ? Object.assign(out, { a0, a1, gapB, lineH, rowH: rowH(out.t), toLogo: titleLeft ? 'right' : 'left' }) : null;
       };
       // Round 12 (the owner's go on round 11's recommendation 2): in a designed layout (pg.grow: the engine owns the
@@ -1139,6 +1152,7 @@
           // (round 12, #6; seen in Desktop 2.158, round 11: two rows both ending at the logo's side did not line up):
           // the rows share one block, as wide as the widest row, at the logo's side; every row starts at its reading start
           const rowW = (row) => row.reduce((a, i) => a + tabs.ws[i], 0) + tabs.gapB * (row.length - 1), maxW = Math.max(...tabs.rows.map(rowW));
+          if (tabs.rows.length > 1 && !tabRows.some((x) => x.page === (pg.name || base))) tabRows.push({ page: pg.name || base, rows: tabs.rows.length, size: tabs.t });
           tabs.rows.forEach((row, r) => {
             // the block sits at the logo's side of the room; in it the first page is at the reading start: leftmost in
             // English, rightmost in Arabic
@@ -1422,7 +1436,7 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows };
   }
 
   const api = { build, zip, crc32, textWidth, columnRoom };

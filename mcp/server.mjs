@@ -842,6 +842,8 @@ server.registerTool('create_report', {
   const tableKept = (pi, s) => { const c = TC.find((x) => x.pageIndex === pi && x.x === s.x && x.y === s.y); return c ? c.kept : null; };
   const tableColumns = TC.length ? { tableColumns: TC.map((c) => ({ page: c.page, shown: c.kept.length, leftOut: c.leftOut.map(fkey) })) } : {};
   if (TC.length) reportNotes.push(`Fields were left out of the table on ${TC.map((c) => `"${c.page}" (${c.leftOut.map(fkey).join(', ')})`).join('; ')}: at this page size the table has room for ${[...new Set(TC.map((c) => c.kept.length))].join(' or ')} columns, and a table wider than its box hides columns behind a scrollbar. For the fields left out: a wider table slot, a larger page, shorter display names, or fewer fields in fields.table.`);
+  // page tabs in two rows (round 16, the owner's yes on design finding #13)
+  if ((r.tabRows || []).length) reportNotes.push(`The page tabs take ${[...new Set(r.tabRows.map((x) => x.rows))].join(' or ')} rows at ${[...new Set(r.tabRows.map((x) => x.size + 'pt'))].join(' or ')} on ${r.tabRows.length === 1 ? 'one page' : r.tabRows.length + ' pages'}: the page names fit one row only at a smaller size, and two rows read better; nothing is cut.`);
   // page buttons that did not fit the header (round 11): never written cut, and never left out without saying so
   const NPB = (r.noPageButtons || []).map((x) => x.page);
   const pageButtons = NPB.length ? { pageButtons: { leftOutOn: NPB, why: 'The page names do not fit the room between the title and the logo, even at 8pt on as many rows as the header is high. A cut name is worse than no button, so these pages have no page buttons; readers still change pages with Power BI\'s own page tabs.' } } : {};

@@ -20,7 +20,11 @@ On the reviewer's list of non-severe "Seen, not in scope" items. Tests first, on
 - Item 6 (#23): the slide-in panel's Filters button has the tab look (no fill, no outline; the text colour).
 - Item 1 (#15): a hand-placed matrix gets the table's rules (calendar order by the helper column, the fit to its
   box, tight rows).
-- Item 5 (#13), **not changed, with the reason:** the tabs already take the largest size that fits one row by the
+- Item 5 (#13), **done after the owner's yes ("two rows", 6 Oct 16:55):** page names that fit one row only at 8pt take
+  two balanced rows, in reading order, at the largest size both rows hold by the measured widths, where the header is
+  high enough; else one row as before; the answer says when tabs use two rows. Measured in tests (8 long names, a
+  72-high header): 1920 x 1080 English 16pt (two rows already), Arabic 8 -> 14pt; 1280 x 720 English 11pt, Arabic 10pt.
+  Earlier note: **not changed, with the reason:** the tabs already take the largest size that fits one row by the
   measured widths, from the header's own size down to 8pt; eight long names in that width fit only at 8pt. Two
   rows at a larger size would read better, which is a taste call (for the owner, below).
 - Tests: `npm test` 514 -> 520, golden PASS; config checks PASS; website suites pbip 73, theme-generator 893, layout 512,
@@ -37,11 +41,10 @@ On the reviewer's list of non-severe "Seen, not in scope" items. Tests first, on
 11. The slide-in panel's Filters button: no box, no outline, looks like a tab (English and Arabic).
 12. A hand-placed matrix of Day Name and four long measures in a 420 x 220 slot: Sunday to Saturday, no horizontal
     scrollbar, no hidden last row (the helper column not visible).
+13. 8 long page names in a 72-high header: two rows at a larger size, English and Arabic, nothing cut.
 
 ### Round 16, for the owner
-1. **Eight tabs in a 72-high header (#13):** they already take the largest one-row size (8pt there). Options: keep; or
-   prefer two rows at a larger size when one row only fits at 8pt. **Recommended:** two rows when the header is high
-   enough, since the names read better.
+(Answered: two rows for the tabs, 6 Oct; done above.)
 
 ## The 1-hour round (2026-10-06, 11:26-12:26 UTC, cloud builder; nothing merged)
 - **A:** `fix/round-15b` from `origin/main` `aa95841` with only round 15's six commits (cherry-picked; one `.min.js`
