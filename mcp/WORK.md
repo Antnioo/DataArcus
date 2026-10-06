@@ -55,6 +55,10 @@ round 18's "seen, not in scope" (items 8-10). Scoring rule: DESKTOP-TESTS.md, "I
   measures any size holds, so the rows' smaller size never holds more (round 18's note was wrong).
 - **Item 10 (`8f8a639`): done.** A table takes the matrix's row rule (a smaller text down to 8pt so seven rows and the total fit).
 
+- **Tests:** `npm test` 543 -> **564 of 564**, golden PASS (task 5's expectation updated with its cause); website suites
+  pbip 73, theme-generator 893, theme-generator-lab 893, svg-kpi 846 PASS; `check:min`, `test-site-config`,
+  `test-analytics-events` PASS; ?v= pbip-export 20261006l, theme-generator 20261006m.
+
 #### Round 19, expected score per golden task (after; the laptop re-scores; before = 8.5 mean)
 | Task | Before EN / AR | Expected after | Why |
 |---|---|---|---|
