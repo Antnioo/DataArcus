@@ -64,6 +64,8 @@ for (const p of pages) {
   ok(/rel="icon"[^>]*favicon-48\.png/.test(h), `${p}: no 48 px PNG icon`);
   ok(/rel="manifest" href="\/site\.webmanifest"/.test(h), `${p}: no manifest link`);
   ok(/name="theme-color"/.test(h), `${p}: no theme-color`);
+  // (round 16: main.min.js is cached like every script, so a page loads it with its version stamp, as the others)
+  ok(!/main\.min\.js"/.test(h) || /main\.min\.js\?v=[0-9a-z]+"/.test(h), `${p}: main.min.js without a ?v= stamp`);
 }
 for (const u of locs) {
   const h = read(local(u));
