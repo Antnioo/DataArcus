@@ -330,16 +330,26 @@
     }
   }
   // chart title for a user's own fields: "Sales by Region"
+  // Round 14, the owner's ask (6 Oct 2026): a title is never half Arabic, half English. "A by B" joins two names of the
+  // same script with that script's word ("إجمالي المبيعات حسب اسم اليوم", "Total Sales by Day Name"); when only one of
+  // the two names is Arabic, the title is the measure's name alone (plan_layout proposes Arabic names to approve).
+  const AR_LETTERS = /[\u0600-\u06FF]/;
+  const byTitle = (a, by, b) => {
+    if (!a || !b) return a || null;
+    const ar = AR_LETTERS.test(a);
+    if (ar !== AR_LETTERS.test(b)) return a;
+    return a + ' ' + (ar ? (AR_LETTERS.test(by) ? by : 'حسب') : (AR_LETTERS.test(by) ? 'by' : by)) + ' ' + b;
+  };
   function bindTitle(kind, B, by) {
     const cat = (B.cats || {})[kind], y = (B.y || {})[kind] || B.measure;
-    if (kind === 'line' && B.date && B.measure) return label(B.measure) + ' ' + by + ' ' + label(B.date);
-    if (['bar', 'column', 'donut', 'funnel', 'treemap', 'map'].includes(kind) && cat && y) return label(y) + ' ' + by + ' ' + label(cat);
+    if (kind === 'line' && B.date && B.measure) return byTitle(label(B.measure), by, label(B.date));
+    if (['bar', 'column', 'donut', 'funnel', 'treemap', 'map'].includes(kind) && cat && y) return byTitle(label(y), by, label(cat));
     if ((kind === 'gauge' || kind === 'card') && y) return label(y);
     // a table or matrix by its content (the owner's design choice 3, 5 Oct 2026): its first measure by its first text
     // column, "Total Sales by Region"; the other columns are named by their headers
     if (kind === 'table' || kind === 'matrix') {
       const fs = (B.table || []).filter(Boolean), m = fs.find(isValue), c = fs.find(isTextField);
-      return m && c ? label(m) + ' ' + by + ' ' + label(c) : m ? label(m) : null;
+      return m && c ? byTitle(label(m), by, label(c)) : m ? label(m) : null;
     }
     return null;
   }
@@ -981,7 +991,7 @@
           // (round 10: the sample download names its charts by their fields too, "Total Revenue by Month", as a report on a
           // user's model does; before, it kept the layout's role names, "Main trend")
           if (B && query) ttl = bindTitle(s.kind, B, W.by || 'by') || ttl;
-          if ((s.kind === 'table' || s.kind === 'matrix') && ttl && chartTitles.has(ttl)) ttl = ttl + ': ' + (W.detail || (lang === 'ar' ? 'التفاصيل' : 'detail'));
+          if ((s.kind === 'table' || s.kind === 'matrix') && ttl && chartTitles.has(ttl)) ttl = ttl + ': ' + (AR_LETTERS.test(ttl) ? (W.detail && AR_LETTERS.test(W.detail) ? W.detail : 'التفاصيل') : (W.detail && !AR_LETTERS.test(W.detail) ? W.detail : 'detail'));   // (round 14: in the title's own script)
           if (s.kind === 'kpi') { if (B && query) ttl = label(B.kpis[kpiIndex]); kpiIndex++; }
           // KPI names read as labels: semibold, so the number below stays the hero
           if (s.kind === 'kpi') extra.title = obj({ show: bool(true), text: str(ttl), alignment: str(align), bold: bool(true) });
@@ -1373,7 +1383,7 @@
         // each bar's value beside it instead, which leaves room for one more row
         { x: 12, y: 92, w: 296, h: 184, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), tip.cat),
           objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
-          visualContainerObjects: tipFrame(tip.y.m === tip.card.m && tip.y.t === tip.card.t ? label(tip.y) + ' ' + (W.by || 'by') + ' ' + label(tip.cat) : label(tip.y)) }) }]
+          visualContainerObjects: tipFrame(tip.y.m === tip.card.m && tip.y.t === tip.card.t ? byTitle(label(tip.y), W.by || 'by', label(tip.cat)) : label(tip.y)) }) }]
       : [{ x: 12, y: 12, w: 296, h: 260, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }]);
     // the trend: the card's measure by month, as a bar chart with the same settings, 310 high on a 320 x 410 page: 12
     // rows (22 a row and 46 for the title and padding), so every month's name is whole and horizontal with its value
@@ -1383,7 +1393,7 @@
     if (trend) tipPage(trend.name, trend.binding, (W.tooltipPage || 'Tooltip') + ' \u00b7 ' + label(tip.date), [tipCardVisual(),
       { x: 12, y: 92, w: 296, h: 310, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(tip.card)] }), tip.date),
         objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
-        visualContainerObjects: tipFrame(label(tip.card) + ' ' + (W.by || 'by') + ' ' + label(tip.date)) }) }], 410);
+        visualContainerObjects: tipFrame(byTitle(label(tip.card), W.by || 'by', label(tip.date))) }) }], 410);
 
     // git: keep local and cached files out of source control
     // in someone's project folder these would replace their own files, so they are left out there

@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, Svg, applyColumnTypes, inside, loadModel, nothingAt, prepareRoot, rootProblem, summary, writeNew } from './lib/model.mjs';
 import { E, themeDesign, planLayout, pageOf, contrastReport, freeFile } from './lib/design.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
+import { proposeArabic } from './lib/arabic-names.mjs';
 import { addGulfCalendar, gulfFixInputs } from './lib/gulf-calendar.mjs';
 
 // the version is in one place: mcp/package.json
@@ -904,7 +905,7 @@ server.registerTool('generate_theme', {
 
 server.registerTool('plan_layout', {
   title: 'Plan a report page layout',
-  description: 'The exact position of every visual on a Power BI page, as the DataArcus Theme Generator lays it out: one row per visual with its name, the suggested visual, and x, y, width, height in the page\'s own units (Format > General > Properties). Right-to-left designs are mirrored. With path (the model), the fields that lack their right number or date format come first in the answer, with a ready TMDL script written next to the project (never applied, the model is not changed): tell the user that first. forAuthoring gives the same numbers as PBIR visual.json positions for editing an existing report: use them exactly, never snap them to multiples of 8, so every visual lands on its panel. Nothing else is written.' + UNTRUSTED,
+  description: 'The exact position of every visual on a Power BI page, as the DataArcus Theme Generator lays it out: one row per visual with its name, the suggested visual, and x, y, width, height in the page\'s own units (Format > General > Properties). Right-to-left designs are mirrored. With path (the model), the fields that lack their right number or date format come first in the answer, with a ready TMDL script written next to the project (never applied, the model is not changed): tell the user that first. With path and lang "ar", arabicNames proposes an Arabic display name for each field without one (from a fixed list of report words, never a translation): show them to the user to approve before create_report, and pass the approved ones as displayNames. forAuthoring gives the same numbers as PBIR visual.json positions for editing an existing report: use them exactly, never snap them to multiples of 8, so every visual lands on its panel. Nothing else is written.' + UNTRUSTED,
   inputSchema: {
     design: z.record(z.any()).optional().describe('The design from generate_theme (its layout is the starting point); the other inputs change it'),
     layout: z.enum(['exec', 'analysis', 'ops', 'focus']).optional().describe('Executive summary, analysis (filters and a wide table), operations monitor, or single focus'),
@@ -916,22 +917,33 @@ server.registerTool('plan_layout', {
     lang: langInput,
     path: modelPath.optional().describe('The model the report is for: its fields are checked for the right number and date formats, said first in the answer with a ready script file'),
     fields: z.array(z.string()).max(40).optional().describe('With path: the plan\'s fields as "Table[Field]" (default: the fields suggest_fields picks)'),
+    displayNames: z.record(z.string(), z.string()).optional().describe('With path and lang "ar": display names the user already gave, as { "Table[Field]": "الاسم" }; the others get a proposal'),
     focus: focusInput, tables: tablesInput
   }, annotations: ADDS
 }, safe(async (a) => {
   // formats fixed at the source (the owner's ask, 6 Oct 2026): with the model, the fields that lack their right format
   // come first, with the script (the same file check_model_health writes)
-  let formats = {};
+  let formats = {}, arabicNames = {};
   if (a.path) {
     const m = loadModel(a.path), sc = scopeOf(m, { focus: a.focus, tables: a.tables });
     const keys = a.fields ? new Set(a.fields.map((x) => { const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(x); }))
       : sc.needsFocus ? null : (() => { const b = Bind.suggest(sc.tables, Math.max(1, a.kpis == null ? 4 : a.kpis)); return new Set([b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean).map((f) => `${f.t}[${f.c != null ? f.c : f.m}]`)); })();
     const fmt = keys && formatsAnswer(m, a.path, keys);
+    // round 14 (the owner's ask, 6 Oct): an Arabic plan proposes an Arabic display name for every field it will show
+    // that has none (a fixed glossary of report words, never a free translation), for the user to approve first
+    if (a.lang === 'ar' && keys) {
+      const given = new Set(Object.keys(a.displayNames || {}).map((k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : k; }));
+      const todo = [...keys].filter((k) => !given.has(k) && !/[\u0600-\u06FF]/.test(k.replace(/^.*?\[/, '')));
+      const prop = {}, none = [];
+      todo.forEach((k) => { const p = proposeArabic(k.replace(/^.*?\[(.*)\]$/, '$1')); if (p) prop[k] = p; else none.push(k); });
+      if (todo.length) arabicNames = { arabicNames: Object.assign({ sayFirst: 'Show the user these proposed Arabic display names and ask them to approve or change each before create_report; then pass the approved ones as displayNames. They come from a fixed list of common report words, not a translation; a field without a proposal needs a name from the user. Without Arabic names those fields show their English names, and titles that would mix the two scripts show the measure\'s name alone.' },
+        Object.keys(prop).length ? { suggestedDisplayNames: prop } : {}, none.length ? { needNames: none } : {}) };
+    }
     if (fmt) formats = { formats: Object.assign({ sayFirst: `Tell the user first, before the layout: ${fmt.fields.length} of the plan's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). create_report shows them right in the report's cards, tooltip and tables anyway; the script sets them in the model too.` }, fmt) };
   }
   const r = planLayout(a), { page, fitted } = pageOf(r.design.layout);
   const unknown = a.design ? unknownKeys(a.design) : null;
-  return text(Object.assign(formats, { page, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, unknown ? { ignored: unknown } : {}, { design: r.design }));
+  return text(Object.assign(formats, arabicNames, { page, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, unknown ? { ignored: unknown } : {}, { design: r.design }));
 }));
 
 server.registerTool('add_gulf_calendar', {

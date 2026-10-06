@@ -2117,7 +2117,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     // (round 12, #15, the owner's go 6 Oct: a table whose title is a chart's on the same page adds ": detail", so the
     // two never carry the same title; the first measure by the first text column stays its start)
     const titled = (t, base, detail) => t === base || t === base + ': ' + detail;
-    chk(() => tt(enV).length >= 1 && tt(enV).every((t) => titled(t, 'Total Sales by Region', 'detail')) && tt(arV).every((t) => titled(t, 'Total Sales حسب Region', 'التفاصيل'))
+    chk(() => tt(enV).length >= 1 && tt(enV).every((t) => titled(t, 'Total Sales by Region', 'detail')) && tt(arV).every((t) => titled(t, 'Total Sales by Region', 'detail')) /* (round 14, the owner's ask: a title is never half Arabic, half English: two English names are joined by "by" on an Arabic report too; was "Total Sales حسب Region") */
         && tt(siteEn).length >= 1 && tt(siteEn).every((t) => titled(t, 'Total Revenue by Region', 'detail')) && tt(siteAr).length >= 1 && tt(siteAr).every((t) => titled(t, 'إجمالي الإيرادات حسب المنطقة', 'التفاصيل')),
       () => `a table must be titled by its first measure and its first text column: ${JSON.stringify([tt(enV), tt(arV), tt(siteEn), tt(siteAr)])}`);
   }
@@ -2635,7 +2635,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       measures: [{ name: M1, expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Total net sales after discounts, returns and all the taxes that are due', expression: 'SUM ( Sales[Amount] ) + 1', formatString: '#,0' }] }] } }));
     const texts = (x) => { const dir = path.join(ROOT, 'r13-long', x.j.report, 'definition', 'pages'); const out = [];
       const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const p = path.join(d, e.name); if (e.isDirectory()) walk(p); else if (e.name === 'visual.json') (fs.readFileSync(p, 'utf8').match(/'[^'\n]*\u2026[^'\n]*'/g) || []).forEach((s) => out.push(s.slice(1, -1))); }); walk(dir); return out; };
-    const ar = await ask('create_report', { path: 'r13-long', name: 'R13 Long ar', lang: 'ar', design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', page: '1280x720', lang: 'ar' })).j.design });
+    // (round 14: the charts are given the Arabic columns; a title of the Arabic measure by the English column is the
+    // measure's name alone since round 14's item 2, which fits, so fewer Arabic titles were shortened)
+    const ar = await ask('create_report', { path: 'r13-long', name: 'R13 Long ar', lang: 'ar', design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', page: '1280x720', lang: 'ar' })).j.design, fields: { category: `Sales[${C1}]`, category2: `Sales[${C2}]` } });
     const en = await ask('create_report', { path: 'r13-long', name: 'R13 Long en', design: (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', page: '1280x720' })).j.design, fields: { kpis: ['Sales[Total net sales after discounts, returns and all the taxes that are due]'], measure: 'Sales[Total net sales after discounts, returns and all the taxes that are due]', category: 'Sales[Region with a very long English name that cannot fit]', category2: 'Sales[Region with a very long English name that cannot fit]' } });
     const isAr = (s) => /[\u0600-\u06FF]/.test(s);
     chk(() => { const a = texts(ar).filter(isAr); return a.length >= 2 && a.every((s) => /\u2026\u200f$/.test(s)); }, () => `every shortened Arabic text must end with "…" and a right-to-left mark: ${ar.err ? short(ar) : JSON.stringify(texts(ar).map((s) => s.slice(-12).split('').map((ch) => ch.charCodeAt(0).toString(16)).slice(-3)))}`);
@@ -3248,6 +3250,35 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const A = order(ar, 'r14'), E = order(en, 'r14'), H = order(hand, 'r14');
     chk(() => A.length >= 1 && A.every(rtlOk) && H.length === 1 && H.every(rtlOk) && E.length >= 1 && E.every((t) => real(t.refs)[0] === 'Calendar.Day Name'),
       () => `the Arabic table must end with its text column (right edge), measures to its left in reading order, all right-aligned; English unchanged: AR ${JSON.stringify(A)} HAND ${JSON.stringify(H)} EN ${JSON.stringify(E.map((t) => t.refs))} ${ar.err ? ar.t.slice(0, 200) : ''}${hand.err ? hand.t.slice(0, 200) : ''}`);
+  }
+
+  // 2. Less English on Arabic pages (owner, 6 Oct): plan_layout proposes Arabic display names (a fixed glossary, never a
+  // free translation) for every field an Arabic plan shows without one; titles are never half Arabic, half English;
+  // slicer headers take the approved names
+  {
+    const pl = await ask('plan_layout', { layout: 'exec', kpis: 3, lang: 'ar', path: 'r14', fields: ['Sales[Total Sales]', 'Sales[Orders]', 'Calendar[Day Name]', 'Calendar[Quarter]', 'Calendar[Year]', 'Sales[Margin %]'], displayNames: { 'Sales[Orders]': 'عدد الطلبات' } });
+    const an = pl.j && pl.j.arabicNames;
+    chk(() => !pl.err && JSON.stringify(an.suggestedDisplayNames) === JSON.stringify({ 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Day Name]': 'اسم اليوم', 'Calendar[Quarter]': 'الربع', 'Calendar[Year]': 'السنة', 'Sales[Margin %]': 'نسبة الهامش' })
+        && !('Sales[Orders]' in an.suggestedDisplayNames) && /approve/i.test(an.sayFirst) && !(an.needNames || []).length,
+      () => `plan_layout (Arabic) must propose Arabic display names for the fields without one: ${pl.err ? pl.t.slice(0, 300) : JSON.stringify(an)}`);
+    const odd = await ask('plan_layout', { layout: 'exec', kpis: 3, lang: 'ar', path: 'r14', fields: ['Sales[Region]', 'Calendar[Date]'] });
+    const en = await ask('plan_layout', { layout: 'exec', kpis: 3, path: 'r14', fields: ['Sales[Total Sales]'] });
+    chk(() => !odd.err && odd.j.arabicNames.suggestedDisplayNames['Sales[Region]'] === 'المنطقة' && !en.err && !('arabicNames' in en.j),
+      () => `the proposals are for Arabic plans only: ${JSON.stringify(odd.j && odd.j.arabicNames)} ${JSON.stringify(en.j && Object.keys(en.j))}`);
+
+    const titles = (x) => (x.err ? [] : visuals('r14', x.j.report)).map((v) => { const t = ((v.visual && v.visual.visualContainerObjects) || {}).title; const lit = t && t[0] && t[0].properties.text && t[0].properties.text.expr.Literal.Value; return lit ? lit.replace(/^'|'$/g, '') : null; }).filter(Boolean);
+    const mixed = (t) => /[؀-ۿ]/.test(t) && /[A-Za-z]/.test(t);
+    const design = (await ask('plan_layout', { layout: 'exec', kpis: 2, filters: 'end', lang: 'ar' })).j.design;
+    const f = { kpis: ['Sales[Total Sales]', 'Sales[Orders]'], measure: 'Sales[Total Sales]', category: 'Calendar[Day Name]', category2: 'Calendar[Quarter]', table: ['Calendar[Day Name]', 'Sales[Total Sales]'], slicers: ['Calendar[Quarter]', 'Calendar[Year]'] };
+    const all = await ask('create_report', { path: 'r14', name: 'R14 names', lang: 'ar', design, fields: f, secondPage: false,
+      displayNames: { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Sales[Orders]': 'عدد الطلبات', 'Calendar[Day Name]': 'اسم اليوم', 'Calendar[Quarter]': 'الربع', 'Calendar[Year]': 'السنة' } });
+    const half = await ask('create_report', { path: 'r14', name: 'R14 half', lang: 'ar', design, fields: f, secondPage: false, displayNames: { 'Sales[Total Sales]': 'إجمالي المبيعات' } });
+    // an Arabic report with English names only: English titles, "by" and ": detail" in English too
+    const enT = await ask('create_report', { path: 'r14', name: 'R14 english names', lang: 'ar', design, fields: f, secondPage: false });
+    const TA = titles(all), TH = titles(half);
+    const slicerNames = (all.err ? [] : visuals('r14', all.j.report)).filter((v) => v.visual && v.visual.visualType === 'slicer').map((v) => v.visual.query.queryState.Values.projections[0].displayName);
+    chk(() => TA.includes('إجمالي المبيعات حسب اسم اليوم') && !TA.some(mixed) && TH.length && !TH.some(mixed) && !titles(enT).some(mixed) && TH.includes('إجمالي المبيعات') && slicerNames.includes('الربع') && slicerNames.includes('السنة'),
+      () => `titles must never mix Arabic and English, and slicers take the Arabic names: ALL ${JSON.stringify(TA)} HALF ${JSON.stringify(TH)} SLICERS ${JSON.stringify(slicerNames)} ${all.err ? all.t.slice(0, 200) : ''}`);
   }
 }
 
