@@ -2119,7 +2119,7 @@ gauge, funnel, treemap, matrix, slicer; `chartColors` "gradient"), "OPS AR" (the
   "681.9%"); a 444-wide slicer slot holds three dropdowns whose headers are cut to "Q…", "Da…" (in Arabic to "…"
   alone); the donut, gauge, funnel and treemap are not mirrored in Arabic (nothing in them has a side).
 - **Off on the operations page:** two bar charts and a donut all show Total Sales by Quarter.
-## Round 14, laptop proof (2026-10-06, 08:09 to 08:25, `fix/round-14` at `1dd7f4e`), Power BI Desktop 2.158.1177
+## Round 14, laptop proof (2026-10-06, 08:09 to 08:17, `fix/round-14` at `1dd7f4e`), Power BI Desktop 2.158.1177
 Thirty minutes; made-up models only; nothing fixed (a FAIL is recorded with its crop). Reports from the working
 copy's server (`r13-make.mjs`, `r14-build.mjs`); captures in `<tests folder>\desk-r14\`. `idle.ps1` 141 s at the
 start; Desktop closed at the end without saving (the Gulf test copy was saved once, on purpose, so that the report
