@@ -258,6 +258,9 @@ let slotOk = 0; const slotBad = [];
 for (const c of DESIGNS) {
   r = await tryCall('plan_layout', { design: c.state, lang: c.lang });
   const rows = r.err ? null : r.j.slots.map((s) => [s.role, s.visual, s.x, s.y, s.w, s.h].map(String));
+  // (round 19, the owner's choice B: below 800 wide the MCP plans the single-focus layout instead of the executive one,
+  // and says so (smallPage); the website still shows the executive layout there, so that case is the plan's on purpose)
+  if (!r.err && r.j.smallPage && r.j.design.layout.preset === 'focus' && r.j.page.w < 800) { slotOk++; continue; }
   if (rows && JSON.stringify(rows) === JSON.stringify(c.slots)) slotOk++;
   else slotBad.push(`${c.id}: ${r.err ? r.t.slice(0, 120) : JSON.stringify(rows).slice(0, 160) + ' vs ' + JSON.stringify(c.slots).slice(0, 160)}`);
 }

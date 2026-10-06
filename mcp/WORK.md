@@ -21,6 +21,75 @@ picture), S3 (slanted day names). Records: DESKTOP-TESTS.md, rows 9b, 12b, S1.. 
 - **20:37, the stop:** the run started at 20:24 had not finished by 20:36 and was stopped for the hard stop, so **the last full result on this laptop is 533 of 534, before the check's update; the full count after it is CI's to give**. Stopping it also stopped the other `server.mjs` processes of the working copy on this laptop (a session's own DataArcus server among them: a new session starts it again). Desktop closed; no capture process left.
 - **Not reached, in order:** FAIL 12 (the matrix: the table's fit rules, tight rows, the answer when seven rows cannot fit), S3 (a short day-name column on the column chart), the touched website suites.
 - **For the owner:** a ring as a table picture is 28 high when the table is small, and its number then cannot be read. Options: drop the number inside a table ring under about 40 high (the column beside it can carry it); keep the ring larger and show fewer rows; leave it. Recommended: drop the number under 40.
+### Round 19, golden reports to 9.5 (cloud; 6 Oct, 18:32-19:35 UTC; `fix/round-17` on top of `20e4de0`; not merged)
+The owner (~21:50 Dubai): "get the scores to 9.5 first"; "B" for the tiny page; his "No data" idea; the reviewer added
+round 18's "seen, not in scope" (items 8-10). Scoring rule: DESKTOP-TESTS.md, "Item 6, the golden tasks' reports again".
+- **Item 8 (`94c145b`): done.** No script builds a path from the module URL's pathname: `make-share-images`,
+  `make-article-mockups`, `test-svg-kpi` use `fileURLToPath`; `test-site-config.mjs` checks every .js/.mjs under
+  scripts/ and mcp/ (red 3, then green).
+- **Item 1 (`450260e`): done, with a limit.** Made-up rows in `no-measures` (task 7) and `arabic-long-names` (task 6).
+  They are Power Query rows, so Desktop shows them **after one Refresh** (a Power Query table opens empty). Task 8's
+  model already had rows: its "--" was the missing refresh. Task 10's 300-table model is generated empty: left.
+  Making them DAX tables would open with data but changes what the tools read: not done this hour.
+- **Item 2 (`f83b154`): done.** A column chart by day or month names that would slant (measured letter widths), on a
+  model without a short name column, is written as a **bar chart** where the slot holds one bar per name (22 + 46,
+  round 0); told. Why bars: of the options that change no data they are the one that never slants, and their height
+  is measured; a model's Day Short keeps a column chart (round 18).
+- **Item 3 (`4134e84`): done.** Below 800 wide the executive layout becomes **single focus** (KPI cards and one large chart);
+  `plan_layout`'s `smallPage` and create_report's reportNotes say so. Golden task 5's first page is now "Single focus
+  640x360" (golden expectation updated, cause in its "why").
+- **Item 4: not done (why).** At 960 x 720 the table already takes 8pt and still holds three of four fields; four
+  need a wider slot, which means changing the executive layout's column shares for 4:3 pages: a layout call for the
+  owner (below).
+- **Item 5: not done (why).** The growth measure is plain DAX (SAMEPERIODLASTYEAR on the calendar's date column);
+  nothing in the metadata is missing or mistyped, so the health check cannot tell it fails. Most likely the empty
+  tables (now with rows) or the calendar not marked as a date table (already a health finding): the laptop re-checks.
+- **Item 6: not done (taste).** With one measure the KPI row already has one card across the whole row (the engine's
+  kpiCards); how it should look is the owner's call (below).
+- **Item 7 (`16737e0`, then opt-in): built.** `noDataMessage: true`: a report-level measure IF ( ISBLANK ( [m] ), "No data for this
+  selection" / "لا توجد بيانات لهذا الاختيار", "" ) on a card one layer below each chart and table, same box, tooltip
+  and title off, not on the phone; the visual above has no background of its own so the card's panel shows. **Default
+  off**: default on breaks about 20 older checks that rightly treat every card visual as a KPI card and changes every
+  report's look before Desktop has shown it once. KPI cards unchanged (Microsoft's card docs name no blank-text setting).
+- **Item 9: no change needed (guard added).** The width fit already tries every size down to 8pt and keeps the most
+  measures any size holds, so the rows' smaller size never holds more (round 18's note was wrong).
+- **Item 10 (`8f8a639`): done.** A table takes the matrix's row rule (a smaller text down to 8pt so seven rows and the total fit).
+
+#### Round 19, expected score per golden task (after; the laptop re-scores; before = 8.5 mean)
+| Task | Before EN / AR | Expected after | Why |
+|---|---|---|---|
+| 1 Exec 1920 | 9 / 9 | 10 / 10 | the day chart is a bar chart (no slant) |
+| 2 Analysis | 10 / 10 | 10 / 10 | - |
+| 3 Ramadan | 10 / 10 | 10 / 10 | - |
+| 4 16:9 | 10 / 10 | 10 / 10 | - |
+| 4 4:3 | 8 / 8 | 9 / 9 | the day chart is a bar chart; the table's 3 of 4 fields stays (item 4) |
+| 5 640 x 360 | 6 / 6 | 9 / 9 | single focus: no table, no day chart; page 2 (Details) not changed: its card values may still be cut |
+| 6 long Arabic | 8 / 8 | 9 / 9 | rows after Refresh; the growth card may still fail (item 5) |
+| 7 no measures | 8 / 8 | 9 / 9 | rows after Refresh; a count of a text column as a card stays |
+| 8 redesign | 8 / 8 | 9 / 9 | rows after Refresh; one wide card (item 6, the owner's) |
+| 10 300 tables | 8 / 8 | 8 / 8 | no rows (generated model) |
+| **Mean** | **8.5** | **about 9.3** | 9.5 needs items 4, 5, 6 decided and task 10's rows |
+
+#### Round 19, for the laptop to prove
+1. Rebuild the 20 golden reports, open each, **Refresh once** (Home > Refresh), score with the same rule; before/after
+   pairs beside the table above.
+2. No data (`noDataMessage: true`, any made-up model): a page filtered to an empty selection shows the message in
+   each chart and table box; with data the charts draw normally with nothing showing through; clicks, tooltips and
+   Tab move to the chart, never to the message card; the phone layout has no message cards.
+3. Item 2: task 1 and task 4:3's chart by day is a bar chart, names level, Sunday first.
+4. Item 10: a 420 x 220 table of Day Name on a 1920 x 1080 page: 9pt, seven days and the total, no scrollbar.
+5. Round 18's 12b, S2b, S3b (above).
+
+#### Round 19, for the owner
+1. **"No data" by default?** Recommended: keep it opt-in until the laptop proves it, then on by default with the older
+   checks taught to tell message cards from KPI cards (about 20 places).
+2. **Task 8's single wide card:** (a) the card at a quarter of the row, at the reading start; (b) the card and a text
+   box with the plan's sentence; (c) as it is. Recommended: (a).
+3. **Task 4:3's table:** (a) on 4:3 pages the table takes the wider share of its row; (b) leave three of four fields,
+   told. Recommended: (a), measured on the laptop first.
+4. **Test models as DAX tables** (open with data, no Refresh): recommended for the next round, with the golden
+   expectations it changes written beside them.
+
 ### Round 18, finished (cloud; 6 Oct, 16:49-17:48 UTC; `fix/round-17` on top of `e3067ff`; not merged)
 - **Intact first:** `npm ci` (root and mcp); `npm test` on `e3067ff`: **534 of 534, golden PASS** (11 tasks); the website's 17 suites: **all PASS**;
   `test-site-config`, `test-analytics-events`, `check:min`: all pass.
