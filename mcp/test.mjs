@@ -727,7 +727,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   // 7. tool annotations: three tools only read; the three that write only add files (round 5: check_model_health writes its fix scripts)
   {
     const ann = Object.fromEntries((await client.listTools()).tools.map((t) => [t.name, t.annotations || {}]));
-    const ro = ['read_model', 'suggest_fields', 'plan_layout'].filter((n) => ann[n].readOnlyHint !== true);
+    // (plan_layout left this list on 6 Oct 2026, the owner's ask "formats fixed at the source": with path it writes the
+    // format script file next to the project)
+    const ro = ['read_model', 'suggest_fields'].filter((n) => ann[n].readOnlyHint !== true);
+    check(ann.plan_layout.destructiveHint === false, 'plan_layout must only add files (destructiveHint false)');
     check(!ro.length, `readOnlyHint true is missing on: ${ro}`);
     const wr = ['generate_theme', 'create_report', 'check_model_health'].filter((n) => !(ann[n].readOnlyHint === false && ann[n].destructiveHint === false));
     check(!wr.length, `readOnlyHint false with destructiveHint false is missing on: ${wr} (${JSON.stringify(wr.map((n) => ann[n]))})`);
@@ -1483,12 +1486,12 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     // own percent format where it has one decimal or none; before, a percent card had no entry at all)
     chk(() => has('Margin %', '0.0%'), () => `a percent measure shows its own percent format: ${JSON.stringify(cardsOf('Margin %', false).map((v) => v.visual.objects.value)).slice(0, 300)}`);
     const nf = (x.j && x.j.numberFormats) || {};
-    chk(() => has('No Format', '#,0.##') && pages.filter((p) => p.tooltip).flatMap((p) => p.visuals).filter((v) => v.visual.visualType === 'cardVisual').every((v) => v.visual.objects.value.length === 2)
-      && JSON.stringify(nf.cards.formatted) === JSON.stringify([{ field: 'Sales[Total Sales]', format: '#,0' }, { field: 'Sales[Avg Price]', format: '#,0.00' }, { field: 'Sales[No Format]', format: '#,0.##' }])
+    chk(() => /* (6 Oct 2026, the owner's rule "formats fixed at the source": a number without a format is #,0.00, was #,0.##) */ has('No Format', '#,0.00') && pages.filter((p) => p.tooltip).flatMap((p) => p.visuals).filter((v) => v.visual.visualType === 'cardVisual').every((v) => v.visual.objects.value.length === 2)
+      && JSON.stringify(nf.cards.formatted) === JSON.stringify([{ field: 'Sales[Total Sales]', format: '#,0' }, { field: 'Sales[Avg Price]', format: '#,0.00' }, { field: 'Sales[No Format]', format: '#,0.00' }])
       // (round 10: tables were measured in Desktop on 2026-10-04 and are formatted now, so the "needs a Desktop check"
       // text is gone and numberFormats.tables lists them; the tooltip's card follows kpiValues: see round 10's checks)
       && /101,914/.test(nf.cards.note) && nf.tables.formatted.length >= 1 && nf.noThousandSeparator.includes('Sales[Total Sales]') && errors(dir) === '0',
-      () => `a measure with no format gets '#,0.##'; the tooltip card is not touched; the answer lists the formatted cards and says tables need a Desktop check; validator 0: ${JSON.stringify(nf).slice(0, 700)} validator ${dir ? errors(dir) : ''}`);
+      () => `a measure with no format gets '#,0.00'; the tooltip card is not touched; the answer lists the formatted cards and says tables need a Desktop check; validator 0: ${JSON.stringify(nf).slice(0, 700)} validator ${dir ? errors(dir) : ''}`);
   }
 
   // ----- R9.2: "this Ramadan only" is two page filters: the Ramadan flag and the Hijri year the user gives -----
@@ -1736,7 +1739,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     // 3. kpiValues "full": round 9's entry (the measure's format with the separator), per card
     const f = await ask('create_report', { path: 'r10-project', name: 'R10 Full', design: exec, kpiValues: 'full', fields: { kpis: SIX } });
     const fp = f.err ? [] : report(path.join(ROOT, 'r10-project', f.j.report)).filter((p) => !p.tooltip).flatMap(cards), codeOf = (m) => fp.filter((v) => v.visual.query.queryState.Data.projections[0].queryRef === 'Sales.' + m).map((v) => v.visual.objects.value.length === 2 ? L(v.visual.objects.value[1].properties.customFormatString) : 'none');
-    chk(() => [...new Set(codeOf('Total Sales'))].join() === "'#,0'" && [...new Set(codeOf('Avg Price'))].join() === "'#,0.00'" && [...new Set(codeOf('No Format'))].join() === "'#,0.##'" && [...new Set(codeOf('Orders'))].join() === 'none' && [...new Set(codeOf('Margin %'))].join() === "'0.0%'" /* (round 12: a percent shows its percent format in both modes) */
+    chk(() => [...new Set(codeOf('Total Sales'))].join() === "'#,0'" && [...new Set(codeOf('Avg Price'))].join() === "'#,0.00'" && [...new Set(codeOf('No Format'))].join() === "'#,0.00'" /* (6 Oct 2026, the owner's rule "formats fixed at the source": a number without a format is #,0.00, was #,0.##) */ && [...new Set(codeOf('Orders'))].join() === 'none' && [...new Set(codeOf('Margin %'))].join() === "'0.0%'" /* (round 12: a percent shows its percent format in both modes) */
         && fp.every((v) => !('labelPrecision' in v.visual.objects.value[0].properties) || v.visual.objects.value.length === 1) && f.j.kpiValues.mode === 'full' && f.j.numberFormats.cards.formatted.length === 3,
       () => `kpiValues "full" must write round 9's format entry per card: ${['Total Sales', 'Avg Price', 'No Format', 'Orders', 'Margin %'].map((m) => m + ' ' + codeOf(m).join('/')).join('; ')} ${short(f)}`);
     // 4 and 5. the value fits its card in every layout: 3 to 6 cards x three pages x two languages. The widest automatic
@@ -1933,7 +1936,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const t = await ask('create_report', { path: 'r10-project', name: 'R10 Table', design: exec, fields: { kpis: SIX, table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Avg Price]', 'Sales[Orders]', 'Sales[Margin %]', 'Sales[No Format]'] } });
     const pages = t.err ? [] : report(path.join(ROOT, 'r10-project', t.j.report)), tables = pages.flatMap((p) => p.visuals).filter((v) => type(v) === 'tableEx');
     const fmt = (v) => Object.fromEntries(v.visual.query.queryState.Values.projections.map((p) => [p.nativeQueryRef, p.format]));
-    chk(() => tables.length >= 1 && tables.every((v) => { const f = fmt(v); return f['Total Sales'] === '#,0' && f['Avg Price'] === '#,0.00' && f['No Format'] === '#,0.##' && !('Orders' in f && f.Orders) && !f['Margin %'] && !f.Region; })
+    chk(() => tables.length >= 1 && tables.every((v) => { const f = fmt(v); return f['Total Sales'] === '#,0' && f['Avg Price'] === '#,0.00' && f['No Format'] === '#,0.00' /* (6 Oct 2026, the owner's rule "formats fixed at the source": a number without a format is #,0.00, was #,0.##) */ && !('Orders' in f && f.Orders) && !f['Margin %'] && !f.Region; })
         && pages.flatMap((p) => p.visuals).filter((v) => /Chart$/.test(type(v))).every((v) => !/"format"/.test(JSON.stringify(v.visual.query))) && errors(path.join(ROOT, 'r10-project', t.j.report)) === '0',
       () => `a table's measure columns must carry "format" on their projections (the measure's format with the separator), and charts none: ${JSON.stringify(tables.map(fmt))} ${short(t)}`);
     const full = await ask('create_report', { path: 'r10-project', name: 'R10 Table full', design: exec, kpiValues: 'full', fields: { kpis: SIX } });
@@ -1943,7 +1946,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => tip(t).length >= 1 && tip(t).every((v) => !('labelPrecision' in v.visual.objects.value[0].properties) && L(v.visual.objects.value[1].properties.customFormatString) === "'#,0'") && tip(full).length >= 1 && tip(full).every((v) => v.visual.objects.value.length === 2 && L(v.visual.objects.value[1].properties.customFormatString) === "'#,0'" && v.visual.objects.value[1].selector.metadata === 'Sales.Total Sales'),
       () => `the tooltip card follows the KPI cards (automatic units by default; the format entry with kpiValues "full"): ${JSON.stringify(tip(full).map((v) => v.visual.objects.value)).slice(0, 400)}`);
     const nf = (t.j && t.j.numberFormats) || {};
-    chk(() => JSON.stringify(nf.tables.formatted) === JSON.stringify([{ field: 'Sales[Total Sales]', format: '#,0' }, { field: 'Sales[Avg Price]', format: '#,0.00' }, { field: 'Sales[No Format]', format: '#,0.##' }]) && /13,857/.test(nf.tables.note)
+    chk(() => JSON.stringify(nf.tables.formatted) === JSON.stringify([{ field: 'Sales[Total Sales]', format: '#,0' }, { field: 'Sales[Avg Price]', format: '#,0.00' }, { field: 'Sales[No Format]', format: '#,0.00' }]) /* (6 Oct 2026, the owner's rule "formats fixed at the source": a number without a format is #,0.00, was #,0.##) */ && /13,857/.test(nf.tables.note)
         && !('tablesAndTooltips' in nf) && /chart/i.test(nf.charts) && nf.noThousandSeparator.includes('Sales[Total Sales]'), () => `numberFormats must say what the report formats now (tables) and what it leaves (chart labels): ${JSON.stringify(nf).slice(0, 700)}`);
   }
 
@@ -2865,6 +2868,47 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       () => `an Arabic report must show the Arabic name columns where the model has them, an English one the English: AR ${a.err ? a.t.slice(0, 200) : (ra.match(/"Property": "[^"]*Name[^"]*"/g) || []).join(',')} EN ${(re.match(/"Property": "[^"]*Name[^"]*"/g) || []).join(',')}`);
     chk(() => !n.err && (n.j.reportNotes || []).some((x) => /add the Gulf calendar's Arabic name columns/i.test(x)),
       () => `without them an Arabic report must say how to get them: ${JSON.stringify(n.j && n.j.reportNotes)}`);
+  }
+
+  // Round 12b, the owner's ask (6 Oct 03:28): formats fixed at the source. One rule (model-health-tmdl.js formatOf):
+  // a ratio 0.0%, a count #,0 (also over "0.00"), money its own currency format, other numbers #,0.00, a date
+  // dd mmm yyyy; well formatted is left alone. check_model_health, plan_layout and create_report hand over one script
+  // file; plan_layout and create_report say it first; the report shows the right formats before the script is applied
+  {
+    const req = (await import('node:module')).createRequire(import.meta.url), T = req('../assets/js/model-health-tmdl.js');
+    const of = (o, kind) => { const r = T.formatOf && T.formatOf(o, kind, []); return r ? r.format : null; };
+    const unit = [of({ name: 'Return Rate', expression: 'DIVIDE ( [A], [B] )' }, 'measure'), of({ name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '0.00' }, 'measure'),
+      of({ name: 'Avg Price', expression: 'AVERAGE ( Sales[Amount] )' }, 'measure'), of({ name: 'Revenue', expression: 'SUM ( Sales[Amount] )', formatString: '"AED" #,0.00' }, 'measure'),
+      of({ name: 'Cost', expression: 'SUM ( Sales[Cost] )', formatString: '\\$0.00' }, 'measure'), of({ name: 'Order Date', dataType: 'dateTime' }, 'column'), of({ name: 'Units', expression: 'SUM ( Sales[Qty] )', formatString: '#,0' }, 'measure')];
+    chk(() => JSON.stringify(unit) === JSON.stringify(['0.0%', '#,0', '#,0.00', null, '\\$#,0.00', 'dd mmm yyyy', null]),
+      () => `the format rule: ratio 0.0%, count over 0.00 #,0, decimal #,0.00, currency kept (separator added, never invented), date dd mmm yyyy, good format left alone: ${JSON.stringify(unit)}`);
+
+    const sales = { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), Object.assign(col('Qty', 'int64'), { formatString: '0.00' }), col('Order Date', 'dateTime'), col('Region', 'string')],
+      measures: [{ name: 'Return Rate', expression: 'DIVIDE ( SUM ( Sales[Qty] ), 100 )' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '0.00' },
+        { name: 'Avg Price', expression: 'AVERAGE ( Sales[Amount] )' }, { name: 'Revenue', expression: 'SUM ( Sales[Amount] )', formatString: '"AED" #,0.00' }] };
+    const bim = JSON.stringify({ compatibilityLevel: 1567, model: { tables: [sales] } });
+    fs.mkdirSync(path.join(ROOT, 'r12b-fmt/Fmt.SemanticModel'), { recursive: true }); fs.writeFileSync(path.join(ROOT, 'r12b-fmt/Fmt.SemanticModel/model.bim'), bim);
+    const to = (list) => Object.fromEntries((list || []).map((i) => [i.object, i.to]).sort());
+    const h = await ask('check_model_health', { path: 'r12b-fmt' }), hf = h.j && h.j.fixes && h.j.fixes.FORMATS;
+    const want = { 'Sales[Return Rate]': '0.0%', 'Sales[Orders]': '#,0', 'Sales[Avg Price]': '#,0.00', 'Sales[Amount]': '#,0.00', 'Sales[Qty]': '#,0', 'Sales[Order Date]': 'dd mmm yyyy' };
+    const sc = hf && hf.fixScriptFile ? fs.readFileSync(hf.fixScriptFile, 'utf8') : '';
+    chk(() => !h.err && JSON.stringify(to(hf.fields)) === JSON.stringify(Object.fromEntries(Object.entries(want).sort())) && /formatString: 0\.0%/.test(sc) && /measure Orders = [\s\S]*?formatString: #,0\n/.test(sc) && !/Revenue/.test(sc),
+      () => `check_model_health fixes.FORMATS: ${h.err ? h.t.slice(0, 300) : JSON.stringify(hf)}`);
+    const pl = await ask('plan_layout', { layout: 'exec', kpis: 3, path: 'r12b-fmt', fields: ['Sales[Return Rate]', 'Sales[Orders]', 'Sales[Revenue]'] });
+    chk(() => !pl.err && Object.keys(pl.j)[0] === 'formats' && JSON.stringify(to(pl.j.formats.fields)) === JSON.stringify({ 'Sales[Orders]': '#,0', 'Sales[Return Rate]': '0.0%' })
+        && pl.j.formats.fixScriptFile === hf.fixScriptFile && /first/i.test(pl.j.formats.sayFirst) && pl.j.slots.length,
+      () => `plan_layout with the model must say the formats first, with the health check's own file: ${pl.err ? pl.t.slice(0, 300) : JSON.stringify(Object.keys(pl.j)) + ' ' + JSON.stringify(pl.j.formats)}`);
+    const cr = await ask('create_report', { path: 'r12b-fmt', name: 'Fmt', design: (await ask('plan_layout', { layout: 'exec', kpis: 3 })).j.design,
+      fields: { kpis: ['Sales[Return Rate]', 'Sales[Orders]', 'Sales[Revenue]'], table: ['Sales[Order Date]', 'Sales[Orders]', 'Sales[Return Rate]', 'Sales[Qty]'] } });
+    const vis = []; if (!cr.err) { const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((f) => { const q = path.join(d, f.name); if (f.isDirectory()) walk(q); else if (f.name === 'visual.json') vis.push(JSON.parse(fs.readFileSync(q, 'utf8'))); }); walk(path.join(ROOT, 'r12b-fmt', cr.j.report, 'definition', 'pages')); }
+    const tables = vis.filter((v) => v.visual && v.visual.visualType === 'tableEx'), projs = tables.flatMap((v) => v.visual.query.queryState.Values.projections);
+    const fmtOf = (ref) => [...new Set(projs.filter((x) => x.queryRef === ref).map((x) => x.format || null))];
+    const cardOf = (mname) => vis.filter((v) => v.visual && /card/i.test(v.visual.visualType) && JSON.stringify(v.visual.query || {}).includes(`"Property":"${mname}"`)).map((v) => JSON.stringify(v.visual.objects || {}));
+    chk(() => !cr.err && Object.keys(cr.j)[0] === 'formats' && cr.j.formats.fixScriptFile === hf.fixScriptFile
+        && JSON.stringify(fmtOf('Sales.Return Rate')) === '["0.0%"]' && JSON.stringify(fmtOf('Sales.Orders')) === '["#,0"]' && JSON.stringify(fmtOf('Sales.Order Date')) === '["dd mmm yyyy"]'
+        && cardOf('Return Rate').length && cardOf('Return Rate').every((o) => /0\.0%/.test(o)) && cardOf('Orders').length && cardOf('Orders').every((o) => /#,0'/.test(o) && !/0\.00/.test(o))
+        && fs.readFileSync(path.join(ROOT, 'r12b-fmt/Fmt.SemanticModel/model.bim'), 'utf8') === bim,
+      () => `create_report must say the formats first and show them right (table, cards) without touching the model: ${cr.err ? cr.t.slice(0, 300) : JSON.stringify(Object.keys(cr.j).slice(0, 3))} table ${JSON.stringify(['Sales.Return Rate', 'Sales.Orders', 'Sales.Order Date', 'Sales.Qty'].map(fmtOf))} cards ${JSON.stringify(cardOf('Return Rate')).slice(0, 300)} | ${JSON.stringify(cardOf('Orders')).slice(0, 300)}`);
   }
 }
 

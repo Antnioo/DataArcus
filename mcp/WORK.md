@@ -32,12 +32,27 @@ The owner's rule tonight: a round that finishes early takes the non-severe not-i
      "add the Gulf calendar's Arabic name columns to show Arabic day and month names". `pbip-bind` / the writer treat a
      name with "(Arabic)" as the same kind of name. Test model: A01-A03 added (43 checks; the article says 43).
      The laptop builder's `fix/round-13` (Arabic display names, reversed table columns) was not touched.
+  5. **Formats fixed at the source** (owner, 6 Oct 03:28). One rule, `model-health-tmdl.js` `formatOf` (the old
+     `suggestFormat` / `formatFixes` / `separatorFixes` agree with it): a ratio by format, name or DAX (%, rate, ratio,
+     pct, percent; margin, share, vs, growth, change when the DAX divides) "0.0%"; a count or whole number "#,0" (also
+     over "0.00"); money keeps the model's currency format (separator added; a currency is never invented); other
+     numbers "#,0.00" or their own format with the separator; a date column "dd mmm yyyy" (none or General Date);
+     well formatted, a format expression or text: left alone. A percent-like column name is left alone (its values may
+     be 5 for 5%). `formatReview` writes one script. `check_model_health` `fixes.FORMATS`, `plan_layout` (new optional
+     `path`, `fields`, `focus`, `tables`; `formats` first in the answer) and `create_report` (`formats` first) hand over
+     the same file "<model> - fix formats.tmdl" next to the project; nothing is applied. Until it is applied the report
+     shows the rule's format: cards and the tooltip's card (pctFormat / wholeFormat), table projections (format), and
+     kpiValues "full" cards. The website Health Check lists the same fixes with a "Copy: right number formats" button.
+     Decision for the owner: the date format "dd mmm yyyy" (05 Oct 2026) was my choice for "a clear date format".
 - **Round 12b, for the laptop to prove:**
   1. Apply `add_gulf_calendar`'s script (defaults) in TMDL view: the three (Arabic) columns are there, and slicers on
      them list الأحد…السبت, يناير…ديسمبر and محرم…ذو الحجة in order (sort-by from the script).
   2. `create_report` with `lang: "ar"` on that model: the axis, table and slicer show الأحد…السبت and يناير…ديسمبر in
      calendar order; on a model without the columns the reportNotes line is there.
   3. Run `scripts/gulf-calendar/test-model/check.dax` on the rebuilt test model: 43 of 43 pass (A01-A03 new).
+  4. Formats: run check_model_health on a model with a ratio without a format and a count formatted "0.00"; apply the
+     "fix formats" script in TMDL view (Preview shows only formatString changes); the percent shows as 12.3% in a card,
+     a table and the tooltip, and the count with no decimals everywhere (before and after the script).
 - **Left, with why:** #3 Tahoma widths, D16, D-P1b, #10 (title top-align) and the tooltip covering the ribbon (each
   needs Desktop); #11 (hand-placed pages get the generated theme's text sizes) and #8's semibold value (taste calls:
   they change how every hand-placed report looks); #19 (no property in Microsoft's schema); #27 (nothing in the
