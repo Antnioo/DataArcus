@@ -38,6 +38,10 @@ picture), S3 (slanted day names). Records: DESKTOP-TESTS.md, rows 9b, 12b, S1.. 
 - **After:** `npm test` **540 of 540** (534 + 4 matrix + 2 ring), golden PASS (538 after the matrix alone); touched suites pbip 73, theme-generator 893, theme-generator-lab 893: PASS; `check:min`, `test-site-config`, `test-analytics-events` PASS; CI green on `845f73c` and on `f91de94` (both jobs); this docs-only commit: CI to confirm.
 - **Seen, not in scope:** the matrix keeps the measures chosen at the width's size (11pt at 1920 x 1080) and then takes 9pt for its rows, where a third measure may now fit (kept as is: fewer columns is the safe side); the same `new URL(import.meta.url).pathname` root in `scripts/make-share-images.mjs`, `make-article-mockups.mjs` and `test-svg-kpi.mjs` (the last is a website suite: it may stop on a Windows checkout too); a table (not a matrix) still does not take a smaller text for its rows (the brief asked it for the matrix only).
 
+- **S3 and the end (18:11 UTC):** `npm test` **543 of 543** (540 + 3 for S3), golden PASS; website suites gulf-calendar 813,
+  tools 341, pbip 73, theme-generator 893, theme-generator-lab 893: PASS; `check:min`, `test-site-config`,
+  `test-analytics-events` PASS; CI green on `0511c5e` (both jobs).
+
 #### Round 18, for the laptop to prove
 - **12b** (the hand-placed matrix): rebuild "P7 hand EN" (1920 x 1080, Day Name and four long measures, 420 x 220).
   Expected, from the test's fixture of the same shape: the matrix's text 9pt (values, headers, row headers, total;
