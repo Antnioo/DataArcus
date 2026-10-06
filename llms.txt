@@ -1,0 +1,26 @@
+# DataArcus
+
+> DataArcus (dataarcus.com) offers free browser-based Power BI tools and Power BI consulting from Dubai, in English and Arabic. The tools run in the browser: nothing is uploaded.
+
+## Free tools
+- [Power BI Model Health Check](https://dataarcus.com/tools/power-bi-model-health-check.html): scores a Power BI model (.pbit or PBIP) and lists unused columns and measures, risky relationships, slow DAX and date-table issues, with ready fix scripts.
+- [DAX Calendar Table Generator](https://dataarcus.com/tools/dax-calendar-table-generator.html): a DAX date table with fiscal years, GCC weekends, Hijri dates (Umm al-Qura) and Ramadan and Eid flags.
+- [Power BI Theme Generator](https://dataarcus.com/tools/power-bi-theme-generator.html): a report theme JSON from your brand colours, with a matching page background and layout.
+- [SVG KPI Designer](https://dataarcus.com/tools/svg-kpi-designer.html): design KPI cards, progress rings and sparklines visually and copy one DAX image measure for Power BI's own visuals.
+- [DAX Measure Builder](https://dataarcus.com/tools/dax-measure-builder.html): YoY, YTD, MTD and rolling measures written as DAX.
+- [Power BI Licensing Cost Calculator](https://dataarcus.com/tools/power-bi-licensing-cost-calculator.html): compares Pro, Premium Per User and Fabric capacity costs for a team.
+- [PL-300 practice exam](https://dataarcus.com/tools/pl-300-practice-exam.html) and [DP-600 practice exam](https://dataarcus.com/tools/dp-600-practice-exam.html).
+
+## Articles
+- [A Gulf calendar in Power BI](https://dataarcus.com/articles/article-gulf-calendar-power-bi.html)
+- [Compare Ramadan sales year over year in Power BI](https://dataarcus.com/articles/article-ramadan-sales-power-bi.html)
+- [Power BI model health check](https://dataarcus.com/articles/article-power-bi-model-health-check.html)
+- [Is your Power BI model ready for AI? A 7-point check](https://dataarcus.com/articles/article-power-bi-model-ai-ready.html)
+- [Power BI licensing guide](https://dataarcus.com/articles/article-power-bi-licensing-guide.html)
+- [All articles](https://dataarcus.com/blog.html)
+
+## Services
+- [Copilot readiness audit](https://dataarcus.com/services/copilot-readiness-audit.html)
+
+## Contact
+- hello@dataarcus.com
