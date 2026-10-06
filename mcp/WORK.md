@@ -4,6 +4,21 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## The 1-hour round (2026-10-06, 11:26-12:26 UTC, cloud builder; nothing merged)
+- **A:** `fix/round-15b` from `origin/main` `aa95841` with only round 15's six commits (cherry-picked; one `.min.js`
+  conflict, rebuilt) and `theme-generator.min.js?v=20261006h` (main had already used `g`). `fix/round-15` kept.
+  `npm test` 514 of 514, golden PASS; `test-site-config.mjs` and `test-analytics-events.mjs` PASS; pbip 73,
+  theme-generator 893, design-engine 598, tools 341, svg-kpi 846 PASS. "Round 15, for the laptop to prove" unchanged.
+- **B:** DataArcus `feat/check-report-2` (`3867807`, one commit on `origin/main`: feat/check-report merged with main and
+  squashed; `npm test` 543 of 543, golden PASS; no conflict with `fix/round-15b`, checked by a trial merge). Engine
+  `feat/check-report-package-2` (`352db47` on its main `0aefb16`; 25 bundle entries, six lib files, eleven engines;
+  packaging tests 21 of 21). The `.mcpb` built on Linux as a dry run (no release record, no version committed):
+  **9,055,524 bytes, SHA-256 5077d6334148fd2070572f1fa9421269db0e54fd62a83aa17b99c240c3a2f9a0**; all 8 tools called
+  from the unpacked file on a made-up model: all answered.
+- **C:** `plan/arabic-indexing`: `mcp/plans/ARABIC-INDEXING.md` (plan only). Recommendation: static `/ar/` copies
+  made at build (Playwright snapshot of each page at `?lang=ar`), hreflang pairs, self-canonicals, sitemap
+  alternates; the cut for tonight: the 5 tool pages. The one decision: `/ar/` or `ar.dataarcus.com`.
+
 ## Round 15, the owner's accepted recommendations of rounds 13 and 14 (2026-10-06, cloud builder; branch `fix/round-15` from `fix/round-14` `7be2f22`; not merged)
 The owner's answer on the cards (6 Oct 09:56-09:58): accept all recommendations of "Round 13, for the owner" and
 "Round 14, for the owner". One commit each, tests first.
