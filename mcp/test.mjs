@@ -3537,6 +3537,23 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const en = await btn('en'), ar = await btn('ar');
     chk(() => [en, ar].every((r) => r.found && r.fillOff && r.outlineOff && r.text), () => `the header's Filters button must look like a tab (no box, no outline): EN ${JSON.stringify(en)} AR ${JSON.stringify(ar)}`);
   }
+
+  // 1. #15: a hand-placed matrix gets the table's rules: days in calendar order (the helper column, the sort), the fit to
+  // its box (the values it has room for), tight rows where 7 rows would not fit
+  {
+    model('r16-m', [cal, { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime')],
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Total Sales Last Year Same Period', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' },
+        { name: 'Orders Placed In The Period', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }, { name: 'Average Order Value Of The Period', expression: 'DIVIDE ( 1, 2 )', formatString: '#,0.00' }] }]);
+    const x = await ask('create_report', { path: 'r16-m', name: 'R16 matrix', fields: { kpis: ['Sales[Total Sales]'], table: ['Calendar[Day Name]', 'Sales[Total Sales]', 'Sales[Total Sales Last Year Same Period]', 'Sales[Orders Placed In The Period]', 'Sales[Average Order Value Of The Period]'] },
+      pages: [{ name: 'P', slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'matrix', x: 36, y: 100, w: 420, h: 220, title: 'M' }] }] });
+    const m = x.err ? null : visuals('r16-m', x.j.report).find((v) => v.visual && v.visual.visualType === 'pivotTable');
+    const qs = m && m.visual.query.queryState, sd = m && m.visual.query.sortDefinition, vals = qs ? qs.Values.projections.map((p) => p.queryRef) : [];
+    const helper = vals.find((r) => /^Min\(Calendar\.Day of Week\)$/.test(r)), o = (m && m.visual.objects) || {};
+    chk(() => m && helper && sd && sd.sort[0].direction === 'Ascending' && JSON.stringify(sd.sort[0].field).includes('Day of Week')
+        && (o.columnWidth || []).some((e) => e.selector && e.selector.metadata === helper) && vals.filter((r) => r !== helper).length < 4
+        && ((o.grid || [])[0] || {}).properties && o.grid[0].properties.rowPadding,
+      () => `the matrix must take the table's rules (order, fit, tight rows): values ${JSON.stringify(vals)} sort ${JSON.stringify(sd)} objects ${JSON.stringify(Object.keys(o))} ${x.err ? x.t.slice(0, 300) : ''}`);
+  }
 }
 
 await client.close();

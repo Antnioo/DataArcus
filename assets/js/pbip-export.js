@@ -328,7 +328,9 @@
       // third sitting of 2026-10-04: 13857 became 13,857); the field carries it as tableFormat
       case 'table': { const fs = tableFields(B, rtl); return fs.length ? inOrder(q({ Values: fs.map(tproj) }), fs, rtl) : null; }
       // a matrix: rows by the table's first text column, its measures as the values
-      case 'matrix': { const fs = (B.table || []).filter(Boolean), row = fs.find(isTextField), vals = fs.filter(isValue); return row && vals.length ? q({ Rows: [proj(row)], Values: vals.map(tproj) }) : null; }
+      // (round 16, design finding #15: a hand-placed matrix showed days A to Z: it is put in calendar order as a table is,
+      // by the helper column or the model's own sort)
+      case 'matrix': { const fs = (B.table || []).filter(Boolean), row = fs.find(isTextField), vals = fs.filter(isValue); return row && vals.length ? inOrder(q({ Rows: [proj(row)], Values: vals.map(tproj) }), fs, false) : null; }
       // (round 16, design finding #16: a gauge on a percent measure read 0.34 between 0.00 and 0.68; it shows the card's
       // percent format through its projection's format, as tables do)
       case 'gauge': return need(y) ? q({ Y: [Object.assign(proj(y), y.pctFormat ? { format: String(y.pctFormat) } : {})] }) : null;
@@ -984,7 +986,7 @@
         } else {
           // a table keeps only the fields its width has room for (tableFit); Bt is the bind this table is written from
           let Bt = B, tableText = null;
-          if (B && s.kind === 'table') {
+          if (B && (s.kind === 'table' || s.kind === 'matrix')) {   // (a matrix too: round 16, #15)
             // Round 12 (the owner's go on round 11's recommendation 5): a table too narrow for its fields first takes a
             // smaller text, down to 8pt: the largest size that keeps the most fields; a field is left out only where even
             // that doesn't hold it. The size is written on the table (values, headers, total) and told.
@@ -1079,16 +1081,17 @@
           // would not fit (grid.rowPadding 0); one that still does not fit is told. Measured (round 11): a row's pitch is
           // 1.415 x the text's height + 2 x rowPadding (1 when none is written), the header 7 more; the title 1.5 x its
           // size; 16 for the visual's own padding.
-          if (s.kind === 'table' && query) {
+          if ((s.kind === 'table' || s.kind === 'matrix') && query) {   // (a matrix too: round 16, #15)
             const tf = tableFields(Bt, rtl).find(isTextField), n = tf ? (/(^|\s)(day|weekday)|اليوم/i.test(tf.c) && Bind_nameLike(tf.c) ? 7 : /quarter|الربع/i.test(tf.c) ? 4 : /month|الشهر/i.test(tf.c) && Bind_nameLike(tf.c) ? 12 : 0) : 0;
             if (n) {
               const T = tableText || +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
               const need = (pad) => { const pitch = 1.415 * T * 4 / 3 + 2 * pad; return 1.5 * TITLE * 4 / 3 + pitch + 7 + (n + 1) * pitch + 16; };
-              if (need(1) > s.h) { visual.objects.grid = [{ properties: { rowPadding: num(0) } }]; if (need(0) > s.h) tableRows.push({ page: pg.name || base, field: label(tf), rows: n, need: Math.ceil(need(0)), h: s.h }); }
+              if (need(1) > s.h) { visual.objects = visual.objects || {}; visual.objects.grid = [{ properties: { rowPadding: num(0) } }]; if (need(0) > s.h) tableRows.push({ page: pg.name || base, field: label(tf), rows: n, need: Math.ceil(need(0)), h: s.h }); }
             }
           }
           // the calendar order's helper column (see inOrder): its text in the card colour and as narrow as Desktop allows
-          const oh = s.kind === 'table' && query ? orderedBy(tableFields(Bt, rtl)) : null;
+          const oh = (s.kind === 'table' || s.kind === 'matrix') && query ? orderedBy(s.kind === 'matrix' ? (Bt.table || []).filter(Boolean) : tableFields(Bt, rtl)) : null;
+          if (oh && oh.sortBy && s.kind === 'matrix') { visual.objects = visual.objects || {}; visual.objects.columnFormatting = visual.objects.columnFormatting || []; }
           if (oh && oh.sortBy) { const ref = orderHelper(oh).queryRef;
             visual.objects.columnFormatting.push({ properties: { fontColor: color(u.card), alignment: str('Right'), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) }, selector: { metadata: ref } });
             visual.objects.columnWidth = [{ properties: { value: num(1) }, selector: { metadata: ref } }];
