@@ -2693,6 +2693,21 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
         () => `a table's percent column must carry the card's percent format (${cardCode}), and a measure the model formats none: ${JSON.stringify(tables.map(fmt))} ${short(x)}`);
     }
   }
+
+  // ----- a hand-placed slicer slot too narrow for its dropdowns side by side (seen in Desktop, 6 Oct) -----
+  // "AK EN light", "AK AR dark": a 444 x 310 slicer slot (wider than high, so "across") held three dropdowns 100 wide
+  // beside Reset, their headers cut to "Q…", "Da…" (in Arabic to "…" alone). A slot is a strip only when each dropdown
+  // gets at least 160 (x the page's scale); otherwise, where its height holds them, the dropdowns are stacked as in a
+  // rail, each the slot's width. A real top strip (1800 wide) is unchanged.
+  {
+    const slotPage = (w, h) => [{ name: 'Slicers', slots: [{ kind: 'title', x: 24, y: 12, w: 600, h: 48 }, { kind: 'slicer', x: 24, y: 80, w, h }, { kind: 'bar', x: 24, y: 420, w: 600, h: 300 }] }];
+    const slicersOf = (x) => read(x).vis.filter((v) => v.visual.visualType === 'slicer' && !v.tooltipPage).map((v) => v.position).sort((p, q) => p.y - q.y || p.x - q.x);
+    const narrow = await ask('create_report', { path: P, name: 'R13 Slot narrow', pages: slotPage(444, 310) }), wide = await ask('create_report', { path: P, name: 'R13 Slot wide', pages: slotPage(1800, 80) });
+    chk(() => { const s = slicersOf(narrow); return s.length === 3 && s.every((p) => p.width >= 400 && p.x === s[0].x) && s[1].y >= s[0].y + s[0].height && s[2].y >= s[1].y + s[1].height && s[2].y + s[2].height <= 80 + 310; },
+      () => `a 444 x 310 slicer slot must stack its three dropdowns at the slot's width: ${narrow.err ? short(narrow) : JSON.stringify(slicersOf(narrow))}`);
+    chk(() => { const s = slicersOf(wide); return s.length === 3 && s.every((p) => p.y === s[0].y && p.width >= 160) && s[1].x > s[0].x && s[2].x > s[1].x; },
+      () => `an 1800-wide strip keeps its dropdowns side by side: ${wide.err ? short(wide) : JSON.stringify(slicersOf(wide))}`);
+  }
 }
 
 // ---------- round 12: every small detail fixed in code (owner's go 6 Oct 01:45; WORK.md "Round 12") ----------

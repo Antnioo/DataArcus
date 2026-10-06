@@ -2077,6 +2077,15 @@ capture of the same report (`desk-r11\`); pairs are `desk-r13\ba-<report>.png` (
   Arabic "…" at the line's end from the engine (`f-g6-ar-top-crop.png`); the Arabic Reset with its arrow at the
   right of the words. On "G6 Long" the fourth card shows Desktop's "Something's wrong with one or more fields":
   the test model's own growth measure fails (so in round 11 too).
+### Item 3, the side effects looked at afterwards: the hover tooltip and the phone
+- **Hover on a mirrored column chart** ("G4 16x9 AR" built with the final code; the pointer put on Monday's column,
+  the canvas cut out of a window capture: `hover-ar-column.png`): the report page tooltip opens with Monday's value
+  (15.17K) and its trend by month, the tooltip's own bars growing from the right with their values at the bars'
+  left ends, January to December from the top. So the Descending sort and the moved axis do not disturb the tooltip.
+- **The phone layout of the same report** (`f-g4w-ar-s-phone-p1-s1.png`): the bar and column charts keep the mirror
+  and the gradient. The Arabic table (four fields with long names) is wider than the phone canvas: its last header
+  is cut at the edge (design finding 22).
+- Drill-down: not tried (the engine's charts have one level).
 ### Item 6, the golden tasks' reports again, scored before and after
 All 20 reports (10 tasks' reports x English and Arabic) rebuilt with the final code (`13-r13\golden2`) and opened
 one by one: no error dialog, ready in 11 to 21 s (the 300-table model 37 and 48 s). Task 9 is refused as expected
@@ -2111,6 +2120,7 @@ gauge, funnel, treemap, matrix, slicer; `chartColors` "gradient"), "OPS AR" (the
   alone); the donut, gauge, funnel and treemap are not mirrored in Arabic (nothing in them has a side).
 - **Off on the operations page:** two bar charts and a donut all show Total Sales by Quarter.
 ## Lessons
+- **Round 13: a capture of the whole Desktop window shows the title bar with the signed-in account.** One such picture was made tonight and deleted; cut the canvas out (`crop.ps1`) and keep only that.
 - **Round 13: a button's `iconSize` is honoured; its icon and text margins did nothing (8L, 20L, 20D).** With
   `icon.placement` written the arrow is drawn small and tight against the text: write the size, and a gap as two
   no-break spaces in the text.

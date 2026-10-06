@@ -896,9 +896,15 @@
           // (on a user's own model a slicer the model has no column for is left out and told, and the others share the room)
           const all3 = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null), fields = B && own ? all3.filter(Boolean) : all3, pad = 10 * k, gap = 8 * k, n = Math.max(1, fields.length);
           all3.forEach((f, i) => { if (B && own && !f) leftOut.push({ page: pg.name || base, kind: 'slicer', title: (W.slicer || 'Slicer') + ' ' + (i + 1) }); });
-          const resetText = W.reset || 'Reset filters', across = s.w > s.h;
+          const resetText = W.reset || 'Reset filters';
           const bw = resetW(resetText, k, s.w - 2 * pad);
           const reset = resetFit(resetText, bw, k), bh = reset.h;
+          // Round 13 (seen in Desktop 2.158, 6 Oct 2026, "AK EN light": a hand-placed 444 x 310 slot, wider than high,
+          // held three dropdowns 100 wide beside Reset, their headers cut to "Q…", "Da…"): the slot is a strip only when
+          // each dropdown gets 160k at least; a slot too narrow for that stacks them like a rail where its height holds
+          // them (a slot that holds them neither way stays a strip, as before).
+          const stripW = (s.w - 2 * pad - bw - gap - gap * (n - 1)) / n, stackH = n * slicerH(SLICER_TEXT) + gap * n + bh + 2 * pad;
+          const across = s.w > s.h && (stripW >= 160 * k || stackH > s.h);
           const room = across ? s.w - 2 * pad - bw - gap : s.w - 2 * pad;
           const sw = across ? (room - gap * (n - 1)) / n : room;
           const sh = across ? s.h - 2 * pad : Math.max(slicerH(SLICER_TEXT), Math.min(76 * k, (s.h - 2 * pad - bh - gap * n) / n));
