@@ -21,9 +21,11 @@ the next rounds can pick from measured facts instead of guesses.
    says what was seen. Where it says "not opened", the row rests on the schema alone.
 5. Microsoft Learn was used only to confirm what a setting is for.
 
-**Not done:** Desktop's Options > Preview features list and the format pane were not walked by hand (no person at the
-laptop, and the pane's switches are not reachable without many clicks); no preview feature was switched on, so none
-had to be switched off. Keyboard shortcuts were not collected. Nothing outside Power BI's public schemas, the files
+**Not done:** Desktop's Options > Preview features list could not be read: UI Automation opens File > Options and
+settings > Options, but the dialog's contents are not exposed to it (one try, `builder-scripts\n1-preview.ps1`; the
+dialog was closed with the test report, nothing in it was touched). The format pane was not walked by hand (no person
+at the laptop). No preview feature was switched on, so none had to be switched off. The visual gallery did show two
+entries marked "(Preview)" in Desktop 2.158: "List slicer (Preview)" and "Goals (Preview)". Keyboard shortcuts were not collected. Nothing outside Power BI's public schemas, the files
 Desktop wrote for these made-up reports and Desktop's own window was read.
 
 **Words used:** *documented* = on Microsoft Learn or in the format pane; *schema only* = in Microsoft's published
@@ -113,7 +115,7 @@ end of the table for anything that did not get its turn.
 
 | # | What it does | The exact property (as written, opened and saved back by Desktop 2.158 unless said) | Status | Risk | Value for DataArcus (golden task) | In Desktop tonight |
 |---|---|---|---|---|---|---|
-| 1 | Text for a blank KPI value instead of "--" | `visual.objects.value[0].properties.showBlankAs` = text literal, selector `{ id: "default" }` (the entry that already holds the card's font size) | schema only (capabilities: "Show blank as") | low: one optional text | **high**: every report filtered to nothing; the "No data" idea for cards (all tasks) | drawn: both cards read "No data" on a page filtered to an empty selection (`gx-pair.png`); not saved back |
+| 1 | Text for a blank KPI value instead of "--" | `visual.objects.value[0].properties.showBlankAs` = text literal, selector `{ id: "default" }` (the entry that already holds the card's font size) | schema only (capabilities: "Show blank as") | low: one optional text | **high**: every report filtered to nothing; the "No data" idea for cards (all tasks) | drawn: both cards read "No data" on a page filtered to an empty selection (`gx-pair.png`); with «لا توجد بيانات» the text is shaped and whole, but at the value's own size its dots touch the card's bottom edge (`gx-blank-ar-crop.png`): a blank text wants to be short or the value a size smaller; not saved back |
 | 2 | A subtitle under the title | `visualContainerObjects.subTitle[0].properties`: `show`, `text`, `fontSize`, also `fontColor`, `alignment`, `bold`, `fontFamily`, `titleWrap`, `heading`; no selector | documented (format pane, Title > Subtitle) | low | **high**: long titles (6), context lines (3) | drawn in small text under the title; kept as written on Save |
 | 3 | A divider line under the title area | `visualContainerObjects.divider[0].properties`: `show`, `color`, `width`, `style` (solid, dashed, dotted), `ignorePadding` | documented (format pane, Title > Divider) | low | medium | drawn (a dotted line); kept |
 | 4 | A heading level for the title (screen readers) | `visualContainerObjects.title[0].properties.heading` = `'Heading2'` ... `'Heading6'` | documented (accessibility) | low | medium: accessibility, nothing to see | accepted and kept (nothing visible, as meant) |

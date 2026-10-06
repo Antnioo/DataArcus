@@ -2277,6 +2277,25 @@ whatever the hand-placed page's size; "Refresh now" banner on every DAX-table mo
 Store has number-like names (1, 2) on a wide axis; task 8's "Total by Note" is one bar (the model's own column) and its
 customer table scrolls (12 rows); the health check cannot tell that a measure's DAX does not parse (task 6's cause).
 
+### Block G, settings the writer does not use yet (research; `mcp/research/POWERBI-HIDDEN-CAPABILITIES.md`)
+"GX try" (the sample, a hand-placed 1280 x 720 page: two cards, a column chart, a line chart, a donut, a table), each
+setting written by hand as Microsoft's capabilities data names it, opened, then saved by Desktop (Ctrl+S) and read
+back (`n1-gx-diff.mjs`): **Desktop kept every object as written** and upgraded the changed files to visualContainer
+2.13.0 and report 3.3.0. Crop: `gx-try-crop.png`.
+| Setting | Seen |
+|---|---|
+| `visualContainerObjects.subTitle`, `.divider`, `title.heading` | a small subtitle under the title, a dotted line under it; the heading level changes nothing to see |
+| `y1AxisReferenceLine` (selector `{ id }`) | a dashed line across the column chart, labelled "Target: 40000" |
+| `labels` (`labelPosition`, `labelDisplayUnits`, `labelPrecision`) | 77.7K above the columns |
+| `lineStyles` (`lineChartType: 'smooth'`, `showMarker`, `areaShow`) | a smooth line, a dot per month, a tinted area |
+| `zoom` | a slider beside the value axis |
+| donut `slices.innerRadiusRatio: 75`, `centerValue.show`, `labels.labelStyle` | a thin ring, "Friday 13.6%" labels; the centre value appears but is cut ("1…") |
+| table `columnFormatting.dataBars` | a bar in every row of the column, the number over its end |
+| card `accentBar`, `divider`, `referenceLabel` | the accent bar draws; the divider and the reference label do not (the form is incomplete) |
+| card `value.showBlankAs: 'No data'` ("GX blank", a page filtered to nothing) | **both KPI cards read "No data" instead of "--"** (`gx-pair.png`); with «لا توجد بيانات» shaped and whole, its dots touching the card's bottom edge at the value's size (`gx-blank-ar-crop.png`) |
+| `report.json` `settings.hideVisualContainerHeader`, `defaultFilterActionIsDataFilter` | accepted, kept on Save; their effect was not tried |
+| `report.json` `settings.locale: 'ar-SA'` ("GX locale AR") | the report opened without a message; the bridge returned no picture of its page, so nothing was seen |
+
 ## Lessons
 - **Night of 6-7 Oct: a bar chart at the theme's 10pt (1280 x 720) needs 22.2 a row, 45 above the first row and 8
   under the last, and 38 more for its value axis.** Round 0's "22 a row + 46" was the tooltip page's chart without a

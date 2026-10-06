@@ -158,6 +158,21 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
   KPI row out); the website's designs never have it. A visual is never written without its fields: Microsoft's
   validator calls it `PBIR_QUERY_STATE_MISSING`.
 
+- Night of 6-7 October, measured in Desktop 2.158 (`scripts/tests/DESKTOP-TESTS.md`, "2026-10-06 night"):
+  - A test model's Power Query rows must be a typed table (`#table(type table [#"A" = datetime, #"B" = number], rows)`):
+    untyped, every column loads as text on Refresh and every SUM fails. DAX needs quotes around a table name that
+    is not plain Latin letters.
+  - A visual whose border is switched off in `visual.json` draws about 5 nearer its box's edges than one that leaves
+    the border to a solid theme: to let something below show through, switch off only the background.
+  - A bar chart at the theme's 10pt needs 22.2 a row, 45 above the first row and 8 under the last, and 38 more for
+    its value axis (1280 x 720; scaled with the page).
+  - The new card's `value.showBlankAs` (default selector) replaces "--" with a text of ours; `subTitle`, `divider`,
+    constant lines, `lineStyles`, data bars and the donut's `slices` all draw as Microsoft's capabilities data names
+    them (`mcp/research/POWERBI-HIDDEN-CAPABILITIES.md`: research, nothing of it is used yet).
+  - `layout.wideTable` and `layout.kpiCards` are the MCP's own layout options: the website's designs never carry
+    them, and the website's `design-engine` suite compares its layouts with recorded fixtures.
+  - Run the full `npm test` with Desktop and the browser suites idle: beside them a request passed its 60 s limit.
+
 ## Writing prompts for another agent or session
 Start with the request itself ("Run this test now"). Name every file. List the steps. Add the rules: scope folder, don't
 change test files or expected numbers, stop and report on failure. Give the exact report format. Compare with expected

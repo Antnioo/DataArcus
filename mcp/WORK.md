@@ -87,6 +87,33 @@ quotes), not the date table. Fixed in the test model: 215.4%.
    by month was one dot) **and its growth measure quotes the table name.**
 6. **The ring note** no longer says a column carries the value when the table has none (`server.mjs`).
 
+#### Package 0.2.7 candidate (night of 6-7 Oct)
+**No release, nothing pushed or committed of it, no version bump, nothing installed in Claude Desktop.**
+- **The trial merge (local only, in a worktree of its own, branch `local/night-trial`, never pushed):** `fix/round-17`
+  at `46c225a` with `origin/feat/check-report-2` at `e597761`. **Two conflicts the reviewer will meet:**
+  1. `mcp/test.mjs`: both branches added their checks at the end of the file, just before `await client.close()`.
+     Keep both, round 17's first, then check_report's block (round 17 follow-up G-04).
+  2. `mcp/PRIVACY.md`, the tools table: keep round 17's `create_report` row ("the path of the new `.pbip` (relative
+     to the working folder)", G-02), drop the other branch's `create_report` row ("the full path"), and keep its new
+     `check_report` row. **Read that row again when merging:** round 17 made every answer's paths relative, so any
+     "full path" wording left in it would be wrong.
+  `mcp/README.md`, `mcp/WORK.md`, `mcp/server.mjs` merged by themselves; the server registers 8 tools (read_model,
+  suggest_fields, check_model_health, create_report, generate_theme, check_report, plan_layout, add_gulf_calendar).
+- **`npm test` on the trial tree (this Windows laptop):** **618 checks, 1 failing**, and the one is not the merge's: check_report's own offline check ("check_report must run with the network blocked and Playwright unloadable") starts a child process that imports `mcp/lib/check-report.mjs` by its Windows path, and Node refuses a `C:\...` path as a module (`ERR_UNSUPPORTED_ESM_URL_SCHEME`; it needs `pathToFileURL`, as round 19's item 8 did for three scripts). On Linux the path is a valid specifier, so CI is the record for that check; the fix belongs on `feat/check-report-2`. The other 617 pass, among them every report the test client creates validated by Microsoft's validator with 0 errors. The trial tree's golden baseline, run by itself: PASS, 11 tasks.
+- **The package**, built in the engine repo's `feat/check-report-package-2` (`352db47`) the way `packaging/build.mjs`
+  does, `--commit <the trial commit> --version 0.2.7 --dry` (so no committed release record; the two version files the
+  build writes were put back): `dataarcus-0.2.7.mcpb`, **8,968,692 bytes, SHA-256
+  `72461c479243b16bc628058a718caf3180e8410a95a8e71ffa125b143b0a590f`**, unsigned, 105 packages, staged files
+  3,481,784 bytes (engines 453,403). It is in the engine worktree's git-ignored `dist/` on the laptop only. The
+  SHA-256 is of this build: a build from the real merge commit will differ (the record holds the commit).
+- **From the unpacked file** (started as Claude Desktop starts it, working folder with the made-up Ramadan sample):
+  server 0.2.7, 8 tools, each called once, all `ok`: read_model (2 tables), suggest_fields, check_model_health (score
+  99, the Gulf section present), generate_theme, plan_layout (10 slots), create_report (2 pages), add_gulf_calendar
+  (4,748 rows, the script written), check_report on the report just made: **Microsoft's validator 0.4.0 ran offline
+  from inside the bundle: 0 errors, 0 warnings** (2 notes of our own rule TOOLTIP_SCROLL).
+- **Seen:** the bundle's `node_modules/@microsoft` also holds `powerbi-desktop-bridge-cli` (it comes with Microsoft's
+  authoring CLI); the server does not use it. Whether it should ship is a packaging question for the reviewer.
+- **Check 14 stays the owner's** (his checklist below; the tool count there is now 8, with check_report).
 #### Block G, research (nothing shipped): `mcp/research/POWERBI-HIDDEN-CAPABILITIES.md`
 24 capabilities with the exact property each, 13 opened in Desktop on a made-up report, saved by Desktop and read
 back. Top 5: the card's `value.showBlankAs` ("No data" instead of "--" on KPI cards, drawn in Desktop), a subtitle and
