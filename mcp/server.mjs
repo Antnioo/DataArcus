@@ -126,10 +126,11 @@ const themeColors = (t) => {
 // byte order mark): a name can then read as another one, or two names can look the same (audit AUD-017). The model
 // is never renamed; the tables, columns and measures named so are listed, with those characters written as code
 // points, so the AI app and the user can see them. Up to 20 names.
-const visible = (s) => String(s).replace(/\p{Cf}/gu, (ch) => '\\u' + ch.codePointAt(0).toString(16).padStart(4, '0'));
+// (AUD-032, round 20: control characters too, \p{Cc}: a tab or a line break in a name breaks a script line)
+const visible = (s) => String(s).replace(/[\p{Cf}\p{Cc}]/gu, (ch) => '\\u' + ch.codePointAt(0).toString(16).padStart(4, '0'));
 function hiddenOf(m) { return Object.assign(hiddenOnly(m), suspiciousOf(m)); }
 function hiddenOnly(m) {
-  const names = [], has = (s) => /\p{Cf}/u.test(String(s));
+  const names = [], has = (s) => /[\p{Cf}\p{Cc}]/u.test(String(s));
   (m.tables || []).forEach((t) => {
     if (has(t.name)) names.push(visible(t.name));
     (t.columns || []).concat(t.measures || []).forEach((x) => { if (has(x.name) || has(t.name)) names.push(`${visible(t.name)}[${visible(x.name)}]`); });
@@ -413,7 +414,14 @@ server.registerTool('check_model_health', {
   const r = Health.analyze(m.tmsl, m.report);
   // ready fixes for three findings, as TMDL scripts the user applies in Power BI Desktop (TMDL view); nothing is ever
   // applied by this tool. What a script can't do safely is listed as steps by hand, never guessed.
-  const raw = ((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).tables || [], itemsOf = (id) => ((r.findings.find((f) => f.id === id) || {}).items || []).concat((((r.skipped || []).find((s) => s.id === id)) || {}).items || []);
+  // AUD-032 (round 20): a name with a control character (a tab, a line break) is never written raw into a fix script:
+  // such tables, columns and measures are left out of what the scripts are built from (the scripts touch only the
+  // objects they name, under "ref table"), and the answer names them, escaped
+  const raw0 = ((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).tables || [], cc = (x) => /\p{Cc}/u.test(String(x)), scriptSkip = [];
+  const raw = raw0.filter((t) => { if (cc(t.name)) { scriptSkip.push(visible(t.name)); return false; } return true; }).map((t) => {
+    const keep = (x) => { if (!cc(x.name)) return true; scriptSkip.push(`${visible(t.name)}[${visible(x.name)}]`); return false; };
+    return Object.assign({}, t, { columns: (t.columns || []).filter(keep), measures: (t.measures || []).filter(keep) }); });
+  const itemsOf = (id) => ((r.findings.find((f) => f.id === id) || {}).items || []).concat((((r.skipped || []).find((s) => s.id === id)) || {}).items || []);
   const howToApply = 'Tell the user: save a copy of the Power BI file first; open the script file in Notepad, select all and copy; in Power BI Desktop open TMDL view, paste, choose Preview to see the changes, then Apply. The script is a suggestion: it is never applied by this tool. It holds the model\'s own definitions (expressions, descriptions) of the objects it changes, which is why it is in a file and not in this answer: don\'t read the file into the conversation unless the user asks.';
   // measured in Power BI Desktop 2.158: after a script that adds a column, every visual shows an error until the
   // yellow bar's "Refresh now" is pressed
@@ -460,6 +468,7 @@ server.registerTool('check_model_health', {
   return text({
     source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report,
     fixes: Object.keys(fixes).length ? fixes : undefined,
+    ...(scriptSkip.length ? { scriptsSkip: { names: scriptSkip.slice(0, 20), note: 'These names hold a control character (a tab or a line break, shown as a code point): no fix script names them, as it would break the script. Tell the user; renaming them in Power BI Desktop lets the scripts include them.' } } : {}),
     gulfCalendar,
     ...hiddenOf(m),
     // what was done with columnTypes: types used, types the files already had (kept), names and types that could not be used

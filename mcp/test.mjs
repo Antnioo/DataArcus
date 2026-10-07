@@ -3978,6 +3978,26 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const untyped = parts.filter((x) => !/Source = #table\(type table \[/.test(x.t)).map((x) => x.f);
   checks++; if (!(parts.length === 5 && !untyped.length)) problems.push(`the golden test models' made-up rows must be typed tables (#table(type table [...], rows)): ${parts.length} partitions with rows, untyped: ${untyped.join(', ')}`);
 }
+// ---------- round 20 (7 Oct, the owner's "all recommended"): the audit's AUD-032 and the repeated titles ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }], col = (name, dataType) => ({ name, dataType, sourceColumn: name });
+  // 1. AUD-032: a name with control characters (a tab, a line break: \p{Cc}) is listed under hiddenCharacters as code
+  //    points, like \p{Cf}; check_model_health never writes such a name raw into a fix script: the object is left out
+  //    of the script and named (escaped) in the answer. A made-up model in the shape of the audit's evidence.
+  {
+    const dir = 'r20-cc'; fs.mkdirSync(path.join(ROOT, dir, 'M.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, dir, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'),
+      columns: [col('Amount', 'double'), col('Note\nLine', 'string')], measures: [{ name: 'Total\tSales', expression: 'SUM ( Sales[Amount] )' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )' }] }] } }));
+    const rm = await ask('read_model', { path: dir }), h = await ask('check_model_health', { path: dir });
+    const hid = rm.err ? '' : JSON.stringify(rm.j.hiddenCharacters || null), nf = h.err ? {} : ((h.j.fixes || {}).NO_FORMAT || {});
+    const sc = nf.fixScriptFile ? fs.readFileSync(path.join(ROOT, nf.fixScriptFile), 'utf8') : '';
+    chk(() => hid.includes('Total\\\\u0009Sales') && hid.includes('Note\\\\u000aLine'), () => `read_model must list the names with a tab or a line break as code points: ${hid.slice(0, 300)} ${rm.err ? rm.t.slice(0, 200) : ''}`);
+    chk(() => /measure Orders\b/.test(sc) && !/Total\tSales|Total.Sales/.test(sc) && /Sales\[Total\\\\u0009Sales\]/.test(JSON.stringify(h.j.scriptsSkip || null)),
+      () => `the fix script must leave out the measure with a tab in its name and the answer must name it escaped: script ${JSON.stringify(sc.slice(0, 300))} skip ${JSON.stringify(h.err ? h.t.slice(0, 200) : h.j.scriptsSkip || null)}`);
+  }
+}
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);
