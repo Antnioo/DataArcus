@@ -480,10 +480,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Round 22 (the code review's i): the years a search names (2015 to 2035) are set aside, then 7 or more digits are
   // redacted: "2024 2025 top 10" is kept, "2012 1995" (as likely a phone number) is not.
   // Round 22b (the review of round 22, item 1: "050 2024 2025" and "+971 50 2030 2015" got through, their groups read as
-  // years): a run of numbers joined by spaces, dashes, dots, slashes or brackets is read whole. It counts all its digits
-  // unless it is years only ("2024 2025") or one number of at most 3 digits beside one year ("dp-600 2025"); one that
-  // starts with + or 0 always counts them all ("050 2025"). 7 or more counted digits in a run are redacted.
-  const safeTerm = (q) => { const Y = /^20(1[5-9]|2\d|3[0-5])$/, n = (s) => (s.match(/\d/g) || []).length; if (q.includes('@') || n(q.replace(/(?<!\d)20(1[5-9]|2\d|3[0-5])(?!\d)/g, '')) >= 7) return '(redacted)'; const phone = (q.match(/\+?\d+(?:[\s\-.()/]+\d+)*/g) || []).some((run) => { const g = run.match(/\d+/g), other = g.filter((x) => !Y.test(x)), years = g.length - other.length, all = n(run); const counted = /^(\+|0)/.test(run) ? all : !other.length ? 0 : other.length === 1 && other[0].length <= 3 && years === 1 ? other[0].length : all; return counted >= 7; }); return phone ? '(redacted)' : q.slice(0, 50); };
+  // years; the second review, items 1, 6, 7: no regex lookbehind, which Safari before 16.4 cannot parse and so drops the
+  // whole file; commas, underscores or one letter between numbers join them too; order does not matter). The numbers of
+  // a term are read in runs: numbers joined by anything but a word of two or more letters ("050,2024,2025", "050x2024").
+  // A run counts the digits of its numbers that are not years (2015 to 2035), or all its digits when those are 4 or more
+  // ("5520 2025") or the run starts with + or 0 ("050 2025"). 7 or more counted digits in a run, or in the whole term,
+  // are redacted. So "2024 2025 top 10", "dp-600 2025" and "fy2024 vs fy2025" are kept.
+  const safeTerm = (q) => { if (q.includes('@')) return '(redacted)'; const Y = /^20(1[5-9]|2\d|3[0-5])$/, p = q.split(/(\d+)/), runs = []; let run = null, sum = 0; for (let i = 1; i < p.length; i += 2) { if (!run || (p[i - 1].match(/\p{L}/gu) || []).length > 1) runs.push(run = { pre: /\+\s*$/.test(p[i - 1]), g: [] }); run.g.push(p[i]); } for (const r of runs) { const all = r.g.join('').length, other = r.g.filter((x) => !Y.test(x)).join('').length, c = r.pre || r.g[0][0] === '0' || other >= 4 ? all : other; if (c >= 7) return '(redacted)'; sum += c; } return sum >= 7 ? '(redacted)' : q.slice(0, 50); };
 
   const once = new Set();
   const trackOnce = (key, name, params) => { if (once.has(key)) return; once.add(key); track(name, params); };
