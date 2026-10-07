@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "Capabilities Gallery"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "abed2d48-b03b-4b40-93e1-50267ba1873c"
+  }
+}

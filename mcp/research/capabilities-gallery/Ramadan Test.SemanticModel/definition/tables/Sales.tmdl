@@ -1,0 +1,70 @@
+table Sales
+	lineageTag: 2eb8080b-07fa-401f-a9b9-ddd215b305b0
+
+	measure 'Total Sales' = SUM ( 'Sales'[Amount] )
+		lineageTag: 0aa933ad-6109-4537-b654-1a3f59623c59
+
+	measure 'Total Sales Last Ramadan' =
+			VAR _RamadanDays =
+			    FILTER (
+			        SUMMARIZE ( 'Calendar', 'Calendar'[Hijri Year], 'Calendar'[Ramadan Day] ),
+			        NOT ISBLANK ( 'Calendar'[Ramadan Day] )
+			    )
+			VAR _SameDaysLastYear =
+			    SELECTCOLUMNS (
+			        _RamadanDays,
+			        "Hijri Year", 'Calendar'[Hijri Year] - 1,
+			        "Ramadan Day", 'Calendar'[Ramadan Day]
+			    )
+			RETURN
+			    CALCULATE (
+			        [Total Sales],
+			        REMOVEFILTERS ( 'Calendar' ),
+			        TREATAS ( _SameDaysLastYear, 'Calendar'[Hijri Year], 'Calendar'[Ramadan Day] )
+			    )
+		lineageTag: 89bfdd16-6990-4494-b80a-b124e0bfcc86
+
+	measure 'Total Sales vs Last Ramadan %' =
+			VAR _ThisRamadan = CALCULATE ( [Total Sales], KEEPFILTERS ( 'Calendar'[Is Ramadan] = TRUE () ) )
+			VAR _LastRamadan = [Total Sales Last Ramadan]
+			RETURN
+			    DIVIDE ( _ThisRamadan - _LastRamadan, _LastRamadan )
+		lineageTag: 299cefc9-10aa-4c9a-8c8d-e482105bac14
+
+	measure 'Total Sales Last Ramadan (old)' =
+			VAR _HijriYear = MAX ( 'Calendar'[Hijri Year] )
+			VAR _Days = VALUES ( 'Calendar'[Ramadan Day] )
+			RETURN
+			    CALCULATE (
+			        [Total Sales],
+			        REMOVEFILTERS ( 'Calendar' ),
+			        'Calendar'[Is Ramadan] = TRUE (),
+			        'Calendar'[Hijri Year] = _HijriYear - 1,
+			        TREATAS ( _Days, 'Calendar'[Ramadan Day] )
+			    )
+		lineageTag: 9279d3a8-2fe3-4a1f-85d0-2090056f4eb0
+
+	measure 'Total Sales vs Last Ramadan % (old)' = DIVIDE ( [Total Sales] - [Total Sales Last Ramadan (old)], [Total Sales Last Ramadan (old)] )
+		lineageTag: 30ca315d-2a26-4108-bc28-307d3eea4b7e
+
+	column Date
+		lineageTag: d2c3686c-0d9f-41d1-b1ac-ed08aa9fdbba
+		isNameInferred
+		sourceColumn: [Date]
+
+	column Amount
+		lineageTag: 8006b930-6057-404f-9873-4619ec548f09
+		isNameInferred
+		sourceColumn: [Amount]
+
+	partition Sales = calculated
+		mode: import
+		source =
+				-- Test data with known answers: 1 per normal day; on Ramadan day d of Hijri year h the amount is (h - 1440) * 100 + d
+				-- e.g. Ramadan 1446 day 5 (5 Mar 2025) = 605, Ramadan 1445 day 5 (15 Mar 2024) = 505
+				SELECTCOLUMNS (
+				    'Calendar',
+				    "Date", 'Calendar'[Date],
+				    "Amount", IF ( 'Calendar'[Is Ramadan], ( 'Calendar'[Hijri Year] - 1440 ) * 100 + 'Calendar'[Ramadan Day], 1 )
+				)
+
