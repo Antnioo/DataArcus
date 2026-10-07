@@ -96,6 +96,8 @@ function scriptTables(m) {
     return Object.assign({}, t, { columns: (t.columns || []).filter(keep), measures: (t.measures || []).filter(keep) }); });
   return { raw0, raw, skipped };
 }
+// (round 22) the model's relationships for the field picker, which puts a category the measure's table is related to first
+const relsOf = (m) => ({ relationships: ((((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).relationships) || []).filter((r) => r && r.fromTable && r.toTable && r.isActive !== false).map((r) => ({ fromTable: r.fromTable, toTable: r.toTable })) });
 function formatsAnswer(m, p, keys, maxItems) {
   const raw = scriptTables(m).raw, s = Fix.formatReview(raw);
   const all = s.items.concat(s.byHand), mine = keys ? all.filter((i) => keys.has(i.object)) : all;
@@ -391,7 +393,7 @@ server.registerTool('suggest_fields', {
   const m = loadModel(p), sc = scopeOf(m, { focus, tables });
   // a large model without a focus, or a focus that matches nothing: no picks, and what to ask the user
   if (sc.needsFocus) return text(sc);
-  const b = Bind.suggest(sc.tables, kpis); delete b.choices; delete b.catPool;
+  const b = Bind.suggest(sc.tables, kpis, relsOf(m)); delete b.choices; delete b.catPool;
   // measures left behind (old, test, unused, backup, temp in the name) are picked only when nothing else is left: said here
   if (b.skipped) b.skipped = { measures: b.skipped.map((x) => `${x.t}[${x.m}]`), why: 'Not picked: the name has the word old, test, unused, backup or temp, and other measures were there. Ask the user before using one; to use it anyway, name it in create_report\'s fields.' };
   // no measures at all: said, with what to propose (a card or a chart shows a measure, never a bare column)
@@ -676,7 +678,7 @@ server.registerTool('create_report', {
     const cats = b.cats ? Object.fromEntries(Object.entries(b.cats).map(([k, f]) => [k, short(f)])) : b.cats;
     return Object.assign({}, b, { kpis: (b.kpis || []).map(one), table: (b.table || []).map(cell) }, b.tip ? { tip } : {}, b.cats ? { cats } : {}, b.catPool ? { catPool: b.catPool.map(short) } : {});
   };
-  const usable = F && F.kpis ? F.kpis.map((k) => k.m) : Bind.suggest(pickFrom, 8).kpis.filter(Boolean).map((k) => k.m);
+  const usable = F && F.kpis ? F.kpis.map((k) => k.m) : Bind.suggest(pickFrom, 8, relsOf(m)).kpis.filter(Boolean).map((k) => k.m);
   // Round 12 (#25): a model without measures gets its numbers from its columns, counted or summed by the visuals
   // (Bind.counts), so the report has cards, charts and a table instead of a page four fifths empty
   const COUNTS = usable.length ? [] : Bind.counts(pickFrom, a.lang === 'ar' ? { count: (c) => 'عدد ' + c, sum: (c) => 'مجموع ' + c } : null);
@@ -684,13 +686,13 @@ server.registerTool('create_report', {
   // (round 16, design finding #14: "Count of Region" made a weak KPI): the cards take counts of ID-like columns and sums
   // only; a count of a category column still feeds a chart or the table, never a card: fewer cards, and told
   const KPI_COUNTS = COUNTS.filter((c) => !c.category), nCards = usable.length || KPI_COUNTS.length;
-  const countBind = (n) => { const b = Bind.suggest(pickFrom, n), C = COUNTS, K = KPI_COUNTS, cat = b.cats.bar || b.cats.column;
+  const countBind = (n) => { const b = Bind.suggest(pickFrom, n, relsOf(m)), C = COUNTS, K = KPI_COUNTS, cat = b.cats.bar || b.cats.column;
     return Object.assign({}, b, { kpis: Array.from({ length: n }, (_, i) => K[i] || null), measure: C[0], y: { funnel: C[1] || C[0], gauge: C[0] },
       table: [b.cats.column || cat, C[0], C[1]].filter((x, i, l) => x && l.indexOf(x) === i), tip: { card: C[0], cat, y: C[1] || C[0], date: b.tip.date } }); };
   // the binding for n KPI cards: the picker's, with every given field in its place
   const bindFor = (n) => {
     if (COUNTS.length) return countBind(n);
-    const b = Bind.suggest(pickFrom, n);
+    const b = Bind.suggest(pickFrom, n, relsOf(m));
     if (!F && !PF) return b;
     const ch = Object.assign({}, b.choices);
     // Round 12 (#22; seen in Desktop 2.158, golden task 3: Hijri Year and Is Ramadan slicers showed "All" while the page
@@ -1085,7 +1087,7 @@ server.registerTool('plan_layout', {
   if (a.path) {
     const m = loadModel(a.path), sc = scopeOf(m, { focus: a.focus, tables: a.tables });
     const keys = a.fields ? new Set(a.fields.map((x) => { const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(x); }))
-      : sc.needsFocus ? null : (() => { const b = Bind.suggest(sc.tables, Math.max(1, a.kpis == null ? 4 : a.kpis)); return new Set([b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean).map((f) => `${f.t}[${f.c != null ? f.c : f.m}]`)); })();
+      : sc.needsFocus ? null : (() => { const b = Bind.suggest(sc.tables, Math.max(1, a.kpis == null ? 4 : a.kpis), relsOf(m)); return new Set([b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean).map((f) => `${f.t}[${f.c != null ? f.c : f.m}]`)); })();
     const fmt = keys && formatsAnswer(m, a.path, keys);
     // round 14 (the owner's ask, 6 Oct): an Arabic plan proposes an Arabic display name for every field it will show
     // that has none (a fixed glossary of report words, never a free translation), for the user to approve first

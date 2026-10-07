@@ -1049,6 +1049,13 @@
             const T0 = +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
             let tf = tableFit(B.table, s.w, T0, font);
             if (tf.leftOut.length) { for (let t2 = Math.ceil(T0) - 1; t2 >= 8; t2--) { const f2 = tableFit(B.table, s.w, t2, font); if (f2.kept.length > tf.kept.length) { tf = f2; tableText = t2; } if (!f2.leftOut.length) break; } }
+            // Round 22 (golden task 6 in English, in Desktop since the night of 6-7 Oct: two long names at the theme's 15pt
+            // were wider than the table, a horizontal scrollbar): the fields a table keeps must fit its box too. The text
+            // was only made smaller to keep more fields; the two that are always kept were never measured. It now goes
+            // down, to 8pt at most, until the kept fields fit (told like every smaller table text)
+            { const need = (t2) => tf.kept.reduce((a2, f) => a2 + columnRoom(tproj(f), t2, font), 0); let t3 = tableText || T0;
+              while (t3 > 8 && need(t3) > s.w) t3 = Math.ceil(t3) - 1;
+              if (t3 < (tableText || T0)) tableText = t3; }
             if (tableText) tableSmaller.push(smallEntry = { page: pg.name || base, size: tableText, from: T0 });
             if (tf.leftOut.length) { Bt = Object.assign({}, B, { table: tf.kept }); tableColumns.push({ page: pg.name || base, pageIndex, x: s.x, y: s.y, kept: tf.kept, leftOut: tf.leftOut }); }
           }

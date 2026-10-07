@@ -84,6 +84,41 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     chk(() => gapOf(en).startsWith(G) && !gapOf(en).endsWith(' '), () => `English: the Reset text starts with the gap: ${JSON.stringify(gapOf(en))} ${en.err ? en.t.slice(0, 200) : ''}`);
     chk(() => gapOf(ar).endsWith(G) && !gapOf(ar).startsWith(' '), () => `Arabic: the gap follows the Reset text (the arrow is at its right): ${JSON.stringify(gapOf(ar))} ${ar.err ? ar.t.slice(0, 200) : ''}`);
   }
+  // A table's two fields that are always kept (its name column and its first measure) must fit its box too (golden
+  //    task 6 in English, in Desktop since the night of 6-7 Oct: two long names at the theme's 15pt were wider than the
+  //    table, a horizontal scrollbar; the text was only made smaller to keep MORE fields, never for the two): the
+  //    table's text goes down, to 8pt at most, until they fit, and the notes say so
+  {
+    const long1 = 'Sales channel used to complete the whole transaction', long2 = 'Total net sales after every discount and every return';
+    model('r22-long', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col(long1, 'string')], measures: [{ name: long2, expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }]);
+    const mk = (w) => ask('create_report', { path: 'r22-long', name: 'R22 long table ' + w, fields: { kpis: [`Sales[${long2}]`], measure: `Sales[${long2}]`, category: `Sales[${long1}]`, table: [`Sales[${long1}]`, `Sales[${long2}]`] },
+      pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'table', x: 36, y: 100, w, h: 300 }] }] });
+    const sizeOf = (x) => { const t = vis(x, 'r22-long').find((v) => v.visual.visualType === 'tableEx'), e = t && ((t.visual.objects || {}).values || [])[0]; return e && e.properties.fontSize ? parseFloat(e.properties.fontSize.expr.Literal.Value) : null; };
+    const narrow = await mk(600), wide = await mk(1200);
+    chk(() => !narrow.err && sizeOf(narrow) != null && sizeOf(narrow) < 10 && sizeOf(narrow) >= 8 && /table text is/.test(notes(narrow)), () => `a 600-wide table of two long names takes a smaller text, told: size ${sizeOf(narrow)} ${notes(narrow).slice(0, 300)}`);
+    chk(() => !wide.err && sizeOf(wide) == null && !/table text is/.test(notes(wide)), () => `a 1200-wide table of the same two names keeps the theme's text: size ${sizeOf(wide)}`);
+  }
+  // A chart's category comes from a table the measure's table is related to (golden task 10 in Desktop, 7 Oct: the
+  //    same total for every Carrier Group and Route Group, as the picker took lookups that only another fact table is
+  //    related to). The picker now reads the model's relationships: a text column of the measure's own table or of a
+  //    lookup reached from it comes before any other; a model without relationships is picked from as before
+  {
+    const rel = (ft, fc, tt, tc) => ({ name: `${ft}-${tt}`, fromTable: ft, fromColumn: fc, toTable: tt, toColumn: tc });
+    const tables = [
+      { name: 'Shipments', partitions: mp('Shipments'), columns: [col('Amount', 'double'), col('Hub Key', 'int64')], measures: [{ name: 'Total Amount', expression: 'SUM ( Shipments[Amount] )', formatString: '#,0' }] },
+      { name: 'Deliveries', partitions: mp('Deliveries'), columns: [col('Qty', 'int64'), col('Carrier Key', 'int64')] },
+      { name: 'Carrier', partitions: mp('Carrier'), columns: [col('Carrier Key', 'int64'), col('Carrier Category', 'string'), col('Carrier Group', 'string')] },
+      { name: 'Hub', partitions: mp('Hub'), columns: [col('Hub Key', 'int64'), col('Hub Zone', 'string')] }];
+    fs.mkdirSync(path.join(ROOT, 'r22-rel', 'M.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, 'r22-rel', 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables, relationships: [rel('Shipments', 'Hub Key', 'Hub', 'Hub Key'), rel('Deliveries', 'Carrier Key', 'Carrier', 'Carrier Key')] } }));
+    model('r22-norel', tables);
+    const a = await ask('suggest_fields', { path: 'r22-rel' }), b = await ask('suggest_fields', { path: 'r22-norel' }), c = await ask('create_report', { path: 'r22-rel', name: 'R22 related', fields: { kpis: ['Shipments[Total Amount]'] },
+      pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w: 500, h: 300 }] }] });
+    const barOf = (x) => (x.err ? x.t.slice(0, 200) : `${x.j.cats.bar.t}[${x.j.cats.bar.c}]`), bound = c.err ? c.t.slice(0, 200) : JSON.stringify(c.j.boundFields[0].visuals.find((v) => v.visual === 'Bar chart'));
+    chk(() => barOf(a) === 'Hub[Hub Zone]', () => `suggest_fields: the bar chart's category is the related lookup's, Hub[Hub Zone]: ${barOf(a)}`);
+    chk(() => /Hub\[Hub Zone\]/.test(bound) && !/Carrier/.test(bound), () => `create_report: the bar chart is by the related lookup: ${bound}`);
+    chk(() => /^Carrier\[/.test(barOf(b)), () => `without relationships the pick is as before (the first category by name): ${barOf(b)}`);
+  }
   // b. (measured in Desktop 2.158.1304, 7 Oct: with a subtitle a planned KPI card's value is pushed down and cut in
   //    half) a subtitle is never written on a KPI card; the answer says which key was not used
   {

@@ -212,7 +212,7 @@
     });
     return { measures, columns };
   }
-  function suggest(tables, nKpis) {
+  function suggest(tables, nKpis, opt) {
     const { measures, columns } = catalog(tables);
     const score = (x) => (MAIN.test(x.m) ? 3 : 0) + (COUNTISH.test(x.m) ? 2 : 0) - (x.variant ? 4 : 0) - (x.pct ? 1 : 0);
     // (measures left behind, see STALE, come after every other one)
@@ -241,6 +241,13 @@
     const textLike = (c) => c.type === 'string' || (c.type === 'unknown' && !NUMBERISH.test(c.c) && !DATEISH.test(c.c));
     let cats = columns.filter((c) => !c.dateTable && textLike(c) && !NOT_CAT.test(c.c) && c !== date)
       .sort((a, b) => (CAT.test(b.c) ? 1 : 0) - (CAT.test(a.c) ? 1 : 0));
+    // Round 22 (golden task 10 in Desktop 2.158.1304, 7 Oct 2026: the same total for every Carrier Group, the lookup's
+    // table was related to another fact table only): with the model's relationships (opt.relationships, each
+    // { fromTable, toTable }; the MCP gives them, the website's picker has none and is unchanged) a category of the
+    // main measure's own table, or of a table reached from it along the relationships, comes before every other
+    { const rels = (opt && opt.relationships) || [];
+      if (rels.length && main) { const reach = new Set([main.t]); for (let grew = true; grew;) { grew = false; rels.forEach((r) => { if (reach.has(r.fromTable) && !reach.has(r.toTable)) { reach.add(r.toTable); grew = true; } }); }
+        if (cats.some((c) => reach.has(c.t))) cats = cats.filter((c) => reach.has(c.t)).concat(cats.filter((c) => !reach.has(c.t))); } }
     // no category outside the date table: the date table's named parts (quarter, day, month names), never the time axis
     if (!cats.length) cats = DATE_PARTS.map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date)).filter(Boolean);
     const catA = cats[0] || null, catB = cats.find((c) => c !== catA && c.t !== (catA && catA.t)) || cats[1] || catA;
