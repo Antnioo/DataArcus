@@ -134,6 +134,35 @@ for (const dir of fs.readdirSync(path.join(ROOT, 'go'))) {
 }
 ok(links >= 10, `only ${links} short links found: the scan is broken`);
 
+// One rule for every post's links, so nothing drifts (owner 2026-10-07): a post gets one campaign "<name>-YYYY-MM-DD"
+// and a pair of links, go/<name> (utm_content=personal, his profile) and go/<name>-page (utm_content=page, the
+// DataArcus page's own post), both to the same address and campaign. Two posts may point at the same page: each keeps
+// its own campaign, so GA4 tells the posts apart. LEGACY: links made before the rule (the September design-tools launch
+// and the 6 Oct SVG video); they stay as they are, so their numbers stay comparable.
+const LEGACY = ['ad-li', 'dev', 'fabric', 'fb', 'hashnode', 'ih', 'kpi', 'kpi-ar', 'li', 'li-ar', 'medium', 'ph', 'reddit', 'svg', 'svg-ar', 'theme', 'tools', 'tools-page', 'x'];
+const tags = {};
+for (const dir of fs.readdirSync(path.join(ROOT, 'go'))) {
+  const f = path.join(ROOT, 'go', dir, 'index.html');
+  if (!fs.existsSync(f)) continue;
+  const m = fs.readFileSync(f, 'utf8').replace(/&amp;/g, '&').match(/https:\/\/dataarcus\.com\/[^'"\s]*utm_[^'"\s]*/);
+  if (m) { const u = new URL(m[0]); const q = u.searchParams; tags[dir] = { to: u.pathname + (q.get('lang') ? '?lang=' + q.get('lang') : ''), campaign: q.get('utm_campaign'), content: q.get('utm_content') }; }
+}
+for (const [name, t] of Object.entries(tags)) {
+  if (LEGACY.includes(name)) continue;
+  const where = `go/${name}`;
+  ok(/^[a-z0-9-]+-\d{4}-\d{2}-\d{2}$/.test(t.campaign || ''), `${where}: utm_campaign=${t.campaign} must be <name>-YYYY-MM-DD (one campaign per post)`);
+  if (name.endsWith('-page')) {
+    ok(t.content === 'page', `${where}: a -page link must carry utm_content=page`);
+    ok(tags[name.slice(0, -5)], `${where}: no go/${name.slice(0, -5)} for the personal profile`);
+  } else {
+    ok(t.content === 'personal', `${where}: utm_content=${t.content} must be personal (the page's twin is go/${name}-page)`);
+    const twin = tags[name + '-page'];
+    ok(twin, `${where}: no go/${name}-page for the DataArcus page`);
+    if (twin) ok(twin.to === t.to && twin.campaign === t.campaign, `${where} and go/${name}-page must share address and campaign`);
+  }
+}
+
+
 ok(calls > 50, `only ${calls} tracking calls found: the scan is broken`);
 
 if (fails.length) { console.error(`Analytics events: ${fails.length} problem(s)\n  ` + fails.join('\n  ')); process.exit(1); }
