@@ -88,7 +88,7 @@ function reportFormatOf(o, kind, tables) {
 // AUD-032 (round 20) and the code review's a (round 22): a name with a control character (a tab, a line break) is
 // never written raw into a fix script. Every script is built from the model without such tables, columns and
 // measures (the scripts touch only the objects they name, under "ref table"); skipped names them, escaped
-const hasControl = (x) => /\p{Cc}/u.test(String(x));
+const hasControl = Pbip.hasControl;   // (the writer's, one test for both: round 22b, X-05)
 function scriptTables(m) {
   const raw0 = ((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).tables || [], skipped = [];
   const raw = raw0.filter((t) => { if (hasControl(t.name)) { skipped.push(visible(t.name)); return false; } return true; }).map((t) => {
@@ -693,6 +693,9 @@ server.registerTool('create_report', {
   const bindFor = (n) => {
     if (COUNTS.length) return countBind(n);
     const b = Bind.suggest(pickFrom, n, relsOf(m));
+    // (round 22b, X-04) the picker's "no category is related to the measure" stays with a binding built again from the
+    // user's fields, while it still has no category
+    const carry = (nb) => (b.noRelatedCategory && !Object.values(nb.cats || {}).some(Boolean) ? Object.assign(nb, { noRelatedCategory: b.noRelatedCategory }) : nb);
     if (!F && !PF) return b;
     const ch = Object.assign({}, b.choices);
     // Round 12 (#22; seen in Desktop 2.158, golden task 3: Hijri Year and Is Ramadan slicers showed "All" while the page
@@ -710,7 +713,7 @@ server.registerTool('create_report', {
       const tb = flag && pickFrom.concat(m.tables).find((t) => t.name === flag.t), rd = tb && tb.columns.find((c) => /^ramadan\s*day$/i.test(c.name));
       if (rd && !(F && F.timeAxis)) { ch.date = { t: tb.name, c: rd.name, type: String(rd.dataType || 'int64').toLowerCase() }; byRamadanDay.push(`${tb.name}[${rd.name}]`); }
     }
-    if (!F) { const nb = Bind.build(ch); return nb; }
+    if (!F) { const nb = Bind.build(ch); return carry(nb); }
     if (F.kpis) ch.kpis = F.kpis;
     if (F.measure) ch.main = F.measure;
     if (F.timeAxis) ch.date = F.timeAxis;
@@ -722,7 +725,7 @@ server.registerTool('create_report', {
     // (round 16: categories the approved plan names are kept as given: no other category is put on its charts)
     if (F.category || F.category2) delete nb.catPool;
     if (F.table) nb.table = F.table.map((x) => (x.m != null ? Object.assign({ t: x.t, m: x.m }, x.pctFormat ? { pctFormat: x.pctFormat } : {}) :Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {})));
-    return nb;
+    return carry(nb);
   };
   const cardNote = (asked, built, leftOut) => (COUNTS.length ? Object.assign({ asked, built, counted: KPI_COUNTS.slice(0, built).map((f) => f.name),
     why: `The model has no measures, so the KPI cards, the charts and the table show counts and sums of its columns, made by the visuals themselves (${COUNTS.slice(0, 4).map((f) => f.name).join(', ')}); the model is not changed.${built < asked && COUNTS.some((c) => c.category) ? ` Fewer cards than asked: a count of a category column (${COUNTS.filter((c) => c.category).slice(0, 3).map((f) => f.name).join(', ')}) is not a KPI, so it is shown in a chart or the table, never on a card.` : ''} For real KPIs, propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again.` }, leftOut ? { leftOut } : {})
@@ -945,6 +948,8 @@ server.registerTool('create_report', {
   if (byRamadanDay.length) reportNotes.push(`The line chart runs by ${byRamadanDay[0]} (the days of Ramadan), not by month: the page filter keeps Ramadan, and one Ramadan by month is a line of two or three points.`);
   // tables given a smaller text so more of their fields fit (round 12, recommendation 5)
   if ((r.tableSmaller || []).length) reportNotes.push(`The table text is ${[...new Set(r.tableSmaller.map((x) => x.size + 'pt'))].join(' or ')} (the theme's is ${r.tableSmaller[0].from}pt) on ${r.tableSmaller.map((x) => `"${x.page}"`).join(', ')}, so more of its fields fit its width${r.tableSmaller.some((x) => x.rows) ? ' and its rows and total fit its height' : ''}; a field is left out only where even 8pt doesn't hold it.`);
+  // (round 22b, the outside review's X-05) a measure whose name holds a control character gets no "No data" card
+  if ((r.noDataSkipped || []).length) reportNotes.push(`No data message for ${r.noDataSkipped.map((x) => `${visible(x.t)}[${visible(x.m)}]`).join(', ')}: not written, the name holds a control character (a tab or a line break) that no DAX may name. Rename it in Power BI Desktop (remove the hidden character) and create the report again for the message.`);
   // (round 22b, the review of round 22, item 8) a table whose name column and first measure need more than its width even at 8pt
   if ((r.tableWide || []).length) reportNotes.push(`${r.tableWide.map((x) => `The table on "${x.page}" needs about ${x.need} for its name column and first measure, wider than the table (${Math.round(x.width)}) even at 8pt`).join('; ')}: it scrolls sideways in Power BI. Make the table wider, or give those two fields shorter display names (displayNames, from the user).`);
   // a header that grew one row so the page names fit as tabs (round 12)
@@ -956,6 +961,8 @@ server.registerTool('create_report', {
   // visuals left out because the model has no field for them (never written empty)
   const WHY = { funnel: 'a funnel shows an amount, and the model has no measure that is not a ratio or a percent', slicer: 'the model has no more text columns a slicer can use', line: 'the model has no month or date column for its axis', table: 'no field was found for it', matrix: 'it needs a text column and a measure', gauge: 'the model has no measure for it', card: 'the model has no measure for it' };
   const KIND = { slicer: 'Slicer', line: 'Line chart', bar: 'Bar chart', column: 'Column chart', donut: 'Donut chart', funnel: 'Funnel', treemap: 'Treemap', map: 'Map', table: 'Table', matrix: 'Matrix', gauge: 'Gauge', card: 'Card' };
+  // (round 22b, the outside review's X-04) no category is related to the main measure: the charts that need one are left out
+  if (bind && bind.noRelatedCategory) { const n = bind.noRelatedCategory; reportNotes.push(`No category is related to ${visible(n.measure.t)}[${visible(n.measure.m)}]: the text columns of ${n.tables.map((t) => visible(t)).join(', ')} are in tables the measure's table does not reach through a relationship, so a chart by them would show the same total on every bar. The charts that need a category are left out. Add a relationship from ${visible(n.measure.t)} to one of those tables, or pick a category of a related table in "fields".`); }
   const leftOutList = (r.leftOut || []).map((x) => ({ visual: x.kind === 'slicer' ? (x.title || 'Slicer') : `${KIND[x.kind] || x.kind}${x.title ? ` "${x.title}"` : ''}`, page: x.page, why: WHY[x.kind] || 'the model has no text column (a category) or no measure for it' }));
   if (leftOutList.length) reportNotes.push(`${leftOutList.length} visual${leftOutList.length === 1 ? ' was' : 's were'} left out, because a visual is never written without its field: ${leftOutList.map((x) => `${x.visual} on "${x.page}" (${x.why})`).join('; ')}.`);
   // tables that hold fewer fields than given, for lack of room (round 11): named, and boundFields lists what each shows

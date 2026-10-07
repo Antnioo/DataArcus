@@ -178,6 +178,9 @@
   // its widest value, + 10 (a cell's padding is not measured yet: the measured button rule, 5 a side, stands in). A
   // measure's widest value is taken as nine digits with separators ("888,888,888", 0.54 em a digit and 0.21 a
   // separator, measured in round 10); a column's values are not known to the writer, so 12 letters at 0.55 em.
+  // a name holding a control character (\p{Cc}: a tab, a line break), which no DAX this writer builds may name (AUD-032;
+  // round 22b, the outside review's X-05): the one test, used by the MCP's server for its scripts too
+  const hasControl = (x) => /\p{Cc}/u.test(String(x));
   const columnRoom = (p, t, font) => {
     const head = textWidth(p.displayName || p.nativeQueryRef || '', t, true, font);
     const value = p.field && (p.field.Measure || p.field.Aggregation) ? (9 * 0.54 + 2 * 0.21) * t * 4 / 3 : 12 * 0.55 * t * 4 / 3;
@@ -403,6 +406,7 @@
     const subtitlesUsed = new Set();   // round 22: the subtitle keys that found their visual
     const blankKept = [];   // round 21: KPI cards too narrow for the blank text at the value's size
     const noData = [];   // round 19: the "No data" measures, { t, m, expression }
+    const noDataSkipped = [];   // round 22b (X-05): fields whose name holds a control character: no "No data" card, { page, t, m }
     const NODATA = own && o.noDataMessage !== false;   // on by default since round 22 (the owner's rule: every part passed in Desktop on the night of 6-7 Oct); noDataMessage: false leaves it out
     const barCharts = [];   // round 19: column charts by day or month names written as bar charts
     const shortDays = [];   // round 18, S3: column charts that show Day Short
@@ -1276,7 +1280,12 @@
         // what shows, and its message only when the visual is empty. Charts and tables with a measure of the model.
         if (NODATA && visual && visual.query && ['bar', 'column', 'line', 'donut', 'table'].includes(s.kind)) {
           const st = visual.query.queryState, pr = [].concat((st.Y || {}).projections || [], (st.Values || {}).projections || []).find((p) => p.field && p.field.Measure && !p.field.Measure.Expression.SourceRef.Schema);
-          if (pr) {
+          // (round 22b, the outside review's X-05: the measure's DAX names the field, so none for a name with a control
+          // character; told in the notes)
+          if (pr && (hasControl(pr.field.Measure.Expression.SourceRef.Entity) || hasControl(pr.field.Measure.Property))) {
+            const sk = { page: pg.name || base, t: pr.field.Measure.Expression.SourceRef.Entity, m: pr.field.Measure.Property };
+            if (!noDataSkipped.some((x) => x.t === sk.t && x.m === sk.m)) noDataSkipped.push(sk);
+          } else if (pr) {
             const ent = pr.field.Measure.Expression.SourceRef.Entity, mm = pr.field.Measure.Property, nm = (W.noDataName || 'No data: ') + mm;
             if (!noData.some((x) => x.t === ent && x.m === nm)) noData.push({ t: ent, m: nm, expression: 'IF ( ISBLANK ( ' + "'" + ent.replace(/'/g, "''") + "'" + '[' + mm.replace(/\]/g, ']]') + '] ), "' + (lang === 'ar' ? 'لا توجد بيانات لهذا الاختيار' : 'No data for this selection').replace(/"/g, '""') + '", "" )' });
             container({ x: s.x, y: box.y, w: s.w, h: box.h, z: z - 500, parent, kind: 'nodata', noPhone: true, visual: { visualType: 'cardVisual',
@@ -1623,9 +1632,9 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, tableWide, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts, blankKept, subtitlesUsed: [...subtitlesUsed] };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, tableWide, noDataSkipped, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts, blankKept, subtitlesUsed: [...subtitlesUsed] };
   }
 
-  const api = { build, zip, crc32, textWidth, columnRoom };
+  const api = { build, zip, crc32, textWidth, columnRoom, hasControl };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbip = api;
 })(typeof self !== 'undefined' ? self : this);
