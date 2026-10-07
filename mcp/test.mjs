@@ -4043,6 +4043,13 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       () => `noDataMessage on: "No data" on the cards 300 wide or more, the value a step under: ${JSON.stringify(k1.map((v, i) => [v.position.width, blankOf(v), sizeOf(v), sizeOf(k0[i])]))} ${on.err ? on.t.slice(0, 200) : ''}`);
     chk(() => k2.some((v) => blankOf(v) === "'لا توجد بيانات'"), () => `Arabic: «لا توجد بيانات»: ${JSON.stringify(k2.map(blankOf))}`);
   }
+  // 3. (lab #4) every visual title carries a heading level for screen readers: 'Heading3'; nothing to see
+  {
+    const x = await build('R21 heading'), vs = vis(x);
+    const titled = vs.filter((v) => { const t = ((v.visual.visualContainerObjects || {}).title || [])[0]; return t && t.properties && t.properties.show && /true/.test(JSON.stringify(t.properties.show)); });
+    const heads = titled.map((v) => { const h = v.visual.visualContainerObjects.title[0].properties.heading; return h ? h.expr.Literal.Value : null; });
+    chk(() => titled.length >= 5 && heads.every((h) => h === "'Heading3'"), () => `every shown title must carry heading 'Heading3': ${JSON.stringify(heads)}`);
+  }
 }
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });

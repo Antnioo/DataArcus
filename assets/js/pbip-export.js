@@ -1479,6 +1479,10 @@
           const lat = /[A-Za-z]/, adds = (x) => (AR_LETTERS.test(c) && !AR_LETTERS.test(x)) || (lat.test(c) && !lat.test(x));
           if (c && !adds(k)) v.visual.visualContainerObjects.title[0].properties.text = str(k + ' (' + c + ')'); }));
       }
+      // Round 21 (the capabilities lab's #4, Desktop 2.158, 7 Oct 2026: accepted and kept, nothing to see): every shown
+      // visual title carries a heading level for screen readers, 'Heading3' (the page title is a text box, not a title)
+      visuals.forEach((v) => { const t = v.visual && ((v.visual.visualContainerObjects || {}).title || [])[0];
+        if (t && t.properties && JSON.stringify(t.properties.show || '').includes('true')) t.properties.heading = str('Heading3'); });
       visuals.forEach((v) => {
         add(D + '/pages/' + pageName + '/visuals/' + v.name + '/visual.json', json(v));
         const p = pos[v.name];
@@ -1521,6 +1525,7 @@
       }));
       visuals.forEach((s, i) => {
         const v = { $schema: SCHEMA.visual, name: rnd(), position: { x: s.x, y: s.y, z: (i + 1) * 1000, height: s.h, width: s.w, tabOrder: (i + 1) * 1000 }, visual: s.visual };
+        { const t = ((s.visual.visualContainerObjects || {}).title || [])[0]; if (t && t.properties && JSON.stringify(t.properties.show || '').includes('true')) t.properties.heading = str('Heading3'); }   // (round 21: the tooltip pages' titles too)
         add(D + '/pages/' + name + '/visuals/' + v.name + '/visual.json', json(v));
       });
     };
