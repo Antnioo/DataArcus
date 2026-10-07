@@ -96,6 +96,20 @@ for (const f of files) {
 // Typed text never reaches GA4 when it looks like an email address or a phone number (Google's terms forbid personal data)
 const main = fs.readFileSync(path.join(ROOT, 'assets/js/main.js'), 'utf8');
 ok(/track\('search', \{ search_term: safeTerm\(/.test(main), "main.js: the blog search must send safeTerm(...), not the raw text");
+// AUD-031 (round 20): a search term with 7 or more digits in all is redacted (a Gulf phone number is 8 digits, "5512 3456"),
+// unless every number in it is a year (19xx or 20xx), so "2024 2025" is kept; the "@" rule and the 50-character cut stay
+{
+  const src = (main.match(/const safeTerm = ([^\n]+);\n/) || [])[1];
+  let safe = null; try { safe = src && Function('return (' + src + ')')(); } catch (e) { safe = null; }
+  ok(typeof safe === 'function', 'main.js: safeTerm could not be read as one arrow function on one line');
+  if (typeof safe === 'function') {
+    for (const q of ['5512 3456', '9876 5432', '+974 5512 3456', '050 123 4567', 'me@example.com', '1234567'])
+      ok(safe(q) === '(redacted)', `safeTerm("${q}") must be "(redacted)", got "${safe(q)}"`);
+    for (const q of ['2024 2025', 'top 10 dax', 'dax 2025', 'calculate'])
+      ok(safe(q) === q, `safeTerm("${q}") must keep the term, got "${safe(q)}"`);
+    ok(safe('x'.repeat(80)) === 'x'.repeat(50), 'safeTerm must cut a term to 50 characters');
+  }
+}
 
 // European visitors who click Accept: Clarity gets its consent signal (it is enforced for the EEA, UK and Switzerland)
 ok(/clarity\('consentv2', \{ ad_Storage: 'denied', analytics_Storage: 'granted' \}\)/.test(main), "main.js: an explicit Accept must send Clarity consentv2 (analytics granted, ads denied)");
