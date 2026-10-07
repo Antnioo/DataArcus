@@ -145,6 +145,28 @@ is checked to be terser's output of it (`check-min`), not evaluated on its own.
    (safeTerm, the `?v=` stamps, check-min), check_report (no visual change).
 5. **The 0.2.7 package:** its manifest's Node compatibility against `>=20.10`, then rebuilt from this branch's head.
 
+### Round 22b, laptop proof (night of 7-8 Oct, laptop builder; work tree `C:\DataArcus\r22b-wt` at `6f706cc`; started 23:28 UTC, hard stop 03:30 UTC; the owner asleep, no person answers)
+The only session driving Power BI Desktop (none was open at the start; the node processes found are the tool servers of
+other open sessions, none drives Desktop: left alone). Every tool call goes to this branch's `mcp/server.mjs` over stdio
+(scripts `builder-scripts\r22b-*`); files and captures under `<tests folder>\r22b\`. Made-up models only, their rows as
+DAX tables. The package is not built or installed (the reviewer merges first).
+
+#### Round 22b, laptop proof, expected (written 23:45 UTC, before any build or capture)
+| # | What is opened in Desktop | Expected (a FAIL is anything else) |
+|---|---|---|
+| 1a | Golden task 10, English and Arabic | charts by Hub Region and Lane Region as at `6b122ff`; the bars differ; slicers as before |
+| 1b | Made-up model: Shipments and Deliveries (no text columns), their lookups Hub and Carrier, a `Measures` table related to nothing, the calendars 'Date' (related to nothing) and 'Ship Date' (related to Shipments). A report on `Measures[Total]` = `SUM ( shipments[Amount] )` (lower case), English and Arabic | every chart by Hub Zone, bars differ; the line chart and the year slicer from 'Ship Date', its points differ; nothing by Carrier or 'Date' |
+| 1c | The same model, `Measures[Total Quoted]` = `CALCULATE ( SUM ( 'Shipments'[Amount] ), 'Shipments'[Ship Day] >= DATE ( 2024, 1, 1 ) )` | as 1b: Hub Zone and 'Ship Date', never 'Date' (which only `DATE (` names) |
+| 1d | The same model, a plan naming `Deliveries[Delivered Qty]` (the other fact table's measure) | charts by Carrier Group, bars differ; no line chart (Deliveries reaches no calendar: left out and told, as the second review's "Seen" says) |
+| 1e | A model whose measure reaches no category (Sales; Region related to Returns only) | the KPI card only: no chart by Region; reportNotes name the tables and the fixes |
+| 2a | Three charts on two text columns, Arabic (Orders: Order Id a number, Region, Channel) | three titles, each its own: two end "(Region)" / "(Channel)", the third "(Region 2)" or "(Channel 2)"; whole in Desktop or listed as shortened; altText = the title |
+| 2b | A bar and a donut by the same measure and column, English and Arabic | "Total Sales by Region" and "Total Sales by Region (2)", whole; altText the same |
+| 3 | A 300-wide table whose two kept fields are wider than it at 8pt, English and Arabic | the note in reportNotes ("wider than its table": scrolls sideways, how to fix); Desktop shows a horizontal scrollbar, the text at 8pt, nothing cut without a way to reach it |
+| 4 | No visual change: one report with No data on (golden task 8 Arabic, the empty model) | as captured at `6b122ff` (`gshots\pages\g8-ar-b-p1.png`): one message card per chart and table |
+| S | The showcase (Marsa Home) rebuilt by this branch, English light and Arabic dark | files the same as the `6b122ff` build except what 22b changes (titles' numbering cannot apply: its charts differ); scores unchanged, English 10, Arabic 9 (the "Total" word) |
+| G | Golden tasks rebuilt by this branch; the files compared with the `6b122ff` build, every changed report opened | 6, 7, 10 in both languages at least. Scores before 9.8 / 9.9: unchanged or higher (task 7 Arabic may gain a number in a title; task 10's table still repeats the two other fact tables' totals: 9 / 9) |
+`npm test` is run only if code changes (691 of 691 on Linux at `03d500b`).
+
 ## Sitting 7-8 Oct (laptop builder; branch `fix/round-22` from `origin/fix/round-21` `9d927a9` with `origin/main` `7cdf252` merged in as `8b7d4d6`; not merged, no PR)
 **Started 15:22 UTC on 7 Oct (19:22 Dubai). Hard stop 21:20 UTC; the stop report is below ("the stop report"), pushed 18:48 UTC.** Two sessions: the first stopped at about 15:28, the second did the work. The owner gave
 the laptop; this is the only session driving Power BI Desktop. Work tree on the laptop: `C:\DataArcus\r22-wt` (the main
