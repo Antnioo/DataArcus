@@ -485,8 +485,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // a term are read in runs: numbers joined by anything but a word of two or more letters ("050,2024,2025", "050x2024").
   // A run counts the digits of its numbers that are not years (2015 to 2035), or all its digits when those are 4 or more
   // ("5520 2025") or the run starts with + or 0 ("050 2025"). 7 or more counted digits in a run, or in the whole term,
-  // are redacted. So "2024 2025 top 10", "dp-600 2025" and "fy2024 vs fy2025" are kept.
-  const safeTerm = (q) => { if (q.includes('@')) return '(redacted)'; const Y = /^20(1[5-9]|2\d|3[0-5])$/, p = q.split(/(\d+)/), runs = []; let run = null, sum = 0; for (let i = 1; i < p.length; i += 2) { if (!run || (p[i - 1].match(/\p{L}/gu) || []).length > 1) runs.push(run = { pre: /\+\s*$/.test(p[i - 1]), g: [] }); run.g.push(p[i]); } for (const r of runs) { const all = r.g.join('').length, other = r.g.filter((x) => !Y.test(x)).join('').length, c = r.pre || r.g[0][0] === '0' || other >= 4 ? all : other; if (c >= 7) return '(redacted)'; sum += c; } return sum >= 7 ? '(redacted)' : q.slice(0, 50); };
+  // are redacted. So "2024 2025 top 10", "dp-600 2025" and "fy2024 vs fy2025" are kept. The third review (items 5, 6): a
+  // number of 3 or more digits beside two or more years counts whole ("971 2030 2015"), and Arabic-Indic and Eastern
+  // Arabic digits are read as digits ("٠٥٠١٢٣٤٥٦٧"); a kept term is sent as typed.
+  const safeTerm = (q) => { if (q.includes('@')) return '(redacted)'; const d = q.replace(/[\u0660-\u0669]/g, (x) => x.charCodeAt(0) - 0x660).replace(/[\u06f0-\u06f9]/g, (x) => x.charCodeAt(0) - 0x6f0), Y = /^20(1[5-9]|2\d|3[0-5])$/, p = d.split(/(\d+)/), runs = []; let run = null, sum = 0; for (let i = 1; i < p.length; i += 2) { if (!run || (p[i - 1].match(/\p{L}/gu) || []).length > 1) runs.push(run = { pre: /\+\s*$/.test(p[i - 1]), g: [] }); run.g.push(p[i]); } for (const r of runs) { const all = r.g.join('').length, others = r.g.filter((x) => !Y.test(x)), other = others.join('').length, c = r.pre || r.g[0][0] === '0' || other >= 4 || (r.g.length - others.length >= 2 && others.some((x) => x.length >= 3)) ? all : other; if (c >= 7) return '(redacted)'; sum += c; } return sum >= 7 ? '(redacted)' : q.slice(0, 50); };
 
   const once = new Set();
   const trackOnce = (key, name, params) => { if (once.has(key)) return; once.add(key); track(name, params); };
