@@ -78,7 +78,7 @@ tooltip pages (a card and a bar chart by category; and, when the model has a mon
 | Languages | English and Arabic (right to left) | |
 | Fonts | Segoe UI, Segoe UI Semibold, DIN, Arial, Calibri, Tahoma, Verdana, Georgia; for Arabic: Segoe UI, Segoe UI Semibold, Arial, Tahoma | `design-engine.js` |
 | Theme text sizes | 8-60 pt (Power BI refuses a theme outside it) | `mcp/CLAUDE.md` |
-| Runtime | Node.js 18 or later; the MCP SDK `@modelcontextprotocol/sdk` 1.31 or later | `mcp/package.json` |
+| Runtime | Node.js 20.10 or later (Microsoft's report CLI behind `check_report` needs 20, its schema package 20.10; round 22b); the MCP SDK `@modelcontextprotocol/sdk` 1.31 or later | `mcp/package.json` |
 | AI apps | any MCP client over stdio; built and tested with Claude Code; Claude Desktop extension and Claude Code plugin: packaging in progress | |
 
 Power BI's PBIR format still changes. Only `assets/js/pbip-export.js` writes it, so a format change is fixed in one
