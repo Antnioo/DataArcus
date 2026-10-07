@@ -172,6 +172,99 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
       () => `g. Month Name's sort is a step by hand (its number column's name holds a tab), no new Month Number: ${all.slice(0, 600)} ${h.err ? h.t.slice(0, 200) : ''}`);
     chk(() => !h.err && !/not found/.test(all), () => `g. no column is "not found" because its name holds a control character: ${all.slice(0, 600)}`);
   }
+
+  // ---- Round 22b: the reviewer's code review of fix/round-22 (items 2 to 10; item 1 is the website's, in
+  //      scripts/test-analytics-events.mjs; item 7 in scripts/check-min.mjs), each written red first ----
+  const HERE = path.dirname(fileURLToPath(import.meta.url));
+  // 2, 3. the related category (round 22) for every chart: catB (the column chart and the map) and the pool the
+  //    writer gives a page's charts from come from a table the measure reaches, never Carrier, which only Deliveries is
+  //    related to; and the tables a measure reaches start at the tables its DAX reads, not only at the table it is
+  //    stored in (a disconnected measures table, or a measure built on another measure)
+  {
+    const rel = (ft, fc, tt, tc) => ({ name: `${ft}-${tt}`, fromTable: ft, fromColumn: fc, toTable: tt, toColumn: tc });
+    const facts = [
+      { name: 'Shipments', partitions: mp('Shipments'), columns: [col('Amount', 'double'), col('Hub Key', 'int64')] },
+      { name: 'Deliveries', partitions: mp('Deliveries'), columns: [col('Qty', 'int64'), col('Carrier Key', 'int64')] },
+      { name: 'Carrier', partitions: mp('Carrier'), columns: [col('Carrier Key', 'int64'), col('Carrier Category', 'string'), col('Carrier Group', 'string')] },
+      { name: 'Hub', partitions: mp('Hub'), columns: [col('Hub Key', 'int64'), col('Hub Zone', 'string')] }];
+    const rels = [rel('Shipments', 'Hub Key', 'Hub', 'Hub Key'), rel('Deliveries', 'Carrier Key', 'Carrier', 'Carrier Key')];
+    const mkModel = (d, tables) => { fs.mkdirSync(path.join(ROOT, d, 'M.SemanticModel'), { recursive: true }); fs.writeFileSync(path.join(ROOT, d, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables, relationships: rels } })); };
+    const withMeasure = (expr, more) => facts.map((t) => (t.name === 'Shipments' ? Object.assign({}, t, { measures: [{ name: 'Total Amount', expression: expr, formatString: '#,0' }] }) : t)).concat(more || []);
+    mkModel('r22b-rel', withMeasure('SUM ( Shipments[Amount] )'));
+    // (a measures table of its own, related to nothing: Total reads Shipments through a hidden measure, quoted)
+    mkModel('r22b-mt', facts.concat([{ name: 'Measures', partitions: mp('Measures'), columns: [col('Dummy', 'string')].map((c) => Object.assign(c, { isHidden: true })),
+      measures: [{ name: 'Base Amount', expression: "SUM ( 'Shipments'[Amount] )", isHidden: true }, { name: 'Total', expression: '[Base Amount] * 1', formatString: '#,0' }] }]));
+    const catsOf = (x) => (x.err ? x.t.slice(0, 200) : JSON.stringify(Object.fromEntries(Object.entries(x.j.cats).map(([k, v]) => [k, v ? `${v.t}[${v.c}]` : null]))));
+    const a = await ask('suggest_fields', { path: 'r22b-rel' });
+    chk(() => !a.err && Object.values(a.j.cats).every((v) => v && v.t === 'Hub'), () => `2. every chart's category is reachable from Shipments (Hub), never Carrier: ${catsOf(a)}`);
+    const two = (d, m) => ask('create_report', { path: d, name: 'R22b pool ' + d, fields: { kpis: [m] }, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w: 500, h: 300 }, { kind: 'column', x: 640, y: 100, w: 500, h: 300 }] }] });
+    const c = await two('r22b-rel', 'Shipments[Total Amount]'), boundC = c.err ? c.t.slice(0, 200) : JSON.stringify(c.j.boundFields);
+    chk(() => !c.err && !/Carrier/.test(boundC) && /Hub\[Hub Zone\]/.test(boundC), () => `2. create_report: no chart by Carrier (only Deliveries reaches it): ${boundC.slice(0, 600)}`);
+    const m = await ask('suggest_fields', { path: 'r22b-mt' });
+    chk(() => !m.err && m.j.measure && m.j.measure.m === 'Total' && Object.values(m.j.cats).every((v) => v && v.t === 'Hub'), () => `3. a measure of a measures table related to nothing reaches Hub through the tables its DAX reads: ${catsOf(m)} measure ${m.err ? '' : JSON.stringify(m.j.measure)}`);
+  }
+  // 4, 6. check_report: the files left unread are counted per call (two calls at once never mix their counts), and the
+  //    report is walked once (a folder past the depth is one cut, not three)
+  {
+    const mkReport = (d, deep) => { const r = path.join(ROOT, d, 'R.Report'), def = path.join(r, 'definition'), pg = path.join(def, 'pages', 'p1');
+      fs.mkdirSync(pg, { recursive: true });
+      fs.writeFileSync(path.join(def, 'report.json'), JSON.stringify({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/2.1.0/schema.json', themeCollection: {} }));
+      fs.writeFileSync(path.join(def, 'pages', 'pages.json'), JSON.stringify({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/pagesMetadata/1.0.0/schema.json', pageOrder: ['p1'], activePageName: 'p1' }));
+      fs.writeFileSync(path.join(pg, 'page.json'), JSON.stringify({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.0.0/schema.json', name: 'p1', displayName: deep && deep.name || 'Page 1', displayOption: 'FitToPage', width: 1280, height: 720 }));
+      if (deep && deep.levels) { let q = path.join(r, 'extra'); for (let i = 0; i < deep.levels; i++) q = path.join(q, 'd' + i); fs.mkdirSync(q, { recursive: true }); fs.writeFileSync(path.join(q, 'x.txt'), 'x'); }
+      return d + '/R.Report'; };
+    const deepOf = (x) => { if (x.err) return 'error ' + x.t.slice(0, 200); const n = (x.j.notChecked || []).find((y) => y.rule === 'folders too deep'); return n ? n.why : null; };
+    const pd = mkReport('r22b-deep', { levels: 16 }), pc = mkReport('r22b-clean');
+    const one = await ask('check_report', { path: pd, checks: ['schemas'] });
+    chk(() => /: 1 cut$/.test(deepOf(one) || ''), () => `6. one folder past the depth is one cut (the report walked once): ${deepOf(one)}`);
+    const runs = await Promise.all([ask('check_report', { path: pd }), ask('check_report', { path: pc }), ask('check_report', { path: pd }), ask('check_report', { path: pc })]);
+    chk(() => runs.every((x) => !x.err) && /: 1 cut$/.test(deepOf(runs[0]) || '') && /: 1 cut$/.test(deepOf(runs[2]) || '') && deepOf(runs[1]) == null && deepOf(runs[3]) == null,
+      () => `4. four calls at once: the deep report's calls say "1 cut", the clean one's say nothing: ${JSON.stringify(runs.map(deepOf))}`);
+  // 9. one helper writes the invisible characters of a report's names as code points: format characters (\p{Cf}) and
+  //    control characters (\p{Cc}) alike, as the server does for a model's names (AUD-032)
+    const pn = mkReport('r22b-cc', { name: 'Page\u0007one​two' }), x = await ask('check_report', { path: pn, checks: ['schemas'] });
+    const names = x.err ? x.t.slice(0, 200) : JSON.stringify(x.j.report.pageNames);
+    chk(() => !x.err && x.j.report.pageNames[0] === 'Page\\u0007one\\u200btwo', () => `9. a page name's control and format characters are written as code points: ${names}`);
+    const src = fs0.readFileSync(path.join(HERE, 'lib', 'check-report.mjs'), 'utf8'), srv = fs0.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+    chk(() => !/const visible\s*=/.test(src) && !/const visible\s*=/.test(srv), () => '9. check-report.mjs and server.mjs share one visible() (no copy of their own)');
+  }
+  // 5. one tool's dependency cannot stop the server: Microsoft's report CLI (Node 20 or later, its schema package 20.10
+  //    or later) is loaded by check_report when it runs, never when the server starts; and package.json's engines say
+  //    the real minimum, the highest of the packages the MCP ships with
+  {
+    const src = fs0.readFileSync(path.join(HERE, 'lib', 'check-report.mjs'), 'utf8'), srv = fs0.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+    const statics = (s) => (s.match(/^import [^;]*;/gm) || []).join('\n');
+    chk(() => !/powerbi-report-authoring-cli/.test(statics(src)) && !/powerbi-report-authoring-cli/.test(statics(srv)), () => `5. no static import of Microsoft's report CLI: ${statics(src).split('\n').filter((l) => /cli/.test(l)).join(' | ')}`);
+    const pkg = JSON.parse(fs0.readFileSync(path.join(HERE, 'package.json'), 'utf8')), lock = JSON.parse(fs0.readFileSync(path.join(HERE, 'package-lock.json'), 'utf8'));
+    const min = (r) => { const v = (String(r || '').match(/>=\s*(\d+(?:\.\d+){0,2})/) || [])[1]; return v ? v.split('.').concat(['0', '0']).slice(0, 3).map(Number) : [0, 0, 0]; };
+    const cmp = (x, y) => x[0] - y[0] || x[1] - y[1] || x[2] - y[2];
+    const shipped = Object.entries(lock.packages || {}).filter(([k, v]) => k && !v.dev && v.engines && v.engines.node);
+    const top = shipped.reduce((acc, [k, v]) => (cmp(min(v.engines.node), acc[1]) > 0 ? [k, min(v.engines.node)] : acc), ['', [0, 0, 0]]);
+    chk(() => cmp(min(pkg.engines.node), top[1]) >= 0, () => `5. engines.node (${pkg.engines.node}) must be at least the highest a shipped package needs: ${top[0]} ${top[1].join('.')}`);
+  }
+  // 8. a table's text made smaller so its two kept fields fit (round 22) is the size its fields are fitted at: a field
+  //    that fits at that size is kept; and a table whose two fields are wider than its box even at 8pt is told
+  {
+    const long1 = 'Sales channel used to complete the whole transaction', long2 = 'Total net sales after every discount and every return';
+    model('r22b-fit', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col(long1, 'string')],
+      measures: [{ name: long2, expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Qty', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }]);
+    const mk = (w) => ask('create_report', { path: 'r22b-fit', name: 'R22b fit ' + w, fields: { kpis: [`Sales[${long2}]`], measure: `Sales[${long2}]`, category: `Sales[${long1}]`, table: [`Sales[${long1}]`, `Sales[${long2}]`, 'Sales[Qty]'] },
+      pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'table', x: 36, y: 100, w, h: 300 }] }] });
+    const cols = (x) => { const t = vis(x, 'r22b-fit').find((v) => v.visual.visualType === 'tableEx'); return t ? t.visual.query.queryState.Values.projections.length : 0; };
+    const fit = await mk(640), tiny = await mk(300);
+    chk(() => !fit.err && cols(fit) === 3 && !(fit.j.tableColumns || []).length, () => `8. at the smaller size Qty fits too and is kept: ${cols(fit)} columns, tableColumns ${JSON.stringify(fit.err ? fit.t.slice(0, 200) : fit.j.tableColumns || null)} ${notes(fit).slice(0, 300)}`);
+    chk(() => !tiny.err && /wider than (its|the) table/.test(notes(tiny)), () => `8. two fields wider than a 300-wide table even at 8pt are told: ${notes(tiny).slice(0, 500)}`);
+  }
+  // 10. charts that would share a title each get a title of their own: the column in brackets, and where two charts of
+  //    the group share the column too, a short number after it ("(Region 2)"), fitted, with the same alt text
+  {
+    // (two text columns for three charts: the pool gives one of them twice; Order Id is a number, counted)
+    model('r22b-nm', [{ name: 'Orders', partitions: mp('Orders'), columns: [col('Order Id', 'int64'), col('Region', 'string'), col('Channel', 'string')] }]);
+    const x = await ask('create_report', { path: 'r22b-nm', name: 'R22b three charts', lang: 'ar', pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 },
+      { kind: 'bar', x: 36, y: 100, w: 380, h: 300 }, { kind: 'column', x: 440, y: 100, w: 380, h: 300 }, { kind: 'bar', x: 860, y: 100, w: 380, h: 300 }] }] });
+    const cs = vis(x, 'r22b-nm').filter((v) => /Chart$/.test(v.visual.visualType) && titleOf(v) && v.position.width === 380), ts = cs.map(titleOf);
+    chk(() => cs.length === 3 && new Set(ts).size === 3 && cs.every((v) => altOf(v) === titleOf(v)), () => `10. three charts, three titles, each alt text its title: ${JSON.stringify(cs.map((v) => [titleOf(v), altOf(v)]))} ${x.err ? x.t.slice(0, 200) : ''}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

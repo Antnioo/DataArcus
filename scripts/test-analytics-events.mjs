@@ -115,6 +115,14 @@ ok(/track\('search', \{ search_term: safeTerm\(/.test(main), "main.js: the blog 
     for (const q of ['2024 2025', 'top 10 dax', 'dax 2025', 'calculate'])
       ok(safe(q) === q, `safeTerm("${q}") must keep the term, got "${safe(q)}"`);
     ok(safe('x'.repeat(80)) === 'x'.repeat(50), 'safeTerm must cut a term to 50 characters');
+    // (round 22b, the review of round 22, item 1: setting the years aside let phone numbers through whose groups read
+    // as years, "050 2024 2025". Never a phone-like number: a run of numbers joined by spaces, dashes, dots, slashes or
+    // brackets counts whole unless it is years only, or one number of at most 3 digits beside one year, "dp-600 2025")
+    for (const q of ['050 2024 2025', '+971 50 2030 2015', '971 50 2030 2015', '5520 2025', '50 2024 2025', '04 2024 2025', '050 2025', '+971501234567', '00971 50 123 4567',
+      '050-123-4567', '050.123.4567', '(04) 123 4567', '+966 55 123 4567', '055 123 4567', '+44 20 7946 0958', '+1 (415) 555-2671', 'call 050 123 4567 please', '+2030 2015 2020'])
+      ok(safe(q) === '(redacted)', `safeTerm("${q}") must be "(redacted)" (a phone number), got "${safe(q)}"`);
+    for (const q of ['dp-600 2025', 'fy2025', 'fy2024 vs fy2025', 'q1 2025', 'pl-300', 'pl-300 dp-600', 'top 10', 'power bi 2024 2025 2026'])
+      ok(safe(q) === q, `safeTerm("${q}") must keep the term, got "${safe(q)}"`);
   }
 }
 

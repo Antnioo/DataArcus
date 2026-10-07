@@ -27,3 +27,23 @@ for (const min of files) {
 if (!stale.length) console.log(`All ${checked} .min.js files match their sources.`);
 else if (write) console.log(`Rebuilt ${stale.length} of ${checked}:\n  ${stale.join('\n  ')}`);
 else { console.error(`${stale.length} of ${checked} .min.js files differ from what terser makes of their source (run: npm run build:min):\n  ${stale.join('\n  ')}`); process.exit(1); }
+
+// Round 22b (the review of round 22, item 7: pbip-bind.min.js changed but its ?v= stamp did not, so a browser keeps the
+// old file): every .min.js that differs from main's must be loaded with a ?v= stamp main does not use for it. Compared
+// with origin/main (CI checks out the whole history); without it, or on main itself, there is nothing to compare.
+{
+  const git = (args) => { try { return execSync('git ' + args, { cwd: ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }); } catch (e) { return null; } };
+  const base = git('rev-parse --verify --quiet origin/main') && git('merge-base HEAD origin/main');
+  if (!base) console.log('?v= stamps: origin/main not found, not compared.');
+  else {
+    const stampsIn = (text) => { const out = {}; for (const m of text.matchAll(/([\w.-]+\.min\.js)\?v=([\w.-]+)/g)) (out[m[1]] = out[m[1]] || new Set()).add(m[2]); return out; };
+    const pages = execSync('git ls-files "*.html" "*.js"', { cwd: ROOT, encoding: 'utf8' }).trim().split('\n').filter((f) => f && !/\.min\.js$/.test(f));
+    const now = {}, before = {};
+    for (const f of pages) { const add = (to, t) => Object.entries(stampsIn(t)).forEach(([k, s]) => s.forEach((v) => (to[k] = to[k] || new Set()).add(v)));
+      add(now, fs.readFileSync(path.join(ROOT, f), 'utf8')); const old = git(`show ${base.trim()}:"${f}"`); if (old) add(before, old); }
+    const unbumped = files.filter((min) => { const name = path.basename(min), old = git(`show ${base.trim()}:"${min}"`);
+      return old != null && lf(old) !== lf(fs.readFileSync(path.join(ROOT, min), 'utf8')) && now[name] && [...now[name]].some((v) => before[name] && before[name].has(v)); });
+    if (unbumped.length) { console.error(`${unbumped.length} changed .min.js file${unbumped.length === 1 ? ' is' : 's are'} still loaded with main's ?v= stamp (bump it on every page that loads it):\n  ${unbumped.map((m) => `${m} (${[...now[path.basename(m)]].join(', ')})`).join('\n  ')}`); process.exit(1); }
+    console.log('?v= stamps: every .min.js changed since main has a new stamp.');
+  }
+}
