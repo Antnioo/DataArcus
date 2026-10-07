@@ -477,9 +477,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Typed text that looks like an email address or a phone number never reaches GA4 (no personal data in analytics)
   // AUD-031 (round 20): 7 or more digits in all is a phone or an ID (a Gulf mobile is 8 digits, "5512 3456"), unless
   // every number in the term is a year ("2024 2025"); an "@" is an e-mail; anything else is cut to 50 characters.
-  // Round 22 (the code review's i): one rule. The years a search names (2015 to 2035, standing alone) are set aside,
-  // then 7 or more digits are redacted: "2024 2025 top 10" is kept, "2012 1995" (as likely a phone number) is not
-  const safeTerm = (q) => (q.includes('@') || (q.replace(/\b20(1[5-9]|2\d|3[0-5])\b/g, '').match(/\d/g) || []).length >= 7 ? '(redacted)' : q.slice(0, 50));
+  // Round 22 (the code review's i): the years a search names (2015 to 2035) are set aside, then 7 or more digits are
+  // redacted: "2024 2025 top 10" is kept, "2012 1995" (as likely a phone number) is not.
+  // Round 22b (the review of round 22, item 1: "050 2024 2025" and "+971 50 2030 2015" got through, their groups read as
+  // years): a run of numbers joined by spaces, dashes, dots, slashes or brackets is read whole. It counts all its digits
+  // unless it is years only ("2024 2025") or one number of at most 3 digits beside one year ("dp-600 2025"); one that
+  // starts with + or 0 always counts them all ("050 2025"). 7 or more counted digits in a run are redacted.
+  const safeTerm = (q) => { const Y = /^20(1[5-9]|2\d|3[0-5])$/, n = (s) => (s.match(/\d/g) || []).length; if (q.includes('@') || n(q.replace(/(?<!\d)20(1[5-9]|2\d|3[0-5])(?!\d)/g, '')) >= 7) return '(redacted)'; const phone = (q.match(/\+?\d+(?:[\s\-.()/]+\d+)*/g) || []).some((run) => { const g = run.match(/\d+/g), other = g.filter((x) => !Y.test(x)), years = g.length - other.length, all = n(run); const counted = /^(\+|0)/.test(run) ? all : !other.length ? 0 : other.length === 1 && other[0].length <= 3 && years === 1 ? other[0].length : all; return counted >= 7; }); return phone ? '(redacted)' : q.slice(0, 50); };
 
   const once = new Set();
   const trackOnce = (key, name, params) => { if (once.has(key)) return; once.add(key); track(name, params); };
