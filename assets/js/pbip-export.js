@@ -399,6 +399,7 @@
     const tableRows = [];   // tables whose known rows don't fit even with tight rows (round 12, #23)
     const headerGrew = [];   // pages whose header grew one row of tabs (round 12)
     const tableSmaller = [];   // tables given a smaller text so more fields fit (round 12)
+    const tableWide = [];   // tables whose two kept fields are wider than the box even at 8pt: { page, width, need } (round 22b)
     const subtitlesUsed = new Set();   // round 22: the subtitle keys that found their visual
     const blankKept = [];   // round 21: KPI cards too narrow for the blank text at the value's size
     const noData = [];   // round 19: the "No data" measures, { t, m, expression }
@@ -1053,9 +1054,13 @@
             // were wider than the table, a horizontal scrollbar): the fields a table keeps must fit its box too. The text
             // was only made smaller to keep more fields; the two that are always kept were never measured. It now goes
             // down, to 8pt at most, until the kept fields fit (told like every smaller table text)
+            // Round 22b (the review of round 22, item 8): two fields wider than the box even at 8pt are told. (The fit is
+            // not redone at this size: the loop above already tried every size down to 8 and kept the most fields, so
+            // this only runs where the two alone are kept, and no third fits at any size: checked on 30,000 tables)
             { const need = (t2) => tf.kept.reduce((a2, f) => a2 + columnRoom(tproj(f), t2, font), 0); let t3 = tableText || T0;
               while (t3 > 8 && need(t3) > s.w) t3 = Math.ceil(t3) - 1;
-              if (t3 < (tableText || T0)) tableText = t3; }
+              if (t3 < (tableText || T0)) tableText = t3;
+              if (need(t3) > s.w) tableWide.push({ page: pg.name || base, width: s.w, need: Math.ceil(need(t3)) }); }
             if (tableText) tableSmaller.push(smallEntry = { page: pg.name || base, size: tableText, from: T0 });
             if (tf.leftOut.length) { Bt = Object.assign({}, B, { table: tf.kept }); tableColumns.push({ page: pg.name || base, pageIndex, x: s.x, y: s.y, kept: tf.kept, leftOut: tf.leftOut }); }
           }
@@ -1520,17 +1525,22 @@
         // repeat itself; the new title is fitted like any title, and the alt text carries the same name)
         const same = {}, full = (v) => (fitted.get(v.visual) || {}).ttl || tOf(v), colOf = (v) => { const p = v.visual.query.queryState.Category.projections[0]; return p.displayName || p.nativeQueryRef; };
         visuals.filter((v) => v.visual && v.visual.query && v.visual.query.queryState.Category && tOf(v)).forEach((v) => { (same[full(v)] = same[full(v)] || []).push(v); });
-        Object.keys(same).filter((k) => new Set(same[k].map(colOf)).size > 1).forEach((k) => same[k].forEach((v) => { const c = colOf(v);
+        // (round 22b, the review of round 22, item 10: three charts and two columns, "عدد Order Id (Channel)" twice: charts
+        // of the group by the same column too take a number after it in reading order, "(Channel 2)"; nothing else
+        // tells them apart, as their measure and column are the same)
+        const order = (a, b) => a.position.y - b.position.y || (rtl ? b.position.x - a.position.x : a.position.x - b.position.x);
+        Object.keys(same).filter((k) => new Set(same[k].map(colOf)).size > 1).forEach((k) => { const nth = {}; same[k].slice().sort(order).forEach((v) => { const c = colOf(v);
           // (never a script the title does not have already: round 14's rule keeps an Arabic title free of English names;
           // "عدد Order Id" holds Latin letters already, so "(Region)" may follow it)
           const lat = /[A-Za-z]/, adds = (x) => (AR_LETTERS.test(c) && !AR_LETTERS.test(x)) || (lat.test(c) && !lat.test(x));
           if (!c || adds(k)) return;
-          const name = k + ' (' + c + ')', f = fitted.get(v.visual), tp = v.visual.visualContainerObjects.title[0].properties, g = (v.visual.visualContainerObjects.general || [])[0];
+          nth[c] = (nth[c] || 0) + 1;
+          const name = k + ' (' + c + (nth[c] > 1 ? ' ' + nth[c] : '') + ')', f = fitted.get(v.visual), tp = v.visual.visualContainerObjects.title[0].properties, g = (v.visual.visualContainerObjects.general || [])[0];
           const tf = f ? titleFit(name, TITLE, f.avail) : { mode: 'one', shown: name };
           tp.text = str(tf.shown); if (tf.mode !== 'one' && !tf.one) tp.titleWrap = bool(true); else delete tp.titleWrap;
           if (g && g.properties && g.properties.altText) g.properties.altText = str(name);
           if (f) { ['wrapped', 'shortened'].forEach((m) => { const i = titles[m].findIndex((x) => x.page === f.page && x.title === k); if (i >= 0) titles[m].splice(i, 1); });
-            if (tf.mode !== 'one') titles[tf.mode].push({ page: f.page, title: name, shown: tf.shown }); } }));
+            if (tf.mode !== 'one') titles[tf.mode].push({ page: f.page, title: name, shown: tf.shown }); } }); });
       }
       visuals.forEach((v) => { headed(v.visual);
         add(D + '/pages/' + pageName + '/visuals/' + v.name + '/visual.json', json(v));
@@ -1613,7 +1623,7 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts, blankKept, subtitlesUsed: [...subtitlesUsed] };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, tableWide, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts, blankKept, subtitlesUsed: [...subtitlesUsed] };
   }
 
   const api = { build, zip, crc32, textWidth, columnRoom };

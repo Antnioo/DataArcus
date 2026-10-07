@@ -8,7 +8,7 @@ import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, Svg, applyColumnTypes, inside, loadModel, nothingAt, prepareRoot, rootProblem, summary, writeNew } from './lib/model.mjs';
+import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, Svg, applyColumnTypes, inside, loadModel, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
 import { E, themeDesign, planLayout, pageOf, contrastReport, freeFile } from './lib/design.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
@@ -140,8 +140,8 @@ const themeColors = (t) => {
 // byte order mark): a name can then read as another one, or two names can look the same (audit AUD-017). The model
 // is never renamed; the tables, columns and measures named so are listed, with those characters written as code
 // points, so the AI app and the user can see them. Up to 20 names.
-// (AUD-032, round 20: control characters too, \p{Cc}: a tab or a line break in a name breaks a script line)
-const visible = (s) => String(s).replace(/[\p{Cf}\p{Cc}]/gu, (ch) => '\\u' + ch.codePointAt(0).toString(16).padStart(4, '0'));
+// (AUD-032, round 20: control characters too, \p{Cc}: a tab or a line break in a name breaks a script line; the
+// helper, visible, is model.mjs's, shared with check_report since round 22b)
 function hiddenOf(m) { return Object.assign(hiddenOnly(m), suspiciousOf(m)); }
 function hiddenOnly(m) {
   const names = [], has = (s) => /[\p{Cf}\p{Cc}]/u.test(String(s));
@@ -945,6 +945,8 @@ server.registerTool('create_report', {
   if (byRamadanDay.length) reportNotes.push(`The line chart runs by ${byRamadanDay[0]} (the days of Ramadan), not by month: the page filter keeps Ramadan, and one Ramadan by month is a line of two or three points.`);
   // tables given a smaller text so more of their fields fit (round 12, recommendation 5)
   if ((r.tableSmaller || []).length) reportNotes.push(`The table text is ${[...new Set(r.tableSmaller.map((x) => x.size + 'pt'))].join(' or ')} (the theme's is ${r.tableSmaller[0].from}pt) on ${r.tableSmaller.map((x) => `"${x.page}"`).join(', ')}, so more of its fields fit its width${r.tableSmaller.some((x) => x.rows) ? ' and its rows and total fit its height' : ''}; a field is left out only where even 8pt doesn't hold it.`);
+  // (round 22b, the review of round 22, item 8) a table whose name column and first measure need more than its width even at 8pt
+  if ((r.tableWide || []).length) reportNotes.push(`${r.tableWide.map((x) => `The table on "${x.page}" needs about ${x.need} for its name column and first measure, wider than the table (${Math.round(x.width)}) even at 8pt`).join('; ')}: it scrolls sideways in Power BI. Make the table wider, or give those two fields shorter display names (displayNames, from the user).`);
   // a header that grew one row so the page names fit as tabs (round 12)
   if ((r.headerGrew || []).length) reportNotes.push(`The header is ${r.headerGrew[0].by} taller on ${r.headerGrew.map((x) => `"${x.page}"`).join(', ')}, so the page names fit as two rows of tabs; the visuals under it moved down and the last row is that much shorter.`);
   // tables whose known rows don't fit even with tight rows (round 12, #23)
