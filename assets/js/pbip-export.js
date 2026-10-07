@@ -1138,7 +1138,7 @@
           if (s.kind !== 'kpi' && s.kind !== 'card' && ttl) {
             const tf = titleFit(ttl, TITLE, s.w - 2 * Math.round(16 * pg.page.h / 1080)), tp = visual.visualContainerObjects.title[0].properties;
             fitted.set(visual, { ttl, avail: s.w - 2 * Math.round(16 * pg.page.h / 1080), page: pg.name || base });
-            if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); titles[tf.mode].push({ page: pg.name || base, title: ttl, shown: tf.shown }); }
+            if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); titles[tf.mode].push(fitted.get(visual).entry = { page: pg.name || base, title: ttl, shown: tf.shown }); }
           }
           // the title already names the KPI, so the card's own label under the number is not repeated
           if (type === 'cardVisual') {
@@ -1543,8 +1543,10 @@
           const tf = f ? titleFit(name, TITLE, f.avail) : { mode: 'one', shown: name };
           tp.text = str(tf.shown); if (tf.mode !== 'one' && !tf.one) tp.titleWrap = bool(true); else delete tp.titleWrap;
           if (g && g.properties && g.properties.altText) g.properties.altText = str(name);
-          if (f) { ['wrapped', 'shortened'].forEach((m) => { const i = titles[m].findIndex((x) => x.page === f.page && x.title === k); if (i >= 0) titles[m].splice(i, 1); });
-            if (tf.mode !== 'one') titles[tf.mode].push({ page: f.page, title: name, shown: tf.shown }); } };
+          // (the reviewer's third review, item 4: the entry this visual's title gave, not the first with the same title,
+          // which may be another chart's)
+          if (f) { ['wrapped', 'shortened'].forEach((m) => { const i = titles[m].indexOf(f.entry); if (i >= 0) titles[m].splice(i, 1); });
+            f.entry = null; if (tf.mode !== 'one') titles[tf.mode].push(f.entry = { page: f.page, title: name, shown: tf.shown }); } };
         Object.keys(same).filter((k) => same[k].length > 1).forEach((k) => { const nth = {}, one = new Set(same[k].map(colOf)).size === 1; same[k].slice().sort(order).forEach((v) => { const c = colOf(v);
           // (the reviewer's second review, item 8: charts with the same measure and the same column kept the same title
           // and alt text: the second and later are numbered, "Total Sales by City (2)")
