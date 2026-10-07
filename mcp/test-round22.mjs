@@ -350,6 +350,32 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     const t0 = Date.now(); for (let i = 0; i < 3; i++) await ask('suggest_fields', { path: 'r22c-large', kpis: 4, focus: 'logistics' }); const ms = (Date.now() - t0) / 3;
     chk(() => ms < 1500, () => `10. suggest_fields on the 300-table model takes ${Math.round(ms)} ms a call (under 1500)`);
   }
+  // ---- Round 22b, the reviewer's third review (items 1, 2, 4; 3 is check-min's, 5 and 6 the website's) ----
+  {
+    const rel = (ft, fc, tt, tc) => ({ name: `${ft}-${tt}`, fromTable: ft, fromColumn: fc, toTable: tt, toColumn: tc });
+    const write = (d, tables, rels) => { fs.mkdirSync(path.join(ROOT, d, 'M.SemanticModel'), { recursive: true }); fs.writeFileSync(path.join(ROOT, d, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables, relationships: rels } })); };
+    // 1. 'Sales'[Quantity] is a column, not a call of the measure [Quantity] of Returns (whose lookup is Carrier)
+    write('r22d-col', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Quantity', 'double'), col('Region Key', 'int64')], measures: [{ name: 'Total Units', expression: "SUM ( 'Sales'[Quantity] )", formatString: '#,0' }] },
+      { name: 'Returns', partitions: mp('Returns'), columns: [col('Qty', 'int64'), col('Carrier Key', 'int64')], measures: [{ name: 'quantity', expression: 'SUM ( Returns[Qty] )', isHidden: true }] },
+      { name: 'Carrier', partitions: mp('Carrier'), columns: [col('Carrier Key', 'int64'), col('Carrier Group', 'string')] },
+      { name: 'Region', partitions: mp('Region'), columns: [col('Region Key', 'int64'), col('Region Name', 'string')] }],
+      [rel('Sales', 'Region Key', 'Region', 'Region Key'), rel('Returns', 'Carrier Key', 'Carrier', 'Carrier Key')]);
+    const a = await ask('suggest_fields', { path: 'r22d-col' });
+    chk(() => !a.err && a.j.measure.m === 'Total Units' && Object.values(a.j.cats).every((v) => v && v.t === 'Region'), () => `3rd-1. 'Sales'[Quantity] reads a column: every category Region, never Carrier: ${a.err ? a.t.slice(0, 200) : JSON.stringify(a.j.cats)}`);
+    // 2. DATE ( ... ) is a function, not the table 'Date': the time axis and the year slicer from 'Ship Date' (related)
+    const cal = (n) => ({ name: n, dataCategory: 'Time', partitions: mp(n), columns: [Object.assign(col('Date', 'dateTime'), { isKey: true }), col('Year', 'int64'), col('Month', 'string'), col('Month Number', 'int64')] });
+    write('r22d-fn', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Ship', 'dateTime'), col('Channel', 'string')], measures: [{ name: 'Total Sales', expression: 'CALCULATE ( SUM ( Sales[Amount] ), Sales[Ship] >= DATE ( 2024, 1, 1 ) )', formatString: '#,0' }] }, cal('Date'), cal('Ship Date')],
+      [rel('Sales', 'Ship', 'Ship Date', 'Date')]);
+    const b = await ask('suggest_fields', { path: 'r22d-fn' }), bd = b.err ? b.t.slice(0, 200) : JSON.stringify({ date: b.j.date, slicers: b.j.slicers });
+    chk(() => !b.err && b.j.date && b.j.date.t === 'Ship Date' && !/"t":"Date"/.test(bd), () => `3rd-2. DATE ( ) is a function: the axis and slicers from 'Ship Date': ${bd}`);
+    // 4. two charts by the same measure and column, the first's title shortened, the second's whole: numbering the
+    //    second leaves the first's "shortened" entry in the notes
+    const long1 = 'Sales channel used to complete the whole transaction', long2 = 'Total net sales after every discount and every return';
+    const c = await ask('create_report', { path: 'r22-long', name: 'R22d titles', fields: { kpis: [`Sales[${long2}]`], measure: `Sales[${long2}]`, category: `Sales[${long1}]`, category2: `Sales[${long1}]` },
+      pages: [{ name: 'P', width: 1920, height: 1080, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w: 400, h: 400 }, { kind: 'column', x: 500, y: 100, w: 1380, h: 400 }] }] });
+    const n = notes(c);
+    chk(() => !c.err && /shortened/.test(n) && n.includes(`${long2} by ${long1}\\"`), () => `3rd-4. the first chart's shortened title is still told: ${c.err ? c.t.slice(0, 200) : n.slice(0, 600)}`);
+  }
   // X-03. Node 20.10 everywhere the MCP says what it runs on, and a CLI that cannot be loaded never stops the server:
   //    started with the CLI's import failing, the server lists its 8 tools and check_report says the validator is not
   //    available, and why

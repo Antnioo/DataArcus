@@ -141,6 +141,13 @@ ok(/track\('search', \{ search_term: safeTerm\(/.test(main), "main.js: the blog 
       ok(safe(q) === '(redacted)', `safeTerm("${q}") must be "(redacted)" (a phone number), got "${safe(q)}"`);
     for (const q of ['top 10 2024 2025', '5 2024 2025', '2024 2025 2026 30', '2024 2025 top 10'])
       ok(safe(q) === q, `safeTerm("${q}") must keep the term, got "${safe(q)}"`);
+    // (round 22b, the reviewer's third review, items 5 and 6) a number of 3 or more digits beside two or more years counts
+    // whole ("971 2030 2015"); Arabic-Indic and Eastern Arabic digits count as digits ("٠٥٠١٢٣٤٥٦٧"), and the term is
+    // sent as typed when kept
+    for (const q of ['971 2030 2015', '123 2024 2025', '\u0660\u0665\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667', '\u06f0\u06f5\u06f0\u06f1\u06f2\u06f3\u06f4\u06f5\u06f6\u06f7', '+\u0669\u0667\u0661 \u0665\u0660 \u0661\u0662\u0663 \u0664\u0665\u0666\u0667'])
+      ok(safe(q) === '(redacted)', `safeTerm("${q}") must be "(redacted)" (a phone number), got "${safe(q)}"`);
+    for (const q of ['5 2024 2025', 'top 10 2024 2025', '\u062a\u0642\u0631\u064a\u0631 \u0662\u0660\u0662\u0665', 'dp-600 2025'])
+      ok(safe(q) === q, `safeTerm("${q}") must keep the term as typed, got "${safe(q)}"`);
     for (const q of ['dp-600 2025', 'fy2025', 'fy2024 vs fy2025', 'q1 2025', 'pl-300', 'pl-300 dp-600', 'top 10', 'power bi 2024 2025 2026'])
       ok(safe(q) === q, `safeTerm("${q}") must keep the term, got "${safe(q)}"`);
   }
