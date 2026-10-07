@@ -91,6 +91,31 @@ measure reaches no category (the note, no chart by the unrelated table); X-05 no
 (the line chart) can still come from a date table the measure does not reach; a model with several tables and no
 relationship at all is still picked from as before (round 22's rule: no relationships = unknown).
 
+### Round 22b, the reviewer's second review (22b's own changes; added 21:37 UTC; checks first)
+**Commits:** `40b27a8` the checks (red first: items 1, 2, 3, 4, 5, 6, 7, 8); `6e6bbfa` items 1, 6, 7; `27d36ca` items 2, 3, 4,
+5, 10; `75374ab` item 8; `7ef71d1` item 9; then this report.
+| # | Result | Fix |
+|---|---|---|
+| 1 | **CONFIRMED** (a lookbehind in main.js and main.min.js: Safari before 16.4 drops the whole script) | `6e6bbfa`: safeTerm without one; `test-analytics-events.mjs` fails on any `(?<=` / `(?<!` in `assets/js` |
+| 2 | **CONFIRMED** (`SUM ( shipments[Amount] )`: no category at all) | `27d36ca`: names matched without regard to case |
+| 3 | **CONFIRMED** (scope Measures + Region, the measure reading Shipments two hops away: no category) | `27d36ca`: the whole model's tables (`modelTables`) |
+| 4 | **CONFIRMED** (fields.measure Deliveries: the bar chart by Hub, the picker's own measure's lookup) | `27d36ca`: `opt.main`, the plan's measure, decides; the note names it |
+| 5 | **CONFIRMED** (two calendars, Sales related to "Ship Date": axis and Year slicer from "Order Calendar") | `27d36ca`: the date fields from reached tables |
+| 6 | **CONFIRMED** (5 forms: "050,2024,2025", "050 , 2024 , 2025", "050_2024_2025", "050x2024x2025", "+971,50,2030,2015") | `6e6bbfa`: numbers joined by anything but a word of 2+ letters are one run |
+| 7 | **CONFIRMED** (3 forms redacted) | `6e6bbfa`: a number of up to 3 digits beside years is kept, any order. Accepted with it: "50 2024 2025" kept (moved to the accepted cases, with the reason) |
+| 8 | **CONFIRMED** (two "Total Sales by Region") | `75374ab`: "(2)" after the first; round 22's check e changed with this decision beside it |
+| 9 | **CONFIRMED** (on a scratch copy: a changed `translations/theme-generator.min.js`, loaded with no `?v=`, passed the old check; fails the new) | `7ef71d1`: keyed by path; no stamp = fail |
+| 10 | **REFUTED as measured** (15 ms a `suggest()` on the 300-table model: only the measures reached are read) | done with item 2's rewrite (one reading per measure, a map of names); timing check kept (under 1500 ms a call) |
+**Tests:** `test-round22.mjs` 48 -> 53; full `npm test` **688 of 688, golden PASS** (no golden number changed); website all 17
+suites PASS; `check-min`, `test-site-config`, `test-analytics-events`, `csp` PASS; CI green on `7ef71d1`.
+**For the laptop to prove (what changes what Desktop shows):** 2, 3, 4: charts by a lookup of the table the measure
+reads (a measures table, lower-case DAX, a plan naming another fact table's measure: golden task 10 and a made-up
+model); 5: a model with two calendars, the line chart by the related one; 8: two charts by the same column, the second
+"(2)", whole; X-04 and items 10 and e of round 22 as listed above. 1, 6, 7, 9: the website only (1 is Safari before 16.4:
+the site's scripts load again there).
+**Seen, not in scope:** a model whose measure reaches no date table now gets no line chart (left out and told as a
+chart without its field, no note of its own); the website's picker still has no relationships.
+
 ## Sitting 7-8 Oct (laptop builder; branch `fix/round-22` from `origin/fix/round-21` `9d927a9` with `origin/main` `7cdf252` merged in as `8b7d4d6`; not merged, no PR)
 **Started 15:22 UTC on 7 Oct (19:22 Dubai). Hard stop 21:20 UTC; the stop report is below ("the stop report"), pushed 18:48 UTC.** Two sessions: the first stopped at about 15:28, the second did the work. The owner gave
 the laptop; this is the only session driving Power BI Desktop. Work tree on the laptop: `C:\DataArcus\r22-wt` (the main
