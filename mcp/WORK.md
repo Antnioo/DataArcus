@@ -75,6 +75,22 @@ of numbers with 7 digits) and keeps "800 2024" (a 7-digit toll-free number reads
 | The website's picker has no relationships (round 22): the same total can show there | open since round 22 |
 | Every item of the round 22 stop report's list | unchanged |
 
+### Round 22b, the outside review's X-03 to X-06 (added by the reviewer at 20:47 UTC; same rules, checks first)
+**Commits:** `55a1669` the checks (`test-round22.mjs` 40 -> 48, `test-analytics-events.mjs` + X-06's cases); `93a99c2` X-04 in
+the picker; `63b0550` X-04's note and X-05 in the writer and the server.
+| # | Result | Fix |
+|---|---|---|
+| X-03 | **CONFIRMED, already fixed by item 5** (`0f5c367`): the new check (a server started with the CLI's import failing lists 8 tools; check_report answers with the validator "not available" and the reason) passed when written; no MCP document says Node 18 | none more. check_report keeps answering with its other checks and says why the validator did not run, rather than a tool error (the design since round 17) |
+| X-04 | **CONFIRMED** (red: Sales and an unrelated Region, every chart by Region) | `93a99c2`, `63b0550`: only reached categories; the date table's parts only when reached; otherwise the charts that need a category are left out (the existing "never without its field" path, told) and a note names the tables and the fixes (a relationship, or a category in "fields"). Not a card in their place: a decision for the owner if wanted |
+| X-05 | **CONFIRMED** (red: `IF ( ISBLANK ( 'Sa''les EU'[Total<tab>Sales] ) ...`) | `63b0550`: one test, `hasControl` in the writer, used by the server's scripts too; no message card for such a field, named (escaped) in the notes. Hostile-name fixture: quotes, brackets, \p{Cf}, a 200-character name and an instruction-like description: files valid (validator 0 errors, schemas 0), description never in the answer or files |
+| X-06 | kept as decided | a check documents "2015 2035" and "Vision 2030" as an accepted case, with the reason |
+**Tests:** full `npm test` **683 of 683, golden PASS** (Linux, on `63b0550`); website pbip 73, theme-generator 893,
+theme-generator-lab 893 PASS; `check-min` (stamps), `test-analytics-events` PASS. **For the laptop:** X-04 on a model whose
+measure reaches no category (the note, no chart by the unrelated table); X-05 nothing visible (only a card left out).
+**Seen, not in scope:** `boundFields` lists a chart that was left out (with its measure only), as before; the time axis
+(the line chart) can still come from a date table the measure does not reach; a model with several tables and no
+relationship at all is still picked from as before (round 22's rule: no relationships = unknown).
+
 ## Sitting 7-8 Oct (laptop builder; branch `fix/round-22` from `origin/fix/round-21` `9d927a9` with `origin/main` `7cdf252` merged in as `8b7d4d6`; not merged, no PR)
 **Started 15:22 UTC on 7 Oct (19:22 Dubai). Hard stop 21:20 UTC; the stop report is below ("the stop report"), pushed 18:48 UTC.** Two sessions: the first stopped at about 15:28, the second did the work. The owner gave
 the laptop; this is the only session driving Power BI Desktop. Work tree on the laptop: `C:\DataArcus\r22-wt` (the main
