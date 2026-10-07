@@ -3997,6 +3997,23 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => /measure Orders\b/.test(sc) && !/Total\tSales|Total.Sales/.test(sc) && /Sales\[Total\\\\u0009Sales\]/.test(JSON.stringify(h.j.scriptsSkip || null)),
       () => `the fix script must leave out the measure with a tab in its name and the answer must name it escaped: script ${JSON.stringify(sc.slice(0, 300))} skip ${JSON.stringify(h.err ? h.t.slice(0, 200) : h.j.scriptsSkip || null)}`);
   }
+  // 3. Repeated titles (golden task 7, the owner's (a), 7 Oct): where two or more visuals of a page would carry the same
+  //    title (the model without measures: three charts "Count of Order Id"), each gets its grouping column in brackets
+  //    ("Count of Order Id (Region)"), English and Arabic alike; a title already unique is not changed
+  {
+    fs.cpSync(path.join(HERE, 'test-models/no-measures'), path.join(ROOT, 'r20-plain'), { recursive: true });
+    const titles = async (lang) => { const pl = await ask('plan_layout', { layout: 'exec', kpis: 4, lang }); const x = await ask('create_report', { path: 'r20-plain', name: 'R20 plain ' + lang, lang, design: pl.j.design });
+      if (x.err) return { err: x.t.slice(0, 200) };
+      const def = path.join(ROOT, 'r20-plain', x.j.report, 'definition', 'pages'), order = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder;
+      return order.map((pg) => fs.readdirSync(path.join(def, pg, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, pg, 'visuals', v, 'visual.json'), 'utf8')))
+        .filter((v) => v.visual && /Chart$|^tableEx$/.test(v.visual.visualType)).map((v) => { const t = ((v.visual.visualContainerObjects || {}).title || [{}])[0]; return t.properties && t.properties.text ? t.properties.text.expr.Literal.Value.replace(/^'|'$/g, '') : null; }).filter(Boolean)); };
+    for (const lang of ['en', 'ar']) {
+      const pages = await titles(lang), dup = (ts) => ts.filter((t, i) => ts.indexOf(t) !== i);
+      // (English titles carry "by <column>" and are already their own: unchanged, no brackets; the Arabic ones repeated)
+      chk(() => Array.isArray(pages) && pages.length >= 1 && pages.every((ts) => !dup(ts).length) && (lang === 'ar' ? pages.flat().some((t) => / \([^)]+\)$/.test(t)) : !pages.flat().some((t) => / \([^)]+\)$/.test(t))),
+        () => `${lang}: every chart title of a page must be its own, a repeated one with its grouping column in brackets: ${JSON.stringify(pages)}`);
+    }
+  }
 }
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });

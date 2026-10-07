@@ -1457,6 +1457,16 @@
           } }
         return Object.assign({}, Object.keys(objects).length ? { objects } : {}, Object.keys(vco).length ? { visualContainerObjects: vco } : {});
       };
+      // Round 20 (golden task 7, the owner's (a), 7 Oct 2026: on the Arabic page of a model without measures three charts
+      // were all titled "عدد Order Id"): charts of a page whose titles would be the same each get their grouping column
+      // in brackets, "عدد Order Id (Region)", English and Arabic alike; a title that is already its own is not changed
+      {
+        const tOf = (v) => { const t = ((v.visual.visualContainerObjects || {}).title || [])[0], x = t && t.properties && t.properties.text; return x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") : null; };
+        const same = {};
+        visuals.filter((v) => v.visual && v.visual.query && v.visual.query.queryState.Category && tOf(v)).forEach((v) => { (same[tOf(v)] = same[tOf(v)] || []).push(v); });
+        Object.keys(same).filter((k) => same[k].length > 1).forEach((k) => same[k].forEach((v) => { const p = v.visual.query.queryState.Category.projections[0], c = p.displayName || p.nativeQueryRef;
+          if (c) v.visual.visualContainerObjects.title[0].properties.text = str(k + ' (' + c + ')'); }));
+      }
       visuals.forEach((v) => {
         add(D + '/pages/' + pageName + '/visuals/' + v.name + '/visual.json', json(v));
         const p = pos[v.name];
