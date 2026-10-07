@@ -2319,6 +2319,10 @@ Desktop updated itself from 2.158.1177: the builder scripts' fixed install path 
 | Golden task 10 with rows (the Logistics tables and the calendar as DAX tables) | PASS: opens with data, no Refresh (Desktop's bar "Some of the tables have incomplete or no data" for the other 274 tables). Seen: the same total for every Carrier Group and Route Group (the picked lookups are not related to the Shipments table) | `gshots\pages\g10-en-p1.png` |
 | A page 640 x 360 (golden task 5) | as built: card values touch the card's bottom on page 1, cut in half on page 2, whose table scrolls. With the KPI cards 116 high on the 720 grid (58 at this size; they were 48) and one page: the values whole and clear of the edge, English and Arabic. "Your logo" is still cut in English | `gshots\pages\g5-en-p1.png`, `g5-en-p2.png` (before), `g5-en-b-p1.png`, `g5-ar-b-p1.png` |
 | A 960 x 720 page (golden task 4) | the table's four columns fit (the three-fifths share). The capture shows the page's middle 75% only (Desktop fits the width; the header and the last rows are outside the captured window) | `gshots\pages\g4s-en-p1.png` |
+| The Arabic table's "Total" word, four ways (19:01 UTC) | (1) as today: names at the right, no word; (2) the name column first in the file: names at the LEFT, "Total" in English; (3) the name column first at width 0, a report-level text measure at the right (the name on a row, «الإجمالي» on the total row), automatic widths off: names at the right, the word shown, narrow columns; (4) as 3 with automatic widths on: **names at the right, «الإجمالي» shown, the hidden column stays hidden, the columns grow to fit**. Not built (a card for the owner) | `shots\total-lab-crop.png` |
+| Golden task 6 in English, the table's horizontal scrollbar | the cause: the two fields a table always keeps were never measured against its width. Fixed: PASS, no scrollbar (the text smaller) | `gshots\pages\g6-en-c-p1.png` (before), `g6-en-d-p1.png` |
+| Golden task 10, the same total for every group | the cause: the picker ignored relationships. Fixed: the bars by Hub Region and Lane Region differ; the table's two columns of other fact tables' measures still repeat their total | `gshots\pages\g10-en-p1.png` (before), `g10-en-d-p1.png` |
+| "Your logo" at 640 x 360 | the same 75 x 25 text box at 8pt outside the header group draws the words whole (75 to 110 wide): the width is not the cause; inside the header its last letter is under a small grey block. Cause not found | `shots\logo-lab-crop.png` |
 
 Facts measured:
 - **DATATABLE takes a date as "yyyy-mm-dd"** (and "yyyy-mm-dd hh:mm:ss"), not the ISO form with a "T". A model written
@@ -2328,8 +2332,12 @@ Facts measured:
 - **A script that starts Desktop keeps the caller's output pipe** even when it redirects its own child: a tool call
   that pipes its output (`... | cut`) returns only when Desktop closes. `r22-gshots.ps1` closes the test report at its end.
 - **Data bars beside a plain copy:** a measure twice in one table (round 21's item 4), written by hand on a made-up report (`builder-scripts22-databars.mjs`, `r22-databars2.mjs`; crops `shotsdb-lab-crop.png`, `db-lab2-crop.png`): (1) the same projection twice (one queryRef): both columns draw, and a data bar on that queryRef turns BOTH into bars; (2) the copy with its own queryRef and nativeQueryRef ("Sales.Total Sales1", "Total Sales1") after the original: two columns, and a bar whose selector names the ORIGINAL's queryRef draws on the original only: a bar column, then the plain number: **this form works**; (3) a bar whose selector names the copy's queryRef: no bar; (4) the copy first and the original (with a displayName) after it, the bar on the original: no bar; (5) a copy whose queryRef differs but whose nativeQueryRef is the original's: "Error fetching data for this visual". Not saved back by Desktop, so how Desktop itself names a second copy is still not read.
-- **Not measured:** the Arabic letter widths in Segoe UI (golden task 6 in English still has a horizontal scrollbar
-  in its table).
+- **Arabic names in Segoe UI** (task 6's two headers at 14pt): our count 364 and 438, Microsoft's report CLI (`text measure`,
+  font metrics) 386 and 471, Desktop about 311 and 418 (read off the capture at the table's own size, so near, not exact):
+  our count is not too small for what Desktop draws.
+- **A table column written with width 0 stays hidden** with the automatic column widths on (`columnWidth`, selector
+  `{ metadata: queryRef }`, value `0D`), and a report-level text measure can stand for the name column, giving the
+  total row its own word.
 
 ## Lessons
 - **Night of 6-7 Oct: a bar chart at the theme's 10pt (1280 x 720) needs 22.2 a row, 45 above the first row and 8
