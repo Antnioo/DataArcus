@@ -1106,6 +1106,15 @@
             }
             if (s.kind === 'kpi') cc = Object.assign({}, cc, { V: Math.min(cc.V, rowValue()) });
             visual.objects = cardObjects(cc, s.kind === 'kpi' ? align : null, cf0); cardFrame(visual.visualContainerObjects, cc, s.kind === 'kpi' ? kpiTitle : TITLE);
+            // Round 21 (the capabilities lab's #1, measured in Desktop 2.158 on 7 Oct 2026; the owner's go): with the "No data"
+            // option a card says "No data" (Arabic: لا توجد بيانات) instead of "--": value.showBlankAs in the default entry.
+            // The blank text is drawn at the value's size, and «لا توجد بيانات» at 38pt was cut by the card's bottom, at 30pt
+            // whole: the value is one step under (0.8: 30 under 38). Only on cards about 300 wide or more (at 240 the Arabic
+            // was cut with "..." at 30pt); narrower cards keep "--".
+            if (NODATA && (s.kind === 'kpi' || s.kind === 'card') && s.w >= 300 * pg.page.h / 720) {
+              const ve = visual.objects.value.find((e) => e.selector && e.selector.id === 'default');
+              if (ve) { ve.properties.fontSize = num(Math.round(cc.V * 0.8)); ve.properties.showBlankAs = str(lang === 'ar' ? 'لا توجد بيانات' : 'No data'); }
+            }
             // #7 (seen in Desktop 2.158, round 11: the value 9 to the right of its title's first letter): a KPI card's inner
             // padding is 0 at the reading start, so the value starts at its title's edge (paddingIndividual and the
             // margins, in Microsoft's theme schema for the card visual)

@@ -4017,6 +4017,33 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     }
   }
 }
+// ---------- round 21 (7 Oct, the owner's go on the capabilities lab's "adopt now" list) ----------
+{
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }], col = (name, dataType) => ({ name, dataType, sourceColumn: name });
+  const dir = 'r21'; fs.mkdirSync(path.join(ROOT, dir, 'M.SemanticModel'), { recursive: true });
+  fs.writeFileSync(path.join(ROOT, dir, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'),
+    columns: [col('Amount', 'double'), col('Region', 'string'), col('Channel', 'string'), col('Quarter', 'string')],
+    measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }] }] } }));
+  const vis = (x) => { if (x.err) return []; const out = []; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((f) => { const q = path.join(d, f.name); if (f.isDirectory()) walk(q); else if (f.name === 'visual.json') out.push(JSON.parse(fs.readFileSync(q, 'utf8'))); }); walk(path.join(ROOT, dir, x.j.report, 'definition', 'pages')); return out.filter((v) => v.visual); };
+  const build = async (name, extra, lang) => { const pl = await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', lang: lang || 'en' }); return ask('create_report', Object.assign({ path: dir, name, lang: lang || 'en', secondPage: false, design: pl.j.design }, extra || {})); };
+  const kpis = (vs) => vs.filter((v) => v.visual.visualType === 'cardVisual' && v.parentGroupName && !JSON.stringify(v.visual.query || '').includes('"Schema":"extension"'));
+  const blankOf = (v) => { const e = (v.visual.objects.value || []).find((x) => x.selector && x.selector.id === 'default'); return e && e.properties.showBlankAs ? e.properties.showBlankAs.expr.Literal.Value : null; };
+  const sizeOf = (v) => { const e = (v.visual.objects.value || []).find((x) => x.selector && x.selector.id === 'default'); return e ? parseFloat(e.properties.fontSize.expr.Literal.Value) : NaN; };
+  // 1. (lab #1) the KPI card's blank text: "No data" / «لا توجد بيانات» in value.showBlankAs (selector default, the entry
+  //    with the value's size), with the option noDataMessage only; the value one size step under (the lab: 30 under 38);
+  //    only on cards about 300 wide or more at 1280 x 720 (scaled with the page); narrower cards keep "--"
+  {
+    const off = await build('R21 blank off'), on = await build('R21 blank on', { noDataMessage: true }), ar = await build('R21 blank ar', { noDataMessage: true }, 'ar');
+    const k0 = kpis(vis(off)), k1 = kpis(vis(on)), k2 = kpis(vis(ar));
+    const wide = (v, x) => v.position.width >= 300 * (x.j.page ? x.j.page.h : 1080) / 720;
+    chk(() => k0.length >= 3 && k0.every((v) => blankOf(v) === null), () => `noDataMessage off: no blank text on the cards: ${JSON.stringify(k0.map(blankOf))}`);
+    chk(() => k1.length >= 3 && k1.every((v, i) => (wide(v, on) ? blankOf(v) === "'No data'" && sizeOf(v) === Math.round(sizeOf(k0[i]) * 0.8) : blankOf(v) === null)) && k1.some((v) => blankOf(v)),
+      () => `noDataMessage on: "No data" on the cards 300 wide or more, the value a step under: ${JSON.stringify(k1.map((v, i) => [v.position.width, blankOf(v), sizeOf(v), sizeOf(k0[i])]))} ${on.err ? on.t.slice(0, 200) : ''}`);
+    chk(() => k2.some((v) => blankOf(v) === "'لا توجد بيانات'"), () => `Arabic: «لا توجد بيانات»: ${JSON.stringify(k2.map(blankOf))}`);
+  }
+}
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);
