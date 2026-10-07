@@ -1465,7 +1465,10 @@
         const same = {};
         visuals.filter((v) => v.visual && v.visual.query && v.visual.query.queryState.Category && tOf(v)).forEach((v) => { (same[tOf(v)] = same[tOf(v)] || []).push(v); });
         Object.keys(same).filter((k) => same[k].length > 1).forEach((k) => same[k].forEach((v) => { const p = v.visual.query.queryState.Category.projections[0], c = p.displayName || p.nativeQueryRef;
-          if (c) v.visual.visualContainerObjects.title[0].properties.text = str(k + ' (' + c + ')'); }));
+          // (never a script the title does not have already: round 14's rule keeps an Arabic title free of English names;
+          // "عدد Order Id" holds Latin letters already, so "(Region)" may follow it)
+          const lat = /[A-Za-z]/, adds = (x) => (AR_LETTERS.test(c) && !AR_LETTERS.test(x)) || (lat.test(c) && !lat.test(x));
+          if (c && !adds(k)) v.visual.visualContainerObjects.title[0].properties.text = str(k + ' (' + c + ')'); }));
       }
       visuals.forEach((v) => {
         add(D + '/pages/' + pageName + '/visuals/' + v.name + '/visual.json', json(v));

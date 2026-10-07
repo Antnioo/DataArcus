@@ -3974,8 +3974,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
 // #table({names}, {rows}) loads every column as text on Refresh, whatever the TMDL column declares.
 {
   const dirs = ['test-models/arabic-long-names/Arabic Long Names.SemanticModel/definition/tables', 'test-models/no-measures/Plain Orders.SemanticModel/definition/tables'].map((d) => path.join(path.dirname(fileURLToPath(import.meta.url)), d));
-  const parts = dirs.flatMap((d) => fs.readdirSync(d).map((f) => ({ f, t: fs.readFileSync(path.join(d, f), 'utf8') }))).filter((x) => /#table\(/.test(x.t));
-  const untyped = parts.filter((x) => !/Source = #table\(type table \[/.test(x.t)).map((x) => x.f);
+  const parts = dirs.flatMap((d) => fs.readdirSync(d).map((f) => ({ f, t: fs.readFileSync(path.join(d, f), 'utf8') }))).filter((x) => /#table\(|DATATABLE \(/.test(x.t));   // (round 20: DAX tables too)
+  // (round 20, the owner's yes of 6 Oct: the rows became DAX tables, DATATABLE with a type for every column, which
+  // Desktop opens with data; a Power Query table's rows still have to be a typed #table)
+  const untyped = parts.filter((x) => !/Source = #table\(type table \[/.test(x.t) && !/= calculated\n\t\tmode: import\n\t\tsource = DATATABLE \( "[^"]+", (DATETIME|INTEGER|STRING|DOUBLE|BOOLEAN)/.test(x.t)).map((x) => x.f);
   checks++; if (!(parts.length === 5 && !untyped.length)) problems.push(`the golden test models' made-up rows must be typed tables (#table(type table [...], rows)): ${parts.length} partitions with rows, untyped: ${untyped.join(', ')}`);
 }
 // ---------- round 20 (7 Oct, the owner's "all recommended"): the audit's AUD-032 and the repeated titles ----------
