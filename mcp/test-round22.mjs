@@ -242,8 +242,9 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     const top = shipped.reduce((acc, [k, v]) => (cmp(min(v.engines.node), acc[1]) > 0 ? [k, min(v.engines.node)] : acc), ['', [0, 0, 0]]);
     chk(() => cmp(min(pkg.engines.node), top[1]) >= 0, () => `5. engines.node (${pkg.engines.node}) must be at least the highest a shipped package needs: ${top[0]} ${top[1].join('.')}`);
   }
-  // 8. a table's text made smaller so its two kept fields fit (round 22) is the size its fields are fitted at: a field
-  //    that fits at that size is kept; and a table whose two fields are wider than its box even at 8pt is told
+  // 8. a table whose two kept fields are wider than its box even at 8pt is told. The review's other half (a field that
+  //    fits at the smaller size stays out) is REFUTED: the size loop before the round 22 shrink already tries every size
+  //    down to 8 and keeps the most fields (at 700 wide Qty fits at 8pt, 644, and is kept; this passed before the fix)
   {
     const long1 = 'Sales channel used to complete the whole transaction', long2 = 'Total net sales after every discount and every return';
     model('r22b-fit', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col(long1, 'string')],
@@ -251,8 +252,8 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     const mk = (w) => ask('create_report', { path: 'r22b-fit', name: 'R22b fit ' + w, fields: { kpis: [`Sales[${long2}]`], measure: `Sales[${long2}]`, category: `Sales[${long1}]`, table: [`Sales[${long1}]`, `Sales[${long2}]`, 'Sales[Qty]'] },
       pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'table', x: 36, y: 100, w, h: 300 }] }] });
     const cols = (x) => { const t = vis(x, 'r22b-fit').find((v) => v.visual.visualType === 'tableEx'); return t ? t.visual.query.queryState.Values.projections.length : 0; };
-    const fit = await mk(640), tiny = await mk(300);
-    chk(() => !fit.err && cols(fit) === 3 && !(fit.j.tableColumns || []).length, () => `8. at the smaller size Qty fits too and is kept: ${cols(fit)} columns, tableColumns ${JSON.stringify(fit.err ? fit.t.slice(0, 200) : fit.j.tableColumns || null)} ${notes(fit).slice(0, 300)}`);
+    const fit = await mk(700), tiny = await mk(300);
+    chk(() => !fit.err && cols(fit) === 3 && !(fit.j.tableColumns || []).length, () => `8 (REFUTED). at 8pt Qty fits too and is kept: ${cols(fit)} columns, tableColumns ${JSON.stringify(fit.err ? fit.t.slice(0, 200) : fit.j.tableColumns || null)} ${notes(fit).slice(0, 300)}`);
     chk(() => !tiny.err && /wider than (its|the) table/.test(notes(tiny)), () => `8. two fields wider than a 300-wide table even at 8pt are told: ${notes(tiny).slice(0, 500)}`);
   }
   // 10. charts that would share a title each get a title of their own: the column in brackets, and where two charts of
