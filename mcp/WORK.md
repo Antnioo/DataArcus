@@ -27,6 +27,54 @@ the cause. Then the suites the changes touch, the full `npm test` once (Linux) a
 `npm test`: all green, the count grows (663 of 663 on the laptop at `6b122ff`). Only 2, 3, 8 and 10 can change what
 Desktop shows: they go to "for the laptop to prove".
 
+### Round 22b, the report (cloud builder, Linux; branch `fix/round-22b`, pushed; not merged, no PR)
+**Commits:** `3645d5f` plan and expected, `mcp/quick.tmp.mjs` deleted; `202342a` the failing checks (all ten items, red
+first); `692ad33` item 1; `309de43` items 2, 3; `0f5c367` items 4, 5, 6, 9; `6dc9c5a` items 8, 10; `97a3f9e` item 8's
+check as the refutation, item 10's model; `1ac6b65` item 7; then this report with golden task 10's number.
+
+**Tests, before -> after:** `mcp/test-round22.mjs` 28 -> 40 checks (12 new; 12 red before the fixes, the one of item 8's
+refuted half passes on the old code by design). `npm test` 663 of 663 (laptop, `6b122ff`) -> **675 of 675, golden PASS**
+(Linux). Golden changed once, with its cause in "why": task 10 `suggestChars` 14364 -> 5610 (item 2: the slicer pool
+holds only the tables the measure reaches; categories, slicers and KPIs the same). Website: all 17 suites PASS
+(`run-all.mjs`); `check-min` (now with the `?v=` check), `test-site-config`, `test-analytics-events` (+26 safeTerm
+cases), `csp` PASS. No older check changed.
+
+| # | Finding | Result | Fix |
+|---|---|---|---|
+| 1 | safeTerm lets phone numbers with year-like groups through | **CONFIRMED** (privacy; 8 phone forms red) | `692ad33`: a run of numbers is read whole; years set aside only for a run of years alone or one number of up to 3 digits beside one year; a run starting with + or 0 always counts |
+| 2 | catB / catPool still take an unreachable table (Carrier) | **CONFIRMED** (column and map by Carrier) | `309de43`: where any category is reached, only reached ones are given out; catB falls back to catA |
+| 3 | the reachable set starts only at the measure's table | **CONFIRMED** (a measures table: every chart by Carrier) | `309de43`: starts at the tables the DAX names, through the measures it calls |
+| 4 | `skipped` shared by concurrent calls | **CONFIRMED** (four calls at once: "2 cut" on the wrong call) | `0f5c367`: one record per call |
+| 5 | the CLI loaded at start; engines >= 18 | **CONFIRMED** | `0f5c367`: `import()` when the validator runs; engines `>=20.10` (lock by npm); PRODUCT_SPEC.md's runtime line. The `.mcpb` manifest is in the packaging repo: **not checked here** |
+| 6 | the report walked three times | **CONFIRMED** ("3 cut" for one folder) | `0f5c367`: one walk |
+| 7 | pbip-bind.min.js changed, `?v=` not | **CONFIRMED** (check-min red) | `1ac6b65`: pbip-bind, pbip-export, theme-generator (which loads them) 20261007r22b; main.min.js with item 1; check-min fails on a changed .min.js with main's stamp |
+| 8 | the fit not redone after the shrink; 8pt overflow untold | **half REFUTED, half CONFIRMED.** The fit: the size loop before the shrink already tries every size to 8 and keeps the most fields, so the shrink runs only where no third field fits at any size (check passes on the old code; 30,000 random tables, no difference). The overflow: red | `6dc9c5a`: reportNotes say the table scrolls sideways and how to fix it |
+| 9 | visible() escapes \p{Cf} only | **CONFIRMED** (a page name's \u0007 raw) | `0f5c367`: one helper in model.mjs for both |
+| 10 | two "عدد Order Id (Channel)" | **CONFIRMED** (two text columns, three charts) | `6dc9c5a`: "(Channel 2)" in reading order, fitted, alt text the same |
+
+**For the laptop to prove** (only these change what Desktop shows): 2 and 3, golden task 10 (charts by Hub and Lane as
+before; its slicers the same; a model with a separate measures table: charts by a lookup of the fact table the measure
+reads); 8, a table whose two fields are wider than its box at 8pt (the note; Desktop scrolls); 10, golden task 7 Arabic
+or three charts on a two-text-column model ("(Channel)" and "(Channel 2)", whole). And the 0.2.7 package: its
+manifest's Node compatibility against `>=20.10`, then a rebuild from this branch's head.
+
+**The one decision needed:** charts of a page whose title is the same AND whose column is the same too (a bar and a donut
+both "Total Sales by Region") are left alone, as round 22 decided (a bracket would repeat itself), so their titles stay
+the same. (a) Leave them; (b) add the number there too ("Total Sales by Region (2)"). **Recommended: (a)**: the two
+charts show the same numbers; a number tells a screen reader apart from the other but means nothing to the eye.
+Also, no action needed unless the owner disagrees: safeTerm now redacts "top 10 2024 2025" and "dax 10 20 30 40" (a run
+of numbers with 7 digits) and keeps "800 2024" (a 7-digit toll-free number reads like "dp-600 2025").
+
+**Seen, not in scope:**
+| Item | Status |
+|---|---|
+| Arabic charts on English column names whose titles are the same: no bracket (round 14's script rule), so they stay the same | open, with the decision above |
+| A model whose only text column is an ID (round 22's "r22-nm", Order Id a text): a chart by Order Id | open: the picker counts an ID text column as a category |
+| A model where the measure reaches no category: the charts still take an unreachable one (as before), the same total on every bar | open: leave out the chart and tell, or use the date parts |
+| A table that shrinks for its rows (round 12) after the width shrink is not refitted either; by the same proof it cannot keep more fields | not a bug, noted |
+| The website's picker has no relationships (round 22): the same total can show there | open since round 22 |
+| Every item of the round 22 stop report's list | unchanged |
+
 ## Sitting 7-8 Oct (laptop builder; branch `fix/round-22` from `origin/fix/round-21` `9d927a9` with `origin/main` `7cdf252` merged in as `8b7d4d6`; not merged, no PR)
 **Started 15:22 UTC on 7 Oct (19:22 Dubai). Hard stop 21:20 UTC; the stop report is below ("the stop report"), pushed 18:48 UTC.** Two sessions: the first stopped at about 15:28, the second did the work. The owner gave
 the laptop; this is the only session driving Power BI Desktop. Work tree on the laptop: `C:\DataArcus\r22-wt` (the main

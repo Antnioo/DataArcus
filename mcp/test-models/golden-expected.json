@@ -37,7 +37,7 @@
     "10": {
       "visuals": "35 -> 39: round 10 (3803b7a), the navigator as buttons with a line (see task 1) | 39 -> 45: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (+6). The model's Logistics tables and calendar hold rows as DAX tables since round 22: no other number of this task changed",
       "category": "Carrier[Carrier Group] -> Hub[Hub Region]: round 22 (seen in Desktop, 7 Oct: the same total for every Carrier Group; Carrier is related to Deliveries only): the picker reads the relationships and takes a lookup the main measure's table (Shipments) is related to",
-      "suggestChars": "14410 -> 14364: round 22: the picked categories changed with the relationship rule (shorter names)"
+      "suggestChars": "14410 -> 14364: round 22: the picked categories changed with the relationship rule (shorter names) | 14364 -> 5610: round 22b (the review of round 22, item 2): the pool of slicer columns (slicerPool) holds only the tables the measure reaches (Shipments and its lookups), no longer every category of the Logistics area; the picked categories, slicers and KPIs are the same"
     }
   },
   "tasks": {
@@ -247,7 +247,7 @@
       "detailTables": 5,
       "noFocus": "asks for a focus",
       "createNoFocus": "refused",
-      "suggestChars": 14364,
+      "suggestChars": 5610,
       "kpis": "Shipments[Shipments Total Net Amount] | Deliveries[Deliveries Total Tax Amount] | Freight Costs[Freight Costs Total Tax Amount] | Freight Costs[Freight Costs Units Share %]",
       "category": "Hub[Hub Region]",
       "pages": [
