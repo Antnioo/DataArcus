@@ -121,6 +121,11 @@ ok(/track\('search', \{ search_term: safeTerm\(/.test(main), "main.js: the blog 
     for (const q of ['050 2024 2025', '+971 50 2030 2015', '971 50 2030 2015', '5520 2025', '50 2024 2025', '04 2024 2025', '050 2025', '+971501234567', '00971 50 123 4567',
       '050-123-4567', '050.123.4567', '(04) 123 4567', '+966 55 123 4567', '055 123 4567', '+44 20 7946 0958', '+1 (415) 555-2671', 'call 050 123 4567 please', '+2030 2015 2020'])
       ok(safe(q) === '(redacted)', `safeTerm("${q}") must be "(redacted)" (a phone number), got "${safe(q)}"`);
+    // (X-06, the outside review of round 22b; the reviewer's decision, keep as is: a run of years alone, "2015 2035", is
+    // kept although it has 8 digits. Year searches such as "2024 2025" and "Vision 2030" matter more than this rare
+    // case: an accepted, known gap, documented here so a change to it is a decision, not an accident)
+    for (const q of ['2015 2035', '2024 2025', 'vision 2030', 'vision 2030 2035'])
+      ok(safe(q) === q, `safeTerm("${q}") keeps a run of years alone (X-06, accepted): got "${safe(q)}"`);
     for (const q of ['dp-600 2025', 'fy2025', 'fy2024 vs fy2025', 'q1 2025', 'pl-300', 'pl-300 dp-600', 'top 10', 'power bi 2024 2025 2026'])
       ok(safe(q) === q, `safeTerm("${q}") must keep the term, got "${safe(q)}"`);
   }
