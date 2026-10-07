@@ -399,6 +399,7 @@
     const tableRows = [];   // tables whose known rows don't fit even with tight rows (round 12, #23)
     const headerGrew = [];   // pages whose header grew one row of tabs (round 12)
     const tableSmaller = [];   // tables given a smaller text so more fields fit (round 12)
+    const blankKept = [];   // round 21: KPI cards too narrow for the blank text at the value's size
     const noData = [];   // round 19: the "No data" measures, { t, m, expression }
     const NODATA = own && o.noDataMessage === true;   // (opt-in for now: see WORK.md, round 19, for the owner)
     const barCharts = [];   // round 19: column charts by day or month names written as bar charts
@@ -1123,12 +1124,14 @@
             visual.objects = cardObjects(cc, s.kind === 'kpi' ? align : null, cf0); cardFrame(visual.visualContainerObjects, cc, s.kind === 'kpi' ? kpiTitle : TITLE);
             // Round 21 (the capabilities lab's #1, measured in Desktop 2.158 on 7 Oct 2026; the owner's go): with the "No data"
             // option a card says "No data" (Arabic: لا توجد بيانات) instead of "--": value.showBlankAs in the default entry.
-            // The blank text is drawn at the value's size, and «لا توجد بيانات» at 38pt was cut by the card's bottom, at 30pt
-            // whole: the value is one step under (0.8: 30 under 38). Only on cards about 300 wide or more (at 240 the Arabic
-            // was cut with "..." at 30pt); narrower cards keep "--".
-            if (NODATA && (s.kind === 'kpi' || s.kind === 'card') && s.w >= 300 * pg.page.h / 720) {
-              const ve = visual.objects.value.find((e) => e.selector && e.selector.id === 'default');
-              if (ve) { ve.properties.fontSize = num(Math.round(cc.V * 0.8)); ve.properties.showBlankAs = str(lang === 'ar' ? 'لا توجد بيانات' : 'No data'); }
+            // The owner (7 Oct, "Keep numbers big"): the value keeps its size. The blank text is drawn at the value's size, so
+            // it is written only where it fits there: the lab's anchor (the Arabic text whole on a card 300 wide at 30pt, cut
+            // at 240) scaled by our letter widths; a narrower card keeps "--" (told: blankKept).
+            if (NODATA && (s.kind === 'kpi' || s.kind === 'card')) {
+              const ve = visual.objects.value.find((e) => e.selector && e.selector.id === 'default'), bt = lang === 'ar' ? 'لا توجد بيانات' : 'No data';
+              const need = 300 * textWidth(bt, cc.V, false, font) / textWidth('لا توجد بيانات', 30, false, 'Segoe UI');
+              if (ve && s.w >= need) ve.properties.showBlankAs = str(bt);
+              else if (ve) blankKept.push({ page: pg.name || base, title: ttl || null, w: s.w, need: Math.ceil(need) });
             }
             // #7 (seen in Desktop 2.158, round 11: the value 9 to the right of its title's first letter): a KPI card's inner
             // padding is 0 at the reading start, so the value starts at its title's edge (paddingIndividual and the
@@ -1579,7 +1582,7 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts, blankKept };
   }
 
   const api = { build, zip, crc32, textWidth, columnRoom };

@@ -4032,16 +4032,31 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const blankOf = (v) => { const e = (v.visual.objects.value || []).find((x) => x.selector && x.selector.id === 'default'); return e && e.properties.showBlankAs ? e.properties.showBlankAs.expr.Literal.Value : null; };
   const sizeOf = (v) => { const e = (v.visual.objects.value || []).find((x) => x.selector && x.selector.id === 'default'); return e ? parseFloat(e.properties.fontSize.expr.Literal.Value) : NaN; };
   // 1. (lab #1) the KPI card's blank text: "No data" / «لا توجد بيانات» in value.showBlankAs (selector default, the entry
-  //    with the value's size), with the option noDataMessage only; the value one size step under (the lab: 30 under 38);
-  //    only on cards about 300 wide or more at 1280 x 720 (scaled with the page); narrower cards keep "--"
+  //    with the value's size), with the option noDataMessage only. (The owner, 7 Oct ~12:50 Dubai, "Keep numbers big":
+  //    the value keeps its size; round 21's first rule, the value a step under, is replaced.) The text is written only
+  //    where it fits at the value's own size: the lab's Desktop measurement as the anchor (the Arabic text whole on a
+  //    card 300 wide at 30pt, cut at 240), scaled by our letter widths; narrower cards keep "--" and the answer says so.
+  //    At 1280 x 720 and 1920 x 1080, English and Arabic; and three cards in a narrow page row.
   {
-    const off = await build('R21 blank off'), on = await build('R21 blank on', { noDataMessage: true }), ar = await build('R21 blank ar', { noDataMessage: true }, 'ar');
-    const k0 = kpis(vis(off)), k1 = kpis(vis(on)), k2 = kpis(vis(ar));
-    const wide = (v, x) => v.position.width >= 300 * (x.j.page ? x.j.page.h : 1080) / 720;
-    chk(() => k0.length >= 3 && k0.every((v) => blankOf(v) === null), () => `noDataMessage off: no blank text on the cards: ${JSON.stringify(k0.map(blankOf))}`);
-    chk(() => k1.length >= 3 && k1.every((v, i) => (wide(v, on) ? blankOf(v) === "'No data'" && sizeOf(v) === Math.round(sizeOf(k0[i]) * 0.8) : blankOf(v) === null)) && k1.some((v) => blankOf(v)),
-      () => `noDataMessage on: "No data" on the cards 300 wide or more, the value a step under: ${JSON.stringify(k1.map((v, i) => [v.position.width, blankOf(v), sizeOf(v), sizeOf(k0[i])]))} ${on.err ? on.t.slice(0, 200) : ''}`);
-    chk(() => k2.some((v) => blankOf(v) === "'لا توجد بيانات'"), () => `Arabic: «لا توجد بيانات»: ${JSON.stringify(k2.map(blankOf))}`);
+    const Px = (await import('node:module')).createRequire(import.meta.url)('../assets/js/pbip-export.js');
+    const AR = 'لا توجد بيانات', minW = (t, v) => 300 * Px.textWidth(t, v, false, 'Segoe UI') / Px.textWidth(AR, 30, false, 'Segoe UI');
+    for (const [page, lang] of [['1920x1080', 'en'], ['1920x1080', 'ar'], ['1280x720', 'en'], ['1280x720', 'ar']]) {
+      const pl = await ask('plan_layout', { layout: 'ops', kpis: 6, filters: 'end', lang, page });
+      const mk = (on) => ask('create_report', Object.assign({ path: dir, name: `R21 blank ${page} ${lang} ${on}`, lang, secondPage: false, design: pl.j.design }, on ? { noDataMessage: true } : {}));
+      const off = await mk(false), on = await mk(true), k0 = kpis(vis(off)), k1 = kpis(vis(on)), T = lang === 'ar' ? AR : 'No data';
+      const rows = k1.map((v, i) => ({ w: v.position.width, v: sizeOf(v), v0: sizeOf(k0[i]), blank: blankOf(v), need: Math.round(minW(T, sizeOf(v))) }));
+      const told = /keep \\"--\\"/.test(JSON.stringify(on.err ? '' : on.j.reportNotes || ''));
+      chk(() => k1.length >= 3 && rows.every((r) => r.v === r.v0) && rows.every((r) => (r.w >= r.need ? r.blank === `'${T}'` : r.blank === null)) && (rows.every((r) => r.blank) || told),
+        () => `${page} ${lang}: the value keeps its size and "${T}" only where it fits at that size (else "--", told ${told}): ${JSON.stringify(rows)} ${on.err ? on.t.slice(0, 200) : ''}`);
+    }
+    const off = await build('R21 blank off');
+    chk(() => kpis(vis(off)).every((v) => blankOf(v) === null), () => `noDataMessage off: no blank text on the cards`);
+    // narrow cards (240 wide on 1280 x 720, where the lab saw the Arabic cut): "--" kept, the value unchanged, told
+    const hand = (on) => ask('create_report', Object.assign({ path: dir, name: 'R21 narrow ' + on, lang: 'ar', fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin %]'] },
+      pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }].concat([0, 1, 2].map((i) => ({ kind: 'kpi', x: 36 + i * 260, y: 100, w: 240, h: 110, title: 'K' + i }))) }] }, on ? { noDataMessage: true } : {}));
+    const n0 = await hand(false), n1 = await hand(true), c0 = vis(n0).filter((v) => v.visual.visualType === 'cardVisual' && v.position.width === 240), c1 = vis(n1).filter((v) => v.visual.visualType === 'cardVisual' && v.position.width === 240);
+    chk(() => c1.length === 3 && c1.every((v, i) => blankOf(v) === null && sizeOf(v) === sizeOf(c0[i])) && /keep \\"--\\"/.test(JSON.stringify(n1.j.reportNotes)),
+      () => `240-wide Arabic cards keep "--" and their size, told: ${JSON.stringify(c1.map((v, i) => [blankOf(v), sizeOf(v), sizeOf(c0[i])]))} ${n1.err ? n1.t.slice(0, 200) : JSON.stringify(n1.j.reportNotes).slice(0, 200)}`);
   }
   // 3. (lab #4) every visual title carries a heading level for screen readers: 'Heading3'; nothing to see
   {

@@ -7,9 +7,15 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 ## Round 21, the capabilities lab's "adopt now" (7 Oct, 08:31-09:31 UTC, cloud builder; branch `fix/round-21` from `fix/round-20` `585d107`; not merged)
 The owner's go (~12:30 Dubai). Source: `research/capabilities-lab`, mcp/research/POWERBI-HIDDEN-CAPABILITIES.md, "Lab 7 Oct":
 the property names, value forms and selectors Desktop 2.158 drew and saved back.
-- **Item 1, lab #1 (done):** with `noDataMessage` a KPI card says "No data" / «لا توجد بيانات» (value.showBlankAs,
-  default selector); its value one step under (0.8: the lab's 30 under 38); only on cards >= 300 wide at 1280 x 720,
-  scaled with the page. Off with the option off (still default off).
+- **Item 1, lab #1 (done; changed by the owner's answer, below):** with `noDataMessage` a KPI card says "No data" /
+  «لا توجد بيانات» (value.showBlankAs, default selector) **only where the text fits at the value's own size**; the value
+  keeps its size; a narrower card keeps "--" and reportNotes names it (blankKept). The minimum card width: the lab's
+  anchor (Arabic whole on a 300-wide card at 30pt, cut at 240) scaled by our letter widths:
+  | value pt | 20 | 24 | 28 | 30 | 34 | 38 | 42 |
+  |---|---|---|---|---|---|---|---|
+  | English "No data" (Segoe UI) | 100 | 120 | 140 | 150 | 170 | 190 | 210 |
+  | English (Tahoma) | 106 | 127 | 148 | 159 | 180 | 201 | 222 |
+  | Arabic «لا توجد بيانات» | 201 | 241 | 281 | 300 | 341 | 381 | 421 |
 - **Item 2, lab #2 (done, in part):** `subtitles` option: { slot role (plan_layout's, English or Arabic) or a hand
   slot's title: text } -> visualContainerObjects.subTitle (show, text). Only given texts. **Not built:** moving round
   20's "(Region)" brackets into a subtitle (needs a measured "which is shorter"), #3's divider (the themes use none).
@@ -25,10 +31,16 @@ the property names, value forms and selectors Desktop 2.158 drew and saved back.
 - **Tests:** npm test 588 (round 20) -> **597 of 597**, golden PASS (no golden expectation changed); website pbip 73, theme-generator 893, theme-generator-lab 893 pass;
   test-site-config, test-analytics-events, check:min pass. ?v= 20261007r21.
 
+### Round 21, for the owner
+- **Answered (7 Oct ~12:50 Dubai): "Keep numbers big".** Done (follow-up commit): the value never shrinks for the
+  blank text; "No data" only on cards wide enough at the value's size; narrower cards keep "--", told.
+
 ### Round 21, for the laptop (expected look; a FAIL is anything else)
-1. **Blank text:** golden task 10 (no rows) with `noDataMessage: true`, 1920 x 1080: every KPI card reads "No data"
-   (Arabic report «لا توجد بيانات», whole, not cut) at a size one step under the usual value; with data, the values
-   are that step smaller. FAIL: "--", a cut Arabic text, a value cut at its bottom.
+1. **Blank text:** golden task 10 (no rows) with `noDataMessage: true`: **the values at their usual size**. At 1920 x
+   1080 (cards about 507 wide, values 42pt): every card reads "No data" (Arabic «لا توجد بيانات», whole, needs 421).
+   At 1280 x 720 (cards about 339 wide, 28pt): every card reads "No data" (Arabic needs 281: fits). A hand-placed card
+   240 wide at 28pt in Arabic keeps "--" and reportNotes says so. FAIL: a value smaller than without the option, a
+   cut text, "--" on a card the table above says is wide enough.
 2. **Subtitles:** any golden exec report built with `subtitles: { "Breakdown": "..." }` (Arabic: "التوزيع"): one
    small line under the bar chart's title, shaped right in Arabic; the plot a little shorter. FAIL: no line, two lines,
    the text over the plot.
