@@ -39,11 +39,15 @@ else { console.error(`${stale.length} of ${checked} .min.js files differ from wh
   else {
     // (the reviewer's second review, item 9: keyed by the file's path, not its name, as translations/theme-generator.min.js
     // and theme-generator.min.js are two files; a changed file loaded with no ?v= at all fails too, written "(none)")
-    const keyOf = (ref) => ref.replace(/^(\.\.?\/|\/)+/, '');
-    const stampsIn = (text) => { const out = {}; for (const m of text.matchAll(/([\w./-]*\.min\.js)(?:\?v=([\w.-]+))?/g)) (out[keyOf(m[1])] = out[keyOf(m[1])] || new Set()).add(m[2] || '(none)'); return out; };
+    // (the third review, item 3: a reference is resolved from the file that holds it, so the worker's
+    // importScripts('tmdl-model.min.js') is assets/js/tmdl-model.min.js; a script's reference made for the page that
+    // loads it, '../assets/js/x.min.js' in assets/js/theme-generator.js, falls back to the path without its leading ../)
+    const known = new Set(files);
+    const keyOf = (ref, from) => { const near = path.posix.normalize(path.posix.join(path.posix.dirname(from), ref)), bare = ref.replace(/^(\.\.?\/|\/)+/, ''); return ref.startsWith('/') ? bare : known.has(near) ? near : bare; };
+    const stampsIn = (text, from) => { const out = {}; for (const m of text.matchAll(/([\w./-]*\.min\.js)(?:\?v=([\w.-]+))?/g)) { const k = keyOf(m[1], from); (out[k] = out[k] || new Set()).add(m[2] || '(none)'); } return out; };
     const pages = execSync('git ls-files "*.html" "*.js"', { cwd: ROOT, encoding: 'utf8' }).trim().split('\n').filter((f) => f && !/\.min\.js$/.test(f));
     const now = {}, before = {};
-    for (const f of pages) { const add = (to, t) => Object.entries(stampsIn(t)).forEach(([k, s]) => s.forEach((v) => (to[k] = to[k] || new Set()).add(v)));
+    for (const f of pages) { const add = (to, t) => Object.entries(stampsIn(t, f)).forEach(([k, s]) => s.forEach((v) => (to[k] = to[k] || new Set()).add(v)));
       add(now, fs.readFileSync(path.join(ROOT, f), 'utf8')); const old = git(`show ${base.trim()}:"${f}"`); if (old) add(before, old); }
     const unbumped = files.filter((min) => { const old = git(`show ${base.trim()}:"${min}"`);
       return old != null && lf(old) !== lf(fs.readFileSync(path.join(ROOT, min), 'utf8')) && now[min] && [...now[min]].some((v) => v === '(none)' || (before[min] && before[min].has(v))); });
