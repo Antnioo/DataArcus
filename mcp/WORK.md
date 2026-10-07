@@ -5,7 +5,7 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
 ## Sitting 7-8 Oct (laptop builder; branch `fix/round-22` from `origin/fix/round-21` `9d927a9` with `origin/main` `7cdf252` merged in as `8b7d4d6`; not merged, no PR)
-**Started 15:22 UTC on 7 Oct (19:22 Dubai). Hard stop 21:22 UTC; the stop report is pushed by then.** The owner gave
+**Started 15:22 UTC on 7 Oct (19:22 Dubai). Hard stop 21:20 UTC; the stop report is below ("the stop report"), pushed 18:55 UTC.** Two sessions: the first stopped at about 15:28, the second did the work. The owner gave
 the laptop; this is the only session driving Power BI Desktop. Work tree on the laptop: `C:\DataArcus\r22-wt` (the main
 checkout stays on its branch). The session's own DataArcus tools run the main checkout's older code, so every tool call
 of this sitting goes to this branch's `mcp/server.mjs` over stdio (scripts `builder-scripts\r22-*`).
@@ -49,6 +49,78 @@ and 21, (3) test models as DAX tables, (4) `feat/check-report-2` merged, (5) the
   | j | the Heading3 rule copied twice | cleanup | `5006a56`: set in frame(), where titles are made |
   Also seen while measuring b: two charts by the same column both read "Total Sales by City (City)" (round 20's bracket): fixed with e (charts by the same column are left alone).
 - 16:18: **item 1** the switch made (`pbip-export.js`, `server.mjs`: on by default, `noDataMessage: false` leaves it out); **item 3** the large model's calendar, Logistics facts and their lookups (26 tables) hold rows as DAX tables (`generate.mjs`; the other 274 unchanged); **item 4** `origin/feat/check-report-2` (`6c7f656`, its offline check already imports by file URL) merged locally: conflicts `mcp/test.mjs` (both blocks kept, this branch's first), `mcp/PRIVACY.md` (this branch's create_report row, the other's check_report row) and `mcp/WORK.md` (this branch's). The checks that read card visuals skip a message card through `isMessageCard` (report-check.mjs, exported). Full test.mjs running.
+- 17:16: full `mcp/test.mjs` on the merged tree with the default on: 653 checks, 4 failing (all older checks meeting the message cards), then green. 17:32: merge commit `1a65d99`. 18:03: full `npm test` 656 of 656, golden PASS. 18:45: full `npm test` on `73b602b`: **658 of 658, golden PASS**. 18:50: the 0.2.7 candidate built and called.
+
+### Sitting 7-8 Oct, the stop report (written 18:55 UTC; the sitting's limit is 21:20)
+**Commits** (`fix/round-22`, pushed; not merged, no PR): `7ec0e5a` WORK.md after the showcase; `7a7494a` the code review's a, b, c, e, f, g, h, i; `5006a56` the No-data switch, the large model's rows, j (work in progress); `1a65d99` the merge of `origin/feat/check-report-2` (`6c7f656`) with No data's checks, tiny pages, the test models' dates, j corrected; `5f4cea2` golden counts with their causes, task 6's months, README; `e54d7bc` the Arabic Reset gap and DESKTOP-TESTS.md; `3f81604` the website's report suite; `73b602b` the two older Reset checks. dataarcus-engine `showcase/2026-10-07`: `65a8ce6` (pushed, not merged).
+
+**Tests, before -> after:** `npm test` 600 of 600 (round 21) -> **658 of 658, golden PASS** (+35 with the merge of check_report's branch, +23 in `mcp/test-round22.mjs`, which also runs alone in under a minute) on `73b602b`, Desktop closed, 15 minutes. Website suites pbip 73, theme-generator 893, theme-generator-lab 893, design-engine 598, layout 512, layout-lab 512: PASS; `check:min`, `test-site-config`, `test-analytics-events` PASS. Not run: the website's other seven suites (their files were not touched).
+Older checks changed, each with its cause beside it: the checks that read card visuals skip a message card (`isMessageCard`, never the KPI rules themselves); a chart over its message card may write its background off and nothing else; the SVG checks read the picture measures only; the two checks of the option's "off" ask for `noDataMessage: false`; check_report's TOOLTIP_TYPE and SELECTOR_CARD cases break a real tooltip link and a KPI card; the two Reset-gap checks (Arabic: the gap after the text); two checks read CRLF checkouts. `golden-expected.json`: +6 visuals a two-page report, task 5 one page, task 6's long-title uses, each in "why".
+
+**The code review, a to j:** the table under "16:08" above (a, b, c, e, f, g, h, i CONFIRMED and fixed in `7a7494a`; d REFUTED in Desktop; j in `5006a56`, corrected in `1a65d99`: titles are made in four places, so the rule is one helper called where a page's visuals are written, not `frame()`).
+
+**Desktop (2.158.1304), per item** (crops under `<tests folder>\r22\`; the full table is in DESKTOP-TESTS.md, "2026-10-07 evening"):
+| Item | Result | Crop |
+|---|---|---|
+| 1. No data on by default, empty report (Arabic) | PASS | `gshots\pages\g8-ar-p1.png` |
+| 1. No data with data (20 golden reports) | PASS | `gshots\pages\` |
+| 2. No data on KPI cards, Arabic at 28pt, narrow, beside a picture | PASS | `shots\d2-ar-crop.png` |
+| 2. Subtitles | PASS on charts; FAIL on KPI cards as built, fixed | `shots\b2-720-crop.png`, showcase pages |
+| 2. Heading levels | PASS (nothing to see) | |
+| 2. Data labels by quarter | PASS | showcase pages |
+| 2. Data bars: a measure twice in one table (the queryRef) | **NOT MEASURED** (needs the measure added by hand in Desktop and saved) | |
+| 2. Tiny pages (640 x 360) | FAIL as built; with cards 116 high and one page: PASS, English "Your logo" still cut | `gshots\pages\g5-en-b-p1.png` |
+| 2. Arabic widths (Arabic names in an English report) | **NOT MEASURED**; task 6 English keeps its table's horizontal scrollbar | `gshots\pages\g6-en-c-p1.png` |
+| 2. Round 20's bracket on repeated titles | PASS (task 7 Arabic); FAIL for two charts by the same column, fixed | `gshots\pages\g7-ar-b-p1.png` |
+| 3. Tasks 6 and 7 open with data, no Refresh | **FAIL as built** (every visual an error: DATATABLE refuses "yyyy-mm-ddT00:00:00"), fixed: PASS; task 7 January to June in order | `gshots\pages\g6-en-p1.png`, `g7-en-b-p1.png` |
+| 3. Task 10 with rows | PASS | `gshots\pages\g10-en-p1.png` |
+| The Arabic Reset arrow's gap | FAIL as built, fixed: PASS | `shots\reset-ar-before.png`, `reset-ar.png` |
+
+**Golden reports, English / Arabic** (10 less 1 per kind of visible problem; the missing "Total" word of an Arabic table is listed, not deducted, as in every earlier table: deducted, every Arabic score with a table is 1 lower):
+| Task | Before (night of 6-7 Oct) | After |
+|---|---|---|
+| 1 Exec 1920 | 10 / 10 | 10 / 10 |
+| 2 Analysis | 10 / 10 | 10 / 10 |
+| 3 Ramadan | 10 / 10 | 10 / 10 |
+| 4 16:9 | 10 / 10 | 10 / 10 |
+| 4 4:3 | 10 / 10 | 10 / 10 (the captured middle of the page) |
+| 5 640 x 360 | 8 / 8 | 9 / 10 ("Your logo" cut in English) |
+| 6 long Arabic | 9 / 10 | 9 / 10 (as built today 0 / 0 until the date fix; English: the table's horizontal scrollbar) |
+| 7 no measures | 9 / 8 | 10 / 10 |
+| 8 redesign | 10 / 10 | 10 / 10 |
+| 10 300 tables | 8 / 8 | 9 / 9 (the same total for every group: the lookups picked are not related to the measure's table) |
+| **Mean** | **9.4 / 9.4** | **9.7 / 9.9** (target 9.5) |
+Page 1 of every report was read at the capture's size; page 2 for tasks 1, 5, 6, 7 and 10. Showcase: English 10 / 10, Arabic 9 / 9 after the Reset fix (8 / 8 as first captured; the "Total" word is the point lost).
+
+**The 0.2.7 candidate** (engine worktree `C:\DataArcus\night-engine`, `packaging/build.mjs --commit 73b602b --repo <the branch's work tree> --version 0.2.7 --dry`; no release record, the two version files put back, nothing tagged or published): `dist\dataarcus-0.2.7.mcpb`, **8,973,803 bytes, SHA-256 `ba613a0ef395bf334848b3f53595481830b1125bba9ad1907b861f679c73dd35`**, unsigned, 105 packages, staged 3,496,947 bytes. From the unpacked file: server 0.2.7, 8 tools, each called once, all `ok` (read_model 2 tables; check_model_health 99 with the Gulf section; create_report 2 pages with the message cards; add_gulf_calendar 4,748 rows; check_report on that report: Microsoft's validator 0.4.0 offline, 0 errors, 0 warnings, 2 notes TOOLTIP_SCROLL).
+
+**The one decision needed:** the Arabic table's "Total" word. Desktop writes it only in the table's first column, and in a right-to-left report that column is a number (the columns are written in reverse so the names sit at the right). (a) Leave it (as now); (b) put the name column first in the file and let the table read left to right inside a right-to-left page, with the word; (c) measure in Desktop whether the table can be mirrored another way that keeps the first column a text. **Recommended: (c) next sitting**, one made-up table, both ways.
+Also for the owner, no action needed unless you disagree: safeTerm now redacts "2012 1995" (years outside 2015 to 2035 count as digits); the website's downloaded reports carry the "No data" cards too (the shared writer's default).
+
+**Seen, not in scope:**
+| Item | Status |
+|---|---|
+| The Arabic table has no "Total" word | open (the decision above) |
+| "Your logo" is cut on a 640 x 360 page in English | open, small (the placeholder only; a real logo takes its own width) |
+| Golden task 6 in English: a horizontal scrollbar in the table (Arabic names measured as Latin) | open since the night sitting |
+| Golden task 10: the same total for every Carrier Group and Route Group | open: `suggest_fields` picks a lookup that is not related to the measure's table; the made-up model has such lookups in its area |
+| A brand colour alone keeps the dark default preset in `generate_theme` | open: a light report needs a light preset named |
+| Five table fields narrowed an SVG bar column to 8 x 8 (told in the notes) | open, taste: a note is easy to miss |
+| The bar chart by a text column is in alphabetical order, not by value | open, design |
+| A design's second page has no subtitles (its slots' roles differ) and its table leaves empty room | open; the unused keys are now named in the notes |
+| Desktop marks measures "Field list item has error" until a DAX-table model's first refresh; the visuals draw | Desktop's own |
+| Power BI's "All" in slicers stays English in an Arabic report | Desktop's own (follows the viewer) |
+| A theme from `generate_theme` alone keeps the 1920 x 1080 text sizes on a smaller hand-placed page | open since the night sitting, not touched |
+| A 960 x 720 page does not fit the capture window (the bridge captures what Desktop shows) | a capture limit: its header and last rows were not seen |
+| `mcp/quick.tmp.mjs` (a scratch file) is committed | open since round 20: delete it |
+| The data bars' queryRef, the Arabic letter widths in Segoe UI | not measured (above) |
+| The local bake-off against Microsoft's report skill | not started |
+
+#### The next session starts with
+1. The owner's answer on the Arabic "Total" word; then the two measurements left (a measure twice in one table; Arabic letters in Segoe UI).
+2. The reviewer: `fix/round-22` at its head for review and the Linux run; the 0.2.7 package is built again from the merge commit (its SHA-256 will differ).
+3. Left on the laptop: `<tests folder>\r22\` (lab reports, golden reports and captures, the unpacked package in `pkg\`), `<tests folder>\showcase-1007\`, scripts `builder-scripts\r22-*`, the engine work trees `C:\DataArcus\night-engine` (the candidate in `dist\`) and `C:\DataArcus\showcase-wt`. No Desktop window is left open.
+
 
 ## Round 21, the capabilities lab's "adopt now" (7 Oct, 08:31-09:31 UTC, cloud builder; branch `fix/round-21` from `fix/round-20` `585d107`; not merged)
 The owner's go (~12:30 Dubai). Source: `research/capabilities-lab`, mcp/research/POWERBI-HIDDEN-CAPABILITIES.md, "Lab 7 Oct":
