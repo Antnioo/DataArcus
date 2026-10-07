@@ -475,7 +475,9 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   window.dataArcusTrack = track; // lets tool pages send their own events
   // Typed text that looks like an email address or a phone number never reaches GA4 (no personal data in analytics)
-  const safeTerm = (q) => (q.includes('@') || (q.match(/\d/g) || []).length >= 9 ? '(redacted)' : q.slice(0, 50));
+  // AUD-031 (round 20): 7 or more digits in all is a phone or an ID (a Gulf mobile is 8 digits, "5512 3456"), unless
+  // every number in the term is a year ("2024 2025"); an "@" is an e-mail; anything else is cut to 50 characters
+  const safeTerm = (q) => (q.includes('@') || ((q.match(/\d/g) || []).length >= 7 && !(q.match(/\d+/g) || []).every((n) => /^(19|20)\d\d$/.test(n))) ? '(redacted)' : q.slice(0, 50));
 
   const once = new Set();
   const trackOnce = (key, name, params) => { if (once.has(key)) return; once.add(key); track(name, params); };
