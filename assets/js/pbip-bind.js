@@ -268,12 +268,17 @@
     // related to nothing. Now it begins at the tables the measure's DAX reads (through the measures it calls too) and
     // its own table, and where any category is reached, only reached ones are given out (catB falls back to catA)
     const rels = (opt && opt.relationships) || [], reach = rels.length && main ? reached(tables, main, rels) : null;
-    if (reach && cats.some((c) => reach.has(c.t))) cats = cats.filter((c) => reach.has(c.t));
+    // (the outside review's X-04: where none is reached, none is given: a chart by a table the measure is not related
+    // to shows the same total on every bar; the date table's parts only when the measure reaches that table, else the
+    // charts that need a category are left out and the caller says why: noRelatedCategory)
+    const unreached = reach ? cats.filter((c) => !reach.has(c.t)) : [];
+    if (reach) cats = cats.filter((c) => reach.has(c.t));
     // no category outside the date table: the date table's named parts (quarter, day, month names), never the time axis
-    if (!cats.length) cats = DATE_PARTS.map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date)).filter(Boolean);
+    if (!cats.length) cats = DATE_PARTS.map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date && (!reach || reach.has(c.t)))).filter(Boolean);
     const catA = cats[0] || null, catB = cats.find((c) => c !== catA && c.t !== (catA && catA.t)) || cats[1] || catA;
     const sl = [year, catA, catB, date].filter((x, i, l) => x && l.indexOf(x) === i);
     const out = build({ kpis, main, date, catA, catB, slicers: [sl[0] || null, sl[1] || null, sl[2] || null] });
+    if (!cats.length && unreached.length) out.noRelatedCategory = { measure: { t: main.t, m: main.m }, tables: [...new Set(unreached.map((c) => c.t))].slice(0, 5) };
     // every column a slicer could take, in the order they are picked (round 12, #22: the caller replaces a slicer that
     // a page filter makes pointless)
     out.slicerPool = [year].concat(cats, [date]).filter((x, i, l) => x && l.indexOf(x) === i);
