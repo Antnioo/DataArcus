@@ -28,7 +28,8 @@
     },
     "7": {
       "visuals": "39 -> 38: round 16, design finding #14 (the owner's go): Count of Region is no longer a KPI card (one card fewer)",
-      "kpiCards": "4 -> 3 cards: round 16, design finding #14: a count of a category column is never a KPI card; fewer cards, and the answer says why"
+      "kpiCards": "4 -> 3 cards: round 16, design finding #14: a count of a category column is never a KPI card; fewer cards, and the answer says why",
+      "health": "93 -> 92: round 20 (the owner's yes, 6 Oct): the test model's tables became DAX tables with made-up rows and a Month Number column (a chart by month runs over six months); the new number column is one more the score counts"
     },
     "8": {
       "kpiCards": "built 2 -> 1: round 12 (85d54c1), #26: 'Unused One' shows text (its format is \"Yes\";\"Yes\";\"No\") and is never a KPI card"
@@ -188,7 +189,7 @@
       "measures": 0,
       "dateTables": 0,
       "kpis": " |  |  | ",
-      "health": "93: MONTH_SORT DATE_NOT_MARKED SUMMARIZE_KEYS FK_VISIBLE DOUBLE NO_RLS",
+      "health": "92: MONTH_SORT DATE_NOT_MARKED SUMMARIZE_KEYS FK_VISIBLE DOUBLE NO_RLS",
       "pages": [
         "Executive summary 1920x1080",
         "Details 1920x1080"
