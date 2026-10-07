@@ -590,7 +590,10 @@
     // at the reading start (placement, in Microsoft's theme schema) and the text aligned to the same side, so they sit
     // together in a button only as wide as both
     const resetIcon = (r) => Object.assign({ shapeType: str(r.icon ? 'reset' : 'blank'), lineColor: color(u.accent || u.text), placement: str(rtl ? 'right' : 'left') }, r.icon ? { iconSize: num(Math.round(0.75 * r.h)) } : {});
-    const resetLook = (text, r) => ({ show: bool(true), text: str((r && r.icon ? RESET_GAP : '') + text), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL), horizontalAlignment: str(rtl ? 'right' : 'left') });
+    // (round 22, seen in Desktop on every Arabic report since round 14: the arrow touched the text's last letter. The
+    // gap goes on the arrow's side: before the text in English, after it in a right-to-left report, where the arrow is
+    // at the right and no-break spaces before Arabic text fall at its far end)
+    const resetLook = (text, r) => ({ show: bool(true), text: str(r && r.icon ? (rtl ? text + RESET_GAP : RESET_GAP + text) : text), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL), horizontalAlignment: str(rtl ? 'right' : 'left') });
     // (the Arabic tooltip is the button's own words, "إعادة ضبط الفلاتر": the owner's design choice 6, 5 Oct 2026)
     const resetTip = W.resetTip || (o.lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Clear the filters on this page');
     // the largest text size within 8-60 whose one line fits a text box h high (8 at least)

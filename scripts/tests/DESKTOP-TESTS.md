@@ -2295,6 +2295,42 @@ back (`n1-gx-diff.mjs`): **Desktop kept every object as written** and upgraded t
 | `report.json` `settings.hideVisualContainerHeader`, `defaultFilterActionIsDataFilter` | accepted, kept on Save; their effect was not tried |
 | `report.json` `settings.locale: 'ar-SA'` ("GX locale AR") | the report opened without a message; the bridge returned no picture of its page, so nothing was seen |
 
+## 2026-10-07 evening, the sitting of 7-8 Oct (`fix/round-22`), Power BI Desktop 2.158.1304
+Desktop updated itself from 2.158.1177: the builder scripts' fixed install path stopped working (`desk.ps1`,
+`lab-1007-shot.ps1` and `r22-shot.ps1` now ask `Get-AppxPackage` for it). Every report is on a made-up model. Captures
+(2x, the page area 2250 wide, nothing scaled down) and crops: `<tests folder>\r22\` (`shots\`, `gshots\pages\`) and
+`<tests folder>\showcase-1007\`; scripts `builder-scripts\r22-*`.
+
+| Check | Result | Crop |
+|---|---|---|
+| A subtitle on a KPI card (code review b), planned cards at 1280 x 720 and 1920 x 1080 | **FAIL as built**: the value is pushed down and cut in half. Fixed: no subtitle on a card, told in the notes | `shots\b2-720-crop.png` |
+| A subtitle on a hand-placed card 110 high | whole (title, subtitle, value); the rule is the same for every card | `shots\b-sub-crop.png` |
+| "No data" beside a card's SVG picture (code review d), Arabic, 28pt | PASS (refuted): whole on cards 284, 300 and 310 wide, the ring about 19 clear of the text at 284 | `shots\d2-ar-crop.png`, `d-ar-crop.png` |
+| The same in English, 14pt, cards 150 to 240 wide | PASS | `shots\d-en-crop.png` |
+| "No data" on a whole report (golden task 8 in Arabic, opened before its Refresh: every table empty) | PASS: the KPI card reads «لا توجد بيانات» at its usual size, whole; each chart and the table show «لا توجد بيانات لهذا الاختيار» once, centred, inside the panel | `gshots\pages\g8-ar-p1.png` |
+| "No data" with data (every golden report) | PASS: no message, outline or fill shows through any chart or table | `gshots\pages\*` |
+| Subtitles under chart titles (round 21), English and Arabic, light and dark | PASS: one small line under the title, shaped right in Arabic, the plot a little shorter | `showcase-1007\page-*-p1.png` |
+| Data labels on a column chart by quarter (round 21) | PASS: "2.8M" above each of the four columns, English and Arabic («الربع 1» ...) | `showcase-1007\page-*-p1.png` |
+| Heading levels (round 21) | PASS: nothing to see on any report | |
+| Round 20's bracket on repeated titles, golden task 7 in Arabic | PASS: "عدد Order Id (Region)", "(Month Name)", "(Product)"; English unchanged | `gshots\pages\g7-ar-b-p1.png` |
+| The same bracket on two charts by the same column | **FAIL as built**: "Total Sales by City (City)" twice. Fixed (charts by the same column are left alone) | `shots\b2-720-crop.png` |
+| Golden tasks 6 and 7's models as DAX tables (round 20) | **FAIL as built**: every visual an error. DATATABLE refuses a date written "2026-01-03T00:00:00" ("Cannot convert value ... of type Text to type Date", read from INFO.PARTITIONS through Microsoft's modeling MCP); both tables stayed empty. Fixed ("2026-01-03" is taken): data shows without Refresh, task 7's months run January to June in order, task 6's growth card reads 215.4% | `gshots\pages\g6-en-p1.png` (before), `g6-en-c-p1.png`, `g7-en-b-p1.png` |
+| Golden task 6's chart by month | one dot as built (every row in January); the rows now run over seven months, the chart 1 to 7 in order | `gshots\pages\g6-en-c-p1.png` |
+| Golden task 10 with rows (the Logistics tables and the calendar as DAX tables) | PASS: opens with data, no Refresh (Desktop's bar "Some of the tables have incomplete or no data" for the other 274 tables). Seen: the same total for every Carrier Group and Route Group (the picked lookups are not related to the Shipments table) | `gshots\pages\g10-en-p1.png` |
+| A page 640 x 360 (golden task 5) | as built: card values touch the card's bottom on page 1, cut in half on page 2, whose table scrolls. With the KPI cards 116 high on the 720 grid (58 at this size; they were 48) and one page: the values whole and clear of the edge, English and Arabic. "Your logo" is still cut in English | `gshots\pages\g5-en-p1.png`, `g5-en-p2.png` (before), `g5-en-b-p1.png`, `g5-ar-b-p1.png` |
+| A 960 x 720 page (golden task 4) | the table's four columns fit (the three-fifths share). The capture shows the page's middle 75% only (Desktop fits the width; the header and the last rows are outside the captured window) | `gshots\pages\g4s-en-p1.png` |
+
+Facts measured:
+- **DATATABLE takes a date as "yyyy-mm-dd"** (and "yyyy-mm-dd hh:mm:ss"), not the ISO form with a "T". A model written
+  without Desktop needs one open before its numbers are trusted: the tool-level baseline could not see this.
+- **A DAX-table model opens with data**; Desktop shows "One or more calculated objects need to be manually refreshed"
+  (or "Refresh now") and the Data pane marks measures "Field list item has error" until that refresh; the visuals draw.
+- **A script that starts Desktop keeps the caller's output pipe** even when it redirects its own child: a tool call
+  that pipes its output (`... | cut`) returns only when Desktop closes. `r22-gshots.ps1` closes the test report at its end.
+- **Not measured:** how Desktop names a measure placed twice in one table (round 21's item 4, the data bars beside a
+  plain copy): it needs the measure added by hand in Desktop and the file saved; the Arabic letter widths in Segoe UI
+  (golden task 6 in English still has a horizontal scrollbar in its table).
+
 ## Lessons
 - **Night of 6-7 Oct: a bar chart at the theme's 10pt (1280 x 720) needs 22.2 a row, 45 above the first row and 8
   under the last, and 38 more for its value axis.** Round 0's "22 a row + 46" was the tooltip page's chart without a

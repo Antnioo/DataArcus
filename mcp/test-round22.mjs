@@ -73,6 +73,17 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     walk(path.join(HERE, 'test-models'));
     chk(() => bad.length === 0, () => `a DATATABLE date must be written as "yyyy-mm-dd" (Desktop refuses "yyyy-mm-ddT00:00:00"): ${bad.join(', ')}`);
   }
+  // The Reset button's gap between its arrow and its text (two no-break spaces, round 13) is on the arrow's side: in
+  //    English the arrow is at the left and the text starts with the gap; in Arabic the arrow is at the right, so the
+  //    gap follows the text (before the text it fell on the far side and the arrow touched the last letter: seen in
+  //    Desktop on every Arabic report since round 14)
+  {
+    const gapOf = (x) => { const b = vis(x).find((v) => v.visual.visualType === 'actionButton' && /Bookmark/.test(JSON.stringify(v.visual.visualContainerObjects || {})) && (v.visual.objects || {}).icon);
+      const e = b && (b.visual.objects.text || []).find((q) => q.properties && q.properties.text); return e ? lit(e.properties.text) : null; };
+    const en = await build('R22 reset en'), ar = await build('R22 reset ar', {}, 'ar'), G = '  ';
+    chk(() => gapOf(en).startsWith(G) && !gapOf(en).endsWith(' '), () => `English: the Reset text starts with the gap: ${JSON.stringify(gapOf(en))} ${en.err ? en.t.slice(0, 200) : ''}`);
+    chk(() => gapOf(ar).endsWith(G) && !gapOf(ar).startsWith(' '), () => `Arabic: the gap follows the Reset text (the arrow is at its right): ${JSON.stringify(gapOf(ar))} ${ar.err ? ar.t.slice(0, 200) : ''}`);
+  }
   // b. (measured in Desktop 2.158.1304, 7 Oct: with a subtitle a planned KPI card's value is pushed down and cut in
   //    half) a subtitle is never written on a KPI card; the answer says which key was not used
   {
