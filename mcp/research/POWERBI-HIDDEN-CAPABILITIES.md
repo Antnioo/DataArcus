@@ -8,7 +8,7 @@ the next rounds can pick from measured facts instead of guesses.
 Two hours on the laptop, 7 October 2026 (03:46 to 05:46 UTC), Power BI Desktop 2.158.1177. All 24 settings below were
 written by hand into one gallery report on the repo's made-up Ramadan sample, opened in Desktop and judged from
 captures of the page at its own size (1280 x 720). Research only: nothing in the writer changed. The verdict of each is
-in the table's last column, "Seen 7 Oct". Count: **9 work, 12 work with a catch, 3 could not be seen in Desktop,
+in the table's last column, "Seen 7 Oct". Count: **10 work, 11 work with a catch, 3 could not be seen in Desktop,
 0 break a report by themselves** (one, the locale, empties the report when written into our present report.json:
 see #16).
 
@@ -116,11 +116,33 @@ first open: `EXPECTED-en.txt`, `EXPECTED-ar.txt`. Scripts: `builder-scripts\lab-
 ### How it was done, and its limits
 - The report is `create_report`'s own (main's server) on the Ramadan sample; each capability was then written into
   copies of its visuals (`lab-1007-base.mjs`, `lab-1007-patch.mjs`). Three builds; the committed one is the last.
+- Opening Desktop from a script must not be waited on through a pipe: Desktop inherits it and the caller waits until
+  Desktop closes (8 minutes lost twice; `lab-1007-run.ps1` starts the script in a process of its own with a log file).
+  After "ready" the page tabs take up to a minute more to exist for UI Automation.
 - Pages were captured through the Desktop bridge at scale 1; clicks (slicer, column, drill through, card under a
   chart) through the mouse while the laptop was idle. No preview feature was switched on, nobody signed in.
 - Not seen for lack of a reading view: #9, #10. Not tried: the View > Themes import (#24), icons in a rule (#24),
   a phone layout or PDF of any of it, a dark theme, a 1920 x 1080 page.
-- **Not reached:** the model-side features (field parameters, a calculation group, a visual calculation).
+- The model-side features were reached at the end: see "Model-side features" below. **Not reached:** nothing of the list; left open inside it: #14's label name, #23's `transform` block, #24's menu import.
+
+### Model-side features (field parameter, calculation group, visual calculation)
+Tried on a COPY of the Ramadan sample in the tests folder (`<tests folder>lab-1007	mdl-try`, not committed;
+`builder-scriptslab-1007-tmdl.mjs`), written by hand, opened in Desktop 2.158. **All three opened and drew at the first try**
+(`tmdl1-p1.png`, `tmdl2-dayname.png`); Microsoft's validator: 0 errors.
+
+| Feature | What was written | Seen |
+|---|---|---|
+| Calculation group | a table file with `calculationGroup`, `precedence`, two `calculationItem`s (`SELECTEDMEASURE()` and it inside `CALCULATE` for Ramadan days), its name column (`sourceColumn: Name`, sorted by a hidden `Ordinal`), `ref table` and **`discourageImplicitMeasures`** in model.tmdl. In the report: the group's column as a matrix's Columns | the matrix has a "Value" and a "Ramadan only" column with the right numbers (101,914 and 99,900) |
+| Field parameter | a DAX table `{ ("Quarter", NAMEOF(...), 0), ("Day Name", NAMEOF(...), 1) }` with three columns: the name (with `relatedColumnDetails` > `groupByColumn`), the hidden field column carrying `extendedProperty ParameterMetadata = { "version": 3, "kind": 2 }`, the hidden order. In the report: the chart's Category keeps a real field and gets `fieldParameters: [{ parameterExpr: <the name column>, index: 0, length: 1 }]`; a slicer on the name column | picking "Day Name" in the slicer switched the chart from quarters to day names |
+| Visual calculation | one more projection in the table: `field: { NativeVisualCalculation: { Language: "dax", Expression: "RUNNINGSUM([Total Sales])", Name: "Running total" } }`, `queryRef: "select"` | a "Running total" column: 77,734.00, 100,810.00, 101,362.00, 101,914.00 (it has no format: two decimals) |
+
+**What our tools would need to write them.** A visual calculation is report-only (one projection): `create_report`
+could write it today, for a running total or a share of total, with a format. A field parameter and a calculation
+group are **model** objects: the tools read models and never write them, so they would come as a TMDL script the user
+applies (as the fix scripts do), never as a silent edit; then `create_report` binds to them. Two cautions, neither
+tested here: a calculation group switches the model to `discourageImplicitMeasures`, and the writer's own charts use
+implicit aggregates ("Min of Month Number" to sort month names), which such a model refuses; and the day names came
+sorted by value, not by weekday, when the axis came from the parameter.
 
 ### Seen, not in scope
 - Every open shows "One or more calculated objects need to be manually refreshed" (the sample's DAX tables).
@@ -273,7 +295,7 @@ end of the table for anything that did not get its turn.
 | 23 | Forecast and anomalies on a line | `lineChart` `forecast`, `anomalyDetection` | documented (Analytics pane; need a date axis) | medium: models differ | low: easy to mislead with | not opened | **NOT SEEN** (`en2-p8.png`): `forecast.show` and `anomalyDetection.show` alone draw nothing and give no message (Desktop keeps them on Save); Desktop's own form carries a `transform` block that has to be read from a chart made by hand. On this sample a forecast would mislead anyway: the line is flat at 1 with one block a year that moves about 11 days earlier each year |
 | 24 | Theme: icons, more text classes, structural colours | theme `icons`, `textClasses.largeTitle/dataTitle/boldLabel/...`, `firstLevelElements` ... `accent`, `null` | documented (theme schema) | medium: one unknown property and the menu import refuses the theme | medium (see top 5, item 4) | not opened | **WORKS WITH A CATCH** (`en3t-p1.png` … `en3t-p8.png`, `en3t2-p3.png`; every page differs from the captures before by 29,038 to 106,496 pixels): loaded from inside the project, the unused text classes restyle every visual at once: `largeTitle` colours the chart and card titles, `smallLightLabel` the axis text and the constant line's label, `boldLabel` the table and matrix totals. A font name Power BI does not know ("Segoe UI Bold") turned the totals into a serif font, silently. The structural colours changed nothing that could be told apart; the icon was not seen (no icon rule in the gallery). Microsoft's validator passed the theme. **The View > Themes import was not tried** |
 
-**From TMDL, not looked at tonight:** field parameters, calculation groups and visual calculations (generally
+**From TMDL, not looked at on the night (tried on 7 Oct: see "Model-side features" in the lab section above):** field parameters, calculation groups and visual calculations (generally
 available since May 2026 per Microsoft Learn) are model or query features; the tools read models and never write them,
 so they are left for a round of their own.
 
