@@ -1,0 +1,52 @@
+name: IndexNow
+
+# After a push to main, once GitHub Pages has published it, tell Bing (IndexNow) which sitemap pages changed.
+# "Run workflow" sends every page in the sitemap (the first time, or after a big change).
+
+on:
+  push:
+    branches: [main]
+    paths: ['**.html', 'sitemap.xml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: read
+
+concurrency:
+  group: indexnow
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Wait for GitHub Pages to publish this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for i in $(seq 1 60); do
+            if ! out="$(gh api "repos/${{ github.repository }}/pages/builds/latest" --jq '.status + " " + .commit')"; then
+              echo "Pages build status not readable: waiting 3 minutes instead"; sleep 180; exit 0
+            fi
+            read -r status commit <<< "$out"
+            echo "Pages: $status ${commit:0:7}"
+            if [ "$status" = "built" ] && [ "$commit" = "${{ github.sha }}" ]; then exit 0; fi
+            if [ "$status" = "errored" ] && [ "$commit" = "${{ github.sha }}" ]; then exit 1; fi
+            sleep 15
+          done
+          echo "Pages did not publish this commit within 15 minutes"; exit 1
+
+      - name: Send the changed pages
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then node scripts/indexnow.mjs --all
+          else node scripts/indexnow.mjs ${{ github.event.before }} ${{ github.sha }}; fi

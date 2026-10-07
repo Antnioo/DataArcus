@@ -40,6 +40,9 @@ jobs:
       - name: Sitemap dates skip boilerplate-only commits (git history, no network)
         run: node scripts/test-sitemap-lastmod.mjs
 
+      - name: IndexNow sends the right pages, and the key file is in place (no network)
+        run: node scripts/test-indexnow.mjs
+
       - name: The site's config files (robots, sitemap, icons, manifest, security.txt, llms.txt, every page's head)
         run: node scripts/test-site-config.mjs
 
