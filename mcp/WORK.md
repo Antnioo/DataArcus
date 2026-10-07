@@ -4,6 +4,36 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Sitting 7-8 Oct (laptop builder; branch `fix/round-22` from `origin/fix/round-21` `9d927a9` with `origin/main` `7cdf252` merged in as `8b7d4d6`; not merged, no PR)
+**Started 15:22 UTC on 7 Oct (19:22 Dubai). Hard stop 21:22 UTC; the stop report is pushed by then.** The owner gave
+the laptop; this is the only session driving Power BI Desktop. Work tree on the laptop: `C:\DataArcus\r22-wt` (the main
+checkout stays on its branch). The session's own DataArcus tools run the main checkout's older code, so every tool call
+of this sitting goes to this branch's `mcp/server.mjs` over stdio (scripts `builder-scripts\r22-*`).
+The merge of main: two conflicts, both the `?v=` of design-engine.min.js and theme-generator.min.js on the two Theme
+Generator pages; main did not change those two scripts, so round 21's values stay; every other site file is main's.
+
+Order: part 1, the showcase dashboard (made-up model, English and Arabic, light and dark; screenshots in
+`<tests folder>\showcase-1007\`, the 4 best in dataarcus-engine `business/showcase/2026-10-07/`, branch
+`showcase/2026-10-07`); part 2, the beta sitting: (1) "No data" option A on by default, (2) Desktop proof of rounds 20
+and 21, (3) test models as DAX tables, (4) `feat/check-report-2` merged, (5) the 20 golden reports re-scored, (6) full
+`npm test` once, (7) the 0.2.7 candidate (`--dry`), (8) if time: the local bake-off, then small "Seen, not in scope" items.
+
+### Sitting 7-8 Oct, expected (written 15:40 UTC, before any run)
+- **Showcase:** English and Arabic at 9.5 or more (golden rule: 10 less 1 per kind of visible problem), light and dark.
+  My own guess before looking: English 9 to 10; Arabic 9 (the made-up model's Arabic names come from me as its author;
+  Power BI's own words such as "All" follow the viewer).
+- **No data on by default:** every report gets one message card per chart and table; a KPI card wide enough reads
+  "No data" when blank, at its usual size; `npm test` red first on the checks that count card visuals, then green
+  with none weakened; golden counts change only by the message cards, each cause written.
+- **Rounds 20 and 21 in Desktop:** every item of their "for the laptop" lists PASS; the data-bars measurement gives
+  two different queryRefs for a measure used twice.
+- **Golden mean:** 9.4 / 9.4 -> 9.5 or more in both languages (task 10 with rows and task 7 with months are the points).
+- **`npm test`:** all green (600 of 600 on round 21; more after the merge and this sitting's checks, about 640).
+- **0.2.7 candidate:** about 9 MB, 8 tools, each `ok` from the unpacked file.
+
+### Sitting 7-8 Oct, where I am (kept current; times UTC)
+- 15:40: branch made, main merged (`8b7d4d6`), expected written. Next: the showcase.
+
 ## Round 21, the capabilities lab's "adopt now" (7 Oct, 08:31-09:31 UTC, cloud builder; branch `fix/round-21` from `fix/round-20` `585d107`; not merged)
 The owner's go (~12:30 Dubai). Source: `research/capabilities-lab`, mcp/research/POWERBI-HIDDEN-CAPABILITIES.md, "Lab 7 Oct":
 the property names, value forms and selectors Desktop 2.158 drew and saved back.
