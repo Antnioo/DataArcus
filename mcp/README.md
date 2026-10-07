@@ -13,8 +13,8 @@ For testers on Windows, no command line needed.
 4. **Choose the working folder** when asked (the setting is called **Working folder**): the folder that holds your
    `.pbip` projects. DataArcus reads and writes only inside it; put in it only models whose names, types and formats
    you may share with Claude.
-5. **Check it:** in a new chat, ask "list your DataArcus tools". Claude lists 7 tools (`read_model`, `suggest_fields`,
-   `check_model_health`, `plan_layout`, `create_report`, `generate_theme`, `add_gulf_calendar`).
+5. **Check it:** in a new chat, ask "list your DataArcus tools". Claude lists 8 tools (`read_model`, `suggest_fields`,
+   `check_model_health`, `plan_layout`, `create_report`, `check_report`, `generate_theme`, `add_gulf_calendar`).
 6. **First prompt:** "Read the model in <folder> and suggest a report", with `<folder>` the name of a project folder
    inside the working folder.
 7. **Where reports go:** a new report is written next to its model, inside the working folder, as `<name>.pbip` plus
