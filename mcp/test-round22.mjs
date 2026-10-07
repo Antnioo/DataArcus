@@ -25,6 +25,19 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
   const hand = (name, slots, extra) => ask('create_report', Object.assign({ path: dir, name, fields: { kpis: ['Sales[Total Sales]'], measure: 'Sales[Total Sales]', category: 'Sales[Region]', category2: 'Sales[Channel]' },
     pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }].concat(slots) }] }, extra || {}));
 
+  // item 1 of the sitting: "No data" is on by default (the owner's rule: every part passed in Desktop on the night of
+  //    6-7 Oct). Without the option a report has one message card under each chart and table and "No data" on the KPI
+  //    cards wide enough for it; noDataMessage: false leaves all of it out, as every report was before
+  {
+    const msg = (x) => vis(x).filter((v) => v.visual.visualType === 'cardVisual' && /"Property":"No data: /.test(JSON.stringify(v.visual.query || '')));
+    const blank = (x) => vis(x).filter((v) => v.visual.visualType === 'cardVisual' && (v.visual.objects.value || []).some((e) => e.properties && e.properties.showBlankAs));
+    const dflt = await build('R22 nodata default'), off = await build('R22 nodata off', { noDataMessage: false });
+    const charts = (x) => vis(x).filter((v) => /Chart$|^tableEx$/.test(v.visual.visualType) && v.visual.query).length;
+    chk(() => !dflt.err && charts(dflt) >= 3 && msg(dflt).length >= 3 && msg(dflt).length <= charts(dflt) && blank(dflt).length >= 3 && msg(dflt).every((v) => !('tabOrder' in v.position)),
+      () => `by default the charts and the table of a page have their "No data" card (no tab stop; the tooltip pages have none) and the KPI cards their blank text: charts ${charts(dflt)}, message cards ${msg(dflt).length}, cards with a blank text ${blank(dflt).length} ${dflt.err ? dflt.t.slice(0, 200) : ''}`);
+    chk(() => !off.err && charts(off) >= 3 && msg(off).length === 0 && blank(off).length === 0 && !fs.existsSync(path.join(ROOT, dir, off.j.report, 'definition', 'reportExtensions.json')),
+      () => `noDataMessage: false writes no message card, no blank text and no report-level measure: ${msg(off).length} ${blank(off).length} ${off.err ? off.t.slice(0, 200) : ''}`);
+  }
   // a. AUD-032's follow-up: the FORMATS script (check_model_health's, and the one plan_layout and create_report hand
   //    over) is built from the model without the names that hold a control character, like every other fix script
   {
@@ -38,6 +51,27 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     const cr = await ask('create_report', { path: d, name: 'R22 cc', fields: { kpis: ['Sales[Orders]'] }, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'kpi', x: 36, y: 100, w: 300, h: 110 }] }] });
     const files = fs.readdirSync(path.join(ROOT, d)).filter((n) => /fix formats/.test(n)).map((n) => fs.readFileSync(path.join(ROOT, d, n), 'utf8'));
     chk(() => !pl.err && !cr.err && files.length && files.every((t) => !/Sales\tTotal/.test(t)), () => `a. no formats script in the folder may name the measure with a tab raw: ${files.length} file(s) ${pl.err ? pl.t.slice(0, 150) : ''} ${cr.err ? cr.t.slice(0, 150) : ''}`);
+  }
+  // A page under 800 wide (the owner's (a); golden task 5 at 640 x 360 in Desktop 2.158.1304, 7 Oct: card values
+  //    touching the card's bottom on page 1, cut in half on the second page, whose table scrolled): the single-focus
+  //    layout's KPI cards are one step taller than the layout's own (48 at this size), and the report has one page,
+  //    said in the notes; a page 800 wide or more is unchanged (two pages)
+  {
+    const small = await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'none', page: { w: 640, h: 360 }, lang: 'en' }), big = await ask('plan_layout', { layout: 'focus', kpis: 3, filters: 'none', page: '1280x720', lang: 'en' });
+    const kh = (p) => (p.err ? [] : p.j.slots.filter((s) => s.kind === 'kpi').map((s) => s.h));
+    chk(() => kh(small).length === 3 && kh(small).every((h) => h > 48 && h <= 64) && kh(big).every((h) => h === 96), () => `a 640 x 360 plan's KPI cards are taller than 48 (and a 1280 x 720 focus plan's stay 96): ${JSON.stringify([kh(small), kh(big)])} ${small.err ? small.t.slice(0, 200) : ''}`);
+    const rs = small.err ? small : await ask('create_report', { path: dir, name: 'R22 tiny', design: small.j.design }), rb = big.err ? big : await ask('create_report', { path: dir, name: 'R22 not tiny', design: big.j.design });
+    chk(() => !rs.err && rs.j.pages.length === 1 && /one page/.test(notes(rs)) && !rb.err && rb.j.pages.length === 2 && !/one page/.test(notes(rb)),
+      () => `under 800 wide the report has one page, told; at 1280 x 720 two: ${rs.err ? rs.t.slice(0, 200) : rs.j.pages.length + ' ' + notes(rs).slice(0, 200)} | ${rb.err ? rb.t.slice(0, 200) : rb.j.pages.length}`);
+  }
+  // The golden test models' DAX tables (round 20) write a date as Desktop's DATATABLE takes it, "2026-01-03": with
+  //    "2026-01-03T00:00:00" both tables of tasks 6 and 7 stayed empty and every visual showed an error (measured in
+  //    Desktop 2.158.1304, 7 Oct: "Cannot convert value ... of type Text to type Date")
+  {
+    const HERE = path.dirname(fileURLToPath(import.meta.url)), bad = [];
+    const walk = (p) => fs0.readdirSync(p, { withFileTypes: true }).forEach((f) => { const q = path.join(p, f.name); if (f.isDirectory()) walk(q); else if (q.endsWith('.tmdl') && /DATATABLE \([^\n]*"\d{4}-\d{2}-\d{2}T\d\d:\d\d:\d\d"/.test(fs0.readFileSync(q, 'utf8'))) bad.push(f.name); });
+    walk(path.join(HERE, 'test-models'));
+    chk(() => bad.length === 0, () => `a DATATABLE date must be written as "yyyy-mm-dd" (Desktop refuses "yyyy-mm-ddT00:00:00"): ${bad.join(', ')}`);
   }
   // b. (measured in Desktop 2.158.1304, 7 Oct: with a subtitle a planned KPI card's value is pushed down and cut in
   //    half) a subtitle is never written on a KPI card; the answer says which key was not used

@@ -4,6 +4,94 @@
 were made for it. Written on `plan/check-report-number-check` from main `2268d6f`. It is the first of the owner's five
 new tools (`business/IDEAS.md` in dataarcus-engine). Sources were read on 2026-10-04 unless a date is given.
 
+## Where it stands (2026-10-05, first session, branch `feat/check-report` from main `850b0a0`; not merged)
+The owner's go (4 Oct, "accept all"): question 1 (a) ship the validator, without Playwright if `validate` runs
+without it; question 2 (a) always offline with bundled schemas; question 3 (a) unmeasured fonts as `note`.
+
+**Built (tests first: 19 checks, all failing before the tool; `npm test` 363 -> 382 of 382):**
+- `check_report` in `mcp/server.mjs` (read-only), `mcp/lib/check-report.mjs`: inputs `path`, `checks`
+  (`validator`, `schemas`, `sizes`, `selectors`, `phone`, `tooltips`, `theme`: `rtl` and `navigation` wait for their
+  rules, and `theme` was added for THEME_NAME), `lang`, `maxFindings` (1-200, 60). The answer as section 1 plans, plus
+  `schemas: { checked, errors }`, `counts.errors/warnings/notes` and `report.pageNames` (cleaned, capped at 60).
+- **Microsoft's validator, offline, in this process:** `runReportValidation` from the CLI's library entry with
+  `skipSchema: true` (what `--no-schema` does). **Playwright is not needed:** the library entry never imports it
+  (proven: test 6 runs with Playwright unloadable). The CLI, `ajv` and `ajv-formats` are dependencies now (were dev).
+  Its messages come back without quoted text or file paths.
+- **The bundled schemas:** `mcp/schemas/` (111 files, 2.7 MB, MIT, `microsoft/json-schemas` `8db0a64`, the same JSON
+  as developer.microsoft.com: `SOURCE.md`), checked with our own `ajv`. A file naming a version not bundled (Desktop's
+  visualContainer 2.13.0) or the theme schema goes to `notChecked`. The licence question of section 2 is answered: MIT.
+- **No network, proven:** test 6 runs the tool in a separate Node with `net`, `tls`, `http`, `https`, `dns` and
+  `child_process` replaced by throwing stubs and Playwright unloadable: the same answer and 0 connections tried
+  (a negative control showed the stubs do block). The tool's source holds no `child_process`, `https.get` or `fetch`.
+- **The rule engine** `assets/js/report-rules.js` (Node and browser): TEXT_SIZE_RANGE, TEXTBOX_FITS, BUTTON_ONE_LINE,
+  SLICER_FITS, SELECTOR_SHOW, SELECTOR_CARD, TOOLTIP_TYPE, IMAGE_FIT, PHONE_OVERLAP, THEME_NAME, each with its source
+  (DESKTOP-TESTS.md, date, Desktop version, section). The numbers are main's (`report-check.mjs`); BUTTON_ONE_LINE
+  keeps 0.45 em a character + icon + 6 until round 10's measured per-letter widths (M3) are merged.
+  Fonts other than Segoe UI and Tahoma: the finding is a `note` marked as an estimate.
+- **Safety:** findings carry numbers and ids only (test 3: planted values in a page filter, a slicer selection, a
+  bookmark and a text box never come back, in five `checks` combinations); instruction-like page names give an
+  `INSTRUCTION_TEXT` note without repeating the name; U+202E comes back as `\u202e`; caps (test 5: 300 findings ->
+  60, counted 300, under 40,000 characters); PBIR-Legacy refused with what to do; nothing written (hashes).
+- **Seen on our own reports:** the Arabic golden export gets 2 validator warnings, `PBIR_TEXTBOX_HEIGHT_BELOW_FLOOR`
+  (the header's 20pt title in a 46-high box: the validator wants 48; our measured rule, 10 + 1.8 x pt, says 46 fits).
+  Not changed: a Desktop look decides which is right.
+
+**Session 2 (2026-10-05, cloud; tests first: 7 checks, all failing before; `npm test` 382 -> 389 of 389):**
+- **One copy of the numbers:** `report-rules.js` exports `MEASURED` (text box, button, slicer, page button, tooltip
+  rows); `scripts/tests/report-check.mjs` takes its numbers from there. The website's `pbip` suite: 71 of 71, as before.
+- **The four rules, each from a measured fact:** PAGE_BUTTON_WRAP (round 1, 2026-10-03: two lines only when 3.5 x pt
+  in Segoe UI / 3.2 x pt in Tahoma fit the height; BUTTON_ONE_LINE now leaves page buttons to it); SORT_IN_VISUAL
+  (round 2, 2026-10-03: a chart sorts only by a field it holds); TOOLTIP_SCROLL (round 0: 22 a row + 46): a **note**
+  with the rows that fit, because the row count is in the data, which the tool never reads; RTL_MIRROR (Arabic
+  reports only): a page navigator (round 2: no order setting) and a shown title not aligned right (the 2026-10-03
+  plugin test: Desktop does not mirror titles). The answer lists `rulesRun`.
+- **Not judged, in `notChecked`:** which column a right-to-left table puts first: since the owner's choice of 5 Oct
+  (round 10) the text column comes first so "Total" shows, so the category at the left can be right.
+- **Two older checks changed, causes beside them:** test 1 and the broken-copy checks now allow measured *notes*
+  (TOOLTIP_SCROLL's) where they required no measured finding at all.
+- `mcp/PRIVACY.md`: the check_report row (marked "not released yet").
+
+**Security fixes from the outside review (2026-10-05, owner's go ~13:15; tests first: 4 checks, all failing before;
+`npm test` 391 -> 395 of 395):**
+- **B-01, sizes and depth:** every report file is measured (`lstat`) before it is read: **8 MB** at most
+  (`REPORT_LIMITS.file`). Evidence: our largest report files are about 7 KB (a visual.json) and 22 KB (a theme); a
+  report's SVG measures can reach 32,000 characters each in reportExtensions.json; 8 MB is hundreds of times those.
+  Folders are walked **12 levels** deep at most (`REPORT_LIMITS.depth`; a PBIR report is 6 levels deep:
+  definition/pages/<page>/visuals/<visual>/visual.json). Over the limits: told in `notChecked` with the size, never a
+  crash; and when any file is over the limit, Microsoft's validator is not run (it reads every file whole), said in
+  `validator.why`.
+- **B-03, every text from the report that reaches the answer:** visual names, visual types, page ids and the folder
+  names in `file` paths now go through the same cleaning as page names (invisible and direction characters as code
+  points, capped at 60); a name that reads like an instruction is **withheld** (`(withheld: reads like an
+  instruction)`) and an INSTRUCTION_TEXT note says it is there, without repeating it; a visual type that is not a
+  plain word comes back as `other (...)`. PHONE_OVERLAP no longer names the other visual.
+- **B-04 (opinion, no code):** check-then-use on write paths. Every file the MCP writes goes through `writeNew`
+  (`mcp/lib/model.mjs`, `fs.writeFileSync(f, data, { flag: 'wx' })`): `create_report`'s files (`server.mjs`, the
+  `r.files.forEach` after the name check), the fix scripts and `add_gulf_calendar`'s script (`writeScript` in
+  `server.mjs`), and `generate_theme`'s theme (`server.mjs`, after `freeFile`). So a name taken between the check
+  (`nothingAt`, `freeFile`) and the write makes the write fail (EEXIST) instead of writing over or through it:
+  `writeScript` tries the next name, `create_report` and `generate_theme` stop with an error. Not exclusive:
+  `fs.mkdirSync(..., { recursive: true })` for folders (`create_report`, `freeFile`); a folder made by someone else
+  in between is used as it is, but every path was resolved inside the working folder (`inside`, `real`) first, and
+  a file is never written through a link (`'wx'` refuses one). `check_report` writes nothing.
+
+**Ready for 0.2.7 (2026-10-05 evening; the owner: it merges after 0.2.6):**
+- Main `3803b7a` (round 10) merged in. BUTTON_ONE_LINE now uses round 10's measurement for a button with an icon
+  (the text letter by letter with `pbip-export.js`'s widths, + 10, + the icon; DESKTOP-TESTS.md round 10, M3) as
+  `MEASURED.BTN_ICON_TW`, which `scripts/tests/report-check.mjs` uses too; without an icon, 0.45 em a character as
+  before. Cause: main's Reset is 155 wide at 15pt, measured whole in Desktop, and the estimate called it too narrow.
+- F-05: README (8 tools, a `check_report` row, four read-only tools), PRIVACY.md (released, section 1 says it reads
+  report files locally and runs the validator offline), tests that every listed tool is in both tables (`npm test`
+  448 -> 451). Packaging on dataarcus-engine `feat/check-report-package`.
+
+**Left:**
+1. **For the laptop:** the online-vs-offline comparison on every fixture (which validator codes need the schema
+   download; our bundled check must find them); Microsoft's starter theme fixture (test 4: 6
+   `PBIR_THEME_VISUAL_PROP_UNKNOWN`, from finding 001's `repro.sh`); Microsoft's plugin report as a fixture (test 3);
+   the AR header title box, 46 or 48 high (the validator's floor against our measured rule); CR-1 (every finding of
+   test 3 seen on a full-size crop), CR-2 (Segoe UI Semibold and Arial at 10, 14, 22pt), CR-3 (1366 x 768); and
+   TOOLTIP_SCROLL with the value axis on (not measured: the note says so).
+
 ## What it is
 A tool that checks a PBIR report that already exists, whoever built it: our `create_report`, Microsoft's
 `powerbi-authoring` plugin, Copilot, or a person in Desktop. It runs two kinds of checks:

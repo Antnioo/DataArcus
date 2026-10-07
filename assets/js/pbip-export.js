@@ -507,10 +507,15 @@
     // nothing is written for them. Solid is read from the theme itself: its "*" visuals have a background.
     // Header title, logo, page buttons, slicers, buttons and the tooltip page's visuals stay off in both.
     const SOLID = !!((((((o.theme || {}).visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).show;
+    // Round 21 (the capabilities lab's #4, Desktop 2.158, 7 Oct 2026: accepted and kept, nothing to see): every shown
+    // visual title carries a heading level for screen readers, 'Heading3' (the page title is a text box, not a title).
+    // Round 22 (the code review's j): one rule, read from the title's own show value, called where each page's visuals
+    // are written. Titles are made in four places (frame, the KPI card's own, the tooltip pages' two), so it is not
+    // set in frame(): tried, and five of eight titles lost their heading
+    const headed = (vis) => { const t = vis && ((vis.visualContainerObjects || {}).title || [])[0], sh = t && t.properties && t.properties.show;
+      if (sh && sh.expr && sh.expr.Literal && sh.expr.Literal.Value === 'true') t.properties.heading = str('Heading3'); };
     const frame = (title, alt, extra, panel) => Object.assign({
-      // (round 21, the capabilities lab's #4: a shown title carries a heading level for screen readers, nothing to see;
-      // round 22, the code review's j: set here, where every title is made, not in a pass after)
-      title: obj(title ? { show: bool(true), text: str(title), alignment: str(align), heading: str('Heading3') } : { show: bool(false) })
+      title: obj(title ? { show: bool(true), text: str(title), alignment: str(align) } : { show: bool(false) })
     }, panel && SOLID ? {} : {
       background: obj({ show: bool(false) }),
       border: obj({ show: bool(false) }),
@@ -1517,7 +1522,7 @@
           if (f) { ['wrapped', 'shortened'].forEach((m) => { const i = titles[m].findIndex((x) => x.page === f.page && x.title === k); if (i >= 0) titles[m].splice(i, 1); });
             if (tf.mode !== 'one') titles[tf.mode].push({ page: f.page, title: name, shown: tf.shown }); } }));
       }
-      visuals.forEach((v) => {
+      visuals.forEach((v) => { headed(v.visual);
         add(D + '/pages/' + pageName + '/visuals/' + v.name + '/visual.json', json(v));
         const p = pos[v.name];
         if (p) add(D + '/pages/' + pageName + '/visuals/' + v.name + '/mobile.json', json(Object.assign({ $schema: SCHEMA.mobile,
@@ -1559,6 +1564,7 @@
       }));
       visuals.forEach((s, i) => {
         const v = { $schema: SCHEMA.visual, name: rnd(), position: { x: s.x, y: s.y, z: (i + 1) * 1000, height: s.h, width: s.w, tabOrder: (i + 1) * 1000 }, visual: s.visual };
+        headed(s.visual);
         add(D + '/pages/' + name + '/visuals/' + v.name + '/visual.json', json(v));
       });
     };
