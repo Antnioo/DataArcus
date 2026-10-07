@@ -4063,6 +4063,15 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       () => `a column chart by Quarter must show its labels outside the end, automatic units: ${JSON.stringify(L(q.c) || null)} ${q.err}`);
     chk(() => r.c && !L(r.c), () => `a column chart by Region (count unknown) keeps no labels: ${JSON.stringify(L(r.c) || null)} ${r.err}`);
   }
+  // 2. (lab #2) subtitles under chart titles, from the approved plan only: create_report's subtitles maps a slot (its
+  //    plan role, as plan_layout names it, or a hand-placed slot's title) to its text; nothing written without it
+  {
+    const en = await build('R21 sub en', { subtitles: { Breakdown: 'Largest region first' } }), ar = await build('R21 sub ar', { subtitles: { 'التوزيع': 'الأكبر أولًا' } }, 'ar'), none = await build('R21 sub none');
+    const subs = (x) => vis(x).map((v) => ((v.visual.visualContainerObjects || {}).subTitle || [])[0]).filter(Boolean).map((e) => [e.properties.show && e.properties.show.expr.Literal.Value, e.properties.text && e.properties.text.expr.Literal.Value]);
+    chk(() => JSON.stringify(subs(en)) === JSON.stringify([['true', "'Largest region first'"]]), () => `English: one subtitle, on the Breakdown chart: ${JSON.stringify(subs(en))} ${en.err ? en.t.slice(0, 200) : ''}`);
+    chk(() => JSON.stringify(subs(ar)) === JSON.stringify([['true', "'الأكبر أولًا'"]]), () => `Arabic: one subtitle by the Arabic role: ${JSON.stringify(subs(ar))} ${ar.err ? ar.t.slice(0, 200) : ''}`);
+    chk(() => subs(none).length === 0, () => `without subtitles none is written: ${JSON.stringify(subs(none))}`);
+  }
 }
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });

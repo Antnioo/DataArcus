@@ -1095,6 +1095,11 @@
           // a column chart written as a bar chart (asBar) in a slot too low for its rows and a value axis: no value axis,
           // each bar's value beside it (the tooltip pages' bar chart, measured in round 0)
           if (s.wasColumn && query && s.h < (s.rows * 23 + 92) * (pg.page.h / 720)) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.show = bool(false); visual.objects.labels = obj({ show: bool(true) }); }
+          // Round 21 (the capabilities lab's #2, Desktop 2.158, 7 Oct 2026: one small line under the title, shaped right in
+          // Arabic, kept on Save): a subtitle from the approved plan only (o.subtitles: a slot's plan role, English or
+          // Arabic, or a hand-placed slot's title -> its text); the writer never makes one up
+          if (o.subtitles && ttl && visual.visualContainerObjects) { const sub = [].concat(s.role || [], s.title || []).map((k) => o.subtitles[k]).find((t) => typeof t === 'string' && t.trim());
+            if (sub) visual.visualContainerObjects.subTitle = obj({ show: bool(true), text: str(sub.trim()) }); }
           if (s.kind !== 'kpi' && s.kind !== 'card' && ttl) {
             const tf = titleFit(ttl, TITLE, s.w - 2 * Math.round(16 * pg.page.h / 1080)), tp = visual.visualContainerObjects.title[0].properties;
             if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); titles[tf.mode].push({ page: pg.name || base, title: ttl, shown: tf.shown }); }
