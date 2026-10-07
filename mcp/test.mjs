@@ -2412,7 +2412,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const arAll = resets(arV).concat(resets(siteAr), resets(panelAr));
     // (round 13: the shown text now starts with two no-break spaces, the gap between the arrow and the words that Desktop
     // needs since round 12 put the arrow beside the text (measured 6 Oct, DESKTOP-TESTS.md round 13); the words are the same)
-    chk(() => resets(arV).length >= 1 && arAll.every((v) => S(linkOf(v).enabledTooltip) === 'إعادة ضبط الفلاتر' && S(lookOf(v, 'text').text).replace(/^\u00a0+/, '') === 'إعادة ضبط الفلاتر') && resets(enV).every((v) => S(linkOf(v).enabledTooltip) === 'Clear the filters on this page'),
+    chk(() => resets(arV).length >= 1 && arAll.every((v) => S(linkOf(v).enabledTooltip) === 'إعادة ضبط الفلاتر' && S(lookOf(v, 'text').text).replace(/^\u00a0+|\u00a0+$/g, '') === 'إعادة ضبط الفلاتر')   /* round 22: in Arabic the gap follows the text (the arrow is at its right) */ && resets(enV).every((v) => S(linkOf(v).enabledTooltip) === 'Clear the filters on this page'),
       () => `the Arabic Reset's text and tooltip must be "إعادة ضبط الفلاتر": ${JSON.stringify(arAll.map((v) => [S(lookOf(v, 'text').text), S(linkOf(v).enabledTooltip)]))}`);
   }
   // 7. Reset is only as wide as its icon (as wide as the button is high) and its text + 10 (the measured button rule),
@@ -2951,7 +2951,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
         const ic = Object.assign({}, ...v.visual.objects.icon.map((e) => e.properties)), tx = Object.assign({}, ...v.visual.objects.text.map((e) => e.properties)), link = v.visual.visualContainerObjects.visualLink[0].properties;
         const text = Sx(tx.text), need = Math.ceil(Pb3.textWidth(text, Nn(tx.fontSize), false, Sx(tx.fontFamily)) + 10 + v.position.height);
         if (!ic.iconSize || Nn(ic.iconSize) !== Math.round(0.75 * v.position.height)) bad.push(`${lang} ${filters}: iconSize ${ic.iconSize && Nn(ic.iconSize)} on a ${v.position.height}-high button`);
-        if (!/^\u00a0\u00a0\S/.test(text)) bad.push(`${lang} ${filters}: text ${JSON.stringify(text)} does not start with two no-break spaces`);
+        // (round 22, seen in Desktop 2.158.1304: before Arabic text the gap fell at the far end and the arrow touched the
+        // last letter) the gap is on the arrow's side: the text starts with it in English and ends with it in Arabic
+        if (!(lang === 'ar' ? /\S\u00a0\u00a0$/.test(text) && !/^\u00a0/.test(text) : /^\u00a0\u00a0\S/.test(text) && !/\u00a0$/.test(text))) bad.push(`${lang} ${filters}: text ${JSON.stringify(text)} does not ${lang === 'ar' ? 'end' : 'start'} with two no-break spaces`);
         if (v.position.width < need - 1) bad.push(`${lang} ${filters}: ${v.position.width} wide, the text with its gap needs ${need}`);
         if (/\u00a0/.test(Sx(link.enabledTooltip))) bad.push(`${lang} ${filters}: the tooltip carries the gap`); });
     }
