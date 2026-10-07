@@ -399,6 +399,7 @@
     const tableRows = [];   // tables whose known rows don't fit even with tight rows (round 12, #23)
     const headerGrew = [];   // pages whose header grew one row of tabs (round 12)
     const tableSmaller = [];   // tables given a smaller text so more fields fit (round 12)
+    const subtitlesUsed = new Set();   // round 22: the subtitle keys that found their visual
     const blankKept = [];   // round 21: KPI cards too narrow for the blank text at the value's size
     const noData = [];   // round 19: the "No data" measures, { t, m, expression }
     const NODATA = own && o.noDataMessage === true;   // (opt-in for now: see WORK.md, round 19, for the owner)
@@ -852,6 +853,7 @@
       // long for one line wraps to two (titleWrap, as a KPI title does), and one too long for two lines is shortened at a
       // word with "…" at its end, so it still begins with the measure's name; the full title stays the alt text. The
       // room: the visual's width less 16 a side (1920 x 1080, scaled); the theme's title size, measured as bold.
+      const fitted = new Map();   // round 22: each chart's full title and the room it was fitted to
       const titleFit = (text, size, avail) => {
         if (text == null || textWidth(text, size, true, font) <= avail) return { mode: 'one', shown: text };
         const two = (t) => { const ls = wrapLines(t, size, avail); return ls.length <= 2 && ls.every((l) => textWidth(l, size, true, font) <= avail); };
@@ -1087,7 +1089,10 @@
           // values' size, as the KPI cards) with one decimal (a percent measure keeps its own format). Only where the
           // number of columns is known from the model's names: a quarter (4); other columns could have any number
           if (query && s.kind === 'column') { const cf = query.queryState.Category.projections[0], cn = String(cf.nativeQueryRef || cf.queryRef || '');
-            if (/(^|\s|\.)quarter$|الربع/i.test(cn) || /(^|\s)quarter$/i.test(String(((Bt.cats || {}).column || {}).c || ''))) {
+            // (round 22, the code review's f: "Year Quarter" and "Fiscal Year Quarter" end the same way and hold 8 to 40 values:
+            // a name with a year in it is never taken for four columns)
+            const four = (n) => /(^|\s|\.)quarter$|الربع/i.test(n) && !/year|سنة|السنة|عام/i.test(n);
+            if (four(cn) || four(String(((Bt.cats || {}).column || {}).c || ''))) {
               const yf = ((Bt.y || {}).column || Bt.measure || {}), pct = !!yf.pct;
               visual.objects = visual.objects || {};
               visual.objects.labels = obj(Object.assign({ show: bool(true), labelPosition: str('OutsideEnd'), labelDisplayUnits: num(0) }, pct ? {} : { labelPrecision: lit('1L') }));
@@ -1099,10 +1104,14 @@
           // Round 21 (the capabilities lab's #2, Desktop 2.158, 7 Oct 2026: one small line under the title, shaped right in
           // Arabic, kept on Save): a subtitle from the approved plan only (o.subtitles: a slot's plan role, English or
           // Arabic, or a hand-placed slot's title -> its text); the writer never makes one up
-          if (o.subtitles && ttl && visual.visualContainerObjects) { const sub = [].concat(s.role || [], s.title || []).map((k) => o.subtitles[k]).find((t) => typeof t === 'string' && t.trim());
-            if (sub) visual.visualContainerObjects.subTitle = obj({ show: bool(true), text: str(sub.trim()) }); }
+          // (round 22, the code review's b, measured in Desktop 2.158.1304 on 7 Oct: on a planned KPI card the subtitle's line
+          // pushes the value down and cuts it in half, the card is sized for a title and a value: never on a card. The keys
+          // used are reported, subtitlesUsed, so the caller can say which were not)
+          if (o.subtitles && ttl && visual.visualContainerObjects && s.kind !== 'kpi' && s.kind !== 'card') { const key = [].concat(s.role || [], s.title || []).find((k) => typeof o.subtitles[k] === 'string' && o.subtitles[k].trim());
+            if (key != null) { visual.visualContainerObjects.subTitle = obj({ show: bool(true), text: str(o.subtitles[key].trim()) }); subtitlesUsed.add(key); } }
           if (s.kind !== 'kpi' && s.kind !== 'card' && ttl) {
             const tf = titleFit(ttl, TITLE, s.w - 2 * Math.round(16 * pg.page.h / 1080)), tp = visual.visualContainerObjects.title[0].properties;
+            fitted.set(visual, { ttl, avail: s.w - 2 * Math.round(16 * pg.page.h / 1080), page: pg.name || base });
             if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); titles[tf.mode].push({ page: pg.name || base, title: ttl, shown: tf.shown }); }
           }
           // the title already names the KPI, so the card's own label under the number is not repeated
@@ -1489,13 +1498,22 @@
       // in brackets, "عدد Order Id (Region)", English and Arabic alike; a title that is already its own is not changed
       {
         const tOf = (v) => { const t = ((v.visual.visualContainerObjects || {}).title || [])[0], x = t && t.properties && t.properties.text; return x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") : null; };
-        const same = {};
-        visuals.filter((v) => v.visual && v.visual.query && v.visual.query.queryState.Category && tOf(v)).forEach((v) => { (same[tOf(v)] = same[tOf(v)] || []).push(v); });
-        Object.keys(same).filter((k) => same[k].length > 1).forEach((k) => same[k].forEach((v) => { const p = v.visual.query.queryState.Category.projections[0], c = p.displayName || p.nativeQueryRef;
+        // (round 22, the code review's e and h, and seen in Desktop on 7 Oct, "Total Sales by City (City)" twice: the
+        // titles are compared in full, not as shortened; charts by the same column are left alone, a bracket would only
+        // repeat itself; the new title is fitted like any title, and the alt text carries the same name)
+        const same = {}, full = (v) => (fitted.get(v.visual) || {}).ttl || tOf(v), colOf = (v) => { const p = v.visual.query.queryState.Category.projections[0]; return p.displayName || p.nativeQueryRef; };
+        visuals.filter((v) => v.visual && v.visual.query && v.visual.query.queryState.Category && tOf(v)).forEach((v) => { (same[full(v)] = same[full(v)] || []).push(v); });
+        Object.keys(same).filter((k) => new Set(same[k].map(colOf)).size > 1).forEach((k) => same[k].forEach((v) => { const c = colOf(v);
           // (never a script the title does not have already: round 14's rule keeps an Arabic title free of English names;
           // "عدد Order Id" holds Latin letters already, so "(Region)" may follow it)
           const lat = /[A-Za-z]/, adds = (x) => (AR_LETTERS.test(c) && !AR_LETTERS.test(x)) || (lat.test(c) && !lat.test(x));
-          if (c && !adds(k)) v.visual.visualContainerObjects.title[0].properties.text = str(k + ' (' + c + ')'); }));
+          if (!c || adds(k)) return;
+          const name = k + ' (' + c + ')', f = fitted.get(v.visual), tp = v.visual.visualContainerObjects.title[0].properties, g = (v.visual.visualContainerObjects.general || [])[0];
+          const tf = f ? titleFit(name, TITLE, f.avail) : { mode: 'one', shown: name };
+          tp.text = str(tf.shown); if (tf.mode !== 'one' && !tf.one) tp.titleWrap = bool(true); else delete tp.titleWrap;
+          if (g && g.properties && g.properties.altText) g.properties.altText = str(name);
+          if (f) { ['wrapped', 'shortened'].forEach((m) => { const i = titles[m].findIndex((x) => x.page === f.page && x.title === k); if (i >= 0) titles[m].splice(i, 1); });
+            if (tf.mode !== 'one') titles[tf.mode].push({ page: f.page, title: name, shown: tf.shown }); } }));
       }
       // Round 21 (the capabilities lab's #4, Desktop 2.158, 7 Oct 2026: accepted and kept, nothing to see): every shown
       // visual title carries a heading level for screen readers, 'Heading3' (the page title is a text box, not a title)
@@ -1582,7 +1600,7 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts, blankKept };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts, blankKept, subtitlesUsed: [...subtitlesUsed] };
   }
 
   const api = { build, zip, crc32, textWidth, columnRoom };

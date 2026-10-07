@@ -99,12 +99,19 @@ ok(/track\('search', \{ search_term: safeTerm\(/.test(main), "main.js: the blog 
 // AUD-031 (round 20): a search term with 7 or more digits in all is redacted (a Gulf phone number is 8 digits, "5512 3456"),
 // unless every number in it is a year (19xx or 20xx), so "2024 2025" is kept; the "@" rule and the 50-character cut stay
 {
-  const src = (main.match(/const safeTerm = ([^\n]+);\n/) || [])[1];
+  const src = (main.match(/const safeTerm = ([^\r\n]+);\r?\n/) || [])[1];   // (a Windows checkout has CRLF line ends)
   let safe = null; try { safe = src && Function('return (' + src + ')')(); } catch (e) { safe = null; }
   ok(typeof safe === 'function', 'main.js: safeTerm could not be read as one arrow function on one line');
   if (typeof safe === 'function') {
     for (const q of ['5512 3456', '9876 5432', '+974 5512 3456', '050 123 4567', 'me@example.com', '1234567'])
       ok(safe(q) === '(redacted)', `safeTerm("${q}") must be "(redacted)", got "${safe(q)}"`);
+    // (round 22, the code review's i) the rule is one: the years a search names (2015 to 2035) are set aside, then 7 or
+    // more digits are redacted. So other words and small numbers beside years are kept, and two old "years" that
+    // could as well be a phone number ("2012 1995") are not
+    for (const q of ['2012 1995', '2024 5512 3456', '2024 2025 050 123 4567', '20242025'])
+      ok(safe(q) === '(redacted)', `safeTerm("${q}") must be "(redacted)", got "${safe(q)}"`);
+    for (const q of ['2024 2025 top 10', 'dax 2024 vs 2025 top 100', 'power bi 2019 2020 2021'])
+      ok(safe(q) === q, `safeTerm("${q}") must keep the term, got "${safe(q)}"`);
     for (const q of ['2024 2025', 'top 10 dax', 'dax 2025', 'calculate'])
       ok(safe(q) === q, `safeTerm("${q}") must keep the term, got "${safe(q)}"`);
     ok(safe('x'.repeat(80)) === 'x'.repeat(50), 'safeTerm must cut a term to 50 characters');

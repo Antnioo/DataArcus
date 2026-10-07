@@ -84,8 +84,19 @@ function reportFormatOf(o, kind, tables) {
   const expr = Array.isArray(o.expression) ? o.expression.join('\n') : String(o.expression == null ? '' : o.expression);
   return kind === 'measure' && DIVIDES_OR_AVERAGES.test(expr.replace(/\/\/.*$/gm, '').replace(/--.*$/gm, '')) ? r : Object.assign({}, r, { format: '#,0.##', reason: 'no format in the model: the separator, and decimals only where the value has them' });
 }
+// AUD-032 (round 20) and the code review's a (round 22): a name with a control character (a tab, a line break) is
+// never written raw into a fix script. Every script is built from the model without such tables, columns and
+// measures (the scripts touch only the objects they name, under "ref table"); skipped names them, escaped
+const hasControl = (x) => /\p{Cc}/u.test(String(x));
+function scriptTables(m) {
+  const raw0 = ((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).tables || [], skipped = [];
+  const raw = raw0.filter((t) => { if (hasControl(t.name)) { skipped.push(visible(t.name)); return false; } return true; }).map((t) => {
+    const keep = (x) => { if (!hasControl(x.name)) return true; skipped.push(`${visible(t.name)}[${visible(x.name)}]`); return false; };
+    return Object.assign({}, t, { columns: (t.columns || []).filter(keep), measures: (t.measures || []).filter(keep) }); });
+  return { raw0, raw, skipped };
+}
 function formatsAnswer(m, p, keys, maxItems) {
-  const raw = ((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).tables || [], s = Fix.formatReview(raw);
+  const raw = scriptTables(m).raw, s = Fix.formatReview(raw);
   const all = s.items.concat(s.byHand), mine = keys ? all.filter((i) => keys.has(i.object)) : all;
   if (!mine.length) return null;
   const cap = maxItems || 50, list = mine.slice(0, cap).map((i) => Object.assign({ object: i.object, kind: i.kind, from: i.from, to: i.to, why: i.reason }, i.steps ? { byHand: i.steps } : {}));
@@ -417,10 +428,7 @@ server.registerTool('check_model_health', {
   // AUD-032 (round 20): a name with a control character (a tab, a line break) is never written raw into a fix script:
   // such tables, columns and measures are left out of what the scripts are built from (the scripts touch only the
   // objects they name, under "ref table"), and the answer names them, escaped
-  const raw0 = ((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).tables || [], cc = (x) => /\p{Cc}/u.test(String(x)), scriptSkip = [];
-  const raw = raw0.filter((t) => { if (cc(t.name)) { scriptSkip.push(visible(t.name)); return false; } return true; }).map((t) => {
-    const keep = (x) => { if (!cc(x.name)) return true; scriptSkip.push(`${visible(t.name)}[${visible(x.name)}]`); return false; };
-    return Object.assign({}, t, { columns: (t.columns || []).filter(keep), measures: (t.measures || []).filter(keep) }); });
+  const { raw0, raw, skipped: scriptSkip } = scriptTables(m), cc = hasControl;
   const itemsOf = (id) => ((r.findings.find((f) => f.id === id) || {}).items || []).concat((((r.skipped || []).find((s) => s.id === id)) || {}).items || []);
   const howToApply = 'Tell the user: save a copy of the Power BI file first; open the script file in Notepad, select all and copy; in Power BI Desktop open TMDL view, paste, choose Preview to see the changes, then Apply. The script is a suggestion: it is never applied by this tool. It holds the model\'s own definitions (expressions, descriptions) of the objects it changes, which is why it is in a file and not in this answer: don\'t read the file into the conversation unless the user asks.';
   // measured in Power BI Desktop 2.158: after a script that adds a column, every visual shows an error until the
@@ -429,11 +437,23 @@ server.registerTool('check_model_health', {
   const fixes = {};
   {
     const cols = itemsOf('MONTH_SORT').map((i) => String(i.obj).match(/^(.*)\[(.*)\]$/)).filter(Boolean).map((x) => ({ table: x[1], column: x[2] }));
-    if (cols.length) { const s = Fix.sortFixes(raw, cols, { weekStart });
+    // (round 22, the code review's g) a column left out for a control character in its name is not "not found", and
+    // its table's number column is not added a second time beside one whose name holds such a character: both are
+    // steps by hand, with the reason
+    const ccHand = [], plain = (x) => String(x).replace(/\p{Cc}/gu, '').trim().toLowerCase();
+    const ask = cols.filter((c) => { if (!cc(c.table) && !cc(c.column)) return true; ccHand.push({ column: `${visible(c.table)}[${visible(c.column)}]`, why: 'its name holds a control character (a tab or a line break): no script names it', steps: 'Rename the column in Power BI Desktop (remove the hidden character), then check the model again.' }); return false; });
+    let s = ask.length ? Fix.sortFixes(raw, ask, { weekStart }) : { sorts: [], byHand: [], script: '', weekStart };
+    const twin = (x) => { if (!x.added) return null; const mt = String(x.by).match(/^(.*)\[(.*)\]$/), tb = mt && raw0.find((q) => q.name === mt[1]); return (tb && (tb.columns || []).find((c) => cc(c.name) && plain(c.name) === plain(mt[2]))) || null; };
+    const twins = s.sorts.filter(twin);
+    if (twins.length) { const names = new Set(twins.map((x) => x.column)), rest = ask.filter((c) => !names.has(`${c.table}[${c.column}]`));
+      twins.forEach((x) => ccHand.push({ column: x.column, why: `its number column, ${visible(twin(x).name)}, holds a control character (a tab or a line break) in its name: no script names it, and a second column of the same name is not added`, steps: 'Rename that number column in Power BI Desktop (remove the hidden character), then Column tools > Sort by column; or check the model again after renaming.' }));
+      s = rest.length ? Fix.sortFixes(raw, rest, { weekStart }) : { sorts: [], byHand: [], script: '', weekStart }; }
+    s.byHand = (s.byHand || []).concat(ccHand);
+    if (cols.length) {
       fixes.MONTH_SORT = Object.assign({ weekStart: s.weekStart, weekStartNote: s.sorts.some((x) => x.added && /Day of Week/.test(x.by)) ? `A weekday number column is added with the week starting on ${s.weekStart}; call again with weekStart: 'sunday', 'monday' or 'saturday' for another start.` : undefined,
         sorts: s.sorts, byHand: s.byHand }, scriptAnswer('sort order', s.script, s.sorts.some((x) => x.added))); }
     for (const [id, percent] of [['NO_FORMAT', false], ['PCT_FORMAT', true]]) {
-      const names = itemsOf(id).map((i) => String(i.obj).replace(/^\[|\]$/g, ''));
+      const names = itemsOf(id).map((i) => String(i.obj).replace(/^\[|\]$/g, '')).filter((n) => !cc(n));   // (round 22, g: named under scriptsSkip, never "not found")
       if (!names.length) continue;
       // the script and its list cover maxItems measures (as the findings list their objects), and stay under 30,000
       // characters: on a large model the whole script was the biggest part of the answer (measured: 147,000 characters)
@@ -786,6 +806,7 @@ server.registerTool('create_report', {
     if (size.h > size.w) reportNotes.push('This logo is tall; a horizontal version will read much better in the header.');
   }
   let r, bind, extra = {}, written, boundPages = null;
+  const subKeys = {};   // round 22: a subtitle key given in the other language -> the slot's role in the report's language
   const unknown = a.design ? unknownKeys(a.design) : null;
   if (a.design) {
     // the website's project download for this design: its pages (second page, slide-in panel), labels and theme
@@ -804,9 +825,14 @@ server.registerTool('create_report', {
     if (nCards < 6) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpiCards: Math.min(design.layout.kpiCards != null ? design.layout.kpiCards : 6, nCards) }) });
     kpiCards = cardNote(askedCards, Math.min(askedCards, nCards));
     const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage, panel: a.slidePanel, logoRatio }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
+    // (round 22, the code review's c) a slot's role is matched in English or Arabic whatever the report's language:
+    // the same pages in the other language give each role's other name
+    if (a.subtitles) { const o1 = { second: a.secondPage, panel: a.slidePanel, logoRatio }, mine = E.projectPages(design.layout, a.lang, o1), other = E.projectPages(design.layout, a.lang === 'ar' ? 'en' : 'ar', o1);
+      other.forEach((p, i) => p.slots.forEach((s, j) => { const q = mine[i] && mine[i].slots[j]; if (q && q.kind === s.kind && s.title && q.title && !(q.title in a.subtitles)) subKeys[s.title] = q.title; })); }
+    const subtitles = a.subtitles && Object.fromEntries(Object.entries(a.subtitles).map(([k, v]) => [subKeys[k] || k, v]));
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bindFor(kpisOf(pages))))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles: a.subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', quietGrid: true,
+      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bindFor(kpisOf(pages))))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', quietGrid: true,
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
@@ -881,6 +907,8 @@ server.registerTool('create_report', {
   Object.entries(r.svgSizes || {}).filter(([, z]) => z.capped).forEach(([pi, z]) => reportNotes.push(`The SVG pictures in the table on "${boundPages[pi].name}" were narrowed to ${z.w} x ${z.h} (the widest design is ${z.design}) so the table fits its box. For the design's own size, give the table more room or fewer columns.`));
   // round 19 (the owner's choice B): a page under 800 wide was planned with the single-focus layout
   if (a.design && a.design.layout && a.design.layout.preset === 'focus' && E.page(a.design.layout).w < 800) reportNotes.push(`The page is ${E.page(a.design.layout).w} wide, under 800, so it uses the single-focus layout (the KPI cards and one large chart): the executive layout's four charts and table would be cut or scroll on it.`);
+  if (a.subtitles) { const used = new Set(r.subtitlesUsed || []), un = Object.keys(a.subtitles).filter((k) => !used.has(subKeys[k] || k));
+    if (un.length) reportNotes.push(`No subtitle was written for ${un.map((k) => '"' + k + '"').join(', ')}: a subtitle goes under the title of a chart or a table, found by its slot's role as plan_layout names it (in English or Arabic) or by a hand-placed slot's title. A KPI card never gets one (its value would be pushed down and cut).`); }
   if ((r.blankKept || []).length) reportNotes.push(`${r.blankKept.length === 1 ? 'A KPI card keeps' : r.blankKept.length + ' KPI cards keep'} "--" when there is no data (${r.blankKept.map((x) => `${x.title ? '"' + x.title + '"' : 'a card'} on "${x.page}", ${x.w} wide, needs ${x.need}`).join('; ')}): the "No data" text, at the value's own size, does not fit, and the value keeps its size.`);
   if ((r.barCharts || []).length) reportNotes.push(`The chart${r.barCharts.length === 1 ? '' : 's'} by ${[...new Set(r.barCharts.map((x) => x.field))].join(', ')} on ${[...new Set(r.barCharts.map((x) => `"${x.page}"`))].join(', ')} ${r.barCharts.length === 1 ? 'is a bar chart' : 'are bar charts'} instead of a column chart: the names would not fit side by side and would slant; as bars they read level. A short name column in the model (the Gulf calendar's Day Short) keeps a column chart.`);
   if ((r.shortDays || []).length) reportNotes.push(`The column chart${r.shortDays.length === 1 ? '' : 's'} by day on ${[...new Set(r.shortDays.map((x) => `"${x.page}"`))].join(', ')} ${r.shortDays.length === 1 ? 'shows' : 'show'} Day Short (Sun ... Sat), in the calendar's order: the full day names would not fit side by side and would slant. Tables and slicers keep Day Name.`);

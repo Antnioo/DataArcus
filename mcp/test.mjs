@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { round22 } from './test-round22.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems } from '../scripts/tests/report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
@@ -4088,6 +4089,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => subs(none).length === 0, () => `without subtitles none is written: ${JSON.stringify(subs(none))}`);
   }
 }
+// ---------- round 22 (the code review of rounds 20 and 21): its checks live in test-round22.mjs, which also runs alone ----------
+await round22({ call, check, ROOT, fs });
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 console.log(problems.length ? `FAIL  mcp  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  mcp  ${checks} checks`);
