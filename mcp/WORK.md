@@ -4,6 +4,39 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 21, the capabilities lab's "adopt now" (7 Oct, 08:31-09:31 UTC, cloud builder; branch `fix/round-21` from `fix/round-20` `585d107`; not merged)
+The owner's go (~12:30 Dubai). Source: `research/capabilities-lab`, mcp/research/POWERBI-HIDDEN-CAPABILITIES.md, "Lab 7 Oct":
+the property names, value forms and selectors Desktop 2.158 drew and saved back.
+- **Item 1, lab #1 (done):** with `noDataMessage` a KPI card says "No data" / «لا توجد بيانات» (value.showBlankAs,
+  default selector); its value one step under (0.8: the lab's 30 under 38); only on cards >= 300 wide at 1280 x 720,
+  scaled with the page. Off with the option off (still default off).
+- **Item 2, lab #2 (done, in part):** `subtitles` option: { slot role (plan_layout's, English or Arabic) or a hand
+  slot's title: text } -> visualContainerObjects.subTitle (show, text). Only given texts. **Not built:** moving round
+  20's "(Region)" brackets into a subtitle (needs a measured "which is shorter"), #3's divider (the themes use none).
+- **Item 3, lab #4 (done):** every shown visual title (tooltip pages too) carries heading 'Heading3'. The page title
+  is a text box: not changed.
+- **Item 4, lab #12 (not done, why):** "beside a plain number column of the same measure" needs the same measure twice
+  in one table, and how Desktop names the second copy (its queryRef, which the data bar's selector needs) is not
+  measured; writing the bar on the only copy would hide its number. For the laptop: add a measure twice to a table
+  by hand, save, read both projections' queryRef and nativeQueryRef.
+- **Item 5, lab #6 (done):** a column chart by a quarter (4 columns, known from the name) shows labels OutsideEnd,
+  automatic units (0: K / M), one decimal (a percent measure keeps its format). Charts by columns whose count is not
+  known are unchanged.
+- **Tests:** npm test 588 (round 20) -> **597 of 597**, golden PASS (no golden expectation changed); website pbip 73, theme-generator 893, theme-generator-lab 893 pass;
+  test-site-config, test-analytics-events, check:min pass. ?v= 20261007r21.
+
+### Round 21, for the laptop (expected look; a FAIL is anything else)
+1. **Blank text:** golden task 10 (no rows) with `noDataMessage: true`, 1920 x 1080: every KPI card reads "No data"
+   (Arabic report «لا توجد بيانات», whole, not cut) at a size one step under the usual value; with data, the values
+   are that step smaller. FAIL: "--", a cut Arabic text, a value cut at its bottom.
+2. **Subtitles:** any golden exec report built with `subtitles: { "Breakdown": "..." }` (Arabic: "التوزيع"): one
+   small line under the bar chart's title, shaped right in Arabic; the plot a little shorter. FAIL: no line, two lines,
+   the text over the plot.
+3. **Heading:** nothing to see on any report (open, read, nothing moved). FAIL: anything changed.
+4. **Labels:** golden task 1's or 3's column chart by Quarter: four values above the columns ("77.7K" style); charts by
+   Region or day names unchanged. FAIL: labels inside the columns, cut, or numbers with more decimals than one.
+5. **Data bars (item 4):** the measurement above (a measure twice in one table: both queryRefs).
+
 ## Round 20, the owner's "all recommended" (7 Oct, 02:54-03:55 UTC, cloud builder; branch `fix/round-20` from main `11ed33a`; not merged)
 - **Item 1, AUD-031 (`3580a36`): done.** The blog search's `safeTerm` redacts a term with 7 or more digits in all
   ("5512 3456", "+974 5512 3456", "050 123 4567"), **unless every number in it is a year** (19xx/20xx: "2024 2025"
