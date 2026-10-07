@@ -28,7 +28,7 @@ the property names, value forms and selectors Desktop 2.158 drew and saved back.
 - **Item 5, lab #6 (done):** a column chart by a quarter (4 columns, known from the name) shows labels OutsideEnd,
   automatic units (0: K / M), one decimal (a percent measure keeps its format). Charts by columns whose count is not
   known are unchanged.
-- **Tests:** npm test 588 (round 20) -> **597 of 597**, golden PASS (no golden expectation changed); website pbip 73, theme-generator 893, theme-generator-lab 893 pass;
+- **Tests:** npm test 588 (round 20) -> **597 of 597**, then **600 of 600** after the owner's "Keep numbers big" follow-up, golden PASS (no golden expectation changed); website pbip 73, theme-generator 893, theme-generator-lab 893 pass;
   test-site-config, test-analytics-events, check:min pass. ?v= 20261007r21.
 
 ### Round 21, for the owner
