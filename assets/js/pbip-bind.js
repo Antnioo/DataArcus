@@ -214,18 +214,22 @@
   }
   // the tables a measure reaches (round 22b): the tables its DAX names ('Sales'[Amount], Sales[Amount], COUNTROWS ( Sales ))
   // and those of the measures it calls ([Base Amount]), with its own table, then every table a relationship leads to from
-  // them (many to one, from fromTable to toTable)
+  // them (many to one, from fromTable to toTable). The reviewer's second review (items 2, 3, 10): names are matched as
+  // DAX does, without regard to case; tables are the whole model's (opt.modelTables), not only those in the pick's
+  // scope; and the DAX is read once per measure (its quoted names and its words looked up), not once per table
   function reached(tables, main, rels) {
-    const byMeasure = {}; tables.forEach((t) => (t.measures || []).forEach((m) => { if (!(m.name in byMeasure)) byMeasure[m.name] = { expr: m.expr || '' }; }));
-    const names = tables.map((t) => t.name), esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const reads = (expr) => { const e = String(expr || '').replace(/"(?:[^"]|"")*"/g, '""').replace(/--[^\n]*|\/\/[^\n]*|\/\*[\s\S]*?\*\//g, ' ');
-      const bare = e.replace(/'(?:[^']|'')*'/g, ' ').replace(/\[(?:[^\]]|\]\])*\]/g, ' ');
-      return { tables: names.filter((n) => e.includes("'" + n.replace(/'/g, "''") + "'") || new RegExp('(^|[^\\w])' + esc(n) + '(?![\\w])').test(bare)),
-        measures: (e.match(/(^|[^'\w\]])\[((?:[^\]]|\]\])+)\]/g) || []).map((x) => x.replace(/^[^[]*\[|\]$/g, '').replace(/\]\]/g, ']')).filter((n) => n in byMeasure) }; };
-    // (a model's measure names are unique, whatever table holds them)
-    const reach = new Set([main.t]), seen = new Set(), todo = [main.m];
-    while (todo.length && seen.size < 200) { const n = todo.shift(); if (seen.has(n) || !byMeasure[n]) continue; seen.add(n);
-      const r = reads(byMeasure[n].expr); r.tables.forEach((t) => reach.add(t)); todo.push(...r.measures); }
+    const lc = (x) => String(x).toLowerCase(), byName = new Map(), byMeasure = new Map();
+    tables.forEach((t) => { byName.set(lc(t.name), t.name); (t.measures || []).forEach((m) => { if (!byMeasure.has(lc(m.name))) byMeasure.set(lc(m.name), m.expr || ''); }); });
+    const reads = (expr) => { const e = String(expr || '').replace(/"(?:[^"]|"")*"/g, '""').replace(/--[^\n]*|\/\/[^\n]*|\/\*[\s\S]*?\*\//g, ' '), out = { tables: [], measures: [] };
+      (e.match(/'(?:[^']|'')*'/g) || []).forEach((x) => { const n = byName.get(lc(x.slice(1, -1).replace(/''/g, "'"))); if (n) out.tables.push(n); });
+      const bare = e.replace(/'(?:[^']|'')*'/g, ' ');
+      // a measure is [Name] not right after a table name or a quote ('Sales'[Amount] and Sales[Amount] are columns)
+      (bare.match(/(^|[^\w\]])\[(?:[^\]]|\]\])+\]/g) || []).forEach((x) => { const n = lc(x.slice(x.indexOf('[') + 1, -1).replace(/\]\]/g, ']')); if (byMeasure.has(n)) out.measures.push(n); });
+      (bare.replace(/\[(?:[^\]]|\]\])*\]/g, ' ').match(/[\p{L}_][\p{L}\p{N}_]*/gu) || []).forEach((w) => { const n = byName.get(lc(w)); if (n) out.tables.push(n); });
+      return out; };
+    const reach = new Set([main.t]), seen = new Set(), todo = [lc(main.m)];
+    while (todo.length && seen.size < 500) { const n = todo.shift(); if (seen.has(n) || !byMeasure.has(n)) continue; seen.add(n);
+      const r = reads(byMeasure.get(n)); r.tables.forEach((t) => reach.add(t)); todo.push(...r.measures); }
     for (let grew = true; grew;) { grew = false; rels.forEach((r) => { if (reach.has(r.fromTable) && !reach.has(r.toTable)) { reach.add(r.toTable); grew = true; } }); }
     return reach;
   }
@@ -244,11 +248,20 @@
     if (ratio && kpis.length < nKpis) kpis.push(ratio);
     ranked.forEach((x) => { if (kpis.length < nKpis && !kpis.includes(x)) kpis.push(x); });
     while (kpis.length < nKpis) kpis.push(null);   // more cards than measures: the rest stay empty
+    // Round 22b (the review of round 22, items 2 and 3): only the main chart's category took this order, the column
+    // chart's and the map's (catB) and the pool every other chart takes from still reached a table the measure is not
+    // related to; and the walk began at the table the measure is stored in, which for a measures table of its own is
+    // related to nothing. Now it begins at the tables the measure's DAX reads (through the measures it calls too) and
+    // its own table, and only reached categories are given out (catB falls back to catA). The reviewer's second review:
+    // the measure is the plan's (opt.main) where it names one (item 4), and the time axis and the year slicer come from
+    // a reached table too (item 5: two calendars, the measure related to one)
+    const rels = (opt && opt.relationships) || [], anchor = (opt && opt.main && opt.main.m != null ? opt.main : null) || main;
+    const reach = rels.length && anchor ? reached((opt && opt.modelTables) || tables, anchor, rels) : null, near = (c) => !reach || reach.has(c.t);
     // time axis: a month column from the date table, else its date column, else any date column
-    const inDate = columns.filter((c) => c.dateTable);
+    const inDate = columns.filter((c) => c.dateTable && near(c));
     let date = inDate.find((c) => /^(month[\s_-]*(name|year)?|year[\s_-]*month|الشهر)$/i.test(c.c)) || inDate.find((c) => /month|الشهر/i.test(c.c))
-      || inDate.find((c) => /date/.test(c.type)) || columns.find((c) => /date/.test(c.type))
-      || columns.find((c) => /^(month[\s_-]*(name)?|الشهر)$/i.test(c.c)) || null;   // no date table: a month column anywhere
+      || inDate.find((c) => /date/.test(c.type)) || columns.find((c) => /date/.test(c.type) && near(c))
+      || columns.find((c) => /^(month[\s_-]*(name)?|الشهر)$/i.test(c.c) && near(c)) || null;   // no date table: a month column anywhere
     // Round 12 (#16; seen in Desktop 2.158, round 11: "January" ... "December" slanted on the line chart): the time axis
     // takes the model's short month names ("Jan") where it has them, in the same order
     const SHORT_MONTH = /^(month\s*(short|abbr|abbreviation)|short\s*month|mmm)$/i;
@@ -262,15 +275,9 @@
     // table was related to another fact table only): with the model's relationships (opt.relationships, each
     // { fromTable, toTable }; the MCP gives them, the website's picker has none and is unchanged) a category of the
     // main measure's own table, or of a table reached from it along the relationships, comes before every other
-    // Round 22b (the review of round 22, items 2 and 3): only the main chart's category took this order, the column
-    // chart's and the map's (catB) and the pool every other chart takes from still reached a table the measure is not
-    // related to; and the walk began at the table the measure is stored in, which for a measures table of its own is
-    // related to nothing. Now it begins at the tables the measure's DAX reads (through the measures it calls too) and
-    // its own table, and where any category is reached, only reached ones are given out (catB falls back to catA)
-    const rels = (opt && opt.relationships) || [], reach = rels.length && main ? reached(tables, main, rels) : null;
     // (the outside review's X-04: where none is reached, none is given: a chart by a table the measure is not related
-    // to shows the same total on every bar; the date table's parts only when the measure reaches that table, else the
-    // charts that need a category are left out and the caller says why: noRelatedCategory)
+    // to shows the same total on every bar; the date table's parts only when reached, else the charts that need a
+    // category are left out and the caller says why: noRelatedCategory)
     const unreached = reach ? cats.filter((c) => !reach.has(c.t)) : [];
     if (reach) cats = cats.filter((c) => reach.has(c.t));
     // no category outside the date table: the date table's named parts (quarter, day, month names), never the time axis
@@ -278,7 +285,7 @@
     const catA = cats[0] || null, catB = cats.find((c) => c !== catA && c.t !== (catA && catA.t)) || cats[1] || catA;
     const sl = [year, catA, catB, date].filter((x, i, l) => x && l.indexOf(x) === i);
     const out = build({ kpis, main, date, catA, catB, slicers: [sl[0] || null, sl[1] || null, sl[2] || null] });
-    if (!cats.length && unreached.length) out.noRelatedCategory = { measure: { t: main.t, m: main.m }, tables: [...new Set(unreached.map((c) => c.t))].slice(0, 5) };
+    if (!cats.length && unreached.length) out.noRelatedCategory = { measure: { t: anchor.t, m: anchor.m }, tables: [...new Set(unreached.map((c) => c.t))].slice(0, 5) };
     // every column a slicer could take, in the order they are picked (round 12, #22: the caller replaces a slicer that
     // a page filter makes pointless)
     out.slicerPool = [year].concat(cats, [date]).filter((x, i, l) => x && l.indexOf(x) === i);

@@ -96,8 +96,9 @@ function scriptTables(m) {
     return Object.assign({}, t, { columns: (t.columns || []).filter(keep), measures: (t.measures || []).filter(keep) }); });
   return { raw0, raw, skipped };
 }
-// (round 22) the model's relationships for the field picker, which puts a category the measure's table is related to first
-const relsOf = (m) => ({ relationships: ((((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).relationships) || []).filter((r) => r && r.fromTable && r.toTable && r.isActive !== false).map((r) => ({ fromTable: r.fromTable, toTable: r.toTable })) });
+// (round 22) the model's relationships for the field picker, which puts a category the measure's table is related to first;
+// (round 22b, the reviewer's second review, item 3) with the whole model's tables, which a measure's DAX may read outside the scope
+const relsOf = (m) => ({ modelTables: m.tables, relationships: ((((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).relationships) || []).filter((r) => r && r.fromTable && r.toTable && r.isActive !== false).map((r) => ({ fromTable: r.fromTable, toTable: r.toTable })) });
 function formatsAnswer(m, p, keys, maxItems) {
   const raw = scriptTables(m).raw, s = Fix.formatReview(raw);
   const all = s.items.concat(s.byHand), mine = keys ? all.filter((i) => keys.has(i.object)) : all;
@@ -692,7 +693,8 @@ server.registerTool('create_report', {
   // the binding for n KPI cards: the picker's, with every given field in its place
   const bindFor = (n) => {
     if (COUNTS.length) return countBind(n);
-    const b = Bind.suggest(pickFrom, n, relsOf(m));
+    // (round 22b, the reviewer's second review, item 4: the plan's measure, where it names one, decides what is related)
+    const b = Bind.suggest(pickFrom, n, Object.assign(relsOf(m), F && F.measure ? { main: F.measure } : {}));
     // (round 22b, X-04) the picker's "no category is related to the measure" stays with a binding built again from the
     // user's fields, while it still has no category
     const carry = (nb) => (b.noRelatedCategory && !Object.values(nb.cats || {}).some(Boolean) ? Object.assign(nb, { noRelatedCategory: b.noRelatedCategory }) : nb);
