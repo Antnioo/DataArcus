@@ -115,11 +115,12 @@ Also for the owner, no action needed unless you disagree: safeTerm now redacts "
 | `mcp/quick.tmp.mjs` (a scratch file) is committed | open since round 20: delete it |
 | The Arabic letter widths in Segoe UI | not measured |
 | Data bars beside a plain number column | a working hand-written form is measured (above); not built: the bar column comes before the number in that form, and the reverse order drew no bar |
-| The local bake-off against Microsoft's report skill | not started |
+| The local bake-off against Microsoft's report skill | not started (the session's memory was heavy with captures by then). Checked only that it can run locally: Microsoft's report CLI in `mcp/node_modules` (`powerbi-report-author`: catalog, formatting, theme, text measurement, validate, previews) needs no sign-in and no tenant |
 
 #### The next session starts with
 1. The owner's answer on the Arabic "Total" word; then the measurement left (Arabic letters in Segoe UI) and, if data bars are wanted, the order question (number first, bar second).
-2. The reviewer: `fix/round-22` at its head for review and the Linux run; the 0.2.7 package is built again from the merge commit (its SHA-256 will differ).
+2. The bake-off, in a session of its own: the same request on the made-up "Marsa Home" model (`<tests folder>showcase-1007`) through Microsoft's report skill and through DataArcus, both opened in Desktop, scored blind by the golden rule. The CLI's `text` helpers may also give the Arabic widths in Segoe UI.
+3. The reviewer: `fix/round-22` at its head for review and the Linux run; the 0.2.7 package is built again from the merge commit (its SHA-256 will differ).
 3. Left on the laptop: `<tests folder>\r22\` (lab reports, golden reports and captures, the unpacked package in `pkg\`), `<tests folder>\showcase-1007\`, scripts `builder-scripts\r22-*`, the engine work trees `C:\DataArcus\night-engine` (the candidate in `dist\`) and `C:\DataArcus\showcase-wt`. No Desktop window is left open.
 
 
