@@ -116,6 +116,35 @@ the site's scripts load again there).
 **Seen, not in scope:** a model whose measure reaches no date table now gets no line chart (left out and told as a
 chart without its field, no note of its own); the website's picker still has no relationships.
 
+### Round 22b, the reviewer's third review (96e6c1c's changes; added 22:33 UTC; the last loop)
+**Commits:** the checks (red first: 1, 2, 4, 5, 6), then `pbip-bind` 1 and 2, `pbip-export` 4, `main.js` 5 and 6,
+`check-min` 3 (head `03d500b`, then this report).
+| # | Result | Fix |
+|---|---|---|
+| 1 | **CONFIRMED** ('Sales'[Quantity] read as a call of Returns' measure "quantity": charts by Carrier) | a quoted table name stands as a word before the calls are read |
+| 2 | **CONFIRMED** (DATE ( ) reached the table 'Date': axis and Year slicer from it, not 'Ship Date') | a word followed by "(" is a function; VAR, RETURN, TRUE, FALSE, IN, NOT, AND, OR... are keywords |
+| 3 | **CONFIRMED** (scratch copy: a changed tmdl-model.min.js, loaded by the worker with main's stamp, passed) | each reference resolved from the file that holds it |
+| 4 | **CONFIRMED** (a 400-wide chart's shortened title no longer in the notes after the second was numbered) | each fitted title keeps its own entry |
+| 5 | **CONFIRMED** ("971 2030 2015", "123 2024 2025" kept) | a 3+-digit number beside two or more years counts the whole run |
+| 6 | **CONFIRMED** ("٠٥٠١٢٣٤٥٦٧" and the Eastern Arabic form kept) | those digits read as digits for the count; a kept term sent as typed |
+"Tests in both scripts" for 6: the cases are in `test-analytics-events.mjs`, which reads safeTerm from `main.js`; `main.min.js`
+is checked to be terser's output of it (`check-min`), not evaluated on its own.
+**Tests:** `test-round22.mjs` 53 -> 56; full `npm test` **691 of 691, golden PASS**; website all 17 suites PASS;
+`check-min`, `test-site-config`, `test-analytics-events`, `csp` PASS; CI green on `03d500b`.
+
+### Round 22b, for the laptop to prove (the final list: everything of 22b that changes what Desktop shows)
+1. **Categories from a related table** (items 2, 3 of the first review; X-04; 2, 3, 4, 5 of the second; 1, 2 of the third):
+   golden task 10 (charts by Hub and Lane as before); a made-up model with a measures table, a lower-case or quoted table
+   name in the DAX, a plan naming another fact table's measure, two calendars (the line chart by the related one, never
+   by one a function name like DATE matches); a model whose measure reaches no category (no chart by the unrelated
+   table, the note).
+2. **Titles** (item 10 of the first review, 8 of the second, 4 of the third): three charts on two text columns ("(Channel)",
+   "(Channel 2)"); two charts by the same measure and column ("(2)"), each whole or told as shortened.
+3. **A table too narrow even at 8pt** (item 8): the note; Desktop scrolls sideways.
+4. **No change expected:** X-05 (a "No data" card left out for a name with a control character), the website-only items
+   (safeTerm, the `?v=` stamps, check-min), check_report (no visual change).
+5. **The 0.2.7 package:** its manifest's Node compatibility against `>=20.10`, then rebuilt from this branch's head.
+
 ## Sitting 7-8 Oct (laptop builder; branch `fix/round-22` from `origin/fix/round-21` `9d927a9` with `origin/main` `7cdf252` merged in as `8b7d4d6`; not merged, no PR)
 **Started 15:22 UTC on 7 Oct (19:22 Dubai). Hard stop 21:20 UTC; the stop report is below ("the stop report"), pushed 18:48 UTC.** Two sessions: the first stopped at about 15:28, the second did the work. The owner gave
 the laptop; this is the only session driving Power BI Desktop. Work tree on the laptop: `C:\DataArcus\r22-wt` (the main
