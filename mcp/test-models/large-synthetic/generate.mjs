@@ -94,6 +94,36 @@ facts.forEach((t) => {
   }));
 });
 
+// 3b. rows (round 22, the owner's yes of 6 Oct: test models as DAX tables, so the golden report opens with data and no
+// Refresh). The calendar, the Logistics facts and every lookup they use hold made-up rows written as DAX (a formula of
+// the date and a row number: no RAND, the same rows on every open); the other 280 tables stay empty Power Query
+// tables, as before. Nothing here draws from rnd(), so the names above are the ones the model always had.
+const withRows = new Set(['Calendar']);
+facts.filter((f) => f.area === 'Logistics').forEach((f) => { withRows.add(f.name); f.links.forEach((d) => withRows.add(d.name)); });
+dims.filter((d) => d.area === 'Logistics').forEach((d) => withRows.add(d.name));
+const CAL = {
+  Year: 'YEAR ( [Date] )', Quarter: '"Q" & QUARTER ( [Date] )', 'Year Quarter': 'YEAR ( [Date] ) & " Q" & QUARTER ( [Date] )', 'Month Number': 'MONTH ( [Date] )',
+  'Month Name': 'FORMAT ( [Date], "MMMM", "en-US" )', 'Month Short': 'FORMAT ( [Date], "MMM", "en-US" )', 'Year Month': 'FORMAT ( [Date], "yyyy-MM", "en-US" )', 'Year Month Number': 'YEAR ( [Date] ) * 100 + MONTH ( [Date] )',
+  Day: 'DAY ( [Date] )', 'Weekday Number': 'WEEKDAY ( [Date], 1 )', 'Day Name': 'FORMAT ( [Date], "dddd", "en-US" )', 'Week Of Year': 'WEEKNUM ( [Date], 1 )', 'Is Weekend': 'WEEKDAY ( [Date], 1 ) IN { 1, 7 }',
+  'Fiscal Year': '"FY" & YEAR ( [Date] )', 'Fiscal Quarter': '"FQ" & QUARTER ( [Date] )', 'Fiscal Month Number': 'MONTH ( [Date] )',
+  // (made-up, near enough for a test model: not a Hijri calendar)
+  'Hijri Year': '1445 + IF ( [Date] >= DATE ( 2024, 7, 7 ), 1, 0 ) + IF ( [Date] >= DATE ( 2025, 6, 26 ), 1, 0 )', 'Hijri Month Number': '1 + MOD ( INT ( DATEDIFF ( DATE ( 2023, 7, 19 ), [Date], DAY ) / 29.53 ), 12 )',
+  'Is Ramadan': '( [Date] >= DATE ( 2024, 3, 11 ) && [Date] <= DATE ( 2024, 4, 9 ) ) || ( [Date] >= DATE ( 2025, 3, 1 ) && [Date] <= DATE ( 2025, 3, 29 ) )'
+};
+const DAYS = 'CALENDAR ( DATE ( 2024, 1, 1 ), DATE ( 2025, 12, 31 ) )';
+const rowsDax = (t) => {
+  if (t.kind === 'date') return `ADDCOLUMNS ( ${DAYS}, ${t.columns.filter((c) => c.name !== 'Date').map((c) => `"${c.name}", ${CAL[c.name] || 'BLANK ()'}`).join(', ')} )`;
+  if (t.kind === 'fact') {
+    const n = facts.indexOf(t) + 1;
+    const cols = t.columns.map((c, i) => `"${c.name}", ` + (i === 0 ? '( INT ( [Date] ) - 45000 ) * 10 + [Value]' : c.name === 'Date' ? '[Date]' : c.fk ? `1 + MOD ( [S] + [Value] + ${i * 37}, 8 )`
+      : c.type === 'int64' ? `1 + MOD ( [S] * ${i + 2}, 40 )` : `${c.type === 'decimal' ? 'CURRENCY' : ''} ( ROUND ( ( 40 + MOD ( [S] * ${i + 3}, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) )`));
+    return `VAR B = ADDCOLUMNS ( CROSSJOIN ( ${DAYS}, GENERATESERIES ( 1, 3 ) ), "S", MOD ( INT ( [Date] ) * 7919 + [Value] * 104729 + ${n * 1299709}, 1000 ) ) RETURN SELECTCOLUMNS ( B, ${cols.join(', ')} )`;
+  }
+  const cols = t.columns.map((c, i) => `"${c.name}", ` + (i === 0 ? '[Value]' : i === 1 ? `"${t.name} " & [Value]` : c.type === 'int64' ? '[Value]' : c.type === 'boolean' ? 'MOD ( [Value], 2 ) = 1' : c.type === 'dateTime' ? 'DATE ( 2024, [Value], 1 )'
+    : `"${c.name.slice(t.name.length + 1)} " & ( 1 + MOD ( [Value] + ${i}, 3 ) )`));
+  return `SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), ${cols.join(', ')} )`;
+};
+
 // 4. write the TMDL files
 const tmdlTable = (t) => {
   const out = [`table ${q(t.name)}`];
@@ -111,8 +141,11 @@ const tmdlTable = (t) => {
     if (c.hidden) out.push('\t\tisHidden');
     if (c.sortBy) out.push(`\t\tsortByColumn: ${q(c.sortBy)}`);
     if (t.kind === 'date' && c.name === 'Date') out.push('\t\tisKey');
-    out.push(`\t\tsourceColumn: ${c.name}`, '');
+    // (a DAX table's column, as Desktop writes it: the name and the type inferred, the source in brackets)
+    if (withRows.has(t.name)) out.push('\t\tisNameInferred', '\t\tisDataTypeInferred', `\t\tsourceColumn: [${c.name}]`, '');
+    else out.push(`\t\tsourceColumn: ${c.name}`, '');
   });
+  if (withRows.has(t.name)) { out.push(`\tpartition ${q(t.name)} = calculated`, '\t\tmode: import', '\t\tsource = ' + rowsDax(t), ''); return out.join('\n'); }
   out.push(`\tpartition ${q(t.name)} = m`, '\t\tmode: import', '\t\tsource =', '\t\t\t\tlet', `\t\t\t\t    Source = #table({${t.columns.map((c) => JSON.stringify(c.name)).join(', ')}}, {})`, '\t\t\t\tin', '\t\t\t\t    Source', '');
   return out.join('\n');
 };
@@ -132,4 +165,4 @@ facts.forEach((t) => {
 fs.writeFileSync(path.join(OUT, 'definition', 'relationships.tmdl'), rels.map(([ft, fc, tt, tc], i) => `relationship rel_${String(i + 1).padStart(4, '0')}\n\tfromColumn: ${q(ft)}.${q(fc)}\n\ttoColumn: ${q(tt)}.${q(tc)}\n`).join('\n'));
 
 const measures = facts.reduce((n, t) => n + t.measures.length, 0);
-console.log(`Large Synthetic: ${tables.length} tables (${facts.length} facts, ${dims.length} lookups, 1 calendar), ${tables.reduce((n, t) => n + t.columns.length, 0)} columns, ${measures} measures, ${rels.length} relationships -> ${path.relative(process.cwd(), OUT)}`);
+console.log(`Large Synthetic: ${withRows.size} tables with rows (DAX tables); ${tables.length} tables (${facts.length} facts, ${dims.length} lookups, 1 calendar), ${tables.reduce((n, t) => n + t.columns.length, 0)} columns, ${measures} measures, ${rels.length} relationships -> ${path.relative(process.cwd(), OUT)}`);

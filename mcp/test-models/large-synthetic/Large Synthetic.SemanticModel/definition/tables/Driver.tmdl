@@ -3,40 +3,52 @@ table Driver
 	column 'Driver Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Driver Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Driver Key]
 
 	column Driver
 		dataType: string
-		sourceColumn: Driver
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Driver]
 
 	column 'Driver Parent Code'
 		dataType: string
-		sourceColumn: Driver Parent Code
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Driver Parent Code]
 
 	column 'Driver Region'
 		dataType: string
-		sourceColumn: Driver Region
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Driver Region]
 
 	column 'Driver Status'
 		dataType: string
-		sourceColumn: Driver Status
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Driver Status]
 
 	column 'Driver Created By'
 		dataType: string
-		sourceColumn: Driver Created By
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Driver Created By]
 
 	column 'Driver Code'
 		dataType: string
-		sourceColumn: Driver Code
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Driver Code]
 
 	column 'Driver Description'
 		dataType: string
-		sourceColumn: Driver Description
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Driver Description]
 
-	partition Driver = m
+	partition Driver = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Driver Key", "Driver", "Driver Parent Code", "Driver Region", "Driver Status", "Driver Created By", "Driver Code", "Driver Description"}, {})
-				in
-				    Source
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Driver Key", [Value], "Driver", "Driver " & [Value], "Driver Parent Code", "Parent Code " & ( 1 + MOD ( [Value] + 2, 3 ) ), "Driver Region", "Region " & ( 1 + MOD ( [Value] + 3, 3 ) ), "Driver Status", "Status " & ( 1 + MOD ( [Value] + 4, 3 ) ), "Driver Created By", "Created By " & ( 1 + MOD ( [Value] + 5, 3 ) ), "Driver Code", "Code " & ( 1 + MOD ( [Value] + 6, 3 ) ), "Driver Description", "Description " & ( 1 + MOD ( [Value] + 7, 3 ) ) )

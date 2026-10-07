@@ -402,7 +402,7 @@
     const subtitlesUsed = new Set();   // round 22: the subtitle keys that found their visual
     const blankKept = [];   // round 21: KPI cards too narrow for the blank text at the value's size
     const noData = [];   // round 19: the "No data" measures, { t, m, expression }
-    const NODATA = own && o.noDataMessage === true;   // (opt-in for now: see WORK.md, round 19, for the owner)
+    const NODATA = own && o.noDataMessage !== false;   // on by default since round 22 (the owner's rule: every part passed in Desktop on the night of 6-7 Oct); noDataMessage: false leaves it out
     const barCharts = [];   // round 19: column charts by day or month names written as bar charts
     const shortDays = [];   // round 18, S3: column charts that show Day Short
     const ringsSmall = [];   // round 18: ring pictures drawn under 40 high, written without their number
@@ -508,7 +508,9 @@
     // Header title, logo, page buttons, slicers, buttons and the tooltip page's visuals stay off in both.
     const SOLID = !!((((((o.theme || {}).visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).show;
     const frame = (title, alt, extra, panel) => Object.assign({
-      title: obj(title ? { show: bool(true), text: str(title), alignment: str(align) } : { show: bool(false) })
+      // (round 21, the capabilities lab's #4: a shown title carries a heading level for screen readers, nothing to see;
+      // round 22, the code review's j: set here, where every title is made, not in a pass after)
+      title: obj(title ? { show: bool(true), text: str(title), alignment: str(align), heading: str('Heading3') } : { show: bool(false) })
     }, panel && SOLID ? {} : {
       background: obj({ show: bool(false) }),
       border: obj({ show: bool(false) }),
@@ -1515,10 +1517,6 @@
           if (f) { ['wrapped', 'shortened'].forEach((m) => { const i = titles[m].findIndex((x) => x.page === f.page && x.title === k); if (i >= 0) titles[m].splice(i, 1); });
             if (tf.mode !== 'one') titles[tf.mode].push({ page: f.page, title: name, shown: tf.shown }); } }));
       }
-      // Round 21 (the capabilities lab's #4, Desktop 2.158, 7 Oct 2026: accepted and kept, nothing to see): every shown
-      // visual title carries a heading level for screen readers, 'Heading3' (the page title is a text box, not a title)
-      visuals.forEach((v) => { const t = v.visual && ((v.visual.visualContainerObjects || {}).title || [])[0];
-        if (t && t.properties && JSON.stringify(t.properties.show || '').includes('true')) t.properties.heading = str('Heading3'); });
       visuals.forEach((v) => {
         add(D + '/pages/' + pageName + '/visuals/' + v.name + '/visual.json', json(v));
         const p = pos[v.name];
@@ -1561,7 +1559,6 @@
       }));
       visuals.forEach((s, i) => {
         const v = { $schema: SCHEMA.visual, name: rnd(), position: { x: s.x, y: s.y, z: (i + 1) * 1000, height: s.h, width: s.w, tabOrder: (i + 1) * 1000 }, visual: s.visual };
-        { const t = ((s.visual.visualContainerObjects || {}).title || [])[0]; if (t && t.properties && JSON.stringify(t.properties.show || '').includes('true')) t.properties.heading = str('Heading3'); }   // (round 21: the tooltip pages' titles too)
         add(D + '/pages/' + name + '/visuals/' + v.name + '/visual.json', json(v));
       });
     };

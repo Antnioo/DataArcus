@@ -4,96 +4,132 @@ table Calendar
 	column Date
 		dataType: dateTime
 		isKey
-		sourceColumn: Date
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Date]
 
 	column Year
 		dataType: int64
-		sourceColumn: Year
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Year]
 
 	column Quarter
 		dataType: string
-		sourceColumn: Quarter
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Quarter]
 
 	column 'Year Quarter'
 		dataType: string
-		sourceColumn: Year Quarter
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Year Quarter]
 
 	column 'Month Number'
 		dataType: int64
 		isHidden
-		sourceColumn: Month Number
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Month Number]
 
 	column 'Month Name'
 		dataType: string
 		sortByColumn: 'Month Number'
-		sourceColumn: Month Name
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Month Name]
 
 	column 'Month Short'
 		dataType: string
 		sortByColumn: 'Month Number'
-		sourceColumn: Month Short
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Month Short]
 
 	column 'Year Month'
 		dataType: string
 		sortByColumn: 'Year Month Number'
-		sourceColumn: Year Month
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Year Month]
 
 	column 'Year Month Number'
 		dataType: int64
 		isHidden
-		sourceColumn: Year Month Number
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Year Month Number]
 
 	column Day
 		dataType: int64
-		sourceColumn: Day
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Day]
 
 	column 'Weekday Number'
 		dataType: int64
 		isHidden
-		sourceColumn: Weekday Number
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Weekday Number]
 
 	column 'Day Name'
 		dataType: string
 		sortByColumn: 'Weekday Number'
-		sourceColumn: Day Name
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Day Name]
 
 	column 'Week Of Year'
 		dataType: int64
-		sourceColumn: Week Of Year
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Week Of Year]
 
 	column 'Is Weekend'
 		dataType: boolean
-		sourceColumn: Is Weekend
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Is Weekend]
 
 	column 'Fiscal Year'
 		dataType: string
-		sourceColumn: Fiscal Year
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Fiscal Year]
 
 	column 'Fiscal Quarter'
 		dataType: string
-		sourceColumn: Fiscal Quarter
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Fiscal Quarter]
 
 	column 'Fiscal Month Number'
 		dataType: int64
 		isHidden
-		sourceColumn: Fiscal Month Number
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Fiscal Month Number]
 
 	column 'Hijri Year'
 		dataType: int64
-		sourceColumn: Hijri Year
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hijri Year]
 
 	column 'Hijri Month Number'
 		dataType: int64
-		sourceColumn: Hijri Month Number
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hijri Month Number]
 
 	column 'Is Ramadan'
 		dataType: boolean
-		sourceColumn: Is Ramadan
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Is Ramadan]
 
-	partition Calendar = m
+	partition Calendar = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Date", "Year", "Quarter", "Year Quarter", "Month Number", "Month Name", "Month Short", "Year Month", "Year Month Number", "Day", "Weekday Number", "Day Name", "Week Of Year", "Is Weekend", "Fiscal Year", "Fiscal Quarter", "Fiscal Month Number", "Hijri Year", "Hijri Month Number", "Is Ramadan"}, {})
-				in
-				    Source
+		source = ADDCOLUMNS ( CALENDAR ( DATE ( 2024, 1, 1 ), DATE ( 2025, 12, 31 ) ), "Year", YEAR ( [Date] ), "Quarter", "Q" & QUARTER ( [Date] ), "Year Quarter", YEAR ( [Date] ) & " Q" & QUARTER ( [Date] ), "Month Number", MONTH ( [Date] ), "Month Name", FORMAT ( [Date], "MMMM", "en-US" ), "Month Short", FORMAT ( [Date], "MMM", "en-US" ), "Year Month", FORMAT ( [Date], "yyyy-MM", "en-US" ), "Year Month Number", YEAR ( [Date] ) * 100 + MONTH ( [Date] ), "Day", DAY ( [Date] ), "Weekday Number", WEEKDAY ( [Date], 1 ), "Day Name", FORMAT ( [Date], "dddd", "en-US" ), "Week Of Year", WEEKNUM ( [Date], 1 ), "Is Weekend", WEEKDAY ( [Date], 1 ) IN { 1, 7 }, "Fiscal Year", "FY" & YEAR ( [Date] ), "Fiscal Quarter", "FQ" & QUARTER ( [Date] ), "Fiscal Month Number", MONTH ( [Date] ), "Hijri Year", 1445 + IF ( [Date] >= DATE ( 2024, 7, 7 ), 1, 0 ) + IF ( [Date] >= DATE ( 2025, 6, 26 ), 1, 0 ), "Hijri Month Number", 1 + MOD ( INT ( DATEDIFF ( DATE ( 2023, 7, 19 ), [Date], DAY ) / 29.53 ), 12 ), "Is Ramadan", ( [Date] >= DATE ( 2024, 3, 11 ) && [Date] <= DATE ( 2024, 4, 9 ) ) || ( [Date] >= DATE ( 2025, 3, 1 ) && [Date] <= DATE ( 2025, 3, 29 ) ) )

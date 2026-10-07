@@ -53,64 +53,84 @@ table Shipments
 	column 'Shipment Id'
 		dataType: int64
 		isHidden
-		sourceColumn: Shipment Id
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Shipment Id]
 
 	column Date
 		dataType: dateTime
 		isHidden
-		sourceColumn: Date
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Date]
 
 	column 'Logistics Lookup 024 Key'
 		dataType: int64
-		sourceColumn: Logistics Lookup 024 Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 024 Key]
 
 	column 'Customs Status Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Customs Status Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Customs Status Key]
 
 	column 'Hub Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Hub Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hub Key]
 
 	column 'Lane Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Lane Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Lane Key]
 
 	column 'Logistics Lookup 010 Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Logistics Lookup 010 Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 010 Key]
 
 	column Discount
 		dataType: decimal
-		sourceColumn: Discount
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Discount]
 
 	column 'Net Amount'
 		dataType: decimal
 		isHidden
-		sourceColumn: Net Amount
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Net Amount]
 
 	column Quantity
 		dataType: int64
 		isHidden
-		sourceColumn: Quantity
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Quantity]
 
 	column Price
 		dataType: decimal
 		isHidden
-		sourceColumn: Price
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Price]
 
 	column Margin
 		dataType: decimal
-		sourceColumn: Margin
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Margin]
 
-	partition Shipments = m
+	partition Shipments = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Shipment Id", "Date", "Logistics Lookup 024 Key", "Customs Status Key", "Hub Key", "Lane Key", "Logistics Lookup 010 Key", "Discount", "Net Amount", "Quantity", "Price", "Margin"}, {})
-				in
-				    Source
+		source = VAR B = ADDCOLUMNS ( CROSSJOIN ( CALENDAR ( DATE ( 2024, 1, 1 ), DATE ( 2025, 12, 31 ) ), GENERATESERIES ( 1, 3 ) ), "S", MOD ( INT ( [Date] ) * 7919 + [Value] * 104729 + 31193016, 1000 ) ) RETURN SELECTCOLUMNS ( B, "Shipment Id", ( INT ( [Date] ) - 45000 ) * 10 + [Value], "Date", [Date], "Logistics Lookup 024 Key", 1 + MOD ( [S] + [Value] + 74, 8 ), "Customs Status Key", 1 + MOD ( [S] + [Value] + 111, 8 ), "Hub Key", 1 + MOD ( [S] + [Value] + 148, 8 ), "Lane Key", 1 + MOD ( [S] + [Value] + 185, 8 ), "Logistics Lookup 010 Key", 1 + MOD ( [S] + [Value] + 222, 8 ), "Discount", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 10, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Net Amount", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 11, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Quantity", 1 + MOD ( [S] * 11, 40 ), "Price", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 13, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Margin", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 14, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ) )

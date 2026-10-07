@@ -3,48 +3,64 @@ table 'Logistics Lookup 046'
 	column 'Logistics Lookup 046 Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Logistics Lookup 046 Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 046 Key]
 
 	column 'Logistics Lookup 046'
 		dataType: string
-		sourceColumn: Logistics Lookup 046
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 046]
 
 	column 'Logistics Lookup 046 Is Active'
 		dataType: boolean
-		sourceColumn: Logistics Lookup 046 Is Active
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 046 Is Active]
 
 	column 'Logistics Lookup 046 Parent Code'
 		dataType: string
-		sourceColumn: Logistics Lookup 046 Parent Code
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 046 Parent Code]
 
 	column 'Logistics Lookup 046 Category'
 		dataType: string
-		sourceColumn: Logistics Lookup 046 Category
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 046 Category]
 
 	column 'Logistics Lookup 046 Owner'
 		dataType: string
-		sourceColumn: Logistics Lookup 046 Owner
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 046 Owner]
 
 	column 'Logistics Lookup 046 Valid To'
 		dataType: dateTime
-		sourceColumn: Logistics Lookup 046 Valid To
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 046 Valid To]
 
 	column 'Logistics Lookup 046 Status'
 		dataType: string
-		sourceColumn: Logistics Lookup 046 Status
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 046 Status]
 
 	column 'Logistics Lookup 046 Group'
 		dataType: string
-		sourceColumn: Logistics Lookup 046 Group
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 046 Group]
 
 	column 'Logistics Lookup 046 Code'
 		dataType: string
-		sourceColumn: Logistics Lookup 046 Code
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 046 Code]
 
-	partition 'Logistics Lookup 046' = m
+	partition 'Logistics Lookup 046' = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Logistics Lookup 046 Key", "Logistics Lookup 046", "Logistics Lookup 046 Is Active", "Logistics Lookup 046 Parent Code", "Logistics Lookup 046 Category", "Logistics Lookup 046 Owner", "Logistics Lookup 046 Valid To", "Logistics Lookup 046 Status", "Logistics Lookup 046 Group", "Logistics Lookup 046 Code"}, {})
-				in
-				    Source
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Logistics Lookup 046 Key", [Value], "Logistics Lookup 046", "Logistics Lookup 046 " & [Value], "Logistics Lookup 046 Is Active", MOD ( [Value], 2 ) = 1, "Logistics Lookup 046 Parent Code", "Parent Code " & ( 1 + MOD ( [Value] + 3, 3 ) ), "Logistics Lookup 046 Category", "Category " & ( 1 + MOD ( [Value] + 4, 3 ) ), "Logistics Lookup 046 Owner", "Owner " & ( 1 + MOD ( [Value] + 5, 3 ) ), "Logistics Lookup 046 Valid To", DATE ( 2024, [Value], 1 ), "Logistics Lookup 046 Status", "Status " & ( 1 + MOD ( [Value] + 7, 3 ) ), "Logistics Lookup 046 Group", "Group " & ( 1 + MOD ( [Value] + 8, 3 ) ), "Logistics Lookup 046 Code", "Code " & ( 1 + MOD ( [Value] + 9, 3 ) ) )
