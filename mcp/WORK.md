@@ -4,6 +4,29 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 22b, the reviewer's code review of `fix/round-22` (7 Oct, cloud builder; branch `fix/round-22b` from `origin/fix/round-22` `10234be`; not merged, no PR)
+Owner's go (7 Oct): "finishing everything needed for the beta release": these ten findings are required before 0.2.7.
+For each finding a check is written first that reproduces it (`mcp/test-round22.mjs`, which runs alone in seconds, or the
+website check it belongs to), or shows it is not a bug (then REFUTED, no code change). Only CONFIRMED ones are fixed, at
+the cause. Then the suites the changes touch, the full `npm test` once (Linux) and the website checks (`check-min`,
+`test-site-config`, `test-analytics-events`, `csp`). Also: `mcp/quick.tmp.mjs` deleted.
+
+### Round 22b, expected (written before any run)
+| # | Finding | Expected |
+|---|---|---|
+| 1 | `main.js` safeTerm lets phone numbers holding year-like groups through ("050 2024 2025", "+971 50 2030 2015", "5520 2025") | CONFIRMED (privacy) |
+| 2 | `pbip-bind.js` catB (and catPool) still take a category of a table the measure cannot reach | CONFIRMED |
+| 3 | `pbip-bind.js` the reachable set starts only at the measure's home table (a disconnected measures table reaches nothing) | CONFIRMED |
+| 4 | `check-report.mjs` module-level `skipped` shared by concurrent calls | CONFIRMED |
+| 5 | `server.mjs` loads Microsoft's report CLI at start (Node >= 20, its schema package >= 20.10) while `engines` says >= 18 | CONFIRMED (risk) |
+| 6 | `check-report.mjs` walks the report three times: "folders too deep" counted three times | CONFIRMED |
+| 7 | `pbip-bind.min.js` changed but its `?v=` did not (`20261006f`) | CONFIRMED |
+| 8 | `pbip-export.js` the table text shrink after tableFit: the fit not recomputed; an overflow at 8pt not told | likely CONFIRMED |
+| 9 | `check-report.mjs` visible() escapes \p{Cf} only (server.mjs: \p{Cf} and \p{Cc}) | CONFIRMED |
+| 10 | `pbip-export.js` charts of one bracket group by the same column keep the same title ("عدد Order Id (Region)" twice) | CONFIRMED |
+`npm test`: all green, the count grows (663 of 663 on the laptop at `6b122ff`). Only 2, 3, 8 and 10 can change what
+Desktop shows: they go to "for the laptop to prove".
+
 ## Sitting 7-8 Oct (laptop builder; branch `fix/round-22` from `origin/fix/round-21` `9d927a9` with `origin/main` `7cdf252` merged in as `8b7d4d6`; not merged, no PR)
 **Started 15:22 UTC on 7 Oct (19:22 Dubai). Hard stop 21:20 UTC; the stop report is below ("the stop report"), pushed 18:48 UTC.** Two sessions: the first stopped at about 15:28, the second did the work. The owner gave
 the laptop; this is the only session driving Power BI Desktop. Work tree on the laptop: `C:\DataArcus\r22-wt` (the main
@@ -33,12 +56,14 @@ and 21, (3) test models as DAX tables, (4) `feat/check-report-2` merged, (5) the
 
 ### Sitting 7-8 Oct, where I am (kept current; times UTC)
 - 15:40: branch made, main merged (`8b7d4d6`), expected written. Next: the showcase.
-- 15:52 (second session of the sitting; the first stopped at about 15:28, its start and "15:40" above are its own): **part 1 done.** Showcase on the made-up "Marsa Home" model (two DAX tables, 35,088 generated rows), built by this branch's server (`builder-scripts22-showcase-model.mjs`, `r22-showcase.mjs`), opened in Desktop **2.158.1304** (it updated itself from 2.158.1177: `desk.ps1` and `lab-1007-shot.ps1` now look the install path up). Scores: English light 10, dark 10; Arabic light 8, dark 8 (no "Total" word in the table; the Reset arrow touches its text: both known). Expected was 9.5 or more: English yes, **Arabic no**. Pages in `<tests folder>showcase-1007page-*.png`; the four in dataarcus-engine `business/showcase/2026-10-07/` on `showcase/2026-10-07` (pushed, not merged) with a README (what made what, what needed a hand). Seen: a brand colour alone keeps the dark preset; five table fields narrowed the SVG bar to 8 x 8 (told in the notes); a subtitle key in the other language is ignored silently (code-review item c); the bar chart by city is alphabetical. Next: part 2, item 0 (the code review's ten findings, tests first).
+- 15:52 (second session of the sitting; the first stopped at about 15:28, its start and "15:40" above are its own): **part 1 done.** Showcase on the made-up "Marsa Home" model (two DAX tables, 35,088 generated rows), built by this branch's server (`builder-scripts
+22-showcase-model.mjs`, `r22-showcase.mjs`), opened in Desktop **2.158.1304** (it updated itself from 2.158.1177: `desk.ps1` and `lab-1007-shot.ps1` now look the install path up). Scores: English light 10, dark 10; Arabic light 8, dark 8 (no "Total" word in the table; the Reset arrow touches its text: both known). Expected was 9.5 or more: English yes, **Arabic no**. Pages in `<tests folder>showcase-1007page-*.png`; the four in dataarcus-engine `business/showcase/2026-10-07/` on `showcase/2026-10-07` (pushed, not merged) with a README (what made what, what needed a hand). Seen: a brand colour alone keeps the dark preset; five table fields narrowed the SVG bar to 8 x 8 (told in the notes); a subtitle key in the other language is ignored silently (code-review item c); the bar chart by city is alphabetical. Next: part 2, item 0 (the code review's ten findings, tests first).
 - 16:08: **item 0, the code review's ten findings** (commit `7a7494a`; j in `5006a56`). Each confirmed by a failing check (mcp/test-round22.mjs, 16 checks, 13 red first; it runs alone in seconds and from test.mjs) or measured in Desktop 2.158.1304:
   | | Finding | Result | Fix |
   |---|---|---|---|
   | a | FORMATS script writes names with control characters | CONFIRMED (red) | `7a7494a`: one helper, scriptTables, for every script |
-  | b | a subtitle on a KPI card cuts the value | CONFIRMED in Desktop (planned cards at 1280 x 720 and 1920 x 1080: the value cut in half; crop `<tests folder>22shots2-720-crop.png`) | `7a7494a`: never on a card, told in reportNotes |
+  | b | a subtitle on a KPI card cuts the value | CONFIRMED in Desktop (planned cards at 1280 x 720 and 1920 x 1080: the value cut in half; crop `<tests folder>
+22shots2-720-crop.png`) | `7a7494a`: never on a card, told in reportNotes |
   | c | a subtitle key works only in the report's language, ignored silently | CONFIRMED (red) | `7a7494a`: both languages; unused keys named in reportNotes |
   | d | "No data" fit ignores padding and the SVG picture | **REFUTED** in Desktop: Arabic whole on a 284-wide card at 28pt beside a ring, the ring about 19 clear of the text (`shotsd2-ar-crop.png`); English whole at 150 and 160 (`d-en-crop.png`) | none |
   | e | " (Column)" appended after the title was fitted | CONFIRMED by reading (the bracket was added to the shortened text); the check that could be written red is h's and the same-column one | `7a7494a`: fitted again from the full name; the titles report follows |
