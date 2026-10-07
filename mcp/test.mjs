@@ -5,7 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import zlib from 'node:zlib';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
@@ -1816,9 +1816,10 @@ http.request = no('http.request'); http.get = no('http.get'); https.request = no
 for (const k of ['spawn', 'spawnSync', 'exec', 'execSync', 'execFile', 'execFileSync', 'fork']) cp[k] = no('child_process.' + k);
 register('data:text/javascript,' + encodeURIComponent('export async function resolve(s, c, n) { if (/^playwright/.test(s)) throw new Error("playwright blocked"); return n(s, c); }'));
 `);
+    // (round 20: by file URLs, so the check runs on a Windows checkout: a "C:\\..." path is read as a URL scheme there)
     const run = path.join(ROOT, 'offline-run.mjs');
-    fs.writeFileSync(run, `const m = await import(${JSON.stringify(path.join(HERE, 'lib', 'check-report.mjs'))}); const a = await m.checkReport(process.argv[2], {}); console.log(JSON.stringify({ tries: globalThis.__tries, validator: a.validator, schemas: a.schemas, findings: a.findings.length }));`);
-    const p = spawnSync(process.execPath, ['--import', guard, run, 'cr-project/CR Gold AR.Report'], { encoding: 'utf8', env: Object.assign({}, process.env, { DATAARCUS_ROOT: ROOT }) });
+    fs.writeFileSync(run, `const m = await import(${JSON.stringify(pathToFileURL(path.join(HERE, 'lib', 'check-report.mjs')).href)}); const a = await m.checkReport(process.argv[2], {}); console.log(JSON.stringify({ tries: globalThis.__tries, validator: a.validator, schemas: a.schemas, findings: a.findings.length }));`);
+    const p = spawnSync(process.execPath, ['--import', pathToFileURL(guard).href, run, 'cr-project/CR Gold AR.Report'], { encoding: 'utf8', env: Object.assign({}, process.env, { DATAARCUS_ROOT: ROOT }) });
     let o = null; try { o = JSON.parse(p.stdout.trim().split('\n').pop()); } catch (e) { o = null; }
     const inProc = await ask('check_report', { path: 'cr-project/CR Gold AR.Report' });
     const src = fs.existsSync(path.join(HERE, 'lib', 'check-report.mjs')) ? fs.readFileSync(path.join(HERE, 'lib', 'check-report.mjs'), 'utf8') : '';
