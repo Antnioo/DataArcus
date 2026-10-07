@@ -1,0 +1,85 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/report/3.3.0/schema.json",
+  "themeCollection": {
+    "customTheme": {
+      "name": "capabilities-gallery-ar-theme.json",
+      "reportVersionAtImport": {
+        "visual": "2.1.0",
+        "report": "3.0.0",
+        "page": "2.3.0"
+      },
+      "type": "RegisteredResources"
+    }
+  },
+  "objects": {
+    "outspacePane": [
+      {
+        "properties": {
+          "expanded": {
+            "expr": {
+              "Literal": {
+                "Value": "true"
+              }
+            }
+          },
+          "visible": {
+            "expr": {
+              "Literal": {
+                "Value": "true"
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "resourcePackages": [
+    {
+      "name": "RegisteredResources",
+      "type": "RegisteredResources",
+      "items": [
+        {
+          "name": "capabilities-gallery-ar-theme.json",
+          "path": "capabilities-gallery-ar-theme.json",
+          "type": "CustomTheme"
+        },
+        {
+          "name": "capabilities-gallery-ar-background.png",
+          "path": "capabilities-gallery-ar-background.png",
+          "type": "Image"
+        },
+        {
+          "name": "capabilities-gallery-ar-background-2.png",
+          "path": "capabilities-gallery-ar-background-2.png",
+          "type": "Image"
+        },
+        {
+          "name": "capabilities-gallery-ar-background-3.png",
+          "path": "capabilities-gallery-ar-background-3.png",
+          "type": "Image"
+        },
+        {
+          "name": "capabilities-gallery-ar-background-4.png",
+          "path": "capabilities-gallery-ar-background-4.png",
+          "type": "Image"
+        }
+      ]
+    }
+  ],
+  "settings": {
+    "useStylableVisualContainerHeader": true,
+    "useEnhancedTooltips": true,
+    "defaultDrillFilterOtherVisuals": true,
+    "allowChangeFilterTypes": true,
+    "useDefaultAggregateDisplayName": true,
+    "isPersistentUserStateDisabled": false,
+    "exportDataMode": "AllowSummarized",
+    "locale": "ar-AE"
+  },
+  "annotations": [
+    {
+      "name": "generatedBy",
+      "value": "DataArcus Power BI Theme & Layout Generator (dataarcus.com)"
+    }
+  ]
+}

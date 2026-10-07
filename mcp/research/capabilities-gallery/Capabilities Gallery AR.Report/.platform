@@ -1,0 +1,11 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/gitIntegration/platformProperties/2.0.0/schema.json",
+  "metadata": {
+    "type": "Report",
+    "displayName": "Capabilities Gallery AR"
+  },
+  "config": {
+    "version": "2.0",
+    "logicalId": "d5f5465d-25cc-4dba-a2da-c9987f3ad4a7"
+  }
+}

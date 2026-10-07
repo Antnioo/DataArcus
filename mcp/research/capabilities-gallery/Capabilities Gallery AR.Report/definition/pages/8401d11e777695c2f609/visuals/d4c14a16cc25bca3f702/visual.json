@@ -1,0 +1,31 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "name": "d4c14a16cc25bca3f702",
+  "position": {
+    "x": 16,
+    "y": 64,
+    "z": 2000,
+    "height": 110,
+    "width": 612,
+    "tabOrder": 2000
+  },
+  "visualGroup": {
+    "displayName": "بطاقات المؤشرات",
+    "groupMode": "ScaleMode",
+    "objects": {
+      "background": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
