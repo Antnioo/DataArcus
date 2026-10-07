@@ -26,11 +26,16 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const sha = (s) => `'sha256-${crypto.createHash('sha256').update(s, 'utf8').digest('base64')}'`;
 // Google's list for the Google tag (developers.google.com/tag-platform/security/guides/csp, with Google signals and the
-// Ads conversion the contact form's generate_lead reports), except its country domains (*.google.<TLD>), one per
-// country: the beacons measured go to analytics.google.com, www.google.com and stats.g.doubleclick.net
+// Ads conversion the contact form's generate_lead reports). Google signals also sends a beacon to the visitor's own
+// country domain (www.google.ae, www.google.de, ...); a CSP can't say "every country", so the countries the site's
+// visitors come from are listed (GA4 Tag diagnostics, 2026-10-07: img-src blocked https://www.google.*). A visitor
+// from a country not listed only loses that one signals beacon; page views and events still arrive.
+const GOOGLE_COUNTRIES = ['ae', 'com.sa', 'com.qa', 'com.kw', 'com.om', 'com.bh', 'com.eg', 'jo', 'com.lb', 'co.ma', 'dz', 'tn',
+  'com.tr', 'com.pk', 'co.in', 'com.bd', 'co.uk', 'ie', 'de', 'fr', 'nl', 'be', 'es', 'it', 'pt', 'ch', 'at', 'se', 'no', 'dk',
+  'fi', 'pl', 'gr', 'ca', 'com.au', 'co.nz', 'com.sg', 'com.my', 'co.za', 'com.ng', 'com.br', 'com.mx'].map((c) => `https://www.google.${c}`);
 const GA = { script: ['https://www.googletagmanager.com'], frame: ['https://www.googletagmanager.com'],
-  img: ['https://www.googletagmanager.com', 'https://*.google-analytics.com', 'https://*.google.com', 'https://*.g.doubleclick.net'],
-  connect: ['https://www.googletagmanager.com', 'https://*.google-analytics.com', 'https://*.google.com', 'https://*.g.doubleclick.net', 'https://pagead2.googlesyndication.com'] };
+  img: ['https://www.googletagmanager.com', 'https://*.google-analytics.com', 'https://*.google.com', 'https://*.g.doubleclick.net', ...GOOGLE_COUNTRIES],
+  connect: ['https://www.googletagmanager.com', 'https://*.google-analytics.com', 'https://*.google.com', 'https://*.g.doubleclick.net', 'https://pagead2.googlesyndication.com', ...GOOGLE_COUNTRIES] };
 // jsDelivr packages whose stylesheet loads font files from its own folder
 const FONT_PACKAGES = ['bootstrap-icons'];
 const CLARITY = { script: ['https://*.clarity.ms'], frame: [], img: ['https://*.clarity.ms', 'https://c.bing.com'], connect: ['https://*.clarity.ms', 'https://c.bing.com'] };
