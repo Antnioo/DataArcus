@@ -2327,9 +2327,9 @@ Facts measured:
   (or "Refresh now") and the Data pane marks measures "Field list item has error" until that refresh; the visuals draw.
 - **A script that starts Desktop keeps the caller's output pipe** even when it redirects its own child: a tool call
   that pipes its output (`... | cut`) returns only when Desktop closes. `r22-gshots.ps1` closes the test report at its end.
-- **Not measured:** how Desktop names a measure placed twice in one table (round 21's item 4, the data bars beside a
-  plain copy): it needs the measure added by hand in Desktop and the file saved; the Arabic letter widths in Segoe UI
-  (golden task 6 in English still has a horizontal scrollbar in its table).
+- **Data bars beside a plain copy:** a measure twice in one table (round 21's item 4), written by hand on a made-up report (`builder-scripts22-databars.mjs`, `r22-databars2.mjs`; crops `shotsdb-lab-crop.png`, `db-lab2-crop.png`): (1) the same projection twice (one queryRef): both columns draw, and a data bar on that queryRef turns BOTH into bars; (2) the copy with its own queryRef and nativeQueryRef ("Sales.Total Sales1", "Total Sales1") after the original: two columns, and a bar whose selector names the ORIGINAL's queryRef draws on the original only: a bar column, then the plain number: **this form works**; (3) a bar whose selector names the copy's queryRef: no bar; (4) the copy first and the original (with a displayName) after it, the bar on the original: no bar; (5) a copy whose queryRef differs but whose nativeQueryRef is the original's: "Error fetching data for this visual". Not saved back by Desktop, so how Desktop itself names a second copy is still not read.
+- **Not measured:** the Arabic letter widths in Segoe UI (golden task 6 in English still has a horizontal scrollbar
+  in its table).
 
 ## Lessons
 - **Night of 6-7 Oct: a bar chart at the theme's 10pt (1280 x 720) needs 22.2 a row, 45 above the first row and 8

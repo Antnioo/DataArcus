@@ -5,7 +5,7 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
 ## Sitting 7-8 Oct (laptop builder; branch `fix/round-22` from `origin/fix/round-21` `9d927a9` with `origin/main` `7cdf252` merged in as `8b7d4d6`; not merged, no PR)
-**Started 15:22 UTC on 7 Oct (19:22 Dubai). Hard stop 21:20 UTC; the stop report is below ("the stop report"), pushed 18:55 UTC.** Two sessions: the first stopped at about 15:28, the second did the work. The owner gave
+**Started 15:22 UTC on 7 Oct (19:22 Dubai). Hard stop 21:20 UTC; the stop report is below ("the stop report"), pushed 18:48 UTC.** Two sessions: the first stopped at about 15:28, the second did the work. The owner gave
 the laptop; this is the only session driving Power BI Desktop. Work tree on the laptop: `C:\DataArcus\r22-wt` (the main
 checkout stays on its branch). The session's own DataArcus tools run the main checkout's older code, so every tool call
 of this sitting goes to this branch's `mcp/server.mjs` over stdio (scripts `builder-scripts\r22-*`).
@@ -51,7 +51,7 @@ and 21, (3) test models as DAX tables, (4) `feat/check-report-2` merged, (5) the
 - 16:18: **item 1** the switch made (`pbip-export.js`, `server.mjs`: on by default, `noDataMessage: false` leaves it out); **item 3** the large model's calendar, Logistics facts and their lookups (26 tables) hold rows as DAX tables (`generate.mjs`; the other 274 unchanged); **item 4** `origin/feat/check-report-2` (`6c7f656`, its offline check already imports by file URL) merged locally: conflicts `mcp/test.mjs` (both blocks kept, this branch's first), `mcp/PRIVACY.md` (this branch's create_report row, the other's check_report row) and `mcp/WORK.md` (this branch's). The checks that read card visuals skip a message card through `isMessageCard` (report-check.mjs, exported). Full test.mjs running.
 - 17:16: full `mcp/test.mjs` on the merged tree with the default on: 653 checks, 4 failing (all older checks meeting the message cards), then green. 17:32: merge commit `1a65d99`. 18:03: full `npm test` 656 of 656, golden PASS. 18:45: full `npm test` on `73b602b`: **658 of 658, golden PASS**. 18:50: the 0.2.7 candidate built and called.
 
-### Sitting 7-8 Oct, the stop report (written 18:55 UTC; the sitting's limit is 21:20)
+### Sitting 7-8 Oct, the stop report (written 18:48 UTC, the data-bars line added 18:55; the sitting's limit is 21:20)
 **Commits** (`fix/round-22`, pushed; not merged, no PR): `7ec0e5a` WORK.md after the showcase; `7a7494a` the code review's a, b, c, e, f, g, h, i; `5006a56` the No-data switch, the large model's rows, j (work in progress); `1a65d99` the merge of `origin/feat/check-report-2` (`6c7f656`) with No data's checks, tiny pages, the test models' dates, j corrected; `5f4cea2` golden counts with their causes, task 6's months, README; `e54d7bc` the Arabic Reset gap and DESKTOP-TESTS.md; `3f81604` the website's report suite; `73b602b` the two older Reset checks. dataarcus-engine `showcase/2026-10-07`: `65a8ce6` (pushed, not merged).
 
 **Tests, before -> after:** `npm test` 600 of 600 (round 21) -> **658 of 658, golden PASS** (+35 with the merge of check_report's branch, +23 in `mcp/test-round22.mjs`, which also runs alone in under a minute) on `73b602b`, Desktop closed, 15 minutes. Website suites pbip 73, theme-generator 893, theme-generator-lab 893, design-engine 598, layout 512, layout-lab 512: PASS; `check:min`, `test-site-config`, `test-analytics-events` PASS. Not run: the website's other seven suites (their files were not touched).
@@ -68,7 +68,7 @@ Older checks changed, each with its cause beside it: the checks that read card v
 | 2. Subtitles | PASS on charts; FAIL on KPI cards as built, fixed | `shots\b2-720-crop.png`, showcase pages |
 | 2. Heading levels | PASS (nothing to see) | |
 | 2. Data labels by quarter | PASS | showcase pages |
-| 2. Data bars: a measure twice in one table (the queryRef) | **NOT MEASURED** (needs the measure added by hand in Desktop and saved) | |
+| 2. Data bars: a measure twice in one table (the queryRef) | measured by hand-written files (18:51 UTC, after the report was first written): a copy with its own queryRef and nativeQueryRef ("Sales.Total Sales1", "Total Sales1") after the original draws as a second column, and a bar on the original's queryRef draws on the original only (a bar column, then the number). The same queryRef twice makes both bars; a bar on the copy's queryRef, or the copy placed first, draws no bar; a copy sharing the original's nativeQueryRef is an error. Desktop's own name for a second copy: not read (nothing saved back). Nothing built from it | `shotsdb-lab-crop.png`, `db-lab2-crop.png` |
 | 2. Tiny pages (640 x 360) | FAIL as built; with cards 116 high and one page: PASS, English "Your logo" still cut | `gshots\pages\g5-en-b-p1.png` |
 | 2. Arabic widths (Arabic names in an English report) | **NOT MEASURED**; task 6 English keeps its table's horizontal scrollbar | `gshots\pages\g6-en-c-p1.png` |
 | 2. Round 20's bracket on repeated titles | PASS (task 7 Arabic); FAIL for two charts by the same column, fixed | `gshots\pages\g7-ar-b-p1.png` |
@@ -113,11 +113,12 @@ Also for the owner, no action needed unless you disagree: safeTerm now redacts "
 | A theme from `generate_theme` alone keeps the 1920 x 1080 text sizes on a smaller hand-placed page | open since the night sitting, not touched |
 | A 960 x 720 page does not fit the capture window (the bridge captures what Desktop shows) | a capture limit: its header and last rows were not seen |
 | `mcp/quick.tmp.mjs` (a scratch file) is committed | open since round 20: delete it |
-| The data bars' queryRef, the Arabic letter widths in Segoe UI | not measured (above) |
+| The Arabic letter widths in Segoe UI | not measured |
+| Data bars beside a plain number column | a working hand-written form is measured (above); not built: the bar column comes before the number in that form, and the reverse order drew no bar |
 | The local bake-off against Microsoft's report skill | not started |
 
 #### The next session starts with
-1. The owner's answer on the Arabic "Total" word; then the two measurements left (a measure twice in one table; Arabic letters in Segoe UI).
+1. The owner's answer on the Arabic "Total" word; then the measurement left (Arabic letters in Segoe UI) and, if data bars are wanted, the order question (number first, bar second).
 2. The reviewer: `fix/round-22` at its head for review and the Linux run; the 0.2.7 package is built again from the merge commit (its SHA-256 will differ).
 3. Left on the laptop: `<tests folder>\r22\` (lab reports, golden reports and captures, the unpacked package in `pkg\`), `<tests folder>\showcase-1007\`, scripts `builder-scripts\r22-*`, the engine work trees `C:\DataArcus\night-engine` (the candidate in `dist\`) and `C:\DataArcus\showcase-wt`. No Desktop window is left open.
 
