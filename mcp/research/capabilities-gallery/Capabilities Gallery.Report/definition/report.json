@@ -94,7 +94,8 @@
     "allowChangeFilterTypes": true,
     "useDefaultAggregateDisplayName": true,
     "isPersistentUserStateDisabled": false,
-    "exportDataMode": "AllowSummarized"
+    "exportDataMode": "AllowSummarized",
+    "defaultFilterActionIsDataFilter": true
   },
   "annotations": [
     {

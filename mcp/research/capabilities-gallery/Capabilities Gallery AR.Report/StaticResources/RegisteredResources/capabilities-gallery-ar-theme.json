@@ -1,0 +1,1205 @@
+{
+  "name": "capabilities-gallery-ar-theme.json",
+  "dataColors": [
+    "#1f4e79",
+    "#2e75b6",
+    "#f4b183",
+    "#c55a11",
+    "#548235",
+    "#9dc3e6",
+    "#a9d18e",
+    "#7f7f7f"
+  ],
+  "foreground": "#1f2933",
+  "foregroundNeutralSecondary": "#6d747a",
+  "foregroundNeutralTertiary": "#a5a9ad",
+  "background": "#ffffff",
+  "backgroundLight": "#f9fafc",
+  "backgroundNeutral": "#d2d4d6",
+  "tableAccent": "#1f4e79",
+  "good": "#2e7d32",
+  "neutral": "#f9a825",
+  "bad": "#c62828",
+  "maximum": "#2e7d32",
+  "center": "#f9a825",
+  "minimum": "#c62828",
+  "hyperlink": "#1f4e79",
+  "visitedHyperlink": "#1f4364",
+  "textClasses": {
+    "callout": {
+      "fontSize": 42,
+      "fontFace": "Segoe UI",
+      "color": "#1f2933"
+    },
+    "title": {
+      "fontSize": 18,
+      "fontFace": "Segoe UI",
+      "color": "#1f2933"
+    },
+    "header": {
+      "fontSize": 18,
+      "fontFace": "Segoe UI",
+      "color": "#1f2933"
+    },
+    "label": {
+      "fontSize": 15,
+      "fontFace": "Segoe UI",
+      "color": "#6d747a"
+    }
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "page": {
+      "*": {
+        "background": [
+          {
+            "color": {
+              "solid": {
+                "color": "#f3f5f8"
+              }
+            },
+            "transparency": 0
+          }
+        ],
+        "outspace": [
+          {
+            "color": {
+              "solid": {
+                "color": "#f3f5f8"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "group": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "actionButton": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "bookmarkNavigator": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "textbox": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "pageNavigator": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "shape": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "barChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "columnChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "clusteredBarChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "clusteredColumnChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "hundredPercentStackedBarChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "hundredPercentStackedColumnChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "lineChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "areaChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "stackedAreaChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "hundredPercentStackedAreaChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "lineStackedColumnComboChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "lineClusteredColumnComboChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "ribbonChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "waterfallChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "funnel": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "scatterChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "pieChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "donutChart": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "treemap": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "map": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "filledMap": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "shapeMap": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "azureMap": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "gauge": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "cardVisual": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "card": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ],
+        "labels": [
+          {
+            "fontSize": 42
+          }
+        ],
+        "categoryLabels": [
+          {
+            "fontSize": 15
+          }
+        ]
+      }
+    },
+    "multiRowCard": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ],
+        "cardTitle": [
+          {
+            "fontSize": 18
+          }
+        ],
+        "dataLabels": [
+          {
+            "fontSize": 27
+          }
+        ],
+        "categoryLabels": [
+          {
+            "fontSize": 15
+          }
+        ]
+      }
+    },
+    "kpi": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "slicer": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ],
+        "header": [
+          {
+            "textSize": 15
+          }
+        ],
+        "items": [
+          {
+            "textSize": 15
+          }
+        ]
+      }
+    },
+    "tableEx": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ],
+        "values": [
+          {
+            "fontSize": 15
+          }
+        ],
+        "columnHeaders": [
+          {
+            "fontSize": 15
+          }
+        ],
+        "total": [
+          {
+            "fontSize": 15
+          }
+        ]
+      }
+    },
+    "pivotTable": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ],
+        "rowHeaders": [
+          {
+            "fontSize": 15
+          }
+        ],
+        "values": [
+          {
+            "fontSize": 15
+          }
+        ],
+        "columnHeaders": [
+          {
+            "fontSize": 15
+          }
+        ],
+        "total": [
+          {
+            "fontSize": 15
+          }
+        ]
+      }
+    },
+    "scriptVisual": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "pythonVisual": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "keyDriversVisual": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "decompositionTreeVisual": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "qnaVisual": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "aiNarratives": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "scorecard": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "rdlVisual": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "advancedSlicerVisual": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "textSlicer": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "listSlicer": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    },
+    "image": {
+      "*": {
+        "border": [
+          {
+            "show": true,
+            "color": {
+              "solid": {
+                "color": "#ffffff"
+              }
+            },
+            "width": 1,
+            "radius": 12
+          }
+        ],
+        "dropShadow": [
+          {
+            "show": true
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainerMobileState/2.1.0/schema.json",
+  "position": {
+    "x": 0,
+    "y": 0,
+    "z": 3000,
+    "width": 323,
+    "height": 56,
+    "tabOrder": 3000
+  },
+  "objects": {
+    "general": [
+      {
+        "properties": {
+          "paragraphs": [
+            {
+              "textRuns": [
+                {
+                  "value": "Capabilities Gallery AR",
+                  "textStyle": {
+                    "fontFamily": "Segoe UI",
+                    "fontSize": "14pt",
+                    "fontWeight": "bold",
+                    "color": "#1f2933"
+                  }
+                }
+              ],
+              "horizontalTextAlignment": "left"
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
