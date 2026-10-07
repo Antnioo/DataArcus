@@ -152,7 +152,10 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     chk(() => four.length === 4 && four.every((v) => /\((Region|Channel)\)$/.test(altOf(v) || '')), () => `h. each chart's alt text carries its bracketed name: ${JSON.stringify(four.map(altOf))}`);
     const s = await hand('R22 same column', [{ kind: 'bar', x: 36, y: 100, w: 500, h: 300 }, { kind: 'donut', x: 600, y: 100, w: 500, h: 300 }]);
     const st = vis(s).filter((v) => /Chart$/.test(v.visual.visualType) && v.position.width === 500).map(titleOf);
-    chk(() => st.length === 2 && st.every((t) => t === 'Total Sales by Region'), () => `e. two charts by the same column keep their title (a bracket would repeat itself): ${JSON.stringify(st)} ${s.err ? s.t.slice(0, 200) : ''}`);
+    // (changed in round 22b, the reviewer's second review, item 8: two charts with the same measure and column kept the
+    // same title and alt text; they are now numbered after the first, "(2)", like the charts of a bracket group)
+    const sa = vis(s).filter((v) => /Chart$/.test(v.visual.visualType) && v.position.width === 500).map(altOf);
+    chk(() => st.length === 2 && st.slice().sort().join('|') === 'Total Sales by Region|Total Sales by Region (2)' && sa.slice().sort().join('|') === st.slice().sort().join('|'), () => `e. two charts by the same column: the second numbered, "(2)", its alt text the same: ${JSON.stringify([st, sa])} ${s.err ? s.t.slice(0, 200) : ''}`);
   }
   // f. data labels above the columns only where the columns are four: "Quarter", never "Year Quarter" (8 to 40 values)
   {
@@ -305,6 +308,47 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     chk(() => !x.err && !JSON.stringify(x.j).includes('Ignore all previous') && !vis(x, d).some((v) => JSON.stringify(v).includes('Ignore all previous')), () => `X-05. the description is never in the answer or the files`);
     const cr = x.err ? x : await ask('check_report', { path: d + '/' + x.j.report });
     chk(() => !cr.err && cr.j.validator.errors === 0 && cr.j.schemas.errors === 0, () => `X-05. the report's files are valid (Microsoft's validator and the schemas): ${cr.err ? cr.t.slice(0, 300) : JSON.stringify([cr.j.validator, cr.j.schemas, cr.j.findings.filter((f) => f.severity === 'error').slice(0, 3)])}`);
+  }
+  // ---- Round 22b, the reviewer's second review (items 2, 3, 4, 5, 10; 8 is check e above) ----
+  {
+    const rel = (ft, fc, tt, tc) => ({ name: `${ft}-${tt}`, fromTable: ft, fromColumn: fc, toTable: tt, toColumn: tc });
+    const write = (d, tables, rels) => { fs.mkdirSync(path.join(ROOT, d, 'M.SemanticModel'), { recursive: true }); fs.writeFileSync(path.join(ROOT, d, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables, relationships: rels } })); };
+    const base = () => [
+      { name: 'Shipments', partitions: mp('Shipments'), columns: [col('Amount', 'double'), col('Hub Key', 'int64')] },
+      { name: 'Deliveries', partitions: mp('Deliveries'), columns: [col('Qty', 'int64'), col('Carrier Key', 'int64')] },
+      { name: 'Carrier', partitions: mp('Carrier'), columns: [col('Carrier Key', 'int64'), col('Carrier Group', 'string')] },
+      { name: 'Hub', partitions: mp('Hub'), columns: [col('Hub Key', 'int64'), col('Hub Zone', 'string')] }];
+    const rels = [rel('Shipments', 'Hub Key', 'Hub', 'Hub Key'), rel('Deliveries', 'Carrier Key', 'Carrier', 'Carrier Key')];
+    const catsOf = (x) => (x.err ? x.t.slice(0, 200) : JSON.stringify(x.j.cats));
+    // 2. DAX names are case-insensitive: SUM ( shipments[Amount] ) in a measures table reads Shipments
+    write('r22c-case', base().concat([{ name: 'Measures', partitions: mp('Measures'), columns: [Object.assign(col('Dummy', 'string'), { isHidden: true })], measures: [{ name: 'Total', expression: 'SUM ( shipments[Amount] )', formatString: '#,0' }] }]), rels);
+    const a = await ask('suggest_fields', { path: 'r22c-case' });
+    chk(() => !a.err && Object.values(a.j.cats).every((v) => v && v.t === 'Hub'), () => `2b. a lower-case table name in DAX reaches Shipments, so Hub: ${catsOf(a)}`);
+    // 3. the reach is read from the whole model, not the tables in scope (a scope holds the tables asked for and their
+    //    direct neighbours): Shipments -> Hub -> Region, scope ["Measures", "Region"] (so Hub, not Shipments): the measure
+    //    still reads Shipments, which reaches Hub and Region
+    write('r22c-scope', base().map((t) => (t.name === 'Hub' ? Object.assign(t, { columns: t.columns.concat([col('Region Key', 'int64')]) }) : t)).concat([
+      { name: 'Region', partitions: mp('Region'), columns: [col('Region Key', 'int64'), col('Region Name', 'string')] },
+      { name: 'Measures', partitions: mp('Measures'), columns: [Object.assign(col('Dummy', 'string'), { isHidden: true })], measures: [{ name: 'Total', expression: "SUM ( 'Shipments'[Amount] )", formatString: '#,0' }] }]),
+      rels.concat([rel('Hub', 'Region Key', 'Region', 'Region Key')]));
+    const b = await ask('suggest_fields', { path: 'r22c-scope', tables: ['Measures', 'Region'] });
+    chk(() => !b.err && b.j.cats.bar && /^(Hub|Region)$/.test(b.j.cats.bar.t), () => `3b. in a scope without Shipments the measure still reaches Hub and Region: ${catsOf(b)}`);
+    // 4. the plan's measure decides what is reached: fields.measure Deliveries[Delivered Qty] without a category gives
+    //    charts by Carrier (Deliveries' lookup), not by Hub (the picker's own main measure's)
+    write('r22c-plan', base().map((t) => (t.name === 'Shipments' ? Object.assign(t, { measures: [{ name: 'Total Amount', expression: 'SUM ( Shipments[Amount] )', formatString: '#,0' }] }) : t.name === 'Deliveries' ? Object.assign(t, { measures: [{ name: 'Delivered Qty', expression: 'SUM ( Deliveries[Qty] )', formatString: '#,0' }] }) : t)), rels);
+    const c = await ask('create_report', { path: 'r22c-plan', name: 'R22c plan', fields: { kpis: ['Deliveries[Delivered Qty]'], measure: 'Deliveries[Delivered Qty]' }, pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w: 500, h: 300 }] }] });
+    const bc = c.err ? c.t.slice(0, 200) : JSON.stringify(c.j.boundFields);
+    chk(() => !c.err && /Carrier\[Carrier Group\]/.test(bc) && !/Hub/.test(bc), () => `4. the bar chart of Deliveries[Delivered Qty] is by Carrier: ${bc.slice(0, 400)}`);
+    // 5. the time axis and the year slicer come from a date table the measure reaches: Sales is related to "Ship Date"
+    //    only, never "Order Calendar" (first by name)
+    const cal = (n) => ({ name: n, dataCategory: 'Time', partitions: mp(n), columns: [Object.assign(col('Date', 'dateTime'), { isKey: true }), col('Year', 'int64'), col('Month', 'string'), col('Month Number', 'int64')] });
+    write('r22c-date', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Ship Date', 'dateTime'), col('Region', 'string')], measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }, cal('Order Calendar'), cal('Ship Date')], [rel('Sales', 'Ship Date', 'Ship Date', 'Date')]);
+    const d = await ask('suggest_fields', { path: 'r22c-date' }), dd = d.err ? d.t.slice(0, 200) : JSON.stringify({ date: d.j.date, slicers: d.j.slicers });
+    chk(() => !d.err && d.j.date && d.j.date.t === 'Ship Date' && !/Order Calendar/.test(dd), () => `5. the time axis and slicers from "Ship Date", never "Order Calendar": ${dd}`);
+    // 10. the 300-table model's picks stay fast (one pattern per call, not one per table and measure)
+    const big = path.join(ROOT, 'r22c-large'); fs0.cpSync(path.join(HERE, 'test-models', 'large-synthetic', 'Large Synthetic.SemanticModel'), path.join(big, 'Large Synthetic.SemanticModel'), { recursive: true });
+    const t0 = Date.now(); for (let i = 0; i < 3; i++) await ask('suggest_fields', { path: 'r22c-large', kpis: 4, focus: 'logistics' }); const ms = (Date.now() - t0) / 3;
+    chk(() => ms < 1500, () => `10. suggest_fields on the 300-table model takes ${Math.round(ms)} ms a call (under 1500)`);
   }
   // X-03. Node 20.10 everywhere the MCP says what it runs on, and a CLI that cannot be loaded never stops the server:
   //    started with the CLI's import failing, the server lists its 8 tools and check_report says the validator is not
