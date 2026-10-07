@@ -4,6 +4,51 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 20, the owner's "all recommended" (7 Oct, 02:54-03:55 UTC, cloud builder; branch `fix/round-20` from main `11ed33a`; not merged)
+- **Item 1, AUD-031 (`3580a36`): done.** The blog search's `safeTerm` redacts a term with 7 or more digits in all
+  ("5512 3456", "+974 5512 3456", "050 123 4567"), **unless every number in it is a year** (19xx/20xx: "2024 2025"
+  is kept; the brief's "7 digits" and "2024 2025 kept" needed that exception); "@" and the 50-character cut stay.
+  `test-analytics-events.mjs` runs safeTerm from main.js on the cases (red 3, green). main.min.js ?v= 20261007r20.
+- **Item 2, AUD-032 (`b075970`): done.** Names with control characters (\p{Cc}) are listed under hiddenCharacters as
+  code points; check_model_health builds its scripts without them and names them, escaped, in `scriptsSkip` (a made-up
+  model in the audit's shape; red 2, green). The audit's own evidence file (dataarcus-engine) was not read here.
+- **Item 3 (`1ba6c86`): done.** Charts of a page with the same title get their grouping column in brackets ("عدد Order Id
+  (Region)"), only where the bracket brings no new script into the title (round 14's rule: an Arabic title with
+  Arabic names only stays free of English). Unique titles unchanged.
+- **Item 4 (`4452723`): done.** The design engine gives a table beside a chart 3/5 of its row on 4:3 pages by default
+  (website and MCP alike; a design with wideTable false keeps equal shares). Re-recorded: cases.json (3 cases),
+  project-pages.json (5), each named in the fixture's `meta.changed` with the cause. Suites design-engine 598, layout
+  512, layout-lab 512, theme-generator 893, theme-generator-lab 893, pbip 73 pass.
+- **Item 5: done for tasks 6 and 7; not for task 10.** Their test models hold the rows as DAX tables (DATATABLE, the
+  columns as Desktop writes a DAX table's); task 7 has a Month Number and six months. Golden: task 7 health 93 -> 92
+  (the new column; cause in "why"). Task 10's generated 300-table model: no rows yet (time).
+- **Item 6 (`6c7f656` on `feat/check-report-2`): done.** The offline check imports check-report.mjs and the guard by
+  file URLs. **Trial merge with main (local only, not pushed):** two conflicts, as foreseen: `mcp/test.mjs` (end of
+  file: check_report's G-04 block and main's round 15-19 blocks; kept both, G-04 first) and `mcp/PRIVACY.md`
+  (create_report's row: main's relative-path wording kept, check_report's new row kept after it). npm test on the
+  trial: **619 of 619, golden PASS** (on this container, beside the round 20 run).
+- **Tests:** `npm test` 584 -> **588 of 588** (on main 584; +4 round 20); golden PASS (task 7's health updated with its cause).
+
+### Round 20, for the laptop
+1. **Item 3:** golden task 7 in Arabic: the three charts read "عدد Order Id (Region)", "(Product)", "(Month Name)"; the
+   English report's titles unchanged ("Count of Order Id by Region" ...).
+2. **Item 4:** the website's Theme Generator at 960 x 720, executive layout: the table takes 3/5 of the second row
+   (the column chart 2/5), as the MCP's 4:3 report; the downloaded project the same.
+3. **Item 5:** open golden tasks 6 and 7's models: **data shows without Refresh** (a refresh banner may show, as the
+   sample's); task 7's chart by month runs January to June in order; every weekday appears; task 6's growth card:
+   note what it shows (2026 vs 2025: +100% by the invented rows) or its error.
+4. The laptop's own list: No-data ON + the card's `value.showBlankAs` proven in Arabic at a smaller size first; tiny
+   pages under 800 wide (no second page, cards one step taller), measured first; Arabic letter widths in Segoe UI for
+   the table fit; re-score the 20 golden reports.
+
+### Round 20, for the owner
+- **safeTerm's year exception:** a term of years only ("2024 2025") is kept; any other 7+ digits are redacted.
+  Recommended: keep it (as built). Option: redact every 7+ digits (loses "2024 2025" searches).
+- **Task 10's rows:** recommended next round (its generator writes the 300 tables).
+
+### Round 20, seen, not in scope
+- `mcp/quick.tmp.mjs` (a scratch copy of the test file's head) is committed on main; recommended: delete it.
+
 ## Night sitting 6-7 Oct (laptop builder 2)
 Started 19:43 UTC on 6 Oct (23:43 Dubai), `fix/round-17` at `d774780`; hard stop 00:40 UTC on 7 Oct. The owner is
 asleep: nothing waits for a person. `idle.ps1` 6,470 s at the start, no Desktop window open. Blocks in order: A (Desktop
