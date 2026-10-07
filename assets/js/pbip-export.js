@@ -1538,18 +1538,23 @@
         // of the group by the same column too take a number after it in reading order, "(Channel 2)"; nothing else
         // tells them apart, as their measure and column are the same)
         const order = (a, b) => a.position.y - b.position.y || (rtl ? b.position.x - a.position.x : a.position.x - b.position.x);
-        Object.keys(same).filter((k) => new Set(same[k].map(colOf)).size > 1).forEach((k) => { const nth = {}; same[k].slice().sort(order).forEach((v) => { const c = colOf(v);
+        // the new title fitted like any title, the alt text the same name, the titles report following
+        const rename = (v, k, name) => { const f = fitted.get(v.visual), tp = v.visual.visualContainerObjects.title[0].properties, g = (v.visual.visualContainerObjects.general || [])[0];
+          const tf = f ? titleFit(name, TITLE, f.avail) : { mode: 'one', shown: name };
+          tp.text = str(tf.shown); if (tf.mode !== 'one' && !tf.one) tp.titleWrap = bool(true); else delete tp.titleWrap;
+          if (g && g.properties && g.properties.altText) g.properties.altText = str(name);
+          if (f) { ['wrapped', 'shortened'].forEach((m) => { const i = titles[m].findIndex((x) => x.page === f.page && x.title === k); if (i >= 0) titles[m].splice(i, 1); });
+            if (tf.mode !== 'one') titles[tf.mode].push({ page: f.page, title: name, shown: tf.shown }); } };
+        Object.keys(same).filter((k) => same[k].length > 1).forEach((k) => { const nth = {}, one = new Set(same[k].map(colOf)).size === 1; same[k].slice().sort(order).forEach((v) => { const c = colOf(v);
+          // (the reviewer's second review, item 8: charts with the same measure and the same column kept the same title
+          // and alt text: the second and later are numbered, "Total Sales by City (2)")
+          if (one) { nth[''] = (nth[''] || 0) + 1; if (nth[''] > 1) rename(v, k, k + ' (' + nth[''] + ')'); return; }
           // (never a script the title does not have already: round 14's rule keeps an Arabic title free of English names;
           // "عدد Order Id" holds Latin letters already, so "(Region)" may follow it)
           const lat = /[A-Za-z]/, adds = (x) => (AR_LETTERS.test(c) && !AR_LETTERS.test(x)) || (lat.test(c) && !lat.test(x));
           if (!c || adds(k)) return;
           nth[c] = (nth[c] || 0) + 1;
-          const name = k + ' (' + c + (nth[c] > 1 ? ' ' + nth[c] : '') + ')', f = fitted.get(v.visual), tp = v.visual.visualContainerObjects.title[0].properties, g = (v.visual.visualContainerObjects.general || [])[0];
-          const tf = f ? titleFit(name, TITLE, f.avail) : { mode: 'one', shown: name };
-          tp.text = str(tf.shown); if (tf.mode !== 'one' && !tf.one) tp.titleWrap = bool(true); else delete tp.titleWrap;
-          if (g && g.properties && g.properties.altText) g.properties.altText = str(name);
-          if (f) { ['wrapped', 'shortened'].forEach((m) => { const i = titles[m].findIndex((x) => x.page === f.page && x.title === k); if (i >= 0) titles[m].splice(i, 1); });
-            if (tf.mode !== 'one') titles[tf.mode].push({ page: f.page, title: name, shown: tf.shown }); } }); });
+          rename(v, k, k + ' (' + c + (nth[c] > 1 ? ' ' + nth[c] : '') + ')'); }); });
       }
       visuals.forEach((v) => { headed(v.visual);
         add(D + '/pages/' + pageName + '/visuals/' + v.name + '/visual.json', json(v));
