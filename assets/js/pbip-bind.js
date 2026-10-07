@@ -212,6 +212,23 @@
     });
     return { measures, columns };
   }
+  // the tables a measure reaches (round 22b): the tables its DAX names ('Sales'[Amount], Sales[Amount], COUNTROWS ( Sales ))
+  // and those of the measures it calls ([Base Amount]), with its own table, then every table a relationship leads to from
+  // them (many to one, from fromTable to toTable)
+  function reached(tables, main, rels) {
+    const byMeasure = {}; tables.forEach((t) => (t.measures || []).forEach((m) => { if (!(m.name in byMeasure)) byMeasure[m.name] = { expr: m.expr || '' }; }));
+    const names = tables.map((t) => t.name), esc = (x) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const reads = (expr) => { const e = String(expr || '').replace(/"(?:[^"]|"")*"/g, '""').replace(/--[^\n]*|\/\/[^\n]*|\/\*[\s\S]*?\*\//g, ' ');
+      const bare = e.replace(/'(?:[^']|'')*'/g, ' ').replace(/\[(?:[^\]]|\]\])*\]/g, ' ');
+      return { tables: names.filter((n) => e.includes("'" + n.replace(/'/g, "''") + "'") || new RegExp('(^|[^\\w])' + esc(n) + '(?![\\w])').test(bare)),
+        measures: (e.match(/(^|[^'\w\]])\[((?:[^\]]|\]\])+)\]/g) || []).map((x) => x.replace(/^[^[]*\[|\]$/g, '').replace(/\]\]/g, ']')).filter((n) => n in byMeasure) }; };
+    // (a model's measure names are unique, whatever table holds them)
+    const reach = new Set([main.t]), seen = new Set(), todo = [main.m];
+    while (todo.length && seen.size < 200) { const n = todo.shift(); if (seen.has(n) || !byMeasure[n]) continue; seen.add(n);
+      const r = reads(byMeasure[n].expr); r.tables.forEach((t) => reach.add(t)); todo.push(...r.measures); }
+    for (let grew = true; grew;) { grew = false; rels.forEach((r) => { if (reach.has(r.fromTable) && !reach.has(r.toTable)) { reach.add(r.toTable); grew = true; } }); }
+    return reach;
+  }
   function suggest(tables, nKpis, opt) {
     const { measures, columns } = catalog(tables);
     const score = (x) => (MAIN.test(x.m) ? 3 : 0) + (COUNTISH.test(x.m) ? 2 : 0) - (x.variant ? 4 : 0) - (x.pct ? 1 : 0);
@@ -245,13 +262,16 @@
     // table was related to another fact table only): with the model's relationships (opt.relationships, each
     // { fromTable, toTable }; the MCP gives them, the website's picker has none and is unchanged) a category of the
     // main measure's own table, or of a table reached from it along the relationships, comes before every other
-    { const rels = (opt && opt.relationships) || [];
-      if (rels.length && main) { const reach = new Set([main.t]); for (let grew = true; grew;) { grew = false; rels.forEach((r) => { if (reach.has(r.fromTable) && !reach.has(r.toTable)) { reach.add(r.toTable); grew = true; } }); }
-        if (cats.some((c) => reach.has(c.t))) cats = cats.filter((c) => reach.has(c.t)).concat(cats.filter((c) => !reach.has(c.t))); } }
+    // Round 22b (the review of round 22, items 2 and 3): only the main chart's category took this order, the column
+    // chart's and the map's (catB) and the pool every other chart takes from still reached a table the measure is not
+    // related to; and the walk began at the table the measure is stored in, which for a measures table of its own is
+    // related to nothing. Now it begins at the tables the measure's DAX reads (through the measures it calls too) and
+    // its own table, and where any category is reached, only reached ones are given out (catB falls back to catA)
+    const rels = (opt && opt.relationships) || [], reach = rels.length && main ? reached(tables, main, rels) : null;
+    if (reach && cats.some((c) => reach.has(c.t))) cats = cats.filter((c) => reach.has(c.t));
     // no category outside the date table: the date table's named parts (quarter, day, month names), never the time axis
     if (!cats.length) cats = DATE_PARTS.map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date)).filter(Boolean);
     const catA = cats[0] || null, catB = cats.find((c) => c !== catA && c.t !== (catA && catA.t)) || cats[1] || catA;
-    // three different slicers: the year, then the categories, then the time axis
     const sl = [year, catA, catB, date].filter((x, i, l) => x && l.indexOf(x) === i);
     const out = build({ kpis, main, date, catA, catB, slicers: [sl[0] || null, sl[1] || null, sl[2] || null] });
     // every column a slicer could take, in the order they are picked (round 12, #22: the caller replaces a slicer that
