@@ -217,15 +217,18 @@
   // them (many to one, from fromTable to toTable). The reviewer's second review (items 2, 3, 10): names are matched as
   // DAX does, without regard to case; tables are the whole model's (opt.modelTables), not only those in the pick's
   // scope; and the DAX is read once per measure (its quoted names and its words looked up), not once per table
+  const KEYWORDS = new Set(['var', 'return', 'true', 'false', 'in', 'not', 'and', 'or', 'evaluate', 'define', 'measure', 'order', 'by', 'asc', 'desc']);
   function reached(tables, main, rels) {
     const lc = (x) => String(x).toLowerCase(), byName = new Map(), byMeasure = new Map();
     tables.forEach((t) => { byName.set(lc(t.name), t.name); (t.measures || []).forEach((m) => { if (!byMeasure.has(lc(m.name))) byMeasure.set(lc(m.name), m.expr || ''); }); });
     const reads = (expr) => { const e = String(expr || '').replace(/"(?:[^"]|"")*"/g, '""').replace(/--[^\n]*|\/\/[^\n]*|\/\*[\s\S]*?\*\//g, ' '), out = { tables: [], measures: [] };
       (e.match(/'(?:[^']|'')*'/g) || []).forEach((x) => { const n = byName.get(lc(x.slice(1, -1).replace(/''/g, "'"))); if (n) out.tables.push(n); });
-      const bare = e.replace(/'(?:[^']|'')*'/g, ' ');
-      // a measure is [Name] not right after a table name or a quote ('Sales'[Amount] and Sales[Amount] are columns)
+      // (the reviewer's third review, items 1 and 2: a quoted table name stands as a word, so 'Sales'[Quantity] stays a
+      // column; a word followed by "(" is a function (DATE, YEAR, CALENDAR), and VAR, RETURN, TRUE... are keywords)
+      const bare = e.replace(/'(?:[^']|'')*'/g, '_');
+      // a measure is [Name] not right after a table name ('Sales'[Amount] and Sales[Amount] are columns)
       (bare.match(/(^|[^\w\]])\[(?:[^\]]|\]\])+\]/g) || []).forEach((x) => { const n = lc(x.slice(x.indexOf('[') + 1, -1).replace(/\]\]/g, ']')); if (byMeasure.has(n)) out.measures.push(n); });
-      (bare.replace(/\[(?:[^\]]|\]\])*\]/g, ' ').match(/[\p{L}_][\p{L}\p{N}_]*/gu) || []).forEach((w) => { const n = byName.get(lc(w)); if (n) out.tables.push(n); });
+      (bare.replace(/\[(?:[^\]]|\]\])*\]/g, ' ').match(/[\p{L}_][\p{L}\p{N}_]*(?!\s*\(|[\p{L}\p{N}_])/gu) || []).forEach((w) => { const n = !KEYWORDS.has(lc(w)) && byName.get(lc(w)); if (n) out.tables.push(n); });
       return out; };
     const reach = new Set([main.t]), seen = new Set(), todo = [lc(main.m)];
     while (todo.length && seen.size < 500) { const n = todo.shift(); if (seen.has(n) || !byMeasure.has(n)) continue; seen.add(n);
