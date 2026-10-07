@@ -4050,6 +4050,19 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const heads = titled.map((v) => { const h = v.visual.visualContainerObjects.title[0].properties.heading; return h ? h.expr.Literal.Value : null; });
     chk(() => titled.length >= 5 && heads.every((h) => h === "'Heading3'"), () => `every shown title must carry heading 'Heading3': ${JSON.stringify(heads)}`);
   }
+  // 5. (lab #6) a column chart with few columns (a quarter: 4) shows its values above the columns: labels show,
+  //    labelPosition 'OutsideEnd', labelDisplayUnits 0 (automatic K / M, as the KPI cards), labelPrecision 1 for a
+  //    whole-number measure; a column chart by a column whose count is not known (Region) is unchanged
+  {
+    const run = async (cat) => { const x = await ask('create_report', { path: dir, name: 'R21 labels ' + cat, fields: { kpis: ['Sales[Total Sales]'], measure: 'Sales[Total Sales]', category: 'Sales[Channel]', category2: 'Sales[' + cat + ']' },
+      pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'column', x: 36, y: 100, w: 600, h: 400, title: 'C' }] }] });
+      const c = vis(x).find((v) => v.visual.visualType === 'clusteredColumnChart'); return { c, err: x.err ? x.t.slice(0, 200) : '' }; };
+    const q = await run('Quarter'), r = await run('Region');
+    const L = (v) => v && ((v.visual.objects || {}).labels || [])[0], P = (v, k) => { const e = L(v); return e && e.properties[k] ? e.properties[k].expr.Literal.Value : null; };
+    chk(() => q.c && P(q.c, 'show') === 'true' && P(q.c, 'labelPosition') === "'OutsideEnd'" && P(q.c, 'labelDisplayUnits') === '0D' && P(q.c, 'labelPrecision') === '1L',
+      () => `a column chart by Quarter must show its labels outside the end, automatic units: ${JSON.stringify(L(q.c) || null)} ${q.err}`);
+    chk(() => r.c && !L(r.c), () => `a column chart by Region (count unknown) keeps no labels: ${JSON.stringify(L(r.c) || null)} ${r.err}`);
+  }
 }
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });

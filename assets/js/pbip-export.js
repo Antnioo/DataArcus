@@ -1081,6 +1081,16 @@
           // bars that fade by value (gradientFill above): the report's own bar and column charts, never the tooltip pages'
           if (GRAD && query && (s.kind === 'bar' || s.kind === 'column')) { visual.objects = { dataPoint: gradientFill(query.queryState.Y.projections[0].field, GRAD) }; chartColors.charts++; }
           if (MIRROR && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { mirrorChart(visual, s.kind); chartAxes.charts++; }
+          // Round 21 (the capabilities lab's #6, Desktop 2.158, 7 Oct 2026: "77.7K" above the columns, kept on Save): a column
+          // chart with few columns shows its values above them: labels at 'OutsideEnd', automatic units (0, K or M by the
+          // values' size, as the KPI cards) with one decimal (a percent measure keeps its own format). Only where the
+          // number of columns is known from the model's names: a quarter (4); other columns could have any number
+          if (query && s.kind === 'column') { const cf = query.queryState.Category.projections[0], cn = String(cf.nativeQueryRef || cf.queryRef || '');
+            if (/(^|\s|\.)quarter$|الربع/i.test(cn) || /(^|\s)quarter$/i.test(String(((Bt.cats || {}).column || {}).c || ''))) {
+              const yf = ((Bt.y || {}).column || Bt.measure || {}), pct = !!yf.pct;
+              visual.objects = visual.objects || {};
+              visual.objects.labels = obj(Object.assign({ show: bool(true), labelPosition: str('OutsideEnd'), labelDisplayUnits: num(0) }, pct ? {} : { labelPrecision: lit('1L') }));
+            } }
           if (GRID && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.gridlineColor = color(GRID); }
           // a column chart written as a bar chart (asBar) in a slot too low for its rows and a value axis: no value axis,
           // each bar's value beside it (the tooltip pages' bar chart, measured in round 0)
