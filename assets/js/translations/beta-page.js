@@ -1,0 +1,157 @@
+// Translations for power-bi-mcp/index.html (DataArcus for Power BI, the private beta page)
+window.betaPageTranslations = {
+  "en": {
+    "meta": {
+      "title": "DataArcus for Power BI: private beta",
+      "description": "An AI agent in Claude Desktop reads your Power BI project and writes a complete new report next to it, in English or Arabic. Private beta for Windows.",
+      "author": "DataArcus",
+      "og:type": "website",
+      "og:title": "DataArcus for Power BI: private beta",
+      "og:description": "An AI agent in Claude Desktop reads your Power BI project and writes a complete new report next to it, in English or Arabic. Private beta for Windows.",
+      "og:url": "https://dataarcus.com/power-bi-mcp/",
+      "og:site_name": "DataArcus",
+      "og:image": "https://dataarcus.com/assets/img/og/home.jpg",
+      "og:locale": "en_US",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "DataArcus for Power BI: private beta",
+      "twitter:description": "An AI agent in Claude Desktop reads your Power BI project and writes a complete new report next to it, in English or Arabic. Private beta for Windows.",
+      "twitter:image": "https://dataarcus.com/assets/img/og/home.jpg",
+      "canonical": "https://dataarcus.com/power-bi-mcp/"
+    },
+    "beta": {
+      "hero": {
+        "badge": "Private beta",
+        "title": "DataArcus for Power BI",
+        "subtitle": "An AI agent in Claude Desktop reads your Power BI project (PBIP, with its TMDL model) and writes a complete new report (PBIR) next to it, in English or in Arabic, right to left.",
+        "button": "Ask to join",
+        "ga": "Microsoft: <em>\"Power BI Desktop projects (PBIP) and Power BI enhanced report format (PBIR) are generally available.\"</em> (<a href='https://learn.microsoft.com/power-bi/developer/projects/projects-external-editing' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>)"
+      },
+      "how": {
+        "title": "How it works",
+        "s1": "<strong>Save as a project.</strong> In Power BI Desktop: File &gt; Save as &gt; Power BI project (.pbip).",
+        "s2": "<strong>Ask Claude.</strong> For example: \"Read the model in Sales and suggest a report\".",
+        "s3": "<strong>Open the new report</strong> in Power BI Desktop: it is a new .pbip next to your model."
+      },
+      "tools": {
+        "title": "The 8 tools",
+        "read_model": "Reads the tables, the columns with their types, the measures with their formats and the date tables. Changes nothing.",
+        "suggest_fields": "Picks the measures and columns for each KPI card, chart, table and slicer.",
+        "check_model_health": "The Model Health Check: a score and every finding, with fix scripts for you to review (never applied).",
+        "plan_layout": "The exact position of every visual on the page, mirrored for right to left. Writes nothing.",
+        "create_report": "A new report next to your model, every visual placed and bound to your fields.",
+        "check_report": "Checks a report that already exists, offline: Microsoft's validator and the rules measured in Power BI Desktop. Changes nothing.",
+        "generate_theme": "A Power BI report theme, exactly as the DataArcus Theme Generator makes it.",
+        "add_gulf_calendar": "A Gulf date table (Hijri, Ramadan, Eid and the country's weekend) as a script for you to check and apply."
+      },
+      "run": {
+        "title": "A real run",
+        "intro": "Measured on 8 October 2026 with DataArcus 0.2.8, on a made-up home-goods sales model (Marsa Home):",
+        "files": "91 files written, all new: 2 pages and 2 tooltip pages, 45 visuals.",
+        "validator": "Microsoft's report validator: 0 errors, 0 warnings.",
+        "model": "The model's files byte-identical before and after."
+      },
+      "safe": {
+        "title": "What keeps it safe",
+        "model": "It never changes your model and never writes over a file: every report is new, next to your model.",
+        "ask": "Claude Desktop asks you before every file it writes.",
+        "validator": "It checks the report offline with Microsoft's report validator.",
+        "data": "It reads your model's structure (tables, columns, measures, formats), not your data. What the AI app sees: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
+      },
+      "req": {
+        "title": "Requirements and limits",
+        "windows": "Windows only.",
+        "desktop": "A recent Power BI Desktop: the reports use recent features that older versions lack.",
+        "claude": "Claude Desktop.",
+        "beta": "A private beta: the package is not signed yet, and we send its SHA-256 so you can check the file you received.",
+        "large": "Models above about 50 tables are experimental."
+      },
+      "join": {
+        "title": "Ask to join",
+        "next": "We reply with the setup steps. No payment.",
+        "name": "Name *",
+        "email": "Email *",
+        "model": "What is your model about? *",
+        "linkedin": "LinkedIn (optional)",
+        "button": "Send my request",
+        "privacy": "What you send reaches our email through Web3Forms, only so we can reply: <a href='../privacy.html' class='text-accent'>Privacy</a>."
+      }
+    }
+  },
+  "ar": {
+    "meta": {
+      "title": "DataArcus لـ Power BI: نسخة تجريبية خاصة",
+      "description": "وكيل ذكاء اصطناعي في Claude Desktop يقرأ مشروع Power BI ويكتب بجانبه تقريرًا جديدًا كاملًا، بالعربية أو الإنجليزية. نسخة تجريبية خاصة لنظام Windows.",
+      "author": "داتا أركوس",
+      "og:type": "website",
+      "og:title": "DataArcus لـ Power BI: نسخة تجريبية خاصة",
+      "og:description": "وكيل ذكاء اصطناعي في Claude Desktop يقرأ مشروع Power BI ويكتب بجانبه تقريرًا جديدًا كاملًا، بالعربية أو الإنجليزية. نسخة تجريبية خاصة لنظام Windows.",
+      "og:url": "https://dataarcus.com/power-bi-mcp/",
+      "og:site_name": "DataArcus",
+      "og:image": "https://dataarcus.com/assets/img/og/home.jpg",
+      "og:locale": "ar_AE",
+      "twitter:card": "summary_large_image",
+      "twitter:title": "DataArcus لـ Power BI: نسخة تجريبية خاصة",
+      "twitter:description": "وكيل ذكاء اصطناعي في Claude Desktop يقرأ مشروع Power BI ويكتب بجانبه تقريرًا جديدًا كاملًا، بالعربية أو الإنجليزية. نسخة تجريبية خاصة لنظام Windows.",
+      "twitter:image": "https://dataarcus.com/assets/img/og/home.jpg",
+      "canonical": "https://dataarcus.com/power-bi-mcp/"
+    },
+    "beta": {
+      "hero": {
+        "badge": "نسخة تجريبية خاصة",
+        "title": "DataArcus لـ Power BI",
+        "subtitle": "وكيل ذكاء اصطناعي في Claude Desktop يقرأ مشروع Power BI الخاص بك (PBIP مع نموذج TMDL) ويكتب بجانبه تقريرًا جديدًا كاملًا (PBIR)، بالإنجليزية أو بالعربية من اليمين إلى اليسار.",
+        "button": "اطلب الانضمام",
+        "ga": "Microsoft: <em>\"Power BI Desktop projects (PBIP) and Power BI enhanced report format (PBIR) are generally available.\"</em> أي أن مشاريع Power BI Desktop (PBIP) وصيغة التقارير المحسّنة (PBIR) متاحة للجميع. (<a href='https://learn.microsoft.com/power-bi/developer/projects/projects-external-editing' class='text-accent' target='_blank' rel='noopener'>Microsoft Learn</a>)"
+      },
+      "how": {
+        "title": "كيف يعمل",
+        "s1": "<strong>احفظ التقرير كمشروع.</strong> في Power BI Desktop: File &gt; Save as &gt; Power BI project (.pbip).",
+        "s2": "<strong>اطلب من Claude.</strong> مثلًا: \"اقرأ النموذج في مجلد Sales واقترح تقريرًا\".",
+        "s3": "<strong>افتح التقرير الجديد</strong> في Power BI Desktop: ملف .pbip جديد بجانب نموذجك."
+      },
+      "tools": {
+        "title": "الأدوات الثماني",
+        "read_model": "تقرأ الجداول، والأعمدة بأنواعها، والمقاييس بتنسيقاتها، وجداول التاريخ. لا تغيّر شيئًا.",
+        "suggest_fields": "تختار المقاييس والأعمدة لكل بطاقة مؤشر ومخطط وجدول ومقسّم.",
+        "check_model_health": "فحص صحة النموذج: درجة وكل ملاحظة، مع نصوص إصلاح تراجعها أنت (لا تُطبَّق أبدًا).",
+        "plan_layout": "الموضع الدقيق لكل عنصر مرئي في الصفحة، معكوسًا للاتجاه من اليمين إلى اليسار. لا تكتب شيئًا.",
+        "create_report": "تقرير جديد بجانب نموذجك، كل عنصر مرئي في مكانه ومربوط بحقولك.",
+        "check_report": "تفحص تقريرًا موجودًا دون اتصال: مدقّق Microsoft والقواعد التي قيست في Power BI Desktop. لا تغيّر شيئًا.",
+        "generate_theme": "سمة لتقارير Power BI، تمامًا كما يصنعها مولّد السمات من DataArcus.",
+        "add_gulf_calendar": "جدول تاريخ خليجي (الهجري ورمضان والعيد وعطلة نهاية الأسبوع في بلدك) كنص برمجي تراجعه وتطبّقه أنت."
+      },
+      "run": {
+        "title": "تشغيل حقيقي",
+        "intro": "قيس في 8 أكتوبر 2026 بالإصدار 0.2.8 من DataArcus، على نموذج مختلَق لمبيعات أدوات منزلية (Marsa Home):",
+        "files": "كُتب 91 ملفًا، كلها جديدة: صفحتان وصفحتا تلميح، و45 عنصرًا مرئيًا.",
+        "validator": "مدقّق التقارير من Microsoft: 0 أخطاء، 0 تحذيرات.",
+        "model": "ملفات النموذج مطابقة بايتًا ببايت قبل التشغيل وبعده."
+      },
+      "safe": {
+        "title": "ما الذي يجعله آمنًا",
+        "model": "لا يغيّر نموذجك أبدًا ولا يكتب فوق أي ملف: كل تقرير جديد، بجانب نموذجك.",
+        "ask": "يستأذنك Claude Desktop قبل كل ملف يكتبه.",
+        "validator": "يفحص التقرير دون اتصال بمدقّق التقارير من Microsoft.",
+        "data": "يقرأ بنية نموذجك (الجداول والأعمدة والمقاييس والتنسيقات)، لا بياناتك. ما يراه تطبيق الذكاء الاصطناعي: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
+      },
+      "req": {
+        "title": "المتطلبات والحدود",
+        "windows": "Windows فقط.",
+        "desktop": "إصدار حديث من Power BI Desktop: التقارير تستخدم ميزات حديثة لا توجد في الإصدارات الأقدم.",
+        "claude": "Claude Desktop.",
+        "beta": "نسخة تجريبية خاصة: الحزمة غير موقّعة بعد، ونرسل بصمتها SHA-256 لتتحقق من الملف الذي استلمته.",
+        "large": "النماذج التي تتجاوز نحو 50 جدولًا تجريبية."
+      },
+      "join": {
+        "title": "اطلب الانضمام",
+        "next": "نرد عليك بخطوات الإعداد. دون أي دفع.",
+        "name": "الاسم *",
+        "email": "البريد الإلكتروني *",
+        "model": "عن ماذا يتحدث نموذجك؟ *",
+        "linkedin": "LinkedIn (اختياري)",
+        "button": "أرسل طلبي",
+        "privacy": "ما ترسله يصل إلى بريدنا عبر Web3Forms، فقط لنرد عليك: <a href='../privacy.html' class='text-accent'>الخصوصية</a>."
+      }
+    }
+  }
+};

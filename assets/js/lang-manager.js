@@ -74,6 +74,8 @@ class LanguageManager {
     } else if (path.includes('/tools/')) {
       return window.toolsHubTranslations;
     }
+    // the beta page lives in a folder (/power-bi-mcp/, also as /power-bi-mcp/index.html): before the home page's "index"
+    if (path.includes('/power-bi-mcp/')) return window.betaPageTranslations;
 
     if (path.includes('adventureworks-dashboard')) {
       return window.adventureworksTranslations;

@@ -359,6 +359,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize form handlers
   handleFormSubmit(document.getElementById('contact-form'), document.getElementById('form-result'));
+  handleFormSubmit(document.getElementById('beta-form'), document.getElementById('beta-form-result'));
   
   // Add focus/blur and validation effects to form inputs
   document.querySelectorAll('.form-control').forEach(input => {
@@ -498,8 +499,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const trackOnce = (key, name, params) => { if (once.has(key)) return; once.add(key); track(name, params); };
 
   // --- Leads: fired by the form handler in section 5 after a successful send
+  // (the beta page's request form is its own event, beta_request, so the home form's generate_lead keeps its meaning)
   document.addEventListener('dataarcus:lead', (e) => {
-    track('generate_lead', { form_id: (e.detail && e.detail.formId) || 'unknown' });
+    const formId = (e.detail && e.detail.formId) || 'unknown';
+    if (formId === 'beta-form') track('beta_request', { form_id: formId });
+    else track('generate_lead', { form_id: formId });
   });
 
   // --- Form funnel: first interaction with a form (started but maybe not sent)

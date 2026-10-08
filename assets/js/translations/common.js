@@ -35,6 +35,7 @@ window.commonTranslations = {
         contact: "Contact",
         blog: "Blog",
         tools: "Free Power BI & Fabric Tools",
+        mcp: "DataArcus for Power BI",
         privacy: "Privacy"
       }
     },
@@ -123,6 +124,7 @@ window.commonTranslations = {
         contact: "تواصل معنا",
         blog: "المدونة",
         tools: "أدوات Power BI و Fabric مجانية",
+        mcp: "DataArcus لـ Power BI",
         privacy: "الخصوصية"
       }
     },

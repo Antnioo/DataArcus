@@ -233,6 +233,15 @@ for (const [name, t] of Object.entries(tags)) {
   }
 }
 
+// The beta page (owner 2026-10-08): its request form sends beta_request, never the home form's generate_lead
+{
+  const main = fs.readFileSync(path.join(ROOT, 'assets/js/main.js'), 'utf8');
+  ok(/handleFormSubmit\(document\.getElementById\('beta-form'\)/.test(main), 'main.js: the beta form is not sent by the form handler');
+  ok(/formId === 'beta-form'\) track\('beta_request', \{ form_id: formId \}\)/.test(main), "main.js: a sent beta form must track beta_request");
+  const page = fs.readFileSync(path.join(ROOT, 'power-bi-mcp/index.html'), 'utf8');
+  ok(/<form id="beta-form" action="https:\/\/api\.web3forms\.com\/submit"/.test(page), 'power-bi-mcp/index.html: no beta-form posting to Web3Forms');
+}
+
 ok(calls > 50, `only ${calls} tracking calls found: the scan is broken`);
 
 if (fails.length) { console.error(`Analytics events: ${fails.length} problem(s)\n  ` + fails.join('\n  ')); process.exit(1); }

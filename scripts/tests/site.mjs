@@ -3,7 +3,7 @@
 // and the top offset (style.css --top-offset) matches the real navbar.
 import fs from 'node:fs';
 import path from 'node:path';
-import { pages, visitor, ROOT, ready } from './lib.mjs';
+import { pages, visitor, ROOT, ready, WAIT } from './lib.mjs';
 
 export default async function ({ browser, url }) {
   const problems = []; let checks = 0;
@@ -306,5 +306,46 @@ export default async function ({ browser, url }) {
       await v.ctx.close();
     }
   }
+  // The beta page (owner 2026-10-08, for the 9 Oct PBIP post): English and Arabic on one URL, the request form's fields,
+  // its beta_request event after a send, and no claim that 0.2.8 cannot keep ("until you say": nothing waits for a go)
+  {
+    const home = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8'), key = (home.match(/name="access_key" value="([^"]+)"/) || [])[1];
+    for (const lang of ['en', 'ar']) {
+      const v = await visitor(browser, { viewport: [1440, 900] }), tag = `power-bi-mcp ${lang}`;
+      await v.pg.goto(`${url}/power-bi-mcp/?lang=${lang}`, { waitUntil: 'networkidle' }); await ready(v.pg);
+      const r = await v.pg.evaluate(() => {
+        const f = document.getElementById('beta-form'), el = (n) => f && f.querySelector(`[name="${n}"]`);
+        return { lang: document.documentElement.lang, dir: document.documentElement.dir, h1: document.querySelector('h1').textContent, title: document.title,
+          text: document.body.innerText, action: f && f.getAttribute('action'), key: el('access_key') && el('access_key').value, subject: el('subject') && el('subject').value,
+          fields: ['name', 'email', 'model', 'linkedin'].map((n) => [n, !!el(n), !!(el(n) && el(n).required), el(n) && el(n).labels.length]),
+          join: !!document.querySelector('a[href="#join"]') && !!document.getElementById('join'), tools: document.querySelectorAll('#join, code').length };
+      });
+      checks++;
+      if (lang === 'ar' && (r.lang !== 'ar' || r.dir !== 'rtl')) problems.push(`${tag}: lang=${r.lang} dir=${r.dir}, want ar and rtl`);
+      if (lang === 'en' && (r.lang !== 'en' || r.dir === 'rtl')) problems.push(`${tag}: lang=${r.lang} dir=${r.dir}, want en, left to right`);
+      if (lang === 'ar' && !/[\u0600-\u06FF]/.test(r.title + r.h1)) problems.push(`${tag}: title or heading not in Arabic`);
+      if (lang === 'en' && r.title !== 'DataArcus for Power BI: private beta') problems.push(`${tag}: title is "${r.title}"`);
+      if (r.action !== 'https://api.web3forms.com/submit' || !key || r.key !== key) problems.push(`${tag}: the form does not post to the home form's Web3Forms endpoint and key`);
+      if (r.subject !== 'DataArcus for Power BI beta request') problems.push(`${tag}: hidden subject is "${r.subject}"`);
+      for (const [n, has, req, labels] of r.fields) {
+        if (!has || !labels) problems.push(`${tag}: form field ${n} missing or without a label`);
+        else if (req !== (n !== 'linkedin')) problems.push(`${tag}: form field ${n} ${req ? 'required' : 'optional'}, want ${n === 'linkedin' ? 'optional' : 'required'}`);
+      }
+      if (!r.join) problems.push(`${tag}: no "Ask to join" link to #join`);
+      if (r.tools < 9) problems.push(`${tag}: the 8 tools are not listed`);
+      for (const claim of [/until you say/i, /until you approve/i, /nothing is written until/i, /plan first/i, /\bfirst\b[^.]{0,30}\b(tool|agent|mcp)\b/i, /\bonly (tool|agent|mcp)\b/i, /\b(AED|USD|\$)\s?\d/])
+        if (claim.test(r.text)) problems.push(`${tag}: a claim it must not make: ${claim}`);
+      // a sent request: Web3Forms answers 200 (stubbed by visitor()), then GA4 gets beta_request, not generate_lead
+      await v.pg.evaluate(() => { window.__ev = []; window.gtag = (...a) => window.__ev.push(a); });
+      await v.pg.fill('#beta-name', 'Test Person'); await v.pg.fill('#beta-email', 'test@example.com'); await v.pg.fill('#beta-model', 'A made-up sales model');
+      await v.pg.click('#beta-form button[type="submit"]');
+      const ev = await v.pg.waitForFunction(() => window.__ev.find((a) => a[0] === 'event' && /beta_request|generate_lead/.test(a[1])), null, { timeout: WAIT }).then((h) => h.jsonValue()).catch(() => null);
+      checks++;
+      if (!ev || ev[1] !== 'beta_request' || ev[2].form_id !== 'beta-form') problems.push(`${tag}: a sent request tracks ${ev ? ev[1] : 'nothing'}, want beta_request`);
+      if (v.errs.length) problems.push(`${tag}: ${v.errs.join(' | ')}`);
+      await v.ctx.close();
+    }
+  }
+
   return { checks, problems };
 }

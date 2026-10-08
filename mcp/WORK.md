@@ -4,6 +4,23 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## The beta page /power-bi-mcp/ (8-9 Oct, cloud builder; website only; not merged, no PR)
+The owner's go ("option 2, let's get it ready"), for the 9 Oct PBIP post (its links go/pbip and go/pbip-page).
+**Branch:** the reviewer named `site/beta-page`; this cloud session may push only to `fix/round-23-total`, so that branch
+was restarted from main `61926b2` (round 24 merged) and carries the page.
+- **Page:** `power-bi-mcp/index.html`; its text in `assets/js/translations/beta-page.js` (English and **Arabic, for the
+  owner to read**), on the same URL. Hero, how it works (3 steps), the 8 tools, a real run (8 Oct, 0.2.8: 91 files, 2
+  pages + 2 tooltip pages, 45 visuals, validator 0/0, model byte-identical; numbers as the reviewer gave them from the
+  engine's PACKAGING.md), what keeps it safe (only what 0.2.8 does), requirements and limits, "Ask to join" form
+  (home form's Web3Forms endpoint and key, hidden subject "DataArcus for Power BI beta request", tracks `beta_request`).
+- go/pbip and go/pbip-page retargeted (UTM unchanged); sitemap, llms.txt, footer link on every page; `?v=20261009` for
+  main, lang-manager and common.
+- **Tests:** `site` suite (the page in English and Arabic, rtl, the form's fields, a sent request tracks beta_request,
+  no "until you say" or other claims), `test-analytics-events`; check-min, csp, test-site-config pass.
+- **Open, for the owner:** the page uses the home page's preview image (no own og image yet); the privacy page names the
+  contact form's fields, not the beta form's LinkedIn field; sitemap lastmod of other pages left as they were (the
+  footer link is not a content change), `node scripts/sitemap-lastmod.mjs` would move them all to 9 Oct.
+
 ## Round 24, B1 and B2 of the laptop's re-proof (8 Oct, cloud builder; website download only; not merged, no PR)
 The owner's go: "Fix them now". **Branch:** the reviewer named `fix/round-24-b1b2`; this cloud session may push only to
 `fix/round-23-total`, so that branch was restarted from main `843c8dc` (round 23 squash-merged) and carries round 24.
