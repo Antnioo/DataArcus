@@ -3,48 +3,64 @@ table 'Logistics Lookup 048'
 	column 'Logistics Lookup 048 Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Logistics Lookup 048 Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Key]
 
 	column 'Logistics Lookup 048'
 		dataType: string
-		sourceColumn: Logistics Lookup 048
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048]
 
 	column 'Logistics Lookup 048 Status'
 		dataType: string
-		sourceColumn: Logistics Lookup 048 Status
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Status]
 
 	column 'Logistics Lookup 048 External Id'
 		dataType: string
-		sourceColumn: Logistics Lookup 048 External Id
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 External Id]
 
 	column 'Logistics Lookup 048 Level'
 		dataType: int64
-		sourceColumn: Logistics Lookup 048 Level
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Level]
 
 	column 'Logistics Lookup 048 Is Active'
 		dataType: boolean
-		sourceColumn: Logistics Lookup 048 Is Active
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Is Active]
 
 	column 'Logistics Lookup 048 Category'
 		dataType: string
-		sourceColumn: Logistics Lookup 048 Category
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Category]
 
 	column 'Logistics Lookup 048 Type'
 		dataType: string
-		sourceColumn: Logistics Lookup 048 Type
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Type]
 
 	column 'Logistics Lookup 048 Notes'
 		dataType: string
-		sourceColumn: Logistics Lookup 048 Notes
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Notes]
 
 	column 'Logistics Lookup 048 Code'
 		dataType: string
-		sourceColumn: Logistics Lookup 048 Code
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Code]
 
-	partition 'Logistics Lookup 048' = m
+	partition 'Logistics Lookup 048' = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Logistics Lookup 048 Key", "Logistics Lookup 048", "Logistics Lookup 048 Status", "Logistics Lookup 048 External Id", "Logistics Lookup 048 Level", "Logistics Lookup 048 Is Active", "Logistics Lookup 048 Category", "Logistics Lookup 048 Type", "Logistics Lookup 048 Notes", "Logistics Lookup 048 Code"}, {})
-				in
-				    Source
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Logistics Lookup 048 Key", [Value], "Logistics Lookup 048", "Logistics Lookup 048 " & [Value], "Logistics Lookup 048 Status", "Status " & ( 1 + MOD ( [Value] + 2, 3 ) ), "Logistics Lookup 048 External Id", "External Id " & ( 1 + MOD ( [Value] + 3, 3 ) ), "Logistics Lookup 048 Level", [Value], "Logistics Lookup 048 Is Active", MOD ( [Value], 2 ) = 1, "Logistics Lookup 048 Category", "Category " & ( 1 + MOD ( [Value] + 6, 3 ) ), "Logistics Lookup 048 Type", "Type " & ( 1 + MOD ( [Value] + 7, 3 ) ), "Logistics Lookup 048 Notes", "Notes " & ( 1 + MOD ( [Value] + 8, 3 ) ), "Logistics Lookup 048 Code", "Code " & ( 1 + MOD ( [Value] + 9, 3 ) ) )

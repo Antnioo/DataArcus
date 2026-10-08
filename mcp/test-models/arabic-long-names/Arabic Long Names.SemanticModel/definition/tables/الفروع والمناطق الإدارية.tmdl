@@ -2,25 +2,28 @@ table 'الفروع والمناطق الإدارية'
 
 	column 'رمز الفرع'
 		dataType: int64
-		isHidden
-		sourceColumn: رمز الفرع
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [رمز الفرع]
 
 	column 'اسم الفرع التجاري الرئيسي'
 		dataType: string
-		sourceColumn: اسم الفرع التجاري الرئيسي
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [اسم الفرع التجاري الرئيسي]
 
 	column 'المنطقة الإدارية والمحافظة التابعة لها'
 		dataType: string
-		sourceColumn: المنطقة الإدارية والمحافظة التابعة لها
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [المنطقة الإدارية والمحافظة التابعة لها]
 
 	column 'فئة الفرع حسب حجم المساحة التجارية'
 		dataType: string
-		sourceColumn: فئة الفرع حسب حجم المساحة التجارية
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [فئة الفرع حسب حجم المساحة التجارية]
 
-	partition 'الفروع والمناطق الإدارية' = m
+	partition 'الفروع والمناطق الإدارية' = calculated
 		mode: import
-		source =
-				let
-				    Source = #table(type table [#"رمز الفرع" = Int64.Type, #"اسم الفرع التجاري الرئيسي" = text, #"المنطقة الإدارية والمحافظة التابعة لها" = text, #"فئة الفرع حسب حجم المساحة التجارية" = text], {{1, "Branch A", "Region 1", "Small"}, {2, "Branch B", "Region 1", "Large"}, {3, "Branch C", "Region 2", "Small"}, {4, "Branch D", "Region 2", "Large"}})
-				in
-				    Source
+		source = DATATABLE ( "رمز الفرع", INTEGER, "اسم الفرع التجاري الرئيسي", STRING, "المنطقة الإدارية والمحافظة التابعة لها", STRING, "فئة الفرع حسب حجم المساحة التجارية", STRING, { { 1, "Branch A", "Region 1", "Small" }, { 2, "Branch B", "Region 1", "Large" }, { 3, "Branch C", "Region 2", "Small" }, { 4, "Branch D", "Region 2", "Large" } } )

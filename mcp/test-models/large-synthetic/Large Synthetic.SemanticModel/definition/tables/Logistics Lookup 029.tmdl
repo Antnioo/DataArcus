@@ -3,48 +3,64 @@ table 'Logistics Lookup 029'
 	column 'Logistics Lookup 029 Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Logistics Lookup 029 Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 029 Key]
 
 	column 'Logistics Lookup 029'
 		dataType: string
-		sourceColumn: Logistics Lookup 029
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 029]
 
 	column 'Logistics Lookup 029 Status'
 		dataType: string
-		sourceColumn: Logistics Lookup 029 Status
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 029 Status]
 
 	column 'Logistics Lookup 029 Created By'
 		dataType: string
-		sourceColumn: Logistics Lookup 029 Created By
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 029 Created By]
 
 	column 'Logistics Lookup 029 Notes'
 		dataType: string
-		sourceColumn: Logistics Lookup 029 Notes
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 029 Notes]
 
 	column 'Logistics Lookup 029 Level'
 		dataType: int64
-		sourceColumn: Logistics Lookup 029 Level
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 029 Level]
 
 	column 'Logistics Lookup 029 Owner'
 		dataType: string
-		sourceColumn: Logistics Lookup 029 Owner
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 029 Owner]
 
 	column 'Logistics Lookup 029 Type'
 		dataType: string
-		sourceColumn: Logistics Lookup 029 Type
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 029 Type]
 
 	column 'Logistics Lookup 029 Sort Order'
 		dataType: int64
-		sourceColumn: Logistics Lookup 029 Sort Order
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 029 Sort Order]
 
 	column 'Logistics Lookup 029 Code'
 		dataType: string
-		sourceColumn: Logistics Lookup 029 Code
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 029 Code]
 
-	partition 'Logistics Lookup 029' = m
+	partition 'Logistics Lookup 029' = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Logistics Lookup 029 Key", "Logistics Lookup 029", "Logistics Lookup 029 Status", "Logistics Lookup 029 Created By", "Logistics Lookup 029 Notes", "Logistics Lookup 029 Level", "Logistics Lookup 029 Owner", "Logistics Lookup 029 Type", "Logistics Lookup 029 Sort Order", "Logistics Lookup 029 Code"}, {})
-				in
-				    Source
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Logistics Lookup 029 Key", [Value], "Logistics Lookup 029", "Logistics Lookup 029 " & [Value], "Logistics Lookup 029 Status", "Status " & ( 1 + MOD ( [Value] + 2, 3 ) ), "Logistics Lookup 029 Created By", "Created By " & ( 1 + MOD ( [Value] + 3, 3 ) ), "Logistics Lookup 029 Notes", "Notes " & ( 1 + MOD ( [Value] + 4, 3 ) ), "Logistics Lookup 029 Level", [Value], "Logistics Lookup 029 Owner", "Owner " & ( 1 + MOD ( [Value] + 6, 3 ) ), "Logistics Lookup 029 Type", "Type " & ( 1 + MOD ( [Value] + 7, 3 ) ), "Logistics Lookup 029 Sort Order", [Value], "Logistics Lookup 029 Code", "Code " & ( 1 + MOD ( [Value] + 9, 3 ) ) )

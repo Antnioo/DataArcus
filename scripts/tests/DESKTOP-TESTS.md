@@ -2295,6 +2295,79 @@ back (`n1-gx-diff.mjs`): **Desktop kept every object as written** and upgraded t
 | `report.json` `settings.hideVisualContainerHeader`, `defaultFilterActionIsDataFilter` | accepted, kept on Save; their effect was not tried |
 | `report.json` `settings.locale: 'ar-SA'` ("GX locale AR") | the report opened without a message; the bridge returned no picture of its page, so nothing was seen |
 
+## 2026-10-07 evening, the sitting of 7-8 Oct (`fix/round-22`), Power BI Desktop 2.158.1304
+Desktop updated itself from 2.158.1177: the builder scripts' fixed install path stopped working (`desk.ps1`,
+`lab-1007-shot.ps1` and `r22-shot.ps1` now ask `Get-AppxPackage` for it). Every report is on a made-up model. Captures
+(2x, the page area 2250 wide, nothing scaled down) and crops: `<tests folder>\r22\` (`shots\`, `gshots\pages\`) and
+`<tests folder>\showcase-1007\`; scripts `builder-scripts\r22-*`.
+
+| Check | Result | Crop |
+|---|---|---|
+| A subtitle on a KPI card (code review b), planned cards at 1280 x 720 and 1920 x 1080 | **FAIL as built**: the value is pushed down and cut in half. Fixed: no subtitle on a card, told in the notes | `shots\b2-720-crop.png` |
+| A subtitle on a hand-placed card 110 high | whole (title, subtitle, value); the rule is the same for every card | `shots\b-sub-crop.png` |
+| "No data" beside a card's SVG picture (code review d), Arabic, 28pt | PASS (refuted): whole on cards 284, 300 and 310 wide, the ring about 19 clear of the text at 284 | `shots\d2-ar-crop.png`, `d-ar-crop.png` |
+| The same in English, 14pt, cards 150 to 240 wide | PASS | `shots\d-en-crop.png` |
+| "No data" on a whole report (golden task 8 in Arabic, opened before its Refresh: every table empty) | PASS: the KPI card reads «لا توجد بيانات» at its usual size, whole; each chart and the table show «لا توجد بيانات لهذا الاختيار» once, centred, inside the panel | `gshots\pages\g8-ar-p1.png` |
+| "No data" with data (every golden report) | PASS: no message, outline or fill shows through any chart or table | `gshots\pages\*` |
+| Subtitles under chart titles (round 21), English and Arabic, light and dark | PASS: one small line under the title, shaped right in Arabic, the plot a little shorter | `showcase-1007\page-*-p1.png` |
+| Data labels on a column chart by quarter (round 21) | PASS: "2.8M" above each of the four columns, English and Arabic («الربع 1» ...) | `showcase-1007\page-*-p1.png` |
+| Heading levels (round 21) | PASS: nothing to see on any report | |
+| Round 20's bracket on repeated titles, golden task 7 in Arabic | PASS: "عدد Order Id (Region)", "(Month Name)", "(Product)"; English unchanged | `gshots\pages\g7-ar-b-p1.png` |
+| The same bracket on two charts by the same column | **FAIL as built**: "Total Sales by City (City)" twice. Fixed (charts by the same column are left alone) | `shots\b2-720-crop.png` |
+| Golden tasks 6 and 7's models as DAX tables (round 20) | **FAIL as built**: every visual an error. DATATABLE refuses a date written "2026-01-03T00:00:00" ("Cannot convert value ... of type Text to type Date", read from INFO.PARTITIONS through Microsoft's modeling MCP); both tables stayed empty. Fixed ("2026-01-03" is taken): data shows without Refresh, task 7's months run January to June in order, task 6's growth card reads 215.4% | `gshots\pages\g6-en-p1.png` (before), `g6-en-c-p1.png`, `g7-en-b-p1.png` |
+| Golden task 6's chart by month | one dot as built (every row in January); the rows now run over seven months, the chart 1 to 7 in order | `gshots\pages\g6-en-c-p1.png` |
+| Golden task 10 with rows (the Logistics tables and the calendar as DAX tables) | PASS: opens with data, no Refresh (Desktop's bar "Some of the tables have incomplete or no data" for the other 274 tables). Seen: the same total for every Carrier Group and Route Group (the picked lookups are not related to the Shipments table) | `gshots\pages\g10-en-p1.png` |
+| A page 640 x 360 (golden task 5) | as built: card values touch the card's bottom on page 1, cut in half on page 2, whose table scrolls. With the KPI cards 116 high on the 720 grid (58 at this size; they were 48) and one page: the values whole and clear of the edge, English and Arabic. "Your logo" is still cut in English | `gshots\pages\g5-en-p1.png`, `g5-en-p2.png` (before), `g5-en-b-p1.png`, `g5-ar-b-p1.png` |
+| A 960 x 720 page (golden task 4) | the table's four columns fit (the three-fifths share). The capture shows the page's middle 75% only (Desktop fits the width; the header and the last rows are outside the captured window) | `gshots\pages\g4s-en-p1.png` |
+| The Arabic table's "Total" word, four ways (19:01 UTC) | (1) as today: names at the right, no word; (2) the name column first in the file: names at the LEFT, "Total" in English; (3) the name column first at width 0, a report-level text measure at the right (the name on a row, «الإجمالي» on the total row), automatic widths off: names at the right, the word shown, narrow columns; (4) as 3 with automatic widths on: **names at the right, «الإجمالي» shown, the hidden column stays hidden, the columns grow to fit**. Not built (a card for the owner) | `shots\total-lab-crop.png` |
+| Golden task 6 in English, the table's horizontal scrollbar | the cause: the two fields a table always keeps were never measured against its width. Fixed: PASS, no scrollbar (the text smaller) | `gshots\pages\g6-en-c-p1.png` (before), `g6-en-d-p1.png` |
+| Golden task 10, the same total for every group | the cause: the picker ignored relationships. Fixed: the bars by Hub Region and Lane Region differ; the table's two columns of other fact tables' measures still repeat their total | `gshots\pages\g10-en-p1.png` (before), `g10-en-d-p1.png` |
+| "Your logo" at 640 x 360 | the same 75 x 25 text box at 8pt outside the header group draws the words whole (75 to 110 wide): the width is not the cause; inside the header its last letter is under a small grey block. Cause not found | `shots\logo-lab-crop.png` |
+
+Facts measured:
+- **DATATABLE takes a date as "yyyy-mm-dd"** (and "yyyy-mm-dd hh:mm:ss"), not the ISO form with a "T". A model written
+  without Desktop needs one open before its numbers are trusted: the tool-level baseline could not see this.
+- **A DAX-table model opens with data**; Desktop shows "One or more calculated objects need to be manually refreshed"
+  (or "Refresh now") and the Data pane marks measures "Field list item has error" until that refresh; the visuals draw.
+- **A script that starts Desktop keeps the caller's output pipe** even when it redirects its own child: a tool call
+  that pipes its output (`... | cut`) returns only when Desktop closes. `r22-gshots.ps1` closes the test report at its end.
+- **Data bars beside a plain copy:** a measure twice in one table (round 21's item 4), written by hand on a made-up report (`builder-scripts22-databars.mjs`, `r22-databars2.mjs`; crops `shotsdb-lab-crop.png`, `db-lab2-crop.png`): (1) the same projection twice (one queryRef): both columns draw, and a data bar on that queryRef turns BOTH into bars; (2) the copy with its own queryRef and nativeQueryRef ("Sales.Total Sales1", "Total Sales1") after the original: two columns, and a bar whose selector names the ORIGINAL's queryRef draws on the original only: a bar column, then the plain number: **this form works**; (3) a bar whose selector names the copy's queryRef: no bar; (4) the copy first and the original (with a displayName) after it, the bar on the original: no bar; (5) a copy whose queryRef differs but whose nativeQueryRef is the original's: "Error fetching data for this visual". Not saved back by Desktop, so how Desktop itself names a second copy is still not read.
+- **Arabic names in Segoe UI** (task 6's two headers at 14pt): our count 364 and 438, Microsoft's report CLI (`text measure`,
+  font metrics) 386 and 471, Desktop about 311 and 418 (read off the capture at the table's own size, so near, not exact):
+  our count is not too small for what Desktop draws.
+- **A table column written with width 0 stays hidden** with the automatic column widths on (`columnWidth`, selector
+  `{ metadata: queryRef }`, value `0D`), and a report-level text measure can stand for the name column, giving the
+  total row its own word.
+
+## 2026-10-08 night, round 22b's laptop proof (`fix/round-22b` at `6f706cc`), Power BI Desktop 2.158.1304
+Every report is on a made-up model whose rows are DAX tables; the laptop was locked (the bridge captures the page all the
+same; a screen capture is black). Captures (2x, the page area 2250 wide, nothing scaled down), crops and the pixel
+comparisons: `<tests folder>\r22b\shots\` (`crops\`, `cmp\`); the reports `<tests folder>\r22b\lab\`, `golden\`,
+`showcase\`; scripts `builder-scripts\r22b-*`.
+
+| Check | Result | Crop |
+|---|---|---|
+| Golden task 10, English and Arabic (22b's related categories) | PASS: bars by Hub Region and Lane Region differ; English page 1 is the capture of `6b122ff` pixel for pixel; Arabic opened for the first time since that fix | `shots\g10-en-p1.png`, `crops\g10-ar-p1-left.png`, `-right.png` |
+| A measures table related to nothing, `SUM ( shipments[Amount] )` (lower case), English and Arabic | PASS: every chart by Hub Zone (four different bars), the line chart and the Year and Month slicers from 'Ship Date', nothing by Carrier or 'Date' | `shots\1b-en-p1.png`, `1b-ar-p1.png` |
+| The same table, `CALCULATE ( SUM ( 'Shipments'[Amount] ), 'Shipments'[Ship Day] >= DATE ( 2024, 1, 1 ) )` beside a calendar named 'Date' | PASS: Hub Zone and 'Ship Date'; the line rises January to December | `crops\1c-en-left.png`, `-right.png` |
+| A plan naming the other fact table's measure (`Deliveries[Delivered Qty]`) | PASS: charts by Carrier Group (Air, Road, Sea differ); no line chart (Deliveries reaches no calendar), its place empty | `shots\1d-en-p1.png` |
+| A measure that reaches no category (Region related to Returns only), English and Arabic | PASS: the KPI card alone, no chart by Region; the note names Region and the two fixes | `crops\1e-en-left.png`, `shots\1e-ar-p1.png` |
+| Three charts on two text columns, Arabic | PASS: "عدد Order Id (Region)", "(Channel)", "(Channel 2)", each whole; alt text the same. English: "Count of Order Id by Region", "by Channel", "by Channel (2)" | `crops\2a-ar-left.png`, `-right.png`, `2a-en-right.png` |
+| A bar and a donut by the same measure and column, English and Arabic | PASS: "Total Sales by Region" and "Total Sales by Region (2)", whole; alt text the same | `crops\2b-en-left.png`, `-right.png`, `shots\2b-ar-p1.png` |
+| A 300-wide table whose two kept fields need about 577 at 8pt, English and Arabic | PASS: the note ("wider than the table (300) even at 8pt: it scrolls sideways"); Desktop draws a horizontal scrollbar under the table, the second column reached by it. Beside it the 700-wide table keeps three columns whole | `crops\3-en-left.png`, `-right.png`, `3-ar-left.png` |
+| "No data" unchanged (golden task 8 before its Refresh), Arabic and English | PASS: Arabic is the capture of the 7 Oct sitting pixel for pixel; English shows "No data" on the card and "No data for this selection" once in each chart and the table | `shots\g8-ar-p1.png`, `g8-en-p1.png` |
+| The showcase rebuilt by this branch, English light and Arabic dark | PASS, unchanged: page 1 of each is the 7 Oct capture pixel for pixel | `shots\sc-en-light-p1.png`, `sc-ar-dark-p1.png` |
+| The 20 golden reports rebuilt by this branch | unchanged: every file the same as the `6b122ff` build but the random ids; 17 of the 28 captures are the 7 Oct ones pixel for pixel; the other 11 differ from an older capture only by what changed after it was taken: the Arabic Reset arrow's gap (6: tasks 1, 2, 3, 6, 7), the related category and the table fit of 19:00 UTC (4: task 10 English page 2 and Arabic, task 6 Arabic page 1, each read again at full size) and task 8 English not refreshed (1) | `shots\g*-p*.png`, `cmp\` |
+
+Facts measured:
+- **Desktop does not open a model that has a table named exactly "Measures"**: "Unable to open document" a few seconds
+  after the start, on three made-up models with it; the same models without that table, or with it named `_Measures`,
+  open. (`mcp/test-round22.mjs` names its measures table "Measures" in model.bim fixtures that are never opened.)
+- **A capture taken while a report still loads shows empty panels with small spinners**, not an error: the sitting's
+  first open took over five minutes (a cold start), every later one about 22 s.
+- **The pixel comparison of two captures of the same files is exact** (0 of 4,097,500 pixels) when nothing changed, so
+  a rebuild can be proven unchanged without reading every page again (`builder-scripts\r22b-cmp.py`, `r22b-diff.mjs`).
+
 ## Lessons
 - **Night of 6-7 Oct: a bar chart at the theme's 10pt (1280 x 720) needs 22.2 a row, 45 above the first row and 8
   under the last, and 38 more for its value axis.** Round 0's "22 a row + 46" was the tooltip page's chart without a

@@ -3,36 +3,46 @@ table Port
 	column 'Port Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Port Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Port Key]
 
 	column Port
 		dataType: string
-		sourceColumn: Port
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Port]
 
 	column 'Port Sort Order'
 		dataType: int64
-		sourceColumn: Port Sort Order
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Port Sort Order]
 
 	column 'Port Created By'
 		dataType: string
-		sourceColumn: Port Created By
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Port Created By]
 
 	column 'Port Status'
 		dataType: string
-		sourceColumn: Port Status
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Port Status]
 
 	column 'Port Code'
 		dataType: string
-		sourceColumn: Port Code
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Port Code]
 
 	column 'Port Description'
 		dataType: string
-		sourceColumn: Port Description
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Port Description]
 
-	partition Port = m
+	partition Port = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Port Key", "Port", "Port Sort Order", "Port Created By", "Port Status", "Port Code", "Port Description"}, {})
-				in
-				    Source
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Port Key", [Value], "Port", "Port " & [Value], "Port Sort Order", [Value], "Port Created By", "Created By " & ( 1 + MOD ( [Value] + 3, 3 ) ), "Port Status", "Status " & ( 1 + MOD ( [Value] + 4, 3 ) ), "Port Code", "Code " & ( 1 + MOD ( [Value] + 5, 3 ) ), "Port Description", "Description " & ( 1 + MOD ( [Value] + 6, 3 ) ) )

@@ -3,52 +3,70 @@ table Hub
 	column 'Hub Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Hub Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hub Key]
 
 	column Hub
 		dataType: string
-		sourceColumn: Hub
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hub]
 
 	column 'Hub Code'
 		dataType: string
-		sourceColumn: Hub Code
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hub Code]
 
 	column 'Hub Created By'
 		dataType: string
-		sourceColumn: Hub Created By
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hub Created By]
 
 	column 'Hub Is Active'
 		dataType: boolean
-		sourceColumn: Hub Is Active
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hub Is Active]
 
 	column 'Hub Short Name'
 		dataType: string
-		sourceColumn: Hub Short Name
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hub Short Name]
 
 	column 'Hub Owner'
 		dataType: string
-		sourceColumn: Hub Owner
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hub Owner]
 
 	column 'Hub Description'
 		dataType: string
-		sourceColumn: Hub Description
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hub Description]
 
 	column 'Hub Region'
 		dataType: string
-		sourceColumn: Hub Region
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hub Region]
 
 	column 'Hub Group'
 		dataType: string
-		sourceColumn: Hub Group
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hub Group]
 
 	column 'Hub Category'
 		dataType: string
-		sourceColumn: Hub Category
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hub Category]
 
-	partition Hub = m
+	partition Hub = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Hub Key", "Hub", "Hub Code", "Hub Created By", "Hub Is Active", "Hub Short Name", "Hub Owner", "Hub Description", "Hub Region", "Hub Group", "Hub Category"}, {})
-				in
-				    Source
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Hub Key", [Value], "Hub", "Hub " & [Value], "Hub Code", "Code " & ( 1 + MOD ( [Value] + 2, 3 ) ), "Hub Created By", "Created By " & ( 1 + MOD ( [Value] + 3, 3 ) ), "Hub Is Active", MOD ( [Value], 2 ) = 1, "Hub Short Name", "Short Name " & ( 1 + MOD ( [Value] + 5, 3 ) ), "Hub Owner", "Owner " & ( 1 + MOD ( [Value] + 6, 3 ) ), "Hub Description", "Description " & ( 1 + MOD ( [Value] + 7, 3 ) ), "Hub Region", "Region " & ( 1 + MOD ( [Value] + 8, 3 ) ), "Hub Group", "Group " & ( 1 + MOD ( [Value] + 9, 3 ) ), "Hub Category", "Category " & ( 1 + MOD ( [Value] + 10, 3 ) ) )

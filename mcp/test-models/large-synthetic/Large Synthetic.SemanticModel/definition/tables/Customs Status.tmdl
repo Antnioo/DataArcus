@@ -3,36 +3,46 @@ table 'Customs Status'
 	column 'Customs Status Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Customs Status Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Customs Status Key]
 
 	column 'Customs Status'
 		dataType: string
-		sourceColumn: Customs Status
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Customs Status]
 
 	column 'Customs Status Category'
 		dataType: string
-		sourceColumn: Customs Status Category
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Customs Status Category]
 
 	column 'Customs Status Sort Order'
 		dataType: int64
-		sourceColumn: Customs Status Sort Order
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Customs Status Sort Order]
 
 	column 'Customs Status Valid To'
 		dataType: dateTime
-		sourceColumn: Customs Status Valid To
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Customs Status Valid To]
 
 	column 'Customs Status Code'
 		dataType: string
-		sourceColumn: Customs Status Code
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Customs Status Code]
 
 	column 'Customs Status Description'
 		dataType: string
-		sourceColumn: Customs Status Description
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Customs Status Description]
 
-	partition 'Customs Status' = m
+	partition 'Customs Status' = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Customs Status Key", "Customs Status", "Customs Status Category", "Customs Status Sort Order", "Customs Status Valid To", "Customs Status Code", "Customs Status Description"}, {})
-				in
-				    Source
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Customs Status Key", [Value], "Customs Status", "Customs Status " & [Value], "Customs Status Category", "Category " & ( 1 + MOD ( [Value] + 2, 3 ) ), "Customs Status Sort Order", [Value], "Customs Status Valid To", DATE ( 2024, [Value], 1 ), "Customs Status Code", "Code " & ( 1 + MOD ( [Value] + 5, 3 ) ), "Customs Status Description", "Description " & ( 1 + MOD ( [Value] + 6, 3 ) ) )

@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { visitor } from './lib.mjs';
-import { layoutProblems, phoneTextProblems, navProblems, headerAndRail, headerProblems, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems } from './report-check.mjs';
+import { layoutProblems, phoneTextProblems, navProblems, headerAndRail, headerProblems, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from './report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT = path.join(HERE, 'fixtures', 'bridge-project');
@@ -31,7 +31,8 @@ function unzip(buf) {
 const refs = (files) => Object.entries(files).filter(([n]) => n.endsWith('/visual.json')).flatMap(([, b]) => {
   const out = [];
   JSON.stringify(JSON.parse(b.toString('utf8')), (k, v) => {
-    if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression) { const x = v.Column || v.Measure; out.push({ kind: v.Column ? 'c' : 'm', t: x.Expression.SourceRef.Entity, n: x.Property }); }
+    // (round 22: a report-level measure, Schema 'extension', is the report's own, e.g. the "No data" text of a chart: not a field of the model)
+    if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && !(v.Column || v.Measure).Expression.SourceRef.Schema) { const x = v.Column || v.Measure; out.push({ kind: v.Column ? 'c' : 'm', t: x.Expression.SourceRef.Entity, n: x.Property }); }
     return v;
   });
   return out;
@@ -49,7 +50,7 @@ function cardProblems(files, rtl) {
     const j = JSON.parse(String(files[f])), v = j.visual, id = j.name;
     if (!v) return;
     if (v.visualType === 'card' || v.visualType === 'multiRowCard') { bad.push(`${id}: legacy ${v.visualType}`); return; }
-    if (v.visualType !== 'cardVisual') return;
+    if (v.visualType !== 'cardVisual' || isMessageCard(v)) return;   // (round 22: a "No data" message card is not a KPI card)
     cards++;
     const o = v.objects || {}, c = v.visualContainerObjects || {}, val = def(o.value), pad = def(o.padding), lay = def(o.layout);
     const roles = Object.keys((v.query || {}).queryState || {});
@@ -247,7 +248,7 @@ export default async function ({ browser, url }) {
       check(tb.columns === 8 && !tb.bad.length, `default report: ${tb.bad.length} of ${tb.columns} table columns without header alignment (8 columns expected)`);
       check(cd.cards === 9 && !cd.bad.length, `default report: ${cardsBad} of ${cd.cards} cards with their own fill or ignored padding (9 cards expected: 7 KPI cards and the two tooltip cards)`);
       // value sizes: the default cards keep 42 (1080) and 28 (720); the tooltip card 20
-      const sizes = (files) => [...new Set(Object.keys(files).filter((f) => f.endsWith('/visual.json')).map((f) => JSON.parse(String(files[f]))).filter((v) => v.visual && v.visual.visualType === 'cardVisual').map((v) => parseFloat(v.visual.objects.value[0].properties.fontSize.expr.Literal.Value)))].sort((x, y) => x - y).join(',');
+      const sizes = (files) => [...new Set(Object.keys(files).filter((f) => f.endsWith('/visual.json')).map((f) => JSON.parse(String(files[f]))).filter((v) => v.visual && v.visual.visualType === 'cardVisual' && !isMessageCard(v)).map((v) => parseFloat(v.visual.objects.value[0].properties.fontSize.expr.Literal.Value)))].sort((x, y) => x - y).join(',');
       const s720 = sizes(build(std('1280x720'), 'en', { second: true, panel: false }).files);
       check(sizes(b.files) === '20,42' && s720 === '20,28', `card value sizes: 1080 ${sizes(b.files)} (want 20,42), 720 ${s720} (want 20,28)`);
       // a side accent bar: the title's side padding clears it (26 on 1080, 17 on 720); a bar on top needs none

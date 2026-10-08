@@ -4,6 +4,473 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 22b, the reviewer's code review of `fix/round-22` (7 Oct, cloud builder; branch `fix/round-22b` from `origin/fix/round-22` `10234be`; not merged, no PR)
+Owner's go (7 Oct): "finishing everything needed for the beta release": these ten findings are required before 0.2.7.
+For each finding a check is written first that reproduces it (`mcp/test-round22.mjs`, which runs alone in seconds, or the
+website check it belongs to), or shows it is not a bug (then REFUTED, no code change). Only CONFIRMED ones are fixed, at
+the cause. Then the suites the changes touch, the full `npm test` once (Linux) and the website checks (`check-min`,
+`test-site-config`, `test-analytics-events`, `csp`). Also: `mcp/quick.tmp.mjs` deleted.
+
+### Round 22b, expected (written before any run)
+| # | Finding | Expected |
+|---|---|---|
+| 1 | `main.js` safeTerm lets phone numbers holding year-like groups through ("050 2024 2025", "+971 50 2030 2015", "5520 2025") | CONFIRMED (privacy) |
+| 2 | `pbip-bind.js` catB (and catPool) still take a category of a table the measure cannot reach | CONFIRMED |
+| 3 | `pbip-bind.js` the reachable set starts only at the measure's home table (a disconnected measures table reaches nothing) | CONFIRMED |
+| 4 | `check-report.mjs` module-level `skipped` shared by concurrent calls | CONFIRMED |
+| 5 | `server.mjs` loads Microsoft's report CLI at start (Node >= 20, its schema package >= 20.10) while `engines` says >= 18 | CONFIRMED (risk) |
+| 6 | `check-report.mjs` walks the report three times: "folders too deep" counted three times | CONFIRMED |
+| 7 | `pbip-bind.min.js` changed but its `?v=` did not (`20261006f`) | CONFIRMED |
+| 8 | `pbip-export.js` the table text shrink after tableFit: the fit not recomputed; an overflow at 8pt not told | likely CONFIRMED |
+| 9 | `check-report.mjs` visible() escapes \p{Cf} only (server.mjs: \p{Cf} and \p{Cc}) | CONFIRMED |
+| 10 | `pbip-export.js` charts of one bracket group by the same column keep the same title ("عدد Order Id (Region)" twice) | CONFIRMED |
+`npm test`: all green, the count grows (663 of 663 on the laptop at `6b122ff`). Only 2, 3, 8 and 10 can change what
+Desktop shows: they go to "for the laptop to prove".
+
+### Round 22b, the report (cloud builder, Linux; branch `fix/round-22b`, pushed; not merged, no PR)
+**Commits:** `3645d5f` plan and expected, `mcp/quick.tmp.mjs` deleted; `202342a` the failing checks (all ten items, red
+first); `692ad33` item 1; `309de43` items 2, 3; `0f5c367` items 4, 5, 6, 9; `6dc9c5a` items 8, 10; `97a3f9e` item 8's
+check as the refutation, item 10's model; `1ac6b65` item 7; then this report with golden task 10's number.
+
+**Tests, before -> after:** `mcp/test-round22.mjs` 28 -> 40 checks (12 new; 12 red before the fixes, the one of item 8's
+refuted half passes on the old code by design). `npm test` 663 of 663 (laptop, `6b122ff`) -> **675 of 675, golden PASS**
+(Linux). Golden changed once, with its cause in "why": task 10 `suggestChars` 14364 -> 5610 (item 2: the slicer pool
+holds only the tables the measure reaches; categories, slicers and KPIs the same). Website: all 17 suites PASS
+(`run-all.mjs`); `check-min` (now with the `?v=` check), `test-site-config`, `test-analytics-events` (+26 safeTerm
+cases), `csp` PASS. No older check changed.
+
+| # | Finding | Result | Fix |
+|---|---|---|---|
+| 1 | safeTerm lets phone numbers with year-like groups through | **CONFIRMED** (privacy; 8 phone forms red) | `692ad33`: a run of numbers is read whole; years set aside only for a run of years alone or one number of up to 3 digits beside one year; a run starting with + or 0 always counts |
+| 2 | catB / catPool still take an unreachable table (Carrier) | **CONFIRMED** (column and map by Carrier) | `309de43`: where any category is reached, only reached ones are given out; catB falls back to catA |
+| 3 | the reachable set starts only at the measure's table | **CONFIRMED** (a measures table: every chart by Carrier) | `309de43`: starts at the tables the DAX names, through the measures it calls |
+| 4 | `skipped` shared by concurrent calls | **CONFIRMED** (four calls at once: "2 cut" on the wrong call) | `0f5c367`: one record per call |
+| 5 | the CLI loaded at start; engines >= 18 | **CONFIRMED** | `0f5c367`: `import()` when the validator runs; engines `>=20.10` (lock by npm); PRODUCT_SPEC.md's runtime line. The `.mcpb` manifest is in the packaging repo: **not checked here** |
+| 6 | the report walked three times | **CONFIRMED** ("3 cut" for one folder) | `0f5c367`: one walk |
+| 7 | pbip-bind.min.js changed, `?v=` not | **CONFIRMED** (check-min red) | `1ac6b65`: pbip-bind, pbip-export, theme-generator (which loads them) 20261007r22b; main.min.js with item 1; check-min fails on a changed .min.js with main's stamp |
+| 8 | the fit not redone after the shrink; 8pt overflow untold | **half REFUTED, half CONFIRMED.** The fit: the size loop before the shrink already tries every size to 8 and keeps the most fields, so the shrink runs only where no third field fits at any size (check passes on the old code; 30,000 random tables, no difference). The overflow: red | `6dc9c5a`: reportNotes say the table scrolls sideways and how to fix it |
+| 9 | visible() escapes \p{Cf} only | **CONFIRMED** (a page name's \u0007 raw) | `0f5c367`: one helper in model.mjs for both |
+| 10 | two "عدد Order Id (Channel)" | **CONFIRMED** (two text columns, three charts) | `6dc9c5a`: "(Channel 2)" in reading order, fitted, alt text the same |
+
+**For the laptop to prove** (only these change what Desktop shows): 2 and 3, golden task 10 (charts by Hub and Lane as
+before; its slicers the same; a model with a separate measures table: charts by a lookup of the fact table the measure
+reads); 8, a table whose two fields are wider than its box at 8pt (the note; Desktop scrolls); 10, golden task 7 Arabic
+or three charts on a two-text-column model ("(Channel)" and "(Channel 2)", whole). And the 0.2.7 package: its
+manifest's Node compatibility against `>=20.10`, then a rebuild from this branch's head.
+
+**The one decision needed:** charts of a page whose title is the same AND whose column is the same too (a bar and a donut
+both "Total Sales by Region") are left alone, as round 22 decided (a bracket would repeat itself), so their titles stay
+the same. (a) Leave them; (b) add the number there too ("Total Sales by Region (2)"). **Recommended: (a)**: the two
+charts show the same numbers; a number tells a screen reader apart from the other but means nothing to the eye.
+Also, no action needed unless the owner disagrees: safeTerm now redacts "top 10 2024 2025" and "dax 10 20 30 40" (a run
+of numbers with 7 digits) and keeps "800 2024" (a 7-digit toll-free number reads like "dp-600 2025").
+
+**Seen, not in scope:**
+| Item | Status |
+|---|---|
+| Arabic charts on English column names whose titles are the same: no bracket (round 14's script rule), so they stay the same | open, with the decision above |
+| A model whose only text column is an ID (round 22's "r22-nm", Order Id a text): a chart by Order Id | open: the picker counts an ID text column as a category |
+| A model where the measure reaches no category: the charts still take an unreachable one (as before), the same total on every bar | open: leave out the chart and tell, or use the date parts |
+| A table that shrinks for its rows (round 12) after the width shrink is not refitted either; by the same proof it cannot keep more fields | not a bug, noted |
+| The website's picker has no relationships (round 22): the same total can show there | open since round 22 |
+| Every item of the round 22 stop report's list | unchanged |
+
+### Round 22b, the outside review's X-03 to X-06 (added by the reviewer at 20:47 UTC; same rules, checks first)
+**Commits:** `55a1669` the checks (`test-round22.mjs` 40 -> 48, `test-analytics-events.mjs` + X-06's cases); `93a99c2` X-04 in
+the picker; `63b0550` X-04's note and X-05 in the writer and the server.
+| # | Result | Fix |
+|---|---|---|
+| X-03 | **CONFIRMED, already fixed by item 5** (`0f5c367`): the new check (a server started with the CLI's import failing lists 8 tools; check_report answers with the validator "not available" and the reason) passed when written; no MCP document says Node 18 | none more. check_report keeps answering with its other checks and says why the validator did not run, rather than a tool error (the design since round 17) |
+| X-04 | **CONFIRMED** (red: Sales and an unrelated Region, every chart by Region) | `93a99c2`, `63b0550`: only reached categories; the date table's parts only when reached; otherwise the charts that need a category are left out (the existing "never without its field" path, told) and a note names the tables and the fixes (a relationship, or a category in "fields"). Not a card in their place: a decision for the owner if wanted |
+| X-05 | **CONFIRMED** (red: `IF ( ISBLANK ( 'Sa''les EU'[Total<tab>Sales] ) ...`) | `63b0550`: one test, `hasControl` in the writer, used by the server's scripts too; no message card for such a field, named (escaped) in the notes. Hostile-name fixture: quotes, brackets, \p{Cf}, a 200-character name and an instruction-like description: files valid (validator 0 errors, schemas 0), description never in the answer or files |
+| X-06 | kept as decided | a check documents "2015 2035" and "Vision 2030" as an accepted case, with the reason |
+**Tests:** full `npm test` **683 of 683, golden PASS** (Linux, on `63b0550`); website pbip 73, theme-generator 893,
+theme-generator-lab 893 PASS; `check-min` (stamps), `test-analytics-events` PASS. **For the laptop:** X-04 on a model whose
+measure reaches no category (the note, no chart by the unrelated table); X-05 nothing visible (only a card left out).
+**Seen, not in scope:** `boundFields` lists a chart that was left out (with its measure only), as before; the time axis
+(the line chart) can still come from a date table the measure does not reach; a model with several tables and no
+relationship at all is still picked from as before (round 22's rule: no relationships = unknown).
+
+### Round 22b, the reviewer's second review (22b's own changes; added 21:37 UTC; checks first)
+**Commits:** `40b27a8` the checks (red first: items 1, 2, 3, 4, 5, 6, 7, 8); `6e6bbfa` items 1, 6, 7; `27d36ca` items 2, 3, 4,
+5, 10; `75374ab` item 8; `7ef71d1` item 9; then this report.
+| # | Result | Fix |
+|---|---|---|
+| 1 | **CONFIRMED** (a lookbehind in main.js and main.min.js: Safari before 16.4 drops the whole script) | `6e6bbfa`: safeTerm without one; `test-analytics-events.mjs` fails on any `(?<=` / `(?<!` in `assets/js` |
+| 2 | **CONFIRMED** (`SUM ( shipments[Amount] )`: no category at all) | `27d36ca`: names matched without regard to case |
+| 3 | **CONFIRMED** (scope Measures + Region, the measure reading Shipments two hops away: no category) | `27d36ca`: the whole model's tables (`modelTables`) |
+| 4 | **CONFIRMED** (fields.measure Deliveries: the bar chart by Hub, the picker's own measure's lookup) | `27d36ca`: `opt.main`, the plan's measure, decides; the note names it |
+| 5 | **CONFIRMED** (two calendars, Sales related to "Ship Date": axis and Year slicer from "Order Calendar") | `27d36ca`: the date fields from reached tables |
+| 6 | **CONFIRMED** (5 forms: "050,2024,2025", "050 , 2024 , 2025", "050_2024_2025", "050x2024x2025", "+971,50,2030,2015") | `6e6bbfa`: numbers joined by anything but a word of 2+ letters are one run |
+| 7 | **CONFIRMED** (3 forms redacted) | `6e6bbfa`: a number of up to 3 digits beside years is kept, any order. Accepted with it: "50 2024 2025" kept (moved to the accepted cases, with the reason) |
+| 8 | **CONFIRMED** (two "Total Sales by Region") | `75374ab`: "(2)" after the first; round 22's check e changed with this decision beside it |
+| 9 | **CONFIRMED** (on a scratch copy: a changed `translations/theme-generator.min.js`, loaded with no `?v=`, passed the old check; fails the new) | `7ef71d1`: keyed by path; no stamp = fail |
+| 10 | **REFUTED as measured** (15 ms a `suggest()` on the 300-table model: only the measures reached are read) | done with item 2's rewrite (one reading per measure, a map of names); timing check kept (under 1500 ms a call) |
+**Tests:** `test-round22.mjs` 48 -> 53; full `npm test` **688 of 688, golden PASS** (no golden number changed); website all 17
+suites PASS; `check-min`, `test-site-config`, `test-analytics-events`, `csp` PASS; CI green on `7ef71d1`.
+**For the laptop to prove (what changes what Desktop shows):** 2, 3, 4: charts by a lookup of the table the measure
+reads (a measures table, lower-case DAX, a plan naming another fact table's measure: golden task 10 and a made-up
+model); 5: a model with two calendars, the line chart by the related one; 8: two charts by the same column, the second
+"(2)", whole; X-04 and items 10 and e of round 22 as listed above. 1, 6, 7, 9: the website only (1 is Safari before 16.4:
+the site's scripts load again there).
+**Seen, not in scope:** a model whose measure reaches no date table now gets no line chart (left out and told as a
+chart without its field, no note of its own); the website's picker still has no relationships.
+
+### Round 22b, the reviewer's third review (96e6c1c's changes; added 22:33 UTC; the last loop)
+**Commits:** the checks (red first: 1, 2, 4, 5, 6), then `pbip-bind` 1 and 2, `pbip-export` 4, `main.js` 5 and 6,
+`check-min` 3 (head `03d500b`, then this report).
+| # | Result | Fix |
+|---|---|---|
+| 1 | **CONFIRMED** ('Sales'[Quantity] read as a call of Returns' measure "quantity": charts by Carrier) | a quoted table name stands as a word before the calls are read |
+| 2 | **CONFIRMED** (DATE ( ) reached the table 'Date': axis and Year slicer from it, not 'Ship Date') | a word followed by "(" is a function; VAR, RETURN, TRUE, FALSE, IN, NOT, AND, OR... are keywords |
+| 3 | **CONFIRMED** (scratch copy: a changed tmdl-model.min.js, loaded by the worker with main's stamp, passed) | each reference resolved from the file that holds it |
+| 4 | **CONFIRMED** (a 400-wide chart's shortened title no longer in the notes after the second was numbered) | each fitted title keeps its own entry |
+| 5 | **CONFIRMED** ("971 2030 2015", "123 2024 2025" kept) | a 3+-digit number beside two or more years counts the whole run |
+| 6 | **CONFIRMED** ("٠٥٠١٢٣٤٥٦٧" and the Eastern Arabic form kept) | those digits read as digits for the count; a kept term sent as typed |
+"Tests in both scripts" for 6: the cases are in `test-analytics-events.mjs`, which reads safeTerm from `main.js`; `main.min.js`
+is checked to be terser's output of it (`check-min`), not evaluated on its own.
+**Tests:** `test-round22.mjs` 53 -> 56; full `npm test` **691 of 691, golden PASS**; website all 17 suites PASS;
+`check-min`, `test-site-config`, `test-analytics-events`, `csp` PASS; CI green on `03d500b`.
+
+### Round 22b, the reviewer's final items (8 Oct, after the laptop's proof `475e0a0`; website and picker only)
+All four CONFIRMED by a red check first, fixed: (1) safeTerm reads the NFKC form (fullwidth digits, ＠ and ﹫) and any
+script's digits; (2) an exam or product code (pl-300, dp-600, az-900) is no part of a phone run; (3) "50 2025 2030" and
+"55 2024 2025 1" redacted (two or more years with 2+ other digits), "top 10 2024 2025" and "5 2024 2025" kept (a 1-2 digit
+number right after a word stands alone); two older cases changed with their cause: "2024 2025 2026 30" and "50 2024 2025"
+now redacted (accepted over-redaction); (4) 'Sales' [Quantity] / Sales [Quantity] read as columns. Tests: `test-round22.mjs`
+58; full `npm test` **693 of 693, golden PASS**; website all 17 suites, `test-analytics-events`, `check-min` PASS; CI green on
+`24f1235`. Nothing here changes what Desktop shows except (4), which only matters for DAX written with a space before
+the column (no golden model has one).
+
+### Round 22b, for the laptop to prove (the final list: everything of 22b that changes what Desktop shows)
+1. **Categories from a related table** (items 2, 3 of the first review; X-04; 2, 3, 4, 5 of the second; 1, 2 of the third):
+   golden task 10 (charts by Hub and Lane as before); a made-up model with a measures table, a lower-case or quoted table
+   name in the DAX, a plan naming another fact table's measure, two calendars (the line chart by the related one, never
+   by one a function name like DATE matches); a model whose measure reaches no category (no chart by the unrelated
+   table, the note).
+2. **Titles** (item 10 of the first review, 8 of the second, 4 of the third): three charts on two text columns ("(Channel)",
+   "(Channel 2)"); two charts by the same measure and column ("(2)"), each whole or told as shortened.
+3. **A table too narrow even at 8pt** (item 8): the note; Desktop scrolls sideways.
+4. **No change expected:** X-05 (a "No data" card left out for a name with a control character), the website-only items
+   (safeTerm, the `?v=` stamps, check-min), check_report (no visual change).
+5. **The 0.2.7 package:** its manifest's Node compatibility against `>=20.10`, then rebuilt from this branch's head.
+
+### Round 22b, laptop proof (night of 7-8 Oct, laptop builder; work tree `C:\DataArcus\r22b-wt` at `6f706cc`; started 23:28 UTC, hard stop 03:30 UTC; the owner asleep, no person answers)
+The only session driving Power BI Desktop (none was open at the start; the node processes found are the tool servers of
+other open sessions, none drives Desktop: left alone). Every tool call goes to this branch's `mcp/server.mjs` over stdio
+(scripts `builder-scripts\r22b-*`); files and captures under `<tests folder>\r22b\`. Made-up models only, their rows as
+DAX tables. The package is not built or installed (the reviewer merges first).
+
+#### Round 22b, laptop proof, expected (written about 23:35 UTC, before any build or capture)
+| # | What is opened in Desktop | Expected (a FAIL is anything else) |
+|---|---|---|
+| 1a | Golden task 10, English and Arabic | charts by Hub Region and Lane Region as at `6b122ff`; the bars differ; slicers as before |
+| 1b | Made-up model: Shipments and Deliveries (no text columns), their lookups Hub and Carrier, a `Measures` table related to nothing, the calendars 'Date' (related to nothing) and 'Ship Date' (related to Shipments). A report on `Measures[Total]` = `SUM ( shipments[Amount] )` (lower case), English and Arabic | every chart by Hub Zone, bars differ; the line chart and the year slicer from 'Ship Date', its points differ; nothing by Carrier or 'Date' |
+| 1c | The same model, `Measures[Total Quoted]` = `CALCULATE ( SUM ( 'Shipments'[Amount] ), 'Shipments'[Ship Day] >= DATE ( 2024, 1, 1 ) )` | as 1b: Hub Zone and 'Ship Date', never 'Date' (which only `DATE (` names) |
+| 1d | The same model, a plan naming `Deliveries[Delivered Qty]` (the other fact table's measure) | charts by Carrier Group, bars differ; no line chart (Deliveries reaches no calendar: left out and told, as the second review's "Seen" says) |
+| 1e | A model whose measure reaches no category (Sales; Region related to Returns only) | the KPI card only: no chart by Region; reportNotes name the tables and the fixes |
+| 2a | Three charts on two text columns, Arabic (Orders: Order Id a number, Region, Channel) | three titles, each its own: two end "(Region)" / "(Channel)", the third "(Region 2)" or "(Channel 2)"; whole in Desktop or listed as shortened; altText = the title |
+| 2b | A bar and a donut by the same measure and column, English and Arabic | "Total Sales by Region" and "Total Sales by Region (2)", whole; altText the same |
+| 3 | A 300-wide table whose two kept fields are wider than it at 8pt, English and Arabic | the note in reportNotes ("wider than its table": scrolls sideways, how to fix); Desktop shows a horizontal scrollbar, the text at 8pt, nothing cut without a way to reach it |
+| 4 | No visual change: one report with No data on (golden task 8 Arabic, the empty model) | as captured at `6b122ff` (`gshots\pages\g8-ar-b-p1.png`): one message card per chart and table |
+| S | The showcase (Marsa Home) rebuilt by this branch, English light and Arabic dark | files the same as the `6b122ff` build except what 22b changes (titles' numbering cannot apply: its charts differ); scores unchanged, English 10, Arabic 9 (the "Total" word) |
+| G | Golden tasks rebuilt by this branch; the files compared with the `6b122ff` build, every changed report opened | 6, 7, 10 in both languages at least. Scores before 9.8 / 9.9: unchanged or higher (task 7 Arabic may gain a number in a title; task 10's table still repeats the two other fact tables' totals: 9 / 9) |
+`npm test` is run only if code changes (691 of 691 on Linux at `03d500b`).
+
+#### Round 22b, laptop proof, the stop report (written 01:10 UTC on 8 Oct; the limit was 03:30)
+**Commits** (`fix/round-22b`, pushed; not merged, no PR): `44e976c` the expected results; then this report with
+DESKTOP-TESTS.md ("2026-10-08 night"). **No code changed**, so `npm test` was not run (691 of 691 on Linux at `03d500b`
+stands). No FAIL. The package was not built or installed.
+
+**Desktop (2.158.1304), per item** (captures at 2x, read at their own size; `<tests folder>\r22b\shots\`):
+| # | Item | Result | Crop |
+|---|---|---|---|
+| 1a | Golden task 10, English and Arabic | **PASS**: bars by Hub Region and Lane Region differ (446,746 / 445,391 / 296,246); slicers Year, Hub Region, Lane Region | `g10-en-p1.png` (the `6b122ff` capture pixel for pixel), `g10-en-p2.png`, `crops\g10-ar-p1-left.png`, `-right.png` |
+| 1b | A measures table related to nothing, `SUM ( shipments[Amount] )`, English and Arabic | **PASS**: charts by Hub Zone (595,970 / 288,863 / 442,578 / 749,093); the line chart and the Year and Month slicers from 'Ship Date'; nothing by Carrier or 'Date' | `1b-en-p1.png`, `1b-ar-p1.png` |
+| 1c | `CALCULATE ( SUM ( 'Shipments'[Amount] ), 'Shipments'[Ship Day] >= DATE ( 2024, 1, 1 ) )` beside a calendar named 'Date' | **PASS**: Hub Zone and 'Ship Date', never 'Date' | `crops\1c-en-left.png`, `-right.png` |
+| 1d | A plan naming `Deliveries[Delivered Qty]` | **PASS**: charts by Carrier Group (1,993 / 4,021 / 2,998); no line chart, left out and told | `1d-en-p1.png` |
+| 1e | A measure that reaches no category, English and Arabic | **PASS**: the card only (26,413), no chart by Region; reportNotes: "No category is related to Sales[Total Sales]: the text columns of Region ... Add a relationship from Sales to one of those tables, or pick a category of a related table in "fields"." | `crops\1e-en-left.png`, `1e-ar-p1.png` |
+| 2a | Three charts on two text columns | **PASS**: Arabic "عدد Order Id (Region)", "(Channel)", "(Channel 2)"; English "... by Region", "by Channel", "by Channel (2)"; each whole, altText = title | `crops\2a-ar-left.png`, `-right.png`, `2a-en-right.png` |
+| 2b | A bar and a donut by the same measure and column, English and Arabic | **PASS**: "Total Sales by Region", "Total Sales by Region (2)", whole; altText the same. Also on the planned pages of 1b, 1c, 1d ("Total by Hub Zone (2)") | `crops\2b-en-left.png`, `-right.png`, `2b-ar-p1.png` |
+| 3 | A 300-wide table too narrow even at 8pt, English and Arabic | **PASS**: the note ("needs about 577 ... wider than the table (300) even at 8pt: it scrolls sideways in Power BI. Make the table wider, or give those two fields shorter display names"); Desktop draws the horizontal scrollbar; the title is shortened and told. The 700-wide table beside it keeps three columns whole | `crops\3-en-left.png`, `-right.png`, `3-ar-left.png` |
+| 4 | No visual change: No data on (golden task 8 unrefreshed) | **PASS**: Arabic is the 7 Oct capture pixel for pixel; English reads "No data" on the card and "No data for this selection" once per chart and table | `g8-ar-p1.png`, `g8-en-p1.png` |
+| S | The showcase rebuilt by this branch | **unchanged: English 10, Arabic 9** (the "Total" word). The four reports' files are the `6b122ff` build's but the random ids; English light page 1 and 2 and Arabic dark page 1 are the 7 Oct captures pixel for pixel (Arabic dark page 2 differs from its capture of before the Reset fix by the arrow's gap only) | `sc-en-light-p1.png`, `-p2.png`, `sc-ar-dark-p1.png`, `-p2.png` |
+
+**Golden, per task, English / Arabic, before -> after** (10 less 1 per kind of visible problem, as on 7 Oct). All 20
+reports were rebuilt by this branch and opened; their files are the `6b122ff` build's but the random ids
+(`<tests folder>\r22b\files-diff.txt`), so 22b changes none of them. 17 of the 28 captures are the 7 Oct ones pixel for
+pixel; the other 11 differ from an older capture only by what changed after it was taken (6 the Arabic Reset gap, 4 the
+19:00 UTC fixes, 1 task 8 English unrefreshed), and those were read again at full size.
+| Task | Before | After |
+|---|---|---|
+| 1 Exec 1920 | 10 / 10 | 10 / 10 |
+| 2 Analysis | 10 / 10 | 10 / 10 |
+| 3 Ramadan | 10 / 10 | 10 / 10 |
+| 4 16:9 | 10 / 10 | 10 / 10 |
+| 4 4:3 | 10 / 10 | 10 / 10 (the captured middle of the page, as before) |
+| 5 640 x 360 | 9 / 10 | 9 / 10 |
+| 6 long Arabic | 10 / 10 | 10 / 10 (Arabic opened for the first time since the table fit: no scrollbar) |
+| 7 no measures | 10 / 10 | 10 / 10 (no title gains a number: its three charts are on three columns) |
+| 8 redesign | 10 / 10 | 10 / 10 (opened without Refresh: the No data state; with data it is the same files as on 7 Oct) |
+| 10 300 tables | 9 / 9 | 9 / 9 (Arabic opened for the first time since the related category: the bars differ; the table's two other columns still repeat) |
+| **Mean** | **9.8 / 9.9** | **9.8 / 9.9** |
+Page 1 of every report; page 2 for tasks 1, 6, 7, 10 and the showcase.
+
+**The one decision needed:** none. (The Arabic "Total" word of 7 Oct is still open.)
+
+**Seen, not in scope:**
+| Item | Status |
+|---|---|
+| Desktop does not open a model with a table named exactly "Measures" ("Unable to open document"): my first lab model had one; without it, or as `_Measures`, it opens. `mcp/test-round22.mjs`'s fixtures name theirs "Measures" (model.bim, never opened in Desktop; the picker does not read the name) | new; a fact for DESKTOP-TESTS.md, no code touched |
+| 1d: the left-out line chart leaves the largest slot of the page empty, and its reason reads "the model has no month or date column for its axis" though the model has two calendars (the measure reaches neither) | open (the second review's "Seen") |
+| 1b: the table mixes fact tables: Delivered Qty repeats 9,012 on every Hub Zone row | open since round 22 (as task 10) |
+| A hand-placed page (`pages`) in an Arabic report is not mirrored: the title, the charts' axes and the table's name column are at the left, titles left-aligned, and the table says "Total" in English | seen on 1e, 2a, 2b, 3; not checked whether known |
+| A hand-placed page without a design: chart titles are a very light grey on white (hard to read) | seen on 2a, 2b, 3 |
+| Item 3's note names the page twice ("on "P", "P"") for two tables of one page | small |
+| Golden task 6 Arabic: the table's text (8pt after the fit) is much smaller than the page's other text; two slicer headers and one chart title end with "…" | told in the notes |
+| Desktop's bar "Some of the tables have incomplete or no data" covers the top of the header in task 10's and task 8's captures | a capture limit |
+| The Arabic table has no "Total" word; "All" in slicers stays English; English field names in the Arabic lab reports (the models' own names) | open / Desktop's own / by rule 2 |
+| A KPI row planned with one card leaves the rest of the row empty (1c, 1d: my plan asked for one) | by the plan |
+| "Your logo" cut at 640 x 360 in English; the 960 x 720 capture shows the page's middle only | unchanged |
+| The laptop: an empty folder `C:\shots` is left by a bug in my capture script (its one log is removed; removing the folder was refused by the session's guard). Three failed "Untitled" Desktop windows of the bisect were closed; no Desktop window is left open | for the owner to delete |
+
+**Left on the laptop:** `<tests folder>\r22b\` (`lab\` the five made-up models and 12 reports, `golden\`, `showcase\`,
+`shots\` with `crops\` and `cmp\`, `files-diff.txt`), scripts `builder-scripts\r22b-*` (`models`, `lab`, `golden`,
+`showcase`, `shots.ps1`, `probe.ps1`, `dialog.ps1`, `kill.ps1`, `diff.mjs`, `cmp.py`), the work tree `C:\DataArcus\r22b-wt`.
+**Next:** the reviewer merges; then the 0.2.7 package from the merged head and its install test (item 5 of the final list).
+
+## Sitting 7-8 Oct (laptop builder; branch `fix/round-22` from `origin/fix/round-21` `9d927a9` with `origin/main` `7cdf252` merged in as `8b7d4d6`; not merged, no PR)
+**Started 15:22 UTC on 7 Oct (19:22 Dubai). Hard stop 21:20 UTC; the stop report is below ("the stop report"), pushed 18:48 UTC.** Two sessions: the first stopped at about 15:28, the second did the work. The owner gave
+the laptop; this is the only session driving Power BI Desktop. Work tree on the laptop: `C:\DataArcus\r22-wt` (the main
+checkout stays on its branch). The session's own DataArcus tools run the main checkout's older code, so every tool call
+of this sitting goes to this branch's `mcp/server.mjs` over stdio (scripts `builder-scripts\r22-*`).
+The merge of main: two conflicts, both the `?v=` of design-engine.min.js and theme-generator.min.js on the two Theme
+Generator pages; main did not change those two scripts, so round 21's values stay; every other site file is main's.
+
+Order: part 1, the showcase dashboard (made-up model, English and Arabic, light and dark; screenshots in
+`<tests folder>\showcase-1007\`, the 4 best in dataarcus-engine `business/showcase/2026-10-07/`, branch
+`showcase/2026-10-07`); part 2, the beta sitting: (1) "No data" option A on by default, (2) Desktop proof of rounds 20
+and 21, (3) test models as DAX tables, (4) `feat/check-report-2` merged, (5) the 20 golden reports re-scored, (6) full
+`npm test` once, (7) the 0.2.7 candidate (`--dry`), (8) if time: the local bake-off, then small "Seen, not in scope" items.
+
+### Sitting 7-8 Oct, expected (written 15:40 UTC, before any run)
+- **Showcase:** English and Arabic at 9.5 or more (golden rule: 10 less 1 per kind of visible problem), light and dark.
+  My own guess before looking: English 9 to 10; Arabic 9 (the made-up model's Arabic names come from me as its author;
+  Power BI's own words such as "All" follow the viewer).
+- **No data on by default:** every report gets one message card per chart and table; a KPI card wide enough reads
+  "No data" when blank, at its usual size; `npm test` red first on the checks that count card visuals, then green
+  with none weakened; golden counts change only by the message cards, each cause written.
+- **Rounds 20 and 21 in Desktop:** every item of their "for the laptop" lists PASS; the data-bars measurement gives
+  two different queryRefs for a measure used twice.
+- **Golden mean:** 9.4 / 9.4 -> 9.5 or more in both languages (task 10 with rows and task 7 with months are the points).
+- **`npm test`:** all green (600 of 600 on round 21; more after the merge and this sitting's checks, about 640).
+- **0.2.7 candidate:** about 9 MB, 8 tools, each `ok` from the unpacked file.
+
+### Sitting 7-8 Oct, where I am (kept current; times UTC)
+- 15:40: branch made, main merged (`8b7d4d6`), expected written. Next: the showcase.
+- 15:52 (second session of the sitting; the first stopped at about 15:28, its start and "15:40" above are its own): **part 1 done.** Showcase on the made-up "Marsa Home" model (two DAX tables, 35,088 generated rows), built by this branch's server (`builder-scripts
+22-showcase-model.mjs`, `r22-showcase.mjs`), opened in Desktop **2.158.1304** (it updated itself from 2.158.1177: `desk.ps1` and `lab-1007-shot.ps1` now look the install path up). Scores: English light 10, dark 10; Arabic light 8, dark 8 (no "Total" word in the table; the Reset arrow touches its text: both known). Expected was 9.5 or more: English yes, **Arabic no**. Pages in `<tests folder>showcase-1007page-*.png`; the four in dataarcus-engine `business/showcase/2026-10-07/` on `showcase/2026-10-07` (pushed, not merged) with a README (what made what, what needed a hand). Seen: a brand colour alone keeps the dark preset; five table fields narrowed the SVG bar to 8 x 8 (told in the notes); a subtitle key in the other language is ignored silently (code-review item c); the bar chart by city is alphabetical. Next: part 2, item 0 (the code review's ten findings, tests first).
+- 16:08: **item 0, the code review's ten findings** (commit `7a7494a`; j in `5006a56`). Each confirmed by a failing check (mcp/test-round22.mjs, 16 checks, 13 red first; it runs alone in seconds and from test.mjs) or measured in Desktop 2.158.1304:
+  | | Finding | Result | Fix |
+  |---|---|---|---|
+  | a | FORMATS script writes names with control characters | CONFIRMED (red) | `7a7494a`: one helper, scriptTables, for every script |
+  | b | a subtitle on a KPI card cuts the value | CONFIRMED in Desktop (planned cards at 1280 x 720 and 1920 x 1080: the value cut in half; crop `<tests folder>
+22shots2-720-crop.png`) | `7a7494a`: never on a card, told in reportNotes |
+  | c | a subtitle key works only in the report's language, ignored silently | CONFIRMED (red) | `7a7494a`: both languages; unused keys named in reportNotes |
+  | d | "No data" fit ignores padding and the SVG picture | **REFUTED** in Desktop: Arabic whole on a 284-wide card at 28pt beside a ring, the ring about 19 clear of the text (`shotsd2-ar-crop.png`); English whole at 150 and 160 (`d-en-crop.png`) | none |
+  | e | " (Column)" appended after the title was fitted | CONFIRMED by reading (the bracket was added to the shortened text); the check that could be written red is h's and the same-column one | `7a7494a`: fitted again from the full name; the titles report follows |
+  | f | "Year Quarter" taken for a quarter | CONFIRMED (red) | `7a7494a` |
+  | g | sort and format fixes misjudge what the filter hid | CONFIRMED (red: a second "Month Number" was added) | `7a7494a`: steps by hand with the reason |
+  | h | alt text not updated with the bracket | CONFIRMED (red) | `7a7494a` |
+  | i | safeTerm's years exemption | CONFIRMED (red: "2024 2025 top 10" redacted, "2012 1995" kept) | `7a7494a`: one rule, the years 2015 to 2035 set aside, then 7 or more digits redacted. **For the owner:** "2012 1995" is now redacted |
+  | j | the Heading3 rule copied twice | cleanup | `5006a56`: set in frame(), where titles are made |
+  Also seen while measuring b: two charts by the same column both read "Total Sales by City (City)" (round 20's bracket): fixed with e (charts by the same column are left alone).
+- 16:18: **item 1** the switch made (`pbip-export.js`, `server.mjs`: on by default, `noDataMessage: false` leaves it out); **item 3** the large model's calendar, Logistics facts and their lookups (26 tables) hold rows as DAX tables (`generate.mjs`; the other 274 unchanged); **item 4** `origin/feat/check-report-2` (`6c7f656`, its offline check already imports by file URL) merged locally: conflicts `mcp/test.mjs` (both blocks kept, this branch's first), `mcp/PRIVACY.md` (this branch's create_report row, the other's check_report row) and `mcp/WORK.md` (this branch's). The checks that read card visuals skip a message card through `isMessageCard` (report-check.mjs, exported). Full test.mjs running.
+- 17:16: full `mcp/test.mjs` on the merged tree with the default on: 653 checks, 4 failing (all older checks meeting the message cards), then green. 17:32: merge commit `1a65d99`. 18:03: full `npm test` 656 of 656, golden PASS. 18:45: full `npm test` on `73b602b`: **658 of 658, golden PASS**. 18:50: the 0.2.7 candidate built and called.
+
+### Sitting 7-8 Oct, the stop report (written 18:48 UTC, the data-bars line added 18:55; the sitting's limit is 21:20)
+**Commits** (`fix/round-22`, pushed; not merged, no PR): `7ec0e5a` WORK.md after the showcase; `7a7494a` the code review's a, b, c, e, f, g, h, i; `5006a56` the No-data switch, the large model's rows, j (work in progress); `1a65d99` the merge of `origin/feat/check-report-2` (`6c7f656`) with No data's checks, tiny pages, the test models' dates, j corrected; `5f4cea2` golden counts with their causes, task 6's months, README; `e54d7bc` the Arabic Reset gap and DESKTOP-TESTS.md; `3f81604` the website's report suite; `73b602b` the two older Reset checks. dataarcus-engine `showcase/2026-10-07`: `65a8ce6` (pushed, not merged).
+
+**Tests, before -> after:** `npm test` 600 of 600 (round 21) -> **658 of 658, golden PASS** (+35 with the merge of check_report's branch, +23 in `mcp/test-round22.mjs`, which also runs alone in under a minute) on `73b602b`, Desktop closed, 15 minutes. Website suites pbip 73, theme-generator 893, theme-generator-lab 893, design-engine 598, layout 512, layout-lab 512: PASS; `check:min`, `test-site-config`, `test-analytics-events` PASS. Not run: the website's other seven suites (their files were not touched).
+Older checks changed, each with its cause beside it: the checks that read card visuals skip a message card (`isMessageCard`, never the KPI rules themselves); a chart over its message card may write its background off and nothing else; the SVG checks read the picture measures only; the two checks of the option's "off" ask for `noDataMessage: false`; check_report's TOOLTIP_TYPE and SELECTOR_CARD cases break a real tooltip link and a KPI card; the two Reset-gap checks (Arabic: the gap after the text); two checks read CRLF checkouts. `golden-expected.json`: +6 visuals a two-page report, task 5 one page, task 6's long-title uses, each in "why".
+
+**The code review, a to j:** the table under "16:08" above (a, b, c, e, f, g, h, i CONFIRMED and fixed in `7a7494a`; d REFUTED in Desktop; j in `5006a56`, corrected in `1a65d99`: titles are made in four places, so the rule is one helper called where a page's visuals are written, not `frame()`).
+
+**Desktop (2.158.1304), per item** (crops under `<tests folder>\r22\`; the full table is in DESKTOP-TESTS.md, "2026-10-07 evening"):
+| Item | Result | Crop |
+|---|---|---|
+| 1. No data on by default, empty report (Arabic) | PASS | `gshots\pages\g8-ar-p1.png` |
+| 1. No data with data (20 golden reports) | PASS | `gshots\pages\` |
+| 2. No data on KPI cards, Arabic at 28pt, narrow, beside a picture | PASS | `shots\d2-ar-crop.png` |
+| 2. Subtitles | PASS on charts; FAIL on KPI cards as built, fixed | `shots\b2-720-crop.png`, showcase pages |
+| 2. Heading levels | PASS (nothing to see) | |
+| 2. Data labels by quarter | PASS | showcase pages |
+| 2. Data bars: a measure twice in one table (the queryRef) | measured by hand-written files (18:51 UTC, after the report was first written): a copy with its own queryRef and nativeQueryRef ("Sales.Total Sales1", "Total Sales1") after the original draws as a second column, and a bar on the original's queryRef draws on the original only (a bar column, then the number). The same queryRef twice makes both bars; a bar on the copy's queryRef, or the copy placed first, draws no bar; a copy sharing the original's nativeQueryRef is an error. Desktop's own name for a second copy: not read (nothing saved back). Nothing built from it | `shotsdb-lab-crop.png`, `db-lab2-crop.png` |
+| 2. Tiny pages (640 x 360) | FAIL as built; with cards 116 high and one page: PASS, English "Your logo" still cut | `gshots\pages\g5-en-b-p1.png` |
+| 2. Arabic widths (Arabic names in an English report) | **NOT MEASURED**; task 6 English keeps its table's horizontal scrollbar | `gshots\pages\g6-en-c-p1.png` |
+| 2. Round 20's bracket on repeated titles | PASS (task 7 Arabic); FAIL for two charts by the same column, fixed | `gshots\pages\g7-ar-b-p1.png` |
+| 3. Tasks 6 and 7 open with data, no Refresh | **FAIL as built** (every visual an error: DATATABLE refuses "yyyy-mm-ddT00:00:00"), fixed: PASS; task 7 January to June in order | `gshots\pages\g6-en-p1.png`, `g7-en-b-p1.png` |
+| 3. Task 10 with rows | PASS | `gshots\pages\g10-en-p1.png` |
+| The Arabic Reset arrow's gap | FAIL as built, fixed: PASS | `shots\reset-ar-before.png`, `reset-ar.png` |
+
+**Golden reports, English / Arabic** (10 less 1 per kind of visible problem; the missing "Total" word of an Arabic table is listed, not deducted, as in every earlier table: deducted, every Arabic score with a table is 1 lower):
+| Task | Before (night of 6-7 Oct) | After |
+|---|---|---|
+| 1 Exec 1920 | 10 / 10 | 10 / 10 |
+| 2 Analysis | 10 / 10 | 10 / 10 |
+| 3 Ramadan | 10 / 10 | 10 / 10 |
+| 4 16:9 | 10 / 10 | 10 / 10 |
+| 4 4:3 | 10 / 10 | 10 / 10 (the captured middle of the page) |
+| 5 640 x 360 | 8 / 8 | 9 / 10 ("Your logo" cut in English) |
+| 6 long Arabic | 9 / 10 | 9 / 10 (as built today 0 / 0 until the date fix; English: the table's horizontal scrollbar) |
+| 7 no measures | 9 / 8 | 10 / 10 |
+| 8 redesign | 10 / 10 | 10 / 10 |
+| 10 300 tables | 8 / 8 | 9 / 9 (the same total for every group: the lookups picked are not related to the measure's table) |
+| **Mean** | **9.4 / 9.4** | **9.7 / 9.9** (target 9.5) |
+Page 1 of every report was read at the capture's size; page 2 for tasks 1, 5, 6, 7 and 10. Showcase: English 10 / 10, Arabic 9 / 9 after the Reset fix (8 / 8 as first captured; the "Total" word is the point lost).
+
+**The 0.2.7 candidate, as first built (replaced at 19:52: see "after the stop report" below for the current size and SHA-256)** (engine worktree `C:\DataArcus\night-engine`, `packaging/build.mjs --commit 73b602b --repo <the branch's work tree> --version 0.2.7 --dry`; no release record, the two version files put back, nothing tagged or published): `dist\dataarcus-0.2.7.mcpb`, **8,973,803 bytes, SHA-256 `ba613a0ef395bf334848b3f53595481830b1125bba9ad1907b861f679c73dd35`**, unsigned, 105 packages, staged 3,496,947 bytes. From the unpacked file: server 0.2.7, 8 tools, each called once, all `ok` (read_model 2 tables; check_model_health 99 with the Gulf section; create_report 2 pages with the message cards; add_gulf_calendar 4,748 rows; check_report on that report: Microsoft's validator 0.4.0 offline, 0 errors, 0 warnings, 2 notes TOOLTIP_SCROLL).
+
+**The one decision needed:** the Arabic table's "Total" word. Desktop writes it only in the table's first column, and in a right-to-left report that column is a number (the columns are written in reverse so the names sit at the right). (a) Leave it (as now); (b) put the name column first in the file and let the table read left to right inside a right-to-left page, with the word; (c) measure in Desktop whether the table can be mirrored another way that keeps the first column a text. **Recommended: (c) next sitting**, one made-up table, both ways.
+Also for the owner, no action needed unless you disagree: safeTerm now redacts "2012 1995" (years outside 2015 to 2035 count as digits); the website's downloaded reports carry the "No data" cards too (the shared writer's default).
+
+**Seen, not in scope:**
+| Item | Status |
+|---|---|
+| The Arabic table has no "Total" word | open (the decision above) |
+| "Your logo" is cut on a 640 x 360 page in English | open, small (the placeholder only; a real logo takes its own width) |
+| Golden task 6 in English: a horizontal scrollbar in the table (Arabic names measured as Latin) | open since the night sitting |
+| Golden task 10: the same total for every Carrier Group and Route Group | open: `suggest_fields` picks a lookup that is not related to the measure's table; the made-up model has such lookups in its area |
+| A brand colour alone keeps the dark default preset in `generate_theme` | open: a light report needs a light preset named |
+| Five table fields narrowed an SVG bar column to 8 x 8 (told in the notes) | open, taste: a note is easy to miss |
+| The bar chart by a text column is in alphabetical order, not by value | open, design |
+| A design's second page has no subtitles (its slots' roles differ) and its table leaves empty room | open; the unused keys are now named in the notes |
+| Desktop marks measures "Field list item has error" until a DAX-table model's first refresh; the visuals draw | Desktop's own |
+| Power BI's "All" in slicers stays English in an Arabic report | Desktop's own (follows the viewer) |
+| A theme from `generate_theme` alone keeps the 1920 x 1080 text sizes on a smaller hand-placed page | open since the night sitting, not touched |
+| A 960 x 720 page does not fit the capture window (the bridge captures what Desktop shows) | a capture limit: its header and last rows were not seen |
+| `mcp/quick.tmp.mjs` (a scratch file) is committed | open since round 20: delete it |
+| The Arabic letter widths in Segoe UI | not measured |
+| Data bars beside a plain number column | a working hand-written form is measured (above); not built: the bar column comes before the number in that form, and the reverse order drew no bar |
+| The local bake-off against Microsoft's report skill | not started (the session's memory was heavy with captures by then). Checked only that it can run locally: Microsoft's report CLI in `mcp/node_modules` (`powerbi-report-author`: catalog, formatting, theme, text measurement, validate, previews) needs no sign-in and no tenant |
+
+#### The next session starts with
+1. The owner's answer on the Arabic "Total" word; then the measurement left (Arabic letters in Segoe UI) and, if data bars are wanted, the order question (number first, bar second).
+2. The bake-off, in a session of its own: the same request on the made-up "Marsa Home" model (`<tests folder>showcase-1007`) through Microsoft's report skill and through DataArcus, both opened in Desktop, scored blind by the golden rule. The CLI's `text` helpers may also give the Arabic widths in Segoe UI.
+3. The reviewer: `fix/round-22` at its head for review and the Linux run; the 0.2.7 package is built again from the merge commit (its SHA-256 will differ).
+3. Left on the laptop: `<tests folder>\r22\` (lab reports, golden reports and captures, the unpacked package in `pkg\`), `<tests folder>\showcase-1007\`, scripts `builder-scripts\r22-*`, the engine work trees `C:\DataArcus\night-engine` (the candidate in `dist\`) and `C:\DataArcus\showcase-wt`. No Desktop window is left open.
+
+
+### Sitting 7-8 Oct, after the stop report (the reviewer's five items, 19:00-19:55 UTC)
+The reviewer asked for five more items in the time left. Commits: `77624c5` (the table fit and the related category), `6b122ff` (the older check of the large model's picks), then this report. The stop report above is as written at 18:48; where the lines below differ, these are the later ones.
+
+1. **The Arabic "Total" word: measured, not built; a card for the owner.** One made-up Arabic table on the showcase model, four ways, in Desktop 2.158.1304 (`builder-scripts\r22-total.mjs`; crop `<tests folder>\r22\shots\total-lab-crop.png`, the four tables left to right):
+   | Way | Names at the right | The word |
+   |---|---|---|
+   | 1. As today (the numbers first in the file, the name column last) | yes | none |
+   | 2. The name column first in the file (as an English table) | **no**, at the left | "Total" in English, at the left |
+   | 3. The name column first at width 0 (hidden), the numbers, and at the right a report-level text measure that gives the name on a row and «الإجمالي» on the total row; automatic widths off | yes | «الإجمالي», at the right; the columns keep their narrow widths |
+   | 4. As 3 with the automatic column widths left on | yes | **«الإجمالي», at the right; the hidden column stays hidden and the others grow to fit** |
+   **Way 4 is the only one that keeps the names at the right and shows the word.** Not built tonight, on purpose: it changes what every Arabic table is made of (the visible name column becomes a report-level measure, and a hidden column carries the rows), which the owner has not seen. **For the owner:** (a) build way 4 next round, with these to check in Desktop first: a click on a row still filters the page, the header still sorts, the hidden column stays hidden after a resize of the page, a screen reader's reading; (b) leave the Arabic tables without the word. **Recommended: (a).**
+2. **Arabic names in an English report: measured; the cause was elsewhere; fixed.** Our width for task 6's two headers at 14pt in Segoe UI is 364 and 438; Microsoft's report CLI (`text measure`, font metrics of segoeui.ttf) gives 386 and 471; Desktop drew them about 311 and 418 wide (read off the capture). So our count is not too small for what Desktop draws, and the scrollbar was not a width error: **the table text was only ever made smaller to keep more fields; the two fields a table always keeps (its name column and its first measure) were never measured against the table's width.** Fixed (`pbip-export.js`): the text goes down, to 8pt at most, until the kept fields fit, told in the notes. In Desktop: task 6 in English has no scrollbar (`gshots\pages\g6-en-d-p1.png`).
+3. **"Your logo" cut at 640 x 360: cause not found, not fixed.** Measured: the same text box (75 x 25, 8pt) outside the header group draws "Your logo" whole at 75 wide and at every width up to 110 (`shots\logo-lab-crop.png`), so the box's width is not the cause; inside the header group its last letter is under a small grey block at the box's right end. Not looked at further (time): it is the placeholder only.
+4. **Task 10, the same total for every group: cause found and fixed in the picker.** `pbip-bind.js` never read the model's relationships: it took Carrier and Route, lookups only the Deliveries table is related to, for charts of a Shipments measure. The MCP now passes the relationships and a category of the main measure's table, or of a lookup reached from it, comes first (the website's picker has no relationships and is unchanged). In Desktop: the bars by Hub Region and Lane Region differ (`gshots\pages\g10-en-d-p1.png`). **Still seen:** in the table, the columns of the two other fact tables' measures (Deliveries, Freight Costs) repeat their total on every row, as those tables are not related to the row's lookup: a table that mixes measures of several fact tables. Open.
+5. **The bake-off: not run.** It needs no sign-in and no tenant, but Microsoft's report skill builds a new report through a planning step whose approval must come from a person in a later reply, and this sitting has no person; its design and authoring references are also some sixty files. Writing a report "in its style" by hand would not be its result. For a session with the owner present.
+
+**Tests after these:** `mcp/test-round22.mjs` 28 checks (5 new, red first); full `npm test` on `6b122ff`: **663 of 663, golden PASS (one older check of the large model's picks changed with its cause: Hub and Lane, it was Carrier and Route)**; website suites pbip 73, theme-generator 893, theme-generator-lab 893 PASS, `check:min` PASS. `golden-expected.json`: task 10's category (Carrier[Carrier Group] -> Hub[Hub Region]) and answer size, with the cause.
+**Golden after these, English / Arabic:** task 6 9 / 10 -> **10 / 10**; task 10 stays 9 / 9 (the table's two repeated columns); the mean **9.8 / 9.9** (it was 9.7 / 9.9 at the stop report). Arabic tasks 6 and 10 were not opened again after these two fixes (their change is in the files of both languages).
+**The 0.2.7 candidate, rebuilt** (the code changed): `dist\dataarcus-0.2.7.mcpb`, **8,974,559 bytes, SHA-256 `0e0a8005cc3f57030411cef2ed31bf695ae7f1d07dc5e0c6e65e45b7cd4689a9`**, from `6b122ff`, `--dry`; from the unpacked file: server 0.2.7, 8 tools, each called once, all `ok`.
+
+## Round 21, the capabilities lab's "adopt now" (7 Oct, 08:31-09:31 UTC, cloud builder; branch `fix/round-21` from `fix/round-20` `585d107`; not merged)
+The owner's go (~12:30 Dubai). Source: `research/capabilities-lab`, mcp/research/POWERBI-HIDDEN-CAPABILITIES.md, "Lab 7 Oct":
+the property names, value forms and selectors Desktop 2.158 drew and saved back.
+- **Item 1, lab #1 (done; changed by the owner's answer, below):** with `noDataMessage` a KPI card says "No data" /
+  «لا توجد بيانات» (value.showBlankAs, default selector) **only where the text fits at the value's own size**; the value
+  keeps its size; a narrower card keeps "--" and reportNotes names it (blankKept). The minimum card width: the lab's
+  anchor (Arabic whole on a 300-wide card at 30pt, cut at 240) scaled by our letter widths:
+  | value pt | 20 | 24 | 28 | 30 | 34 | 38 | 42 |
+  |---|---|---|---|---|---|---|---|
+  | English "No data" (Segoe UI) | 100 | 120 | 140 | 150 | 170 | 190 | 210 |
+  | English (Tahoma) | 106 | 127 | 148 | 159 | 180 | 201 | 222 |
+  | Arabic «لا توجد بيانات» | 201 | 241 | 281 | 300 | 341 | 381 | 421 |
+- **Item 2, lab #2 (done, in part):** `subtitles` option: { slot role (plan_layout's, English or Arabic) or a hand
+  slot's title: text } -> visualContainerObjects.subTitle (show, text). Only given texts. **Not built:** moving round
+  20's "(Region)" brackets into a subtitle (needs a measured "which is shorter"), #3's divider (the themes use none).
+- **Item 3, lab #4 (done):** every shown visual title (tooltip pages too) carries heading 'Heading3'. The page title
+  is a text box: not changed.
+- **Item 4, lab #12 (not done, why):** "beside a plain number column of the same measure" needs the same measure twice
+  in one table, and how Desktop names the second copy (its queryRef, which the data bar's selector needs) is not
+  measured; writing the bar on the only copy would hide its number. For the laptop: add a measure twice to a table
+  by hand, save, read both projections' queryRef and nativeQueryRef.
+- **Item 5, lab #6 (done):** a column chart by a quarter (4 columns, known from the name) shows labels OutsideEnd,
+  automatic units (0: K / M), one decimal (a percent measure keeps its format). Charts by columns whose count is not
+  known are unchanged.
+- **Tests:** npm test 588 (round 20) -> **597 of 597**, then **600 of 600** after the owner's "Keep numbers big" follow-up, golden PASS (no golden expectation changed); website pbip 73, theme-generator 893, theme-generator-lab 893 pass;
+  test-site-config, test-analytics-events, check:min pass. ?v= 20261007r21.
+
+### Round 21, for the owner
+- **Answered (7 Oct ~12:50 Dubai): "Keep numbers big".** Done (follow-up commit): the value never shrinks for the
+  blank text; "No data" only on cards wide enough at the value's size; narrower cards keep "--", told.
+
+### Round 21, for the laptop (expected look; a FAIL is anything else)
+1. **Blank text:** golden task 10 (no rows) with `noDataMessage: true`: **the values at their usual size**. At 1920 x
+   1080 (cards about 507 wide, values 42pt): every card reads "No data" (Arabic «لا توجد بيانات», whole, needs 421).
+   At 1280 x 720 (cards about 339 wide, 28pt): every card reads "No data" (Arabic needs 281: fits). A hand-placed card
+   240 wide at 28pt in Arabic keeps "--" and reportNotes says so. FAIL: a value smaller than without the option, a
+   cut text, "--" on a card the table above says is wide enough.
+2. **Subtitles:** any golden exec report built with `subtitles: { "Breakdown": "..." }` (Arabic: "التوزيع"): one
+   small line under the bar chart's title, shaped right in Arabic; the plot a little shorter. FAIL: no line, two lines,
+   the text over the plot.
+3. **Heading:** nothing to see on any report (open, read, nothing moved). FAIL: anything changed.
+4. **Labels:** golden task 1's or 3's column chart by Quarter: four values above the columns ("77.7K" style); charts by
+   Region or day names unchanged. FAIL: labels inside the columns, cut, or numbers with more decimals than one.
+5. **Data bars (item 4):** the measurement above (a measure twice in one table: both queryRefs).
+
+## Round 20, the owner's "all recommended" (7 Oct, 02:54-03:55 UTC, cloud builder; branch `fix/round-20` from main `11ed33a`; not merged)
+- **Item 1, AUD-031 (`3580a36`): done.** The blog search's `safeTerm` redacts a term with 7 or more digits in all
+  ("5512 3456", "+974 5512 3456", "050 123 4567"), **unless every number in it is a year** (19xx/20xx: "2024 2025"
+  is kept; the brief's "7 digits" and "2024 2025 kept" needed that exception); "@" and the 50-character cut stay.
+  `test-analytics-events.mjs` runs safeTerm from main.js on the cases (red 3, green). main.min.js ?v= 20261007r20.
+- **Item 2, AUD-032 (`b075970`): done.** Names with control characters (\p{Cc}) are listed under hiddenCharacters as
+  code points; check_model_health builds its scripts without them and names them, escaped, in `scriptsSkip` (a made-up
+  model in the audit's shape; red 2, green). The audit's own evidence file (dataarcus-engine) was not read here.
+- **Item 3 (`1ba6c86`): done.** Charts of a page with the same title get their grouping column in brackets ("عدد Order Id
+  (Region)"), only where the bracket brings no new script into the title (round 14's rule: an Arabic title with
+  Arabic names only stays free of English). Unique titles unchanged.
+- **Item 4 (`4452723`): done.** The design engine gives a table beside a chart 3/5 of its row on 4:3 pages by default
+  (website and MCP alike; a design with wideTable false keeps equal shares). Re-recorded: cases.json (3 cases),
+  project-pages.json (5), each named in the fixture's `meta.changed` with the cause. Suites design-engine 598, layout
+  512, layout-lab 512, theme-generator 893, theme-generator-lab 893, pbip 73 pass.
+- **Item 5: done for tasks 6 and 7; not for task 10.** Their test models hold the rows as DAX tables (DATATABLE, the
+  columns as Desktop writes a DAX table's); task 7 has a Month Number and six months. Golden: task 7 health 93 -> 92
+  (the new column; cause in "why"). Task 10's generated 300-table model: no rows yet (time).
+- **Item 6 (`6c7f656` on `feat/check-report-2`): done.** The offline check imports check-report.mjs and the guard by
+  file URLs. **Trial merge with main (local only, not pushed):** two conflicts, as foreseen: `mcp/test.mjs` (end of
+  file: check_report's G-04 block and main's round 15-19 blocks; kept both, G-04 first) and `mcp/PRIVACY.md`
+  (create_report's row: main's relative-path wording kept, check_report's new row kept after it). npm test on the
+  trial: **619 of 619, golden PASS** (on this container, beside the round 20 run).
+- **Tests:** `npm test` 584 -> **588 of 588** (on main 584; +4 round 20); golden PASS (task 7's health updated with its cause).
+
+### Round 20, for the laptop
+1. **Item 3:** golden task 7 in Arabic: the three charts read "عدد Order Id (Region)", "(Product)", "(Month Name)"; the
+   English report's titles unchanged ("Count of Order Id by Region" ...).
+2. **Item 4:** the website's Theme Generator at 960 x 720, executive layout: the table takes 3/5 of the second row
+   (the column chart 2/5), as the MCP's 4:3 report; the downloaded project the same.
+3. **Item 5:** open golden tasks 6 and 7's models: **data shows without Refresh** (a refresh banner may show, as the
+   sample's); task 7's chart by month runs January to June in order; every weekday appears; task 6's growth card:
+   note what it shows (2026 vs 2025: +100% by the invented rows) or its error.
+4. The laptop's own list: No-data ON + the card's `value.showBlankAs` proven in Arabic at a smaller size first; tiny
+   pages under 800 wide (no second page, cards one step taller), measured first; Arabic letter widths in Segoe UI for
+   the table fit; re-score the 20 golden reports.
+
+### Round 20, for the owner
+- **safeTerm's year exception:** a term of years only ("2024 2025") is kept; any other 7+ digits are redacted.
+  Recommended: keep it (as built). Option: redact every 7+ digits (loses "2024 2025" searches).
+- **Task 10's rows:** recommended next round (its generator writes the 300 tables).
+
+### Round 20, seen, not in scope
+- `mcp/quick.tmp.mjs` (a scratch copy of the test file's head) is committed on main; recommended: delete it.
+
 ## Night sitting 6-7 Oct (laptop builder 2)
 Started 19:43 UTC on 6 Oct (23:43 Dubai), `fix/round-17` at `d774780`; hard stop 00:40 UTC on 7 Oct. The owner is
 asleep: nothing waits for a person. `idle.ps1` 6,470 s at the start, no Desktop window open. Blocks in order: A (Desktop

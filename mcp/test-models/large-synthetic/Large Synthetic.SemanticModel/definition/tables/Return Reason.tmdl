@@ -3,44 +3,58 @@ table 'Return Reason'
 	column 'Return Reason Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Return Reason Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason Key]
 
 	column 'Return Reason'
 		dataType: string
-		sourceColumn: Return Reason
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason]
 
 	column 'Return Reason Category'
 		dataType: string
-		sourceColumn: Return Reason Category
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason Category]
 
 	column 'Return Reason External Id'
 		dataType: string
-		sourceColumn: Return Reason External Id
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason External Id]
 
 	column 'Return Reason Valid From'
 		dataType: dateTime
-		sourceColumn: Return Reason Valid From
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason Valid From]
 
 	column 'Return Reason Valid To'
 		dataType: dateTime
-		sourceColumn: Return Reason Valid To
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason Valid To]
 
 	column 'Return Reason Rank'
 		dataType: int64
-		sourceColumn: Return Reason Rank
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason Rank]
 
 	column 'Return Reason Code'
 		dataType: string
-		sourceColumn: Return Reason Code
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason Code]
 
 	column 'Return Reason Description'
 		dataType: string
-		sourceColumn: Return Reason Description
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason Description]
 
-	partition 'Return Reason' = m
+	partition 'Return Reason' = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Return Reason Key", "Return Reason", "Return Reason Category", "Return Reason External Id", "Return Reason Valid From", "Return Reason Valid To", "Return Reason Rank", "Return Reason Code", "Return Reason Description"}, {})
-				in
-				    Source
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Return Reason Key", [Value], "Return Reason", "Return Reason " & [Value], "Return Reason Category", "Category " & ( 1 + MOD ( [Value] + 2, 3 ) ), "Return Reason External Id", "External Id " & ( 1 + MOD ( [Value] + 3, 3 ) ), "Return Reason Valid From", DATE ( 2024, [Value], 1 ), "Return Reason Valid To", DATE ( 2024, [Value], 1 ), "Return Reason Rank", [Value], "Return Reason Code", "Code " & ( 1 + MOD ( [Value] + 7, 3 ) ), "Return Reason Description", "Description " & ( 1 + MOD ( [Value] + 8, 3 ) ) )
