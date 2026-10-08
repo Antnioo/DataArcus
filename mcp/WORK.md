@@ -16,9 +16,17 @@ The owner's go ("I approve part A", and item 9 for the logo strip). Branch `fix/
   in private beta (8 tools)"; FAQ "Does the AI agent see my data?"; "Response within 1 working day"; menu item
   "AI Agent (beta)" on all 38 pages (Arabic «الوكيل الذكي (تجريبي)»; the 992-1199 menu is a little smaller so the call
   button stays on screen in Arabic). The FAQ's "I connect to ... SQL databases" is untouched.
+- **Item 10 (the owner's calls to action):** hero has 2 buttons, "Book a Free Data Clarity Call" (main, #contact) and
+  "Try the AI agent (beta)" (second, /power-bi-mcp/); "Explore My Work" removed. About ends with the text link "Tell me
+  about your data →" («أخبرني عن بياناتك ←», arrow mirrored). The gradient band after the FAQ ("Ready to See Your Data
+  in Action?" and its button) removed whole: without the button its line only repeated the contact section; its CSS
+  (.cta-section, gradient-shift) and main.js's animation for it went too, and the unused translation keys
+  (hero.buttonWork, about.ctaButton, finalCta). cta_click needed no change (it follows any #contact link or main button).
+  "Book a call" buttons on the home page: 3 (menu, hero, contact form).
 - **Tests:** the `site` suite's part A check (hero links, badges on one row at 1440, gap under 80px, 4 logos and the
   label, menu item EN/AR and on every page, the phone menu, 1 working day, 1448, stats against blog and showcases, FAQ
-  links, the call button on screen at 992): red on main (91 problems), green after.
+  links, the call button on screen at 992; item 10: the 2 hero buttons and their targets, About's link and no button,
+  no button or band after the FAQ, 3 call buttons): red on main (91 problems) and red for item 10 on 89e17b4, green after.
 - **Screenshots:** `scripts/tests/shots/home-top-{en,ar}-{1440,390}.png` (the home top after the change).
 - **Seen, not in scope:** the showcases page (portfolio.html) still labels RepeatIQ "SAAS & RETENTION" and uses "our"/"we"
   in its intro and meta; it also has a 9th "confidential" finance card with no page (not counted in the 8); the third

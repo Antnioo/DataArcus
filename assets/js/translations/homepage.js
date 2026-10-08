@@ -41,7 +41,6 @@ window.homepageTranslations = {
     hero: {
       title: "Power BI reports checked in Power BI, not just generated",
       subtitle: "AI can now build a Power BI report in minutes. DataArcus works beside Microsoft's tools to check yours and fit it to the Gulf: a free model health check, Ramadan, Eid and Hijri calendars with each country's weekend, and Arabic reports laid out right to left (in <a href='/power-bi-mcp/' class='text-accent'>private beta</a>).",
-      buttonWork: "Explore My Work",
       buttonDiscuss: "Book a Free Data Clarity Call",
       buttonAgent: "Try the AI agent (beta)",
       badgeSecurity: "Enterprise Security",
@@ -143,7 +142,7 @@ portfolio: {
       ],
       ctaTitle: "Curious What This Could Look Like for Your Data?",
       ctaSubtitle: "No obligation. Tell me what you're working with, and I'll show you what's possible on a quick call.",
-      ctaButton: "Book a Free Data Clarity Call"
+      ctaLink: "Tell me about your data"
     },
 
     process: {"title": "How a Project Works", "subtitle": "Three steps, no surprises.", "steps": [{"title": "Free Data Clarity Call", "desc": "20 minutes on your data and the decisions you need to make. You get a straight answer on what's fixable, even if we never work together."}, {"title": "Build and Validate", "desc": "I build the data model and dashboards, and check every number against your source system before you see a single chart."}, {"title": "Handover and Support", "desc": "Your team gets the report, a walkthrough and documentation. Changes after launch are one message away, and you talk to the person who built it."}]},
@@ -238,11 +237,6 @@ portfolio: {
     },
 
     // Final CTA Section
-    finalCta: {
-      title: "Ready to See Your Data in Action?",
-      subtitle: "Book a free 20-minute Data Clarity Call. No obligation, just a straight look at what's possible with what you've got.",
-      button: "Book Your Free Call"
-    },
 
     // Contact Section
     contact: {
@@ -346,7 +340,6 @@ portfolio: {
     hero: {
       title: "تقارير Power BI نتحقق منها في Power BI نفسه، ولا نكتفي بتوليدها",
       subtitle: "صار بإمكان الذكاء الاصطناعي بناء تقرير Power BI في دقائق. يعمل داتا أركوس إلى جانب أدوات Microsoft ليفحص تقريرك ويهيّئه لطبيعة العمل في الخليج: فحص مجاني لنموذج البيانات، وتقويم برمضان والعيد والتاريخ الهجري مع عطلة نهاية الأسبوع في كل دولة، وتقارير عربية مصمَّمة من اليمين إلى اليسار (في <a href='/power-bi-mcp/' class='text-accent'>تجربة خاصة</a>).",
-      buttonWork: "استكشف أعمالي",
       buttonDiscuss: "احجز مكالمة وضوح بيانات مجانية",
       buttonAgent: "جرّب الوكيل الذكي (تجريبي)",
       badgeSecurity: "أمان على مستوى الشركات",
@@ -448,7 +441,7 @@ portfolio: {
       ],
       ctaTitle: "هل تتساءل كيف سيبدو هذا لبياناتك؟",
       ctaSubtitle: "بدون أي التزام. أخبرني بما تعمل عليه، وسأوضح لك ما هو ممكن في مكالمة سريعة.",
-      ctaButton: "احجز مكالمة وضوح بيانات مجانية"
+      ctaLink: "أخبرني عن بياناتك"
     },
 
     process: {"title": "كيف يسير المشروع", "subtitle": "ثلاث خطوات، بدون مفاجآت.", "steps": [{"title": "مكالمة وضوح البيانات المجانية", "desc": "20 دقيقة حول بياناتك والقرارات التي تحتاج إلى اتخاذها. تحصل على إجابة واضحة عمّا يمكن إصلاحه، حتى لو لم نعمل معًا."}, {"title": "البناء والتحقق", "desc": "أبني نموذج البيانات ولوحات التحكم، وأطابق كل رقم مع نظامك المصدر قبل أن ترى أي رسم بياني."}, {"title": "التسليم والدعم", "desc": "يحصل فريقك على التقرير وشرح عملي وتوثيق كامل. أي تعديل بعد الإطلاق على بُعد رسالة واحدة، مع الشخص الذي بناه مباشرة."}]},
@@ -543,11 +536,6 @@ portfolio: {
     },
 
     // Final CTA Section
-    finalCta: {
-      title: "هل أنت مستعد لرؤية بياناتك في العمل؟",
-      subtitle: "احجز مكالمة وضوح بيانات مجانية مدتها 20 دقيقة. بدون التزام، فقط نظرة صريحة على ما هو ممكن بما لديك.",
-      button: "احجز مكالمتك المجانية"
-    },
 
     // Contact Section
     contact: {

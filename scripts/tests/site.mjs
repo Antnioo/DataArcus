@@ -378,7 +378,12 @@ export default async function ({ browser, url }) {
           stats: [...document.querySelectorAll('#about [data-count]')].map((e) => +e.dataset.count),
           agentStat: !!document.querySelector('#about a[href="/power-bi-mcp/"]'),
           faq: [...document.querySelectorAll('#faq .accordion-body')].some((b) => b.querySelector('a[href="/power-bi-mcp/"]') && b.querySelector('a[href$="mcp/PRIVACY.md"]')),
-          faqConnect: document.querySelector('#faq').innerHTML.includes('SQL')
+          faqConnect: document.querySelector('#faq').innerHTML.includes('SQL'),
+          // item 10: three calls to action, one job each
+          heroBtns: [...hero.querySelectorAll('.btn')].map((e) => [e.getAttribute('href'), e.classList.contains('btn-accent') ? 'main' : 'second']),
+          aboutLink: !!document.querySelector('#about a.proof-link[href="#contact"]'), aboutBtns: document.querySelectorAll('#about .btn').length,
+          faqBtns: document.querySelectorAll('#faq .btn').length, ctaBand: !!document.querySelector('.cta-section'),
+          bookBtns: document.querySelectorAll('a.btn[href$="#contact"], #contact-form button[type="submit"]').length
         };
       });
       checks++;
@@ -401,6 +406,10 @@ export default async function ({ browser, url }) {
       if (!r.agentStat || r.stats[4] !== 1) bad('no stat "1 AI agent in private beta" linking to /power-bi-mcp/');
       if (!r.faq) bad('no FAQ answer linking /power-bi-mcp/ and mcp/PRIVACY.md');
       if (!r.faqConnect) bad('the FAQ\'s "I connect to" list lost SQL databases');
+      if (JSON.stringify(r.heroBtns) !== JSON.stringify([['#contact', 'main'], ['/power-bi-mcp/', 'second']])) bad(`hero buttons ${JSON.stringify(r.heroBtns)}, want the call (main) and the AI agent (second)`);
+      if (!r.aboutLink || r.aboutBtns) bad(`About ends with ${r.aboutBtns} button(s), want only the text link to #contact`);
+      if (r.faqBtns || r.ctaBand) bad('a call-to-action button or band still follows the FAQ');
+      if (r.bookBtns !== 3) bad(`${r.bookBtns} "book a call" buttons, want 3 (menu, hero, contact form)`);
       // the phone menu still opens and shows the new item
       if (vp[0] < 992) {
         await v.pg.click('.navbar-toggler'); await v.pg.waitForTimeout(450);
