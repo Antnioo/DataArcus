@@ -8,6 +8,7 @@ import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
+import { absorb } from './lib/slots.mjs';
 import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, Svg, applyColumnTypes, inside, loadModel, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
 import { E, themeDesign, planLayout, pageOf, contrastReport, freeFile } from './lib/design.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
@@ -98,7 +99,9 @@ function scriptTables(m) {
 }
 // (round 22) the model's relationships for the field picker, which puts a category the measure's table is related to first;
 // (round 22b, the reviewer's second review, item 3) with the whole model's tables, which a measure's DAX may read outside the scope
-const relsOf = (m) => ({ modelTables: m.tables, relationships: ((((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).relationships) || []).filter((r) => r && r.fromTable && r.toTable && r.isActive !== false).map((r) => ({ fromTable: r.fromTable, toTable: r.toTable })) });
+// (round 23: lang, the report's language, for the picker's language rule)
+// (round 23 part 5, the review's 10: one reader of relationships, the shared engine's, with both-directions ones)
+const relsOf = (m, lang) => ({ ...(lang ? { lang } : {}), modelTables: m.tables, relationships: Bind.relsOfTmsl(m.tmsl) });
 function formatsAnswer(m, p, keys, maxItems) {
   const raw = scriptTables(m).raw, s = Fix.formatReview(raw);
   const all = s.items.concat(s.byHand), mine = keys ? all.filter((i) => keys.has(i.object)) : all;
@@ -389,12 +392,13 @@ server.registerTool('read_model', {
 server.registerTool('suggest_fields', {
   title: 'Suggest fields for a report design',
   description: 'Picks which of the model\'s measures and columns go in each KPI card, chart, table and slicer, the way the DataArcus theme generator does (base measures first, month from the date table, no keys or hidden fields).' + UNTRUSTED,
-  inputSchema: { path: modelPath, kpis: z.number().int().min(1).max(8).default(4).describe('Number of KPI cards'), focus: focusInput, tables: tablesInput }, annotations: READS
-}, safe(async ({ path: p, kpis, focus, tables }) => {
+  inputSchema: { path: modelPath, kpis: z.number().int().min(1).max(8).default(4).describe('Number of KPI cards'), focus: focusInput, tables: tablesInput,
+    lang: z.enum(['en', 'ar']).optional().describe('The report\'s language: pass it. On a model with columns in both languages (City and المدينة) only the columns in that language are picked (language: what was skipped); an English report uses an Arabic column only when it has no other') }, annotations: READS
+}, safe(async ({ path: p, kpis, focus, tables, lang }) => {
   const m = loadModel(p), sc = scopeOf(m, { focus, tables });
   // a large model without a focus, or a focus that matches nothing: no picks, and what to ask the user
   if (sc.needsFocus) return text(sc);
-  const b = Bind.suggest(sc.tables, kpis, relsOf(m)); delete b.choices; delete b.catPool;
+  const b = Bind.suggest(sc.tables, kpis, relsOf(m, lang)); delete b.choices; delete b.catPool;
   // measures left behind (old, test, unused, backup, temp in the name) are picked only when nothing else is left: said here
   if (b.skipped) b.skipped = { measures: b.skipped.map((x) => `${x.t}[${x.m}]`), why: 'Not picked: the name has the word old, test, unused, backup or temp, and other measures were there. Ask the user before using one; to use it anyway, name it in create_report\'s fields.' };
   // no measures at all: said, with what to propose (a card or a chart shows a measure, never a bare column)
@@ -565,7 +569,7 @@ server.registerTool('create_report', {
     logo: z.string().optional().describe('Logo image for the header: a PNG or JPG file inside the DataArcus folder, 2 MB at most. It is copied into the new report (the file itself is not changed) and shown at its own shape, never stretched; a horizontal logo reads best'),
     subtitles: z.record(z.string(), z.string().max(120)).optional().describe('A subtitle under a chart\'s title, from the plan the user approved only, never made up: { "<the slot\'s role as plan_layout names it, or a hand-placed slot\'s title>": "<text>" }. Without it no subtitle is written'),
     noDataMessage: z.boolean().default(true).describe('Charts and tables show "No data for this selection" (Arabic: لا توجد بيانات لهذا الاختيار) when their measure is blank for the current filters, instead of an empty box: a report-level measure and a card under each visual; the model is not touched. A KPI card wide enough for it says "No data" (لا توجد بيانات) at its usual size, a narrower one keeps "--". On by default (proven in Power BI Desktop, October 2026); false leaves all of it out'),
-    lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().default(false), font: z.string().default('Segoe UI'),
+    lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().optional().describe('Hand-placed pages only: right to left (Arabic: the default with lang "ar"; false keeps them left to right)'), font: z.string().default('Segoe UI'),
     colors: z.object({ text: z.string(), card: z.string(), background: z.string(), accent: z.string() }).partial().optional()
   }, annotations: ADDS
 }, safe(async (a) => {
@@ -596,7 +600,9 @@ server.registerTool('create_report', {
   }
   // SVG columns: each design checked against the model and compiled (nothing is written when one can't be used)
   // (a right-to-left report mirrors a design, unless the design says mirror: false; a text keeps its direction)
-  const rtlReport = a.pages ? !!a.rtl : a.dir ? a.dir === 'rtl' : a.lang === 'ar', svgLabels = new Set();
+  // (round 23: a hand-placed Arabic page is right to left unless rtl: false is given; before, only with rtl: true)
+  const rtlHand = a.rtl == null ? a.lang === 'ar' : !!a.rtl;
+  const rtlReport = a.pages ? rtlHand : a.dir ? a.dir === 'rtl' : a.lang === 'ar', svgLabels = new Set();
   // The colours an SVG design takes from the report's theme (round 13; seen in Desktop 2.158, 6 Oct: a design without
   // colours was drawn in the compiler's own, a near-black ring and cyan on a white Corporate card): the design's own
   // colours as the report will have them, or the theme file's and the colours given with hand-placed pages.
@@ -679,25 +685,27 @@ server.registerTool('create_report', {
     const cats = b.cats ? Object.fromEntries(Object.entries(b.cats).map(([k, f]) => [k, short(f)])) : b.cats;
     return Object.assign({}, b, { kpis: (b.kpis || []).map(one), table: (b.table || []).map(cell) }, b.tip ? { tip } : {}, b.cats ? { cats } : {}, b.catPool ? { catPool: b.catPool.map(short) } : {});
   };
-  const usable = F && F.kpis ? F.kpis.map((k) => k.m) : Bind.suggest(pickFrom, 8, relsOf(m)).kpis.filter(Boolean).map((k) => k.m);
+  const usable = F && F.kpis ? F.kpis.map((k) => k.m) : Bind.suggest(pickFrom, 8, relsOf(m, a.lang)).kpis.filter(Boolean).map((k) => k.m);
   // Round 12 (#25): a model without measures gets its numbers from its columns, counted or summed by the visuals
   // (Bind.counts), so the report has cards, charts and a table instead of a page four fifths empty
-  const COUNTS = usable.length ? [] : Bind.counts(pickFrom, a.lang === 'ar' ? { count: (c) => 'عدد ' + c, sum: (c) => 'مجموع ' + c } : null);
+  const COUNTS = usable.length ? [] : Bind.counts(pickFrom, a.lang === 'ar' ? { count: (c) => 'عدد ' + c, sum: (c) => 'مجموع ' + c } : null, { lang: a.lang });
   const nValues = usable.length || COUNTS.length;
   // (round 16, design finding #14: "Count of Region" made a weak KPI): the cards take counts of ID-like columns and sums
   // only; a count of a category column still feeds a chart or the table, never a card: fewer cards, and told
   const KPI_COUNTS = COUNTS.filter((c) => !c.category), nCards = usable.length || KPI_COUNTS.length;
-  const countBind = (n) => { const b = Bind.suggest(pickFrom, n, relsOf(m)), C = COUNTS, K = KPI_COUNTS, cat = b.cats.bar || b.cats.column;
+  const countBind = (n) => { const b = Bind.suggest(pickFrom, n, relsOf(m, a.lang)), C = COUNTS, K = KPI_COUNTS, cat = b.cats.bar || b.cats.column;
     return Object.assign({}, b, { kpis: Array.from({ length: n }, (_, i) => K[i] || null), measure: C[0], y: { funnel: C[1] || C[0], gauge: C[0] },
       table: [b.cats.column || cat, C[0], C[1]].filter((x, i, l) => x && l.indexOf(x) === i), tip: { card: C[0], cat, y: C[1] || C[0], date: b.tip.date } }); };
   // the binding for n KPI cards: the picker's, with every given field in its place
   const bindFor = (n) => {
     if (COUNTS.length) return countBind(n);
     // (round 22b, the reviewer's second review, item 4: the plan's measure, where it names one, decides what is related)
-    const b = Bind.suggest(pickFrom, n, Object.assign(relsOf(m), F && F.measure ? { main: F.measure } : {}));
+    const b = Bind.suggest(pickFrom, n, Object.assign(relsOf(m, a.lang), F && F.measure ? { main: F.measure } : {}));
     // (round 22b, X-04) the picker's "no category is related to the measure" stays with a binding built again from the
     // user's fields, while it still has no category
-    const carry = (nb) => (b.noRelatedCategory && !Object.values(nb.cats || {}).some(Boolean) ? Object.assign(nb, { noRelatedCategory: b.noRelatedCategory }) : nb);
+    // (round 23: the language note and the calendar's reason stay with a binding built again; the table's reach rule is
+    // build's own, through the choices)
+    const carry = (nb) => { if (b.language) nb.language = b.language; if (b.noRelatedCalendar && !nb.date) nb.noRelatedCalendar = b.noRelatedCalendar; return b.noRelatedCategory && !Object.values(nb.cats || {}).some(Boolean) ? Object.assign(nb, { noRelatedCategory: b.noRelatedCategory }) : nb; };   // (round 23: and the language rule's note)
     if (!F && !PF) return b;
     const ch = Object.assign({}, b.choices);
     // Round 12 (#22; seen in Desktop 2.158, golden task 3: Hijri Year and Is Ramadan slicers showed "All" while the page
@@ -726,6 +734,7 @@ server.registerTool('create_report', {
     const nb = Bind.build(ch);
     // (round 16: categories the approved plan names are kept as given: no other category is put on its charts)
     if (F.category || F.category2) delete nb.catPool;
+    if (F.table) delete nb.notReached;   // (round 23: the user's own table fields are kept as named)
     if (F.table) nb.table = F.table.map((x) => (x.m != null ? Object.assign({ t: x.t, m: x.m }, x.pctFormat ? { pctFormat: x.pctFormat } : {}) :Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {})));
     return carry(nb);
   };
@@ -736,6 +745,7 @@ server.registerTool('create_report', {
       : 'The model has no measures, so no KPI card was built, and the charts were left out too (they have no value to show; see leftOutVisuals). The report has its header, filters and table only. Propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again.' }, leftOut ? { leftOut } : {}));
   let kpiCards = null;
   const slicersDropped = [], byRamadanDay = [];
+  const modelNames = Object.fromEntries(m.tables.map((t) => [t.name, (t.columns || []).map((c) => c.name).concat((t.measures || []).map((x) => x.name))]));   // (round 23: for the report measures' free names)   // (round 23: line charts whose slot went to the visual beside them)
   // Round 12 (#20; seen in Desktop 2.158, golden task 3: "What it means" shipped its placeholder sentence): a text
   // slot holds the plan's sentence (a.text, or a hand-placed slot's own text), or is left out. In a design the visual
   // beside it (the same row, else the same column) takes its room; hand-placed positions are the caller's.
@@ -746,11 +756,7 @@ server.registerTool('create_report', {
     ts.filter((t) => !t.text && !a.text).forEach((t) => {
       textLeftOut.push(t.title || 'Text');
       if (own) return;
-      const near = (list) => list.sort((p, q) => Math.abs(p.x - t.x) + Math.abs(p.y - t.y) - Math.abs(q.x - t.x) - Math.abs(q.y - t.y))[0];
-      const row = near(out.filter((x) => !['title', 'logo', 'text'].includes(x.kind) && Math.abs(x.y - t.y) <= 1 && Math.abs(x.h - t.h) <= 1));
-      const colm = row ? null : near(out.filter((x) => !['title', 'logo', 'text'].includes(x.kind) && Math.abs(x.x - t.x) <= 1 && Math.abs(x.w - t.w) <= 1));
-      if (row) { const x0 = Math.min(row.x, t.x), x1 = Math.max(row.x + row.w, t.x + t.w); out = out.map((x) => (x === row ? Object.assign({}, x, { x: x0, w: x1 - x0 }) : x)); }
-      else if (colm) { const y0 = Math.min(colm.y, t.y), y1 = Math.max(colm.y + colm.h, t.y + t.h); out = out.map((x) => (x === colm ? Object.assign({}, x, { y: y0, h: y1 - y0 }) : x)); }
+      out = absorb(out, t);   // (round 23 part 6, the re-review's 7: one rule for the room, lib/slots.mjs)
     });
     return out;
   };
@@ -836,7 +842,10 @@ server.registerTool('create_report', {
     // (round 22, the owner's (a) for pages under 800 wide; golden task 5's second page in Desktop: cut card values and a
     // scrolling table) such a page gets no second page
     tinyPage = E.page(design.layout).w < 800;
-    const pages = E.projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
+    let pages = E.projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
+    // (round 23: a line chart without a time axis gives its room to the visual beside it: the shared writer does it,
+    // for the website too; leftOut says so with gave)
+    const bound = bindFor(kpisOf(pages));
     // (round 22, the code review's c) a slot's role is matched in English or Arabic whatever the report's language:
     // the same pages in the other language give each role's other name
     if (a.subtitles) { const o1 = { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio }, mine = E.projectPages(design.layout, a.lang, o1), other = E.projectPages(design.layout, a.lang === 'ar' ? 'en' : 'ar', o1);
@@ -844,7 +853,7 @@ server.registerTool('create_report', {
     const subtitles = a.subtitles && Object.fromEntries(Object.entries(a.subtitles).map(([k, v]) => [subKeys[k] || k, v]));
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bindFor(kpisOf(pages))))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', quietGrid: true,
+      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bound))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', quietGrid: true,
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
@@ -858,14 +867,42 @@ server.registerTool('create_report', {
     if (COUNTS.length && !leftOut.length) kpiCards = cardNote(kpisOf(a.pages), kpisOf(a.pages));
     if (leftOut.length) { const asked = kpisOf(a.pages) === 1 && !usable.length ? leftOut.length : Math.max(...a.pages.map((p) => p.slots.filter((s) => s.kind === 'kpi').length)) + leftOut.length; kpiCards = cardNote(asked, asked - leftOut.length, leftOut); }
     const theme = a.theme ? JSON.parse(fs.readFileSync(inside(a.theme), 'utf8')) : { name: a.name };
+    // Round 23 (the owner's "nothing critical left"): a theme's text sizes are made for its page (generate_theme's
+    // layout.page, 1920 x 1080 by default: 10pt x the page's height / 720, as plan_layout's pages are), and a smaller
+    // hand-placed page drew them too large. Our theme says its scale through its table text (10 x scale); every text
+    // size in it follows the pages' height, within Power BI's 8-60. Pages of different heights, or a theme without that
+    // mark, keep the theme as it is, told.
+    if (a.theme) {
+      const t10 = +((((((theme.visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0] || {}).fontSize), hs = [...new Set(a.pages.map((p) => +p.height || 1080))];
+      // (round 23 part 5, the reviewer's code review, item 6: a theme the user made, with a 12pt table, was scaled as
+      // ours. Ours is known by its sizes: every size generate_theme writes is its base x one page scale (design-engine's
+      // textSizes: the table and slicer 10, the card 28, the multi-row card's title 12 and values 18); any other theme is
+      // never rescaled, only noted)
+      // (part 6, the re-review's 4: the scale is not read back from the rounded table size, which missed generate_theme's
+      // own themes for pages like 768 high: every page height generate_theme can make is tried with the engine's own
+      // rounding, and the theme is ours when one gives all its sizes; no mark is written into the theme, as Desktop may
+      // refuse a theme with a key it does not know)
+      const vs = theme.visualStyles || {}, at = (v, k, prop) => +((((vs[v] || {})['*'] || {})[k] || [{}])[0] || {})[prop];
+      const fsz = (n, h) => Math.min(60, Math.max(8, Math.round(n * (h / 720) * 2) / 2));
+      const fits = (h) => at('tableEx', 'values', 'fontSize') === fsz(10, h) && at('slicer', 'header', 'textSize') === fsz(10, h) && at('card', 'labels', 'fontSize') === fsz(28, h) && at('multiRowCard', 'cardTitle', 'fontSize') === fsz(12, h) && at('multiRowCard', 'dataLabels', 'fontSize') === fsz(18, h) && at('pivotTable', 'rowHeaders', 'fontSize') === fsz(10, h);
+      let themeH = null; if (t10 > 0) for (let h = 200; h <= 4400 && !themeH; h++) if (fits(h)) { const hs2 = []; for (let k = h; k <= 4400 && fits(k); k++) hs2.push(k); themeH = hs2[Math.floor(hs2.length / 2)]; }
+      const ours = !!themeH;
+      const ratio = ours && hs.length === 1 ? hs[0] / themeH : null;
+      if (ratio && Math.abs(ratio - 1) > 0.01) {
+        const walk = (o) => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') Object.keys(o).forEach((k) => { if ((k === 'fontSize' || k === 'textSize') && typeof o[k] === 'number') o[k] = Math.min(60, Math.max(8, Math.round(o[k] * ratio * 2) / 2)); else walk(o[k]); }); };
+        walk(theme);
+        reportNotes.push(`The theme's text sizes were made for a page about ${themeH} high; they were scaled to these ${hs[0]}-high pages (x ${ratio.toFixed(2)}, within 8-60), as a planned page's theme is. The theme file itself was not changed.`);
+      } else if (t10 > 0 && !ours) reportNotes.push(`The theme's text sizes were not scaled to the pages: it is not a theme generate_theme made, so its sizes are kept as its author set them. If they look too large or too small on these ${hs.join(' and ')}-high pages, change the theme, or make one with generate_theme (layout.page).`);
+      else if (!ratio && t10 > 0 && hs.length > 1) reportNotes.push(`The theme's text sizes are made for a page ${Math.round(720 * t10 / 10)} high and were not scaled: the pages have different heights (${hs.join(', ')}). Use one page size, or a theme made for it (generate_theme's layout.page).`);
+    }
     written = theme;
     r = Pbip.build({
-      name: a.name, title: a.title || a.name, lang: a.lang, rtl: a.rtl, font: a.font, sample: false, logo, theme,
+      name: a.name, title: a.title || a.name, lang: a.lang, rtl: rtlHand, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: m.taken }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bindFor(kpisOf(a.pages))))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', quietGrid: true,
+      model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bindFor(kpisOf(a.pages))))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', quietGrid: true,
       // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
       texts: Object.assign({}, E.REPORT_TEXTS[a.lang === 'ar' ? 'ar' : 'en'], { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' }),
-      pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
+      pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, hand: true, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
     });
   }
   if (!boundPages) boundPages = a.pages;
@@ -950,6 +987,9 @@ server.registerTool('create_report', {
   if (byRamadanDay.length) reportNotes.push(`The line chart runs by ${byRamadanDay[0]} (the days of Ramadan), not by month: the page filter keeps Ramadan, and one Ramadan by month is a line of two or three points.`);
   // tables given a smaller text so more of their fields fit (round 12, recommendation 5)
   if ((r.tableSmaller || []).length) reportNotes.push(`The table text is ${[...new Set(r.tableSmaller.map((x) => x.size + 'pt'))].join(' or ')} (the theme's is ${r.tableSmaller[0].from}pt) on ${r.tableSmaller.map((x) => `"${x.page}"`).join(', ')}, so more of its fields fit its width${r.tableSmaller.some((x) => x.rows) ? ' and its rows and total fit its height' : ''}; a field is left out only where even 8pt doesn't hold it.`);
+  // round 23 (the owner's go, 8 Oct 2026): the right-to-left table's total row says «الإجمالي» (way 4, measured in Desktop)
+  if ((r.rowLabels || []).length) reportNotes.push(`The total row of the Arabic table${r.rowLabels.length === 1 ? '' : 's'} says «الإجمالي»: Power BI writes its own "Total" only in a table's first column, which is at the left, so the name column you see at the right is a measure that exists only in this report (${r.rowLabels.map((x) => `"${visible(x.m)}" in ${visible(x.t)}`).join(', ')}, definition/reportExtensions.json; the model was not changed), and the column itself is the table's first column, hidden at width 0: it keeps the rows and the click that filters the page. A click on that header sorts the names A to Z as text. To remove it: in Power BI Desktop select the table, remove the "Row label: ..." field, drag the column to the end of Columns and widen it; the total row then has no word.`);
+  if ((r.rowLabelSkipped || []).length) reportNotes.push(`The total row of the Arabic table by ${r.rowLabelSkipped.map((x) => `${visible(x.t)}[${visible(x.c)}]`).join(', ')} has no «الإجمالي»: the name holds a control character (a tab or a line break) that no DAX may name, so the table is as before (the name column at the right, no word). Rename it in Power BI Desktop (remove the hidden character) and create the report again for the word.`);
   // (round 22b, the outside review's X-05) a measure whose name holds a control character gets no "No data" card
   if ((r.noDataSkipped || []).length) reportNotes.push(`No data message for ${r.noDataSkipped.map((x) => `${visible(x.t)}[${visible(x.m)}]`).join(', ')}: not written, the name holds a control character (a tab or a line break) that no DAX may name. Rename it in Power BI Desktop (remove the hidden character) and create the report again for the message.`);
   // (round 22b, the review of round 22, item 8) a table whose name column and first measure need more than its width even at 8pt
@@ -961,11 +1001,22 @@ server.registerTool('create_report', {
   // days and months put in calendar order in a table by a helper column (round 12, #17)
   if ((r.tableOrder || []).length) reportNotes.push(`${[...new Set(r.tableOrder.map((x) => x.field))].join(', ')} ${r.tableOrder.length === 1 ? 'is' : 'are'} in calendar order in the table${r.tableOrder.length === 1 ? '' : 's'} too (by ${[...new Set(r.tableOrder.map((x) => x.by))].join(', ')}, the same order as the charts): the model gives ${r.tableOrder.length === 1 ? 'it' : 'them'} no sort-by column, so each table carries the number in a narrow column with no header, in the card colour. Setting the sort-by column in the model (check_model_health, fixes.MONTH_SORT) orders slicers too.`);
   // visuals left out because the model has no field for them (never written empty)
-  const WHY = { funnel: 'a funnel shows an amount, and the model has no measure that is not a ratio or a percent', slicer: 'the model has no more text columns a slicer can use', line: 'the model has no month or date column for its axis', table: 'no field was found for it', matrix: 'it needs a text column and a measure', gauge: 'the model has no measure for it', card: 'the model has no measure for it' };
+  const WHY = { funnel: 'a funnel shows an amount, and the model has no measure that is not a ratio or a percent', slicer: 'the model has no more text columns a slicer can use', line: bind && !bind.measure ? 'the model has no measure for it' : bind && bind.noRelatedCalendar ? (bind.noRelatedCalendar.kind === 'date' ? `no date column is related to ${visible(bind.noRelatedCalendar.measure.t)}: the date column${bind.noRelatedCalendar.tables.length === 1 ? '' : 's'} of ${bind.noRelatedCalendar.tables.map(visible).join(', ')} ${bind.noRelatedCalendar.tables.length === 1 ? 'is' : 'are'} not reached from ${visible(bind.noRelatedCalendar.measure.t)}[${visible(bind.noRelatedCalendar.measure.m)}]; add a calendar related to ${visible(bind.noRelatedCalendar.measure.t)} (add_gulf_calendar writes one) for a trend` : `no calendar is related to ${visible(bind.noRelatedCalendar.measure.t)}: the model's calendar${bind.noRelatedCalendar.tables.length === 1 ? '' : 's'} (${bind.noRelatedCalendar.tables.map(visible).join(', ')}) ${bind.noRelatedCalendar.tables.length === 1 ? 'is' : 'are'} not reached from ${visible(bind.noRelatedCalendar.measure.t)}[${visible(bind.noRelatedCalendar.measure.m)}]; add the relationship (a date column of ${visible(bind.noRelatedCalendar.measure.t)} to the calendar's date) for a trend`): 'the model has no month or date column for its axis', table: 'no field was found for it', matrix: 'it needs a text column and a measure', gauge: 'the model has no measure for it', card: 'the model has no measure for it' };
   const KIND = { slicer: 'Slicer', line: 'Line chart', bar: 'Bar chart', column: 'Column chart', donut: 'Donut chart', funnel: 'Funnel', treemap: 'Treemap', map: 'Map', table: 'Table', matrix: 'Matrix', gauge: 'Gauge', card: 'Card' };
   // (round 22b, the outside review's X-04) no category is related to the main measure: the charts that need one are left out
+  // round 23 (the owner's rule, 8 Oct 2026: English in English reports, Arabic in Arabic reports): which columns the
+  // picker left for the report's language, and the named fields in the other language (the user's names always win)
+  if (bind && bind.language) { const L = bind.language, sk = L.skipped || [], fb = L.fallback || [];
+    reportNotes.push(`${a.lang === 'ar' ? 'Arabic' : 'English'} report: the columns picked are in ${a.lang === 'ar' ? 'Arabic where the model has an Arabic column for the same thing (the others keep their names, shown through display names)' : 'English'}${sk.length ? `; ${sk.map(visible).join(', ')} ${sk.length === 1 ? 'was' : 'were'} not used: ${a.lang === 'ar' ? 'the English column of an Arabic twin' : 'Arabic columns, with English ones beside them'}` : ''}${fb.length ? `; ${fb.map(visible).join(', ')} ${fb.length === 1 ? 'is' : 'are'} Arabic and used anyway: the model has no English column for ${fb.length === 1 ? 'it' : 'them'}` : ''}. To use another column, name it in "fields".`); }
+  if (F) { const tw = Bind.twinsOf(m.tables), cl = Bind.langsOf(m.tables), named = [].concat(F.kpis || [], [F.measure, F.timeAxis, F.category, F.category2], F.table || [], F.slicers || []).filter(Boolean);
+    const off = [...new Set(named.filter((f) => { const n = f.c != null ? f.c : f.m, l = f.c != null && cl[`${f.t}[${f.c}]`] ? cl[`${f.t}[${f.c}]`] : Bind.langOf(n); return a.lang === 'ar' ? l === 'en' && f.c != null && tw[`${f.t}[${f.c}]`] : l === 'ar'; }).map((f) => `${visible(f.t)}[${visible(f.c != null ? f.c : f.m)}]`))];
+    if (off.length) reportNotes.push(`${off.join(', ')} ${off.length === 1 ? 'is' : 'are'} in ${a.lang === 'ar' ? 'English (the model has an Arabic column beside it)' : 'Arabic'}, and the report is ${a.lang === 'ar' ? 'Arabic' : 'English'}: used as named in "fields".`); }
+  // round 23: a report measure renamed because the model has an object of that name
+  if ((r.extRenamed || []).length) reportNotes.push(`${r.extRenamed.map((x) => `${visible(x.t)} already has "${visible(x.from)}", so the report's own measure is "${visible(x.to)}"`).join('; ')} (definition/reportExtensions.json; the model was not changed).`);
+  // round 23: a table's measures that do not reach its rows were left out of it (they would repeat one total on every row)
+  if (bind && (bind.notReached || []).length) { const nr = bind.notReached; reportNotes.push(`${nr.map((x) => `${visible(x.t)}[${visible(x.m)}]`).join(', ')} ${nr.length === 1 ? 'was' : 'were'} left out of the table by ${visible(nr[0].row.t)}[${visible(nr[0].row.c)}]: ${[...new Set(nr.map((x) => visible(x.t)))].join(', ')} ${nr.length === 1 ? 'is' : 'are'} not related to ${visible(nr[0].row.t)}, so ${nr.length === 1 ? 'it' : 'each'} would repeat one total on every row. Add the relationship in the model, or name the table's fields in "fields".`); }
   if (bind && bind.noRelatedCategory) { const n = bind.noRelatedCategory; reportNotes.push(`No category is related to ${visible(n.measure.t)}[${visible(n.measure.m)}]: the text columns of ${n.tables.map((t) => visible(t)).join(', ')} are in tables the measure's table does not reach through a relationship, so a chart by them would show the same total on every bar. The charts that need a category are left out. Add a relationship from ${visible(n.measure.t)} to one of those tables, or pick a category of a related table in "fields".`); }
-  const leftOutList = (r.leftOut || []).map((x) => ({ visual: x.kind === 'slicer' ? (x.title || 'Slicer') : `${KIND[x.kind] || x.kind}${x.title ? ` "${x.title}"` : ''}`, page: x.page, why: WHY[x.kind] || 'the model has no text column (a category) or no measure for it' }));
+  const leftOutList = (r.leftOut || []).map((x) => ({ visual: x.kind === 'slicer' ? (x.title || 'Slicer') : `${KIND[x.kind] || x.kind}${x.title ? ` "${x.title}"` : ''}`, page: x.page, why: (WHY[x.kind] || 'the model has no text column (a category) or no measure for it') + (x.gave ? ' (the visual beside it takes its room)' : '') }));   // (round 23: gave, the shared writer's)
   if (leftOutList.length) reportNotes.push(`${leftOutList.length} visual${leftOutList.length === 1 ? ' was' : 's were'} left out, because a visual is never written without its field: ${leftOutList.map((x) => `${x.visual} on "${x.page}" (${x.why})`).join('; ')}.`);
   // tables that hold fewer fields than given, for lack of room (round 11): named, and boundFields lists what each shows
   const TC = r.tableColumns || [], fkey = (f) => `${f.t}[${f.c != null ? f.c : f.m}]`;
@@ -1098,7 +1149,7 @@ server.registerTool('plan_layout', {
   if (a.path) {
     const m = loadModel(a.path), sc = scopeOf(m, { focus: a.focus, tables: a.tables });
     const keys = a.fields ? new Set(a.fields.map((x) => { const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(x); }))
-      : sc.needsFocus ? null : (() => { const b = Bind.suggest(sc.tables, Math.max(1, a.kpis == null ? 4 : a.kpis), relsOf(m)); return new Set([b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean).map((f) => `${f.t}[${f.c != null ? f.c : f.m}]`)); })();
+      : sc.needsFocus ? null : (() => { const b = Bind.suggest(sc.tables, Math.max(1, a.kpis == null ? 4 : a.kpis), relsOf(m, a.lang === 'ar' ? 'ar' : 'en')); return new Set([b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean).map((f) => `${f.t}[${f.c != null ? f.c : f.m}]`)); })();
     const fmt = keys && formatsAnswer(m, a.path, keys);
     // round 14 (the owner's ask, 6 Oct): an Arabic plan proposes an Arabic display name for every field it will show
     // that has none (a fixed glossary of report words, never a free translation), for the user to approve first

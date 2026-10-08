@@ -24,7 +24,7 @@
     },
     "6": {
       "visuals": "43 -> 45: round 10 (3803b7a), the line under the current page's button (see task 2) | 45 -> 51: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (+6)",
-      "longTitleUses": "61 -> 64: round 13 (6f54d6a, measured: its own runner gives 64): the gradient bars (chartColors) name the chart's measure once more in each bar and column chart's colour rule (FillRule input), three charts on this report | 64 -> 81: round 22: the \"No data\" message cards and their report-level measures carry the long measure name too (reportExtensions.json and each card's query)"
+      "longTitleUses": "61 -> 64: round 13 (6f54d6a, measured: its own runner gives 64): the gradient bars (chartColors) name the chart's measure once more in each bar and column chart's colour rule (FillRule input), three charts on this report | 64 -> 81: round 22: the \"No data\" message cards and their report-level measures carry the long measure name too (reportExtensions.json and each card's query) | 81 -> 84: round 23, item 8 (the owner's \"nothing critical left\", 8 Oct): a bar or column chart by a text category is sorted by its measure, largest first, so the long measure name is written once more in the sortDefinition of each of its 3 bar and column charts | 84 -> 86: round 23 part 5 (the reviewer's code review, R1): the Arabic tables' row label is blank where the row's numbers are, so its DAX names the table's measures; the two tables (pages 1 and 2) show different measures, so each has its own label (\"Row label: ...\", \"Row label: ... (2)\"), each naming the long measure once"
     },
     "7": {
       "visuals": "39 -> 38: round 16, design finding #14 (the owner's go): Count of Region is no longer a KPI card (one card fewer)",
@@ -37,7 +37,7 @@
     "10": {
       "visuals": "35 -> 39: round 10 (3803b7a), the navigator as buttons with a line (see task 1) | 39 -> 45: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (+6). The model's Logistics tables and calendar hold rows as DAX tables since round 22: no other number of this task changed",
       "category": "Carrier[Carrier Group] -> Hub[Hub Region]: round 22 (seen in Desktop, 7 Oct: the same total for every Carrier Group; Carrier is related to Deliveries only): the picker reads the relationships and takes a lookup the main measure's table (Shipments) is related to",
-      "suggestChars": "14410 -> 14364: round 22: the picked categories changed with the relationship rule (shorter names) | 14364 -> 5610: round 22b (the review of round 22, item 2): the pool of slicer columns (slicerPool) holds only the tables the measure reaches (Shipments and its lookups), no longer every category of the Logistics area; the picked categories, slicers and KPIs are the same"
+      "suggestChars": "14410 -> 14364: round 22: the picked categories changed with the relationship rule (shorter names) | 14364 -> 5610: round 22b (the review of round 22, item 2): the pool of slicer columns (slicerPool) holds only the tables the measure reaches (Shipments and its lookups), no longer every category of the Logistics area; the picked categories, slicers and KPIs are the same | 5610 -> 5113: round 23, item 1 (a table's measures all reach its row column's table): Deliveries[Deliveries Total Tax Amount] and Freight Costs[Freight Costs Total Tax Amount] left the table by Lane[Lane Region] (they repeated one total on every row) and are named in notReached; item 3 (an ID-like column is never a category or a slicer): the \"... Code\" columns left the slicer pool | 5113 -> 5119: round 23 part 7 (the laptop's W1): the tooltip's bar by Hub[Hub Region] shows Freight Costs[Freight Costs Total Tax Amount], which reaches Hub, instead of Deliveries[Deliveries Total Tax Amount], which does not (it repeated one total on every bar); diffed answer by answer, the only change | 5119 -> 5111: round 23 part 8 (the review of part 7, 1): the tooltip page is opened by the charts of both categories (Hub Region and Lane Region), and Freight Costs does not reach Lane, so the tooltip's bar shows the main measure, Shipments[Shipments Total Net Amount]; diffed, the only change"
     }
   },
   "tasks": {
@@ -170,7 +170,7 @@
       "id": 6,
       "measures": 5,
       "kpis": "إجمالي صافي المبيعات بعد الخصومات والمرتجعات | عدد الفواتير الصادرة خلال الفترة المحددة | إجمالي الكمية المباعة من جميع الأصناف | نسبة النمو مقارنة بنفس الفترة من العام الماضي",
-      "longTitleUses": 81,
+      "longTitleUses": 86,
       "pages": [
         "ملخص تنفيذي 1920x1080",
         "التفاصيل 1920x1080"
@@ -247,7 +247,7 @@
       "detailTables": 5,
       "noFocus": "asks for a focus",
       "createNoFocus": "refused",
-      "suggestChars": 5610,
+      "suggestChars": 5111,
       "kpis": "Shipments[Shipments Total Net Amount] | Deliveries[Deliveries Total Tax Amount] | Freight Costs[Freight Costs Total Tax Amount] | Freight Costs[Freight Costs Units Share %]",
       "category": "Hub[Hub Region]",
       "pages": [

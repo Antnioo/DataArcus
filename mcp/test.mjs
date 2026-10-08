@@ -10,9 +10,17 @@ import { spawnSync } from 'node:child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { round22 } from './test-round22.mjs';
+import { round23 } from './test-round23.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
+// Round 23 (the owner's go, 8 Oct 2026; way 4, measured in Desktop 2.158.1304): an Arabic table with a total row has its
+// name column first in the file at width 0 (hidden) and shows it through a report-level row-label measure at the right.
+// shownOf gives a table's projections as the reader sees them: the hidden column left out, the row label read as the
+// column it shows. The checks of the columns' order since round 11 compare that, with the cause beside each.
+const hiddenOf = (vis) => ((vis.objects || {}).columnWidth || []).filter((e) => e.properties.value.expr.Literal.Value === '0D').map((e) => e.selector.metadata);
+const isRowLabelP = (p) => !!(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema === 'extension' && /^Row label: /.test(p.field.Measure.Property));
+const shownOf = (vis) => { const ps = vis.query.queryState.Values.projections, hid = hiddenOf(vis), col = ps.find((p) => hid.includes(p.queryRef)); return ps.filter((p) => !hid.includes(p.queryRef)).map((p) => (isRowLabelP(p) && col ? col : p)); };
 const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-mcp-'));
 // (round 17, the outside review's G-02: answers give paths relative to the working folder, never absolute. The checks
 // open the files the answers name, so a relative path that is not a file here is read from the working folder)
@@ -459,7 +467,8 @@ check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.string
   const tables = (res) => res.err ? [] : readReport(path.join(ROOT, 'dax-project', res.j.report)).flatMap((p) => p.visuals).filter((v) => v.type === 'tableEx').map((v) => JSON.parse(v.text).visual);
   // (round 12, #17: a day or month name without a sort-by column is followed by a helper column, the minimum of its
   //  number, that puts the table in calendar order; it is not one of the table's own fields, so it is set aside here)
-  const cols = (v) => v.query.queryState.Values.projections.filter((x) => !(x.field.Aggregation && x.displayName === ' ')).map((x) => (x.field.Column ? 'C:' + x.field.Column.Property : 'M:' + x.field.Measure.Property));
+  // (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; compared as the reader sees it, shownOf)
+  const cols = (v) => shownOf(v).filter((x) => !(x.field.Aggregation && x.displayName === ' ')).map((x) => (x.field.Column ? 'C:' + x.field.Column.Property : 'M:' + x.field.Measure.Property));
   const grow = (v) => /growToFit/.test(JSON.stringify(v.objects || {})) && /autoSizeColumnWidth/.test(JSON.stringify(v.objects || {}));
   const te = tables(en), ta = tables(ar);
   check(te.length && ta.length && te.concat(ta).every(grow), `tables must grow to fit: ${te.length} EN, ${ta.length} AR, ${JSON.stringify((te[0] || {}).objects)}`);
@@ -588,7 +597,8 @@ const cardProblems = (dir, rtl) => {
     const allText = (fl) => Object.keys(fl).filter((k) => k.endsWith('/visual.json')).map((k) => String(fl[k])).join('\n');
     const projections = (fl) => { const out = []; Object.keys(fl).filter((k) => k.endsWith('/visual.json')).forEach((k) => { const v = JSON.parse(String(fl[k])); Object.values(((v.visual || {}).query || {}).queryState || {}).forEach((r) => (r.projections || []).forEach((p) => out.push(p))); }); return out; };
     // (round 12, #17: the calendar order's helper column carries a blank displayName, its header; not a display name)
-    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ')) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Short]') : !res.j.arabicNames),
+    // (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; the row-label measure's header is its column's name, so it carries a displayName)
+    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Short]') : !res.j.arabicNames),
       `${name}: without displayNames: a displayName written, or arabicNames ${JSON.stringify(res.j.arabicNames || null).slice(0, 200)}`);
     if (rtl) {
       const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Month Short]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
@@ -2136,7 +2146,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const en = await ask('create_report', { path: 'r10-project', name: 'R10 SVG EN', design: exec, fields: { kpis: SIX }, svgColumns: [{ label: 'Progress', design: bar('Avg Price') }, { label: 'Strip', design: strip }] });
     const ar = await ask('create_report', { path: 'r10-project', name: 'R10 SVG AR', design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', lang: 'ar' }), lang: 'ar', svgColumns: [{ label: 'التقدم', design: bar('Avg Price') }, { label: 'الشريط', design: strip }] });
     const tableOf = (x) => (x.err ? null : report(path.join(ROOT, 'r10-project', x.j.report)).filter((p) => !p.tooltip).flatMap((p) => p.visuals).find((v) => type(v) === 'tableEx' && /extension/.test(JSON.stringify(v.visual.query))));
-    const te = tableOf(en), ta = tableOf(ar), isPic = (p) => !!(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema);
+    // (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; compared as the reader sees it, shownOf)
+    const te = tableOf(en), ta = tableOf(ar), isPic = (p) => !!(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema) && !isRowLabelP(p);
     // 1. the image size comes from the designs: the tallest height and the widest width, as Desktop writes them
     // (changed 5 Oct 2026: Desktop showed this table wider than its box with the designs' own 180 wide; the pictures'
     //  width is now capped by the table's room, so here it is at most 180 and the height follows; the cap itself is
@@ -2147,7 +2158,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     // 2. a picture is never the first projection, and the first is a text column in both directions (so "Total" shows)
     // (changed 6 Oct 2026, round 14, the owner's ask: an Arabic table ends with its text column, drawn at the right edge, the measures to its left in reading order; this replaces design choice 5, text first): the Arabic table's pictures sit at its left end, its text column last
     chk(() => [te, ta].every((t) => t.visual.query.queryState.Values.projections.filter(isPic).length === 2) && te.visual.query.queryState.Values.projections[0].field.Column && te.visual.query.queryState.Values.projections.slice(-2).every(isPic)
-        && ta.visual.query.queryState.Values.projections.slice(-1)[0].field.Column && ta.visual.query.queryState.Values.projections.filter((p) => p.displayName !== ' ').slice(0, 2).every(isPic),
+        && shownOf(ta.visual).slice(-1)[0].field.Column && shownOf(ta.visual).filter((p) => p.displayName !== ' ').slice(0, 2).every(isPic),
       () => `the English table's first projection must be a text column, the Arabic table's last, never a picture: EN ${te && te.visual.query.queryState.Values.projections.map((p) => p.queryRef).join(' | ')}; AR ${ta && ta.visual.query.queryState.Values.projections.map((p) => p.queryRef).join(' | ')}`);
     // 3. a right-to-left report mirrors the design: shapes flipped, texts kept readable at the mirrored place
     {
@@ -2396,11 +2407,12 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   // 5. an Arabic table puts its text column first (Power BI writes "Total" only in a first column of text), then the
   //    measures in the mirrored order; an English table is unchanged; each column's alignment follows it
   {
-    const refs = (vs) => vs.filter((v) => type(v) === 'tableEx').map((v) => v.visual.query.queryState.Values.projections.map((p) => p.queryRef).join(' | '));
+    // (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; compared as the reader sees it, shownOf); the row label right-aligned as its column
+    const refs = (vs) => vs.filter((v) => type(v) === 'tableEx').map((v) => shownOf(v.visual).map((p) => p.queryRef).join(' | '));
     const fmt = (vs) => vs.filter((v) => type(v) === 'tableEx').map((v) => v.visual.objects.columnFormatting.map((e) => e.selector.metadata + '=' + S(e.properties.alignment)).join(' | '));
     chk(() => refs(enV).every((r) => r === 'Sales.Region | Sales.Total Sales | Sales.Orders') && refs(arV).length >= 1 && refs(arV).every((r) => r === 'Sales.Orders | Sales.Total Sales | Sales.Region') /* (changed 6 Oct 2026, round 14, the owner's ask: an Arabic table ends with its text column, drawn at the right edge, the measures to its left in reading order; this replaces design choice 5, text first) */
         // (round 12, #12, the owner's go 6 Oct: numbers right-aligned in a right-to-left table too; they were Left)
-        && fmt(arV).every((f) => f === 'Sales.Orders=Right | Sales.Total Sales=Right | Sales.Region=Right') && siteAr.filter((v) => type(v) === 'tableEx').every((v) => !!v.visual.query.queryState.Values.projections.filter((p) => p.displayName !== ' ').slice(-1)[0].field.Column),
+        && fmt(arV).every((f) => f === 'Sales.Orders=Right | Sales.Total Sales=Right | Sales.Region=Right | Sales.Row label: Region=Right') && siteAr.filter((v) => type(v) === 'tableEx').every((v) => !!shownOf(v.visual).filter((p) => p.displayName !== ' ').slice(-1)[0].field.Column),
       () => `an Arabic table's last projection must be its text column: EN ${JSON.stringify(refs(enV))} AR ${JSON.stringify(refs(arV))} ${JSON.stringify(fmt(arV))}`);
   }
   // (round 18: a Reset button is told from the panel's Filters and Close buttons by their sign, which an Arabic Filters
@@ -2481,13 +2493,18 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const strip = { w: 180, h: 20, values: [{ id: 'q', label: 'Qty', kind: 'column', column: 'Sales[Qty]' }], layers: [{ type: 'rect', x: 0, y: 4, w: 0, h: 12, fill: '#e9c46a', bind: { w: { v: 'q', d0: 0, d1: 30, r0: 0, r1: 180 } } }] };
     const pics = [{ label: 'Progress', design: bar }, { label: 'Strip', design: strip }], T4 = ['Sales[Region]', 'Sales[Channel]', 'Sales[Total Sales]', 'Sales[Orders]'];
     const bad = [], capped = [];
+    const hiddenRefs = (t) => ((t.visual.objects || {}).columnWidth || []).filter((e) => e.properties.value.expr.Literal.Value === '0D').map((e) => e.selector.metadata);
+    const isRowLabel = (p) => !!(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema === 'extension' && /^Row label: /.test(p.field.Measure.Property));
     for (const lang of ['en', 'ar']) {
       const x = await ask('create_report', { path: 'd5-project', name: 'D5 SVG ' + lang, lang, design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', lang }), fields: { kpis: KPIS, table: T4 }, svgColumns: pics });
       const t = pageVisuals(x, 'd5-project').find((v) => type(v) === 'tableEx' && /extension/.test(JSON.stringify(v.visual.query)));
       if (!t) { bad.push(`${lang}: no table ${short(x)}`); continue; }
       const ps = t.visual.query.queryState.Values.projections, g = t.visual.objects.grid[0].properties, W = N(g.imageWidth), H = N(g.imageHeight);
       const size = tableText(x, 'd5-project'), font = 'Segoe UI';
-      const other = ps.filter((p) => !(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema)).reduce((a, p) => a + (Pb.columnRoom ? Pb.columnRoom(p, size, font) : Infinity), 0), pic = ps.length - ps.filter((p) => !(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema)).length;
+      // (round 23: an Arabic table's name column is hidden at width 0 and shown by its row-label measure, a text column
+      // at the right that is not a picture: the hidden column takes no room, the row label the name column's)
+      const hid = hiddenRefs(t), isPic = (p) => p.field.Measure && p.field.Measure.Expression.SourceRef.Schema && !isRowLabel(p);
+      const other = ps.filter((p) => !isPic(p) && !hid.includes(p.queryRef)).reduce((a, p) => a + (Pb.columnRoom ? Pb.columnRoom(isRowLabel(p) ? ps.find((h) => hid.includes(h.queryRef)) : p, size, font) : Infinity), 0), pic = ps.filter(isPic).length;
       if (other + pic * (W + 10) > t.at.w + 0.5 || W < 8 || W > 180 || H !== Math.max(8, Math.round(Math.max(24 * Math.min(1, W / 160), 20 * Math.min(1, W / 180))))) bad.push(`${lang}: ${ps.length} columns need ${(other + pic * (W + 10)).toFixed(0)} of ${t.at.w} with pictures ${W} x ${H}`);
       if (W < 180) capped.push(lang);
       if (!(x.j.svgMeasures || []).every((m) => m.imageWidth === W) || !(x.j.reportNotes || []).some((n) => /narrowed/.test(n) && new RegExp(String(W)).test(n))) bad.push(`${lang}: the answer must give the pictures' width and say they were narrowed: ${JSON.stringify(x.j.svgMeasures)}`);
@@ -2513,7 +2530,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
           // (round 12, recommendation 5, the owner's go 6 Oct: a narrow table first takes a smaller text, down to 8pt, and
           // drops a column only where that doesn't hold it; so its room is measured at the size written on it)
           const own = t.visual.objects.values ? N(t.visual.objects.values[0].properties.fontSize) : size;
-          const ps = t.visual.query.queryState.Values.projections, need = ps.reduce((a, p) => a + Pb.columnRoom(p, own, font), 0), refs = ps.map((p) => p.queryRef);
+          // (round 23: the Arabic table's hidden name column (width 0) is not a shown column; its row-label measure is, with the column's room)
+          const all = t.visual.query.queryState.Values.projections, hid = hiddenRefs(t), ps = all.filter((p) => !hid.includes(p.queryRef)), refs = all.map((p) => p.queryRef);
+          const need = ps.reduce((a, p) => a + Pb.columnRoom(isRowLabel(p) ? all.find((h) => hid.includes(h.queryRef)) : p, own, font), 0);
           if (need > t.at.w + 0.5 && ps.length > 2) tbad.push(`${lang} ${pg.name}: ${ps.length} columns need ${need.toFixed(0)} of ${t.at.w}`);
           if (!refs.includes('Sales.Region') || !refs.includes('Sales.Total Sales')) tbad.push(`${lang} ${pg.name}: the text column and the first measure must stay: ${refs}`);
           if (JSON.stringify((t.visual.objects.columnFormatting || []).map((e) => e.selector.metadata).sort()) !== JSON.stringify(refs.slice().sort())) tbad.push(`${lang} ${pg.name}: columnFormatting must follow the kept columns`);
@@ -2847,10 +2866,14 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const vt = (v) => v.visual.visualType, upright = (v) => vt(v) === 'clusteredColumnChart' || vt(v) === 'lineChart', lying = (v) => vt(v) === 'clusteredBarChart';
     const sortOf = (v) => ((v.visual.query.sortDefinition || {}).sort || [])[0] || null, qs = (v) => v.visual.query.queryState;
     // an upright chart, mirrored: the value axis at the right, the category axis inverted (for a continuous one), and sorted Descending by its category (or by the number that orders it)
+    // (changed 8 Oct 2026, round 23, the owner's "nothing critical left": a bar or column chart by a text category is
+    // sorted by its measure (its Y), largest first: Descending, and Ascending on a mirrored column chart (the largest at
+    // the right); time categories keep the sorts below)
+    const byY = (v, dir) => { const s = sortOf(v), y = qs(v).Y && qs(v).Y.projections[0]; return !!s && !!y && s.direction === dir && JSON.stringify(s.field) === JSON.stringify(y.field) && vt(v) !== 'lineChart'; };
     const mirroredUp = (v) => { const s = sortOf(v), want = qs(v).Tooltips ? qs(v).Tooltips.projections[0].field : qs(v).Category.projections[0].field;
-      return on(P1(v, 'valueAxis').switchAxisPosition) && on(P1(v, 'categoryAxis').invertAxis) && !!s && s.direction === 'Descending' && JSON.stringify(s.field) === JSON.stringify(want); };
-    const mirroredBar = (v) => on(P1(v, 'valueAxis').invertAxis) && on(P1(v, 'categoryAxis').switchAxisPosition) && (!sortOf(v) || sortOf(v).direction === 'Ascending');
-    const plain = (v) => !/invertAxis|switchAxisPosition/.test(JSON.stringify(v.visual.objects || {})) && (!sortOf(v) || sortOf(v).direction === 'Ascending');
+      return on(P1(v, 'valueAxis').switchAxisPosition) && on(P1(v, 'categoryAxis').invertAxis) && !!s && ((s.direction === 'Descending' && JSON.stringify(s.field) === JSON.stringify(want)) || byY(v, 'Ascending')); };
+    const mirroredBar = (v) => on(P1(v, 'valueAxis').invertAxis) && on(P1(v, 'categoryAxis').switchAxisPosition) && (!sortOf(v) || sortOf(v).direction === 'Ascending' || byY(v, 'Descending'));
+    const plain = (v) => !/invertAxis|switchAxisPosition/.test(JSON.stringify(v.visual.objects || {})) && (!sortOf(v) || sortOf(v).direction === 'Ascending' || byY(v, 'Descending'));
     const tellM = (r) => JSON.stringify(r.vis.filter((v) => upright(v) || lying(v)).map((v) => [vt(v), v.tooltipPage ? 'tip' : 'page', Object.keys(v.visual.objects || {}).join('+'), sortOf(v) && sortOf(v).direction])).slice(0, 800);
     const arDesign = (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', lang: 'ar' })).j.design, enDesign = (await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end' })).j.design;
     // 6. an Arabic designed report: every column, line and bar chart of its pages is mirrored, the gradient stays, and the tooltip pages' bars grow from the right too
@@ -3146,7 +3169,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   const ar2 = await ask('create_report', { path: 'r12-project', name: 'R12 AR2', lang: 'ar', design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', lang: 'ar' }), fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Margin %]', 'Sales[Avg Price]'], table: ['Sales[Region]', 'Sales[Total Sales]', 'Sales[Orders]'] } });
   {
     const fmt = (x, p) => pageVisuals(x, p).filter((v) => type(v) === 'tableEx').map((v) => v.visual.objects.columnFormatting.map((e) => e.selector.metadata + '=' + S(e.properties.alignment)).join(' | '));
-    chk(() => fmt(ar2, 'r12-project').length >= 1 && fmt(ar2, 'r12-project').every((f) => f === 'Sales.Orders=Right | Sales.Total Sales=Right | Sales.Region=Right') /* (changed 6 Oct 2026, round 14, the owner's ask: an Arabic table ends with its text column, drawn at the right edge, the measures to its left in reading order; this replaces design choice 5, text first) */ && fmt(en, 'r12-project').every((f) => f === 'Sales.Region=Left | Sales.Total Sales=Right | Sales.Orders=Right'),
+    chk(() => fmt(ar2, 'r12-project').length >= 1 && fmt(ar2, 'r12-project').every((f) => f === 'Sales.Orders=Right | Sales.Total Sales=Right | Sales.Region=Right | Sales.Row label: Region=Right') /* (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; compared as the reader sees it, shownOf); the row label right-aligned as its column */ /* (changed 6 Oct 2026, round 14, the owner's ask: an Arabic table ends with its text column, drawn at the right edge, the measures to its left in reading order; this replaces design choice 5, text first) */ && fmt(en, 'r12-project').every((f) => f === 'Sales.Region=Left | Sales.Total Sales=Right | Sales.Orders=Right'),
       () => `#12: numbers right-aligned in both directions, text at the reading start: AR ${JSON.stringify(fmt(ar2, 'r12-project'))} EN ${JSON.stringify(fmt(en, 'r12-project'))}`);
   }
 
@@ -3585,7 +3608,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const hand = await ask('create_report', { path: 'r14', name: 'R14 AR hand', lang: 'ar', rtl: true, font: 'Tahoma', fields,
       pages: [{ name: 'صفحة', slots: [{ kind: 'title', x: 1044, y: 18, w: 840, h: 48 }, { kind: 'table', x: 36, y: 100, w: 1000, h: 600 }] }] });
     const order = (x, p) => (x.err ? [] : visuals(p, x.j.report)).filter((v) => v.visual && v.visual.visualType === 'tableEx' && !/tooltip/i.test(JSON.stringify(v.visual.visualContainerObjects || {})))
-      .map((v) => ({ refs: v.visual.query.queryState.Values.projections.map((q) => q.queryRef), align: Object.fromEntries((v.visual.objects.columnFormatting || []).map((c) => [c.selector.metadata, c.properties.alignment && c.properties.alignment.expr.Literal.Value])) }));
+      // (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; compared as the reader sees it, shownOf)
+      .map((v) => ({ refs: shownOf(v.visual).map((q) => q.queryRef), align: Object.fromEntries((v.visual.objects.columnFormatting || []).map((c) => [c.selector.metadata, c.properties.alignment && c.properties.alignment.expr.Literal.Value])) }));
     const real = (refs) => refs.filter((r) => !/^Min\(/.test(r));
     const rtlOk = (t) => { const r = real(t.refs); return r[r.length - 1] === 'Calendar.Day Name' && r.indexOf('Sales.Total Sales') > r.indexOf('Sales.Orders') && Object.values(t.align).every((a) => a === "'Right'") && (t.refs.findIndex((q) => /^Min\(/.test(q)) <= 0); };
     const A = order(ar, 'r14'), E = order(en, 'r14'), H = order(hand, 'r14');
@@ -4157,7 +4181,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
         chk(() => c1.length === 1 && Math.abs(c1[0].w - quarter) <= 2 && (lang === 'ar' ? Math.abs(c1[0].x + c1[0].w - x1) <= 1 : Math.abs(c1[0].x - x0) <= 1), () => `${lang}: a plan asked for one card gives the quarter card too: ${JSON.stringify(c1.map((v) => [v.x, v.w]))}`);
         const F = { fields: { kpis: MS.map((n) => `Sales[${n}]`), table: ['Calendar[Day Name]'].concat(MS.map((n) => `Sales[${n}]`)) } };
         for (const [page, wider] of [['960x720', true], ['1280x720', false]]) { const r = await rep('n1-three', lang, page, 3, F), tb = r.vs.find((v) => v.t === 'tableEx'), beside = tb && r.vs.find((v) => /Chart$/.test(v.t) && v.y === tb.y);
-          const shown = tb ? tb.v.visual.query.queryState.Values.projections.map((p) => p.queryRef).filter((q) => !/^Min\(/.test(q) && !/\.Ring|extension/.test(q)) : [], left = r.x.err ? [] : (r.x.j.tableColumns || []).flatMap((c) => c.leftOut || []);
+          // (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; compared as the reader sees it, shownOf)
+          const shown = tb ? shownOf(tb.v.visual).map((p) => p.queryRef).filter((q) => !/^Min\(/.test(q) && !/\.Ring|extension/.test(q)) : [], left = r.x.err ? [] : (r.x.j.tableColumns || []).flatMap((c) => c.leftOut || []);
           chk(() => tb && beside && shown.length === 4 && !left.length && (wider ? Math.abs(tb.w / beside.w - 1.5) < 0.03 : Math.abs(tb.w - beside.w) <= 1),
             () => `${lang} ${page}: ${wider ? 'on a 4:3 page the table takes three fifths of its row' : 'on a 16:9 page the table and the chart beside it stay equal'}, and the table holds its four fields: the table ${tb ? tb.w : 'none'}, the chart ${beside ? beside.w : 'none'}, shown ${JSON.stringify(shown)}, left out ${JSON.stringify(left)} ${r.x.err ? r.x.t.slice(0, 300) : ''}`); }
       }
@@ -4387,6 +4412,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 }
 // ---------- round 22 (the code review of rounds 20 and 21): its checks live in test-round22.mjs, which also runs alone ----------
 await round22({ call, check, ROOT, fs });
+// ---------- round 23 (the Arabic table's "Total" word, way 4): its checks live in test-round23.mjs, which also runs alone ----------
+await round23({ call, check, ROOT, fs });
 // ---------- round 17 follow-up: G-04, check_report's instruction-like names in suspiciousNames (owner: all recommended) ----------
 // the name stays withheld (only the placeholder), each entry has its kind and reason, and the check's result is the
 // same as for a plainly named visual

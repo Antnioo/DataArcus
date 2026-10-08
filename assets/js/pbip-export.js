@@ -215,8 +215,21 @@
   // sort-by column in the model) gets Min of that column in the chart's Tooltips role and a sort by it. A chart only
   // sorts by a field that is in it, and our charts show a report page tooltip, so the number is never seen. The model
   // is not touched; tables and slicers can't do this and follow the model.
-  const sorted = (query, f) => {
-    if (!query || !f || !f.sortBy) return query;
+  // Round 23 (the owner's "nothing critical left"; seen in Desktop on 7 Oct: "the bar chart by city is alphabetical"):
+  // a bar or column chart by a text category (byValue) is sorted by its measure, largest first; a time category (a
+  // month, day, week, quarter or year, Hijri ones too, a name the model sorts, a number) keeps its own order
+  // (round 23 part 5, the review's 9: whole words, so "Holiday Package" or "Candidate" is a text category)
+  const TIME_WORDS = /\b(month|day|weekday|week|quarter|year|hijri|date|period)s?\b|(^|\s)(الشهر|اليوم|الأسبوع|الربع|السنة|هجري|الهجري)(\s|$)/i;
+  // (part 6, the re-review's 1: a name is split into its words first, at CamelCase, "_", "-" and digits: MonthName,
+  // Month_Name, FiscalYear, WeekNum, اسم_الشهر are time; "Holiday Package" and "Candidate" are not)
+  const wordsOf = (n) => String(n).replace(/([a-z])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2').replace(/[_\-\d]+/g, ' ');
+  const sorted = (query, f, byValue) => {
+    if (!query || !f) return query;
+    if (!f.sortBy) {
+      const y = byValue && query.queryState.Y && query.queryState.Y.projections[0];
+      if (y && !f.ordered && !f.num && !TIME_WORDS.test(wordsOf(f.c))) query.sortDefinition = { sort: [{ field: y.field, direction: 'Descending' }], isDefaultSort: true };
+      return query;
+    }
     const field = { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Entity: f.sortBy.t } }, Property: f.sortBy.c } }, Function: 3 } };
     query.queryState.Tooltips = { projections: [{ field, queryRef: 'Min(' + f.sortBy.t + '.' + f.sortBy.c + ')', nativeQueryRef: 'Min of ' + f.sortBy.c }] };
     query.sortDefinition = { sort: [{ field, direction: 'Ascending' }], isDefaultSort: true };
@@ -261,7 +274,9 @@
     if (kind === 'bar') { put('valueAxis', { invertAxis: bool(true) }); put('categoryAxis', { switchAxisPosition: bool(true) }); return visual; }
     put('valueAxis', { switchAxisPosition: bool(true) }); put('categoryAxis', { invertAxis: bool(true) });
     const query = visual.query, sd = query.sortDefinition;
-    if (sd && sd.sort && sd.sort[0]) sd.sort[0].direction = 'Descending';
+    // (round 23: a chart sorted by its measure, largest first, is mirrored by Ascending: the largest at the right)
+    const byY = sd && sd.sort && sd.sort[0] && query.queryState.Y && JSON.stringify(sd.sort[0].field) === JSON.stringify(query.queryState.Y.projections[0].field);
+    if (sd && sd.sort && sd.sort[0]) sd.sort[0].direction = byY ? 'Ascending' : 'Descending';
     else query.sortDefinition = { sort: [{ field: query.queryState.Category.projections[0].field, direction: 'Descending' }], isDefaultSort: true };
     return visual;
   };
@@ -275,10 +290,11 @@
   const orderHelper = (f) => ({ field: { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Entity: f.sortBy.t } }, Property: f.sortBy.c } }, Function: 3 } },
     queryRef: 'Min(' + f.sortBy.t + '.' + f.sortBy.c + ')', nativeQueryRef: 'Min of ' + f.sortBy.c, displayName: ' ' });
   const orderedBy = (fs) => fs.find((f) => isTextField(f) && (f.sortBy || f.ordered)) || null;
-  const inOrder = (query, fs, rtl) => {
+  const inOrder = (query, fs, rtl, at) => {
     const f = orderedBy(fs); if (!f) return query;
-    // (round 14: in a right-to-left table the helper goes at the left end, away from the text column at the right)
-    if (f.sortBy) { const h = orderHelper(f); query.queryState.Values.projections[rtl ? 'unshift' : 'push'](h); query.sortDefinition = { sort: [{ field: h.field, direction: 'Ascending' }], isDefaultSort: true }; }
+    // (round 14: in a right-to-left table the helper goes at the left end, away from the text column at the right;
+    // round 23: after the hidden name column, at = 1, which stays the table's first column)
+    if (f.sortBy) { const h = orderHelper(f), ps = query.queryState.Values.projections; ps.splice(rtl ? at || 0 : ps.length, 0, h); query.sortDefinition = { sort: [{ field: h.field, direction: 'Ascending' }], isDefaultSort: true }; }
     else query.sortDefinition = { sort: [{ field: proj(f).field, direction: 'Ascending' }], isDefaultSort: true };
     return query;
   };
@@ -298,6 +314,30 @@
     const r = fs.slice().reverse(), first = fs.find(isTextField);
     return first ? r.filter((f) => f !== first).concat([first]) : r;
   };
+  // Round 23 (the owner's go, 8 Oct 2026: "i wanna fix the word total as well"; way 4 of the sitting of 7-8 Oct, measured
+  // in Desktop 2.158.1304, DESKTOP-TESTS.md): Power BI writes the total row's "Total" only in a table's first column, and
+  // a right-to-left table's first column is at the left, a number. So a right-to-left table with a total row (a text
+  // column and a measure or an aggregated column; text columns alone have none) shows its name column through a
+  // report-level text measure at the right, "Row label: <Column>" in the column's table (reportExtensions.json, the model
+  // untouched), which gives the row's name on a row and «الإجمالي» on the total row, under the column's display name; the
+  // column itself is the table's first projection, at width 0 with the automatic widths on (it stayed hidden, and the
+  // other columns grew to fit), and keeps the rows, their order and the identity a click filters the page by. A name
+  // with a control character keeps the table as before (AUD-032: no DAX may name it). Left to right: never.
+  const ROW_LABEL = 'Row label: ';
+  // (round 23 part 5: the table's numbers are named in the label's DAX too, so none may hold a control character either)
+  const rowLabelOf = (fs, rtl) => { const f = rtl ? fs.find(isTextField) : null; return f && fs.some(isValue) && !hasControl(f.t) && !hasControl(f.c) && fs.filter(isValue).every((v) => !hasControl(v.t) && !hasControl(v.m != null ? v.m : v.c)) ? f : null; };
+  const rowLabelProj = (f) => ({ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: f.t } }, Property: ROW_LABEL + f.c } }, queryRef: f.t + '.' + ROW_LABEL + f.c, nativeQueryRef: ROW_LABEL + f.c, displayName: label(f) });
+  // (round 23 part 5, the reviewer's code review, R1: a label that always has a value kept every row in the table, so
+  // rows whose numbers are all blank (a product without sales in the chosen year) showed with their name, and an empty
+  // table showed its names over the "No data" card. The label is blank unless one of the table's numbers (vals: its
+  // projections, the measures and the columns the visual sums or counts, in the table's order) has a value there, as
+  // Power BI decides for an English table's rows; the total row's word likewise)
+  const daxName = (t, n) => "'" + String(t).replace(/'/g, "''") + "'[" + String(n).replace(/\]/g, ']]') + ']';
+  const AGG_DAX = { 0: 'SUM', 1: 'AVERAGE', 2: 'DISTINCTCOUNT', 3: 'MIN', 4: 'MAX', 5: 'COUNTA' };   // (part 6: 2 is the visual's distinct count)
+  const valueDax = (p) => (p.field.Measure ? daxName(p.field.Measure.Expression.SourceRef.Entity, p.field.Measure.Property)
+    : (AGG_DAX[p.field.Aggregation.Function] || 'COUNTA') + ' ( ' + daxName(p.field.Aggregation.Expression.Column.Expression.SourceRef.Entity, p.field.Aggregation.Expression.Column.Property) + ' )');
+  const rowLabelDax = (f, word, vals) => { const c = daxName(f.t, f.c), inner = 'IF ( ISINSCOPE ( ' + c + ' ), SELECTEDVALUE ( ' + c + ' ), "' + word.replace(/"/g, '""') + '" )';
+    return vals && vals.length ? 'IF ( ' + vals.map((p) => 'NOT ISBLANK ( ' + valueDax(p) + ' )').join(' || ') + ', ' + inner + ' )' : inner; };
   // Round 11 (seen in Desktop 2.158, 5 Oct 2026: on a 960 x 720 page a table of a text column and three measures was
   // wider than its box, a header cut and a column off the box behind a scrollbar; at 1920 x 1080 too with four long
   // measure names). A table holds only the fields its width has room for, by the rule its pictures already follow
@@ -325,11 +365,13 @@
       case 'kpi': return kpi ? q({ Data: [proj(kpi)] }) : null;
       case 'card': return need(B.measure) ? q({ Data: [proj(B.measure)] }) : null;
       case 'line': return need(B.date, B.measure) ? sorted(q({ Category: [proj(B.date)], Y: [proj(B.measure)] }), B.date) : null;
-      case 'bar': case 'column': return need(cat, y) ? sorted(q({ Category: [proj(cat)], Y: [proj(y)] }), cat) : null;
+      case 'bar': case 'column': return need(cat, y) ? sorted(q({ Category: [proj(cat)], Y: [proj(y)] }), cat, true) : null;
       case 'donut': case 'funnel': return need(cat, y) ? q({ Category: [proj(cat)], Y: [proj(y)] }) : null;
       // a table column's number format on the report side is "format" on its projection (measured in Desktop 2.158,
       // third sitting of 2026-10-04: 13857 became 13,857); the field carries it as tableFormat
-      case 'table': { const fs = tableFields(B, rtl); return fs.length ? inOrder(q({ Values: fs.map(tproj) }), fs, rtl) : null; }
+      // (round 23: a right-to-left table with a total row: the name column hidden first, the row-label measure last)
+      case 'table': { const fs = tableFields(B, rtl), rl = rowLabelOf(fs, rtl); if (!fs.length) return null;
+        return rl ? inOrder(q({ Values: [tproj(rl)].concat(fs.filter((f) => f !== rl).map(tproj), [rowLabelProj(rl)]) }), fs, rtl, 1) : inOrder(q({ Values: fs.map(tproj) }), fs, rtl); }
       // a matrix: rows by the table's first text column, its measures as the values
       // (round 16, design finding #15: a hand-placed matrix showed days A to Z: it is put in calendar order as a table is,
       // by the helper column or the model's own sort)
@@ -368,6 +410,36 @@
   }
 
   // ---------- the project ----------
+  // Round 23 (the owner's "nothing critical left"; the reviewer's part 7 review, 2: shared by the website and the MCP):
+  // a slot whose visual cannot be written gives its room to the visual beside it (the same row and height, else the
+  // same column and width), as a text box without its sentence does. absorb(out, t): out the slots left, t the one
+  // that goes. dropLines(slots): every line chart's slot goes (no time axis); touching line slots are merged first, so
+  // two side by side leave no blank band (the re-review's 5); nothing beside it: the room stays empty.
+  const OWN_SLOTS = ['title', 'logo', 'text'];
+  const nearSlot = (list, t) => list.slice().sort((p, q) => Math.abs(p.x - t.x) + Math.abs(p.y - t.y) - Math.abs(q.x - t.x) - Math.abs(q.y - t.y))[0];
+  function absorb(out, t) {
+    const row = nearSlot(out.filter((x) => !OWN_SLOTS.includes(x.kind) && Math.abs(x.y - t.y) <= 1 && Math.abs(x.h - t.h) <= 1), t);
+    const colm = row ? null : nearSlot(out.filter((x) => !OWN_SLOTS.includes(x.kind) && Math.abs(x.x - t.x) <= 1 && Math.abs(x.w - t.w) <= 1), t);
+    if (row) { const x0 = Math.min(row.x, t.x), x1 = Math.max(row.x + row.w, t.x + t.w); return out.map((x) => (x === row ? Object.assign({}, x, { x: x0, w: x1 - x0 }) : x)); }
+    if (colm) { const y0 = Math.min(colm.y, t.y), y1 = Math.max(colm.y + colm.h, t.y + t.h); return out.map((x) => (x === colm ? Object.assign({}, x, { y: y0, h: y1 - y0 }) : x)); }
+    return out;
+  }
+  const SLOT_GAP = 40;
+  const slotsTouch = (a, b) => (Math.abs(a.y - b.y) <= 1 && Math.abs(a.h - b.h) <= 1 && Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w) <= SLOT_GAP)
+    || (Math.abs(a.x - b.x) <= 1 && Math.abs(a.w - b.w) <= 1 && Math.max(a.y, b.y) - Math.min(a.y + a.h, b.y + b.h) <= SLOT_GAP);
+  function dropLines(slots) {
+    const dropped = slots.filter((x) => x.kind === 'line'), boxes = dropped.map((x) => ({ x: x.x, y: x.y, w: x.w, h: x.h }));
+    for (let merged = true; merged;) {
+      merged = false;
+      for (let i = 0; i < boxes.length && !merged; i++) for (let j = i + 1; j < boxes.length && !merged; j++) if (slotsTouch(boxes[i], boxes[j])) {
+        const a = boxes[i], b = boxes[j], x0 = Math.min(a.x, b.x), y0 = Math.min(a.y, b.y);
+        boxes.splice(j, 1); boxes[i] = { x: x0, y: y0, w: Math.max(a.x + a.w, b.x + b.w) - x0, h: Math.max(a.y + a.h, b.y + b.h) - y0 }; merged = true;
+      }
+    }
+    let out = slots.filter((x) => x.kind !== 'line');
+    boxes.forEach((t) => { out = absorb(out, t); });
+    return { slots: out, dropped };
+  }
   // o: { name, lang, rtl, font, ui, page:{w,h}, slots:[{kind,title,x,y,w,h,rail}] in page units, theme, png (Uint8Array),
   //      logo: { bytes, ext } or null, sample: true|false, texts: {...},
   //      pages: [{ name, page, slots, png, panel, kpiInset }] (kpiInset: the design engine's, where KPI titles start
@@ -407,6 +479,13 @@
     const blankKept = [];   // round 21: KPI cards too narrow for the blank text at the value's size
     const noData = [];   // round 19: the "No data" measures, { t, m, expression }
     const noDataSkipped = [];   // round 22b (X-05): fields whose name holds a control character: no "No data" card, { page, t, m }
+    // Round 23 (the owner's "nothing critical left"): a report measure ("No data: ...", "Row label: ...") never takes a
+    // name its model table already has (o.model.names: { table: [its columns' and measures' names] }, from the MCP; DAX
+    // names ignore case): the first free "<name> (2)", "(3)"... is used, and told (extRenamed)
+    const modelNames = (o.model && o.model.names) || {}, extRenamed = [];
+    const freeExt = (t, want) => { const has = (n) => (modelNames[t] || []).some((x) => String(x).toLowerCase() === n.toLowerCase()); if (!has(want)) return want;
+      let k = 2; while (has(want + ' (' + k + ')')) k++; const nm = want + ' (' + k + ')'; if (!extRenamed.some((x) => x.t === t && x.from === want)) extRenamed.push({ t, from: want, to: nm }); return nm; };
+    const rowLabels = [], rowLabelSkipped = [];   // round 23: the tables' row-label measures { page, t, c, m, expression }; tables kept as before (a control character) { page, t, c }
     const NODATA = own && o.noDataMessage !== false;   // on by default since round 22 (the owner's rule: every part passed in Desktop on the night of 6-7 Oct); noDataMessage: false leaves it out
     const barCharts = [];   // round 19: column charts by day or month names written as bar charts
     const shortDays = [];   // round 18, S3: column charts that show Day Short
@@ -782,8 +861,13 @@
         const kk = pg.page.h / 1080, pad = 10 * kk, gap = 8 * kk, all3 = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null), n = Math.max(1, (B && own ? all3.filter(Boolean) : all3).length);
         const resetText = W.reset || 'Reset filters', bh = resetFit(resetText, resetW(resetText, kk, s.w - 2 * pad), kk).h;
         const sh = Math.max(slicerH(SLICER_TEXT), Math.min(76 * kk, (s.h - 2 * pad - bh - gap * n) / n));
-        return Object.assign({}, s, { h: Math.min(s.h, Math.ceil(2 * pad + n * sh + gap * n + bh)) });
+        // (round 23, the laptop's S1: fitted to two slicers at 720 high the rail came out wider than high and was then laid
+        // out as a strip, two slicers 24 wide side by side, -2 in Arabic: a rail stays a column, stack)
+        return Object.assign({}, s, { h: Math.min(s.h, Math.ceil(2 * pad + n * sh + gap * n + bh)), stack: true });
       };
+      // (round 23: on a user's model whose binding has no time axis, a designed page's line charts give their room to
+      // the visual beside them, told in leftOut with gave; a hand-placed page (pg.hand) keeps the caller's positions)
+      if (B && own && !B.date && !pg.hand && pg.slots.some((x) => x.kind === 'line')) { const dl = dropLines(pg.slots); dl.dropped.forEach((t) => leftOut.push({ page: pg.name || base, kind: 'line', title: t.title || null, gave: true })); pg = Object.assign({}, pg, { slots: dl.slots }); }
       pg = Object.assign({}, pg, { slots: grown(pg.slots) });
       // Round 19 (seen in Desktop, golden tasks 1 and 4:3: day names slant on the column charts of models without a short
       // day column): a column chart by day or month names whose widest name, at the label size, is wider than its share
@@ -991,7 +1075,7 @@
           // each dropdown gets 160k at least; a slot too narrow for that stacks them like a rail where its height holds
           // them (a slot that holds them neither way stays a strip, as before).
           const stripW = (s.w - 2 * pad - bw - gap - gap * (n - 1)) / n, stackH = n * slicerH(SLICER_TEXT) + gap * n + bh + 2 * pad;
-          const across = s.w > s.h && (stripW >= 160 * k || stackH > s.h);
+          const across = !s.stack && s.w > s.h && (stripW >= 160 * k || stackH > s.h);
           const room = across ? s.w - 2 * pad - bw - gap : s.w - 2 * pad;
           const sw = across ? (room - gap * (n - 1)) / n : room;
           const sh = across ? s.h - 2 * pad : Math.max(slicerH(SLICER_TEXT), Math.min(76 * k, (s.h - 2 * pad - bh - gap * n) / n));
@@ -1202,9 +1286,17 @@
           // follow. (Round 12, #12; seen in Desktop 2.158, 5 Oct 2026: in a right-to-left table with left-aligned numbers,
           // "Friday", right-aligned at the left end, and its first number were 9 apart and read as one text, while 430
           // separated the two measures. Right-aligned, a number ends at its column's far edge, as in English.)
+          // (round 23: the row-label measure, text, right-aligned as the name column it stands for)
+          const rowLabel = s.kind === 'table' && query ? rowLabelOf(tableFields(Bt, rtl), rtl) : null;
+          // (part 5: its DAX names this table's numbers, so a second table by the same column with other numbers gets a
+          // label of its own, "(2)"; the same numbers share one)
+          const rlExpr = rowLabel ? rowLabelDax(rowLabel, lang === 'ar' ? 'الإجمالي' : 'Total', query.queryState.Values.projections.filter((p) => (p.field.Measure && !p.field.Measure.Expression.SourceRef.Schema) || (p.field.Aggregation && p.displayName !== ' '))) : null;
+          let rlName = rowLabel ? freeExt(rowLabel.t, ROW_LABEL + rowLabel.c) : null;
+          if (rowLabel) { const same = (n) => rowLabels.find((x) => x.t === rowLabel.t && x.m === n); for (let k = 2; same(rlName) && same(rlName).expression !== rlExpr; k++) rlName = freeExt(rowLabel.t, ROW_LABEL + rowLabel.c + ' (' + k + ')'); }
+          if (rowLabel && rlName !== ROW_LABEL + rowLabel.c) { const ps0 = query.queryState.Values.projections, lp = ps0[ps0.length - 1]; lp.field.Measure.Property = rlName; lp.queryRef = rowLabel.t + '.' + rlName; lp.nativeQueryRef = rlName; }
           if (s.kind === 'table' && query) visual.objects.columnFormatting = tableFields(Bt, rtl).map((f) => ({
             properties: { alignment: str(isValue(f) || f.num ? 'Right' : (rtl ? 'Right' : 'Left')), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) },
-            selector: { metadata: proj(f).queryRef } }));
+            selector: { metadata: proj(f).queryRef } })).concat(rowLabel ? [{ properties: { alignment: str('Right'), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) }, selector: { metadata: rowLabel.t + '.' + rlName } }] : []);
           // Round 12 (#23, #32; seen in Desktop 2.158, round 11: six of seven days and a scrollbar): a table whose rows are
           // known (a day, month or quarter name: 7, 12 or 4 rows, a header and a total) gets its rows tighter where they
           // would not fit (grid.rowPadding 0); one that still does not fit is told. Measured (round 11): a row's pitch is
@@ -1232,8 +1324,17 @@
           if (oh && oh.sortBy && s.kind === 'matrix') { visual.objects = visual.objects || {}; visual.objects.columnFormatting = visual.objects.columnFormatting || []; }
           if (oh && oh.sortBy) { const ref = orderHelper(oh).queryRef;
             visual.objects.columnFormatting.push({ properties: { fontColor: color(u.card), alignment: str('Right'), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) }, selector: { metadata: ref } });
-            visual.objects.columnWidth = [{ properties: { value: num(1) }, selector: { metadata: ref } }];
+            (visual.objects.columnWidth = visual.objects.columnWidth || []).push({ properties: { value: num(1) }, selector: { metadata: ref } });
             tableOrder.push({ page: pg.name || base, field: oh.t + '[' + oh.c + ']', by: oh.sortBy.t + '[' + oh.sortBy.c + ']' }); }
+          // round 23: the name column at width 0 (hidden; the automatic widths stay on), its measure into the extensions
+          if (rowLabel) {
+            (visual.objects.columnWidth = visual.objects.columnWidth || []).push({ properties: { value: num(0) }, selector: { metadata: proj(rowLabel).queryRef } });
+            const m = rlName;
+            if (!rowLabels.some((x) => x.t === rowLabel.t && x.m === m)) rowLabels.push({ page: pg.name || base, t: rowLabel.t, c: rowLabel.c, m, expression: rlExpr });
+          } else if (s.kind === 'table' && query && rtl) {
+            const tf = tableFields(Bt, rtl), f = tf.find(isTextField);
+            if (f && tf.some(isValue) && !rowLabelSkipped.some((x) => x.t === f.t && x.c === f.c)) rowLabelSkipped.push({ page: pg.name || base, t: f.t, c: f.c });
+          }
           // SVG columns (experimental; measured in Desktop 2.158, D-P1, 2026-10-04): report-level measures of
           // reportExtensions.json, shown as the last columns of the page's first table (the reading end: on a
           // right-to-left page that is the left, where the table's first projection sits)
@@ -1249,7 +1350,8 @@
               const ps = query.queryState.Values.projections;
               // (round 14: a right-to-left table ends with its text column, so the pictures, the reading end, go at the
               // left, after the order's helper column where there is one)
-              if (rtl && s.kind === 'table') { const lead = ps.length && /^Min\(/.test(ps[0].queryRef) && ps[0].displayName === ' ' ? 1 : 0; query.queryState.Values.projections = ps.slice(0, lead).concat(cols.slice().reverse(), ps.slice(lead)); }
+              // (round 23: and after the hidden name column, which stays first)
+              if (rtl && s.kind === 'table') { let lead = rowLabel ? 1 : 0; if (ps.length > lead && /^Min\(/.test(ps[lead].queryRef) && ps[lead].displayName === ' ') lead++; query.queryState.Values.projections = ps.slice(0, lead).concat(cols.slice().reverse(), ps.slice(lead)); }
               else query.queryState.Values.projections = ps.concat(cols);
               // The pictures never push the table past its box (Desktop showed a scrollbar and a cut header with three
               // fields and pictures of 160 and 180 in a 553-wide table, 5 Oct 2026): every other column keeps its room
@@ -1286,7 +1388,7 @@
             const sk = { page: pg.name || base, t: pr.field.Measure.Expression.SourceRef.Entity, m: pr.field.Measure.Property };
             if (!noDataSkipped.some((x) => x.t === sk.t && x.m === sk.m)) noDataSkipped.push(sk);
           } else if (pr) {
-            const ent = pr.field.Measure.Expression.SourceRef.Entity, mm = pr.field.Measure.Property, nm = (W.noDataName || 'No data: ') + mm;
+            const ent = pr.field.Measure.Expression.SourceRef.Entity, mm = pr.field.Measure.Property, nm = freeExt(ent, (W.noDataName || 'No data: ') + mm);
             if (!noData.some((x) => x.t === ent && x.m === nm)) noData.push({ t: ent, m: nm, expression: 'IF ( ISBLANK ( ' + "'" + ent.replace(/'/g, "''") + "'" + '[' + mm.replace(/\]/g, ']]') + '] ), "' + (lang === 'ar' ? 'لا توجد بيانات لهذا الاختيار' : 'No data for this selection').replace(/"/g, '""') + '", "" )' });
             container({ x: s.x, y: box.y, w: s.w, h: box.h, z: z - 500, parent, kind: 'nodata', noPhone: true, visual: { visualType: 'cardVisual',
               query: q({ Data: [{ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: ent } }, Property: nm } }, queryRef: ent + '.' + nm, nativeQueryRef: nm }] }),
@@ -1517,8 +1619,10 @@
           // page, columnRoom), less the visual's padding (16)
           const g = vis.objects && vis.objects.grid && vis.objects.grid[0].properties;
           if (g && g.imageWidth) {
-            const ps = vis.query.queryState.Values.projections, pics = ps.filter((x) => x.field.Measure && x.field.Measure.Expression.SourceRef.Schema);
-            const others = ps.filter((x) => !pics.includes(x)).reduce((a, x) => a + columnRoom(x, PHONE.table, font), 0);
+            // (round 23: the row-label measure is the name column, not a picture; the hidden name column takes no room)
+            const ps = vis.query.queryState.Values.projections, hidden = (vis.objects.columnWidth || []).filter((e) => e.properties.value.expr.Literal.Value === '0D').map((e) => e.selector.metadata);
+            const pics = ps.filter((x) => x.field.Measure && x.field.Measure.Expression.SourceRef.Schema && !rowLabels.some((r) => x.queryRef === r.t + '.' + r.m));
+            const others = ps.filter((x) => !pics.includes(x) && !hidden.includes(x.queryRef)).reduce((a, x) => a + columnRoom(x, PHONE.table, font), 0);
             const w0 = parseFloat(g.imageWidth.expr.Literal.Value), h0 = parseFloat(g.imageHeight.expr.Literal.Value), w1 = Math.max(8, Math.min(w0, Math.floor((p.w - 16 - others) / Math.max(1, pics.length)) - 10));
             objects.grid = obj({ imageWidth: num(w1), imageHeight: num(Math.max(8, Math.round(h0 * w1 / w0))) });
           } }
@@ -1568,9 +1672,10 @@
     });
 
     // the "No data" measures (round 19): into the report's extensions, beside the SVG measures where there are some
-    if (noData.length) {
+    // (round 23: and the tables' row-label measures after them)
+    if (noData.length || rowLabels.length) {
       const ents = extFile ? extFile.entities : [];
-      noData.forEach((c) => { let e = ents.find((x) => x.name === c.t); if (!e) ents.push(e = { name: c.t, measures: [] }); e.measures.push({ name: c.m, dataType: 'Text', expression: c.expression }); });
+      noData.concat(rowLabels).forEach((c) => { let e = ents.find((x) => x.name === c.t); if (!e) ents.push(e = { name: c.t, measures: [] }); e.measures.push({ name: c.m, dataType: 'Text', expression: c.expression }); });
       if (extFile) extFile.changed = true; else add(D + '/reportExtensions.json', json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: ents }));
     }
     if (extFile && extFile.changed) extFile.entry.data = json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: extFile.entities });
@@ -1619,7 +1724,7 @@
         // a bar chart writes its category names horizontally (a column chart slants or cuts them); its own sizes, as
         // the card has: axis text 8pt, 40% of the width for the names (a 20-character name is whole), no value axis and
         // each bar's value beside it instead, which leaves room for one more row
-        { x: 12, y: 92, w: 296, h: 184, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), tip.cat),
+        { x: 12, y: 92, w: 296, h: 184, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), tip.cat, true),   /* (round 23: largest first) */
           objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
           visualContainerObjects: tipFrame(tip.y.m === tip.card.m && tip.y.t === tip.card.t ? byTitle(label(tip.y), W.by || 'by', label(tip.cat)) : label(tip.y)) }) }]
       : [{ x: 12, y: 12, w: 296, h: 260, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }]);
@@ -1639,9 +1744,9 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, tableWide, noDataSkipped, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts, blankKept, subtitlesUsed: [...subtitlesUsed] };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, tableWide, noDataSkipped, svgSizes, noPageButtons, tableColumns, rowLabels: rowLabels.map((x) => ({ page: x.page, t: x.t, c: x.c, m: x.m })), rowLabelSkipped, extRenamed, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts, blankKept, subtitlesUsed: [...subtitlesUsed] };
   }
 
-  const api = { build, zip, crc32, textWidth, columnRoom, hasControl };
+  const api = { build, zip, crc32, textWidth, columnRoom, hasControl, absorb, dropLines };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbip = api;
 })(typeof self !== 'undefined' ? self : this);

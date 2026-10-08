@@ -279,6 +279,14 @@ export default async function ({ browser, url }) {
       check(f('check.dax') === checkQuery(exp), 'test model: check.dax does not hold the expected numbers (run make-test-model.mjs)');
       check(exp.length >= 25 && exp.every((x) => x.expected === null || Number.isFinite(x.expected)), `test model: ${exp.length} checks`);
     }
+    // (round 23, the night audit's AUD-033, the owner's go 8 Oct: the README said 40 checks while expected.json held 43)
+    // the README's counts are expected.json's: the total, the rows Desktop gives, and each group by its names' letter
+    const readme = f('README.md') || '', saved = JSON.parse(f('expected.json') || '[]'), n = Object.keys(saved).length;
+    const by = (k) => Object.values(saved).filter((x) => String(x.name).startsWith(k)).length;
+    const total = readme.match(/one query, (\d+) checks \(([^)]*)\)/), rows = readme.match(/Expected: (\d+) rows/);
+    const parts = total ? [...total[2].matchAll(/(\d+) (on the calendar|Arabic names?|Ramadan|Eid)/g)].map((x) => [+x[1], { 'on the calendar': 'C', Ramadan: 'R', Eid: 'E' }[x[2]] || 'A']) : [];
+    check(total && +total[1] === n && rows && +rows[1] === n && parts.reduce((a, [k]) => a + k, 0) === n && parts.every(([k, l]) => by(l) === k),
+      `test model: the README's counts (${total ? total[0] : 'none'}; ${rows ? rows[0] : 'no rows line'}) are not expected.json's ${n} (C ${by('C')}, A ${by('A')}, R ${by('R')}, E ${by('E')})`);
   }
 
   // ---------- 7. The MCP's Gulf check (assets/js/gulf-health.js) reads the generator's calendars as the generator means them ----------

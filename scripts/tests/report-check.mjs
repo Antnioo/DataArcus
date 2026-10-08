@@ -341,6 +341,10 @@ export function sortProblems(files) {
     // category's own column (which is in the visual). So: Descending where the chart is mirrored, Ascending elsewhere.
     const mirrored = (((((v.visual.objects || {}).valueAxis || [])[0] || {}).properties || {}).switchAxisPosition || { expr: { Literal: {} } }).expr.Literal.Value === 'true', want = mirrored ? 'Descending' : 'Ascending';
     if (mirrored && (sd.sort || []).length === 1 && !agg && JSON.stringify(s0.field) === JSON.stringify(((v.visual.query.queryState.Category || {}).projections || [{}])[0].field) && s0.direction === want) return;
+    // (round 23: a bar or column chart by a text category is sorted by its measure (its Y), largest first: Descending,
+    // Ascending where a column chart is mirrored)
+    const yField = (((v.visual.query.queryState.Y || {}).projections || [{}])[0] || {}).field;
+    if ((sd.sort || []).length === 1 && yField && JSON.stringify(s0.field) === JSON.stringify(yField) && ['clusteredBarChart', 'clusteredColumnChart'].includes(v.visual.visualType) && s0.direction === (mirrored ? 'Ascending' : 'Descending')) { sorted.push({ page: p.page.displayName, tooltip: p.page.type === 'Tooltip', type: v.visual.visualType, category: catRef(v), by: 'measure' }); return; }
     if ((sd.sort || []).length !== 1 || !agg || agg.Function !== 3 || !agg.Expression.Column || s0.direction !== want) { bad.push(`${id}: sort ${JSON.stringify(sd).slice(0, 160)}, want one ${want.toLowerCase()} Min of a column`); return; }
     const by = agg.Expression.Column.Expression.SourceRef.Entity + '.' + agg.Expression.Column.Property;
     if (!tips.some((t) => JSON.stringify(t.field) === JSON.stringify(s0.field))) bad.push(`${id}: sorted by Min of ${by}, which is not in its tooltip fields (Desktop ignores the sort)`);
@@ -376,6 +380,45 @@ export function tableProblems(files, rtl, numbers) {
     });
   }));
   return { columns, bad };
+}
+
+// Round 23 (the owner's go, 8 Oct 2026; way 4, measured in Desktop 2.158.1304, DESKTOP-TESTS.md, sitting of 7-8 Oct):
+// Power BI writes the total row's "Total" only in a table's first column, so a right-to-left table with a total row (a
+// text column and a measure or an aggregated column) shows its name column through a report-level text measure at
+// the right, "Row label: <Column>" in the column's table (reportExtensions.json), IF ( ISINSCOPE ( col ), SELECTEDVALUE
+// ( col ), "الإجمالي" ), with the column's display name, and the column itself is the table's first projection at
+// width 0 (columnWidth 0, the automatic widths on): it keeps the rows and their identity. That hidden column and that
+// measure are intentional. A name with a control character keeps the old table (no DAX may name it). Left to right
+// tables never have it. Returns { tables (with the pattern), bad }.
+export function rowLabelProblems(files, rtl) {
+  const bad = []; let tables = 0;
+  const extFile = Object.keys(files).find((p) => /definition\/reportExtensions\.json$/.test(p));
+  const ext = extFile ? JSON.parse(String(files[extFile])).entities.flatMap((e) => (e.measures || []).map((m) => Object.assign({ entity: e.name }, m))) : [];
+  const q = (s) => "'" + String(s).replace(/'/g, "''") + "'", b = (s) => '[' + String(s).replace(/\]/g, ']]') + ']';
+  pagesOf(files).forEach((p) => p.visuals.filter((v) => v.visual && v.visual.visualType === 'tableEx' && v.visual.query).forEach((v) => {
+    const ps = v.visual.query.queryState.Values.projections, id = `${p.page.displayName}/${v.name.slice(0, 6)}`;
+    const isLabel = (x) => x.field.Measure && x.field.Measure.Expression.SourceRef.Schema === 'extension' && /^Row label: /.test(x.field.Measure.Property);
+    const labels = ps.filter(isLabel), text = ps.find((x) => x.field.Column), total = ps.some((x) => (x.field.Measure && !x.field.Measure.Expression.SourceRef.Schema) || (x.field.Aggregation && x.displayName !== ' '));
+    if (!rtl) { if (labels.length) bad.push(`${id}: a row-label measure in a left-to-right table`); return; }
+    if (!labels.length) { if (text && total && !/\p{Cc}/u.test(text.field.Column.Property + text.field.Column.Expression.SourceRef.Entity)) bad.push(`${id}: a right-to-left table with a total row and no row-label measure (no "Total" word)`); return; }
+    tables++;
+    const first = ps[0], last = ps[ps.length - 1], c = first.field.Column, widths = ((v.visual.objects || {}).columnWidth || []);
+    if (labels.length !== 1 || last !== labels[0]) { bad.push(`${id}: the row-label measure is not the one last projection`); return; }
+    if (!c) { bad.push(`${id}: the first projection is not the name column`); return; }
+    // (the word in the report's language: «الإجمالي», or "Total" in an English report laid out right to left)
+    // (round 23 part 5, the review's R1: blank unless one of the table's numbers has a value on the row: its measures and
+    // the columns it sums or counts, in the table's order)
+    const AGG = { 0: 'SUM', 1: 'AVERAGE', 2: 'DISTINCTCOUNT', 3: 'MIN', 4: 'MAX', 5: 'COUNTA' };
+    const nums = ps.filter((x) => (x.field.Measure && !x.field.Measure.Expression.SourceRef.Schema) || (x.field.Aggregation && x.displayName !== ' ')).map((x) => (x.field.Measure ? q(x.field.Measure.Expression.SourceRef.Entity) + b(x.field.Measure.Property)
+      : `${AGG[x.field.Aggregation.Function] || 'COUNTA'} ( ${q(x.field.Aggregation.Expression.Column.Expression.SourceRef.Entity)}${b(x.field.Aggregation.Expression.Column.Property)} )`));
+    const m = last.field.Measure, t = c.Expression.SourceRef.Entity, wants = ['الإجمالي', 'Total'].map((w) => `IF ( ${nums.map((n) => `NOT ISBLANK ( ${n} )`).join(' || ')}, IF ( ISINSCOPE ( ${q(t)}${b(c.Property)} ), SELECTEDVALUE ( ${q(t)}${b(c.Property)} ), "${w}" ) )`), want = wants[0];
+    if ((m.Property !== 'Row label: ' + c.Property && !(m.Property.startsWith('Row label: ' + c.Property + ' (') && /\(\d+\)$/.test(m.Property))) || m.Expression.SourceRef.Entity !== t)   /* (round 23: "(2)" where the model has the name) */ bad.push(`${id}: the measure ${m.Property} is not the first column's (${c.Property})`);
+    if ((last.displayName || '') !== (first.displayName || c.Property)) bad.push(`${id}: the measure's header "${last.displayName}" is not the column's name`);
+    if (!widths.some((w) => w.selector && w.selector.metadata === first.queryRef && w.properties.value.expr.Literal.Value === '0D')) bad.push(`${id}: the name column is not at width 0`);
+    const def = ext.find((x) => x.entity === t && x.name === m.Property);
+    if (!def || def.dataType !== 'Text' || !wants.includes(def.expression)) bad.push(`${id}: the measure in reportExtensions.json is ${JSON.stringify(def || null).slice(0, 200)}, want ${want}`);
+  }));
+  return { tables, bad };
 }
 
 // Cards, as measured: the card's own fill is off (fillCustom show false, with no selector: with the "default" selector
