@@ -2339,6 +2339,35 @@ Facts measured:
   `{ metadata: queryRef }`, value `0D`), and a report-level text measure can stand for the name column, giving the
   total row its own word.
 
+## 2026-10-08 night, round 22b's laptop proof (`fix/round-22b` at `6f706cc`), Power BI Desktop 2.158.1304
+Every report is on a made-up model whose rows are DAX tables; the laptop was locked (the bridge captures the page all the
+same; a screen capture is black). Captures (2x, the page area 2250 wide, nothing scaled down), crops and the pixel
+comparisons: `<tests folder>\r22b\shots\` (`crops\`, `cmp\`); the reports `<tests folder>\r22b\lab\`, `golden\`,
+`showcase\`; scripts `builder-scripts\r22b-*`.
+
+| Check | Result | Crop |
+|---|---|---|
+| Golden task 10, English and Arabic (22b's related categories) | PASS: bars by Hub Region and Lane Region differ; English page 1 is the capture of `6b122ff` pixel for pixel; Arabic opened for the first time since that fix | `shots\g10-en-p1.png`, `crops\g10-ar-p1-left.png`, `-right.png` |
+| A measures table related to nothing, `SUM ( shipments[Amount] )` (lower case), English and Arabic | PASS: every chart by Hub Zone (four different bars), the line chart and the Year and Month slicers from 'Ship Date', nothing by Carrier or 'Date' | `shots\1b-en-p1.png`, `1b-ar-p1.png` |
+| The same table, `CALCULATE ( SUM ( 'Shipments'[Amount] ), 'Shipments'[Ship Day] >= DATE ( 2024, 1, 1 ) )` beside a calendar named 'Date' | PASS: Hub Zone and 'Ship Date'; the line rises January to December | `crops\1c-en-left.png`, `-right.png` |
+| A plan naming the other fact table's measure (`Deliveries[Delivered Qty]`) | PASS: charts by Carrier Group (Air, Road, Sea differ); no line chart (Deliveries reaches no calendar), its place empty | `shots\1d-en-p1.png` |
+| A measure that reaches no category (Region related to Returns only), English and Arabic | PASS: the KPI card alone, no chart by Region; the note names Region and the two fixes | `crops\1e-en-left.png`, `shots\1e-ar-p1.png` |
+| Three charts on two text columns, Arabic | PASS: "عدد Order Id (Region)", "(Channel)", "(Channel 2)", each whole; alt text the same. English: "Count of Order Id by Region", "by Channel", "by Channel (2)" | `crops\2a-ar-left.png`, `-right.png`, `2a-en-right.png` |
+| A bar and a donut by the same measure and column, English and Arabic | PASS: "Total Sales by Region" and "Total Sales by Region (2)", whole; alt text the same | `crops\2b-en-left.png`, `-right.png`, `shots\2b-ar-p1.png` |
+| A 300-wide table whose two kept fields need about 577 at 8pt, English and Arabic | PASS: the note ("wider than the table (300) even at 8pt: it scrolls sideways"); Desktop draws a horizontal scrollbar under the table, the second column reached by it. Beside it the 700-wide table keeps three columns whole | `crops\3-en-left.png`, `-right.png`, `3-ar-left.png` |
+| "No data" unchanged (golden task 8 before its Refresh), Arabic and English | PASS: Arabic is the capture of the 7 Oct sitting pixel for pixel; English shows "No data" on the card and "No data for this selection" once in each chart and the table | `shots\g8-ar-p1.png`, `g8-en-p1.png` |
+| The showcase rebuilt by this branch, English light and Arabic dark | PASS, unchanged: page 1 of each is the 7 Oct capture pixel for pixel | `shots\sc-en-light-p1.png`, `sc-ar-dark-p1.png` |
+| The 20 golden reports rebuilt by this branch | unchanged: every file the same as the `6b122ff` build but the random ids; 17 of the 28 captures are the 7 Oct ones pixel for pixel; the other 11 differ from an older capture only by what changed after it was taken: the Arabic Reset arrow's gap (6: tasks 1, 2, 3, 6, 7), the related category and the table fit of 19:00 UTC (4: task 10 English page 2 and Arabic, task 6 Arabic page 1, each read again at full size) and task 8 English not refreshed (1) | `shots\g*-p*.png`, `cmp\` |
+
+Facts measured:
+- **Desktop does not open a model that has a table named exactly "Measures"**: "Unable to open document" a few seconds
+  after the start, on three made-up models with it; the same models without that table, or with it named `_Measures`,
+  open. (`mcp/test-round22.mjs` names its measures table "Measures" in model.bim fixtures that are never opened.)
+- **A capture taken while a report still loads shows empty panels with small spinners**, not an error: the sitting's
+  first open took over five minutes (a cold start), every later one about 22 s.
+- **The pixel comparison of two captures of the same files is exact** (0 of 4,097,500 pixels) when nothing changed, so
+  a rebuild can be proven unchanged without reading every page again (`builder-scripts\r22b-cmp.py`, `r22b-diff.mjs`).
+
 ## Lessons
 - **Night of 6-7 Oct: a bar chart at the theme's 10pt (1280 x 720) needs 22.2 a row, 45 above the first row and 8
   under the last, and 38 more for its value axis.** Round 0's "22 a row + 46" was the tooltip page's chart without a

@@ -151,7 +151,7 @@ other open sessions, none drives Desktop: left alone). Every tool call goes to t
 (scripts `builder-scripts\r22b-*`); files and captures under `<tests folder>\r22b\`. Made-up models only, their rows as
 DAX tables. The package is not built or installed (the reviewer merges first).
 
-#### Round 22b, laptop proof, expected (written 23:45 UTC, before any build or capture)
+#### Round 22b, laptop proof, expected (written about 23:35 UTC, before any build or capture)
 | # | What is opened in Desktop | Expected (a FAIL is anything else) |
 |---|---|---|
 | 1a | Golden task 10, English and Arabic | charts by Hub Region and Lane Region as at `6b122ff`; the bars differ; slicers as before |
@@ -166,6 +166,68 @@ DAX tables. The package is not built or installed (the reviewer merges first).
 | S | The showcase (Marsa Home) rebuilt by this branch, English light and Arabic dark | files the same as the `6b122ff` build except what 22b changes (titles' numbering cannot apply: its charts differ); scores unchanged, English 10, Arabic 9 (the "Total" word) |
 | G | Golden tasks rebuilt by this branch; the files compared with the `6b122ff` build, every changed report opened | 6, 7, 10 in both languages at least. Scores before 9.8 / 9.9: unchanged or higher (task 7 Arabic may gain a number in a title; task 10's table still repeats the two other fact tables' totals: 9 / 9) |
 `npm test` is run only if code changes (691 of 691 on Linux at `03d500b`).
+
+#### Round 22b, laptop proof, the stop report (written 01:10 UTC on 8 Oct; the limit was 03:30)
+**Commits** (`fix/round-22b`, pushed; not merged, no PR): `44e976c` the expected results; then this report with
+DESKTOP-TESTS.md ("2026-10-08 night"). **No code changed**, so `npm test` was not run (691 of 691 on Linux at `03d500b`
+stands). No FAIL. The package was not built or installed.
+
+**Desktop (2.158.1304), per item** (captures at 2x, read at their own size; `<tests folder>\r22b\shots\`):
+| # | Item | Result | Crop |
+|---|---|---|---|
+| 1a | Golden task 10, English and Arabic | **PASS**: bars by Hub Region and Lane Region differ (446,746 / 445,391 / 296,246); slicers Year, Hub Region, Lane Region | `g10-en-p1.png` (the `6b122ff` capture pixel for pixel), `g10-en-p2.png`, `crops\g10-ar-p1-left.png`, `-right.png` |
+| 1b | A measures table related to nothing, `SUM ( shipments[Amount] )`, English and Arabic | **PASS**: charts by Hub Zone (595,970 / 288,863 / 442,578 / 749,093); the line chart and the Year and Month slicers from 'Ship Date'; nothing by Carrier or 'Date' | `1b-en-p1.png`, `1b-ar-p1.png` |
+| 1c | `CALCULATE ( SUM ( 'Shipments'[Amount] ), 'Shipments'[Ship Day] >= DATE ( 2024, 1, 1 ) )` beside a calendar named 'Date' | **PASS**: Hub Zone and 'Ship Date', never 'Date' | `crops\1c-en-left.png`, `-right.png` |
+| 1d | A plan naming `Deliveries[Delivered Qty]` | **PASS**: charts by Carrier Group (1,993 / 4,021 / 2,998); no line chart, left out and told | `1d-en-p1.png` |
+| 1e | A measure that reaches no category, English and Arabic | **PASS**: the card only (26,413), no chart by Region; reportNotes: "No category is related to Sales[Total Sales]: the text columns of Region ... Add a relationship from Sales to one of those tables, or pick a category of a related table in "fields"." | `crops\1e-en-left.png`, `1e-ar-p1.png` |
+| 2a | Three charts on two text columns | **PASS**: Arabic "عدد Order Id (Region)", "(Channel)", "(Channel 2)"; English "... by Region", "by Channel", "by Channel (2)"; each whole, altText = title | `crops\2a-ar-left.png`, `-right.png`, `2a-en-right.png` |
+| 2b | A bar and a donut by the same measure and column, English and Arabic | **PASS**: "Total Sales by Region", "Total Sales by Region (2)", whole; altText the same. Also on the planned pages of 1b, 1c, 1d ("Total by Hub Zone (2)") | `crops\2b-en-left.png`, `-right.png`, `2b-ar-p1.png` |
+| 3 | A 300-wide table too narrow even at 8pt, English and Arabic | **PASS**: the note ("needs about 577 ... wider than the table (300) even at 8pt: it scrolls sideways in Power BI. Make the table wider, or give those two fields shorter display names"); Desktop draws the horizontal scrollbar; the title is shortened and told. The 700-wide table beside it keeps three columns whole | `crops\3-en-left.png`, `-right.png`, `3-ar-left.png` |
+| 4 | No visual change: No data on (golden task 8 unrefreshed) | **PASS**: Arabic is the 7 Oct capture pixel for pixel; English reads "No data" on the card and "No data for this selection" once per chart and table | `g8-ar-p1.png`, `g8-en-p1.png` |
+| S | The showcase rebuilt by this branch | **unchanged: English 10, Arabic 9** (the "Total" word). The four reports' files are the `6b122ff` build's but the random ids; English light page 1 and 2 and Arabic dark page 1 are the 7 Oct captures pixel for pixel (Arabic dark page 2 differs from its capture of before the Reset fix by the arrow's gap only) | `sc-en-light-p1.png`, `-p2.png`, `sc-ar-dark-p1.png`, `-p2.png` |
+
+**Golden, per task, English / Arabic, before -> after** (10 less 1 per kind of visible problem, as on 7 Oct). All 20
+reports were rebuilt by this branch and opened; their files are the `6b122ff` build's but the random ids
+(`<tests folder>\r22b\files-diff.txt`), so 22b changes none of them. 17 of the 28 captures are the 7 Oct ones pixel for
+pixel; the other 11 differ from an older capture only by what changed after it was taken (6 the Arabic Reset gap, 4 the
+19:00 UTC fixes, 1 task 8 English unrefreshed), and those were read again at full size.
+| Task | Before | After |
+|---|---|---|
+| 1 Exec 1920 | 10 / 10 | 10 / 10 |
+| 2 Analysis | 10 / 10 | 10 / 10 |
+| 3 Ramadan | 10 / 10 | 10 / 10 |
+| 4 16:9 | 10 / 10 | 10 / 10 |
+| 4 4:3 | 10 / 10 | 10 / 10 (the captured middle of the page, as before) |
+| 5 640 x 360 | 9 / 10 | 9 / 10 |
+| 6 long Arabic | 10 / 10 | 10 / 10 (Arabic opened for the first time since the table fit: no scrollbar) |
+| 7 no measures | 10 / 10 | 10 / 10 (no title gains a number: its three charts are on three columns) |
+| 8 redesign | 10 / 10 | 10 / 10 (opened without Refresh: the No data state; with data it is the same files as on 7 Oct) |
+| 10 300 tables | 9 / 9 | 9 / 9 (Arabic opened for the first time since the related category: the bars differ; the table's two other columns still repeat) |
+| **Mean** | **9.8 / 9.9** | **9.8 / 9.9** |
+Page 1 of every report; page 2 for tasks 1, 6, 7, 10 and the showcase.
+
+**The one decision needed:** none. (The Arabic "Total" word of 7 Oct is still open.)
+
+**Seen, not in scope:**
+| Item | Status |
+|---|---|
+| Desktop does not open a model with a table named exactly "Measures" ("Unable to open document"): my first lab model had one; without it, or as `_Measures`, it opens. `mcp/test-round22.mjs`'s fixtures name theirs "Measures" (model.bim, never opened in Desktop; the picker does not read the name) | new; a fact for DESKTOP-TESTS.md, no code touched |
+| 1d: the left-out line chart leaves the largest slot of the page empty, and its reason reads "the model has no month or date column for its axis" though the model has two calendars (the measure reaches neither) | open (the second review's "Seen") |
+| 1b: the table mixes fact tables: Delivered Qty repeats 9,012 on every Hub Zone row | open since round 22 (as task 10) |
+| A hand-placed page (`pages`) in an Arabic report is not mirrored: the title, the charts' axes and the table's name column are at the left, titles left-aligned, and the table says "Total" in English | seen on 1e, 2a, 2b, 3; not checked whether known |
+| A hand-placed page without a design: chart titles are a very light grey on white (hard to read) | seen on 2a, 2b, 3 |
+| Item 3's note names the page twice ("on "P", "P"") for two tables of one page | small |
+| Golden task 6 Arabic: the table's text (8pt after the fit) is much smaller than the page's other text; two slicer headers and one chart title end with "…" | told in the notes |
+| Desktop's bar "Some of the tables have incomplete or no data" covers the top of the header in task 10's and task 8's captures | a capture limit |
+| The Arabic table has no "Total" word; "All" in slicers stays English; English field names in the Arabic lab reports (the models' own names) | open / Desktop's own / by rule 2 |
+| A KPI row planned with one card leaves the rest of the row empty (1c, 1d: my plan asked for one) | by the plan |
+| "Your logo" cut at 640 x 360 in English; the 960 x 720 capture shows the page's middle only | unchanged |
+| The laptop: an empty folder `C:\shots` is left by a bug in my capture script (its one log is removed; removing the folder was refused by the session's guard). Three failed "Untitled" Desktop windows of the bisect were closed; no Desktop window is left open | for the owner to delete |
+
+**Left on the laptop:** `<tests folder>\r22b\` (`lab\` the five made-up models and 12 reports, `golden\`, `showcase\`,
+`shots\` with `crops\` and `cmp\`, `files-diff.txt`), scripts `builder-scripts\r22b-*` (`models`, `lab`, `golden`,
+`showcase`, `shots.ps1`, `probe.ps1`, `dialog.ps1`, `kill.ps1`, `diff.mjs`, `cmp.py`), the work tree `C:\DataArcus\r22b-wt`.
+**Next:** the reviewer merges; then the 0.2.7 package from the merged head and its install test (item 5 of the final list).
 
 ## Sitting 7-8 Oct (laptop builder; branch `fix/round-22` from `origin/fix/round-21` `9d927a9` with `origin/main` `7cdf252` merged in as `8b7d4d6`; not merged, no PR)
 **Started 15:22 UTC on 7 Oct (19:22 Dubai). Hard stop 21:20 UTC; the stop report is below ("the stop report"), pushed 18:48 UTC.** Two sessions: the first stopped at about 15:28, the second did the work. The owner gave
