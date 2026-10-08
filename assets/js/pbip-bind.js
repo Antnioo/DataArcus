@@ -225,7 +225,9 @@
       (e.match(/'(?:[^']|'')*'/g) || []).forEach((x) => { const n = byName.get(lc(x.slice(1, -1).replace(/''/g, "'"))); if (n) out.tables.push(n); });
       // (the reviewer's third review, items 1 and 2: a quoted table name stands as a word, so 'Sales'[Quantity] stays a
       // column; a word followed by "(" is a function (DATE, YEAR, CALENDAR), and VAR, RETURN, TRUE... are keywords)
-      const bare = e.replace(/'(?:[^']|'')*'/g, '_');
+      // (the reviewer's final item 4: DAX allows spaces between a table and its column, 'Sales' [Quantity]: they are closed
+      // up, except after a keyword, RETURN [Total] being a measure call)
+      const bare = e.replace(/'(?:[^']|'')*'/g, '_').replace(/([\p{L}\p{N}_]+)\s+\[/gu, (x, w) => (KEYWORDS.has(lc(w)) ? x : w + '['));
       // a measure is [Name] not right after a table name ('Sales'[Amount] and Sales[Amount] are columns)
       (bare.match(/(^|[^\w\]])\[(?:[^\]]|\]\])+\]/g) || []).forEach((x) => { const n = lc(x.slice(x.indexOf('[') + 1, -1).replace(/\]\]/g, ']')); if (byMeasure.has(n)) out.measures.push(n); });
       (bare.replace(/\[(?:[^\]]|\]\])*\]/g, ' ').match(/[\p{L}_][\p{L}\p{N}_]*(?!\s*\(|[\p{L}\p{N}_])/gu) || []).forEach((w) => { const n = !KEYWORDS.has(lc(w)) && byName.get(lc(w)); if (n) out.tables.push(n); });
