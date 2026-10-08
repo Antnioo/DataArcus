@@ -376,6 +376,21 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     const n = notes(c);
     chk(() => !c.err && /shortened/.test(n) && n.includes(`${long2} by ${long1}\\"`), () => `3rd-4. the first chart's shortened title is still told: ${c.err ? c.t.slice(0, 200) : n.slice(0, 600)}`);
   }
+  // final item 4: DAX allows spaces between a table and its column: 'Sales' [Quantity] and Sales [Quantity] are columns
+  {
+    const rel = (ft, fc, tt, tc) => ({ name: `${ft}-${tt}`, fromTable: ft, fromColumn: fc, toTable: tt, toColumn: tc });
+    for (const [d, expr] of [['r22e-q', "SUM ( 'Sales' [Quantity] )"], ['r22e-b', 'SUM ( Sales [Quantity] )']]) {
+      fs.mkdirSync(path.join(ROOT, d, 'M.SemanticModel'), { recursive: true });
+      fs.writeFileSync(path.join(ROOT, d, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [
+        { name: 'Sales', partitions: mp('Sales'), columns: [col('Quantity', 'double'), col('Region Key', 'int64')], measures: [{ name: 'Total Units', expression: expr, formatString: '#,0' }] },
+        { name: 'Returns', partitions: mp('Returns'), columns: [col('Qty', 'int64'), col('Carrier Key', 'int64')], measures: [{ name: 'Quantity', expression: 'SUM ( Returns[Qty] )', isHidden: true }] },
+        { name: 'Carrier', partitions: mp('Carrier'), columns: [col('Carrier Key', 'int64'), col('Carrier Group', 'string')] },
+        { name: 'Region', partitions: mp('Region'), columns: [col('Region Key', 'int64'), col('Region Name', 'string')] }],
+        relationships: [rel('Sales', 'Region Key', 'Region', 'Region Key'), rel('Returns', 'Carrier Key', 'Carrier', 'Carrier Key')] } }));
+      const a = await ask('suggest_fields', { path: d });
+      chk(() => !a.err && Object.values(a.j.cats).every((v) => v && v.t === 'Region'), () => `final-4. ${expr} reads a column: every category Region: ${a.err ? a.t.slice(0, 200) : JSON.stringify(a.j.cats)}`);
+    }
+  }
   // X-03. Node 20.10 everywhere the MCP says what it runs on, and a CLI that cannot be loaded never stops the server:
   //    started with the CLI's import failing, the server lists its 8 tools and check_report says the validator is not
   //    available, and why
