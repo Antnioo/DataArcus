@@ -10,7 +10,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { visitor } from './lib.mjs';
-import { layoutProblems, phoneTextProblems, navProblems, headerAndRail, headerProblems, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from './report-check.mjs';
+import { layoutProblems, phoneTextProblems, navProblems, headerAndRail, headerProblems, tooltipProblems, tooltipPageProblems, tableProblems, rowLabelProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from './report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT = path.join(HERE, 'fixtures', 'bridge-project');
@@ -100,6 +100,45 @@ export default async function ({ browser, url }) {
       { name: 'Dim', dataCategory: 'Time', columns: [{ name: 'Day', dataType: 'dateTime' }, { name: 'Mon', dataType: 'string' }] }] } };
     const viaPbit = DB.fromTmsl({ tables: E.analyze(bim).rawTables }), direct = DB.fromTmsl(bim);
     check(JSON.stringify(viaPbit) === JSON.stringify(direct), `pbit: the model differs from the model.bim: ${JSON.stringify(viaPbit.map((t) => [t.name, t.hidden, t.date]))}`);
+  }
+  // Round 23 (the owner's "nothing critical left"): the website's picker had no relationships, so a download could show
+  //    the same total on every bar. The relationships a model carries (a model.bim, a .pbit through the health engine,
+  //    a project's definition/relationships.tmdl; inactive ones left out) reach the shared picker as the MCP gives them
+  {
+    const require = createRequire(import.meta.url);
+    const E = require('../../assets/js/model-health-engine.js'), DB = require('../../assets/js/pbip-bind.js');
+    const T = (name, cols, ms) => ({ name, columns: cols.map(([n, t]) => ({ name: n, dataType: t })), measures: (ms || []).map(([n, e]) => ({ name: n, expression: e, formatString: '#,0' })) });
+    const bim = { model: { tables: [T('Hub', [['Hub Key', 'int64'], ['Hub Zone', 'string']]), T('Carrier', [['Carrier Key', 'int64'], ['Carrier Group', 'string']]),
+      T('Shipments', [['Hub Key', 'int64'], ['Amount', 'double']], [['Shipments Amount', 'SUM ( Shipments[Amount] )']]), T('Deliveries', [['Carrier Key', 'int64'], ['Qty', 'double']], [['Delivered Qty', 'SUM ( Deliveries[Qty] )']])],
+      relationships: [{ name: 'a', fromTable: 'Shipments', fromColumn: 'Hub Key', toTable: 'Hub', toColumn: 'Hub Key' }, { name: 'b', fromTable: 'Deliveries', fromColumn: 'Carrier Key', toTable: 'Carrier', toColumn: 'Carrier Key' },
+        { name: 'c', fromTable: 'Shipments', fromColumn: 'Hub Key', toTable: 'Carrier', toColumn: 'Carrier Key', isActive: false }] } };
+    const tmdl = "relationship a1\n\tfromColumn: Shipments.'Hub Key'\n\ttoColumn: Hub.'Hub Key'\n\nrelationship b2\n\tfromColumn: Deliveries.'Carrier Key'\n\ttoColumn: Carrier.'Carrier Key'\n\nrelationship c3\n\tisActive: false\n\tfromColumn: Shipments.'Hub Key'\n\ttoColumn: Carrier.'Carrier Key'\n";
+    const want = JSON.stringify([{ fromTable: 'Shipments', toTable: 'Hub' }, { fromTable: 'Deliveries', toTable: 'Carrier' }]);
+    const a = DB.relsOfTmsl ? DB.relsOfTmsl(bim) : null, b = DB.relsOfTmsl ? DB.relsOfTmsl({ relationships: E.analyze(bim).relationships }) : null, c = DB.relsOfTmdl ? DB.relsOfTmdl(tmdl) : null;
+    check(JSON.stringify(a) === want && JSON.stringify(b) === want && JSON.stringify(c) === want, `relationships read from the model.bim, the .pbit and relationships.tmdl: ${JSON.stringify([a, b, c])}`);
+    const tables = DB.fromTmsl(bim), pick = DB.suggest(tables, 2, { relationships: a || [], modelTables: tables });
+    check(pick.cats.bar && pick.cats.bar.c === 'Hub Zone' && !pick.table.some((f) => f && f.m === 'Delivered Qty'), `the picker with the relationships: charts by a reached category, the table without the unrelated measure: ${JSON.stringify([pick.cats.bar, pick.table])}`);
+    // (round 23 part 5, the review's 2: a change in the picker builds the binding again from its choices; the table there
+    // must leave the unrelated measure out too)
+    const again = DB.build(Object.assign({}, pick.choices, { kpis: pick.choices.kpis.slice(), slicers: pick.choices.slicers.slice() }));
+    check(!again.table.some((f) => f && f.m === 'Delivered Qty') && again.table.some((f) => f && f.m === 'Shipments Amount'), `a picker change keeps the unrelated measure out of the table: ${JSON.stringify(again.table)}`);
+    // (the review's 3: a relationship that filters both ways is followed both ways, read from TMSL and TMDL)
+    const both = DB.relsOfTmdl("relationship z\n\tcrossFilteringBehavior: bothDirections\n\tfromColumn: Hub.'Hub Key'\n\ttoColumn: Deliveries.'Hub Key'\n"), bothJ = DB.relsOfTmsl({ relationships: [{ fromTable: 'Hub', toTable: 'Deliveries', crossFilteringBehavior: 'bothDirections' }] });
+    check(JSON.stringify(both) === JSON.stringify([{ fromTable: 'Hub', toTable: 'Deliveries', both: true }]) && JSON.stringify(bothJ) === JSON.stringify(both), `both-directions relationships read: ${JSON.stringify([both, bothJ])}`);
+    // (round 23 part 8, the review's 2: the website's own designed pages hand a line chart's slot to the visual beside
+    // it too when the model gives no time axis, as the MCP's do: the shared writer does it)
+    {
+      const P = require('../../assets/js/pbip-export.js'), D = require('../../assets/js/design-engine.js'), d = D.fresh(); D.repairState(d);
+      const pages = D.projectPages(d.layout, 'en', { second: false }), line = pages[0].slots.find((z) => z.kind === 'line');
+      const nb = DB.build(Object.assign({}, pick.choices, { date: null }));
+      const r = P.build({ name: 'Own', title: 'Own', pageName: pages[0].name, lang: 'en', rtl: false, font: d.font, sample: false, logo: null, theme: D.buildTheme(d, 'en'), ui: d.ui, texts: D.REPORT_TEXTS.en,
+        model: { byPath: 'T.SemanticModel' }, bind: nb, pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: new Uint8Array(8), panel: p.panel })) });
+      const vs = r.files.filter((f) => /visual\.json$/.test(f.path)).map((f) => JSON.parse(typeof f.data === 'string' ? f.data : Buffer.from(f.data).toString('utf8'))).filter((v) => v.visual && /Chart$|tableEx/.test(v.visual.visualType));
+      const covers = line && vs.some((v) => v.position.x <= line.x + 1 && v.position.x + v.position.width >= line.x + line.w - 1 && Math.abs(v.position.y - line.y) <= 60);
+      check(line && !vs.some((v) => v.visual.visualType === 'lineChart') && covers && (r.leftOut || []).some((x) => x.kind === 'line' && x.gave), `the website's page gives the line chart's room to its neighbour: ${JSON.stringify(vs.map((v) => [v.visual.visualType, v.position.x, v.position.y, v.position.width]))} ${JSON.stringify(r.leftOut)}`);
+    }
+    const tg = fs.readFileSync(path.join(HERE, '../../assets/js/theme-generator.js'), 'utf8');
+    check(/relationships: e\.relationships/.test(tg) && /relsOfTmdl|relationships:/.test(fs.readFileSync(path.join(HERE, '../../assets/js/pbip-bind.js'), 'utf8')), 'the Theme Generator must pass the model\'s relationships to the picker');
   }
 
   // 9. File and folder names from any design name: whole characters only (an emoji is never cut in half)
@@ -209,6 +248,9 @@ export default async function ({ browser, url }) {
       // charts that are themselves by month; of the page's charts at least one is linked to the trend)
       if (t.bad.length || t.pages !== 2 || t.charts !== 2 || t.trend !== 1 || !a.trend) bad.tip.push(`${c.id}: ${t.bad[0] || `${t.pages} tooltip pages, ${t.charts} charts, ${t.trend} trend, ${a.trend} charts linked to it`}`);
       if (tb.bad.length) bad.table.push(`${c.id}: ${tb.bad.length} of ${tb.columns} columns, ${tb.bad[0]}`);
+      // (round 23: an Arabic table's total row says «الإجمالي»: the name column hidden first, the row-label measure last)
+      const rl = rowLabelProblems(b.files, rtl);
+      if (rl.bad.length || (rtl && !rl.tables)) bad.table.push(`${c.id} (${c.lang}): row label ${rl.tables} tables, ${rl.bad[0] || 'no Arabic table has it'}`);
       if (cd.bad.length) bad.card.push(`${c.id}: ${cd.bad[0]} (+${cd.bad.length - 1} on ${cd.cards} cards)`);
       if (sh.length) bad.shell.push(`${c.id}: ${sh.join('; ')}`);
     }
@@ -317,10 +359,11 @@ export default async function ({ browser, url }) {
   // visitor's default design has it at the side: insets 26 on 1920 x 1080)
   const round0 = (files, rtl, insets) => {
     const a = tooltipProblems(files), t = tooltipPageProblems(files), tb = tableProblems(files, rtl), cd = cardStyleProblems(files, rtl, insets);
+    const rl = rowLabelProblems(files, rtl);   // (round 23)
     // the page's download always has a transparent theme and a background image that draws the panels: no visual
     // may leave its panel to the theme there
     const pp = panelProblems(files);
-    return a.bad.slice(0, 1).map((x) => `tooltip link (${a.bad.length} of ${a.charts}): ${x}`).concat(t.bad.slice(0, 1), tb.bad.slice(0, 1).map((x) => `table (${tb.bad.length} of ${tb.columns}): ${x}`),
+    return a.bad.slice(0, 1).map((x) => `tooltip link (${a.bad.length} of ${a.charts}): ${x}`).concat(t.bad.slice(0, 1), tb.bad.slice(0, 1).map((x) => `table (${tb.bad.length} of ${tb.columns}): ${x}`), rl.bad.slice(0, 1).map((x) => `row label: ${x}`),
       cd.bad.slice(0, 1).map((x) => `cards (${cd.bad.length} on ${cd.cards}): ${x}`), projectProblems(files),
       pp.solid || pp.bad.length ? [`panels: the download's theme is ${pp.solid ? 'solid' : 'transparent'}, ${pp.bad.length} visuals wrong: ${pp.bad[0] || ''}`] : []);
   };

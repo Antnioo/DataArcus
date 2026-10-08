@@ -4,6 +4,402 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 23, the Arabic table's "Total" word, way 4 (8 Oct, cloud builder; branch `fix/round-23-total` from main `f9f461d`; not merged, no PR)
+Owner's go (8 Oct ~11:15 Dubai): "i wanna fix the word total as well": build way 4 of "Sitting 7-8 Oct, after the stop
+report" item 1 (measured in Desktop 2.158.1304). Rejected: way 1 (as today, no word), way 2 (names at the left), way 3
+(automatic widths off). Out of scope: English tables, matrices, Arabic tables without a total row.
+
+### Round 23, the plan
+1. Only a right-to-left table whose row field is a text column and that has a total row (a measure or an aggregated
+   column: a table of text columns only has none). The projections, left to right: the text column at width 0
+   (`columnWidth` 0, its own `columnFormatting`), the calendar order's helper where there is one, the SVG pictures, the
+   numbers (reversed, as today), and at the right a report-level text measure `Row label: <Column>` in the column's own
+   table (reportExtensions.json, beside the "No data" measures): `IF ( ISINSCOPE ( 'T'[C] ), SELECTEDVALUE ( 'T'[C] ),
+   "الإجمالي" )`, names escaped as the No-data measures do; its header is the column's display name (the Arabic one when
+   given), right-aligned. Automatic widths stay on (`autoSizeColumnWidth`, grow to fit), as measured. A name with a
+   control character (AUD-032's `hasControl`) keeps today's table, told in the notes.
+2. The sort stays what it is today (the helper, or the column itself where the model sorts it; no sort where today has
+   none). A click on the visible header sorts by the measure (the names as text: A to Z, not the calendar): for the laptop.
+3. reportNotes: one line (what the measure is and why, how to remove it).
+4. check_report: the "RTL_MIRROR (tables)" not-checked line names the pattern (a hidden first column + a row-label
+   measure is intentional). The website's report checks (`scripts/tests/report-check.mjs`): the table checks accept it,
+   and a new check proves it (hidden column first, width 0, the measure last, its DAX).
+5. The website's Arabic download gets it too (the shared engine: every Arabic table with a total).
+
+### Round 23, expected (written before any run)
+| Check | Expected |
+|---|---|
+| New checks, written first | red on `f9f461d` (no measure, the text column last), green after |
+| English reports (golden 1, 3, 4, 5 and an English hand-placed table), built before and after with the same ids | byte-identical, every file |
+| Arabic table without a total (text columns only) | unchanged |
+| Golden tool-level | only tasks 2 and 6 (the Arabic ones with tables) may move, each with its cause; visuals, validator 0, table headers 0 unchanged |
+| `npm test` | all green, 693 -> more |
+| Website suites touched (pbip, theme-generator, theme-generator-lab), `check-min`, `csp`, `test-site-config` | PASS |
+
+### Round 23, the report (cloud builder, Linux; branch `fix/round-23-total`, pushed; not merged, no PR)
+**Commits:** `13fddba` (the plan and expected numbers, before any run), `6aeb31e` (the build), then this report.
+
+**Tests before -> after:** new `mcp/test-round23.mjs` (11 checks, runs alone in seconds): 9 red on `f9f461d`, 2 green
+(the two "unchanged" checks), all 11 green after. Full `npm test` (Linux, once at the end): **693 -> 704 of 704, golden
+PASS**. `golden-expected.json` unchanged: tasks 2 and 6 (the Arabic ones with tables) keep their visuals, validator 0
+and table headers 0; no answer size moved past its expected. Website: all 17 suites PASS (pbip 73, theme-generator 893,
+theme-generator-lab 893, ...); `check-min` (pbip-export and theme-generator rebuilt, `?v=20261008r23`), `csp`,
+`test-site-config`, `test-analytics-events` PASS.
+Ten older checks (rounds 11-22) asserted the Arabic table's text column as the last projection: they now compare the
+columns as the reader sees them (`shownOf` in `mcp/test.mjs`: the hidden column left out, the row label read as its
+column), the cause beside each; one (round 2's "no displayName without displayNames") exempts the row-label measure,
+whose header must be its column's name. No expected number changed.
+
+**English byte-identical (proved):** the whole golden run built on `f9f461d` and on this branch with the same ids
+(Math.random and crypto seeded by a preload, scratch only): every file of every English report (tasks 1, 3, 4, 5, 7, 8,
+9, 10), the themes and the models are identical; only the two Arabic reports differ, in their two tables'
+`visual.json` and `reportExtensions.json`.
+
+**What is written, one Arabic table (golden task 2, Day Name, Ramadan sample):**
+```
+projections (left to right): Calendar.Day Name | Min(Calendar.Day of Week) [" "] | Sales.Total Sales vs Last Ramadan % |
+  Sales.Total Sales Last Ramadan | Sales.Total Sales | Calendar.Row label: Day Name ["Day Name"]
+  (before: Min(...) | the three measures | Calendar.Day Name)
+the last: { "field": { "Measure": { "Expression": { "SourceRef": { "Schema": "extension", "Entity": "Calendar" } },
+  "Property": "Row label: Day Name" } }, "queryRef": "Calendar.Row label: Day Name", "displayName": "Day Name" }
+sortDefinition: unchanged (Min of Calendar[Day of Week], Ascending)
+columnWidth: [ 1D on Min(Calendar.Day of Week) (as before), 0D on Calendar.Day Name (new) ]
+columnFormatting: + { alignment 'Right', styleHeader/Values/Total true, selector Calendar.Row label: Day Name }
+columnHeaders: columnAdjustment growToFit, autoSizeColumnWidth true (as before)
+reportExtensions.json, entity Calendar: { "name": "Row label: Day Name", "dataType": "Text",
+  "expression": "IF ( ISINSCOPE ( 'Calendar'[Day Name] ), SELECTEDVALUE ( 'Calendar'[Day Name] ), \"الإجمالي\" )" }
+```
+reportNotes adds: "The total row of the Arabic table says «الإجمالي»: ... the name column you see at the right is a measure
+that exists only in this report ("Row label: Day Name" in Calendar, definition/reportExtensions.json; the model was not
+changed), and the column itself is the table's first column, hidden at width 0 ... To remove it: select the table, remove
+the "Row label: ..." field, drag the column to the end of Columns and widen it."
+
+### Round 23, for the laptop to prove (Desktop 2.158.1304; each expected before the run; a FAIL is anything else)
+| # | Check | Expected |
+|---|---|---|
+| 1 | An Arabic table (golden 2, 6; the showcase Arabic dark), the total row | «الإجمالي» at the right end of the total row, bold like the totals; names at the right; no "Total" anywhere |
+| 2 | The hidden column | invisible at the left; stays hidden after a page resize (Fit to page / Fit to width, a window resize) and in Focus mode; no gap or sliver at the left edge |
+| 3 | A click on a row (and Ctrl+click two rows) | the other visuals filter to that day/region (the hidden column carries the row's identity); a click on the total row selects nothing |
+| 4 | Row order | as before (Sunday to Saturday where the helper sorts; where today has no sort, write down the order Desktop gives) |
+| 5 | A click on the visible name header | sorts by the measure: the names A to Z as text (days alphabetical, not the calendar); a second click Z to A. Expected and told in the notes; write down what Desktop does |
+| 6 | Tab and a screen reader (Narrator) in the table | the order sensible; write down whether the name is read twice (the hidden column and the label) |
+| 7 | English tables (golden 1, showcase English light) | unchanged (the files are byte-identical) |
+| 8 | Showcase Arabic dark rebuilt | **10** (was 9: the "Total" word); golden Arabic tasks 2 and 6: the word shown, nothing else moved |
+| 9 | The website's Arabic download (Theme Generator, Arabic, any design) | as 1-3 (the same engine) |
+
+### Round 23, part 2: the report's language decides the columns (the reviewer's routine, 07:40 UTC; owner's rule 8 Oct)
+Owner: "in any model I want to make sure English in English reports and Arabic in Arabic reports." Found in the 0.2.7
+install test on the made-up bilingual Marsa Home model: an English report took Sales[المدينة] for its column chart, its
+table and a slicer beside the City slicer. **Commit `71072ce`.**
+- **One rule, in the shared picker** (`pbip-bind.js` `langOf`, twins, `byLang`): used by `suggest_fields` (new optional
+  `lang`), create_report's picker, the counts of a model without measures, plan_layout's Arabic names, and the website's
+  picker (the Theme Generator passes the page's language). A name with Arabic letters or an Arabic mark ("(Arabic)",
+  "(AR)", "_ar", " AR") is Arabic, Latin is English, else neutral; only text columns have a language. Twins: an Arabic
+  and an English text column of one table, by the same name less its mark, else the same data category, else adjacent.
+  - English report: no Arabic column while another exists for the role; else used and told ("used anyway").
+  - Arabic report: an English column with an Arabic twin gives its place to the twin; one without stays (display names
+    as today); the date table keeps round 12b's own swap (Day Name -> Day Name (Arabic)).
+  - Measures named in the other language rank after the others. Twins are never both slicers or categories.
+  - The user's named `fields` always win; a named field in the other language gets a note (in an Arabic report, only an
+    English column that has an Arabic twin). One reportNotes line names the columns skipped.
+- **Tests:** `test-round23.mjs` checks 7 to 11 (7 checks): 6 red on the old picker (the English report used
+  Sales[المدينة] and both twin slicers; the Arabic one used City and المدينة), all green after. Full `npm test` (Linux):
+  **704 -> 711 of 711, golden PASS, `golden-expected.json` unchanged** (no golden model is bilingual; the golden run built
+  before and after with the same ids differs only in the two Arabic reports' tables, part 1). Website suites pbip,
+  theme-generator, theme-generator-lab PASS; `check-min` (`pbip-bind.min.js?v=20261008r23`), `csp`, `test-site-config`,
+  `test-analytics-events` PASS. One bug found by the full run and fixed before the commit (plan_layout's name scope).
+- **Docs:** `mcp/README.md` step 3: if Windows asks which app opens the `.mcpb`, choose Claude; or Settings > Extensions
+  > Advanced settings > Install Extension...; on an update the button says Update, then Windows asks Install.
+  **INSTALL.md is not in this repo** (it is the package's, in dataarcus-engine): not changed; the same lines belong there.
+- **For the laptop to prove (add to the list above):**
+  | # | Check | Expected |
+  |---|---|---|
+  | 10 | Marsa Home, English report (fields picked automatically) | City, Category, Channel only; no Arabic column on any page, slicer or tooltip; no twin slicers; the note names the Arabic columns skipped |
+  | 11 | Marsa Home, Arabic report | المدينة, الفئة, القناة; Day Name (Arabic) where a day shows; no City/Category/Channel; no twin slicers |
+  | 12 | Golden tasks in both languages (2, 6 and an English one) | as before part 2 (the files are the same) |
+
+### Round 23, part 3: AUD-033 (the reviewer's routine, 07:58 UTC; the owner's go "Fix aud033")
+`934f525`: `scripts/gulf-calendar/test-model/README.md` said 40 checks and 40 rows; `expected.json` holds 43 (15 C,
+3 A for the Arabic name columns added 6 Oct, 10 R, 15 E): now 43 with the four groups. The `gulf-calendar` suite checks
+the README's total, its rows line and each group against `expected.json` (red on the old README, green after; the suite
+813 -> 814 checks, PASS). Seen, not changed: `content/linkedin-gulf-calendar.md` still says "the test model's 40 checks";
+DESKTOP-TESTS.md's 40 rows is the record of a run made before the Arabic checks (history, left).
+
+### Round 23, part 4: the beta-critical leftovers (the reviewer's routine, 08:21 UTC; the owner: "make sure there is nothing critical left in seen not in scope")
+**Commit `b7fbac6`.** Each item a check first (`test-round23.mjs` 1-8 of part 4, 7 checks; the website's in
+`scripts/tests/pbip.mjs`, 3 checks), all red on `2bd95fa`, green after.
+| # | Item | Root cause and fix |
+|---|---|---|
+| 1 | A table mixing measures of unrelated fact tables repeats one total (lab 1b, golden 10) | the table's measures were never checked against its row column; `Bind.reachTable` (the charts' reach rule) leaves out a measure that does not reach the row's table, named in reportNotes and `notReached`; named `fields.table` wins |
+| 2 | The website's picker has no relationships | the readers dropped them; `relsOfTmsl` (model.bim, the .pbit through the health engine's answer) and `relsOfTmdl` (`definition/relationships.tmdl`), inactive ones out; the Theme Generator passes them with the tables; none known: as before |
+| 3 | ID-like text columns as categories | `NOT_CAT` was case-sensitive ("Order Id", "Customer Code" passed) and had no number words; the identifier words (id, key, code, guid, sk, no, num, number) now ignore case, plus camel ends (OrderID, InvoiceNo); the list's other words unchanged (a first try made all of it case-insensitive and lost the Health Test model's "Note" category: narrowed) |
+| 4 | Hand-placed Arabic pages left to right without `rtl: true` | `rtl` defaulted to false; now `rtl` unset follows `lang` ("ar": right to left, way 4); `rtl: false` still wins |
+| 5 | A 1920 x 1080 theme on a smaller hand page | the theme was copied as is; our theme's scale is read from its table text (10 x scale) and every font/text size follows the pages' height (8-60), told; mixed page heights: told, not scaled |
+| 6 | Empty slot and wrong reason when the measure reaches no calendar | the picker gave no reason; `noRelatedCalendar` names the calendars, the reason says "no calendar is related to <table>", and on a designed page the visual beside the line chart takes its slot (the text box's rule, `absorb`) |
+| 7 | Report measures could take a model object's name | `o.model.names` (every column and measure, hidden too); "(2)", "(3)"... where taken, case-insensitive, told |
+| 8 | Bar/column charts by text alphabetical | no sort was written; `sorted(..., byValue)`: by the measure, Descending (Ascending on a mirrored column chart); months, days, quarters, years, Hijri names, model-sorted and number columns keep their order; the tooltip's bar chart too. `sortProblems` (website) accepts it |
+| 9 | zod 3 -> 4 (Dependabot #5) | **already on main** (`75c0e2f`, "supersedes Dependabot PR #5"); every run of this round used zod 4.6.5. Nothing applied (the branch `deps/zod-4` is from an older main and conflicts) |
+
+**Tests:** `npm test` 711 -> **719 of 719**; golden PASS after two changes with their cause in `why`: task 6
+`longTitleUses` 81 -> 84 (item 8: the measure in 3 charts' sortDefinition, counted in the files), task 10 `suggestChars`
+5610 -> 5113 (item 1: two unrelated measures out of the table, in `notReached`; item 3: the "... Code" columns out of the
+slicer pool; diffed answer by answer). Older checks changed: the chart sort predicates of round 13 (item 8, cause beside
+them). Website: pbip 73 -> 76, theme-generator 893, theme-generator-lab 893, model-health 62 PASS; `check-min`, `csp`,
+`test-site-config` PASS.
+
+**For the laptop to prove (add to the list above; expected before the run):**
+| # | Check | Expected |
+|---|---|---|
+| 13 | Golden 10 EN + AR (and lab 1b) | the table has no column repeating one total on every row; the note names the measures left out |
+| 14 | The website: a project folder (TMDL with relationships.tmdl) and a .pbit of a model with two fact tables | the download's charts by a related category, bars differ |
+| 15 | A model with Order Id / Invoice No text columns, EN | no chart, slicer or table by them |
+| 16 | A hand-placed Arabic page (no `rtl`) | mirrored: title right, page buttons right to left, the table's names at the right with «الإجمالي» |
+| 17 | generate_theme (1920 x 1080) + a 1280 x 720 hand page | text sizes as a planned 1280 x 720 report's (table 10pt, titles 12pt), nothing cut |
+| 18 | Golden 7 or a model whose measure reaches no calendar, EN + AR | no line chart and no empty slot (the bar chart beside it wider); the answer's reason names the calendar |
+| 19 | Golden 5, 6, 7, 10 EN + AR: bar/column charts | by a text category largest first (an Arabic column chart: largest at the right); months and days in calendar order |
+
+### Round 23, part 5: the reviewer's code review (09:16 UTC; 10 findings, all CONFIRMED by a red check, all fixed)
+**Commit `b74d4fe`.** Checks R1, R3-R9 in `test-round23.mjs` (8) and two in `scripts/tests/pbip.mjs` (findings 2, 3):
+all red on `4f82310`, green after. Finding 10 is a refactor (one relationship reader), covered by R3.
+| # | Finding | Fix |
+|---|---|---|
+| 1 HIGH | The row label had a value on every row: empty rows stayed (names with blank numbers; names over the "No data" card) | `IF ( NOT ISBLANK ( [m1] ) \|\| ..., IF ( ISINSCOPE ( col ), SELECTEDVALUE ( col ), "الإجمالي" ) )` over the table's own numbers (measures, and the columns it sums or counts); a second table by the same column with other numbers gets "Row label: X (2)"; a number whose name has a control character keeps the old table |
+| 2 HIGH | The website's picker change rebuilt the table without the reach rule | the rule is in `build()` (choices.reach), so every path has it; the server's duplicate removed; named `fields.table` still wins |
+| 3 HIGH | bothDirections relationships followed one way only | `both` read from TMSL and TMDL, followed both ways in `reached` |
+| 4 MED | Language rule before the reach left an English report with no category | the reach first, then the language (with its Arabic fallback, told) |
+| 5 MED | "Adjacent" paired unrelated columns | adjacent only when the table's layout is unambiguous: every free Arabic column after its English one, or every one before, not both |
+| 6 HIGH | A user's theme was rescaled | rescaled only when every size generate_theme writes (table, slicer, card, multi-row card, matrix) sits on one page scale; otherwise kept and noted |
+| 7 MED | Two line slots: a stretched line chart stayed | `mcp/lib/slots.mjs` `dropLines`: all line slots out first, then each absorbed (**the package must carry `lib/slots.mjs`**) |
+| 8 LOW | "Aging AR" read as Arabic | only "(AR)", "(Arabic)", the word Arabic and Arabic letters |
+| 9 LOW | "Holiday Package" read as time; "Order No (AR)" not an ID | whole time words (English and Arabic); `NOT_CAT` reads the name without its Arabic mark |
+| 10 LOW | Two relationship readers | the server uses `Bind.relsOfTmsl` |
+**Tests:** `npm test` 719 -> **727 of 727**; golden PASS after task 6 `longTitleUses` 84 -> 86 (finding 1: the two
+tables' labels each name the long measure once; counted in reportExtensions.json; cause in `why`). Website pbip 76 -> 78,
+theme-generator 893, theme-generator-lab 893 PASS; `check-min` PASS. zod 4: already on main (the reviewer's note corrected).
+**For the laptop to prove (add):**
+| # | Check | Expected |
+|---|---|---|
+| 20 | An Arabic table, a slicer selection where some rows have no data (a product with no sales in the chosen year) | those rows vanish, as in the English table; with everything blank, the "No data" card alone, no names over it; the total row's «الإجمالي» only when a number shows |
+| 21 | The website: change a picker field on a model with two fact tables | the table still has no column repeating one total |
+| 22 | A model with a both-directions relationship (Hub <-> Deliveries) | Delivered Qty stays in the table by Hub Zone, its rows differ |
+| 23 | A theme the user made (not generate_theme's) on a 1280 x 720 hand page | its own sizes, unchanged; the note says it was not scaled |
+
+### Round 23, part 6: the reviewer's re-review of part 5 (09:42 UTC; the last loop)
+**Commit `62d8d06`.** Checks F1-F7 in `test-round23.mjs` (7), all red on `44eba28`, green after; finding 8 (a cache) has no
+behaviour to show, covered by the existing reach checks.
+| # | Finding | Fix |
+|---|---|---|
+| 1 HIGH | Whole-word time words missed QuarterName, Month_Name, FiscalYear, WeekNum, اسم_الشهر | the name is split into words first (CamelCase, "_", "-", digits) |
+| 2 HIGH | Part 5 made "City_AR" English | a trailing _AR / -AR / " AR" is Arabic where the same table has the English column of that name (then twins); alone, English |
+| 3 LOW | "Arabic" inside a name read as Arabic | only at the end ("Name (Arabic)", "Name Arabic") or the start ("Arabic Name") |
+| 4 MED | generate_theme's 768-high theme not known as ours | every page height 200-4400 tried with the engine's rounding; no key written into the theme (Desktop may refuse an unknown one) |
+| 5 MED | Two touching line slots left a blank band | touching line slots merged into one box, then handed to the visual beside it (lib/slots.mjs); nothing beside it: the band stays empty (no card added) |
+| 6 LOW | Function 2 written as COUNTA | DISTINCTCOUNT, in the writer and the website's check |
+| 7 LOW | withText's own copy of absorb | uses lib/slots.mjs |
+| 8 LOW | reachTable walked the model on every build | each measure's reach kept with the choices' reach |
+**Tests:** `npm test` 727 -> **734 of 734**, golden PASS (unchanged). Website pbip 78, theme-generator 893,
+theme-generator-lab 893 PASS; `check-min` PASS.
+**For the laptop to prove (add):**
+| # | Check | Expected |
+|---|---|---|
+| 24 | A chart by a MonthName / QuarterName / Month_Name text column (no sort-by column in the model) | not sorted by value (its own order; the model's sort-by column where it has one) |
+| 25 | A model with City and City_AR, English and Arabic reports | English: City only; Arabic: City_AR only; never both as slicers |
+
+### Round 23, part 7: the laptop's findings S1, W1, S2 (11:00 UTC; the laptop proved round 23 at `4f1136c`: 25 of 25 PASS)
+**Commit `c250a69`.** Checks S1, W1, S2 in `test-round23.mjs`, all red on `ab28427`, green after.
+| # | Finding | Root cause and fix |
+|---|---|---|
+| S1 HIGH | A rail with two slicers: two 24-wide slivers side by side (English), width -2 (Arabic) | `railFit` shrinks the rail to its slicers' height; at 720 high with two slicers it came out wider than high (196 x ~150), and the slicer layout took it for a top strip. A fitted rail keeps `stack`: always a column. Older than round 23 (seen on `fix/round-22b` files too). Swept: every layout (exec, analysis, ops, focus) x 1920/1280/960 x end/start/top x EN/AR: the 32 cases at 1280 and 960 with a side rail were wrong, all right now |
+| W1 | The tooltip's bar repeated one total (the second KPI of an unrelated fact table) | `build()`'s tooltip measure takes the reach rule (the table's): a KPI that does not reach the tooltip's category is passed over; else the main measure. In `build()`, so the website's picker and its changes get it |
+| S2 | A line chart left out for "no month or date column" left its slot empty | `dropLines` ran only with `noRelatedCalendar`; now for every designed page whose binding has no time axis |
+**Tests:** `npm test` 734 -> **737 of 737**; golden PASS after task 10 `suggestChars` 5113 -> 5119 (W1: the tooltip's measure
+Freight Costs, which reaches Hub, instead of Deliveries, which does not; diffed, the only change; cause in `why`). Website pbip
+78, theme-generator 893, theme-generator-lab 893 PASS; `check-min` PASS.
+**For the laptop to prove (re-prove only these three):**
+| # | Check | Expected |
+|---|---|---|
+| S1 | Labs 15, 18, 20 (two usable text columns) English and Arabic, 1280 x 720 (and one at 960 x 720) | the rail shows both slicers, each the rail's width, one under the other, then Reset; Arabic the same at the right; nothing cut |
+| W1 | The website's download on Dhow Freight; the MCP's report on the same model; hover a Hub Zone bar | the tooltip's bar chart shows a measure whose bars differ (Shipments, or the main measure), never one total on every bar |
+| S2 | Labs 15, 20, 22 (no date column), English and Arabic | no line chart and no empty slot on page 1: the visual beside it (the bar chart) takes the line chart's room; leftOutVisuals: "no month or date column" |
+
+### Round 23, part 8: the reviewer's review of part 7 (11:42 UTC)
+**Commit `652d24c`.** Checks P1, P3 in `test-round23.mjs` and one in `scripts/tests/pbip.mjs` (the website's page), all
+red on `43d0791`, green after.
+| # | Finding | Fix |
+|---|---|---|
+| 1 | The tooltip's measure was checked against A's table only, but every chart that opens the tooltip filters it | it must reach A's, B's and the time axis's tables; else the main measure |
+| 2 | The line slot's hand-off was MCP-only | moved into the shared writer (`absorb`, `dropLines` in `pbip-export.js`; `leftOut` with `gave`); `mcp/lib/slots.mjs` re-exports them; hand-placed pages (`hand: true`) keep their positions |
+| 3 | "The model has no month or date column" when a date column is in an unreached table | "no date column is related to <table>"; "the model has no measure for it" when that is the cause |
+**Tests:** `npm test` 737 -> **739 of 739**; golden PASS after task 10 `suggestChars` 5119 -> 5111 (finding 1: the tooltip's bar
+shows the main measure, Freight Costs does not reach Lane; diffed, the only change; cause in `why`). Website pbip 78 -> 79,
+theme-generator 893, theme-generator-lab 893 PASS; `check-min` PASS.
+**For the laptop (with S1, W1, S2):** W1 now expects the tooltip's bar by the main measure where the second KPI does not
+reach both categories; S2 also on the website's download of a model without a date column (no hole on page 1).
+
+### Round 23, the one decision needed
+**The website's Arabic download gets way 4 too** (built: the engine is shared, rule 3 "fix the cause"). (a) Keep it
+(the website's Arabic table then says «الإجمالي» as the MCP's does); (b) only the MCP's reports (a flag the website
+leaves off). **Recommended: (a)**, once the laptop's 1-3 pass.
+
+### Round 23, seen, not in scope
+- A hand-placed page (`pages`) in an Arabic report is right to left only with `rtl: true` (create_report's rule); without
+  it the table reads left to right with the English "Total" (known since 7 Oct: 1e, 2a, 2b, 3).
+- An English report laid out right to left (`dir: "rtl"`) gets way 4 with the word "Total"; the note still names «الإجمالي».
+- A model measure or column named exactly "Row label: <Column>" in the same table would collide with the report
+  measure (as "No data: " would); not guarded.
+- Matrices are unchanged (their row header is not reversed in an Arabic report).
+- Still open from earlier: "All" in slicers follows the viewer's Power BI language; English field names where the model
+  has no Arabic ones; task 10's table repeats the totals of measures of unrelated fact tables; "Your logo" cut at 640 x 360.
+
+### Round 23, laptop proof (8 Oct, laptop builder; work tree `C:\DataArcus\r23-wt`; started 09:45 UTC, hard stop 14:30 UTC; the owner's "Go for it now")
+The only session driving Power BI Desktop (none was open at the start; Windows not locked). Every tool call goes to this
+branch's `mcp/server.mjs` over stdio (scripts `builder-scripts\r23-*`); files and captures under `<tests folder>\r23\`.
+Made-up models only, their rows as DAX tables. No code file is touched (a FAIL is reported with its cause and a proposed
+fix); the package is not built or installed. Two parts: A on `44eba28` (what the cloud builder's last review loop does not
+touch), B on the loop's head once it is pushed and CI is green (if not by 13:45 UTC: B is listed "not proven yet").
+
+#### Round 23, laptop proof, expected (written 09:50 UTC, before any capture is read)
+The expected results are the lists above (items 1-23, each written by the cloud builder before its run). What is opened:
+| Part | Items | What is opened in Desktop | Expected (a FAIL is anything else) |
+|---|---|---|---|
+| A | 1, 2, 3, 5, 8 | The showcase Arabic dark (Marsa Home), golden 2 and 6 Arabic | «الإجمالي» at the right of the total row, bold; names at the right; no "Total"; the hidden column invisible, also after Fit to width, a window resize and Focus mode; a row click filters the page, the total row selects nothing; a header click sorts the names as text |
+| A | 20 | Made-up "Majlis Store" (a product without sales in 2025, no rows in 2023), Arabic, the year as a page filter and as a slicer click | 2025: the product's row gone (as in the English table); 2023: the "No data" card alone, no names over it, no «الإجمالي» |
+| A | 10, 11 | Marsa Home, fields picked automatically, English and Arabic | English: City, Category, Channel only; Arabic: المدينة, الفئة, القناة and the Arabic month/day names; no twin slicers; the note names the skipped columns |
+| A | 13 | Lab 1b of round 22b (Dhow Freight) English and Arabic; golden 10 | the table by Hub Zone has Total and Total Quoted only (no 9,012 on every row); the note names Delivered Qty |
+| A | 14, 21, 9 | The website's lab page served from the work tree: Dhow Freight's project folder picked, downloaded; one picker field changed, downloaded again; the Arabic sample download | charts by Hub Zone, bars differ; the table without Delivered Qty both times; the Arabic download's table as items 1-3. A .pbit's download is a live connection (no published made-up model): files only |
+| A | 15 | Made-up "Souk Orders" (Order Id, Invoice No, Customer Code as text; Region, Channel) | no chart, slicer or table by the three ID columns |
+| A | 22 | Made-up "Dhow Hubs" (Hub <-> Deliveries both directions) | Delivered Qty in the table by Hub Zone, its rows differ (1,200 / 2,750 / 1,980 / 3,082) |
+| A | 16 | A hand-placed Arabic page without `rtl` (Sales Lab) | mirrored: title right, the table's names at the right with «الإجمالي» |
+| A | 23 | A theme with a 12pt table (not generate_theme's) on a 1280 x 720 hand page | its sizes unchanged (table 12, card 42); the note "not scaled" |
+| B | 19 + loop | Golden 5, 6, 7, 10 and made-up "Bayt Sales" (MonthName, YearMonth, DayName; City / City_AR) English and Arabic | bars by a text category largest first (an Arabic column chart: largest at the right); months and days in calendar order; English uses City, Arabic City_AR |
+| B | 17 | generate_theme's 1920 x 1080 theme on a 1280 x 720 hand page | table 10pt, card 28pt, nothing cut; the note |
+| B | 18 | Made-up "Souk Regions" (the measure reaches no calendar) English and Arabic, one and two line slots | no line chart, no blank band; the reason names the calendar |
+| B | S, G | The showcase English light and Arabic dark; golden 5, 6, 7, 10 English and Arabic | showcase 10 / **10** (was 9); golden before 9.8 / 9.9: task 10 9 -> 10 if its table no longer repeats; nothing lower |
+Not planned: item 6 (Narrator), unless time is left. `npm test` is not run (no code changes; 727 of 727 on Linux at `b74d4fe`).
+
+#### Round 23, laptop proof, the stop report (written 10:50 UTC on 8 Oct; the limit was 14:30)
+**Heads proven:** part A on `44eba28`; then everything rebuilt and part B on **`4f1136c`** (part 6 `62d8d06` merged with
+the expected-results commit; CI green on `4f1136c`). Every part A report rebuilt on `4f1136c` has the same fields, sorts,
+row labels and notes (one note's wording differs: "about 1080 high"), and the showcase and golden 2, 6 Arabic captures
+are the part A ones pixel for pixel: part A stands for `4f1136c`. **No code file touched; `npm test` not run** (734 of
+734 on Linux at `62d8d06`). The package was not built or installed. **No FAIL of a listed item; three findings below.**
+Commits: `0bb045b` (the expected results), then this report with DESKTOP-TESTS.md ("2026-10-08 midday").
+
+**Desktop (2.158.1304), per item** (bridge captures at 2x, read at their own size; `<tests folder>\r23\shots\`):
+| # | Item | Result | Crop |
+|---|---|---|---|
+| 1 | The Arabic total row | **PASS**: «الإجمالي» at the right end, bold like the totals, names at the right, no "Total": the showcase Arabic dark, golden 2, 6, 7, 10 Arabic, lab 13, 16, 20 | `sc-ar-dark-p1.png`, `g2-ar-p1.png`, `g6-ar-p1.png`, `g7-ar-p1.png`, `g10-ar-c-p1.png` |
+| 2 | The hidden column | **PASS**: invisible, no sliver at the left edge, also in Focus mode, after the window was made 1300 x 800 (page at 20%) and after View > Page view > Fit to width | `poke\i6-focus.png`, `i7-window-1300.png`, `i8-fit-width.png` |
+| 3 | A row click, Ctrl+click, the total row | **PASS**: a click on الأثاث filters the page (11,771,119 -> 3,563,989, the charts highlight); Ctrl+click on a second row adds it (4,601,192 = the two rows); a click on the total row selects nothing (the page back to 11,771,119) | `poke\i1-row1.png`, `i2-row1-ctrl-row3.png`, `i345-stack.png` |
+| 4 | Row order | **PASS**: golden 2 Sunday to Saturday (the helper); where there is no sort, Desktop gives the names A to Z | `g2-ar-p1.png` |
+| 5 | A click on the visible name header | **PASS**, as told in the notes: first click the names A to Z (the arrow up), second click Z to A; «الإجمالي» stays last | `poke\i345-stack.png` |
+| 6 | Tab and Narrator | **not done** (not planned). Seen instead: the Filters and Build panes list the name twice (the hidden column and the label), as the note says | `poke\i6-focus.png` |
+| 7 | English tables | **PASS**: golden 1 English is round 22b's capture pixel for pixel | `g1-en-p1.png` |
+| 8 | Showcase Arabic dark | **10** (was 9); see the scores | `sc-ar-dark-b-p1.png`, `-p2.png` |
+| 9 | The website's Arabic download | **PASS**: the sample download and the download on a picked project both say «الإجمالي», names at the right | `w4-ar-p1.png`, `w3-ar-p1.png` |
+| 10 | Marsa Home, English, fields picked automatically | **PASS**: City, Category, Month Name; slicers Year, City, Category; no Arabic column on either page; the note names المدينة, الفئة, القناة as skipped | `m-en-p1.png`, `-p2.png` |
+| 11 | Marsa Home, Arabic | **PASS**: المدينة, الفئة, Month Name (Arabic); slicers Year, المدينة, الفئة; no City / Category / Channel | `m-ar-p1.png`, `-p2.png` |
+| 12 | Golden in both languages | as before part 2 (2 and 6 Arabic, 1 English opened) | above |
+| 13 | A table without the unrelated fact table's measure | **PASS**: lab 1b English and Arabic: Hub Zone, Total, Total Quoted (no 9,012 column), the note names Delivered Qty; golden 10 English and Arabic: Lane Region and Shipments Total Net Amount only | `13-en-p1.png`, `13-ar-p1.png`, `g10-en-c-p1.png`, `-p2.png`, `g10-ar-c-p1.png` |
+| 14 | The website, a project folder with relationships.tmdl | **PASS** for the pages: charts by Hub Zone, four different bars, the table without Delivered Qty. **The .pbit: not proven in Desktop** (its download is a live connection; no made-up published model). **Finding W1 below** (the tooltip page) | `w1-en-p1.png`, `w1-en-p3.png` |
+| 15 | ID-like text columns | **PASS**: Region and Channel only; nothing by Order Id, Invoice No, Customer Code. **Finding S1 below** (the two slicers) | `15-en-p1.png` |
+| 16 | A hand-placed Arabic page, no `rtl` | **PASS**: the table's names at the right with «الإجمالي», the bar chart mirrored, titles right-aligned. The slots stay where the plan placed them (the card at the left) | `16-ar-p1.png` |
+| 17 | generate_theme's 1920 x 1080 theme on a 1280 x 720 hand page | **PASS** (`4f1136c`): table 15 -> 10, card 42 -> 28, nothing cut; the note | `17-en-b-p1.png` |
+| 18 | The measure reaches no calendar | **PASS** for a planned page, English and Arabic: no line chart, the bar chart beside it 1040 wide, the reason names the calendar. **Two line slots: not reachable in Desktop**: no layout of plan_layout has two, and on hand-placed pages the rule is not applied (`server.mjs` 850 is the design branch): two line slots there stay an empty band, as placed | `18n-en-p1.png`, `18n-ar-p1.png`, `18t-en-p1.png` |
+| 19 | Bars by a text category | **PASS**: largest first (golden 6, 10, Marsa, the labs); an Arabic column chart has its largest at the right; golden 7's bars are equal | `g6-en-p1.png`, `g10-ar-c-p1.png`, `m-ar-p1.png` |
+| 20 | Rows without data | **PASS**: year 2025: the row of the product without sales is gone, English and Arabic alike (4 rows, 21,041); year 2023: the "No data" messages alone, no names, no «الإجمالي». The year was a page filter (the slicer of that report is finding S1); the same filter context | `20-25-ar-p1.png`, `20-23-ar-p1.png`, `20-all-ar-p1.png`, `20-25-en-p1.png` |
+| 21 | The website, a picker field changed | **PASS**: KPI 3 changed to Total Quoted: the table Hub Zone, Total Amount, Total Quoted; no Delivered Qty | `w2-en-p1.png` |
+| 22 | A both-directions relationship | **PASS**: Delivered Qty in the table by Hub Zone: 1,980 / 1,200 / 2,750 / 3,082 | `22-en-p1.png` |
+| 23 | A user's own theme | **PASS**: table 12pt and card 42pt kept; the note "not scaled" | `23-en-p1.png` |
+| 24 | MonthName, YearMonth, DayName (no sort-by column) | **PASS** (`4f1136c`): January to December, 2025-01 to 2025-12, Sunday to Saturday, in the line, bar and column charts and the tables, English and Arabic | `cm-en-p1.png`, `cd-en-p1.png`, `cm-ar-p1.png` |
+| 25 | City / City_AR | **PASS** (`4f1136c`): English City and Category only; Arabic City_AR and Category_AR only; the note names the others | `c-en-p1.png`, `c-ar-p1.png` |
+
+**Showcase** (rebuilt on `4f1136c`): English light **10** (page 2 is round 22b's capture pixel for pixel; page 1 differs
+only in the City chart, now largest first), Arabic dark **10** (was 9: the total row says «الإجمالي»).
+
+**Golden, English / Arabic, before -> after** (10 less 1 per kind of visible problem):
+| Task | Before | After |
+|---|---|---|
+| 5 640 x 360 | 9 / 10 | 9 / 10 (both captures are round 22b's pixel for pixel; "Your logo" still cut in English) |
+| 6 long Arabic | 10 / 10 | 10 / 10 (bars largest first; «الإجمالي») |
+| 7 no measures | 10 / 10 | 10 / 10 (English is round 22b's capture pixel for pixel; Arabic gains «الإجمالي») |
+| 10 300 tables | 9 / 9 | **10 / 10** (the table no longer repeats the other fact tables' totals) |
+| **Mean** (tasks 1-4 and 8 not re-opened but 1 English and 2 Arabic: carried from round 22b) | **9.8 / 9.9** | **9.9 / 10.0** |
+
+**What a beta tester would trip over (findings, none fixed here):**
+| # | Finding | Cause | Proposed fix |
+|---|---|---|---|
+| S1 | **A filter rail with exactly two slicers shows two slivers, or none**: when "Slicer 3" is left out (a model with two usable text columns: seen on 15, 18, 20), English writes both slicers 24 wide side by side at the same y; Arabic writes them at width -2 and Desktop shows the rail with Reset only. **Older than round 23**: the same files on `fix/round-22b` | mine, from the files, not traced in the code: the slicers left after one is dropped are laid out as a row inside a rail that is a column | lay the remaining slicers out again as a column (each the rail's width, stacked); a check: no slicer narrower than its header |
+| W1 | **The tooltip page's bar chart can repeat one total**: in the website's download on Dhow Freight the tooltip shows Delivered Qty by Hub Zone, 9.0K on every bar (KPI 2 is not related to Hub) | the reach rule covers the page's charts and the table, not the tooltip page's second-measure chart (the MCP's tooltip was not opened with such a KPI: likely the same, not proven) | apply `reachTable` to the tooltip's bar (leave the bar out, or use the first measure, when the second does not reach the category) |
+| S2 | **A line chart left out for "no month or date column" leaves its slot empty** (15, 20, 22: a large hole on page 1); only the "no calendar is related" case hands the room on | `dropLines` runs only with `noRelatedCalendar` | run it for every left-out line chart of a designed page |
+
+**Seen, not in scope:**
+| Item | Status |
+|---|---|
+| Golden task 10 takes about a minute to draw: a capture 20 s after "ready" shows empty panels with spinners (my first two captures; retaken after 100 s) | a capture fact, in DESKTOP-TESTS.md |
+| Focus mode on the Arabic dark table: the total row is drawn on a white page (the rows keep their dark bands), grey bold on white | new, small |
+| Arabic reports without display names: two charts titled only "Total Sales" and "Total Sales (2)" (Marsa Arabic, 20) | by rule 2 (no name given) |
+| Marsa Arabic: four KPI cards keep "--" when empty (the "No data" text does not fit 376 wide) | told in the notes |
+| A 12-month bar chart at 1280 x 720 scrolls (November, December behind a scrollbar); month names slant under the column and line charts; the 12-row table scrolls | told in the notes (the table), the rest known |
+| A hand-placed page without a design: chart titles a very light grey on white (16) | open since round 22b |
+| A KPI row planned for three cards with one or two measures leaves the rest of the row empty | by the plan |
+| The website's Arabic sample: "% هامش الربح" reads with the % at the right | the sample's own name |
+| Desktop's banners ("calculated objects need to be manually refreshed", "incomplete or no data") cover the header in captures of English reports | a capture limit |
+| "All" in slicers stays English; English field names in Arabic reports where the model has no Arabic ones; "Your logo" cut at 640 x 360 | open / by rule 2 |
+| The laptop: `C:\shots` (empty, from round 22b) is still there; no Desktop window is left open | for the owner |
+
+**The one decision needed:** the website's Arabic download keeps way 4 (items 1-3 and 9 pass): **(a) keep it**, as the
+cloud builder recommends. S1 is the one to decide before the beta: it hides the slicers of any two-category model.
+
+**Left on the laptop:** `<tests folder>\r23\` (`lab\` seven made-up models and their reports, `golden\` and `golden-b\`,
+`showcase\`, `site\` the four website downloads, `shots\` with `crops\`, `cmp\`, `poke\`), scripts `builder-scripts\r23-*`
+(`models`, `lab`, `golden`, `showcase`, `site`, `shots.ps1`, `poke.ps1`, `crop.py`), the work tree `C:\DataArcus\r23-wt`
+(its `node_modules` is a junction to the main checkout's, for the site's test browser).
+**Next:** the reviewer merges; then the 0.2.7 package from the merged head (it must carry `lib/slots.mjs`).
+
+### Round 23, laptop re-proof (8 Oct, laptop builder; work tree `C:\DataArcus\r23-wt`; 12:06 to 12:35 UTC, hard stop 13:15)
+**Head proven: `9ff1363`** (parts 7 and 8). The only session driving Power BI Desktop 2.158.1304 (none open at the start,
+Windows not locked; none left open). Every report built by this head's `mcp/server.mjs` over stdio, the website's
+downloads from the work tree's lab page; made-up models only (the labs of the first proof, copied; three small variants).
+**No code file touched; `npm test` not run** (739 of 739 on Linux at `652d24c`). The package was not built.
+Expected: the three rows of part 7 and the two lines of part 8, written by the cloud builder before this run.
+Captures at 2x, read at their own size: `<tests folder>\r23b\shots\` (`crops\`); reports `r23b\lab\`, `r23b\site\`;
+scripts `builder-scripts\r23b-lab.mjs`, `r23b-site.mjs`, `r23b-shots.ps1` (hovers: `r23-poke.ps1`).
+
+| # | Item | Result | Crop |
+|---|---|---|---|
+| S1 | A rail with exactly two slicers (15, 18 and their variants), English and Arabic, 1280 x 720 and 960 x 720 | **PASS**: Region and Channel one under the other, each the rail's width (183), then Reset; names and "All" readable, nothing at width <= 0; Arabic the same, the rail at the left (the mirrored end, as every Arabic report); filters `start` in Arabic: the rail at the right, the same | `c15-en-p1.png`, `c15-ar-p1.png`, `c15-960-p1.png`, `c15-ar-start-p1.png`, `c18-en-p1.png`, `c18-ar-p1.png`, `crops\c15-en-rail.png`, `crops\c15-ar-rail.png` |
+| S1 | One slicer and three slicers | **PASS**, unchanged: one slicer and Reset (20, 22; Arabic 20); three stacked (City / City_AR model English and Arabic, Dhow Freight) | `c20-en-p1.png`, `c20-ar-p1.png`, `c22-en-p1.png`, `three-en-p1.png`, `three-ar-p1.png` |
+| W1 | The tooltip pages on Dhow Freight, the MCP's report (KPIs Total, Delivered Qty, Total Quoted) | **PASS**: a bar (West 749,093 with months 45K to 82K; North months 17K to 32K), a column (East 595,970, months 36K to 65K), a month on the line (Mar 142,373 with West 52K, East 41K, South 30K, North 20K; Oct 209,673 with 75K / 60K / 45K / 29K): every value changes with the item. The hub tooltip's bar is Total Quoted (Delivered Qty, which does not reach Hub, is passed over); no 9.0K anywhere | `w1m-hover-bar-west.png`, `w1m-hover-bar-north.png`, `w1m-hover-col-east.png`, `w1m-hover-line-mar.png`, `w1m-hover-line-oct.png` |
+| W1 | The same on the website's download (picker left as suggested: Total Amount, Delivered Qty, Total, Total Quoted) | **PASS**: the same values per bar, column and month; the tooltip's bar is Total (was Delivered Qty, 9.0K on every bar) | `w1w-hover-bar-west.png`, `w1w-hover-bar-north.png`, `w1w-hover-col-east.png`, `w1w-hover-line-mar.png`, `w1w-hover-line-oct.png` |
+| S2 | A line chart left out, the MCP's report: no date column (15, 20, 22, English and Arabic), no related calendar (18), a date column in an unrelated table (variant "promo"), no measures (variant: counts) | **PASS**: no line chart, no hole: the bar chart beside it is 1040 wide (720 at 960 x 720). The reason names the cause each time: "the model has no month or date column for its axis"; "no calendar is related to Sales: the model's calendar (Calendar) is not reached from Sales[Total Sales]"; "no date column is related to Sales: the date column of Promo is not reached" | the S1 captures; `promo-en-p1.png`, `promo-ar-p1.png`, `nomeas-en-p1.png` |
+| S2 | The website's download on a model without a date column (15) and without a related calendar (18, Arabic) | **PASS for the hole, with finding B1**: no line chart, the bar chart takes the whole row (1248 wide), English and Arabic | `s2w-en-p1.png`, `s2w-ar-p1.png`, `crops\s2w-en-seam.png` |
+| R | Showcase Arabic dark page 1 and 2; golden 10 English page 1 and 2 (rebuilt on `9ff1363`) | **as in the first proof, pixel for pixel**: showcase page 2 and golden 10 pages 1 and 2 are the midday captures exactly; showcase page 1 differs in one strip of 18 x 1 pixels under the table (drawing noise). «الإجمالي» at the right; golden 10's table by Lane Region with Shipments Total Net Amount only | `sc-ar-dark-p1.png`, `-p2.png`, `g10-en-p1.png`, `-p2.png` |
+
+"The model has no measure for it" (the third reason of part 8) could not be reached with a model: a model without measures
+gets counts (the charts say "Count of Order Id"), so its line chart is left out for the date column, said so.
+
+**What a beta tester would trip over (new, none fixed here; both on the website's download only):**
+| # | Finding | Cause | Proposed fix |
+|---|---|---|---|
+| B1 | **The widened bar chart sits on two panels**: where the line chart is left out, the page's background picture still draws the line chart's panel and the bar chart's panel, so a dark gap crosses the bar chart (at about 2/3 of its width in English, 1/3 in Arabic) and grid lines and bars run over it. Not on the MCP's reports opened here (their theme draws each visual's own panel) | mine, from the captures: the background picture is drawn from the slots as planned, before `absorb` hands the line slot on | draw the background from the slots after `absorb`; the same check for an MCP design with transparent visuals (not opened here) |
+| B2 | **Empty white boxes for the KPI cards without a measure**: with four KPI cards and a model of one measure, the download has three cards with no field: Desktop draws three white "Select or add data to populate this visual" boxes on page 1 and two on Details. Seen on both S2 downloads; probably older than round 23 (the first proof's website model had four measures), not checked on an earlier head | from the files: `cardVisual` written with no query where the picker's KPI is empty (the MCP caps the cards with `layout.kpiCards`; the website's designs never carry it) | on the website too, leave out a card whose KPI is empty and share the row among the rest (and the background's panels with them) |
+
+**Seen, not in scope:**
+| Item | Status |
+|---|---|
+| A fitted rail: the last slicer's dropdown box has no bottom edge (one or two pixels cut); with three slicers the middle one too | small; the same with three slicers, so older |
+| A rail with one or two slicers leaves the page dark under it down to the bottom (the rail is fitted to its slicers) | by design since `railFit` |
+| A KPI row planned for three cards with one measure leaves two thirds of the row empty (15, 18) | by the plan, known |
+| A model without measures: the table's second column is "Count of Region", 4 on every row; the bars by Region are equal (60 each: the made-up rows are even) | the counts rule; the data's own |
+| Arabic reports of the labs keep English field names (Region, Channel, Total Sales) and "All" | by rule 2 / Power BI's own word |
+| The tooltip of a bar near the page's edge is placed by Desktop over the neighbouring chart; the 410-high month tooltip needs room | Desktop's placing |
+| Desktop's banner "calculated tables need to be manually refreshed" covers the header in English captures | a capture limit |
+
+**Left on the laptop:** `<tests folder>\r23b\` (`lab\`, `site\`, `shots\`), `r23\showcase\Showcase * c.pbip`, `r23\golden-c\`,
+scripts `builder-scripts\r23b-*`. No Desktop window is open.
+**Next:** the reviewer decides B1 and B2 (website only), merges, then sends the 0.2.8 build.
+
 ## Round 22b, the reviewer's code review of `fix/round-22` (7 Oct, cloud builder; branch `fix/round-22b` from `origin/fix/round-22` `10234be`; not merged, no PR)
 Owner's go (7 Oct): "finishing everything needed for the beta release": these ten findings are required before 0.2.7.
 For each finding a check is written first that reproduces it (`mcp/test-round22.mjs`, which runs alone in seconds, or the

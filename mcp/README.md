@@ -8,8 +8,10 @@ For testers on Windows, no command line needed.
    reports as Power BI projects (File > Save as > `.pbip`).
 2. **Get the extension:** download the `.mcpb` file from https://github.com/Antnioo/DataArcus/releases (the beta
    release is shared with testers), or use the file you were sent.
-3. **Install it:** with Claude Desktop installed, double-click the `.mcpb` file and choose Install. Settings >
-   Extensions then shows "DataArcus for Power BI".
+3. **Install it:** with Claude Desktop installed, double-click the `.mcpb` file and choose Install (if Windows asks
+   which app opens the `.mcpb`, choose Claude). Or, in Claude Desktop: Settings > Extensions > Advanced settings >
+   Install Extension..., then pick the `.mcpb` file. Settings > Extensions then shows "DataArcus for Power BI".
+   **To update**, open the new `.mcpb` the same way: the button says Update, then Windows asks Install.
 4. **Choose the working folder** when asked (the setting is called **Working folder**): the folder that holds your
    `.pbip` projects. DataArcus reads and writes only inside it; put in it only models whose names, types and formats
    you may share with Claude.

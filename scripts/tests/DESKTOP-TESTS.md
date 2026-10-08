@@ -2368,6 +2368,54 @@ Facts measured:
 - **The pixel comparison of two captures of the same files is exact** (0 of 4,097,500 pixels) when nothing changed, so
   a rebuild can be proven unchanged without reading every page again (`builder-scripts\r22b-cmp.py`, `r22b-diff.mjs`).
 
+## 2026-10-08 midday, round 23's laptop proof (`fix/round-23-total` at `44eba28`, then `4f1136c`), Power BI Desktop 2.158.1304
+Every report is on a made-up model whose rows are DAX tables; the laptop was unlocked, so the mouse checks were done
+(`builder-scripts\r23-poke.ps1`: UI Automation finds the visuals about a minute after "ready"). Captures (2x, nothing
+scaled down), crops and pixel comparisons: `<tests folder>\r23\shots\` (`crops\`, `cmp\`, `poke\`); the reports
+`<tests folder>\r23\lab\`, `golden-b\`, `showcase\`, `site\`; scripts `builder-scripts\r23-*`. The full table is in
+`mcp/WORK.md`, "Round 23, laptop proof, the stop report".
+
+| Check | Result | Crop |
+|---|---|---|
+| The Arabic table's total row (way 4: a hidden first column and a row-label measure at the right) | PASS: «الإجمالي» at the right, bold; the hidden column stays hidden in Focus mode, after a window resize and Fit to width; a row click and Ctrl+click filter the page; the total row selects nothing; a header click sorts the names as text | `shots\sc-ar-dark-p1.png`, `poke\i1-row1.png`, `i2-row1-ctrl-row3.png`, `i345-stack.png`, `i6-focus.png`, `i8-fit-width.png` |
+| Rows without data in an Arabic table (the row label is blank where the numbers are) | PASS: the row is gone as in English; with nothing at all, the "No data" messages alone | `shots\20-25-ar-p1.png`, `20-23-ar-p1.png` |
+| A bilingual model, fields picked automatically (Marsa Home; City / City_AR) | PASS: English columns in the English report, the Arabic twins in the Arabic one, no twin slicers | `shots\m-en-p1.png`, `m-ar-p1.png`, `c-en-p1.png`, `c-ar-p1.png` |
+| A table by a category the measure does not reach (lab 1b, golden 10); a both-directions relationship | PASS: the unrelated measure is left out and named; through a both-directions relationship it stays and its rows differ | `shots\13-en-p1.png`, `g10-en-c-p1.png`, `22-en-p1.png` |
+| The website's download on a picked project (relationships.tmdl), a picker change, the Arabic sample | PASS for the pages. The tooltip page's bar chart repeats 9.0K on every bar (the second KPI does not reach the category): open | `shots\w1-en-p1.png`, `w2-en-p1.png`, `w3-ar-p1.png`, `w4-ar-p1.png`, `w1-en-p3.png` |
+| ID-like text columns; a hand-placed Arabic page without `rtl`; a user's theme and generate_theme's on a 1280 x 720 hand page | PASS: no ID column used; mirrored with «الإجمالي»; the user's sizes kept (12 / 42), ours scaled (10 / 28) | `shots\15-en-p1.png`, `16-ar-p1.png`, `23-en-p1.png`, `17-en-b-p1.png` |
+| Bars by value; MonthName, YearMonth, DayName without sort-by columns; a measure that reaches no calendar | PASS: largest first (an Arabic column chart from the right); calendar order everywhere; no line chart and no blank band on a planned page | `shots\g6-en-p1.png`, `cm-en-p1.png`, `cd-en-p1.png`, `cm-ar-p1.png`, `18n-en-p1.png` |
+| The showcase and golden 5, 6, 7, 10 | Showcase 10 / 10 (Arabic was 9); golden 5 9 / 10, 6 and 7 10 / 10, 10 now 10 / 10 | `shots\sc-en-light-b-p1.png`, `sc-ar-dark-b-p1.png`, `g5-*`, `g6-*`, `g7-*`, `g10-*-c-*` |
+
+Facts learned:
+- A table's first column at `columnWidth` 0 stays hidden in Focus mode, at any zoom and page view; the row's identity
+  still comes from it (a click on a row cross-filters; the total row selects nothing).
+- A slicer written 24 wide draws as a sliver, and one with a negative width is not drawn at all: Desktop gives no error
+  (a rail with two of three slicers, older than round 23: open).
+- A model of 300 tables needs about a minute after the bridge says "ready" before its visuals are drawn: capture
+  golden task 10 with a 100 s wait, or the panels are empty with spinners.
+- View > Page view > Fit to width is reached by the mouse; its menu items are not found by name through UI Automation.
+
+## 2026-10-08 afternoon, round 23's laptop re-proof (`fix/round-23-total` at `9ff1363`), Power BI Desktop 2.158.1304
+The three findings of the midday proof, fixed in parts 7 and 8, opened again on made-up models (the same labs, copied,
+and three variants). Captures (2x) and hover pictures: `<tests folder>\r23b\shots\` (`crops\`); reports `r23b\lab\`,
+`r23b\site\`; scripts `builder-scripts\r23b-*`. The full table is in `mcp/WORK.md`, "Round 23, laptop re-proof".
+
+| Check | Result | Crop |
+|---|---|---|
+| A filter rail with two slicers, English and Arabic, 1280 x 720 and 960 x 720; one and three slicers | PASS: each slicer the rail's width, one under the other, then Reset; one and three unchanged | `c15-en-p1.png`, `c15-ar-p1.png`, `c15-960-p1.png`, `c18-ar-p1.png`, `c20-ar-p1.png`, `three-en-p1.png` |
+| The tooltip pages where the second KPI does not reach the category (Dhow Freight), the MCP's report and the website's download: a bar, a column and a month hovered | PASS: the card and the tooltip's bars change with every item; the unrelated measure is not used | `w1m-hover-*.png`, `w1w-hover-*.png` |
+| A line chart left out (no date column, no related calendar, a date column in an unrelated table), the MCP's report | PASS: no hole, the bar chart beside it takes the room; the reason names the cause | `c15-en-p1.png`, `c18-en-p1.png`, `promo-en-p1.png` |
+| The same on the website's download | PASS for the hole. Open: the background picture keeps the two panels (a gap crosses the widened bar chart), and KPI cards without a measure are white "Select or add data" boxes | `s2w-en-p1.png`, `s2w-ar-p1.png`, `crops\s2w-en-seam.png` |
+| The showcase Arabic dark and golden 10 English, rebuilt | as in the midday proof, pixel for pixel (but one strip of 18 x 1 pixels on the showcase's page 1) | `sc-ar-dark-p1.png`, `g10-en-p1.png` |
+
+Facts learned:
+- A card written without a field is drawn by Desktop as a white "Select or add data to populate this visual" box, on a
+  dark page too: no error, no banner.
+- A page background picture that draws the panels does not follow a visual that was widened in the files: check the
+  picture whenever a slot is handed on.
+- Right after the window is maximised UI Automation finds no visual (0 of 21); a second listing a few seconds later
+  finds them. A hover's tooltip needs 5 s before the picture; bars are reached at a fraction of the visual's box.
+
 ## Lessons
 - **Night of 6-7 Oct: a bar chart at the theme's 10pt (1280 x 720) needs 22.2 a row, 45 above the first row and 8
   under the last, and 38 more for its value axis.** Round 0's "22 a row + 46" was the tooltip page's chart without a

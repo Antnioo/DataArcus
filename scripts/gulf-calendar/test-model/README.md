@@ -11,14 +11,14 @@ fails when they differ from what the website's tools write):
 - `sales.dax`: the made-up Sales table.
 - `measures.dax`: the Measure Builder's script: Total Sales, Last Ramadan, vs Last Ramadan %, and the six Eid window
   measures.
-- `check.dax`: one query, 40 checks (15 on the calendar, 10 Ramadan, 15 Eid), each with its expected value.
+- `check.dax`: one query, 43 checks (15 on the calendar, 3 Arabic names, 10 Ramadan, 15 Eid), each with its expected value.
 
 ## Steps in Power BI Desktop (builder; about 10 minutes, or through Microsoft's Power BI Authoring MCP)
 1. New blank report. **Modeling > New table**: paste `calendar.dax`, Enter. Then again with `sales.dax`.
 2. **Model view**: relate `Sales[Date]` to `Calendar[Date]` (many to one, single direction). If Desktop made it
    already, check it is many to one.
 3. **DAX query view**: paste `measures.dax`, click **Update model with changes**.
-4. **DAX query view**: paste `check.dax`, run. **Expected: 40 rows, every one Pass = TRUE.**
+4. **DAX query view**: paste `check.dax`, run. **Expected: 43 rows, every one Pass = TRUE.**
 5. Record the result in `scripts/tests/DESKTOP-TESTS.md` (Desktop version, rows passing, any row that fails with
    its Result and Expected). Don't change an expected number to make a row pass: report it.
 

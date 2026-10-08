@@ -235,7 +235,7 @@ export async function checkReport(p, opts) {
     if (x.type === 'textbox') flag('textbox', ((((((x.json.visual.objects || {}).general || [{}])[0] || {}).properties || {}).paragraphs) || []).flatMap((p) => (p.textRuns || []).map((r) => String(r.value || ''))).join(' '), x.file); });
   (bookmarkNames || []).forEach((b) => flag('bookmark', b.name, b.file));
   // what the tool could not judge
-  if (lang === 'ar') notChecked.push({ rule: 'RTL_MIRROR (tables)', why: 'which column a right-to-left table puts first is the report\'s choice: Power BI writes the total row\'s "Total" only in a first column of text, so the category at the left can be right (measured 2026-10-04); not judged' });
+  if (lang === 'ar') notChecked.push({ rule: 'RTL_MIRROR (tables)', why: 'which column a right-to-left table puts first is the report\'s choice: Power BI writes the total row\'s "Total" only in a first column of text, so the category at the left can be right (measured 2026-10-04); a hidden first column (width 0) with a row-label measure at the right that gives the row\'s name and «الإجمالي» on the total row is intentional (DataArcus\'s own Arabic tables since 8 Oct 2026, measured in Desktop 2.158.1304), not a finding; not judged' });
   else notChecked.push({ rule: 'RTL_MIRROR', why: 'the report reads left to right (lang en); pass lang "ar" to apply the right-to-left rules' });
   notChecked.push({ rule: 'DataArcus layout rules', why: 'the header, filter rail and panel sizes describe DataArcus\'s own layouts, not Power BI: not run on any report' });
   if (customVisuals) notChecked.push({ rule: 'custom visuals', why: `${customVisuals} visual${customVisuals === 1 ? ' is' : 's are'} not a Power BI core visual: only the validator checks them` });
