@@ -306,14 +306,21 @@ body {
     gap: 0;
   }
 
+  /* (7 links since the AI Agent item: a little smaller, so the call button stays on screen at 992 in Arabic) */
   .nav-link {
-    padding-left: 9px !important;
-    padding-right: 9px !important;
+    font-size: 14px;
+    padding-left: 6px !important;
+    padding-right: 6px !important;
   }
 
   .nav-link::after {
-    left: 9px;
-    right: 9px;
+    left: 6px;
+    right: 6px;
+  }
+
+  .navbar .btn-accent {
+    font-size: 14px;
+    padding: 9px 12px;
   }
 }
 
@@ -479,9 +486,23 @@ footer a.text-white-50:hover {
   }
 }
 
-/* Trust line under the hero buttons: tighter gap when it wraps */
+/* Trust line under the hero, across both columns: one line on desktop, tighter gap when it wraps on phones */
 .hero-trust {
   row-gap: 0.75rem !important;
+  margin-top: 3rem;
+}
+
+/* room under the trust line before the logo strip, on every screen */
+.hero {
+  padding-bottom: 2.5rem;
+}
+
+/* The hero is as tall as its content on desktop, so no empty band sits between the trust line and the logo strip */
+@media (min-width: 992px) {
+  .hero {
+    min-height: auto;
+    padding-top: calc(80px + 4rem);
+  }
 }
 
 .hero .lead {

@@ -4,6 +4,27 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Home page part A (9 Oct, cloud builder; website only; not merged, no PR)
+The owner's go ("I approve part A", and item 9 for the logo strip). Branch `fix/round-23-total`, restarted from main
+`4984d8b` (the beta page merged).
+- **Done:** hero "private beta" links to /power-bi-mcp/ and a third button "Try the AI agent (beta)" (headline and line
+  otherwise unchanged); the 3 trust badges on their own row across the hero (one line at 1440, wrap on phones) and the
+  hero sized to its content on desktop (no empty band before the strip); logo strip: label "Tools I work with", Power BI,
+  Excel, Azure, Fabric (SQL and Python removed, their 2 icon files deleted: nothing else used them, no CSP or preload
+  entry); Ramadan 1448 on the calendar card; RepeatIQ "E-COMMERCE & RETENTION" and "Explore my proof-of-concept
+  dashboards"; stats 13 articles (the blog's 13), 8 dashboard builds (the showcases page's 8 pages), new stat "1 AI agent
+  in private beta (8 tools)"; FAQ "Does the AI agent see my data?"; "Response within 1 working day"; menu item
+  "AI Agent (beta)" on all 38 pages (Arabic «الوكيل الذكي (تجريبي)»; the 992-1199 menu is a little smaller so the call
+  button stays on screen in Arabic). The FAQ's "I connect to ... SQL databases" is untouched.
+- **Tests:** the `site` suite's part A check (hero links, badges on one row at 1440, gap under 80px, 4 logos and the
+  label, menu item EN/AR and on every page, the phone menu, 1 working day, 1448, stats against blog and showcases, FAQ
+  links, the call button on screen at 992): red on main (91 problems), green after.
+- **Screenshots:** `scripts/tests/shots/home-top-{en,ar}-{1440,390}.png` (the home top after the change).
+- **Seen, not in scope:** the showcases page (portfolio.html) still labels RepeatIQ "SAAS & RETENTION" and uses "our"/"we"
+  in its intro and meta; it also has a 9th "confidential" finance card with no page (not counted in the 8); the third
+  hero button sits on its own line at 1440 (the column fits two); homepage.js still has the unused `attrs.sql` and
+  `attrs.python` labels; whether a beta request should also count as `generate_lead` (open from the beta page).
+
 ## The beta page /power-bi-mcp/ (8-9 Oct, cloud builder; website only; not merged, no PR)
 The owner's go ("option 2, let's get it ready"), for the 9 Oct PBIP post (its links go/pbip and go/pbip-page).
 **Branch:** the reviewer named `site/beta-page`; this cloud session may push only to `fix/round-23-total`, so that branch

@@ -40,9 +40,10 @@ window.homepageTranslations = {
     // Hero Section
     hero: {
       title: "Power BI reports checked in Power BI, not just generated",
-      subtitle: "AI can now build a Power BI report in minutes. DataArcus works beside Microsoft's tools to check yours and fit it to the Gulf: a free model health check, Ramadan, Eid and Hijri calendars with each country's weekend, and Arabic reports laid out right to left (in private beta).",
+      subtitle: "AI can now build a Power BI report in minutes. DataArcus works beside Microsoft's tools to check yours and fit it to the Gulf: a free model health check, Ramadan, Eid and Hijri calendars with each country's weekend, and Arabic reports laid out right to left (in <a href='/power-bi-mcp/' class='text-accent'>private beta</a>).",
       buttonWork: "Explore My Work",
       buttonDiscuss: "Book a Free Data Clarity Call",
+      buttonAgent: "Try the AI agent (beta)",
       badgeSecurity: "Enterprise Security",
       badgeTurnaround: "Fast Turnaround",
       badgeExcellence: "Committed to Excellence",
@@ -59,11 +60,10 @@ window.homepageTranslations = {
 
     // Tech Stack Section
     techStack: {
+      label: "Tools I work with",
       powerbi: "Power BI",
       excel: "Excel",
-      sql: "SQL",
       azure: "Azure",
-      python: "Python",
       fabric: "Fabric"
     },
 
@@ -95,7 +95,7 @@ window.homepageTranslations = {
     // Portfolio Section
 portfolio: {
       title: "Solution Showcases",
-      subtitle: "Explore our proof-of-concept dashboards, engineered to solve common business challenges. See what's possible for your data.",
+      subtitle: "Explore my proof-of-concept dashboards, engineered to solve common business challenges. See what's possible for your data.",
       cardPulse: {
         badge: "SALES CRM",
         title: "DataArcus Pulse: CRM Intelligence",
@@ -107,7 +107,7 @@ portfolio: {
         desc: "A live early-warning system for 72 projects, analyzing budget, schedule, and delivery risk using Earned Value Management (EVM)."
       },
       cardRepeatiq: {
-        badge: "SAAS & RETENTION",
+        badge: "E-COMMERCE & RETENTION",
         title: "RepeatIQ Commerce Analytics",
         desc: "A 5-page strategic suite maximizing Customer Lifetime Value (CLV) through cohort analysis, churn prediction, and risk modeling."
       },
@@ -138,7 +138,8 @@ portfolio: {
         { title: "Articles Published on the Blog" },
         { title: "Languages: English and Arabic" },
         { title: "End-to-End Dashboard Builds" },
-        { title: "Free Power BI & Fabric Tools Published" }
+        { title: "Free Power BI & Fabric Tools Published" },
+        { title: "AI agent in private beta (8 tools)" }
       ],
       ctaTitle: "Curious What This Could Look Like for Your Data?",
       ctaSubtitle: "No obligation. Tell me what you're working with, and I'll show you what's possible on a quick call.",
@@ -228,6 +229,10 @@ portfolio: {
         {
           q: "What if we're not sure what we need?",
           a: "<strong>That's exactly what the free Data Clarity Call is for.</strong> Bring what you've got, and I'll help you figure out where the real opportunity is, even if that's not a full dashboard build yet. No commitment required."
+        },
+        {
+          q: "Does the AI agent see my data?",
+          a: "<strong>It reads your model's structure, not the rows in it.</strong> The agent's tools run on your own computer, in Claude Desktop: they read your model's structure (tables, columns, measures, formats), not the rows in it, and write a new report next to your model. Claude Desktop asks before every file it writes. More on the <a href='/power-bi-mcp/' class='text-accent'>beta page</a> and in <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
         }
       ]
     },
@@ -252,7 +257,7 @@ portfolio: {
         details: "Project Details *",
         placeholder: "e.g., We use a CRM and a few spreadsheets. We need a single view of leads, conversion, and team performance...",
         button: "Book My Free Call",
-        response: "Response within 4 hours"
+        response: "Response within 1 working day"
       },
       checklist: {
         title: "What to bring to your Data Clarity Call",
@@ -340,9 +345,10 @@ portfolio: {
     // Hero Section
     hero: {
       title: "تقارير Power BI نتحقق منها في Power BI نفسه، ولا نكتفي بتوليدها",
-      subtitle: "صار بإمكان الذكاء الاصطناعي بناء تقرير Power BI في دقائق. يعمل داتا أركوس إلى جانب أدوات Microsoft ليفحص تقريرك ويهيّئه لطبيعة العمل في الخليج: فحص مجاني لنموذج البيانات، وتقويم برمضان والعيد والتاريخ الهجري مع عطلة نهاية الأسبوع في كل دولة، وتقارير عربية مصمَّمة من اليمين إلى اليسار (في تجربة خاصة).",
+      subtitle: "صار بإمكان الذكاء الاصطناعي بناء تقرير Power BI في دقائق. يعمل داتا أركوس إلى جانب أدوات Microsoft ليفحص تقريرك ويهيّئه لطبيعة العمل في الخليج: فحص مجاني لنموذج البيانات، وتقويم برمضان والعيد والتاريخ الهجري مع عطلة نهاية الأسبوع في كل دولة، وتقارير عربية مصمَّمة من اليمين إلى اليسار (في <a href='/power-bi-mcp/' class='text-accent'>تجربة خاصة</a>).",
       buttonWork: "استكشف أعمالي",
       buttonDiscuss: "احجز مكالمة وضوح بيانات مجانية",
+      buttonAgent: "جرّب الوكيل الذكي (تجريبي)",
       badgeSecurity: "أمان على مستوى الشركات",
       badgeTurnaround: "تنفيذ سريع",
       badgeExcellence: "ملتزمون بالتميز",
@@ -359,11 +365,10 @@ portfolio: {
 
     // Tech Stack Section
     techStack: {
+      label: "أدوات أعمل بها",
       powerbi: "Power BI",
       excel: "Excel",
-      sql: "SQL",
       azure: "Azure",
-      python: "Python",
       fabric: "Fabric"
     },
 
@@ -395,7 +400,7 @@ portfolio: {
     // Portfolio Section
 portfolio: {
       title: "نماذج الحلول",
-      subtitle: "استكشف لوحات التحكم التجريبية لدينا. شاهد ما هو ممكن لبياناتك.",
+      subtitle: "استكشف لوحات التحكم التجريبية التي بنيتها. شاهد ما هو ممكن لبياناتك.",
       cardPulse: {
         badge: "CRM للمبيعات",
         title: "داتا أركوس بالس: ذكاء إدارة علاقات العملاء",
@@ -407,7 +412,7 @@ portfolio: {
         desc: "نظام إنذار مبكر لـ 72 مشروعًا، يحلل الميزانية والجدول الزمني ومخاطر التسليم باستخدام إدارة القيمة المكتسبة (EVM)."
       },
       cardRepeatiq: {
-        badge: "تحليلات الاشتراكات",
+        badge: "التجارة الإلكترونية والاحتفاظ بالعملاء",
         title: "تحليلات RepeatIQ للتجارة",
         desc: "جناح استراتيجي من 5 صفحات لتعظيم القيمة الدائمة للعميل من خلال تحليل الدفعات (Cohorts) والتنبؤ بالتسرب."
       },
@@ -438,7 +443,8 @@ portfolio: {
         { title: "مقالًا منشورًا في المدونة" },
         { title: "لغتان: العربية والإنجليزية" },
         { title: "لوحة تحكم متكاملة تم بناؤها" },
-        { title: "أدوات Power BI و Fabric مجانية منشورة" }
+        { title: "أدوات Power BI و Fabric مجانية منشورة" },
+        { title: "وكيل ذكاء اصطناعي في نسخة تجريبية خاصة (8 أدوات)" }
       ],
       ctaTitle: "هل تتساءل كيف سيبدو هذا لبياناتك؟",
       ctaSubtitle: "بدون أي التزام. أخبرني بما تعمل عليه، وسأوضح لك ما هو ممكن في مكالمة سريعة.",
@@ -528,6 +534,10 @@ portfolio: {
         {
           q: "ماذا لو لم نكن متأكدين مما نحتاجه؟",
           a: "<strong>هذا بالضبط سبب وجود مكالمة وضوح البيانات المجانية.</strong> أحضر ما لديك، وسأساعدك في تحديد الفرصة الحقيقية، حتى لو لم تكن بناء لوحة تحكم كاملة بعد. لا يوجد أي التزام مطلوب."
+        },
+        {
+          q: "هل يرى وكيل الذكاء الاصطناعي بياناتي؟",
+          a: "<strong>يقرأ بنية نموذجك، لا الصفوف التي فيه.</strong> تعمل أدوات الوكيل على جهازك أنت، في Claude Desktop: تقرأ بنية النموذج (الجداول والأعمدة والمقاييس والتنسيقات)، لا الصفوف التي فيه، وتكتب تقريرًا جديدًا بجانب نموذجك. ويستأذنك Claude Desktop قبل كل ملف يكتبه. المزيد في <a href='/power-bi-mcp/' class='text-accent'>صفحة النسخة التجريبية</a> وفي <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
         }
       ]
     },
@@ -552,7 +562,7 @@ portfolio: {
         details: "تفاصيل المشروع *",
         placeholder: "مثال: نستخدم نظام CRM وبعض جداول البيانات. نحتاج رؤية موحدة للعملاء المحتملين والتحويل وأداء الفريق...",
         button: "احجز مكالمتي المجانية",
-        response: "الرد في غضون ٤ ساعات"
+        response: "الرد خلال يوم عمل واحد"
       },
       checklist: {
         title: "ما الذي تحضره إلى مكالمة وضوح البيانات",

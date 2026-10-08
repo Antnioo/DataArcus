@@ -347,5 +347,83 @@ export default async function ({ browser, url }) {
     }
   }
 
+  // Home page part A (owner 2026-10-09): the hero and the menu lead to the beta page, the trust badges sit on one row at
+  // 1440 with no empty band before the logo strip, the strip shows the owner's 4 tools under its label, the stats count
+  // what the site really has, the FAQ answers the agent's data question, and the contact form says 1 working day
+  {
+    const blogCards = (fs.readFileSync(path.join(ROOT, 'blog.html'), 'utf8').match(/data-category=/g) || []).length;
+    const dashboards = new Set(fs.readFileSync(path.join(ROOT, 'portfolio.html'), 'utf8').match(/href="dashboards\/[^"]+"/g) || []).size;
+    const want = { en: { menu: 'AI Agent (beta)', label: 'Tools I work with', reply: 'Response within 1 working day', button: 'Try the AI agent (beta)' },
+      ar: { menu: /[\u0600-\u06FF]/, label: 'أدوات أعمل بها', reply: /يوم عمل/, button: /[\u0600-\u06FF]/ } };
+    const is = (v, w) => (w instanceof RegExp ? w.test(v || '') : (v || '').trim() === w);
+    for (const lang of ['en', 'ar']) for (const vp of [[1440, 900], [390, 844]]) {
+      const v = await visitor(browser, { viewport: vp }), tag = `home part A ${lang} ${vp[0]}px`, w = want[lang];
+      await v.pg.goto(`${url}/index.html?lang=${lang}`, { waitUntil: 'networkidle' }); await ready(v.pg);
+      const r = await v.pg.evaluate(() => {
+        const hero = document.getElementById('hero'), trust = document.querySelector('.hero-trust'), strip = document.querySelector('.tech-strip');
+        const text = (sel) => (document.querySelector(sel) || {}).textContent;
+        return {
+          heroLinks: [...hero.querySelectorAll('a[href="/power-bi-mcp/"]')].map((a) => a.textContent.trim()),
+          subtitleLink: !!hero.querySelector('.lead a[href="/power-bi-mcp/"]'),
+          trustRows: trust ? new Set([...trust.children].map((c) => Math.round(c.getBoundingClientRect().top))).size : 0,
+          trustSide: trust ? Math.max(...[...trust.children].map((c) => c.getBoundingClientRect().right)) <= innerWidth : false,
+          gap: trust && strip ? Math.round(strip.getBoundingClientRect().top - trust.getBoundingClientRect().bottom) : null,
+          logos: strip ? [...strip.querySelectorAll('img')].map((i) => i.getAttribute('src')) : [],
+          label: strip && (strip.querySelector('.tech-strip-label') || {}).textContent,
+          menu: (document.querySelector('#navmenu a[href="/power-bi-mcp/"]') || {}).textContent,
+          reply: text('[data-i18n="contact.form.response"]'),
+          ramadan: text('.tool-mini-cal'),
+          repeatiq: text('[data-i18n="portfolio.cardRepeatiq.badge"]'),
+          showcase: text('[data-i18n="portfolio.subtitle"]'),
+          stats: [...document.querySelectorAll('#about [data-count]')].map((e) => +e.dataset.count),
+          agentStat: !!document.querySelector('#about a[href="/power-bi-mcp/"]'),
+          faq: [...document.querySelectorAll('#faq .accordion-body')].some((b) => b.querySelector('a[href="/power-bi-mcp/"]') && b.querySelector('a[href$="mcp/PRIVACY.md"]')),
+          faqConnect: document.querySelector('#faq').innerHTML.includes('SQL')
+        };
+      });
+      checks++;
+      const bad = (m) => problems.push(`${tag}: ${m}`);
+      if (!r.subtitleLink) bad('"private beta" in the hero line is not a link to /power-bi-mcp/');
+      if (!r.heroLinks.some((t) => is(t, w.button))) bad(`no hero button "${w.button}" to /power-bi-mcp/ (${r.heroLinks.join(' | ')})`);
+      if (vp[0] === 1440 && r.trustRows !== 1) bad(`the trust badges sit on ${r.trustRows} rows, want 1`);
+      if (!r.trustSide) bad('a trust badge runs off the screen');
+      if (vp[0] === 1440 && (r.gap === null || r.gap > 80)) bad(`${r.gap}px of empty space between the trust badges and the logo strip`);
+      const names = r.logos.map((s) => s.split('/').pop());
+      if (names.length !== 4 || names.some((n) => /sql|python/i.test(n))) bad(`logo strip shows ${names.join(', ')}, want Power BI, Excel, Azure and Fabric`);
+      if (!is(r.label, w.label)) bad(`logo strip label is "${r.label}"`);
+      if (!is(r.menu, w.menu)) bad(`menu item to /power-bi-mcp/ is "${r.menu}"`);
+      if (!is(r.reply, w.reply)) bad(`contact reply time is "${r.reply}"`);
+      if (!/1448/.test(r.ramadan || '') || /1447/.test(r.ramadan || '')) bad(`the calendar card shows "${r.ramadan}", want Ramadan 1448`);
+      if (lang === 'en' && r.repeatiq !== 'E-COMMERCE & RETENTION') bad(`RepeatIQ badge is "${r.repeatiq}"`);
+      if (lang === 'en' && !/^Explore my /.test(r.showcase || '')) bad(`showcases intro is not in the "I" voice: "${r.showcase}"`);
+      if (r.stats[0] !== blogCards) bad(`articles stat ${r.stats[0]}, the blog lists ${blogCards}`);
+      if (r.stats[2] !== dashboards) bad(`dashboard builds stat ${r.stats[2]}, the showcases page shows ${dashboards}`);
+      if (!r.agentStat || r.stats[4] !== 1) bad('no stat "1 AI agent in private beta" linking to /power-bi-mcp/');
+      if (!r.faq) bad('no FAQ answer linking /power-bi-mcp/ and mcp/PRIVACY.md');
+      if (!r.faqConnect) bad('the FAQ\'s "I connect to" list lost SQL databases');
+      // the phone menu still opens and shows the new item
+      if (vp[0] < 992) {
+        await v.pg.click('.navbar-toggler'); await v.pg.waitForTimeout(450);
+        if (!await v.pg.locator('#navmenu a[href="/power-bi-mcp/"]').isVisible()) bad('the phone menu does not show the AI Agent item');
+      }
+      if (v.errs.length) bad(v.errs.join(' | '));
+      await v.ctx.close();
+    }
+    // the longer menu still fits a small laptop: at 992 (the narrowest desktop menu) the call button stays on screen
+    for (const lang of ['en', 'ar']) {
+      const v = await visitor(browser, { viewport: [992, 800] });
+      await v.pg.goto(`${url}/index.html?lang=${lang}`, { waitUntil: 'networkidle' }); await ready(v.pg);
+      const b = await v.pg.evaluate(() => { const r = document.querySelector('#navmenu .btn').getBoundingClientRect(); return [r.left, r.right, innerWidth]; });
+      checks++; if (b[0] < 0 || b[1] > b[2]) problems.push(`home ${lang} 992px: the menu's call button runs off the screen (${Math.round(b[0])} to ${Math.round(b[1])})`);
+      await v.ctx.close();
+    }
+    // every page with the menu has the item (the menu is the same on every page)
+    for (const p of pages()) {
+      const html = fs.readFileSync(path.join(ROOT, p), 'utf8');
+      if (html.includes('id="navmenu"') && !/<li class="nav-item"><a class="nav-link" href="\/power-bi-mcp\/" data-i18n="nav.agent">/.test(html)) problems.push(`${p}: the menu has no AI Agent (beta) item`);
+      checks++;
+    }
+  }
+
   return { checks, problems };
 }
