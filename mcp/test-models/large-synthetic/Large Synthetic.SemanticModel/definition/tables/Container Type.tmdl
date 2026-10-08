@@ -3,36 +3,46 @@ table 'Container Type'
 	column 'Container Type Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Container Type Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Container Type Key]
 
 	column 'Container Type'
 		dataType: string
-		sourceColumn: Container Type
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Container Type]
 
 	column 'Container Type Valid From'
 		dataType: dateTime
-		sourceColumn: Container Type Valid From
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Container Type Valid From]
 
 	column 'Container Type Region'
 		dataType: string
-		sourceColumn: Container Type Region
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Container Type Region]
 
 	column 'Container Type External Id'
 		dataType: string
-		sourceColumn: Container Type External Id
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Container Type External Id]
 
 	column 'Container Type Code'
 		dataType: string
-		sourceColumn: Container Type Code
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Container Type Code]
 
 	column 'Container Type Description'
 		dataType: string
-		sourceColumn: Container Type Description
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Container Type Description]
 
-	partition 'Container Type' = m
+	partition 'Container Type' = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Container Type Key", "Container Type", "Container Type Valid From", "Container Type Region", "Container Type External Id", "Container Type Code", "Container Type Description"}, {})
-				in
-				    Source
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Container Type Key", [Value], "Container Type", "Container Type " & [Value], "Container Type Valid From", DATE ( 2024, [Value], 1 ), "Container Type Region", "Region " & ( 1 + MOD ( [Value] + 3, 3 ) ), "Container Type External Id", "External Id " & ( 1 + MOD ( [Value] + 4, 3 ) ), "Container Type Code", "Code " & ( 1 + MOD ( [Value] + 5, 3 ) ), "Container Type Description", "Description " & ( 1 + MOD ( [Value] + 6, 3 ) ) )

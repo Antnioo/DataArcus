@@ -3,32 +3,40 @@ table Lane
 	column 'Lane Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Lane Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Lane Key]
 
 	column Lane
 		dataType: string
-		sourceColumn: Lane
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Lane]
 
 	column 'Lane Region'
 		dataType: string
-		sourceColumn: Lane Region
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Lane Region]
 
 	column 'Lane Sort Order'
 		dataType: int64
-		sourceColumn: Lane Sort Order
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Lane Sort Order]
 
 	column 'Lane Code'
 		dataType: string
-		sourceColumn: Lane Code
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Lane Code]
 
 	column 'Lane Description'
 		dataType: string
-		sourceColumn: Lane Description
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Lane Description]
 
-	partition Lane = m
+	partition Lane = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Lane Key", "Lane", "Lane Region", "Lane Sort Order", "Lane Code", "Lane Description"}, {})
-				in
-				    Source
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Lane Key", [Value], "Lane", "Lane " & [Value], "Lane Region", "Region " & ( 1 + MOD ( [Value] + 2, 3 ) ), "Lane Sort Order", [Value], "Lane Code", "Code " & ( 1 + MOD ( [Value] + 4, 3 ) ), "Lane Description", "Description " & ( 1 + MOD ( [Value] + 5, 3 ) ) )

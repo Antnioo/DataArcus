@@ -32,7 +32,9 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
 
 ## How it is built
 - `mcp/server.mjs`: the MCP server (stdio). Tools: `read_model`, `suggest_fields`, `check_model_health`, `generate_theme`,
-  `plan_layout`, `create_report`. `mcp/lib/design.mjs`: the design tools' logic on top of `assets/js/design-engine.js`.
+  `plan_layout`, `create_report`, `add_gulf_calendar`, `check_report` (`mcp/lib/check-report.mjs`: Microsoft's validator
+  offline with the schemas bundled in `mcp/schemas/`, and the measured rules of `assets/js/report-rules.js`; read-only,
+  no network). `mcp/lib/design.mjs`: the design tools' logic on top of `assets/js/design-engine.js`.
 - `mcp/lib/model.mjs`: reads models from disk (project folders with TMDL or model.bim, model.bim files, .pbit zips), keeps every path inside `DATAARCUS_ROOT`.
 - **The engines are shared with the website, on purpose.** They live in `assets/js/` and run in the browser and in Node:
   `pbip-export.js` (writes PBIR projects), `pbip-bind.js` (reads models, suggests fields), `model-health-engine.js`

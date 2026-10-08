@@ -3,40 +3,52 @@ table Carrier
 	column 'Carrier Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Carrier Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Carrier Key]
 
 	column Carrier
 		dataType: string
-		sourceColumn: Carrier
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Carrier]
 
 	column 'Carrier Group'
 		dataType: string
-		sourceColumn: Carrier Group
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Carrier Group]
 
 	column 'Carrier Description'
 		dataType: string
-		sourceColumn: Carrier Description
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Carrier Description]
 
 	column 'Carrier Category'
 		dataType: string
-		sourceColumn: Carrier Category
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Carrier Category]
 
 	column 'Carrier Owner'
 		dataType: string
-		sourceColumn: Carrier Owner
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Carrier Owner]
 
 	column 'Carrier Code'
 		dataType: string
-		sourceColumn: Carrier Code
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Carrier Code]
 
 	column 'Carrier Type'
 		dataType: string
-		sourceColumn: Carrier Type
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Carrier Type]
 
-	partition Carrier = m
+	partition Carrier = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Carrier Key", "Carrier", "Carrier Group", "Carrier Description", "Carrier Category", "Carrier Owner", "Carrier Code", "Carrier Type"}, {})
-				in
-				    Source
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Carrier Key", [Value], "Carrier", "Carrier " & [Value], "Carrier Group", "Group " & ( 1 + MOD ( [Value] + 2, 3 ) ), "Carrier Description", "Description " & ( 1 + MOD ( [Value] + 3, 3 ) ), "Carrier Category", "Category " & ( 1 + MOD ( [Value] + 4, 3 ) ), "Carrier Owner", "Owner " & ( 1 + MOD ( [Value] + 5, 3 ) ), "Carrier Code", "Code " & ( 1 + MOD ( [Value] + 6, 3 ) ), "Carrier Type", "Type " & ( 1 + MOD ( [Value] + 7, 3 ) ) )

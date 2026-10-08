@@ -1,47 +1,54 @@
 table التقويم
 	dataCategory: Time
 
-	column التاريخ
+	column 'التاريخ'
 		dataType: dateTime
-		isKey
-		sourceColumn: التاريخ
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [التاريخ]
 
-	column السنة
+	column 'السنة'
 		dataType: int64
-		sourceColumn: السنة
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [السنة]
 
 	column 'رقم الشهر'
 		dataType: int64
-		isHidden
-		sourceColumn: رقم الشهر
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [رقم الشهر]
 
 	column 'اسم الشهر'
 		dataType: string
-		sortByColumn: 'رقم الشهر'
-		sourceColumn: اسم الشهر
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [اسم الشهر]
 
 	column 'رقم اليوم في الأسبوع'
 		dataType: int64
-		isHidden
-		sourceColumn: رقم اليوم في الأسبوع
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [رقم اليوم في الأسبوع]
 
 	column 'اسم اليوم'
 		dataType: string
-		sortByColumn: 'رقم اليوم في الأسبوع'
-		sourceColumn: اسم اليوم
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [اسم اليوم]
 
 	column 'السنة الهجرية'
 		dataType: int64
-		sourceColumn: السنة الهجرية
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [السنة الهجرية]
 
 	column 'هل هو شهر رمضان'
 		dataType: boolean
-		sourceColumn: هل هو شهر رمضان
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [هل هو شهر رمضان]
 
-	partition التقويم = m
+	partition التقويم = calculated
 		mode: import
-		source =
-				let
-				    Source = #table(type table [#"التاريخ" = datetime, #"السنة" = Int64.Type, #"رقم الشهر" = Int64.Type, #"اسم الشهر" = text, #"رقم اليوم في الأسبوع" = Int64.Type, #"اسم اليوم" = text, #"السنة الهجرية" = Int64.Type, #"هل هو شهر رمضان" = logical], {{#datetime(2025, 1, 1, 0, 0, 0), 2025, 1, "January", 4, "Wednesday", 1446, false}, {#datetime(2025, 2, 1, 0, 0, 0), 2025, 2, "February", 7, "Saturday", 1446, false}, {#datetime(2025, 3, 1, 0, 0, 0), 2025, 3, "March", 7, "Saturday", 1446, true}, {#datetime(2025, 4, 1, 0, 0, 0), 2025, 4, "April", 3, "Tuesday", 1446, false}, {#datetime(2025, 5, 1, 0, 0, 0), 2025, 5, "May", 5, "Thursday", 1446, false}, {#datetime(2025, 6, 1, 0, 0, 0), 2025, 6, "June", 1, "Sunday", 1446, false}, {#datetime(2025, 7, 1, 0, 0, 0), 2025, 7, "July", 3, "Tuesday", 1447, false}, {#datetime(2026, 1, 1, 0, 0, 0), 2026, 1, "January", 5, "Thursday", 1447, false}, {#datetime(2026, 2, 1, 0, 0, 0), 2026, 2, "February", 1, "Sunday", 1447, false}, {#datetime(2026, 3, 1, 0, 0, 0), 2026, 3, "March", 1, "Sunday", 1447, true}, {#datetime(2026, 4, 1, 0, 0, 0), 2026, 4, "April", 4, "Wednesday", 1447, false}, {#datetime(2026, 5, 1, 0, 0, 0), 2026, 5, "May", 6, "Friday", 1447, false}, {#datetime(2026, 6, 1, 0, 0, 0), 2026, 6, "June", 2, "Monday", 1447, false}, {#datetime(2026, 7, 1, 0, 0, 0), 2026, 7, "July", 4, "Wednesday", 1448, false}})
-				in
-				    Source
+		source = DATATABLE ( "التاريخ", DATETIME, "السنة", INTEGER, "رقم الشهر", INTEGER, "اسم الشهر", STRING, "رقم اليوم في الأسبوع", INTEGER, "اسم اليوم", STRING, "السنة الهجرية", INTEGER, "هل هو شهر رمضان", BOOLEAN, { { "2025-01-01", 2025, 1, "January", 4, "Wednesday", 1446, FALSE }, { "2025-02-02", 2025, 2, "February", 1, "Sunday", 1446, FALSE }, { "2025-03-03", 2025, 3, "March", 2, "Monday", 1446, FALSE }, { "2025-04-04", 2025, 4, "April", 6, "Friday", 1446, FALSE }, { "2025-05-05", 2025, 5, "May", 2, "Monday", 1446, FALSE }, { "2025-06-06", 2025, 6, "June", 6, "Friday", 1446, FALSE }, { "2025-07-07", 2025, 7, "July", 2, "Monday", 1446, FALSE }, { "2026-01-01", 2026, 1, "January", 5, "Thursday", 1447, FALSE }, { "2026-02-02", 2026, 2, "February", 2, "Monday", 1447, FALSE }, { "2026-03-03", 2026, 3, "March", 3, "Tuesday", 1447, FALSE }, { "2026-04-04", 2026, 4, "April", 7, "Saturday", 1447, FALSE }, { "2026-05-05", 2026, 5, "May", 3, "Tuesday", 1447, FALSE }, { "2026-06-06", 2026, 6, "June", 7, "Saturday", 1447, FALSE }, { "2026-07-07", 2026, 7, "July", 3, "Tuesday", 1447, FALSE } } )

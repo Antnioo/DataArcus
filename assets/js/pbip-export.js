@@ -178,6 +178,9 @@
   // its widest value, + 10 (a cell's padding is not measured yet: the measured button rule, 5 a side, stands in). A
   // measure's widest value is taken as nine digits with separators ("888,888,888", 0.54 em a digit and 0.21 a
   // separator, measured in round 10); a column's values are not known to the writer, so 12 letters at 0.55 em.
+  // a name holding a control character (\p{Cc}: a tab, a line break), which no DAX this writer builds may name (AUD-032;
+  // round 22b, the outside review's X-05): the one test, used by the MCP's server for its scripts too
+  const hasControl = (x) => /\p{Cc}/u.test(String(x));
   const columnRoom = (p, t, font) => {
     const head = textWidth(p.displayName || p.nativeQueryRef || '', t, true, font);
     const value = p.field && (p.field.Measure || p.field.Aggregation) ? (9 * 0.54 + 2 * 0.21) * t * 4 / 3 : 12 * 0.55 * t * 4 / 3;
@@ -399,8 +402,12 @@
     const tableRows = [];   // tables whose known rows don't fit even with tight rows (round 12, #23)
     const headerGrew = [];   // pages whose header grew one row of tabs (round 12)
     const tableSmaller = [];   // tables given a smaller text so more fields fit (round 12)
+    const tableWide = [];   // tables whose two kept fields are wider than the box even at 8pt: { page, width, need } (round 22b)
+    const subtitlesUsed = new Set();   // round 22: the subtitle keys that found their visual
+    const blankKept = [];   // round 21: KPI cards too narrow for the blank text at the value's size
     const noData = [];   // round 19: the "No data" measures, { t, m, expression }
-    const NODATA = own && o.noDataMessage === true;   // (opt-in for now: see WORK.md, round 19, for the owner)
+    const noDataSkipped = [];   // round 22b (X-05): fields whose name holds a control character: no "No data" card, { page, t, m }
+    const NODATA = own && o.noDataMessage !== false;   // on by default since round 22 (the owner's rule: every part passed in Desktop on the night of 6-7 Oct); noDataMessage: false leaves it out
     const barCharts = [];   // round 19: column charts by day or month names written as bar charts
     const shortDays = [];   // round 18, S3: column charts that show Day Short
     const ringsSmall = [];   // round 18: ring pictures drawn under 40 high, written without their number
@@ -505,6 +512,13 @@
     // nothing is written for them. Solid is read from the theme itself: its "*" visuals have a background.
     // Header title, logo, page buttons, slicers, buttons and the tooltip page's visuals stay off in both.
     const SOLID = !!((((((o.theme || {}).visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).show;
+    // Round 21 (the capabilities lab's #4, Desktop 2.158, 7 Oct 2026: accepted and kept, nothing to see): every shown
+    // visual title carries a heading level for screen readers, 'Heading3' (the page title is a text box, not a title).
+    // Round 22 (the code review's j): one rule, read from the title's own show value, called where each page's visuals
+    // are written. Titles are made in four places (frame, the KPI card's own, the tooltip pages' two), so it is not
+    // set in frame(): tried, and five of eight titles lost their heading
+    const headed = (vis) => { const t = vis && ((vis.visualContainerObjects || {}).title || [])[0], sh = t && t.properties && t.properties.show;
+      if (sh && sh.expr && sh.expr.Literal && sh.expr.Literal.Value === 'true') t.properties.heading = str('Heading3'); };
     const frame = (title, alt, extra, panel) => Object.assign({
       title: obj(title ? { show: bool(true), text: str(title), alignment: str(align) } : { show: bool(false) })
     }, panel && SOLID ? {} : {
@@ -581,7 +595,10 @@
     // at the reading start (placement, in Microsoft's theme schema) and the text aligned to the same side, so they sit
     // together in a button only as wide as both
     const resetIcon = (r) => Object.assign({ shapeType: str(r.icon ? 'reset' : 'blank'), lineColor: color(u.accent || u.text), placement: str(rtl ? 'right' : 'left') }, r.icon ? { iconSize: num(Math.round(0.75 * r.h)) } : {});
-    const resetLook = (text, r) => ({ show: bool(true), text: str((r && r.icon ? RESET_GAP : '') + text), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL), horizontalAlignment: str(rtl ? 'right' : 'left') });
+    // (round 22, seen in Desktop on every Arabic report since round 14: the arrow touched the text's last letter. The
+    // gap goes on the arrow's side: before the text in English, after it in a right-to-left report, where the arrow is
+    // at the right and no-break spaces before Arabic text fall at its far end)
+    const resetLook = (text, r) => ({ show: bool(true), text: str(r && r.icon ? (rtl ? text + RESET_GAP : RESET_GAP + text) : text), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL), horizontalAlignment: str(rtl ? 'right' : 'left') });
     // (the Arabic tooltip is the button's own words, "إعادة ضبط الفلاتر": the owner's design choice 6, 5 Oct 2026)
     const resetTip = W.resetTip || (o.lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Clear the filters on this page');
     // the largest text size within 8-60 whose one line fits a text box h high (8 at least)
@@ -851,6 +868,7 @@
       // long for one line wraps to two (titleWrap, as a KPI title does), and one too long for two lines is shortened at a
       // word with "…" at its end, so it still begins with the measure's name; the full title stays the alt text. The
       // room: the visual's width less 16 a side (1920 x 1080, scaled); the theme's title size, measured as bold.
+      const fitted = new Map();   // round 22: each chart's full title and the room it was fitted to
       const titleFit = (text, size, avail) => {
         if (text == null || textWidth(text, size, true, font) <= avail) return { mode: 'one', shown: text };
         const two = (t) => { const ls = wrapLines(t, size, avail); return ls.length <= 2 && ls.every((l) => textWidth(l, size, true, font) <= avail); };
@@ -1036,6 +1054,17 @@
             const T0 = +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
             let tf = tableFit(B.table, s.w, T0, font);
             if (tf.leftOut.length) { for (let t2 = Math.ceil(T0) - 1; t2 >= 8; t2--) { const f2 = tableFit(B.table, s.w, t2, font); if (f2.kept.length > tf.kept.length) { tf = f2; tableText = t2; } if (!f2.leftOut.length) break; } }
+            // Round 22 (golden task 6 in English, in Desktop since the night of 6-7 Oct: two long names at the theme's 15pt
+            // were wider than the table, a horizontal scrollbar): the fields a table keeps must fit its box too. The text
+            // was only made smaller to keep more fields; the two that are always kept were never measured. It now goes
+            // down, to 8pt at most, until the kept fields fit (told like every smaller table text)
+            // Round 22b (the review of round 22, item 8): two fields wider than the box even at 8pt are told. (The fit is
+            // not redone at this size: the loop above already tried every size down to 8 and kept the most fields, so
+            // this only runs where the two alone are kept, and no third fits at any size: checked on 30,000 tables)
+            { const need = (t2) => tf.kept.reduce((a2, f) => a2 + columnRoom(tproj(f), t2, font), 0); let t3 = tableText || T0;
+              while (t3 > 8 && need(t3) > s.w) t3 = Math.ceil(t3) - 1;
+              if (t3 < (tableText || T0)) tableText = t3;
+              if (need(t3) > s.w) tableWide.push({ page: pg.name || base, width: s.w, need: Math.ceil(need(t3)) }); }
             if (tableText) tableSmaller.push(smallEntry = { page: pg.name || base, size: tableText, from: T0 });
             if (tf.leftOut.length) { Bt = Object.assign({}, B, { table: tf.kept }); tableColumns.push({ page: pg.name || base, pageIndex, x: s.x, y: s.y, kept: tf.kept, leftOut: tf.leftOut }); }
           }
@@ -1081,13 +1110,35 @@
           // bars that fade by value (gradientFill above): the report's own bar and column charts, never the tooltip pages'
           if (GRAD && query && (s.kind === 'bar' || s.kind === 'column')) { visual.objects = { dataPoint: gradientFill(query.queryState.Y.projections[0].field, GRAD) }; chartColors.charts++; }
           if (MIRROR && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { mirrorChart(visual, s.kind); chartAxes.charts++; }
+          // Round 21 (the capabilities lab's #6, Desktop 2.158, 7 Oct 2026: "77.7K" above the columns, kept on Save): a column
+          // chart with few columns shows its values above them: labels at 'OutsideEnd', automatic units (0, K or M by the
+          // values' size, as the KPI cards) with one decimal (a percent measure keeps its own format). Only where the
+          // number of columns is known from the model's names: a quarter (4); other columns could have any number
+          if (query && s.kind === 'column') { const cf = query.queryState.Category.projections[0], cn = String(cf.nativeQueryRef || cf.queryRef || '');
+            // (round 22, the code review's f: "Year Quarter" and "Fiscal Year Quarter" end the same way and hold 8 to 40 values:
+            // a name with a year in it is never taken for four columns)
+            const four = (n) => /(^|\s|\.)quarter$|الربع/i.test(n) && !/year|سنة|السنة|عام/i.test(n);
+            if (four(cn) || four(String(((Bt.cats || {}).column || {}).c || ''))) {
+              const yf = ((Bt.y || {}).column || Bt.measure || {}), pct = !!yf.pct;
+              visual.objects = visual.objects || {};
+              visual.objects.labels = obj(Object.assign({ show: bool(true), labelPosition: str('OutsideEnd'), labelDisplayUnits: num(0) }, pct ? {} : { labelPrecision: lit('1L') }));
+            } }
           if (GRID && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.gridlineColor = color(GRID); }
           // a column chart written as a bar chart (asBar) in a slot too low for its rows and a value axis: no value axis,
           // each bar's value beside it (the tooltip pages' bar chart, measured in round 0)
           if (s.wasColumn && query && s.h < (s.rows * 23 + 92) * (pg.page.h / 720)) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.show = bool(false); visual.objects.labels = obj({ show: bool(true) }); }
+          // Round 21 (the capabilities lab's #2, Desktop 2.158, 7 Oct 2026: one small line under the title, shaped right in
+          // Arabic, kept on Save): a subtitle from the approved plan only (o.subtitles: a slot's plan role, English or
+          // Arabic, or a hand-placed slot's title -> its text); the writer never makes one up
+          // (round 22, the code review's b, measured in Desktop 2.158.1304 on 7 Oct: on a planned KPI card the subtitle's line
+          // pushes the value down and cuts it in half, the card is sized for a title and a value: never on a card. The keys
+          // used are reported, subtitlesUsed, so the caller can say which were not)
+          if (o.subtitles && ttl && visual.visualContainerObjects && s.kind !== 'kpi' && s.kind !== 'card') { const key = [].concat(s.role || [], s.title || []).find((k) => typeof o.subtitles[k] === 'string' && o.subtitles[k].trim());
+            if (key != null) { visual.visualContainerObjects.subTitle = obj({ show: bool(true), text: str(o.subtitles[key].trim()) }); subtitlesUsed.add(key); } }
           if (s.kind !== 'kpi' && s.kind !== 'card' && ttl) {
             const tf = titleFit(ttl, TITLE, s.w - 2 * Math.round(16 * pg.page.h / 1080)), tp = visual.visualContainerObjects.title[0].properties;
-            if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); titles[tf.mode].push({ page: pg.name || base, title: ttl, shown: tf.shown }); }
+            fitted.set(visual, { ttl, avail: s.w - 2 * Math.round(16 * pg.page.h / 1080), page: pg.name || base });
+            if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); titles[tf.mode].push(fitted.get(visual).entry = { page: pg.name || base, title: ttl, shown: tf.shown }); }
           }
           // the title already names the KPI, so the card's own label under the number is not repeated
           if (type === 'cardVisual') {
@@ -1106,6 +1157,17 @@
             }
             if (s.kind === 'kpi') cc = Object.assign({}, cc, { V: Math.min(cc.V, rowValue()) });
             visual.objects = cardObjects(cc, s.kind === 'kpi' ? align : null, cf0); cardFrame(visual.visualContainerObjects, cc, s.kind === 'kpi' ? kpiTitle : TITLE);
+            // Round 21 (the capabilities lab's #1, measured in Desktop 2.158 on 7 Oct 2026; the owner's go): with the "No data"
+            // option a card says "No data" (Arabic: لا توجد بيانات) instead of "--": value.showBlankAs in the default entry.
+            // The owner (7 Oct, "Keep numbers big"): the value keeps its size. The blank text is drawn at the value's size, so
+            // it is written only where it fits there: the lab's anchor (the Arabic text whole on a card 300 wide at 30pt, cut
+            // at 240) scaled by our letter widths; a narrower card keeps "--" (told: blankKept).
+            if (NODATA && (s.kind === 'kpi' || s.kind === 'card')) {
+              const ve = visual.objects.value.find((e) => e.selector && e.selector.id === 'default'), bt = lang === 'ar' ? 'لا توجد بيانات' : 'No data';
+              const need = 300 * textWidth(bt, cc.V, false, font) / textWidth('لا توجد بيانات', 30, false, 'Segoe UI');
+              if (ve && s.w >= need) ve.properties.showBlankAs = str(bt);
+              else if (ve) blankKept.push({ page: pg.name || base, title: ttl || null, w: s.w, need: Math.ceil(need) });
+            }
             // #7 (seen in Desktop 2.158, round 11: the value 9 to the right of its title's first letter): a KPI card's inner
             // padding is 0 at the reading start, so the value starts at its title's edge (paddingIndividual and the
             // margins, in Microsoft's theme schema for the card visual)
@@ -1218,7 +1280,12 @@
         // what shows, and its message only when the visual is empty. Charts and tables with a measure of the model.
         if (NODATA && visual && visual.query && ['bar', 'column', 'line', 'donut', 'table'].includes(s.kind)) {
           const st = visual.query.queryState, pr = [].concat((st.Y || {}).projections || [], (st.Values || {}).projections || []).find((p) => p.field && p.field.Measure && !p.field.Measure.Expression.SourceRef.Schema);
-          if (pr) {
+          // (round 22b, the outside review's X-05: the measure's DAX names the field, so none for a name with a control
+          // character; told in the notes)
+          if (pr && (hasControl(pr.field.Measure.Expression.SourceRef.Entity) || hasControl(pr.field.Measure.Property))) {
+            const sk = { page: pg.name || base, t: pr.field.Measure.Expression.SourceRef.Entity, m: pr.field.Measure.Property };
+            if (!noDataSkipped.some((x) => x.t === sk.t && x.m === sk.m)) noDataSkipped.push(sk);
+          } else if (pr) {
             const ent = pr.field.Measure.Expression.SourceRef.Entity, mm = pr.field.Measure.Property, nm = (W.noDataName || 'No data: ') + mm;
             if (!noData.some((x) => x.t === ent && x.m === nm)) noData.push({ t: ent, m: nm, expression: 'IF ( ISBLANK ( ' + "'" + ent.replace(/'/g, "''") + "'" + '[' + mm.replace(/\]/g, ']]') + '] ), "' + (lang === 'ar' ? 'لا توجد بيانات لهذا الاختيار' : 'No data for this selection').replace(/"/g, '""') + '", "" )' });
             container({ x: s.x, y: box.y, w: s.w, h: box.h, z: z - 500, parent, kind: 'nodata', noPhone: true, visual: { visualType: 'cardVisual',
@@ -1457,7 +1524,41 @@
           } }
         return Object.assign({}, Object.keys(objects).length ? { objects } : {}, Object.keys(vco).length ? { visualContainerObjects: vco } : {});
       };
-      visuals.forEach((v) => {
+      // Round 20 (golden task 7, the owner's (a), 7 Oct 2026: on the Arabic page of a model without measures three charts
+      // were all titled "عدد Order Id"): charts of a page whose titles would be the same each get their grouping column
+      // in brackets, "عدد Order Id (Region)", English and Arabic alike; a title that is already its own is not changed
+      {
+        const tOf = (v) => { const t = ((v.visual.visualContainerObjects || {}).title || [])[0], x = t && t.properties && t.properties.text; return x && x.expr && x.expr.Literal ? String(x.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") : null; };
+        // (round 22, the code review's e and h, and seen in Desktop on 7 Oct, "Total Sales by City (City)" twice: the
+        // titles are compared in full, not as shortened; charts by the same column are left alone, a bracket would only
+        // repeat itself; the new title is fitted like any title, and the alt text carries the same name)
+        const same = {}, full = (v) => (fitted.get(v.visual) || {}).ttl || tOf(v), colOf = (v) => { const p = v.visual.query.queryState.Category.projections[0]; return p.displayName || p.nativeQueryRef; };
+        visuals.filter((v) => v.visual && v.visual.query && v.visual.query.queryState.Category && tOf(v)).forEach((v) => { (same[full(v)] = same[full(v)] || []).push(v); });
+        // (round 22b, the review of round 22, item 10: three charts and two columns, "عدد Order Id (Channel)" twice: charts
+        // of the group by the same column too take a number after it in reading order, "(Channel 2)"; nothing else
+        // tells them apart, as their measure and column are the same)
+        const order = (a, b) => a.position.y - b.position.y || (rtl ? b.position.x - a.position.x : a.position.x - b.position.x);
+        // the new title fitted like any title, the alt text the same name, the titles report following
+        const rename = (v, k, name) => { const f = fitted.get(v.visual), tp = v.visual.visualContainerObjects.title[0].properties, g = (v.visual.visualContainerObjects.general || [])[0];
+          const tf = f ? titleFit(name, TITLE, f.avail) : { mode: 'one', shown: name };
+          tp.text = str(tf.shown); if (tf.mode !== 'one' && !tf.one) tp.titleWrap = bool(true); else delete tp.titleWrap;
+          if (g && g.properties && g.properties.altText) g.properties.altText = str(name);
+          // (the reviewer's third review, item 4: the entry this visual's title gave, not the first with the same title,
+          // which may be another chart's)
+          if (f) { ['wrapped', 'shortened'].forEach((m) => { const i = titles[m].indexOf(f.entry); if (i >= 0) titles[m].splice(i, 1); });
+            f.entry = null; if (tf.mode !== 'one') titles[tf.mode].push(f.entry = { page: f.page, title: name, shown: tf.shown }); } };
+        Object.keys(same).filter((k) => same[k].length > 1).forEach((k) => { const nth = {}, one = new Set(same[k].map(colOf)).size === 1; same[k].slice().sort(order).forEach((v) => { const c = colOf(v);
+          // (the reviewer's second review, item 8: charts with the same measure and the same column kept the same title
+          // and alt text: the second and later are numbered, "Total Sales by City (2)")
+          if (one) { nth[''] = (nth[''] || 0) + 1; if (nth[''] > 1) rename(v, k, k + ' (' + nth[''] + ')'); return; }
+          // (never a script the title does not have already: round 14's rule keeps an Arabic title free of English names;
+          // "عدد Order Id" holds Latin letters already, so "(Region)" may follow it)
+          const lat = /[A-Za-z]/, adds = (x) => (AR_LETTERS.test(c) && !AR_LETTERS.test(x)) || (lat.test(c) && !lat.test(x));
+          if (!c || adds(k)) return;
+          nth[c] = (nth[c] || 0) + 1;
+          rename(v, k, k + ' (' + c + (nth[c] > 1 ? ' ' + nth[c] : '') + ')'); }); });
+      }
+      visuals.forEach((v) => { headed(v.visual);
         add(D + '/pages/' + pageName + '/visuals/' + v.name + '/visual.json', json(v));
         const p = pos[v.name];
         if (p) add(D + '/pages/' + pageName + '/visuals/' + v.name + '/mobile.json', json(Object.assign({ $schema: SCHEMA.mobile,
@@ -1499,6 +1600,7 @@
       }));
       visuals.forEach((s, i) => {
         const v = { $schema: SCHEMA.visual, name: rnd(), position: { x: s.x, y: s.y, z: (i + 1) * 1000, height: s.h, width: s.w, tabOrder: (i + 1) * 1000 }, visual: s.visual };
+        headed(s.visual);
         add(D + '/pages/' + name + '/visuals/' + v.name + '/visual.json', json(v));
       });
     };
@@ -1537,9 +1639,9 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, tableWide, noDataSkipped, svgSizes, noPageButtons, tableColumns, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts, blankKept, subtitlesUsed: [...subtitlesUsed] };
   }
 
-  const api = { build, zip, crc32, textWidth, columnRoom };
+  const api = { build, zip, crc32, textWidth, columnRoom, hasControl };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbip = api;
 })(typeof self !== 'undefined' ? self : this);

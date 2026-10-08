@@ -17,6 +17,7 @@
 //    A button needs 6 + 1.6 x pt in height (measured 2026-10-01 on 2.158: "إعادة ضبط الفلاتر" whole from 19 at 8pt
 //    and 30 at 15pt; English from 14).
 // Returns { phone: [...], sizes: [...] }, what is wrong.
+// The measured numbers live once, in assets/js/report-rules.js (MEASURED), which check_report uses too (5 Oct 2026).
 // (changed 5 Oct 2026, with Reset only as wide as its icon and text, the owner's design choice 7: a button's text is
 // measured with the writer's per-letter widths and needs its width + 10, as measured in Desktop 2.158 in round 10, M3,
 // DESKTOP-TESTS.md; the icon as wide as the button is high. The old 0.45 em a character + 6 was an estimate made
@@ -24,10 +25,10 @@
 // rule: Desktop showed "إعادة ضبط الفلاتر" whole in a 91-wide button at 8pt (round 1), which the per-letter widths,
 // made on the safe side, would call too narrow.)
 import { createRequire } from 'node:module';
-const { textWidth } = createRequire(import.meta.url)('../../assets/js/pbip-export.js');
-const BTW = (text, t, font) => textWidth(text, t, false, font) + 10;
-const BOX = (t) => Math.ceil(10 + 1.8 * t), BTN = (t) => Math.ceil(2 + 1.6 * t), RESET = (t) => Math.ceil(6 + 1.6 * t), TW = (t, n) => 0.45 * 4 / 3 * t * n;
-const SLICER = (t) => Math.ceil(16 + 4 * t), CH = (t) => t * 0.55 * 4 / 3;
+const { MEASURED } = createRequire(import.meta.url)('../../assets/js/report-rules.js');
+const BTW = MEASURED.BTN_ICON_TW;
+const BOX = (t) => MEASURED.BOX(t), BTN = (t) => MEASURED.BTN_TEXT(t), RESET = MEASURED.BTN_H, TW = MEASURED.BTN_TW;
+const SLICER = MEASURED.SLICER, CH = MEASURED.CH;
 const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
 const num = (p) => parseFloat(lit(p)), str = (p) => String(lit(p) || '').replace(/^'|'$/g, '').replace(/''/g, "'");
 const state = (list, id) => ((list || []).find((x) => x.selector && x.selector.id === id) || {}).properties || {};
@@ -177,7 +178,7 @@ export function phoneTextProblems(files) {
     } else if (t === 'pageNavigator') {
       const sizes = ['default', 'hover', 'selected'].map((k) => { const a = num(state(mo.text, k).fontSize); return isNaN(a) ? num(state(o.text, k).fontSize) : a; }), size = sizes[0];
       const lines = Math.min(2, Math.floor(h / (1.8 * size))), longest = Math.max(...pageNames.map((x) => x.length));
-      if (sizes.some((x) => x !== size) || !(lines >= 1) || 0.45 * 4 / 3 * size * Math.ceil(longest / Math.max(1, lines)) > w / pageNames.length) say(`page buttons at ${sizes.join('/')}pt don't fit ${pageNames.length} in the phone's ${w}x${h}`);
+      if (sizes.some((x) => x !== size) || !(lines >= 1) || TW(size, Math.ceil(longest / Math.max(1, lines))) > w / pageNames.length) say(`page buttons at ${sizes.join('/')}pt don't fit ${pageNames.length} in the phone's ${w}x${h}`);
     } else if (t === 'slicer') {
       const a = num(plain(mo.header).textSize), b = num(plain(mo.items).textSize), size = Math.max(isNaN(a) ? slicerTheme || labelTheme : a, isNaN(b) ? slicerTheme || labelTheme : b);
       if (SLICER(size) > h) say(`a ${size}pt dropdown slicer needs ${SLICER(size)}, the phone box is ${h}`);
@@ -220,6 +221,7 @@ export function tooltipProblems(files) {
   pages.filter((p) => p.page.type !== 'Tooltip').forEach((p) => p.visuals.forEach((v) => {
     if (!v.visual) return;
     const tt = ((v.visual.visualContainerObjects || {}).visualTooltip || [])[0], id = `${p.page.displayName}/${v.visual.visualType}`;
+    if (isMessageCard(v)) return;   // (round 22) its visualTooltip entry switches the tooltip off; mcp/test.mjs checks that it does (round 19, "tipOff")
     if (!CHART_TYPES.includes(v.visual.visualType)) { if (tt) bad.push(`${id}: linked to a tooltip page, only charts are`); return; }
     charts++;
     if (!tt) { bad.push(`${id}: no tooltip link`); return; }
@@ -388,7 +390,7 @@ export function cardStyleProblems(files, rtl, insets) {
   const bad = []; let cards = 0;
   const themeFile = Object.keys(files).find((p) => /StaticResources\/RegisteredResources\/[^/]*\.json$/.test(p)), theme = themeFile ? JSON.parse(String(files[themeFile])) : {};
   const solid = !!((((((theme.visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).show);
-  pagesOf(files).forEach((p, pi) => p.visuals.filter((v) => v.visual && v.visual.visualType === 'cardVisual').forEach((v) => {
+  pagesOf(files).forEach((p, pi) => p.visuals.filter((v) => v.visual && v.visual.visualType === 'cardVisual' && !isMessageCard(v)).forEach((v) => {
     cards++;
     const id = `${p.page.displayName}/${v.name.slice(0, 6)}`, o = v.visual.objects || {}, c = v.visual.visualContainerObjects || {}, tip = p.page.type === 'Tooltip';
     const fill = o.fillCustom || [];
@@ -439,6 +441,15 @@ export function projectProblems(files) {
 // everything else (header title, logo, page buttons, slicers, buttons, the tooltip page's visuals) stays off.
 // Returns { solid, panels (visuals left to the theme), bad }.
 const PANEL_TYPES = ['cardVisual', 'gauge', 'tableEx'].concat(CHART_TYPES);
+// Round 22 ("No data" is on by default): the message under a chart or a table is a card visual too, but not a KPI card:
+// its value is a report-level measure named "No data: <the chart's measure>", it sits under the chart (no title, no
+// tab stop, not on the phone). The KPI card rules below skip it; its own look is checked where it is made (mcp/test.mjs,
+// round 19 and the night of 6-7 Oct). Takes a visual.json's object, its inner visual, or the file's text.
+export const isMessageCard = (v) => {
+  if (typeof v === 'string') return /"visualType":\s*"cardVisual"/.test(v) && /"Property":\s*"No data: /.test(v);
+  const inner = (v && v.visual) || v || {};
+  return inner.visualType === 'cardVisual' && /"Property":"No data: /.test(JSON.stringify(inner.query || ''));
+};
 export function panelProblems(files) {
   const bad = [], themeFile = Object.keys(files).find((p) => /StaticResources\/RegisteredResources\/[^/]*\.json$/.test(p));
   const theme = themeFile ? JSON.parse(String(files[themeFile])) : {};
@@ -447,7 +458,7 @@ export function panelProblems(files) {
   const KEYS = ['background', 'border', 'dropShadow'], off = (c, k) => lit((((c[k] || [])[0] || {}).properties || {}).show) === 'false';
   pagesOf(files).forEach((p) => {
     const tip = p.page.type === 'Tooltip', byName = Object.fromEntries(p.visuals.map((v) => [v.name, v]));
-    const kpiGroups = new Set(p.visuals.filter((v) => v.visual && v.visual.visualType === 'cardVisual' && v.parentGroupName).map((v) => v.parentGroupName));
+    const kpiGroups = new Set(p.visuals.filter((v) => v.visual && v.visual.visualType === 'cardVisual' && !isMessageCard(v) && v.parentGroupName).map((v) => v.parentGroupName));
     // the bands (round 1): empty text boxes outside every group
     const emptyText = (v) => { const ps = ((((v.visual.objects || {}).general || [{}])[0].properties || {}).paragraphs || []); return ps.every((x) => (x.textRuns || []).every((r) => !r.value)); };
     const bands = p.visuals.filter((v) => v.visual && v.visual.visualType === 'textbox' && !v.parentGroupName && emptyText(v)), used = new Set();
@@ -483,7 +494,13 @@ export function panelProblems(files) {
       }
       const c = v.visual.visualContainerObjects || {}, parent = v.parentGroupName ? byName[v.parentGroupName] : null;
       if (parent && parent.isHidden) return;   // the slide-in panel: its own card, written in visual.json
+      if (isMessageCard(v)) return;   // (round 22) the "No data" card under a chart: its own shadow is written off on purpose (mcp/test.mjs, round 19 and the night of 6-7 Oct, "plain")
       const panel = !tip && (PANEL_TYPES.includes(v.visual.visualType) || (v.visual.visualType === 'textbox' && !v.parentGroupName));
+      // (round 22, "No data" on by default; measured in Desktop on the night of 6-7 Oct) a chart or a table with its
+      // message card under it is see-through: it writes its background off, and only that (border and shadow stay the
+      // theme's, so the panel is drawn as every other one)
+      const over = solid && panel && p.visuals.some((m) => m !== v && isMessageCard(m) && m.parentGroupName === v.parentGroupName && m.position.x === v.position.x && m.position.width === v.position.width);
+      if (over) { panels++; const has = KEYS.filter((k) => c[k]); if (has.join() !== 'background' || !off(c, 'background')) bad.push(`${id}: over its "No data" card only the background is written, off (${has.join(', ') || 'nothing'} written)`); return; }
       if (solid && panel) { panels++; const has = KEYS.filter((k) => c[k]); if (has.length) bad.push(`${id}: ${has.join(', ')} written, the theme can't draw its panel`); }
       else { const on = KEYS.filter((k) => !off(c, k)); if (on.length) bad.push(`${id}: ${on.join(', ')} not switched off`); }
     });

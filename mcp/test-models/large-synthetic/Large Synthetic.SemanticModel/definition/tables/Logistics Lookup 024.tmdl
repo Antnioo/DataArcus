@@ -3,28 +3,34 @@ table 'Logistics Lookup 024'
 	column 'Logistics Lookup 024 Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Logistics Lookup 024 Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 024 Key]
 
 	column 'Logistics Lookup 024'
 		dataType: string
-		sourceColumn: Logistics Lookup 024
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 024]
 
 	column 'Logistics Lookup 024 Status'
 		dataType: string
-		sourceColumn: Logistics Lookup 024 Status
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 024 Status]
 
 	column 'Logistics Lookup 024 Valid From'
 		dataType: dateTime
-		sourceColumn: Logistics Lookup 024 Valid From
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 024 Valid From]
 
 	column 'Logistics Lookup 024 Code'
 		dataType: string
-		sourceColumn: Logistics Lookup 024 Code
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 024 Code]
 
-	partition 'Logistics Lookup 024' = m
+	partition 'Logistics Lookup 024' = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Logistics Lookup 024 Key", "Logistics Lookup 024", "Logistics Lookup 024 Status", "Logistics Lookup 024 Valid From", "Logistics Lookup 024 Code"}, {})
-				in
-				    Source
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Logistics Lookup 024 Key", [Value], "Logistics Lookup 024", "Logistics Lookup 024 " & [Value], "Logistics Lookup 024 Status", "Status " & ( 1 + MOD ( [Value] + 2, 3 ) ), "Logistics Lookup 024 Valid From", DATE ( 2024, [Value], 1 ), "Logistics Lookup 024 Code", "Code " & ( 1 + MOD ( [Value] + 4, 3 ) ) )

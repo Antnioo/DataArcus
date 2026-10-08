@@ -3,40 +3,52 @@ table 'Delivery Status'
 	column 'Delivery Status Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Delivery Status Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Delivery Status Key]
 
 	column 'Delivery Status'
 		dataType: string
-		sourceColumn: Delivery Status
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Delivery Status]
 
 	column 'Delivery Status Created By'
 		dataType: string
-		sourceColumn: Delivery Status Created By
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Delivery Status Created By]
 
 	column 'Delivery Status Valid To'
 		dataType: dateTime
-		sourceColumn: Delivery Status Valid To
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Delivery Status Valid To]
 
 	column 'Delivery Status Level'
 		dataType: int64
-		sourceColumn: Delivery Status Level
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Delivery Status Level]
 
 	column 'Delivery Status Code'
 		dataType: string
-		sourceColumn: Delivery Status Code
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Delivery Status Code]
 
 	column 'Delivery Status Description'
 		dataType: string
-		sourceColumn: Delivery Status Description
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Delivery Status Description]
 
 	column 'Delivery Status Group'
 		dataType: string
-		sourceColumn: Delivery Status Group
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Delivery Status Group]
 
-	partition 'Delivery Status' = m
+	partition 'Delivery Status' = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Delivery Status Key", "Delivery Status", "Delivery Status Created By", "Delivery Status Valid To", "Delivery Status Level", "Delivery Status Code", "Delivery Status Description", "Delivery Status Group"}, {})
-				in
-				    Source
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Delivery Status Key", [Value], "Delivery Status", "Delivery Status " & [Value], "Delivery Status Created By", "Created By " & ( 1 + MOD ( [Value] + 2, 3 ) ), "Delivery Status Valid To", DATE ( 2024, [Value], 1 ), "Delivery Status Level", [Value], "Delivery Status Code", "Code " & ( 1 + MOD ( [Value] + 5, 3 ) ), "Delivery Status Description", "Description " & ( 1 + MOD ( [Value] + 6, 3 ) ), "Delivery Status Group", "Group " & ( 1 + MOD ( [Value] + 7, 3 ) ) )

@@ -93,21 +93,74 @@ for (const f of files) {
     }
   }
 }
+// (round 22b, the reviewer's second review, item 1) no regex lookbehind in a site script: Safari before 16.4 cannot
+// parse "(?<=" or "(?<!" and drops the whole file (main.js runs on every page). A named group "(?<name>" is fine.
+{
+  const files = fs.readdirSync(path.join(ROOT, 'assets/js'), { recursive: true }).filter((f) => /\.js$/.test(f)).map((f) => path.join('assets/js', f));
+  const bad = files.filter((f) => /\(\?<[=!]/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')));
+  ok(!bad.length, `no regex lookbehind in site scripts (Safari before 16.4 fails on the whole file): ${bad.join(', ')}`);
+}
 // Typed text never reaches GA4 when it looks like an email address or a phone number (Google's terms forbid personal data)
 const main = fs.readFileSync(path.join(ROOT, 'assets/js/main.js'), 'utf8');
 ok(/track\('search', \{ search_term: safeTerm\(/.test(main), "main.js: the blog search must send safeTerm(...), not the raw text");
 // AUD-031 (round 20): a search term with 7 or more digits in all is redacted (a Gulf phone number is 8 digits, "5512 3456"),
 // unless every number in it is a year (19xx or 20xx), so "2024 2025" is kept; the "@" rule and the 50-character cut stay
 {
-  const src = (main.match(/const safeTerm = ([^\n]+);\n/) || [])[1];
+  const src = (main.match(/const safeTerm = ([^\r\n]+);\r?\n/) || [])[1];   // (a Windows checkout has CRLF line ends)
   let safe = null; try { safe = src && Function('return (' + src + ')')(); } catch (e) { safe = null; }
   ok(typeof safe === 'function', 'main.js: safeTerm could not be read as one arrow function on one line');
   if (typeof safe === 'function') {
     for (const q of ['5512 3456', '9876 5432', '+974 5512 3456', '050 123 4567', 'me@example.com', '1234567'])
       ok(safe(q) === '(redacted)', `safeTerm("${q}") must be "(redacted)", got "${safe(q)}"`);
+    // (round 22, the code review's i) the rule is one: the years a search names (2015 to 2035) are set aside, then 7 or
+    // more digits are redacted. So other words and small numbers beside years are kept, and two old "years" that
+    // could as well be a phone number ("2012 1995") are not
+    for (const q of ['2012 1995', '2024 5512 3456', '2024 2025 050 123 4567', '20242025'])
+      ok(safe(q) === '(redacted)', `safeTerm("${q}") must be "(redacted)", got "${safe(q)}"`);
+    for (const q of ['2024 2025 top 10', 'dax 2024 vs 2025 top 100', 'power bi 2019 2020 2021'])
+      ok(safe(q) === q, `safeTerm("${q}") must keep the term, got "${safe(q)}"`);
     for (const q of ['2024 2025', 'top 10 dax', 'dax 2025', 'calculate'])
       ok(safe(q) === q, `safeTerm("${q}") must keep the term, got "${safe(q)}"`);
     ok(safe('x'.repeat(80)) === 'x'.repeat(50), 'safeTerm must cut a term to 50 characters');
+    // (round 22b, the review of round 22, item 1: setting the years aside let phone numbers through whose groups read
+    // as years, "050 2024 2025". Never a phone-like number: a run of numbers joined by spaces, dashes, dots, slashes or
+    // brackets counts whole unless it is years only, or one number of at most 3 digits beside one year, "dp-600 2025")
+    for (const q of ['050 2024 2025', '+971 50 2030 2015', '971 50 2030 2015', '5520 2025', '04 2024 2025', '050 2025', '+971501234567', '00971 50 123 4567',
+      '050-123-4567', '050.123.4567', '(04) 123 4567', '+966 55 123 4567', '055 123 4567', '+44 20 7946 0958', '+1 (415) 555-2671', 'call 050 123 4567 please', '+2030 2015 2020'])
+      ok(safe(q) === '(redacted)', `safeTerm("${q}") must be "(redacted)" (a phone number), got "${safe(q)}"`);
+    // (X-06, the outside review of round 22b; the reviewer's decision, keep as is: a run of years alone, "2015 2035", is
+    // kept although it has 8 digits. Year searches such as "2024 2025" and "Vision 2030" matter more than this rare
+    // case: an accepted, known gap, documented here so a change to it is a decision, not an accident)
+    // (and, by the reviewer's item 7, "a small number beside years is kept, in any order": "50 2024 2025", a UAE mobile
+    // written without its 0 whose last seven digits read as two years, is kept too: accepted with the same reason)
+    // ("50 2024 2025" left this list with the reviewer's final item 3: it is now redacted, as "50 2025 2030")
+    for (const q of ['2015 2035', '2024 2025', 'vision 2030', 'vision 2030 2035'])
+      ok(safe(q) === q, `safeTerm("${q}") keeps a run of years alone (X-06, accepted): got "${safe(q)}"`);
+    // (round 22b, the reviewer's second review, items 6 and 7) commas, underscores, a single letter between numbers
+    // join them like a space ("050,2024,2025", "050x2024x2025"); and a small number beside years is kept whatever the order
+    for (const q of ['050,2024,2025', '050 , 2024 , 2025', '050_2024_2025', '050x2024x2025', '+971,50,2030,2015'])
+      ok(safe(q) === '(redacted)', `safeTerm("${q}") must be "(redacted)" (a phone number), got "${safe(q)}"`);
+    // ("2024 2025 2026 30" left this list with the reviewer's final item 3: a run of two or more years and 2 or more other
+    // digits counts whole, which "50 2025 2030", a UAE mobile without its 0, needs; accepted over-redaction)
+    for (const q of ['top 10 2024 2025', '5 2024 2025', '2024 2025 top 10'])
+      ok(safe(q) === q, `safeTerm("${q}") must keep the term, got "${safe(q)}"`);
+    // (round 22b, the reviewer's third review, items 5 and 6) a number of 3 or more digits beside two or more years counts
+    // whole ("971 2030 2015"); Arabic-Indic and Eastern Arabic digits count as digits ("٠٥٠١٢٣٤٥٦٧"), and the term is
+    // sent as typed when kept
+    for (const q of ['971 2030 2015', '123 2024 2025', '\u0660\u0665\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667', '\u06f0\u06f5\u06f0\u06f1\u06f2\u06f3\u06f4\u06f5\u06f6\u06f7', '+\u0669\u0667\u0661 \u0665\u0660 \u0661\u0662\u0663 \u0664\u0665\u0666\u0667'])
+      ok(safe(q) === '(redacted)', `safeTerm("${q}") must be "(redacted)" (a phone number), got "${safe(q)}"`);
+    for (const q of ['5 2024 2025', 'top 10 2024 2025', '\u062a\u0642\u0631\u064a\u0631 \u0662\u0660\u0662\u0665', 'dp-600 2025'])
+      ok(safe(q) === q, `safeTerm("${q}") must keep the term as typed, got "${safe(q)}"`);
+    // (round 22b, the reviewer's final items 1 to 3) fullwidth and other scripts' digits and at-signs count; an exam or
+    // product code ("pl-300", "dp-600") is not part of a phone run; a number of 1 or 2 digits right after a word ("top 10")
+    // stands alone; any run of two or more years with 2 or more other digits counts whole ("50 2025 2030")
+    for (const q of ['\uff10\uff15\uff10\uff11\uff12\uff13\uff14\uff15\uff16\uff17', '+\uff19\uff17\uff11 \uff15\uff10 \uff11\uff12\uff13 \uff14\uff15\uff16\uff17', '\u096b\u0966\u0967\u0968\u0969\u096a\u096b\u096c\u096d\u096e',
+      'test\uff20mail.com', 'test\ufe6bmail.com', '50 2025 2030', '55 2024 2025 1', '971 2030 2015', '050 2024 2025', '5512 3456', '123 2024 2025'])
+      ok(safe(q) === '(redacted)', `safeTerm("${q}") must be "(redacted)", got "${safe(q)}"`);
+    for (const q of ['top 10 2024 2025', '2024 2025 top 10', '5 2024 2025', 'dp-600 2025', 'pl-300 2024 2025', 'dp-600 2024 2025', 'az-900 2025', 'vision 2030', '2024 2025', 'q1 2025', 'fy2024 vs fy2025'])
+      ok(safe(q) === q, `safeTerm("${q}") must keep the term, got "${safe(q)}"`);
+    for (const q of ['dp-600 2025', 'fy2025', 'fy2024 vs fy2025', 'q1 2025', 'pl-300', 'pl-300 dp-600', 'top 10', 'power bi 2024 2025 2026'])
+      ok(safe(q) === q, `safeTerm("${q}") must keep the term, got "${safe(q)}"`);
   }
 }
 

@@ -33,6 +33,10 @@ export function rootProblem() {
   return null;
 }
 // A working folder that is there but can't be used yet (empty), as a message for the user: a normal answer, not an error
+// Invisible characters of a name written as code points, so the AI app and the user can see them: format characters
+// (\p{Cf}: zero-width, direction, byte order mark; AUD-017) and control characters (\p{Cc}: a tab or a line break;
+// AUD-032). One helper for the server and check_report (round 22b, the review of round 22, item 9).
+export const visible = (s) => String(s).replace(/[\p{Cf}\p{Cc}]/gu, (ch) => '\\u' + ch.codePointAt(0).toString(16).padStart(4, '0'));
 export class Notice extends Error { constructor(state, message) { super(message); this.state = state; } }
 // A name is free only when nothing at all is there. lstat, not existsSync: a link whose target is missing "doesn't
 // exist" to existsSync, and writing at its name would create the target, outside the working folder (audit AUD-005)

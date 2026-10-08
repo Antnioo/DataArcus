@@ -57,76 +57,102 @@ table 'Freight Costs'
 	column 'Freight Cost Id'
 		dataType: int64
 		isHidden
-		sourceColumn: Freight Cost Id
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Freight Cost Id]
 
 	column Date
 		dataType: dateTime
 		isHidden
-		sourceColumn: Date
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Date]
 
 	column 'Port Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Port Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Port Key]
 
 	column 'Hub Key'
 		dataType: int64
-		sourceColumn: Hub Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hub Key]
 
 	column 'Delay Reason Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Delay Reason Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Delay Reason Key]
 
 	column 'Delivery Status Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Delivery Status Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Delivery Status Key]
 
 	column 'Customs Status Key'
 		dataType: int64
-		sourceColumn: Customs Status Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Customs Status Key]
 
 	column 'Return Reason Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Return Reason Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Reason Key]
 
 	column 'Tax Amount'
 		dataType: double
 		isHidden
-		sourceColumn: Tax Amount
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Tax Amount]
 
 	column Units
 		dataType: int64
-		sourceColumn: Units
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Units]
 
 	column Score
 		dataType: decimal
 		isHidden
-		sourceColumn: Score
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Score]
 
 	column Margin
 		dataType: decimal
-		sourceColumn: Margin
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Margin]
 
 	column Price
 		dataType: double
 		isHidden
-		sourceColumn: Price
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Price]
 
 	column Count
 		dataType: int64
-		sourceColumn: Count
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Count]
 
 	column 'Net Amount'
 		dataType: decimal
-		sourceColumn: Net Amount
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Net Amount]
 
-	partition 'Freight Costs' = m
+	partition 'Freight Costs' = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Freight Cost Id", "Date", "Port Key", "Hub Key", "Delay Reason Key", "Delivery Status Key", "Customs Status Key", "Return Reason Key", "Tax Amount", "Units", "Score", "Margin", "Price", "Count", "Net Amount"}, {})
-				in
-				    Source
+		source = VAR B = ADDCOLUMNS ( CROSSJOIN ( CALENDAR ( DATE ( 2024, 1, 1 ), DATE ( 2025, 12, 31 ) ), GENERATESERIES ( 1, 3 ) ), "S", MOD ( INT ( [Date] ) * 7919 + [Value] * 104729 + 35092143, 1000 ) ) RETURN SELECTCOLUMNS ( B, "Freight Cost Id", ( INT ( [Date] ) - 45000 ) * 10 + [Value], "Date", [Date], "Port Key", 1 + MOD ( [S] + [Value] + 74, 8 ), "Hub Key", 1 + MOD ( [S] + [Value] + 111, 8 ), "Delay Reason Key", 1 + MOD ( [S] + [Value] + 148, 8 ), "Delivery Status Key", 1 + MOD ( [S] + [Value] + 185, 8 ), "Customs Status Key", 1 + MOD ( [S] + [Value] + 222, 8 ), "Return Reason Key", 1 + MOD ( [S] + [Value] + 259, 8 ), "Tax Amount",  ( ROUND ( ( 40 + MOD ( [S] * 11, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Units", 1 + MOD ( [S] * 11, 40 ), "Score", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 13, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Margin", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 14, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Price",  ( ROUND ( ( 40 + MOD ( [S] * 15, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Count", 1 + MOD ( [S] * 15, 40 ), "Net Amount", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 17, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ) )

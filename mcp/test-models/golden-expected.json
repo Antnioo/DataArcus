@@ -2,39 +2,42 @@
   "note": "The golden tasks' expected results at tool level (round 12b, the night audit's AUD-030). node test-models/golden-baseline.mjs compares every task with these and fails on a difference (npm test runs it). A change made on purpose: run it with --update, then write its cause in \"why\", beside the number. Refreshed once on 2026-10-05 from fix/round-12 (26d9c6c); every number that differs from GOLDEN-TASKS.md's round 7 table is explained below, each cause found by running each round's own runner at its merge commit.",
   "why": {
     "1": {
-      "visuals": "40 -> 44: round 10 (3803b7a), the owner's design note R10.6a: the page navigator became one button per page with a line under the current one, in both directions (on each of the 2 pages: 1 navigator -> 2 buttons + 1 line, +2)",
+      "visuals": "40 -> 44: round 10 (3803b7a), the owner's design note R10.6a: the page navigator became one button per page with a line under the current one, in both directions (on each of the 2 pages: 1 navigator -> 2 buttons + 1 line, +2) | 44 -> 50: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (3 on each of the 2 pages, +6)",
       "modelNotes": "Calendar[Month Name] -> Calendar[Month Short]: round 12 (d048c8d), #16: the time axis takes the short month names, so the note is on them"
     },
     "2": {
-      "visuals": "36 -> 38: round 10 (3803b7a): the line under the current page's button (+1 on each page; an Arabic report had one button per page since round 2)",
+      "visuals": "36 -> 38: round 10 (3803b7a): the line under the current page's button (+1 on each page; an Arabic report had one button per page since round 2) | 38 -> 44: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (+6)",
       "modelNotes": "Month Short: round 12, #16 (see task 1)"
     },
     "3": {
-      "visuals": "20 -> 19 -> 17: round 12 (85d54c1), #20: the 'What it means' box is left out when no text is given (-1); round 12 (d048c8d), #21: one Ramadan's line chart runs by Ramadan Day, so the monthly trend tooltip page and its card and bar chart are not written (-2)",
+      "visuals": "20 -> 19 -> 17: round 12 (85d54c1), #20: the 'What it means' box is left out when no text is given (-1); round 12 (d048c8d), #21: one Ramadan's line chart runs by Ramadan Day, so the monthly trend tooltip page and its card and bar chart are not written (-2) | 17 -> 18: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (the one chart of the one page, +1)",
       "hidden": "2 -> 1: the trend tooltip page (#21)",
       "slicers": "Hijri Year and Is Ramadan -> Year, Quarter, Day Name: round 12 (d048c8d), #22: no slicer on a column a page filter fixes; the picker's next columns instead"
     },
     "4": {
-      "wide": "visuals 34 -> 38: round 10 (3803b7a), the navigator as buttons with a line (see task 1)",
-      "square": "visuals 34 -> 38: round 10 (3803b7a), as wide"
+      "wide": "visuals 34 -> 38: round 10 (3803b7a), the navigator as buttons with a line (see task 1) | visuals 38 -> 44: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (+6)",
+      "square": "visuals 34 -> 38: round 10 (3803b7a), as wide | visuals 38 -> 44: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (+6)"
     },
     "5": {
-      "visuals": "34 -> 38: round 10 (3803b7a), the navigator as buttons with a line (see task 1); 38 -> 35: round 19, the single-focus layout on the 640 x 360 page (one large chart for the executive layout's line, bar, column and table)",
-      "pages": "\"Executive summary 640x360\" -> \"Single focus 640x360\": round 19, the owner's choice B (6 Oct): below 800 wide the executive layout is not used"
+      "visuals": "34 -> 38: round 10 (3803b7a), the navigator as buttons with a line (see task 1); 38 -> 35: round 19, the single-focus layout on the 640 x 360 page (one large chart for the executive layout's line, bar, column and table) | 35 -> 14: round 22: one page instead of two (the Details page and its tooltip-free visuals are gone), and the one chart's \"No data\" card (+1)",
+      "pages": "\"Executive summary 640x360\" -> \"Single focus 640x360\": round 19, the owner's choice B (6 Oct): below 800 wide the executive layout is not used | 2 -> 1: round 22 (the owner's (a) for pages under 800 wide; in Desktop the second page cut its card values and scrolled its table): a page under 800 wide gets no second page"
     },
     "6": {
-      "visuals": "43 -> 45: round 10 (3803b7a), the line under the current page's button (see task 2)",
-      "longTitleUses": "61 -> 64: round 13 (6f54d6a, measured: its own runner gives 64): the gradient bars (chartColors) name the chart's measure once more in each bar and column chart's colour rule (FillRule input), three charts on this report"
+      "visuals": "43 -> 45: round 10 (3803b7a), the line under the current page's button (see task 2) | 45 -> 51: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (+6)",
+      "longTitleUses": "61 -> 64: round 13 (6f54d6a, measured: its own runner gives 64): the gradient bars (chartColors) name the chart's measure once more in each bar and column chart's colour rule (FillRule input), three charts on this report | 64 -> 81: round 22: the \"No data\" message cards and their report-level measures carry the long measure name too (reportExtensions.json and each card's query)"
     },
     "7": {
       "visuals": "39 -> 38: round 16, design finding #14 (the owner's go): Count of Region is no longer a KPI card (one card fewer)",
-      "kpiCards": "4 -> 3 cards: round 16, design finding #14: a count of a category column is never a KPI card; fewer cards, and the answer says why"
+      "kpiCards": "4 -> 3 cards: round 16, design finding #14: a count of a category column is never a KPI card; fewer cards, and the answer says why",
+      "health": "93 -> 92: round 20 (the owner's yes, 6 Oct): the test model's tables became DAX tables with made-up rows and a Month Number column (a chart by month runs over six months); the new number column is one more the score counts"
     },
     "8": {
       "kpiCards": "built 2 -> 1: round 12 (85d54c1), #26: 'Unused One' shows text (its format is \"Yes\";\"Yes\";\"No\") and is never a KPI card"
     },
     "10": {
-      "visuals": "35 -> 39: round 10 (3803b7a), the navigator as buttons with a line (see task 1)"
+      "visuals": "35 -> 39: round 10 (3803b7a), the navigator as buttons with a line (see task 1) | 39 -> 45: round 22 (the owner's rule, on since 7 Oct): \"No data\" is on by default, one message card under each chart and table that shows a measure of the model (+6). The model's Logistics tables and calendar hold rows as DAX tables since round 22: no other number of this task changed",
+      "category": "Carrier[Carrier Group] -> Hub[Hub Region]: round 22 (seen in Desktop, 7 Oct: the same total for every Carrier Group; Carrier is related to Deliveries only): the picker reads the relationships and takes a lookup the main measure's table (Shipments) is related to",
+      "suggestChars": "14410 -> 14364: round 22: the picked categories changed with the relationship rule (shorter names) | 14364 -> 5610: round 22b (the review of round 22, item 2): the pool of slicer columns (slicerPool) holds only the tables the measure reaches (Shipments and its lookups), no longer every category of the Logistics area; the picked categories, slicers and KPIs are the same"
     }
   },
   "tasks": {
@@ -49,7 +52,7 @@
         "Details 1920x1080"
       ],
       "hidden": 2,
-      "visuals": 44,
+      "visuals": 50,
       "validator": 0,
       "sizeProblems": 0,
       "phoneProblems": 0,
@@ -73,7 +76,7 @@
         "نظرة عامة 1920x1080"
       ],
       "hidden": 2,
-      "visuals": 38,
+      "visuals": 44,
       "validator": 0,
       "sizeProblems": 0,
       "phoneProblems": 0,
@@ -101,7 +104,7 @@
         "Single focus 1920x1080"
       ],
       "hidden": 1,
-      "visuals": 17,
+      "visuals": 18,
       "validator": 0,
       "sizeProblems": 0,
       "phoneProblems": 0,
@@ -123,7 +126,7 @@
           "Details 1280x720"
         ],
         "hidden": 2,
-        "visuals": 38,
+        "visuals": 44,
         "validator": 0,
         "sizeProblems": 0,
         "phoneProblems": 0,
@@ -137,7 +140,7 @@
           "Details 960x720"
         ],
         "hidden": 2,
-        "visuals": 38,
+        "visuals": 44,
         "validator": 0,
         "sizeProblems": 0,
         "phoneProblems": 0,
@@ -151,11 +154,10 @@
       "id": 5,
       "cards": "Sales[Total Sales] | Sales[Total Sales Last Ramadan] | Sales[Total Sales vs Last Ramadan %]",
       "pages": [
-        "Single focus 640x360",
-        "Details 640x360"
+        "Single focus 640x360"
       ],
       "hidden": 2,
-      "visuals": 35,
+      "visuals": 14,
       "validator": 0,
       "sizeProblems": 0,
       "phoneProblems": 0,
@@ -168,13 +170,13 @@
       "id": 6,
       "measures": 5,
       "kpis": "إجمالي صافي المبيعات بعد الخصومات والمرتجعات | عدد الفواتير الصادرة خلال الفترة المحددة | إجمالي الكمية المباعة من جميع الأصناف | نسبة النمو مقارنة بنفس الفترة من العام الماضي",
-      "longTitleUses": 64,
+      "longTitleUses": 81,
       "pages": [
         "ملخص تنفيذي 1920x1080",
         "التفاصيل 1920x1080"
       ],
       "hidden": 2,
-      "visuals": 45,
+      "visuals": 51,
       "validator": 0,
       "sizeProblems": 0,
       "phoneProblems": 0,
@@ -188,7 +190,7 @@
       "measures": 0,
       "dateTables": 0,
       "kpis": " |  |  | ",
-      "health": "93: MONTH_SORT DATE_NOT_MARKED SUMMARIZE_KEYS FK_VISIBLE DOUBLE NO_RLS",
+      "health": "92: MONTH_SORT DATE_NOT_MARKED SUMMARIZE_KEYS FK_VISIBLE DOUBLE NO_RLS",
       "pages": [
         "Executive summary 1920x1080",
         "Details 1920x1080"
@@ -245,15 +247,15 @@
       "detailTables": 5,
       "noFocus": "asks for a focus",
       "createNoFocus": "refused",
-      "suggestChars": 14410,
+      "suggestChars": 5610,
       "kpis": "Shipments[Shipments Total Net Amount] | Deliveries[Deliveries Total Tax Amount] | Freight Costs[Freight Costs Total Tax Amount] | Freight Costs[Freight Costs Units Share %]",
-      "category": "Carrier[Carrier Group]",
+      "category": "Hub[Hub Region]",
       "pages": [
         "Executive summary 1920x1080",
         "Details 1920x1080"
       ],
       "hidden": 2,
-      "visuals": 39,
+      "visuals": 45,
       "validator": 0,
       "sizeProblems": 0,
       "phoneProblems": 0,

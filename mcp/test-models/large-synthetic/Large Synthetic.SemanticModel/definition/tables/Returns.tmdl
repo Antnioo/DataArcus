@@ -53,70 +53,94 @@ table Returns
 	column 'Return Id'
 		dataType: int64
 		isHidden
-		sourceColumn: Return Id
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Return Id]
 
 	column Date
 		dataType: dateTime
 		isHidden
-		sourceColumn: Date
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Date]
 
 	column 'Port Key'
 		dataType: int64
-		sourceColumn: Port Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Port Key]
 
 	column 'Fleet Unit Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Fleet Unit Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Fleet Unit Key]
 
 	column 'Logistics Lookup 010 Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Logistics Lookup 010 Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 010 Key]
 
 	column 'Logistics Lookup 046 Key'
 		dataType: int64
-		sourceColumn: Logistics Lookup 046 Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 046 Key]
 
 	column 'Logistics Lookup 029 Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Logistics Lookup 029 Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 029 Key]
 
 	column 'Logistics Lookup 024 Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Logistics Lookup 024 Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 024 Key]
 
 	column Amount
 		dataType: double
 		isHidden
-		sourceColumn: Amount
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Amount]
 
 	column 'Weight Kg'
 		dataType: double
-		sourceColumn: Weight Kg
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Weight Kg]
 
 	column Count
 		dataType: int64
-		sourceColumn: Count
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Count]
 
 	column Cost
 		dataType: double
-		sourceColumn: Cost
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Cost]
 
 	column Units
 		dataType: int64
-		sourceColumn: Units
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Units]
 
 	column 'Net Amount'
 		dataType: double
-		sourceColumn: Net Amount
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Net Amount]
 
-	partition Returns = m
+	partition Returns = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Return Id", "Date", "Port Key", "Fleet Unit Key", "Logistics Lookup 010 Key", "Logistics Lookup 046 Key", "Logistics Lookup 029 Key", "Logistics Lookup 024 Key", "Amount", "Weight Kg", "Count", "Cost", "Units", "Net Amount"}, {})
-				in
-				    Source
+		source = VAR B = ADDCOLUMNS ( CROSSJOIN ( CALENDAR ( DATE ( 2024, 1, 1 ), DATE ( 2025, 12, 31 ) ), GENERATESERIES ( 1, 3 ) ), "S", MOD ( INT ( [Date] ) * 7919 + [Value] * 104729 + 36391852, 1000 ) ) RETURN SELECTCOLUMNS ( B, "Return Id", ( INT ( [Date] ) - 45000 ) * 10 + [Value], "Date", [Date], "Port Key", 1 + MOD ( [S] + [Value] + 74, 8 ), "Fleet Unit Key", 1 + MOD ( [S] + [Value] + 111, 8 ), "Logistics Lookup 010 Key", 1 + MOD ( [S] + [Value] + 148, 8 ), "Logistics Lookup 046 Key", 1 + MOD ( [S] + [Value] + 185, 8 ), "Logistics Lookup 029 Key", 1 + MOD ( [S] + [Value] + 222, 8 ), "Logistics Lookup 024 Key", 1 + MOD ( [S] + [Value] + 259, 8 ), "Amount",  ( ROUND ( ( 40 + MOD ( [S] * 11, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Weight Kg",  ( ROUND ( ( 40 + MOD ( [S] * 12, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Count", 1 + MOD ( [S] * 12, 40 ), "Cost",  ( ROUND ( ( 40 + MOD ( [S] * 14, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Units", 1 + MOD ( [S] * 14, 40 ), "Net Amount",  ( ROUND ( ( 40 + MOD ( [S] * 16, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ) )

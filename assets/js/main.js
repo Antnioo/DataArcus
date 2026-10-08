@@ -476,8 +476,23 @@ document.addEventListener('DOMContentLoaded', () => {
   window.dataArcusTrack = track; // lets tool pages send their own events
   // Typed text that looks like an email address or a phone number never reaches GA4 (no personal data in analytics)
   // AUD-031 (round 20): 7 or more digits in all is a phone or an ID (a Gulf mobile is 8 digits, "5512 3456"), unless
-  // every number in the term is a year ("2024 2025"); an "@" is an e-mail; anything else is cut to 50 characters
-  const safeTerm = (q) => (q.includes('@') || ((q.match(/\d/g) || []).length >= 7 && !(q.match(/\d+/g) || []).every((n) => /^(19|20)\d\d$/.test(n))) ? '(redacted)' : q.slice(0, 50));
+  // every number in the term is a year ("2024 2025"); an "@" is an e-mail; anything else is cut to 50 characters.
+  // Round 22 (the code review's i): the years a search names (2015 to 2035) are set aside, then 7 or more digits are
+  // redacted: "2024 2025 top 10" is kept, "2012 1995" (as likely a phone number) is not.
+  // Round 22b (the review of round 22, item 1: "050 2024 2025" and "+971 50 2030 2015" got through, their groups read as
+  // years; the second review, items 1, 6, 7: no regex lookbehind, which Safari before 16.4 cannot parse and so drops the
+  // whole file; commas, underscores or one letter between numbers join them too; order does not matter). The numbers of
+  // a term are read in runs: numbers joined by anything but a word of two or more letters ("050,2024,2025", "050x2024").
+  // A run counts the digits of its numbers that are not years (2015 to 2035), or all its digits when those are 4 or more
+  // ("5520 2025") or the run starts with + or 0 ("050 2025"). 7 or more counted digits in a run, or in the whole term,
+  // are redacted. So "2024 2025 top 10", "dp-600 2025" and "fy2024 vs fy2025" are kept. The third review (items 5, 6): a
+  // number of 3 or more digits beside two or more years counts whole ("971 2030 2015"), and Arabic-Indic and Eastern
+  // Arabic digits are read as digits ("٠٥٠١٢٣٤٥٦٧"); a kept term is sent as typed.
+  // The reviewer's final items 1 to 3: the term is read in its NFKC form (fullwidth digits and at-signs as ASCII), and
+  // any other script's digit counts as a non-year digit; an exam or product code ("pl-300", "dp-600") is no part of a run;
+  // a number of 1 or 2 digits right after a word ("top 10") stands alone; a run of two or more years with 2 or more
+  // other digits counts whole ("50 2025 2030", "55 2024 2025 1").
+  const safeTerm = (q) => { const d = q.normalize('NFKC').replace(/[\u0660-\u0669]/g, (x) => x.charCodeAt(0) - 0x660).replace(/[\u06f0-\u06f9]/g, (x) => x.charCodeAt(0) - 0x6f0).replace(/\p{Nd}/gu, (x) => (/[0-9]/.test(x) ? x : '9')); if (d.includes('@')) return '(redacted)'; const Y = /^20(1[5-9]|2\d|3[0-5])$/, p = d.split(/(\d+)/), runs = []; let run = null, sum = 0; for (let i = 1; i < p.length; i += 2) { const gap = p[i - 1]; if (/\p{L}-$/u.test(gap)) { run = null; continue; } const lone = p[i].length <= 2 && /\p{L}\s+$/u.test(gap); if (!run || run.lone || lone || (gap.match(/\p{L}/gu) || []).length > 1) runs.push(run = { pre: /\+\s*$/.test(gap), g: [], lone }); run.g.push(p[i]); } for (const r of runs) { const all = r.g.join('').length, others = r.g.filter((x) => !Y.test(x)), other = others.join('').length, c = r.pre || r.g[0][0] === '0' || other >= 4 || (r.g.length - others.length >= 2 && other >= 2) ? all : other; if (c >= 7) return '(redacted)'; sum += c; } return sum >= 7 ? '(redacted)' : q.slice(0, 50); };
 
   const once = new Set();
   const trackOnce = (key, name, params) => { if (once.has(key)) return; once.add(key); track(name, params); };

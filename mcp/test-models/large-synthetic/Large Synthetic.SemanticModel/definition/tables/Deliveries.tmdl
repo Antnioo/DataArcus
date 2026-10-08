@@ -58,72 +58,96 @@ table Deliveries
 	column 'Deliverie Id'
 		dataType: int64
 		isHidden
-		sourceColumn: Deliverie Id
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Deliverie Id]
 
 	column Date
 		dataType: dateTime
 		isHidden
-		sourceColumn: Date
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Date]
 
 	column 'Driver Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Driver Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Driver Key]
 
 	column 'Logistics Lookup 048 Key'
 		dataType: int64
-		sourceColumn: Logistics Lookup 048 Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Logistics Lookup 048 Key]
 
 	column 'Route Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Route Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Route Key]
 
 	column 'Carrier Key'
 		dataType: int64
-		sourceColumn: Carrier Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Carrier Key]
 
 	column 'Tax Amount'
 		dataType: decimal
-		sourceColumn: Tax Amount
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Tax Amount]
 
 	column Hours
 		dataType: double
 		isHidden
-		sourceColumn: Hours
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Hours]
 
 	column Cost
 		dataType: decimal
-		sourceColumn: Cost
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Cost]
 
 	column 'Net Amount'
 		dataType: double
 		isHidden
-		sourceColumn: Net Amount
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Net Amount]
 
 	column Score
 		dataType: double
-		sourceColumn: Score
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Score]
 
 	column Value
 		dataType: decimal
 		isHidden
-		sourceColumn: Value
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Value]
 
 	column Amount
 		dataType: double
 		isHidden
-		sourceColumn: Amount
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Amount]
 
 	column 'Duration Minutes'
 		dataType: double
 		isHidden
-		sourceColumn: Duration Minutes
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Duration Minutes]
 
-	partition Deliveries = m
+	partition Deliveries = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Deliverie Id", "Date", "Driver Key", "Logistics Lookup 048 Key", "Route Key", "Carrier Key", "Tax Amount", "Hours", "Cost", "Net Amount", "Score", "Value", "Amount", "Duration Minutes"}, {})
-				in
-				    Source
+		source = VAR B = ADDCOLUMNS ( CROSSJOIN ( CALENDAR ( DATE ( 2024, 1, 1 ), DATE ( 2025, 12, 31 ) ), GENERATESERIES ( 1, 3 ) ), "S", MOD ( INT ( [Date] ) * 7919 + [Value] * 104729 + 33792434, 1000 ) ) RETURN SELECTCOLUMNS ( B, "Deliverie Id", ( INT ( [Date] ) - 45000 ) * 10 + [Value], "Date", [Date], "Driver Key", 1 + MOD ( [S] + [Value] + 74, 8 ), "Logistics Lookup 048 Key", 1 + MOD ( [S] + [Value] + 111, 8 ), "Route Key", 1 + MOD ( [S] + [Value] + 148, 8 ), "Carrier Key", 1 + MOD ( [S] + [Value] + 185, 8 ), "Tax Amount", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 9, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Hours",  ( ROUND ( ( 40 + MOD ( [S] * 10, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Cost", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 11, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Net Amount",  ( ROUND ( ( 40 + MOD ( [S] * 12, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Score",  ( ROUND ( ( 40 + MOD ( [S] * 13, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Value", CURRENCY ( ROUND ( ( 40 + MOD ( [S] * 14, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Amount",  ( ROUND ( ( 40 + MOD ( [S] * 15, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ), "Duration Minutes",  ( ROUND ( ( 40 + MOD ( [S] * 16, 900 ) ) * IF ( YEAR ( [Date] ) = 2025, 1.12, 1 ) * IF ( WEEKDAY ( [Date], 1 ) >= 6, 1.25, 1 ), 2 ) ) )

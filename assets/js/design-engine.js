@@ -176,7 +176,9 @@
     // kpiCards): on a 4:3 page (narrower than 3:2 on the design grid) a table beside a chart takes the
     // wider share of its row, 3 to 2: measured, a table of a day column and three measures needs 463 at 8pt in Segoe UI
     // and 483 in Tahoma, and half of a 960 x 720 page's row is 458.
-    const narrow = !!c.wideTable && PW < 1080, share = (cols) => (narrow && cols.length > 1 ? cols.map((col) => (col[1] === 'table' ? [col[0] * 1.5, col[1], col[2]] : col)) : cols);
+    // (round 20, the owner's (b), 7 Oct 2026: the website follows the MCP: on by default; a design that says false keeps
+    // equal shares)
+    const narrow = c.wideTable !== false && PW < 1080, share = (cols) => (narrow && cols.length > 1 ? cols.map((col) => (col[1] === 'table' ? [col[0] * 1.5, col[1], col[2]] : col)) : cols);
     const rows = (nK ? [{ fixed: z.kpiH, quarter: nK === 1 && c.kpis > 1, cols: Array.from({ length: nK }, (_, i) => [1, 'kpi', [`KPI ${i + 1}`, `مؤشر ${i + 1}`]]) }] : [])
       .concat([first].concat(P.rows.slice(1)).map((cols, i) => ({ flex: flex[i], cols: share(cols) })));
     let y = top;

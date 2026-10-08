@@ -3,44 +3,58 @@ table 'Service Level'
 	column 'Service Level Key'
 		dataType: int64
 		isHidden
-		sourceColumn: Service Level Key
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Service Level Key]
 
 	column 'Service Level'
 		dataType: string
-		sourceColumn: Service Level
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Service Level]
 
 	column 'Service Level Status'
 		dataType: string
-		sourceColumn: Service Level Status
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Service Level Status]
 
 	column 'Service Level Type'
 		dataType: string
-		sourceColumn: Service Level Type
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Service Level Type]
 
 	column 'Service Level Owner'
 		dataType: string
-		sourceColumn: Service Level Owner
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Service Level Owner]
 
 	column 'Service Level Valid From'
 		dataType: dateTime
-		sourceColumn: Service Level Valid From
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Service Level Valid From]
 
 	column 'Service Level Region'
 		dataType: string
-		sourceColumn: Service Level Region
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Service Level Region]
 
 	column 'Service Level Code'
 		dataType: string
-		sourceColumn: Service Level Code
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Service Level Code]
 
 	column 'Service Level Description'
 		dataType: string
-		sourceColumn: Service Level Description
+		isNameInferred
+		isDataTypeInferred
+		sourceColumn: [Service Level Description]
 
-	partition 'Service Level' = m
+	partition 'Service Level' = calculated
 		mode: import
-		source =
-				let
-				    Source = #table({"Service Level Key", "Service Level", "Service Level Status", "Service Level Type", "Service Level Owner", "Service Level Valid From", "Service Level Region", "Service Level Code", "Service Level Description"}, {})
-				in
-				    Source
+		source = SELECTCOLUMNS ( GENERATESERIES ( 1, 8 ), "Service Level Key", [Value], "Service Level", "Service Level " & [Value], "Service Level Status", "Status " & ( 1 + MOD ( [Value] + 2, 3 ) ), "Service Level Type", "Type " & ( 1 + MOD ( [Value] + 3, 3 ) ), "Service Level Owner", "Owner " & ( 1 + MOD ( [Value] + 4, 3 ) ), "Service Level Valid From", DATE ( 2024, [Value], 1 ), "Service Level Region", "Region " & ( 1 + MOD ( [Value] + 6, 3 ) ), "Service Level Code", "Code " & ( 1 + MOD ( [Value] + 7, 3 ) ), "Service Level Description", "Description " & ( 1 + MOD ( [Value] + 8, 3 ) ) )

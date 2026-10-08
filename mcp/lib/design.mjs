@@ -104,12 +104,17 @@ export function planLayout(a) {
   // Round 19 (the owner's choice B, 6 Oct 2026; golden task 5 at 640 x 360 in Desktop: cut card values, "Wednes...", a
   // scrolling table): below 800 wide the executive layout's four charts do not fit, so the plan takes the single-focus
   // layout: the KPI cards and one large chart (the text box beside it only when the report is given its text)
+  const SMALL_KPI_H = 116;
   let smallPage = null;
   const pw0 = E.page(design.layout).w;
   if (pw0 < 800 && design.layout.preset === 'exec') {
     const L = design.layout; L.preset = 'focus'; L.filters = E.LAYOUTS.focus.filters; delete L.kpiH; delete L.mainW; delete L.split;
     smallPage = { from: 'exec', to: 'focus', say: `The page is ${pw0} wide, under 800: the executive layout's four charts and table would be cut or scroll there, so this plan uses the single-focus layout (the KPI cards and one large chart). Say so in the plan; a page 800 wide or more takes the executive layout.` };
   }
+  // Round 22 (the owner's (a) of the night sitting's question 4; golden task 5 at 640 x 360 in Desktop 2.158.1304: the
+  // card values touched the card's bottom edge): under 800 wide the single-focus layout's KPI cards are one step
+  // taller (SMALL_KPI_H on the 720 grid, the layout's own is 96), unless the design sets its own height
+  if (pw0 < 800 && design.layout.preset === 'focus' && design.layout.kpiH == null) design.layout.kpiH = SMALL_KPI_H;
   E.repairState(design);
   const lang = a.lang, nm = (pair) => (lang === 'ar' ? pair[1] : pair[0]), layout = design.layout;
   // one row per visual, as the website's slot table: its name, the suggested visual, and x, y, w, h in page units
