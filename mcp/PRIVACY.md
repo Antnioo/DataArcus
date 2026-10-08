@@ -1,7 +1,7 @@
 # DataArcus MCP: what stays on your machine, and what your AI app sees
 
-Plain English. Checked against the code on 2026-10-05 (`feat/check-report` with main `3803b7a` merged in, after round 10 and 11: `mcp/server.mjs`, `mcp/lib/`,
-the report-design skill, and the shared engines it loads from `assets/js/`). If the code changes, this page is checked again before the next release.
+Plain English. Checked against 0.2.8 (DataArcus `843c8dc`, Microsoft's validator 0.4.0) on 2026-10-08: `mcp/server.mjs`, `mcp/lib/`,
+the report-design skill, and the shared engines it loads from `assets/js/`. If the code changes, this page is checked again before the next release.
 
 ## In one paragraph
 The DataArcus MCP runs on your own computer and sends nothing anywhere by itself. But it is a tool for an AI app
@@ -17,6 +17,7 @@ data in your tables.
   report files it writes are Microsoft's schema names, which Power BI reads; nothing is downloaded from them.
   `check_report` reads report files on your computer and runs Microsoft's report validator offline, in the same
   process: the schemas the validator would download are read from Microsoft's copies bundled in `mcp/schemas/`.)
+  The validator's schema download is switched off (`skipSchema`) and is never called.
 - It reads and writes files only inside one working folder that you choose (`DATAARCUS_ROOT`; see section 4).
 - It writes one line to the app's local log when it starts ("DataArcus MCP ready. Folder: ..."), which your AI app
   keeps on your computer.

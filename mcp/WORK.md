@@ -4,6 +4,57 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Round 24, B1 and B2 of the laptop's re-proof (8 Oct, cloud builder; website download only; not merged, no PR)
+The owner's go: "Fix them now". **Branch:** the reviewer named `fix/round-24-b1b2`; this cloud session may push only to
+`fix/round-23-total`, so that branch was restarted from main `843c8dc` (round 23 squash-merged) and carries round 24.
+Rename or merge from it as you like.
+- **B1** (a dark seam across the widened bar chart): the page drew its background picture from the planned slots, before
+  the writer gives a left-out line chart's room to the chart beside it. Now `pngBlob` draws from the same slots the
+  writer lays out (`P.dropLines`, the shared writer's own, when the binding has no time axis).
+- **B2** (white "Select or add data" boxes): the page wrote a KPI card for every slot of the design, with no field where
+  the model has fewer measures. Now the design gets the MCP's own cap, `kpiCards` = the picked KPIs (the design engine
+  shares the row among the cards left and the background's panels follow; page 2's layout inherits it).
+- **Where:** `assets/js/theme-generator.js` only (+ `.min.js`, its `?v=20261008r24` on both Theme Generator pages).
+  **No shared engine file changed** (`pbip-export.js`, `pbip-bind.js`, `design-engine.js` untouched): **MCP output is
+  unchanged** (the MCP already capped cards with `kpiCards`, and its designs have no background picture unless the user
+  gives one: a transparent design without one is made solid, round 20's `themeChanged`, so B1 cannot occur there).
+- **Tests:** `scripts/tests/pbip.mjs` (website): a made-up one-measure, no-date project downloaded in English and Arabic;
+  B2: no KPI card without a field; B1: along the middle of the widened bar chart the background picture is one colour.
+  Red on `843c8dc` (B2: 5 empty cards per language; B1: page colour at x 1266 English, 636 Arabic, the laptop's 2/3 and
+  1/3), green after: pbip 79 -> 83. theme-generator 893, theme-generator-lab 893, `check-min`, `csp`, `test-site-config`,
+  `test-analytics-events` PASS; full `npm test` below.
+- **For the laptop (website download only):** the "Lean" shape (one measure, no date column) and Dhow Freight, English and
+  Arabic: page 1 has one KPI card (or as many as there are measures) sharing the row, no white "Select or add data" box on
+  page 1 or Details; the bar chart that took the line chart's room sits on one panel, no seam, in both languages.
+- **R24-1 (the review of round 24):** a KPI emptied in the middle of the picker (KPI 1 Total Sales, KPI 2 empty, KPI 3
+  Total Qty) still gave an empty card and dropped Total Qty: the writer gives card i the binding's KPI i. The page now
+  builds with the picked KPIs packed in order (`theme-generator.js` only; `?v=20261008r24b`). Check (pbip 83 -> 85, a
+  two-measure project, English and Arabic): red, then two cards in the picked order, both with a field.
+  For the laptop: the same in Desktop (two cards, Total Sales first at the reading start).
+- **Y-02 (an outside review; the owner's "Yes"):** `outbound_click` sent `link_url: url.href`, the whole address with its
+  query string, fragment and any user:password part, to GA4. Now `outboundUrl(url)` in `assets/js/main.js`: the host
+  without www. and the path, at most 100 characters; `link_domain` and `link_text` unchanged, no other event touched.
+  Check in `scripts/test-analytics-events.mjs` (red on the old main.js, green after): a made-up
+  `https://user:pw@www.example.com/a/b?email=x@y.com&t=123#frag` gives `example.com/a/b`. `main.min.js` rebuilt,
+  `?v=20261008r24` on its 37 pages; `check-min`, `test-site-config`, `csp`, `test-analytics-events` PASS.
+- **Seen, not in scope:** the page's PNG download (Download background) still draws the planned layout (no model is
+  known there, by design); the Details page keeps its own KPI count (3) capped by the same `kpiCards`.
+
+### Round 24, laptop proof (8 Oct, laptop builder; 14:08 to 14:20 UTC; `754d29c`, the website's download only)
+**Head proven: `754d29c`** (a work tree at that commit; the lab page served from it; Desktop 2.158.1304; Windows not locked;
+the only session driving Desktop, none left open). Made-up models only. **No code file touched; no test run here.**
+Downloads `<tests folder>\r24\site\`, captures (2x, read at their own size) `<tests folder>\r24\shots\`; scripts
+`builder-scripts\r24-site.mjs`, `r24-shots.ps1`. English and Arabic, 1280 x 720, page 1 and Details. **Verdict: PASS, 3 of 3.**
+| Model | Result | Capture |
+|---|---|---|
+| Lean (one measure, no date column; the picker's KPI 2 to 4 empty) | **PASS**: one card (Total Sales), no white "Select or add data" box on page 1 or Details; the widened bar chart sits on one panel, no seam, English and Arabic | `lean-en-p1.png`, `-p2.png`, `lean-ar-p1.png`, `-p2.png` |
+| Two measures, the middle KPI emptied (KPI 1 Total Sales, KPI 2 empty, KPI 3 Orders) | **PASS**: two cards sharing the row, Total Sales first at the reading start (left in English, right in Arabic), then Orders; no empty card on either page; the bar chart on one panel | `gap-en-p1.png`, `-p2.png`, `gap-ar-p1.png`, `-p2.png` |
+| Dhow Freight (four measures, a date) | **PASS, unchanged**: four cards, the line chart kept; the English page 1 is the re-proof's capture pixel for pixel (`r23b\shots\w1w-en-p1.png`) | `freight-en-p1.png`, `-p2.png`, `freight-ar-p1.png`, `-p2.png` |
+
+**Seen, not in scope:** on Lean the one card keeps a quarter of the row (303 wide; 251 on Details) and the rest of the row is
+empty page, where two cards share the whole row; a 5-row table scrolls on page 1 (the total covers the last row's edge),
+known; Arabic downloads keep English field names and "All"; the bars are one flat colour on the website's download.
+
 ## Round 23, the Arabic table's "Total" word, way 4 (8 Oct, cloud builder; branch `fix/round-23-total` from main `f9f461d`; not merged, no PR)
 Owner's go (8 Oct ~11:15 Dubai): "i wanna fix the word total as well": build way 4 of "Sitting 7-8 Oct, after the stop
 report" item 1 (measured in Desktop 2.158.1304). Rejected: way 1 (as today, no word), way 2 (names at the left), way 3

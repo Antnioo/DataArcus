@@ -418,9 +418,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return new Blob([png.subarray(0, head), ...chunks, png.subarray(head)], { type: 'image/png' });
   }).catch(() => blob);
   // the background as a PNG blob (with the credit metadata); used by the PNG download and the Power BI project
-  const pngBlob = (c) => new Promise((resolve, reject) => {
+  // (round 24, B1: fit, when given, turns the planned slots into those the report writer lays out, so the panels the
+  // picture draws are the visuals' own: a left-out line chart's room given to the chart beside it, one panel under it)
+  const pngBlob = (c, fit) => new Promise((resolve, reject) => {
     const was = state.layout; if (c) state.layout = c;
-    const [pw, ph] = pngSize(), svg = bgSvg(computeSlots(lay()), { w: pngSize()[0], h: pngSize()[1] });
+    const sl = computeSlots(lay()), [pw, ph] = pngSize(), svg = bgSvg(fit ? fit(sl) : sl, { w: pngSize()[0], h: pngSize()[1] });
     state.layout = was; if (c) applyPage(was);
     const img = new Image();
     img.onload = () => {
@@ -559,14 +561,24 @@ document.addEventListener('DOMContentLoaded', () => {
       const was = c.transparent; c.transparent = true; const theme = buildTheme(); c.transparent = was;
       // the pages (design engine): this layout, a second page in a complementary layout when asked, and filters as a
       // slide-in panel when asked; each page's background is drawn for its own layout
-      const specs = E.projectPages(c, isAr() ? 'ar' : 'en', { second: !!($('pbipPages') && $('pbipPages').checked), panel: !!($('pbipPanel') && $('pbipPanel').checked), logoRatio: logo ? logo.ratio : undefined });
-      Promise.all([loadBuilder(), model ? loadBind() : null].concat(specs.map((sp) => pngBlob(sp.layout).then((b) => b.arrayBuffer())))).then(([P, DB, ...bufs]) => {
+      // Round 24 (the laptop's re-proof of round 23; the owner's "Fix them now"), on the user's own model:
+      // B2: a KPI card the model has no measure for is not written: the design gets the MCP's kpiCards (the cards left
+      // share the row, and the background's panels follow them) instead of a cardVisual with no field ("Select or add
+      // data" in Desktop); B1: with no time axis the writer gives the line chart's room to the chart beside it
+      // (dropLines), so the background is drawn from those same slots, one panel under the widened chart
+      const nK = model && bind ? (bind.kpis || []).filter(Boolean).length : null;
+      const cL = nK != null && nK < c.kpis ? Object.assign({}, c, { kpiCards: nK }) : c, noLine = !!(model && bind && !bind.date);
+      // (R24-1, the review of round 24: the writer gives card i the binding's KPI i, so a KPI emptied in the middle of the
+      // picker left an empty card and dropped the last one: the picked KPIs fill the cards in their order)
+      const bindL = bind && nK < (bind.kpis || []).length ? Object.assign({}, bind, { kpis: bind.kpis.filter(Boolean) }) : bind;
+      const specs = E.projectPages(cL, isAr() ? 'ar' : 'en', { second: !!($('pbipPages') && $('pbipPages').checked), panel: !!($('pbipPanel') && $('pbipPanel').checked), logoRatio: logo ? logo.ratio : undefined });
+      Promise.all([loadBuilder(), model ? loadBind() : null]).then(([P, DB]) => Promise.all(specs.map((sp) => pngBlob(sp.layout, noLine ? (sl) => P.dropLines(sl).slots : null).then((b) => b.arrayBuffer()))).then((bufs) => [P, DB, ...bufs])).then(([P, DB, ...bufs]) => {
         if (model && model.ws) model = { byConnection: DB.connection(model.ws, model.mn) };
         // kpiInset: where the KPI titles start beside the side accent bar drawn in this page's background
         const pages = specs.map((sp, i) => ({ name: sp.name, page: sp.page, slots: sp.slots, png: new Uint8Array(bufs[i]), panel: sp.panel, kpiInset: E.kpiInset(sp.layout) }));
         const r = P.build({
           name: state.name || 'Power BI Report', title: state.name || L('Sales overview', 'نظرة عامة على المبيعات'), pageName: nm(LAYOUTS[c.preset].name),
-          lang: isAr() ? 'ar' : 'en', rtl: rtl(), font: state.font, ui: state.ui, pages, theme, logo, sample, model, bind,
+          lang: isAr() ? 'ar' : 'en', rtl: rtl(), font: state.font, ui: state.ui, pages, theme, logo, sample, model, bind: bindL,
           // round 15 (the owner's go on round 13's recommendation 2b): a right-to-left download has its charts mirrored, as the MCP's
           ...(rtl() ? { chartAxes: 'mirrored' } : {}),
           // the report's labels come from the design engine (the MCP uses the same); the readme stays here
