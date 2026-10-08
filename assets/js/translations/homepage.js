@@ -537,7 +537,7 @@ portfolio: {
         },
         {
           q: "هل يرى وكيل الذكاء الاصطناعي بياناتي؟",
-          a: "<strong>يقرأ بنية نموذجك، لا الصفوف التي فيه.</strong> تعمل أدوات الوكيل على جهازك أنت، في Claude Desktop: تقرأ بنية النموذج (الجداول والأعمدة والمقاييس والتنسيقات)، لا الصفوف التي فيه، وتكتب تقريرًا جديدًا بجانب نموذجك. ويستأذنك Claude Desktop قبل كل ملف يكتبه. المزيد في <a href='/power-bi-mcp/' class='text-accent'>صفحة النسخة التجريبية</a> وفي <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
+          a: "<strong>يقرأ بنية نموذجك الدلالي، لا الصفوف التي فيه.</strong> تعمل أدوات الوكيل على جهازك في Claude Desktop: تقرأ بنية النموذج (الجداول والأعمدة والمقاييس والتنسيقات) لا صفوف البيانات، وتكتب تقريرًا جديدًا بجانب نموذجك. ويستأذنك Claude Desktop قبل كتابة أي ملف. اقرأ المزيد في <a href='/power-bi-mcp/' class='text-accent'>صفحة النسخة التجريبية</a> وفي <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
         }
       ]
     },
@@ -562,7 +562,7 @@ portfolio: {
         details: "تفاصيل المشروع *",
         placeholder: "مثال: نستخدم نظام CRM وبعض جداول البيانات. نحتاج رؤية موحدة للعملاء المحتملين والتحويل وأداء الفريق...",
         button: "احجز مكالمتي المجانية",
-        response: "الرد خلال يوم عمل واحد"
+        response: "أرد عليك خلال يوم عمل واحد"
       },
       checklist: {
         title: "ما الذي تحضره إلى مكالمة وضوح البيانات",

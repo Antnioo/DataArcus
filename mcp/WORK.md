@@ -24,6 +24,10 @@ The owner's go ("I approve part A", and item 9 for the logo strip). Branch `fix/
   in its intro and meta; it also has a 9th "confidential" finance card with no page (not counted in the 8); the third
   hero button sits on its own line at 1440 (the column fits two); homepage.js still has the unused `attrs.sql` and
   `attrs.python` labels; whether a beta request should also count as `generate_lead` (open from the beta page).
+- **Arabic voice (the owner's guide, ARABIC-VOICE.md):** part A's Arabic follows it (short imperatives, active voice,
+  product names in English letters, «نموذج دلالي»). Lines outside part A that break it, for a later approved pass: the
+  beta page's «قيس في 8 أكتوبر 2026» (passive; «قِسنا» or «النتائج من تشغيل في 8 أكتوبر 2026»); the home page's
+  existing Arabic writes «داتا أركوس» (the name transliterated) 14 times in homepage.js (hero line, meta, about).
 
 ## The beta page /power-bi-mcp/ (8-9 Oct, cloud builder; website only; not merged, no PR)
 The owner's go ("option 2, let's get it ready"), for the 9 Oct PBIP post (its links go/pbip and go/pbip-page).
