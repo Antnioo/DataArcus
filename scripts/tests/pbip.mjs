@@ -415,6 +415,60 @@ export default async function ({ browser, url }) {
     check(charts.length >= 2 && charts.every((c) => !c.mirrored), `local (English): charts mirrored ${JSON.stringify(charts)}`);
   }
 
+  // Round 24 (the laptop's re-proof of round 23, B1 and B2: the website's download only), English and Arabic, on a made-up
+  // project with one measure and no date column:
+  //  B1. the line chart is left out and the bar chart beside it takes its room, so the page's background picture draws
+  //      one panel under the widened bar chart (before: the planned panels, a dark seam across the bar chart)
+  //  B2. a KPI card with no measure is not written: one card on the row, none empty (before: three cardVisual with no
+  //      field, "Select or add data" boxes in Desktop)
+  {
+    const { PNG } = createRequire(import.meta.url)('pngjs');
+    const lean = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-lean-'));
+    fs.mkdirSync(path.join(lean, 'Lean', 'Lean.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(lean, 'Lean', 'Lean.SemanticModel', 'definition.pbism'), '{ "version": "4.0", "settings": {} }');
+    fs.writeFileSync(path.join(lean, 'Lean', 'Lean.SemanticModel', 'model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales',
+      columns: [{ name: 'Region', dataType: 'string' }, { name: 'Channel', dataType: 'string' }, { name: 'Amount', dataType: 'double' }], measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }] }] } }));
+    for (const lang of ['en', 'ar']) {
+      const { files } = await run(lang, 'Lean', async (pg) => { await pg.selectOption('#pbipData', 'local'); await pg.setInputFiles('#pbipFolder', path.join(lean, 'Lean')); return picker(pg); });
+      const pageDirs = [...new Set(Object.keys(files).filter((n) => /\/pages\/[^/]+\/page\.json$/.test(n)).map((n) => n.replace(/page\.json$/, '')))];
+      const pagesJ = pageDirs.map((d) => ({ d, j: JSON.parse(files[d + 'page.json'].toString('utf8')) })).filter((p) => p.j.type !== 'Tooltip');
+      const vis = (d) => Object.entries(files).filter(([n]) => n.startsWith(d + 'visuals/') && n.endsWith('/visual.json')).map(([, b]) => JSON.parse(b.toString('utf8')));
+      // B2
+      const empty = pagesJ.flatMap((p) => vis(p.d)).filter((v) => v.visual && v.visual.visualType === 'cardVisual' && !isMessageCard(v) && !(v.visual.query && Object.keys(v.visual.query.queryState || {}).length));
+      check(!empty.length, `B2 (${lang}): ${empty.length} KPI card(s) written with no field`);
+      // B1: along the middle of the widened bar chart, the background picture is one panel (no strip of page colour)
+      const p1 = pagesJ[0], bar = vis(p1.d).find((v) => v.visual && v.visual.visualType === 'clusteredBarChart'), pngName = Object.keys(files).find((n) => /RegisteredResources\/.*\.png$/i.test(n) && JSON.stringify(p1.j).includes(n.split('/').pop()));
+      if (!bar || !pngName) { check(false, `B1 (${lang}): no bar chart or background picture on page 1 (${!!bar}, ${pngName})`); continue; }
+      const png = PNG.sync.read(Buffer.from(files[pngName])), sc = png.width / p1.j.width, y = Math.round((bar.position.y + bar.position.height / 2) * sc);
+      const at = (x) => { const i = (y * png.width + x) * 4; return [png.data[i], png.data[i + 1], png.data[i + 2]]; }, ref = at(Math.round((bar.position.x + bar.position.width / 2) * sc));
+      const off = []; for (let x = Math.round((bar.position.x + 24) * sc); x < Math.round((bar.position.x + bar.position.width - 24) * sc); x += 2) { const c = at(x); if (c.some((v, k) => Math.abs(v - ref[k]) > 8)) { off.push(Math.round(x / sc)); } }
+      check(!off.length, `B1 (${lang}): the background under the widened bar chart (${bar.position.x}..${bar.position.x + bar.position.width}) is not one panel: other colours at x ${off.slice(0, 3).join(', ')}${off.length > 3 ? '...' : ''}`);
+    }
+    // R24-1 (the review of round 24): a KPI emptied in the middle of the picker (KPI 1 Total Sales, KPI 2 empty, KPI 3
+    // Total Qty): the picked KPIs fill the cards in order, two cards, both with a field (before: card 2 read the empty
+    // KPI 2, an empty card, and Total Qty was dropped)
+    fs.mkdirSync(path.join(lean, 'Two', 'Two.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(lean, 'Two', 'Two.SemanticModel', 'definition.pbism'), '{ "version": "4.0", "settings": {} }');
+    fs.writeFileSync(path.join(lean, 'Two', 'Two.SemanticModel', 'model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales',
+      columns: [{ name: 'Region', dataType: 'string' }, { name: 'Amount', dataType: 'double' }, { name: 'Qty', dataType: 'double' }],
+      measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Total Qty', expression: 'SUM ( Sales[Qty] )', formatString: '#,0' }] }] } }));
+    for (const lang of ['en', 'ar']) {
+      const { files } = await run(lang, 'Two', async (pg) => {
+        await pg.selectOption('#pbipData', 'local'); await pg.setInputFiles('#pbipFolder', path.join(lean, 'Two')); await picker(pg);
+        const set = (i, text) => pg.evaluate(([i, text]) => { const s = document.querySelector(`#pbipMap select[data-path="kpis.${i}"]`); const o = [...s.options].find((x) => x.text.replace(/[\u2068\u2069]/g, '') === text); s.value = o ? o.value : ''; s.dispatchEvent(new Event('change', { bubbles: true })); }, [i, text]);
+        await set(0, 'Total Sales'); await set(1, ''); await set(2, 'Total Qty');
+        return picker(pg);
+      });
+      const p1 = Object.keys(files).filter((n) => /\/pages\/[^/]+\/page\.json$/.test(n)).map((n) => ({ d: n.replace(/page\.json$/, ''), j: JSON.parse(files[n].toString('utf8')) })).filter((p) => p.j.type !== 'Tooltip')[0];
+      const cards = Object.entries(files).filter(([n]) => n.startsWith(p1.d + 'visuals/') && n.endsWith('/visual.json')).map(([, b]) => JSON.parse(b.toString('utf8')))
+        .filter((v) => v.visual && v.visual.visualType === 'cardVisual' && !isMessageCard(v));
+      const abs = (v) => v.position.x + (v.parentGroupName ? (JSON.parse((Object.entries(files).find(([n, b]) => n.endsWith('/visual.json') && JSON.parse(b.toString('utf8')).name === v.parentGroupName) || [0, '{"position":{"x":0}}'])[1].toString('utf8')).position.x) : 0);
+      const order = cards.slice().sort((a, b) => (lang === 'ar' ? abs(b) - abs(a) : abs(a) - abs(b))).map((v) => { const q = (((v.visual.query || {}).queryState || {}).Data || {}).projections; return q && q[0] ? q[0].field.Measure.Property : null; });
+      check(JSON.stringify(order) === JSON.stringify(['Total Sales', 'Total Qty']), `R24-1 (${lang}): KPI 1, an empty KPI 2 and KPI 3 give two cards in order, both with a field: ${JSON.stringify(order)}`);
+    }
+    fs.rmSync(lean, { recursive: true, force: true });
+  }
+
   // 2. Published model, Arabic page: live connection, fields read from a .pbit
   {
     const { files, picked } = await run('ar', 'Exec Board', async (pg) => {

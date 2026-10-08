@@ -216,6 +216,23 @@ for (const [name, t] of Object.entries(tags)) {
 }
 
 
+// Y-02 (an outside review, the owner's yes, 8 Oct 2026): outbound_click sent the whole address to GA4 (the query string,
+// the fragment, any user:password part). link_url is the host without www. and the path only, at most 100 characters,
+// made by main.js's outboundUrl, run here on a made-up address
+{
+  const main = fs.readFileSync(path.join(ROOT, 'assets/js/main.js'), 'utf8');
+  const fn = main.match(/const outboundUrl = (\(url\) => [^;]+);/);
+  ok(!!fn, 'main.js: no outboundUrl(url) helper for outbound_click');
+  ok(!/link_url:\s*url\.href/.test(main), 'main.js: outbound_click sends url.href (the query string, fragment and credentials)');
+  ok(/'outbound_click', \{[^}]{0,200}link_url:\s*outboundUrl\(url\)/.test(main), 'main.js: outbound_click must send link_url: outboundUrl(url)');
+  if (fn) {
+    const f = new Function('return ' + fn[1])(), u = new URL('https://user:pw@www.example.com/a/b?email=x@y.com&t=123#frag'), got = f(u);
+    ok(got === 'example.com/a/b', `outboundUrl gives "${got}", want "example.com/a/b"`);
+    ok(!/user|pw|email|123|frag|[?#@]/.test(got), `outboundUrl leaks the query, fragment or credentials: "${got}"`);
+    ok(f(new URL('https://example.com/' + 'x'.repeat(200))).length === 100, 'outboundUrl must cut at 100 characters');
+  }
+}
+
 ok(calls > 50, `only ${calls} tracking calls found: the scan is broken`);
 
 if (fails.length) { console.error(`Analytics events: ${fails.length} problem(s)\n  ` + fails.join('\n  ')); process.exit(1); }

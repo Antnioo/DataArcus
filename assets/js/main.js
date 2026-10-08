@@ -522,10 +522,13 @@ document.addEventListener('DOMContentLoaded', () => {
       return track('cta_click', { cta_text: text, cta_target: href });
     }
 
+    // (Y-02, an outside review, the owner's yes, 8 Oct 2026: link_url was the whole address, its query string, fragment
+    // and any user:password part with it; now the host without www. and the path only)
+    const outboundUrl = (url) => (url.hostname.replace(/^www\./, '') + url.pathname).slice(0, 100);
     try {
       const url = new URL(href, location.href);
       if (url.hostname && url.hostname !== location.hostname && /^https?:$/.test(url.protocol)) {
-        track('outbound_click', { link_domain: url.hostname.replace(/^www\./, ''), link_url: url.href.slice(0, 100), link_text: text });
+        track('outbound_click', { link_domain: url.hostname.replace(/^www\./, ''), link_url: outboundUrl(url), link_text: text });
       }
     } catch (err) { /* ignore bad URLs */ }
   }, { capture: true });

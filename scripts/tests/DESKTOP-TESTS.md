@@ -2416,6 +2416,16 @@ Facts learned:
 - Right after the window is maximised UI Automation finds no visual (0 of 21); a second listing a few seconds later
   finds them. A hover's tooltip needs 5 s before the picture; bars are reached at a fraction of the visual's box.
 
+## 2026-10-08 evening, round 24's laptop proof (`fix/round-23-total` at `754d29c`), Power BI Desktop 2.158.1304
+The website's download only (the lab page served from the work tree), made-up models, English and Arabic, 1280 x 720.
+Captures `<tests folder>\r24\shots\`; the table is in `mcp/WORK.md`, "Round 24, laptop proof".
+
+| Check | Result | Crop |
+|---|---|---|
+| One measure, no date column | PASS: one card, no white "Select or add data" box on page 1 or Details; the widened bar chart on one panel, no seam | `lean-en-p1.png`, `lean-ar-p1.png`, `lean-en-p2.png` |
+| Two measures, the picker's middle KPI emptied | PASS: two cards in the picked order sharing the row, none empty | `gap-en-p1.png`, `gap-ar-p1.png`, `gap-ar-p2.png` |
+| Dhow Freight | PASS: unchanged (English page 1 pixel for pixel the re-proof's capture) | `freight-en-p1.png`, `freight-ar-p1.png` |
+
 ## Lessons
 - **Night of 6-7 Oct: a bar chart at the theme's 10pt (1280 x 720) needs 22.2 a row, 45 above the first row and 8
   under the last, and 38 more for its value axis.** Round 0's "22 a row + 46" was the tooltip page's chart without a
