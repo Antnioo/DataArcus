@@ -132,6 +132,16 @@ is checked to be terser's output of it (`check-min`), not evaluated on its own.
 **Tests:** `test-round22.mjs` 53 -> 56; full `npm test` **691 of 691, golden PASS**; website all 17 suites PASS;
 `check-min`, `test-site-config`, `test-analytics-events`, `csp` PASS; CI green on `03d500b`.
 
+### Round 22b, the reviewer's final items (8 Oct, after the laptop's proof `475e0a0`; website and picker only)
+All four CONFIRMED by a red check first, fixed: (1) safeTerm reads the NFKC form (fullwidth digits, ＠ and ﹫) and any
+script's digits; (2) an exam or product code (pl-300, dp-600, az-900) is no part of a phone run; (3) "50 2025 2030" and
+"55 2024 2025 1" redacted (two or more years with 2+ other digits), "top 10 2024 2025" and "5 2024 2025" kept (a 1-2 digit
+number right after a word stands alone); two older cases changed with their cause: "2024 2025 2026 30" and "50 2024 2025"
+now redacted (accepted over-redaction); (4) 'Sales' [Quantity] / Sales [Quantity] read as columns. Tests: `test-round22.mjs`
+58; full `npm test` **693 of 693, golden PASS**; website all 17 suites, `test-analytics-events`, `check-min` PASS; CI green on
+`24f1235`. Nothing here changes what Desktop shows except (4), which only matters for DAX written with a space before
+the column (no golden model has one).
+
 ### Round 22b, for the laptop to prove (the final list: everything of 22b that changes what Desktop shows)
 1. **Categories from a related table** (items 2, 3 of the first review; X-04; 2, 3, 4, 5 of the second; 1, 2 of the third):
    golden task 10 (charts by Hub and Lane as before); a made-up model with a measures table, a lower-case or quoted table
