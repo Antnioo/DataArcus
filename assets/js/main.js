@@ -246,12 +246,6 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Scroll-in animations come from AOS only (data-aos attributes, section 1)
 
-  // Animate the gradient on the CTA section
-  const ctaSection = document.querySelector('.cta-section');
-  if (ctaSection) {
-    ctaSection.style.backgroundSize = '400% 400%';
-    ctaSection.style.animation = 'gradient-shift 8s ease infinite';
-  }
 
 
   /**
