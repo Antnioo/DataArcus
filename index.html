@@ -63,7 +63,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   
   <link href="assets/css/vendor/bootstrap.min.css?v=20261003" rel="stylesheet">
-  <link href="assets/css/style.min.css?v=20261005a" rel="stylesheet">
+  <link href="assets/css/style.min.css?v=20261009i" rel="stylesheet">
 
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.css" as="style" integrity="sha384-Bk5cbLkZQ5raZ0+H2/+VbfYx3WpvxvQK4zqXZr7sYODuaX7bKXoSOnipQxkaS8sv" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" as="style" integrity="sha384-/rJKQnzOkEo+daG0jMjU1IwwY9unxt1NBw3Ef2fmOJ3PW/TfAg2KXVoWwMZQZtw9" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'">
@@ -154,6 +154,7 @@
           <li class="nav-item"><a class="nav-link" href="/#services" data-i18n="nav.services">Services</a></li>
           <li class="nav-item"><a class="nav-link" href="portfolio.html" data-i18n="nav.portfolio">Showcases</a></li>
           <li class="nav-item"><a class="nav-link" href="/tools/" data-i18n="nav.tools">Free Tools</a></li>
+          <li class="nav-item"><a class="nav-link" href="/power-bi-mcp/" data-i18n="nav.agent">AI Agent (beta)</a></li>
           <li class="nav-item"><a class="nav-link" href="/#about" data-i18n="nav.about">About</a></li>
           <li class="nav-item"><a class="nav-link" href="/#contact" data-i18n="nav.contact">Contact</a></li>
         </ul>
@@ -170,19 +171,14 @@
         <div class="row align-items-center">
           <div class="col-lg-7" data-aos="fade-up">
             <h1 data-i18n="hero.title">Power BI reports checked in Power BI, not just generated</h1>
-            <p class="lead" data-i18n="hero.subtitle">AI can now build a Power BI report in minutes. DataArcus works beside Microsoft's tools to check yours and fit it to the Gulf: a free model health check, Ramadan, Eid and Hijri calendars with each country's weekend, and Arabic reports laid out right to left (in private beta).</p>
-            <div class="d-flex flex-column flex-sm-row gap-3 mt-4">
-              <a href="#portfolio" class="btn btn-accent btn-lg px-4 py-3">
-                <i class="bi bi-bar-chart me-2"></i><span data-i18n="hero.buttonWork">Explore My Work</span>
-              </a>
-              <a href="#contact" class="btn btn-glass btn-lg px-4 py-3">
+            <p class="lead" data-i18n-html="hero.subtitle">AI can now build a Power BI report in minutes. DataArcus works beside Microsoft's tools to check yours and fit it to the Gulf: a free model health check, Ramadan, Eid and Hijri calendars with each country's weekend, and Arabic reports laid out right to left (in <a href='/power-bi-mcp/' class='text-accent'>private beta</a>).</p>
+            <div class="d-flex flex-column flex-sm-row flex-sm-wrap gap-3 mt-4">
+              <a href="#contact" class="btn btn-accent btn-lg px-4 py-3">
                 <i class="bi bi-calendar3 me-2"></i><span data-i18n="hero.buttonDiscuss">Book a Free Data Clarity Call</span>
               </a>
-            </div>
-            <div class="mt-5 d-flex flex-wrap gap-4 small text-white-50 hero-trust">
-              <div><i class="bi bi-patch-check-fill text-info me-2"></i><span data-i18n="hero.proofBadges.0">Microsoft Certified Power BI Data Analyst</span></div>
-              <div><i class="bi bi-check2-circle text-success me-2"></i><span data-i18n="hero.proofBadges.1">Every number validated against the source</span></div>
-              <div><i class="bi bi-translate text-warning me-2"></i><span data-i18n="hero.proofBadges.2">Arabic &amp; English</span></div>
+              <a href="/power-bi-mcp/" class="btn btn-glass btn-lg px-4 py-3">
+                <i class="bi bi-robot me-2"></i><span data-i18n="hero.buttonAgent">Try the AI agent (beta)</span>
+              </a>
             </div>
           </div>
           <div class="col-lg-5 mt-5 mt-lg-0" data-aos="fade-up" data-aos-delay="200">
@@ -203,13 +199,18 @@
             </div>
           </div>
         </div>
+        <div class="d-flex flex-wrap flex-xl-nowrap gap-4 small text-white-50 hero-trust">
+          <div><i class="bi bi-patch-check-fill text-info me-2"></i><span data-i18n="hero.proofBadges.0">Microsoft Certified Power BI Data Analyst</span></div>
+          <div><i class="bi bi-check2-circle text-success me-2"></i><span data-i18n="hero.proofBadges.1">Every number validated against the source</span></div>
+          <div><i class="bi bi-translate text-warning me-2"></i><span data-i18n="hero.proofBadges.2">Arabic &amp; English</span></div>
+        </div>
       </div>
   </header>
 
-  <section class="py-4 border-bottom glowing-divider-bg">
+  <section class="py-4 border-bottom glowing-divider-bg tech-strip">
     <div class="container">
+      <p class="small text-white-50 text-center mb-2 tech-strip-label" data-i18n="techStack.label">Tools I work with</p>
       <div class="row justify-content-center align-items-center g-4">
-        
         <div class="col-6 col-md-2">
           <div class="tech-stack-item">
             <img src="assets/img/icons/power-bi-icon.svg" alt="Power BI Icon" data-i18n-alt="attrs.powerBi" class="tech-icon" style="height: 36px; width: 36px;">
@@ -226,22 +227,8 @@
 
         <div class="col-6 col-md-2">
           <div class="tech-stack-item">
-            <img src="assets/img/icons/azure-sql-database-icon.svg" alt="SQL Icon" data-i18n-alt="attrs.sql" class="tech-icon" style="height: 36px; width: 36px;">
-            <div class="small mt-2 text-white-50" data-i18n="techStack.sql">SQL</div>
-          </div>
-        </div>
-
-        <div class="col-6 col-md-2">
-          <div class="tech-stack-item">
             <img src="assets/img/icons/azure-icon.svg" alt="Azure Icon" data-i18n-alt="attrs.azure" class="tech-icon" style="height: 36px; width: 36px;">
             <div class="small mt-2 text-white-50" data-i18n="techStack.azure">Azure</div>
-          </div>
-        </div>
-
-        <div class="col-6 col-md-2">
-          <div class="tech-stack-item">
-            <img src="assets/img/icons/python.svg" alt="Python Icon" data-i18n-alt="attrs.python" class="tech-icon" style="height: 36px; width: 36px;">
-            <div class="small mt-2 text-white-50" data-i18n="techStack.python">Python</div>
           </div>
         </div>
 
@@ -336,7 +323,7 @@
         <div class="row mb-5">
           <div class="col-lg-8 mx-auto text-center">
             <h2 class="display-6 fw-bold mb-4" data-i18n="portfolio.title">Solution Showcases</h2>
-            <p class="lead text-white-50" data-i18n="portfolio.subtitle">Explore our proof-of-concept dashboards, engineered to solve common business challenges. See what's possible for your data.</p>
+            <p class="lead text-white-50" data-i18n="portfolio.subtitle">Explore my proof-of-concept dashboards, engineered to solve common business challenges. See what's possible for your data.</p>
           </div>
         </div>
         <div class="row g-4">
@@ -386,7 +373,7 @@
                 </picture>
               </div>
               <div class="p-4 d-flex flex-column flex-grow-1">
-                <span class="badge bg-warning text-dark mb-2 align-self-start" data-i18n="portfolio.cardRepeatiq.badge">SAAS & RETENTION</span>
+                <span class="badge bg-warning text-dark mb-2 align-self-start" data-i18n="portfolio.cardRepeatiq.badge">E-COMMERCE & RETENTION</span>
                 <h3 class="mb-3">
                   <a href="dashboards/repeatiq-dashboard.html" class="stretched-link text-white text-decoration-none" data-i18n="portfolio.cardRepeatiq.title">RepeatIQ Commerce Analytics</a>
                 </h3>
@@ -428,7 +415,7 @@
                 <b data-i18n="toolsStrip.cards.7.title">SVG KPI Designer</b><span data-i18n="toolsStrip.cards.7.desc">KPI cards and sparklines for Power BI, as one DAX measure.</span></a></div>
               <div class="col-md-6"><a class="tool-mini" href="tools/dax-calendar-table-generator.html" data-tool="dax-calendar-table-generator">
                 <span class="tool-mini-tag" data-i18n="toolsStrip.cards.1.tag">Build</span>
-                <div class="tool-mini-cal">1 Ramadan 1447</div>
+                <div class="tool-mini-cal">1 Ramadan 1448</div>
                 <b data-i18n="toolsStrip.cards.1.title">DAX Calendar Generator</b><span data-i18n="toolsStrip.cards.1.desc">Date table with Hijri dates and Ramadan flags.</span></a></div>
               <div class="col-md-6"><a class="tool-mini" href="tools/dax-measure-builder.html" data-tool="dax-measure-builder">
                 <span class="tool-mini-tag" data-i18n="toolsStrip.cards.2.tag">Build</span>
@@ -512,28 +499,34 @@
           </div>
         </div>
         <div class="row g-4 mt-4">
-          <div class="col-6 col-lg-3">
+          <div class="col-6 col-lg">
             <div class="glass-card p-4 text-center h-100">
-              <div class="stat-number" data-count="12" data-suffix="">12</div>
+              <div class="stat-number" data-count="13" data-suffix="">13</div>
               <div class="small text-white-50" data-i18n="about.stats.0.title">Articles Published on the Blog</div>
             </div>
           </div>
-          <div class="col-6 col-lg-3">
+          <div class="col-6 col-lg">
             <div class="glass-card p-4 text-center h-100">
               <div class="stat-number" data-count="2" data-suffix="">2</div>
               <div class="small text-white-50" data-i18n="about.stats.1.title">Languages: English and Arabic</div>
             </div>
           </div>
-          <div class="col-6 col-lg-3">
+          <div class="col-6 col-lg">
             <div class="glass-card p-4 text-center h-100">
-              <div class="stat-number" data-count="4" data-suffix="">4</div>
+              <div class="stat-number" data-count="8" data-suffix="">8</div>
               <div class="small text-white-50" data-i18n="about.stats.2.title">End-to-End Dashboard Builds</div>
             </div>
           </div>
-          <div class="col-6 col-lg-3">
+          <div class="col-6 col-lg">
             <div class="glass-card p-4 text-center h-100">
               <div class="stat-number" data-count="8" data-suffix="">8</div>
               <div class="small text-white-50" data-i18n="about.stats.3.title">Free Power BI &amp; Fabric Tools Published</div>
+            </div>
+          </div>
+          <div class="col-12 col-lg">
+            <div class="glass-card p-4 text-center h-100 position-relative">
+              <div class="stat-number" data-count="1" data-suffix="">1</div>
+              <a href="/power-bi-mcp/" class="small text-white-50 text-decoration-none stretched-link" data-i18n="about.stats.4.title">AI agent in private beta (8 tools)</a>
             </div>
           </div>
         </div>
@@ -541,9 +534,7 @@
           <div class="col-lg-8 mx-auto text-center" data-aos="fade-up">
             <h4 class="fw-bold" data-i18n="about.ctaTitle">Curious What This Could Look Like for Your Data?</h4>
             <p class="text-white-50 mb-4" data-i18n="about.ctaSubtitle">No obligation. Tell me what you're working with, and I'll show you what's possible on a quick call.</p>
-            <a href="#contact" class="btn btn-accent btn-lg">
-              <i class="bi bi-calendar3 me-2"></i><span data-i18n="about.ctaButton">Book a Free Data Clarity Call</span>
-            </a>
+            <a href="#contact" class="proof-link"><span data-i18n="about.ctaLink">Tell me about your data</span> <i class="bi bi-arrow-right"></i></a>
           </div>
         </div>
       </div>
@@ -691,23 +682,19 @@
                   </div>
                 </div>
               </div>
+              <div class="glass-card mb-3">
+                <div class="accordion-item bg-transparent border-0">
+                  <h3 class="accordion-header">
+                    <button class="accordion-button collapsed bg-transparent text-white fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
+                      <i class="bi bi-robot me-3 text-accent"></i><span data-i18n="faq.items.7.q">Does the AI agent see my data?</span>
+                    </button>
+                  </h3>
+                  <div id="faq8" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                    <div class="accordion-body text-white-50" data-i18n-html="faq.items.7.a"><strong>It reads your model's structure, not the rows in it.</strong> The agent's tools run on your own computer, in Claude Desktop: they read your model's structure (tables, columns, measures, formats), not the rows in it, and write a new report next to your model. Claude Desktop asks before every file it writes. More on the <a href='/power-bi-mcp/' class='text-accent'>beta page</a> and in <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>.</div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
-  </section>
-
-  <section class="py-5 cta-section">
-      <div class="container">
-        <div class="row align-items-center">
-          <div class="col-lg-8" data-aos="fade-right">
-            <h2 class="display-6 fw-bold mb-3" data-i18n="finalCta.title">Ready to See Your Data in Action?</h2>
-            <p class="lead mb-0" data-i18n="finalCta.subtitle">Book a free 20-minute Data Clarity Call. No obligation, just a straight look at what's possible with what you've got.</p>
-          </div>
-          <div class="col-lg-4 text-lg-end mt-4 mt-lg-0" data-aos="fade-left">
-            <a href="#contact" class="btn btn-dark btn-lg px-4 py-3">
-              <i class="bi bi-rocket me-2"></i><span data-i18n="finalCta.button">Book Your Free Call</span>
-            </a>
           </div>
         </div>
       </div>
@@ -758,7 +745,7 @@
                     </button>
                     <div class="text-white-50 small">
                       <div><i class="bi bi-envelope me-2"></i>hello@DataArcus.com</div>
-                      <div><i class="bi bi-clock me-2"></i><span data-i18n="contact.form.response">Response within 4 hours</span></div>
+                      <div><i class="bi bi-clock me-2"></i><span data-i18n="contact.form.response">Response within 1 working day</span></div>
                     </div>
                   </div>
                 </div>
@@ -886,14 +873,14 @@
       </div>
   </footer>
 
-  <script src="assets/js/translations/common.min.js?v=20261009" defer></script>
-  <script src="assets/js/translations/homepage.min.js?v=20261005a" defer></script>
+  <script src="assets/js/translations/common.min.js?v=20261009h" defer></script>
+  <script src="assets/js/translations/homepage.min.js?v=20261009i" defer></script>
   <script src="assets/js/lang-manager.min.js?v=20261009" defer></script>
 
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.min.js" integrity="sha384-G/EV+4j2dNv+tEPo3++6LCgdCROaejBqfUeNjuKAiuXbjrxilcCdDz6ZAVfHWe1Y" crossorigin="anonymous" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js" integrity="sha384-n1AULnKdMJlK1oQCLNDL9qZsDgXtH6jRYFCpBtWFc+a9Yve0KSoMn575rk755NJZ" crossorigin="anonymous" defer></script>
-  <script src="assets/js/main.min.js?v=20261009" defer></script>
+  <script src="assets/js/main.min.js?v=20261009h" defer></script>
   <script>
     document.addEventListener('click', function (e) {
       var a = e.target.closest('[data-tool]');
