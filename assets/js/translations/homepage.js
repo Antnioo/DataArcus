@@ -231,7 +231,7 @@ portfolio: {
         },
         {
           q: "Does the AI agent see my data?",
-          a: "<strong>It reads your model's structure, not the rows in it.</strong> The agent's tools run on your own computer, in Claude Desktop: they read your model's structure (tables, columns, measures, formats), not the rows in it, and write a new report next to your model. Claude Desktop asks before every file it writes. More on the <a href='/power-bi-mcp/' class='text-accent'>beta page</a> and in <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
+          a: "<strong>It reads your model's structure, not the rows in it.</strong> The agent's tools run on your own computer, in Claude Desktop: they read your model's structure (tables, columns, measures, formats), not the rows in it, and write a new report next to your model. It writes only inside the one folder you choose. More on the <a href='/power-bi-mcp/' class='text-accent'>beta page</a> and in <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
         }
       ]
     },
@@ -530,7 +530,7 @@ portfolio: {
         },
         {
           q: "هل يرى وكيل الذكاء الاصطناعي بياناتي؟",
-          a: "<strong>يقرأ بنية نموذجك الدلالي، لا الصفوف التي فيه.</strong> تعمل أدوات الوكيل على جهازك في Claude Desktop: تقرأ بنية النموذج (الجداول والأعمدة والمقاييس والتنسيقات) لا صفوف البيانات، وتكتب تقريرًا جديدًا بجانب نموذجك. ويستأذنك Claude Desktop قبل كتابة أي ملف. اقرأ المزيد في <a href='/power-bi-mcp/' class='text-accent'>صفحة النسخة التجريبية</a> وفي <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
+          a: "<strong>يقرأ بنية نموذجك الدلالي، لا الصفوف التي فيه.</strong> تعمل أدوات الوكيل على جهازك في Claude Desktop: تقرأ بنية النموذج (الجداول والأعمدة والمقاييس والتنسيقات) لا صفوف البيانات، وتكتب تقريرًا جديدًا بجانب نموذجك. ولا يكتب إلا داخل المجلد الذي تختاره. اقرأ المزيد في <a href='/power-bi-mcp/' class='text-accent'>صفحة النسخة التجريبية</a> وفي <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
         }
       ]
     },
