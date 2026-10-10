@@ -53,7 +53,7 @@ window.betaPageTranslations = {
       "safe": {
         "title": "What keeps it safe",
         "model": "It never changes your model and never writes over a file: every report is new, next to your model.",
-        "ask": "Claude Desktop asks you before every file it writes.",
+        "ask": "It writes only inside the one folder you choose.",
         "validator": "It checks the report offline with Microsoft's report validator.",
         "data": "It reads your model's structure (tables, columns, measures, formats), not your data. What the AI app sees: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
       },
@@ -130,7 +130,7 @@ window.betaPageTranslations = {
       "safe": {
         "title": "ما الذي يجعله آمنًا",
         "model": "لا يغيّر نموذجك أبدًا ولا يكتب فوق أي ملف: كل تقرير جديد، بجانب نموذجك.",
-        "ask": "يستأذنك Claude Desktop قبل كل ملف يكتبه.",
+        "ask": "يكتب فقط داخل المجلد الذي تختاره.",
         "validator": "يفحص التقرير دون اتصال بمدقّق التقارير من Microsoft.",
         "data": "يقرأ بنية نموذجك (الجداول والأعمدة والمقاييس والتنسيقات)، لا بياناتك. ما يراه تطبيق الذكاء الاصطناعي: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
       },
