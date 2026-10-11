@@ -1,15 +1,15 @@
 /* DataArcus report mirror: the right-to-left twin of any PBIR report's pages and visuals (0.3.0, the Arabic twin; the
  * owner's plan of 11 Oct 2026). Pure JSON in, JSON out: the caller reads the original's files and writes the twin's
  * (mcp/lib/arabic-twin.mjs); this engine never touches a file.
- * What it does is what Power BI Desktop 2.158 was seen to honour (dataarcus-engine business/research/ARABIC-TWIN-LAB.md
- * and ARABIC-TWIN-FULL-LAB.md, 10 Oct 2026; scripts/tests/DESKTOP-TESTS.md round 0, 11 and 13), nothing else:
+ * What it does is what Power BI Desktop 2.158 was seen to honour (the laptop's Arabic twin labs of 10 Oct 2026, and
+ * scripts/tests/DESKTOP-TESTS.md round 0, 11 and 13), nothing else:
  *  - every visual's place: x' = W - x - width, W the page's width, or the parent group's width for a visual inside a
  *    group (PBIR positions in a group are relative to it); rounded to 0.01 (floating point gave x = -1e-13 and the
  *    validator's PBIR_LAYOUT_NEGATIVE_X);
  *  - bar charts: the category axis at the right, the value axis inverted (bars grow from the right);
  *  - column, line, area and combo charts: the value axis at the right, and the category order reversed BY THE SORT
  *    (an existing sort flipped, else Descending by the category). categoryAxis.invertAxis is never written: on a
- *    categorical axis it changed nothing. Mirroring time is the owner's choice (opts.timeRightToLeft, default true);
+ *    categorical axis Desktop ignored it. Mirroring time is the owner's choice (opts.timeRightToLeft, default true);
  *  - legends: left and right swapped, TopRight when none is set; titles right-aligned (centred kept); text boxes
  *    right-aligned (centred kept); tables: columns reversed, text columns right-aligned; a matrix's values reversed;
  *    a new card's values reversed and right-aligned; buttons: a left text or icon goes right;

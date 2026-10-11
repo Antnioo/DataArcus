@@ -129,12 +129,12 @@ export async function v030twin({ call, check, ROOT, fs = fs0 }) {
       chk(() => ok && !wrong.length, () => `T5. ${pg}: the expected positions (written before the run): ${wrong.map(([n, x]) => `${n} ${b[n] && b[n].position.x} (expected ${x})`).join('; ')}`);
     }
   }
-  // T6. per type: what Desktop honours (ARABIC-TWIN-LAB, and this repo's round 0, 11 and 13 proofs), nothing else
+  // T6. per type: what Desktop honours (the laptop's twin labs, and this repo's round 0, 11 and 13 proofs), nothing else
   if (!ok) check(false, 'T6. per type: no twin to read (25 checks not run)');
   else {
     const p1 = vis(TWIN, 'p1overview'), p2 = vis(TWIN, 'p2details'), o1 = vis(ORIG, 'p1overview'), o2 = vis(ORIG, 'p2details');
     const col = p1.colRegion;
-    chk(() => objProp(col, 'valueAxis', 'switchAxisPosition') === 'true' && objProp(col, 'categoryAxis', 'invertAxis') === undefined, () => `T6. column chart: value axis at the right; categoryAxis.invertAxis never written (it did nothing in Desktop, ARABIC-TWIN-LAB): ${JSON.stringify(col.visual.objects)}`);
+    chk(() => objProp(col, 'valueAxis', 'switchAxisPosition') === 'true' && objProp(col, 'categoryAxis', 'invertAxis') === undefined, () => `T6. column chart: value axis at the right; categoryAxis.invertAxis never written (Desktop ignored it, the twin labs): ${JSON.stringify(col.visual.objects)}`);
     chk(() => { const s = col.visual.query.sortDefinition.sort[0]; return s.direction === 'Descending' && s.field.Column.Property === 'Region'; }, () => `T6. column chart without a sort: Descending by its category: ${JSON.stringify(col.visual.query.sortDefinition)}`);
     chk(() => objProp(col, 'legend', 'position') === "'TopRight'" && objProp(col, 'legend', 'show') === 'true', () => `T6. legend Top -> TopRight: ${JSON.stringify(col.visual.objects.legend)}`);
     chk(() => objProp(col, 'title', 'alignment', true) === "'right'" && objProp(col, 'title', 'text', true) === "'المبيعات حسب المنطقة'", () => `T6. the title right-aligned, with the approved label: ${JSON.stringify(col.visual.visualContainerObjects.title)}`);
