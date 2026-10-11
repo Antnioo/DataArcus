@@ -331,8 +331,13 @@
   // Status" were taken as their opposite): the picker marks it from the model: a column of a date table, one the model or
   // the picker sorts by a number, or a date. A3-7: a calendar category's kind (month, day, quarter), its known number of
   // rows (12, 7, 4) and its names' family (english, arabic, hijri), so the writer measures the right names
+  // (integration round 4: a column whose whole name is a calendar name, a month, day or quarter name written in any case or
+  // with "_" (QuarterName, Month_Name), is time too, in any table; a name that only holds such a word, "Period Status",
+  // is not)
+  const CAL_WHOLE = /^(year\s*)?(quarter|qtr)(\s*(name|label))?$/i;
+  const calendarName = (name) => { const n = splitName(name).replace(/\s+/g, ' '); return nameLike(n) || CAL_WHOLE.test(n); };
   function timeMarks(table, name, type, sorted) {
-    const time = isDateTable(table) || sorted || /^date/.test(type);
+    const time = isDateTable(table) || sorted || /^date/.test(type) || ((type === 'string' || type === 'unknown') && calendarName(name));
     const quarter = /quarter|الربع/i.test(name) && !/year|السنة|سنة/i.test(name);
     const named = nameLike(name) || sorted, k = quarter ? 'quarter' : named ? sortKind(name) : null;
     const cal = k ? { kind: k === 'yearMonth' ? 'month' : k, rows: k === 'quarter' ? 4 : k === 'day' ? 7 : k === 'month' ? 12 : null,
