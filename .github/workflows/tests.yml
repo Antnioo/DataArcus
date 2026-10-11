@@ -77,11 +77,10 @@ jobs:
         run: npm test
 
   # The users and the validation laptop run Windows; several past bugs were Windows-only (file URLs, paths, locks).
-  # Not blocking until it has been green on main once (owner 11 Oct: "Windows in CI").
+  # Blocking since it was green on main (owner 11 Oct: "Windows in CI"; outside review Z-11: a release needs it green).
   mcp-windows:
     runs-on: windows-latest
     timeout-minutes: 25
-    continue-on-error: true
     defaults:
       run:
         working-directory: mcp
