@@ -69,10 +69,10 @@
       about: 'a text box\'s height holds its lines: 10 + 1.8 x pt a line, the lines wrapped at 0.55 em a character',
       run(R, out) {
         R.visuals.filter((x) => x.type === 'textbox').forEach((x) => {
-          const paras = (plain(((x.json.visual || {}).objects || {}).general).paragraphs) || [];
+          const paras = entries(plain(((x.json.visual || {}).objects || {}).general).paragraphs);
           let lines = 0, top = 0, text = 0, fonts = [];
           paras.forEach((p) => {
-            const runs = p.textRuns || [], t = Math.max(0, ...runs.map((r) => parseFloat(((r.textStyle || {}).fontSize) || '') || R.textSize));
+            const runs = entries(p && p.textRuns), t = Math.max(0, ...runs.map((r) => parseFloat(((r.textStyle || {}).fontSize) || '') || R.textSize));
             const len = runs.reduce((a, r) => a + String(r.value || '').length, 0); text += len;
             runs.forEach((r) => fonts.push((r.textStyle || {}).fontFamily || R.font));
             top = Math.max(top, t);
@@ -205,20 +205,23 @@
 
   // R: { pages: [{ id, visuals: [x] }], visuals: [x], textSize, labelSize, slicerSize, font, theme: { file, ref, json },
   //      hasPlatform }, x: { name, type, file, mobileFile, json (visual.json), mobile (mobile.json or null), x, y, w, h }
-  // opts: { groups: [...] }. Returns { findings: [{ rule, severity, file, page, visual, what, fix, source }], ran: [ids] }
+  // opts: { groups: [...] }. Returns { findings: [{ rule, severity, file, page, visual, what, fix, source }], ran: [ids],
+  // failed: [{ rule, why }] }. (A4-2, audit 4: each rule runs on its own: one that cannot read the report is named in
+  // failed and its findings so far dropped; the others still run)
   function check(R, opts) {
-    const groups = (opts && opts.groups) || GROUPS, findings = [], ran = [];
+    const groups = (opts && opts.groups) || GROUPS, findings = [], ran = [], failed = [];
     RULES.filter((r) => groups.includes(r.group) && (!r.lang || r.lang === R.lang)).forEach((rule) => {
       ran.push(rule.id);
-      rule.run(R, (x, what, fix, extra, src) => {
+      const mine = [];
+      try { rule.run(R, (x, what, fix, extra, src) => {
         const e = extra || {}, source = src || rule.source;
-        findings.push({ rule: rule.id, severity: e.estimate ? 'note' : rule.severity, file: e.file || (x ? x.file : null), page: x ? x.page : null,
+        mine.push({ rule: rule.id, severity: e.estimate ? 'note' : rule.severity, file: e.file || (x ? x.file : null), page: x ? x.page : null,
           visual: x ? { name: x.name, type: x.type, x: x.x, y: x.y, w: x.w, h: x.h } : null,
           what: e.estimate ? what + ' (an estimate: measured in Segoe UI and Tahoma, not in this font)' : what, fix,
           source: `measured: ${source.file}, ${source.date}, Desktop ${source.desktop}, "${source.section}"` });
-      });
+      }); findings.push(...mine); } catch (e) { failed.push({ rule: rule.id, why: 'could not read this report: a file has a shape the rule did not expect' }); }
     });
-    return { findings, ran };
+    return { findings, ran, failed };
   }
 
   const api = { RULES, GROUPS, MEASURED, check };
