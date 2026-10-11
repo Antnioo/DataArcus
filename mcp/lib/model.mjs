@@ -75,7 +75,7 @@ export const nothingAt = (f) => { try { fs.lstatSync(f); return false; } catch (
 // A new file: 'wx' fails when anything is at the name (a link included), so nothing is ever written over or through
 export const writeNew = (f, data) => { fs.writeFileSync(f, data, { flag: 'wx' }); };
 const within = (root, p) => { const rel = path.relative(root, p); return !(rel.startsWith('..') || path.isAbsolute(rel)); };
-const linkError = (p) => new Error(`"${p}" leads outside the working folder ${ROOT} through a link (a symbolic link or a junction). DataArcus reads and writes only inside the working folder.`);
+const linkError = (p) => new ReadError('OUTSIDE_LINK', { path: p }, `"${p}" leads outside the working folder ${ROOT} through a link (a symbolic link or a junction). DataArcus reads and writes only inside the working folder.`);
 const isLink = (p) => { try { return fs.lstatSync(p).isSymbolicLink(); } catch (e) { return false; } };
 // Where a path really is: the real path of its deepest part that exists (links followed), plus the part that
 // doesn't exist yet. A link whose target is missing counts as leading outside.
@@ -122,7 +122,7 @@ const json = (buf) => JSON.parse(decode(buf));
 const MB = 1024 * 1024;
 export const PBIT_LIMITS = { model: 64 * MB, entry: 32 * MB, total: 128 * MB, file: 300 * MB, entries: 20000 };
 const mb = (n) => (n >= MB / 10 ? (n / MB >= 10 ? Math.round(n / MB) : Math.round(n / MB * 10) / 10) + ' MB' : Math.ceil(n / 1024) + ' KB');
-const refuse = (what) => new Error(`This file was not read: ${what}. A Power BI template without data is usually under 20 MB; nothing in this file was used.`);
+const refuse = (what) => new ReadError('TOO_BIG', { what }, `This file was not read: ${what}. A Power BI template without data is usually under 20 MB; nothing in this file was used.`);
 const isModelPart = (n) => n === 'DataModelSchema' || /(^|\/)model\.bim$/i.test(n);
 const isReportPart = (n) => n === 'Report/Layout' || (/(^|\/)definition\/(report\.json|reportExtensions\.json|pages\/.*\.json|bookmarks\/.*\.json)$/i.test(n) && !/StaticResources|CustomVisuals/i.test(n));
 // buf: the zip; lim: the limits (PBIT_LIMITS, or smaller ones in a test). Returns { name: bytes } of the needed parts.
@@ -212,10 +212,16 @@ const walk = (dir, depth = 0, links = null) => (depth > 4 ? [] : fs.readdirSync(
 // A model asked for by its plain name ("Ramadan Test", "Ramadan Test.pbip"), when no file or folder of that path
 // exists: the one model folder, .pbip or project folder of that name inside the working folder (any letter case;
 // links are not followed). None, or more than one: an error that says what is there, never a guess.
-function byName(p) {
+// A reading error: a code and its data, for the tool layer to word (A1-9, the audit of the reading block: the reader
+// spoke as the MCP tool). Its message is a plain fallback that names no tool.
+export class ReadError extends Error { constructor(code, data, message) { super(message); this.code = code; this.data = data || {}; } }
+
+function byName(p, root) {
   const strip = (n) => String(n).replace(/\.(pbip|SemanticModel|Dataset)$/i, ''), want = strip(p).trim().toLowerCase(), isModel = (n) => /\.(SemanticModel|Dataset)$/i.test(n);
   const hits = new Set(), models = [];
-  const visit = (dir, depth) => { let list = []; try { list = fs.readdirSync(dir, { withFileTypes: true }); } catch (e) { return; }
+  // (the audit's "seen": one folder that cannot be read never fails the whole search)
+  const readdirSafe = (d, opts) => { try { return fs.readdirSync(d, opts); } catch (e) { return []; } };
+  const visit = (dir, depth) => { const list = readdirSafe(dir, { withFileTypes: true });
     for (const e of list) {
       if (e.isSymbolicLink() || e.name === 'node_modules' || e.name === '.git') continue;
       const full = path.join(dir, e.name), same = strip(e.name).toLowerCase() === want;
@@ -223,42 +229,68 @@ function byName(p) {
       if (e.isDirectory() && /\.Report$/i.test(e.name)) continue;
       // a .pbip: the model folder of the same name beside it, else its folder (the nearest model in it)
       if (!e.isDirectory() && /\.pbip$/i.test(e.name) && same) { const m = list.find((x) => x.isDirectory() && isModel(x.name) && strip(x.name).toLowerCase() === want); hits.add(m ? path.join(dir, m.name) : dir); }
-      if (e.isDirectory()) { if (same && fs.readdirSync(full).some((n) => isModel(n))) hits.add(full); if (depth < 3) visit(full, depth + 1); }
+      if (e.isDirectory()) { if (same && readdirSafe(full).some((n) => isModel(n))) hits.add(full); if (depth < 3) visit(full, depth + 1); }
     } };
-  visit(ROOT, 0);
+  visit(root, 0);
   // (A1-12, the audit of the reading block: folder names from disk are screened before they reach a message)
-  const rel = (f) => shownPath(path.relative(ROOT, f)) || '.';
+  const rel = (f) => shownPath(path.relative(root, f)) || '.';
   if (hits.size === 1) return [...hits][0];
-  if (hits.size > 1) throw new Error(`More than one model in the working folder is named "${p}": ${[...hits].map(rel).join('; ')}. Give read_model the path of the one you mean.`);
-  throw new Error(`No model named "${p}" in the working folder ${ROOT}. ${models.length ? 'Models there: ' + models.slice(0, 12).map(rel).join('; ') + (models.length > 12 ? '; and ' + (models.length - 12) + ' more' : '') + '. Give read_model one of these paths, or "." for the working folder itself.' : 'Give read_model the path of a project folder, or "." for the working folder itself.'}`);
+  const all = models.map(rel);
+  if (hits.size > 1) throw new ReadError('MANY_MODELS_NAMED', { name: p, hits: [...hits].map(rel) }, `More than one model in the working folder is named "${p}": ${[...hits].map(rel).join('; ')}.`);
+  throw new ReadError('NO_MODEL_NAMED', { name: p, root, models: all.slice(0, 12), more: Math.max(0, all.length - 12) }, `No model named "${p}" in the working folder ${root}.${all.length ? ' Models there: ' + all.slice(0, 12).join('; ') + (all.length > 12 ? '; and ' + (all.length - 12) + ' more' : '') + '.' : ''}`);
 }
-export function loadModel(p) {
-  let full = inside(p);
+
+/**
+ * What loadModel reads: one shape for every route (A1-5, the audit of the reading block).
+ * @typedef {Object} ModelRead
+ * @property {string} source  the model's place, relative to the working folder (screened)
+ * @property {string|null} folder  the model folder (null for a model.bim or .pbit given as a file)
+ * @property {string|null} projectDir  the project folder beside the model folder, when it is inside the working folder
+ * @property {Object} tmsl  the whole model in model.bim form (modelOf(tmsl) unwraps it)
+ * @property {Array<{name:string, hidden:boolean, date:boolean, columns:Array, measures:Array}>} tables  the fields, read
+ *   from tmsl (fromTmsl), without Power BI's hidden automatic date tables
+ * @property {{format:string, files:Array<{path:string, json:Object}>}|null} report  the model's own reports, for the health check
+ * @property {{counted:string[], notCounted:Array, skipped:Array<{file:string, why:string}>, partial?:string}|null} reportsSeen
+ */
+const modelRead = (o) => ({ source: o.source, folder: o.folder || null, projectDir: o.projectDir || null, tmsl: o.tmsl,
+  tables: Bind.fromTmsl(o.tmsl).filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name)), report: o.report || null, reportsSeen: o.reportsSeen || null });
+// a report file that could not be read: said, never dropped silently (A1-4)
+const skippedOf = (e) => (/not valid JSON/.test(String(e && e.message)) ? 'not valid JSON' : /above the/.test(String(e && e.message)) ? 'too big' : /link/i.test(String(e && e.message)) ? 'a link (never followed)' : 'could not be read');
+const PARTIAL = 'Some report files could not be read (skipped): the findings about fields "not used anywhere" are partial, since those files may use them.';
+
+// opts.root: the working folder to read in (default: DATAARCUS_ROOT). Returns a ModelRead; throws a ReadError (or a
+// Notice for an empty working folder).
+export function loadModel(p, opts) {
+  const root = opts && opts.root ? path.resolve(String(opts.root)) : ROOT;
+  if (!(opts && opts.root)) { const problem = rootProblem(); if (problem) throw new Error(problem); }
+  const realIn = (full, shown) => { const r = realOf(full); if (!r || !within(fs.realpathSync.native(root), r)) throw linkError(shown == null ? path.relative(root, full) || full : shown); return full; };
+  let full = path.resolve(root, String(p || '.'));
+  if (!within(root, full)) throw new ReadError('OUTSIDE', { path: p }, `"${p}" is outside the allowed folder ${root}`);
+  realIn(full, p);
   // not a path that exists, and written without a slash: a model's name
   // (A1-1, the audit of the reading block: every path picked here goes through real() before any stat or read, as the
   // path given does; a .pbip's model folder that is a link leading outside was read)
-  if (!fs.existsSync(full) && !/[\\/]/.test(String(p))) full = real(byName(p), p);
+  if (!fs.existsSync(full) && !/[\\/]/.test(String(p))) full = realIn(byName(p, root), p);
   // a .pbip file is the project's shortcut, not a model: the model folder of its name beside it, else its folder
-  else if (/\.pbip$/i.test(full) && fs.existsSync(full) && fs.statSync(full).isFile()) { const beside = full.replace(/\.pbip$/i, '.SemanticModel'); full = real(nothingAt(beside) ? path.dirname(full) : beside, p); }
+  else if (/\.pbip$/i.test(full) && fs.existsSync(full) && fs.statSync(full).isFile()) { const beside = full.replace(/\.pbip$/i, '.SemanticModel'); full = realIn(nothingAt(beside) ? path.dirname(full) : beside, p); }
   const st = fs.statSync(full);
   if (st.isFile()) {
     // a file above the limit is refused before it is read into memory (a .pbit 300 MB; a model.bim given as a file 64 MB)
     const isZip = (() => { try { const fd = fs.openSync(full, 'r'), b = Buffer.alloc(2); fs.readSync(fd, b, 0, 2, 0); fs.closeSync(fd); return b[0] === 0x50 && b[1] === 0x4b; } catch (e) { return false; } })();
     const cap = isZip ? PBIT_LIMITS.file : PBIT_LIMITS.model;
     if (st.size > cap) throw refuse(`it is ${mb(st.size)}, above the ${mb(cap)} DataArcus reads${isZip ? '' : ' for a model file'}`);
-    const buf = readCapped(full, cap, isZip ? 'file' : 'model file');
+    const buf = readCapped(full, cap, isZip ? 'file' : 'model file'), source = shownName(path.basename(full), 80);
     if (buf[0] === 0x50 && buf[1] === 0x4b) {
       const z = unzipNeeded(buf), dms = z.DataModelSchema || Object.entries(z).find(([n]) => /(^|\/)model\.bim$/i.test(n))?.[1];
-      if (!dms) throw new Error('No model in this file. Use a .pbit (File > Export > Power BI template), a model.bim, or a project folder.');
+      if (!dms) throw new ReadError('NO_MODEL_IN_FILE', {}, 'No model in this file. Use a .pbit (File > Export > Power BI template), a model.bim, or a project folder.');
       // the report: the legacy Report/Layout file, or PBIR files (same choice as the website's worker)
-      const tmsl = partJson(dms, 'model part'), layout = z['Report/Layout'];
+      const tmsl = partJson(dms, 'model part'), layout = z['Report/Layout'], skipped = [];
       const pbir = Object.keys(z).filter((n) => /(^|\/)definition\/(report\.json|reportExtensions\.json|pages\/.*\.json|bookmarks\/.*\.json)$/i.test(n) && !/StaticResources|CustomVisuals/i.test(n));
       const report = layout ? { format: 'legacy', files: [{ path: 'Report/Layout', json: partJson(layout, 'report part') }] }
-        : pbir.length ? { format: 'pbir', files: pbir.map((n) => { try { return { path: n, json: partJson(z[n], 'report part') }; } catch (e) { return null; } }).filter(Boolean) } : null;
-      return { source: shownName(path.basename(full), 80), folder: null, tmsl, tables: Bind.fromTmsl(tmsl), report };
+        : pbir.length ? { format: 'pbir', files: pbir.map((n) => { try { return { path: n, json: partJson(z[n], 'report part') }; } catch (e) { skipped.push({ file: shownPath(n), why: skippedOf(e) }); return null; } }).filter(Boolean) } : null;
+      return modelRead({ source, tmsl, report, reportsSeen: skipped.length ? { counted: [], notCounted: [], skipped, partial: PARTIAL } : null });
     }
-    const tmsl = partJson(buf, 'model file');
-    return { source: shownName(path.basename(full), 80), folder: null, tmsl, tables: Bind.fromTmsl(tmsl), report: null };
+    return modelRead({ source, tmsl: partJson(buf, 'model file') });
   }
   // a folder: the model folder nearest to the top wins (a backup copy deeper down never does)
   const links = [];
@@ -266,20 +298,20 @@ export function loadModel(p) {
   if (!dirs.length) {
     // a model folder that is a link is not followed: say so when it leads outside the working folder
     const linked = links.find((l) => /\.(SemanticModel|Dataset)$/i.test(l));
-    if (linked) real(linked);
-    if (path.resolve(full) === ROOT && !fs.readdirSync(ROOT).length) throw new Notice('empty', `Your working folder ${ROOT} is empty: put a Power BI project (a .pbip file with its folders, saved from Power BI Desktop) in it.`);
-    throw new Error(`No .SemanticModel folder in ${p}. Point at a Power BI project folder saved from Desktop.`);
+    if (linked) realIn(linked);
+    if (path.resolve(full) === root && !fs.readdirSync(root).length) throw new Notice('empty', `Your working folder ${root} is empty: put a Power BI project (a .pbip file with its folders, saved from Power BI Desktop) in it.`);
+    throw new ReadError('NO_MODEL_FOLDER', { path: p }, `No .SemanticModel folder in ${p}. Point at a Power BI project folder saved from Desktop.`);
   }
   dirs.sort((a, b) => a.split(path.sep).length - b.split(path.sep).length);
   const folder = dirs[0], bim = path.join(folder, 'model.bim');
-  if (isLink(bim)) real(bim);
-  let tmsl = null, tables;
-  if (fs.existsSync(bim)) { tmsl = partJson(readCapped(bim, PBIT_LIMITS.model, 'model.bim'), 'model.bim'); tables = Bind.fromTmsl(tmsl); }
+  if (isLink(bim)) realIn(bim);
+  let tmsl = null;
+  if (fs.existsSync(bim)) tmsl = partJson(readCapped(bim, PBIT_LIMITS.model, 'model.bim'), 'model.bim');
   else {
     const tdir = path.join(folder, 'definition', 'tables');
-    if (!fs.existsSync(tdir)) throw new Error(`No model.bim and no definition/tables in ${shownPath(path.relative(ROOT, folder))}`);
-    if (isLink(path.join(folder, 'definition'))) real(path.join(folder, 'definition'));
-    if (isLink(tdir)) real(tdir);
+    if (!fs.existsSync(tdir)) throw new ReadError('NO_MODEL_FILES', { folder: shownPath(path.relative(root, folder)) }, `No model.bim and no definition/tables in ${shownPath(path.relative(root, folder))}`);
+    if (isLink(path.join(folder, 'definition'))) realIn(path.join(folder, 'definition'));
+    if (isLink(tdir)) realIn(tdir);
     // every TMDL file measured first, one by one and all together, before any is read
     const def = path.join(folder, 'definition'), tfiles = walk(def).filter((f) => /\.tmdl$/i.test(f));
     let total = 0;
@@ -290,13 +322,11 @@ export function loadModel(p) {
     // the whole model (expressions, relationships, roles...) in model.bim form, for the health check
     // (lineage tags kept: the fix scripts write each object back with its own tag, so Desktop doesn't give it a new one)
     tmsl = Tmdl.fromFiles(tfiles.map((f) => ({ path: path.relative(folder, f).replace(/\\/g, '/'), text: text.get(f) })), { lineageTags: true });
-    tables = Bind.fromTmsl(tmsl);
   }
-  tables = tables.filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name));
-  // the project's own reports (PBIR), for the health check and for choosing a report name that is free
+  // the project's own reports (PBIR), for the health check
   // When the working folder is the model folder itself, the project folder is outside it: nothing there is read
-  // (no reports, no names in use) and create_report refuses (projectDir null).
-  const projectDir = within(ROOT, path.dirname(folder)) ? path.dirname(folder) : null;
+  // (no reports) and create_report refuses (projectDir null).
+  const projectDir = within(root, path.dirname(folder)) ? path.dirname(folder) : null;
   const beside = projectDir ? fs.readdirSync(projectDir, { withFileTypes: true }).filter((e) => !e.isSymbolicLink()).map((e) => e.name) : [];
   // (0.2.9 item 13, the 0.2.8 beta's folder bug) only the reports of this model: their definition.pbir points at this
   // model folder. Another project's reports in the same folder were counted as this model's broken reports, and the chat
@@ -308,11 +338,11 @@ export function loadModel(p) {
   // file measured first, all together, before any is read, as the TMDL files above
   { let total = 0; for (const f of pbir) total += fs.lstatSync(f).size;
     if (total > PBIT_LIMITS.total) throw refuse(`the JSON files of its reports are ${mb(total)} together, above the ${mb(PBIT_LIMITS.total)} DataArcus reads`); }
-  const report = pbir.length ? { format: 'pbir', files: pbir.map((f) => { try { return { path: f.replace(/\\/g, '/'), json: partJson(readCapped(f, PBIT_LIMITS.entry, 'report file'), 'report file') }; } catch (e) { return null; } }).filter(Boolean) } : null;
-  // report names in use: an X.Report folder and its X.pbip count once
-  const taken = [...new Set((projectDir ? fs.readdirSync(projectDir) : []).filter((n) => /\.(Report|pbip)$/i.test(n)).map((n) => n.replace(/\.(Report|pbip)$/i, '')))];
-  const reportsSeen = projectDir ? { counted: reports.map((r) => shownName(r.replace(/\.Report$/i, ''), 80)), notCounted } : null;
-  return { source: shownPath(path.relative(ROOT, folder)) || shownName(path.basename(folder), 80), folder, projectDir, taken, tmsl, tables, report, reportsSeen };
+  // (A1-4: a file that cannot be read is listed as skipped with why, and the "unused" findings are said to be partial)
+  const skipped = [];
+  const report = pbir.length ? { format: 'pbir', files: pbir.map((f) => { try { return { path: f.replace(/\\/g, '/'), json: partJson(readCapped(f, PBIT_LIMITS.entry, 'report file'), 'report file') }; } catch (e) { skipped.push({ file: shownPath(path.relative(projectDir, f)), why: skippedOf(e) }); return null; } }).filter(Boolean) } : null;
+  const reportsSeen = projectDir ? Object.assign({ counted: reports.map((r) => shownName(r.replace(/\.Report$/i, ''), 80)), notCounted }, skipped.length ? { skipped, partial: PARTIAL } : {}) : null;
+  return modelRead({ source: shownPath(path.relative(root, folder)) || shownName(path.basename(folder), 80), folder, projectDir, tmsl, report, reportsSeen });
 }
 
 // why a report beside the model is not this model's (null when it is): its definition.pbir must name this model folder
