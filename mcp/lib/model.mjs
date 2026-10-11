@@ -37,6 +37,32 @@ export function rootProblem() {
 // (\p{Cf}: zero-width, direction, byte order mark; AUD-017) and control characters (\p{Cc}: a tab or a line break;
 // AUD-032). One helper for the server and check_report (round 22b, the review of round 22, item 9).
 export const visible = (s) => String(s).replace(/[\p{Cf}\p{Cc}]/gu, (ch) => '\\u' + ch.codePointAt(0).toString(16).padStart(4, '0'));
+// The untrusted-text screen: ONE screen for the whole reading block (A1-13, the audit of the reading block: the server
+// and check_report each had their own list, both English only). A name or a text from a model or a report that reads
+// like an instruction to an AI is data: callers label it (suspiciousNames) or withhold it, and never follow it. The
+// Arabic patterns are the same asks in Arabic (a Gulf product's names are often Arabic), read after the diacritics and
+// the tatweel are dropped and the alef forms made one.
+const SCREEN = [
+  [/\b(ignore|disregard|forget|override)\b[^.]{0,40}\b(rules?|instructions?|prompt|above|previous)\b/i, 'asks to ignore instructions'],
+  [/\b(delete|drop|remove|erase)\b[^.]{0,30}\b(model|files?|reports?|tables?|data)\b/i, 'asks to delete something'],
+  [/system\s+prompt/i, 'names a system prompt'], [/\byou\s+are\b/i, 'speaks to the AI ("you are")'],
+  [/\bassistant\s*:/i, 'speaks as the assistant'], [/\bact\s+as\b/i, 'asks the AI to act as someone'],
+  [/\bdo\s+not\s+tell\b/i, 'asks to hide something from the user'], [/\brun\s+(cmd|powershell|bash|shell|script|code|command|this|the\s+following)\b/i, 'asks to run something'],
+  [/\bexecute\b/i, 'asks to execute something'], [/https?:\/\//i, 'holds a web address'], [/<script/i, 'holds a script tag'],
+  [/(تجاهل|تجاهلي|تجاهلوا|انس|انسى|اترك)\s+((كل|جميع)\s+)?(ال)?(تعليمات|اوامر|قواعد)/, 'asks to ignore instructions'],
+  [/(تعليمات|موجه|اوامر)\s+النظام/, 'names a system prompt'], [/انت\s+(الان|من\s+الان)/, 'speaks to the AI ("you are now")'],
+  [/(نفذ|شغل)\s+(ال)?(امر|اوامر|سكربت|برنامج|كود|تالي)/, 'asks to run something'],
+  [/(احذف|امسح|ازل)\s+(ال)?(نموذج|ملفات|ملف|تقرير|تقارير|بيانات|جداول|جدول)/, 'asks to delete something'], [/لا\s+تخبر/, 'asks to hide something from the user']
+];
+const plainArabic = (s) => String(s).replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[\u0622\u0623\u0625]/g, '\u0627');
+export const LONG_NAME = 120;
+// why a name or text reads like an instruction (empty when it doesn't); a long one is said too
+export const screenWhy = (s) => { const t = plainArabic(s), why = [...new Set(SCREEN.filter(([re]) => re.test(t)).map(([, w]) => w))]; if (String(s).length > LONG_NAME) why.push(`longer than ${LONG_NAME} characters (${String(s).length})`); return why; };
+export const readsLikeInstruction = (s) => { const t = plainArabic(s); return SCREEN.some(([re]) => re.test(t)); };
+export const WITHHELD = '(withheld: reads like an instruction)';
+// a name from disk or from a file as a message may show it: withheld when it reads like an instruction, invisible
+// characters as code points, cut at cap characters
+export const shownName = (s, cap = 60) => { if (readsLikeInstruction(s)) return WITHHELD; const v = visible(s); return v.length > cap ? v.slice(0, cap) + '…' : v; };
 export class Notice extends Error { constructor(state, message) { super(message); this.state = state; } }
 // A name is free only when nothing at all is there. lstat, not existsSync: a link whose target is missing "doesn't
 // exist" to existsSync, and writing at its name would create the target, outside the working folder (audit AUD-005)
