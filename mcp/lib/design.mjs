@@ -8,6 +8,8 @@ import { inside, nothingAt } from './model.mjs';
 
 const require = createRequire(import.meta.url);
 export const E = require('../../assets/js/design-engine.js');
+// the design's keys and its written schema are the engine's (the audit's A2-7)
+export const { DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, SCHEMA } = E;
 
 const HARMONIES = ['analogous', 'complementary', 'triadic', 'mono'];
 // the light page of a brand theme (0.2.9, O-11): the Corporate preset's (the cross-review's G7: one light page, the

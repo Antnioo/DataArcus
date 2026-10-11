@@ -10,7 +10,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { absorb } from './lib/slots.mjs';
 import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, Svg, applyColumnTypes, inside, loadModel, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
-import { E, themeDesign, planLayout, pageOf, contrastReport, freeFile } from './lib/design.mjs';
+import { E, themeDesign, planLayout, pageOf, contrastReport, freeFile, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS } from './lib/design.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
 import { addGulfCalendar, gulfFixInputs } from './lib/gulf-calendar.mjs';
@@ -391,12 +391,11 @@ function boundOf(pages, B, tableKept) {
 }
 // The keys of a design the tools know. Another key (a typing slip, or an input that doesn't exist, like "fields"
 // inside a design) is named in the answer's "ignored", never dropped without a word.
-const DESIGN_KEYS = ['preset', 'name', 'font', 'data', 'ui', 'chart', 'layout'];
-const LAYOUT_KEYS = ['v', 'page', 'preset', 'kpis', 'filters', 'dir', 'radius', 'shadow', 'header', 'kpiBar', 'headLine', 'samples', 'transparent', 'kpiCards', 'wideTable', 'fpos', 'pageW', 'pageH',
-  'hh', 'logoW', 'fw', 'fh', 'kpiH', 'mainW', 'split', 'kpiBarW', 'headLineW', 'kpiBarC', 'headLineC'];
+// (the audit's A2-7: the key lists are the design engine's, with its written schema; an older design's keys the engine
+// still reads, such as kpiCards, are reported by the engine's repair instead)
 function unknownKeys(design) {
   const keys = Object.keys(design || {}).filter((k) => !DESIGN_KEYS.includes(k))
-    .concat(Object.keys((design && typeof design.layout === 'object' && design.layout) || {}).filter((k) => !LAYOUT_KEYS.includes(k)).map((k) => 'layout.' + k));
+    .concat(Object.keys((design && typeof design.layout === 'object' && design.layout) || {}).filter((k) => !LAYOUT_KEYS.includes(k) && !OLD_LAYOUT_KEYS.includes(k)).map((k) => 'layout.' + k));
   return keys.length ? { keys, why: 'These keys of the design are not ones the tools know, so they changed nothing. Fields go in create_report\'s own "fields" input, not inside the design; layout choices are the inputs of plan_layout.' } : null;
 }
 
