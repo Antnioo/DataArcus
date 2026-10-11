@@ -357,7 +357,9 @@ const slotsPlaced = (pages, want) => {   // every slot except the filter rail ha
       // (round 1: a header text box, the title or "Your logo", may start lower in its slot so its text is centred in the
       // header: the same x, width and bottom edge)
       // (0.2.9 part 2, O-6: create_report writes no "Your logo" placeholder, so a logo slot without a logo stays empty)
-      else if (!got.visuals.some((v) => v.type !== 'group' && v.x === s.x && v.w === s.w && (v.y === s.y && v.h === s.h || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h))) && s.kind !== 'logo') bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
+      // (0.2.9, the design block's S7: a slot wholly under the shortened filter rail takes the rail's column: the same row,
+      // one edge kept, wider)
+      else if (!got.visuals.some((v) => v.type !== 'group' && ((v.x === s.x && v.w === s.w) || (v.y === s.y && v.h === s.h && v.w > s.w && (v.x === s.x || v.x + v.w === s.x + s.w))) && (v.y === s.y && v.h === s.h || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h))) && s.kind !== 'logo') bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
     });
   });
   return bad;
@@ -2527,7 +2529,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const hiddenRefs = (t) => ((t.visual.objects || {}).columnWidth || []).filter((e) => e.properties.value.expr.Literal.Value === '0D').map((e) => e.selector.metadata);
     const isRowLabel = (p) => !!(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema === 'extension' && /^Row label: /.test(p.field.Measure.Property));
     for (const lang of ['en', 'ar']) {
-      const x = await ask('create_report', { path: 'd5-project', name: 'D5 SVG ' + lang, lang, design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', lang }), fields: { kpis: KPIS, table: T4 }, svgColumns: pics });
+      // (0.2.9, the design block's D16: this model has no date, so the executive layout made for it gives the table the
+      // whole second row; the operations layout keeps the table a third of its row, the narrow table this check needs)
+      const x = await ask('create_report', { path: 'd5-project', name: 'D5 SVG ' + lang, lang, design: await planOf({ layout: 'ops', kpis: 4, filters: 'end', lang }), fields: { kpis: KPIS, table: T4 }, svgColumns: pics });
       const t = pageVisuals(x, 'd5-project').find((v) => type(v) === 'tableEx' && /extension/.test(JSON.stringify(v.visual.query)));
       if (!t) { bad.push(`${lang}: no table ${short(x)}`); continue; }
       const ps = t.visual.query.queryState.Values.projections, g = t.visual.objects.grid[0].properties, W = N(g.imageWidth), H = N(g.imageHeight);
@@ -2552,7 +2556,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
       for (const lang of ['en', 'ar']) {
         // (night of 6-7 Oct: since the owner's answer 3a a 4:3 page gives the table three fifths of its row; this check is about
         // a table too narrow for its fields, so its design keeps the half-width table: layout.wideTable false)
-        const narrowPlan = await planOf({ layout: 'exec', kpis: 4, filters: 'end', page: '960x720', lang }); narrowPlan.layout.wideTable = false;
+        // (0.2.9, the design block's D16: this model has no date, and the executive layout made for it gives the table the
+        // whole second row; the operations layout keeps it a third of its row, too narrow for five fields as this check needs)
+        const narrowPlan = await planOf({ layout: 'ops', kpis: 4, filters: 'end', page: '960x720', lang }); narrowPlan.layout.wideTable = false;
         const x = await ask('create_report', { path: 'd5-project', name: 'D5 table fit ' + lang, lang, design: narrowPlan, fields: { kpis: KPIS, table: FIVE } });
         if (x.err) { tbad.push(`${lang}: ${short(x)}`); continue; }
         const pgs = report(path.join(ROOT, 'd5-project', x.j.report)).filter((p) => !p.tooltip), size = tableText(x, 'd5-project'), font = lang === 'ar' ? 'Tahoma' : 'Segoe UI';
