@@ -37,14 +37,32 @@ fs.writeFileSync(path.join(dir, 'qwerty_corp', 'x.txt'), 'line one\nZeta Widgets
 fs.writeFileSync(path.join(dir, 'bin.dat'), Buffer.from([0, 1, 2, 0x7a, 0x65, 0x74, 0x61]));
 git('add', '.'); git('commit', '-qm', 'about Zeta-Widgets');
 
-t('a repository: path, text and commit message are all found; binary skipped', () => {
+t('a repository: path, text, commit message and the commit\'s added lines are all found; binary skipped', () => {
   const hits = scanRepo(dir, termsOf('zeta widgets, qwerty corp'), base + '..HEAD');
   const where = hits.map((h) => h.where + ':' + h.line + ':' + h.term).sort();
+  const head = git('rev-parse', '--short=7', 'HEAD').trim();
   assert.deepEqual(where, [
-    'commit message ' + git('rev-parse', '--short=7', 'HEAD').trim() + ':1:1',
+    'commit message ' + head + ':1:1',
+    `qwerty_corp/x.txt (a line added in commit ${head}):0:1`,
     'qwerty_corp/x.txt (its path):0:2',
+    `qwerty_corp/x.txt (its path, commit ${head}):0:2`,
     'qwerty_corp/x.txt:2:1',
   ]);
+});
+// a word added in one commit and removed in the next is still found (the checkout alone would miss it)
+fs.writeFileSync(path.join(dir, 'clean.md'), 'all good\nqwerty corp was here\n');
+git('add', '.'); git('commit', '-qm', 'add');
+const mid = git('rev-parse', '--short=7', 'HEAD').trim();
+fs.writeFileSync(path.join(dir, 'clean.md'), 'all good\n');
+git('add', '.'); git('commit', '-qm', 'remove again');
+t('a word added and removed again is found in the commit that added it', () => {
+  const hits = scanRepo(dir, termsOf('qwerty corp'), base + '..HEAD').filter((h) => h.where.includes('commit ' + mid));
+  assert.equal(hits.length, 1);
+  assert.match(hits[0].where, /^clean\.md \(a line added in commit/);
+});
+t('a first push (before = zeros) still reads the new commits', () => {
+  const hits = scanRepo(dir, termsOf('zeta widgets'), '0000000000000000000000000000000000000000..HEAD');
+  assert.ok(hits.some((h) => h.where.startsWith('commit message')), 'the commit message with the word is read');
 });
 fs.rmSync(dir, { recursive: true, force: true });
 console.log(`${n} checks passed`);

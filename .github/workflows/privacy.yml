@@ -32,10 +32,10 @@ jobs:
       - name: The deny-list scan's own checks (made-up words)
         run: node scripts/test-deny-scan.mjs
 
-      - name: No word from the private deny list (every file, every path, this push's commit messages)
+      - name: No word from the private deny list (every file and path; each new commit's message, added lines and paths)
         env:
           DENY_TERMS: ${{ secrets.DENY_TERMS }}
-          DENY_RANGE: ${{ github.event_name == 'push' && format('{0}..{1}', github.event.before, github.sha) || '' }}
+          DENY_RANGE: ${{ github.event_name == 'push' && format('{0}..{1}', github.event.before, github.sha) || (github.event_name == 'pull_request' && format('{0}..{1}', github.event.pull_request.base.sha, github.event.pull_request.head.sha)) || '' }}
         run: node scripts/deny-scan.mjs .
 
       - name: No secrets in the history (gitleaks 8.21.2)
