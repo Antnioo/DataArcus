@@ -188,9 +188,11 @@ function byName(p) {
 export function loadModel(p) {
   let full = inside(p);
   // not a path that exists, and written without a slash: a model's name
-  if (!fs.existsSync(full) && !/[\\/]/.test(String(p))) full = byName(p);
+  // (A1-1, the audit of the reading block: every path picked here goes through real() before any stat or read, as the
+  // path given does; a .pbip's model folder that is a link leading outside was read)
+  if (!fs.existsSync(full) && !/[\\/]/.test(String(p))) full = real(byName(p), p);
   // a .pbip file is the project's shortcut, not a model: the model folder of its name beside it, else its folder
-  else if (/\.pbip$/i.test(full) && fs.existsSync(full) && fs.statSync(full).isFile()) { const beside = full.replace(/\.pbip$/i, '.SemanticModel'); full = fs.existsSync(beside) ? beside : path.dirname(full); }
+  else if (/\.pbip$/i.test(full) && fs.existsSync(full) && fs.statSync(full).isFile()) { const beside = full.replace(/\.pbip$/i, '.SemanticModel'); full = real(nothingAt(beside) ? path.dirname(full) : beside, p); }
   const st = fs.statSync(full);
   if (st.isFile()) {
     // a file above the limit is refused before it is read into memory (a .pbit 300 MB; a model.bim given as a file 64 MB)
