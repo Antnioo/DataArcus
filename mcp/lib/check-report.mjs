@@ -14,7 +14,7 @@ import addFormats from 'ajv-formats';
 // (Microsoft's report CLI, which needs Node 20 or later, is loaded when the validator runs, never at the server's start:
 // one tool's dependency cannot stop the others; round 22b, the review of round 22, item 5)
 import { loadModel, ROOT, visible } from './model.mjs';
-import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, TooBig, readJson, isFile, isDir, walk, locate, inventory, diskSource } from './read-report.mjs';
+import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, TooBig, readJson, isFile, isDir, walk, locate, inventory, diskSource, isCustom } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
 
 const require = createRequire(import.meta.url);
@@ -71,7 +71,7 @@ function readReport(loc, sk) {
       note(j.$schema);
       let mobile = null; if (isFile(mf)) { try { mobile = readJson(mf); note(mobile.$schema); } catch (e) { if (e instanceof TooBig) sk.big.push({ file: rel(reportDir, mf), size: e.size }); else unreadable++; } }
       const type = j.visual ? String(j.visual.visualType || '') : j.visualGroup ? 'group' : 'unknown';
-      if (j.visual && !/^[a-z][A-Za-z]*$/.test(type)) customVisuals++;
+      if (j.visual && isCustom(type)) customVisuals++;
       const pos = j.position || {};
       list.push({ name: String(j.name || vid), type, file: rel(reportDir, f), mobileFile: mobile ? rel(reportDir, mf) : null, json: j, mobile, parent: j.parentGroupName || null, pos, page: { id, name: page.name } });
       if (type === 'textbox') ((((((j.visual.objects || {}).general || [{}])[0] || {}).properties || {}).paragraphs) || []).forEach((p) => (p.textRuns || []).forEach((r) => texts.push(String(r.value || ''))));
@@ -244,7 +244,7 @@ export async function checkReport(p, opts) {
       const pbir = readJson(path.join(loc.reportDir, 'definition.pbir')), by = pbir && pbir.datasetReference && pbir.datasetReference.byPath && pbir.datasetReference.byPath.path;
       if (by) model = loadModel(path.resolve(loc.reportDir, String(by))).tables; else modelNote = 'the report names no model folder (definition.pbir byPath): column types and sort-by columns are unknown';
     } catch (e) { modelNote = 'the model the report names could not be read: column types and sort-by columns are unknown'; }
-    const L = lint(inventory(diskSource(loc, { big: [], deep: 0 }), path.basename(loc.reportDir)), model, null);
+    const L = lint(inventory(diskSource(loc, { big: [], deep: 0 }), path.basename(loc.reportDir)), model, null, { titles: false });
     lintSection = Object.assign({}, L, { findings: L.findings.slice(0, cap).map((f) => Object.assign({}, f, { why: visible(f.why), visual: f.visual == null ? null : visible(f.visual) })) },
       L.findings.length > cap ? { truncated: true } : {}, modelNote ? { modelNote } : {});
   }

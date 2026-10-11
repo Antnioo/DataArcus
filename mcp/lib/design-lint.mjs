@@ -38,7 +38,9 @@ export function lint(inv, model, facts, opts) {
   (model || []).forEach((t) => (t.columns || []).forEach((c) => { cols[`${t.name}[${c.name}]`] = { type: String(c.dataType || 'unknown').toLowerCase(), sortBy: c.sortBy || null }; }));
   const hasModel = !!(model && model.length);
   const findings = [];
-  const where = (x) => `${x.type}${x.title ? ` "${x.title}"` : ''} at ${x.x},${x.y} ${x.w}x${x.h}`;
+  // (o.titles false: the visual by its type and place only; check_report's lint never returns a report's text, the owner's
+  // decision R5 of 11 Oct)
+  const where = (x) => `${x.type}${x.title && o.titles !== false ? ` "${x.title}"` : ''} at ${x.x},${x.y} ${x.w}x${x.h}`;
   const add = (rule, severity, p, x, why, fix, guess) => findings.push({ rule, severity, guess: !!guess, page: { n: p.n, name: p.name }, visual: x ? where(x) : null, why, fix });
   const typeOf = (f) => { const k = keyOf(f), m = k && cols[k]; return m ? m.type : null; };
   const isText = (f) => { if (!f || f.kind !== 'column') return false; const t = typeOf(f); return t == null || t === 'unknown' || t === 'string'; };

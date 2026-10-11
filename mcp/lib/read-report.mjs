@@ -139,6 +139,8 @@ const textOf = (j) => ((plain(((j.visual || {}).objects || {}).general).paragrap
 const BUILTIN = /^(actionButton|advancedSlicerVisual|areaChart|azureMap|barChart|basicShape|bookmarkNavigator|card|cardVisual|clusteredBarChart|clusteredColumnChart|columnChart|decompositionTreeVisual|donutChart|filledMap|funnel|gauge|hundredPercentStacked\w+|image|keyDriversVisual|kpi|lineChart|lineClusteredColumnComboChart|lineStackedColumnComboChart|listSlicer|map|multiRowCard|pageNavigator|pieChart|pivotTable|qnaVisual|ribbonChart|scatterChart|shape|shapeMap|slicer|stackedAreaChart|stackedBarChart|stackedColumnChart|tableEx|textbox|textSlicer|treemap|waterfallChart|scriptVisual|pythonVisual|paginator|rdlVisual)$/;
 const SLICERS = /^(slicer|advancedSlicerVisual|listSlicer|textSlicer)$/;
 const typeName = (t) => (t === 'group' || BUILTIN.test(t) ? t : 'custom ' + safeName(t));
+// a custom visual's type: the one test (the cross-review's duplicates, 11 Oct: check_report used its own regex)
+export const isCustom = (t) => t !== 'group' && t !== 'unknown' && !BUILTIN.test(String(t));
 
 // ---- the inventory: everything the layers above need, structured, from any source ----
 // { name, pages, theme { name, dataColors, labelSize }, bookmarks, types, customVisuals, installedNotUsed, reportFilters,
