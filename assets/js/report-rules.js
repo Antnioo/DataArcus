@@ -33,7 +33,9 @@
     pageWrap: M('2026-10-03', '2.158.1177', 'round 1 measurements: a page button puts a long name on two lines only when two lines fit its height'),
     round2: M('2026-10-03', '2.158.1177', 'round 2 measurements: a chart sorts by a field only when it is in the visual; the page navigator has no order setting'),
     plugin: M('2026-10-03', '2.158.1177', 'Microsoft\'s powerbi-authoring plugin on an Arabic report: Desktop does not mirror titles'),
-    tipTrend: M('2026-10-10', '2.158.1304', 'a tooltip bar chart\'s rows at 8pt labels (the tooltip lab)')
+    tipTrend: M('2026-10-10', '2.158.1304', 'a tooltip bar chart\'s rows at 8pt labels (the tooltip lab)'),
+    round10: M('2026-10-04', '2.158.1177', 'round 10 (overnight): measurements before the code'),
+    textMid: M('2026-10-03', '2.158.1177', 'round 1 measurements: a text box is top-aligned, its text\'s middle by the font')
   };
   // The text rules were measured in these fonts; on another font a finding is an estimate (a note, never an error)
   const MEASURED_FONTS = ['segoe ui', 'tahoma'];
@@ -41,7 +43,6 @@
   // The measured numbers, in page units (a point size takes the same page units on any page, as measured). The one
   // copy: scripts/tests/report-check.mjs takes them from here (MEASURED).
   const BOX = (t, n) => Math.ceil(10 + 1.8 * t * (n || 1));        // a text box: 10 + 1.8 x pt a line
-  const BTN_TEXT = (t, n) => Math.ceil(2 + 1.6 * t * (n || 1));    // a button's text, a line (English)
   const BTN_H = (t) => Math.ceil(6 + 1.6 * t);                     // a button's one line (Arabic needs the 6)
   const BTN_TW = (t, n) => 0.45 * 4 / 3 * t * n;                   // a button's text, 0.45 em a character
   // a button with an icon: its text measured with the per-letter widths, + 10 (round 10, M3); the widths are
@@ -51,9 +52,16 @@
   const CH = (t) => t * 0.55 * 4 / 3;                              // a text box's character, 0.55 em
   const SLICER = (t) => Math.ceil(16 + 4 * t);                     // a dropdown slicer, title and box
   const PAGE_TWO_LINES = (t, font) => (/^tahoma/i.test(String(font || '')) ? 3.2 : 3.5) * t;   // a page button's two lines
+  // (A4-6, audit 4) the lines a page button shows at a height: two only when two fit (SRC.pageWrap), one when one does
+  const PAGE_LINES = (h, t, font) => (h + 0.5 >= PAGE_TWO_LINES(t, font) ? 2 : h + 0.5 >= BTN_H(t) ? 1 : 0);
+  // a page button's one line, measured letter by letter + 10 (round 10, M3; round 1: "Executive summary" at 14pt cut
+  // at 160 wide and less, whole at about 174)
+  const PAGE_TW = (text, t, font) => textWidth()(text, t, false, font) + 10;
+  // a text box's text middle below its top, by the font (SRC.textMid: Segoe UI 3 + 1.19 x pt, Tahoma 1.12 x pt)
+  const TEXT_MID = (font, t) => (/^segoe ui/i.test(String(font)) ? 3 + 1.19 * t : /^tahoma/i.test(String(font)) ? 1.12 * t : 1.2 * t);
   const TIP_ROWS = (h) => Math.floor((h - 46) / 22);               // a bar chart without its value axis: 22 a row + 46
   const TIP_ROWS_6 = (h) => Math.floor((h - 40) / 27);             // a tooltip bar chart at 8pt labels: 27 a bar + 40 (SRC.tipTrend)
-  const MEASURED = { BOX, BTN_TEXT, BTN_H, BTN_TW, BTN_ICON_TW, CH, SLICER, PAGE_TWO_LINES, TIP_ROWS, TIP_ROWS_6, PHONE_W: 323, TEXT_MIN: 8, TEXT_MAX: 60 };
+  const MEASURED = { BOX, BTN_H, BTN_TW, BTN_ICON_TW, CH, SLICER, PAGE_TWO_LINES, PAGE_LINES, PAGE_TW, TEXT_MID, TIP_ROWS, TIP_ROWS_6, PHONE_W: 323, TEXT_MIN: 8, TEXT_MAX: 60 };
   const isPageButton = (x) => x.type === 'actionButton' && str(plain(((x.json.visual || {}).visualContainerObjects || {}).visualLink).type) === 'PageNavigation';
   const STATES = ['default', 'hover', 'press', 'pressed', 'disabled', 'selected'];
 
@@ -164,14 +172,15 @@
         });
       } },
     { id: 'PAGE_BUTTON_WRAP', group: 'navigation', severity: 'warning', source: SRC.pageWrap,
-      about: 'a page button (an actionButton that goes to a page) puts a long name on two lines only when two lines fit its height (3.5 x pt in Segoe UI, 3.2 x pt in Tahoma); otherwise it cuts the name with "..."; a line holds 0.45 em a character',
+      about: 'a page button (an actionButton that goes to a page) puts a long name on two lines only when two lines fit its height (3.5 x pt in Segoe UI, 3.2 x pt in Tahoma); otherwise it cuts the name with "..."; a line is measured letter by letter, + 10 (round 10, M3; A4-6: the flat 0.45 em missed the cut at 150-160 wide)',
       run(R, out) {
         R.visuals.filter(isPageButton).forEach((x) => {
-          const o = (x.json.visual || {}).objects || {}, tx = look(o.text), t = num(tx.fontSize) || R.labelSize, n = str(tx.text).length, font = str(tx.fontFamily) || R.font;
-          if (!n || BTN_TW(t, n) <= x.w + 0.5) return;
-          const two = Math.ceil(PAGE_TWO_LINES(t, font)), est = measuredFont(font) ? null : { estimate: true };
-          if (x.h + 0.5 < two) out(x, `the page name (${n} characters at ${t}pt) needs ${Math.ceil(BTN_TW(t, n))} wide on one line; the button is ${x.w} wide, and two lines need ${two} high, the button is ${x.h}`, `Make the button at least ${Math.ceil(BTN_TW(t, n))} wide, or at least ${two} high for two lines, or the name shorter: Power BI cuts it with "...".`, est);
-          else if (BTN_TW(t, Math.ceil(n / 2)) > x.w + 0.5) out(x, `the page name (${n} characters at ${t}pt) does not fit even on two lines in ${x.w} wide (each line needs about ${Math.ceil(BTN_TW(t, Math.ceil(n / 2)))})`, `Make the button at least ${Math.ceil(BTN_TW(t, Math.ceil(n / 2)))} wide, or the name shorter.`, est);
+          const o = (x.json.visual || {}).objects || {}, tx = look(o.text), t = num(tx.fontSize) || R.labelSize, text = str(tx.text), n = text.length, font = str(tx.fontFamily) || R.font;
+          const one = Math.ceil(PAGE_TW(text, t, font));
+          if (!n || one <= x.w + 0.5) return;
+          const two = Math.ceil(PAGE_TWO_LINES(t, font)), half = Math.ceil((one - 10) / 2 + 10), est = measuredFont(font) ? null : { estimate: true };
+          if (x.h + 0.5 < two) out(x, `the page name (${n} characters at ${t}pt) needs ${one} wide on one line; the button is ${x.w} wide, and two lines need ${two} high, the button is ${x.h}`, `Make the button at least ${one} wide, or at least ${two} high for two lines, or the name shorter: Power BI cuts it with "...".`, est, SRC.round10);
+          else if (half > x.w + 0.5) out(x, `the page name (${n} characters at ${t}pt) does not fit even on two lines in ${x.w} wide (each line needs about ${half})`, `Make the button at least ${half} wide, or the name shorter.`, est, SRC.round10);
         });
       } },
     { id: 'SORT_IN_VISUAL', group: 'sort', severity: 'warning', source: SRC.round2,
