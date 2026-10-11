@@ -104,7 +104,7 @@ export async function v029f({ call, check, ROOT }) {
     ['a', 'b'].flatMap((p) => [{ path: `definition/pages/${p}/page.json`, data: JSON.stringify({ name: p, displayName: p, width: 1920, height: 1080 }) }].concat(Array.from({ length: 5 }, (_, i) => ({ path: `definition/pages/${p}/visuals/v${i}/visual.json`, data: JSON.stringify(vis('v' + i, 'lineChart', {})) }))))));
   const json0 = mem.json; mem.json = (rel) => { if (/visual\.json$/.test(rel)) reads++; return json0(rel); };
   const inv9 = RR.inventory(mem, 'R', { pages: [2] });
-  chk(() => reads === 5 && inv9.pages.length === 2 && inv9.pages[1].visuals.length === 5 && /files:/.test(src('lib/read-report.mjs').match(/REPORT_LIMITS = \{[^}]*\}/)[0]), () => `A5-9/A5-12. only the asked pages' visuals are read (5 reads, ${reads} made); memorySource takes report-relative paths; a file count cap in REPORT_LIMITS`);
+  chk(() => reads === 5 && inv9.pages.length === 2 && inv9.pages[1].visuals.length === 5 && /files:/.test(src('lib/read-report.mjs').match(/REPORT_LIMITS = (?:Object\.freeze\()?\{[^}]*\}/)[0]), () => `A5-9/A5-12. only the asked pages' visuals are read (5 reads, ${reads} made); memorySource takes report-relative paths; a file count cap in REPORT_LIMITS`);
 
   // ---------- A5-12: one decoder (a UTF-16 page.json is read) ----------
   const rep12 = mkReport('f12', [{ id: 'p1', name: 'x', visuals: [] }], null, (R, D) => { const t = JSON.stringify({ name: 'p1', displayName: 'Utf Sixteen', width: 1920, height: 1080 }); fs.writeFileSync(path.join(D, 'pages', 'p1', 'page.json'), Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(t, 'utf16le')])); });
