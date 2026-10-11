@@ -197,6 +197,23 @@ export async function v029visuals({ check }) {
   // a map by latitude and longitude roles: Azure map's X and Y
   try { const geo = visualsOf({ geo: ['vendorPins' + HEX, { Latitude: [col('Sites', 'Lat')], Longitude: [col('Sites', 'Lon')], Size: [mea('Sites', 'Visits')] }] }).geo, a = nativeFor(geo, {});
     chk(() => a.native === 'azureMap' && refs(a.roles.Y).join() === 'Sites[Lat]' && refs(a.roles.X).join() === 'Sites[Lon]' && a.candidates[0].fits, () => `A5-14: latitude and longitude roles: Azure map's Y and X: ${JSON.stringify(a).slice(0, 500)}`); } catch (e) { check(false, 'V. A5-14: the map by latitude and longitude: ' + e.message); }
+  // ---------- step B: read_report gives each custom visual its meaning (kind, native, why), from the reading block ----------
+  { const files = [{ path: 'R.Report/definition/report.json', data: JSON.stringify({ publicCustomVisuals: ['acmeDrillPie' + HEX] }) }, { path: 'R.Report/definition/pages/pages.json', data: JSON.stringify({ pageOrder: ['p1'] }) },
+      { path: 'R.Report/definition/pages/p1/page.json', data: JSON.stringify({ name: 'p1', displayName: 'P', width: 1280, height: 720 }) },
+      { path: 'R.Report/definition/pages/p1/visuals/a/visual.json', data: JSON.stringify(vj('a', 'acmeDrillPie' + HEX, { Category: [col('Orders', 'Secret Region')], Values: [mea('Orders', 'Secret Sales')] })) },
+      { path: 'R.Report/definition/pages/p1/visuals/b/visual.json', data: JSON.stringify(Object.assign(vj('b', 'vendorGraph' + HEX, { Source: [col('Flows', 'From Hub')], Target: [col('Flows', 'To Hub')] }), { position: { x: 0, y: 400, z: 0, width: 400, height: 300 } })) },
+      { path: 'R.Report/definition/pages/p1/visuals/c/visual.json', data: JSON.stringify(Object.assign(vj('c', 'clusteredColumnChart', { Category: [col('Orders', 'Region')], Y: [mea('Orders', 'Total Sales')] }), { position: { x: 500, y: 0, z: 0, width: 400, height: 300 } })) }];
+    let inv, text, json;
+    try { const RR = await import('./lib/read-report.mjs'); inv = RR.inventory(memorySource(files), 'R'); text = RR.answerOf(inv, {}); json = RR.answerOf(inv, { format: 'json' }); } catch (e) { inv = null; text = String(e.message); }
+    const vis = inv ? Object.fromEntries(inv.pages[0].visuals.map((v) => [v.id, v])) : {};
+    chk(() => vis.a.meaning.kind === 'pie' && vis.a.meaning.native === 'pieChart' && typeof vis.a.meaning.why === 'string' && vis.b.meaning.kind === 'network' && vis.b.meaning.native === null && vis.b.meaning.htmlNeeded === true && !vis.c.meaning,
+      () => `B: the inventory gives each custom visual its meaning (kind, native, why), a native one none: ${JSON.stringify(inv && inv.pages[0].visuals.map((v) => [v.id, v.meaning]))}`);
+    chk(() => /REPLACE pie -> pieChart/.test(text) && /REPLACE network -> no native visual \(HTML\/SVG\)/.test(text) && (text.match(/REPLACE/g) || []).length === 2,
+      () => `B: read_report's text says what each custom visual would become, once per custom visual: ${text.slice(0, 1500)}`);
+    const jv = json && json.pages[0].visuals.find((v) => v.id === 'a');
+    chk(() => jv.meaning.kind === 'pie' && jv.meaning.native === 'pieChart' && jv.meaning.why && jv.meaning.tell && !('roles' in jv.meaning),
+      () => `B: the JSON answer carries the meaning (kind, native, why, tell), not the fields again: ${JSON.stringify(jv && jv.meaning)}`);
+    chk(() => !/Secret/.test(JSON.stringify(inv.pages[0].visuals.map((v) => v.meaning))), () => 'B: the meaning carries no field name (the fields are listed by read_report\'s own screened lines)'); }
   // pure: the same input gives the same answer, and the input is not changed
   { const before = JSON.stringify(V.drill), a = JSON.stringify(meaningOf(V.drill, { typeOf })), b = JSON.stringify(meaningOf(V.drill, { typeOf }));
     chk(() => a === b && JSON.stringify(V.drill) === before, () => 'pure: the same answer twice, the visual unchanged'); }

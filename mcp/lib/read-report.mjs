@@ -8,6 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { inside, readCapped, readsLikeInstruction, real, shownName, shownPath, visible, WITHHELD } from './model.mjs';
+import { meaningInReport } from './visual-meaning.mjs';
 
 // ---- untrusted text (check_report's rules, one copy) ----
 // (A1-13: the one screen is model.mjs's; INSTRUCTION keeps its name and its test() for the callers)
@@ -241,6 +242,7 @@ export function inventory(src, reportName) {
       const tip = litStr(plain(vco.visualTooltip).section); if (tip) x.tooltipPage = pageName(tip);
       const ch = anyOf(o.columnHeaders), ca = anyOf(o.categoryAxis), vals = anyOf(o.values);
       const widths = {}; entries(o.columnWidth).forEach((e) => { const k = e && e.selector && e.selector.metadata, w = litNum(((e || {}).properties || {}).value); if (k && w != null) widths[k] = w; });
+      const meaning = meaningInReport(x, report); if (meaning) x.meaning = meaning; // custom visuals: what it shows, its native replacement
       x.format = { axisShare: litNum(ca.maxMarginFactor), axisFontSize: litNum(ca.fontSize), autoSize: litBool(ch.autoSizeColumnWidth), growToFit: litStr(ch.columnAdjustment) === 'growToFit', wordWrap: litBool(vals.wordWrap), widths };
       list.push(x);
     }
@@ -281,6 +283,7 @@ function visualLine(x) {
   if ((x.filters || []).length) s += ' | filters ' + x.filters.map(filterText).join(', ');
   if (x.action) s += ' | ' + x.action;
   if (x.tooltipPage) s += ` | tooltip page "${x.tooltipPage}"`;
+  if (x.meaning) s += ` | REPLACE ${x.meaning.kind} -> ${x.meaning.native || 'no native visual (HTML/SVG)'} (${x.meaning.confidence}${x.meaning.guess ? ', a guess' : ''}): ${x.meaning.why}`;
   return s;
 }
 const byPlace = (l) => l.slice().sort((a, b) => a.y - b.y || a.x - b.x);
@@ -315,7 +318,7 @@ export function answerOf(inv, opts) {
       x.type === 'group' ? { groupTitle: safeText(x.groupTitle) } : {}, x.title ? { title: x.title } : {}, x.text ? { text: x.text } : {},
       { fields: Object.fromEntries(Object.entries(x.fields || {}).map(([r, l]) => [r, l.map((f) => (f.kind === 'other' ? '(an expression)' : refOf(f)) + (f.displayName ? ` as "${safeText(f.displayName)}"` : ''))])),
         sort: (x.sort || []).map((s) => `${refOf(s.field)} ${s.dir}`), filters: (x.filters || []).map(filterText) },
-      x.action ? { action: x.action } : {}, x.tooltipPage ? { tooltipPage: x.tooltipPage } : {},
+      x.action ? { action: x.action } : {}, x.tooltipPage ? { tooltipPage: x.tooltipPage } : {}, x.meaning ? { meaning: x.meaning } : {},
       x.format ? { format: Object.assign({}, x.format, { widths: Object.fromEntries(Object.entries(x.format.widths || {}).map(([k, w]) => [safeName(k), w])) }) } : {});
     const out = { report: inv.name, theme: inv.theme, reportFilters: inv.reportFilters.map(filterText), customVisuals: inv.customVisuals, installedNotUsed: inv.installedNotUsed, types: Object.fromEntries(Object.entries(inv.types).map(([t, n]) => [typeName(t), n])),
       pages: inv.pages.map((p) => Object.assign({ n: p.n, id: safeName(p.id), name: p.name, size: `${p.w}x${p.h}`, kind: p.kind, hidden: p.hidden, filters: p.filters.map(filterText), visualCount: p.visuals.length },
