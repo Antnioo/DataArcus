@@ -392,3 +392,13 @@ export function nativeFor(visual, opts) {
     : `No native Power BI visual can show this custom visual's fields as they are: it can be kept as it is or left out. Nothing is decided without you.`;
   return Object.assign({}, m, best ? { kind: best.kind, native: best.native, roles: best.roles } : { native: null }, { custom: true, candidates: ranked, guess, lost, tell, htmlNeeded: m.kind === 'network' });
 }
+
+// read_report's record of one visual (step B): null for a Power BI visual; for a custom one { kind, native, why, tell,
+// confidence, guess, htmlNeeded }, without the fields (read_report lists them in its own screened lines). report: the
+// report.json (its declared custom visuals). opts: nativeFor's (the custom roles and objects, when the reading block has them).
+export function meaningInReport(visual, report, opts) {
+  const declared = VT.customTypesOf(report);
+  if (!visual || !VT.isCustom(visual.type, null, declared)) return null;
+  const r = nativeFor(visual, Object.assign({}, opts, { declared }));
+  return { kind: r.kind, native: r.native, why: r.why, tell: r.tell, confidence: r.confidence, guess: r.guess, htmlNeeded: r.htmlNeeded };
+}
