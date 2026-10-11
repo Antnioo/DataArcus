@@ -9,7 +9,7 @@
 (function (root) {
   'use strict';
   // the one field-meaning rule (assets/js/field-meaning.js, shared with the field picker: the block audit's A1-11, 11 Oct)
-  const FM = typeof module === 'object' && module.exports ? require('./field-meaning.js') : root.DataArcusFieldMeaning;
+  const FM = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./field-meaning.js') : root.DataArcusFieldMeaning;
   const TAB = '\t';
   const ind = (n) => TAB.repeat(n);
   const text = (v) => (Array.isArray(v) ? v.join('\n') : v == null ? '' : String(v));
