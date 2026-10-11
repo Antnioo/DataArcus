@@ -79,6 +79,29 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     const y = await ask('create_report', { path: 's-loans', name: 'S names raw', design: design({ preset: 'exec' }), secondPage: false, fields: { category: 'loans[loan_intent]' } });
     chk(() => !y.err && /loan_intent/.test(JSON.stringify(visualsOf(y, 's-loans').map((v) => (v.visual || {}).visualContainerObjects || {}))), () => 'S6: without the user\'s go no name is changed (the raw name stays)');
   }
+
+  // ---------- the second sweep (DETAIL-2): T4, T5, A2: a chart's tooltip shows the hovered chart's own measure, by another category ----------
+  {
+    // a shop with a month (the trend tooltip) and one without (the category tooltip only), made-up names
+    model('s-shop', [{ name: 'shop', partitions: mp('shop'), columns: [col('Amount', 'double'), col('Region', 'string'), col('Product', 'string'), col('Channel', 'string'), col('Month', 'string')],
+      measures: [{ name: 'Revenue', expression: 'SUM ( shop[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( shop )', formatString: '#,0' }, { name: 'Units', expression: 'SUM ( shop[Amount] ) * 2', formatString: '#,0' }] }]);
+    const role = (v, r) => ((((v.visual || {}).query || {}).queryState || {})[r] || { projections: [] }).projections.map((p) => JSON.stringify(p.field));
+    const lit = (x) => String(x && x.expr && x.expr.Literal && x.expr.Literal.Value || '').replace(/^'|'$/g, '');
+    const tipsOf = (x, dir) => { const vs = visualsOf(x, dir), out = [];
+      vs.filter((v) => v.page.type !== 'Tooltip' && /Chart$/.test(typeOf(v))).forEach((v) => { const t = (((v.visual.visualContainerObjects || {}).visualTooltip || [])[0] || {}).properties || {};
+        const page = vs.filter((w) => w.page.name === lit(t.section) && w.page.type === 'Tooltip'), card = page.find((w) => typeOf(w) === 'cardVisual'), bar = page.find((w) => typeOf(w) === 'clusteredBarChart');
+        out.push({ chart: typeOf(v) + ' on ' + v.page.displayName, linked: lit(t.type) === 'Canvas' ? lit(t.section) : null, y: role(v, 'Y')[0], cat: role(v, 'Category')[0], card: card && role(card, 'Data')[0], barY: bar && role(bar, 'Y')[0], barCat: bar && role(bar, 'Category')[0] }); });
+      return out; };
+    const name = (f) => (f || '').replace(/.*"Property":"([^"]*)".*/, '$1');
+    for (const [dir, label] of [['s-loans', 'no month'], ['s-shop', 'a month']]) {
+      const x = await ask('create_report', { path: dir, name: 'T45 ' + dir, design: design({ preset: 'ops' }), secondPage: true });
+      const ts = tipsOf(x, dir), linked = ts.filter((t) => t.linked);
+      chk(() => !x.err && linked.length && linked.every((t) => t.card === t.y && t.barY === t.y), () => `T4 (${label}): a chart's tooltip shows the hovered chart's own measure, in its card and its bars: ${linked.map((t) => `${t.chart}: ${name(t.y)} -> card ${name(t.card)}, bars ${name(t.barY)}`).join('; ')} ${x.err ? short(x) : ''}`);
+      chk(() => !x.err && linked.length && linked.every((t) => t.barCat !== t.cat), () => `T5 (${label}): a tooltip's bars are never by the hovered chart's own category (one bar): ${linked.map((t) => `${t.chart} by ${name(t.cat)} -> bars by ${name(t.barCat)}`).join('; ')}`);
+    }
+    const ar = await ask('plan_layout', { layout: 'exec', path: 's-shop', lang: 'ar' }), say = ar.j && ar.j.arabicNames && ar.j.arabicNames.sayFirst;
+    chk(() => /أعلى 6/.test(say || '') && /tooltip/i.test(say || ''), () => `A2: an Arabic plan with English measure names says the tooltip's «أعلى 6» title will mix the two scripts unless Arabic names are given: ${say}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
