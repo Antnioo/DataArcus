@@ -8,7 +8,7 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 The full report: `mcp/work/0.2.9-writer.md`. Done: A3-10 (`daxNames`), A3-11 (shown text without format characters), A3-7 and A3-8
 (writer side: the picker's `kind`/`rows`/`family`/`time` read when given, names measured by family), A3-9 (JSDoc contract, `checkBuild`,
 typed page filters), A3-12 (`build` split into `pbip-query.js`, `pbip-sizing.js`, `pbip-page.js`, `pbip-notes.js`; byte-identical on 970
-inputs), and the audit's writer items B-23 and B-06. `npm test` 939 -> 967, golden unchanged. **Not done: A2-3 (item 7)**, blocked on
+inputs), and the audit's writer items B-23 and B-06, then audit 6's A6-12 (`build` returns `bound`) and A6-14 (`Pbip.pageFilterOf`) with the server pointed at both. `npm test` 939 -> 971, golden unchanged. **Not done: A2-3 (item 7)**, blocked on
 `fix/0.2.9-design` (not pushed). Next: the reviewer reviews; the laptop proves W1-W8 of the report; A2-3 after builder 10's push.
 
 ## 0.2.9 integration (11 Oct, cloud builder 5; `fix/0.2.9-gate` is the integration branch for tonight's laptop proof; not merged, no PR)
