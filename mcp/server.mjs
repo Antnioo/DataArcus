@@ -20,6 +20,7 @@ import { planLint } from './lib/plan-lint.mjs';
 import * as Plans from './lib/plans.mjs';
 import { planTwin, twinKey, writeTwin } from './lib/arabic-twin.mjs';
 import { writeTree, readUserFile } from './lib/files.mjs';
+import { nameOut, out } from './lib/answer.mjs';
 
 // the version is in one place: mcp/package.json
 const VERSION = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
@@ -62,12 +63,13 @@ const scrub = (str) => {
   if (home && home.length > 3) for (const f of forms(home)) s = s.split(f).join('~');
   return s;
 };
-const text = (o) => ({ content: [{ type: 'text', text: scrub(typeof o === 'string' ? o : JSON.stringify(o, null, 2)) }] });
-const compact = (o) => ({ content: [{ type: 'text', text: scrub(JSON.stringify(o)) }] });
+// (audit 6, A6-6: every answer leaves through out(): a model name's hidden characters as code points, lib/answer.mjs)
+const text = (o) => ({ content: [{ type: 'text', text: scrub(typeof o === 'string' ? nameOut(o) : JSON.stringify(out(o), null, 2)) }] });
+const compact = (o) => ({ content: [{ type: 'text', text: scrub(JSON.stringify(out(o))) }] });
 // the part of a large model a request is about (see lib/scope.mjs)
 const focusInput = z.string().min(1).max(80).optional().describe('On a large model: the part of the model the user asked about, in their words ("logistics", "sales"). The picks then come from the tables whose name or whose measures\' display folder contains it, the tables related to them and the date table. A large model needs a focus or tables');
 const tablesInput = z.array(z.string()).min(1).max(60).optional().describe('Instead of a focus: the tables to pick from, by name (the tables related to them and the date table are added)');
-const fail = (e) => ({ isError: true, content: [{ type: 'text', text: scrub(String(e && e.message || e)) }] });
+const fail = (e) => ({ isError: true, content: [{ type: 'text', text: scrub(nameOut(String(e && e.message || e))) }] });
 // A working folder that is chosen but can't be used yet (it doesn't exist, or it is empty): a normal answer with what
 // to do, not an error (an AI app shows an error as "Failed" in red, though nothing went wrong). Nothing is read or written.
 const notice = (state, whatToDo) => text({ workingFolder: ROOT ? path.basename(ROOT) : ROOT, state, done: 'Nothing was read or written.', whatToDo });
