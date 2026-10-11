@@ -7,7 +7,9 @@
 // no format character, so the walk over every string changes only names that came from a model or a report.
 import { visible } from './model.mjs';
 
-const FORMAT = /\p{Cf}/u;
+// (Z-06, the outside review: control characters too, C0 and C1 such as U+0085 and U+009B, not only format characters;
+// tab, line feed and carriage return stay as they are)
+const FORMAT = /\p{Cf}|[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F-\u009F]/u;
 export const nameOut = (s) => (FORMAT.test(String(s)) ? visible(String(s)).replace(/\\u000[9a]|\\u000d/g, (m) => ({ '\\u0009': '\t', '\\u000a': '\n', '\\u000d': '\r' }[m])) : String(s));
 // every string of an answer, keys included
 export function out(o) {
@@ -65,6 +67,32 @@ export function capAnswer(o, size) {
     c.truncated = { cut, how: `This answer was cut to stay under ${ANSWER_MAX.toLocaleString('en-US')} characters: each list under cut kept its first items (kept of). For the rest, ask again with a smaller maxItems, a focus or tables, or for one part at a time. Tell the user the answer was cut.` };
     if (size(c) <= ANSWER_MAX) return c;
   }
+  // (Z-07: an object of thousands of short keys has no list or long string to cut) the largest object, by its
+  // serialized size, keeps its first keys, until the answer fits
+  const largestObject = () => {
+    let best = null;
+    const walk = (x, p) => {
+      if (Array.isArray(x)) x.forEach((y, i) => walk(y, p + '[' + i + ']'));
+      else if (x && typeof x === 'object') {
+        const n = Object.keys(x).length, len = JSON.stringify(x).length;
+        if (p && n > 1 && (!best || len > best.len)) best = { x, p, len, n };
+        Object.entries(x).forEach(([k, v]) => { if (k !== 'truncated') walk(v, p ? p + '.' + k : k); });
+      }
+    };
+    walk(c, '');
+    if (!best) { const n = Object.keys(c).filter((k) => k !== 'truncated').length; if (n > 1) best = { x: c, p: '(the answer)', n, top: true }; }
+    return best;
+  };
+  for (let n = 0; n < 400 && size(c) > ANSWER_MAX; n++) {
+    const b = largestObject();
+    if (!b) break;
+    const keys = Object.keys(b.x).filter((k) => k !== 'truncated'), keep = Math.max(1, Math.floor(keys.length / 2));
+    keys.slice(keep).forEach((k) => { delete b.x[k]; });
+    cut[b.p] = { keptKeys: keep, of: cut[b.p] && cut[b.p].of ? cut[b.p].of : keys.length };
+    c.truncated = { cut, how: `This answer was cut to stay under ${ANSWER_MAX.toLocaleString('en-US')} characters: the parts under cut kept their first items or keys. For the rest, ask again with a smaller maxItems, a focus or tables, or for one part at a time. Tell the user the answer was cut.` };
+  }
+  // the last backstop: whatever is left, a small answer that says so
+  if (size(c) > ANSWER_MAX) return { truncated: { cut: { '(the answer)': 'too large to cut into shape' }, how: `This answer was over ${ANSWER_MAX.toLocaleString('en-US')} characters and could not be cut into shape: nothing of it is shown. Ask for less: a smaller maxItems, a focus or tables, or one part at a time. Tell the user.` } };
   return c;
 }
 
