@@ -1113,7 +1113,9 @@ function modelNotes(tmsl, bind) {
     if (seen.has(key)) return; seen.add(key);
     if (f.c != null) {
       const c = find(f, 'columns');
-      if (c && !c.sortByColumn && /month|الشهر/i.test(f.c) && !/number|num|no|sort|key|offset|start|date/i.test(f.c))
+      // (builder 7's audit A6-15, 11 Oct: "no" was matched inside "Announced": a month column is a text column (the model's
+      // type, not its name) whose name has the whole word month; a number, key or date column is never one)
+      if (c && !c.sortByColumn && /^(string|unknown)?$/i.test(String(c.dataType || '')) && /\bmonths?\b|الشهر/i.test(f.c) && !/\b(number|num|no|sort|key|offset|index|id)\b/i.test(f.c))
         notes.push({ field: key, issue: f.sortBy ? 'This column has no sort-by column in the model. The report\'s charts and tables are put in month order by the report itself (round 12); slicers still show months in alphabetical order.' : 'Months will show in alphabetical order: this column has no sort-by column.',
           fix: `In Power BI Desktop select ${key}, then Column tools > Sort by column > ${f.sortBy ? f.sortBy.c : 'the month number column'}. check_model_health gives the steps or a ready script (fixes.MONTH_SORT).` });
       if (c && !c.sortByColumn && /(day|weekday)\s*name|اسم اليوم/i.test(f.c))
