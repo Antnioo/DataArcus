@@ -140,7 +140,7 @@ export function planLayout(a) {
   E.repairState(design, fix);
   const lang = a.lang, nm = (x) => E.label(x, lang), layout = design.layout;   // (A2-9: labels keyed by language)
   // one row per visual, as the website's slot table: its name, the suggested visual, and x, y, w, h in page units
-  const planned = E.computeSlots(layout, lang, { tableFields: a.tableFields }).map((s) => Object.assign({ role: nm(s.role), kind: s.kind, visual: nm(E.KINDS[s.kind]) }, E.boxOf(s, layout)));
+  const planned = E.computeSlots(layout, lang, { tableFields: a.tableFields, noTime: a.noTime }).map((s) => Object.assign({ role: nm(s.role), kind: s.kind, visual: nm(E.KINDS[s.kind]) }, E.boxOf(s, layout), s.topN ? { topN: s.topN } : {}));   // (D16: a.noTime; S5: each category chart's topN)
   const slots = a.fit ? E.fitSlots(planned, a.fit(design, planned)).slots : planned;
   // the PBIR visual.json position, in reading order (top to bottom, then along the reading direction: the order
   // pbip-export.js sorts visuals in), z and tabOrder 1000, 2000...

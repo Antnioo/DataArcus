@@ -109,8 +109,11 @@ export function v029w({ check }) {
       () => `A3-8: the picker's mark decides (a time kind or time: true keeps its order; another kind or time: false is sorted largest first): Shift/day ${byValue(shift)}, Day Type/category ${byValue(dayType)}, Slot/time ${byValue(marked)}, Day Type/not time ${byValue(unmarked)}`);
     const region = chart(C('Region')), week = chart(C('Fiscal Week'));
     chk(() => byValue(region) && !byValue(week), () => `A3-8: without a mark the words decide as before: Region ${byValue(region)}, Fiscal Week ${byValue(week)}`);
-    chk(() => shift.tooltipLimits && shift.tooltipLimits.top === null && dayType.tooltipLimits.top === 6,
-      () => `A3-8: the tooltip's Top 6 follows the same mark (never on a time category): ${JSON.stringify([shift.tooltipLimits, dayType.tooltipLimits])}`);
+    // (the laptop's second sweep, T5: a chart never opens a tooltip by its own category, so the tooltip's category is
+    // checked under a chart by another one, Channel)
+    const tipShift = chart(C('Channel'), C('Shift', { kind: 'day' })), tipDayType = chart(C('Channel'), C('Day Type', { kind: 'category' }));
+    chk(() => tipShift.tooltipLimits && tipShift.tooltipLimits.top === null && tipDayType.tooltipLimits.top === 6,
+      () => `A3-8: the tooltip's Top 6 follows the same mark (never on a time category): ${JSON.stringify([tipShift.tooltipLimits, tipDayType.tooltipLimits])}`);
   }
 
   // ---------- A3-9 (writer side): build's input and result written down (JSDoc) and checked at its top; typed page filters ----------
@@ -281,14 +284,14 @@ export function v029w({ check }) {
     const topOf = (v) => { const f = ((v.filterConfig || {}).filters || []).find((x) => x.type === 'TopN'); return f ? f.filter.From[0].Expression.Subquery.Query.Top : null; };
     const bar = vs.find((v) => v.position.x === 24), col = vs.find((v) => v.position.x === 640 && v.position.y === 80);
     // a bar chart 300 high at 720: (300 - 45 - 8 - 38) / 22.2 = 9 rows; a column chart 500 wide: room for 12-character labels
-    chk(() => topOf(bar) === 9 && topOf(col) >= 3 && /^Top 9: /.test(titleOf(bar)) && new RegExp('^Top ' + topOf(col) + ': ').test(titleOf(col)) && (r.chartTops || []).length >= 2,
+    chk(() => topOf(bar) === 9 && topOf(col) >= 3 && /^Top 9: /.test(titleOf(bar)) && new RegExp('^Top ' + topOf(col) + ': ').test(titleOf(col)) && (r.topCharts || []).length >= 2,   /* (round 7: S5 belongs to the design block, which reports the cut charts as topCharts) */
       () => `rc1-4: a chart by a text category shows its top N by its measure, N the rows or columns it holds, said in its title and told: ${r.threw || JSON.stringify(vs.map((v) => [titleOf(v), topOf(v)]))}`);
     const t = get(() => build(base({ cats: { bar: C('Month Name', { sortBy: { t: D, c: 'Month No' } }, D), column: C('Quarter', {}, D), donut: C('Channel') } }), { pages: hand(1280, 720, [{ kind: 'bar', title: 'B', x: 24, y: 80, w: 600, h: 300 }, { kind: 'column', title: 'K', x: 640, y: 80, w: 500, h: 300 }]) }));
     chk(() => t.files && visuals(t).filter((v) => /^clustered/.test(v.visual.visualType) && v.position.x !== 12).every((v) => topOf(v) == null), () => 'rc1-4: a time or known category (months, quarters) is never cut to a top N');
     // the website's sample report (4 values a category) is never cut and never titled "Top N" (the tooltip page's own
     // "Top 6", at x 12, is older and left as it is)
     const sm = get(() => build(null, { sample: true, model: null, pages: hand(1280, 720, [{ kind: 'bar', title: 'B', x: 24, y: 80, w: 600, h: 300 }, { kind: 'column', title: 'K', x: 640, y: 80, w: 500, h: 300 }]) }));
-    chk(() => sm.files && visuals(sm).filter((v) => /^clustered/.test(v.visual.visualType) && v.position.x !== 12).length === 2 && visuals(sm).filter((v) => /^clustered/.test(v.visual.visualType) && v.position.x !== 12).every((v) => topOf(v) == null && !/^Top \d/.test(titleOf(v) || '')) && !(sm.chartTops || []).length,
+    chk(() => sm.files && visuals(sm).filter((v) => /^clustered/.test(v.visual.visualType) && v.position.x !== 12).length === 2 && visuals(sm).filter((v) => /^clustered/.test(v.visual.visualType) && v.position.x !== 12).every((v) => topOf(v) == null && !/^Top \d/.test(titleOf(v) || '')) && !(sm.topCharts || []).length,
       () => `rc1-4: the sample report's charts are not cut to a top N: ${sm.threw || JSON.stringify(visuals(sm).map((v) => [titleOf(v), topOf(v)]))}`);
     // S7: under a rail fitted to its slicers, the bottom row's visual beside the rail takes the rail's column
     const sl = [{ kind: 'slicer', x: 1068, y: 70, w: 196, h: 634 }, { kind: 'bar', x: 16, y: 178, w: 1040, h: 293 }, { kind: 'column', x: 16, y: 483, w: 514, h: 221 }, { kind: 'table', x: 542, y: 483, w: 514, h: 221 }];
@@ -318,7 +321,9 @@ export function v029w({ check }) {
     const mm = (v) => L(((((v || {}).visual || {}).objects || {}).categoryAxis || [{ properties: {} }])[0].properties.maxMarginFactor);
     chk(() => mm(top) === String(Px.barNameShare(296, 720)) + 'L' && mm(tb) === String(Px.barNameShare(296, 720)) + 'L', () => `T8: the tooltip's names take ${Px.barNameShare(296, 720)}% of its width: ${mm(top)} ${mm(tb)}`);
     // T10: a measure shown whole on the cards (a unit in its format, "#,0 \"kg\"") shows its own format on the tooltip's bars, never "8.0Kkg"
-    const kg = M('Weight', { wholeFormat: '#,0 "kg"' }), rk = get(() => build(base({ date: monthName, tip: { card: kg, cat: C('Product'), y: kg, date: monthName } })));
+    // (round 7, the design block's T4: each tooltip page shows the hovered chart's own measure, so the charts here show
+    // the kg measure too; before, the pages showed the picker's tooltip card whatever the chart's measure)
+    const kg = M('Weight', { wholeFormat: '#,0 "kg"' }), rk = get(() => build(base({ measure: kg, date: monthName, tip: { card: kg, cat: C('Product'), y: kg, date: monthName } })));
     const units = (v) => L(((((v || {}).visual || {}).objects || {}).labels || [{ properties: {} }])[0].properties.labelDisplayUnits);
     chk(() => rk.files && units(barOf(topOf(rk))) === '1D' && units(barOf(trendOf(rk))) === '1D' && units(top) == null,
       () => `T10: a whole-number measure's tooltip labels have no display units (its format's unit kept): ${rk.threw || JSON.stringify([units(barOf(topOf(rk))), units(barOf(trendOf(rk))), units(top)])}`);

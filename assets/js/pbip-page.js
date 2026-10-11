@@ -92,9 +92,14 @@
   // months, quarters) shows its top N by its measure, N the categories its slot holds, said in its title. A bar chart: its
   // rows, 22.2 a row with 45 above, 8 under and 38 for the value axis (measured at 10pt, 1280 x 720, scaled with the page);
   // a column chart: a column for a 12-character label at the label size (a GUESS, to be measured), so the names stay level
+  // (integration round 7: on a designed page N is the design engine's, s.topN from its categoryFit, the design block's
+  // S5; the writer's rc1 conditions stay: the sample's categories are never cut, nor a time or known category)
   const topCount = (c, s, pg, f) => {
-    // (the sample's categories have 4 values each: never cut, and never a "Top N" on the website's sample report)
-    if (!c.own || !f || !isTextField(f) || isTime(f) || catKind(f) || (s.kind !== 'bar' && s.kind !== 'column')) return 0;
+    if (!c.own || !f || !isTextField(f) || isTime(f) || catKind(f) || f.sortBy || f.ordered || f.dateOf || (s.kind !== 'bar' && s.kind !== 'column')) return 0;
+    if (s.topN) return s.topN;   // a designed page: the design engine's N
+    // a hand-placed page (no design computed one): the writer's measured count. A bar chart: its rows, 22.2 a row with 45
+    // above, 8 under and 38 for the value axis (measured at 10pt, 1280 x 720, scaled with the page); a column chart: a
+    // column for a 12-character label at the label size (a GUESS, to be measured)
     if (s.kind === 'bar') return Math.max(3, Math.floor((s.h * 720 / pg.page.h - 45 - 8 - 38) / 22.2));
     const plot = s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40, need = textWidth('n'.repeat(12), c.LABEL, false, c.font) + 6;
     return Math.max(3, Math.floor(plot / need));
@@ -107,8 +112,8 @@
   // fixes of 0.2.9 part 2), made once per report from its context c (see build)
   function kit(c) {
     const {
-      MIRROR, W, align, base, byMonthStart, edge, font, lastMonths, n, notBlank, o, rowLabels, topN,
-      rtl, timeAxes, u
+      MIRROR, W, align, base, byMonthStart, edge, font, lastMonths, n, notBlank, o, rowLabels,
+      rtl, timeAxes, topN, u
     } = c;
 
     // filter pane in the theme's colors, so it matches the page
@@ -238,9 +243,12 @@
       const st = visual.query.queryState, cat = st.Category && st.Category.projections[0], col = cat && cat.field.Column, filters = [];
       const put = (object, props) => { visual.objects = visual.objects || {}; const e = visual.objects[object] || (visual.objects[object] = [{ properties: {} }]); Object.assign(e[0].properties, props); };
       if (col && CHARTS.includes(s.kind)) { filters.push(notBlank(col)); n.blankFiltered++; }
-      // (rc1: a crowded category chart, its top N by its measure; topCount)
-      const top = col && st.Y ? topCount(c, s, pg, catOf(Bt, visual.query)) : 0;
-      if (top) { filters.push(topN(col, st.Y.projections[0].field, top)); n.chartTops.push({ page: pg.name || base, field: col.Expression.SourceRef.Entity + '[' + col.Property + ']', top }); }
+      // (the design block's S5/D19, from the laptop's sweep of rc.1: a category with dozens of values gave cut vertical
+      // labels and a scrollbar) a bar or column chart keeps the Top N categories its slot can show (s.topN, the design
+      // engine's categoryFit), by its measure; never on a time axis or an ordered category, whose order would be lost;
+      // said in its title (the writer's rc1 rule, topCount, with the design's N)
+      const top = col && st.Y && st.Y.projections[0] ? topCount(c, s, pg, catOf(Bt, visual.query)) : 0;
+      if (top) { filters.push(topN(col, st.Y.projections[0].field, top)); n.topCharts.push({ page: pg.name || base, kind: s.kind, field: col.Expression.SourceRef.Entity + '[' + col.Property + ']', top }); }
       // O-4: a bar chart's names get 40% of its width, 50% on a narrow chart (under 560 on the 720-high page); the default 25 cut them at about 10 characters
       if (visual.visualType === 'clusteredBarChart') put('categoryAxis', { maxMarginFactor: lit(barNameShare(s.w, pg.page.h) + 'L') });
       // O-13: the line chart's month label
@@ -298,7 +306,7 @@
       extFile, fixVisual, font, frame, freeExt, headed, headerGrew, kpiTitleFit, kpiTitles, lang, leftOut, logoFile,
       noData, noDataSkipped, noPageButtons, o, oneLine, own, pageFilters, paneObjects, pt, resetFill, resetFit, resetIcon,
       resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, same, shortDays, slicerH, subtitlesUsed, svgDone,
-      svgSizes, tabRows, tableColumns, tableOrder, tableRows, tableSmaller, tableWide, textbox, tip, tipName, titleFit, titles,
+      svgSizes, tabRows, tableColumns, tableOrder, tableRows, tableSmaller, tableWide, textbox, tip, tipFor, tipName, titleFit, titles,
       trend, u, valueEm, wrapLines
     } = c;
     const pageName = pg.id, filters = pageFilters();
@@ -538,6 +546,7 @@
         return;
       }
       let visual, box = s, vFilters = null;   // (vFilters: the visual's own filters, from fixVisual; the cross-review's G12)
+      let hov = null;   // a chart's own measure and category, for its tooltip page (the second sweep's T4 and T5)
       if (s.kind === 'title') {
         // the title and the logo text follow the header's height (within 8-60pt), and stay on one line in it, with
         // the text's middle at the header's (see centred)
@@ -617,6 +626,8 @@
           if (widest + 6 > room) { Bt = Object.assign({}, Bt, { cats: Object.assign({}, Bt.cats, { column: Object.assign({}, c0.short, { name: label(c0) }) }) }); shortDays.push({ page: pg.name || base }); }
         }
         const query = B ? bindQuery(s.kind, Bt, kpiIndex, rtl) : null;
+        if (B && CHARTS.includes(s.kind)) { const k = s.kind;
+          hov = { m: k === 'line' ? Bt.measure : k === 'funnel' && Bt.y && 'funnel' in Bt.y ? Bt.y.funnel : (Bt.y || {})[k] || Bt.measure, cat: k === 'line' ? Bt.date : (Bt.cats || {})[k] }; }
         let ttl = s.title;
         const extra = {};
         // (round 10: the sample download names its charts by their fields too, "Total Revenue by Month", as a report on a
@@ -867,7 +878,7 @@
       }
       const v = container({ x: s.x, y: box.y, w: s.w, h: box.h, z, parent, visual, kind: s.kind });
       if (vFilters && vFilters.length) v.filterConfig = { filters: vFilters };
-      if (CHARTS.includes(s.kind)) charts.push({ v, byMonth: !!trend && same(s.kind === 'line' ? B.date : (B.cats || {})[s.kind], tip.date) });
+      if (CHARTS.includes(s.kind)) charts.push({ v, hov });
       z += 1000;
       // the page navigator follows the title in the reading order; its text size is set for the default, hover and
       // selected states (the current page's button is the selected one, and would otherwise show Power BI's own size)
@@ -986,7 +997,17 @@
 
     // every chart shows the tooltip page when you hover it: type 'Canvas' is Power BI's name for a report page tooltip
     // ('ReportPage' is not a value: Desktop then shows its default tooltip; measured in Desktop 2.158)
-    charts.forEach((c) => { c.v.visual.visualContainerObjects.visualTooltip = obj({ show: bool(true), type: str('Canvas'), section: str(trend && !c.byMonth ? trend.name : tipName) }); });
+    // (the laptop's second sweep of rc.1, T4 and T5) each chart opens the tooltip page of its own measure: by month (the
+    // trend) when the chart is not by the month itself; otherwise by a category other than the chart's own, the picker's
+    // tooltip category first, then the report's other chart categories; with none, Power BI's own tooltip
+    const tipSection = (h) => {
+      if (!tip) return tipName;
+      const m = (h && h.m) || tip.card, cat = h && h.cat;
+      if (trend && !same(cat, tip.date)) return tipFor('trend', m, tip.date).name;
+      const other = [tip.cat].concat(Object.values(B.cats || {}), B.catPool || []).find((f) => f && f.c != null && f.agg == null && !same(f, cat) && !same(f, tip.date));
+      return other ? tipFor('cat', m, other).name : null;
+    };
+    charts.forEach((c) => { const sec = tipSection(c.hov); if (sec) c.v.visual.visualContainerObjects.visualTooltip = obj({ show: bool(true), type: str('Canvas'), section: str(sec) }); });
 
     // phone layout: Power BI's phone canvas is 323 points wide. Cards go two per row (158 x 100), charts and
     // tables full width, slicers and buttons as short full-width rows, in the reading order of the page.
@@ -1154,8 +1175,8 @@
   // its last 6 months
   function tooltips(c) {
     const {
-      D, FULL, MIRROR, TIP_TITLE, TIP_VALUE, W, add, align, byMonthStart, cardCode, cardFit, cardFrame,
-      cardObjects, frame, headed, lang, lastMonths, notBlank, textbox, tip, tipBinding, tipName, topN, trend,
+      B, D, FULL, MIRROR, TIP_TITLE, TIP_VALUE, W, add, align, byMonthStart, cardCode, cardFit, cardFrame,
+      cardObjects, frame, headed, lang, lastMonths, notBlank, sameField, textbox, tip, tipBinding, tipFor, tipName, tipPages, titleFit, topN, trend,
       u
     } = c;
 
@@ -1176,18 +1197,24 @@
       });
     };
     const tipCard = cardFit(296, 76, 1, TIP_TITLE, TIP_VALUE);
-    const tipFrame = (t) => { const f = frame(t, t); f.title = obj({ show: bool(true), text: str(shown(t)), alignment: str(align), fontSize: num(TIP_TITLE) }); return f; };
+    // (the second sweep's T4: the tooltip now shows the hovered chart's own measure, whatever its name's length: a title
+    // two lines of the page's width don't hold is shortened, as the report's chart titles are; the full name stays the alt text)
+    const tipTitle = (t) => { const f = titleFit(t, TIP_TITLE, 296 - 16); return f.mode === 'shortened' ? f.shown : t; };
+    const tipFrame = (t) => { const f = frame(t, t); f.title = obj({ show: bool(true), text: str(shown(tipTitle(t))), alignment: str(align), fontSize: num(TIP_TITLE) }); return f; };
     // the theme's text sizes are made for the report's full page; on this small page the card value and the titles get
     // their own, so the value isn't cut off and the titles fit
     // (the tooltip's card follows the KPI cards: automatic units with 2 decimals, or the full number with kpiValues "full")
-    const tipCardVisual = () => { const objects = cardObjects(tipCard, null, tip.card);
-      if (FULL && tip.card && tip.card.m != null && tip.card.cardFormat && !cardCode(tip.card)) objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(tip.card.cardFormat) }, selector: { metadata: tip.card.t + '.' + tip.card.m } });
-      return { x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(tip.card)] }), objects, visualContainerObjects: cardFrame(tipFrame(label(tip.card)), tipCard, TIP_TITLE) } }; };
+    // (the second sweep's T4: the card is the hovered chart's measure, with the card format the report gives it: the
+    // picker's tooltip card, or the KPI card of the same measure)
+    const cardOf = (m) => (sameField(m, tip.card) ? tip.card : (B && B.kpis || []).find((k) => sameField(k, m)) || m);
+    const tipCardVisual = (card) => { const objects = cardObjects(tipCard, null, card);
+      if (FULL && card && card.m != null && card.cardFormat && !cardCode(card)) objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(card.cardFormat) }, selector: { metadata: card.t + '.' + card.m } });
+      return { x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(card)] }), objects, visualContainerObjects: cardFrame(tipFrame(label(card)), tipCard, TIP_TITLE) } }; };
     const notBlankOf = (f) => notBlank(fieldCol(f.t, f.c).field.Column);
-    const tipTop = (tv) => { if (!tip.cat || tip.cat.c == null || tip.cat.agg != null || isTime(tip.cat)) return tv;
-      tv.filters = [notBlankOf(tip.cat), topN(fieldCol(tip.cat.t, tip.cat.c).field.Column, proj(tip.y).field, 6)];
-      const t0 = tv.visual.visualContainerObjects.title[0].properties.text.expr.Literal.Value.replace(/^'|'$/g, '').replace(/''/g, "'"), top = (W.top6 || (lang === 'ar' ? 'أعلى 6' : 'Top 6')) + ': ' + t0;
-      tv.visual.visualContainerObjects.title[0].properties.text = str(top); return tv; };
+    const tipTop = (tv, cat, m, t0) => { if (!cat || cat.c == null || cat.agg != null || isTime(cat)) return tv;
+      tv.filters = [notBlankOf(cat), topN(fieldCol(cat.t, cat.c).field.Column, proj(m).field, 6)];
+      const top = (W.top6 || (lang === 'ar' ? 'أعلى 6' : 'Top 6')) + ': ' + t0;
+      tv.visual.visualContainerObjects.title[0].properties.text = str(tipTitle(top)); return tv; };
     // (the tooltip pages' bars grow from the right in a mirrored report too)
     const tipBar = (vis) => (MIRROR ? mirrorChart(vis, 'bar') : vis);
     // rc1 (DETAIL-2 T6, T9; measured in Desktop 2.158 on the night of 6-7 Oct at the 10pt text, the tooltip's 8pt being
@@ -1199,18 +1226,19 @@
     // keeps its own format on the bars' values (display units None), as on its card; the rest keep Power BI's automatic
     const tipLook = (y) => ({ categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit(barNameShare(296, 720) + 'L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }),
       labels: obj(Object.assign({ show: bool(true), fontSize: num(8) }, y && y.wholeFormat && !y.pct ? { labelDisplayUnits: num(1) } : {})) });
-    tipPage(tipName, tipBinding, W.tooltipPage || 'Tooltip', tip
-      ? [tipCardVisual(),
-        // a bar chart writes its category names horizontally (a column chart slants or cuts them); its own sizes, as
-        // the card has: axis text 8pt, 40% of the width for the names (a 20-character name is whole), no value axis and
-        // each bar's value beside it instead, which leaves room for one more row
-        // (0.2.9 part 2, TOOLTIP-FIX-LAB: 9 products in 184 showed 6 bars and a scrollbar a tooltip can't use: the Top 6
-        // by the measure shown, said in the title; a time category is never cut by value)
-        tipTop({ x: 12, y: 92, w: 296, h: tipRows(6), visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), tip.cat, true),   /* (round 23: largest first) */
-          objects: tipLook(tip.y),
-          visualContainerObjects: tipFrame(tip.y.m === tip.card.m && tip.y.t === tip.card.t ? byTitle(label(tip.y), W.by || 'by', label(tip.cat)) : label(tip.y)) }) })]
-      : [{ x: 12, y: 12, w: 296, h: 260, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }], tip ? 92 + tipRows(6) + 8 : 284);
-    // the trend: the card's measure by month, as a bar chart with the same settings, 310 high on a 320 x 410 page: 12
+    const base = W.tooltipPage || 'Tooltip';
+    if (!tip) {
+      tipPage(tipName, tipBinding, base, [{ x: 12, y: 12, w: 296, h: 260, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, base) } }]);
+      return false;
+    }
+    // round 1's two pages are always there (the bar chart by category, and the trend where there is a month): a kind no
+    // chart opened gets the picker's card by its category or by month, as before
+    if (!tipPages.some((t) => t.kind === 'cat')) tipFor('cat', tip.card, tip.cat);
+    if (trend && !tipPages.some((t) => t.kind === 'trend')) tipFor('trend', tip.card, tip.date);
+    // each page's name says what tells it apart from the first of its kind: the measure, the category
+    const nameOf = (t) => { const f = tipPages.find((x) => x.kind === t.kind);
+      return [t.kind === 'trend' ? base + ' \u00b7 ' + label(tip.date) : base].concat(f === t ? [] : [sameField(f.m, t.m) ? null : label(t.m), t.kind === 'cat' && !sameField(f.cat, t.cat) ? label(t.cat) : null]).filter(Boolean).join(' \u00b7 '); };
+    // the trend: the measure by month, as a bar chart with the same settings, 310 high on a 320 x 410 page: 12
     // rows (22 a row and 46 for the title and padding), so every month's name is whole and horizontal with its value
     // beside the bar, whatever the measure. Measured in Desktop 2.158 (DESKTOP-TESTS.md, "round 1 built"): at this width
     // a column or line chart loses the last month behind a scrollbar as soon as the value axis's labels are wide
@@ -1218,14 +1246,29 @@
     // (0.2.9 part 2, TOOLTIP-FIX-LAB: about 77 months in 310 showed 13 and a scrollbar: where the month's table has a date
     // column, the last 6 months, newest first, at 40 + 27 a bar; elsewhere the 12 rows as before)
     // (the cross-review's G3: the same rule as the trend's, so a month name the model or the report sorts keeps its 12)
-    const six = !!(tip && ['monthStart', 'monthLabel'].includes((timeAxisPlan(tip.date) || {}).order));
-    if (trend) { const tv = { x: 12, y: 92, w: 296, h: six ? 40 + 27 * 6 + 8 : tipRows(12), visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(tip.card)] }), tip.date),
-        objects: tipLook(tip.card),
-        visualContainerObjects: tipFrame(byTitle(label(tip.card), W.by || 'by', label(tip.date))) }) };
+    const six = !!(trend && ['monthStart', 'monthLabel'].includes((timeAxisPlan(tip.date) || {}).order));
+    tipPages.forEach((t) => {
+      const card = cardOf(t.m);
+      if (t.kind === 'cat') {
+        // a bar chart writes its category names horizontally (a column chart slants or cuts them); its own sizes, as
+        // the card has: axis text 8pt, 40% of the width for the names (a 20-character name is whole), no value axis and
+        // each bar's value beside it instead, which leaves room for one more row
+        // (0.2.9 part 2, TOOLTIP-FIX-LAB: 9 products in 184 showed 6 bars and a scrollbar a tooltip can't use: the Top 6
+        // by the measure shown, said in the title; a time category is never cut by value)
+        tipPage(t.name, t.binding, nameOf(t), [tipCardVisual(card),
+          tipTop({ x: 12, y: 92, w: 296, h: tipRows(6), visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(t.cat)], Y: [proj(t.m)] }), t.cat, true),   /* (round 23: largest first) */
+            objects: tipLook(card),
+            visualContainerObjects: tipFrame(byTitle(label(t.m), W.by || 'by', label(t.cat))) }) }, t.cat, t.m, shown(byTitle(label(t.m), W.by || 'by', label(t.cat))))], 92 + tipRows(6) + 8);
+        return;
+      }
+      const tv = { x: 12, y: 92, w: 296, h: six ? 40 + 27 * 6 + 8 : tipRows(12), visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(t.m)] }), tip.date),
+        objects: tipLook(card),
+        visualContainerObjects: tipFrame(byTitle(label(t.m), W.by || 'by', label(tip.date))) }) };
       // (rc1, DETAIL-2 T1: the month tooltip showed "(Blank)" first and 13 rows: it gets the chart's "is not blank" filter)
       tv.filters = [notBlankOf(tip.date)];
-      if (six) { byMonthStart(tv.visual.query, tip.date, 'Descending'); const lf = lastMonths(tip.date, proj(tip.card).field, 6); if (lf) tv.filters.push(lf); }
-      tipPage(trend.name, trend.binding, (W.tooltipPage || 'Tooltip') + ' \u00b7 ' + label(tip.date), [tipCardVisual(), tv], six ? 92 + tv.h + 12 : 92 + tv.h + 8); }
+      if (six) { byMonthStart(tv.visual.query, tip.date, 'Descending'); const lf = lastMonths(tip.date, proj(t.m).field, 6); if (lf) tv.filters.push(lf); }
+      tipPage(t.name, t.binding, nameOf(t), [tipCardVisual(card), tv], six ? 92 + tv.h + 12 : 92 + tv.h + 8);
+    });
     return six;
   }
 

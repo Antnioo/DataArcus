@@ -37,7 +37,7 @@ report files are written by `create_report` for a new report, or by Microsoft's 
 5. **Show the plan and wait for "go":** the pages, the visuals and the fields on each, the page size, the colours, the contrast checks (with every warning), anything under
    `repaired`, the layout with its three reasons, and the slot table (name, suggested visual, x, y, width, height).
    Say that the bars of the bar and column charts fade by their value (`plan_layout`'s `chartColors.sayInPlan`), and
-   say first what `plan_layout` puts first (`formats`, `arabicNames`) when it was given the model.
+   say first what `plan_layout` puts first (`formats`, `arabicNames`, `displayNames`: readable names it proposes for database-style field names, used only when the user approves them) when it was given the model.
    Never call `create_report` in the same turn as the request: the user's "go" comes first. After the go, call
    `approve_plan` with the `planId` and the user's reply in their own words; never approve on your own. When the app
    supports it, DataArcus then asks the person itself in the app's prompt (`approvedBy: "user-in-app"`); a no there

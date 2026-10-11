@@ -27,6 +27,7 @@ import { v030twin, v030engine, v030audit } from './test-0.3.0-twin.mjs';
 import { audit6 } from './test-audit6.mjs';
 import { zgate } from './test-z.mjs';
 import { v029a4 } from './test-0.2.9-a4.mjs';
+import { v029sweep } from './test-0.2.9-sweep.mjs';
 import { withPlans } from './test-plan.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
 
@@ -362,9 +363,9 @@ const slotsPlaced = (pages, want) => {   // every slot except the filter rail ha
       // header: the same x, width and bottom edge)
       // (0.2.9 part 2, O-6: create_report writes no "Your logo" placeholder, so a logo slot without a logo stays empty)
       // (changed in 0.2.9 rc1, S3: a table ends on a whole row, its box less under one row at the bottom)
-      // (changed in 0.2.9 rc1, item 4, S7: a slot that starts below the filter rail's slicers and is next to the rail
-      // takes the rail's column too, the design engine's fitSlots: its box is the slot's and the rail's, the same y and height)
-      else if (!got.visuals.some((v) => v.type !== 'group' && (v.x === s.x && v.w === s.w || besideRail(got, wp, s, v)) && (v.y === s.y && v.h === s.h || (v.type === 'tableEx' && v.y === s.y && v.h <= s.h && s.h - v.h < 30) || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h))) && s.kind !== 'logo') bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
+      // (0.2.9, the design block's S7: a slot wholly under the shortened filter rail takes the rail's column: the same row,
+      // one edge kept, wider)
+      else if (!got.visuals.some((v) => v.type !== 'group' && ((v.x === s.x && v.w === s.w) || (v.y === s.y && v.w > s.w && (v.x === s.x || v.x + v.w === s.x + s.w))) && (v.y === s.y && v.h === s.h || (v.type === 'tableEx' && v.y === s.y && v.h <= s.h && s.h - v.h < 30) || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h))) && s.kind !== 'logo') bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
     });
   });
   return bad;
@@ -2536,7 +2537,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const hiddenRefs = (t) => ((t.visual.objects || {}).columnWidth || []).filter((e) => e.properties.value.expr.Literal.Value === '0D').map((e) => e.selector.metadata);
     const isRowLabel = (p) => !!(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema === 'extension' && /^Row label: /.test(p.field.Measure.Property));
     for (const lang of ['en', 'ar']) {
-      const x = await ask('create_report', { path: 'd5-project', name: 'D5 SVG ' + lang, lang, design: await planOf({ layout: 'exec', kpis: 4, filters: 'end', lang }), fields: { kpis: KPIS, table: T4 }, svgColumns: pics });
+      // (0.2.9, the design block's S7: under a side rail shortened to its slicers the table now takes the rail's column,
+      // so it is no longer narrow; filters on top (no side rail) on a 960 x 720 page keep the narrow table this check needs)
+      const x = await ask('create_report', { path: 'd5-project', name: 'D5 SVG ' + lang, lang, design: await planOf({ layout: 'exec', kpis: 4, filters: 'top', page: '960x720', lang }), fields: { kpis: KPIS, table: T4 }, svgColumns: pics });
       const t = pageVisuals(x, 'd5-project').find((v) => type(v) === 'tableEx' && /extension/.test(JSON.stringify(v.visual.query)));
       if (!t) { bad.push(`${lang}: no table ${short(x)}`); continue; }
       const ps = t.visual.query.queryState.Values.projections, g = t.visual.objects.grid[0].properties, W = N(g.imageWidth), H = N(g.imageHeight);
@@ -2566,7 +2569,10 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
       for (const lang of ['en', 'ar']) {
         // (night of 6-7 Oct: since the owner's answer 3a a 4:3 page gives the table three fifths of its row; this check is about
         // a table too narrow for its fields, so its design keeps the half-width table: layout.wideTable false)
-        const narrowPlan = await planOf({ layout: 'exec', kpis: 4, filters: 'end', page: '960x720', lang }); narrowPlan.layout.wideTable = false;
+        // (0.2.9, the design block's S7: under a side rail shortened to its slicers the table now takes the rail's column;
+        // the operations layout with filters on top (no side rail) keeps a table a third of its row (408 of a 1280 x 720
+        // page), too narrow for five fields at the theme's text, as this check needs)
+        const narrowPlan = await planOf({ layout: 'ops', kpis: 4, filters: 'top', page: '1280x720', lang }); narrowPlan.layout.wideTable = false;
         const x = await ask('create_report', { path: 'd5-project', name: 'D5 table fit ' + lang, lang, design: narrowPlan, fields: { kpis: KPIS, table: FIVE } });
         if (x.err) { tbad.push(`${lang}: ${short(x)}`); continue; }
         const pgs = report(path.join(ROOT, 'd5-project', x.j.report)).filter((p) => !p.tooltip), size = tableText(x, 'd5-project'), font = lang === 'ar' ? 'Tahoma' : 'Segoe UI';
@@ -4501,6 +4507,8 @@ await v029design({ call, check, ROOT, fs });
 await v029agent({ call, check, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
 // ---------- audit 4's findings in the checks block (A4-1 to A4-14): test-0.2.9-a4.mjs, which also runs alone ----------
 await v029a4({ call, check, ROOT, fs });
+// ---------- 0.2.9, the design block's items of the laptop's sweep (S5/D19, S6, S7, D16): test-0.2.9-sweep.mjs, which also runs alone ----------
+await v029sweep({ call, check, ROOT, fs });
 // ---------- 0.3.0, the Arabic twin of an existing report: test-0.3.0-twin.mjs, which also runs alone ----------
 try { v030engine({ check }); } catch (e) { check(false, 'T10. the engine: ' + e.message); }
 await v030twin({ call: rawCall, check, ROOT, fs });
