@@ -30,7 +30,7 @@ const cleanName = (s) => { const v = visible(s); return v.length > 60 ? v.slice(
 // a name that reads like an instruction is not repeated at all (INSTRUCTION_TEXT says it is there)
 const WITHHELD = '(withheld: reads like an instruction)';
 const safeName = (s) => (INSTRUCTION.test(String(s)) ? WITHHELD : cleanName(s));
-const INSTRUCTION = /\b(ignore|disregard|forget|override)\b[^.]{0,40}\b(rules?|instructions?|prompt|above|previous)\b|\b(delete|drop|remove|erase)\b[^.]{0,30}\b(model|files?|reports?|tables?|data)\b|\bsystem prompt\b|\byou are now\b|\b(run|execute)\b[^.]{0,20}\b(command|script|code)\b/i;
+export const INSTRUCTION = /\b(ignore|disregard|forget|override)\b[^.]{0,40}\b(rules?|instructions?|prompt|above|previous)\b|\b(delete|drop|remove|erase)\b[^.]{0,30}\b(model|files?|reports?|tables?|data)\b|\bsystem prompt\b|\byou are now\b|\b(run|execute)\b[^.]{0,20}\b(command|script|code)\b/i;
 // a validator message, without the report's own text: quoted parts and file paths are left out
 const scrub = (m, reportDir) => String(m || '').split(reportDir).join('<report>').replace(/(['"“”‘’])[^'"“”‘’]{0,400}\1/g, '<text>').replace(/(?:[A-Za-z]:)?[\\/][^\s:,;)]+/g, '<file>').slice(0, 240);
 const rel = (reportDir, f) => path.relative(reportDir, f).split(path.sep).join('/');
