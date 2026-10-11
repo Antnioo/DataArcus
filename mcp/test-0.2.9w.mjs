@@ -214,7 +214,9 @@ export function v029w({ check }) {
     const pj = r.files ? r.files.filter((f) => /\/page\.json$/.test(f.path)).map((f) => JSON.parse(String(f.data))).filter((p) => p.type !== 'Tooltip') : [];
     const written = pj.map((p) => r.files.filter((f) => f.path.includes('/pages/' + p.name + '/') && /visual\.json$/.test(f.path)).map((f) => JSON.parse(String(f.data))).filter((v) => v.visual && DATA.includes(v.visual.visualType) && !v.parentGroupName).map(box).sort());
     const planned = pages.map((sl2) => sl2.filter((s) => ['bar', 'column', 'donut', 'table'].includes(s.kind)).map((s) => [s.x, s.y, s.w, s.h].join(',')).sort());
-    chk(() => written.length === 2 && written.every((w, i) => w.length && w.every((b) => planned[i].includes(b))) && fo.every((f) => (f.dropKinds || []).includes('line')),
+    // (changed in 0.2.9 rc1, S3: a table ends on a whole row, so its box is its slot's, less under one row at the bottom)
+    const onSlot = (b, pl) => pl.includes(b) || pl.some((q) => { const [x, y, w, h] = b.split(',').map(Number), [x2, y2, w2, h2] = q.split(',').map(Number); return x === x2 && y === y2 && w === w2 && h <= h2 && h2 - h < 30; });
+    chk(() => written.length === 2 && written.every((w, i) => w.length && w.every((b) => onSlot(b, planned[i]))) && fo.every((f) => (f.dropKinds || []).includes('line')),
       () => `A2-3: every chart and table of the report is on a slot of fitSlots(slots, fitOptions): written ${JSON.stringify(written)} fitted ${JSON.stringify(planned)} ${r.threw || ''} ${fo && fo.threw || ''}`);
     // the website's PNG and plan_layout take the same fitting
     const tg = fs.readFileSync(path.join(REPO, 'assets/js/theme-generator.js'), 'utf8'), srv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
@@ -293,6 +295,53 @@ export function v029w({ check }) {
     const f = E.fitSlots(sl, { railItems: { n: 2, minH: 50, maxH: 50, resetH: 30, pad: 10, gap: 8 } }).slots, tb = f.find((x) => x.kind === 'table'), br = f.find((x) => x.kind === 'bar');
     chk(() => tb.x === 542 && tb.w === 1264 - 542 && br.w === 1040 && f.find((x) => x.kind === 'column').w === 514,
       () => `rc1-4 S7: the bottom row's visual beside a short rail takes the rail's column; a row beside the rail keeps its width: ${JSON.stringify(f)}`);
+  }
+
+  // ---------- rc1 DETAIL-2 and the reviewer's addition (S3, D3): tooltip pages, table rows, slicer headers ----------
+  {
+    const pagesOf = (r) => r.files.filter((f) => /pages\/[^/]+\/page\.json$/.test(f.path)).map((f) => { const pj = JSON.parse(String(f.data)), dir = f.path.replace(/page\.json$/, '');
+      return Object.assign(pj, { vs: r.files.filter((x) => x.path.startsWith(dir) && /visual\.json$/.test(x.path)).map((x) => JSON.parse(String(x.data))).filter((v) => v.visual) }); });
+    const tips = (r) => pagesOf(r).filter((p) => p.type === 'Tooltip'), trendOf = (r) => tips(r).find((p) => / · /.test(p.displayName)), topOf = (r) => tips(r).find((p) => !/ · /.test(p.displayName));
+    const barOf = (p) => p && p.vs.find((v) => v.visual.visualType === 'clusteredBarChart');
+    const hasNotBlank = (v) => JSON.stringify((v.filterConfig || {}).filters || []).includes('"Not"');
+    // the measured bar chart (Desktop 2.158, night of 6-7 Oct, at the 10pt theme text): 22.2 a row, 45 above the first, 8 under the last
+    const rowsFit = (h, n) => h >= 45 + 8 + 22.2 * n;
+    const monthName = C('Month Name', { sortBy: { t: D, c: 'Month No' } }, D);
+    const r = get(() => build(base({ date: monthName, tip: { card: M('Total Sales'), cat: C('Product'), y: M('Total Sales'), date: monthName } })));
+    const tr = r.files ? trendOf(r) : null, tb = barOf(tr), top = r.files ? barOf(topOf(r)) : null;
+    // T1: the month tooltip gets the chart's "is not blank" filter, so no "(Blank)" row (13 rows, a scrollbar)
+    chk(() => tb && hasNotBlank(tb), () => `T1: the month tooltip's bars leave the blank month out: ${r.threw || JSON.stringify(tb && tb.filterConfig || null)}`);
+    // T9 and T6: the tooltip's bar chart holds its 12 months and its 6 bars, and the page holds the chart
+    chk(() => tb && rowsFit(tb.position.height, 12) && tb.position.y + tb.position.height <= tr.height && top && rowsFit(top.position.height, 6) && top.position.y + top.position.height <= topOf(r).height,
+      () => `T6/T9: 12 months need ${Math.ceil(53 + 22.2 * 12)} and 6 bars ${Math.ceil(53 + 22.2 * 6)}: ${JSON.stringify([tb && tb.position, tr && tr.height, top && top.position, r.files && topOf(r).height])}`);
+    // T8: the Top 6 names take the share of a narrow bar chart (barNameShare: 50 under 560 wide at 720), as the page's bar charts
+    const mm = (v) => L(((((v || {}).visual || {}).objects || {}).categoryAxis || [{ properties: {} }])[0].properties.maxMarginFactor);
+    chk(() => mm(top) === String(Px.barNameShare(296, 720)) + 'L' && mm(tb) === String(Px.barNameShare(296, 720)) + 'L', () => `T8: the tooltip's names take ${Px.barNameShare(296, 720)}% of its width: ${mm(top)} ${mm(tb)}`);
+    // T10: a measure shown whole on the cards (a unit in its format, "#,0 \"kg\"") shows its own format on the tooltip's bars, never "8.0Kkg"
+    const kg = M('Weight', { wholeFormat: '#,0 "kg"' }), rk = get(() => build(base({ date: monthName, tip: { card: kg, cat: C('Product'), y: kg, date: monthName } })));
+    const units = (v) => L(((((v || {}).visual || {}).objects || {}).labels || [{ properties: {} }])[0].properties.labelDisplayUnits);
+    chk(() => rk.files && units(barOf(topOf(rk))) === '1D' && units(barOf(trendOf(rk))) === '1D' && units(top) == null,
+      () => `T10: a whole-number measure's tooltip labels have no display units (its format's unit kept): ${rk.threw || JSON.stringify([units(barOf(topOf(rk))), units(barOf(trendOf(rk))), units(top)])}`);
+    // T2: an untyped month-year label: the month tooltip in time order, its last 6 months (as the line chart, item 1)
+    const my = C('Month Year', { type: 'unknown' }), r2 = get(() => build(base({ date: my, tip: { card: M('Total Sales'), cat: C('Product'), y: M('Total Sales'), date: my } })));
+    const t2 = r2.files ? barOf(trendOf(r2)) : null, sd = t2 && JSON.stringify(t2.visual.query.sortDefinition || null);
+    chk(() => t2 && /Month start/.test(sd) && /Descending/.test(sd) && JSON.stringify(t2.filterConfig || {}).includes('Last'),
+      () => `T2: the month tooltip of a month label is in time order, newest first, its last months: ${r2.threw || JSON.stringify([sd, (t2 && t2.filterConfig || {}).filters])}`);
+    // S3: a table of rows the model doesn't count ends on a whole row: its height is the title, the header, whole rows
+    // and the total (round 11's measured pitch: 1.415 x the text + 2, the header 7 more, the title 1.5 x its size, 16 of padding)
+    const rt = get(() => build(base({ table: [C('City'), M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 300 }]) }));
+    const tv = rt.files ? visuals(rt).find((v) => v.visual.visualType === 'tableEx') : null;
+    const th = JSON.parse(String(rt.files.find((f) => /RegisteredResources\/.*\.json$/.test(f.path)).data)), tt = +th.visualStyles.tableEx['*'].values[0].fontSize, pitch = 1.415 * tt * 4 / 3 + 2;
+    const TT = +(th.textClasses.title || {}).fontSize || 12, fixed = 1.5 * TT * 4 / 3 + (pitch + 7) + pitch + 16, rows = tv ? (tv.position.height - fixed) / pitch : 0;
+    chk(() => tv && tv.position.height <= 300 && 300 - tv.position.height < pitch && tv.position.y === 80 && rows - Math.floor(rows) < 1 / pitch + 1e-9,
+      () => `S3: a table ends on a whole row (pitch ${pitch.toFixed(1)}, ${rows.toFixed(2)} rows): ${rt.threw || JSON.stringify(tv && tv.position)}`);
+    const rd = get(() => build(base({ table: [C('Day Name', { kind: 'day', rows: 7 }), M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 300 }]) }));
+    chk(() => rd.files && visuals(rd).find((v) => v.visual.visualType === 'tableEx').position.height === 300, () => 'S3: a table whose rows all show (7 days) keeps its height');
+    // D3: a long slicer header takes a smaller text, down to 8pt, before it is shortened
+    const rs = get(() => build(base({ slicers: [C('Enforcement_History_Status'), null, null] }), { pages: hand(1280, 720, [{ kind: 'slicer', x: 1068, y: 70, w: 196, h: 300 }]) }));
+    const sv = rs.files ? visuals(rs).find((v) => v.visual.visualType === 'slicer') : null, hd = sv && sv.visual.objects.header[0].properties;
+    chk(() => hd && L(hd.text) == null && +L(hd.textSize).replace(/D$/, '') >= 8 && !(rs.titles && (rs.titles.slicers || []).length),
+      () => `D3: "Enforcement_History_Status" in a 196-wide slicer is whole at a smaller header text: ${rs.threw || JSON.stringify(hd)} ${JSON.stringify(rs.titles && rs.titles.slicers)}`);
   }
 }
 

@@ -359,9 +359,10 @@ const slotsPlaced = (pages, want) => {   // every slot except the filter rail ha
       // (round 1: a header text box, the title or "Your logo", may start lower in its slot so its text is centred in the
       // header: the same x, width and bottom edge)
       // (0.2.9 part 2, O-6: create_report writes no "Your logo" placeholder, so a logo slot without a logo stays empty)
+      // (changed in 0.2.9 rc1, S3: a table ends on a whole row, its box less under one row at the bottom)
       // (changed in 0.2.9 rc1, item 4, S7: a slot that starts below the filter rail's slicers and is next to the rail
       // takes the rail's column too, the design engine's fitSlots: its box is the slot's and the rail's, the same y and height)
-      else if (!got.visuals.some((v) => v.type !== 'group' && (v.x === s.x && v.w === s.w || besideRail(got, wp, s, v)) && (v.y === s.y && v.h === s.h || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h))) && s.kind !== 'logo') bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
+      else if (!got.visuals.some((v) => v.type !== 'group' && (v.x === s.x && v.w === s.w || besideRail(got, wp, s, v)) && (v.y === s.y && v.h === s.h || (v.type === 'tableEx' && v.y === s.y && v.h <= s.h && s.h - v.h < 30) || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h))) && s.kind !== 'logo') bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
     });
   });
   return bad;
@@ -3197,7 +3198,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const vs = pageVisuals(ar, 'r12-ar').filter((v) => type(v) === 'slicer'), bad = [];
     const SL = ar.err ? 15 : +themeOf(ar, 'r12-ar').visualStyles.slicer['*'].header[0].textSize;
     vs.forEach((v) => { const p = v.visual.query.queryState.Values.projections[0], ht = v.visual.objects.header[0].properties.text, shown = ht ? S(ht) : p.displayName || p.nativeQueryRef, room = v.at.w - 2 * Math.round(8 * v.pg.h / 1080);
-      if (tw(shown, SL, true, 'Tahoma') > room + 0.5) bad.push(`"${shown}" needs ${Math.round(tw(shown, SL, true, 'Tahoma'))} of ${room}`);
+      // (changed in 0.2.9 rc1, PERF-COMPARE D3: a header takes a smaller text, down to 8pt, before it is shortened: measured at its written size)
+      const hs = v.visual.objects.header[0].properties.textSize, size = hs ? N(hs) : SL;
+      if (tw(shown, size, true, 'Tahoma') > room + 0.5) bad.push(`"${shown}" needs ${Math.round(tw(shown, size, true, 'Tahoma'))} of ${room} at ${size}pt`);
       if (!altOf(v).startsWith(shown.replace(/…\u200f?$/, '').trim())) bad.push(`"${shown}" is not the start of "${altOf(v)}"`); });
     chk(() => vs.length >= 2 && bad.length === 0, () => `#24: a slicer header must fit its slicer: ${bad.join(' | ')}`);
   }
