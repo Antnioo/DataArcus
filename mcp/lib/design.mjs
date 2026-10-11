@@ -10,6 +10,21 @@ const require = createRequire(import.meta.url);
 export const E = require('../../assets/js/design-engine.js');
 
 const HARMONIES = ['analogous', 'complementary', 'triadic', 'mono'];
+// 0.2.9 (the reviewer, 11 Oct: the analogous harmony gave loud colours, #2ce21d, #2635e3, beside the owner's brand): the
+// colours beside a brand, calm and told apart by hue; each is darkened (towards the text) or lightened until it stands
+// 3:1 on the visuals' background, and one too near the brand's hue is skipped
+const CALM = ['#2f6e9e', '#b86e00', '#1f7a70', '#6a4c93', '#b5452f', '#56636f', '#5e7f3a', '#8e5b2e', '#a23b72', '#3d7ea6'];
+function calmData(brand, card, text) {
+  const hue = (c) => E.hexToHsl(c), near = (a, b) => { const [h1, s1] = hue(a), [h2, s2] = hue(b), d = Math.abs(h1 - h2) % 360; return s1 > 0.15 && s2 > 0.15 && Math.min(d, 360 - d) < 25; };
+  const out = [];
+  for (const c0 of CALM) {
+    if (out.length === 7) break;
+    if (near(c0, brand) || out.some((x) => x === c0)) continue;
+    let c = c0; for (let t = 0.1; E.contrast(c, card) < 3 && t <= 1; t += 0.1) c = E.mix(c0, text, t);
+    if (!out.includes(c) && c !== brand) out.push(c);
+  }
+  return [brand].concat(out).slice(0, 8);
+}
 // the light page of a brand theme (0.2.9, O-11): a near-white page, white visuals, dark text; good, neutral and bad
 // as the Corporate preset's (the accent is the brand)
 const LIGHT_UI = { background: '#f5f7fa', card: '#ffffff', text: '#1f2933', accent: '#1f4e79', good: '#2e7d32', neutral: '#f9a825', bad: '#c62828' };
@@ -22,9 +37,11 @@ const hex = (v) => (typeof v === 'string' ? E.clampHex(v) : null);
 // The engine's own full design with everything given laid over it: the given layout is merged into the engine's
 // current layout (so a partial one is never read as an old saved design, and the MCP never names a layout version),
 // and the given data colours are used when there are 8 (otherwise the engine would drop the whole design)
+// (0.2.9, the reviewer's answer to part 1's question, 11 Oct 2026: the owner chose light with the brand exact, O-11): a
+// design without its own colours starts light (the Corporate preset), never the dark DataArcus one
 export function withDefaults(given) {
   const base = E.repairState(E.fresh()), g = given ? JSON.parse(JSON.stringify(given)) : {};
-  if (!(Array.isArray(g.data) && g.data.length === 8)) delete g.data;
+  if (!(Array.isArray(g.data) && g.data.length === 8)) { delete g.data; Object.assign(base, { preset: 'Corporate', data: E.PRESETS.Corporate.data.slice(), ui: Object.assign({}, E.PRESETS.Corporate.ui, g.ui && typeof g.ui === 'object' ? g.ui : {}) }); delete g.ui; delete g.preset; }
   return E.repairState(Object.assign(base, g, { layout: Object.assign(base.layout, g.layout && typeof g.layout === 'object' ? g.layout : {}) }));
 }
 
@@ -61,15 +78,16 @@ export function themeDesign(a) {
     if (a.brand != null) fix('brand', a.brand, null, 'not used: a palette was given');
   } else if (a.brand != null) {
     const b = hex(a.brand);
-    let h = a.harmony == null ? 'analogous' : a.harmony;
-    if (!HARMONIES.includes(h)) { fix('harmony', a.harmony, 'analogous', `not a harmony; use one of ${HARMONIES.join(', ')}`); h = 'analogous'; }
-    else if (a.harmony == null) notes.push('No harmony given: analogous.');
+    let h = a.harmony == null ? 'calm' : a.harmony;
+    if (!HARMONIES.includes(h) && h !== 'calm') { fix('harmony', a.harmony, 'analogous', `not a harmony; use one of ${HARMONIES.join(', ')}`); h = 'analogous'; }
+    else if (a.harmony == null) notes.push('No harmony asked: a calm set of 7 colours beside the brand, each at least 3:1 on the visuals\' background (a harmony gives the generator\'s brighter colours).');
     if (!b) fix('brand', a.brand, null, 'not a hex colour; kept the preset\'s colours');
     // the website's Generate button makes the 8 colours from the brand (and keeps its lightness between 0.4 and 0.55);
     // here the brand itself is the first data colour and the accent, exactly, on a light page (dark only when asked:
     // mode "dark", or a dark preset chosen with the brand)
-    else { d.data = E.generate(b, h); d.data[0] = b; d.ui = Object.assign({}, a.mode ? (dark ? E.PRESETS.DataArcus.ui : LIGHT_UI) : a.preset != null && E.PRESETS[a.preset] ? E.PRESETS[a.preset].ui : LIGHT_UI, { accent: b }); d.preset = null;
-      notes.push(`The brand colour ${b} is used exactly as given: the first data colour and the accent. The other 7 data colours come from the ${h} harmony.`); }
+    else { d.ui = Object.assign({}, a.mode ? (dark ? E.PRESETS.DataArcus.ui : LIGHT_UI) : a.preset != null && E.PRESETS[a.preset] ? E.PRESETS[a.preset].ui : LIGHT_UI);
+      d.data = h === 'calm' ? calmData(b, d.ui.card, d.ui.text) : E.generate(b, h); d.data[0] = b; d.ui.accent = b; d.preset = null;
+      notes.push(`The brand colour ${b} is used exactly as given: the first data colour and the accent. The other 7 data colours come from ${h === 'calm' ? 'the calm set' : 'the ' + h + ' harmony'}.`); }
   } else if (a.harmony != null) fix('harmony', a.harmony, null, 'not used: no brand colour given');
   if (a.name != null) d.name = String(a.name);
   if (a.font != null) {
