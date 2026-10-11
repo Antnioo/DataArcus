@@ -2529,9 +2529,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const hiddenRefs = (t) => ((t.visual.objects || {}).columnWidth || []).filter((e) => e.properties.value.expr.Literal.Value === '0D').map((e) => e.selector.metadata);
     const isRowLabel = (p) => !!(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema === 'extension' && /^Row label: /.test(p.field.Measure.Property));
     for (const lang of ['en', 'ar']) {
-      // (0.2.9, the design block's D16: this model has no date, so the executive layout made for it gives the table the
-      // whole second row; the operations layout keeps the table a third of its row, the narrow table this check needs)
-      const x = await ask('create_report', { path: 'd5-project', name: 'D5 SVG ' + lang, lang, design: await planOf({ layout: 'ops', kpis: 4, filters: 'end', lang }), fields: { kpis: KPIS, table: T4 }, svgColumns: pics });
+      // (0.2.9, the design block's S7: under a side rail shortened to its slicers the table now takes the rail's column,
+      // so it is no longer narrow; filters on top (no side rail) on a 960 x 720 page keep the narrow table this check needs)
+      const x = await ask('create_report', { path: 'd5-project', name: 'D5 SVG ' + lang, lang, design: await planOf({ layout: 'exec', kpis: 4, filters: 'top', page: '960x720', lang }), fields: { kpis: KPIS, table: T4 }, svgColumns: pics });
       const t = pageVisuals(x, 'd5-project').find((v) => type(v) === 'tableEx' && /extension/.test(JSON.stringify(v.visual.query)));
       if (!t) { bad.push(`${lang}: no table ${short(x)}`); continue; }
       const ps = t.visual.query.queryState.Values.projections, g = t.visual.objects.grid[0].properties, W = N(g.imageWidth), H = N(g.imageHeight);
@@ -2556,9 +2556,10 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
       for (const lang of ['en', 'ar']) {
         // (night of 6-7 Oct: since the owner's answer 3a a 4:3 page gives the table three fifths of its row; this check is about
         // a table too narrow for its fields, so its design keeps the half-width table: layout.wideTable false)
-        // (0.2.9, the design block's D16: this model has no date, and the executive layout made for it gives the table the
-        // whole second row; the operations layout keeps it a third of its row, too narrow for five fields as this check needs)
-        const narrowPlan = await planOf({ layout: 'ops', kpis: 4, filters: 'end', page: '960x720', lang }); narrowPlan.layout.wideTable = false;
+        // (0.2.9, the design block's S7: under a side rail shortened to its slicers the table now takes the rail's column;
+        // the operations layout with filters on top (no side rail) keeps a table a third of its row (408 of a 1280 x 720
+        // page), too narrow for five fields at the theme's text, as this check needs)
+        const narrowPlan = await planOf({ layout: 'ops', kpis: 4, filters: 'top', page: '1280x720', lang }); narrowPlan.layout.wideTable = false;
         const x = await ask('create_report', { path: 'd5-project', name: 'D5 table fit ' + lang, lang, design: narrowPlan, fields: { kpis: KPIS, table: FIVE } });
         if (x.err) { tbad.push(`${lang}: ${short(x)}`); continue; }
         const pgs = report(path.join(ROOT, 'd5-project', x.j.report)).filter((p) => !p.tooltip), size = tableText(x, 'd5-project'), font = lang === 'ar' ? 'Tahoma' : 'Segoe UI';
