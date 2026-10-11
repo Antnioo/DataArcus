@@ -212,7 +212,9 @@ const CHART_TYPES = ['lineChart', 'clusteredBarChart', 'clusteredColumnChart', '
 // itself by that month field is linked to the other tooltip page (the bar chart by category; its own trend would be
 // one bar), and every other chart to the trend page. Returns { charts, trend (charts linked to the trend page), bad }.
 const tipChart = (p) => p.visuals.find((v) => v.visual && /Chart$/.test(v.visual.visualType));
-const isTrend = (p) => p.page.height === 410;
+// (0.2.9 part 2: or 314 high when kept to its last 6 months, TOOLTIP-FIX-LAB)
+const sixMonths = (p) => p.visuals.some((v) => v.filterConfig && JSON.stringify(v.filterConfig).includes('Last 6 months'));
+const isTrend = (p) => p.page.height === 410 || (p.page.height === 314 && sixMonths(p));
 const catRef = (v) => { const q = ((v.visual.query || {}).queryState || {}), r = q.Category || q.Group; return r && r.projections[0] ? r.projections[0].queryRef : null; };
 export function tooltipProblems(files) {
   const pages = pagesOf(files), tipPages = pages.filter((p) => p.page.type === 'Tooltip'), tips = tipPages.map((p) => p.page.name), bad = [];
@@ -246,17 +248,21 @@ export function tooltipPageProblems(files) {
   const bad = []; let charts = 0, trend = 0;
   const tips = pagesOf(files).filter((p) => p.page.type === 'Tooltip');
   tips.forEach((p) => {
-    const isT = isTrend(p), wantH = isT ? 410 : 284;
+    // (0.2.9 part 2, TOOLTIP-FIX-LAB, measured in Desktop 2.158.1304: a trend kept to its last 6 months, newest first, is
+    // 40 + 27 a bar high: the page 320 x 314; a trend without a date column keeps its 12 rows on 320 x 410)
+    const six = sixMonths(p);
+    const isT = isTrend(p), wantH = isT ? (six ? 314 : 410) : 284;
     if (isT) trend++;
-    if (p.page.width !== 320 || p.page.height !== wantH) bad.push(`tooltip page is ${p.page.width} x ${p.page.height}, want 320 x 284, or 320 x 410 for the trend`);
+    if (p.page.width !== 320 || p.page.height !== wantH) bad.push(`tooltip page is ${p.page.width} x ${p.page.height}, want 320 x 284, or 320 x 410 for the trend (320 x 314 kept to its last 6 months)`);
     const cs = p.visuals.filter((v) => v.visual && /Chart$/.test(v.visual.visualType));
     if (cs.length > 1 || (isT && cs.length !== 1)) bad.push(`tooltip page "${p.page.displayName}" has ${cs.length} charts`);
     cs.forEach((v) => {
       charts++;
       const o = v.visual.objects || {}, P = (k) => ((o[k] || [])[0] || {}).properties || {}, c = P('categoryAxis'), y = P('valueAxis'), l = P('labels');
-      const rows = Math.floor((v.position.height - 46) / 22);
+      // (0.2.9 part 2: the last-6-months trend by the tooltip lab's measure, 27 a bar at 8pt and 40 for the title and padding)
+      const rows = isT && six ? Math.floor((v.position.height - 40) / 27) : Math.floor((v.position.height - 46) / 22);
       const got = { type: v.visual.visualType, text: lit(c.fontSize), room: lit(c.maxMarginFactor), axisTitle: lit(c.showAxisTitle), valueAxis: lit(y.show), labels: lit(l.show), labelText: lit(l.fontSize), rows };
-      const want = { type: 'clusteredBarChart', text: '8D', room: '40L', axisTitle: 'false', valueAxis: 'false', labels: 'true', labelText: '8D', rows: isT ? 12 : 6 };
+      const want = { type: 'clusteredBarChart', text: '8D', room: '40L', axisTitle: 'false', valueAxis: 'false', labels: 'true', labelText: '8D', rows: isT ? (six ? 6 : 12) : 6 };
       if (JSON.stringify(got) !== JSON.stringify(want)) bad.push(`tooltip chart ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
       if (v.position.y + v.position.height > p.page.height || v.position.x + v.position.width > p.page.width) bad.push('tooltip chart outside its page');
     });

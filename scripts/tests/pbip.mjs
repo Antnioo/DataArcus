@@ -32,7 +32,7 @@ const refs = (files) => Object.entries(files).filter(([n]) => n.endsWith('/visua
   const out = [];
   JSON.stringify(JSON.parse(b.toString('utf8')), (k, v) => {
     // (round 22: a report-level measure, Schema 'extension', is the report's own, e.g. the "No data" text of a chart: not a field of the model)
-    if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && !(v.Column || v.Measure).Expression.SourceRef.Schema) { const x = v.Column || v.Measure; out.push({ kind: v.Column ? 'c' : 'm', t: x.Expression.SourceRef.Entity, n: x.Property }); }
+    if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && !(v.Column || v.Measure).Expression.SourceRef.Schema && !(v.Column || v.Measure).Expression.SourceRef.Source) {   /* (0.2.9 part 2: a visual filter's condition names its From's aliases, SourceRef.Source, not model fields) */ const x = v.Column || v.Measure; out.push({ kind: v.Column ? 'c' : 'm', t: x.Expression.SourceRef.Entity, n: x.Property }); }
     return v;
   });
   return out;
