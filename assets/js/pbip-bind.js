@@ -195,6 +195,8 @@
   // (the rc's laptop proof, 11 Oct: picks by formula and format, never by names)
   // D4: a what-if parameter's value is the slicer's selection, never a number of the model: SELECTEDVALUE, or
   // IF(HASONEVALUE(...), VALUES(...)), at the top of the DAX
+  // S4: a measure that needs one period: blank over the whole date range, or guarded on one selected value
+  const NEEDS_PERIOD = /\b(PREVIOUS(DAY|MONTH|QUARTER|YEAR)|NEXT(DAY|MONTH|QUARTER|YEAR)|PARALLELPERIOD|HASONEVALUE|HASONEFILTER|ISFILTERED|ISINSCOPE)\s*\(/i;
   const PARAM_DAX = /^\s*(SELECTEDVALUE\s*\(|IF\s*\(\s*HASONEVALUE\s*\()/i;
   // D2: a helper (a Top N threshold, a rank) only serves another visual's filter or sort
   const HELPER_DAX = /\b(RANKX|TOPN|RANK)\s*\(/i;
@@ -472,11 +474,13 @@
     // (round 23: with a report language (opt.lang), a measure named in the other language comes after those named in
     // its own or in none, as a measure left behind does)
     const L = opt && opt.lang, note = { skipped: new Set(), fallback: new Set() }, other = (x) => (L && langOf(x.m) && langOf(x.m) !== L ? 1 : 0);
-    // (the rc's laptop proof, 11 Oct, S4: a measure built on a time variant, "Growth %" = DIVIDE([X] - [X PY], [X PY]),
-    // is a period measure too: through the measures it calls, as reached() reads them)
+    // (the rc's laptop proof, 11 Oct, S4: a measure that needs one period to show a number says "No data" on a card of the
+    // whole page: PREVIOUSMONTH and the like, NEXT..., PARALLELPERIOD (blank over the whole date range), or a guard on a
+    // single selected value; directly or through the measures it calls, as reached() reads them. A PY or "last" measure
+    // still shows a number: it stays a variant, after every base measure)
     const byName = new Map(measures.map((x) => [x.m.toLowerCase(), x])), refs = (x) => (exprOf(x).match(/(^|[^\w\]'])\[(?:[^\]]|\]\])+\]/g) || []).map((r) => byName.get(r.slice(r.indexOf('[') + 1, -1).replace(/\]\]/g, ']').toLowerCase())).filter(Boolean);
-    const timeDep = new Map(), isTimeDep = (x, seen) => { if (timeDep.has(x)) return timeDep.get(x); if (seen.has(x)) return false; seen.add(x); const v = x.variant || refs(x).some((y) => isTimeDep(y, seen)); timeDep.set(x, v); return v; };
-    measures.forEach((x) => isTimeDep(x, new Set()));
+    const walk = (test) => { const memo = new Map(), go = (x, seen) => { if (memo.has(x)) return memo.get(x); if (seen.has(x)) return false; seen.add(x); const v = test(x) || refs(x).some((y) => go(y, seen)); memo.set(x, v); return v; }; measures.forEach((x) => go(x, new Set())); return memo; };
+    const timeDep = walk((x) => x.variant), needsPeriod = walk((x) => NEEDS_PERIOD.test(exprOf(x)));
     // (D6 + D14: an alias, [Other] alone, has its value: the same key)
     const keyOf = (x, n) => { const k = metaOf(x).key; if (!/^alias:/.test(k) || (n || 0) > 20) return k; const y = byName.get(k.slice(6)); return y ? keyOf(y, (n || 0) + 1) : k; };
     // (A3-5: every base measure before any time variant, then the shape score; the rc's proof, D5 + D13: a plain amount
@@ -487,14 +491,14 @@
       || group(a) - group(b) || score(b) - score(a));
     // a card shows one number for the whole page: never a period measure (S4: "No data" without its period), a what-if
     // value (D4), a helper (D2) or a share of all (D14); never two cards with the same value (D6, D14)
-    const cardable = (x) => !timeDep.get(x) && !metaOf(x).notCard;
+    const cardable = (x) => !needsPeriod.get(x) && !metaOf(x).notCard;
     const main = ranked.find((x) => !x.pct && cardable(x)) || ranked.find((x) => !x.pct && !metaOf(x).notCard) || ranked[0] || null;
     // KPIs: the strongest base measures, with one ratio among them when the model has one; a measure left behind only
     // when the cards outnumber the other measures
     const current = ranked.filter((x) => !x.stale && cardable(x)), keys = new Set(), fresh = (x) => { const k = keyOf(x); if (keys.has(k)) return false; keys.add(k); return true; };
-    const kpis = current.filter((x) => !x.pct && fresh(x)).slice(0, Math.max(0, nKpis - 1));
+    const kpis = current.filter((x) => !x.pct && !timeDep.get(x) && fresh(x)).slice(0, Math.max(0, nKpis - 1));
     keys.clear(); kpis.forEach((x) => keys.add(keyOf(x)));   // (fresh() saw every candidate; only the cards taken count)
-    const ratio = current.find((x) => x.pct && !keys.has(keyOf(x)));
+    const ratio = current.find((x) => x.pct && !timeDep.get(x) && !keys.has(keyOf(x)));
     if (ratio && kpis.length < nKpis) { kpis.push(ratio); keys.add(keyOf(ratio)); }
     ranked.filter((x) => cardable(x)).forEach((x) => { if (kpis.length < nKpis && !kpis.includes(x) && !keys.has(keyOf(x))) { kpis.push(x); keys.add(keyOf(x)); } });
     while (kpis.length < nKpis) kpis.push(null);   // more cards than measures: the rest stay empty
