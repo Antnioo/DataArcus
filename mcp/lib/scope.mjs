@@ -1,15 +1,16 @@
 // Large models: a summary first, details on request (owner 2026-10-03), and the part of a model a request is about.
 // A model is "large" when its full read_model answer would pass LIMIT characters: about 10,000 tokens, where Claude
 // Code starts warning, and far below Claude Desktop's limit. Small models answer exactly as before.
-import { shownName, summary } from './model.mjs';
+import { modelOf, shownName, summary } from './model.mjs';
+import { takenNames } from './report-names.mjs';
 
 export const LIMIT = 40000;
 const size = (o) => JSON.stringify(o, null, 2).length;
 const lc = (s) => String(s == null ? '' : s).toLowerCase();
-const raw = (m) => ((m.tmsl && (m.tmsl.model || m.tmsl)) || {});
+const raw = (m) => modelOf(m.tmsl);
 
 // read_model's full answer, as it has always been
-export const fullAnswer = (m) => ({ source: m.source, existingReports: m.taken || [], tables: summary(m) });
+export const fullAnswer = (m) => ({ source: m.source, existingReports: takenNames(m.projectDir), tables: summary(m) });
 export const isLarge = (m) => { if (m.large == null) m.large = size(fullAnswer(m)) > LIMIT; return m.large; };
 
 // the tables related to a table (either side of a relationship)
@@ -67,7 +68,7 @@ export function largeSummary(m) {
 }
 function largeBody(m, all, rel, full, withMeasures, notListed) {
   return Object.assign({
-    source: m.source, existingReports: m.taken || [], summary: true,
+    source: m.source, existingReports: takenNames(m.projectDir), summary: true,
     why: `This model is large: the full list of its tables, columns and measures would be ${full.toLocaleString('en-US')} characters, more than an AI app reads well in one answer. This is a summary; ask for the tables you need.`,
     counts: { tables: all.length, columns: m.tables.reduce((n, t) => n + t.columns.length, 0), measures: m.tables.reduce((n, t) => n + t.measures.length, 0), relationships: (raw(m).relationships || []).length },
     dateTables: all.filter((t) => t.dateTable).map((t) => t.table),
@@ -84,7 +85,7 @@ export function namedTables(m, names) {
   const all = summary(m), by = new Map(all.map((t) => [lc(t.table), t]));
   const found = [], notFound = [];
   [...new Set((names || []).map((n) => String(n)))].forEach((n) => { const t = by.get(lc(n.trim())); if (t) { if (!found.includes(t)) found.push(t); } else notFound.push(n); });
-  const out = { source: m.source, existingReports: m.taken || [], tables: [] }, notShown = [];
+  const out = { source: m.source, existingReports: takenNames(m.projectDir), tables: [] }, notShown = [];
   if (notFound.length) out.notFound = notFound;
   for (const t of found) {
     out.tables.push(t);

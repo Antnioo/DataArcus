@@ -29,11 +29,12 @@ const lvl = (t, c, level) => ({ field: { HierarchyLevel: { Expression: { Hierarc
 const vj = (name, type, roles) => ({ $schema: VC, name, position: { x: 0, y: 0, z: 0, width: 400, height: 300 },
   visual: { visualType: type, query: { queryState: Object.fromEntries(Object.entries(roles).map(([r, p]) => [r, { projections: p }])) } } });
 
-// the made-up report: one page, one visual per case, read by the reading block
+// the made-up report: one page, one visual per case, read by the reading block (memorySource takes paths relative to
+// the report folder since builder 6's A5-12)
 function visualsOf(cases) {
-  const files = [{ path: 'R.Report/definition/report.json', data: '{}' }, { path: 'R.Report/definition/pages/pages.json', data: JSON.stringify({ pageOrder: ['p1'] }) },
-    { path: 'R.Report/definition/pages/p1/page.json', data: JSON.stringify({ name: 'p1', displayName: 'P', width: 1280, height: 720 }) }];
-  Object.entries(cases).forEach(([id, [type, roles]]) => files.push({ path: `R.Report/definition/pages/p1/visuals/${id}/visual.json`, data: JSON.stringify(vj(id, type, roles)) }));
+  const files = [{ path: 'definition/report.json', data: '{}' }, { path: 'definition/pages/pages.json', data: JSON.stringify({ pageOrder: ['p1'] }) },
+    { path: 'definition/pages/p1/page.json', data: JSON.stringify({ name: 'p1', displayName: 'P', width: 1280, height: 720 }) }];
+  Object.entries(cases).forEach(([id, [type, roles]]) => files.push({ path: `definition/pages/p1/visuals/${id}/visual.json`, data: JSON.stringify(vj(id, type, roles)) }));
   const inv = inventory(memorySource(files), 'R');
   return Object.fromEntries(inv.pages[0].visuals.map((v) => [v.id, v]));
 }
@@ -178,14 +179,14 @@ export async function v029visuals({ check }) {
   { let RR = {}; try { RR = await import('./lib/read-report.mjs'); } catch (e) { /* reported below */ }
     chk(() => catalog.concat(MADE_UP).every((t) => RR.isCustom(t) === VT.isCustom(t)) && !RR.isCustom('group') && !RR.isCustom('unknown'),
       () => `A6-13: the reading block and the catalog agree on every type: ${catalog.concat(MADE_UP).filter((t) => RR.isCustom(t) !== VT.isCustom(t))}`);
-    const files = [{ path: 'R.Report/definition/report.json', data: JSON.stringify({ resourcePackages: [{ name: 'heatMap', type: 'CustomVisual', items: [] }] }) }, { path: 'R.Report/definition/pages/pages.json', data: JSON.stringify({ pageOrder: ['p1'] }) },
-      { path: 'R.Report/definition/pages/p1/page.json', data: JSON.stringify({ name: 'p1', displayName: 'P', width: 1280, height: 720 }) },
-      { path: 'R.Report/definition/pages/p1/visuals/a/visual.json', data: JSON.stringify(vj('a', 'heatMap', { Category: [col('Orders', 'Region')], Values: [mea('Orders', 'Total Sales')] })) },
-      { path: 'R.Report/definition/pages/p1/visuals/b/visual.json', data: JSON.stringify(Object.assign(vj('b', 'scorecard', {}), { position: { x: 0, y: 400, z: 0, width: 10, height: 10 } })) },
-      { path: 'R.Report/definition/pages/p1/visuals/c/visual.json', data: JSON.stringify(Object.assign(vj('c', 'filterSlicer', { Values: [col('Orders', 'Region')] }), { position: { x: 0, y: 500, z: 0, width: 10, height: 10 } })) }];
+    const files = [{ path: 'definition/report.json', data: JSON.stringify({ resourcePackages: [{ name: 'heatMap', type: 'CustomVisual', items: [] }] }) }, { path: 'definition/pages/pages.json', data: JSON.stringify({ pageOrder: ['p1'] }) },
+      { path: 'definition/pages/p1/page.json', data: JSON.stringify({ name: 'p1', displayName: 'P', width: 1280, height: 720 }) },
+      { path: 'definition/pages/p1/visuals/a/visual.json', data: JSON.stringify(vj('a', 'heatMap', { Category: [col('Orders', 'Region')], Values: [mea('Orders', 'Total Sales')] })) },
+      { path: 'definition/pages/p1/visuals/b/visual.json', data: JSON.stringify(Object.assign(vj('b', 'scorecard', {}), { position: { x: 0, y: 400, z: 0, width: 10, height: 10 } })) },
+      { path: 'definition/pages/p1/visuals/c/visual.json', data: JSON.stringify(Object.assign(vj('c', 'filterSlicer', { Values: [col('Orders', 'Region')] }), { position: { x: 0, y: 500, z: 0, width: 10, height: 10 } })) }];
     let inv = null; try { inv = RR.inventory(memorySource(files), 'R'); } catch (e) { /* below */ }
     const by = inv ? Object.fromEntries(inv.pages[0].visuals.map((v) => [v.id, v])) : {};
-    chk(() => JSON.stringify(inv.customVisuals) === '["heatMap"]' && by.a.meaning && !by.b.meaning && by.c.slicer === true && RR.typeName('scorecard') === 'scorecard' && RR.typeName('drilldownpie') === 'custom drilldownpie',
+    chk(() => JSON.stringify(inv.customVisuals.map((c) => c.type || c)) === '["heatMap"]' && by.a.meaning && !by.b.meaning && by.c.slicer === true && RR.typeName('scorecard') === 'scorecard' && RR.typeName('drilldownpie') === 'custom drilldownpie',
       () => `A5-6 + A6-13: read_report: a type the report declares custom is custom (heatMap here), a catalog type is not (scorecard), filterSlicer is a slicer, a plain-word id is custom: ${JSON.stringify(inv && { custom: inv.customVisuals, v: inv.pages[0].visuals.map((v) => [v.id, v.type, !!v.meaning, !!v.slicer]) })}`); }
   chk(() => VT.SLICER_TYPES.includes('filterSlicer') && VT.SLICER_TYPES.every((t) => catalog.includes(t)), () => 'A5-6: the slicers come from the catalog, filterSlicer among them');
   chk(() => ['scorecard', 'heatMap', 'filterSlicer', 'aiNarratives'].every((t) => meaningOf({ type: t, fields: {} }).why === 'a Power BI visual: kept as it is'), () => 'A5-6: the meaning module asks the same catalog (scorecard, heatMap, filterSlicer, aiNarratives are Power BI\'s own)');
@@ -217,11 +218,11 @@ export async function v029visuals({ check }) {
   try { const geo = visualsOf({ geo: ['vendorPins' + HEX, { Latitude: [col('Sites', 'Lat')], Longitude: [col('Sites', 'Lon')], Size: [mea('Sites', 'Visits')] }] }).geo, a = nativeFor(geo, {});
     chk(() => a.native === 'azureMap' && refs(a.roles.Y).join() === 'Sites[Lat]' && refs(a.roles.X).join() === 'Sites[Lon]' && a.candidates[0].fits, () => `A5-14: latitude and longitude roles: Azure map's Y and X: ${JSON.stringify(a).slice(0, 500)}`); } catch (e) { check(false, 'V. A5-14: the map by latitude and longitude: ' + e.message); }
   // ---------- step B: read_report gives each custom visual its meaning (kind, native, why), from the reading block ----------
-  { const files = [{ path: 'R.Report/definition/report.json', data: JSON.stringify({ publicCustomVisuals: ['acmeDrillPie' + HEX] }) }, { path: 'R.Report/definition/pages/pages.json', data: JSON.stringify({ pageOrder: ['p1'] }) },
-      { path: 'R.Report/definition/pages/p1/page.json', data: JSON.stringify({ name: 'p1', displayName: 'P', width: 1280, height: 720 }) },
-      { path: 'R.Report/definition/pages/p1/visuals/a/visual.json', data: JSON.stringify(vj('a', 'acmeDrillPie' + HEX, { Category: [col('Orders', 'Secret Region')], Values: [mea('Orders', 'Secret Sales')] })) },
-      { path: 'R.Report/definition/pages/p1/visuals/b/visual.json', data: JSON.stringify(Object.assign(vj('b', 'vendorGraph' + HEX, { Source: [col('Flows', 'From Hub')], Target: [col('Flows', 'To Hub')] }), { position: { x: 0, y: 400, z: 0, width: 400, height: 300 } })) },
-      { path: 'R.Report/definition/pages/p1/visuals/c/visual.json', data: JSON.stringify(Object.assign(vj('c', 'clusteredColumnChart', { Category: [col('Orders', 'Region')], Y: [mea('Orders', 'Total Sales')] }), { position: { x: 500, y: 0, z: 0, width: 400, height: 300 } })) }];
+  { const files = [{ path: 'definition/report.json', data: JSON.stringify({ publicCustomVisuals: ['acmeDrillPie' + HEX] }) }, { path: 'definition/pages/pages.json', data: JSON.stringify({ pageOrder: ['p1'] }) },
+      { path: 'definition/pages/p1/page.json', data: JSON.stringify({ name: 'p1', displayName: 'P', width: 1280, height: 720 }) },
+      { path: 'definition/pages/p1/visuals/a/visual.json', data: JSON.stringify(vj('a', 'acmeDrillPie' + HEX, { Category: [col('Orders', 'Secret Region')], Values: [mea('Orders', 'Secret Sales')] })) },
+      { path: 'definition/pages/p1/visuals/b/visual.json', data: JSON.stringify(Object.assign(vj('b', 'vendorGraph' + HEX, { Source: [col('Flows', 'From Hub')], Target: [col('Flows', 'To Hub')] }), { position: { x: 0, y: 400, z: 0, width: 400, height: 300 } })) },
+      { path: 'definition/pages/p1/visuals/c/visual.json', data: JSON.stringify(Object.assign(vj('c', 'clusteredColumnChart', { Category: [col('Orders', 'Region')], Y: [mea('Orders', 'Total Sales')] }), { position: { x: 500, y: 0, z: 0, width: 400, height: 300 } })) }];
     let inv, text, json;
     try { const RR = await import('./lib/read-report.mjs'); inv = RR.inventory(memorySource(files), 'R'); text = RR.answerOf(inv, {}); json = RR.answerOf(inv, { format: 'json' }); } catch (e) { inv = null; text = String(e.message); }
     const vis = inv ? Object.fromEntries(inv.pages[0].visuals.map((v) => [v.id, v])) : {};

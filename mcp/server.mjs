@@ -8,16 +8,23 @@ import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
+import { createRequire } from 'node:module';
 import { absorb } from './lib/slots.mjs';
-import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, screenWhy, shownName, Svg, applyColumnTypes, inside, loadModel, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
+import { Notice, ROOT, screenWhy, shownName, applyColumnTypes, inside, loadModel, modelOf, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
 import { E, themeDesign, planLayout, pageOf, contrastReport, freeFile } from './lib/design.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
 import { addGulfCalendar, gulfFixInputs } from './lib/gulf-calendar.mjs';
 import { checkReport, CHECKS } from './lib/check-report.mjs';
 import { readReport } from './lib/read-report.mjs';
+import { wordOf } from './lib/read-words.mjs';
+import { takenNames } from './lib/report-names.mjs';
 import { planLint } from './lib/plan-lint.mjs';
 import * as Plans from './lib/plans.mjs';
+// the engines this server uses, required here (A1-10: the model reader exports reading only)
+const require = createRequire(import.meta.url);
+const Bind = require('../assets/js/pbip-bind.js'), Health = require('../assets/js/model-health-engine.js'), Pbip = require('../assets/js/pbip-export.js');
+const Fix = require('../assets/js/model-health-tmdl.js'), Svg = require('../assets/js/svg-kpi-compiler.js'), Gulf = require('../assets/js/gulf-health.js');
 import { planTwin, twinKey, writeTwin } from './lib/arabic-twin.mjs';
 
 // the version is in one place: mcp/package.json
@@ -66,7 +73,8 @@ const compact = (o) => ({ content: [{ type: 'text', text: scrub(JSON.stringify(o
 // the part of a large model a request is about (see lib/scope.mjs)
 const focusInput = z.string().min(1).max(80).optional().describe('On a large model: the part of the model the user asked about, in their words ("logistics", "sales"). The picks then come from the tables whose name or whose measures\' display folder contains it, the tables related to them and the date table. A large model needs a focus or tables');
 const tablesInput = z.array(z.string()).min(1).max(60).optional().describe('Instead of a focus: the tables to pick from, by name (the tables related to them and the date table are added)');
-const fail = (e) => ({ isError: true, content: [{ type: 'text', text: scrub(String(e && e.message || e)) }] });
+// (A1-9: the reading block's coded errors are worded here, in the tool layer)
+const fail = (e) => ({ isError: true, content: [{ type: 'text', text: scrub(wordOf(e)) }] });
 // A working folder that is chosen but can't be used yet (it doesn't exist, or it is empty): a normal answer with what
 // to do, not an error (an AI app shows an error as "Failed" in red, though nothing went wrong). Nothing is read or written.
 const notice = (state, whatToDo) => text({ workingFolder: ROOT ? path.basename(ROOT) : ROOT, state, done: 'Nothing was read or written.', whatToDo });
@@ -105,7 +113,7 @@ function reportFormatOf(o, kind, tables) {
 // measures (the scripts touch only the objects they name, under "ref table"); skipped names them, escaped
 const hasControl = Pbip.hasControl;   // (the writer's, one test for both: round 22b, X-05)
 function scriptTables(m) {
-  const raw0 = ((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).tables || [], skipped = [];
+  const raw0 = modelOf(m.tmsl).tables || [], skipped = [];
   const raw = raw0.filter((t) => { if (hasControl(t.name)) { skipped.push(visible(t.name)); return false; } return true; }).map((t) => {
     const keep = (x) => { if (!hasControl(x.name)) return true; skipped.push(`${visible(t.name)}[${visible(x.name)}]`); return false; };
     return Object.assign({}, t, { columns: (t.columns || []).filter(keep), measures: (t.measures || []).filter(keep) }); });
@@ -446,7 +454,7 @@ server.registerTool('check_model_health', {
     let file; try { file = writeScript(scriptDir, scriptBase + ' - fix ' + what, script); } catch (e) { return { scriptNotWritten: 'The script could not be written to ' + scriptDir + ' (' + String(e && e.code || e && e.message || e) + '). Use the object names above and make the changes by hand in Power BI Desktop.' }; }
     return { fixScriptFile: file, howToApply: 'The script is in the file "' + path.basename(file) + '", next to the project. ' + howToApply + (refresh ? refreshAfter : '') };
   };
-  const typed = columnTypes ? applyColumnTypes(m.tmsl, columnTypes) : undefined;
+  const typed = columnTypes ? applyColumnTypes(m, columnTypes) : undefined;   // (A1-6: both views)
   const r = Health.analyze(m.tmsl, m.report);
   // ready fixes for three findings, as TMDL scripts the user applies in Power BI Desktop (TMDL view); nothing is ever
   // applied by this tool. What a script can't do safely is listed as steps by hand, never guessed.
@@ -664,7 +672,7 @@ server.registerTool('create_report', {
   const cardFormats = [];
   const cardFormatOf = (f) => {
     if (!f || f.m == null) return null;
-    const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t), o = t && (t.measures || []).find((x) => x.name === f.m);
+    const model = modelOf(m.tmsl), t = (model.tables || []).find((x) => x.name === f.t), o = t && (t.measures || []).find((x) => x.name === f.m);
     if (!o || o.formatStringDefinition || Bind.isPercent(f.m, o.formatString, o.expression)) return null;
     // the shared format rule first (formats fixed at the source, 6 Oct 2026): a count #,0, a number #,0.00
     const right = reportFormatOf(o, 'measure', model.tables || []);
@@ -676,7 +684,7 @@ server.registerTool('create_report', {
   // cards and the tooltip's card (the card rule's pctFormat and wholeFormat), and every field of a table in the rule's
   // format on its own projection (tableFormat). Fields the visuals count or sum themselves are left as they are.
   const rightOf = (f) => {
-    const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t);
+    const model = modelOf(m.tmsl), t = (model.tables || []).find((x) => x.name === f.t);
     const o = t && (f.m != null ? (t.measures || []).find((x) => x.name === f.m) : (t.columns || []).find((x) => x.name === f.c));
     return o ? reportFormatOf(o, f.m != null ? 'measure' : 'column', model.tables || []) : null;
   };
@@ -704,14 +712,14 @@ server.registerTool('create_report', {
     const one = (f) => { const code = FULL && cardFormatOf(f); if (!code) return f; if (!cardFormats.some((x) => x.field === keyOf(f))) cardFormats.push({ field: keyOf(f), format: code }); return Object.assign({}, f, { cardFormat: code }); };
     // (round 13, seen in Desktop on 6 Oct: a card said 33.8% and the table's column of the same measure 0.34: where the
     // report gives a measure's card a percent format the model does not have, its table column carries the same)
-    const pctCell = (f) => { if (!f || f.m == null || !f.pctFormat) return null; const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t), o = t && (t.measures || []).find((x) => x.name === f.m); return o && !o.formatStringDefinition && o.formatString !== f.pctFormat ? f.pctFormat : null; };
+    const pctCell = (f) => { if (!f || f.m == null || !f.pctFormat) return null; const model = modelOf(m.tmsl), t = (model.tables || []).find((x) => x.name === f.t), o = t && (t.measures || []).find((x) => x.name === f.m); return o && !o.formatStringDefinition && o.formatString !== f.pctFormat ? f.pctFormat : null; };
     const cell = (f) => { if (f && f.m != null && f.tableFormat) { if (!tableFormats.some((x) => x.field === keyOf(f))) tableFormats.push({ field: keyOf(f), format: f.tableFormat }); return f; }
       const code = f && f.m != null && (cardFormatOf(f) || pctCell(f)); if (!code) return f; if (!tableFormats.some((x) => x.field === keyOf(f))) tableFormats.push({ field: keyOf(f), format: code }); return Object.assign({}, f, { tableFormat: code }); };
     const tip = b.tip && b.tip.card ? Object.assign({}, b.tip, { card: (() => { const code = FULL && cardFormatOf(b.tip.card); return code ? Object.assign({}, b.tip.card, { cardFormat: code }) : b.tip.card; })() }) : b.tip;
     // round 18, S3 (the owner's yes, 6 Oct ~21:38 Dubai: "add the short day name column"): a chart category "Day Name"
     // whose table has "Day Short" (the Gulf calendar's, by name: metadata only) carries it, sorted as the calendar sorts
     // it; the writer uses it on a column chart where the full names would slant
-    const model0 = (m.tmsl && (m.tmsl.model || m.tmsl)) || {};
+    const model0 = modelOf(m.tmsl);
     const short = (f) => { if (!f || f.c !== 'Day Name' || f.short) return f; const t = (model0.tables || []).find((x) => x.name === f.t), cs = (t && t.columns) || [], sc = cs.find((c) => c.name === 'Day Short');
       if (!sc) return f; const by = sc.sortByColumn ? null : cs.find((c) => c.name === 'Day of Week');
       return Object.assign({}, f, { short: Object.assign({ t: f.t, c: 'Day Short', type: 'string' }, sc.sortByColumn ? { ordered: true } : by ? { sortBy: { t: f.t, c: by.name } } : {}) }); };
@@ -886,7 +894,7 @@ server.registerTool('create_report', {
     const subtitles = a.subtitles && Object.fromEntries(Object.entries(a.subtitles).map(([k, v]) => [subKeys[k] || k, v]));
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bound))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
+      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bound))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
@@ -932,7 +940,7 @@ server.registerTool('create_report', {
     r = Pbip.build({
       name: a.name, title: a.title || a.name, lang: a.lang, rtl: rtlHand, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bindFor(kpisOf(a.pages))))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
+      model: { byPath: path.basename(m.folder), taken: takenNames(m.projectDir), names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bindFor(kpisOf(a.pages))))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
       // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
       texts: Object.assign({}, E.REPORT_TEXTS[a.lang === 'ar' ? 'ar' : 'en'], { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' }),
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, hand: true, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
@@ -964,7 +972,7 @@ server.registerTool('create_report', {
   // numbers the report shows whose format in the model has no thousand separator (or that have no format): Power BI
   // takes the format of a table cell, a tooltip and an unscaled card from the model, so the report can't add it
   const noSep = (() => {
-    const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, seen = new Set(), out = [];
+    const model = modelOf(m.tmsl), seen = new Set(), out = [];
     // (measures wherever they are shown; number columns only in the table, and never an identifier or a date part)
     fieldsOf(bind).filter((f) => f.m != null).concat((bind.table || []).filter((f) => f && f.c != null && f.num && !Fix.notAQuantity(f.c))).forEach((f) => {
       const k = keyOf(f); if (seen.has(k)) return; seen.add(k);
@@ -1096,7 +1104,7 @@ const CARD_RULE = 'a percentage (a % in its format or name; a rate or ratio; a m
 // model: these are told to the user, with the fix, to make in Power BI Desktop (or through Microsoft's MCP, with the
 // user's go). A month or day name without a sort column shows them A to Z; a ratio without a format string shows 0.34, not 34%.
 function modelNotes(tmsl, bind) {
-  const model = (tmsl && (tmsl.model || tmsl)) || {}, notes = [], seen = new Set();
+  const model = modelOf(tmsl), notes = [], seen = new Set();
   const find = (f, kind) => { const t = (model.tables || []).find((x) => x.name === f.t); return t && (t[kind] || []).find((x) => x.name === (f.c || f.m)); };
   const fields = bind ? [bind.date, bind.measure, ...(bind.kpis || []), ...Object.values(bind.cats || {}), ...Object.values(bind.y || {}), ...(bind.table || []), ...(bind.slicers || [])] : [];
   fields.filter(Boolean).forEach((f) => {
@@ -1184,9 +1192,10 @@ server.registerTool('read_report', {
   inputSchema: {
     path: z.string().describe('The report: a .pbip file, a .Report folder, or a folder holding definition/, inside the working folder'),
     pages: z.array(z.number().int().min(1).max(500)).min(1).max(50).optional().describe('Only these pages (1 is the first in the report\'s order), for a report too large for one answer'),
-    format: z.enum(['text', 'json']).default('text').describe('text (default): one line per visual, the smallest; json: the same as data')
+    format: z.enum(['text', 'json']).default('text').describe('text (default): one line per visual, the smallest; json: the same as data'),
+    from: z.number().int().min(0).max(100000).optional().describe('With pages: start the first page asked at this visual (the answer\'s MORE line, or next.from, gives it when a page is too large for one answer)')
   }, annotations: READS
-}, safe(async (a) => { const r = readReport(a.path, { pages: a.pages, format: a.format }); return typeof r === 'string' ? text(r) : compact(r); }));
+}, safe(async (a) => { const r = readReport(a.path, { pages: a.pages, format: a.format, from: a.from }); return typeof r === 'string' ? text(r) : compact(r); }));
 
 server.registerTool('plan_layout', {
   title: 'Plan a report page layout',
