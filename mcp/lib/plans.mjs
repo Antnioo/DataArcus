@@ -42,30 +42,69 @@ export function proposal(id, extra) {
   return Object.assign({ planId: id, status: 'proposed', written: false, writesAfterGo: p.writes, sayFirst: 'Nothing was written. ' + SHOW, expiresInMinutes: Math.round(TTL / 60000) }, extra || {});
 }
 
-/** approve_plan: marks a proposed plan approved with the user's reply. Throws with what to do when it can't. */
-export function approve(id, reply) {
+/** A plan that can still be approved (known, alive), or a throw with what to do: checked before the person is asked. */
+export function pending(id) {
   const p = plans.get(String(id || ''));
   if (!p) throw new Error(`Not approved: there is no plan ${JSON.stringify(String(id || ''))} (a plan id is good only in this session of the DataArcus server, and a restart forgets it). Make the plan again (plan_layout, or call the tool without planId), show it to the user and wait for their go.`);
   if (!alive(p)) { plans.delete(p.id); throw new Error(`Not approved: plan ${p.id} has expired (a plan is good for ${Math.round(TTL / 60000)} minutes). Make the plan again, show it to the user and wait for their go.`); }
-  const r = String(reply == null ? '' : reply).trim();
-  if (!r) throw new Error('Not approved: userReply is empty. Pass the user\'s own reply to the plan, in their words.');
-  if (NOT_GO.test(r) && !SAYS_GO.test(r.replace(/^\s*no\s+problem/i, ''))) throw new Error('Not approved: the user\'s reply does not say go. Change the plan as the user asks, show it again and wait.');
-  p.status = 'approved'; p.approvedAt = now(); p.reply = r.slice(0, 200);
-  return { planId: p.id, status: 'approved', kind: p.kind, allows: ALLOWS[p.kind], writes: p.writes, expiresInMinutes: Math.round(TTL / 60000),
-    note: 'Approved. Pass this planId to ' + ALLOWS[p.kind].join(' and ') + '. The tools check that the plan was approved; they can\'t check that a person typed the reply: approve a plan only after the user said go to the plan you showed.' };
+  return { id: p.id, kind: p.kind, writes: p.writes.slice(), status: p.status };
 }
 
-/** The gate: returns the approved plan, or throws "Nothing was written" with what to do. tool: the calling tool; model: its model's key (or null). */
-export function gate(tool, id, model) {
+/** approve_plan: marks a proposed plan approved. by: 'user-in-app' (the person said yes in the app's own prompt, MCP
+ *  elicitation) or 'assistant-reported' (the assistant passed the reply it says the person gave: the tools can't check
+ *  that a person typed it). Throws with what to do when it can't. (Audit 6, A6-3) */
+export function approve(id, reply, by) {
+  const p = plans.get(String((pending(id), id)));
+  const who = by === 'user-in-app' ? 'user-in-app' : 'assistant-reported';
+  const r = String(reply == null ? '' : reply).trim();
+  if (who === 'assistant-reported') {
+    if (!r) throw new Error('Not approved: userReply is empty, and this app can\'t ask the person itself. Pass the user\'s own reply to the plan, in their words.');
+    if (NOT_GO.test(r) && !SAYS_GO.test(r.replace(/^\s*no\s+problem/i, ''))) throw new Error('Not approved: the user\'s reply does not say go. Change the plan as the user asks, show it again and wait.');
+  }
+  p.status = 'approved'; p.approvedAt = now(); p.reply = (r || 'approved in the app').slice(0, 200); p.approvedBy = who;
+  return { planId: p.id, status: 'approved', approvedBy: who, kind: p.kind, allows: ALLOWS[p.kind], writes: p.writes, expiresInMinutes: Math.round(TTL / 60000),
+    note: 'Approved. Pass this planId to ' + ALLOWS[p.kind].join(' and ') + '. ' + (who === 'user-in-app'
+      ? 'The person approved it in the app\'s own prompt, which showed what will be written.'
+      : 'This app can\'t show DataArcus\'s own approval prompt, so the approval rests on the reply you passed: the tools can\'t check that a person typed it. Approve a plan only after the user said go to the plan you showed.') };
+}
+
+// Audit 6, A6-1 and A6-5: a plan pins what the write may use (data.pins[tool], stored at the proposal); the write's own
+// inputs are compared with it, key by key, and any difference is refused with the keys named. canon: one JSON form
+// (object keys sorted, undefined as null), so the same inputs always compare equal
+const canon = (v) => JSON.stringify(v === undefined ? null : v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().filter((key) => x[key] !== undefined).map((key) => [key, x[key]])) : x));
+function differences(want, got) {
+  const keys = [...new Set(Object.keys(want || {}).concat(Object.keys(got || {})))].sort(), off = [];
+  for (const k of keys) {
+    const w = (want || {})[k], g = (got || {})[k];
+    if (canon(w) === canon(g)) continue;
+    const isObj = (x) => x && typeof x === 'object' && !Array.isArray(x);
+    const sub = isObj(w) && isObj(g) ? [...new Set(Object.keys(w).concat(Object.keys(g)))].filter((s) => canon(w[s]) !== canon(g[s])) : [];
+    off.push(sub.length && sub.length <= 6 ? `${k} (${sub.join(', ')})` : k);
+  }
+  return off;
+}
+
+/** The gate: returns the approved plan, or throws "Nothing was written" with what to do. tool: the calling tool; model:
+ *  its model's key (or null); pin: the write's own inputs in the form the plan pinned them (A6-1, A6-5). */
+export function gate(tool, id, model, pin) {
   if (id == null || id === '') throw new Error(`Nothing was written: ${tool} writes a file only with an approved plan id (planId). ${tool === 'create_report' ? 'Call plan_layout with the model (path) and the plan\'s fields: it checks the plan against the tools\' limits and gives a plan id. ' : ''}${SHOW}`);
   const p = plans.get(String(id));
   if (!p) throw new Error(`Nothing was written: the plan id ${JSON.stringify(String(id))} is unknown (a plan id is good only in this session of the DataArcus server, and a restart forgets it). ${SHOW}`);
   if (!alive(p)) { plans.delete(p.id); throw new Error(`Nothing was written: plan ${p.id} has expired (a plan is good for ${Math.round(TTL / 60000)} minutes). Make the plan again. ${SHOW}`); }
   if (p.status !== 'approved') throw new Error(`Nothing was written: plan ${p.id} is not approved yet. ${SHOW}`);
+  if (p.used && p.used[tool]) throw new Error(`Nothing was written: plan ${p.id} was already used for ${tool} (a plan writes once). For another write, make a new plan, show it to the user and wait for their go.`);
   if (!ALLOWS[p.kind].includes(tool)) throw new Error(`Nothing was written: plan ${p.id} is a ${p.kind} plan, which allows ${ALLOWS[p.kind].join(' and ')}, not ${tool}. ${tool === 'create_report' ? 'A report needs a plan from plan_layout. ' : ''}${SHOW}`);
   if (p.model && model && p.model !== model) throw new Error(`Nothing was written: plan ${p.id} was made for another model. ${SHOW}`);
   if (tool === 'create_report' && !p.model) throw new Error(`Nothing was written: plan ${p.id} was made without the model; a report's plan comes from plan_layout with path (the model), so its fields are checked against it. ${SHOW}`);
+  const want = p.data && p.data.pins && p.data.pins[tool];
+  if (want && pin !== undefined) {
+    const off = differences(want, pin);
+    if (off.length) throw new Error(`Nothing was written: ${tool}'s inputs differ from the approved plan ${p.id} in ${off.join('; ')}. The user approved that plan, so only its inputs are written: pass the approved ones, or make a new plan with these, show it and wait for the user's go.`);
+  }
   return p;
 }
 
 
+
+/** After a successful write (audit 6, A6-2): the plan is used for that tool, and the same id is refused for it again. */
+export function consume(id, tool) { const p = plans.get(String(id)); if (p) { p.used = p.used || {}; p.used[tool] = true; } }

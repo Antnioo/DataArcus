@@ -30,6 +30,10 @@
   const COLUMN = ['columnChart', 'clusteredColumnChart', 'hundredPercentStackedColumnChart', 'lineChart', 'areaChart', 'stackedAreaChart', 'hundredPercentStackedAreaChart', 'lineClusteredColumnComboChart', 'lineStackedColumnComboChart', 'ribbonChart'];
   const BAR = ['barChart', 'clusteredBarChart', 'hundredPercentStackedBarChart'];
   const SLICER = ['slicer', 'advancedSlicerVisual', 'listSlicer', 'textSlicer'];
+  // visuals with nothing that has a side (the labs and round 13: they move only). Any other Power BI visual (a waterfall,
+  // a scatter chart, a decomposition tree...) is 'other': it moves only too, but the plan says no setting is proven
+  // for it (the cross-review's T6), instead of claiming it has no side
+  const SIDELESS = ['card', 'multiRowCard', 'kpi', 'gauge', 'donutChart', 'pieChart', 'funnel', 'treemap', 'map', 'filledMap', 'shapeMap', 'azureMap', 'image', 'shape', 'basicShape'];
   // a custom visual's type carries its id (letters and digits, like "ChicletSlicer1448559807354"); Power BI's own
   // types are plain words (the same test as check_report's)
   const isCustom = (type) => !/^[a-z][A-Za-z]*$/.test(String(type || ''));
@@ -46,7 +50,7 @@
     if (t === 'actionButton') return 'button';
     if (t === 'pageNavigator') return 'navigator';
     if (SLICER.includes(t)) return 'slicer';
-    return 'plain';
+    return SIDELESS.includes(t) ? 'plain' : 'other';
   }
   const KIND_WHAT = {
     column: 'column, line, area and combo charts: value axis at the right, categories right to left by the sort',
@@ -60,7 +64,8 @@
     slicer: 'slicers: moved only (their items keep Power BI\'s own alignment)',
     custom: 'custom visuals: moved only, their settings left as they are',
     group: 'groups: mirrored with their visuals inside',
-    plain: 'cards, gauges, donuts, maps, images, shapes and other visuals: moved only (nothing in them has a side)'
+    plain: 'cards, gauges, donuts, funnels, treemaps, maps, images and shapes: moved only (nothing in them has a side)',
+    other: 'other visuals (waterfall, scatter...): moved only; no right-to-left setting is proven for them'
   };
 
   // ---- small helpers ----
