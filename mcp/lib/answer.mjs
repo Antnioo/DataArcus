@@ -36,9 +36,29 @@ export function capAnswer(o, size) {
     walk(c, '');
     return best;
   };
+  // the backstop when no list is left to cut: the longest string, shortened (a single string of 200,000 characters;
+  // the fuzz test's F-TP), named in cut with what was kept
+  const longestString = () => {
+    let best = null;
+    const walk = (x, holder, key, p) => {
+      if (typeof x === 'string') { if (x.length > 400 && (!best || x.length > best.x.length)) best = { x, holder, key, p }; }
+      else if (Array.isArray(x)) x.forEach((y, i) => walk(y, x, i, p + '[' + i + ']'));
+      else if (x && typeof x === 'object') Object.entries(x).forEach(([k, v]) => { if (k !== 'truncated') walk(v, x, k, p ? p + '.' + k : k); });
+    };
+    walk(c, null, null, '');
+    return best;
+  };
   for (let n = 0; n < 400; n++) {
     const b = longest();
-    if (!b) break;
+    if (!b) {
+      const t = longestString();
+      if (!t) break;
+      cut[t.p] = { keptCharacters: 400, of: t.x.length };
+      t.holder[t.key] = t.x.slice(0, 400) + '…';
+      c.truncated = { cut, how: `This answer was cut to stay under ${ANSWER_MAX.toLocaleString('en-US')} characters: a text over 400 characters was shortened. Tell the user the answer was cut.` };
+      if (size(c) <= ANSWER_MAX) return c;
+      continue;
+    }
     const keep = Math.max(1, Math.floor(b.x.length / 2));
     cut[b.p] = { kept: keep, of: cut[b.p] ? cut[b.p].of : b.x.length };
     b.x.splice(keep);
