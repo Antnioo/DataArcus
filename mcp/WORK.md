@@ -1,8 +1,18 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Integration round 4: ALL MERGED" just below (tonight's rc head), then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Integration round 5" just below (the rc head), then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## Integration round 5: Z fixes + main + version sources (11 Oct, from 18:27 UTC, cloud builder 5; `fix/0.2.9-gate`; not merged to main, no PR)
+- Merged `fix/0.2.9-z-gate` at `dc96530` (builder 9: the outside review's Z-01..Z-04, Z-06, Z-07) and `main` at `c8f0840`
+  (Z-08: CHANGELOG, privacy workflow, blocking Windows job, deny-scan, gitleaks, bot workflows): no conflicts.
+- Z-08 version sources: PRIVACY's header "Checked against 0.2.9" (re-read against this head: deletions say what Z-04
+  does; Known gaps: A6-3 and the folder checks' limit open, the 0.2.9 closures listed by id); CHANGELOG's
+  "## [Unreleased]: 0.2.9" lists the release candidate's contents with the outside-review fixes in plain words (no
+  custom-visuals line: not in this branch). `mcp/package.json`'s version stays 0.1.0: the build writes 0.2.9-rc.1.
+- Tests: `npm test` **1196** + reader 36, 21, 21, 20, golden PASS, fuzz PASS (KNOWN lists empty), FUZZ_LONG 10,000
+  cases PASS; website 17 suites PASS; test-deny-scan 9, test-site-config, csp, check-min (62) PASS.
 
 ## Integration round 4: ALL MERGED (11 Oct, from 14:41 UTC, cloud builder 5; `fix/0.2.9-gate`; not merged to main, no PR)
 Tonight's rc build is this branch's head: the commit that adds this section (memory only) on top of **`805df7f`**, the
