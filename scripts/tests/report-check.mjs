@@ -27,7 +27,7 @@
 import { createRequire } from 'node:module';
 const { MEASURED } = createRequire(import.meta.url)('../../assets/js/report-rules.js');
 const BTW = MEASURED.BTN_ICON_TW;
-const BOX = (t) => MEASURED.BOX(t), BTN = (t) => MEASURED.BTN_TEXT(t), RESET = MEASURED.BTN_H, TW = MEASURED.BTN_TW;
+const BOX = (t) => MEASURED.BOX(t), RESET = MEASURED.BTN_H, TW = MEASURED.BTN_TW;
 const SLICER = MEASURED.SLICER, CH = MEASURED.CH;
 const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
 const num = (p) => parseFloat(lit(p)), str = (p) => String(lit(p) || '').replace(/^'|'$/g, '').replace(/''/g, "'");
@@ -77,7 +77,8 @@ export function layoutProblems(files) {
       } else if (v.visualType === 'pageNavigator') {
         // a page button puts a long name on two lines only when two lines fit its height: 3.5 x pt in Segoe UI, 3.2 x pt
         // in Tahoma (measured in Desktop 2.158, DESKTOP-TESTS.md round 1); otherwise it cuts it with "..."
-        const t = font(id(x), num(look((v.objects || {}).text).fontSize)), lines = Math.min(2, Math.floor(h / (1.8 * t)));
+        // (A4-6, audit 4: the lines from the measured page-button rule, not 1.8 x pt a line, which Desktop disproved)
+        const t = font(id(x), num(look((v.objects || {}).text).fontSize)), lines = MEASURED.PAGE_LINES(h, t, str(look((v.objects || {}).text).fontFamily));
         const longest = Math.max(...pageNames.map((s) => s.length)), each = w / pageNames.length;
         if (!(lines >= 1) || CH(t) * Math.ceil(longest / Math.max(1, lines)) > each) sizes.push(`${id(x)}: page names at ${t}pt don't fit ${pageNames.length} buttons in ${w}x${h}`);
         const per = ['hover', 'selected'].map((k) => num(state((v.objects || {}).text, k).fontSize));
@@ -122,7 +123,7 @@ export function headerAndRail(files) {
 // middle is at or below the group's (the title at 0.42 x its box). Returns { boxes, bad }.
 // Round 6: the text's middle by the font's own measured number (the same measurement: Segoe UI 3 + 1.19 x pt, Tahoma
 // 1.12 x pt; 1.2 x pt for a font that was not measured), as the report writer now places it; before, 1.2 x pt for all.
-const TEXT_MID = (font, t) => (/^segoe ui/i.test(String(font)) ? 3 + 1.19 * t : /^tahoma/i.test(String(font)) ? 1.12 * t : 1.2 * t);
+const TEXT_MID = MEASURED.TEXT_MID;
 export function headerProblems(files) {
   const bad = []; let boxes = 0;
   pagesOf(files).filter((p) => p.page.type !== 'Tooltip').forEach((p) => {
@@ -177,7 +178,7 @@ export function phoneTextProblems(files) {
       if (BOX(size) > h || (size > 8 && CH(size) * text.length > w)) say(`"${text}" at ${size}pt doesn't fit the phone's ${w}x${h}`);
     } else if (t === 'pageNavigator') {
       const sizes = ['default', 'hover', 'selected'].map((k) => { const a = num(state(mo.text, k).fontSize); return isNaN(a) ? num(state(o.text, k).fontSize) : a; }), size = sizes[0];
-      const lines = Math.min(2, Math.floor(h / (1.8 * size))), longest = Math.max(...pageNames.map((x) => x.length));
+      const lines = MEASURED.PAGE_LINES(h, size, str(state(mo.text, 'default').fontFamily) || str(state(o.text, 'default').fontFamily)), longest = Math.max(...pageNames.map((x) => x.length));
       if (sizes.some((x) => x !== size) || !(lines >= 1) || TW(size, Math.ceil(longest / Math.max(1, lines))) > w / pageNames.length) say(`page buttons at ${sizes.join('/')}pt don't fit ${pageNames.length} in the phone's ${w}x${h}`);
     } else if (t === 'slicer') {
       const a = num(plain(mo.header).textSize), b = num(plain(mo.items).textSize), size = Math.max(isNaN(a) ? slicerTheme || labelTheme : a, isNaN(b) ? slicerTheme || labelTheme : b);
