@@ -25,6 +25,7 @@ import { v030twin, v030engine, v030audit } from './test-0.3.0-twin.mjs';
 import { audit6 } from './test-audit6.mjs';
 import { zgate } from './test-z.mjs';
 import { v029a4 } from './test-0.2.9-a4.mjs';
+import { v029sweep } from './test-0.2.9-sweep.mjs';
 import { withPlans } from './test-plan.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
 
@@ -4475,6 +4476,8 @@ await v029design({ call, check, ROOT, fs });
 await v029agent({ call, check, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
 // ---------- audit 4's findings in the checks block (A4-1 to A4-14): test-0.2.9-a4.mjs, which also runs alone ----------
 await v029a4({ call, check, ROOT, fs });
+// ---------- 0.2.9, the design block's items of the laptop's sweep (S5/D19, S6, S7, D16): test-0.2.9-sweep.mjs, which also runs alone ----------
+await v029sweep({ call, check, ROOT, fs });
 // ---------- 0.3.0, the Arabic twin of an existing report: test-0.3.0-twin.mjs, which also runs alone ----------
 try { v030engine({ check }); } catch (e) { check(false, 'T10. the engine: ' + e.message); }
 await v030twin({ call: rawCall, check, ROOT, fs });
