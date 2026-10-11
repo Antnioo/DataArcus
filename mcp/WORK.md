@@ -1,8 +1,50 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "0.2.9 part 1" just below (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "0.2.9 part 2" just below, then part 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## 0.2.9 part 2: the report writer fixes (11 Oct, cloud builder; same branch `fix/0.2.9-gate`, on top of part 1 `4785367`; not merged, no PR)
+The reviewer's routine (11 Oct 05:52 UTC, "Builder 5: 0.2.9 part 2"): plan items 3, 4, 5, 7, 8, 9 and the answer to part
+1's decision (YES: the MCP's design default light, brand exact; golden themes and backgrounds move with the cause; the
+loud brand-harmony secondaries replaced by a calm, contrast-checked set). Part 1's behaviour is not changed (the laptop
+is proving it). Recipes: dataarcus-engine REPORT-FIXES-LAB, TOOLTIP-FIX-LAB, VALIDATOR-LAB, LINT-V2-LAB.
+
+### The plan (written before any code; LAYER in brackets)
+1. [field picker + report writer] **O-13 month axis:** a text time-axis column with no sort column (a "Month-Year" label)
+   whose table has a date column gets a report-level measure `Month start (sort)` = MIN of that date, in Tooltips, the
+   chart sorted by it (mirrored: descending), and a visual filter "last 12 months" (a report-level measure counted back
+   from the last date where the chart's measure is not blank, = 1). A month name the model or the picker sorts keeps its
+   number order (12 points). No date column: kept as today and told. plan_layout's `timeAxis` says which.
+2. [report writer] **O-14 tables:** auto-size off (no grow-to-fit), one `columnWidth` per field: numbers 90-130 by their
+   header (page-scaled), text columns share what is left (160 at least), within the visual's width minus 36; values
+   word-wrap. The hidden helper (1) and the Arabic hidden name column (0) keep their widths.
+3. [report writer] **O-4 bar labels:** `categoryAxis.maxMarginFactor` 50 on a bar chart under 560 wide (720-high units),
+   40 above.
+4. [report writer + field picker] **O-3** a visual filter "is not blank" on every chart's category column (said in the
+   plan); **O-6** no "Your logo"/«شعارك» placeholder in create_report's reports (option `logoPlaceholder: false`; the
+   website's template download keeps it); **O-7** the KPI picks prefer core counts and amounts: a plain SUM/COUNT
+   measure up, an acronym name (CPI, EOC) and predicted/forecast/estimated/index down; "budget" is a main word.
+5. [field picker] **O-2 number formats on the cards:** an amount (a currency format, or a SUM-like measure with a
+   whole-number format that is not a count) shows automatic units with 2 decimals (EUR 54.66M); counts and other
+   whole-number formats stay whole; percents as today; a format with decimals as today.
+6. [report writer] **Tooltip pages:** the category bar chart gets a Top 6 visual filter by its measure (title "Top 6");
+   the month trend, where the table has a date column, the last 6 months newest first (sort by month start descending,
+   a "last 6 months" filter) at a height for 6 bars; no scrollbar.
+7. [report writer] **$schema** on every JSON file of the report and the .pbip (checked; the theme file in
+   RegisteredResources is a theme, not a PBIR file, and is left as Power BI themes are).
+8. [design engine] plan_layout / create_report without a design: a light design (Corporate) instead of the dark
+   DataArcus one; generate_theme's brand palette: the brand exact, then a calm set each checked to 3:1 on the card
+   (darkened or lightened until it is), unless a harmony is asked.
+
+### Expected (written before any run)
+| Check | Expected |
+|---|---|
+| New `mcp/test-0.2.9b.mjs`, written first | red on `4785367` for every item; green after |
+| Golden (`golden-expected.json`) | visuals -1 per page where the report has no logo (the placeholder gone); themes and backgrounds light; KPI picks unchanged on the golden models unless a name is an acronym (each move recorded with its cause via --update); validator 0 and table headers 0 unchanged |
+| Older checks of the "Your logo"/«شعارك» placeholder in create_report's reports, of the table's grow-to-fit, of the dark default | changed to the new behaviour with the cause beside each; no expected number moved to pass |
+| `npm test` | all green, more checks than 782 |
+| Website suites (pbip, theme-generator, theme-generator-lab, design-engine), `check-min`, `csp`, `test-site-config` | PASS (the website's download gets 1-4 and 6-7 too: the shared writer) |
 
 ## 0.2.9 part 1: the gate, the plan's limits, the user's choices (11 Oct, cloud builder; branch `fix/0.2.9-gate` from main `517e702`; not merged, no PR)
 The owner approved the 0.2.9 plan on 11 Oct (`dataarcus-engine` business/PLAN-0.2.9-0.3.0.md, items 1, 2 and 6). The reviewer
