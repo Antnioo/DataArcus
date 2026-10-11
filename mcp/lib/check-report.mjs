@@ -23,6 +23,7 @@ const Rules = require('../../assets/js/report-rules.js');
 const SCHEMAS = path.join(HERE, '..', 'schemas');
 const SCHEMA_ROOT = 'https://developer.microsoft.com/json-schemas/';
 const SCHEMA_COMMIT = '8db0a64';
+const SCHEMA_FILE = /^https:\/\/developer\.microsoft\.com\/json-schemas\/[A-Za-z0-9_./-]+\/\d+\.\d+\.\d+\/schema(?:[.-]embedded)?\.json$/;
 const VALIDATOR_VERSION = (() => { try { return JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.resolve('@microsoft/powerbi-report-authoring-cli'))), '..', 'package.json'), 'utf8')).version; } catch (e) { return 'unknown'; } })();
 export const CHECKS = ['validator', 'schemas', 'sizes', 'selectors', 'phone', 'tooltips', 'theme', 'navigation', 'sort', 'rtl', 'lint'];
 
@@ -112,8 +113,11 @@ function schemaCheck(loc, out, notChecked, all, sk) {
     let j; try { j = readJson(f); } catch (e) { if (e instanceof TooBig && !sk.big.some((b) => b.file === rel(loc.reportDir, f))) sk.big.push({ file: rel(loc.reportDir, f), size: e.size }); continue; }
     const s = j && typeof j.$schema === 'string' ? j.$schema : null;
     if (!s) continue;
-    const validate = s.startsWith(SCHEMA_ROOT) ? ajv().getSchema(s) : null;
-    const key = s.startsWith(SCHEMA_ROOT) && family(s) && ver(s) ? `${family(s)} ${ver(s)}` : /reportThemeSchema/.test(s) ? 'the report theme schema' : 'a schema from another address';
+    // (A4-14, audit 4: only a whole bundled schema file, never a fragment or a query the report chose: a fragment
+    // compiles a sub-schema the file picked, and the file would count as checked with 0 errors)
+    const whole = SCHEMA_FILE.test(s);
+    const validate = whole ? ajv().getSchema(s) : null;
+    const key = !whole && /[#?]/.test(s) ? 'a schema address with a fragment or a query (only whole schema files are used)' : s.startsWith(SCHEMA_ROOT) && family(s) && ver(s) ? `${family(s)} ${ver(s)}` : /reportThemeSchema/.test(s) ? 'the report theme schema' : 'a schema from another address';
     if (!validate) { missing.set(key, (missing.get(key) || 0) + 1); continue; }
     checked++;
     if (!validate(j)) {
