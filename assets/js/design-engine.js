@@ -27,6 +27,9 @@
   // The theme's name when none is given (the name box shows it to new visitors): the theme JSON and every file use it,
   // so an empty or blank name gives one name everywhere. A name with text is kept exactly as typed.
   const DEFAULT_NAME = 'My Brand Theme';
+  // The longest theme name, as the name box takes it (maxlength 60) and generate_theme: repairState cuts a longer one
+  // (0.2.9, the audit's A2-12: a 5,000-character name reached the theme, the file names and the tools' answers)
+  const NAME_MAX = 60;
   const themeName = (name) => (name && String(name).trim() ? name : DEFAULT_NAME);
 
   // ---------- color math ----------
@@ -529,7 +532,7 @@
   // its keys (the MCP names any other key of a given design as ignored).
   const SCHEMA = {
     preset: { about: 'the preset the colours came from, or null', values: Object.keys(PRESETS).concat([null]) },
-    name: { about: 'the theme name (the theme JSON and the file names); at most 60 characters', type: 'text' },
+    name: { about: 'the theme name (the theme JSON and the file names); at most NAME_MAX (60) characters', type: 'text' },
     font: { about: 'the font of every text', values: FONTS },
     data: { about: 'the 8 data colours', type: '8 hex colours' },
     ui: { about: 'the page colours: background, card (the visuals), text, accent, good, neutral, bad', type: 'hex colours' },
@@ -582,6 +585,7 @@
       state.data = state.data.map((c, i) => { const h = hex(c); if (!h) say(`data[${i}]`, c, d.data[i], 'not a hex colour'); return h || d.data[i]; });
       state.ui = Object.fromEntries(Object.keys(d.ui).map((k) => { const h = hex(ui[k]); if (!h && ui[k] != null) say('ui.' + k, ui[k], d.ui[k], 'not a hex colour'); return [k, h || d.ui[k]]; }));
       if (typeof state.name !== 'string') { if (state.name != null) say('name', state.name, d.name, 'not a text'); state.name = d.name; }
+      if ([...state.name].length > NAME_MAX) { const cut = [...state.name].slice(0, NAME_MAX).join(''); say('name', `${[...state.name].length} characters`, cut, `a theme name is ${NAME_MAX} characters at most`); state.name = cut; }
       if (!FONTS.some((f) => f === state.font)) { if (state.font != null) say('font', state.font, d.font, `use one of ${FONTS.join(', ')}`); state.font = d.font; }
       if (state.preset != null && !PRESETS[state.preset]) { say('preset', state.preset, null, `not a preset; use one of ${Object.keys(PRESETS).join(', ')}`); state.preset = null; }
     }
@@ -617,7 +621,7 @@
   const fileBase = (name) => themeName(name).replace(/[^\p{L}\p{M}\p{N}_\- ]+/gu, '').trim().replace(/\s+/g, '-').toLowerCase() || 'power-bi-theme';
 
   const api = {
-    PRESETS, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
+    PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate, calmPalette,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
     fs, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
