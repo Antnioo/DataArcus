@@ -1,8 +1,52 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). Last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "0.2.9 part 1" just below (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## 0.2.9 part 1: the gate, the plan's limits, the user's choices (11 Oct, cloud builder; branch `fix/0.2.9-gate` from main `517e702`; not merged, no PR)
+The owner approved the 0.2.9 plan on 11 Oct (`dataarcus-engine` business/PLAN-0.2.9-0.3.0.md, items 1, 2 and 6). The reviewer
+reviews and merges; this builder never merges. Findings: P-1, O-1, O-8, O-11, O-12 (business/beta/OWNER-RESULTS-0.2.8.md).
+
+### The plan (written before any code)
+1. **LAYER MCP tools: the gate inside the tools (P-1).** The owner's Claude Desktop showed no approval prompt at all, so the
+   gate can't rely on the client. A plan registry in the server process (`mcp/lib/plans.mjs`): a plan id is
+   `proposed` when a tool proposes a write, `approved` only through a new tool `approve_plan { planId, userReply }` (the
+   user's own words after the plan was shown; a reply that starts with no/wait/stop/cancel is refused). Every tool that
+   writes a file refuses to write without an approved plan id: `generate_theme` (returns the design and the theme's
+   readability checks without writing; with an approved id it writes the file), `create_report` (refuses without one;
+   the id must come from `plan_layout` for the same model), `check_model_health` (findings as before; its fix scripts
+   are written only with an approved id, otherwise named as "after go" with a proposed id), `add_gulf_calendar`
+   (checks everything and says what it would write; writes with an approved id), `plan_layout` (writes nothing any
+   more: its format script is named, and create_report writes it after "go"). Unknown, expired (2 hours) or unapproved
+   ids are refused with a message telling Claude to show the plan and wait. Kinds: a `report` plan (plan_layout) allows
+   generate_theme and create_report for its model; a `theme` plan allows generate_theme; a `scripts` plan allows
+   check_model_health's scripts for its model; a `calendar` plan allows add_gulf_calendar for its model. The server
+   instructions and the writers' descriptions say this. **Honest limit:** the tools can force a plan step and an explicit
+   approval call; they cannot prove that a person typed "go" (an agent could call approve_plan on its own).
+2. **LAYER agent instructions + design engine: the plan checked against the tools' limits before it is shown (O-12).**
+   plan_layout returns `limits` (slicers 3, KPI cards 6, table fields 8, page filters 8, SVG columns 4, SVG cards 6,
+   page sizes, the visual kinds) and takes the plan's fields (`planFields`, create_report's `fields` shape, no caps in
+   the schema). A plan over a limit, or naming a field not in the model, gets no plan id: `planProblems` says what to
+   change. The instructions say: show only a plan that plan_layout accepted.
+3. **LAYER design engine: keep the user's choices.** O-1: `secondLayout` (assets/js/design-engine.js) keeps the first
+   page's filter side (`fpos`) instead of `start` (shared engine: the website's second page too; the design fixtures
+   whose first page has its rail at `end` or `top` move, each named). O-8: the page stays 1920 x 1080 unless the user
+   asks (plan_layout says `page.chosenBy` default/asked, the instructions forbid a smaller page for Arabic). O-11:
+   generate_theme defaults to a light theme (`mode`, light unless "dark" is asked) with the brand colour exact as the
+   first data colour and the accent; a colour is never changed for contrast: a failing check is said in the plan
+   (`sayInPlan`).
+
+### Expected (written before any run)
+| Check | Expected |
+|---|---|
+| New `mcp/test-0.2.9.mjs`, written first | red on `517e702` for every gate, limit and choice check (the ones that already hold, like 1920 x 1080 for Arabic by default, green and said so); all green after |
+| Tool list | 8 -> 9 tools (`approve_plan`); README and PRIVACY tables list it |
+| Older checks that asserted a write before a plan (plan_layout's format script file, generate_theme's file on the first call) | changed to the gate's behaviour, each named in the report with its cause; no expected number changed |
+| Golden tool-level (`golden-expected.json`) | visuals, validator 0, table headers unchanged (the report writer is not touched); the golden runner gets its plan ids through the same approve step |
+| Design fixtures | only the project cases whose first page has filters at `end` or `top` move (their second page's rail side) |
+| `npm test` | all green, more checks than before |
+| Website suites touched (design-engine, theme-generator, theme-generator-lab, pbip), `check-min`, `test-site-config` | PASS |
 
 ## Home page part A (9 Oct, cloud builder; website only; not merged, no PR)
 The owner's go ("I approve part A", and item 9 for the logo strip). Branch `fix/round-23-total`, restarted from main
