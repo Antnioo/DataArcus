@@ -1,6 +1,6 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "0.2.9 integration" just below, then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "0.2.9 integration" just below, then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
@@ -85,6 +85,55 @@ files), plus:
   tell an indicator from a core amount when both are computed.
 - O-2's decision (amounts under a million show K) and the reader's R1-R4, R6-R9 and the twin's T2-T8 are their blocks'.
 - T1 (invertAxis) is the laptop's tonight.
+
+### CI
+CI green on `d2300f9` and `da2347b`; red on `2fc8044` (the website's model-health suite crashed: its loader gives
+`module` without `require`), fixed in `da2347b`.
+
+## 0.2.9 audit fixes (picker) (11 Oct, cloud builder 5; same branch `fix/0.2.9-gate`; not merged, no PR)
+The reviewer's routines (08:43 and 09:26 UTC): the rest of builder 7's audit 3 on the field picker's side, plus A6-15;
+tests first, one commit per item, root fixes; nothing tuned to the portfolio's reports or fixtures. New suite
+`mcp/test-0.2.9p.mjs` (27 checks, made-up retail, HR, French, clinic, events models), now run by `test.mjs`.
+| Item | Commits (tests first) | What changed |
+|---|---|---|
+| A6-15 | `fbfe30a` -> `1d34473` | a month column without a sort-by column is noted by the picker's facts (type, whole words), not a word list |
+| A3-5 | `fbfe30a` -> `4a7f59c` | a time variant by its words or its time-intelligence DAX, never "Average"; every base measure ranks before any variant |
+| A3-6 | `fbfe30a` -> `6902493` | the rank by shape; the name words are one named tie-break (`TIEBREAK_WORDS`); a measure others build on +1; a French model ranks by shape alone |
+| A3-8, A3-7 (picker side) | `ab3c794` -> `c2e445b` | every column says `time` (a date table's, sorted by a number, or a date) and, for a calendar name, `cal: { kind, rows, family }` (month 12, day 7, quarter 4; english, arabic, hijri) |
+| A3-9 + "]" keys | `ab3c794` -> `4e185f0` | a JSDoc `Field` typedef; isMeasure, expr, amount, lang, i, twin in a WeakMap (`exprOf` reads a measure's DAX); the reach cache off the caller's options; `fieldKey` escapes "]" (DAX's "]]") in langsOf, twinsOf, the language note and the server's lookups |
+| A3-3 | `77c473d` -> `d750912` | one format rule: `formatOf` and `reportFormatOf` in `field-meaning.js` (moved from the health engine and the server); the picker's `cardKind` derives pct, pctFormat, wholeFormat, tableFormat and the "full" card format from it; `measureOf` beside `fieldOf`; the readers keep a column's format and summarizeBy and a measure's dynamic format; the server's `withRightFormats`, `cardFormatOf`, `rightOf` are gone |
+| A3-2 | `a2dcb21` -> `d3b50fd` | `suggest(tables, n, { pinned, excludeColumns, axisFor, lang, kpiValues })`: the user's fields pinned through build (a pinned table keeps its formats); no slicer on a column a page filter fixes (`excluded`); a flag kept true runs the axis by its own day column, found by the flag's word + "day" (`axisBy`; "Is Ramadan" -> "Ramadan Day", "Is Festival" -> "Festival Day"); Arabic: the calendar's Arabic name columns by twin or by kind (`calendarNames` for those with none, `calendarSwaps`); a day name's short twin by shape (`short`); `mapFields` (display names as copies, never set on the picker's fields); the counted binding goes through build; the server and the plan's lint only pass options |
+
+**Tests before -> after:** `npm test` 946 -> **973** (+ v029p 27), reader **36**, golden **PASS** (11 tasks).
+Golden moves, each with its cause in `golden-expected.json`'s "why": task 6's fourth KPI (A3-5, `58ce8c1`); task 10
+suggestChars 5097 -> 6085 (A3-8/A3-7's marks, `a0bc56e`; diffed: only `time`/`cal` added). A3-3 and A3-2 moved no golden number.
+Website: **17 suites PASS**; `check-min` (57), `csp`, `test-site-config` PASS. Test fixes of my own new checks (each before it first passed, cause beside it): the A3-2 slicer
+check needed a second category (one category leaves no "next column", as before); the server-source check matched the
+page filter's own Ramadan note and add_gulf_calendar's column list (tools-layer text, not picker rules): narrowed.
+
+### 0.2.9 audit fixes (picker), for the laptop (each expected before the run)
+| # | Check | Expected |
+|---|---|---|
+| P1 | Golden task 3's Ramadan report (page filter Is Ramadan = true) | the line by Ramadan Day; no slicer on Is Ramadan / Hijri Year; note names the axis and the flag |
+| P2 | An Arabic report on the Gulf calendar | Month Name (Arabic) on the axis, Day Name (Arabic) on charts, sorted by their numbers; a name with no Arabic column noted |
+| P3 | A column chart by Day Name (English) | Day Short (Sun ... Sat) in calendar order where the full names would slant; the note names the columns |
+| P4 | A measure "Visit Count" COUNTROWS formatted `#,0.00`, in a table and on a card | 1,234 (no decimals) in both, on the website's download and the MCP's |
+| P5 | The website's Theme Generator download and create_report on the same model | the same card and table formats in both (one rule) |
+| P6 | Builder 11 (writer): read `time` and `cal` from the bound fields instead of the name words | (writer's block; not changed here) |
+
+### 0.2.9 audit fixes (picker), the decision needed
+- With fields or page filters, create_report's binding has no category pool (the old server rebuilt the binding and
+  lost `catPool`; kept as it was, `noted()` in server.mjs, and the plan's lint does the same). Keep it, or give such
+  reports the pool too (each chart of a page then takes a category not used on it yet)?
+
+### 0.2.9 audit fixes (picker), seen, not in scope
+- `parseTmdl` appends the lines of a measure's `formatStringDefinition` (depth 3) to its DAX text (pre-existing; the
+  DAX text is read for counts, text and time intelligence only).
+- The counted binding's funnel and tooltip measure are now the second KPI count (build's rule); before they were the
+  second count of any kind (a category count when the model has no sums): only on a model with no measures and no sums.
+- Display names given for a column that ends up in the category pool now show on those charts too (mapFields maps the
+  pool; before, only the bound fields were named).
+- Packaging must carry `assets/js/field-meaning.js` (now also the format rule).
 
 ## 0.2.9 part 2: the report writer fixes (11 Oct, cloud builder; same branch `fix/0.2.9-gate`, on top of part 1 `4785367`; not merged, no PR)
 The reviewer's routine (11 Oct 05:52 UTC, "Builder 5: 0.2.9 part 2"): plan items 3, 4, 5, 7, 8, 9 and the answer to part
