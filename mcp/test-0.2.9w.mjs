@@ -76,6 +76,29 @@ export function v029w({ check }) {
     chk(() => measures(r2).filter((m) => /^No data: Sales/.test(m.name)).length === 2 && new Set(measures(r2).map((m) => m.name)).size === measures(r2).length,
       () => `A3-11: "Sales" and "Sales" + U+202E get a No data measure each, with different names: ${r2.threw || JSON.stringify(measures(r2).map((m) => m.name))}`);
   }
+
+  // ---------- A3-7 (writer side): the picker's nameLike, not a hand copy; names measured by their own family ----------
+  {
+    const s = src();
+    chk(() => !/Bind_nameLike/.test(s) && !/\(month\|day\|weekday\)\\s\*_\?\(name\|short\)/.test(s), () => 'A3-7: the writer keeps no hand copy of the picker\'s nameLike');
+    const col = (c, w, lang) => get(() => build(base({ cats: { bar: C('City'), column: c, donut: C('Channel') } }), { lang, pages: hand(1280, 720, [{ kind: 'column', title: 'C', x: 24, y: 80, w, h: 400 }]) }));
+    const bars = (r) => (r.barCharts || []).length;
+    // 1000 wide: twelve English month names fit their share of the plot (September 66 wide at 10pt); the Hijri ones don't
+    // ("Jumada al-Akhirah" 113): a Hijri month chart is written as a bar chart, a Gregorian one stays a column chart
+    const hijri = col(C('Hijri Month Name', { sortBy: { t: D, c: 'Hijri Month No' } }, D), 1000), greg = col(C('Month Name', { sortBy: { t: D, c: 'Month No' } }, D), 1000);
+    chk(() => bars(hijri) === 1 && bars(greg) === 0, () => `A3-7: Hijri month names are measured as Hijri names (a bar chart at 1000 wide), Gregorian ones as theirs (a column chart): hijri ${hijri.threw || JSON.stringify(hijri.barCharts)} gregorian ${greg.threw || JSON.stringify(greg.barCharts)}`);
+    // 800 wide in Arabic (Tahoma): the English names would not fit ("September" 70), the Arabic ones do ("سبتمبر" 45)
+    const ar = col(C('اسم الشهر', { ordered: true }, D), 800, 'ar'), arDays = col(C('Day Name (Arabic)', { ordered: true }, D), 560, 'ar');
+    chk(() => bars(ar) === 0 && bars(arDays) === 0, () => `A3-7: Arabic month and day names are measured as Arabic names (both stay column charts): months ${ar.threw || JSON.stringify(ar.barCharts)} days ${arDays.threw || JSON.stringify(arDays.barCharts)}`);
+    // the picker's kind, row count and family, where it gives them, before any name
+    const given = col(C('Period', { kind: 'month', rows: 12, family: 'hijri' }, D), 1000);
+    chk(() => bars(given) === 1, () => `A3-7: a category the picker marks { kind: 'month', family: 'hijri' } is measured as Hijri month names: ${given.threw || JSON.stringify(given.barCharts)}`);
+    // a table's known rows: "Year Quarter" holds many quarters (never 4); a quarter or a day the picker counts is known
+    const tbl = (c) => get(() => build(base({ table: [c, M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 120 }]) }));
+    const tight = (r) => !!(r.files && visuals(r).some((v) => v.visual.visualType === 'tableEx' && JSON.stringify(v.visual.objects.grid || '').includes('rowPadding'))) || (r.tableRows || []).length > 0;
+    const yq = tbl(C('Year Quarter', {}, D)), qq = tbl(C('Quarter', {}, D)), pk = tbl(C('Weekday Label', { kind: 'day', rows: 7 }, D)), my = tbl(C('Month Year', {}, D));
+    chk(() => !tight(yq) && tight(qq) && tight(pk) && !tight(my), () => `A3-7: rows known only for a quarter without a year, a day or month name, or the picker's count: Year Quarter ${tight(yq)}, Quarter ${tight(qq)}, picker's 7 days ${tight(pk)}, Month Year ${tight(my)}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

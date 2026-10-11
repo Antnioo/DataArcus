@@ -316,7 +316,35 @@
   // row's "Total" only in the first projection's column and only when that is a column of text (measured in Desktop
   // 2.158, 4 Oct: with a measure first there was no "Total"), so the category sits at the left end and "Total" shows.
   const isTextField = (f) => f.c != null && !f.num && f.agg == null;
-  const Bind_nameLike = (name) => /(^|\s|_)(month|day|weekday)\s*_?(name|short)$|^(day of week|weekday|mmm|mmmm)$|short\s*month|^(اسم\s*)?(الشهر|اليوم)$/i.test(String(name).replace(/\s*\((arabic|عربي)\)\s*$/i, '').replace(/hijri|fiscal|هجري|مالي/i, '').trim());
+  // 0.2.9, audit 3's A3-7: the field picker's own nameLike (pbip-bind.js), never a hand copy of it (the copy had lost
+  // "Month Year"). In the browser the picker is loaded with the user's model; without it (the sample) no name is
+  // taken for a day or month name. A category's kind: the picker's, where it gives it ({ kind, rows, family }), else
+  // read from the name as before: a day name (7 rows), a month name (12; "Month Year" is no month name: it holds a
+  // month per year), a quarter without a year in its name (4; "Year Quarter" holds many).
+  const Bind = () => { try { return (typeof module !== 'undefined' && module.exports ? require('./pbip-bind.js') : root.DABind) || null; } catch (e) { return null; } };
+  const nameLike = (n) => { const b = Bind(); return !!(b && b.nameLike && b.nameLike(n)); };
+  const YEARISH = /year|سنة|السنة|عام/i;
+  const KIND_ROWS = { day: 7, month: 12, quarter: 4 };
+  const catKind = (f) => {
+    if (!f || f.c == null) return null;
+    if (f.kind) return { kind: String(f.kind), rows: f.rows != null && isFinite(+f.rows) ? +f.rows : KIND_ROWS[f.kind] || 0, family: f.family || null };
+    const c = String(f.c), kind = /(^|\s)(day|weekday)|اليوم/i.test(c) && nameLike(c) ? 'day' : /quarter|الربع/i.test(c) && !YEARISH.test(c) ? 'quarter'
+      : /month|الشهر/i.test(c) && nameLike(c) && !YEARISH.test(c) ? 'month' : null;
+    return kind ? { kind, rows: KIND_ROWS[kind], family: null } : null;
+  };
+  // The names a day or month category shows, by its family, to measure them (asBar, Day Short): English, Arabic or Hijri
+  // (the calendar generator's names, calendar-generator.js). Arabic: the name has Arabic letters or says so ("(Arabic)").
+  const NAMES = {
+    day: { en: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], ar: ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'] },
+    month: { en: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'], ar: T.ar.months },
+    hijri: { en: ['Muharram', 'Safar', 'Rabi al-Awwal', 'Rabi al-Thani', 'Jumada al-Ula', 'Jumada al-Akhirah', 'Rajab', "Sha'ban", 'Ramadan', 'Shawwal', "Dhu al-Qa'dah", 'Dhu al-Hijjah'],
+      ar: ['محرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'] }
+  };
+  const namesOf = (f, kind) => {
+    const c = String(f.c), ar = /[\u0600-\u06FF]/.test(c) || /\((arabic|عربي|ar)\)\s*$/i.test(c) || f.lang === 'ar' ? 'ar' : 'en';
+    const hijri = kind === 'month' && (/hijri/i.test(String(f.family || '')) || /hijri|هجري/i.test(c));
+    return (NAMES[hijri ? 'hijri' : kind] || {})[ar] || null;
+  };
   // Round 14, the owner's ask (6 Oct 2026; his capture "GM AR dark 720" had Day Name at the left of an Arabic table):
   // the text column is the LAST projection in a right-to-left report, so Desktop draws it at the right edge, and the
   // measures sit to its left in reading order. This replaces design choice 5 (text first, for the total row's "Total",
@@ -1001,11 +1029,13 @@
       // of the plot (as S3 works it out) is written as a bar chart, whose names are level, where the slot holds one bar
       // per name (22 each + 46, measured in round 0 at 1280 x 720, scaled with the page). A model's "Day Short"
       // (round 18) is used first, so such a chart stays a column chart.
-      const NAMES = { day: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'], month: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] };
+      // (0.2.9, A3-7: the names are measured in their own family, NAMES and namesOf: an Arabic month name by the Arabic
+      // names, a Hijri one by the Hijri names; a category the picker gives a kind is taken by that kind)
       const asBar = (s) => {
         const f = B && s.kind === 'column' && (B.cats || {}).column;
         if (!f || f.short || f.c == null) return s;
-        const list = /(^|\s)(day|weekday)\s*name|اسم اليوم/i.test(f.c) ? NAMES.day : /(^|\s)month\s*name|اسم الشهر/i.test(f.c) ? NAMES.month : null;
+        const kind = f.kind ? (['day', 'month'].includes(String(f.kind)) ? String(f.kind) : null) : /(^|\s)(day|weekday)\s*name|اسم اليوم/i.test(f.c) ? 'day' : /(^|\s)month\s*name|اسم الشهر/i.test(f.c) ? 'month' : null;
+        const list = kind && namesOf(f, kind);
         if (!list) return s;
         const k = pg.page.h / 720, room = (s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40) / list.length, widest = Math.max(...list.map((d) => textWidth(d, LABEL, false, font)));
         // (night sitting 6-7 Oct, measured in Desktop 2.158 on a 221-high slot at 1280 x 720, names at the theme's 10pt: a
@@ -1302,7 +1332,7 @@
           // full names, at the label size, are wider than a seventh of the chart's plot (the value axis about 40)
           if (B && s.kind === 'column' && ((Bt.cats || {}).column || {}).short) {
             const c0 = Bt.cats.column, room = (s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40) / 7;
-            const widest = Math.max(...['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map((d) => textWidth(d, LABEL, false, font)));
+            const widest = Math.max(...namesOf(c0, 'day').map((d) => textWidth(d, LABEL, false, font)));   // (A3-7: the day names of its own family)
             if (widest + 6 > room) { Bt = Object.assign({}, Bt, { cats: Object.assign({}, Bt.cats, { column: Object.assign({}, c0.short, { name: label(c0) }) }) }); shortDays.push({ page: pg.name || base }); }
           }
           const query = B ? bindQuery(s.kind, Bt, kpiIndex, rtl) : null;
@@ -1332,7 +1362,8 @@
             // (round 22, the code review's f: "Year Quarter" and "Fiscal Year Quarter" end the same way and hold 8 to 40 values:
             // a name with a year in it is never taken for four columns)
             const four = (n) => /(^|\s|\.)quarter$|الربع/i.test(n) && !/year|سنة|السنة|عام/i.test(n);
-            if (four(cn) || four(String(((Bt.cats || {}).column || {}).c || ''))) {
+            const cf0 = (Bt.cats || {}).column || {};   // (A3-7: the picker's kind and count first, where it gives them)
+            if (cf0.kind ? String(cf0.kind) === 'quarter' && (catKind(cf0) || {}).rows === 4 : four(cn) || four(String(cf0.c || ''))) {
               const yf = ((Bt.y || {}).column || Bt.measure || {}), pct = !!yf.pct;
               visual.objects = visual.objects || {};
               visual.objects.labels = obj(Object.assign({ show: bool(true), labelPosition: str('OutsideEnd'), labelDisplayUnits: num(0) }, pct ? {} : { labelPrecision: lit('1L') }));
@@ -1433,7 +1464,7 @@
           // 1.415 x the text's height + 2 x rowPadding (1 when none is written), the header 7 more; the title 1.5 x its
           // size; 16 for the visual's own padding.
           if ((s.kind === 'table' || s.kind === 'matrix') && query) {   // (a matrix too: round 16, #15)
-            const tf = tableFields(Bt, rtl).find(isTextField), n = tf ? (/(^|\s)(day|weekday)|اليوم/i.test(tf.c) && Bind_nameLike(tf.c) ? 7 : /quarter|الربع/i.test(tf.c) ? 4 : /month|الشهر/i.test(tf.c) && Bind_nameLike(tf.c) ? 12 : 0) : 0;
+            const tf = tableFields(Bt, rtl).find(isTextField), n = ((tf && catKind(tf)) || {}).rows || 0;   // (A3-7: the picker's count, else the kind's)
             if (n) {
               let T = tableText || +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
               const need = (pad, t = T) => { const pitch = 1.415 * t * 4 / 3 + 2 * pad; return 1.5 * TITLE * 4 / 3 + pitch + 7 + (n + 1) * pitch + 16; };
