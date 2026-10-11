@@ -565,9 +565,18 @@
     return { dax: L.join('\n'), errors: c.errors };
   }
 
+  // A text bound to a value and placed inside a ring: the ring's number (round 15: on a KPI card the card shows the value,
+  // so the ring there has none; round 18: a table picture drawn under 40 high has none either, its number unreadable)
+  const ringNumber = (layers) => { const rings = (layers || []).filter((l) => l && l.type === 'ring');
+    return (l) => !!(l && l.type === 'text' && l.bind && l.bind.text && l.bind.text.v && rings.some((r) => Math.hypot((+l.x || 0) - (+r.cx || 0), (+l.y || 0) - (+r.cy || 0)) < (+r.r || 20))); };
   // The measure's expression alone (no name line, no comment lines): for a report-level measure, where the name and
   // the data category are fields of their own. The same VARs and the same RETURN as toDax.
-  function toMeasure(design) {
+  // opts.context (audit 6, A6-11: the variants are made here, not re-derived by the MCP): 'card' leaves the ring's
+  // number out (ringNumberDropped: true when there was one); 'table' also returns noNumber, the measure without it.
+  function toMeasure(design, opts) {
+    const context = opts && opts.context, d0 = design || {}, inRing = ringNumber(d0.layers), has = (d0.layers || []).some(inRing);
+    if (context === 'card' && has) return Object.assign(toMeasure(Object.assign({}, d0, { layers: d0.layers.filter((l) => !inRing(l)) })), { ringNumberDropped: true });
+    if (context === 'table' && has) { const full = toMeasure(d0), small = toMeasure(Object.assign({}, d0, { layers: d0.layers.filter((l) => !inRing(l)) })); return small.errors.length ? full : Object.assign(full, { noNumber: small.dax }); }
     const c = compile(design);
     const L = c.vars.map((v) => 'VAR ' + v.name + ' = ' + dax(v.node));
     L.push('VAR _svg =');

@@ -398,5 +398,21 @@ const tricky = { name: 'Odd "name"', w: 100, h: 20, values: [{ id: 'a', kind: 'm
   let r3 = null; try { r3 = SVGKPI.toDax(named); } catch (e) { r3 = null; }
   ok(r3 && !/\p{Cc}/u.test(r3.dax.split('\n')[0]), 'A3-4: the measure\'s own name line holds no control character');
 }
+
+// A6-11 (audit 6): the compiler makes the variants a context needs, so the MCP no longer re-derives them: on a KPI card
+// (context 'card') a text bound to a value inside a ring is left out (the card shows the number); in a table (context
+// 'table') the full picture, plus noNumber, the same without that text (for pictures drawn under 40 high)
+{
+  const ringD = { w: 60, h: 60, values: [{ id: 'p', label: 'Pct', kind: 'measure', measure: 'Pct' }],
+    layers: [{ type: 'ring', cx: 30, cy: 30, r: 24, bind: { value: { v: 'p', d0: 0, d1: 1 } } }, { type: 'text', x: 30, y: 34, text: '0', bind: { text: { v: 'p', fmt: 'auto' } } }] };
+  const bare = Object.assign({}, ringD, { layers: ringD.layers.slice(0, 1) });
+  let card = null, table = null, plain = null;
+  try { card = SVGKPI.toMeasure(ringD, { context: 'card' }); table = SVGKPI.toMeasure(ringD, { context: 'table' }); plain = SVGKPI.toMeasure(ringD); } catch (e) { card = null; }
+  ok(card && card.dax === SVGKPI.toMeasure(bare).dax && card.ringNumberDropped === true, 'A6-11: on a card the number inside a ring is left out, and said (ringNumberDropped)');
+  ok(table && table.dax === plain.dax && table.noNumber === SVGKPI.toMeasure(bare).dax, 'A6-11: in a table the full picture, and noNumber without the ring\'s number');
+  const noRing = { w: 60, h: 20, values: ringD.values, layers: [{ type: 'text', x: 30, y: 14, text: '0', bind: { text: { v: 'p', fmt: 'auto' } } }] };
+  const t2 = SVGKPI.toMeasure(noRing, { context: 'table' }), c2 = SVGKPI.toMeasure(noRing, { context: 'card' });
+  ok(!('noNumber' in t2) && !c2.ringNumberDropped && c2.dax === SVGKPI.toMeasure(noRing).dax, 'A6-11: no ring, no variant: the design as it is');
+}
 console.log(`${checks - fails}/${checks} checks passed`);
 process.exit(fails ? 1 : 0);

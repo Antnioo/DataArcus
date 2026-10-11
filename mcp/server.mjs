@@ -351,26 +351,22 @@ function resolveSvgColumns(tables, list, opt) {
     if (opt && opt.palette) { const t = Svg.themed(d, opt.palette); if (t.errors.length) { problems.push(`${where} ("${label}"): ${[...new Set(t.errors)].slice(0, 3).join('; ')}`); return null; } d = t.design; }
     // round 15 (the owner's go on round 14's recommendation 3): on a KPI card the card shows the value, so a ring there
     // has no number inside it (a text bound to a value whose place is inside a ring is left out); a table picture keeps it
-    if (WHAT === 'svgCards') { const rings = d.layers.filter((l) => l && l.type === 'ring');
-      const inside = (l) => l && l.type === 'text' && l.bind && l.bind.text && l.bind.text.v && rings.some((r) => Math.hypot((+l.x || 0) - (+r.cx || 0), (+l.y || 0) - (+r.cy || 0)) < (+r.r || 20));
-      const n0 = d.layers.length; d.layers = d.layers.filter((l) => !inside(l)); if (d.layers.length < n0 && opt.ringNumbers) opt.ringNumbers.push(label); }
+    // (audit 6, A6-11: the compiler makes that variant: toMeasure(d, { context: 'card' }) below)
     if (opt && opt.mirror && d.mirror !== false) d.mirror = true;
     if (d.layers.some((l) => l && l.type === 'spark')) { const f = find(d.dateCol, 'c'); if (!f) problems.push(`${where} ("${label}"): a sparkline needs dateCol, a date column of the model written as Table[Column]`); else d.dateCol = daxColumn(f.t.name, f.o.name); }
     else delete d.dateCol;
     d.name = label;
     if (problems.length > before) return null;
     let c;
-    try { c = Svg.toMeasure(d); } catch (e) { c = { dax: '', errors: ['the design can\'t be compiled: ' + String(e && e.message || e).slice(0, 120)] }; }
+    try { c = Svg.toMeasure(d, { context: WHAT === 'svgCards' ? 'card' : 'table' }); if (c.ringNumberDropped && opt.ringNumbers) opt.ringNumbers.push(label); } catch (e) { c = { dax: '', errors: ['the design can\'t be compiled: ' + String(e && e.message || e).slice(0, 120)] }; }
     if (c.errors.length) { problems.push(`${where} ("${label}"): ${[...new Set(c.errors)].slice(0, 5).join('; ')}`); return null; }
     if (c.dax.length > SVG_CAP) { problems.push(`${where} ("${label}"): the measure is ${c.dax.length.toLocaleString('en-US')} characters; the limit is ${SVG_CAP.toLocaleString('en-US')}, to keep the report's size and its speed (Power BI draws longer pictures, slowly): use fewer or shorter layers`); return null; }
     if (!/RETURN\n\s+(IF \( ISBLANK \( \w+ \), BLANK \(\), )?"data:image\/svg\+xml;utf8," & _svg( \))?$/.test(c.dax)) { problems.push(`${where} ("${label}"): the compiled measure does not end in a data:image/svg+xml text`); return null; }
     // round 18 (the owner's answer, 6 Oct ~20:51 Dubai: "yes drop the number under 40"): a ring as a table picture
     // drawn under 40 high has no number inside (its number could not be read at 28); the writer picks this version
     // where the picture comes out that small, and the table's own value column carries the number
-    let small = null;
-    if (WHAT === 'svgColumns') { const rings = d.layers.filter((l) => l && l.type === 'ring');
-      const inside = (l) => l && l.type === 'text' && l.bind && l.bind.text && l.bind.text.v && rings.some((r) => Math.hypot((+l.x || 0) - (+r.cx || 0), (+l.y || 0) - (+r.cy || 0)) < (+r.r || 20));
-      if (d.layers.some(inside)) { try { const c2 = Svg.toMeasure(Object.assign({}, d, { layers: d.layers.filter((l) => !inside(l)) })); if (!c2.errors.length) small = c2.dax; } catch (e) { small = null; } } }
+    // (audit 6, A6-11: the compiler's own variant, toMeasure's noNumber in the 'table' context)
+    const small = WHAT === 'svgColumns' && c.noNumber ? c.noNumber : null;
     const withMeasures = tables.find((t) => t.measures.length) || tables[0];
     return { label, t: entity || (withMeasures && withMeasures.name), expression: c.dax, ...(small ? { expressionNoNumber: small } : {}), page: sc.page != null ? sc.page : null, card: sc.card != null ? sc.card : null,
       w: Math.max(8, Math.min(2000, +d.w || 240)), h: Math.max(8, Math.min(2000, +d.h || 80)) };
