@@ -9,7 +9,7 @@ export const E = require('../../assets/js/design-engine.js');
 export const { DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, SCHEMA } = E;
 // The engine's parts the MCP tools use (the audit's A2-8: server.mjs reaches the engine only through this adapter; the
 // adapter itself reads and writes no file)
-export const { PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, REPORT_TEXTS, clampHex, lum, buildTheme, projectPages, themeName, fileBase, imageSize, isSmall } = E;
+export const { PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, REPORT_TEXTS, texts, clampHex, lum, buildTheme, projectPages, themeName, fileBase, imageSize, isSmall } = E;
 export const designRtl = E.rtl;
 
 const HARMONIES = ['analogous', 'complementary', 'triadic', 'mono'];
@@ -134,7 +134,7 @@ export function planLayout(a) {
     smallPage = Object.assign({}, sp, { say: `The page is ${sp.w} wide, under ${E.SMALL_PAGE.w}: the executive layout's four charts and table would be cut or scroll there, so this plan uses the single-focus layout (the KPI cards and one large chart). Say so in the plan; a page ${E.SMALL_PAGE.w} wide or more takes the executive layout.` });
   }
   E.repairState(design, fix);
-  const lang = a.lang, nm = (pair) => (lang === 'ar' ? pair[1] : pair[0]), layout = design.layout;
+  const lang = a.lang, nm = (x) => E.label(x, lang), layout = design.layout;   // (A2-9: labels keyed by language)
   // one row per visual, as the website's slot table: its name, the suggested visual, and x, y, w, h in page units
   const slots = E.computeSlots(layout, lang, { tableFields: a.tableFields }).map((s) => Object.assign({ role: nm(s.role), kind: s.kind, visual: nm(E.KINDS[s.kind]) }, E.boxOf(s, layout)));
   // the PBIR visual.json position, in reading order (top to bottom, then along the reading direction: the order
