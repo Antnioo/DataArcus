@@ -23,6 +23,7 @@ import { v029agent } from './test-0.2.9-agent.mjs';
 import { INSTRUCTIONS_MAX } from './lib/agent-text.mjs';
 import { v030twin, v030engine, v030audit } from './test-0.3.0-twin.mjs';
 import { audit6 } from './test-audit6.mjs';
+import { zgate } from './test-z.mjs';
 import { v029a4 } from './test-0.2.9-a4.mjs';
 import { withPlans } from './test-plan.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
@@ -4480,6 +4481,8 @@ await v030twin({ call: rawCall, check, ROOT, fs });
 await v030audit({ call: rawCall, check, ROOT, fs });
 // ---------- audit 6 (the MCP tools block): test-audit6.mjs, which also runs alone ----------
 await audit6({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
+// ---------- the outside review of the 0.2.9 release candidate (Z-01..Z-07, the tools layer): test-z.mjs, which also runs alone ----------
+await zgate({ call: rawCall, check, ROOT, fs });
 // ---------- round 17 follow-up: G-04, check_report's instruction-like names in suspiciousNames (owner: all recommended) ----------
 // the name stays withheld (only the placeholder), each entry has its kind and reason, and the check's result is the
 // same as for a plainly named visual
