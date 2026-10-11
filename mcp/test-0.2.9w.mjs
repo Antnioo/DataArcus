@@ -150,6 +150,24 @@ export function v029w({ check }) {
     const tg = fs.readFileSync(path.join(REPO, 'assets/js/theme-generator.js'), 'utf8'), order = ['pbip-query', 'pbip-sizing', 'pbip-notes', 'pbip-page', 'pbip-export'].map((f) => tg.indexOf(f + '.min.js?v='));
     chk(() => order.every((i, k) => i > 0 && (k === 0 || i > order[k - 1])), () => `A3-12: the website loads the writer's modules before pbip-export.min.js: ${JSON.stringify(order)}`);
   }
+
+  // ---------- the audit's "seen, not in scope" items in the writer: B-23 (a table's grid entry), B-06 (a text column's room) ----------
+  {
+    // B-23: a table whose known rows need tight rows (grid.rowPadding 0) and that holds pictures (grid.imageHeight) keeps both:
+    // the pictures' entry replaced the rows' one
+    const r = get(() => build(base({ table: [C('Day Name', { sortBy: { t: D, c: 'Day No' } }, D), M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 150 }]),
+      svgColumns: [{ page: 0, t: T, m: 'Bar', expression: '"<svg/>"', w: 120, h: 24 }] }));
+    const grid = r.files ? ((visuals(r).find((v) => v.visual.visualType === 'tableEx') || { visual: { objects: {} } }).visual.objects.grid || []) : [];
+    chk(() => grid.length === 1 && grid[0].properties.rowPadding && grid[0].properties.imageHeight && grid[0].properties.imageWidth,
+      () => `B-23: one grid entry with the tight rows and the pictures' size: ${r.threw || JSON.stringify(grid)}`);
+    // B-06: a text column's room was 12 letters whatever it holds; a day or month name's values are known (its family's
+    // names), so its room is its widest name: "Wednesday" (71) needs less, "Jumada al-Akhirah" (113) more
+    const tbl = (c, w) => get(() => build(base({ table: [c, M('A'), M('B'), M('C')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w, h: 400 }]) }));
+    const cut = (x) => (x.tableColumns || []).length + (x.tableSmaller || []).length;
+    const days = tbl(C('Day Name', { sortBy: { t: D, c: 'Day No' } }, D), 330), hij = tbl(C('HM', { kind: 'month', family: 'hijri' }, D), 350), plain = tbl(C('Customer'), 330);
+    chk(() => cut(days) === 0 && cut(hij) > 0 && cut(plain) > 0,
+      () => `B-06: a known name column takes its widest name's room (days fit 330; the picker's Hijri months, under a short header, don't fit 350), another text column 12 letters as before: days ${days.threw || cut(days)}, hijri ${hij.threw || cut(hij)}, customer ${plain.threw || cut(plain)}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
