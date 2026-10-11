@@ -589,6 +589,19 @@
       const n = Math.max(1, R.n), sh = Math.max(R.minH, Math.min(R.maxH, (s.h - 2 * R.pad - R.resetH - R.gap * n) / n));
       return Object.assign({}, s, { h: Math.min(s.h, Math.ceil(2 * R.pad + n * sh + R.gap * n + R.resetH)), stack: true });
     });
+    // 0.2.9 rc1 (the laptop's PERF-COMPARE S7, and Task 1: the column under the fitted rail was empty to the page's
+    // bottom): a visual of a row that starts below the fitted rail and stands beside the rail's column (within SLOT_GAP)
+    // takes the rail's column to the row's height; a row beside the rail keeps its width (no L shape)
+    if (R) out.filter((r) => r.kind === 'slicer' && r.stack).forEach((r) => {
+      const end = r.y + r.h;
+      out = out.map((x) => {
+        if (x === r || x.kind === 'title' || x.kind === 'logo' || x.y < end + 1) return x;
+        const gap = x.x >= r.x + r.w ? x.x - (r.x + r.w) : r.x - (x.x + x.w);
+        if (gap < 0 || gap > SLOT_GAP) return x;
+        const x0 = Math.min(x.x, r.x), x1 = Math.max(x.x + x.w, r.x + r.w);
+        return Object.assign({}, x, { x: x0, w: x1 - x0 });
+      });
+    });
     return { slots: out, dropped };
   }
   // fitSlots' options in other units (k: the units wanted per unit given; the background's 720 grid from page units is

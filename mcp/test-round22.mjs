@@ -151,10 +151,12 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     const four = narrow.concat(wide);
     chk(() => four.length === 4 && four.every((v) => /\((Region|Channel)\)$/.test(altOf(v) || '')), () => `h. each chart's alt text carries its bracketed name: ${JSON.stringify(four.map(altOf))}`);
     const s = await hand('R22 same column', [{ kind: 'bar', x: 36, y: 100, w: 500, h: 300 }, { kind: 'donut', x: 600, y: 100, w: 500, h: 300 }]);
-    const st = vis(s).filter((v) => /Chart$/.test(v.visual.visualType) && v.position.width === 500).map(titleOf);
+    // (changed in 0.2.9 rc1, item 4: a bar chart by a category that is not time shows its top N, its title starts
+    // "Top N: "; the numbering is of the title without that prefix, so the prefix is left out of the comparison)
+    const st = vis(s).filter((v) => /Chart$/.test(v.visual.visualType) && v.position.width === 500).map(titleOf).map((t) => String(t).replace(/^(Top|أعلى) \d+: /, ''));
     // (changed in round 22b, the reviewer's second review, item 8: two charts with the same measure and column kept the
     // same title and alt text; they are now numbered after the first, "(2)", like the charts of a bracket group)
-    const sa = vis(s).filter((v) => /Chart$/.test(v.visual.visualType) && v.position.width === 500).map(altOf);
+    const sa = vis(s).filter((v) => /Chart$/.test(v.visual.visualType) && v.position.width === 500).map(altOf).map((t) => String(t).replace(/^(Top|أعلى) \d+: /, ''));
     chk(() => st.length === 2 && st.slice().sort().join('|') === 'Total Sales by Region|Total Sales by Region (2)' && sa.slice().sort().join('|') === st.slice().sort().join('|'), () => `e. two charts by the same column: the second numbered, "(2)", its alt text the same: ${JSON.stringify([st, sa])} ${s.err ? s.t.slice(0, 200) : ''}`);
   }
   // f. data labels above the columns only where the columns are four: "Quarter", never "Year Quarter" (8 to 40 values)
@@ -248,6 +250,9 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
   // 8. a table whose two kept fields are wider than its box even at 8pt is told. The review's other half (a field that
   //    fits at the smaller size stays out) is REFUTED: the size loop before the round 22 shrink already tries every size
   //    down to 8 and keeps the most fields (at 700 wide Qty fits at 8pt, 644, and is kept; this passed before the fix)
+  //    (changed in 0.2.9 rc1, item 2: a column's room is now its bold header or its widest value plus the measured cell
+  //    padding, and the table's own 36 of frame comes off its width, so the three fields need 676 + 36 at 8pt; the check
+  //    is made at 720 wide, where they still fit only at 8pt: 834 at 10pt)
   {
     const long1 = 'Sales channel used to complete the whole transaction', long2 = 'Total net sales after every discount and every return';
     model('r22b-fit', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col(long1, 'string')],
@@ -255,7 +260,7 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     const mk = (w) => ask('create_report', { path: 'r22b-fit', name: 'R22b fit ' + w, fields: { kpis: [`Sales[${long2}]`], measure: `Sales[${long2}]`, category: `Sales[${long1}]`, table: [`Sales[${long1}]`, `Sales[${long2}]`, 'Sales[Qty]'] },
       pages: [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'table', x: 36, y: 100, w, h: 300 }] }] });
     const cols = (x) => { const t = vis(x, 'r22b-fit').find((v) => v.visual.visualType === 'tableEx'); return t ? t.visual.query.queryState.Values.projections.length : 0; };
-    const fit = await mk(700), tiny = await mk(300);
+    const fit = await mk(720), tiny = await mk(300);
     chk(() => !fit.err && cols(fit) === 3 && !(fit.j.tableColumns || []).length, () => `8 (REFUTED). at 8pt Qty fits too and is kept: ${cols(fit)} columns, tableColumns ${JSON.stringify(fit.err ? fit.t.slice(0, 200) : fit.j.tableColumns || null)} ${notes(fit).slice(0, 300)}`);
     chk(() => !tiny.err && /wider than (its|the) table/.test(notes(tiny)), () => `8. two fields wider than a 300-wide table even at 8pt are told: ${notes(tiny).slice(0, 500)}`);
   }

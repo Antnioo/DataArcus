@@ -36,12 +36,13 @@
     const timeExt = [];   // 0.2.9 part 2: the time axes' report measures (DateTime and Integer), into reportExtensions.json with the others
     const timeAxes = [];   // what was done to each time axis, for the answer
     let blankFiltered = 0;
-    const bound = [];   // 0.2.9, A6-12: what each written visual shows, page by page: { page, visuals: [{ kind, fields }] }   // charts given the "is not blank" filter (the cross-review's G13: the note only then)
+    const bound = [];
+    const chartTops = [];   // 0.2.9 rc1: category charts cut to their top N, { page, field, top }   // 0.2.9, A6-12: what each written visual shows, page by page: { page, visuals: [{ kind, fields }] }   // charts given the "is not blank" filter (the cross-review's G13: the note only then)
     return {
       tableColumns, tabRows, noPageButtons, leftOut, kpiTitles, titles, tableOrder, tableRows,
       headerGrew, tableSmaller, tableWide, subtitlesUsed, blankKept, noData, noDataSkipped, modelNames,
       extRenamed, freeExt, rowLabels, rowLabelSkipped, barCharts, shortDays, ringsSmall, svgSizes,
-      timeExt, timeAxes, blankFiltered, bound
+      timeExt, timeAxes, blankFiltered, bound, chartTops
     };
   }
 
@@ -51,7 +52,7 @@
     headerGrew: n.headerGrew, tableSmaller: n.tableSmaller, tableWide: n.tableWide, noDataSkipped: n.noDataSkipped, svgSizes: n.svgSizes, noPageButtons: n.noPageButtons, tableColumns: n.tableColumns,
     rowLabels: n.rowLabels.map((x) => ({ page: x.page, t: x.t, c: x.c, m: x.m })), rowLabelSkipped: n.rowLabelSkipped, extRenamed: n.extRenamed, chartColors: r.chartColors, chartAxes: r.chartAxes,
     tabRows: n.tabRows, ringsSmall: n.ringsSmall, shortDays: n.shortDays, barCharts: n.barCharts, blankKept: n.blankKept, subtitlesUsed: [...n.subtitlesUsed], timeAxes: n.timeAxes,
-    blankFiltered: n.blankFiltered, tooltipLimits: r.tooltipLimits, bound: n.bound });
+    blankFiltered: n.blankFiltered, tooltipLimits: r.tooltipLimits, bound: n.bound, chartTops: n.chartTops });
 
   const api = {
     make, result

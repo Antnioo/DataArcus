@@ -13,7 +13,7 @@
     AR_MONTHS, HEX6, PF_KINDS, SCHEMA, TYPES, bool, daxNames, gradientEnds, guid, hasControl, isTime, json,
     mixHex, obj, pageFilterOf, pfLiteral, rnd, timeAxisPlan
   } = Query;
-  const { barNameShare, columnRoom, textWidth } = Sizing;
+  const { barNameShare, cellRoom, columnRoom, textWidth } = Sizing;
 
 
   // ---------- zip (stored) ----------
@@ -230,6 +230,7 @@
    * @property {{top: number, months: number}} tooltipLimits
    * @property {Array<{page: string, visuals: Array<{kind: string, fields: string[]}>}>} bound  what each written visual shows,
    *   page by page (A6-12): its fields as Table[Field] or Sum(Table[Field]), the helpers left out
+   * @property {Array<{page: string, field: string, top: number}>} chartTops  category charts cut to their top N (rc1)
    */
   const KIND_NAMES = Object.keys(TYPES);
   const PBI_LITERAL = /^(true|false|null|'(?:[^']|'')*'|-?\d+L|-?\d+(\.\d+)?D)$/;
@@ -459,6 +460,6 @@
 
 
   // AR_MONTHS: the one Arabic month list (the cross-review's duplicates: the twin uses it too)
-  const api = { build, zip, crc32, textWidth, columnRoom, hasControl, daxNames, pageFilterOf, fitOptions, timeAxisPlan, barNameShare, AR_MONTHS: T.ar.months.slice() };
+  const api = { build, zip, crc32, textWidth, columnRoom, cellRoom, hasControl, daxNames, pageFilterOf, fitOptions, timeAxisPlan, barNameShare, AR_MONTHS: T.ar.months.slice() };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbip = api;
 })(typeof self !== 'undefined' ? self : this);
