@@ -25,6 +25,11 @@ import { getCapabilities } from '@microsoft/powerbi-core-visual-schema';
 
 // one test of custom versus native for every block (assets/js/visual-types.js, Microsoft's catalog)
 const VT = createRequire(import.meta.url)('../../assets/js/visual-types.js');
+// Microsoft's validator's own table of required roles and maxima per visual type (its metadata provider): the referee
+// of every native visual this module chooses (the laptop proof of 11 Oct: a donut written with no value, a map with no
+// location: PBIR_ROLE_REQUIRED_MISSING; two categories in a donut: PBIR_ROLE_MAX_EXCEEDED)
+let VP = null;
+try { VP = await (await import('@microsoft/powerbi-report-authoring-cli')).getMetadataProvider(); } catch (e) { VP = null; }
 
 // ---- the role words (lower-case words; a role name is split at case changes, digits and other characters) ----
 // Order matters: a role takes the first class one of its words belongs to (ColumnValues: bar before value).
@@ -144,7 +149,7 @@ function rolesOf(v, customRoles, temporal) {
     else if (has('time') && shape === 'values' && fields.every((f) => f.kind === 'aggregation' && /^(Min|Max)$/.test(f.agg))) eff = 'timeHelper'; // the first date of a period: the axis's helper, no value
     else if (shape === 'columns') eff = has('latitude') ? 'latitude' : has('longitude') ? 'longitude' : has('location') ? 'location' : has('node') ? 'node' : has('from') ? 'from' : toWord ? 'to'
       : { bar: 'mcolumns', x: 'category', y: 'category', rows: 'rows', time: 'time', category: 'category', series: 'series', breakdown: 'breakdown' }[cls] || 'anonCol';
-    else eff = has('latitude') ? 'latitude' : has('longitude') ? 'longitude' : has('indicator') ? 'indicator' : has('from') ? 'fromV' : toWord && has('goal') ? 'toV'
+    else eff = has('latitude') ? 'latitude' : has('longitude') ? 'longitude' : has('series') && words.some((w) => /^colou?rs?$/.test(w)) ? 'colorValue' : has('indicator') ? 'indicator' : has('from') ? 'fromV' : toWord && has('goal') ? 'toV'
       : { goal: 'goal', min: 'min', max: 'max', line: 'line', bar: 'bar', x: 'x', y: 'y', size: 'size', node: 'size', value: 'value', category: 'extra', series: 'value', time: 'value', location: 'extra' }[cls] || 'anonVal';
     return { role, cls, eff, words, named: cls !== 'other', fields, cols, vals };
   }).filter((r) => r.fields.length);
@@ -185,7 +190,8 @@ export function meaningOf(visual, opts) {
   if (R.some((r) => r.eff === 'colorRule')) lost.push('its colour rule role (marks coloured by a field): in Power BI that is conditional formatting by a measure, set by hand');
   // tooltips, and a value role that is a label (a category word holding values), go to Tooltips; the axis's date helper is
   // no value (a native time axis sorts itself)
-  const SIDE = ['tooltip', 'extra', 'colorRule', 'timeHelper'];
+  const SIDE = ['tooltip', 'extra', 'colorRule', 'timeHelper', 'colorValue'];
+  if (R.some((r) => r.eff === 'colorValue')) lost.push('its colour by a value (marks shaded by a measure): the native visual colours by a legend category, or by conditional formatting set by hand');
   const live = R.filter((r) => !SIDE.includes(r.eff)), tips = R.filter((r) => r.eff === 'tooltip' || r.eff === 'extra').flatMap((r) => r.fields.filter((f) => r.eff === 'tooltip' || isValue(f)).map(copy));
   const named = live.length > 0 && live.every((r) => r.named);
   const by = (...effs) => live.filter((r) => effs.includes(r.eff));
@@ -196,7 +202,7 @@ export function meaningOf(visual, opts) {
   if (!live.length) return out('unknown', {}, { why: `${custom} with no fields in its roles: nothing tells what it shows` });
 
   // the shape: which family of kinds the fields can show
-  let shape, roles, drill = [], series = null, why, kind;
+  let shape, roles, drill = [], series = null, why, kind, aggregate = null;
   const valueRoles = by('value', 'indicator', 'bar', 'anonVal', 'y', 'size', 'line', 'goal', 'min', 'max', 'x');
   const catRoles = by('category', 'time', 'x', 'y').filter((r) => r.cols.length).concat(by('anonCol'));
   if (by('start').length && by('end').length) {
@@ -216,12 +222,14 @@ export function meaningOf(visual, opts) {
     const lat = by('latitude').flatMap((r) => r.fields.map(copy)).slice(0, 1), lon = by('longitude').flatMap((r) => r.fields.map(copy)).slice(0, 1);
     const places = cols('location').concat(by('category').filter(named2).flatMap((r) => r.cols.map(copy)));
     const legend = cols('series').concat(by('category').filter((r) => !named2(r)).flatMap((r) => r.cols.map(copy)));
-    roles = withTips({});
-    if (lat.length && lon.length) { roles.Y = lat; roles.X = lon; if (places.length) lost.push('the place names on the map (the native bubbles are placed by latitude and longitude; their names are not shown)'); }
-    else roles.Category = places.length ? places : lat.concat(lon);
+    // Azure map needs a Location (Microsoft's validator): the place's name, else the first category; latitude and
+    // longitude go with it averaged (its capabilities: with a Location they are values), so each place sits where they say
+    roles = withTips({ Category: places.length ? places.slice(0, 1) : legend.splice(0, 1) });
+    if (lat.length && lon.length) { roles.Y = lat.map((f) => Object.assign({}, f, { kind: 'aggregation', agg: 'Avg' })); roles.X = lon.map((f) => Object.assign({}, f, { kind: 'aggregation', agg: 'Avg' })); aggregate = { Y: 'Avg', X: 'Avg' }; }
     const size = vals('size', 'value', 'anonVal').slice(0, 1); if (size.length) roles.Size = size;
     if (legend.length) roles.Series = legend.slice(0, 1);
-    why = `${roles.Y ? 'a latitude and a longitude' : 'a location'}${size.length ? ' and a value' : ''}${legend.length ? ' by a category' : ''}: a map`;
+    if (!places.length && roles.Category.length) lost.push('the place names: its category is used as the location, which Power BI looks up on the map; check the places');
+    why = `a location${roles.Y ? ' with its latitude and longitude' : ''}${size.length ? ', sized by a value' : ''}${legend.length ? ' by a category' : ''}: a map`;
   } else if (by('x').length && (by('y').length || by('value').length)) {
     shape = 'scatter';
     roles = withTips({ Category: cols('category', 'time', 'anonCol'), X: vals('x'), Y: vals('y', 'value').slice(0, 1), Size: vals('size').slice(0, 1) });
@@ -276,9 +284,11 @@ export function meaningOf(visual, opts) {
       const lines = vals('line'), bars = vals('bar');
       let main = vals('value', 'indicator', 'anonVal', 'y', 'size', 'goal', 'min', 'max');
       // a KPI value beside the chart's own values (a total shown in a donut's hole): not one of its values
-      const kpiVals = vals('indicator');
-      if (kpiVals.length && (lines.length || bars.length || main.length > kpiVals.length)) {
-        const ks = new Set(kpiVals.map((f) => f.queryRef)); main = main.filter((f) => !ks.has(f.queryRef));
+      // (by its role, not by its field: the laptop proof's Z1, a donut whose value and KPI value are the same measure lost
+      // both and was written with no value)
+      const others = vals('value', 'anonVal', 'y', 'size', 'goal', 'min', 'max');
+      if (by('indicator').length && (lines.length || bars.length || others.length)) {
+        main = others;
         lost.push('the total it shows over the chart (its own KPI value): a card placed over the native visual can show it');
       }
       roles = withTips({ Category: cat });
@@ -348,7 +358,7 @@ export function meaningOf(visual, opts) {
     else lost.push(`the ${drill.length} drill levels: the native visual shows them side by side, not as a drill-down`);
   }
   lost.push('the custom visual\'s own look (colours, labels, animation) is not carried over: the report\'s theme gives the native one its look');
-  return out(kind, roles, { drill, series, confidence: conf, why: `${custom}: ${why}`, lost, htmlNeeded: kind === 'network' });
+  return out(kind, roles, Object.assign({ drill, series, confidence: conf, why: `${custom}: ${why}`, lost, htmlNeeded: kind === 'network' }, aggregate ? { aggregate } : {}));
 }
 
 // ---- Microsoft's capabilities of the native visuals (@microsoft/powerbi-core-visual-schema 0.1.1) ----
@@ -388,6 +398,12 @@ export function fitsCapabilities(type, roles) {
   const maps = caps.dataViewMappings || [];
   const condOk = !maps.length || maps.some((m) => !m || !Array.isArray(m.conditions) || !m.conditions.length || m.conditions.some(meets));
   if (!condOk) problems.push(`${type} can't show ${used.map(([r, l]) => `${l.length} in ${r}`).join(', ')} (none of its field-count conditions is met)`);
+  // Microsoft's validator: every required role filled, no role over its maximum (it counts every field, drill levels too)
+  const entry = VP ? VP.getVisualEntry(type) : null;
+  if (entry) {
+    entry.requiredRoles.filter((r) => !((roles || {})[r] || []).length).forEach((r) => problems.push(`${type} needs its ${r} role (${dr[r] && dr[r].displayName || r}) filled`));
+    Object.entries(entry.maxPerRole).filter(([r, mx]) => ((roles || {})[r] || []).length > mx).forEach(([r, mx]) => problems.push(`${type}'s ${r} takes at most ${mx} field(s)`));
+  }
   return { ok: problems.length === 0, problems };
 }
 
@@ -410,6 +426,8 @@ function candidatesOf(m) {
     [...new Set(order)].forEach((k) => {
       if (k === 'combo') out.push({ kind: k, native: NATIVE.combo, roles: Object.assign({}, base, R.Y2 ? { Y: R.Y, Y2: R.Y2 } : { Y: Y.slice(0, 1), Y2: Y.slice(1) }) });
       else if (k === 'waterfall') out.push({ kind: k, native: NATIVE.waterfall, roles: Object.assign({ Category: R.Category || [], Y }, R.Breakdown ? { Breakdown: R.Breakdown } : {}, tips) });
+      // a pie or donut by two categories: the second as its details (Microsoft's validator: its Category takes one field)
+      else if ((k === 'pie' || k === 'donut') && base.Category.length === 2 && !base.Series) out.push({ kind: k, native: NATIVE[k], twoLevel: true, roles: Object.assign({}, base, { Category: base.Category.slice(0, 1), Series: base.Category.slice(1), Y }) });
       else out.push({ kind: k, native: NATIVE[k], roles: Object.assign({}, base, { Y }) });
     });
     out.push(table);
@@ -451,12 +469,36 @@ export function nativeFor(visual, opts) {
     const note = drillsIn(best.native) ? `the custom visual's own drill-down: Power BI's drill buttons on the native visual take its place, the ${m.drill.length} levels kept as a hierarchy` : `the ${m.drill.length} drill levels: the native visual shows them side by side, not as a drill-down`;
     if (i >= 0) lost[i] = note; else lost.push(note);
   }
+  // what the custom visual showed and the native one can show too (opts.facts: the writer's formatFacts of its own flags)
+  const f = o.facts || {}, format = {}, bc = best ? capsOf(best.native) || {} : {}, bobj = bc.objects || {};
+  let expand = 0;
+  if (best) {
+    if (best.twoLevel) { const i = lost.findIndex((x) => /drill/.test(x)); const note = 'the drill-down from its first category to its second: the native donut shows both at once, the second as its details'; if (i >= 0) lost[i] = note; else lost.push(note); }
+    if (CHARTS.includes(best.kind) && !['pie', 'donut'].includes(best.kind)) format.axisTitles = false; // the custom visuals have none; Power BI would add the fields' names
+    if (f.valueLabels) { if (bobj.labels) format.valueLabels = true; else lost.push('its value labels: the native visual has none'); }
+    if (f.categoryLabels) { if (bobj.categoryLabels && best.kind === 'scatter') format.categoryLabels = true; else lost.push('the labels under its marks (the category\'s names): the native visual has no such labels'); }
+    if (f.trend) { if (bobj.trend) format.trend = true; else lost.push('its regression line'); }
+    if (f.thresholds) lost.push('its threshold lines: add constant lines on the native visual by hand');
+    if (best.kind === 'scatter' && f.legend !== true && (best.roles.Series || []).length) {
+      best.roles = Object.assign({}, best.roles); delete best.roles.Series;
+      lost.push('its colour split by a legend field: the original showed no legend, so the native scatter keeps one colour');
+    }
+    if (best.kind === 'map') format.stylePicker = false;
+    // a timeline shows a finer date level than the top one: the native chart opens one level down (years with their quarters)
+    const lv = m.drill.filter((x) => x.level);
+    if (hintsOf(type).includes('time') && lv.length >= 2 && drillsIn(best.native)) {
+      expand = 1;
+      const nm = (x) => (/^[A-Za-z ]{1,20}$/.test(String(x.level)) ? String(x.level).toLowerCase() : 'the next level');
+      lost.push(`the date level it chose by its zoom: the native chart opens at ${nm(lv[1])} within ${nm(lv[0])}; its drill buttons move between the levels`);
+    }
+  }
   const keeps = best ? Object.entries(best.roles).filter(([, l]) => l.length).map(([r, l]) => `${roleLabel(best.native, r)} (${n(l.length, 'field', 'fields')})`).join(', ') : '';
   const short = lost.map((x) => x.split(':')[0]).join('; ');
   const tell = best ? `This custom visual becomes a native ${LABEL[best.kind] || best.native}${best.native === 'multiRowCard' ? ' (multi-row card)' : ''}${guess ? ' (a guess from its fields\' kinds: the custom visual\'s own role definitions are not in the report)' : ''}. It keeps ${keeps}. It loses ${short}.`
     : m.kind === 'network' ? `No native Power BI visual draws this custom visual's network: an HTML/SVG measure in an image-capable visual can (you approve it in the plan), or a table of its links. It loses ${short}.`
     : `No native Power BI visual can show this custom visual's fields as they are: it can be kept as it is or left out. Nothing is decided without you.`;
-  return Object.assign({}, m, best ? { kind: best.kind, native: best.native, roles: best.roles } : { native: null }, { custom: true, candidates: ranked, guess, lost, tell, htmlNeeded: m.kind === 'network' });
+  const extras = best ? Object.assign({ format, tooltips: !!(bc.dataRoles || []).some((r) => r.name === 'Tooltips') }, expand ? { expand } : {}, m.aggregate && best.native === m.native ? { aggregate: m.aggregate } : {}) : {};
+  return Object.assign({}, m, best ? { kind: best.kind, native: best.native, roles: best.roles } : { native: null, aggregate: undefined }, extras, { custom: true, candidates: ranked, guess, lost, tell, htmlNeeded: m.kind === 'network' });
 }
 
 // read_report's record of one visual (step B): null for a Power BI visual; for a custom one { kind, native, why, tell,
@@ -485,9 +527,10 @@ export function replacementsOf(inv, opts) {
   const o = opts || {}, out = [];
   ((inv && inv.pages) || []).forEach((p) => (p.visuals || []).forEach((x) => {
     if (!x.meaning) return; // the reading block gives a meaning to custom visuals only
-    const r = nativeFor(x, Object.assign({}, o, { declared: new Set([x.type]) }));
+    const r = nativeFor(x, Object.assign({}, o, { declared: new Set([x.type]) }, o.factsOf && x.json ? { facts: o.factsOf(x.json) } : {}));
     out.push({ page: p.n, pageName: p.name, visual: x.id, place: `${x.x},${x.y}`, size: `${x.w}x${x.h}`, from: shortType(x.type), kind: r.kind, native: r.native, label: r.native ? LABEL[r.kind] || r.native : null,
       roles: r.native ? Object.fromEntries(Object.entries(r.roles).map(([k, l]) => [k, l.map((f) => f.queryRef).filter(Boolean)])) : {},
+      format: r.format || {}, tooltips: !!r.tooltips, ...(r.expand ? { expand: r.expand } : {}), ...(r.aggregate ? { aggregate: r.aggregate } : {}),
       why: r.why, tell: r.tell, lost: r.lost, guess: r.guess, confidence: r.confidence, htmlNeeded: r.htmlNeeded, candidates: (r.candidates || []).map((c) => ({ native: c.native, fits: c.fits })) });
   }));
   return out;
