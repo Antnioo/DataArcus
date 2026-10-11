@@ -1,15 +1,16 @@
 // The design tools' logic: a design (the Theme Generator's saved design) from the tools' inputs, with every value that
 // could not be used listed with what was used instead. The engine is the website's own (assets/js/design-engine.js),
 // so the MCP and the Theme Generator give the same theme JSON and slot tables byte for byte.
-import fs from 'node:fs';
-import path from 'node:path';
 import { createRequire } from 'node:module';
-import { inside, nothingAt } from './model.mjs';
 
 const require = createRequire(import.meta.url);
 export const E = require('../../assets/js/design-engine.js');
 // the design's keys and its written schema are the engine's (the audit's A2-7)
 export const { DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, SCHEMA } = E;
+// The engine's parts the MCP tools use (the audit's A2-8: server.mjs reaches the engine only through this adapter; the
+// adapter itself reads and writes no file)
+export const { PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, REPORT_TEXTS, clampHex, lum, buildTheme, projectPages, themeName, fileBase, imageSize, isSmall } = E;
+export const designRtl = E.rtl;
 
 const HARMONIES = ['analogous', 'complementary', 'triadic', 'mono'];
 // the light page of a brand theme (0.2.9, O-11): the Corporate preset's (the cross-review's G7: one light page, the
@@ -158,13 +159,3 @@ export function contrastReport(design) {
   return { contrast: c, warnings };
 }
 
-// A file inside the DataArcus folder that doesn't exist yet: name.ext, name-2.ext, name-3.ext... (a name held by
-// anything, a link included, is skipped)
-export function freeFile(folder, base, ext) {
-  const dir = inside(folder || '.');
-  fs.mkdirSync(dir, { recursive: true });
-  for (let n = 1; ; n++) {
-    const f = path.join(dir, base + (n > 1 ? '-' + n : '') + ext);
-    if (nothingAt(f)) return f;
-  }
-}
