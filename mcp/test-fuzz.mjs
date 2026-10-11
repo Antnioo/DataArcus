@@ -18,7 +18,9 @@
 //  P1. no target crashes: it answers, or refuses with its own message (an Error it throws on purpose, naming what it
 //      could not read); a TypeError, RangeError, SyntaxError, a stack overflow or any other runtime error is a crash;
 //  P2. every answer stays within its cap (40,000 characters, the tools' answer size: read_report's READ_CAP);
-//  P3. no planted instruction text appears in any answer;
+//  P3. no planted instruction text appears in any answer, unless it is marked as data (the owner's decision on F-MP,
+//      option b, 11 Oct: an instruction-like model name is shown, inside an object with suspicious: true, and the
+//      answer carries the namesNote line);
 //  P4. no raw control or format character (C0, C1, bidi overrides and isolates, zero-width) appears in any answer.
 // A crash already recorded (mcp/work/0.2.9-fuzz.md) is in KNOWN with its owner and finding id: it is skipped while it
 // still crashes (counted, named), and passes when the fix lands (then move it out of KNOWN).
@@ -150,16 +152,19 @@ const KNOWN_SLOW = [
 // P1 also holds for time: a target that answers after more than this is a finding (a hang in all but name)
 const SLOW_MS = 10000;
 const KNOWN_PROPS = [
-  { id: 'F-MP', owner: 'builder 6 (reading; P3 is an owner decision)', target: /^read_model answer$/, props: /P3/, k: 23, what: 'one 200,000-character name keeps the full answer; instruction-like names returned raw (flagged only in suspiciousNames); a control character in a type' },
   { id: 'F-CP', owner: 'builder 7 (checks)', target: /^check_report$/, props: /P2|P3/, k: 427, what: 'the answer past 40,000 characters; a page name raw in the "page sizes" rule\'s why' },
   { id: 'F-TP', owner: 'builder 9 (twin)', target: /^twin plan$/, props: /P2|P3|P4/, k: 2, what: 'the plan past 40,000 characters; a bookmark name raw in a text id; bidi controls in a page name' }
 ];
+// (P3) planted text in a string that is not inside an object marked suspicious: true (keys included)
+const plantedOutsideMark = (o) => (typeof o === 'string' ? PLANT_RE.test(o) : !o || typeof o !== 'object' || o.suspicious === true ? false
+  : Object.entries(o).some(([k, v]) => (!Array.isArray(o) && PLANT_RE.test(k)) || plantedOutsideMark(v)));
 function answerProps(target, ctx, ans) {
   let s; try { s = typeof ans === 'string' ? ans : JSON.stringify(ans); } catch (e) { results.props.push({ target, ctx, prop: 'P2 cap', detail: 'the answer cannot be written as JSON: ' + e.message }); return; }
   results.checks += 3;
   const fail = (prop, detail) => { const known = KNOWN_PROPS.find((x) => x.target.test(target) && x.props.test(prop)); if (known) results.skipped.push(`${known.id} (${known.owner})`); else results.props.push({ target, ctx, prop, detail }); };
   if (s.length > CAP) fail('P2 cap', `${s.length} characters`);
-  if (PLANT_RE.test(s)) fail('P3 planted instruction', s.slice(Math.max(0, s.search(PLANT_RE) - 80), s.search(PLANT_RE) + 60));
+  const unmarked = PLANT_RE.test(s) && (typeof ans === 'string' || !/^These names look like instructions/.test(ans.namesNote || '') || plantedOutsideMark(ans));
+  if (unmarked) fail('P3 planted instruction', s.slice(Math.max(0, s.search(PLANT_RE) - 80), s.search(PLANT_RE) + 60));
   const strs = typeof ans === 'string' ? [ans] : []; if (typeof ans !== 'string') JSON.stringify(ans, (k, v) => { if (typeof k === 'string' && k) strs.push(k); if (typeof v === 'string') strs.push(v); return v; });
   const bad = strs.find((x) => RAW.test(x));
   if (bad != null) fail('P4 raw control/format character', JSON.stringify(bad.slice(Math.max(0, bad.search(RAW) - 30), bad.search(RAW) + 30)));
