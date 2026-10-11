@@ -410,8 +410,9 @@
   // A page's slots for the report: kind, name in lang, filter rail or not, and the box in page units
   const projectSlots = (c, lang, opt) => computeSlots(c, lang, opt).map((s) => Object.assign({ kind: s.kind, title: lang === 'ar' ? s.role[1] : s.role[0], rail: !!s.rail }, boxOf(s, c)));
   // a second page in a complementary layout: an analysis page (filters, a main chart, a wide table) after an
-  // overview, or an executive overview after an analysis page
-  const secondLayout = (c) => Object.assign({}, c, c.preset === 'analysis' ? { preset: 'exec', kpis: 4, filters: false } : { preset: 'analysis', kpis: 3, filters: true, fpos: 'start' }, { kpiH: null, mainW: null, split: null });
+  // overview, or an executive overview after an analysis page. The filters stay on the side the user chose for the
+  // first page (O-1 of the owner's test of 0.2.8, 10 Oct 2026: "filters right" gave a second page with them at the left)
+  const secondLayout = (c) => Object.assign({}, c, c.preset === 'analysis' ? { preset: 'exec', kpis: 4, filters: false } : { preset: 'analysis', kpis: 3, filters: true, fpos: ['start', 'end', 'top'].includes(c.fpos) ? c.fpos : 'start' }, { kpiH: null, mainW: null, split: null });
   // Filters as a slide-in panel: the page without its filter rail, and the panel's box (null when the page has no
   // filters or no header). The panel opens under the Filters button, at the end of the header (right in English, left in Arabic)
   const slidePanel = (cc, lang) => {
