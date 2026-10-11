@@ -53,6 +53,28 @@ unchanged (no KPI pick of a golden model moved). Website: all 17 suites PASS; `c
 check (it was on the portfolio's own names: now the shape only: the plain count and sum first); the reader's L1
 O-13/O-14 checks (find the visual by its place, R5).
 
+### Step 3, the field picker's bias fixes (the owner's "fix all of them now"; builder 7's block audit A1-11, A3-1)
+Checks first: `mcp/test-0.2.9k.mjs` (7 checks, ordinary names, none of the portfolio's): **6 red, 7 green**.
+- `2fc8044` (field picker + model reading): **A1-11** one field-meaning rule, new `assets/js/field-meaning.js`, used by
+  `pbip-bind.js` and `model-health-tmdl.js` (their copies had drifted). The picker: the format string decides first; a
+  name only by whole words and never a NOT_PCT name ("Corporate Revenue", "Generated Leads", "Exchange Rate", "Hourly
+  Rate" are no percents; "Interest Rate %", "Conversion Rate", «نسبة الإنجاز» are). The health check keeps format-or-name
+  with the same name rule; its money test is ISO 4217 codes and currency signs (CAD, INR were not money). **A3-1** a
+  calendar is marked (dataCategory Time), shaped like one (`markCalendars`: a relationship's one side on its date column,
+  from fromTmsl and, for TMDL projects, model.mjs), or named by a whole calendar word (Date, Dates, Calendar, Dim Date,
+  Time, Period, Arabic): Candidates, Updates, Mandates, Overtime, Time Sheets keep their categories.
+- `da2347b`: the engines use `require` only where it exists; the website's model-health suite loads field-meaning first,
+  as the page does (it crashed on `2fc8044`: found by the website run, fixed before this report).
+- Browser: the Model Health Check page loads `field-meaning.min.js` before the TMDL builder; the Theme Generator loads it
+  before pbip-bind (`?v=20261011k`/`k2`). **Packaging must carry `assets/js/field-meaning.js`** with the engines
+  (pbip-bind.js and model-health-tmdl.js require it): the engine repo's packaging list needs it (not changed here).
+
+### integration green
+**MCP: `npm test` 946 checks + the reader's 36, golden PASS (11 tasks, unchanged); website: 17 suites PASS** (the full run
+on `2fc8044`: 16 PASS, model-health crashed; after `da2347b` model-health 62, pbip 85, theme-generator 893, tmdl-model 70
+PASS; the other 13 untouched since); `check-min` (57 files), `csp`, `test-site-config` PASS. Counts on this branch since
+main: 739 -> 946 (+ reader 36): gate 43, part 2 33, checks 24, reader 36, twin 81, root fixes 19, picker bias 7.
+
 ### For the laptop tonight (the integration branch; each expected before the run)
 Everything of part 1's and part 2's tables (above, unchanged), the reader's and the twin's own tables (their memory
 files), plus:
@@ -64,6 +86,9 @@ files), plus:
 | I4 | create_report after a plan with planFields, other fields passed (G5) | refused, nothing written |
 | I5 | The Theme Generator website page, Generate with a brand | unchanged (its harmonies); the MCP's brand theme: Corporate light page, the calm set |
 | I6 | T1 (the twin's mirror vs the writer's `invertAxis`) | settled by the laptop tonight: both paths are left as they are |
+| I7 | A model with a fact table named like "Candidates" or "Time Sheets" (A3-1) | its text columns are the charts' categories; nothing left out |
+| I8 | A measure named "Corporate Revenue" or "Exchange Rate" with no format (A1-11) | a number card (auto units), never 0.0% |
+| I9 | The website's Model Health Check and Theme Generator pages | load and work (the new field-meaning.min.js loads first; no console error) |
 
 ### Seen, not in scope
 - `report-mirror.js` keeps its own `isCustom` (a website engine can't import the MCP's reading block); `calendar-generator.js`
