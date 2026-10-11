@@ -65,8 +65,10 @@ must keep them under it.
 
 ## rc1 release blockers, writer (11 Oct from 20:22 UTC, cloud builder 11; `fix/0.2.9-writer` reset to `46037f3`; not merged, no PR)
 Report: `mcp/work/0.2.9-writer.md` (section "rc1 release blockers"). Done: 1 O-13 `5f2d4e8`, 2 S1/S2 `b1eb2f8`, 4 S5/S7 `9ace5d8`;
-3 has no writer cause (for builder 5). `npm test` 1204 + 36 + 21 + 21 + 20, golden, fuzz PASS; website 16/17: design-engine's 6
-background fixtures moved by S7 on purpose. **Decision needed:** the owner's yes to re-record those 6. Next: builder 5 merges into
+3 has no writer cause (for builder 5). Then the reviewer's additions `7664e72`: T1, T6/T9, T8, T10 (tooltips), S3 (tables end on a
+whole row), D3 (slicer header); T2 by item 1; D18 for builder 5 (patch in the report); D15 and A1 need the owner / a Desktop measure.
+`npm test` 1212 + 36 + 21 + 21 + 20, golden, fuzz PASS; website 16/17: design-engine's 6 background fixtures moved by S7 on purpose.
+**Decisions needed:** the owner's yes to re-record those 6; D15's bar-chart rule. Next: builder 5 merges into
 the gate after that; the laptop proves O-13's DATEVALUE, S1/S2, S5, S7 in Desktop.
 
 ## 0.2.9 writer block (11 Oct, cloud builder 11; branch `fix/0.2.9-writer` from `fix/0.2.9-gate` `d2300f9`; not merged, no PR)
