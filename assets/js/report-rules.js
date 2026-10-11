@@ -188,7 +188,12 @@
       run(R, out) {
         R.pages.filter((p) => p.tooltip).forEach((pg) => pg.visuals.filter((x) => x.type === 'clusteredBarChart').forEach((x) => {
           const axis = lit(plain(((x.json.visual || {}).objects || {}).valueAxis).show) !== 'false', rows = Math.max(0, TIP_ROWS(x.h));
-          out(x, `about ${rows} rows fit in its ${x.h} height; rows past that go behind a scrollbar no one can use in a tooltip. How many rows it has depends on the data, which check_report doesn't read`, `Keep the category to ${rows} rows or fewer (a filter, or a top-N), or make the chart taller (22 a row + 46)${axis ? '; the value axis is on, which takes more room than measured' : ''}.`, axis ? { estimate: true } : null);
+          // (A4-12, audit 4: a Top N filter on the visual that keeps no more rows than fit leaves no scrollbar: nothing to say)
+          const top = entries((x.json.filterConfig || {}).filters).filter((g) => g && g.type === 'TopN').map((g) => n((((((g.filter || {}).From || [])[0] || {}).Expression || {}).Subquery || { Query: {} }).Query.Top)).filter(Number.isFinite);
+          if (top.length && Math.min(...top) <= rows) return;
+          // the 22 a row was measured with 8pt category labels; another size makes the row count an estimate
+          const pt = num(plain(((x.json.visual || {}).objects || {}).categoryAxis).fontSize), other = Number.isFinite(pt) && pt !== 8;
+          out(x, `about ${rows} rows fit in its ${x.h} height; rows past that go behind a scrollbar no one can use in a tooltip. How many rows it has depends on the data, which check_report doesn't read`, `Keep the category to ${rows} rows or fewer (a filter, or a top-N), or make the chart taller (22 a row + 46)${axis ? '; the value axis is on, which takes more room than measured' : ''}${other ? `; its labels are ${pt}pt, and the 22 a row was measured at 8pt` : ''}.`, axis || other ? { estimate: true } : null);
         }));
       } },
     { id: 'RTL_MIRROR', group: 'rtl', lang: 'ar', severity: 'warning', source: SRC.round2,
