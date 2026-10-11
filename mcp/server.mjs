@@ -228,8 +228,8 @@ function fieldsAndProblems(tables, fields) {
     if (wanted === 'm' && !meas) { problems.push(`${where}: ${ref} is a column; a measure is needed here`); return null; }
     if (wanted === 'c' && !col) { problems.push(`${where}: ${ref} is a measure; a column is needed here`); return null; }
     if (meas && wanted !== 'c') { const k = Bind.measureCard(meas); return Object.assign({ t: t.name, m: meas.name, pct: k.pct, variant: false }, k.text ? { text: true } : {}, k.pctFormat ? { pctFormat: k.pctFormat } : {}, k.wholeFormat ? { wholeFormat: k.wholeFormat } : {}); }
-    const by = col.sortBy ? null : Bind.sortColumnFor(t.columns, col.name);
-    return Object.assign({ t: t.name, c: col.name, type: String(col.dataType || 'string').toLowerCase() }, by ? { sortBy: { t: t.name, c: by.name } } : {}, col.sortBy && Bind.nameLike(col.name) ? { ordered: true } : {});
+    const by = col.sortBy ? null : Bind.sortColumnFor(t.columns, col.name), dt = Bind.dateColumnFor(t.columns, col.name, col.dataType);
+    return Object.assign({ t: t.name, c: col.name, type: String(col.dataType || 'string').toLowerCase() }, by ? { sortBy: { t: t.name, c: by.name } } : {}, col.sortBy && Bind.nameLike(col.name) ? { ordered: true } : {}, dt ? { dateOf: { t: t.name, c: dt.name } } : {});
   };
   const out = {};
   if (fields.kpis) out.kpis = fields.kpis.map((r, i) => one(r, 'm', `fields.kpis[${i}]`));
@@ -882,7 +882,7 @@ server.registerTool('create_report', {
     const subtitles = a.subtitles && Object.fromEntries(Object.entries(a.subtitles).map(([k, v]) => [subKeys[k] || k, v]));
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bound))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', quietGrid: true,
+      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bound))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
@@ -928,7 +928,7 @@ server.registerTool('create_report', {
     r = Pbip.build({
       name: a.name, title: a.title || a.name, lang: a.lang, rtl: rtlHand, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bindFor(kpisOf(a.pages))))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', quietGrid: true,
+      model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bindFor(kpisOf(a.pages))))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
       // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
       texts: Object.assign({}, E.REPORT_TEXTS[a.lang === 'ar' ? 'ar' : 'en'], { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' }),
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, hand: true, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
@@ -1011,6 +1011,10 @@ server.registerTool('create_report', {
     : { mode: 'standard', note: 'The charts run left to right, as Power BI draws them.' } } : {};
   if (englishNames.size) reportNotes.push(`${[...englishNames].join(', ')} ${englishNames.size === 1 ? 'shows' : 'show'} the calendar's own names, English unless the calendar was made in Arabic: add the Gulf calendar's Arabic name columns to show Arabic day and month names (add_gulf_calendar writes them, as does the Calendar Generator's "Add Arabic name columns"), then create the report again.`);
   reportNotes.push('How the KPI cards show their numbers: ' + CARD_RULE + (textKpis.length ? '' : ''));
+  // 0.2.9 part 2 (the owner's own test of 0.2.8): what the report does to its axes, tables and tooltips, said once
+  (r.timeAxes || []).forEach((x) => reportNotes.push(`The line chart by ${visible(x.field)} on "${x.page}" is in time order by the month's first date (a report-level measure, "Month start (sort)", from ${visible(x.by)}; the model's column has no sort column)${x.last ? `, and shows the last ${x.last} months with data (a visual filter: clear it in the Filters pane for the whole history)` : ''}.`));
+  reportNotes.push('Charts leave out a blank category ("(Blank)"): each has a visual filter "is not blank" on its category, which can be cleared in the Filters pane. Tables have set column widths, and long text wraps.');
+  if (r.tooltipLimits && (r.tooltipLimits.top || r.tooltipLimits.months)) reportNotes.push(`The tooltip pages show ${[r.tooltipLimits.top ? `the Top ${r.tooltipLimits.top} by the measure (said in the title)` : '', r.tooltipLimits.months ? `the last ${r.tooltipLimits.months} months, newest first` : ''].filter(Boolean).join(' and ')}, so no bar is lost behind a scrollbar a tooltip can't use.`);
   if (textKpis.length) reportNotes.push(`${textKpis.length === 1 ? 'A KPI card was' : textKpis.length + ' KPI cards were'} left out: ${textKpis.map((k) => `${k.t}[${k.m}]`).join(', ')} ${textKpis.length === 1 ? 'shows' : 'show'} text, not a number (a format of words only, a date format, or DAX that returns text), and a KPI card would show that text. Pick a measure that returns a number for the card.`);
   if (slicersDropped.length) reportNotes.push(`No slicer on ${[...new Set(slicersDropped)].join(', ')}: a page filter already keeps one value of ${new Set(slicersDropped).size === 1 ? 'it' : 'each'}, so a slicer would only show the choice already made. The next columns took the rail's places.`);
   if (byRamadanDay.length) reportNotes.push(`The line chart runs by ${byRamadanDay[0]} (the days of Ramadan), not by month: the page filter keeps Ramadan, and one Ramadan by month is a line of two or three points.`);
@@ -1081,7 +1085,7 @@ server.registerTool('create_report', {
 }));
 
 // The KPI cards' number rule (round 12, the owner's ask of 6 Oct 2026), as the answer and reportNotes state it
-const CARD_RULE = 'a percentage (a % in its format or name; a rate or ratio; a margin, share, growth or "vs" measure whose DAX divides and that has no format) shows as a percent without useless decimals: the model\'s percent format where it has one decimal or none, otherwise 0.0%; a measure whose format has no decimals (or a count without a format) shows its whole number with thousand separators (179, 101,914); money and every other measure keep automatic units with 2 decimals (14.81K, 3.43M). A measure that shows text is never put on a card.';
+const CARD_RULE = 'a percentage (a % in its format or name; a rate or ratio; a margin, share, growth or "vs" measure whose DAX divides and that has no format) shows as a percent without useless decimals: the model\'s percent format where it has one decimal or none, otherwise 0.0%; a count, or a measure whose format has no decimals (or a count without a format), shows its whole number with thousand separators (179, 101,914), except an amount (a currency in its format, or a sum of money: sales, revenue, cost, budget...), which keeps automatic units with 2 decimals (EUR 54.66M; 14.81K under a million: Power BI cannot switch the units by the value without a change in the model); every other measure keeps automatic units with 2 decimals (3.43M). A measure that shows text is never put on a card.';
 // Things in the user's model that make the new report look wrong, for the fields it uses. The report never changes the
 // model: these are told to the user, with the fix, to make in Power BI Desktop (or through Microsoft's MCP, with the
 // user's go). A month or day name without a sort column shows them A to Z; a ratio without a format string shows 0.34, not 34%.
@@ -1223,13 +1227,21 @@ server.registerTool('plan_layout', {
   let model = null, planned = null;
   if (a.path) { const m = m0; model = modelKey(m, a.path); if (Object.keys(pf).length) { const fr = fieldsAndProblems(m.tables, pf); fr.problems.forEach((x) => planProblems.push(x + ' (use the names exactly as read_model lists them)')); planned = pf; } }
   else if (Object.keys(pf).length) planProblems.push('planFields need path (the model), so the fields can be checked against it.');
+  // 0.2.9 part 2 (O-13): how the plan's month axis will be ordered, said before the plan is shown
+  let timeAxis = {};
+  if (m0 && !planProblems.length) {
+    const sc0 = scopeOf(m0, { focus: a.focus, tables: a.tables });
+    const tf = pf.timeAxis ? (fieldsAndProblems(m0.tables, { timeAxis: pf.timeAxis }).out || {}).timeAxis : sc0.needsFocus ? null : (Bind.suggest(sc0.tables, 1, relsOf(m0, a.lang === 'ar' ? 'ar' : 'en')) || {}).date;
+    if (tf) { const key = `${tf.t}[${tf.c}]`, text = !/^(int64|double|decimal|number|datetime|date)/.test(String(tf.type || 'string')) && !tf.num;
+      timeAxis = { timeAxis: { field: key, how: !text ? 'The column\'s own order (a date or a number).' : tf.ordered ? 'The model sorts this column (its sort-by column): calendar order.' : tf.sortBy ? `In month order by ${tf.sortBy.t}[${tf.sortBy.c}] (the report sorts it; the model is not changed).` : tf.dateOf ? `In time order by the month start (a report-level measure from ${tf.dateOf.t}[${tf.dateOf.c}]), showing the last 12 months with data (a visual filter the user can clear); the model is not changed.` : 'A to Z: this text column has no sort column and its table no date column. Pick a date or month column with an order, or add a sort-by column in the model, before showing the plan.', sayInPlan: 'Say in the plan how the trend\'s axis is ordered and how many months it shows.' } }; }
+  }
   const writes = [`the report "<name>.Report" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`, 'the theme file, only if the user asks for one (generate_theme)'];
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     : { plan: Plans.proposal(Plans.propose('report', model, writes), Object.assign(model ? {} : { noModel: 'Made without path: this plan id allows only a theme file. For a report, call plan_layout with the model (path).' }, planned ? { fields: planned } : {})) };
   // round 15 (the owner's go on round 13's recommendation 1): gradient bars are the default for designed pages, and the
   // plan the user approves says so
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a light tint and the largest in the theme\'s colour (the bar\'s length tells the size; the colour ranks). For one colour, create_report takes chartColors "solid".' } };
-  return text(Object.assign(formats, arabicNames, plan, { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.smallPage ? { smallPage: r.smallPage } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
+  return text(Object.assign(formats, arabicNames, plan, timeAxis, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.' }, { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.smallPage ? { smallPage: r.smallPage } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
 }));
 
 server.registerTool('add_gulf_calendar', {
