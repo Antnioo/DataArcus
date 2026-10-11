@@ -189,7 +189,11 @@
   const MONEY = /revenue|sales|amount|income|profit|cost|budget|spend|المبيعات|الإيرادات|التكلفة|الميزانية|المبلغ/i;
   const AMOUNT = (x, f) => !COUNTS.test(x.expr || '') && (hasCurrency(f) || (!hasUnit(f) && MONEY.test(x.name || '') && /^\s*SUM\s*\(/i.test(x.expr || '')));
   // time intelligence variants (MTD, PY, YoY %...) are not the headline number
-  const VARIANT = /\b(PY|LY|YoY|MoM|QoQ|MTD|QTD|YTD|PYTD|PM|Prior|Previous|Prev|Last|vs|Rolling|Running|Avg|Average|\d+D)\b/i;
+  // (builder 7's audit A3-5, 11 Oct: "Avg" and "Average" made "Average Order Value" a variant; an average is a base
+  // measure. A variant is a time-intelligence measure: by its name's whole words, or by its DAX (language-free))
+  const VARIANT = /\b(PY|LY|YoY|MoM|QoQ|MTD|QTD|YTD|PYTD|PM|Prior|Previous|Prev|Last|vs|Rolling|Running|\d+D)\b/i;
+  const TIME_DAX = /\b(SAMEPERIODLASTYEAR|DATEADD|PARALLELPERIOD|PREVIOUS(DAY|MONTH|QUARTER|YEAR)|TOTAL(MTD|QTD|YTD)|DATES(MTD|QTD|YTD|INPERIOD|BETWEEN))\s*\(/i;
+  const isVariant = (m) => VARIANT.test(String(m.name)) || TIME_DAX.test(String(m.expr || (Array.isArray(m.expression) ? m.expression.join('\n') : m.expression) || ''));
   // a measure someone left behind: the whole word old, test, unused, backup or temp in its name ("Sales (old)", "Test
   // margin", "TEMP total"; not "Oldham", "Latest" or "Contest"). It is picked only when no other measure is left.
   const STALE = /(^|[^A-Za-z])(old|test|unused|backup|temp)([^A-Za-z]|$)/i;
@@ -319,7 +323,7 @@
     const shown = tables.filter((t) => !t.hidden);
     const measures = [], columns = [];
     shown.forEach((t) => {
-      t.measures.filter((m) => !m.isHidden).forEach((m) => { const x = Object.assign({ t: t.name, m: m.name, pct: PCT(m), variant: VARIANT.test(m.name), stale: STALE.test(m.name), text: isText(m) }, cardKind(m));
+      t.measures.filter((m) => !m.isHidden).forEach((m) => { const x = Object.assign({ t: t.name, m: m.name, pct: PCT(m), variant: isVariant(m), stale: STALE.test(m.name), text: isText(m) }, cardKind(m));
         // (0.2.9: its DAX, for the core-number rank; non-enumerable, so the fields given out keep their shape)
         Object.defineProperty(x, 'expr', { value: String(m.expr || (Array.isArray(m.expression) ? m.expression.join('\n') : m.expression) || '') });
         Object.defineProperty(x, 'amount', { value: !x.pct && hasCurrency(m.formatString || '') }); measures.push(x); });
@@ -396,7 +400,8 @@
     // (round 23: with a report language (opt.lang), a measure named in the other language comes after those named in
     // its own or in none, as a measure left behind does)
     const L = opt && opt.lang, note = { skipped: new Set(), fallback: new Set() }, other = (x) => (L && langOf(x.m) && langOf(x.m) !== L ? 1 : 0);
-    const ranked = measures.filter((x) => !x.text).sort((a, b) => (a.stale ? 1 : 0) - (b.stale ? 1 : 0) || other(a) - other(b) || score(b) - score(a));
+    // (A3-5: every base measure before any time variant, then the shape score)
+    const ranked = measures.filter((x) => !x.text).sort((a, b) => (a.stale ? 1 : 0) - (b.stale ? 1 : 0) || other(a) - other(b) || (a.variant ? 1 : 0) - (b.variant ? 1 : 0) || score(b) - score(a));
     const main = ranked.find((x) => !x.pct) || ranked[0] || null;
     // KPIs: the strongest base measures, with one ratio among them when the model has one; a measure left behind only
     // when the cards outnumber the other measures
