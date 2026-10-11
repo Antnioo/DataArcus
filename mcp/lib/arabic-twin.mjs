@@ -16,6 +16,8 @@ import { inside, real, nothingAt, writeNew, visible, loadModel, ROOT } from './m
 import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, readBytes, isFile, isDir, locate as readerLocate, strictFiles, inventory, diskSource } from './read-report.mjs';
 import { proposeArabic } from './arabic-names.mjs';
 import { writeTree } from './files.mjs';
+// (the fuzz test's F-TP: the plan's own answer within 40,000 characters, whoever calls planTwin)
+import { capAnswer } from './answer.mjs';
 
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
@@ -23,6 +25,10 @@ const Mirror = require('../../assets/js/report-mirror.js');
 // the limits check_report reads a report within (the reading block's: 8 MB a file, 12 levels), and a count
 const MB = 1024 * 1024, LIMITS = { file: REPORT_LIMITS.file, depth: REPORT_LIMITS.depth, files: 20000 }, TEXT_CAP = 200, TEXTS_MAX = 400;
 const relRoot = (f) => path.relative(ROOT, f).split(path.sep).join('/');
+// a path for an answer: each folder or file name screened as the reading block screens names (instruction-like
+// withheld, hidden characters as code points, 60 characters at most): the fuzz test's F-TP (a model path from
+// definition.pbir with planted text, isolates, 200,000 characters went raw into the plan)
+const pathOut = (f) => relRoot(f).split('/').map((seg) => (seg === '..' || seg === '.' ? seg : safeName(seg))).join('/');
 const json = (o) => JSON.stringify(o, null, 2) + '\n';
 // (the one Arabic month list, the writer's: the cross-review's duplicates, 11 Oct)
 const MONTHS_AR = require('../../assets/js/pbip-export.js').AR_MONTHS;
@@ -46,12 +52,21 @@ function readOriginal(loc) {
   const files = strictFiles(loc.dir, { files: LIMITS.files, tail: ' Nothing was written.' });
   const inv = inventory(diskSource({ reportDir: loc.dir }, { big: [], deep: 0 }), path.basename(loc.dir));
   const unreadable = inv.unreadableFiles.slice();
-  let pbir = {}; try { pbir = readJson(path.join(loc.dir, 'definition.pbir')); } catch (e) { if (files.includes('definition.pbir')) unreadable.push('definition.pbir'); }
+  // (the fuzz test's F-T4 and its crash in modelOf: any file can hold any JSON; what is not the shape expected is left
+  // out here and copied as it is)
+  let pbir = {}; try { const j = readJson(path.join(loc.dir, 'definition.pbir')); pbir = isObj(j) ? j : {}; } catch (e) { if (files.includes('definition.pbir')) unreadable.push('definition.pbir'); }
   const pages = inv.pages.filter((pg) => files.includes(pg.file)).map((pg) => ({ id: pg.id, rel: pg.file, page: pg.raw,
     visuals: pg.visuals.filter((x) => x.json && x.json.name != null && x.file.split('/').length === 6).sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0)).map((x) => ({ rel: x.file, json: x.json })) }));
-  const bookmarks = inv.bookmarks.map((b) => ({ rel: b.file, json: b.raw }));
+  const bookmarks = inv.bookmarks.filter((b) => isObj(b.raw) && (typeof b.raw.name === 'string' || typeof b.raw.name === 'number')).map((b) => ({ rel: b.file, json: b.raw }));
   return { files, pages, bookmarks, pbir, unreadable, phone: files.some((f) => /\/mobile\.json$/.test(f)), hasPlatform: files.includes('.platform') };
 }
+
+const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
+// definition.pbir's model folder, when it names one: { path } or null
+const byPathOf = (pbir) => { const d = isObj(pbir) && isObj(pbir.datasetReference) ? pbir.datasetReference : null, b = d && isObj(d.byPath) ? d.byPath : null; return b && typeof b.path === 'string' && b.path ? b : null; };
+const pageOf = (pg) => (isObj(pg.page) ? pg.page : {});
+// a page's size as numbers, never the file's own text (P3, P4 of the fuzz test: a width holding text went raw into the plan)
+const sizeOf = (pg) => { const w = pageOf(pg).width, h = pageOf(pg).height; return Number.isFinite(w) && Number.isFinite(h) ? `${w} x ${h}` : 'not a number in page.json'; };
 
 // ---- the texts a reader sees, for the user's Arabic (cleaned, capped, instruction-like withheld) ----
 // An id holds report names (a page, a visual, a field's queryRef). An id that reads like an instruction, holds an
@@ -62,10 +77,10 @@ function textsOf(R) {
   const all = [], seen = new Set();
   const add = (t, where) => { if (seen.has(t.id)) return; seen.add(t.id); all.push(Object.assign(t, where)); };
   R.pages.forEach((pg) => {
-    add({ id: 'page:' + pg.id, kind: 'page', text: String(pg.page.displayName || '') }, { page: pg.id });
+    add({ id: 'page:' + pg.id, kind: 'page', text: typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : '' }, { page: pg.id });
     pg.visuals.forEach((v) => Mirror.textsOfVisual(pg.id, v.json).forEach((t) => add(t, t.kind === 'field' ? {} : { page: pg.id, visual: String(v.json.name) })));
   });
-  R.bookmarks.forEach((b) => add({ id: 'bookmark:' + b.json.name, kind: 'bookmark', text: String(b.json.displayName || '') }, {}));
+  R.bookmarks.forEach((b) => add({ id: 'bookmark:' + b.json.name, kind: 'bookmark', text: typeof b.json.displayName === 'string' ? b.json.displayName : '' }, {}));
   return all.map((t) => {
     const raw = String(t.text);
     const out = { id: safeId(t.id), kind: t.kind, rawId: t.id };
@@ -81,9 +96,9 @@ const rawLabels = (texts, labels) => { const by = new Map(texts.map((t) => [t.id
 
 // ---- the model next to the report: its date tables (for time left to right, T2) and the month offer ----
 function modelOf(R, loc) {
-  const ref = (R.pbir.datasetReference || {}).byPath;
+  const ref = byPathOf(R.pbir);
   if (!ref || !ref.path) return { m: null, why: 'the report is connected to a published model (not a model folder next to it): the column is a model step for the model\'s owner' };
-  try { return { m: loadModel(relRoot(path.resolve(loc.dir, String(ref.path)))) }; } catch (e) { return { m: null, why: 'the model next to the report could not be read: ' + String(e && e.message || e).slice(0, 160) }; }
+  try { return { m: loadModel(relRoot(path.resolve(loc.dir, String(ref.path)))) }; } catch (e) { return { m: null, why: 'the model that definition.pbir names next to the report could not be read (a model folder saved from Power BI Desktop is needed there; the error is not repeated: it holds the file\'s own path)' }; }
 }
 const isDateCol = (c) => /^date(time)?$/i.test(String(c.dataType || ''));
 // the model's date tables: marked as one, or named like a calendar with a date column
@@ -134,7 +149,7 @@ export function planTwin(a) {
     const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false, dateTables });
     Object.entries(r.kinds).forEach(([k, n]) => { kinds[k] = (kinds[k] || 0) + n; });
     pg.visuals.forEach((v) => { const k = Mirror.kindOf(v.json); if (where[k]) where[k].push(safeName(pg.id) + '/' + safeName(v.json.name) + (k === 'other' ? ' (' + safeName(v.json.visual.visualType) + ')' : '')); });
-    return { id: safeName(pg.id), name: INSTRUCTION.test(String(pg.page.displayName || '')) ? '(withheld)' : visible(String(pg.page.displayName || '')).slice(0, 60), size: `${pg.page.width} x ${pg.page.height}`, tooltip: pg.page.type === 'Tooltip', visuals: pg.visuals.length };
+    return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length };
   });
   const mirrors = Object.keys(kinds).map((k) => ({ kind: k, what: Mirror.KIND_WHAT[k], count: kinds[k] }));
   const cannot = [];
@@ -148,11 +163,11 @@ export function planTwin(a) {
   cannot.push({ what: 'the phone layout', why: R.phone ? 'copied as it is (a phone shows one column; the phone layout is not mirrored)' : 'the report has none' });
   const month = a.arabicMonth === false ? { offered: false, why: 'not asked (arabicMonth false)' } : monthOffer(model, loc);
   const { script, howToApply, ...monthShown } = month;
-  const ref = (R.pbir.datasetReference || {}).byPath;
-  return { loc, R, labels, texts, month, dateTables, answer: {
+  const ref = byPathOf(R.pbir);
+  return { loc, R, labels, texts, month, dateTables, answer: capAnswer({
     written: false,
-    original: { report: relRoot(loc.dir), pbip: loc.pbip ? relRoot(loc.pbip) : null, readOnly: 'only read: never changed' },
-    twin: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: relRoot(loc.project) || '.', model: ref && ref.path ? relRoot(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
+    original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
+    twin: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
     pages, mirrors, cannot,
     keptForNavigation: 'Page ids, visual names, bookmark names, page and bookmark links are kept: navigation and bookmarks work in the twin without rewiring.',
     timeRightToLeft: a.timeRightToLeft !== false ? 'yes: charts over time run right to left like the rest of the page (the user can choose false: time stays left to right)' : 'no: charts over time keep left to right (the user\'s choice)',
@@ -161,7 +176,7 @@ export function planTwin(a) {
     arabicMonth: month.offered ? Object.assign(monthShown, { howToApplyAfterGo: howToApply }) : monthShown,
     ...(R.unreadable.length ? { unreadable: { count: R.unreadable.length, note: 'files that are not JSON: copied as they are, not mirrored' } } : {}),
     sayFirst: 'Nothing was written. Show the user this plan: the twin\'s name and place, the pages, what mirrors, what cannot, and the Arabic texts. draftArabic comes from a fixed glossary; for every other text draft the Arabic yourself in modern, simple Standard Arabic (Western digits, product names in Latin letters, short and natural, not a word-for-word translation) and show each one to the user as a DRAFT. Never translate silently and never write a text the user has not approved: a text without an approved label stays as it is. Call this tool again with the approved texts as labels ({ id: text }) to get a plan id for exactly those, show it, and after the user\'s go call approve_plan, then this tool with planId.'
-  } };
+  }, (x) => JSON.stringify(x).length) };
 }
 
 // ---- the write ----
@@ -187,9 +202,12 @@ export function writeTwin(a, plan) {
   const out = new Map(), opts = { timeRightToLeft: d.timeRightToLeft !== false, dateTables: P.dateTables };
   let applied = 0;
   R.pages.forEach((pg) => {
-    const page = JSON.parse(JSON.stringify(pg.page));
-    if (labels['page:' + pg.id] != null) { page.displayName = labels['page:' + pg.id]; applied++; }
-    out.set(pg.rel, json(page));
+    // (a page.json that is not an object is copied as it is: there is nothing to label or mirror in it)
+    if (isObj(pg.page)) {
+      const page = JSON.parse(JSON.stringify(pg.page));
+      if (labels['page:' + pg.id] != null) { page.displayName = labels['page:' + pg.id]; applied++; }
+      out.set(pg.rel, json(page));
+    }
     const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), opts);
     r.visuals.forEach((vj, i) => { applied += Mirror.labelVisual(pg.id, vj, labels); out.set(pg.visuals[i].rel, json(vj)); });
   });
@@ -204,11 +222,11 @@ export function writeTwin(a, plan) {
   if (P.month.offered) {
     const f = scriptName(loc.project, `${loc.base} AR - Arabic month`, P.month.script);
     if (f.free) tree.push({ path: path.basename(f.file), data: P.month.script });
-    month = { scriptFile: relRoot(f.file), column: P.month.column, table: P.month.table, howToApply: P.month.howToApply };
+    month = { scriptFile: pathOut(f.file), column: P.month.column, table: P.month.table, howToApply: P.month.howToApply };
   }
   tree.push({ path: path.basename(twinPbip), data: json(pbip) });
   writeTree(loc.project, tree);
-  return { written: true, report: relRoot(twinDir), pbip: relRoot(twinPbip), files: R.files.length + 1, pages: P.answer.pages.length, mirrors: P.answer.mirrors, cannot: P.answer.cannot,
+  return { written: true, report: pathOut(twinDir), pbip: pathOut(twinPbip), files: R.files.length + 1, pages: P.answer.pages.length, mirrors: P.answer.mirrors, cannot: P.answer.cannot,
     labelsApplied: applied, textsWithoutLabel: P.answer.labels.withoutLabel, original: 'only read: not changed', arabicMonth: month,
     nextSteps: `Open "${path.basename(twinPbip)}" in Power BI Desktop (the original stays as it was), look at every page, and check it with check_report. Tell the user what cannot be mirrored (cannot)${P.month.offered ? ' and how to apply the month script' : ''}.` };
 }
