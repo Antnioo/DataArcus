@@ -56,8 +56,9 @@
           if (/^dataCategory\s*:\s*Time$/i.test(trimmed)) table.date = true;
         }
       } else if (depth === 2 && cur) {
-        const p = trimmed.match(/^(dataType|dataCategory|formatString)\s*:\s*(.*)$/);
-        if (p) cur[p[1]] = p[2].trim();
+        // (the display folder too: the MCP screens it as untrusted text, the audit's A1-7)
+        const p = trimmed.match(/^(dataType|dataCategory|formatString|displayFolder)\s*:\s*(.*)$/);
+        if (p) cur[p[1]] = p[1] === 'displayFolder' ? p[2].trim().replace(/^'(.*)'$/, '$1').replace(/''/g, "'") : p[2].trim();
         else if (/^sortByColumn\s*:/.test(trimmed)) cur.sortBy = tmdlName(trimmed.replace(/^sortByColumn\s*:\s*/, ''));
         else if (/^isHidden(\s*:\s*true)?$/.test(trimmed)) cur.isHidden = true;
         else if (cur.isMeasure && !/^[A-Za-z]+\s*(:|=|$)/.test(trimmed)) { addExpr(cur, trimmed); if (divides(trimmed)) cur.divides = true; }
@@ -74,8 +75,8 @@
     return (m.tables || []).filter((t) => t && t.name != null).map((t) => ({
       name: String(t.name), hidden: !!t.isHidden, date: /^time$/i.test(t.dataCategory || ''),
       columns: (t.columns || []).filter((c) => c.type !== 'rowNumber' && c.name != null)
-        .map((c) => Object.assign({ name: String(c.name), dataType: c.dataType || 'string', isHidden: !!c.isHidden, dataCategory: c.dataCategory }, c.sortByColumn ? { sortBy: String(c.sortByColumn) } : {})),
-      measures: (t.measures || []).filter((x) => x.name != null).map((x) => { const m = { name: String(x.name), isHidden: !!x.isHidden, formatString: x.formatString, divides: divides(x.expression) }; addExpr(m, Array.isArray(x.expression) ? x.expression.join('\n') : x.expression); return m; })
+        .map((c) => Object.assign({ name: String(c.name), dataType: c.dataType || 'string', isHidden: !!c.isHidden, dataCategory: c.dataCategory }, c.sortByColumn ? { sortBy: String(c.sortByColumn) } : {}, c.displayFolder ? { displayFolder: String(c.displayFolder) } : {})),
+      measures: (t.measures || []).filter((x) => x.name != null).map((x) => { const m = Object.assign({ name: String(x.name), isHidden: !!x.isHidden, formatString: x.formatString, divides: divides(x.expression) }, x.displayFolder ? { displayFolder: String(x.displayFolder) } : {}); addExpr(m, Array.isArray(x.expression) ? x.expression.join('\n') : x.expression); return m; })
     }));
   }
   // Round 23 (the owner's "nothing critical left": the website's picker had no relationships, so a download could show
