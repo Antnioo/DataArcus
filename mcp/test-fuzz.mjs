@@ -135,7 +135,6 @@ const sig = (target, e) => `${frameOf(e)} ${shape(e)}`;
 // A crash is matched by the file it happens in and its message; a property failure by its target and property. A crash
 // anywhere else, or a property failing on another target, fails the run. Remove an entry once its fix is merged.
 const KNOWN = [
-  { id: 'F-M1', owner: 'builder 6 (model loader, TMDL reader)', file: 'tmdl-model.js', msg: /./, k: 1, what: 'a truncated or mis-indented TMDL file' },
   { id: 'F-M2', owner: 'builder 6 (model loader)', file: 'pbip-bind.js', msg: /./, k: 16, what: 'a model.bim or .pbit whose tables, columns, measures or relationships are not arrays, or hold null' },
   { id: 'F-C2', owner: 'builder 7 (checks)', file: 'report-rules.js', msg: /./, k: 167, what: 'a sort list or a property bag of the wrong type' },
   { id: 'F-T1', owner: 'builder 9 (twin)', file: 'report-mirror.js', msg: /Cannot create property/, k: 7, what: 'an object expected, a string or number found' },
