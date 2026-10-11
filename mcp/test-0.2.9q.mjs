@@ -73,7 +73,7 @@ export async function v029q({ check }) {
   // ---------- D7: never the same chart twice; D8: never two slicers on the same field name ----------
   {
     const j = model([{ name: 'Desks', columns: [col('Desk', 'string'), col('Desk ID', 'string')] },
-      { name: 'Calls', columns: [col('Desk', 'string'), col('Seconds', 'double'), col('Desk ID', 'string')], measures: [ms('Talk Time', 'SUM ( Calls[Seconds] )', '#,0')] }],
+      { name: 'Calls', columns: [col('Desk', 'string'), col('Shift', 'string'), col('Seconds', 'double'), col('Desk ID', 'string')], measures: [ms('Talk Time', 'SUM ( Calls[Seconds] )', '#,0')] }],
       [rel('Calls', 'Desk ID', 'Desks', 'Desk ID')]);
     const b = pick(j, 2), c = b.cats;
     chk(() => !(c.bar && c.column && c.bar.c.toLowerCase() === c.column.c.toLowerCase()), () => `D7: the bar and the column chart never by the same field (a field of the same name in two tables reads the same): ${JSON.stringify(c)}`);
