@@ -68,5 +68,4 @@ export function gate(tool, id, model) {
   return p;
 }
 
-/** For the answer: is this id an approved, live plan that allows the tool (no throw). */
-export function approvedFor(tool, id, model) { try { gate(tool, id, model); return true; } catch (e) { return false; } }
+
