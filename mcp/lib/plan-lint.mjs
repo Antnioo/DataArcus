@@ -10,6 +10,7 @@ import { E } from './design.mjs';
 import { absorb } from './slots.mjs';
 import { inventory, memorySource } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
+import { takenNames } from './report-names.mjs';
 
 const relsOf = (m, lang) => ({ ...(lang ? { lang } : {}), modelTables: m.tables, relationships: Bind.relsOfTmsl(m.tmsl) });
 const PNG1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4AWMAAQAABQABNtCI3QAAAABJRU5ErkJggg==', 'base64');
@@ -45,7 +46,7 @@ export function planLint(a) {
     return { name: p.name, page: p.page, slots, png: PNG1, panel: p.panel, grow: true };
   });
   const r = Pbip.build({ name: 'Plan', title: 'Plan', pageName: pages[0].name, lang, rtl: E.rtl(design.layout, lang), font: design.font, sample: false,
-    theme: E.buildTheme(design, lang), ui: design.ui, model: { byPath: 'Model.SemanticModel', taken: m.taken, names: {} }, bind,
+    theme: E.buildTheme(design, lang), ui: design.ui, model: { byPath: 'Model.SemanticModel', taken: takenNames(m.projectDir), names: {} }, bind,
     logoPlaceholder: false, texts: E.REPORT_TEXTS[lang === 'ar' ? 'ar' : 'en'], pages });
   const inv = inventory(memorySource(r.files), 'the planned report');
   const out = lint(inv, m.tables, null, { pages: [1] });
