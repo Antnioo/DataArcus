@@ -10,6 +10,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
 import { withPlans } from './test-plan.mjs';
+import { INSTRUCTIONS_MAX } from './lib/agent-text.mjs';
 
 
 export async function v029c({ call, check, ROOT, meta }) {
@@ -218,7 +219,7 @@ export async function v029c({ call, check, ROOT, meta }) {
 
   // ---------- I. the instructions ----------
   const ins = (meta && meta.instructions) || '';
-  chk(() => /read_report/.test(ins) && /designLint/.test(ins) && ins.length <= 2500, () => `I. the instructions say: read_report before a redesign, designLint in the plan (${ins.length} characters, 2,500 at most): ${ins.slice(0, 200)}`);
+  chk(() => /read_report/.test(ins) && /designLint/.test(ins) && ins.length <= INSTRUCTIONS_MAX, () => `I. the instructions say: read_report before a redesign, designLint in the plan (${ins.length} characters, ${INSTRUCTIONS_MAX} at most: the one cap, A7-4): ${ins.slice(0, 200)}`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
