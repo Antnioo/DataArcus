@@ -1,8 +1,90 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "0.2.9 integration" just below, then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Integration round 5" just below (the rc head), then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## Integration round 5: Z fixes + main + version sources (11 Oct, from 18:27 UTC, cloud builder 5; `fix/0.2.9-gate`; not merged to main, no PR)
+- Merged `fix/0.2.9-z-gate` at `dc96530` (builder 9: the outside review's Z-01..Z-04, Z-06, Z-07) and `main` at `c8f0840`
+  (Z-08: CHANGELOG, privacy workflow, blocking Windows job, deny-scan, gitleaks, bot workflows): no conflicts.
+- Z-08 version sources: PRIVACY's header "Checked against 0.2.9" (re-read against this head: deletions say what Z-04
+  does; Known gaps: A6-3 and the folder checks' limit open, the 0.2.9 closures listed by id); CHANGELOG's
+  "## [Unreleased]: 0.2.9" lists the release candidate's contents with the outside-review fixes in plain words (no
+  custom-visuals line: not in this branch). `mcp/package.json`'s version stays 0.1.0: the build writes 0.2.9-rc.1.
+- Tests: `npm test` **1196** + reader 36, 21, 21, 20, golden PASS, fuzz PASS (KNOWN lists empty), FUZZ_LONG 10,000
+  cases PASS; website 17 suites PASS; test-deny-scan 9, test-site-config, csp, check-min (62) PASS.
+
+## Integration round 4: ALL MERGED (11 Oct, from 14:41 UTC, cloud builder 5; `fix/0.2.9-gate`; not merged to main, no PR)
+Tonight's rc build is this branch's head: the commit that adds this section (memory only) on top of **`805df7f`**, the
+last code commit. The rc version (0.2.9-rc.1) is written at build time by builder 13's build.
+| Merge | Commit | Conflicts, resolved keeping both sides |
+|---|---|---|
+| `fix/0.2.9-checks` at `8c2d9ac` (builder 7: audit 4 A4-1..A4-14, fuzz F-C1, F-C2, F-CP) | `9f098ca` | check-report: the reader's one reading (R1) with A4-2 (an unreadable lint told in notChecked) and A4-7 (lint findings carry origin, level, impact, source); design-lint: the reader's measured constants and R7's guess mark with A4-8 (no "missing title" unless the title is switched off); fuzz P3 with the owner's choice (b) |
+| fix from its run | `c902387` | audit 4's `obj`/`arr` shape helpers kept beside the reader's rulesInput (every check_report said "arr is not defined") |
+| `fix/0.2.9-writer` at `8a94c4a` (builder 11: writer split, A3-7..A3-12 writer side, A2-3 fitSlots, A6-12/A6-14, 6 re-recorded fixtures, F-W1) | `1c56110` | pbip-export: the split; A4-5 (one text measurement) moved to pbip-sizing.js, which takes textWidth from text-measure.js; theme generator loads text-measure first, then the writer's five files; slots.mjs gone (absorb and fitSlots through design.mjs), the reader's engine requires kept (A1-10) |
+| fix from its run | `3ca94fa` | the picker marks a whole calendar name (QuarterName, Month_Name) as time in any table: the writer now reads that mark (A3-8) and sorted them by value (round23 F1) |
+| `feat/0.3.0-arabic-twin` at `841ced1` (builder 9: twin fuzz F-T1..F-T4, F-TP) | `805df7f` | the fuzz test: every KNOWN list empty |
+
+**Counts (after the last merge, `805df7f`):** `npm test` **1183** + reader c 36, d 21, e 21, f 20, golden PASS (11
+tasks, no move), fuzz PASS (600 cases, 8,199 checks, nothing skipped); **FUZZ_LONG=1: 10,000 cases, 135,843 checks,
+PASS**. **KNOWN, KNOWN_SLOW and KNOWN_PROPS are empty**: no finding still reproduces. Website: 17 suites PASS;
+`check-min` (62), `csp`, `test-site-config` PASS. Startup instructions **2,193 of 2,200** (unchanged by round 4).
+Run notes: merge 1's website run beside the MCP run failed pbip once (the service picker's timing under load; alone it
+passed 85/85); from then on the website suites ran after the MCP run, and every one passed.
+Seen, not in scope: the open decision on the category pool with fields or page filters (picker section); laptop items
+P1-P6 and the blocks' own laptop lists (their memory files).
+
+## Integration round 3: reader update + design merged (11 Oct, from 14:00 UTC, cloud builder 5; `fix/0.2.9-gate`; not merged, no PR)
+| Merge | Commit | Conflicts, resolved keeping both sides |
+|---|---|---|
+| `fix/0.2.9-reader` at `57f4802` (builder 6: fuzz fixes F-R1, F-R2, F-M1, F-M2, F-RP, F-MP, the owner's choice (b)); it already holds `fix/0.2.9-design` at `fa206cd` (builder 10: audit 2, audit 7, the fuzz test) | `5950df4` | server: A7-4 (instructions from LIMITS in agent-text.mjs, cap 2,200) and A2-8 (engine only through design.mjs) with the tools block's VISUAL_KINDS (matrix; LIMITS.visuals is that list), readUserFile, themeOf, gate pin and approve_plan's elicitation text, naming the plan sources from planSources() (A7-8); the picker's listFormats/named; both nameOut (model.mjs: capped names; answer.mjs, as textOut: format characters); files.mjs (both added): one writer/reader + freeFile; plan-lint: kpis = card count (A2-4) + pinned fields (A3-2); README approve_plan row; WORK.md both sections; stamps `20261011t` |
+| A1-1's TODOs | `5950df4` | A1-1 (`63066cf`) is in the tree: the TODO(A1-1) lines in PRIVACY and README removed; test-0.2.9-agent's A1-1 detector also matches `realIn(` (the reader's name for it; with `real(` only it said A1-1 was missing) |
+| fixes from the full run | `4f0f133` | 4 of 1106 red: a theme file read into a const that the design block scales (let); the skill's visuals list gains matrix; PRIVACY's ".pbip points at" claim was split over two lines |
+| `fix/0.2.9-design` at `fa206cd` | (none) | already in through the reader: "Already up to date" |
+
+**Counts:** `npm test` **1106** + reader c 36, d 21, e 21, f 20, golden PASS (11 tasks, no move), **fuzz PASS** (seed
+20261011, 604 cases, 8,110 checks; skipped as known and open: F-T1..F-T4, F-TP (twin, builder 9), F-C2, F-CP (checks,
+builder 7); F-W1 (writer, builder 11) is in KNOWN_SLOW; no known finding reported as closed, so the KNOWN lists keep
+these). Website: 17 suites PASS; `check-min` (61), `csp`, `test-site-config` PASS. Startup instructions **2,193 of
+2,200**. Next (round 4, when the reviewer says): checks (builder 7), writer (builder 11), twin fuzz (builder 9).
+
+## Integration round 2: reader + tools merged (11 Oct, from 12:56 UTC, cloud builder 5; `fix/0.2.9-gate`; not merged, no PR)
+The reviewer's routine: merge the finished branches with real merges, both sides' intent kept, one full run after each.
+Not merged yet (the reviewer sends each when ready): design (builder 10), writer (builder 11), checks, custom visuals.
+| Merge | Commit | Conflicts, resolved keeping both sides |
+|---|---|---|
+| `fix/0.2.9-reader` at `4bc9a2f` (builder 6: audit 1, audit 5, R1-R9) | `0ad0dd5` | pbip-bind: the reader's one TMDL parse (A1-8, no parseTmdl/relsOfTmdl; a folder through tmdl-model.js), A1-6 (no type = unknown), displayFolder, with the picker's side tables, format facts and markCalendars in fromTmsl; model.mjs: the reader's modelRead (calendars marked by fromTmsl); server: the picker's options and listFormats with the reader's takenNames; theme-generator loads field-meaning, tmdl-model, pbip-bind; new `?v=20261011s` stamps |
+| `feat/0.3.0-arabic-twin` at `d131e66` (builder 9: twin T2-T9, compiler A3-4 and A6-11, audit 6's tools block: gate holes A6-1/2/3/5, atomic writes, files.mjs, caps) | `6e5d69b` | arabic-twin.mjs: the twin branch's version (reading block's locate/readJson, safeId, date tables, writeTree) with the reader's R1 read (readOriginal: strictFiles + inventory; copies through readBytes); server fail(): wordOf and nameOut |
+| fix found by the full run | `7d379e4` | safe() handed fail() failText's string, so the reader's coded errors lost their words (read_model by an unknown name): a coded error now goes to wordOf |
+
+**Counts:** after the reader: `npm test` **973** + reader 36 + d 21 + e 21 + f 16, golden PASS; website 17 suites PASS.
+After the twin and tools: **1033** + 36 + 21 + 21 + 16, golden PASS (11 tasks, no move) after `7d379e4` (the first run:
+1 of 1033 red, the fix above); website 17 suites PASS; `check-min` (57), `csp`, `test-site-config`, `test-svg-kpi`
+(854) PASS. The startup instructions are **2,493 characters** (cap 2,500): builder 10's A7-4 (every rule from one source)
+must keep them under it.
+
+## 0.2.9 writer block (11 Oct, cloud builder 11; branch `fix/0.2.9-writer` from `fix/0.2.9-gate` `d2300f9`; not merged, no PR)
+The full report: `mcp/work/0.2.9-writer.md`. Done: A3-10 (`daxNames`), A3-11 (shown text without format characters), A3-7 and A3-8
+(writer side: the picker's `kind`/`rows`/`family`/`time` read when given, names measured by family), A3-9 (JSDoc contract, `checkBuild`,
+typed page filters), A3-12 (`build` split into `pbip-query.js`, `pbip-sizing.js`, `pbip-page.js`, `pbip-notes.js`; byte-identical on 970
+inputs), and the audit's writer items B-23 and B-06, then audit 6's A6-12 (`build` returns `bound`) and A6-14 (`Pbip.pageFilterOf`) with the server pointed at both. `npm test` 939 -> 971, golden unchanged. A2-3 done (`bacf172`): `fix/0.2.9-design` merged in, one `E.fitSlots` for the writer, plan_layout and the website's background; `slots.mjs` deleted. `npm test` 1026 + 36 + golden PASS; website all 17 PASS after the 6 background fixtures A2-3 moved were re-recorded (owner's yes, 11 Oct; causes in `meta.changed`). F-W1 (the fuzz test's writer hang on a 200,000-character name) fixed at the root (`1f59de4`): npm test 1057 + 36 + golden + fuzz PASS. Next: the reviewer reviews; the laptop proves W1-W11.
+
+## 0.2.9 design engine block (11 Oct, cloud builder 10; branch `fix/0.2.9-design` from `fix/0.2.9-gate` `d2300f9`; not merged, no PR)
+The audit `audit-2-design-engine.md` (A2-1 to A2-12, but A2-3) and the tools audit's A6-10, fixed at the root in the
+design block, one commit each, tests first (`mcp/test-0.2.9-design.mjs`, 50 checks). **The full report, the moved
+numbers, the slot shapes A2-3's fitSlots needs and the laptop list: `mcp/work/0.2.9-design.md`.**
+- The engine now holds: the small-page rule (`SMALL_PAGE`, `smallPage`, `fitLayout`; no second page under 800), kpis
+  0-6 (`kpiCards` gone; `maxKpis` caps pages), the table's share by its fields (`TABLE_NEED`, `tableWeight`), slot
+  `index`, `colours`/`roles`, the written `SCHEMA` and key lists, `repairState(state, report)`, labels `{ en, ar }` with
+  `label`/`texts` and `RTL_LANGS`, `MEASURED_FONTS`, `NAME_MAX`, `themeScaleOf`/`scaleTheme`.
+- `mcp/lib/files.mjs` is new (freeFile); server.mjs reaches the engine only through design.mjs.
+- Fixtures moved with their cause in `meta.changed`: the 640 x 360 cases and page-too-tall (A2-1). Nothing else.
+- **Audit 7 (same branch, after merging fix/0.2.9-gate):** A7-1, A7-2, A7-4..A7-13 done (`ce5668a`..`4abb90b`); new
+  `mcp/lib/agent-text.mjs` (instructions from LIMITS, one cap 2,200; now 2,185), `test-0.2.9-agent.mjs` (23). npm test
+  1019 + 36, golden PASS; website 17 PASS. **PRIVACY/README containment lines carry TODO(A1-1): merge only with the
+  reader's 63066cf, and delete the TODO lines then.** A7-3 is builder 9's.
+- **Next:** builder 11 does A2-3 (fitSlots) last; the laptop proves A2-1 (700-800 wide), A2-5 (5-6 field tables),
+  A2-11 (Verdana) and D1-D3 (DESKTOP-TESTS.md "0.2.9 design block").
 
 ## 0.2.9 integration (11 Oct, cloud builder 5; `fix/0.2.9-gate` is the integration branch for tonight's laptop proof; not merged, no PR)
 The reviewer's routine (11 Oct 07:36 UTC): merge checks, reader and the Arabic twin into this branch, then fix the gate
@@ -40,6 +122,28 @@ unchanged (no KPI pick of a golden model moved). Website: all 17 suites PASS; `c
 check (it was on the portfolio's own names: now the shape only: the plain count and sum first); the reader's L1
 O-13/O-14 checks (find the visual by its place, R5).
 
+### Step 3, the field picker's bias fixes (the owner's "fix all of them now"; builder 7's block audit A1-11, A3-1)
+Checks first: `mcp/test-0.2.9k.mjs` (7 checks, ordinary names, none of the portfolio's): **6 red, 7 green**.
+- `2fc8044` (field picker + model reading): **A1-11** one field-meaning rule, new `assets/js/field-meaning.js`, used by
+  `pbip-bind.js` and `model-health-tmdl.js` (their copies had drifted). The picker: the format string decides first; a
+  name only by whole words and never a NOT_PCT name ("Corporate Revenue", "Generated Leads", "Exchange Rate", "Hourly
+  Rate" are no percents; "Interest Rate %", "Conversion Rate", «نسبة الإنجاز» are). The health check keeps format-or-name
+  with the same name rule; its money test is ISO 4217 codes and currency signs (CAD, INR were not money). **A3-1** a
+  calendar is marked (dataCategory Time), shaped like one (`markCalendars`: a relationship's one side on its date column,
+  from fromTmsl and, for TMDL projects, model.mjs), or named by a whole calendar word (Date, Dates, Calendar, Dim Date,
+  Time, Period, Arabic): Candidates, Updates, Mandates, Overtime, Time Sheets keep their categories.
+- `da2347b`: the engines use `require` only where it exists; the website's model-health suite loads field-meaning first,
+  as the page does (it crashed on `2fc8044`: found by the website run, fixed before this report).
+- Browser: the Model Health Check page loads `field-meaning.min.js` before the TMDL builder; the Theme Generator loads it
+  before pbip-bind (`?v=20261011k`/`k2`). **Packaging must carry `assets/js/field-meaning.js`** with the engines
+  (pbip-bind.js and model-health-tmdl.js require it): the engine repo's packaging list needs it (not changed here).
+
+### integration green
+**MCP: `npm test` 946 checks + the reader's 36, golden PASS (11 tasks, unchanged); website: 17 suites PASS** (the full run
+on `2fc8044`: 16 PASS, model-health crashed; after `da2347b` model-health 62, pbip 85, theme-generator 893, tmdl-model 70
+PASS; the other 13 untouched since); `check-min` (57 files), `csp`, `test-site-config` PASS. Counts on this branch since
+main: 739 -> 946 (+ reader 36): gate 43, part 2 33, checks 24, reader 36, twin 81, root fixes 19, picker bias 7.
+
 ### For the laptop tonight (the integration branch; each expected before the run)
 Everything of part 1's and part 2's tables (above, unchanged), the reader's and the twin's own tables (their memory
 files), plus:
@@ -51,6 +155,9 @@ files), plus:
 | I4 | create_report after a plan with planFields, other fields passed (G5) | refused, nothing written |
 | I5 | The Theme Generator website page, Generate with a brand | unchanged (its harmonies); the MCP's brand theme: Corporate light page, the calm set |
 | I6 | T1 (the twin's mirror vs the writer's `invertAxis`) | settled by the laptop tonight: both paths are left as they are |
+| I7 | A model with a fact table named like "Candidates" or "Time Sheets" (A3-1) | its text columns are the charts' categories; nothing left out |
+| I8 | A measure named "Corporate Revenue" or "Exchange Rate" with no format (A1-11) | a number card (auto units), never 0.0% |
+| I9 | The website's Model Health Check and Theme Generator pages | load and work (the new field-meaning.min.js loads first; no console error) |
 
 ### Seen, not in scope
 - `report-mirror.js` keeps its own `isCustom` (a website engine can't import the MCP's reading block); `calendar-generator.js`
@@ -60,6 +167,64 @@ files), plus:
   tell an indicator from a core amount when both are computed.
 - O-2's decision (amounts under a million show K) and the reader's R1-R4, R6-R9 and the twin's T2-T8 are their blocks'.
 - T1 (invertAxis) is the laptop's tonight.
+
+### CI
+CI green on `d2300f9` and `da2347b`; red on `2fc8044` (the website's model-health suite crashed: its loader gives
+`module` without `require`), fixed in `da2347b`.
+
+## 0.2.9 audit fixes (picker) (11 Oct, cloud builder 5; same branch `fix/0.2.9-gate`; not merged, no PR)
+The reviewer's routines (08:43 and 09:26 UTC): the rest of builder 7's audit 3 on the field picker's side, plus A6-15;
+tests first, one commit per item, root fixes; nothing tuned to the portfolio's reports or fixtures. New suite
+`mcp/test-0.2.9p.mjs` (27 checks, made-up retail, HR, French, clinic, events models), now run by `test.mjs`.
+| Item | Commits (tests first) | What changed |
+|---|---|---|
+| A6-15 | `fbfe30a` -> `1d34473` | a month column without a sort-by column is noted by the picker's facts (type, whole words), not a word list |
+| A3-5 | `fbfe30a` -> `4a7f59c` | a time variant by its words or its time-intelligence DAX, never "Average"; every base measure ranks before any variant |
+| A3-6 | `fbfe30a` -> `6902493` | the rank by shape; the name words are one named tie-break (`TIEBREAK_WORDS`); a measure others build on +1; a French model ranks by shape alone |
+| A3-8, A3-7 (picker side) | `ab3c794` -> `c2e445b` | every column says `time` (a date table's, sorted by a number, or a date) and, for a calendar name, `cal: { kind, rows, family }` (month 12, day 7, quarter 4; english, arabic, hijri) |
+| A3-9 + "]" keys | `ab3c794` -> `4e185f0` | a JSDoc `Field` typedef; isMeasure, expr, amount, lang, i, twin in a WeakMap (`exprOf` reads a measure's DAX); the reach cache off the caller's options; `fieldKey` escapes "]" (DAX's "]]") in langsOf, twinsOf, the language note and the server's lookups |
+| A3-3 | `77c473d` -> `d750912` | one format rule: `formatOf` and `reportFormatOf` in `field-meaning.js` (moved from the health engine and the server); the picker's `cardKind` derives pct, pctFormat, wholeFormat, tableFormat and the "full" card format from it; `measureOf` beside `fieldOf`; the readers keep a column's format and summarizeBy and a measure's dynamic format; the server's `withRightFormats`, `cardFormatOf`, `rightOf` are gone |
+| A3-2 | `a2dcb21` -> `d3b50fd` | `suggest(tables, n, { pinned, excludeColumns, axisFor, lang, kpiValues })`: the user's fields pinned through build (a pinned table keeps its formats); no slicer on a column a page filter fixes (`excluded`); a flag kept true runs the axis by its own day column, found by the flag's word + "day" (`axisBy`; "Is Ramadan" -> "Ramadan Day", "Is Festival" -> "Festival Day"); Arabic: the calendar's Arabic name columns by twin or by kind (`calendarNames` for those with none, `calendarSwaps`); a day name's short twin by shape (`short`); `mapFields` (display names as copies, never set on the picker's fields); the counted binding goes through build; the server and the plan's lint only pass options |
+
+**Tests before -> after:** `npm test` 946 -> **973** (+ v029p 27), reader **36**, golden **PASS** (11 tasks).
+Golden moves, each with its cause in `golden-expected.json`'s "why": task 6's fourth KPI (A3-5, `58ce8c1`); task 10
+suggestChars 5097 -> 6085 (A3-8/A3-7's marks, `a0bc56e`; diffed: only `time`/`cal` added). A3-3 and A3-2 moved no golden number.
+Website: **17 suites PASS**; `check-min` (57), `csp`, `test-site-config` PASS. Test fixes of my own new checks (each before it first passed, cause beside it): the A3-2 slicer
+check needed a second category (one category leaves no "next column", as before); the server-source check matched the
+page filter's own Ramadan note and add_gulf_calendar's column list (tools-layer text, not picker rules): narrowed.
+
+### For packaging (the reviewer's routine 10:29 UTC; builder 13's audit 8: A8-6, A8-8, A8-9)
+- The MCP's runtime dependencies are pinned exactly in `mcp/package.json`, at the versions the lockfile already had:
+  `@modelcontextprotocol/sdk` 1.32.1, `ajv` 8.20.0, `ajv-formats` 3.0.1, `zod` 4.6.5 (`npm install`: the lockfile's
+  ranges follow; no installed version changed).
+- **The rc version is written at build time**: `mcp/package.json`'s "version" stays 0.1.0 here; builder 13's build
+  (`fix/0.2.9-packaging`) writes 0.2.9-rc.1 and checks it against PRIVACY.md's header and `mcp/CHANGELOG.md` (PR #7).
+- Seen, not in scope: `@microsoft/powerbi-report-authoring-cli` (Microsoft's validator, used by the tests only) is
+  under "dependencies", not "devDependencies", so a production install would carry it; packaging's call.
+
+### 0.2.9 audit fixes (picker), for the laptop (each expected before the run)
+| # | Check | Expected |
+|---|---|---|
+| P1 | Golden task 3's Ramadan report (page filter Is Ramadan = true) | the line by Ramadan Day; no slicer on Is Ramadan / Hijri Year; note names the axis and the flag |
+| P2 | An Arabic report on the Gulf calendar | Month Name (Arabic) on the axis, Day Name (Arabic) on charts, sorted by their numbers; a name with no Arabic column noted |
+| P3 | A column chart by Day Name (English) | Day Short (Sun ... Sat) in calendar order where the full names would slant; the note names the columns |
+| P4 | A measure "Visit Count" COUNTROWS formatted `#,0.00`, in a table and on a card | 1,234 (no decimals) in both, on the website's download and the MCP's |
+| P5 | The website's Theme Generator download and create_report on the same model | the same card and table formats in both (one rule) |
+| P6 | Builder 11 (writer): read `time` and `cal` from the bound fields instead of the name words | (writer's block; not changed here) |
+
+### 0.2.9 audit fixes (picker), the decision needed
+- With fields or page filters, create_report's binding has no category pool (the old server rebuilt the binding and
+  lost `catPool`; kept as it was, `noted()` in server.mjs, and the plan's lint does the same). Keep it, or give such
+  reports the pool too (each chart of a page then takes a category not used on it yet)?
+
+### 0.2.9 audit fixes (picker), seen, not in scope
+- `parseTmdl` appends the lines of a measure's `formatStringDefinition` (depth 3) to its DAX text (pre-existing; the
+  DAX text is read for counts, text and time intelligence only).
+- The counted binding's funnel and tooltip measure are now the second KPI count (build's rule); before they were the
+  second count of any kind (a category count when the model has no sums): only on a model with no measures and no sums.
+- Display names given for a column that ends up in the category pool now show on those charts too (mapFields maps the
+  pool; before, only the bound fields were named).
+- Packaging must carry `assets/js/field-meaning.js` (now also the format rule).
 
 ## 0.2.9 part 2: the report writer fixes (11 Oct, cloud builder; same branch `fix/0.2.9-gate`, on top of part 1 `4785367`; not merged, no PR)
 The reviewer's routine (11 Oct 05:52 UTC, "Builder 5: 0.2.9 part 2"): plan items 3, 4, 5, 7, 8, 9 and the answer to part

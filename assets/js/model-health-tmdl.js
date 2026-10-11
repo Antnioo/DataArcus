@@ -8,6 +8,8 @@
  */
 (function (root) {
   'use strict';
+  // the one field-meaning rule (assets/js/field-meaning.js, shared with the field picker: the block audit's A1-11, 11 Oct)
+  const FM = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./field-meaning.js') : root.DataArcusFieldMeaning;
   const TAB = '\t';
   const ind = (n) => TAB.repeat(n);
   const text = (v) => (Array.isArray(v) ? v.join('\n') : v == null ? '' : String(v));
@@ -265,33 +267,10 @@
   // format (digit placeholders 0 or #) with no "," before the decimal point. Never true for a percentage, a date or
   // time format, scientific notation, text, a named format, or no format at all (a measure without a format is the
   // NO_FORMAT finding's; a column without one is asked about separately, see separatorFixes).
-  const unquoted = (f) => String(f).replace(/"[^"]*"/g, '').replace(/\\./g, '');
-  function lacksSeparator(format) {
-    if (format == null || !String(format).trim()) return false;
-    const f = unquoted(format);
-    if (!/[0#]/.test(f) || /%/.test(f) || /e[+-]/i.test(f) || /[dmyhs]/i.test(f) || /^[a-z ]+$/i.test(f.trim())) return false;
-    return f.split(';').some((sec) => /[0#]/.test(sec) && !/,/.test(sec.split('.')[0]));
-  }
-  // the same format with the separator: each section's whole-number part becomes #,0 ("0.00" -> "#,0.00")
-  function withSeparator(format) {
-    let quoted = false;
-    // split into sections at ";" outside quotes, then replace the first run of digit placeholders of each
-    const secs = []; let cur = '';
-    for (const ch of String(format)) { if (ch === '"') quoted = !quoted; if (ch === ';' && !quoted) { secs.push(cur); cur = ''; } else cur += ch; }
-    secs.push(cur);
-    return secs.map((sec) => {
-      if (/,/.test(unquoted(sec).split('.')[0]) || !/[0#]/.test(unquoted(sec))) return sec;
-      let q = false, done = false, out = '';
-      for (let i = 0; i < sec.length; i++) {
-        const ch = sec[i];
-        if (ch === '"') q = !q;
-        if (!q && !done && (ch === '0' || ch === '#')) { let j = i; while (j < sec.length && (sec[j] === '0' || sec[j] === '#')) j++; out += '#,0'; i = j - 1; done = true; } else out += ch;
-      }
-      return out;
-    }).join(';');
-  }
+  // (A3-3: the separator rule lives in field-meaning.js with the format rule that uses it)
+  const lacksSeparator = FM.lacksSeparator, withSeparator = FM.withSeparator;
   // Columns that are identifiers or parts of a date, by name: a separator would be wrong on them (2,026)
-  const NOT_A_QUANTITY = /year|month|day|week|quarter|hijri|(^|[\s_-])(id|key|code|no|num|number|index|sort|order|rank|zip|postal|phone|mobile)s?$|[a-z]ID$|Key$|السنة|الشهر|اليوم|رقم/i;
+  const NOT_A_QUANTITY = FM.NOT_A_QUANTITY;
   // Measures whose format has no separator, and visible number columns that are summed (summarizeBy not "none", not
   // an identifier or a date part by name) whose format has none or that have no format: each with the format to
   // give it, and a script that does. A percentage by name is left to the percentage check. max: objects of each kind.
@@ -325,60 +304,9 @@
   }
 
   // ---------- the owner's ask, 6 Oct 2026: formats fixed at the source ----------
-  // ONE rule for the right format of a measure or a column, used by the health check's format script, plan_layout and
-  // create_report (and the report's own formats until the script is applied). formatOf(obj, kind, rawTables) returns
-  // null when the object is left alone (already well formatted, a format expression, text, or not a number or date),
-  // else { format, reason }:
-  //   a percentage (a % in the format or the name, ratio, rate, pct, percent; or margin, share, vs, growth, change
-  //     when the DAX divides and the format is not money): "0.0%", unless its format already has a %
-  //   a whole number or a count (COUNT..., a sum of a whole-number column, a whole-number column): "#,0"
-  //   money (a currency in the format): the model's own format, with the thousand separator added where it lacks one;
-  //     a currency is never invented
-  //   a sum without a format: "#,0" (round 14); any other number: "#,0.00" without a format; its own format with the
-  //     separator where it lacks one
-  //   a date column: "dd mmm yyyy" without a format or with "General Date" (which shows a time of 12:00:00 AM)
-  const DIVIDES = /\bDIVIDE\s*\(|(^|[^/])\/(?!\/)/i;
-  const PCT_HARD = /%|\bpct\b|\bpercent(age)?\b|\bratio\b|\brate\b|نسبة/i, PCT_SOFT = /margin|share|\bvs\b|growth|change|هامش|نمو/i;
-  const NOT_PCT = /hourly|exchange|run\s*rate|\bper\b|colou?r|icon|label|title|arrow/i;
-  const MONEY = /[$€£¥₹]|\[\$|\bcurrency\b|"[^"]*(AED|SAR|QAR|KWD|BHD|OMR|USD|EUR|GBP|د\.إ|ر\.س|ر\.ق|د\.ك)[^"]*"/i;
-  const COUNT_EXPR = /^(COUNT|COUNTA|COUNTAX|COUNTBLANK|COUNTROWS|COUNTX|DISTINCTCOUNT|DISTINCTCOUNTNOBLANK)\s*\(/i;
-  const isTextFormat = (f) => { if (!f) return false; if (/^\s*(yes\/no|true\/false|on\/off)\s*$/i.test(f)) return true; if (/^\s*(general( number)?|currency|fixed|standard|percent|scientific)\s*$/i.test(f)) return false;
-    return !/[0#%]/.test(unquoted(f)); };
-  const TEXT_EXPR = /^\s*"|^\s*(FORMAT|CONCATENATEX?|UNICHAR|UPPER|LOWER|LEFT|RIGHT|MID|SUBSTITUTE|REPT|COMBINEVALUES)\s*\(|"\s*&|&\s*"/i;
-  const hasDecimals = (f) => /\.[0#]/.test(unquoted(f));
-  const sumOfWhole = (expr, rawTables) => {
-    const sum = expr.match(/^SUM\s*\(\s*'?([^'\[\]]+?)'?\s*\[\s*([^\]]+)\]\s*\)$/i); if (!sum) return false;
-    const t = (rawTables || []).find((x) => x.name.toLowerCase() === sum[1].trim().toLowerCase()), c = t && (t.columns || []).find((x) => x.name.toLowerCase() === sum[2].trim().toLowerCase());
-    return !!(c && c.dataType === 'int64');
-  };
-  // the right format of a number whose kind is known: whole (a count) or not
-  // (round 14, the laptop's proof on 6 Oct: the sample's unformatted SUM showed 14,178.00 in its table, where round 13
-  // showed 14,178): a sum the model leaves without a format shows no decimals, as a count does; only a real decimal
-  // (an average, a division, any other DAX) gets two; a sum the model formats with decimals keeps them
-  const numberFix = (f, whole, sum) => {
-    if (MONEY.test(f || '')) return lacksSeparator(f) ? { format: withSeparator(f), reason: 'money: the model\'s own currency format, with the thousand separator' } : null;
-    if (whole) return !f || hasDecimals(f) || lacksSeparator(f) || /^\s*general( number)?\s*$/i.test(f) ? { format: '#,0', reason: f && hasDecimals(f) ? 'a count or whole number shown with decimals (' + f + ')' : 'a count or whole number: thousand separator, no decimals' } : null;
-    if (!f && sum) return { format: '#,0', reason: 'a sum without a format: thousand separator, no decimals' };
-    if (!f) return { format: '#,0.00', reason: 'a number without a format: thousand separator and two decimals' };
-    return lacksSeparator(f) ? { format: withSeparator(f), reason: 'the format has no thousand separator (' + f + ')' } : null;
-  };
-  function formatOf(obj, kind, rawTables) {
-    if (!obj) return null;
-    const f = obj.formatString == null ? '' : String(obj.formatString).trim(), nm = String(obj.name || '');
-    if (kind === 'column') {
-      const type = String(obj.dataType || '').toLowerCase();
-      if (obj.isHidden || obj.type === 'rowNumber') return null;
-      if (type === 'datetime') return /time|stamp|hour/i.test(nm) || (f && !/^\s*general date\s*$/i.test(f)) ? null : { format: 'dd mmm yyyy', reason: f ? 'a date shown with a time (General Date)' : 'a date without a format' };
-      if (!/^(int64|double|decimal)$/.test(type) || obj.summarizeBy === 'none' || NOT_A_QUANTITY.test(nm) || PCT_HARD.test(nm) || isTextFormat(f)) return null;
-      return numberFix(f, type === 'int64');
-    }
-    if (obj.formatStringDefinition) return null;
-    const expr = text(obj.expression).replace(/\/\/.*$/gm, '').replace(/--.*$/gm, '').trim();
-    if (isTextFormat(f) || TEXT_EXPR.test(expr)) return null;
-    const pct = /%/.test(unquoted(f)) || (PCT_HARD.test(nm) && !NOT_PCT.test(nm)) || (PCT_SOFT.test(nm) && DIVIDES.test(expr) && !MONEY.test(f));
-    if (pct) return /%/.test(unquoted(f)) ? null : { format: '0.0%', reason: f ? 'a ratio (by its name or its DAX) formatted as ' + f : 'a ratio (by its name or its DAX) without a format' };
-    return numberFix(f, COUNT_EXPR.test(expr) || sumOfWhole(expr, rawTables), /^SUM\s*\(\s*'?[^'\[\]()]+'?\s*\[[^\]]+\]\s*\)$/i.test(expr));
-  }
+  // ONE rule for the right format of a measure or a column, formatOf (field-meaning.js; builder 7's audit A3-3, 11 Oct:
+  // there, so the picker's cards and tables use it too): the health check's format script, plan_layout and create_report
+  const formatOf = FM.formatOf;
   // Every measure and column the rule would change, with one script that does it (createOrReplace, each object
   // written in full with only its format changed). The health check, plan_layout and create_report write this same
   // script to the same file. max: objects in the script; maxChars: its length (a large model's script stays readable).

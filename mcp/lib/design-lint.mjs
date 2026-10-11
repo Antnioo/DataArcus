@@ -18,14 +18,21 @@ export const LINT_RULES = {
   OFF_PAGE: 'a visual outside the page',
   OVERLAP: 'two visible data visuals, cards or slicers overlapping by more than 10% of the smaller',
   COVER_CARDS: 'a card laid over another visual at the same place (a "no data" message): counted apart, not an overlap',
-  NO_TITLE: 'a chart or table with no title and no text box just above it',
+  NO_TITLE: 'a chart or table whose title is switched off, with no text box just above it (with no title setting Power BI draws its own title)',
   PLACEHOLDER_TEXT: 'placeholder wording left in a title or text box ("Your logo", «شعارك», lorem ipsum...) (O-6)'
 };
 
 const CHARTS = /^(lineChart|areaChart|stackedAreaChart|columnChart|clusteredColumnChart|barChart|clusteredBarChart|stackedBarChart|stackedColumnChart|hundredPercentStacked\w+|line\w*ComboChart|ribbonChart|waterfallChart)$/;
 const BARS = /^(barChart|clusteredBarChart|stackedBarChart|hundredPercentStackedBarChart)$/;
 const DATA = /Chart$|^tableEx$|^pivotTable$|^treemap$|^funnel$|^gauge$|^map$|^filledMap$|^azureMap$/;
-const TIMEY = /month|year|date|week|quarter|period|day|شهر|سنة|تاريخ|أسبوع|ربع|يوم/i;
+// (A4-9, audit 4: a time-like name by its whole words, never inside another word: "Candidate" and "Update Status" are
+// not dates; "OrderDate", "Month-Year", "fiscal_period", «الشهر» are) a name's words: split on spaces, marks and camel case
+const wordsOf = (name) => String(name || '').replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase().split(/[^a-z0-9\u0600-\u06ff]+/).filter(Boolean).map((w) => w.replace(/^ال(?=..)/, ''));
+const TIME_WORDS = new Set(['month', 'months', 'year', 'years', 'date', 'dates', 'week', 'weeks', 'quarter', 'quarters', 'qtr', 'period', 'periods', 'day', 'days', 'شهر', 'سنة', 'تاريخ', 'أسبوع', 'ربع', 'يوم']);
+const TIMEY = { test: (name) => wordsOf(name).some((w) => TIME_WORDS.has(w)) };
+const many = (name) => { const w = wordsOf(name); return (w.some((x) => /^months?$/.test(x)) && w.some((x) => /^years?$/.test(x))) || w.some((x) => /^dates?$|^تاريخ$/.test(x)); };
+// (A4-8) the reading layer's titleOff; a visual JSON when given (the reading branch's inventory keeps it, a test's too)
+const titleOff = (x) => { if (x.titleOff) return true; const t = (((((x.json || {}).visual || {}).visualContainerObjects || {}).title) || []).find((e) => e && !e.selector && e.properties && e.properties.show); const v = t && t.properties.show.expr && t.properties.show.expr.Literal && t.properties.show.expr.Literal.Value; return String(v) === 'false'; };
 const PLACEHOLDER = /your logo|logo here|lorem ipsum|placeholder|title here|text here|click to add|شعارك|عنوان هنا|نص هنا/i;
 // a character of a label at a point size (Segoe UI, measured in the report-fixes lab): 1.333 px a point x 0.57 em
 // (R7, the cross-review: every number the rules use, named, with where it comes from; a number that was chosen and not
@@ -75,9 +82,8 @@ export function lint(inv, model, facts, opts) {
         const k = keyOf(f), m = cols[k];
         const sortedByOther = x.sort.some((s) => s.field && !(s.field.table === f.table && s.field.name === f.name) && !ys.some((y) => y.table === s.field.table && y.name === s.field.name && y.kind === s.field.kind));
         if (sortedByOther) continue;
-        const many = (/month/i.test(f.name) && /year/i.test(f.name)) || /date/i.test(f.name);
         if (m && m.type === 'string' && !m.sortBy)
-          add('AXIS_TEXT_TIME_UNSORTED', many ? 'high' : 'medium', p, x, `${refOf(f)} is a text column and the model gives it no sort-by column, so the axis runs in alphabetical order${x.sort.length ? ' (the visual is ordered by its value, not by time)' : ''}${many ? '; a label holding month and year is likely to give many points and a scrollbar' : ''}`,
+          add('AXIS_TEXT_TIME_UNSORTED', many(f.name) ? 'high' : 'medium', p, x, `${refOf(f)} is a text column and the model gives it no sort-by column, so the axis runs in alphabetical order${x.sort.length ? ' (the visual is ordered by its value, not by time)' : ''}${many(f.name) ? '; a label holding month and year is likely to give many points and a scrollbar' : ''}`,
             'order the chart by the earliest date of each label (a MIN of the date column in Tooltips, then sort by it), and keep the last 12 months when there are more than about two years; or put Year and Month on the axis as two levels', true);   // (R7: a time field known by the words of its name: a guess)
         else if (m && m.type === 'unknown' && !m.sortBy)
           add('AXIS_TEXT_TIME_UNSORTED', 'medium', p, x, `${refOf(f)} has no type in the model's files (a column of a DAX table) and no sort-by column: if it holds text, the axis runs in alphabetical order`, 'check its type; order the chart by the earliest date of each label, or give the column a sort-by column in the model', true);
@@ -105,8 +111,9 @@ export function lint(inv, model, facts, opts) {
       }
       // (d) off the page
       if (p.w && p.h && (x.x < -V('PAGE_SLACK') || x.y < -V('PAGE_SLACK') || x.x + x.w > p.w + V('PAGE_SLACK') || x.y + x.h > p.h + V('PAGE_SLACK'))) add('OFF_PAGE', 'high', p, x, `part of the visual lies outside the ${p.w}x${p.h} page`, 'move it or make it smaller', false);
-      // (e) a data visual with no title and no text box just above it
-      if (DATA.test(x.type) && !x.title) {
+      // (e) a data visual with its title switched off and no text box just above it. (A4-8, audit 4: with no title setting,
+      // Power BI draws its own title, "Sales by Region", so that is not a missing title)
+      if (DATA.test(x.type) && !x.title && titleOff(x)) {
         const label = shown.some((t) => t.type === 'textbox' && t.text && t.y + t.h <= x.y + V('LABEL_INTO') && t.y + t.h >= x.y - V('LABEL_ABOVE') && t.x < x.x + x.w && t.x + t.w > x.x);
         if (!label) add('NO_TITLE', 'medium', p, x, 'no title, and no text box just above it to name it', 'add a title that says what the visual answers', false);
       }

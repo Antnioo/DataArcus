@@ -272,7 +272,8 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
   }
   // R7. Two line charts without a time axis: each slot goes to a visual beside it, and no line chart is left stretched
   {
-    const { dropLines } = await import('./lib/slots.mjs').catch(() => ({}));
+    // (0.2.9, A2-3: the rule is the design engine's fitSlots since; lib/slots.mjs is gone. The expectations are unchanged)
+    const { fitSlots } = await import('./lib/design.mjs').catch(() => ({})), dropLines = fitSlots && ((sl) => fitSlots(sl, { dropKinds: ['line'] }));
     const slots = [{ kind: 'line', x: 0, y: 0, w: 100, h: 50 }, { kind: 'line', x: 100, y: 0, w: 100, h: 50 }, { kind: 'bar', x: 200, y: 0, w: 100, h: 50 }];
     const out = dropLines ? dropLines(slots) : null;
     chk(() => out && !out.slots.some((x) => x.kind === 'line') && out.dropped.length === 2 && out.slots.find((x) => x.kind === 'bar').w === 300 && out.slots.find((x) => x.kind === 'bar').x === 0, () => `R7. both line slots go to the bar beside them: ${JSON.stringify(out)}`);
@@ -322,7 +323,8 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
   }
   // F5. Two line charts side by side above a table as wide as both: the table takes their whole band (no blank band)
   {
-    const { dropLines } = await import('./lib/slots.mjs');
+    // (0.2.9, A2-3: the design engine's fitSlots, as R7)
+    const { fitSlots } = await import('./lib/design.mjs'), dropLines = (sl) => fitSlots(sl, { dropKinds: ['line'] });
     const out = dropLines([{ kind: 'line', x: 0, y: 0, w: 100, h: 50 }, { kind: 'line', x: 110, y: 0, w: 100, h: 50 }, { kind: 'table', x: 0, y: 60, w: 210, h: 50 }]);
     const t = out.slots.find((z) => z.kind === 'table');
     chk(() => t && t.y === 0 && t.h === 110 && t.w === 210 && !out.slots.some((z) => z.kind === 'line'), () => `F5. the table takes the two lines' band: ${JSON.stringify(out.slots)}`);
@@ -336,7 +338,7 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
   // F7. One implementation of the room rule: the server's text slots use lib/slots.mjs's absorb (no copy of its own)
   {
     const srv = fs0.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'server.mjs'), 'utf8');
-    chk(() => /absorb\(/.test(srv) && !/const row = near\(/.test(srv), () => 'F7. server.mjs must use slots.mjs absorb for text slots, not its own copy');
+    chk(() => /absorb\(/.test(srv) && !/const row = near\(/.test(srv), () => 'F7. server.mjs must use the one absorb (the design engine\'s since 0.2.9 A2-3) for text slots, not its own copy');
   }
 
   // ---- Round 23, part 7: the laptop's proof (ab28427), findings S1, W1, S2, each red first ----

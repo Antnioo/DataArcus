@@ -147,7 +147,12 @@
   // DAX printing
   const daxStr = (s) => '"' + String(s).replace(/"/g, '""') + '"';
   const daxNum = (n) => { const s = String(+n.toFixed(6)); return s.startsWith('.') ? '0' + s : s; };
-  const daxMeasure = (name) => '[' + String(name).replace(/\]/g, ']]') + ']';
+  // A3-4 (AUD-032): a name holding a control character (\p{Cc}: a tab, a line break) is never written into DAX: the
+  // same test as the report writer's Pbip.hasControl. compile refuses such values with an error first; this throw is
+  // the backstop, so no path can write one
+  const hasControl = (x) => /\p{Cc}/u.test(String(x));
+  const CONTROL_MSG = 'holds a control character (a tab or a line break), which DAX names can\'t hold: rename it in the model';
+  const daxMeasure = (name) => { if (hasControl(name)) throw new Error('The measure name ' + CONTROL_MSG); return '[' + String(name).replace(/\]/g, ']]') + ']'; };
   function dax(n) {
     switch (n.k) {
       case 'num': return n.n < 0 ? '( ' + daxNum(n.n) + ' )' : daxNum(n.n);
@@ -289,6 +294,7 @@
   // 'Date'[Date] or Date[Date] -> table and column, always quoted. DAX doubles a ' inside a quoted table name
   // and a ] inside a column name ('Date''s'[Date], 'Cal'[Da]]te]), so those are read and written back the same way.
   function columnRef(text) {
+    if (hasControl(text == null ? '' : String(text).trim())) return null;   // A3-4: never a name with a control character
     const m = /^\s*(?:'((?:[^']|'')+)'|([^'\[\]]+?))\s*\[((?:[^\]]|\]\])+)\]\s*$/.exec(String(text == null ? '' : text));
     if (!m) return null;
     const t = (m[1] !== undefined ? m[1].replace(/''/g, "'") : m[2]).trim(), c = m[3].replace(/\]\]/g, ']').trim();
@@ -315,6 +321,8 @@
     (d.values || []).forEach((v) => {
       const make = VALUE_KINDS[v.kind];
       if (!make) { errors.push('Unknown value kind: ' + v.kind); return; }
+      if (v.kind === 'column' && hasControl(String(v.column || '').trim())) { errors.push('Value "' + (v.label || v.id) + '": the column ' + CONTROL_MSG); return; }
+      if (v.kind === 'measure' && hasControl(String(v.measure || '').trim())) { errors.push('Value "' + (v.label || v.id) + '": the measure name ' + CONTROL_MSG); return; }
       if (v.kind === 'column') {
         const c = columnRef(v.column);
         if (!c) { errors.push('Value "' + (v.label || v.id) + '" needs a column written as Table[Column]'); return; }
@@ -329,6 +337,7 @@
     const exprOf = (id, depth) => {
       const v = (d.values || []).find((x) => x.id === id);
       if (!v || !VALUE_KINDS[v.kind] || (depth || 0) > 20) { errors.push('Unknown value: ' + id); return N.num(0); }
+      if ((v.kind === 'measure' && hasControl(String(v.measure || '').trim())) || (v.kind === 'column' && hasControl(String(v.column || '').trim()))) return N.num(0);   // (refused above, with its error)
       return VALUE_KINDS[v.kind](v, (x) => exprOf(x, (depth || 0) + 1));
     };
     // 'Date'[Date] or Date[Date] -> table and column, always quoted. DAX doubles a ' inside a quoted table name
@@ -530,7 +539,7 @@
     // Only a measure can be "blank" in the same way in DAX and in the preview
     const hideIf = (d.values || []).some((v) => v.id === d.hideIfBlank && v.kind === 'measure' && valueIds.has(v.id)) ? d.hideIfBlank : null;
 
-    return { vars: vars, svg: svgNode, hideIf: hideIf ? varName(hideIf) : null, errors: errors, name: String(d.name || 'SVG KPI').replace(/[\r\n]+/g, ' ').trim() || 'SVG KPI' };
+    return { vars: vars, svg: svgNode, hideIf: hideIf ? varName(hideIf) : null, errors: errors, name: String(d.name || 'SVG KPI').replace(/\p{Cc}+/gu, ' ').trim() || 'SVG KPI' };
   }
 
   // ---------- outputs ----------
@@ -556,9 +565,18 @@
     return { dax: L.join('\n'), errors: c.errors };
   }
 
+  // A text bound to a value and placed inside a ring: the ring's number (round 15: on a KPI card the card shows the value,
+  // so the ring there has none; round 18: a table picture drawn under 40 high has none either, its number unreadable)
+  const ringNumber = (layers) => { const rings = (layers || []).filter((l) => l && l.type === 'ring');
+    return (l) => !!(l && l.type === 'text' && l.bind && l.bind.text && l.bind.text.v && rings.some((r) => Math.hypot((+l.x || 0) - (+r.cx || 0), (+l.y || 0) - (+r.cy || 0)) < (+r.r || 20))); };
   // The measure's expression alone (no name line, no comment lines): for a report-level measure, where the name and
   // the data category are fields of their own. The same VARs and the same RETURN as toDax.
-  function toMeasure(design) {
+  // opts.context (audit 6, A6-11: the variants are made here, not re-derived by the MCP): 'card' leaves the ring's
+  // number out (ringNumberDropped: true when there was one); 'table' also returns noNumber, the measure without it.
+  function toMeasure(design, opts) {
+    const context = opts && opts.context, d0 = design || {}, inRing = ringNumber(d0.layers), has = (d0.layers || []).some(inRing);
+    if (context === 'card' && has) return Object.assign(toMeasure(Object.assign({}, d0, { layers: d0.layers.filter((l) => !inRing(l)) })), { ringNumberDropped: true });
+    if (context === 'table' && has) { const full = toMeasure(d0), small = toMeasure(Object.assign({}, d0, { layers: d0.layers.filter((l) => !inRing(l)) })); return small.errors.length ? full : Object.assign(full, { noNumber: small.dax }); }
     const c = compile(design);
     const L = c.vars.map((v) => 'VAR ' + v.name + ' = ' + dax(v.node));
     L.push('VAR _svg =');
