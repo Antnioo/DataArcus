@@ -11,6 +11,8 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { round22 } from './test-round22.mjs';
 import { round23 } from './test-round23.mjs';
+import { v029 } from './test-0.2.9.mjs';
+import { withPlans } from './test-plan.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
@@ -58,16 +60,19 @@ const client = new Client({ name: 'test', version: '1' });
 await client.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: { ...process.env, DATAARCUS_ROOT: ROOT }, stderr: 'ignore' }));
 // every report the main client creates, validated once at the end (round 17, the outside review's G-13)
 const createdReports = new Set();
-const call = async (name, args) => { const r = await client.callTool({ name, arguments: args }); const t = r.content[0].text; const j = r.isError ? null : JSON.parse(t);
+const rawCall = async (name, args) => { const r = await client.callTool({ name, arguments: args }); const t = r.content[0].text; const j = r.isError ? null : JSON.parse(t);
   if (name === 'create_report' && j && j.report && j.open) createdReports.add(path.join(ROOT, path.dirname(j.open), j.report));
   return { err: !!r.isError, t, j }; };
+// (0.2.9, the gate: the older checks get their approved plan ids through approve_plan, as an agent must; test-plan.mjs)
+const call = withPlans(rawCall);
 const hash = (f) => crypto.createHash('md5').update(fs.readFileSync(f)).digest('hex');
 // round 5: a fix script is in a new file in the working folder, never in the answer; the tests read the file
 const scriptOf = (fix) => { try { return fix && fix.fixScriptFile ? fs.readFileSync(fix.fixScriptFile, 'utf8') : ''; } catch (e) { return ''; } };
 
 const tools = (await client.listTools()).tools.map((t) => t.name).sort();
 // (check_report added 5 Oct 2026: 7 -> 8 tools)
-check(tools.join() === 'add_gulf_calendar,check_model_health,check_report,create_report,generate_theme,plan_layout,read_model,suggest_fields', `tools: ${tools}`);
+// (approve_plan added 11 Oct 2026, 0.2.9's gate: 8 -> 9 tools)
+check(tools.join() === 'add_gulf_calendar,approve_plan,check_model_health,check_report,create_report,generate_theme,plan_layout,read_model,suggest_fields', `tools: ${tools}`);
 // F-05 (5 Oct 2026, check_report for 0.2.7): every tool the server lists is in the README's table and PRIVACY.md's
 // table, the README's install line gives the count, and PRIVACY.md no longer calls check_report unreleased
 {
@@ -251,7 +256,9 @@ check(!r.err && r.j.repaired.some((x) => x.field === 'harmony'), `generate_theme
 // brand + each harmony: the engine's generate(), with the first colour as the table accent, as on the website
 for (const h of ['analogous', 'complementary', 'triadic', 'mono']) {
   r = await tryCall('generate_theme', { name: 'Brand ' + h, brand: '#0F4C5C', harmony: h });
-  check(!r.err && JSON.stringify(r.j.design.data) === JSON.stringify(E.generate('#0f4c5c', h)) && r.j.design.ui.accent === r.j.design.data[0], `generate_theme brand ${h}: ${r.t.slice(0, 150)}`);
+  // (0.2.9, O-11 of the owner's test of 0.2.8: the brand colour itself is the first data colour and the accent, exactly;
+  // the website's generate() kept it only between lightness 0.4 and 0.55. The other 7 are still the engine's generate())
+  check(!r.err && r.j.design.data[0] === '#0f4c5c' && JSON.stringify(r.j.design.data.slice(1)) === JSON.stringify(E.generate('#0f4c5c', h).slice(1)) && r.j.design.ui.accent === '#0f4c5c', `generate_theme brand ${h}: ${r.t.slice(0, 150)}`);
 }
 // font sizes stay within Power BI's 8-60 on the biggest and smallest pages
 for (const [w, h] of [[3840, 2160], [640, 360]]) {
@@ -682,7 +689,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const start = async (env, cwd) => {
     const c = new Client({ name: 'test-r3', version: '1' }), e = { ...process.env }; delete e.DATAARCUS_ROOT; Object.assign(e, env);
     try { await c.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: e, cwd, stderr: 'ignore' })); } catch (err) { return { dead: String(err && err.message || err), call: async () => ({ err: true, t: 'the server did not start', j: null }), close: async () => {} }; }
-    return { c, close: () => c.close(), call: async (name, args) => { try { const r = await c.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; } catch (err) { return { err: true, t: 'call failed: ' + String(err && err.message || err), j: null }; } } };
+    return { c, close: () => c.close(), call: withPlans(async (name, args) => { try { const r = await c.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; } catch (err) { return { err: true, t: 'call failed: ' + String(err && err.message || err), j: null }; } }) };
   };
   const one = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const plan = await one('plan_layout', {}), design = plan.j && plan.j.design;
@@ -737,8 +744,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const NOT_SET = /No working folder is set/, calls = [['read_model', { path: '.' }], ['suggest_fields', { path: '.' }], ['check_model_health', { path: '.' }], ['generate_theme', { name: 'No root' }], ['plan_layout', {}], ['create_report', { path: '.', name: 'No root', design: design || {} }]];
     const s = await start({}, CWD);
     const listed = s.dead ? [] : (await s.c.listTools()).tools.map((t) => t.name);
-    // (8 tools since check_report, 5 Oct 2026)
-    check(!s.dead && listed.length === 8, `no DATAARCUS_ROOT: the server must start and list its 8 tools: ${s.dead || listed}`);
+    // (8 tools since check_report, 5 Oct 2026; 9 since approve_plan, 11 Oct 2026, 0.2.9's gate)
+    check(!s.dead && listed.length === 9, `no DATAARCUS_ROOT: the server must start and list its 9 tools: ${s.dead || listed}`);
     const answers = []; for (const [n, a] of calls) answers.push([n, await s.call(n, a)]);
     const wrong = answers.filter(([, x]) => !(x.err && NOT_SET.test(x.t) && /DATAARCUS_ROOT/.test(x.t)));
     check(!wrong.length, `no DATAARCUS_ROOT: ${wrong.length} of 6 tools did not refuse with the reason, e.g. ${wrong[0] && wrong[0][0]}: ${wrong[0] && wrong[0][1].t.slice(0, 120)}`);
@@ -780,7 +787,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     // (plan_layout left this list on 6 Oct 2026, the owner's ask "formats fixed at the source": with path it writes the
     // format script file next to the project)
     const ro = ['read_model', 'suggest_fields', 'check_report'].filter((n) => ann[n].readOnlyHint !== true);
-    check(ann.plan_layout.destructiveHint === false, 'plan_layout must only add files (destructiveHint false)');
+    // (0.2.9, the gate: plan_layout writes nothing again; create_report writes the format script after the user's go)
+    check(ann.plan_layout.readOnlyHint === true, 'plan_layout must only read (readOnlyHint true)');
     check(!ro.length, `readOnlyHint true is missing on: ${ro}`);
     const wr = ['generate_theme', 'create_report', 'check_model_health'].filter((n) => !(ann[n].readOnlyHint === false && ann[n].destructiveHint === false));
     check(!wr.length, `readOnlyHint false with destructiveHint false is missing on: ${wr} (${JSON.stringify(wr.map((n) => ann[n]))})`);
@@ -1021,7 +1029,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const start = async (env, cwd) => {
     const c = new Client({ name: 'test-r5', version: '1' }), e = { ...process.env }; delete e.DATAARCUS_ROOT; Object.assign(e, env);
     await c.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: e, cwd, stderr: 'ignore' }));
-    return { c, close: () => c.close(), call: async (name, args) => { try { const r = await c.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; } catch (err) { return { err: true, t: 'call failed: ' + String(err && err.message || err), j: null }; } } };
+    return { c, close: () => c.close(), call: withPlans(async (name, args) => { try { const r = await c.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; } catch (err) { return { err: true, t: 'call failed: ' + String(err && err.message || err), j: null }; } }) };
   };
   // a link whose target is missing: a symbolic link where the system allows one (Linux, CI), otherwise a junction
   const dangling = (target, at) => { try { fs.symlinkSync(target, at); return 'symlink'; } catch (e) { fs.symlinkSync(target, at, 'junction'); return 'junction'; } };
@@ -3567,8 +3575,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     chk(() => !h.err && JSON.stringify(to(hf.fields)) === JSON.stringify(Object.fromEntries(Object.entries(want).sort())) && /formatString: 0\.0%/.test(sc) && /measure Orders = [\s\S]*?formatString: #,0\n/.test(sc) && !/Revenue/.test(sc),
       () => `check_model_health fixes.FORMATS: ${h.err ? h.t.slice(0, 300) : JSON.stringify(hf)}`);
     const pl = await ask('plan_layout', { layout: 'exec', kpis: 3, path: 'r12b-fmt', fields: ['Sales[Return Rate]', 'Sales[Orders]', 'Sales[Revenue]'] });
+    // (0.2.9, the gate: plan_layout names the health check's own file, which create_report writes after the user's go)
     chk(() => !pl.err && Object.keys(pl.j)[0] === 'formats' && JSON.stringify(to(pl.j.formats.fields)) === JSON.stringify({ 'Sales[Orders]': '#,0', 'Sales[Return Rate]': '0.0%' })
-        && pl.j.formats.fixScriptFile === hf.fixScriptFile && /first/i.test(pl.j.formats.sayFirst) && pl.j.slots.length,
+        && !pl.j.formats.fixScriptFile && pl.j.formats.scriptAfterGo === path.basename(hf.fixScriptFile) && /first/i.test(pl.j.formats.sayFirst) && pl.j.slots.length,
       () => `plan_layout with the model must say the formats first, with the health check's own file: ${pl.err ? pl.t.slice(0, 300) : JSON.stringify(Object.keys(pl.j)) + ' ' + JSON.stringify(pl.j.formats)}`);
     const cr = await ask('create_report', { path: 'r12b-fmt', name: 'Fmt', design: (await ask('plan_layout', { layout: 'exec', kpis: 3 })).j.design,
       fields: { kpis: ['Sales[Return Rate]', 'Sales[Orders]', 'Sales[Revenue]'], table: ['Sales[Order Date]', 'Sales[Orders]', 'Sales[Return Rate]', 'Sales[Qty]'] } });
@@ -3986,7 +3995,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     out.push(await call2('suggest_fields', { path: 'Shop', kpis: 2 }), await call2('check_model_health', { path: 'Shop' }), await call2('check_model_health', { path: 'Shop/Shop.SemanticModel' }));
     const th = await call2('generate_theme', { name: 'R17' }); out.push(th);
     const pl = await call2('plan_layout', { layout: 'exec', kpis: 2, path: 'Shop' }); out.push(pl);
-    out.push(await call2('create_report', { path: 'Shop', name: 'R17', design: JSON.parse(pl.t).design, secondPage: false }));
+    // (0.2.9, the gate: the report is written with the plan approved, as an agent must)
+    await call2('approve_plan', { planId: JSON.parse(pl.t).plan.planId, userReply: 'go' });
+    out.push(await call2('create_report', { path: 'Shop', name: 'R17', design: JSON.parse(pl.t).design, secondPage: false, planId: JSON.parse(pl.t).plan.planId }));
     out.push(await call2('create_report', { path: 'Shop/Shop.SemanticModel', name: 'R17b', design: JSON.parse(pl.t).design }));
     out.push(await call2('add_gulf_calendar', { path: 'Shop', firstYear: 2025, lastYear: 2026, asOf: '2026-10-06' }), await call2('add_gulf_calendar', { path: 'Shop', firstYear: 2025 }));
     await c2.close();
@@ -4414,6 +4425,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 await round22({ call, check, ROOT, fs });
 // ---------- round 23 (the Arabic table's "Total" word, way 4): its checks live in test-round23.mjs, which also runs alone ----------
 await round23({ call, check, ROOT, fs });
+// ---------- 0.2.9 part 1 (the gate, the plan's limits, the user's choices): test-0.2.9.mjs, which also runs alone ----------
+// (the raw call: the gate is tested without the helper that gets plans)
+await v029({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
 // ---------- round 17 follow-up: G-04, check_report's instruction-like names in suspiciousNames (owner: all recommended) ----------
 // the name stays withheld (only the placeholder), each entry has its kind and reason, and the check's result is the
 // same as for a plainly named visual

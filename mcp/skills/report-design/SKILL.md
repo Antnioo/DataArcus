@@ -23,13 +23,23 @@ report files are written by `create_report` for a new report, or by Microsoft's 
    measure for the user to add; never put a different value under that label.
 3. **Theme.** `generate_theme`: a brand colour and a harmony, a full palette, or a preset; the font; the language
    (`lang: "ar"` for Arabic, with an Arabic font: Segoe UI, Segoe UI Semibold, Arial or Tahoma). Keep its `design`.
-4. **Layout.** `plan_layout` with that design: the layout (exec, analysis, ops, focus), KPI cards, filters, page size.
+   It writes nothing yet: it returns the design, the colours and `sayInPlan`. A theme is light with the brand colour
+   exact unless the user asks for dark (`mode: "dark"`); a colour is never changed for contrast without the user's yes:
+   say a failing check in the plan and offer a darker or lighter shade.
+4. **Layout and the plan's check.** `plan_layout` with that design, the model (`path`) and the plan's fields
+   (`planFields`, the shape of `create_report`'s `fields`): the layout (exec, analysis, ops, focus), KPI cards,
+   filters, page size. The page is 1920 x 1080 unless the user asks for another size, an Arabic report too
+   (`pageSize.chosenBy`). It checks the plan against the tools' limits (`limits`: 3 slicers, 6 KPI cards, 8 table
+   fields...) and the model: a plan within them gets a `planId`; `planProblems` means change the plan and call again.
+   Never show a plan the tools would refuse.
 5. **Show the plan and wait for "go":** the pages, the visuals and the fields on each, the page size, the colours, the contrast checks (with every warning), anything under
    `repaired`, the layout with its three reasons, and the slot table (name, suggested visual, x, y, width, height).
    Say that the bars of the bar and column charts fade by their value (`plan_layout`'s `chartColors.sayInPlan`), and
    say first what `plan_layout` puts first (`formats`, `arabicNames`) when it was given the model.
-   Never call `create_report` in the same turn as the request: the user's "go" comes first.
-6. **Build.** `create_report` with the design (and the same layout choices) and the approved plan's fields in
+   Never call `create_report` in the same turn as the request: the user's "go" comes first. After the go, call
+   `approve_plan` with the `planId` and the user's reply in their own words; never approve on your own. No tool writes
+   a file without an approved `planId` (the theme file, the report, fix scripts, the Gulf calendar script).
+6. **Build.** `create_report` with the `planId`, the design (and the same layout choices) and the approved plan's fields in
    `fields` (`kpis`, `measure`, `timeAxis`, `category`, `category2`, `table`, `slicers`, each as `Table[Field]`): what
    is given is bound as given, what is left out is picked automatically. Read `boundFields` in the answer and tell
    the user anything that differs from the plan. When the request limits the report to part of the data ("Ramadan

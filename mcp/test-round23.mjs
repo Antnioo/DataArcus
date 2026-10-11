@@ -417,7 +417,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const ROOT = fs0.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-r23-')), problems = []; let checks = 0;
   const client = new Client({ name: 'test-r23', version: '1' });
   await client.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: { ...process.env, DATAARCUS_ROOT: ROOT }, stderr: 'ignore' }));
-  const call = async (name, args) => { const r = await client.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; };
+  const { withPlans } = await import('./test-plan.mjs');
+  const call = withPlans(async (name, args) => { const r = await client.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; });
   await round23({ call, check: (ok, msg) => { checks++; if (!ok) problems.push(msg); }, ROOT });
   await client.close(); fs0.rmSync(ROOT, { recursive: true, force: true });
   console.log(problems.length ? `FAIL  round23  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  round23  ${checks} checks`);

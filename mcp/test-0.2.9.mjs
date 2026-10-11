@@ -147,16 +147,18 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
     const dir = x.err ? null : path.join(ROOT, 'g', x.j.report, 'definition', 'pages');
     const order = dir ? JSON.parse(fs.readFileSync(path.join(dir, 'pages.json'), 'utf8')).pageOrder : [];
     const rail = (pg) => { const vd = path.join(dir, pg, 'visuals'), W = JSON.parse(fs.readFileSync(path.join(dir, pg, 'page.json'), 'utf8')).width;
-      const xs = fs.readdirSync(vd).map((v) => JSON.parse(fs.readFileSync(path.join(vd, v, 'visual.json'), 'utf8'))).filter((v) => v.visual && /slicer/i.test(v.visual.visualType)).map((v) => v.position.x);
+      // (a visual inside a group has its position relative to the group: PBIR)
+      const vs = fs.readdirSync(vd).map((v) => JSON.parse(fs.readFileSync(path.join(vd, v, 'visual.json'), 'utf8'))), gx = (v) => { const g = v.parentGroupName && vs.find((q) => q.name === v.parentGroupName); return g ? g.position.x + gx(g) : 0; };
+      const xs = vs.filter((v) => v.visual && /slicer/i.test(v.visual.visualType)).map((v) => v.position.x + gx(v));
       return { W, xs }; };
     const p2 = dir && order[1] ? rail(order[1]) : { W: 0, xs: [] };
     chk(() => p2.xs.length && p2.xs.every((v) => v > p2.W / 2), () => `C2. page 2's filter rail must be at the right as asked (O-1): slicers at x ${JSON.stringify(p2.xs)} of ${p2.W} ${x.err ? short(x) : ''}`);
   }
   {
     const ar = await ask('plan_layout', { layout: 'exec', lang: 'ar' });
-    chk(() => ar.j.page.w === 1920 && ar.j.page.h === 1080 && ar.j.page.chosenBy === 'default', () => `C3. an Arabic plan without a size must be 1920 x 1080, said as the default (O-8): ${JSON.stringify(ar.j && ar.j.page)}`);
+    chk(() => ar.j.page.w === 1920 && ar.j.page.h === 1080 && ar.j.pageSize.chosenBy === 'default', () => `C3. an Arabic plan without a size must be 1920 x 1080, said as the default (O-8): ${JSON.stringify(ar.j && [ar.j.page, ar.j.pageSize])}`);
     const asked = await ask('plan_layout', { layout: 'exec', lang: 'ar', page: '1280x720' });
-    chk(() => asked.j.page.w === 1280 && asked.j.page.chosenBy === 'asked', () => `C3. a size the user asked for is kept and said: ${JSON.stringify(asked.j && asked.j.page)}`);
+    chk(() => asked.j.page.w === 1280 && asked.j.pageSize.chosenBy === 'asked', () => `C3. a size the user asked for is kept and said: ${JSON.stringify(asked.j && [asked.j.page, asked.j.pageSize])}`);
     chk(() => !meta || (/1920 x 1080/.test(meta.instructions) && /Arabic/.test(meta.instructions.match(/1920 x 1080[^\n]*/)[0])), () => 'C3. the instructions must keep 1920 x 1080 unless the user asks, also for Arabic');
   }
   {
