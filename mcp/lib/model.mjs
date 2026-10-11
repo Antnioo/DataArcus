@@ -409,11 +409,16 @@ export function applyColumnTypes(model, types) {
 }
 
 // Short, readable summary of a model for the agent
+// (F-MP, the fuzz test: a 200,000-character name kept read_model's whole answer, and a control character in a type
+// came back raw. Every model name and type an answer writes goes through nameOut: invisible characters as code points,
+// cut at 200 characters, about ten times the longest real name; such a name is flagged in suspiciousNames too.)
+export const NAME_OUT = 200;
+export const nameOut = (s) => { const v = visible(s == null ? '' : s); return v.length > NAME_OUT ? v.slice(0, NAME_OUT) + '…' : v; };
 export function summary(m) {
   return m.tables.map((t) => ({
-    table: t.name, hidden: !!t.hidden, dateTable: !!t.date,
-    columns: t.columns.filter((c) => !c.isHidden).map((c) => `${c.name} (${c.dataType || 'unknown'})`),
+    table: nameOut(t.name), hidden: !!t.hidden, dateTable: !!t.date,
+    columns: t.columns.filter((c) => !c.isHidden).map((c) => `${nameOut(c.name)} (${nameOut(c.dataType || 'unknown')})`),
     hiddenColumns: t.columns.filter((c) => c.isHidden).length,
-    measures: t.measures.filter((x) => !x.isHidden).map((x) => x.name + (x.formatString ? ` [${x.formatString}]` : ''))
+    measures: t.measures.filter((x) => !x.isHidden).map((x) => nameOut(x.name) + (x.formatString ? ` [${nameOut(x.formatString)}]` : ''))
   }));
 }

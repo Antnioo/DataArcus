@@ -1,7 +1,7 @@
 // Large models: a summary first, details on request (owner 2026-10-03), and the part of a model a request is about.
 // A model is "large" when its full read_model answer would pass LIMIT characters: about 10,000 tokens, where Claude
 // Code starts warning, and far below Claude Desktop's limit. Small models answer exactly as before.
-import { modelOf, shownName, summary } from './model.mjs';
+import { modelOf, nameOut, shownName, summary } from './model.mjs';
 import { takenNames } from './report-names.mjs';
 
 export const LIMIT = 40000;
@@ -28,7 +28,7 @@ export function areasOf(m) {
   (m.tables || []).forEach((t) => (t.measures || []).forEach((ms) => {
     const folder = String(ms.displayFolder || '').split(/[\\/;]/)[0].trim(); if (!folder) return;
     if (!by.has(folder)) by.set(folder, { area: shownName(folder, 80), measures: 0, tables: [] });
-    const a = by.get(folder); a.measures++; if (!a.tables.includes(t.name)) a.tables.push(t.name);
+    const a = by.get(folder); a.measures++; if (!a.tables.includes(nameOut(t.name))) a.tables.push(nameOut(t.name));
   }));
   return [...by.values()].sort((a, b) => b.measures - a.measures);
 }
@@ -82,7 +82,8 @@ function largeBody(m, all, rel, full, withMeasures, notListed) {
 // read_model with tables: exactly the named tables, in full; names that don't exist are listed back; an answer that
 // would pass LIMIT stops at a table and names the tables left out
 export function namedTables(m, names) {
-  const all = summary(m), by = new Map(all.map((t) => [lc(t.table), t]));
+  // (the user's names are matched against the model's own, the answer gives them as nameOut writes them)
+  const all = summary(m), by = new Map(all.map((t, i) => [lc(m.tables[i].name), t]));
   const found = [], notFound = [];
   [...new Set((names || []).map((n) => String(n)))].forEach((n) => { const t = by.get(lc(n.trim())); if (t) { if (!found.includes(t)) found.push(t); } else notFound.push(n); });
   const out = { source: m.source, existingReports: takenNames(m.projectDir), tables: [] }, notShown = [];
@@ -103,7 +104,7 @@ export function scopeOf(m, opts) {
   const focus = opts && opts.focus != null ? String(opts.focus).trim() : '', names = (opts && opts.tables) || null;
   const rawTables = raw(m).tables || [], order = new Map(rawTables.map((t, i) => [t.name, i]));
   const ask = (why) => ({ needsFocus: true, why, areas: short(areasOf(m), AREA_TABLES),
-    tablesWithMeasures: m.tables.filter((t) => t.measures.length).map((t) => t.name).slice(0, 80),
+    tablesWithMeasures: m.tables.filter((t) => t.measures.length).map((t) => nameOut(t.name)).slice(0, 80),
     how: 'Ask the user which part of the model the report is about, then call again with focus: "<area or word>" or tables: ["<table>", ...].' });
   if (!focus && !(names && names.length)) {
     if (!isLarge(m)) return { tables: m.tables };
