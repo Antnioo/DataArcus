@@ -30,6 +30,8 @@ const VT = createRequire(import.meta.url)('../../assets/js/visual-types.js');
 // Order matters: a role takes the first class one of its words belongs to (ColumnValues: bar before value).
 export const ROLE_WORDS = {
   tooltip: ['tooltip', 'tooltips'],
+  // a colour rule (a field that only colours the marks): never a series
+  colorRule: ['rule', 'rules'],
   latitude: ['latitude', 'lat'],
   longitude: ['longitude', 'lon', 'lng'],
   location: ['location', 'locations', 'geo', 'address', 'place', 'places'],
@@ -74,11 +76,14 @@ export const FAMILY_HINTS = {
   card: ['card', 'tile'],
   area: ['area'],
   line: ['line'],
-  column: ['column'],
+  column: ['column', 'facet'],
   bar: ['bar']
 };
 
 // ---- the native visual of each kind (Power BI's visualType; null: no native visual shows it) ----
+// the custom visual's own format objects can name its form (weak, as the id's words): a pie drawn with a hole
+export const OBJECT_HINTS = { donut: ['donut', 'doughnut'] };
+
 export const NATIVE = {
   combo: 'lineClusteredColumnComboChart', column: 'clusteredColumnChart', bar: 'clusteredBarChart', line: 'lineChart', area: 'areaChart',
   pie: 'pieChart', donut: 'donutChart', waterfall: 'waterfallChart', scatter: 'scatterChart', map: 'azureMap', network: null,
@@ -99,34 +104,55 @@ const DATE_LEVELS = new Set(['year', 'quarter', 'month', 'day', 'week', 'date'])
 const DATE_TYPES = /^(date|datetime|datetimezone)$/i;
 
 // a name split into lower-case words: "ColumnValues" -> column, values; "Y2" -> y2; "Trend Axis" -> trend, axis
-export const wordsOf = (s) => String(s || '').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+export const wordsOf = (s) => String(s || '').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean)
+  .flatMap((w) => { const m = /^([a-z]+)\d+$/.exec(w); return m ? [w, m[1]] : [w]; }); // "Values1" -> values1, values (a vendor numbers its value roles)
 const classOf = (role, display) => { const w = wordsOf(role).concat(display ? wordsOf(display) : []); for (const [cls, list] of Object.entries(ROLE_WORDS)) { const hit = w.find((x) => list.includes(x)); if (hit) return { cls, word: hit }; } return { cls: 'other', word: null }; };
+// every class a role's words belong to (a vendor joins two: "sourceNodes", "kpiValue", "StartDate"), with the words
+const classesOf = (role, display) => { const w = wordsOf(role).concat(display ? wordsOf(display) : []); return { words: w, set: new Set(Object.entries(ROLE_WORDS).filter(([, list]) => w.some((x) => list.includes(x))).map(([c]) => c)) }; };
 const isValue = (f) => f.kind === 'measure' || f.kind === 'aggregation';
 const isCol = (f) => f.kind === 'column';
 const copy = (f) => Object.assign({}, f);
 
 // a custom visual's id words for the hint (the trailing code of 32 letters and digits left out)
-function hintOf(type) {
+function hintsOf(type) {
   const w = wordsOf(String(type || '').replace(/[0-9A-Fa-f]{32}$/, ''));
-  for (const [kind, list] of Object.entries(FAMILY_HINTS)) if (w.some((x) => list.includes(x))) return kind;
-  return null;
+  return Object.entries(FAMILY_HINTS).filter(([, list]) => w.some((x) => list.includes(x))).map(([kind]) => kind);
 }
+const hintOf = (type) => hintsOf(type)[0] || null;
+// the format objects' hint (OBJECT_HINTS): names only, never their values
+const objectHintOf = (objects) => { const w = (Array.isArray(objects) ? objects : []).flatMap((x) => wordsOf(x)); const e = Object.entries(OBJECT_HINTS).find(([, list]) => w.some((x) => list.includes(x))); return e ? e[0] : null; };
+// a value shown as a percentage, by its format string (quoted text left out): null when the format is not known
+const pctOf = (fmt) => (typeof fmt === 'string' ? /%/.test(fmt.replace(/"[^"]*"/g, '').replace(/\\./g, '')) : null);
 
 // each role: its effective class from its words and its fields' shapes
 // customRoles: the custom visual's own dataRoles when the report has its package ([{ name, displayName, kind }]): a role
 // whose name says nothing ("measureRole7") is read by its display name ("Values")
-function rolesOf(v, customRoles) {
+function rolesOf(v, customRoles, temporal) {
   const disp = Object.fromEntries((Array.isArray(customRoles) ? customRoles : []).filter((r) => r && r.name).map((r) => [String(r.name), String(r.displayName || '')]));
-  return Object.entries(v.fields || {}).map(([role, list]) => {
+  const R = Object.entries(v.fields || {}).map(([role, list]) => {
     const fields = (list || []).filter((f) => f && (isValue(f) || isCol(f)));
-    const { cls, word } = classOf(role, disp[role]), cols = fields.filter(isCol), vals = fields.filter(isValue);
+    const { cls, word } = classOf(role, disp[role]), { set, words } = classesOf(role, disp[role]), cols = fields.filter(isCol), vals = fields.filter(isValue);
     const shape = !fields.length ? 'none' : !vals.length ? 'columns' : !cols.length ? 'values' : 'mixed';
-    let eff = cls;
-    if (shape === 'mixed') eff = cls === 'tooltip' ? 'tooltip' : 'mixed';
-    else if (shape === 'columns') eff = { node: 'node', from: 'from', goal: TO_WORDS.has(word) ? 'to' : 'anonCol', bar: 'mcolumns', x: 'category', y: 'category', rows: 'rows', time: 'time', category: 'category', series: 'series', breakdown: 'breakdown', location: 'location', latitude: 'latitude', longitude: 'longitude', tooltip: 'tooltip' }[cls] || 'anonCol';
-    else if (shape === 'values') eff = { goal: 'goal', min: 'min', max: 'max', indicator: 'indicator', line: 'line', bar: 'bar', x: 'x', y: 'y', size: 'size', tooltip: 'tooltip', value: 'value', category: 'value', series: 'value', time: 'value', node: 'size', from: 'size', location: 'size', latitude: 'latitude', longitude: 'longitude' }[cls] || 'anonVal';
-    return { role, cls, eff, named: cls !== 'other', fields, cols, vals };
+    const has = (c) => set.has(c), toWord = words.some((w) => TO_WORDS.has(w));
+    // dates only: a date column, or the first or last of one (Min/Max)
+    const dates = fields.length > 0 && fields.every((f) => temporal(f) || (f.kind === 'aggregation' && /^(Min|Max)$/.test(f.agg) && temporal(Object.assign({}, f, { kind: 'column' }))));
+    let eff;
+    if (has('tooltip')) eff = 'tooltip';
+    else if (has('colorRule')) eff = 'colorRule';
+    else if (shape === 'mixed') eff = 'mixed';
+    else if ((has('from') || toWord) && dates && !has('node')) eff = has('from') ? 'start' : 'end'; // a date range: a schedule
+    else if (has('time') && shape === 'values' && fields.every((f) => f.kind === 'aggregation' && /^(Min|Max)$/.test(f.agg))) eff = 'timeHelper'; // the first date of a period: the axis's helper, no value
+    else if (shape === 'columns') eff = has('latitude') ? 'latitude' : has('longitude') ? 'longitude' : has('location') ? 'location' : has('node') ? 'node' : has('from') ? 'from' : toWord ? 'to'
+      : { bar: 'mcolumns', x: 'category', y: 'category', rows: 'rows', time: 'time', category: 'category', series: 'series', breakdown: 'breakdown' }[cls] || 'anonCol';
+    else eff = has('latitude') ? 'latitude' : has('longitude') ? 'longitude' : has('indicator') ? 'indicator' : has('from') ? 'fromV' : toWord && has('goal') ? 'toV'
+      : { goal: 'goal', min: 'min', max: 'max', line: 'line', bar: 'bar', x: 'x', y: 'y', size: 'size', node: 'size', value: 'value', category: 'extra', series: 'value', time: 'value', location: 'extra' }[cls] || 'anonVal';
+    return { role, cls, eff, words, named: cls !== 'other', fields, cols, vals };
   }).filter((r) => r.fields.length);
+  // a start and an end that are values are a scatter's X and Y ("sourceNodes", "targetNodes"); alone, a start value is a
+  // size and an end value a target (a gauge's)
+  const pair = R.some((r) => r.eff === 'fromV') && R.some((r) => r.eff === 'toV');
+  R.forEach((r) => { if (r.eff === 'fromV') r.eff = pair ? 'x' : 'size'; else if (r.eff === 'toV') r.eff = pair ? 'y' : 'goal'; });
+  return R;
 }
 
 const LEVELS = ['low', 'medium', 'high'];
@@ -139,6 +165,7 @@ const n = (k, one, many) => `${k} ${k === 1 ? one : many}`;
 export function meaningOf(visual, opts) {
   const o = opts || {}, type = String((visual && visual.type) || '');
   const typeOf = (f) => { try { return o.typeOf ? o.typeOf(f) : undefined; } catch (e) { return undefined; } };
+  const formatOf = (f) => { try { return o.formatOf ? o.formatOf(f) : undefined; } catch (e) { return undefined; } };
   const temporal = (f) => isCol(f) && ((f.level && DATE_LEVELS.has(String(f.level).toLowerCase())) || DATE_TYPES.test(String(typeOf(f) || '')));
   const out = (kind, roles, extra) => Object.assign({ kind, native: NATIVE[kind], drill: [], series: null, confidence: 'low', why: '', htmlNeeded: kind === 'network', roles, lost: [] }, extra);
 
@@ -150,14 +177,21 @@ export function meaningOf(visual, opts) {
     return out(kind, roles, { native: type, drill: cat.length > 1 ? cat.map(copy) : [], series: roles.Series ? roles.Series.map(copy) : null, confidence: 'high', why: 'a Power BI visual: kept as it is' });
   }
 
-  const R = rolesOf(visual || {}, o.customRoles), hint = hintOf(type);
-  const live = R.filter((r) => r.eff !== 'tooltip'), tips = R.filter((r) => r.eff === 'tooltip').flatMap((r) => r.fields.map(copy));
+  const R = rolesOf(visual || {}, o.customRoles, temporal), idHints = hintsOf(type), objHint = objectHintOf(o.customObjects || (visual && visual.customObjects));
+  let hint = objHint || idHints[0] || null;
+  const lost = [];
+  // a start without an end (or an end without a start) is no date range: a time column, or a value
+  if (!(R.some((r) => r.eff === 'start') && R.some((r) => r.eff === 'end'))) R.forEach((r) => { if (r.eff === 'start' || r.eff === 'end') r.eff = r.cols.length ? 'time' : 'value'; });
+  if (R.some((r) => r.eff === 'colorRule')) lost.push('its colour rule role (marks coloured by a field): in Power BI that is conditional formatting by a measure, set by hand');
+  // tooltips, and a value role that is a label (a category word holding values), go to Tooltips; the axis's date helper is
+  // no value (a native time axis sorts itself)
+  const SIDE = ['tooltip', 'extra', 'colorRule', 'timeHelper'];
+  const live = R.filter((r) => !SIDE.includes(r.eff)), tips = R.filter((r) => r.eff === 'tooltip' || r.eff === 'extra').flatMap((r) => r.fields.filter((f) => r.eff === 'tooltip' || isValue(f)).map(copy));
   const named = live.length > 0 && live.every((r) => r.named);
   const by = (...effs) => live.filter((r) => effs.includes(r.eff));
   const cols = (...effs) => by(...effs).flatMap((r) => r.cols.map(copy));
   const vals = (...effs) => by(...effs).flatMap((r) => r.vals.map(copy));
   const withTips = (roles) => (tips.length ? Object.assign(roles, { Tooltips: tips }) : roles);
-  const lost = [];
   const custom = 'a custom visual';
   if (!live.length) return out('unknown', {}, { why: `${custom} with no fields in its roles: nothing tells what it shows` });
 
@@ -165,18 +199,29 @@ export function meaningOf(visual, opts) {
   let shape, roles, drill = [], series = null, why, kind;
   const valueRoles = by('value', 'indicator', 'bar', 'anonVal', 'y', 'size', 'line', 'goal', 'min', 'max', 'x');
   const catRoles = by('category', 'time', 'x', 'y').filter((r) => r.cols.length).concat(by('anonCol'));
-  if (by('node').length || (by('from').length && (by('to').length || by('node').length))) {
+  if (by('start').length && by('end').length) {
+    shape = 'schedule';
+    roles = { Values: live.flatMap((r) => r.fields.map(copy)) };
+    why = 'a start date and an end date per row: a schedule (a Gantt), which no native visual draws as bars; a table keeps its facts';
+    lost.push('the bars from start to end date: no native visual draws a date range; the table lists the same fields');
+  } else if (by('node').length || (by('from').length && (by('to').length || by('node').length))) {
     shape = 'network';
     roles = { Source: cols('from', 'node'), Target: cols('to'), Weight: vals('size', 'value', 'anonVal') };
     why = 'its roles join two columns (a start and an end, or nodes and their links): a network, which no native visual draws';
   } else if (by('location', 'latitude', 'longitude').length) {
     shape = 'map';
-    roles = withTips({ Category: cols('location') });
-    if (by('latitude').length) roles.Y = by('latitude').flatMap((r) => r.fields.map(copy)).slice(0, 1);
-    if (by('longitude').length) roles.X = by('longitude').flatMap((r) => r.fields.map(copy)).slice(0, 1);
+    // a place: by latitude and longitude when both are there (Azure map takes those columns only without a Location),
+    // else by a location or a name; a category that is no name is the legend
+    const NAME = ['name', 'names', 'label', 'labels'], named2 = (r) => r.words.some((w) => NAME.includes(w));
+    const lat = by('latitude').flatMap((r) => r.fields.map(copy)).slice(0, 1), lon = by('longitude').flatMap((r) => r.fields.map(copy)).slice(0, 1);
+    const places = cols('location').concat(by('category').filter(named2).flatMap((r) => r.cols.map(copy)));
+    const legend = cols('series').concat(by('category').filter((r) => !named2(r)).flatMap((r) => r.cols.map(copy)));
+    roles = withTips({});
+    if (lat.length && lon.length) { roles.Y = lat; roles.X = lon; if (places.length) lost.push('the place names on the map (the native bubbles are placed by latitude and longitude; their names are not shown)'); }
+    else roles.Category = places.length ? places : lat.concat(lon);
     const size = vals('size', 'value', 'anonVal').slice(0, 1); if (size.length) roles.Size = size;
-    if (by('series').length) roles.Series = cols('series');
-    why = `${roles.Category.length ? 'a location' : 'a latitude and a longitude'}${size.length ? ' and a value' : ''}: a map`;
+    if (legend.length) roles.Series = legend.slice(0, 1);
+    why = `${roles.Y ? 'a latitude and a longitude' : 'a location'}${size.length ? ' and a value' : ''}${legend.length ? ' by a category' : ''}: a map`;
   } else if (by('x').length && (by('y').length || by('value').length)) {
     shape = 'scatter';
     roles = withTips({ Category: cols('category', 'time', 'anonCol'), X: vals('x'), Y: vals('y', 'value').slice(0, 1), Size: vals('size').slice(0, 1) });
@@ -228,12 +273,24 @@ export function meaningOf(visual, opts) {
       why = 'a value, a trend over dates and a goal: a KPI';
     } else {
       shape = 'chart';
-      const lines = vals('line'), bars = vals('bar'), main = vals('value', 'indicator', 'anonVal', 'y', 'size', 'goal', 'min', 'max');
+      const lines = vals('line'), bars = vals('bar');
+      let main = vals('value', 'indicator', 'anonVal', 'y', 'size', 'goal', 'min', 'max');
+      // a KPI value beside the chart's own values (a total shown in a donut's hole): not one of its values
+      const kpiVals = vals('indicator');
+      if (kpiVals.length && (lines.length || bars.length || main.length > kpiVals.length)) {
+        const ks = new Set(kpiVals.map((f) => f.queryRef)); main = main.filter((f) => !ks.has(f.queryRef));
+        lost.push('the total it shows over the chart (its own KPI value): a card placed over the native visual can show it');
+      }
       roles = withTips({ Category: cat });
       drill = cat.length > 1 ? cat.map(copy) : [];
+      const all = bars.concat(main), pcts = all.map((f) => pctOf(formatOf(f)));
       if (lines.length && (bars.length || main.length)) {
         kind = 'combo'; roles.Y = bars.concat(main); roles.Y2 = lines;
         why = `a category, column values and line values: a combo`;
+      } else if (all.length >= 2 && pcts.every((x) => x !== null) && pcts.some(Boolean) && pcts.some((x) => !x)) {
+        // amounts with a percentage riding along: the percentage draws as a line on its own axis (by the values' formats)
+        kind = 'combo'; roles.Y = all.filter((f, i) => !pcts[i]); roles.Y2 = all.filter((f, i) => pcts[i]);
+        why = `a category${cat.length > 1 ? ` with ${cat.length} drill levels` : ''}, ${n(roles.Y.length, 'amount', 'amounts')} and ${n(roles.Y2.length, 'percentage', 'percentages')} (by their formats): a combo, the percentages as a line`;
       } else {
         roles.Y = bars.concat(main, lines);
         if (by('breakdown').length) { kind = 'waterfall'; roles.Breakdown = cols('breakdown'); }
@@ -252,15 +309,23 @@ export function meaningOf(visual, opts) {
   // confidence: the shape with named roles is medium, without them low; the hint moves it
   let conf = named ? 'medium' : 'low';
   const timeAxis = !!(roles && roles._time); if (roles) delete roles._time;
-  if (!kind) kind = { network: 'network', map: 'map', scatter: 'scatter', matrix: 'matrix', table: 'table', gauge: 'gauge', card: 'card', slicer: 'slicer', kpi: 'kpi' }[shape];
+  if (!kind) kind = { schedule: 'table', network: 'network', map: 'map', scatter: 'scatter', matrix: 'matrix', table: 'table', gauge: 'gauge', card: 'card', slicer: 'slicer', kpi: 'kpi' }[shape];
   if (hint) {
     const nY = (roles.Y || []).length, single = shape === 'chart' && nY === 1 && !roles.Y2 && !roles.Breakdown;
     const fits = { pie: single, donut: single, waterfall: shape === 'chart' && nY === 1 && !roles.Y2, combo: shape === 'chart' && (nY + (roles.Y2 || []).length) >= 2,
       time: shape === 'chart', line: shape === 'chart' && !roles.Y2, area: shape === 'chart' && !roles.Y2, column: shape === 'chart' && !roles.Y2, bar: shape === 'chart' && !roles.Y2,
       network: shape === 'network', map: shape === 'map', scatter: shape === 'scatter', matrix: shape === 'matrix', table: shape === 'table', slicer: shape === 'slicer', card: shape === 'card',
       gauge: shape === 'gauge', kpi: shape === 'kpi' || shape === 'gauge' }[hint];
-    const want = hint === 'time' ? (timeAxis ? 'line' : 'column') : hint === 'kpi' && shape === 'gauge' ? 'gauge' : hint;
-    if (fits) {
+    const allKnown = (roles.Y || []).every((f) => pctOf(formatOf(f)) !== null) && (roles.Y || []).length > 0;
+    const next = idHints.find((h) => h !== 'combo' && ['bar', 'column', 'line', 'area'].includes(h));
+    const want = hint === 'time' ? (roles.Y2 ? 'combo' : timeAxis ? 'line' : 'column') : hint === 'kpi' && shape === 'gauge' ? 'gauge' : hint;
+    if (fits && hint === 'combo' && !roles.Y2 && allKnown) {
+      // the values' formats are known and none is a percentage beside amounts: no line is called for; the id's other
+      // word (a bar) gives the chart, and the bars drawn over each other are told
+      kind = next || (timeAxis ? 'line' : 'column');
+      lost.push('its overlapping bars (one drawn inside a wider one): native bars sit side by side');
+      why += `; the id's words hint at a combo, but the values' formats call for no line: ${kind === 'bar' ? 'bars' : kind}`;
+    } else if (fits) {
       if (hint === 'combo' && !roles.Y2) {
         // one role of several values: the first draws as columns, the rest as lines (the custom visual's own format
         // decides which are lines; it is not in its roles)
@@ -270,7 +335,8 @@ export function meaningOf(visual, opts) {
         conf = named ? 'medium' : 'low';
       } else conf = up(conf);
       kind = want;
-      why += `; the id's words hint at a ${hint === 'time' ? 'timeline' : hint}, which the fields can show`;
+      if (kind === 'combo' && idHints.includes('bar')) lost.push('its horizontal bars: Power BI\'s line and column combo is vertical, so the bars become columns');
+      why += `; the ${hint === objHint ? 'format objects' : 'id\'s words'} hint at a ${hint === 'time' ? 'timeline' : hint}, which the fields can show`;
     } else {
       conf = down(conf);
       why += `; the id's words hint at a ${hint === 'time' ? 'timeline' : hint}, set aside: the fields can't be shown as one`;
