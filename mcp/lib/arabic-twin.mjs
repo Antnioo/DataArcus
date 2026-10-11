@@ -1,5 +1,5 @@
 // create_arabic_twin (0.3.0, the owner's headline request; plan approved 11 Oct 2026): the right-to-left twin of an
-// existing PBIR report, as the laptop proved it (dataarcus-engine ARABIC-TWIN-LAB.md and ARABIC-TWIN-FULL-LAB.md):
+// existing PBIR report, as the laptop proved it in its Arabic twin labs (10 Oct 2026):
 // a separate "<name> AR" report next to the original, on the same model, every page mirrored in place, every page id,
 // visual name and bookmark name kept so navigation and bookmarks keep working without rewiring.
 // The original is only read. Nothing is written without an approved twin plan (lib/plans.mjs), and the Arabic texts
