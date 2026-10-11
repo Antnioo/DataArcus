@@ -506,13 +506,185 @@
     boxes.forEach((t) => { out = absorb(out, t); });
     return { slots: out, dropped };
   }
-  // o: { name, lang, rtl, font, ui, page:{w,h}, slots:[{kind,title,x,y,w,h,rail}] in page units, theme, png (Uint8Array),
-  //      logo: { bytes, ext } or null, sample: true|false, texts: {...},
-  //      pages: [{ name, page, slots, png, panel, kpiInset }] (kpiInset: the design engine's, where KPI titles start
-  //      beside a side accent bar drawn in the background image; 0 or absent without one),
-  //      model: { byPath: 'Their.SemanticModel' } or { byConnection: 'Data Source=...' } for the user's own model,
-  //      bind: their fields for each visual (see sampleBind) }
+  /**
+   * 0.2.9, audit 3's A3-9: build's contract, written down and checked at its top (checkBuild). The writer reads nothing
+   * else from its caller. Sizes are page units (the page's own width and height).
+   *
+   * @typedef {Object} Field  a bound field: a column, a measure, or a column the visual sums or counts
+   * @property {string} t  its table
+   * @property {string} [c]  a column's name (a field has c or m)
+   * @property {string} [m]  a measure's name
+   * @property {number} [agg]  with c: the visual's aggregation (0 Sum, 2 Distinct count, 5 Count; Microsoft's QueryAggregateFunction)
+   * @property {string} [name]  the display name shown for it (titles, headers, axis); the model is not renamed
+   * @property {string} [type]  the column's data type as the model gives it (int64, double, string, dateTime...)
+   * @property {boolean} [num]  a number column
+   * @property {{t: string, c: string}} [sortBy]  the number column that puts a day or month name in order (no sort-by in the model)
+   * @property {boolean} [ordered]  the model sorts this name itself
+   * @property {{t: string, c: string}} [dateOf]  a month label's date column (its month start orders it, see timeAxisPlan)
+   * @property {string} [kind]  the picker's kind of a category (day, month, quarter, year, date, period...; A3-7, A3-8)
+   * @property {number} [rows]  the picker's known number of values of a category (7 days, 12 months...)
+   * @property {string} [family]  the picker's family of the names (hijri, fiscal...)
+   * @property {boolean} [time]  the picker's mark: a time category keeps its own order
+   * @property {Field} [short]  a day name's short column (Day Short), used where the full names do not fit
+   * @property {boolean} [pct]  a percent measure; pctFormat: its card format ("0.0%")
+   * @property {string} [pctFormat]
+   * @property {string} [wholeFormat]  a whole-number card format ("#,0")
+   * @property {string} [cardFormat]  the card's format with kpiValues "full"
+   * @property {string} [tableFormat]  a table column's format
+   *
+   * @typedef {Object} Bind  the fields of each visual (sampleBind gives the sample's)
+   * @property {Field[]} [kpis]  one per KPI card, in order
+   * @property {Field} [measure]  the main measure (line chart, cards, table titles)
+   * @property {Field} [date]  the line chart's time axis (null: the line charts give their room away, dropLines)
+   * @property {Object<string, Field>} [cats]  the category of each chart kind: bar, column, donut, funnel, treemap, map
+   * @property {Object<string, Field>} [y]  a chart kind's own measure: funnel, gauge
+   * @property {Field[]} [table]  the table's (and matrix's) fields, in order
+   * @property {Field[]} [slicers]  up to three slicers (null where the model has none)
+   * @property {{card: Field, cat: Field, y: Field, date: Field}} [tip]  the tooltip pages' card, bar chart and trend
+   * @property {Field[]} [catPool]  more categories, so the charts of a page show different ones
+   *
+   * @typedef {Object} Slot  a visual's place: kind (title, logo, text, kpi, card, line, bar, column, donut, funnel, treemap,
+   *   map, gauge, table, matrix, slicer), its box x, y, w, h, and title (the layout's role name)
+   * @property {string} kind
+   * @property {number} x
+   * @property {number} y
+   * @property {number} w
+   * @property {number} h
+   * @property {string} [title]
+   * @property {string} [text]  a text slot's sentence
+   * @property {string|string[]} [role]  the design engine's role names (subtitles are keyed by them)
+   * @property {boolean} [rail]  a filter rail's slot
+   *
+   * @typedef {Object} Page
+   * @property {string} [name]  the page's name (the report's name when absent)
+   * @property {{w: number, h: number}} page  its size
+   * @property {Slot[]} slots
+   * @property {Uint8Array} png  its background image
+   * @property {{x: number, y: number, w: number, h: number}} [panel]  a slide-in filter panel's box
+   * @property {number} [kpiInset]  where KPI titles start beside a side accent bar (the design engine's kpiInset)
+   * @property {boolean} [grow]  a designed page: the writer may grow its header for a second row of page tabs
+   * @property {boolean} [hand]  hand-placed slots: the writer never moves them
+   *
+   * @typedef {Object} BuildInput
+   * @property {string} [name]  the report's name (its folder and files; cut to 30 characters at a word)
+   * @property {string} [title]  the header's title (the name when absent)
+   * @property {string} [lang]  'en' or 'ar' (the writer's own words and sample data)
+   * @property {boolean} [rtl]  right to left
+   * @property {string} [font]  the report's font ('Segoe UI' when absent)
+   * @property {{text: string, card: string, background: string, accent: string}} ui  the colours (#rrggbb)
+   * @property {Object} [theme]  the report theme (Power BI's theme JSON)
+   * @property {Page[]} [pages]  the pages; or one page from page, pageName, slots and png
+   * @property {{w: number, h: number}} [page]
+   * @property {string} [pageName]
+   * @property {Slot[]} [slots]
+   * @property {Uint8Array} [png]
+   * @property {{bytes: Uint8Array, ext: string}|null} [logo]  a png or jpg
+   * @property {boolean} [sample]  the sample model and data (without model)
+   * @property {{byPath: string, byConnection: string, names: Object<string, string[]>, taken: string[]}} [model]  the user's
+   *   model: byPath (its .SemanticModel folder) or byConnection; names: each table's column and measure names (the
+   *   report's own measures never take one); taken: report and .pbip names already in the folder
+   * @property {Bind} [bind]  the fields (the sample's own with sample)
+   * @property {Object<string, string>} [texts]  the report's words (design-engine REPORT_TEXTS): reset, resetTip, pages,
+   *   close, filterPanel, openFilters, closeFilters, filtersOpen, filtersClosed, header, kpis, filters, slicer, logo,
+   *   logoHere, textHere, by, detail, newDesign, noDataName, top6, tooltipPage, tooltipHere, readme ({name} is the report's)
+   * @property {Array<{page: number, t: string, m: string, expression: string, expressionNoNumber: string, w: number, h: number}>} [svgColumns]
+   *   report measures drawn as pictures in a page's first table
+   * @property {Array<{card: number, t: string, m: string, expression: string, w: number, h: number}>} [svgCards]  a picture on the nth KPI card
+   * @property {Object<string, string>} [subtitles]  a slot's role or title -> its subtitle
+   * @property {string} [chartColors]  'gradient': bars fade by value
+   * @property {string} [chartAxes]  'mirrored': right-to-left charts are mirrored
+   * @property {boolean} [quietGrid]  quiet gridlines
+   * @property {Array<{t: string, c: string, type: string, values: Array<boolean|string|number>, literals: string[]}>} [pageFilters]
+   *   "is one of" filters on every report page: typed values (the writer writes Power BI's literals; type is the column's
+   *   data type: boolean, string, int64 or double), or literals already written as Power BI writes them (checked)
+   * @property {string} [kpiValues]  'full': the cards show the full number
+   * @property {boolean} [noDataMessage]  false: no "No data" cards (on by default on a user's model)
+   * @property {boolean} [logoPlaceholder]  false: no "Your logo" text without a logo
+   *
+   * @typedef {Object} BuildResult  the files, and what the writer did that its caller should tell (each a list of
+   *   { page, ... } entries unless said)
+   * @property {string} base  the report's name as written
+   * @property {Array<{path: string, data: string|Uint8Array}>} files
+   * @property {function(): Uint8Array} zip  the files as a zip
+   * @property {Array} leftOut  visuals not written (no field for them, or a line chart's room given away: gave)
+   * @property {{wrapped: Array, shortened: Array}} kpiTitles
+   * @property {{wrapped: Array, shortened: Array, slicers: Array}} titles
+   * @property {Array} tableOrder  tables put in calendar order by a helper column
+   * @property {Array} tableRows  tables whose known rows don't fit
+   * @property {Array} headerGrew  headers grown for a second row of tabs
+   * @property {Array} tableSmaller  tables given a smaller text
+   * @property {Array} tableWide  tables wider than their box even at 8pt
+   * @property {Array} noDataSkipped  measures with no "No data" card (a control character)
+   * @property {Object} svgSizes  each page's table picture size
+   * @property {Array} noPageButtons  pages without page buttons (no room)
+   * @property {Array} tableColumns  tables that hold fewer fields than given
+   * @property {Array} rowLabels  the Arabic tables' row-label measures
+   * @property {Array} rowLabelSkipped
+   * @property {Array} extRenamed  report measures renamed because the model has the name
+   * @property {Object} chartColors
+   * @property {Object} chartAxes
+   * @property {Array} tabRows  pages whose tabs take two or three rows
+   * @property {Array} ringsSmall  ring pictures drawn without their number
+   * @property {Array} shortDays  column charts that show Day Short
+   * @property {Array} barCharts  column charts written as bar charts
+   * @property {Array} blankKept  cards too narrow for the "No data" text
+   * @property {string[]} subtitlesUsed
+   * @property {Array} timeAxes  time axes ordered by their month start
+   * @property {number} blankFiltered  charts given the "is not blank" filter
+   * @property {{top: number, months: number}} tooltipLimits
+   */
+  const KIND_NAMES = Object.keys(TYPES);
+  const PF_KINDS = { boolean: 'boolean', string: 'text', int64: 'whole', double: 'decimal' };
+  const PBI_LITERAL = /^(true|false|null|'(?:[^']|'')*'|-?\d+L|-?\d+(\.\d+)?D)$/;
+  // one page filter value as Power BI writes it, by the column's type (or, with none, the value's own), or null
+  const pfLiteral = (v, type) => {
+    const kind = PF_KINDS[String(type || '').toLowerCase()] || (typeof v === 'boolean' ? 'boolean' : typeof v === 'number' ? (Number.isInteger(v) ? 'whole' : 'decimal') : 'text');
+    if (kind === 'boolean') return typeof v === 'boolean' ? String(v) : null;
+    if (kind === 'text') return typeof v === 'string' && !hasControl(v) ? "'" + v.replace(/'/g, "''") + "'" : null;
+    if (typeof v !== 'number' || !Number.isFinite(v) || /e/i.test(String(v)) || (kind === 'whole' && !Number.isSafeInteger(v))) return null;
+    return String(v) + (kind === 'whole' ? 'L' : 'D');
+  };
+  // build's input checked against the contract above; every problem named at once (a TypeError)
+  function checkBuild(o) {
+    const bad = [], isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x), num = (x) => typeof x === 'number' && Number.isFinite(x);
+    const opt = (k, test, what) => { if (o[k] != null && !test(o[k])) bad.push(k + ' must be ' + what); };
+    if (!isObj(o)) throw new TypeError('build(o): o must be an object');
+    ['name', 'title', 'font', 'pageName'].forEach((k) => opt(k, (x) => typeof x === 'string', 'a text'));
+    opt('lang', (x) => x === 'en' || x === 'ar', "'en' or 'ar'");
+    if (!isObj(o.ui) || !['text', 'card', 'background'].every((k) => HEX6.test(String(o.ui[k])))) bad.push('ui must hold the colours text, card and background as #rrggbb');
+    opt('theme', isObj, 'an object (a Power BI theme)');
+    opt('texts', (x) => isObj(x) && Object.values(x).every((v) => typeof v === 'string'), 'an object of texts');
+    opt('subtitles', (x) => isObj(x) && Object.values(x).every((v) => typeof v === 'string'), 'an object of texts');
+    opt('logo', (x) => isObj(x) && x.bytes instanceof Uint8Array && /^(png|jpe?g)$/i.test(String(x.ext)), 'null or { bytes, ext: png or jpg }');
+    opt('model', (x) => isObj(x) && (typeof x.byPath === 'string' || typeof x.byConnection === 'string'), '{ byPath } or { byConnection }');
+    opt('bind', isObj, 'an object of fields');
+    const box = (x) => isObj(x) && num(x.x) && num(x.y) && num(x.w) && num(x.h);
+    const pages = o.pages && o.pages.length ? o.pages : [{ page: o.page, slots: o.slots, png: o.png }], where = o.pages && o.pages.length ? (i) => 'pages[' + i + ']' : () => 'the page';
+    if (o.pages != null && !Array.isArray(o.pages)) bad.push('pages must be a list');
+    else pages.forEach((pg, i) => {
+      if (!isObj(pg)) return void bad.push(where(i) + ' must be an object');
+      if (!isObj(pg.page) || !(pg.page.w > 0) || !(pg.page.h > 0)) bad.push(where(i) + ': page must be { w, h }' + (o.pages ? '' : ' (or give pages)'));
+      if (!Array.isArray(pg.slots)) bad.push(where(i) + ': slots must be a list');
+      else pg.slots.forEach((s, j) => { if (!box(s) || !KIND_NAMES.includes(s.kind)) bad.push(where(i) + ': slots[' + j + '] must be { kind, x, y, w, h } with a kind of ' + KIND_NAMES.join(', ') + ' (' + JSON.stringify(isObj(s) ? s.kind : s) + ')'); });
+      if (pg.png != null && !(pg.png instanceof Uint8Array) && typeof pg.png !== 'string') bad.push(where(i) + ': png must be the image\'s bytes');
+      if (pg.panel != null && !box(pg.panel)) bad.push(where(i) + ': panel must be { x, y, w, h }');
+    });
+    (['svgColumns', 'svgCards']).forEach((k) => opt(k, (x) => Array.isArray(x) && x.every((c) => isObj(c) && typeof c.t === 'string' && typeof c.m === 'string' && typeof c.expression === 'string'), 'a list of { t, m, expression }'));
+    if (o.pageFilters != null) {
+      if (!Array.isArray(o.pageFilters)) bad.push('pageFilters must be a list');
+      else o.pageFilters.forEach((f, i) => {
+        const at = 'pageFilters[' + i + ']';
+        if (!isObj(f) || typeof f.t !== 'string' || typeof f.c !== 'string') return void bad.push(at + ' must be { t, c, values }');
+        if (Array.isArray(f.values)) { if (!f.values.length || f.values.some((v) => pfLiteral(v, f.type) == null)) bad.push(at + ': every value must be ' + ({ boolean: 'true or false', text: 'a text', whole: 'a whole number', decimal: 'a plain number' }[PF_KINDS[String(f.type || '').toLowerCase()]] || 'true, false, a text or a plain number') + ' (' + JSON.stringify(f.values).slice(0, 80) + ')'); }
+        else if (Array.isArray(f.literals)) { if (!f.literals.length || f.literals.some((v) => typeof v !== 'string' || !PBI_LITERAL.test(v))) bad.push(at + ': a literal must be written as Power BI writes one (true, \'text\', 5L, 5.5D): ' + JSON.stringify(f.literals).slice(0, 80)); }
+        else bad.push(at + ' must have values');
+      });
+    }
+    if (bad.length) throw new TypeError('build(o): ' + bad.join('; '));
+  }
+  /** @param {BuildInput} o @returns {BuildResult} */
   function build(o) {
+    checkBuild(o);
     const lang = o.lang === 'ar' ? 'ar' : 'en', t = T[lang], rtl = !!o.rtl, u = o.ui, font = o.font || 'Segoe UI';
     const W = o.texts || {};
     // the data: the sample table, the user's own model (o.model: { byPath } or { byConnection }), or none
@@ -811,8 +983,8 @@
       return out;
     };
 
-    // Page filters (o.pageFilters: [{ t, c, literals }], the literals already written as Power BI writes them: true,
-    // 'text', 5L, 5.5D). Each is a basic filter (Categorical, "is one of") on a column, in the shape Microsoft's report
+    // Page filters (o.pageFilters: [{ t, c, type, values }]: A3-9, the writer writes each typed value as Power BI writes
+    // it, true, 'text', 5L, 5.5D; literals already written that way are still taken, checked by checkBuild). Each is a basic filter (Categorical, "is one of") on a column, in the shape Microsoft's report
     // authoring reference gives: the field by its table, the condition by the alias of From. Written on every report
     // page, each with its own name; not on the tooltip pages. The user sees and clears them in the Filters pane.
     const pageFilters = () => (o.pageFilters || []).map((f) => {
@@ -822,7 +994,7 @@
         field: { Column: { Expression: { SourceRef: { Entity: f.t } }, Property: f.c } },
         type: 'Categorical',
         filter: { Version: 2, From: [{ Name: alias, Entity: f.t, Type: 0 }],
-          Where: [{ Condition: { In: { Expressions: [{ Column: { Expression: { SourceRef: { Source: alias } }, Property: f.c } }], Values: f.literals.map((v) => [{ Literal: { Value: v } }]) } } }] },
+          Where: [{ Condition: { In: { Expressions: [{ Column: { Expression: { SourceRef: { Source: alias } }, Property: f.c } }], Values: (Array.isArray(f.values) ? f.values.map((v) => pfLiteral(v, f.type)) : f.literals).map((v) => [{ Literal: { Value: v } }]) } } }] },
         howCreated: 'User'
       };
     });
