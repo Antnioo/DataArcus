@@ -146,11 +146,26 @@ const partJson = (buf, what) => {
 // same limits as the parts of a .pbit: a model file 64 MB, any other file 32 MB, all the TMDL files together 128 MB.
 // The largest TMDL file we have is 46,099 bytes (the 300-table test model's relationships), the largest model.bim
 // about 600 KB as JSON.
-const readCapped = (f, cap, what) => {
-  const size = fs.lstatSync(f).size;
-  if (size > cap) throw refuse(`its ${what} is ${mb(size)}, above the ${mb(cap)} DataArcus reads`);
-  return fs.readFileSync(f);
-};
+// (A1-3, the audit of the reading block: the size was measured with lstat and the file read by name afterwards, so a
+// link was measured as the link and its target read whole, a 70 MB file behind a model.bim link. Now one descriptor:
+// a link is refused, the file is opened without following links, measured with fstat (a regular file within the
+// cap) and read to at most cap + 1 bytes, so a file that grows in between is refused too.)
+const linkRefused = (what) => new Error(`This file was not read: its ${what} is a link (a symbolic link or a junction), and DataArcus never follows links. Nothing in it was used.`);
+export function readCapped(f, cap, what) {
+  if (isLink(f)) throw linkRefused(what);
+  let fd;
+  try { fd = fs.openSync(f, fs.constants.O_RDONLY | (fs.constants.O_NOFOLLOW || 0)); } catch (e) { if (e.code === 'ELOOP') throw linkRefused(what); throw e; }
+  try {
+    const st = fs.fstatSync(fd);
+    if (!st.isFile()) throw new Error(`This file was not read: its ${what} is not a regular file.`);
+    if (st.size > cap) throw refuse(`its ${what} is ${mb(st.size)}, above the ${mb(cap)} DataArcus reads`);
+    const buf = Buffer.alloc(st.size + 1 > cap + 1 ? cap + 1 : st.size + 1);
+    let n = 0, r;
+    while (n < buf.length && (r = fs.readSync(fd, buf, n, buf.length - n, null)) > 0) n += r;
+    if (n > cap) throw refuse(`its ${what} is above the ${mb(cap)} DataArcus reads`);
+    return buf.subarray(0, n);
+  } finally { fs.closeSync(fd); }
+}
 
 // Links (symbolic links, junctions) are never followed: they are left out, and listed in `links` when given
 const walk = (dir, depth = 0, links = null) => (depth > 4 ? [] : fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) => {
@@ -199,7 +214,7 @@ export function loadModel(p) {
     const isZip = (() => { try { const fd = fs.openSync(full, 'r'), b = Buffer.alloc(2); fs.readSync(fd, b, 0, 2, 0); fs.closeSync(fd); return b[0] === 0x50 && b[1] === 0x4b; } catch (e) { return false; } })();
     const cap = isZip ? PBIT_LIMITS.file : PBIT_LIMITS.model;
     if (st.size > cap) throw refuse(`it is ${mb(st.size)}, above the ${mb(cap)} DataArcus reads${isZip ? '' : ' for a model file'}`);
-    const buf = fs.readFileSync(full);
+    const buf = readCapped(full, cap, isZip ? 'file' : 'model file');
     if (buf[0] === 0x50 && buf[1] === 0x4b) {
       const z = unzipNeeded(buf), dms = z.DataModelSchema || Object.entries(z).find(([n]) => /(^|\/)model\.bim$/i.test(n))?.[1];
       if (!dms) throw new Error('No model in this file. Use a .pbit (File > Export > Power BI template), a model.bim, or a project folder.');
@@ -238,7 +253,7 @@ export function loadModel(p) {
     let total = 0;
     for (const f of tfiles) { const size = fs.lstatSync(f).size; if (size > PBIT_LIMITS.entry) throw refuse(`one of its TMDL files is ${mb(size)}, above the ${mb(PBIT_LIMITS.entry)} DataArcus reads`); total += size; }
     if (total > PBIT_LIMITS.total) throw refuse(`its TMDL files are ${mb(total)} together, above the ${mb(PBIT_LIMITS.total)} DataArcus reads`);
-    const text = new Map(tfiles.map((f) => [f, decode(fs.readFileSync(f))]));
+    const text = new Map(tfiles.map((f) => [f, decode(readCapped(f, PBIT_LIMITS.entry, 'TMDL file'))]));
     tables = fs.readdirSync(tdir, { withFileTypes: true }).filter((e) => !e.isSymbolicLink() && /\.tmdl$/i.test(e.name)).flatMap((e) => { const f = path.join(tdir, e.name); return Bind.parseTmdl(text.has(f) ? text.get(f) : decode(readCapped(f, PBIT_LIMITS.entry, 'TMDL file'))); });
     // the whole model (expressions, relationships, roles...) in model.bim form, for the health check
     // (lineage tags kept: the fix scripts write each object back with its own tag, so Desktop doesn't give it a new one)
