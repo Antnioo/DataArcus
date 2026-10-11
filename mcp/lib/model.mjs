@@ -6,13 +6,10 @@ import zlib from 'node:zlib';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-export const Bind = require('../../assets/js/pbip-bind.js');
-export const Health = require('../../assets/js/model-health-engine.js');
-export const Pbip = require('../../assets/js/pbip-export.js');
+// (A1-10, the audit of the reading block: this module exports reading only; each consumer requires its own engines.
+// The readers it uses: pbip-bind's fromTmsl (the fields of a model's JSON) and tmdl-model.js (TMDL into that JSON).)
+const Bind = require('../../assets/js/pbip-bind.js');
 const Tmdl = require('../../assets/js/tmdl-model.js');
-export const Fix = require('../../assets/js/model-health-tmdl.js');
-export const Svg = require('../../assets/js/svg-kpi-compiler.js');
-export const Gulf = require('../../assets/js/gulf-health.js');
 
 // Every path the tools read or write must sit inside the working folder, DATAARCUS_ROOT. Not set, empty, blank or
 // still a placeholder ("${user_config.working_folder}": what an app's settings leave when nothing was chosen) means

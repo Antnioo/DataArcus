@@ -8,8 +8,9 @@ import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
+import { createRequire } from 'node:module';
 import { absorb } from './lib/slots.mjs';
-import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, screenWhy, shownName, Svg, applyColumnTypes, inside, loadModel, modelOf, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
+import { Notice, ROOT, screenWhy, shownName, applyColumnTypes, inside, loadModel, modelOf, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
 import { E, themeDesign, planLayout, pageOf, contrastReport, freeFile } from './lib/design.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
@@ -20,6 +21,10 @@ import { wordOf } from './lib/read-words.mjs';
 import { takenNames } from './lib/report-names.mjs';
 import { planLint } from './lib/plan-lint.mjs';
 import * as Plans from './lib/plans.mjs';
+// the engines this server uses, required here (A1-10: the model reader exports reading only)
+const require = createRequire(import.meta.url);
+const Bind = require('../assets/js/pbip-bind.js'), Health = require('../assets/js/model-health-engine.js'), Pbip = require('../assets/js/pbip-export.js');
+const Fix = require('../assets/js/model-health-tmdl.js'), Svg = require('../assets/js/svg-kpi-compiler.js'), Gulf = require('../assets/js/gulf-health.js');
 import { planTwin, twinKey, writeTwin } from './lib/arabic-twin.mjs';
 
 // the version is in one place: mcp/package.json

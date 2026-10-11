@@ -5,7 +5,10 @@
 // writer's own fixes for O-3, O-4, O-6, O-13, O-14), the lint of the plan follows without a change here.
 // What is not the same as create_report's report: number formats, Arabic display names, SVG measures and page filters
 // are left out (no lint rule reads them); the first page is the one linted (the page the plan shows).
-import { Bind, Pbip } from './model.mjs';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const Bind = require('../../assets/js/pbip-bind.js'), Pbip = require('../../assets/js/pbip-export.js');
 import { E } from './design.mjs';
 import { absorb } from './slots.mjs';
 import { inventory, memorySource } from './read-report.mjs';
