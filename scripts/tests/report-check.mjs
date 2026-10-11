@@ -264,7 +264,7 @@ export function tooltipPageProblems(files) {
       charts++;
       const o = v.visual.objects || {}, P = (k) => ((o[k] || [])[0] || {}).properties || {}, c = P('categoryAxis'), y = P('valueAxis'), l = P('labels');
       // (0.2.9 part 2: the last-6-months trend by the tooltip lab's measure, 27 a bar at 8pt and 40 for the title and padding)
-      const rows = isT && six ? Math.floor((v.position.height - 40) / 27) : Math.floor((v.position.height - 46) / 22);
+      const rows = isT && six ? MEASURED.TIP_ROWS_6(v.position.height) : MEASURED.TIP_ROWS(v.position.height);
       const got = { type: v.visual.visualType, text: lit(c.fontSize), room: lit(c.maxMarginFactor), axisTitle: lit(c.showAxisTitle), valueAxis: lit(y.show), labels: lit(l.show), labelText: lit(l.fontSize), rows };
       const want = { type: 'clusteredBarChart', text: '8D', room: '40L', axisTitle: 'false', valueAxis: 'false', labels: 'true', labelText: '8D', rows: isT ? (six ? 6 : 12) : 6 };
       if (JSON.stringify(got) !== JSON.stringify(want)) bad.push(`tooltip chart ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);

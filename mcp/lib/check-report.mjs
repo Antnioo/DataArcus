@@ -145,6 +145,8 @@ const DESKTOP_OPENS = {
   PBIR_FORMATTING_OBJECT_UNKNOWN: (b, f) => /^StaticResources\/RegisteredResources\//.test(f || ''),
   PBIR_FILLRULE_STOP_COLOR_INVALID: () => true
 };
+// (A4-10 and C1, audit 4: the Desktop-opens codes name their measurement, as the measured rules do)
+export const DESKTOP_OPENS_SOURCE = { file: 'scripts/tests/DESKTOP-TESTS.md', date: '2026-10-10', desktop: '2.158.1304', section: 'Microsoft\'s validator on a working hand-built report' };
 export const IMPACT = {
   desktopOpens: 'Power BI Desktop opens the report with these (seen on a working hand-built report): only Microsoft\'s strict validation, and Fabric when the report is published through it, would refuse them. Fix them before publishing through Fabric or Git; the report is not broken in Desktop.',
   canBreak: 'These can break the report in Power BI Desktop: a page or visual that does not open, or shows an error or nothing. Fix these first.',
@@ -292,7 +294,7 @@ export async function checkReport(p, opts) {
   return {
     report: { pages: R.pages.filter((p) => !p.tooltip).length, tooltipPages: R.pages.filter((p) => p.tooltip).length, visuals: R.visuals.length, bookmarks, pageNames: R.pages.map((p) => p.name), schemaVersions: versions, builtBy: 'unknown' },
     lang, validator, schemas, rulesRun: ruled.ran,
-    impact: { summary: impactSummary(byImpact, { validator, unread: sk.big.length + sk.deep + unreadable + (sk.links || []).length, desktopOpensErrors: all.filter((f) => f.impact === 'desktopOpens' && f.severity === 'error').length }), kinds: Object.fromEntries(Object.entries(IMPACT).map(([k, means]) => [k, { count: byImpact[k], means }])),
+    impact: { summary: impactSummary(byImpact, { validator, unread: sk.big.length + sk.deep + unreadable + (sk.links || []).length, desktopOpensErrors: all.filter((f) => f.impact === 'desktopOpens' && f.severity === 'error').length }), kinds: Object.fromEntries(Object.entries(IMPACT).map(([k, means]) => [k, Object.assign({ count: byImpact[k], means }, k === 'desktopOpens' ? { measured: `measured: ${DESKTOP_OPENS_SOURCE.file}, ${DESKTOP_OPENS_SOURCE.date}, Desktop ${DESKTOP_OPENS_SOURCE.desktop}, "${DESKTOP_OPENS_SOURCE.section}"` } : {})])),
       tellUser: 'Tell the user the summary and, for each kind with findings, its sentence: a report Desktop opens is not broken because of what only strict validation or Fabric would refuse. Each finding\'s "impact" is its kind; its code is Microsoft\'s or DataArcus\'s, unchanged.' },
     findings, notChecked,
     ...(lintSection ? { lint: lintSection } : {}),
