@@ -172,16 +172,30 @@
     const f = String(x.formatString || '');
     if (PCT(x)) { const d = (f.match(/\.([0#]+)\s*%/) || ['', ''])[1].length; return { pctFormat: /%/.test(f) && d <= 1 ? f : '0.0%' }; }
     if (isText(x)) return {};
-    if (f && !/\.[0#]/.test(f) && /[0#]/.test(f)) return { wholeFormat: /^[#,0]+$/.test(f) ? '#,0' : f };
+    // 0.2.9 (O-2 of the owner's test of 0.2.8: "EUR 54,662,000" on a card where he wanted EUR 54.66M): an amount (a
+    // currency in its format, or a sum of money: a SUM with a money word in its name) keeps automatic units with 2
+    // decimals although its format has none; counts and other whole numbers stay whole
+    if (f && !/\.[0#]/.test(f) && /[0#]/.test(f)) return AMOUNT(x, f) ? {} : { wholeFormat: /^[#,0]+$/.test(f) ? '#,0' : f };
     if (!f && COUNTS.test(x.expr || '')) return { wholeFormat: '#,0' };
     return {};
   };
+  // an amount for the card rule above: a currency in the format ("EUR" #,0, \$#,0, #,0 "AED"), or a SUM of money by name;
+  // never a count
+  const CURRENCY = /"[A-Za-z\u0600-\u06FF]{1,4}\.?"|\\?[$€£¥]|\[\$/;
+  const MONEY = /revenue|sales|amount|income|profit|cost|budget|spend|price|value|المبيعات|الإيرادات|التكلفة|الميزانية|المبلغ/i;
+  const AMOUNT = (x, f) => !COUNTS.test(x.expr || '') && (CURRENCY.test(f) || (MONEY.test(x.name || '') && /\bSUMX?\s*\(/i.test(x.expr || '')));
   // time intelligence variants (MTD, PY, YoY %...) are not the headline number
   const VARIANT = /\b(PY|LY|YoY|MoM|QoQ|MTD|QTD|YTD|PYTD|PM|Prior|Previous|Prev|Last|vs|Rolling|Running|Avg|Average|\d+D)\b/i;
   // a measure someone left behind: the whole word old, test, unused, backup or temp in its name ("Sales (old)", "Test
   // margin", "TEMP total"; not "Oldham", "Latest" or "Contest"). It is picked only when no other measure is left.
   const STALE = /(^|[^A-Za-z])(old|test|unused|backup|temp)([^A-Za-z]|$)/i;
-  const MAIN = /revenue|sales|amount|income|profit|value|bookings|orders|leads|deals|calls|visits|spend|cost|الإيرادات|المبيعات|الأرباح|الطلبات/i;
+  const MAIN = /revenue|sales|amount|income|profit|value|bookings|orders|leads|deals|calls|visits|spend|cost|budget|الإيرادات|المبيعات|الأرباح|الطلبات|الميزانية/i;
+  // 0.2.9 (O-7: an executive page got Predicted Cost (EOC), Earned Value and CPI where the user wanted Total Projects and
+  // Actual Budget): a plain count or sum is a core number; an acronym (CPI, EOC, SPI) and a forecast or an index are not
+  const CORE = /^\s*(SUM|COUNTROWS|COUNT|COUNTA|DISTINCTCOUNT(NOBLANK)?)\s*\([^()]*\)\s*$/i;
+  // (a currency code or an Arabic mark in a name is no acronym: "Total Sales (AED)", "Revenue USD", "City AR")
+  const ACRONYM_RE = /(^|[\s(])[A-Z]{2,5}(\)|\s|$)/, NOT_ACRONYM = /(^|[\s(])(AED|SAR|USD|EUR|GBP|QAR|KWD|BHD|OMR|EGP|JOD|AR|EN|ID|KPI|YTD|MTD|QTD)(?=\)|\s|$)/g;
+  const ACRONYM = { test: (n) => ACRONYM_RE.test(String(n).replace(NOT_ACRONYM, '$1')) }, FORECAST = /predict|forecast|estimat|projected|target|index|ratio/i;
   const COUNTISH = /total|count|number|#|qty|quantity|units|customers|clients|tickets|إجمالي|عدد/i;
   const CAT = /category|product|brand|region|country|city|emirate|segment|channel|type|status|department|store|branch|source|platform|model|team|group|class|stage|agent|rep|salesperson|campaign|الفئة|المنتج|العلامة|المنطقة|المدينة|القناة|الفرع|المصدر/i;
   // (round 23, the owner's "nothing critical left": "Order Id", "Invoice No" and "Customer Code" were chart categories:
@@ -262,16 +276,27 @@
       if (before !== after) left.forEach((a) => tie(a, at(a.i + (before ? -1 : 1))));
     });
   }
+  // 0.2.9 (O-13: a "Month-Year" text column on the line chart ran Apr 2018, Apr 2019 ... A to Z): a month label (a text
+  // column with month or period in its name) whose table has a date column names it (dateOf), so the report can order
+  // the label by the month's first date and keep the last months; the model is not touched
+  function dateColumnFor(columns, name, type) {
+    if (!/month|period|الشهر/i.test(String(name)) || !/^(string|unknown)$/.test(String(type || 'string').toLowerCase())) return null;
+    const dates = (columns || []).filter((c) => /^date(time)?$/i.test(String(c.dataType || '')) && c.name !== name);
+    return dates.find((c) => /^(date|التاريخ)$/i.test(c.name)) || dates[0] || null;
+  }
   function catalog(tables) {
     const shown = tables.filter((t) => !t.hidden);
     const measures = [], columns = [];
     shown.forEach((t) => {
-      t.measures.filter((m) => !m.isHidden).forEach((m) => measures.push(Object.assign({ t: t.name, m: m.name, pct: PCT(m), variant: VARIANT.test(m.name), stale: STALE.test(m.name), text: isText(m) }, cardKind(m))));
+      t.measures.filter((m) => !m.isHidden).forEach((m) => { const x = Object.assign({ t: t.name, m: m.name, pct: PCT(m), variant: VARIANT.test(m.name), stale: STALE.test(m.name), text: isText(m) }, cardKind(m));
+        // (0.2.9: its DAX, for the core-number rank; non-enumerable, so the fields given out keep their shape)
+        Object.defineProperty(x, 'expr', { value: String(m.expr || (Array.isArray(m.expression) ? m.expression.join('\n') : m.expression) || '') }); measures.push(x); });
       t.columns.filter((c) => !c.isHidden).forEach((c, i) => { const by = c.sortBy ? null : sortColumnFor(t.columns, c.name), type = String(c.dataType || 'string').toLowerCase();
         // (round 12, #17: a month or day name the model itself sorts is ordered: a table sorts it by itself)
         // (round 23: lang and i, the column's place, for the language rule: text columns only; non-enumerable, so the
         // fields given out keep their shape)
-        const col = Object.assign({ t: t.name, c: c.name, type, dateTable: t.date || DATE_TABLE.test(t.name), cat: c.dataCategory }, by ? { sortBy: { t: t.name, c: by.name } } : {}, c.sortBy && nameLike(c.name) ? { ordered: true } : {});
+        const dt = dateColumnFor(t.columns, c.name, type);
+        const col = Object.assign({ t: t.name, c: c.name, type, dateTable: t.date || DATE_TABLE.test(t.name), cat: c.dataCategory }, by ? { sortBy: { t: t.name, c: by.name } } : {}, c.sortBy && nameLike(c.name) ? { ordered: true } : {}, dt ? { dateOf: { t: t.name, c: dt.name } } : {});
         Object.defineProperties(col, { lang: { value: type === 'string' || type === 'unknown' ? langOf(c.name) : null, writable: true }, i: { value: i }, twin: { value: null, writable: true } });
         columns.push(col); });
     });
@@ -332,7 +357,8 @@
   }
   function suggest(tables, nKpis, opt) {
     const { measures, columns } = catalog(tables);
-    const score = (x) => (MAIN.test(x.m) ? 3 : 0) + (COUNTISH.test(x.m) ? 2 : 0) - (x.variant ? 4 : 0) - (x.pct ? 1 : 0);
+    const score = (x) => (MAIN.test(x.m) ? 3 : 0) + (COUNTISH.test(x.m) ? 2 : 0) - (x.variant ? 4 : 0) - (x.pct ? 1 : 0)
+      + (CORE.test(x.expr || '') ? 2 : 0) - (ACRONYM.test(x.m) && !/%/.test(x.m) ? 3 : 0) - (FORECAST.test(x.m) ? 2 : 0);   // (0.2.9, O-7)
     // (measures left behind, see STALE, come after every other one)
     // (a measure that shows text is never picked: round 12, #26)
     // (round 23: with a report language (opt.lang), a measure named in the other language comes after those named in
@@ -440,7 +466,7 @@
     // and a month or day name without a sort-by column says which number column puts it in order (sortBy)
     // (a measure keeps pct: its KPI card shows the model's own percent format, the owner's design choice 2, 5 Oct 2026)
     const f = (x) => (x ? (x.m != null ? Object.assign({ t: x.t, m: x.m }, x.pct ? { pct: true } : {}, x.pctFormat ? { pctFormat: x.pctFormat } : {}, x.wholeFormat ? { wholeFormat: x.wholeFormat } : {})
-      : Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {})) : null);
+      : Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {}, x.dateOf ? { dateOf: x.dateOf } : {})) : null);
     const kpis = (ch.kpis || []).map(f);
     const main = f(ch.main), second = kpis.find((k) => k && main && k.m !== main.m) || main;
     const ratio = (ch.kpis || []).find((k) => k && k.pct);
@@ -526,6 +552,6 @@
   // the language of each text column as the picker reads it, with the table's context ({ 'T[c]': 'ar' | 'en' })
   const langsOf = (tables) => { const out = {}; catalog(tables).columns.filter((c) => c.lang).forEach((c) => { out[`${c.t}[${c.c}]`] = c.lang; }); return out; };
   const twinsOf = (tables) => { const out = {}; catalog(tables).columns.filter((c) => c.twin).forEach((c) => { out[`${c.t}[${c.c}]`] = `${c.twin.t}[${c.twin.c}]`; }); return out; };
-  const api = { langOf, langsOf, twinsOf, reachTable, relsOfTmsl, relsOfTmdl, isPercent, measureCard, nameLike, iso, parseTmdl, fromTmsl, fromFolder, fromFile, suggest, build, counts, sortColumnFor, renderPicker, connection };
+  const api = { dateColumnFor, langOf, langsOf, twinsOf, reachTable, relsOfTmsl, relsOfTmdl, isPercent, measureCard, nameLike, iso, parseTmdl, fromTmsl, fromFolder, fromFile, suggest, build, counts, sortColumnFor, renderPicker, connection };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DABind = api;
 })(typeof self !== 'undefined' ? self : this);
