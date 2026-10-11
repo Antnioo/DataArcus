@@ -1,9 +1,9 @@
 # DataArcus MCP: what stays on your machine, and what your AI app sees
 
-Plain English. Checked against the DataArcus MCP package 0.1.0 (`mcp/package.json`; the 0.2.9 beta in preparation,
-branch `fix/0.2.9-design`) on 2026-10-11, with Microsoft's validator 0.4.0: `mcp/server.mjs`, `mcp/lib/`, the
-report-design skill, and the shared engines it loads from `assets/js/`. If the code changes, this page is checked again
-before the next release. What is not true yet is listed under "Known gaps" at the end.
+Plain English. Checked against 0.2.9 (the release candidate; the build writes its version into the package, and the
+source's `mcp/package.json` says 0.1.0 until then) on 2026-10-11, with Microsoft's validator 0.4.0: `mcp/server.mjs`,
+`mcp/lib/`, the report-design skill, and the shared engines it loads from `assets/js/`. If the code changes, this page
+is checked again before the next release. What is not true yet is listed under "Known gaps" at the end.
 
 ## In one paragraph
 The DataArcus MCP runs on your own computer and sends nothing anywhere by itself. But it is a tool for an AI app
@@ -118,7 +118,9 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
     file is created in a way that fails if the name exists: nothing is written over a file or through a link.
   - `read_model`, `suggest_fields`, `plan_layout` and `check_report` only read.
   - Your logo and background images are copied into the new report; the originals are not changed.
-- **Nothing is deleted.** No tool deletes a file.
+- **Nothing of yours is deleted.** No tool deletes a file it did not just create. When a write fails part-way, the
+  tool removes only the files and folders that same call had created, so no half-written report or twin is left; a
+  file or folder that was there before is never touched.
 - **Keep the folder clean.** Put in it only the models you are allowed to share with your AI app. Don't put employer
   or client models there unless you may send their structure to the AI provider.
 
@@ -141,19 +143,29 @@ as data, never as instructions:
   first, with the owner's approval, before it ships. Until then, section 3 stands as written.
 
 ## Known gaps
-Open on 2026-10-11 (from the 0.2.9 audits; each will be closed with a test that fails before the fix):
-- **A1-1** (being merged): a model folder that a `.pbip` points at was not checked against the working folder, so a
-  link there could be read from outside it. Fixed in the reading block (`63066cf`); true here once it is merged.
-- **A6-1, A6-2, A6-3** (the plan gate): an approved plan does not yet pin every input of the write (A6-1), can be used
-  more than once (A6-2), and is approved by the AI app passing your reply, which the tools can't prove you typed (A6-3).
-- **A7-3** (the plan gate): a reply such as "Wait, don't go yet" can still approve a plan, and approving a plan again
-  keeps it alive past its 2 hours. `approve_plan`'s description promises both; the gate's fix makes it true.
-- **A6-4**: a write that fails part-way can leave a half-written new report (never one written over a file).
-- **A5-1, A5-5** (`read_report`): field roles are returned as written in the report, and the instruction screen runs on
-  the raw text.
-- **A6-6** (`create_report`): `boundFields` can hold a field name's invisible format character as it is, not as its
-  code point.
-- **A4-7** (`check_report`): the design lint's findings carry no `impact` kind.
+Open on 2026-10-11:
+- **A6-3** (who approves): when the AI app can show DataArcus's own prompt (MCP elicitation), only your yes there
+  approves a plan. When it can't, the AI app passes your reply (`approvedBy: "assistant-reported"`), and DataArcus
+  can't prove that you typed it.
+- **The working folder's checks** are made when a path is used: they are not a defence against another program on the
+  same computer changing the folder while DataArcus is working (see section 4).
+
+Closed in 0.2.9 (from the 0.2.9 audits and an outside review of the release candidate), each with a test that failed
+before the fix:
+- **A1-1:** the model folder a `.pbip` points at, and a model found by name, are checked against the working folder
+  like any path (section 4).
+- **A6-1, A6-2** (the plan gate): an approved plan pins the inputs of its write and is used once; a plan kind that
+  pins nothing for a tool refuses it, and a report's plan allows the report only (its theme goes inside the report;
+  a separate theme file needs its own plan).
+- **A7-3** (the plan gate): a reply with a no, not yet or wait in it never approves a plan; a plan is approved once,
+  and its 2 hours count from its proposal.
+- **A6-4:** a write is all or nothing; when one fails part-way, only what that call created is removed.
+- **A5-1, A5-5** (`read_report`): field roles are screened, and the instruction screen runs on cleaned text.
+- **A6-6:** every answer writes invisible format and control characters as code points, and no answer of any shape
+  passes 40,000 characters.
+- **A4-7** (`check_report`): the design lint's findings carry their `impact` kind like the others.
+- Files you name (a logo, a background, a theme) are measured and read through one capped read, never past their size
+  limit.
 
 Closed on 2026-10-04 (round 5, from the audit of 2026-10-04), each with tests that failed before the fix:
 - fix scripts in the health check's answer carried expressions and descriptions (now files; see section 3);
