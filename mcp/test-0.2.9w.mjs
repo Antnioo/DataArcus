@@ -270,6 +270,30 @@ export function v029w({ check }) {
     chk(() => !check(a1).length && !check(a2).length && ((a2.tableColumns || []).length || (a2.tableSmaller || []).length),
       () => `rc1-2: every number as wide as its widest value, every header whole, all within the table (a table with too many fields leaves one out or takes a smaller text, told): ${JSON.stringify([check(a1), check(a2), a2.tableColumns && a2.tableColumns.length, a2.tableSmaller])}`);
   }
+
+  // ---------- rc1 item 4 (PERF-COMPARE S5, S7, D15, Task 1): crowded category charts, and the empty column under a short rail ----------
+  {
+    const r = get(() => build(base({ cats: { bar: C('Product'), column: C('City'), donut: C('Channel') } }), { pages: hand(1280, 720, [
+      { kind: 'bar', title: 'B', x: 24, y: 80, w: 600, h: 300 }, { kind: 'column', title: 'K', x: 640, y: 80, w: 500, h: 300 }, { kind: 'column', title: 'Q', x: 640, y: 400, w: 500, h: 300 }]) }));
+    const vs = r.files ? visuals(r).filter((v) => /^clustered(Bar|Column)Chart$/.test(v.visual.visualType)) : [];
+    const topOf = (v) => { const f = ((v.filterConfig || {}).filters || []).find((x) => x.type === 'TopN'); return f ? f.filter.From[0].Expression.Subquery.Query.Top : null; };
+    const bar = vs.find((v) => v.position.x === 24), col = vs.find((v) => v.position.x === 640 && v.position.y === 80);
+    // a bar chart 300 high at 720: (300 - 45 - 8 - 38) / 22.2 = 9 rows; a column chart 500 wide: room for 12-character labels
+    chk(() => topOf(bar) === 9 && topOf(col) >= 3 && /^Top 9: /.test(titleOf(bar)) && new RegExp('^Top ' + topOf(col) + ': ').test(titleOf(col)) && (r.chartTops || []).length >= 2,
+      () => `rc1-4: a chart by a text category shows its top N by its measure, N the rows or columns it holds, said in its title and told: ${r.threw || JSON.stringify(vs.map((v) => [titleOf(v), topOf(v)]))}`);
+    const t = get(() => build(base({ cats: { bar: C('Month Name', { sortBy: { t: D, c: 'Month No' } }, D), column: C('Quarter', {}, D), donut: C('Channel') } }), { pages: hand(1280, 720, [{ kind: 'bar', title: 'B', x: 24, y: 80, w: 600, h: 300 }, { kind: 'column', title: 'K', x: 640, y: 80, w: 500, h: 300 }]) }));
+    chk(() => t.files && visuals(t).filter((v) => /^clustered/.test(v.visual.visualType) && v.position.x !== 12).every((v) => topOf(v) == null), () => 'rc1-4: a time or known category (months, quarters) is never cut to a top N');
+    // the website's sample report (4 values a category) is never cut and never titled "Top N" (the tooltip page's own
+    // "Top 6", at x 12, is older and left as it is)
+    const sm = get(() => build(null, { sample: true, model: null, pages: hand(1280, 720, [{ kind: 'bar', title: 'B', x: 24, y: 80, w: 600, h: 300 }, { kind: 'column', title: 'K', x: 640, y: 80, w: 500, h: 300 }]) }));
+    chk(() => sm.files && visuals(sm).filter((v) => /^clustered/.test(v.visual.visualType) && v.position.x !== 12).length === 2 && visuals(sm).filter((v) => /^clustered/.test(v.visual.visualType) && v.position.x !== 12).every((v) => topOf(v) == null && !/^Top \d/.test(titleOf(v) || '')) && !(sm.chartTops || []).length,
+      () => `rc1-4: the sample report's charts are not cut to a top N: ${sm.threw || JSON.stringify(visuals(sm).map((v) => [titleOf(v), topOf(v)]))}`);
+    // S7: under a rail fitted to its slicers, the bottom row's visual beside the rail takes the rail's column
+    const sl = [{ kind: 'slicer', x: 1068, y: 70, w: 196, h: 634 }, { kind: 'bar', x: 16, y: 178, w: 1040, h: 293 }, { kind: 'column', x: 16, y: 483, w: 514, h: 221 }, { kind: 'table', x: 542, y: 483, w: 514, h: 221 }];
+    const f = E.fitSlots(sl, { railItems: { n: 2, minH: 50, maxH: 50, resetH: 30, pad: 10, gap: 8 } }).slots, tb = f.find((x) => x.kind === 'table'), br = f.find((x) => x.kind === 'bar');
+    chk(() => tb.x === 542 && tb.w === 1264 - 542 && br.w === 1040 && f.find((x) => x.kind === 'column').w === 514,
+      () => `rc1-4 S7: the bottom row's visual beside a short rail takes the rail's column; a row beside the rail keeps its width: ${JSON.stringify(f)}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

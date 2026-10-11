@@ -86,11 +86,28 @@
   const themeSizes = (o) => { const TH = (o.theme && o.theme.textClasses) || {}, LABEL = +(TH.label || {}).fontSize || 10;
     return { TH, TITLE: +(TH.title || {}).fontSize || 12, CALLOUT: +(TH.callout || {}).fontSize || 28, LABEL, SLICER_TEXT: +((((((o.theme || {}).visualStyles || {}).slicer || {})['*'] || {}).header || [{}])[0].textSize) || LABEL }; };
 
+  // 0.2.9 rc1 (the laptop's PERF-COMPARE S5, D15, D19 and Task 1: a column chart of products or cities drew dozens of
+  // vertical labels, cut, with a scrollbar; on a page narrowed by the filter rail the department labels were slanted and
+  // cut): a bar or column chart by a text category (not a time category, nor one whose values the writer knows: days,
+  // months, quarters) shows its top N by its measure, N the categories its slot holds, said in its title. A bar chart: its
+  // rows, 22.2 a row with 45 above, 8 under and 38 for the value axis (measured at 10pt, 1280 x 720, scaled with the page);
+  // a column chart: a column for a 12-character label at the label size (a GUESS, to be measured), so the names stay level
+  const topCount = (c, s, pg, f) => {
+    // (the sample's categories have 4 values each: never cut, and never a "Top N" on the website's sample report)
+    if (!c.own || !f || !isTextField(f) || isTime(f) || catKind(f) || (s.kind !== 'bar' && s.kind !== 'column')) return 0;
+    if (s.kind === 'bar') return Math.max(3, Math.floor((s.h * 720 / pg.page.h - 45 - 8 - 38) / 22.2));
+    const plot = s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40, need = textWidth('n'.repeat(12), c.LABEL, false, c.font) + 6;
+    return Math.max(3, Math.floor(plot / need));
+  };
+  // the category field a chart's query shows (after the page's own choice of categories)
+  const catOf = (Bt, query) => { const p = ((query.queryState.Category || {}).projections || [])[0], col = p && p.field.Column;
+    return col ? Object.values(Bt.cats || {}).find((x) => x && x.t === col.Expression.SourceRef.Entity && x.c === col.Property) || null : null; };
+
   // The visuals' look and sizes shared by a report's pages and its tooltip pages (frames, cards, buttons, the visual
   // fixes of 0.2.9 part 2), made once per report from its context c (see build)
   function kit(c) {
     const {
-      MIRROR, W, align, base, byMonthStart, edge, font, lastMonths, n, notBlank, o, rowLabels,
+      MIRROR, W, align, base, byMonthStart, edge, font, lastMonths, n, notBlank, o, rowLabels, topN,
       rtl, timeAxes, u
     } = c;
 
@@ -221,6 +238,9 @@
       const st = visual.query.queryState, cat = st.Category && st.Category.projections[0], col = cat && cat.field.Column, filters = [];
       const put = (object, props) => { visual.objects = visual.objects || {}; const e = visual.objects[object] || (visual.objects[object] = [{ properties: {} }]); Object.assign(e[0].properties, props); };
       if (col && CHARTS.includes(s.kind)) { filters.push(notBlank(col)); n.blankFiltered++; }
+      // (rc1: a crowded category chart, its top N by its measure; topCount)
+      const top = col && st.Y ? topCount(c, s, pg, catOf(Bt, visual.query)) : 0;
+      if (top) { filters.push(topN(col, st.Y.projections[0].field, top)); n.chartTops.push({ page: pg.name || base, field: col.Expression.SourceRef.Entity + '[' + col.Property + ']', top }); }
       // O-4: a bar chart's names get 40% of its width, 50% on a narrow chart (under 560 on the 720-high page); the default 25 cut them at about 10 characters
       if (visual.visualType === 'clusteredBarChart') put('categoryAxis', { maxMarginFactor: lit(barNameShare(s.w, pg.page.h) + 'L') });
       // O-13: the line chart's month label
@@ -597,6 +617,8 @@
         // (round 10: the sample download names its charts by their fields too, "Total Revenue by Month", as a report on a
         // user's model does; before, it kept the layout's role names, "Main trend")
         if (B && query) ttl = bindTitle(s.kind, Bt, W.by || 'by') || ttl;
+        // (rc1: a chart cut to its top N says so in its title, as the tooltip page's "Top 6")
+        { const top = B && query ? topCount(c, s, pg, catOf(Bt, query)) : 0; if (top && ttl) ttl = (lang === 'ar' ? 'أعلى ' : 'Top ') + top + ': ' + ttl; }
         if ((s.kind === 'table' || s.kind === 'matrix') && ttl && chartTitles.has(ttl)) ttl = ttl + ': ' + (AR_LETTERS.test(ttl) ? (W.detail && AR_LETTERS.test(W.detail) ? W.detail : 'التفاصيل') : (W.detail && !AR_LETTERS.test(W.detail) ? W.detail : 'detail'));   // (round 14: in the title's own script)
         if (s.kind === 'kpi') { if (B && query) ttl = label(B.kpis[kpiIndex]); kpiIndex++; }
         // KPI names read as labels: semibold, so the number below stays the hero
@@ -775,8 +797,11 @@
             // (columnRoom) and the pictures share what is left, each with + 10 like a column; their width is capped by
             // that, 8 at least, and the height follows the designs' ratio. With room, the designs' own size is kept.
             const wide = Math.max(...mine.map((c) => +c.w || 0)) || 75, tt = +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
-            const others = query.queryState.Values.projections.filter((p) => !(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema) && p.displayName !== ' ').reduce((a, p) => a + columnRoom(p, tt, font), 0);
-            const W = Math.max(8, Math.min(512, wide, Math.floor((s.w - others) / cols.length) - 10));
+            // (rc1, S1/S2: a table's other columns take the room its fit and its column widths give them, cellRoom at the
+            // table's own text, within its width less 36; the pictures had kept the earlier rule and could push it past)
+            const tsc = s.kind === 'table' ? pg.page.h / 1080 : null, fOf = (p) => ((Bt || {}).table || []).filter(Boolean).find((f) => proj(f).queryRef === p.queryRef);
+            const others = query.queryState.Values.projections.filter((p) => !(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema) && p.displayName !== ' ').reduce((a, p) => a + (tsc && fOf(p) ? cellRoom(fOf(p), tableText || tt, font, tsc) : columnRoom(p, tt, font)), 0);
+            const W = Math.max(8, Math.min(512, wide, Math.floor(((tsc ? s.w - 36 : s.w) - others) / cols.length) - 10));
             const H0 = Math.max(8, Math.min(512, Math.round(Math.max(...mine.map((c) => (+c.h || 75) * Math.min(1, W / (+c.w || 75)))))));
             // Round 18 (measured in Desktop 2.158, 6 Oct 2026, "P4 ring EN": a 64-high picture in a 221-high table at
             // 1280 x 720: the rows 66 apart (the picture + 2), the first 68 under the table's top; one and a half rows
@@ -1060,7 +1085,10 @@
       // titles are compared in full, not as shortened; charts by the same column are left alone, a bracket would only
       // repeat itself; the new title is fitted like any title, and the alt text carries the same name)
       const same = {}, full = (v) => (fitted.get(v.visual) || {}).ttl || tOf(v), colOf = (v) => { const p = v.visual.query.queryState.Category.projections[0]; return shown(p.displayName || p.nativeQueryRef); };
-      visuals.filter((v) => v.visual && v.visual.query && v.visual.query.queryState.Category && tOf(v)).forEach((v) => { (same[full(v)] = same[full(v)] || []).push(v); });
+      // (rc1: a chart cut to its top N keeps its "Top N: " before its title; the titles are compared without it, so two charts
+      // that differ only by their N are still told apart by their column, and the new name keeps the prefix)
+      const TOPPED = /^(Top|أعلى) \d+: /, core = (v) => full(v).replace(TOPPED, ''), prefix = (v) => (full(v).match(TOPPED) || [''])[0];
+      visuals.filter((v) => v.visual && v.visual.query && v.visual.query.queryState.Category && tOf(v)).forEach((v) => { (same[core(v)] = same[core(v)] || []).push(v); });
       // (round 22b, the review of round 22, item 10: three charts and two columns, "عدد Order Id (Channel)" twice: charts
       // of the group by the same column too take a number after it in reading order, "(Channel 2)"; nothing else
       // tells them apart, as their measure and column are the same)
@@ -1077,13 +1105,13 @@
       Object.keys(same).filter((k) => same[k].length > 1).forEach((k) => { const nth = {}, one = new Set(same[k].map(colOf)).size === 1; same[k].slice().sort(order).forEach((v) => { const c = colOf(v);
         // (the reviewer's second review, item 8: charts with the same measure and the same column kept the same title
         // and alt text: the second and later are numbered, "Total Sales by City (2)")
-        if (one) { nth[''] = (nth[''] || 0) + 1; if (nth[''] > 1) rename(v, k, k + ' (' + nth[''] + ')'); return; }
+        if (one) { nth[''] = (nth[''] || 0) + 1; if (nth[''] > 1) rename(v, k, prefix(v) + k + ' (' + nth[''] + ')'); return; }
         // (never a script the title does not have already: round 14's rule keeps an Arabic title free of English names;
         // "عدد Order Id" holds Latin letters already, so "(Region)" may follow it)
         const lat = /[A-Za-z]/, adds = (x) => (AR_LETTERS.test(c) && !AR_LETTERS.test(x)) || (lat.test(c) && !lat.test(x));
         if (!c || adds(k)) return;
         nth[c] = (nth[c] || 0) + 1;
-        rename(v, k, k + ' (' + c + (nth[c] > 1 ? ' ' + nth[c] : '') + ')'); }); });
+        rename(v, k, prefix(v) + k + ' (' + c + (nth[c] > 1 ? ' ' + nth[c] : '') + ')'); }); });
     }
     // 0.2.9, audit 6's A6-12: what each written visual shows, in the page's order, for the caller's answer: its fields as
     // Table[Field] (a measure or a column) or Sum(Table[Field]) (a column the visual sums or counts), its roles in order; the
