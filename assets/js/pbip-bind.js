@@ -197,12 +197,14 @@
   // a measure someone left behind: the whole word old, test, unused, backup or temp in its name ("Sales (old)", "Test
   // margin", "TEMP total"; not "Oldham", "Latest" or "Contest"). It is picked only when no other measure is left.
   const STALE = /(^|[^A-Za-z])(old|test|unused|backup|temp)([^A-Za-z]|$)/i;
-  const MAIN = /revenue|sales|amount|income|profit|value|bookings|orders|leads|deals|calls|visits|spend|cost|budget|الإيرادات|المبيعات|الأرباح|الطلبات|الميزانية/i;
   // 0.2.9 (O-7: an executive page got computed indicators where the user wanted the core counts and amounts; the
   // cross-review's G1, 11 Oct: ranked by the measure's shape and format, not by a list of names): a plain count or sum
-  // of one column is a core number (+3), an amount in a currency +1; the name words (MAIN, COUNTISH) only break ties (+0.5)
+  // of one column is a core number (+3), an amount in a currency +1; the name words (TIEBREAK_WORDS) only break ties (+0.5)
   const CORE = /^\s*(SUM|COUNTROWS|COUNT|COUNTA|DISTINCTCOUNT(NOBLANK)?)\s*\([^()]*\)\s*$/i;
-  const COUNTISH = /total|count|number|#|qty|quantity|units|customers|clients|tickets|إجمالي|عدد/i;
+  // The name words, one named tie-break (builder 7's audit A3-6, 11 Oct: the rank is the measure's shape first; these
+  // English and Arabic words only break ties between measures of the same shape, +0.5 each; a model in another
+  // language ranks by shape alone): money words and count words
+  const TIEBREAK_WORDS = { money: /revenue|sales|amount|income|profit|value|bookings|orders|leads|deals|calls|visits|spend|cost|budget|الإيرادات|المبيعات|الأرباح|الطلبات|الميزانية/i, count: /total|count|number|#|qty|quantity|units|customers|clients|tickets|إجمالي|عدد/i };
   const CAT = /category|product|brand|region|country|city|emirate|segment|channel|type|status|department|store|branch|source|platform|model|team|group|class|stage|agent|rep|salesperson|campaign|الفئة|المنتج|العلامة|المنطقة|المدينة|القناة|الفرع|المصدر/i;
   // (round 23, the owner's "nothing critical left": "Order Id", "Invoice No" and "Customer Code" were chart categories:
   // an identifier's last word (id, key, code, guid, sk, no, num, number) is read without regard to case; the other words
@@ -393,8 +395,10 @@
   }
   function suggest(tables, nKpis, opt) {
     const { measures, columns } = catalog(tables);
+    // (A3-6: a measure other measures build on, [Its Name] in their DAX, is a core number: a shape, in any language)
+    const usedBy = new Set(measures.filter((y) => measures.some((z) => z !== y && String(z.expr || '').includes('[' + y.m + ']'))).map((y) => y.m));
     const score = (x) => (CORE.test(x.expr || '') ? 3 : 0) + (x.amount ? 1 : 0) - (x.variant ? 4 : 0) - (x.pct ? 1 : 0)
-      + (MAIN.test(x.m) ? 0.5 : 0) + (COUNTISH.test(x.m) ? 0.5 : 0);   // (0.2.9, O-7 and the cross-review's G1: shape first, names a tiebreak)
+      + (usedBy.has(x.m) ? 1 : 0) + (TIEBREAK_WORDS.money.test(x.m) ? 0.5 : 0) + (TIEBREAK_WORDS.count.test(x.m) ? 0.5 : 0);   // (0.2.9, O-7, G1, A3-6: shape first, names a tiebreak)
     // (measures left behind, see STALE, come after every other one)
     // (a measure that shows text is never picked: round 12, #26)
     // (round 23: with a report language (opt.lang), a measure named in the other language comes after those named in
