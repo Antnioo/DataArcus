@@ -1,8 +1,23 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "0.2.9 integration" just below, then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Integration round 2" just below, then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## Integration round 2: reader + tools merged (11 Oct, from 12:56 UTC, cloud builder 5; `fix/0.2.9-gate`; not merged, no PR)
+The reviewer's routine: merge the finished branches with real merges, both sides' intent kept, one full run after each.
+Not merged yet (the reviewer sends each when ready): design (builder 10), writer (builder 11), checks, custom visuals.
+| Merge | Commit | Conflicts, resolved keeping both sides |
+|---|---|---|
+| `fix/0.2.9-reader` at `4bc9a2f` (builder 6: audit 1, audit 5, R1-R9) | `0ad0dd5` | pbip-bind: the reader's one TMDL parse (A1-8, no parseTmdl/relsOfTmdl; a folder through tmdl-model.js), A1-6 (no type = unknown), displayFolder, with the picker's side tables, format facts and markCalendars in fromTmsl; model.mjs: the reader's modelRead (calendars marked by fromTmsl); server: the picker's options and listFormats with the reader's takenNames; theme-generator loads field-meaning, tmdl-model, pbip-bind; new `?v=20261011s` stamps |
+| `feat/0.3.0-arabic-twin` at `d131e66` (builder 9: twin T2-T9, compiler A3-4 and A6-11, audit 6's tools block: gate holes A6-1/2/3/5, atomic writes, files.mjs, caps) | `6e5d69b` | arabic-twin.mjs: the twin branch's version (reading block's locate/readJson, safeId, date tables, writeTree) with the reader's R1 read (readOriginal: strictFiles + inventory; copies through readBytes); server fail(): wordOf and nameOut |
+| fix found by the full run | `7d379e4` | safe() handed fail() failText's string, so the reader's coded errors lost their words (read_model by an unknown name): a coded error now goes to wordOf |
+
+**Counts:** after the reader: `npm test` **973** + reader 36 + d 21 + e 21 + f 16, golden PASS; website 17 suites PASS.
+After the twin and tools: **1033** + 36 + 21 + 21 + 16, golden PASS (11 tasks, no move) after `7d379e4` (the first run:
+1 of 1033 red, the fix above); website 17 suites PASS; `check-min` (57), `csp`, `test-site-config`, `test-svg-kpi`
+(854) PASS. The startup instructions are **2,493 characters** (cap 2,500): builder 10's A7-4 (every rule from one source)
+must keep them under it.
 
 ## 0.2.9 integration (11 Oct, cloud builder 5; `fix/0.2.9-gate` is the integration branch for tonight's laptop proof; not merged, no PR)
 The reviewer's routine (11 Oct 07:36 UTC): merge checks, reader and the Arabic twin into this branch, then fix the gate
