@@ -11,7 +11,7 @@
     mirrorChart, mixHex, namesOf, num, obj, orderHelper, orderedBy, pfLiteral, proj, q, resource, rnd,
     rowLabelDax, rowLabelOf, shown, sorted, str, tableFields, timeAxisPlan, tproj
   } = Q;
-  const { barNameShare, columnRoom, tableFit, textWidth } = Z;
+  const { barNameShare, columnRoom, fieldRoom, tableFit, textWidth } = Z;
 
   // ---------- the slots ----------
   // Round 23 (the owner's "nothing critical left"; the reviewer's part 7 review, 2: shared by the website and the MCP):
@@ -590,7 +590,7 @@
           // Round 22b (the review of round 22, item 8): two fields wider than the box even at 8pt are told. (The fit is
           // not redone at this size: the loop above already tried every size down to 8 and kept the most fields, so
           // this only runs where the two alone are kept, and no third fits at any size: checked on 30,000 tables)
-          { const need = (t2) => tf.kept.reduce((a2, f) => a2 + columnRoom(tproj(f), t2, font), 0); let t3 = tableText || T0;
+          { const need = (t2) => tf.kept.reduce((a2, f) => a2 + fieldRoom(f, t2, font), 0); let t3 = tableText || T0;
             while (t3 > 8 && need(t3) > s.w) t3 = Math.ceil(t3) - 1;
             if (t3 < (tableText || T0)) tableText = t3;
             if (need(t3) > s.w) tableWide.push({ page: pg.name || base, width: s.w, need: Math.ceil(need(t3)) }); }
@@ -762,7 +762,7 @@
               if (t2 >= 8 && need(0, t2) <= s.h) { const from = T; T = t2; (s.kind === 'matrix' ? ['values', 'columnHeaders', 'rowHeaders', 'total'] : ['values', 'columnHeaders', 'total']).forEach((k) => { visual.objects = visual.objects || {}; const e = (visual.objects[k] || [])[0]; if (e && e.properties) e.properties.fontSize = num(t2); else visual.objects[k] = obj({ fontSize: num(t2) }); });
                 if (smallEntry) Object.assign(smallEntry, { size: t2, rows: true }); else tableSmaller.push({ page: pg.name || base, size: t2, from, rows: true }); }
             }
-            if (need(1) > s.h) { visual.objects = visual.objects || {}; visual.objects.grid = [{ properties: { rowPadding: num(0) } }]; if (need(0) > s.h) tableRows.push({ page: pg.name || base, field: label(tf), rows: n, need: Math.ceil(need(0)), h: s.h }); }
+            if (need(1) > s.h) { visual.objects = visual.objects || {}; visual.objects.grid = [{ properties: Object.assign(((visual.objects.grid || [])[0] || {}).properties || {}, { rowPadding: num(0) }) }]; if (need(0) > s.h) tableRows.push({ page: pg.name || base, field: label(tf), rows: n, need: Math.ceil(need(0)), h: s.h }); }
           }
         }
         // the calendar order's helper column (see inOrder): its text in the card colour and as narrow as Desktop allows
@@ -811,7 +811,8 @@
             // 1280 x 720: the rows 66 apart (the picture + 2), the first 68 under the table's top; one and a half rows
             // showed): a table picture is no taller than lets four rows and the total show, 24 at least.
             const H = Math.min(H0, Math.max(24, Math.floor((s.h - 68 * pg.page.h / 720) / 5) - 2));
-            visual.objects = Object.assign(visual.objects || {}, { grid: [{ properties: { imageHeight: num(H), imageWidth: num(W) } }] });
+            // (0.2.9, audit 3's seen B-23: into the table's one grid entry, which may hold the tight rows already)
+            visual.objects = visual.objects || {}; visual.objects.grid = [{ properties: Object.assign(((visual.objects.grid || [])[0] || {}).properties || {}, { imageHeight: num(H), imageWidth: num(W) }) }];
             svgSizes[pageIndex] = { w: W, h: H, design: wide, capped: W < wide };
             // Round 18 (the owner's answer, 6 Oct 2026: "yes drop the number under 40"; a 28-high ring's number could not
             // be read in Desktop): a ring drawn under 40 high takes its version without the number inside (the server's

@@ -5,7 +5,7 @@
 (function (root) {
   'use strict';
   const Q = (typeof module !== 'undefined' && module.exports ? require('./pbip-query.js') : root.DAPbipQuery);
-  const { isTextField, isValue, tproj } = Q;
+  const { catKind, isTextField, isValue, namesOf, tproj } = Q;
   // The width of one line of text in page units (measured in Power BI Desktop 2.158, DESKTOP-TESTS.md round 10): the
   // width depends on the letters, not on their count ("Executive summary" 0.49 em a character, "Reset filters" 0.38),
   // so Latin text is added up from Segoe UI's letter widths (within 5% of the measured widths, on the safe side), bold
@@ -41,11 +41,15 @@
   // its widest value, + 10 (a cell's padding is not measured yet: the measured button rule, 5 a side, stands in). A
   // measure's widest value is taken as nine digits with separators ("888,888,888", 0.54 em a digit and 0.21 a
   // separator, measured in round 10); a column's values are not known to the writer, so 12 letters at 0.55 em.
-  const columnRoom = (p, t, font) => {
+  // (0.2.9, audit 3's seen B-06: names, the column's values where they are known, a day or month name's family: its
+  // widest name, not 12 letters)
+  const columnRoom = (p, t, font, names) => {
     const head = textWidth(p.displayName || p.nativeQueryRef || '', t, true, font);
-    const value = p.field && (p.field.Measure || p.field.Aggregation) ? (9 * 0.54 + 2 * 0.21) * t * 4 / 3 : 12 * 0.55 * t * 4 / 3;
+    const value = p.field && (p.field.Measure || p.field.Aggregation) ? (9 * 0.54 + 2 * 0.21) * t * 4 / 3 : names && names.length ? Math.max(...names.map((x) => textWidth(x, t, false, font))) : 12 * 0.55 * t * 4 / 3;
     return Math.ceil(Math.max(head, value) + 10);
   };
+  // a bound field's room in a table: its projection's, with its known names (a day or month name; catKind, namesOf)
+  const fieldRoom = (f, t, font) => { const k = isTextField(f) && catKind(f), names = k && (k.kind === 'day' || k.kind === 'month') ? namesOf(f, k.kind) : null; return columnRoom(tproj(f), t, font, names); };
   // 0.2.9 part 2 (O-4) and the cross-review's G8: the share of a bar chart's width its category names get
   // (categoryAxis.maxMarginFactor). Measured on the laptop (REPORT-FIXES-LAB B1/B2, Desktop 2.158.1304, 10 Oct): a chart
   // 508 wide on a 1080-high page cut names at about 10 characters with the default 25; 40 held about 20, 50 about 25.
@@ -61,7 +65,7 @@
   const tableFit = (fields, width, t, font) => {
     const fs = (fields || []).filter(Boolean);
     if (fs.length <= 2) return { kept: fs, leftOut: [] };
-    const room = (f) => columnRoom(tproj(f), t, font), must = [fs.find(isTextField), fs.find(isValue)].filter(Boolean);
+    const room = (f) => fieldRoom(f, t, font), must = [fs.find(isTextField), fs.find(isValue)].filter(Boolean);
     let used = must.reduce((a, f) => a + room(f), 0), full = false;
     const kept = [], leftOut = [];
     fs.forEach((f) => { if (must.includes(f)) return void kept.push(f); if (!full && used + room(f) <= width) { used += room(f); kept.push(f); } else { full = true; leftOut.push(f); } });
@@ -166,7 +170,7 @@
   }
 
   const api = {
-    LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, tableFit, make
+    fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, tableFit, make
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbipSizing = api;
 })(typeof self !== 'undefined' ? self : this);
