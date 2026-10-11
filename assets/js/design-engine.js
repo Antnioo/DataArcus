@@ -322,7 +322,9 @@
   // Power BI's default text sizes (title 12, label 10, callout 28) are made for a 1280 × 720 page. On a bigger page
   // everything looks small, so every size grows with the page: × 1.5 on 1920 × 1080, unchanged on 1280 × 720.
   // Power BI rejects the whole theme when one font size is outside 8-60 (tested in Desktop), so very big or small pages stop there
-  const fs = (n, l) => Math.min(60, Math.max(8, Math.round(n * page(l).s * 2) / 2));
+  // sizeAt: a base size on a page h high (the grid is 720 high), in half points within 8-60
+  const sizeAt = (n, h) => Math.min(60, Math.max(8, Math.round(n * (h / 720) * 2) / 2));
+  const fs = (n, l) => sizeAt(n, page(l).h);
   const textSizes = (d) => {
     const l = d.layout, f = (n) => fs(n, l);
     const merge = (t, extra) => ({ [t]: { '*': Object.assign({ border: borderStyle(d.ui, l), dropShadow: shadowStyle(l) }, extra) } });
@@ -333,6 +335,25 @@
       merge('slicer', { header: [{ textSize: f(10) }], items: [{ textSize: f(10) }] }),
       merge('card', { labels: [{ fontSize: f(28) }], categoryLabels: [{ fontSize: f(10) }] }),
       merge('multiRowCard', { cardTitle: [{ fontSize: f(12) }], dataLabels: [{ fontSize: f(18) }], categoryLabels: [{ fontSize: f(10) }] }));
+  };
+  // The visual text sizes textSizes writes, each its base on the 720 grid: a theme is the engine's when every one of
+  // them is its base at one page height (0.2.9, the tools audit's A6-10: the MCP server copied these sizes and the
+  // rounding to find a theme's page; an engine change would have broken it without a word)
+  const TEXT_BASES = [['tableEx', 'values', 'fontSize', 10], ['slicer', 'header', 'textSize', 10], ['card', 'labels', 'fontSize', 28], ['multiRowCard', 'cardTitle', 'fontSize', 12], ['multiRowCard', 'dataLabels', 'fontSize', 18], ['pivotTable', 'rowHeaders', 'fontSize', 10]];
+  // The page height a theme's text sizes were made for: { h } (the middle of the heights that give all its sizes), or
+  // null for a theme the engine did not make (its sizes are its author's)
+  const themeScaleOf = (theme) => {
+    const vs = (theme && theme.visualStyles) || {}, at = (v, k, prop) => +((((vs[v] || {})['*'] || {})[k] || [{}])[0] || {})[prop];
+    const got = TEXT_BASES.map(([v, k, prop]) => at(v, k, prop));
+    if (!(got[0] > 0)) return null;
+    const fits = (h) => TEXT_BASES.every(([, , , n], i) => got[i] === sizeAt(n, h));
+    const hs = []; for (let h = 200; h <= 4400; h++) if (fits(h)) hs.push(h);
+    return hs.length ? { h: hs[Math.floor(hs.length / 2)] } : null;
+  };
+  // A copy of a theme with every text size times r, in half points within 8-60 (the theme given is not changed)
+  const scaleTheme = (theme, r) => {
+    const walk = (o) => (Array.isArray(o) ? o.map(walk) : o && typeof o === 'object' ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, (k === 'fontSize' || k === 'textSize') && typeof v === 'number' ? Math.min(60, Math.max(8, Math.round(v * r * 2) / 2)) : walk(v)])) : o);
+    return walk(theme);
   };
   // Chart style: theme-wide defaults, written only to the visual types whose theme schema (2.157) has that
   // setting, because Power BI rejects the whole theme when one property is unknown. "auto" writes nothing.
@@ -624,7 +645,7 @@
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate, calmPalette,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    fs, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    fs, sizeAt, TEXT_BASES, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;
