@@ -4,6 +4,13 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## 0.2.9 writer block (11 Oct, cloud builder 11; branch `fix/0.2.9-writer` from `fix/0.2.9-gate` `d2300f9`; not merged, no PR)
+The full report: `mcp/work/0.2.9-writer.md`. Done: A3-10 (`daxNames`), A3-11 (shown text without format characters), A3-7 and A3-8
+(writer side: the picker's `kind`/`rows`/`family`/`time` read when given, names measured by family), A3-9 (JSDoc contract, `checkBuild`,
+typed page filters), A3-12 (`build` split into `pbip-query.js`, `pbip-sizing.js`, `pbip-page.js`, `pbip-notes.js`; byte-identical on 970
+inputs), and the audit's writer items B-23 and B-06. `npm test` 939 -> 967, golden unchanged. **Not done: A2-3 (item 7)**, blocked on
+`fix/0.2.9-design` (not pushed). Next: the reviewer reviews; the laptop proves W1-W8 of the report; A2-3 after builder 10's push.
+
 ## 0.2.9 integration (11 Oct, cloud builder 5; `fix/0.2.9-gate` is the integration branch for tonight's laptop proof; not merged, no PR)
 The reviewer's routine (11 Oct 07:36 UTC): merge checks, reader and the Arabic twin into this branch, then fix the gate
 block's findings of builder 7's cross-review (`mcp/work/0.2.9-crossreview.md`, from `fix/0.2.9-checks`) at the root.
