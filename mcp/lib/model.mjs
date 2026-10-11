@@ -51,7 +51,9 @@ const SCREEN = [
   [/(نفذ|شغل)\s+(ال)?(امر|اوامر|سكربت|برنامج|كود|تالي)/, 'asks to run something'],
   [/(احذف|امسح|ازل)\s+(ال)?(نموذج|ملفات|ملف|تقرير|تقارير|بيانات|جداول|جدول)/, 'asks to delete something'], [/لا\s+تخبر/, 'asks to hide something from the user']
 ];
-const plainArabic = (s) => String(s).replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[\u0622\u0623\u0625]/g, '\u0627');
+// (A5-5, audit 5: one zero-width character, a soft hyphen or full-width letters got past the screen: the text is
+// screened with format and control characters removed and compatibility forms folded, NFKC; it is shown as visible() writes it)
+const plainArabic = (s) => String(s).normalize('NFKC').replace(/[\p{Cf}\p{Cc}]/gu, '').replace(/[\u064B-\u065F\u0670\u0640]/g, '').replace(/[\u0622\u0623\u0625]/g, '\u0627');
 export const LONG_NAME = 120;
 // why a name or text reads like an instruction (empty when it doesn't); a long one is said too
 export const screenWhy = (s) => { const t = plainArabic(s), why = [...new Set(SCREEN.filter(([re]) => re.test(t)).map(([, w]) => w))]; if (String(s).length > LONG_NAME) why.push(`longer than ${LONG_NAME} characters (${String(s).length})`); return why; };
