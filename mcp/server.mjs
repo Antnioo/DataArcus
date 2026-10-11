@@ -1290,6 +1290,7 @@ server.registerTool('create_arabic_twin', {
     labels: z.record(z.string().max(200), z.string().max(200)).optional().describe('The Arabic texts the user approved, by the text ids of the plan ({ "page:<id>": "...", "title:<page>/<visual>": "...", "field:<queryRef>": "..." }). A text without a label stays as it is'),
     timeRightToLeft: z.boolean().default(true).describe('Charts over time (months, dates) run right to left like the rest of the page (default); false keeps time left to right. The user\'s choice'),
     arabicMonth: z.boolean().default(true).describe('Offer (and after the go write) the TMDL script that adds an Arabic month name column to the date table; the user applies it in TMDL view'),
+    mirrorPicturePages: z.boolean().default(false).describe('A page drawn on a background picture is kept left to right by default (Power BI has no setting that mirrors the picture, so mirrored visuals would leave its panels); true mirrors such pages anyway. The plan names them: ask the user'),
     planId: planIdInput
   }, annotations: ADDS
 }, safe(async (a) => {
@@ -1300,7 +1301,7 @@ server.registerTool('create_arabic_twin', {
   if (!P.answer.twin.nameFree) throw new Error(`Nothing was written: "${P.answer.twin.report}" or "${P.answer.twin.pbip}" is already there. DataArcus never writes over a file: rename or move the old twin, then ask again.`);
   const writes = [`the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original (${P.answer.pages.length} pages mirrored, ${P.answer.labels.given} Arabic texts as approved); the original is not changed`]
     .concat(P.month.offered ? [`the TMDL script "${P.month.scriptAfterGo}" next to the project (the Arabic month column); never applied: the user applies it in TMDL view`] : []);
-  return text(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', key, writes, { labels: P.labels, timeRightToLeft: a.timeRightToLeft !== false, arabicMonth: a.arabicMonth !== false })) }));
+  return text(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', key, writes, { labels: P.labels, timeRightToLeft: a.timeRightToLeft !== false, arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true })) }));
 }));
 
 server.registerTool('approve_plan', {

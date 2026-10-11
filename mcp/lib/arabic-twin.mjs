@@ -101,8 +101,29 @@ function modelOf(R, loc) {
   try { return { m: loadModel(relRoot(path.resolve(loc.dir, String(ref.path)))) }; } catch (e) { return { m: null, why: 'the model that definition.pbir names next to the report could not be read (a model folder saved from Power BI Desktop is needed there; the error is not repeated: it holds the file\'s own path)' }; }
 }
 const isDateCol = (c) => /^date(time)?$/i.test(String(c.dataType || ''));
-// the model's date tables: marked as one, or named like a calendar with a date column
-const dateTablesOf = (m) => (m ? (m.tables || []).filter((t) => (t.date || /calendar|date|تقويم|تاريخ/i.test(t.name)) && (t.columns || []).some(isDateCol)).map((t) => t.name) : []);
+// (T-5 of the laptop's rc.2 twins: "the model has no date table" on a table spelled "Calender" and on one named
+// "Calendar" but not marked: the date table was found by its name and mark, and a DAX table's columns carry no type)
+// A date table by its SHAPE, never its name: a date column (typed date, or untyped in a table built with CALENDAR or
+// CALENDARAUTO, which gives one row a day) and a month and a year column (by their DAX, or their names). Read from the
+// model's own definitions (m.tmsl), where an untyped column is undefined, not guessed.
+const MONTHISH = /\bmonth|الشهر|شهر/i, YEARISH = /\byear|السنة|سنة/i;
+function dateTableShapes(m) {
+  if (!m) return [];
+  const raw = (m.tmsl && m.tmsl.model && Array.isArray(m.tmsl.model.tables)) ? m.tmsl.model.tables : [];
+  return (m.tables || []).map((t) => {
+    const r = raw.find((x) => x && x.name === t.name) || {}, rc = Array.isArray(r.columns) ? r.columns : [];
+    const expr = (Array.isArray(r.partitions) ? r.partitions : []).map((p) => (p && p.source && typeof p.source.expression === 'string' ? p.source.expression : Array.isArray(p && p.source && p.source.expression) ? p.source.expression.join('\n') : '')).join('\n');
+    const calendar = /\bCALENDAR(AUTO)?\s*\(/i.test(expr);
+    const typeOf = (c) => { const x = rc.find((y) => y && y.name === c.name); return x && x.dataType ? String(x.dataType) : x ? '' : String(c.dataType || ''); };
+    const dates = (t.columns || []).filter((c) => /^date(time)?$/i.test(typeOf(c)) || (calendar && !typeOf(c) && /^\[?date\]?$/i.test(String((rc.find((y) => y && y.name === c.name) || {}).sourceColumn || c.name))));
+    const text = expr + ' ' + (t.columns || []).map((c) => c.name).join(' ');
+    const shaped = dates.length && MONTHISH.test(text) && YEARISH.test(text);
+    return shaped ? { name: t.name, marked: !!t.date, calendar, dates: dates.map((c) => c.name) } : null;
+  }).filter(Boolean);
+}
+// the date tables (by shape) and every date column of the model, "Table.Column" (a continuous axis: T-2)
+const dateTablesOf = (m) => dateTableShapes(m).map((t) => t.name);
+const dateColumnsOf = (m) => (m ? [...new Set([].concat(...(m.tables || []).map((t) => (t.columns || []).filter(isDateCol).map((c) => t.name + '.' + c.name)), ...dateTableShapes(m).map((t) => t.dates.map((c) => t.name + '.' + c))))] : []);
 
 // ---- the Arabic month column: a TMDL script offered when the model has one date table and no Arabic month ----
 const tmdlName = (n) => (/^[A-Za-z_][A-Za-z0-9_]*$/.test(n) ? n : "'" + String(n).replace(/'/g, "''") + "'");
@@ -110,15 +131,19 @@ const daxCol = (t, c) => "'" + String(t).replace(/'/g, "''") + "'[" + String(c).
 function monthOffer(model, loc) {
   if (!model.m) return { offered: false, why: model.why };
   const m = model.m, isDate = isDateCol;
-  let cands = (m.tables || []).filter((t) => t.date && (t.columns || []).some(isDate));
-  if (!cands.length) cands = (m.tables || []).filter((t) => /calendar|date|تقويم|تاريخ/i.test(t.name) && (t.columns || []).some(isDate));
-  if (cands.length !== 1) return { offered: false, why: cands.length ? `the model has ${cands.length} date tables: say which one, and the column is a model step done by hand` : 'the model has no date table (a table marked as date table, or named like a calendar, with a date column)' };
+  // (T-5: by shape; when several, the one marked as the date table, then the one built with CALENDAR)
+  const shapes = dateTableShapes(m);
+  let pick = shapes; if (pick.length > 1 && pick.some((x) => x.marked)) pick = pick.filter((x) => x.marked); if (pick.length > 1 && pick.some((x) => x.calendar)) pick = pick.filter((x) => x.calendar);
+  const cands = pick.map((x) => Object.assign({}, (m.tables || []).find((t) => t.name === x.name), { shapeDates: x.dates }));
+  if (cands.length !== 1) return { offered: false, why: cands.length ? `the model has ${cands.length} date tables: say which one, and the column is a model step done by hand` : 'the model has no date table (a table with a date column and month and year columns; its name and its mark do not matterr, with a date column)' };
   const t = cands[0], cols = t.columns || [];
   const has = (re) => cols.find((c) => re.test(String(c.name)));
   if (has(/^month name \(arabic\)$/i) || cols.some((c) => /(arabic|عربي|\bAR\b)/i.test(c.name) && /(month|شهر)/i.test(c.name)) || has(/^(اسم\s*)?الشهر$/)) return { offered: false, why: `the date table "${visible(t.name)}" has an Arabic month column already` };
   const raw = ((m.tmsl && m.tmsl.model && m.tmsl.model.tables) || []).find((x) => x.name === t.name) || {};
-  const date = (raw.columns || []).find((c) => c.name && isDate(c) && c.isKey) || cols.find(isDate);
-  const num = cols.find((c) => /^int64$/i.test(String(c.dataType || '')) && /^(month\s*(number|no\.?|num|nr|of year|index)|monthnum(ber)?|month)$/i.test(String(c.name).trim()));
+  const date = (raw.columns || []).find((c) => c.name && isDate(c) && c.isKey) || cols.find(isDate) || cols.find((c) => (t.shapeDates || []).includes(c.name));
+  // the month number to sort by: an integer column named like one (an untyped DAX column of that name counts: its DAX makes it a number)
+  const typedRaw = (c) => { const x = (raw.columns || []).find((y) => y && y.name === c.name); return x ? String(x.dataType || '') : String(c.dataType || ''); };
+  const num = cols.find((c) => /^(int64|)$/i.test(typedRaw(c)) && /^(month\s*(number|no\.?|num|nr|of year|index)|monthnum(ber)?|month)$/i.test(String(c.name).trim()));
   const calculated = (raw.partitions || []).some((p) => p.source && p.source.type === 'calculated');
   const lines = ['createOrReplace', '', '\tref table ' + tmdlName(t.name), ''];
   if (!num) lines.push(`\t\tcolumn ${tmdlName(MONTH_SORT)} = MONTH ( ${daxCol(t.name, date.name)} )`, '\t\t\tdataType: int64', '\t\t\tisHidden', '\t\t\tsummarizeBy: none', '');
@@ -139,14 +164,19 @@ export function planTwin(a) {
   const loc = locate(a.path), R = readOriginal(loc);
   const twinDir = path.join(loc.project, loc.base + ' AR.Report'), twinPbip = path.join(loc.project, loc.base + ' AR.pbip');
   const free = nothingAt(twinDir) && nothingAt(twinPbip);
-  const texts = textsOf(R), ids = new Set(texts.map((t) => t.id)), model = modelOf(R, loc), dateTables = dateTablesOf(model.m);
+  const texts = textsOf(R), ids = new Set(texts.map((t) => t.id)), model = modelOf(R, loc), dateTables = dateTablesOf(model.m), dateColumns = dateColumnsOf(model.m);
+  // (T-1: Power BI has no setting that mirrors a page's background picture, so a page drawn on one stays left to right
+  // unless the user asks to mirror it anyway: its visuals would leave the picture's panels)
+  const pictureIds = new Set(R.pages.filter((pg) => Mirror.pageHasPicture(pg.page)).map((pg) => pg.id)), mirrorPictures = a.mirrorPicturePages === true;
+  const keepLtr = (pg) => pictureIds.has(pg.id) && !mirrorPictures;
   const given = a.labels || {}, labels = {}, unknown = [];
   Object.keys(given).forEach((k) => { if (ids.has(k)) labels[k] = cleanLabel(given[k]); else unknown.push(visible(k).slice(0, 160)); });
   texts.forEach((t) => { if (labels[t.id] != null) t.label = labels[t.id]; });
   // what mirrors, counted per kind, and what cannot
   const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [] };
   const pages = R.pages.map((pg) => {
-    const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false, dateTables });
+    if (keepLtr(pg)) return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length, leftToRight: 'drawn on a background picture: kept left to right' };
+    const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false, dateTables, dateColumns });
     Object.entries(r.kinds).forEach(([k, n]) => { kinds[k] = (kinds[k] || 0) + n; });
     pg.visuals.forEach((v) => { const k = Mirror.kindOf(v.json); if (where[k]) where[k].push(safeName(pg.id) + '/' + safeName(v.json.name) + (k === 'other' ? ' (' + safeName(v.json.visual.visualType) + ')' : '')); });
     return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length };
@@ -158,17 +188,26 @@ export function planTwin(a) {
   if (where.slicer.length) cannot.push({ what: 'slicer items', why: 'moved only: the items keep Power BI\'s own alignment (no setting was proven)', where: where.slicer.slice(0, 30) });
   if (where.other.length) cannot.push({ what: 'other visuals (waterfall, scatter and kinds without a proven setting)', why: 'moved only: no right-to-left setting is proven for these, so nothing inside them is changed; look at them in the twin', where: where.other.slice(0, 30) });
   if (where.matrix.length) cannot.push({ what: 'matrix rows', why: 'a matrix keeps its row headers at the left (a hierarchy keeps its order); only its values are reversed', where: where.matrix.slice(0, 30) });
+  if (pictureIds.size) cannot.push({ what: 'pages drawn on a background picture', why: mirrorPictures ? 'mirrored as asked (mirrorPicturePages), but the picture is not: its panels stay where they are, so the visuals no longer sit on them' : 'kept left to right: Power BI has no setting that mirrors a page picture, and the visuals would leave its panels. To mirror them anyway (the picture stays as it is), ask again with mirrorPicturePages true', where: [...pictureIds].map((x) => safeName(x)).slice(0, 30) });
+  // (T-4: data bars inside a table or a matrix have no proven direction setting)
+  if (R.pages.some((pg) => pg.visuals.some((v) => ['table', 'matrix'].includes(Mirror.kindOf(v.json))))) cannot.push({ what: 'data bars inside tables and matrices', why: 'they keep their direction (no right-to-left setting is proven for them); the columns themselves are reversed' });
   cannot.push({ what: 'Power BI\'s own words', why: '"All", "Select all", "Total", "(Blank)", the visual header menu, the filter pane, date and number formats follow the viewer\'s Power BI language and regional settings, not the report: an Arabic viewer sees them in Arabic' });
   cannot.push({ what: 'data values', why: 'category names, legend entries, slicer items and month names come from the model: Arabic columns are a model step (see arabicMonth)' });
   cannot.push({ what: 'the phone layout', why: R.phone ? 'copied as it is (a phone shows one column; the phone layout is not mirrored)' : 'the report has none' });
+  const checkInTwin = [];
+  const offAxis = (v) => { const vis = isObj(v.json) && isObj(v.json.visual) ? v.json.visual : {}, es = isObj(vis.objects) && Array.isArray(vis.objects.categoryAxis) ? vis.objects.categoryAxis : []; return es.some((e) => isObj(e) && isObj(e.properties) && isObj(e.properties.show) && isObj(e.properties.show.expr) && isObj(e.properties.show.expr.Literal) && e.properties.show.expr.Literal.Value === 'false'); };
+  const pairs = R.pages.filter((pg) => !keepLtr(pg)).flatMap((pg) => pg.visuals.filter((v) => Mirror.kindOf(v.json) === 'bar' && offAxis(v)).map((v) => safeName(pg.id) + '/' + safeName(v.json.name)));
+  if (pairs.length) checkInTwin.push({ what: 'bar lists with their names hidden', why: 'the names are probably another visual beside the bars; both are mirrored, and the bars grow from the right: look that each pair still sits together in the twin', where: pairs.slice(0, 30) });
+  if (!model.m) { const t = R.pages.filter((pg) => !keepLtr(pg)).flatMap((pg) => pg.visuals.filter((v) => Mirror.kindOf(v.json) === 'column').map((v) => safeName(pg.id) + '/' + safeName(v.json.name))); if (t.length) checkInTwin.push({ what: 'charts whose axis may be a date', why: 'the model could not be read, so a continuous date axis can\'t be told from a category: such a chart may stay left to right', where: t.slice(0, 30) }); }
   const month = a.arabicMonth === false ? { offered: false, why: 'not asked (arabicMonth false)' } : monthOffer(model, loc);
   const { script, howToApply, ...monthShown } = month;
   const ref = byPathOf(R.pbir);
-  return { loc, R, labels, texts, month, dateTables, answer: capAnswer({
+  return { loc, R, labels, texts, month, dateTables, dateColumns, pictureIds, keepLtr, answer: capAnswer({
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
-    pages, mirrors, cannot,
+    pages, mirrors, cannot, ...(checkInTwin.length ? { checkInTwin } : {}),
+    ...(pictureIds.size ? { picturePages: [...pictureIds].map((x) => ({ page: safeName(x), what: mirrorPictures ? 'mirrored as asked; its picture is not' : 'kept left to right (its background picture can\'t be mirrored); mirrorPicturePages true mirrors it anyway' })) } : {}),
     keptForNavigation: 'Page ids, visual names, bookmark names, page and bookmark links are kept: navigation and bookmarks work in the twin without rewiring.',
     timeRightToLeft: a.timeRightToLeft !== false ? 'yes: charts over time run right to left like the rest of the page (the user can choose false: time stays left to right)' : 'no: charts over time keep left to right (the user\'s choice)',
     texts: texts.slice(0, TEXTS_MAX).map(({ rawId, ...t }) => t), ...(texts.length > TEXTS_MAX ? { textsNotListed: texts.length - TEXTS_MAX } : {}),
@@ -193,13 +232,13 @@ export function writeTwin(a, plan) {
   const d = plan.data || {};
   const asked = a.labels ? sortKeys(planTwin(Object.assign({}, a, { labels: a.labels })).labels) : null;
   if (asked && JSON.stringify(asked) !== JSON.stringify(sortKeys(d.labels))) throw new Error('Nothing was written: these labels differ from the labels of the approved plan. Show the user the new labels, get a new plan id for them (call this tool without planId), and wait for the user\'s go.');
-  const P = planTwin({ path: a.path, labels: d.labels || {}, timeRightToLeft: d.timeRightToLeft, arabicMonth: d.arabicMonth });
+  const P = planTwin({ path: a.path, labels: d.labels || {}, timeRightToLeft: d.timeRightToLeft, arabicMonth: d.arabicMonth, mirrorPicturePages: d.mirrorPicturePages });
   const { loc, R } = P, labels = rawLabels(P.texts, P.labels);
   const twinDir = path.join(loc.project, loc.base + ' AR.Report'), twinPbip = path.join(loc.project, loc.base + ' AR.pbip');
   if (!nothingAt(twinDir) || !nothingAt(twinPbip)) throw new Error(`Nothing was written: "${path.basename(nothingAt(twinDir) ? twinPbip : twinDir)}" is already there. DataArcus never writes over a file: rename or move the old twin, then ask again.`);
   real(twinDir); real(twinPbip);
   // everything is built in memory first; then written, each file new
-  const out = new Map(), opts = { timeRightToLeft: d.timeRightToLeft !== false, dateTables: P.dateTables };
+  const out = new Map(), opts = { timeRightToLeft: d.timeRightToLeft !== false, dateTables: P.dateTables, dateColumns: P.dateColumns };
   let applied = 0;
   R.pages.forEach((pg) => {
     // (a page.json that is not an object is copied as it is: there is nothing to label or mirror in it)
@@ -208,7 +247,8 @@ export function writeTwin(a, plan) {
       if (labels['page:' + pg.id] != null) { page.displayName = labels['page:' + pg.id]; applied++; }
       out.set(pg.rel, json(page));
     }
-    const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), opts);
+    // (T-1: a page drawn on a picture is copied left to right unless asked; its texts still take the approved labels)
+    const r = P.keepLtr(pg) ? { visuals: pg.visuals.map((v) => JSON.parse(JSON.stringify(v.json))) } : Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), opts);
     r.visuals.forEach((vj, i) => { applied += Mirror.labelVisual(pg.id, vj, labels); out.set(pg.visuals[i].rel, json(vj)); });
   });
   R.bookmarks.forEach((b) => { if (labels['bookmark:' + b.json.name] != null) { out.set(b.rel, json(Object.assign({}, b.json, { displayName: labels['bookmark:' + b.json.name] }))); applied++; } });

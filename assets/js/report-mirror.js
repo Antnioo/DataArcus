@@ -144,6 +144,13 @@
         q.sortDefinition = { sort: [{ field: clone(c0.field), direction: 'Descending' }], isDefaultSort: true };
         changes.push('sort');
       }
+      // (T-2 of the laptop's rc.2 twins: a continuous date axis ignores the sort, so time stayed left to right; on such
+      // an axis categoryAxis.invertAxis is honoured: round 13, "2027 at the left, 2022 at the right". Continuous: the
+      // category is a date column of the model (opts.dateColumns, "Table.Column") and the axis is not set Categorical)
+      const cf = c0 && isObj(c0.field) && isObj(c0.field.Column) ? c0.field.Column : null;
+      const cref = cf && isObj(cf.Expression) && isObj(cf.Expression.SourceRef) ? cf.Expression.SourceRef.Entity + '.' + cf.Property : null;
+      const axisType = (entries(v.objects, 'categoryAxis') || []).map((e) => strOf((e.properties || {}).axisType)).find((x) => x != null);
+      if (cref && (o.dateColumns || []).includes(cref) && axisType !== 'Categorical' && o.timeRightToLeft !== false) { plainEntry(objects(), 'categoryAxis').properties.invertAxis = mk('true'); changes.push('time axis'); }
     }
     // legends: a legend entry, or a legend role (Series, Legend) in the query
     // (charts only: the labs saw it there; a donut's or a map's legend is left as it is)
@@ -194,6 +201,15 @@
       (entries(v.objects, 'text') || []).forEach((e) => { if (strOf((e.properties || {}).horizontalAlignment) === 'left') { e.properties.horizontalAlignment = str('right'); changes.push('text'); } });
       (entries(v.objects, 'icon') || []).forEach((e) => { if (strOf((e.properties || {}).placement) === 'left') { e.properties.placement = str('right'); changes.push('icon'); } });
     }
+    // (T-3 of the laptop's rc.2 twins: a text kept clear of an icon by its container's padding on one side ran under the
+    // icon once mirrored) the container's left and right padding swap sides with everything else
+    (entries(v.visualContainerObjects, 'padding') || []).forEach((e) => {
+      if (!isObj(e.properties) || (e.properties.left === undefined && e.properties.right === undefined)) return;
+      const l = e.properties.left, r = e.properties.right;
+      if (r === undefined) delete e.properties.left; else e.properties.left = r;
+      if (l === undefined) delete e.properties.right; else e.properties.right = l;
+      changes.push('padding');
+    });
     // titles: an existing one right-aligned unless centred; a chart or table without one gets the alignment (its
     // default title is drawn at the left); visuals that only move get nothing
     const titles = entries(v.visualContainerObjects, 'title');
@@ -255,6 +271,8 @@
     return n;
   }
 
-  const api = { kindOf, isCustom, KIND_WHAT, mirrorVisual, mirrorPage, textsOfVisual, labelVisual, round };
+  // a page drawn on a picture (T-1): Power BI has no setting that mirrors a page's background image
+  const pageHasPicture = (page) => isObj(page) && isObj(page.objects) && ['background', 'wallpaper'].some((k) => (entries(page.objects, k) || []).some((e) => isObj(e.properties) && e.properties.image !== undefined));
+  const api = { kindOf, isCustom, KIND_WHAT, mirrorVisual, mirrorPage, textsOfVisual, labelVisual, round, pageHasPicture };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAMirror = api;
 })(typeof self !== 'undefined' ? self : this);
