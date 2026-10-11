@@ -1,8 +1,28 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Integration round 3" just below, then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Integration round 4: ALL MERGED" just below (tonight's rc head), then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## Integration round 4: ALL MERGED (11 Oct, from 14:41 UTC, cloud builder 5; `fix/0.2.9-gate`; not merged to main, no PR)
+Tonight's rc build is this branch's head: the commit that adds this section (memory only) on top of **`805df7f`**, the
+last code commit. The rc version (0.2.9-rc.1) is written at build time by builder 13's build.
+| Merge | Commit | Conflicts, resolved keeping both sides |
+|---|---|---|
+| `fix/0.2.9-checks` at `8c2d9ac` (builder 7: audit 4 A4-1..A4-14, fuzz F-C1, F-C2, F-CP) | `9f098ca` | check-report: the reader's one reading (R1) with A4-2 (an unreadable lint told in notChecked) and A4-7 (lint findings carry origin, level, impact, source); design-lint: the reader's measured constants and R7's guess mark with A4-8 (no "missing title" unless the title is switched off); fuzz P3 with the owner's choice (b) |
+| fix from its run | `c902387` | audit 4's `obj`/`arr` shape helpers kept beside the reader's rulesInput (every check_report said "arr is not defined") |
+| `fix/0.2.9-writer` at `8a94c4a` (builder 11: writer split, A3-7..A3-12 writer side, A2-3 fitSlots, A6-12/A6-14, 6 re-recorded fixtures, F-W1) | `1c56110` | pbip-export: the split; A4-5 (one text measurement) moved to pbip-sizing.js, which takes textWidth from text-measure.js; theme generator loads text-measure first, then the writer's five files; slots.mjs gone (absorb and fitSlots through design.mjs), the reader's engine requires kept (A1-10) |
+| fix from its run | `3ca94fa` | the picker marks a whole calendar name (QuarterName, Month_Name) as time in any table: the writer now reads that mark (A3-8) and sorted them by value (round23 F1) |
+| `feat/0.3.0-arabic-twin` at `841ced1` (builder 9: twin fuzz F-T1..F-T4, F-TP) | `805df7f` | the fuzz test: every KNOWN list empty |
+
+**Counts (after the last merge, `805df7f`):** `npm test` **1183** + reader c 36, d 21, e 21, f 20, golden PASS (11
+tasks, no move), fuzz PASS (600 cases, 8,199 checks, nothing skipped); **FUZZ_LONG=1: 10,000 cases, 135,843 checks,
+PASS**. **KNOWN, KNOWN_SLOW and KNOWN_PROPS are empty**: no finding still reproduces. Website: 17 suites PASS;
+`check-min` (62), `csp`, `test-site-config` PASS. Startup instructions **2,193 of 2,200** (unchanged by round 4).
+Run notes: merge 1's website run beside the MCP run failed pbip once (the service picker's timing under load; alone it
+passed 85/85); from then on the website suites ran after the MCP run, and every one passed.
+Seen, not in scope: the open decision on the category pool with fields or page filters (picker section); laptop items
+P1-P6 and the blocks' own laptop lists (their memory files).
 
 ## Integration round 3: reader update + design merged (11 Oct, from 14:00 UTC, cloud builder 5; `fix/0.2.9-gate`; not merged, no PR)
 | Merge | Commit | Conflicts, resolved keeping both sides |
