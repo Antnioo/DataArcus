@@ -231,8 +231,8 @@ function fieldsAndProblems(tables, fields) {
     if (wanted === 'm' && !meas) { problems.push(`${where}: ${ref} is a column; a measure is needed here`); return null; }
     if (wanted === 'c' && !col) { problems.push(`${where}: ${ref} is a measure; a column is needed here`); return null; }
     if (meas && wanted !== 'c') { const k = Bind.measureCard(meas); return Object.assign({ t: t.name, m: meas.name, pct: k.pct, variant: false }, k.text ? { text: true } : {}, k.pctFormat ? { pctFormat: k.pctFormat } : {}, k.wholeFormat ? { wholeFormat: k.wholeFormat } : {}); }
-    const by = col.sortBy ? null : Bind.sortColumnFor(t.columns, col.name), dt = Bind.dateColumnFor(t.columns, col.name, col.dataType);
-    return Object.assign({ t: t.name, c: col.name, type: String(col.dataType || 'string').toLowerCase() }, by ? { sortBy: { t: t.name, c: by.name } } : {}, col.sortBy && Bind.nameLike(col.name) ? { ordered: true } : {}, dt ? { dateOf: { t: t.name, c: dt.name } } : {});
+    // (the cross-review's G9: the picker's own field builder, so a new picker property needs no edit here)
+    return Bind.fieldOf(t, col.name);
   };
   const out = {};
   if (fields.kpis) out.kpis = fields.kpis.map((r, i) => one(r, 'm', `fields.kpis[${i}]`));

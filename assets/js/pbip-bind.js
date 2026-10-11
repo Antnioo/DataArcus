@@ -179,23 +179,27 @@
     if (!f && COUNTS.test(x.expr || '')) return { wholeFormat: '#,0' };
     return {};
   };
-  // an amount for the card rule above: a currency in the format ("EUR" #,0, \$#,0, #,0 "AED"), or a SUM of money by name;
-  // never a count
-  const CURRENCY = /"[A-Za-z\u0600-\u06FF]{1,4}\.?"|\\?[$€£¥]|\[\$/;
-  const MONEY = /revenue|sales|amount|income|profit|cost|budget|spend|price|value|المبيعات|الإيرادات|التكلفة|الميزانية|المبلغ/i;
-  const AMOUNT = (x, f) => !COUNTS.test(x.expr || '') && (CURRENCY.test(f) || (MONEY.test(x.name || '') && /\bSUMX?\s*\(/i.test(x.expr || '')));
+  // an amount for the card rule above, read from the format string: a currency in it, by its ISO 4217 code ("EUR" #,0,
+  // #,0 "INR") or a currency sign ($, €, £, ¥, ₹, the Gulf's د.إ and ر.س ...); a unit ("kg", "pcs") is no currency.
+  // (The cross-review's G2, 11 Oct: the first cut took any short quoted text for a currency.) Without a currency, a plain
+  // SUM whose name says money and whose format has no unit is an amount too: a weak tiebreak by the name, documented.
+  const ISO4217 = 'AED AFN ALL AMD ANG AOA ARS AUD AWG AZN BAM BBD BDT BGN BHD BIF BMD BND BOB BRL BSD BTN BWP BYN BZD CAD CDF CHF CLP CNY COP CRC CUP CVE CZK DJF DKK DOP DZD EGP ERN ETB EUR FJD FKP GBP GEL GHS GIP GMD GNF GTQ GYD HKD HNL HTG HUF IDR ILS INR IQD IRR ISK JMD JOD JPY KES KGS KHR KMF KPW KRW KWD KYD KZT LAK LBP LKR LRD LSL LYD MAD MDL MGA MKD MMK MNT MOP MRU MUR MVR MWK MXN MYR MZN NAD NGN NIO NOK NPR NZD OMR PAB PEN PGK PHP PKR PLN PYG QAR RON RSD RUB RWF SAR SBD SCR SDG SEK SGD SHP SLE SOS SRD SSP STN SYP SZL THB TJS TMT TND TOP TRY TTD TWD TZS UAH UGX USD UYU UZS VES VND VUV WST XAF XCD XOF XPF YER ZAR ZMW ZWL'.split(' ');
+  const CURRENCY_SIGN = /\\?[$€£¥₹₩₽₺₪₫฿₦₱₴₸₼₾﷼]|\[\$|د\.إ|ر\.س|ر\.ق|د\.ك|د\.ب|ر\.ع|ج\.م/;
+  const quotedOf = (f) => (String(f).match(/"[^"]*"|\\./g) || []).map((q) => q.replace(/^"|"$/g, '').replace(/^\\/, '').trim());
+  const hasCurrency = (f) => CURRENCY_SIGN.test(String(f)) || quotedOf(f).some((q) => ISO4217.includes(q.toUpperCase().replace(/\.$/, '')));
+  const hasUnit = (f) => quotedOf(f).some((q) => q && /[A-Za-z\u0600-\u06FF]/.test(q) && !ISO4217.includes(q.toUpperCase().replace(/\.$/, '')) && !CURRENCY_SIGN.test(q));
+  const MONEY = /revenue|sales|amount|income|profit|cost|budget|spend|المبيعات|الإيرادات|التكلفة|الميزانية|المبلغ/i;
+  const AMOUNT = (x, f) => !COUNTS.test(x.expr || '') && (hasCurrency(f) || (!hasUnit(f) && MONEY.test(x.name || '') && /^\s*SUM\s*\(/i.test(x.expr || '')));
   // time intelligence variants (MTD, PY, YoY %...) are not the headline number
   const VARIANT = /\b(PY|LY|YoY|MoM|QoQ|MTD|QTD|YTD|PYTD|PM|Prior|Previous|Prev|Last|vs|Rolling|Running|Avg|Average|\d+D)\b/i;
   // a measure someone left behind: the whole word old, test, unused, backup or temp in its name ("Sales (old)", "Test
   // margin", "TEMP total"; not "Oldham", "Latest" or "Contest"). It is picked only when no other measure is left.
   const STALE = /(^|[^A-Za-z])(old|test|unused|backup|temp)([^A-Za-z]|$)/i;
   const MAIN = /revenue|sales|amount|income|profit|value|bookings|orders|leads|deals|calls|visits|spend|cost|budget|الإيرادات|المبيعات|الأرباح|الطلبات|الميزانية/i;
-  // 0.2.9 (O-7: an executive page got Predicted Cost (EOC), Earned Value and CPI where the user wanted Total Projects and
-  // Actual Budget): a plain count or sum is a core number; an acronym (CPI, EOC, SPI) and a forecast or an index are not
+  // 0.2.9 (O-7: an executive page got computed indicators where the user wanted the core counts and amounts; the
+  // cross-review's G1, 11 Oct: ranked by the measure's shape and format, not by a list of names): a plain count or sum
+  // of one column is a core number (+3), an amount in a currency +1; the name words (MAIN, COUNTISH) only break ties (+0.5)
   const CORE = /^\s*(SUM|COUNTROWS|COUNT|COUNTA|DISTINCTCOUNT(NOBLANK)?)\s*\([^()]*\)\s*$/i;
-  // (a currency code or an Arabic mark in a name is no acronym: "Total Sales (AED)", "Revenue USD", "City AR")
-  const ACRONYM_RE = /(^|[\s(])[A-Z]{2,5}(\)|\s|$)/, NOT_ACRONYM = /(^|[\s(])(AED|SAR|USD|EUR|GBP|QAR|KWD|BHD|OMR|EGP|JOD|AR|EN|ID|KPI|YTD|MTD|QTD)(?=\)|\s|$)/g;
-  const ACRONYM = { test: (n) => ACRONYM_RE.test(String(n).replace(NOT_ACRONYM, '$1')) }, FORECAST = /predict|forecast|estimat|projected|target|index|ratio/i;
   const COUNTISH = /total|count|number|#|qty|quantity|units|customers|clients|tickets|إجمالي|عدد/i;
   const CAT = /category|product|brand|region|country|city|emirate|segment|channel|type|status|department|store|branch|source|platform|model|team|group|class|stage|agent|rep|salesperson|campaign|الفئة|المنتج|العلامة|المنطقة|المدينة|القناة|الفرع|المصدر/i;
   // (round 23, the owner's "nothing critical left": "Order Id", "Invoice No" and "Customer Code" were chart categories:
@@ -279,10 +283,25 @@
   // 0.2.9 (O-13: a "Month-Year" text column on the line chart ran Apr 2018, Apr 2019 ... A to Z): a month label (a text
   // column with month or period in its name) whose table has a date column names it (dateOf), so the report can order
   // the label by the month's first date and keep the last months; the model is not touched
-  function dateColumnFor(columns, name, type) {
+  // (the cross-review's G11, 11 Oct: "Payment Period" of a fact table took its Order Date: only a label of a date table,
+  // or a column whose own DAX is made from that date, is ordered by it)
+  const isDateTable = (t) => !!(t && (t.date || /^time$/i.test(t.dataCategory || '') || DATE_TABLE.test(String(t.name))));
+  function dateColumnFor(columns, name, type, table) {
     if (!/month|period|الشهر/i.test(String(name)) || !/^(string|unknown)$/.test(String(type || 'string').toLowerCase())) return null;
     const dates = (columns || []).filter((c) => /^date(time)?$/i.test(String(c.dataType || '')) && c.name !== name);
+    const self = (columns || []).find((c) => c.name === name), expr = String((self && self.expression) || '');
+    const made = dates.find((d) => expr && expr.toLowerCase().includes('[' + String(d.name).toLowerCase() + ']'));
+    if (made) return made;
+    if (table && !isDateTable(table)) return null;
     return dates.find((c) => /^(date|التاريخ)$/i.test(c.name)) || dates[0] || null;
+  }
+  // a column as the picker gives it out ({ t, c, type, sortBy, ordered, dateOf }), the one field builder (the cross-review's
+  // G9: create_report's field check used to rebuild it): table as the readers give it, name the column's
+  function fieldOf(table, name) {
+    const cols = table.columns || [], c = cols.find((x) => x.name === name); if (!c) return null;
+    const type = String(c.dataType || 'string').toLowerCase(), sortBy = c.sortBy || c.sortByColumn || null;
+    const by = sortBy ? null : sortColumnFor(cols, c.name), dt = dateColumnFor(cols, c.name, type, table);
+    return Object.assign({ t: table.name, c: c.name, type }, by ? { sortBy: { t: table.name, c: by.name } } : {}, sortBy && nameLike(c.name) ? { ordered: true } : {}, dt ? { dateOf: { t: table.name, c: dt.name } } : {});
   }
   function catalog(tables) {
     const shown = tables.filter((t) => !t.hidden);
@@ -290,13 +309,14 @@
     shown.forEach((t) => {
       t.measures.filter((m) => !m.isHidden).forEach((m) => { const x = Object.assign({ t: t.name, m: m.name, pct: PCT(m), variant: VARIANT.test(m.name), stale: STALE.test(m.name), text: isText(m) }, cardKind(m));
         // (0.2.9: its DAX, for the core-number rank; non-enumerable, so the fields given out keep their shape)
-        Object.defineProperty(x, 'expr', { value: String(m.expr || (Array.isArray(m.expression) ? m.expression.join('\n') : m.expression) || '') }); measures.push(x); });
-      t.columns.filter((c) => !c.isHidden).forEach((c, i) => { const by = c.sortBy ? null : sortColumnFor(t.columns, c.name), type = String(c.dataType || 'string').toLowerCase();
+        Object.defineProperty(x, 'expr', { value: String(m.expr || (Array.isArray(m.expression) ? m.expression.join('\n') : m.expression) || '') });
+        Object.defineProperty(x, 'amount', { value: !x.pct && hasCurrency(m.formatString || '') }); measures.push(x); });
+      t.columns.filter((c) => !c.isHidden).forEach((c, i) => { const type = String(c.dataType || 'string').toLowerCase();
         // (round 12, #17: a month or day name the model itself sorts is ordered: a table sorts it by itself)
         // (round 23: lang and i, the column's place, for the language rule: text columns only; non-enumerable, so the
         // fields given out keep their shape)
-        const dt = dateColumnFor(t.columns, c.name, type);
-        const col = Object.assign({ t: t.name, c: c.name, type, dateTable: t.date || DATE_TABLE.test(t.name), cat: c.dataCategory }, by ? { sortBy: { t: t.name, c: by.name } } : {}, c.sortBy && nameLike(c.name) ? { ordered: true } : {}, dt ? { dateOf: { t: t.name, c: dt.name } } : {});
+        const fo = fieldOf(t, c.name);
+        const col = Object.assign({ t: t.name, c: c.name, type, dateTable: isDateTable(t), cat: c.dataCategory }, fo.sortBy ? { sortBy: fo.sortBy } : {}, fo.ordered ? { ordered: true } : {}, fo.dateOf ? { dateOf: fo.dateOf } : {});
         Object.defineProperties(col, { lang: { value: type === 'string' || type === 'unknown' ? langOf(c.name) : null, writable: true }, i: { value: i }, twin: { value: null, writable: true } });
         columns.push(col); });
     });
@@ -357,8 +377,8 @@
   }
   function suggest(tables, nKpis, opt) {
     const { measures, columns } = catalog(tables);
-    const score = (x) => (MAIN.test(x.m) ? 3 : 0) + (COUNTISH.test(x.m) ? 2 : 0) - (x.variant ? 4 : 0) - (x.pct ? 1 : 0)
-      + (CORE.test(x.expr || '') ? 2 : 0) - (ACRONYM.test(x.m) && !/%/.test(x.m) ? 3 : 0) - (FORECAST.test(x.m) ? 2 : 0);   // (0.2.9, O-7)
+    const score = (x) => (CORE.test(x.expr || '') ? 3 : 0) + (x.amount ? 1 : 0) - (x.variant ? 4 : 0) - (x.pct ? 1 : 0)
+      + (MAIN.test(x.m) ? 0.5 : 0) + (COUNTISH.test(x.m) ? 0.5 : 0);   // (0.2.9, O-7 and the cross-review's G1: shape first, names a tiebreak)
     // (measures left behind, see STALE, come after every other one)
     // (a measure that shows text is never picked: round 12, #26)
     // (round 23: with a report language (opt.lang), a measure named in the other language comes after those named in
@@ -552,6 +572,6 @@
   // the language of each text column as the picker reads it, with the table's context ({ 'T[c]': 'ar' | 'en' })
   const langsOf = (tables) => { const out = {}; catalog(tables).columns.filter((c) => c.lang).forEach((c) => { out[`${c.t}[${c.c}]`] = c.lang; }); return out; };
   const twinsOf = (tables) => { const out = {}; catalog(tables).columns.filter((c) => c.twin).forEach((c) => { out[`${c.t}[${c.c}]`] = `${c.twin.t}[${c.twin.c}]`; }); return out; };
-  const api = { dateColumnFor, langOf, langsOf, twinsOf, reachTable, relsOfTmsl, relsOfTmdl, isPercent, measureCard, nameLike, iso, parseTmdl, fromTmsl, fromFolder, fromFile, suggest, build, counts, sortColumnFor, renderPicker, connection };
+  const api = { dateColumnFor, fieldOf, langOf, langsOf, twinsOf, reachTable, relsOfTmsl, relsOfTmdl, isPercent, measureCard, nameLike, iso, parseTmdl, fromTmsl, fromFolder, fromFile, suggest, build, counts, sortColumnFor, renderPicker, connection };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DABind = api;
 })(typeof self !== 'undefined' ? self : this);
