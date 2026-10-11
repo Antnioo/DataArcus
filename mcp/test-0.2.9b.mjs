@@ -110,7 +110,10 @@ export async function v029b({ call, check, ROOT, fs = fs0 }) {
         { name: 'Total Projects', expression: 'COUNTROWS ( Projects )', formatString: '#,0' }, { name: 'Actual Budget', expression: 'SUM ( Projects[Budget] )', formatString: '#,0' },
         { name: 'Budget Variance %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }, { name: '% On Track', expression: 'DIVIDE ( 1, 3 )', formatString: '0.0%' }] }] } }));
     const s = await ask('suggest_fields', { path: 'b29k', kpis: 4 }), k = (s.j && s.j.kpis || []).filter(Boolean).map((x) => x.m);
-    chk(() => k.includes('Total Projects') && k.includes('Actual Budget') && !k.includes('CPI') && !k.includes('SPI') && !k.includes('Predicted Cost (EOC)'), () => `O-7: the executive KPIs must be core counts and amounts, not acronyms or forecasts: ${JSON.stringify(k)}`);
+    // (the cross-review's G1, 11 Oct: this model is the portfolio's own names, so the check asks for the shape only: the
+    // plain count and sum first, a computed indicator such as CPI not before them; no name list decides. The general
+    // check, on retail, HR and logistics measures, is in test-0.2.9i.mjs)
+    chk(() => k[0] === 'Total Projects' && k[1] === 'Actual Budget' && !k.includes('CPI') && !k.includes('SPI'), () => `O-7: the executive KPIs must start with the core count and sum: ${JSON.stringify(k)}`);
   }
 
   // ---------- 5. O-2: the cards' numbers ----------
