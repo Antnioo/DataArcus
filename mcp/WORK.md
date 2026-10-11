@@ -1,8 +1,107 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "0.2.9 part 2" just below, then part 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "0.2.9 integration" just below, then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## 0.2.9 design engine block (11 Oct, cloud builder 10; branch `fix/0.2.9-design` from `fix/0.2.9-gate` `d2300f9`; not merged, no PR)
+The audit `audit-2-design-engine.md` (A2-1 to A2-12, but A2-3) and the tools audit's A6-10, fixed at the root in the
+design block, one commit each, tests first (`mcp/test-0.2.9-design.mjs`, 50 checks). **The full report, the moved
+numbers, the slot shapes A2-3's fitSlots needs and the laptop list: `mcp/work/0.2.9-design.md`.**
+- The engine now holds: the small-page rule (`SMALL_PAGE`, `smallPage`, `fitLayout`; no second page under 800), kpis
+  0-6 (`kpiCards` gone; `maxKpis` caps pages), the table's share by its fields (`TABLE_NEED`, `tableWeight`), slot
+  `index`, `colours`/`roles`, the written `SCHEMA` and key lists, `repairState(state, report)`, labels `{ en, ar }` with
+  `label`/`texts` and `RTL_LANGS`, `MEASURED_FONTS`, `NAME_MAX`, `themeScaleOf`/`scaleTheme`.
+- `mcp/lib/files.mjs` is new (freeFile); server.mjs reaches the engine only through design.mjs.
+- Fixtures moved with their cause in `meta.changed`: the 640 x 360 cases and page-too-tall (A2-1). Nothing else.
+- **Audit 7 (same branch, after merging fix/0.2.9-gate):** A7-1, A7-2, A7-4..A7-13 done (`ce5668a`..`4abb90b`); new
+  `mcp/lib/agent-text.mjs` (instructions from LIMITS, one cap 2,200; now 2,185), `test-0.2.9-agent.mjs` (23). npm test
+  1019 + 36, golden PASS; website 17 PASS. **PRIVACY/README containment lines carry TODO(A1-1): merge only with the
+  reader's 63066cf, and delete the TODO lines then.** A7-3 is builder 9's.
+- **Next:** builder 11 does A2-3 (fitSlots) last; the laptop proves A2-1 (700-800 wide), A2-5 (5-6 field tables),
+  A2-11 (Verdana) and D1-D3 (DESKTOP-TESTS.md "0.2.9 design block").
+
+## 0.2.9 integration (11 Oct, cloud builder 5; `fix/0.2.9-gate` is the integration branch for tonight's laptop proof; not merged, no PR)
+The reviewer's routine (11 Oct 07:36 UTC): merge checks, reader and the Arabic twin into this branch, then fix the gate
+block's findings of builder 7's cross-review (`mcp/work/0.2.9-crossreview.md`, from `fix/0.2.9-checks`) at the root.
+The owner's rule: build in blocks, fix at the root inside one block, nothing tuned to his two portfolio reports or fixtures.
+
+### Step 1, integration (LAYER: all, merge only)
+**Commits:** `a626273` (+ checks: test.mjs both sides), `357a6c5` (+ reader: check_report keeps impact and
+counts.byImpact and adds lint; plan_layout keeps timeAxis and blankCategories and adds designLint; README and PRIVACY
+rows combined), `365fd8c` (+ twin: **Break 1** the twin imports `INSTRUCTION` from the reading block `read-report.mjs`;
+**Break 2** 11 tools: the tool list, the no-root count and round 22's X-03 say 11 with the cause; README says 11).
+**Integration green:** `npm test` **920 + reader's 35, golden PASS**; every branch suite on the merged tree: gate 43,
+part 2 33, checks 24, reader 35, twin 81; website 17 suites PASS; `check-min`, `csp`, `test-site-config` PASS. Pushed.
+
+### Step 2, the gate block's root fixes (each its own commit; the checks first: `20e2446`, 18 of 19 red)
+New `mcp/test-0.2.9i.mjs` (19 checks, on made-up retail, HR and logistics models, not the portfolio's names):
+| Finding | Commit | What changed |
+|---|---|---|
+| G1 + G2 (bias) | `3eff1de` field picker | KPI rank by shape: a plain SUM/COUNT of one column +3, an amount in a currency +1, ratio -1, variant -4; name words only +0.5 (documented tiebreak); the acronym and forecast lists are gone. A currency is an ISO 4217 code or a currency sign in the format; "kg"/"pcs" are units, not money; "value" no longer a money word |
+| G9 | `3eff1de` | `Bind.fieldOf(table, column)`, used by catalog and by create_report's field check |
+| G11 | `3eff1de` | a month label gets `dateOf` only in a date table, or when its own DAX is made from that date ("Payment Period" of a fact table: none) |
+| G6 + G3 | `ccfae87` report writer | `timeAxisPlan(field)` (own / model / number / monthStart + last 12 / az), pure and exported; the writer applies it, plan_layout says it (`timeAxis.order`); the tooltip trend uses the same rule, so a sorted month name keeps its 12 |
+| G4 | `ccfae87` | the time measures use the writer's `daxName` / `valueDax` (one AGG_DAX) |
+| G8 | `ccfae87` | `barNameShare(w, pageH)` exported; 560 marked a GUESS beside the measured 508-wide chart; tested at 508@1080 = 50 and 1232@720 = 40 |
+| G12 | `ccfae87`, `49c7a6f` | fixVisual returns the filters (no `__filters`); `approvedFor` removed |
+| G13 | `ccfae87` | the blank-category note only when a chart got the filter (`blankFiltered`); the table note only with a table |
+| G5 (B-01) | `49c7a6f` MCP tools | the report plan stores its planned fields; create_report refuses other fields under the approved id, naming each |
+| G7 | `6d0a719` design engine | `calmPalette` in `design-engine.js` (the website and the MCP give the same palette); the MCP's light page is `PRESETS.Corporate.ui` |
+| G10 | `695aa61` website check helpers | the last-months tooltip filter found by its shape (Advanced, a report-level measure, = 1), not its name |
+| R5 (decision) | `e8bf832` checks | check_report's lint names a visual by type and place only (lint option `titles: false`); read_report keeps screened titles (PRIVACY's read_report row says so) |
+| duplicates | `ccfae87`, `e8bf832` | one Arabic month list (`Pbip.AR_MONTHS`; the twin uses it); one custom-visual test (the reading block's `isCustom`; check_report uses it); one AGG_DAX |
+
+**Tests before -> after:** `npm test` 920 -> **939** (+19), reader 35 -> **36** (R5's no-title check), golden PASS
+unchanged (no KPI pick of a golden model moved). Website: all 17 suites PASS; `check-min`, `csp`, `test-site-config` PASS. Older checks changed, each with its cause beside it: part 2's O-7
+check (it was on the portfolio's own names: now the shape only: the plain count and sum first); the reader's L1
+O-13/O-14 checks (find the visual by its place, R5).
+
+### Step 3, the field picker's bias fixes (the owner's "fix all of them now"; builder 7's block audit A1-11, A3-1)
+Checks first: `mcp/test-0.2.9k.mjs` (7 checks, ordinary names, none of the portfolio's): **6 red, 7 green**.
+- `2fc8044` (field picker + model reading): **A1-11** one field-meaning rule, new `assets/js/field-meaning.js`, used by
+  `pbip-bind.js` and `model-health-tmdl.js` (their copies had drifted). The picker: the format string decides first; a
+  name only by whole words and never a NOT_PCT name ("Corporate Revenue", "Generated Leads", "Exchange Rate", "Hourly
+  Rate" are no percents; "Interest Rate %", "Conversion Rate", «نسبة الإنجاز» are). The health check keeps format-or-name
+  with the same name rule; its money test is ISO 4217 codes and currency signs (CAD, INR were not money). **A3-1** a
+  calendar is marked (dataCategory Time), shaped like one (`markCalendars`: a relationship's one side on its date column,
+  from fromTmsl and, for TMDL projects, model.mjs), or named by a whole calendar word (Date, Dates, Calendar, Dim Date,
+  Time, Period, Arabic): Candidates, Updates, Mandates, Overtime, Time Sheets keep their categories.
+- `da2347b`: the engines use `require` only where it exists; the website's model-health suite loads field-meaning first,
+  as the page does (it crashed on `2fc8044`: found by the website run, fixed before this report).
+- Browser: the Model Health Check page loads `field-meaning.min.js` before the TMDL builder; the Theme Generator loads it
+  before pbip-bind (`?v=20261011k`/`k2`). **Packaging must carry `assets/js/field-meaning.js`** with the engines
+  (pbip-bind.js and model-health-tmdl.js require it): the engine repo's packaging list needs it (not changed here).
+
+### integration green
+**MCP: `npm test` 946 checks + the reader's 36, golden PASS (11 tasks, unchanged); website: 17 suites PASS** (the full run
+on `2fc8044`: 16 PASS, model-health crashed; after `da2347b` model-health 62, pbip 85, theme-generator 893, tmdl-model 70
+PASS; the other 13 untouched since); `check-min` (57 files), `csp`, `test-site-config` PASS. Counts on this branch since
+main: 739 -> 946 (+ reader 36): gate 43, part 2 33, checks 24, reader 36, twin 81, root fixes 19, picker bias 7.
+
+### For the laptop tonight (the integration branch; each expected before the run)
+Everything of part 1's and part 2's tables (above, unchanged), the reader's and the twin's own tables (their memory
+files), plus:
+| # | Check | Expected |
+|---|---|---|
+| I1 | Fintech KPI picks (G1) | the plain count and the plain sum first (Total Projects, Actual Budget); the third is the next computed measure; no CPI/SPI; one ratio |
+| I2 | A measure formatted `#,0 "kg"` or `#,0 "pcs"` on a card (G2) | its whole number, not K/M |
+| I3 | A tooltip by a model-sorted Month Name (G3) | 12 months in calendar order, no scrollbar (320 x 410) |
+| I4 | create_report after a plan with planFields, other fields passed (G5) | refused, nothing written |
+| I5 | The Theme Generator website page, Generate with a brand | unchanged (its harmonies); the MCP's brand theme: Corporate light page, the calm set |
+| I6 | T1 (the twin's mirror vs the writer's `invertAxis`) | settled by the laptop tonight: both paths are left as they are |
+| I7 | A model with a fact table named like "Candidates" or "Time Sheets" (A3-1) | its text columns are the charts' categories; nothing left out |
+| I8 | A measure named "Corporate Revenue" or "Exchange Rate" with no format (A1-11) | a number card (auto units), never 0.0% |
+| I9 | The website's Model Health Check and Theme Generator pages | load and work (the new field-meaning.min.js loads first; no console error) |
+
+### Seen, not in scope
+- `report-mirror.js` keeps its own `isCustom` (a website engine can't import the MCP's reading block); `calendar-generator.js`
+  and `theme-generator.js` keep their Arabic month lists (browser pages load their scripts separately; a shared file
+  needs a script tag on two pages): two lists left, the MCP and the writer share one.
+- G1's third KPI on the Fintech-like model is a computed measure (Predicted Cost) by the name tiebreak: shape can't
+  tell an indicator from a core amount when both are computed.
+- O-2's decision (amounts under a million show K) and the reader's R1-R4, R6-R9 and the twin's T2-T8 are their blocks'.
+- T1 (invertAxis) is the laptop's tonight.
 
 ## 0.2.9 part 2: the report writer fixes (11 Oct, cloud builder; same branch `fix/0.2.9-gate`, on top of part 1 `4785367`; not merged, no PR)
 The reviewer's routine (11 Oct 05:52 UTC, "Builder 5: 0.2.9 part 2"): plan items 3, 4, 5, 7, 8, 9 and the answer to part
