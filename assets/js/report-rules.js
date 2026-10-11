@@ -15,6 +15,10 @@
   const plain = (list) => entries(list).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e.properties || {}), {});
   const withId = (list, id) => entries(list).filter((e) => e && e.selector && e.selector.id === id).reduce((a, e) => Object.assign(a, e.properties || {}), {});
   const look = (list) => { const d = withId(list, 'default'); return Object.keys(d).length ? d : plain(list); };
+  // (A4-1, audit 4: a report's text never reaches a finding through a number or a key) a finite number or NaN; a
+  // formatting key or a setting's value is repeated only when it is a plain word
+  const n = (v) => (typeof v === 'number' ? v : typeof v === 'string' && /^\s*-?\d+(\.\d+)?\s*$/.test(v) ? +v : NaN);
+  const word = (k) => /^[A-Za-z][A-Za-z0-9]{0,40}$/.test(String(k));
 
   // where each number comes from: DESKTOP-TESTS.md, the section's date, the Desktop version, the section's title
   const M = (date, desktop, section) => ({ file: 'scripts/tests/DESKTOP-TESTS.md', date, desktop, section });
@@ -109,7 +113,8 @@
         R.visuals.filter((x) => /button|navigator/i.test(x.type)).forEach((x) => {
           const o = (x.json.visual || {}).objects || {};
           const cards = Object.keys(o).filter((k) => entries(o[k]).some((e) => e && e.selector && STATES.includes(e.selector.id) && e.properties && 'show' in e.properties));
-          if (cards.length) out(x, `${cards.length} formatting card${cards.length === 1 ? '' : 's'} (${cards.join(', ')}) set "show" inside a state selector`, 'Move each "show" into its own entry without a selector, as Power BI Desktop saves it; inside a state it is ignored and the text, fill or outline stays hidden.');
+          const named = cards.filter(word), others = cards.length - named.length;
+          if (cards.length) out(x, `${cards.length} formatting card${cards.length === 1 ? '' : 's'} (${named.concat(others ? [`${others} not named`] : []).join(', ')}) set "show" inside a state selector`, 'Move each "show" into its own entry without a selector, as Power BI Desktop saves it; inside a state it is ignored and the text, fill or outline stays hidden.');
         });
       } },
     { id: 'SELECTOR_CARD', group: 'selectors', severity: 'warning', source: SRC.round0,
@@ -143,12 +148,13 @@
       about: 'on the phone layout (mobile.json, where a grouped visual\'s position is a page position) no two boxes overlap and every box is inside the 323-wide canvas',
       run(R, out) {
         R.pages.forEach((pg) => {
-          const boxes = pg.visuals.filter((x) => x.mobile && x.mobile.position && !x.json.visualGroup);
+          const pos = (x) => { const p = x.mobile.position, b = { x: n(p.x), y: n(p.y), width: n(p.width), height: n(p.height) }; return Object.values(b).every(Number.isFinite) ? b : null; };
+          const boxes = pg.visuals.filter((x) => x.mobile && x.mobile.position && !x.json.visualGroup && pos(x));
           boxes.forEach((a, i) => {
-            const A = a.mobile.position;
+            const A = pos(a);
             if (A.x < -0.5 || A.x + A.width > 323.5) out(a, `the phone box is outside the 323-wide canvas (x ${A.x}, width ${A.width})`, 'Move or narrow it on the phone layout.', { file: a.mobileFile });
             boxes.slice(i + 1).forEach((b) => {
-              const B = b.mobile.position;
+              const B = pos(b);
               if (A.x < B.x + B.width - 0.5 && B.x < A.x + A.width - 0.5 && A.y < B.y + B.height - 0.5 && B.y < A.y + A.height - 0.5)
                 out(a, `the phone box at ${A.x},${A.y} (${A.width} x ${A.height}) overlaps another visual's phone box at ${B.x},${B.y}`, 'Move one of them on the phone layout.', { file: a.mobileFile });
             });
@@ -191,7 +197,7 @@
         R.visuals.filter((x) => x.type === 'pageNavigator').forEach((x) => out(x, 'a page navigator in a right-to-left report: it always puts the first page at the left', 'Use single page buttons (actionButton with a PageNavigation link) placed from the right.'));
         R.visuals.forEach((x) => {
           const t = plain(((x.json.visual || {}).visualContainerObjects || {}).title);
-          if (lit(t.show) === 'true' && str(t.alignment) !== 'right' && str(t.alignment) !== 'center') out(x, `its title is aligned ${str(t.alignment) || 'left (the default)'} in a right-to-left report`, 'Align the title right, where an Arabic reader starts.', null, SRC.plugin);
+          if (lit(t.show) === 'true' && str(t.alignment) !== 'right' && str(t.alignment) !== 'center') out(x, `its title is aligned ${str(t.alignment) ? (word(str(t.alignment)) ? str(t.alignment) : 'by a value that is not a plain word') : 'left (the default)'} in a right-to-left report`, 'Align the title right, where an Arabic reader starts.', null, SRC.plugin);
         });
       } },
     { id: 'THEME_NAME', group: 'theme', severity: 'warning', source: SRC.round0,
@@ -208,7 +214,15 @@
   // opts: { groups: [...] }. Returns { findings: [{ rule, severity, file, page, visual, what, fix, source }], ran: [ids],
   // failed: [{ rule, why }] }. (A4-2, audit 4: each rule runs on its own: one that cannot read the report is named in
   // failed and its findings so far dropped; the others still run)
+  // (A4-1) every size and position the rules print is a number: a page's or a visual's that is not becomes 0
+  function normalize(R) {
+    const fin = (v) => { const x = n(v); return Number.isFinite(x) ? x : 0; };
+    (R.pages || []).forEach((p) => { p.w = fin(p.w); p.h = fin(p.h); });
+    (R.visuals || []).forEach((x) => { x.x = fin(x.x); x.y = fin(x.y); x.w = fin(x.w); x.h = fin(x.h); });
+    return R;
+  }
   function check(R, opts) {
+    normalize(R);
     const groups = (opts && opts.groups) || GROUPS, findings = [], ran = [], failed = [];
     RULES.filter((r) => groups.includes(r.group) && (!r.lang || r.lang === R.lang)).forEach((rule) => {
       ran.push(rule.id);
@@ -224,6 +238,6 @@
     return { findings, ran, failed };
   }
 
-  const api = { RULES, GROUPS, MEASURED, check };
+  const api = { RULES, GROUPS, MEASURED, check, normalize };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DARules = api;
 })(typeof self !== 'undefined' ? self : this);
