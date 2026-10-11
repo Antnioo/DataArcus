@@ -18,6 +18,7 @@ import { checkReport, CHECKS } from './lib/check-report.mjs';
 import { readReport } from './lib/read-report.mjs';
 import { planLint } from './lib/plan-lint.mjs';
 import * as Plans from './lib/plans.mjs';
+import { planTwin, twinKey, writeTwin } from './lib/arabic-twin.mjs';
 
 // the version is in one place: mcp/package.json
 const VERSION = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
@@ -1300,6 +1301,27 @@ server.registerTool('add_gulf_calendar', {
   const { scriptFile, howToApply, ...rest } = addGulfCalendar(m, a, { Gulf, Fix, writeScript: named, scriptDir, scriptBase });
   return text(Object.assign({ written: false, scriptAfterGo: path.basename(scriptFile) }, rest, { howToApplyAfterGo: howToApply,
     plan: Plans.proposal(Plans.propose('calendar', modelKey(m, a.path), [`the TMDL script "${path.basename(scriptFile)}" next to the project, adding the table ${JSON.stringify(rest.table)} (${rest.range.from} to ${rest.range.to})${rest.relationships.length ? ' and ' + rest.relationships.length + ' relationship' + (rest.relationships.length > 1 ? 's' : '') : ''}; never applied: the user applies it in TMDL view`])) }));
+}));
+
+server.registerTool('create_arabic_twin', {
+  title: 'Create the Arabic twin of a report',
+  description: 'Makes the right-to-left Arabic twin of an existing PBIR report: a new "<name> AR" report and .pbip next to the original, on the same model, every page mirrored in place (each visual\'s place mirrored, groups included; bar charts growing from the right; column, line and area charts with the value axis at the right and their order reversed by the sort; legends, titles, text boxes and table columns to the right), page ids, visual names and bookmarks kept so navigation keeps working. The original is only read, never changed; nothing is ever written over. Without planId it writes nothing and answers the plan: the pages, what mirrors, what cannot (custom visuals, the page navigator\'s order, Power BI\'s own words, data values), every text of the report with an id for its Arabic, and the Arabic month column offered as a TMDL script the user applies. The Arabic texts are DRAFTS for the user to approve: pass the approved ones as labels to get a plan id for exactly those; never translate silently. After the user\'s go: approve_plan, then this tool with planId.' + UNTRUSTED,
+  inputSchema: {
+    path: z.string().describe('The original report: its .pbip file or its .Report folder, inside the working folder'),
+    labels: z.record(z.string().max(200), z.string().max(200)).optional().describe('The Arabic texts the user approved, by the text ids of the plan ({ "page:<id>": "...", "title:<page>/<visual>": "...", "field:<queryRef>": "..." }). A text without a label stays as it is'),
+    timeRightToLeft: z.boolean().default(true).describe('Charts over time (months, dates) run right to left like the rest of the page (default); false keeps time left to right. The user\'s choice'),
+    arabicMonth: z.boolean().default(true).describe('Offer (and after the go write) the TMDL script that adds an Arabic month name column to the date table; the user applies it in TMDL view'),
+    planId: planIdInput
+  }, annotations: ADDS
+}, safe(async (a) => {
+  if (a.labels && Object.keys(a.labels).length > 400) throw new Error('At most 400 labels in one plan.');
+  const key = twinKey(a.path);
+  if (a.planId != null && a.planId !== '') return text(writeTwin(a, Plans.gate('create_arabic_twin', a.planId, key)));
+  const P = planTwin(a);
+  if (!P.answer.twin.nameFree) throw new Error(`Nothing was written: "${P.answer.twin.report}" or "${P.answer.twin.pbip}" is already there. DataArcus never writes over a file: rename or move the old twin, then ask again.`);
+  const writes = [`the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original (${P.answer.pages.length} pages mirrored, ${P.answer.labels.given} Arabic texts as approved); the original is not changed`]
+    .concat(P.month.offered ? [`the TMDL script "${P.month.scriptAfterGo}" next to the project (the Arabic month column); never applied: the user applies it in TMDL view`] : []);
+  return text(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', key, writes, { labels: P.labels, timeRightToLeft: a.timeRightToLeft !== false, arabicMonth: a.arabicMonth !== false })) }));
 }));
 
 server.registerTool('approve_plan', {
