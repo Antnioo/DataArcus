@@ -175,11 +175,14 @@ export async function v029c({ call, check, ROOT, meta }) {
   const c6 = await ask('check_report', { path: rep6 });
   const lint6 = c6.j && c6.j.lint, F6 = (lint6 && lint6.findings) || [], by = (rule) => F6.filter((f) => f.rule === rule);
   chk(() => !c6.err && lint6 && lint6.modelRead === true && Array.isArray(lint6.findings), () => `L1. check_report has a lint section, the model read beside the report: ${short(c6)}`);
-  chk(() => by('AXIS_TEXT_TIME_UNSORTED').length === 1 && /By month"/.test(by('AXIS_TEXT_TIME_UNSORTED')[0].visual) && by('AXIS_TEXT_TIME_UNSORTED')[0].severity === 'high' && by('AXIS_TEXT_TIME_UNSORTED')[0].guess === false,
+  // (the owner's decision R5, 11 Oct: check_report's lint names a visual by its type and place only, never its title;
+  // so these find the visual by its place, and no title may come back)
+  chk(() => !/"By month"|"Issues"/.test(JSON.stringify(F6)), () => `R5: check_report's lint must return no titles: ${JSON.stringify(F6).slice(0, 300)}`);
+  chk(() => by('AXIS_TEXT_TIME_UNSORTED').length === 1 && /^lineChart at 20,20 900x300$/.test(by('AXIS_TEXT_TIME_UNSORTED')[0].visual) && by('AXIS_TEXT_TIME_UNSORTED')[0].severity === 'high' && by('AXIS_TEXT_TIME_UNSORTED')[0].guess === false,
     () => `L1. O-13: only the unsorted text Month-Year axis, high, not a guess (the model says text, no sort-by): ${JSON.stringify(by('AXIS_TEXT_TIME_UNSORTED'))}`);
   chk(() => by('BAR_LABELS_MAY_BE_CUT').length === 1 && /about 11 characters/.test(by('BAR_LABELS_MAY_BE_CUT')[0].why) && by('BAR_LABELS_MAY_BE_CUT')[0].guess === true && by('BAR_LABELS_MAY_BE_CUT')[0].severity === 'high',
     () => `L1. O-4: the 508-wide bar chart at 15 pt, about 11 characters, a guess; not the one with axis share 50: ${JSON.stringify(by('BAR_LABELS_MAY_BE_CUT'))}`);
-  chk(() => by('TABLE_GROW_TO_FIT').length === 1 && /"Issues"/.test(by('TABLE_GROW_TO_FIT')[0].visual) && by('TABLE_WIDTHS_TOO_WIDE').length === 1 && /add up to 500 in a table 400 wide/.test(by('TABLE_WIDTHS_TOO_WIDE')[0].why),
+  chk(() => by('TABLE_GROW_TO_FIT').length === 1 && /^tableEx at 20,660 600x300$/.test(by('TABLE_GROW_TO_FIT')[0].visual) && by('TABLE_WIDTHS_TOO_WIDE').length === 1 && /add up to 500 in a table 400 wide/.test(by('TABLE_WIDTHS_TOO_WIDE')[0].why),
     () => `L1. O-14: grow to fit without wrap (not the wrapped one); set widths wider than the table: ${JSON.stringify(by('TABLE_GROW_TO_FIT').concat(by('TABLE_WIDTHS_TOO_WIDE')))}`);
   chk(() => by('NO_TITLE').length === 1 && /donutChart at 1060,660/.test(by('NO_TITLE')[0].visual), () => `L1. a chart with no title (the one under a text box is labelled): ${JSON.stringify(by('NO_TITLE'))}`);
   chk(() => by('PLACEHOLDER_TEXT').length === 1 && !JSON.stringify(lint6).includes('Your logo'), () => `L1. O-6: the placeholder found, its words never quoted: ${JSON.stringify(by('PLACEHOLDER_TEXT'))}`);
