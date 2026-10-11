@@ -133,7 +133,8 @@ const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undef
 const litStr = (p) => { const v = lit(p); return v == null ? null : /^'.*'$/s.test(String(v)) ? String(v).slice(1, -1).replace(/''/g, "'") : String(v).replace(/[DLM]$/, ''); };
 const litNum = (p) => { const n = parseFloat(lit(p)); return isNaN(n) ? null : n; };
 const litBool = (p) => { const v = lit(p); return v === 'true' || v === true ? true : v === 'false' || v === false ? false : null; };
-const entries = (list) => (Array.isArray(list) ? list : []);
+// (A5-2, audit 5: only objects; a null entry in a list made the whole reader throw)
+const entries = (list) => (Array.isArray(list) ? list.filter((e) => e && typeof e === 'object') : []);
 const plain = (list) => entries(list).filter((e) => e && !e.selector).reduce((a, e) => Object.assign(a, e.properties || {}), {});
 const anyOf = (list) => entries(list).reduce((a, e) => Object.assign(a, (e && e.properties) || {}), {});
 // Microsoft's QueryAggregateFunction (semantic query schema)
@@ -157,6 +158,8 @@ export const refOf = (x) => {
 // the model's key of a column: "Table[Column]" (raw, for looking it up in the model; never returned as is)
 export const keyOf = (x) => (x && x.kind !== 'measure' ? `${x.table}[${x.name}]` : null);
 // the filters of a visual, page or report: the field and the kind of filter, never its values
+// (A5-2: a filter list that cannot be read is no filters, never an error)
+const safeFilters = (cfg) => { try { return filtersOf(cfg); } catch (e) { return []; } };
 function filtersOf(cfg) {
   return entries(cfg && cfg.filters).map((f) => {
     const field = fieldOf(f.field), s = JSON.stringify(f.filter || {});
@@ -168,7 +171,7 @@ function filtersOf(cfg) {
 }
 const filterText = (f) => `${refOf(f.field)} (${f.notBlank ? 'not blank' : f.top ? 'top ' + f.top : f.type + (f.set ? ', set' : ', empty')})`;
 const hex = (c) => (typeof c === 'string' && /^#[0-9a-f]{3,8}$/i.test(c) ? c.toLowerCase() : null);
-const textOf = (j) => ((plain(((j.visual || {}).objects || {}).general).paragraphs) || []).map((p) => (p.textRuns || []).map((r) => String(r.value || '')).join('')).join(' / ').trim();
+const textOf = (j) => { const ps = plain(((j.visual || {}).objects || {}).general).paragraphs; return (Array.isArray(ps) ? ps : []).filter((p) => p && typeof p === 'object').map((p) => entries(p.textRuns).map((r) => String(r.value == null ? '' : r.value)).join('')).join(' / ').trim(); };
 // Power BI's own visuals (a custom visual's type is its id: a name and 32 characters)
 const BUILTIN = /^(actionButton|advancedSlicerVisual|areaChart|azureMap|barChart|basicShape|bookmarkNavigator|card|cardVisual|clusteredBarChart|clusteredColumnChart|columnChart|decompositionTreeVisual|donutChart|filledMap|funnel|gauge|hundredPercentStacked\w+|image|keyDriversVisual|kpi|lineChart|lineClusteredColumnComboChart|lineStackedColumnComboChart|listSlicer|map|multiRowCard|pageNavigator|pieChart|pivotTable|qnaVisual|ribbonChart|scatterChart|shape|shapeMap|slicer|stackedAreaChart|stackedBarChart|stackedColumnChart|tableEx|textbox|textSlicer|treemap|waterfallChart|scriptVisual|pythonVisual|paginator|rdlVisual)$/;
 const SLICERS = /^(slicer|advancedSlicerVisual|listSlicer|textSlicer)$/;
@@ -209,13 +212,15 @@ export function inventory(src, reportName) {
     const prel = `definition/pages/${id}`, pj = pageJson[id];
     const page = { id, n: i + 1, name: pageName(id), rawName: String(pj.displayName || ''), w: +pj.width || 0, h: +pj.height || 0,
       kind: pj.type === 'Tooltip' ? 'Tooltip' : pj.pageBinding && /drill/i.test(String(pj.pageBinding.type || '')) ? 'Drillthrough' : null,
-      hidden: pj.visibility === 'HiddenInViewMode', filters: filtersOf(pj.filterConfig), visuals: [], raw: pj, file: prel + '/page.json' };
+      hidden: pj.visibility === 'HiddenInViewMode', filters: safeFilters(pj.filterConfig), visuals: [], raw: pj, file: prel + '/page.json' };
     flag('page', page.rawName, prel + '/page.json');
     const list = [];
     for (const vid of src.dirs(prel + '/visuals')) {
       const vrel = `${prel}/visuals/${vid}/visual.json`;
       if (!src.has(vrel)) continue;
       const j = note(json(vrel)); if (!j) continue;
+      // (A5-2: a visual that cannot be read, whatever is wrong inside it, goes to the unreadable files; the others stay)
+      try {
       const pos = j.position || {};
       // (the raw JSON and the phone layout stay inside the reading block's callers: check_report's measured rules and the
       // twin read them; no answer ever carries them)
@@ -230,7 +235,7 @@ export function inventory(src, reportName) {
       x.fields = {};
       Object.entries((v.query || {}).queryState || {}).forEach(([role, r]) => { const l = entries(r && r.projections).map((p) => Object.assign({}, fieldOf(p.field) || { kind: 'other' }, { queryRef: String(p.queryRef || '') }, p.displayName ? { displayName: String(p.displayName) } : {})); if (l.length) x.fields[role] = l; });
       x.sort = entries(((v.query || {}).sortDefinition || {}).sort).map((s) => ({ field: fieldOf(s.field), dir: /desc/i.test(String(s.direction || '')) ? 'desc' : 'asc' }));
-      x.filters = filtersOf(j.filterConfig);
+      x.filters = safeFilters(j.filterConfig);
       if (SLICERS.test(x.type)) x.slicer = true;
       if (x.type === 'textbox') { const tx = textOf(j); if (tx) { x.rawText = tx; x.text = safeText(tx); flag('textbox', tx, vrel); } }
       const link = plain(vco.visualLink), ltype = litStr(link.type);
@@ -243,6 +248,7 @@ export function inventory(src, reportName) {
       const widths = {}; entries(o.columnWidth).forEach((e) => { const k = e && e.selector && e.selector.metadata, w = litNum(((e || {}).properties || {}).value); if (k && w != null) widths[k] = w; });
       x.format = { axisShare: litNum(ca.maxMarginFactor), axisFontSize: litNum(ca.fontSize), autoSize: litBool(ch.autoSizeColumnWidth), growToFit: litStr(ch.columnAdjustment) === 'growToFit', wordWrap: litBool(vals.wordWrap), widths };
       list.push(x);
+      } catch (e) { unreadableFiles.push(vrel); }
     }
     // positions on the page: a visual inside a group is placed relative to the group; hidden with its group
     const by = Object.fromEntries(list.map((x) => [x.id, x]));
@@ -262,7 +268,7 @@ export function inventory(src, reportName) {
   const installedNotUsed = entries(report.publicCustomVisuals).filter((t) => !custom.includes(t)).length;
   return { name: safeName(reportName || 'report'), pages, theme, themeFile: ref ? 'StaticResources/RegisteredResources/' + ref : null, themeJson: th, themeRef: ref, report,
     hasPlatform: src.has('.platform'), versions: Object.fromEntries(Object.entries(versions).map(([k, v]) => [k, [...v].sort()])),
-    bookmarks, bookmarkFiles: src.files('definition/bookmarks').filter((n) => /\.bookmark\.json$/i.test(n)).length, types, customVisuals: custom.map(safeName), installedNotUsed, reportFilters: filtersOf(report.filterConfig), unreadable: unreadableFiles.length, unreadableFiles, suspicious, sk };
+    bookmarks, bookmarkFiles: src.files('definition/bookmarks').filter((n) => /\.bookmark\.json$/i.test(n)).length, types, customVisuals: custom.map(safeName), installedNotUsed, reportFilters: safeFilters(report.filterConfig), unreadable: unreadableFiles.length, unreadableFiles, suspicious, sk };
 }
 
 // ---- read_report's answer: one line per visual (text, the default) or the same as JSON ----

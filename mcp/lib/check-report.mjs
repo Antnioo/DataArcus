@@ -55,7 +55,8 @@ function rulesInput(inv) {
       const j = x.json, type = j.visual ? String(j.visual.visualType || '') : j.visualGroup ? 'group' : 'unknown';
       if (j.visual && isCustom(type)) customVisuals++;
       page.visuals.push({ name: x.id, type, file: x.file, mobileFile: x.mobileFile, json: j, mobile: x.mobile, parent: x.group, page: { id: pg.id, name: pg.name }, x: x.x, y: x.y, w: +(j.position || {}).width || 0, h: +(j.position || {}).height || 0 });
-      if (type === 'textbox') ((((((j.visual.objects || {}).general || [{}])[0] || {}).properties || {}).paragraphs) || []).forEach((p) => (p.textRuns || []).forEach((r) => texts.push(String(r.value || ''))));
+      // (A5-2: the text the reading block read safely, not the raw paragraphs again)
+      if (type === 'textbox' && x.rawText) texts.push(x.rawText);
     });
     R.pages.push(page); R.visuals.push(...page.visuals);
     texts.push(page.rawName);

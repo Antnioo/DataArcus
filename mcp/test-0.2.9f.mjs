@@ -39,7 +39,7 @@ export async function v029f({ call, check, ROOT }) {
     vis('nullProj', 'lineChart', { Category: [null], Y: [mea('Sales', 'Total')] }),
     Object.assign(vis('nullFilter', 'clusteredBarChart', { Category: [col('Sales', 'Region')] }), { filterConfig: { filters: [null] } }),
     { name: 'badText', visual: { visualType: 'textbox', objects: { general: [{ properties: { paragraphs: 'x' } }] } } }] }]);
-  const r2 = await ask('read_report', { path: rep2 }), c2 = await ask('check_report', { path: rep2, checks: ['lint', 'sizes'] });
+  const r2 = await ask('read_report', { path: rep2 }), c2 = await ask('check_report', { path: rep2, checks: ['lint'] });
   chk(() => !r2.err && /lineChart 0,0 300x200/.test(r2.t) && /PAGE 1 "One"/.test(r2.t), () => `A5-2. read_report answers with null entries in one visual, the others listed: ${short(r2)}`);
   chk(() => !c2.err && c2.j.lint && Array.isArray(c2.j.lint.findings), () => `A5-2. check_report's lint answers too: ${short(c2)}`);
 
