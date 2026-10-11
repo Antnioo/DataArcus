@@ -37,9 +37,10 @@
   // a scatter chart, a decomposition tree...) is 'other': it moves only too, but the plan says no setting is proven
   // for it (the cross-review's T6), instead of claiming it has no side
   const SIDELESS = ['card', 'multiRowCard', 'kpi', 'gauge', 'donutChart', 'pieChart', 'funnel', 'treemap', 'map', 'filledMap', 'shapeMap', 'azureMap', 'image', 'shape', 'basicShape'];
-  // a custom visual's type carries its id (letters and digits, like "ChicletSlicer1448559807354"); Power BI's own
-  // types are plain words (the same test as check_report's)
-  const isCustom = (type) => !/^[a-z][A-Za-z]*$/.test(String(type || ''));
+  // a custom visual: the shared catalog's test (visual-types.js; the reading block uses the same one). A visual with no
+  // type at all is treated as custom too: moved only
+  const VT = typeof module !== 'undefined' && module.exports ? require('./visual-types.js') : root.DAVisualTypes;
+  const isCustom = (type) => !type || VT.isCustom(type);
   function kindOf(json) {
     if (!isObj(json)) return 'unreadable';
     if (isObj(json.visualGroup)) return 'group';

@@ -8,6 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { decode, inside, readCapped, readsLikeInstruction, real, shownName, shownPath, visible, WITHHELD } from './model.mjs';
+import { meaningInReport, VT } from './visual-meaning.mjs';
 
 // ---- untrusted text (check_report's rules, one copy) ----
 // (A1-13: the one screen is model.mjs's; INSTRUCTION keeps its name and its test() for the callers)
@@ -193,12 +194,11 @@ function filtersOf(cfg) {
 const filterText = (f) => `${refOf(f.field)} (${f.notBlank ? 'not blank' : f.top ? 'top ' + f.top : f.type + (f.set ? ', set' : ', empty')})`;
 const hex = (c) => (typeof c === 'string' && /^#[0-9a-f]{3,8}$/i.test(c) ? c.toLowerCase() : null);
 const textOf = (j) => { const ps = plain(((j.visual || {}).objects || {}).general).paragraphs; return (Array.isArray(ps) ? ps : []).filter((p) => p && typeof p === 'object').map((p) => entries(p.textRuns).map((r) => String(r.value == null ? '' : r.value)).join('')).join(' / ').trim(); };
-// Power BI's own visuals (a custom visual's type is its id: a name and 32 characters)
-const BUILTIN = /^(actionButton|advancedSlicerVisual|areaChart|azureMap|barChart|basicShape|bookmarkNavigator|card|cardVisual|clusteredBarChart|clusteredColumnChart|columnChart|decompositionTreeVisual|donutChart|filledMap|funnel|gauge|hundredPercentStacked\w+|image|keyDriversVisual|kpi|lineChart|lineClusteredColumnComboChart|lineStackedColumnComboChart|listSlicer|map|multiRowCard|pageNavigator|pieChart|pivotTable|qnaVisual|ribbonChart|scatterChart|shape|shapeMap|slicer|stackedAreaChart|stackedBarChart|stackedColumnChart|tableEx|textbox|textSlicer|treemap|waterfallChart|scriptVisual|pythonVisual|paginator|rdlVisual)$/;
-const SLICERS = /^(slicer|advancedSlicerVisual|listSlicer|textSlicer)$/;
-export const typeName = (t) => (t === 'group' || BUILTIN.test(t) ? t : 'custom ' + safeName(t));
+// Power BI's own visuals and slicers: Microsoft's catalog (assets/js/visual-types.js); a custom visual's type is its id
+const SLICERS = new RegExp('^(' + VT.SLICER_TYPES.join('|') + ')$');
+export const typeName = (t) => (t === 'group' || VT.isNative(t) ? t : 'custom ' + safeName(t));
 // a custom visual's type: the one test (the cross-review's duplicates, 11 Oct: check_report used its own regex)
-export const isCustom = (t) => t !== 'group' && t !== 'unknown' && !BUILTIN.test(String(t));
+export const isCustom = (t) => VT.isCustom(t);
 
 // ---- the inventory: everything the layers above need, structured, from any source ----
 // { name, pages, theme { name, dataColors, labelSize }, bookmarks, types, customVisuals, installedNotUsed, reportFilters,
@@ -276,7 +276,8 @@ export function inventory(src, reportName, opts) {
       const ch = anyOf(o.columnHeaders), ca = anyOf(o.categoryAxis), vals = anyOf(o.values);
       const widths = {}; entries(o.columnWidth).forEach((e) => { const k = e && e.selector && e.selector.metadata, w = litNum(((e || {}).properties || {}).value); if (k && w != null) widths[k] = w; });
       // (A5-13: a custom visual's formatting objects by name, never their values: what a replacement would lose)
-      if (!BUILTIN.test(x.type)) { const ob = Object.keys(o).filter((k) => k !== 'general').sort().slice(0, 30).map(safeName); if (ob.length) x.customObjects = ob; }
+      if (VT.isCustom(x.type, report)) { const ob = Object.keys(o).filter((k) => k !== 'general').sort().slice(0, 30).map(safeName); if (ob.length) x.customObjects = ob; }
+      const meaning = meaningInReport(x, report, { customObjects: x.customObjects }); if (meaning) x.meaning = meaning; // custom visuals: what it shows, its native replacement
       x.format = { axisShare: litNum(ca.maxMarginFactor), axisFontSize: litNum(ca.fontSize), autoSize: litBool(ch.autoSizeColumnWidth), growToFit: litStr(ch.columnAdjustment) === 'growToFit', wordWrap: litBool(vals.wordWrap), widths };
       list.push(x);
       } catch (e) { unreadableFiles.push(vrel); }
@@ -295,7 +296,7 @@ export function inventory(src, reportName, opts) {
   const bookmarks = bmRaw.map(({ n, b }) => { flag('bookmark', b.displayName, 'definition/bookmarks/' + n); const o = b.options || {}, st = b.explorationState || {};
     return { file: 'definition/bookmarks/' + n, rawName: String(b.displayName || ''), raw: b, name: safeName(b.displayName || b.name || n), page: st.activeSection ? pageName(String(st.activeSection)) : null, data: !o.suppressData, display: !o.suppressDisplay, targets: names(o.targetVisualNames).length || 'all' }; });
   const types = {}; pages.forEach((p) => p.visuals.forEach((x) => { types[x.type] = (types[x.type] || 0) + 1; }));
-  const custom = Object.keys(types).filter((t) => t !== 'group' && t !== 'unknown' && !BUILTIN.test(t));
+  const custom = Object.keys(types).filter((t) => VT.isCustom(t, report));
   // (A5-10, audit 5: where each custom visual comes from, as report.json lists them: AppSource (publicCustomVisuals), the
   // organisation's (organizationCustomVisuals), or private (a CustomVisual resource package inside the report); its
   // package is not read: its layout on disk is to be measured on a saved report first)
@@ -324,6 +325,7 @@ function visualLine(x) {
   if ((x.filters || []).length) s += ' | filters ' + x.filters.map(filterText).join(', ');
   if (x.action) s += ' | ' + x.action;
   if (x.tooltipPage) s += ` | tooltip page "${x.tooltipPage}"`;
+  if (x.meaning) s += ` | REPLACE ${x.meaning.kind} -> ${x.meaning.native || 'no native visual (HTML/SVG)'} (${x.meaning.confidence}${x.meaning.guess ? ', a guess' : ''}): ${x.meaning.why}`;
   return s;
 }
 const byPlace = (l) => l.slice().sort((a, b) => a.y - b.y || a.x - b.x);
@@ -349,7 +351,7 @@ export function answerOf(inv, opts) {
     { fields: Object.fromEntries(Object.entries(x.fields || {}).map(([r, l]) => [safeName(r), l.map((f) => (f.kind === 'other' ? '(an expression)' : refOf(f)) + (f.displayName ? ` as "${safeText(f.displayName)}"` : ''))])),
       roles: Object.fromEntries(Object.keys(x.fields || {}).map((k) => [safeName(k), rolesOf(x.type)[k] || null])),
       sort: (x.sort || []).map((s) => `${refOf(s.field)} ${s.dir}`), filters: (x.filters || []).map(filterText) },
-    x.action ? { action: x.action } : {}, x.tooltipPage ? { tooltipPage: x.tooltipPage } : {}, x.customObjects ? { customObjects: x.customObjects } : {},
+    x.action ? { action: x.action } : {}, x.tooltipPage ? { tooltipPage: x.tooltipPage } : {}, x.customObjects ? { customObjects: x.customObjects } : {}, x.meaning ? { meaning: x.meaning } : {},
     x.format ? { format: Object.assign({}, x.format, { widths: Object.fromEntries(Object.entries(x.format.widths || {}).map(([k, w]) => [safeName(k), w])) }) } : {});
   const pageHead = (p) => ({ n: p.n, id: safeName(p.id), name: p.name, size: `${p.w}x${p.h}`, kind: p.kind, hidden: p.hidden, filters: p.filters.map(filterText), visualCount: p.visualCount });
   // (A5-4, audit 5: the cap is measured on the form returned, text or JSON; A5-3: a page too large alone is listed in
