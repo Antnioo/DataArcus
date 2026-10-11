@@ -13,6 +13,7 @@ import { round22 } from './test-round22.mjs';
 import { round23 } from './test-round23.mjs';
 import { v029 } from './test-0.2.9.mjs';
 import { v029b } from './test-0.2.9b.mjs';
+import { v029checks } from './test-0.2.9-checks.mjs';
 import { withPlans } from './test-plan.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
 
@@ -3990,6 +3991,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     model('r17-big', [sales]);
     const d = path.join(ROOT, 'r17-big', 'Big.Report', 'definition', 'pages', 'p1');
     fs.mkdirSync(d, { recursive: true });
+    // (0.2.9 item 13: only a report whose definition.pbir points at the model is read, so the fixture has one, as every
+    // report Desktop saves; the check itself is unchanged)
+    fs.writeFileSync(path.join(ROOT, 'r17-big', 'Big.Report', 'definition.pbir'), JSON.stringify({ version: '4.0', datasetReference: { byPath: { path: '../M.SemanticModel' } } }));
     for (let i = 0; i < 5; i++) { const fd = fs.openSync(path.join(d, `part${i}.json`), 'w'); fs.ftruncateSync(fd, 30 * 1024 * 1024); fs.closeSync(fd); }   // sparse: 150 MB on paper
     const r = await ask('read_model', { path: 'r17-big' });
     chk(() => r.err && /report/i.test(r.t) && /together/.test(r.t) && /128 MB/.test(r.t),
@@ -4446,6 +4450,8 @@ await round23({ call, check, ROOT, fs });
 await v029({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
 // ---------- 0.2.9 part 2 (the report writer's fixes): test-0.2.9b.mjs, which also runs alone ----------
 await v029b({ call, check, ROOT, fs });
+// ---------- 0.2.9 items 12-13 (check_report's three kinds, the health check's own reports): test-0.2.9-checks.mjs, which also runs alone ----------
+await v029checks({ call, check, ROOT, fs });
 // ---------- round 17 follow-up: G-04, check_report's instruction-like names in suspiciousNames (owner: all recommended) ----------
 // the name stays withheld (only the placeholder), each entry has its kind and reason, and the check's result is the
 // same as for a plainly named visual
