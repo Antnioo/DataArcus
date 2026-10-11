@@ -28,6 +28,16 @@
   // ---------- color math ----------
   // #1a2b3c, 1a2b3c or the short #abc form, spaces around allowed; anything else is not a color (null)
   const clampHex = (v) => { v = (v || '').trim(); if (!v.startsWith('#')) v = '#' + v; if (/^#[0-9a-fA-F]{3}$/.test(v)) v = '#' + [...v.slice(1)].map((c) => c + c).join(''); return /^#[0-9a-fA-F]{6}$/.test(v) ? v.toLowerCase() : null; };
+  // A design's colours as the engine draws and writes them: each a hex colour, else the default design's (fresh); never
+  // a caller's text (0.2.9, the audit's A2-7: an unrepaired ui.background reached the background SVG the website sets
+  // as innerHTML). d: the design
+  const colours = (d) => {
+    const D = PRESETS.DataArcus, u = d && d.ui && typeof d.ui === 'object' ? d.ui : {}, data = d && Array.isArray(d.data) && d.data.length ? d.data : D.data;
+    const ok = (v, f) => (typeof v === 'string' && clampHex(v)) || f;
+    return { ui: Object.fromEntries(Object.keys(D.ui).map((k) => [k, ok(u[k], D.ui[k])])), data: data.map((c, i) => ok(c, D.data[i % D.data.length])) };
+  };
+  // The colours a KPI bar or the header line can take (the page's choices)
+  const BAR_COLORS = ['accent', 'good', 'neutral', 'data'];
   const hexToRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
   const rgbToHex = (r) => '#' + r.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
   const mix = (a, b, t) => { const A = hexToRgb(a), B = hexToRgb(b); return rgbToHex(A.map((v, i) => v + (B[i] - v) * t)); };
@@ -343,8 +353,8 @@
   };
   // d: the design { name, font, data, ui, chart, layout }; lang: the page's language ('ar' or 'en'), for the reading
   // direction when the layout has none
-  const buildTheme = (d, lang) => {
-    const u = d.ui, l = d.layout, sec = mix(u.text, u.card, 0.35), ter = mix(u.text, u.card, 0.6), f = d.font;
+  const buildTheme = (d0, lang) => {
+    const cc = colours(d0), d = Object.assign({}, d0, { ui: cc.ui, data: cc.data }), u = d.ui, l = d.layout, sec = mix(u.text, u.card, 0.35), ter = mix(u.text, u.card, 0.6), f = d.font;
     return {
       name: themeName(d.name),
       dataColors: d.data,
@@ -401,7 +411,10 @@
   // ---------- the background drawing ----------
   // accent bars: side, thickness and color (Advanced options)
   const barW = (k, c) => clampTo(k, c[k] == null ? (k === 'kpiBarW' ? 4 : 3) : c[k]);
-  const barColor = (d, k, i) => { const v = d.layout[k], u = d.ui; return v === 'data' ? d.data[i % d.data.length] : (u[v] || u.accent); };
+  // (0.2.9, the audit's A2-7: the engine never trusts its caller to have run repairState: a colour key is looked up as
+  // the design's own key only, and every colour drawn or written is a hex colour, else the default's)
+  const barColor = (d, k, i) => { const v = d.layout[k], { ui: u, data } = colours(d), n = Number.isInteger(i) && i >= 0 ? i : 0;
+    return v === 'data' ? data[n % data.length] : (BAR_COLORS.includes(v) && v !== 'data' && Object.prototype.hasOwnProperty.call(u, v) ? u[v] : u.accent); };
   const c0 = (c) => (c.kpiBar === 'start' ? barW('kpiBarW', c) + 8 : 0); // KPI text sits after a side bar
   // Where a KPI card's title can start beside the side accent bar, in page units from the card's reading-start edge: the
   // bar's far edge (it is drawn 10 in, see bgSvg) plus round(5k), k = page height / 1080 (measured in Power BI Desktop
@@ -412,8 +425,8 @@
   // The PNG matches the table to the pixel. In Power BI, with Image fit: Stretch, each panel lands exactly under
   // its visual (checked with calibration backgrounds on 1920 × 1080 and 1280 × 720 pages).
   // opt: { w, h } the image size, preview (the page's layout preview), overlay(slots) the preview's own marks
-  function bgSvg(d, slots, opt, lang) {
-    const u = d.ui, c = d.layout, right = rtl(c, lang), light = lum(u.background) > 0.45, PW = pw(c), PH = 720;
+  function bgSvg(d0, slots, opt, lang) {
+    const cc = colours(d0), d = Object.assign({}, d0, { ui: cc.ui, data: cc.data }), u = d.ui, c = d.layout, right = rtl(c, lang), light = lum(u.background) > 0.45, PW = pw(c), PH = 720;
     const edge = mix(u.text, u.card, light ? 0.86 : 0.9), rail = mix(u.card, u.background, 0.35), r = +c.radius;
     let s = `<rect width="${PW}" height="${PH}" fill="${u.background}"/>`;
     if (c.header) {
@@ -488,6 +501,50 @@
   };
 
   // ---------- saved designs ----------
+  // The design's written schema (0.2.9, the audit's A2-7: it lived only in the MCP server's key lists). Every key the
+  // engine reads, what it means and the values it takes; repairState checks each one. DESIGN_KEYS and LAYOUT_KEYS are
+  // its keys (the MCP names any other key of a given design as ignored).
+  const SCHEMA = {
+    preset: { about: 'the preset the colours came from, or null', values: Object.keys(PRESETS).concat([null]) },
+    name: { about: 'the theme name (the theme JSON and the file names); at most 60 characters', type: 'text' },
+    font: { about: 'the font of every text', values: FONTS },
+    data: { about: 'the 8 data colours', type: '8 hex colours' },
+    ui: { about: 'the page colours: background, card (the visuals), text, accent, good, neutral, bad', type: 'hex colours' },
+    chart: { about: 'chart style defaults; auto writes nothing', values: CHART_OPTIONS },
+    layout: {
+      v: { about: 'the saved layout\'s version (3)', type: 'number' },
+      page: { about: 'the page size', values: Object.keys(PAGES).concat('custom') },
+      pageW: { about: 'a custom page\'s width (640-3840; fitted to 4:3-2.4:1)', type: 'number' },
+      pageH: { about: 'a custom page\'s height (360-2160)', type: 'number' },
+      preset: { about: 'the layout', values: Object.keys(LAYOUTS) },
+      kpis: { about: 'the KPI cards in the top row (0 leaves the row out)', values: [0, 1, 2, 3, 4, 5, 6] },
+      filters: { about: 'a filter panel', type: 'boolean' },
+      fpos: { about: 'where the filter panel sits (start and end follow the reading direction)', values: ['start', 'end', 'top'] },
+      dir: { about: 'the reading direction; empty: the language decides', values: ['', 'ltr', 'rtl'] },
+      radius: { about: 'the corners, on the 720 grid', range: [0, 24] },
+      shadow: { about: 'soft shadows', type: 'boolean' },
+      header: { about: 'a header band with the title and the logo', type: 'boolean' },
+      samples: { about: 'sample visuals in the preview (the website only)', type: 'boolean' },
+      transparent: { about: 'transparent visuals over panels drawn in the background image', type: 'boolean' },
+      wideTable: { about: 'on a narrow page a table takes the wider share of its row (default on)', type: 'boolean' },
+      kpiBar: { about: 'the KPI cards\' accent bar', values: ['start', 'top', 'bottom', 'none'] },
+      kpiBarC: { about: 'the KPI bar\'s colour (default accent)', values: BAR_COLORS },
+      kpiBarW: { about: 'the KPI bar\'s thickness', range: RANGE.kpiBarW },
+      headLine: { about: 'the line under the header', values: ['short', 'full', 'none'] },
+      headLineC: { about: 'the header line\'s colour (default accent)', values: BAR_COLORS },
+      headLineW: { about: 'the header line\'s thickness', range: RANGE.headLineW },
+      hh: { about: 'the header\'s height', range: RANGE.hh },
+      logoW: { about: 'the logo\'s width', range: RANGE.logoW },
+      fw: { about: 'the side filter panel\'s width', range: RANGE.fw },
+      fh: { about: 'the top filter strip\'s height', range: RANGE.fh },
+      kpiH: { about: 'the KPI row\'s height', range: RANGE.kpiH },
+      mainW: { about: 'the main chart\'s share of its row, in %', range: RANGE.mainW },
+      split: { about: 'the first chart row\'s share of the chart rows, in %', range: RANGE.split }
+    }
+  };
+  const DESIGN_KEYS = Object.keys(SCHEMA), LAYOUT_KEYS = Object.keys(SCHEMA.layout);
+  // keys of older saved designs the repair still reads (accentBar: v1; kpiCards: the MCP before 0.2.9)
+  const OLD_LAYOUT_KEYS = ['accentBar', 'kpiCards'];
   const fresh = () => ({ preset: 'DataArcus', name: DEFAULT_NAME, font: 'Segoe UI', data: PRESETS.DataArcus.data.slice(), ui: { ...PRESETS.DataArcus.ui } });
   // A saved design (or none) made safe to use, the way the generator repairs it on load: an old or hand-edited save may
   // be partial, so each value that is not valid falls back to its default, and older layouts are upgraded.
@@ -499,27 +556,36 @@
     if (!state || typeof state !== 'object' || !Array.isArray(state.data) || state.data.length !== 8) state = fresh();
     {
       const d = fresh(), hex = (v) => (typeof v === 'string' ? clampHex(v) : null), ui = state.ui && typeof state.ui === 'object' ? state.ui : {};
-      state.data = state.data.map((c, i) => hex(c) || d.data[i]);
-      state.ui = Object.fromEntries(Object.keys(d.ui).map((k) => [k, hex(ui[k]) || d.ui[k]]));
-      if (typeof state.name !== 'string') state.name = d.name;
-      if (!FONTS.some((f) => f === state.font)) state.font = d.font;
-      if (state.preset != null && !PRESETS[state.preset]) state.preset = null;
+      state.data = state.data.map((c, i) => { const h = hex(c); if (!h) say(`data[${i}]`, c, d.data[i], 'not a hex colour'); return h || d.data[i]; });
+      state.ui = Object.fromEntries(Object.keys(d.ui).map((k) => { const h = hex(ui[k]); if (!h && ui[k] != null) say('ui.' + k, ui[k], d.ui[k], 'not a hex colour'); return [k, h || d.ui[k]]; }));
+      if (typeof state.name !== 'string') { if (state.name != null) say('name', state.name, d.name, 'not a text'); state.name = d.name; }
+      if (!FONTS.some((f) => f === state.font)) { if (state.font != null) say('font', state.font, d.font, `use one of ${FONTS.join(', ')}`); state.font = d.font; }
+      if (state.preset != null && !PRESETS[state.preset]) { say('preset', state.preset, null, `not a preset; use one of ${Object.keys(PRESETS).join(', ')}`); state.preset = null; }
     }
     // saved chart choices: only the ones the page offers
-    if (state.chart) state.chart = Object.fromEntries(Object.keys(CHART_OPTIONS).filter((k) => CHART_OPTIONS[k].some((o) => o === state.chart[k])).map((k) => [k, state.chart[k]]));
+    if (state.chart) {
+      if (typeof state.chart === 'object') Object.keys(state.chart).filter((k) => !(CHART_OPTIONS[k] || []).some((o) => o === state.chart[k])).forEach((k) => say('chart.' + k, state.chart[k], null, CHART_OPTIONS[k] ? `use one of ${CHART_OPTIONS[k].join(', ')}` : `not a chart setting; use ${Object.keys(CHART_OPTIONS).join(', ')}`));
+      state.chart = Object.fromEntries(Object.keys(CHART_OPTIONS).filter((k) => CHART_OPTIONS[k].some((o) => o === state.chart[k])).map((k) => [k, state.chart[k]]));
+    }
     state.layout = Object.assign({ v: 3, page: '1920x1080', preset: 'exec', kpis: 4, filters: false, dir: '', radius: 8, shadow: true, header: true, kpiBar: 'start', headLine: 'short', samples: true, transparent: false }, upgrade(state.layout) || {});
-    if (!LAYOUTS[state.layout.preset]) state.layout.preset = 'exec';
+    if (!LAYOUTS[state.layout.preset]) { say('layout.preset', state.layout.preset, 'exec', `use one of ${Object.keys(LAYOUTS).join(', ')}`); state.layout.preset = 'exec'; }
     // saved layout values outside the choices the page offers fall back to the defaults
     {
       const l = state.layout, one = (k, list, d) => { if (!list.includes(l[k])) { say('layout.' + k, l[k], d, `use one of ${list.map((x) => JSON.stringify(x)).join(', ')}`); l[k] = d; } };
       // an older MCP design's kpiCards (fewer cards than the layout's kpis) is its kpis now
       if ('kpiCards' in l) { const n = Math.floor(+l.kpiCards); if (l.kpiCards != null && n >= 0 && n < +l.kpis) l.kpis = n; say('layout.kpiCards', l.kpiCards, null, `not a layout key any more: kpis (0-6) is the number of KPI cards; kpis ${l.kpis} used`); delete l.kpiCards; }
       one('kpis', [0, 1, 2, 3, 4, 5, 6], LAYOUTS[l.preset].kpis); one('dir', ['', 'ltr', 'rtl'], '');
-      if (!(+l.radius >= 0 && +l.radius <= 24)) l.radius = 8;
+      if (!(+l.radius >= 0 && +l.radius <= 24)) { say('layout.radius', l.radius, 8, 'corners are 0 to 24'); l.radius = 8; }
       one('kpiBar', ['start', 'top', 'bottom', 'none'], 'start'); one('headLine', ['short', 'full', 'none'], 'short');
-      if (!PAGES[l.page] && l.page !== 'custom') l.page = '1920x1080';
-      ['filters', 'shadow', 'header', 'samples', 'transparent'].forEach((k) => { if (typeof l[k] !== 'boolean') l[k] = k !== 'filters' && k !== 'transparent'; });
-      ['hh', 'logoW', 'fw', 'fh', 'kpiH', 'mainW', 'split', 'kpiBarW', 'headLineW', 'pageW', 'pageH'].forEach((k) => { if (l[k] != null && !isFinite(+l[k])) delete l[k]; });
+      if (!PAGES[l.page] && l.page !== 'custom') { say('layout.page', l.page, '1920x1080', `use ${Object.keys(PAGES).join(', ')} or custom`); l.page = '1920x1080'; }
+      ['filters', 'shadow', 'header', 'samples', 'transparent'].forEach((k) => { if (typeof l[k] !== 'boolean') { const d = k !== 'filters' && k !== 'transparent'; say('layout.' + k, l[k], d, 'true or false'); l[k] = d; } });
+      ['hh', 'logoW', 'fw', 'fh', 'kpiH', 'mainW', 'split', 'kpiBarW', 'headLineW', 'pageW', 'pageH'].forEach((k) => { if (l[k] != null && !isFinite(+l[k])) { say('layout.' + k, l[k], null, 'not a number; the default is used'); delete l[k]; } });
+      // the optional choices (0.2.9, the audit's A2-7: every layout key is checked, not only the ones the page offers):
+      // a value outside its choices is dropped (its default is used) and said
+      const opt = (k, ok, why) => { if (l[k] !== undefined && !ok(l[k])) { say('layout.' + k, l[k], null, why); delete l[k]; } };
+      opt('kpiBarC', (v) => BAR_COLORS.includes(v), `use one of ${BAR_COLORS.join(', ')}`); opt('headLineC', (v) => BAR_COLORS.includes(v), `use one of ${BAR_COLORS.join(', ')}`);
+      opt('fpos', (v) => ['start', 'end', 'top'].includes(v), 'use start, end or top');
+      opt('wideTable', (v) => typeof v === 'boolean', 'true or false');
     }
     return state;
   }
@@ -531,7 +597,7 @@
     PRESETS, FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate, calmPalette,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    fs, chart, buildTheme, contrastChecks, REPORT_TEXTS, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    fs, chart, colours, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;
