@@ -32,7 +32,8 @@
     phone: M('2026-10-03', '2.158.1177', 'round 1 measurements: mobile.json positions and selectors'),
     pageWrap: M('2026-10-03', '2.158.1177', 'round 1 measurements: a page button puts a long name on two lines only when two lines fit its height'),
     round2: M('2026-10-03', '2.158.1177', 'round 2 measurements: a chart sorts by a field only when it is in the visual; the page navigator has no order setting'),
-    plugin: M('2026-10-03', '2.158.1177', 'Microsoft\'s powerbi-authoring plugin on an Arabic report: Desktop does not mirror titles')
+    plugin: M('2026-10-03', '2.158.1177', 'Microsoft\'s powerbi-authoring plugin on an Arabic report: Desktop does not mirror titles'),
+    tipTrend: M('2026-10-10', '2.158.1304', 'a tooltip bar chart\'s rows at 8pt labels (the tooltip lab)')
   };
   // The text rules were measured in these fonts; on another font a finding is an estimate (a note, never an error)
   const MEASURED_FONTS = ['segoe ui', 'tahoma'];
@@ -51,7 +52,8 @@
   const SLICER = (t) => Math.ceil(16 + 4 * t);                     // a dropdown slicer, title and box
   const PAGE_TWO_LINES = (t, font) => (/^tahoma/i.test(String(font || '')) ? 3.2 : 3.5) * t;   // a page button's two lines
   const TIP_ROWS = (h) => Math.floor((h - 46) / 22);               // a bar chart without its value axis: 22 a row + 46
-  const MEASURED = { BOX, BTN_TEXT, BTN_H, BTN_TW, BTN_ICON_TW, CH, SLICER, PAGE_TWO_LINES, TIP_ROWS, PHONE_W: 323, TEXT_MIN: 8, TEXT_MAX: 60 };
+  const TIP_ROWS_6 = (h) => Math.floor((h - 40) / 27);             // a tooltip bar chart at 8pt labels: 27 a bar + 40 (SRC.tipTrend)
+  const MEASURED = { BOX, BTN_TEXT, BTN_H, BTN_TW, BTN_ICON_TW, CH, SLICER, PAGE_TWO_LINES, TIP_ROWS, TIP_ROWS_6, PHONE_W: 323, TEXT_MIN: 8, TEXT_MAX: 60 };
   const isPageButton = (x) => x.type === 'actionButton' && str(plain(((x.json.visual || {}).visualContainerObjects || {}).visualLink).type) === 'PageNavigation';
   const STATES = ['default', 'hover', 'press', 'pressed', 'disabled', 'selected'];
 
@@ -245,6 +247,6 @@
     return { findings, ran, failed };
   }
 
-  const api = { RULES, GROUPS, MEASURED, check, normalize };
+  const api = { RULES, GROUPS, MEASURED, SRC, check, normalize };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DARules = api;
 })(typeof self !== 'undefined' ? self : this);

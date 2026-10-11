@@ -2331,7 +2331,8 @@ Facts measured:
   (or "Refresh now") and the Data pane marks measures "Field list item has error" until that refresh; the visuals draw.
 - **A script that starts Desktop keeps the caller's output pipe** even when it redirects its own child: a tool call
   that pipes its output (`... | cut`) returns only when Desktop closes. `r22-gshots.ps1` closes the test report at its end.
-- **Data bars beside a plain copy:** a measure twice in one table (round 21's item 4), written by hand on a made-up report (`builder-scripts22-databars.mjs`, `r22-databars2.mjs`; crops `shotsdb-lab-crop.png`, `db-lab2-crop.png`): (1) the same projection twice (one queryRef): both columns draw, and a data bar on that queryRef turns BOTH into bars; (2) the copy with its own queryRef and nativeQueryRef ("Sales.Total Sales1", "Total Sales1") after the original: two columns, and a bar whose selector names the ORIGINAL's queryRef draws on the original only: a bar column, then the plain number: **this form works**; (3) a bar whose selector names the copy's queryRef: no bar; (4) the copy first and the original (with a displayName) after it, the bar on the original: no bar; (5) a copy whose queryRef differs but whose nativeQueryRef is the original's: "Error fetching data for this visual". Not saved back by Desktop, so how Desktop itself names a second copy is still not read.
+- **Data bars beside a plain copy:** a measure twice in one table (round 21's item 4), written by hand on a made-up report (`builder-scripts
+22-databars.mjs`, `r22-databars2.mjs`; crops `shotsdb-lab-crop.png`, `db-lab2-crop.png`): (1) the same projection twice (one queryRef): both columns draw, and a data bar on that queryRef turns BOTH into bars; (2) the copy with its own queryRef and nativeQueryRef ("Sales.Total Sales1", "Total Sales1") after the original: two columns, and a bar whose selector names the ORIGINAL's queryRef draws on the original only: a bar column, then the plain number: **this form works**; (3) a bar whose selector names the copy's queryRef: no bar; (4) the copy first and the original (with a displayName) after it, the bar on the original: no bar; (5) a copy whose queryRef differs but whose nativeQueryRef is the original's: "Error fetching data for this visual". Not saved back by Desktop, so how Desktop itself names a second copy is still not read.
 - **Arabic names in Segoe UI** (task 6's two headers at 14pt): our count 364 and 438, Microsoft's report CLI (`text measure`,
   font metrics) 386 and 471, Desktop about 311 and 418 (read off the capture at the table's own size, so near, not exact):
   our count is not too small for what Desktop draws.
@@ -2425,6 +2426,30 @@ Captures `<tests folder>\r24\shots\`; the table is in `mcp/WORK.md`, "Round 24, 
 | One measure, no date column | PASS: one card, no white "Select or add data" box on page 1 or Details; the widened bar chart on one panel, no seam | `lean-en-p1.png`, `lean-ar-p1.png`, `lean-en-p2.png` |
 | Two measures, the picker's middle KPI emptied | PASS: two cards in the picked order sharing the row, none empty | `gap-en-p1.png`, `gap-ar-p1.png`, `gap-ar-p2.png` |
 | Dhow Freight | PASS: unchanged (English page 1 pixel for pixel the re-proof's capture) | `freight-en-p1.png`, `freight-ar-p1.png` |
+
+## 2026-10-10: Microsoft's validator on a working hand-built report (Power BI Desktop 2.158.1304, the laptop's version that night)
+(Recorded 11 Oct 2026 for audit 4's A4-10, from the laptop lab run of 10 Oct; the report is the owner's own portfolio
+report, read only, nothing of it is in this repo.) The report opens and works in Power BI Desktop, yet Microsoft's
+validator (`@microsoft/powerbi-report-authoring-cli` 0.4.0, offline, through `check_report`) gave it 10 errors and 4
+warnings, all in the report's own files:
+- `PBIR_JSON_FILE_NO_SCHEMA` (2): the `.pbip` file and `definition.pbir` have no `$schema`.
+- `PBIR_THEME_FILE_NAME_MISMATCH` (1): the custom theme's own `name` is not the file name `report.json` references.
+- `PBIR_FORMATTING_OBJECT_UNKNOWN` (1) and `PBIR_THEME_VISUAL_PROP_UNKNOWN` (4): unknown cards and properties in the
+  same theme file.
+- `PBIR_FILLRULE_STOP_COLOR_INVALID` (2): one scatter chart's gradient stop colours are not `#RRGGBB` literals.
+- Warnings: `PBIR_FILTER_NAME_DUPLICATE_GLOBAL` (3, slicers on three pages) and `PBIR_SCATTER_NO_GROUPING` (1).
+So these five error codes, in those files, are what Desktop opens and only strict validation (and Fabric) refuses:
+`check_report`'s `desktopOpens` kind (`mcp/lib/check-report.mjs`, `DESKTOP_OPENS`). Any other code is not called
+harmless until a Desktop proof like this one says so.
+
+## 2026-10-10: a tooltip bar chart's rows at 8pt labels (the tooltip lab), Power BI Desktop 2.158.1304
+(Recorded 11 Oct 2026 for audit 4's A4-10, from the laptop lab run of 10 Oct on copies of a test report.) On a tooltip
+page, a bar chart with 8pt labels needs about **27 a bar, plus 40 for its title and padding**: 184 high holds 5 to 6
+bars, 250 holds 9, 310 about 10. Smaller bars (`preferredCategoryWidth`, `innerPadding`) and 7pt labels changed nothing.
+So the bars that fit are floor((height - 40) / 27): a trend kept to its last 6 months is 40 + 6 x 27 = 202 high, on a
+320 x 314 tooltip page (0.2.9 part 2). A category is kept to a Top N of the bars that fit; a time field to its last N
+periods, never a Top N by value. (`MEASURED.TIP_ROWS_6` in `assets/js/report-rules.js`; round 0's 22 a row + 46 was measured on
+that round's tooltip format.)
 
 ## Lessons
 - **Night of 6-7 Oct: a bar chart at the theme's 10pt (1280 x 720) needs 22.2 a row, 45 above the first row and 8
