@@ -44,9 +44,9 @@
   const BTN_TEXT = (t, n) => Math.ceil(2 + 1.6 * t * (n || 1));    // a button's text, a line (English)
   const BTN_H = (t) => Math.ceil(6 + 1.6 * t);                     // a button's one line (Arabic needs the 6)
   const BTN_TW = (t, n) => 0.45 * 4 / 3 * t * n;                   // a button's text, 0.45 em a character
-  // a button with an icon: its text measured with the report writer's per-letter widths, + 10 (round 10, M3); the
-  // per-letter widths are pbip-export.js's (DAPbip in the browser), so the rule and the writer never disagree
-  const textWidth = () => (typeof module !== 'undefined' && module.exports ? require('./pbip-export.js') : root.DAPbip).textWidth;
+  // a button with an icon: its text measured with the per-letter widths, + 10 (round 10, M3); the widths are
+  // text-measure.js's, the one copy the report writer uses too (audit 4's A4-5: the rules never load the writer)
+  const textWidth = () => (typeof module !== 'undefined' && module.exports ? require('./text-measure.js') : root.DataArcusTextMeasure).textWidth;
   const BTN_ICON_TW = (text, t, font) => textWidth()(text, t, false, font) + 10;
   const CH = (t) => t * 0.55 * 4 / 3;                              // a text box's character, 0.55 em
   const SLICER = (t) => Math.ceil(16 + 4 * t);                     // a dropdown slicer, title and box
