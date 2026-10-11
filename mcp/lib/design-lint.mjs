@@ -28,7 +28,26 @@ const DATA = /Chart$|^tableEx$|^pivotTable$|^treemap$|^funnel$|^gauge$|^map$|^fi
 const TIMEY = /month|year|date|week|quarter|period|day|شهر|سنة|تاريخ|أسبوع|ربع|يوم/i;
 const PLACEHOLDER = /your logo|logo here|lorem ipsum|placeholder|title here|text here|click to add|شعارك|عنوان هنا|نص هنا/i;
 // a character of a label at a point size (Segoe UI, measured in the report-fixes lab): 1.333 px a point x 0.57 em
-const pxPerChar = (pt) => pt * 1.333 * 0.57;
+// (R7, the cross-review: every number the rules use, named, with where it comes from; a number that was chosen and not
+// measured says so, and a finding that rests on one, or on a word list, is a guess)
+const MEASURED = {
+  PX_PER_PT: { value: 1.333, source: 'a point is 4/3 of a page unit (Power BI\'s 96 dpi page)' },
+  CHAR_EM: { value: 0.57, source: 'measured on the laptop, Power BI Desktop 2.158, 10 Oct 2026: the average width of a category label\'s character in Segoe UI, in em' },
+  AXIS_SHARE: { value: 25, source: 'Power BI\'s default category-axis maximum width, in % of the visual (no maxMarginFactor set)' },
+  BAR_FIT_WARN: { value: 18, source: 'chosen, not measured: fewer characters than this on a bar chart\'s axis is worth a look (a guess)' },
+  BAR_FIT_HIGH: { value: 13, source: 'chosen, not measured: fewer than this is likely to cut most names (a guess)' },
+  TABLE_SLACK: { value: 20, source: 'chosen, not measured: set widths more than this past the table\'s width scroll' },
+  PIVOT_SCROLL: { value: 1.5, source: 'chosen, not measured: a matrix\'s set widths scroll by design up to 1.5 x its width' },
+  PAGE_SLACK: { value: 1, source: 'chosen: a visual this far past the page edge is still on the page (rounding)' },
+  LABEL_ABOVE: { value: 70, source: 'chosen, not measured: a text box ending up to this far above a visual names it' },
+  LABEL_INTO: { value: 12, source: 'chosen, not measured: ... or reaching this far into it' },
+  COVER_NEAR: { value: 3, source: 'chosen, not measured: a card within this of another visual\'s place and size lies over it (a "no data" message)' },
+  OVERLAP_SHARE: { value: 0.1, source: 'chosen, not measured: an overlap above this share of the smaller visual is worth a look' },
+  OVERLAP_HIGH: { value: 0.5, source: 'chosen, not measured: above this share an overlap is high' }
+};
+export { MEASURED };
+const V = (k) => MEASURED[k].value;
+const pxPerChar = (pt) => pt * V('PX_PER_PT') * V('CHAR_EM');
 
 // model: the model reader's tables ([{ name, columns: [{ name, dataType, sortBy }] }]) or null
 // facts: { "Table[Column]": { blank: true } } (the blank count, when the user agreed to read it; not read by the MCP yet)
@@ -59,7 +78,7 @@ export function lint(inv, model, facts, opts) {
         const many = (/month/i.test(f.name) && /year/i.test(f.name)) || /date/i.test(f.name);
         if (m && m.type === 'string' && !m.sortBy)
           add('AXIS_TEXT_TIME_UNSORTED', many ? 'high' : 'medium', p, x, `${refOf(f)} is a text column and the model gives it no sort-by column, so the axis runs in alphabetical order${x.sort.length ? ' (the visual is ordered by its value, not by time)' : ''}${many ? '; a label holding month and year is likely to give many points and a scrollbar' : ''}`,
-            'order the chart by the earliest date of each label (a MIN of the date column in Tooltips, then sort by it), and keep the last 12 months when there are more than about two years; or put Year and Month on the axis as two levels', false);
+            'order the chart by the earliest date of each label (a MIN of the date column in Tooltips, then sort by it), and keep the last 12 months when there are more than about two years; or put Year and Month on the axis as two levels', true);   // (R7: a time field known by the words of its name: a guess)
         else if (m && m.type === 'unknown' && !m.sortBy)
           add('AXIS_TEXT_TIME_UNSORTED', 'medium', p, x, `${refOf(f)} has no type in the model's files (a column of a DAX table) and no sort-by column: if it holds text, the axis runs in alphabetical order`, 'check its type; order the chart by the earliest date of each label, or give the column a sort-by column in the model', true);
         else if (!m && !hasModel) add('AXIS_TIME_UNKNOWN', 'note', p, x, `${refOf(f)} is named like a time field, and without the model its type and sort-by column cannot be known`, 'make sure it is a date, or a text column with a sort-by column', true);
@@ -74,25 +93,25 @@ export function lint(inv, model, facts, opts) {
         if (fm.growToFit && fm.wordWrap !== true && text.length && all.length > 1)
           add('TABLE_GROW_TO_FIT', 'high', p, x, `the columns are set to "grow to fit" with no word wrap, so ${text.map(refOf).join(', ')} widen${text.length === 1 ? 's' : ''} to the longest text and the other ${all.length - text.length} column(s) move out of view`,
             'switch off auto-size, give each column its own width (90 to 130 for numbers, what is left for text) and switch on word wrap', text.some((f) => typeOf(f) == null || typeOf(f) === 'unknown'));
-        else if (setAll && fm.autoSize === false && widths > (x.type === 'pivotTable' ? x.w * 1.5 : x.w - 20))
+        else if (setAll && fm.autoSize === false && widths > (x.type === 'pivotTable' ? x.w * V('PIVOT_SCROLL') : x.w - V('TABLE_SLACK')))
           add('TABLE_WIDTHS_TOO_WIDE', 'medium', p, x, `the set column widths add up to ${Math.round(widths)} in a table ${x.w} wide`, `bring the widths down to ${Math.round(x.w - 36)} in all, or widen the table`, false);
       }
       // (c) bar labels (O-4): the axis share of the width at the label size the visual or the theme sets
       if (BARS.test(x.type) && cat.length) {
-        const share = (x.format && x.format.axisShare) || 25, pt = (x.format && x.format.axisFontSize) || inv.theme.labelSize || 10;
+        const share = (x.format && x.format.axisShare) || V('AXIS_SHARE'), pt = (x.format && x.format.axisFontSize) || inv.theme.labelSize || 10;
         const fit = Math.floor(x.w * share / 100 / pxPerChar(pt)), f = cat[cat.length - 1];
-        if (isText(f) && fit < 18) add('BAR_LABELS_MAY_BE_CUT', fit < 13 ? 'high' : 'medium', p, x, `about ${fit} characters of a category name fit (visual ${x.w} wide, category axis share ${share}, label ${pt} pt); ${refOf(f)} is text, so longer names are cut with "..."`,
+        if (isText(f) && fit < V('BAR_FIT_WARN')) add('BAR_LABELS_MAY_BE_CUT', fit < V('BAR_FIT_HIGH') ? 'high' : 'medium', p, x, `about ${fit} characters of a category name fit (visual ${x.w} wide, category axis share ${share}, label ${pt} pt); ${refOf(f)} is text, so longer names are cut with "..."`,
           'raise the category axis maximum width to 40 or 50, or give the chart more width; the longest name decides', true);
       }
       // (d) off the page
-      if (p.w && p.h && (x.x < -1 || x.y < -1 || x.x + x.w > p.w + 1 || x.y + x.h > p.h + 1)) add('OFF_PAGE', 'high', p, x, `part of the visual lies outside the ${p.w}x${p.h} page`, 'move it or make it smaller', false);
+      if (p.w && p.h && (x.x < -V('PAGE_SLACK') || x.y < -V('PAGE_SLACK') || x.x + x.w > p.w + V('PAGE_SLACK') || x.y + x.h > p.h + V('PAGE_SLACK'))) add('OFF_PAGE', 'high', p, x, `part of the visual lies outside the ${p.w}x${p.h} page`, 'move it or make it smaller', false);
       // (e) a data visual with no title and no text box just above it
       if (DATA.test(x.type) && !x.title) {
-        const label = shown.some((t) => t.type === 'textbox' && t.text && t.y + t.h <= x.y + 12 && t.y + t.h >= x.y - 70 && t.x < x.x + x.w && t.x + t.w > x.x);
+        const label = shown.some((t) => t.type === 'textbox' && t.text && t.y + t.h <= x.y + V('LABEL_INTO') && t.y + t.h >= x.y - V('LABEL_ABOVE') && t.x < x.x + x.w && t.x + t.w > x.x);
         if (!label) add('NO_TITLE', 'medium', p, x, 'no title, and no text box just above it to name it', 'add a title that says what the visual answers', false);
       }
       // (f) placeholder wording (read from the raw text, never quoted)
-      if (PLACEHOLDER.test([x.rawTitle, x.rawText].filter(Boolean).join(' '))) add('PLACEHOLDER_TEXT', 'high', p, x, 'the words of a placeholder are still there', 'put the real content in, or take the visual out', false);
+      if (PLACEHOLDER.test([x.rawTitle, x.rawText].filter(Boolean).join(' '))) add('PLACEHOLDER_TEXT', 'high', p, x, 'the words of a placeholder are still there', 'put the real content in, or take the visual out', true);   // (R7: a word list: a guess)
     }
     // (d2) overlapping data visuals; a card over another visual at the same place (within 3) is a cover, counted apart
     const data = shown.filter((x) => DATA.test(x.type) || /^card/.test(x.type) || x.type === 'multiRowCard' || x.type === 'kpi' || x.slicer);
@@ -101,10 +120,10 @@ export function lint(inv, model, facts, opts) {
       const A = data[a], B = data[b];
       const ox = Math.min(A.x + A.w, B.x + B.w) - Math.max(A.x, B.x), oy = Math.min(A.y + A.h, B.y + B.h) - Math.max(A.y, B.y);
       if (ox <= 2 || oy <= 2) continue;
-      const near = (m, n) => Math.abs(m - n) <= 3;
+      const near = (m, n) => Math.abs(m - n) <= V('COVER_NEAR');
       if (near(A.x, B.x) && near(A.y, B.y) && near(A.w, B.w) && near(A.h, B.h) && (/^card/.test(A.type) || /^card/.test(B.type))) { covers++; continue; }
       const share = ox * oy / Math.max(1, Math.min(A.w * A.h, B.w * B.h));
-      if (share > 0.1) add('OVERLAP', share > 0.5 ? 'high' : 'medium', p, A, `covers ${Math.round(share * 100)}% of the smaller of it and ${where(B)}`, 'move one of the two, or show them one at a time with bookmarks when they are alternatives', false);
+      if (share > V('OVERLAP_SHARE')) add('OVERLAP', share > V('OVERLAP_HIGH') ? 'high' : 'medium', p, A, `covers ${Math.round(share * 100)}% of the smaller of it and ${where(B)}`, 'move one of the two, or show them one at a time with bookmarks when they are alternatives', false);
     }
     if (covers) add('COVER_CARDS', 'note', p, null, `${covers} card(s) sit on another visual at the same place (the "no data" message pattern), not counted as overlaps`, 'none, when that is meant', false);
   }
