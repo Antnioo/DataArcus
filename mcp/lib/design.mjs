@@ -1,13 +1,18 @@
 // The design tools' logic: a design (the Theme Generator's saved design) from the tools' inputs, with every value that
 // could not be used listed with what was used instead. The engine is the website's own (assets/js/design-engine.js),
 // so the MCP and the Theme Generator give the same theme JSON and slot tables byte for byte.
-import fs from 'node:fs';
-import path from 'node:path';
 import { createRequire } from 'node:module';
-import { inside, nothingAt } from './model.mjs';
 
 const require = createRequire(import.meta.url);
 export const E = require('../../assets/js/design-engine.js');
+// the design's keys and its written schema are the engine's (the audit's A2-7)
+export const { DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, SCHEMA } = E;
+// The engine's parts the MCP tools use (the audit's A2-8: server.mjs reaches the engine only through this adapter; the
+// adapter itself reads and writes no file)
+export const { PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, REPORT_TEXTS, texts, clampHex, lum, buildTheme, themeScaleOf, scaleTheme, projectPages, themeName, fileBase, imageSize, isSmall } = E;
+// (0.2.9, audit 2's A2-3: the slot rules are the engine's: absorb for a text slot without its sentence, fitSlots for the rest)
+export const { absorb, fitSlots } = E;
+export const designRtl = E.rtl;
 
 const HARMONIES = ['analogous', 'complementary', 'triadic', 'mono'];
 // the light page of a brand theme (0.2.9, O-11): the Corporate preset's (the cross-review's G7: one light page, the
@@ -24,10 +29,11 @@ const hex = (v) => (typeof v === 'string' ? E.clampHex(v) : null);
 // and the given data colours are used when there are 8 (otherwise the engine would drop the whole design)
 // (0.2.9, the reviewer's answer to part 1's question, 11 Oct 2026: the owner chose light with the brand exact, O-11): a
 // design without its own colours starts light (the Corporate preset), never the dark DataArcus one
-export function withDefaults(given) {
+// report (optional): told each value of the given design the engine could not use (E.repairState's report)
+export function withDefaults(given, report) {
   const base = E.repairState(E.fresh()), g = given ? JSON.parse(JSON.stringify(given)) : {};
   if (!(Array.isArray(g.data) && g.data.length === 8)) { delete g.data; Object.assign(base, { preset: 'Corporate', data: E.PRESETS.Corporate.data.slice(), ui: Object.assign({}, E.PRESETS.Corporate.ui, g.ui && typeof g.ui === 'object' ? g.ui : {}) }); delete g.ui; delete g.preset; }
-  return E.repairState(Object.assign(base, g, { layout: Object.assign(base.layout, g.layout && typeof g.layout === 'object' ? g.layout : {}) }));
+  return E.repairState(Object.assign(base, g, { layout: Object.assign(base.layout, g.layout && typeof g.layout === 'object' ? g.layout : {}) }), report);
 }
 
 // The design for generate_theme's inputs (see server.mjs): the colours from palette, brand + harmony or preset (in that
@@ -76,7 +82,7 @@ export function themeDesign(a) {
   } else if (a.harmony != null) fix('harmony', a.harmony, null, 'not used: no brand colour given');
   if (a.name != null) d.name = String(a.name);
   if (a.font != null) {
-    if (E.FONTS.includes(a.font)) d.font = a.font;
+    if (E.FONTS.includes(a.font)) { d.font = a.font; if (!E.MEASURED_FONTS.includes(a.font)) notes.push(`${a.font}: the text room of the cards, header, filters and tables was measured in Power BI Desktop in ${E.MEASURED_FONTS.join(' and ')} only; ${a.font} is not measured yet, so a long title or value may be cut. Say so in the plan, or offer ${E.MEASURED_FONTS.join(' or ')}.`); }
     else fix('font', a.font, d.font, `not a Power BI font the generator offers; use one of ${E.FONTS.join(', ')}`);
   }
   if (a.chart) {
@@ -109,40 +115,39 @@ export function layoutFrom(l, base, fix) {
 }
 
 // plan_layout: the design (from generate_theme, or a fresh one) with the tool's layout choices applied the way the
-// website applies them, and the slots in page units. Returns { design, slots, forAuthoring, why }.
+// website applies them, and the slots in page units. Returns { design, slots, forAuthoring, why, smallPage?, repaired? }
+// (0.2.9, A2-3: a.fit(design, slots), when given, returns the engine's fitSlots options for the page, the report writer's
+// measures (Pbip.fitOptions): the slots are those the report will have, and z and tabOrder follow them)
+// (repaired: each value of the given design that could not be used, with what was used instead)
 export function planLayout(a) {
-  const design = withDefaults(a.design), l = design.layout;
+  const repaired = [], fix = (r) => repaired.push(r);
+  const design = withDefaults(a.design, fix), l = design.layout;
   // choosing a layout, as on the website: its own KPI count and filters, and the size sliders back to its defaults
   if (a.layout) { l.preset = a.layout; l.kpis = E.LAYOUTS[a.layout].kpis; l.filters = E.LAYOUTS[a.layout].filters; delete l.kpiH; delete l.mainW; delete l.split; }
-  // fewer than 3 KPI cards (the engine's own minimum): the layout keeps its 3 and the page shows kpiCards of them
-  if (a.kpis != null) { l.kpis = Math.max(3, a.kpis); if (a.kpis < 3) l.kpiCards = a.kpis; else delete l.kpiCards; }
-  if (l.wideTable !== false) l.wideTable = true;   // (a design that says false keeps equal shares) the owner, 6 Oct 2026: on a 4:3 page the table takes the wider share of its row (the design engine, computeSlots)
+  // the KPI cards, 0-6: the engine's own count (0.2.9, A2-4: no kpiCards)
+  if (a.kpis != null) l.kpis = a.kpis;
   if (a.filters != null) { l.filters = a.filters !== 'none'; if (l.filters) l.fpos = a.filters; }
   Object.assign(design.layout, layoutFrom({ page: a.page, header: a.header, dir: a.dir }, l, () => {}));
-  // Round 19 (the owner's choice B, 6 Oct 2026; golden task 5 at 640 x 360 in Desktop: cut card values, "Wednes...", a
-  // scrolling table): below 800 wide the executive layout's four charts do not fit, so the plan takes the single-focus
-  // layout: the KPI cards and one large chart (the text box beside it only when the report is given its text)
-  const SMALL_KPI_H = 116;
+  // Round 19 and 22 (golden task 5 at 640 x 360 in Desktop): a page under 800 wide takes the single-focus layout and
+  // its taller KPI cards. The rule is the design engine's (E.SMALL_PAGE, E.fitLayout; the audit's A2-1), so the website
+  // lays out the same page; the plan shows the layout the page really gets
+  const sp = E.smallPage(design.layout);
   let smallPage = null;
-  const pw0 = E.page(design.layout).w;
-  if (pw0 < 800 && design.layout.preset === 'exec') {
-    const L = design.layout; L.preset = 'focus'; L.filters = E.LAYOUTS.focus.filters; delete L.kpiH; delete L.mainW; delete L.split;
-    smallPage = { from: 'exec', to: 'focus', say: `The page is ${pw0} wide, under 800: the executive layout's four charts and table would be cut or scroll there, so this plan uses the single-focus layout (the KPI cards and one large chart). Say so in the plan; a page 800 wide or more takes the executive layout.` };
+  if (sp) {
+    design.layout = E.fitLayout(design.layout); ['kpiH', 'mainW', 'split'].forEach((k) => { if (design.layout[k] == null) delete design.layout[k]; });
+    smallPage = Object.assign({}, sp, { say: `The page is ${sp.w} wide, under ${E.SMALL_PAGE.w}: the executive layout's four charts and table would be cut or scroll there, so this plan uses the single-focus layout (the KPI cards and one large chart). Say so in the plan; a page ${E.SMALL_PAGE.w} wide or more takes the executive layout.` });
   }
-  // Round 22 (the owner's (a) of the night sitting's question 4; golden task 5 at 640 x 360 in Desktop 2.158.1304: the
-  // card values touched the card's bottom edge): under 800 wide the single-focus layout's KPI cards are one step
-  // taller (SMALL_KPI_H on the 720 grid, the layout's own is 96), unless the design sets its own height
-  if (pw0 < 800 && design.layout.preset === 'focus' && design.layout.kpiH == null) design.layout.kpiH = SMALL_KPI_H;
-  E.repairState(design);
-  const lang = a.lang, nm = (pair) => (lang === 'ar' ? pair[1] : pair[0]), layout = design.layout;
+  E.repairState(design, fix);
+  const lang = a.lang, nm = (x) => E.label(x, lang), layout = design.layout;   // (A2-9: labels keyed by language)
   // one row per visual, as the website's slot table: its name, the suggested visual, and x, y, w, h in page units
-  const slots = E.computeSlots(layout, lang).map((s) => Object.assign({ role: nm(s.role), kind: s.kind, visual: nm(E.KINDS[s.kind]) }, E.boxOf(s, layout)));
+  const planned = E.computeSlots(layout, lang, { tableFields: a.tableFields }).map((s) => Object.assign({ role: nm(s.role), kind: s.kind, visual: nm(E.KINDS[s.kind]) }, E.boxOf(s, layout)));
+  const slots = a.fit ? E.fitSlots(planned, a.fit(design, planned)).slots : planned;
   // the PBIR visual.json position, in reading order (top to bottom, then along the reading direction: the order
   // pbip-export.js sorts visuals in), z and tabOrder 1000, 2000...
   const right = E.rtl(layout, lang);
   const forAuthoring = slots.slice().sort((p, q) => (p.y - q.y) || (right ? q.x - p.x : p.x - q.x))
     .map((s, i) => ({ role: s.role, kind: s.kind, position: { x: s.x, y: s.y, z: (i + 1) * 1000, width: s.w, height: s.h, tabOrder: (i + 1) * 1000 } }));
-  return Object.assign({ design, slots, forAuthoring, why: E.LAYOUTS[layout.preset].why.map(nm) }, smallPage ? { smallPage } : {});
+  return Object.assign({ design, slots, forAuthoring, why: E.LAYOUTS[layout.preset].why.map(nm) }, smallPage ? { smallPage } : {}, repaired.length ? { repaired } : {});
 }
 
 // The page size a layout really gets, and whether a custom size had to be fitted (as the website does)
@@ -159,13 +164,3 @@ export function contrastReport(design) {
   return { contrast: c, warnings };
 }
 
-// A file inside the DataArcus folder that doesn't exist yet: name.ext, name-2.ext, name-3.ext... (a name held by
-// anything, a link included, is skipped)
-export function freeFile(folder, base, ext) {
-  const dir = inside(folder || '.');
-  fs.mkdirSync(dir, { recursive: true });
-  for (let n = 1; ; n++) {
-    const f = path.join(dir, base + (n > 1 ? '-' + n : '') + ext);
-    if (nothingAt(f)) return f;
-  }
-}

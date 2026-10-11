@@ -1,0 +1,10 @@
+# gitleaks settings for the Privacy scan workflow: the default rules, plus the known false alarms, each public on purpose
+# and each allowed by its exact value or pattern, never a whole file.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Public on purpose: the made-up IndexNow key in its test, and Power BI 'Publish to web' links (the site's dashboards)."
+regexTarget = "line"
+regexes = ['''app\.powerbi\.com/view\?r=''']
+stopwords = ['''0123456789abcdef0123456789abcdef''']

@@ -42,8 +42,10 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     const PLAIN = ['Revenue INR', 'Units Sold', 'Shipped Weight', 'Orders', 'Cost CAD', 'Gross Rupees', 'Headcount'];
     chk(() => k.length === 4 && names.slice(0, 3).every((n) => PLAIN.includes(n)) && names.includes('Revenue INR') && names[3] === 'ROI',
       () => `G1: the cards must be plain sums and counts first (a currency code such as INR is no acronym), then one ratio: ${JSON.stringify(names)}`);
-    const all = await ask('suggest_fields', { path: 'i-retail', kpis: 8 }), by = Object.fromEntries((all.j && all.j.kpis || []).filter(Boolean).map((x) => [x.m, x]));
-    chk(() => by['Units Sold'].wholeFormat && by['Shipped Weight'].wholeFormat && !by['Revenue INR'].wholeFormat && !by['Cost CAD'].wholeFormat && by.Orders.wholeFormat === '#,0',
+    const all = await ask('suggest_fields', { path: 'i-retail', kpis: 6 })   // (the design block's A7-5: suggest_fields takes at most LIMITS.kpiCards, 6, as plan_layout; it took 8, so the 7th
+    // plain measure, Shipped Weight, is checked through the picker's own measureCard below)
+    , by = Object.fromEntries((all.j && all.j.kpis || []).filter(Boolean).map((x) => [x.m, x]));
+    chk(() => by['Units Sold'].wholeFormat && req('../assets/js/pbip-bind.js').measureCard({ name: 'Shipped Weight', formatString: '#,0 "kg"', expression: 'SUM ( Sales[Weight] )' }).wholeFormat && !by['Revenue INR'].wholeFormat && !by['Cost CAD'].wholeFormat && by.Orders.wholeFormat === '#,0',
       () => `G2: a unit in the format ("pcs", "kg") is no currency: those stay whole; INR and CAD are amounts: ${JSON.stringify(Object.fromEntries(Object.entries(by).map(([n, x]) => [n, x.wholeFormat || null])))}`);
     const B = req('../assets/js/pbip-bind.js');
     chk(() => !B.measureCard({ name: 'Gross Rupees', formatString: '₹#,0', expression: 'SUM ( Sales[Amount] )' }).wholeFormat && !B.measureCard({ name: 'X', formatString: '#,0 "JPY"', expression: 'SUM ( T[A] )' }).wholeFormat
@@ -148,7 +150,8 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
 
   // ---------- duplicates the gate block owns: one DAX for a visual's value, one Arabic month list, one custom-visual test ----------
   {
-    const px = fs.readFileSync(path.join(REPO, 'assets/js/pbip-export.js'), 'utf8'), Px = req('../assets/js/pbip-export.js');
+    // (0.2.9, the writer's A3-12: the writer is five files since, pbip-export.js and its modules; AGG_DAX is in pbip-query.js)
+    const px = ['pbip-export', 'pbip-query', 'pbip-sizing', 'pbip-page', 'pbip-notes'].map((f) => path.join(REPO, 'assets/js', f + '.js')).filter((f) => fs.existsSync(f)).map((f) => fs.readFileSync(f, 'utf8')).join('\n'), Px = req('../assets/js/pbip-export.js');
     const twin = fs.readFileSync(path.join(HERE, 'lib/arabic-twin.mjs'), 'utf8'), cr = fs.readFileSync(path.join(HERE, 'lib/check-report.mjs'), 'utf8'), plans = fs.readFileSync(path.join(HERE, 'lib/plans.mjs'), 'utf8');
     chk(() => (px.match(/const AGG_DAX = /g) || []).length === 1, () => `G4: one AGG_DAX in the writer: ${(px.match(/const AGG_DAX = /g) || []).length}`);
     chk(() => Array.isArray(Px.AR_MONTHS) && Px.AR_MONTHS.length === 12 && !/const MONTHS_AR = \[/.test(twin) && /AR_MONTHS/.test(twin), () => 'one Arabic month list: the writer exports AR_MONTHS and the twin uses it');

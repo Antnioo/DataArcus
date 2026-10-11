@@ -33,13 +33,16 @@ window.betaPageTranslations = {
         "s3": "<strong>Open the new report</strong> in Power BI Desktop: it is a new .pbip next to your model."
       },
       "tools": {
-        "title": "The 8 tools",
+        "title": "The 11 tools",
         "read_model": "Reads the tables, the columns with their types, the measures with their formats and the date tables. Changes nothing.",
         "suggest_fields": "Picks the measures and columns for each KPI card, chart, table and slicer.",
         "check_model_health": "The Model Health Check: a score and every finding, with fix scripts for you to review (never applied).",
         "plan_layout": "The exact position of every visual on the page, mirrored for right to left. Writes nothing.",
+        "approve_plan": "Records your go on the plan: no tool writes a file without an approved plan.",
         "create_report": "A new report next to your model, every visual placed and bound to your fields.",
         "check_report": "Checks a report that already exists, offline: Microsoft's validator and the rules measured in Power BI Desktop. Changes nothing.",
+        "read_report": "Reads a report you already have, one line per visual, before a redesign. Changes nothing.",
+        "create_arabic_twin": "An Arabic, right-to-left copy of an existing report, next to it, with Arabic texts you approve. The original is never changed.",
         "generate_theme": "A Power BI report theme, exactly as the DataArcus Theme Generator makes it.",
         "add_gulf_calendar": "A Gulf date table (Hijri, Ramadan, Eid and the country's weekend) as a script for you to check and apply."
       },
@@ -54,7 +57,7 @@ window.betaPageTranslations = {
         "title": "What keeps it safe",
         "model": "It never changes your model and never writes over a file: every report is new, next to your model.",
         "ask": "It writes only inside the one folder you choose.",
-        "validator": "It checks the report offline with Microsoft's report validator.",
+        "validator": "Its check_report tool checks any report offline with Microsoft's report validator.",
         "data": "It reads your model's structure (tables, columns, measures, formats), not your data. What the AI app sees: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
       },
       "req": {
@@ -110,13 +113,16 @@ window.betaPageTranslations = {
         "s3": "<strong>افتح التقرير الجديد</strong> في Power BI Desktop: ملف .pbip جديد بجانب نموذجك."
       },
       "tools": {
-        "title": "الأدوات الثماني",
+        "title": "الأدوات: 11 أداة",
         "read_model": "تقرأ الجداول، والأعمدة بأنواعها، والمقاييس بتنسيقاتها، وجداول التاريخ. لا تغيّر شيئًا.",
         "suggest_fields": "تختار المقاييس والأعمدة لكل بطاقة مؤشر ومخطط وجدول ومقسّم.",
         "check_model_health": "فحص صحة النموذج: درجة وكل ملاحظة، مع نصوص إصلاح تراجعها أنت (لا تُطبَّق أبدًا).",
         "plan_layout": "الموضع الدقيق لكل عنصر مرئي في الصفحة، معكوسًا للاتجاه من اليمين إلى اليسار. لا تكتب شيئًا.",
+        "approve_plan": "تسجّل موافقتك على الخطة: لا تكتب أي أداة ملفًا دون خطة موافَق عليها.",
         "create_report": "تقرير جديد بجانب نموذجك، كل عنصر مرئي في مكانه ومربوط بحقولك.",
         "check_report": "تفحص تقريرًا موجودًا دون اتصال: مدقّق Microsoft والقواعد التي قيست في Power BI Desktop. لا تغيّر شيئًا.",
+        "read_report": "تقرأ تقريرًا موجودًا لديك، سطرًا لكل عنصر مرئي، قبل إعادة تصميمه. لا تغيّر شيئًا.",
+        "create_arabic_twin": "نسخة عربية من تقرير موجود، من اليمين إلى اليسار، بجانبه، بنصوص عربية توافق عليها أنت. لا يتغيّر التقرير الأصلي أبدًا.",
         "generate_theme": "سمة لتقارير Power BI، تمامًا كما يصنعها مولّد السمات من DataArcus.",
         "add_gulf_calendar": "جدول تاريخ خليجي (الهجري ورمضان والعيد وعطلة نهاية الأسبوع في بلدك) كنص برمجي تراجعه وتطبّقه أنت."
       },
@@ -131,7 +137,7 @@ window.betaPageTranslations = {
         "title": "ما الذي يجعله آمنًا",
         "model": "لا يغيّر نموذجك أبدًا ولا يكتب فوق أي ملف: كل تقرير جديد، بجانب نموذجك.",
         "ask": "يكتب فقط داخل المجلد الذي تختاره.",
-        "validator": "يفحص التقرير دون اتصال بمدقّق التقارير من Microsoft.",
+        "validator": "تفحص أداة check_report أي تقرير دون اتصال بمدقّق التقارير من Microsoft.",
         "data": "يقرأ بنية نموذجك (الجداول والأعمدة والمقاييس والتنسيقات)، لا بياناتك. ما يراه تطبيق الذكاء الاصطناعي: <a href='https://github.com/Antnioo/DataArcus/blob/main/mcp/PRIVACY.md' class='text-accent' target='_blank' rel='noopener'>PRIVACY.md</a>."
       },
       "req": {

@@ -24,19 +24,28 @@
   const mk = (v) => ({ expr: { Literal: { Value: v } } });
   const strOf = (p) => { const v = lit(p); return typeof v === 'string' && /^'.*'$/s.test(v) ? v.slice(1, -1).replace(/''/g, "'") : null; };
   const str = (s) => mk("'" + String(s).replace(/'/g, "''") + "'");
-  const clone = (o) => JSON.parse(JSON.stringify(o));
+  // (the fuzz test's F-T1..F-T3, 11 Oct: a report from anyone can hold any shape. Every read and write below checks the
+  // shape it touches; a part of an unexpected shape is left exactly as it is, never written into or thrown on)
+  const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
+  const clone = (o) => (o === undefined ? undefined : JSON.parse(JSON.stringify(o)));
 
   // ---- the kinds ----
   const COLUMN = ['columnChart', 'clusteredColumnChart', 'hundredPercentStackedColumnChart', 'lineChart', 'areaChart', 'stackedAreaChart', 'hundredPercentStackedAreaChart', 'lineClusteredColumnComboChart', 'lineStackedColumnComboChart', 'ribbonChart'];
   const BAR = ['barChart', 'clusteredBarChart', 'hundredPercentStackedBarChart'];
   const SLICER = ['slicer', 'advancedSlicerVisual', 'listSlicer', 'textSlicer'];
+  // visuals with nothing that has a side (the labs and round 13: they move only). Any other Power BI visual (a waterfall,
+  // a scatter chart, a decomposition tree...) is 'other': it moves only too, but the plan says no setting is proven
+  // for it (the cross-review's T6), instead of claiming it has no side
+  const SIDELESS = ['card', 'multiRowCard', 'kpi', 'gauge', 'donutChart', 'pieChart', 'funnel', 'treemap', 'map', 'filledMap', 'shapeMap', 'azureMap', 'image', 'shape', 'basicShape'];
   // a custom visual: the shared catalog's test (visual-types.js; the reading block uses the same one). A visual with no
   // type at all is treated as custom too: moved only
   const VT = typeof module !== 'undefined' && module.exports ? require('./visual-types.js') : root.DAVisualTypes;
   const isCustom = (type) => !type || VT.isCustom(type);
   function kindOf(json) {
-    if (json.visualGroup) return 'group';
-    const t = (json.visual || {}).visualType;
+    if (!isObj(json)) return 'unreadable';
+    if (isObj(json.visualGroup)) return 'group';
+    if (!isObj(json.visual)) return 'unreadable';
+    const t = json.visual.visualType;
     if (isCustom(t)) return 'custom';
     if (COLUMN.includes(t)) return 'column';
     if (BAR.includes(t)) return 'bar';
@@ -47,7 +56,7 @@
     if (t === 'actionButton') return 'button';
     if (t === 'pageNavigator') return 'navigator';
     if (SLICER.includes(t)) return 'slicer';
-    return 'plain';
+    return SIDELESS.includes(t) ? 'plain' : 'other';
   }
   const KIND_WHAT = {
     column: 'column, line, area and combo charts: value axis at the right, categories right to left by the sort',
@@ -61,38 +70,61 @@
     slicer: 'slicers: moved only (their items keep Power BI\'s own alignment)',
     custom: 'custom visuals: moved only, their settings left as they are',
     group: 'groups: mirrored with their visuals inside',
-    plain: 'cards, gauges, donuts, maps, images, shapes and other visuals: moved only (nothing in them has a side)'
+    plain: 'cards, gauges, donuts, funnels, treemaps, maps, images and shapes: moved only (nothing in them has a side)',
+    other: 'other visuals (waterfall, scatter...): moved only; no right-to-left setting is proven for them',
+    unreadable: 'visuals whose file has an unexpected shape: copied as they are, not mirrored'
   };
 
   // ---- small helpers ----
   const round = (v) => { const r = Math.round(v * 100) / 100; return r === 0 ? 0 : r; };
-  const entries = (bag, name) => (bag && Array.isArray(bag[name]) ? bag[name] : null);
-  // the entry without a selector (made when missing), where axis and legend switches go
-  const plainEntry = (bag, name) => { const es = bag[name] || (bag[name] = []); let e = es.find((x) => !x.selector); if (!e) { e = { properties: {} }; es.unshift(e); } e.properties = e.properties || {}; return e; };
-  const projections = (query, role) => (query && query.queryState && query.queryState[role] && Array.isArray(query.queryState[role].projections) ? query.queryState[role].projections : null);
+  // the entries of a formatting card that are objects (an odd one is skipped, never changed)
+  const entries = (bag, name) => (isObj(bag) && Array.isArray(bag[name]) ? bag[name].filter((e) => isObj(e) && (e.properties === undefined || isObj(e.properties))) : null);
+  // the entry without a selector (made when missing), where axis and legend switches go; when the card or the entry has
+  // an unexpected shape, a detached entry is returned: what is set on it goes nowhere, and the original stays as it is
+  const detached = () => ({ properties: {} });
+  const plainEntry = (bag, name) => {
+    if (!isObj(bag)) return detached();
+    if (bag[name] === undefined) bag[name] = [];
+    const es = bag[name]; if (!Array.isArray(es)) return detached();
+    let e = es.find((x) => isObj(x) && !x.selector); if (!e) { e = { properties: {} }; es.unshift(e); }
+    if (e.properties === undefined) e.properties = {};
+    return isObj(e.properties) ? e : detached();
+  };
+  // a list inside an object, made when missing; null when something else is there
+  const listIn = (bag, name) => { if (!isObj(bag)) return null; if (bag[name] === undefined) bag[name] = []; return Array.isArray(bag[name]) ? bag[name] : null; };
+  const projections = (query, role) => (isObj(query) && isObj(query.queryState) && isObj(query.queryState[role]) && Array.isArray(query.queryState[role].projections) ? query.queryState[role].projections : null);
+  const first = (ps) => (ps && isObj(ps[0]) ? ps[0] : null);
   const sameField = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   const LEGEND = { Top: 'TopRight', TopLeft: 'TopRight', TopRight: 'TopLeft', Bottom: 'BottomRight', BottomLeft: 'BottomRight', BottomRight: 'BottomLeft', Left: 'Right', Right: 'Left', LeftCenter: 'RightCenter', RightCenter: 'LeftCenter' };
   // a time category: a hierarchy level, a column of a date table, or a column named like a date part
   const TIME_NAME = /\b(date|month|year|quarter|week|day|weekday|period)s?\b|التاريخ|الشهر|السنة|الربع|الأسبوع|اليوم/i;
   function isTime(field, dateTables) {
-    if (!field) return false;
+    if (!isObj(field)) return false;
     if (field.HierarchyLevel) return true;
-    const c = field.Column; if (!c) return false;
-    const ent = c.Expression && c.Expression.SourceRef && c.Expression.SourceRef.Entity;
+    const c = field.Column; if (!isObj(c)) return false;
+    const ent = isObj(c.Expression) && isObj(c.Expression.SourceRef) ? c.Expression.SourceRef.Entity : null;
     return (dateTables || []).includes(ent) || TIME_NAME.test(String(c.Property || ''));
   }
+
+  // a text box's paragraphs that are objects, and a paragraph's text runs that are objects
+  const paragraphsOf = (v) => (entries(isObj(v) ? v.objects : null, 'general') || []).flatMap((e) => (isObj(e.properties) && Array.isArray(e.properties.paragraphs) ? e.properties.paragraphs : []).map((para, i) => (isObj(para) ? Object.assign(para, {}) : null)).filter(Boolean));
+  const runsOf = (para) => (Array.isArray(para.textRuns) ? para.textRuns : []);
 
   // ---- one visual ----
   // json: visual.json of the original; W: the width it is placed in (the page's, or its parent group's)
   // opts: { timeRightToLeft (default true), dateTables: [names] }. Returns { json (a new object), kind, changes }
   function mirrorVisual(json0, W, opts) {
-    const o = opts || {}, json = clone(json0), kind = kindOf(json), changes = [];
-    const p = json.position || {};
-    if (typeof p.x === 'number' && typeof p.width === 'number' && typeof W === 'number') { p.x = round(W - p.x - p.width); changes.push('position'); }
+    const o = opts || {};
+    if (!isObj(json0)) return { json: json0, kind: 'unreadable', changes: [] };
+    const json = clone(json0), kind = kindOf(json), changes = [];
+    const p = isObj(json.position) ? json.position : {};
+    if (Number.isFinite(p.x) && Number.isFinite(p.width) && Number.isFinite(W)) { p.x = round(W - p.x - p.width); changes.push('position'); }
     const v = json.visual;
-    if (!v || kind === 'custom' || kind === 'group') return { json, kind, changes };
-    const objects = () => (v.objects = v.objects || {});
-    const vco = () => (v.visualContainerObjects = v.visualContainerObjects || {});
+    if (!isObj(v) || kind === 'custom' || kind === 'group' || kind === 'unreadable') return { json, kind, changes };
+    // the visual's formatting cards: made when missing; an unexpected shape there gets a detached bag (nothing written)
+    const bagOf = (name) => (v[name] === undefined ? (v[name] = {}) : isObj(v[name]) ? v[name] : {});
+    const objects = () => bagOf('objects');
+    const vco = () => bagOf('visualContainerObjects');
     // charts
     if (kind === 'bar') {
       plainEntry(objects(), 'categoryAxis').properties.switchAxisPosition = mk('true');
@@ -102,13 +134,14 @@
     if (kind === 'column') {
       plainEntry(objects(), 'valueAxis').properties.switchAxisPosition = mk('true');
       changes.push('value axis');
-      const q = v.query, cat = projections(q, 'Category'), sd = q && q.sortDefinition && Array.isArray(q.sortDefinition.sort) && q.sortDefinition.sort[0] ? q.sortDefinition : null;
-      const time = cat && cat[0] && isTime(cat[0].field, o.dateTables), keepTime = o.timeRightToLeft === false && time;
+      const q = v.query, c0 = first(projections(q, 'Category'));
+      const sd = isObj(q) && isObj(q.sortDefinition) && Array.isArray(q.sortDefinition.sort) && isObj(q.sortDefinition.sort[0]) ? q.sortDefinition : null;
+      const time = c0 && isTime(c0.field, o.dateTables), keepTime = o.timeRightToLeft === false && time;
       if (sd) {
-        const s = sd.sort[0], byCategory = cat && cat[0] && sameField(s.field, cat[0].field);
+        const s = sd.sort[0], byCategory = c0 && sameField(s.field, c0.field);
         if (!(keepTime && byCategory)) { s.direction = s.direction === 'Descending' ? 'Ascending' : 'Descending'; changes.push('sort'); }
-      } else if (cat && cat[0] && !keepTime) {
-        q.sortDefinition = { sort: [{ field: clone(cat[0].field), direction: 'Descending' }], isDefaultSort: true };
+      } else if (c0 && c0.field !== undefined && !keepTime && (q.sortDefinition === undefined)) {
+        q.sortDefinition = { sort: [{ field: clone(c0.field), direction: 'Descending' }], isDefaultSort: true };
         changes.push('sort');
       }
     }
@@ -126,10 +159,12 @@
     if (kind === 'table') {
       const ps = projections(v.query, 'Values');
       if (ps && ps.length > 1) { ps.reverse(); changes.push('columns'); }
-      (ps || []).filter((x) => x.field && x.field.Column).forEach((x) => {
-        const cf = objects().columnFormatting = objects().columnFormatting || [];
-        let e = cf.find((y) => y.selector && y.selector.metadata === x.queryRef);
+      (ps || []).filter((x) => isObj(x) && isObj(x.field) && x.field.Column && typeof x.queryRef === 'string').forEach((x) => {
+        const cf = listIn(objects(), 'columnFormatting'); if (!cf) return;
+        let e = cf.find((y) => isObj(y) && isObj(y.selector) && y.selector.metadata === x.queryRef);
         if (!e) { e = { properties: {}, selector: { metadata: x.queryRef } }; cf.push(e); }
+        if (e.properties === undefined) e.properties = {};
+        if (!isObj(e.properties)) return;
         const a = strOf(e.properties.alignment);
         if (a !== 'Center' && a !== 'Right') {
           e.properties.alignment = str('Right');
@@ -143,18 +178,17 @@
       const ps = projections(v.query, 'Data');
       if (ps && ps.length > 1) {
         ps.reverse();
-        const es = objects().value = objects().value || [];
-        let e = es.find((y) => y.selector && y.selector.id === 'default');
-        if (!e) { e = { properties: {}, selector: { id: 'default' } }; es.push(e); }
-        e.properties.horizontalAlignment = str('right');
+        const es = listIn(objects(), 'value');
+        let e = es ? es.find((y) => isObj(y) && isObj(y.selector) && y.selector.id === 'default') : null;
+        if (es && !e) { e = { properties: {}, selector: { id: 'default' } }; es.push(e); }
+        if (e && e.properties === undefined) e.properties = {};
+        if (e && isObj(e.properties)) e.properties.horizontalAlignment = str('right');
         changes.push('values');
       }
     }
     // text
     if (kind === 'textbox') {
-      ((entries(v.objects, 'general') || []).forEach((e) => ((e.properties || {}).paragraphs || []).forEach((para) => {
-        if (para.horizontalTextAlignment !== 'center') { para.horizontalTextAlignment = 'right'; changes.push('text'); }
-      })));
+      paragraphsOf(v).forEach((para) => { if (para.horizontalTextAlignment !== 'center') { para.horizontalTextAlignment = 'right'; changes.push('text'); } });
     }
     if (kind === 'button') {
       (entries(v.objects, 'text') || []).forEach((e) => { if (strOf((e.properties || {}).horizontalAlignment) === 'left') { e.properties.horizontalAlignment = str('right'); changes.push('text'); } });
@@ -173,45 +207,51 @@
   // ---- one page: every visual mirrored, W from its parent group ----
   // visuals: [visual.json]; opts as mirrorVisual's. Returns { visuals: [json] in the same order, kinds: { kind: n }, custom: [names] }
   function mirrorPage(page, visuals, opts) {
-    const byName = {}; visuals.forEach((v) => { if (v && v.name != null) byName[v.name] = v; });
-    const kinds = {}, custom = [], out = visuals.map((v) => {
-      const parent = v.parentGroupName != null ? byName[v.parentGroupName] : null;
-      const W = parent && parent.position ? parent.position.width : page.width;
-      const r = mirrorVisual(v, W, opts);
+    const list = Array.isArray(visuals) ? visuals : [], byName = {};
+    list.forEach((v) => { if (isObj(v) && (typeof v.name === 'string' || typeof v.name === 'number')) byName[v.name] = v; });
+    const kinds = {}, custom = [], unreadable = [], out = list.map((v) => {
+      const parent = isObj(v) && (typeof v.parentGroupName === 'string' || typeof v.parentGroupName === 'number') ? byName[v.parentGroupName] : null;
+      const W = parent && isObj(parent.position) ? parent.position.width : isObj(page) ? page.width : undefined;
+      // (the backstop: whatever the file holds, a visual that can't be mirrored is copied as it is and listed)
+      let r; try { r = mirrorVisual(v, W, opts); } catch (e) { r = { json: v, kind: 'unreadable', changes: [] }; }
       kinds[r.kind] = (kinds[r.kind] || 0) + 1;
       if (r.kind === 'custom') custom.push(String(v.name));
+      if (r.kind === 'unreadable') unreadable.push(isObj(v) && v.name != null ? String(v.name) : '(no name)');
       return r.json;
     });
-    return { visuals: out, kinds, custom };
+    return { visuals: out, kinds, custom, unreadable };
   }
 
   // ---- texts: what a reader sees that the report itself says (the model's data values are not here) ----
   // ids: page:<page>, title:<page>/<visual>, textbox:<page>/<visual>/<paragraph>.<run>, button:<page>/<visual>,
   // field:<queryRef> (one per field across the report), bookmark:<name>
-  const eachProjection = (v, fn) => { const qs = v.query && v.query.queryState; if (qs) Object.keys(qs).forEach((r) => (projections(v.query, r) || []).forEach(fn)); };
+  const eachProjection = (v, fn) => { const qs = isObj(v.query) && v.query.queryState; if (isObj(qs)) Object.keys(qs).forEach((r) => (projections(v.query, r) || []).forEach((x) => { if (isObj(x)) fn(x); })); };
+  // a text box's runs with their paragraph and run numbers as the file has them (the ids' numbers)
+  const eachRun = (v, fn) => (entries(v.objects, 'general') || []).forEach((e) => (isObj(e.properties) && Array.isArray(e.properties.paragraphs) ? e.properties.paragraphs : []).forEach((para, i) => {
+    if (isObj(para)) runsOf(para).forEach((run, j) => { if (isObj(run)) fn(run, i, j); });
+  }));
   function textsOfVisual(pageId, json) {
-    const out = [], v = json.visual, where = pageId + '/' + json.name;
-    if (!v) return out;
+    const out = [];
+    if (!isObj(json) || !isObj(json.visual)) return out;
+    const v = json.visual, where = pageId + '/' + json.name;
     const t = (entries(v.visualContainerObjects, 'title') || []).map((e) => strOf((e.properties || {}).text)).find((x) => x != null);
     if (t != null && kindOf(json) !== 'button') out.push({ id: 'title:' + where, kind: 'title', text: t });
-    if (kindOf(json) === 'textbox') (entries(v.objects, 'general') || []).forEach((e) => ((e.properties || {}).paragraphs || []).forEach((para, i) => (para.textRuns || []).forEach((run, j) => {
+    if (kindOf(json) === 'textbox') eachRun(v, (run, i, j) => {
       if (typeof run.value === 'string' && run.value.trim()) out.push({ id: `textbox:${where}/${i}.${j}`, kind: 'textbox', text: run.value });
-    })));
+    });
     if (kindOf(json) === 'button') { const b = (entries(v.objects, 'text') || []).map((e) => strOf((e.properties || {}).text)).find((x) => x != null); if (b != null) out.push({ id: 'button:' + where, kind: 'button', text: b }); }
-    eachProjection(v, (x) => { if (x.queryRef) out.push({ id: 'field:' + x.queryRef, kind: 'field', text: x.displayName != null ? x.displayName : (x.nativeQueryRef || x.queryRef) }); });
+    eachProjection(v, (x) => { if (typeof x.queryRef === 'string' && x.queryRef) out.push({ id: 'field:' + x.queryRef, kind: 'field', text: String(x.displayName != null ? x.displayName : (x.nativeQueryRef || x.queryRef)) }); });
     return out;
   }
   // labels: { id: text } (the user's approved texts). Returns how many were applied
   function labelVisual(pageId, json, labels) {
+    if (!isObj(json) || !isObj(json.visual) || !labels) return 0;
     const v = json.visual, where = pageId + '/' + json.name; let n = 0;
-    if (!v || !labels) return 0;
     const has = (id) => Object.prototype.hasOwnProperty.call(labels, id);
     if (has('title:' + where)) (entries(v.visualContainerObjects, 'title') || []).forEach((e) => { if (e.properties && e.properties.text) { e.properties.text = str(labels['title:' + where]); n++; } });
-    if (kindOf(json) === 'textbox') (entries(v.objects, 'general') || []).forEach((e) => ((e.properties || {}).paragraphs || []).forEach((para, i) => (para.textRuns || []).forEach((run, j) => {
-      const id = `textbox:${where}/${i}.${j}`; if (has(id)) { run.value = String(labels[id]); n++; }
-    })));
+    if (kindOf(json) === 'textbox') eachRun(v, (run, i, j) => { const id = `textbox:${where}/${i}.${j}`; if (has(id)) { run.value = String(labels[id]); n++; } });
     if (kindOf(json) === 'button' && has('button:' + where)) (entries(v.objects, 'text') || []).forEach((e) => { if (e.properties && e.properties.text) { e.properties.text = str(labels['button:' + where]); n++; } });
-    eachProjection(v, (x) => { if (x.queryRef && has('field:' + x.queryRef)) { x.displayName = String(labels['field:' + x.queryRef]); n++; } });
+    eachProjection(v, (x) => { if (typeof x.queryRef === 'string' && has('field:' + x.queryRef)) { x.displayName = String(labels['field:' + x.queryRef]); n++; } });
     return n;
   }
 

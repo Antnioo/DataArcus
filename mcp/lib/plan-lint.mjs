@@ -9,8 +9,7 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const Bind = require('../../assets/js/pbip-bind.js'), Pbip = require('../../assets/js/pbip-export.js');
-import { E } from './design.mjs';
-import { absorb } from './slots.mjs';
+import { E, absorb } from './design.mjs';   // (A2-3: the slot rules are the design engine's)
 import { inventory, memorySource } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
 import { takenNames } from './report-names.mjs';
@@ -26,23 +25,14 @@ export function planLint(a) {
   // (the two settings create_report itself forces on a design: solid visuals when there is no background image, and the
   // wider table share unless the design says otherwise; the page is built as create_report will write it, nothing tuned)
   let design = Object.assign({}, d0, { layout: Object.assign({}, d0.layout, { transparent: false, wideTable: d0.layout.wideTable !== false }) });
-  if (F && F.kpis) design.layout = Object.assign({}, design.layout, { kpis: Math.max(3, Math.min(6, F.kpis.length)), kpiCards: F.kpis.length });
-  // the binding: the picker's, with every field the plan names in its place (create_report's bindFor, without page filters)
+  if (F && F.kpis) design.layout = Object.assign({}, design.layout, { kpis: Math.min(6, F.kpis.length) });   // (the design block's A2-4: kpis is the card count, 0-6)
+  // the binding: the picker's, with every field the plan names pinned (create_report's options, without page filters;
+  // A3-2: the picker keeps them, so nothing is rebuilt here)
   const n = Math.max(1, ...E.projectPages(design.layout, lang, { second: false }).map((p) => p.slots.filter((s) => s.kind === 'kpi').length));
-  const b = Bind.suggest(pickFrom, n, Object.assign(relsOf(m, lang), F && F.measure ? { main: F.measure } : {}));
-  if (!(b.kpis || []).filter(Boolean).length && !(F && F.kpis && F.kpis.length)) return { skipped: 'the model has no measure a card or a chart can show, so the planned page was not linted (create_report counts its columns instead)' };
-  let bind = b;
-  if (F) {
-    const ch = Object.assign({}, b.choices);
-    if (F.kpis) ch.kpis = F.kpis;
-    if (F.measure) ch.main = F.measure;
-    if (F.timeAxis) ch.date = F.timeAxis;
-    if (F.category) ch.catA = F.category;
-    if (F.category2) ch.catB = F.category2;
-    if (F.slicers) { const same = (x, y) => x && y && x.t === y.t && x.c === y.c; ch.slicers = F.slicers.concat((ch.slicers || []).filter((s) => s && !F.slicers.some((g) => same(g, s)))).slice(0, 3); while (ch.slicers.length < 3) ch.slicers.push(null); }
-    bind = Bind.build(ch);
-    if (F.table) bind.table = F.table.map((x) => (x.m != null ? { t: x.t, m: x.m } : Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {})));
-  }
+  const pinned = F ? Object.fromEntries([['kpis', F.kpis], ['main', F.measure], ['date', F.timeAxis], ['catA', F.category], ['catB', F.category2], ['slicers', F.slicers], ['table', F.table]].filter(([, v]) => v)) : null;
+  const bind = Bind.suggest(pickFrom, n, Object.assign(relsOf(m, lang), F && F.measure ? { main: F.measure } : {}, pinned ? { pinned } : {}));
+  if (!(bind.kpis || []).filter(Boolean).length) return { skipped: 'the model has no measure a card or a chart can show, so the planned page was not linted (create_report counts its columns instead)' };
+  if (F) delete bind.catPool;   // (as create_report's binding with the plan's fields)
   // a text slot without a text is left out by create_report and its room given to the visual beside it
   const pages = E.projectPages(design.layout, lang, { second: false }).slice(0, 1).map((p) => {
     let slots = p.slots; p.slots.filter((s) => s.kind === 'text' && !s.text).forEach((t) => { slots = absorb(slots.filter((s) => s !== t), t); });

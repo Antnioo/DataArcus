@@ -213,11 +213,13 @@ export function inventory(src, reportName, opts) {
   const sk = src.sk || { big: [], deep: 0 };
   const unreadableFiles = [], versions = {};
   sk.links = sk.links || [];
-  const json = (rel) => { if (++reads > REPORT_LIMITS.files) { sk.capped = true; return null; } try { return src.json(rel); } catch (e) { if (e instanceof TooBig) sk.big.push({ file: rel, size: e.size }); else if (e instanceof Linked) sk.links.push(rel); else if (src.has(rel)) unreadableFiles.push(rel); return null; } };
+  // (F-R1/F-R2, the fuzz test: one shape check where a file comes in: a file that is not a JSON object is unreadable,
+  // never read on; lists are read through entries() / names() only)
+  const json = (rel) => { if (++reads > REPORT_LIMITS.files) { sk.capped = true; return null; } try { const j = src.json(rel); if (!j || typeof j !== 'object' || Array.isArray(j)) { unreadableFiles.push(rel); return null; } return j; } catch (e) { if (e instanceof TooBig) sk.big.push({ file: rel, size: e.size }); else if (e instanceof Linked) sk.links.push(rel); else if (src.has(rel)) unreadableFiles.push(rel); return null; } };
   // the schema versions the files name (check_report's answer): family -> versions
   const note = (j) => { const u = String((j && j.$schema) || ''), m = /\/([A-Za-z]+)\/(\d+\.\d+\.\d+)\/schema(?:[.-]embedded)?\.json$/.exec(u); if (m) (versions[m[1]] = versions[m[1]] || new Set()).add(m[2]); return j; };
   const report = note(json('definition/report.json')) || {};
-  const order = ((note(json('definition/pages/pages.json')) || {}).pageOrder || []).map(String);
+  const order = names((note(json('definition/pages/pages.json')) || {}).pageOrder);
   const ids = src.dirs('definition/pages');
   const pageIds = order.filter((id) => ids.includes(id)).concat(ids.filter((id) => !order.includes(id)));
   const pageJson = Object.fromEntries(pageIds.map((id) => [id, note(json(`definition/pages/${id}/page.json`)) || {}]));
@@ -256,6 +258,8 @@ export function inventory(src, reportName, opts) {
       const v = j.visual || {}, vco = v.visualContainerObjects || {}, o = v.objects || {};
       x.type = String(v.visualType || 'unknown');
       const t = plain(vco.title), tp = t.text;
+      // (A4-8, audit 4: a title switched off, for the lint's NO_TITLE; with no title setting Power BI draws its own title)
+      if (litBool(t.show) === false) x.titleOff = true;
       if (litBool(t.show) !== false && tp) { const lt = litStr(tp); if (lt != null) { x.rawTitle = lt; x.title = safeText(lt); flag('title', lt, vrel); } else if (tp.expr) { const f = fieldOf(tp.expr); x.title = 'fx ' + refOf(f); } }
       x.fields = {};
       Object.entries((v.query || {}).queryState || {}).forEach(([role, r]) => { const l = entries(r && r.projections).map((p) => Object.assign({}, fieldOf(p.field) || { kind: 'other' }, { queryRef: String(p.queryRef || '') }, p.displayName ? { displayName: String(p.displayName) } : {})); if (l.length) x.fields[role] = l; });

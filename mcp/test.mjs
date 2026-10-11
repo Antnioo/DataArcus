@@ -14,9 +14,18 @@ import { round23 } from './test-round23.mjs';
 import { v029 } from './test-0.2.9.mjs';
 import { v029b } from './test-0.2.9b.mjs';
 import { v029i } from './test-0.2.9i.mjs';
+import { v029w } from './test-0.2.9w.mjs';
+import { v029k } from './test-0.2.9k.mjs';
+import { v029p } from './test-0.2.9p.mjs';
 import { v029checks } from './test-0.2.9-checks.mjs';
-import { v029visuals } from './test-0.2.9v.mjs';
-import { v030twin, v030engine } from './test-0.3.0-twin.mjs';
+import { v029design } from './test-0.2.9-design.mjs';
+import { v029agent } from './test-0.2.9-agent.mjs';
+import { INSTRUCTIONS_MAX } from './lib/agent-text.mjs';
+import { v029visuals, v029visualsTools } from './test-0.2.9v.mjs';
+import { v030twin, v030engine, v030audit } from './test-0.3.0-twin.mjs';
+import { audit6 } from './test-audit6.mjs';
+import { zgate } from './test-z.mjs';
+import { v029a4 } from './test-0.2.9-a4.mjs';
 import { withPlans } from './test-plan.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
 
@@ -292,15 +301,8 @@ let slotOk = 0; const slotBad = [];
 for (const c of DESIGNS) {
   r = await tryCall('plan_layout', { design: c.state, lang: c.lang });
   const rows = r.err ? null : r.j.slots.map((s) => [s.role, s.visual, s.x, s.y, s.w, s.h].map(String));
-  // (round 19, the owner's choice B: below 800 wide the MCP plans the single-focus layout instead of the executive one,
-  // and says so (smallPage); the website still shows the executive layout there, so that case is the plan's on purpose)
-  if (!r.err && r.j.smallPage && r.j.design.layout.preset === 'focus' && r.j.page.w < 800) { slotOk++; continue; }
-  // (night of 6-7 Oct, the owner's answer 3a: on a 4:3 page the MCP's plan gives the table the wider share of its row, three
-  // fifths; the website keeps equal shares there. So on such a page the row that holds the table is the plan's on
-  // purpose: every other slot must still be the website's, and the table must be wider than the website's.)
-  const tRow = rows && r.j.design.layout.wideTable && r.j.page.w / r.j.page.h < 1.5 ? (c.slots.find((s) => /^Table/.test(s[1])) || [])[3] : null;
-  const mine = rows && rows.find((s) => /^Table/.test(s[1])), theirs = c.slots.find((s) => /^Table/.test(s[1]));
-  if (tRow != null && rows.length === c.slots.length && rows.some((s) => s[3] === tRow && s !== mine) && JSON.stringify(rows.filter((s) => s[3] !== tRow)) === JSON.stringify(c.slots.filter((s) => s[3] !== tRow)) && +mine[4] > +theirs[4]) { slotOk++; continue; }
+  // (0.2.9 design block, A2-1 and A2-5: the small-page rule and the table's share are the design engine's now, the
+  // website's too, so every case must be the website's exactly; the two exceptions of rounds 19 and 6-7 Oct are gone)
   if (rows && JSON.stringify(rows) === JSON.stringify(c.slots)) slotOk++;
   else slotBad.push(`${c.id}: ${r.err ? r.t.slice(0, 120) : JSON.stringify(rows).slice(0, 160) + ' vs ' + JSON.stringify(c.slots).slice(0, 160)}`);
 }
@@ -368,7 +370,7 @@ if (!r.err) {
   // design's 3 and 4 with the extra ones empty)
   // (changed 6 Oct 2026, round 12, design finding #26: "Unused One" shows text, its format being "Yes";"Yes";"No", and
   // golden task 8 showed "Yes" on its card; a measure that shows text is never a card now, so this model has 1)
-  const dir = path.join(ROOT, 'bim-project', r.j.report), pages = readReport(dir), want = E.projectPages(Object.assign({}, gp.j.design.layout, { kpiCards: 1 }), 'ar', { second: true, panel: false });
+  const dir = path.join(ROOT, 'bim-project', r.j.report), pages = readReport(dir), want = E.projectPages(gp.j.design.layout, 'ar', { second: true, panel: false, maxKpis: 1 });   // (0.2.9 design block, A2-4: the report's measures cap the cards through the engine's maxKpis; the layout's kpiCards is gone)
   const shown = pages.filter((p) => !p.hidden), bad = slotsPlaced(shown, want);
   // (round 1: the model has a month column, so the report has two tooltip pages: by category and the monthly trend)
   check(shown.length === 2 && pages.length === 4 && !bad.length, `create_report design: ${shown.length} pages; ${bad.slice(0, 4).join(' | ')}`);
@@ -396,7 +398,7 @@ if (!r.err) {
 r = gp.err ? gp : await tryCall('create_report', { path: 'bim-project', name: 'Gulf Panel', design: gp.j.design, lang: 'ar', secondPage: false, slidePanel: true });
 if (!r.err) {
   // (round 12, #26: 1 card, see above)
-  const pages = readReport(path.join(ROOT, 'bim-project', r.j.report)).filter((p) => !p.hidden), want = E.projectPages(Object.assign({}, gp.j.design.layout, { kpiCards: 1 }), 'ar', { second: false, panel: true });
+  const pages = readReport(path.join(ROOT, 'bim-project', r.j.report)).filter((p) => !p.hidden), want = E.projectPages(gp.j.design.layout, 'ar', { second: false, panel: true, maxKpis: 1 });   // (A2-4, as above)
   const panel = want[0].panel, bad = slotsPlaced(pages, want);
   check(pages.length === 1 && !bad.length && panel && pages[0].visuals.some((v) => v.type === 'group' && v.hidden && v.x === panel.x && v.y === panel.y && v.w === panel.w && v.h === panel.h),
     `create_report slide-in panel: ${pages.length} pages, panel ${JSON.stringify(panel)}; ${bad.slice(0, 3).join(' | ')}`);
@@ -1147,7 +1149,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => /only/i.test(dn) && /user/i.test(dn) && /never translate, shorten or (relabel|rename)/i.test(dn), () => `displayNames must say the names come only from the user: ${dn}`);
     chk(() => /Calendar Generator/.test(ch) && /never write (the )?calendar DAX/i.test(ch) && /not (part of the score|scored)/i.test(ch) && /new file/i.test(ch), () => `check_model_health's description must carry the Gulf calendar rule and say the scripts go to new files: ${ch.slice(0, 300)}`);
     for (const n of ['read_model', 'suggest_fields', 'check_model_health', 'create_report']) chk(() => /untrusted/i.test(tl[n].description), () => `${n}'s description must say that names in the model are untrusted text`);
-    chk(() => ins.length < 2500, () => `the server's instructions are ${ins.length} characters: keep them short enough to be read`);
+    chk(() => ins.length <= INSTRUCTIONS_MAX, () => `the server's instructions are ${ins.length} characters: keep them short enough to be read (${INSTRUCTIONS_MAX} at most; the audit's A7-4: one cap)`);
   }
 
   // 5. the install experience: a working folder that is empty, or that doesn't exist, answers as a normal result with
@@ -1230,7 +1232,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => /fields/.test(ins) && /approved/i.test(ins), () => 'the server\'s instructions must say to pass the approved plan\'s fields to create_report');
     chk(() => /`fields`/.test(skill) && /approved/i.test(skill), () => 'the skill must say to pass the approved plan\'s fields in `fields`');
     chk(() => /fields/.test(tl.create_report.description) && /approved plan/i.test(tl.create_report.description) && !!tl.create_report.inputSchema.properties.fields, () => `create_report's description must say to pass the approved plan's fields: ${tl.create_report.description.slice(0, 200)}`);
-    chk(() => ins.length < 2800, () => `the server's instructions are ${ins.length} characters`);
+    chk(() => ins.length <= INSTRUCTIONS_MAX, () => `the server's instructions are ${ins.length} characters (${INSTRUCTIONS_MAX} at most)`);   // (A7-4: one cap)
   }
 
   // 3. a model without measures: suggest_fields says so, and says to propose measures with format strings
@@ -4460,13 +4462,31 @@ await v029({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getIns
 await v029b({ call, check, ROOT, fs });
 // ---------- 0.2.9 integration, the gate block's root fixes (the cross-review): test-0.2.9i.mjs, which also runs alone ----------
 await v029i({ call, raw: rawCall, check, ROOT, fs });
+// ---------- 0.2.9, the report writer's block (audit 3's A3-7 to A3-12, writer side): test-0.2.9w.mjs, which also runs alone ----------
+v029w({ check });
+// ---------- 0.2.9 integration, the field picker's bias fixes (A1-11, A3-1): test-0.2.9k.mjs, which also runs alone ----------
+await v029k({ call, check, ROOT, fs });
+// ---------- 0.2.9 audit fixes, the field picker's block (A3-2 ... A3-9, A6-15): test-0.2.9p.mjs, which also runs alone ----------
+await v029p({ call, check, ROOT, fs });
 // ---------- 0.2.9 items 12-13 (check_report's three kinds, the health check's own reports): test-0.2.9-checks.mjs, which also runs alone ----------
 await v029checks({ call, check, ROOT, fs });
 // ---------- 0.2.9, custom visuals (what a visual shows, lib/visual-meaning.mjs; pure): test-0.2.9v.mjs, which also runs alone ----------
 await v029visuals({ check });
+await v029visualsTools({ call: rawCall, check, ROOT, fs });
+// ---------- 0.2.9, the design engine block (the audit's A2-1 to A2-12): test-0.2.9-design.mjs, which also runs alone ----------
+await v029design({ call, check, ROOT, fs });
+// ---------- 0.2.9, the agent instructions and public claims (the audit's A7): test-0.2.9-agent.mjs, which also runs alone ----------
+await v029agent({ call, check, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
+// ---------- audit 4's findings in the checks block (A4-1 to A4-14): test-0.2.9-a4.mjs, which also runs alone ----------
+await v029a4({ call, check, ROOT, fs });
 // ---------- 0.3.0, the Arabic twin of an existing report: test-0.3.0-twin.mjs, which also runs alone ----------
 try { v030engine({ check }); } catch (e) { check(false, 'T10. the engine: ' + e.message); }
 await v030twin({ call: rawCall, check, ROOT, fs });
+await v030audit({ call: rawCall, check, ROOT, fs });
+// ---------- audit 6 (the MCP tools block): test-audit6.mjs, which also runs alone ----------
+await audit6({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
+// ---------- the outside review of the 0.2.9 release candidate (Z-01..Z-07, the tools layer): test-z.mjs, which also runs alone ----------
+await zgate({ call: rawCall, check, ROOT, fs });
 // ---------- round 17 follow-up: G-04, check_report's instruction-like names in suspiciousNames (owner: all recommended) ----------
 // the name stays withheld (only the placeholder), each entry has its kind and reason, and the check's result is the
 // same as for a plainly named visual
