@@ -287,15 +287,124 @@ export async function v029visuals({ check }) {
     chk(() => { try { R.replaceVisual({ name: 'g', visualGroup: {} }, byId.cvPie); return false; } catch (e) { return true; } }, () => 'C: a group is never replaced');
     fs.rmSync(TMP, { recursive: true, force: true });
   } catch (e) { check(false, 'V. C: the replacement on the fixture: ' + (e && e.stack || e).toString().slice(0, 400)); }
+  // ---------- the real role names (the laptop's inventory of 11 Oct, read-only): a drill-down vendor's public role ids,
+  // on made-up ids, made-up retail/HR/project fields and made-up formats. Each type is decided by its fields' shapes. ----------
+  try {
+    const TY = { 'Orders[Order Date]': 'dateTime', 'Projects[Start]': 'dateTime', 'Projects[Finish]': 'dateTime', 'Geo[Lat]': 'double', 'Geo[Lon]': 'double' };
+    const FMT = { 'Orders[Total Sales]': '#,0', 'Orders[Total Cost]': '#,0', 'Orders[Margin %]': '0.0%', 'Orders[Orders]': '#,0', 'Orders[Discount %]': '0.00%', 'Orders[Repeat %]': '0.00%', 'Orders[Grand Total]': '#,0' };
+    const o2 = { typeOf: (f) => TY[`${f.table}[${f.name}]`], formatOf: (f) => FMT[`${f.table}[${f.name}]`] };
+    const minOf = (t, c) => ({ field: { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Entity: t } }, Property: c } }, Function: 3 } }, queryRef: `Min(${t}.${c})`, nativeQueryRef: `First ${c}` });
+    const avgOf = (t, c) => ({ field: { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Entity: t } }, Property: c } }, Function: 1 } }, queryRef: `Avg(${t}.${c})`, nativeQueryRef: `Average of ${c}` });
+    const R = visualsOf({
+      facet: ['vendorFacetChartPaid' + HEX, { Category: [col('Orders', 'Channel')], Values1: [mea('Orders', 'Total Sales')], tooltipContent: [mea('Orders', 'Orders')], RuleColor: [col('Orders', 'Tier')] }],
+      ring: ['vendorPieChartPaid' + HEX, { Category: [col('Orders', 'Segment'), col('Orders', 'Region')], Values: [mea('Orders', 'Total Sales')], kpiValue: [mea('Orders', 'Grand Total')] }],
+      bubble: ['vendorDrillDownBubblePro' + HEX, { sourceNodes: [mea('Orders', 'Discount %')], tooltipFields: [mea('Orders', 'Total Sales')], nodeSize: [mea('Orders', 'Orders')], category: [col('Orders', 'Code')], targetNodes: [mea('Orders', 'Repeat %')] }],
+      map: ['vendorDrillDownMapPro' + HEX, { latitude: [col('Geo', 'Lat')], longitude: [col('Geo', 'Lon')], category: [col('Orders', 'Channel')], value: [mea('Orders', 'Total Sales')], name: [col('Geo', 'Country')], tooltipFields: [mea('Orders', 'Total Sales'), minOf('Orders', 'Channel')], label: [minOf('Geo', 'Country')] }],
+      bars3: ['vendorDrillDownComboBarPro' + HEX, { Category: [col('Teams', 'Department')], Values1: [mea('Orders', 'Total Sales')], Values2: [mea('Orders', 'Total Cost')], Values3: [mea('Orders', 'Orders')] }],
+      barPct: ['vendorDrillDownComboBarPro' + HEX, { Category: [col('Teams', 'Department')], Values1: [mea('Orders', 'Total Sales')], Values2: [mea('Orders', 'Margin %')], tooltipContent: [mea('Orders', 'Orders')] }],
+      timeline: ['vendorDrillDownTimelinePro' + HEX, { Category: [lvl('Orders', 'Order Date', 'Year'), lvl('Orders', 'Order Date', 'Quarter'), lvl('Orders', 'Order Date', 'Month')], DateValue: [minOf('Orders', 'Order Date')], Values1: [mea('Orders', 'Total Sales')], Values2: [mea('Orders', 'Total Cost')], Values3: [mea('Orders', 'Margin %')] }],
+      gantt: ['Gantt0123456789012' , { Task: [col('Projects', 'Name')], Legend: [col('Projects', 'Status')], StartDate: [col('Projects', 'Start')], EndDate: [minOf('Projects', 'Finish')], Completion: [avgOf('Projects', 'Done')], ExtraInformation: [col('Projects', 'Owner')] }],
+      text: ['textFilter0123456789ABCDEF0123456789ABCDEF', { field: [col('Orders', 'Customer')] }]
+    });
+    const objs = { ring: ['general', 'fillSettings', 'donut', 'kpiCard', 'toolbar'] };
+    const N = {}; for (const id of Object.keys(R)) { try { N[id] = M.nativeFor(R[id], Object.assign({ customObjects: objs[id] }, o2)); } catch (e) { N[id] = { error: String(e && e.stack || e).slice(0, 300) }; } }
+    const sh = (id) => JSON.stringify(N[id]).slice(0, 700);
+    chk(() => M.wordsOf('Values1').includes('values') && M.wordsOf('Y2').includes('y2') && M.wordsOf('sourceNodes').join() === 'source,nodes', () => `R0: role names split at digits too (Values1 -> values), a known token kept (Y2): ${M.wordsOf('Values1')} / ${M.wordsOf('Y2')}`);
+    chk(() => N.facet.native === 'clusteredColumnChart' && refs(N.facet.roles.Y).join() === 'Orders[Total Sales]' && refs(N.facet.roles.Tooltips).join() === 'Orders[Orders]' && !N.facet.roles.Series && N.facet.lost.some((x) => /colour rule/.test(x)),
+      () => `R1: a facet column (Category, Values1, tooltipContent, RuleColor): a column chart, the colour-rule role is no series and is told as lost: ${sh('facet')}`);
+    chk(() => N.ring.native === 'donutChart' && refs(N.ring.roles.Y).join() === 'Orders[Total Sales]' && N.ring.drill.length === 2 && N.ring.lost.some((x) => /over the chart|in the hole|a card/.test(x)) && !refs(N.ring.roles.Y).includes('Orders[Grand Total]'),
+      () => `R2: a pie with a donut object and a kpiValue: a donut (the object name decides), Category drills, the total in the hole is told as lost (a card), not a second value: ${sh('ring')}`);
+    chk(() => N.bubble.native === 'scatterChart' && refs(N.bubble.roles.X).join() === 'Orders[Discount %]' && refs(N.bubble.roles.Y).join() === 'Orders[Repeat %]' && refs(N.bubble.roles.Size).join() === 'Orders[Orders]' && refs(N.bubble.roles.Category).join() === 'Orders[Code]' && refs(N.bubble.roles.Tooltips).join() === 'Orders[Total Sales]' && !N.bubble.htmlNeeded,
+      () => `R3: source and target roles holding VALUES are a scatter's X and Y (not a network): ${sh('bubble')}`);
+    chk(() => N.map.native === 'azureMap' && refs(N.map.roles.Y).join() === 'Geo[Lat]' && refs(N.map.roles.X).join() === 'Geo[Lon]' && refs(N.map.roles.Size).join() === 'Orders[Total Sales]' && refs(N.map.roles.Series).join() === 'Orders[Channel]' && !N.map.roles.Category && N.map.candidates[0].fits && N.map.lost.some((x) => /place names/.test(x)),
+      () => `R4: latitude, longitude, value, category, name: Azure map Y, X, Size and Legend (Series); by Microsoft's capabilities latitude and longitude columns go with no Location, so the place names are told as lost: ${sh('map')}`);
+    chk(() => N.bars3.native === 'clusteredBarChart' && refs(N.bars3.roles.Y).length === 3 && !N.bars3.roles.Y2 && N.bars3.lost.some((x) => /overlap/.test(x)),
+      () => `R5: a combo-bar with three amounts (no percentage among them): a clustered bar chart, the overlapping bars told as lost: ${sh('bars3')}`);
+    chk(() => N.barPct.native === 'lineClusteredColumnComboChart' && refs(N.barPct.roles.Y).join() === 'Orders[Total Sales]' && refs(N.barPct.roles.Y2).join() === 'Orders[Margin %]' && /vertical|columns/.test(JSON.stringify(N.barPct.lost)),
+      () => `R6: an amount with a percentage riding along: a combo, the percentage the line (by its format), and the bars turning to columns told: ${sh('barPct')}`);
+    chk(() => N.timeline.native === 'lineClusteredColumnComboChart' && N.timeline.drill.map((f) => f.level).join() === 'Year,Quarter,Month' && refs(N.timeline.roles.Y).join() === 'Orders[Total Sales],Orders[Total Cost]' && refs(N.timeline.roles.Y2).join() === 'Orders[Margin %]' && !JSON.stringify(N.timeline.roles).includes('Min(')
+      && N.timeline.lost.some((x) => /drill/.test(x)),
+      () => `R7: a timeline (date levels, a date helper, two amounts and a percentage): a combo over the date hierarchy, the helper is no value, the drill-down told as lost: ${sh('timeline')}`);
+    chk(() => N.gantt.native === 'tableEx' && N.gantt.kind === 'table' && N.gantt.lost.some((x) => /start to/.test(x)) && !N.gantt.htmlNeeded,
+      () => `R8: a start date and an end date per task: a schedule, kept as a table, the bars from start to end told as lost (not a network): ${sh('gantt')}`);
+    chk(() => N.text.native === 'slicer' && refs(N.text.roles.Values).join() === 'Orders[Customer]', () => `R9: one field role: a slicer: ${sh('text')}`);
+    chk(() => Object.keys(N).every((id) => !N[id].error && (!N[id].native || M.fitsCapabilities(N[id].native, N[id].roles).ok)), () => `R10: every chosen native visual fits Microsoft's capabilities: ${Object.keys(N).filter((id) => N[id].error || (N[id].native && !M.fitsCapabilities(N[id].native, N[id].roles).ok)).map(sh).join(' | ')}`);
+    chk(() => Object.keys(N).every((id) => N[id].lost.length > 0 && typeof N[id].tell === 'string' && /It loses/.test(N[id].tell)), () => 'R11: every replacement says what it loses, in its sentence for the user');
+  } catch (e) { check(false, 'V. R: the real role names: ' + String(e && e.stack || e).slice(0, 400)); }
   // pure: the same input gives the same answer, and the input is not changed
   { const before = JSON.stringify(V.drill), a = JSON.stringify(meaningOf(V.drill, { typeOf })), b = JSON.stringify(meaningOf(V.drill, { typeOf }));
     chk(() => a === b && JSON.stringify(V.drill) === before, () => 'pure: the same answer twice, the visual unchanged'); }
+}
+
+
+// ---------- step C wired (through the server): plan_layout lists each replacement and what it loses; create_report writes
+// the approved ones only, in a new "<name> native" report; the original is only read. Made-up report and model only. ----------
+// call: the raw call (no plan id added), as the gate's own tests use it
+export async function v029visualsTools({ call, check, ROOT, fs }) {
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, 'VC. ' + text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const short = (x) => (x.err ? x.t.slice(0, 400) : JSON.stringify(x.j).slice(0, 600));
+  const J = (f) => JSON.parse(fs.readFileSync(f, 'utf8')), W = (f, j) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, JSON.stringify(j, null, 2)); };
+  const tree = (d) => fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? tree(path.join(d, e.name)) : [path.join(d, e.name)]));
+  const P = path.join(ROOT, 'cvt'); fs.cpSync(path.join(HERE, 'fixtures/twin-project'), P, { recursive: true });
+  // the model: one made-up percentage measure added to the copy
+  const mb = path.join(P, 'Twin Sales.SemanticModel/model.bim'), bim = J(mb); bim.model.tables[0].measures.push({ name: 'Margin %', expression: 'DIVIDE ( 1, 3 )', formatString: '0.0%' }); W(mb, bim);
+  const RD = path.join(P, 'Twin Sales.Report'), PG = path.join(RD, 'definition/pages/p1overview/visuals');
+  const place = (j, y) => Object.assign(j, { position: { x: 900, y, z: 9000 + y, width: 300, height: 90, tabOrder: 9000 + y } });
+  const CV = { cvFacet: 'vendorFacetChartPaid' + HEX, cvBars: 'vendorDrillDownComboBarPro' + HEX, cvBubble: 'vendorDrillDownBubblePro' + HEX, cvPlan: 'Gantt0123456789012', cvNet: 'vendorGraph' + HEX };
+  W(path.join(PG, 'cvFacet/visual.json'), place(vj('cvFacet', CV.cvFacet, { Category: [col('Sales', 'Region')], Values1: [mea('Sales', 'Total Sales')], tooltipContent: [mea('Sales', 'Orders')] }), 0));
+  W(path.join(PG, 'cvBars/visual.json'), place(vj('cvBars', CV.cvBars, { Category: [col('Sales', 'Product')], Values1: [mea('Sales', 'Total Sales')], Values2: [mea('Sales', 'Margin %')] }), 100));
+  W(path.join(PG, 'cvBubble/visual.json'), place(vj('cvBubble', CV.cvBubble, { category: [col('Sales', 'Product')], sourceNodes: [mea('Sales', 'Total Sales')], targetNodes: [mea('Sales', 'Margin %')], nodeSize: [mea('Sales', 'Orders')] }), 200));
+  W(path.join(PG, 'cvPlan/visual.json'), place(vj('cvPlan', CV.cvPlan, { Task: [col('Sales', 'Product')], StartDate: [col('Sales', 'Order Date')], EndDate: [col('Calendar', 'Date')] }), 300));
+  W(path.join(PG, 'cvNet/visual.json'), place(vj('cvNet', CV.cvNet, { Source: [col('Sales', 'Region')], Target: [col('Sales', 'Product')] }), 400));
+  const rj = J(path.join(RD, 'definition/report.json')); rj.publicCustomVisuals = (rj.publicCustomVisuals || []).concat(Object.values(CV)); W(path.join(RD, 'definition/report.json'), rj);
+  const hashOf = (d) => tree(d).sort().map((f) => path.relative(d, f) + ':' + fs.readFileSync(f).toString('base64')).join('|');
+  const before = hashOf(RD);
+  // the plan
+  const pl = await ask('plan_layout', { path: 'cvt', customVisualsFrom: 'cvt/Twin Sales.Report' });
+  const cv = pl.j && pl.j.customVisuals, reps = (cv && cv.replacements) || [];
+  const byFrom = (f) => reps.find((r) => r.from === f) || {};
+  // (5: the fixture's own custom gauge is replaced too, as in step C's pure test)
+  chk(() => reps.length === 5 && byFrom('vendorFacetChartPaid').native === 'clusteredColumnChart' && byFrom('vendorDrillDownComboBarPro').native === 'lineClusteredColumnComboChart' && byFrom('vendorDrillDownBubblePro').native === 'scatterChart' && byFrom('Gantt0123456789012').native === 'tableEx',
+    () => `C1: plan_layout lists the 5 replaceable custom visuals with their native visual (facet -> column, a percentage with amounts -> combo, a bubble -> scatter, a schedule -> table): ${short(pl)}`);
+  chk(() => reps.every((r) => /^custom visual \S+ on page \d+ at \d+,\d+ -> /.test(r.line) && r.lost.length > 0 && /It loses/.test(r.tell)) && (cv.notReplaced || []).length >= 1 && cv.notReplaced.some((x) => /HTML\/SVG/.test(x.line + x.why)),
+    () => `C2: each replacement has its plan line and what it loses; the network is listed as not replaced (HTML/SVG later): ${short(pl)}`);
+  chk(() => !JSON.stringify(cv).match(/Total Sales|Margin %|Region\b/), () => `C3: the plan's replacement lines carry no field name (the report's names are untrusted; the fields are read_report's): ${JSON.stringify(cv).slice(0, 400)}`);
+  chk(() => pl.j.plan && pl.j.plan.planId && (pl.j.plan.writesAfterGo || []).some((w) => /Twin Sales native/.test(w)), () => `C4: the plan says it writes "Twin Sales native" and has a plan id: ${short(pl)}`);
+  const id = pl.j && pl.j.plan && pl.j.plan.planId;
+  const no = await ask('create_report', { path: 'cvt', planId: id, customVisualsFrom: 'cvt/Twin Sales.Report' });
+  chk(() => no.err && /not approved/.test(no.t) && !fs.existsSync(path.join(P, 'Twin Sales native.Report')), () => `C5: before the user's go, nothing is written: ${short(no)}`);
+  await ask('approve_plan', { planId: id, userReply: 'go' });
+  const other = await ask('create_report', { path: 'cvt', planId: id, customVisualsFrom: 'cvt/Twin Sales.pbip' });
+  chk(() => other.err && /differ/.test(other.t), () => `C6: another customVisualsFrom than the approved one is refused: ${short(other)}`);
+  const made = await ask('create_report', { path: 'cvt', planId: id, customVisualsFrom: 'cvt/Twin Sales.Report' });
+  const ND = path.join(P, 'Twin Sales native.Report'), NPG = path.join(ND, 'definition/pages/p1overview/visuals');
+  const vt = (id2) => { try { return J(path.join(NPG, id2, 'visual.json')).visual.visualType; } catch (e) { return null; } };
+  chk(() => made.j && made.j.written && made.j.replaced === 5 && vt('cvFacet') === 'clusteredColumnChart' && vt('cvBars') === 'lineClusteredColumnComboChart' && vt('cvBubble') === 'scatterChart' && vt('cvPlan') === 'tableEx' && vt('cvNet') === CV.cvNet
+    && fs.existsSync(path.join(P, 'Twin Sales native.pbip')), () => `C7: create_report wrote "Twin Sales native" with the 5 approved replacements; the network stays the custom visual: ${short(made)}`);
+  chk(() => hashOf(RD) === before, () => 'C8: the original report is byte for byte as it was');
+  let nrj = {}; try { nrj = J(path.join(ND, 'definition/report.json')); } catch (e) { nrj = {}; }
+  chk(() => !nrj.publicCustomVisuals.includes(CV.cvFacet) && nrj.publicCustomVisuals.includes(CV.cvNet) && made.j.lost.length === 5 && made.j.lost.every((x) => x.lost.length), () => `C9: the replaced custom visuals are no longer declared, the network's still is; the answer says what each lost: ${JSON.stringify(nrj.publicCustomVisuals)} ${short(made)}`);
+  const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js'), pv = spawnSync(process.execPath, [cli, 'validate', ND], { encoding: 'utf8' });
+  let vd = null; try { vd = JSON.parse(pv.stdout).data; } catch (e) { vd = null; }
+  chk(() => vd && vd.errorCount === 0, () => `C10: Microsoft's validator on "Twin Sales native": 0 errors: ${vd ? JSON.stringify(Object.entries(vd.diagnostics || {}).filter(([, d]) => d.severity === 'error').map(([k, d]) => k + ': ' + String(d.items[0].message).slice(0, 160))) : String(pv.stdout || pv.stderr).slice(0, 300)}`);
+  const again = await ask('create_report', { path: 'cvt', planId: id, customVisualsFrom: 'cvt/Twin Sales.Report' });
+  chk(() => again.err && /already used|already there/.test(again.t), () => `C11: a plan writes once: ${short(again)}`);
+  // a report changed after the plan: refused
+  fs.rmSync(ND, { recursive: true, force: true }); fs.rmSync(path.join(P, 'Twin Sales native.pbip'), { force: true });
+  const pl2 = await ask('plan_layout', { path: 'cvt', customVisualsFrom: 'cvt/Twin Sales.Report' }), id2 = pl2.j && pl2.j.plan && pl2.j.plan.planId;
+  await ask('approve_plan', { planId: id2, userReply: 'go' });
+  const f = path.join(PG, 'cvFacet/visual.json'), j = J(f); j.visual.query.queryState.Values1.projections.push(mea('Sales', 'Orders')); W(f, j);
+  const changed = await ask('create_report', { path: 'cvt', planId: id2, customVisualsFrom: 'cvt/Twin Sales.Report' });
+  chk(() => changed.err && /changed since the plan/.test(changed.t) && !fs.existsSync(ND), () => `C12: the report changed after the plan: nothing written: ${short(changed)}`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const problems = []; let checks = 0;
   const check = (ok, msg) => { checks++; if (!ok) problems.push(msg); };
   await v029visuals({ check });
+  { const { serverClient } = await import('./test-0.2.9.mjs'); const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-cvt-')), sc = await serverClient(ROOT);
+    try { await v029visualsTools({ call: sc.call, check, ROOT, fs }); } finally { await sc.close(); fs.rmSync(ROOT, { recursive: true, force: true }); } }
   console.log(problems.length ? `FAIL  v029visuals  ${checks} checks, ${problems.length} failed\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  v029visuals  ${checks} checks`);
   process.exit(problems.length ? 1 : 0);
 }
