@@ -20,13 +20,19 @@
 // table, column or measure name. The fields in `roles` are the report's own (the writer needs them); a caller that
 // shows them screens them as read_report does.
 
-import { isCustom } from './read-report.mjs';
+import { createRequire } from 'node:module';
+import { getCapabilities } from '@microsoft/powerbi-core-visual-schema';
+
+// one test of custom versus native for every block (assets/js/visual-types.js, Microsoft's catalog)
+const VT = createRequire(import.meta.url)('../../assets/js/visual-types.js');
 
 // ---- the role words (lower-case words; a role name is split at case changes, digits and other characters) ----
 // Order matters: a role takes the first class one of its words belongs to (ColumnValues: bar before value).
 export const ROLE_WORDS = {
   tooltip: ['tooltip', 'tooltips'],
-  location: ['location', 'locations', 'latitude', 'longitude', 'lat', 'lon', 'lng', 'geo', 'address', 'place', 'places'],
+  latitude: ['latitude', 'lat'],
+  longitude: ['longitude', 'lon', 'lng'],
+  location: ['location', 'locations', 'geo', 'address', 'place', 'places'],
   node: ['node', 'nodes', 'link', 'links', 'edge', 'edges'],
   from: ['source', 'sources', 'from', 'parent', 'parents', 'origin', 'start'],
   // "target" is a network's end when it holds a column, a goal when it holds a measure
@@ -78,8 +84,6 @@ export const NATIVE = {
   pie: 'pieChart', donut: 'donutChart', waterfall: 'waterfallChart', scatter: 'scatterChart', map: 'azureMap', network: null,
   gauge: 'gauge', kpi: 'kpi', table: 'tableEx', matrix: 'pivotTable', card: 'cardVisual', slicer: 'slicer', unknown: null
 };
-// the kinds a native visual can drill (a hierarchy in its category, or a matrix's rows, or a slicer's tree)
-const DRILLS = new Set(['combo', 'column', 'bar', 'line', 'area', 'pie', 'donut', 'waterfall', 'matrix', 'slicer']);
 // Power BI's own visuals: their kind
 const BUILTIN_KIND = {
   lineClusteredColumnComboChart: 'combo', lineStackedColumnComboChart: 'combo',
@@ -96,7 +100,7 @@ const DATE_TYPES = /^(date|datetime|datetimezone)$/i;
 
 // a name split into lower-case words: "ColumnValues" -> column, values; "Y2" -> y2; "Trend Axis" -> trend, axis
 export const wordsOf = (s) => String(s || '').replace(/([a-z])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2').toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
-const classOf = (role) => { const w = wordsOf(role); for (const [cls, list] of Object.entries(ROLE_WORDS)) { const hit = w.find((x) => list.includes(x)); if (hit) return { cls, word: hit }; } return { cls: 'other', word: null }; };
+const classOf = (role, display) => { const w = wordsOf(role).concat(display ? wordsOf(display) : []); for (const [cls, list] of Object.entries(ROLE_WORDS)) { const hit = w.find((x) => list.includes(x)); if (hit) return { cls, word: hit }; } return { cls: 'other', word: null }; };
 const isValue = (f) => f.kind === 'measure' || f.kind === 'aggregation';
 const isCol = (f) => f.kind === 'column';
 const copy = (f) => Object.assign({}, f);
@@ -109,15 +113,18 @@ function hintOf(type) {
 }
 
 // each role: its effective class from its words and its fields' shapes
-function rolesOf(v) {
+// customRoles: the custom visual's own dataRoles when the report has its package ([{ name, displayName, kind }]): a role
+// whose name says nothing ("measureRole7") is read by its display name ("Values")
+function rolesOf(v, customRoles) {
+  const disp = Object.fromEntries((Array.isArray(customRoles) ? customRoles : []).filter((r) => r && r.name).map((r) => [String(r.name), String(r.displayName || '')]));
   return Object.entries(v.fields || {}).map(([role, list]) => {
     const fields = (list || []).filter((f) => f && (isValue(f) || isCol(f)));
-    const { cls, word } = classOf(role), cols = fields.filter(isCol), vals = fields.filter(isValue);
+    const { cls, word } = classOf(role, disp[role]), cols = fields.filter(isCol), vals = fields.filter(isValue);
     const shape = !fields.length ? 'none' : !vals.length ? 'columns' : !cols.length ? 'values' : 'mixed';
     let eff = cls;
     if (shape === 'mixed') eff = cls === 'tooltip' ? 'tooltip' : 'mixed';
-    else if (shape === 'columns') eff = { node: 'node', from: 'from', goal: TO_WORDS.has(word) ? 'to' : 'other', bar: 'mcolumns', x: 'category', y: 'category', rows: 'rows', time: 'time', category: 'category', series: 'series', breakdown: 'breakdown', location: 'location', tooltip: 'tooltip' }[cls] || 'anonCol';
-    else if (shape === 'values') eff = { goal: 'goal', min: 'min', max: 'max', indicator: 'indicator', line: 'line', bar: 'bar', x: 'x', y: 'y', size: 'size', tooltip: 'tooltip', value: 'value', category: 'value', series: 'value', time: 'value', node: 'size', from: 'size', location: 'size' }[cls] || 'anonVal';
+    else if (shape === 'columns') eff = { node: 'node', from: 'from', goal: TO_WORDS.has(word) ? 'to' : 'anonCol', bar: 'mcolumns', x: 'category', y: 'category', rows: 'rows', time: 'time', category: 'category', series: 'series', breakdown: 'breakdown', location: 'location', latitude: 'latitude', longitude: 'longitude', tooltip: 'tooltip' }[cls] || 'anonCol';
+    else if (shape === 'values') eff = { goal: 'goal', min: 'min', max: 'max', indicator: 'indicator', line: 'line', bar: 'bar', x: 'x', y: 'y', size: 'size', tooltip: 'tooltip', value: 'value', category: 'value', series: 'value', time: 'value', node: 'size', from: 'size', location: 'size', latitude: 'latitude', longitude: 'longitude' }[cls] || 'anonVal';
     return { role, cls, eff, named: cls !== 'other', fields, cols, vals };
   }).filter((r) => r.fields.length);
 }
@@ -127,7 +134,8 @@ const up = (c) => LEVELS[Math.min(2, LEVELS.indexOf(c) + 1)];
 const down = (c) => LEVELS[Math.max(0, LEVELS.indexOf(c) - 1)];
 const n = (k, one, many) => `${k} ${k === 1 ? one : many}`;
 
-// opts: { typeOf(field) -> data type }
+// opts: { typeOf(field) -> data type, customRoles: the custom visual's dataRoles (optional), declared: a Set of the types
+// the report declares custom (visual-types.js customTypesOf; optional) }
 export function meaningOf(visual, opts) {
   const o = opts || {}, type = String((visual && visual.type) || '');
   const typeOf = (f) => { try { return o.typeOf ? o.typeOf(f) : undefined; } catch (e) { return undefined; } };
@@ -136,13 +144,13 @@ export function meaningOf(visual, opts) {
 
   // a Power BI visual: its own kind, kept as it is
   if (type === 'group') return out('unknown', {}, { native: null, why: 'a group of visuals: nothing to replace' });
-  if (!isCustom(type)) {
+  if (!VT.isCustom(type, null, o.declared)) {
     const kind = Object.prototype.hasOwnProperty.call(BUILTIN_KIND, type) ? BUILTIN_KIND[type] : 'unknown', roles = Object.fromEntries(Object.entries(visual.fields || {}).map(([r, l]) => [r, (l || []).filter((f) => f && (isValue(f) || isCol(f))).map(copy)]).filter(([, l]) => l.length));
     const cat = roles.Category || roles.Rows || [];
     return out(kind, roles, { native: type, drill: cat.length > 1 ? cat.map(copy) : [], series: roles.Series ? roles.Series.map(copy) : null, confidence: 'high', why: 'a Power BI visual: kept as it is' });
   }
 
-  const R = rolesOf(visual || {}), hint = hintOf(type);
+  const R = rolesOf(visual || {}, o.customRoles), hint = hintOf(type);
   const live = R.filter((r) => r.eff !== 'tooltip'), tips = R.filter((r) => r.eff === 'tooltip').flatMap((r) => r.fields.map(copy));
   const named = live.length > 0 && live.every((r) => r.named);
   const by = (...effs) => live.filter((r) => effs.includes(r.eff));
@@ -161,12 +169,14 @@ export function meaningOf(visual, opts) {
     shape = 'network';
     roles = { Source: cols('from', 'node'), Target: cols('to'), Weight: vals('size', 'value', 'anonVal') };
     why = 'its roles join two columns (a start and an end, or nodes and their links): a network, which no native visual draws';
-  } else if (by('location').length) {
+  } else if (by('location', 'latitude', 'longitude').length) {
     shape = 'map';
-    roles = withTips({ Category: cols('location'), Size: vals('size', 'value', 'anonVal').slice(0, 1) });
+    roles = withTips({ Category: cols('location') });
+    if (by('latitude').length) roles.Y = by('latitude').flatMap((r) => r.fields.map(copy)).slice(0, 1);
+    if (by('longitude').length) roles.X = by('longitude').flatMap((r) => r.fields.map(copy)).slice(0, 1);
+    const size = vals('size', 'value', 'anonVal').slice(0, 1); if (size.length) roles.Size = size;
     if (by('series').length) roles.Series = cols('series');
-    why = 'a location role and a value: a map';
-    if (by('location').length > 1) lost.push('latitude and longitude roles are placed as locations: check the points on the map');
+    why = `${roles.Category.length ? 'a location' : 'a latitude and a longitude'}${size.length ? ' and a value' : ''}: a map`;
   } else if (by('x').length && (by('y').length || by('value').length)) {
     shape = 'scatter';
     roles = withTips({ Category: cols('category', 'time', 'anonCol'), X: vals('x'), Y: vals('y', 'value').slice(0, 1), Size: vals('size').slice(0, 1) });
@@ -268,9 +278,117 @@ export function meaningOf(visual, opts) {
   }
   if (kind === 'network') lost.push('no native visual draws a network: an HTML/SVG measure in an image-capable visual is needed (the owner approves it in the plan)');
   if (drill.length > 1) {
-    if (DRILLS.has(kind)) lost.push(`the custom visual's own drill-down (its animation and click behaviour): Power BI's drill buttons on the native visual take its place, the ${drill.length} levels kept as a hierarchy`);
+    if (drillsIn(NATIVE[kind])) lost.push(`the custom visual's own drill-down (its animation and click behaviour): Power BI's drill buttons on the native visual take its place, the ${drill.length} levels kept as a hierarchy`);
     else lost.push(`the ${drill.length} drill levels: the native visual shows them side by side, not as a drill-down`);
   }
   lost.push('the custom visual\'s own look (colours, labels, animation) is not carried over: the report\'s theme gives the native one its look');
   return out(kind, roles, { drill, series, confidence: conf, why: `${custom}: ${why}`, lost, htmlNeeded: kind === 'network' });
+}
+
+// ---- Microsoft's capabilities of the native visuals (@microsoft/powerbi-core-visual-schema 0.1.1) ----
+const capsOf = (type) => { try { return type ? getCapabilities(type) || null : null; } catch (e) { return null; } };
+const drillsIn = (type) => { const c = capsOf(type); return !!(c && c.drilldown); };
+// whether a native visual takes these fields in these roles: every role is one of its dataRoles, a Grouping role holds
+// columns and a Measure role values, and the counts meet one of its conditions (min, max, and kind: 0 a column, 1 a
+// value), in one of its data view mappings. Returns { ok, problems: [text] } (role names are the native's own).
+export function fitsCapabilities(type, roles) {
+  const caps = capsOf(type);
+  if (!caps) return { ok: false, problems: [`${type || 'no type'} is not in Microsoft's catalog of visuals`] };
+  const problems = [], dr = Object.fromEntries((caps.dataRoles || []).map((r) => [r.name, r]));
+  const used = Object.entries(roles || {}).filter(([, l]) => Array.isArray(l) && l.length);
+  for (const [r, l] of used) {
+    const d = dr[r];
+    if (!d) { problems.push(`${type} has no ${r} role`); continue; }
+    if (d.kind === 'Measure' && l.some(isCol)) problems.push(`${type}'s ${r} (${d.displayName || r}) takes values, not columns`);
+    if (d.kind === 'Grouping' && l.some(isValue)) {
+      // a Grouping role some condition lets hold values (kind 1: the scatter's and the map's X and Y)
+      const valuesOk = (caps.dataViewMappings || []).some((m) => (m.conditions || []).some((c) => c[r] && c[r].kind === 1));
+      if (!valuesOk) problems.push(`${type}'s ${r} (${d.displayName || r}) takes columns, not values`);
+    }
+  }
+  // a drill role's fields are levels: Power BI shows one at a time, so its conditions count one (a pie's Category max 1
+  // still drills through a hierarchy)
+  const drillRoles = (caps.drilldown && caps.drilldown.roles) || [];
+  const count = (r) => { const k = ((roles || {})[r] || []).length; return drillRoles.includes(r) ? Math.min(k, 1) : k; };
+  const meets = (c) => Object.entries(c).every(([r, k]) => {
+    if (!k || typeof k !== 'object' || !dr[r] && !(r in (roles || {}))) return true;
+    const nr = count(r);
+    if (k.min != null && nr < k.min) return false;
+    if (k.max != null && nr > k.max) return false;
+    if (k.kind === 1 && ((roles || {})[r] || []).some(isCol)) return false;
+    if (k.kind === 0 && ((roles || {})[r] || []).some(isValue)) return false;
+    return true;
+  });
+  const maps = caps.dataViewMappings || [];
+  const condOk = !maps.length || maps.some((m) => !m || !Array.isArray(m.conditions) || !m.conditions.length || m.conditions.some(meets));
+  if (!condOk) problems.push(`${type} can't show ${used.map(([r, l]) => `${l.length} in ${r}`).join(', ')} (none of its field-count conditions is met)`);
+  return { ok: problems.length === 0, problems };
+}
+
+// the native visual's own name of a role (its display name in Desktop's field wells)
+const roleLabel = (type, r) => { const c = capsOf(type), d = c && (c.dataRoles || []).find((x) => x.name === r); return d && d.displayName ? d.displayName : r; };
+const LABEL = { combo: 'line and clustered column chart', column: 'clustered column chart', bar: 'clustered bar chart', line: 'line chart', area: 'area chart', pie: 'pie chart',
+  donut: 'donut chart', waterfall: 'waterfall chart', scatter: 'scatter chart', map: 'Azure map', gauge: 'gauge', kpi: 'KPI', table: 'table', matrix: 'matrix', card: 'card', slicer: 'slicer', multiRowCard: 'multi-row card' };
+const CHARTS = ['bar', 'column', 'line', 'area', 'combo', 'pie', 'donut', 'waterfall'];
+
+// the candidates for one meaning, most fitting first: [{ kind, native, roles }]
+function candidatesOf(m) {
+  const R = m.roles || {}, tips = R.Tooltips ? { Tooltips: R.Tooltips } : {};
+  const all = Object.entries(R).filter(([r]) => r !== 'Tooltips').flatMap(([, l]) => l);
+  const table = { kind: 'table', native: 'tableEx', roles: { Values: all.slice() } };
+  const out = [];
+  if (CHARTS.includes(m.kind)) {
+    const Y = (R.Y || []).concat(R.Y2 || []), base = Object.assign({ Category: R.Category || [] }, R.Series ? { Series: R.Series } : {}, tips);
+    const time = m.kind === 'line' || m.kind === 'area';
+    const order = [m.kind].concat(time ? ['line', 'area', 'column', 'bar'] : ['bar', 'column', 'line'], Y.length >= 2 ? ['combo'] : ['donut', 'pie']);
+    [...new Set(order)].forEach((k) => {
+      if (k === 'combo') out.push({ kind: k, native: NATIVE.combo, roles: Object.assign({}, base, R.Y2 ? { Y: R.Y, Y2: R.Y2 } : { Y: Y.slice(0, 1), Y2: Y.slice(1) }) });
+      else if (k === 'waterfall') out.push({ kind: k, native: NATIVE.waterfall, roles: Object.assign({ Category: R.Category || [], Y }, R.Breakdown ? { Breakdown: R.Breakdown } : {}, tips) });
+      else out.push({ kind: k, native: NATIVE[k], roles: Object.assign({}, base, { Y }) });
+    });
+    out.push(table);
+  } else if (m.kind === 'card') out.push({ kind: 'card', native: 'cardVisual', roles: R }, { kind: 'card', native: 'multiRowCard', roles: { Values: R.Data || [] } }, table);
+  else if (m.kind === 'gauge') out.push({ kind: 'gauge', native: 'gauge', roles: R }, { kind: 'card', native: 'cardVisual', roles: { Data: all } });
+  else if (m.kind === 'kpi') out.push({ kind: 'kpi', native: 'kpi', roles: R }, { kind: 'line', native: 'lineChart', roles: { Category: R.TrendLine || [], Y: (R.Indicator || []).concat(R.Goal || []) } }, { kind: 'card', native: 'cardVisual', roles: { Data: (R.Indicator || []).concat(R.Goal || []) } });
+  else if (m.kind === 'matrix') out.push({ kind: 'matrix', native: 'pivotTable', roles: R }, table);
+  else if (m.kind === 'table') out.push({ kind: 'table', native: 'tableEx', roles: R }, { kind: 'matrix', native: 'pivotTable', roles: { Rows: all.filter(isCol), Values: all.filter(isValue) } });
+  else if (m.kind === 'slicer') out.push({ kind: 'slicer', native: 'slicer', roles: R }, { kind: 'slicer', native: 'listSlicer', roles: R }, table);
+  else if (m.kind === 'scatter' || m.kind === 'map') out.push({ kind: m.kind, native: m.native, roles: R }, table);
+  else if (m.kind === 'network') out.push(table);
+  return out.filter((c) => c.native);
+}
+
+// a custom object's name as the answer may show it (plain names only; the reading block screens them first)
+const objName = (s) => (typeof s === 'string' && /^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(s) ? s : null);
+
+// The design decision for one visual (audit 5, A5-14): which native visual takes a custom visual's place, ranked.
+// visual: as meaningOf takes it; opts: meaningOf's, plus customObjects: the names of its formatting objects.
+// Returns meaningOf's answer, and: candidates [{ kind, native, roles, fits, problems }] (the fitting ones first),
+// the chosen one (kind, native, roles; native null when none fits or the kind needs HTML), guess (true when the custom
+// visual's own role definitions were not given: matched by field kinds only), lost, and tell: the sentence for the user.
+export function nativeFor(visual, opts) {
+  const o = opts || {}, m = meaningOf(visual, o);
+  const type = String((visual && visual.type) || ''), custom = VT.isCustom(type, null, o.declared);
+  if (!custom) return Object.assign({}, m, { custom: false, candidates: [], guess: false, tell: 'a Power BI visual: kept as it is' });
+  const cands = candidatesOf(m).map((c, i) => Object.assign({}, c, fitsCapabilities(c.native, c.roles), { rank: i }));
+  const ranked = cands.filter((c) => c.ok).concat(cands.filter((c) => !c.ok)).map(({ ok, rank, ...c }) => Object.assign(c, { fits: ok }));
+  const best = m.kind === 'network' ? null : ranked.find((c) => c.fits) || null;
+  const guess = !(Array.isArray(o.customRoles) && o.customRoles.length);
+  const lost = m.lost.filter((x) => !/own look/.test(x));
+  const objs = (o.customObjects || visual.customObjects || []).map(objName), named = objs.filter(Boolean);
+  if (objs.length) lost.push(`its own format settings (${objs.length}${named.length ? ': ' + named.slice(0, 8).join(', ') + (named.length > 8 ? ', …' : '') : ''}): the report's theme formats the native visual`);
+  else lost.push('its own look (colours, labels, animation): the report\'s theme formats the native visual');
+  lost.push('its own interactions (its clicks, animation and drill behaviour): Power BI\'s cross-filtering and drill buttons take their place');
+  // when the chosen visual is not the meaning's first choice, its drill note follows the chosen one
+  if (best && best.native !== m.native && m.drill.length > 1) {
+    const i = lost.findIndex((x) => /drill levels|drill-down/.test(x));
+    const note = drillsIn(best.native) ? `the custom visual's own drill-down: Power BI's drill buttons on the native visual take its place, the ${m.drill.length} levels kept as a hierarchy` : `the ${m.drill.length} drill levels: the native visual shows them side by side, not as a drill-down`;
+    if (i >= 0) lost[i] = note; else lost.push(note);
+  }
+  const keeps = best ? Object.entries(best.roles).filter(([, l]) => l.length).map(([r, l]) => `${roleLabel(best.native, r)} (${n(l.length, 'field', 'fields')})`).join(', ') : '';
+  const short = lost.map((x) => x.split(':')[0]).join('; ');
+  const tell = best ? `This custom visual becomes a native ${LABEL[best.kind] || best.native}${best.native === 'multiRowCard' ? ' (multi-row card)' : ''}${guess ? ' (a guess from its fields\' kinds: the custom visual\'s own role definitions are not in the report)' : ''}. It keeps ${keeps}. It loses ${short}.`
+    : m.kind === 'network' ? `No native Power BI visual draws this custom visual's network: an HTML/SVG measure in an image-capable visual can (you approve it in the plan), or a table of its links. It loses ${short}.`
+    : `No native Power BI visual can show this custom visual's fields as they are: it can be kept as it is or left out. Nothing is decided without you.`;
+  return Object.assign({}, m, best ? { kind: best.kind, native: best.native, roles: best.roles } : { native: null }, { custom: true, candidates: ranked, guess, lost, tell, htmlNeeded: m.kind === 'network' });
 }

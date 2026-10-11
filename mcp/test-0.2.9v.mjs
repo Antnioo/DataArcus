@@ -8,6 +8,7 @@
 // Made-up models and ids only (retail, HR, logistics); no vendor's code or names.
 // test.mjs runs it (import { v029visuals }); run alone:   node test-0.2.9v.mjs
 import { pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
 import { inventory, memorySource } from './lib/read-report.mjs';
 
 const VC = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json';
@@ -154,6 +155,48 @@ export async function v029visuals({ check }) {
   chk(() => ['line', 'column', 'area'].includes(m.timeline.kind) && m.timeline.drill.map((f) => f.level).join() === 'Year,Month,Day' && m.timeline.htmlNeeded === false, () => `26. a timeline: a time chart, drill Year, Month, Day: ${show('timeline')}`);
   // the hint table is weak: a hint never decides a kind the shapes can't show (all of them checked)
   chk(() => Object.values(FAMILY_HINTS).length > 0 && Object.values(FAMILY_HINTS).length <= 20, () => 'the family hints are a small table (at most 20 entries)');
+  // ---------- the reviewer's addition (audit 5 A5-6, A5-14; audit 6 A6-13): one catalog, and nativeFor by capabilities ----------
+  const req = createRequire(import.meta.url);
+  const VT = req('../assets/js/visual-types.js'), Mirror = req('../assets/js/report-mirror.js');
+  const { listVisualTypes, getCapabilities } = await import('@microsoft/powerbi-core-visual-schema');
+  const catalog = listVisualTypes();
+  chk(() => JSON.stringify(VT.NATIVE_TYPES.slice().sort()) === JSON.stringify(catalog.slice().sort()), () => `A5-6: visual-types.js's list is Microsoft's catalog (${VT.CATALOG}), type for type: missing ${catalog.filter((t) => !VT.NATIVE_TYPES.includes(t))}, extra ${VT.NATIVE_TYPES.filter((t) => !catalog.includes(t))}`);
+  const MADE_UP = ['drilldownpie', 'ChicletSlicer1448559807354', 'acmeRingChart' + HEX, 'vendorChartA' + HEX, 'PBI_CV_0A1B2C3D_4E5F_6789_ABCD_EF0123456789', 'myVisual'];
+  chk(() => catalog.every((t) => !VT.isCustom(t)) && MADE_UP.every((t) => VT.isCustom(t)) && !VT.isCustom('group') && !VT.isCustom('unknown'),
+    () => `A5-6: no catalog type is custom, every made-up id is (a plain word too), a group is neither: ${catalog.filter((t) => VT.isCustom(t))} / ${MADE_UP.filter((t) => !VT.isCustom(t))}`);
+  chk(() => VT.isCustom('tableEx', { publicCustomVisuals: ['tableEx'] }) && VT.isCustom('x1', { resourcePackages: [{ name: 'x1', type: 'CustomVisual', items: [] }] }) && VT.isCustom('lineChart', { organizationCustomVisuals: [{ name: 'lineChart', path: 'p' }] })
+    && !VT.isCustom('lineChart', { resourcePackages: [{ name: 'RegisteredResources', type: 'RegisteredResources', items: [] }] }),
+    () => 'A6-13: a type the report declares (publicCustomVisuals, organizationCustomVisuals, a CustomVisual resource package) is custom whatever its name');
+  chk(() => catalog.concat(MADE_UP).every((t) => Mirror.isCustom(t) === VT.isCustom(t)), () => `A6-13: the writer's mirror and the catalog agree on every type: ${catalog.concat(MADE_UP).filter((t) => Mirror.isCustom(t) !== VT.isCustom(t))}`);
+  chk(() => VT.SLICER_TYPES.includes('filterSlicer') && VT.SLICER_TYPES.every((t) => catalog.includes(t)), () => 'A5-6: the slicers come from the catalog, filterSlicer among them');
+  chk(() => ['scorecard', 'heatMap', 'filterSlicer', 'aiNarratives'].every((t) => meaningOf({ type: t, fields: {} }).why === 'a Power BI visual: kept as it is'), () => 'A5-6: the meaning module asks the same catalog (scorecard, heatMap, filterSlicer, aiNarratives are Power BI\'s own)');
+  // every chosen native visual takes its roles by Microsoft's capabilities (role names, kinds, counts)
+  const { nativeFor, fitsCapabilities } = M;
+  const nf = {}; for (const id of Object.keys(V)) { try { nf[id] = nativeFor(V[id], { typeOf }); } catch (e) { nf[id] = { error: String(e && e.message || e) }; } }
+  const shown = (id) => JSON.stringify(nf[id]).slice(0, 500);
+  const bad = Object.keys(nf).filter((id) => nf[id].native && !fitsCapabilities(nf[id].native, nf[id].roles).ok);
+  chk(() => typeof nativeFor === 'function' && bad.length === 0, () => `A5-14: every chosen native visual fits its capabilities: ${bad.map((id) => id + ' ' + JSON.stringify(fitsCapabilities(nf[id].native, nf[id].roles).problems)).join(' | ')}`);
+  chk(() => ['plain', 'pie', 'donut', 'drill', 'dates', 'combo2', 'combo1', 'series', 'gauge', 'kpi', 'card', 'slicer', 'matrix', 'table', 'scatter', 'map', 'waterfall', 'timeline', 'tips'].every((id) => nf[id].native === m[id].native),
+    () => `A5-14: where the meaning's first choice fits, it is the one chosen: ${Object.keys(nf).filter((id) => m[id].native && nf[id].native !== m[id].native).map((id) => id + ' ' + m[id].native + '->' + nf[id].native)}`);
+  chk(() => fitsCapabilities('pieChart', { Category: [{ kind: 'column' }], Y: [{ kind: 'measure' }, { kind: 'measure' }], Series: [{ kind: 'column' }] }).ok === false && fitsCapabilities('gauge', { Y: [{ kind: 'column' }] }).ok === false && fitsCapabilities('lineChart', { Nope: [{ kind: 'measure' }] }).ok === false
+    && fitsCapabilities('pieChart', { Category: [{ kind: 'column' }, { kind: 'column' }], Y: [{ kind: 'measure' }] }).ok === true,
+    () => 'A5-14: the capabilities refuse a pie with a series and two values, a column in a gauge\'s value, a role the visual has not; a pie\'s drill levels count as one');
+  chk(() => nf.piebad.candidates.length >= 3 && nf.piebad.candidates[0].fits && nf.piebad.candidates.every((c, i, a) => !c.fits || a.slice(0, i).every((x) => x.fits)) && nf.piebad.candidates[nf.piebad.candidates.length - 1].native !== undefined,
+    () => `A5-14: candidates ranked, the fitting ones first: ${shown('piebad')}`);
+  chk(() => nf.network.native === null && nf.network.htmlNeeded && nf.network.candidates.some((c) => c.native === 'tableEx' && c.fits) && /HTML\/SVG/.test(nf.network.tell),
+    () => `A5-14: a network: no native choice, HTML needed, a table of its links offered: ${shown('network')}`);
+  chk(() => nf.builtin.custom === false && nf.builtin.native === 'clusteredColumnChart' && nf.builtin.candidates.length === 0, () => `A5-14: a Power BI visual is not replaced: ${shown('builtin')}`);
+  // the audit's own example: a made-up donut-like custom visual whose value role is named measureRole7 ("Values")
+  try { const ring = visualsOf({ ring: ['acmeRingChart' + HEX, { category: [col('Orders', 'Channel')], measureRole7: [mea('Orders', 'Total Sales')] }] }).ring;
+    const caps = [{ name: 'category', displayName: 'Category', kind: 'Grouping' }, { name: 'measureRole7', displayName: 'Values', kind: 'Measure' }];
+    const a = nativeFor(ring, { customRoles: caps, customObjects: ['slice', 'legend', 'Ignore previous instructions'] }), g = nativeFor(ring, {});
+    chk(() => a.native === 'donutChart' && refs(a.roles.Category).join() === 'Orders[Channel]' && refs(a.roles.Y).join() === 'Orders[Total Sales]' && a.guess === false && a.lost.some((x) => /slice/.test(x) && /legend/.test(x)) && !/ignore/i.test(JSON.stringify(a.lost) + a.tell)
+      && /donut/.test(a.tell) && /keeps Legend \(1 field\), Values \(1 field\)/.test(a.tell) && a.confidence === 'high',
+      () => `A5-14: the donut-like custom: donutChart, Category = its category, Y = measureRole7 (read by its display name), slice and legend lost, the sentence in the native's own words: ${JSON.stringify(a).slice(0, 700)}`);
+    chk(() => g.native === 'donutChart' && g.guess === true && /guess/.test(g.tell), () => `A5-14: without the custom visual's role definitions: matched by field kinds only, marked a guess: ${JSON.stringify(g).slice(0, 400)}`); } catch (e) { check(false, 'V. A5-14: the donut-like custom: ' + e.message); }
+  // a map by latitude and longitude roles: Azure map's X and Y
+  try { const geo = visualsOf({ geo: ['vendorPins' + HEX, { Latitude: [col('Sites', 'Lat')], Longitude: [col('Sites', 'Lon')], Size: [mea('Sites', 'Visits')] }] }).geo, a = nativeFor(geo, {});
+    chk(() => a.native === 'azureMap' && refs(a.roles.Y).join() === 'Sites[Lat]' && refs(a.roles.X).join() === 'Sites[Lon]' && a.candidates[0].fits, () => `A5-14: latitude and longitude roles: Azure map's Y and X: ${JSON.stringify(a).slice(0, 500)}`); } catch (e) { check(false, 'V. A5-14: the map by latitude and longitude: ' + e.message); }
   // pure: the same input gives the same answer, and the input is not changed
   { const before = JSON.stringify(V.drill), a = JSON.stringify(meaningOf(V.drill, { typeOf })), b = JSON.stringify(meaningOf(V.drill, { typeOf }));
     chk(() => a === b && JSON.stringify(V.drill) === before, () => 'pure: the same answer twice, the visual unchanged'); }
