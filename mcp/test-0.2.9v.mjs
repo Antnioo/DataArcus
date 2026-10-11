@@ -221,7 +221,8 @@ export async function v029visuals({ check }) {
   try { const geo = visualsOf({ geo: ['vendorPins' + HEX, { Latitude: [col('Sites', 'Lat')], Longitude: [col('Sites', 'Lon')], Size: [mea('Sites', 'Visits')] }] }).geo, a = nativeFor(geo, {});
     // (changed after the laptop proof: Microsoft's validator requires Azure map's Location; with no place and no category
     // there is none, so no map is written: the fields go to a table, never an invalid map)
-    chk(() => a.native === 'tableEx' && a.candidates.some((c) => c.native === 'azureMap' && !c.fits && c.problems.some((x) => /Category/.test(x))), () => `A5-14: latitude and longitude with no location: no map (its Location is required), a table: ${JSON.stringify(a).slice(0, 500)}`); } catch (e) { check(false, 'V. A5-14: the map by latitude and longitude: ' + e.message); }
+    // (changed again after rc.2b, Z11: never a table for a map; the latitude keys each point so the validator's Location is filled)
+    chk(() => a.native === 'azureMap' && refs(a.roles.Category).join() === 'Sites[Lat]' && refs(a.roles.Size).join() === 'Sites[Visits]' && a.candidates[0].fits, () => `A5-14: latitude and longitude with no location: a map keyed by its latitude, sized by the value: ${JSON.stringify(a).slice(0, 500)}`); } catch (e) { check(false, 'V. A5-14: the map by latitude and longitude: ' + e.message); }
   // ---------- step B: read_report gives each custom visual its meaning (kind, native, why), from the reading block ----------
   { const files = [{ path: 'definition/report.json', data: JSON.stringify({ publicCustomVisuals: ['acmeDrillPie' + HEX] }) }, { path: 'definition/pages/pages.json', data: JSON.stringify({ pageOrder: ['p1'] }) },
       { path: 'definition/pages/p1/page.json', data: JSON.stringify({ name: 'p1', displayName: 'P', width: 1280, height: 720 }) },
@@ -364,7 +365,11 @@ export async function v029visuals({ check }) {
       sorted: ['vendorDrillDownComboBarPro' + HEX, { Category: [col('Orders', 'Discount Band')], Values1: [mea('Orders', 'Orders')] }, null,
         { query: { queryState: { Category: { projections: [col('Orders', 'Discount Band')] }, Values1: { projections: [mea('Orders', 'Orders')] } }, sortDefinition: { sort: [{ field: col('Orders', 'Band Order').field, direction: 'Ascending' }] } } }],
       // Z4: a timeline over Year > Quarter > Month
-      timeline: ['vendorDrillDownTimelinePro' + HEX, { Category: [lvl('Orders', 'Order Date', 'Year'), lvl('Orders', 'Order Date', 'Quarter'), lvl('Orders', 'Order Date', 'Month')], Values1: [mea('Orders', 'Total Sales')] }]
+      timeline: ['vendorDrillDownTimelinePro' + HEX, { Category: [lvl('Orders', 'Order Date', 'Year'), lvl('Orders', 'Order Date', 'Quarter'), lvl('Orders', 'Order Date', 'Month')], Values1: [mea('Orders', 'Total Sales')] }],
+      // Z11 (rc.2b): a map of latitude, longitude and a value, no place and no category
+      bareMap: ['vendorDrillDownMapPro' + HEX, { latitude: [col('Geo', 'Lat')], longitude: [col('Geo', 'Lon')], value: [mea('Orders', 'Orders')], tooltipFields: [mea('Orders', 'Orders')] }],
+      // a map that truly can't be one (a latitude alone)
+      halfMap: ['vendorDrillDownMapPro' + HEX, { latitude: [col('Geo', 'Lat')], value: [mea('Orders', 'Orders')] }]
     });
     const NZ = {}; for (const id of Object.keys(Z)) { try { NZ[id] = M.nativeFor(Z[id], Object.assign({ facts: REP.formatFacts(Z[id].json), customObjects: Object.keys(((Z[id].json || {}).visual || {}).objects || {}) }, o3)); } catch (e) { NZ[id] = { error: String(e && e.stack || e).slice(0, 300) }; } }
     const zs = (id) => JSON.stringify(NZ[id]).slice(0, 600);
@@ -382,6 +387,12 @@ export async function v029visuals({ check }) {
       () => `Z5: value labels, labels under bubbles and the regression line are kept (format), the threshold lines told as lost: ${zs('labelled')} ${zs('bubble')}`);
     chk(() => NZ.bubble.native === 'scatterChart' && !NZ.bubble.roles.Series && NZ.bubble.lost.some((x) => /colour/.test(x)), () => `Z6: no legend the original did not show (no Series on the scatter; the colour split told as lost): ${zs('bubble')}`);
     chk(() => NZ.timeline.expand === 1 && NZ.timeline.lost.some((x) => /level/.test(x)), () => `Z4: a timeline opens one level down its date hierarchy (quarters under years), and says so: ${zs('timeline')}`);
+    chk(() => NZ.bareMap.native === 'azureMap' && refs(NZ.bareMap.roles.Category).join() === 'Geo[Lat]' && refs(NZ.bareMap.roles.Size).join() === 'Orders[Orders]' && refs(NZ.bareMap.roles.Y).join() === 'Geo[Lat]' && refs(NZ.bareMap.roles.X).join() === 'Geo[Lon]' && NZ.bareMap.lost.some((x) => /latitude/.test(x) && /place/.test(x)),
+      () => `Z11: latitude, longitude and a value with no place: still a map, sized by the value (the latitude keys each point, said in lost), never a table: ${zs('bareMap')}`);
+    chk(() => NZ.halfMap.native !== 'azureMap' && NZ.halfMap.lost.some((x) => /map/.test(x) && /table/.test(x)) && /table/.test(NZ.halfMap.tell),
+      () => `Z11: a map that truly can't be one says "map -> table" in plain words in its lost list: ${zs('halfMap')}`);
+    chk(() => NZ.sorted.lost.some((x) => /sort/.test(x) && /helper/.test(x)) && NZ.bubble.lost.some((x) => /regression line/.test(x)) && NZ.timeline.lost.some((x) => /Expand all/.test(x)),
+      () => `rc.2b: lost names the sort by a helper field, the regression line in words, and how to drill the timeline: ${zs('sorted')} ${zs('bubble')} ${zs('timeline')}`);
     // the writer
     const w = (id) => REP.replaceVisual(Z[id].json, NZ[id]).json;
     const mapJ = w('map'), mq = mapJ.visual.query.queryState;
@@ -398,7 +409,13 @@ export async function v029visuals({ check }) {
       && JSON.stringify(sj.query.sortDefinition.sort[0].field) === JSON.stringify(sj.query.queryState.Tooltips.projections.find((p) => p.field.Aggregation).field),
       () => `Z9: the sort by a helper column is kept (Min of it in Tooltips, sorted by that, as measured in Desktop round 2): ${JSON.stringify(sj.query)}`);
     const tj = w('timeline').visual;
-    chk(() => Array.isArray(tj.expansionStates) && tj.expansionStates[0].roles.includes('Category') && tj.expansionStates[0].levels.length >= 2, () => `Z4: the timeline is written expanded one level: ${JSON.stringify(tj.expansionStates)}`);
+    // (rc.2b: Desktop opened at years with the expansion state alone; Microsoft's schema: "active: is the field currently
+    // active in the visual, used as part of drill operations": both shown levels are active)
+    const cps = tj.query.queryState.Category.projections;
+    chk(() => Array.isArray(tj.expansionStates) && tj.expansionStates[0].roles.includes('Category') && tj.expansionStates[0].levels.length >= 2 && cps[0].active === true && cps[1].active === true && !cps[2].active,
+      () => `Z3: the timeline is written with years and quarters both active (the levels shown) and expanded one level: ${JSON.stringify([cps.map((p) => p.active), tj.expansionStates])}`);
+    const bm = w('bareMap').visual;
+    chk(() => valid(bm.visualType, Object.fromEntries(Object.entries(bm.query.queryState).map(([r, q]) => [r, q.projections]))) && bm.query.queryState.Size, () => `Z11: the written bare map meets the validator's roles and keeps its size: ${JSON.stringify(bm.query)}`);
     const dj = w('twoCats').visual;
     chk(() => valid(dj.visualType, Object.fromEntries(Object.entries(dj.query.queryState).map(([r, q]) => [r, q.projections]))), () => `Z0: the written donut meets the validator's roles: ${JSON.stringify(dj.query)}`);
   } catch (e) { check(false, 'V. Z: the laptop proof\'s defects: ' + String(e && e.stack || e).slice(0, 500)); }
@@ -424,7 +441,10 @@ export async function v029visualsTools({ call, check, ROOT, fs }) {
   const RD = path.join(P, 'Twin Sales.Report'), PG = path.join(RD, 'definition/pages/p1overview/visuals');
   const place = (j, y) => Object.assign(j, { position: { x: 900, y, z: 9000 + y, width: 300, height: 90, tabOrder: 9000 + y } });
   const CV = { cvFacet: 'vendorFacetChartPaid' + HEX, cvBars: 'vendorDrillDownComboBarPro' + HEX, cvBubble: 'vendorDrillDownBubblePro' + HEX, cvPlan: 'Gantt0123456789012', cvNet: 'vendorGraph' + HEX,
-    cvRing: 'vendorPieChartPaid' + HEX, cvMap: 'vendorDrillDownMapPro' + HEX };
+    cvRing: 'vendorPieChartPaid' + HEX, cvMap: 'vendorDrillDownMapPro' + HEX, cvTime: 'vendorDrillDownTimelinePro' + HEX, cvBare: 'vendorDrillDownMapPro' + HEX.replace('0', '1') };
+  // (rc.2b: a timeline over the date hierarchy, and a map of latitude, longitude and a value only)
+  W(path.join(PG, 'cvTime/visual.json'), place(vj('cvTime', CV.cvTime, { Category: [lvl('Calendar', 'Date', 'Year'), lvl('Calendar', 'Date', 'Quarter'), lvl('Calendar', 'Date', 'Month')], Values1: [mea('Sales', 'Total Sales')] }), 700));
+  W(path.join(PG, 'cvBare/visual.json'), place(vj('cvBare', CV.cvBare, { latitude: [col('Sales', 'Lat')], longitude: [col('Sales', 'Lon')], value: [mea('Sales', 'Orders')], tooltipFields: [mea('Sales', 'Orders')] }), 800));
   // (the laptop proof's failing shapes: a donut whose value and KPI value are one measure, by two categories; a map by
   // name, latitude, longitude and a value that is also in its tooltips)
   W(path.join(PG, 'cvRing/visual.json'), Object.assign(place(vj('cvRing', CV.cvRing, { Category: [col('Sales', 'Region'), col('Sales', 'Product')], Values: [mea('Sales', 'Total Sales')], kpiValue: [mea('Sales', 'Total Sales')] }), 500), {}));
@@ -442,9 +462,9 @@ export async function v029visualsTools({ call, check, ROOT, fs }) {
   const pl = await ask('plan_layout', { path: 'cvt', customVisualsFrom: 'cvt/Twin Sales.Report' });
   const cv = pl.j && pl.j.customVisuals, reps = (cv && cv.replacements) || [];
   const byFrom = (f) => reps.find((r) => r.from === f) || {};
-  // (7: the fixture's own custom gauge is replaced too, as in step C's pure test; and the proof's donut and map)
-  chk(() => reps.length === 7 && byFrom('vendorPieChartPaid').native === 'donutChart' && byFrom('vendorDrillDownMapPro').native === 'azureMap' && byFrom('vendorFacetChartPaid').native === 'clusteredColumnChart' && byFrom('vendorDrillDownComboBarPro').native === 'lineClusteredColumnComboChart' && byFrom('vendorDrillDownBubblePro').native === 'scatterChart' && byFrom('Gantt0123456789012').native === 'tableEx',
-    () => `C1: plan_layout lists the 7 replaceable custom visuals with their native visual (facet -> column, a percentage with amounts -> combo, a bubble -> scatter, a schedule -> table): ${short(pl)}`);
+  // (9: the fixture's own custom gauge is replaced too, as in step C's pure test; the proof's donut and maps; the timeline)
+  chk(() => reps.length === 9 && reps.filter((r) => r.native === 'azureMap').length === 2 && reps.some((r) => r.from === 'vendorDrillDownTimelinePro' && /Expand all/.test(r.lost.join(' '))) && byFrom('vendorPieChartPaid').native === 'donutChart' && byFrom('vendorDrillDownMapPro').native === 'azureMap' && byFrom('vendorFacetChartPaid').native === 'clusteredColumnChart' && byFrom('vendorDrillDownComboBarPro').native === 'lineClusteredColumnComboChart' && byFrom('vendorDrillDownBubblePro').native === 'scatterChart' && byFrom('Gantt0123456789012').native === 'tableEx',
+    () => `C1: plan_layout lists the 9 replaceable custom visuals with their native visual (facet -> column, a percentage with amounts -> combo, a bubble -> scatter, a schedule -> table): ${short(pl)}`);
   chk(() => reps.every((r) => /^custom visual \S+ on page \d+ at \d+,\d+ -> /.test(r.line) && r.lost.length > 0 && /It loses/.test(r.tell)) && (cv.notReplaced || []).length >= 1 && cv.notReplaced.some((x) => /HTML\/SVG/.test(x.line + x.why)),
     () => `C2: each replacement has its plan line and what it loses; the network is listed as not replaced (HTML/SVG later): ${short(pl)}`);
   chk(() => !JSON.stringify(cv).match(/Total Sales|Margin %|Region\b/), () => `C3: the plan's replacement lines carry no field name (the report's names are untrusted; the fields are read_report's): ${JSON.stringify(cv).slice(0, 400)}`);
@@ -458,16 +478,19 @@ export async function v029visualsTools({ call, check, ROOT, fs }) {
   const made = await ask('create_report', { path: 'cvt', planId: id, customVisualsFrom: 'cvt/Twin Sales.Report' });
   const ND = path.join(P, 'Twin Sales native.Report'), NPG = path.join(ND, 'definition/pages/p1overview/visuals');
   const vt = (id2) => { try { return J(path.join(NPG, id2, 'visual.json')).visual.visualType; } catch (e) { return null; } };
-  chk(() => made.j && made.j.written && made.j.replaced === 7 && vt('cvFacet') === 'clusteredColumnChart' && vt('cvBars') === 'lineClusteredColumnComboChart' && vt('cvBubble') === 'scatterChart' && vt('cvPlan') === 'tableEx' && vt('cvNet') === CV.cvNet
-    && fs.existsSync(path.join(P, 'Twin Sales native.pbip')), () => `C7: create_report wrote "Twin Sales native" with the 7 approved replacements; the network stays the custom visual: ${short(made)}`);
+  chk(() => made.j && made.j.written && made.j.replaced === 9 && vt('cvFacet') === 'clusteredColumnChart' && vt('cvBars') === 'lineClusteredColumnComboChart' && vt('cvBubble') === 'scatterChart' && vt('cvPlan') === 'tableEx' && vt('cvNet') === CV.cvNet
+    && fs.existsSync(path.join(P, 'Twin Sales native.pbip')), () => `C7: create_report wrote "Twin Sales native" with the 9 approved replacements; the network stays the custom visual: ${short(made)}`);
   chk(() => hashOf(RD) === before, () => 'C8: the original report is byte for byte as it was');
   let nrj = {}; try { nrj = J(path.join(ND, 'definition/report.json')); } catch (e) { nrj = {}; }
-  chk(() => !nrj.publicCustomVisuals.includes(CV.cvFacet) && nrj.publicCustomVisuals.includes(CV.cvNet) && made.j.lost.length === 7 && made.j.lost.every((x) => x.lost.length), () => `C9: the replaced custom visuals are no longer declared, the network's still is; the answer says what each lost: ${JSON.stringify(nrj.publicCustomVisuals)} ${short(made)}`);
+  chk(() => !nrj.publicCustomVisuals.includes(CV.cvFacet) && nrj.publicCustomVisuals.includes(CV.cvNet) && made.j.lost.length === 9 && made.j.lost.every((x) => x.lost.length), () => `C9: the replaced custom visuals are no longer declared, the network's still is; the answer says what each lost: ${JSON.stringify(nrj.publicCustomVisuals)} ${short(made)}`);
   // the native report adds no validator error over the original (the laptop proof: 10 -> 14 and 10 -> 11 errors)
   const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
   const errorsOf = (dir) => { const pv = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(pv.stdout).data; return Object.entries(d.diagnostics || {}).filter(([, x]) => x.severity === 'error').flatMap(([k, x]) => (x.items || [1]).map(() => k)); } catch (e) { return null; } };
   const eo = errorsOf(RD), en = errorsOf(ND), extra = en && eo ? en.filter((k) => { const i = eo.indexOf(k); if (i >= 0) { eo.splice(i, 1); return false; } return true; }) : null;
   chk(() => extra && extra.length === 0, () => `C10: Microsoft's validator: the native report adds no error over the original: ${JSON.stringify(extra || 'the validator did not run')}`);
+  { const t = J(path.join(NPG, 'cvTime', 'visual.json')).visual, b = J(path.join(NPG, 'cvBare', 'visual.json')).visual;
+    chk(() => t.expansionStates && t.query.queryState.Category.projections.filter((p) => p.active).length === 2 && b.visualType === 'azureMap' && b.query.queryState.Size && b.query.queryState.Category,
+      () => `C10c: the written timeline has both shown levels active and its expansion state (schema-valid, C10), the bare map is a map with its size and a location key: ${JSON.stringify([t.query, t.expansionStates, b.query]).slice(0, 900)}`); }
   // every written native visual has every role the validator requires
   { const { getMetadataProvider } = await import('@microsoft/powerbi-report-authoring-cli'), VP = await getMetadataProvider();
     const miss = tree(NPG).filter((f) => f.endsWith('visual.json')).map((f) => J(f)).filter((j) => j.visual && Object.values(CV).every((t) => t !== j.visual.visualType) && VP.getVisualEntry(j.visual.visualType))

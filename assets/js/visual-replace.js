@@ -102,6 +102,9 @@
     // a date hierarchy opened one level down (the level a timeline showed): written per Microsoft's schema, both levels
     // expanded from the root (to be proved in Desktop: no measured example yet)
     if (mapping.expand && qs.Category && qs.Category.projections.length > mapping.expand) {
+      // (rc.2b: with only the first level active Desktop opened at years; Microsoft's schema: "active" is the field
+      // currently active in the visual, for drill operations: every shown level is active)
+      qs.Category.projections.forEach((p, i) => { if (i <= mapping.expand) p.active = true; else delete p.active; });
       visual.expansionStates = [{ roles: ['Category'], levels: qs.Category.projections.slice(0, mapping.expand + 1).map((p) => ({ queryRefs: [p.queryRef], isCollapsed: true, isPinned: true })), root: { isToggled: true } }];
     }
     const out = clone(json); out.visual = visual;

@@ -224,11 +224,15 @@ export function meaningOf(visual, opts) {
     const legend = cols('series').concat(by('category').filter((r) => !named2(r)).flatMap((r) => r.cols.map(copy)));
     // Azure map needs a Location (Microsoft's validator): the place's name, else the first category; latitude and
     // longitude go with it averaged (its capabilities: with a Location they are values), so each place sits where they say
-    roles = withTips({ Category: places.length ? places.slice(0, 1) : legend.splice(0, 1) });
+    // (rc.2b, Z11: with latitude and longitude but no place, the latitude column keys each point: a category used as the
+    // location would move the points; never a table for a map)
+    const keyByLat = !places.length && lat.length && lon.length;
+    roles = withTips({ Category: places.length ? places.slice(0, 1) : keyByLat ? lat.map(copy) : legend.splice(0, 1) });
     if (lat.length && lon.length) { roles.Y = lat.map((f) => Object.assign({}, f, { kind: 'aggregation', agg: 'Avg' })); roles.X = lon.map((f) => Object.assign({}, f, { kind: 'aggregation', agg: 'Avg' })); aggregate = { Y: 'Avg', X: 'Avg' }; }
     const size = vals('size', 'value', 'anonVal').slice(0, 1); if (size.length) roles.Size = size;
     if (legend.length) roles.Series = legend.slice(0, 1);
-    if (!places.length && roles.Category.length) lost.push('the place names: its category is used as the location, which Power BI looks up on the map; check the places');
+    if (keyByLat) lost.push('the place names: the original had none, so each point is keyed by its latitude (shown as its location name) and placed by its latitude and longitude');
+    else if (!places.length && roles.Category.length) lost.push('the place names: its category is used as the location, which Power BI looks up on the map; check the places');
     why = `a location${roles.Y ? ' with its latitude and longitude' : ''}${size.length ? ', sized by a value' : ''}${legend.length ? ' by a category' : ''}: a map`;
   } else if (by('x').length && (by('y').length || by('value').length)) {
     shape = 'scatter';
@@ -477,7 +481,7 @@ export function nativeFor(visual, opts) {
     if (CHARTS.includes(best.kind) && !['pie', 'donut'].includes(best.kind)) format.axisTitles = false; // the custom visuals have none; Power BI would add the fields' names
     if (f.valueLabels) { if (bobj.labels) format.valueLabels = true; else lost.push('its value labels: the native visual has none'); }
     if (f.categoryLabels) { if (bobj.categoryLabels && best.kind === 'scatter') format.categoryLabels = true; else lost.push('the labels under its marks (the category\'s names): the native visual has no such labels'); }
-    if (f.trend) { if (bobj.trend) format.trend = true; else lost.push('its regression line'); }
+    if (f.trend) { if (bobj.trend) { format.trend = true; lost.push('its own regression line: the native trend line is switched on in its place (a straight line through the points; check it draws)'); } else lost.push('its regression line: the native visual has none'); }
     if (f.thresholds) lost.push('its threshold lines: add constant lines on the native visual by hand');
     if (best.kind === 'scatter' && f.legend !== true && (best.roles.Series || []).length) {
       best.roles = Object.assign({}, best.roles); delete best.roles.Series;
@@ -489,8 +493,16 @@ export function nativeFor(visual, opts) {
     if (hintsOf(type).includes('time') && lv.length >= 2 && drillsIn(best.native)) {
       expand = 1;
       const nm = (x) => (/^[A-Za-z ]{1,20}$/.test(String(x.level)) ? String(x.level).toLowerCase() : 'the next level');
-      lost.push(`the date level it chose by its zoom: the native chart opens at ${nm(lv[1])} within ${nm(lv[0])}; its drill buttons move between the levels`);
+      lost.push(`the date level it chose by its zoom: the native chart is set to open at ${nm(lv[1])} within ${nm(lv[0])}; if it opens at ${nm(lv[0])}, use "Expand all down one level" (the forked arrow above the chart) to see ${nm(lv[1])}`);
     }
+  }
+  if (best) {
+    // a picture that becomes another kind of visual says so first, in plain words (rc.2b: a map written as a table)
+    const PIC = ['map', 'scatter', 'gauge', 'kpi', 'pie', 'donut', 'waterfall'];
+    if (PIC.includes(m.kind) && best.kind !== m.kind) lost.unshift(`the ${LABEL[m.kind]} itself: no native ${LABEL[m.kind]} could take its fields, so it is written as a ${LABEL[best.kind] || best.native}`);
+    // a sort by a field no role carries (a helper): kept through the tooltips, said
+    const inRoles = (sf) => Object.values(best.roles).some((l) => l.some((x) => x.table === sf.table && x.name === sf.name));
+    if ((visual.sort || []).some((x) => x && x.field && !inRoles(x.field))) lost.push(best.tooltips === false || !(bc.dataRoles || []).some((r) => r.name === 'Tooltips') ? 'its sort by a helper field: the native visual sorts by its own fields' : 'its sort by a helper field: kept by adding that field (its first value) to the tooltips, where it also shows');
   }
   const keeps = best ? Object.entries(best.roles).filter(([, l]) => l.length).map(([r, l]) => `${roleLabel(best.native, r)} (${n(l.length, 'field', 'fields')})`).join(', ') : '';
   const short = lost.map((x) => x.split(':')[0]).join('; ');
