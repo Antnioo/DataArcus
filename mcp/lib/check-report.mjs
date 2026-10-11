@@ -190,9 +190,14 @@ export async function checkReport(p, opts) {
   const { R, versions, texts, customVisuals, unreadable, bookmarks, bookmarkNames } = readReport(loc, sk);
   const all = [], notChecked = [];
   const add = (f) => all.push(f);
-  // the reading direction: Arabic when most letters of the titles, text boxes and page names are Arabic (counted only)
-  const letters = texts.join(' '), ar = (letters.match(/[؀-ۿݐ-ݿﭐ-﻿]/g) || []).length, lat = (letters.match(/[A-Za-z]/g) || []).length;
-  const lang = o.lang && o.lang !== 'auto' ? o.lang : ar > lat ? 'ar' : 'en';
+  // the reading direction: right to left when most letters of the titles, text boxes and page names are Arabic or Hebrew
+  // (counted only, never returned). (A4-11, audit 4: the visuals' titles are counted too, and Hebrew is right to left;
+  // the right-to-left rules key on the direction, the language is said beside it)
+  R.visuals.forEach((x) => { const t = (((((x.json || {}).visual || {}).visualContainerObjects || {}).title) || []).find((e) => e && !e.selector && e.properties && e.properties.text);
+    const v = t && t.properties.text.expr && t.properties.text.expr.Literal && t.properties.text.expr.Literal.Value; if (typeof v === 'string') texts.push(v); });
+  const letters = texts.join(' '), ar = (letters.match(/[؀-ۿݐ-ݿﭐ-﻿]/g) || []).length, he = (letters.match(/[\u0590-\u05FF\uFB1D-\uFB4F]/g) || []).length, lat = (letters.match(/[A-Za-z]/g) || []).length;
+  const lang = o.lang && o.lang !== 'auto' ? o.lang : ar > lat && ar >= he ? 'ar' : he > lat ? 'he' : 'en';
+  const dir = lang === 'ar' || lang === 'he' ? 'rtl' : 'ltr';
   // 1. Microsoft's validator, offline (its schema download skipped: the bundled schemas below do that part)
   const validator = { ran: false, mode: 'not run', errors: 0, warnings: 0, version: VALIDATOR_VERSION };
   // (A4-4, audit 4: the validator reads the report's folder itself and would follow a link out of it; with a link inside
@@ -219,7 +224,7 @@ export async function checkReport(p, opts) {
   // (A4-1: sizes and positions as numbers before anything prints them, the page sizes line below included)
   Rules.normalize(R);
   const groups = Rules.GROUPS.filter((g) => checks.includes(g));
-  R.lang = lang;
+  R.lang = lang; R.dir = dir;
   const ruled = groups.length ? Rules.check(R, { groups }) : { findings: [], ran: [] };
   ruled.findings.forEach(add);
   // (A4-2: a rule that could not read this report is named; the others ran)
@@ -243,8 +248,8 @@ export async function checkReport(p, opts) {
     if (x.type === 'textbox') flag('textbox', arr(((((x.json.visual.objects || {}).general || [{}])[0] || {}).properties || {}).paragraphs).flatMap((p) => arr(p && p.textRuns).map((r) => String((r && r.value) || ''))).join(' '), x.file); });
   (bookmarkNames || []).forEach((b) => flag('bookmark', b.name, b.file));
   // what the tool could not judge
-  if (lang === 'ar') notChecked.push({ rule: 'RTL_MIRROR (tables)', why: 'which column a right-to-left table puts first is the report\'s choice: Power BI writes the total row\'s "Total" only in a first column of text, so the category at the left can be right (measured 2026-10-04); a hidden first column (width 0) with a row-label measure at the right that gives the row\'s name and «الإجمالي» on the total row is intentional (DataArcus\'s own Arabic tables since 8 Oct 2026, measured in Desktop 2.158.1304), not a finding; not judged' });
-  else notChecked.push({ rule: 'RTL_MIRROR', why: 'the report reads left to right (lang en); pass lang "ar" to apply the right-to-left rules' });
+  if (dir === 'rtl') notChecked.push({ rule: 'RTL_MIRROR (tables)', why: 'which column a right-to-left table puts first is the report\'s choice: Power BI writes the total row\'s "Total" only in a first column of text, so the category at the left can be right (measured 2026-10-04); a hidden first column (width 0) with a row-label measure at the right that gives the row\'s name and «الإجمالي» on the total row is intentional (DataArcus\'s own Arabic tables since 8 Oct 2026, measured in Desktop 2.158.1304), not a finding; not judged' });
+  else notChecked.push({ rule: 'RTL_MIRROR', why: `the report reads left to right (lang ${lang}); pass lang "ar" to apply the right-to-left rules` });
   notChecked.push({ rule: 'DataArcus layout rules', why: 'the header, filter rail and panel sizes describe DataArcus\'s own layouts, not Power BI: not run on any report' });
   if (customVisuals) notChecked.push({ rule: 'custom visuals', why: `${customVisuals} visual${customVisuals === 1 ? ' is' : 's are'} not a Power BI core visual: only the validator checks them` });
   if (sk.big.length) notChecked.push({ rule: 'files too large', why: `${sk.big.length} file${sk.big.length === 1 ? ' was' : 's were'} not read: over the ${mbOf(REPORT_LIMITS.file)} DataArcus reads (the largest report files are well under 1 MB): ${sk.big.slice(0, 5).map((b) => `${b.file.split('/').map(safeName).join('/')} (${mbOf(b.size)})`).join('; ')}` });
