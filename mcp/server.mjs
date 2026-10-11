@@ -15,6 +15,7 @@ import { themeDesign, planLayout, pageOf, contrastReport, DESIGN_KEYS, LAYOUT_KE
 import { freeFile } from './lib/files.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
+import { readableName } from './lib/display-names.mjs';
 import { addGulfCalendar, gulfFixInputs } from './lib/gulf-calendar.mjs';
 import { checkReport, CHECKS } from './lib/check-report.mjs';
 import { readReport } from './lib/read-report.mjs';
@@ -1122,7 +1123,7 @@ server.registerTool('plan_layout', {
 }, safe(async (a) => {
   // formats fixed at the source (the owner's ask, 6 Oct 2026): with the model, the fields that lack their right format
   // come first, with the script (the same file check_model_health writes)
-  let formats = {}, arabicNames = {}, m0 = null;
+  let formats = {}, arabicNames = {}, displayNamesAns = {}, m0 = null;
   if (a.path) {
     const m = (m0 = loadModel(a.path)), sc = scopeOf(m, { focus: a.focus, tables: a.tables });
     const keys = a.fields ? new Set(a.fields.map((x) => { const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(x); }))
@@ -1130,6 +1131,15 @@ server.registerTool('plan_layout', {
     const fmt = keys && formatsAnswer(m, a.path, keys, undefined, false, 'create_report writes it next to the project with the report, after the user\'s go (the same file check_model_health writes).');
     // round 14 (the owner's ask, 6 Oct): an Arabic plan proposes an Arabic display name for every field it will show
     // that has none (a fixed glossary of report words, never a free translation), for the user to approve first
+    // (the laptop's sweep of rc.1, S6: raw field names in titles and slicer headers) a plan in English proposes a readable
+    // display name for each field named like a database column (ProductName, loan_intent), for the user to approve;
+    // never applied without it (create_report shows only the displayNames given)
+    if (a.lang !== 'ar' && keys) {
+      const given = new Set(Object.keys(a.displayNames || {}).map((k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : k; }));
+      const prop = {};
+      [...keys].filter((k) => !given.has(k)).forEach((k) => { const r = readableName(k.replace(/^.*?\[(.*)\]$/, '$1')); if (r) prop[k] = r; });
+      if (Object.keys(prop).length) displayNamesAns = { displayNames: { sayFirst: 'Some of the plan\'s fields have database-style names, which the report would show as they are in titles, axes, slicer headers and table headers. Show the user these readable display names and ask them to approve or change each before create_report; pass the approved ones as displayNames. Never use a name the user did not approve: without it the model\'s own name is shown. The model is not renamed.', suggestedDisplayNames: prop } };
+    }
     if (a.lang === 'ar' && keys) {
       const given = new Set(Object.keys(a.displayNames || {}).map((k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : k; }));
       const todo = [...keys].filter((k) => !given.has(k) && !/[\u0600-\u06FF]/.test(k.replace(/^.*?\[/, '')));
@@ -1197,7 +1207,7 @@ server.registerTool('plan_layout', {
     } catch (e) { return { skipped: 'the planned page could not be built for the lint: ' + String(e && e.message || e).slice(0, 200) }; }
   })() };
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a light tint and the largest in the theme\'s colour (the bar\'s length tells the size; the colour ranks). For one colour, create_report takes chartColors "solid".' } };
-  return text(Object.assign(formats, arabicNames, plan, timeAxis, designLint, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.' }, (() => { const tops = r.slots.filter((x) => x.topN); return tops.length ? { categoryCharts: { tops: tops.map((x) => ({ role: x.role, kind: x.kind, top: x.topN })), sayInPlan: `Each bar and column chart by a category shows the categories its place can hold, its Top N by its measure (${tops.map((x) => `${x.role}: Top ${x.topN}`).join('; ')}): the rest are left out, not summed. Say it in the plan; a month or day axis keeps all its values in order.` } } : {}; })(), { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
+  return text(Object.assign(formats, arabicNames, displayNamesAns, plan, timeAxis, designLint, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.' }, (() => { const tops = r.slots.filter((x) => x.topN); return tops.length ? { categoryCharts: { tops: tops.map((x) => ({ role: x.role, kind: x.kind, top: x.topN })), sayInPlan: `Each bar and column chart by a category shows the categories its place can hold, its Top N by its measure (${tops.map((x) => `${x.role}: Top ${x.topN}`).join('; ')}): the rest are left out, not summed. Say it in the plan; a month or day axis keeps all its values in order.` } } : {}; })(), { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
 }));
 
 server.registerTool('add_gulf_calendar', {
