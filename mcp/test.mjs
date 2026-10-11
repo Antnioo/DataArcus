@@ -14,6 +14,7 @@ import { round23 } from './test-round23.mjs';
 import { v029 } from './test-0.2.9.mjs';
 import { v029b } from './test-0.2.9b.mjs';
 import { v029i } from './test-0.2.9i.mjs';
+import { v029k } from './test-0.2.9k.mjs';
 import { v029checks } from './test-0.2.9-checks.mjs';
 import { v030twin, v030engine } from './test-0.3.0-twin.mjs';
 import { withPlans } from './test-plan.mjs';
@@ -4456,6 +4457,8 @@ await v029({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getIns
 await v029b({ call, check, ROOT, fs });
 // ---------- 0.2.9 integration, the gate block's root fixes (the cross-review): test-0.2.9i.mjs, which also runs alone ----------
 await v029i({ call, raw: rawCall, check, ROOT, fs });
+// ---------- 0.2.9 integration, the field picker's bias fixes (A1-11, A3-1): test-0.2.9k.mjs, which also runs alone ----------
+await v029k({ call, check, ROOT, fs });
 // ---------- 0.2.9 items 12-13 (check_report's three kinds, the health check's own reports): test-0.2.9-checks.mjs, which also runs alone ----------
 await v029checks({ call, check, ROOT, fs });
 // ---------- 0.3.0, the Arabic twin of an existing report: test-0.3.0-twin.mjs, which also runs alone ----------

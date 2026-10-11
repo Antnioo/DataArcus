@@ -6,6 +6,8 @@
  * (c) DataArcus. All rights reserved.
  */
 (function (root) {
+  // the one field-meaning rule (assets/js/field-meaning.js, shared with the health check: the block audit's A1-11, 11 Oct)
+  const FM = typeof module === 'object' && module.exports ? require('./field-meaning.js') : root.DataArcusFieldMeaning;
   // ---------- reading the model ----------
   const decodeText = (u8) => {
     if (u8.length >= 2 && u8[0] === 0xff && u8[1] === 0xfe) return new TextDecoder('utf-16le').decode(u8.subarray(2));
@@ -71,12 +73,12 @@
   // model.bim / DataModelSchema (TMSL JSON) into the same shape
   function fromTmsl(json) {
     const m = (json && json.model) || json || {};
-    return (m.tables || []).filter((t) => t && t.name != null).map((t) => ({
+    return markCalendars((m.tables || []).filter((t) => t && t.name != null).map((t) => ({
       name: String(t.name), hidden: !!t.isHidden, date: /^time$/i.test(t.dataCategory || ''),
       columns: (t.columns || []).filter((c) => c.type !== 'rowNumber' && c.name != null)
         .map((c) => Object.assign({ name: String(c.name), dataType: c.dataType || 'string', isHidden: !!c.isHidden, dataCategory: c.dataCategory }, c.sortByColumn ? { sortBy: String(c.sortByColumn) } : {})),
       measures: (t.measures || []).filter((x) => x.name != null).map((x) => { const m = { name: String(x.name), isHidden: !!x.isHidden, formatString: x.formatString, divides: divides(x.expression) }; addExpr(m, Array.isArray(x.expression) ? x.expression.join('\n') : x.expression); return m; })
-    }));
+    })), m);
   }
   // Round 23 (the owner's "nothing critical left": the website's picker had no relationships, so a download could show
   // the same total on every bar): the active relationships a model carries, { fromTable, toTable }, as the MCP gives
@@ -150,20 +152,20 @@
   // A percentage: a % in the format or the name, or a name that says ratio or rate. "Margin" and "share" are money
   // as often as a percentage ("Total Margin" = SUM): they count only when the measure has no format and its DAX
   // divides (DIVIDE or /). x: { name, formatString, divides }
-  const DIVIDES = /\bDIVIDE\s*\(|(^|[^/])\/(?!\/)/i;
-  const divides = (expr) => DIVIDES.test(Array.isArray(expr) ? expr.join('\n') : String(expr == null ? '' : expr));
+  const divides = FM.divides;
   // (round 12, the owner's ask, 6 Oct 2026: "vs", "growth" and "change" count too, on the same terms as margin and share)
-  const PCT = (x) => /%/.test(x.formatString || '') || /%|ratio|rate|نسبة/i.test(x.name) || (/margin|share|\bvs\b|growth|change|هامش|نمو/i.test(x.name) && !x.formatString && !!x.divides);
+  // (the block audit's A1-11, 11 Oct: the format string decides first: a number format without % is no percent; a name
+  // alone counts only by whole words and never for a NOT_PCT name: "Corporate Revenue", "Generated Leads", "Exchange
+  // Rate" are no percents. The rule is field-meaning.js's, shared with the health check)
+  const PCT = (x) => FM.formatHasPercent(x.formatString) || (!(x.formatString && FM.isNumberFormat(x.formatString)) && FM.percentFromName(x.name, { divides: !!x.divides, format: x.formatString, soft: 'noFormat' }));
   // Round 12 (#26; seen in Desktop 2.158, golden task 8: a KPI card showed "Yes"): a measure that shows text, never a
   // number: a format of quoted words only ("Yes";"Yes";"No"), Yes/No, True/False, On/Off, a date format; or DAX that
   // returns text (a string at the top, FORMAT, CONCATENATE, text joined with &, an IF or SWITCH whose results are
   // strings). It is never put on a KPI card.
-  const TEXT_FMT = (f) => { if (!f) return false; if (/^\s*(yes\/no|true\/false|on\/off)\s*$/i.test(f)) return true; if (/^\s*(general( number)?|currency|fixed|standard|percent|scientific)\s*$/i.test(f)) return false;
-    const bare = String(f).replace(/"[^"]*"/g, '').replace(/\\./g, ''); return !/[0#%]/.test(bare); };
-  const TEXT_EXPR = /^\s*"|^\s*(FORMAT|CONCATENATEX?|UNICHAR|UPPER|LOWER|LEFT|RIGHT|MID|SUBSTITUTE|REPT|COMBINEVALUES)\s*\(|"\s*&|&\s*"|\b(IF|SWITCH)\s*\([\s\S]*,\s*"[^"]*"\s*\)\s*$/i;
+  const TEXT_FMT = FM.isTextFormat, TEXT_EXPR = FM.TEXT_EXPR;
   const isText = (x) => TEXT_FMT(x.formatString) || TEXT_EXPR.test(x.expr || '');
   // a measure that counts (its DAX counts rows or values)
-  const COUNTS = /\b(COUNTROWS|DISTINCTCOUNT(NOBLANK)?|COUNTA?X?|COUNTBLANK)\s*\(/i;
+  const COUNTS = FM.COUNTS;
   // Round 12, the owner's ask (6 Oct 2026): a KPI card shows a percent as a percent without useless decimals (the
   // model's percent format where it has one decimal or none, otherwise "0.0%"), a measure whose format has no decimals
   // (or a count without a format) as its whole number with separators ("179", "101,914"), and the rest with automatic
@@ -183,11 +185,7 @@
   // #,0 "INR") or a currency sign ($, €, £, ¥, ₹, the Gulf's د.إ and ر.س ...); a unit ("kg", "pcs") is no currency.
   // (The cross-review's G2, 11 Oct: the first cut took any short quoted text for a currency.) Without a currency, a plain
   // SUM whose name says money and whose format has no unit is an amount too: a weak tiebreak by the name, documented.
-  const ISO4217 = 'AED AFN ALL AMD ANG AOA ARS AUD AWG AZN BAM BBD BDT BGN BHD BIF BMD BND BOB BRL BSD BTN BWP BYN BZD CAD CDF CHF CLP CNY COP CRC CUP CVE CZK DJF DKK DOP DZD EGP ERN ETB EUR FJD FKP GBP GEL GHS GIP GMD GNF GTQ GYD HKD HNL HTG HUF IDR ILS INR IQD IRR ISK JMD JOD JPY KES KGS KHR KMF KPW KRW KWD KYD KZT LAK LBP LKR LRD LSL LYD MAD MDL MGA MKD MMK MNT MOP MRU MUR MVR MWK MXN MYR MZN NAD NGN NIO NOK NPR NZD OMR PAB PEN PGK PHP PKR PLN PYG QAR RON RSD RUB RWF SAR SBD SCR SDG SEK SGD SHP SLE SOS SRD SSP STN SYP SZL THB TJS TMT TND TOP TRY TTD TWD TZS UAH UGX USD UYU UZS VES VND VUV WST XAF XCD XOF XPF YER ZAR ZMW ZWL'.split(' ');
-  const CURRENCY_SIGN = /\\?[$€£¥₹₩₽₺₪₫฿₦₱₴₸₼₾﷼]|\[\$|د\.إ|ر\.س|ر\.ق|د\.ك|د\.ب|ر\.ع|ج\.م/;
-  const quotedOf = (f) => (String(f).match(/"[^"]*"|\\./g) || []).map((q) => q.replace(/^"|"$/g, '').replace(/^\\/, '').trim());
-  const hasCurrency = (f) => CURRENCY_SIGN.test(String(f)) || quotedOf(f).some((q) => ISO4217.includes(q.toUpperCase().replace(/\.$/, '')));
-  const hasUnit = (f) => quotedOf(f).some((q) => q && /[A-Za-z\u0600-\u06FF]/.test(q) && !ISO4217.includes(q.toUpperCase().replace(/\.$/, '')) && !CURRENCY_SIGN.test(q));
+  const hasCurrency = FM.hasCurrency, hasUnit = FM.hasUnit;
   const MONEY = /revenue|sales|amount|income|profit|cost|budget|spend|المبيعات|الإيرادات|التكلفة|الميزانية|المبلغ/i;
   const AMOUNT = (x, f) => !COUNTS.test(x.expr || '') && (hasCurrency(f) || (!hasUnit(f) && MONEY.test(x.name || '') && /^\s*SUM\s*\(/i.test(x.expr || '')));
   // time intelligence variants (MTD, PY, YoY %...) are not the headline number
@@ -209,7 +207,11 @@
   const NOT_CAT_ID = /(^|[\s_-])(id|key|code|guid|sk|no|num|number)s?$/i, NOT_CAT_CAMEL = /[a-z](Id|No|Code)$/;
   // (round 23 part 5, the review's 9: read without an Arabic mark, so "Order No (AR)" is an identifier too)
   const NOT_CAT = { test: (x0) => { const x = String(x0).replace(/\s*\((arabic|عربي|ar)\)\s*$/i, ''); return NOT_CAT_OLD.test(x) || NOT_CAT_ID.test(x) || NOT_CAT_CAMEL.test(x); } };
-  const DATE_TABLE = /date|calendar|time|period|تقويم|تاريخ/i;
+  // a calendar by its name (the block audit's A3-1, 11 Oct: tested without word boundaries, "Candidates", "Updates",
+  // "Mandates", "Overtime" and "Time Sheets" were calendars and lost their categories): only a name that ends with a
+  // calendar word (Date, Dates, Calendar: "Gulf Calendar", "Dim Date"), or is one (Time, Period), Arabic too
+  const CAL_NAME = /(^|\s)(dates?|calendar)(\s*table)?$|^(dim\s*)?(time|period|periods)$|(^|\s)(التقويم|تقويم|التاريخ)$/i;
+  const splitName = (n) => String(n).replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').trim();
   // names that read as a number or a date, for columns whose type the files don't give
   const NUMBERISH = /amount|qty|quantity|price|cost|value|sales|revenue|total|count|number|units|profit|margin|rate|score|percent|%|offset|sort|المبلغ|الكمية|السعر|القيمة|المبيعات|العدد/i;
   const DATEISH = /date|time|stamp|تاريخ|وقت/i;
@@ -285,7 +287,17 @@
   // the label by the month's first date and keep the last months; the model is not touched
   // (the cross-review's G11, 11 Oct: "Payment Period" of a fact table took its Order Date: only a label of a date table,
   // or a column whose own DAX is made from that date, is ordered by it)
-  const isDateTable = (t) => !!(t && (t.date || /^time$/i.test(t.dataCategory || '') || DATE_TABLE.test(String(t.name))));
+  // a calendar: marked (dataCategory Time), shaped like one (a relationship's one side on its date column: unique dates;
+  // the reader marks it, dateKey), or named like one by whole words
+  const isDateTable = (t) => !!(t && (t.date || /^time$/i.test(t.dataCategory || '') || t.dateKey || CAL_NAME.test(splitName(t.name))));
+  // the reader's part: a table whose date column is the one side of a relationship holds unique dates (metadata only)
+  function markCalendars(tables, json) {
+    const m = (json && json.model) || json || {};
+    (m.relationships || []).filter((r) => r && r.toTable && r.toColumn && r.isActive !== false && String(r.isActive) !== 'false').forEach((r) => {
+      const t = (tables || []).find((x) => x.name === String(r.toTable)), c = t && (t.columns || []).find((x) => x.name === String(r.toColumn));
+      if (c && /^date(time)?$/i.test(String(c.dataType || '')) && (!r.toCardinality || /^one$/i.test(r.toCardinality))) t.dateKey = true; });
+    return tables;
+  }
   function dateColumnFor(columns, name, type, table) {
     if (!/month|period|الشهر/i.test(String(name)) || !/^(string|unknown)$/.test(String(type || 'string').toLowerCase())) return null;
     const dates = (columns || []).filter((c) => /^date(time)?$/i.test(String(c.dataType || '')) && c.name !== name);
@@ -572,6 +584,6 @@
   // the language of each text column as the picker reads it, with the table's context ({ 'T[c]': 'ar' | 'en' })
   const langsOf = (tables) => { const out = {}; catalog(tables).columns.filter((c) => c.lang).forEach((c) => { out[`${c.t}[${c.c}]`] = c.lang; }); return out; };
   const twinsOf = (tables) => { const out = {}; catalog(tables).columns.filter((c) => c.twin).forEach((c) => { out[`${c.t}[${c.c}]`] = `${c.twin.t}[${c.twin.c}]`; }); return out; };
-  const api = { dateColumnFor, fieldOf, langOf, langsOf, twinsOf, reachTable, relsOfTmsl, relsOfTmdl, isPercent, measureCard, nameLike, iso, parseTmdl, fromTmsl, fromFolder, fromFile, suggest, build, counts, sortColumnFor, renderPicker, connection };
+  const api = { dateColumnFor, fieldOf, isDateTable, markCalendars, langOf, langsOf, twinsOf, reachTable, relsOfTmsl, relsOfTmdl, isPercent, measureCard, nameLike, iso, parseTmdl, fromTmsl, fromFolder, fromFile, suggest, build, counts, sortColumnFor, renderPicker, connection };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DABind = api;
 })(typeof self !== 'undefined' ? self : this);
