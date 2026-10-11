@@ -1,7 +1,9 @@
 # DataArcus MCP: what stays on your machine, and what your AI app sees
 
-Plain English. Checked against 0.2.8 (DataArcus `843c8dc`, Microsoft's validator 0.4.0) on 2026-10-08: `mcp/server.mjs`, `mcp/lib/`,
-the report-design skill, and the shared engines it loads from `assets/js/`. If the code changes, this page is checked again before the next release.
+Plain English. Checked against the DataArcus MCP package 0.1.0 (`mcp/package.json`; the 0.2.9 beta in preparation,
+branch `fix/0.2.9-design`) on 2026-10-11, with Microsoft's validator 0.4.0: `mcp/server.mjs`, `mcp/lib/`, the
+report-design skill, and the shared engines it loads from `assets/js/`. If the code changes, this page is checked again
+before the next release. What is not true yet is listed under "Known gaps" at the end.
 
 ## In one paragraph
 The DataArcus MCP runs on your own computer and sends nothing anywhere by itself. But it is a tool for an AI app
@@ -94,7 +96,9 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
   tools tell you to create it.
 - **Links are not followed out of the folder.** A shortcut-like link inside the working folder (a symbolic link or a
   Windows junction) that points to a folder outside it is refused, for reading and for writing: the tools check where
-  a path really is, not only its name. When searching a project for its model, links are never followed.
+  a path really is, not only its name. The same holds for the paths a tool picks itself: the model folder a `.pbip`
+  points at, and a model found by its folder's name. When searching a project for its model, links are never followed.
+  <!-- TODO(A1-1): true once the reading block's A1-1 fix (63066cf, fix/0.2.9-reader) is merged; remove this line then -->
 - **A working folder that is itself a model folder** (`... .SemanticModel`): the reading tools work on it, and read
   nothing above it. `create_report` refuses, because a report is written next to its model, which would be outside
   the working folder; choose the project folder instead.
@@ -135,7 +139,21 @@ as data, never as instructions:
   first, with the owner's approval, before it ships. Until then, section 3 stands as written.
 
 ## Known gaps
-None open. Closed on 2026-10-04 (round 5, from the audit of 2026-10-04), each with tests that failed before the fix:
+Open on 2026-10-11 (from the 0.2.9 audits; each will be closed with a test that fails before the fix):
+- **A1-1** (being merged): a model folder that a `.pbip` points at was not checked against the working folder, so a
+  link there could be read from outside it. Fixed in the reading block (`63066cf`); true here once it is merged.
+- **A6-1, A6-2, A6-3** (the plan gate): an approved plan does not yet pin every input of the write (A6-1), can be used
+  more than once (A6-2), and is approved by the AI app passing your reply, which the tools can't prove you typed (A6-3).
+- **A7-3** (the plan gate): a reply such as "Wait, don't go yet" can still approve a plan, and approving a plan again
+  keeps it alive past its 2 hours. `approve_plan`'s description promises both; the gate's fix makes it true.
+- **A6-4**: a write that fails part-way can leave a half-written new report (never one written over a file).
+- **A5-1, A5-5** (`read_report`): field roles are returned as written in the report, and the instruction screen runs on
+  the raw text.
+- **A6-6** (`create_report`): `boundFields` can hold a field name's invisible format character as it is, not as its
+  code point.
+- **A4-7** (`check_report`): the design lint's findings carry no `impact` kind.
+
+Closed on 2026-10-04 (round 5, from the audit of 2026-10-04), each with tests that failed before the fix:
 - fix scripts in the health check's answer carried expressions and descriptions (now files; see section 3);
 - a new theme file could be written through a link whose target was missing, to a place outside the working folder
   (now such a name counts as taken; see section 4);

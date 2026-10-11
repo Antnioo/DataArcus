@@ -27,7 +27,7 @@ export async function v029agent({ call, check, meta }) {
   {
     const model = src('mcp/lib/model.mjs'), a11 = /beside[^\n]*real\(|real\([^\n]*beside/.test(model.split('\n').find((l) => /\.pbip\$\/i\.test\(full\)/.test(l)) || '');
     const claims = /\.pbip/.test(section(privacy, '## 4.')) && /model folder a `?\.pbip`? (points at|names)/i.test(privacy);
-    if (a11) chk(() => claims, () => 'A7-1: PRIVACY section 4 must say that the model folder a .pbip points at is checked like every path');
+    if (a11) chk(() => claims && !/TODO\(A1-1\)/.test(privacy + src('mcp/README.md')), () => 'A7-1: with A1-1 in model.mjs, PRIVACY section 4 says the .pbip route is checked, and the TODO(A1-1) lines are gone (PRIVACY, README)');
     else { chk(() => /TODO[^\n]*A1-1/.test(privacy) || !claims, () => 'A7-1: without A1-1 in model.mjs, PRIVACY must not claim the .pbip route is contained (or must carry the TODO naming A1-1)');
       console.warn('PENDING  A7-1: model.mjs here has no A1-1 (the reading block\'s 63066cf); the containment claim is checked once it is merged'); }
   }
