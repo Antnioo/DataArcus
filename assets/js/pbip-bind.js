@@ -172,7 +172,7 @@
     delete own.pctFormat; own.pct = false;
     // (the second sweep, I8: an amount by its formula, a sum of a decimal column or a row's quantity x price, keeps
     // automatic units on its card although the model gives it no format; a count or a whole quantity stays whole)
-    const amountByFormula = !x.formatStringDefinition && !hasUnit(x.formatString || '') && sumOfDecimal(exprOf(x), tables || []);
+    const amountByFormula = !String(x.formatString || '').trim() && !x.formatStringDefinition && sumOfDecimal(exprOf(x), tables || []);   // (no format at all: a format the model gives decides, round 12)
     if (amountByFormula) delete own.wholeFormat;
     return Object.assign(own, r.format === '#,0' && !amountByFormula ? { wholeFormat: '#,0' } : {}, { tableFormat: r.format, fullFormat: r.format });
   };
