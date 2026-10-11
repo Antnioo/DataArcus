@@ -12,6 +12,7 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { round22 } from './test-round22.mjs';
 import { round23 } from './test-round23.mjs';
 import { v029 } from './test-0.2.9.mjs';
+import { v029b } from './test-0.2.9b.mjs';
 import { withPlans } from './test-plan.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
 
@@ -192,9 +193,11 @@ if (!r.err) {
   check(pbir.datasetReference.byPath.path === '../Health Test.SemanticModel', `pbir: ${JSON.stringify(pbir.datasetReference)}`);
   const model = JSON.parse(fs.readFileSync(bim, 'utf8')).model.tables;
   // (round 19: report-level measures, Schema "extension", are skipped below: they are the report's, not the model's)
+  // (0.2.9 part 2: so are the names inside a visual filter's condition, SourceRef.Source: an alias of its From, whose
+  // entities are the field's own)
   const has = (k, t, n) => model.some((x) => x.name === t && (k === 'Measure' ? x.measures || [] : x.columns).some((c) => c.name === n));
   const refs = [];
-  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension') refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); });
+  const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension' && !(v.Column || v.Measure).Expression.SourceRef.Source) refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); });
   walk(dir);
   check(refs.length >= 4, `create_report bound only ${refs.length} fields`);
   // with no background given, the page background is fully transparent (the theme's page colour shows)
@@ -346,7 +349,8 @@ const slotsPlaced = (pages, want) => {   // every slot except the filter rail ha
       if (s.rail) { const sl = got.visuals.filter((v) => v.type === 'slicer'); if (!sl.length || sl.some((v) => v.x < s.x || v.y < s.y || v.x + v.w > s.x + s.w || v.y + v.h > s.y + s.h)) bad.push(`page ${i + 1}: slicers not inside the rail ${JSON.stringify(s)}`); }
       // (round 1: a header text box, the title or "Your logo", may start lower in its slot so its text is centred in the
       // header: the same x, width and bottom edge)
-      else if (!got.visuals.some((v) => v.type !== 'group' && v.x === s.x && v.w === s.w && (v.y === s.y && v.h === s.h || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h)))) bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
+      // (0.2.9 part 2, O-6: create_report writes no "Your logo" placeholder, so a logo slot without a logo stays empty)
+      else if (!got.visuals.some((v) => v.type !== 'group' && v.x === s.x && v.w === s.w && (v.y === s.y && v.h === s.h || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h))) && s.kind !== 'logo') bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
     });
   });
   return bad;
@@ -372,7 +376,8 @@ if (!r.err) {
   check(rail1 && k1.x > rail1.x && k1.w > 300 && k1.w < 500 && k1.x + k1.w === rowEnd && shown[0].visuals.some((v) => v.x === k1.x && v.w === k1.w) && JSON.stringify(shown.map((p) => p.name)) === '["تحليل","نظرة عامة"]', `create_report design: not mirrored or page names not Arabic (first KPI slot ${k1.x}, ${k1.w})`);
   // the Arabic labels from the engine
   const all1 = shown.map((p) => p.visuals.map((v) => v.text).join('')).join('');
-  check(all1.includes('إعادة ضبط الفلاتر') && all1.includes('شعارك') && !all1.includes('Reset filters'), 'create_report design: the report labels are not Arabic');
+  // (0.2.9 part 2, O-6: no «شعارك» placeholder in create_report's reports, so it is no longer among the Arabic labels)
+  check(all1.includes('إعادة ضبط الفلاتر') && !all1.includes('شعارك') && !all1.includes('Reset filters'), 'create_report design: the report labels are not Arabic');
   // the registered theme is the design's theme exactly, with nothing changed (its visuals are already solid) but its
   // name: inside a project the theme carries the name report.json references, its file name (Microsoft's theming
   // reference and validator; owner's decision 2026-10-01, round 0 change 7)
@@ -451,8 +456,10 @@ check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.string
     check(/"value":\[\{"properties":\{"fontSize":\{"expr":\{"Literal":\{"Value":"20D"\}\}\}[^\]]*"selector":\{"id":"default"\}\}(\]|,\{"properties":\{"labelDisplayUnits"[^\]]*"customFormatString":\{"expr":\{"Literal":\{"Value":"'#,0'"\}\}\}[^\]]*\])/.test(tipText.replace(/\s/g, '')) && (tipText.replace(/\s/g, '').match(/"fontSize":\{"expr":\{"Literal":\{"Value":"10D"\}\}\}/g) || []).length === 2,
       'tooltip page: the card value must be 20 and both titles 10');
     // 3. logo placeholder: readable (at least 12pt in a 48-high header slot)
-    const logo = all.find((v) => v.type === 'textbox' && /Your logo/.test(v.text)), size = logo && +((logo.text.match(/"fontSize":\s*"(\d+)pt"/) || [])[1]);
-    check(size >= 12, `logo placeholder: ${size}pt`);
+    // (0.2.9 part 2, O-6 of the owner's test of 0.2.8: create_report writes no placeholder; the website's template keeps it,
+    // its size checked in the header block below with the shared writer)
+    const logo = all.find((v) => v.type === 'textbox' && /Your logo/.test(v.text));
+    check(!logo, 'logo placeholder: create_report must write none without a logo');
     // 4. fields: no number (Amount) or date (Sales[Date]) as a category, axis or slicer; the date table's named parts instead
     const cols = boundFields(dir).filter(([k]) => k === 'Column').map(([, t, c]) => `${t}[${c}]`);
     // (round 12, #16, the owner's go 6 Oct: the time axis takes the model's short month names, Calendar[Month Short],
@@ -476,9 +483,11 @@ check(!r.err && JSON.stringify(r.j.page) === '{"w":1280,"h":720}' && JSON.string
   //  number, that puts the table in calendar order; it is not one of the table's own fields, so it is set aside here)
   // (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; compared as the reader sees it, shownOf)
   const cols = (v) => shownOf(v).filter((x) => !(x.field.Aggregation && x.displayName === ' ')).map((x) => (x.field.Column ? 'C:' + x.field.Column.Property : 'M:' + x.field.Measure.Property));
-  const grow = (v) => /growToFit/.test(JSON.stringify(v.objects || {})) && /autoSizeColumnWidth/.test(JSON.stringify(v.objects || {}));
+  // (0.2.9 part 2, O-14 of the owner's test of 0.2.8: grow-to-fit let a long text push the numbers out of view; now
+  // auto-size off and one width per column filling the table, measured in Desktop on the laptop, REPORT-FIXES-LAB)
+  const grow = (v) => !/growToFit/.test(JSON.stringify(v.objects || {})) && /"autoSizeColumnWidth":\{"expr":\{"Literal":\{"Value":"false"\}\}\}/.test(JSON.stringify(v.objects || {})) && v.query.queryState.Values.projections.every((p) => (v.objects.columnWidth || []).some((e) => e.selector.metadata === p.queryRef));
   const te = tables(en), ta = tables(ar);
-  check(te.length && ta.length && te.concat(ta).every(grow), `tables must grow to fit: ${te.length} EN, ${ta.length} AR, ${JSON.stringify((te[0] || {}).objects)}`);
+  check(te.length && ta.length && te.concat(ta).every(grow), `tables must have set widths, auto-size off: ${te.length} EN, ${ta.length} AR, ${JSON.stringify((te[0] || {}).objects)}`);
   // (changed 5 Oct 2026, the owner's design choice 5: the Arabic table keeps its text column first, so the total row's
   //  "Total" shows (Power BI writes it only in a first column of text), and the rest follow in the mirrored order.
   //  Before, the whole order was reversed and the category sat last, on the right.)
@@ -2394,7 +2403,10 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     // (changed 6 Oct 2026, round 12, the owner's ask: a percent card carries its percent format, "0.0%", and a measure
     // whose format has no decimals, "#,0", its whole number; the averages with decimals keep 2L. Before: the percent
     // card had no entry, and every other card 2L)
-    const avg = (v) => /Avg Price|Avg Order Value|متوسط قيمة الطلب/.test(JSON.stringify(v.visual.query || {}));
+    // (0.2.9 part 2, O-2 of the owner's test of 0.2.8: an amount, a SUM of money, keeps automatic units with 2 decimals
+    // although its format has none: the MCP's Total Sales; the website's sample sets its own formats and is unchanged)
+    const avg = (v) => /Avg Price|Avg Order Value|متوسط قيمة الطلب/.test(JSON.stringify(v.visual.query || {})) || (vsAmount.has(v) && /"Property":"Total Sales"/.test(JSON.stringify(v.visual.query || {})));
+    const vsAmount = new Set([].concat(enV, arV));
     [enV, arV, siteEn, siteAr].forEach((vs, i) => vs.filter((v) => type(v) === 'cardVisual' && v.visual.query && !isMessageCard(v)).forEach((v) => {
       const p = valueOf(v), code = v.visual.objects.value.length === 2 ? L(v.visual.objects.value[1].properties.customFormatString) : undefined;
       const ok = pct(v) ? code === "'0.0%'" && !('labelPrecision' in p) : avg(v) ? L(p.labelPrecision) === '2L' && code === undefined : code === "'#,0'" && !('labelPrecision' in p);
@@ -3256,7 +3268,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   {
     const x = await ask('create_report', { path: 'r12-project', name: 'R12 Formats', design: await planOf({ layout: 'exec', kpis: 6, filters: 'end' }), secondPage: false,
       fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]', 'Sales[Avg Price]', 'Sales[Margin %]', 'Sales[Conversion Rate]', 'Sales[Growth vs Last Year]'] } });
-    const want = { 'Total Sales': '#,0', Orders: '#,0', 'Avg Price': null, 'Margin %': '0.0%', 'Conversion Rate': '0.0%', 'Growth vs Last Year': '0.0%' }, bad = [];
+    // (0.2.9 part 2, O-2: Total Sales, a SUM of money, is an amount: automatic units with 2 decimals, no '#,0')
+    const want = { 'Total Sales': null, Orders: '#,0', 'Avg Price': null, 'Margin %': '0.0%', 'Conversion Rate': '0.0%', 'Growth vs Last Year': '0.0%' }, bad = [];
     pageVisuals(x, 'r12-project').filter(isKpi).forEach((v) => {
       const m = v.visual.query.queryState.Data.projections[0].field.Measure.Property, vs = v.visual.objects.value, d = valueOf(v), cust = vs.find((e) => e.selector && e.selector.metadata);
       const got = cust ? S(cust.properties.customFormatString) : null;
@@ -3330,7 +3343,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const hand = await ask('create_report', { path: 'r12-project', name: 'R12 Hand AR', lang: 'ar', rtl: true, font: 'Tahoma', pages: [{ name: 'صفحة', width: 1280, height: 720,
       slots: [{ kind: 'title', x: 400, y: 12, w: 856, h: 40 }, { kind: 'logo', x: 24, y: 12, w: 160, h: 40 }, { kind: 'bar', x: 24, y: 70, w: 1232, h: 620 }] }] });
     const tips = hand.err ? [] : pagesOf(hand, 'r12-project').filter((p) => p.tooltip).map((p) => p.name);
-    chk(() => al(logo(ar2, 'r12-project')) === 'left' && al(logo(en, 'r12-project')) === 'right' && /شعارك/.test(JSON.stringify(logo(hand, 'r12-project') && logo(hand, 'r12-project').visual.objects)) && tips.length >= 1 && tips.every((n) => /تلميح/.test(n)),
+    // (0.2.9 part 2, O-6: create_report writes no placeholder at all, designed or hand-placed; its place is checked with the
+    // shared writer for the website's template above)
+    chk(() => !logo(ar2, 'r12-project') && !logo(en, 'r12-project') && !logo(hand, 'r12-project') && tips.length >= 1 && tips.every((n) => /تلميح/.test(n)),
       () => `#30/#14/#13: the logo placeholder at the page's edge, Arabic texts on hand-placed pages: AR ${al(logo(ar2, 'r12-project'))} EN ${al(logo(en, 'r12-project'))} hand ${JSON.stringify(logo(hand, 'r12-project') && logo(hand, 'r12-project').visual.objects).slice(0, 120)} tips ${JSON.stringify(tips)} ${short(hand)}`);
   }
   // the Arabic Reset: its arrow beside its text (seen in Desktop: at opposite ends): the icon placed at the reading
@@ -3933,7 +3948,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const tabsOf = async (W, H, hh, names, lang) => {
       const rtl = lang === 'ar', tw = Math.round(W * 0.72), lw = Math.round(W * 0.12);
       const slots = [{ kind: 'title', x: rtl ? W - 24 - tw : 24, y: 12, w: tw, h: hh }, { kind: 'logo', x: rtl ? 24 : W - 24 - lw, y: 12, w: lw, h: hh }, { kind: 'kpi', title: 'K', x: 24, y: hh + 40, w: 300, h: 120 }];
-      const x = await ask('create_report', { path: 'r16-g', name: `R16 tabs ${W} ${hh} ${names.length} ${lang}`, lang, rtl, font: rtl ? 'Tahoma' : 'Segoe UI', title: rtl ? 'تقرير' : 'Report', fields: { kpis: ['Sales[Total Sales]'] },
+      // (0.2.9 part 2, O-6: no placeholder without a logo, so the room is measured from a real logo's image)
+      const x = await ask('create_report', { path: 'r16-g', name: `R16 tabs ${W} ${hh} ${names.length} ${lang}`, lang, rtl, logo: 'cr-project/logo.png', font: rtl ? 'Tahoma' : 'Segoe UI', title: rtl ? 'تقرير' : 'Report', fields: { kpis: ['Sales[Total Sales]'] },
         pages: names.map((n) => ({ name: n, width: W, height: H, slots })) });
       if (x.err) return { err: x.t.slice(0, 200) };
       const pagesDir = path.join(ROOT, 'r16-g', x.j.report, 'definition', 'pages'), order = JSON.parse(fs.readFileSync(path.join(pagesDir, 'pages.json'), 'utf8')).pageOrder;
@@ -3943,7 +3959,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
       const logo = slots[1], rows = [...new Set(btns.map((b) => b.y))].sort((a, b) => a - b);
       const fitText = btns.every((b) => b.w >= Px.textWidth(b.name, b.size, true, rtl ? 'Tahoma' : 'Segoe UI') + 10);
       // (positions inside the header group are relative to the group: the logo's own visual is in the same frame)
-      const lv = vs.find((v) => v.visual && /Your logo|شعارك/.test(JSON.stringify(v.visual.objects || {}))), lp = lv ? lv.position : null;
+      const lv = vs.find((v) => v.visual && v.visual.visualType === 'image'), lp = lv ? lv.position : null;
       const inRoom = !!lp && btns.every((b) => (rtl ? b.x >= lp.x + lp.width : b.x + b.w <= lp.x));
       const first = btns.find((b) => b.name === names[0]), row0 = btns.filter((b) => b.y === rows[0]);
       const firstAtStart = first && first.y === rows[0] && (rtl ? first.x === Math.max(...row0.map((b) => b.x)) : first.x === Math.min(...row0.map((b) => b.x)));
@@ -4289,7 +4305,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   }
   // Round 19, item 10: a table takes the matrix's row rule (round 18): where seven rows and the total do not fit even with
   //     tight rows at the theme's size, the largest smaller text down to 8pt that holds them, on its values, headers and
-  //     total; the header keeps its grow-to-fit
+  //     total; the header keeps its grow-to-fit (0.2.9 part 2, O-14: no more: auto-size off and set widths)
   {
     const dir = 'r18-matrix';
     const x = await ask('create_report', { path: dir, name: 'R19 table rows', theme: `${dir}/theme-1.5.json`, fields: { kpis: ['Sales[Total Sales]'], table: ['Calendar[Day Name]', 'Sales[Total Sales]'] },
@@ -4298,7 +4314,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const t = vs.find((v) => v.visual && v.visual.visualType === 'tableEx'), o = (t && t.visual.objects) || {};
     const fz = (k) => { const e = (o[k] || [])[0]; return e && e.properties.fontSize ? parseFloat(e.properties.fontSize.expr.Literal.Value) : null; };
     const T = fz('values'), pitch = 1.415 * T * 4 / 3, need = 1.5 * 18 * 4 / 3 + pitch + 7 + 8 * pitch + 16;
-    chk(() => T && T < 15 && fz('columnHeaders') === T && fz('total') === T && need <= 220 && JSON.stringify(o.columnHeaders).includes('growToFit') && !/needs about \d+ to show its 7 rows/.test(JSON.stringify(x.j)),
+    chk(() => T && T < 15 && fz('columnHeaders') === T && fz('total') === T && need <= 220 && JSON.stringify(o.columnHeaders).includes('"autoSizeColumnWidth":{"expr":{"Literal":{"Value":"false"}}}') && !/needs about \d+ to show its 7 rows/.test(JSON.stringify(x.j)),
       () => `a 420 x 220 table of Day Name at 15pt must take a smaller text so seven rows and the total fit: values ${T}, headers ${fz('columnHeaders')}, total ${fz('total')}, need ${Math.round(need)} ${x.err ? x.t.slice(0, 200) : ''}`);
   }
 }
@@ -4428,6 +4444,8 @@ await round23({ call, check, ROOT, fs });
 // ---------- 0.2.9 part 1 (the gate, the plan's limits, the user's choices): test-0.2.9.mjs, which also runs alone ----------
 // (the raw call: the gate is tested without the helper that gets plans)
 await v029({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
+// ---------- 0.2.9 part 2 (the report writer's fixes): test-0.2.9b.mjs, which also runs alone ----------
+await v029b({ call, check, ROOT, fs });
 // ---------- round 17 follow-up: G-04, check_report's instruction-like names in suspiciousNames (owner: all recommended) ----------
 // the name stays withheld (only the placeholder), each entry has its kind and reason, and the check's result is the
 // same as for a plainly named visual

@@ -81,7 +81,7 @@ export async function v029b({ call, check, ROOT, fs = fs0 }) {
     const refs = t ? t.visual.query.queryState.Values.projections.map((p) => p.queryRef) : [];
     chk(() => ch.autoSizeColumnWidth.expr.Literal.Value === 'false' && !ch.columnAdjustment, () => `O-14 ${tag}: the table's auto-size must be off and grow-to-fit gone: ${JSON.stringify(ch)}`);
     chk(() => refs.length && refs.every((q) => ws.some((w) => w.ref === q)), () => `O-14 ${tag}: one width per column: ${JSON.stringify(refs)} vs ${JSON.stringify(ws)}`);
-    const sc = get(() => pg.page.height / 1080), issue = ws.find((w) => w.ref === 'Sales.Issue'), nums = ws.filter((w) => /^Sales\.(Total Sales|Orders|Margin %)$/.test(w.ref)), sum = ws.reduce((a, w) => a + w.w, 0);
+    const sc = get(() => pg.page.height / 1080), issue = ws.find((w) => w.ref === (tag === 'ar' ? 'Sales.Row label: Issue' : 'Sales.Issue')),   /* (Arabic: the name column is hidden at 0, round 23; its row label shows it) */ nums = ws.filter((w) => /^Sales\.(Total Sales|Orders|Margin %)$/.test(w.ref)), sum = ws.reduce((a, w) => a + w.w, 0);
     chk(() => issue.w >= 160 * sc && nums.every((w) => w.w >= 90 * sc - 0.5 && w.w <= 130 * sc + 0.5) && sum <= t.position.width - 36 + 0.5,
       () => `O-14 ${tag}: numbers 90-130, the text 160 at least, all within the width less 36 (${t && t.position.width}): ${JSON.stringify(ws)}`);
     chk(() => o.values[0].properties.wordWrap.expr.Literal.Value === 'true', () => `O-14 ${tag}: the values must wrap: ${JSON.stringify(o && o.values)}`);
@@ -127,7 +127,7 @@ export async function v029b({ call, check, ROOT, fs = fs0 }) {
     const tips = r.pages.filter((p) => p.page.type === 'Tooltip'), bars = tips.map((p) => ({ p, v: p.visuals.find((v) => typeOf(v) === 'clusteredBarChart') })).filter((x) => x.v);
     const byCat = bars.find((x) => !/Calendar/.test(JSON.stringify(x.v.visual.query.queryState.Category))), byMonth = bars.find((x) => /Calendar/.test(JSON.stringify(x.v.visual.query.queryState.Category)));
     const top = get(() => filtersOf(byCat.v).find((f) => f.type === 'TopN'));
-    chk(() => top && /"Top":6/.test(JSON.stringify(top.filter)) && /Top 6/.test(JSON.stringify(byCat.v.visual.visualContainerObjects.title)), () => `tooltip ${tag}: the category bars must be the Top 6 by their measure, said in the title: ${JSON.stringify(byCat && filtersOf(byCat.v)).slice(0, 300)}`);
+    chk(() => top && /"Top":6/.test(JSON.stringify(top.filter)) && (tag === 'ar' ? /أعلى 6/ : /Top 6/).test(JSON.stringify(byCat.v.visual.visualContainerObjects.title)), () => `tooltip ${tag}: the category bars must be the Top 6 by their measure, said in the title: ${JSON.stringify(byCat && filtersOf(byCat.v)).slice(0, 300)}`);
     const m6 = get(() => filtersOf(byMonth.v).map((f) => extByField(r, f.field)).find((m) => m && /EDATE \( [^,]+, -6 \)/.test(m.expression)));
     const sd = get(() => byMonth.v.visual.query.sortDefinition.sort[0]);
     chk(() => m6 && sd.direction === 'Descending' && /MIN \( 'Calendar'\[Date\] \)/.test((extByField(r, sd.field) || {}).expression) && byMonth.v.position.height >= 40 + 27 * 6 && byMonth.v.position.height + byMonth.v.position.y <= byMonth.p.page.height,

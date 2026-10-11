@@ -41,7 +41,7 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
     const ps = t ? t.visual.query.queryState.Values.projections : [], last = ps[ps.length - 1] || {}, ch = ((t || { visual: {} }).visual.objects || {}).columnHeaders;
     chk(() => t && JSON.stringify(refs(t)) === JSON.stringify(['Sales.Region', 'Sales.Orders', 'Sales.Total Sales', 'Sales.Row label: Region'])
       && JSON.stringify(width0(t)) === '["Sales.Region"]' && last.field.Measure.Expression.SourceRef.Schema === 'extension' && last.field.Measure.Expression.SourceRef.Entity === 'Sales'
-      && last.displayName === 'Region' && ch[0].properties.autoSizeColumnWidth.expr.Literal.Value === 'true',
+      && last.displayName === 'Region' && ch[0].properties.autoSizeColumnWidth.expr.Literal.Value === 'false',   /* (0.2.9 part 2, O-14: auto-size off, a width per column; the name column keeps its 0) */
       () => `1. the Arabic table: Region first at width 0, the numbers, the row-label measure last with the column's name: ${t ? JSON.stringify(refs(t)) + ' width 0: ' + JSON.stringify(width0(t)) + ' last ' + JSON.stringify(last).slice(0, 300) : 'no table'} ${short(x)}`);
     const m = ms.find((e) => e.name === 'Row label: Region');
     chk(() => m && m.entity === 'Sales' && m.dataType === 'Text' && m.expression === LABEL('Sales', 'Region', ['Orders', 'Total Sales']), () => `1. the measure in reportExtensions.json: ${JSON.stringify(ms).slice(0, 500)}`);
