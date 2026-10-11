@@ -95,6 +95,32 @@ export async function v029p({ call, check, ROOT, fs = fs0 }) {
     const lk = B.langsOf(t), keys = Object.keys(lk);
     chk(() => typeof B.fieldKey === 'function' && B.fieldKey('Sales', 'A]B') !== B.fieldKey('Sales]A', 'B') && keys.includes(B.fieldKey('Sales', 'A]B')), () => `the field keys must be unambiguous for a name with "]": ${JSON.stringify(keys)}`);
   }
+
+  // ---------- A3-3: one format rule (field-meaning.js formatOf), which the picker's card and table formats come from ----------
+  {
+    const FM = req('../assets/js/field-meaning.js'), Fix = req('../assets/js/model-health-tmdl.js');
+    const src = (f) => fs.readFileSync(path.join(REPO, f), 'utf8');
+    chk(() => typeof FM.formatOf === 'function' && typeof FM.reportFormatOf === 'function' && Fix.formatOf === FM.formatOf && !/function formatOf\(/.test(src('assets/js/model-health-tmdl.js')),
+      () => 'A3-3: formatOf (and the report\'s reportFormatOf) live in field-meaning.js; the health engine uses that one');
+    const s = src('mcp/server.mjs');
+    chk(() => !/withRightFormats|cardFormatOf|function reportFormatOf|const rightOf/.test(s), () => 'A3-3: the server keeps no format rule of its own (withRightFormats, cardFormatOf, reportFormatOf, rightOf)');
+    // a model the website's picker reads: the formats it gives are the rule's, with no server after it
+    const t = tablesOf([{ name: 'Visits', columns: [col('Visit', 'string'), col('Visited', 'dateTime'), col('Pages', 'int64'), col('Clinic', 'string')],
+      measures: [ms('Visit Count', 'COUNTROWS ( Visits )', '#,0.00'), ms('Return Rate', 'DIVIDE ( [Returns], [Visit Count] )'), ms('Returns', 'CALCULATE ( [Visit Count], Visits[Clinic] = "x" )', '#,0'),
+        ms('Total Margin', 'SUM ( Visits[Pages] )'), ms('Wait Share', 'DIVIDE ( 1, 2 )', '0.00%')] }]);
+    const card = (b, n) => (b.kpis || []).concat(b.table || []).find((k) => k && k.m === n) || {};
+    const b = B.suggest(t, 5);
+    chk(() => card(b, 'Visit Count').wholeFormat === '#,0' && !card(b, 'Visit Count').pct && card(b, 'Return Rate').pct === true && card(b, 'Return Rate').pctFormat === '0.0%'
+      && !card(b, 'Total Margin').pct && card(b, 'Wait Share').pctFormat === '0.0%',
+      () => `A3-3: the cards' formats by the one rule (a count with decimals shows whole, a rate without a format 0.0%, "Total Margin" = SUM no percent, 0.00% shown 0.0%): ${JSON.stringify(b.kpis)}`);
+    const full = B.suggest(t, 5, { kpiValues: 'full' }), plain = full.kpis.find((k) => k && k.m === 'Total Margin');
+    chk(() => plain && plain.cardFormat === '#,0' && !(b.kpis.find((k) => k && k.m === 'Total Margin') || {}).cardFormat && !(full.kpis.find((k) => k && k.m === 'Return Rate') || {}).cardFormat,
+      () => `A3-3: with kpiValues "full" a card carries the rule's number format (never on a percent; none without "full"): ${JSON.stringify(full.kpis)}`);
+    const tb = typeof B.measureOf === 'function' ? B.build(Object.assign({}, b.choices, { table: [B.fieldOf(t[0], 'Visited'), B.measureOf(t[0], 'Visit Count', t), B.measureOf(t[0], 'Wait Share', t)] })) : { table: [] };
+    const tf = (x) => (tb.table.find((f) => f.c === x || f.m === x) || {}).tableFormat;
+    chk(() => tf('Visited') === 'dd mmm yyyy' && tf('Visit Count') === '#,0' && tf('Wait Share') === '0.0%',
+      () => `A3-3: a table's fields carry the rule's format (a date without a format dd mmm yyyy, a count #,0, 0.00% as 0.0%), pinned with the picker's own field builders (fieldOf, measureOf): ${JSON.stringify(tb.table)}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
