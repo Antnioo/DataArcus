@@ -17,6 +17,7 @@ import { v029i } from './test-0.2.9i.mjs';
 import { v029w } from './test-0.2.9w.mjs';
 import { v029k } from './test-0.2.9k.mjs';
 import { v029p } from './test-0.2.9p.mjs';
+import { v029q } from './test-0.2.9q.mjs';
 import { v029checks } from './test-0.2.9-checks.mjs';
 import { v029design } from './test-0.2.9-design.mjs';
 import { v029agent } from './test-0.2.9-agent.mjs';
@@ -947,7 +948,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
   const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnostics || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run'; } };
   const f = (x) => (x ? `${x.t}[${x.m != null ? x.m : x.c}]` : null);
-  const LOGISTICS = ['Shipments[Shipments Total Net Amount]', 'Deliveries[Deliveries Total Tax Amount]', 'Freight Costs[Freight Costs Total Tax Amount]', 'Freight Costs[Freight Costs Units Share %]'];
+  // (the rc's laptop proof, D14: a share of all, DIVIDE([X], CALCULATE([X], ALL(...))), is 100 % on a card: the 4th card was
+  // 'Freight Costs[Freight Costs Units Share %]', now the next amount)
+  const LOGISTICS = ['Shipments[Shipments Total Net Amount]', 'Deliveries[Deliveries Total Tax Amount]', 'Freight Costs[Freight Costs Total Tax Amount]', 'Returns[Returns Total Amount]'];
 
   // 1. read_model: a large model gets a summary; named tables come in full; small models answer as before
   const big = await ask('read_model', { path: 'large' }), s = big.j || {};
@@ -1031,8 +1034,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const mq = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Date"}, {}) in Source' } }], col = (name, dataType) => ({ name, dataType, sourceColumn: name });
     fs.mkdirSync(path.join(ROOT, 'margin-project/Margin.SemanticModel'), { recursive: true });
     fs.writeFileSync(path.join(ROOT, 'margin-project/Margin.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [
-      { name: 'Sales', columns: [col('Region', 'string'), col('Amount', 'double'), col('Margin', 'double')], partitions: mq('Sales'),
-        measures: [{ name: 'Total Margin', expression: 'SUM ( Sales[Margin] )' }, { name: 'Net Margin', expression: 'SUM ( Sales[Margin] )', formatString: '#,0' }, { name: 'Gross Margin', expression: 'DIVIDE ( SUM ( Sales[Margin] ), SUM ( Sales[Amount] ) )' },
+      { name: 'Sales', columns: [col('Region', 'string'), col('Amount', 'double'), col('Margin', 'double'), col('Net', 'double')], partitions: mq('Sales'),   // (Net: D6, two measures of the same DAX are one card; they were both SUM ( Sales[Margin] ))
+        measures: [{ name: 'Total Margin', expression: 'SUM ( Sales[Margin] )' }, { name: 'Net Margin', expression: 'SUM ( Sales[Net] )', formatString: '#,0' }, { name: 'Gross Margin', expression: 'DIVIDE ( SUM ( Sales[Margin] ), SUM ( Sales[Amount] ) )' },
           { name: 'Margin %', expression: ['DIVIDE (', '    [Total Margin],', '    SUM ( Sales[Amount] )', ')'] }] }] } }));
     const mr = await ask('create_report', { path: 'margin-project', name: 'Margins', design, layout: 'exec', kpis: 4 });
     const flagged = mr.err ? null : (mr.j.modelNotes || []).filter((n) => /percentage/.test(n.issue)).map((n) => n.field).sort();
@@ -1251,7 +1254,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => s4.j.kpis.map(f).slice(0, 3).join('|') === RAM.kpis.join('|') && /\(old\)/.test(f(s4.j.kpis[3])) && s4.j.skipped.measures.length === 1, () => `4 cards, 3 current measures: the fourth is an old one because nothing else is left: ${s4.err ? s4.t.slice(0, 200) : s4.j.kpis.map(f)}`);
     chk(() => s5.j.kpis.filter(Boolean).length === 5 && !s5.j.skipped, () => `5 cards, 5 measures: all used, nothing skipped: ${s5.err ? s5.t.slice(0, 200) : JSON.stringify(s5.j.skipped)}`);
     fs.writeFileSync(path.join(ROOT, 'stale.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', columns: [{ name: 'Amount', dataType: 'double', sourceColumn: 'Amount' }, { name: 'Region', dataType: 'string', sourceColumn: 'Region' }],
-      measures: ['Sales Test', 'Backup Revenue', 'TEMP total', 'Unused Sales', 'Oldham Sales', 'Latest Orders', 'Contest Wins'].map((name) => ({ name, expression: 'SUM ( Sales[Amount] )', formatString: '#,0' })) }] } }));
+      measures: ['Sales Test', 'Backup Revenue', 'TEMP total', 'Unused Sales', 'Oldham Sales', 'Latest Orders', 'Contest Wins'].map((name, i) => ({ name, expression: 'SUM ( Sales[Amount] ) * ' + (i + 1), formatString: '#,0' })) }] } }));   // (D6: each its own DAX; the same DAX is one card)
     const st = await ask('suggest_fields', { path: 'stale.bim', kpis: 3 });
     chk(() => st.j.kpis.map((k) => k.m).sort().join() === 'Contest Wins,Latest Orders,Oldham Sales' && st.j.skipped.measures.length === 4 && st.j.measure.m !== 'Sales Test',
       () => `whole words only (Oldham, Latest, Contest are not old or test): ${st.err ? st.t.slice(0, 200) : st.j.kpis.map((k) => k.m) + ' skipped ' + JSON.stringify(st.j.skipped)}`);
@@ -4202,7 +4205,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     {
       const model = (dir, ms) => { fs.mkdirSync(path.join(ROOT, dir, 'M.SemanticModel'), { recursive: true });
         fs.writeFileSync(path.join(ROOT, dir, 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Calendar', dataCategory: 'Time', partitions: mp('Calendar'), columns: [col('Date', 'dateTime'), col('Day of Week', 'int64'), col('Day Name', 'string'), col('Quarter', 'string'), col('Month Short', 'string'), col('Month Number', 'int64')] },
-          { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime')], measures: ms.map((n) => ({ name: n, expression: /%/.test(n) ? 'DIVIDE ( SUM ( Sales[Amount] ), 2 )' : 'SUM ( Sales[Amount] )', formatString: /%/.test(n) ? '0.0%' : '#,0' })) }] } })); };
+          { name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Date', 'dateTime')], measures: ms.map((n, i) => ({ name: n, expression: /%/.test(n) ? 'DIVIDE ( SUM ( Sales[Amount] ), 2 )' : i ? 'SUM ( Sales[Amount] ) * ' + (i + 1) : 'SUM ( Sales[Amount] )', formatString: /%/.test(n) ? '0.0%' : '#,0' })) }] } })); };
+      // (D6: each measure has its own DAX, two of the same are one card: the 2nd is SUM * 2)
       const MS = ['Total Sales', 'Total Sales Last Ramadan', 'Total Sales vs Last Ramadan %'];
       model('n1-one', MS.slice(0, 1)); model('n1-two', MS.slice(0, 2)); model('n1-three', MS);
       const all = (dir, x) => { if (x.err) return []; const def = path.join(ROOT, dir, x.j.report, 'definition', 'pages'), pg = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder[0];
@@ -4468,6 +4472,8 @@ v029w({ check });
 await v029k({ call, check, ROOT, fs });
 // ---------- 0.2.9 audit fixes, the field picker's block (A3-2 ... A3-9, A6-15): test-0.2.9p.mjs, which also runs alone ----------
 await v029p({ call, check, ROOT, fs });
+// ---------- 0.2.9 picker fixes from the rc's laptop proof (S4, S5, S8, D2, D4-D14, D17): test-0.2.9q.mjs, which also runs alone ----------
+await v029q({ check });
 // ---------- 0.2.9 items 12-13 (check_report's three kinds, the health check's own reports): test-0.2.9-checks.mjs, which also runs alone ----------
 await v029checks({ call, check, ROOT, fs });
 // ---------- 0.2.9, custom visuals (what a visual shows, lib/visual-meaning.mjs; pure): test-0.2.9v.mjs, which also runs alone ----------

@@ -1,8 +1,36 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Integration round 6" just below (the rc head), then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Picker fixes from the rc's laptop proof" (branch fix/0.2.9-picker) and "Integration round 6" just below (the rc head), then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## Picker fixes from the rc's laptop proof (11 Oct, from 20:33 UTC, cloud builder 5; branch `fix/0.2.9-picker` from `c83e86d`; not merged, no PR)
+The laptop scored the rc 5.4 on nine real models (three worse than 0.2.8 by the picks): engine `lab/proof-0.2.9-rc1`,
+`business/beta/PERF-COMPARE-0.2.8-vs-0.2.9.md` and `DETAIL-2-RC1.md`. Fixed in the picker by formula, format and shape,
+never by those models' names; tests first in `mcp/test-0.2.9q.mjs` (19 checks, synthetic models).
+| Item | Rule now |
+|---|---|
+| S4 | a measure that needs one period (PREVIOUS*/NEXT*/PARALLELPERIOD, a HASONEVALUE/ISFILTERED/ISINSCOPE guard; directly or through the measures it calls) is never a card; PY and "last" measures keep their place after the base measures |
+| D4, D2, D14 | never a card: a what-if value (SELECTEDVALUE at the top), a helper (RANKX, TOPN; never a table column either), a share of all |
+| D6, D14 | never two cards with the same value: same DAX, an alias, a count of the same column |
+| D5, D13 | plain amounts (money format, a sum of a decimal column without a unit, quantity x price) first, then plain counts, then computed measures |
+| D17 | a dynamic-format measure is no amount; beside currency cards it is told (`formatsMixed`, a report note) |
+| S8, T3 | the trend's month is never a number column (nor the column another one is sorted by, also in a DAX calendar) |
+| D9, D10 | a time stamp is never the trend or a slicer: its date, or the calendar |
+| D7, D8 | the column chart never by the bar chart's field or one of the same name; never two slicers of the same name |
+| D11, S5 | a two-value category last; a lookup's own name column or a detail place (city, address) after the others |
+| I8 | an amount by formula with no format keeps automatic units on its card |
+| T7, D12 | hold by the reach rule (a chart's and the tooltip's measure reach its category); equal bars on the laptop were not reproducible from metadata |
+
+Commits: tests `77f22b6`, `b3dbff0`; fixes `24a2b05`, `a3bfb60` (D7 single-category), `fede511` (S4 narrowed, fixtures),
+`067cf54` (T3, I8), `9fc94cb` (I8 without a format only, golden). Older expectations changed by the new rules, each with its
+cause beside it: O-7's order (D13: the sum before the count), LOGISTICS' 4th card (D14), fixtures whose measures had
+the same DAX (D6: one card). Golden: task 10's 4th card, its note and suggestChars 6085 -> 6105 (D14), in "why".
+**Tests:** `npm test` **1298** + reader 36, 21, 21, 20, golden PASS, fuzz PASS, FUZZ_LONG 10,000 cases PASS (KNOWN lists
+empty); website 17 suites PASS; deny-scan 9, site config, csp, check-min (62) PASS.
+Seen, not in scope: with one category only, a left-out column chart would leave its slot empty (the writer's), so the
+column chart repeats the bar chart's field there; S1-S3, S6, S7, D1, D3, D15, D16, D18, D19 are the writer's or design's.
+Next: wait for the reviewer's "round 7 go" (writer, design and this branch into the gate).
 
 ## Integration round 6: custom visuals merged (11 Oct, from 20:23 UTC, cloud builder 5; `fix/0.2.9-gate`; not merged to main, no PR)
 - Merged `feat/0.2.9-custom-visuals` at `a61b00a` (builder 12: custom visuals to native in a new "<name> native" report;
