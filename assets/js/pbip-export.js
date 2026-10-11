@@ -162,6 +162,11 @@
   // the projection's displayName; measured in Desktop 2.158, DESKTOP-TESTS.md round 2) and in the titles written
   // here. The model is not renamed, and queryRef stays the field's own.
   const fname = (f) => (f.m != null ? f.m : f.c);
+  // 0.2.9, audit 3's A3-11: a model's name may hold format characters (Unicode Cf); a right-to-left override (U+202E) in
+  // a measure's name reversed the title it was shown in. Shown text (titles, alt text, display names, the report
+  // measures' own names) drops them, as the report's file name does; the joiners U+200C and U+200D stay (Arabic and
+  // Persian words and emoji need them). The model's names are untouched: the DAX and the field references keep them.
+  const shown = (x) => String(x).replace(/(?![\u200C\u200D])\p{Cf}/gu, '');
   // Round 12 (#25): a model without measures still gets numbers: a column counted or summed by the visual itself (what
   // Desktop writes when a column is dropped on a value well), f.agg being Microsoft's QueryAggregateFunction (semantic
   // query schema: 0 Sum, 2 Distinct count, 5 Count of the non-null values). Such a field is a value, like a measure.
@@ -169,9 +174,9 @@
   const fieldAgg = (t, c, fn) => ({ field: { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Entity: t } }, Property: c } }, Function: fn } },
     queryRef: (AGG[fn] || ['Agg'])[0] + '(' + t + '.' + c + ')', nativeQueryRef: (AGG[fn] || ['', ''])[1] + c });
   const isValue = (f) => !!f && (f.m != null || f.agg != null);
-  const proj = (f) => Object.assign(f.agg != null ? fieldAgg(f.t, f.c, f.agg) : f.m != null ? fieldMea(f.t, f.m) : fieldCol(f.t, f.c), f.name ? { displayName: String(f.name) } : {});
+  const proj = (f) => Object.assign(f.agg != null ? fieldAgg(f.t, f.c, f.agg) : f.m != null ? fieldMea(f.t, f.m) : fieldCol(f.t, f.c), f.name ? { displayName: shown(f.name) } : {});
   const tproj = (f) => Object.assign(proj(f), f.tableFormat ? { format: String(f.tableFormat) } : {});
-  const label = (f) => (f ? (f.name ? String(f.name) : fname(f)) : null);
+  const label = (f) => (f ? shown(f.name ? f.name : fname(f)) : null);
   // The room a table column takes beside SVG pictures, in page units, at the table's text size t: its header (bold) or
   // its widest value, + 10 (a cell's padding is not measured yet: the measured button rule, 5 a side, stands in). A
   // measure's widest value is taken as nine digits with separators ("888,888,888", 0.54 em a digit and 0.21 a
@@ -334,7 +339,7 @@
   const ROW_LABEL = 'Row label: ';
   // (round 23 part 5: the table's numbers are named in the label's DAX too, so none may hold a control character either)
   const rowLabelOf = (fs, rtl) => { const f = rtl ? fs.find(isTextField) : null; return f && fs.some(isValue) && !hasControl(f.t) && !hasControl(f.c) && fs.filter(isValue).every((v) => !hasControl(v.t) && !hasControl(v.m != null ? v.m : v.c)) ? f : null; };
-  const rowLabelProj = (f) => ({ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: f.t } }, Property: ROW_LABEL + f.c } }, queryRef: f.t + '.' + ROW_LABEL + f.c, nativeQueryRef: ROW_LABEL + f.c, displayName: label(f) });
+  const rowLabelProj = (f) => ({ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: f.t } }, Property: ROW_LABEL + shown(f.c) } }, queryRef: f.t + '.' + ROW_LABEL + shown(f.c), nativeQueryRef: ROW_LABEL + shown(f.c), displayName: label(f) });
   // (round 23 part 5, the reviewer's code review, R1: a label that always has a value kept every row in the table, so
   // rows whose numbers are all blank (a product without sales in the chosen year) showed with their name, and an empty
   // table showed its names over the "No data" card. The label is blank unless one of the table's numbers (vals: its
@@ -627,13 +632,13 @@
     const headed = (vis) => { const t = vis && ((vis.visualContainerObjects || {}).title || [])[0], sh = t && t.properties && t.properties.show;
       if (sh && sh.expr && sh.expr.Literal && sh.expr.Literal.Value === 'true') t.properties.heading = str('Heading3'); };
     const frame = (title, alt, extra, panel) => Object.assign({
-      title: obj(title ? { show: bool(true), text: str(title), alignment: str(align) } : { show: bool(false) })
+      title: obj(title ? { show: bool(true), text: str(shown(title)), alignment: str(align) } : { show: bool(false) })
     }, panel && SOLID ? {} : {
       background: obj({ show: bool(false) }),
       border: obj({ show: bool(false) }),
       dropShadow: obj({ show: bool(false) })
     }, {
-      general: obj({ altText: str(alt || title || '') })
+      general: obj({ altText: str(shown(alt || title || '')) })
     }, extra || {});
     const textbox = (text, size, bold, colr, side) => ({ general: obj({ paragraphs: [{ textRuns: [{ value: text, textStyle: { fontFamily: font, fontSize: size + 'pt', fontWeight: bold ? 'bold' : 'normal', color: colr } }], horizontalTextAlignment: side || align }] }) });
     // Card visuals: sized so the title and the number fit the box, from Microsoft's card sizing (a line of text takes
@@ -827,7 +832,7 @@
     const lastMonths = (f, yField, n) => {
       const y = daxOf(yField); if (!y) return null;
       const d = daxNames.column(f.dateOf.t, f.dateOf.c), yName = yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property;
-      const m = extMeasure(f.dateOf.t, 'Last ' + n + ' months: ' + yName, 'VAR _last = CALCULATE ( MAXX ( FILTER ( ALL ( ' + d + ' ), NOT ISBLANK ( ' + y + ' ) ), ' + d + ' ), ALL ( ' + daxNames.table(f.dateOf.t) + ' ) ) RETURN IF ( MAX ( ' + d + ' ) > EDATE ( _last, -' + n + ' ), 1 )', 'Integer');
+      const m = extMeasure(f.dateOf.t, 'Last ' + n + ' months: ' + shown(yName), 'VAR _last = CALCULATE ( MAXX ( FILTER ( ALL ( ' + d + ' ), NOT ISBLANK ( ' + y + ' ) ), ' + d + ' ), ALL ( ' + daxNames.table(f.dateOf.t) + ' ) ) RETURN IF ( MAX ( ' + d + ' ) > EDATE ( _last, -' + n + ' ), 1 )', 'Integer');
       return { name: 'Filter' + rnd() + rnd().slice(0, 4), type: 'Advanced', field: extField(f.dateOf.t, m),
         filter: { Version: 2, From: [{ Name: 'm', Entity: f.dateOf.t, Schema: 'extension', Type: 0 }],
           Where: [{ Condition: { Comparison: { ComparisonKind: 0, Left: { Measure: { Expression: { SourceRef: { Source: 'm' } }, Property: m } }, Right: { Literal: { Value: '1L' } } } } }] }, howCreated: 'User' };
@@ -928,7 +933,7 @@
       const tabsLayout = (title, logo, x0, x1, H) => {
         const kk = pg.page.h / 1080, gap = 24 * kk, th = title.textH || title.h;
         const names = PAGES.map((p) => String(p.name || base)), titleSize = Math.min(pt(th * 0.42), boxFit(th));
-        const titleNeed = Math.min(title.w, Math.ceil(textWidth(o.title || base, titleSize, true, font) + 24 * kk));
+        const titleNeed = Math.min(title.w, Math.ceil(textWidth(shown(o.title || base), titleSize, true, font) + 24 * kk));
         // the room: between the end of the title's text and the logo (or the Filters button). The title's text is at the
         // reading start of its box, so room inside the box is taken only where the box's free end faces the logo
         const titleLeft = title.x < logo.x;
@@ -1230,7 +1235,7 @@
           // the text's middle at the header's (see centred)
           const size = Math.min(pt((s.textH || s.h) * 0.42), boxFit(s.textH || s.h));
           box = centred(s, size);
-          visual = { visualType: 'textbox', objects: textbox(o.title || base, size, true, u.text), visualContainerObjects: frame(null, o.title || base) };
+          visual = { visualType: 'textbox', objects: textbox(shown(o.title || base), size, true, u.text), visualContainerObjects: frame(null, o.title || base) };
         } else if (s.kind === 'logo') {
           // image.fit 'Fit' keeps the logo's own ratio and shows it whole; the old imageScaling 'Fit' stretched it to the
           // box (measured in Desktop 2.158). The box itself has the logo's shape (the design engine, logoRatio).
@@ -1309,7 +1314,7 @@
           if ((s.kind === 'table' || s.kind === 'matrix') && ttl && chartTitles.has(ttl)) ttl = ttl + ': ' + (AR_LETTERS.test(ttl) ? (W.detail && AR_LETTERS.test(W.detail) ? W.detail : 'التفاصيل') : (W.detail && !AR_LETTERS.test(W.detail) ? W.detail : 'detail'));   // (round 14: in the title's own script)
           if (s.kind === 'kpi') { if (B && query) ttl = label(B.kpis[kpiIndex]); kpiIndex++; }
           // KPI names read as labels: semibold, so the number below stays the hero
-          if (s.kind === 'kpi') extra.title = obj({ show: bool(true), text: str(ttl), alignment: str(align), bold: bool(true) });
+          if (s.kind === 'kpi') extra.title = obj({ show: bool(true), text: str(shown(ttl)), alignment: str(align), bold: bool(true) });
           // a visual that shows data is never written without its fields (Microsoft's validator: PBIR_QUERY_STATE_MISSING;
           // Desktop shows an empty box): on a user's own model it is left out and told (leftOut). The KPI cards are
           // counted by the caller.
@@ -1416,9 +1421,9 @@
           // (part 5: its DAX names this table's numbers, so a second table by the same column with other numbers gets a
           // label of its own, "(2)"; the same numbers share one)
           const rlExpr = rowLabel ? rowLabelDax(rowLabel, lang === 'ar' ? 'الإجمالي' : 'Total', query.queryState.Values.projections.filter((p) => (p.field.Measure && !p.field.Measure.Expression.SourceRef.Schema) || (p.field.Aggregation && p.displayName !== ' '))) : null;
-          let rlName = rowLabel ? freeExt(rowLabel.t, ROW_LABEL + rowLabel.c) : null;
-          if (rowLabel) { const same = (n) => rowLabels.find((x) => x.t === rowLabel.t && x.m === n); for (let k = 2; same(rlName) && same(rlName).expression !== rlExpr; k++) rlName = freeExt(rowLabel.t, ROW_LABEL + rowLabel.c + ' (' + k + ')'); }
-          if (rowLabel && rlName !== ROW_LABEL + rowLabel.c) { const ps0 = query.queryState.Values.projections, lp = ps0[ps0.length - 1]; lp.field.Measure.Property = rlName; lp.queryRef = rowLabel.t + '.' + rlName; lp.nativeQueryRef = rlName; }
+          let rlName = rowLabel ? freeExt(rowLabel.t, ROW_LABEL + shown(rowLabel.c)) : null;
+          if (rowLabel) { const same = (n) => rowLabels.find((x) => x.t === rowLabel.t && x.m === n); for (let k = 2; same(rlName) && same(rlName).expression !== rlExpr; k++) rlName = freeExt(rowLabel.t, ROW_LABEL + shown(rowLabel.c) + ' (' + k + ')'); }
+          if (rowLabel && rlName !== ROW_LABEL + shown(rowLabel.c)) { const ps0 = query.queryState.Values.projections, lp = ps0[ps0.length - 1]; lp.field.Measure.Property = rlName; lp.queryRef = rowLabel.t + '.' + rlName; lp.nativeQueryRef = rlName; }
           if (s.kind === 'table' && query) visual.objects.columnFormatting = tableFields(Bt, rtl).map((f) => ({
             properties: { alignment: str(isValue(f) || f.num ? 'Right' : (rtl ? 'Right' : 'Left')), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) },
             selector: { metadata: proj(f).queryRef } })).concat(rowLabel ? [{ properties: { alignment: str('Right'), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) }, selector: { metadata: rowLabel.t + '.' + rlName } }] : []);
@@ -1514,8 +1519,11 @@
             const sk = { page: pg.name || base, t: pr.field.Measure.Expression.SourceRef.Entity, m: pr.field.Measure.Property };
             if (!noDataSkipped.some((x) => x.t === sk.t && x.m === sk.m)) noDataSkipped.push(sk);
           } else if (pr) {
-            const ent = pr.field.Measure.Expression.SourceRef.Entity, mm = pr.field.Measure.Property, nm = freeExt(ent, (W.noDataName || 'No data: ') + mm);
-            if (!noData.some((x) => x.t === ent && x.m === nm)) noData.push({ t: ent, m: nm, expression: 'IF ( ISBLANK ( ' + daxNames.column(ent, mm) + ' ), ' + daxNames.string(lang === 'ar' ? 'لا توجد بيانات لهذا الاختيار' : 'No data for this selection') + ', "" )' });
+            // (A3-11: two measures whose names differ only by a format character get a name each, "(2)")
+            const ent = pr.field.Measure.Expression.SourceRef.Entity, mm = pr.field.Measure.Property, expression = 'IF ( ISBLANK ( ' + daxNames.column(ent, mm) + ' ), ' + daxNames.string(lang === 'ar' ? 'لا توجد بيانات لهذا الاختيار' : 'No data for this selection') + ', "" )';
+            const want = (W.noDataName || 'No data: ') + shown(mm), other = (n) => noData.some((x) => x.t === ent && x.m === n && x.expression !== expression);
+            let nm = freeExt(ent, want); for (let k = 2; other(nm); k++) nm = freeExt(ent, want + ' (' + k + ')');
+            if (!noData.some((x) => x.t === ent && x.m === nm)) noData.push({ t: ent, m: nm, expression });
             container({ x: s.x, y: box.y, w: s.w, h: box.h, z: z - 500, parent, kind: 'nodata', noPhone: true, visual: { visualType: 'cardVisual',
               query: q({ Data: [{ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: ent } }, Property: nm } }, queryRef: ent + '.' + nm, nativeQueryRef: nm }] }),
               objects: { value: [{ properties: { fontSize: num(LABEL), fontColor: color(mixHex(u.text, u.card, 0.3)), horizontalAlignment: str('center') }, selector: { id: 'default' } }], label: [{ properties: { show: bool(false) }, selector: { id: 'default' } }], outline: [{ properties: { show: bool(false) }, selector: { id: 'default' } }], fillCustom: [{ properties: { show: bool(false) } }] },
@@ -1763,7 +1771,7 @@
         // (round 22, the code review's e and h, and seen in Desktop on 7 Oct, "Total Sales by City (City)" twice: the
         // titles are compared in full, not as shortened; charts by the same column are left alone, a bracket would only
         // repeat itself; the new title is fitted like any title, and the alt text carries the same name)
-        const same = {}, full = (v) => (fitted.get(v.visual) || {}).ttl || tOf(v), colOf = (v) => { const p = v.visual.query.queryState.Category.projections[0]; return p.displayName || p.nativeQueryRef; };
+        const same = {}, full = (v) => (fitted.get(v.visual) || {}).ttl || tOf(v), colOf = (v) => { const p = v.visual.query.queryState.Category.projections[0]; return shown(p.displayName || p.nativeQueryRef); };
         visuals.filter((v) => v.visual && v.visual.query && v.visual.query.queryState.Category && tOf(v)).forEach((v) => { (same[full(v)] = same[full(v)] || []).push(v); });
         // (round 22b, the review of round 22, item 10: three charts and two columns, "عدد Order Id (Channel)" twice: charts
         // of the group by the same column too take a number after it in reading order, "(Channel 2)"; nothing else
@@ -1829,7 +1837,7 @@
       });
     };
     const tipCard = cardFit(296, 76, 1, TIP_TITLE, TIP_VALUE);
-    const tipFrame = (t) => { const f = frame(t, t); f.title = obj({ show: bool(true), text: str(t), alignment: str(align), fontSize: num(TIP_TITLE) }); return f; };
+    const tipFrame = (t) => { const f = frame(t, t); f.title = obj({ show: bool(true), text: str(shown(t)), alignment: str(align), fontSize: num(TIP_TITLE) }); return f; };
     // the theme's text sizes are made for the report's full page; on this small page the card value and the titles get
     // their own, so the value isn't cut off and the titles fit
     // (the tooltip's card follows the KPI cards: automatic units with 2 decimals, or the full number with kpiValues "full")
