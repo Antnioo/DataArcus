@@ -188,7 +188,11 @@ export async function checkReport(p, opts) {
   const lang = o.lang && o.lang !== 'auto' ? o.lang : ar > lat ? 'ar' : 'en';
   // 1. Microsoft's validator, offline (its schema download skipped: the bundled schemas below do that part)
   const validator = { ran: false, mode: 'not run', errors: 0, warnings: 0, version: VALIDATOR_VERSION };
+  // (A4-4, audit 4: the validator reads the report's folder itself and would follow a link out of it; with a link inside
+  // the report (counted by the reading layer's walk) it is not run, as for a file that is too large)
+  const links = sk.links || [];
   if (checks.includes('validator') && scan.length) Object.assign(validator, { why: `not run: ${scan.length} file${scan.length === 1 ? ' is' : 's are'} over the ${mbOf(REPORT_LIMITS.file)} DataArcus reads, and the validator reads every file whole (see notChecked)` });
+  else if (checks.includes('validator') && links.length) Object.assign(validator, { why: `not run: the report holds ${links.length} link${links.length === 1 ? '' : 's'} (a symbolic link or a junction), which DataArcus never follows and the validator would (see notChecked)` });
   else if (checks.includes('validator')) {
     try {
       const { runReportValidation, getMetadataProvider } = await import('@microsoft/powerbi-report-authoring-cli');
@@ -237,6 +241,7 @@ export async function checkReport(p, opts) {
   notChecked.push({ rule: 'DataArcus layout rules', why: 'the header, filter rail and panel sizes describe DataArcus\'s own layouts, not Power BI: not run on any report' });
   if (customVisuals) notChecked.push({ rule: 'custom visuals', why: `${customVisuals} visual${customVisuals === 1 ? ' is' : 's are'} not a Power BI core visual: only the validator checks them` });
   if (sk.big.length) notChecked.push({ rule: 'files too large', why: `${sk.big.length} file${sk.big.length === 1 ? ' was' : 's were'} not read: over the ${mbOf(REPORT_LIMITS.file)} DataArcus reads (the largest report files are well under 1 MB): ${sk.big.slice(0, 5).map((b) => `${b.file.split('/').map(safeName).join('/')} (${mbOf(b.size)})`).join('; ')}` });
+  if (links.length) notChecked.push({ rule: 'links', why: `${links.length} file${links.length === 1 ? ' or folder is a link' : 's or folders are links'} (symbolic links or junctions) inside the report: never followed, not read; Microsoft's validator was not run because it would follow ${links.length === 1 ? 'it' : 'them'}` });
   if (sk.deep) notChecked.push({ rule: 'folders too deep', why: `folders deeper than ${REPORT_LIMITS.depth} levels inside the report were not read (a PBIR report is 6 levels deep): ${sk.deep} cut` });
   if (unreadable) notChecked.push({ rule: 'unreadable files', why: `${unreadable} file${unreadable === 1 ? '' : 's'} could not be read as JSON` });
   const sizes = [...new Set(R.pages.filter((p) => !p.tooltip && p.w > 0 && p.h > 0).map((p) => `${p.w}x${p.h}`))].filter((s) => !['1920x1080', '1280x720', '960x720', '640x360', '3840x2160'].includes(s));
