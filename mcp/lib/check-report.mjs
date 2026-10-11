@@ -195,10 +195,15 @@ export async function checkReport(p, opts) {
   // the reading direction: right to left when most letters of the titles, text boxes and page names are Arabic or Hebrew
   // (counted only, never returned). (A4-11, audit 4: the visuals' titles are counted too, and Hebrew is right to left;
   // the right-to-left rules key on the direction, the language is said beside it)
+  const titles = [];
   R.visuals.forEach((x) => { const t = (((((x.json || {}).visual || {}).visualContainerObjects || {}).title) || []).find((e) => e && !e.selector && e.properties && e.properties.text);
-    const v = t && t.properties.text.expr && t.properties.text.expr.Literal && t.properties.text.expr.Literal.Value; if (typeof v === 'string') texts.push(v); });
-  const letters = texts.join(' '), ar = (letters.match(/[؀-ۿݐ-ݿﭐ-﻿]/g) || []).length, he = (letters.match(/[\u0590-\u05FF\uFB1D-\uFB4F]/g) || []).length, lat = (letters.match(/[A-Za-z]/g) || []).length;
-  const lang = o.lang && o.lang !== 'auto' ? o.lang : ar > lat && ar >= he ? 'ar' : he > lat ? 'he' : 'en';
+    const v = t && t.properties.text.expr && t.properties.text.expr.Literal && t.properties.text.expr.Literal.Value; if (typeof v === 'string') titles.push(v); });
+  // each source on its own: the text boxes and page names, then the titles (a right-to-left report's titles can hold the
+  // model's English field names; its page names can be English while its titles are Arabic)
+  const langOf = (list) => { const l = list.join(' '), ar = (l.match(/[؀-ۿݐ-ݿﭐ-﻿]/g) || []).length, he = (l.match(/[\u0590-\u05FF\uFB1D-\uFB4F]/g) || []).length, lat = (l.match(/[A-Za-z]/g) || []).length;
+    return ar > lat && ar >= he ? 'ar' : he > lat ? 'he' : null; };
+  const lang = o.lang && o.lang !== 'auto' ? o.lang : langOf(texts) || langOf(titles) || 'en';
+  texts.push(...titles);
   const dir = lang === 'ar' || lang === 'he' ? 'rtl' : 'ltr';
   // 1. Microsoft's validator, offline (its schema download skipped: the bundled schemas below do that part)
   const validator = { ran: false, mode: 'not run', errors: 0, warnings: 0, version: VALIDATOR_VERSION };
