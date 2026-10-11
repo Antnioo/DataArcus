@@ -15,8 +15,11 @@ import { v029 } from './test-0.2.9.mjs';
 import { v029b } from './test-0.2.9b.mjs';
 import { v029i } from './test-0.2.9i.mjs';
 import { v029w } from './test-0.2.9w.mjs';
+import { v029k } from './test-0.2.9k.mjs';
 import { v029checks } from './test-0.2.9-checks.mjs';
 import { v029design } from './test-0.2.9-design.mjs';
+import { v029agent } from './test-0.2.9-agent.mjs';
+import { INSTRUCTIONS_MAX } from './lib/agent-text.mjs';
 import { v030twin, v030engine } from './test-0.3.0-twin.mjs';
 import { withPlans } from './test-plan.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
@@ -1138,7 +1141,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => /only/i.test(dn) && /user/i.test(dn) && /never translate, shorten or (relabel|rename)/i.test(dn), () => `displayNames must say the names come only from the user: ${dn}`);
     chk(() => /Calendar Generator/.test(ch) && /never write (the )?calendar DAX/i.test(ch) && /not (part of the score|scored)/i.test(ch) && /new file/i.test(ch), () => `check_model_health's description must carry the Gulf calendar rule and say the scripts go to new files: ${ch.slice(0, 300)}`);
     for (const n of ['read_model', 'suggest_fields', 'check_model_health', 'create_report']) chk(() => /untrusted/i.test(tl[n].description), () => `${n}'s description must say that names in the model are untrusted text`);
-    chk(() => ins.length < 2500, () => `the server's instructions are ${ins.length} characters: keep them short enough to be read`);
+    chk(() => ins.length <= INSTRUCTIONS_MAX, () => `the server's instructions are ${ins.length} characters: keep them short enough to be read (${INSTRUCTIONS_MAX} at most; the audit's A7-4: one cap)`);
   }
 
   // 5. the install experience: a working folder that is empty, or that doesn't exist, answers as a normal result with
@@ -1221,7 +1224,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => /fields/.test(ins) && /approved/i.test(ins), () => 'the server\'s instructions must say to pass the approved plan\'s fields to create_report');
     chk(() => /`fields`/.test(skill) && /approved/i.test(skill), () => 'the skill must say to pass the approved plan\'s fields in `fields`');
     chk(() => /fields/.test(tl.create_report.description) && /approved plan/i.test(tl.create_report.description) && !!tl.create_report.inputSchema.properties.fields, () => `create_report's description must say to pass the approved plan's fields: ${tl.create_report.description.slice(0, 200)}`);
-    chk(() => ins.length < 2800, () => `the server's instructions are ${ins.length} characters`);
+    chk(() => ins.length <= INSTRUCTIONS_MAX, () => `the server's instructions are ${ins.length} characters (${INSTRUCTIONS_MAX} at most)`);   // (A7-4: one cap)
   }
 
   // 3. a model without measures: suggest_fields says so, and says to propose measures with format strings
@@ -4453,10 +4456,14 @@ await v029b({ call, check, ROOT, fs });
 await v029i({ call, raw: rawCall, check, ROOT, fs });
 // ---------- 0.2.9, the report writer's block (audit 3's A3-7 to A3-12, writer side): test-0.2.9w.mjs, which also runs alone ----------
 v029w({ check });
+// ---------- 0.2.9 integration, the field picker's bias fixes (A1-11, A3-1): test-0.2.9k.mjs, which also runs alone ----------
+await v029k({ call, check, ROOT, fs });
 // ---------- 0.2.9 items 12-13 (check_report's three kinds, the health check's own reports): test-0.2.9-checks.mjs, which also runs alone ----------
 await v029checks({ call, check, ROOT, fs });
 // ---------- 0.2.9, the design engine block (the audit's A2-1 to A2-12): test-0.2.9-design.mjs, which also runs alone ----------
 await v029design({ call, check, ROOT, fs });
+// ---------- 0.2.9, the agent instructions and public claims (the audit's A7): test-0.2.9-agent.mjs, which also runs alone ----------
+await v029agent({ call, check, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
 // ---------- 0.3.0, the Arabic twin of an existing report: test-0.3.0-twin.mjs, which also runs alone ----------
 try { v030engine({ check }); } catch (e) { check(false, 'T10. the engine: ' + e.message); }
 await v030twin({ call: rawCall, check, ROOT, fs });

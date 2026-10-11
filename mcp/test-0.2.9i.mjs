@@ -42,8 +42,10 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     const PLAIN = ['Revenue INR', 'Units Sold', 'Shipped Weight', 'Orders', 'Cost CAD', 'Gross Rupees', 'Headcount'];
     chk(() => k.length === 4 && names.slice(0, 3).every((n) => PLAIN.includes(n)) && names.includes('Revenue INR') && names[3] === 'ROI',
       () => `G1: the cards must be plain sums and counts first (a currency code such as INR is no acronym), then one ratio: ${JSON.stringify(names)}`);
-    const all = await ask('suggest_fields', { path: 'i-retail', kpis: 8 }), by = Object.fromEntries((all.j && all.j.kpis || []).filter(Boolean).map((x) => [x.m, x]));
-    chk(() => by['Units Sold'].wholeFormat && by['Shipped Weight'].wholeFormat && !by['Revenue INR'].wholeFormat && !by['Cost CAD'].wholeFormat && by.Orders.wholeFormat === '#,0',
+    const all = await ask('suggest_fields', { path: 'i-retail', kpis: 6 })   // (the design block's A7-5: suggest_fields takes at most LIMITS.kpiCards, 6, as plan_layout; it took 8, so the 7th
+    // plain measure, Shipped Weight, is checked through the picker's own measureCard below)
+    , by = Object.fromEntries((all.j && all.j.kpis || []).filter(Boolean).map((x) => [x.m, x]));
+    chk(() => by['Units Sold'].wholeFormat && req('../assets/js/pbip-bind.js').measureCard({ name: 'Shipped Weight', formatString: '#,0 "kg"', expression: 'SUM ( Sales[Weight] )' }).wholeFormat && !by['Revenue INR'].wholeFormat && !by['Cost CAD'].wholeFormat && by.Orders.wholeFormat === '#,0',
       () => `G2: a unit in the format ("pcs", "kg") is no currency: those stay whole; INR and CAD are amounts: ${JSON.stringify(Object.fromEntries(Object.entries(by).map(([n, x]) => [n, x.wholeFormat || null])))}`);
     const B = req('../assets/js/pbip-bind.js');
     chk(() => !B.measureCard({ name: 'Gross Rupees', formatString: '₹#,0', expression: 'SUM ( Sales[Amount] )' }).wholeFormat && !B.measureCard({ name: 'X', formatString: '#,0 "JPY"', expression: 'SUM ( T[A] )' }).wholeFormat
