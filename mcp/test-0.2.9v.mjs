@@ -9,8 +9,15 @@
 // test.mjs runs it (import { v029visuals }); run alone:   node test-0.2.9v.mjs
 import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { inventory, memorySource } from './lib/read-report.mjs';
 
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const req = createRequire(import.meta.url);
 const VC = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json';
 const HEX = '0123456789ABCDEF0123456789ABCDEF';
 // fields as PBIR writes them
@@ -156,7 +163,6 @@ export async function v029visuals({ check }) {
   // the hint table is weak: a hint never decides a kind the shapes can't show (all of them checked)
   chk(() => Object.values(FAMILY_HINTS).length > 0 && Object.values(FAMILY_HINTS).length <= 20, () => 'the family hints are a small table (at most 20 entries)');
   // ---------- the reviewer's addition (audit 5 A5-6, A5-14; audit 6 A6-13): one catalog, and nativeFor by capabilities ----------
-  const req = createRequire(import.meta.url);
   const VT = req('../assets/js/visual-types.js'), Mirror = req('../assets/js/report-mirror.js');
   const { listVisualTypes, getCapabilities } = await import('@microsoft/powerbi-core-visual-schema');
   const catalog = listVisualTypes();
@@ -227,6 +233,59 @@ export async function v029visuals({ check }) {
     chk(() => jv.meaning.kind === 'pie' && jv.meaning.native === 'pieChart' && jv.meaning.why && jv.meaning.tell && !('roles' in jv.meaning),
       () => `B: the JSON answer carries the meaning (kind, native, why, tell), not the fields again: ${JSON.stringify(jv && jv.meaning)}`);
     chk(() => !/Secret/.test(JSON.stringify(inv.pages[0].visuals.map((v) => v.meaning))), () => 'B: the meaning carries no field name (the fields are listed by read_report\'s own screened lines)'); }
+  // ---------- step C, the pure parts: the plan's entries (replacementsOf) and the writer's replaceVisual ----------
+  // A copy of the twin fixture (made up) with four made-up custom visuals; each replaced by its native visual and the
+  // result checked by Microsoft's validator; the original projections carried byte for byte.
+  try {
+    const R = req('../assets/js/visual-replace.js');
+    const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-cv-')), P = path.join(TMP, 'tw');
+    fs.cpSync(path.join(HERE, 'fixtures/twin-project'), P, { recursive: true });
+    const RD = path.join(P, 'Twin Sales.Report'), PG = path.join(RD, 'definition/pages/p1overview/visuals');
+    const J = (f) => JSON.parse(fs.readFileSync(f, 'utf8')), W = (f, j) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, JSON.stringify(j, null, 2)); };
+    const CV = { cvPie: 'acmeDrillPie' + HEX, cvCombo: 'acmeDrillDownCombo' + HEX, cvTile: 'vendorTile' + HEX, cvNet: 'vendorGraph' + HEX };
+    const place = (j, y) => Object.assign(j, { position: { x: 900, y, z: 9000 + y, width: 300, height: 90, tabOrder: 9000 + y } });
+    W(path.join(PG, 'cvPie/visual.json'), place(vj('cvPie', CV.cvPie, { Category: [col('Sales', 'Region')], Values: [mea('Sales', 'Total Sales')] }), 0));
+    const combo = place(vj('cvCombo', CV.cvCombo, { Category: [col('Calendar', 'Year'), col('Calendar', 'Month Name')], Values: [mea('Sales', 'Total Sales'), mea('Sales', 'Orders')] }), 100);
+    combo.visual.objects = { vendorAnimation: [{ properties: { speed: { expr: { Literal: { Value: '3D' } } } } }] };
+    combo.visual.visualContainerObjects = { title: [{ properties: { show: { expr: { Literal: { Value: 'true' } } }, text: { expr: { Literal: { Value: "'Sales and orders'" } } } } }] };
+    W(path.join(PG, 'cvCombo/visual.json'), combo);
+    W(path.join(PG, 'cvTile/visual.json'), place(vj('cvTile', CV.cvTile, { Values: [mea('Sales', 'Orders')] }), 200));
+    W(path.join(PG, 'cvNet/visual.json'), place(vj('cvNet', CV.cvNet, { Source: [col('Sales', 'Region')], Target: [col('Sales', 'Product')] }), 300));
+    const rj = J(path.join(RD, 'definition/report.json')); rj.publicCustomVisuals = (rj.publicCustomVisuals || []).concat(Object.values(CV)); W(path.join(RD, 'definition/report.json'), rj);
+    const model = J(path.join(P, 'Twin Sales.SemanticModel/model.bim')).model;
+    const RR = await import('./lib/read-report.mjs');
+    const inv = RR.inventory(RR.diskSource({ reportDir: RD }, { big: [], deep: 0 }), 'Twin Sales');
+    const reps = M.replacementsOf(inv, { typeOf: M.typeOfModel(model.tables) });
+    const byId = Object.fromEntries(reps.map((e) => [e.visual, e]));
+    chk(() => reps.length === 5 && byId.cvPie.native === 'pieChart' && byId.cvCombo.native === 'lineClusteredColumnComboChart' && byId.cvTile.native === 'cardVisual' && byId.cvNet.native === null && byId.cvNet.htmlNeeded
+      && JSON.stringify(byId.cvCombo.roles) === JSON.stringify({ Category: ['Calendar.Year', 'Calendar.Month Name'], Y: ['Sales.Total Sales'], Y2: ['Sales.Orders'] }) && byId.cvPie.page === 1 && byId.cvPie.from === 'acmeDrillPie',
+      () => `C: one entry per custom visual (the fixture's own custom gauge too), its native visual and roles by queryRef: ${JSON.stringify(reps).slice(0, 900)}`);
+    const line = M.replacementLine(byId.cvCombo), nline = M.replacementLine(byId.cvNet);
+    chk(() => /^custom visual acmeDrillDownCombo on page 1 at 900,100 -> line and clustered column chart \(lineClusteredColumnComboChart\) \[a guess\]: /.test(line) && /HTML\/SVG/.test(nline) && !/Sales|Region|Orders/.test(line + nline),
+      () => `C: the plan's line, "custom visual X -> native Y (why)", without any field name: ${line} || ${nline}`);
+    // the writer: each replaceable one written as its native visual
+    const before = {}; Object.keys(CV).forEach((id) => { before[id] = J(path.join(PG, id, 'visual.json')); });
+    const done = reps.filter((e) => e.native && CV[e.visual]).map((e) => { const f = path.join(PG, e.visual, 'visual.json'), r = R.replaceVisual(J(f), e); W(f, r.json); return [e.visual, r]; });
+    const r2 = R.dropUnusedCustomVisuals(J(path.join(RD, 'definition/report.json')), inv.pages.flatMap((p) => p.visuals.map((v) => (CV[v.id] && byId[v.id].native ? byId[v.id].native : v.type))));
+    W(path.join(RD, 'definition/report.json'), r2.json);
+    const after = Object.fromEntries(Object.keys(CV).map((id) => [id, J(path.join(PG, id, 'visual.json'))]));
+    const projs = (j) => Object.values(j.visual.query.queryState).flatMap((r) => r.projections.map((p) => JSON.stringify(Object.assign({}, p, { active: undefined }))));
+    chk(() => done.length === 3 && after.cvPie.visual.visualType === 'pieChart' && after.cvCombo.visual.visualType === 'lineClusteredColumnComboChart' && after.cvTile.visual.visualType === 'cardVisual' && after.cvNet.visual.visualType === CV.cvNet
+      && ['cvPie', 'cvCombo', 'cvTile'].every((id) => JSON.stringify(projs(after[id]).sort()) === JSON.stringify(projs(before[id]).sort()) && JSON.stringify(after[id].position) === JSON.stringify(before[id].position) && after[id].name === id),
+      () => `C: replaceVisual writes the native type, the same projections (byte for byte), the same name and place; the network is left for step D: ${JSON.stringify(after).slice(0, 900)}`);
+    chk(() => !after.cvCombo.visual.objects && after.cvCombo.visual.visualContainerObjects.title && after.cvCombo.visual.query.queryState.Category.projections[0].active === true && !after.cvCombo.visual.query.queryState.Category.projections[1].active
+      && done.find(([id]) => id === 'cvCombo')[1].lost.some((x) => /vendorAnimation/.test(x)),
+      () => `C: the custom format objects are dropped and named as lost, the container's title kept, the drill hierarchy's first level active: ${JSON.stringify(after.cvCombo.visual)} ${JSON.stringify(done.map(([, r]) => r.lost))}`);
+    chk(() => ['cvPie', 'cvCombo', 'cvTile'].every((id) => M.fitsCapabilities(after[id].visual.visualType, Object.fromEntries(Object.entries(after[id].visual.query.queryState).map(([r, q]) => [r, q.projections.map((p) => (p.field.Measure ? { kind: 'measure' } : { kind: 'column' }))]))).ok),
+      () => 'C: every written native visual fits its capabilities');
+    chk(() => !r2.json.publicCustomVisuals.includes(CV.cvPie) && r2.json.publicCustomVisuals.includes(CV.cvNet) && r2.json.publicCustomVisuals.includes('twinCustomGauge0123456789ABCDEF') && r2.dropped.length === 3,
+      () => `C: the custom visuals no visual uses any more are dropped from report.json (no sign-in prompt for them); the ones still used are kept: ${JSON.stringify(r2)}`);
+    const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js'), pv = spawnSync(process.execPath, [cli, 'validate', RD], { encoding: 'utf8' });
+    let vd = null; try { vd = JSON.parse(pv.stdout).data; } catch (e) { vd = null; }
+    chk(() => vd && vd.errorCount === 0, () => `C: Microsoft's validator on the report with the replaced visuals: 0 errors: ${vd ? JSON.stringify(Object.entries(vd.diagnostics || {}).filter(([, d]) => d.severity === 'error').map(([k, d]) => k + ': ' + String(d.items[0].message).slice(0, 160))) : String(pv.stdout || pv.stderr).slice(0, 300)}`);
+    chk(() => { try { R.replaceVisual({ name: 'g', visualGroup: {} }, byId.cvPie); return false; } catch (e) { return true; } }, () => 'C: a group is never replaced');
+    fs.rmSync(TMP, { recursive: true, force: true });
+  } catch (e) { check(false, 'V. C: the replacement on the fixture: ' + (e && e.stack || e).toString().slice(0, 400)); }
   // pure: the same input gives the same answer, and the input is not changed
   { const before = JSON.stringify(V.drill), a = JSON.stringify(meaningOf(V.drill, { typeOf })), b = JSON.stringify(meaningOf(V.drill, { typeOf }));
     chk(() => a === b && JSON.stringify(V.drill) === before, () => 'pure: the same answer twice, the visual unchanged'); }

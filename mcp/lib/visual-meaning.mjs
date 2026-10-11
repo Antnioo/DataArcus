@@ -402,4 +402,33 @@ export function meaningInReport(visual, report, opts) {
   const r = nativeFor(visual, Object.assign({}, opts, { declared }));
   return { kind: r.kind, native: r.native, why: r.why, tell: r.tell, confidence: r.confidence, guess: r.guess, htmlNeeded: r.htmlNeeded };
 }
+
+// ---- step C: the plan's entries (plan_layout lists them; the owner approves each before anything is written) ----
+// the model's data types, for typeOf: tables as read_model / model.bim gives them ([{ name, columns: [{ name, dataType }] }])
+export function typeOfModel(tables) {
+  const map = new Map();
+  (Array.isArray(tables) ? tables : []).forEach((t) => (t && Array.isArray(t.columns) ? t.columns : []).forEach((c) => { if (c && c.name != null) map.set(`${t.name}[${c.name}]`, c.dataType); }));
+  return (f) => (f ? map.get(`${f.table}[${f.name}]`) : undefined);
+}
+// a custom visual's type as the plan shows it: its id without the trailing code, plain letters and digits only
+export const shortType = (t) => { const s = String(t || '').replace(/[0-9A-Fa-f]{32}$/, ''); return /^[A-Za-z][A-Za-z0-9_]{0,39}$/.test(s) ? s : 'a custom visual'; };
+// inv: the reading block's inventory (read-report.mjs); opts: { typeOf } (typeOfModel of the report's model)
+// One entry per custom visual: { page, pageName, visual (its id, for the writer), place, size, from, kind, native, label,
+// roles { NativeRole: [queryRef] }, why, tell, lost, guess, confidence, htmlNeeded, candidates [{ native, fits }] }
+export function replacementsOf(inv, opts) {
+  const o = opts || {}, out = [];
+  ((inv && inv.pages) || []).forEach((p) => (p.visuals || []).forEach((x) => {
+    if (!x.meaning) return; // the reading block gives a meaning to custom visuals only
+    const r = nativeFor(x, Object.assign({}, o, { declared: new Set([x.type]) }));
+    out.push({ page: p.n, pageName: p.name, visual: x.id, place: `${x.x},${x.y}`, size: `${x.w}x${x.h}`, from: shortType(x.type), kind: r.kind, native: r.native, label: r.native ? LABEL[r.kind] || r.native : null,
+      roles: r.native ? Object.fromEntries(Object.entries(r.roles).map(([k, l]) => [k, l.map((f) => f.queryRef).filter(Boolean)])) : {},
+      why: r.why, tell: r.tell, lost: r.lost, guess: r.guess, confidence: r.confidence, htmlNeeded: r.htmlNeeded, candidates: (r.candidates || []).map((c) => ({ native: c.native, fits: c.fits })) });
+  }));
+  return out;
+}
+// the plan's line: "custom visual X on page N at x,y -> native Y (visualType): why"; no field or report name in it
+export function replacementLine(e) {
+  const why = String(e.why || '').replace(/^a custom visual: /, '');
+  return `custom visual ${e.from} on page ${e.page} at ${e.place} -> ` + (e.native ? `${e.label} (${e.native})${e.guess ? ' [a guess]' : ''}: ${why}` : `no native visual: an HTML/SVG measure in an image-capable visual (step D), or a table of its links: ${why}`);
+}
 export { VT };
