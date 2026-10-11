@@ -144,10 +144,9 @@ const KNOWN = [
 ];
 // Inputs that make a target run for hours (a hang can't be caught, only not started): skipped, counted, while open
 const longestName = (m) => Math.max(0, ...(m.tables || []).flatMap((t) => [t.name].concat((t.columns || []).map((c) => c.name), (t.measures || []).map((x) => x.name))).map((n) => String(n == null ? '' : n).length));
-const KNOWN_SLOW = [
-  { id: 'F-W1', owner: 'builder 11 (report writer)', target: 'plan lint', when: (m) => longestName(m) > 2000, seed: 7, k: 809,
-    what: 'a name of one long word (no space) is shortened one character at a time, measuring each try (pbip-export.js kpiTitleFit, oneLine): quadratic; 4,000 characters take 2 s, 200,000 hours' }
-];
+// (F-W1, the writer's hang on a 200,000-character name, is fixed: pbip-sizing.js cuts a title to what its box could show
+// before it searches for the shortened one; the plan lint runs on every case again)
+const KNOWN_SLOW = [];
 // P1 also holds for time: a target that answers after more than this is a finding (a hang in all but name)
 const SLOW_MS = 10000;
 const KNOWN_PROPS = [

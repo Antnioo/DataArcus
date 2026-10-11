@@ -150,7 +150,8 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
 
   // ---------- duplicates the gate block owns: one DAX for a visual's value, one Arabic month list, one custom-visual test ----------
   {
-    const px = fs.readFileSync(path.join(REPO, 'assets/js/pbip-export.js'), 'utf8'), Px = req('../assets/js/pbip-export.js');
+    // (0.2.9, the writer's A3-12: the writer is five files since, pbip-export.js and its modules; AGG_DAX is in pbip-query.js)
+    const px = ['pbip-export', 'pbip-query', 'pbip-sizing', 'pbip-page', 'pbip-notes'].map((f) => path.join(REPO, 'assets/js', f + '.js')).filter((f) => fs.existsSync(f)).map((f) => fs.readFileSync(f, 'utf8')).join('\n'), Px = req('../assets/js/pbip-export.js');
     const twin = fs.readFileSync(path.join(HERE, 'lib/arabic-twin.mjs'), 'utf8'), cr = fs.readFileSync(path.join(HERE, 'lib/check-report.mjs'), 'utf8'), plans = fs.readFileSync(path.join(HERE, 'lib/plans.mjs'), 'utf8');
     chk(() => (px.match(/const AGG_DAX = /g) || []).length === 1, () => `G4: one AGG_DAX in the writer: ${(px.match(/const AGG_DAX = /g) || []).length}`);
     chk(() => Array.isArray(Px.AR_MONTHS) && Px.AR_MONTHS.length === 12 && !/const MONTHS_AR = \[/.test(twin) && /AR_MONTHS/.test(twin), () => 'one Arabic month list: the writer exports AR_MONTHS and the twin uses it');

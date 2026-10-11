@@ -9,8 +9,7 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const Bind = require('../../assets/js/pbip-bind.js'), Pbip = require('../../assets/js/pbip-export.js');
-import { E } from './design.mjs';
-import { absorb } from './slots.mjs';
+import { E, absorb } from './design.mjs';   // (A2-3: the slot rules are the design engine's)
 import { inventory, memorySource } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
 import { takenNames } from './report-names.mjs';

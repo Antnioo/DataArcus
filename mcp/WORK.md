@@ -33,6 +33,12 @@ After the twin and tools: **1033** + 36 + 21 + 21 + 16, golden PASS (11 tasks, n
 (854) PASS. The startup instructions are **2,493 characters** (cap 2,500): builder 10's A7-4 (every rule from one source)
 must keep them under it.
 
+## 0.2.9 writer block (11 Oct, cloud builder 11; branch `fix/0.2.9-writer` from `fix/0.2.9-gate` `d2300f9`; not merged, no PR)
+The full report: `mcp/work/0.2.9-writer.md`. Done: A3-10 (`daxNames`), A3-11 (shown text without format characters), A3-7 and A3-8
+(writer side: the picker's `kind`/`rows`/`family`/`time` read when given, names measured by family), A3-9 (JSDoc contract, `checkBuild`,
+typed page filters), A3-12 (`build` split into `pbip-query.js`, `pbip-sizing.js`, `pbip-page.js`, `pbip-notes.js`; byte-identical on 970
+inputs), and the audit's writer items B-23 and B-06, then audit 6's A6-12 (`build` returns `bound`) and A6-14 (`Pbip.pageFilterOf`) with the server pointed at both. `npm test` 939 -> 971, golden unchanged. A2-3 done (`bacf172`): `fix/0.2.9-design` merged in, one `E.fitSlots` for the writer, plan_layout and the website's background; `slots.mjs` deleted. `npm test` 1026 + 36 + golden PASS; website all 17 PASS after the 6 background fixtures A2-3 moved were re-recorded (owner's yes, 11 Oct; causes in `meta.changed`). F-W1 (the fuzz test's writer hang on a 200,000-character name) fixed at the root (`1f59de4`): npm test 1057 + 36 + golden + fuzz PASS. Next: the reviewer reviews; the laptop proves W1-W11.
+
 ## 0.2.9 design engine block (11 Oct, cloud builder 10; branch `fix/0.2.9-design` from `fix/0.2.9-gate` `d2300f9`; not merged, no PR)
 The audit `audit-2-design-engine.md` (A2-1 to A2-12, but A2-3) and the tools audit's A6-10, fixed at the root in the
 design block, one commit each, tests first (`mcp/test-0.2.9-design.mjs`, 50 checks). **The full report, the moved
