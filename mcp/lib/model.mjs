@@ -250,9 +250,25 @@ function byName(p, root) {
  *   from tmsl (fromTmsl), without Power BI's hidden automatic date tables
  * @property {{format:string, files:Array<{path:string, json:Object}>}|null} report  the model's own reports, for the health check
  * @property {{counted:string[], notCounted:Array, skipped:Array<{file:string, why:string}>, partial?:string}|null} reportsSeen
+ * @property {number} partsSkipped  model parts left out because they were not lists of objects (F-M2)
  */
-const modelRead = (o) => ({ source: o.source, folder: o.folder || null, projectDir: o.projectDir || null, tmsl: o.tmsl,
-  tables: Bind.fromTmsl(o.tmsl).filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name)), report: o.report || null, reportsSeen: o.reportsSeen || null });
+// (F-M2, the fuzz test: a model.bim or .pbit whose tables, columns, measures, partitions or relationships were not lists of
+// objects crashed in the field picker's catalog. The shape is checked here, where the model comes in: a list that is
+// not a list becomes empty and an entry that is not an object is left out, both counted in partsSkipped; both views,
+// the model's JSON and the reader's tables, then read the same checked model)
+const isObj = (x) => !!x && typeof x === 'object' && !Array.isArray(x);
+function shapeChecked(tmsl) {
+  let skipped = 0;
+  const root = isObj(tmsl) ? tmsl : (skipped++, { model: {} });
+  if (root.model !== undefined && !isObj(root.model)) { root.model = {}; skipped++; }
+  const m = isObj(root.model) ? root.model : root;   // a model.bim's JSON, or a model given without its wrapper (modelOf)
+  const list = (o, k) => { if (o[k] === undefined) return; if (!Array.isArray(o[k])) { o[k] = []; skipped++; return; } const n = o[k].length; o[k] = o[k].filter(isObj); skipped += n - o[k].length; };
+  list(m, 'tables'); list(m, 'relationships');
+  (m.tables || []).forEach((t) => ['columns', 'measures', 'partitions', 'hierarchies'].forEach((k) => list(t, k)));
+  return { tmsl: root, skipped };
+}
+const modelRead = (o0) => { const c = shapeChecked(o0.tmsl), o = Object.assign({}, o0, { tmsl: c.tmsl }); return ({ source: o.source, folder: o.folder || null, projectDir: o.projectDir || null, tmsl: o.tmsl, partsSkipped: c.skipped,
+  tables: Bind.fromTmsl(o.tmsl).filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name)), report: o.report || null, reportsSeen: o.reportsSeen || null }); };
 // a report file that could not be read: said, never dropped silently (A1-4)
 const skippedOf = (e) => (/not valid JSON/.test(String(e && e.message)) ? 'not valid JSON' : /above the/.test(String(e && e.message)) ? 'too big' : /link/i.test(String(e && e.message)) ? 'a link (never followed)' : 'could not be read');
 const PARTIAL = 'Some report files could not be read (skipped): the findings about fields "not used anywhere" are partial, since those files may use them.';
