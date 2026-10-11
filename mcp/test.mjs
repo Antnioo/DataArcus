@@ -2593,7 +2593,10 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
         }));
         // (round 12: told as a smaller text when that holds every field, as left-out fields otherwise)
         const smaller = (x.j.reportNotes || []).some((n) => /table text is \d+pt/.test(n));
-        if (!(smaller && !told.length) && (!told.length || (x.j.reportNotes || []).filter((n) => /table/i.test(n) && /left out|room/i.test(n)).length !== 1)) tbad.push(`${lang}: a narrow table must be told in tableColumns and one reportNotes line: ${JSON.stringify(told)} ${JSON.stringify(x.j.reportNotes)}`.slice(0, 400));
+        // (round 7: with the writer's measured table widths, the design's 408-wide table drops a field even at 8pt, so the
+        // smaller-text line and the left-out line are both told; the smaller-text line ("left out only where even 8pt
+        // doesn't hold it") is not a second left-out line)
+        if (!(smaller && !told.length) && (!told.length || (x.j.reportNotes || []).filter((n) => /table/i.test(n) && /left out|room/i.test(n) && !/table text is \d+pt/.test(n)).length !== 1)) tbad.push(`${lang}: a narrow table must be told in tableColumns and one reportNotes line: ${JSON.stringify(told)} ${JSON.stringify(x.j.reportNotes)}`.slice(0, 400));
       }
       const roomy = await ask('create_report', { path: 'd5-project', name: 'D5 table roomy', fields: { table: FIVE },
         pages: [{ name: 'W', slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'table', title: 'Wide', x: 36, y: 90, w: 1800, h: 600 }] }] });
