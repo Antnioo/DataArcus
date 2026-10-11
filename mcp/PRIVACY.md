@@ -99,6 +99,8 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
   a path really is, not only its name. The same holds for the paths a tool picks itself:
   the model folder a `.pbip` points at, and a model found by its folder's name. When searching a project for its model,
   links are never followed.
+- **What these checks are not:** DataArcus checks every path inside the working folder and never follows links, but
+  it is not a defence against another program on the same computer changing the folder while DataArcus is working.
 - **A working folder that is itself a model folder** (`... .SemanticModel`): the reading tools work on it, and read
   nothing above it. `create_report` refuses, because a report is written next to its model, which would be outside
   the working folder; choose the project folder instead.
