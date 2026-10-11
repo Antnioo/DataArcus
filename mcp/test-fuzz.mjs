@@ -146,6 +146,14 @@ const KNOWN = [
   { id: 'F-T3', owner: 'builder 9 (twin)', file: 'report-mirror.js', msg: /JSON/, k: 658, what: 'a value parsed as JSON that is not JSON' },
   { id: 'F-T4', owner: 'builder 9 (twin)', file: 'arabic-twin.mjs', msg: /./, k: 48, what: 'pages.json\'s pageOrder not an array, or null' }
 ];
+// Inputs that make a target run for hours (a hang can't be caught, only not started): skipped, counted, while open
+const longestName = (m) => Math.max(0, ...(m.tables || []).flatMap((t) => [t.name].concat((t.columns || []).map((c) => c.name), (t.measures || []).map((x) => x.name))).map((n) => String(n == null ? '' : n).length));
+const KNOWN_SLOW = [
+  { id: 'F-W1', owner: 'builder 11 (report writer)', target: 'plan lint', when: (m) => longestName(m) > 2000, seed: 7, k: 809,
+    what: 'a name of one long word (no space) is shortened one character at a time, measuring each try (pbip-export.js kpiTitleFit, oneLine): quadratic; 4,000 characters take 2 s, 200,000 hours' }
+];
+// P1 also holds for time: a target that answers after more than this is a finding (a hang in all but name)
+const SLOW_MS = 10000;
 const KNOWN_PROPS = [
   { id: 'F-RP', owner: 'builder 6 (reading)', target: /^read_report (json|memory)$/, props: /P2|P3|P4/, k: 8, what: 'the JSON answer past 40,000 characters; visual ids and bookmark file names raw (planted text); bidi controls in page names' },
   { id: 'F-MP', owner: 'builder 6 (reading; P3 is an owner decision)', target: /^read_model answer$/, props: /P2|P3|P4/, k: 23, what: 'one 200,000-character name keeps the full answer; instruction-like names returned raw (flagged only in suspiciousNames); a control character in a type' },
@@ -163,8 +171,10 @@ function answerProps(target, ctx, ans) {
   if (bad != null) fail('P4 raw control/format character', JSON.stringify(bad.slice(Math.max(0, bad.search(RAW) - 30), bad.search(RAW) + 30)));
 }
 async function run(target, ctx, fn) {
+  if (process.env.FUZZ_TRACE) console.error('  target', target, ctx.k, ctx.log.join(' | ').slice(0, 400));
   results.checks++;
-  try { const a = await fn(); if (a !== undefined) answerProps(target, ctx, a); return a; }
+  const t0c = Date.now();
+  try { const a = await fn(); if (Date.now() - t0c > SLOW_MS) results.props.push({ target, ctx, prop: 'P1 too slow', detail: `${Date.now() - t0c} ms` }); if (a !== undefined) answerProps(target, ctx, a); return a; }
   catch (e) {
     if (!crashOf(e)) return undefined;   // a refusal the target throws on purpose, with its own message
     const s = sig(target, e), known = KNOWN.find((x) => x.file === frameOf(e).split(':')[0] && x.msg.test(String(e && e.message || e)));
@@ -212,7 +222,9 @@ async function modelCase(k) {
   let model = null; try { model = loadModel(target); } catch (e) { model = null; }
   if (model) {
     await run('read_model answer', ctx, () => readModelAnswer(model));
-    await run('plan lint', ctx, () => planLint({ m: model, design: planLayout({ layout: 'exec', lang: r() < 0.5 ? 'ar' : 'en' }).design, lang: 'en', F: null }));
+    const slow = KNOWN_SLOW.find((x) => x.target === 'plan lint' && x.when(model));
+    if (slow) results.skipped.push(`${slow.id} (${slow.owner})`);
+    else await run('plan lint', ctx, () => planLint({ m: model, design: planLayout({ layout: 'exec', lang: r() < 0.5 ? 'ar' : 'en' }).design, lang: 'en', F: null }));
   }
   if (kind === 'tmdl') await run('tmdl reader', ctx, () => { Tmdl.fromFiles(Object.entries(TMDL).map(([p, t]) => ({ path: p, text: mutateText(r, t, log) }))); return undefined; });
   fs.rmSync(dir, { recursive: true, force: true });
@@ -223,7 +235,7 @@ async function modelCase(k) {
 const t0 = Date.now();
 // the bounded run's cases, and every known finding's first case (so a known one is always tried: skipped while open)
 const ks = ONLY != null ? [ONLY] : [...new Set(Array.from({ length: RUNS }, (_, i) => i).concat(SEED === 20261011 ? KNOWN.concat(KNOWN_PROPS).map((x) => x.k) : []))];
-for (const k of ks) { await reportCase(k); await modelCase(k); results.cases += 2; }
+for (const k of ks) { if (process.env.FUZZ_TRACE) console.error('case', k); await reportCase(k); await modelCase(k); results.cases += 2; }
 fs.rmSync(ROOT, { recursive: true, force: true }); fs.rmSync(OUTSIDE, { recursive: true, force: true });
 
 // one line per distinct crash or property failure (the first case that showed it, to reproduce)
