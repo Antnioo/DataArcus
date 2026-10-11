@@ -83,5 +83,19 @@ for (const u of locs) {
 const scriptsWith = (dir) => fs.readdirSync(path.join(ROOT, dir), { withFileTypes: true }).flatMap((f) => f.isDirectory() ? (f.name === 'node_modules' ? [] : scriptsWith(path.join(dir, f.name))) : /\.m?js$/.test(f.name) && !/\.min\.js$/.test(f.name) ? [path.join(dir, f.name)] : []);
 for (const f of ['scripts', 'mcp'].flatMap(scriptsWith)) ok(!/import\.meta\.url\)\.pathname/.test(fs.readFileSync(path.join(ROOT, f), 'utf8')), `${f}: builds a path from the module URL's pathname (use fileURLToPath)`);
 
+// the AI agent's public pages say what the MCP server has (0.2.9, the audit's A7-10): the number of tools, in English
+// and Arabic, a line for each tool on the beta page, and check_report (not create_report) named as the offline check
+{
+  const tools = [...read('mcp/server.mjs').matchAll(/server\.registerTool\('([a-z_]+)'/g)].map((m) => m[1]), n = tools.length;
+  const beta = read('assets/js/translations/beta-page.js'), home = read('assets/js/translations/homepage.js'), page = read('power-bi-mcp/index.html');
+  const [betaEn, betaAr] = [beta.slice(0, beta.search(/^\s*ar:\s*\{|"ar":\s*\{/m)), beta.slice(beta.search(/^\s*ar:\s*\{|"ar":\s*\{/m))];
+  ok(new RegExp(`"title": "The ${n} tools"`).test(betaEn) && new RegExp(`"title": "[^"]*${n}[^"]*أداة`).test(betaAr), `the beta page's tools title must say ${n} tools in English and Arabic (the server has ${n})`);
+  ok(new RegExp(`private beta \\(${n} tools\\)`).test(home) && new RegExp(`\\(${n} أداة\\)`).test(home), `the home page's agent line must say ${n} tools in English and Arabic`);
+  ok(new RegExp(`>The ${n} tools<`).test(page), `power-bi-mcp/index.html must say "The ${n} tools"`);
+  const missing = tools.filter((t) => !page.includes(`<code translate="no">${t}</code>`) || (beta.match(new RegExp(`"${t}":`, 'g')) || []).length < 2);
+  ok(!missing.length, `the beta page must have a line for each tool in English and Arabic: missing ${missing.join(', ')}`);
+  ok(!/"validator": "It checks the report offline/.test(betaEn) && /check_report/.test((betaEn.match(/"safe":[\s\S]*?\}/) || [''])[0]), 'the beta page must say check_report is the offline check (create_report does not run the validator)');
+}
+
 if (fails.length) { console.error(`FAIL  site config: ${fails.length} problem(s)\n- ` + fails.join('\n- ')); process.exit(1); }
 console.log(`PASS  site config: _config, CNAME, robots, sitemap (${locs.length} URLs), icons, manifest, security.txt, llms.txt, ${pages.length} pages`);

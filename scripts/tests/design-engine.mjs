@@ -33,7 +33,7 @@ export default async function ({ browser, url }) {
   check(all.length === 54, `fixtures: ${all.length} cases, expected 54`);
 
   for (const c of all) {
-    const nm = (pair) => (c.lang === 'ar' ? pair[1] : pair[0]);
+    const nm = (x) => E.label(x, c.lang);   // (0.2.9 design block, A2-9: the engine's labels are keyed by language, { en, ar })
     // the repairs on load: from the design before the reload, and a design already repaired stays as it is
     if (c.setup.set || c.setup.layout || c.setup.rawLayout || c.setup.raw) {
       const got = E.repairState(before(c, all));

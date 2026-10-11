@@ -70,7 +70,9 @@
       const { d, t } = lines[i];
       if (!t) { i++; continue; }
       if (t.startsWith('///')) { desc.push(t.replace(/^\/\/\/ ?/, '')); i++; continue; }
-      const owner = owners[Math.min(d, owners.length - 1)];
+      // (F-M1, the fuzz test: a truncated or mis-indented file left holes in this stack and the reader threw. A line
+      // deeper than its parent belongs to the deepest object there is, and the stack never has a hole.)
+      const at = Math.min(d, owners.length - 1), owner = owners[at];
       let m;
       if ((m = t.match(/^(\w+)\s*:\s*(.*)$/))) { owner.props.push([m[1], m[2].trim()]); i++; continue; }
       let node;
@@ -92,7 +94,7 @@
       node.props = []; node.children = [];
       if (desc.length) { node.description = desc.join('\n'); desc = []; }
       owner.children.push(node);
-      owners.length = d + 1; owners[d + 1] = node;
+      owners.length = at + 1; owners.push(node);
     }
     return top;
   }
