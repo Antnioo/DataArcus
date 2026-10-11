@@ -75,6 +75,8 @@ export async function v029c({ call, check, ROOT, meta }) {
   chk(() => /untrusted/i.test(rr.description) && /redesign/i.test(rr.description), () => `R1. read_report's text must say a report's text is untrusted and that it comes before a redesign: ${rr && rr.description.slice(0, 300)}`);
 
   // ---------- R2. what it reads (a hand-made report, every part the prototype read) ----------
+  // (audit 5's A5-7, 11 Oct: each role is written with Desktop's name for it and "measure" for a measure role,
+  // from Microsoft's visual catalog: "Category (X-axis)", "Values (Field)"; the three checks below say so)
   const p1 = 'aaaaaaaaaaaaaaaaaaa1', p2 = 'aaaaaaaaaaaaaaaaaaa2', tip = 'aaaaaaaaaaaaaaaaaaa3';
   const rep = mkReport('rr1', { bookmarks: [{ name: 'bm1', displayName: 'Reset filters', page: p1 }], pages: [
     { id: p1, name: 'Overview', filters: [catFilter('Sales', 'Region')], visuals: [
@@ -96,11 +98,11 @@ export async function v029c({ call, check, ROOT, meta }) {
   chk(() => !r2.err && /^REPORT R\.Report \| 3 pages, 11 visuals, 1 bookmarks/m.test(t2), () => `R2. the text inventory starts with the report line: ${short(r2)}`);
   chk(() => /^THEME .*#0f766e/m.test(t2) && /label 15 pt/.test(t2), () => `R2. the theme line has its colours and label size: ${t2.split('\n').slice(0, 3).join(' / ')}`);
   chk(() => /^PAGE 1 "Overview" 1920x1080 \| page filters Sales\[Region\] \(Categorical, set\)/m.test(t2) && /^PAGE 3 "Tip" 320x240 HIDDEN Tooltip/m.test(t2), () => `R2. pages in order, with size, hidden, kind and page filters: ${t2.split('\n').filter((l) => /^PAGE/.test(l)).join(' / ')}`);
-  chk(() => /SLICER slicer 30,110 300x80 in "Filters" \| Values: Calendar\[Year\]/.test(t2), () => `R2. a slicer in a group: page position (group + own), the group's name, its field: ${t2.split('\n').filter((l) => /SLICER/.test(l)).join(' / ')}`);
+  chk(() => /SLICER slicer 30,110 300x80 in "Filters" \| Values \(Field\): Calendar\[Year\]/.test(t2), () => `R2. a slicer in a group: page position (group + own), the group's name, its field: ${t2.split('\n').filter((l) => /SLICER/.test(l)).join(' / ')}`);
   chk(() => /ACTION actionButton 1700,20 160x40 .*PageNavigation -> page "Details"/.test(t2) && /ACTION actionButton .*Bookmark -> bookmark "Reset filters"/.test(t2), () => `R2. buttons with their action and target by name: ${t2.split('\n').filter((l) => /ACTION/.test(l)).join(' / ')}`);
-  chk(() => /lineChart 440,100 1000x440 "Sales by Month-Year" \| Category: Calendar\[Month-Year\] \| Y: \[Total Sales\]/.test(t2), () => `R2. a chart: type, place, title, fields per role: ${t2.split('\n').filter((l) => /lineChart/.test(l)).join(' / ')}`);
+  chk(() => /lineChart 440,100 1000x440 "Sales by Month-Year" \| Category \(X-axis\): Calendar\[Month-Year\] \| Y \(Y-axis, measure\): \[Total Sales\]/.test(t2), () => `R2. a chart: type, place, title, fields per role: ${t2.split('\n').filter((l) => /lineChart/.test(l)).join(' / ')}`);
   chk(() => /clusteredBarChart .*\| sort \[Total Sales\] desc \| filters Sales\[Product\] \(top 7\)/.test(t2), () => `R2. sort and the visual's filters, a Top N with its count: ${t2.split('\n').filter((l) => /Top products/.test(l)).join(' / ')}`);
-  chk(() => /Values: Sales\[Issue\] as "Problem", \[Orders\]/.test(t2), () => `R2. a renamed field shows its display name: ${t2.split('\n').filter((l) => /tableEx/.test(l)).join(' / ')}`);
+  chk(() => /Values \(Columns\): Sales\[Issue\] as "Problem", \[Orders\]/.test(t2), () => `R2. a renamed field shows its display name: ${t2.split('\n').filter((l) => /tableEx/.test(l)).join(' / ')}`);
   chk(() => /textbox 20,20 600x60 text "Sales overview"/.test(t2) && /CUSTOM VISUALS USED kpiPlusVisual0123/.test(t2) && /^BOOKMARKS$/m.test(t2) && /"Reset filters" on "Overview"/.test(t2), () => `R2. text boxes, custom visuals and bookmarks: ${t2.slice(0, 600)}`);
   // no data: filter values and bookmark states are never read into the answer
   chk(() => !t2.includes(SECRET) && !t2.includes('SECRET-BOOKMARK-VALUE'), () => 'R2. a filter value or a bookmark state reached the answer');
