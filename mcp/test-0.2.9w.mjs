@@ -162,11 +162,13 @@ export function v029w({ check }) {
       () => `B-23: one grid entry with the tight rows and the pictures' size: ${r.threw || JSON.stringify(grid)}`);
     // B-06: a text column's room was 12 letters whatever it holds; a day or month name's values are known (its family's
     // names), so its room is its widest name: "Wednesday" (71) needs less, "Jumada al-Akhirah" (113) more
-    const tbl = (c, w) => get(() => build(base({ table: [c, M('A'), M('B'), M('C')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w, h: 400 }]) }));
+    const tbl = (c, w) => get(() => build(base({ table: [c, M('A', { tableFormat: '#,0' }), M('B', { tableFormat: '#,0' }), M('C', { tableFormat: '#,0' })] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w, h: 400 }]) }));
     const cut = (x) => (x.tableColumns || []).length + (x.tableSmaller || []).length;
-    const days = tbl(C('Day Name', { sortBy: { t: D, c: 'Day No' } }, D), 330), hij = tbl(C('HM', { kind: 'month', family: 'hijri' }, D), 350), plain = tbl(C('Customer'), 330);
+    // (rc1, S1/S2: the rooms are cellRoom's since, the one rule of the kept fields and the widths: padding 16 at 720, numbers
+    // "#,0" 105, Day Name 87, Customer 104, a Hijri month 129; a table 446 wide has 410 for its columns)
+    const days = tbl(C('Day Name', { sortBy: { t: D, c: 'Day No' } }, D), 446), hij = tbl(C('HM', { kind: 'month', family: 'hijri' }, D), 446), plain = tbl(C('Customer'), 446);
     chk(() => cut(days) === 0 && cut(hij) > 0 && cut(plain) > 0,
-      () => `B-06: a known name column takes its widest name's room (days fit 330; the picker's Hijri months, under a short header, don't fit 350), another text column 12 letters as before: days ${days.threw || cut(days)}, hijri ${hij.threw || cut(hij)}, customer ${plain.threw || cut(plain)}`);
+      () => `B-06: a known name column takes its widest name's room (days fit 410; the picker's Hijri months, under a short header, don't), another text column 12 letters as before: days ${days.threw || cut(days)}, hijri ${hij.threw || cut(hij)}, customer ${plain.threw || cut(plain)}`);
   }
 
   // ---------- audit 6's writer items: A6-12 (build tells what it bound), A6-14 (one page filter from typed values) ----------
@@ -212,7 +214,9 @@ export function v029w({ check }) {
     const pj = r.files ? r.files.filter((f) => /\/page\.json$/.test(f.path)).map((f) => JSON.parse(String(f.data))).filter((p) => p.type !== 'Tooltip') : [];
     const written = pj.map((p) => r.files.filter((f) => f.path.includes('/pages/' + p.name + '/') && /visual\.json$/.test(f.path)).map((f) => JSON.parse(String(f.data))).filter((v) => v.visual && DATA.includes(v.visual.visualType) && !v.parentGroupName).map(box).sort());
     const planned = pages.map((sl2) => sl2.filter((s) => ['bar', 'column', 'donut', 'table'].includes(s.kind)).map((s) => [s.x, s.y, s.w, s.h].join(',')).sort());
-    chk(() => written.length === 2 && written.every((w, i) => w.length && w.every((b) => planned[i].includes(b))) && fo.every((f) => (f.dropKinds || []).includes('line')),
+    // (changed in 0.2.9 rc1, S3: a table ends on a whole row, so its box is its slot's, less under one row at the bottom)
+    const onSlot = (b, pl) => pl.includes(b) || pl.some((q) => { const [x, y, w, h] = b.split(',').map(Number), [x2, y2, w2, h2] = q.split(',').map(Number); return x === x2 && y === y2 && w === w2 && h <= h2 && h2 - h < 30; });
+    chk(() => written.length === 2 && written.every((w, i) => w.length && w.every((b) => onSlot(b, planned[i]))) && fo.every((f) => (f.dropKinds || []).includes('line')),
       () => `A2-3: every chart and table of the report is on a slot of fitSlots(slots, fitOptions): written ${JSON.stringify(written)} fitted ${JSON.stringify(planned)} ${r.threw || ''} ${fo && fo.threw || ''}`);
     // the website's PNG and plan_layout take the same fitting
     const tg = fs.readFileSync(path.join(REPO, 'assets/js/theme-generator.js'), 'utf8'), srv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
@@ -228,6 +232,116 @@ export function v029w({ check }) {
     chk(() => one.ms < 3000 && many.ms < 3000 && one.r.files && many.r.files && cutTitles(one) >= 2 && cutTitles(many) >= 2
       && visuals(one.r).every((v) => (titleOf(v) || '').length < 2000),
       () => `F-W1: a 200,000-character name (one word, or 40,000 words) is fitted fast and its titles are cut: one word ${one.ms} ms, ${one.r.threw || cutTitles(one) + ' cut'}; words ${many.ms} ms, ${many.r.threw || cutTitles(many) + ' cut'}`);
+  }
+
+  // ---------- rc1 release blocker 1 (the laptop's 11 Oct proof, O-13 again): a month label of a DAX table (no type, no date
+  // column the picker can type, no sort-by column) was written in alphabetical order; it is put in time order by the label
+  // itself read as a date (a report measure), kept to the last 12 months, and the plan says so ----------
+  {
+    const my = C('Month-Year', { type: 'unknown' }, 'Calendar');
+    const r = get(() => build(base({ date: my, measure: M('Total Sales') }), { pages: hand(1280, 720, [{ kind: 'line', title: 'L', x: 24, y: 80, w: 900, h: 400 }]) }));
+    const line = r.files ? visuals(r).find((v) => v.visual.visualType === 'lineChart') : null, sd = line && line.visual.query.sortDefinition, ms = measures(r);
+    const key = ms.find((m) => /Month start/.test(m.name)), last = ms.find((m) => /^Last 12 months/.test(m.name));
+    chk(() => (Px.timeAxisPlan(my) || {}).order === 'monthLabel' && sd && sd.sort[0].field.Measure && sd.sort[0].field.Measure.Expression.SourceRef.Schema === 'extension'
+      && key && key.t === 'Calendar' && /DATEVALUE/.test(key.expression) && /'Calendar'\[Month-Year\]/.test(key.expression) && last && /ISBLANK \( _last \)/.test(last.expression)
+      && (line.filterConfig || { filters: [] }).filters.some((f) => /Last 12 months/.test(JSON.stringify(f))),
+      () => `rc1-1: an untyped Month-Year label is ordered by the label read as a date and kept to its last 12 months (and nothing parsed keeps every month): ${r.threw || JSON.stringify({ plan: Px.timeAxisPlan(my), sd, ms: ms.map((m) => m.name) })}`);
+    // a "period" or week label is not read as a date (G11); a month label with a date column keeps the exact month start
+    chk(() => Px.timeAxisPlan(C('Payment Period', { type: 'unknown' })).order === 'az' && Px.timeAxisPlan(C('Month-Year', { dateOf: { t: D, c: 'Date' } }, D)).order === 'monthStart',
+      () => 'rc1-1: only a month label is read as a date; a label with its date column keeps the month start');
+    const srv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+    chk(() => /monthLabel: /.test(srv), () => 'rc1-1: plan_layout says how a month label read as a date is ordered (timeAxis.how), before the plan is approved');
+  }
+
+  // ---------- rc1 release blocker 2 (PERF-COMPARE S1, S2): table amounts wrapped onto two lines and headers were cut ----------
+  {
+    const tbl = (fields, w, page) => get(() => build(base({ table: fields }), { pages: hand(page ? page.w : 1920, page ? page.h : 1080, [{ kind: 'table', title: 'T', x: 24, y: 120, w, h: 500 }]) }));
+    const check = (r) => { const v = r.files && visuals(r).find((x) => x.visual.visualType === 'tableEx'); if (!v) return ['no table: ' + (r.threw || '')];
+      const th = JSON.parse(String(r.files.find((f) => /RegisteredResources\/[^/]+theme\.json$/.test(f.path)).data)), vf = ((v.visual.objects.values || [{ properties: {} }])[0].properties || {}).fontSize;
+      const T = vf ? parseFloat(L(vf)) : +th.visualStyles.tableEx['*'].values[0].fontSize, bad = [];
+      const widths = Object.fromEntries((v.visual.objects.columnWidth || []).map((e) => [e.selector.metadata, parseFloat(L(e.properties.value))]));
+      v.visual.query.queryState.Values.projections.forEach((p) => { const wd = widths[p.queryRef]; if (wd == null || wd <= 1) return;
+        const head = Px.textWidth(p.displayName || p.nativeQueryRef, T, true, 'Segoe UI');
+        if (wd < head + 10) bad.push(`header "${p.nativeQueryRef}" ${head.toFixed(0)} in ${wd}`);
+        if ((p.field.Measure || p.field.Aggregation) && wd < Px.textWidth('8,888,888,888', T, false, 'Segoe UI') + 10) bad.push(`number "${p.nativeQueryRef}" in ${wd}`); });
+      const total = Object.values(widths).reduce((a2, x) => a2 + x, 0); if (total > v.position.width) bad.push(`columns ${total} in a table ${v.position.width}`);
+      return bad; };
+    const money = (n) => M(n, { tableFormat: '$#,0.00' });
+    const a1 = tbl([C('Region'), money('Revenue'), money('Total Cost of Goods'), M('Quantity Sold In Store'), M('Exposure At Default')], 927);
+    const a2 = tbl([C('Issue'), money('Revenue'), money('Total Milestones Budget'), money('Average Wait Time Minutes'), money('Gross Margin'), money('Net Margin'), money('Discount Given')], 927);
+    chk(() => !check(a1).length && !check(a2).length && ((a2.tableColumns || []).length || (a2.tableSmaller || []).length),
+      () => `rc1-2: every number as wide as its widest value, every header whole, all within the table (a table with too many fields leaves one out or takes a smaller text, told): ${JSON.stringify([check(a1), check(a2), a2.tableColumns && a2.tableColumns.length, a2.tableSmaller])}`);
+  }
+
+  // ---------- rc1 item 4 (PERF-COMPARE S5, S7, D15, Task 1): crowded category charts, and the empty column under a short rail ----------
+  {
+    const r = get(() => build(base({ cats: { bar: C('Product'), column: C('City'), donut: C('Channel') } }), { pages: hand(1280, 720, [
+      { kind: 'bar', title: 'B', x: 24, y: 80, w: 600, h: 300 }, { kind: 'column', title: 'K', x: 640, y: 80, w: 500, h: 300 }, { kind: 'column', title: 'Q', x: 640, y: 400, w: 500, h: 300 }]) }));
+    const vs = r.files ? visuals(r).filter((v) => /^clustered(Bar|Column)Chart$/.test(v.visual.visualType)) : [];
+    const topOf = (v) => { const f = ((v.filterConfig || {}).filters || []).find((x) => x.type === 'TopN'); return f ? f.filter.From[0].Expression.Subquery.Query.Top : null; };
+    const bar = vs.find((v) => v.position.x === 24), col = vs.find((v) => v.position.x === 640 && v.position.y === 80);
+    // a bar chart 300 high at 720: (300 - 45 - 8 - 38) / 22.2 = 9 rows; a column chart 500 wide: room for 12-character labels
+    chk(() => topOf(bar) === 9 && topOf(col) >= 3 && /^Top 9: /.test(titleOf(bar)) && new RegExp('^Top ' + topOf(col) + ': ').test(titleOf(col)) && (r.chartTops || []).length >= 2,
+      () => `rc1-4: a chart by a text category shows its top N by its measure, N the rows or columns it holds, said in its title and told: ${r.threw || JSON.stringify(vs.map((v) => [titleOf(v), topOf(v)]))}`);
+    const t = get(() => build(base({ cats: { bar: C('Month Name', { sortBy: { t: D, c: 'Month No' } }, D), column: C('Quarter', {}, D), donut: C('Channel') } }), { pages: hand(1280, 720, [{ kind: 'bar', title: 'B', x: 24, y: 80, w: 600, h: 300 }, { kind: 'column', title: 'K', x: 640, y: 80, w: 500, h: 300 }]) }));
+    chk(() => t.files && visuals(t).filter((v) => /^clustered/.test(v.visual.visualType) && v.position.x !== 12).every((v) => topOf(v) == null), () => 'rc1-4: a time or known category (months, quarters) is never cut to a top N');
+    // the website's sample report (4 values a category) is never cut and never titled "Top N" (the tooltip page's own
+    // "Top 6", at x 12, is older and left as it is)
+    const sm = get(() => build(null, { sample: true, model: null, pages: hand(1280, 720, [{ kind: 'bar', title: 'B', x: 24, y: 80, w: 600, h: 300 }, { kind: 'column', title: 'K', x: 640, y: 80, w: 500, h: 300 }]) }));
+    chk(() => sm.files && visuals(sm).filter((v) => /^clustered/.test(v.visual.visualType) && v.position.x !== 12).length === 2 && visuals(sm).filter((v) => /^clustered/.test(v.visual.visualType) && v.position.x !== 12).every((v) => topOf(v) == null && !/^Top \d/.test(titleOf(v) || '')) && !(sm.chartTops || []).length,
+      () => `rc1-4: the sample report's charts are not cut to a top N: ${sm.threw || JSON.stringify(visuals(sm).map((v) => [titleOf(v), topOf(v)]))}`);
+    // S7: under a rail fitted to its slicers, the bottom row's visual beside the rail takes the rail's column
+    const sl = [{ kind: 'slicer', x: 1068, y: 70, w: 196, h: 634 }, { kind: 'bar', x: 16, y: 178, w: 1040, h: 293 }, { kind: 'column', x: 16, y: 483, w: 514, h: 221 }, { kind: 'table', x: 542, y: 483, w: 514, h: 221 }];
+    const f = E.fitSlots(sl, { railItems: { n: 2, minH: 50, maxH: 50, resetH: 30, pad: 10, gap: 8 } }).slots, tb = f.find((x) => x.kind === 'table'), br = f.find((x) => x.kind === 'bar');
+    chk(() => tb.x === 542 && tb.w === 1264 - 542 && br.w === 1040 && f.find((x) => x.kind === 'column').w === 514,
+      () => `rc1-4 S7: the bottom row's visual beside a short rail takes the rail's column; a row beside the rail keeps its width: ${JSON.stringify(f)}`);
+  }
+
+  // ---------- rc1 DETAIL-2 and the reviewer's addition (S3, D3): tooltip pages, table rows, slicer headers ----------
+  {
+    const pagesOf = (r) => r.files.filter((f) => /pages\/[^/]+\/page\.json$/.test(f.path)).map((f) => { const pj = JSON.parse(String(f.data)), dir = f.path.replace(/page\.json$/, '');
+      return Object.assign(pj, { vs: r.files.filter((x) => x.path.startsWith(dir) && /visual\.json$/.test(x.path)).map((x) => JSON.parse(String(x.data))).filter((v) => v.visual) }); });
+    const tips = (r) => pagesOf(r).filter((p) => p.type === 'Tooltip'), trendOf = (r) => tips(r).find((p) => / · /.test(p.displayName)), topOf = (r) => tips(r).find((p) => !/ · /.test(p.displayName));
+    const barOf = (p) => p && p.vs.find((v) => v.visual.visualType === 'clusteredBarChart');
+    const hasNotBlank = (v) => JSON.stringify((v.filterConfig || {}).filters || []).includes('"Not"');
+    // the measured bar chart (Desktop 2.158, night of 6-7 Oct, at the 10pt theme text): 22.2 a row, 45 above the first, 8 under the last
+    const rowsFit = (h, n) => h >= 45 + 8 + 22.2 * n;
+    const monthName = C('Month Name', { sortBy: { t: D, c: 'Month No' } }, D);
+    const r = get(() => build(base({ date: monthName, tip: { card: M('Total Sales'), cat: C('Product'), y: M('Total Sales'), date: monthName } })));
+    const tr = r.files ? trendOf(r) : null, tb = barOf(tr), top = r.files ? barOf(topOf(r)) : null;
+    // T1: the month tooltip gets the chart's "is not blank" filter, so no "(Blank)" row (13 rows, a scrollbar)
+    chk(() => tb && hasNotBlank(tb), () => `T1: the month tooltip's bars leave the blank month out: ${r.threw || JSON.stringify(tb && tb.filterConfig || null)}`);
+    // T9 and T6: the tooltip's bar chart holds its 12 months and its 6 bars, and the page holds the chart
+    chk(() => tb && rowsFit(tb.position.height, 12) && tb.position.y + tb.position.height <= tr.height && top && rowsFit(top.position.height, 6) && top.position.y + top.position.height <= topOf(r).height,
+      () => `T6/T9: 12 months need ${Math.ceil(53 + 22.2 * 12)} and 6 bars ${Math.ceil(53 + 22.2 * 6)}: ${JSON.stringify([tb && tb.position, tr && tr.height, top && top.position, r.files && topOf(r).height])}`);
+    // T8: the Top 6 names take the share of a narrow bar chart (barNameShare: 50 under 560 wide at 720), as the page's bar charts
+    const mm = (v) => L(((((v || {}).visual || {}).objects || {}).categoryAxis || [{ properties: {} }])[0].properties.maxMarginFactor);
+    chk(() => mm(top) === String(Px.barNameShare(296, 720)) + 'L' && mm(tb) === String(Px.barNameShare(296, 720)) + 'L', () => `T8: the tooltip's names take ${Px.barNameShare(296, 720)}% of its width: ${mm(top)} ${mm(tb)}`);
+    // T10: a measure shown whole on the cards (a unit in its format, "#,0 \"kg\"") shows its own format on the tooltip's bars, never "8.0Kkg"
+    const kg = M('Weight', { wholeFormat: '#,0 "kg"' }), rk = get(() => build(base({ date: monthName, tip: { card: kg, cat: C('Product'), y: kg, date: monthName } })));
+    const units = (v) => L(((((v || {}).visual || {}).objects || {}).labels || [{ properties: {} }])[0].properties.labelDisplayUnits);
+    chk(() => rk.files && units(barOf(topOf(rk))) === '1D' && units(barOf(trendOf(rk))) === '1D' && units(top) == null,
+      () => `T10: a whole-number measure's tooltip labels have no display units (its format's unit kept): ${rk.threw || JSON.stringify([units(barOf(topOf(rk))), units(barOf(trendOf(rk))), units(top)])}`);
+    // T2: an untyped month-year label: the month tooltip in time order, its last 6 months (as the line chart, item 1)
+    const my = C('Month Year', { type: 'unknown' }), r2 = get(() => build(base({ date: my, tip: { card: M('Total Sales'), cat: C('Product'), y: M('Total Sales'), date: my } })));
+    const t2 = r2.files ? barOf(trendOf(r2)) : null, sd = t2 && JSON.stringify(t2.visual.query.sortDefinition || null);
+    chk(() => t2 && /Month start/.test(sd) && /Descending/.test(sd) && JSON.stringify(t2.filterConfig || {}).includes('Last'),
+      () => `T2: the month tooltip of a month label is in time order, newest first, its last months: ${r2.threw || JSON.stringify([sd, (t2 && t2.filterConfig || {}).filters])}`);
+    // S3: a table of rows the model doesn't count ends on a whole row: its height is the title, the header, whole rows
+    // and the total (round 11's measured pitch: 1.415 x the text + 2, the header 7 more, the title 1.5 x its size, 16 of padding)
+    const rt = get(() => build(base({ table: [C('City'), M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 300 }]) }));
+    const tv = rt.files ? visuals(rt).find((v) => v.visual.visualType === 'tableEx') : null;
+    const th = JSON.parse(String(rt.files.find((f) => /RegisteredResources\/.*\.json$/.test(f.path)).data)), tt = +th.visualStyles.tableEx['*'].values[0].fontSize, pitch = 1.415 * tt * 4 / 3 + 2;
+    const TT = +(th.textClasses.title || {}).fontSize || 12, fixed = 1.5 * TT * 4 / 3 + (pitch + 7) + pitch + 16, rows = tv ? (tv.position.height - fixed) / pitch : 0;
+    chk(() => tv && tv.position.height <= 300 && 300 - tv.position.height < pitch && tv.position.y === 80 && rows - Math.floor(rows) < 1 / pitch + 1e-9,
+      () => `S3: a table ends on a whole row (pitch ${pitch.toFixed(1)}, ${rows.toFixed(2)} rows): ${rt.threw || JSON.stringify(tv && tv.position)}`);
+    const rd = get(() => build(base({ table: [C('Day Name', { kind: 'day', rows: 7 }), M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 300 }]) }));
+    chk(() => rd.files && visuals(rd).find((v) => v.visual.visualType === 'tableEx').position.height === 300, () => 'S3: a table whose rows all show (7 days) keeps its height');
+    // D3: a long slicer header takes a smaller text, down to 8pt, before it is shortened
+    const rs = get(() => build(base({ slicers: [C('Enforcement_History_Status'), null, null] }), { pages: hand(1280, 720, [{ kind: 'slicer', x: 1068, y: 70, w: 196, h: 300 }]) }));
+    const sv = rs.files ? visuals(rs).find((v) => v.visual.visualType === 'slicer') : null, hd = sv && sv.visual.objects.header[0].properties;
+    chk(() => hd && L(hd.text) == null && +L(hd.textSize).replace(/D$/, '') >= 8 && !(rs.titles && (rs.titles.slicers || []).length),
+      () => `D3: "Enforcement_History_Status" in a 196-wide slicer is whole at a smaller header text: ${rs.threw || JSON.stringify(hd)} ${JSON.stringify(rs.titles && rs.titles.slicers)}`);
   }
 }
 

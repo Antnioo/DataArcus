@@ -82,8 +82,10 @@ export async function v029b({ call, check, ROOT, fs = fs0 }) {
     chk(() => ch.autoSizeColumnWidth.expr.Literal.Value === 'false' && !ch.columnAdjustment, () => `O-14 ${tag}: the table's auto-size must be off and grow-to-fit gone: ${JSON.stringify(ch)}`);
     chk(() => refs.length && refs.every((q) => ws.some((w) => w.ref === q)), () => `O-14 ${tag}: one width per column: ${JSON.stringify(refs)} vs ${JSON.stringify(ws)}`);
     const sc = get(() => pg.page.height / 1080), issue = ws.find((w) => w.ref === (tag === 'ar' ? 'Sales.Row label: Issue' : 'Sales.Issue')),   /* (Arabic: the name column is hidden at 0, round 23; its row label shows it) */ nums = ws.filter((w) => /^Sales\.(Total Sales|Orders|Margin %)$/.test(w.ref)), sum = ws.reduce((a, w) => a + w.w, 0);
-    chk(() => issue.w >= 160 * sc && nums.every((w) => w.w >= 90 * sc - 0.5 && w.w <= 130 * sc + 0.5) && sum <= t.position.width - 36 + 0.5,
-      () => `O-14 ${tag}: numbers 90-130, the text 160 at least, all within the width less 36 (${t && t.position.width}): ${JSON.stringify(ws)}`);
+    // (0.2.9 rc1, the laptop's PERF-COMPARE S1: a number capped at 130 wrapped its amount onto two lines: since, a number is
+    // as wide as its widest value and header, no cap; the rest of this check is unchanged)
+    chk(() => issue.w >= 160 * sc && nums.every((w) => w.w >= 90 * sc - 0.5) && sum <= t.position.width - 36 + 0.5,
+      () => `O-14 ${tag}: numbers 90 at least (as wide as their values), the text 160 at least, all within the width less 36 (${t && t.position.width}): ${JSON.stringify(ws)}`);
     chk(() => o.values[0].properties.wordWrap.expr.Literal.Value === 'true', () => `O-14 ${tag}: the values must wrap: ${JSON.stringify(o && o.values)}`);
   }
 

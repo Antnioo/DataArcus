@@ -13,7 +13,7 @@
     mirrorChart, mixHex, namesOf, num, obj, orderHelper, orderedBy, pageFilterOf, proj, q, resource, rnd,
     rowLabelDax, rowLabelOf, shown, sorted, str, tableFields, timeAxisPlan, tproj
   } = Q;
-  const { barNameShare, columnRoom, fieldRoom, tableFit, textWidth } = Z;
+  const { barNameShare, cellRoom, columnRoom, fieldRoom, tableFit, textWidth } = Z;
 
 
   // The page buttons as tabs (see write): the layout of a page's tabs, made per page from the report's context c
@@ -86,11 +86,28 @@
   const themeSizes = (o) => { const TH = (o.theme && o.theme.textClasses) || {}, LABEL = +(TH.label || {}).fontSize || 10;
     return { TH, TITLE: +(TH.title || {}).fontSize || 12, CALLOUT: +(TH.callout || {}).fontSize || 28, LABEL, SLICER_TEXT: +((((((o.theme || {}).visualStyles || {}).slicer || {})['*'] || {}).header || [{}])[0].textSize) || LABEL }; };
 
+  // 0.2.9 rc1 (the laptop's PERF-COMPARE S5, D15, D19 and Task 1: a column chart of products or cities drew dozens of
+  // vertical labels, cut, with a scrollbar; on a page narrowed by the filter rail the department labels were slanted and
+  // cut): a bar or column chart by a text category (not a time category, nor one whose values the writer knows: days,
+  // months, quarters) shows its top N by its measure, N the categories its slot holds, said in its title. A bar chart: its
+  // rows, 22.2 a row with 45 above, 8 under and 38 for the value axis (measured at 10pt, 1280 x 720, scaled with the page);
+  // a column chart: a column for a 12-character label at the label size (a GUESS, to be measured), so the names stay level
+  const topCount = (c, s, pg, f) => {
+    // (the sample's categories have 4 values each: never cut, and never a "Top N" on the website's sample report)
+    if (!c.own || !f || !isTextField(f) || isTime(f) || catKind(f) || (s.kind !== 'bar' && s.kind !== 'column')) return 0;
+    if (s.kind === 'bar') return Math.max(3, Math.floor((s.h * 720 / pg.page.h - 45 - 8 - 38) / 22.2));
+    const plot = s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40, need = textWidth('n'.repeat(12), c.LABEL, false, c.font) + 6;
+    return Math.max(3, Math.floor(plot / need));
+  };
+  // the category field a chart's query shows (after the page's own choice of categories)
+  const catOf = (Bt, query) => { const p = ((query.queryState.Category || {}).projections || [])[0], col = p && p.field.Column;
+    return col ? Object.values(Bt.cats || {}).find((x) => x && x.t === col.Expression.SourceRef.Entity && x.c === col.Property) || null : null; };
+
   // The visuals' look and sizes shared by a report's pages and its tooltip pages (frames, cards, buttons, the visual
   // fixes of 0.2.9 part 2), made once per report from its context c (see build)
   function kit(c) {
     const {
-      MIRROR, W, align, base, byMonthStart, edge, font, lastMonths, n, notBlank, o, rowLabels,
+      MIRROR, W, align, base, byMonthStart, edge, font, lastMonths, n, notBlank, o, rowLabels, topN,
       rtl, timeAxes, u
     } = c;
 
@@ -221,13 +238,16 @@
       const st = visual.query.queryState, cat = st.Category && st.Category.projections[0], col = cat && cat.field.Column, filters = [];
       const put = (object, props) => { visual.objects = visual.objects || {}; const e = visual.objects[object] || (visual.objects[object] = [{ properties: {} }]); Object.assign(e[0].properties, props); };
       if (col && CHARTS.includes(s.kind)) { filters.push(notBlank(col)); n.blankFiltered++; }
+      // (rc1: a crowded category chart, its top N by its measure; topCount)
+      const top = col && st.Y ? topCount(c, s, pg, catOf(Bt, visual.query)) : 0;
+      if (top) { filters.push(topN(col, st.Y.projections[0].field, top)); n.chartTops.push({ page: pg.name || base, field: col.Expression.SourceRef.Entity + '[' + col.Property + ']', top }); }
       // O-4: a bar chart's names get 40% of its width, 50% on a narrow chart (under 560 on the 720-high page); the default 25 cut them at about 10 characters
       if (visual.visualType === 'clusteredBarChart') put('categoryAxis', { maxMarginFactor: lit(barNameShare(s.w, pg.page.h) + 'L') });
       // O-13: the line chart's month label
-      if (s.kind === 'line' && col && Bt.date && (timeAxisPlan(Bt.date) || {}).order === 'monthStart' && col.Property === Bt.date.c) {
+      if (s.kind === 'line' && col && Bt.date && ['monthStart', 'monthLabel'].includes((timeAxisPlan(Bt.date) || {}).order) && col.Property === Bt.date.c) {
         byMonthStart(visual.query, Bt.date, MIRROR ? 'Descending' : 'Ascending');
         const lf = st.Y && lastMonths(Bt.date, st.Y.projections[0].field, 12); if (lf) filters.push(lf);
-        timeAxes.push({ page: pg.name || base, field: Bt.date.t + '[' + Bt.date.c + ']', by: Bt.date.dateOf.t + '[' + Bt.date.dateOf.c + ']', last: lf ? 12 : null });
+        timeAxes.push({ page: pg.name || base, field: Bt.date.t + '[' + Bt.date.c + ']', by: Bt.date.dateOf ? Bt.date.dateOf.t + '[' + Bt.date.dateOf.c + ']' : 'the label read as a date', last: lf ? 12 : null });
       }
       // O-14: a table's columns get set widths (auto-size off: grow-to-fit let a long text push the numbers out of view):
       // numbers 90 to 130 by their header, the text columns share the rest (160 at least), all within the width less 36
@@ -241,14 +261,15 @@
         const free = ps.filter((p) => !fixed.has(p.queryRef)), usable = s.w - 36 - cw.reduce((a, e) => a + parseFloat(e.properties.value.expr.Literal.Value), 0);
         const pic = (((visual.objects.grid || [])[0] || { properties: {} }).properties.imageWidth || null), picW = pic ? parseFloat(pic.expr.Literal.Value) + 10 : 0;
         const w = new Map();
-        free.filter(isNum).forEach((p) => w.set(p, Math.max(90 * sc, Math.min(130 * sc, textWidth(p.displayName || p.nativeQueryRef || '', T, true, font) + 24 * sc))));
+        // (0.2.9 rc1, S1/S2: each column at least its cellRoom, the room the table's fields were kept by: a number as wide as
+        // its widest value, so it never wraps, and every header whole; the text columns share what is left, and give up
+        // width only down to their own room; no number is narrowed)
+        const room = (p) => { const f = fieldOf(p); return f ? cellRoom(f, T, font, sc) : Math.ceil(textWidth(p.displayName || p.nativeQueryRef || '', T, true, font) + 24 * sc); };
+        free.filter(isNum).forEach((p) => w.set(p, room(p)));
         free.filter(isPic).forEach((p) => w.set(p, picW || 90 * sc));
-        const texts = free.filter((p) => !w.has(p)), used = [...w.values()].reduce((a, x) => a + x, 0);
-        let each = texts.length ? (usable - used) / texts.length : 0;
-        // too little room: the numbers give up width (down to 40 each) before a text column goes under 160
-        if (texts.length && each < 160 * sc) { const nums = free.filter((p) => w.has(p) && isNum(p)), over = 160 * sc * texts.length - (usable - used), cut = nums.length ? Math.min(over / nums.length, Math.max(0, ...nums.map((p) => w.get(p) - 40))) : 0;
-          nums.forEach((p) => w.set(p, Math.max(40, w.get(p) - cut))); each = (usable - [...w.values()].reduce((a, x) => a + x, 0)) / texts.length; }
-        texts.forEach((p) => w.set(p, Math.max(40, each)));
+        const texts = free.filter((p) => !w.has(p)), used = [...w.values()].reduce((a, x) => a + x, 0), mins = texts.map(room);
+        const spare = usable - used - mins.reduce((a, x) => a + x, 0);
+        texts.forEach((p, i) => w.set(p, mins[i] + Math.max(0, spare) / texts.length));
         // no text column: the numbers share the whole width
         if (!texts.length && w.size) { const k = usable / [...w.values()].reduce((a, x) => a + x, 0); if (k > 1) w.forEach((x, p) => w.set(p, x * k)); }
         free.forEach((p) => cw.push({ properties: { value: num(Math.floor(w.get(p))) }, selector: { metadata: p.queryRef } }));
@@ -383,7 +404,12 @@
     const fitted = new Map();   // round 22: each chart's full title and the room it was fitted to
     // a slicer's header, shortened to the slicer's width: the header's own text (header.text, in Microsoft's theme
     // schema), so the field keeps its name everywhere else; the full name stays the slicer's alt text
-    const slicerHeader = (f, w) => { const out = { show: bool(true), fontFamily: str(font) }; if (!f) return obj(out); const full = label(f), shown = oneLine(full, SLICER_TEXT, w - 2 * Math.round(8 * k));
+    // (rc1, PERF-COMPARE D3: "Enforcement_History..." cut where a smaller text held it whole: the header takes the largest
+    // size, down to 8pt, at which the name is whole, as a KPI card's title; it is shortened only where even 8pt doesn't hold it)
+    const slicerHeader = (f, w) => { const out = { show: bool(true), fontFamily: str(font) }; if (!f) return obj(out); const full = label(f), room = w - 2 * Math.round(8 * k);
+      let size = SLICER_TEXT; while (size > 8 && oneLine(full, size, room) !== full) size = Math.ceil(size) - 1;
+      if (size < SLICER_TEXT) out.textSize = num(size);
+      const shown = oneLine(full, size, room);
       if (shown !== full) { titles.slicers.push({ page: pg.name || base, field: full, shown }); out.text = str(shown); } return obj(out); };
     // Round 12 (#15; seen in Desktop 2.158, round 11: "Total Sales by Day Name" twice on one page): a table whose title
     // is a chart's title on the same page is titled by what it adds, "...: detail"
@@ -548,8 +574,11 @@
           // smaller text, down to 8pt: the largest size that keeps the most fields; a field is left out only where even
           // that doesn't hold it. The size is written on the table (values, headers, total) and told.
           const T0 = +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
-          let tf = tableFit(B.table, s.w, T0, font);
-          if (tf.leftOut.length) { for (let t2 = Math.ceil(T0) - 1; t2 >= 8; t2--) { const f2 = tableFit(B.table, s.w, t2, font); if (f2.kept.length > tf.kept.length) { tf = f2; tableText = t2; } if (!f2.leftOut.length) break; } }
+          // (rc1, S1/S2: a table's fields are kept by cellRoom, the room its column widths are written by, within its width
+          // less 36 (padding and scrollbar); a matrix keeps the earlier rule)
+          const tsc = s.kind === 'table' ? pg.page.h / 1080 : null, tw = tsc ? s.w - 36 : s.w, roomOf = (f, t2) => (tsc ? cellRoom(f, t2, font, tsc) : fieldRoom(f, t2, font));
+          let tf = tableFit(B.table, tw, T0, font, tsc);
+          if (tf.leftOut.length) { for (let t2 = Math.ceil(T0) - 1; t2 >= 8; t2--) { const f2 = tableFit(B.table, tw, t2, font, tsc); if (f2.kept.length > tf.kept.length) { tf = f2; tableText = t2; } if (!f2.leftOut.length) break; } }
           // Round 22 (golden task 6 in English, in Desktop since the night of 6-7 Oct: two long names at the theme's 15pt
           // were wider than the table, a horizontal scrollbar): the fields a table keeps must fit its box too. The text
           // was only made smaller to keep more fields; the two that are always kept were never measured. It now goes
@@ -557,10 +586,10 @@
           // Round 22b (the review of round 22, item 8): two fields wider than the box even at 8pt are told. (The fit is
           // not redone at this size: the loop above already tried every size down to 8 and kept the most fields, so
           // this only runs where the two alone are kept, and no third fits at any size: checked on 30,000 tables)
-          { const need = (t2) => tf.kept.reduce((a2, f) => a2 + fieldRoom(f, t2, font), 0); let t3 = tableText || T0;
-            while (t3 > 8 && need(t3) > s.w) t3 = Math.ceil(t3) - 1;
+          { const need = (t2) => tf.kept.reduce((a2, f) => a2 + roomOf(f, t2), 0); let t3 = tableText || T0;
+            while (t3 > 8 && need(t3) > tw) t3 = Math.ceil(t3) - 1;
             if (t3 < (tableText || T0)) tableText = t3;
-            if (need(t3) > s.w) tableWide.push({ page: pg.name || base, width: s.w, need: Math.ceil(need(t3)) }); }
+            if (need(t3) > tw) tableWide.push({ page: pg.name || base, width: s.w, need: Math.ceil(need(t3)) }); }
           if (tableText) tableSmaller.push(smallEntry = { page: pg.name || base, size: tableText, from: T0 });
           if (tf.leftOut.length) { Bt = Object.assign({}, B, { table: tf.kept }); tableColumns.push({ page: pg.name || base, pageIndex, x: s.x, y: s.y, kept: tf.kept, leftOut: tf.leftOut }); }
         }
@@ -593,6 +622,8 @@
         // (round 10: the sample download names its charts by their fields too, "Total Revenue by Month", as a report on a
         // user's model does; before, it kept the layout's role names, "Main trend")
         if (B && query) ttl = bindTitle(s.kind, Bt, W.by || 'by') || ttl;
+        // (rc1: a chart cut to its top N says so in its title, as the tooltip page's "Top 6")
+        { const top = B && query ? topCount(c, s, pg, catOf(Bt, query)) : 0; if (top && ttl) ttl = (lang === 'ar' ? 'أعلى ' : 'Top ') + top + ': ' + ttl; }
         if ((s.kind === 'table' || s.kind === 'matrix') && ttl && chartTitles.has(ttl)) ttl = ttl + ': ' + (AR_LETTERS.test(ttl) ? (W.detail && AR_LETTERS.test(W.detail) ? W.detail : 'التفاصيل') : (W.detail && !AR_LETTERS.test(W.detail) ? W.detail : 'detail'));   // (round 14: in the title's own script)
         if (s.kind === 'kpi') { if (B && query) ttl = label(B.kpis[kpiIndex]); kpiIndex++; }
         // KPI names read as labels: semibold, so the number below stays the hero
@@ -771,8 +802,11 @@
             // (columnRoom) and the pictures share what is left, each with + 10 like a column; their width is capped by
             // that, 8 at least, and the height follows the designs' ratio. With room, the designs' own size is kept.
             const wide = Math.max(...mine.map((c) => +c.w || 0)) || 75, tt = +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
-            const others = query.queryState.Values.projections.filter((p) => !(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema) && p.displayName !== ' ').reduce((a, p) => a + columnRoom(p, tt, font), 0);
-            const W = Math.max(8, Math.min(512, wide, Math.floor((s.w - others) / cols.length) - 10));
+            // (rc1, S1/S2: a table's other columns take the room its fit and its column widths give them, cellRoom at the
+            // table's own text, within its width less 36; the pictures had kept the earlier rule and could push it past)
+            const tsc = s.kind === 'table' ? pg.page.h / 1080 : null, fOf = (p) => ((Bt || {}).table || []).filter(Boolean).find((f) => proj(f).queryRef === p.queryRef);
+            const others = query.queryState.Values.projections.filter((p) => !(p.field.Measure && p.field.Measure.Expression.SourceRef.Schema) && p.displayName !== ' ').reduce((a, p) => a + (tsc && fOf(p) ? cellRoom(fOf(p), tableText || tt, font, tsc) : columnRoom(p, tt, font)), 0);
+            const W = Math.max(8, Math.min(512, wide, Math.floor(((tsc ? s.w - 36 : s.w) - others) / cols.length) - 10));
             const H0 = Math.max(8, Math.min(512, Math.round(Math.max(...mine.map((c) => (+c.h || 75) * Math.min(1, W / (+c.w || 75)))))));
             // Round 18 (measured in Desktop 2.158, 6 Oct 2026, "P4 ring EN": a 64-high picture in a 221-high table at
             // 1280 x 720: the rows 66 apart (the picture + 2), the first 68 under the table's top; one and a half rows
@@ -787,6 +821,17 @@
             if (H < 40 && extFile) mine.forEach((c) => { if (!c.expressionNoNumber) return; const e = extFile.entities.find((x) => x.name === c.t), me = e && e.measures.find((x) => x.name === c.m); if (me) { me.expression = c.expressionNoNumber; extFile.changed = true; ringsSmall.push({ page: pg.name || base, label: c.m, h: H }); } });
             svgDone[pageIndex] = true;
           }
+        }
+        // rc1 (PERF-COMPARE S3, 6 models: the last row a table showed was cut in half by its total line): a table whose rows
+        // don't all show ends on a whole row. Its height is the title, the header, the whole rows that fit and the total, by
+        // round 11's measured pitch (above: 1.415 x the text's height + 2 x rowPadding, 1 when none is written; the header 7
+        // more; the title 1.5 x its size; 16 of padding); the top stays. Not a table with pictures (their rows are taller).
+        if (s.kind === 'table' && visual && visual.query) {
+          const gp = (((visual.objects || {}).grid || [])[0] || {}).properties || {}, padOf = gp.rowPadding ? +String(gp.rowPadding.expr.Literal.Value).replace(/D$/, '') : 1;
+          const tv = (((visual.objects || {}).values || [])[0] || {}).properties || {}, t = tv.fontSize ? +String(tv.fontSize.expr.Literal.Value).replace(/D$/, '') : (+((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10);
+          const tf = tableFields(Bt, rtl).find(isTextField), n = ((tf && catKind(tf)) || {}).rows || 0;
+          const pitch = 1.415 * t * 4 / 3 + 2 * padOf, fixed = 1.5 * TITLE * 4 / 3 + (pitch + 7) + pitch + 16, k0 = Math.floor((box.h - fixed) / pitch);
+          if (!gp.imageHeight && k0 >= 1 && !(n && n <= k0)) { const h1 = Math.ceil(fixed + k0 * pitch); if (h1 < box.h) box = { y: box.y, h: h1 }; }
         }
         if (B && visual && visual.query) vFilters = fixVisual(visual, s, pg, Bt, tableText);
       }
@@ -1056,7 +1101,10 @@
       // titles are compared in full, not as shortened; charts by the same column are left alone, a bracket would only
       // repeat itself; the new title is fitted like any title, and the alt text carries the same name)
       const same = {}, full = (v) => (fitted.get(v.visual) || {}).ttl || tOf(v), colOf = (v) => { const p = v.visual.query.queryState.Category.projections[0]; return shown(p.displayName || p.nativeQueryRef); };
-      visuals.filter((v) => v.visual && v.visual.query && v.visual.query.queryState.Category && tOf(v)).forEach((v) => { (same[full(v)] = same[full(v)] || []).push(v); });
+      // (rc1: a chart cut to its top N keeps its "Top N: " before its title; the titles are compared without it, so two charts
+      // that differ only by their N are still told apart by their column, and the new name keeps the prefix)
+      const TOPPED = /^(Top|أعلى) \d+: /, core = (v) => full(v).replace(TOPPED, ''), prefix = (v) => (full(v).match(TOPPED) || [''])[0];
+      visuals.filter((v) => v.visual && v.visual.query && v.visual.query.queryState.Category && tOf(v)).forEach((v) => { (same[core(v)] = same[core(v)] || []).push(v); });
       // (round 22b, the review of round 22, item 10: three charts and two columns, "عدد Order Id (Channel)" twice: charts
       // of the group by the same column too take a number after it in reading order, "(Channel 2)"; nothing else
       // tells them apart, as their measure and column are the same)
@@ -1073,13 +1121,13 @@
       Object.keys(same).filter((k) => same[k].length > 1).forEach((k) => { const nth = {}, one = new Set(same[k].map(colOf)).size === 1; same[k].slice().sort(order).forEach((v) => { const c = colOf(v);
         // (the reviewer's second review, item 8: charts with the same measure and the same column kept the same title
         // and alt text: the second and later are numbered, "Total Sales by City (2)")
-        if (one) { nth[''] = (nth[''] || 0) + 1; if (nth[''] > 1) rename(v, k, k + ' (' + nth[''] + ')'); return; }
+        if (one) { nth[''] = (nth[''] || 0) + 1; if (nth[''] > 1) rename(v, k, prefix(v) + k + ' (' + nth[''] + ')'); return; }
         // (never a script the title does not have already: round 14's rule keeps an Arabic title free of English names;
         // "عدد Order Id" holds Latin letters already, so "(Region)" may follow it)
         const lat = /[A-Za-z]/, adds = (x) => (AR_LETTERS.test(c) && !AR_LETTERS.test(x)) || (lat.test(c) && !lat.test(x));
         if (!c || adds(k)) return;
         nth[c] = (nth[c] || 0) + 1;
-        rename(v, k, k + ' (' + c + (nth[c] > 1 ? ' ' + nth[c] : '') + ')'); }); });
+        rename(v, k, prefix(v) + k + ' (' + c + (nth[c] > 1 ? ' ' + nth[c] : '') + ')'); }); });
     }
     // 0.2.9, audit 6's A6-12: what each written visual shows, in the page's order, for the caller's answer: its fields as
     // Table[Field] (a measure or a column) or Sum(Table[Field]) (a column the visual sums or counts), its roles in order; the
@@ -1112,7 +1160,7 @@
     } = c;
 
     // tooltip page: small, hidden in view mode, shown when a chart is hovered. 320 x 284: the card, and a bar chart 184
-    // high, which holds 6 rows (measured in Desktop 2.158: a bar row takes 22 and the title and padding 46; a tooltip
+    // high, which holds 6 rows (rc1: 187 and 287 by the measured rows, tipRows below; 284 stays for the empty page) (measured in Desktop 2.158: a bar row takes 22 and the title and padding 46; a tooltip
     // can't be scrolled, so rows past the last one would be lost behind a scrollbar)
     const tipPage = (name, binding, displayName, visuals, height) => {
       add(D + '/pages/' + name + '/page.json', json({
@@ -1142,6 +1190,15 @@
       tv.visual.visualContainerObjects.title[0].properties.text = str(top); return tv; };
     // (the tooltip pages' bars grow from the right in a mirrored report too)
     const tipBar = (vis) => (MIRROR ? mirrorChart(vis, 'bar') : vis);
+    // rc1 (DETAIL-2 T6, T9; measured in Desktop 2.158 on the night of 6-7 Oct at the 10pt text, the tooltip's 8pt being
+    // smaller): a bar chart without its value axis needs 22.2 a row, 45 above the first and 8 under the last. 184 for 6
+    // bars and 310 for 12 months were short of that: a scrollbar beside the Top 6, the 12th month cut.
+    const tipRows = (n) => Math.ceil(45 + 8 + 22.2 * n);
+    // rc1 (T8: "Microsoft 365 Busin..."): the names take the share of a narrow bar chart, as the page's (barNameShare)
+    // rc1 (T10: "8.0Kkg" where the card read "60,000 kg"): a measure the cards show whole (wholeFormat: a unit, a count)
+    // keeps its own format on the bars' values (display units None), as on its card; the rest keep Power BI's automatic
+    const tipLook = (y) => ({ categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit(barNameShare(296, 720) + 'L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }),
+      labels: obj(Object.assign({ show: bool(true), fontSize: num(8) }, y && y.wholeFormat && !y.pct ? { labelDisplayUnits: num(1) } : {})) });
     tipPage(tipName, tipBinding, W.tooltipPage || 'Tooltip', tip
       ? [tipCardVisual(),
         // a bar chart writes its category names horizontally (a column chart slants or cuts them); its own sizes, as
@@ -1149,10 +1206,10 @@
         // each bar's value beside it instead, which leaves room for one more row
         // (0.2.9 part 2, TOOLTIP-FIX-LAB: 9 products in 184 showed 6 bars and a scrollbar a tooltip can't use: the Top 6
         // by the measure shown, said in the title; a time category is never cut by value)
-        tipTop({ x: 12, y: 92, w: 296, h: 184, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), tip.cat, true),   /* (round 23: largest first) */
-          objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
+        tipTop({ x: 12, y: 92, w: 296, h: tipRows(6), visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), tip.cat, true),   /* (round 23: largest first) */
+          objects: tipLook(tip.y),
           visualContainerObjects: tipFrame(tip.y.m === tip.card.m && tip.y.t === tip.card.t ? byTitle(label(tip.y), W.by || 'by', label(tip.cat)) : label(tip.y)) }) })]
-      : [{ x: 12, y: 12, w: 296, h: 260, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }]);
+      : [{ x: 12, y: 12, w: 296, h: 260, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }], tip ? 92 + tipRows(6) + 8 : 284);
     // the trend: the card's measure by month, as a bar chart with the same settings, 310 high on a 320 x 410 page: 12
     // rows (22 a row and 46 for the title and padding), so every month's name is whole and horizontal with its value
     // beside the bar, whatever the measure. Measured in Desktop 2.158 (DESKTOP-TESTS.md, "round 1 built"): at this width
@@ -1161,12 +1218,14 @@
     // (0.2.9 part 2, TOOLTIP-FIX-LAB: about 77 months in 310 showed 13 and a scrollbar: where the month's table has a date
     // column, the last 6 months, newest first, at 40 + 27 a bar; elsewhere the 12 rows as before)
     // (the cross-review's G3: the same rule as the trend's, so a month name the model or the report sorts keeps its 12)
-    const six = !!(tip && (timeAxisPlan(tip.date) || {}).order === 'monthStart');
-    if (trend) { const tv = { x: 12, y: 92, w: 296, h: six ? 40 + 27 * 6 + 8 : 310, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(tip.card)] }), tip.date),
-        objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
+    const six = !!(tip && ['monthStart', 'monthLabel'].includes((timeAxisPlan(tip.date) || {}).order));
+    if (trend) { const tv = { x: 12, y: 92, w: 296, h: six ? 40 + 27 * 6 + 8 : tipRows(12), visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(tip.card)] }), tip.date),
+        objects: tipLook(tip.card),
         visualContainerObjects: tipFrame(byTitle(label(tip.card), W.by || 'by', label(tip.date))) }) };
-      if (six) { byMonthStart(tv.visual.query, tip.date, 'Descending'); const lf = lastMonths(tip.date, proj(tip.card).field, 6); if (lf) tv.filters = [notBlankOf(tip.date), lf]; }
-      tipPage(trend.name, trend.binding, (W.tooltipPage || 'Tooltip') + ' \u00b7 ' + label(tip.date), [tipCardVisual(), tv], six ? 92 + tv.h + 12 : 410); }
+      // (rc1, DETAIL-2 T1: the month tooltip showed "(Blank)" first and 13 rows: it gets the chart's "is not blank" filter)
+      tv.filters = [notBlankOf(tip.date)];
+      if (six) { byMonthStart(tv.visual.query, tip.date, 'Descending'); const lf = lastMonths(tip.date, proj(tip.card).field, 6); if (lf) tv.filters.push(lf); }
+      tipPage(trend.name, trend.binding, (W.tooltipPage || 'Tooltip') + ' \u00b7 ' + label(tip.date), [tipCardVisual(), tv], six ? 92 + tv.h + 12 : 92 + tv.h + 8); }
     return six;
   }
 

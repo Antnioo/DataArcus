@@ -348,6 +348,9 @@ const bimModel = JSON.parse(fs.readFileSync(path.join(ROOT, 'bim-project/Health 
 // (round 19: the "No data" measures live in the report (Schema "extension"), as the SVG measures: they are not model fields)
 const boundFields = (dir) => { const refs = []; const w = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) w(f); else if (e.name === 'visual.json') JSON.stringify(JSON.parse(fs.readFileSync(f, 'utf8')), (k, v) => { if (v && (v.Column || v.Measure) && (v.Column || v.Measure).Expression && (v.Column || v.Measure).Expression.SourceRef.Entity && (v.Column || v.Measure).Expression.SourceRef.Schema !== 'extension') refs.push([v.Column ? 'Column' : 'Measure', (v.Column || v.Measure).Expression.SourceRef.Entity, (v.Column || v.Measure).Property]); return v; }); }); w(dir); return refs; };
 const inModel = ([k, t, n]) => bimModel.some((x) => x.name === t && (k === 'Measure' ? x.measures || [] : x.columns).some((c) => c.name === n));
+const besideRail = (got, wp, s, v) => { const r = wp.slots.find((x) => x.rail), sl = got.visuals.filter((x) => x.type === 'slicer');
+  if (!r || !sl.length || s.y < Math.max(...sl.map((x) => x.y + x.h))) return false;
+  return v.x === Math.min(s.x, r.x) && v.x + v.w === Math.max(s.x + s.w, r.x + r.w); };
 const slotsPlaced = (pages, want) => {   // every slot except the filter rail has a visual at exactly its box; slicers sit in the rail
   const bad = [];
   want.forEach((wp, i) => {
@@ -358,7 +361,10 @@ const slotsPlaced = (pages, want) => {   // every slot except the filter rail ha
       // (round 1: a header text box, the title or "Your logo", may start lower in its slot so its text is centred in the
       // header: the same x, width and bottom edge)
       // (0.2.9 part 2, O-6: create_report writes no "Your logo" placeholder, so a logo slot without a logo stays empty)
-      else if (!got.visuals.some((v) => v.type !== 'group' && v.x === s.x && v.w === s.w && (v.y === s.y && v.h === s.h || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h))) && s.kind !== 'logo') bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
+      // (changed in 0.2.9 rc1, S3: a table ends on a whole row, its box less under one row at the bottom)
+      // (changed in 0.2.9 rc1, item 4, S7: a slot that starts below the filter rail's slicers and is next to the rail
+      // takes the rail's column too, the design engine's fitSlots: its box is the slot's and the rail's, the same y and height)
+      else if (!got.visuals.some((v) => v.type !== 'group' && (v.x === s.x && v.w === s.w || besideRail(got, wp, s, v)) && (v.y === s.y && v.h === s.h || (v.type === 'tableEx' && v.y === s.y && v.h <= s.h && s.h - v.h < 30) || ((s.kind === 'title' || s.kind === 'logo') && v.type === 'textbox' && v.y > s.y && v.y + v.h === s.y + s.h))) && s.kind !== 'logo') bad.push(`page ${i + 1}: nothing at ${s.title} ${s.x},${s.y} ${s.w}x${s.h}`);
     });
   });
   return bad;
@@ -2534,12 +2540,17 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
       const t = pageVisuals(x, 'd5-project').find((v) => type(v) === 'tableEx' && /extension/.test(JSON.stringify(v.visual.query)));
       if (!t) { bad.push(`${lang}: no table ${short(x)}`); continue; }
       const ps = t.visual.query.queryState.Values.projections, g = t.visual.objects.grid[0].properties, W = N(g.imageWidth), H = N(g.imageHeight);
-      const size = tableText(x, 'd5-project'), font = 'Segoe UI';
+      const size = t.visual.objects.values ? N(t.visual.objects.values[0].properties.fontSize) : tableText(x, 'd5-project'), font = 'Segoe UI';
       // (round 23: an Arabic table's name column is hidden at width 0 and shown by its row-label measure, a text column
       // at the right that is not a picture: the hidden column takes no room, the row label the name column's)
       const hid = hiddenRefs(t), isPic = (p) => p.field.Measure && p.field.Measure.Expression.SourceRef.Schema && !isRowLabel(p);
-      const other = ps.filter((p) => !isPic(p) && !hid.includes(p.queryRef)).reduce((a, p) => a + (Pb.columnRoom ? Pb.columnRoom(isRowLabel(p) ? ps.find((h) => hid.includes(h.queryRef)) : p, size, font) : Infinity), 0), pic = ps.filter(isPic).length;
-      if (other + pic * (W + 10) > t.at.w + 0.5 || W < 8 || W > 180 || H !== Math.max(8, Math.round(Math.max(24 * Math.min(1, W / 160), 20 * Math.min(1, W / 180))))) bad.push(`${lang}: ${ps.length} columns need ${(other + pic * (W + 10)).toFixed(0)} of ${t.at.w} with pictures ${W} x ${H}`);
+      // (changed in 0.2.9 rc1, item 2: a table's columns take cellRoom, their bold header or widest value plus the measured
+      // padding, the rule its fit and its column widths are written by, within its width less 36; the pictures follow it.
+      // The fields as the picker gives them: a column of text, a measure with no format)
+      const pdir = path.join(ROOT, 'd5-project', x.j.report, 'definition', 'pages'), pageH = Math.max(...fs.readdirSync(pdir).filter((n) => fs.existsSync(path.join(pdir, n, 'page.json'))).map((n) => JSON.parse(fs.readFileSync(path.join(pdir, n, 'page.json'), 'utf8'))).filter((pj) => pj.type !== 'Tooltip').map((pj) => pj.height));
+      const cell = (p) => { const e = (p.field.Column || p.field.Measure).Expression.SourceRef.Entity, f = p.field.Column ? { t: e, c: p.field.Column.Property, type: 'string' } : { t: e, m: p.field.Measure.Property }; return Pb.cellRoom(f, size, font, pageH / 1080); };
+      const other = ps.filter((p) => !isPic(p) && !hid.includes(p.queryRef)).reduce((a, p) => a + (Pb.cellRoom ? cell(isRowLabel(p) ? ps.find((h) => hid.includes(h.queryRef)) : p) : Infinity), 0), pic = ps.filter(isPic).length;
+      if (other + pic * (W + 10) > t.at.w - 36 + 0.5 || W < 8 || W > 180 || H !== Math.max(8, Math.round(Math.max(24 * Math.min(1, W / 160), 20 * Math.min(1, W / 180))))) bad.push(`${lang}: ${ps.length} columns need ${(other + pic * (W + 10)).toFixed(0)} of ${t.at.w} with pictures ${W} x ${H}`);
       if (W < 180) capped.push(lang);
       if (!(x.j.svgMeasures || []).every((m) => m.imageWidth === W) || !(x.j.reportNotes || []).some((n) => /narrowed/.test(n) && new RegExp(String(W)).test(n))) bad.push(`${lang}: the answer must give the pictures' width and say they were narrowed: ${JSON.stringify(x.j.svgMeasures)}`);
     }
@@ -3191,7 +3202,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const vs = pageVisuals(ar, 'r12-ar').filter((v) => type(v) === 'slicer'), bad = [];
     const SL = ar.err ? 15 : +themeOf(ar, 'r12-ar').visualStyles.slicer['*'].header[0].textSize;
     vs.forEach((v) => { const p = v.visual.query.queryState.Values.projections[0], ht = v.visual.objects.header[0].properties.text, shown = ht ? S(ht) : p.displayName || p.nativeQueryRef, room = v.at.w - 2 * Math.round(8 * v.pg.h / 1080);
-      if (tw(shown, SL, true, 'Tahoma') > room + 0.5) bad.push(`"${shown}" needs ${Math.round(tw(shown, SL, true, 'Tahoma'))} of ${room}`);
+      // (changed in 0.2.9 rc1, PERF-COMPARE D3: a header takes a smaller text, down to 8pt, before it is shortened: measured at its written size)
+      const hs = v.visual.objects.header[0].properties.textSize, size = hs ? N(hs) : SL;
+      if (tw(shown, size, true, 'Tahoma') > room + 0.5) bad.push(`"${shown}" needs ${Math.round(tw(shown, size, true, 'Tahoma'))} of ${room} at ${size}pt`);
       if (!altOf(v).startsWith(shown.replace(/…\u200f?$/, '').trim())) bad.push(`"${shown}" is not the start of "${altOf(v)}"`); });
     chk(() => vs.length >= 2 && bad.length === 0, () => `#24: a slicer header must fit its slicer: ${bad.join(' | ')}`);
   }
@@ -3492,8 +3505,11 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const size = t && t.visual.objects.values ? N(t.visual.objects.values[0].properties.fontSize) : T;
     const shown = t ? t.visual.query.queryState.Values.projections.filter((p) => !(p.field.Aggregation && p.displayName === ' ')) : [];
     // the room each column takes at a size (the writer's own rule, columnRoom), and how many fields fit at the theme's size
-    const fitAt = (sz) => { const ps = fields.map((f) => { const m = f.match(/^(.+)\[(.+)\]$/); return /Total|Orders|Growth|Avg|Margin/.test(m[2]) ? { field: { Measure: {} }, nativeQueryRef: m[2] } : { field: { Column: {} }, nativeQueryRef: m[2] }; });
-      let used = 0, n = 0; for (const p of ps) { const r = Pb.columnRoom(p, sz, 'Segoe UI'); if (n < 2 || used + r <= t.at.w) { used += r; n++; } else break; } return n; };
+    // (changed in 0.2.9 rc1, item 2: the writer's rule is now cellRoom, the bold header or widest value plus the measured
+    // padding, within the table's width less 36, on the 960 x 720 page; a measure with its format in the model)
+    const FMT = { 'Total Sales': '#,0', Orders: '#,0', 'Avg Price': '#,0.00', 'Margin %': '0.00%', 'Total Sales Last Ramadan': '#,0' };
+    const fitAt = (sz) => { const ps = fields.map((f) => { const m = f.match(/^(.+)\[(.+)\]$/); return /Total|Orders|Growth|Avg|Margin/.test(m[2]) ? { t: m[1], m: m[2], format: FMT[m[2]] } : { t: m[1], c: m[2], type: 'string' }; });
+      let used = 0, n = 0; for (const p of ps) { const r = Pb.cellRoom(p, sz, 'Segoe UI', 720 / 1080); if (n < 2 || used + r <= t.at.w - 36) { used += r; n++; } else break; } return n; };
     chk(() => !x.err && t && size < T && size >= 8 && shown.length > fitAt(T) && shown.length === fitAt(size) && N(t.visual.objects.columnHeaders[0].properties.fontSize) === size && /text/i.test(JSON.stringify(x.j.reportNotes || [])),
       () => `recommendation 5: a narrow table's text first, then its columns (${t && t.at.w} wide): ${size}pt (theme ${T}), ${shown.length} shown; ${t && fitAt(T)} fit at ${T}pt, ${t && fitAt(size)} at ${size}pt ${short(x)}`);
   }
