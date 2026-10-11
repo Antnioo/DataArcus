@@ -25,7 +25,8 @@ const isDir = (f) => { try { return fs.lstatSync(f).isDirectory(); } catch (e) {
 const relRoot = (f) => path.relative(ROOT, f).split(path.sep).join('/');
 const readText = (f) => { const b = fs.readFileSync(f); return b[0] === 0xef && b[1] === 0xbb && b[2] === 0xbf ? b.subarray(3).toString('utf8') : b.toString('utf8'); };
 const json = (o) => JSON.stringify(o, null, 2) + '\n';
-const MONTHS_AR = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+// (the one Arabic month list, the writer's: the cross-review's duplicates, 11 Oct)
+const MONTHS_AR = require('../../assets/js/pbip-export.js').AR_MONTHS;
 const MONTH_COLUMN = 'Month Name (Arabic)', MONTH_SORT = 'Month Number (AR sort)';
 
 // ---- the original: a .pbip, a .Report folder, or a folder holding exactly one .Report ----
