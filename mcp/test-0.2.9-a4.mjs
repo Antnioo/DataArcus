@@ -59,7 +59,9 @@ export async function v029a4({ call, check, ROOT, fs = fs0 }) {
     ['paragraphs text', (R) => { const f = visualOf(R, 'textbox', false), j = J(f); j.visual.objects.general[0].properties.paragraphs = 'x'; W(f, j); }]]) {
     const name = 'A42 ' + tag; change(copy(name));
     const x = await run(name);
-    chk(() => !x.err && x.j.validator.ran && x.j.findings.some((f) => /^Microsoft validator /.test(f.source)) && Array.isArray(x.j.notChecked),
+    // (Microsoft's validator and the bundled schemas accept a text box whose paragraphs is a string: that case has no
+    // validator finding to keep, only the answer)
+    chk(() => !x.err && x.j.validator.ran && (tag === 'paragraphs text' || x.j.findings.some((f) => /^Microsoft validator /.test(f.source))) && Array.isArray(x.j.notChecked),
       () => `A4-2 (${tag}): check_report answers with the validator's findings, it never throws: ${short(x)}`);
   }
   {
