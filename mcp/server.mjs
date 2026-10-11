@@ -88,18 +88,6 @@ function writeScript(dir, base, script) {
 // same rule everywhere) written to the same file by check_model_health, plan_layout and create_report, next to the
 // project (never into the model). keys: the report's fields ("Table[Field]") to name; without keys, every object.
 const FORMAT_HOW = 'Save a copy of the Power BI file first; open the script file in Notepad, select all and copy; in Power BI Desktop open TMDL view, paste, choose Preview (only the formats of the listed objects change), then Apply. The script is never applied by DataArcus: the model\'s files are not changed until the user applies it. It holds the model\'s own definitions of the objects it changes, which is why it is in a file: don\'t read the file into the conversation unless the user asks.';
-// The format a report writes for a field (round 14, the laptop's finish on 6 Oct: "Total Sales Last Ramadan", built with
-// variables and no format in the model, showed 10,310.00 in tables where round 13 showed 10,310). The report never adds
-// decimals the model did not ask for: where the shared rule proposes "#,0.00" for a field the model leaves unformatted,
-// the report writes "#,0.##" (the separator, and decimals only where the value has them), unless the measure's DAX
-// divides or averages. The health check's fix script still proposes the rule's own format, for the user to approve.
-const DIVIDES_OR_AVERAGES = /\bDIVIDE\s*\(|(^|[^/])\/(?!\/)|\bAVERAGE[AX]?\s*\(/i;
-function reportFormatOf(o, kind, tables) {
-  const r = Fix.formatOf(o, kind, tables);
-  if (!r || r.format !== '#,0.00' || (o.formatString && String(o.formatString).trim())) return r;
-  const expr = Array.isArray(o.expression) ? o.expression.join('\n') : String(o.expression == null ? '' : o.expression);
-  return kind === 'measure' && DIVIDES_OR_AVERAGES.test(expr.replace(/\/\/.*$/gm, '').replace(/--.*$/gm, '')) ? r : Object.assign({}, r, { format: '#,0.##', reason: 'no format in the model: the separator, and decimals only where the value has them' });
-}
 // AUD-032 (round 20) and the code review's a (round 22): a name with a control character (a tab, a line break) is
 // never written raw into a fix script. Every script is built from the model without such tables, columns and
 // measures (the scripts touch only the objects they name, under "ref table"); skipped names them, escaped
@@ -230,7 +218,8 @@ function fieldsAndProblems(tables, fields) {
     if (!meas && !col) { problems.push(`${where}: ${ref} is not in the model`); return null; }
     if (wanted === 'm' && !meas) { problems.push(`${where}: ${ref} is a column; a measure is needed here`); return null; }
     if (wanted === 'c' && !col) { problems.push(`${where}: ${ref} is a measure; a column is needed here`); return null; }
-    if (meas && wanted !== 'c') { const k = Bind.measureCard(meas); return Object.assign({ t: t.name, m: meas.name, pct: k.pct, variant: false }, k.text ? { text: true } : {}, k.pctFormat ? { pctFormat: k.pctFormat } : {}, k.wholeFormat ? { wholeFormat: k.wholeFormat } : {}); }
+    // (A3-3: the picker's own measure builder, with the one format rule's formats; a measure the user names is never a variant)
+    if (meas && wanted !== 'c') { const k = Bind.measureOf(t, meas.name, tables); return Object.assign({ t: k.t, m: k.m, pct: k.pct, variant: false }, k.text ? { text: true } : {}, k.pctFormat ? { pctFormat: k.pctFormat } : {}, k.wholeFormat ? { wholeFormat: k.wholeFormat } : {}, k.tableFormat ? { tableFormat: k.tableFormat } : {}, k.fullFormat ? { fullFormat: k.fullFormat } : {}); }
     // (the cross-review's G9: the picker's own field builder, so a new picker property needs no edit here)
     return Bind.fieldOf(t, col.name);
   };
@@ -668,55 +657,17 @@ server.registerTool('create_report', {
     return SV.map((c, i) => { if (c.page != null && !hasTable[c.page - 1]) throw new Error(`Nothing was written. svgColumns[${i}]: page ${c.page} has no table (pages with a table: ${hasTable.map((h, k) => (h ? k + 1 : 0)).filter(Boolean).join(', ')}).`);
       return (c.at = Object.assign({ page: c.page != null ? c.page - 1 : first, t: c.t, m: c.label, expression: c.expression, w: c.w, h: c.h }, c.expressionNoNumber ? { expressionNoNumber: c.expressionNoNumber } : {})); });
   };
-  // a KPI card's number format on the report side (D8): the measure's own format with the separator, where the model's
-  // has none; a measure with no format gets "#,0.##". A percentage, or a format that has the separator: nothing
-  const cardFormats = [];
-  const cardFormatOf = (f) => {
-    if (!f || f.m == null) return null;
-    const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t), o = t && (t.measures || []).find((x) => x.name === f.m);
-    if (!o || o.formatStringDefinition || Bind.isPercent(f.m, o.formatString, o.expression)) return null;
-    // the shared format rule first (formats fixed at the source, 6 Oct 2026): a count #,0, a number #,0.00
-    const right = reportFormatOf(o, 'measure', model.tables || []);
-    if (right) return /%/.test(right.format) ? null : right.format;
-    return !o.formatString ? '#,0.##' : Fix.lacksSeparator(o.formatString) ? Fix.withSeparator(o.formatString) : null;
-  };
-  // Formats fixed at the source (the owner's ask, 6 Oct 2026): until the user applies the format script, the report
-  // shows each field in its right format by the same rule: a ratio as a percent and a count without decimals on the
-  // cards and the tooltip's card (the card rule's pctFormat and wholeFormat), and every field of a table in the rule's
-  // format on its own projection (tableFormat). Fields the visuals count or sum themselves are left as they are.
-  const rightOf = (f) => {
-    const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t);
-    const o = t && (f.m != null ? (t.measures || []).find((x) => x.name === f.m) : (t.columns || []).find((x) => x.name === f.c));
-    return o ? reportFormatOf(o, f.m != null ? 'measure' : 'column', model.tables || []) : null;
-  };
-  const withRightFormats = (b) => {
-    if (!b) return b;
-    const fix = (f, inTable) => {
-      if (!f || typeof f !== 'object' || f.t == null || f.agg != null) return f;
-      const r = rightOf(f); if (!r) return f;
-      const out = Object.assign({}, f);
-      if (f.m != null) {
-        if (/%/.test(r.format)) { out.pct = true; out.pctFormat = r.format; delete out.wholeFormat; }
-        else { delete out.pct; delete out.pctFormat; if (r.format === '#,0') out.wholeFormat = '#,0'; }
-      }
-      if (inTable) out.tableFormat = r.format;
-      return out;
-    };
-    const each = (v) => (Array.isArray(v) ? v.map((x) => fix(x, false)) : v && typeof v === 'object' && v.c == null && v.m == null ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fix(x, false)])) : fix(v, false));
-    return Object.fromEntries(Object.entries(b).map(([k, v]) => [k, k === 'choices' ? v : k === 'table' ? (v || []).map((x) => fix(x, true)) : k === 'slicers' ? v : each(v)]));
-  };
   // Round 10: the cards show automatic units with 2 decimals by default (kpiValues "auto"), so a card's own format is
   // written only with kpiValues "full" (and then on the tooltip's card too). A table's measure column gets the same
   // format on its projection in both modes (measured in Desktop: "format" on the projection, 13857 -> 13,857).
-  const FULL = a.kpiValues === 'full', tableFormats = [];
+  // (A3-3: the formats themselves are the picker's, by the one rule: cardFormat with kpiValues "full", tableFormat on a
+  // table's fields; here they are only listed for the answer)
+  // (round 13, seen in Desktop on 6 Oct: a card said 33.8% and the table's column of the same measure 0.34: a measure's
+  // table column carries the percent format its card shows: the picker's tableFormat)
+  const FULL = a.kpiValues === 'full', cardFormats = [], tableFormats = [];
   const withCardFormats = (b) => {
-    const one = (f) => { const code = FULL && cardFormatOf(f); if (!code) return f; if (!cardFormats.some((x) => x.field === keyOf(f))) cardFormats.push({ field: keyOf(f), format: code }); return Object.assign({}, f, { cardFormat: code }); };
-    // (round 13, seen in Desktop on 6 Oct: a card said 33.8% and the table's column of the same measure 0.34: where the
-    // report gives a measure's card a percent format the model does not have, its table column carries the same)
-    const pctCell = (f) => { if (!f || f.m == null || !f.pctFormat) return null; const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t), o = t && (t.measures || []).find((x) => x.name === f.m); return o && !o.formatStringDefinition && o.formatString !== f.pctFormat ? f.pctFormat : null; };
-    const cell = (f) => { if (f && f.m != null && f.tableFormat) { if (!tableFormats.some((x) => x.field === keyOf(f))) tableFormats.push({ field: keyOf(f), format: f.tableFormat }); return f; }
-      const code = f && f.m != null && (cardFormatOf(f) || pctCell(f)); if (!code) return f; if (!tableFormats.some((x) => x.field === keyOf(f))) tableFormats.push({ field: keyOf(f), format: code }); return Object.assign({}, f, { tableFormat: code }); };
-    const tip = b.tip && b.tip.card ? Object.assign({}, b.tip, { card: (() => { const code = FULL && cardFormatOf(b.tip.card); return code ? Object.assign({}, b.tip.card, { cardFormat: code }) : b.tip.card; })() }) : b.tip;
+    const list = (to, f, code) => { if (f && f.m != null && code && !to.some((x) => x.field === keyOf(f))) to.push({ field: keyOf(f), format: code }); };
+    (b.kpis || []).forEach((f) => list(cardFormats, f, f && f.cardFormat)); (b.table || []).forEach((f) => list(tableFormats, f, f && f.tableFormat));
     // round 18, S3 (the owner's yes, 6 Oct ~21:38 Dubai: "add the short day name column"): a chart category "Day Name"
     // whose table has "Day Short" (the Gulf calendar's, by name: metadata only) carries it, sorted as the calendar sorts
     // it; the writer uses it on a column chart where the full names would slant
@@ -725,7 +676,7 @@ server.registerTool('create_report', {
       if (!sc) return f; const by = sc.sortByColumn ? null : cs.find((c) => c.name === 'Day of Week');
       return Object.assign({}, f, { short: Object.assign({ t: f.t, c: 'Day Short', type: 'string' }, sc.sortByColumn ? { ordered: true } : by ? { sortBy: { t: f.t, c: by.name } } : {}) }); };
     const cats = b.cats ? Object.fromEntries(Object.entries(b.cats).map(([k, f]) => [k, short(f)])) : b.cats;
-    return Object.assign({}, b, { kpis: (b.kpis || []).map(one), table: (b.table || []).map(cell) }, b.tip ? { tip } : {}, b.cats ? { cats } : {}, b.catPool ? { catPool: b.catPool.map(short) } : {});
+    return Object.assign({}, b, b.cats ? { cats } : {}, b.catPool ? { catPool: b.catPool.map(short) } : {});
   };
   const usable = F && F.kpis ? F.kpis.map((k) => k.m) : Bind.suggest(pickFrom, 8, relsOf(m, a.lang)).kpis.filter(Boolean).map((k) => k.m);
   // Round 12 (#25): a model without measures gets its numbers from its columns, counted or summed by the visuals
@@ -742,7 +693,7 @@ server.registerTool('create_report', {
   const bindFor = (n) => {
     if (COUNTS.length) return countBind(n);
     // (round 22b, the reviewer's second review, item 4: the plan's measure, where it names one, decides what is related)
-    const b = Bind.suggest(pickFrom, n, Object.assign(relsOf(m, a.lang), F && F.measure ? { main: F.measure } : {}));
+    const b = Bind.suggest(pickFrom, n, Object.assign(relsOf(m, a.lang), F && F.measure ? { main: F.measure } : {}, FULL ? { kpiValues: 'full' } : {}));
     // (round 22b, X-04) the picker's "no category is related to the measure" stays with a binding built again from the
     // user's fields, while it still has no category
     // (round 23: the language note and the calendar's reason stay with a binding built again; the table's reach rule is
@@ -772,12 +723,11 @@ server.registerTool('create_report', {
     if (F.category) ch.catA = F.category;
     if (F.category2) ch.catB = F.category2;
     // the given slicers first; a slot left over keeps the picker's (never a slicer without a field)
+    if (F.table) ch.table = F.table;   // (A3-2: the user's own table fields, kept as named through the picker's build)
     if (F.slicers) { const same = (x, y) => x && y && x.t === y.t && x.c === y.c, rest = (ch.slicers || []).filter((s) => s && !F.slicers.some((g) => same(g, s))); ch.slicers = F.slicers.concat(rest).slice(0, 3); while (ch.slicers.length < 3) ch.slicers.push(null); unfixed(); }
     const nb = Bind.build(ch);
     // (round 16: categories the approved plan names are kept as given: no other category is put on its charts)
     if (F.category || F.category2) delete nb.catPool;
-    if (F.table) delete nb.notReached;   // (round 23: the user's own table fields are kept as named)
-    if (F.table) nb.table = F.table.map((x) => (x.m != null ? Object.assign({ t: x.t, m: x.m }, x.pctFormat ? { pctFormat: x.pctFormat } : {}) :Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {})));
     return carry(nb);
   };
   const cardNote = (asked, built, leftOut) => (COUNTS.length ? Object.assign({ asked, built, counted: KPI_COUNTS.slice(0, built).map((f) => f.name),
@@ -895,7 +845,7 @@ server.registerTool('create_report', {
     const subtitles = a.subtitles && Object.fromEntries(Object.entries(a.subtitles).map(([k, v]) => [subKeys[k] || k, v]));
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bound))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
+      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(inArabic(named(bound)))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
@@ -941,7 +891,7 @@ server.registerTool('create_report', {
     r = Pbip.build({
       name: a.name, title: a.title || a.name, lang: a.lang, rtl: rtlHand, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bindFor(kpisOf(a.pages))))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
+      model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(inArabic(named(bindFor(kpisOf(a.pages)))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
       // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
       texts: Object.assign({}, E.REPORT_TEXTS[a.lang === 'ar' ? 'ar' : 'en'], { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' }),
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, hand: true, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
