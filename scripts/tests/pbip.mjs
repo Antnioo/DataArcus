@@ -246,7 +246,10 @@ export default async function ({ browser, url }) {
       if (a.bad.length) bad.link.push(`${c.id}: ${a.bad.length} of ${a.charts} charts, ${a.bad[0]}`);
       // (round 1: the sample has a month, so two tooltip pages: the monthly trend, and the bar chart by category for the
       // charts that are themselves by month; of the page's charts at least one is linked to the trend)
-      if (t.bad.length || t.pages !== 2 || t.charts !== 2 || t.trend !== 1 || !a.trend) bad.tip.push(`${c.id}: ${t.bad[0] || `${t.pages} tooltip pages, ${t.charts} charts, ${t.trend} trend, ${a.trend} charts linked to it`}`);
+      // (0.2.9 design block, A2-1: a page under 800 wide is the single-focus layout on the website too, one line chart by
+      // month and no chart by category, so no chart can link to the trend there; the MCP's reports were already so)
+      const byCategory = E.projectPages(c.state.layout, c.lang, { second: true }).some((p) => p.slots.some((s) => ['bar', 'column', 'donut'].includes(s.kind)));
+      if (t.bad.length || t.pages !== 2 || t.charts !== 2 || t.trend !== 1 || (byCategory && !a.trend)) bad.tip.push(`${c.id}: ${t.bad[0] || `${t.pages} tooltip pages, ${t.charts} charts, ${t.trend} trend, ${a.trend} charts linked to it`}`);
       if (tb.bad.length) bad.table.push(`${c.id}: ${tb.bad.length} of ${tb.columns} columns, ${tb.bad[0]}`);
       // (round 23: an Arabic table's total row says «الإجمالي»: the name column hidden first, the row-label measure last)
       const rl = rowLabelProblems(b.files, rtl);

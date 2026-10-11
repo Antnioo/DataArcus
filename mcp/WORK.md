@@ -8,8 +8,20 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 The full report: `mcp/work/0.2.9-writer.md`. Done: A3-10 (`daxNames`), A3-11 (shown text without format characters), A3-7 and A3-8
 (writer side: the picker's `kind`/`rows`/`family`/`time` read when given, names measured by family), A3-9 (JSDoc contract, `checkBuild`,
 typed page filters), A3-12 (`build` split into `pbip-query.js`, `pbip-sizing.js`, `pbip-page.js`, `pbip-notes.js`; byte-identical on 970
-inputs), and the audit's writer items B-23 and B-06, then audit 6's A6-12 (`build` returns `bound`) and A6-14 (`Pbip.pageFilterOf`) with the server pointed at both. `npm test` 939 -> 971, golden unchanged. **Not done: A2-3 (item 7)**, blocked on
-`fix/0.2.9-design` (not pushed). Next: the reviewer reviews; the laptop proves W1-W8 of the report; A2-3 after builder 10's push.
+inputs), and the audit's writer items B-23 and B-06, then audit 6's A6-12 (`build` returns `bound`) and A6-14 (`Pbip.pageFilterOf`) with the server pointed at both. `npm test` 939 -> 971, golden unchanged. A2-3 (item 7): `fix/0.2.9-design` merged in, fitSlots in progress (see the report).
+
+## 0.2.9 design engine block (11 Oct, cloud builder 10; branch `fix/0.2.9-design` from `fix/0.2.9-gate` `d2300f9`; not merged, no PR)
+The audit `audit-2-design-engine.md` (A2-1 to A2-12, but A2-3) and the tools audit's A6-10, fixed at the root in the
+design block, one commit each, tests first (`mcp/test-0.2.9-design.mjs`, 50 checks). **The full report, the moved
+numbers, the slot shapes A2-3's fitSlots needs and the laptop list: `mcp/work/0.2.9-design.md`.**
+- The engine now holds: the small-page rule (`SMALL_PAGE`, `smallPage`, `fitLayout`; no second page under 800), kpis
+  0-6 (`kpiCards` gone; `maxKpis` caps pages), the table's share by its fields (`TABLE_NEED`, `tableWeight`), slot
+  `index`, `colours`/`roles`, the written `SCHEMA` and key lists, `repairState(state, report)`, labels `{ en, ar }` with
+  `label`/`texts` and `RTL_LANGS`, `MEASURED_FONTS`, `NAME_MAX`, `themeScaleOf`/`scaleTheme`.
+- `mcp/lib/files.mjs` is new (freeFile); server.mjs reaches the engine only through design.mjs.
+- Fixtures moved with their cause in `meta.changed`: the 640 x 360 cases and page-too-tall (A2-1). Nothing else.
+- **Next:** builder 11 does A2-3 (fitSlots) last; the laptop proves A2-1 (700-800 wide), A2-5 (5-6 field tables),
+  A2-11 (Verdana) and D1-D3 (DESKTOP-TESTS.md "0.2.9 design block").
 
 ## 0.2.9 integration (11 Oct, cloud builder 5; `fix/0.2.9-gate` is the integration branch for tonight's laptop proof; not merged, no PR)
 The reviewer's routine (11 Oct 07:36 UTC): merge checks, reader and the Arabic twin into this branch, then fix the gate
