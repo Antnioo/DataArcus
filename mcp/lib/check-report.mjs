@@ -158,7 +158,7 @@ function impactSummary(n, errors) {
 // p: a path inside the working folder. opts: { checks, lang ('auto'|'en'|'ar'), maxFindings (1-200, default 60) }
 export async function checkReport(p, opts) {
   const o = opts || {}, checks = (o.checks && o.checks.length ? o.checks : CHECKS), cap = Math.max(1, Math.min(200, o.maxFindings || 60));
-  const loc = locate(p);
+  const loc = locate(p, 'check_report');
   const sk = { big: [], deep: 0 };
   // the report's files, walked once (round 22b, item 6: three walks counted a folder past the depth three times)
   const reportFiles = walk(loc.reportDir, [], 20000, 0, sk);

@@ -6,7 +6,7 @@
 // placeholder (O-6) were caught wherever they happened, and the table rule was narrowed to the setting that was seen
 // to fail ("grow to fit" without word wrap), which removed most false alarms on hand-built reports.
 // A finding names the visual by its type, title (cleaned), place and size; it never quotes a text box or a value.
-import { keyOf, refOf } from './read-report.mjs';
+import { keyOf, refOf, typeName } from './read-report.mjs';
 
 export const LINT_RULES = {
   AXIS_TEXT_TIME_UNSORTED: 'a chart\'s axis is a text column with a time-like name, no sort-by column in the model, and the visual is not sorted by another field: it sorts A to Z (O-13)',
@@ -40,7 +40,8 @@ export function lint(inv, model, facts, opts) {
   const findings = [];
   // (o.titles false: the visual by its type and place only; check_report's lint never returns a report's text, the owner's
   // decision R5 of 11 Oct)
-  const where = (x) => `${x.type}${x.title && o.titles !== false ? ` "${x.title}"` : ''} at ${x.x},${x.y} ${x.w}x${x.h}`;
+  // (R4: the type through the reading block's screen, never raw; the place rounded)
+  const where = (x) => `${typeName(x.type)}${x.title && o.titles !== false ? ` "${x.title}"` : ''} at ${Math.round(x.x)},${Math.round(x.y)} ${Math.round(x.w)}x${Math.round(x.h)}`;
   const add = (rule, severity, p, x, why, fix, guess) => findings.push({ rule, severity, guess: !!guess, page: { n: p.n, name: p.name }, visual: x ? where(x) : null, why, fix });
   const typeOf = (f) => { const k = keyOf(f), m = k && cols[k]; return m ? m.type : null; };
   const isText = (f) => { if (!f || f.kind !== 'column') return false; const t = typeOf(f); return t == null || t === 'unknown' || t === 'string'; };
