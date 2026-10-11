@@ -18,6 +18,7 @@ import { proposeArabic } from './lib/arabic-names.mjs';
 import { addGulfCalendar, gulfFixInputs } from './lib/gulf-calendar.mjs';
 import { checkReport, CHECKS } from './lib/check-report.mjs';
 import { readReport } from './lib/read-report.mjs';
+import { planNative, writeNative } from './lib/native-copy.mjs';
 import { wordOf } from './lib/read-words.mjs';
 import { takenNames } from './lib/report-names.mjs';
 import { planLint } from './lib/plan-lint.mjs';
@@ -533,7 +534,7 @@ const themeOf = (p) => readUserFile(p, { kind: 'theme', max: THEME_MAX, json: tr
 const CREATE_REPORT_INPUTS = {
     path: modelPath.describe('The project folder or .SemanticModel folder the report will use'),
     planId: planIdInput.describe('The approved plan id from plan_layout (made with this model\'s path), after approve_plan with the user\'s go. Required: without it nothing is written'),
-    name: z.string().min(1).max(60).describe('Report name'),
+    name: z.string().min(1).max(60).optional().describe('Report name (needed for a new report; customVisualsFrom names its copy after the original)'),
     title: z.string().min(1).max(80).optional().describe('The title in the report\'s header; without it the header shows the report\'s name'),
     pages: z.array(z.object({ name: z.string(), width: z.number().int().default(1920), height: z.number().int().default(1080), slots: z.array(slot).min(1),
       background: z.string().optional().describe('PNG file for the page background, inside the DataArcus folder') })).min(1).optional()
@@ -577,13 +578,15 @@ const CREATE_REPORT_INPUTS = {
     subtitles: z.record(z.string(), z.string().max(120)).optional().describe('A subtitle under a chart\'s title, from the plan the user approved only, never made up: { "<the slot\'s role as plan_layout names it, or a hand-placed slot\'s title>": "<text>" }. Without it no subtitle is written'),
     noDataMessage: z.boolean().default(true).describe('Charts and tables show "No data for this selection" (Arabic: لا توجد بيانات لهذا الاختيار) when their measure is blank for the current filters, instead of an empty box: a report-level measure and a card under each visual; the model is not touched. A KPI card wide enough for it says "No data" (لا توجد بيانات) at its usual size, a narrower one keeps "--". On by default (proven in Power BI Desktop, October 2026); false leaves all of it out'),
     lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().optional().describe('Hand-placed pages only: right to left (Arabic: the default with lang "ar"; false keeps them left to right)'), font: z.string().default('Segoe UI'),
-    colors: z.object({ text: z.string(), card: z.string(), background: z.string(), accent: z.string() }).partial().optional()
+    colors: z.object({ text: z.string(), card: z.string(), background: z.string(), accent: z.string() }).partial().optional(),
+    // (0.2.9, custom visuals, step C: lib/native-copy.mjs)
+    customVisualsFrom: z.string().max(400).optional().describe('An existing PBIR report (its .pbip or .Report folder) whose custom visuals are replaced by native Power BI visuals in a NEW report "<name> native" next to it (the original is only read). In plan_layout: lists each replacement and what it loses, for the user\'s go. In create_report: with the approved planId, path (the model) and no pages or design, writes exactly the approved replacements')
 };
 // What a report plan pins (audit 6, A6-1): the design as planLayout resolves it (or the hand-placed pages), the page,
 // language and direction, the fields, page filters, display names, text, subtitles and SVG designs. plan_layout stores
 // it with the plan; create_report computes the same from its own inputs, and the gate compares them key by key.
 // (Not pinned: name, title, theme, logo, colours and the report options; see the audit report.)
-const REPORT_PINNED = ['pages', 'page', 'lang', 'dir', 'fields', 'pageFilters', 'displayNames', 'text', 'subtitles', 'svgColumns', 'svgCards'];
+const REPORT_PINNED = ['pages', 'page', 'lang', 'dir', 'fields', 'pageFilters', 'displayNames', 'text', 'subtitles', 'svgColumns', 'svgCards', 'customVisualsFrom'];
 const resolvedDesign = (a) => (a.pages ? null : planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang }).design);
 const reportPin = (a, fields) => Object.assign({ design: resolvedDesign(a) }, Object.fromEntries(REPORT_PINNED.map((k) => [k, k === 'fields' ? fields : a[k]])));
 // the other writers pin every input they were proposed with (A6-5)
@@ -593,7 +596,14 @@ server.registerTool('create_report', {
   description: 'Writes only with an approved planId from plan_layout for the same model: without one it refuses and writes nothing. Before calling this, call plan_layout with the model and the plan\'s fields (planFields), show the user the plan (pages, visuals, the fields on each, sizes, theme) and wait for their "go"; then approve_plan with the user\'s reply, and pass the planId and the approved plan\'s fields in fields, so the report shows exactly what the user approved. When the answer has formats (first), tell the user that first: the fields without their right number or date format and the script file that sets them in the model (never applied by this tool; the report already shows them right). Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme applied; each KPI card, chart and table on its own panel (drawn by the theme\'s solid visuals, or by a page\'s background image when one is given). The model and any existing report are never touched; the new report gets a free name. Every report also gets a hidden tooltip page, shown when a chart is hovered. An optional logo (a PNG or JPG in the DataArcus folder) goes in the header at its own shape. Give either pages (hand-placed slots) or a design (from generate_theme or plan_layout): with a design the pages, positions, second page, slide-in filter panel, labels and theme are exactly the DataArcus Theme Generator\'s project download. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge). A KPI card shows a measure as the model defines it, filtered only by the page filters you pass and the user\'s slicers: its label must say what the value really is. When the request limits the report to part of the data (for example "Ramadan only"), pass a page filter in pageFilters and show it in the plan: it filters every visual on the pages, the cards included. A visual outside the list of kinds is not supported: write nothing and offer the closest supported ones.' + UNTRUSTED,
   inputSchema: CREATE_REPORT_INPUTS, annotations: ADDS
 }, safe(async (a) => {
+  // (0.2.9, custom visuals, step C) the native copy of an existing report: only the approved replacements, nothing else
+  if (a.customVisualsFrom != null) {
+    if (a.pages || a.design) throw new Error('Nothing was written: customVisualsFrom writes the native copy of that report alone; a new design is its own plan. Call create_report with customVisualsFrom, path and the approved planId only.');
+    const mm = loadModel(a.path), p = Plans.gate('create_report', a.planId, modelKey(mm, a.path), reportPin(a, a.fields));
+    const done = writeNative(a.customVisualsFrom, mm, p); Plans.consume(a.planId, 'create_report'); return text(done);
+  }
   if (!a.pages === !a.design) throw new Error('Give create_report pages or a design, not both and not neither: pages with hand-placed slots, or the design from generate_theme or plan_layout.');
+  if (!a.name) throw new Error('Give create_report a name for the new report (Report name).');
   const m = loadModel(a.path);
   if (!m.folder) throw new Error('create_report needs a project folder with a .SemanticModel (save the .pbix as a Power BI project first).');
   // the gate (0.2.9, P-1): nothing is written without an approved plan for this model, whatever the AI app asks before a tool
@@ -1115,7 +1125,7 @@ server.registerTool('plan_layout', {
     focus: focusInput, tables: tablesInput,
     // (audit 6, A6-1: what create_report will write, pinned with the plan; the same definitions as create_report's)
     pages: CREATE_REPORT_INPUTS.pages, pageFilters: CREATE_REPORT_INPUTS.pageFilters, text: CREATE_REPORT_INPUTS.text, subtitles: CREATE_REPORT_INPUTS.subtitles,
-    svgColumns: CREATE_REPORT_INPUTS.svgColumns, svgCards: CREATE_REPORT_INPUTS.svgCards
+    svgColumns: CREATE_REPORT_INPUTS.svgColumns, svgCards: CREATE_REPORT_INPUTS.svgCards, customVisualsFrom: CREATE_REPORT_INPUTS.customVisualsFrom
   }, annotations: READS
 }, safe(async (a) => {
   // formats fixed at the source (the owner's ask, 6 Oct 2026): with the model, the fields that lack their right format
@@ -1173,10 +1183,17 @@ server.registerTool('plan_layout', {
         az: 'A to Z: this text column has no sort column, and no date of a date table orders it. Pick a date or month column with an order, or add a sort-by column in the model, before showing the plan.' }[tp.order];
       timeAxis = { timeAxis: { field: key, order: tp.order, how, sayInPlan: 'Say in the plan how the trend\'s axis is ordered and how many months it shows.' } }; }
   }
-  const writes = [`the report "<name>.Report" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`];
+  // (0.2.9, custom visuals, step C) the replacements of an existing report's custom visuals, each with what it loses; the
+  // plan pins the approved mapping, and create_report writes only that, in a new "<name> native" report
+  let customVisuals = {}, cvEntries = null;
+  if (a.customVisualsFrom != null) {
+    if (!m0) planProblems.push('customVisualsFrom needs path (the report\'s model), so each replacement is checked against the model\'s types and formats.');
+    else { const cv = planNative(a.customVisualsFrom, m0); cvEntries = cv.entries; customVisuals = { customVisuals: cv.answer }; if (!cv.entries.length) planProblems.push('customVisualsFrom: ' + (cv.answer.none || 'no custom visual of this report has a native replacement') + ' (nothing to write).'); if (cv.answer.taken) planProblems.push('customVisualsFrom: ' + cv.answer.taken); }
+  }
+  const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0).writes : [`the report "<name>.Report" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`];
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     // (Z-01: a report plan allows create_report only, which needs the model; without path no plan id is given)
-    : model ? { plan: Plans.proposal(Plans.propose('report', model, writes, { pins: { create_report: reportPin(a, a.planFields) } }), planned ? { fields: planned } : {}) }
+    : model ? { plan: Plans.proposal(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: reportPin(a, a.planFields) } }, cvEntries ? { customVisuals: cvEntries } : {})), planned ? { fields: planned } : {}) }
       : { noPlan: 'No plan id: this layout was planned without the model (path). For a report, call plan_layout with the model; for a separate theme file, generate_theme proposes its own theme plan.' };
   // round 15 (the owner's go on round 13's recommendation 1): gradient bars are the default for designed pages, and the
   // plan the user approves says so
@@ -1192,7 +1209,7 @@ server.registerTool('plan_layout', {
     } catch (e) { return { skipped: 'the planned page could not be built for the lint: ' + String(e && e.message || e).slice(0, 200) }; }
   })() };
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a light tint and the largest in the theme\'s colour (the bar\'s length tells the size; the colour ranks). For one colour, create_report takes chartColors "solid".' } };
-  return text(Object.assign(formats, arabicNames, plan, timeAxis, designLint, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.' }, { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
+  return text(Object.assign(formats, arabicNames, customVisuals, plan, timeAxis, designLint, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.' }, { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
 }));
 
 server.registerTool('add_gulf_calendar', {
