@@ -442,7 +442,8 @@ server.registerTool('check_model_health', {
 }, safe(async ({ path: p, maxItems, columnTypes, weekStart, country, asOf, planId }) => {
   const m = loadModel(p);
   // the gate (0.2.9): the scripts are written only with an approved plan; without one they are named, for after go
-  const write = planId != null && planId !== '' && !!Plans.gate('check_model_health', planId, modelKey(m, p)), wouldWrite = [];
+  const pinH = { path: p, maxItems, columnTypes, weekStart, country, asOf };
+  const write = planId != null && planId !== '' && !!Plans.gate('check_model_health', planId, modelKey(m, p), pinH), wouldWrite = [];
   const AFTER_GO = 'the user has not approved it. Tell the user which script files this check would write, wait for their go, call approve_plan with the planId of this answer and the user\'s reply, then call check_model_health again with planId.';
   // where a fix script may go: next to the project (never inside the model folder), or beside a model file. When the
   // working folder is the model folder itself there is no such place inside it: no file, and the answer says why
@@ -521,7 +522,7 @@ server.registerTool('check_model_health', {
   const addGulf = gulfFixInputs(gulfCalendar);
   if (addGulf) gulfCalendar.fixes.addGulfCalendar = addGulf;
   // the plan for the scripts, when there are any to write and no approved plan was given
-  const plan = !write && wouldWrite.length ? { plan: Plans.proposal(Plans.propose('scripts', modelKey(m, p), wouldWrite.map((f) => `the fix script "${f}" next to the project (never applied: the user applies it in TMDL view)`))) } : {};
+  const plan = !write && wouldWrite.length ? { plan: Plans.proposal(Plans.propose('scripts', modelKey(m, p), wouldWrite.map((f) => `the fix script "${f}" next to the project (never applied: the user applies it in TMDL view)`), { pins: { check_model_health: pinH } })) } : {};
   return text({
     source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report, ...plan,
     // (0.2.9 item 13) which reports beside the model were read: only this model's (lib/model.mjs, notThisModel)
@@ -552,10 +553,8 @@ const slot = z.object({
   title: z.string().optional(), x: z.number(), y: z.number(), w: z.number().positive(), h: z.number().positive(),
   text: z.string().min(1).max(400).optional().describe('A text slot\'s sentence (from the approved plan); a text slot without one is left out')
 });
-server.registerTool('create_report', {
-  title: 'Create a report project for an existing model',
-  description: 'Writes only with an approved planId from plan_layout for the same model: without one it refuses and writes nothing. Before calling this, call plan_layout with the model and the plan\'s fields (planFields), show the user the plan (pages, visuals, the fields on each, sizes, theme) and wait for their "go"; then approve_plan with the user\'s reply, and pass the planId and the approved plan\'s fields in fields, so the report shows exactly what the user approved. When the answer has formats (first), tell the user that first: the fields without their right number or date format and the script file that sets them in the model (never applied by this tool; the report already shows them right). Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme applied; each KPI card, chart and table on its own panel (drawn by the theme\'s solid visuals, or by a page\'s background image when one is given). The model and any existing report are never touched; the new report gets a free name. Every report also gets a hidden tooltip page, shown when a chart is hovered. An optional logo (a PNG or JPG in the DataArcus folder) goes in the header at its own shape. Give either pages (hand-placed slots) or a design (from generate_theme or plan_layout): with a design the pages, positions, second page, slide-in filter panel, labels and theme are exactly the DataArcus Theme Generator\'s project download. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge). A KPI card shows a measure as the model defines it, filtered only by the page filters you pass and the user\'s slicers: its label must say what the value really is. When the request limits the report to part of the data (for example "Ramadan only"), pass a page filter in pageFilters and show it in the plan: it filters every visual on the pages, the cards included. A visual outside the list of kinds is not supported: write nothing and offer the closest supported ones.' + UNTRUSTED,
-  inputSchema: {
+// create_report's inputs, one definition: plan_layout takes the ones a plan pins (audit 6, A6-1)
+const CREATE_REPORT_INPUTS = {
     path: modelPath.describe('The project folder or .SemanticModel folder the report will use'),
     planId: planIdInput.describe('The approved plan id from plan_layout (made with this model\'s path), after approve_plan with the user\'s go. Required: without it nothing is written'),
     name: z.string().min(1).max(60).describe('Report name'),
@@ -603,21 +602,27 @@ server.registerTool('create_report', {
     noDataMessage: z.boolean().default(true).describe('Charts and tables show "No data for this selection" (Arabic: لا توجد بيانات لهذا الاختيار) when their measure is blank for the current filters, instead of an empty box: a report-level measure and a card under each visual; the model is not touched. A KPI card wide enough for it says "No data" (لا توجد بيانات) at its usual size, a narrower one keeps "--". On by default (proven in Power BI Desktop, October 2026); false leaves all of it out'),
     lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().optional().describe('Hand-placed pages only: right to left (Arabic: the default with lang "ar"; false keeps them left to right)'), font: z.string().default('Segoe UI'),
     colors: z.object({ text: z.string(), card: z.string(), background: z.string(), accent: z.string() }).partial().optional()
-  }, annotations: ADDS
+};
+// What a report plan pins (audit 6, A6-1): the design as planLayout resolves it (or the hand-placed pages), the page,
+// language and direction, the fields, page filters, display names, text, subtitles and SVG designs. plan_layout stores
+// it with the plan; create_report computes the same from its own inputs, and the gate compares them key by key.
+// (Not pinned: name, title, theme, logo, colours and the report options; see the audit report.)
+const REPORT_PINNED = ['pages', 'page', 'lang', 'dir', 'fields', 'pageFilters', 'displayNames', 'text', 'subtitles', 'svgColumns', 'svgCards'];
+const resolvedDesign = (a) => (a.pages ? null : planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang }).design);
+const reportPin = (a, fields) => Object.assign({ design: resolvedDesign(a) }, Object.fromEntries(REPORT_PINNED.map((k) => [k, k === 'fields' ? fields : a[k]])));
+// the other writers pin every input they were proposed with (A6-5)
+const inputsPin = (a) => Object.fromEntries(Object.entries(a || {}).filter(([k]) => k !== 'planId'));
+server.registerTool('create_report', {
+  title: 'Create a report project for an existing model',
+  description: 'Writes only with an approved planId from plan_layout for the same model: without one it refuses and writes nothing. Before calling this, call plan_layout with the model and the plan\'s fields (planFields), show the user the plan (pages, visuals, the fields on each, sizes, theme) and wait for their "go"; then approve_plan with the user\'s reply, and pass the planId and the approved plan\'s fields in fields, so the report shows exactly what the user approved. When the answer has formats (first), tell the user that first: the fields without their right number or date format and the script file that sets them in the model (never applied by this tool; the report already shows them right). Writes a new Power BI report (PBIR) next to the user\'s model: every visual placed, bound to the model\'s fields (suggested, or given), theme applied; each KPI card, chart and table on its own panel (drawn by the theme\'s solid visuals, or by a page\'s background image when one is given). The model and any existing report are never touched; the new report gets a free name. Every report also gets a hidden tooltip page, shown when a chart is hovered. An optional logo (a PNG or JPG in the DataArcus folder) goes in the header at its own shape. Give either pages (hand-placed slots) or a design (from generate_theme or plan_layout): with a design the pages, positions, second page, slide-in filter panel, labels and theme are exactly the DataArcus Theme Generator\'s project download. Open the new .pbip in Power BI Desktop afterwards (or reload it with the Desktop bridge). A KPI card shows a measure as the model defines it, filtered only by the page filters you pass and the user\'s slicers: its label must say what the value really is. When the request limits the report to part of the data (for example "Ramadan only"), pass a page filter in pageFilters and show it in the plan: it filters every visual on the pages, the cards included. A visual outside the list of kinds is not supported: write nothing and offer the closest supported ones.' + UNTRUSTED,
+  inputSchema: CREATE_REPORT_INPUTS, annotations: ADDS
 }, safe(async (a) => {
   if (!a.pages === !a.design) throw new Error('Give create_report pages or a design, not both and not neither: pages with hand-placed slots, or the design from generate_theme or plan_layout.');
   const m = loadModel(a.path);
   if (!m.folder) throw new Error('create_report needs a project folder with a .SemanticModel (save the .pbix as a Power BI project first).');
   // the gate (0.2.9, P-1): nothing is written without an approved plan for this model, whatever the AI app asks before a tool
-  const approved = Plans.gate('create_report', a.planId, modelKey(m, a.path));
-  // (the cross-review's G5, 11 Oct: the plan checked against the tools' limits is the plan written: the fields approved with
-  // it, where plan_layout was given them, are the report's; any other is refused, named, and nothing is written)
-  const plannedFields = approved.data && approved.data.fields;
-  if (plannedFields) {
-    const norm = (v) => JSON.stringify(Array.isArray(v) ? v.map((x) => String(x).trim()) : v == null ? null : String(v).trim());
-    const keys = [...new Set(Object.keys(plannedFields).concat(Object.keys(a.fields || {})))], off = keys.filter((k) => norm((a.fields || {})[k]) !== norm(plannedFields[k]));
-    if (off.length) throw new Error(`Nothing was written: the fields differ from the approved plan's in ${off.join(', ')} (approved: ${off.map((k) => `${k} ${norm(plannedFields[k])}`).join('; ')}). Pass the approved plan's fields as they are, or make a new plan with plan_layout, show it and wait for the user's go.`);
-  }
+  // (the gate: below, once the inputs themselves are checked: a refused input is told as itself, and nothing is written either way)
+  // (the cross-review's G5, then audit 6's A6-1: the fields and every other pinned input are the approved plan's: the gate above)
   // the part of the model the report is about: on a large model a focus (or tables) is needed, as in suggest_fields
   const sc = scopeOf(m, { focus: a.focus, tables: a.tables });
   if (sc.needsFocus) throw new Error(`Nothing was written. ${sc.why} ${sc.how} Areas in this model: ${sc.areas.map((x) => x.area).join(', ') || 'none (no measure display folders)'}.`);
@@ -625,6 +630,9 @@ server.registerTool('create_report', {
   // KPI cards: never more than the measures a card can show (no card is ever written without a field)
   // the approved plan's fields (a.fields): each name checked against the model, then bound as given
   const F = resolveFields(m.tables, a.fields);
+  // the gate (0.2.9, P-1; audit 6, A6-1): nothing is written without an approved plan for this model, whose pinned inputs
+  // (design, page, language, fields, filters, names, texts, SVG designs) are these
+  Plans.gate('create_report', a.planId, modelKey(m, a.path), reportPin(a, a.fields));
   // Round 12 (#26): a measure that shows text ("Yes", a date) is never a KPI card, even when the plan names it: left out, and told
   const textKpis = F && F.kpis ? F.kpis.filter((k) => k.text) : [];
   if (textKpis.length) F.kpis = F.kpis.filter((k) => !k.text);
@@ -1168,9 +1176,9 @@ server.registerTool('generate_theme', {
   if (a.planId == null || a.planId === '') {
     const base = E.fileBase(design.name) + '.json';
     return text({ written: false, fileAfterGo: base, page, colours, sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}),
-      plan: Plans.proposal(Plans.propose('theme', null, [`the theme file "${base}" in ${a.folder ? 'the folder ' + a.folder : 'the working folder'} (a new file, never over another)`]), { orWith: 'For a report, plan_layout\'s planId covers this file too: create_report puts the theme in the report itself, so a separate theme file is needed only when the user asks for one.' }) });
+      plan: Plans.proposal(Plans.propose('theme', null, [`the theme file "${base}" in ${a.folder ? 'the folder ' + a.folder : 'the working folder'} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) } }), { orWith: 'For a report, plan_layout\'s planId covers this file too: create_report puts the theme in the report itself, so a separate theme file is needed only when the user asks for one.' }) });
   }
-  Plans.gate('generate_theme', a.planId, null);
+  Plans.gate('generate_theme', a.planId, null, inputsPin(a));
   const file = freeFile(a.folder, E.fileBase(design.name), '.json');
   writeNew(file, JSON.stringify(E.buildTheme(design, a.lang), null, 2));
   return text({ path: file, file: path.basename(file), page, colours, sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}) });
@@ -1214,7 +1222,10 @@ server.registerTool('plan_layout', {
     displayNames: z.record(z.string(), z.string()).optional().describe('With path and lang "ar": display names the user already gave, as { "Table[Field]": "الاسم" }; the others get a proposal'),
     planFields: z.object({ kpis: z.array(z.string()).max(40), measure: z.string(), timeAxis: z.string(), category: z.string(), category2: z.string(), table: z.array(z.string()).max(40), slicers: z.array(z.string()).max(40) })
       .partial().strict().optional().describe('With path: the plan\'s fields in create_report\'s fields shape (Table[Field]); each is checked against the model and the tools\' limits before the plan is shown'),
-    focus: focusInput, tables: tablesInput
+    focus: focusInput, tables: tablesInput,
+    // (audit 6, A6-1: what create_report will write, pinned with the plan; the same definitions as create_report's)
+    pages: CREATE_REPORT_INPUTS.pages, pageFilters: CREATE_REPORT_INPUTS.pageFilters, text: CREATE_REPORT_INPUTS.text, subtitles: CREATE_REPORT_INPUTS.subtitles,
+    svgColumns: CREATE_REPORT_INPUTS.svgColumns, svgCards: CREATE_REPORT_INPUTS.svgCards
   }, annotations: READS
 }, safe(async (a) => {
   // formats fixed at the source (the owner's ask, 6 Oct 2026): with the model, the fields that lack their right format
@@ -1267,7 +1278,7 @@ server.registerTool('plan_layout', {
   }
   const writes = [`the report "<name>.Report" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`, 'the theme file, only if the user asks for one (generate_theme)'];
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
-    : { plan: Plans.proposal(Plans.propose('report', model, writes, planned ? { fields: planned } : undefined), Object.assign(model ? {} : { noModel: 'Made without path: this plan id allows only a theme file. For a report, call plan_layout with the model (path).' }, planned ? { fields: planned } : {})) };
+    : { plan: Plans.proposal(Plans.propose('report', model, writes, model ? { pins: { create_report: reportPin(a, a.planFields) } } : undefined), Object.assign(model ? {} : { noModel: 'Made without path: this plan id allows only a theme file. For a report, call plan_layout with the model (path).' }, planned ? { fields: planned } : {})) };
   // round 15 (the owner's go on round 13's recommendation 1): gradient bars are the default for designed pages, and the
   // plan the user approves says so
   // 0.2.9 item 11 (LAYER checks): the design lint of the planned page (the writer's page built in memory, read and
@@ -1307,7 +1318,7 @@ server.registerTool('add_gulf_calendar', {
 }, safe(async (a) => {
   const m = loadModel(a.path);
   // the gate (0.2.9): with an approved plan the script is written; without one every check runs and the file is only named
-  const write = a.planId != null && a.planId !== '' && !!Plans.gate('add_gulf_calendar', a.planId, modelKey(m, a.path));
+  const write = a.planId != null && a.planId !== '' && !!Plans.gate('add_gulf_calendar', a.planId, modelKey(m, a.path), inputsPin(a));
   // the script's place, as check_model_health's fix scripts: next to the project, never inside the model folder
   const scriptDir = m.folder ? m.projectDir : path.dirname(inside(a.path));
   const scriptBase = m.folder ? path.basename(m.folder).replace(/\.(SemanticModel|Dataset)$/i, '') : path.basename(inside(a.path)).replace(/\.[^.]+$/, '');
@@ -1315,7 +1326,7 @@ server.registerTool('add_gulf_calendar', {
   const named = (dir, base) => path.join(dir, base + '.tmdl');
   const { scriptFile, howToApply, ...rest } = addGulfCalendar(m, a, { Gulf, Fix, writeScript: named, scriptDir, scriptBase });
   return text(Object.assign({ written: false, scriptAfterGo: path.basename(scriptFile) }, rest, { howToApplyAfterGo: howToApply,
-    plan: Plans.proposal(Plans.propose('calendar', modelKey(m, a.path), [`the TMDL script "${path.basename(scriptFile)}" next to the project, adding the table ${JSON.stringify(rest.table)} (${rest.range.from} to ${rest.range.to})${rest.relationships.length ? ' and ' + rest.relationships.length + ' relationship' + (rest.relationships.length > 1 ? 's' : '') : ''}; never applied: the user applies it in TMDL view`])) }));
+    plan: Plans.proposal(Plans.propose('calendar', modelKey(m, a.path), [`the TMDL script "${path.basename(scriptFile)}" next to the project, adding the table ${JSON.stringify(rest.table)} (${rest.range.from} to ${rest.range.to})${rest.relationships.length ? ' and ' + rest.relationships.length + ' relationship' + (rest.relationships.length > 1 ? 's' : '') : ''}; never applied: the user applies it in TMDL view`], { pins: { add_gulf_calendar: inputsPin(a) } })) }));
 }));
 
 server.registerTool('create_arabic_twin', {
