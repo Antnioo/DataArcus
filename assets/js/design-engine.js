@@ -108,20 +108,26 @@
   const toPage = (v, c) => Math.round(v * page(c).s);
   // a box in page units: its edges are rounded, not its size, so equal margins and gaps stay equal after rounding
   const boxOf = (s, c) => { const x = toPage(s.x, c), y = toPage(s.y, c); return { x, y, w: toPage(s.x + s.w, c) - x, h: toPage(s.y + s.h, c) - y }; };
-  const KINDS = { kpi: ['Card', 'بطاقة'], line: ['Line chart', 'مخطط خطي'], bar: ['Bar chart', 'مخطط شريطي'], column: ['Column chart', 'مخطط أعمدة'], donut: ['Donut chart', 'مخطط دائري'], table: ['Table or matrix', 'جدول أو مصفوفة'], text: ['Text box or narrative', 'مربع نص أو سرد'], slicer: ['Slicers', 'مقسمات (Slicers)'], title: ['Text box (page title)', 'مربع نص (عنوان الصفحة)'], logo: ['Image (logo)', 'صورة (الشعار)'] };
+  // Labels keyed by language, with an English fallback (0.2.9, the audit's A2-9: every label was an [en, ar] pair, so a
+  // third language meant editing each one). T makes one; label(x, lang) reads one in a language (an older [en, ar] pair
+  // is read too).
+  const T = (en, ar) => ({ en, ar });
+  const baseLang = (lang) => String(lang || '').toLowerCase().split(/[-_]/)[0];
+  const label = (x, lang) => (Array.isArray(x) ? (baseLang(lang) === 'ar' ? x[1] : x[0]) : x && typeof x === 'object' ? (x[baseLang(lang)] != null ? x[baseLang(lang)] : x.en) : x);
+  const KINDS = { kpi: T('Card', 'بطاقة'), line: T('Line chart', 'مخطط خطي'), bar: T('Bar chart', 'مخطط شريطي'), column: T('Column chart', 'مخطط أعمدة'), donut: T('Donut chart', 'مخطط دائري'), table: T('Table or matrix', 'جدول أو مصفوفة'), text: T('Text box or narrative', 'مربع نص أو سرد'), slicer: T('Slicers', 'مقسمات (Slicers)'), title: T('Text box (page title)', 'مربع نص (عنوان الصفحة)'), logo: T('Image (logo)', 'صورة (الشعار)') };
   const LAYOUTS = {
-    exec: { name: ['Executive summary', 'ملخص تنفيذي'], kpis: 4, kpiH: 96, filters: false, flex: [1.3, 1],
-      rows: [[[2, 'line', ['Main trend', 'الاتجاه الرئيسي']], [1, 'bar', ['Breakdown', 'التوزيع']]], [[1, 'column', ['Comparison', 'المقارنة']], [1, 'table', ['Detail', 'التفاصيل']]]],
-      why: [['Key numbers first, where the eye starts', 'الأرقام الأهم أولًا حيث تبدأ العين'], ['One screen, no scrolling', 'شاشة واحدة بدون تمرير'], ['8 visuals at most', '8 عناصر كحد أقصى']] },
-    analysis: { name: ['Analysis', 'تحليل'], kpis: 3, kpiH: 84, filters: true, flex: [1, 1.25],
-      rows: [[[1, 'column', ['Main chart', 'المخطط الرئيسي']]], [[1, 'table', ['Detail table', 'جدول التفاصيل']]]],
-      why: [['All filters in one place', 'كل الفلاتر في مكان واحد'], ['Overview on top, detail below', 'النظرة العامة في الأعلى والتفاصيل في الأسفل'], ['A wide table that is easy to read', 'جدول عريض سهل القراءة']] },
-    ops: { name: ['Operations monitor', 'مراقبة العمليات'], kpis: 6, kpiH: 84, filters: false, flex: [1, 1],
-      rows: [[[1, 'line', ['Trend', 'الاتجاه']], [1, 'bar', ['Ranking', 'الترتيب']], [1, 'donut', ['Mix', 'التركيبة']]], [[1, 'column', ['Volume', 'الحجم']], [1, 'bar', ['Exceptions', 'الاستثناءات']], [1, 'table', ['Watch list', 'قائمة المتابعة']]]],
-      why: [['Equal tiles for equal importance', 'مربعات متساوية لأهمية متساوية'], ['Dense but on one grid', 'كثيف لكن على شبكة واحدة'], ['Made for a daily check or a wall screen', 'مصمم للمتابعة اليومية أو شاشة العرض']] },
-    focus: { name: ['Single focus', 'رسالة واحدة'], kpis: 3, kpiH: 96, filters: false, flex: [1],
-      rows: [[[2.2, 'line', ['Hero chart', 'المخطط الرئيسي']], [1, 'text', ['What it means', 'ماذا يعني']]]],
-      why: [['One message per page', 'رسالة واحدة لكل صفحة'], ['A short text explains the chart', 'نص قصير يشرح المخطط'], ['Generous white space', 'مساحة بيضاء مريحة']] }
+    exec: { name: T('Executive summary', 'ملخص تنفيذي'), kpis: 4, kpiH: 96, filters: false, flex: [1.3, 1],
+      rows: [[[2, 'line', T('Main trend', 'الاتجاه الرئيسي')], [1, 'bar', T('Breakdown', 'التوزيع')]], [[1, 'column', T('Comparison', 'المقارنة')], [1, 'table', T('Detail', 'التفاصيل')]]],
+      why: [T('Key numbers first, where the eye starts', 'الأرقام الأهم أولًا حيث تبدأ العين'), T('One screen, no scrolling', 'شاشة واحدة بدون تمرير'), T('8 visuals at most', '8 عناصر كحد أقصى')] },
+    analysis: { name: T('Analysis', 'تحليل'), kpis: 3, kpiH: 84, filters: true, flex: [1, 1.25],
+      rows: [[[1, 'column', T('Main chart', 'المخطط الرئيسي')]], [[1, 'table', T('Detail table', 'جدول التفاصيل')]]],
+      why: [T('All filters in one place', 'كل الفلاتر في مكان واحد'), T('Overview on top, detail below', 'النظرة العامة في الأعلى والتفاصيل في الأسفل'), T('A wide table that is easy to read', 'جدول عريض سهل القراءة')] },
+    ops: { name: T('Operations monitor', 'مراقبة العمليات'), kpis: 6, kpiH: 84, filters: false, flex: [1, 1],
+      rows: [[[1, 'line', T('Trend', 'الاتجاه')], [1, 'bar', T('Ranking', 'الترتيب')], [1, 'donut', T('Mix', 'التركيبة')]], [[1, 'column', T('Volume', 'الحجم')], [1, 'bar', T('Exceptions', 'الاستثناءات')], [1, 'table', T('Watch list', 'قائمة المتابعة')]]],
+      why: [T('Equal tiles for equal importance', 'مربعات متساوية لأهمية متساوية'), T('Dense but on one grid', 'كثيف لكن على شبكة واحدة'), T('Made for a daily check or a wall screen', 'مصمم للمتابعة اليومية أو شاشة العرض')] },
+    focus: { name: T('Single focus', 'رسالة واحدة'), kpis: 3, kpiH: 96, filters: false, flex: [1],
+      rows: [[[2.2, 'line', T('Hero chart', 'المخطط الرئيسي')], [1, 'text', T('What it means', 'ماذا يعني')]]],
+      why: [T('One message per page', 'رسالة واحدة لكل صفحة'), T('A short text explains the chart', 'نص قصير يشرح المخطط'), T('Generous white space', 'مساحة بيضاء مريحة')] }
   };
   // v2: corners 0/8/16, and the KPI accent bar became a choice of side (from the old on/off accentBar)
   const upgrade = (l) => {
@@ -134,8 +140,10 @@
     if (l && l.v < 3) { if (!l.page) l.page = '1280x720'; l.v = 3; }
     return l;
   };
-  // Reading direction: the layout's own, or the page's language when none is chosen
-  const rtl = (c, lang) => (c.dir ? c.dir === 'rtl' : lang === 'ar');
+  // Reading direction: the layout's own, or the page's language when none is chosen: a language written right to left
+  // (0.2.9, A2-9: a set, not only Arabic; a region like ar-AE counts as its language)
+  const RTL_LANGS = ['ar', 'arc', 'ckb', 'dv', 'fa', 'he', 'ku', 'ps', 'sd', 'ug', 'ur', 'yi'];
+  const rtl = (c, lang) => (c.dir ? c.dir === 'rtl' : RTL_LANGS.includes(baseLang(lang)));
 
   // Small pages (0.2.9, the audit's A2-1: the rule moved here from the MCP's design.mjs, so the website and the MCP lay
   // out the same page). Under 800 wide the executive layout's four charts and table do not fit (cut card values,
@@ -205,14 +213,14 @@
     if (c.header) {
       const th = z.hh - 24, ratio = opt && +opt.logoRatio > 0 ? +opt.logoRatio : 0;
       const logoW = ratio ? Math.max(1, Math.min(RANGE.logoW[1], Math.round(th * ratio))) : z.logoW, lx = PW - M - 8 - logoW;
-      slots.push({ kind: 'title', role: ['Page title', 'عنوان الصفحة'], x: M + 8, y: 12, w: Math.min(560, lx - 24 - (M + 8)), h: th });
-      slots.push({ kind: 'logo', role: ['Logo', 'الشعار'], x: lx, y: 12, w: logoW, h: th });
+      slots.push({ kind: 'title', role: T('Page title', 'عنوان الصفحة'), x: M + 8, y: 12, w: Math.min(560, lx - 24 - (M + 8)), h: th });
+      slots.push({ kind: 'logo', role: T('Logo', 'الشعار'), x: lx, y: 12, w: logoW, h: th });
     }
     let x0 = M, cw = PW - 2 * M;
-    if (c.filters && z.fpos === 'top') { slots.push({ kind: 'slicer', role: ['Filters', 'الفلاتر'], x: M, y: top, w: cw, h: z.fh, rail: true }); top += z.fh + G; }
+    if (c.filters && z.fpos === 'top') { slots.push({ kind: 'slicer', role: T('Filters', 'الفلاتر'), x: M, y: top, w: cw, h: z.fh, rail: true }); top += z.fh + G; }
     else if (c.filters) {
       const fx = z.fpos === 'end' ? PW - M - z.fw : M;
-      slots.push({ kind: 'slicer', role: ['Filters', 'الفلاتر'], x: fx, y: top, w: z.fw, h: PH - M - top, rail: true });
+      slots.push({ kind: 'slicer', role: T('Filters', 'الفلاتر'), x: fx, y: top, w: z.fw, h: PH - M - top, rail: true });
       cw = PW - 2 * M - z.fw - G; if (z.fpos !== 'end') x0 = M + z.fw + G;
     }
     // the first chart row: the main chart takes its share, the others split the rest by their weights
@@ -230,7 +238,7 @@
     // (the owner, 6 Oct 2026; round 20: the website and the MCP alike) on a narrow page a table beside a chart takes the
     // wider share of its row, by its need (TABLE_NEED); a design that says wideTable false keeps equal shares
     const narrow = c.wideTable !== false && PW < 1080, tw = tableWeight(opt && opt.tableFields), share = (cols) => (narrow && cols.length > 1 ? cols.map((col) => (col[1] === 'table' ? [col[0] * tw, col[1], col[2]] : col)) : cols);
-    const rows = (nK ? [{ fixed: z.kpiH, quarter: nK === 1, cols: Array.from({ length: nK }, (_, i) => [1, 'kpi', [`KPI ${i + 1}`, `مؤشر ${i + 1}`]]) }] : [])
+    const rows = (nK ? [{ fixed: z.kpiH, quarter: nK === 1, cols: Array.from({ length: nK }, (_, i) => [1, 'kpi', T(`KPI ${i + 1}`, `مؤشر ${i + 1}`)]) }] : [])
       .concat([first].concat(P.rows.slice(1)).map((cols, i) => ({ flex: flex[i], cols: share(cols) })));
     let y = top;
     rows.forEach((r, ri) => {
@@ -466,8 +474,10 @@
       logo: 'الشعار', logoHere: 'شعارك', textHere: 'اشرح ما يعرضه المخطط الرئيسي وما الإجراء المطلوب.', by: 'حسب', newDesign: 'تصميم جديد',
       tooltipPage: 'تلميح', tooltipHere: 'صفحة التلميح: أضف بطاقة أو مخططًا صغيرًا هنا.' }
   };
+  // The report's labels in a language, English when it has none of its own
+  const texts = (lang) => REPORT_TEXTS[baseLang(lang)] || REPORT_TEXTS.en;
   // A page's slots for the report: kind, name in lang, filter rail or not, and the box in page units
-  const projectSlots = (c, lang, opt) => computeSlots(c, lang, opt).map((s) => Object.assign({ kind: s.kind, title: lang === 'ar' ? s.role[1] : s.role[0], rail: !!s.rail }, boxOf(s, c)));
+  const projectSlots = (c, lang, opt) => computeSlots(c, lang, opt).map((s) => Object.assign({ kind: s.kind, title: label(s.role, lang), rail: !!s.rail }, boxOf(s, c)));
   // a second page in a complementary layout: an analysis page (filters, a main chart, a wide table) after an
   // overview, or an executive overview after an analysis page. The filters stay on the side the user chose for the
   // first page (O-1 of the owner's test of 0.2.8, 10 Oct 2026: "filters right" gave a second page with them at the left)
@@ -491,8 +501,8 @@
   // A small page (SMALL_PAGE) has its own layout and no second page.
   // Each page: { layout (for its background), name, page { w, h }, slots, panel }
   const projectPages = (given, lang, opts) => {
-    const nm = (pair) => (lang === 'ar' ? pair[1] : pair[0]), o = opts || {}, c = fitLayout(given);
-    const specs = [{ c, name: nm(LAYOUTS[c.preset].name) }].concat(o.second && !isSmall(c) ? [{ c: secondLayout(c), name: nm(c.preset === 'analysis' ? ['Overview', 'نظرة عامة'] : ['Details', 'التفاصيل']) }] : []);
+    const nm = (x) => label(x, lang), o = opts || {}, c = fitLayout(given);
+    const specs = [{ c, name: nm(LAYOUTS[c.preset].name) }].concat(o.second && !isSmall(c) ? [{ c: secondLayout(c), name: nm(c.preset === 'analysis' ? T('Overview', 'نظرة عامة') : T('Details', 'التفاصيل')) }] : []);
     const cap = (l) => (o.maxKpis != null && +o.maxKpis >= 0 && +o.maxKpis < +l.kpis ? Object.assign({}, l, { kpis: Math.floor(+o.maxKpis) }) : l);
     return specs.map((sp) => {
       const sl = o.panel ? slidePanel(cap(sp.c), lang) : null, layout = sl ? sl.layout : cap(sp.c), p = page(layout);
@@ -594,10 +604,10 @@
   const fileBase = (name) => themeName(name).replace(/[^\p{L}\p{M}\p{N}_\- ]+/gu, '').trim().replace(/\s+/g, '-').toLowerCase() || 'power-bi-theme';
 
   const api = {
-    PRESETS, FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
+    PRESETS, FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate, calmPalette,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    fs, chart, colours, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    fs, chart, colours, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;

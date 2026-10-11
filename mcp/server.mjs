@@ -10,7 +10,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { absorb } from './lib/slots.mjs';
 import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, Svg, applyColumnTypes, inside, loadModel, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
-import { themeDesign, planLayout, pageOf, contrastReport, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, REPORT_TEXTS,
+import { themeDesign, planLayout, pageOf, contrastReport, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, texts,
   clampHex, lum, buildTheme, projectPages, designRtl, themeName, fileBase, imageSize, isSmall } from './lib/design.mjs';
 import { freeFile } from './lib/files.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
@@ -902,7 +902,7 @@ server.registerTool('create_report', {
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: designRtl(design.layout, a.lang), font: design.font, sample: false, logo,
       theme: (written = buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bound))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
-      texts: REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
+      texts: texts(a.lang), pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
     extra = { pages: pages.map((p) => ({ name: p.name, width: p.page.w, height: p.page.h, slots: p.slots.length, slideInPanel: !!p.panel })), theme: themeName(design.name),
@@ -949,7 +949,7 @@ server.registerTool('create_report', {
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
       model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bindFor(kpisOf(a.pages))))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
       // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
-      texts: Object.assign({}, REPORT_TEXTS[a.lang === 'ar' ? 'ar' : 'en'], { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' }),
+      texts: Object.assign({}, texts(a.lang), { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' }),
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, hand: true, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
     });
   }

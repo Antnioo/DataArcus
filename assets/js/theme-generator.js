@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const boxOf = (s, c) => E.boxOf(s, c || lay());
   const lay = () => state.layout;
   const rtl = (c) => E.rtl(c || lay(), isAr() ? 'ar' : 'en');
-  const nm = (pair) => (isAr() ? pair[1] : pair[0]);
+  const nm = (x) => E.label(x, isAr() ? 'ar' : 'en');   // (A2-9: the engine's labels are keyed by language)
 
   // sizes kept inside their safe ranges (the filter panel's depends on the current page width; the header's and the top
   // filter rail's start higher on a small page, so their text fits)
