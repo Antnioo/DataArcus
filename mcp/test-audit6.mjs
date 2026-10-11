@@ -124,9 +124,12 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
     const one = await call('create_report', { path: 'a6', name: 'A6 once', planId: pid, design: pl.j && pl.j.design, noDataMessage: false });
     const before = files(), two = await call('create_report', { path: 'a6', name: 'A6 twice', planId: pid, design: pl.j && pl.j.design, noDataMessage: false });
     chk(() => !one.err && two.err && /already used/.test(two.t) && /Nothing was written/.test(two.t) && files() === before, () => `A6-2. one approved plan writes one report; the second write is refused: ${short(one)} / ${short(two)}`);
-    const th = await call('generate_theme', { brand: '#0F766E', name: 'A6 once theme', planId: pid });
-    chk(() => !th.err && th.j.path, () => `A6-2. a report plan still allows its theme file once (used per tool): ${short(th)}`);
-    const th2 = await call('generate_theme', { brand: '#0F766E', name: 'A6 once theme', planId: pid });
+    // (Z-01, the outside review: a report plan no longer allows a theme file; a theme plan writes its file once)
+    const tp = await call('generate_theme', { brand: '#0F766E', name: 'A6 once theme' }), tpid = tp.j && tp.j.plan && tp.j.plan.planId;
+    await call('approve_plan', { planId: tpid, userReply: 'go' });
+    const th = await call('generate_theme', { brand: '#0F766E', name: 'A6 once theme', planId: tpid });
+    chk(() => !th.err && th.j.path, () => `A6-2. a theme plan writes its theme file once: ${short(th)}`);
+    const th2 = await call('generate_theme', { brand: '#0F766E', name: 'A6 once theme', planId: tpid });
     chk(() => th2.err && /already used/.test(th2.t), () => `A6-2. the theme file a second time: refused: ${short(th2)}`);
     const c0 = { path: 'a6', firstYear: 2020, lastYear: 2021, asOf: '2026-10-11', name: 'Once Calendar' };
     const cp = await call('add_gulf_calendar', c0), cid = cp.j && cp.j.plan && cp.j.plan.planId;

@@ -81,9 +81,10 @@ export async function v029({ call, check, ROOT, fs = fs0, meta }) {
     await run('other model', pid, 'g2', /another model/);
     const before = all(), x = await ask('create_report', { path: 'g', name: 'Gate ok', design: pl.j.design, planId: pid, noDataMessage: false, secondPage: false }), after = all();
     chk(() => !x.err && x.j.report && added(before, after).some((f) => /Gate ok\.Report\/definition\/report\.json$/.test(f)), () => `G4. create_report with the approved plan must write the report: ${short(x)}`);
-    // the same approved plan also allows the theme file
+    // (Z-01, the outside review of 11 Oct: a report plan pins only create_report's inputs, so it no longer allows a
+    // separate theme file, which takes its own theme plan; before, any theme inputs were written with it)
     const th = await ask('generate_theme', { brand: '#0F766E', name: 'Gate Report Theme', planId: pid });
-    chk(() => !th.err && th.j.path, () => `G4. a report plan must allow generate_theme's file: ${short(th)}`);
+    chk(() => th.err && /report plan, which allows create_report, not generate_theme/.test(th.t), () => `G4. a report plan allows no separate theme file (Z-01): ${short(th)}`);
   }
   // G5. plan_layout writes nothing (its format script is named; create_report writes it after go)
   {
