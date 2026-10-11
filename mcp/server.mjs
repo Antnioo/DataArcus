@@ -665,18 +665,10 @@ server.registerTool('create_report', {
   // (round 13, seen in Desktop on 6 Oct: a card said 33.8% and the table's column of the same measure 0.34: a measure's
   // table column carries the percent format its card shows: the picker's tableFormat)
   const FULL = a.kpiValues === 'full', cardFormats = [], tableFormats = [];
-  const withCardFormats = (b) => {
+  const listFormats = (b) => {
     const list = (to, f, code) => { if (f && f.m != null && code && !to.some((x) => x.field === keyOf(f))) to.push({ field: keyOf(f), format: code }); };
     (b.kpis || []).forEach((f) => list(cardFormats, f, f && f.cardFormat)); (b.table || []).forEach((f) => list(tableFormats, f, f && f.tableFormat));
-    // round 18, S3 (the owner's yes, 6 Oct ~21:38 Dubai: "add the short day name column"): a chart category "Day Name"
-    // whose table has "Day Short" (the Gulf calendar's, by name: metadata only) carries it, sorted as the calendar sorts
-    // it; the writer uses it on a column chart where the full names would slant
-    const model0 = (m.tmsl && (m.tmsl.model || m.tmsl)) || {};
-    const short = (f) => { if (!f || f.c !== 'Day Name' || f.short) return f; const t = (model0.tables || []).find((x) => x.name === f.t), cs = (t && t.columns) || [], sc = cs.find((c) => c.name === 'Day Short');
-      if (!sc) return f; const by = sc.sortByColumn ? null : cs.find((c) => c.name === 'Day of Week');
-      return Object.assign({}, f, { short: Object.assign({ t: f.t, c: 'Day Short', type: 'string' }, sc.sortByColumn ? { ordered: true } : by ? { sortBy: { t: f.t, c: by.name } } : {}) }); };
-    const cats = b.cats ? Object.fromEntries(Object.entries(b.cats).map(([k, f]) => [k, short(f)])) : b.cats;
-    return Object.assign({}, b, b.cats ? { cats } : {}, b.catPool ? { catPool: b.catPool.map(short) } : {});
+    return b;
   };
   const usable = F && F.kpis ? F.kpis.map((k) => k.m) : Bind.suggest(pickFrom, 8, relsOf(m, a.lang)).kpis.filter(Boolean).map((k) => k.m);
   // Round 12 (#25): a model without measures gets its numbers from its columns, counted or summed by the visuals
@@ -686,57 +678,32 @@ server.registerTool('create_report', {
   // (round 16, design finding #14: "Count of Region" made a weak KPI): the cards take counts of ID-like columns and sums
   // only; a count of a category column still feeds a chart or the table, never a card: fewer cards, and told
   const KPI_COUNTS = COUNTS.filter((c) => !c.category), nCards = usable.length || KPI_COUNTS.length;
-  const countBind = (n) => { const b = Bind.suggest(pickFrom, n, relsOf(m, a.lang)), C = COUNTS, K = KPI_COUNTS, cat = b.cats.bar || b.cats.column;
-    return Object.assign({}, b, { kpis: Array.from({ length: n }, (_, i) => K[i] || null), measure: C[0], y: { funnel: C[1] || C[0], gauge: C[0] },
-      table: [b.cats.column || cat, C[0], C[1]].filter((x, i, l) => x && l.indexOf(x) === i), tip: { card: C[0], cat, y: C[1] || C[0], date: b.tip.date } }); };
-  // the binding for n KPI cards: the picker's, with every given field in its place
-  const bindFor = (n) => {
-    if (COUNTS.length) return countBind(n);
-    // (round 22b, the reviewer's second review, item 4: the plan's measure, where it names one, decides what is related)
-    const b = Bind.suggest(pickFrom, n, Object.assign(relsOf(m, a.lang), F && F.measure ? { main: F.measure } : {}, FULL ? { kpiValues: 'full' } : {}));
-    // (round 22b, X-04) the picker's "no category is related to the measure" stays with a binding built again from the
-    // user's fields, while it still has no category
-    // (round 23: the language note and the calendar's reason stay with a binding built again; the table's reach rule is
-    // build's own, through the choices)
-    const carry = (nb) => { if (b.language) nb.language = b.language; if (b.noRelatedCalendar && !nb.date) nb.noRelatedCalendar = b.noRelatedCalendar; return b.noRelatedCategory && !Object.values(nb.cats || {}).some(Boolean) ? Object.assign(nb, { noRelatedCategory: b.noRelatedCategory }) : nb; };   // (round 23: and the language rule's note)
-    if (!F && !PF) return b;
-    const ch = Object.assign({}, b.choices);
-    // Round 12 (#22; seen in Desktop 2.158, golden task 3: Hijri Year and Is Ramadan slicers showed "All" while the page
-    // filter had fixed them): no slicer on a column a page filter fixes; the next column the picker would take instead
-    const unfixed = () => { if (!PF) return;
-      const fixed = (x) => x && PF.some((f) => f.t === x.t && f.c === x.c), keep = (ch.slicers || []).filter((x) => x && !fixed(x));
-      (b.slicerPool || []).forEach((x) => { if (keep.length < 3 && !fixed(x) && !keep.some((k) => k.t === x.t && k.c === x.c)) keep.push(x); });
-      if ((ch.slicers || []).some(fixed)) slicersDropped.push(...ch.slicers.filter(fixed).map((x) => `${x.t}[${x.c}]`));
-      ch.slicers = keep.concat([null, null, null]).slice(0, 3); };
-    if (PF) {
-      unfixed();
-      // #21 (golden task 3: one Ramadan by month was a line of two points): with a page filter on a Ramadan flag the
-      // line chart runs by the calendar's Ramadan Day (1 to 30) where it has one, unless the plan named the axis
-      const flag = PF.find((f) => /ramadan/i.test(f.c) && f.values.length && f.values.every((v) => v === true));
-      const tb = flag && pickFrom.concat(m.tables).find((t) => t.name === flag.t), rd = tb && tb.columns.find((c) => /^ramadan\s*day$/i.test(c.name));
-      if (rd && !(F && F.timeAxis)) { ch.date = { t: tb.name, c: rd.name, type: String(rd.dataType || 'int64').toLowerCase() }; byRamadanDay.push(`${tb.name}[${rd.name}]`); }
-    }
-    if (!F) { const nb = Bind.build(ch); return carry(nb); }
-    if (F.kpis) ch.kpis = F.kpis;
-    if (F.measure) ch.main = F.measure;
-    if (F.timeAxis) ch.date = F.timeAxis;
-    if (F.category) ch.catA = F.category;
-    if (F.category2) ch.catB = F.category2;
-    // the given slicers first; a slot left over keeps the picker's (never a slicer without a field)
-    if (F.table) ch.table = F.table;   // (A3-2: the user's own table fields, kept as named through the picker's build)
-    if (F.slicers) { const same = (x, y) => x && y && x.t === y.t && x.c === y.c, rest = (ch.slicers || []).filter((s) => s && !F.slicers.some((g) => same(g, s))); ch.slicers = F.slicers.concat(rest).slice(0, 3); while (ch.slicers.length < 3) ch.slicers.push(null); unfixed(); }
-    const nb = Bind.build(ch);
-    // (round 16: categories the approved plan names are kept as given: no other category is put on its charts)
-    if (F.category || F.category2) delete nb.catPool;
-    return carry(nb);
-  };
+  // The binding for n KPI cards: the picker's, with every given field in its place (builder 7's audit A3-2, 11 Oct: the
+  // picker's rules, the fixed slicers, the flag's day axis, the Arabic calendar names and the short day names, are the
+  // picker's own, so the website's download gets them too; the server passes options)
+  const pinned = F ? Object.fromEntries([['kpis', F.kpis], ['main', F.measure], ['date', F.timeAxis], ['catA', F.category], ['catB', F.category2], ['slicers', F.slicers], ['table', F.table]].filter(([, v]) => v)) : null;
+  // (round 22b, the reviewer's second review, item 4: the plan's measure, where it names one, decides what is related)
+  const pickOpts = () => Object.assign(relsOf(m, a.lang), F && F.measure ? { main: F.measure } : {}, FULL ? { kpiValues: 'full' } : {}, pinned ? { pinned } : {},
+    PF ? { excludeColumns: PF.map((f) => ({ t: f.t, c: f.c })), axisFor: PF.map((f) => ({ t: f.t, c: f.c, values: f.values })) } : {});
+  // what the picker did for the page filters and the Arabic report, for the notes
+  const noted = (b) => { (b.excluded || []).forEach((x) => slicersDropped.push(`${x.t}[${x.c}]`)); if (b.axisBy) byFlagDay.push(b.axisBy); (b.calendarNames || []).forEach((x) => englishNames.add(`${x.t}[${x.c}]`));
+    // (kept as before A3-2, an open item: with fields or page filters the binding had no category pool, so the charts
+    // of a page take the plan's categories only)
+    if (F || PF) delete b.catPool;
+    return b; };
+  // a model without measures: the same binding, its numbers the columns the visuals count or sum (through build, so the
+  // table's and the tooltip's rules are the picker's)
+  const countBind = (n) => { const b = Bind.suggest(pickFrom, n, pickOpts()), C = COUNTS, ch = b.choices;
+    const nb = Bind.build(Object.assign({}, ch, { kpis: Array.from({ length: n }, (_, i) => KPI_COUNTS[i] || null), main: C[0], table: [ch.catB || ch.catA, C[0], C[1]].filter((x, i, l) => x && l.indexOf(x) === i) }));
+    delete b.notReached; return noted(Object.assign({}, b, nb)); };
+  const bindFor = (n) => (COUNTS.length ? countBind(n) : noted(Bind.suggest(pickFrom, n, pickOpts())));
   const cardNote = (asked, built, leftOut) => (COUNTS.length ? Object.assign({ asked, built, counted: KPI_COUNTS.slice(0, built).map((f) => f.name),
     why: `The model has no measures, so the KPI cards, the charts and the table show counts and sums of its columns, made by the visuals themselves (${COUNTS.slice(0, 4).map((f) => f.name).join(', ')}); the model is not changed.${built < asked && COUNTS.some((c) => c.category) ? ` Fewer cards than asked: a count of a category column (${COUNTS.filter((c) => c.category).slice(0, 3).map((f) => f.name).join(', ')}) is not a KPI, so it is shown in a chart or the table, never on a card.` : ''} For real KPIs, propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again.` }, leftOut ? { leftOut } : {})
     : built >= asked ? null : Object.assign({ asked, built, measures: usable.slice(0, built),
     why: usable.length ? `The model has ${usable.length} measure${usable.length === 1 ? '' : 's'} a KPI card can show${sc.scope ? ' in this part of the model' : ''}, so ${built} of ${asked} KPI cards were built. Add measures to the model (in Power BI Desktop) for more cards, then create the report again.`
       : 'The model has no measures, so no KPI card was built, and the charts were left out too (they have no value to show; see leftOutVisuals). The report has its header, filters and table only. Propose measures with their format strings to the user; when they are in the model (added in Power BI Desktop), create the report again.' }, leftOut ? { leftOut } : {}));
   let kpiCards = null;
-  const slicersDropped = [], byRamadanDay = [];
+  const slicersDropped = [], byFlagDay = [];
   const modelNames = Object.fromEntries(m.tables.map((t) => [t.name, (t.columns || []).map((c) => c.name).concat((t.measures || []).map((x) => x.name))]));   // (round 23: for the report measures' free names)   // (round 23: line charts whose slot went to the visual beside them)
   // Round 12 (#20; seen in Desktop 2.158, golden task 3: "What it means" shipped its placeholder sentence): a text
   // slot holds the plan's sentence (a.text, or a hand-placed slot's own text), or is left out. In a design the visual
@@ -771,31 +738,11 @@ server.registerTool('create_report', {
   }
   const fieldsOf = (b) => (b ? [b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean) : []);
   const keyOf = (f) => `${f.t}[${f.c != null ? f.c : f.m}]`;
-  const named = (b) => { fieldsOf(b).forEach((f) => { const g = given.get(Bind.fieldKey(f.t, f.c != null ? f.c : f.m)); if (g) { f.name = g.name; g.used = true; } }); return b; };
-  // Owner 2026-10-06: an Arabic report shows the Gulf calendar's Arabic name columns (Day Name (Arabic), Month Name
-  // (Arabic), Hijri Month Name (Arabic)) in place of the English ones wherever the same table has them (axis, table,
-  // slicer, tooltip), with their own sort; without them the reportNotes say how to get them
-  const ARABIC_OF = [[/^day\s*name$/i, 'Day Name (Arabic)'], [/^month\s*(name|short)$/i, 'Month Name (Arabic)'], [/^hijri\s*month\s*name$/i, 'Hijri Month Name (Arabic)']];
+  // the display names given, as copies of the bound fields (A3-2: never set on the picker's fields in place); a calendar
+  // name the picker swapped for its Arabic column keeps the name given for the English one
   const englishNames = new Set();
-  const inArabic = (b) => {
-    if (a.lang !== 'ar' || !b) return b;
-    const done = new Map();
-    const swap = (f) => {
-      if (!f || typeof f !== 'object' || f.c == null || f.t == null) return f;
-      if (done.has(f)) return done.get(f);
-      const rule = ARABIC_OF.find(([re]) => re.test(String(f.c).trim()));
-      const t = rule && m.tables.find((x) => x.name === f.t), col = t && t.columns.find((c) => c.name === rule[1]);
-      let out = f;
-      if (col) {
-        const by = col.sortBy ? null : Bind.sortColumnFor(t.columns, col.name);
-        out = Object.assign({}, f, { c: col.name }); delete out.sortBy; delete out.ordered;
-        Object.assign(out, by ? { sortBy: { t: t.name, c: by.name } } : {}, col.sortBy && Bind.nameLike(col.name) ? { ordered: true } : {});
-      } else if (rule) englishNames.add(keyOf(f));
-      done.set(f, out); return out;
-    };
-    const each = (v) => (Array.isArray(v) ? v.map(swap) : v && typeof v === 'object' && v.c == null && v.m == null ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, swap(x)])) : swap(v));
-    return Object.fromEntries(Object.entries(b).map(([k, v]) => [k, k === 'choices' ? v : each(v)]));
-  };
+  const named = (b) => { const from = new Map(((b && b.calendarSwaps) || []).map((w) => [Bind.fieldKey(w.to.t, w.to.c), Bind.fieldKey(w.from.t, w.from.c)]));
+    return Bind.mapFields(b, (f) => { const k = Bind.fieldKey(f.t, f.c != null ? f.c : f.m), g = given.get(k) || given.get(from.get(k)); if (!g) return f; g.used = true; return Object.assign({}, f, { name: g.name }); }); };
   // the logo, as the website takes it: a PNG or JPG, 2 MB at most; its size is read so its box can take its shape
   const reportNotes = [];
   // Power BI's own words can't be set by a report (measured: no slicer property holds "All")
@@ -845,7 +792,7 @@ server.registerTool('create_report', {
     const subtitles = a.subtitles && Object.fromEntries(Object.entries(a.subtitles).map(([k, v]) => [subKeys[k] || k, v]));
     r = Pbip.build({
       name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(inArabic(named(bound)))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
+      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = listFormats(named(bound))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
       texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
@@ -891,7 +838,7 @@ server.registerTool('create_report', {
     r = Pbip.build({
       name: a.name, title: a.title || a.name, lang: a.lang, rtl: rtlHand, font: a.font, sample: false, logo, theme,
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
-      model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(inArabic(named(bindFor(kpisOf(a.pages)))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
+      model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = listFormats(named(bindFor(kpisOf(a.pages))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
       // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
       texts: Object.assign({}, E.REPORT_TEXTS[a.lang === 'ar' ? 'ar' : 'en'], { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' }),
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, hand: true, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
@@ -952,8 +899,8 @@ server.registerTool('create_report', {
   if (a.subtitles) { const used = new Set(r.subtitlesUsed || []), un = Object.keys(a.subtitles).filter((k) => !used.has(subKeys[k] || k));
     if (un.length) reportNotes.push(`No subtitle was written for ${un.map((k) => '"' + k + '"').join(', ')}: a subtitle goes under the title of a chart or a table, found by its slot's role as plan_layout names it (in English or Arabic) or by a hand-placed slot's title. A KPI card never gets one (its value would be pushed down and cut).`); }
   if ((r.blankKept || []).length) reportNotes.push(`${r.blankKept.length === 1 ? 'A KPI card keeps' : r.blankKept.length + ' KPI cards keep'} "--" when there is no data (${r.blankKept.map((x) => `${x.title ? '"' + x.title + '"' : 'a card'} on "${x.page}", ${x.w} wide, needs ${x.need}`).join('; ')}): the "No data" text, at the value's own size, does not fit, and the value keeps its size.`);
-  if ((r.barCharts || []).length) reportNotes.push(`The chart${r.barCharts.length === 1 ? '' : 's'} by ${[...new Set(r.barCharts.map((x) => x.field))].join(', ')} on ${[...new Set(r.barCharts.map((x) => `"${x.page}"`))].join(', ')} ${r.barCharts.length === 1 ? 'is a bar chart' : 'are bar charts'} instead of a column chart: the names would not fit side by side and would slant; as bars they read level. A short name column in the model (the Gulf calendar's Day Short) keeps a column chart.`);
-  if ((r.shortDays || []).length) reportNotes.push(`The column chart${r.shortDays.length === 1 ? '' : 's'} by day on ${[...new Set(r.shortDays.map((x) => `"${x.page}"`))].join(', ')} ${r.shortDays.length === 1 ? 'shows' : 'show'} Day Short (Sun ... Sat), in the calendar's order: the full day names would not fit side by side and would slant. Tables and slicers keep Day Name.`);
+  if ((r.barCharts || []).length) reportNotes.push(`The chart${r.barCharts.length === 1 ? '' : 's'} by ${[...new Set(r.barCharts.map((x) => x.field))].join(', ')} on ${[...new Set(r.barCharts.map((x) => `"${x.page}"`))].join(', ')} ${r.barCharts.length === 1 ? 'is a bar chart' : 'are bar charts'} instead of a column chart: the names would not fit side by side and would slant; as bars they read level. A short day name column in the model (Sun ... Sat, as the Gulf calendar's) keeps a column chart.`);
+  if ((r.shortDays || []).length) { const sh = Object.values((bind && bind.cats) || {}).find((f) => f && f.short), shortCol = sh ? visible(sh.short.c) : 'the short day names', fullCol = sh ? visible(sh.c) : 'the day names'; reportNotes.push(`The column chart${r.shortDays.length === 1 ? '' : 's'} by day on ${[...new Set(r.shortDays.map((x) => `"${x.page}"`))].join(', ')} ${r.shortDays.length === 1 ? 'shows' : 'show'} ${shortCol} (Sun ... Sat), in the calendar's order: the full day names would not fit side by side and would slant. Tables and slicers keep ${fullCol}.`); }
   if ((r.ringsSmall || []).length) reportNotes.push(`The ring${r.ringsSmall.length === 1 ? '' : 's'} in the table (${[...new Set(r.ringsSmall.map((x) => x.label))].join(', ')}) ${r.ringsSmall.length === 1 ? 'is' : 'are'} drawn ${Math.max(...r.ringsSmall.map((x) => x.h))} high, too small for a number to be read, so ${r.ringsSmall.length === 1 ? 'it has' : 'they have'} no number inside: the measure's own column in the table carries the value (add it to fields.table where the table does not have it).`);   // (night of 6-7 Oct, seen in Desktop: a table without that column showed the value nowhere, and the note said it did)
   if (ringNumbers.length) reportNotes.push(`The ring${ringNumbers.length === 1 ? '' : 's'} on the KPI card${ringNumbers.length === 1 ? '' : 's'} (${ringNumbers.join(', ')}) ${ringNumbers.length === 1 ? 'has' : 'have'} no number inside: the card already shows the value, and two numbers read as two facts. A table picture keeps its number.`);
   if (svgList.length) reportNotes.push(`${svgList.length === 1 ? 'An SVG picture was' : svgList.length + ' SVG pictures were'} added (${svgList.map((c) => c.label).join(', ')}): each is a measure that exists only in this report (definition/reportExtensions.json); the model was not changed. This is ${SVG_STATUS}.`);
@@ -982,7 +929,7 @@ server.registerTool('create_report', {
   if (r.tooltipLimits && (r.tooltipLimits.top || r.tooltipLimits.months)) reportNotes.push(`The tooltip pages show ${[r.tooltipLimits.top ? `the Top ${r.tooltipLimits.top} by the measure (said in the title)` : '', r.tooltipLimits.months ? `the last ${r.tooltipLimits.months} months, newest first` : ''].filter(Boolean).join(' and ')}, so no bar is lost behind a scrollbar a tooltip can't use.`);
   if (textKpis.length) reportNotes.push(`${textKpis.length === 1 ? 'A KPI card was' : textKpis.length + ' KPI cards were'} left out: ${textKpis.map((k) => `${k.t}[${k.m}]`).join(', ')} ${textKpis.length === 1 ? 'shows' : 'show'} text, not a number (a format of words only, a date format, or DAX that returns text), and a KPI card would show that text. Pick a measure that returns a number for the card.`);
   if (slicersDropped.length) reportNotes.push(`No slicer on ${[...new Set(slicersDropped)].join(', ')}: a page filter already keeps one value of ${new Set(slicersDropped).size === 1 ? 'it' : 'each'}, so a slicer would only show the choice already made. The next columns took the rail's places.`);
-  if (byRamadanDay.length) reportNotes.push(`The line chart runs by ${byRamadanDay[0]} (the days of Ramadan), not by month: the page filter keeps Ramadan, and one Ramadan by month is a line of two or three points.`);
+  if (byFlagDay.length) { const x = byFlagDay[0]; reportNotes.push(`The line chart runs by ${x.t}[${x.c}] (its days), not by month: the page filter keeps ${x.flag.t}[${x.flag.c}] true, and one such period by month is a line of two or three points.`); }
   // tables given a smaller text so more of their fields fit (round 12, recommendation 5)
   if ((r.tableSmaller || []).length) reportNotes.push(`The table text is ${[...new Set(r.tableSmaller.map((x) => x.size + 'pt'))].join(' or ')} (the theme's is ${r.tableSmaller[0].from}pt) on ${r.tableSmaller.map((x) => `"${x.page}"`).join(', ')}, so more of its fields fit its width${r.tableSmaller.some((x) => x.rows) ? ' and its rows and total fit its height' : ''}; a field is left out only where even 8pt doesn't hold it.`);
   // round 23 (the owner's go, 8 Oct 2026): the right-to-left table's total row says «الإجمالي» (way 4, measured in Desktop)

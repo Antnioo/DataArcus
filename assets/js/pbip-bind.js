@@ -361,9 +361,23 @@
     const type = String(c.dataType || 'string').toLowerCase(), sortBy = c.sortBy || c.sortByColumn || null;
     const by = sortBy ? null : sortColumnFor(cols, c.name), dt = dateColumnFor(cols, c.name, type, table);
     // (A3-3: tableFormat, the one format rule's for a table's column, where it would change the model's)
-    const r = FM.reportFormatOf(c, 'column', []);
+    const r = FM.reportFormatOf(c, 'column', []), marks = timeMarks(table, c.name, type, !!(sortBy || by)), sh = shortOf(table, c.name, marks.cal);
     return Object.assign({ t: table.name, c: c.name, type }, by ? { sortBy: { t: table.name, c: by.name } } : {}, sortBy && nameLike(c.name) ? { ordered: true } : {}, dt ? { dateOf: { t: table.name, c: dt.name } } : {},
-      timeMarks(table, c.name, type, !!(sortBy || by)), r ? { tableFormat: r.format } : {});
+      marks, r ? { tableFormat: r.format } : {}, sh ? { short: sh } : {});
+  }
+  // (round 18, S3, the owner's yes on 6 Oct: a chart's day names slant on a column chart; builder 7's audit A3-2, 11 Oct:
+  // it was the server's, by the Gulf calendar's names "Day Name" and "Day Short"): a day-name column carries its
+  // calendar's short day name, found by shape: a column of the same table with a short word (Short, Abbr, ddd) that is a
+  // day name of the same family, sorted as the calendar sorts it. The writer uses it where the full names would slant.
+  const SHORT_WORD = /(^|[\s_-])(short|abbr|abbreviation)([\s_-]|$)|^ddd$/i;
+  function shortOf(table, name, cal) {
+    if (!cal || cal.kind !== 'day' || SHORT_WORD.test(name)) return null;
+    const cols = table.columns || [];
+    const s = cols.find((x) => x.name !== name && SHORT_WORD.test(x.name.replace(ARABIC_SUFFIX, '')) && nameLike(x.name) && sortKind(x.name) === 'day'
+      && (timeMarks(table, x.name, String(x.dataType || 'string').toLowerCase(), true).cal || {}).family === cal.family);
+    if (!s) return null;
+    const sortBy = s.sortBy || s.sortByColumn || null, by = sortBy ? null : sortColumnFor(cols, s.name);
+    return Object.assign({ t: table.name, c: s.name, type: 'string' }, sortBy ? { ordered: true } : by ? { sortBy: { t: table.name, c: by.name } } : {});
   }
   // (builder 7's audit A3-8, 11 Oct: the writer told a time category from its name's words, so "Day Type" and "Period
   // Status" were taken as their opposite): the picker marks it from the model: a column of a date table, one the model or
@@ -399,7 +413,7 @@
         const fo = fieldOf(t, c.name);
         const col = Object.assign({ t: t.name, c: c.name, type, dateTable: isDateTable(t), cat: c.dataCategory }, fo.sortBy ? { sortBy: fo.sortBy } : {}, fo.ordered ? { ordered: true } : {}, fo.dateOf ? { dateOf: fo.dateOf } : {}, { time: fo.time }, fo.cal ? { cal: fo.cal } : {});
         // (A3-3: its table format in META too: build puts it on a table's field only)
-        Object.assign(meta(col), { lang: type === 'string' || type === 'unknown' ? langOf(c.name) : null, i, twin: null, tableFormat: fo.tableFormat || null });
+        Object.assign(meta(col), { lang: type === 'string' || type === 'unknown' ? langOf(c.name) : null, i, twin: null, tableFormat: fo.tableFormat || null, short: fo.short || null });
         columns.push(col); });
     });
     columns.forEach((c) => { if (metaOf(c).lang === 'en' && AR_SUFFIX.test(c.c)) { const base = c.c.replace(AR_SUFFIX, '').trim().toLowerCase(); if (columns.some((o) => o !== c && o.t === c.t && metaOf(o).lang === 'en' && o.c.trim().toLowerCase() === base)) meta(c).lang = 'ar'; } });
@@ -487,7 +501,8 @@
     // its own table, and only reached categories are given out (catB falls back to catA). The reviewer's second review:
     // the measure is the plan's (opt.main) where it names one (item 4), and the time axis and the year slicer come from
     // a reached table too (item 5: two calendars, the measure related to one)
-    const rels = (opt && opt.relationships) || [], anchor = (opt && opt.main && opt.main.m != null ? opt.main : null) || main;
+    const P = (opt && opt.pinned) || {};
+    const rels = (opt && opt.relationships) || [], anchor = (opt && opt.main && opt.main.m != null ? opt.main : null) || (P.main && P.main.m != null ? P.main : null) || main;
     const reach = rels.length && anchor ? reached((opt && opt.modelTables) || tables, anchor, rels) : null, near = (c) => !reach || reach.has(c.t);
     // time axis: a month column from the date table, else its date column, else any date column
     const quiet = { skipped: new Set(), fallback: new Set() }, inDate = byLang(columns.filter((c) => c.dateTable && near(c)), L, quiet);   // (the calendar's own Arabic columns are not told)
@@ -522,21 +537,64 @@
     const sl = [year, catA, catB, date].filter((x, i, l) => x && l.indexOf(x) === i);
     // (round 23 part 5, the review's 2: the table's reach rule lives in build, so a binding built again from these choices
     // (a picker change, the website's own picks) keeps it: choices.reach)
-    const out = build(Object.assign({ kpis, main, date, catA, catB, slicers: [sl[0] || null, sl[1] || null, sl[2] || null] }, opt && opt.kpiValues === 'full' ? { full: true } : {}, reach ? { reach: { relationships: rels, modelTables: (opt && opt.modelTables) || tables } } : {}));
+    // (builder 7's audit A3-2, 11 Oct: these rules were create_report's, by the Gulf calendar's own names, so the website's
+    // download of the same model had none of them; the caller now passes options and builds nothing itself)
+    // pinned: the fields the user names ({ kpis, main, date, catA, catB, slicers, table }, as fieldOf and measureOf give
+    // them), kept as named: the given slicers first, a slot left over keeps the picker's
+    const same = (x, y) => x && y && x.t === y.t && x.c === y.c;
+    let ch = Object.assign({ kpis, main, date, catA, catB, slicers: [sl[0] || null, sl[1] || null, sl[2] || null] }, opt && opt.kpiValues === 'full' ? { full: true } : {}, reach ? { reach: { relationships: rels, modelTables: (opt && opt.modelTables) || tables } } : {});
+    ['kpis', 'main', 'date', 'catA', 'catB', 'table'].forEach((k) => { if (P[k]) ch[k] = P[k]; });
+    if (P.slicers) { ch.slicers = P.slicers.concat(ch.slicers.filter((x) => x && !P.slicers.some((g) => same(g, x)))).slice(0, 3); while (ch.slicers.length < 3) ch.slicers.push(null); }
+    // excludeColumns (round 12, #22; seen in Desktop 2.158, golden task 3: slicers showed "All" while a page filter had
+    // fixed them): no slicer on a column a page filter fixes; the next column the picker would take instead, and named
+    const ex = (opt && opt.excludeColumns) || [], fixed = (x) => x && ex.some((e) => same(e, x)), pool = [year].concat(cats, [date]).filter((x, i, l) => x && l.indexOf(x) === i), excluded = [];
+    if (ex.length) { const keep = ch.slicers.filter((x) => x && !fixed(x)); ch.slicers.filter(fixed).forEach((x) => { if (!excluded.some((e) => same(e, x))) excluded.push({ t: x.t, c: x.c }); });
+      pool.forEach((x) => { if (keep.length < 3 && !fixed(x) && !keep.some((k) => same(k, x))) keep.push(x); });
+      ch.slicers = keep.concat([null, null, null]).slice(0, 3); }
+    // axisFor (round 12, #21; golden task 3: one Ramadan by month was a line of two points): with a page filter that keeps
+    // a flag true ("Is Festival", "Is Ramadan"), the time axis runs by the flag's own day column of the same table
+    // ("Festival Day": the flag's word and "day"), unless the plan named the axis
+    let axisBy = null;
+    if (!P.date) for (const fl of (opt && opt.axisFor) || []) {
+      if (!fl || !(fl.values || []).length || !fl.values.every((v) => v === true)) continue;
+      const tb = ((opt && opt.modelTables) || tables).concat(tables).find((x) => x.name === fl.t), word = String(fl.c).replace(/^\s*(is|flag)[\s_-]+/i, '').replace(/[\s_-]+flag\s*$/i, '').trim().toLowerCase();
+      const dc = tb && word && (tb.columns || []).find((c) => c.name !== fl.c && c.name.replace(/[\s_-]+/g, ' ').trim().toLowerCase() === word.replace(/[\s_-]+/g, ' ') + ' day');
+      if (dc) { ch.date = fieldOf(tb, dc.name); axisBy = { t: tb.name, c: dc.name, flag: { t: fl.t, c: fl.c } }; break; }
+    }
+    // lang "ar" (owner 2026-10-06, the MCP's until A3-2): the calendar's Arabic name columns in place of the English ones,
+    // wherever a field is bound (picked or pinned), with their own sort: a day or month name's Arabic twin, else the
+    // table's Arabic name of the same kind (a month name for "Month Short") and calendar (Hijri or not); a calendar name
+    // with neither is named (calendarNames), so the caller can say how to get one
+    const calendarNames = [], swaps = [];
+    const inAr = (x) => {
+      if (L !== 'ar' || !x || x.c == null || !x.cal || !/^(month|day)$/.test(x.cal.kind)) return x;
+      const c0 = columns.find((c) => c.t === x.t && c.c === x.c); if (!c0 || metaOf(c0).lang !== 'en') return x;
+      const hijri = (c) => (c.cal || {}).family === 'hijri';
+      const tw = (metaOf(c0).twin && metaOf(c0).twin.cal ? metaOf(c0).twin : null) || columns.find((c) => c.t === x.t && metaOf(c).lang === 'ar' && c.cal && c.cal.kind === x.cal.kind && hijri(c) === hijri(x));
+      if (!tw) { if (!calendarNames.some((e) => same(e, x))) calendarNames.push({ t: x.t, c: x.c }); return x; }
+      if (!swaps.some((w) => same(w.from, x))) swaps.push({ from: { t: x.t, c: x.c }, to: { t: tw.t, c: tw.c } });
+      return tw;
+    };
+    if (L === 'ar') { ['date', 'catA', 'catB'].forEach((k) => { ch[k] = inAr(ch[k]); }); ch.slicers = ch.slicers.map(inAr); if (ch.table) ch.table = ch.table.map(inAr); }
+    const out = build(ch);
     Object.assign(out, langNote(L, note));
+    if (excluded.length) out.excluded = excluded;
+    if (axisBy) out.axisBy = axisBy;
+    if (calendarNames.length) out.calendarNames = calendarNames;
+    if (swaps.length) out.calendarSwaps = swaps;
     // (round 23: no time axis because the measure reaches no calendar of the model: said with the calendars' names)
     // (part 8, the review's 3: a date column of a table the measure does not reach, with no marked calendar, is named too:
     // kind 'date', "no date column is related to")
-    if (!date && reach) { const cal = [...new Set(columns.filter((c) => c.dateTable && !reach.has(c.t)).map((c) => c.t))], dt = [...new Set(columns.filter((c) => !c.dateTable && /date/.test(c.type) && !reach.has(c.t)).map((c) => c.t))];
+    if (!out.date && reach) { const cal = [...new Set(columns.filter((c) => c.dateTable && !reach.has(c.t)).map((c) => c.t))], dt = [...new Set(columns.filter((c) => !c.dateTable && /date/.test(c.type) && !reach.has(c.t)).map((c) => c.t))];
       if (cal.length) out.noRelatedCalendar = { measure: { t: anchor.t, m: anchor.m }, tables: cal.slice(0, 5), kind: 'calendar' };
       else if (dt.length) out.noRelatedCalendar = { measure: { t: anchor.t, m: anchor.m }, tables: dt.slice(0, 5), kind: 'date' }; }
-    if (!cats.length && unreached.length) out.noRelatedCategory = { measure: { t: anchor.t, m: anchor.m }, tables: [...new Set(unreached.map((c) => c.t))].slice(0, 5) };
-    // every column a slicer could take, in the order they are picked (round 12, #22: the caller replaces a slicer that
-    // a page filter makes pointless)
-    out.slicerPool = [year].concat(cats, [date]).filter((x, i, l) => x && l.indexOf(x) === i);
+    if (!cats.length && unreached.length && !ch.catA && !ch.catB) out.noRelatedCategory = { measure: { t: anchor.t, m: anchor.m }, tables: [...new Set(unreached.map((c) => c.t))].slice(0, 5) };
+    // every column a slicer could take, in the order they are picked (round 12, #22)
+    out.slicerPool = pool;
     // the categories a page's charts can take, in the picker's order (round 16, design finding #18: the operations
-    // layout drew two bar charts and a donut all by Quarter): the writer gives each chart of a page one not used there yet
-    out.catPool = cats.slice(0, 8).map((c) => Object.assign({ t: c.t, c: c.c }, c.sortBy ? { sortBy: c.sortBy } : {}, c.ordered ? { ordered: true } : {}, c.time != null ? { time: c.time } : {}, c.cal ? { cal: c.cal } : {}));
+    // layout drew two bar charts and a donut all by Quarter): the writer gives each chart of a page one not used there yet;
+    // none when the plan names its categories (round 16: they are kept as given)
+    if (!P.catA && !P.catB) out.catPool = cats.slice(0, 8).map(inAr).filter((x, i, l) => l.indexOf(x) === i).map((c) => Object.assign({ t: c.t, c: c.c }, c.sortBy ? { sortBy: c.sortBy } : {}, c.ordered ? { ordered: true } : {}, c.time != null ? { time: c.time } : {}, c.cal ? { cal: c.cal } : {}, metaOf(c).short ? { short: metaOf(c).short } : {}));
     // the measures left behind that were not picked, so the caller can say so (none: no such key)
     const skipped = ranked.filter((x) => x.stale && !kpis.includes(x) && x !== main).map((x) => ({ t: x.t, m: x.m }));
     if (skipped.length) out.skipped = skipped;
@@ -573,18 +631,23 @@
     // (a measure keeps pct: its KPI card shows the model's own percent format, the owner's design choice 2, 5 Oct 2026)
     // (A3-3: a table's field carries the format rule's tableFormat; a card its fullFormat as cardFormat with kpiValues
     // "full", ch.full; the server no longer re-decides either)
-    const tfOf = (x) => x.tableFormat || metaOf(x).tableFormat;
-    const f = (x, inTable) => (x ? (x.m != null ? Object.assign({ t: x.t, m: x.m }, x.pct ? { pct: true } : {}, x.pctFormat ? { pctFormat: x.pctFormat } : {}, x.wholeFormat ? { wholeFormat: x.wholeFormat } : {}, inTable && tfOf(x) ? { tableFormat: tfOf(x) } : {})
-      : Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {}, x.dateOf ? { dateOf: x.dateOf } : {}, x.time != null ? { time: x.time } : {}, x.cal ? { cal: x.cal } : {}, inTable && tfOf(x) ? { tableFormat: tfOf(x) } : {})) : null);
+    // (A3-2: role 'cat', a chart's category, carries its short day name; a column the visual counts or sums itself
+    // (counts: agg, its name) keeps them, so a model without measures is bound here too)
+    const tfOf = (x) => x.tableFormat || metaOf(x).tableFormat, shortOf = (x) => x.short || metaOf(x).short;
+    const f = (x, role) => (x ? (x.m != null ? Object.assign({ t: x.t, m: x.m }, x.pct ? { pct: true } : {}, x.pctFormat ? { pctFormat: x.pctFormat } : {}, x.wholeFormat ? { wholeFormat: x.wholeFormat } : {}, role === 'table' && tfOf(x) ? { tableFormat: tfOf(x) } : {})
+      : Object.assign(/^(int64|double|decimal|number)$/.test(x.type || '') || x.num ? { t: x.t, c: x.c, num: true } : { t: x.t, c: x.c }, x.sortBy ? { sortBy: x.sortBy } : {}, x.ordered ? { ordered: true } : {}, x.dateOf ? { dateOf: x.dateOf } : {}, x.time != null ? { time: x.time } : {}, x.cal ? { cal: x.cal } : {},
+        x.agg != null ? Object.assign({ agg: x.agg }, x.name ? { name: x.name } : {}, x.wholeFormat ? { wholeFormat: x.wholeFormat } : {}) : {}, role === 'table' && tfOf(x) ? { tableFormat: tfOf(x) } : {}, role === 'cat' && shortOf(x) ? { short: shortOf(x) } : {})) : null);
     const card = (x) => { const o = f(x); return o && ch.full && x.fullFormat ? Object.assign(o, { cardFormat: x.fullFormat }) : o; };
+    // the same field: a measure by its name (as before), a column by its table, name and aggregation
+    const same = (x, y) => (x.m != null || y.m != null ? x.m === y.m : x.t === y.t && x.c === y.c && x.agg === y.agg);
     const kpis = (ch.kpis || []).map(card);
-    const main = f(ch.main), second = kpis.find((k) => k && main && k.m !== main.m) || main;
+    const main = f(ch.main), second = kpis.find((k) => k && main && !same(k, main)) || main;
     const ratio = (ch.kpis || []).find((k) => k && k.pct);
-    const A = f(ch.catA), Bc = f(ch.catB);
+    const A = f(ch.catA, 'cat'), Bc = f(ch.catB, 'cat');
     const uniq = (list) => list.filter((x, i) => x && list.findIndex((y) => y && JSON.stringify(y) === JSON.stringify(x)) === i);
     // (round 23 part 5, the review's 2: the table keeps only the measures that reach its rows, on every path)
     // (A3-2: a table the user names, ch.table, is kept as named, through this same field builder)
-    const tf = (x) => f(x, true), second0 = (ch.kpis || []).find((k) => k && ch.main && k.m !== ch.main.m) || ch.main;
+    const tf = (x) => f(x, 'table'), second0 = (ch.kpis || []).find((k) => k && ch.main && !same(k, ch.main)) || ch.main;
     const TB = ch.table ? { table: ch.table.filter(Boolean).map(tf), notReached: [] } : reachTable(uniq([tf(ch.catB) || tf(ch.catA), tf(ch.main), tf(second0), tf((ch.kpis || [])[2])]), ch.reach);
     const out = {
       choices: ch,
@@ -602,7 +665,7 @@
       // the second KPI of an unrelated fact table repeated one total on every bar)
       // (part 8, the review's 1: every chart that opens that tooltip filters it by its own category, the line chart by the
       // month: the measure reaches each of those tables, A's, B's and the time axis's)
-      tip: { card: card(ch.main), cat: A, y: f((ch.kpis || []).find((k) => k && ch.main && k.m !== ch.main.m && !k.variant && !k.pct && (!ch.reach || [A, Bc, ch.date].filter(Boolean).every((c) => !reachTable([c, k], ch.reach).notReached.length)))) || main, date: ch.date && /month|\u0627\u0644\u0634\u0647\u0631/i.test(ch.date.c) ? f(ch.date) : null }
+      tip: { card: card(ch.main), cat: f(ch.catA), y: f((ch.kpis || []).find((k) => k && ch.main && !same(k, ch.main) && !k.variant && !k.pct && (!ch.reach || [A, Bc, ch.date].filter(Boolean).every((c) => !reachTable([c, k], ch.reach).notReached.length)))) || main, date: ch.date && /month|\u0627\u0644\u0634\u0647\u0631/i.test(ch.date.c) ? f(ch.date) : null }
     };
     if (TB.notReached.length) out.notReached = TB.notReached;
     return out;
@@ -666,6 +729,16 @@
   const fieldKey = (t, c) => String(t) + '[' + String(c).replace(/\]/g, ']]') + ']';
   const langsOf = (tables) => { const out = {}; catalog(tables).columns.filter((c) => metaOf(c).lang).forEach((c) => { out[fieldKey(c.t, c.c)] = metaOf(c).lang; }); return out; };
   const twinsOf = (tables) => { const out = {}; catalog(tables).columns.filter((c) => metaOf(c).twin).forEach((c) => { const w = metaOf(c).twin; out[fieldKey(c.t, c.c)] = fieldKey(w.t, w.c); }); return out; };
-  const api = { dateColumnFor, fieldOf, measureOf, isDateTable, markCalendars, exprOf, fieldKey, langOf, langsOf, twinsOf, reachTable, relsOfTmsl, relsOfTmdl, isPercent, measureCard, nameLike, iso, parseTmdl, fromTmsl, fromFolder, fromFile, suggest, build, counts, sortColumnFor, renderPicker, connection };
+  // every field of a binding mapped by fn (a display name, a format), as copies: a field the binding shares (the bar's
+  // and the donut's category) stays shared, and the picker's own fields are never changed (A3-2: the server's named()
+  // used to set name on them in place)
+  const FIELD_KEYS = ['date', 'measure', 'kpis', 'cats', 'y', 'table', 'slicers', 'tip', 'catPool', 'slicerPool'];
+  function mapFields(bind, fn) {
+    if (!bind) return bind;
+    const done = new Map(), one = (x) => { if (!x || typeof x !== 'object') return x; if (!done.has(x)) done.set(x, fn(x)); return done.get(x); };
+    const each = (v) => (Array.isArray(v) ? v.map(one) : v && typeof v === 'object' && v.t == null ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, one(x)])) : one(v));
+    return Object.assign({}, bind, Object.fromEntries(FIELD_KEYS.filter((k) => bind[k] != null).map((k) => [k, each(bind[k])])));
+  }
+  const api = { dateColumnFor, mapFields, fieldOf, measureOf, isDateTable, markCalendars, exprOf, fieldKey, langOf, langsOf, twinsOf, reachTable, relsOfTmsl, relsOfTmdl, isPercent, measureCard, nameLike, iso, parseTmdl, fromTmsl, fromFolder, fromFile, suggest, build, counts, sortColumnFor, renderPicker, connection };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DABind = api;
 })(typeof self !== 'undefined' ? self : this);
