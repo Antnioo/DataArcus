@@ -16,6 +16,7 @@ import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { withPlans } from '../test-plan.mjs';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { layoutProblems, tableProblems, projectProblems } from '../../scripts/tests/report-check.mjs';
 
@@ -38,11 +39,12 @@ const sizes = [];
 // Every backslash pair is counted as one character. (An answer that holds the temporary folder's own path, like
 // check_model_health's script files, still varies with that folder's name.)
 const chars = (t) => t.split('\\\\').join('/').length;
-const call = async (name, args) => {
+// (0.2.9, the gate: each writing call gets its approved plan id through approve_plan, as an agent must; ../test-plan.mjs)
+const call = withPlans(async (name, args) => {
   const r = await client.callTool({ name, arguments: args }), t = r.content[0].text;
   sizes.push({ tool: name, chars: chars(t) });
   return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) };
-};
+});
 const hashes = (dir) => { const out = {}; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else out[f] = crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex'); }); walk(dir); return out; };
 const unchanged = (before) => Object.entries(before).filter(([f, h]) => !fs.existsSync(f) || hashes(path.dirname(f))[f] !== h).map(([f]) => path.relative(ROOT, f));
 const filesOf = (dir, rel) => { const out = {}; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else out[path.relative(rel, f).split(path.sep).join('/')] = fs.readFileSync(f); }); walk(dir); return out; };

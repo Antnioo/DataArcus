@@ -410,8 +410,9 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
       await cl.close();
     } catch (e) { err = String(e && e.message || e); }
     fs0.rmSync(tmp, { recursive: true, force: true });
-    chk(() => tools.length === 8 && ans && !ans.err && ans.validator.ran === false && ans.validator.mode === 'not available' && /cannot be loaded|report CLI/i.test(ans.validator.why || ''),
-      () => `X-03. with the CLI failing to load: 8 tools and check_report's validator "not available" with the reason: ${tools.length} tools ${JSON.stringify(ans && (ans.validator || ans)).slice(0, 300)} ${err}`);
+    // (9 tools since approve_plan, 11 Oct 2026, 0.2.9's gate)
+    chk(() => tools.length === 9 && ans && !ans.err && ans.validator.ran === false && ans.validator.mode === 'not available' && /cannot be loaded|report CLI/i.test(ans.validator.why || ''),
+      () => `X-03. with the CLI failing to load: 9 tools and check_report's validator "not available" with the reason: ${tools.length} tools ${JSON.stringify(ans && (ans.validator || ans)).slice(0, 300)} ${err}`);
   }
 }
 
@@ -421,7 +422,8 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const ROOT = fs0.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-r22-')), problems = []; let checks = 0;
   const client = new Client({ name: 'test-r22', version: '1' });
   await client.connect(new StdioClientTransport({ command: process.execPath, args: [path.join(HERE, 'server.mjs')], env: { ...process.env, DATAARCUS_ROOT: ROOT }, stderr: 'ignore' }));
-  const call = async (name, args) => { const r = await client.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; };
+  const { withPlans } = await import('./test-plan.mjs');
+  const call = withPlans(async (name, args) => { const r = await client.callTool({ name, arguments: args }); const t = r.content[0].text; return { err: !!r.isError, t, j: r.isError ? null : JSON.parse(t) }; });
   await round22({ call, check: (ok, msg) => { checks++; if (!ok) problems.push(msg); }, ROOT });
   await client.close(); fs0.rmSync(ROOT, { recursive: true, force: true }); void req;
   console.log(problems.length ? `FAIL  round22  ${checks} checks\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  round22  ${checks} checks`);
