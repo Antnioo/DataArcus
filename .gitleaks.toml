@@ -1,7 +1,9 @@
-# gitleaks settings for the Privacy scan workflow: the default rules, plus the one known false alarm.
+# gitleaks settings for the Privacy scan workflow: the default rules, plus the known false alarms, each public on purpose.
 [extend]
 useDefault = true
 
 [allowlist]
-description = "The IndexNow key is public on purpose (the protocol serves it at /<key>.txt); its test holds it."
+description = "Public on purpose: the IndexNow key (the protocol serves it at /<key>.txt) and Power BI 'Publish to web' links (the site's dashboards)."
 paths = ['''^scripts/test-indexnow\.mjs$''']
+regexTarget = "line"
+regexes = ['''app\.powerbi\.com/view\?r=''']
