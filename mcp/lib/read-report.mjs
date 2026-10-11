@@ -128,6 +128,20 @@ export function memorySource(files) {
 }
 
 
+// ---- Microsoft's catalog of Power BI's own visuals (A5-7, audit 5): each role's name in Desktop and its kind ----
+// (loaded once, at the module's start; without it the roles are listed by their keys alone, as before)
+let VS = null;
+try { VS = await import('@microsoft/powerbi-core-visual-schema'); } catch (e) { VS = null; }
+const ROLE_CACHE = new Map();
+export const rolesOf = (type) => {
+  if (!ROLE_CACHE.has(type)) { let roles = {}; try { roles = Object.fromEntries(((VS && VS.getCapabilities(String(type))) || { dataRoles: [] }).dataRoles.map((d) => [d.name, { name: String(d.displayName || d.name), kind: String(d.kind || '') }])); } catch (e) { roles = {}; } ROLE_CACHE.set(type, roles); }
+  return ROLE_CACHE.get(type);
+};
+// a role as the answers write it: its key screened (a custom visual's keys are free text: A5-1), then Desktop's name and
+// "measure" when the catalog knows them ("Category (Y-axis)", "Y (X-axis, measure)")
+const roleLabel = (type, role) => { const k = safeName(role), d = rolesOf(type)[role], kind = d && d.kind === 'Measure' ? 'measure' : '';
+  if (!d) return k; const parts = [d.name !== role ? d.name : '', kind].filter(Boolean); return parts.length ? `${k} (${parts.join(', ')})` : k; };
+
 // ---- reading a visual's parts ----
 const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
 const litStr = (p) => { const v = lit(p); return v == null ? null : /^'.*'$/s.test(String(v)) ? String(v).slice(1, -1).replace(/''/g, "'") : String(v).replace(/[DLM]$/, ''); };
@@ -276,7 +290,7 @@ export function inventory(src, reportName) {
 // 18,000 characters as text). Capped at 40,000 characters, read_model's large-model line (lib/scope.mjs): pages past it
 // are listed with their counts only, and the answer says how to read them (the pages input).
 export const READ_CAP = 40000;
-const fieldsText = (x) => Object.entries(x.fields || {}).map(([r, l]) => `${r}: ${l.map((f) => (f.kind === 'other' ? '(an expression)' : refOf(f)) + (f.displayName ? ` as "${safeText(f.displayName)}"` : '')).join(', ')}`).join(' | ');
+const fieldsText = (x) => Object.entries(x.fields || {}).map(([r, l]) => `${roleLabel(x.type, r)}: ${l.map((f) => (f.kind === 'other' ? '(an expression)' : refOf(f)) + (f.displayName ? ` as "${safeText(f.displayName)}"` : '')).join(', ')}`).join(' | ');
 function visualLine(x) {
   let s = '  ' + (x.slicer ? 'SLICER ' : x.action ? 'ACTION ' : '') + typeName(x.type) + ` ${Math.round(x.x)},${Math.round(x.y)} ${Math.round(x.w)}x${Math.round(x.h)}` + (x.hidden ? ' hidden' : '') + (x.hiddenByGroup ? ' hidden-by-group' : '') + (x.group ? ` in "${x.groupName || safeName(x.group)}"` : '');
   if (x.type === 'group' && x.groupTitle) s += ` "${safeText(x.groupTitle)}"`;
@@ -319,7 +333,8 @@ export function answerOf(inv, opts) {
     const strip = (x) => Object.assign({ id: safeName(x.id), type: typeName(x.type), x: Math.round(x.x), y: Math.round(x.y), w: Math.round(x.w), h: Math.round(x.h), z: x.z },
       x.group ? { group: safeName(x.group), groupName: x.groupName } : {}, x.hidden ? { hidden: true } : {}, x.hiddenByGroup ? { hiddenByGroup: true } : {}, x.slicer ? { slicer: true } : {},
       x.type === 'group' ? { groupTitle: safeText(x.groupTitle) } : {}, x.title ? { title: x.title } : {}, x.text ? { text: x.text } : {},
-      { fields: Object.fromEntries(Object.entries(x.fields || {}).map(([r, l]) => [r, l.map((f) => (f.kind === 'other' ? '(an expression)' : refOf(f)) + (f.displayName ? ` as "${safeText(f.displayName)}"` : ''))])),
+      { fields: Object.fromEntries(Object.entries(x.fields || {}).map(([r, l]) => [safeName(r), l.map((f) => (f.kind === 'other' ? '(an expression)' : refOf(f)) + (f.displayName ? ` as "${safeText(f.displayName)}"` : ''))])),
+        roles: Object.fromEntries(Object.keys(x.fields || {}).map((k) => [safeName(k), rolesOf(x.type)[k] || null])),
         sort: (x.sort || []).map((s) => `${refOf(s.field)} ${s.dir}`), filters: (x.filters || []).map(filterText) },
       x.action ? { action: x.action } : {}, x.tooltipPage ? { tooltipPage: x.tooltipPage } : {},
       x.format ? { format: Object.assign({}, x.format, { widths: Object.fromEntries(Object.entries(x.format.widths || {}).map(([k, w]) => [safeName(k), w])) }) } : {});
