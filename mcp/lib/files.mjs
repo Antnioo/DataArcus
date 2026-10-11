@@ -6,6 +6,12 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { nothingAt, real, inside } from './model.mjs';
 
+// what was written in this server's life, in order (audit 6, A6-17): a tool that fails says what it had written
+const WRITTEN = [];
+export const noteWritten = (f) => { WRITTEN.push(String(f)); };
+/** With no mark: the current mark. With a mark: what was written since, as paths relative to the working folder. */
+export function writtenSince(mark) { if (mark === undefined) return WRITTEN.length; return WRITTEN.slice(mark).map((f) => path.relative(process.env.DATAARCUS_ROOT ? path.resolve(process.env.DATAARCUS_ROOT) : '.', f).split(path.sep).join('/')); }
+
 // tests only: DATAARCUS_TEST_WRITE_FAIL="<code>:<n>" makes the write fail with that error code after n files (a full
 // disk, ENOSPC; an I/O error, EIO), to prove the clean-up. It can only make a write fail, never make one succeed.
 function testFailure() {
@@ -45,12 +51,13 @@ export function writeTree(dir, files) {
       const from = path.join(tmp, t), to = path.join(dir, t);
       if (isDir(t)) { if (!nothingAt(to)) throw new Error(`"${t}" appeared while writing`); fs.renameSync(from, to); }
       else { fs.linkSync(from, to); fs.unlinkSync(from); }   // link: fails with EEXIST rather than replace a file
-      placed.push(t);
+      placed.push(t); noteWritten(to);
     }
     fs.rmSync(tmp, { recursive: true, force: true }); made = false;
     return placed;
   } catch (e) {
     for (const t of placed) { try { fs.rmSync(path.join(dir, t), { recursive: true, force: true }); } catch (x) { /* already gone */ } }
+    if (placed.length) WRITTEN.splice(WRITTEN.length - placed.length, placed.length);   // (removed again: not written)
     if (made) { try { fs.rmSync(tmp, { recursive: true, force: true }); } catch (x) { /* already gone */ } }
     const why = e && e.code === 'ENOSPC' ? 'the disk is full (ENOSPC)' : String(e && e.message || e).slice(0, 200);
     const err = new Error(`Nothing was written: the files could not be written (${why}). What this call had written was removed; nothing else was touched.`);
