@@ -135,11 +135,8 @@ const sig = (target, e) => `${frameOf(e)} ${shape(e)}`;
 // A crash is matched by the file it happens in and its message; a property failure by its target and property. A crash
 // anywhere else, or a property failing on another target, fails the run. Remove an entry once its fix is merged.
 const KNOWN = [
-  { id: 'F-R1', owner: 'builder 6 (reading)', file: 'read-report.mjs', msg: /is not a function/, k: 48, what: 'a list (pageOrder, textRuns, paragraphs) that is not an array' },
-  { id: 'F-R2', owner: 'builder 6 (reading)', file: 'read-report.mjs', msg: /of null|of undefined/, k: 120, what: 'a null projection, filter or text run' },
   { id: 'F-M1', owner: 'builder 6 (model loader, TMDL reader)', file: 'tmdl-model.js', msg: /./, k: 1, what: 'a truncated or mis-indented TMDL file' },
   { id: 'F-M2', owner: 'builder 6 (model loader)', file: 'pbip-bind.js', msg: /./, k: 16, what: 'a model.bim or .pbit whose tables, columns, measures or relationships are not arrays, or hold null' },
-  { id: 'F-C1', owner: 'builder 7 (checks)', file: 'check-report.mjs', msg: /./, k: 6, what: 'a null report.json, page.json or bookmark, or text runs that are not an array' },
   { id: 'F-C2', owner: 'builder 7 (checks)', file: 'report-rules.js', msg: /./, k: 167, what: 'a sort list or a property bag of the wrong type' },
   { id: 'F-T1', owner: 'builder 9 (twin)', file: 'report-mirror.js', msg: /Cannot create property/, k: 7, what: 'an object expected, a string or number found' },
   { id: 'F-T2', owner: 'builder 9 (twin)', file: 'report-mirror.js', msg: /of null|of undefined|is not a function/, k: 9, what: 'a null entry, or a list that is not an array' },
