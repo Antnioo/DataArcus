@@ -262,12 +262,20 @@
   // last 12 months with data), 'az' (a text with no order: A to Z)
   // (A3-10: a date column whose name holds a control character can't be named in the month's DAX: no month start)
   const monthLabel = (f) => !!(f && f.c != null && f.dateOf && !f.sortBy && !f.ordered && !f.num && f.agg == null && !/^(int64|double|decimal|number|date)/.test(String(f.type || 'string')) && !hasControl(f.dateOf.t) && !hasControl(f.dateOf.c));
+  // 0.2.9 rc1 (the laptop's proof of 11 Oct: a Month-Year column of a DAX table, which the files give no type, ran A to Z
+  // with about 60 labels): a month label with no date column and no sort-by column is read as a date itself, by a report
+  // measure (DATEVALUE of "1 " & the label, or of the label & "-01", or of the label: "Apr 2018", "April 2018",
+  // "2018-04"), which orders the chart and keeps its last 12 months; a label no form reads gives blank, and then the chart
+  // keeps every point. Only a month-and-year label ("Month-Year", "Year Month"): a month name alone keeps its rules (the
+  // picker's sort column, or the model's), and a "period" or week label is no date (G11)
+  const labelMonth = (f) => !!(f && f.c != null && !f.dateOf && !f.sortBy && !f.ordered && !f.num && f.agg == null && /^(string|unknown)$/.test(String(f.type || 'string').toLowerCase()) && /month|الشهر/i.test(String(f.c)) && YEARISH.test(String(f.c)) && !hasControl(f.t) && !hasControl(f.c));
   const timeAxisPlan = (f) => {
     if (!f || f.c == null) return null;
     if (f.agg != null || f.num || /^(int64|double|decimal|number|date)/.test(String(f.type || 'string'))) return { order: 'own' };
     if (f.ordered) return { order: 'model' };
     if (f.sortBy) return { order: 'number', by: f.sortBy };
     if (monthLabel(f)) return { order: 'monthStart', by: f.dateOf, last: 12 };
+    if (labelMonth(f)) return { order: 'monthLabel', last: 12 };
     return { order: 'az' };
   };
   const rowLabelDax = (f, word, vals) => { const c = daxNames.column(f.t, f.c), inner = 'IF ( ISINSCOPE ( ' + c + ' ), SELECTEDVALUE ( ' + c + ' ), ' + daxNames.string(word) + ' )';
@@ -380,17 +388,27 @@
     // order by a measure, the month's first date, in the visual's Tooltips; and kept to the last n months, counted back
     // from the last date where the visual's measure has a value (not from today: an old data set still shows its last
     // months), by a visual filter on a measure that is 1 for those months
-    const monthStart = (f) => extMeasure(f.dateOf.t, 'Month start (sort)', 'MIN ( ' + daxNames.column(f.dateOf.t, f.dateOf.c) + ' )', 'DateTime');
+    // (rc1: a month label without its date, timeAxisPlan's monthLabel, read as a date: asDate)
+    const asDate = (x) => 'IFERROR ( DATEVALUE ( "1 " & ' + x + ' ), IFERROR ( DATEVALUE ( ' + x + ' & "-01" ), IFERROR ( DATEVALUE ( ' + x + ' ), BLANK () ) ) )';
+    const monthStart = (f) => (f.dateOf ? extMeasure(f.dateOf.t, 'Month start (sort)', 'MIN ( ' + daxNames.column(f.dateOf.t, f.dateOf.c) + ' )', 'DateTime')
+      : extMeasure(f.t, 'Month start (sort)', asDate('MIN ( ' + daxNames.column(f.t, f.c) + ' )'), 'DateTime'));
     const lastMonths = (f, yField, n) => {
       const y = daxOf(yField); if (!y) return null;
+      if (!f.dateOf) {
+        const c = daxNames.column(f.t, f.c), yn = yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property;
+        const m = extMeasure(f.t, 'Last ' + n + ' months: ' + shown(yn), 'VAR _last = CALCULATE ( MAXX ( FILTER ( ALL ( ' + c + ' ), NOT ISBLANK ( ' + y + ' ) ), ' + asDate(c) + ' ), ALL ( ' + daxNames.table(f.t) + ' ) ) RETURN IF ( ISBLANK ( _last ), 1, IF ( ' + asDate('MAX ( ' + c + ' )') + ' > EDATE ( _last, -' + n + ' ), 1 ) )', 'Integer');
+        return { name: 'Filter' + rnd() + rnd().slice(0, 4), type: 'Advanced', field: extField(f.t, m),
+          filter: { Version: 2, From: [{ Name: 'm', Entity: f.t, Schema: 'extension', Type: 0 }],
+            Where: [{ Condition: { Comparison: { ComparisonKind: 0, Left: { Measure: { Expression: { SourceRef: { Source: 'm' } }, Property: m } }, Right: { Literal: { Value: '1L' } } } } }] }, howCreated: 'User' };
+      }
       const d = daxNames.column(f.dateOf.t, f.dateOf.c), yName = yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property;
       const m = extMeasure(f.dateOf.t, 'Last ' + n + ' months: ' + shown(yName), 'VAR _last = CALCULATE ( MAXX ( FILTER ( ALL ( ' + d + ' ), NOT ISBLANK ( ' + y + ' ) ), ' + d + ' ), ALL ( ' + daxNames.table(f.dateOf.t) + ' ) ) RETURN IF ( MAX ( ' + d + ' ) > EDATE ( _last, -' + n + ' ), 1 )', 'Integer');
       return { name: 'Filter' + rnd() + rnd().slice(0, 4), type: 'Advanced', field: extField(f.dateOf.t, m),
         filter: { Version: 2, From: [{ Name: 'm', Entity: f.dateOf.t, Schema: 'extension', Type: 0 }],
           Where: [{ Condition: { Comparison: { ComparisonKind: 0, Left: { Measure: { Expression: { SourceRef: { Source: 'm' } }, Property: m } }, Right: { Literal: { Value: '1L' } } } } }] }, howCreated: 'User' };
     };
-    const byMonthStart = (query, f, dir) => { const m = monthStart(f), field = extField(f.dateOf.t, m);
-      query.queryState.Tooltips = { projections: [{ field, queryRef: f.dateOf.t + '.' + m, nativeQueryRef: m }] };
+    const byMonthStart = (query, f, dir) => { const m = monthStart(f), et = f.dateOf ? f.dateOf.t : f.t, field = extField(et, m);
+      query.queryState.Tooltips = { projections: [{ field, queryRef: et + '.' + m, nativeQueryRef: m }] };
       query.sortDefinition = { sort: [{ field, direction: dir }], isDefaultSort: true }; };
     // O-3 (the "(Blank)" month on the line chart): a visual filter "is not blank" on a chart's category column, the
     // shape Desktop writes for it
@@ -418,7 +436,7 @@
     TYPES, CHARTS, TIME_WORDS, wordsOf, TIME_KINDS, isTime, sorted, HEX6, gradientEnds, gradientFill,
     mirrorChart, orderHelper, orderedBy, inOrder, isTextField, Bind, nameLike, YEARISH, KIND_ROWS, catKind,
     AR_MONTHS, NAMES, namesOf, tableFields, ROW_LABEL, rowLabelOf, rowLabelProj, AGG_DAX, valueDax, monthLabel,
-    timeAxisPlan, rowLabelDax, CAT_KINDS, bindQuery, AR_LETTERS, byTitle, bindTitle, PF_KINDS, pfLiteral, pageFilterOf, measures
+    labelMonth, timeAxisPlan, rowLabelDax, CAT_KINDS, bindQuery, AR_LETTERS, byTitle, bindTitle, PF_KINDS, pfLiteral, pageFilterOf, measures
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbipQuery = api;
 })(typeof self !== 'undefined' ? self : this);
