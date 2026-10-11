@@ -219,7 +219,8 @@ const tipChart = (p) => p.visuals.find((v) => v.visual && /Chart$/.test(v.visual
 const lastMonthsFilter = (f) => f.type === 'Advanced' && !!(f.field && f.field.Measure && f.field.Measure.Expression.SourceRef.Schema === 'extension')
   && ((((f.filter || {}).Where || [])[0] || {}).Condition || {}).Comparison && f.filter.Where[0].Condition.Comparison.ComparisonKind === 0 && ((f.filter.Where[0].Condition.Comparison.Right || {}).Literal || {}).Value === '1L';
 const sixMonths = (p) => p.visuals.some((v) => ((v.filterConfig || {}).filters || []).some(lastMonthsFilter));
-const isTrend = (p) => p.page.height === 410 || (p.page.height === 314 && sixMonths(p));
+// (changed in 0.2.9 rc1, DETAIL-2 T6/T9: the pages are as high as the measured rows need, 22.2 a row + 45 + 8: the trend 420, was 410)
+const isTrend = (p) => p.page.height === 420 || (p.page.height === 314 && sixMonths(p));
 const catRef = (v) => { const q = ((v.visual.query || {}).queryState || {}), r = q.Category || q.Group; return r && r.projections[0] ? r.projections[0].queryRef : null; };
 export function tooltipProblems(files) {
   const pages = pagesOf(files), tipPages = pages.filter((p) => p.page.type === 'Tooltip'), tips = tipPages.map((p) => p.page.name), bad = [];
@@ -256,9 +257,10 @@ export function tooltipPageProblems(files) {
     // (0.2.9 part 2, TOOLTIP-FIX-LAB, measured in Desktop 2.158.1304: a trend kept to its last 6 months, newest first, is
     // 40 + 27 a bar high: the page 320 x 314; a trend without a date column keeps its 12 rows on 320 x 410)
     const six = sixMonths(p);
-    const isT = isTrend(p), wantH = isT ? (six ? 314 : 410) : 284;
+    // (changed in 0.2.9 rc1, T6/T9: 6 bars need 187, 12 months 320, by the measured bar rows: the pages 287 and 420, were 284 and 410)
+    const isT = isTrend(p), wantH = isT ? (six ? 314 : 420) : 287;
     if (isT) trend++;
-    if (p.page.width !== 320 || p.page.height !== wantH) bad.push(`tooltip page is ${p.page.width} x ${p.page.height}, want 320 x 284, or 320 x 410 for the trend (320 x 314 kept to its last 6 months)`);
+    if (p.page.width !== 320 || p.page.height !== wantH) bad.push(`tooltip page is ${p.page.width} x ${p.page.height}, want 320 x 287, or 320 x 420 for the trend (320 x 314 kept to its last 6 months)`);
     const cs = p.visuals.filter((v) => v.visual && /Chart$/.test(v.visual.visualType));
     if (cs.length > 1 || (isT && cs.length !== 1)) bad.push(`tooltip page "${p.page.displayName}" has ${cs.length} charts`);
     cs.forEach((v) => {
@@ -267,7 +269,8 @@ export function tooltipPageProblems(files) {
       // (0.2.9 part 2: the last-6-months trend by the tooltip lab's measure, 27 a bar at 8pt and 40 for the title and padding)
       const rows = isT && six ? MEASURED.TIP_ROWS_6(v.position.height) : MEASURED.TIP_ROWS(v.position.height);
       const got = { type: v.visual.visualType, text: lit(c.fontSize), room: lit(c.maxMarginFactor), axisTitle: lit(c.showAxisTitle), valueAxis: lit(y.show), labels: lit(l.show), labelText: lit(l.fontSize), rows };
-      const want = { type: 'clusteredBarChart', text: '8D', room: '40L', axisTitle: 'false', valueAxis: 'false', labels: 'true', labelText: '8D', rows: isT ? (six ? 6 : 12) : 6 };
+      // (changed in 0.2.9 rc1, T8: names cut at 40%; the share of a narrow bar chart, barNameShare, 50 at 296 wide)
+      const want = { type: 'clusteredBarChart', text: '8D', room: '50L', axisTitle: 'false', valueAxis: 'false', labels: 'true', labelText: '8D', rows: isT ? (six ? 6 : 12) : 6 };
       if (JSON.stringify(got) !== JSON.stringify(want)) bad.push(`tooltip chart ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
       if (v.position.y + v.position.height > p.page.height || v.position.x + v.position.width > p.page.width) bad.push('tooltip chart outside its page');
     });
