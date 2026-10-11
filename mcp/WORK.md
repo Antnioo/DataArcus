@@ -63,6 +63,12 @@ After the twin and tools: **1033** + 36 + 21 + 21 + 16, golden PASS (11 tasks, n
 (854) PASS. The startup instructions are **2,493 characters** (cap 2,500): builder 10's A7-4 (every rule from one source)
 must keep them under it.
 
+## rc1 release blockers, writer (11 Oct from 20:22 UTC, cloud builder 11; `fix/0.2.9-writer` reset to `46037f3`; not merged, no PR)
+Report: `mcp/work/0.2.9-writer.md` (section "rc1 release blockers"). Done: 1 O-13 `5f2d4e8`, 2 S1/S2 `b1eb2f8`, 4 S5/S7 `9ace5d8`;
+3 has no writer cause (for builder 5). `npm test` 1204 + 36 + 21 + 21 + 20, golden, fuzz PASS; website 16/17: design-engine's 6
+background fixtures moved by S7 on purpose. **Decision needed:** the owner's yes to re-record those 6. Next: builder 5 merges into
+the gate after that; the laptop proves O-13's DATEVALUE, S1/S2, S5, S7 in Desktop.
+
 ## 0.2.9 writer block (11 Oct, cloud builder 11; branch `fix/0.2.9-writer` from `fix/0.2.9-gate` `d2300f9`; not merged, no PR)
 The full report: `mcp/work/0.2.9-writer.md`. Done: A3-10 (`daxNames`), A3-11 (shown text without format characters), A3-7 and A3-8
 (writer side: the picker's `kind`/`rows`/`family`/`time` read when given, names measured by family), A3-9 (JSDoc contract, `checkBuild`,
