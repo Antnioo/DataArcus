@@ -8,6 +8,8 @@ on:
 permissions:
   contents: write
   issues: write
+  pull-requests: write
+  actions: write
 
 jobs:
   check-outlines:
@@ -29,17 +31,27 @@ jobs:
         run: node scripts/check-exam-outline.mjs pl-300
         continue-on-error: true
 
-      - name: Save the check dates
+      # main is protected (pull requests with passing checks only), so the bot opens a pull request and starts the
+      # checks on it itself (a pull request opened by this token starts no workflows on its own); the owner merges it
+      - name: Propose the check dates (a pull request)
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           if git diff --quiet assets/data/dp600-outline.json assets/data/pl300-outline.json; then
             echo "No changes"
           else
+            DAY=$(date -u +%Y-%m-%d)
+            BRANCH="bot/exam-outlines-$DAY-${{ github.run_id }}"
             git config user.name "DataArcus exam bot"
             git config user.email "actions@users.noreply.github.com"
+            git switch -c "$BRANCH"
             git add assets/data/dp600-outline.json assets/data/pl300-outline.json
-            git commit -m "Weekly exam outline check $(date -u +%Y-%m-%d)"
-            git pull --rebase
-            git push
+            git commit -m "Weekly exam outline check $DAY"
+            git push -u origin "$BRANCH"
+            gh pr create --base main --head "$BRANCH" --title "Weekly exam outline check $DAY" \
+              --body "The weekly check of Microsoft's DP-600 and PL-300 outlines. If an issue was opened too, the questions need a review first."
+            gh workflow run tests.yml --ref "$BRANCH"
+            gh workflow run privacy.yml --ref "$BRANCH"
           fi
 
       - name: Open an issue when Microsoft changed something
