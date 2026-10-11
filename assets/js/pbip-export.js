@@ -120,17 +120,15 @@
       months: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'], cats: ['إلكترونيات', 'المنزل', 'أزياء', 'رياضة'], regions: ['دبي', 'أبوظبي', 'الشارقة', 'عجمان'],
       m: { rev: 'إجمالي الإيرادات', ord: 'إجمالي الطلبات', aov: 'متوسط قيمة الطلب', mar: 'هامش الربح %', cus: 'إجمالي العملاء', rpc: 'الإيراد لكل عميل' } }
   };
-  const dq = (s) => '"' + String(s).replace(/"/g, '""') + '"';
-  const ref = (t, c) => "'" + t.replace(/'/g, "''") + "'[" + c.replace(/]/g, ']]') + ']';
   function sampleModel(t) {
     const rows = [];
     t.months.forEach((mo, mi) => t.cats.forEach((ca, ci) => {
       const base = 42000 + ci * 9000 + mi * 1800 + ((mi * 7 + ci * 13) % 9) * 1500, orders = Math.round(base / (180 + ci * 35));
-      rows.push('{' + [dq(mo), mi + 1, dq(ca), dq(t.regions[(mi + ci) % 4]), base, Math.round(base * (0.58 + ci * 0.04)), orders, Math.round(orders * 0.72)].join(', ') + '}');
+      rows.push('{' + [daxNames.string(mo), mi + 1, daxNames.string(ca), daxNames.string(t.regions[(mi + ci) % 4]), base, Math.round(base * (0.58 + ci * 0.04)), orders, Math.round(orders * 0.72)].join(', ') + '}');
     }));
     const tb = t.table, col = (name, dataType, extra) => Object.assign({ type: 'calculatedTableColumn', name, dataType, isNameInferred: true, isDataTypeInferred: true, sourceColumn: '[' + name + ']' }, extra || {});
-    const expr = 'DATATABLE(' + [dq(t.month), 'STRING', dq(t.monthNo), 'INTEGER', dq(t.category), 'STRING', dq(t.region), 'STRING', dq(t.revenue), 'DOUBLE', dq(t.cost), 'DOUBLE', dq(t.orders), 'INTEGER', dq(t.customers), 'INTEGER'].join(', ') + ', {' + rows.join(', ') + '})';
-    const R = ref(tb, t.revenue), m = t.m;
+    const expr = 'DATATABLE(' + [t.month, 'STRING', t.monthNo, 'INTEGER', t.category, 'STRING', t.region, 'STRING', t.revenue, 'DOUBLE', t.cost, 'DOUBLE', t.orders, 'INTEGER', t.customers, 'INTEGER'].map((x, i) => (i % 2 ? x : daxNames.string(x))).join(', ') + ', {' + rows.join(', ') + '})';
+    const R = daxNames.column(tb, t.revenue), m = t.m;
     return {
       name: tb,
       columns: [
@@ -146,10 +144,10 @@
       partitions: [{ name: tb, mode: 'import', source: { type: 'calculated', expression: expr } }],
       measures: [
         { name: m.rev, expression: 'SUM(' + R + ')', formatString: '#,0' },
-        { name: m.ord, expression: 'SUM(' + ref(tb, t.orders) + ')', formatString: '#,0' },
+        { name: m.ord, expression: 'SUM(' + daxNames.column(tb, t.orders) + ')', formatString: '#,0' },
         { name: m.aov, expression: 'DIVIDE([' + m.rev + '], [' + m.ord + '])', formatString: '#,0.0' },
-        { name: m.mar, expression: 'DIVIDE(SUM(' + R + ') - SUM(' + ref(tb, t.cost) + '), SUM(' + R + '))', formatString: '0.0%' },
-        { name: m.cus, expression: 'SUM(' + ref(tb, t.customers) + ')', formatString: '#,0' },
+        { name: m.mar, expression: 'DIVIDE(SUM(' + R + ') - SUM(' + daxNames.column(tb, t.cost) + '), SUM(' + R + '))', formatString: '0.0%' },
+        { name: m.cus, expression: 'SUM(' + daxNames.column(tb, t.customers) + ')', formatString: '#,0' },
         { name: m.rpc, expression: 'DIVIDE([' + m.rev + '], [' + m.cus + '])', formatString: '#,0' }
       ]
     };
@@ -181,6 +179,16 @@
   // a name holding a control character (\p{Cc}: a tab, a line break), which no DAX this writer builds may name (AUD-032;
   // round 22b, the outside review's X-05): the one test, used by the MCP's server for its scripts too
   const hasControl = (x) => /\p{Cc}/u.test(String(x));
+  // 0.2.9, audit 3's A3-10: the one DAX quoter of the writer (it had five: ref, daxName, daxTable, dq and one inline),
+  // exported for the SVG compiler and the server too. table 'Name', measure [Name], column 'Table'[Name], string "Text";
+  // a name with a control character is refused (AUD-032): no DAX this writer builds may hold one
+  const daxSafe = (n) => { const s = String(n); if (hasControl(s)) throw new Error('A DAX name may not hold a control character (a tab, a line break): ' + JSON.stringify(s)); return s; };
+  const daxNames = {
+    table: (t) => "'" + daxSafe(t).replace(/'/g, "''") + "'",
+    measure: (m) => '[' + daxSafe(m).replace(/\]/g, ']]') + ']',
+    column: (t, c) => daxNames.table(t) + daxNames.measure(c),
+    string: (s) => '"' + daxSafe(s).replace(/"/g, '""') + '"'
+  };
   const columnRoom = (p, t, font) => {
     const head = textWidth(p.displayName || p.nativeQueryRef || '', t, true, font);
     const value = p.field && (p.field.Measure || p.field.Aggregation) ? (9 * 0.54 + 2 * 0.21) * t * 4 / 3 : 12 * 0.55 * t * 4 / 3;
@@ -332,10 +340,9 @@
   // table showed its names over the "No data" card. The label is blank unless one of the table's numbers (vals: its
   // projections, the measures and the columns the visual sums or counts, in the table's order) has a value there, as
   // Power BI decides for an English table's rows; the total row's word likewise)
-  const daxName = (t, n) => "'" + String(t).replace(/'/g, "''") + "'[" + String(n).replace(/\]/g, ']]') + ']';
   const AGG_DAX = { 0: 'SUM', 1: 'AVERAGE', 2: 'DISTINCTCOUNT', 3: 'MIN', 4: 'MAX', 5: 'COUNTA' };   // (part 6: 2 is the visual's distinct count)
-  const valueDax = (p) => (p.field.Measure ? daxName(p.field.Measure.Expression.SourceRef.Entity, p.field.Measure.Property)
-    : (AGG_DAX[p.field.Aggregation.Function] || 'COUNTA') + ' ( ' + daxName(p.field.Aggregation.Expression.Column.Expression.SourceRef.Entity, p.field.Aggregation.Expression.Column.Property) + ' )');
+  const valueDax = (p) => (p.field.Measure ? daxNames.column(p.field.Measure.Expression.SourceRef.Entity, p.field.Measure.Property)
+    : (AGG_DAX[p.field.Aggregation.Function] || 'COUNTA') + ' ( ' + daxNames.column(p.field.Aggregation.Expression.Column.Expression.SourceRef.Entity, p.field.Aggregation.Expression.Column.Property) + ' )');
   // 0.2.9 part 2 (O-4) and the cross-review's G8: the share of a bar chart's width its category names get
   // (categoryAxis.maxMarginFactor). Measured on the laptop (REPORT-FIXES-LAB B1/B2, Desktop 2.158.1304, 10 Oct): a chart
   // 508 wide on a 1080-high page cut names at about 10 characters with the default 25; 40 held about 20, 50 about 25.
@@ -347,7 +354,8 @@
   // applies it and plan_layout says it. order: 'own' (a date or number), 'model' (the model's sort-by column), 'number'
   // (the report sorts by the number column, by), 'monthStart' (a month label of a date table: by its first date, the
   // last 12 months with data), 'az' (a text with no order: A to Z)
-  const monthLabel = (f) => !!(f && f.c != null && f.dateOf && !f.sortBy && !f.ordered && !f.num && f.agg == null && !/^(int64|double|decimal|number|date)/.test(String(f.type || 'string')));
+  // (A3-10: a date column whose name holds a control character can't be named in the month's DAX: no month start)
+  const monthLabel = (f) => !!(f && f.c != null && f.dateOf && !f.sortBy && !f.ordered && !f.num && f.agg == null && !/^(int64|double|decimal|number|date)/.test(String(f.type || 'string')) && !hasControl(f.dateOf.t) && !hasControl(f.dateOf.c));
   const timeAxisPlan = (f) => {
     if (!f || f.c == null) return null;
     if (f.agg != null || f.num || /^(int64|double|decimal|number|date)/.test(String(f.type || 'string'))) return { order: 'own' };
@@ -356,7 +364,7 @@
     if (monthLabel(f)) return { order: 'monthStart', by: f.dateOf, last: 12 };
     return { order: 'az' };
   };
-  const rowLabelDax = (f, word, vals) => { const c = daxName(f.t, f.c), inner = 'IF ( ISINSCOPE ( ' + c + ' ), SELECTEDVALUE ( ' + c + ' ), "' + word.replace(/"/g, '""') + '" )';
+  const rowLabelDax = (f, word, vals) => { const c = daxNames.column(f.t, f.c), inner = 'IF ( ISINSCOPE ( ' + c + ' ), SELECTEDVALUE ( ' + c + ' ), ' + daxNames.string(word) + ' )';
     return vals && vals.length ? 'IF ( ' + vals.map((p) => 'NOT ISBLANK ( ' + valueDax(p) + ' )').join(' || ') + ', ' + inner + ' )' : inner; };
   // Round 11 (seen in Desktop 2.158, 5 Oct 2026: on a 960 x 720 page a table of a text column and three measures was
   // wider than its box, a header cut and a column off the box behind a scrollbar; at 1920 x 1080 too with four long
@@ -546,9 +554,9 @@
 
     // project shortcut, report pointer, semantic model
     add(base + '.pbip', json({ $schema: SCHEMA.pbip, version: '1.0', artifacts: [{ report: { path: R } }], settings: { enableAutoRecovery: true } }));
-    const ref = own ? (o.model.byPath ? { byPath: { path: '../' + String(o.model.byPath).replace(/^.*\//, '') } } : { byConnection: { connectionString: o.model.byConnection } })
+    const datasetRef = own ? (o.model.byPath ? { byPath: { path: '../' + String(o.model.byPath).replace(/^.*\//, '') } } : { byConnection: { connectionString: o.model.byConnection } })
       : { byPath: { path: '../' + M } };
-    add(R + '/definition.pbir', json({ $schema: SCHEMA.pbir, version: '4.0', datasetReference: ref }));
+    add(R + '/definition.pbir', json({ $schema: SCHEMA.pbir, version: '4.0', datasetReference: datasetRef }));
     // the item metadata Power BI Desktop and Fabric keep next to each item (as Microsoft's own scaffold writes it)
     const platform = (type) => json({ $schema: SCHEMA.platform, metadata: { type, displayName: base }, config: { version: '2.0', logicalId: guid() } });
     add(R + '/.platform', platform('Report'));
@@ -799,8 +807,7 @@
     // Report-level measures for the time axes (DateTime and Integer), into reportExtensions.json with the others; the same
     // expression in the same table is one measure
     const timeExt = [];
-    // (the cross-review's G4: the writer's own daxName and valueDax, one DAX for a visual's value everywhere)
-    const daxTable = (t) => "'" + String(t).replace(/'/g, "''") + "'";
+    // (the cross-review's G4: the writer's own daxNames and valueDax, one DAX for a visual's value everywhere)
     const extMeasure = (t, want, expression, dataType) => {
       const had = timeExt.find((x) => x.t === t && x.expression === expression); if (had) return had.m;
       let m = freeExt(t, want); for (let k = 2; timeExt.some((x) => x.t === t && x.m === m); k++) m = freeExt(t, want + ' (' + k + ')');
@@ -808,16 +815,19 @@
     };
     const extField = (t, m) => ({ Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: t } }, Property: m } });
     // a field of a visual as DAX (a model measure, or a column a visual sums or counts), or null
-    const daxOf = (field) => ((field && field.Measure && !field.Measure.Expression.SourceRef.Schema) || (field && field.Aggregation && field.Aggregation.Expression.Column) ? valueDax({ field }) : null);
+    // (A3-10: null too for a name with a control character, which daxNames refuses)
+    const daxOf = (field) => { const m = field && field.Measure && !field.Measure.Expression.SourceRef.Schema ? field.Measure : null, c = field && field.Aggregation && field.Aggregation.Expression.Column;
+      const names = m ? [m.Expression.SourceRef.Entity, m.Property] : c ? [c.Expression.SourceRef.Entity, c.Property] : null;
+      return names && !names.some(hasControl) ? valueDax({ field }) : null; };
     // O-13: a month label (a text column the model does not sort, with its table's date column, f.dateOf) is put in time
     // order by a measure, the month's first date, in the visual's Tooltips; and kept to the last n months, counted back
     // from the last date where the visual's measure has a value (not from today: an old data set still shows its last
     // months), by a visual filter on a measure that is 1 for those months
-    const monthStart = (f) => extMeasure(f.dateOf.t, 'Month start (sort)', 'MIN ( ' + daxName(f.dateOf.t, f.dateOf.c) + ' )', 'DateTime');
+    const monthStart = (f) => extMeasure(f.dateOf.t, 'Month start (sort)', 'MIN ( ' + daxNames.column(f.dateOf.t, f.dateOf.c) + ' )', 'DateTime');
     const lastMonths = (f, yField, n) => {
       const y = daxOf(yField); if (!y) return null;
-      const d = daxName(f.dateOf.t, f.dateOf.c), yName = yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property;
-      const m = extMeasure(f.dateOf.t, 'Last ' + n + ' months: ' + yName, 'VAR _last = CALCULATE ( MAXX ( FILTER ( ALL ( ' + d + ' ), NOT ISBLANK ( ' + y + ' ) ), ' + d + ' ), ALL ( ' + daxTable(f.dateOf.t) + ' ) ) RETURN IF ( MAX ( ' + d + ' ) > EDATE ( _last, -' + n + ' ), 1 )', 'Integer');
+      const d = daxNames.column(f.dateOf.t, f.dateOf.c), yName = yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property;
+      const m = extMeasure(f.dateOf.t, 'Last ' + n + ' months: ' + yName, 'VAR _last = CALCULATE ( MAXX ( FILTER ( ALL ( ' + d + ' ), NOT ISBLANK ( ' + y + ' ) ), ' + d + ' ), ALL ( ' + daxNames.table(f.dateOf.t) + ' ) ) RETURN IF ( MAX ( ' + d + ' ) > EDATE ( _last, -' + n + ' ), 1 )', 'Integer');
       return { name: 'Filter' + rnd() + rnd().slice(0, 4), type: 'Advanced', field: extField(f.dateOf.t, m),
         filter: { Version: 2, From: [{ Name: 'm', Entity: f.dateOf.t, Schema: 'extension', Type: 0 }],
           Where: [{ Condition: { Comparison: { ComparisonKind: 0, Left: { Measure: { Expression: { SourceRef: { Source: 'm' } }, Property: m } }, Right: { Literal: { Value: '1L' } } } } }] }, howCreated: 'User' };
@@ -1437,9 +1447,9 @@
           // the calendar order's helper column (see inOrder): its text in the card colour and as narrow as Desktop allows
           const oh = (s.kind === 'table' || s.kind === 'matrix') && query ? orderedBy(s.kind === 'matrix' ? (Bt.table || []).filter(Boolean) : tableFields(Bt, rtl)) : null;
           if (oh && oh.sortBy && s.kind === 'matrix') { visual.objects = visual.objects || {}; visual.objects.columnFormatting = visual.objects.columnFormatting || []; }
-          if (oh && oh.sortBy) { const ref = orderHelper(oh).queryRef;
-            visual.objects.columnFormatting.push({ properties: { fontColor: color(u.card), alignment: str('Right'), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) }, selector: { metadata: ref } });
-            (visual.objects.columnWidth = visual.objects.columnWidth || []).push({ properties: { value: num(1) }, selector: { metadata: ref } });
+          if (oh && oh.sortBy) { const helperRef = orderHelper(oh).queryRef;
+            visual.objects.columnFormatting.push({ properties: { fontColor: color(u.card), alignment: str('Right'), styleHeader: bool(true), styleValues: bool(true), styleTotal: bool(true) }, selector: { metadata: helperRef } });
+            (visual.objects.columnWidth = visual.objects.columnWidth || []).push({ properties: { value: num(1) }, selector: { metadata: helperRef } });
             tableOrder.push({ page: pg.name || base, field: oh.t + '[' + oh.c + ']', by: oh.sortBy.t + '[' + oh.sortBy.c + ']' }); }
           // round 23: the name column at width 0 (hidden; the automatic widths stay on), its measure into the extensions
           if (rowLabel) {
@@ -1505,7 +1515,7 @@
             if (!noDataSkipped.some((x) => x.t === sk.t && x.m === sk.m)) noDataSkipped.push(sk);
           } else if (pr) {
             const ent = pr.field.Measure.Expression.SourceRef.Entity, mm = pr.field.Measure.Property, nm = freeExt(ent, (W.noDataName || 'No data: ') + mm);
-            if (!noData.some((x) => x.t === ent && x.m === nm)) noData.push({ t: ent, m: nm, expression: 'IF ( ISBLANK ( ' + "'" + ent.replace(/'/g, "''") + "'" + '[' + mm.replace(/\]/g, ']]') + '] ), "' + (lang === 'ar' ? 'لا توجد بيانات لهذا الاختيار' : 'No data for this selection').replace(/"/g, '""') + '", "" )' });
+            if (!noData.some((x) => x.t === ent && x.m === nm)) noData.push({ t: ent, m: nm, expression: 'IF ( ISBLANK ( ' + daxNames.column(ent, mm) + ' ), ' + daxNames.string(lang === 'ar' ? 'لا توجد بيانات لهذا الاختيار' : 'No data for this selection') + ', "" )' });
             container({ x: s.x, y: box.y, w: s.w, h: box.h, z: z - 500, parent, kind: 'nodata', noPhone: true, visual: { visualType: 'cardVisual',
               query: q({ Data: [{ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: ent } }, Property: nm } }, queryRef: ent + '.' + nm, nativeQueryRef: nm }] }),
               objects: { value: [{ properties: { fontSize: num(LABEL), fontColor: color(mixHex(u.text, u.card, 0.3)), horizontalAlignment: str('center') }, selector: { id: 'default' } }], label: [{ properties: { show: bool(false) }, selector: { id: 'default' } }], outline: [{ properties: { show: bool(false) }, selector: { id: 'default' } }], fillCustom: [{ properties: { show: bool(false) } }] },
@@ -1879,6 +1889,6 @@
   }
 
   // AR_MONTHS: the one Arabic month list (the cross-review's duplicates: the twin uses it too)
-  const api = { build, zip, crc32, textWidth, columnRoom, hasControl, absorb, dropLines, timeAxisPlan, barNameShare, AR_MONTHS: T.ar.months.slice() };
+  const api = { build, zip, crc32, textWidth, columnRoom, hasControl, daxNames, absorb, dropLines, timeAxisPlan, barNameShare, AR_MONTHS: T.ar.months.slice() };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbip = api;
 })(typeof self !== 'undefined' ? self : this);
