@@ -404,7 +404,12 @@
     const fitted = new Map();   // round 22: each chart's full title and the room it was fitted to
     // a slicer's header, shortened to the slicer's width: the header's own text (header.text, in Microsoft's theme
     // schema), so the field keeps its name everywhere else; the full name stays the slicer's alt text
-    const slicerHeader = (f, w) => { const out = { show: bool(true), fontFamily: str(font) }; if (!f) return obj(out); const full = label(f), shown = oneLine(full, SLICER_TEXT, w - 2 * Math.round(8 * k));
+    // (rc1, PERF-COMPARE D3: "Enforcement_History..." cut where a smaller text held it whole: the header takes the largest
+    // size, down to 8pt, at which the name is whole, as a KPI card's title; it is shortened only where even 8pt doesn't hold it)
+    const slicerHeader = (f, w) => { const out = { show: bool(true), fontFamily: str(font) }; if (!f) return obj(out); const full = label(f), room = w - 2 * Math.round(8 * k);
+      let size = SLICER_TEXT; while (size > 8 && oneLine(full, size, room) !== full) size = Math.ceil(size) - 1;
+      if (size < SLICER_TEXT) out.textSize = num(size);
+      const shown = oneLine(full, size, room);
       if (shown !== full) { titles.slicers.push({ page: pg.name || base, field: full, shown }); out.text = str(shown); } return obj(out); };
     // Round 12 (#15; seen in Desktop 2.158, round 11: "Total Sales by Day Name" twice on one page): a table whose title
     // is a chart's title on the same page is titled by what it adds, "...: detail"
@@ -817,6 +822,17 @@
             svgDone[pageIndex] = true;
           }
         }
+        // rc1 (PERF-COMPARE S3, 6 models: the last row a table showed was cut in half by its total line): a table whose rows
+        // don't all show ends on a whole row. Its height is the title, the header, the whole rows that fit and the total, by
+        // round 11's measured pitch (above: 1.415 x the text's height + 2 x rowPadding, 1 when none is written; the header 7
+        // more; the title 1.5 x its size; 16 of padding); the top stays. Not a table with pictures (their rows are taller).
+        if (s.kind === 'table' && visual && visual.query) {
+          const gp = (((visual.objects || {}).grid || [])[0] || {}).properties || {}, padOf = gp.rowPadding ? +String(gp.rowPadding.expr.Literal.Value).replace(/D$/, '') : 1;
+          const tv = (((visual.objects || {}).values || [])[0] || {}).properties || {}, t = tv.fontSize ? +String(tv.fontSize.expr.Literal.Value).replace(/D$/, '') : (+((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10);
+          const tf = tableFields(Bt, rtl).find(isTextField), n = ((tf && catKind(tf)) || {}).rows || 0;
+          const pitch = 1.415 * t * 4 / 3 + 2 * padOf, fixed = 1.5 * TITLE * 4 / 3 + (pitch + 7) + pitch + 16, k0 = Math.floor((box.h - fixed) / pitch);
+          if (!gp.imageHeight && k0 >= 1 && !(n && n <= k0)) { const h1 = Math.ceil(fixed + k0 * pitch); if (h1 < box.h) box = { y: box.y, h: h1 }; }
+        }
         if (B && visual && visual.query) vFilters = fixVisual(visual, s, pg, Bt, tableText);
       }
       // Round 19 (the owner's idea, 6 Oct 2026): "No data for this selection" where the visual's measure is blank. A
@@ -1144,7 +1160,7 @@
     } = c;
 
     // tooltip page: small, hidden in view mode, shown when a chart is hovered. 320 x 284: the card, and a bar chart 184
-    // high, which holds 6 rows (measured in Desktop 2.158: a bar row takes 22 and the title and padding 46; a tooltip
+    // high, which holds 6 rows (rc1: 187 and 287 by the measured rows, tipRows below; 284 stays for the empty page) (measured in Desktop 2.158: a bar row takes 22 and the title and padding 46; a tooltip
     // can't be scrolled, so rows past the last one would be lost behind a scrollbar)
     const tipPage = (name, binding, displayName, visuals, height) => {
       add(D + '/pages/' + name + '/page.json', json({
@@ -1174,6 +1190,15 @@
       tv.visual.visualContainerObjects.title[0].properties.text = str(top); return tv; };
     // (the tooltip pages' bars grow from the right in a mirrored report too)
     const tipBar = (vis) => (MIRROR ? mirrorChart(vis, 'bar') : vis);
+    // rc1 (DETAIL-2 T6, T9; measured in Desktop 2.158 on the night of 6-7 Oct at the 10pt text, the tooltip's 8pt being
+    // smaller): a bar chart without its value axis needs 22.2 a row, 45 above the first and 8 under the last. 184 for 6
+    // bars and 310 for 12 months were short of that: a scrollbar beside the Top 6, the 12th month cut.
+    const tipRows = (n) => Math.ceil(45 + 8 + 22.2 * n);
+    // rc1 (T8: "Microsoft 365 Busin..."): the names take the share of a narrow bar chart, as the page's (barNameShare)
+    // rc1 (T10: "8.0Kkg" where the card read "60,000 kg"): a measure the cards show whole (wholeFormat: a unit, a count)
+    // keeps its own format on the bars' values (display units None), as on its card; the rest keep Power BI's automatic
+    const tipLook = (y) => ({ categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit(barNameShare(296, 720) + 'L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }),
+      labels: obj(Object.assign({ show: bool(true), fontSize: num(8) }, y && y.wholeFormat && !y.pct ? { labelDisplayUnits: num(1) } : {})) });
     tipPage(tipName, tipBinding, W.tooltipPage || 'Tooltip', tip
       ? [tipCardVisual(),
         // a bar chart writes its category names horizontally (a column chart slants or cuts them); its own sizes, as
@@ -1181,10 +1206,10 @@
         // each bar's value beside it instead, which leaves room for one more row
         // (0.2.9 part 2, TOOLTIP-FIX-LAB: 9 products in 184 showed 6 bars and a scrollbar a tooltip can't use: the Top 6
         // by the measure shown, said in the title; a time category is never cut by value)
-        tipTop({ x: 12, y: 92, w: 296, h: 184, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), tip.cat, true),   /* (round 23: largest first) */
-          objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
+        tipTop({ x: 12, y: 92, w: 296, h: tipRows(6), visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), tip.cat, true),   /* (round 23: largest first) */
+          objects: tipLook(tip.y),
           visualContainerObjects: tipFrame(tip.y.m === tip.card.m && tip.y.t === tip.card.t ? byTitle(label(tip.y), W.by || 'by', label(tip.cat)) : label(tip.y)) }) })]
-      : [{ x: 12, y: 12, w: 296, h: 260, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }]);
+      : [{ x: 12, y: 12, w: 296, h: 260, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }], tip ? 92 + tipRows(6) + 8 : 284);
     // the trend: the card's measure by month, as a bar chart with the same settings, 310 high on a 320 x 410 page: 12
     // rows (22 a row and 46 for the title and padding), so every month's name is whole and horizontal with its value
     // beside the bar, whatever the measure. Measured in Desktop 2.158 (DESKTOP-TESTS.md, "round 1 built"): at this width
@@ -1194,11 +1219,13 @@
     // column, the last 6 months, newest first, at 40 + 27 a bar; elsewhere the 12 rows as before)
     // (the cross-review's G3: the same rule as the trend's, so a month name the model or the report sorts keeps its 12)
     const six = !!(tip && ['monthStart', 'monthLabel'].includes((timeAxisPlan(tip.date) || {}).order));
-    if (trend) { const tv = { x: 12, y: 92, w: 296, h: six ? 40 + 27 * 6 + 8 : 310, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(tip.card)] }), tip.date),
-        objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
+    if (trend) { const tv = { x: 12, y: 92, w: 296, h: six ? 40 + 27 * 6 + 8 : tipRows(12), visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(tip.card)] }), tip.date),
+        objects: tipLook(tip.card),
         visualContainerObjects: tipFrame(byTitle(label(tip.card), W.by || 'by', label(tip.date))) }) };
-      if (six) { byMonthStart(tv.visual.query, tip.date, 'Descending'); const lf = lastMonths(tip.date, proj(tip.card).field, 6); if (lf) tv.filters = [notBlankOf(tip.date), lf]; }
-      tipPage(trend.name, trend.binding, (W.tooltipPage || 'Tooltip') + ' \u00b7 ' + label(tip.date), [tipCardVisual(), tv], six ? 92 + tv.h + 12 : 410); }
+      // (rc1, DETAIL-2 T1: the month tooltip showed "(Blank)" first and 13 rows: it gets the chart's "is not blank" filter)
+      tv.filters = [notBlankOf(tip.date)];
+      if (six) { byMonthStart(tv.visual.query, tip.date, 'Descending'); const lf = lastMonths(tip.date, proj(tip.card).field, 6); if (lf) tv.filters.push(lf); }
+      tipPage(trend.name, trend.binding, (W.tooltipPage || 'Tooltip') + ' \u00b7 ' + label(tip.date), [tipCardVisual(), tv], six ? 92 + tv.h + 12 : 92 + tv.h + 8); }
     return six;
   }
 
