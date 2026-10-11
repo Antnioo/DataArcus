@@ -42,17 +42,30 @@ export function proposal(id, extra) {
   return Object.assign({ planId: id, status: 'proposed', written: false, writesAfterGo: p.writes, sayFirst: 'Nothing was written. ' + SHOW, expiresInMinutes: Math.round(TTL / 60000) }, extra || {});
 }
 
-/** approve_plan: marks a proposed plan approved with the user's reply. Throws with what to do when it can't. */
-export function approve(id, reply) {
+/** A plan that can still be approved (known, alive), or a throw with what to do: checked before the person is asked. */
+export function pending(id) {
   const p = plans.get(String(id || ''));
   if (!p) throw new Error(`Not approved: there is no plan ${JSON.stringify(String(id || ''))} (a plan id is good only in this session of the DataArcus server, and a restart forgets it). Make the plan again (plan_layout, or call the tool without planId), show it to the user and wait for their go.`);
   if (!alive(p)) { plans.delete(p.id); throw new Error(`Not approved: plan ${p.id} has expired (a plan is good for ${Math.round(TTL / 60000)} minutes). Make the plan again, show it to the user and wait for their go.`); }
+  return { id: p.id, kind: p.kind, writes: p.writes.slice(), status: p.status };
+}
+
+/** approve_plan: marks a proposed plan approved. by: 'user-in-app' (the person said yes in the app's own prompt, MCP
+ *  elicitation) or 'assistant-reported' (the assistant passed the reply it says the person gave: the tools can't check
+ *  that a person typed it). Throws with what to do when it can't. (Audit 6, A6-3) */
+export function approve(id, reply, by) {
+  const p = plans.get(String((pending(id), id)));
+  const who = by === 'user-in-app' ? 'user-in-app' : 'assistant-reported';
   const r = String(reply == null ? '' : reply).trim();
-  if (!r) throw new Error('Not approved: userReply is empty. Pass the user\'s own reply to the plan, in their words.');
-  if (NOT_GO.test(r) && !SAYS_GO.test(r.replace(/^\s*no\s+problem/i, ''))) throw new Error('Not approved: the user\'s reply does not say go. Change the plan as the user asks, show it again and wait.');
-  p.status = 'approved'; p.approvedAt = now(); p.reply = r.slice(0, 200);
-  return { planId: p.id, status: 'approved', kind: p.kind, allows: ALLOWS[p.kind], writes: p.writes, expiresInMinutes: Math.round(TTL / 60000),
-    note: 'Approved. Pass this planId to ' + ALLOWS[p.kind].join(' and ') + '. The tools check that the plan was approved; they can\'t check that a person typed the reply: approve a plan only after the user said go to the plan you showed.' };
+  if (who === 'assistant-reported') {
+    if (!r) throw new Error('Not approved: userReply is empty, and this app can\'t ask the person itself. Pass the user\'s own reply to the plan, in their words.');
+    if (NOT_GO.test(r) && !SAYS_GO.test(r.replace(/^\s*no\s+problem/i, ''))) throw new Error('Not approved: the user\'s reply does not say go. Change the plan as the user asks, show it again and wait.');
+  }
+  p.status = 'approved'; p.approvedAt = now(); p.reply = (r || 'approved in the app').slice(0, 200); p.approvedBy = who;
+  return { planId: p.id, status: 'approved', approvedBy: who, kind: p.kind, allows: ALLOWS[p.kind], writes: p.writes, expiresInMinutes: Math.round(TTL / 60000),
+    note: 'Approved. Pass this planId to ' + ALLOWS[p.kind].join(' and ') + '. ' + (who === 'user-in-app'
+      ? 'The person approved it in the app\'s own prompt, which showed what will be written.'
+      : 'This app can\'t show DataArcus\'s own approval prompt, so the approval rests on the reply you passed: the tools can\'t check that a person typed it. Approve a plan only after the user said go to the plan you showed.') };
 }
 
 /** The gate: returns the approved plan, or throws "Nothing was written" with what to do. tool: the calling tool; model: its model's key (or null). */
