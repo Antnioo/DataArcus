@@ -773,6 +773,102 @@
       extFile = { entry: files[files.length - 1], entities };
     }
 
+
+    // ---------- 0.2.9 part 2: the owner's own test of 0.2.8 (10 Oct 2026), recipes measured in Desktop 2.158.1304 ----------
+    // (dataarcus-engine business/research/REPORT-FIXES-LAB.md and TOOLTIP-FIX-LAB.md, on the laptop, 10 Oct)
+    // Report-level measures for the time axes (DateTime and Integer), into reportExtensions.json with the others; the same
+    // expression in the same table is one measure
+    const timeExt = [];
+    const dq = (t) => "'" + String(t).replace(/'/g, "''") + "'", dc = (t, c) => dq(t) + '[' + String(c).replace(/\]/g, ']]') + ']';
+    const extMeasure = (t, want, expression, dataType) => {
+      const had = timeExt.find((x) => x.t === t && x.expression === expression); if (had) return had.m;
+      let m = freeExt(t, want); for (let k = 2; timeExt.some((x) => x.t === t && x.m === m); k++) m = freeExt(t, want + ' (' + k + ')');
+      timeExt.push({ t, m, expression, dataType }); return m;
+    };
+    const extField = (t, m) => ({ Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: t } }, Property: m } });
+    // a field of a visual as DAX (a model measure, or a column a visual sums or counts), or null
+    const AGG_DAX = { 0: 'SUM', 1: 'AVERAGE', 2: 'DISTINCTCOUNT', 3: 'MIN', 4: 'MAX', 5: 'COUNT' };
+    const daxOf = (field) => {
+      if (field && field.Measure && !field.Measure.Expression.SourceRef.Schema) return dc(field.Measure.Expression.SourceRef.Entity, field.Measure.Property);
+      const a = field && field.Aggregation, c = a && a.Expression && a.Expression.Column;
+      return c && AGG_DAX[a.Function] ? AGG_DAX[a.Function] + ' ( ' + dc(c.Expression.SourceRef.Entity, c.Property) + ' )' : null;
+    };
+    // O-13: a month label (a text column the model does not sort, with its table's date column, f.dateOf) is put in time
+    // order by a measure, the month's first date, in the visual's Tooltips; and kept to the last n months, counted back
+    // from the last date where the visual's measure has a value (not from today: an old data set still shows its last
+    // months), by a visual filter on a measure that is 1 for those months
+    const monthLabel = (f) => !!(f && f.c != null && f.dateOf && !f.sortBy && !f.ordered && !f.num && f.agg == null);
+    const monthStart = (f) => extMeasure(f.dateOf.t, 'Month start (sort)', 'MIN ( ' + dc(f.dateOf.t, f.dateOf.c) + ' )', 'DateTime');
+    const lastMonths = (f, yField, n) => {
+      const y = daxOf(yField); if (!y) return null;
+      const d = dc(f.dateOf.t, f.dateOf.c), yName = yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property;
+      const m = extMeasure(f.dateOf.t, 'Last ' + n + ' months: ' + yName, 'VAR _last = CALCULATE ( MAXX ( FILTER ( ALL ( ' + d + ' ), NOT ISBLANK ( ' + y + ' ) ), ' + d + ' ), ALL ( ' + dq(f.dateOf.t) + ' ) ) RETURN IF ( MAX ( ' + d + ' ) > EDATE ( _last, -' + n + ' ), 1 )', 'Integer');
+      return { name: 'Filter' + rnd() + rnd().slice(0, 4), type: 'Advanced', field: extField(f.dateOf.t, m),
+        filter: { Version: 2, From: [{ Name: 'm', Entity: f.dateOf.t, Schema: 'extension', Type: 0 }],
+          Where: [{ Condition: { Comparison: { ComparisonKind: 0, Left: { Measure: { Expression: { SourceRef: { Source: 'm' } }, Property: m } }, Right: { Literal: { Value: '1L' } } } } }] }, howCreated: 'User' };
+    };
+    const byMonthStart = (query, f, dir) => { const m = monthStart(f), field = extField(f.dateOf.t, m);
+      query.queryState.Tooltips = { projections: [{ field, queryRef: f.dateOf.t + '.' + m, nativeQueryRef: m }] };
+      query.sortDefinition = { sort: [{ field, direction: dir }], isDefaultSort: true }; };
+    // O-3 (the "(Blank)" month on the line chart): a visual filter "is not blank" on a chart's category column, the
+    // shape Desktop writes for it
+    const notBlank = (col) => ({ name: 'Filter' + rnd() + rnd().slice(0, 4), type: 'Advanced', field: { Column: col },
+      filter: { Version: 2, From: [{ Name: 'c', Entity: col.Expression.SourceRef.Entity, Type: 0 }],
+        Where: [{ Condition: { Not: { Expression: { Comparison: { ComparisonKind: 0, Left: { Column: { Expression: { SourceRef: { Source: 'c' } }, Property: col.Property } }, Right: { Literal: { Value: 'null' } } } } } } }] }, howCreated: 'User' });
+    // the tooltip pages (TOOLTIP-FIX-LAB): a category's bars are its Top n by the measure shown, a Top N visual filter
+    const topN = (col, yField, n) => {
+      const ct = col.Expression.SourceRef.Entity, yt = yField.Measure ? yField.Measure.Expression.SourceRef.Entity : yField.Aggregation.Expression.Column.Expression.SourceRef.Entity;
+      const ya = yt === ct ? 'd' : '_', from = [{ Name: 'd', Entity: ct, Type: 0 }].concat(yt === ct ? [] : [{ Name: '_', Entity: yt, Type: 0 }]);
+      const order = yField.Measure ? { Measure: { Expression: { SourceRef: { Source: ya } }, Property: yField.Measure.Property } }
+        : { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Source: ya } }, Property: yField.Aggregation.Expression.Column.Property } }, Function: yField.Aggregation.Function } };
+      return { name: 'Filter' + rnd() + rnd().slice(0, 4), type: 'TopN', field: { Column: col },
+        filter: { Version: 2, From: [{ Name: 'subquery', Type: 2, Expression: { Subquery: { Query: { Version: 2, From: from,
+          Select: [{ Column: { Expression: { SourceRef: { Source: 'd' } }, Property: col.Property }, Name: 'field' }], OrderBy: [{ Direction: 2, Expression: order }], Top: n } } } }, { Name: 'd', Entity: ct, Type: 0 }],
+          Where: [{ Condition: { In: { Expressions: [{ Column: { Expression: { SourceRef: { Source: 'd' } }, Property: col.Property } }], Table: { SourceRef: { Source: 'subquery' } } } } }] }, howCreated: 'User' };
+    };
+    const timeAxes = [];   // what was done to each time axis, for the answer
+    // The fixes on a report visual, after its fields and objects are written (Bt: its binding, tt: its table's text size)
+    const fixVisual = (visual, s, pg, Bt, tt) => {
+      const st = visual.query.queryState, cat = st.Category && st.Category.projections[0], col = cat && cat.field.Column, filters = [];
+      const put = (object, props) => { visual.objects = visual.objects || {}; const e = visual.objects[object] || (visual.objects[object] = [{ properties: {} }]); Object.assign(e[0].properties, props); };
+      if (col && CHARTS.includes(s.kind)) filters.push(notBlank(col));
+      // O-4: a bar chart's names get 40% of its width, 50% on a narrow chart (under 560 on the 720-high page); the default 25 cut them at about 10 characters
+      if (visual.visualType === 'clusteredBarChart') put('categoryAxis', { maxMarginFactor: lit((s.w * 720 / pg.page.h < 560 ? 50 : 40) + 'L') });
+      // O-13: the line chart's month label
+      if (s.kind === 'line' && col && Bt.date && monthLabel(Bt.date) && col.Property === Bt.date.c) {
+        byMonthStart(visual.query, Bt.date, MIRROR ? 'Descending' : 'Ascending');
+        const lf = st.Y && lastMonths(Bt.date, st.Y.projections[0].field, 12); if (lf) filters.push(lf);
+        timeAxes.push({ page: pg.name || base, field: Bt.date.t + '[' + Bt.date.c + ']', by: Bt.date.dateOf.t + '[' + Bt.date.dateOf.c + ']', last: lf ? 12 : null });
+      }
+      // O-14: a table's columns get set widths (auto-size off: grow-to-fit let a long text push the numbers out of view):
+      // numbers 90 to 130 by their header, the text columns share the rest (160 at least), all within the width less 36
+      // (padding and the scrollbar); values wrap. The order's helper (1) and the hidden name column (0) keep theirs.
+      if (s.kind === 'table') {
+        const ps = st.Values.projections, sc = pg.page.h / 1080, T = tt || +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
+        const cw = (visual.objects.columnWidth = visual.objects.columnWidth || []), fixed = new Set(cw.map((e) => e.selector.metadata));
+        const fieldOf = (p) => (Bt.table || []).filter(Boolean).find((f) => proj(f).queryRef === p.queryRef);
+        const isNum = (p) => (p.field.Measure && !p.field.Measure.Expression.SourceRef.Schema) || !!p.field.Aggregation || !!((fieldOf(p) || {}).num);
+        const isPic = (p) => p.field.Measure && p.field.Measure.Expression.SourceRef.Schema && !(rowLabels || []).some((r) => p.queryRef === r.t + '.' + r.m) && !/^Row label: /.test(p.field.Measure.Property);
+        const free = ps.filter((p) => !fixed.has(p.queryRef)), usable = s.w - 36 - cw.reduce((a, e) => a + parseFloat(e.properties.value.expr.Literal.Value), 0);
+        const pic = (((visual.objects.grid || [])[0] || { properties: {} }).properties.imageWidth || null), picW = pic ? parseFloat(pic.expr.Literal.Value) + 10 : 0;
+        const w = new Map();
+        free.filter(isNum).forEach((p) => w.set(p, Math.max(90 * sc, Math.min(130 * sc, textWidth(p.displayName || p.nativeQueryRef || '', T, true, font) + 24 * sc))));
+        free.filter(isPic).forEach((p) => w.set(p, picW || 90 * sc));
+        const texts = free.filter((p) => !w.has(p)), used = [...w.values()].reduce((a, x) => a + x, 0);
+        let each = texts.length ? (usable - used) / texts.length : 0;
+        // too little room: the numbers give up width (down to 40 each) before a text column goes under 160
+        if (texts.length && each < 160 * sc) { const nums = free.filter((p) => w.has(p) && isNum(p)), over = 160 * sc * texts.length - (usable - used), cut = nums.length ? Math.min(over / nums.length, Math.max(0, ...nums.map((p) => w.get(p) - 40))) : 0;
+          nums.forEach((p) => w.set(p, Math.max(40, w.get(p) - cut))); each = (usable - [...w.values()].reduce((a, x) => a + x, 0)) / texts.length; }
+        texts.forEach((p) => w.set(p, Math.max(40, each)));
+        // no text column: the numbers share the whole width
+        if (!texts.length && w.size) { const k = usable / [...w.values()].reduce((a, x) => a + x, 0); if (k > 1) w.forEach((x, p) => w.set(p, x * k)); }
+        free.forEach((p) => cw.push({ properties: { value: num(Math.floor(w.get(p))) }, selector: { metadata: p.queryRef } }));
+        const ch = visual.objects.columnHeaders[0].properties; delete ch.columnAdjustment; ch.autoSizeColumnWidth = bool(false);
+        put('values', { wordWrap: bool(true) });
+      }
+      if (filters.length) visual.__filters = filters;
+    };
+
     PAGES.forEach((pg, pageIndex) => {
       const pageName = pg.id, filters = pageFilters();
       add(D + '/pages/' + pageName + '/page.json', json(Object.assign({
@@ -1115,6 +1211,9 @@
           const size = Math.min(pt((s.textH || s.h) * 0.3), boxFit(s.textH || s.h));
           // (round 12, #30: the Tahoma placeholder sat 2.6 to 3.4 below the header's middle, measured in Desktop 2.158,
           // round 11 (D15): it is drawn 3 higher)
+          // (0.2.9, O-6 of the owner's test of 0.2.8: "Your logo" stayed in a finished report's header): no placeholder
+          // where the caller says so (create_report); the website's template download keeps it for the user to replace
+          if (!logoFile && o.logoPlaceholder === false) return;
           if (!logoFile) { box = centred(s, size); if (/^tahoma/i.test(font) && box.y > s.y) { const up = Math.min(3, box.y - s.y); box = { y: box.y - up, h: box.h + up }; } }
           visual = logoFile
             ? { visualType: 'image', objects: { general: obj({ imageUrl: resource(logoFile) }), image: obj({ fit: str('Fit') }) }, visualContainerObjects: frame(null, W.logo || 'Logo') }
@@ -1374,6 +1473,7 @@
               svgDone[pageIndex] = true;
             }
           }
+          if (B && visual && visual.query) fixVisual(visual, s, pg, Bt, tableText);
         }
         // Round 19 (the owner's idea, 6 Oct 2026): "No data for this selection" where the visual's measure is blank. A
         // report-level measure (reportExtensions.json, the model untouched) gives the text only when the measure is blank,
@@ -1402,7 +1502,9 @@
             visual.visualContainerObjects.background = obj({ show: bool(false) });
           }
         }
+        const vf = visual && visual.__filters; if (vf) delete visual.__filters;
         const v = container({ x: s.x, y: box.y, w: s.w, h: box.h, z, parent, visual, kind: s.kind });
+        if (vf && vf.length) v.filterConfig = { filters: vf };
         if (CHARTS.includes(s.kind)) charts.push({ v, byMonth: !!trend && same(s.kind === 'line' ? B.date : (B.cats || {})[s.kind], tip.date) });
         z += 1000;
         // the page navigator follows the title in the reading order; its text size is set for the default, hover and
@@ -1671,15 +1773,6 @@
       });
     });
 
-    // the "No data" measures (round 19): into the report's extensions, beside the SVG measures where there are some
-    // (round 23: and the tables' row-label measures after them)
-    if (noData.length || rowLabels.length) {
-      const ents = extFile ? extFile.entities : [];
-      noData.concat(rowLabels).forEach((c) => { let e = ents.find((x) => x.name === c.t); if (!e) ents.push(e = { name: c.t, measures: [] }); e.measures.push({ name: c.m, dataType: 'Text', expression: c.expression }); });
-      if (extFile) extFile.changed = true; else add(D + '/reportExtensions.json', json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: ents }));
-    }
-    if (extFile && extFile.changed) extFile.entry.data = json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: extFile.entities });
-
     // Reset buttons: one data-only bookmark per page that brings that page's slicers back to "All"
     if (bookmarks.length) {
       bookmarks.forEach((b) => add(D + '/bookmarks/' + b.name + '.bookmark.json', json(b.group
@@ -1705,6 +1798,7 @@
       }));
       visuals.forEach((s, i) => {
         const v = { $schema: SCHEMA.visual, name: rnd(), position: { x: s.x, y: s.y, z: (i + 1) * 1000, height: s.h, width: s.w, tabOrder: (i + 1) * 1000 }, visual: s.visual };
+        if (s.filters && s.filters.length) v.filterConfig = { filters: s.filters };
         headed(s.visual);
         add(D + '/pages/' + name + '/visuals/' + v.name + '/visual.json', json(v));
       });
@@ -1717,6 +1811,11 @@
     const tipCardVisual = () => { const objects = cardObjects(tipCard, null, tip.card);
       if (FULL && tip.card && tip.card.m != null && tip.card.cardFormat && !cardCode(tip.card)) objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(tip.card.cardFormat) }, selector: { metadata: tip.card.t + '.' + tip.card.m } });
       return { x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(tip.card)] }), objects, visualContainerObjects: cardFrame(tipFrame(label(tip.card)), tipCard, TIP_TITLE) } }; };
+    const notBlankOf = (f) => notBlank(fieldCol(f.t, f.c).field.Column);
+    const tipTop = (tv) => { if (!tip.cat || tip.cat.c == null || tip.cat.agg != null || TIME_WORDS.test(wordsOf(tip.cat.c))) return tv;
+      tv.filters = [notBlankOf(tip.cat), topN(fieldCol(tip.cat.t, tip.cat.c).field.Column, proj(tip.y).field, 6)];
+      const t0 = tv.visual.visualContainerObjects.title[0].properties.text.expr.Literal.Value.replace(/^'|'$/g, '').replace(/''/g, "'"), top = (W.top6 || (lang === 'ar' ? 'أعلى 6' : 'Top 6')) + ': ' + t0;
+      tv.visual.visualContainerObjects.title[0].properties.text = str(top); return tv; };
     // (the tooltip pages' bars grow from the right in a mirrored report too)
     const tipBar = (vis) => (MIRROR ? mirrorChart(vis, 'bar') : vis);
     tipPage(tipName, tipBinding, W.tooltipPage || 'Tooltip', tip
@@ -1724,19 +1823,35 @@
         // a bar chart writes its category names horizontally (a column chart slants or cuts them); its own sizes, as
         // the card has: axis text 8pt, 40% of the width for the names (a 20-character name is whole), no value axis and
         // each bar's value beside it instead, which leaves room for one more row
-        { x: 12, y: 92, w: 296, h: 184, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), tip.cat, true),   /* (round 23: largest first) */
+        // (0.2.9 part 2, TOOLTIP-FIX-LAB: 9 products in 184 showed 6 bars and a scrollbar a tooltip can't use: the Top 6
+        // by the measure shown, said in the title; a time category is never cut by value)
+        tipTop({ x: 12, y: 92, w: 296, h: 184, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.cat)], Y: [proj(tip.y)] }), tip.cat, true),   /* (round 23: largest first) */
           objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
-          visualContainerObjects: tipFrame(tip.y.m === tip.card.m && tip.y.t === tip.card.t ? byTitle(label(tip.y), W.by || 'by', label(tip.cat)) : label(tip.y)) }) }]
+          visualContainerObjects: tipFrame(tip.y.m === tip.card.m && tip.y.t === tip.card.t ? byTitle(label(tip.y), W.by || 'by', label(tip.cat)) : label(tip.y)) }) })]
       : [{ x: 12, y: 12, w: 296, h: 260, visual: { visualType: 'textbox', objects: textbox(W.tooltipHere || 'Tooltip page: add a card or a small chart here.', 11, false, u.text), visualContainerObjects: frame(null, W.tooltipPage || 'Tooltip') } }]);
     // the trend: the card's measure by month, as a bar chart with the same settings, 310 high on a 320 x 410 page: 12
     // rows (22 a row and 46 for the title and padding), so every month's name is whole and horizontal with its value
     // beside the bar, whatever the measure. Measured in Desktop 2.158 (DESKTOP-TESTS.md, "round 1 built"): at this width
     // a column or line chart loses the last month behind a scrollbar as soon as the value axis's labels are wide
     // ("100K", "0.4M"), and without that axis the first month's name is cut. The owner's choice, 2026-10-03.
-    if (trend) tipPage(trend.name, trend.binding, (W.tooltipPage || 'Tooltip') + ' \u00b7 ' + label(tip.date), [tipCardVisual(),
-      { x: 12, y: 92, w: 296, h: 310, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(tip.card)] }), tip.date),
+    // (0.2.9 part 2, TOOLTIP-FIX-LAB: about 77 months in 310 showed 13 and a scrollbar: where the month's table has a date
+    // column, the last 6 months, newest first, at 40 + 27 a bar; elsewhere the 12 rows as before)
+    const six = tip && tip.date && tip.date.c != null && tip.date.dateOf && tip.date.agg == null && !tip.date.num;
+    if (trend) { const tv = { x: 12, y: 92, w: 296, h: six ? 40 + 27 * 6 + 8 : 310, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(tip.card)] }), tip.date),
         objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
-        visualContainerObjects: tipFrame(byTitle(label(tip.card), W.by || 'by', label(tip.date))) }) }], 410);
+        visualContainerObjects: tipFrame(byTitle(label(tip.card), W.by || 'by', label(tip.date))) }) };
+      if (six) { byMonthStart(tv.visual.query, tip.date, 'Descending'); const lf = lastMonths(tip.date, proj(tip.card).field, 6); if (lf) tv.filters = [notBlankOf(tip.date), lf]; }
+      tipPage(trend.name, trend.binding, (W.tooltipPage || 'Tooltip') + ' \u00b7 ' + label(tip.date), [tipCardVisual(), tv], six ? 92 + tv.h + 12 : 410); }
+
+    // the "No data" measures (round 19): into the report's extensions, beside the SVG measures where there are some
+    // (round 23: and the tables' row-label measures after them)
+    // (0.2.9 part 2: and the time axes' measures, DateTime and Integer; written after the tooltip pages, which add some)
+    if (noData.length || rowLabels.length || timeExt.length) {
+      const ents = extFile ? extFile.entities : [];
+      noData.concat(rowLabels, timeExt).forEach((c) => { let e = ents.find((x) => x.name === c.t); if (!e) ents.push(e = { name: c.t, measures: [] }); e.measures.push({ name: c.m, dataType: c.dataType || 'Text', expression: c.expression }); });
+      if (extFile) extFile.changed = true; else add(D + '/reportExtensions.json', json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: ents }));
+    }
+    if (extFile && extFile.changed) extFile.entry.data = json({ $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/reportExtension/1.0.0/schema.json', name: 'extension', entities: extFile.entities });
 
     // git: keep local and cached files out of source control
     // in someone's project folder these would replace their own files, so they are left out there
@@ -1744,7 +1859,7 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, tableWide, noDataSkipped, svgSizes, noPageButtons, tableColumns, rowLabels: rowLabels.map((x) => ({ page: x.page, t: x.t, c: x.c, m: x.m })), rowLabelSkipped, extRenamed, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts, blankKept, subtitlesUsed: [...subtitlesUsed] };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, tableWide, noDataSkipped, svgSizes, noPageButtons, tableColumns, rowLabels: rowLabels.map((x) => ({ page: x.page, t: x.t, c: x.c, m: x.m })), rowLabelSkipped, extRenamed, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts, blankKept, subtitlesUsed: [...subtitlesUsed], timeAxes, tooltipLimits: { top: tip && tip.cat && tip.cat.c != null && tip.cat.agg == null && !TIME_WORDS.test(wordsOf(tip.cat.c)) ? 6 : null, months: six ? 6 : null } };
   }
 
   const api = { build, zip, crc32, textWidth, columnRoom, hasControl, absorb, dropLines };

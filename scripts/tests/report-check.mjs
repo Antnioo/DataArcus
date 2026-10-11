@@ -345,6 +345,11 @@ export function sortProblems(files) {
     // Ascending where a column chart is mirrored)
     const yField = (((v.visual.query.queryState.Y || {}).projections || [{}])[0] || {}).field;
     if ((sd.sort || []).length === 1 && yField && JSON.stringify(s0.field) === JSON.stringify(yField) && ['clusteredBarChart', 'clusteredColumnChart'].includes(v.visual.visualType) && s0.direction === (mirrored ? 'Ascending' : 'Descending')) { sorted.push({ page: p.page.displayName, tooltip: p.page.type === 'Tooltip', type: v.visual.visualType, category: catRef(v), by: 'measure' }); return; }
+    // (0.2.9 part 2, O-13 and the tooltip fix, measured in Desktop 2.158.1304, REPORT-FIXES-LAB and TOOLTIP-FIX-LAB: a month
+    // label is sorted by a report-level measure, the month's first date, held in the chart's Tooltips; the trend in time
+    // order (Descending where mirrored), the tooltip's last months newest first, Descending)
+    const ms = (s0.field || {}).Measure, held = ms && ms.Expression.SourceRef.Schema === 'extension' && tips.some((t) => JSON.stringify(t.field) === JSON.stringify(s0.field));
+    if ((sd.sort || []).length === 1 && held && /^Month start/.test(ms.Property) && (s0.direction === want || p.page.type === 'Tooltip')) { sorted.push({ page: p.page.displayName, tooltip: p.page.type === 'Tooltip', type: v.visual.visualType, category: catRef(v), by: ms.Expression.SourceRef.Entity + '.' + ms.Property }); return; }
     if ((sd.sort || []).length !== 1 || !agg || agg.Function !== 3 || !agg.Expression.Column || s0.direction !== want) { bad.push(`${id}: sort ${JSON.stringify(sd).slice(0, 160)}, want one ${want.toLowerCase()} Min of a column`); return; }
     const by = agg.Expression.Column.Expression.SourceRef.Entity + '.' + agg.Expression.Column.Property;
     if (!tips.some((t) => JSON.stringify(t.field) === JSON.stringify(s0.field))) bad.push(`${id}: sorted by Min of ${by}, which is not in its tooltip fields (Desktop ignores the sort)`);
