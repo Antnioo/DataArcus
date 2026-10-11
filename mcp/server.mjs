@@ -1341,12 +1341,27 @@ server.registerTool('create_arabic_twin', {
 
 server.registerTool('approve_plan', {
   title: 'Approve a plan (after the user\'s go)',
-  description: 'Marks a plan approved, so the writing tools may write what it lists. Call it only after you showed the user the plan (pages, visuals and fields, page size, theme colours, the files that will be written) and the user replied go, never in the same turn as the request and never on your own: pass the planId and the user\'s reply in their own words. A reply that says no or not yet is refused. The plan ids come from plan_layout (a report: create_report and the theme file) or from a writing tool called without one (generate_theme, check_model_health, add_gulf_calendar). A plan is good for 2 hours in this session of the server. Nothing is written by this tool. The tools check that a plan was approved; they cannot check that a person typed the reply.',
+  description: 'Marks a plan approved, so the writing tools may write what it lists. When the app supports MCP elicitation, DataArcus asks the person itself, in the app\'s own prompt that shows what will be written: only their yes there approves (approvedBy "user-in-app"); a no or a closed prompt refuses. When the app can\'t, call it only after you showed the user the plan (pages, visuals and fields, page size, theme colours, the files that will be written) and the user replied go, never in the same turn as the request and never on your own: pass the planId and the user\'s reply in their own words (approvedBy "assistant-reported": the tools can\'t check that a person typed it). A reply that says no or not yet is refused. The plan ids come from plan_layout (a report: create_report and the theme file) or from a writing tool called without one (generate_theme, check_model_health, add_gulf_calendar, create_arabic_twin). A plan is good for 2 hours in this session of the server. Nothing is written by this tool.',
   inputSchema: {
     planId: z.string().min(1).max(40).describe('The proposed plan id'),
-    userReply: z.string().min(1).max(500).describe('The user\'s reply to the plan, in their own words ("go", "yes, build it")')
+    userReply: z.string().min(1).max(500).optional().describe('The user\'s reply to the plan, in their own words ("go", "yes, build it"). Needed when the app can\'t ask the person itself (no MCP elicitation)')
   }, annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false }
-}, safe(async (a) => text(Plans.approve(a.planId, a.userReply))));
+}, safe(async (a) => {
+  // Audit 6, A6-3 (the owner's P-1: an assistant could approve its own plan): when the app declares MCP elicitation, the
+  // person answers DataArcus's own prompt, which lists what will be written; the assistant's reply is not used then
+  const caps = server.server.getClientCapabilities() || {};
+  if (!(caps.elicitation && (caps.elicitation.form || !caps.elicitation.url))) return text(Plans.approve(a.planId, a.userReply, 'assistant-reported'));
+  const p = Plans.pending(a.planId);
+  let r;
+  try {
+    r = await server.server.elicitInput({ mode: 'form',
+      message: `DataArcus asks before it writes anything. Approve this plan (${p.kind}, ${p.id})? It will write:\n- ${p.writes.join('\n- ')}\nNothing is overwritten or deleted.`,
+      requestedSchema: { type: 'object', properties: { approve: { type: 'boolean', title: 'Write these files', description: 'Yes: DataArcus may write what is listed above. No: nothing is written.', default: false } }, required: ['approve'] } },
+    { timeout: 10 * 60 * 1000 });
+  } catch (e) { throw new Error('Not approved: the approval prompt in the app did not get an answer (' + String(e && e.message || e).slice(0, 120) + '). Nothing was written. Ask the user to try again.'); }
+  if (!r || r.action !== 'accept' || !r.content || r.content.approve !== true) throw new Error(`Not approved: the person ${r && r.action === 'cancel' ? 'closed' : 'declined'} DataArcus's approval prompt in the app (they did not approve writing these files). Nothing was written. Ask what to change in the plan.`);
+  return text(Plans.approve(a.planId, null, 'user-in-app'));
+}));
 
 prepareRoot();
 await server.connect(new StdioServerTransport());

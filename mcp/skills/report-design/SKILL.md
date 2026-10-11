@@ -37,7 +37,9 @@ report files are written by `create_report` for a new report, or by Microsoft's 
    Say that the bars of the bar and column charts fade by their value (`plan_layout`'s `chartColors.sayInPlan`), and
    say first what `plan_layout` puts first (`formats`, `arabicNames`) when it was given the model.
    Never call `create_report` in the same turn as the request: the user's "go" comes first. After the go, call
-   `approve_plan` with the `planId` and the user's reply in their own words; never approve on your own. No tool writes
+   `approve_plan` with the `planId` and the user's reply in their own words; never approve on your own. When the app
+   supports it, DataArcus then asks the person itself in the app's prompt (`approvedBy: "user-in-app"`); a no there
+   refuses: ask what to change. Otherwise the approval is marked `assistant-reported`. No tool writes
    a file without an approved `planId` (the theme file, the report, fix scripts, the Gulf calendar script).
 6. **Build.** `create_report` with the `planId`, the design (and the same layout choices) and the approved plan's fields in
    `fields` (`kpis`, `measure`, `timeAxis`, `category`, `category2`, `table`, `slicers`, each as `Table[Field]`): what
