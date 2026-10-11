@@ -36,6 +36,15 @@
     const ok = (v, f) => (typeof v === 'string' && clampHex(v)) || f;
     return { ui: Object.fromEntries(Object.keys(D.ui).map((k) => [k, ok(u[k], D.ui[k])])), data: data.map((c, i) => ok(c, D.data[i % D.data.length])) };
   };
+  // The colours a theme derives from its page colours (0.2.9, the audit's A2-10: they were mixed in five places, so a
+  // change to one was missed in the preview or the contrast check): secondary text (labels), tertiary text, the dotted
+  // gridline and the theme's neutral background, the table's lines, the light background, the header band, the filter
+  // rail and the panels' edge (lighter on a light page). ui: the design's ui
+  const roles = (ui) => {
+    const u = colours({ ui }).ui, light = lum(u.background) > 0.45;
+    return { secondary: mix(u.text, u.card, 0.35), tertiary: mix(u.text, u.card, 0.6), gridline: mix(u.text, u.card, 0.8), grid: mix(u.text, u.card, 0.85),
+      backgroundLight: mix(u.card, u.background, 0.5), band: mix(u.card, u.background, 0.25), rail: mix(u.card, u.background, 0.35), edge: mix(u.text, u.card, light ? 0.86 : 0.9), light };
+  };
   // The colours a KPI bar or the header line can take (the page's choices)
   const BAR_COLORS = ['accent', 'good', 'neutral', 'data'];
   const hexToRgb = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
@@ -333,7 +342,7 @@
     });
     if (c.labels !== 'auto') add(AXIS_CHARTS, 'labels', { show: c.labels === 'on' });
     if (c.grid !== 'auto') {
-      const g = c.grid === 'off' ? { gridlineShow: false } : { gridlineShow: true, gridlineStyle: 'dotted', gridlineColor: { solid: { color: mix(u.text, u.card, 0.8) } } };
+      const g = c.grid === 'off' ? { gridlineShow: false } : { gridlineShow: true, gridlineStyle: 'dotted', gridlineColor: { solid: { color: roles(u).gridline } } };
       add(AXIS_CHARTS.concat('scatterChart'), 'valueAxis', g);
       // waterfall has no category gridlines in the schema; Power BI draws none there anyway
       if (c.grid === 'off') add(AXIS_CHARTS.concat('scatterChart').filter((t) => t !== 'waterfallChart'), 'categoryAxis', { gridlineShow: false });
@@ -345,7 +354,7 @@
       : { show: true, position: c.legend });
     if (c.axis === 'off') ['valueAxis', 'categoryAxis'].forEach((a) => add(AXIS_CHARTS.concat('scatterChart'), a, { showAxisTitle: false }));
     if (c.table !== 'auto') {
-      const line = { solid: { color: mix(u.text, u.card, 0.85) } };
+      const line = { solid: { color: roles(u).grid } };
       add(['tableEx', 'pivotTable'], 'grid', { gridVertical: false, gridHorizontal: c.table === 'minimal', gridHorizontalColor: line });
       add(['tableEx', 'pivotTable'], 'values', { backColorPrimary: { solid: { color: u.card } }, backColorSecondary: { solid: { color: c.table === 'banded' ? mix(u.card, u.accent, 0.08) : u.card } } });
     }
@@ -362,7 +371,7 @@
   // d: the design { name, font, data, ui, chart, layout }; lang: the page's language ('ar' or 'en'), for the reading
   // direction when the layout has none
   const buildTheme = (d0, lang) => {
-    const cc = colours(d0), d = Object.assign({}, d0, { ui: cc.ui, data: cc.data }), u = d.ui, l = d.layout, sec = mix(u.text, u.card, 0.35), ter = mix(u.text, u.card, 0.6), f = d.font;
+    const cc = colours(d0), d = Object.assign({}, d0, { ui: cc.ui, data: cc.data }), u = d.ui, l = d.layout, R = roles(u), sec = R.secondary, ter = R.tertiary, f = d.font;
     return {
       name: themeName(d.name),
       dataColors: d.data,
@@ -370,8 +379,8 @@
       foregroundNeutralSecondary: sec,
       foregroundNeutralTertiary: ter,
       background: u.card,
-      backgroundLight: mix(u.card, u.background, 0.5),
-      backgroundNeutral: mix(u.text, u.card, 0.8),
+      backgroundLight: R.backgroundLight,
+      backgroundNeutral: R.gridline,
       tableAccent: u.accent,
       good: u.good, neutral: u.neutral, bad: u.bad,
       maximum: u.good, center: u.neutral, minimum: u.bad,
@@ -405,7 +414,7 @@
   // WCAG contrast of the theme's main pairs (4.5:1 for text, 3:1 for the first data colour, which carries the main
   // series), and the data colours that almost disappear on the visual background (below 1.6:1). d: the design
   const contrastChecks = (d) => {
-    const u = d.ui, sec = mix(u.text, u.card, 0.35);
+    const u = colours(d).ui, sec = roles(u).secondary;
     const checks = [
       ['textOnVisuals', contrast(u.text, u.card), 4.5],
       ['labelsOnVisuals', contrast(sec, u.card), 4.5],
@@ -434,12 +443,12 @@
   // its visual (checked with calibration backgrounds on 1920 × 1080 and 1280 × 720 pages).
   // opt: { w, h } the image size, preview (the page's layout preview), overlay(slots) the preview's own marks
   function bgSvg(d0, slots, opt, lang) {
-    const cc = colours(d0), d = Object.assign({}, d0, { ui: cc.ui, data: cc.data }), u = d.ui, c = d.layout, right = rtl(c, lang), light = lum(u.background) > 0.45, PW = pw(c), PH = 720;
-    const edge = mix(u.text, u.card, light ? 0.86 : 0.9), rail = mix(u.card, u.background, 0.35), r = +c.radius;
+    const cc = colours(d0), d = Object.assign({}, d0, { ui: cc.ui, data: cc.data }), u = d.ui, c = d.layout, right = rtl(c, lang), R = roles(u), light = R.light, PW = pw(c), PH = 720;
+    const edge = R.edge, rail = R.rail, r = +c.radius;
     let s = `<rect width="${PW}" height="${PH}" fill="${u.background}"/>`;
     if (c.header) {
       const hh = sizes(c, PW).hh;
-      s += `<rect width="${PW}" height="${hh}" fill="${mix(u.card, u.background, 0.25)}"/><rect y="${hh - 1}" width="${PW}" height="1" fill="${edge}"/>`
+      s += `<rect width="${PW}" height="${hh}" fill="${R.band}"/><rect y="${hh - 1}" width="${PW}" height="1" fill="${edge}"/>`
         + (c.headLine === 'none' ? '' : (() => { const t = barW('headLineW', c), col = barColor(d, 'headLineC', 0);
           return c.headLine === 'full' ? `<rect class="hl" y="${hh - t}" width="${PW}" height="${t}" fill="${col}"/>`
             : `<rect class="hl" x="${right ? PW - M - 8 - 40 : M + 8}" y="${hh - 6 - t}" width="40" height="${t}" rx="${t / 2}" fill="${col}"/>`; })());
@@ -607,7 +616,7 @@
     PRESETS, FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate, calmPalette,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    fs, chart, colours, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    fs, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;

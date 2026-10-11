@@ -46,13 +46,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const buildTheme = () => E.buildTheme(state, isAr() ? 'ar' : 'en');
 
   const renderPreview = () => {
-    const u = state.ui, d = state.data, sec = mix(u.text, u.card, 0.35), grid = mix(u.text, u.card, 0.85), cs = chart();
+    const u = state.ui, d = state.data, ro = E.roles(u), sec = ro.secondary, grid = ro.grid, cs = chart();   // (A2-10: the engine's derived colours)
     const card = (k, v, delta, good) => `<div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${sec}">${k}</div><div class="v">${v}</div><div class="d" style="color:${good ? u.good : u.bad}">${delta}</div></div>`;
     const months = isAr() ? ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'] : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
     const s1 = [42, 55, 48, 63, 70, 78], s2 = [30, 34, 41, 38, 49, 52], s3 = [18, 22, 20, 27, 25, 31];
     const bars = months.map((m, i) => [s1[i], s2[i], s3[i]].map((v, j) => { const x = 34 + i * 58 + j * 15, h = v * 1.6; return `<rect x="${x}" y="${150 - h}" width="13" height="${h}" rx="2" fill="${d[j]}"/>`
       + (cs.labels === 'on' ? `<text x="${x + 6.5}" y="${146 - h}" font-size="7" text-anchor="middle" fill="${sec}">${v}</text>` : ''); }).join('') + `<text x="${34 + i * 58 + 21}" y="166" font-size="10" text-anchor="middle" fill="${sec}">${m}</text>`).join('');
-    const gridLines = [0, 40, 80, 120].map((v) => `${cs.grid === 'off' && v ? '' : `<line x1="28" x2="380" y1="${150 - v}" y2="${150 - v}" stroke="${cs.grid === 'dotted' && v ? mix(u.text, u.card, 0.8) : grid}" stroke-width="1"${cs.grid === 'dotted' && v ? ' stroke-dasharray="1 3"' : ''}/>`}<text x="22" y="${154 - v}" font-size="9" text-anchor="end" fill="${sec}">${v / 1.6 | 0}</text>`).join('');
+    const gridLines = [0, 40, 80, 120].map((v) => `${cs.grid === 'off' && v ? '' : `<line x1="28" x2="380" y1="${150 - v}" y2="${150 - v}" stroke="${cs.grid === 'dotted' && v ? ro.gridline : grid}" stroke-width="1"${cs.grid === 'dotted' && v ? ' stroke-dasharray="1 3"' : ''}/>`}<text x="22" y="${154 - v}" font-size="9" text-anchor="end" fill="${sec}">${v / 1.6 | 0}</text>`).join('');
     // legend of the bar chart, where the theme puts it (Power BI's default is top left)
     const legendItems = [L('Online', 'أونلاين'), L('Stores', 'المتاجر'), L('Partners', 'الشركاء')].map((n, i) => `<span style="display:inline-flex;align-items:center;gap:4px"><i style="width:8px;height:8px;border-radius:50%;background:${d[i]};display:inline-block"></i>${n}</span>`).join('');
     const side = cs.legend === 'Right';
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <svg viewBox="0 0 390 160" role="img" aria-label="Line chart preview">${gridLines}<polyline points="${pts(s1, 1.6)}" fill="none" stroke="${d[0]}" stroke-width="3" stroke-linejoin="round"/><polyline points="${pts(s2, 1.6)}" fill="none" stroke="${d[1]}" stroke-width="3" stroke-linejoin="round"/></svg></div>
         <div class="tg-card" style="background:${u.card};color:${u.text};overflow-x:auto"><table class="tg-table">
           <tr style="background:${u.accent}">${(isAr() ? ['العلامة', 'المبيعات', 'الحالة'] : ['Brand', 'Sales', 'Status']).map((h) => `<th style="color:${contrast(u.accent, '#ffffff') >= contrast(u.accent, '#111111') ? '#ffffff' : '#111111'}">${h}</th>`).join('')}</tr>
-          ${[[L('North', 'الشمال'), '412K', 'good'], [L('South', 'الجنوب'), '288K', 'neutral'], [L('East', 'الشرق'), '176K', 'bad']].map((r, i) => `<tr style="background:${i % 2 && cs.table !== 'minimal' ? mix(u.card, u.accent, 0.08) : u.card}${cs.table === 'minimal' ? `;border-bottom:1px solid ${mix(u.text, u.card, 0.85)}` : ''}"><td>${r[0]}</td><td>${r[1]}</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${u[r[2]]}"></span></td></tr>`).join('')}
+          ${[[L('North', 'الشمال'), '412K', 'good'], [L('South', 'الجنوب'), '288K', 'neutral'], [L('East', 'الشرق'), '176K', 'bad']].map((r, i) => `<tr style="background:${i % 2 && cs.table !== 'minimal' ? mix(u.card, u.accent, 0.08) : u.card}${cs.table === 'minimal' ? `;border-bottom:1px solid ${grid}` : ''}"><td>${r[0]}</td><td>${r[1]}</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${u[r[2]]}"></span></td></tr>`).join('')}
         </table></div>
       </div>`;
   };
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Sample content so the preview reads like a finished report (never drawn in the PNG)
   function sample(s, u, right) {
-    const d = state.data, sec = mix(u.text, u.card, 0.35), grid = mix(u.text, u.card, 0.85), p = 14;
+    const d = state.data, R = E.roles(u), sec = R.secondary, grid = R.grid, p = 14;
     const X = s.x + p, Y = s.y + 32, W = s.w - 2 * p, H = s.h - 32 - p;
     const at = (fx) => (right ? s.x + s.w - p - fx : X + fx); // horizontal position from the reading start
     const font = `font-family="'${state.font}', 'Segoe UI', Arial, sans-serif"`;
@@ -250,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const previewMarks = (slots) => {
     const u = state.ui, c = lay(), right = rtl(), r = +c.radius;
     let s = '';
-    const sec = mix(u.text, u.card, 0.35), font = `font-family="'${state.font}', 'Segoe UI', Arial, sans-serif"`;
+    const sec = E.roles(u).secondary, font = `font-family="'${state.font}', 'Segoe UI', Arial, sans-serif"`;
     slots.forEach((p, i) => {
       let g = c.samples ? sample(p, u, right) : '';
       if (p.kind !== 'title' && p.kind !== 'logo') {
@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // small wireframe for the layout buttons
   const thumb = (key) => {
     const c = Object.assign({}, lay(), { preset: key, kpis: LAYOUTS[key].kpis, filters: LAYOUTS[key].filters, kpiH: null, mainW: null, split: null }), u = state.ui;
-    return `<svg viewBox="0 0 ${PW} ${PH}"><rect width="${PW}" height="${PH}" fill="${u.background}"/>${c.header ? `<rect width="${PW}" height="${sizes(c).hh}" fill="${mix(u.card, u.background, 0.25)}"/>` : ''}`
+    return `<svg viewBox="0 0 ${PW} ${PH}"><rect width="${PW}" height="${PH}" fill="${u.background}"/>${c.header ? `<rect width="${PW}" height="${sizes(c).hh}" fill="${E.roles(u).band}"/>` : ''}`
       + computeSlots(c).filter((s) => s.kind !== 'title' && s.kind !== 'logo').map((s) => `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="18" fill="${s.kind === 'kpi' ? u.accent : u.card}" opacity="${s.kind === 'kpi' ? 0.55 : 1}"/>`).join('') + '</svg>';
   };
 
