@@ -178,8 +178,9 @@ export async function v029c({ call, check, ROOT, meta }) {
   // (the owner's decision R5, 11 Oct: check_report's lint names a visual by its type and place only, never its title;
   // so these find the visual by its place, and no title may come back)
   chk(() => !/"By month"|"Issues"/.test(JSON.stringify(F6)), () => `R5: check_report's lint must return no titles: ${JSON.stringify(F6).slice(0, 300)}`);
-  chk(() => by('AXIS_TEXT_TIME_UNSORTED').length === 1 && /^lineChart at 20,20 900x300$/.test(by('AXIS_TEXT_TIME_UNSORTED')[0].visual) && by('AXIS_TEXT_TIME_UNSORTED')[0].severity === 'high' && by('AXIS_TEXT_TIME_UNSORTED')[0].guess === false,
-    () => `L1. O-13: only the unsorted text Month-Year axis, high, not a guess (the model says text, no sort-by): ${JSON.stringify(by('AXIS_TEXT_TIME_UNSORTED'))}`);
+  chk(() => by('AXIS_TEXT_TIME_UNSORTED').length === 1 && /^lineChart at 20,20 900x300$/.test(by('AXIS_TEXT_TIME_UNSORTED')[0].visual) && by('AXIS_TEXT_TIME_UNSORTED')[0].severity === 'high' && by('AXIS_TEXT_TIME_UNSORTED')[0].guess === true,
+    // (the cross-review's R7, 11 Oct: a finding that rests on a word list, here the time words of the axis's name, is a guess)
+    () => `L1. O-13: only the unsorted text Month-Year axis, high, a guess (a time field known by its name): ${JSON.stringify(by('AXIS_TEXT_TIME_UNSORTED'))}`);
   chk(() => by('BAR_LABELS_MAY_BE_CUT').length === 1 && /about 11 characters/.test(by('BAR_LABELS_MAY_BE_CUT')[0].why) && by('BAR_LABELS_MAY_BE_CUT')[0].guess === true && by('BAR_LABELS_MAY_BE_CUT')[0].severity === 'high',
     () => `L1. O-4: the 508-wide bar chart at 15 pt, about 11 characters, a guess; not the one with axis share 50: ${JSON.stringify(by('BAR_LABELS_MAY_BE_CUT'))}`);
   chk(() => by('TABLE_GROW_TO_FIT').length === 1 && /^tableEx at 20,660 600x300$/.test(by('TABLE_GROW_TO_FIT')[0].visual) && by('TABLE_WIDTHS_TOO_WIDE').length === 1 && /add up to 500 in a table 400 wide/.test(by('TABLE_WIDTHS_TOO_WIDE')[0].why),
@@ -188,7 +189,7 @@ export async function v029c({ call, check, ROOT, meta }) {
   chk(() => by('PLACEHOLDER_TEXT').length === 1 && !JSON.stringify(lint6).includes('Your logo'), () => `L1. O-6: the placeholder found, its words never quoted: ${JSON.stringify(by('PLACEHOLDER_TEXT'))}`);
   chk(() => by('OVERLAP').length === 1 && /cardVisual at 1700,660/.test(by('OVERLAP')[0].visual) && by('COVER_CARDS').length === 1 && by('OFF_PAGE').length === 1 && /cardVisual at 1800,700/.test(by('OFF_PAGE')[0].visual),
     () => `L1. an overlap (not the card laid over the chart: a cover), and a card off the page: ${JSON.stringify(by('OVERLAP').concat(by('COVER_CARDS'), by('OFF_PAGE')))}`);
-  chk(() => !F6.some((f) => /3000/.test(f.visual || '')) && F6.length === 9 && lint6.guesses === 1, () => `L1. a hidden visual is never linted; 9 findings in all, 1 a guess: ${F6.length} ${JSON.stringify(lint6 && lint6.counts)}`);
+  chk(() => !F6.some((f) => /3000/.test(f.visual || '')) && F6.length === 9 && lint6.guesses === 3, () => `L1. a hidden visual is never linted; 9 findings in all, 3 guesses (bar labels; R7: the time-word axis and the placeholder words): ${F6.length} ${JSON.stringify(lint6 && lint6.counts)}`);
   const c6only = await ask('check_report', { path: rep6, checks: ['lint'] });
   chk(() => !c6only.err && c6only.j.lint.findings.length === 9 && c6only.j.validator.ran === false, () => `L1. checks ["lint"] runs the lint alone: ${short(c6only)}`);
   // without the model, the time axis is only a guess
@@ -209,7 +210,8 @@ export async function v029c({ call, check, ROOT, meta }) {
   const ap = pl.j && pl.j.plan && pl.j.plan.planId ? await ask('approve_plan', { planId: pl.j.plan.planId, userReply: 'go' }) : null;
   const cr = await ask('create_report', { path: 'pl1', name: 'Planned', design: pl.j && pl.j.design, fields: planFields, planId: pl.j && pl.j.plan && pl.j.plan.planId });
   const cl = !cr.err ? await ask('check_report', { path: `pl1/${cr.j.report}`, checks: ['lint'] }) : cr;
-  const rules = (fs2) => fs2.filter((f) => f.page.n === 1 && f.rule !== 'COVER_CARDS').map((f) => `${f.rule}|${f.visual}`).sort();
+  // (the cross-review's R3, 11 Oct: the plan's lint filters nothing out, so the "no data" cards' note is compared too)
+  const rules = (fs2) => fs2.filter((f) => f.page.n === 1).map((f) => `${f.rule}|${f.visual}`).sort();
   chk(() => ap && !ap.err && !cr.err && !cl.err && JSON.stringify(rules(dl.findings)) === JSON.stringify(rules(cl.j.lint.findings)),
     () => `L2. the plan's lint matches the lint of the report create_report writes for it: plan ${JSON.stringify(dl && rules(dl.findings))} report ${JSON.stringify(cl.j && cl.j.lint && rules(cl.j.lint.findings))} ${short(cr)}`);
   // without a model, the plan says why it was not linted
