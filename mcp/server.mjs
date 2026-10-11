@@ -1192,9 +1192,10 @@ server.registerTool('read_report', {
   inputSchema: {
     path: z.string().describe('The report: a .pbip file, a .Report folder, or a folder holding definition/, inside the working folder'),
     pages: z.array(z.number().int().min(1).max(500)).min(1).max(50).optional().describe('Only these pages (1 is the first in the report\'s order), for a report too large for one answer'),
-    format: z.enum(['text', 'json']).default('text').describe('text (default): one line per visual, the smallest; json: the same as data')
+    format: z.enum(['text', 'json']).default('text').describe('text (default): one line per visual, the smallest; json: the same as data'),
+    from: z.number().int().min(0).max(100000).optional().describe('With pages: start the first page asked at this visual (the answer\'s MORE line, or next.from, gives it when a page is too large for one answer)')
   }, annotations: READS
-}, safe(async (a) => { const r = readReport(a.path, { pages: a.pages, format: a.format }); return typeof r === 'string' ? text(r) : compact(r); }));
+}, safe(async (a) => { const r = readReport(a.path, { pages: a.pages, format: a.format, from: a.from }); return typeof r === 'string' ? text(r) : compact(r); }));
 
 server.registerTool('plan_layout', {
   title: 'Plan a report page layout',

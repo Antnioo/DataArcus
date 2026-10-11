@@ -98,7 +98,7 @@ export function inside(p) {
   return real(full, p);
 }
 
-const decode = (buf) => {
+export const decode = (buf) => {
   const u8 = new Uint8Array(buf);
   if (u8[0] === 0xff && u8[1] === 0xfe) return new TextDecoder('utf-16le').decode(u8.subarray(2));
   if (u8[0] === 0xef && u8[1] === 0xbb && u8[2] === 0xbf) return new TextDecoder('utf-8').decode(u8.subarray(3));

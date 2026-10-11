@@ -51,7 +51,8 @@ export function planLint(a) {
   const r = Pbip.build({ name: 'Plan', title: 'Plan', pageName: pages[0].name, lang, rtl: E.rtl(design.layout, lang), font: design.font, sample: false,
     theme: E.buildTheme(design, lang), ui: design.ui, model: { byPath: 'Model.SemanticModel', taken: takenNames(m.projectDir), names: {} }, bind,
     logoPlaceholder: false, texts: E.REPORT_TEXTS[lang === 'ar' ? 'ar' : 'en'], pages });
-  const inv = inventory(memorySource(r.files), 'the planned report');
+  // (the writer's paths start with its .Report folder; the reading block takes paths inside the report: A5-12)
+  const inv = inventory(memorySource(r.files.filter((f) => /^[^/]+\.Report\//.test(f.path)).map((f) => ({ path: f.path.replace(/^[^/]+\.Report\//, ''), data: f.data }))), 'the planned report');
   const out = lint(inv, m.tables, null, { pages: [1] });
   return Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out);
 }
