@@ -218,6 +218,17 @@ export function v029w({ check }) {
     const tg = fs.readFileSync(path.join(REPO, 'assets/js/theme-generator.js'), 'utf8'), srv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
     chk(() => /fitSlots/.test(tg) && /fitOptions/.test(tg) && !/dropLines/.test(tg) && /fitOptions/.test(srv), () => 'A2-3: the website\'s background PNG and plan_layout fit the slots with the writer\'s options');
   }
+
+  // ---------- F-W1 (the fuzz test, seed 7 case 809): a 200,000-character name is measured and fitted in bounded time ----------
+  {
+    const huge = 'x'.repeat(200000), words = Array.from({ length: 40000 }, (_, i) => 'w' + i).join(' ');
+    const run = (name) => { const t0 = Date.now(), r = get(() => build(base({ kpis: [M(name), M('Orders')], measure: M(name), cats: { bar: C(name), column: C('Channel'), donut: C('Channel') }, slicers: [C(name), null, null] }), { layout: { filters: true } })); return { r, ms: Date.now() - t0 }; };
+    const one = run(huge), many = run(words);
+    const cutTitles = (x) => (x.r.kpiTitles ? x.r.kpiTitles.shortened.length : 0) + (x.r.titles ? x.r.titles.shortened.length + x.r.titles.slicers.length : 0);
+    chk(() => one.ms < 3000 && many.ms < 3000 && one.r.files && many.r.files && cutTitles(one) >= 2 && cutTitles(many) >= 2
+      && visuals(one.r).every((v) => (titleOf(v) || '').length < 2000),
+      () => `F-W1: a 200,000-character name (one word, or 40,000 words) is fitted fast and its titles are cut: one word ${one.ms} ms, ${one.r.threw || cutTitles(one) + ' cut'}; words ${many.ms} ms, ${many.r.threw || cutTitles(many) + ' cut'}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

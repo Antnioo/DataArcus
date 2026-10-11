@@ -137,8 +137,14 @@
     // Wrapping is preferred: the reader sees the whole name. Both are told in kpiTitles. (The wrap itself and the
     // tooltip are to be proven in Desktop; titleWrap is the title's "Text wrap", in Microsoft's default theme.)
     const wrapLines = (text, size, avail) => { const out = []; let cur = ''; String(text).split(' ').forEach((w) => { const t = cur ? cur + ' ' + w : w; if (!cur || textWidth(t, size, true, font) <= avail) cur = t; else { out.push(cur); cur = w; } }); out.push(cur); return out; };
+    // 0.2.9, the fuzz test's F-W1 (a measure name of 200,000 characters hung the writer: each shorter try was measured
+    // again, a quadratic search): a title that does not fit is first cut to what its box could ever show, its first
+    // characters up to three times the room (two lines and the space between them fit in less), measured as it is cut;
+    // the search for the shortened title then runs on that, whatever the name's length. A text that fits is never cut.
+    const bounded = (text, size, avail) => { let w = 0, out = ''; for (const ch of String(text)) { out += ch; w += textWidth(ch, size, true, font); if (w > 3 * avail + 2 * size) break; } return out; };
     const kpiTitleFit = (text, size, avail, c, two) => {
       if (text == null || textWidth(text, size, true, font) <= avail) return { mode: 'one' };
+      text = bounded(text, size, avail);
       const ls = wrapLines(text, size, avail);
       if (size === 8 && ls.length === 2 && ls.every((l) => textWidth(l, size, true, font) <= avail) && two && two.V >= c.V) return { mode: 'wrapped', c: Object.assign({}, two, { V: c.V }) };
       const words = String(text).split(' ');
@@ -149,6 +155,7 @@
     };
     const titleFit = (text, size, avail) => {
       if (text == null || textWidth(text, size, true, font) <= avail) return { mode: 'one', shown: text };
+      text = bounded(text, size, avail);   // (F-W1)
       const two = (t) => { const ls = wrapLines(t, size, avail); return ls.length <= 2 && ls.every((l) => textWidth(l, size, true, font) <= avail); };
       if (two(text)) return { mode: 'wrapped', shown: text };
       const words = String(text).split(' ');
@@ -160,6 +167,7 @@
     // one line only, shortened at its end (a slicer's header, a phone title that two lines don't hold)
     const oneLine = (text, size, avail) => {
       if (text == null || textWidth(text, size, true, font) <= avail) return text;
+      text = bounded(text, size, avail);   // (F-W1)
       const words = String(text).split(' ');
       for (let n = words.length - 1; n >= 1; n--) { const t = cutAt(words.slice(0, n).join(' ').replace(/[\s,;:(\-–]+$/, '')); if (textWidth(t, size, true, font) <= avail) return t; }
       const ch = [...String(text)];
