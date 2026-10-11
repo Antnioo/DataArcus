@@ -564,16 +564,16 @@ document.addEventListener('DOMContentLoaded', () => {
       // the pages (design engine): this layout, a second page in a complementary layout when asked, and filters as a
       // slide-in panel when asked; each page's background is drawn for its own layout
       // Round 24 (the laptop's re-proof of round 23; the owner's "Fix them now"), on the user's own model:
-      // B2: a KPI card the model has no measure for is not written: the design gets the MCP's kpiCards (the cards left
-      // share the row, and the background's panels follow them) instead of a cardVisual with no field ("Select or add
+      // B2: a KPI card the model has no measure for is not written: the pages get at most the model's KPI count (the
+      // engine's maxKpis, 0.2.9 A2-4; the cards left share the row, and the background's panels follow them) instead of a cardVisual with no field ("Select or add
       // data" in Desktop); B1: with no time axis the writer gives the line chart's room to the chart beside it
       // (dropLines), so the background is drawn from those same slots, one panel under the widened chart
       const nK = model && bind ? (bind.kpis || []).filter(Boolean).length : null;
-      const cL = nK != null && nK < c.kpis ? Object.assign({}, c, { kpiCards: nK }) : c, noLine = !!(model && bind && !bind.date);
+      const noLine = !!(model && bind && !bind.date);
       // (R24-1, the review of round 24: the writer gives card i the binding's KPI i, so a KPI emptied in the middle of the
       // picker left an empty card and dropped the last one: the picked KPIs fill the cards in their order)
       const bindL = bind && nK < (bind.kpis || []).length ? Object.assign({}, bind, { kpis: bind.kpis.filter(Boolean) }) : bind;
-      const specs = E.projectPages(cL, isAr() ? 'ar' : 'en', { second: !!($('pbipPages') && $('pbipPages').checked), panel: !!($('pbipPanel') && $('pbipPanel').checked), logoRatio: logo ? logo.ratio : undefined });
+      const specs = E.projectPages(c, isAr() ? 'ar' : 'en', { second: !!($('pbipPages') && $('pbipPages').checked), panel: !!($('pbipPanel') && $('pbipPanel').checked), logoRatio: logo ? logo.ratio : undefined, maxKpis: nK != null ? nK : undefined });
       Promise.all([loadBuilder(), model ? loadBind() : null]).then(([P, DB]) => Promise.all(specs.map((sp) => pngBlob(sp.layout, noLine ? (sl) => P.dropLines(sl).slots : null).then((b) => b.arrayBuffer()))).then((bufs) => [P, DB, ...bufs])).then(([P, DB, ...bufs]) => {
         if (model && model.ws) model = { byConnection: DB.connection(model.ws, model.mn) };
         // kpiInset: where the KPI titles start beside the side accent bar drawn in this page's background

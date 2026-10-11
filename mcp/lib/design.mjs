@@ -24,10 +24,11 @@ const hex = (v) => (typeof v === 'string' ? E.clampHex(v) : null);
 // and the given data colours are used when there are 8 (otherwise the engine would drop the whole design)
 // (0.2.9, the reviewer's answer to part 1's question, 11 Oct 2026: the owner chose light with the brand exact, O-11): a
 // design without its own colours starts light (the Corporate preset), never the dark DataArcus one
-export function withDefaults(given) {
+// report (optional): told each value of the given design the engine could not use (E.repairState's report)
+export function withDefaults(given, report) {
   const base = E.repairState(E.fresh()), g = given ? JSON.parse(JSON.stringify(given)) : {};
   if (!(Array.isArray(g.data) && g.data.length === 8)) { delete g.data; Object.assign(base, { preset: 'Corporate', data: E.PRESETS.Corporate.data.slice(), ui: Object.assign({}, E.PRESETS.Corporate.ui, g.ui && typeof g.ui === 'object' ? g.ui : {}) }); delete g.ui; delete g.preset; }
-  return E.repairState(Object.assign(base, g, { layout: Object.assign(base.layout, g.layout && typeof g.layout === 'object' ? g.layout : {}) }));
+  return E.repairState(Object.assign(base, g, { layout: Object.assign(base.layout, g.layout && typeof g.layout === 'object' ? g.layout : {}) }), report);
 }
 
 // The design for generate_theme's inputs (see server.mjs): the colours from palette, brand + harmony or preset (in that
@@ -109,13 +110,15 @@ export function layoutFrom(l, base, fix) {
 }
 
 // plan_layout: the design (from generate_theme, or a fresh one) with the tool's layout choices applied the way the
-// website applies them, and the slots in page units. Returns { design, slots, forAuthoring, why }.
+// website applies them, and the slots in page units. Returns { design, slots, forAuthoring, why, smallPage?, repaired? }
+// (repaired: each value of the given design that could not be used, with what was used instead)
 export function planLayout(a) {
-  const design = withDefaults(a.design), l = design.layout;
+  const repaired = [], fix = (r) => repaired.push(r);
+  const design = withDefaults(a.design, fix), l = design.layout;
   // choosing a layout, as on the website: its own KPI count and filters, and the size sliders back to its defaults
   if (a.layout) { l.preset = a.layout; l.kpis = E.LAYOUTS[a.layout].kpis; l.filters = E.LAYOUTS[a.layout].filters; delete l.kpiH; delete l.mainW; delete l.split; }
-  // fewer than 3 KPI cards (the engine's own minimum): the layout keeps its 3 and the page shows kpiCards of them
-  if (a.kpis != null) { l.kpis = Math.max(3, a.kpis); if (a.kpis < 3) l.kpiCards = a.kpis; else delete l.kpiCards; }
+  // the KPI cards, 0-6: the engine's own count (0.2.9, A2-4: no kpiCards)
+  if (a.kpis != null) l.kpis = a.kpis;
   if (l.wideTable !== false) l.wideTable = true;   // (a design that says false keeps equal shares) the owner, 6 Oct 2026: on a 4:3 page the table takes the wider share of its row (the design engine, computeSlots)
   if (a.filters != null) { l.filters = a.filters !== 'none'; if (l.filters) l.fpos = a.filters; }
   Object.assign(design.layout, layoutFrom({ page: a.page, header: a.header, dir: a.dir }, l, () => {}));
@@ -128,7 +131,7 @@ export function planLayout(a) {
     design.layout = E.fitLayout(design.layout); ['kpiH', 'mainW', 'split'].forEach((k) => { if (design.layout[k] == null) delete design.layout[k]; });
     smallPage = Object.assign({}, sp, { say: `The page is ${sp.w} wide, under ${E.SMALL_PAGE.w}: the executive layout's four charts and table would be cut or scroll there, so this plan uses the single-focus layout (the KPI cards and one large chart). Say so in the plan; a page ${E.SMALL_PAGE.w} wide or more takes the executive layout.` });
   }
-  E.repairState(design);
+  E.repairState(design, fix);
   const lang = a.lang, nm = (pair) => (lang === 'ar' ? pair[1] : pair[0]), layout = design.layout;
   // one row per visual, as the website's slot table: its name, the suggested visual, and x, y, w, h in page units
   const slots = E.computeSlots(layout, lang).map((s) => Object.assign({ role: nm(s.role), kind: s.kind, visual: nm(E.KINDS[s.kind]) }, E.boxOf(s, layout)));
@@ -137,7 +140,7 @@ export function planLayout(a) {
   const right = E.rtl(layout, lang);
   const forAuthoring = slots.slice().sort((p, q) => (p.y - q.y) || (right ? q.x - p.x : p.x - q.x))
     .map((s, i) => ({ role: s.role, kind: s.kind, position: { x: s.x, y: s.y, z: (i + 1) * 1000, width: s.w, height: s.h, tabOrder: (i + 1) * 1000 } }));
-  return Object.assign({ design, slots, forAuthoring, why: E.LAYOUTS[layout.preset].why.map(nm) }, smallPage ? { smallPage } : {});
+  return Object.assign({ design, slots, forAuthoring, why: E.LAYOUTS[layout.preset].why.map(nm) }, smallPage ? { smallPage } : {}, repaired.length ? { repaired } : {});
 }
 
 // The page size a layout really gets, and whether a custom size had to be fitted (as the website does)
