@@ -148,6 +148,23 @@ export async function v029designEngine({ check }) {
     chk(() => r.name.length === 60 && notes.some((n) => n.field === 'name'), () => `A2-12: a 5,000-character name is cut to 60 and said: ${r.name && r.name.length}`);
   }
 
+  // ---------- A6-10 (the tools audit, the reviewer's addition): the theme's page scale is the engine's ----------
+  {
+    const pages = [['1920x1080'], ['1280x720'], ['960x720'], ['custom', 1366, 768], ['custom', 3840, 2160], ['custom', 640, 360]];
+    const bad = pages.map(([pg, w, h]) => {
+      const d = design(Object.assign({ preset: 'exec', page: pg }, w ? { pageW: w, pageH: h } : {})), th = E.buildTheme(d, 'en'), sc = get(() => E.themeScaleOf(th));
+      const again = sc && sc.h ? get(() => JSON.stringify(E.buildTheme(design({ preset: 'exec', page: 'custom', pageW: Math.round(sc.h * 16 / 9), pageH: sc.h }), 'en').visualStyles.tableEx)) : null;
+      return sc && sc.h && again === JSON.stringify(th.visualStyles.tableEx) ? null : `${pg}${w ? ' ' + w + 'x' + h : ''}: ${JSON.stringify(sc)}`;
+    }).filter(Boolean);
+    chk(() => !bad.length, () => `A6-10: themeScaleOf finds the height every buildTheme was made for: ${bad.join(' | ')}`);
+    const user = { name: 'Mine', visualStyles: { tableEx: { '*': { values: [{ fontSize: 12 }] } } } };
+    chk(() => get(() => E.themeScaleOf(user)) === null, () => `A6-10: a theme the user made gives null: ${JSON.stringify(get(() => E.themeScaleOf(user)))}`);
+    const t = E.buildTheme(design({ preset: 'exec', page: '1920x1080' }), 'en'), half = get(() => E.scaleTheme(t, 0.5));
+    chk(() => half.visualStyles.card['*'].labels[0].fontSize === 21 && half.textClasses.callout.fontSize === 21 && t.visualStyles.card['*'].labels[0].fontSize === 42 && get(() => E.scaleTheme(t, 10)).textClasses.callout.fontSize === 60,
+      () => `A6-10: scaleTheme scales every text size within 8-60 and leaves the theme given as it was: ${JSON.stringify(half && half.textClasses)}`);
+    chk(() => !/fsz\(|for \(let h = 200; h <= 4400/.test(src('mcp/server.mjs')), () => 'A6-10: server.mjs no longer re-derives the theme\'s scale');
+  }
+
   // ---------- the audit's "Seen, not in scope" in this block ----------
   {
     const r = get(() => D.planLayout({ dir: 'up', lang: 'en' })), d2 = get(() => D.planLayout({ design: Object.assign(base(), { layout: { dir: 'sideways' } }), lang: 'en' }));
