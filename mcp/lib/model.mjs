@@ -62,6 +62,8 @@ export const readsLikeInstruction = (s) => { const t = plainArabic(s); return SC
 export const WITHHELD = '(withheld: reads like an instruction)';
 // a name from disk or from a file as a message may show it: withheld when it reads like an instruction, invisible
 // characters as code points, cut at cap characters
+// a relative path from disk, each folder name screened
+export const shownPath = (p) => String(p).split(/[\\/]/).map((n) => (n ? shownName(n, 80) : n)).join('/');
 export const shownName = (s, cap = 60) => { if (readsLikeInstruction(s)) return WITHHELD; const v = visible(s); return v.length > cap ? v.slice(0, cap) + '…' : v; };
 export class Notice extends Error { constructor(state, message) { super(message); this.state = state; } }
 // A name is free only when nothing at all is there. lstat, not existsSync: a link whose target is missing "doesn't
@@ -221,7 +223,8 @@ function byName(p) {
       if (e.isDirectory()) { if (same && fs.readdirSync(full).some((n) => isModel(n))) hits.add(full); if (depth < 3) visit(full, depth + 1); }
     } };
   visit(ROOT, 0);
-  const rel = (f) => path.relative(ROOT, f) || '.';
+  // (A1-12, the audit of the reading block: folder names from disk are screened before they reach a message)
+  const rel = (f) => shownPath(path.relative(ROOT, f)) || '.';
   if (hits.size === 1) return [...hits][0];
   if (hits.size > 1) throw new Error(`More than one model in the working folder is named "${p}": ${[...hits].map(rel).join('; ')}. Give read_model the path of the one you mean.`);
   throw new Error(`No model named "${p}" in the working folder ${ROOT}. ${models.length ? 'Models there: ' + models.slice(0, 12).map(rel).join('; ') + (models.length > 12 ? '; and ' + (models.length - 12) + ' more' : '') + '. Give read_model one of these paths, or "." for the working folder itself.' : 'Give read_model the path of a project folder, or "." for the working folder itself.'}`);
@@ -249,10 +252,10 @@ export function loadModel(p) {
       const pbir = Object.keys(z).filter((n) => /(^|\/)definition\/(report\.json|reportExtensions\.json|pages\/.*\.json|bookmarks\/.*\.json)$/i.test(n) && !/StaticResources|CustomVisuals/i.test(n));
       const report = layout ? { format: 'legacy', files: [{ path: 'Report/Layout', json: partJson(layout, 'report part') }] }
         : pbir.length ? { format: 'pbir', files: pbir.map((n) => { try { return { path: n, json: partJson(z[n], 'report part') }; } catch (e) { return null; } }).filter(Boolean) } : null;
-      return { source: path.basename(full), folder: null, tmsl, tables: Bind.fromTmsl(tmsl), report };
+      return { source: shownName(path.basename(full), 80), folder: null, tmsl, tables: Bind.fromTmsl(tmsl), report };
     }
     const tmsl = partJson(buf, 'model file');
-    return { source: path.basename(full), folder: null, tmsl, tables: Bind.fromTmsl(tmsl), report: null };
+    return { source: shownName(path.basename(full), 80), folder: null, tmsl, tables: Bind.fromTmsl(tmsl), report: null };
   }
   // a folder: the model folder nearest to the top wins (a backup copy deeper down never does)
   const links = [];
@@ -271,7 +274,7 @@ export function loadModel(p) {
   if (fs.existsSync(bim)) { tmsl = partJson(readCapped(bim, PBIT_LIMITS.model, 'model.bim'), 'model.bim'); tables = Bind.fromTmsl(tmsl); }
   else {
     const tdir = path.join(folder, 'definition', 'tables');
-    if (!fs.existsSync(tdir)) throw new Error(`No model.bim and no definition/tables in ${folder}`);
+    if (!fs.existsSync(tdir)) throw new Error(`No model.bim and no definition/tables in ${shownPath(path.relative(ROOT, folder))}`);
     if (isLink(path.join(folder, 'definition'))) real(path.join(folder, 'definition'));
     if (isLink(tdir)) real(tdir);
     // every TMDL file measured first, one by one and all together, before any is read
@@ -295,7 +298,7 @@ export function loadModel(p) {
   // model folder. Another project's reports in the same folder were counted as this model's broken reports, and the chat
   // then suggested deleting good reports. Every other report is named with why, and never read.
   const all = beside.filter((n) => /\.Report$/i.test(n)), notCounted = [];
-  const reports = all.filter((r) => { const why = notThisModel(projectDir, r, folder); if (why) notCounted.push({ report: visible(r.replace(/\.Report$/i, '')).slice(0, 80), why }); return !why; });
+  const reports = all.filter((r) => { const why = notThisModel(projectDir, r, folder); if (why) notCounted.push({ report: shownName(r.replace(/\.Report$/i, ''), 80), why }); return !why; });
   const pbir = reports.flatMap((r) => { const d = path.join(projectDir, r, 'definition'); return !isLink(d) && fs.existsSync(d) ? walk(d).filter((f) => f.endsWith('.json')) : []; });
   // (round 17, the outside review's G-05: each report file was capped, but not all of them together) every report JSON
   // file measured first, all together, before any is read, as the TMDL files above
@@ -304,8 +307,8 @@ export function loadModel(p) {
   const report = pbir.length ? { format: 'pbir', files: pbir.map((f) => { try { return { path: f.replace(/\\/g, '/'), json: partJson(readCapped(f, PBIT_LIMITS.entry, 'report file'), 'report file') }; } catch (e) { return null; } }).filter(Boolean) } : null;
   // report names in use: an X.Report folder and its X.pbip count once
   const taken = [...new Set((projectDir ? fs.readdirSync(projectDir) : []).filter((n) => /\.(Report|pbip)$/i.test(n)).map((n) => n.replace(/\.(Report|pbip)$/i, '')))];
-  const reportsSeen = projectDir ? { counted: reports.map((r) => visible(r.replace(/\.Report$/i, '')).slice(0, 80)), notCounted } : null;
-  return { source: path.relative(ROOT, folder) || folder, folder, projectDir, taken, tmsl, tables, report, reportsSeen };
+  const reportsSeen = projectDir ? { counted: reports.map((r) => shownName(r.replace(/\.Report$/i, ''), 80)), notCounted } : null;
+  return { source: shownPath(path.relative(ROOT, folder)) || shownName(path.basename(folder), 80), folder, projectDir, taken, tmsl, tables, report, reportsSeen };
 }
 
 // why a report beside the model is not this model's (null when it is): its definition.pbir must name this model folder
@@ -320,7 +323,7 @@ function notThisModel(projectDir, r, folder) {
   const to = ref.byPath && typeof ref.byPath.path === 'string' ? path.resolve(projectDir, r, ref.byPath.path.replace(/\\/g, '/')) : null;
   if (!to) return 'its definition.pbir names no model, so the model it uses is not known';
   const same = process.platform === 'win32' ? to.toLowerCase() === path.resolve(folder).toLowerCase() : to === path.resolve(folder);
-  return same ? null : `it belongs to another model (${visible(path.basename(to)).slice(0, 80)}), not to ${visible(path.basename(folder)).slice(0, 80)}`;
+  return same ? null : `it belongs to another model (${shownName(path.basename(to), 80)}), not to ${shownName(path.basename(folder), 80)}`;
 }
 
 // Column types read from the model open in Power BI Desktop (INFO.COLUMNS() through Microsoft's Power BI Authoring MCP),
