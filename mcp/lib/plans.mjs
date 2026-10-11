@@ -6,13 +6,16 @@
 // that a person typed that reply (an AI app could call approve_plan on its own). The instructions forbid that.
 import crypto from 'node:crypto';
 
-// how long a plan id is good for: 2 hours from its proposal, and 2 hours from its approval. DATAARCUS_PLAN_TTL_MS can
-// only shorten it (the tests use a few seconds); it can never make a plan live longer
+// how long a plan id is good for: 2 hours from its proposal, never extended (an approval does not restart it: Z-02).
+// DATAARCUS_PLAN_TTL_MS can only shorten it (the tests use a few seconds); it can never make a plan live longer
 const TTL_DEFAULT = 2 * 60 * 60 * 1000;
 const TTL = (() => { const v = Number(process.env.DATAARCUS_PLAN_TTL_MS); return Number.isFinite(v) && v > 0 ? Math.min(TTL_DEFAULT, v) : TTL_DEFAULT; })();
 // which writing tools each kind of plan allows
 export const ALLOWS = {
-  report: ['generate_theme', 'create_report'],   // plan_layout's plan: the theme file and the report (with its format script)
+  // plan_layout's plan: the report (with its format script and its theme inside it). Not a separate theme file (Z-01:
+  // the report plan pins only create_report's inputs, so a theme file written with it took any inputs): that file has
+  // its own theme plan, generate_theme's proposal
+  report: ['create_report'],
   theme: ['generate_theme'],                      // generate_theme's own proposal: the theme file
   scripts: ['check_model_health'],                // check_model_health's fix scripts
   calendar: ['add_gulf_calendar'],                // add_gulf_calendar's script
@@ -20,10 +23,12 @@ export const ALLOWS = {
 };
 const plans = new Map();
 const now = () => Date.now();
-// a reply that says no (or not yet) is never an approval
-// ("No problem, go ahead" is a go: a reply that starts with a no but says go, yes or OK is not refused)
-const NOT_GO = /^\s*(no\b|nope\b|not\s+yet|wait\b|stop\b|cancel|don'?t\b|do\s+not\b|hold\b|لا(\s|$|[.,!،])|انتظر|توقف)/i;
-const SAYS_GO = /\b(go|yes|ok|okay|approved?|proceed|sure)\b|موافق|نعم|تمام|ابدأ|اكتب/i;
+// The assistant-reported approval (Z-02, the outside review: "I said no" and "Wait, don't go yet" were approvals): a
+// reply is a go only when it says go AND holds no word of no, not yet, wait or stop ANYWHERE, in English or Arabic.
+// "no problem" is the one known go phrase with a "no" in it. When unsure, it is refused.
+const NOT_GO = /\b(no|nope|not|nah|don'?t|dont|wait|stop|hold|cancel|later|never|before|until|unless|but|maybe|hmm)\b|n't\b|(^|[\s،,.!؟?؛:])(لا|لأ|ليس|مو|مش|لسه|بعدين|لاحقا|لاحقًا|لكن|بس|ربما)(?=$|[\s،,.!؟?؛:])|انتظر|توقف|تمهل|الغ|ألغ/i;
+const SAYS_GO = /\b(go|yes|yep|yeah|ok|okay|approved?|proceed|sure|confirm(ed)?)\b|موافق|نعم|أيوه|ايوه|تمام|ابدأ|ابدا|اكتب|نفذ|نفّذ|اعتمد/i;
+const saysGo = (r) => { const t = String(r).replace(/\bno\s+problem\b/gi, ' '); return SAYS_GO.test(t) && !NOT_GO.test(t); };
 
 const SHOW = 'Show the user the plan (pages, visuals and their fields, page size, theme colours, every file that will be written) and wait for their reply. When they say go, call approve_plan with the plan id and their reply in their own words, then call this tool again with planId.';
 
@@ -34,7 +39,7 @@ export function propose(kind, model, writes, data) {
   plans.set(id, { id, kind, model: model || null, writes: writes || [], data: data === undefined ? null : JSON.parse(JSON.stringify(data)), status: 'proposed', created: now(), approvedAt: null, reply: null });
   return id;
 }
-const alive = (p) => p && now() - (p.status === 'approved' ? p.approvedAt : p.created) <= TTL;
+const alive = (p) => p && now() - p.created <= TTL;
 
 /** The answer's plan block for a proposal: nothing was written, what to do next. */
 export function proposal(id, extra) {
@@ -55,11 +60,12 @@ export function pending(id) {
  *  that a person typed it). Throws with what to do when it can't. (Audit 6, A6-3) */
 export function approve(id, reply, by) {
   const p = plans.get(String((pending(id), id)));
+  if (p.status === 'approved') throw new Error(`Not approved again: plan ${p.id} is already approved (an approval is given once, and a plan is good for ${Math.round(TTL / 60000)} minutes from its proposal). Use it, or make a new plan.`);
   const who = by === 'user-in-app' ? 'user-in-app' : 'assistant-reported';
   const r = String(reply == null ? '' : reply).trim();
   if (who === 'assistant-reported') {
     if (!r) throw new Error('Not approved: userReply is empty, and this app can\'t ask the person itself. Pass the user\'s own reply to the plan, in their words.');
-    if (NOT_GO.test(r) && !SAYS_GO.test(r.replace(/^\s*no\s+problem/i, ''))) throw new Error('Not approved: the user\'s reply does not say go. Change the plan as the user asks, show it again and wait.');
+    if (!saysGo(r)) throw new Error('Not approved: the user\'s reply does not say go. Change the plan as the user asks, show it again and wait.');
   }
   p.status = 'approved'; p.approvedAt = now(); p.reply = (r || 'approved in the app').slice(0, 200); p.approvedBy = who;
   return { planId: p.id, status: 'approved', approvedBy: who, kind: p.kind, allows: ALLOWS[p.kind], writes: p.writes, expiresInMinutes: Math.round(TTL / 60000),
@@ -97,6 +103,8 @@ export function gate(tool, id, model, pin) {
   if (p.model && model && p.model !== model) throw new Error(`Nothing was written: plan ${p.id} was made for another model. ${SHOW}`);
   if (tool === 'create_report' && !p.model) throw new Error(`Nothing was written: plan ${p.id} was made without the model; a report's plan comes from plan_layout with path (the model), so its fields are checked against it. ${SHOW}`);
   const want = p.data && p.data.pins && p.data.pins[tool];
+  // (Z-01: the gate fails closed: a writing tool's plan must pin its inputs; the twin writes only from the plan's data)
+  if (!want && tool !== 'create_arabic_twin') throw new Error(`Nothing was written: plan ${p.id} holds no pinned inputs for ${tool}, so it can't say what the user approved. Make the plan with the tool that proposes it, show it to the user and wait for their go.`);
   if (want && pin !== undefined) {
     const off = differences(want, pin);
     if (off.length) throw new Error(`Nothing was written: ${tool}'s inputs differ from the approved plan ${p.id} in ${off.join('; ')}. The user approved that plan, so only its inputs are written: pass the approved ones, or make a new plan with these, show it and wait for the user's go.`);

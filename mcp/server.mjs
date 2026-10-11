@@ -1064,7 +1064,7 @@ server.registerTool('generate_theme', {
   if (a.planId == null || a.planId === '') {
     const base = fileBase(design.name) + '.json';
     return text({ written: false, fileAfterGo: base, page, colours, sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}),
-      plan: Plans.proposal(Plans.propose('theme', null, [`the theme file "${base}" in ${a.folder ? 'the folder ' + a.folder : 'the working folder'} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) } }), { orWith: 'For a report, plan_layout\'s planId covers this file too: create_report puts the theme in the report itself, so a separate theme file is needed only when the user asks for one.' }) });
+      plan: Plans.proposal(Plans.propose('theme', null, [`the theme file "${base}" in ${a.folder ? 'the folder ' + a.folder : 'the working folder'} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) } }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
   }
   Plans.gate('generate_theme', a.planId, null, inputsPin(a));
   const file = freeFile(a.folder, fileBase(design.name), '.json');
@@ -1173,9 +1173,11 @@ server.registerTool('plan_layout', {
         az: 'A to Z: this text column has no sort column, and no date of a date table orders it. Pick a date or month column with an order, or add a sort-by column in the model, before showing the plan.' }[tp.order];
       timeAxis = { timeAxis: { field: key, order: tp.order, how, sayInPlan: 'Say in the plan how the trend\'s axis is ordered and how many months it shows.' } }; }
   }
-  const writes = [`the report "<name>.Report" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`, 'the theme file, only if the user asks for one (generate_theme)'];
+  const writes = [`the report "<name>.Report" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`];
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
-    : { plan: Plans.proposal(Plans.propose('report', model, writes, model ? { pins: { create_report: reportPin(a, a.planFields) } } : undefined), Object.assign(model ? {} : { noModel: 'Made without path: this plan id allows only a theme file. For a report, call plan_layout with the model (path).' }, planned ? { fields: planned } : {})) };
+    // (Z-01: a report plan allows create_report only, which needs the model; without path no plan id is given)
+    : model ? { plan: Plans.proposal(Plans.propose('report', model, writes, { pins: { create_report: reportPin(a, a.planFields) } }), planned ? { fields: planned } : {}) }
+      : { noPlan: 'No plan id: this layout was planned without the model (path). For a report, call plan_layout with the model; for a separate theme file, generate_theme proposes its own theme plan.' };
   // round 15 (the owner's go on round 13's recommendation 1): gradient bars are the default for designed pages, and the
   // plan the user approves says so
   // 0.2.9 item 11 (LAYER checks): the design lint of the planned page (the writer's page built in memory, read and
