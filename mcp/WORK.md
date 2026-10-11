@@ -8,7 +8,7 @@ by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is m
 The full report: `mcp/work/0.2.9-writer.md`. Done: A3-10 (`daxNames`), A3-11 (shown text without format characters), A3-7 and A3-8
 (writer side: the picker's `kind`/`rows`/`family`/`time` read when given, names measured by family), A3-9 (JSDoc contract, `checkBuild`,
 typed page filters), A3-12 (`build` split into `pbip-query.js`, `pbip-sizing.js`, `pbip-page.js`, `pbip-notes.js`; byte-identical on 970
-inputs), and the audit's writer items B-23 and B-06, then audit 6's A6-12 (`build` returns `bound`) and A6-14 (`Pbip.pageFilterOf`) with the server pointed at both. `npm test` 939 -> 971, golden unchanged. A2-3 (item 7): `fix/0.2.9-design` merged in, fitSlots in progress (see the report).
+inputs), and the audit's writer items B-23 and B-06, then audit 6's A6-12 (`build` returns `bound`) and A6-14 (`Pbip.pageFilterOf`) with the server pointed at both. `npm test` 939 -> 971, golden unchanged. A2-3 done (`bacf172`): `fix/0.2.9-design` merged in, one `E.fitSlots` for the writer, plan_layout and the website's background; `slots.mjs` deleted. `npm test` 1026 + 36 + golden PASS; website 16 of 17, **design-engine 6 background fixtures differ on purpose (the PNG's rail now matches the report): re-recording needs the owner's go**. Next: the owner's go on the fixtures; the reviewer reviews; the laptop proves W1-W11.
 
 ## 0.2.9 design engine block (11 Oct, cloud builder 10; branch `fix/0.2.9-design` from `fix/0.2.9-gate` `d2300f9`; not merged, no PR)
 The audit `audit-2-design-engine.md` (A2-1 to A2-12, but A2-3) and the tools audit's A6-10, fixed at the root in the
