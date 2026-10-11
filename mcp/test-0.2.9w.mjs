@@ -112,6 +112,29 @@ export function v029w({ check }) {
     chk(() => shift.tooltipLimits && shift.tooltipLimits.top === null && dayType.tooltipLimits.top === 6,
       () => `A3-8: the tooltip's Top 6 follows the same mark (never on a time category): ${JSON.stringify([shift.tooltipLimits, dayType.tooltipLimits])}`);
   }
+
+  // ---------- A3-9 (writer side): build's input and result written down (JSDoc) and checked at its top; typed page filters ----------
+  {
+    const s = fs.readFileSync(path.join(REPO, 'assets/js/pbip-export.js'), 'utf8'), doc = (s.match(/\/\*\*(?:(?!\*\/)[\s\S])*@typedef \{Object\} BuildInput[\s\S]*?\*\//) || [''])[0], res = (s.match(/@typedef \{Object\} BuildResult[\s\S]*?\*\//) || [''])[0];
+    const KEYS = ['name', 'title', 'lang', 'rtl', 'font', 'ui', 'theme', 'page', 'pageName', 'slots', 'png', 'pages', 'logo', 'sample', 'model', 'bind', 'texts', 'svgColumns', 'svgCards', 'subtitles', 'chartColors', 'chartAxes', 'quietGrid', 'pageFilters', 'kpiValues', 'noDataMessage', 'logoPlaceholder'];
+    const RES = ['base', 'files', 'zip', 'leftOut', 'kpiTitles', 'titles', 'tableOrder', 'tableRows', 'headerGrew', 'tableSmaller', 'tableWide', 'noDataSkipped', 'svgSizes', 'noPageButtons', 'tableColumns', 'rowLabels', 'rowLabelSkipped', 'extRenamed', 'chartColors', 'chartAxes', 'tabRows', 'ringsSmall', 'shortDays', 'barCharts', 'blankKept', 'subtitlesUsed', 'timeAxes', 'blankFiltered', 'tooltipLimits'];
+    const TEXTS = ['by', 'detail', 'reset', 'resetTip', 'noDataName', 'top6', 'readme', 'logoHere', 'tooltipPage'];
+    chk(() => KEYS.every((k) => new RegExp('\\b' + k + '\\b').test(doc)) && RES.every((k) => new RegExp('\\b' + k + '\\b').test(res)) && TEXTS.every((k) => doc.includes(k)) && /@property/.test(doc) && /sortBy/.test(doc) && /kind/.test(doc),
+      () => `A3-9: a JSDoc BuildInput (every key, the texts, page, slot and field properties) and a BuildResult (every key): missing ${KEYS.filter((k) => !new RegExp('\\b' + k + '\\b').test(doc)).concat(RES.filter((k) => !new RegExp('\\b' + k + '\\b').test(res)), TEXTS.filter((k) => !doc.includes(k))).join(', ')}`);
+    const err = (o) => { try { Px.build(o); return null; } catch (e) { return e; } };
+    const e0 = err({}), e1 = err({ ui: { text: '#111111', card: '#ffffff', background: '#eeeeee' }, pages: [{ name: 'P', page: { w: 1280, h: 720 }, slots: [{ kind: 'chart', x: 0, y: 0, w: 10, h: 10 }] }] });
+    chk(() => e0 instanceof TypeError && /ui/.test(e0.message) && /pages/.test(e0.message) && e1 instanceof TypeError && /slots\[0\]/.test(e1.message) && /chart/.test(e1.message),
+      () => `A3-9: build checks its input first and names what is wrong: ${e0 && e0.message} | ${e1 && e1.message}`);
+    // page filters take typed values; the writer writes the literals (before: the caller's literals, trusted as written)
+    const pf = (f) => get(() => build(base(), { pageFilters: [f] }));
+    const vals = (r) => { const pj = r.files && r.files.find((x) => /pages\/[^/]+\/page\.json$/.test(x.path) && /filterConfig/.test(String(x.data))); return pj ? JSON.parse(String(pj.data)).filterConfig.filters[0].filter.Where[0].Condition.In.Values.map((v) => v[0].Literal.Value) : r.threw; };
+    chk(() => JSON.stringify(vals(pf({ t: T, c: 'City', type: 'string', values: ["O'Brien", 'Dubai'] }))) === JSON.stringify(["'O''Brien'", "'Dubai'"])
+      && JSON.stringify(vals(pf({ t: T, c: 'Year', type: 'int64', values: [2024] }))) === '["2024L"]' && JSON.stringify(vals(pf({ t: T, c: 'Rate', type: 'double', values: [5.5, 3] }))) === '["5.5D","3D"]'
+      && JSON.stringify(vals(pf({ t: T, c: 'Open', type: 'boolean', values: [true] }))) === '["true"]' && JSON.stringify(vals(pf({ t: T, c: 'Code', values: [7] }))) === '["7L"]',
+      () => `A3-9: a page filter's typed values are written as Power BI's literals by the writer: ${JSON.stringify(vals(pf({ t: T, c: 'City', type: 'string', values: ["O'Brien"] })))}`);
+    const bad = [pf({ t: T, c: 'City', literals: ["'a') } ] } , 'b'"] }), pf({ t: T, c: 'City', values: [{ x: 1 }] }), pf({ t: T, c: 'City', type: 'int64', values: [1.5] })];
+    chk(() => bad.every((r) => r.threw && /pageFilters\[0\]/.test(r.threw)), () => `A3-9: a literal that is not Power BI's, or a value of the wrong type, is refused: ${JSON.stringify(bad.map((r) => r.threw || 'written'))}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
