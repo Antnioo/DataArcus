@@ -8,6 +8,8 @@ import { ROOT, visitor } from './lib.mjs';
 
 // the engine and the TMDL builder exactly as the browser loads them (minified)
 const load = (file) => { const m = { exports: {} }; new Function('module', 'exports', 'self', fs.readFileSync(path.join(ROOT, 'assets/js', file), 'utf8'))(m, m.exports, undefined); return m.exports; };
+// (0.2.9: the page loads field-meaning.min.js first, the rule the TMDL builder reads; so does this test)
+globalThis.DataArcusFieldMeaning = load('field-meaning.min.js');
 
 // a PBIR report with one table visual showing these fields: [kind, table, field]
 const report = (refs) => ({ format: 'pbir', files: [{ path: 'definition/pages/p1/page.json', json: { displayName: 'P1' } },
