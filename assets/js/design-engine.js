@@ -127,6 +127,21 @@
   // Reading direction: the layout's own, or the page's language when none is chosen
   const rtl = (c, lang) => (c.dir ? c.dir === 'rtl' : lang === 'ar');
 
+  // Small pages (0.2.9, the audit's A2-1: the rule moved here from the MCP's design.mjs, so the website and the MCP lay
+  // out the same page). Under 800 wide the executive layout's four charts and table do not fit (cut card values,
+  // "Wednes...", a scrolling table), so such a page takes the single-focus layout, without a second page, and the
+  // single-focus KPI cards are one step taller (116 on the 720 grid; the layout's own is 96) unless the design sets its
+  // own height. Measured at ONE size only: 640 x 360 (golden task 5, Desktop 2.158.1304, DESKTOP-TESTS.md "2026-10-07";
+  // rounds 19 and 22). Nothing was measured between 640 and 800: the laptop proof "A2-1" in DESKTOP-TESTS.md checks
+  // 700-800 wide before these values are trusted there.
+  const SMALL_PAGE = { w: 800, kpiH: 116, measured: 'one size only: 640 x 360 (golden task 5, Power BI Desktop 2.158.1304, 2026-10-07); 700-800 wide not measured yet (laptop proof A2-1)' };
+  // null, or how a small page's layout is changed: { w (the page width), from, to }
+  const smallPage = (c) => { const w = page(c).w; return w < SMALL_PAGE.w && c.preset === 'exec' ? { w, from: 'exec', to: 'focus' } : null; };
+  const isSmall = (c) => page(c).w < SMALL_PAGE.w;
+  // the layout a page really gets: on a small page the executive layout becomes the single-focus one, its filters and
+  // its size sliders back to that layout's defaults (as choosing a layout does)
+  const fitLayout = (c) => (smallPage(c) ? Object.assign({}, c, { preset: 'focus', filters: LAYOUTS.focus.filters, kpiH: null, mainW: null, split: null }) : c);
+
   // Adjustable sizes, each kept inside a safe range so every visual stays usable
   const RANGE = { hh: [44, 96], logoW: [100, 360], fw: [160, 320], fh: [56, 120], kpiH: [64, 160], mainW: [40, 75], split: [30, 70], radius: [0, 24], kpiBarW: [2, 8], headLineW: [2, 8] };
   // on a narrow (4:3) page the side filter panel is capped at a quarter of the width (PW: the page's width, see pw)
@@ -150,7 +165,7 @@
     const P = LAYOUTS[c.preset], n = (k, d) => clampTo(k, c[k] == null || !isFinite(+c[k]) ? d : c[k], PW, c);
     const w0 = P.rows[0].reduce((a, col) => a + col[0], 0);
     return { hh: n('hh', HH), logoW: n('logoW', 150), fpos: ['start', 'end', 'top'].includes(c.fpos) ? c.fpos : 'start', fw: n('fw', 196), fh: n('fh', 72),
-      kpiH: n('kpiH', P.kpiH), mainW: n('mainW', 100 * P.rows[0][0][0] / w0), split: n('split', P.flex.length === 2 ? 100 * P.flex[0] / (P.flex[0] + P.flex[1]) : 50) };
+      kpiH: n('kpiH', c.preset === 'focus' && isSmall(c) ? SMALL_PAGE.kpiH : P.kpiH), mainW: n('mainW', 100 * P.rows[0][0][0] / w0), split: n('split', P.flex.length === 2 ? 100 * P.flex[0] / (P.flex[0] + P.flex[1]) : 50) };
   }
 
   // The slots of a layout, on the 720-tall design grid (boxOf turns one into page units). lang: the page's language,
@@ -158,7 +173,9 @@
   // opt.logoRatio (width / height of an attached logo, see imageSize): the logo slot keeps the designed height and takes
   // the logo's own width (no minimum; at most the logo width range's 360), its far edge where it is; the title and the
   // page buttons get the room that is left. Without it the slot is the designed logo width, as before.
+  // A small page gets its own layout first (fitLayout, see SMALL_PAGE).
   function computeSlots(c, lang, opt) {
+    c = fitLayout(c);
     const PW = pw(c), PH = 720;
     const P = LAYOUTS[c.preset], z = sizes(c, PW), slots = [];
     let top = c.header ? z.hh + 14 : M;
@@ -440,10 +457,11 @@
   };
   // The report's pages for a layout: this page, the second page when asked, each with the slide-in panel when asked.
   // opts: { second, panel, logoRatio (an attached logo's width / height, see computeSlots) }.
+  // A small page (SMALL_PAGE) has its own layout and no second page.
   // Each page: { layout (for its background), name, page { w, h }, slots, panel }
-  const projectPages = (c, lang, opts) => {
-    const nm = (pair) => (lang === 'ar' ? pair[1] : pair[0]), o = opts || {};
-    const specs = [{ c, name: nm(LAYOUTS[c.preset].name) }].concat(o.second ? [{ c: secondLayout(c), name: nm(c.preset === 'analysis' ? ['Overview', 'نظرة عامة'] : ['Details', 'التفاصيل']) }] : []);
+  const projectPages = (given, lang, opts) => {
+    const nm = (pair) => (lang === 'ar' ? pair[1] : pair[0]), o = opts || {}, c = fitLayout(given);
+    const specs = [{ c, name: nm(LAYOUTS[c.preset].name) }].concat(o.second && !isSmall(c) ? [{ c: secondLayout(c), name: nm(c.preset === 'analysis' ? ['Overview', 'نظرة عامة'] : ['Details', 'التفاصيل']) }] : []);
     return specs.map((sp) => {
       const sl = o.panel ? slidePanel(sp.c, lang) : null, layout = sl ? sl.layout : sp.c, p = page(layout);
       return { layout, name: sp.name, page: { w: p.w, h: p.h }, slots: projectSlots(layout, lang, { logoRatio: o.logoRatio }), panel: sl ? sl.panel : null };
@@ -488,7 +506,7 @@
   const api = {
     PRESETS, FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate, calmPalette,
-    within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
+    within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
     fs, chart, buildTheme, contrastChecks, REPORT_TEXTS, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
