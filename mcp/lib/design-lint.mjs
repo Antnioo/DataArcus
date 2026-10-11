@@ -18,7 +18,7 @@ export const LINT_RULES = {
   OFF_PAGE: 'a visual outside the page',
   OVERLAP: 'two visible data visuals, cards or slicers overlapping by more than 10% of the smaller',
   COVER_CARDS: 'a card laid over another visual at the same place (a "no data" message): counted apart, not an overlap',
-  NO_TITLE: 'a chart or table with no title and no text box just above it',
+  NO_TITLE: 'a chart or table whose title is switched off, with no text box just above it (with no title setting Power BI draws its own title)',
   PLACEHOLDER_TEXT: 'placeholder wording left in a title or text box ("Your logo", «شعارك», lorem ipsum...) (O-6)'
 };
 
@@ -26,6 +26,8 @@ const CHARTS = /^(lineChart|areaChart|stackedAreaChart|columnChart|clusteredColu
 const BARS = /^(barChart|clusteredBarChart|stackedBarChart|hundredPercentStackedBarChart)$/;
 const DATA = /Chart$|^tableEx$|^pivotTable$|^treemap$|^funnel$|^gauge$|^map$|^filledMap$|^azureMap$/;
 const TIMEY = /month|year|date|week|quarter|period|day|شهر|سنة|تاريخ|أسبوع|ربع|يوم/i;
+// (A4-8) the reading layer's titleOff; a visual JSON when given (the reading branch's inventory keeps it, a test's too)
+const titleOff = (x) => { if (x.titleOff) return true; const t = (((((x.json || {}).visual || {}).visualContainerObjects || {}).title) || []).find((e) => e && !e.selector && e.properties && e.properties.show); const v = t && t.properties.show.expr && t.properties.show.expr.Literal && t.properties.show.expr.Literal.Value; return String(v) === 'false'; };
 const PLACEHOLDER = /your logo|logo here|lorem ipsum|placeholder|title here|text here|click to add|شعارك|عنوان هنا|نص هنا/i;
 // a character of a label at a point size (Segoe UI, measured in the report-fixes lab): 1.333 px a point x 0.57 em
 const pxPerChar = (pt) => pt * 1.333 * 0.57;
@@ -85,8 +87,9 @@ export function lint(inv, model, facts, opts) {
       }
       // (d) off the page
       if (p.w && p.h && (x.x < -1 || x.y < -1 || x.x + x.w > p.w + 1 || x.y + x.h > p.h + 1)) add('OFF_PAGE', 'high', p, x, `part of the visual lies outside the ${p.w}x${p.h} page`, 'move it or make it smaller', false);
-      // (e) a data visual with no title and no text box just above it
-      if (DATA.test(x.type) && !x.title) {
+      // (e) a data visual with its title switched off and no text box just above it. (A4-8, audit 4: with no title setting,
+      // Power BI draws its own title, "Sales by Region", so that is not a missing title)
+      if (DATA.test(x.type) && !x.title && titleOff(x)) {
         const label = shown.some((t) => t.type === 'textbox' && t.text && t.y + t.h <= x.y + 12 && t.y + t.h >= x.y - 70 && t.x < x.x + x.w && t.x + t.w > x.x);
         if (!label) add('NO_TITLE', 'medium', p, x, 'no title, and no text box just above it to name it', 'add a title that says what the visual answers', false);
       }
