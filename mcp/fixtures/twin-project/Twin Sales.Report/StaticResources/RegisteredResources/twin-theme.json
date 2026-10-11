@@ -1,0 +1,14 @@
+{
+  "name": "twin-theme.json",
+  "dataColors": [
+    "#0F766E",
+    "#2563EB",
+    "#D97706",
+    "#7C3AED",
+    "#DC2626",
+    "#059669"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#1F2937",
+  "tableAccent": "#0F766E"
+}

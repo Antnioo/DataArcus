@@ -243,6 +243,8 @@ export function loadModel(p) {
     tmsl = Tmdl.fromFiles(tfiles.map((f) => ({ path: path.relative(folder, f).replace(/\\/g, '/'), text: text.get(f) })), { lineageTags: true });
   }
   tables = tables.filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name));
+  // (the block audit's A3-1: a table whose date column is a relationship's one side is a calendar, from the files' relationships)
+  if (tmsl) Bind.markCalendars(tables, tmsl);
   // the project's own reports (PBIR), for the health check and for choosing a report name that is free
   // When the working folder is the model folder itself, the project folder is outside it: nothing there is read
   // (no reports, no names in use) and create_report refuses (projectDir null).

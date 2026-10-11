@@ -8,6 +8,8 @@
  */
 (function (root) {
   'use strict';
+  // the one field-meaning rule (assets/js/field-meaning.js, shared with the field picker: the block audit's A1-11, 11 Oct)
+  const FM = typeof require === 'function' && typeof module === 'object' && module.exports ? require('./field-meaning.js') : root.DataArcusFieldMeaning;
   const TAB = '\t';
   const ind = (n) => TAB.repeat(n);
   const text = (v) => (Array.isArray(v) ? v.join('\n') : v == null ? '' : String(v));
@@ -337,14 +339,9 @@
   //   a sum without a format: "#,0" (round 14); any other number: "#,0.00" without a format; its own format with the
   //     separator where it lacks one
   //   a date column: "dd mmm yyyy" without a format or with "General Date" (which shows a time of 12:00:00 AM)
-  const DIVIDES = /\bDIVIDE\s*\(|(^|[^/])\/(?!\/)/i;
-  const PCT_HARD = /%|\bpct\b|\bpercent(age)?\b|\bratio\b|\brate\b|نسبة/i, PCT_SOFT = /margin|share|\bvs\b|growth|change|هامش|نمو/i;
-  const NOT_PCT = /hourly|exchange|run\s*rate|\bper\b|colou?r|icon|label|title|arrow/i;
-  const MONEY = /[$€£¥₹]|\[\$|\bcurrency\b|"[^"]*(AED|SAR|QAR|KWD|BHD|OMR|USD|EUR|GBP|د\.إ|ر\.س|ر\.ق|د\.ك)[^"]*"/i;
-  const COUNT_EXPR = /^(COUNT|COUNTA|COUNTAX|COUNTBLANK|COUNTROWS|COUNTX|DISTINCTCOUNT|DISTINCTCOUNTNOBLANK)\s*\(/i;
-  const isTextFormat = (f) => { if (!f) return false; if (/^\s*(yes\/no|true\/false|on\/off)\s*$/i.test(f)) return true; if (/^\s*(general( number)?|currency|fixed|standard|percent|scientific)\s*$/i.test(f)) return false;
-    return !/[0#%]/.test(unquoted(f)); };
-  const TEXT_EXPR = /^\s*"|^\s*(FORMAT|CONCATENATEX?|UNICHAR|UPPER|LOWER|LEFT|RIGHT|MID|SUBSTITUTE|REPT|COMBINEVALUES)\s*\(|"\s*&|&\s*"/i;
+  const DIVIDES = FM.DIVIDES, PCT_HARD = FM.PCT_HARD, COUNT_EXPR = FM.COUNT_EXPR, isTextFormat = FM.isTextFormat, TEXT_EXPR = FM.TEXT_EXPR;
+  // money: a currency in the format (an ISO 4217 code or a currency sign; field-meaning.js)
+  const MONEY = { test: FM.hasCurrency };
   const hasDecimals = (f) => /\.[0#]/.test(unquoted(f));
   const sumOfWhole = (expr, rawTables) => {
     const sum = expr.match(/^SUM\s*\(\s*'?([^'\[\]]+?)'?\s*\[\s*([^\]]+)\]\s*\)$/i); if (!sum) return false;
@@ -375,7 +372,7 @@
     if (obj.formatStringDefinition) return null;
     const expr = text(obj.expression).replace(/\/\/.*$/gm, '').replace(/--.*$/gm, '').trim();
     if (isTextFormat(f) || TEXT_EXPR.test(expr)) return null;
-    const pct = /%/.test(unquoted(f)) || (PCT_HARD.test(nm) && !NOT_PCT.test(nm)) || (PCT_SOFT.test(nm) && DIVIDES.test(expr) && !MONEY.test(f));
+    const pct = FM.formatHasPercent(f) || FM.percentFromName(nm, { divides: DIVIDES.test(expr), format: f, soft: 'notMoney' });
     if (pct) return /%/.test(unquoted(f)) ? null : { format: '0.0%', reason: f ? 'a ratio (by its name or its DAX) formatted as ' + f : 'a ratio (by its name or its DAX) without a format' };
     return numberFix(f, COUNT_EXPR.test(expr) || sumOfWhole(expr, rawTables), /^SUM\s*\(\s*'?[^'\[\]()]+'?\s*\[[^\]]+\]\s*\)$/i.test(expr));
   }

@@ -410,9 +410,9 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
       await cl.close();
     } catch (e) { err = String(e && e.message || e); }
     fs0.rmSync(tmp, { recursive: true, force: true });
-    // (9 tools since approve_plan, 11 Oct 2026, 0.2.9's gate)
-    chk(() => tools.length === 9 && ans && !ans.err && ans.validator.ran === false && ans.validator.mode === 'not available' && /cannot be loaded|report CLI/i.test(ans.validator.why || ''),
-      () => `X-03. with the CLI failing to load: 9 tools and check_report's validator "not available" with the reason: ${tools.length} tools ${JSON.stringify(ans && (ans.validator || ans)).slice(0, 300)} ${err}`);
+    // (9 tools since approve_plan, 11 Oct 2026, 0.2.9's gate; 10 with read_report, 0.2.9 item 10; 11 with create_arabic_twin, 0.3.0: the three branches merged for the laptop proof, 11 Oct)
+    chk(() => tools.length === 11 && ans && !ans.err && ans.validator.ran === false && ans.validator.mode === 'not available' && /cannot be loaded|report CLI/i.test(ans.validator.why || ''),
+      () => `X-03. with the CLI failing to load: 11 tools (read_report and create_arabic_twin both added) and check_report's validator "not available" with the reason: ${tools.length} tools ${JSON.stringify(ans && (ans.validator || ans)).slice(0, 300)} ${err}`);
   }
 }
 

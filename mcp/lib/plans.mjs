@@ -15,7 +15,8 @@ export const ALLOWS = {
   report: ['generate_theme', 'create_report'],   // plan_layout's plan: the theme file and the report (with its format script)
   theme: ['generate_theme'],                      // generate_theme's own proposal: the theme file
   scripts: ['check_model_health'],                // check_model_health's fix scripts
-  calendar: ['add_gulf_calendar']                 // add_gulf_calendar's script
+  calendar: ['add_gulf_calendar'],                // add_gulf_calendar's script
+  twin: ['create_arabic_twin']                    // create_arabic_twin's own proposal: the "<name> AR" report (and its month script)
 };
 const plans = new Map();
 const now = () => Date.now();
@@ -26,10 +27,11 @@ const SAYS_GO = /\b(go|yes|ok|okay|approved?|proceed|sure)\b|موافق|نعم|�
 
 const SHOW = 'Show the user the plan (pages, visuals and their fields, page size, theme colours, every file that will be written) and wait for their reply. When they say go, call approve_plan with the plan id and their reply in their own words, then call this tool again with planId.';
 
-/** A new proposed plan. kind: report | theme | scripts | calendar; model: the model's key (its folder's real path) or null; writes: what it will write, in words. */
-export function propose(kind, model, writes) {
+/** A new proposed plan. kind: report | theme | scripts | calendar | twin; model: the model's key (its folder's real path)
+ *  or null; writes: what it will write, in words; data: what the write must use exactly as approved (the twin's labels) */
+export function propose(kind, model, writes, data) {
   const id = 'plan-' + crypto.randomBytes(6).toString('hex');
-  plans.set(id, { id, kind, model: model || null, writes: writes || [], status: 'proposed', created: now(), approvedAt: null, reply: null });
+  plans.set(id, { id, kind, model: model || null, writes: writes || [], data: data === undefined ? null : JSON.parse(JSON.stringify(data)), status: 'proposed', created: now(), approvedAt: null, reply: null });
   return id;
 }
 const alive = (p) => p && now() - (p.status === 'approved' ? p.approvedAt : p.created) <= TTL;
@@ -66,5 +68,4 @@ export function gate(tool, id, model) {
   return p;
 }
 
-/** For the answer: is this id an approved, live plan that allows the tool (no throw). */
-export function approvedFor(tool, id, model) { try { gate(tool, id, model); return true; } catch (e) { return false; } }
+
