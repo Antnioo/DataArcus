@@ -57,6 +57,22 @@
     // than 0.2, so the darkest colour is 0.2. It stays as a safety limit in case the steps change.
     return plans[mode].map(([dh, dl]) => hslToHex(h + dh, s, Math.min(0.85, Math.max(0.15, l + dl))));
   };
+  // A calm palette beside a brand colour (0.2.9, the reviewer of 11 Oct: the analogous harmony gave loud colours beside
+  // the owner's brand; moved here from the MCP by the cross-review's G7, so the website and the MCP give the same one):
+  // the brand exactly, then up to 7 calm colours told apart by hue (one within 25 degrees of the brand's is skipped), each
+  // mixed towards the text colour until it stands 3:1 on the visuals' background (card)
+  const CALM = ['#2f6e9e', '#b86e00', '#1f7a70', '#6a4c93', '#b5452f', '#56636f', '#5e7f3a', '#8e5b2e', '#a23b72', '#3d7ea6'];
+  const calmPalette = (brand, card, text) => {
+    const near = (a, b) => { const [h1, s1] = hexToHsl(a), [h2, s2] = hexToHsl(b), d = Math.abs(h1 - h2) % 360; return s1 > 0.15 && s2 > 0.15 && Math.min(d, 360 - d) < 25; };
+    const out = [];
+    for (const c0 of CALM) {
+      if (out.length === 7) break;
+      if (near(c0, brand)) continue;
+      let c = c0; for (let t = 0.1; contrast(c, card) < 3 && t <= 1; t += 0.1) c = mix(c0, text, t);
+      if (!out.includes(c) && c !== brand) out.push(c);
+    }
+    return [brand].concat(out).slice(0, 8);
+  };
 
   // ---------- page layout: a full background with a place for every visual ----------
   // Power BI's default page is 1280 × 720, so every slot is in those units and can be typed straight
@@ -471,7 +487,7 @@
 
   const api = {
     PRESETS, FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
-    clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate,
+    clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate, calmPalette,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
     fs, chart, buildTheme, contrastChecks, REPORT_TEXTS, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
