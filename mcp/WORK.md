@@ -111,6 +111,15 @@ Website: **17 suites PASS**; `check-min` (57), `csp`, `test-site-config` PASS. T
 check needed a second category (one category leaves no "next column", as before); the server-source check matched the
 page filter's own Ramadan note and add_gulf_calendar's column list (tools-layer text, not picker rules): narrowed.
 
+### For packaging (the reviewer's routine 10:29 UTC; builder 13's audit 8: A8-6, A8-8, A8-9)
+- The MCP's runtime dependencies are pinned exactly in `mcp/package.json`, at the versions the lockfile already had:
+  `@modelcontextprotocol/sdk` 1.32.1, `ajv` 8.20.0, `ajv-formats` 3.0.1, `zod` 4.6.5 (`npm install`: the lockfile's
+  ranges follow; no installed version changed).
+- **The rc version is written at build time**: `mcp/package.json`'s "version" stays 0.1.0 here; builder 13's build
+  (`fix/0.2.9-packaging`) writes 0.2.9-rc.1 and checks it against PRIVACY.md's header and `mcp/CHANGELOG.md` (PR #7).
+- Seen, not in scope: `@microsoft/powerbi-report-authoring-cli` (Microsoft's validator, used by the tests only) is
+  under "dependencies", not "devDependencies", so a production install would carry it; packaging's call.
+
 ### 0.2.9 audit fixes (picker), for the laptop (each expected before the run)
 | # | Check | Expected |
 |---|---|---|
