@@ -109,8 +109,11 @@ export function v029w({ check }) {
       () => `A3-8: the picker's mark decides (a time kind or time: true keeps its order; another kind or time: false is sorted largest first): Shift/day ${byValue(shift)}, Day Type/category ${byValue(dayType)}, Slot/time ${byValue(marked)}, Day Type/not time ${byValue(unmarked)}`);
     const region = chart(C('Region')), week = chart(C('Fiscal Week'));
     chk(() => byValue(region) && !byValue(week), () => `A3-8: without a mark the words decide as before: Region ${byValue(region)}, Fiscal Week ${byValue(week)}`);
-    chk(() => shift.tooltipLimits && shift.tooltipLimits.top === null && dayType.tooltipLimits.top === 6,
-      () => `A3-8: the tooltip's Top 6 follows the same mark (never on a time category): ${JSON.stringify([shift.tooltipLimits, dayType.tooltipLimits])}`);
+    // (the laptop's second sweep, T5: a chart never opens a tooltip by its own category, so the tooltip's category is
+    // checked under a chart by another one, Channel)
+    const tipShift = chart(C('Channel'), C('Shift', { kind: 'day' })), tipDayType = chart(C('Channel'), C('Day Type', { kind: 'category' }));
+    chk(() => tipShift.tooltipLimits && tipShift.tooltipLimits.top === null && tipDayType.tooltipLimits.top === 6,
+      () => `A3-8: the tooltip's Top 6 follows the same mark (never on a time category): ${JSON.stringify([tipShift.tooltipLimits, tipDayType.tooltipLimits])}`);
   }
 
   // ---------- A3-9 (writer side): build's input and result written down (JSDoc) and checked at its top; typed page filters ----------
