@@ -87,7 +87,7 @@ const fail = (e) => ({ isError: true, content: [{ type: 'text', text: scrub(name
 const notice = (state, whatToDo) => text({ workingFolder: ROOT ? path.basename(ROOT) : ROOT, state, done: 'Nothing was read or written.', whatToDo });
 // no working folder set: every tool refuses with the reason and touches no file
 // (audit 6, A6-17: an internal error is told as one, with what this call wrote, from the files module's log)
-const safe = (fn) => async (args) => { const mark = writtenSince(); try { const problem = rootProblem(); if (problem) return ROOT ? notice('missing', problem) : fail(problem); return await fn(args); } catch (e) { return e instanceof Notice ? notice(e.state, e.message) : fail(failText(e, writtenSince(mark))); } };
+const safe = (fn) => async (args) => { const mark = writtenSince(); try { const problem = rootProblem(); if (problem) return ROOT ? notice('missing', problem) : fail(problem); return await fn(args); } catch (e) { return e instanceof Notice ? notice(e.state, e.message) : fail(e && e.code && !/^E[A-Z]+$/.test(e.code) ? e : failText(e, writtenSince(mark))); } };   // (a reading block's coded error is worded by wordOf, A1-9; any other by failText, A6)
 // A fix script goes to a new file, never into an answer: a script rewrites whole objects, so it holds the user's own
 // expressions and descriptions, and everything a tool returns is read by the AI app (audit AUD-006). The file gets a
 // free name; asked again, the file that already holds exactly this script is named again instead of a second copy.
