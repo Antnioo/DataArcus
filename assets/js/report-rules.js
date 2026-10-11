@@ -122,7 +122,7 @@
       run(R, out) {
         R.visuals.filter((x) => /button|navigator/i.test(x.type)).forEach((x) => {
           const o = (x.json.visual || {}).objects || {};
-          const cards = Object.keys(o).filter((k) => entries(o[k]).some((e) => e && e.selector && STATES.includes(e.selector.id) && e.properties && 'show' in e.properties));
+          const cards = Object.keys(o).filter((k) => entries(o[k]).some((e) => e && e.selector && STATES.includes(e.selector.id) && e.properties && typeof e.properties === 'object' && 'show' in e.properties));
           const named = cards.filter(word), others = cards.length - named.length;
           if (cards.length) out(x, `${cards.length} formatting card${cards.length === 1 ? '' : 's'} (${named.concat(others ? [`${others} not named`] : []).join(', ')}) set "show" inside a state selector`, 'Move each "show" into its own entry without a selector, as Power BI Desktop saves it; inside a state it is ignored and the text, fill or outline stays hidden.');
         });
@@ -133,7 +133,7 @@
         R.visuals.filter((x) => x.type === 'cardVisual').forEach((x) => {
           const v = x.json.visual || {}, o = v.objects || {}, c = v.visualContainerObjects || {}, bad = [];
           ['padding', 'spacing'].forEach((k) => { if (entries(c[k]).some((e) => e && e.selector && e.selector.id === 'default')) bad.push(`the container's ${k} with "default"`); });
-          if (entries(o.fillCustom).some((e) => e && e.selector && e.selector.id === 'default' && e.properties && 'show' in e.properties)) bad.push('fillCustom "show" with "default"');
+          if (entries(o.fillCustom).some((e) => e && e.selector && e.selector.id === 'default' && e.properties && typeof e.properties === 'object' && 'show' in e.properties)) bad.push('fillCustom "show" with "default"');
           ['value', 'label', 'outline'].forEach((k) => { if (entries(o[k]).some((e) => e && !e.selector)) bad.push(`${k} without "default"`); });
           if (bad.length) out(x, `${bad.length} entr${bad.length === 1 ? 'y' : 'ies'} Desktop ignores: ${bad.join('; ')}`, 'Write the container\'s padding and spacing and fillCustom\'s "show" without a selector, and the card\'s value, label and outline with selector { id: "default" }.');
         });
@@ -187,9 +187,10 @@
       about: 'a chart sorts by a field only when that field is in the visual (a sort by any other field is ignored)',
       run(R, out) {
         R.visuals.filter((x) => /Chart$|^(donutChart|funnel|treemap|map|pieChart)$/.test(x.type)).forEach((x) => {
-          const q = ((x.json.visual || {}).query) || {}, sorts = ((q.sortDefinition || {}).sort) || [];
+          // (F-C2, the fuzz test: a sort list or a projection list that is not a list is read as empty, never a crash)
+          const q = ((x.json.visual || {}).query) || {}, sorts = entries((q.sortDefinition || {}).sort).filter((t) => t && typeof t === 'object');
           if (!sorts.length) return;
-          const held = Object.values(q.queryState || {}).flatMap((r) => (r && r.projections) || []).map((p) => JSON.stringify(p.field));
+          const held = Object.values(q.queryState && typeof q.queryState === 'object' ? q.queryState : {}).flatMap((r) => entries(r && r.projections)).map((p) => JSON.stringify(p && p.field));
           const missing = sorts.filter((s) => !held.includes(JSON.stringify(s.field))).length;
           if (missing) out(x, `${missing} of its ${sorts.length} sort field${sorts.length === 1 ? ' is' : 's are'} not in the visual, so Desktop ignores ${missing === 1 ? 'it' : 'them'}`, 'Put the sort field in the visual (for a month or day name: Min of its number column in the Tooltips role), or sort by a field the chart shows.');
         });
