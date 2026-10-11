@@ -453,10 +453,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // (0.2.9, A3-12: the writer is five files, its modules first, in this order; each written out with its own ?v= stamp)
     const BUILDER = ['../assets/js/pbip-query.min.js?v=20261011w', '../assets/js/pbip-sizing.min.js?v=20261011w', '../assets/js/pbip-notes.min.js?v=20261011w',
       '../assets/js/pbip-page.min.js?v=20261011w', '../assets/js/pbip-export.min.js?v=20261011w'];
-    const loadScript = (src) => new Promise((resolve, reject) => {
+    const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : BUILDER.reduce((p, src) => p.then(() => new Promise((resolve, reject) => {
       const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc);
-    });
-    const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : BUILDER.reduce((p, src) => p.then(() => loadScript(src)), Promise.resolve()).then(() => window.DAPbip));
+    })), Promise.resolve()).then(() => window.DAPbip));
     // ---- your own model: a local project (the report points at its .SemanticModel folder) or a published one ----
     // Each choice keeps its own model and the fields picked for it, so switching between them never pairs one
     // model's fields with the other's location: own.local / own.service = { tables, msg, bad, folder, dir, reports, choices }
