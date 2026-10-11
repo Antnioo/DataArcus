@@ -26,7 +26,8 @@
     return (m.tables || []).filter((t) => t && t.name != null).map((t) => ({
       name: String(t.name), hidden: !!t.isHidden, date: /^time$/i.test(t.dataCategory || ''),
       columns: (t.columns || []).filter((c) => c.type !== 'rowNumber' && c.name != null)
-        .map((c) => Object.assign({ name: String(c.name), dataType: c.dataType || 'string', isHidden: !!c.isHidden, dataCategory: c.dataCategory }, c.sortByColumn ? { sortBy: String(c.sortByColumn) } : {}, c.displayFolder ? { displayFolder: String(c.displayFolder) } : {})),
+        // (A1-6: a column with no type is unknown, as in TMDL: never guessed as text)
+        .map((c) => Object.assign({ name: String(c.name), dataType: c.dataType || 'unknown', isHidden: !!c.isHidden, dataCategory: c.dataCategory }, c.sortByColumn ? { sortBy: String(c.sortByColumn) } : {}, c.displayFolder ? { displayFolder: String(c.displayFolder) } : {})),
       measures: (t.measures || []).filter((x) => x.name != null).map((x) => { const m = Object.assign({ name: String(x.name), isHidden: !!x.isHidden, formatString: x.formatString, divides: divides(x.expression) }, x.displayFolder ? { displayFolder: String(x.displayFolder) } : {}); addExpr(m, Array.isArray(x.expression) ? x.expression.join('\n') : x.expression); return m; })
     }));
   }
