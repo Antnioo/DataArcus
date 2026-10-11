@@ -20,7 +20,7 @@ const PNG1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQV
 export function planLint(a) {
   const { m, design: d0, lang, F } = a, pickFrom = a.tables || m.tables;
   let design = Object.assign({}, d0, { layout: Object.assign({}, d0.layout, { transparent: false, wideTable: d0.layout.wideTable !== false }) });
-  if (F && F.kpis) design.layout = Object.assign({}, design.layout, { kpis: Math.max(3, Math.min(6, F.kpis.length)), kpiCards: F.kpis.length });
+  if (F && F.kpis) design.layout = Object.assign({}, design.layout, { kpis: Math.min(6, F.kpis.length) });   // (the design block's A2-4: kpis is the card count, 0-6)
   // the binding: the picker's, with every field the plan names in its place (create_report's bindFor, without page filters)
   const n = Math.max(1, ...E.projectPages(design.layout, lang, { second: false }).map((p) => p.slots.filter((s) => s.kind === 'kpi').length));
   const b = Bind.suggest(pickFrom, n, Object.assign(relsOf(m, lang), F && F.measure ? { main: F.measure } : {}));

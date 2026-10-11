@@ -156,9 +156,10 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
   `tables`. Every answer that lists objects must have a cap: round 2's fix script made `check_model_health` 162,909
   characters on the 300-table model without anyone noticing, because only `read_model` was measured. The golden
   baseline prints the largest answer of the run: read it.
-- Fewer measures than KPI cards (round 4): the engine's `layout.kpiCards` caps the cards of every page (0 leaves the
-  KPI row out); the website's designs never have it. A visual is never written without its fields: Microsoft's
-  validator calls it `PBIR_QUERY_STATE_MISSING`.
+- Fewer measures than KPI cards (round 4; 0.2.9 design block A2-4): `layout.kpis` is the number of cards, 0-6 (0 leaves
+  the KPI row out), and the report's measures cap every page through `projectPages`' `maxKpis` (the old `kpiCards` is
+  gone; an older design's is read as its kpis). A visual is never written without its fields: Microsoft's validator
+  calls it `PBIR_QUERY_STATE_MISSING`.
 
 - Night of 6-7 October, measured in Desktop 2.158 (`scripts/tests/DESKTOP-TESTS.md`, "2026-10-06 night"):
   - A test model's Power Query rows must be a typed table (`#table(type table [#"A" = datetime, #"B" = number], rows)`):
@@ -173,8 +174,9 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
   - The new card's `value.showBlankAs` (default selector) replaces "--" with a text of ours; `subTitle`, `divider`,
     constant lines, `lineStyles`, data bars and the donut's `slices` all draw as Microsoft's capabilities data names
     them (`mcp/research/POWERBI-HIDDEN-CAPABILITIES.md`: research, nothing of it is used yet).
-  - `layout.wideTable` and `layout.kpiCards` are the MCP's own layout options: the website's designs never carry
-    them, and the website's `design-engine` suite compares its layouts with recorded fixtures.
+  - `layout.wideTable` is on by default in the design engine, for the website and the MCP alike (false keeps equal
+    shares); the table's share of a narrow row is by its fields (`tableFields`, `E.TABLE_NEED`; 0.2.9 A2-5). The
+    website's `design-engine` suite compares its layouts with recorded fixtures.
   - Run the full `npm test` with Desktop and the browser suites idle: beside them a request passed its 60 s limit.
 
 ## Writing prompts for another agent or session

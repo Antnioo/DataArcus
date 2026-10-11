@@ -10,7 +10,9 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { absorb } from './lib/slots.mjs';
 import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, Svg, applyColumnTypes, inside, loadModel, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
-import { E, themeDesign, planLayout, pageOf, contrastReport, freeFile } from './lib/design.mjs';
+import { themeDesign, planLayout, pageOf, contrastReport, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, texts,
+  clampHex, lum, buildTheme, themeScaleOf, scaleTheme, projectPages, designRtl, themeName, fileBase, imageSize, isSmall } from './lib/design.mjs';
+import { freeFile } from './lib/files.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
 import { addGulfCalendar, gulfFixInputs } from './lib/gulf-calendar.mjs';
@@ -379,12 +381,11 @@ function boundOf(bound) {
 }
 // The keys of a design the tools know. Another key (a typing slip, or an input that doesn't exist, like "fields"
 // inside a design) is named in the answer's "ignored", never dropped without a word.
-const DESIGN_KEYS = ['preset', 'name', 'font', 'data', 'ui', 'chart', 'layout'];
-const LAYOUT_KEYS = ['v', 'page', 'preset', 'kpis', 'filters', 'dir', 'radius', 'shadow', 'header', 'kpiBar', 'headLine', 'samples', 'transparent', 'kpiCards', 'wideTable', 'fpos', 'pageW', 'pageH',
-  'hh', 'logoW', 'fw', 'fh', 'kpiH', 'mainW', 'split', 'kpiBarW', 'headLineW', 'kpiBarC', 'headLineC'];
+// (the audit's A2-7: the key lists are the design engine's, with its written schema; an older design's keys the engine
+// still reads, such as kpiCards, are reported by the engine's repair instead)
 function unknownKeys(design) {
   const keys = Object.keys(design || {}).filter((k) => !DESIGN_KEYS.includes(k))
-    .concat(Object.keys((design && typeof design.layout === 'object' && design.layout) || {}).filter((k) => !LAYOUT_KEYS.includes(k)).map((k) => 'layout.' + k));
+    .concat(Object.keys((design && typeof design.layout === 'object' && design.layout) || {}).filter((k) => !LAYOUT_KEYS.includes(k) && !OLD_LAYOUT_KEYS.includes(k)).map((k) => 'layout.' + k));
   return keys.length ? { keys, why: 'These keys of the design are not ones the tools know, so they changed nothing. Fields go in create_report\'s own "fields" input, not inside the design; layout choices are the inputs of plan_layout.' } : null;
 }
 
@@ -844,18 +845,22 @@ server.registerTool('create_report', {
     if (!ext) throw new Error(`The logo must be a PNG or JPG file: ${a.logo}`);
     if (!fs.existsSync(file) || !fs.statSync(file).isFile()) throw new Error(`Logo not found: ${a.logo}`);
     if (fs.statSync(file).size > 2 * 1024 * 1024) throw new Error(`The logo must be 2 MB at most: ${a.logo} is ${(fs.statSync(file).size / 1024 / 1024).toFixed(1)} MB`);
-    const bytes = new Uint8Array(fs.readFileSync(file)), size = E.imageSize(bytes);
+    const bytes = new Uint8Array(fs.readFileSync(file)), size = imageSize(bytes);
     if (!size) throw new Error(`The logo must be a PNG or JPG file: ${a.logo} could not be read as one`);
     logo = { bytes, ext }; logoRatio = size.w / size.h;
     if (size.h > size.w) reportNotes.push('This logo is tall; a horizontal version will read much better in the header.');
   }
   let r, bind, extra = {}, written, boundPages = null;
-  let tinyPage = false;
+  let tinyPage = false, smallPageNote = null, designRepaired = null;
   const subKeys = {};   // round 22: a subtitle key given in the other language -> the slot's role in the report's language
   const unknown = a.design ? unknownKeys(a.design) : null;
   if (a.design) {
     // the website's project download for this design: its pages (second page, slide-in panel), labels and theme
-    let design = planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang }).design;
+    const planned = planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang });
+    let design = planned.design;
+    // (the audit's A2-2: the note comes from the plan's own smallPage, the design engine's rule)
+    if (planned.smallPage) smallPageNote = planned.smallPage;
+    if (planned.repaired) designRepaired = planned.repaired;   // (A2-4/A2-7: a design value the engine could not use is said)
     const themeChanged = [];
     if (design.layout.transparent) {
       themeChanged.push({ setting: 'layout.transparent', from: true, to: false,
@@ -863,31 +868,32 @@ server.registerTool('create_report', {
       design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { transparent: false }) });
     }
     // fields.kpis decides the number of cards (one per measure given)
-    // (the owner, 6 Oct 2026: on a 4:3 page the table takes the wider share of its row; the MCP's own, see the design engine)
-    design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { wideTable: design.layout.wideTable !== false }) });   // (a design that says wideTable false keeps equal shares)
-    if (F && F.kpis) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: Math.max(3, Math.min(6, F.kpis.length)), kpiCards: F.kpis.length }) });
-    const askedCards = design.layout.kpiCards != null ? Math.min(design.layout.kpis, design.layout.kpiCards) : design.layout.kpis;
-    if (nCards < 6) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpiCards: Math.min(design.layout.kpiCards != null ? design.layout.kpiCards : 6, nCards) }) });
+    // (the owner, 6 Oct 2026: on a 4:3 page the table takes the wider share of its row: the design engine's default,
+    // by the table's fields, tableFields below; the design block's A2-5)
+    // (the design block's A2-4: kpis is the card count, 0-6; the report's measures cap every page through maxKpis)
+    if (F && F.kpis) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: Math.min(6, F.kpis.length) }) });
+    const askedCards = design.layout.kpis, maxKpis = Math.min(F && F.kpis ? F.kpis.length : 6, nCards);
+    const tableFields = F && F.table ? F.table.length : undefined;   // (the table's share of a narrow row is by its fields)
     kpiCards = cardNote(askedCards, Math.min(askedCards, nCards));
     // (round 22, the owner's (a) for pages under 800 wide; golden task 5's second page in Desktop: cut card values and a
     // scrolling table) such a page gets no second page
-    tinyPage = E.page(design.layout).w < 800;
-    let pages = E.projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
+    tinyPage = isSmall(design.layout);
+    let pages = projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
     // (round 23: a line chart without a time axis gives its room to the visual beside it: the shared writer does it,
     // for the website too; leftOut says so with gave)
     const bound = bindFor(kpisOf(pages));
     // (round 22, the code review's c) a slot's role is matched in English or Arabic whatever the report's language:
     // the same pages in the other language give each role's other name
-    if (a.subtitles) { const o1 = { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio }, mine = E.projectPages(design.layout, a.lang, o1), other = E.projectPages(design.layout, a.lang === 'ar' ? 'en' : 'ar', o1);
+    if (a.subtitles) { const o1 = { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields }, mine = projectPages(design.layout, a.lang, o1), other = projectPages(design.layout, a.lang === 'ar' ? 'en' : 'ar', o1);
       other.forEach((p, i) => p.slots.forEach((s, j) => { const q = mine[i] && mine[i].slots[j]; if (q && q.kind === s.kind && s.title && q.title && !(q.title in a.subtitles)) subKeys[s.title] = q.title; })); }
     const subtitles = a.subtitles && Object.fromEntries(Object.entries(a.subtitles).map(([k, v]) => [subKeys[k] || k, v]));
     r = Pbip.build({
-      name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: E.rtl(design.layout, a.lang), font: design.font, sample: false, logo,
-      theme: (written = E.buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bound))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
-      texts: E.REPORT_TEXTS[a.lang], pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
+      name: a.name, title: a.title || a.name, pageName: pages[0].name, lang: a.lang, rtl: designRtl(design.layout, a.lang), font: design.font, sample: false, logo,
+      theme: (written = buildTheme(design, a.lang)), ui: design.ui, model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bound))))), pageFilters: PF, svgColumns: svgFor(pages, bind), svgCards: svgCardsFor(kpisOf(pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles, chartColors: a.chartColors || 'gradient', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
+      texts: texts(a.lang), pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
-    extra = { pages: pages.map((p) => ({ name: p.name, width: p.page.w, height: p.page.h, slots: p.slots.length, slideInPanel: !!p.panel })), theme: E.themeName(design.name),
+    extra = { pages: pages.map((p) => ({ name: p.name, width: p.page.w, height: p.page.h, slots: p.slots.length, slideInPanel: !!p.panel })), theme: themeName(design.name),
       ...(themeChanged.length ? { themeChanged } : {}) };
   } else {
     // hand-placed pages: KPI slots beyond the measures are left out, and named
@@ -896,7 +902,7 @@ server.registerTool('create_report', {
     a.pages = a.pages.map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots), true) }));
     if (COUNTS.length && !leftOut.length) kpiCards = cardNote(kpisOf(a.pages), kpisOf(a.pages));
     if (leftOut.length) { const asked = kpisOf(a.pages) === 1 && !usable.length ? leftOut.length : Math.max(...a.pages.map((p) => p.slots.filter((s) => s.kind === 'kpi').length)) + leftOut.length; kpiCards = cardNote(asked, asked - leftOut.length, leftOut); }
-    const theme = a.theme ? JSON.parse(fs.readFileSync(inside(a.theme), 'utf8')) : { name: a.name };
+    let theme = a.theme ? JSON.parse(fs.readFileSync(inside(a.theme), 'utf8')) : { name: a.name };
     // Round 23 (the owner's "nothing critical left"): a theme's text sizes are made for its page (generate_theme's
     // layout.page, 1920 x 1080 by default: 10pt x the page's height / 720, as plan_layout's pages are), and a smaller
     // hand-placed page drew them too large. Our theme says its scale through its table text (10 x scale); every text
@@ -912,15 +918,12 @@ server.registerTool('create_report', {
       // own themes for pages like 768 high: every page height generate_theme can make is tried with the engine's own
       // rounding, and the theme is ours when one gives all its sizes; no mark is written into the theme, as Desktop may
       // refuse a theme with a key it does not know)
-      const vs = theme.visualStyles || {}, at = (v, k, prop) => +((((vs[v] || {})['*'] || {})[k] || [{}])[0] || {})[prop];
-      const fsz = (n, h) => Math.min(60, Math.max(8, Math.round(n * (h / 720) * 2) / 2));
-      const fits = (h) => at('tableEx', 'values', 'fontSize') === fsz(10, h) && at('slicer', 'header', 'textSize') === fsz(10, h) && at('card', 'labels', 'fontSize') === fsz(28, h) && at('multiRowCard', 'cardTitle', 'fontSize') === fsz(12, h) && at('multiRowCard', 'dataLabels', 'fontSize') === fsz(18, h) && at('pivotTable', 'rowHeaders', 'fontSize') === fsz(10, h);
-      let themeH = null; if (t10 > 0) for (let h = 200; h <= 4400 && !themeH; h++) if (fits(h)) { const hs2 = []; for (let k = h; k <= 4400 && fits(k); k++) hs2.push(k); themeH = hs2[Math.floor(hs2.length / 2)]; }
+      // (the tools audit's A6-10: the engine finds the theme's page and scales it; nothing of its sizes is copied here)
+      const sc = themeScaleOf(theme), themeH = sc ? sc.h : null;
       const ours = !!themeH;
       const ratio = ours && hs.length === 1 ? hs[0] / themeH : null;
       if (ratio && Math.abs(ratio - 1) > 0.01) {
-        const walk = (o) => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') Object.keys(o).forEach((k) => { if ((k === 'fontSize' || k === 'textSize') && typeof o[k] === 'number') o[k] = Math.min(60, Math.max(8, Math.round(o[k] * ratio * 2) / 2)); else walk(o[k]); }); };
-        walk(theme);
+        theme = scaleTheme(theme, ratio);
         reportNotes.push(`The theme's text sizes were made for a page about ${themeH} high; they were scaled to these ${hs[0]}-high pages (x ${ratio.toFixed(2)}, within 8-60), as a planned page's theme is. The theme file itself was not changed.`);
       } else if (t10 > 0 && !ours) reportNotes.push(`The theme's text sizes were not scaled to the pages: it is not a theme generate_theme made, so its sizes are kept as its author set them. If they look too large or too small on these ${hs.join(' and ')}-high pages, change the theme, or make one with generate_theme (layout.page).`);
       else if (!ratio && t10 > 0 && hs.length > 1) reportNotes.push(`The theme's text sizes are made for a page ${Math.round(720 * t10 / 10)} high and were not scaled: the pages have different heights (${hs.join(', ')}). Use one page size, or a theme made for it (generate_theme's layout.page).`);
@@ -931,7 +934,7 @@ server.registerTool('create_report', {
       ui: Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd' }, themeColors(theme), a.colors || {}),
       model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bindFor(kpisOf(a.pages))))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
       // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
-      texts: Object.assign({}, E.REPORT_TEXTS[a.lang === 'ar' ? 'ar' : 'en'], { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' }),
+      texts: Object.assign({}, texts(a.lang), { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' }),
       pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, hand: true, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
     });
   }
@@ -984,8 +987,9 @@ server.registerTool('create_report', {
   const svgMeasures = svgList.length ? { svgMeasures: svgList } : {};
   // pictures narrowed so the table fits its box (never a scrollbar or a cut header)
   Object.entries(r.svgSizes || {}).filter(([, z]) => z.capped).forEach(([pi, z]) => reportNotes.push(`The SVG pictures in the table on "${boundPages[pi].name}" were narrowed to ${z.w} x ${z.h} (the widest design is ${z.design}) so the table fits its box. For the design's own size, give the table more room or fewer columns.`));
-  // round 19 (the owner's choice B): a page under 800 wide was planned with the single-focus layout
-  if (a.design && a.design.layout && a.design.layout.preset === 'focus' && E.page(a.design.layout).w < 800) reportNotes.push(`The page is ${E.page(a.design.layout).w} wide, under 800, so it uses the single-focus layout (the KPI cards and one large chart): the executive layout's four charts and table would be cut or scroll on it.`);
+  // round 19 (the owner's choice B): a page under 800 wide takes the single-focus layout (the design engine's rule):
+  // said when this call switched it (a design already planned as single focus was told so by plan_layout)
+  if (smallPageNote) reportNotes.push(`The page is ${smallPageNote.w} wide, under 800, so it uses the single-focus layout (the KPI cards and one large chart): the executive layout's four charts and table would be cut or scroll on it.`);
   if (tinyPage && a.secondPage) reportNotes.push('The page is under 800 wide: the report has one page. A second page (details) would cut its card values and scroll its table at this size; ask for a page 800 wide or more for two pages.');
   if (a.subtitles) { const used = new Set(r.subtitlesUsed || []), un = Object.keys(a.subtitles).filter((k) => !used.has(subKeys[k] || k));
     if (un.length) reportNotes.push(`No subtitle was written for ${un.map((k) => '"' + k + '"').join(', ')}: a subtitle goes under the title of a chart or a table, found by its slot's role as plan_layout names it (in English or Arabic) or by a hand-placed slot's title. A KPI card never gets one (its value would be pushed down and cut).`); }
@@ -1083,7 +1087,7 @@ server.registerTool('create_report', {
   const formats = fmt ? { formats: Object.assign({ sayFirst: `Tell the user first: ${fmt.fields.length} of the report's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). The report already shows them right: the cards, the tooltip's card and the tables carry the right format of their own. Applying the script sets them in the model too, so every other visual, Excel and other reports show them right.` }, fmt) } : {};
   return text(Object.assign(formats, { written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
     { boundFields: boundOf(r.bound) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, chartColors, chartAxes, kpiTitles, chartTitles, pageButtons, tableColumns, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
-    sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {}));
+    sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, designRepaired ? { repaired: designRepaired } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {}));
 }));
 
 // The KPI cards' number rule (round 12, the owner's ask of 6 Oct 2026), as the answer and reportNotes state it
@@ -1117,7 +1121,7 @@ function modelNotes(tmsl, bind) {
 }
 
 // ---------- design tools: the Theme Generator's engine (assets/js/design-engine.js) ----------
-const hexOk = (v) => typeof v === 'string' && !!E.clampHex(v);
+const hexOk = (v) => typeof v === 'string' && !!clampHex(v);
 
 server.registerTool('generate_theme', {
   title: 'Generate a Power BI theme',
@@ -1129,10 +1133,10 @@ server.registerTool('generate_theme', {
         .describe('Page, visual (card), text and table accent colours; good/neutral/bad come from the preset when left out') }).optional(),
     brand: z.string().optional().describe('A brand colour (hex): 8 data colours are generated from it with the harmony'),
     harmony: z.string().optional().describe('analogous (default), complementary, triadic or mono'),
-    preset: z.string().optional().describe(`A preset palette: ${Object.keys(E.PRESETS).join(', ')} (default DataArcus)`),
-    font: z.string().optional().describe(`One of: ${E.FONTS.join(', ')}. For Arabic reports: ${E.AR_FONTS.join(', ')}`),
+    preset: z.string().optional().describe(`A preset palette: ${Object.keys(PRESETS).join(', ')} (default DataArcus)`),
+    font: z.string().optional().describe(`One of: ${FONTS.join(', ')}. For Arabic reports: ${AR_FONTS.join(', ')}`),
     chart: z.object({ labels: z.string(), grid: z.string(), legend: z.string(), axis: z.string(), table: z.string() }).partial().optional()
-      .describe(`Chart style: ${Object.entries(E.CHART_OPTIONS).map(([k, v]) => `${k} ${v.join('|')}`).join('; ')}. legend "Right" sits at the right in both directions`),
+      .describe(`Chart style: ${Object.entries(CHART_OPTIONS).map(([k, v]) => `${k} ${v.join('|')}`).join('; ')}. legend "Right" sits at the right in both directions`),
     layout: z.object({ page: pageInput.optional(), radius: z.number().optional().describe('Corner radius 0-24 (default 8)'), shadow: z.boolean().optional(),
       transparent: z.boolean().optional().describe('Transparent visuals, for a background image with the panels'), dir: z.enum(['ltr', 'rtl']).optional() }).optional()
       .describe('Page and style choices that change the theme (text sizes grow with the page, kept within 8-60)'),
@@ -1146,20 +1150,20 @@ server.registerTool('generate_theme', {
   const { page, fitted } = pageOf(design.layout), { contrast, warnings } = contrastReport(design);
   if (fitted) warnings.push(`Page ${fitted.asked.w} x ${fitted.asked.h} is outside the sizes the generator allows; the theme is made for ${page.w} x ${page.h}.`);
   const arabic = a.lang === 'ar' || design.layout.dir === 'rtl';
-  if (arabic && !E.AR_FONTS.includes(design.font)) warnings.push(`${design.font} has no Arabic letters, so Arabic text will show in another font. For Arabic reports use ${E.AR_FONTS.join(', ')}.`);
+  if (arabic && !AR_FONTS.includes(design.font)) warnings.push(`${design.font} has no Arabic letters, so Arabic text will show in another font. For Arabic reports use ${AR_FONTS.join(', ')}.`);
   // what the plan says about the colours (0.2.9, O-11): light unless dark was asked, the brand exact, a failing check said
-  const light = E.lum(design.ui.background) > 0.45, colours = { page: design.ui.background, visuals: design.ui.card, text: design.ui.text, accent: design.ui.accent, data: design.data, mode: light ? 'light' : 'dark' };
-  const sayInPlan = `Say in the plan: a ${light ? 'light' : 'dark'} theme (page ${design.ui.background}, visuals ${design.ui.card}, text ${design.ui.text})${hexOk(a.brand) ? ` with the brand colour ${E.clampHex(a.brand)} exactly as given (the first data colour and the accent)` : ''}${light ? '; dark only if the user asks' : ''}.` +
+  const light = lum(design.ui.background) > 0.45, colours = { page: design.ui.background, visuals: design.ui.card, text: design.ui.text, accent: design.ui.accent, data: design.data, mode: light ? 'light' : 'dark' };
+  const sayInPlan = `Say in the plan: a ${light ? 'light' : 'dark'} theme (page ${design.ui.background}, visuals ${design.ui.card}, text ${design.ui.text})${hexOk(a.brand) ? ` with the brand colour ${clampHex(a.brand)} exactly as given (the first data colour and the accent)` : ''}${light ? '; dark only if the user asks' : ''}.` +
     (warnings.length ? ` These readability checks fail: ${warnings.join('; ')}. The colours were kept as given (a colour is never changed for contrast without the user's yes): say so and offer a darker or lighter shade.` : '');
   // the gate (0.2.9, P-1): the file only with an approved plan; without one, the theme for the plan and a proposed plan id
   if (a.planId == null || a.planId === '') {
-    const base = E.fileBase(design.name) + '.json';
+    const base = fileBase(design.name) + '.json';
     return text({ written: false, fileAfterGo: base, page, colours, sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}),
       plan: Plans.proposal(Plans.propose('theme', null, [`the theme file "${base}" in ${a.folder ? 'the folder ' + a.folder : 'the working folder'} (a new file, never over another)`]), { orWith: 'For a report, plan_layout\'s planId covers this file too: create_report puts the theme in the report itself, so a separate theme file is needed only when the user asks for one.' }) });
   }
   Plans.gate('generate_theme', a.planId, null);
-  const file = freeFile(a.folder, E.fileBase(design.name), '.json');
-  writeNew(file, JSON.stringify(E.buildTheme(design, a.lang), null, 2));
+  const file = freeFile(a.folder, fileBase(design.name), '.json');
+  writeNew(file, JSON.stringify(buildTheme(design, a.lang), null, 2));
   return text({ path: file, file: path.basename(file), page, colours, sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}) });
 }));
 
@@ -1224,7 +1228,8 @@ server.registerTool('plan_layout', {
     }
     if (fmt) formats = { formats: Object.assign({ sayFirst: `Tell the user first, before the layout: ${fmt.fields.length} of the plan's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). create_report shows them right in the report's cards, tooltip and tables anyway; the script sets them in the model too.` }, fmt) };
   }
-  const r = planLayout(a), { page, fitted } = pageOf(r.design.layout);
+  // (A2-5: the plan's table fields set the table's share of a narrow row, as create_report's)
+  const r = planLayout(Object.assign({}, a, a.planFields && a.planFields.table ? { tableFields: a.planFields.table.length } : {})), { page, fitted } = pageOf(r.design.layout);
   const unknown = a.design ? unknownKeys(a.design) : null;
   // the page size (0.2.9, O-8: an Arabic plan was made 1280 x 720 though the user asked for no size): who chose it
   const chosenBy = a.page != null ? 'asked' : page.w === 1920 && page.h === 1080 ? 'default' : 'design';
@@ -1269,7 +1274,7 @@ server.registerTool('plan_layout', {
     } catch (e) { return { skipped: 'the planned page could not be built for the lint: ' + String(e && e.message || e).slice(0, 200) }; }
   })() };
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a light tint and the largest in the theme\'s colour (the bar\'s length tells the size; the colour ranks). For one colour, create_report takes chartColors "solid".' } };
-  return text(Object.assign(formats, arabicNames, plan, timeAxis, designLint, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.' }, { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.smallPage ? { smallPage: r.smallPage } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
+  return text(Object.assign(formats, arabicNames, plan, timeAxis, designLint, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.' }, { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
 }));
 
 server.registerTool('add_gulf_calendar', {
