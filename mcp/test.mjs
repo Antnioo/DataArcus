@@ -956,7 +956,10 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const allFacts = big.j && big.j.tablesWithMeasures ? await ask('read_model', { path: 'large', tables: big.j.tablesWithMeasures.map((t) => t.table) }) : { err: true, t: 'no summary' };
   chk(() => !allFacts.err && allFacts.t.length <= 40000 && allFacts.j.tables.length > 10 && allFacts.j.tables.length < 65 && allFacts.j.notShown.length === 65 - allFacts.j.tables.length && /40,000/.test(String(allFacts.j.note)), () => `read_model with more tables than fit must stop at a table and name the rest: ${allFacts.err ? allFacts.t.slice(0, 200) : allFacts.t.length + ' characters, ' + allFacts.j.tables.length + ' tables, notShown ' + (allFacts.j.notShown || []).length}`);
   // read_model's answers on the small fixtures, as main gives them before round 4 (md5 start and length, with the path separator in source as /: Windows writes it as a backslash)
-  const SMALL_ANSWERS = { 'tmdl-project': '63cfd0805729:893', 'bim-project': 'ccbcc917fc9e:1344', 'dax-project': '4502344299d5:2099', 'sample.pbit': '7d20d9242374:4518' };
+  // (sample.pbit moved 11 Oct 2026, the audit of the reading block's A1-5: a .pbit's three hidden automatic date tables,
+  // LocalDateTable_*, were listed on the file route while the folder route left them out; one result now leaves them
+  // out on every route. Before: '7d20d9242374:4518'; the other nine tables unchanged)
+  const SMALL_ANSWERS = { 'tmdl-project': '63cfd0805729:893', 'bim-project': 'ccbcc917fc9e:1344', 'dax-project': '4502344299d5:2099', 'sample.pbit': '2063aaafa581:4008' };
   const small = {};
   for (const p of ['tmdl-project', 'bim-project', 'dax-project', 'sample.pbit']) { const x = await ask('read_model', { path: p }); const t = x.t.split(String.fromCharCode(92, 92)).join('/'); small[p] = x.err ? 'error' : crypto.createHash('md5').update(t).digest('hex').slice(0, 12) + ':' + t.length; }
   chk(() => JSON.stringify(small) === JSON.stringify(SMALL_ANSWERS), () => `read_model on the small fixtures changed: ${JSON.stringify(small)}`);

@@ -5,11 +5,15 @@
 // writer's own fixes for O-3, O-4, O-6, O-13, O-14), the lint of the plan follows without a change here.
 // What is not the same as create_report's report: number formats, Arabic display names, SVG measures and page filters
 // are left out (no lint rule reads them); the first page is the one linted (the page the plan shows).
-import { Bind, Pbip } from './model.mjs';
+import { createRequire } from 'node:module';
+
+const require = createRequire(import.meta.url);
+const Bind = require('../../assets/js/pbip-bind.js'), Pbip = require('../../assets/js/pbip-export.js');
 import { E } from './design.mjs';
 import { absorb } from './slots.mjs';
 import { inventory, memorySource } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
+import { takenNames } from './report-names.mjs';
 
 const relsOf = (m, lang) => ({ ...(lang ? { lang } : {}), modelTables: m.tables, relationships: Bind.relsOfTmsl(m.tmsl) });
 const PNG1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQVR4AWMAAQAABQABNtCI3QAAAABJRU5ErkJggg==', 'base64');
@@ -45,9 +49,10 @@ export function planLint(a) {
     return { name: p.name, page: p.page, slots, png: PNG1, panel: p.panel, grow: true };
   });
   const r = Pbip.build({ name: 'Plan', title: 'Plan', pageName: pages[0].name, lang, rtl: E.rtl(design.layout, lang), font: design.font, sample: false,
-    theme: E.buildTheme(design, lang), ui: design.ui, model: { byPath: 'Model.SemanticModel', taken: m.taken, names: {} }, bind,
+    theme: E.buildTheme(design, lang), ui: design.ui, model: { byPath: 'Model.SemanticModel', taken: takenNames(m.projectDir), names: {} }, bind,
     logoPlaceholder: false, texts: E.REPORT_TEXTS[lang === 'ar' ? 'ar' : 'en'], pages });
-  const inv = inventory(memorySource(r.files), 'the planned report');
+  // (the writer's paths start with its .Report folder; the reading block takes paths inside the report: A5-12)
+  const inv = inventory(memorySource(r.files.filter((f) => /^[^/]+\.Report\//.test(f.path)).map((f) => ({ path: f.path.replace(/^[^/]+\.Report\//, ''), data: f.data }))), 'the planned report');
   const out = lint(inv, m.tables, null, { pages: [1] });
   return Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out);
 }
