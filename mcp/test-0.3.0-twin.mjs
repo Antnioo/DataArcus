@@ -302,6 +302,15 @@ export function v030engine({ check }) {
     check(keep.visual && !keep.visual.query.sortDefinition && flip.visual && flip.visual.query.sortDefinition.sort[0].direction === 'Descending', `T10. timeRightToLeft false keeps a time axis; the default mirrors it: ${JSON.stringify([keep.visual && keep.visual.query.sortDefinition, flip.visual && flip.visual.query.sortDefinition])}`);
     const region = run(v('columnChart', { queryState: { Category: { projections: [col('S', 'Region')] }, Y: { projections: [mea('S', 'A')] } } }), 1280, { timeRightToLeft: false, dateTables: ['Calendar'] });
     check(region.visual && region.visual.query.sortDefinition.sort[0].direction === 'Descending', 'T10. timeRightToLeft false still mirrors a category that is not time'); }
+  // the fuzz test's F-T1..F-T3: odd shapes never throw; an odd part is left as it is, a hopeless visual copied and listed
+  { const odd = [null, 7, 'x', { name: 'a', visual: 'text' }, { name: 'b', visual: { visualType: 'barChart', objects: 'none' } },
+      { name: 'c', visual: { visualType: 'columnChart', objects: { valueAxis: [null, 5] }, query: { queryState: { Category: { projections: [null] } }, sortDefinition: 'x' } } },
+      { name: 'd', visual: { visualType: 'textbox', objects: { general: [{ properties: { paragraphs: [null, { textRuns: 'x' }] } }] } } },
+      { name: 'e', visual: { visualType: 'tableEx', objects: { columnFormatting: 3 }, query: { queryState: { Values: { projections: [null, { field: { Column: {} }, queryRef: 'T.c' }] } } } } },
+      { name: 'f', position: { x: 'a', width: 10 }, visual: { visualType: 'cardVisual', objects: { value: 'v' }, query: { queryState: { Data: { projections: [{}, {}] } } } } }];
+    let r = null, threw = null; try { r = M.mirrorPage({ width: 100 }, odd, {}); odd.forEach((v) => { M.textsOfVisual('p', v); M.labelVisual('p', v, { 'title:p/a': 'x' }); }); M.mirrorPage(null, 'x', {}); M.mirrorVisual(undefined, 10, {}); } catch (e) { threw = e; }
+    check(!threw && r && r.visuals.length === odd.length && r.unreadable.includes('a') && r.visuals[1] === 7, `T10. odd shapes never throw, are kept, and unreadable ones are listed: ${threw ? threw.message : JSON.stringify(r && r.unreadable)}`);
+    check(r && r.visuals[4].visual.objects === 'none' && r.visuals[5].visual.query.sortDefinition === 'x' && r.visuals[7].visual.objects.columnFormatting === 3, 'T10. an odd part is left exactly as it was'); }
   // legends: left and right swapped, centred kept
   { const pos = (p) => { const r = run(v('clusteredColumnChart', { queryState: { Category: { projections: [col('S', 'R')] }, Series: { projections: [col('S', 'P')] }, Y: { projections: [mea('S', 'A')] } } }, p ? { legend: [{ properties: { position: lit("'" + p + "'") } }] } : null), 1280); return r.visual && r.visual.objects.legend[0].properties.position.expr.Literal.Value; };
     const got = ['Top', 'Left', 'BottomLeft', 'Right', 'TopCenter', null].map(pos);
