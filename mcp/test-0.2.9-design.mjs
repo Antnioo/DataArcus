@@ -83,7 +83,7 @@ export async function v029designEngine({ check }) {
 
   // ---------- A2-6: slots carry their index ----------
   {
-    const sl = get(() => E.computeSlots(design({ preset: 'ops' }).layout, 'en').filter((s) => s.kind === 'kpi'));
+    const sl = get(() => E.computeSlots(design({ preset: 'ops', kpis: 6 }).layout, 'en').filter((s) => s.kind === 'kpi'));
     chk(() => sl.map((s) => s.index).join() === '0,1,2,3,4,5', () => `A2-6: KPI slots carry index 0..5: ${JSON.stringify(sl.map && sl.map((s) => s.index))}`);
     const d = design({ preset: 'exec', kpiBarC: 'data' }), renamed = get(() => E.computeSlots(d.layout, 'en').map((s) => Object.assign({}, s, { role: { en: 'Revenue', ar: 'الإيرادات' } })));
     const svg = get(() => E.bgSvg(d, renamed, {}, 'en'));

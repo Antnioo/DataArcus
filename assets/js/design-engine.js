@@ -235,6 +235,10 @@
     });
     // Arabic reports read from the right: mirror the whole page so KPI 1 and the title start there
     if (rtl(c, lang)) slots.forEach((s) => { s.x = PW - s.x - s.w; });
+    // each slot carries its index among the slots of its kind (KPI 1 is 0), so nothing reads it from the role's text
+    // (0.2.9, the audit's A2-6: the KPI bar's data colour came from parsing "KPI n")
+    const seen = {};
+    slots.forEach((s) => { s.index = seen[s.kind] = s.kind in seen ? seen[s.kind] + 1 : 0; });
     return slots;
   }
   // An image's size in pixels, read from its bytes (a Uint8Array): PNG (the IHDR chunk) or JPG (the frame header);
@@ -419,12 +423,13 @@
           return c.headLine === 'full' ? `<rect class="hl" y="${hh - t}" width="${PW}" height="${t}" fill="${col}"/>`
             : `<rect class="hl" x="${right ? PW - M - 8 - 40 : M + 8}" y="${hh - 6 - t}" width="40" height="${t}" rx="${t / 2}" fill="${col}"/>`; })());
     }
-    let clips = '';
+    let clips = '', k = -1;
     slots.forEach((p, i) => {
       if (p.kind === 'title' || p.kind === 'logo') return;
       s += `<rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="${r}" fill="${p.rail ? rail : u.card}"${c.shadow ? ' filter="url(#sh)"' : ''}${light || !c.shadow ? ` stroke="${edge}" stroke-width="1"` : ''}/>`;
+      if (p.kind === 'kpi') k++;
       if (p.kind !== 'kpi' || !c.kpiBar || c.kpiBar === 'none') return;
-      const t = barW('kpiBarW', c), col = barColor(d, 'kpiBarC', +p.role[0].split(' ')[1] - 1);
+      const t = barW('kpiBarW', c), col = barColor(d, 'kpiBarC', Number.isInteger(p.index) ? p.index : k);
       if (c.kpiBar === 'start') s += `<rect class="kb" x="${right ? p.x + p.w - 10 - t : p.x + 10}" y="${p.y + 16}" width="${t}" height="${p.h - 32}" rx="${t / 2}" fill="${col}"/>`;
       else { // a strip along the top or bottom edge, clipped to the card's corners
         clips += `<clipPath id="kc${i}"><rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="${r}"/></clipPath>`;

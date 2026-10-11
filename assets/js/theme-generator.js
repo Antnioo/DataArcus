@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const font = `font-family="'${state.font}', 'Segoe UI', Arial, sans-serif"`;
     switch (s.kind) {
       case 'kpi': {
-        const vals = ['AED 1.24M', '8,432', '4.8%', '312', '96%', '27 min'], v = vals[(+s.role[0].split(' ')[1] - 1) % vals.length];
+        const vals = ['AED 1.24M', '8,432', '4.8%', '312', '96%', '27 min'], v = vals[(s.index || 0) % vals.length];   // (A2-6: the slot's own index)
         const fs = Math.min(30, Math.round(s.h * 0.3));
         return `<text x="${at(c0(s))}" y="${s.y + s.h / 2 + fs / 2.6}" ${font} font-size="${fs}" font-weight="800" fill="${u.text}" text-anchor="${right ? 'end' : 'start'}">${v}</text>`
           + `<text x="${at(c0(s))}" y="${s.y + s.h - 14}" ${font} font-size="11" font-weight="600" fill="${u.good}" text-anchor="${right ? 'end' : 'start'}">▲ ${L('5.1% vs LM', '5.1% عن الشهر الماضي')}</text>`;
