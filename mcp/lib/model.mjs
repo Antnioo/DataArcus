@@ -65,6 +65,9 @@ export const WITHHELD = '(withheld: reads like an instruction)';
 // a relative path from disk, each folder name screened
 export const shownPath = (p) => String(p).split(/[\\/]/).map((n) => (n ? shownName(n, 80) : n)).join('/');
 export const shownName = (s, cap = 60) => { if (readsLikeInstruction(s)) return WITHHELD; const v = visible(s); return v.length > cap ? v.slice(0, cap) + '…' : v; };
+// the model of a model.bim's JSON (or a .pbit's DataModelSchema), whichever way it is wrapped (A1-8: one helper for
+// every caller)
+export const modelOf = (tmsl) => (tmsl && (tmsl.model || tmsl)) || {};
 export class Notice extends Error { constructor(state, message) { super(message); this.state = state; } }
 // A name is free only when nothing at all is there. lstat, not existsSync: a link whose target is missing "doesn't
 // exist" to existsSync, and writing at its name would create the target, outside the working folder (audit AUD-005)
@@ -283,10 +286,11 @@ export function loadModel(p) {
     for (const f of tfiles) { const size = fs.lstatSync(f).size; if (size > PBIT_LIMITS.entry) throw refuse(`one of its TMDL files is ${mb(size)}, above the ${mb(PBIT_LIMITS.entry)} DataArcus reads`); total += size; }
     if (total > PBIT_LIMITS.total) throw refuse(`its TMDL files are ${mb(total)} together, above the ${mb(PBIT_LIMITS.total)} DataArcus reads`);
     const text = new Map(tfiles.map((f) => [f, decode(readCapped(f, PBIT_LIMITS.entry, 'TMDL file'))]));
-    tables = fs.readdirSync(tdir, { withFileTypes: true }).filter((e) => !e.isSymbolicLink() && /\.tmdl$/i.test(e.name)).flatMap((e) => { const f = path.join(tdir, e.name); return Bind.parseTmdl(text.has(f) ? text.get(f) : decode(readCapped(f, PBIT_LIMITS.entry, 'TMDL file'))); });
+    // (A1-8: one parse: the model's JSON from tmdl-model.js, the picker's fields from that JSON, as for a model.bim)
     // the whole model (expressions, relationships, roles...) in model.bim form, for the health check
     // (lineage tags kept: the fix scripts write each object back with its own tag, so Desktop doesn't give it a new one)
     tmsl = Tmdl.fromFiles(tfiles.map((f) => ({ path: path.relative(folder, f).replace(/\\/g, '/'), text: text.get(f) })), { lineageTags: true });
+    tables = Bind.fromTmsl(tmsl);
   }
   tables = tables.filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name));
   // the project's own reports (PBIR), for the health check and for choosing a report name that is free

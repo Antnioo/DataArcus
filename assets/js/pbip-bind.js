@@ -13,59 +13,10 @@
     if (u8.length >= 2 && u8[1] === 0x00) return new TextDecoder('utf-16le').decode(u8);
     return new TextDecoder('utf-8').decode(u8);
   };
-  // TMDL names: plain, or in single quotes with '' for a quote; a name ends at " =" or the end of the line
-  function tmdlName(rest) {
-    rest = rest.trim();
-    if (rest[0] === "'") {
-      let out = '', i = 1;
-      for (; i < rest.length; i++) {
-        if (rest[i] === "'") { if (rest[i + 1] === "'") { out += "'"; i++; } else break; } else out += rest[i];
-      }
-      return out;
-    }
-    return rest.replace(/\s*=.*$/, '').trim();
-  }
-  // Only what the field picker needs: tables, their columns (type, hidden, category) and measures (hidden, format).
-  // Expressions are skipped, fenced (```) or not, since they sit deeper than the properties.
-  function parseTmdl(text) {
-    const tables = [];
-    let table = null, cur = null, fence = false;
-    text.split(/\r?\n/).forEach((raw) => {
-      const line = raw.replace(/^( {4})+/, (s) => '\t'.repeat(s.length / 4));
-      const trimmed = line.trim();
-      if (fence) { if (trimmed === '```') fence = false; else if (cur && cur.isMeasure) { addExpr(cur, trimmed); if (divides(trimmed)) cur.divides = true; } return; }
-      if (/=\s*```\s*$/.test(trimmed)) fence = true;
-      if (!trimmed || trimmed.startsWith('///')) return;
-      const depth = line.match(/^\t*/)[0].length;
-      if (depth === 0) {
-        const m = trimmed.match(/^table\s+(.+)$/);
-        table = m ? { name: tmdlName(m[1]), hidden: false, date: false, columns: [], measures: [] } : null;
-        if (table) tables.push(table);
-        cur = null;
-      } else if (depth === 1 && table) {
-        const m = trimmed.match(/^(column|measure)\s+(.+)$/);
-        if (m) {
-          // a column with no dataType line (columns of DAX tables in a project Desktop saved) is 'unknown', never
-          // guessed as text: guessing made numbers and dates look like categories (a chart "by Amount")
-          cur = m[1] === 'column' ? { name: tmdlName(m[2]), dataType: 'unknown', isHidden: false } : { name: tmdlName(m[2]), isHidden: false, divides: divides(m[2].replace(/^('(?:[^']|'')*'|[^=]*)=/, '')) };
-          if (m[1] === 'measure') { Object.defineProperty(cur, 'isMeasure', { value: true }); addExpr(cur, m[2].replace(/^('(?:[^']|'')*'|[^=]*)=/, '').replace(/```\s*$/, '')); }
-          table[m[1] === 'column' ? 'columns' : 'measures'].push(cur);
-        } else {
-          cur = null;
-          if (/^isHidden(\s*:\s*true)?$/.test(trimmed)) table.hidden = true;
-          if (/^dataCategory\s*:\s*Time$/i.test(trimmed)) table.date = true;
-        }
-      } else if (depth === 2 && cur) {
-        // (the display folder too: the MCP screens it as untrusted text, the audit's A1-7)
-        const p = trimmed.match(/^(dataType|dataCategory|formatString|displayFolder)\s*:\s*(.*)$/);
-        if (p) cur[p[1]] = p[1] === 'displayFolder' ? p[2].trim().replace(/^'(.*)'$/, '$1').replace(/''/g, "'") : p[2].trim();
-        else if (/^sortByColumn\s*:/.test(trimmed)) cur.sortBy = tmdlName(trimmed.replace(/^sortByColumn\s*:\s*/, ''));
-        else if (/^isHidden(\s*:\s*true)?$/.test(trimmed)) cur.isHidden = true;
-        else if (cur.isMeasure && !/^[A-Za-z]+\s*(:|=|$)/.test(trimmed)) { addExpr(cur, trimmed); if (divides(trimmed)) cur.divides = true; }
-      } else if (depth > 2 && cur && cur.isMeasure) { addExpr(cur, trimmed); if (divides(trimmed)) cur.divides = true; }
-    });
-    return tables;
-  }
+  // (the audit's A1-8: one TMDL parse for the website and the MCP: a TMDL folder is read by tmdl-model.js into the
+  // model's JSON, as a model.bim is, and the picker's fields and relationships come from that JSON; this file has no
+  // TMDL parser of its own any more)
+  const Tmdl = () => (typeof module !== 'undefined' && module.exports ? require('./tmdl-model.js') : root.TmdlModel);
   // a measure's expression, kept (up to 4,000 characters) only for what the picker reads from it: whether it counts and
   // whether it returns text (never sent anywhere: the field picker and the report writer read it on the user's machine)
   const addExpr = (m, line) => { const t = String(line || '').trim(); if (!t) return; const e = m.expr ? m.expr + '\n' + t : t; Object.defineProperty(m, 'expr', { value: e.slice(0, 4000), writable: true, configurable: true }); };
@@ -85,16 +36,6 @@
   // from a project's definition/relationships.tmdl (isActive: false left out; a column is Table.Column, either quoted).
   const relsOfTmsl = (json) => { const m = (json && json.model) || json || {};
     return (m.relationships || []).filter((r) => r && r.fromTable && r.toTable && r.isActive !== false && String(r.isActive) !== 'false' && r.active !== false).map((r) => Object.assign({ fromTable: String(r.fromTable), toTable: String(r.toTable) }, /^bothDirections$/i.test(r.crossFilteringBehavior || r.cross || '') ? { both: true } : {})); };   // (part 5: both: filters both ways)
-  function relsOfTmdl(text) {
-    const out = [], tableOf = (v) => { const m = String(v).trim().match(/^('(?:[^']|'')*'|[^.]+)\./); return m ? tmdlName(m[1]) : null; };
-    String(text || '').split(/\r?\n(?=relationship\s)/).forEach((block) => {
-      if (!/^relationship\s/.test(block.trim())) return;
-      const get = (k) => { const m = block.match(new RegExp('^\\s+' + k + '\\s*:\\s*(.+)$', 'm')); return m ? m[1].trim() : null; };
-      const from = tableOf(get('fromColumn') || ''), to = tableOf(get('toColumn') || '');
-      if (from && to && !/^false$/i.test(get('isActive') || '')) out.push(Object.assign({ fromTable: from, toTable: to }, /^bothDirections$/i.test(get('crossFilteringBehavior') || '') ? { both: true } : {}));
-    });
-    return out;
-  }
   // Power BI's hidden automatic date tables are not fields anyone picks
   const clean = (tables) => tables.filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name));
 
@@ -113,12 +54,12 @@
     let tables, relationships = [];
     if (bim) { const j = JSON.parse(decodeText(new Uint8Array(await bim.arrayBuffer()))); tables = fromTmsl(j); relationships = relsOfTmsl(j); }
     else {
-      const rf = inside.find((f) => /\/definition\/relationships\.tmdl$/i.test(f.webkitRelativePath || f.name));
-      if (rf) relationships = relsOfTmdl(decodeText(new Uint8Array(await rf.arrayBuffer())));
-      const tmdl = inside.filter((f) => /\/definition\/tables\/[^/]+\.tmdl$/i.test(f.webkitRelativePath || f.name));
-      if (!tmdl.length) throw new Error('NO_MODEL');
-      tables = [];
-      for (const f of tmdl) tables.push(...parseTmdl(decodeText(new Uint8Array(await f.arrayBuffer()))));
+      const tmdl = inside.filter((f) => /\/definition\/.+\.tmdl$/i.test(f.webkitRelativePath || f.name));
+      if (!tmdl.some((f) => /\/definition\/tables\/[^/]+\.tmdl$/i.test(f.webkitRelativePath || f.name))) throw new Error('NO_MODEL');
+      const parts = [];
+      for (const f of tmdl) parts.push({ path: rel(f).slice(path.length + 1), text: decodeText(new Uint8Array(await f.arrayBuffer())) });
+      const j = Tmdl().fromFiles(parts);
+      tables = fromTmsl(j); relationships = relsOfTmsl(j);
     }
     // the reports already next to the model (X.Report folders, X.pbip files), so the new one never takes their name
     const dir = path.includes('/') ? path.replace(/\/[^/]*$/, '') + '/' : '', reports = new Set();
@@ -573,6 +514,6 @@
   // the language of each text column as the picker reads it, with the table's context ({ 'T[c]': 'ar' | 'en' })
   const langsOf = (tables) => { const out = {}; catalog(tables).columns.filter((c) => c.lang).forEach((c) => { out[`${c.t}[${c.c}]`] = c.lang; }); return out; };
   const twinsOf = (tables) => { const out = {}; catalog(tables).columns.filter((c) => c.twin).forEach((c) => { out[`${c.t}[${c.c}]`] = `${c.twin.t}[${c.twin.c}]`; }); return out; };
-  const api = { dateColumnFor, fieldOf, langOf, langsOf, twinsOf, reachTable, relsOfTmsl, relsOfTmdl, isPercent, measureCard, nameLike, iso, parseTmdl, fromTmsl, fromFolder, fromFile, suggest, build, counts, sortColumnFor, renderPicker, connection };
+  const api = { dateColumnFor, fieldOf, langOf, langsOf, twinsOf, reachTable, relsOfTmsl, isPercent, measureCard, nameLike, iso, fromTmsl, fromFolder, fromFile, suggest, build, counts, sortColumnFor, renderPicker, connection };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DABind = api;
 })(typeof self !== 'undefined' ? self : this);
