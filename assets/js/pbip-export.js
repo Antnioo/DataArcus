@@ -393,14 +393,27 @@
     const tip = B && B.tip && B.tip.card && B.tip.cat && B.tip.y ? B.tip : null;
     const trend = tip && tip.date ? { name: rnd(), binding: rnd() } : null;
     const same = (a, b) => !!a && !!b && a.t === b.t && a.c != null && a.c === b.c;
-    add(D + '/pages/pages.json', json({ $schema: SCHEMA.pages, pageOrder: PAGES.map((pg) => pg.id).concat(trend ? [tipName, trend.name] : [tipName]), activePageName: PAGES[0].id }));
+    // (the laptop's second sweep of rc.1, T4 and T5: one tooltip page showed the picker's second measure under the hovered
+    // chart's, and a chart by the tooltip's own category got a "Top 6" of one bar.) A tooltip page is made for each
+    // measure a chart shows and each category it is shown by: the card and the bars are the hovered chart's own measure,
+    // the bars by a category other than the chart's own (or by month, the trend). tipFor gives the page, made once; the
+    // first of each kind keeps the names tipName and trend.name. The pages are written by Page.tooltips.
+    const sameField = (a, b) => !!a && !!b && a.t === b.t && a.c === b.c && a.m === b.m && (a.agg || null) === (b.agg || null);
+    const tipPages = [];
+    const tipFor = (kind, m, cat) => { let t = tipPages.find((x) => x.kind === kind && sameField(x.m, m) && sameField(x.cat, cat));
+      if (!t) { const first = !tipPages.some((x) => x.kind === kind);
+        t = { kind, m, cat, name: first ? (kind === 'trend' ? trend.name : tipName) : rnd(), binding: first ? (kind === 'trend' ? trend.binding : tipBinding) : rnd() };
+        tipPages.push(t); }
+      return t; };
+    add(D + '/pages/pages.json', '');
+    const pagesFile = files[files.length - 1];
 
     // 0.2.9, audit 3's A3-12: the context the writer's modules share (pbip-query.js, pbip-sizing.js, pbip-page.js): this
     // report's settings, its files, and its notes; then the report's own measures and the visuals' look
     const c = Object.assign({
       B, D, GRAD, GRID, MIRROR, NODATA, PAGES, W, add, align, base, bookmarks,
-      chartAxes, chartColors, edge, font, lang, logoFile, o, own, rtl, same, tip, tipBinding,
-      tipName, trend, u, n
+      chartAxes, chartColors, edge, font, lang, logoFile, o, own, rtl, same, sameField, tip, tipBinding,
+      tipFor, tipName, tipPages, trend, u, n
     }, n);
     Object.assign(c, Query.measures(c));
     Object.assign(c, Page.kit(c));
@@ -437,6 +450,7 @@
 
     // the tooltip pages (pbip-page.js); six: the trend kept to its last 6 months
     const six = Page.tooltips(c);
+    pagesFile.data = json({ $schema: SCHEMA.pages, pageOrder: PAGES.map((pg) => pg.id).concat(tip ? tipPages.filter((t) => t.kind === 'cat').concat(tipPages.filter((t) => t.kind === 'trend')).map((t) => t.name) : [tipName]), activePageName: PAGES[0].id });
 
     // the "No data" measures (round 19): into the report's extensions, beside the SVG measures where there are some
     // (round 23: and the tables' row-label measures after them)
@@ -454,7 +468,7 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return Notes.result(n, { base, files, zip: () => zip(files), chartColors, chartAxes, tooltipLimits: { top: tip && tip.cat && tip.cat.c != null && tip.cat.agg == null && !isTime(tip.cat) ? 6 : null, months: six ? 6 : null } });
+    return Notes.result(n, { base, files, zip: () => zip(files), chartColors, chartAxes, tooltipLimits: { top: tip && tipPages.some((t) => t.kind === 'cat' && t.cat.c != null && t.cat.agg == null && !isTime(t.cat)) ? 6 : null, months: six ? 6 : null } });
   }
 
 
