@@ -40,60 +40,10 @@
     if (u8.length >= 2 && u8[1] === 0x00) return new TextDecoder('utf-16le').decode(u8);
     return new TextDecoder('utf-8').decode(u8);
   };
-  // TMDL names: plain, or in single quotes with '' for a quote; a name ends at " =" or the end of the line
-  function tmdlName(rest) {
-    rest = rest.trim();
-    if (rest[0] === "'") {
-      let out = '', i = 1;
-      for (; i < rest.length; i++) {
-        if (rest[i] === "'") { if (rest[i + 1] === "'") { out += "'"; i++; } else break; } else out += rest[i];
-      }
-      return out;
-    }
-    return rest.replace(/\s*=.*$/, '').trim();
-  }
-  // Only what the field picker needs: tables, their columns (type, hidden, category, format, summarizeBy) and measures
-  // (hidden, format, a dynamic format).
-  // Expressions are skipped, fenced (```) or not, since they sit deeper than the properties.
-  function parseTmdl(text) {
-    const tables = [];
-    let table = null, cur = null, fence = false;
-    text.split(/\r?\n/).forEach((raw) => {
-      const line = raw.replace(/^( {4})+/, (s) => '\t'.repeat(s.length / 4));
-      const trimmed = line.trim();
-      if (fence) { if (trimmed === '```') fence = false; else if (cur && metaOf(cur).isMeasure) { addExpr(cur, trimmed); if (divides(trimmed)) cur.divides = true; } return; }
-      if (/=\s*```\s*$/.test(trimmed)) fence = true;
-      if (!trimmed || trimmed.startsWith('///')) return;
-      const depth = line.match(/^\t*/)[0].length;
-      if (depth === 0) {
-        const m = trimmed.match(/^table\s+(.+)$/);
-        table = m ? { name: tmdlName(m[1]), hidden: false, date: false, columns: [], measures: [] } : null;
-        if (table) tables.push(table);
-        cur = null;
-      } else if (depth === 1 && table) {
-        const m = trimmed.match(/^(column|measure)\s+(.+)$/);
-        if (m) {
-          // a column with no dataType line (columns of DAX tables in a project Desktop saved) is 'unknown', never
-          // guessed as text: guessing made numbers and dates look like categories (a chart "by Amount")
-          cur = m[1] === 'column' ? { name: tmdlName(m[2]), dataType: 'unknown', isHidden: false } : { name: tmdlName(m[2]), isHidden: false, divides: divides(m[2].replace(/^('(?:[^']|'')*'|[^=]*)=/, '')) };
-          if (m[1] === 'measure') { meta(cur).isMeasure = true; addExpr(cur, m[2].replace(/^('(?:[^']|'')*'|[^=]*)=/, '').replace(/```\s*$/, '')); }
-          table[m[1] === 'column' ? 'columns' : 'measures'].push(cur);
-        } else {
-          cur = null;
-          if (/^isHidden(\s*:\s*true)?$/.test(trimmed)) table.hidden = true;
-          if (/^dataCategory\s*:\s*Time$/i.test(trimmed)) table.date = true;
-        }
-      } else if (depth === 2 && cur) {
-        const p = trimmed.match(/^(dataType|dataCategory|formatString|summarizeBy)\s*:\s*(.*)$/);
-        if (p) cur[p[1]] = p[2].trim();
-        else if (/^formatStringDefinition\b/.test(trimmed)) cur.formatStringDefinition = true;   // (A3-3: a dynamic format: the format rule leaves it alone)
-        else if (/^sortByColumn\s*:/.test(trimmed)) cur.sortBy = tmdlName(trimmed.replace(/^sortByColumn\s*:\s*/, ''));
-        else if (/^isHidden(\s*:\s*true)?$/.test(trimmed)) cur.isHidden = true;
-        else if (metaOf(cur).isMeasure && !/^[A-Za-z]+\s*(:|=|$)/.test(trimmed)) { addExpr(cur, trimmed); if (divides(trimmed)) cur.divides = true; }
-      } else if (depth > 2 && cur && metaOf(cur).isMeasure) { addExpr(cur, trimmed); if (divides(trimmed)) cur.divides = true; }
-    });
-    return tables;
-  }
+  // (the audit's A1-8: one TMDL parse for the website and the MCP: a TMDL folder is read by tmdl-model.js into the
+  // model's JSON, as a model.bim is, and the picker's fields and relationships come from that JSON; this file has no
+  // TMDL parser of its own any more)
+  const Tmdl = () => (typeof module !== 'undefined' && module.exports ? require('./tmdl-model.js') : root.TmdlModel);
   // a measure's expression, kept (up to 4,000 characters) only for what the picker reads from it: whether it counts and
   // whether it returns text (never sent anywhere: the field picker and the report writer read it on the user's machine)
   const addExpr = (m, line) => { const t = String(line || '').trim(); if (!t) return; const prev = metaOf(m).expr; meta(m).expr = (prev ? prev + '\n' + t : t).slice(0, 4000); };
@@ -103,8 +53,9 @@
     return markCalendars((m.tables || []).filter((t) => t && t.name != null).map((t) => ({
       name: String(t.name), hidden: !!t.isHidden, date: /^time$/i.test(t.dataCategory || ''),
       columns: (t.columns || []).filter((c) => c.type !== 'rowNumber' && c.name != null)
-        .map((c) => Object.assign({ name: String(c.name), dataType: c.dataType || 'string', isHidden: !!c.isHidden, dataCategory: c.dataCategory }, c.sortByColumn ? { sortBy: String(c.sortByColumn) } : {}, c.formatString != null ? { formatString: String(c.formatString) } : {}, c.summarizeBy ? { summarizeBy: String(c.summarizeBy) } : {})),
-      measures: (t.measures || []).filter((x) => x.name != null).map((x) => { const m = Object.assign({ name: String(x.name), isHidden: !!x.isHidden, formatString: x.formatString, divides: divides(x.expression) }, x.formatStringDefinition ? { formatStringDefinition: true } : {}); addExpr(m, Array.isArray(x.expression) ? x.expression.join('\n') : x.expression); return m; })
+        // (A1-6: a column with no type is unknown, as in TMDL: never guessed as text)
+        .map((c) => Object.assign({ name: String(c.name), dataType: c.dataType || 'unknown', isHidden: !!c.isHidden, dataCategory: c.dataCategory }, c.sortByColumn ? { sortBy: String(c.sortByColumn) } : {}, c.displayFolder ? { displayFolder: String(c.displayFolder) } : {}, c.formatString != null ? { formatString: String(c.formatString) } : {}, c.summarizeBy ? { summarizeBy: String(c.summarizeBy) } : {})),
+      measures: (t.measures || []).filter((x) => x.name != null).map((x) => { const m = Object.assign({ name: String(x.name), isHidden: !!x.isHidden, formatString: x.formatString, divides: divides(x.expression) }, x.displayFolder ? { displayFolder: String(x.displayFolder) } : {}, x.formatStringDefinition ? { formatStringDefinition: true } : {}); addExpr(m, Array.isArray(x.expression) ? x.expression.join('\n') : x.expression); return m; })
     })), m);
   }
   // Round 23 (the owner's "nothing critical left": the website's picker had no relationships, so a download could show
@@ -113,19 +64,13 @@
   // from a project's definition/relationships.tmdl (isActive: false left out; a column is Table.Column, either quoted).
   const relsOfTmsl = (json) => { const m = (json && json.model) || json || {};
     return (m.relationships || []).filter((r) => r && r.fromTable && r.toTable && r.isActive !== false && String(r.isActive) !== 'false' && r.active !== false).map((r) => Object.assign({ fromTable: String(r.fromTable), toTable: String(r.toTable) }, /^bothDirections$/i.test(r.crossFilteringBehavior || r.cross || '') ? { both: true } : {})); };   // (part 5: both: filters both ways)
-  function relsOfTmdl(text) {
-    const out = [], tableOf = (v) => { const m = String(v).trim().match(/^('(?:[^']|'')*'|[^.]+)\./); return m ? tmdlName(m[1]) : null; };
-    String(text || '').split(/\r?\n(?=relationship\s)/).forEach((block) => {
-      if (!/^relationship\s/.test(block.trim())) return;
-      const get = (k) => { const m = block.match(new RegExp('^\\s+' + k + '\\s*:\\s*(.+)$', 'm')); return m ? m[1].trim() : null; };
-      const from = tableOf(get('fromColumn') || ''), to = tableOf(get('toColumn') || '');
-      if (from && to && !/^false$/i.test(get('isActive') || '')) out.push(Object.assign({ fromTable: from, toTable: to }, /^bothDirections$/i.test(get('crossFilteringBehavior') || '') ? { both: true } : {}));
-    });
-    return out;
-  }
   // Power BI's hidden automatic date tables are not fields anyone picks
   const clean = (tables) => tables.filter((t) => !/^(LocalDateTable_|DateTableTemplate_)/.test(t.name));
 
+  // The MCP reader's limits (mcp/lib/model.mjs PBIT_LIMITS, the Health Check worker's too): a file over them is refused
+  // before it is read (the audit of the reading block, "seen": the website read a model.bim of any size)
+  const MB = 1024 * 1024, LIMITS = { model: 64 * MB, entry: 32 * MB, total: 128 * MB, file: 300 * MB };
+  const tooBig = () => new Error('TOO_BIG');
   // A folder from <input webkitdirectory>: the .SemanticModel folder itself, or a project folder holding one.
   // A model is known by its whole path, not its name: a copy with the same name in a subfolder (a backup) is another
   // model, and the one nearest the top of the chosen folder is used.
@@ -139,14 +84,16 @@
     const path = models[0], folder = path.replace(/^.*\//, ''), inside = files.filter((f) => modelOf(f) === path);
     const bim = inside.find((f) => /\/model\.bim$/i.test(f.webkitRelativePath || f.name));
     let tables, relationships = [];
+    if (bim && (bim.size || 0) > LIMITS.model) throw tooBig();
     if (bim) { const j = JSON.parse(decodeText(new Uint8Array(await bim.arrayBuffer()))); tables = fromTmsl(j); relationships = relsOfTmsl(j); }
     else {
-      const rf = inside.find((f) => /\/definition\/relationships\.tmdl$/i.test(f.webkitRelativePath || f.name));
-      if (rf) relationships = relsOfTmdl(decodeText(new Uint8Array(await rf.arrayBuffer())));
-      const tmdl = inside.filter((f) => /\/definition\/tables\/[^/]+\.tmdl$/i.test(f.webkitRelativePath || f.name));
-      if (!tmdl.length) throw new Error('NO_MODEL');
-      tables = [];
-      for (const f of tmdl) tables.push(...parseTmdl(decodeText(new Uint8Array(await f.arrayBuffer()))));
+      const tmdl = inside.filter((f) => /\/definition\/.+\.tmdl$/i.test(f.webkitRelativePath || f.name));
+      if (!tmdl.some((f) => /\/definition\/tables\/[^/]+\.tmdl$/i.test(f.webkitRelativePath || f.name))) throw new Error('NO_MODEL');
+      if (tmdl.some((f) => (f.size || 0) > LIMITS.entry) || tmdl.reduce((n, f) => n + (f.size || 0), 0) > LIMITS.total) throw tooBig();
+      const parts = [];
+      for (const f of tmdl) parts.push({ path: rel(f).slice(path.length + 1), text: decodeText(new Uint8Array(await f.arrayBuffer())) });
+      const j = Tmdl().fromFiles(parts);
+      tables = fromTmsl(j); relationships = relsOfTmsl(j);
     }
     // the reports already next to the model (X.Report folders, X.pbip files), so the new one never takes their name
     const dir = path.includes('/') ? path.replace(/\/[^/]*$/, '') + '/' : '', reports = new Set();
@@ -159,6 +106,7 @@
   // A model.bim, or a .pbit (unzipped by the Model Health Check's worker, which already reads them)
   function fromFile(file, workerUrl) {
     if (/\.pbix$/i.test(file.name)) return Promise.reject(new Error('PBIX'));
+    if ((file.size || 0) > (/\.pbit$/i.test(file.name) ? LIMITS.file : LIMITS.model)) return Promise.reject(tooBig());
     return file.arrayBuffer().then((buf) => {
       const u8 = new Uint8Array(buf);
       if (!(u8[0] === 0x50 && u8[1] === 0x4b)) { const j = JSON.parse(decodeText(u8)); return { tables: clean(fromTmsl(j)), relationships: relsOfTmsl(j) }; }
@@ -739,6 +687,6 @@
     const each = (v) => (Array.isArray(v) ? v.map(one) : v && typeof v === 'object' && v.t == null ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, one(x)])) : one(v));
     return Object.assign({}, bind, Object.fromEntries(FIELD_KEYS.filter((k) => bind[k] != null).map((k) => [k, each(bind[k])])));
   }
-  const api = { dateColumnFor, mapFields, fieldOf, measureOf, isDateTable, markCalendars, exprOf, fieldKey, langOf, langsOf, twinsOf, reachTable, relsOfTmsl, relsOfTmdl, isPercent, measureCard, nameLike, iso, parseTmdl, fromTmsl, fromFolder, fromFile, suggest, build, counts, sortColumnFor, renderPicker, connection };
+  const api = { dateColumnFor, mapFields, fieldOf, measureOf, isDateTable, markCalendars, exprOf, fieldKey, langOf, langsOf, twinsOf, reachTable, relsOfTmsl, isPercent, measureCard, nameLike, iso, fromTmsl, fromFolder, fromFile, suggest, build, counts, sortColumnFor, renderPicker, connection };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DABind = api;
 })(typeof self !== 'undefined' ? self : this);

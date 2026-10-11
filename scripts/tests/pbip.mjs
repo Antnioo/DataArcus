@@ -114,7 +114,9 @@ export default async function ({ browser, url }) {
         { name: 'c', fromTable: 'Shipments', fromColumn: 'Hub Key', toTable: 'Carrier', toColumn: 'Carrier Key', isActive: false }] } };
     const tmdl = "relationship a1\n\tfromColumn: Shipments.'Hub Key'\n\ttoColumn: Hub.'Hub Key'\n\nrelationship b2\n\tfromColumn: Deliveries.'Carrier Key'\n\ttoColumn: Carrier.'Carrier Key'\n\nrelationship c3\n\tisActive: false\n\tfromColumn: Shipments.'Hub Key'\n\ttoColumn: Carrier.'Carrier Key'\n";
     const want = JSON.stringify([{ fromTable: 'Shipments', toTable: 'Hub' }, { fromTable: 'Deliveries', toTable: 'Carrier' }]);
-    const a = DB.relsOfTmsl ? DB.relsOfTmsl(bim) : null, b = DB.relsOfTmsl ? DB.relsOfTmsl({ relationships: E.analyze(bim).relationships }) : null, c = DB.relsOfTmdl ? DB.relsOfTmdl(tmdl) : null;
+    // (the audit's A1-8: relationships.tmdl is read by tmdl-model.js, the one TMDL reader, then as any model's JSON)
+    const Tmdl = require('../../assets/js/tmdl-model.js'), fromTmdl = (text) => DB.relsOfTmsl(Tmdl.fromFiles([{ path: 'definition/relationships.tmdl', text }]));
+    const a = DB.relsOfTmsl ? DB.relsOfTmsl(bim) : null, b = DB.relsOfTmsl ? DB.relsOfTmsl({ relationships: E.analyze(bim).relationships }) : null, c = fromTmdl(tmdl);
     check(JSON.stringify(a) === want && JSON.stringify(b) === want && JSON.stringify(c) === want, `relationships read from the model.bim, the .pbit and relationships.tmdl: ${JSON.stringify([a, b, c])}`);
     const tables = DB.fromTmsl(bim), pick = DB.suggest(tables, 2, { relationships: a || [], modelTables: tables });
     check(pick.cats.bar && pick.cats.bar.c === 'Hub Zone' && !pick.table.some((f) => f && f.m === 'Delivered Qty'), `the picker with the relationships: charts by a reached category, the table without the unrelated measure: ${JSON.stringify([pick.cats.bar, pick.table])}`);
@@ -123,7 +125,7 @@ export default async function ({ browser, url }) {
     const again = DB.build(Object.assign({}, pick.choices, { kpis: pick.choices.kpis.slice(), slicers: pick.choices.slicers.slice() }));
     check(!again.table.some((f) => f && f.m === 'Delivered Qty') && again.table.some((f) => f && f.m === 'Shipments Amount'), `a picker change keeps the unrelated measure out of the table: ${JSON.stringify(again.table)}`);
     // (the review's 3: a relationship that filters both ways is followed both ways, read from TMSL and TMDL)
-    const both = DB.relsOfTmdl("relationship z\n\tcrossFilteringBehavior: bothDirections\n\tfromColumn: Hub.'Hub Key'\n\ttoColumn: Deliveries.'Hub Key'\n"), bothJ = DB.relsOfTmsl({ relationships: [{ fromTable: 'Hub', toTable: 'Deliveries', crossFilteringBehavior: 'bothDirections' }] });
+    const both = fromTmdl("relationship z\n\tcrossFilteringBehavior: bothDirections\n\tfromColumn: Hub.'Hub Key'\n\ttoColumn: Deliveries.'Hub Key'\n"), bothJ = DB.relsOfTmsl({ relationships: [{ fromTable: 'Hub', toTable: 'Deliveries', crossFilteringBehavior: 'bothDirections' }] });
     check(JSON.stringify(both) === JSON.stringify([{ fromTable: 'Hub', toTable: 'Deliveries', both: true }]) && JSON.stringify(bothJ) === JSON.stringify(both), `both-directions relationships read: ${JSON.stringify([both, bothJ])}`);
     // (round 23 part 8, the review's 2: the website's own designed pages hand a line chart's slot to the visual beside
     // it too when the model gives no time axis, as the MCP's do: the shared writer does it)
@@ -138,7 +140,7 @@ export default async function ({ browser, url }) {
       check(line && !vs.some((v) => v.visual.visualType === 'lineChart') && covers && (r.leftOut || []).some((x) => x.kind === 'line' && x.gave), `the website's page gives the line chart's room to its neighbour: ${JSON.stringify(vs.map((v) => [v.visual.visualType, v.position.x, v.position.y, v.position.width]))} ${JSON.stringify(r.leftOut)}`);
     }
     const tg = fs.readFileSync(path.join(HERE, '../../assets/js/theme-generator.js'), 'utf8');
-    check(/relationships: e\.relationships/.test(tg) && /relsOfTmdl|relationships:/.test(fs.readFileSync(path.join(HERE, '../../assets/js/pbip-bind.js'), 'utf8')), 'the Theme Generator must pass the model\'s relationships to the picker');
+    check(/relationships: e\.relationships/.test(tg) && /relsOfTmsl|relationships:/.test(fs.readFileSync(path.join(HERE, '../../assets/js/pbip-bind.js'), 'utf8')), 'the Theme Generator must pass the model\'s relationships to the picker');
   }
 
   // 9. File and folder names from any design name: whole characters only (an emoji is never cut in half)
