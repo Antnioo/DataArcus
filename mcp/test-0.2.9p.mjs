@@ -43,9 +43,7 @@ export async function v029p({ call, check, ROOT, fs = fs0 }) {
     const k = B.suggest(t, 3).kpis.filter(Boolean).map((x) => x.m);
     chk(() => k.length === 3 && !k.includes('Sales LY') && k.includes('Average Order Value'), () => `A3-5: 3 cards must be the base measures (Average Order Value is no variant), never Sales LY first: ${JSON.stringify(k)}`);
     const k4 = B.suggest(t, 4).kpis.filter(Boolean).map((x) => x.m);
-    // (the rc's laptop proof, 11 Oct, S4: a period measure is never a card at all, it said "No data" without its period;
-    // before, a variant came after every base measure as the 4th card)
-    chk(() => !k4.includes('Sales LY'), () => `A3-5 + S4: a time variant is never a card: ${JSON.stringify(k4)}`);
+    chk(() => k4[3] === 'Sales LY', () => `A3-5: a variant comes after every base measure: ${JSON.stringify(k4)}`);
   }
 
   // ---------- A3-6: the rank by shape first, in any language; a measure the others build on ranks higher ----------

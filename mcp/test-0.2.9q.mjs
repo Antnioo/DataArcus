@@ -28,10 +28,13 @@ export async function v029q({ check }) {
   {
     const j = model([cal, { name: 'Sales', columns: [col('Amount', 'double'), col('Order Date', 'dateTime'), col('Region', 'string')],
       measures: [ms('Total Revenue', 'SUM ( Sales[Amount] )', '\\$#,0'), ms('Orders', 'COUNTROWS ( Sales )', '#,0'),
-        ms('Revenue PY', 'CALCULATE ( [Total Revenue], SAMEPERIODLASTYEAR ( Calendar[Date] ) )', '\\$#,0'),
-        ms('Revenue Growth %', 'DIVIDE ( [Total Revenue] - [Revenue PY], [Revenue PY] )', '0.0%')] }], [rel('Sales', 'Order Date', 'Calendar', 'Date')]);
+        ms('Revenue PM', 'CALCULATE ( [Total Revenue], PREVIOUSMONTH ( Calendar[Date] ) )', '\\$#,0'),
+        ms('Revenue Growth %', 'DIVIDE ( [Total Revenue] - [Revenue PM], [Revenue PM] )', '0.0%'),
+        ms('Revenue This Year', 'IF ( HASONEVALUE ( Calendar[Year] ), [Total Revenue] )', '\\$#,0'),
+        ms('Revenue PY', 'CALCULATE ( [Total Revenue], SAMEPERIODLASTYEAR ( Calendar[Date] ) )', '\\$#,0')] }], [rel('Sales', 'Order Date', 'Calendar', 'Date')]);
     const k = names(pick(j, 4).kpis);
-    chk(() => !k.includes('Revenue PY') && !k.includes('Revenue Growth %') && k.includes('Total Revenue'), () => `S4: no card for a period measure or one built on it: ${JSON.stringify(k)}`);
+    // (blank over the whole date range: PREVIOUSMONTH, or a guard on one selected year; a PY measure shows a number)
+    chk(() => !k.includes('Revenue PM') && !k.includes('Revenue Growth %') && !k.includes('Revenue This Year') && k[0] === 'Total Revenue', () => `S4: no card for a measure that needs one period, or one built on it: ${JSON.stringify(k)}`);
   }
 
   // ---------- D4: a what-if parameter's value (the slicer's selection) is never a card ----------
