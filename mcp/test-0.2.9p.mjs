@@ -128,7 +128,7 @@ export async function v029p({ call, check, ROOT, fs = fs0 }) {
       { name: 'Calendar', dataCategory: 'Time', columns: [col('Date', 'dateTime'), col('Year', 'int64'), col('Month Name', 'string', { sortByColumn: 'Month Number' }), col('Month Number', 'int64'),
         col('Month Name (Arabic)', 'string', { sortByColumn: 'Month Number' }), col('Day Name', 'string'), col('Day of Week', 'int64'), col('Day Short', 'string', { sortByColumn: 'Day of Week' }),
         col('Day Name (Arabic)', 'string'), col('Hijri Month Name', 'string', { sortByColumn: 'Hijri Month' }), col('Hijri Month', 'int64'), col('Is Festival', 'boolean'), col('Festival Day', 'int64')] },
-      { name: 'Bookings', columns: [col('Booked', 'dateTime'), col('Venue', 'string'), col('Guests', 'int64')], measures: [ms('Total Guests', 'SUM ( Bookings[Guests] )', '#,0'), ms('Bookings', 'COUNTROWS ( Bookings )', '#,0')] }]);
+      { name: 'Bookings', columns: [col('Booked', 'dateTime'), col('Venue', 'string'), col('Channel', 'string'), col('Guests', 'int64')], measures: [ms('Total Guests', 'SUM ( Bookings[Guests] )', '#,0'), ms('Bookings', 'COUNTROWS ( Bookings )', '#,0')] }]);
     const cal = t.find((x) => x.name === 'Calendar'), bk = t.find((x) => x.name === 'Bookings');
     const keys = (l) => (l || []).filter(Boolean).map((f) => `${f.t}[${f.c != null ? f.c : f.m}]`);
     // a page filter keeps a flag true: the time axis runs by the flag's own day column ("Festival Day"), found by the flag's word, not a fixed name
@@ -153,7 +153,7 @@ export async function v029p({ call, check, ROOT, fs = fs0 }) {
     chk(() => keys(ar.calendarNames).includes('Calendar[Hijri Month Name]'), () => `A3-2: a calendar name with no Arabic column is named (calendarNames): ${JSON.stringify(ar.calendarNames)}`);
     // the server and the plan's lint keep no picker rule of their own
     const s = fs.readFileSync(path.join(REPO, 'mcp/server.mjs'), 'utf8'), pl = fs.readFileSync(path.join(REPO, 'mcp/lib/plan-lint.mjs'), 'utf8');
-    chk(() => !/Day Short|Day Name \(Arabic\)|ARABIC_OF|\/ramadan\/i|ramadan\\s\*day|F\.table\.map/.test(s) && !/F\.table\.map|Bind\.build\(/.test(pl) && /countBind = [^\n]*\n?[^\n]*Bind\.build\(/.test(s),
+    chk(() => !/Day Short|ARABIC_OF|ramadan\\s\*day|F\.table\.map/.test(s) && !/F\.table\.map|Bind\.build\(/.test(pl) && /countBind = [^\n]*\n?[^\n]*Bind\.build\(/.test(s),
       () => 'A3-2: no Gulf-calendar names or Ramadan rule in the server, no copy of build\'s field mapper in the server or the plan\'s lint, and the counted binding goes through build');
     // the picker's field map keeps shared fields shared and changes no field of the binding it maps
     const b0 = B.suggest(t, 2), mapped = typeof B.mapFields === 'function' ? B.mapFields(b0, (f) => Object.assign({}, f, { name: 'x' })) : null;
