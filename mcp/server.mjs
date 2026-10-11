@@ -609,7 +609,15 @@ server.registerTool('create_report', {
   const m = loadModel(a.path);
   if (!m.folder) throw new Error('create_report needs a project folder with a .SemanticModel (save the .pbix as a Power BI project first).');
   // the gate (0.2.9, P-1): nothing is written without an approved plan for this model, whatever the AI app asks before a tool
-  Plans.gate('create_report', a.planId, modelKey(m, a.path));
+  const approved = Plans.gate('create_report', a.planId, modelKey(m, a.path));
+  // (the cross-review's G5, 11 Oct: the plan checked against the tools' limits is the plan written: the fields approved with
+  // it, where plan_layout was given them, are the report's; any other is refused, named, and nothing is written)
+  const plannedFields = approved.data && approved.data.fields;
+  if (plannedFields) {
+    const norm = (v) => JSON.stringify(Array.isArray(v) ? v.map((x) => String(x).trim()) : v == null ? null : String(v).trim());
+    const keys = [...new Set(Object.keys(plannedFields).concat(Object.keys(a.fields || {})))], off = keys.filter((k) => norm((a.fields || {})[k]) !== norm(plannedFields[k]));
+    if (off.length) throw new Error(`Nothing was written: the fields differ from the approved plan's in ${off.join(', ')} (approved: ${off.map((k) => `${k} ${norm(plannedFields[k])}`).join('; ')}). Pass the approved plan's fields as they are, or make a new plan with plan_layout, show it and wait for the user's go.`);
+  }
   // the part of the model the report is about: on a large model a focus (or tables) is needed, as in suggest_fields
   const sc = scopeOf(m, { focus: a.focus, tables: a.tables });
   if (sc.needsFocus) throw new Error(`Nothing was written. ${sc.why} ${sc.how} Areas in this model: ${sc.areas.map((x) => x.area).join(', ') || 'none (no measure display folders)'}.`);
@@ -1259,7 +1267,7 @@ server.registerTool('plan_layout', {
   }
   const writes = [`the report "<name>.Report" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`, 'the theme file, only if the user asks for one (generate_theme)'];
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
-    : { plan: Plans.proposal(Plans.propose('report', model, writes), Object.assign(model ? {} : { noModel: 'Made without path: this plan id allows only a theme file. For a report, call plan_layout with the model (path).' }, planned ? { fields: planned } : {})) };
+    : { plan: Plans.proposal(Plans.propose('report', model, writes, planned ? { fields: planned } : undefined), Object.assign(model ? {} : { noModel: 'Made without path: this plan id allows only a theme file. For a report, call plan_layout with the model (path).' }, planned ? { fields: planned } : {})) };
   // round 15 (the owner's go on round 13's recommendation 1): gradient bars are the default for designed pages, and the
   // plan the user approves says so
   // 0.2.9 item 11 (LAYER checks): the design lint of the planned page (the writer's page built in memory, read and
