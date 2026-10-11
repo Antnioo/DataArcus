@@ -1,7 +1,7 @@
 // Large models: a summary first, details on request (owner 2026-10-03), and the part of a model a request is about.
 // A model is "large" when its full read_model answer would pass LIMIT characters: about 10,000 tokens, where Claude
 // Code starts warning, and far below Claude Desktop's limit. Small models answer exactly as before.
-import { summary } from './model.mjs';
+import { shownName, summary } from './model.mjs';
 
 export const LIMIT = 40000;
 const size = (o) => JSON.stringify(o, null, 2).length;
@@ -20,11 +20,13 @@ function relatedOf(m) {
 }
 // the model's areas: the top display folder of its measures, with the tables that have measures there. It is what a
 // user would name ("logistics"); a model without display folders has none.
+// (A1-7, the audit of the reading block: the folders come from the reader's shape, never from the raw model, and a
+// folder's name is screened before it is returned: one that reads like an instruction is withheld)
 export function areasOf(m) {
   const by = new Map();
-  (raw(m).tables || []).forEach((t) => (t.measures || []).forEach((ms) => {
+  (m.tables || []).forEach((t) => (t.measures || []).forEach((ms) => {
     const folder = String(ms.displayFolder || '').split(/[\\/;]/)[0].trim(); if (!folder) return;
-    if (!by.has(folder)) by.set(folder, { area: folder, measures: 0, tables: [] });
+    if (!by.has(folder)) by.set(folder, { area: shownName(folder, 80), measures: 0, tables: [] });
     const a = by.get(folder); a.measures++; if (!a.tables.includes(t.name)) a.tables.push(t.name);
   }));
   return [...by.values()].sort((a, b) => b.measures - a.measures);
@@ -46,7 +48,7 @@ export function largeSummary(m) {
     const order = new Map(withMeasures.map((t, i) => [t.table, i]));
     const ranked = withMeasures.slice().sort((a, b) => b.measures.length - a.measures.length || order.get(a.table) - order.get(b.table));
     const rest = ranked.slice(TOP), areaOf = new Map();
-    (raw(m).tables || []).forEach((t) => { const ms = (t.measures || []).find((x) => x.displayFolder); areaOf.set(t.name, ms ? String(ms.displayFolder).split(/[\\/;]/)[0].trim() : ''); });
+    (m.tables || []).forEach((t) => { const ms = (t.measures || []).find((x) => x.displayFolder); areaOf.set(t.name, ms ? shownName(String(ms.displayFolder).split(/[\\/;]/)[0].trim(), 80) : ''); });
     const by = new Map(); rest.forEach((t) => { const a = areaOf.get(t.table) || '(no display folder)'; by.set(a, (by.get(a) || 0) + 1); });
     withMeasures = ranked.slice(0, TOP);
     notListed = { tablesWithMeasures: rest.length, byArea: [...by.entries()].sort((a, b) => b[1] - a[1]).slice(0, 40).map(([area, tables]) => ({ area, tables })),
@@ -113,7 +115,7 @@ export function scopeOf(m, opts) {
     core = names.map((n) => by.get(lc(String(n).trim())).name);
   } else {
     const f = lc(focus), folderHit = new Set();
-    rawTables.forEach((t) => { if ((t.measures || []).some((ms) => lc(ms.displayFolder).includes(f))) folderHit.add(t.name); });
+    m.tables.forEach((t) => { if ((t.measures || []).some((ms) => lc(ms.displayFolder).includes(f))) folderHit.add(t.name); });
     const hit = m.tables.filter((t) => lc(t.name).includes(f) || folderHit.has(t.name));
     // the tables with measures are what the user means by an area; lookups that only share the word come in when
     // they are related, and alone only when no table with measures matches
