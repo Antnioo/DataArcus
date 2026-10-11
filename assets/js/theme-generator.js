@@ -46,13 +46,13 @@ document.addEventListener('DOMContentLoaded', () => {
   const buildTheme = () => E.buildTheme(state, isAr() ? 'ar' : 'en');
 
   const renderPreview = () => {
-    const u = state.ui, d = state.data, sec = mix(u.text, u.card, 0.35), grid = mix(u.text, u.card, 0.85), cs = chart();
+    const u = state.ui, d = state.data, ro = E.roles(u), sec = ro.secondary, grid = ro.grid, cs = chart();   // (A2-10: the engine's derived colours)
     const card = (k, v, delta, good) => `<div class="tg-card" style="background:${u.card};color:${u.text}"><div class="k" style="color:${sec}">${k}</div><div class="v">${v}</div><div class="d" style="color:${good ? u.good : u.bad}">${delta}</div></div>`;
     const months = isAr() ? ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'] : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
     const s1 = [42, 55, 48, 63, 70, 78], s2 = [30, 34, 41, 38, 49, 52], s3 = [18, 22, 20, 27, 25, 31];
     const bars = months.map((m, i) => [s1[i], s2[i], s3[i]].map((v, j) => { const x = 34 + i * 58 + j * 15, h = v * 1.6; return `<rect x="${x}" y="${150 - h}" width="13" height="${h}" rx="2" fill="${d[j]}"/>`
       + (cs.labels === 'on' ? `<text x="${x + 6.5}" y="${146 - h}" font-size="7" text-anchor="middle" fill="${sec}">${v}</text>` : ''); }).join('') + `<text x="${34 + i * 58 + 21}" y="166" font-size="10" text-anchor="middle" fill="${sec}">${m}</text>`).join('');
-    const gridLines = [0, 40, 80, 120].map((v) => `${cs.grid === 'off' && v ? '' : `<line x1="28" x2="380" y1="${150 - v}" y2="${150 - v}" stroke="${cs.grid === 'dotted' && v ? mix(u.text, u.card, 0.8) : grid}" stroke-width="1"${cs.grid === 'dotted' && v ? ' stroke-dasharray="1 3"' : ''}/>`}<text x="22" y="${154 - v}" font-size="9" text-anchor="end" fill="${sec}">${v / 1.6 | 0}</text>`).join('');
+    const gridLines = [0, 40, 80, 120].map((v) => `${cs.grid === 'off' && v ? '' : `<line x1="28" x2="380" y1="${150 - v}" y2="${150 - v}" stroke="${cs.grid === 'dotted' && v ? ro.gridline : grid}" stroke-width="1"${cs.grid === 'dotted' && v ? ' stroke-dasharray="1 3"' : ''}/>`}<text x="22" y="${154 - v}" font-size="9" text-anchor="end" fill="${sec}">${v / 1.6 | 0}</text>`).join('');
     // legend of the bar chart, where the theme puts it (Power BI's default is top left)
     const legendItems = [L('Online', 'أونلاين'), L('Stores', 'المتاجر'), L('Partners', 'الشركاء')].map((n, i) => `<span style="display:inline-flex;align-items:center;gap:4px"><i style="width:8px;height:8px;border-radius:50%;background:${d[i]};display:inline-block"></i>${n}</span>`).join('');
     const side = cs.legend === 'Right';
@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <svg viewBox="0 0 390 160" role="img" aria-label="Line chart preview">${gridLines}<polyline points="${pts(s1, 1.6)}" fill="none" stroke="${d[0]}" stroke-width="3" stroke-linejoin="round"/><polyline points="${pts(s2, 1.6)}" fill="none" stroke="${d[1]}" stroke-width="3" stroke-linejoin="round"/></svg></div>
         <div class="tg-card" style="background:${u.card};color:${u.text};overflow-x:auto"><table class="tg-table">
           <tr style="background:${u.accent}">${(isAr() ? ['العلامة', 'المبيعات', 'الحالة'] : ['Brand', 'Sales', 'Status']).map((h) => `<th style="color:${contrast(u.accent, '#ffffff') >= contrast(u.accent, '#111111') ? '#ffffff' : '#111111'}">${h}</th>`).join('')}</tr>
-          ${[[L('North', 'الشمال'), '412K', 'good'], [L('South', 'الجنوب'), '288K', 'neutral'], [L('East', 'الشرق'), '176K', 'bad']].map((r, i) => `<tr style="background:${i % 2 && cs.table !== 'minimal' ? mix(u.card, u.accent, 0.08) : u.card}${cs.table === 'minimal' ? `;border-bottom:1px solid ${mix(u.text, u.card, 0.85)}` : ''}"><td>${r[0]}</td><td>${r[1]}</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${u[r[2]]}"></span></td></tr>`).join('')}
+          ${[[L('North', 'الشمال'), '412K', 'good'], [L('South', 'الجنوب'), '288K', 'neutral'], [L('East', 'الشرق'), '176K', 'bad']].map((r, i) => `<tr style="background:${i % 2 && cs.table !== 'minimal' ? mix(u.card, u.accent, 0.08) : u.card}${cs.table === 'minimal' ? `;border-bottom:1px solid ${grid}` : ''}"><td>${r[0]}</td><td>${r[1]}</td><td><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${u[r[2]]}"></span></td></tr>`).join('')}
         </table></div>
       </div>`;
   };
@@ -179,13 +179,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const page = (c) => E.page(c || lay());
   let pageMsg = '';   // shown once after a typed value was outside the limits
   const shapeMsg = (c) => { if (c.page !== 'custom') return ''; const [w, h] = fitCustom(c.pageW, c.pageH);
-    return w === c.pageW && h === c.pageH ? '' : L(`This shape is outside 4:3 to 2.4:1, so the preview uses ${w} × ${h}.`, `هذا الشكل خارج النطاق من 4:3 إلى 2.4:1، لذلك تستخدم المعاينة <bdi dir="ltr">${w} × ${h}</bdi>.`); };
+    // (0.2.9, the audit's A2-1: the small-page rule is the design engine's, so the page says what the report will get)
+    const sp = E.smallPage(c), small = sp ? L(`Under ${E.SMALL_PAGE.w} wide the executive layout becomes the single-focus layout (the KPI cards and one large chart), with no second page.`, `تحت عرض ${E.SMALL_PAGE.w} يصبح الملخص التنفيذي تخطيط الرسالة الواحدة (بطاقات المؤشرات ومخطط كبير واحد)، بدون صفحة ثانية.`) : '';
+    return [w === c.pageW && h === c.pageH ? '' : L(`This shape is outside 4:3 to 2.4:1, so the preview uses ${w} × ${h}.`, `هذا الشكل خارج النطاق من 4:3 إلى 2.4:1، لذلك تستخدم المعاينة <bdi dir="ltr">${w} × ${h}</bdi>.`), small].filter(Boolean).join(' '); };
   const applyPage = (c) => { const p = page(c); PW = Math.round(p.w / p.s); PH = 720; return p; };
   const toPage = (v, c) => E.toPage(v, c || lay());
   const boxOf = (s, c) => E.boxOf(s, c || lay());
   const lay = () => state.layout;
   const rtl = (c) => E.rtl(c || lay(), isAr() ? 'ar' : 'en');
-  const nm = (pair) => (isAr() ? pair[1] : pair[0]);
+  const nm = (x) => E.label(x, isAr() ? 'ar' : 'en');   // (A2-9: the engine's labels are keyed by language)
 
   // sizes kept inside their safe ranges (the filter panel's depends on the current page width; the header's and the top
   // filter rail's start higher on a small page, so their text fits)
@@ -196,13 +198,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Sample content so the preview reads like a finished report (never drawn in the PNG)
   function sample(s, u, right) {
-    const d = state.data, sec = mix(u.text, u.card, 0.35), grid = mix(u.text, u.card, 0.85), p = 14;
+    const d = state.data, R = E.roles(u), sec = R.secondary, grid = R.grid, p = 14;
     const X = s.x + p, Y = s.y + 32, W = s.w - 2 * p, H = s.h - 32 - p;
     const at = (fx) => (right ? s.x + s.w - p - fx : X + fx); // horizontal position from the reading start
     const font = `font-family="'${state.font}', 'Segoe UI', Arial, sans-serif"`;
     switch (s.kind) {
       case 'kpi': {
-        const vals = ['AED 1.24M', '8,432', '4.8%', '312', '96%', '27 min'], v = vals[(+s.role[0].split(' ')[1] - 1) % vals.length];
+        const vals = ['AED 1.24M', '8,432', '4.8%', '312', '96%', '27 min'], v = vals[(s.index || 0) % vals.length];   // (A2-6: the slot's own index)
         const fs = Math.min(30, Math.round(s.h * 0.3));
         return `<text x="${at(c0(s))}" y="${s.y + s.h / 2 + fs / 2.6}" ${font} font-size="${fs}" font-weight="800" fill="${u.text}" text-anchor="${right ? 'end' : 'start'}">${v}</text>`
           + `<text x="${at(c0(s))}" y="${s.y + s.h - 14}" ${font} font-size="11" font-weight="600" fill="${u.good}" text-anchor="${right ? 'end' : 'start'}">▲ ${L('5.1% vs LM', '5.1% عن الشهر الماضي')}</text>`;
@@ -248,7 +250,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const previewMarks = (slots) => {
     const u = state.ui, c = lay(), right = rtl(), r = +c.radius;
     let s = '';
-    const sec = mix(u.text, u.card, 0.35), font = `font-family="'${state.font}', 'Segoe UI', Arial, sans-serif"`;
+    const sec = E.roles(u).secondary, font = `font-family="'${state.font}', 'Segoe UI', Arial, sans-serif"`;
     slots.forEach((p, i) => {
       let g = c.samples ? sample(p, u, right) : '';
       if (p.kind !== 'title' && p.kind !== 'logo') {
@@ -262,11 +264,11 @@ document.addEventListener('DOMContentLoaded', () => {
   };
   const bgSvg = (slots, opt) => E.bgSvg(state, slots, Object.assign({}, opt, { overlay: previewMarks }), isAr() ? 'ar' : 'en');
 
-  // small wireframe for the layout buttons
+  // small wireframe for the layout buttons (corners: the design's radius, as the panels; the audit's seen-not-in-scope)
   const thumb = (key) => {
     const c = Object.assign({}, lay(), { preset: key, kpis: LAYOUTS[key].kpis, filters: LAYOUTS[key].filters, kpiH: null, mainW: null, split: null }), u = state.ui;
-    return `<svg viewBox="0 0 ${PW} ${PH}"><rect width="${PW}" height="${PH}" fill="${u.background}"/>${c.header ? `<rect width="${PW}" height="${sizes(c).hh}" fill="${mix(u.card, u.background, 0.25)}"/>` : ''}`
-      + computeSlots(c).filter((s) => s.kind !== 'title' && s.kind !== 'logo').map((s) => `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="18" fill="${s.kind === 'kpi' ? u.accent : u.card}" opacity="${s.kind === 'kpi' ? 0.55 : 1}"/>`).join('') + '</svg>';
+    return `<svg viewBox="0 0 ${PW} ${PH}"><rect width="${PW}" height="${PH}" fill="${u.background}"/>${c.header ? `<rect width="${PW}" height="${sizes(c).hh}" fill="${E.roles(u).band}"/>` : ''}`
+      + computeSlots(c).filter((s) => s.kind !== 'title' && s.kind !== 'logo').map((s) => `<rect x="${s.x}" y="${s.y}" width="${s.w}" height="${s.h}" rx="${+c.radius || 0}" fill="${s.kind === 'kpi' ? u.accent : u.card}" opacity="${s.kind === 'kpi' ? 0.55 : 1}"/>`).join('') + '</svg>';
   };
 
   const seg = (key, opts, cur) => `<div class="tg-seg" role="group">${opts.map(([v, t]) => `<button type="button" data-l="${key}" data-v="${v}" class="${String(v) === String(cur) ? 'active' : ''}" aria-pressed="${String(v) === String(cur)}">${t}</button>`).join('')}</div>`;
@@ -457,12 +459,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Each choice keeps its own model and the fields picked for it, so switching between them never pairs one
     // model's fields with the other's location: own.local / own.service = { tables, msg, bad, folder, dir, reports, choices }
     const dataIn = $('pbipData'), own = { local: null, service: null, getBind: null };
-    const loadBind = () => (window.DABind ? Promise.resolve(window.DABind) : new Promise((resolve, reject) => {
-      // (A1-8: the picker reads a TMDL folder through tmdl-model.js, the one TMDL reader: loaded first)
-      const add = (src, next) => { const sc = document.createElement('script'); sc.src = src; sc.onload = next; sc.onerror = reject; document.head.appendChild(sc); };
-      const bind = () => add('../assets/js/pbip-bind.min.js?v=20261011r', () => resolve(window.DABind));
-      if (window.TmdlModel) bind(); else add('../assets/js/tmdl-model.min.js?v=20261011r', bind);
-    }));
+    // (0.2.9: the field picker reads its field-meaning rule from field-meaning.js, and a TMDL folder through tmdl-model.js,
+    // the one TMDL reader (A1-8): both loaded first)
+    const loadScript = (src) => new Promise((resolve, reject) => { const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc); });
+    const loadBind = () => (window.DABind ? Promise.resolve(window.DABind)
+      : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('../assets/js/field-meaning.min.js?v=20261011k'))
+        .then(() => (window.TmdlModel ? null : loadScript('../assets/js/tmdl-model.min.js?v=20261011r')))
+        .then(() => loadScript('../assets/js/pbip-bind.min.js?v=20261011s')).then(() => window.DABind));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
     // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)
@@ -565,16 +568,16 @@ document.addEventListener('DOMContentLoaded', () => {
       // the pages (design engine): this layout, a second page in a complementary layout when asked, and filters as a
       // slide-in panel when asked; each page's background is drawn for its own layout
       // Round 24 (the laptop's re-proof of round 23; the owner's "Fix them now"), on the user's own model:
-      // B2: a KPI card the model has no measure for is not written: the design gets the MCP's kpiCards (the cards left
-      // share the row, and the background's panels follow them) instead of a cardVisual with no field ("Select or add
+      // B2: a KPI card the model has no measure for is not written: the pages get at most the model's KPI count (the
+      // engine's maxKpis, 0.2.9 A2-4; the cards left share the row, and the background's panels follow them) instead of a cardVisual with no field ("Select or add
       // data" in Desktop); B1: with no time axis the writer gives the line chart's room to the chart beside it
       // (dropLines), so the background is drawn from those same slots, one panel under the widened chart
       const nK = model && bind ? (bind.kpis || []).filter(Boolean).length : null;
-      const cL = nK != null && nK < c.kpis ? Object.assign({}, c, { kpiCards: nK }) : c, noLine = !!(model && bind && !bind.date);
+      const noLine = !!(model && bind && !bind.date);
       // (R24-1, the review of round 24: the writer gives card i the binding's KPI i, so a KPI emptied in the middle of the
       // picker left an empty card and dropped the last one: the picked KPIs fill the cards in their order)
       const bindL = bind && nK < (bind.kpis || []).length ? Object.assign({}, bind, { kpis: bind.kpis.filter(Boolean) }) : bind;
-      const specs = E.projectPages(cL, isAr() ? 'ar' : 'en', { second: !!($('pbipPages') && $('pbipPages').checked), panel: !!($('pbipPanel') && $('pbipPanel').checked), logoRatio: logo ? logo.ratio : undefined });
+      const specs = E.projectPages(c, isAr() ? 'ar' : 'en', { second: !!($('pbipPages') && $('pbipPages').checked), panel: !!($('pbipPanel') && $('pbipPanel').checked), logoRatio: logo ? logo.ratio : undefined, maxKpis: nK != null ? nK : undefined });
       Promise.all([loadBuilder(), model ? loadBind() : null]).then(([P, DB]) => Promise.all(specs.map((sp) => pngBlob(sp.layout, noLine ? (sl) => P.dropLines(sl).slots : null).then((b) => b.arrayBuffer()))).then((bufs) => [P, DB, ...bufs])).then(([P, DB, ...bufs]) => {
         if (model && model.ws) model = { byConnection: DB.connection(model.ws, model.mn) };
         // kpiInset: where the KPI titles start beside the side accent bar drawn in this page's background
