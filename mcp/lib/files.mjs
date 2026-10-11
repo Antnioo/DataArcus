@@ -1,6 +1,7 @@
 // The one writer of new files (audit 6, A6-4 and A6-7; the twin's T8): every tool that writes a new tree of files
 // (create_report, create_arabic_twin) writes it here, all or nothing, never over anything; and the one reader of a file
-// the user names (a theme, a background, a logo), measured before it is read.
+// the user names (a theme, a background, a logo), measured before it is read; and where a tool may write one new file
+// (freeFile: 0.2.9, the audit's A2-8, moved here from the design adapter, which reads and writes no file).
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -82,4 +83,15 @@ export function readUserFile(p, { kind = 'file', max = 2 * 1024 * 1024, json = f
   if (!json) return buf;
   const t = buf[0] === 0xef && buf[1] === 0xbb && buf[2] === 0xbf ? buf.subarray(3).toString('utf8') : buf.toString('utf8');
   try { return JSON.parse(t); } catch (e) { throw new Error(`The ${kind} file is not valid JSON (its text is not shown: a file's text is not passed on). Use a theme file saved from Power BI or the DataArcus Theme Generator. Nothing was written.`); }
+}
+
+// A file inside the DataArcus folder that doesn't exist yet: name.ext, name-2.ext, name-3.ext... (a name held by
+// anything, a link included, is skipped)
+export function freeFile(folder, base, ext) {
+  const dir = inside(folder || '.');
+  fs.mkdirSync(dir, { recursive: true });
+  for (let n = 1; ; n++) {
+    const f = path.join(dir, base + (n > 1 ? '-' + n : '') + ext);
+    if (nothingAt(f)) return f;
+  }
 }

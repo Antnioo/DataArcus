@@ -1,7 +1,7 @@
 // Large models: a summary first, details on request (owner 2026-10-03), and the part of a model a request is about.
 // A model is "large" when its full read_model answer would pass LIMIT characters: about 10,000 tokens, where Claude
 // Code starts warning, and far below Claude Desktop's limit. Small models answer exactly as before.
-import { modelOf, shownName, summary } from './model.mjs';
+import { marked, modelOf, nameOut, shownName, summary, withNamesNote } from './model.mjs';
 import { takenNames } from './report-names.mjs';
 
 export const LIMIT = 40000;
@@ -10,7 +10,7 @@ const lc = (s) => String(s == null ? '' : s).toLowerCase();
 const raw = (m) => modelOf(m.tmsl);
 
 // read_model's full answer, as it has always been
-export const fullAnswer = (m) => ({ source: m.source, existingReports: takenNames(m.projectDir), tables: summary(m) });
+export const fullAnswer = (m) => withNamesNote({ source: m.source, existingReports: takenNames(m.projectDir), tables: summary(m) });
 export const isLarge = (m) => { if (m.large == null) m.large = size(fullAnswer(m)) > LIMIT; return m.large; };
 
 // the tables related to a table (either side of a relationship)
@@ -28,7 +28,7 @@ export function areasOf(m) {
   (m.tables || []).forEach((t) => (t.measures || []).forEach((ms) => {
     const folder = String(ms.displayFolder || '').split(/[\\/;]/)[0].trim(); if (!folder) return;
     if (!by.has(folder)) by.set(folder, { area: shownName(folder, 80), measures: 0, tables: [] });
-    const a = by.get(folder); a.measures++; if (!a.tables.includes(t.name)) a.tables.push(t.name);
+    const a = by.get(folder); a.measures++; if (!a.tables.some((x) => (x.name || x) === nameOut(t.name))) a.tables.push(marked(nameOut(t.name), t.name));
   }));
   return [...by.values()].sort((a, b) => b.measures - a.measures);
 }
@@ -64,17 +64,19 @@ export function largeSummary(m) {
     for (const n of [8, 3, 0]) { if (fits()) break; out.areas = short(areasOf(m), n); }
     if (!fits()) out.areas = out.areas.slice(0, 40);
   }
-  return out;
+  return withNamesNote(out);
 }
+// a table's name as a list gives it: marked when its row is (F-MP P3)
+const tableOut = (t) => (t.suspicious ? { name: t.table, suspicious: true } : t.table);
 function largeBody(m, all, rel, full, withMeasures, notListed) {
   return Object.assign({
     source: m.source, existingReports: takenNames(m.projectDir), summary: true,
     why: `This model is large: the full list of its tables, columns and measures would be ${full.toLocaleString('en-US')} characters, more than an AI app reads well in one answer. This is a summary; ask for the tables you need.`,
     counts: { tables: all.length, columns: m.tables.reduce((n, t) => n + t.columns.length, 0), measures: m.tables.reduce((n, t) => n + t.measures.length, 0), relationships: (raw(m).relationships || []).length },
-    dateTables: all.filter((t) => t.dateTable).map((t) => t.table),
+    dateTables: all.filter((t) => t.dateTable).map(tableOut),
     areas: short(areasOf(m), AREA_TABLES),
-    tablesWithMeasures: withMeasures.map((t) => ({ table: t.table, measures: t.measures.length, columns: t.columns.length, relatedTables: (rel.get(t.table) || new Set()).size })),
-    otherTables: all.filter((t) => !t.measures.length).map((t) => t.table) }, notListed ? { notListed } : {}, {
+    tablesWithMeasures: withMeasures.map((t) => ({ table: t.table, ...(t.suspicious ? { suspicious: true } : {}), measures: t.measures.length, columns: t.columns.length, relatedTables: (rel.get(t.table) || new Set()).size })),
+    otherTables: all.filter((t) => !t.measures.length).map(tableOut) }, notListed ? { notListed } : {}, {
     details: 'Call read_model again with tables: ["Table name", ...] to get those tables in full (columns with types, measures with formats). For field picks on one part of the model, call suggest_fields with focus: "<an area or a word from table names>" or with tables.'
   });
 }
@@ -82,7 +84,8 @@ function largeBody(m, all, rel, full, withMeasures, notListed) {
 // read_model with tables: exactly the named tables, in full; names that don't exist are listed back; an answer that
 // would pass LIMIT stops at a table and names the tables left out
 export function namedTables(m, names) {
-  const all = summary(m), by = new Map(all.map((t) => [lc(t.table), t]));
+  // (the user's names are matched against the model's own, the answer gives them as nameOut writes them)
+  const all = summary(m), by = new Map(all.map((t, i) => [lc(m.tables[i].name), t]));
   const found = [], notFound = [];
   [...new Set((names || []).map((n) => String(n)))].forEach((n) => { const t = by.get(lc(n.trim())); if (t) { if (!found.includes(t)) found.push(t); } else notFound.push(n); });
   const out = { source: m.source, existingReports: takenNames(m.projectDir), tables: [] }, notShown = [];
@@ -91,8 +94,8 @@ export function namedTables(m, names) {
     out.tables.push(t);
     if (size(out) > LIMIT - 400 && out.tables.length > 1) { out.tables.pop(); notShown.push(t.table); }
   }
-  if (notShown.length) { out.notShown = notShown; out.note = `The answer is kept under 40,000 characters: ${out.tables.length} of ${found.length} tables are shown. Call read_model again with the tables in notShown.`; }
-  return out;
+  if (notShown.length) { out.notShown = notShown.map((n) => marked(n, n)); out.note = `The answer is kept under 40,000 characters: ${out.tables.length} of ${found.length} tables are shown. Call read_model again with the tables in notShown.`; }
+  return withNamesNote(out);
 }
 
 // The part of the model a request is about. opts: { focus: a word the user said, tables: [names] }.
@@ -102,8 +105,8 @@ export function namedTables(m, names) {
 export function scopeOf(m, opts) {
   const focus = opts && opts.focus != null ? String(opts.focus).trim() : '', names = (opts && opts.tables) || null;
   const rawTables = raw(m).tables || [], order = new Map(rawTables.map((t, i) => [t.name, i]));
-  const ask = (why) => ({ needsFocus: true, why, areas: short(areasOf(m), AREA_TABLES),
-    tablesWithMeasures: m.tables.filter((t) => t.measures.length).map((t) => t.name).slice(0, 80),
+  const ask = (why) => withNamesNote({ needsFocus: true, why, areas: short(areasOf(m), AREA_TABLES),
+    tablesWithMeasures: m.tables.filter((t) => t.measures.length).map((t) => marked(nameOut(t.name), t.name)).slice(0, 80),
     how: 'Ask the user which part of the model the report is about, then call again with focus: "<area or word>" or tables: ["<table>", ...].' });
   if (!focus && !(names && names.length)) {
     if (!isLarge(m)) return { tables: m.tables };

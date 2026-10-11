@@ -19,6 +19,23 @@ After the twin and tools: **1033** + 36 + 21 + 21 + 16, golden PASS (11 tasks, n
 (854) PASS. The startup instructions are **2,493 characters** (cap 2,500): builder 10's A7-4 (every rule from one source)
 must keep them under it.
 
+## 0.2.9 design engine block (11 Oct, cloud builder 10; branch `fix/0.2.9-design` from `fix/0.2.9-gate` `d2300f9`; not merged, no PR)
+The audit `audit-2-design-engine.md` (A2-1 to A2-12, but A2-3) and the tools audit's A6-10, fixed at the root in the
+design block, one commit each, tests first (`mcp/test-0.2.9-design.mjs`, 50 checks). **The full report, the moved
+numbers, the slot shapes A2-3's fitSlots needs and the laptop list: `mcp/work/0.2.9-design.md`.**
+- The engine now holds: the small-page rule (`SMALL_PAGE`, `smallPage`, `fitLayout`; no second page under 800), kpis
+  0-6 (`kpiCards` gone; `maxKpis` caps pages), the table's share by its fields (`TABLE_NEED`, `tableWeight`), slot
+  `index`, `colours`/`roles`, the written `SCHEMA` and key lists, `repairState(state, report)`, labels `{ en, ar }` with
+  `label`/`texts` and `RTL_LANGS`, `MEASURED_FONTS`, `NAME_MAX`, `themeScaleOf`/`scaleTheme`.
+- `mcp/lib/files.mjs` is new (freeFile); server.mjs reaches the engine only through design.mjs.
+- Fixtures moved with their cause in `meta.changed`: the 640 x 360 cases and page-too-tall (A2-1). Nothing else.
+- **Audit 7 (same branch, after merging fix/0.2.9-gate):** A7-1, A7-2, A7-4..A7-13 done (`ce5668a`..`4abb90b`); new
+  `mcp/lib/agent-text.mjs` (instructions from LIMITS, one cap 2,200; now 2,185), `test-0.2.9-agent.mjs` (23). npm test
+  1019 + 36, golden PASS; website 17 PASS. **PRIVACY/README containment lines carry TODO(A1-1): merge only with the
+  reader's 63066cf, and delete the TODO lines then.** A7-3 is builder 9's.
+- **Next:** builder 11 does A2-3 (fitSlots) last; the laptop proves A2-1 (700-800 wide), A2-5 (5-6 field tables),
+  A2-11 (Verdana) and D1-D3 (DESKTOP-TESTS.md "0.2.9 design block").
+
 ## 0.2.9 integration (11 Oct, cloud builder 5; `fix/0.2.9-gate` is the integration branch for tonight's laptop proof; not merged, no PR)
 The reviewer's routine (11 Oct 07:36 UTC): merge checks, reader and the Arabic twin into this branch, then fix the gate
 block's findings of builder 7's cross-review (`mcp/work/0.2.9-crossreview.md`, from `fix/0.2.9-checks`) at the root.

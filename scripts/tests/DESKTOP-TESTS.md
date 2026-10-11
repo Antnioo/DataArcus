@@ -2331,7 +2331,8 @@ Facts measured:
   (or "Refresh now") and the Data pane marks measures "Field list item has error" until that refresh; the visuals draw.
 - **A script that starts Desktop keeps the caller's output pipe** even when it redirects its own child: a tool call
   that pipes its output (`... | cut`) returns only when Desktop closes. `r22-gshots.ps1` closes the test report at its end.
-- **Data bars beside a plain copy:** a measure twice in one table (round 21's item 4), written by hand on a made-up report (`builder-scripts22-databars.mjs`, `r22-databars2.mjs`; crops `shotsdb-lab-crop.png`, `db-lab2-crop.png`): (1) the same projection twice (one queryRef): both columns draw, and a data bar on that queryRef turns BOTH into bars; (2) the copy with its own queryRef and nativeQueryRef ("Sales.Total Sales1", "Total Sales1") after the original: two columns, and a bar whose selector names the ORIGINAL's queryRef draws on the original only: a bar column, then the plain number: **this form works**; (3) a bar whose selector names the copy's queryRef: no bar; (4) the copy first and the original (with a displayName) after it, the bar on the original: no bar; (5) a copy whose queryRef differs but whose nativeQueryRef is the original's: "Error fetching data for this visual". Not saved back by Desktop, so how Desktop itself names a second copy is still not read.
+- **Data bars beside a plain copy:** a measure twice in one table (round 21's item 4), written by hand on a made-up report (`builder-scripts
+22-databars.mjs`, `r22-databars2.mjs`; crops `shotsdb-lab-crop.png`, `db-lab2-crop.png`): (1) the same projection twice (one queryRef): both columns draw, and a data bar on that queryRef turns BOTH into bars; (2) the copy with its own queryRef and nativeQueryRef ("Sales.Total Sales1", "Total Sales1") after the original: two columns, and a bar whose selector names the ORIGINAL's queryRef draws on the original only: a bar column, then the plain number: **this form works**; (3) a bar whose selector names the copy's queryRef: no bar; (4) the copy first and the original (with a displayName) after it, the bar on the original: no bar; (5) a copy whose queryRef differs but whose nativeQueryRef is the original's: "Error fetching data for this visual". Not saved back by Desktop, so how Desktop itself names a second copy is still not read.
 - **Arabic names in Segoe UI** (task 6's two headers at 14pt): our count 364 and 438, Microsoft's report CLI (`text measure`,
   font metrics) 386 and 471, Desktop about 311 and 418 (read off the capture at the table's own size, so near, not exact):
   our count is not too small for what Desktop draws.
@@ -2425,6 +2426,16 @@ Captures `<tests folder>\r24\shots\`; the table is in `mcp/WORK.md`, "Round 24, 
 | One measure, no date column | PASS: one card, no white "Select or add data" box on page 1 or Details; the widened bar chart on one panel, no seam | `lean-en-p1.png`, `lean-ar-p1.png`, `lean-en-p2.png` |
 | Two measures, the picker's middle KPI emptied | PASS: two cards in the picked order sharing the row, none empty | `gap-en-p1.png`, `gap-ar-p1.png`, `gap-ar-p2.png` |
 | Dhow Freight | PASS: unchanged (English page 1 pixel for pixel the re-proof's capture) | `freight-en-p1.png`, `freight-ar-p1.png` |
+
+## 0.2.9 design block: laptop proofs still to run (`fix/0.2.9-design`; written before any run, nothing measured yet)
+Values the design engine uses that were measured at one size only, or not at all. Each row: what to open, what is
+expected, and what a different result changes. Results go in a new dated section above, with the Desktop version.
+
+| # | Check | Expected | If not |
+|---|---|---|---|
+| A2-1 | The small-page rule between 700 and 800 wide: `create_report` with the executive design at 700 x 394, 760 x 428 and 799 x 450, and at 800 x 450, English and Arabic (one page each; the 640 x 360 case is measured: 2026-10-07) | under 800: the single-focus layout, one page, card values whole and clear of the card's bottom edge (KPI row 116 on the 720 grid); at 800: the executive layout's four charts and table with nothing cut and no scrollbar | move `SMALL_PAGE.w` (`design-engine.js`) to the width where the executive layout first fits, and `SMALL_PAGE.kpiH` to the measured card height; record both here |
+| A2-5 | A table of 5 and of 6 fields (a day column and 4 or 5 measures) beside a chart on a 960 x 720 executive page, filters at the end, Segoe UI and Tahoma (`create_report` with `fields.table`) | every column whole, no horizontal scrollbar; the chart beside it still readable (the table takes 1.875 and 2.25 times the chart's weight: `E.tableWeight`) | set `TABLE_NEED` (`design-engine.js`) from the measured widths per field; record them here |
+| A2-11 | The widest font offered, Verdana (and Georgia), on golden task 4 (960 x 720) and task 1 (1920 x 1080): `generate_theme` with `font`, then `create_report` with that design | the header title, the filter rail's slicer text, every KPI title and value and every table column whole, as in Segoe UI; no scrollbar | measure the room Verdana needs (title box, rail, table per field) and add it to `minOf`, `TABLE_NEED` and the writer's text widths, or offer the MCP only `E.MEASURED_FONTS` |
 
 ## Lessons
 - **Night of 6-7 Oct: a bar chart at the theme's 10pt (1280 x 720) needs 22.2 a row, 45 above the first row and 8
