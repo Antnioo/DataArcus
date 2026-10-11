@@ -17,7 +17,8 @@ import { v029i } from './test-0.2.9i.mjs';
 import { v029k } from './test-0.2.9k.mjs';
 import { v029p } from './test-0.2.9p.mjs';
 import { v029checks } from './test-0.2.9-checks.mjs';
-import { v030twin, v030engine } from './test-0.3.0-twin.mjs';
+import { v030twin, v030engine, v030audit } from './test-0.3.0-twin.mjs';
+import { audit6 } from './test-audit6.mjs';
 import { withPlans } from './test-plan.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
 
@@ -4470,6 +4471,9 @@ await v029checks({ call, check, ROOT, fs });
 // ---------- 0.3.0, the Arabic twin of an existing report: test-0.3.0-twin.mjs, which also runs alone ----------
 try { v030engine({ check }); } catch (e) { check(false, 'T10. the engine: ' + e.message); }
 await v030twin({ call: rawCall, check, ROOT, fs });
+await v030audit({ call: rawCall, check, ROOT, fs });
+// ---------- audit 6 (the MCP tools block): test-audit6.mjs, which also runs alone ----------
+await audit6({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
 // ---------- round 17 follow-up: G-04, check_report's instruction-like names in suspiciousNames (owner: all recommended) ----------
 // the name stays withheld (only the placeholder), each entry has its kind and reason, and the check's result is the
 // same as for a plainly named visual

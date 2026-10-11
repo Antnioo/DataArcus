@@ -11,41 +11,30 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { inside, real, nothingAt, writeNew, visible, loadModel, ROOT } from './model.mjs';
-// (the untrusted-text screen lives in the reading block: the cross-review's Break 1, 11 Oct)
-import { INSTRUCTION, diskSource, inventory, isDir, isFile, readBytes, readText, strictFiles } from './read-report.mjs';
+// (the reading block's screen, locate, JSON reader, strict file list, inventory and limits: the cross-review's Break 1,
+// T3 and R1, 11 Oct; strictFiles refuses a link or a deep folder, never skips it, as a writer must)
+import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, readBytes, isFile, isDir, locate as readerLocate, strictFiles, inventory, diskSource } from './read-report.mjs';
 import { proposeArabic } from './arabic-names.mjs';
+import { writeTree } from './files.mjs';
 
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
 
-// the limits check_report reads a report within (8 MB a file, 12 levels), and a count
-const MB = 1024 * 1024, LIMITS = { file: 8 * MB, depth: 12, files: 20000 }, TEXT_CAP = 200, TEXTS_MAX = 400;
+// the limits check_report reads a report within (the reading block's: 8 MB a file, 12 levels), and a count
+const MB = 1024 * 1024, LIMITS = { file: REPORT_LIMITS.file, depth: REPORT_LIMITS.depth, files: 20000 }, TEXT_CAP = 200, TEXTS_MAX = 400;
 const relRoot = (f) => path.relative(ROOT, f).split(path.sep).join('/');
 const json = (o) => JSON.stringify(o, null, 2) + '\n';
 // (the one Arabic month list, the writer's: the cross-review's duplicates, 11 Oct)
 const MONTHS_AR = require('../../assets/js/pbip-export.js').AR_MONTHS;
 const MONTH_COLUMN = 'Month Name (Arabic)', MONTH_SORT = 'Month Number (AR sort)';
 
-// ---- the original: a .pbip, a .Report folder, or a folder holding exactly one .Report ----
+// ---- the original: the reading block's locate (a .pbip, a .Report folder, a folder holding exactly one), named ----
 function locate(p) {
-  const full = inside(p);
-  let dir = null, pbip = null;
-  if (isFile(full) && /\.pbip$/i.test(full)) {
-    pbip = full; dir = full.replace(/\.pbip$/i, '.Report');
-    try { if (fs.lstatSync(full).size < MB) { const a = JSON.parse(readText(full)), r = ((a.artifacts || []).find((x) => x && x.report) || {}).report; if (r && r.path) dir = path.resolve(path.dirname(full), String(r.path)); } } catch (e) { /* the default name */ }
-  } else if (isDir(full) && /\.Report$/i.test(full)) dir = full;
-  else if (isDir(full)) {
-    const reps = fs.readdirSync(full).filter((n) => /\.Report$/i.test(n) && isDir(path.join(full, n)));
-    if (reps.length !== 1) throw new Error(reps.length ? `"${p}" holds ${reps.length} reports: name one of them (its .pbip file or its .Report folder).` : `"${p}" holds no report: give the report's .pbip file or its .Report folder.`);
-    dir = path.join(full, reps[0]);
-  } else throw new Error(`"${p}" is not a report: give the report's .pbip file or its .Report folder.`);
-  real(dir, p);
-  if (!isDir(dir)) throw new Error(`The report folder of "${p}" is not there.`);
-  if (!isDir(path.join(dir, 'definition'))) throw new Error(isFile(path.join(dir, 'report.json'))
-    ? 'This report is in the older PBIR-Legacy format (one report.json). Save it once in Power BI Desktop (it then converts to PBIR), then ask again. Nothing was read beyond that file\'s name.'
-    : `"${p}" has no definition folder: it is not a PBIR report.`);
+  const loc = readerLocate(p, 'create_arabic_twin'), dir = loc.reportDir;
+  if (!/\.Report$/i.test(dir)) throw new Error(`"${p}" is a folder holding a definition folder, not a .Report folder: give the report's .pbip file or its .Report folder, so the twin can be named after it. Nothing was written.`);
   const base = path.basename(dir).replace(/\.Report$/i, '');
   if (/\sAR$/i.test(base)) throw new Error(`"${path.basename(dir)}" is already an Arabic twin (its name ends in " AR"): make the twin of the original report instead. Nothing was written.`);
+  let pbip = loc.pbipPath;
   if (!pbip) { const beside = path.join(path.dirname(dir), base + '.pbip'); if (isFile(beside)) pbip = beside; }
   return { dir, base, pbip, project: path.dirname(dir) };
 }
@@ -57,7 +46,7 @@ function readOriginal(loc) {
   const files = strictFiles(loc.dir, { files: LIMITS.files, tail: ' Nothing was written.' });
   const inv = inventory(diskSource({ reportDir: loc.dir }, { big: [], deep: 0 }), path.basename(loc.dir));
   const unreadable = inv.unreadableFiles.slice();
-  let pbir = {}; try { pbir = JSON.parse(readText(path.join(loc.dir, 'definition.pbir'))); } catch (e) { if (files.includes('definition.pbir')) unreadable.push('definition.pbir'); }
+  let pbir = {}; try { pbir = readJson(path.join(loc.dir, 'definition.pbir')); } catch (e) { if (files.includes('definition.pbir')) unreadable.push('definition.pbir'); }
   const pages = inv.pages.filter((pg) => files.includes(pg.file)).map((pg) => ({ id: pg.id, rel: pg.file, page: pg.raw,
     visuals: pg.visuals.filter((x) => x.json && x.json.name != null && x.file.split('/').length === 6).sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0)).map((x) => ({ rel: x.file, json: x.json })) }));
   const bookmarks = inv.bookmarks.map((b) => ({ rel: b.file, json: b.raw }));
@@ -65,6 +54,10 @@ function readOriginal(loc) {
 }
 
 // ---- the texts a reader sees, for the user's Arabic (cleaned, capped, instruction-like withheld) ----
+// An id holds report names (a page, a visual, a field's queryRef). An id that reads like an instruction, holds an
+// invisible character or is longer than 160 is replaced by an opaque one ("h:" and 16 hex digits of its hash), which
+// the server maps back: no such name reaches the answer (the cross-review's T5)
+const safeId = (raw) => (!INSTRUCTION.test(raw) && visible(raw) === raw && raw.length <= 160 ? raw : 'h:' + crypto.createHash('sha256').update(raw).digest('hex').slice(0, 16));
 function textsOf(R) {
   const all = [], seen = new Set();
   const add = (t, where) => { if (seen.has(t.id)) return; seen.add(t.id); all.push(Object.assign(t, where)); };
@@ -75,24 +68,33 @@ function textsOf(R) {
   R.bookmarks.forEach((b) => add({ id: 'bookmark:' + b.json.name, kind: 'bookmark', text: String(b.json.displayName || '') }, {}));
   return all.map((t) => {
     const raw = String(t.text);
-    const out = { id: visible(t.id).slice(0, 160), kind: t.kind };
-    if (t.page) out.page = visible(t.page).slice(0, 60);
-    if (t.visual) out.visual = visible(t.visual).slice(0, 60);
+    const out = { id: safeId(t.id), kind: t.kind, rawId: t.id };
+    if (t.page) out.page = safeName(t.page);
+    if (t.visual) out.visual = safeName(t.visual);
     if (INSTRUCTION.test(raw)) return Object.assign(out, { text: null, withheld: `reads like an instruction to an AI assistant (${raw.length} characters): not shown, kept as it is unless the user gives its Arabic`, draftArabic: null });
     const text = visible(raw);
     return Object.assign(out, { text: text.length > TEXT_CAP ? text.slice(0, TEXT_CAP) + '…' : text }, text.length > TEXT_CAP ? { long: raw.length } : {}, { draftArabic: proposeArabic(raw) });
   });
 }
+// the labels by the ids the answer gave, as the mirror engine's ids (the report's own names)
+const rawLabels = (texts, labels) => { const by = new Map(texts.map((t) => [t.id, t.rawId])), out = {}; Object.keys(labels || {}).forEach((k) => { if (by.has(k)) out[by.get(k)] = labels[k]; }); return out; };
+
+// ---- the model next to the report: its date tables (for time left to right, T2) and the month offer ----
+function modelOf(R, loc) {
+  const ref = (R.pbir.datasetReference || {}).byPath;
+  if (!ref || !ref.path) return { m: null, why: 'the report is connected to a published model (not a model folder next to it): the column is a model step for the model\'s owner' };
+  try { return { m: loadModel(relRoot(path.resolve(loc.dir, String(ref.path)))) }; } catch (e) { return { m: null, why: 'the model next to the report could not be read: ' + String(e && e.message || e).slice(0, 160) }; }
+}
+const isDateCol = (c) => /^date(time)?$/i.test(String(c.dataType || ''));
+// the model's date tables: marked as one, or named like a calendar with a date column
+const dateTablesOf = (m) => (m ? (m.tables || []).filter((t) => (t.date || /calendar|date|تقويم|تاريخ/i.test(t.name)) && (t.columns || []).some(isDateCol)).map((t) => t.name) : []);
 
 // ---- the Arabic month column: a TMDL script offered when the model has one date table and no Arabic month ----
 const tmdlName = (n) => (/^[A-Za-z_][A-Za-z0-9_]*$/.test(n) ? n : "'" + String(n).replace(/'/g, "''") + "'");
 const daxCol = (t, c) => "'" + String(t).replace(/'/g, "''") + "'[" + String(c).replace(/]/g, ']]') + ']';
-function monthOffer(R, loc) {
-  const ref = (R.pbir.datasetReference || {}).byPath;
-  if (!ref || !ref.path) return { offered: false, why: 'the report is connected to a published model (not a model folder next to it): the column is a model step for the model\'s owner' };
-  let m;
-  try { m = loadModel(relRoot(path.resolve(loc.dir, String(ref.path)))); } catch (e) { return { offered: false, why: 'the model next to the report could not be read: ' + String(e && e.message || e).slice(0, 160) }; }
-  const isDate = (c) => /^date(time)?$/i.test(String(c.dataType || ''));
+function monthOffer(model, loc) {
+  if (!model.m) return { offered: false, why: model.why };
+  const m = model.m, isDate = isDateCol;
   let cands = (m.tables || []).filter((t) => t.date && (t.columns || []).some(isDate));
   if (!cands.length) cands = (m.tables || []).filter((t) => /calendar|date|تقويم|تاريخ/i.test(t.name) && (t.columns || []).some(isDate));
   if (cands.length !== 1) return { offered: false, why: cands.length ? `the model has ${cands.length} date tables: say which one, and the column is a model step done by hand` : 'the model has no date table (a table marked as date table, or named like a calendar, with a date column)' };
@@ -122,38 +124,39 @@ export function planTwin(a) {
   const loc = locate(a.path), R = readOriginal(loc);
   const twinDir = path.join(loc.project, loc.base + ' AR.Report'), twinPbip = path.join(loc.project, loc.base + ' AR.pbip');
   const free = nothingAt(twinDir) && nothingAt(twinPbip);
-  const texts = textsOf(R), ids = new Set(texts.map((t) => t.id));
+  const texts = textsOf(R), ids = new Set(texts.map((t) => t.id)), model = modelOf(R, loc), dateTables = dateTablesOf(model.m);
   const given = a.labels || {}, labels = {}, unknown = [];
   Object.keys(given).forEach((k) => { if (ids.has(k)) labels[k] = cleanLabel(given[k]); else unknown.push(visible(k).slice(0, 160)); });
   texts.forEach((t) => { if (labels[t.id] != null) t.label = labels[t.id]; });
   // what mirrors, counted per kind, and what cannot
-  const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [] };
+  const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [] };
   const pages = R.pages.map((pg) => {
-    const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false });
+    const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false, dateTables });
     Object.entries(r.kinds).forEach(([k, n]) => { kinds[k] = (kinds[k] || 0) + n; });
-    pg.visuals.forEach((v) => { const k = Mirror.kindOf(v.json); if (where[k]) where[k].push(visible(pg.id + '/' + v.json.name).slice(0, 120)); });
-    return { id: visible(pg.id).slice(0, 60), name: INSTRUCTION.test(String(pg.page.displayName || '')) ? '(withheld)' : visible(String(pg.page.displayName || '')).slice(0, 60), size: `${pg.page.width} x ${pg.page.height}`, tooltip: pg.page.type === 'Tooltip', visuals: pg.visuals.length };
+    pg.visuals.forEach((v) => { const k = Mirror.kindOf(v.json); if (where[k]) where[k].push(safeName(pg.id) + '/' + safeName(v.json.name) + (k === 'other' ? ' (' + safeName(v.json.visual.visualType) + ')' : '')); });
+    return { id: safeName(pg.id), name: INSTRUCTION.test(String(pg.page.displayName || '')) ? '(withheld)' : visible(String(pg.page.displayName || '')).slice(0, 60), size: `${pg.page.width} x ${pg.page.height}`, tooltip: pg.page.type === 'Tooltip', visuals: pg.visuals.length };
   });
   const mirrors = Object.keys(kinds).map((k) => ({ kind: k, what: Mirror.KIND_WHAT[k], count: kinds[k] }));
   const cannot = [];
   if (where.custom.length) cannot.push({ what: 'custom visuals', why: 'moved only: no report setting reaches inside a custom visual (its labels, sides and menus stay as they are; a licensed one may ask for a sign-in when its page opens)', where: where.custom.slice(0, 30) });
   if (where.navigator.length) cannot.push({ what: 'the page navigator\'s order', why: 'Power BI has no order setting: the first page stays at the left. It lists the twin\'s own pages by their (Arabic) names and keeps working', where: where.navigator.slice(0, 30) });
   if (where.slicer.length) cannot.push({ what: 'slicer items', why: 'moved only: the items keep Power BI\'s own alignment (no setting was proven)', where: where.slicer.slice(0, 30) });
+  if (where.other.length) cannot.push({ what: 'other visuals (waterfall, scatter and kinds without a proven setting)', why: 'moved only: no right-to-left setting is proven for these, so nothing inside them is changed; look at them in the twin', where: where.other.slice(0, 30) });
   if (where.matrix.length) cannot.push({ what: 'matrix rows', why: 'a matrix keeps its row headers at the left (a hierarchy keeps its order); only its values are reversed', where: where.matrix.slice(0, 30) });
   cannot.push({ what: 'Power BI\'s own words', why: '"All", "Select all", "Total", "(Blank)", the visual header menu, the filter pane, date and number formats follow the viewer\'s Power BI language and regional settings, not the report: an Arabic viewer sees them in Arabic' });
   cannot.push({ what: 'data values', why: 'category names, legend entries, slicer items and month names come from the model: Arabic columns are a model step (see arabicMonth)' });
   cannot.push({ what: 'the phone layout', why: R.phone ? 'copied as it is (a phone shows one column; the phone layout is not mirrored)' : 'the report has none' });
-  const month = a.arabicMonth === false ? { offered: false, why: 'not asked (arabicMonth false)' } : monthOffer(R, loc);
+  const month = a.arabicMonth === false ? { offered: false, why: 'not asked (arabicMonth false)' } : monthOffer(model, loc);
   const { script, howToApply, ...monthShown } = month;
   const ref = (R.pbir.datasetReference || {}).byPath;
-  return { loc, R, labels, texts, month, answer: {
+  return { loc, R, labels, texts, month, dateTables, answer: {
     written: false,
     original: { report: relRoot(loc.dir), pbip: loc.pbip ? relRoot(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: relRoot(loc.project) || '.', model: ref && ref.path ? relRoot(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
     pages, mirrors, cannot,
     keptForNavigation: 'Page ids, visual names, bookmark names, page and bookmark links are kept: navigation and bookmarks work in the twin without rewiring.',
     timeRightToLeft: a.timeRightToLeft !== false ? 'yes: charts over time run right to left like the rest of the page (the user can choose false: time stays left to right)' : 'no: charts over time keep left to right (the user\'s choice)',
-    texts: texts.slice(0, TEXTS_MAX), ...(texts.length > TEXTS_MAX ? { textsNotListed: texts.length - TEXTS_MAX } : {}),
+    texts: texts.slice(0, TEXTS_MAX).map(({ rawId, ...t }) => t), ...(texts.length > TEXTS_MAX ? { textsNotListed: texts.length - TEXTS_MAX } : {}),
     labels: { given: Object.keys(labels).length, unknown, withoutLabel: texts.filter((t) => labels[t.id] == null).length },
     arabicMonth: month.offered ? Object.assign(monthShown, { howToApplyAfterGo: howToApply }) : monthShown,
     ...(R.unreadable.length ? { unreadable: { count: R.unreadable.length, note: 'files that are not JSON: copied as they are, not mirrored' } } : {}),
@@ -162,11 +165,12 @@ export function planTwin(a) {
 }
 
 // ---- the write ----
-function freeScript(dir, base, text) {
+// the month script's name: the first free one, or the file that already holds exactly this script (written once)
+function scriptName(dir, base, text) {
   for (let n = 1; n < 1000; n++) {
     const f = path.join(dir, base + (n > 1 ? ' ' + n : '') + '.tmdl');
-    if (nothingAt(f)) { writeNew(f, text); return f; }
-    try { if (fs.lstatSync(f).isFile() && readBytes(f).toString('utf8') === text) return f; } catch (e) { /* the next name */ }
+    if (nothingAt(f)) return { file: f, free: true };
+    try { if (fs.lstatSync(f).isFile() && readBytes(f).toString('utf8') === text) return { file: f, free: false }; } catch (e) { /* the next name */ }
   }
   throw new Error('no free file name for the month script');
 }
@@ -175,12 +179,12 @@ export function writeTwin(a, plan) {
   const asked = a.labels ? sortKeys(planTwin(Object.assign({}, a, { labels: a.labels })).labels) : null;
   if (asked && JSON.stringify(asked) !== JSON.stringify(sortKeys(d.labels))) throw new Error('Nothing was written: these labels differ from the labels of the approved plan. Show the user the new labels, get a new plan id for them (call this tool without planId), and wait for the user\'s go.');
   const P = planTwin({ path: a.path, labels: d.labels || {}, timeRightToLeft: d.timeRightToLeft, arabicMonth: d.arabicMonth });
-  const { loc, R, labels } = P;
+  const { loc, R } = P, labels = rawLabels(P.texts, P.labels);
   const twinDir = path.join(loc.project, loc.base + ' AR.Report'), twinPbip = path.join(loc.project, loc.base + ' AR.pbip');
   if (!nothingAt(twinDir) || !nothingAt(twinPbip)) throw new Error(`Nothing was written: "${path.basename(nothingAt(twinDir) ? twinPbip : twinDir)}" is already there. DataArcus never writes over a file: rename or move the old twin, then ask again.`);
   real(twinDir); real(twinPbip);
   // everything is built in memory first; then written, each file new
-  const out = new Map(), opts = { timeRightToLeft: d.timeRightToLeft !== false };
+  const out = new Map(), opts = { timeRightToLeft: d.timeRightToLeft !== false, dateTables: P.dateTables };
   let applied = 0;
   R.pages.forEach((pg) => {
     const page = JSON.parse(JSON.stringify(pg.page));
@@ -190,17 +194,20 @@ export function writeTwin(a, plan) {
     r.visuals.forEach((vj, i) => { applied += Mirror.labelVisual(pg.id, vj, labels); out.set(pg.visuals[i].rel, json(vj)); });
   });
   R.bookmarks.forEach((b) => { if (labels['bookmark:' + b.json.name] != null) { out.set(b.rel, json(Object.assign({}, b.json, { displayName: labels['bookmark:' + b.json.name] }))); applied++; } });
-  if (R.hasPlatform) { try { const pl = JSON.parse(readText(path.join(loc.dir, '.platform'))); pl.metadata = Object.assign({}, pl.metadata, { displayName: loc.base + ' AR' }); pl.config = Object.assign({}, pl.config, { logicalId: crypto.randomUUID() }); out.set('.platform', json(pl)); } catch (e) { /* copied as it is */ } }
+  if (R.hasPlatform) { try { const pl = readJson(path.join(loc.dir, '.platform')); pl.metadata = Object.assign({}, pl.metadata, { displayName: loc.base + ' AR' }); pl.config = Object.assign({}, pl.config, { logicalId: crypto.randomUUID() }); out.set('.platform', json(pl)); } catch (e) { /* copied as it is */ } }
   let pbip = { $schema: 'https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json', version: '1.0', artifacts: [{ report: { path: path.basename(twinDir) } }], settings: { enableAutoRecovery: true } };
-  if (loc.pbip) { try { const o = JSON.parse(readText(loc.pbip)); o.artifacts = (o.artifacts || []).map((x) => (x && x.report ? Object.assign({}, x, { report: Object.assign({}, x.report, { path: path.basename(twinDir) }) }) : x)); if (!o.artifacts.some((x) => x && x.report)) o.artifacts.push({ report: { path: path.basename(twinDir) } }); pbip = o; } catch (e) { /* the default above */ } }
-  fs.mkdirSync(twinDir);
-  for (const rel of R.files) {
-    const f = path.join(twinDir, ...rel.split('/'));
-    fs.mkdirSync(path.dirname(f), { recursive: true });
-    writeNew(f, out.has(rel) ? out.get(rel) : readBytes(path.join(loc.dir, ...rel.split('/'))));
+  if (loc.pbip) { try { const o = readJson(loc.pbip); o.artifacts = (o.artifacts || []).map((x) => (x && x.report ? Object.assign({}, x, { report: Object.assign({}, x.report, { path: path.basename(twinDir) }) }) : x)); if (!o.artifacts.some((x) => x && x.report)) o.artifacts.push({ report: { path: path.basename(twinDir) } }); pbip = o; } catch (e) { /* the default above */ } }
+  // the cross-review's T8 and audit 6's A6-4: the one writer (lib/files.mjs), all or nothing: the twin's folder, the month
+  // script (when offered and not already there with the same text) and the .pbip last; on any failure nothing is left
+  const tree = R.files.map((rel) => ({ path: path.basename(twinDir) + '/' + rel, data: out.has(rel) ? out.get(rel) : readBytes(path.join(loc.dir, ...rel.split('/'))) }));
+  let month = { written: false, why: P.month.why };
+  if (P.month.offered) {
+    const f = scriptName(loc.project, `${loc.base} AR - Arabic month`, P.month.script);
+    if (f.free) tree.push({ path: path.basename(f.file), data: P.month.script });
+    month = { scriptFile: relRoot(f.file), column: P.month.column, table: P.month.table, howToApply: P.month.howToApply };
   }
-  writeNew(twinPbip, json(pbip));
-  const month = P.month.offered ? { scriptFile: relRoot(freeScript(loc.project, `${loc.base} AR - Arabic month`, P.month.script)), column: P.month.column, table: P.month.table, howToApply: P.month.howToApply } : { written: false, why: P.month.why };
+  tree.push({ path: path.basename(twinPbip), data: json(pbip) });
+  writeTree(loc.project, tree);
   return { written: true, report: relRoot(twinDir), pbip: relRoot(twinPbip), files: R.files.length + 1, pages: P.answer.pages.length, mirrors: P.answer.mirrors, cannot: P.answer.cannot,
     labelsApplied: applied, textsWithoutLabel: P.answer.labels.withoutLabel, original: 'only read: not changed', arabicMonth: month,
     nextSteps: `Open "${path.basename(twinPbip)}" in Power BI Desktop (the original stays as it was), look at every page, and check it with check_report. Tell the user what cannot be mirrored (cannot)${P.month.offered ? ' and how to apply the month script' : ''}.` };
