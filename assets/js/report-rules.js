@@ -211,7 +211,7 @@
 
   // R: { pages: [{ id, visuals: [x] }], visuals: [x], textSize, labelSize, slicerSize, font, theme: { file, ref, json },
   //      hasPlatform }, x: { name, type, file, mobileFile, json (visual.json), mobile (mobile.json or null), x, y, w, h }
-  // opts: { groups: [...] }. Returns { findings: [{ rule, severity, file, page, visual, what, fix, source }], ran: [ids],
+  // opts: { groups: [...] }. Returns { findings: [{ origin: 'rule', rule, severity, file, page, visual, what, fix, source }], ran: [ids],
   // failed: [{ rule, why }] }. (A4-2, audit 4: each rule runs on its own: one that cannot read the report is named in
   // failed and its findings so far dropped; the others still run)
   // (A4-1) every size and position the rules print is a number: a page's or a visual's that is not becomes 0
@@ -229,7 +229,7 @@
       const mine = [];
       try { rule.run(R, (x, what, fix, extra, src) => {
         const e = extra || {}, source = src || rule.source;
-        mine.push({ rule: rule.id, severity: e.estimate ? 'note' : rule.severity, file: e.file || (x ? x.file : null), page: x ? x.page : null,
+        mine.push({ origin: 'rule', rule: rule.id, severity: e.estimate ? 'note' : rule.severity, file: e.file || (x ? x.file : null), page: x ? x.page : null,
           visual: x ? { name: x.name, type: x.type, x: x.x, y: x.y, w: x.w, h: x.h } : null,
           what: e.estimate ? what + ' (an estimate: measured in Segoe UI and Tahoma, not in this font)' : what, fix,
           source: `measured: ${source.file}, ${source.date}, Desktop ${source.desktop}, "${source.section}"` });
