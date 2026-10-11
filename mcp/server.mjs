@@ -796,6 +796,9 @@ server.registerTool('create_report', {
       texts: texts(a.lang), pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
+    // (D16) the line charts the layout leaves out on a model without a time axis are named, with the reason, as before
+    if (noTime) projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields })
+      .forEach((p) => p.slots.filter((x) => x.kind === 'line').forEach((x) => (r.leftOut = r.leftOut || []).push({ page: p.name, kind: 'line', title: x.title || null, noTime: true })));
     extra = { pages: pages.map((p) => ({ name: p.name, width: p.page.w, height: p.page.h, slots: p.slots.length, slideInPanel: !!p.panel })), theme: themeName(design.name),
       ...(themeChanged.length ? { themeChanged } : {}) };
   } else {
@@ -961,7 +964,7 @@ server.registerTool('create_report', {
   // round 23: a table's measures that do not reach its rows were left out of it (they would repeat one total on every row)
   if (bind && (bind.notReached || []).length) { const nr = bind.notReached; reportNotes.push(`${nr.map((x) => `${visible(x.t)}[${visible(x.m)}]`).join(', ')} ${nr.length === 1 ? 'was' : 'were'} left out of the table by ${visible(nr[0].row.t)}[${visible(nr[0].row.c)}]: ${[...new Set(nr.map((x) => visible(x.t)))].join(', ')} ${nr.length === 1 ? 'is' : 'are'} not related to ${visible(nr[0].row.t)}, so ${nr.length === 1 ? 'it' : 'each'} would repeat one total on every row. Add the relationship in the model, or name the table's fields in "fields".`); }
   if (bind && bind.noRelatedCategory) { const n = bind.noRelatedCategory; reportNotes.push(`No category is related to ${visible(n.measure.t)}[${visible(n.measure.m)}]: the text columns of ${n.tables.map((t) => visible(t)).join(', ')} are in tables the measure's table does not reach through a relationship, so a chart by them would show the same total on every bar. The charts that need a category are left out. Add a relationship from ${visible(n.measure.t)} to one of those tables, or pick a category of a related table in "fields".`); }
-  const leftOutList = (r.leftOut || []).map((x) => ({ visual: x.kind === 'slicer' ? (x.title || 'Slicer') : `${KIND[x.kind] || x.kind}${x.title ? ` "${x.title}"` : ''}`, page: x.page, why: (WHY[x.kind] || 'the model has no text column (a category) or no measure for it') + (x.gave ? ' (the visual beside it takes its room)' : '') }));   // (round 23: gave, the shared writer's)
+  const leftOutList = (r.leftOut || []).map((x) => ({ visual: x.kind === 'slicer' ? (x.title || 'Slicer') : `${KIND[x.kind] || x.kind}${x.title ? ` "${x.title}"` : ''}`, page: x.page, why: (WHY[x.kind] || 'the model has no text column (a category) or no measure for it') + (x.gave ? ' (the visual beside it takes its room)' : x.noTime ? ' (the page has the layout made for a model without a time axis: the charts by category share its rows)' : '') }));   // (round 23: gave, the shared writer's)
   if (leftOutList.length) reportNotes.push(`${leftOutList.length} visual${leftOutList.length === 1 ? ' was' : 's were'} left out, because a visual is never written without its field: ${leftOutList.map((x) => `${x.visual} on "${x.page}" (${x.why})`).join('; ')}.`);
   // tables that hold fewer fields than given, for lack of room (round 11): named, and boundFields lists what each shows
   const TC = r.tableColumns || [], fkey = (f) => `${f.t}[${f.c != null ? f.c : f.m}]`;
