@@ -13,7 +13,7 @@
     mirrorChart, mixHex, namesOf, num, obj, orderHelper, orderedBy, pageFilterOf, proj, q, resource, rnd,
     rowLabelDax, rowLabelOf, shown, sorted, str, tableFields, timeAxisPlan, tproj
   } = Q;
-  const { barNameShare, columnRoom, fieldRoom, tableFit, textWidth } = Z;
+  const { barNameShare, cellRoom, columnRoom, fieldRoom, tableFit, textWidth } = Z;
 
 
   // The page buttons as tabs (see write): the layout of a page's tabs, made per page from the report's context c
@@ -241,14 +241,15 @@
         const free = ps.filter((p) => !fixed.has(p.queryRef)), usable = s.w - 36 - cw.reduce((a, e) => a + parseFloat(e.properties.value.expr.Literal.Value), 0);
         const pic = (((visual.objects.grid || [])[0] || { properties: {} }).properties.imageWidth || null), picW = pic ? parseFloat(pic.expr.Literal.Value) + 10 : 0;
         const w = new Map();
-        free.filter(isNum).forEach((p) => w.set(p, Math.max(90 * sc, Math.min(130 * sc, textWidth(p.displayName || p.nativeQueryRef || '', T, true, font) + 24 * sc))));
+        // (0.2.9 rc1, S1/S2: each column at least its cellRoom, the room the table's fields were kept by: a number as wide as
+        // its widest value, so it never wraps, and every header whole; the text columns share what is left, and give up
+        // width only down to their own room; no number is narrowed)
+        const room = (p) => { const f = fieldOf(p); return f ? cellRoom(f, T, font, sc) : Math.ceil(textWidth(p.displayName || p.nativeQueryRef || '', T, true, font) + 24 * sc); };
+        free.filter(isNum).forEach((p) => w.set(p, room(p)));
         free.filter(isPic).forEach((p) => w.set(p, picW || 90 * sc));
-        const texts = free.filter((p) => !w.has(p)), used = [...w.values()].reduce((a, x) => a + x, 0);
-        let each = texts.length ? (usable - used) / texts.length : 0;
-        // too little room: the numbers give up width (down to 40 each) before a text column goes under 160
-        if (texts.length && each < 160 * sc) { const nums = free.filter((p) => w.has(p) && isNum(p)), over = 160 * sc * texts.length - (usable - used), cut = nums.length ? Math.min(over / nums.length, Math.max(0, ...nums.map((p) => w.get(p) - 40))) : 0;
-          nums.forEach((p) => w.set(p, Math.max(40, w.get(p) - cut))); each = (usable - [...w.values()].reduce((a, x) => a + x, 0)) / texts.length; }
-        texts.forEach((p) => w.set(p, Math.max(40, each)));
+        const texts = free.filter((p) => !w.has(p)), used = [...w.values()].reduce((a, x) => a + x, 0), mins = texts.map(room);
+        const spare = usable - used - mins.reduce((a, x) => a + x, 0);
+        texts.forEach((p, i) => w.set(p, mins[i] + Math.max(0, spare) / texts.length));
         // no text column: the numbers share the whole width
         if (!texts.length && w.size) { const k = usable / [...w.values()].reduce((a, x) => a + x, 0); if (k > 1) w.forEach((x, p) => w.set(p, x * k)); }
         free.forEach((p) => cw.push({ properties: { value: num(Math.floor(w.get(p))) }, selector: { metadata: p.queryRef } }));
@@ -548,8 +549,11 @@
           // smaller text, down to 8pt: the largest size that keeps the most fields; a field is left out only where even
           // that doesn't hold it. The size is written on the table (values, headers, total) and told.
           const T0 = +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
-          let tf = tableFit(B.table, s.w, T0, font);
-          if (tf.leftOut.length) { for (let t2 = Math.ceil(T0) - 1; t2 >= 8; t2--) { const f2 = tableFit(B.table, s.w, t2, font); if (f2.kept.length > tf.kept.length) { tf = f2; tableText = t2; } if (!f2.leftOut.length) break; } }
+          // (rc1, S1/S2: a table's fields are kept by cellRoom, the room its column widths are written by, within its width
+          // less 36 (padding and scrollbar); a matrix keeps the earlier rule)
+          const tsc = s.kind === 'table' ? pg.page.h / 1080 : null, tw = tsc ? s.w - 36 : s.w, roomOf = (f, t2) => (tsc ? cellRoom(f, t2, font, tsc) : fieldRoom(f, t2, font));
+          let tf = tableFit(B.table, tw, T0, font, tsc);
+          if (tf.leftOut.length) { for (let t2 = Math.ceil(T0) - 1; t2 >= 8; t2--) { const f2 = tableFit(B.table, tw, t2, font, tsc); if (f2.kept.length > tf.kept.length) { tf = f2; tableText = t2; } if (!f2.leftOut.length) break; } }
           // Round 22 (golden task 6 in English, in Desktop since the night of 6-7 Oct: two long names at the theme's 15pt
           // were wider than the table, a horizontal scrollbar): the fields a table keeps must fit its box too. The text
           // was only made smaller to keep more fields; the two that are always kept were never measured. It now goes
@@ -557,10 +561,10 @@
           // Round 22b (the review of round 22, item 8): two fields wider than the box even at 8pt are told. (The fit is
           // not redone at this size: the loop above already tried every size down to 8 and kept the most fields, so
           // this only runs where the two alone are kept, and no third fits at any size: checked on 30,000 tables)
-          { const need = (t2) => tf.kept.reduce((a2, f) => a2 + fieldRoom(f, t2, font), 0); let t3 = tableText || T0;
-            while (t3 > 8 && need(t3) > s.w) t3 = Math.ceil(t3) - 1;
+          { const need = (t2) => tf.kept.reduce((a2, f) => a2 + roomOf(f, t2), 0); let t3 = tableText || T0;
+            while (t3 > 8 && need(t3) > tw) t3 = Math.ceil(t3) - 1;
             if (t3 < (tableText || T0)) tableText = t3;
-            if (need(t3) > s.w) tableWide.push({ page: pg.name || base, width: s.w, need: Math.ceil(need(t3)) }); }
+            if (need(t3) > tw) tableWide.push({ page: pg.name || base, width: s.w, need: Math.ceil(need(t3)) }); }
           if (tableText) tableSmaller.push(smallEntry = { page: pg.name || base, size: tableText, from: T0 });
           if (tf.leftOut.length) { Bt = Object.assign({}, B, { table: tf.kept }); tableColumns.push({ page: pg.name || base, pageIndex, x: s.x, y: s.y, kept: tf.kept, leftOut: tf.leftOut }); }
         }
