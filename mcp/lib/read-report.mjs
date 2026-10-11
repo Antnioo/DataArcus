@@ -258,6 +258,8 @@ export function inventory(src, reportName, opts) {
       const v = j.visual || {}, vco = v.visualContainerObjects || {}, o = v.objects || {};
       x.type = String(v.visualType || 'unknown');
       const t = plain(vco.title), tp = t.text;
+      // (A4-8, audit 4: a title switched off, for the lint's NO_TITLE; with no title setting Power BI draws its own title)
+      if (litBool(t.show) === false) x.titleOff = true;
       if (litBool(t.show) !== false && tp) { const lt = litStr(tp); if (lt != null) { x.rawTitle = lt; x.title = safeText(lt); flag('title', lt, vrel); } else if (tp.expr) { const f = fieldOf(tp.expr); x.title = 'fx ' + refOf(f); } }
       x.fields = {};
       Object.entries((v.query || {}).queryState || {}).forEach(([role, r]) => { const l = entries(r && r.projections).map((p) => Object.assign({}, fieldOf(p.field) || { kind: 'other' }, { queryRef: String(p.queryRef || '') }, p.displayName ? { displayName: String(p.displayName) } : {})); if (l.length) x.fields[role] = l; });

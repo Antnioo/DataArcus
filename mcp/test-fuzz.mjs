@@ -137,7 +137,6 @@ const sig = (target, e) => `${frameOf(e)} ${shape(e)}`;
 // A crash is matched by the file it happens in and its message; a property failure by its target and property. A crash
 // anywhere else, or a property failing on another target, fails the run. Remove an entry once its fix is merged.
 const KNOWN = [
-  { id: 'F-C2', owner: 'builder 7 (checks)', file: 'report-rules.js', msg: /./, k: 167, what: 'a sort list or a property bag of the wrong type' },
   { id: 'F-T1', owner: 'builder 9 (twin)', file: 'report-mirror.js', msg: /Cannot create property/, k: 7, what: 'an object expected, a string or number found' },
   { id: 'F-T2', owner: 'builder 9 (twin)', file: 'report-mirror.js', msg: /of null|of undefined|is not a function/, k: 9, what: 'a null entry, or a list that is not an array' },
   { id: 'F-T3', owner: 'builder 9 (twin)', file: 'report-mirror.js', msg: /JSON/, k: 658, what: 'a value parsed as JSON that is not JSON' },
@@ -152,7 +151,6 @@ const KNOWN_SLOW = [
 // P1 also holds for time: a target that answers after more than this is a finding (a hang in all but name)
 const SLOW_MS = 10000;
 const KNOWN_PROPS = [
-  { id: 'F-CP', owner: 'builder 7 (checks)', target: /^check_report$/, props: /P2|P3/, k: 427, what: 'the answer past 40,000 characters; a page name raw in the "page sizes" rule\'s why' },
   { id: 'F-TP', owner: 'builder 9 (twin)', target: /^twin plan$/, props: /P2|P3|P4/, k: 2, what: 'the plan past 40,000 characters; a bookmark name raw in a text id; bidi controls in a page name' }
 ];
 // (P3) planted text in a string that is not inside an object marked suspicious: true (keys included)
