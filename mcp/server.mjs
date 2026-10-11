@@ -19,6 +19,7 @@ import { readReport } from './lib/read-report.mjs';
 import { planLint } from './lib/plan-lint.mjs';
 import * as Plans from './lib/plans.mjs';
 import { planTwin, twinKey, writeTwin } from './lib/arabic-twin.mjs';
+import { writeTree, readUserFile } from './lib/files.mjs';
 
 // the version is in one place: mcp/package.json
 const VERSION = JSON.parse(fs.readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
@@ -554,6 +555,10 @@ const slot = z.object({
   title: z.string().optional(), x: z.number(), y: z.number(), w: z.number().positive(), h: z.number().positive(),
   text: z.string().min(1).max(400).optional().describe('A text slot\'s sentence (from the approved plan); a text slot without one is left out')
 });
+// the files a user names, read through lib/files.mjs (audit 6, A6-7): measured first, never quoted; the largest real
+// theme files are about 22 KB and a page background a few hundred KB, so the caps are far above them
+const THEME_MAX = 4 * 1024 * 1024, BACKGROUND_MAX = 10 * 1024 * 1024, LOGO_MAX = 2 * 1024 * 1024;
+const themeOf = (p) => readUserFile(p, { kind: 'theme', max: THEME_MAX, json: true });
 // create_report's inputs, one definition: plan_layout takes the ones a plan pins (audit 6, A6-1)
 const CREATE_REPORT_INPUTS = {
     path: modelPath.describe('The project folder or .SemanticModel folder the report will use'),
@@ -660,7 +665,7 @@ server.registerTool('create_report', {
   const svgPalette = (() => {
     if (!(a.svgColumns || []).length && !(a.svgCards || []).length) return null;
     if (a.design) { const d = planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang }).design; return Svg.themePalette(d.ui, d.data); }
-    const t = a.theme ? JSON.parse(fs.readFileSync(inside(a.theme), 'utf8')) : {};
+    const t = a.theme ? themeOf(a.theme) : {};
     return Svg.themePalette(Object.assign({ text: '#1f2937', card: '#ffffff', background: '#f3f4f6', accent: '#0f6cbd', good: t.good, bad: t.bad, neutral: t.neutral }, themeColors(t), a.colors || {}), t.dataColors);
   })();
   const SV = resolveSvgColumns(m.tables, a.svgColumns, { mirror: rtlReport, what: 'svgColumns', taken: svgLabels, palette: svgPalette });
@@ -863,9 +868,8 @@ server.registerTool('create_report', {
   if (a.logo) {
     const file = inside(a.logo), ext = /\.png$/i.test(file) ? 'png' : /\.jpe?g$/i.test(file) ? 'jpg' : null;
     if (!ext) throw new Error(`The logo must be a PNG or JPG file: ${a.logo}`);
-    if (!fs.existsSync(file) || !fs.statSync(file).isFile()) throw new Error(`Logo not found: ${a.logo}`);
-    if (fs.statSync(file).size > 2 * 1024 * 1024) throw new Error(`The logo must be 2 MB at most: ${a.logo} is ${(fs.statSync(file).size / 1024 / 1024).toFixed(1)} MB`);
-    const bytes = new Uint8Array(fs.readFileSync(file)), size = E.imageSize(bytes);
+    // (audit 6, A6-7: the one reader: a regular file, never a link, 2 MB at most, measured before it is read)
+    const bytes = new Uint8Array(readUserFile(a.logo, { kind: 'logo', max: LOGO_MAX })), size = E.imageSize(bytes);
     if (!size) throw new Error(`The logo must be a PNG or JPG file: ${a.logo} could not be read as one`);
     logo = { bytes, ext }; logoRatio = size.w / size.h;
     if (size.h > size.w) reportNotes.push('This logo is tall; a horizontal version will read much better in the header.');
@@ -917,7 +921,7 @@ server.registerTool('create_report', {
     a.pages = a.pages.map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots), true) }));
     if (COUNTS.length && !leftOut.length) kpiCards = cardNote(kpisOf(a.pages), kpisOf(a.pages));
     if (leftOut.length) { const asked = kpisOf(a.pages) === 1 && !usable.length ? leftOut.length : Math.max(...a.pages.map((p) => p.slots.filter((s) => s.kind === 'kpi').length)) + leftOut.length; kpiCards = cardNote(asked, asked - leftOut.length, leftOut); }
-    const theme = a.theme ? JSON.parse(fs.readFileSync(inside(a.theme), 'utf8')) : { name: a.name };
+    const theme = a.theme ? themeOf(a.theme) : { name: a.name };
     // Round 23 (the owner's "nothing critical left"): a theme's text sizes are made for its page (generate_theme's
     // layout.page, 1920 x 1080 by default: 10pt x the page's height / 720, as plan_layout's pages are), and a smaller
     // hand-placed page drew them too large. Our theme says its scale through its table text (10 x scale); every text
@@ -953,7 +957,7 @@ server.registerTool('create_report', {
       model: { byPath: path.basename(m.folder), taken: m.taken, names: modelNames }, bind: (bind = withCardFormats(withRightFormats(inArabic(named(bindFor(kpisOf(a.pages))))))), pageFilters: PF, svgColumns: svgFor(a.pages, bind), svgCards: svgCardsFor(kpisOf(a.pages)), kpiValues: a.kpiValues, noDataMessage: a.noDataMessage, subtitles: a.subtitles, chartColors: a.chartColors || 'solid', chartAxes: a.chartAxes || 'mirrored', logoPlaceholder: false, quietGrid: true,
       // (round 12, #13 and #14: a hand-placed Arabic report gets the Arabic texts too: "شعارك", the tooltip pages' names)
       texts: Object.assign({}, E.REPORT_TEXTS[a.lang === 'ar' ? 'ar' : 'en'], { by: a.lang === 'ar' ? 'حسب' : 'by', newDesign: a.lang === 'ar' ? 'تصميم جديد' : 'New design' }),
-      pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, hand: true, png: p.background ? fs.readFileSync(inside(p.background)) : png1 }))
+      pages: a.pages.map((p) => ({ name: p.name, page: { w: p.width, h: p.height }, slots: p.slots, panel: null, hand: true, png: p.background ? readUserFile(p.background, { kind: 'background image', max: BACKGROUND_MAX }) : png1 }))
     });
   }
   if (!boundPages) boundPages = a.pages;
@@ -961,9 +965,9 @@ server.registerTool('create_report', {
   if (Array.from(String(a.name).trim()).length > 30) reportNotes.push(`The report name was shortened to "${r.base}": a report name is 30 characters at most (Windows limits the length of a path), cut at a whole word.`);
   // write next to the model; refuse to replace anything that already exists
   // (anything at a name counts, a link whose target is missing included; each file is created with 'wx')
-  const clash = r.files.map((f) => path.join(m.projectDir, f.path)).filter((f) => !nothingAt(f));
-  if (clash.length) throw new Error(`Not written: ${clash.length} files already exist, e.g. ${clash[0]}`);
-  r.files.forEach((f) => { const out = path.join(m.projectDir, f.path); fs.mkdirSync(path.dirname(out), { recursive: true }); writeNew(out, f.data); });
+  // (audit 6, A6-4: one writer, all or nothing: a temporary folder, moved into place when complete, the .pbip last;
+  // anything at a name refuses the whole write, a link whose target is missing included)
+  writeTree(m.projectDir, r.files);
   // what the report shows behind its visuals (read from the theme that was written, as the report writer reads it)
   const solid = !!((((((written.visualStyles || {})['*'] || {})['*'] || {}).background || [{}])[0] || {}).show);
   const panels = solid

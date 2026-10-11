@@ -265,7 +265,7 @@ export async function v030audit({ call, check, ROOT, fs = fs0 }) {
   // T8: a write that fails part-way leaves nothing: no twin, no temporary folder, no .pbip, no script
   {
     const P3 = setup('twin3'), before = fs.readdirSync(P3).sort();
-    const s = await serverClient(ROOT, { DATAARCUS_TEST_TWIN_FAIL_AT: '5' });
+    const s = await serverClient(ROOT, { DATAARCUS_TEST_WRITE_FAIL: 'EIO:5' })   // (audit 6, A6-4: the one writer's test switch);
     const p3 = await s.call('create_arabic_twin', { path: 'twin3/Twin Sales.pbip' }), id3 = p3.j && p3.j.plan && p3.j.plan.planId;
     await s.call('approve_plan', { planId: id3, userReply: 'go' });
     const f = await s.call('create_arabic_twin', { path: 'twin3/Twin Sales.pbip', planId: id3 });

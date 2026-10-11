@@ -15,6 +15,7 @@ import { inside, real, nothingAt, writeNew, visible, loadModel, ROOT } from './m
 // one strict file walk of its own, below, because a writer must refuse a link or a deep folder, never skip it)
 import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, isFile, isDir, locate as readerLocate } from './read-report.mjs';
 import { proposeArabic } from './arabic-names.mjs';
+import { writeTree } from './files.mjs';
 
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
@@ -189,11 +190,12 @@ export function planTwin(a) {
 }
 
 // ---- the write ----
-function freeScript(dir, base, text) {
+// the month script's name: the first free one, or the file that already holds exactly this script (written once)
+function scriptName(dir, base, text) {
   for (let n = 1; n < 1000; n++) {
     const f = path.join(dir, base + (n > 1 ? ' ' + n : '') + '.tmdl');
-    if (nothingAt(f)) { writeNew(f, text); return { f, created: true }; }
-    try { if (fs.lstatSync(f).isFile() && fs.readFileSync(f, 'utf8') === text) return { f, created: false }; } catch (e) { /* the next name */ }
+    if (nothingAt(f)) return { file: f, free: true };
+    try { if (fs.lstatSync(f).isFile() && fs.readFileSync(f, 'utf8') === text) return { file: f, free: false }; } catch (e) { /* the next name */ }
   }
   throw new Error('no free file name for the month script');
 }
@@ -220,37 +222,17 @@ export function writeTwin(a, plan) {
   if (R.hasPlatform) { try { const pl = readJson(path.join(loc.dir, '.platform')); pl.metadata = Object.assign({}, pl.metadata, { displayName: loc.base + ' AR' }); pl.config = Object.assign({}, pl.config, { logicalId: crypto.randomUUID() }); out.set('.platform', json(pl)); } catch (e) { /* copied as it is */ } }
   let pbip = { $schema: 'https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json', version: '1.0', artifacts: [{ report: { path: path.basename(twinDir) } }], settings: { enableAutoRecovery: true } };
   if (loc.pbip) { try { const o = readJson(loc.pbip); o.artifacts = (o.artifacts || []).map((x) => (x && x.report ? Object.assign({}, x, { report: Object.assign({}, x.report, { path: path.basename(twinDir) }) }) : x)); if (!o.artifacts.some((x) => x && x.report)) o.artifacts.push({ report: { path: path.basename(twinDir) } }); pbip = o; } catch (e) { /* the default above */ } }
-  // the cross-review's T8: never a half-written twin. Everything goes into a new temporary folder next to the original;
-  // only when every file is there is it renamed to "<name> AR.Report", then the .pbip and the script are written. On
-  // any failure what this call made is removed (only that: the folder and files it created), and nothing else exists.
-  const tmp = path.join(loc.project, `.${loc.base} AR.Report.tmp-${crypto.randomBytes(4).toString('hex')}`);
-  real(tmp);
-  const made = { tmp: false, dir: false, pbip: false, script: null };
-  // tests only (DATAARCUS_TEST_TWIN_FAIL_AT=n): fail after n files, to prove the clean-up; it can only make a write fail
-  const failAt = Number(process.env.DATAARCUS_TEST_TWIN_FAIL_AT);
-  let month;
-  try {
-    fs.mkdirSync(tmp); made.tmp = true;
-    let n = 0;
-    for (const rel of R.files) {
-      const f = path.join(tmp, ...rel.split('/'));
-      fs.mkdirSync(path.dirname(f), { recursive: true });
-      writeNew(f, out.has(rel) ? out.get(rel) : fs.readFileSync(path.join(loc.dir, ...rel.split('/'))));
-      if (Number.isFinite(failAt) && failAt > 0 && ++n >= failAt) throw new Error(`a test stopped the write after ${n} files (DATAARCUS_TEST_TWIN_FAIL_AT)`);
-    }
-    if (!nothingAt(twinDir)) throw new Error(`"${path.basename(twinDir)}" appeared while writing`);
-    fs.renameSync(tmp, twinDir); made.tmp = false; made.dir = true;
-    writeNew(twinPbip, json(pbip)); made.pbip = true;
-    if (P.month.offered) { const r = freeScript(loc.project, `${loc.base} AR - Arabic month`, P.month.script); if (r.created) made.script = r.f; month = { scriptFile: relRoot(r.f), column: P.month.column, table: P.month.table, howToApply: P.month.howToApply }; }
-    else month = { written: false, why: P.month.why };
-  } catch (e) {
-    const gone = (f, dir) => { try { if (dir) fs.rmSync(f, { recursive: true, force: true }); else fs.unlinkSync(f); } catch (x) { /* already gone */ } };
-    if (made.tmp) gone(tmp, true);
-    if (made.dir) gone(twinDir, true);
-    if (made.pbip) gone(twinPbip);
-    if (made.script) gone(made.script);
-    throw new Error('Nothing was written: the twin could not be written (' + String(e && e.message || e).slice(0, 200) + '). What this call had written was removed; the original was not touched.');
+  // the cross-review's T8 and audit 6's A6-4: the one writer (lib/files.mjs), all or nothing: the twin's folder, the month
+  // script (when offered and not already there with the same text) and the .pbip last; on any failure nothing is left
+  const tree = R.files.map((rel) => ({ path: path.basename(twinDir) + '/' + rel, data: out.has(rel) ? out.get(rel) : fs.readFileSync(path.join(loc.dir, ...rel.split('/'))) }));
+  let month = { written: false, why: P.month.why };
+  if (P.month.offered) {
+    const f = scriptName(loc.project, `${loc.base} AR - Arabic month`, P.month.script);
+    if (f.free) tree.push({ path: path.basename(f.file), data: P.month.script });
+    month = { scriptFile: relRoot(f.file), column: P.month.column, table: P.month.table, howToApply: P.month.howToApply };
   }
+  tree.push({ path: path.basename(twinPbip), data: json(pbip) });
+  writeTree(loc.project, tree);
   return { written: true, report: relRoot(twinDir), pbip: relRoot(twinPbip), files: R.files.length + 1, pages: P.answer.pages.length, mirrors: P.answer.mirrors, cannot: P.answer.cannot,
     labelsApplied: applied, textsWithoutLabel: P.answer.labels.withoutLabel, original: 'only read: not changed', arabicMonth: month,
     nextSteps: `Open "${path.basename(twinPbip)}" in Power BI Desktop (the original stays as it was), look at every page, and check it with check_report. Tell the user what cannot be mirrored (cannot)${P.month.offered ? ' and how to apply the month script' : ''}.` };
