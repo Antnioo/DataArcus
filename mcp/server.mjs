@@ -8,10 +8,9 @@ import path from 'node:path';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
-import { absorb } from './lib/slots.mjs';
 import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, Svg, applyColumnTypes, inside, loadModel, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
 import { themeDesign, planLayout, pageOf, contrastReport, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, texts,
-  clampHex, lum, buildTheme, themeScaleOf, scaleTheme, projectPages, designRtl, themeName, fileBase, imageSize, isSmall } from './lib/design.mjs';
+  clampHex, lum, buildTheme, themeScaleOf, scaleTheme, projectPages, designRtl, themeName, fileBase, imageSize, isSmall, absorb } from './lib/design.mjs';
 import { freeFile } from './lib/files.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
@@ -787,7 +786,7 @@ server.registerTool('create_report', {
     ts.filter((t) => !t.text && !a.text).forEach((t) => {
       textLeftOut.push(t.title || 'Text');
       if (own) return;
-      out = absorb(out, t);   // (round 23 part 6, the re-review's 7: one rule for the room, lib/slots.mjs)
+      out = absorb(out, t);   // (round 23 part 6, the re-review's 7: one rule for the room, the design engine's since 0.2.9 A2-3)
     });
     return out;
   };
@@ -1229,7 +1228,13 @@ server.registerTool('plan_layout', {
     if (fmt) formats = { formats: Object.assign({ sayFirst: `Tell the user first, before the layout: ${fmt.fields.length} of the plan's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). create_report shows them right in the report's cards, tooltip and tables anyway; the script sets them in the model too.` }, fmt) };
   }
   // (A2-5: the plan's table fields set the table's share of a narrow row, as create_report's)
-  const r = planLayout(Object.assign({}, a, a.planFields && a.planFields.table ? { tableFields: a.planFields.table.length } : {})), { page, fitted } = pageOf(r.design.layout);
+  // (0.2.9, audit 2's A2-3: the plan's slots are those the report gets: the writer's measures, Pbip.fitOptions, on the
+  // fields the plan names, else the picker's; the design engine's fitSlots, in planLayout)
+  const planFit = (design, slots) => { if (!m0) return {}; const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return {};
+    const lang = a.lang === 'ar' ? 'ar' : 'en', pf0 = a.planFields || {}, sug = Bind.suggest(sc.tables, 1, relsOf(m0, lang)) || {};
+    return Pbip.fitOptions({ lang, rtl: designRtl(design.layout, lang), font: design.font, theme: buildTheme(design, lang), model: { byPath: 'Model.SemanticModel' },
+      bind: { date: pf0.timeAxis || sug.date || null, slicers: pf0.slicers || sug.slicers || [] }, pages: [{ page: pageOf(design.layout).page, slots, grow: true }] })[0]; };
+  const r = planLayout(Object.assign({}, a, a.planFields && a.planFields.table ? { tableFields: a.planFields.table.length } : {}, { fit: planFit })), { page, fitted } = pageOf(r.design.layout);
   const unknown = a.design ? unknownKeys(a.design) : null;
   // the page size (0.2.9, O-8: an Arabic plan was made 1280 x 720 though the user asked for no size): who chose it
   const chosenBy = a.page != null ? 'asked' : page.w === 1920 && page.h === 1080 ? 'default' : 'design';

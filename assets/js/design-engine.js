@@ -531,6 +531,71 @@
     const r = { x: rtl(cc, lang) ? M : PW - M - w, y: top, w, h: PH - M - top };
     return { layout: open, panel: boxOf(r, cc) };
   };
+  // ---------- the slots a report really gets (0.2.9, audit 2's A2-3) ----------
+  // The report writer used to move the engine's slots itself after plan_layout had given them (absorb, dropLines, its
+  // header growth and its rail fit), and the website's background replayed only part of it. One pure rule here instead,
+  // which the writer, plan_layout and the background all call; the writer measures (its page tabs, its slicers and Reset)
+  // and passes the numbers. Units: the slots' own (page units for a report, the 720 grid for the background), the
+  // options' lengths in the same units.
+  // Round 23 (the owner's "nothing critical left"; the reviewer's part 7 review, 2): a slot whose visual cannot be written
+  // gives its room to the visual beside it (the same row and height, else the same column and width), as a text box
+  // without its sentence does. absorb(out, t): out the slots left, t the one that goes; nothing beside it: the room stays
+  // empty. Touching slots of a dropped kind are merged first (within SLOT_GAP), so two side by side leave no blank band.
+  const OWN_SLOTS = ['title', 'logo', 'text'];
+  const nearSlot = (list, t) => list.slice().sort((p, q) => Math.abs(p.x - t.x) + Math.abs(p.y - t.y) - Math.abs(q.x - t.x) - Math.abs(q.y - t.y))[0];
+  function absorb(out, t) {
+    const row = nearSlot(out.filter((x) => !OWN_SLOTS.includes(x.kind) && Math.abs(x.y - t.y) <= 1 && Math.abs(x.h - t.h) <= 1), t);
+    const colm = row ? null : nearSlot(out.filter((x) => !OWN_SLOTS.includes(x.kind) && Math.abs(x.x - t.x) <= 1 && Math.abs(x.w - t.w) <= 1), t);
+    if (row) { const x0 = Math.min(row.x, t.x), x1 = Math.max(row.x + row.w, t.x + t.w); return out.map((x) => (x === row ? Object.assign({}, x, { x: x0, w: x1 - x0 }) : x)); }
+    if (colm) { const y0 = Math.min(colm.y, t.y), y1 = Math.max(colm.y + colm.h, t.y + t.h); return out.map((x) => (x === colm ? Object.assign({}, x, { y: y0, h: y1 - y0 }) : x)); }
+    return out;
+  }
+  const SLOT_GAP = 40;
+  const slotsTouch = (a, b) => (Math.abs(a.y - b.y) <= 1 && Math.abs(a.h - b.h) <= 1 && Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w) <= SLOT_GAP)
+    || (Math.abs(a.x - b.x) <= 1 && Math.abs(a.w - b.w) <= 1 && Math.max(a.y, b.y) - Math.min(a.y + a.h, b.y + b.h) <= SLOT_GAP);
+  // fitSlots(slots, { dropKinds, headerRows, railItems }): { slots, dropped }; the slots given are never changed
+  //  dropKinds: the kinds whose visual cannot be written (a line chart on a model with no time axis)
+  //  headerRows: how much the header grows for its extra row of page tabs (Round 12, the owner's go on round 11's
+  //    recommendation 2): the title and logo grow (textH keeps their first height), every other slot moves down, and
+  //    those that reach the page's bottom (the last row, the filter rail) give that height up
+  //  railItems: { n, minH, maxH, resetH, pad, gap } (Round 12, #18; seen in Desktop 2.158, round 11: three dropdowns at the
+  //    top of the rail, Reset at its very bottom and 300 page units of empty panel between them): a rail (a slicer slot
+  //    higher than wide) is only as high as its n dropdowns (each minH to maxH) and its Reset (resetH), pad around them
+  //    and gap after each; it stays a column, stack (round 23, the laptop's S1)
+  function fitSlots(slots, opt) {
+    const o = opt || {}, kinds = o.dropKinds || [];
+    let out = slots.slice(), dropped = [];
+    kinds.forEach((kind) => {
+      const gone = out.filter((x) => x.kind === kind), boxes = gone.map((x) => ({ x: x.x, y: x.y, w: x.w, h: x.h }));
+      for (let merged = true; merged;) {
+        merged = false;
+        for (let i = 0; i < boxes.length && !merged; i++) for (let j = i + 1; j < boxes.length && !merged; j++) if (slotsTouch(boxes[i], boxes[j])) {
+          const a = boxes[i], b = boxes[j], x0 = Math.min(a.x, b.x), y0 = Math.min(a.y, b.y);
+          boxes.splice(j, 1); boxes[i] = { x: x0, y: y0, w: Math.max(a.x + a.w, b.x + b.w) - x0, h: Math.max(a.y + a.h, b.y + b.h) - y0 }; merged = true;
+        }
+      }
+      out = out.filter((x) => x.kind !== kind);
+      boxes.forEach((t) => { out = absorb(out, t); });
+      dropped = dropped.concat(gone);
+    });
+    const extra = +o.headerRows || 0;
+    if (extra) {
+      const head = (x) => x.kind === 'title' || x.kind === 'logo', bottom = Math.max(...out.filter((x) => !head(x)).map((x) => x.y + x.h));
+      out = out.map((x) => (head(x) ? Object.assign({}, x, { h: x.h + extra, textH: x.h }) : Object.assign({}, x, { y: x.y + extra }, x.y + x.h >= bottom - 1 ? { h: x.h - extra } : {})));
+    }
+    const R = o.railItems;
+    if (R) out = out.map((s) => {
+      if (s.kind !== 'slicer' || s.w > s.h) return s;
+      const n = Math.max(1, R.n), sh = Math.max(R.minH, Math.min(R.maxH, (s.h - 2 * R.pad - R.resetH - R.gap * n) / n));
+      return Object.assign({}, s, { h: Math.min(s.h, Math.ceil(2 * R.pad + n * sh + R.gap * n + R.resetH)), stack: true });
+    });
+    return { slots: out, dropped };
+  }
+  // fitSlots' options in other units (k: the units wanted per unit given; the background's 720 grid from page units is
+  // 1 / page(c).s): the lengths scaled, the kinds and the count kept
+  const fitScale = (opt, k) => { const o = opt || {}, R = o.railItems;
+    return Object.assign({}, o, { headerRows: (+o.headerRows || 0) * k }, R ? { railItems: Object.assign({}, R, { minH: R.minH * k, maxH: R.maxH * k, resetH: R.resetH * k, pad: R.pad * k, gap: R.gap * k }) } : {}); };
+
   // The report's pages for a layout: this page, the second page when asked, each with the slide-in panel when asked.
   // opts: { second, panel, logoRatio (an attached logo's width / height, see computeSlots), tableFields (see
   // computeSlots), maxKpis (the most KPI cards
@@ -645,7 +710,7 @@
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate, calmPalette,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    fs, sizeAt, TEXT_BASES, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    fs, sizeAt, TEXT_BASES, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;

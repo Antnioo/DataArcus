@@ -10,6 +10,8 @@ export const { DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, SCHEMA } = E;
 // The engine's parts the MCP tools use (the audit's A2-8: server.mjs reaches the engine only through this adapter; the
 // adapter itself reads and writes no file)
 export const { PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, REPORT_TEXTS, texts, clampHex, lum, buildTheme, themeScaleOf, scaleTheme, projectPages, themeName, fileBase, imageSize, isSmall } = E;
+// (0.2.9, audit 2's A2-3: the slot rules are the engine's: absorb for a text slot without its sentence, fitSlots for the rest)
+export const { absorb, fitSlots } = E;
 export const designRtl = E.rtl;
 
 const HARMONIES = ['analogous', 'complementary', 'triadic', 'mono'];
@@ -114,6 +116,8 @@ export function layoutFrom(l, base, fix) {
 
 // plan_layout: the design (from generate_theme, or a fresh one) with the tool's layout choices applied the way the
 // website applies them, and the slots in page units. Returns { design, slots, forAuthoring, why, smallPage?, repaired? }
+// (0.2.9, A2-3: a.fit(design, slots), when given, returns the engine's fitSlots options for the page, the report writer's
+// measures (Pbip.fitOptions): the slots are those the report will have, and z and tabOrder follow them)
 // (repaired: each value of the given design that could not be used, with what was used instead)
 export function planLayout(a) {
   const repaired = [], fix = (r) => repaired.push(r);
@@ -136,7 +140,8 @@ export function planLayout(a) {
   E.repairState(design, fix);
   const lang = a.lang, nm = (x) => E.label(x, lang), layout = design.layout;   // (A2-9: labels keyed by language)
   // one row per visual, as the website's slot table: its name, the suggested visual, and x, y, w, h in page units
-  const slots = E.computeSlots(layout, lang, { tableFields: a.tableFields }).map((s) => Object.assign({ role: nm(s.role), kind: s.kind, visual: nm(E.KINDS[s.kind]) }, E.boxOf(s, layout)));
+  const planned = E.computeSlots(layout, lang, { tableFields: a.tableFields }).map((s) => Object.assign({ role: nm(s.role), kind: s.kind, visual: nm(E.KINDS[s.kind]) }, E.boxOf(s, layout)));
+  const slots = a.fit ? E.fitSlots(planned, a.fit(design, planned)).slots : planned;
   // the PBIR visual.json position, in reading order (top to bottom, then along the reading direction: the order
   // pbip-export.js sorts visuals in), z and tabOrder 1000, 2000...
   const right = E.rtl(layout, lang);

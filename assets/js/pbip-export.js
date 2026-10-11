@@ -14,7 +14,6 @@
     mixHex, obj, pageFilterOf, pfLiteral, rnd, timeAxisPlan
   } = Query;
   const { barNameShare, columnRoom, textWidth } = Sizing;
-  const { absorb, dropLines } = Page;
 
 
   // ---------- zip (stored) ----------
@@ -132,7 +131,7 @@
    * @typedef {Object} Bind  the fields of each visual (sampleBind gives the sample's)
    * @property {Field[]} [kpis]  one per KPI card, in order
    * @property {Field} [measure]  the main measure (line chart, cards, table titles)
-   * @property {Field} [date]  the line chart's time axis (null: the line charts give their room away, dropLines)
+   * @property {Field} [date]  the line chart's time axis (null: the line charts give their room away, fitSlots)
    * @property {Object<string, Field>} [cats]  the category of each chart kind: bar, column, donut, funnel, treemap, map
    * @property {Object<string, Field>} [y]  a chart kind's own measure: funnel, gauge
    * @property {Field[]} [table]  the table's (and matrix's) fields, in order
@@ -272,6 +271,42 @@
     }
     if (bad.length) throw new TypeError('build(o): ' + bad.join('; '));
   }
+  // The report's name as written (its folder and files) and the user's model folder's name (theirs), from o.name: the
+  // same for build and fitOptions
+  function nameOf(o, W) {
+  // (a name over the limit ends at its last whole word: cut at the last space before the limit, and a dash or
+  // other joining mark left at the end goes too; one word longer than the limit is cut at the limit)
+  // cut by characters, not UTF-16 units, so an emoji at the cut is never split into a broken file name; at most 30,
+  // because the name appears up to three times in a path and Windows limits paths to 260 characters
+  // no dots or spaces at either end: ".." would climb out of the folder, and Windows drops a trailing dot or space
+  const tidy = (s) => s.replace(/^[.\s]+|[.\s]+$/g, '');
+  // format characters first (Unicode category Cf: direction overrides and marks, zero-width characters, the byte
+  // order mark): nobody sees them, and one can make a file name read as another ("Report" + U+202E + "xcod.exe"
+  // shows as "Reportexe.docx"). They are taken out of the name before anything else.
+  const whole = Array.from(tidy(String(o.name || 'Power BI Report').replace(/\p{Cf}/gu, '').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ')));
+  let cut = whole.slice(0, 30).join('');
+  if (whole.length > 30 && whole[30] !== ' ' && cut.lastIndexOf(' ') > 0) cut = cut.slice(0, cut.lastIndexOf(' '));
+  if (whole.length > 30) cut = cut.replace(/[\s\-\u2013\u2014\u00b7:,;&+]+$/, '');
+  let base = tidy(cut) || 'Power BI Report';
+  // next to someone's project: never the name of a report already there (o.model.taken: their X.Report folders and
+  // X.pbip files), nor the model's own name, which their first report usually has
+  const theirs = o.model && o.model.byPath ? String(o.model.byPath).replace(/^.*\//, '').replace(/\.(SemanticModel|Dataset)$/i, '') : null;
+  if (theirs) {
+    const taken = new Set([theirs].concat(o.model.taken || []).map((n) => String(n).toLowerCase())), b0 = base;
+    for (let n = 1; taken.has(base.toLowerCase()); n++) base = b0 + ' - ' + (W.newDesign || 'New design') + (n > 1 ? ' ' + n : '');
+  }
+    return { base, theirs };
+  }
+  // 0.2.9, audit 2's A2-3: the options of the design engine's fitSlots for each page of a report, as build fits them
+  // (pbip-page.js fitOf; pure): the website draws its background from them and plan_layout plans with them, so both show
+  // the slots the report gets. o: build's input (the pages' png not needed)
+  function fitOptions(o) {
+    const lang = o.lang === 'ar' ? 'ar' : 'en', rtl = !!o.rtl, font = o.font || 'Segoe UI', W = o.texts || {};
+    const own = !!(o.model && (o.model.byPath || o.model.byConnection)), sample = !!o.sample && !own, B = own ? (o.bind || null) : sample ? sampleBind(T[lang]) : null;
+    const PAGES = o.pages && o.pages.length ? o.pages : [{ name: o.pageName, page: o.page, slots: o.slots }], { base } = nameOf(o, W);
+    const ts = Page.themeSizes(o), c = Object.assign({ o, B, own, PAGES, base, rtl, font, W }, ts, Sizing.make({ font, LABEL: ts.LABEL }));
+    return PAGES.map((pg) => Page.fitOf(c, pg));
+  }
   /** @param {BuildInput} o @returns {BuildResult} */
   function build(o) {
     checkBuild(o);
@@ -295,27 +330,7 @@
     const themeGrid = ['lineChart', 'clusteredBarChart', 'clusteredColumnChart'].some((t) => { const va = (((((o.theme || {}).visualStyles || {})[t] || {})['*'] || {}).valueAxis || [])[0]; return !!va && ('gridlineShow' in va || 'gridlineColor' in va); });
     const GRID = o.quietGrid && u && HEX6.test(String(u.text)) && HEX6.test(String(u.card)) && !themeGrid ? mixHex(u.text, u.card, 0.85) : null;
     const NODATA = own && o.noDataMessage !== false;   // on by default since round 22 (the owner's rule: every part passed in Desktop on the night of 6-7 Oct); noDataMessage: false leaves it out
-    // (a name over the limit ends at its last whole word: cut at the last space before the limit, and a dash or
-    // other joining mark left at the end goes too; one word longer than the limit is cut at the limit)
-    // cut by characters, not UTF-16 units, so an emoji at the cut is never split into a broken file name; at most 30,
-    // because the name appears up to three times in a path and Windows limits paths to 260 characters
-    // no dots or spaces at either end: ".." would climb out of the folder, and Windows drops a trailing dot or space
-    const tidy = (s) => s.replace(/^[.\s]+|[.\s]+$/g, '');
-    // format characters first (Unicode category Cf: direction overrides and marks, zero-width characters, the byte
-    // order mark): nobody sees them, and one can make a file name read as another ("Report" + U+202E + "xcod.exe"
-    // shows as "Reportexe.docx"). They are taken out of the name before anything else.
-    const whole = Array.from(tidy(String(o.name || 'Power BI Report').replace(/\p{Cf}/gu, '').replace(/[\\/:*?"<>|]+/g, ' ').replace(/\s+/g, ' ')));
-    let cut = whole.slice(0, 30).join('');
-    if (whole.length > 30 && whole[30] !== ' ' && cut.lastIndexOf(' ') > 0) cut = cut.slice(0, cut.lastIndexOf(' '));
-    if (whole.length > 30) cut = cut.replace(/[\s\-\u2013\u2014\u00b7:,;&+]+$/, '');
-    let base = tidy(cut) || 'Power BI Report';
-    // next to someone's project: never the name of a report already there (o.model.taken: their X.Report folders and
-    // X.pbip files), nor the model's own name, which their first report usually has
-    const theirs = o.model && o.model.byPath ? String(o.model.byPath).replace(/^.*\//, '').replace(/\.(SemanticModel|Dataset)$/i, '') : null;
-    if (theirs) {
-      const taken = new Set([theirs].concat(o.model.taken || []).map((n) => String(n).toLowerCase())), b0 = base;
-      for (let n = 1; taken.has(base.toLowerCase()); n++) base = b0 + ' - ' + (W.newDesign || 'New design') + (n > 1 ? ' ' + n : '');
-    }
+    const { base, theirs } = nameOf(o, W);
     const slug = base.replace(/[^\w-]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').toLowerCase() || 'report';
     const R = base + '.Report', M = base + '.SemanticModel', D = R + '/definition';
     const themeFile = slug + '-theme.json', logoFile = o.logo ? slug + '-logo.' + o.logo.ext : null;
@@ -444,6 +459,6 @@
 
 
   // AR_MONTHS: the one Arabic month list (the cross-review's duplicates: the twin uses it too)
-  const api = { build, zip, crc32, textWidth, columnRoom, hasControl, daxNames, pageFilterOf, absorb, dropLines, timeAxisPlan, barNameShare, AR_MONTHS: T.ar.months.slice() };
+  const api = { build, zip, crc32, textWidth, columnRoom, hasControl, daxNames, pageFilterOf, fitOptions, timeAxisPlan, barNameShare, AR_MONTHS: T.ar.months.slice() };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbip = api;
 })(typeof self !== 'undefined' ? self : this);
