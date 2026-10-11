@@ -817,7 +817,7 @@ server.registerTool('create_report', {
     a.pages = a.pages.map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots), true) }));
     if (COUNTS.length && !leftOut.length) kpiCards = cardNote(kpisOf(a.pages), kpisOf(a.pages));
     if (leftOut.length) { const asked = kpisOf(a.pages) === 1 && !usable.length ? leftOut.length : Math.max(...a.pages.map((p) => p.slots.filter((s) => s.kind === 'kpi').length)) + leftOut.length; kpiCards = cardNote(asked, asked - leftOut.length, leftOut); }
-    const theme = a.theme ? themeOf(a.theme) : { name: a.name };
+    let theme = a.theme ? themeOf(a.theme) : { name: a.name };   // (let: the design block's A2 scales it to the page below)
     // Round 23 (the owner's "nothing critical left"): a theme's text sizes are made for its page (generate_theme's
     // layout.page, 1920 x 1080 by default: 10pt x the page's height / 720, as plan_layout's pages are), and a smaller
     // hand-placed page drew them too large. Our theme says its scale through its table text (10 x scale); every text

@@ -96,8 +96,9 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
   tools tell you to create it.
 - **Links are not followed out of the folder.** A shortcut-like link inside the working folder (a symbolic link or a
   Windows junction) that points to a folder outside it is refused, for reading and for writing: the tools check where
-  a path really is, not only its name. The same holds for the paths a tool picks itself: the model folder a `.pbip`
-  points at, and a model found by its folder's name. When searching a project for its model, links are never followed.
+  a path really is, not only its name. The same holds for the paths a tool picks itself:
+  the model folder a `.pbip` points at, and a model found by its folder's name. When searching a project for its model,
+  links are never followed.
 - **A working folder that is itself a model folder** (`... .SemanticModel`): the reading tools work on it, and read
   nothing above it. `create_report` refuses, because a report is written next to its model, which would be outside
   the working folder; choose the project folder instead.
