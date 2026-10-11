@@ -328,7 +328,7 @@ function resolveSvgColumns(tables, list, opt) {
       if (!v || typeof v !== 'object') return v;
       if (v.kind === 'measure') { const f = find(v.measure, 'm'); if (!f) { problems.push(`${where} ("${label}"): ${v.measure} is not in the model (a measure is needed)`); return v; } entity = entity || f.t.name;
         // (round 14: a percent by the card rule or the shared format rule is marked, so a text bound to it shows a percent)
-        const right = Fix.formatOf(Object.assign({}, f.o, { expression: f.o.expr != null ? f.o.expr : f.o.expression }), 'measure', []);
+        const right = Fix.formatOf(Object.assign({}, f.o, { expression: Bind.exprOf(f.o) }), 'measure', []);
         return Object.assign({}, v, { measure: f.o.name, percent: !!(Bind.measureCard(f.o).pct || (right && /%/.test(right.format))) }, f.o.formatString ? { format: String(f.o.formatString) } : {}); }
       if (v.kind === 'column') { const f = find(v.column, 'c'); if (!f) { problems.push(`${where} ("${label}"): ${v.column} is not in the model (a column is needed, written as Table[Column])`); return v; }
         if (/^(string|boolean|date)/i.test(String(f.o.dataType || ''))) textColumns.set(v.id, `${f.t.name}[${f.o.name}]`);
@@ -817,11 +817,11 @@ server.registerTool('create_report', {
     const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/), name = String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, ' ').trim();
     if (!mk) throw new Error(`displayNames: "${k}" is not written as Table[Field]`);
     if (!name || name.length > 80) throw new Error(`displayNames: the display name for ${k} is empty or longer than 80 characters`);
-    given.set(mk[1] + '[' + mk[2] + ']', { name, key: String(k), used: false });
+    given.set(Bind.fieldKey(mk[1], mk[2]), { name, key: String(k), used: false });
   }
   const fieldsOf = (b) => (b ? [b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean) : []);
   const keyOf = (f) => `${f.t}[${f.c != null ? f.c : f.m}]`;
-  const named = (b) => { fieldsOf(b).forEach((f) => { const g = given.get(keyOf(f)); if (g) { f.name = g.name; g.used = true; } }); return b; };
+  const named = (b) => { fieldsOf(b).forEach((f) => { const g = given.get(Bind.fieldKey(f.t, f.c != null ? f.c : f.m)); if (g) { f.name = g.name; g.used = true; } }); return b; };
   // Owner 2026-10-06: an Arabic report shows the Gulf calendar's Arabic name columns (Day Name (Arabic), Month Name
   // (Arabic), Hijri Month Name (Arabic)) in place of the English ones wherever the same table has them (axis, table,
   // slicer, tooltip), with their own sort; without them the reportNotes say how to get them
@@ -1057,7 +1057,7 @@ server.registerTool('create_report', {
   if (bind && bind.language) { const L = bind.language, sk = L.skipped || [], fb = L.fallback || [];
     reportNotes.push(`${a.lang === 'ar' ? 'Arabic' : 'English'} report: the columns picked are in ${a.lang === 'ar' ? 'Arabic where the model has an Arabic column for the same thing (the others keep their names, shown through display names)' : 'English'}${sk.length ? `; ${sk.map(visible).join(', ')} ${sk.length === 1 ? 'was' : 'were'} not used: ${a.lang === 'ar' ? 'the English column of an Arabic twin' : 'Arabic columns, with English ones beside them'}` : ''}${fb.length ? `; ${fb.map(visible).join(', ')} ${fb.length === 1 ? 'is' : 'are'} Arabic and used anyway: the model has no English column for ${fb.length === 1 ? 'it' : 'them'}` : ''}. To use another column, name it in "fields".`); }
   if (F) { const tw = Bind.twinsOf(m.tables), cl = Bind.langsOf(m.tables), named = [].concat(F.kpis || [], [F.measure, F.timeAxis, F.category, F.category2], F.table || [], F.slicers || []).filter(Boolean);
-    const off = [...new Set(named.filter((f) => { const n = f.c != null ? f.c : f.m, l = f.c != null && cl[`${f.t}[${f.c}]`] ? cl[`${f.t}[${f.c}]`] : Bind.langOf(n); return a.lang === 'ar' ? l === 'en' && f.c != null && tw[`${f.t}[${f.c}]`] : l === 'ar'; }).map((f) => `${visible(f.t)}[${visible(f.c != null ? f.c : f.m)}]`))];
+    const off = [...new Set(named.filter((f) => { const n = f.c != null ? f.c : f.m, l = f.c != null && cl[Bind.fieldKey(f.t, f.c)] ? cl[Bind.fieldKey(f.t, f.c)] : Bind.langOf(n); return a.lang === 'ar' ? l === 'en' && f.c != null && tw[Bind.fieldKey(f.t, f.c)] : l === 'ar'; }).map((f) => `${visible(f.t)}[${visible(f.c != null ? f.c : f.m)}]`))];
     if (off.length) reportNotes.push(`${off.join(', ')} ${off.length === 1 ? 'is' : 'are'} in ${a.lang === 'ar' ? 'English (the model has an Arabic column beside it)' : 'Arabic'}, and the report is ${a.lang === 'ar' ? 'Arabic' : 'English'}: used as named in "fields".`); }
   // round 23: a report measure renamed because the model has an object of that name
   if ((r.extRenamed || []).length) reportNotes.push(`${r.extRenamed.map((x) => `${visible(x.t)} already has "${visible(x.from)}", so the report's own measure is "${visible(x.to)}"`).join('; ')} (definition/reportExtensions.json; the model was not changed).`);
