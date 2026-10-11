@@ -16,6 +16,7 @@ import { v029b } from './test-0.2.9b.mjs';
 import { v029i } from './test-0.2.9i.mjs';
 import { v029k } from './test-0.2.9k.mjs';
 import { v029checks } from './test-0.2.9-checks.mjs';
+import { v029a4 } from './test-0.2.9-a4.mjs';
 import { v030twin, v030engine } from './test-0.3.0-twin.mjs';
 import { withPlans } from './test-plan.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
@@ -4461,6 +4462,8 @@ await v029i({ call, raw: rawCall, check, ROOT, fs });
 await v029k({ call, check, ROOT, fs });
 // ---------- 0.2.9 items 12-13 (check_report's three kinds, the health check's own reports): test-0.2.9-checks.mjs, which also runs alone ----------
 await v029checks({ call, check, ROOT, fs });
+// ---------- audit 4's findings in the checks block (A4-1 to A4-14): test-0.2.9-a4.mjs, which also runs alone ----------
+await v029a4({ call, check, ROOT, fs });
 // ---------- 0.3.0, the Arabic twin of an existing report: test-0.3.0-twin.mjs, which also runs alone ----------
 try { v030engine({ check }); } catch (e) { check(false, 'T10. the engine: ' + e.message); }
 await v030twin({ call: rawCall, check, ROOT, fs });
