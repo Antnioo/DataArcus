@@ -99,6 +99,19 @@ export function v029w({ check }) {
     const yq = tbl(C('Year Quarter', {}, D)), qq = tbl(C('Quarter', {}, D)), pk = tbl(C('Weekday Label', { kind: 'day', rows: 7 }, D)), my = tbl(C('Month Year', {}, D));
     chk(() => !tight(yq) && tight(qq) && tight(pk) && !tight(my), () => `A3-7: rows known only for a quarter without a year, a day or month name, or the picker's count: Year Quarter ${tight(yq)}, Quarter ${tight(qq)}, picker's 7 days ${tight(pk)}, Month Year ${tight(my)}`);
   }
+
+  // ---------- A3-8 (writer side): a time category keeps its own order when the picker marks it; the words are the fallback ----------
+  {
+    const chart = (c, tipCat) => get(() => build(base({ cats: { bar: c, column: C('Channel'), donut: C('Channel') }, tip: { card: M('Total Sales'), cat: tipCat || c, y: M('Total Sales') } }), { pages: hand(1280, 720, [{ kind: 'bar', title: 'B', x: 24, y: 80, w: 600, h: 400 }]) }));
+    const byValue = (r) => { const v = r.files && visuals(r).find((x) => x.visual.visualType === 'clusteredBarChart' && x.position.x === 24); const sd = v && v.visual.query.sortDefinition; return !!(sd && sd.sort[0].field.Measure); };
+    const shift = chart(C('Shift', { kind: 'day' })), dayType = chart(C('Day Type', { kind: 'category' })), marked = chart(C('Slot', { time: true })), unmarked = chart(C('Day Type', { time: false }));
+    chk(() => !byValue(shift) && byValue(dayType) && !byValue(marked) && byValue(unmarked),
+      () => `A3-8: the picker's mark decides (a time kind or time: true keeps its order; another kind or time: false is sorted largest first): Shift/day ${byValue(shift)}, Day Type/category ${byValue(dayType)}, Slot/time ${byValue(marked)}, Day Type/not time ${byValue(unmarked)}`);
+    const region = chart(C('Region')), week = chart(C('Fiscal Week'));
+    chk(() => byValue(region) && !byValue(week), () => `A3-8: without a mark the words decide as before: Region ${byValue(region)}, Fiscal Week ${byValue(week)}`);
+    chk(() => shift.tooltipLimits && shift.tooltipLimits.top === null && dayType.tooltipLimits.top === 6,
+      () => `A3-8: the tooltip's Top 6 follows the same mark (never on a time category): ${JSON.stringify([shift.tooltipLimits, dayType.tooltipLimits])}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
