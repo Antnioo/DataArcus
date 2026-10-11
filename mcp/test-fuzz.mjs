@@ -150,7 +150,6 @@ const KNOWN_SLOW = [
 // P1 also holds for time: a target that answers after more than this is a finding (a hang in all but name)
 const SLOW_MS = 10000;
 const KNOWN_PROPS = [
-  { id: 'F-RP', owner: 'builder 6 (reading)', target: /^read_report (json|memory)$/, props: /P2|P3|P4/, k: 8, what: 'the JSON answer past 40,000 characters; visual ids and bookmark file names raw (planted text); bidi controls in page names' },
   { id: 'F-MP', owner: 'builder 6 (reading; P3 is an owner decision)', target: /^read_model answer$/, props: /P2|P3|P4/, k: 23, what: 'one 200,000-character name keeps the full answer; instruction-like names returned raw (flagged only in suspiciousNames); a control character in a type' },
   { id: 'F-CP', owner: 'builder 7 (checks)', target: /^check_report$/, props: /P2|P3/, k: 427, what: 'the answer past 40,000 characters; a page name raw in the "page sizes" rule\'s why' },
   { id: 'F-TP', owner: 'builder 9 (twin)', target: /^twin plan$/, props: /P2|P3|P4/, k: 2, what: 'the plan past 40,000 characters; a bookmark name raw in a text id; bidi controls in a page name' }
