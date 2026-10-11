@@ -10,6 +10,9 @@ const require = createRequire(import.meta.url);
 export const E = require('../../assets/js/design-engine.js');
 
 const HARMONIES = ['analogous', 'complementary', 'triadic', 'mono'];
+// the light page of a brand theme (0.2.9, O-11): a near-white page, white visuals, dark text; good, neutral and bad
+// as the Corporate preset's (the accent is the brand)
+const LIGHT_UI = { background: '#f5f7fa', card: '#ffffff', text: '#1f2933', accent: '#1f4e79', good: '#2e7d32', neutral: '#f9a825', bad: '#c62828' };
 const UI_KEYS = ['background', 'card', 'text', 'accent', 'good', 'neutral', 'bad'];
 const CONTRAST_NAMES = { textOnVisuals: 'Text on visuals', labelsOnVisuals: 'Labels on visuals', textOnPage: 'Text on page', color1OnVisuals: 'Color 1 on visuals' };
 
@@ -31,13 +34,21 @@ export function themeDesign(a) {
   const repaired = [], notes = [];
   const fix = (field, given, used, why) => repaired.push({ field, given, used, why });
   const d = E.fresh();
+  // 0.2.9 (O-11 of the owner's test of 0.2.8: asked for a theme in #0F766E, he got a dark page and the colour lightened
+  // to #17b5a9): a theme is light unless the user asks for dark (mode), and a brand colour is used exactly as given
+  const dark = a.mode === 'dark';
   // the preset: the colours when nothing else is given, and good/neutral/bad for a palette that leaves them out
-  let preset = 'DataArcus';
+  // (nothing asked: Corporate, light; DataArcus, the dark one, only when dark is asked)
+  let preset = dark ? 'DataArcus' : 'Corporate';
   if (a.preset != null) {
     if (E.PRESETS[a.preset]) preset = a.preset;
     else fix('preset', a.preset, preset, `not a preset; use one of ${Object.keys(E.PRESETS).join(', ')}`);
-  }
+  } else if (!a.palette && a.brand == null) notes.push(dark ? 'No colours asked: the DataArcus preset (dark, as asked).' : 'No colours asked: the Corporate preset, light. Dark only when the user asks for it (mode "dark").');
   d.preset = preset; d.data = E.PRESETS[preset].data.slice(); d.ui = { ...E.PRESETS[preset].ui };
+  // a preset whose page is not what the user asked for (mode): the preset's data colours and accent on the asked page
+  if (a.preset != null && E.PRESETS[a.preset] && a.mode && !a.palette && a.brand == null && (E.lum(d.ui.background) > 0.45) === dark) {
+    d.ui = Object.assign({}, dark ? E.PRESETS.DataArcus.ui : LIGHT_UI, { accent: d.ui.accent }); d.preset = null;
+    notes.push(`The ${preset} preset's colours on a ${dark ? 'dark' : 'light'} page, as asked.`); }
   if (a.palette) {
     const p = a.palette;
     (p.data || []).forEach((c, i) => { const h = hex(c); if (h) d.data[i] = h; else fix(`palette.data[${i}]`, c, d.data[i], 'not a hex colour; kept the preset\'s'); });
@@ -54,7 +65,11 @@ export function themeDesign(a) {
     if (!HARMONIES.includes(h)) { fix('harmony', a.harmony, 'analogous', `not a harmony; use one of ${HARMONIES.join(', ')}`); h = 'analogous'; }
     else if (a.harmony == null) notes.push('No harmony given: analogous.');
     if (!b) fix('brand', a.brand, null, 'not a hex colour; kept the preset\'s colours');
-    else { d.data = E.generate(b, h); d.ui.accent = d.data[0]; d.preset = null; }   // as the website's Generate button
+    // the website's Generate button makes the 8 colours from the brand (and keeps its lightness between 0.4 and 0.55);
+    // here the brand itself is the first data colour and the accent, exactly, on a light page (dark only when asked:
+    // mode "dark", or a dark preset chosen with the brand)
+    else { d.data = E.generate(b, h); d.data[0] = b; d.ui = Object.assign({}, a.mode ? (dark ? E.PRESETS.DataArcus.ui : LIGHT_UI) : a.preset != null && E.PRESETS[a.preset] ? E.PRESETS[a.preset].ui : LIGHT_UI, { accent: b }); d.preset = null;
+      notes.push(`The brand colour ${b} is used exactly as given: the first data colour and the accent. The other 7 data colours come from the ${h} harmony.`); }
   } else if (a.harmony != null) fix('harmony', a.harmony, null, 'not used: no brand colour given');
   if (a.name != null) d.name = String(a.name);
   if (a.font != null) {
