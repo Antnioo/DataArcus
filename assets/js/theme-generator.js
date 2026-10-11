@@ -460,7 +460,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // (0.2.9: the field picker reads its field-meaning rule from field-meaning.js, loaded first)
     const loadScript = (src) => new Promise((resolve, reject) => { const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc); });
     const loadBind = () => (window.DABind ? Promise.resolve(window.DABind)
-      : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('../assets/js/field-meaning.min.js?v=20261011k')).then(() => loadScript('../assets/js/pbip-bind.min.js?v=20261011k')).then(() => window.DABind));
+      : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('../assets/js/field-meaning.min.js?v=20261011k')).then(() => loadScript('../assets/js/pbip-bind.min.js?v=20261011k2')).then(() => window.DABind));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
     // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)
