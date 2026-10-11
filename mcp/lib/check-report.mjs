@@ -205,6 +205,8 @@ export async function checkReport(p, opts) {
   // 2. the bundled schemas
   const schemas = checks.includes('schemas') || checks.includes('validator') ? schemaCheck(loc, add, notChecked, reportFiles, sk) : { checked: 0, errors: 0 };
   // 3. our measured rules
+  // (A4-1: sizes and positions as numbers before anything prints them, the page sizes line below included)
+  Rules.normalize(R);
   const groups = Rules.GROUPS.filter((g) => checks.includes(g));
   R.lang = lang;
   const ruled = groups.length ? Rules.check(R, { groups }) : { findings: [], ran: [] };
@@ -237,7 +239,7 @@ export async function checkReport(p, opts) {
   if (sk.big.length) notChecked.push({ rule: 'files too large', why: `${sk.big.length} file${sk.big.length === 1 ? ' was' : 's were'} not read: over the ${mbOf(REPORT_LIMITS.file)} DataArcus reads (the largest report files are well under 1 MB): ${sk.big.slice(0, 5).map((b) => `${b.file.split('/').map(safeName).join('/')} (${mbOf(b.size)})`).join('; ')}` });
   if (sk.deep) notChecked.push({ rule: 'folders too deep', why: `folders deeper than ${REPORT_LIMITS.depth} levels inside the report were not read (a PBIR report is 6 levels deep): ${sk.deep} cut` });
   if (unreadable) notChecked.push({ rule: 'unreadable files', why: `${unreadable} file${unreadable === 1 ? '' : 's'} could not be read as JSON` });
-  const sizes = [...new Set(R.pages.filter((p) => !p.tooltip).map((p) => `${p.w}x${p.h}`))].filter((s) => !['1920x1080', '1280x720', '960x720', '640x360', '3840x2160'].includes(s));
+  const sizes = [...new Set(R.pages.filter((p) => !p.tooltip && p.w > 0 && p.h > 0).map((p) => `${p.w}x${p.h}`))].filter((s) => !['1920x1080', '1280x720', '960x720', '640x360', '3840x2160'].includes(s));
   if (sizes.length) notChecked.push({ rule: 'page sizes', why: `the text rules were measured on 16:9 and 4:3 pages; ${sizes.join(', ')} were never measured, so their findings are estimates` });
   // the answer: findings capped (errors first), counted per rule
   // every finding's kind (codes kept verbatim), counted over all findings, the capped ones too
