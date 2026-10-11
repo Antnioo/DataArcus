@@ -66,6 +66,12 @@ report files are written by `create_report` for a new report, or by Microsoft's 
    what you checked, and which checks were not done because the user did not agree to them.
 
 ## Existing report
+- **Read it first:** `read_report` (one line per visual; `pages` for a large report) with `read_model` beside it
+  (the report names fields; the model says their types and sort-by columns). Keep its pages, questions and wiring
+  (bookmarks, tooltip and drillthrough pages) in the plan. `check_report` with `checks: ["lint"]` lists its design
+  findings: show them as worth a look, never as errors, and say which are guesses (`guess`: from names, not data).
+- **The plan's own lint:** `plan_layout` with the model answers `designLint` for the planned page: fix each finding in
+  the plan, or show it, before the user's go.
 - DataArcus gives the theme and the positions: `generate_theme` (the theme file to import or register) and
   `plan_layout` (`forAuthoring`: each visual's PBIR `position` { x, y, z, width, height, tabOrder }).
 - Microsoft's Power BI Report skill (`powerbi-report-cli`) makes the file changes, **on a copy the user approves**,

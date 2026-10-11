@@ -72,7 +72,8 @@ const scriptOf = (fix) => { try { return fix && fix.fixScriptFile ? fs.readFileS
 const tools = (await client.listTools()).tools.map((t) => t.name).sort();
 // (check_report added 5 Oct 2026: 7 -> 8 tools)
 // (approve_plan added 11 Oct 2026, 0.2.9's gate: 8 -> 9 tools)
-check(tools.join() === 'add_gulf_calendar,approve_plan,check_model_health,check_report,create_report,generate_theme,plan_layout,read_model,suggest_fields', `tools: ${tools}`);
+// (read_report added 11 Oct 2026, 0.2.9 item 10: 9 -> 10 tools)
+check(tools.join() === 'add_gulf_calendar,approve_plan,check_model_health,check_report,create_report,generate_theme,plan_layout,read_model,read_report,suggest_fields', `tools: ${tools}`);
 // F-05 (5 Oct 2026, check_report for 0.2.7): every tool the server lists is in the README's table and PRIVACY.md's
 // table, the README's install line gives the count, and PRIVACY.md no longer calls check_report unreleased
 {
@@ -744,8 +745,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const NOT_SET = /No working folder is set/, calls = [['read_model', { path: '.' }], ['suggest_fields', { path: '.' }], ['check_model_health', { path: '.' }], ['generate_theme', { name: 'No root' }], ['plan_layout', {}], ['create_report', { path: '.', name: 'No root', design: design || {} }]];
     const s = await start({}, CWD);
     const listed = s.dead ? [] : (await s.c.listTools()).tools.map((t) => t.name);
-    // (8 tools since check_report, 5 Oct 2026; 9 since approve_plan, 11 Oct 2026, 0.2.9's gate)
-    check(!s.dead && listed.length === 9, `no DATAARCUS_ROOT: the server must start and list its 9 tools: ${s.dead || listed}`);
+    // (8 tools since check_report, 5 Oct 2026; 9 since approve_plan, 11 Oct 2026, 0.2.9's gate; 10 since read_report,
+    // 11 Oct 2026, 0.2.9 item 10)
+    check(!s.dead && listed.length === 10, `no DATAARCUS_ROOT: the server must start and list its 10 tools: ${s.dead || listed}`);
     const answers = []; for (const [n, a] of calls) answers.push([n, await s.call(n, a)]);
     const wrong = answers.filter(([, x]) => !(x.err && NOT_SET.test(x.t) && /DATAARCUS_ROOT/.test(x.t)));
     check(!wrong.length, `no DATAARCUS_ROOT: ${wrong.length} of 6 tools did not refuse with the reason, e.g. ${wrong[0] && wrong[0][0]}: ${wrong[0] && wrong[0][1].t.slice(0, 120)}`);
