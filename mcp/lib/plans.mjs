@@ -68,8 +68,25 @@ export function approve(id, reply, by) {
       : 'This app can\'t show DataArcus\'s own approval prompt, so the approval rests on the reply you passed: the tools can\'t check that a person typed it. Approve a plan only after the user said go to the plan you showed.') };
 }
 
-/** The gate: returns the approved plan, or throws "Nothing was written" with what to do. tool: the calling tool; model: its model's key (or null). */
-export function gate(tool, id, model) {
+// Audit 6, A6-1 and A6-5: a plan pins what the write may use (data.pins[tool], stored at the proposal); the write's own
+// inputs are compared with it, key by key, and any difference is refused with the keys named. canon: one JSON form
+// (object keys sorted, undefined as null), so the same inputs always compare equal
+const canon = (v) => JSON.stringify(v === undefined ? null : v, (k, x) => (x && typeof x === 'object' && !Array.isArray(x) ? Object.fromEntries(Object.keys(x).sort().filter((key) => x[key] !== undefined).map((key) => [key, x[key]])) : x));
+function differences(want, got) {
+  const keys = [...new Set(Object.keys(want || {}).concat(Object.keys(got || {})))].sort(), off = [];
+  for (const k of keys) {
+    const w = (want || {})[k], g = (got || {})[k];
+    if (canon(w) === canon(g)) continue;
+    const isObj = (x) => x && typeof x === 'object' && !Array.isArray(x);
+    const sub = isObj(w) && isObj(g) ? [...new Set(Object.keys(w).concat(Object.keys(g)))].filter((s) => canon(w[s]) !== canon(g[s])) : [];
+    off.push(sub.length && sub.length <= 6 ? `${k} (${sub.join(', ')})` : k);
+  }
+  return off;
+}
+
+/** The gate: returns the approved plan, or throws "Nothing was written" with what to do. tool: the calling tool; model:
+ *  its model's key (or null); pin: the write's own inputs in the form the plan pinned them (A6-1, A6-5). */
+export function gate(tool, id, model, pin) {
   if (id == null || id === '') throw new Error(`Nothing was written: ${tool} writes a file only with an approved plan id (planId). ${tool === 'create_report' ? 'Call plan_layout with the model (path) and the plan\'s fields: it checks the plan against the tools\' limits and gives a plan id. ' : ''}${SHOW}`);
   const p = plans.get(String(id));
   if (!p) throw new Error(`Nothing was written: the plan id ${JSON.stringify(String(id))} is unknown (a plan id is good only in this session of the DataArcus server, and a restart forgets it). ${SHOW}`);
@@ -78,6 +95,11 @@ export function gate(tool, id, model) {
   if (!ALLOWS[p.kind].includes(tool)) throw new Error(`Nothing was written: plan ${p.id} is a ${p.kind} plan, which allows ${ALLOWS[p.kind].join(' and ')}, not ${tool}. ${tool === 'create_report' ? 'A report needs a plan from plan_layout. ' : ''}${SHOW}`);
   if (p.model && model && p.model !== model) throw new Error(`Nothing was written: plan ${p.id} was made for another model. ${SHOW}`);
   if (tool === 'create_report' && !p.model) throw new Error(`Nothing was written: plan ${p.id} was made without the model; a report's plan comes from plan_layout with path (the model), so its fields are checked against it. ${SHOW}`);
+  const want = p.data && p.data.pins && p.data.pins[tool];
+  if (want && pin !== undefined) {
+    const off = differences(want, pin);
+    if (off.length) throw new Error(`Nothing was written: ${tool}'s inputs differ from the approved plan ${p.id} in ${off.join('; ')}. The user approved that plan, so only its inputs are written: pass the approved ones, or make a new plan with these, show it and wait for the user's go.`);
+  }
   return p;
 }
 

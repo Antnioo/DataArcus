@@ -74,6 +74,48 @@ export async function audit6({ call, check, ROOT, fs = fs0 }) {
     const readme = fs.readFileSync(path.join(HERE, 'README.md'), 'utf8'), privacy = fs.readFileSync(path.join(HERE, 'PRIVACY.md'), 'utf8');
     chk(() => /elicitation/i.test(readme) && /assistant-reported/.test(readme) && /elicitation/i.test(privacy) && /assistant-reported/.test(privacy), () => 'A6-3. README and PRIVACY say how approval works (elicitation, or assistant-reported)');
   }
+
+  // ---------- A6-1 + A6-5: the plan pins what the write may use; any other input is refused, named, nothing written ----------
+  const tree = (d) => (fs.existsSync(d) ? fs.readdirSync(d, { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? tree(path.join(d, e.name)) : [path.join(d, e.name)])) : []);
+  const files = () => tree(path.join(ROOT, 'a6')).sort().join('|');
+  {
+    const base = { path: 'a6', layout: 'exec', lang: 'en', planFields: { kpis: ['Sales[Total Sales]'], measure: 'Sales[Total Sales]' }, pageFilters: [{ field: 'Sales[Region]', values: ['North'] }],
+      displayNames: { 'Sales[Region]': 'Area' }, text: 'Sales rose in the north.' };
+    const pl = await call('plan_layout', base), pid = pl.j && pl.j.plan && pl.j.plan.planId;
+    await call('approve_plan', { planId: pid, userReply: 'go' });
+    const cr = { path: 'a6', name: 'A6 pinned', planId: pid, design: pl.j && pl.j.design, lang: 'en', fields: base.planFields, pageFilters: base.pageFilters, displayNames: base.displayNames, text: base.text, noDataMessage: false, secondPage: false };
+    const svg = { w: 100, h: 20, values: [{ id: 'v', label: 'S', kind: 'measure', measure: 'Sales[Total Sales]' }], layers: [{ type: 'rect', x: 0, y: 0, w: 100, h: 20, fill: '#0f766e' }] };
+    const variants = {
+      design: { layout: 'focus' }, page: { page: '1280x720' }, lang: { lang: 'ar' }, dir: { dir: 'rtl' },
+      fields: { fields: { kpis: ['Sales[Orders]'], measure: 'Sales[Total Sales]' } }, pageFilters: { pageFilters: [{ field: 'Sales[Region]', values: ['South'] }] },
+      displayNames: { displayNames: { 'Sales[Region]': 'Zone' } }, text: { text: 'Something else.' }, subtitles: { subtitles: { Breakdown: 'Largest first' } },
+      svgColumns: { svgColumns: [{ label: 'Bar', design: svg }] }
+    };
+    for (const [key, change] of Object.entries(variants)) {
+      const before = files(), x = await call('create_report', Object.assign({}, cr, { name: 'A6 ' + key }, change));
+      chk(() => x.err && /Nothing was written/.test(x.t) && new RegExp('\\b' + key + '\\b').test(x.t) && files() === before, () => `A6-1. create_report with another ${key} than the approved plan's: refused, the key named, nothing written: ${short(x)}`);
+    }
+    const ok = await call('create_report', cr);
+    chk(() => !ok.err && ok.j.report, () => `A6-1. the approved inputs are written: ${short(ok)}`);
+  }
+  {
+    // A6-5: the calendar, the scripts and the theme plans pin their inputs too
+    const c0 = { path: 'a6', firstYear: 2020, lastYear: 2021, asOf: '2026-10-11' };
+    const cp = await call('add_gulf_calendar', c0), cid = cp.j && cp.j.plan && cp.j.plan.planId;
+    await call('approve_plan', { planId: cid, userReply: 'go' });
+    const before = files(), wide = await call('add_gulf_calendar', Object.assign({}, c0, { firstYear: 1990, lastYear: 2049, name: 'Other Calendar', planId: cid }));
+    chk(() => wide.err && /Nothing was written/.test(wide.t) && /firstYear/.test(wide.t) && /lastYear/.test(wide.t) && /name/.test(wide.t) && files() === before, () => `A6-5. add_gulf_calendar with other years and name than approved: refused, named: ${short(wide)}`);
+    const tp = await call('generate_theme', { brand: '#0F766E', name: 'A6 Theme' }), tid = tp.j && tp.j.plan && tp.j.plan.planId;
+    await call('approve_plan', { planId: tid, userReply: 'go' });
+    const t2 = await call('generate_theme', { brand: '#B91C1C', name: 'A6 Theme', folder: 'a6', planId: tid });
+    chk(() => t2.err && /Nothing was written/.test(t2.t) && /brand/.test(t2.t) && /folder/.test(t2.t), () => `A6-5. generate_theme with another brand and folder than approved: refused, named: ${short(t2)}`);
+    const hp = await call('check_model_health', { path: 'a6' }), hid = hp.j && hp.j.plan && hp.j.plan.planId;
+    if (hid) {
+      await call('approve_plan', { planId: hid, userReply: 'go' });
+      const h2 = await call('check_model_health', { path: 'a6', weekStart: 'monday', planId: hid });
+      chk(() => h2.err && /Nothing was written/.test(h2.t) && /weekStart/.test(h2.t), () => `A6-5. check_model_health's scripts with other inputs than approved: refused, named: ${short(h2)}`);
+    } else chk(() => true, () => '');
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
