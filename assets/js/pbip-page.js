@@ -91,7 +91,7 @@
   function kit(c) {
     const {
       MIRROR, W, align, base, byMonthStart, edge, font, lastMonths, n, notBlank, o, rowLabels,
-      rtl, timeAxes, u
+      rtl, timeAxes, topN, u
     } = c;
 
     // filter pane in the theme's colors, so it matches the page
@@ -221,6 +221,14 @@
       const st = visual.query.queryState, cat = st.Category && st.Category.projections[0], col = cat && cat.field.Column, filters = [];
       const put = (object, props) => { visual.objects = visual.objects || {}; const e = visual.objects[object] || (visual.objects[object] = [{ properties: {} }]); Object.assign(e[0].properties, props); };
       if (col && CHARTS.includes(s.kind)) { filters.push(notBlank(col)); n.blankFiltered++; }
+      // (the design block's S5/D19, from the laptop's sweep of rc.1, written here by the design block: a category with
+      // dozens of values gave cut vertical labels and a scrollbar) a bar or column chart keeps the Top N categories its
+      // slot can show (s.topN, the design engine's categoryFit), by its measure; never on a time axis or an ordered
+      // category (months, days, a sort-by column), whose order would be lost
+      if (col && s.topN && (s.kind === 'bar' || s.kind === 'column') && st.Y && st.Y.projections[0]) {
+        const f = Object.values(Bt.cats || {}).find((x) => x && x.c === col.Property), time = Bt.date && Bt.date.c === col.Property;
+        if (!time && !(f && (f.sortBy || f.ordered || f.dateOf))) { filters.push(topN(col, st.Y.projections[0].field, s.topN)); n.topCharts.push({ page: pg.name || base, kind: s.kind, top: s.topN }); }
+      }
       // O-4: a bar chart's names get 40% of its width, 50% on a narrow chart (under 560 on the 720-high page); the default 25 cut them at about 10 characters
       if (visual.visualType === 'clusteredBarChart') put('categoryAxis', { maxMarginFactor: lit(barNameShare(s.w, pg.page.h) + 'L') });
       // O-13: the line chart's month label
