@@ -162,11 +162,13 @@ export function v029w({ check }) {
       () => `B-23: one grid entry with the tight rows and the pictures' size: ${r.threw || JSON.stringify(grid)}`);
     // B-06: a text column's room was 12 letters whatever it holds; a day or month name's values are known (its family's
     // names), so its room is its widest name: "Wednesday" (71) needs less, "Jumada al-Akhirah" (113) more
-    const tbl = (c, w) => get(() => build(base({ table: [c, M('A'), M('B'), M('C')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w, h: 400 }]) }));
+    const tbl = (c, w) => get(() => build(base({ table: [c, M('A', { tableFormat: '#,0' }), M('B', { tableFormat: '#,0' }), M('C', { tableFormat: '#,0' })] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w, h: 400 }]) }));
     const cut = (x) => (x.tableColumns || []).length + (x.tableSmaller || []).length;
-    const days = tbl(C('Day Name', { sortBy: { t: D, c: 'Day No' } }, D), 330), hij = tbl(C('HM', { kind: 'month', family: 'hijri' }, D), 350), plain = tbl(C('Customer'), 330);
+    // (rc1, S1/S2: the rooms are cellRoom's since, the one rule of the kept fields and the widths: padding 16 at 720, numbers
+    // "#,0" 105, Day Name 87, Customer 104, a Hijri month 129; a table 446 wide has 410 for its columns)
+    const days = tbl(C('Day Name', { sortBy: { t: D, c: 'Day No' } }, D), 446), hij = tbl(C('HM', { kind: 'month', family: 'hijri' }, D), 446), plain = tbl(C('Customer'), 446);
     chk(() => cut(days) === 0 && cut(hij) > 0 && cut(plain) > 0,
-      () => `B-06: a known name column takes its widest name's room (days fit 330; the picker's Hijri months, under a short header, don't fit 350), another text column 12 letters as before: days ${days.threw || cut(days)}, hijri ${hij.threw || cut(hij)}, customer ${plain.threw || cut(plain)}`);
+      () => `B-06: a known name column takes its widest name's room (days fit 410; the picker's Hijri months, under a short header, don't), another text column 12 letters as before: days ${days.threw || cut(days)}, hijri ${hij.threw || cut(hij)}, customer ${plain.threw || cut(plain)}`);
   }
 
   // ---------- audit 6's writer items: A6-12 (build tells what it bound), A6-14 (one page filter from typed values) ----------
@@ -247,6 +249,26 @@ export function v029w({ check }) {
       () => 'rc1-1: only a month label is read as a date; a label with its date column keeps the month start');
     const srv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
     chk(() => /monthLabel: /.test(srv), () => 'rc1-1: plan_layout says how a month label read as a date is ordered (timeAxis.how), before the plan is approved');
+  }
+
+  // ---------- rc1 release blocker 2 (PERF-COMPARE S1, S2): table amounts wrapped onto two lines and headers were cut ----------
+  {
+    const tbl = (fields, w, page) => get(() => build(base({ table: fields }), { pages: hand(page ? page.w : 1920, page ? page.h : 1080, [{ kind: 'table', title: 'T', x: 24, y: 120, w, h: 500 }]) }));
+    const check = (r) => { const v = r.files && visuals(r).find((x) => x.visual.visualType === 'tableEx'); if (!v) return ['no table: ' + (r.threw || '')];
+      const th = JSON.parse(String(r.files.find((f) => /RegisteredResources\/[^/]+theme\.json$/.test(f.path)).data)), vf = ((v.visual.objects.values || [{ properties: {} }])[0].properties || {}).fontSize;
+      const T = vf ? parseFloat(L(vf)) : +th.visualStyles.tableEx['*'].values[0].fontSize, bad = [];
+      const widths = Object.fromEntries((v.visual.objects.columnWidth || []).map((e) => [e.selector.metadata, parseFloat(L(e.properties.value))]));
+      v.visual.query.queryState.Values.projections.forEach((p) => { const wd = widths[p.queryRef]; if (wd == null || wd <= 1) return;
+        const head = Px.textWidth(p.displayName || p.nativeQueryRef, T, true, 'Segoe UI');
+        if (wd < head + 10) bad.push(`header "${p.nativeQueryRef}" ${head.toFixed(0)} in ${wd}`);
+        if ((p.field.Measure || p.field.Aggregation) && wd < Px.textWidth('8,888,888,888', T, false, 'Segoe UI') + 10) bad.push(`number "${p.nativeQueryRef}" in ${wd}`); });
+      const total = Object.values(widths).reduce((a2, x) => a2 + x, 0); if (total > v.position.width) bad.push(`columns ${total} in a table ${v.position.width}`);
+      return bad; };
+    const money = (n) => M(n, { tableFormat: '$#,0.00' });
+    const a1 = tbl([C('Region'), money('Revenue'), money('Total Cost of Goods'), M('Quantity Sold In Store'), M('Exposure At Default')], 927);
+    const a2 = tbl([C('Issue'), money('Revenue'), money('Total Milestones Budget'), money('Average Wait Time Minutes'), money('Gross Margin'), money('Net Margin'), money('Discount Given')], 927);
+    chk(() => !check(a1).length && !check(a2).length && ((a2.tableColumns || []).length || (a2.tableSmaller || []).length),
+      () => `rc1-2: every number as wide as its widest value, every header whole, all within the table (a table with too many fields leaves one out or takes a smaller text, told): ${JSON.stringify([check(a1), check(a2), a2.tableColumns && a2.tableColumns.length, a2.tableSmaller])}`);
   }
 }
 

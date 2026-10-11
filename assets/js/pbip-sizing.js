@@ -29,6 +29,25 @@
   };
   // a bound field's room in a table: its projection's, with its known names (a day or month name; catKind, namesOf)
   const fieldRoom = (f, t, font) => { const k = isTextField(f) && catKind(f), names = k && (k.kind === 'day' || k.kind === 'month') ? namesOf(f, k.kind) : null; return columnRoom(tproj(f), t, font, names); };
+  // 0.2.9 rc1 (the laptop's PERF-COMPARE S1, S2: amounts wrapped onto a second line in number columns written 108 to 130
+  // wide, and headers were cut with "..." in tables with free width): a table column's room is its header (bold) or its
+  // widest value, whichever is wider, plus the cell's padding (24 at 1080, O-14's, scaled with the page). A number's widest
+  // value is ten digits with separators (a total) with its format's sign, words and decimals where the field carries the
+  // format (tableFormat, wholeFormat, cardFormat or the model's format); a measure whose format is not given is taken as
+  // an amount with a sign and 2 decimals; a percent as -100.0%. A number is never given less, so it never wraps.
+  const numberSample = (f) => {
+    if (f.pct || f.pctFormat) return '-100.0%';
+    const fmt = String(f.tableFormat || f.wholeFormat || f.cardFormat || f.format || '').split(';')[0];
+    if (!fmt) return f.agg != null || f.num ? '-8,888,888,888' : '-$8,888,888,888.88';
+    const dec = ((fmt.match(/\.([0#]+)/) || ['', ''])[1]).length, words = (fmt.match(/"[^"]*"|[$€£¥₹%]/g) || []).map((x) => x.replace(/"/g, '')).join('');
+    return '-' + words + '8,888,888,888' + (dec ? '.' + '8'.repeat(dec) : '');
+  };
+  const cellRoom = (f, t, font, sc) => {
+    const p = tproj(f), head = textWidth(p.displayName || p.nativeQueryRef || '', t, true, font), k = isTextField(f) && catKind(f);
+    const names = k && (k.kind === 'day' || k.kind === 'month') ? namesOf(f, k.kind) : null;
+    const value = isValue(f) || f.num ? textWidth(numberSample(f), t, false, font) : names ? Math.max(...names.map((x) => textWidth(x, t, false, font))) : 12 * 0.55 * t * 4 / 3;
+    return Math.ceil(Math.max(head, value) + 24 * sc);
+  };
   // 0.2.9 part 2 (O-4) and the cross-review's G8: the share of a bar chart's width its category names get
   // (categoryAxis.maxMarginFactor). Measured on the laptop (REPORT-FIXES-LAB B1/B2, Desktop 2.158.1304, 10 Oct): a chart
   // 508 wide on a 1080-high page cut names at about 10 characters with the default 25; 40 held about 20, 50 about 25.
@@ -41,10 +60,11 @@
   // measure names). A table holds only the fields its width has room for, by the rule its pictures already follow
   // (columnRoom): the first text column and the first measure always, then the others in their order while they fit;
   // the first that does not fit and every field after it are left out of that table (and told: tableColumns).
-  const tableFit = (fields, width, t, font) => {
+  // (rc1: sc given, the page's scale, the room is cellRoom's, the one the column widths are written by)
+  const tableFit = (fields, width, t, font, sc) => {
     const fs = (fields || []).filter(Boolean);
     if (fs.length <= 2) return { kept: fs, leftOut: [] };
-    const room = (f) => fieldRoom(f, t, font), must = [fs.find(isTextField), fs.find(isValue)].filter(Boolean);
+    const room = (f) => (sc ? cellRoom(f, t, font, sc) : fieldRoom(f, t, font)), must = [fs.find(isTextField), fs.find(isValue)].filter(Boolean);
     let used = must.reduce((a, f) => a + room(f), 0), full = false;
     const kept = [], leftOut = [];
     fs.forEach((f) => { if (must.includes(f)) return void kept.push(f); if (!full && used + room(f) <= width) { used += room(f); kept.push(f); } else { full = true; leftOut.push(f); } });
@@ -157,7 +177,7 @@
   }
 
   const api = {
-    fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, tableFit, make
+    cellRoom, numberSample, fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, tableFit, make
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbipSizing = api;
 })(typeof self !== 'undefined' ? self : this);
