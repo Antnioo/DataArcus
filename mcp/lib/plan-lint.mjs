@@ -19,6 +19,8 @@ const PNG1 = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACklEQV
 // Returns lint()'s answer for the first page, with the page's name, or { skipped: why } when nothing can be built.
 export function planLint(a) {
   const { m, design: d0, lang, F } = a, pickFrom = a.tables || m.tables;
+  // (the two settings create_report itself forces on a design: solid visuals when there is no background image, and the
+  // wider table share unless the design says otherwise; the page is built as create_report will write it, nothing tuned)
   let design = Object.assign({}, d0, { layout: Object.assign({}, d0.layout, { transparent: false, wideTable: d0.layout.wideTable !== false }) });
   if (F && F.kpis) design.layout = Object.assign({}, design.layout, { kpis: Math.max(3, Math.min(6, F.kpis.length)), kpiCards: F.kpis.length });
   // the binding: the picker's, with every field the plan names in its place (create_report's bindFor, without page filters)
@@ -47,7 +49,5 @@ export function planLint(a) {
     logoPlaceholder: false, texts: E.REPORT_TEXTS[lang === 'ar' ? 'ar' : 'en'], pages });
   const inv = inventory(memorySource(r.files), 'the planned report');
   const out = lint(inv, m.tables, null, { pages: [1] });
-  // the "no data" cards create_report lays over its charts are its own pattern: nothing to tell about them in a plan
-  out.findings = out.findings.filter((f) => f.rule !== 'COVER_CARDS'); delete out.counts.COVER_CARDS;
   return Object.assign({ page: inv.pages[0] ? inv.pages[0].name : null }, out);
 }
