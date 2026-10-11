@@ -212,7 +212,13 @@ const CHART_TYPES = ['lineChart', 'clusteredBarChart', 'clusteredColumnChart', '
 // itself by that month field is linked to the other tooltip page (the bar chart by category; its own trend would be
 // one bar), and every other chart to the trend page. Returns { charts, trend (charts linked to the trend page), bad }.
 const tipChart = (p) => p.visuals.find((v) => v.visual && /Chart$/.test(v.visual.visualType));
-const isTrend = (p) => p.page.height === 410;
+// (0.2.9 part 2: or 314 high when kept to its last 6 months, TOOLTIP-FIX-LAB)
+// (the cross-review's G10, 11 Oct: found by its shape, not its name, so a renamed or translated measure is still found:
+// an Advanced visual filter on a report-level measure that keeps the rows where it is 1)
+const lastMonthsFilter = (f) => f.type === 'Advanced' && !!(f.field && f.field.Measure && f.field.Measure.Expression.SourceRef.Schema === 'extension')
+  && ((((f.filter || {}).Where || [])[0] || {}).Condition || {}).Comparison && f.filter.Where[0].Condition.Comparison.ComparisonKind === 0 && ((f.filter.Where[0].Condition.Comparison.Right || {}).Literal || {}).Value === '1L';
+const sixMonths = (p) => p.visuals.some((v) => ((v.filterConfig || {}).filters || []).some(lastMonthsFilter));
+const isTrend = (p) => p.page.height === 410 || (p.page.height === 314 && sixMonths(p));
 const catRef = (v) => { const q = ((v.visual.query || {}).queryState || {}), r = q.Category || q.Group; return r && r.projections[0] ? r.projections[0].queryRef : null; };
 export function tooltipProblems(files) {
   const pages = pagesOf(files), tipPages = pages.filter((p) => p.page.type === 'Tooltip'), tips = tipPages.map((p) => p.page.name), bad = [];
@@ -246,17 +252,21 @@ export function tooltipPageProblems(files) {
   const bad = []; let charts = 0, trend = 0;
   const tips = pagesOf(files).filter((p) => p.page.type === 'Tooltip');
   tips.forEach((p) => {
-    const isT = isTrend(p), wantH = isT ? 410 : 284;
+    // (0.2.9 part 2, TOOLTIP-FIX-LAB, measured in Desktop 2.158.1304: a trend kept to its last 6 months, newest first, is
+    // 40 + 27 a bar high: the page 320 x 314; a trend without a date column keeps its 12 rows on 320 x 410)
+    const six = sixMonths(p);
+    const isT = isTrend(p), wantH = isT ? (six ? 314 : 410) : 284;
     if (isT) trend++;
-    if (p.page.width !== 320 || p.page.height !== wantH) bad.push(`tooltip page is ${p.page.width} x ${p.page.height}, want 320 x 284, or 320 x 410 for the trend`);
+    if (p.page.width !== 320 || p.page.height !== wantH) bad.push(`tooltip page is ${p.page.width} x ${p.page.height}, want 320 x 284, or 320 x 410 for the trend (320 x 314 kept to its last 6 months)`);
     const cs = p.visuals.filter((v) => v.visual && /Chart$/.test(v.visual.visualType));
     if (cs.length > 1 || (isT && cs.length !== 1)) bad.push(`tooltip page "${p.page.displayName}" has ${cs.length} charts`);
     cs.forEach((v) => {
       charts++;
       const o = v.visual.objects || {}, P = (k) => ((o[k] || [])[0] || {}).properties || {}, c = P('categoryAxis'), y = P('valueAxis'), l = P('labels');
-      const rows = Math.floor((v.position.height - 46) / 22);
+      // (0.2.9 part 2: the last-6-months trend by the tooltip lab's measure, 27 a bar at 8pt and 40 for the title and padding)
+      const rows = isT && six ? Math.floor((v.position.height - 40) / 27) : Math.floor((v.position.height - 46) / 22);
       const got = { type: v.visual.visualType, text: lit(c.fontSize), room: lit(c.maxMarginFactor), axisTitle: lit(c.showAxisTitle), valueAxis: lit(y.show), labels: lit(l.show), labelText: lit(l.fontSize), rows };
-      const want = { type: 'clusteredBarChart', text: '8D', room: '40L', axisTitle: 'false', valueAxis: 'false', labels: 'true', labelText: '8D', rows: isT ? 12 : 6 };
+      const want = { type: 'clusteredBarChart', text: '8D', room: '40L', axisTitle: 'false', valueAxis: 'false', labels: 'true', labelText: '8D', rows: isT ? (six ? 6 : 12) : 6 };
       if (JSON.stringify(got) !== JSON.stringify(want)) bad.push(`tooltip chart ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
       if (v.position.y + v.position.height > p.page.height || v.position.x + v.position.width > p.page.width) bad.push('tooltip chart outside its page');
     });
@@ -345,6 +355,11 @@ export function sortProblems(files) {
     // Ascending where a column chart is mirrored)
     const yField = (((v.visual.query.queryState.Y || {}).projections || [{}])[0] || {}).field;
     if ((sd.sort || []).length === 1 && yField && JSON.stringify(s0.field) === JSON.stringify(yField) && ['clusteredBarChart', 'clusteredColumnChart'].includes(v.visual.visualType) && s0.direction === (mirrored ? 'Ascending' : 'Descending')) { sorted.push({ page: p.page.displayName, tooltip: p.page.type === 'Tooltip', type: v.visual.visualType, category: catRef(v), by: 'measure' }); return; }
+    // (0.2.9 part 2, O-13 and the tooltip fix, measured in Desktop 2.158.1304, REPORT-FIXES-LAB and TOOLTIP-FIX-LAB: a month
+    // label is sorted by a report-level measure, the month's first date, held in the chart's Tooltips; the trend in time
+    // order (Descending where mirrored), the tooltip's last months newest first, Descending)
+    const ms = (s0.field || {}).Measure, held = ms && ms.Expression.SourceRef.Schema === 'extension' && tips.some((t) => JSON.stringify(t.field) === JSON.stringify(s0.field));
+    if ((sd.sort || []).length === 1 && held && /^Month start/.test(ms.Property) && (s0.direction === want || p.page.type === 'Tooltip')) { sorted.push({ page: p.page.displayName, tooltip: p.page.type === 'Tooltip', type: v.visual.visualType, category: catRef(v), by: ms.Expression.SourceRef.Entity + '.' + ms.Property }); return; }
     if ((sd.sort || []).length !== 1 || !agg || agg.Function !== 3 || !agg.Expression.Column || s0.direction !== want) { bad.push(`${id}: sort ${JSON.stringify(sd).slice(0, 160)}, want one ${want.toLowerCase()} Min of a column`); return; }
     const by = agg.Expression.Column.Expression.SourceRef.Entity + '.' + agg.Expression.Column.Property;
     if (!tips.some((t) => JSON.stringify(t.field) === JSON.stringify(s0.field))) bad.push(`${id}: sorted by Min of ${by}, which is not in its tooltip fields (Desktop ignores the sort)`);

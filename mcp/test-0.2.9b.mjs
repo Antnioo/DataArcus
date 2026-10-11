@@ -81,7 +81,7 @@ export async function v029b({ call, check, ROOT, fs = fs0 }) {
     const refs = t ? t.visual.query.queryState.Values.projections.map((p) => p.queryRef) : [];
     chk(() => ch.autoSizeColumnWidth.expr.Literal.Value === 'false' && !ch.columnAdjustment, () => `O-14 ${tag}: the table's auto-size must be off and grow-to-fit gone: ${JSON.stringify(ch)}`);
     chk(() => refs.length && refs.every((q) => ws.some((w) => w.ref === q)), () => `O-14 ${tag}: one width per column: ${JSON.stringify(refs)} vs ${JSON.stringify(ws)}`);
-    const sc = get(() => pg.page.height / 1080), issue = ws.find((w) => w.ref === 'Sales.Issue'), nums = ws.filter((w) => /^Sales\.(Total Sales|Orders|Margin %)$/.test(w.ref)), sum = ws.reduce((a, w) => a + w.w, 0);
+    const sc = get(() => pg.page.height / 1080), issue = ws.find((w) => w.ref === (tag === 'ar' ? 'Sales.Row label: Issue' : 'Sales.Issue')),   /* (Arabic: the name column is hidden at 0, round 23; its row label shows it) */ nums = ws.filter((w) => /^Sales\.(Total Sales|Orders|Margin %)$/.test(w.ref)), sum = ws.reduce((a, w) => a + w.w, 0);
     chk(() => issue.w >= 160 * sc && nums.every((w) => w.w >= 90 * sc - 0.5 && w.w <= 130 * sc + 0.5) && sum <= t.position.width - 36 + 0.5,
       () => `O-14 ${tag}: numbers 90-130, the text 160 at least, all within the width less 36 (${t && t.position.width}): ${JSON.stringify(ws)}`);
     chk(() => o.values[0].properties.wordWrap.expr.Literal.Value === 'true', () => `O-14 ${tag}: the values must wrap: ${JSON.stringify(o && o.values)}`);
@@ -110,7 +110,10 @@ export async function v029b({ call, check, ROOT, fs = fs0 }) {
         { name: 'Total Projects', expression: 'COUNTROWS ( Projects )', formatString: '#,0' }, { name: 'Actual Budget', expression: 'SUM ( Projects[Budget] )', formatString: '#,0' },
         { name: 'Budget Variance %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }, { name: '% On Track', expression: 'DIVIDE ( 1, 3 )', formatString: '0.0%' }] }] } }));
     const s = await ask('suggest_fields', { path: 'b29k', kpis: 4 }), k = (s.j && s.j.kpis || []).filter(Boolean).map((x) => x.m);
-    chk(() => k.includes('Total Projects') && k.includes('Actual Budget') && !k.includes('CPI') && !k.includes('SPI') && !k.includes('Predicted Cost (EOC)'), () => `O-7: the executive KPIs must be core counts and amounts, not acronyms or forecasts: ${JSON.stringify(k)}`);
+    // (the cross-review's G1, 11 Oct: this model is the portfolio's own names, so the check asks for the shape only: the
+    // plain count and sum first, a computed indicator such as CPI not before them; no name list decides. The general
+    // check, on retail, HR and logistics measures, is in test-0.2.9i.mjs)
+    chk(() => k[0] === 'Total Projects' && k[1] === 'Actual Budget' && !k.includes('CPI') && !k.includes('SPI'), () => `O-7: the executive KPIs must start with the core count and sum: ${JSON.stringify(k)}`);
   }
 
   // ---------- 5. O-2: the cards' numbers ----------
@@ -127,7 +130,7 @@ export async function v029b({ call, check, ROOT, fs = fs0 }) {
     const tips = r.pages.filter((p) => p.page.type === 'Tooltip'), bars = tips.map((p) => ({ p, v: p.visuals.find((v) => typeOf(v) === 'clusteredBarChart') })).filter((x) => x.v);
     const byCat = bars.find((x) => !/Calendar/.test(JSON.stringify(x.v.visual.query.queryState.Category))), byMonth = bars.find((x) => /Calendar/.test(JSON.stringify(x.v.visual.query.queryState.Category)));
     const top = get(() => filtersOf(byCat.v).find((f) => f.type === 'TopN'));
-    chk(() => top && /"Top":6/.test(JSON.stringify(top.filter)) && /Top 6/.test(JSON.stringify(byCat.v.visual.visualContainerObjects.title)), () => `tooltip ${tag}: the category bars must be the Top 6 by their measure, said in the title: ${JSON.stringify(byCat && filtersOf(byCat.v)).slice(0, 300)}`);
+    chk(() => top && /"Top":6/.test(JSON.stringify(top.filter)) && (tag === 'ar' ? /أعلى 6/ : /Top 6/).test(JSON.stringify(byCat.v.visual.visualContainerObjects.title)), () => `tooltip ${tag}: the category bars must be the Top 6 by their measure, said in the title: ${JSON.stringify(byCat && filtersOf(byCat.v)).slice(0, 300)}`);
     const m6 = get(() => filtersOf(byMonth.v).map((f) => extByField(r, f.field)).find((m) => m && /EDATE \( [^,]+, -6 \)/.test(m.expression)));
     const sd = get(() => byMonth.v.visual.query.sortDefinition.sort[0]);
     chk(() => m6 && sd.direction === 'Descending' && /MIN \( 'Calendar'\[Date\] \)/.test((extByField(r, sd.field) || {}).expression) && byMonth.v.position.height >= 40 + 27 * 6 && byMonth.v.position.height + byMonth.v.position.y <= byMonth.p.page.height,
