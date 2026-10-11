@@ -135,6 +135,21 @@ export function v029w({ check }) {
     const bad = [pf({ t: T, c: 'City', literals: ["'a') } ] } , 'b'"] }), pf({ t: T, c: 'City', values: [{ x: 1 }] }), pf({ t: T, c: 'City', type: 'int64', values: [1.5] })];
     chk(() => bad.every((r) => r.threw && /pageFilters\[0\]/.test(r.threw)), () => `A3-9: a literal that is not Power BI's, or a value of the wrong type, is refused: ${JSON.stringify(bad.map((r) => r.threw || 'written'))}`);
   }
+
+  // ---------- A3-12: build split into its query, sizing, page and notes modules (each loadable alone; build puts them together) ----------
+  {
+    const mod = (f) => get(() => req('../assets/js/' + f + '.js')), Q = mod('pbip-query'), Z = mod('pbip-sizing'), Pg = mod('pbip-page'), N = mod('pbip-notes');
+    chk(() => typeof Q.bindQuery === 'function' && typeof Q.daxNames.column === 'function' && typeof Q.measures === 'function' && typeof Z.textWidth === 'function' && typeof Z.make === 'function'
+      && typeof Pg.write === 'function' && typeof Pg.kit === 'function' && typeof Pg.tooltips === 'function' && typeof N.make === 'function' && typeof N.result === 'function',
+      () => `A3-12: the modules pbip-query.js, pbip-sizing.js, pbip-page.js and pbip-notes.js export their parts: ${JSON.stringify([Q, Z, Pg, N].map((m) => (m && !m.threw ? Object.keys(m).length : m && m.threw)))}`);
+    chk(() => Px.textWidth === Z.textWidth && Px.daxNames === Q.daxNames && Px.dropLines === Pg.dropLines && Px.timeAxisPlan === Q.timeAxisPlan,
+      () => 'A3-12: pbip-export.js re-exports the modules\' own functions (one of each)');
+    const s = fs.readFileSync(path.join(REPO, 'assets/js/pbip-export.js'), 'utf8'), lines = s.split('\n'), from = lines.findIndex((l) => /^  function build\(o\) \{/.test(l)), to = lines.findIndex((l, i) => i > from && /^  \}$/.test(l));
+    chk(() => from > 0 && to - from < 250, () => `A3-12: build is the orchestrator, under 250 lines (it was about 1,400): ${to - from}`);
+    // the website loads the five files in order, each with its stamp
+    const tg = fs.readFileSync(path.join(REPO, 'assets/js/theme-generator.js'), 'utf8'), order = ['pbip-query', 'pbip-sizing', 'pbip-notes', 'pbip-page', 'pbip-export'].map((f) => tg.indexOf(f + '.min.js?v='));
+    chk(() => order.every((i, k) => i > 0 && (k === 0 || i > order[k - 1])), () => `A3-12: the website loads the writer's modules before pbip-export.min.js: ${JSON.stringify(order)}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
