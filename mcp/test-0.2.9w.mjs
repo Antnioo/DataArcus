@@ -53,6 +53,29 @@ export function v029w({ check }) {
     chk(() => r.files && measures(r).every((m) => !/\p{Cc}/u.test(m.expression)) && !measures(r).some((m) => /Month start|Last 12/.test(m.name)),
       () => `A3-10: a date column with a control character gets no time measure (its DAX can't name it): ${r.threw || JSON.stringify(measures(r).map((m) => m.name))}`);
   }
+
+  // ---------- A3-11: a name's direction controls never reach shown text (titles, alt text, headers, report measures' names) ----------
+  {
+    const RLO = '\u202E', LRI = '\u2066', BIDI = /[\u061C\u200E\u200F\u202A-\u202E\u2066-\u2069]/;
+    const bind = base({ kpis: [M('Sales' + RLO + ' Net'), M('Orders')], measure: M('Sales' + RLO + ' Net'), cats: { bar: C('City' + LRI), column: C('Channel'), donut: C('Channel') },
+      table: [C('City' + LRI), M('Sales' + RLO + ' Net')], date: C('Month Label', { dateOf: { t: T, c: 'Order Date' } }), tip: { card: M('Sales' + RLO + ' Net'), cat: C('City' + LRI), y: M('Sales' + RLO + ' Net') } });
+    for (const lang of ['en', 'ar']) {
+      const r = get(() => build(bind, { lang })), vs = r.files ? visuals(r) : [];
+      const shownText = vs.flatMap((v) => [titleOf(v), altOf(v)].concat(Object.values((v.visual.query || { queryState: {} }).queryState).flatMap((st) => st.projections.map((p) => p.displayName)))).filter((x) => x != null);
+      chk(() => vs.length && shownText.length > 5 && !shownText.some((x) => BIDI.test(x)) && shownText.some((x) => /Sales Net/.test(x)),
+        () => `A3-11 (${lang}): titles, alt text and display names carry no direction control: ${r.threw || JSON.stringify(shownText.filter((x) => BIDI.test(x)).slice(0, 4))}`);
+      const ms = measures(r);
+      chk(() => ms.length && ms.every((m) => !BIDI.test(m.name)) && ms.some((m) => /^No data: Sales Net$/.test(m.name) && m.expression.includes('[Sales' + RLO + ' Net]')),
+        () => `A3-11 (${lang}): a report measure's name has no direction control, its DAX still names the model's measure: ${JSON.stringify(ms.map((m) => [m.name, m.expression.slice(0, 60)]))}`);
+    }
+    // the report's title is shown text too (the header's text box): its file name already dropped the format characters
+    const r3 = get(() => build(base(), { title: 'Report' + RLO + 'xcod.exe' })), heads = r3.files ? visuals(r3).filter((v) => v.visual.visualType === 'textbox').map((v) => JSON.stringify(v.visual.objects)) : [];
+    chk(() => heads.some((x) => x.includes('Reportxcod.exe')) && !heads.some((x) => BIDI.test(x)), () => `A3-11: the header's title drops the override: ${r3.threw || heads.join(' ').slice(0, 200)}`);
+    // two measures that differ only by a direction mark keep two "No data" measures (one name would serve both)
+    const r2 = get(() => build(base({ kpis: [M('Sales'), M('Sales' + RLO)], measure: M('Sales'), y: { bar: M('Sales' + RLO) } })));
+    chk(() => measures(r2).filter((m) => /^No data: Sales/.test(m.name)).length === 2 && new Set(measures(r2).map((m) => m.name)).size === measures(r2).length,
+      () => `A3-11: "Sales" and "Sales" + U+202E get a No data measure each, with different names: ${r2.threw || JSON.stringify(measures(r2).map((m) => m.name))}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
