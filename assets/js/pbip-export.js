@@ -336,6 +336,26 @@
   const AGG_DAX = { 0: 'SUM', 1: 'AVERAGE', 2: 'DISTINCTCOUNT', 3: 'MIN', 4: 'MAX', 5: 'COUNTA' };   // (part 6: 2 is the visual's distinct count)
   const valueDax = (p) => (p.field.Measure ? daxName(p.field.Measure.Expression.SourceRef.Entity, p.field.Measure.Property)
     : (AGG_DAX[p.field.Aggregation.Function] || 'COUNTA') + ' ( ' + daxName(p.field.Aggregation.Expression.Column.Expression.SourceRef.Entity, p.field.Aggregation.Expression.Column.Property) + ' )');
+  // 0.2.9 part 2 (O-4) and the cross-review's G8: the share of a bar chart's width its category names get
+  // (categoryAxis.maxMarginFactor). Measured on the laptop (REPORT-FIXES-LAB B1/B2, Desktop 2.158.1304, 10 Oct): a chart
+  // 508 wide on a 1080-high page cut names at about 10 characters with the default 25; 40 held about 20, 50 about 25.
+  // BAR_NARROW_720 = 560 (in 720-high units) is a GUESS, not measured: under it a chart is as narrow as the measured one
+  // or a little wider and takes 50; at and over it 40, which leaves the bars about 60% (only 508 wide was measured).
+  const BAR_NARROW_720 = 560;
+  const barNameShare = (w, pageH) => (w * 720 / pageH < BAR_NARROW_720 ? 50 : 40);
+  // 0.2.9 part 2 (O-13) and the cross-review's G6: how a time axis's field is ordered, decided once here; the writer
+  // applies it and plan_layout says it. order: 'own' (a date or number), 'model' (the model's sort-by column), 'number'
+  // (the report sorts by the number column, by), 'monthStart' (a month label of a date table: by its first date, the
+  // last 12 months with data), 'az' (a text with no order: A to Z)
+  const monthLabel = (f) => !!(f && f.c != null && f.dateOf && !f.sortBy && !f.ordered && !f.num && f.agg == null && !/^(int64|double|decimal|number|date)/.test(String(f.type || 'string')));
+  const timeAxisPlan = (f) => {
+    if (!f || f.c == null) return null;
+    if (f.agg != null || f.num || /^(int64|double|decimal|number|date)/.test(String(f.type || 'string'))) return { order: 'own' };
+    if (f.ordered) return { order: 'model' };
+    if (f.sortBy) return { order: 'number', by: f.sortBy };
+    if (monthLabel(f)) return { order: 'monthStart', by: f.dateOf, last: 12 };
+    return { order: 'az' };
+  };
   const rowLabelDax = (f, word, vals) => { const c = daxName(f.t, f.c), inner = 'IF ( ISINSCOPE ( ' + c + ' ), SELECTEDVALUE ( ' + c + ' ), "' + word.replace(/"/g, '""') + '" )';
     return vals && vals.length ? 'IF ( ' + vals.map((p) => 'NOT ISBLANK ( ' + valueDax(p) + ' )').join(' || ') + ', ' + inner + ' )' : inner; };
   // Round 11 (seen in Desktop 2.158, 5 Oct 2026: on a 960 x 720 page a table of a text column and three measures was
@@ -779,7 +799,8 @@
     // Report-level measures for the time axes (DateTime and Integer), into reportExtensions.json with the others; the same
     // expression in the same table is one measure
     const timeExt = [];
-    const dq = (t) => "'" + String(t).replace(/'/g, "''") + "'", dc = (t, c) => dq(t) + '[' + String(c).replace(/\]/g, ']]') + ']';
+    // (the cross-review's G4: the writer's own daxName and valueDax, one DAX for a visual's value everywhere)
+    const daxTable = (t) => "'" + String(t).replace(/'/g, "''") + "'";
     const extMeasure = (t, want, expression, dataType) => {
       const had = timeExt.find((x) => x.t === t && x.expression === expression); if (had) return had.m;
       let m = freeExt(t, want); for (let k = 2; timeExt.some((x) => x.t === t && x.m === m); k++) m = freeExt(t, want + ' (' + k + ')');
@@ -787,22 +808,16 @@
     };
     const extField = (t, m) => ({ Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: t } }, Property: m } });
     // a field of a visual as DAX (a model measure, or a column a visual sums or counts), or null
-    const AGG_DAX = { 0: 'SUM', 1: 'AVERAGE', 2: 'DISTINCTCOUNT', 3: 'MIN', 4: 'MAX', 5: 'COUNT' };
-    const daxOf = (field) => {
-      if (field && field.Measure && !field.Measure.Expression.SourceRef.Schema) return dc(field.Measure.Expression.SourceRef.Entity, field.Measure.Property);
-      const a = field && field.Aggregation, c = a && a.Expression && a.Expression.Column;
-      return c && AGG_DAX[a.Function] ? AGG_DAX[a.Function] + ' ( ' + dc(c.Expression.SourceRef.Entity, c.Property) + ' )' : null;
-    };
+    const daxOf = (field) => ((field && field.Measure && !field.Measure.Expression.SourceRef.Schema) || (field && field.Aggregation && field.Aggregation.Expression.Column) ? valueDax({ field }) : null);
     // O-13: a month label (a text column the model does not sort, with its table's date column, f.dateOf) is put in time
     // order by a measure, the month's first date, in the visual's Tooltips; and kept to the last n months, counted back
     // from the last date where the visual's measure has a value (not from today: an old data set still shows its last
     // months), by a visual filter on a measure that is 1 for those months
-    const monthLabel = (f) => !!(f && f.c != null && f.dateOf && !f.sortBy && !f.ordered && !f.num && f.agg == null);
-    const monthStart = (f) => extMeasure(f.dateOf.t, 'Month start (sort)', 'MIN ( ' + dc(f.dateOf.t, f.dateOf.c) + ' )', 'DateTime');
+    const monthStart = (f) => extMeasure(f.dateOf.t, 'Month start (sort)', 'MIN ( ' + daxName(f.dateOf.t, f.dateOf.c) + ' )', 'DateTime');
     const lastMonths = (f, yField, n) => {
       const y = daxOf(yField); if (!y) return null;
-      const d = dc(f.dateOf.t, f.dateOf.c), yName = yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property;
-      const m = extMeasure(f.dateOf.t, 'Last ' + n + ' months: ' + yName, 'VAR _last = CALCULATE ( MAXX ( FILTER ( ALL ( ' + d + ' ), NOT ISBLANK ( ' + y + ' ) ), ' + d + ' ), ALL ( ' + dq(f.dateOf.t) + ' ) ) RETURN IF ( MAX ( ' + d + ' ) > EDATE ( _last, -' + n + ' ), 1 )', 'Integer');
+      const d = daxName(f.dateOf.t, f.dateOf.c), yName = yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property;
+      const m = extMeasure(f.dateOf.t, 'Last ' + n + ' months: ' + yName, 'VAR _last = CALCULATE ( MAXX ( FILTER ( ALL ( ' + d + ' ), NOT ISBLANK ( ' + y + ' ) ), ' + d + ' ), ALL ( ' + daxTable(f.dateOf.t) + ' ) ) RETURN IF ( MAX ( ' + d + ' ) > EDATE ( _last, -' + n + ' ), 1 )', 'Integer');
       return { name: 'Filter' + rnd() + rnd().slice(0, 4), type: 'Advanced', field: extField(f.dateOf.t, m),
         filter: { Version: 2, From: [{ Name: 'm', Entity: f.dateOf.t, Schema: 'extension', Type: 0 }],
           Where: [{ Condition: { Comparison: { ComparisonKind: 0, Left: { Measure: { Expression: { SourceRef: { Source: 'm' } }, Property: m } }, Right: { Literal: { Value: '1L' } } } } }] }, howCreated: 'User' };
@@ -827,15 +842,16 @@
           Where: [{ Condition: { In: { Expressions: [{ Column: { Expression: { SourceRef: { Source: 'd' } }, Property: col.Property } }], Table: { SourceRef: { Source: 'subquery' } } } } }] }, howCreated: 'User' };
     };
     const timeAxes = [];   // what was done to each time axis, for the answer
+    let blankFiltered = 0;   // charts given the "is not blank" filter (the cross-review's G13: the note only then)
     // The fixes on a report visual, after its fields and objects are written (Bt: its binding, tt: its table's text size)
     const fixVisual = (visual, s, pg, Bt, tt) => {
       const st = visual.query.queryState, cat = st.Category && st.Category.projections[0], col = cat && cat.field.Column, filters = [];
       const put = (object, props) => { visual.objects = visual.objects || {}; const e = visual.objects[object] || (visual.objects[object] = [{ properties: {} }]); Object.assign(e[0].properties, props); };
-      if (col && CHARTS.includes(s.kind)) filters.push(notBlank(col));
+      if (col && CHARTS.includes(s.kind)) { filters.push(notBlank(col)); blankFiltered++; }
       // O-4: a bar chart's names get 40% of its width, 50% on a narrow chart (under 560 on the 720-high page); the default 25 cut them at about 10 characters
-      if (visual.visualType === 'clusteredBarChart') put('categoryAxis', { maxMarginFactor: lit((s.w * 720 / pg.page.h < 560 ? 50 : 40) + 'L') });
+      if (visual.visualType === 'clusteredBarChart') put('categoryAxis', { maxMarginFactor: lit(barNameShare(s.w, pg.page.h) + 'L') });
       // O-13: the line chart's month label
-      if (s.kind === 'line' && col && Bt.date && monthLabel(Bt.date) && col.Property === Bt.date.c) {
+      if (s.kind === 'line' && col && Bt.date && (timeAxisPlan(Bt.date) || {}).order === 'monthStart' && col.Property === Bt.date.c) {
         byMonthStart(visual.query, Bt.date, MIRROR ? 'Descending' : 'Ascending');
         const lf = st.Y && lastMonths(Bt.date, st.Y.projections[0].field, 12); if (lf) filters.push(lf);
         timeAxes.push({ page: pg.name || base, field: Bt.date.t + '[' + Bt.date.c + ']', by: Bt.date.dateOf.t + '[' + Bt.date.dateOf.c + ']', last: lf ? 12 : null });
@@ -866,7 +882,7 @@
         const ch = visual.objects.columnHeaders[0].properties; delete ch.columnAdjustment; ch.autoSizeColumnWidth = bool(false);
         put('values', { wordWrap: bool(true) });
       }
-      if (filters.length) visual.__filters = filters;
+      return filters;
     };
 
     PAGES.forEach((pg, pageIndex) => {
@@ -1198,7 +1214,7 @@
           bookmarks.push({ name: bm, page: pageName, targets: slicerNames.slice(), label: (W.reset || 'Reset filters') + (PAGES.length > 1 ? ' · ' + (pg.name || '') : '') });
           return;
         }
-        let visual, box = s;
+        let visual, box = s, vFilters = null;   // (vFilters: the visual's own filters, from fixVisual; the cross-review's G12)
         if (s.kind === 'title') {
           // the title and the logo text follow the header's height (within 8-60pt), and stay on one line in it, with
           // the text's middle at the header's (see centred)
@@ -1473,7 +1489,7 @@
               svgDone[pageIndex] = true;
             }
           }
-          if (B && visual && visual.query) fixVisual(visual, s, pg, Bt, tableText);
+          if (B && visual && visual.query) vFilters = fixVisual(visual, s, pg, Bt, tableText);
         }
         // Round 19 (the owner's idea, 6 Oct 2026): "No data for this selection" where the visual's measure is blank. A
         // report-level measure (reportExtensions.json, the model untouched) gives the text only when the measure is blank,
@@ -1502,9 +1518,8 @@
             visual.visualContainerObjects.background = obj({ show: bool(false) });
           }
         }
-        const vf = visual && visual.__filters; if (vf) delete visual.__filters;
         const v = container({ x: s.x, y: box.y, w: s.w, h: box.h, z, parent, visual, kind: s.kind });
-        if (vf && vf.length) v.filterConfig = { filters: vf };
+        if (vFilters && vFilters.length) v.filterConfig = { filters: vFilters };
         if (CHARTS.includes(s.kind)) charts.push({ v, byMonth: !!trend && same(s.kind === 'line' ? B.date : (B.cats || {})[s.kind], tip.date) });
         z += 1000;
         // the page navigator follows the title in the reading order; its text size is set for the default, hover and
@@ -1836,7 +1851,8 @@
     // ("100K", "0.4M"), and without that axis the first month's name is cut. The owner's choice, 2026-10-03.
     // (0.2.9 part 2, TOOLTIP-FIX-LAB: about 77 months in 310 showed 13 and a scrollbar: where the month's table has a date
     // column, the last 6 months, newest first, at 40 + 27 a bar; elsewhere the 12 rows as before)
-    const six = tip && tip.date && tip.date.c != null && tip.date.dateOf && tip.date.agg == null && !tip.date.num;
+    // (the cross-review's G3: the same rule as the trend's, so a month name the model or the report sorts keeps its 12)
+    const six = !!(tip && (timeAxisPlan(tip.date) || {}).order === 'monthStart');
     if (trend) { const tv = { x: 12, y: 92, w: 296, h: six ? 40 + 27 * 6 + 8 : 310, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(tip.card)] }), tip.date),
         objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
         visualContainerObjects: tipFrame(byTitle(label(tip.card), W.by || 'by', label(tip.date))) }) };
@@ -1859,9 +1875,10 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, tableWide, noDataSkipped, svgSizes, noPageButtons, tableColumns, rowLabels: rowLabels.map((x) => ({ page: x.page, t: x.t, c: x.c, m: x.m })), rowLabelSkipped, extRenamed, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts, blankKept, subtitlesUsed: [...subtitlesUsed], timeAxes, tooltipLimits: { top: tip && tip.cat && tip.cat.c != null && tip.cat.agg == null && !TIME_WORDS.test(wordsOf(tip.cat.c)) ? 6 : null, months: six ? 6 : null } };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, tableWide, noDataSkipped, svgSizes, noPageButtons, tableColumns, rowLabels: rowLabels.map((x) => ({ page: x.page, t: x.t, c: x.c, m: x.m })), rowLabelSkipped, extRenamed, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts, blankKept, subtitlesUsed: [...subtitlesUsed], timeAxes, blankFiltered, tooltipLimits: { top: tip && tip.cat && tip.cat.c != null && tip.cat.agg == null && !TIME_WORDS.test(wordsOf(tip.cat.c)) ? 6 : null, months: six ? 6 : null } };
   }
 
-  const api = { build, zip, crc32, textWidth, columnRoom, hasControl, absorb, dropLines };
+  // AR_MONTHS: the one Arabic month list (the cross-review's duplicates: the twin uses it too)
+  const api = { build, zip, crc32, textWidth, columnRoom, hasControl, absorb, dropLines, timeAxisPlan, barNameShare, AR_MONTHS: T.ar.months.slice() };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbip = api;
 })(typeof self !== 'undefined' ? self : this);
