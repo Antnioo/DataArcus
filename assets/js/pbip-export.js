@@ -236,11 +236,16 @@
   // (part 6, the re-review's 1: a name is split into its words first, at CamelCase, "_", "-" and digits: MonthName,
   // Month_Name, FiscalYear, WeekNum, اسم_الشهر are time; "Holiday Package" and "Candidate" are not)
   const wordsOf = (n) => String(n).replace(/([a-z])([A-Z])/g, '$1 $2').replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2').replace(/[_\-\d]+/g, ' ');
+  // 0.2.9, audit 3's A3-8: the field picker marks a time category (time: true or false, or its kind: a day, week,
+  // month, quarter, year, date, period or Hijri category is time; any other kind is not) and its mark decides; the
+  // name's words (TIME_WORDS) only where the picker gives no mark ("Day Type" with a kind of its own is a category)
+  const TIME_KINDS = /^(date|day|weekday|week|month|quarter|year|period|hijri|time)s?$/i;
+  const isTime = (f) => (f.time != null ? !!f.time : f.kind != null ? TIME_KINDS.test(String(f.kind)) : TIME_WORDS.test(wordsOf(f.c)));
   const sorted = (query, f, byValue) => {
     if (!query || !f) return query;
     if (!f.sortBy) {
       const y = byValue && query.queryState.Y && query.queryState.Y.projections[0];
-      if (y && !f.ordered && !f.num && !TIME_WORDS.test(wordsOf(f.c))) query.sortDefinition = { sort: [{ field: y.field, direction: 'Descending' }], isDefaultSort: true };
+      if (y && !f.ordered && !f.num && !isTime(f)) query.sortDefinition = { sort: [{ field: y.field, direction: 'Descending' }], isDefaultSort: true };
       return query;
     }
     const field = { Aggregation: { Expression: { Column: { Expression: { SourceRef: { Entity: f.sortBy.t } }, Property: f.sortBy.c } }, Function: 3 } };
@@ -1876,7 +1881,7 @@
       if (FULL && tip.card && tip.card.m != null && tip.card.cardFormat && !cardCode(tip.card)) objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(tip.card.cardFormat) }, selector: { metadata: tip.card.t + '.' + tip.card.m } });
       return { x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(tip.card)] }), objects, visualContainerObjects: cardFrame(tipFrame(label(tip.card)), tipCard, TIP_TITLE) } }; };
     const notBlankOf = (f) => notBlank(fieldCol(f.t, f.c).field.Column);
-    const tipTop = (tv) => { if (!tip.cat || tip.cat.c == null || tip.cat.agg != null || TIME_WORDS.test(wordsOf(tip.cat.c))) return tv;
+    const tipTop = (tv) => { if (!tip.cat || tip.cat.c == null || tip.cat.agg != null || isTime(tip.cat)) return tv;
       tv.filters = [notBlankOf(tip.cat), topN(fieldCol(tip.cat.t, tip.cat.c).field.Column, proj(tip.y).field, 6)];
       const t0 = tv.visual.visualContainerObjects.title[0].properties.text.expr.Literal.Value.replace(/^'|'$/g, '').replace(/''/g, "'"), top = (W.top6 || (lang === 'ar' ? 'أعلى 6' : 'Top 6')) + ': ' + t0;
       tv.visual.visualContainerObjects.title[0].properties.text = str(top); return tv; };
@@ -1924,7 +1929,7 @@
       add('.gitignore', '**/.pbi/localSettings.json\n**/.pbi/cache.abf\n');
       add('README.md', (W.readme || '').replace(/\{name\}/g, base));
     }
-    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, tableWide, noDataSkipped, svgSizes, noPageButtons, tableColumns, rowLabels: rowLabels.map((x) => ({ page: x.page, t: x.t, c: x.c, m: x.m })), rowLabelSkipped, extRenamed, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts, blankKept, subtitlesUsed: [...subtitlesUsed], timeAxes, blankFiltered, tooltipLimits: { top: tip && tip.cat && tip.cat.c != null && tip.cat.agg == null && !TIME_WORDS.test(wordsOf(tip.cat.c)) ? 6 : null, months: six ? 6 : null } };
+    return { base, files, zip: () => zip(files), leftOut, kpiTitles, titles, tableOrder, tableRows, headerGrew, tableSmaller, tableWide, noDataSkipped, svgSizes, noPageButtons, tableColumns, rowLabels: rowLabels.map((x) => ({ page: x.page, t: x.t, c: x.c, m: x.m })), rowLabelSkipped, extRenamed, chartColors, chartAxes, tabRows, ringsSmall, shortDays, barCharts, blankKept, subtitlesUsed: [...subtitlesUsed], timeAxes, blankFiltered, tooltipLimits: { top: tip && tip.cat && tip.cat.c != null && tip.cat.agg == null && !isTime(tip.cat) ? 6 : null, months: six ? 6 : null } };
   }
 
   // AR_MONTHS: the one Arabic month list (the cross-review's duplicates: the twin uses it too)
