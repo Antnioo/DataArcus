@@ -36,7 +36,7 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     const s = k({ noTime: true }), kinds = Array.isArray(s) ? s.map((x) => x.kind).join() : s;
     const bar = Array.isArray(s) && s.find((x) => x.kind === 'bar'), colm = Array.isArray(s) && s.find((x) => x.kind === 'column'), tab = Array.isArray(s) && s.find((x) => x.kind === 'table');
     chk(() => kinds === 'title,logo,kpi,kpi,kpi,kpi,bar,column,table' && bar.y === colm.y && tab.y > bar.y && tab.w > bar.w + colm.w, () => `D16: the executive layout without a time axis: the bar and column charts share the first row, the table the second, full width: ${kinds} ${JSON.stringify([bar, colm, tab].map((x) => x && [x.x, x.y, x.w, x.h]))}`);
-    const f = get(() => E.computeSlots(design({ preset: 'focus' }).layout, 'en', { noTime: true }).map((x) => x.kind).join());
+    const f = get(() => E.computeSlots(design({ preset: 'focus', kpis: 3 }).layout, 'en', { noTime: true }).map((x) => x.kind).join());
     chk(() => f === 'title,logo,kpi,kpi,kpi,bar,text', () => `D16: the single-focus layout's hero chart is a bar chart without a time axis: ${f}`);
     chk(() => JSON.stringify(k({})) === JSON.stringify(k(undefined)) && k({}).some((x) => x.kind === 'line'), () => 'D16: with a time axis nothing changes');
     const x = await ask('create_report', { path: 's-loans', name: 'S no time', design: design({ preset: 'exec' }), secondPage: false });
