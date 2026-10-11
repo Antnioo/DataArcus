@@ -163,10 +163,11 @@ export async function v029c({ call, check, ROOT, meta }) {
     { type: 'tableEx', at: [640, 660, 400, 150], title: 'Issues, wrapped', roles: { Values: [col('Sales', 'Issue'), mea('Sales', 'Orders')] }, objects: Object.assign(growTable(), { values: [{ properties: { wordWrap: L('true') } }] }) },
     // set widths wider than the table
     { type: 'tableEx', at: [640, 820, 400, 150], title: 'Too wide', roles: { Values: [col('Sales', 'Region'), mea('Sales', 'Orders')] }, objects: { columnHeaders: [{ properties: { autoSizeColumnWidth: L('false') } }], columnWidth: [{ properties: { value: L('300D') }, selector: { metadata: 'Sales.Region' } }, { properties: { value: L('200D') }, selector: { metadata: 'Sales.Orders' } }] } },
-    // a chart with no title, and one with a text box just above it
-    { type: 'donutChart', at: [1060, 660, 300, 300], roles: { Category: [col('Sales', 'Region')], Y: [mea('Sales', 'Orders')] } },
+    // a chart with its title off, and one with a text box just above it (audit 4's A4-8: with no title setting Power BI
+    // draws its own title, so both are written with the title switched off)
+    { type: 'donutChart', at: [1060, 660, 300, 300], titleOff: true, roles: { Category: [col('Sales', 'Region')], Y: [mea('Sales', 'Orders')] } },
     { type: 'textbox', at: [1380, 640, 300, 30], text: 'Orders by region' },
-    { type: 'donutChart', at: [1380, 672, 300, 200], roles: { Category: [col('Sales', 'Region')], Y: [mea('Sales', 'Orders')] } },
+    { type: 'donutChart', at: [1380, 672, 300, 200], titleOff: true, roles: { Category: [col('Sales', 'Region')], Y: [mea('Sales', 'Orders')] } },
     // O-6: the placeholder; an overlap (half); a card laid over a chart (a cover, not an overlap); off the page
     { type: 'textbox', at: [1700, 900, 200, 40], text: 'Your logo' },
     { type: 'cardVisual', at: [1700, 660, 200, 200], roles: { Data: [mea('Sales', 'Orders')] } },

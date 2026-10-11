@@ -452,9 +452,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let pbipSync = null;   // set below on pages with the project card: keeps the field picker in step with the layout
   if (pbipBtn) {
     let logo = null;
-    const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : new Promise((resolve, reject) => {
-      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-export.min.js?v=20261011i'; sc.onload = () => resolve(window.DAPbip); sc.onerror = reject; document.head.appendChild(sc);
-    }));
+    // (audit 4's A4-5: the writer measures text with text-measure.js, loaded first)
+    const loadOne = (src) => new Promise((resolve, reject) => { const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc); });
+    const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip)
+      : (window.DataArcusTextMeasure ? Promise.resolve() : loadOne('../assets/js/text-measure.min.js?v=20261011a4')).then(() => loadOne('../assets/js/pbip-export.min.js?v=20261011a4')).then(() => window.DAPbip));
     // ---- your own model: a local project (the report points at its .SemanticModel folder) or a published one ----
     // Each choice keeps its own model and the fields picked for it, so switching between them never pairs one
     // model's fields with the other's location: own.local / own.service = { tables, msg, bad, folder, dir, reports, choices }
