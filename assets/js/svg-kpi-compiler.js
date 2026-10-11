@@ -147,7 +147,12 @@
   // DAX printing
   const daxStr = (s) => '"' + String(s).replace(/"/g, '""') + '"';
   const daxNum = (n) => { const s = String(+n.toFixed(6)); return s.startsWith('.') ? '0' + s : s; };
-  const daxMeasure = (name) => '[' + String(name).replace(/\]/g, ']]') + ']';
+  // A3-4 (AUD-032): a name holding a control character (\p{Cc}: a tab, a line break) is never written into DAX: the
+  // same test as the report writer's Pbip.hasControl. compile refuses such values with an error first; this throw is
+  // the backstop, so no path can write one
+  const hasControl = (x) => /\p{Cc}/u.test(String(x));
+  const CONTROL_MSG = 'holds a control character (a tab or a line break), which DAX names can\'t hold: rename it in the model';
+  const daxMeasure = (name) => { if (hasControl(name)) throw new Error('The measure name ' + CONTROL_MSG); return '[' + String(name).replace(/\]/g, ']]') + ']'; };
   function dax(n) {
     switch (n.k) {
       case 'num': return n.n < 0 ? '( ' + daxNum(n.n) + ' )' : daxNum(n.n);
@@ -289,6 +294,7 @@
   // 'Date'[Date] or Date[Date] -> table and column, always quoted. DAX doubles a ' inside a quoted table name
   // and a ] inside a column name ('Date''s'[Date], 'Cal'[Da]]te]), so those are read and written back the same way.
   function columnRef(text) {
+    if (hasControl(text == null ? '' : String(text).trim())) return null;   // A3-4: never a name with a control character
     const m = /^\s*(?:'((?:[^']|'')+)'|([^'\[\]]+?))\s*\[((?:[^\]]|\]\])+)\]\s*$/.exec(String(text == null ? '' : text));
     if (!m) return null;
     const t = (m[1] !== undefined ? m[1].replace(/''/g, "'") : m[2]).trim(), c = m[3].replace(/\]\]/g, ']').trim();
@@ -315,6 +321,8 @@
     (d.values || []).forEach((v) => {
       const make = VALUE_KINDS[v.kind];
       if (!make) { errors.push('Unknown value kind: ' + v.kind); return; }
+      if (v.kind === 'column' && hasControl(String(v.column || '').trim())) { errors.push('Value "' + (v.label || v.id) + '": the column ' + CONTROL_MSG); return; }
+      if (v.kind === 'measure' && hasControl(String(v.measure || '').trim())) { errors.push('Value "' + (v.label || v.id) + '": the measure name ' + CONTROL_MSG); return; }
       if (v.kind === 'column') {
         const c = columnRef(v.column);
         if (!c) { errors.push('Value "' + (v.label || v.id) + '" needs a column written as Table[Column]'); return; }
@@ -329,6 +337,7 @@
     const exprOf = (id, depth) => {
       const v = (d.values || []).find((x) => x.id === id);
       if (!v || !VALUE_KINDS[v.kind] || (depth || 0) > 20) { errors.push('Unknown value: ' + id); return N.num(0); }
+      if ((v.kind === 'measure' && hasControl(String(v.measure || '').trim())) || (v.kind === 'column' && hasControl(String(v.column || '').trim()))) return N.num(0);   // (refused above, with its error)
       return VALUE_KINDS[v.kind](v, (x) => exprOf(x, (depth || 0) + 1));
     };
     // 'Date'[Date] or Date[Date] -> table and column, always quoted. DAX doubles a ' inside a quoted table name
@@ -530,7 +539,7 @@
     // Only a measure can be "blank" in the same way in DAX and in the preview
     const hideIf = (d.values || []).some((v) => v.id === d.hideIfBlank && v.kind === 'measure' && valueIds.has(v.id)) ? d.hideIfBlank : null;
 
-    return { vars: vars, svg: svgNode, hideIf: hideIf ? varName(hideIf) : null, errors: errors, name: String(d.name || 'SVG KPI').replace(/[\r\n]+/g, ' ').trim() || 'SVG KPI' };
+    return { vars: vars, svg: svgNode, hideIf: hideIf ? varName(hideIf) : null, errors: errors, name: String(d.name || 'SVG KPI').replace(/\p{Cc}+/gu, ' ').trim() || 'SVG KPI' };
   }
 
   // ---------- outputs ----------
