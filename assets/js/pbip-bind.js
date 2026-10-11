@@ -170,7 +170,11 @@
     const own = ownKind(x);
     if (!r) return Object.assign(own, own.pctFormat && own.pctFormat !== x.formatString ? { tableFormat: own.pctFormat } : {});
     delete own.pctFormat; own.pct = false;
-    return Object.assign(own, r.format === '#,0' ? { wholeFormat: '#,0' } : {}, { tableFormat: r.format, fullFormat: r.format });
+    // (the second sweep, I8: an amount by its formula, a sum of a decimal column or a row's quantity x price, keeps
+    // automatic units on its card although the model gives it no format; a count or a whole quantity stays whole)
+    const amountByFormula = !x.formatStringDefinition && !hasUnit(x.formatString || '') && sumOfDecimal(exprOf(x), tables || []);
+    if (amountByFormula) delete own.wholeFormat;
+    return Object.assign(own, r.format === '#,0' && !amountByFormula ? { wholeFormat: '#,0' } : {}, { tableFormat: r.format, fullFormat: r.format });
   };
   // an amount for the card rule above, read from the format string: a currency in it, by its ISO 4217 code ("EUR" #,0,
   // #,0 "INR") or a currency sign ($, €, £, ¥, ₹, the Gulf's د.إ and ر.س ...); a unit ("kg", "pcs") is no currency.
@@ -516,7 +520,11 @@
     const quiet = { skipped: new Set(), fallback: new Set() }, inDate = byLang(columns.filter((c) => c.dateTable && near(c)), L, quiet);   // (the calendar's own Arabic columns are not told)
     // (the rc's laptop proof, 11 Oct: S8, a month as a number is no axis: its name column, sorted by it, or the date; D9, a
     // time stamp is never the axis: one point per moment)
-    const monthText = (c) => !/^(int64|double|decimal|number)$/.test(c.type), dayDate = (c) => /date/.test(c.type) && !metaOf(c).stamp;
+    // (the second sweep, T3: a column another column is sorted by is that one's number, also in a DAX calendar whose
+    // files give no types)
+    const sortTargets = new Set(); ((opt && opt.modelTables) || tables).concat(tables).forEach((t) => (t.columns || []).forEach((c) => { if (c.sortBy) sortTargets.add(t.name + '\u0000' + String(c.sortBy)); }));
+    const sortsOther = (c) => sortTargets.has(c.t + '\u0000' + c.c) || columns.some((o) => o !== c && o.t === c.t && o.sortBy && o.sortBy.c === c.c);
+    const monthText = (c) => !/^(int64|double|decimal|number)$/.test(c.type) && !sortsOther(c), dayDate = (c) => /date/.test(c.type) && !metaOf(c).stamp;
     let date = inDate.find((c) => monthText(c) && /^(month[\s_-]*(name|year|label)?|year[\s_-]*month|الشهر)$/i.test(c.c)) || inDate.find((c) => monthText(c) && /month|الشهر/i.test(c.c))
       || inDate.find(dayDate) || columns.find((c) => dayDate(c) && near(c))
       || byLang(columns.filter((c) => monthText(c) && /^(month[\s_-]*(name)?|الشهر)$/i.test(c.c) && near(c)), L, quiet)[0] || null;   // no date table: a month column anywhere
