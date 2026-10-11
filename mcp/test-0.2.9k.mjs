@@ -49,7 +49,7 @@ export async function v029k({ call, check, ROOT, fs = fs0 }) {
     { name: 'Periods', partitions: mp('Periods'), columns: [col('Day', 'dateTime'), col('Month Name', 'string'), col('Year', 'int64')] }],
     [{ name: 'r1', fromTable: 'Candidates', fromColumn: 'Applied', toTable: 'Periods', toColumn: 'Day' }]);
   {
-    const s = await ask('suggest_fields', { path: 'k-hr', kpis: 1 }), j = s.j || {};
+    const s = await ask('suggest_fields', { path: 'k-hr', kpis: 1, tables: ['Candidates'] }), j = s.j || {};   // (the tables related to it, Periods, are added)
     const cats = Object.values(j.cats || {}).filter(Boolean).map((f) => `${f.t}[${f.c}]`);
     chk(() => cats.includes('Candidates[Stage]') || cats.includes('Candidates[Source]'), () => `A3-1: "Candidates" is a fact table: its Stage or Source must be a category: ${JSON.stringify(j.cats)}`);
     const t = await ask('suggest_fields', { path: 'k-hr', kpis: 1, tables: ['Time Sheets'] }), tc = Object.values((t.j || {}).cats || {}).filter(Boolean).map((f) => `${f.t}[${f.c}]`);
