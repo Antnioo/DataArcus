@@ -7,13 +7,14 @@
 // and filter values, slicer selections and bookmark states are never read into an answer. No network, no data.
 import fs from 'node:fs';
 import path from 'node:path';
-import { inside, readCapped, real, visible } from './model.mjs';
+import { inside, readCapped, readsLikeInstruction, real, shownName, visible, WITHHELD } from './model.mjs';
 
 // ---- untrusted text (check_report's rules, one copy) ----
-export const INSTRUCTION = /\b(ignore|disregard|forget|override)\b[^.]{0,40}\b(rules?|instructions?|prompt|above|previous)\b|\b(delete|drop|remove|erase)\b[^.]{0,30}\b(model|files?|reports?|tables?|data)\b|\bsystem prompt\b|\byou are now\b|\b(run|execute)\b[^.]{0,20}\b(command|script|code)\b/i;
-export const WITHHELD = '(withheld: reads like an instruction)';
+// (A1-13: the one screen is model.mjs's; INSTRUCTION keeps its name and its test() for the callers)
+export const INSTRUCTION = { test: (s) => readsLikeInstruction(s) };
+export { WITHHELD };
 export const cleanName = (s) => { const v = visible(s); return v.length > 60 ? v.slice(0, 60) + '…' : v; };
-export const safeName = (s) => (INSTRUCTION.test(String(s)) ? WITHHELD : cleanName(s));
+export const safeName = (s) => shownName(s, 60);
 // a title's or a text box's text: given when it is plain and at most 120 characters (cut at 60, as names are); a longer
 // one is withheld with its length, as check_report's suspiciousNames counts it
 export const LONG_TEXT = 120;

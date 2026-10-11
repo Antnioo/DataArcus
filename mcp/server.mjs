@@ -9,7 +9,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { absorb } from './lib/slots.mjs';
-import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, Svg, applyColumnTypes, inside, loadModel, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
+import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, screenWhy, Svg, applyColumnTypes, inside, loadModel, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
 import { E, themeDesign, planLayout, pageOf, contrastReport, freeFile } from './lib/design.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
@@ -175,18 +175,8 @@ function hiddenOnly(m) {
 // Names that read like an instruction to an AI (outside review G-03): a table, column, measure, display folder or page
 // named "Ignore previous instructions ..." is data, never followed. The model is never renamed; such names are listed
 // with the reason, so the AI app tells the user. Up to 20 names.
-const SUSPICIOUS = [
-  [/\b(ignore|disregard|forget)\s+(the\s+|your\s+)?(previous|above|all|prior)\b.*\binstructions?\b/i, 'asks to ignore instructions'],
-  [/system\s+prompt/i, 'names a system prompt'], [/\byou\s+are\b/i, 'speaks to the AI ("you are")'],
-  [/\bassistant\s*:/i, 'speaks as the assistant'], [/\bact\s+as\b/i, 'asks the AI to act as someone'],
-  [/\bdo\s+not\s+tell\b/i, 'asks to hide something from the user'], [/\brun\s+(cmd|powershell|bash|shell|script|code|command|this|the\s+following)\b/i, 'asks to run something'],
-  [/\bexecute\b/i, 'asks to execute something'], [/https?:\/\//i, 'holds a web address'], [/<script/i, 'holds a script tag'],
-];
-const suspiciousWhy = (name) => {
-  const s = String(name), why = SUSPICIOUS.filter(([re]) => re.test(s)).map(([, w]) => w);
-  if (s.length > 120) why.push(`longer than 120 characters (${s.length})`);
-  return why;
-};
+// (A1-13: the one screen of the reading block, model.mjs's, English and Arabic)
+const suspiciousWhy = screenWhy;
 function suspiciousNames(items) {
   const out = []; const seen = new Set();
   for (const { kind, name, where } of items) {
