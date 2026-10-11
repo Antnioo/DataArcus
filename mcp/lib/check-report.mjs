@@ -151,10 +151,22 @@ const impactOf = (f) => {
   if (f.rule === 'SCHEMA') return 'canBreak';
   return 'dataarcusRule';
 };
-function impactSummary(n, errors) {
-  if (n.canBreak) return `${n.canBreak} finding${n.canBreak === 1 ? '' : 's'} can break the report in Power BI Desktop: fix ${n.canBreak === 1 ? 'it' : 'these'} first.` + (n.desktopOpens ? ` ${n.desktopOpens} more ${n.desktopOpens === 1 ? 'is' : 'are'} only what strict validation or Fabric would refuse; Desktop opens the report with ${n.desktopOpens === 1 ? 'it' : 'them'}.` : '');
-  if (n.desktopOpens) return `The report opens in Power BI Desktop: it is not broken. Its ${errors} error${errors === 1 ? '' : 's'} ${errors === 1 ? 'is' : 'are'} what Microsoft's strict validation or Fabric would refuse (${n.desktopOpens} finding${n.desktopOpens === 1 ? '' : 's'}); fix ${n.desktopOpens === 1 ? 'it' : 'them'} only before publishing through Fabric or Git.` + (n.dataarcusRule ? ` ${n.dataarcusRule} DataArcus rule${n.dataarcusRule === 1 ? '' : 's'} also spoke: ${n.dataarcusRule === 1 ? 'a part that' : 'parts that'} may not look as meant.` : '');
-  if (n.dataarcusRule) return `Nothing found that breaks the report in Power BI Desktop or that Fabric would refuse; ${n.dataarcusRule} DataArcus rule${n.dataarcusRule === 1 ? '' : 's'} spoke: ${n.dataarcusRule === 1 ? 'a part that' : 'parts that'} may not look or work as meant.`;
+// (A4-3, audit 4: "opens in Power BI Desktop" is said only when Microsoft's validator ran offline and every file of the
+// report was read; otherwise the summary says what was not judged. The errors counted are the desktopOpens ones only.)
+// n: findings per kind; ctx: { validator: { ran, mode, why }, unread: files not read (too large, too deep, links,
+// not readable), desktopOpensErrors }. Pure: the same counts and context give the same sentence.
+export function impactSummary(n, ctx) {
+  const c = ctx || {}, v = c.validator || {}, unread = +c.unread || 0, E = +c.desktopOpensErrors || 0;
+  const s = (k, one, many) => (k === 1 ? one : many);
+  const reasons = [].concat(v.ran && v.mode === 'offline' ? [] : [`Microsoft's validator did not run${v.why ? ` (${String(v.why).replace(/^not run: /, '')})` : ''}`],
+    unread ? [`${unread} ${s(unread, 'file was', 'files were')} not read (see notChecked)`] : []);
+  const notJudged = reasons.length ? `Not judged whether Power BI Desktop opens the report: ${reasons.join('; ')}.` : '';
+  const rules = n.dataarcusRule ? ` ${n.dataarcusRule} DataArcus ${s(n.dataarcusRule, 'rule', 'rules')} also spoke: ${s(n.dataarcusRule, 'a part that', 'parts that')} may not look or work as meant.` : '';
+  const strict = n.desktopOpens ? ` ${n.desktopOpens} ${s(n.desktopOpens, 'finding is', 'findings are')} only what Microsoft's strict validation or Fabric would refuse.` : '';
+  if (n.canBreak) return `${n.canBreak} ${s(n.canBreak, 'finding', 'findings')} can break the report in Power BI Desktop: fix ${s(n.canBreak, 'it', 'these')} first.` + (n.desktopOpens ? ` ${n.desktopOpens} more ${s(n.desktopOpens, 'is', 'are')} only what strict validation or Fabric would refuse${notJudged ? '' : `; Desktop opens the report with ${s(n.desktopOpens, 'it', 'them')}`}.` : '') + (notJudged ? ' ' + notJudged : '');
+  if (notJudged) return notJudged + strict + rules;
+  if (n.desktopOpens) return `The report opens in Power BI Desktop: it is not broken. Its ${E} ${s(E, 'error is', 'errors are')} what Microsoft's strict validation or Fabric would refuse (${n.desktopOpens} ${s(n.desktopOpens, 'finding', 'findings')}); fix ${s(n.desktopOpens, 'it', 'them')} only before publishing through Fabric or Git.` + (n.dataarcusRule ? ` ${n.dataarcusRule} DataArcus ${s(n.dataarcusRule, 'rule', 'rules')} also spoke: ${s(n.dataarcusRule, 'a part that', 'parts that')} may not look as meant.` : '');
+  if (n.dataarcusRule) return `Nothing found that breaks the report in Power BI Desktop or that Fabric would refuse; ${n.dataarcusRule} DataArcus ${s(n.dataarcusRule, 'rule', 'rules')} spoke: ${s(n.dataarcusRule, 'a part that', 'parts that')} may not look or work as meant.`;
   return 'Nothing found: the report opens in Power BI Desktop and passes the checks that ran.';
 }
 
@@ -260,7 +272,7 @@ export async function checkReport(p, opts) {
   return {
     report: { pages: R.pages.filter((p) => !p.tooltip).length, tooltipPages: R.pages.filter((p) => p.tooltip).length, visuals: R.visuals.length, bookmarks, pageNames: R.pages.map((p) => p.name), schemaVersions: versions, builtBy: 'unknown' },
     lang, validator, schemas, rulesRun: ruled.ran,
-    impact: { summary: impactSummary(byImpact, all.filter((f) => f.severity === 'error').length), kinds: Object.fromEntries(Object.entries(IMPACT).map(([k, means]) => [k, { count: byImpact[k], means }])),
+    impact: { summary: impactSummary(byImpact, { validator, unread: sk.big.length + sk.deep + unreadable + (sk.links || []).length, desktopOpensErrors: all.filter((f) => f.impact === 'desktopOpens' && f.severity === 'error').length }), kinds: Object.fromEntries(Object.entries(IMPACT).map(([k, means]) => [k, { count: byImpact[k], means }])),
       tellUser: 'Tell the user the summary and, for each kind with findings, its sentence: a report Desktop opens is not broken because of what only strict validation or Fabric would refuse. Each finding\'s "impact" is its kind; its code is Microsoft\'s or DataArcus\'s, unchanged.' },
     findings, notChecked,
     ...(lintSection ? { lint: lintSection } : {}),
