@@ -8,7 +8,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { inside, readCapped, readsLikeInstruction, real, shownName, shownPath, visible, WITHHELD } from './model.mjs';
-import { meaningInReport } from './visual-meaning.mjs';
+import { meaningInReport, VT } from './visual-meaning.mjs';
 
 // ---- untrusted text (check_report's rules, one copy) ----
 // (A1-13: the one screen is model.mjs's; INSTRUCTION keeps its name and its test() for the callers)
@@ -170,12 +170,11 @@ function filtersOf(cfg) {
 const filterText = (f) => `${refOf(f.field)} (${f.notBlank ? 'not blank' : f.top ? 'top ' + f.top : f.type + (f.set ? ', set' : ', empty')})`;
 const hex = (c) => (typeof c === 'string' && /^#[0-9a-f]{3,8}$/i.test(c) ? c.toLowerCase() : null);
 const textOf = (j) => ((plain(((j.visual || {}).objects || {}).general).paragraphs) || []).map((p) => (p.textRuns || []).map((r) => String(r.value || '')).join('')).join(' / ').trim();
-// Power BI's own visuals (a custom visual's type is its id: a name and 32 characters)
-const BUILTIN = /^(actionButton|advancedSlicerVisual|areaChart|azureMap|barChart|basicShape|bookmarkNavigator|card|cardVisual|clusteredBarChart|clusteredColumnChart|columnChart|decompositionTreeVisual|donutChart|filledMap|funnel|gauge|hundredPercentStacked\w+|image|keyDriversVisual|kpi|lineChart|lineClusteredColumnComboChart|lineStackedColumnComboChart|listSlicer|map|multiRowCard|pageNavigator|pieChart|pivotTable|qnaVisual|ribbonChart|scatterChart|shape|shapeMap|slicer|stackedAreaChart|stackedBarChart|stackedColumnChart|tableEx|textbox|textSlicer|treemap|waterfallChart|scriptVisual|pythonVisual|paginator|rdlVisual)$/;
-const SLICERS = /^(slicer|advancedSlicerVisual|listSlicer|textSlicer)$/;
-export const typeName = (t) => (t === 'group' || BUILTIN.test(t) ? t : 'custom ' + safeName(t));
+// Power BI's own visuals and slicers: Microsoft's catalog (assets/js/visual-types.js); a custom visual's type is its id
+const SLICERS = new RegExp('^(' + VT.SLICER_TYPES.join('|') + ')$');
+export const typeName = (t) => (t === 'group' || VT.isNative(t) ? t : 'custom ' + safeName(t));
 // a custom visual's type: the one test (the cross-review's duplicates, 11 Oct: check_report used its own regex)
-export const isCustom = (t) => t !== 'group' && t !== 'unknown' && !BUILTIN.test(String(t));
+export const isCustom = (t) => VT.isCustom(t);
 
 // ---- the inventory: everything the layers above need, structured, from any source ----
 // { name, pages, theme { name, dataColors, labelSize }, bookmarks, types, customVisuals, installedNotUsed, reportFilters,
@@ -260,7 +259,7 @@ export function inventory(src, reportName) {
   const bookmarks = bmRaw.map(({ n, b }) => { flag('bookmark', b.displayName, 'definition/bookmarks/' + n); const o = b.options || {}, st = b.explorationState || {};
     return { file: 'definition/bookmarks/' + n, rawName: String(b.displayName || ''), raw: b, name: safeName(b.displayName || b.name || n), page: st.activeSection ? pageName(String(st.activeSection)) : null, data: !o.suppressData, display: !o.suppressDisplay, targets: entries(o.targetVisualNames).length || 'all' }; });
   const types = {}; pages.forEach((p) => p.visuals.forEach((x) => { types[x.type] = (types[x.type] || 0) + 1; }));
-  const custom = Object.keys(types).filter((t) => t !== 'group' && t !== 'unknown' && !BUILTIN.test(t));
+  const custom = Object.keys(types).filter((t) => VT.isCustom(t, report));
   const installedNotUsed = entries(report.publicCustomVisuals).filter((t) => !custom.includes(t)).length;
   return { name: safeName(reportName || 'report'), pages, theme, themeFile: ref ? 'StaticResources/RegisteredResources/' + ref : null, themeJson: th, themeRef: ref, report,
     hasPlatform: src.has('.platform'), versions: Object.fromEntries(Object.entries(versions).map(([k, v]) => [k, [...v].sort()])),
