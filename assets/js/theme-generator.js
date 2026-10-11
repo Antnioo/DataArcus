@@ -469,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadBind = () => (window.DABind ? Promise.resolve(window.DABind)
       : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('../assets/js/field-meaning.min.js?v=20261011t'))
         .then(() => (window.TmdlModel ? null : loadScript('../assets/js/tmdl-model.min.js?v=20261011t')))
-        .then(() => loadScript('../assets/js/pbip-bind.min.js?v=20261011t')).then(() => window.DABind));
+        .then(() => loadScript('../assets/js/pbip-bind.min.js?v=20261011v')).then(() => window.DABind));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
     // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)
