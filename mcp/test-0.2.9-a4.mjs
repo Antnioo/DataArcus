@@ -217,8 +217,9 @@ export async function v029a4({ call, check, ROOT, fs = fs0 }) {
   {
     // the tooltip bar chart kept to a Top N (the category tooltip page); the trend's "last 6 months" is a measure filter
     // whose row count the files cannot tell, so it is not judged here
-    // (changed in 0.2.9 rc1, item 4: a page's bar chart by a text category has a Top N too, so the tooltip page's is the one looked for)
-    const topFile = (R) => visuals(R).find((f) => { const j = J(f), pg = J(path.join(path.dirname(path.dirname(path.dirname(f))), 'page.json')); return pg.type === 'Tooltip' && j.visual && j.visual.visualType === 'clusteredBarChart' && ((j.filterConfig || {}).filters || []).some((g) => g.type === 'TopN'); });
+    // (the design block's S5: report pages' bar charts carry a Top N too now; this check is the tooltip page's)
+    const onTooltip = (f) => { try { return J(path.join(path.dirname(path.dirname(path.dirname(f))), 'page.json')).type === 'Tooltip'; } catch (e) { return false; } };
+    const topFile = (R) => visuals(R).find((f) => { const j = J(f); return onTooltip(f) && j.visual && j.visual.visualType === 'clusteredBarChart' && ((j.filterConfig || {}).filters || []).some((g) => g.type === 'TopN'); });
     const top = path.relative(path.join(D, 'Base.Report'), topFile(path.join(D, 'Base.Report'))).split(path.sep).join('/');
     chk(() => top && !base.j.findings.some((f) => f.rule === 'TOOLTIP_SCROLL' && f.file === top), () => `A4-12: the tooltip's bar chart kept to a Top N that fits needs no scrollbar note: ${JSON.stringify(base.j.findings.filter((f) => f.rule === 'TOOLTIP_SCROLL').map((f) => f.file))} (Top N chart ${top})`);
     const R = copy('A412 no top'), tf = topFile(R), tj = J(tf); tj.filterConfig.filters = tj.filterConfig.filters.filter((g) => g.type !== 'TopN'); W(tf, tj);

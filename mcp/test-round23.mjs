@@ -198,7 +198,10 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
     const pl = await ask('plan_layout', { layout: 'exec', kpis: 1, filters: 'end', lang: 'en' }), lineSlot = pl.err ? null : pl.j.slots.find((sl) => sl.kind === 'line');
     const x = pl.err ? pl : await ask('create_report', { path: 'r23-nocal', name: 'R23 nocal', lang: 'en', design: pl.j.design, secondPage: false, noDataMessage: false });
     const lo = x.err ? [] : (x.j.leftOutVisuals || []), vs = x.err ? [] : visualsOf(x, 'r23-nocal');
-    const covers = lineSlot && vs.some((v) => /Chart$|tableEx/.test(v.visual.visualType) && v.position.x <= lineSlot.x + 1 && v.position.x + v.position.width >= lineSlot.x + lineSlot.w - 1 && Math.abs(v.position.y - lineSlot.y) <= 60);
+    // (0.2.9, the design block's D16: a model with no time axis gets the layout made for it, its charts by category
+    // sharing the line chart's row: the room is taken by that row's visuals together, not by one)
+    const row = lineSlot ? vs.filter((v) => /Chart$|tableEx/.test(v.visual.visualType) && Math.abs(v.position.y - lineSlot.y) <= 60) : [];
+    const covers = lineSlot && row.length && Math.min(...row.map((v) => v.position.x)) <= lineSlot.x + 1 && Math.max(...row.map((v) => v.position.x + v.position.width)) >= lineSlot.x + lineSlot.w - 1;
     chk(() => lineSlot && !vs.some((v) => v.visual.visualType === 'lineChart') && lo.some((l) => /no calendar is related to Sales/.test(l.why)) && covers,
       () => `6. no line chart, the true reason, its room taken: ${JSON.stringify(lo)} slot ${JSON.stringify(lineSlot)} ${JSON.stringify(vs.filter((v) => /Chart$|tableEx/.test(v.visual.visualType)).map((v) => [v.visual.visualType, v.position.x, v.position.y, v.position.width]))} ${short(x)}`);
   }
@@ -383,7 +386,10 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
     const pl = await ask('plan_layout', { layout: 'exec', kpis: 1, filters: 'end', lang: 'en' }), lineSlot = pl.err ? null : pl.j.slots.find((z) => z.kind === 'line');
     const x = pl.err ? pl : await ask('create_report', { path: 'r23-nodate', name: 'R23 nodate', lang: 'en', design: pl.j.design, secondPage: false, noDataMessage: false });
     const lo = x.err ? [] : (x.j.leftOutVisuals || []), vs = x.err ? [] : visualsOf(x, 'r23-nodate');
-    const covers = lineSlot && vs.some((v) => /Chart$|tableEx/.test(v.visual.visualType) && v.position.x <= lineSlot.x + 1 && v.position.x + v.position.width >= lineSlot.x + lineSlot.w - 1 && Math.abs(v.position.y - lineSlot.y) <= 60);
+    // (0.2.9, the design block's D16: a model with no time axis gets the layout made for it, its charts by category
+    // sharing the line chart's row: the room is taken by that row's visuals together, not by one)
+    const row = lineSlot ? vs.filter((v) => /Chart$|tableEx/.test(v.visual.visualType) && Math.abs(v.position.y - lineSlot.y) <= 60) : [];
+    const covers = lineSlot && row.length && Math.min(...row.map((v) => v.position.x)) <= lineSlot.x + 1 && Math.max(...row.map((v) => v.position.x + v.position.width)) >= lineSlot.x + lineSlot.w - 1;
     chk(() => lineSlot && !vs.some((v) => v.visual.visualType === 'lineChart') && lo.some((l) => /no month or date column/.test(l.why)) && covers,
       () => `S2. no date column: no line chart, its room taken: ${JSON.stringify(lo)} ${JSON.stringify(vs.filter((v) => /Chart$|tableEx/.test(v.visual.visualType)).map((v) => [v.visual.visualType, v.position.x, v.position.y, v.position.width]))} ${short(x)}`);
   }

@@ -15,6 +15,7 @@ import { themeDesign, planLayout, pageOf, contrastReport, DESIGN_KEYS, LAYOUT_KE
 import { freeFile } from './lib/files.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
+import { readableName } from './lib/display-names.mjs';
 import { addGulfCalendar, gulfFixInputs } from './lib/gulf-calendar.mjs';
 import { checkReport, CHECKS } from './lib/check-report.mjs';
 import { readReport } from './lib/read-report.mjs';
@@ -790,13 +791,13 @@ server.registerTool('create_report', {
     // (round 22, the owner's (a) for pages under 800 wide; golden task 5's second page in Desktop: cut card values and a
     // scrolling table) such a page gets no second page
     tinyPage = isSmall(design.layout);
-    let pages = projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
-    // (round 23: a line chart without a time axis gives its room to the visual beside it: the shared writer does it,
-    // for the website too; leftOut says so with gave)
-    const bound = bindFor(kpisOf(pages));
+    // (the laptop's sweep of rc.1, D16: a model with no time axis gets the layout made for it, the design engine's noTime;
+    // the binding is made first, on the pages' KPI count, which noTime doesn't change)
+    const bound = bindFor(kpisOf(projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields }))), noTime = !bound.date;
+    let pages = projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields, noTime }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
     // (round 22, the code review's c) a slot's role is matched in English or Arabic whatever the report's language:
     // the same pages in the other language give each role's other name
-    if (a.subtitles) { const o1 = { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields }, mine = projectPages(design.layout, a.lang, o1), other = projectPages(design.layout, a.lang === 'ar' ? 'en' : 'ar', o1);
+    if (a.subtitles) { const o1 = { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields, noTime }, mine = projectPages(design.layout, a.lang, o1), other = projectPages(design.layout, a.lang === 'ar' ? 'en' : 'ar', o1);
       other.forEach((p, i) => p.slots.forEach((s, j) => { const q = mine[i] && mine[i].slots[j]; if (q && q.kind === s.kind && s.title && q.title && !(q.title in a.subtitles)) subKeys[s.title] = q.title; })); }
     const subtitles = a.subtitles && Object.fromEntries(Object.entries(a.subtitles).map(([k, v]) => [subKeys[k] || k, v]));
     r = Pbip.build({
@@ -805,6 +806,9 @@ server.registerTool('create_report', {
       texts: texts(a.lang), pages: pages.map((p) => ({ name: p.name, page: p.page, slots: p.slots, png: png1, panel: p.panel, grow: true }))
     });
     boundPages = pages;
+    // (D16) the line charts the layout leaves out on a model without a time axis are named, with the reason, as before
+    if (noTime) projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields })
+      .forEach((p) => p.slots.filter((x) => x.kind === 'line').forEach((x) => (r.leftOut = r.leftOut || []).push({ page: p.name, kind: 'line', title: x.title || null, noTime: true })));
     extra = { pages: pages.map((p) => ({ name: p.name, width: p.page.w, height: p.page.h, slots: p.slots.length, slideInPanel: !!p.panel })), theme: themeName(design.name),
       ...(themeChanged.length ? { themeChanged } : {}) };
   } else {
@@ -931,6 +935,8 @@ server.registerTool('create_report', {
   // 0.2.9 part 2 (the owner's own test of 0.2.8): what the report does to its axes, tables and tooltips, said once
   (r.timeAxes || []).forEach((x) => reportNotes.push(`The line chart by ${visible(x.field)} on "${x.page}" is in time order by the month's first date (a report-level measure, "Month start (sort)", from ${visible(x.by)}; the model's column has no sort column)${x.last ? `, and shows the last ${x.last} months with data (a visual filter: clear it in the Filters pane for the whole history)` : ''}.`));
   // (the cross-review's G13: said only where a chart got the filter)
+  // (the design block's S5/D19) the category charts kept to the Top N their slot can show
+  if (r.topCharts && r.topCharts.length) reportNotes.push(`Bar and column charts by a category show the categories their place on the page can hold, by their measure: ${[...new Set(r.topCharts.map((x) => `Top ${x.top}`))].join(', ')} (a Top N visual filter, which can be cleared in the Filters pane; the rest are left out, not summed into one bar).`);
   if (r.blankFiltered) reportNotes.push('Charts leave out a blank category ("(Blank)"): each has a visual filter "is not blank" on its category, which can be cleared in the Filters pane.');
   if (boundPages && boundPages.some((p) => (p.slots || []).some((x) => x.kind === 'table'))) reportNotes.push('Tables have set column widths, and long text wraps.');
   if (r.tooltipLimits && (r.tooltipLimits.top || r.tooltipLimits.months)) reportNotes.push(`The tooltip pages show ${[r.tooltipLimits.top ? `the Top ${r.tooltipLimits.top} by the measure (said in the title)` : '', r.tooltipLimits.months ? `the last ${r.tooltipLimits.months} months, newest first` : ''].filter(Boolean).join(' and ')}, so no bar is lost behind a scrollbar a tooltip can't use.`);
@@ -970,7 +976,7 @@ server.registerTool('create_report', {
   // round 23: a table's measures that do not reach its rows were left out of it (they would repeat one total on every row)
   if (bind && (bind.notReached || []).length) { const nr = bind.notReached; reportNotes.push(`${nr.map((x) => `${visible(x.t)}[${visible(x.m)}]`).join(', ')} ${nr.length === 1 ? 'was' : 'were'} left out of the table by ${visible(nr[0].row.t)}[${visible(nr[0].row.c)}]: ${[...new Set(nr.map((x) => visible(x.t)))].join(', ')} ${nr.length === 1 ? 'is' : 'are'} not related to ${visible(nr[0].row.t)}, so ${nr.length === 1 ? 'it' : 'each'} would repeat one total on every row. Add the relationship in the model, or name the table's fields in "fields".`); }
   if (bind && bind.noRelatedCategory) { const n = bind.noRelatedCategory; reportNotes.push(`No category is related to ${visible(n.measure.t)}[${visible(n.measure.m)}]: the text columns of ${n.tables.map((t) => visible(t)).join(', ')} are in tables the measure's table does not reach through a relationship, so a chart by them would show the same total on every bar. The charts that need a category are left out. Add a relationship from ${visible(n.measure.t)} to one of those tables, or pick a category of a related table in "fields".`); }
-  const leftOutList = (r.leftOut || []).map((x) => ({ visual: x.kind === 'slicer' ? (x.title || 'Slicer') : `${KIND[x.kind] || x.kind}${x.title ? ` "${x.title}"` : ''}`, page: x.page, why: (WHY[x.kind] || 'the model has no text column (a category) or no measure for it') + (x.gave ? ' (the visual beside it takes its room)' : '') }));   // (round 23: gave, the shared writer's)
+  const leftOutList = (r.leftOut || []).map((x) => ({ visual: x.kind === 'slicer' ? (x.title || 'Slicer') : `${KIND[x.kind] || x.kind}${x.title ? ` "${x.title}"` : ''}`, page: x.page, why: (WHY[x.kind] || 'the model has no text column (a category) or no measure for it') + (x.gave ? ' (the visual beside it takes its room)' : x.noTime ? ' (the page has the layout made for a model without a time axis: the charts by category share its rows)' : '') }));   // (round 23: gave, the shared writer's)
   if (leftOutList.length) reportNotes.push(`${leftOutList.length} visual${leftOutList.length === 1 ? ' was' : 's were'} left out, because a visual is never written without its field: ${leftOutList.map((x) => `${x.visual} on "${x.page}" (${x.why})`).join('; ')}.`);
   // tables that hold fewer fields than given, for lack of room (round 11): named, and boundFields lists what each shows
   const TC = r.tableColumns || [], fkey = (f) => `${f.t}[${f.c != null ? f.c : f.m}]`;
@@ -1133,7 +1139,7 @@ server.registerTool('plan_layout', {
 }, safe(async (a) => {
   // formats fixed at the source (the owner's ask, 6 Oct 2026): with the model, the fields that lack their right format
   // come first, with the script (the same file check_model_health writes)
-  let formats = {}, arabicNames = {}, m0 = null;
+  let formats = {}, arabicNames = {}, displayNamesAns = {}, m0 = null;
   if (a.path) {
     const m = (m0 = loadModel(a.path)), sc = scopeOf(m, { focus: a.focus, tables: a.tables });
     const keys = a.fields ? new Set(a.fields.map((x) => { const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(x); }))
@@ -1141,12 +1147,21 @@ server.registerTool('plan_layout', {
     const fmt = keys && formatsAnswer(m, a.path, keys, undefined, false, 'create_report writes it next to the project with the report, after the user\'s go (the same file check_model_health writes).');
     // round 14 (the owner's ask, 6 Oct): an Arabic plan proposes an Arabic display name for every field it will show
     // that has none (a fixed glossary of report words, never a free translation), for the user to approve first
+    // (the laptop's sweep of rc.1, S6: raw field names in titles and slicer headers) a plan in English proposes a readable
+    // display name for each field named like a database column (ProductName, loan_intent), for the user to approve;
+    // never applied without it (create_report shows only the displayNames given)
+    if (a.lang !== 'ar' && keys) {
+      const given = new Set(Object.keys(a.displayNames || {}).map((k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : k; }));
+      const prop = {};
+      [...keys].filter((k) => !given.has(k)).forEach((k) => { const r = readableName(k.replace(/^.*?\[(.*)\]$/, '$1')); if (r) prop[k] = r; });
+      if (Object.keys(prop).length) displayNamesAns = { displayNames: { sayFirst: 'Some of the plan\'s fields have database-style names, which the report would show as they are in titles, axes, slicer headers and table headers. Show the user these readable display names and ask them to approve or change each before create_report; pass the approved ones as displayNames. Never use a name the user did not approve: without it the model\'s own name is shown. The model is not renamed.', suggestedDisplayNames: prop } };
+    }
     if (a.lang === 'ar' && keys) {
       const given = new Set(Object.keys(a.displayNames || {}).map((k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : k; }));
       const todo = [...keys].filter((k) => !given.has(k) && !/[\u0600-\u06FF]/.test(k.replace(/^.*?\[/, '')));
       const prop = {}, none = [];
       todo.forEach((k) => { const p = proposeArabic(k.replace(/^.*?\[(.*)\]$/, '$1')); if (p) prop[k] = p; else none.push(k); });
-      if (todo.length) arabicNames = { arabicNames: Object.assign({ sayFirst: 'Show the user these proposed Arabic display names and ask them to approve or change each before create_report; then pass the approved ones as displayNames. They come from a fixed list of common report words, not a translation; a field without a proposal needs a name from the user. Without Arabic names those fields show their English names, and titles that would mix the two scripts show the measure\'s name alone.' },
+      if (todo.length) arabicNames = { arabicNames: Object.assign({ sayFirst: 'Show the user these proposed Arabic display names and ask them to approve or change each before create_report; then pass the approved ones as displayNames. They come from a fixed list of common report words, not a translation; a field without a proposal needs a name from the user. Without Arabic names those fields show their English names, and titles that would mix the two scripts show the measure\'s name alone, except the tooltip\'s bar chart title: it starts with «أعلى 6» (Top 6) before the measure\'s name, so with an English measure name that one title mixes the two scripts; say so in the plan.' },
         Object.keys(prop).length ? { suggestedDisplayNames: prop } : {}, none.length ? { needNames: none, whyNoProposal: 'DataArcus proposes an Arabic name only for a name made of common English report words (a fixed list, a heuristic: assets/data/arabic-report-words.json); every other name, in English or another language, is the user\'s to give: ask them.' } : {}) };
     }
     if (fmt) formats = { formats: Object.assign({ sayFirst: `Tell the user first, before the layout: ${fmt.fields.length} of the plan's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). create_report shows them right in the report's cards, tooltip and tables anyway; the script sets them in the model too.` }, fmt) };
@@ -1158,7 +1173,10 @@ server.registerTool('plan_layout', {
     const lang = a.lang === 'ar' ? 'ar' : 'en', pf0 = a.planFields || {}, sug = Bind.suggest(sc.tables, 1, relsOf(m0, lang)) || {};
     return Pbip.fitOptions({ lang, rtl: designRtl(design.layout, lang), font: design.font, theme: buildTheme(design, lang), model: { byPath: 'Model.SemanticModel' },
       bind: { date: pf0.timeAxis || sug.date || null, slicers: pf0.slicers || sug.slicers || [] }, pages: [{ page: pageOf(design.layout).page, slots, grow: true }] })[0]; };
-  const r = planLayout(Object.assign({}, a, a.planFields && a.planFields.table ? { tableFields: a.planFields.table.length } : {}, { fit: planFit })), { page, fitted } = pageOf(r.design.layout);
+  // (the laptop's sweep, D16: a model with no time axis is planned with the layout made for it, as create_report writes it)
+  const planNoTime = (() => { if (!m0) return false; const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return false;
+    return !(a.planFields || {}).timeAxis && !(Bind.suggest(sc.tables, 1, relsOf(m0, a.lang === 'ar' ? 'ar' : 'en')) || {}).date; })();
+  const r = planLayout(Object.assign({}, a, a.planFields && a.planFields.table ? { tableFields: a.planFields.table.length } : {}, { fit: planFit, noTime: planNoTime })), { page, fitted } = pageOf(r.design.layout);
   const unknown = a.design ? unknownKeys(a.design) : null;
   // the page size (0.2.9, O-8: an Arabic plan was made 1280 x 720 though the user asked for no size): who chose it
   const chosenBy = a.page != null ? 'asked' : page.w === 1920 && page.h === 1080 ? 'default' : 'design';
@@ -1213,7 +1231,7 @@ server.registerTool('plan_layout', {
     } catch (e) { return { skipped: 'the planned page could not be built for the lint: ' + String(e && e.message || e).slice(0, 200) }; }
   })() };
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a light tint and the largest in the theme\'s colour (the bar\'s length tells the size; the colour ranks). For one colour, create_report takes chartColors "solid".' } };
-  return text(Object.assign(formats, arabicNames, customVisuals, plan, timeAxis, designLint, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds, with "Top N:" in its title: say it in the plan.' }, { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
+  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds, with "Top N:" in its title: say it in the plan.' }, (() => { const tops = r.slots.filter((x) => x.topN); return tops.length ? { categoryCharts: { tops: tops.map((x) => ({ role: x.role, kind: x.kind, top: x.topN })), sayInPlan: `Each bar and column chart by a category shows the categories its place can hold, its Top N by its measure (${tops.map((x) => `${x.role}: Top ${x.topN}`).join('; ')}): the rest are left out, not summed. Say it in the plan; a month or day axis keeps all its values in order.` } } : {}; })(), { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
 }));
 
 server.registerTool('add_gulf_calendar', {

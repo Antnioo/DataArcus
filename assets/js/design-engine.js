@@ -205,10 +205,40 @@
     return [Math.min(r[1], Math.max(r[0], minOf(k, c))), r[1]];
   };
   const clampTo = (k, v, PW, c) => Math.max(rangeOf(k, PW, c)[0], Math.min(rangeOf(k, PW, c)[1], Math.round(+v)));
+  // A layout for a model with no time axis (0.2.9, the laptop's sweep of rc.1, D16: the line chart's room went to the bar
+  // chart beside it, four bars across the whole page): its line chart is left out and its row re-formed. A row left with
+  // one category chart takes the next row's category chart beside it (exec: the bar and column charts share the first
+  // row, the table has the second); a line chart alone with a text box (the single focus) becomes a bar chart. The
+  // writer's fitSlots does nothing more then (no line slot to give away).
+  const CATEGORY_KINDS = ['bar', 'column', 'donut'];
+  // How many categories a chart's slot can show (0.2.9, the laptop's sweep of rc.1, S5 and D19: a category with dozens
+  // of values gave cut vertical labels and a scrollbar). The report keeps that many, its Top N by the chart's measure,
+  // and the plan says so. On the 720 grid, where the theme's text sizes are made for the page (a 1080 page is x 1.5).
+  //  bar: measured, Desktop 2.158 (night of 6-7 Oct, DESKTOP-TESTS.md; mcp/CLAUDE.md): 22.2 a row at the theme's 10pt,
+  //    45 above the first row, 8 under the last and 38 for the value axis;
+  //  column: a GUESS until the laptop proof "S5" in DESKTOP-TESTS.md: horizontal labels need about 64 a column (a label
+  //    of about 8 characters at 10pt) after 60 for the value axis, at most 12 (12 month names fit, round 1, measured)
+  const CATEGORY_FIT = { bar: 'measured: 22.2 a row at 10pt, 45 above, 8 below, 38 for the value axis (Desktop 2.158, 6-7 Oct 2026)',
+    column: 'GUESS until the laptop proof S5: about 64 a column after 60 for the value axis, at most 12 (12 month names fit, round 1)' };
+  const categoryFit = (kind, w, h) => (kind === 'bar' ? Math.max(1, Math.floor((h - 45 - 8 - 38) / 22.2))
+    : kind === 'column' ? Math.max(3, Math.min(12, Math.floor((w - 60) / 64))) : null);
+  const noTimeOf = (P) => {
+    const alone = (r) => r.some((col) => col[1] === 'line') && !r.some((col) => col[1] !== 'line' && col[1] !== 'text');
+    const rows = P.rows.map((r) => (alone(r) ? r.map((col) => (col[1] === 'line' ? [col[0], 'bar', T('Main breakdown', 'التوزيع الرئيسي')] : col)) : r.filter((col) => col[1] !== 'line')))
+      .map((r) => r.map((col) => col.slice()));
+    for (let i = 0; i < rows.length - 1; i++) if (rows[i].length === 1 && CATEGORY_KINDS.includes(rows[i][0][1])) {
+      const j = rows[i + 1].findIndex((col) => CATEGORY_KINDS.includes(col[1]));
+      if (j >= 0 && rows[i + 1].length > 1) { rows[i][0][0] = 1; rows[i].push(Object.assign(rows[i + 1].splice(j, 1)[0], { 0: 1 })); }
+    }
+    const keep = rows.map((r, i) => (r.length ? i : -1)).filter((i) => i >= 0);
+    return Object.assign({}, P, { rows: keep.map((i) => rows[i]), flex: keep.map((i) => P.flex[i] != null ? P.flex[i] : 1) });
+  };
+  // the layout's rows as this page gets them (c.noTime: projectPages' opts.noTime, carried by the page's layout)
+  const layoutOf = (c) => (c.noTime ? noTimeOf(LAYOUTS[c.preset]) : LAYOUTS[c.preset]);
   const hasMain = (P) => P.rows[0].length > 1 && P.rows[0][0][0] > P.rows[0][1][0];   // a wider first chart
   const hasSplit = (P) => P.rows.length === 2;
   function sizes(c, PW) {
-    const P = LAYOUTS[c.preset], n = (k, d) => clampTo(k, c[k] == null || !isFinite(+c[k]) ? d : c[k], PW, c);
+    const P = layoutOf(c), n = (k, d) => clampTo(k, c[k] == null || !isFinite(+c[k]) ? d : c[k], PW, c);
     const w0 = P.rows[0].reduce((a, col) => a + col[0], 0);
     return { hh: n('hh', HH), logoW: n('logoW', 150), fpos: ['start', 'end', 'top'].includes(c.fpos) ? c.fpos : 'start', fw: n('fw', 196), fh: n('fh', 72),
       kpiH: n('kpiH', c.preset === 'focus' && isSmall(c) ? SMALL_PAGE.kpiH : P.kpiH), mainW: n('mainW', 100 * P.rows[0][0][0] / w0), split: n('split', P.flex.length === 2 ? 100 * P.flex[0] / (P.flex[0] + P.flex[1]) : 50) };
@@ -221,10 +251,12 @@
   // page buttons get the room that is left. Without it the slot is the designed logo width, as before.
   // opt.tableFields (the number of fields the report's table shows): its share of a narrow row (TABLE_NEED); 4 when not given.
   // A small page gets its own layout first (fitLayout, see SMALL_PAGE).
+  // opt.noTime (the report's model has no time axis): the layout made for it (noTimeOf); the same as c.noTime.
   function computeSlots(c, lang, opt) {
     c = fitLayout(c);
+    if (opt && opt.noTime && !c.noTime) c = Object.assign({}, c, { noTime: true });
     const PW = pw(c), PH = 720;
-    const P = LAYOUTS[c.preset], z = sizes(c, PW), slots = [];
+    const P = layoutOf(c), z = sizes(c, PW), slots = [];
     let top = c.header ? z.hh + 14 : M;
     if (c.header) {
       const th = z.hh - 24, ratio = opt && +opt.logoRatio > 0 ? +opt.logoRatio : 0;
@@ -273,6 +305,8 @@
     // (0.2.9, the audit's A2-6: the KPI bar's data colour came from parsing "KPI n")
     const seen = {};
     slots.forEach((s) => { s.index = seen[s.kind] = s.kind in seen ? seen[s.kind] + 1 : 0; });
+    // (S5) the categories a bar or column chart's slot can show: its Top N
+    slots.forEach((s) => { const n = categoryFit(s.kind, s.w, s.h); if (n) s.topN = n; });
     return slots;
   }
   // An image's size in pixels, read from its bytes (a Uint8Array): PNG (the IHDR chunk) or JPG (the frame header);
@@ -514,7 +548,7 @@
   // The report's labels in a language, English when it has none of its own
   const texts = (lang) => REPORT_TEXTS[baseLang(lang)] || REPORT_TEXTS.en;
   // A page's slots for the report: kind, name in lang, filter rail or not, and the box in page units
-  const projectSlots = (c, lang, opt) => computeSlots(c, lang, opt).map((s) => Object.assign({ kind: s.kind, title: label(s.role, lang), rail: !!s.rail }, boxOf(s, c)));
+  const projectSlots = (c, lang, opt) => computeSlots(c, lang, opt).map((s) => Object.assign({ kind: s.kind, title: label(s.role, lang), rail: !!s.rail }, boxOf(s, c), s.topN ? { topN: s.topN } : {}));
   // a second page in a complementary layout: an analysis page (filters, a main chart, a wide table) after an
   // overview, or an executive overview after an analysis page. The filters stay on the side the user chose for the
   // first page (O-1 of the owner's test of 0.2.8, 10 Oct 2026: "filters right" gave a second page with them at the left)
@@ -561,7 +595,8 @@
   //  railItems: { n, minH, maxH, resetH, pad, gap } (Round 12, #18; seen in Desktop 2.158, round 11: three dropdowns at the
   //    top of the rail, Reset at its very bottom and 300 page units of empty panel between them): a rail (a slicer slot
   //    higher than wide) is only as high as its n dropdowns (each minH to maxH) and its Reset (resetH), pad around them
-  //    and gap after each; it stays a column, stack (round 23, the laptop's S1)
+  //    and gap after each; it stays a column, stack (round 23, the laptop's S1); the slots wholly below it take its
+  //    column (0.2.9, the laptop's sweep S7)
   function fitSlots(slots, opt) {
     const o = opt || {}, kinds = o.dropKinds || [];
     let out = slots.slice(), dropped = [];
@@ -589,18 +624,15 @@
       const n = Math.max(1, R.n), sh = Math.max(R.minH, Math.min(R.maxH, (s.h - 2 * R.pad - R.resetH - R.gap * n) / n));
       return Object.assign({}, s, { h: Math.min(s.h, Math.ceil(2 * R.pad + n * sh + R.gap * n + R.resetH)), stack: true });
     });
-    // 0.2.9 rc1 (the laptop's PERF-COMPARE S7, and Task 1: the column under the fitted rail was empty to the page's
-    // bottom): a visual of a row that starts below the fitted rail and stands beside the rail's column (within SLOT_GAP)
-    // takes the rail's column to the row's height; a row beside the rail keeps its width (no L shape)
-    if (R) out.filter((r) => r.kind === 'slicer' && r.stack).forEach((r) => {
-      const end = r.y + r.h;
-      out = out.map((x) => {
-        if (x === r || x.kind === 'title' || x.kind === 'logo' || x.y < end + 1) return x;
-        const gap = x.x >= r.x + r.w ? x.x - (r.x + r.w) : r.x - (x.x + x.w);
-        if (gap < 0 || gap > SLOT_GAP) return x;
-        const x0 = Math.min(x.x, r.x), x1 = Math.max(x.x + x.w, r.x + r.w);
-        return Object.assign({}, x, { x: x0, w: x1 - x0 });
-      });
+    // (the laptop's sweep of rc.1, S7: under the shortened rail the page stayed empty to its bottom) a slot wholly below
+    // the rail's new bottom, beside the rail (within SLOT_GAP), takes the rail's column: the row reaches the page's edge
+    const rail = R && out.find((s) => s.kind === 'slicer' && s.stack);
+    if (rail) out = out.map((s) => {
+      if (s === rail || s.y < rail.y + rail.h || OWN_SLOTS.includes(s.kind)) return s;
+      const gapStart = s.x - (rail.x + rail.w), gapEnd = rail.x - (s.x + s.w);
+      if (gapStart >= 0 && gapStart <= SLOT_GAP) return Object.assign({}, s, { x: rail.x, w: s.x + s.w - rail.x });
+      if (gapEnd >= 0 && gapEnd <= SLOT_GAP) return Object.assign({}, s, { w: rail.x + rail.w - s.x });
+      return s;
     });
     return { slots: out, dropped };
   }
@@ -611,7 +643,7 @@
 
   // The report's pages for a layout: this page, the second page when asked, each with the slide-in panel when asked.
   // opts: { second, panel, logoRatio (an attached logo's width / height, see computeSlots), tableFields (see
-  // computeSlots), maxKpis (the most KPI cards
+  // computeSlots), noTime (the model has no time axis: the layout made for it, see noTimeOf), maxKpis (the most KPI cards
   // the report can fill, its measures: every page has at most that many) }.
   // A small page (SMALL_PAGE) has its own layout and no second page.
   // Each page: { layout (for its background), name, page { w, h }, slots, panel }
@@ -620,7 +652,8 @@
     const specs = [{ c, name: nm(LAYOUTS[c.preset].name) }].concat(o.second && !isSmall(c) ? [{ c: secondLayout(c), name: nm(c.preset === 'analysis' ? T('Overview', 'نظرة عامة') : T('Details', 'التفاصيل')) }] : []);
     const cap = (l) => (o.maxKpis != null && +o.maxKpis >= 0 && +o.maxKpis < +l.kpis ? Object.assign({}, l, { kpis: Math.floor(+o.maxKpis) }) : l);
     return specs.map((sp) => {
-      const sl = o.panel ? slidePanel(cap(sp.c), lang) : null, layout = sl ? sl.layout : cap(sp.c), p = page(layout);
+      const c1 = o.noTime ? Object.assign({}, cap(sp.c), { noTime: true }) : cap(sp.c);   // (D16: the page's layout carries it, so its background is drawn the same)
+      const sl = o.panel ? slidePanel(c1, lang) : null, layout = sl ? sl.layout : c1, p = page(layout);
       return { layout, name: sp.name, page: { w: p.w, h: p.h }, slots: projectSlots(layout, lang, { logoRatio: o.logoRatio, tableFields: o.tableFields }), panel: sl ? sl.panel : null };
     });
   };
@@ -723,7 +756,7 @@
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate, calmPalette,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    fs, sizeAt, TEXT_BASES, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    fs, sizeAt, TEXT_BASES, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;

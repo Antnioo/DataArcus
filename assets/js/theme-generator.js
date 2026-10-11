@@ -454,8 +454,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let logo = null;
     // (0.2.9, A3-12: the writer is five files, its modules first, in this order; each written out with its own ?v= stamp;
     // audit 4's A4-5: text-measure.js first, the one text measurement the sizes use)
-    const BUILDER = ['../assets/js/text-measure.min.js?v=20261011a4', '../assets/js/pbip-query.min.js?v=20261011w3', '../assets/js/pbip-sizing.min.js?v=20261011v', '../assets/js/pbip-notes.min.js?v=20261011w3',
-      '../assets/js/pbip-page.min.js?v=20261011w3', '../assets/js/pbip-export.min.js?v=20261011w3'];
+    const BUILDER = ['../assets/js/text-measure.min.js?v=20261011a4', '../assets/js/pbip-query.min.js?v=20261011w3', '../assets/js/pbip-sizing.min.js?v=20261011v', '../assets/js/pbip-notes.min.js?v=20261011r7',
+      '../assets/js/pbip-page.min.js?v=20261011r7', '../assets/js/pbip-export.min.js?v=20261011r7'];
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : BUILDER.reduce((p, src) => p.then(() => new Promise((resolve, reject) => {
       const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc);
     })), Promise.resolve()).then(() => window.DAPbip));
@@ -580,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // (R24-1, the review of round 24: the writer gives card i the binding's KPI i, so a KPI emptied in the middle of the
       // picker left an empty card and dropped the last one: the picked KPIs fill the cards in their order)
       const bindL = bind && nK < (bind.kpis || []).length ? Object.assign({}, bind, { kpis: bind.kpis.filter(Boolean) }) : bind;
-      const specs = E.projectPages(c, isAr() ? 'ar' : 'en', { second: !!($('pbipPages') && $('pbipPages').checked), panel: !!($('pbipPanel') && $('pbipPanel').checked), logoRatio: logo ? logo.ratio : undefined, maxKpis: nK != null ? nK : undefined });
+      const specs = E.projectPages(c, isAr() ? 'ar' : 'en', { second: !!($('pbipPages') && $('pbipPages').checked), panel: !!($('pbipPanel') && $('pbipPanel').checked), logoRatio: logo ? logo.ratio : undefined, maxKpis: nK != null ? nK : undefined, noTime: !!(model && bind && !bind.date) });   // (D16: a model with no time axis gets the layout made for it, as the MCP's)
       Promise.all([loadBuilder(), model ? loadBind() : null]).then(([P, DB]) => {
         if (model && model.ws) model = { byConnection: DB.connection(model.ws, model.mn) };
         // kpiInset: where the KPI titles start beside the side accent bar drawn in this page's background
