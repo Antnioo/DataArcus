@@ -6,8 +6,7 @@
 // What is not the same as create_report's report: number formats, Arabic display names, SVG measures and page filters
 // are left out (no lint rule reads them); the first page is the one linted (the page the plan shows).
 import { Bind, Pbip } from './model.mjs';
-import { E } from './design.mjs';
-import { absorb } from './slots.mjs';
+import { E, absorb } from './design.mjs';
 import { inventory, memorySource } from './read-report.mjs';
 import { lint } from './design-lint.mjs';
 

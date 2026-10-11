@@ -4,6 +4,8 @@
 // (absorb, dropLines).
 (function (root) {
   'use strict';
+  // (0.2.9, A2-3: the design engine's fitSlots moves the slots; design-engine.js, loaded first on the website's pages)
+  const E = (typeof module !== 'undefined' && module.exports ? require('./design-engine.js') : root.DAEngine);
   const Q = (typeof module !== 'undefined' && module.exports ? require('./pbip-query.js') : root.DAPbipQuery), Z = (typeof module !== 'undefined' && module.exports ? require('./pbip-sizing.js') : root.DAPbipSizing);
   const {
     AR_LETTERS, CAT_KINDS, CHARTS, ROW_LABEL, S0, SCHEMA, TYPES, bindQuery, bindTitle, bool, byTitle, catKind,
@@ -13,37 +15,76 @@
   } = Q;
   const { barNameShare, columnRoom, fieldRoom, tableFit, textWidth } = Z;
 
-  // ---------- the slots ----------
-  // Round 23 (the owner's "nothing critical left"; the reviewer's part 7 review, 2: shared by the website and the MCP):
-  // a slot whose visual cannot be written gives its room to the visual beside it (the same row and height, else the
-  // same column and width), as a text box without its sentence does. absorb(out, t): out the slots left, t the one
-  // that goes. dropLines(slots): every line chart's slot goes (no time axis); touching line slots are merged first, so
-  // two side by side leave no blank band (the re-review's 5); nothing beside it: the room stays empty.
-  const OWN_SLOTS = ['title', 'logo', 'text'];
-  const nearSlot = (list, t) => list.slice().sort((p, q) => Math.abs(p.x - t.x) + Math.abs(p.y - t.y) - Math.abs(q.x - t.x) - Math.abs(q.y - t.y))[0];
-  function absorb(out, t) {
-    const row = nearSlot(out.filter((x) => !OWN_SLOTS.includes(x.kind) && Math.abs(x.y - t.y) <= 1 && Math.abs(x.h - t.h) <= 1), t);
-    const colm = row ? null : nearSlot(out.filter((x) => !OWN_SLOTS.includes(x.kind) && Math.abs(x.x - t.x) <= 1 && Math.abs(x.w - t.w) <= 1), t);
-    if (row) { const x0 = Math.min(row.x, t.x), x1 = Math.max(row.x + row.w, t.x + t.w); return out.map((x) => (x === row ? Object.assign({}, x, { x: x0, w: x1 - x0 }) : x)); }
-    if (colm) { const y0 = Math.min(colm.y, t.y), y1 = Math.max(colm.y + colm.h, t.y + t.h); return out.map((x) => (x === colm ? Object.assign({}, x, { y: y0, h: y1 - y0 }) : x)); }
-    return out;
+
+  // The page buttons as tabs (see write): the layout of a page's tabs, made per page from the report's context c
+  const tabsFor = (c, pg) => {
+    const { PAGES, base, boxFit, font, o, pt, rtl } = c;
+      // The page buttons as tabs: their size and rows in the room between the end of the title's text and the logo (or
+      // the Filters button: x0, x1), within a header H high; null when they don't fit even at 8pt. (Taken out of the
+      // header's code in round 12 so the header can be tried one row taller first: see grown below.) The title's text
+      // size comes from the slot's height before any growth (textH).
+      return (title, logo, x0, x1, H) => {
+        const kk = pg.page.h / 1080, gap = 24 * kk, th = title.textH || title.h;
+        const names = PAGES.map((p) => String(p.name || base)), titleSize = Math.min(pt(th * 0.42), boxFit(th));
+        const titleNeed = Math.min(title.w, Math.ceil(textWidth(shown(o.title || base), titleSize, true, font) + 24 * kk));
+        // the room: between the end of the title's text and the logo (or the Filters button). The title's text is at the
+        // reading start of its box, so room inside the box is taken only where the box's free end faces the logo
+        const titleLeft = title.x < logo.x;
+        const a0 = titleLeft ? (rtl ? title.x + title.w + gap : title.x + titleNeed + gap) : (rtl ? x0 : logo.x + logo.w + gap);
+        const a1 = titleLeft ? (rtl ? logo.x - gap : x1) : (rtl ? title.x + title.w - titleNeed - gap : title.x - gap);
+        const room = a1 - a0, padX = 8 * kk, gapB = Math.round(12 * kk), lineH = Math.max(2, Math.round(3 * kk));
+        const rowH = (t) => Math.ceil(6 + 1.6 * t) + (/^segoe ui/i.test(font) ? 0 : 4) + lineH;
+        const lay = (t, maxRows) => {
+          const ws = names.map((nm) => Math.ceil(textWidth(nm, t, true, font) + 10 + 2 * padX));
+          if (ws.some((w) => w > room)) return null;
+          let row = [], used = 0; const rows = [row];
+          ws.forEach((w, i) => { const need = (row.length ? gapB : 0) + w; if (row.length && used + need > room) { row = [i]; rows.push(row); used = w; } else { row.push(i); used += need; } });
+          return rows.length <= maxRows && rows.length * rowH(t) <= H ? { t, ws, rows } : null;
+        };
+        let out = null;
+        for (const maxRows of [1, 2, 3]) { for (let t = pt(th * 0.3); t >= 8 && !out; t--) out = lay(t, maxRows); if (out) break; }
+        // Round 16 (the owner's yes, 6 Oct 2026, design finding #13: eight names at 8pt on one row beside a large title):
+        // names that fit one row only at 8pt take two balanced rows, in reading order, at the largest size both rows
+        // hold (by the measured widths), where the header is high enough; otherwise the one row stays
+        if (out && out.rows.length === 1 && out.t <= 8 && names.length > 2) {
+          for (let t = pt(th * 0.3); t > out.t; t--) {
+            if (2 * rowH(t) > H) continue;
+            const ws = names.map((nm) => Math.ceil(textWidth(nm, t, true, font) + 10 + 2 * padX)), sum = (a, b) => ws.slice(a, b).reduce((x, w) => x + w, 0) + gapB * (b - a - 1);
+            let best = null;
+            for (let cut = 1; cut < names.length; cut++) { const w = Math.max(sum(0, cut), sum(cut, names.length)); if (!best || w < best.w) best = { cut, w }; }
+            if (best.w <= room) { out = { t, ws, rows: [names.slice(0, best.cut).map((_, i) => i), names.slice(best.cut).map((_, i) => best.cut + i)] }; break; }
+          }
+        }
+        return out ? Object.assign(out, { a0, a1, gapB, lineH, rowH: rowH(out.t), toLogo: titleLeft ? 'right' : 'left' }) : null;
+      };
+  };
+  // 0.2.9, audit 2's A2-3: what the writer measures for the design engine's fitSlots on one page (pure: no notes, no
+  // files); build fits its pages with it, and Pbip.fitOptions gives it to the website's background and to plan_layout.
+  // dropKinds: a user's model whose binding has no time axis: a designed page's line charts give their room away.
+  // headerRows: Round 12 (the owner's go on round 11's recommendation 2): in a designed layout (pg.grow: the engine owns
+  // the positions) a header whose page names don't fit one row of tabs grows by the height of the second row, where two
+  // rows then fit. Hand-placed pages are the caller's: their header never grows.
+  // railItems: the rail's dropdowns (the slicers the model has, three on the sample) and its Reset, as measured
+  function fitOf(c, pg) {
+    const { B, PAGES, SLICER_TEXT, own, resetFit, rtl, slicerH } = c, tabsLayout = tabsFor(c, pg);
+    const dropKinds = B && own && !B.date && !pg.hand ? ['line'] : [];
+    const headerRows = (() => {
+      const slots = pg.slots, t0 = slots.find((x) => x.kind === 'title'), l0 = slots.find((x) => x.kind === 'logo');
+      if (!pg.grow || PAGES.length < 2 || !t0 || !l0 || pg.panel) return 0;
+      const kk = pg.page.h / 1080, gap = 24 * kk, x0 = rtl ? l0.x + l0.w + gap : t0.x + t0.w + gap, x1 = rtl ? t0.x - gap : l0.x - gap;
+      if (tabsLayout(t0, l0, x0, x1, t0.h)) return 0;
+      let extra = 0;
+      for (let d = 1; d <= Math.ceil(30 * kk) + 25 && !extra; d++) { const tl = tabsLayout(t0, l0, x0, x1, t0.h + d); if (tl && tl.rows.length === 2 && d <= tl.rowH) extra = d; }
+      return extra;
+    })();
+    const kk = pg.page.h / 1080, all3 = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null);
+    // (the Reset's height does not depend on its width: resetFit)
+    const railItems = { n: Math.max(1, (B && own ? all3.filter(Boolean) : all3).length), minH: slicerH(SLICER_TEXT), maxH: 76 * kk, resetH: resetFit('', 0, kk).h, pad: 10 * kk, gap: 8 * kk };
+    return { dropKinds, headerRows, railItems };
   }
-  const SLOT_GAP = 40;
-  const slotsTouch = (a, b) => (Math.abs(a.y - b.y) <= 1 && Math.abs(a.h - b.h) <= 1 && Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w) <= SLOT_GAP)
-    || (Math.abs(a.x - b.x) <= 1 && Math.abs(a.w - b.w) <= 1 && Math.max(a.y, b.y) - Math.min(a.y + a.h, b.y + b.h) <= SLOT_GAP);
-  function dropLines(slots) {
-    const dropped = slots.filter((x) => x.kind === 'line'), boxes = dropped.map((x) => ({ x: x.x, y: x.y, w: x.w, h: x.h }));
-    for (let merged = true; merged;) {
-      merged = false;
-      for (let i = 0; i < boxes.length && !merged; i++) for (let j = i + 1; j < boxes.length && !merged; j++) if (slotsTouch(boxes[i], boxes[j])) {
-        const a = boxes[i], b = boxes[j], x0 = Math.min(a.x, b.x), y0 = Math.min(a.y, b.y);
-        boxes.splice(j, 1); boxes[i] = { x: x0, y: y0, w: Math.max(a.x + a.w, b.x + b.w) - x0, h: Math.max(a.y + a.h, b.y + b.h) - y0 }; merged = true;
-      }
-    }
-    let out = slots.filter((x) => x.kind !== 'line');
-    boxes.forEach((t) => { out = absorb(out, t); });
-    return { slots: out, dropped };
-  }
+  // the theme's text sizes the writer reads (the kit's, and fitOptions')
+  const themeSizes = (o) => { const TH = (o.theme && o.theme.textClasses) || {}, LABEL = +(TH.label || {}).fontSize || 10;
+    return { TH, TITLE: +(TH.title || {}).fontSize || 12, CALLOUT: +(TH.callout || {}).fontSize || 28, LABEL, SLICER_TEXT: +((((((o.theme || {}).visualStyles || {}).slicer || {})['*'] || {}).header || [{}])[0].textSize) || LABEL }; };
 
   // The visuals' look and sizes shared by a report's pages and its tooltip pages (frames, cards, buttons, the visual
   // fixes of 0.2.9 part 2), made once per report from its context c (see build)
@@ -90,7 +131,7 @@
     // scale (height / 720); title, callout: the title and value sizes the card would have. The padding is 8 on a
     // 1920 x 1080 page, as in Microsoft's recipe, and scales with the page. The value keeps the callout size unless the
     // box is too short, or too narrow for 7 characters ("101.91K"); below 8 the inner padding goes first.
-    const TH = (o.theme && o.theme.textClasses) || {}, TITLE = +(TH.title || {}).fontSize || 12, CALLOUT = +(TH.callout || {}).fontSize || 28;
+    const { TH, TITLE, CALLOUT, LABEL, SLICER_TEXT } = themeSizes(o);
     // the theme's text sizes are made for the report's full page; the 320 x 240 tooltip page and the phone get their own
     const TIP_VALUE = 20, TIP_TITLE = 10;
     // m (KPI cards on a page): { top, side }, the margin above the title (round(12k), k = page height / 1080: measured
@@ -117,8 +158,6 @@
     const resetLook = (text, r) => ({ show: bool(true), text: str(r && r.icon ? (rtl ? text + RESET_GAP : RESET_GAP + text) : text), fontColor: color(u.text), fontFamily: str(font), fontSize: num(LABEL), horizontalAlignment: str(rtl ? 'right' : 'left') });
     // (the Arabic tooltip is the button's own words, "إعادة ضبط الفلاتر": the owner's design choice 6, 5 Oct 2026)
     const resetTip = W.resetTip || (o.lang === 'ar' ? 'إعادة ضبط الفلاتر' : 'Clear the filters on this page');
-    const LABEL = +(TH.label || {}).fontSize || 10;
-    const SLICER_TEXT = +((((((o.theme || {}).visualStyles || {}).slicer || {})['*'] || {}).header || [{}])[0].textSize) || LABEL;
     // The card's value, label, padding, layout and outline need the "default" selector, or Power BI ignores them; the
     // number stays centred, like the legacy card's, in both reading directions; the inner outline would draw a box inside
     // the panel. The card's own fill (on by default, in the theme's background colour) is switched off, so the panel and
@@ -266,76 +305,13 @@
       return v;
     };
 
-    // The page buttons as tabs: their size and rows in the room between the end of the title's text and the logo (or
-    // the Filters button: x0, x1), within a header H high; null when they don't fit even at 8pt. (Taken out of the
-    // header's code in round 12 so the header can be tried one row taller first: see grown below.) The title's text
-    // size comes from the slot's height before any growth (textH).
-    const tabsLayout = (title, logo, x0, x1, H) => {
-      const kk = pg.page.h / 1080, gap = 24 * kk, th = title.textH || title.h;
-      const names = PAGES.map((p) => String(p.name || base)), titleSize = Math.min(pt(th * 0.42), boxFit(th));
-      const titleNeed = Math.min(title.w, Math.ceil(textWidth(shown(o.title || base), titleSize, true, font) + 24 * kk));
-      // the room: between the end of the title's text and the logo (or the Filters button). The title's text is at the
-      // reading start of its box, so room inside the box is taken only where the box's free end faces the logo
-      const titleLeft = title.x < logo.x;
-      const a0 = titleLeft ? (rtl ? title.x + title.w + gap : title.x + titleNeed + gap) : (rtl ? x0 : logo.x + logo.w + gap);
-      const a1 = titleLeft ? (rtl ? logo.x - gap : x1) : (rtl ? title.x + title.w - titleNeed - gap : title.x - gap);
-      const room = a1 - a0, padX = 8 * kk, gapB = Math.round(12 * kk), lineH = Math.max(2, Math.round(3 * kk));
-      const rowH = (t) => Math.ceil(6 + 1.6 * t) + (/^segoe ui/i.test(font) ? 0 : 4) + lineH;
-      const lay = (t, maxRows) => {
-        const ws = names.map((nm) => Math.ceil(textWidth(nm, t, true, font) + 10 + 2 * padX));
-        if (ws.some((w) => w > room)) return null;
-        let row = [], used = 0; const rows = [row];
-        ws.forEach((w, i) => { const need = (row.length ? gapB : 0) + w; if (row.length && used + need > room) { row = [i]; rows.push(row); used = w; } else { row.push(i); used += need; } });
-        return rows.length <= maxRows && rows.length * rowH(t) <= H ? { t, ws, rows } : null;
-      };
-      let out = null;
-      for (const maxRows of [1, 2, 3]) { for (let t = pt(th * 0.3); t >= 8 && !out; t--) out = lay(t, maxRows); if (out) break; }
-      // Round 16 (the owner's yes, 6 Oct 2026, design finding #13: eight names at 8pt on one row beside a large title):
-      // names that fit one row only at 8pt take two balanced rows, in reading order, at the largest size both rows
-      // hold (by the measured widths), where the header is high enough; otherwise the one row stays
-      if (out && out.rows.length === 1 && out.t <= 8 && names.length > 2) {
-        for (let t = pt(th * 0.3); t > out.t; t--) {
-          if (2 * rowH(t) > H) continue;
-          const ws = names.map((nm) => Math.ceil(textWidth(nm, t, true, font) + 10 + 2 * padX)), sum = (a, b) => ws.slice(a, b).reduce((x, w) => x + w, 0) + gapB * (b - a - 1);
-          let best = null;
-          for (let cut = 1; cut < names.length; cut++) { const w = Math.max(sum(0, cut), sum(cut, names.length)); if (!best || w < best.w) best = { cut, w }; }
-          if (best.w <= room) { out = { t, ws, rows: [names.slice(0, best.cut).map((_, i) => i), names.slice(best.cut).map((_, i) => best.cut + i)] }; break; }
-        }
-      }
-      return out ? Object.assign(out, { a0, a1, gapB, lineH, rowH: rowH(out.t), toLogo: titleLeft ? 'right' : 'left' }) : null;
-    };
-    // Round 12 (the owner's go on round 11's recommendation 2): in a designed layout (pg.grow: the engine owns the
-    // positions) a header whose page names don't fit one row of tabs grows by the height of the second row, where two
-    // rows then fit; the page's other slots move down by as much, and those that reach the page's bottom (the last
-    // row, the filter rail) give up that height. Hand-placed pages are the caller's: their header never grows.
-    const grown = (slots) => {
-      const t0 = slots.find((x) => x.kind === 'title'), l0 = slots.find((x) => x.kind === 'logo');
-      if (!pg.grow || PAGES.length < 2 || !t0 || !l0 || pg.panel) return slots;
-      const kk = pg.page.h / 1080, gap = 24 * kk, x0 = rtl ? l0.x + l0.w + gap : t0.x + t0.w + gap, x1 = rtl ? t0.x - gap : l0.x - gap;
-      if (tabsLayout(t0, l0, x0, x1, t0.h)) return slots;
-      let extra = 0;
-      for (let d = 1; d <= Math.ceil(30 * kk) + 25 && !extra; d++) { const tl = tabsLayout(t0, l0, x0, x1, t0.h + d); if (tl && tl.rows.length === 2 && d <= tl.rowH) extra = d; }
-      if (!extra) return slots;
-      const head = (x) => x.kind === 'title' || x.kind === 'logo', bottom = Math.max(...slots.filter((x) => !head(x)).map((x) => x.y + x.h));
-      headerGrew.push({ page: pg.name || base, by: extra });
-      return slots.map((x) => (head(x) ? Object.assign({}, x, { h: x.h + extra, textH: x.h }) : Object.assign({}, x, { y: x.y + extra }, x.y + x.h >= bottom - 1 ? { h: x.h - extra } : {})));
-    };
-    // Round 12 (#18; seen in Desktop 2.158, round 11: three dropdowns at the top of the filter rail, Reset at its very
-    // bottom and 300 page units of empty panel between them): a rail is only as high as its slicers and its Reset, so
-    // Reset sits right under the last slicer and the rail's panel ends there.
-    const railFit = (s) => {
-      if (s.kind !== 'slicer' || s.w > s.h) return s;
-      const kk = pg.page.h / 1080, pad = 10 * kk, gap = 8 * kk, all3 = [0, 1, 2].map((i) => (B && B.slicers && B.slicers[i]) || null), n = Math.max(1, (B && own ? all3.filter(Boolean) : all3).length);
-      const resetText = W.reset || 'Reset filters', bh = resetFit(resetText, resetW(resetText, kk, s.w - 2 * pad), kk).h;
-      const sh = Math.max(slicerH(SLICER_TEXT), Math.min(76 * kk, (s.h - 2 * pad - bh - gap * n) / n));
-      // (round 23, the laptop's S1: fitted to two slicers at 720 high the rail came out wider than high and was then laid
-      // out as a strip, two slicers 24 wide side by side, -2 in Arabic: a rail stays a column, stack)
-      return Object.assign({}, s, { h: Math.min(s.h, Math.ceil(2 * pad + n * sh + gap * n + bh)), stack: true });
-    };
-    // (round 23: on a user's model whose binding has no time axis, a designed page's line charts give their room to
-    // the visual beside them, told in leftOut with gave; a hand-placed page (pg.hand) keeps the caller's positions)
-    if (B && own && !B.date && !pg.hand && pg.slots.some((x) => x.kind === 'line')) { const dl = dropLines(pg.slots); dl.dropped.forEach((t) => leftOut.push({ page: pg.name || base, kind: 'line', title: t.title || null, gave: true })); pg = Object.assign({}, pg, { slots: dl.slots }); }
-    pg = Object.assign({}, pg, { slots: grown(pg.slots) });
+    // 0.2.9, audit 2's A2-3: the slots this page really gets, by the design engine's fitSlots with what the writer measures
+    // (fitOf): a line chart's room given away on a model with no time axis (told in leftOut with gave; a hand-placed page
+    // keeps the caller's positions), the header one row of tabs taller, the filter rail as high as its slicers and Reset
+    const tabsLayout = tabsFor(c, pg), fit = fitOf(c, pg), placed = E.fitSlots(pg.slots, fit);
+    placed.dropped.forEach((t) => leftOut.push({ page: pg.name || base, kind: 'line', title: t.title || null, gave: true }));
+    if (fit.headerRows) headerGrew.push({ page: pg.name || base, by: fit.headerRows });
+    pg = Object.assign({}, pg, { slots: placed.slots });
     // Round 19 (seen in Desktop, golden tasks 1 and 4:3: day names slant on the column charts of models without a short
     // day column): a column chart by day or month names whose widest name, at the label size, is wider than its share
     // of the plot (as S3 works it out) is written as a bar chart, whose names are level, where the slot holds one bar
@@ -358,7 +334,7 @@
       barCharts.push({ page: pg.name || base, field: label(f) });
       return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows: list.length });
     };
-    const sorted = pg.slots.map(railFit).map(asBar).sort((a, b) => (a.y - b.y) || (rtl ? b.x - a.x : a.x - b.x));
+    const sorted = pg.slots.map(asBar).sort((a, b) => (a.y - b.y) || (rtl ? b.x - a.x : a.x - b.x));
     const groups = {};
     const groupOf = (kind) => (kind === 'title' || kind === 'logo' ? 'header' : kind === 'kpi' ? 'kpis' : kind === 'slicer' ? 'filters' : null);
     const GROUP_NAMES = { header: W.header || 'Header', kpis: W.kpis || 'KPI cards', filters: W.filters || 'Filters' };
@@ -1195,7 +1171,7 @@
   }
 
   const api = {
-    absorb, dropLines, kit, write, tooltips
+    fitOf, themeSizes, kit, write, tooltips
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbipPage = api;
 })(typeof self !== 'undefined' ? self : this);

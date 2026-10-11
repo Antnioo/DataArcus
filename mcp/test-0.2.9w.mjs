@@ -142,7 +142,7 @@ export function v029w({ check }) {
     chk(() => typeof Q.bindQuery === 'function' && typeof Q.daxNames.column === 'function' && typeof Q.measures === 'function' && typeof Z.textWidth === 'function' && typeof Z.make === 'function'
       && typeof Pg.write === 'function' && typeof Pg.kit === 'function' && typeof Pg.tooltips === 'function' && typeof N.make === 'function' && typeof N.result === 'function',
       () => `A3-12: the modules pbip-query.js, pbip-sizing.js, pbip-page.js and pbip-notes.js export their parts: ${JSON.stringify([Q, Z, Pg, N].map((m) => (m && !m.threw ? Object.keys(m).length : m && m.threw)))}`);
-    chk(() => Px.textWidth === Z.textWidth && Px.daxNames === Q.daxNames && Px.dropLines === Pg.dropLines && Px.timeAxisPlan === Q.timeAxisPlan,
+    chk(() => Px.textWidth === Z.textWidth && Px.daxNames === Q.daxNames && Px.barNameShare === Z.barNameShare && Px.timeAxisPlan === Q.timeAxisPlan,
       () => 'A3-12: pbip-export.js re-exports the modules\' own functions (one of each)');
     const s = fs.readFileSync(path.join(REPO, 'assets/js/pbip-export.js'), 'utf8'), lines = s.split('\n'), from = lines.findIndex((l) => /^  function build\(o\) \{/.test(l)), to = lines.findIndex((l, i) => i > from && /^  \}$/.test(l));
     chk(() => from > 0 && to - from < 250, () => `A3-12: build is the orchestrator, under 250 lines (it was about 1,400): ${to - from}`);
@@ -186,6 +186,37 @@ export function v029w({ check }) {
       () => `A6-14: pageFilterOf gives the basic filter with its literals: ${JSON.stringify(pf).slice(0, 300)}`);
     const bad = get(() => Px.pageFilterOf({ t: T, c: 'Year', type: 'int64' }, [1.5]));
     chk(() => bad && /whole number|TypeError|must/.test(bad.threw || ''), () => `A6-14: a value of the wrong type is refused: ${JSON.stringify(bad)}`);
+  }
+
+  // ---------- A2-3: one pure fitSlots in the design engine; the writer, plan_layout and the website's PNG all call it ----------
+  {
+    const fit = E.fitSlots, sl = [{ kind: 'title', x: 0, y: 0, w: 600, h: 60 }, { kind: 'logo', x: 600, y: 0, w: 200, h: 60 }, { kind: 'line', x: 0, y: 80, w: 100, h: 50 }, { kind: 'line', x: 110, y: 80, w: 100, h: 50 },
+      { kind: 'table', x: 0, y: 140, w: 210, h: 50 }, { kind: 'slicer', x: 600, y: 80, w: 100, h: 400 }];
+    const copy = JSON.stringify(sl), out = typeof fit === 'function' ? fit(sl, { dropKinds: ['line'], headerRows: 10, railItems: { n: 2, minH: 30, maxH: 50, resetH: 30, pad: 10, gap: 8 } }) : null;
+    const t = out && out.slots.find((x) => x.kind === 'table'), hd = out && out.slots.find((x) => x.kind === 'title'), rail = out && out.slots.find((x) => x.kind === 'slicer');
+    chk(() => out && JSON.stringify(sl) === copy && out.dropped.length === 2 && !out.slots.some((x) => x.kind === 'line') && t.y === 90 && t.h === 110 && hd.h === 70 && hd.textH === 60
+      && rail.y === 90 && rail.stack === true && rail.h === Math.ceil(2 * 10 + 2 * 50 + 8 * 2 + 30),
+      () => `A2-3: E.fitSlots drops a kind (touching slots merged, the room to the visual beside), grows the header, fits the rail to its items, never changes its input: ${JSON.stringify(out)}`);
+    chk(() => typeof E.absorb === 'function' && JSON.stringify(fit(sl, {}).slots) === copy, () => 'A2-3: E.absorb is the engine\'s; with no options fitSlots moves nothing');
+    // the writer measures (tabs, the rail's slicers and Reset), the engine moves: no slot rule left in the writer
+    const pgSrc = fs.readFileSync(path.join(REPO, 'assets/js/pbip-page.js'), 'utf8');
+    chk(() => !/function absorb|function dropLines|const grown = |const railFit = |SLOT_GAP/.test(pgSrc) && /fitSlots/.test(pgSrc) && typeof Px.fitOptions === 'function' && !fs.existsSync(path.join(HERE, 'lib/slots.mjs')),
+      () => 'A2-3: absorb, dropLines, grown and railFit are gone from the writer (it calls E.fitSlots with Pbip.fitOptions), and mcp/lib/slots.mjs is deleted');
+    // the report's visuals sit exactly on the fitted slots: a designed report on a model with no time axis, two pages
+    const o = (() => { const d = E.fresh(); d.layout = Object.assign({}, d.layout, { filters: true, fpos: 'start' }); E.repairState(d);
+      const specs = E.projectPages(d.layout, 'en', { second: true, panel: false });
+      return { name: 'W fit', title: 'W fit', lang: 'en', rtl: false, font: d.font, ui: d.ui, theme: E.buildTheme(d, 'en'), sample: false, model: { byPath: 'M.SemanticModel' }, bind: base(), texts: E.REPORT_TEXTS.en,
+        pages: specs.map((sp) => ({ name: sp.name + ' with a much longer page name for the tabs', page: sp.page, slots: sp.slots, panel: sp.panel, png: new Uint8Array([1]), grow: true })) }; })();
+    const r = get(() => Px.build(o)), fo = get(() => Px.fitOptions(o)), pages = Array.isArray(fo) ? o.pages.map((pg, i) => fit(pg.slots, fo[i]).slots) : [];
+    const box = (v) => [v.position.x, v.position.y, v.position.width, v.position.height].join(','), DATA = ['clusteredBarChart', 'clusteredColumnChart', 'donutChart', 'tableEx'];
+    const pj = r.files ? r.files.filter((f) => /\/page\.json$/.test(f.path)).map((f) => JSON.parse(String(f.data))).filter((p) => p.type !== 'Tooltip') : [];
+    const written = pj.map((p) => r.files.filter((f) => f.path.includes('/pages/' + p.name + '/') && /visual\.json$/.test(f.path)).map((f) => JSON.parse(String(f.data))).filter((v) => v.visual && DATA.includes(v.visual.visualType) && !v.parentGroupName).map(box).sort());
+    const planned = pages.map((sl2) => sl2.filter((s) => ['bar', 'column', 'donut', 'table'].includes(s.kind)).map((s) => [s.x, s.y, s.w, s.h].join(',')).sort());
+    chk(() => written.length === 2 && written.every((w, i) => w.length && w.every((b) => planned[i].includes(b))) && fo.every((f) => (f.dropKinds || []).includes('line')),
+      () => `A2-3: every chart and table of the report is on a slot of fitSlots(slots, fitOptions): written ${JSON.stringify(written)} fitted ${JSON.stringify(planned)} ${r.threw || ''} ${fo && fo.threw || ''}`);
+    // the website's PNG and plan_layout take the same fitting
+    const tg = fs.readFileSync(path.join(REPO, 'assets/js/theme-generator.js'), 'utf8'), srv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+    chk(() => /fitSlots/.test(tg) && /fitOptions/.test(tg) && !/dropLines/.test(tg) && /fitOptions/.test(srv), () => 'A2-3: the website\'s background PNG and plan_layout fit the slots with the writer\'s options');
   }
 }
 
