@@ -5,6 +5,7 @@ import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { squash, termsOf, scanText, scanRepo, textOf } from './deny-scan.mjs';
 
 let n = 0;
@@ -32,7 +33,7 @@ t('a binary file is read for its text runs, ASCII and UTF-16 (a word inside an i
 });
 t('the scan fails closed: no DENY_TERMS is a failed check, never a pass', () => {
   let code = 0;
-  try { execFileSync(process.execPath, [path.join(path.dirname(new URL(import.meta.url).pathname), 'deny-scan.mjs'), '.'], { env: { ...process.env, DENY_TERMS: '' }, stdio: 'pipe' }); }
+  try { execFileSync(process.execPath, [fileURLToPath(new URL('./deny-scan.mjs', import.meta.url)), '.'], { env: { ...process.env, DENY_TERMS: '' }, stdio: 'pipe' }); }
   catch (e) { code = e.status; }
   assert.equal(code, 1);
 });
