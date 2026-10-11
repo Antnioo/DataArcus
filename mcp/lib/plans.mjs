@@ -92,6 +92,7 @@ export function gate(tool, id, model, pin) {
   if (!p) throw new Error(`Nothing was written: the plan id ${JSON.stringify(String(id))} is unknown (a plan id is good only in this session of the DataArcus server, and a restart forgets it). ${SHOW}`);
   if (!alive(p)) { plans.delete(p.id); throw new Error(`Nothing was written: plan ${p.id} has expired (a plan is good for ${Math.round(TTL / 60000)} minutes). Make the plan again. ${SHOW}`); }
   if (p.status !== 'approved') throw new Error(`Nothing was written: plan ${p.id} is not approved yet. ${SHOW}`);
+  if (p.used && p.used[tool]) throw new Error(`Nothing was written: plan ${p.id} was already used for ${tool} (a plan writes once). For another write, make a new plan, show it to the user and wait for their go.`);
   if (!ALLOWS[p.kind].includes(tool)) throw new Error(`Nothing was written: plan ${p.id} is a ${p.kind} plan, which allows ${ALLOWS[p.kind].join(' and ')}, not ${tool}. ${tool === 'create_report' ? 'A report needs a plan from plan_layout. ' : ''}${SHOW}`);
   if (p.model && model && p.model !== model) throw new Error(`Nothing was written: plan ${p.id} was made for another model. ${SHOW}`);
   if (tool === 'create_report' && !p.model) throw new Error(`Nothing was written: plan ${p.id} was made without the model; a report's plan comes from plan_layout with path (the model), so its fields are checked against it. ${SHOW}`);
@@ -104,3 +105,6 @@ export function gate(tool, id, model, pin) {
 }
 
 
+
+/** After a successful write (audit 6, A6-2): the plan is used for that tool, and the same id is refused for it again. */
+export function consume(id, tool) { const p = plans.get(String(id)); if (p) { p.used = p.used || {}; p.used[tool] = true; } }
