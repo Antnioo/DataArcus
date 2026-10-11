@@ -7,7 +7,7 @@
 // and filter values, slicer selections and bookmark states are never read into an answer. No network, no data.
 import fs from 'node:fs';
 import path from 'node:path';
-import { inside, readCapped, readsLikeInstruction, real, shownName, visible, WITHHELD } from './model.mjs';
+import { inside, readCapped, readsLikeInstruction, real, shownName, shownPath, visible, WITHHELD } from './model.mjs';
 
 // ---- untrusted text (check_report's rules, one copy) ----
 // (A1-13: the one screen is model.mjs's; INSTRUCTION keeps its name and its test() for the callers)
@@ -53,6 +53,32 @@ export function walk(d, out, cap, depth, sk) {
   }
   return out;
 }
+
+// ---- strict reading, for a tool that writes from what it reads (the Arabic twin) ----
+// Every file of the report listed; a link, a folder past the depth, more than `files` files or a file over the cap stops
+// the read with the reason (tail: the caller's own words, "Nothing was written."). Read files through readBytes/readText.
+export function strictFiles(dir, opts) {
+  const o = opts || {}, tail = o.tail || '', max = o.files || 20000, out = [];
+  const go = (d, depth) => {
+    if (depth > REPORT_LIMITS.depth) throw new Error(`The report has folders deeper than ${REPORT_LIMITS.depth} levels (a PBIR report is 6 levels deep): not read.${tail}`);
+    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
+      const f = path.join(d, e.name);
+      if (e.isSymbolicLink()) throw new Error(`The report holds a link (a symbolic link or a junction) at "${shownPath(path.relative(dir, f))}": DataArcus never follows links.${tail}`);
+      if (e.isDirectory()) go(f, depth + 1);
+      else if (e.isFile()) {
+        if (out.length >= max) throw new Error(`The report has more than ${max} files: not read.${tail}`);
+        const size = fs.lstatSync(f).size;
+        if (size > REPORT_LIMITS.file) throw new Error(`A report file is ${Math.round(size / MB)} MB, above the ${REPORT_LIMITS.file / MB} MB DataArcus reads (the largest report files are well under 1 MB).${tail}`);
+        out.push(path.relative(dir, f).split(path.sep).join('/'));
+      }
+    }
+  };
+  go(dir, 0);
+  return out.sort();
+}
+// a file's bytes and text through the one-descriptor reader (links refused, within the cap)
+export const readBytes = (f) => readCapped(f, REPORT_LIMITS.file, 'report file');
+export const readText = (f) => { const b = readBytes(f); return (b[0] === 0xef && b[1] === 0xbb && b[2] === 0xbf ? b.subarray(3) : b).toString('utf8'); };
 
 // the report folder of a path: a .pbip file (its .Report beside it), a .Report folder, or a folder holding definition/
 // or exactly one .Report folder

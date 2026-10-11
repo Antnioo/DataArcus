@@ -12,7 +12,7 @@ import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { inside, real, nothingAt, writeNew, visible, loadModel, ROOT } from './model.mjs';
 // (the untrusted-text screen lives in the reading block: the cross-review's Break 1, 11 Oct)
-import { INSTRUCTION } from './read-report.mjs';
+import { INSTRUCTION, diskSource, inventory, isDir, isFile, readBytes, readText, strictFiles } from './read-report.mjs';
 import { proposeArabic } from './arabic-names.mjs';
 
 const require = createRequire(import.meta.url);
@@ -20,10 +20,7 @@ const Mirror = require('../../assets/js/report-mirror.js');
 
 // the limits check_report reads a report within (8 MB a file, 12 levels), and a count
 const MB = 1024 * 1024, LIMITS = { file: 8 * MB, depth: 12, files: 20000 }, TEXT_CAP = 200, TEXTS_MAX = 400;
-const isFile = (f) => { try { return fs.lstatSync(f).isFile(); } catch (e) { return false; } };
-const isDir = (f) => { try { return fs.lstatSync(f).isDirectory(); } catch (e) { return false; } };
 const relRoot = (f) => path.relative(ROOT, f).split(path.sep).join('/');
-const readText = (f) => { const b = fs.readFileSync(f); return b[0] === 0xef && b[1] === 0xbb && b[2] === 0xbf ? b.subarray(3).toString('utf8') : b.toString('utf8'); };
 const json = (o) => JSON.stringify(o, null, 2) + '\n';
 // (the one Arabic month list, the writer's: the cross-review's duplicates, 11 Oct)
 const MONTHS_AR = require('../../assets/js/pbip-export.js').AR_MONTHS;
@@ -53,42 +50,17 @@ function locate(p) {
   return { dir, base, pbip, project: path.dirname(dir) };
 }
 
-// ---- every file of the report, measured; links are refused, never followed ----
-function filesOf(dir) {
-  const out = [];
-  const walk = (d, depth) => {
-    if (depth > LIMITS.depth) throw new Error(`The report has folders deeper than ${LIMITS.depth} levels (a PBIR report is 6 levels deep): not read. Nothing was written.`);
-    for (const e of fs.readdirSync(d, { withFileTypes: true })) {
-      const f = path.join(d, e.name);
-      if (e.isSymbolicLink()) throw new Error(`The report holds a link (a symbolic link or a junction) at "${visible(path.relative(dir, f)).slice(0, 120)}": DataArcus never follows links. Nothing was written.`);
-      if (e.isDirectory()) walk(f, depth + 1);
-      else if (e.isFile()) {
-        if (out.length >= LIMITS.files) throw new Error(`The report has more than ${LIMITS.files} files: not read. Nothing was written.`);
-        const size = fs.lstatSync(f).size;
-        if (size > LIMITS.file) throw new Error(`A report file is ${Math.round(size / MB)} MB, above the 8 MB DataArcus reads (the largest report files are well under 1 MB). Nothing was written.`);
-        out.push(path.relative(dir, f).split(path.sep).join('/'));
-      }
-    }
-  };
-  walk(dir, 0);
-  return out.sort();
-}
-
-// ---- the report read: pages in order, their visuals, bookmarks ----
-function readReport(loc) {
-  const files = filesOf(loc.dir), J = {}, unreadable = [];
-  const parse = (rel) => { if (rel in J) return J[rel]; try { J[rel] = JSON.parse(readText(path.join(loc.dir, rel))); } catch (e) { J[rel] = null; unreadable.push(rel); } return J[rel]; };
-  const pageIds = [...new Set(files.map((f) => (f.match(/^definition\/pages\/([^/]+)\/page\.json$/) || [])[1]).filter(Boolean))];
-  const order = ((parse('definition/pages/pages.json') || {}).pageOrder || []).map(String);
-  const ids = order.filter((id) => pageIds.includes(id)).concat(pageIds.filter((id) => !order.includes(id)));
-  const pages = ids.map((id) => {
-    const page = parse(`definition/pages/${id}/page.json`) || {};
-    const visuals = files.filter((f) => f.startsWith(`definition/pages/${id}/visuals/`) && /\/visual\.json$/.test(f) && f.split('/').length === 6)
-      .map((rel) => ({ rel, json: parse(rel) })).filter((v) => v.json && v.json.name != null);
-    return { id, rel: `definition/pages/${id}/page.json`, page, visuals };
-  });
-  const bookmarks = files.filter((f) => /^definition\/bookmarks\/[^/]+\.bookmark\.json$/.test(f)).map((rel) => ({ rel, json: parse(rel) })).filter((b) => b.json);
-  const pbir = parse('definition.pbir') || {};
+// ---- the report read, strictly, through the reading block (R1, the cross-review: the twin had its own locate, walker,
+// reader and limits): every file listed by strictFiles (a link, a folder too deep, too many files or a file over 8 MB
+// stops it, nothing written); pages in order, their visuals (in file order) and bookmarks from inventory() ----
+function readOriginal(loc) {
+  const files = strictFiles(loc.dir, { files: LIMITS.files, tail: ' Nothing was written.' });
+  const inv = inventory(diskSource({ reportDir: loc.dir }, { big: [], deep: 0 }), path.basename(loc.dir));
+  const unreadable = inv.unreadableFiles.slice();
+  let pbir = {}; try { pbir = JSON.parse(readText(path.join(loc.dir, 'definition.pbir'))); } catch (e) { if (files.includes('definition.pbir')) unreadable.push('definition.pbir'); }
+  const pages = inv.pages.filter((pg) => files.includes(pg.file)).map((pg) => ({ id: pg.id, rel: pg.file, page: pg.raw,
+    visuals: pg.visuals.filter((x) => x.json && x.json.name != null && x.file.split('/').length === 6).sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0)).map((x) => ({ rel: x.file, json: x.json })) }));
+  const bookmarks = inv.bookmarks.map((b) => ({ rel: b.file, json: b.raw }));
   return { files, pages, bookmarks, pbir, unreadable, phone: files.some((f) => /\/mobile\.json$/.test(f)), hasPlatform: files.includes('.platform') };
 }
 
@@ -147,7 +119,7 @@ const cleanLabel = (s) => String(s).replace(/[\p{Cc}]/gu, ' ').trim().slice(0, T
 export function twinKey(p) { const { dir } = locate(p); try { return fs.realpathSync.native(dir); } catch (e) { return dir; } }
 
 export function planTwin(a) {
-  const loc = locate(a.path), R = readReport(loc);
+  const loc = locate(a.path), R = readOriginal(loc);
   const twinDir = path.join(loc.project, loc.base + ' AR.Report'), twinPbip = path.join(loc.project, loc.base + ' AR.pbip');
   const free = nothingAt(twinDir) && nothingAt(twinPbip);
   const texts = textsOf(R), ids = new Set(texts.map((t) => t.id));
@@ -194,7 +166,7 @@ function freeScript(dir, base, text) {
   for (let n = 1; n < 1000; n++) {
     const f = path.join(dir, base + (n > 1 ? ' ' + n : '') + '.tmdl');
     if (nothingAt(f)) { writeNew(f, text); return f; }
-    try { if (fs.lstatSync(f).isFile() && fs.readFileSync(f, 'utf8') === text) return f; } catch (e) { /* the next name */ }
+    try { if (fs.lstatSync(f).isFile() && readBytes(f).toString('utf8') === text) return f; } catch (e) { /* the next name */ }
   }
   throw new Error('no free file name for the month script');
 }
@@ -225,7 +197,7 @@ export function writeTwin(a, plan) {
   for (const rel of R.files) {
     const f = path.join(twinDir, ...rel.split('/'));
     fs.mkdirSync(path.dirname(f), { recursive: true });
-    writeNew(f, out.has(rel) ? out.get(rel) : fs.readFileSync(path.join(loc.dir, ...rel.split('/'))));
+    writeNew(f, out.has(rel) ? out.get(rel) : readBytes(path.join(loc.dir, ...rel.split('/'))));
   }
   writeNew(twinPbip, json(pbip));
   const month = P.month.offered ? { scriptFile: relRoot(freeScript(loc.project, `${loc.base} AR - Arabic month`, P.month.script)), column: P.month.column, table: P.month.table, howToApply: P.month.howToApply } : { written: false, why: P.month.why };
