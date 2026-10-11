@@ -3975,6 +3975,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     model('r17-big', [sales]);
     const d = path.join(ROOT, 'r17-big', 'Big.Report', 'definition', 'pages', 'p1');
     fs.mkdirSync(d, { recursive: true });
+    // (0.2.9 item 13: only a report whose definition.pbir points at the model is read, so the fixture has one, as every
+    // report Desktop saves; the check itself is unchanged)
+    fs.writeFileSync(path.join(ROOT, 'r17-big', 'Big.Report', 'definition.pbir'), JSON.stringify({ version: '4.0', datasetReference: { byPath: { path: '../M.SemanticModel' } } }));
     for (let i = 0; i < 5; i++) { const fd = fs.openSync(path.join(d, `part${i}.json`), 'w'); fs.ftruncateSync(fd, 30 * 1024 * 1024); fs.closeSync(fd); }   // sparse: 150 MB on paper
     const r = await ask('read_model', { path: 'r17-big' });
     chk(() => r.err && /report/i.test(r.t) && /together/.test(r.t) && /128 MB/.test(r.t),
