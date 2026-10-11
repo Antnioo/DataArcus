@@ -46,6 +46,75 @@ is proving it). Recipes: dataarcus-engine REPORT-FIXES-LAB, TOOLTIP-FIX-LAB, VAL
 | `npm test` | all green, more checks than 782 |
 | Website suites (pbip, theme-generator, theme-generator-lab, design-engine), `check-min`, `csp`, `test-site-config` | PASS (the website's download gets 1-4 and 6-7 too: the shared writer) |
 
+### 0.2.9 part 2, the report (cloud builder, Linux; branch `fix/0.2.9-gate`, pushed; not merged, no PR)
+**Commits:** `c32dd0b` (the plan and expected, before any code), `7f638d0` (the checks, written first), `8e80b3b`
+(LAYER field picker: O-2, O-7, dateOf), `2ed850f` (LAYER report writer: O-13, O-14, O-4, O-3, O-6, tooltips), `4cc049f`
+(LAYER design engine: light default, calm palette), `3b53ba0` (LAYER MCP tools: create_report, plan_layout's timeAxis,
+notes; older checks and golden with causes), then the website check helpers and this report.
+
+**Tests before -> after:** new `mcp/test-0.2.9b.mjs` (33 checks, runs alone): **30 red on `4785367`, 33 green** (the 3
+green before: the reports are written, a sorted month name keeps its order, and `$schema` on every file: item 7 already
+held, now guarded). `npm test`: **782 -> 815, golden PASS** after `--update` (below). Microsoft's validator on the new
+reports (English, Arabic, month name): **0 errors, 0 warnings**; every golden report 0. Website: 17 suites, `pbip` 85 PASS
+after its helpers learned the filters (below), the other 16 PASS; `check-min`, `csp`, `test-site-config` PASS.
+- **Golden moves (each in `why`):** visuals -1 on each page where no logo is given (O-6: tasks 1 50->48, 2 44->42, 3
+  18->17, 4 44->42 twice, 5 14->13, 6 51->49, 7 38->36, 10 45->43); task 1 contrastWarnings 1->0 (the light default and the
+  calm palette); task 6 longTitleUses 86->84 (O-2: the long amount's card has no format entry of its own any more); task 10
+  suggestChars 5111->5097 (O-2: an amount carries no wholeFormat). Validator, sizes, phone, table headers unchanged.
+- **Older checks changed, each with its cause beside it:** no "Your logo"/«شعارك» in create_report's reports (5 checks:
+  the slot list, the Arabic labels, the placeholder size, the tabs' room now measured from a real logo image, #30); tables
+  with set widths and auto-size off (3: test.mjs "tables", round 19's table rows, round 23's Arabic table); Total Sales
+  (a SUM of money, `#,0`) is an amount, auto units 2 decimals (2: the D5 cards, B2); the field walkers (test.mjs, the
+  website's pbip.mjs) skip a visual filter's aliases (`SourceRef.Source`); the website's sort check accepts the month-start
+  sort; its tooltip check knows the 320 x 314 trend kept to 6 months (40 + 27 a bar).
+
+**What is built (where):**
+- `pbip-bind.js`: `cardKind` (amount: a currency in the format, or a SUM with a money word, never a count, keeps auto units
+  2 decimals); KPI rank (+2 plain SUM/COUNT, -3 acronym name except currency codes, -2 predict/forecast/estimate/target/
+  index/ratio; budget a main word); `dateColumnFor` and `dateOf` on month/period text columns.
+- `pbip-export.js`: `fixVisual` on every report chart and table (the four fixes), `timeExt` report-level measures
+  (`Month start (sort)` DateTime, `Last 12 months: <measure>` / `Last 6 months: <measure>` Integer, NOT ISBLANK of the
+  chart's measure, not "> 0" as in the lab, so a measure that can be negative works too), `notBlank`, `topN`, the
+  measures file written after the tooltip pages, `logoPlaceholder`; returns `timeAxes`, `tooltipLimits`.
+- `mcp/lib/design.mjs`: `withDefaults` light (Corporate), `calmData` (10 calm colours, a hue within 25 of the brand skipped,
+  each mixed towards the text until 3:1 on the card); a harmony asked still gives the website's `generate()`.
+- `server.mjs`: `logoPlaceholder: false`, a given timeAxis carries `dateOf`, plan_layout `timeAxis` (how the axis is
+  ordered, or "A to Z: pick another" when it can't be) and `blankCategories`, reportNotes for each, the card rule text.
+
+### 0.2.9 part 2, for the laptop to prove (lab-tools/harness.ps1 on COPIES of the two portfolio reports' models; each expected before the run)
+Build with the branch's MCP on the Complaints and Fintech copies, English and Arabic, then the harness screenshots and PDF.
+| # | Check (owner's finding) | Expected |
+|---|---|---|
+| 1 | Complaints, main trend by Month-Year (O-13) | months in time order, the last 12 with data (about 13 points), no scrollbar; the Filters pane shows the "last 12 months" filter; Arabic: newest at the left |
+| 2 | Complaints page 1 table, 771 wide (O-14) | Issue, Complaints, Share, Timely % all visible; long issues wrap; Total row readable; no horizontal scrollbar |
+| 3 | Bar chart by Product, 508 wide (O-4) | names to about 25 characters whole ("Checking Or Savings Account"); longer ones cut, as measured |
+| 4 | Fintech line chart (O-3) | no "(Blank)" month; the filter "is not blank" in the Filters pane |
+| 5 | Header without a logo (O-6) | no "Your logo" / «شعارك»; nothing else moved |
+| 6 | Fintech KPI picks (O-7) | core counts and amounts (Total Projects, Actual Budget...) before EV/CPI/EOC; the plan says the picks |
+| 7 | Fintech cards (O-2) | EUR 54.66M on the budget card (an amount); counts whole (179); percents as the model; under a million an amount shows K with 2 decimals (decision below) |
+| 8 | Tooltip by Product (9 products) | 6 bars, "Top 6: ..." in the title, no scrollbar |
+| 9 | Tooltip by Month-Year | the last 6 months, newest first, no scrollbar, months whole |
+| 10 | Arabic table total row (round 23 with auto-size off) | «الإجمالي» at the right, the hidden column still invisible (width 0), no sliver at the left |
+| 11 | Theme with no brand, and a brand with no harmony | light page; the 7 colours beside the brand calm and readable on white |
+| 12 | Microsoft's validator (check_report) on both reports | 0 errors |
+
+### 0.2.9 part 2, the decision needed
+O-2's "otherwise whole numbers": Power BI can't change a card's display units by its value without a model change (a
+dynamic format string on the measure). Now: an amount always shows auto units with 2 decimals (54.66M, and 14.81K under a
+million); a count or another whole-number measure its whole number. Options: (a) keep this; (b) offer the user, in the
+plan, a TMDL script that gives the amount measures a dynamic format string (M with 2 decimals over a million, whole
+below), applied by the user in TMDL view like the format script. Recommendation: (b) in 0.3.0, (a) for 0.2.9.
+
+### 0.2.9 part 2, seen, not in scope
+- The "is not blank" filter shape, the Top N filter and the last-N filter passed Microsoft's validator; only the laptop can
+  prove Desktop honours them (the lab proved Top N and last-N, not the "is not blank" form written here).
+- A date hierarchy (Year > Month) on the time axis is not used: a month label is sorted by its month start instead
+  (REPORT-FIXES-LAB's L3+L4); a model whose time axis is a plain Date column still draws one point per day (lab's L1).
+- The month order measure lives in the date's table entity; a model whose calendar is hidden keeps it there too.
+- Table widths use average character widths (no data lengths read: LINT-V2's lengths need the user's consent, not built).
+- The website's template download keeps "Your logo" (it is a template); its sample's revenue card stays whole (the
+  sample sets its own formats).
+
 ## 0.2.9 part 1: the gate, the plan's limits, the user's choices (11 Oct, cloud builder; branch `fix/0.2.9-gate` from main `517e702`; not merged, no PR)
 The owner approved the 0.2.9 plan on 11 Oct (`dataarcus-engine` business/PLAN-0.2.9-0.3.0.md, items 1, 2 and 6). The reviewer
 reviews and merges; this builder never merges. Findings: P-1, O-1, O-8, O-11, O-12 (business/beta/OWNER-RESULTS-0.2.8.md).
