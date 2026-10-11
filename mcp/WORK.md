@@ -48,6 +48,73 @@ reviews and merges; this builder never merges. Findings: P-1, O-1, O-8, O-11, O-
 | `npm test` | all green, more checks than before |
 | Website suites touched (design-engine, theme-generator, theme-generator-lab, pbip), `check-min`, `test-site-config` | PASS |
 
+### 0.2.9 part 1, the report (cloud builder, Linux; branch `fix/0.2.9-gate`, pushed; not merged, no PR)
+**Commits:** `55a2887` (plan and expected, before any code), `ae10712` (the checks, written first), `56b14f7` (LAYER MCP
+tools: the gate and the plan's limits), `030c6f2` (LAYER design engine: the user's choices), then this report.
+
+**Tests before -> after:** new `mcp/test-0.2.9.mjs` (43 checks, runs alone: `node test-0.2.9.mjs`): **39 red on main,
+43 green after** (the 4 green on main: a write happens when asked, and "start" stays "start"). Full `npm test` (Linux,
+once at the end): **739 -> 782 of 782, golden PASS** (11 tasks match `golden-expected.json`, unchanged; largest answer
+check_model_health 23,710, unchanged). Website: all 17 suites PASS (design-engine 598 after the two fixtures below,
+theme-generator 893, theme-generator-lab 893, pbip 85, ...). CI green on `030c6f2`. `check-min`, `csp`, `test-site-config` PASS.
+- **Older checks changed for the new behaviour (each with its cause, no expected number moved):** 8 -> 9 tools (test.mjs
+  no-root start, round 22's X-03); plan_layout is read-only (it no longer writes the format script); plan_layout names
+  the format script (`scriptAfterGo`, the health check's own file name) instead of writing it; the r17 privacy run
+  approves its plan before create_report; the brand check expects the brand exact as data[0] and accent, the other 7
+  still the engine's `generate()`. Every other older check gets its plan through `mcp/test-plan.mjs` (plan_layout with
+  the model, or the tool's own proposal, then approve_plan "go"), as an agent must; the gate itself is tested raw.
+- **Design fixtures:** `project-pages.json` re-recorded with the lab page; only `layout-exec-3840x2160` and
+  `layout-ops-3840x2160` (first page's rail on top) moved, page 2 only; noted in `meta.changed` with the cause.
+
+**What is built:**
+- `mcp/lib/plans.mjs`: plans in the server process (`proposed` -> `approved`), 2 h life (`DATAARCUS_PLAN_TTL_MS` can only
+  shorten it), kinds report / theme / scripts / calendar, each allowing its tools, bound to its model's real path.
+- New tool `approve_plan { planId, userReply }` (writes nothing; a reply starting no/wait/stop/cancel/لا without a go word
+  is refused). Writers: `generate_theme` (no file without an approved plan: design, `colours`, `sayInPlan`, `fileAfterGo`,
+  a proposed theme plan; plan_layout's plan allows the file too), `create_report` (refuses without plan_layout's
+  approved plan for the same model; the gate runs after the model is read, so earlier refusals keep their texts),
+  `check_model_health` (findings as before; scripts named `scriptAfterGo` and a proposed scripts plan; written with
+  it), `add_gulf_calendar` (every check runs; `scriptAfterGo`, `howToApplyAfterGo`, a calendar plan; written with it),
+  `plan_layout` (READS now; formats named, create_report writes the script).
+- `plan_layout`: `limits` (kpiCards 6, slicers 3, tableFields 8, pageFilters 8, svgColumns 4, svgCards 6, page sizes,
+  visuals) and `planFields` (create_report's fields shape): counts over a limit, slicers on a layout without filters,
+  a field not in the model or of the wrong kind -> no plan id, `planProblems`. `pageSize.chosenBy` default / asked / design.
+- Instructions (2,496 characters, under the 2,500 the tests allow): rule 1 (plan_layout with planFields, show, wait for
+  the user's "go", approve_plan, planId) and 1b (1920 x 1080 unless asked, Arabic too; light, brand exact; no colour
+  changed unasked; the filter side on every page). The skill, README (9 tools, approve_plan row) and PRIVACY say it.
+- Design engine: `secondLayout` keeps `fpos` (end/top). `mcp/lib/design.mjs`: light by default (`mode`), brand exact as
+  data[0] and accent (light page `#f5f7fa`, white visuals, text `#1f2933`), Corporate with nothing asked; a dark preset
+  chosen with a brand keeps its dark page; `sayInPlan` says failing contrast checks and that colours were kept.
+
+**Honest limit (P-1):** the tools now force a plan step and an explicit approval call carrying the user's reply; they
+cannot prove a person typed it (an agent could call approve_plan on its own; the instructions and the tool text forbid
+it). A server restart forgets the plans (refused as unknown, with what to do).
+
+### 0.2.9 part 1, for the laptop to prove in Desktop (and Claude Desktop) (each expected before the run)
+| # | Check | Expected |
+|---|---|---|
+| 1 | Claude Desktop, new chat: "generate a theme for <model> in #0F766E" | no file in the folder; Claude shows the colours (light page, #0F766E exact) and asks; after "go" one theme file |
+| 2 | "Make an executive report, filters right" on a made-up model | plan shown, nothing in the folder until "go"; then one report; page 2's filter rail on the right too (O-1) |
+| 3 | Ask for 4 slicers | Claude's plan already says 3 at most (planProblems), before any "go" (O-12) |
+| 4 | An Arabic report with no size asked | plan says 1920 x 1080; the report is 1920 x 1080 (O-8) |
+| 5 | The theme of 1 in Desktop | page and visuals light, bars/accent drawn #0F766E to the pixel (O-11) |
+| 6 | Restart Claude Desktop between the plan and "go" | create_report refused with "unknown plan id ... show the plan"; nothing written |
+| 7 | check_model_health on a model with format findings | findings shown, no .tmdl until "go" |
+
+### 0.2.9 part 1, the one decision needed
+plan_layout and create_report **without a design** still start from the dark DataArcus preset (only generate_theme's
+default became light). Recommendation: make the design engine's MCP default light too (golden reports would move:
+their themes and backgrounds, numbers unchanged otherwise), in part 2.
+
+### 0.2.9 part 1, seen, not in scope
+- The brand harmony's 7 other colours are still the website's loud generate() (O-11's #2ce21d, #2635e3): a calmer default
+  harmony for the MCP is a design choice for the owner.
+- An approved plan does not pin create_report's fields to the plan's planFields (a later call could bind other fields;
+  boundFields still tells the difference).
+- The test run on the beta laptop is needed to see how Claude Desktop shows approve_plan (it is not read-only, so a
+  client that asks before tools would ask there too).
+- Open from before: O-2..O-7, O-9, O-10, O-13..O-16 (0.2.9 items 3-5, 7-14).
+
 ## Home page part A (9 Oct, cloud builder; website only; not merged, no PR)
 The owner's go ("I approve part A", and item 9 for the logo strip). Branch `fix/round-23-total`, restarted from main
 `4984d8b` (the beta page merged).
