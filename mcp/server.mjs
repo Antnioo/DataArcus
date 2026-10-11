@@ -862,12 +862,15 @@ server.registerTool('create_report', {
     if (size.h > size.w) reportNotes.push('This logo is tall; a horizontal version will read much better in the header.');
   }
   let r, bind, extra = {}, written, boundPages = null;
-  let tinyPage = false;
+  let tinyPage = false, smallPageNote = null;
   const subKeys = {};   // round 22: a subtitle key given in the other language -> the slot's role in the report's language
   const unknown = a.design ? unknownKeys(a.design) : null;
   if (a.design) {
     // the website's project download for this design: its pages (second page, slide-in panel), labels and theme
-    let design = planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang }).design;
+    const planned = planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang });
+    let design = planned.design;
+    // (the audit's A2-2: the note comes from the plan's own smallPage, the design engine's rule)
+    if (planned.smallPage) smallPageNote = planned.smallPage;
     const themeChanged = [];
     if (design.layout.transparent) {
       themeChanged.push({ setting: 'layout.transparent', from: true, to: false,
@@ -996,8 +999,9 @@ server.registerTool('create_report', {
   const svgMeasures = svgList.length ? { svgMeasures: svgList } : {};
   // pictures narrowed so the table fits its box (never a scrollbar or a cut header)
   Object.entries(r.svgSizes || {}).filter(([, z]) => z.capped).forEach(([pi, z]) => reportNotes.push(`The SVG pictures in the table on "${boundPages[pi].name}" were narrowed to ${z.w} x ${z.h} (the widest design is ${z.design}) so the table fits its box. For the design's own size, give the table more room or fewer columns.`));
-  // round 19 (the owner's choice B): a page under 800 wide was planned with the single-focus layout
-  if (a.design && a.design.layout && a.design.layout.preset === 'focus' && E.page(a.design.layout).w < 800) reportNotes.push(`The page is ${E.page(a.design.layout).w} wide, under 800, so it uses the single-focus layout (the KPI cards and one large chart): the executive layout's four charts and table would be cut or scroll on it.`);
+  // round 19 (the owner's choice B): a page under 800 wide takes the single-focus layout (the design engine's rule):
+  // said when this call switched it (a design already planned as single focus was told so by plan_layout)
+  if (smallPageNote) reportNotes.push(`The page is ${smallPageNote.w} wide, under 800, so it uses the single-focus layout (the KPI cards and one large chart): the executive layout's four charts and table would be cut or scroll on it.`);
   if (tinyPage && a.secondPage) reportNotes.push('The page is under 800 wide: the report has one page. A second page (details) would cut its card values and scroll its table at this size; ask for a page 800 wide or more for two pages.');
   if (a.subtitles) { const used = new Set(r.subtitlesUsed || []), un = Object.keys(a.subtitles).filter((k) => !used.has(subKeys[k] || k));
     if (un.length) reportNotes.push(`No subtitle was written for ${un.map((k) => '"' + k + '"').join(', ')}: a subtitle goes under the title of a chart or a table, found by its slot's role as plan_layout names it (in English or Arabic) or by a hand-placed slot's title. A KPI card never gets one (its value would be pushed down and cut).`); }
