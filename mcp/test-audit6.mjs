@@ -33,7 +33,7 @@ function model(fs, ROOT, dir) {
       measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }] }] } }));
 }
 
-export async function audit6({ call, check, ROOT, fs = fs0 }) {
+export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
   const short = (x) => (x.err ? x.t.slice(0, 300) : JSON.stringify(x.j).slice(0, 300));
   model(fs, ROOT, 'a6');
@@ -191,12 +191,56 @@ export async function audit6({ call, check, ROOT, fs = fs0 }) {
     chk(() => !bad.length, () => `A6-6. raw invisible or direction characters in the answers of: ${bad.join(', ')}`);
     chk(() => JSON.stringify(answers.find(([n]) => n === 'create_report')[1].j.boundFields).includes('\\u202e'), () => 'A6-6. the name is still there, its hidden character shown as a code point');
   }
+
+  // ---------- A6-8: no answer passes 40,000 characters; a cut answer says so and how to get the rest ----------
+  {
+    fs.cpSync(path.join(HERE, 'test-models/large-synthetic'), path.join(ROOT, 'a6big'), { recursive: true });
+    const x = await call('check_model_health', { path: 'a6big', maxItems: 200 });
+    chk(() => !x.err && x.t.length <= 40000 && x.j.truncated && /maxItems|focus|tables/.test(x.j.truncated.how) && Object.keys(x.j.truncated.cut || {}).length, () => `A6-8. check_model_health at maxItems 200 on the 300-table model: ${x.t.length} characters, truncated ${JSON.stringify(x.j && x.j.truncated).slice(0, 200)}`);
+    const y = await call('check_model_health', { path: 'a6big' });
+    chk(() => !y.err && y.t.length <= 40000 && !y.j.truncated, () => `A6-8. the default answer is whole (no cut needed): ${y.t.length}`);
+  }
+
+  // ---------- A6-16: the visual kinds are one list (the tools' limits, create_report's schema, the instructions) ----------
+  {
+    const lim = (await call('plan_layout', { layout: 'exec' })).j.limits.visuals;
+    const cr = meta && meta.tools.find((t) => t.name === 'create_report');
+    const kinds = cr && cr.inputSchema.properties.pages.items.properties.slots.items.properties.kind.enum;
+    chk(() => kinds && JSON.stringify([...kinds].sort()) === JSON.stringify([...lim].sort()) && lim.includes('matrix'), () => `A6-16. create_report's slot kinds are the limits' visuals (matrix included): ${JSON.stringify(kinds)} vs ${JSON.stringify(lim)}`);
+    const rule6 = ((meta && meta.instructions) || '').split('\n').find((l) => /^6\./.test(l)) || '';
+    chk(() => lim.every((k) => new RegExp('\\b' + (k === 'kpi' ? 'KPI card' : k) + '\\b').test(rule6)), () => `A6-16. instruction 6 lists every supported visual: ${rule6.slice(0, 200)}`);
+    chk(() => (meta.instructions || '').length <= 2500, () => `A6-16. the instructions stay within 2,500 characters: ${(meta.instructions || '').length}`);
+  }
+  // ---------- A6-17: an internal error says what happened and whether anything was written ----------
+  {
+    const { failText } = await import('./lib/answer.mjs');
+    const t1 = failText && failText(new TypeError("Cannot read properties of null (reading 'x')"), []);
+    chk(() => /could not finish/.test(t1) && /internal/.test(t1) && /Nothing was written/.test(t1) && /Cannot read properties of null/.test(t1), () => `A6-17. an internal error: what happened, nothing written: ${t1}`);
+    const t2 = failText && failText(new TypeError('boom'), ['a6/X.Report']);
+    chk(() => /could not finish/.test(t2) && !/Nothing was written/.test(t2) && /X\.Report/.test(t2), () => `A6-17. after a write: the files written are named, never "nothing was written": ${t2}`);
+    const own = failText && failText(new Error('Nothing was written: plan x is not approved yet.'), []);
+    chk(() => own === 'Nothing was written: plan x is not approved yet.', () => `A6-17. our own errors pass unchanged: ${own}`);
+  }
+  // ---------- A6-18: Arabic proposals only from a named, marked list; the answer says why a name has none ----------
+  {
+    const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"A"}, {}) in Source' } }];
+    fs.mkdirSync(path.join(ROOT, 'a6fr', 'M.SemanticModel'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, 'a6fr', 'M.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [
+      { name: 'Ventes', partitions: mp('Ventes'), columns: [{ name: 'Montant', dataType: 'double', sourceColumn: 'Montant' }, { name: 'Région', dataType: 'string', sourceColumn: 'Région' }],
+        measures: [{ name: "Chiffre d'affaires", expression: 'SUM ( Ventes[Montant] )', formatString: '#,0' }, { name: 'Total Sales', expression: 'SUM ( Ventes[Montant] )', formatString: '#,0' }] }] } }));
+    const x = await call('plan_layout', { path: 'a6fr', layout: 'exec', lang: 'ar', fields: ["Ventes[Chiffre d'affaires]", 'Ventes[Total Sales]'] });
+    const an = (x.j && x.j.arabicNames) || {};
+    chk(() => (an.needNames || []).includes("Ventes[Chiffre d'affaires]") && an.suggestedDisplayNames && an.suggestedDisplayNames['Ventes[Total Sales]'] && /English report words/.test(an.whyNoProposal || ''), () => `A6-18. a French name needs the user's name, with the reason: ${JSON.stringify(an).slice(0, 300)}`);
+    let words = {}; try { words = JSON.parse(fs.readFileSync(path.join(HERE, '..', 'assets/data/arabic-report-words.json'), 'utf8')); } catch (e) { words = {}; }
+    chk(() => /heuristic/i.test(words._note || '') && words.words && words.words.sales === 'المبيعات', () => 'A6-18. the glossary is a shared data file marked as a heuristic');
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const ROOT = fs0.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-a6-')), problems = []; let checks = 0;
   const s = await serverClient(ROOT);
-  await audit6({ call: s.call, check: (ok, msg) => { checks++; if (!ok) problems.push(msg); }, ROOT });
+  const meta = { instructions: s.c.getInstructions() || '', tools: (await s.c.listTools()).tools };
+  await audit6({ call: s.call, check: (ok, msg) => { checks++; if (!ok) problems.push(msg); }, ROOT, meta });
   await s.close(); fs0.rmSync(ROOT, { recursive: true, force: true });
   console.log(problems.length ? `FAIL  audit6  ${checks} checks, ${problems.length} failed\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  audit6  ${checks} checks`);
   process.exit(problems.length ? 1 : 0);
