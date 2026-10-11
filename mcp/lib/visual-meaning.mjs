@@ -402,3 +402,4 @@ export function meaningInReport(visual, report, opts) {
   const r = nativeFor(visual, Object.assign({}, opts, { declared }));
   return { kind: r.kind, native: r.native, why: r.why, tell: r.tell, confidence: r.confidence, guess: r.guess, htmlNeeded: r.htmlNeeded };
 }
+export { VT };
