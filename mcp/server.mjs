@@ -446,7 +446,7 @@ server.registerTool('check_model_health', {
     let file; try { file = writeScript(scriptDir, scriptBase + ' - fix ' + what, script); } catch (e) { return { scriptNotWritten: 'The script could not be written to ' + scriptDir + ' (' + String(e && e.code || e && e.message || e) + '). Use the object names above and make the changes by hand in Power BI Desktop.' }; }
     return { fixScriptFile: file, howToApply: 'The script is in the file "' + path.basename(file) + '", next to the project. ' + howToApply + (refresh ? refreshAfter : '') };
   };
-  const typed = columnTypes ? applyColumnTypes(m.tmsl, columnTypes) : undefined;
+  const typed = columnTypes ? applyColumnTypes(m, columnTypes) : undefined;   // (A1-6: both views)
   const r = Health.analyze(m.tmsl, m.report);
   // ready fixes for three findings, as TMDL scripts the user applies in Power BI Desktop (TMDL view); nothing is ever
   // applied by this tool. What a script can't do safely is listed as steps by hand, never guessed.

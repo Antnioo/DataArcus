@@ -336,7 +336,7 @@ function notThisModel(projectDir, r, folder) {
 // already give is never replaced. Returns what was used and what was not, so nothing is dropped silently.
 const TYPE_NUMBERS = { 2: 'string', 6: 'int64', 8: 'double', 9: 'dateTime', 10: 'decimal', 11: 'boolean' };
 const TYPE_NAMES = Object.fromEntries(Object.values(TYPE_NUMBERS).map((n) => [n.toLowerCase(), n]));
-function typeName(v) {
+function columnTypeOf(v) {
   const s = String(v).trim();
   return /^\d+$/.test(s) ? TYPE_NUMBERS[s] : TYPE_NAMES[s.toLowerCase()];
 }
@@ -344,17 +344,21 @@ function columnKey(k) {
   const m = String(k).trim().match(/^(?:'((?:[^']|'')+)'|([^'[\]]+?))\s*\[((?:[^\]]|\]\])+)\]$/);
   return m ? [(m[1] || m[2]).replace(/''/g, "'").trim(), m[3].replace(/]]/g, ']')] : null;
 }
-export function applyColumnTypes(tmsl, types) {
+// (A1-6: given the model read by loadModel, both views take the type: its JSON (the health check) and the reader's
+// tables (the picker, the tools); given only the JSON, that alone, as before)
+export function applyColumnTypes(model, types) {
   const out = { applied: 0, alreadyTyped: [], notInModel: [], badType: [] };
-  const tables = ((tmsl && (tmsl.model || tmsl)) || {}).tables || [];
+  const both = model && model.tmsl !== undefined && Array.isArray(model.tables), tmsl = both ? model.tmsl : model;
+  const tables = modelOf(tmsl).tables || [];
   Object.entries(types || {}).forEach(([key, value]) => {
     const ref = columnKey(key), t = ref && tables.find((x) => String(x.name).toLowerCase() === ref[0].toLowerCase());
     const c = t && (t.columns || []).find((x) => x.type !== 'rowNumber' && String(x.name).toLowerCase() === ref[1].toLowerCase());
     if (!c) return out.notInModel.push(key);
-    const type = typeName(value);
+    const type = columnTypeOf(value);
     if (!type) return out.badType.push({ column: key, type: value });
     if (c.dataType && c.dataType !== 'unknown') return out.alreadyTyped.push(key);
     c.dataType = type; out.applied++;
+    if (both) { const rt = model.tables.find((x) => x.name === t.name), rc = rt && rt.columns.find((x) => x.name === c.name); if (rc) rc.dataType = type; }
   });
   return out;
 }
@@ -363,7 +367,7 @@ export function applyColumnTypes(tmsl, types) {
 export function summary(m) {
   return m.tables.map((t) => ({
     table: t.name, hidden: !!t.hidden, dateTable: !!t.date,
-    columns: t.columns.filter((c) => !c.isHidden).map((c) => `${c.name} (${c.dataType || 'string'})`),
+    columns: t.columns.filter((c) => !c.isHidden).map((c) => `${c.name} (${c.dataType || 'unknown'})`),
     hiddenColumns: t.columns.filter((c) => c.isHidden).length,
     measures: t.measures.filter((x) => !x.isHidden).map((x) => x.name + (x.formatString ? ` [${x.formatString}]` : ''))
   }));
