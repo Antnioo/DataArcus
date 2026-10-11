@@ -368,7 +368,7 @@ if (!r.err) {
   // design's 3 and 4 with the extra ones empty)
   // (changed 6 Oct 2026, round 12, design finding #26: "Unused One" shows text, its format being "Yes";"Yes";"No", and
   // golden task 8 showed "Yes" on its card; a measure that shows text is never a card now, so this model has 1)
-  const dir = path.join(ROOT, 'bim-project', r.j.report), pages = readReport(dir), want = E.projectPages(Object.assign({}, gp.j.design.layout, { kpiCards: 1 }), 'ar', { second: true, panel: false });
+  const dir = path.join(ROOT, 'bim-project', r.j.report), pages = readReport(dir), want = E.projectPages(gp.j.design.layout, 'ar', { second: true, panel: false, maxKpis: 1 });   // (0.2.9 design block, A2-4: the report's measures cap the cards through the engine's maxKpis; the layout's kpiCards is gone)
   const shown = pages.filter((p) => !p.hidden), bad = slotsPlaced(shown, want);
   // (round 1: the model has a month column, so the report has two tooltip pages: by category and the monthly trend)
   check(shown.length === 2 && pages.length === 4 && !bad.length, `create_report design: ${shown.length} pages; ${bad.slice(0, 4).join(' | ')}`);
@@ -396,7 +396,7 @@ if (!r.err) {
 r = gp.err ? gp : await tryCall('create_report', { path: 'bim-project', name: 'Gulf Panel', design: gp.j.design, lang: 'ar', secondPage: false, slidePanel: true });
 if (!r.err) {
   // (round 12, #26: 1 card, see above)
-  const pages = readReport(path.join(ROOT, 'bim-project', r.j.report)).filter((p) => !p.hidden), want = E.projectPages(Object.assign({}, gp.j.design.layout, { kpiCards: 1 }), 'ar', { second: false, panel: true });
+  const pages = readReport(path.join(ROOT, 'bim-project', r.j.report)).filter((p) => !p.hidden), want = E.projectPages(gp.j.design.layout, 'ar', { second: false, panel: true, maxKpis: 1 });   // (A2-4, as above)
   const panel = want[0].panel, bad = slotsPlaced(pages, want);
   check(pages.length === 1 && !bad.length && panel && pages[0].visuals.some((v) => v.type === 'group' && v.hidden && v.x === panel.x && v.y === panel.y && v.w === panel.w && v.h === panel.h),
     `create_report slide-in panel: ${pages.length} pages, panel ${JSON.stringify(panel)}; ${bad.slice(0, 3).join(' | ')}`);

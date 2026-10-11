@@ -196,15 +196,14 @@
     const first = P.rows[0].map((col, i) => col.slice());
     if (hasMain(P)) { const rest = first.slice(1).reduce((a, col) => a + col[0], 0); first[0][0] = rest * z.mainW / (100 - z.mainW); }
     const flex = hasSplit(P) ? [z.split, 100 - z.split] : P.flex.slice();
-    // KPI cards: the layout's count, or fewer when the report has fewer measures to show (kpiCards, set by the MCP:
-    // 0 leaves the KPI row out and the charts take its room). The website's designs have no kpiCards.
-    const nK = c.kpiCards != null && +c.kpiCards >= 0 ? Math.min(c.kpis, Math.floor(+c.kpiCards)) : c.kpis;
+    // KPI cards: the layout's count, 0-6 (0.2.9, the audit's A2-4: one value; the MCP's kpiCards is gone): 0 leaves the
+    // KPI row out and the charts take its room
+    const nK = Math.max(0, Math.min(6, Math.floor(+c.kpis) || 0));
     const flexSum = flex.reduce((a, b) => a + b, 0), free = nK ? PH - M - top - G * P.rows.length - z.kpiH : PH - M - top - G * (P.rows.length - 1);
     // no chart row shorter than 90: move the split back if needed
     if (hasSplit(P) && free >= 180) { const h0 = free * flex[0] / flexSum; if (h0 < 90) flex[0] = flexSum * 90 / free; else if (free - h0 < 90) flex[0] = flexSum * (free - 90) / free; flex[1] = flexSum - flex[0]; }
-    // (the owner, 6 Oct 2026) One card where the row was planned for more (a model with one measure: kpiCards 1): the
-    // card takes a quarter of the row at the reading start, not the whole row (quarter). Two or three cards of four
-    // still share the row.
+    // (the owner, 6 Oct 2026) One card (a model with one measure) takes a quarter of the row at the reading start, not
+    // the whole row (quarter). Two or three cards still share the row.
     // (the owner, 6 Oct 2026) For the MCP's reports (wideTable, set by the MCP: the website's designs never have it, as
     // kpiCards): on a 4:3 page (narrower than 3:2 on the design grid) a table beside a chart takes the
     // wider share of its row, 3 to 2: measured, a table of a day column and three measures needs 463 at 8pt in Segoe UI
@@ -212,7 +211,7 @@
     // (round 20, the owner's (b), 7 Oct 2026: the website follows the MCP: on by default; a design that says false keeps
     // equal shares)
     const narrow = c.wideTable !== false && PW < 1080, share = (cols) => (narrow && cols.length > 1 ? cols.map((col) => (col[1] === 'table' ? [col[0] * 1.5, col[1], col[2]] : col)) : cols);
-    const rows = (nK ? [{ fixed: z.kpiH, quarter: nK === 1 && c.kpis > 1, cols: Array.from({ length: nK }, (_, i) => [1, 'kpi', [`KPI ${i + 1}`, `مؤشر ${i + 1}`]]) }] : [])
+    const rows = (nK ? [{ fixed: z.kpiH, quarter: nK === 1, cols: Array.from({ length: nK }, (_, i) => [1, 'kpi', [`KPI ${i + 1}`, `مؤشر ${i + 1}`]]) }] : [])
       .concat([first].concat(P.rows.slice(1)).map((cols, i) => ({ flex: flex[i], cols: share(cols) })));
     let y = top;
     rows.forEach((r, ri) => {
@@ -445,7 +444,10 @@
   // a second page in a complementary layout: an analysis page (filters, a main chart, a wide table) after an
   // overview, or an executive overview after an analysis page. The filters stay on the side the user chose for the
   // first page (O-1 of the owner's test of 0.2.8, 10 Oct 2026: "filters right" gave a second page with them at the left)
-  const secondLayout = (c) => Object.assign({}, c, c.preset === 'analysis' ? { preset: 'exec', kpis: 4, filters: false } : { preset: 'analysis', kpis: 3, filters: true, fpos: ['start', 'end', 'top'].includes(c.fpos) ? c.fpos : 'start' }, { kpiH: null, mainW: null, split: null });
+  // A first page with fewer KPI cards than its layout plans (a report with fewer measures) keeps the second page at that
+  // count (0.2.9, A2-4: this was the MCP's kpiCards, which capped every page).
+  const secondLayout = (c) => { const to = c.preset === 'analysis' ? 'exec' : 'analysis', own = LAYOUTS[to].kpis, k = +c.kpis < LAYOUTS[c.preset].kpis ? Math.min(own, +c.kpis) : own;
+    return Object.assign({}, c, to === 'exec' ? { preset: 'exec', kpis: k, filters: false } : { preset: 'analysis', kpis: k, filters: true, fpos: ['start', 'end', 'top'].includes(c.fpos) ? c.fpos : 'start' }, { kpiH: null, mainW: null, split: null }); };
   // Filters as a slide-in panel: the page without its filter rail, and the panel's box (null when the page has no
   // filters or no header). The panel opens under the Filters button, at the end of the header (right in English, left in Arabic)
   const slidePanel = (cc, lang) => {
@@ -456,14 +458,16 @@
     return { layout: open, panel: boxOf(r, cc) };
   };
   // The report's pages for a layout: this page, the second page when asked, each with the slide-in panel when asked.
-  // opts: { second, panel, logoRatio (an attached logo's width / height, see computeSlots) }.
+  // opts: { second, panel, logoRatio (an attached logo's width / height, see computeSlots), maxKpis (the most KPI cards
+  // the report can fill, its measures: every page has at most that many) }.
   // A small page (SMALL_PAGE) has its own layout and no second page.
   // Each page: { layout (for its background), name, page { w, h }, slots, panel }
   const projectPages = (given, lang, opts) => {
     const nm = (pair) => (lang === 'ar' ? pair[1] : pair[0]), o = opts || {}, c = fitLayout(given);
     const specs = [{ c, name: nm(LAYOUTS[c.preset].name) }].concat(o.second && !isSmall(c) ? [{ c: secondLayout(c), name: nm(c.preset === 'analysis' ? ['Overview', 'نظرة عامة'] : ['Details', 'التفاصيل']) }] : []);
+    const cap = (l) => (o.maxKpis != null && +o.maxKpis >= 0 && +o.maxKpis < +l.kpis ? Object.assign({}, l, { kpis: Math.floor(+o.maxKpis) }) : l);
     return specs.map((sp) => {
-      const sl = o.panel ? slidePanel(sp.c, lang) : null, layout = sl ? sl.layout : sp.c, p = page(layout);
+      const sl = o.panel ? slidePanel(cap(sp.c), lang) : null, layout = sl ? sl.layout : cap(sp.c), p = page(layout);
       return { layout, name: sp.name, page: { w: p.w, h: p.h }, slots: projectSlots(layout, lang, { logoRatio: o.logoRatio }), panel: sl ? sl.panel : null };
     });
   };
@@ -473,7 +477,10 @@
   // A saved design (or none) made safe to use, the way the generator repairs it on load: an old or hand-edited save may
   // be partial, so each value that is not valid falls back to its default, and older layouts are upgraded.
   // Changes the design in place and returns it (or a fresh one when there is nothing usable).
-  function repairState(state) {
+  // report (optional): called with { field, given, used, why } for each value that was not used as given (0.2.9, the
+  // audit's A2-4/A2-7: nothing is reset without a word; the MCP lists them, the website repairs quietly as before).
+  function repairState(state, report) {
+    const say = (field, given, used, why) => { if (report) report({ field, given, used, why }); };
     if (!state || typeof state !== 'object' || !Array.isArray(state.data) || state.data.length !== 8) state = fresh();
     {
       const d = fresh(), hex = (v) => (typeof v === 'string' ? clampHex(v) : null), ui = state.ui && typeof state.ui === 'object' ? state.ui : {};
@@ -489,8 +496,10 @@
     if (!LAYOUTS[state.layout.preset]) state.layout.preset = 'exec';
     // saved layout values outside the choices the page offers fall back to the defaults
     {
-      const l = state.layout, one = (k, list, d) => { if (!list.includes(l[k])) l[k] = d; };
-      one('kpis', [3, 4, 5, 6], LAYOUTS[l.preset].kpis); one('dir', ['', 'ltr', 'rtl'], '');
+      const l = state.layout, one = (k, list, d) => { if (!list.includes(l[k])) { say('layout.' + k, l[k], d, `use one of ${list.map((x) => JSON.stringify(x)).join(', ')}`); l[k] = d; } };
+      // an older MCP design's kpiCards (fewer cards than the layout's kpis) is its kpis now
+      if ('kpiCards' in l) { const n = Math.floor(+l.kpiCards); if (l.kpiCards != null && n >= 0 && n < +l.kpis) l.kpis = n; say('layout.kpiCards', l.kpiCards, null, `not a layout key any more: kpis (0-6) is the number of KPI cards; kpis ${l.kpis} used`); delete l.kpiCards; }
+      one('kpis', [0, 1, 2, 3, 4, 5, 6], LAYOUTS[l.preset].kpis); one('dir', ['', 'ltr', 'rtl'], '');
       if (!(+l.radius >= 0 && +l.radius <= 24)) l.radius = 8;
       one('kpiBar', ['start', 'top', 'bottom', 'none'], 'start'); one('headLine', ['short', 'full', 'none'], 'short');
       if (!PAGES[l.page] && l.page !== 'custom') l.page = '1920x1080';
