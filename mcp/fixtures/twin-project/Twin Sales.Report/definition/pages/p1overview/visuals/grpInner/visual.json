@@ -1,0 +1,17 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json",
+  "name": "grpInner",
+  "position": {
+    "x": 320,
+    "y": 0,
+    "z": 5000,
+    "height": 140,
+    "width": 380,
+    "tabOrder": 5000
+  },
+  "visualGroup": {
+    "displayName": "Orders block",
+    "groupMode": "ScaleMode"
+  },
+  "parentGroupName": "grpKpi"
+}

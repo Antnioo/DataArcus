@@ -12,6 +12,7 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { round22 } from './test-round22.mjs';
 import { round23 } from './test-round23.mjs';
 import { v029 } from './test-0.2.9.mjs';
+import { v030twin, v030engine } from './test-0.3.0-twin.mjs';
 import { withPlans } from './test-plan.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
 
@@ -4428,6 +4429,9 @@ await round23({ call, check, ROOT, fs });
 // ---------- 0.2.9 part 1 (the gate, the plan's limits, the user's choices): test-0.2.9.mjs, which also runs alone ----------
 // (the raw call: the gate is tested without the helper that gets plans)
 await v029({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
+// ---------- 0.3.0, the Arabic twin of an existing report: test-0.3.0-twin.mjs, which also runs alone ----------
+try { v030engine({ check }); } catch (e) { check(false, 'T10. the engine: ' + e.message); }
+await v030twin({ call: rawCall, check, ROOT, fs });
 // ---------- round 17 follow-up: G-04, check_report's instruction-like names in suspiciousNames (owner: all recommended) ----------
 // the name stays withheld (only the placeholder), each entry has its kind and reason, and the check's result is the
 // same as for a plainly named visual
