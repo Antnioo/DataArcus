@@ -215,10 +215,14 @@ export async function v029a4({ call, check, ROOT, fs = fs0 }) {
 
   // ---------- A4-12: TOOLTIP_SCROLL is quiet when a Top N fits ----------
   {
-    chk(() => !base.j.findings.some((f) => f.rule === 'TOOLTIP_SCROLL' && /^definition\/pages\//.test(f.file || '') && base.j.findings.length), () => `A4-12: the tooltip's bar chart kept to a Top N that fits needs no scrollbar note: ${JSON.stringify(base.j.findings.filter((f) => f.rule === 'TOOLTIP_SCROLL'))}`);
-    const R = copy('A412 no top'), tf = visualOf(R, 'clusteredBarChart', true), tj = J(tf); delete tj.filterConfig; W(tf, tj);
+    // the tooltip bar chart kept to a Top N (the category tooltip page); the trend's "last 6 months" is a measure filter
+    // whose row count the files cannot tell, so it is not judged here
+    const topFile = (R) => visuals(R).find((f) => { const j = J(f); return j.visual && j.visual.visualType === 'clusteredBarChart' && ((j.filterConfig || {}).filters || []).some((g) => g.type === 'TopN'); });
+    const top = path.relative(path.join(D, 'Base.Report'), topFile(path.join(D, 'Base.Report'))).split(path.sep).join('/');
+    chk(() => top && !base.j.findings.some((f) => f.rule === 'TOOLTIP_SCROLL' && f.file === top), () => `A4-12: the tooltip's bar chart kept to a Top N that fits needs no scrollbar note: ${JSON.stringify(base.j.findings.filter((f) => f.rule === 'TOOLTIP_SCROLL').map((f) => f.file))} (Top N chart ${top})`);
+    const R = copy('A412 no top'), tf = topFile(R), tj = J(tf); tj.filterConfig.filters = tj.filterConfig.filters.filter((g) => g.type !== 'TopN'); W(tf, tj);
     const x = await run('A412 no top');
-    chk(() => !x.err && x.j.findings.some((f) => f.rule === 'TOOLTIP_SCROLL'), () => `A4-12: without the Top N the note is back: ${x.err ? x.t.slice(0, 200) : JSON.stringify(x.j.findings.map((f) => f.rule))}`);
+    chk(() => !x.err && x.j.findings.some((f) => f.rule === 'TOOLTIP_SCROLL' && f.file === top), () => `A4-12: without the Top N the note is back: ${x.err ? x.t.slice(0, 200) : JSON.stringify(x.j.findings.map((f) => f.rule))}`);
   }
 
   // ---------- A4-13: the month sort measure found by its shape, not its name ----------
