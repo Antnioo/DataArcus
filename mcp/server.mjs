@@ -521,6 +521,8 @@ server.registerTool('check_model_health', {
   const plan = !write && wouldWrite.length ? { plan: Plans.proposal(Plans.propose('scripts', modelKey(m, p), wouldWrite.map((f) => `the fix script "${f}" next to the project (never applied: the user applies it in TMDL view)`))) } : {};
   return text({
     source: m.source, score: r.score, stats: r.stats, reportRead: !!m.report, ...plan,
+    // (0.2.9 item 13) which reports beside the model were read: only this model's (lib/model.mjs, notThisModel)
+    ...(m.reportsSeen && (m.reportsSeen.counted.length || m.reportsSeen.notCounted.length) ? { reports: Object.assign({}, m.reportsSeen, { note: 'Only the reports whose definition.pbir points at this model were read and counted; the others belong to another model or a published one and were not read. A broken field is fixed inside its visual (replace or remove the field in Power BI Desktop): never suggest deleting a report.' }) } : {}),
     fixes: Object.keys(fixes).length ? fixes : undefined,
     ...(scriptSkip.length ? { scriptsSkip: { names: scriptSkip.slice(0, 20), note: 'These names hold a control character (a tab or a line break, shown as a code point): no fix script names them, as it would break the script. Tell the user; renaming them in Power BI Desktop lets the scripts include them.' } } : {}),
     gulfCalendar,

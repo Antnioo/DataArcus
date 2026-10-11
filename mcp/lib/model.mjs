@@ -248,7 +248,11 @@ export function loadModel(p) {
   // (no reports, no names in use) and create_report refuses (projectDir null).
   const projectDir = within(ROOT, path.dirname(folder)) ? path.dirname(folder) : null;
   const beside = projectDir ? fs.readdirSync(projectDir, { withFileTypes: true }).filter((e) => !e.isSymbolicLink()).map((e) => e.name) : [];
-  const reports = beside.filter((n) => /\.Report$/i.test(n));
+  // (0.2.9 item 13, the 0.2.8 beta's folder bug) only the reports of this model: their definition.pbir points at this
+  // model folder. Another project's reports in the same folder were counted as this model's broken reports, and the chat
+  // then suggested deleting good reports. Every other report is named with why, and never read.
+  const all = beside.filter((n) => /\.Report$/i.test(n)), notCounted = [];
+  const reports = all.filter((r) => { const why = notThisModel(projectDir, r, folder); if (why) notCounted.push({ report: visible(r.replace(/\.Report$/i, '')).slice(0, 80), why }); return !why; });
   const pbir = reports.flatMap((r) => { const d = path.join(projectDir, r, 'definition'); return !isLink(d) && fs.existsSync(d) ? walk(d).filter((f) => f.endsWith('.json')) : []; });
   // (round 17, the outside review's G-05: each report file was capped, but not all of them together) every report JSON
   // file measured first, all together, before any is read, as the TMDL files above
@@ -257,7 +261,23 @@ export function loadModel(p) {
   const report = pbir.length ? { format: 'pbir', files: pbir.map((f) => { try { return { path: f.replace(/\\/g, '/'), json: partJson(readCapped(f, PBIT_LIMITS.entry, 'report file'), 'report file') }; } catch (e) { return null; } }).filter(Boolean) } : null;
   // report names in use: an X.Report folder and its X.pbip count once
   const taken = [...new Set((projectDir ? fs.readdirSync(projectDir) : []).filter((n) => /\.(Report|pbip)$/i.test(n)).map((n) => n.replace(/\.(Report|pbip)$/i, '')))];
-  return { source: path.relative(ROOT, folder) || folder, folder, projectDir, taken, tmsl, tables, report };
+  const reportsSeen = projectDir ? { counted: reports.map((r) => visible(r.replace(/\.Report$/i, '')).slice(0, 80)), notCounted } : null;
+  return { source: path.relative(ROOT, folder) || folder, folder, projectDir, taken, tmsl, tables, report, reportsSeen };
+}
+
+// why a report beside the model is not this model's (null when it is): its definition.pbir must name this model folder
+// by path. A report connected to a published model (byConnection), or with no readable definition.pbir, is not counted.
+function notThisModel(projectDir, r, folder) {
+  const f = path.join(projectDir, r, 'definition.pbir');
+  let j;
+  try { if (isLink(path.join(projectDir, r)) || isLink(f) || !fs.existsSync(f)) return 'it has no definition.pbir, so the model it uses is not known'; j = partJson(readCapped(f, PBIT_LIMITS.entry, 'definition.pbir'), 'definition.pbir'); }
+  catch (e) { return 'its definition.pbir could not be read, so the model it uses is not known'; }
+  const ref = (j && j.datasetReference) || {};
+  if (ref.byConnection) return 'it connects to a published model, not to this model folder';
+  const to = ref.byPath && typeof ref.byPath.path === 'string' ? path.resolve(projectDir, r, ref.byPath.path.replace(/\\/g, '/')) : null;
+  if (!to) return 'its definition.pbir names no model, so the model it uses is not known';
+  const same = process.platform === 'win32' ? to.toLowerCase() === path.resolve(folder).toLowerCase() : to === path.resolve(folder);
+  return same ? null : `it belongs to another model (${visible(path.basename(to)).slice(0, 80)}), not to ${visible(path.basename(folder)).slice(0, 80)}`;
 }
 
 // Column types read from the model open in Power BI Desktop (INFO.COLUMNS() through Microsoft's Power BI Authoring MCP),
