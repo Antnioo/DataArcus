@@ -582,7 +582,8 @@
   //  railItems: { n, minH, maxH, resetH, pad, gap } (Round 12, #18; seen in Desktop 2.158, round 11: three dropdowns at the
   //    top of the rail, Reset at its very bottom and 300 page units of empty panel between them): a rail (a slicer slot
   //    higher than wide) is only as high as its n dropdowns (each minH to maxH) and its Reset (resetH), pad around them
-  //    and gap after each; it stays a column, stack (round 23, the laptop's S1)
+  //    and gap after each; it stays a column, stack (round 23, the laptop's S1); the slots wholly below it take its
+  //    column (0.2.9, the laptop's sweep S7)
   function fitSlots(slots, opt) {
     const o = opt || {}, kinds = o.dropKinds || [];
     let out = slots.slice(), dropped = [];
@@ -609,6 +610,16 @@
       if (s.kind !== 'slicer' || s.w > s.h) return s;
       const n = Math.max(1, R.n), sh = Math.max(R.minH, Math.min(R.maxH, (s.h - 2 * R.pad - R.resetH - R.gap * n) / n));
       return Object.assign({}, s, { h: Math.min(s.h, Math.ceil(2 * R.pad + n * sh + R.gap * n + R.resetH)), stack: true });
+    });
+    // (the laptop's sweep of rc.1, S7: under the shortened rail the page stayed empty to its bottom) a slot wholly below
+    // the rail's new bottom, beside the rail (within SLOT_GAP), takes the rail's column: the row reaches the page's edge
+    const rail = R && out.find((s) => s.kind === 'slicer' && s.stack);
+    if (rail) out = out.map((s) => {
+      if (s === rail || s.y < rail.y + rail.h || OWN_SLOTS.includes(s.kind)) return s;
+      const gapStart = s.x - (rail.x + rail.w), gapEnd = rail.x - (s.x + s.w);
+      if (gapStart >= 0 && gapStart <= SLOT_GAP) return Object.assign({}, s, { x: rail.x, w: s.x + s.w - rail.x });
+      if (gapEnd >= 0 && gapEnd <= SLOT_GAP) return Object.assign({}, s, { w: rail.x + rail.w - s.x });
+      return s;
     });
     return { slots: out, dropped };
   }
