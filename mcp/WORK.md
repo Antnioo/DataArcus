@@ -14,6 +14,10 @@ numbers, the slot shapes A2-3's fitSlots needs and the laptop list: `mcp/work/0.
   `label`/`texts` and `RTL_LANGS`, `MEASURED_FONTS`, `NAME_MAX`, `themeScaleOf`/`scaleTheme`.
 - `mcp/lib/files.mjs` is new (freeFile); server.mjs reaches the engine only through design.mjs.
 - Fixtures moved with their cause in `meta.changed`: the 640 x 360 cases and page-too-tall (A2-1). Nothing else.
+- **Audit 7 (same branch, after merging fix/0.2.9-gate):** A7-1, A7-2, A7-4..A7-13 done (`ce5668a`..`4abb90b`); new
+  `mcp/lib/agent-text.mjs` (instructions from LIMITS, one cap 2,200; now 2,185), `test-0.2.9-agent.mjs` (23). npm test
+  1019 + 36, golden PASS; website 17 PASS. **PRIVACY/README containment lines carry TODO(A1-1): merge only with the
+  reader's 63066cf, and delete the TODO lines then.** A7-3 is builder 9's.
 - **Next:** builder 11 does A2-3 (fitSlots) last; the laptop proves A2-1 (700-800 wide), A2-5 (5-6 field tables),
   A2-11 (Verdana) and D1-D3 (DESKTOP-TESTS.md "0.2.9 design block").
 
