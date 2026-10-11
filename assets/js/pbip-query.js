@@ -337,6 +337,23 @@
     if (typeof v !== 'number' || !Number.isFinite(v) || /e/i.test(String(v)) || (kind === 'whole' && !Number.isSafeInteger(v))) return null;
     return String(v) + (kind === 'whole' ? 'L' : 'D');
   };
+  // 0.2.9, audit 6's A6-14: one page filter ("is one of", Categorical) on a column { t, c, type } from its typed values, the
+  // shape Microsoft's report authoring reference gives (the field by its table, the condition by the alias of From), its
+  // literals written here; a value of the wrong type is refused (a TypeError). literals: ones already written (checked by
+  // build's checkBuild), used in place of values
+  const pageFilterOf = (col, values, literals) => {
+    const lits = literals || (values || []).map((v) => pfLiteral(v, col.type));
+    if (!lits.length || lits.some((v) => v == null)) throw new TypeError('pageFilterOf: every value of ' + col.t + '[' + col.c + '] must be ' + ({ boolean: 'true or false', text: 'a text', whole: 'a whole number', decimal: 'a plain number' }[PF_KINDS[String(col.type || '').toLowerCase()]] || 'true, false, a text or a plain number'));
+    const alias = (/^[A-Za-z]/.test(col.t) ? col.t[0] : 't').toLowerCase();
+    return {
+      name: 'Filter' + rnd() + rnd().slice(0, 4),
+      field: { Column: { Expression: { SourceRef: { Entity: col.t } }, Property: col.c } },
+      type: 'Categorical',
+      filter: { Version: 2, From: [{ Name: alias, Entity: col.t, Type: 0 }],
+        Where: [{ Condition: { In: { Expressions: [{ Column: { Expression: { SourceRef: { Source: alias } }, Property: col.c } }], Values: lits.map((v) => [{ Literal: { Value: v } }]) } } }] },
+      howCreated: 'User'
+    };
+  };
 
   // ---------- 0.2.9 part 2: the owner's own test of 0.2.8 (10 Oct 2026), recipes measured in Desktop 2.158.1304 ----------
   // (dataarcus-engine business/research/REPORT-FIXES-LAB.md and TOOLTIP-FIX-LAB.md, on the laptop, 10 Oct)
@@ -401,7 +418,7 @@
     TYPES, CHARTS, TIME_WORDS, wordsOf, TIME_KINDS, isTime, sorted, HEX6, gradientEnds, gradientFill,
     mirrorChart, orderHelper, orderedBy, inOrder, isTextField, Bind, nameLike, YEARISH, KIND_ROWS, catKind,
     AR_MONTHS, NAMES, namesOf, tableFields, ROW_LABEL, rowLabelOf, rowLabelProj, AGG_DAX, valueDax, monthLabel,
-    timeAxisPlan, rowLabelDax, CAT_KINDS, bindQuery, AR_LETTERS, byTitle, bindTitle, PF_KINDS, pfLiteral, measures
+    timeAxisPlan, rowLabelDax, CAT_KINDS, bindQuery, AR_LETTERS, byTitle, bindTitle, PF_KINDS, pfLiteral, pageFilterOf, measures
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbipQuery = api;
 })(typeof self !== 'undefined' ? self : this);

@@ -8,7 +8,7 @@
   const {
     AR_LETTERS, CAT_KINDS, CHARTS, ROW_LABEL, S0, SCHEMA, TYPES, bindQuery, bindTitle, bool, byTitle, catKind,
     color, contrast, daxNames, fieldCol, gradientFill, hasControl, isTextField, isTime, isValue, json, label, lit,
-    mirrorChart, mixHex, namesOf, num, obj, orderHelper, orderedBy, pfLiteral, proj, q, resource, rnd,
+    mirrorChart, mixHex, namesOf, num, obj, orderHelper, orderedBy, pageFilterOf, proj, q, resource, rnd,
     rowLabelDax, rowLabelOf, shown, sorted, str, tableFields, timeAxisPlan, tproj
   } = Q;
   const { barNameShare, columnRoom, fieldRoom, tableFit, textWidth } = Z;
@@ -175,17 +175,8 @@
     // it, true, 'text', 5L, 5.5D; literals already written that way are still taken, checked by checkBuild). Each is a basic filter (Categorical, "is one of") on a column, in the shape Microsoft's report
     // authoring reference gives: the field by its table, the condition by the alias of From. Written on every report
     // page, each with its own name; not on the tooltip pages. The user sees and clears them in the Filters pane.
-    const pageFilters = () => (o.pageFilters || []).map((f) => {
-      const alias = (/^[A-Za-z]/.test(f.t) ? f.t[0] : 't').toLowerCase();
-      return {
-        name: 'Filter' + rnd() + rnd().slice(0, 4),
-        field: { Column: { Expression: { SourceRef: { Entity: f.t } }, Property: f.c } },
-        type: 'Categorical',
-        filter: { Version: 2, From: [{ Name: alias, Entity: f.t, Type: 0 }],
-          Where: [{ Condition: { In: { Expressions: [{ Column: { Expression: { SourceRef: { Source: alias } }, Property: f.c } }], Values: (Array.isArray(f.values) ? f.values.map((v) => pfLiteral(v, f.type)) : f.literals).map((v) => [{ Literal: { Value: v } }]) } } }] },
-        howCreated: 'User'
-      };
-    });
+    // (A6-14: each by the query module's pageFilterOf, which writes the literals from the typed values)
+    const pageFilters = () => (o.pageFilters || []).map((f) => pageFilterOf(f, f.values, Array.isArray(f.values) ? null : f.literals));
     // The fixes on a report visual, after its fields and objects are written (Bt: its binding, tt: its table's text size)
     const fixVisual = (visual, s, pg, Bt, tt) => {
       const st = visual.query.queryState, cat = st.Category && st.Category.projections[0], col = cat && cat.field.Column, filters = [];
@@ -241,7 +232,7 @@
   // One report page: its page.json, and every visual in reading order (visual.json, and mobile.json for the phone)
   function write(c, pg, pageIndex) {
     const {
-      AUTO_EM, B, CALLOUT, D, DEF, FULL, GRAD, GRID, LABEL, MIRROR, NODATA, PAGES,
+      AUTO_EM, B, bound, CALLOUT, D, DEF, FULL, GRAD, GRID, LABEL, MIRROR, NODATA, PAGES,
       SLICER_TEXT, SOLID, TIP_TITLE, TIP_VALUE, TITLE, W, add, align, barCharts, base, blankKept, bookmarks,
       boxFit, buttonH, cardCode, cardFit, cardFrame, cardObjects, centred, charW, chartAxes, chartColors, def, edge,
       extFile, fixVisual, font, frame, freeExt, headed, headerGrew, kpiTitleFit, kpiTitles, lang, leftOut, logoFile,
@@ -1114,6 +1105,18 @@
         nth[c] = (nth[c] || 0) + 1;
         rename(v, k, k + ' (' + c + (nth[c] > 1 ? ' ' + nth[c] : '') + ')'); }); });
     }
+    // 0.2.9, audit 6's A6-12: what each written visual shows, in the page's order, for the caller's answer: its fields as
+    // Table[Field] (a measure or a column) or Sum(Table[Field]) (a column the visual sums or counts), its roles in order; the
+    // helpers are not fields (the Tooltips' sort, the hidden-header order column, the report's own measures: row labels,
+    // pictures, "No data")
+    const AGG_NAMES = { 0: 'Sum', 2: 'DistinctCount', 5: 'Count' };
+    const fieldKey = (p) => { const f = p.field;
+      if (f.Column) return f.Column.Expression.SourceRef.Entity + '[' + f.Column.Property + ']';
+      if (f.Measure) return f.Measure.Expression.SourceRef.Schema ? null : f.Measure.Expression.SourceRef.Entity + '[' + f.Measure.Property + ']';
+      if (f.Aggregation && p.displayName !== ' ') { const c = f.Aggregation.Expression.Column; return (AGG_NAMES[f.Aggregation.Function] || 'Agg') + '(' + c.Expression.SourceRef.Entity + '[' + c.Property + '])'; }
+      return null; };
+    bound.push({ page: pg.name || base, visuals: mob.filter((m) => m.v.visual && m.v.visual.query && m.kind !== 'nodata').map((m) => ({ kind: m.kind,
+      fields: Object.keys(m.v.visual.query.queryState).filter((r) => r !== 'Tooltips').flatMap((r) => m.v.visual.query.queryState[r].projections.map(fieldKey)).filter(Boolean) })) });
     visuals.forEach((v) => { headed(v.visual);
       add(D + '/pages/' + pageName + '/visuals/' + v.name + '/visual.json', json(v));
       const p = pos[v.name];

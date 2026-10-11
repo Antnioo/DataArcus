@@ -11,7 +11,7 @@
   const Notes = (typeof module !== 'undefined' && module.exports ? require('./pbip-notes.js') : root.DAPbipNotes), Page = (typeof module !== 'undefined' && module.exports ? require('./pbip-page.js') : root.DAPbipPage);
   const {
     AR_MONTHS, HEX6, PF_KINDS, SCHEMA, TYPES, bool, daxNames, gradientEnds, guid, hasControl, isTime, json,
-    mixHex, obj, pfLiteral, rnd, timeAxisPlan
+    mixHex, obj, pageFilterOf, pfLiteral, rnd, timeAxisPlan
   } = Query;
   const { barNameShare, columnRoom, textWidth } = Sizing;
   const { absorb, dropLines } = Page;
@@ -229,6 +229,8 @@
    * @property {Array} timeAxes  time axes ordered by their month start
    * @property {number} blankFiltered  charts given the "is not blank" filter
    * @property {{top: number, months: number}} tooltipLimits
+   * @property {Array<{page: string, visuals: Array<{kind: string, fields: string[]}>}>} bound  what each written visual shows,
+   *   page by page (A6-12): its fields as Table[Field] or Sum(Table[Field]), the helpers left out
    */
   const KIND_NAMES = Object.keys(TYPES);
   const PBI_LITERAL = /^(true|false|null|'(?:[^']|'')*'|-?\d+L|-?\d+(\.\d+)?D)$/;
@@ -442,6 +444,6 @@
 
 
   // AR_MONTHS: the one Arabic month list (the cross-review's duplicates: the twin uses it too)
-  const api = { build, zip, crc32, textWidth, columnRoom, hasControl, daxNames, absorb, dropLines, timeAxisPlan, barNameShare, AR_MONTHS: T.ar.months.slice() };
+  const api = { build, zip, crc32, textWidth, columnRoom, hasControl, daxNames, pageFilterOf, absorb, dropLines, timeAxisPlan, barNameShare, AR_MONTHS: T.ar.months.slice() };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbip = api;
 })(typeof self !== 'undefined' ? self : this);

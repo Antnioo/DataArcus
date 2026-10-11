@@ -168,6 +168,25 @@ export function v029w({ check }) {
     chk(() => cut(days) === 0 && cut(hij) > 0 && cut(plain) > 0,
       () => `B-06: a known name column takes its widest name's room (days fit 330; the picker's Hijri months, under a short header, don't fit 350), another text column 12 letters as before: days ${days.threw || cut(days)}, hijri ${hij.threw || cut(hij)}, customer ${plain.threw || cut(plain)}`);
   }
+
+  // ---------- audit 6's writer items: A6-12 (build tells what it bound), A6-14 (one page filter from typed values) ----------
+  {
+    // A6-12: the fields each written visual shows, page by page, as written (Table[Field], Sum(Table[Field])); a model with no
+    // time axis gives no line chart (its room went to the visual beside it), and helpers (sort, hidden name, pictures) are not fields
+    const r = get(() => build(base({ table: [C('City'), M('Total Sales'), C('Qty', { agg: 0 })] }), { layout: { filters: true } })), bd = r.bound || [], vs = bd.flatMap((p) => p.visuals);
+    chk(() => bd.length === 1 && bd[0].page && vs.length > 3 && !vs.some((v) => v.kind === 'line') && vs.filter((v) => v.kind === 'kpi').map((v) => v.fields.join()).join('|') === 'Sales[Total Sales]|Sales[Orders]'
+      && vs.find((v) => v.kind === 'table').fields.join() === 'Sales[City],Sales[Total Sales],Sum(Sales[Qty])' && vs.filter((v) => v.kind === 'slicer').map((v) => v.fields.join()).join() === 'Sales[City]',
+      () => `A6-12: build returns bound, the fields of every visual it wrote: ${r.threw || JSON.stringify(bd).slice(0, 500)}`);
+    const wd = get(() => build(base({ date: C('Month Name', { sortBy: { t: D, c: 'Month No' } }, D) }))), lv = (wd.bound || []).flatMap((p) => p.visuals).find((v) => v.kind === 'line');
+    chk(() => lv && lv.fields.join() === 'Dates[Month Name],Sales[Total Sales]', () => `A6-12: with a time axis the line chart is bound to it, its sort helper not listed: ${wd.threw || JSON.stringify(lv)}`);
+    // A6-14: Pbip.pageFilterOf(col, values) writes the PBIR filter with Power BI's literals (the website can filter too)
+    const pf = get(() => Px.pageFilterOf({ t: T, c: 'City', type: 'string' }, ["O'Brien", 'Dubai'])), num = get(() => Px.pageFilterOf({ t: T, c: 'Year', type: 'int64' }, [2024]));
+    const lits = (f) => (f && f.filter ? f.filter.Where[0].Condition.In.Values.map((v) => v[0].Literal.Value) : f);
+    chk(() => JSON.stringify(lits(pf)) === JSON.stringify(["'O''Brien'", "'Dubai'"]) && JSON.stringify(lits(num)) === '["2024L"]' && pf.type === 'Categorical' && pf.field.Column.Property === 'City' && /^Filter/.test(pf.name),
+      () => `A6-14: pageFilterOf gives the basic filter with its literals: ${JSON.stringify(pf).slice(0, 300)}`);
+    const bad = get(() => Px.pageFilterOf({ t: T, c: 'Year', type: 'int64' }, [1.5]));
+    chk(() => bad && /whole number|TypeError|must/.test(bad.threw || ''), () => `A6-14: a value of the wrong type is refused: ${JSON.stringify(bad)}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
