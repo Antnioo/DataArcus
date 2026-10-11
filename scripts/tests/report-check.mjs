@@ -329,6 +329,13 @@ export function navProblems(files, rtl) {
 // (A sort by a field that is not in the visual is ignored; our charts show a report page tooltip, so the number is
 // never seen.) Every chart with a sortDefinition must be written that way. Returns { sorted: [{ page, type, category,
 // by }], bad }.
+// (A4-13, audit 4: the month sort measure found by its shape, never by its name: a report-level measure whose expression
+// is the MIN of one column and whose type is DateTime; a renamed or translated measure is still it)
+const isDateMin = (files, ms) => {
+  const ext = Object.keys(files).filter((p) => p.endsWith('/reportExtensions.json') || p === 'definition/reportExtensions.json').map((p) => { try { return JSON.parse(String(files[p])); } catch (e) { return null; } }).filter(Boolean);
+  const m = ext.flatMap((e) => (e.entities || []).filter((t) => t.name === ms.Expression.SourceRef.Entity).flatMap((t) => t.measures || [])).find((x) => x.name === ms.Property);
+  return !!m && /^\s*MIN\s*\(\s*('[^']+'|[A-Za-z_][\w ]*)?\[[^\]]+\]\s*\)\s*$/i.test(String(m.expression || '')) && /^datetime$/i.test(String(m.dataType || ''));
+};
 export function sortProblems(files) {
   const bad = [], sorted = [];
   pagesOf(files).forEach((p) => p.visuals.filter((v) => v.visual && v.visual.query).forEach((v) => {
@@ -359,7 +366,7 @@ export function sortProblems(files) {
     // label is sorted by a report-level measure, the month's first date, held in the chart's Tooltips; the trend in time
     // order (Descending where mirrored), the tooltip's last months newest first, Descending)
     const ms = (s0.field || {}).Measure, held = ms && ms.Expression.SourceRef.Schema === 'extension' && tips.some((t) => JSON.stringify(t.field) === JSON.stringify(s0.field));
-    if ((sd.sort || []).length === 1 && held && /^Month start/.test(ms.Property) && (s0.direction === want || p.page.type === 'Tooltip')) { sorted.push({ page: p.page.displayName, tooltip: p.page.type === 'Tooltip', type: v.visual.visualType, category: catRef(v), by: ms.Expression.SourceRef.Entity + '.' + ms.Property }); return; }
+    if ((sd.sort || []).length === 1 && held && isDateMin(files, ms) && (s0.direction === want || p.page.type === 'Tooltip')) { sorted.push({ page: p.page.displayName, tooltip: p.page.type === 'Tooltip', type: v.visual.visualType, category: catRef(v), by: ms.Expression.SourceRef.Entity + '.' + ms.Property }); return; }
     if ((sd.sort || []).length !== 1 || !agg || agg.Function !== 3 || !agg.Expression.Column || s0.direction !== want) { bad.push(`${id}: sort ${JSON.stringify(sd).slice(0, 160)}, want one ${want.toLowerCase()} Min of a column`); return; }
     const by = agg.Expression.Column.Expression.SourceRef.Entity + '.' + agg.Expression.Column.Property;
     if (!tips.some((t) => JSON.stringify(t.field) === JSON.stringify(s0.field))) bad.push(`${id}: sorted by Min of ${by}, which is not in its tooltip fields (Desktop ignores the sort)`);
