@@ -1,8 +1,22 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Integration round 2" just below, then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Integration round 3" just below, then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## Integration round 3: reader update + design merged (11 Oct, from 14:00 UTC, cloud builder 5; `fix/0.2.9-gate`; not merged, no PR)
+| Merge | Commit | Conflicts, resolved keeping both sides |
+|---|---|---|
+| `fix/0.2.9-reader` at `57f4802` (builder 6: fuzz fixes F-R1, F-R2, F-M1, F-M2, F-RP, F-MP, the owner's choice (b)); it already holds `fix/0.2.9-design` at `fa206cd` (builder 10: audit 2, audit 7, the fuzz test) | `5950df4` | server: A7-4 (instructions from LIMITS in agent-text.mjs, cap 2,200) and A2-8 (engine only through design.mjs) with the tools block's VISUAL_KINDS (matrix; LIMITS.visuals is that list), readUserFile, themeOf, gate pin and approve_plan's elicitation text, naming the plan sources from planSources() (A7-8); the picker's listFormats/named; both nameOut (model.mjs: capped names; answer.mjs, as textOut: format characters); files.mjs (both added): one writer/reader + freeFile; plan-lint: kpis = card count (A2-4) + pinned fields (A3-2); README approve_plan row; WORK.md both sections; stamps `20261011t` |
+| A1-1's TODOs | `5950df4` | A1-1 (`63066cf`) is in the tree: the TODO(A1-1) lines in PRIVACY and README removed; test-0.2.9-agent's A1-1 detector also matches `realIn(` (the reader's name for it; with `real(` only it said A1-1 was missing) |
+| fixes from the full run | `4f0f133` | 4 of 1106 red: a theme file read into a const that the design block scales (let); the skill's visuals list gains matrix; PRIVACY's ".pbip points at" claim was split over two lines |
+| `fix/0.2.9-design` at `fa206cd` | (none) | already in through the reader: "Already up to date" |
+
+**Counts:** `npm test` **1106** + reader c 36, d 21, e 21, f 20, golden PASS (11 tasks, no move), **fuzz PASS** (seed
+20261011, 604 cases, 8,110 checks; skipped as known and open: F-T1..F-T4, F-TP (twin, builder 9), F-C2, F-CP (checks,
+builder 7); F-W1 (writer, builder 11) is in KNOWN_SLOW; no known finding reported as closed, so the KNOWN lists keep
+these). Website: 17 suites PASS; `check-min` (61), `csp`, `test-site-config` PASS. Startup instructions **2,193 of
+2,200**. Next (round 4, when the reviewer says): checks (builder 7), writer (builder 11), twin fuzz (builder 9).
 
 ## Integration round 2: reader + tools merged (11 Oct, from 12:56 UTC, cloud builder 5; `fix/0.2.9-gate`; not merged, no PR)
 The reviewer's routine: merge the finished branches with real merges, both sides' intent kept, one full run after each.
