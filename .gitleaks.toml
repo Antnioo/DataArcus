@@ -1,0 +1,7 @@
+# gitleaks settings for the Privacy scan workflow: the default rules, plus the one known false alarm.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "The IndexNow key is public on purpose (the protocol serves it at /<key>.txt); its test holds it."
+paths = ['''^scripts/test-indexnow\.mjs$''']

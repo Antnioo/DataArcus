@@ -75,3 +75,27 @@ jobs:
 
       - name: MCP checks
         run: npm test
+
+  # The users and the validation laptop run Windows; several past bugs were Windows-only (file URLs, paths, locks).
+  # Not blocking until it has been green on main once (owner 11 Oct: "Windows in CI").
+  mcp-windows:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: mcp
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mcp/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: MCP checks on Windows
+        run: npm test
