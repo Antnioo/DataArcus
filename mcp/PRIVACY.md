@@ -102,6 +102,9 @@ DataArcus choice; what DataArcus controls is **what it puts in its answers**. To
   - `create_report` writes a new report next to your model under a free name, and refuses to write at all if any of
     its files already exists. It never changes your model or an existing report.
   - `generate_theme` writes a new theme file and picks a free name (`name.json`, then `name-2.json`, `name-3.json`, ...).
+  - `create_arabic_twin` writes a new "<name> AR" report folder and `.pbip` next to the original report, refusing
+    when either name is taken; the original report is only read. Its Arabic month script (when you ask for it) is a
+    new `.tmdl` file next to the project under a free name, as the scripts below.
   - `check_model_health` and `add_gulf_calendar` write their scripts as new files next to the project, under free names; asked again, it
     names the file that already holds exactly that script instead of writing a second copy. When the working folder
     is the model folder itself it writes no script (nothing is ever written inside a model folder) and says so.
