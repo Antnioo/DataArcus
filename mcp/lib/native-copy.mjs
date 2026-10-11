@@ -43,7 +43,7 @@ export function planNative(reportPath, model) {
   const loc = locate(reportPath);
   strictFiles(loc.dir, { files: 20000, tail: ' Nothing was written.' });
   const inv = inventory(diskSource({ reportDir: loc.dir }, { big: [], deep: 0 }), path.basename(loc.dir));
-  const entries = replacementsOf(inv, { typeOf: typeOfModel(model && model.tables), formatOf: formatOfModel(model && model.tables) });
+  const entries = replacementsOf(inv, { typeOf: typeOfModel(model && model.tables), formatOf: formatOfModel(model && model.tables), factsOf: Replace.formatFacts });
   const replace = entries.filter((e) => e.native), keep = entries.filter((e) => !e.native);
   const free = nothingAt(loc.outDir) && nothingAt(loc.outPbip);
   const answer = {
