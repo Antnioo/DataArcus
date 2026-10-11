@@ -453,8 +453,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (pbipBtn) {
     let logo = null;
     // (0.2.9, A3-12: the writer is five files, its modules first, in this order; each written out with its own ?v= stamp)
-    const BUILDER = ['../assets/js/pbip-query.min.js?v=20261011w2', '../assets/js/pbip-sizing.min.js?v=20261011w2', '../assets/js/pbip-notes.min.js?v=20261011w2',
-      '../assets/js/pbip-page.min.js?v=20261011w2', '../assets/js/pbip-export.min.js?v=20261011w2'];
+    const BUILDER = ['../assets/js/pbip-query.min.js?v=20261011w3', '../assets/js/pbip-sizing.min.js?v=20261011w3', '../assets/js/pbip-notes.min.js?v=20261011w3',
+      '../assets/js/pbip-page.min.js?v=20261011w3', '../assets/js/pbip-export.min.js?v=20261011w3'];
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : BUILDER.reduce((p, src) => p.then(() => new Promise((resolve, reject) => {
       const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc);
     })), Promise.resolve()).then(() => window.DAPbip));
