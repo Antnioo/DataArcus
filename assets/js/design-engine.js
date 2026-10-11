@@ -211,6 +211,17 @@
   // row, the table has the second); a line chart alone with a text box (the single focus) becomes a bar chart. The
   // writer's fitSlots does nothing more then (no line slot to give away).
   const CATEGORY_KINDS = ['bar', 'column', 'donut'];
+  // How many categories a chart's slot can show (0.2.9, the laptop's sweep of rc.1, S5 and D19: a category with dozens
+  // of values gave cut vertical labels and a scrollbar). The report keeps that many, its Top N by the chart's measure,
+  // and the plan says so. On the 720 grid, where the theme's text sizes are made for the page (a 1080 page is x 1.5).
+  //  bar: measured, Desktop 2.158 (night of 6-7 Oct, DESKTOP-TESTS.md; mcp/CLAUDE.md): 22.2 a row at the theme's 10pt,
+  //    45 above the first row, 8 under the last and 38 for the value axis;
+  //  column: a GUESS until the laptop proof "S5" in DESKTOP-TESTS.md: horizontal labels need about 64 a column (a label
+  //    of about 8 characters at 10pt) after 60 for the value axis, at most 12 (12 month names fit, round 1, measured)
+  const CATEGORY_FIT = { bar: 'measured: 22.2 a row at 10pt, 45 above, 8 below, 38 for the value axis (Desktop 2.158, 6-7 Oct 2026)',
+    column: 'GUESS until the laptop proof S5: about 64 a column after 60 for the value axis, at most 12 (12 month names fit, round 1)' };
+  const categoryFit = (kind, w, h) => (kind === 'bar' ? Math.max(1, Math.floor((h - 45 - 8 - 38) / 22.2))
+    : kind === 'column' ? Math.max(3, Math.min(12, Math.floor((w - 60) / 64))) : null);
   const noTimeOf = (P) => {
     const alone = (r) => r.some((col) => col[1] === 'line') && !r.some((col) => col[1] !== 'line' && col[1] !== 'text');
     const rows = P.rows.map((r) => (alone(r) ? r.map((col) => (col[1] === 'line' ? [col[0], 'bar', T('Main breakdown', 'التوزيع الرئيسي')] : col)) : r.filter((col) => col[1] !== 'line')))
@@ -294,6 +305,8 @@
     // (0.2.9, the audit's A2-6: the KPI bar's data colour came from parsing "KPI n")
     const seen = {};
     slots.forEach((s) => { s.index = seen[s.kind] = s.kind in seen ? seen[s.kind] + 1 : 0; });
+    // (S5) the categories a bar or column chart's slot can show: its Top N
+    slots.forEach((s) => { const n = categoryFit(s.kind, s.w, s.h); if (n) s.topN = n; });
     return slots;
   }
   // An image's size in pixels, read from its bytes (a Uint8Array): PNG (the IHDR chunk) or JPG (the frame header);
@@ -535,7 +548,7 @@
   // The report's labels in a language, English when it has none of its own
   const texts = (lang) => REPORT_TEXTS[baseLang(lang)] || REPORT_TEXTS.en;
   // A page's slots for the report: kind, name in lang, filter rail or not, and the box in page units
-  const projectSlots = (c, lang, opt) => computeSlots(c, lang, opt).map((s) => Object.assign({ kind: s.kind, title: label(s.role, lang), rail: !!s.rail }, boxOf(s, c)));
+  const projectSlots = (c, lang, opt) => computeSlots(c, lang, opt).map((s) => Object.assign({ kind: s.kind, title: label(s.role, lang), rail: !!s.rail }, boxOf(s, c), s.topN ? { topN: s.topN } : {}));
   // a second page in a complementary layout: an analysis page (filters, a main chart, a wide table) after an
   // overview, or an executive overview after an analysis page. The filters stay on the side the user chose for the
   // first page (O-1 of the owner's test of 0.2.8, 10 Oct 2026: "filters right" gave a second page with them at the left)
@@ -743,7 +756,7 @@
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate, calmPalette,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    fs, sizeAt, TEXT_BASES, noTimeOf, CATEGORY_KINDS, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    fs, sizeAt, TEXT_BASES, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;
