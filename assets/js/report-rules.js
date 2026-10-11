@@ -196,7 +196,7 @@
           out(x, `about ${rows} rows fit in its ${x.h} height; rows past that go behind a scrollbar no one can use in a tooltip. How many rows it has depends on the data, which check_report doesn't read`, `Keep the category to ${rows} rows or fewer (a filter, or a top-N), or make the chart taller (22 a row + 46)${axis ? '; the value axis is on, which takes more room than measured' : ''}${other ? `; its labels are ${pt}pt, and the 22 a row was measured at 8pt` : ''}.`, axis || other ? { estimate: true } : null);
         }));
       } },
-    { id: 'RTL_MIRROR', group: 'rtl', lang: 'ar', severity: 'warning', source: SRC.round2,
+    { id: 'RTL_MIRROR', group: 'rtl', dir: 'rtl', severity: 'warning', source: SRC.round2,
       about: 'Power BI does not mirror a right-to-left report: the page navigator has no order setting (the first page is always at the left: single page buttons instead), and a visual\'s title stays where its alignment puts it (left by default)',
       run(R, out) {
         R.visuals.filter((x) => x.type === 'pageNavigator').forEach((x) => out(x, 'a page navigator in a right-to-left report: it always puts the first page at the left', 'Use single page buttons (actionButton with a PageNavigation link) placed from the right.'));
@@ -229,7 +229,9 @@
   function check(R, opts) {
     normalize(R);
     const groups = (opts && opts.groups) || GROUPS, findings = [], ran = [], failed = [];
-    RULES.filter((r) => groups.includes(r.group) && (!r.lang || r.lang === R.lang)).forEach((rule) => {
+    // (A4-11: a right-to-left rule keys on the report's direction, Arabic or Hebrew; R.dir, else from R.lang)
+    const dir = R.dir || (R.lang === 'ar' || R.lang === 'he' ? 'rtl' : 'ltr');
+    RULES.filter((r) => groups.includes(r.group) && (!r.lang || r.lang === R.lang) && (!r.dir || r.dir === dir)).forEach((rule) => {
       ran.push(rule.id);
       const mine = [];
       try { rule.run(R, (x, what, fix, extra, src) => {
