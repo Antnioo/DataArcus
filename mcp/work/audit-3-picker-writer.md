@@ -1,6 +1,6 @@
 # Audit 3: field picker and report writer (base origin/main 517e702)
 
-Scope: pbip-bind.js (531 lines), pbip-export.js (1,752), svg-kpi-compiler.js (586) as the writer uses it, and the server.mjs code that re-decides their output. Lines on origin/main; "reproduced" = run on a `git archive` copy (scratchpad `a scratch script (not committed)`, `r2.cjs`). Verified by the builder against the cited lines. Read-only: nothing fixed. Written on `fix/0.2.9-checks` (this session may push only there).
+Scope: pbip-bind.js (531 lines), pbip-export.js (1,752), svg-kpi-compiler.js (586) as the writer uses it, and the server.mjs code that re-decides their output. Lines on origin/main; "reproduced" = run on a `git archive` copy (scratch scripts, not committed). Verified by the builder against the cited lines. Read-only: nothing fixed. Written on `fix/0.2.9-checks` (this session may push only there).
 
 ## History
 
