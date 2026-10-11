@@ -1254,7 +1254,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     chk(() => s4.j.kpis.map(f).slice(0, 3).join('|') === RAM.kpis.join('|') && /\(old\)/.test(f(s4.j.kpis[3])) && s4.j.skipped.measures.length === 1, () => `4 cards, 3 current measures: the fourth is an old one because nothing else is left: ${s4.err ? s4.t.slice(0, 200) : s4.j.kpis.map(f)}`);
     chk(() => s5.j.kpis.filter(Boolean).length === 5 && !s5.j.skipped, () => `5 cards, 5 measures: all used, nothing skipped: ${s5.err ? s5.t.slice(0, 200) : JSON.stringify(s5.j.skipped)}`);
     fs.writeFileSync(path.join(ROOT, 'stale.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', columns: [{ name: 'Amount', dataType: 'double', sourceColumn: 'Amount' }, { name: 'Region', dataType: 'string', sourceColumn: 'Region' }],
-      measures: ['Sales Test', 'Backup Revenue', 'TEMP total', 'Unused Sales', 'Oldham Sales', 'Latest Orders', 'Contest Wins'].map((name) => ({ name, expression: 'SUM ( Sales[Amount] )', formatString: '#,0' })) }] } }));
+      measures: ['Sales Test', 'Backup Revenue', 'TEMP total', 'Unused Sales', 'Oldham Sales', 'Latest Orders', 'Contest Wins'].map((name, i) => ({ name, expression: 'SUM ( Sales[Amount] ) * ' + (i + 1), formatString: '#,0' })) }] } }));   // (D6: each its own DAX; the same DAX is one card)
     const st = await ask('suggest_fields', { path: 'stale.bim', kpis: 3 });
     chk(() => st.j.kpis.map((k) => k.m).sort().join() === 'Contest Wins,Latest Orders,Oldham Sales' && st.j.skipped.measures.length === 4 && st.j.measure.m !== 'Sales Test',
       () => `whole words only (Oldham, Latest, Contest are not old or test): ${st.err ? st.t.slice(0, 200) : st.j.kpis.map((k) => k.m) + ' skipped ' + JSON.stringify(st.j.skipped)}`);

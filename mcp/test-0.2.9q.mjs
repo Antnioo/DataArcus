@@ -122,6 +122,33 @@ export async function v029q({ check }) {
     chk(() => d && d.c !== 'Month' && (d.c === 'Month Label' || d.c === 'Date'), () => `S8: the month's name column or the date, never the month number: ${JSON.stringify(d)}`);
   }
 
+  // ---------- T3 (second sweep): a month number of a DAX calendar (no type in the files) is no axis or tooltip month either ----------
+  {
+    const j = model([{ name: 'Calendar', dataCategory: 'Time', columns: [col('Date', 'unknown'), col('Month', 'unknown'), col('Month Label', 'unknown', { sortByColumn: 'Month' })] },
+      { name: 'Sales', columns: [col('Amount', 'double'), col('Day', 'dateTime'), col('Region', 'string')], measures: [ms('Revenue', 'SUM ( Sales[Amount] )', '\\$#,0')] }],
+      [rel('Sales', 'Day', 'Calendar', 'Date')]);
+    const b = pick(j, 1);
+    chk(() => b.date && b.date.c === 'Month Label' && (!b.tip.date || b.tip.date.c === 'Month Label'), () => `T3: the month's name, not the number another column is sorted by: ${JSON.stringify({ date: b.date, tip: b.tip.date })}`);
+  }
+
+  // ---------- T7 (second sweep): the tooltip's bar measure reaches the tooltip's category (no equal bars) ----------
+  {
+    const j = model([{ name: 'Products', columns: [col('Product Key', 'string'), col('Line', 'string')] },
+      { name: 'Projects', columns: [col('Product Key', 'string'), col('Budget', 'double')], measures: [ms('Total Budget', 'SUM ( Projects[Budget] )', '\\$#,0'), ms('Total Projects', 'COUNTROWS ( Projects )', '#,0')] },
+      { name: 'Milestones', columns: [col('Milestone', 'string')], measures: [ms('Total Milestones', 'COUNTROWS ( Milestones )', '#,0')] }],
+      [rel('Projects', 'Product Key', 'Products', 'Product Key')]);
+    const b = pick(j, 3);
+    chk(() => b.tip.cat && b.tip.cat.c === 'Line' && b.tip.y && b.tip.y.m !== 'Total Milestones', () => `T7: the tooltip's bars by Line show a measure that reaches Products: ${JSON.stringify(b.tip)}`);
+  }
+
+  // ---------- I8 (second sweep): an amount with no format (a sum of a decimal column) gets the amount rule: automatic units ----------
+  {
+    const j = model([{ name: 'Ledger', columns: [col('Value', 'double'), col('Qty', 'int64'), col('Unit', 'string')],
+      measures: [ms('Corporate Revenue', 'SUM ( Ledger[Value] )'), ms('Units Moved', 'SUM ( Ledger[Qty] )')] }]);
+    const k = pick(j, 2).kpis, by = (n) => k.find((x) => x && x.m === n) || {};
+    chk(() => !by('Corporate Revenue').wholeFormat && by('Units Moved').wholeFormat === '#,0', () => `I8: the amount in automatic units, the quantity whole: ${JSON.stringify(k)}`);
+  }
+
   // ---------- D17: a dynamic-format measure beside currency cards: after them, and told when it is a card ----------
   {
     const j = model([{ name: 'Sales', columns: [col('Amount', 'double'), col('Cost', 'double'), col('Local', 'double'), col('Region', 'string')],
