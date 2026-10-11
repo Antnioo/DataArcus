@@ -224,10 +224,10 @@
       // O-4: a bar chart's names get 40% of its width, 50% on a narrow chart (under 560 on the 720-high page); the default 25 cut them at about 10 characters
       if (visual.visualType === 'clusteredBarChart') put('categoryAxis', { maxMarginFactor: lit(barNameShare(s.w, pg.page.h) + 'L') });
       // O-13: the line chart's month label
-      if (s.kind === 'line' && col && Bt.date && (timeAxisPlan(Bt.date) || {}).order === 'monthStart' && col.Property === Bt.date.c) {
+      if (s.kind === 'line' && col && Bt.date && ['monthStart', 'monthLabel'].includes((timeAxisPlan(Bt.date) || {}).order) && col.Property === Bt.date.c) {
         byMonthStart(visual.query, Bt.date, MIRROR ? 'Descending' : 'Ascending');
         const lf = st.Y && lastMonths(Bt.date, st.Y.projections[0].field, 12); if (lf) filters.push(lf);
-        timeAxes.push({ page: pg.name || base, field: Bt.date.t + '[' + Bt.date.c + ']', by: Bt.date.dateOf.t + '[' + Bt.date.dateOf.c + ']', last: lf ? 12 : null });
+        timeAxes.push({ page: pg.name || base, field: Bt.date.t + '[' + Bt.date.c + ']', by: Bt.date.dateOf ? Bt.date.dateOf.t + '[' + Bt.date.dateOf.c + ']' : 'the label read as a date', last: lf ? 12 : null });
       }
       // O-14: a table's columns get set widths (auto-size off: grow-to-fit let a long text push the numbers out of view):
       // numbers 90 to 130 by their header, the text columns share the rest (160 at least), all within the width less 36
@@ -1161,7 +1161,7 @@
     // (0.2.9 part 2, TOOLTIP-FIX-LAB: about 77 months in 310 showed 13 and a scrollbar: where the month's table has a date
     // column, the last 6 months, newest first, at 40 + 27 a bar; elsewhere the 12 rows as before)
     // (the cross-review's G3: the same rule as the trend's, so a month name the model or the report sorts keeps its 12)
-    const six = !!(tip && (timeAxisPlan(tip.date) || {}).order === 'monthStart');
+    const six = !!(tip && ['monthStart', 'monthLabel'].includes((timeAxisPlan(tip.date) || {}).order));
     if (trend) { const tv = { x: 12, y: 92, w: 296, h: six ? 40 + 27 * 6 + 8 : 310, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(tip.card)] }), tip.date),
         objects: { categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit('40L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }), labels: obj({ show: bool(true), fontSize: num(8) }) },
         visualContainerObjects: tipFrame(byTitle(label(tip.card), W.by || 'by', label(tip.date))) }) };

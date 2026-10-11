@@ -229,6 +229,25 @@ export function v029w({ check }) {
       && visuals(one.r).every((v) => (titleOf(v) || '').length < 2000),
       () => `F-W1: a 200,000-character name (one word, or 40,000 words) is fitted fast and its titles are cut: one word ${one.ms} ms, ${one.r.threw || cutTitles(one) + ' cut'}; words ${many.ms} ms, ${many.r.threw || cutTitles(many) + ' cut'}`);
   }
+
+  // ---------- rc1 release blocker 1 (the laptop's 11 Oct proof, O-13 again): a month label of a DAX table (no type, no date
+  // column the picker can type, no sort-by column) was written in alphabetical order; it is put in time order by the label
+  // itself read as a date (a report measure), kept to the last 12 months, and the plan says so ----------
+  {
+    const my = C('Month-Year', { type: 'unknown' }, 'Calendar');
+    const r = get(() => build(base({ date: my, measure: M('Total Sales') }), { pages: hand(1280, 720, [{ kind: 'line', title: 'L', x: 24, y: 80, w: 900, h: 400 }]) }));
+    const line = r.files ? visuals(r).find((v) => v.visual.visualType === 'lineChart') : null, sd = line && line.visual.query.sortDefinition, ms = measures(r);
+    const key = ms.find((m) => /Month start/.test(m.name)), last = ms.find((m) => /^Last 12 months/.test(m.name));
+    chk(() => (Px.timeAxisPlan(my) || {}).order === 'monthLabel' && sd && sd.sort[0].field.Measure && sd.sort[0].field.Measure.Expression.SourceRef.Schema === 'extension'
+      && key && key.t === 'Calendar' && /DATEVALUE/.test(key.expression) && /'Calendar'\[Month-Year\]/.test(key.expression) && last && /ISBLANK \( _last \)/.test(last.expression)
+      && (line.filterConfig || { filters: [] }).filters.some((f) => /Last 12 months/.test(JSON.stringify(f))),
+      () => `rc1-1: an untyped Month-Year label is ordered by the label read as a date and kept to its last 12 months (and nothing parsed keeps every month): ${r.threw || JSON.stringify({ plan: Px.timeAxisPlan(my), sd, ms: ms.map((m) => m.name) })}`);
+    // a "period" or week label is not read as a date (G11); a month label with a date column keeps the exact month start
+    chk(() => Px.timeAxisPlan(C('Payment Period', { type: 'unknown' })).order === 'az' && Px.timeAxisPlan(C('Month-Year', { dateOf: { t: D, c: 'Date' } }, D)).order === 'monthStart',
+      () => 'rc1-1: only a month label is read as a date; a label with its date column keeps the month start');
+    const srv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8');
+    chk(() => /monthLabel: /.test(srv), () => 'rc1-1: plan_layout says how a month label read as a date is ordered (timeAxis.how), before the plan is approved');
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
