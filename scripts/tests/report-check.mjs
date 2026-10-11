@@ -213,7 +213,11 @@ const CHART_TYPES = ['lineChart', 'clusteredBarChart', 'clusteredColumnChart', '
 // one bar), and every other chart to the trend page. Returns { charts, trend (charts linked to the trend page), bad }.
 const tipChart = (p) => p.visuals.find((v) => v.visual && /Chart$/.test(v.visual.visualType));
 // (0.2.9 part 2: or 314 high when kept to its last 6 months, TOOLTIP-FIX-LAB)
-const sixMonths = (p) => p.visuals.some((v) => v.filterConfig && JSON.stringify(v.filterConfig).includes('Last 6 months'));
+// (the cross-review's G10, 11 Oct: found by its shape, not its name, so a renamed or translated measure is still found:
+// an Advanced visual filter on a report-level measure that keeps the rows where it is 1)
+const lastMonthsFilter = (f) => f.type === 'Advanced' && !!(f.field && f.field.Measure && f.field.Measure.Expression.SourceRef.Schema === 'extension')
+  && ((((f.filter || {}).Where || [])[0] || {}).Condition || {}).Comparison && f.filter.Where[0].Condition.Comparison.ComparisonKind === 0 && ((f.filter.Where[0].Condition.Comparison.Right || {}).Literal || {}).Value === '1L';
+const sixMonths = (p) => p.visuals.some((v) => ((v.filterConfig || {}).filters || []).some(lastMonthsFilter));
 const isTrend = (p) => p.page.height === 410 || (p.page.height === 314 && sixMonths(p));
 const catRef = (v) => { const q = ((v.visual.query || {}).queryState || {}), r = q.Category || q.Group; return r && r.projections[0] ? r.projections[0].queryRef : null; };
 export function tooltipProblems(files) {
