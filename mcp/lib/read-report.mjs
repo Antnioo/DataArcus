@@ -41,7 +41,8 @@ export function walk(d, out, cap, depth, sk) {
   for (const e of fs.readdirSync(d, { withFileTypes: true })) {
     if (out.length >= cap) return out;
     const f = path.join(d, e.name);
-    if (e.isSymbolicLink()) continue;
+    // (A4-4, audit 4: a link is never followed, and counted, so check_report can say it and hold back its validator)
+    if (e.isSymbolicLink()) { if (sk) (sk.links = sk.links || []).push(f); continue; }
     if (e.isDirectory()) walk(f, out, cap, level + 1, sk); else if (e.isFile()) out.push(f);
   }
   return out;
