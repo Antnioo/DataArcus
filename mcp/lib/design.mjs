@@ -119,7 +119,6 @@ export function planLayout(a) {
   if (a.layout) { l.preset = a.layout; l.kpis = E.LAYOUTS[a.layout].kpis; l.filters = E.LAYOUTS[a.layout].filters; delete l.kpiH; delete l.mainW; delete l.split; }
   // the KPI cards, 0-6: the engine's own count (0.2.9, A2-4: no kpiCards)
   if (a.kpis != null) l.kpis = a.kpis;
-  if (l.wideTable !== false) l.wideTable = true;   // (a design that says false keeps equal shares) the owner, 6 Oct 2026: on a 4:3 page the table takes the wider share of its row (the design engine, computeSlots)
   if (a.filters != null) { l.filters = a.filters !== 'none'; if (l.filters) l.fpos = a.filters; }
   Object.assign(design.layout, layoutFrom({ page: a.page, header: a.header, dir: a.dir }, l, () => {}));
   // Round 19 and 22 (golden task 5 at 640 x 360 in Desktop): a page under 800 wide takes the single-focus layout and
@@ -134,7 +133,7 @@ export function planLayout(a) {
   E.repairState(design, fix);
   const lang = a.lang, nm = (pair) => (lang === 'ar' ? pair[1] : pair[0]), layout = design.layout;
   // one row per visual, as the website's slot table: its name, the suggested visual, and x, y, w, h in page units
-  const slots = E.computeSlots(layout, lang).map((s) => Object.assign({ role: nm(s.role), kind: s.kind, visual: nm(E.KINDS[s.kind]) }, E.boxOf(s, layout)));
+  const slots = E.computeSlots(layout, lang, { tableFields: a.tableFields }).map((s) => Object.assign({ role: nm(s.role), kind: s.kind, visual: nm(E.KINDS[s.kind]) }, E.boxOf(s, layout)));
   // the PBIR visual.json position, in reading order (top to bottom, then along the reading direction: the order
   // pbip-export.js sorts visuals in), z and tabOrder 1000, 2000...
   const right = E.rtl(layout, lang);

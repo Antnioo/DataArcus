@@ -292,15 +292,8 @@ let slotOk = 0; const slotBad = [];
 for (const c of DESIGNS) {
   r = await tryCall('plan_layout', { design: c.state, lang: c.lang });
   const rows = r.err ? null : r.j.slots.map((s) => [s.role, s.visual, s.x, s.y, s.w, s.h].map(String));
-  // (round 19, the owner's choice B: below 800 wide the MCP plans the single-focus layout instead of the executive one,
-  // and says so (smallPage); the website still shows the executive layout there, so that case is the plan's on purpose)
-  if (!r.err && r.j.smallPage && r.j.design.layout.preset === 'focus' && r.j.page.w < 800) { slotOk++; continue; }
-  // (night of 6-7 Oct, the owner's answer 3a: on a 4:3 page the MCP's plan gives the table the wider share of its row, three
-  // fifths; the website keeps equal shares there. So on such a page the row that holds the table is the plan's on
-  // purpose: every other slot must still be the website's, and the table must be wider than the website's.)
-  const tRow = rows && r.j.design.layout.wideTable && r.j.page.w / r.j.page.h < 1.5 ? (c.slots.find((s) => /^Table/.test(s[1])) || [])[3] : null;
-  const mine = rows && rows.find((s) => /^Table/.test(s[1])), theirs = c.slots.find((s) => /^Table/.test(s[1]));
-  if (tRow != null && rows.length === c.slots.length && rows.some((s) => s[3] === tRow && s !== mine) && JSON.stringify(rows.filter((s) => s[3] !== tRow)) === JSON.stringify(c.slots.filter((s) => s[3] !== tRow)) && +mine[4] > +theirs[4]) { slotOk++; continue; }
+  // (0.2.9 design block, A2-1 and A2-5: the small-page rule and the table's share are the design engine's now, the
+  // website's too, so every case must be the website's exactly; the two exceptions of rounds 19 and 6-7 Oct are gone)
   if (rows && JSON.stringify(rows) === JSON.stringify(c.slots)) slotOk++;
   else slotBad.push(`${c.id}: ${r.err ? r.t.slice(0, 120) : JSON.stringify(rows).slice(0, 160) + ' vs ' + JSON.stringify(c.slots).slice(0, 160)}`);
 }

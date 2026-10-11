@@ -142,6 +142,18 @@
   // its size sliders back to that layout's defaults (as choosing a layout does)
   const fitLayout = (c) => (smallPage(c) ? Object.assign({}, c, { preset: 'focus', filters: LAYOUTS.focus.filters, kpiH: null, mainW: null, split: null }) : c);
 
+  // A table beside a chart on a narrow page (narrower than 3:2 on the design grid) takes a wider share of its row
+  // (wideTable, on by default; a design that says false keeps equal shares), by its need (0.2.9, the audit's A2-5: one
+  // default, here; the share from the table's fields). Measured once, in Power BI Desktop 2.158 on the night of 6-7 Oct
+  // 2026 (mcp/WORK.md, "Block C" item 3; the owner's answer 3a): a table of a day column and three measures (4 fields)
+  // needs 463 in Segoe UI and 483 in Tahoma at 8pt, and half of a 960 x 720 page's row is 458; the table took 1.5 times
+  // its neighbour's weight (three fifths), which Desktop showed whole (golden task 4, DESKTOP-TESTS.md 2026-10-07). Its
+  // need grows with its fields (about 121 a field in the wider font), so each field past 4 adds a quarter of that weight,
+  // up to 3 (the chart beside keeps a quarter of the row); fewer fields keep 1.5. Past 4 fields this is a GUESS until
+  // the laptop proof "A2-5" in DESKTOP-TESTS.md measures 5 and 6 fields.
+  const TABLE_NEED = { fields: 4, weight: 1.5, max: 3, measured: '4 fields (a day column and three measures) need 463 in Segoe UI and 483 in Tahoma at 8pt; half of a 960 x 720 row is 458 (Power BI Desktop 2.158, 6-7 Oct 2026, mcp/WORK.md Block C 3); 5 or more fields not measured (laptop proof A2-5)' };
+  const tableWeight = (n) => Math.min(TABLE_NEED.max, TABLE_NEED.weight * Math.max(TABLE_NEED.fields, Math.floor(+n) || TABLE_NEED.fields) / TABLE_NEED.fields);
+
   // Adjustable sizes, each kept inside a safe range so every visual stays usable
   const RANGE = { hh: [44, 96], logoW: [100, 360], fw: [160, 320], fh: [56, 120], kpiH: [64, 160], mainW: [40, 75], split: [30, 70], radius: [0, 24], kpiBarW: [2, 8], headLineW: [2, 8] };
   // on a narrow (4:3) page the side filter panel is capped at a quarter of the width (PW: the page's width, see pw)
@@ -173,6 +185,7 @@
   // opt.logoRatio (width / height of an attached logo, see imageSize): the logo slot keeps the designed height and takes
   // the logo's own width (no minimum; at most the logo width range's 360), its far edge where it is; the title and the
   // page buttons get the room that is left. Without it the slot is the designed logo width, as before.
+  // opt.tableFields (the number of fields the report's table shows): its share of a narrow row (TABLE_NEED); 4 when not given.
   // A small page gets its own layout first (fitLayout, see SMALL_PAGE).
   function computeSlots(c, lang, opt) {
     c = fitLayout(c);
@@ -204,13 +217,9 @@
     if (hasSplit(P) && free >= 180) { const h0 = free * flex[0] / flexSum; if (h0 < 90) flex[0] = flexSum * 90 / free; else if (free - h0 < 90) flex[0] = flexSum * (free - 90) / free; flex[1] = flexSum - flex[0]; }
     // (the owner, 6 Oct 2026) One card (a model with one measure) takes a quarter of the row at the reading start, not
     // the whole row (quarter). Two or three cards still share the row.
-    // (the owner, 6 Oct 2026) For the MCP's reports (wideTable, set by the MCP: the website's designs never have it, as
-    // kpiCards): on a 4:3 page (narrower than 3:2 on the design grid) a table beside a chart takes the
-    // wider share of its row, 3 to 2: measured, a table of a day column and three measures needs 463 at 8pt in Segoe UI
-    // and 483 in Tahoma, and half of a 960 x 720 page's row is 458.
-    // (round 20, the owner's (b), 7 Oct 2026: the website follows the MCP: on by default; a design that says false keeps
-    // equal shares)
-    const narrow = c.wideTable !== false && PW < 1080, share = (cols) => (narrow && cols.length > 1 ? cols.map((col) => (col[1] === 'table' ? [col[0] * 1.5, col[1], col[2]] : col)) : cols);
+    // (the owner, 6 Oct 2026; round 20: the website and the MCP alike) on a narrow page a table beside a chart takes the
+    // wider share of its row, by its need (TABLE_NEED); a design that says wideTable false keeps equal shares
+    const narrow = c.wideTable !== false && PW < 1080, tw = tableWeight(opt && opt.tableFields), share = (cols) => (narrow && cols.length > 1 ? cols.map((col) => (col[1] === 'table' ? [col[0] * tw, col[1], col[2]] : col)) : cols);
     const rows = (nK ? [{ fixed: z.kpiH, quarter: nK === 1, cols: Array.from({ length: nK }, (_, i) => [1, 'kpi', [`KPI ${i + 1}`, `مؤشر ${i + 1}`]]) }] : [])
       .concat([first].concat(P.rows.slice(1)).map((cols, i) => ({ flex: flex[i], cols: share(cols) })));
     let y = top;
@@ -458,7 +467,8 @@
     return { layout: open, panel: boxOf(r, cc) };
   };
   // The report's pages for a layout: this page, the second page when asked, each with the slide-in panel when asked.
-  // opts: { second, panel, logoRatio (an attached logo's width / height, see computeSlots), maxKpis (the most KPI cards
+  // opts: { second, panel, logoRatio (an attached logo's width / height, see computeSlots), tableFields (see
+  // computeSlots), maxKpis (the most KPI cards
   // the report can fill, its measures: every page has at most that many) }.
   // A small page (SMALL_PAGE) has its own layout and no second page.
   // Each page: { layout (for its background), name, page { w, h }, slots, panel }
@@ -468,7 +478,7 @@
     const cap = (l) => (o.maxKpis != null && +o.maxKpis >= 0 && +o.maxKpis < +l.kpis ? Object.assign({}, l, { kpis: Math.floor(+o.maxKpis) }) : l);
     return specs.map((sp) => {
       const sl = o.panel ? slidePanel(cap(sp.c), lang) : null, layout = sl ? sl.layout : cap(sp.c), p = page(layout);
-      return { layout, name: sp.name, page: { w: p.w, h: p.h }, slots: projectSlots(layout, lang, { logoRatio: o.logoRatio }), panel: sl ? sl.panel : null };
+      return { layout, name: sp.name, page: { w: p.w, h: p.h }, slots: projectSlots(layout, lang, { logoRatio: o.logoRatio, tableFields: o.tableFields }), panel: sl ? sl.panel : null };
     });
   };
 
@@ -515,7 +525,7 @@
   const api = {
     PRESETS, FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate, calmPalette,
-    within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
+    within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
     fs, chart, buildTheme, contrastChecks, REPORT_TEXTS, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

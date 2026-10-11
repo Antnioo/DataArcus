@@ -879,22 +879,23 @@ server.registerTool('create_report', {
       design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { transparent: false }) });
     }
     // fields.kpis decides the number of cards (one per measure given)
-    // (the owner, 6 Oct 2026: on a 4:3 page the table takes the wider share of its row; the MCP's own, see the design engine)
-    design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { wideTable: design.layout.wideTable !== false }) });   // (a design that says wideTable false keeps equal shares)
+    // (the owner, 6 Oct 2026: on a 4:3 page the table takes the wider share of its row: the design engine's default,
+    // by the table's fields, tableFields below; the design block's A2-5)
     // (the design block's A2-4: kpis is the card count, 0-6; the report's measures cap every page through maxKpis)
     if (F && F.kpis) design = Object.assign({}, design, { layout: Object.assign({}, design.layout, { kpis: Math.min(6, F.kpis.length) }) });
     const askedCards = design.layout.kpis, maxKpis = Math.min(F && F.kpis ? F.kpis.length : 6, nCards);
+    const tableFields = F && F.table ? F.table.length : undefined;   // (the table's share of a narrow row is by its fields)
     kpiCards = cardNote(askedCards, Math.min(askedCards, nCards));
     // (round 22, the owner's (a) for pages under 800 wide; golden task 5's second page in Desktop: cut card values and a
     // scrolling table) such a page gets no second page
     tinyPage = E.page(design.layout).w < 800;
-    let pages = E.projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
+    let pages = E.projectPages(design.layout, a.lang, { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields }).map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots)) }));
     // (round 23: a line chart without a time axis gives its room to the visual beside it: the shared writer does it,
     // for the website too; leftOut says so with gave)
     const bound = bindFor(kpisOf(pages));
     // (round 22, the code review's c) a slot's role is matched in English or Arabic whatever the report's language:
     // the same pages in the other language give each role's other name
-    if (a.subtitles) { const o1 = { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis }, mine = E.projectPages(design.layout, a.lang, o1), other = E.projectPages(design.layout, a.lang === 'ar' ? 'en' : 'ar', o1);
+    if (a.subtitles) { const o1 = { second: a.secondPage && !tinyPage, panel: a.slidePanel, logoRatio, maxKpis, tableFields }, mine = E.projectPages(design.layout, a.lang, o1), other = E.projectPages(design.layout, a.lang === 'ar' ? 'en' : 'ar', o1);
       other.forEach((p, i) => p.slots.forEach((s, j) => { const q = mine[i] && mine[i].slots[j]; if (q && q.kind === s.kind && s.title && q.title && !(q.title in a.subtitles)) subKeys[s.title] = q.title; })); }
     const subtitles = a.subtitles && Object.fromEntries(Object.entries(a.subtitles).map(([k, v]) => [subKeys[k] || k, v]));
     r = Pbip.build({
@@ -1242,7 +1243,8 @@ server.registerTool('plan_layout', {
     }
     if (fmt) formats = { formats: Object.assign({ sayFirst: `Tell the user first, before the layout: ${fmt.fields.length} of the plan's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). create_report shows them right in the report's cards, tooltip and tables anyway; the script sets them in the model too.` }, fmt) };
   }
-  const r = planLayout(a), { page, fitted } = pageOf(r.design.layout);
+  // (A2-5: the plan's table fields set the table's share of a narrow row, as create_report's)
+  const r = planLayout(Object.assign({}, a, a.planFields && a.planFields.table ? { tableFields: a.planFields.table.length } : {})), { page, fitted } = pageOf(r.design.layout);
   const unknown = a.design ? unknownKeys(a.design) : null;
   // the page size (0.2.9, O-8: an Arabic plan was made 1280 x 720 though the user asked for no size): who chose it
   const chosenBy = a.page != null ? 'asked' : page.w === 1920 && page.h === 1080 ? 'default' : 'design';
