@@ -57,6 +57,44 @@ export async function v029p({ call, check, ROOT, fs = fs0 }) {
     const src = fs.readFileSync(path.join(REPO, 'assets/js/pbip-bind.js'), 'utf8');
     chk(() => /const TIEBREAK_WORDS = /.test(src) && !/const MAIN = /.test(src), () => 'A3-6: the name words are one named tie-break list (TIEBREAK_WORDS), not a main rank');
   }
+
+  // ---------- A3-8 + A3-7 (picker side): each category says whether it is time, and a calendar's kind, rows and family ----------
+  {
+    const t = tablesOf([
+      { name: 'Calendar', dataCategory: 'Time', columns: [col('Date', 'dateTime'), col('Month Name', 'string', { sortByColumn: 'Month Number' }), col('Month Number', 'int64'), col('Day Name', 'string'), col('Day of Week', 'int64'),
+        col('Hijri Month Name', 'string', { sortByColumn: 'Hijri Month' }), col('Hijri Month', 'int64'), col('Quarter', 'string'), col('Day Type', 'string')] },
+      { name: 'Sales', columns: [col('Amount', 'double'), col('Order Date', 'dateTime'), col('Region', 'string'), col('Period Status', 'string')], measures: [ms('Total Sales', 'SUM ( Sales[Amount] )', '#,0')] }]);
+    const pool = {}; B.suggest(t, 1).catPool.concat(Object.values(B.suggest(t, 1).cats || {})).filter(Boolean).forEach((f) => { pool[f.c] = f; });
+    const fo = (tn, c) => B.fieldOf(t.find((x) => x.name === tn), c);
+    chk(() => fo('Calendar', 'Month Name').time === true && fo('Calendar', 'Day Type').time === true && fo('Sales', 'Region').time === false && fo('Sales', 'Period Status').time === false,
+      () => `A3-8: a category of the date table, or one sorted by a number, is time; a fact table's text is not, whatever its name ("Period Status"): ${JSON.stringify(['Month Name', 'Day Type'].map((c) => fo('Calendar', c)).concat(['Region', 'Period Status'].map((c) => fo('Sales', c))))}`);
+    const cal = (c) => (fo('Calendar', c) || {}).cal || {};
+    chk(() => cal('Month Name').kind === 'month' && cal('Month Name').rows === 12 && cal('Month Name').family === 'english' && cal('Day Name').kind === 'day' && cal('Day Name').rows === 7
+      && cal('Hijri Month Name').family === 'hijri' && cal('Hijri Month Name').rows === 12 && cal('Quarter').kind === 'quarter' && cal('Quarter').rows === 4,
+      () => `A3-7: the calendar's kind, rows and family: ${JSON.stringify(['Month Name', 'Day Name', 'Hijri Month Name', 'Quarter'].map(cal))}`);
+    const ar = tablesOf([{ name: 'التقويم', dataCategory: 'Time', columns: [col('Date', 'dateTime'), col('اسم الشهر', 'string', { sortByColumn: 'رقم الشهر' }), col('رقم الشهر', 'int64')] }]);
+    chk(() => (B.fieldOf(ar[0], 'اسم الشهر').cal || {}).family === 'arabic', () => `A3-7: an Arabic month name's family is arabic: ${JSON.stringify(B.fieldOf(ar[0], 'اسم الشهر'))}`);
+    const built = B.suggest(t, 1), axis = built.date;
+    chk(() => axis && axis.time === true && axis.cal && axis.cal.rows === 12, () => `A3-7/A3-8: the bound fields carry the marks: ${JSON.stringify(axis)}`);
+  }
+
+  // ---------- A3-9: one documented field shape, no hidden properties, no cache on the caller's options ----------
+  {
+    const src = fs.readFileSync(path.join(REPO, 'assets/js/pbip-bind.js'), 'utf8');
+    chk(() => /@typedef \{Object\} Field/.test(src) && !/Object\.defineProperty\(|Object\.defineProperties\(/.test(src), () => 'A3-9: a JSDoc typedef for the field, and no hidden (non-enumerable) properties: a side table (WeakMap) instead');
+    const t = tablesOf([{ name: 'Sales', columns: [col('Amount', 'double'), col('Region', 'string')], measures: [ms('Total Sales', 'SUM ( Sales[Amount] )', '#,0')] }]);
+    const opt = { relationships: [{ fromTable: 'Sales', toTable: 'Sales' }], modelTables: t };
+    B.suggest(t, 1, opt);
+    chk(() => Object.getOwnPropertyNames(opt).sort().join() === 'modelTables,relationships', () => `A3-9: the picker leaves the caller's options as they were: ${Object.getOwnPropertyNames(opt)}`);
+    chk(() => typeof B.exprOf === 'function' && /SUM/.test(B.exprOf(t[0].measures[0])) && !JSON.stringify(t).includes('SUM ('), () => 'A3-9: a measure\'s DAX is read through exprOf, never a property a copy keeps or loses');
+  }
+
+  // ---------- Seen, not in scope (picker): names with "]" keep their own keys ----------
+  {
+    const t = tablesOf([{ name: 'Sales', columns: [col('City', 'string'), col('City (Arabic)', 'string'), col('A]B', 'string'), col('A', 'string')], measures: [ms('Total', 'SUM ( Sales[x] )', '#,0')] }]);
+    const lk = B.langsOf(t), keys = Object.keys(lk);
+    chk(() => typeof B.fieldKey === 'function' && B.fieldKey('Sales', 'A]B') !== B.fieldKey('Sales]A', 'B') && keys.includes(B.fieldKey('Sales', 'A]B')), () => `the field keys must be unambiguous for a name with "]": ${JSON.stringify(keys)}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
