@@ -1,8 +1,17 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Integration round 5" just below (the rc head), then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Integration round 6" just below (the rc head), then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## Integration round 6: custom visuals merged (11 Oct, from 20:23 UTC, cloud builder 5; `fix/0.2.9-gate`; not merged to main, no PR)
+- Merged `feat/0.2.9-custom-visuals` at `a61b00a` (builder 12: custom visuals to native in a new "<name> native" report;
+  visual-types.js the one visual-type rule, Microsoft's catalog its source, a visual declared custom stays custom; Z-10):
+  `5f0c7cd`, no conflicts.
+- Tests: `npm test` **1279** + reader 36, 21, 21, 20, golden PASS, fuzz PASS (KNOWN lists empty), FUZZ_LONG 10,000 cases
+  PASS; website 17 suites PASS; test-deny-scan 9, test-site-config, csp PASS.
+- Next, only on the reviewer's word: round 7 (builder 11's writer fixes, the laptop's release blockers), then the
+  picker's Fintech finding (the KPI picks miss every amount: Actual Budget not picked, counts only).
 
 ## Integration round 5: Z fixes + main + version sources (11 Oct, from 18:27 UTC, cloud builder 5; `fix/0.2.9-gate`; not merged to main, no PR)
 - Merged `fix/0.2.9-z-gate` at `dc96530` (builder 9: the outside review's Z-01..Z-04, Z-06, Z-07) and `main` at `c8f0840`
