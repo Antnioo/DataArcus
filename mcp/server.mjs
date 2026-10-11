@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { absorb } from './lib/slots.mjs';
 import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, Svg, applyColumnTypes, inside, loadModel, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
 import { themeDesign, planLayout, pageOf, contrastReport, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, texts,
-  clampHex, lum, buildTheme, projectPages, designRtl, themeName, fileBase, imageSize, isSmall } from './lib/design.mjs';
+  clampHex, lum, buildTheme, themeScaleOf, scaleTheme, projectPages, designRtl, themeName, fileBase, imageSize, isSmall } from './lib/design.mjs';
 import { freeFile } from './lib/files.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
@@ -914,7 +914,7 @@ server.registerTool('create_report', {
     a.pages = a.pages.map((p) => Object.assign({}, p, { slots: withText(withValues(p.slots), true) }));
     if (COUNTS.length && !leftOut.length) kpiCards = cardNote(kpisOf(a.pages), kpisOf(a.pages));
     if (leftOut.length) { const asked = kpisOf(a.pages) === 1 && !usable.length ? leftOut.length : Math.max(...a.pages.map((p) => p.slots.filter((s) => s.kind === 'kpi').length)) + leftOut.length; kpiCards = cardNote(asked, asked - leftOut.length, leftOut); }
-    const theme = a.theme ? JSON.parse(fs.readFileSync(inside(a.theme), 'utf8')) : { name: a.name };
+    let theme = a.theme ? JSON.parse(fs.readFileSync(inside(a.theme), 'utf8')) : { name: a.name };
     // Round 23 (the owner's "nothing critical left"): a theme's text sizes are made for its page (generate_theme's
     // layout.page, 1920 x 1080 by default: 10pt x the page's height / 720, as plan_layout's pages are), and a smaller
     // hand-placed page drew them too large. Our theme says its scale through its table text (10 x scale); every text
@@ -930,15 +930,12 @@ server.registerTool('create_report', {
       // own themes for pages like 768 high: every page height generate_theme can make is tried with the engine's own
       // rounding, and the theme is ours when one gives all its sizes; no mark is written into the theme, as Desktop may
       // refuse a theme with a key it does not know)
-      const vs = theme.visualStyles || {}, at = (v, k, prop) => +((((vs[v] || {})['*'] || {})[k] || [{}])[0] || {})[prop];
-      const fsz = (n, h) => Math.min(60, Math.max(8, Math.round(n * (h / 720) * 2) / 2));
-      const fits = (h) => at('tableEx', 'values', 'fontSize') === fsz(10, h) && at('slicer', 'header', 'textSize') === fsz(10, h) && at('card', 'labels', 'fontSize') === fsz(28, h) && at('multiRowCard', 'cardTitle', 'fontSize') === fsz(12, h) && at('multiRowCard', 'dataLabels', 'fontSize') === fsz(18, h) && at('pivotTable', 'rowHeaders', 'fontSize') === fsz(10, h);
-      let themeH = null; if (t10 > 0) for (let h = 200; h <= 4400 && !themeH; h++) if (fits(h)) { const hs2 = []; for (let k = h; k <= 4400 && fits(k); k++) hs2.push(k); themeH = hs2[Math.floor(hs2.length / 2)]; }
+      // (the tools audit's A6-10: the engine finds the theme's page and scales it; nothing of its sizes is copied here)
+      const sc = themeScaleOf(theme), themeH = sc ? sc.h : null;
       const ours = !!themeH;
       const ratio = ours && hs.length === 1 ? hs[0] / themeH : null;
       if (ratio && Math.abs(ratio - 1) > 0.01) {
-        const walk = (o) => { if (Array.isArray(o)) o.forEach(walk); else if (o && typeof o === 'object') Object.keys(o).forEach((k) => { if ((k === 'fontSize' || k === 'textSize') && typeof o[k] === 'number') o[k] = Math.min(60, Math.max(8, Math.round(o[k] * ratio * 2) / 2)); else walk(o[k]); }); };
-        walk(theme);
+        theme = scaleTheme(theme, ratio);
         reportNotes.push(`The theme's text sizes were made for a page about ${themeH} high; they were scaled to these ${hs[0]}-high pages (x ${ratio.toFixed(2)}, within 8-60), as a planned page's theme is. The theme file itself was not changed.`);
       } else if (t10 > 0 && !ours) reportNotes.push(`The theme's text sizes were not scaled to the pages: it is not a theme generate_theme made, so its sizes are kept as its author set them. If they look too large or too small on these ${hs.join(' and ')}-high pages, change the theme, or make one with generate_theme (layout.page).`);
       else if (!ratio && t10 > 0 && hs.length > 1) reportNotes.push(`The theme's text sizes are made for a page ${Math.round(720 * t10 / 10)} high and were not scaled: the pages have different heights (${hs.join(', ')}). Use one page size, or a theme made for it (generate_theme's layout.page).`);
