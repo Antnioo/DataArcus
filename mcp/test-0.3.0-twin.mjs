@@ -53,7 +53,7 @@ export async function v030twin({ call, check, ROOT, fs = fs0 }) {
   const cannot = JSON.stringify(j0.cannot || []);
   chk(() => /customGauge/.test(cannot) && /custom visual/i.test(cannot), () => `T1. the custom visual is listed as left as it is: ${cannot.slice(0, 400)}`);
   chk(() => /nav\b/.test(cannot) && /navigator/i.test(cannot), () => `T1. the page navigator's order is listed (no order setting): ${cannot.slice(0, 400)}`);
-  chk(() => /"All"/.test(cannot) && /Total/.test(cannot) && /Blank/.test(cannot), () => `T1. Power BI's own words are listed: ${cannot.slice(0, 400)}`);
+  chk(() => (j0.cannot || []).some((c) => /"All"/.test(c.why) && /Total/.test(c.why) && /Blank/.test(c.why)), () => `T1. Power BI's own words are listed: ${cannot.slice(0, 400)}`);
   chk(() => /phone/i.test(cannot), () => `T1. the phone layout is listed (copied as it is): ${cannot.slice(0, 400)}`);
   const texts = j0.texts || [], tx = (id) => texts.find((t) => t.id === id);
   chk(() => tx('page:p1overview').text === 'Overview' && tx('title:p1overview/colRegion').text === 'Sales by Region' && tx('button:p1overview/btnDetails').text === 'Go to details'
@@ -160,7 +160,14 @@ export async function v030twin({ call, check, ROOT, fs = fs0 }) {
     chk(() => lit(btnText(p1.btnReset).horizontalAlignment) === "'center'", () => 'T6. a centred button stays centred');
     const same = (a, b) => JSON.stringify(Object.assign({}, a, { position: 0 })) === JSON.stringify(Object.assign({}, b, { position: 0 }));
     chk(() => same(p2.customGauge, o2.customGauge), () => 'T6. the custom visual: only its position changed');
-    chk(() => same(p1.nav, o1.nav) && same(p1.slRegion, o1.slRegion) && same(p1.cardOrders, o1.cardOrders) && same(p1.grpKpi, o1.grpKpi), () => 'T6. navigator, slicer, card and group: only their positions changed');
+    chk(() => same(p1.cardOrders, o1.cardOrders) && same(p1.grpKpi, o1.grpKpi), () => 'T6. card and group: only their positions changed');
+    // (the slicer shows Sales.Region, whose approved label is its header: the label is the one other change)
+    const noLabel = (v) => { const c = JSON.parse(JSON.stringify(v)); delete c.visual.query.queryState.Values.projections[0].displayName; return c; };
+    chk(() => same(noLabel(p1.slRegion), o1.slRegion) && p1.slRegion.visual.query.queryState.Values.projections[0].displayName === 'المنطقة', () => 'T6. slicer: moved, the approved field label as its header, nothing else');
+    // (the navigator has a shown title: the labs' title rule right-aligns every title, so its title's alignment is the
+    // one other change; the plan said both "moved only" and "titles right", and the title rule is the more specific)
+    const noAlign = (v) => { const c = JSON.parse(JSON.stringify(v)); delete c.visual.visualContainerObjects.title[0].properties.alignment; return c; };
+    chk(() => same(noAlign(p1.nav), o1.nav) && objProp(p1.nav, 'title', 'alignment', true) === "'right'", () => 'T6. navigator: moved, its title right-aligned, nothing else');
     const pj = rd(path.join(pagesDir(TWIN), 'p1overview/page.json')), pjo = rd(path.join(pagesDir(ORIG), 'p1overview/page.json'));
     chk(() => pj.displayName === 'نظرة عامة' && pj.name === pjo.name && pj.width === pjo.width, () => `T6. page: the approved name, its id and size kept: ${JSON.stringify([pj.name, pj.displayName, pj.width])}`);
   }

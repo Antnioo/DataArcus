@@ -411,8 +411,8 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     } catch (e) { err = String(e && e.message || e); }
     fs0.rmSync(tmp, { recursive: true, force: true });
     // (9 tools since approve_plan, 11 Oct 2026, 0.2.9's gate)
-    chk(() => tools.length === 9 && ans && !ans.err && ans.validator.ran === false && ans.validator.mode === 'not available' && /cannot be loaded|report CLI/i.test(ans.validator.why || ''),
-      () => `X-03. with the CLI failing to load: 9 tools and check_report's validator "not available" with the reason: ${tools.length} tools ${JSON.stringify(ans && (ans.validator || ans)).slice(0, 300)} ${err}`);
+    chk(() => tools.length === 10 && ans && !ans.err && ans.validator.ran === false && ans.validator.mode === 'not available' && /cannot be loaded|report CLI/i.test(ans.validator.why || ''),
+      () => `X-03. with the CLI failing to load: 10 tools (9 -> 10: create_arabic_twin, 0.3.0) and check_report's validator "not available" with the reason: ${tools.length} tools ${JSON.stringify(ans && (ans.validator || ans)).slice(0, 300)} ${err}`);
   }
 }
 
