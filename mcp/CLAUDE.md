@@ -31,10 +31,12 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
 - **Findings you were told not to fix yet** go under "Open items".
 
 ## How it is built
-- `mcp/server.mjs`: the MCP server (stdio). Tools: `read_model`, `suggest_fields`, `check_model_health`, `generate_theme`,
-  `plan_layout`, `create_report`, `add_gulf_calendar`, `check_report` (`mcp/lib/check-report.mjs`: Microsoft's validator
-  offline with the schemas bundled in `mcp/schemas/`, and the measured rules of `assets/js/report-rules.js`; read-only,
-  no network). `mcp/lib/design.mjs`: the design tools' logic on top of `assets/js/design-engine.js`.
+- `mcp/server.mjs`: the MCP server (stdio). 11 tools: `read_model`, `suggest_fields`, `check_model_health`, `generate_theme`,
+  `plan_layout`, `approve_plan` (the gate, `mcp/lib/plans.mjs`), `create_report`, `add_gulf_calendar`, `read_report`,
+  `create_arabic_twin`, `check_report` (`mcp/lib/check-report.mjs`: Microsoft's validator offline with the schemas
+  bundled in `mcp/schemas/`, and the measured rules of `assets/js/report-rules.js`; read-only, no network).
+  `mcp/lib/design.mjs`: the design tools' logic on top of `assets/js/design-engine.js`. `mcp/lib/agent-text.mjs`: the
+  server's instructions and the shared description sentences, built from `LIMITS` (one source; one cap).
 - `mcp/lib/model.mjs`: reads models from disk (project folders with TMDL or model.bim, model.bim files, .pbit zips), keeps every path inside `DATAARCUS_ROOT`.
 - **The engines are shared with the website, on purpose.** They live in `assets/js/` and run in the browser and in Node:
   `pbip-export.js` (writes PBIR projects), `pbip-bind.js` (reads models, suggests fields), `model-health-engine.js`
@@ -43,8 +45,8 @@ Chats end (usage limits, new sessions, restarts); the repo stays. So the memory 
   copying them into `mcp/`, so the website and the MCP always give the same answers. A change to a shared engine must
   pass the website's test suites too.
 - The theme and layout engine is shared too: `assets/js/design-engine.js` (colours, theme JSON, page sizes, layout slots,
-  background SVG), used by the Theme Generator pages and meant for the MCP's design tools. Still browser-only: the
-  Measure Builder, the calendar generator.
+  background SVG), used by the Theme Generator pages and the MCP's design tools. The calendar generator
+  (`calendar-generator.js`) is shared too: `add_gulf_calendar` writes its table. Still browser-only: the Measure Builder.
 
 ## Tests
 - MCP: `cd mcp && npm install && npm test` (starts the server over stdio and calls every tool on copies of the fixtures). The MCP must stay self-contained: its code and tests use only its own `mcp/package.json` packages, never the website's `node_modules`, so it can be packaged on its own.

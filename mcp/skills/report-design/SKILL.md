@@ -5,8 +5,8 @@ description: Design or restyle a Power BI report on the user's own model with th
 
 # Power BI report design with DataArcus
 
-Tools: the DataArcus MCP (`read_model`, `suggest_fields`, `check_model_health`, `generate_theme`, `plan_layout`,
-`create_report`), Microsoft's Power BI Authoring MCP (connect to the model in Desktop, run DAX), the `powerbi-desktop`
+Tools: the DataArcus MCP (`read_model`, `suggest_fields`, `check_model_health`, `generate_theme`, `plan_layout`, `approve_plan`, `create_report`, `read_report`, `check_report`, `create_arabic_twin`, `add_gulf_calendar`),
+Microsoft's Power BI Authoring MCP (connect to the model in Desktop, run DAX), the `powerbi-desktop`
 bridge CLI (open, reload, screenshot), and for edits to an existing report, Microsoft's Power BI Report skill
 (`powerbi-report-cli`).
 
