@@ -56,7 +56,7 @@ notes; older checks and golden with causes), then the website check helpers and 
 green before: the reports are written, a sorted month name keeps its order, and `$schema` on every file: item 7 already
 held, now guarded). `npm test`: **782 -> 815, golden PASS** after `--update` (below). Microsoft's validator on the new
 reports (English, Arabic, month name): **0 errors, 0 warnings**; every golden report 0. Website: 17 suites, `pbip` 85 PASS
-after its helpers learned the filters (below), the other 16 PASS; `check-min`, `csp`, `test-site-config` PASS.
+after its helpers learned the filters (below), the other 16 PASS; `check-min`, `csp`, `test-site-config` PASS. **CI green on `3aea4d6`** (red on `3b53ba0` only: the website's `pbip` helpers, fixed in the next commit).
 - **Golden moves (each in `why`):** visuals -1 on each page where no logo is given (O-6: tasks 1 50->48, 2 44->42, 3
   18->17, 4 44->42 twice, 5 14->13, 6 51->49, 7 38->36, 10 45->43); task 1 contrastWarnings 1->0 (the light default and the
   calm palette); task 6 longTitleUses 86->84 (O-2: the long amount's card has no format entry of its own any more); task 10
