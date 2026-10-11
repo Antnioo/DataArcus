@@ -101,7 +101,6 @@
   // lineage tags are left out (the health check has no use for them) unless fromFiles is asked to keep them: the
   // fix scripts write an object back whole, and without its tag Power BI Desktop gives it a new one (measured)
   const DROP = new Set(['lineageTag', 'sourceLineageTag', 'changedProperty']), TAGS = new Set(['lineageTag', 'sourceLineageTag']);
-  let keepTags = false;
   const NUMBERS = new Set(['compatibilityLevel', 'precedence', 'ordinal']);
   const NAMES = new Set(['sortByColumn', 'column', 'groupByColumn', 'expressionSource', 'queryGroup', 'baseTable', 'relationship', 'hierarchy']);
   const LISTS = { column: 'columns', measure: 'measures', hierarchy: 'hierarchies', level: 'levels', partition: 'partitions', calculationItem: 'calculationItems',
@@ -122,7 +121,9 @@
     return unquote(v);
   }
 
-  function toJson(node) {
+  // opts.lineageTags: keep each object's tags (passed down, never kept in the module: the audit's A1-14)
+  function toJson(node, opts) {
+    const keepTags = !!(opts && opts.lineageTags);
     const o = {};
     if (node.name != null) o.name = node.name;
     if (node.description != null) o.description = node.description;
@@ -141,9 +142,9 @@
     });
     node.children.forEach((c) => {
       if (c.type === 'ref' || DROP.has(c.type)) return;
-      if (LISTS[c.type]) (o[LISTS[c.type]] = o[LISTS[c.type]] || []).push(toJson(c));
+      if (LISTS[c.type]) (o[LISTS[c.type]] = o[LISTS[c.type]] || []).push(toJson(c, opts));
       else if (c.name == null && c.expr != null && !c.props.length && !c.children.length && !/Definition$|^source$/.test(c.type)) o[c.type] = c.expr;
-      else o[c.type] = toJson(c);
+      else o[c.type] = toJson(c, opts);
     });
     if (node.type === 'column' && node.expr != null) o.type = 'calculated';
     // Desktop writes no dataType when Power BI works the type out from the DAX (columns of DAX tables): only the
@@ -157,11 +158,8 @@
 
   // ---------- 3. a project's files into one model ----------
   // opts.lineageTags: keep each object's lineageTag and sourceLineageTag
-  function fromFiles(files, opts) {
-    keepTags = !!(opts && opts.lineageTags);
-    try { return build(files); } finally { keepTags = false; }
-  }
-  function build(files) {
+  function fromFiles(files, opts) { return build(files, opts || {}); }
+  function build(files, opts) {
     const parts = { tables: [], relationships: [], expressions: [], functions: [], roles: [], perspectives: [], cultures: [], dataSources: [], queryGroups: [], annotations: [] };
     const refs = {};
     let database = null, model = null;
@@ -170,11 +168,11 @@
         if (n.type === 'database') database = n;
         else if (n.type === 'model') model = n;
         else if (n.type === 'ref') (refs[n.of] = refs[n.of] || []).push(n.name);
-        else if (n.type === 'annotation') parts.annotations.push(toJson(n));
+        else if (n.type === 'annotation') parts.annotations.push(toJson(n, opts));
         else {
           const key = { table: 'tables', relationship: 'relationships', expression: 'expressions', function: 'functions', role: 'roles', perspective: 'perspectives',
             cultureInfo: 'cultures', dataSource: 'dataSources', queryGroup: 'queryGroups' }[n.type];
-          if (key) parts[key].push(toJson(n));
+          if (key) parts[key].push(toJson(n, opts));
         }
       }));
     // the model's own order (model.tmdl lists its tables, roles, cultures... with "ref"), files not listed after
@@ -191,11 +189,11 @@
     parts.tables.forEach((t) => {
       if ((t.partitions || []).some((p) => p.source && p.source.type === 'calculated')) (t.columns || []).forEach((c) => { if (!c.type) c.type = 'calculatedTableColumn'; });
     });
-    const m = model ? toJson(model) : {};
+    const m = model ? toJson(model, opts) : {};
     if (parts.annotations.length) m.annotations = (m.annotations || []).concat(parts.annotations);
     if (parts.queryGroups.length) m.queryGroups = (m.queryGroups || []).concat(parts.queryGroups);
     ['tables', 'relationships', 'expressions', 'functions', 'roles', 'perspectives', 'cultures', 'dataSources'].forEach((k) => { if (parts[k].length || k === 'tables') m[k] = parts[k]; });
-    const db = database ? toJson(database) : {};
+    const db = database ? toJson(database, opts) : {};
     return Object.assign(db, { model: m });
   }
 

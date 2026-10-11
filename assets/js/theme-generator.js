@@ -457,10 +457,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Each choice keeps its own model and the fields picked for it, so switching between them never pairs one
     // model's fields with the other's location: own.local / own.service = { tables, msg, bad, folder, dir, reports, choices }
     const dataIn = $('pbipData'), own = { local: null, service: null, getBind: null };
-    // (0.2.9: the field picker reads its field-meaning rule from field-meaning.js, loaded first)
+    // (0.2.9: the field picker reads its field-meaning rule from field-meaning.js, and a TMDL folder through tmdl-model.js,
+    // the one TMDL reader (A1-8): both loaded first)
     const loadScript = (src) => new Promise((resolve, reject) => { const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc); });
     const loadBind = () => (window.DABind ? Promise.resolve(window.DABind)
-      : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('../assets/js/field-meaning.min.js?v=20261011k')).then(() => loadScript('../assets/js/pbip-bind.min.js?v=20261011k2')).then(() => window.DABind));
+      : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('../assets/js/field-meaning.min.js?v=20261011s'))
+        .then(() => (window.TmdlModel ? null : loadScript('../assets/js/tmdl-model.min.js?v=20261011s')))
+        .then(() => loadScript('../assets/js/pbip-bind.min.js?v=20261011s')).then(() => window.DABind));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
     // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)
@@ -526,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
       $('pbipModelFile').addEventListener('change', (e) => {
         const f = e.target.files && e.target.files[0]; if (!f) return;
         ownMsg(L('Reading the model…', 'جارٍ قراءة النموذج…'));
-        loadBind().then((DB) => DB.fromFile(f, '../assets/js/model-health-worker.min.js?v=20261005c')).then((res) => loaded('service', res, f.name)).catch((err) => failed('service', err));
+        loadBind().then((DB) => DB.fromFile(f, '../assets/js/model-health-worker.min.js?v=20261011r')).then((res) => loaded('service', res, f.name)).catch((err) => failed('service', err));
       });
     }
     const logoIn = $('pbipLogo');

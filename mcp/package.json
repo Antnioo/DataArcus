@@ -9,12 +9,13 @@
   },
   "scripts": {
     "start": "node server.mjs",
-    "test": "node test.mjs && node test-0.2.9c.mjs && node test-models/golden-baseline.mjs"
+    "test": "node test.mjs && node test-0.2.9c.mjs && node test-0.2.9d.mjs && node test-0.2.9e.mjs && node test-0.2.9f.mjs && node test-models/golden-baseline.mjs"
   },
   "engines": {
     "node": ">=20.10"
   },
   "dependencies": {
+    "@microsoft/powerbi-core-visual-schema": "0.1.1",
     "@microsoft/powerbi-report-authoring-cli": "0.4.0",
     "@modelcontextprotocol/sdk": "1.32.1",
     "ajv": "8.20.0",
