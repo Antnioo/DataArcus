@@ -8,7 +8,8 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
 import { withPlans } from './test-plan.mjs';
-import { Bind } from './lib/model.mjs';
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url), Bind = require('../assets/js/pbip-bind.js'), Tmdl = require('../assets/js/tmdl-model.js');
 import { areasOf } from './lib/scope.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -80,7 +81,8 @@ export async function v029d({ call, check, ROOT, OUT }) {
   const shape = Bind.fromTmsl(tm), areas = areasOf({ tmsl: tm, tables: shape });
   chk(() => shape[0].measures[0].displayFolder === FOLDER && areas.some((a) => a.area === 'Logistics') && !JSON.stringify(areas).includes(FOLDER) && areas.some((a) => /withheld/.test(a.area)),
     () => `A1-7. the reader's shape carries displayFolder; areasOf returns screened folder names: ${JSON.stringify({ m: shape[0].measures[0], areas })}`);
-  const tmdl = Bind.parseTmdl('table Sales\n\tmeasure Total = 1\n\t\tdisplayFolder: Logistics\n\t\tformatString: #,0\n\n\tcolumn Amount\n\t\tdataType: double\n\t\tdisplayFolder: Money\n');
+  // (A1-8 of part 2: the one TMDL reader, tmdl-model.js, then the picker's shape)
+  const tmdl = Bind.fromTmsl(Tmdl.fromFiles([{ path: 'definition/tables/Sales.tmdl', text: 'table Sales\n\tmeasure Total = 1\n\t\tdisplayFolder: Logistics\n\t\tformatString: #,0\n\n\tcolumn Amount\n\t\tdataType: double\n\t\tdisplayFolder: Money\n' }]));
   chk(() => tmdl[0].measures[0].displayFolder === 'Logistics' && tmdl[0].columns[0].displayFolder === 'Money', () => `A1-7. the TMDL reader carries displayFolder too: ${JSON.stringify(tmdl)}`);
 
   // ---------- A1-12 (untrusted text): folder and model names from disk are screened in every message ----------

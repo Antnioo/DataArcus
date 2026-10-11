@@ -1,12 +1,12 @@
 // Large models: a summary first, details on request (owner 2026-10-03), and the part of a model a request is about.
 // A model is "large" when its full read_model answer would pass LIMIT characters: about 10,000 tokens, where Claude
 // Code starts warning, and far below Claude Desktop's limit. Small models answer exactly as before.
-import { shownName, summary } from './model.mjs';
+import { modelOf, shownName, summary } from './model.mjs';
 
 export const LIMIT = 40000;
 const size = (o) => JSON.stringify(o, null, 2).length;
 const lc = (s) => String(s == null ? '' : s).toLowerCase();
-const raw = (m) => ((m.tmsl && (m.tmsl.model || m.tmsl)) || {});
+const raw = (m) => modelOf(m.tmsl);
 
 // read_model's full answer, as it has always been
 export const fullAnswer = (m) => ({ source: m.source, existingReports: m.taken || [], tables: summary(m) });

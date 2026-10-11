@@ -458,7 +458,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // model's fields with the other's location: own.local / own.service = { tables, msg, bad, folder, dir, reports, choices }
     const dataIn = $('pbipData'), own = { local: null, service: null, getBind: null };
     const loadBind = () => (window.DABind ? Promise.resolve(window.DABind) : new Promise((resolve, reject) => {
-      const sc = document.createElement('script'); sc.src = '../assets/js/pbip-bind.min.js?v=20261011i'; sc.onload = () => resolve(window.DABind); sc.onerror = reject; document.head.appendChild(sc);
+      // (A1-8: the picker reads a TMDL folder through tmdl-model.js, the one TMDL reader: loaded first)
+      const add = (src, next) => { const sc = document.createElement('script'); sc.src = src; sc.onload = next; sc.onerror = reject; document.head.appendChild(sc); };
+      const bind = () => add('../assets/js/pbip-bind.min.js?v=20261011r', () => resolve(window.DABind));
+      if (window.TmdlModel) bind(); else add('../assets/js/tmdl-model.min.js?v=20261011r', bind);
     }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');

@@ -9,7 +9,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { absorb } from './lib/slots.mjs';
-import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, screenWhy, shownName, Svg, applyColumnTypes, inside, loadModel, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
+import { Bind, Fix, Gulf, Health, Notice, Pbip, ROOT, screenWhy, shownName, Svg, applyColumnTypes, inside, loadModel, modelOf, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
 import { E, themeDesign, planLayout, pageOf, contrastReport, freeFile } from './lib/design.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
@@ -105,7 +105,7 @@ function reportFormatOf(o, kind, tables) {
 // measures (the scripts touch only the objects they name, under "ref table"); skipped names them, escaped
 const hasControl = Pbip.hasControl;   // (the writer's, one test for both: round 22b, X-05)
 function scriptTables(m) {
-  const raw0 = ((m.tmsl && (m.tmsl.model || m.tmsl)) || {}).tables || [], skipped = [];
+  const raw0 = modelOf(m.tmsl).tables || [], skipped = [];
   const raw = raw0.filter((t) => { if (hasControl(t.name)) { skipped.push(visible(t.name)); return false; } return true; }).map((t) => {
     const keep = (x) => { if (!hasControl(x.name)) return true; skipped.push(`${visible(t.name)}[${visible(x.name)}]`); return false; };
     return Object.assign({}, t, { columns: (t.columns || []).filter(keep), measures: (t.measures || []).filter(keep) }); });
@@ -664,7 +664,7 @@ server.registerTool('create_report', {
   const cardFormats = [];
   const cardFormatOf = (f) => {
     if (!f || f.m == null) return null;
-    const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t), o = t && (t.measures || []).find((x) => x.name === f.m);
+    const model = modelOf(m.tmsl), t = (model.tables || []).find((x) => x.name === f.t), o = t && (t.measures || []).find((x) => x.name === f.m);
     if (!o || o.formatStringDefinition || Bind.isPercent(f.m, o.formatString, o.expression)) return null;
     // the shared format rule first (formats fixed at the source, 6 Oct 2026): a count #,0, a number #,0.00
     const right = reportFormatOf(o, 'measure', model.tables || []);
@@ -676,7 +676,7 @@ server.registerTool('create_report', {
   // cards and the tooltip's card (the card rule's pctFormat and wholeFormat), and every field of a table in the rule's
   // format on its own projection (tableFormat). Fields the visuals count or sum themselves are left as they are.
   const rightOf = (f) => {
-    const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t);
+    const model = modelOf(m.tmsl), t = (model.tables || []).find((x) => x.name === f.t);
     const o = t && (f.m != null ? (t.measures || []).find((x) => x.name === f.m) : (t.columns || []).find((x) => x.name === f.c));
     return o ? reportFormatOf(o, f.m != null ? 'measure' : 'column', model.tables || []) : null;
   };
@@ -704,14 +704,14 @@ server.registerTool('create_report', {
     const one = (f) => { const code = FULL && cardFormatOf(f); if (!code) return f; if (!cardFormats.some((x) => x.field === keyOf(f))) cardFormats.push({ field: keyOf(f), format: code }); return Object.assign({}, f, { cardFormat: code }); };
     // (round 13, seen in Desktop on 6 Oct: a card said 33.8% and the table's column of the same measure 0.34: where the
     // report gives a measure's card a percent format the model does not have, its table column carries the same)
-    const pctCell = (f) => { if (!f || f.m == null || !f.pctFormat) return null; const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, t = (model.tables || []).find((x) => x.name === f.t), o = t && (t.measures || []).find((x) => x.name === f.m); return o && !o.formatStringDefinition && o.formatString !== f.pctFormat ? f.pctFormat : null; };
+    const pctCell = (f) => { if (!f || f.m == null || !f.pctFormat) return null; const model = modelOf(m.tmsl), t = (model.tables || []).find((x) => x.name === f.t), o = t && (t.measures || []).find((x) => x.name === f.m); return o && !o.formatStringDefinition && o.formatString !== f.pctFormat ? f.pctFormat : null; };
     const cell = (f) => { if (f && f.m != null && f.tableFormat) { if (!tableFormats.some((x) => x.field === keyOf(f))) tableFormats.push({ field: keyOf(f), format: f.tableFormat }); return f; }
       const code = f && f.m != null && (cardFormatOf(f) || pctCell(f)); if (!code) return f; if (!tableFormats.some((x) => x.field === keyOf(f))) tableFormats.push({ field: keyOf(f), format: code }); return Object.assign({}, f, { tableFormat: code }); };
     const tip = b.tip && b.tip.card ? Object.assign({}, b.tip, { card: (() => { const code = FULL && cardFormatOf(b.tip.card); return code ? Object.assign({}, b.tip.card, { cardFormat: code }) : b.tip.card; })() }) : b.tip;
     // round 18, S3 (the owner's yes, 6 Oct ~21:38 Dubai: "add the short day name column"): a chart category "Day Name"
     // whose table has "Day Short" (the Gulf calendar's, by name: metadata only) carries it, sorted as the calendar sorts
     // it; the writer uses it on a column chart where the full names would slant
-    const model0 = (m.tmsl && (m.tmsl.model || m.tmsl)) || {};
+    const model0 = modelOf(m.tmsl);
     const short = (f) => { if (!f || f.c !== 'Day Name' || f.short) return f; const t = (model0.tables || []).find((x) => x.name === f.t), cs = (t && t.columns) || [], sc = cs.find((c) => c.name === 'Day Short');
       if (!sc) return f; const by = sc.sortByColumn ? null : cs.find((c) => c.name === 'Day of Week');
       return Object.assign({}, f, { short: Object.assign({ t: f.t, c: 'Day Short', type: 'string' }, sc.sortByColumn ? { ordered: true } : by ? { sortBy: { t: f.t, c: by.name } } : {}) }); };
@@ -964,7 +964,7 @@ server.registerTool('create_report', {
   // numbers the report shows whose format in the model has no thousand separator (or that have no format): Power BI
   // takes the format of a table cell, a tooltip and an unscaled card from the model, so the report can't add it
   const noSep = (() => {
-    const model = (m.tmsl && (m.tmsl.model || m.tmsl)) || {}, seen = new Set(), out = [];
+    const model = modelOf(m.tmsl), seen = new Set(), out = [];
     // (measures wherever they are shown; number columns only in the table, and never an identifier or a date part)
     fieldsOf(bind).filter((f) => f.m != null).concat((bind.table || []).filter((f) => f && f.c != null && f.num && !Fix.notAQuantity(f.c))).forEach((f) => {
       const k = keyOf(f); if (seen.has(k)) return; seen.add(k);
@@ -1096,7 +1096,7 @@ const CARD_RULE = 'a percentage (a % in its format or name; a rate or ratio; a m
 // model: these are told to the user, with the fix, to make in Power BI Desktop (or through Microsoft's MCP, with the
 // user's go). A month or day name without a sort column shows them A to Z; a ratio without a format string shows 0.34, not 34%.
 function modelNotes(tmsl, bind) {
-  const model = (tmsl && (tmsl.model || tmsl)) || {}, notes = [], seen = new Set();
+  const model = modelOf(tmsl), notes = [], seen = new Set();
   const find = (f, kind) => { const t = (model.tables || []).find((x) => x.name === f.t); return t && (t[kind] || []).find((x) => x.name === (f.c || f.m)); };
   const fields = bind ? [bind.date, bind.measure, ...(bind.kpis || []), ...Object.values(bind.cats || {}), ...Object.values(bind.y || {}), ...(bind.table || []), ...(bind.slicers || [])] : [];
   fields.filter(Boolean).forEach((f) => {
