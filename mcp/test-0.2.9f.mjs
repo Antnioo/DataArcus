@@ -97,7 +97,7 @@ export async function v029f({ call, check, ROOT }) {
   chk(() => !r8.err && /NOT READ [^\n]*2 [^\n]*links?/.test(r8.t), () => `A5-8. a linked visual.json and a linked visual folder are counted as links not read: ${short(r8)}`);
   const RR = await import(pathToFileURL(path.join(HERE, 'lib', 'read-report.mjs')).href);
   const sk = { big: [], deep: 0 }; RR.walk(path.join(ROOT, rep8), [], 1000, 0, sk);
-  chk(() => (sk.links || 0) >= 1, () => `A4-4. walk() counts the links it skips (sk.links), for check_report's validator: ${JSON.stringify(sk)}`);
+  chk(() => [].concat(sk.links || []).length >= 1, () => `A4-4. walk() counts the links it skips (sk.links), for check_report's validator: ${JSON.stringify(sk)}`);
 
   // ---------- A5-9: a file cap, and only the asked pages' visuals read ----------
   let reads = 0; const mem = RR.memorySource([].concat([{ path: 'definition/pages/pages.json', data: JSON.stringify({ pageOrder: ['a', 'b'] }) }],

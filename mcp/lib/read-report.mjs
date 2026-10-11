@@ -50,7 +50,8 @@ export function walk(d, out, cap, depth, sk) {
   for (const e of fs.readdirSync(d, { withFileTypes: true })) {
     if (out.length >= cap) return out;
     const f = path.join(d, e.name);
-    if (e.isSymbolicLink()) continue;
+    // (A4-4, audit 4: a link is never followed, and counted, so check_report can say it and hold back its validator)
+    if (e.isSymbolicLink()) { if (sk) (sk.links = sk.links || []).push(f); continue; }
     if (e.isDirectory()) walk(f, out, cap, level + 1, sk); else if (e.isFile()) out.push(f);
   }
   return out;
@@ -112,7 +113,8 @@ export function locate(p, tool) {
 // dirs(rel) the folder names inside, files(rel) the file names inside, json(rel) the parsed file (TooBig past the limit)
 export function diskSource(loc, sk) {
   const at = (rel) => path.join(loc.reportDir, ...String(rel).split('/').filter(Boolean));
-  const list = (rel, want) => { const d = at(rel); if (!isDir(d)) return []; return fs.readdirSync(d, { withFileTypes: true }).filter((e) => !e.isSymbolicLink() && (want === 'dir' ? e.isDirectory() : e.isFile())).map((e) => e.name); };
+  // (A5-8, audit 5: a linked file or folder is left out and counted, never skipped silently)
+  const list = (rel, want) => { const d = at(rel); if (!isDir(d)) return []; return fs.readdirSync(d, { withFileTypes: true }).filter((e) => { if (e.isSymbolicLink()) { const r = (rel ? rel + '/' : '') + e.name; if (sk && !(sk.links = sk.links || []).includes(r)) sk.links.push(r); return false; } return want === 'dir' ? e.isDirectory() : e.isFile(); }).map((e) => e.name); };
   return { dirs: (rel) => list(rel, 'dir'), files: (rel) => list(rel, 'file'), has: (rel) => { try { fs.lstatSync(at(rel)); return true; } catch (e) { return false; } }, json: (rel) => readJson(at(rel)), sk };
 }
 // files: the report writer's [{ path: '<Name>.Report/definition/...', data }]; only the .Report folder's files are read
