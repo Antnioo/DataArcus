@@ -9,10 +9,9 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
 import { createRequire } from 'node:module';
-import { absorb } from './lib/slots.mjs';
 import { Notice, ROOT, nameOut, screenWhy, shownName, applyColumnTypes, inside, loadModel, modelOf, nothingAt, prepareRoot, rootProblem, summary, visible, writeNew } from './lib/model.mjs';
 import { themeDesign, planLayout, pageOf, contrastReport, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, PRESETS, FONTS, AR_FONTS, CHART_OPTIONS, texts,
-  clampHex, lum, buildTheme, themeScaleOf, scaleTheme, projectPages, designRtl, themeName, fileBase, imageSize, isSmall } from './lib/design.mjs';
+  clampHex, lum, buildTheme, themeScaleOf, scaleTheme, projectPages, designRtl, themeName, fileBase, imageSize, isSmall, absorb } from './lib/design.mjs';
 import { freeFile } from './lib/files.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
@@ -254,25 +253,25 @@ function resolvePageFilters(tables, list) {
     const type = String(col.dataType || 'unknown').toLowerCase(), known = KINDS[type];
     if (/^date/.test(type)) { problems.push(`${where}: ${key} is a date column, and a page filter on a date is not supported yet (filter a year, month or flag column instead)`); return null; }
     if (!known && type !== 'unknown') { problems.push(`${where}: ${key} has the type ${type}, and a page filter takes a true/false, text, whole number or decimal number column`); return null; }
-    const values = [], literals = [];
+    const values = [];   // (0.2.9, audit 6's A6-14: typed; the report writer writes the literals, Pbip.pageFilterOf)
     for (const v of f.values) {
       // the kind of this value: the column's, or (no type in the files) the value's own
       const kind = known || (typeof v === 'boolean' ? 'boolean' : typeof v === 'number' ? (Number.isInteger(v) ? 'whole' : 'decimal') : 'text');
       if (kind === 'boolean') {
         const b = typeof v === 'boolean' ? v : /^true$/i.test(String(v).trim()) ? true : /^false$/i.test(String(v).trim()) ? false : null;
         if (b == null) { problems.push(`${where}: ${key} is a true/false column: the value ${JSON.stringify(v)} must be true or false`); return null; }
-        values.push(b); literals.push(String(b));
+        values.push(b);
       } else if (kind === 'text') {
         if (typeof v !== 'string') { problems.push(`${where}: ${key} is a text column: the value ${JSON.stringify(v)} must be a text`); return null; }
-        values.push(v); literals.push("'" + v.replace(/'/g, "''") + "'");
+        values.push(v);
       } else {
         const n = typeof v === 'number' ? v : typeof v === 'string' && /^-?\d+(\.\d+)?$/.test(v.trim()) ? Number(v) : NaN;
         if (!Number.isFinite(n) || /e/i.test(String(n))) { problems.push(`${where}: ${key} is a number column: the value ${JSON.stringify(v)} must be a plain number`); return null; }
         if (kind === 'whole' && !Number.isSafeInteger(n)) { problems.push(`${where}: ${key} is a whole number column: the value ${JSON.stringify(v)} must be a whole number`); return null; }
-        values.push(n); literals.push(String(n) + (kind === 'whole' ? 'L' : 'D'));
+        values.push(n);
       }
     }
-    return Object.assign({ t: t.name, c: col.name, key, type, values, literals }, known ? {} : { typedBy: 'the values given: the model\'s files give this column no type' });
+    return Object.assign({ t: t.name, c: col.name, key, type, values }, known ? {} : { typedBy: 'the values given: the model\'s files give this column no type' });
   });
   if (problems.length) throw new Error(`Nothing was written. ${problems.length} of the page filters can't be used: ${problems.join('; ')}. A page filter takes a column of the model, written exactly as read_model lists it (Table[Column]), and values of the column's type.`);
   return out;
@@ -358,21 +357,9 @@ function resolveSvgColumns(tables, list, opt) {
 
 // What each visual of the written pages shows, by name: the answer's boundFields
 const VISUAL_NAMES = { kpi: 'KPI card', card: 'Card', line: 'Line chart', bar: 'Bar chart', column: 'Column chart', donut: 'Donut chart', table: 'Table', gauge: 'Gauge', funnel: 'Funnel', treemap: 'Treemap', map: 'Map', slicer: 'Slicer' };
-function boundOf(pages, B, tableKept) {
-  const AGGN = { 0: 'Sum', 2: 'DistinctCount', 5: 'Count' };
-  const key = (f) => (f ? (f.agg != null ? `${AGGN[f.agg] || 'Agg'}(${f.t}[${f.c}])` : `${f.t}[${f.c != null ? f.c : f.m}]`) : null), list = (...fs2) => fs2.map(key).filter(Boolean);
-  return (pages || []).map((p, pi) => { let k = 0; const visuals = [];
-    (p.slots || []).slice().sort((s1, s2) => (s1.y - s2.y) || (s1.x - s2.x)).forEach((s) => {
-      const cat = (B.cats || {})[s.kind], y = s.kind === 'funnel' && B.y && 'funnel' in B.y ? B.y.funnel : (B.y || {})[s.kind] || B.measure;
-      if (s.kind === 'kpi') visuals.push({ visual: VISUAL_NAMES.kpi, fields: list((B.kpis || [])[k++]) });
-      else if (s.kind === 'card') visuals.push({ visual: VISUAL_NAMES.card, fields: list(B.measure) });
-      else if (s.kind === 'line') visuals.push({ visual: VISUAL_NAMES.line, fields: list(B.date, B.measure) });
-      else if (['bar', 'column', 'donut', 'funnel', 'treemap', 'map'].includes(s.kind)) visuals.push({ visual: VISUAL_NAMES[s.kind], fields: list(cat, y) });
-      else if (s.kind === 'gauge') visuals.push({ visual: VISUAL_NAMES.gauge, fields: list(y) });
-      else if (s.kind === 'table') visuals.push({ visual: VISUAL_NAMES.table, fields: list(...((tableKept && tableKept(pi, s)) || B.table || [])) });
-      else if (s.kind === 'slicer') (B.slicers || []).slice(0, 3).forEach((f) => visuals.push({ visual: VISUAL_NAMES.slicer, fields: list(f) }));
-    });
-    return { page: p.name, visuals }; });
+// (0.2.9, audit 6's A6-12: what the report writer says it wrote, Pbip.build's bound, not worked out again here)
+function boundOf(bound) {
+  return (bound || []).map((p) => ({ page: p.page, visuals: p.visuals.map((v) => ({ visual: VISUAL_NAMES[v.kind] || v.kind, fields: v.fields })) }));
 }
 // The keys of a design the tools know. Another key (a typing slip, or an input that doesn't exist, like "fields"
 // inside a design) is named in the answer's "ignored", never dropped without a word.
@@ -723,7 +710,7 @@ server.registerTool('create_report', {
     ts.filter((t) => !t.text && !a.text).forEach((t) => {
       textLeftOut.push(t.title || 'Text');
       if (own) return;
-      out = absorb(out, t);   // (round 23 part 6, the re-review's 7: one rule for the room, lib/slots.mjs)
+      out = absorb(out, t);   // (round 23 part 6, the re-review's 7: one rule for the room, the design engine's since 0.2.9 A2-3)
     });
     return out;
   };
@@ -975,7 +962,6 @@ server.registerTool('create_report', {
   if (leftOutList.length) reportNotes.push(`${leftOutList.length} visual${leftOutList.length === 1 ? ' was' : 's were'} left out, because a visual is never written without its field: ${leftOutList.map((x) => `${x.visual} on "${x.page}" (${x.why})`).join('; ')}.`);
   // tables that hold fewer fields than given, for lack of room (round 11): named, and boundFields lists what each shows
   const TC = r.tableColumns || [], fkey = (f) => `${f.t}[${f.c != null ? f.c : f.m}]`;
-  const tableKept = (pi, s) => { const c = TC.find((x) => x.pageIndex === pi && x.x === s.x && x.y === s.y); return c ? c.kept : null; };
   const tableColumns = TC.length ? { tableColumns: TC.map((c) => ({ page: c.page, shown: c.kept.length, leftOut: c.leftOut.map(fkey) })) } : {};
   if (TC.length) reportNotes.push(`Fields were left out of the table on ${TC.map((c) => `"${c.page}" (${c.leftOut.map(fkey).join(', ')})`).join('; ')}: at this page size the table has room for ${[...new Set(TC.map((c) => c.kept.length))].join(' or ')} columns, and a table wider than its box hides columns behind a scrollbar. For the fields left out: a wider table slot, a larger page, shorter display names, or fewer fields in fields.table.`);
   // page tabs in two rows (round 16, the owner's yes on design finding #13)
@@ -1003,7 +989,7 @@ server.registerTool('create_report', {
   const formats = fmt ? { formats: Object.assign({ sayFirst: `Tell the user first: ${fmt.fields.length} of the report's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). The report already shows them right: the cards, the tooltip's card and the tables carry the right format of their own. Applying the script sets them in the model too, so every other visual, Excel and other reports show them right.` }, fmt) } : {};
   Plans.consume(a.planId, 'create_report');   // (audit 6, A6-2: a plan writes once)
   return text(Object.assign(formats, { written: r.files.length, open: path.join(m.projectDir, r.base + '.pbip'), report: r.base + '.Report', model: path.basename(m.folder) }, extra, { panels },
-    { boundFields: boundOf(boundPages, bind, tableKept) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, chartColors, chartAxes, kpiTitles, chartTitles, pageButtons, tableColumns, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
+    { boundFields: boundOf(r.bound) }, PF ? { pageFilters: PF.map((f) => Object.assign({ field: f.key, values: f.values, type: f.type }, f.typedBy ? { typedBy: f.typedBy } : {}, f.note ? { note: f.note } : {})) } : {}, svgMeasures, kpiValues, chartColors, chartAxes, kpiTitles, chartTitles, pageButtons, tableColumns, leftOutList.length ? { leftOutVisuals: leftOutList } : {}, unknown ? { ignored: unknown } : {}, hiddenOf(m),
     sc.scope ? { scope: sc.scope } : {}, kpiCards ? { kpiCards } : {}, designRepaired ? { repaired: designRepaired } : {}, names, arabic, notes.length ? { modelNotes: notes } : {}, numberFormats, reportNotes.length ? { reportNotes } : {}));
 }));
 
@@ -1153,7 +1139,13 @@ server.registerTool('plan_layout', {
     if (fmt) formats = { formats: Object.assign({ sayFirst: `Tell the user first, before the layout: ${fmt.fields.length} of the plan's fields ${fmt.fields.length === 1 ? 'has' : 'have'} no right format in the model (listed with the format each should have). create_report shows them right in the report's cards, tooltip and tables anyway; the script sets them in the model too.` }, fmt) };
   }
   // (A2-5: the plan's table fields set the table's share of a narrow row, as create_report's)
-  const r = planLayout(Object.assign({}, a, a.planFields && a.planFields.table ? { tableFields: a.planFields.table.length } : {})), { page, fitted } = pageOf(r.design.layout);
+  // (0.2.9, audit 2's A2-3: the plan's slots are those the report gets: the writer's measures, Pbip.fitOptions, on the
+  // fields the plan names, else the picker's; the design engine's fitSlots, in planLayout)
+  const planFit = (design, slots) => { if (!m0) return {}; const sc = scopeOf(m0, { focus: a.focus, tables: a.tables }); if (sc.needsFocus) return {};
+    const lang = a.lang === 'ar' ? 'ar' : 'en', pf0 = a.planFields || {}, sug = Bind.suggest(sc.tables, 1, relsOf(m0, lang)) || {};
+    return Pbip.fitOptions({ lang, rtl: designRtl(design.layout, lang), font: design.font, theme: buildTheme(design, lang), model: { byPath: 'Model.SemanticModel' },
+      bind: { date: pf0.timeAxis || sug.date || null, slicers: pf0.slicers || sug.slicers || [] }, pages: [{ page: pageOf(design.layout).page, slots, grow: true }] })[0]; };
+  const r = planLayout(Object.assign({}, a, a.planFields && a.planFields.table ? { tableFields: a.planFields.table.length } : {}, { fit: planFit })), { page, fitted } = pageOf(r.design.layout);
   const unknown = a.design ? unknownKeys(a.design) : null;
   // the page size (0.2.9, O-8: an Arabic plan was made 1280 x 720 though the user asked for no size): who chose it
   const chosenBy = a.page != null ? 'asked' : page.w === 1920 && page.h === 1080 ? 'default' : 'design';

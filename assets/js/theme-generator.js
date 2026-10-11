@@ -452,10 +452,13 @@ document.addEventListener('DOMContentLoaded', () => {
   let pbipSync = null;   // set below on pages with the project card: keeps the field picker in step with the layout
   if (pbipBtn) {
     let logo = null;
-    // (audit 4's A4-5: the writer measures text with text-measure.js, loaded first)
-    const loadOne = (src) => new Promise((resolve, reject) => { const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc); });
-    const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip)
-      : (window.DataArcusTextMeasure ? Promise.resolve() : loadOne('../assets/js/text-measure.min.js?v=20261011a4')).then(() => loadOne('../assets/js/pbip-export.min.js?v=20261011a4')).then(() => window.DAPbip));
+    // (0.2.9, A3-12: the writer is five files, its modules first, in this order; each written out with its own ?v= stamp;
+    // audit 4's A4-5: text-measure.js first, the one text measurement the sizes use)
+    const BUILDER = ['../assets/js/text-measure.min.js?v=20261011a4', '../assets/js/pbip-query.min.js?v=20261011w3', '../assets/js/pbip-sizing.min.js?v=20261011v', '../assets/js/pbip-notes.min.js?v=20261011w3',
+      '../assets/js/pbip-page.min.js?v=20261011w3', '../assets/js/pbip-export.min.js?v=20261011w3'];
+    const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : BUILDER.reduce((p, src) => p.then(() => new Promise((resolve, reject) => {
+      const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc);
+    })), Promise.resolve()).then(() => window.DAPbip));
     // ---- your own model: a local project (the report points at its .SemanticModel folder) or a published one ----
     // Each choice keeps its own model and the fields picked for it, so switching between them never pairs one
     // model's fields with the other's location: own.local / own.service = { tables, msg, bad, folder, dir, reports, choices }
@@ -572,18 +575,17 @@ document.addEventListener('DOMContentLoaded', () => {
       // B2: a KPI card the model has no measure for is not written: the pages get at most the model's KPI count (the
       // engine's maxKpis, 0.2.9 A2-4; the cards left share the row, and the background's panels follow them) instead of a cardVisual with no field ("Select or add
       // data" in Desktop); B1: with no time axis the writer gives the line chart's room to the chart beside it
-      // (dropLines), so the background is drawn from those same slots, one panel under the widened chart
+      // (the design engine's fitSlots since 0.2.9 A2-3), so the background is drawn from those same slots, one panel under the widened chart
       const nK = model && bind ? (bind.kpis || []).filter(Boolean).length : null;
-      const noLine = !!(model && bind && !bind.date);
       // (R24-1, the review of round 24: the writer gives card i the binding's KPI i, so a KPI emptied in the middle of the
       // picker left an empty card and dropped the last one: the picked KPIs fill the cards in their order)
       const bindL = bind && nK < (bind.kpis || []).length ? Object.assign({}, bind, { kpis: bind.kpis.filter(Boolean) }) : bind;
       const specs = E.projectPages(c, isAr() ? 'ar' : 'en', { second: !!($('pbipPages') && $('pbipPages').checked), panel: !!($('pbipPanel') && $('pbipPanel').checked), logoRatio: logo ? logo.ratio : undefined, maxKpis: nK != null ? nK : undefined });
-      Promise.all([loadBuilder(), model ? loadBind() : null]).then(([P, DB]) => Promise.all(specs.map((sp) => pngBlob(sp.layout, noLine ? (sl) => P.dropLines(sl).slots : null).then((b) => b.arrayBuffer()))).then((bufs) => [P, DB, ...bufs])).then(([P, DB, ...bufs]) => {
+      Promise.all([loadBuilder(), model ? loadBind() : null]).then(([P, DB]) => {
         if (model && model.ws) model = { byConnection: DB.connection(model.ws, model.mn) };
         // kpiInset: where the KPI titles start beside the side accent bar drawn in this page's background
-        const pages = specs.map((sp, i) => ({ name: sp.name, page: sp.page, slots: sp.slots, png: new Uint8Array(bufs[i]), panel: sp.panel, kpiInset: E.kpiInset(sp.layout) }));
-        const r = P.build({
+        const pages = specs.map((sp) => ({ name: sp.name, page: sp.page, slots: sp.slots, png: null, panel: sp.panel, kpiInset: E.kpiInset(sp.layout) }));
+        const input = {
           name: state.name || 'Power BI Report', title: state.name || L('Sales overview', 'نظرة عامة على المبيعات'), pageName: nm(LAYOUTS[c.preset].name),
           lang: isAr() ? 'ar' : 'en', rtl: rtl(), font: state.font, ui: state.ui, pages, theme, logo, sample, model, bind: bindL,
           // round 15 (the owner's go on round 13's recommendation 2b): a right-to-left download has its charts mirrored, as the MCP's
@@ -594,7 +596,14 @@ document.addEventListener('DOMContentLoaded', () => {
               '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop وسجّل الدخول. يتصل التقرير مباشرة بنموذجك الدلالي المنشور.\n3. راجع كل عنصر، ثم انشر التقرير في نفس مساحة العمل.\n\n## راجعه في Power BI (دقيقتان)\n1. في كل صفحة، كل عنصر في مكانه على لوحته في الخلفية ويعرض بيانات.\n2. إذا بدت الألوان غير صحيحة: **View > Themes > Browse for themes** واختر ملف السمة في **{name}.Report/StaticResources/RegisteredResources**.\n3. مرّر الماوس على أي مخطط: تظهر صفحة التلميح.\n4. اضغط Ctrl مع النقر على أزرار الصفحات و **Reset filters** (وزر **Filters** إذا اخترت اللوحة المنزلقة).\n5. **View > Mobile layout**: نسخة الهاتف جاهزة.\n\nهل يبدو شيء غير صحيح؟ أرسل لقطة شاشة إلى hello@dataarcus.com.\n') : L('# {name}\n\nMade with the DataArcus Power BI Theme & Layout Generator: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## Open it\n1. Unzip this folder.\n2. Open **{name}.pbip** in Power BI Desktop.\n3. If you chose sample data, click **Refresh** once so it loads.\n\n## Use your own data\nGet data, then drag your fields into each visual. The theme, background, positions, tooltip page and filter pane styling are already set.\n\nOlder Power BI Desktop versions: turn on **File > Options > Preview features > Power BI Project (.pbip) save option** and **Store reports using enhanced metadata format (PBIR)**.\n\n## Check it in Power BI (2 minutes)\n1. On every page, each visual sits on its panel in the background and shows data.\n2. If the colours look off: **View > Themes > Browse for themes** and pick the theme file in **{name}.Report/StaticResources/RegisteredResources**.\n3. Hover any chart: the tooltip page shows.\n4. Ctrl+click the page buttons and **Reset filters** (and the **Filters** button if you chose the slide-in panel).\n5. **View > Mobile layout**: the phone version is already laid out.\n\nSomething looks wrong? Send a screenshot to hello@dataarcus.com.\n',
               '# {name}\n\nصُنع بمولّد السمات والتخطيطات لـ Power BI من DataArcus: https://dataarcus.com/tools/power-bi-theme-generator.html\n\n## افتحه\n1. فك ضغط هذا المجلد.\n2. افتح **{name}.pbip** في Power BI Desktop.\n3. إذا اخترت البيانات التجريبية، اضغط **Refresh** مرة واحدة لتظهر.\n\n## استخدم بياناتك\nاضغط Get data ثم اسحب حقولك إلى كل عنصر. السمة والخلفية والمواضع وصفحة التلميح وتنسيق لوحة الفلاتر جاهزة.\n\nفي إصدارات Power BI Desktop الأقدم: فعّل **File > Options > Preview features > Power BI Project (.pbip) save option** و **Store reports using enhanced metadata format (PBIR)**.\n\n## راجعه في Power BI (دقيقتان)\n1. في كل صفحة، كل عنصر في مكانه على لوحته في الخلفية ويعرض بيانات.\n2. إذا بدت الألوان غير صحيحة: **View > Themes > Browse for themes** واختر ملف السمة في **{name}.Report/StaticResources/RegisteredResources**.\n3. مرّر الماوس على أي مخطط: تظهر صفحة التلميح.\n4. اضغط Ctrl مع النقر على أزرار الصفحات و **Reset filters** (وزر **Filters** إذا اخترت اللوحة المنزلقة).\n5. **View > Mobile layout**: نسخة الهاتف جاهزة.\n\nهل يبدو شيء غير صحيح؟ أرسل لقطة شاشة إلى hello@dataarcus.com.\n')
           })
-        });
+        };
+        // 0.2.9, audit 2's A2-3: each background is drawn from the slots the report gets (the writer's measures,
+        // P.fitOptions, and the design engine's fitSlots, on the picture's 720 grid): a line chart's room given away with
+        // no time axis (round 24's B1), and the filter rail as high as its slicers and Reset, as the report draws them
+        const fo = P.fitOptions(input);
+        return Promise.all(specs.map((sp, i) => pngBlob(sp.layout, (sl) => E.fitSlots(sl, E.fitScale(fo[i], 1 / page(sp.layout).s)).slots).then((b) => b.arrayBuffer()))).then((bufs) => {
+        bufs.forEach((b, i) => { pages[i].png = new Uint8Array(b); });
+        const r = P.build(input);
         saveBlob(new Blob([r.zip()], { type: 'application/zip' }), `${fileBase()}-power-bi-${m === 'local' || m === 'service' ? 'report' : 'project'}.zip`);
         if (m === 'local') {
           const e = own.local, at = e.dir ? ` (${e.dir})` : '';
@@ -602,6 +611,7 @@ document.addEventListener('DOMContentLoaded', () => {
           toast(msg); ownMsg(msg);
         } else toast(L('Project downloaded. Unzip it and open the .pbip file', 'تم تنزيل المشروع. فك الضغط وافتح ملف .pbip'));
         track('theme_pbip', { layout: c.preset, direction: rtl() ? 'rtl' : 'ltr', kpis: c.kpis, sample, data: m, bound: !!bind, logo: !!logo, page: c.page, pages: pages.length, panel: pages.some((pp) => pp.panel) });
+        });
       }).catch(() => toast(L('Could not build the project in this browser', 'تعذّر إنشاء المشروع في هذا المتصفح'))).then(() => { pbipBtn.disabled = false; });
     });
   }

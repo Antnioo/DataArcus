@@ -14,6 +14,7 @@ import { round23 } from './test-round23.mjs';
 import { v029 } from './test-0.2.9.mjs';
 import { v029b } from './test-0.2.9b.mjs';
 import { v029i } from './test-0.2.9i.mjs';
+import { v029w } from './test-0.2.9w.mjs';
 import { v029k } from './test-0.2.9k.mjs';
 import { v029p } from './test-0.2.9p.mjs';
 import { v029checks } from './test-0.2.9-checks.mjs';
@@ -4459,6 +4460,8 @@ await v029({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getIns
 await v029b({ call, check, ROOT, fs });
 // ---------- 0.2.9 integration, the gate block's root fixes (the cross-review): test-0.2.9i.mjs, which also runs alone ----------
 await v029i({ call, raw: rawCall, check, ROOT, fs });
+// ---------- 0.2.9, the report writer's block (audit 3's A3-7 to A3-12, writer side): test-0.2.9w.mjs, which also runs alone ----------
+v029w({ check });
 // ---------- 0.2.9 integration, the field picker's bias fixes (A1-11, A3-1): test-0.2.9k.mjs, which also runs alone ----------
 await v029k({ call, check, ROOT, fs });
 // ---------- 0.2.9 audit fixes, the field picker's block (A3-2 ... A3-9, A6-15): test-0.2.9p.mjs, which also runs alone ----------
