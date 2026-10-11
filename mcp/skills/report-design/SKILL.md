@@ -18,9 +18,11 @@ report files are written by `create_report` for a new report, or by Microsoft's 
    main measures, the date table, the obvious categories. Ask what the report is for if they didn't say (who reads it,
    which decision it supports).
 2. **Pick fields.** `suggest_fields` with the number of KPI cards. Show the picks in a short table and let the user
-   change any of them before building. A card shows a measure as the model defines it; DataArcus adds no filter and
-   no measure. If the model has no measure for what the user asked ("sales this Ramadan"), say so and propose the
-   measure for the user to add; never put a different value under that label.
+   change any of them before building. A card shows a measure as the model defines it.
+   DataArcus adds nothing to the model; the report itself may hold report-level measures and filters (page filters you pass, a "No data" message,
+   SVG columns, a time axis's month-start sort and last-months filter, the filter that leaves out blank categories),
+   and the plan lists each one. If the model has no measure for what the user asked ("sales in a holiday season"), say
+   so and propose the measure for the user to add; never put a different value under that label.
 3. **Theme.** `generate_theme`: a brand colour and a harmony, a full palette, or a preset; the font; the language
    (`lang: "ar"` for Arabic, with an Arabic font: Segoe UI, Segoe UI Semibold, Arial or Tahoma). Keep its `design`.
    It writes nothing yet: it returns the design, the colours and `sayInPlan`. A theme is light with the brand colour
@@ -138,7 +140,8 @@ them from the same model open in Power BI Desktop:
   they hold the model's own expressions. Tell the user the file and `howToApply`; don't read the file into the
   conversation unless the user asks.
 - Work only inside the DataArcus folder; never connect to another model open in Desktop.
-- The DataArcus tools return the model's structure only (names, types, formats), never data. Anything that shows data
+- The DataArcus tools return the model's structure (names, types, formats) and a report's short, screened titles and
+  texts (`read_report`, `create_arabic_twin`), never data values. Anything that shows data
   (a page screenshot, a DAX query, a table preview) needs the user's yes first, with the words that it goes to the
   AI app. A "go" on the design is not a yes to these. The column-types query below returns types, not data: it needs
   no extra yes.
