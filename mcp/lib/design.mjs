@@ -80,7 +80,7 @@ export function themeDesign(a) {
   } else if (a.harmony != null) fix('harmony', a.harmony, null, 'not used: no brand colour given');
   if (a.name != null) d.name = String(a.name);
   if (a.font != null) {
-    if (E.FONTS.includes(a.font)) d.font = a.font;
+    if (E.FONTS.includes(a.font)) { d.font = a.font; if (!E.MEASURED_FONTS.includes(a.font)) notes.push(`${a.font}: the text room of the cards, header, filters and tables was measured in Power BI Desktop in ${E.MEASURED_FONTS.join(' and ')} only; ${a.font} is not measured yet, so a long title or value may be cut. Say so in the plan, or offer ${E.MEASURED_FONTS.join(' or ')}.`); }
     else fix('font', a.font, d.font, `not a Power BI font the generator offers; use one of ${E.FONTS.join(', ')}`);
   }
   if (a.chart) {
