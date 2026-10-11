@@ -43,6 +43,9 @@ const family = (u) => { const m = /\/([A-Za-z]+)\/\d+\.\d+\.\d+\/schema/.exec(St
 // (R1, the cross-review: check_report had a reader of its own beside the reading block's, and read every file twice
 // with the lint on. Its measured rules now take their input from the reading block's inventory(): the same files,
 // links never followed, the same limits, one reading for the rules and the lint.)
+// (A4-2, audit 4: a value that is not the object or list a rule expects, as null or a string, is read as none, never a crash)
+const obj = (v) => (v && typeof v === 'object' && !Array.isArray(v) ? v : null);
+const arr = (v) => (Array.isArray(v) ? v : []);
 function rulesInput(inv) {
   const TC = (inv.themeJson && inv.themeJson.textClasses) || {}, VS = (inv.themeJson && inv.themeJson.visualStyles) || {};
   const R = { pages: [], visuals: [], textSize: 12, labelSize: +((TC.label || {}).fontSize) || 10, font: (TC.label || {}).fontFace || 'Segoe UI',
