@@ -329,7 +329,9 @@
 
     // visuals, in reading order: z and tab order follow it, so keyboard users move through the page the way it reads
     const visuals = [], mob = [], slicerNames = [];
-    let barNth = 0;   // (polish round P1) the page's bar and column charts in reading order: every second one in colour 2
+    // (P3, N27) a bar or column chart's colour index, keyed to its category field (else its measure) across the report
+    const colourOf = (query) => { const st = query.queryState, p = ((st.Category || st.Y || {}).projections || [])[0], k = JSON.stringify(p ? p.field : null), K = chartColors.keys;
+      if (!(k in K)) K[k] = Object.keys(K).length % 2; return K[k]; };
     // a visual inside a group stores its position relative to the group's top-left corner, not the page
     const origin = {};
     const container = (spec) => {
@@ -686,8 +688,10 @@
         visual = { visualType: type, visualContainerObjects: frame(ttl, ttl, extra, true), drillFilterOtherVisuals: true };
         if (query) visual.query = query;
         // bars that fade by value (gradientFill above): the report's own bar and column charts, never the tooltip pages';
-        // the second of a page fades from a chosen second colour (polish round P1, B-71: colour 2 was never used; P1+: secondColour)
-        if (GRAD && query && (s.kind === 'bar' || s.kind === 'column')) { const g2 = barNth++ % 2 && GRAD2; visual.objects = { dataPoint: gradientFill(query.queryState.Y.projections[0].field, g2 || GRAD) }; chartColors.charts++; if (g2) chartColors.second = (chartColors.second || 0) + 1; }
+        // the second of a page fades from a chosen second colour (polish round P1, B-71: colour 2 was never used; P1+: secondColour);
+        // P3 (RESCORE-6 N27: the same chart swapped colours between pages 1 and 2): a chart's colour is keyed to its category
+        // field, report-wide (chartColors.keys): the first field met takes colour 1, the next colour 2, and so on in turn
+        if (GRAD && query && (s.kind === 'bar' || s.kind === 'column')) { const g2 = colourOf(query) && GRAD2; visual.objects = { dataPoint: gradientFill(query.queryState.Y.projections[0].field, g2 || GRAD) }; chartColors.charts++; if (g2) chartColors.second = (chartColors.second || 0) + 1; }
         if (MIRROR && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { mirrorChart(visual, s.kind); chartAxes.charts++; }
         // Round 21 (the capabilities lab's #6, Desktop 2.158, 7 Oct 2026: "77.7K" above the columns, kept on Save): a column
         // chart with few columns shows its values above them: labels at 'OutsideEnd', automatic units (0, K or M by the

@@ -80,15 +80,31 @@
     for (let i = 1; i <= 100; i++) { const l = darker ? l0 - i / 100 : l0 + i / 100; if (l < 0 || l > 1) break; const x = hslToHex(h, sat, l); if (contrast(x, card) >= min) return x; }
     return c;
   };
-  // The second chart's colour (P1+, the laptop's LAB-POLISH section 5, measured in Desktop on 12 Oct: data colour 2 taken
-  // blindly was often the lead's own hue, lighter, and the page stayed one colour): the palette's next colour whose hue
-  // stands at least 30 degrees from the lead's (a grey, saturation under 0.15, has no hue to tell apart) and 3:1 on the
-  // card; with none at 3:1, the first such hue taken to 3:1 (toContrast); with no distinct hue at all, null
-  const secondColour = (data, card) => {
+  // Status hues (P1, RESCORE-5; shared with the MCP since P3): red under 15 or 345 and over, amber 35 to 55, green 90 to
+  // 150 degrees, at saturation 0.35 and over (a grey or a muted colour is never a status colour); null otherwise
+  const STATUS_HUES = { bad: (h) => h < 15 || h >= 345, neutral: (h) => h >= 35 && h <= 55, good: (h) => h >= 90 && h <= 150 };
+  const statusHue = (c) => { const x = clampHex(c || ''); if (!x) return null; const [h, sat] = hexToHsl(x); return sat >= 0.35 ? Object.keys(STATUS_HUES).find((k) => STATUS_HUES[k](h)) || null : null; };
+  // The second chart's colour (P1+, the laptop's LAB-POLISH section 5; P3, RESCORE-6 N26: complaints and ecommerce got
+  // #E63946, inspection its own status red): the palette's next colour that is not a status colour (a red, amber or green
+  // hue, or one of st's good/neutral/bad), stands at least 30 degrees of hue from the lead (a grey, saturation under 0.15,
+  // has no hue to tell apart) and 3:1 on the card; with none at 3:1, the first such hue taken to 3:1 (toContrast); with
+  // none in the palette, the first calm colour (CALM, below) that passes, taken to 3:1. st: { good, neutral, bad }
+  const secondColour = (data, card, st) => {
     const lead = clampHex((data || [])[0] || ''); if (!lead || !clampHex(card || '')) return null;
+    const own = ['good', 'neutral', 'bad'].map((k) => clampHex(((st || {})[k]) || '')).filter(Boolean);
     const [h0, s0] = hexToHsl(lead), far = (c) => { const [h, sat] = hexToHsl(c); if (sat < 0.15) return false; if (s0 < 0.15) return true; const d = Math.abs(h - h0) % 360; return Math.min(d, 360 - d) >= 30; };
-    const rest = data.slice(1).map((c) => clampHex(c || '')).filter((c) => c && far(c));
-    return rest.find((c) => contrast(c, card) >= 3) || (rest.length ? toContrast(rest[0], card, 3) : null);
+    const ok = (c) => c && far(c) && !statusHue(c) && !own.includes(c);
+    const rest = data.slice(1).map((c) => clampHex(c || '')).filter(ok);
+    const pick = rest.find((c) => contrast(c, card) >= 3) || rest[0] || CALM.find(ok);
+    return pick ? toContrast(pick, card, 3) : null;
+  };
+  // The ends of a bar's fade by value (P3, RESCORE-6 N25: a darkened lead faded the other way, the largest bars brown):
+  // the strong end is the chart's colour exactly, never past it; the weak end the lightest tint of it towards the card
+  // that still stands 3:1 there, or, where none does (the colour itself near 3:1), a soft tint halfway (soft: true)
+  const fadeEnds = (base, card) => {
+    const b = clampHex(base || ''), k = clampHex(card || ''); if (!b || !k) return null;
+    for (let n = 12; n >= 3; n--) { const low = mix(b, k, n / 20); if (contrast(low, k) >= 3 && contrast(low, k) < contrast(b, k)) return { low, high: b }; }
+    return { low: mix(b, k, 0.45), high: b, soft: true };
   };
   const generate = (base, mode) => {
     const [h, s0, l0] = hexToHsl(base); const s = Math.max(0.45, s0), l = Math.min(0.55, Math.max(0.4, l0));
@@ -814,7 +830,7 @@
 
   const api = {
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
-    clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, generate, calmPalette,
+    clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, statusHue, fadeEnds, generate, calmPalette,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
     fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
