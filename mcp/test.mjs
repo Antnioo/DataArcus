@@ -18,6 +18,7 @@ import { v029w } from './test-0.2.9w.mjs';
 import { v029k } from './test-0.2.9k.mjs';
 import { v029p } from './test-0.2.9p.mjs';
 import { v029q } from './test-0.2.9q.mjs';
+import { v029r } from './test-0.2.9r.mjs';
 import { v029checks } from './test-0.2.9-checks.mjs';
 import { v029design } from './test-0.2.9-design.mjs';
 import { v029agent } from './test-0.2.9-agent.mjs';
@@ -4499,6 +4500,7 @@ await v029k({ call, check, ROOT, fs });
 await v029p({ call, check, ROOT, fs });
 // ---------- 0.2.9 picker fixes from the rc's laptop proof (S4, S5, S8, D2, D4-D14, D17): test-0.2.9q.mjs, which also runs alone ----------
 await v029q({ check });
+await v029r({ check });
 // ---------- 0.2.9 items 12-13 (check_report's three kinds, the health check's own reports): test-0.2.9-checks.mjs, which also runs alone ----------
 await v029checks({ call, check, ROOT, fs });
 // ---------- 0.2.9, custom visuals (what a visual shows, lib/visual-meaning.mjs; pure): test-0.2.9v.mjs, which also runs alone ----------
