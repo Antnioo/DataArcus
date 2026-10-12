@@ -228,6 +228,10 @@ After the twin and tools: **1033** + 36 + 21 + 21 + 16, golden PASS (11 tasks, n
 (854) PASS. The startup instructions are **2,493 characters** (cap 2,500): builder 10's A7-4 (every rule from one source)
 must keep them under it.
 
+## Writer P3 (12 Oct from 22:03 UTC; branch `fix/0.2.9-writer-p3` from `d73a773`; not merged)
+`788bbba`: report-level measure names unique across the whole report (freeExt report-wide, without case). Whole chain and website
+17/17 green. Next: builder 5 merges; check_report could flag duplicate measure names (seen, not in scope).
+
 ## Writer P2, the owner's polish (12 Oct from 19:30 UTC; `fix/0.2.9-writer` reset to the gate `f48057f`; not merged)
 `d389889`: lines 3 wide, donut ring 68, smoothLines option (off). Whole chain, layouts, website 17/17 (--full) green.
 
