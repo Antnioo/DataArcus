@@ -228,6 +228,9 @@ After the twin and tools: **1033** + 36 + 21 + 21 + 16, golden PASS (11 tasks, n
 (854) PASS. The startup instructions are **2,493 characters** (cap 2,500): builder 10's A7-4 (every rule from one source)
 must keep them under it.
 
+## Writer P2, the owner's polish (12 Oct from 19:30 UTC; `fix/0.2.9-writer` reset to the gate `f48057f`; not merged)
+`d389889`: lines 3 wide, donut ring 68, smoothLines option (off). Whole chain, layouts, website 17/17 (--full) green.
+
 ## Writer round 11 (12 Oct from 14:11 UTC; `fix/0.2.9-writer` reset to the gate `ad5c7f2`; not merged)
 `d46f3e7`: the written text-suffix card now has no decimals set (unitAuto carried through the picker's output and the server's field
 resolution). Whole chain and website 17/17 green. Backlog: N19 (padded card always in millions). Next: builder 5 merges as round 11.
