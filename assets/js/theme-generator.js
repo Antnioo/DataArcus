@@ -466,10 +466,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // (0.2.9: the field picker reads its field-meaning rule from field-meaning.js, and a TMDL folder through tmdl-model.js,
     // the one TMDL reader (A1-8): both loaded first)
     const loadScript = (src) => new Promise((resolve, reject) => { const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc); });
-    const loadBind = () => (window.DABind ? Promise.resolve(window.DABind)
+    // (round 9: loaded once; two choices made quickly (the data option, then the folder) loaded pbip-bind twice, and the
+    // model read by one copy was picked by the other, whose own field notes (a WeakMap) knew none of it: one KPI card)
+    let binding = null;
+    const loadBind = () => binding || (binding = (window.DABind ? Promise.resolve(window.DABind)
       : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('../assets/js/field-meaning.min.js?v=20261011t'))
         .then(() => (window.TmdlModel ? null : loadScript('../assets/js/tmdl-model.min.js?v=20261011t')))
-        .then(() => loadScript('../assets/js/pbip-bind.min.js?v=20261011p1')).then(() => window.DABind));
+        .then(() => loadScript('../assets/js/pbip-bind.min.js?v=20261011p1')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
     // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)
