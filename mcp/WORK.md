@@ -1,8 +1,29 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Picker fixes from the rc's laptop proof" (branch fix/0.2.9-picker) and "Integration round 6" just below (the rc head), then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Integration round 7" just below (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## Integration round 7: picker + writer + design merged (11-12 Oct, cloud builder 5; `fix/0.2.9-gate` from `c83e86d`; not merged to main, no PR)
+Real merges, no squash, in the reviewer's order: (1) `fix/0.2.9-picker` ea6ccdb -> `84d016b`, no conflict; (2) `fix/0.2.9-writer`
+34450a3 -> `c2b7f6b`, one conflict (server.mjs plan_layout: round 6's customVisuals kept, the writer's topCategories note
+added); (3) `fix/0.2.9-design` dafcbe0 -> `e417176`. Conflicts in (3), each resolved as follows:
+- design-engine.js S7: builder 10's rail block (S7 is the design block's; builder 11's proposed S7 not taken);
+  project-pages.json fixture: the design's.
+- pbip-notes.js: the design's `topCharts` (the writer's `chartTops` dropped).
+- pbip-page.js: one `topCount` (the writer's conditions; a designed page takes the design's `topN`, a hand-placed page the
+  writer's measured rows/columns); tooltips: the design's tipPages (T4/T5) with the writer's tipRows/tipLook (T6/T8/T9/T10)
+  and the T1/T2 filters.
+- server.mjs plan_layout: the design's answer + customVisuals + the writer's topCategories note.
+- test-0.2.9-a4: the design's onTooltip; test.mjs layout check: both conditions kept; theme-generator pages: stamps r7.
+Changed expectations, causes beside them: test-0.2.9w rc1-4 reads `topCharts`; T10's charts show the kg measure (design T4);
+test.mjs table-fit counts the left-out line, not the 8pt line (`eb39703`); golden task 6 longTitleUses 90 -> 91 (`2c47875`:
+the writer's measured widths leave the quantity out of the first page's 1083-wide Arabic table, so it gets its own row label).
+Tests (Linux): mcp 1332, v029c 36, d 21, e 21, f 20, golden 11 tasks match, fuzz 600 (8199) and FUZZ_LONG 10000 (135843),
+KNOWN lists empty; website 17 of 17; deny-scan 9; site config; csp 95 pages; check-min 62.
+Not in this round: `feat/0.2.9-custom-visuals` (2 laptop failures open), `fix/0.2.9-twin` (not pushed).
+For the laptop / the decision: the design's S7 said the 1083-wide Arabic table holds all five fields; the writer's measured
+widths say four. Desktop decides (Arabic, 1920 x 1080, golden task 6's model).
 
 ## Picker fixes from the rc's laptop proof (11 Oct, from 20:33 UTC, cloud builder 5; branch `fix/0.2.9-picker` from `c83e86d`; not merged, no PR)
 The laptop scored the rc 5.4 on nine real models (three worse than 0.2.8 by the picks): engine `lab/proof-0.2.9-rc1`,
