@@ -24,6 +24,56 @@ const CONTRAST_NAMES = { textOnVisuals: 'Text on visuals', labelsOnVisuals: 'Lab
 // a colour as the website takes it (#abc, abc, #aabbcc; any case), or null
 const hex = (v) => (typeof v === 'string' ? E.clampHex(v) : null);
 
+// ---- the default colours: an existing report's own theme (0.2.9, KEEP THE DASHBOARD'S IDENTITY: the owner's go, 12 Oct) ----
+// Every new report got the plain Corporate preset when the chat named no colours, even when the model already had a
+// designed report. Now, when a call names no colours (no preset, brand, palette or design colours) and one of the
+// model's reports has a custom theme (lib/read-report.mjs: existingTheme), the design starts from that theme's colours.
+// A base theme only, or no report: today's default, unchanged. An explicit colour request always wins.
+// the line the plan and the answers say, English and Arabic (the engine's label pairs, as the plan's other words), by
+// the source of the colours: the theme, the theme and the colours on the visuals, or those colours alone
+export const THEME_LINE = (name) => [`Colours from your report's theme "${name}" (you can ask for a preset or your brand colours instead).`,
+  `الألوان من سمة تقريرك "${name}" (يمكنك طلب نمط جاهز أو ألوان علامتك التجارية بدلاً منها).`];
+const SOURCE_LINE = {
+  'theme and visuals': (r, n) => [`Colours from your report "${r}": its theme "${n}" and the colours on its visuals (you can ask for a preset or your brand colours instead).`,
+    `الألوان من تقريرك "${r}": سمته "${n}" والألوان المكتوبة على عناصره المرئية (يمكنك طلب نمط جاهز أو ألوان علامتك التجارية بدلاً منها).`],
+  visuals: (r) => [`Colours from the colours on your report "${r}"'s visuals (it has no theme colours of its own; you can ask for a preset or your brand colours instead).`,
+    `الألوان من الألوان المكتوبة على عناصر تقريرك "${r}" المرئية (ليس له ألوان سمة خاصة به؛ يمكنك طلب نمط جاهز أو ألوان علامتك التجارية بدلاً منها).`]
+};
+// does a design name its own colours (a design from generate_theme always does: its preset or its palette)
+export const namesColours = (d) => !!(d && typeof d === 'object' && ((Array.isArray(d.data) && d.data.length) || (d.ui && typeof d.ui === 'object' && Object.keys(d.ui).length) || d.preset != null));
+// rt: existingTheme's { report, theme (the report's identity), others }. The design's 8 data colours: the theme's own
+// (those that differ from the base theme), then the colours written on the visuals by how often, then the engine's own
+// analogous harmony from the first; a dark page (the theme's, else its visuals', darker than 0.45) gives a dark design
+// (the DataArcus preset's page colours where the report sets none), a light one the Corporate preset's. Visuals the
+// theme makes see-through (made for a page picture the new report will not have) stay solid. Colours that are exactly
+// a preset's keep that preset's name. The page size is never taken: only colours, and the font, corner radius and
+// shadow when the report's theme sets them.
+// Returns { data, ui, preset, style { font, radius, shadow }, info } (info: what the plan says, in the plan's language).
+export function themeColours(rt, lang) {
+  const t = rt.theme, lumOf = (c) => E.lum(c), own = t.themeColours || [], painted = t.painted || [];
+  const palette = [...new Set(own.concat(painted))].slice(0, 8), usedPainted = palette.some((c) => !own.includes(c));
+  const source = own.length ? (usedPainted ? 'theme and visuals' : 'theme') : 'visuals';
+  const dark = t.background ? lumOf(t.background) < 0.45 : t.card ? lumOf(t.card) < 0.45 : t.text ? lumOf(t.text) > 0.6 : false;
+  const basis = dark ? 'DataArcus' : 'Corporate', base = E.PRESETS[basis];
+  const fill = E.generate(palette[0], 'analogous');
+  const data = Array.from({ length: 8 }, (_, i) => palette[i] || fill[i]);
+  const ui = { background: t.background || base.ui.background, card: t.card || base.ui.card, text: t.text || base.ui.text, accent: t.accent || palette[0],
+    good: t.good || base.ui.good, neutral: t.neutral || base.ui.neutral, bad: t.bad || base.ui.bad };
+  const preset = Object.keys(E.PRESETS).find((k) => E.PRESETS[k].data.join() === data.join() && UI_KEYS.every((u) => E.PRESETS[k].ui[u] === ui[u])) || null;
+  const filled = palette.length < 8 ? Array.from({ length: 8 - palette.length }, (_, i) => palette.length + i + 1) : [];
+  const fromBase = UI_KEYS.filter((k) => !(k === 'accent' ? t.accent || palette[0] : t[k]));
+  const style = Object.assign({}, t.font && E.FONTS.includes(t.font) ? { font: t.font } : {}, t.radius != null ? { radius: t.radius } : {}, t.shadow ? { shadow: true } : {});
+  const line = source === 'theme' ? THEME_LINE(t.name) : SOURCE_LINE[source](rt.report, t.name);
+  const info = Object.assign({ from: 'report theme', source, report: rt.report, theme: t.name, mode: dark ? 'dark' : 'light', sayInPlan: E.label(line, lang) },
+    usedPainted ? { fromVisuals: palette.filter((c) => !own.includes(c)) } : {},
+    filled.length ? { filled, how: `The report gives ${palette.length} data colour${palette.length === 1 ? '' : 's'}: colours ${filled[0]}-8 come from the engine's analogous harmony from the first (${palette[0]}).` } : {},
+    t.cardTransparent ? { solidVisuals: `The theme's visuals are ${t.cardTransparent}% transparent, made to sit on a page picture the new report will not have: the new visuals are solid (${ui.card}). Say it in the plan.` } : {},
+    fromBase.length ? { fromPreset: { colours: fromBase, preset: basis, why: 'the report does not set them' } } : {},
+    Object.keys(style).length ? { style } : {},
+    rt.others && rt.others.length ? { otherReports: rt.others, pick: `This model has other reports of the user's too (${rt.others.join(', ')}): say so in the plan; to keep another one's colours, call again with themeFrom: "<report>".` } : {});
+  return { data, ui, preset, style, info };
+}
+
 // The engine's own full design with everything given laid over it: the given layout is merged into the engine's
 // current layout (so a partial one is never read as an old saved design, and the MCP never names a layout version),
 // and the given data colours are used when there are 8 (otherwise the engine would drop the whole design)
@@ -51,8 +101,13 @@ export function themeDesign(a) {
   if (a.preset != null) {
     if (E.PRESETS[a.preset]) preset = a.preset;
     else fix('preset', a.preset, preset, `not a preset; use one of ${Object.keys(E.PRESETS).join(', ')}`);
-  } else if (!a.palette && a.brand == null) notes.push(dark ? 'No colours asked: the DataArcus preset (dark, as asked).' : 'No colours asked: the Corporate preset, light. Dark only when the user asks for it (mode "dark").');
+  }
+  // (keep the dashboard's identity) no colours asked (no preset, palette, brand or mode) and the model's report has its
+  // own theme: the design starts from it
+  const own = a.reportTheme && a.reportTheme.theme && a.preset == null && !a.palette && a.brand == null && a.mode == null ? themeColours(a.reportTheme, a.lang) : null;
+  if (!own && a.preset == null && !a.palette && a.brand == null) notes.push(dark ? 'No colours asked: the DataArcus preset (dark, as asked).' : 'No colours asked: the Corporate preset, light. Dark only when the user asks for it (mode "dark").');
   d.preset = preset; d.data = E.PRESETS[preset].data.slice(); d.ui = { ...E.PRESETS[preset].ui };
+  if (own) { d.data = own.data; d.ui = own.ui; d.preset = own.preset; if (own.style.font && a.font == null) d.font = own.style.font; notes.push(own.info.sayInPlan); }
   // a preset whose page is not what the user asked for (mode): the preset's data colours and accent on the asked page
   if (a.preset != null && E.PRESETS[a.preset] && a.mode && !a.palette && a.brand == null && (E.lum(d.ui.background) > 0.45) === dark) {
     d.ui = Object.assign({}, dark ? E.PRESETS.DataArcus.ui : LIGHT_UI, { accent: d.ui.accent }); d.preset = null;
@@ -95,9 +150,9 @@ export function themeDesign(a) {
     d.chart = c;
   }
   // the page and style choices on top of the engine's full current layout (its version, 1920 x 1080 and defaults)
-  d.layout = layoutFrom(a.layout || {}, withDefaults().layout, fix);
+  d.layout = layoutFrom(Object.assign({}, own && own.style.radius != null ? { radius: own.style.radius } : {}, own && own.style.shadow ? { shadow: true } : {}, a.layout || {}), withDefaults().layout, fix);
   const design = E.repairState(d);
-  return { design, repaired, notes };
+  return Object.assign({ design, repaired, notes }, own ? { fromReport: Object.assign(own.info, { contrastWarnings: contrastReport(design).warnings }) } : {});
 }
 
 // Page and style choices into a saved layout. base: a layout to change (plan_layout), fix: records what can't be used
@@ -121,7 +176,21 @@ export function layoutFrom(l, base, fix) {
 // (repaired: each value of the given design that could not be used, with what was used instead)
 export function planLayout(a) {
   const repaired = [], fix = (r) => repaired.push(r);
-  const design = withDefaults(a.design, fix), l = design.layout;
+  // (keep the dashboard's identity) a design without its own colours starts from the model's report's theme (a.reportTheme:
+  // existingTheme's); a design from generate_theme made without the model keeps its colours, and the plan says how to
+  // keep the report's theme instead
+  const rt = a.reportTheme && a.reportTheme.theme ? a.reportTheme : null;
+  let given = a.design, colours = null;
+  if (rt && !namesColours(a.design)) {
+    const c = themeColours(rt, a.lang), g0 = a.design || {}, gl = g0.layout && typeof g0.layout === 'object' ? g0.layout : {};
+    // (the font, corners and shadow of a rich theme, where the design has those settings and does not set them itself)
+    given = Object.assign({}, g0, { data: c.data, ui: c.ui, preset: c.preset }, c.style.font && g0.font == null ? { font: c.style.font } : {},
+      { layout: Object.assign({}, c.style.radius != null && gl.radius == null ? { radius: c.style.radius } : {}, c.style.shadow && gl.shadow == null ? { shadow: true } : {}, gl) });
+    colours = c.info;
+  }
+  else if (rt && a.design && a.design.preset === 'Corporate' && Array.isArray(a.design.data) && a.design.data.join() === E.PRESETS.Corporate.data.join())
+    colours = { from: 'design', note: `The model's report "${rt.report}" has its own theme "${rt.theme.name}"; this design has the Corporate preset (generate_theme was called without the model). If the user asked for no colours, call generate_theme again with path (the model) to keep the report's theme, then plan again; otherwise say the colours are the Corporate preset.` };
+  const design = withDefaults(given, fix), l = design.layout;
   // choosing a layout, as on the website: its own KPI count and filters, and the size sliders back to its defaults
   if (a.layout) { l.preset = a.layout; l.kpis = E.LAYOUTS[a.layout].kpis; l.filters = E.LAYOUTS[a.layout].filters; delete l.kpiH; delete l.mainW; delete l.split; }
   // the KPI cards, 0-6: the engine's own count (0.2.9, A2-4: no kpiCards)
@@ -147,8 +216,9 @@ export function planLayout(a) {
   const right = E.rtl(layout, lang);
   const forAuthoring = slots.slice().sort((p, q) => (p.y - q.y) || (right ? q.x - p.x : p.x - q.x))
     .map((s, i) => ({ role: s.role, kind: s.kind, position: { x: s.x, y: s.y, z: (i + 1) * 1000, width: s.w, height: s.h, tabOrder: (i + 1) * 1000 } }));
+  if (colours && colours.from === 'report theme') colours.contrastWarnings = contrastReport(design).warnings;
   // (the owner's decision on layouts, 12 Oct: a setup that ships as preview says so in one plain line, E.isPreview)
-  return Object.assign({ design, slots, forAuthoring, why: E.LAYOUTS[layout.preset].why.map(nm) }, E.isPreview(layout) ? { preview: nm(E.LAYOUT_PREVIEW) } : {}, smallPage ? { smallPage } : {}, repaired.length ? { repaired } : {});
+  return Object.assign({ design, slots, forAuthoring, why: E.LAYOUTS[layout.preset].why.map(nm) }, E.isPreview(layout) ? { preview: nm(E.LAYOUT_PREVIEW) } : {}, smallPage ? { smallPage } : {}, repaired.length ? { repaired } : {}, colours ? { colours } : {});
 }
 
 // The page size a layout really gets, and whether a custom size had to be fitted (as the website does)
