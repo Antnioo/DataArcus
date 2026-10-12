@@ -360,6 +360,16 @@ export function v029w({ check }) {
     // beside the bars, TOOLTIP-FIX-LAB, report-rules TIP_ROWS_6): 27 a bar and 40, plus the 8 under the last
     chk(() => bar && bar.position.height >= 40 + 27 * 6 + 8 && bar.position.y + bar.position.height <= tp.height,
       () => `T6: the Top 6 tooltip chart holds 6 bars at 27 + 40 (+ 8): ${r.threw || JSON.stringify([bar && bar.position, tp && tp.height])}`);
+    // T8 (RESCORE-1: "Microsoft 365 Business Sta..."): measured on the laptop's crops, a tooltip bar chart's visible name room
+    // is its share x its width - 18 (40%: 96, 50%: 129 at 296 wide); a 31-letter name at 8pt (158) needs a 352-wide chart
+    // at 50%: the Top 6 page 376 wide (the reviewer's yes), its card and chart 352
+    const need = Px.textWidth('Microsoft 365 Business Standard', 8, false, 'Segoe UI'), share = bar ? +String(L(bar.visual.objects.categoryAxis[0].properties.maxMarginFactor)).replace(/L$/, '') : 0;
+    chk(() => tp.width === 376 && bar.position.width === 352 && share / 100 * bar.position.width - 18 >= need && tp.vs.every((v) => v.position.x + v.position.width <= tp.width),
+      () => `T8: the Top 6 tooltip holds a 31-letter name (${need.toFixed(0)}): page ${tp && tp.width}, chart ${bar && bar.position.width}, share ${share}`);
+    // S3 (writer round 8): one table of constants for a table's rows (pbip-sizing.js TABLE_ROWS), used by both height rules
+    const Zs = req('../assets/js/pbip-sizing.js'), pgSrc = fs.readFileSync(path.join(REPO, 'assets/js/pbip-page.js'), 'utf8');
+    chk(() => Zs.TABLE_ROWS && typeof Zs.tableHeight === 'function' && !/1\.415 \* t/.test(pgSrc) && (pgSrc.match(/tableHeight\(/g) || []).length >= 2,
+      () => 'S3: the table row rule lives in pbip-sizing.js TABLE_ROWS, and pbip-page.js has no row constant of its own');
     // D18 (RESCORE-1: "$4,344,705.7026" in a table): a measure the format rule leaves alone keeps its model format on the
     // cards, and its table column shows 2 decimals at most (the report's number rule), the currency kept
     const tb = { name: 'Sales', columns: [{ name: 'Amount', dataType: 'decimal' }], measures: [{ name: 'Revenue', formatString: '\\$#,0.0000', expression: 'SUM ( Sales[Amount] )' }, { name: 'Cost', formatString: '#,0.0000', expression: 'SUM ( Sales[Amount] )' }, { name: 'Units', formatString: '#,0', expression: 'SUM ( Sales[Amount] )' }] };
