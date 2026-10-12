@@ -535,6 +535,10 @@ export function panelProblems(files) {
     // the bands (round 1): empty text boxes outside every group
     const emptyText = (v) => { const ps = ((((v.visual.objects || {}).general || [{}])[0].properties || {}).paragraphs || []); return ps.every((x) => (x.textRuns || []).every((r) => !r.value)); };
     const bands = p.visuals.filter((v) => v.visual && v.visual.visualType === 'textbox' && !v.parentGroupName && emptyText(v)), used = new Set();
+    // (writer round 8, S3 with the design's N6, the reviewer's resolution of 12 Oct: a table that ends on its whole rows has
+    // its panel behind it at the slot's height, a band like the header's: at the table's x, y and width, at least as high,
+    // under it in the layer order)
+    p.visuals.filter((t) => t.visual && t.visual.visualType === 'tableEx').forEach((t) => bands.forEach((b) => { if (b.position.x === t.position.x && b.position.y === t.position.y && b.position.width === t.position.width && b.position.height >= t.position.height && b.position.z < t.position.z) used.add(b.name); }));
     // groups first, so each band is matched to its group before the bands themselves are looked at
     p.visuals.slice().sort((a, b) => (a.visualGroup ? 0 : 1) - (b.visualGroup ? 0 : 1)).forEach((v) => {
       const id = `${p.page.displayName}/${v.visual ? v.visual.visualType : 'group ' + v.visualGroup.displayName}`;
