@@ -3439,10 +3439,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const vs = pageVisuals(en, 'r12-project'), sl = vs.filter((v) => type(v) === 'slicer').sort((p, q) => p.at.y - q.at.y), last = sl[sl.length - 1];
     const reset = vs.find((v) => type(v) === 'actionButton' && /reset/.test(JSON.stringify(v.visual.objects.icon || [])));
     const band = vs.find((v) => type(v) === 'textbox' && !v.parentGroupName && v.at.x <= last.at.x && v.at.x + v.at.w >= last.at.x + last.at.w && v.at.h > last.at.h);
-    // (design round 8, the re-score's S7, asked by the reviewer: a panel taller than its content reaches the bottom of the
-    // row beside it, so the page under the rail is never left empty; Reset stays right under the last slicer)
-    const rowEnd = (b) => vs.some((v) => v !== b && /Chart$|tableEx/.test(type(v)) && Math.abs(v.at.y + v.at.h - (b.at.y + b.at.h)) <= 2);
-    chk(() => last && reset && reset.at.y > last.at.y + last.at.h && reset.at.y - (last.at.y + last.at.h) <= 24 && (!band || band.at.y + band.at.h <= reset.at.y + reset.at.h + 24 || rowEnd(band)),
+    chk(() => last && reset && reset.at.y > last.at.y + last.at.h && reset.at.y - (last.at.y + last.at.h) <= 24 && (!band || band.at.y + band.at.h <= reset.at.y + reset.at.h + 24),
       () => `#18: Reset right under the last slicer, the panel no taller than its content: last slicer ends ${last && last.at.y + last.at.h}, Reset at ${reset && reset.at.y}, panel ${band && JSON.stringify(band.at)}`);
   }
   // #2, #4, #5: the phone's page tabs each as wide as its name, from the reading start with a fixed gap; chart titles
