@@ -4,6 +4,12 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Integration round 9b (12 Oct, cloud builder 5; `fix/0.2.9-gate` from `82dae46`; not merged to main, no PR): rc.5's base
+Merged, each green on GitHub first: twin `c9f6d54` (`372caf6`, no conflict; T-1..T-6 with the rc.5 fixes T-3, T-5, T-6) and
+writer `0bed9bc` (`0a657a0`; N8 and F4; pbip-bind.min.js rebuilt). Tests (Linux): mcp 1430, v029c/d/e/f 36/21/21/20, golden 11
+(no moves), fuzz 600 + FUZZ_LONG 10000, website 17 of 17, deny-scan, site config, csp, check-min 64. GitHub CI on `0a657a0`:
+Tests (mcp, mcp-windows, website) and Privacy scan green. The laptop builds rc.5 from it and re-proves the twin there.
+
 ## Integration round 9 (12 Oct, cloud builder 5; `fix/0.2.9-gate` from `69ea11c`; not merged to main, no PR): rc.5's base
 Merged in the reviewer's order: writer `bfd2904` (`91d5715`; the lint knows the panel card: v029c L2 green), picker9
 `1160b33` (`c111586`), design `f53ce35` (`095f989`; conflicts: pbip-bind twoValued = the design's expression read + round
