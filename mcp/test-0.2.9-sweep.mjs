@@ -71,8 +71,9 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
   // ---------- S6: raw field names: the plan offers readable display names; the report uses the approved ones ----------
   {
     const pl = await ask('plan_layout', { layout: 'exec', path: 's-loans', lang: 'en', fields: ['loans[loan_intent]', 'loans[BranchName]', 'loans[Total Exposure]'] });
-    const sug = pl.j && pl.j.displayNames && pl.j.displayNames.suggestedDisplayNames;
-    chk(() => sug && sug['loans[loan_intent]'] === 'Loan Intent' && sug['loans[BranchName]'] === 'Branch Name' && !('loans[Total Exposure]' in sug) && /approve/i.test(pl.j.displayNames.sayFirst), () => `S6: plan_layout proposes readable names for raw ones, for the user to approve: ${JSON.stringify(pl.j && pl.j.displayNames)}`);
+    // (design round 8, S6: the readable names are the plan's default, inThePlan, named in it for the user's go)
+    const sug = pl.j && pl.j.displayNames && pl.j.displayNames.inThePlan;
+    chk(() => sug && sug['loans[loan_intent]'] === 'Loan Intent' && sug['loans[BranchName]'] === 'Branch Name' && !('loans[Total Exposure]' in sug) && /plan/i.test(pl.j.displayNames.sayInPlan), () => `S6: plan_layout proposes readable names for raw ones, named in the plan: ${JSON.stringify(pl.j && pl.j.displayNames)}`);
     const x = await ask('create_report', { path: 's-loans', name: 'S names', design: design({ preset: 'exec' }), secondPage: false, fields: { category: 'loans[loan_intent]' }, displayNames: { 'loans[loan_intent]': 'Loan Intent' } });
     const titles = JSON.stringify(visualsOf(x, 's-loans').map((v) => (v.visual || {}).visualContainerObjects || {}));
     chk(() => !x.err && /Loan Intent/.test(titles) && !/by loan_intent/.test(titles), () => `S6: the titles use the approved name: ${titles.slice(0, 300)}`);
