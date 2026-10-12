@@ -19,6 +19,7 @@ import { v029w } from './test-0.2.9w.mjs';
 import { v029k } from './test-0.2.9k.mjs';
 import { v029p } from './test-0.2.9p.mjs';
 import { v029q } from './test-0.2.9q.mjs';
+import { v029r } from './test-0.2.9r.mjs';
 import { v029checks } from './test-0.2.9-checks.mjs';
 import { v029design } from './test-0.2.9-design.mjs';
 import { v029agent } from './test-0.2.9-agent.mjs';
@@ -1414,7 +1415,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   // 2. AUD-016: read_model's summary of a large model has a ceiling, whatever the number of tables with measures
   {
     const make = (n, dir) => { const d = path.join(ROOT, dir, 'Big.SemanticModel/definition/tables'); fs.mkdirSync(d, { recursive: true });
-      for (let i = 0; i < n; i++) fs.writeFileSync(path.join(d, `T${i}.tmdl`), [`table 'Table number ${i}'`, ...Array.from({ length: 1 + (i % 7) }, (_, k) => `\tmeasure 'Measure ${i} ${k}' = 1\n\t\tformatString: #,0\n\t\tdisplayFolder: Area ${i % 12}`), ...Array.from({ length: 10 }, (_, k) => `\tcolumn 'Column ${k}'\n\t\tdataType: string\n\t\tsourceColumn: Column ${k}`), ''].join('\n')); };
+      // (picker round 8, N4: a constant measure (= 1) is the model's placeholder and no card, so these stand-ins count rows)
+      for (let i = 0; i < n; i++) fs.writeFileSync(path.join(d, `T${i}.tmdl`), [`table 'Table number ${i}'`, ...Array.from({ length: 1 + (i % 7) }, (_, k) => `\tmeasure 'Measure ${i} ${k}' = COUNTROWS ( 'Table number ${i}' ) + ${k}\n\t\tformatString: #,0\n\t\tdisplayFolder: Area ${i % 12}`), ...Array.from({ length: 10 }, (_, k) => `\tcolumn 'Column ${k}'\n\t\tdataType: string\n\t\tsourceColumn: Column ${k}`), ''].join('\n')); };
     make(500, 'm500'); make(3000, 'm3000');
     const a = await ask('read_model', { path: 'm500' }), b = await ask('read_model', { path: 'm3000' });
     chk(() => !a.err && a.j.summary === true && a.t.length < 40000, () => `read_model on 500 tables with measures: ${a.err ? a.t.slice(0, 200) : a.t.length + ' characters'}`);
@@ -4512,6 +4514,7 @@ await v029k({ call, check, ROOT, fs });
 await v029p({ call, check, ROOT, fs });
 // ---------- 0.2.9 picker fixes from the rc's laptop proof (S4, S5, S8, D2, D4-D14, D17): test-0.2.9q.mjs, which also runs alone ----------
 await v029q({ check });
+await v029r({ check });
 // ---------- 0.2.9 items 12-13 (check_report's three kinds, the health check's own reports): test-0.2.9-checks.mjs, which also runs alone ----------
 await v029checks({ call, check, ROOT, fs });
 // ---------- 0.2.9, custom visuals (what a visual shows, lib/visual-meaning.mjs; pure): test-0.2.9v.mjs, which also runs alone ----------
