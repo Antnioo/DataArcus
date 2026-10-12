@@ -171,17 +171,23 @@
   // format with the padding taken out (all but the last zero of each section's whole part made "#"), as a whole number's
   // card does (Custom units and its format, measured D8); an ordinary "€#,0" keeps automatic units.)
   const padded = (f) => String(f || '').split(';').some((sec) => { const m = sec.replace(/"[^"]*"|\\./g, '').match(/[#0,]+/); return !!m && /0,*[#0]/.test(m[0]); });
-  const unpadded = (f) => String(f).split(';').map((sec) => sec.replace(/("[^"]*"|\\.)|([#0,]+)/g, (all, q, run) => (q ? q : run.replace(/0(?=[#0,]*[#0])/g, '#')))).join(';');
+  // (round 10, RESCORE-3 N11 + N13: the unscaled number, "-€50,866,000", was cut on a 6-card row and read in another style
+  // than the row's "€ 105.53M" cards) the card's own format scales to millions (the value's size isn't known when the
+  // report is written): each sign section keeps its symbols and text, its number becomes #,0,,.00"M" (Microsoft's rule: two
+  // commas just left of the decimal point divide by a million, model, visual and element level alike), so a text suffix
+  // follows the "M" with its space ("-50.87M AED"); a zero section (the third) stays as the model wrote it
+  const scaled = (f) => String(f).split(';').map((sec, i) => { if (i === 2) return sec; let done = false;
+    return sec.replace(/("[^"]*"|\\.)|([#0][#0,]*(?:\.[#0]+)?)/g, (all, q, run) => (q || done ? all : (done = true, '#,0,,.00"M"'))); }).join(';');
   // (F4) a section's quoted text after its last digit placeholder, or before its first when that text is no currency
   const glued = (f) => String(f || '').split(';').some((sec) => { const last = Math.max(sec.lastIndexOf('0'), sec.lastIndexOf('#')), first = sec.search(/[#0]/);
     return (sec.match(/"[^"]*"/g) || []).some((q) => { const at = sec.indexOf(q); return /\S/.test(q.slice(1, -1)) && (at > last || (at < first && !hasCurrency(q))); }); });
   const cardKind = (x, tables) => { const k = cardKind0(x, tables), f = x.formatString;
-    if (!k.pct && padded(f) && !(k.wholeFormat && !padded(k.wholeFormat))) k.wholeFormat = unpadded(f);
+    if (!k.pct && padded(f) && !(k.wholeFormat && !padded(k.wholeFormat))) k.wholeFormat = scaled(f);
     // (writer round 9, the laptop's F4, N8-LAB: "#,0 \"AED\";-#,0 \"AED\"" read "-50.87KAED" / "50.87MAED" in automatic units,
     // the unit letter glued to the text; with Custom units and the model's own format it read right: a format with quoted
     // text after the number (a suffix), or before it when it is no currency (the owner's O-2: "EUR" #,0 reads "EUR 54.66M"
     // in automatic units, and so does a currency code or sign before the number), is shown unscaled in that format, as N8's)
-    else if (!k.pct && !k.wholeFormat && glued(f)) k.wholeFormat = String(f);
+    else if (!k.pct && !k.wholeFormat && glued(f)) k.wholeFormat = scaled(f);
     return k; };
   const cardKind0 = (x, tables) => {
     const r = FM.reportFormatOf({ name: x.name, formatString: x.formatString, formatStringDefinition: x.formatStringDefinition, expression: exprOf(x) }, 'measure', tables || []);
