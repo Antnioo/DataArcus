@@ -66,6 +66,8 @@
   function tableExprCols(t, out) {
     const src = (t.partitions || []).map((p) => p && p.source && p.source.expression).concat([t.expression]).find((e) => e != null);
     const e = String(Array.isArray(src) ? src.join('\n') : src || '').trim(), m0 = e.match(/^(ADDCOLUMNS|SELECTCOLUMNS)\s*\(([\s\S]*)\)$/i);
+    // (round 11, RESCORE-4's N18: a table built with CALENDAR or CALENDARAUTO is a calendar by its shape, whatever its name)
+    if (/\bCALENDAR(AUTO)?\s*\(/i.test(e)) meta(out).calendarShape = true;   // (the picker's note: the model's answers are unchanged)
     if (!m0) return out;
     const a = argsOf(m0[2]);
     for (let i = 1; i + 1 < a.length; i += 2) { const nm = a[i].match(/^"((?:[^"]|"")*)"$/); if (!nm) continue;
@@ -378,7 +380,7 @@
   // or a column whose own DAX is made from that date, is ordered by it)
   // a calendar: marked (dataCategory Time), shaped like one (a relationship's one side on its date column: unique dates;
   // the reader marks it, dateKey), or named like one by whole words
-  const isDateTable = (t) => !!(t && (t.date || /^time$/i.test(t.dataCategory || '') || t.dateKey || CAL_NAME.test(splitName(t.name))));
+  const isDateTable = (t) => !!(t && (t.date || metaOf(t).calendarShape || /^time$/i.test(t.dataCategory || '') || t.dateKey || CAL_NAME.test(splitName(t.name))));
   // the reader's part: a table whose date column is the one side of a relationship holds unique dates (metadata only)
   function markCalendars(tables, json) {
     const m = (json && json.model) || json || {};
@@ -499,7 +501,8 @@
         const col = Object.assign({ t: t.name, c: c.name, type, dateTable: isDateTable(t), cat: c.dataCategory }, fo.sortBy ? { sortBy: fo.sortBy } : {}, fo.ordered ? { ordered: true } : {}, fo.dateOf ? { dateOf: fo.dateOf } : {}, { time: fo.time }, fo.cal ? { cal: fo.cal } : {});
         // (A3-3: its table format in META too: build puts it on a table's field only)
         Object.assign(meta(col), { lang: type === 'string' || type === 'unknown' ? langOf(c.name) : null, i, twin: null, tableFormat: fo.tableFormat || null, short: fo.short || null,
-          stamp: isStamp(c, type), two: twoValued(c, type), wide: manyValued(t, c), id: idLike(c) });
+          stamp: isStamp(c, type), two: twoValued(c, type), wide: manyValued(t, c), id: idLike(c),
+          numeric: /^(sum|average|min|max|count|distinctcount)$/i.test(String(c.summarizeBy || '')) || /^[#0,.\s]+%?$/.test(String(c.formatString || '').trim()) && /0/.test(String(c.formatString || '')) });
         columns.push(col); });
     });
     columns.forEach((c) => { if (metaOf(c).lang === 'en' && AR_SUFFIX.test(c.c)) { const base = c.c.replace(AR_SUFFIX, '').trim().toLowerCase(); if (columns.some((o) => o !== c && o.t === c.t && metaOf(o).lang === 'en' && o.c.trim().toLowerCase() === base)) meta(c).lang = 'ar'; } });
@@ -596,7 +599,13 @@
     const widened = (x) => { const e = exprOf(x).trim(), c = e.match(/^CALCULATE\s*\(([\s\S]*)\)$/i), a = c && argsOf(c[1]);
       return /^COUNTROWS\s*\(\s*(ALL|ALLNOBLANKROW|ALLSELECTED)\s*\(/i.test(e) || !!(a && a.length > 1 && a.slice(1).every((f) => /^(ALL|ALLSELECTED|REMOVEFILTERS|ALLEXCEPT|ALLNOBLANKROW)\s*\(/i.test(f))); };
     const denominator = (x) => widened(x) && measures.some((y) => y !== x && !y.text && !widened(y) && keyOf(y) === keyOf(x));
-    const cardable = (x) => !needsPeriod.get(x) && !metaOf(x).notCard && !selfShare(x) && !denominator(x);
+    // (round 11, RESCORE-4: "[All x] - [x]", a chart's dummy line, is 0 on a card: a value minus its own ALL form, either way)
+    const partKey = (p) => { const t = p.trim().replace(/^\(([\s\S]*)\)$/, '$1').trim(), r = t.match(/^\[([^\]]+)\]$/), y = r && byName.get(r[1].toLowerCase()); if (y) return keyOf(y);
+      const k = valueKey(t); return /^alias:/.test(k) && byName.get(k.slice(6)) ? keyOf(byName.get(k.slice(6))) : k; };
+    const selfDiff = (x) => { const e = inlineVars(exprOf(x)); let d = 0, q = false, at = -1, n = 0;
+      for (let i = 0; i < e.length; i++) { const ch = e[i]; if (ch === '"') q = !q; if (q) continue; if (ch === '(') d++; else if (ch === ')') d--; else if (ch === '-' && d === 0 && i > 0) { at = i; n++; } }
+      return n === 1 && partKey(e.slice(0, at)) === partKey(e.slice(at + 1)); };
+    const cardable = (x) => !needsPeriod.get(x) && !metaOf(x).notCard && !selfShare(x) && !denominator(x) && !selfDiff(x);
     const main = ranked.find((x) => !x.pct && cardable(x)) || ranked.find((x) => !x.pct && !metaOf(x).notCard) || ranked[0] || null;
     // KPIs: the strongest base measures, with one ratio among them when the model has one; a measure left behind only
     // when the cards outnumber the other measures
@@ -625,7 +634,7 @@
     // files give no types)
     const sortTargets = new Set(); ((opt && opt.modelTables) || tables).concat(tables).forEach((t) => (t.columns || []).forEach((c) => { if (c.sortBy) sortTargets.add(t.name + '\u0000' + String(c.sortBy)); }));
     const sortsOther = (c) => sortTargets.has(c.t + '\u0000' + c.c) || columns.some((o) => o !== c && o.t === c.t && o.sortBy && o.sortBy.c === c.c);
-    const monthText = (c) => !/^(int64|double|decimal|number)$/.test(c.type) && !sortsOther(c), dayDate = (c) => /date/.test(c.type) && !metaOf(c).stamp;
+    const monthText = (c) => !/^(int64|double|decimal|number)$/.test(c.type) && !metaOf(c).numeric && !sortsOther(c),   /* (round 11: a summed month number is no month axis) */ dayDate = (c) => /date/.test(c.type) && !metaOf(c).stamp;
     let date = inDate.find((c) => monthText(c) && /^(month[\s_-]*(name|year|label)?|year[\s_-]*month|الشهر)$/i.test(c.c)) || inDate.find((c) => monthText(c) && /month|الشهر/i.test(c.c))
       || inDate.find(dayDate) || columns.find((c) => dayDate(c) && near(c))
       || byLang(columns.filter((c) => monthText(c) && /^(month[\s_-]*(name)?|الشهر)$/i.test(c.c) && near(c)), L, quiet)[0] || null;   // no date table: a month column anywhere
@@ -635,7 +644,8 @@
     if (date && /month|الشهر/i.test(date.c) && !/date/.test(date.type)) { const sh = columns.find((c) => c.t === date.t && SHORT_MONTH.test(c.c.replace(FAMILY, '').trim()) && family(c.c) === family(date.c)); if (sh) date = sh; }
     const year = inDate.find((c) => /^(year|السنة)$/i.test(c.c)) || null;
     // a category: a text column, or one of unknown type whose name reads as a category (not a number, date or key)
-    const textLike = (c) => c.type === 'string' || (c.type === 'unknown' && !NUMBERISH.test(c.c) && !DATEISH.test(c.c));
+    // (round 11, N18: a column the model sums or formats as a plain number is a number, whatever its type in the files)
+    const textLike = (c) => !metaOf(c).numeric && (c.type === 'string' || (c.type === 'unknown' && !NUMBERISH.test(c.c) && !DATEISH.test(c.c)));
     // (round 23: in the report's language; an Arabic twin keeps its English one's place)
     // (round 23 part 5, the review's 4: the reach first, then the language on what is reached, with its Arabic fallback;
     // before, an English column of an unrelated table took the place and then the reach left no category)
@@ -658,13 +668,17 @@
     if (reach) cats = cats.filter((c) => reach.has(c.t));
     cats = byLang(cats, L, note);
     // no category outside the date table: the date table's named parts (quarter, day, month names), never the time axis
+    // no category outside the date table: the date table's named parts (quarter, day, month names), never the time axis
+    // (round 11, RESCORE-4's N18: never its numbers: a summed or "0"-formatted column is no part; when even these are
+    // missing the charts that need a category are left out and the answer says so: noCategory)
     if (!cats.length) cats = DATE_PARTS.map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date && (!reach || reach.has(c.t)))).filter(Boolean);
+    const noCategory = !cats.length;
     // (the rc's laptop proof, D7: the column chart never by the bar chart's field, nor by a field of the same name in
     // another table: the same chart twice; with no other category, a date table's part, else the bar chart's: its slot
     // would stay empty)
     const nm = (c) => String(c.c).toLowerCase(), catA = cats[0] || null, otherName = (c) => catA && c !== catA && nm(c) !== nm(catA);
     const catB = catA ? (cats.find((c) => otherName(c) && c.t !== catA.t && catRank(c) <= catRank(catA)) || cats.find((c) => otherName(c) && catRank(c) < 2)
-      || DATE_PARTS.slice(1).map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date && otherName(c))).filter(Boolean)[0] || catA) : null;   /* (round 10, N12: never the quarter beside a real category) */   // (catA only when the model has no other category: a chart left out leaves its slot empty, the writer's)
+      || (catA.dateTable ? DATE_PARTS.slice(1).map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date && otherName(c))).filter(Boolean)[0] : null) || catA) : null;   /* (round 10, N12: never the quarter beside a real category; round 11, N18: no calendar part beside a real category at all) */   /* (round 10, N12: never the quarter beside a real category) */   // (catA only when the model has no other category: a chart left out leaves its slot empty, the writer's)
     // (D8 + D10: never two slicers on fields of the same name, never on a time stamp)
     const sl = [year, catA, catB, date].filter((x, i, l) => x && l.indexOf(x) === i && !metaOf(x).stamp && l.findIndex((y) => y && nm(y) === nm(x)) === i);
     // (round 23 part 5, the review's 2: the table's reach rule lives in build, so a binding built again from these choices
@@ -710,6 +724,7 @@
     if (L === 'ar') { ['date', 'catA', 'catB'].forEach((k) => { ch[k] = inAr(ch[k]); }); ch.slicers = ch.slicers.map(inAr); if (ch.table) ch.table = ch.table.map(inAr); }
     const out = build(ch);
     Object.assign(out, langNote(L, note));
+    if (noCategory && !P.catA && !P.catB) out.noCategory = 'The model has no text column outside its calendar to group by, so the charts by category are left out: say it in the plan (a calendar\'s year, month or day belongs on the trend).';
     if (excluded.length) out.excluded = excluded;
     if (axisBy) out.axisBy = axisBy;
     if (calendarNames.length) out.calendarNames = calendarNames;
