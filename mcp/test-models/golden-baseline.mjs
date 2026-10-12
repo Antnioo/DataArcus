@@ -88,7 +88,7 @@ const build = async (project, name, theme, layoutArgs, extra = {}) => {
   if (plan.err) return { plan: plan.t.slice(0, 200) };
   const r = await call('create_report', { path: project, name, design: plan.j.design, lang: layoutArgs.lang || 'en', ...extra });
   if (r.err) return { create: r.t.slice(0, 200) };
-  return { plan, r, facts: reportFacts(project, r.j.report, (layoutArgs.lang || 'en') === 'ar'), report: r.j.report, overwritten: unchanged(before).length, modelNotes: (r.j.modelNotes || []).map((n) => n.field) };
+  return { plan, r, facts: reportFacts(project, r.j.report, (layoutArgs.lang || 'en') === 'ar' || layoutArgs.dir === 'rtl'),   /* (12 Oct: a right-to-left report in English is right to left too) */ report: r.j.report, overwritten: unchanged(before).length, modelNotes: (r.j.modelNotes || []).map((n) => n.field) };
 };
 
 await task(1, 'English executive report', async () => {
@@ -184,6 +184,14 @@ await task(11, 'A Gulf model\'s calendar checked', async () => {
   return { uae: found(uae), ksa: found(ksa), scored: uae.j.gulfCalendar.scored, sameScore: uae.j.score.overall === ksa.j.score.overall, overwritten: unchanged(before).length };
 });
 
+// (the layout matrix, 12 Oct: the operations layout had no golden task) the six-tile operations monitor, English and its
+// right-to-left twin, on the Ramadan model with its cards
+await task(12, 'Operations monitor (ops)', async () => {
+  const th = await call('generate_theme', { name: 'Golden Ops', preset: 'Corporate', lang: 'en', folder: 'themes' });
+  const en = await build('ramadan', 'Golden Ops', th, { layout: 'ops', kpis: 6, filters: 'end', page: '1920x1080', lang: 'en' }, { fields: { kpis: RAMADAN_KPIS } });
+  const rtl = await build('ramadan', 'Golden Ops RTL', th, { layout: 'ops', kpis: 6, filters: 'end', page: '1920x1080', lang: 'en', dir: 'rtl' }, { fields: { kpis: RAMADAN_KPIS }, dir: 'rtl' });
+  return { cards: cardsOf(en), slicers: slicersOf(en), en: en.facts, rtl: rtl.facts, overwritten: en.overwritten + rtl.overwritten, modelNotes: en.modelNotes };
+});
 await client.close();
 fs.rmSync(ROOT, { recursive: true, force: true });
 const big = sizes.reduce((a, s) => (s.chars > a.chars ? s : a), { chars: 0 });

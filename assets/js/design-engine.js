@@ -240,6 +240,12 @@
   // its rows are the main chart, then the table beside a bar chart, so a short table leaves half a row, not half a
   // page, and fitSlots reflows the rows beside and under a shortened rail
   const DETAIL_ROWS = [[[1, 'column', T('Main chart', 'المخطط الرئيسي')]], [[1, 'table', T('Detail table', 'جدول التفاصيل')], [1, 'bar', T('Breakdown', 'التوزيع')]]];
+  // (the owner's decision, 12 Oct, after the laptop's LAYOUT-SWEEP-RC6: the executive and single-focus layouts ship as
+  // tested; the operations monitor, analysis as the first page and a page under 1920 wide with filters on top ship as
+  // preview, said in the plan in one plain line; nothing else changes)
+  const LAYOUT_PREVIEW = T('Preview: this layout is still being tuned on real dashboards; the executive and single-focus layouts are the tested ones.',
+    'معاينة: ما زال هذا التخطيط قيد الضبط على لوحات معلومات حقيقية، وتخطيطا «ملخص تنفيذي» و«رسالة واحدة» هما المختبران.');
+  const isPreview = (c) => c.preset === 'ops' || c.preset === 'analysis' || (!!c.filters && c.fpos === 'top' && page(c).w < 1920);
   const layoutOf = (c) => { const L = c.detail ? Object.assign({}, LAYOUTS[c.preset], { rows: DETAIL_ROWS }) : LAYOUTS[c.preset]; return c.noTime ? noTimeOf(L) : L; };
   const hasMain = (P) => P.rows[0].length > 1 && P.rows[0][0][0] > P.rows[0][1][0];   // a wider first chart
   const hasSplit = (P) => P.rows.length === 2;
@@ -784,7 +790,7 @@
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
     clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate, calmPalette,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
-    fs, sizeAt, TEXT_BASES, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
+    fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.DAEngine = api;
