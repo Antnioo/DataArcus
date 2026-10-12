@@ -165,7 +165,25 @@
   // where the rule leaves it alone. tables: the model's (a sum of a whole-number column is a count).
   // Returns { pct, pctFormat?, wholeFormat?, tableFormat?, fullFormat? }: tableFormat, a table column's format;
   // fullFormat, the card's with kpiValues "full" (never a percent)
-  const cardKind = (x, tables) => {
+  // (writer round 9, the laptop's N8, SHAPES-RC4: "-€0,050.87M": the model's "€#,##0,000;-€#,##0,000;€0" has fixed zero
+  // placeholders after a thousands comma; scaled to millions by the card's automatic units the number is padded to four
+  // digits. Radiation from the report writer's block, explained: such a card shows the number unscaled, in the model's
+  // format with the padding taken out (all but the last zero of each section's whole part made "#"), as a whole number's
+  // card does (Custom units and its format, measured D8); an ordinary "€#,0" keeps automatic units.)
+  const padded = (f) => String(f || '').split(';').some((sec) => { const m = sec.replace(/"[^"]*"|\\./g, '').match(/[#0,]+/); return !!m && /0,*[#0]/.test(m[0]); });
+  const unpadded = (f) => String(f).split(';').map((sec) => sec.replace(/("[^"]*"|\\.)|([#0,]+)/g, (all, q, run) => (q ? q : run.replace(/0(?=[#0,]*[#0])/g, '#')))).join(';');
+  // (F4) a section's quoted text after its last digit placeholder, or before its first when that text is no currency
+  const glued = (f) => String(f || '').split(';').some((sec) => { const last = Math.max(sec.lastIndexOf('0'), sec.lastIndexOf('#')), first = sec.search(/[#0]/);
+    return (sec.match(/"[^"]*"/g) || []).some((q) => { const at = sec.indexOf(q); return /\S/.test(q.slice(1, -1)) && (at > last || (at < first && !hasCurrency(q))); }); });
+  const cardKind = (x, tables) => { const k = cardKind0(x, tables), f = x.formatString;
+    if (!k.pct && padded(f) && !(k.wholeFormat && !padded(k.wholeFormat))) k.wholeFormat = unpadded(f);
+    // (writer round 9, the laptop's F4, N8-LAB: "#,0 \"AED\";-#,0 \"AED\"" read "-50.87KAED" / "50.87MAED" in automatic units,
+    // the unit letter glued to the text; with Custom units and the model's own format it read right: a format with quoted
+    // text after the number (a suffix), or before it when it is no currency (the owner's O-2: "EUR" #,0 reads "EUR 54.66M"
+    // in automatic units, and so does a currency code or sign before the number), is shown unscaled in that format, as N8's)
+    else if (!k.pct && !k.wholeFormat && glued(f)) k.wholeFormat = String(f);
+    return k; };
+  const cardKind0 = (x, tables) => {
     const r = FM.reportFormatOf({ name: x.name, formatString: x.formatString, formatStringDefinition: x.formatStringDefinition, expression: exprOf(x) }, 'measure', tables || []);
     if (r && /%/.test(r.format)) return { pct: true, pctFormat: r.format, tableFormat: r.format };
     const own = ownKind(x);
