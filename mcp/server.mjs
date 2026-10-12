@@ -599,7 +599,8 @@ server.registerTool('create_report', {
 }, safe(async (a) => {
   // (rc.4, N9: the approved plan's display names are written when the call leaves them out, as the plan says; other names
   // passed are still compared with the plan, and refused)
-  if (a.displayNames === undefined) { const pn = Plans.pinned(a.planId, 'create_report'); if (pn && pn.displayNames !== undefined) a = Object.assign({}, a, { displayNames: pn.displayNames }); }
+  // (design round 8's S6 does this below for a new report; the native copy returns before it)
+  if (a.displayNames === undefined && a.planId != null) { const pn = Plans.pinned(a.planId, 'create_report', 'displayNames'); if (pn !== undefined) a = Object.assign({}, a, { displayNames: pn }); }
   // (0.2.9, custom visuals, step C) the native copy of an existing report: only the approved replacements, nothing else
   if (a.customVisualsFrom != null) {
     if (a.pages || a.design) throw new Error('Nothing was written: customVisualsFrom writes the native copy of that report alone; a new design is its own plan. Call create_report with customVisualsFrom, path and the approved planId only.');
