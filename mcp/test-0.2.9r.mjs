@@ -89,6 +89,26 @@ export async function v029r({ check }) {
       () => `N5/D14: COUNTROWS ( ALL ( T ) ) is the table's count; a measure over its own value under ALL is no card: ${JSON.stringify(k)}`);
   }
 
+  // ---------- SHAPES-RC4 (the laptop's anonymised shapes, round 9) ----------
+  {
+    // N5: COUNTROWS ( T1 ) and COUNTROWS ( ALLSELECTED ( T1 ) ): the widened one is a denominator, never a card
+    // D14: DIVIDE ( [m1], [m2] ), m2 = CALCULATE ( [m1], ALL ( T1[c1] ) ) or ALL ( T2[c2] ): a share of the total, no card
+    const j = model([{ name: 'T2', columns: [col('c2', 'string')] }, { name: 'T1', columns: [col('c1', 'string'), col('k', 'string'), col('v', 'double')],
+      measures: [ms('m2', 'COUNTROWS ( ALLSELECTED ( T1 ) )', '#,0'), ms('m1', 'COUNTROWS ( T1 )', '#,0'), ms('m4', 'CALCULATE ( [m1], ALL ( T1[c1] ) )', '#,0'),
+        ms('m5', 'CALCULATE ( [m1], ALL ( T2[c2] ) )', '#,0'), ms('m3', 'DIVIDE ( [m1], [m4] )', '0.0%'), ms('m6', 'DIVIDE ( [m1], [m5] )', '0.0%'), ms('v sum', 'SUM ( T1[v] )', '#,0')] }],
+    [rel('T1', 'k', 'T2', 'c2')]);
+    const k = names(pick(j, 6).kpis);
+    chk(() => k.includes('m1') && !['m2', 'm4', 'm5', 'm3', 'm6'].some((m) => k.includes(m)), () => `SHAPES N5/D14: only the plain count is a card (no widened copy, no share of the total): ${JSON.stringify(k)}`);
+    // N7: a small people dimension: the name (the join key), a three-letter picture column, phone, e-mail, address and a
+    // calculated glue column; the name stays the category, the others never are
+    const p = model([{ name: 'People', columns: [col('Name', 'string'), col('Img', 'string'), col('Phone', 'string'), col('Email', 'string'), col('Address', 'string'),
+      col('Card', 'string', { type: 'calculated', expression: 'People[Name] & " " & People[Phone]' })] },
+    { name: 'Calls', columns: [col('Name', 'string'), col('Seconds', 'double')], measures: [ms('Calls', 'COUNTROWS ( Calls )', '#,0')] }],
+    [rel('Calls', 'Name', 'People', 'Name')]);
+    const b = pick(p, 1), ch = b.choices || {}, used = [ch.catA, ch.catB].concat(ch.slicers || [], b.table ? [b.table[0]] : []).filter(Boolean).map((x) => x.c);
+    chk(() => ch.catA && ch.catA.c === 'Name' && !used.some((c) => ['Img', 'Phone', 'Email', 'Address', 'Card'].includes(c)), () => `SHAPES N7: the people's name is the category; no picture, contact or glue column: ${JSON.stringify(used)}`);
+  }
+
   // ---------- D5: a model with currency-formatted amounts shows an amount card first, by format, even when the amount is
   // computed across tables (RELATED) and the counts are plain ----------
   {

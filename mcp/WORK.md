@@ -4,7 +4,7 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
-## Picker round 9 (12 Oct, cloud builder 5; branch `fix/0.2.9-picker9` from the gate `961ef57`; not merged, no PR)
+## Picker round 9 (12 Oct, cloud builder 5; branch `fix/0.2.9-picker9` rebased on the gate `69ea11c` (round 8b); not merged, no PR)
 RESCORE-2 on rc.4: 7.0, target 7.5. Done, each tests first:
 - N9: create_report takes the approved plan's displayNames when the call leaves them out (`Plans.pinned`); the same names
   passed back write; other names are refused (test-0.2.9v, 3 checks). create_report's displayNames description says so.
@@ -19,9 +19,14 @@ RESCORE-2 on rc.4: 7.0, target 7.5. Done, each tests first:
     ALLEXCEPT/ALLNOBLANKROW filters) is x.
   - never a card (100 %): DIVIDE(e, CALCULATE(e, ALL-family ...)) and e / CALCULATE(e, ALL-family ...) for any expression e;
     (round 9) DIVIDE([A], [B]) and [A] / [B] where [B] has [A]'s value (its ALL form, or an alias).
+  - SHAPES-RC4 (landed 06:42, each with a check in test-0.2.9r): COUNTROWS(ALLSELECTED(T1)) beside COUNTROWS(T1) is its
+    denominator, never a card (any value widened to every row, beside the plain one); DIVIDE([m1],[m2]) with m2 =
+    CALCULATE([m1], ALL(T1[c1])) or ALL(T2[c2]) is a share, never a card; N7's people table: Img by name, Phone/Email/Address
+    by contact words (any case, whole words), the glue column by formula; the name, the join key, stays the category (a
+    relationship's key is an identifier only when its table has a better text column). The "freed column" for the share's
+    chart is not done (the share is only kept off the cards).
   - not covered yet: a VAR holding the total (VAR t = CALCULATE(...) RETURN DIVIDE([A], t)); DISTINCTCOUNT vs COUNTROWS of a
-    dimension (different values in general: can't be told by formula alone); FILTER(ALL(...)) forms. SHAPES-RC4.md (the
-    laptop's anonymised shapes) had not landed at the time of writing: cover those when it does.
+    dimension (different values in general: can't be told by formula alone); FILTER(ALL(...)) forms.
 Round 8 on the gate (`961ef57`, before this branch): mcp 1361, v029c/d/e/f, golden 11, fuzz 600 + FUZZ_LONG 10000, deny-scan,
 site config, csp, check-min all pass; website 16 of 17 (pbip: the race fixed here).
 Waiting for the owner: round 8b (writer `fix/0.2.9-writer` 5f92d45 into the gate).

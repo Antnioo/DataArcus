@@ -230,7 +230,7 @@
   const argsOf = (x) => { const out = []; let d = 0, q = false, cur = ''; for (const ch of x) { if (ch === '"') q = !q; if (!q && ch === '(') d++; if (!q && ch === ')') d--;
     if (!q && d === 0 && ch === ',') { out.push(cur); cur = ''; } else cur += ch; } out.push(cur); return out.map((a) => a.trim()); };
   const valueKey = (e) => { const x = String(e || '').trim(), alias = x.match(/^\[([^\]]+)\]$/); if (alias) return 'alias:' + alias[1].toLowerCase();
-    const rows = x.match(/^COUNTROWS\s*\(\s*'?([^'\[\]()]+?)'?\s*\)$/i) || x.match(/^COUNTROWS\s*\(\s*(?:ALL|ALLNOBLANKROW)\s*\(\s*'?([^'\[\]()]+?)'?\s*\)\s*\)$/i) || x.match(/^(?:COUNT|COUNTA)\s*\(\s*'?([^'\[\]()]+?)'?\s*\[[^\]]+\]\s*\)$/i); if (rows) return 'rows:' + rows[1].replace(/\s+/g, ' ').trim().toLowerCase();
+    const rows = x.match(/^COUNTROWS\s*\(\s*'?([^'\[\]()]+?)'?\s*\)$/i) || x.match(/^COUNTROWS\s*\(\s*(?:ALL|ALLNOBLANKROW|ALLSELECTED)\s*\(\s*'?([^'\[\]()]+?)'?\s*\)\s*\)$/i) || x.match(/^(?:COUNT|COUNTA)\s*\(\s*'?([^'\[\]()]+?)'?\s*\[[^\]]+\]\s*\)$/i); if (rows) return 'rows:' + rows[1].replace(/\s+/g, ' ').trim().toLowerCase();
     const calc = x.match(/^CALCULATE\s*\(([\s\S]*)\)$/i), a = calc && argsOf(calc[1]);
     if (a && a[0] && a.slice(1).every((f) => /^(ALL|ALLSELECTED|REMOVEFILTERS|ALLEXCEPT|ALLNOBLANKROW)\s*\(/i.test(f))) return valueKey(a[0]);
     return 'dax:' + x.replace(/\s+/g, '').toLowerCase(); };
@@ -335,12 +335,13 @@
     (m.relationships || []).filter((r) => r && r.toTable && r.toColumn && r.isActive !== false && String(r.isActive) !== 'false').forEach((r) => {
       const t = (tables || []).find((x) => x.name === String(r.toTable)), c = t && (t.columns || []).find((x) => x.name === String(r.toColumn));
       if (c && /^date(time)?$/i.test(String(c.dataType || '')) && (!r.toCardinality || /^one$/i.test(r.toCardinality))) t.dateKey = true; });
-    // (round 8, N1: both ends of a relationship are key columns, an identifier, when the one side's table has another text
-    // column to show (a code beside its name); a join on a readable name alone (Region to Region) stays a category)
+    // (round 8, N1: both ends of a relationship are key columns, an identifier, when the one side's table has a better text
+    // column to show (a code beside its name); a join on a readable name alone (Region to Region) stays a category. Round 9
+    // (SHAPES-RC4's N7): "better" is read in catalog: a people table whose other text columns are a picture, contact data
+    // and a glue column keeps its name, the join key, as the category)
     const colOf = (tn, cn) => { const t = tn != null && (tables || []).find((x) => x.name === String(tn)); return t && cn != null ? [t, (t.columns || []).find((x) => x.name === String(cn))] : [t, null]; };
     (m.relationships || []).forEach((r) => { if (!r) return; const [tt, tc] = colOf(r.toTable, r.toColumn), [, fc] = colOf(r.fromTable, r.fromColumn);
-      if (!tc || !(tt.columns || []).some((x) => x !== tc && !x.isHidden && /^string$/i.test(String(x.dataType || '')))) return;
-      meta(tc).key = true; if (fc) meta(fc).key = true; });
+      if (!tc) return; meta(tc).relKey = { table: tt, col: tc }; if (fc) meta(fc).relKey = { table: tt, col: tc }; });
     return tables;
   }
   function dateColumnFor(columns, name, type, table) {
@@ -423,8 +424,13 @@
   // "product_image", "LogoLink"; "Pickup" or "Logout" hold the letters only)
   const LINK_WORD = /^(img|imgs|image|images|photo|photos|picture|pictures|pic|pics|logo|logos|url|urls|uri|link|links|href|thumbnail|thumbnails|thumb|icon|icons|avatar)$/i;
   const linkName = (n) => splitName(n).split(/\s+/).some((w) => LINK_WORD.test(w));
-  const idLike = (c) => !!(metaOf(c).key || /^(WebUrl|ImageUrl|Barcode)$/i.test(String(c.dataCategory || '')) || linkName(c.name)
+  // (round 9, SHAPES-RC4: contact data by its name's whole words, in any case: "Phone", "Email", "E-mail", "Address", "Fax")
+  const CONTACT = /(^|\s)(e\s?mail|emails?|phones?|mobile|telephone|tel|fax|whatsapp|address(es)?)(\s|$)/i;
+  const idBase = (c) => !!(metaOf(c).key || /^(WebUrl|ImageUrl|Barcode)$/i.test(String(c.dataCategory || '')) || linkName(c.name) || CONTACT.test(splitName(c.name))
     || /UNICHAR\s*\(\s*1[03]\s*\)/i.test(metaOf(c).expr || '') || (/&|\b(CONCATENATE|COMBINEVALUES)\s*\(/i.test(metaOf(c).expr || '') && ((metaOf(c).expr || '').match(/\[[^\]]+\]/g) || []).length >= 2));
+  // a relationship's key is an identifier when the one side's table has another text column that is a better label
+  const idLike = (c) => { if (idBase(c)) return true; const r = metaOf(c).relKey; if (!r || !r.table) return false;
+    return (r.table.columns || []).some((o) => o !== r.col && !o.isHidden && /^string$/i.test(String(o.dataType || '')) && !idBase(o)); };
   function catalog(tables, modelTables) {
     const shown = tables.filter((t) => !t.hidden), all = modelTables || tables;
     const measures = [], columns = [];
@@ -531,7 +537,12 @@
     // (rc.4, round 9, N5 + D14: one measure over another of the same value (the second its ALL form): 100 % on a card)
     const selfShare = (x) => { const e = exprOf(x).trim(), m = e.match(/^DIVIDE\s*\(\s*\[([^\]]+)\]\s*,\s*\[([^\]]+)\]\s*(,[\s\S]*)?\)$/i) || e.match(/^\[([^\]]+)\]\s*\/\s*\[([^\]]+)\]$/);
       const a = m && byName.get(m[1].toLowerCase()), b = m && byName.get(m[2].toLowerCase()); return !!(a && b && a !== b && keyOf(a) === keyOf(b)); };
-    const cardable = (x) => !needsPeriod.get(x) && !metaOf(x).notCard && !selfShare(x);
+    // (SHAPES-RC4, N5: a value widened to every row (COUNTROWS ( ALLSELECTED ( T ) ), CALCULATE ( x, ALL (...) )) beside the
+    // plain value is that value's denominator: never a card while the plain one is there)
+    const widened = (x) => { const e = exprOf(x).trim(), c = e.match(/^CALCULATE\s*\(([\s\S]*)\)$/i), a = c && argsOf(c[1]);
+      return /^COUNTROWS\s*\(\s*(ALL|ALLNOBLANKROW|ALLSELECTED)\s*\(/i.test(e) || !!(a && a.length > 1 && a.slice(1).every((f) => /^(ALL|ALLSELECTED|REMOVEFILTERS|ALLEXCEPT|ALLNOBLANKROW)\s*\(/i.test(f))); };
+    const denominator = (x) => widened(x) && measures.some((y) => y !== x && !y.text && !widened(y) && keyOf(y) === keyOf(x));
+    const cardable = (x) => !needsPeriod.get(x) && !metaOf(x).notCard && !selfShare(x) && !denominator(x);
     const main = ranked.find((x) => !x.pct && cardable(x)) || ranked.find((x) => !x.pct && !metaOf(x).notCard) || ranked[0] || null;
     // KPIs: the strongest base measures, with one ratio among them when the model has one; a measure left behind only
     // when the cards outnumber the other measures
