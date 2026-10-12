@@ -220,7 +220,7 @@ function fieldsAndProblems(tables, fields) {
     if (wanted === 'm' && !meas) { problems.push(`${where}: ${ref} is a column; a measure is needed here`); return null; }
     if (wanted === 'c' && !col) { problems.push(`${where}: ${ref} is a measure; a column is needed here`); return null; }
     // (A3-3: the picker's own measure builder, with the one format rule's formats; a measure the user names is never a variant)
-    if (meas && wanted !== 'c') { const k = Bind.measureOf(t, meas.name, tables); return Object.assign({ t: k.t, m: k.m, pct: k.pct, variant: false }, k.text ? { text: true } : {}, k.pctFormat ? { pctFormat: k.pctFormat } : {}, k.wholeFormat ? { wholeFormat: k.wholeFormat } : {}, k.tableFormat ? { tableFormat: k.tableFormat } : {}, k.fullFormat ? { fullFormat: k.fullFormat } : {}); }
+    if (meas && wanted !== 'c') { const k = Bind.measureOf(t, meas.name, tables); return Object.assign({ t: k.t, m: k.m, pct: k.pct, variant: false }, k.text ? { text: true } : {}, k.pctFormat ? { pctFormat: k.pctFormat } : {}, k.wholeFormat ? { wholeFormat: k.wholeFormat } : {}, k.unitAuto ? { unitAuto: true } : {}, k.tableFormat ? { tableFormat: k.tableFormat } : {}, k.fullFormat ? { fullFormat: k.fullFormat } : {}); }   // (round 11, RESCORE-4: unitAuto was dropped here, so the written text-suffix card kept its 2 decimals: "50.87KAED")
     // (the cross-review's G9: the picker's own field builder, so a new picker property needs no edit here)
     return Bind.fieldOf(t, col.name);
   };
