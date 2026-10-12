@@ -146,8 +146,9 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
   // ---------- G7: one calm brand palette, in the design engine ----------
   {
     const E = req('../assets/js/design-engine.js');
+    // P1+ (LAB-POLISH section 5, 12 Oct): a light design's page is a 6% tint of the lead, here the brand
     const t = await ask('generate_theme', { brand: '#7a2e8c' }), d = t.j && t.j.design;
-    chk(() => typeof E.calmPalette === 'function' && JSON.stringify(d.data) === JSON.stringify(E.calmPalette('#7a2e8c', d.ui.card, d.ui.text)) && JSON.stringify(Object.assign({}, d.ui, { accent: null })) === JSON.stringify(Object.assign({}, E.PRESETS.Corporate.ui, { accent: null })),
+    chk(() => typeof E.calmPalette === 'function' && JSON.stringify(d.data) === JSON.stringify(E.calmPalette('#7a2e8c', d.ui.card, d.ui.text)) && JSON.stringify(Object.assign({}, d.ui, { accent: null })) === JSON.stringify(Object.assign({}, E.PRESETS.Corporate.ui, { accent: null, background: E.mix(E.PRESETS.Corporate.ui.card, '#7a2e8c', 0.06) })),
       () => `G7: the MCP's brand palette is the design engine's calmPalette, on the Corporate light page: ${JSON.stringify(d && { data: d.data, ui: d.ui })}`);
   }
 

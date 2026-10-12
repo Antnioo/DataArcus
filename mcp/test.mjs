@@ -2868,9 +2868,10 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   // The high end is the theme's first data colour (the bars' colour today); the low end is that colour mixed towards
   // the card, as far as it still stands 3:1 off the card (so the smallest bar never fades into its panel).
   const grad = (v) => { const e = dpOf(v)[0], fr = e.properties.fill.solid.color.expr.FillRule; return { input: JSON.stringify(fr.Input), y: JSON.stringify(v.visual.query.queryState.Y.projections[0].field), low: hexOf(fr.FillRule.linearGradient2.min), high: hexOf(fr.FillRule.linearGradient2.max), sel: JSON.stringify(e.selector), n: dpOf(v).length }; };
-  // Polish round P1 (B-71, 12 Oct): the second bar or column chart of a page fades from the theme's second colour, so a
-  // chart's high end is the first or the second data colour (the sweep checks which chart takes which)
-  const good = (r, minBars) => { const bars = r.vis.filter((v) => isBar(v) && !v.tooltipPage), card = cardOf(r.theme), d0 = String(r.theme.dataColors[0]).toLowerCase(), d1 = String(r.theme.dataColors[1]).toLowerCase();
+  // Polish round P1 (B-71, 12 Oct) and P1+ (LAB-POLISH section 5): the second bar or column chart of a page fades from a
+  // chosen second colour (E.secondColour), so a chart's high end is the first data colour or that one (the sweep checks
+  // which chart takes which)
+  const good = (r, minBars) => { const bars = r.vis.filter((v) => isBar(v) && !v.tooltipPage), card = cardOf(r.theme), d0 = String(r.theme.dataColors[0]).toLowerCase(), d1 = String(E.secondColour(r.theme.dataColors, card)).toLowerCase();
     return bars.length >= minBars && bars.every((v) => { const g = grad(v); return g.n === 1 && g.input === g.y && g.sel === '{"data":[{"dataViewWildcard":{"matchingOption":1}}]}' && (g.high === d0 || g.high === d1) && g.low !== g.high && ratio(g.low, card) >= 3 && ratio(g.low, card) < ratio(g.high, card); })
       && r.vis.filter((v) => !isBar(v) || v.tooltipPage).every((v) => !dpOf(v)); };
   const tell = (r) => JSON.stringify(r.vis.filter(isBar).map((v) => [v.visual.visualType, v.tooltipPage, dpOf(v) ? grad(v) : null])).slice(0, 700);
