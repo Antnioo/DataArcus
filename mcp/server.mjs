@@ -18,7 +18,7 @@ import { proposeArabic } from './lib/arabic-names.mjs';
 import { readableName } from './lib/display-names.mjs';
 import { addGulfCalendar, gulfFixInputs } from './lib/gulf-calendar.mjs';
 import { checkReport, CHECKS } from './lib/check-report.mjs';
-import { readReport } from './lib/read-report.mjs';
+import { existingTheme, readReport } from './lib/read-report.mjs';
 import { planNative, writeNative } from './lib/native-copy.mjs';
 import { wordOf } from './lib/read-words.mjs';
 import { takenNames } from './lib/report-names.mjs';
@@ -588,7 +588,9 @@ const CREATE_REPORT_INPUTS = {
 // it with the plan; create_report computes the same from its own inputs, and the gate compares them key by key.
 // (Not pinned: name, title, theme, logo, colours and the report options; see the audit report.)
 const REPORT_PINNED = ['pages', 'page', 'lang', 'dir', 'fields', 'pageFilters', 'displayNames', 'text', 'subtitles', 'svgColumns', 'svgCards', 'customVisualsFrom'];
-const resolvedDesign = (a) => (a.pages ? null : planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang }).design);
+// (a native copy, customVisualsFrom, uses no design: none is pinned, so the report theme read at plan time cannot make
+// its pin differ from create_report's)
+const resolvedDesign = (a) => (a.pages || a.customVisualsFrom != null ? null : planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang, reportTheme: a.reportTheme }).design);
 const reportPin = (a, fields) => Object.assign({ design: resolvedDesign(a) }, Object.fromEntries(REPORT_PINNED.map((k) => [k, k === 'fields' ? fields : a[k]])));
 // the other writers pin every input they were proposed with (A6-5)
 const inputsPin = (a) => Object.fromEntries(Object.entries(a || {}).filter(([k]) => k !== 'planId'));
@@ -1059,7 +1061,7 @@ const hexOk = (v) => typeof v === 'string' && !!clampHex(v);
 
 server.registerTool('generate_theme', {
   title: 'Generate a Power BI theme',
-  description: 'Makes a Power BI report theme (JSON) as the DataArcus Theme Generator does. Without an approved planId it writes nothing: it returns the design (pass it to plan_layout and create_report; create_report puts the theme in the report itself), the colours, the readability checks and a proposed planId for the theme file. With an approved planId (this answer\'s, or plan_layout\'s, after approve_plan with the user\'s go) it writes the theme to a new file inside the DataArcus folder (never over an existing one). Colours from a full palette, a brand colour and a harmony, or a preset (in that order). A theme is light (mode "light") unless the user asks for dark; a brand colour is used exactly as given (the first data colour and the accent), never changed for contrast: a failing readability check is said in the plan (sayInPlan).',
+  description: 'Makes a Power BI report theme (JSON) as the DataArcus Theme Generator does. Without an approved planId it writes nothing: it returns the design (pass it to plan_layout and create_report; create_report puts the theme in the report itself), the colours, the readability checks and a proposed planId for the theme file. With an approved planId (this answer\'s, or plan_layout\'s, after approve_plan with the user\'s go) it writes the theme to a new file inside the DataArcus folder (never over an existing one). Colours from a full palette, a brand colour and a harmony, or a preset (in that order); with path (the model) and no colours asked, from the model\'s report\'s own theme when it has one (fromReport says which; say its line in the plan). A theme is light (mode "light") unless the user asks for dark; a brand colour is used exactly as given (the first data colour and the accent), never changed for contrast: a failing readability check is said in the plan (sayInPlan).',
   inputSchema: {
     name: z.string().max(60).optional().describe('Theme name; empty or blank gives "My Brand Theme"'),
     palette: z.object({ data: z.array(z.string()).length(8).describe('8 data colours, hex'),
@@ -1076,23 +1078,25 @@ server.registerTool('generate_theme', {
       .describe('Page and style choices that change the theme (text sizes grow with the page, kept within 8-60)'),
     mode: z.enum(['light', 'dark']).optional().describe('light (default): a near-white page and white visuals; dark only when the user asks for it'),
     lang: langInput,
+    themeFrom: z.string().max(200).optional().describe('With path: the report (its name, as colours.otherReports lists it) whose colours to keep, when the model has several'),
+    path: modelPath.optional().describe('The model the theme is for: when no colours are asked (no palette, brand, preset or mode) and one of its reports has its own theme, the colours start from that theme (said in sayInPlan)'),
     folder: z.string().optional().describe('Folder for the theme file, inside the DataArcus folder (default: the DataArcus folder)'),
     planId: planIdInput
   }, annotations: ADDS
 }, safe(async (a) => {
-  const { design, repaired, notes } = themeDesign(a);
+  const { design, repaired, notes, fromReport } = themeDesign(Object.assign({}, a, { reportTheme: a.path ? existingTheme(loadModel(a.path), a.themeFrom) : null }));
   const { page, fitted } = pageOf(design.layout), { contrast, warnings } = contrastReport(design);
   if (fitted) warnings.push(`Page ${fitted.asked.w} x ${fitted.asked.h} is outside the sizes the generator allows; the theme is made for ${page.w} x ${page.h}.`);
   const arabic = a.lang === 'ar' || design.layout.dir === 'rtl';
   if (arabic && !AR_FONTS.includes(design.font)) warnings.push(`${design.font} has no Arabic letters, so Arabic text will show in another font. For Arabic reports use ${AR_FONTS.join(', ')}.`);
   // what the plan says about the colours (0.2.9, O-11): light unless dark was asked, the brand exact, a failing check said
   const light = lum(design.ui.background) > 0.45, colours = { page: design.ui.background, visuals: design.ui.card, text: design.ui.text, accent: design.ui.accent, data: design.data, mode: light ? 'light' : 'dark' };
-  const sayInPlan = `Say in the plan: a ${light ? 'light' : 'dark'} theme (page ${design.ui.background}, visuals ${design.ui.card}, text ${design.ui.text})${hexOk(a.brand) ? ` with the brand colour ${clampHex(a.brand)} exactly as given (the first data colour and the accent)` : ''}${light ? '; dark only if the user asks' : ''}.` +
+  const sayInPlan = (fromReport ? `${fromReport.sayInPlan} ` : '') + `Say in the plan: a ${light ? 'light' : 'dark'} theme (page ${design.ui.background}, visuals ${design.ui.card}, text ${design.ui.text})${hexOk(a.brand) ? ` with the brand colour ${clampHex(a.brand)} exactly as given (the first data colour and the accent)` : ''}${light ? '; dark only if the user asks' : ''}.` +
     (warnings.length ? ` These readability checks fail: ${warnings.join('; ')}. The colours were kept as given (a colour is never changed for contrast without the user's yes): say so and offer a darker or lighter shade.` : '');
   // the gate (0.2.9, P-1): the file only with an approved plan; without one, the theme for the plan and a proposed plan id
   if (a.planId == null || a.planId === '') {
     const base = fileBase(design.name) + '.json';
-    return text({ written: false, fileAfterGo: base, page, colours, sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}),
+    return text({ written: false, fileAfterGo: base, page, colours, ...(fromReport ? { fromReport } : {}), sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}),
       plan: Plans.proposal(Plans.propose('theme', null, [`the theme file "${base}" in ${a.folder ? 'the folder ' + a.folder : 'the working folder'} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) } }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
   }
   Plans.gate('generate_theme', a.planId, null, inputsPin(a));
@@ -1126,7 +1130,7 @@ server.registerTool('read_report', {
 
 server.registerTool('plan_layout', {
   title: 'Plan a report page layout',
-  description: 'The exact position of every visual on a Power BI page, as the DataArcus Theme Generator lays it out: one row per visual with its name, the suggested visual, and x, y, width, height in the page\'s own units (Format > General > Properties). Right-to-left designs are mirrored. It writes nothing. It is the plan step: with path (the model) and the plan\'s fields (planFields, as create_report\'s fields) it checks the plan against the tools\' limits (limits in the answer: slicers, KPI cards, table fields, page sizes...) and the model, and gives a proposed planId only for a plan within them; otherwise planProblems says what to change, before the plan is shown. Show the user the plan, wait for go, call approve_plan, then create_report with planId (the same planId also allows generate_theme\'s file). The page is 1920 x 1080 unless the user asks (pageSize.chosenBy says which). With path, the fields that lack their right number or date format come first in the answer, with the format script create_report writes next to the project after go (never applied, the model is not changed): tell the user that first. With path and lang "ar", arabicNames proposes an Arabic display name for each field without one (from a fixed list of report words, never a translation): show them to the user to approve before create_report, and pass the approved ones as displayNames. forAuthoring gives the same numbers as PBIR visual.json positions for editing an existing report: use them exactly, never snap them to multiples of 8, so every visual lands on its panel. Nothing else is written.' + UNTRUSTED,
+  description: 'The exact position of every visual on a Power BI page, as the DataArcus Theme Generator lays it out: one row per visual with its name, the suggested visual, and x, y, width, height in the page\'s own units (Format > General > Properties). Right-to-left designs are mirrored. It writes nothing. It is the plan step: with path (the model) and the plan\'s fields (planFields, as create_report\'s fields) it checks the plan against the tools\' limits (limits in the answer: slicers, KPI cards, table fields, page sizes...) and the model, and gives a proposed planId only for a plan within them; otherwise planProblems says what to change, before the plan is shown. Show the user the plan, wait for go, call approve_plan, then create_report with planId (the same planId also allows generate_theme\'s file). The page is 1920 x 1080 unless the user asks (pageSize.chosenBy says which). With path and a design without its own colours, the colours start from the model\'s own report (its theme\'s own colours, then the colours on its visuals; colours.source says which): say colours.sayInPlan in the plan, colours.solidVisuals and every colours.contrastWarnings; when colours.otherReports lists more of the user\'s reports, say so (themeFrom picks one). With path, the fields that lack their right number or date format come first in the answer, with the format script create_report writes next to the project after go (never applied, the model is not changed): tell the user that first. With path and lang "ar", arabicNames proposes an Arabic display name for each field without one (from a fixed list of report words, never a translation): show them to the user to approve before create_report, and pass the approved ones as displayNames. forAuthoring gives the same numbers as PBIR visual.json positions for editing an existing report: use them exactly, never snap them to multiples of 8, so every visual lands on its panel. Nothing else is written.' + UNTRUSTED,
   inputSchema: {
     design: z.record(z.any()).optional().describe('The design from generate_theme (its layout is the starting point); the other inputs change it'),
     layout: z.enum(['exec', 'analysis', 'ops', 'focus']).optional().describe('Executive summary, analysis (filters and a wide table), operations monitor, or single focus'),
@@ -1142,6 +1146,7 @@ server.registerTool('plan_layout', {
     planFields: z.object({ kpis: z.array(z.string()).max(40), measure: z.string(), timeAxis: z.string(), category: z.string(), category2: z.string(), table: z.array(z.string()).max(40), slicers: z.array(z.string()).max(40) })
       .partial().strict().optional().describe('With path: the plan\'s fields in create_report\'s fields shape (Table[Field]); each is checked against the model and the tools\' limits before the plan is shown'),
     focus: focusInput, tables: tablesInput,
+    themeFrom: z.string().max(200).optional().describe('With path: the report (its name, as colours.otherReports lists it) whose colours a design without its own colours keeps, when the model has several'),
     // (audit 6, A6-1: what create_report will write, pinned with the plan; the same definitions as create_report's)
     pages: CREATE_REPORT_INPUTS.pages, pageFilters: CREATE_REPORT_INPUTS.pageFilters, text: CREATE_REPORT_INPUTS.text, subtitles: CREATE_REPORT_INPUTS.subtitles,
     svgColumns: CREATE_REPORT_INPUTS.svgColumns, svgCards: CREATE_REPORT_INPUTS.svgCards, customVisualsFrom: CREATE_REPORT_INPUTS.customVisualsFrom
@@ -1152,6 +1157,8 @@ server.registerTool('plan_layout', {
   let formats = {}, arabicNames = {}, displayNamesAns = {}, m0 = null, planNames = null;
   if (a.path) {
     const m = (m0 = loadModel(a.path)), sc = scopeOf(m, { focus: a.focus, tables: a.tables });
+    // (keep the dashboard's identity, the owner's go 12 Oct: the model's report's own theme, the design's default colours)
+    a.reportTheme = existingTheme(m, a.themeFrom);
     const keys = a.fields ? new Set(a.fields.map((x) => { const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(x); }))
       : sc.needsFocus ? null : (() => { const b = Bind.suggest(sc.tables, Math.max(1, a.kpis == null ? 4 : a.kpis), relsOf(m, a.lang === 'ar' ? 'ar' : 'en')); return new Set([b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean).map((f) => `${f.t}[${f.c != null ? f.c : f.m}]`)); })();
     const fmt = keys && formatsAnswer(m, a.path, keys, undefined, false, 'create_report writes it next to the project with the report, after the user\'s go (the same file check_model_health writes).');
@@ -1246,7 +1253,7 @@ server.registerTool('plan_layout', {
     } catch (e) { return { skipped: 'the planned page could not be built for the lint: ' + String(e && e.message || e).slice(0, 200) }; }
   })() };
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a light tint and the largest in the theme\'s colour (the bar\'s length tells the size; the colour ranks). For one colour, create_report takes chartColors "solid".' } };
-  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => { const tops = r.slots.filter((x) => x.topN); return tops.length ? { categoryCharts: { tops: tops.map((x) => ({ role: x.role, kind: x.kind, top: x.topN })), sayInPlan: `Each bar and column chart by a category shows the categories its place can hold, its Top N by its measure (${tops.map((x) => `${x.role}: Top ${x.topN}`).join('; ')}): the rest are left out, with no "Other" bar. Its title says "Top N of M:" (for example "Top 9 of 16:") only when it leaves categories out, counted in the report; a chart with N or fewer keeps its plain title. Say it in the plan; a month or day axis keeps all its values in order.` } } : {}; })(), { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.preview ? { preview: r.preview } : {}, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
+  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => { const tops = r.slots.filter((x) => x.topN); return tops.length ? { categoryCharts: { tops: tops.map((x) => ({ role: x.role, kind: x.kind, top: x.topN })), sayInPlan: `Each bar and column chart by a category shows the categories its place can hold, its Top N by its measure (${tops.map((x) => `${x.role}: Top ${x.topN}`).join('; ')}): the rest are left out, with no "Other" bar. Its title says "Top N of M:" (for example "Top 9 of 16:") only when it leaves categories out, counted in the report; a chart with N or fewer keeps its plain title. Say it in the plan; a month or day axis keeps all its values in order.` } } : {}; })(), { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.preview ? { preview: r.preview } : {}, r.colours ? { colours: r.colours } : {}, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
 }));
 
 server.registerTool('add_gulf_calendar', {
