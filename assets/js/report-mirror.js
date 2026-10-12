@@ -126,7 +126,8 @@
     const objects = () => bagOf('objects');
     const vco = () => bagOf('visualContainerObjects');
     // charts
-    if (kind === 'bar') {
+    // (o.keepDirection: a bar list mirrored as one block with its names beside it, T-6: its bars keep growing toward them)
+    if (kind === 'bar' && !o.keepDirection) {
       plainEntry(objects(), 'categoryAxis').properties.switchAxisPosition = mk('true');
       plainEntry(objects(), 'valueAxis').properties.invertAxis = mk('true');
       changes.push('axes');
@@ -222,20 +223,78 @@
 
   // ---- one page: every visual mirrored, W from its parent group ----
   // visuals: [visual.json]; opts as mirrorVisual's. Returns { visuals: [json] in the same order, kinds: { kind: n }, custom: [names] }
+  // ---- visuals mirrored as one (the laptop's rc.5 twins, T-3 and T-6) ----
+  // Mirroring every box on its own broke two kinds of pair:
+  //  - on: a small visual drawn ON a bigger one (a growth badge on a tile, an icon at the end of a card's title). What
+  //    the bigger one draws inside (a picture, a text) does not flip with it, so the reflected badge landed on the
+  //    tile's icon and the icon on the title's last letters. It now moves WITH its host: same offset from the host's
+  //    left edge. On: at least 3/4 of its area inside the host, above it (a higher z), at most a third of the host's
+  //    width, 0.6 of its height and a tenth of its area, a badge's kind (a card, a text box, an image or shape, a new
+  //    card, a button), and the host carries at most 3 such (more: the host is a panel, its visuals mirror one by one);
+  //  - bars: a bar list with its names hidden and the names in the visual beside it (a table, a text box, a slicer, a
+  //    card; never a shape or an image), side by side (a gap of at most 24, half their heights shared). The two are mirrored as one block and keep
+  //    their order inside it; the bars keep growing toward their names (no axis is switched or inverted).
+  // Same parent only (positions in a group are relative to it). Returns { on: [{ visual, host }], bars: [{ bars, names }] }.
+  const BADGE = ['plain', 'textbox', 'newCard', 'button'];
+  // (the names: a visual that shows text; a shape or an image beside the bars is not their names)
+  const showsNames = (v) => ['table', 'matrix', 'textbox', 'slicer', 'newCard'].includes(kindOf(v)) || ['card', 'multiRowCard'].includes(v.visual.visualType);
+  const nameOf = (v) => (isObj(v) && (typeof v.name === 'string' || typeof v.name === 'number') ? String(v.name) : null);
+  const boxOf = (v) => { const p = isObj(v) && isObj(v.position) ? v.position : null; return p && [p.x, p.y, p.width, p.height].every(Number.isFinite) && p.width > 0 && p.height > 0 ? { x: p.x, y: p.y, w: p.width, h: p.height, z: Number.isFinite(p.z) ? p.z : null } : null; };
+  const parentOf = (v) => (isObj(v) && v.parentGroupName != null ? String(v.parentGroupName) : '');
+  const axisHidden = (v) => (entries(isObj(v.visual) ? v.visual.objects : null, 'categoryAxis') || []).some((e) => !e.selector && isObj(e.properties) && lit(e.properties.show) === 'false');
+  function unitsOf(visuals) {
+    const list = (Array.isArray(visuals) ? visuals : []).filter((v) => nameOf(v) != null && boxOf(v) && kindOf(v) !== 'group' && kindOf(v) !== 'unreadable');
+    const inside = (a, b) => { const w = Math.max(0, Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x)), h = Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y)); return (w * h) / (a.w * a.h); };
+    const on = [];
+    list.forEach((v) => {
+      if (!BADGE.includes(kindOf(v))) return;
+      const a = boxOf(v);
+      const hosts = list.filter((h) => h !== v && parentOf(h) === parentOf(v)).map((h) => [h, boxOf(h)]).filter(([, b]) => inside(a, b) >= 0.75 && a.w <= b.w / 3 && a.h <= b.h * 0.6 && a.w * a.h <= b.w * b.h / 10 && a.z != null && b.z != null && a.z > b.z);
+      if (hosts.length) { hosts.sort((x, y) => x[1].w * x[1].h - y[1].w * y[1].h); on.push({ visual: nameOf(v), host: nameOf(hosts[0][0]) }); }
+    });
+    const count = {}; on.forEach((o) => { count[o.host] = (count[o.host] || 0) + 1; });
+    const onKept = on.filter((o) => count[o.host] <= 3 && !on.some((x) => x.visual === o.host));
+    const taken = new Set(onKept.map((o) => o.visual)), bars = [];
+    list.forEach((v) => {
+      if (kindOf(v) !== 'bar' || !axisHidden(v) || taken.has(nameOf(v))) return;
+      const a = boxOf(v);
+      const near = list.filter((n) => n !== v && parentOf(n) === parentOf(v) && showsNames(n) && !taken.has(nameOf(n))).map((n) => {
+        const b = boxOf(n), gap = Math.max(b.x - (a.x + a.w), a.x - (b.x + b.w)), shared = Math.max(0, Math.min(a.y + a.h, b.y + b.h) - Math.max(a.y, b.y));
+        return { n, gap, ok: gap >= -2 && gap <= 24 && shared >= Math.min(a.h, b.h) / 2 };
+      }).filter((c) => c.ok).sort((x, y) => x.gap - y.gap);
+      if (near.length) { bars.push({ bars: nameOf(v), names: nameOf(near[0].n) }); taken.add(nameOf(v)); taken.add(nameOf(near[0].n)); }
+    });
+    return { on: onKept, bars };
+  }
+
   function mirrorPage(page, visuals, opts) {
     const list = Array.isArray(visuals) ? visuals : [], byName = {};
     list.forEach((v) => { if (isObj(v) && (typeof v.name === 'string' || typeof v.name === 'number')) byName[v.name] = v; });
+    const widthOf = (v) => { const parent = isObj(v) && (typeof v.parentGroupName === 'string' || typeof v.parentGroupName === 'number') ? byName[v.parentGroupName] : null; return parent && isObj(parent.position) ? parent.position.width : isObj(page) ? page.width : undefined; };
+    let units; try { units = unitsOf(list); } catch (e) { units = { on: [], bars: [] }; }
+    // where each member of a unit goes (its x in the twin), and the bars that keep their direction
+    const at = {}, keepBars = new Set();
+    units.bars.forEach((u) => {
+      const a = boxOf(byName[u.bars]), b = boxOf(byName[u.names]), W = widthOf(byName[u.bars]); if (!Number.isFinite(W)) return;
+      const left = Math.min(a.x, b.x), right = Math.max(a.x + a.w, b.x + b.w), left2 = W - right;
+      at[u.bars] = round(left2 + a.x - left); at[u.names] = round(left2 + b.x - left); keepBars.add(u.bars);
+    });
+    units.on.forEach((u) => {
+      const a = boxOf(byName[u.visual]), h = boxOf(byName[u.host]), W = widthOf(byName[u.host]); if (!Number.isFinite(W)) return;
+      const hx = at[u.host] != null ? at[u.host] : W - h.x - h.w;
+      at[u.visual] = round(hx + a.x - h.x);
+    });
     const kinds = {}, custom = [], unreadable = [], out = list.map((v) => {
-      const parent = isObj(v) && (typeof v.parentGroupName === 'string' || typeof v.parentGroupName === 'number') ? byName[v.parentGroupName] : null;
-      const W = parent && isObj(parent.position) ? parent.position.width : isObj(page) ? page.width : undefined;
+      const W = widthOf(v), n = nameOf(v);
       // (the backstop: whatever the file holds, a visual that can't be mirrored is copied as it is and listed)
-      let r; try { r = mirrorVisual(v, W, opts); } catch (e) { r = { json: v, kind: 'unreadable', changes: [] }; }
+      let r; try { r = mirrorVisual(v, W, keepBars.has(n) ? Object.assign({}, opts, { keepDirection: true }) : opts); } catch (e) { r = { json: v, kind: 'unreadable', changes: [] }; }
+      if (n != null && at[n] != null && isObj(r.json) && isObj(r.json.position)) r.json.position.x = at[n];
       kinds[r.kind] = (kinds[r.kind] || 0) + 1;
       if (r.kind === 'custom') custom.push(String(v.name));
       if (r.kind === 'unreadable') unreadable.push(isObj(v) && v.name != null ? String(v.name) : '(no name)');
       return r.json;
     });
-    return { visuals: out, kinds, custom, unreadable };
+    return { visuals: out, kinds, custom, unreadable, units };
   }
 
   // ---- texts: what a reader sees that the report itself says (the model's data values are not here) ----
@@ -273,6 +332,6 @@
 
   // a page drawn on a picture (T-1): Power BI has no setting that mirrors a page's background image
   const pageHasPicture = (page) => isObj(page) && isObj(page.objects) && ['background', 'wallpaper'].some((k) => (entries(page.objects, k) || []).some((e) => isObj(e.properties) && e.properties.image !== undefined));
-  const api = { kindOf, isCustom, KIND_WHAT, mirrorVisual, mirrorPage, textsOfVisual, labelVisual, round, pageHasPicture };
+  const api = { kindOf, isCustom, KIND_WHAT, mirrorVisual, mirrorPage, unitsOf, textsOfVisual, labelVisual, round, pageHasPicture };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAMirror = api;
 })(typeof self !== 'undefined' ? self : this);
