@@ -67,7 +67,7 @@
     const src = (t.partitions || []).map((p) => p && p.source && p.source.expression).concat([t.expression]).find((e) => e != null);
     const e = String(Array.isArray(src) ? src.join('\n') : src || '').trim(), m0 = e.match(/^(ADDCOLUMNS|SELECTCOLUMNS)\s*\(([\s\S]*)\)$/i);
     // (round 11, RESCORE-4's N18: a table built with CALENDAR or CALENDARAUTO is a calendar by its shape, whatever its name)
-    if (/\bCALENDAR(AUTO)?\s*\(/i.test(e)) out.date = true;
+    if (/\bCALENDAR(AUTO)?\s*\(/i.test(e)) meta(out).calendarShape = true;   // (the picker's note: the model's answers are unchanged)
     if (!m0) return out;
     const a = argsOf(m0[2]);
     for (let i = 1; i + 1 < a.length; i += 2) { const nm = a[i].match(/^"((?:[^"]|"")*)"$/); if (!nm) continue;
@@ -380,7 +380,7 @@
   // or a column whose own DAX is made from that date, is ordered by it)
   // a calendar: marked (dataCategory Time), shaped like one (a relationship's one side on its date column: unique dates;
   // the reader marks it, dateKey), or named like one by whole words
-  const isDateTable = (t) => !!(t && (t.date || /^time$/i.test(t.dataCategory || '') || t.dateKey || CAL_NAME.test(splitName(t.name))));
+  const isDateTable = (t) => !!(t && (t.date || metaOf(t).calendarShape || /^time$/i.test(t.dataCategory || '') || t.dateKey || CAL_NAME.test(splitName(t.name))));
   // the reader's part: a table whose date column is the one side of a relationship holds unique dates (metadata only)
   function markCalendars(tables, json) {
     const m = (json && json.model) || json || {};
@@ -678,7 +678,7 @@
     // would stay empty)
     const nm = (c) => String(c.c).toLowerCase(), catA = cats[0] || null, otherName = (c) => catA && c !== catA && nm(c) !== nm(catA);
     const catB = catA ? (cats.find((c) => otherName(c) && c.t !== catA.t && catRank(c) <= catRank(catA)) || cats.find((c) => otherName(c) && catRank(c) < 2)
-      || DATE_PARTS.slice(1).map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date && otherName(c))).filter(Boolean)[0] || catA) : null;   /* (round 10, N12: never the quarter beside a real category) */   /* (round 10, N12: never the quarter beside a real category) */   // (catA only when the model has no other category: a chart left out leaves its slot empty, the writer's)
+      || (catA.dateTable ? DATE_PARTS.slice(1).map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date && otherName(c))).filter(Boolean)[0] : null) || catA) : null;   /* (round 10, N12: never the quarter beside a real category; round 11, N18: no calendar part beside a real category at all) */   /* (round 10, N12: never the quarter beside a real category) */   // (catA only when the model has no other category: a chart left out leaves its slot empty, the writer's)
     // (D8 + D10: never two slicers on fields of the same name, never on a time stamp)
     const sl = [year, catA, catB, date].filter((x, i, l) => x && l.indexOf(x) === i && !metaOf(x).stamp && l.findIndex((y) => y && nm(y) === nm(x)) === i);
     // (round 23 part 5, the review's 2: the table's reach rule lives in build, so a binding built again from these choices
