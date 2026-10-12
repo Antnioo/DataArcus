@@ -62,14 +62,8 @@ const statusOf = (c, t) => {
   const [h, sat] = E.hexToHsl(E.clampHex(c) || '#808080');
   return sat >= 0.35 ? Object.keys(STATUS_HUES).find((k) => STATUS_HUES[k](h)) || null : null;
 };
-// (P1, RESCORE-5: adventureworks' lead 1.6:1 and property's 1.8:1 on their cards: thin lines and flat bars) a lead under
-// 3:1 on the card is darkened (lightened on a dark card), its hue and saturation kept, to the first lightness at 3:1
-const toContrast = (c, card, min) => {
-  if (E.contrast(c, card) >= min) return c;
-  const [h, sat, l0] = E.hexToHsl(c), darker = E.lum(card) > 0.45;
-  for (let i = 1; i <= 100; i++) { const l = darker ? l0 - i / 100 : l0 + i / 100; if (l < 0 || l > 1) break; const x = E.hslToHex(h, sat, l); if (E.contrast(x, card) >= min) return x; }
-  return c;
-};
+// a lead under 3:1 on the card is darkened, its hue kept (E.toContrast; P1, RESCORE-5)
+const toContrast = E.toContrast;
 export function themeColours(rt, lang) {
   const t = rt.theme, lumOf = (c) => E.lum(c), own = t.themeColours || [], painted = t.painted || [];
   const found = [...new Set(own.concat(painted))], status = found.filter((c) => statusOf(c, t)), palette = found.filter((c) => !statusOf(c, t)).slice(0, 8);
@@ -183,6 +177,15 @@ export function themeDesign(a) {
   }
   // the page and style choices on top of the engine's full current layout (its version, 1920 x 1080 and defaults)
   d.layout = layoutFrom(Object.assign({}, own && own.style.radius != null ? { radius: own.style.radius } : {}, own && own.style.shadow ? { shadow: true } : {}, a.layout || {}), withDefaults().layout, fix);
+  // (P1+, the laptop's LAB-POLISH section 5, measured in Desktop on 12 Oct: white panels on a white page lifted half a
+  // point with it) a light design's page is a 6% tint of the lead colour, the cards as they are; never on a dark design,
+  // over a background the user asked for (palette.ui.background) or a report theme's own page colour (one apart from its
+  // cards), and off with pageTint: false
+  const ownPage = own && a.reportTheme.theme.background && String(a.reportTheme.theme.background).toLowerCase() !== String(d.ui.card).toLowerCase();
+  if (a.pageTint !== false && !dark && E.lum(d.ui.background) > 0.45 && E.lum(d.ui.card) > 0.45 && !(a.palette && a.palette.ui && hex(a.palette.ui.background)) && !ownPage && hex(d.data[0]) && hex(d.ui.card)) {
+    const tint = E.mix(hex(d.ui.card), hex(d.data[0]), 0.06);
+    if (tint !== d.ui.background) { d.ui.background = tint; notes.push(`The page is a 6% tint of the lead colour (${tint}), so the white visuals stand off it; pageTint: false keeps the plain page. Say it in the plan.`); }
+  }
   const design = E.repairState(d);
   return Object.assign({ design, repaired, notes }, own ? { fromReport: Object.assign(own.info, { contrastWarnings: contrastReport(design).warnings }) } : {});
 }

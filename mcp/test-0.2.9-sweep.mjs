@@ -250,14 +250,34 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     // colour out, or the writer's grey would be switched off (pbip-export.js themeGrid)
     chk(() => JSON.stringify(cc.categoryAxis || '').includes(R0.secondary) && JSON.stringify(cc.valueAxis || '').includes(R0.secondary) && !/gridline/.test(JSON.stringify(cc.valueAxis || '')),
       () => `P1-4: the column chart's axis labels take the grey mixed from the theme's text colour, the gridlines left to the writer's quiet grid: ${JSON.stringify([cc.valueAxis, cc.categoryAxis]).slice(0, 300)}`);
-    // 2. the second palette colour is used: the second bar or column chart of a page takes colour 2
+    // (P1+, the laptop's LAB-POLISH section 5, measured in Desktop, 12 Oct) (b) the second chart takes the palette's next
+    // DISTINCT colour, chosen: a hue at least 30 degrees from the lead and 3:1 on the card (Corporate's colour 2 is the
+    // lead's own blue, lighter: the page stayed one colour), not blindly data colour 2
+    const pick = E.secondColour && E.secondColour(E.PRESETS.Corporate.data, card), hd = (a, b) => { const x = Math.abs(hue(a) - hue(b)) % 360; return Math.min(x, 360 - x); };
+    chk(() => !!pick && hd(pick, E.PRESETS.Corporate.data[0]) >= 30 && E.contrast(pick, card) >= 3 && pick.toLowerCase() === '#c55a11',
+      () => `P1+b: the second colour is chosen, a distinct hue at 3:1 on the card: ${pick}`);
+    const darkened = E.secondColour && E.secondColour(['#1f4e79', '#2e75b6', '#ffd966', '#9dc3e6', '#bdd7ee', '#ddebf7', '#5b9bd5', '#4472c4'], card);
+    chk(() => !!darkened && hd(darkened, '#ffd966') <= 6 && E.contrast(darkened, card) >= 3,
+      () => `P1+b: no distinct colour at 3:1: the first distinct one darkened to 3:1, its hue kept: ${darkened}`);
+    // (d) a 6% tint of the lead as the page background on a light design (the cards stay as they are); never on a dark
+    // design, never over a background the user asked for, off with pageTint: false; the plan names it
+    const T = D.themeDesign({}), lead = T.design.data[0], tint = E.mix(T.design.ui.card, lead, 0.06);
+    chk(() => T.design.ui.background === tint && T.design.ui.card === E.PRESETS.Corporate.ui.card && T.notes.some((n) => n.includes(tint) && /6%/.test(n)),
+      () => `P1+d: a light design's page is a 6% tint of the lead (${tint}), named: ${T.design.ui.background} ${JSON.stringify(T.notes).slice(0, 300)}`);
+    const Tb = D.themeDesign({ brand: '#0F766E' });
+    chk(() => Tb.design.ui.background === E.mix(Tb.design.ui.card, '#0f766e', 0.06), () => `P1+d: a brand's light page is the brand's 6% tint: ${Tb.design.ui.background}`);
+    const Td = D.themeDesign({ mode: 'dark' }), Tp = D.themeDesign({ palette: { data: E.PRESETS.Corporate.data, ui: Object.assign({}, E.PRESETS.Corporate.ui, { background: '#ffffff' }) } }), To = D.themeDesign({ pageTint: false });
+    chk(() => Td.design.ui.background === E.PRESETS.DataArcus.ui.background && Tp.design.ui.background === '#ffffff' && To.design.ui.background === E.PRESETS.Corporate.ui.background,
+      () => `P1+d: no tint on a dark design, over an asked background or with pageTint false: ${Td.design.ui.background} ${Tp.design.ui.background} ${To.design.ui.background}`);
+    // 2. the second palette colour is used: the second bar or column chart of a page takes colour 2 (P1+: the chosen one)
     const two = await ask('create_report', { path: 's-shop', name: 'P1 colours', design: design({ preset: 'exec', page: '1920x1080' }), secondPage: false });
     const grads = visualsOf(two, 's-shop').filter((v) => v.visual && v.page.type !== 'Tooltip' && /^clustered(Bar|Column)Chart$/.test(typeOf(v))).sort((a, b) => a.position.y - b.position.y || a.position.x - b.position.x).map((v) => JSON.stringify(((v.visual.objects || {}).dataPoint) || ''));
     const C = E.PRESETS.Corporate.data.map((c) => c.toLowerCase());
-    chk(() => !two.err && grads.length >= 2 && grads[0].includes(C[0]) && grads[1].includes(C[1]) && !grads[1].includes(C[0]),
+    const C2 = String(E.secondColour ? E.secondColour(E.PRESETS.Corporate.data, card) : C[1]).toLowerCase();
+    chk(() => !two.err && grads.length >= 2 && grads[0].includes(C[0]) && grads[1].includes(C2) && !grads[1].includes(C[0]),
       () => `P1-2: the first bar or column chart takes colour 1, the second colour 2: ${grads.map((g) => (g.match(/#[0-9a-f]{6}/g) || []).join('/')).join(' | ')} ${short(two)}`);
     const sc = ((two.j || {}).chartColors || {}).second || {};
-    chk(() => !two.err && sc.charts >= 1 && String(sc.colour).toLowerCase() === C[1] && grads[1].includes(String(sc.high).toLowerCase()),
+    chk(() => !two.err && sc.charts >= 1 && String(sc.colour).toLowerCase() === C2 && grads[1].includes(String(sc.high).toLowerCase()),
       () => `P1-2: the answer tells the second colour's charts and ends: ${JSON.stringify((two.j || {}).chartColors).slice(0, 400)}`);
   }
 }

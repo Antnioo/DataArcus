@@ -686,7 +686,7 @@
         visual = { visualType: type, visualContainerObjects: frame(ttl, ttl, extra, true), drillFilterOtherVisuals: true };
         if (query) visual.query = query;
         // bars that fade by value (gradientFill above): the report's own bar and column charts, never the tooltip pages';
-        // the second of a page fades from the theme's second colour (polish round P1, B-71: colour 2 was never used)
+        // the second of a page fades from a chosen second colour (polish round P1, B-71: colour 2 was never used; P1+: secondColour)
         if (GRAD && query && (s.kind === 'bar' || s.kind === 'column')) { const g2 = barNth++ % 2 && GRAD2; visual.objects = { dataPoint: gradientFill(query.queryState.Y.projections[0].field, g2 || GRAD) }; chartColors.charts++; if (g2) chartColors.second = (chartColors.second || 0) + 1; }
         if (MIRROR && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { mirrorChart(visual, s.kind); chartAxes.charts++; }
         // Round 21 (the capabilities lab's #6, Desktop 2.158, 7 Oct 2026: "77.7K" above the columns, kept on Save): a column
