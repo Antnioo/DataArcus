@@ -617,6 +617,10 @@ server.registerTool('create_report', {
   // KPI cards: never more than the measures a card can show (no card is ever written without a field)
   // the approved plan's fields (a.fields): each name checked against the model, then bound as given
   const F = resolveFields(m.tables, a.fields);
+  // (design round 8, the re-score's S6: the plan shows readable display names as its default, and pins them; a call
+  // writes the plan's, which the user approved with it, under the names it gives itself, which the gate then checks)
+  { const pn = a.planId != null ? Plans.pinned(a.planId, 'create_report', 'displayNames') : undefined;
+    if (pn) a = Object.assign({}, a, { displayNames: Object.assign({}, pn, a.displayNames || {}) }); }
   // the gate (0.2.9, P-1; audit 6, A6-1): nothing is written without an approved plan for this model, whose pinned inputs
   // (design, page, language, fields, filters, names, texts, SVG designs) are these
   Plans.gate('create_report', a.planId, modelKey(m, a.path), reportPin(a, a.fields));
@@ -936,7 +940,7 @@ server.registerTool('create_report', {
   (r.timeAxes || []).forEach((x) => reportNotes.push(`The line chart by ${visible(x.field)} on "${x.page}" is in time order by the month's first date (a report-level measure, "Month start (sort)", from ${visible(x.by)}; the model's column has no sort column)${x.last ? `, and shows the last ${x.last} months with data (a visual filter: clear it in the Filters pane for the whole history)` : ''}.`));
   // (the cross-review's G13: said only where a chart got the filter)
   // (the design block's S5/D19) the category charts kept to the Top N their slot can show
-  if (r.topCharts && r.topCharts.length) reportNotes.push(`Bar and column charts by a category show the categories their place on the page can hold, by their measure: ${[...new Set(r.topCharts.map((x) => `Top ${x.top}`))].join(', ')} (a Top N visual filter, which can be cleared in the Filters pane; the rest are left out, not summed into one bar).`);
+  if (r.topCharts && r.topCharts.length) reportNotes.push(`Bar and column charts by a category show the categories their place on the page can hold, by their measure: ${[...new Set(r.topCharts.map((x) => `Top ${x.top}`))].join(', ')} (a Top N visual filter, which can be cleared in the Filters pane; the rest are left out, with no "Other" bar). Only when a chart leaves categories out does its title say so, "${`Top ${r.topCharts[0].top} of`}" and the number of its categories, counted in the report under the page's filters; otherwise it shows its plain title (a report-level measure, the model untouched).`);
   if (r.blankFiltered) reportNotes.push('Charts leave out a blank category ("(Blank)"): each has a visual filter "is not blank" on its category, which can be cleared in the Filters pane.');
   if (boundPages && boundPages.some((p) => (p.slots || []).some((x) => x.kind === 'table'))) reportNotes.push('Tables have set column widths, and long text wraps.');
   if (r.tooltipLimits && (r.tooltipLimits.top || r.tooltipLimits.months)) reportNotes.push(`The tooltip pages show ${[r.tooltipLimits.top ? `the Top ${r.tooltipLimits.top} by the measure (said in the title)` : '', r.tooltipLimits.months ? `the last ${r.tooltipLimits.months} months, newest first` : ''].filter(Boolean).join(' and ')}, so no bar is lost behind a scrollbar a tooltip can't use.`);
@@ -1139,7 +1143,7 @@ server.registerTool('plan_layout', {
 }, safe(async (a) => {
   // formats fixed at the source (the owner's ask, 6 Oct 2026): with the model, the fields that lack their right format
   // come first, with the script (the same file check_model_health writes)
-  let formats = {}, arabicNames = {}, displayNamesAns = {}, m0 = null;
+  let formats = {}, arabicNames = {}, displayNamesAns = {}, m0 = null, planNames = null;
   if (a.path) {
     const m = (m0 = loadModel(a.path)), sc = scopeOf(m, { focus: a.focus, tables: a.tables });
     const keys = a.fields ? new Set(a.fields.map((x) => { const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(x); }))
@@ -1150,11 +1154,16 @@ server.registerTool('plan_layout', {
     // (the laptop's sweep of rc.1, S6: raw field names in titles and slicer headers) a plan in English proposes a readable
     // display name for each field named like a database column (ProductName, loan_intent), for the user to approve;
     // never applied without it (create_report shows only the displayNames given)
+    // (design round 8, the re-score's S6: the names were offered but not used, and the reports kept "ProductName") the
+    // readable names are the plan's default: named in the plan, pinned with it (create_report writes them when it gets no
+    // displayNames), and changed by the user through displayNames (their own name, or the model's to keep it)
     if (a.lang !== 'ar' && keys) {
       const given = new Set(Object.keys(a.displayNames || {}).map((k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : k; }));
+      const planKeys = [].concat(...Object.values(a.planFields || {})).filter((x) => typeof x === 'string').map((x) => { const mk = x.trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : null; }).filter(Boolean);
       const prop = {};
-      [...keys].filter((k) => !given.has(k)).forEach((k) => { const r = readableName(k.replace(/^.*?\[(.*)\]$/, '$1')); if (r) prop[k] = r; });
-      if (Object.keys(prop).length) displayNamesAns = { displayNames: { sayFirst: 'Some of the plan\'s fields have database-style names, which the report would show as they are in titles, axes, slicer headers and table headers. Show the user these readable display names and ask them to approve or change each before create_report; pass the approved ones as displayNames. Never use a name the user did not approve: without it the model\'s own name is shown. The model is not renamed.', suggestedDisplayNames: prop } };
+      [...new Set([...keys, ...planKeys])].filter((k) => !given.has(k)).forEach((k) => { const r = readableName(k.replace(/^.*?\[(.*)\]$/, '$1')); if (r) prop[k] = r; });
+      if (Object.keys(prop).length) { planNames = Object.assign({}, prop, a.displayNames || {});
+        displayNamesAns = { displayNames: { inThePlan: prop, sayInPlan: 'The report shows these fields under readable names, the plan\'s default: list every one in the plan ("loan_intent" shown as "Loan Intent"), so the user sees each before saying go. The plan pins them, and create_report writes them without displayNames. To change one, or keep the model\'s own name, call plan_layout again with displayNames { "Table[Field]": "the name" } and show the new plan. The model is not renamed.' } }; }
     }
     if (a.lang === 'ar' && keys) {
       const given = new Set(Object.keys(a.displayNames || {}).map((k) => { const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : k; }));
@@ -1215,7 +1224,7 @@ server.registerTool('plan_layout', {
   const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0).writes : [`the report "<name>.Report" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`];
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     // (Z-01: a report plan allows create_report only, which needs the model; without path no plan id is given)
-    : model ? { plan: Plans.proposal(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: reportPin(a, a.planFields) } }, cvEntries ? { customVisuals: cvEntries } : {})), planned ? { fields: planned } : {}) }
+    : model ? { plan: Plans.proposal(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: reportPin(planNames ? Object.assign({}, a, { displayNames: planNames }) : a, a.planFields) } }, cvEntries ? { customVisuals: cvEntries } : {})), planned ? { fields: planned } : {}) }
       : { noPlan: 'No plan id: this layout was planned without the model (path). For a report, call plan_layout with the model; for a separate theme file, generate_theme proposes its own theme plan.' };
   // round 15 (the owner's go on round 13's recommendation 1): gradient bars are the default for designed pages, and the
   // plan the user approves says so
@@ -1231,7 +1240,7 @@ server.registerTool('plan_layout', {
     } catch (e) { return { skipped: 'the planned page could not be built for the lint: ' + String(e && e.message || e).slice(0, 200) }; }
   })() };
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a light tint and the largest in the theme\'s colour (the bar\'s length tells the size; the colour ranks). For one colour, create_report takes chartColors "solid".' } };
-  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds, with "Top N:" in its title: say it in the plan.' }, (() => { const tops = r.slots.filter((x) => x.topN); return tops.length ? { categoryCharts: { tops: tops.map((x) => ({ role: x.role, kind: x.kind, top: x.topN })), sayInPlan: `Each bar and column chart by a category shows the categories its place can hold, its Top N by its measure (${tops.map((x) => `${x.role}: Top ${x.topN}`).join('; ')}): the rest are left out, not summed. Say it in the plan; a month or day axis keeps all its values in order.` } } : {}; })(), { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
+  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => { const tops = r.slots.filter((x) => x.topN); return tops.length ? { categoryCharts: { tops: tops.map((x) => ({ role: x.role, kind: x.kind, top: x.topN })), sayInPlan: `Each bar and column chart by a category shows the categories its place can hold, its Top N by its measure (${tops.map((x) => `${x.role}: Top ${x.topN}`).join('; ')}): the rest are left out, with no "Other" bar. Its title says "Top N of M:" (for example "Top 9 of 16:") only when it leaves categories out, counted in the report; a chart with N or fewer keeps its plain title. Say it in the plan; a month or day axis keeps all its values in order.` } } : {}; })(), { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
 }));
 
 server.registerTool('add_gulf_calendar', {

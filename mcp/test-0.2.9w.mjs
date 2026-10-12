@@ -95,7 +95,9 @@ export function v029w({ check }) {
     chk(() => bars(given) === 1, () => `A3-7: a category the picker marks { kind: 'month', family: 'hijri' } is measured as Hijri month names: ${given.threw || JSON.stringify(given.barCharts)}`);
     // a table's known rows: "Year Quarter" holds many quarters (never 4); a quarter or a day the picker counts is known
     const tbl = (c) => get(() => build(base({ table: [c, M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 120 }]) }));
-    const tight = (r) => !!(r.files && visuals(r).some((v) => v.visual.visualType === 'tableEx' && JSON.stringify(v.visual.objects.grid || '').includes('rowPadding'))) || (r.tableRows || []).length > 0;
+    // (design round 8, N6: a table of unknown rows now takes the room past its last whole row as extra row padding; a table
+    // whose rows are known and tight has rowPadding 0)
+    const tight = (r) => !!(r.files && visuals(r).some((v) => v.visual.visualType === 'tableEx' && JSON.stringify(v.visual.objects.grid || '').includes('"rowPadding":{"expr":{"Literal":{"Value":"0D"}}}'))) || (r.tableRows || []).length > 0;
     const yq = tbl(C('Year Quarter', {}, D)), qq = tbl(C('Quarter', {}, D)), pk = tbl(C('Weekday Label', { kind: 'day', rows: 7 }, D)), my = tbl(C('Month Year', {}, D));
     chk(() => !tight(yq) && tight(qq) && tight(pk) && !tight(my), () => `A3-7: rows known only for a quarter without a year, a day or month name, or the picker's count: Year Quarter ${tight(yq)}, Quarter ${tight(qq)}, picker's 7 days ${tight(pk)}, Month Year ${tight(my)}`);
   }
@@ -284,8 +286,11 @@ export function v029w({ check }) {
     const topOf = (v) => { const f = ((v.filterConfig || {}).filters || []).find((x) => x.type === 'TopN'); return f ? f.filter.From[0].Expression.Subquery.Query.Top : null; };
     const bar = vs.find((v) => v.position.x === 24), col = vs.find((v) => v.position.x === 640 && v.position.y === 80);
     // a bar chart 300 high at 720: (300 - 45 - 8 - 38) / 22.2 = 9 rows; a column chart 500 wide: room for 12-character labels
-    chk(() => topOf(bar) === 9 && topOf(col) >= 3 && /^Top 9: /.test(titleOf(bar)) && new RegExp('^Top ' + topOf(col) + ': ').test(titleOf(col)) && (r.topCharts || []).length >= 2,   /* (round 7: S5 belongs to the design block, which reports the cut charts as topCharts) */
-      () => `rc1-4: a chart by a text category shows its top N by its measure, N the rows or columns it holds, said in its title and told: ${r.threw || JSON.stringify(vs.map((v) => [titleOf(v), topOf(v)]))}`);
+    // (design round 8, N2/N3: the title says "Top N of M:" only when the chart leaves categories out: a report measure)
+    const extTitle = (v) => { const m = (((v.visual.visualContainerObjects || {}).title || [])[0] || { properties: {} }).properties.text, ref = m && m.expr && m.expr.Measure; if (!ref || !r.files) return '';
+      const ext = r.files.find((f) => /reportExtensions\.json$/.test(f.path)); return ext ? (JSON.parse(String(ext.data)).entities.flatMap((e) => e.measures).find((x) => x.name === ref.Property) || {}).expression || '' : ''; };
+    chk(() => topOf(bar) === 9 && topOf(col) >= 3 && extTitle(bar).includes('"Top 9 of "') && extTitle(col).includes('"Top ' + topOf(col) + ' of "') && (r.topCharts || []).length >= 2,   /* (round 7: S5 belongs to the design block, which reports the cut charts as topCharts) */
+      () => `rc1-4: a chart by a text category shows its top N by its measure, N the rows or columns it holds, said in its title and told: ${r.threw || JSON.stringify(vs.map((v) => [extTitle(v) || titleOf(v), topOf(v)]))}`);
     const t = get(() => build(base({ cats: { bar: C('Month Name', { sortBy: { t: D, c: 'Month No' } }, D), column: C('Quarter', {}, D), donut: C('Channel') } }), { pages: hand(1280, 720, [{ kind: 'bar', title: 'B', x: 24, y: 80, w: 600, h: 300 }, { kind: 'column', title: 'K', x: 640, y: 80, w: 500, h: 300 }]) }));
     chk(() => t.files && visuals(t).filter((v) => /^clustered/.test(v.visual.visualType) && v.position.x !== 12).every((v) => topOf(v) == null), () => 'rc1-4: a time or known category (months, quarters) is never cut to a top N');
     // the website's sample report (4 values a category) is never cut and never titled "Top N" (the tooltip page's own
@@ -350,6 +355,18 @@ export function v029w({ check }) {
     // (RESCORE-1's page-1 case: 302 high at 1920 x 1080 holds 5.9 rows: 5 whole rows and the total, 276.3)
     chk(() => t1 && w1080.k === 5 && Math.abs(t1.position.height - w1080.h) <= 1.5,
       () => `S3: the 302-high table at 1920 x 1080 shows 5 whole rows and its total in ${w1080.h.toFixed(1)} (measured): ${r1.threw || JSON.stringify(t1 && t1.position)}`);
+    // S3 with the design's N6 (the reviewer's resolution, 12 Oct): a table beside a chart in one row of the page: the table
+    // visual ends on its whole rows (measured), its panel keeps the slot's height, and the panel's bottom is the chart's;
+    // the table's shadow is the theme's (over a "No data" card only the background is written: the owner's measured rule)
+    const row = [{ kind: 'table', title: 'T', x: 24, y: 120, w: 900, h: 302 }, { kind: 'bar', title: 'B', x: 948, y: 120, w: 900, h: 302 }];
+    for (const nd of [true, false]) {
+      const rp = get(() => build(base({ table: [C('City'), M('Total Sales')] }), { theme: th15, noDataMessage: nd, pages: hand(1920, 1080, row) }));
+      const vs = rp.files ? visuals(rp) : [], tb = vs.find((v) => v.visual.visualType === 'tableEx'), ch = vs.find((v) => v.visual.visualType === 'clusteredBarChart');
+      const panel = vs.find((v) => v !== tb && v.position.x === 24 && v.position.y === 120 && v.position.height === 302 && /^(cardVisual|textbox)$/.test(v.visual.visualType));
+      const shadowOff = tb && L((((tb.visual.visualContainerObjects || {}).dropShadow || [])[0] || { properties: {} }).properties.show) === 'false';
+      chk(() => tb && Math.abs(tb.position.height - w1080.h) <= 1.5 && panel && panel.position.y + panel.position.height === ch.position.y + ch.position.height && panel.position.z < tb.position.z && !shadowOff && panel.position.tabOrder == null,
+        () => `S3/N6 (${nd ? 'with' : 'without'} the "No data" card): the table on whole rows (${w1080.h.toFixed(1)}) inside a panel whose bottom is the chart's: ${rp.threw || JSON.stringify({ table: tb && tb.position, panel: panel && [panel.visual.visualType, panel.position], chart: ch && ch.position, shadowOff })}`);
+    }
     const rd = get(() => build(base({ table: [C('Day Name', { kind: 'day', rows: 7 }), M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 300 }]) }));
     chk(() => rd.files && visuals(rd).find((v) => v.visual.visualType === 'tableEx').position.height === 300, () => 'S3: a table whose rows all show (7 days) keeps its height');
     // D3: a long slicer header takes a smaller text, down to 8pt, before it is shortened
