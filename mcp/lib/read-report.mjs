@@ -309,42 +309,91 @@ export function inventory(src, reportName, opts) {
     bookmarks, bookmarkFiles: src.files('definition/bookmarks').filter((n) => /\.bookmark\.json$/i.test(n)).length, types, customVisuals: custom.map((t) => ({ type: safeName(t), source: sourceOf(t) })), installedNotUsed, reportFilters: safeFilters(report.filterConfig), unreadable: unreadableFiles.length, unreadableFiles, suspicious, sk };
 }
 
-// ---- an existing report's theme, as a design needs it (0.2.9, KEEP THE DASHBOARD'S IDENTITY: the owner's go, 12 Oct) ----
+// ---- an existing report's identity, as a design needs it (0.2.9, KEEP THE DASHBOARD'S IDENTITY: the owner's go, 12 Oct) ----
 // A new report started from the plain Corporate preset whenever the chat named no colours, even when the model already
-// had a designed report. The design block's default (lib/design.mjs) now starts from that report's own theme; this
-// reading gives it the colours, and nothing else: hex colours only (#rgb or #rrggbb, checked; any other value is left
-// out), never a model value, never a text. A report with a base theme only (no customTheme) has none: null.
+// had a designed report. The design block's default (lib/design.mjs) now starts from that report's own colours; this
+// reading gives it the colours and three style settings, nothing else: hex colours only (#rgb or #rrggbb, checked; any
+// other value is left out), never a model value, never a text.
+// (the laptop's inventory of nine real dashboards, 12 Oct: only 4 had a full palette in their theme; 3 were 8-colour
+// "Custom" stubs whose first 1-3 colours are their own and the rest the base theme's; on 5 the identity was in colours
+// written on the visuals themselves.) So three sources, in this order: the custom theme's colours that differ from the
+// report's base theme (read from the base theme file the report carries, never from a list of ours), then the colours
+// written on its pages and visuals by how often, then nothing (the design's own default).
 const hex6 = (c) => { const m = typeof c === 'string' ? /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(c.trim()) : null; return m ? '#' + (m[1].length === 3 ? m[1].replace(/./g, '$&$&') : m[1]).toLowerCase() : null; };
-const solidOf = (x) => { const e = Array.isArray(x) ? x[0] : null; return e && typeof e === 'object' && e.color && e.color.solid ? hex6(e.color.solid.color) : null; };
-// { name, dataColors (up to 8), background (the page), card (the visuals: visualStyles '*' background, else the theme's
-// background), border (the visuals' border), text (foreground), accent (tableAccent), good, neutral, bad } | null
-export function reportTheme(inv) {
+const firstOf = (x) => (Array.isArray(x) && x[0] && typeof x[0] === 'object' ? x[0] : null);
+const solidOf = (x) => { const e = firstOf(x); return e && e.color && e.color.solid ? hex6(e.color.solid.color) : null; };
+// saturation and lightness of a hex colour (HSL)
+const sl = (h) => { const v = [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255), mx = Math.max(...v), mn = Math.min(...v), l = (mx + mn) / 2;
+  return { s: mx === mn ? 0 : l > 0.5 ? (mx - mn) / (2 - mx - mn) : (mx - mn) / (mx + mn), l }; };
+// a colour that can lead a palette (coloured, neither near white nor near black), and a dark grey that reads as text
+const isDataColour = (h) => { const { s, l } = sl(h); return s >= 0.25 && l >= 0.2 && l <= 0.8; };
+const isTextColour = (h) => { const { s, l } = sl(h); return s < 0.25 && l < 0.35; };
+// { name, dataColors (the theme's own, up to 8: those of the base theme left out when base is given), background (the
+// page), card (the visuals, only when solid), cardTransparent (the visuals' transparency, %, when the theme makes them
+// see-through: made for a page picture, never copied), border, text (foreground), accent (tableAccent), good, neutral,
+// bad, radius, shadow, font } | null (a report with a base theme only). base: the base theme's JSON, when read.
+export function reportTheme(inv, base) {
   const t = inv && inv.themeRef ? inv.themeJson : null;
   if (!t || typeof t !== 'object' || Array.isArray(t)) return null;
   const vs = t.visualStyles && typeof t.visualStyles === 'object' ? t.visualStyles : {};
-  const at = (v, k) => { const o = vs[v] && vs[v]['*']; return o && typeof o === 'object' ? solidOf(o[k]) : null; };
-  const out = { name: inv.theme.name, dataColors: (Array.isArray(t.dataColors) ? t.dataColors : []).map(hex6).filter(Boolean).slice(0, 8),
-    background: at('page', 'background'), card: at('*', 'background') || hex6(t.background), border: at('*', 'border'), text: hex6(t.foreground), accent: hex6(t.tableAccent),
-    good: hex6(t.good) || hex6(t.maximum), neutral: hex6(t.neutral) || hex6(t.center), bad: hex6(t.bad) || hex6(t.minimum) };
+  const at = (v) => { const o = vs[v] && vs[v]['*']; return o && typeof o === 'object' ? o : {}; };
+  const b = base && typeof base === 'object' ? base : {}, inBase = new Set((Array.isArray(b.dataColors) ? b.dataColors : []).map(hex6).filter(Boolean));
+  const own = (c, baseC) => { const h = hex6(c); return h && h !== hex6(baseC) ? h : null; };
+  const vbg = firstOf(at('*').background), transp = vbg ? +vbg.transparency || 0 : 0, title = (t.textClasses && t.textClasses.title) || {}, font = typeof title.fontFace === 'string' ? title.fontFace.split(',')[0].replace(/'/g, '').trim() : null;
+  const border = firstOf(at('*').border), shadow = firstOf(at('*').dropShadow);
+  const out = { name: inv.theme.name, dataColors: (Array.isArray(t.dataColors) ? t.dataColors : []).map(hex6).filter((h) => h && !inBase.has(h)).slice(0, 8),
+    background: solidOf(at('page').background), card: transp > 0 ? null : solidOf(at('*').background) || own(t.background, b.background), cardTransparent: transp > 0 ? transp : null,
+    border: solidOf(at('*').border), text: own(t.foreground, b.foreground), accent: own(t.tableAccent, b.tableAccent),
+    good: hex6(t.good) || hex6(t.maximum), neutral: hex6(t.neutral) || hex6(t.center), bad: hex6(t.bad) || hex6(t.minimum),
+    radius: border && Number.isFinite(+border.radius) && +border.radius >= 0 && +border.radius <= 24 ? +border.radius : null, shadow: shadow && shadow.show === true ? true : null, font };
   return Object.fromEntries(Object.entries(out).filter(([, v]) => v != null && !(Array.isArray(v) && !v.length)));
 }
+// the colours written on a report's pages and visuals (a fill, a data colour, a background, a border: a literal hex
+// colour; a theme colour reference is the theme's), counted: [[hex, how often]], the most used first
+export function paintedColours(inv) {
+  const n = new Map();
+  const walkC = (o, d) => {
+    if (!o || typeof o !== 'object' || d > 40) return;
+    if (Array.isArray(o)) { o.forEach((x) => walkC(x, d + 1)); return; }
+    const lit = o.solid && o.solid.color && o.solid.color.expr && o.solid.color.expr.Literal;
+    if (lit) { const h = hex6(String(lit.Value == null ? '' : lit.Value).replace(/'/g, '')); if (h) n.set(h, (n.get(h) || 0) + 1); }
+    Object.values(o).forEach((v) => walkC(v, d + 1));
+  };
+  (inv.pages || []).forEach((p) => { walkC(p.raw && p.raw.objects, 0); (p.visuals || []).forEach((x) => walkC(x.json && (x.json.visual || x.json.visualGroup), 0)); });
+  return [...n.entries()].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1));
+}
+// a report's identity: { name (the theme's, or null), themeColours, painted (data colours written on it, by how often,
+// neither the base's nor the theme's), text, ...reportTheme's other colours and styles } | null when it has none
+export function reportIdentity(src, reportName) {
+  const inv = inventory(src, reportName);
+  const bt = (((inv.report || {}).themeCollection || {}).baseTheme || {}).name, base = bt ? (() => { try { return src.json(`StaticResources/SharedResources/BaseThemes/${path.basename(String(bt))}.json`); } catch (e) { return null; } })() : null;
+  const th = reportTheme(inv, base) || {}, inBase = new Set(((base && Array.isArray(base.dataColors)) ? base.dataColors : []).map(hex6).filter(Boolean));
+  const own = th.dataColors || [], counted = paintedColours(inv);
+  const painted = counted.map(([h]) => h).filter((h) => isDataColour(h) && !inBase.has(h) && !own.includes(h)).slice(0, 8);
+  const text = th.text || (counted.find(([h]) => isTextColour(h)) || [])[0] || null;
+  const ours = ((inv.report || {}).annotations || []).some((x) => x && x.name === 'generatedBy' && /DataArcus/.test(String(x.value)));
+  if (!own.length && !painted.length) return { ours, identity: null };
+  const { dataColors, ...rest } = th;
+  return { ours, identity: Object.assign({}, rest, { name: inv.themeRef ? th.name || inv.theme.name : null, themeColours: own, painted }, text ? { text } : {}) };
+}
 // Which report: one of the model's own reports (those the model loader counted: their definition.pbir points at this
-// model folder, inside the working folder; another model's report, or one outside, is never read). Several: the one
-// named as the model (X.Report beside X.SemanticModel), then one a .pbip opens, then by name; the answer says which.
-// The report a call is about to write does not exist yet, and a report written earlier is chosen only after the model's
-// own. Returns { report (its name, screened), theme (reportTheme's, or null for a base theme only), others } | null.
-export function existingTheme(m) {
+// model folder, inside the working folder; another model's report, or one outside, is never read), never one DataArcus
+// wrote itself (its report.json's generatedBy). Several: the one a .pbip opens, then the one named as the model, then by
+// name; the others are named, and want (themeFrom: a report's name) picks one. Returns { report (its name, screened),
+// theme (reportIdentity's identity, or null: nothing of its own), others: [names] } | null.
+export function existingTheme(m, want) {
   if (!m || !m.projectDir || !m.folder || !m.report || !Array.isArray(m.report.files)) return null;
   const root = path.resolve(m.projectDir), model = path.basename(m.folder).replace(/\.SemanticModel$/i, '');
   const dirs = [...new Set(m.report.files.map((f) => path.relative(root, path.resolve(String(f.path))).split(path.sep)[0]).filter((n) => /\.Report$/i.test(n) && !n.startsWith('..')))];
-  if (!dirs.length) return null;
   const base = (n) => n.replace(/\.Report$/i, '');
   const opened = (n) => { const f = path.join(root, base(n) + '.pbip'); try { if (!isFile(f)) return false; const a = readJson(f); const r = ((Array.isArray(a.artifacts) ? a.artifacts : []).find((x) => x && x.report) || {}).report; return path.resolve(root, String((r && r.path) || n)) === path.join(root, n); } catch (e) { return false; } };
-  const rank = (n) => (base(n) === model ? 0 : 2) + (opened(n) ? 0 : 1);
-  const pick = dirs.slice().sort((a, b) => rank(a) - rank(b) || (a < b ? -1 : a > b ? 1 : 0))[0];
-  let theme = null;
-  try { const dir = path.join(root, pick); theme = reportTheme(inventory(diskSource({ reportDir: dir, defDir: path.join(dir, 'definition') }, { big: [], deep: 0 }), base(pick), { pages: [0] })); } catch (e) { theme = null; }
-  return { report: safeName(base(pick)), theme, others: dirs.length - 1 };
+  const read = (n) => { try { const dir = path.join(root, n); return reportIdentity(diskSource({ reportDir: dir, defDir: path.join(dir, 'definition') }, { big: [], deep: 0 }), base(n)); } catch (e) { return { ours: false, identity: null }; } };
+  const all = dirs.map((n) => Object.assign({ n }, read(n))), human = all.filter((x) => !x.ours);
+  const rank = (x) => (opened(x.n) ? 0 : 2) + (base(x.n) === model ? 0 : 1);
+  const asked = want != null && String(want).trim() ? all.find((x) => base(x.n).toLowerCase() === String(want).trim().replace(/\.Report$/i, '').toLowerCase()) : null;
+  const pick = asked || human.slice().sort((a, b) => rank(a) - rank(b) || (a.n < b.n ? -1 : a.n > b.n ? 1 : 0))[0];
+  if (!pick) return null;
+  return { report: safeName(base(pick.n)), theme: pick.identity, others: human.filter((x) => x !== pick).map((x) => safeName(base(x.n))) };
 }
 
 // ---- read_report's answer: one line per visual (text, the default) or the same as JSON ----
