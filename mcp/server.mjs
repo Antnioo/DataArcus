@@ -1076,12 +1076,13 @@ server.registerTool('generate_theme', {
       .describe('Page and style choices that change the theme (text sizes grow with the page, kept within 8-60)'),
     mode: z.enum(['light', 'dark']).optional().describe('light (default): a near-white page and white visuals; dark only when the user asks for it'),
     lang: langInput,
+    themeFrom: z.string().max(200).optional().describe('With path: the report (its name, as colours.otherReports lists it) whose colours to keep, when the model has several'),
     path: modelPath.optional().describe('The model the theme is for: when no colours are asked (no palette, brand, preset or mode) and one of its reports has its own theme, the colours start from that theme (said in sayInPlan)'),
     folder: z.string().optional().describe('Folder for the theme file, inside the DataArcus folder (default: the DataArcus folder)'),
     planId: planIdInput
   }, annotations: ADDS
 }, safe(async (a) => {
-  const { design, repaired, notes, fromReport } = themeDesign(Object.assign({}, a, { reportTheme: a.path ? existingTheme(loadModel(a.path)) : null }));
+  const { design, repaired, notes, fromReport } = themeDesign(Object.assign({}, a, { reportTheme: a.path ? existingTheme(loadModel(a.path), a.themeFrom) : null }));
   const { page, fitted } = pageOf(design.layout), { contrast, warnings } = contrastReport(design);
   if (fitted) warnings.push(`Page ${fitted.asked.w} x ${fitted.asked.h} is outside the sizes the generator allows; the theme is made for ${page.w} x ${page.h}.`);
   const arabic = a.lang === 'ar' || design.layout.dir === 'rtl';
@@ -1143,6 +1144,7 @@ server.registerTool('plan_layout', {
     planFields: z.object({ kpis: z.array(z.string()).max(40), measure: z.string(), timeAxis: z.string(), category: z.string(), category2: z.string(), table: z.array(z.string()).max(40), slicers: z.array(z.string()).max(40) })
       .partial().strict().optional().describe('With path: the plan\'s fields in create_report\'s fields shape (Table[Field]); each is checked against the model and the tools\' limits before the plan is shown'),
     focus: focusInput, tables: tablesInput,
+    themeFrom: z.string().max(200).optional().describe('With path: the report (its name, as colours.otherReports lists it) whose colours a design without its own colours keeps, when the model has several'),
     // (audit 6, A6-1: what create_report will write, pinned with the plan; the same definitions as create_report's)
     pages: CREATE_REPORT_INPUTS.pages, pageFilters: CREATE_REPORT_INPUTS.pageFilters, text: CREATE_REPORT_INPUTS.text, subtitles: CREATE_REPORT_INPUTS.subtitles,
     svgColumns: CREATE_REPORT_INPUTS.svgColumns, svgCards: CREATE_REPORT_INPUTS.svgCards, customVisualsFrom: CREATE_REPORT_INPUTS.customVisualsFrom
@@ -1154,7 +1156,7 @@ server.registerTool('plan_layout', {
   if (a.path) {
     const m = (m0 = loadModel(a.path)), sc = scopeOf(m, { focus: a.focus, tables: a.tables });
     // (keep the dashboard's identity, the owner's go 12 Oct: the model's report's own theme, the design's default colours)
-    a.reportTheme = existingTheme(m);
+    a.reportTheme = existingTheme(m, a.themeFrom);
     const keys = a.fields ? new Set(a.fields.map((x) => { const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(x); }))
       : sc.needsFocus ? null : (() => { const b = Bind.suggest(sc.tables, Math.max(1, a.kpis == null ? 4 : a.kpis), relsOf(m, a.lang === 'ar' ? 'ar' : 'en')); return new Set([b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean).map((f) => `${f.t}[${f.c != null ? f.c : f.m}]`)); })();
     const fmt = keys && formatsAnswer(m, a.path, keys, undefined, false, 'create_report writes it next to the project with the report, after the user\'s go (the same file check_model_health writes).');
