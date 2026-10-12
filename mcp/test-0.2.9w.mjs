@@ -437,6 +437,15 @@ export function v029w({ check }) {
     const ve = kc ? kc.visual.objects.value.find((e) => e.selector && e.selector.metadata) : null;
     chk(() => ve && L(ve.properties.labelDisplayUnits) === '-1D' && S(ve.properties.customFormatString) === '€#,###,##0;-€#,###,##0;€0',
       () => `N8: the card writes Custom units and that format (positive and negative sections): ${rn.threw || JSON.stringify(kc && kc.visual.objects.value)}`);
+    // F4 (N8-LAB: "#,0 \"AED\";-#,0 \"AED\"" read "-50.87KAED" / "50.87MAED" in automatic units: the unit letter glued to the
+    // text, its space lost; with Custom units and the model's own format it read right, unscaled): a card whose model format
+    // carries quoted text after the number, or a prefix that is no currency, shows the number unscaled in that format, both signs; "€#,0",
+    // "$#,0.00;($#,0.00)" stay on automatic units, "#,0" whole, as before
+    const f4 = (f) => { const T = { name: 'S', columns: [{ name: 'A', dataType: 'decimal' }], measures: [{ name: 'X', formatString: f, expression: 'SUM ( S[A] )' }] }; return (get(() => Bind.measureOf(T, 'X', [T])) || {}).wholeFormat || null; };
+    const g4 = ['#,0 "AED";-#,0 "AED"', '"AED" #,0;-"AED" #,0', '#,0.00 "AED"', '€#,0', '$#,0.00;($#,0.00)', '#,0'].map(f4);
+    // (a currency code before the number reads right in automatic units, "EUR 54.66M": the owner's O-2, kept)
+    chk(() => JSON.stringify(g4) === JSON.stringify(['#,0 "AED";-#,0 "AED"', null, '#,0.00 "AED"', null, null, '#,0']) && f4('"Qty " #,0') === '"Qty " #,0',
+      () => `F4: quoted text in a card's format: unscaled in that format; currency signs keep automatic units: ${JSON.stringify(g4)}`);
     // D15 (RESCORE-2: bank's "Debtconsolidation" slanted and cut on a designed 6-column chart): a column chart by a text
     // category whose columns can't each hold a 12-letter name (the writer's stand-in for a name it can't measure, as its
     // tables use) is written as a bar chart, whose names are level, where its slot holds 3 rows or more
