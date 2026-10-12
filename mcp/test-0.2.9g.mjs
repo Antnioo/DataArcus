@@ -33,7 +33,13 @@ export async function v029g({ call, check, ROOT }) {
     (reports || []).forEach((r) => {
       const R = path.join(P, r.name + '.Report'), D = path.join(R, 'definition');
       write(path.join(R, 'definition.pbir'), { version: '4.0', datasetReference: { byPath: { path: `../${r.to || 'M'}.SemanticModel` } } });
-      write(path.join(D, 'report.json'), { themeCollection: Object.assign({ baseTheme: { name: 'CY24SU10', type: 'SharedResources' } }, r.theme ? { customTheme: { name: r.file || 'Brand.json', type: 'RegisteredResources' } } : {}) });
+      write(path.join(D, 'report.json'), Object.assign({ themeCollection: Object.assign({ baseTheme: { name: 'CY24SU10', type: 'SharedResources' } }, r.theme ? { customTheme: { name: r.file || 'Brand.json', type: 'RegisteredResources' } } : {}) },
+        r.ours ? { annotations: [{ name: 'generatedBy', value: 'DataArcus Power BI Theme & Layout Generator (dataarcus.com)' }] } : {}));
+      // the base theme file a saved report carries (synthetic colours: the reader compares with this file, never a list of its own)
+      if (r.base) write(path.join(R, 'StaticResources', 'SharedResources', 'BaseThemes', 'CY24SU10.json'), { name: 'CY24SU10', dataColors: BASE, foreground: '#252423', background: '#ffffff', tableAccent: BASE[0] });
+      // colours written on the visuals themselves: [[hex, how many visuals]]
+      (r.paint || []).forEach(([c, n], k) => { for (let i = 0; i < n; i++) write(path.join(D, 'pages/p1/visuals', `c${k}_${i}`, 'visual.json'), { name: `c${k}_${i}`, position: { x: 0, y: 0, z: 0, width: 100, height: 100 },
+        visual: { visualType: 'shape', objects: { fill: [{ properties: { fillColor: { solid: { color: { expr: { Literal: { Value: `'${c}'` } } } } } } }] } } }); });
       write(path.join(D, 'pages/pages.json'), { pageOrder: ['p1'] });
       write(path.join(D, 'pages/p1/page.json'), { name: 'p1', displayName: 'Overview', width: 1920, height: 1080 });
       if (r.theme) write(path.join(R, 'StaticResources', 'RegisteredResources', r.file || 'Brand.json'), r.theme);
@@ -41,6 +47,7 @@ export async function v029g({ call, check, ROOT }) {
     });
     return dir;
   };
+  const BASE = ['#a01010', '#10a010', '#1010a0', '#a0a010', '#10a0a0', '#a010a0', '#505050', '#c06020'];
   const LIGHT = { name: 'Ocean Brand', dataColors: ['#0B5394', '#e69138', '#6aa84f', '#cc0000', '#674ea7', '#45818e', '#bf9000', '#3d85c6', '#999999'], foreground: '#1c2833', background: '#ffffff',
     tableAccent: '#0b5394', good: '#1e8449', neutral: '#d4ac0d', bad: '#a93226',
     visualStyles: { page: { '*': { background: solid('#eef3f8') } }, '*': { '*': { background: solid('#fdfefe'), border: solid('#d0d7de') } } } };
@@ -59,6 +66,20 @@ export async function v029g({ call, check, ROOT }) {
   project('tm', [{ name: 'Z', theme: LIGHT }, { name: 'M', theme: DARK, pbip: true }, { name: 'F', theme: TRIO, to: 'Other' }]);
   // no report shares the model's name: the one a .pbip opens wins
   project('tq', [{ name: 'A', theme: TRIO }, { name: 'B', theme: LIGHT, pbip: true }]);
+  // (the laptop's inventory of nine real dashboards, 12 Oct: the identity is often outside the theme file) synthetic shapes:
+  // a stub (3 own colours, then the base's), a base theme with colours written on the visuals, transparent visuals made for
+  // a page picture, a rich theme (radius, shadow, font), and reports DataArcus wrote itself beside the user's
+  const STUB = { name: 'Custom', dataColors: ['#2b2c8d', '#eb6542', '#3a877f'].concat(BASE.slice(3, 8)) };
+  const SEE = { name: 'See Through', dataColors: ['#605bff', '#51e51c', '#fe8d1f'], foreground: '#1f1f3a', visualStyles: { '*': { '*': { background: [{ color: { solid: { color: '#ffffff' } }, transparency: 100 }] } } } };
+  const RICH = { name: 'Rich', dataColors: ['#7f4bfc', '#5c2dd5', '#9d6fff', '#4fc3f7', '#0d6e8c', '#b393ff', '#f472d0', '#00a896'], foreground: '#1a1a2e',
+    textClasses: { title: { fontFace: 'Segoe UI Semibold' } }, visualStyles: { '*': { '*': { border: [{ color: { solid: { color: '#e9ecef' } }, radius: 12 }], dropShadow: [{ show: true, color: { solid: { color: '#7f4bfc' } } }] } } } };
+  project('ts', [{ name: 'M', theme: STUB, base: true, paint: [['#c4c4dd', 3], ['#b0b0e4', 2], ['#20e2d7', 4]] }]);
+  project('tv', [{ name: 'M', base: true, paint: [['#20E2D7', 5], ['#333333', 3], ['#DE6A73', 2], [BASE[0], 6]] }]);
+  project('tt', [{ name: 'M', theme: SEE }]);
+  project('tr', [{ name: 'M', theme: RICH }]);
+  project('to', [{ name: 'M', theme: TRIO, ours: true }, { name: 'Sales', theme: LIGHT }]);
+  project('t2', [{ name: 'M', theme: TRIO, ours: true, pbip: true }, { name: 'North', theme: DARK }, { name: 'South', theme: LIGHT, pbip: true }]);
+
 
   const CORP = E.PRESETS.Corporate;
   const LINE = (n) => `Colours from your report's theme "${n}" (you can ask for a preset or your brand colours instead).`;
@@ -125,10 +146,40 @@ export async function v029g({ call, check, ROOT }) {
   chk(() => !again.err && colOf(again).report === 'M', () => `4b. the next plan still reads the model's own report, never the one just written: ${JSON.stringify(colOf(again))}`);
 }
 
+
+// ---------- 5. the laptop's inventory (12 Oct): three sources, in order; transparent visuals; DataArcus's own reports ----------
+export async function v029g5({ call, check }) {
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
+  const short = (x) => (x.err ? x.t.slice(0, 500) : (x.j ? JSON.stringify(x.j) : x.t).slice(0, 500));
+  const plan = (dir, more) => ask('plan_layout', Object.assign({ path: dir }, more || {}));
+  const colOf = (x) => (x.j && x.j.colours) || {};
+  const ps = await plan('ts'), ds = ps.j && ps.j.design;
+  chk(() => !ps.err && ds.data.slice(0, 4).join() === '#2b2c8d,#eb6542,#3a877f,#20e2d7' && colOf(ps).source === 'theme and visuals' && !ds.data.includes('#c4c4dd') && !ds.data.includes('#10a010'),
+    () => `5a. a stub theme: its own colours (not the base's leftovers) first, then the colours written on the visuals by frequency (a pale tint is not a data colour), source named: ${short(ps)}`);
+  const pv = await plan('tv'), dv = pv.j && pv.j.design;
+  chk(() => !pv.err && dv.data[0] === '#20e2d7' && dv.data[1] === '#de6a73' && dv.ui.text === '#333333' && colOf(pv).source === 'visuals' && !dv.data.includes('#a01010')
+    && /visuals/.test(colOf(pv).sayInPlan || ''),
+  () => `5b. a base theme only: the colours written on the visuals lead (by frequency; a base colour is not identity), the dark grey is the text, said: ${short(pv)}`);
+  const pt = await plan('tt'), dt = pt.j && pt.j.design;
+  chk(() => !pt.err && dt.data[0] === '#605bff' && dt.ui.card === E.PRESETS.Corporate.ui.card && /transparen/.test(JSON.stringify(colOf(pt))),
+    () => `5c. transparent visuals (made for a page picture) are not copied: solid cards, and the plan says why: ${short(pt)}`);
+  const pr = await plan('tr'), dr = pr.j && pr.j.design;
+  chk(() => !pr.err && dr.layout.radius === 12 && dr.layout.shadow === true && dr.font === 'Segoe UI Semibold' && pr.j.page.w === 1920,
+    () => `5d. a rich theme's radius, shadow and font are taken where the design has them; the page size is never the theme's business: ${short(pr)}`);
+  const po = await plan('to');
+  chk(() => !po.err && colOf(po).report === 'Sales' && colOf(po).theme === 'Ocean Brand', () => `5e. a report DataArcus wrote itself is skipped: ${JSON.stringify(colOf(po))}`);
+  const p2 = await plan('t2'), p2b = await plan('t2', { themeFrom: 'North' });
+  chk(() => !p2.err && colOf(p2).report === 'South' && (colOf(p2).otherReports || []).join() === 'North' && /themeFrom/.test(JSON.stringify(colOf(p2)))
+    && !p2b.err && colOf(p2b).report === 'North' && E.lum(p2b.j.design.ui.background) < 0.45,
+  () => `5f. two of the user's reports: the one a .pbip opens, the other named, and themeFrom picks it: ${JSON.stringify(colOf(p2))} | ${JSON.stringify(colOf(p2b))}`);
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-029g-')), problems = []; let checks = 0;
   const s = await serverClient(ROOT);
   await v029g({ call: withPlans(s.call), check: (ok, msg) => { checks++; if (!ok) problems.push(msg); }, ROOT });
+  await v029g5({ call: withPlans(s.call), check: (ok, msg) => { checks++; if (!ok) problems.push(msg); } });
   await s.close(); fs.rmSync(ROOT, { recursive: true, force: true });
   console.log(problems.length ? `FAIL  v029g  ${checks} checks, ${problems.length} failed\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  v029g  ${checks} checks`);
   process.exit(problems.length ? 1 : 0);
