@@ -23,7 +23,8 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
   const vco = (v, k) => ((v.visual.visualContainerObjects || {})[k] || [])[0];
   // (design round 8, N2: a measure title reads as its plain title, the last text of its DAX: "Top N of M: ..." is shown only
   // when the chart leaves categories out)
-  const plainOf = (v, ref) => { const m = (v._ext || []).find((x) => x.name === ref.Property), all = m ? [...m.expression.matchAll(/"((?:[^"]|"")*)"/g)] : []; return all.length ? all[all.length - 1][1].replace(/""/g, '"') : null; };
+  // (design round 10: the plain title is the text right after IF ( _s = _n, )
+  const plainOf = (v, ref) => { const m = (v._ext || []).find((x) => x.name === ref.Property), p = m && m.expression.match(/IF \( _s = _n, "((?:[^"]|"")*)"/), all = m ? [...m.expression.matchAll(/"((?:[^"]|"")*)"/g)] : []; return p ? p[1].replace(/""/g, '"') : all.length ? all[all.length - 1][1].replace(/""/g, '"') : null; };
   const titleOf = (v) => { const t = vco(v, 'title'), e = t && t.properties.text && t.properties.text.expr; return !t ? null : e && e.Measure ? plainOf(v, e.Measure) : lit(t.properties.text); }, altOf = (v) => { const g = vco(v, 'general'); return g ? lit(g.properties.altText) : null; };
   const subs = (x) => vis(x).filter((v) => vco(v, 'subTitle')).map((v) => [v.visual.visualType, lit(vco(v, 'subTitle').properties.text)]);
   const notes = (x) => JSON.stringify(x.err ? x.t : x.j.reportNotes || []);
@@ -43,7 +44,8 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
       () => `by default the charts and the table of a page have their "No data" card (no tab stop; the tooltip pages have none) and the KPI cards their blank text: charts ${charts(dflt)}, message cards ${msg(dflt).length}, cards with a blank text ${blank(dflt).length} ${dflt.err ? dflt.t.slice(0, 200) : ''}`);
     // (design round 8, N2: a chart cut to its Top N has a report-level title measure, "Title: ..."; no "No data" measure)
     const extNames = (x) => { const f = path.join(ROOT, dir, x.j.report, 'definition', 'reportExtensions.json'); return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')).entities.flatMap((e) => e.measures.map((m) => m.name)) : []; };
-    chk(() => !off.err && charts(off) >= 3 && msg(off).length === 0 && blank(off).length === 0 && extNames(off).every((n) => /^Title: /.test(n)),
+    // (design round 10, N14: and the "Keep: ..." measures that keep a chart's Top N)
+    chk(() => !off.err && charts(off) >= 3 && msg(off).length === 0 && blank(off).length === 0 && extNames(off).every((n) => /^(Title|Keep): /.test(n)),
       () => `noDataMessage: false writes no message card, no blank text and no report-level measure: ${msg(off).length} ${blank(off).length} ${off.err ? off.t.slice(0, 200) : ''}`);
   }
   // a. AUD-032's follow-up: the FORMATS script (check_model_health's, and the one plan_layout and create_report hand

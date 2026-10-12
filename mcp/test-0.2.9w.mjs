@@ -284,13 +284,17 @@ export function v029w({ check }) {
     const r = get(() => build(base({ cats: { bar: C('Product'), column: C('City'), donut: C('Channel') } }), { pages: hand(1280, 720, [
       { kind: 'bar', title: 'B', x: 24, y: 80, w: 600, h: 300 }, { kind: 'column', title: 'K', x: 640, y: 80, w: 500, h: 300 }, { kind: 'column', title: 'Q', x: 640, y: 400, w: 500, h: 300 }]) }));
     const vs = r.files ? visuals(r).filter((v) => /^clustered(Bar|Column)Chart$/.test(v.visual.visualType)) : [];
-    const topOf = (v) => { const f = ((v.filterConfig || {}).filters || []).find((x) => x.type === 'TopN'); return f ? f.filter.From[0].Expression.Subquery.Query.Top : null; };
+    // (design round 10, N14: a report chart's Top N is kept by a report measure, "Keep: ...": N is its rank's limit)
+    const topOf = (v) => { const fs = (v.filterConfig || {}).filters || [], f = fs.find((x) => x.type === 'TopN'); if (f) return f.filter.From[0].Expression.Subquery.Query.Top;
+      const k = fs.find((x) => x.field && x.field.Measure && /^Keep: /.test(x.field.Measure.Property)), ext = k && r.files && r.files.find((g) => /reportExtensions\.json$/.test(g.path));
+      const m = ext && JSON.parse(String(ext.data)).entities.flatMap((e) => e.measures).find((x) => x.name === k.field.Measure.Property), n = m && m.expression.match(/MIN \( _n, (\d+) \) = \1, (\d+), _n \)/);
+      return n ? +n[2] : null; };
     const bar = vs.find((v) => v.position.x === 24), col = vs.find((v) => v.position.x === 640 && v.position.y === 80);
     // a bar chart 300 high at 720: (300 - 45 - 8 - 38) / 22.2 = 9 rows; a column chart 500 wide: room for 12-character labels
     // (design round 8, N2/N3: the title says "Top N of M:" only when the chart leaves categories out: a report measure)
     const extTitle = (v) => { const m = (((v.visual.visualContainerObjects || {}).title || [])[0] || { properties: {} }).properties.text, ref = m && m.expr && m.expr.Measure; if (!ref || !r.files) return '';
       const ext = r.files.find((f) => /reportExtensions\.json$/.test(f.path)); return ext ? (JSON.parse(String(ext.data)).entities.flatMap((e) => e.measures).find((x) => x.name === ref.Property) || {}).expression || '' : ''; };
-    chk(() => topOf(bar) === 9 && topOf(col) >= 3 && extTitle(bar).includes('"Top 9 of "') && extTitle(col).includes('"Top ' + topOf(col) + ' of "') && (r.topCharts || []).length >= 2,   /* (round 7: S5 belongs to the design block, which reports the cut charts as topCharts) */
+    chk(() => topOf(bar) === 9 && topOf(col) >= 3 && /, 9, _n \)/.test(extTitle(bar)) && new RegExp(', ' + topOf(col) + ', _n \\)').test(extTitle(col)) && (r.topCharts || []).length >= 2,   /* (round 7: S5 belongs to the design block, which reports the cut charts as topCharts) */
       () => `rc1-4: a chart by a text category shows its top N by its measure, N the rows or columns it holds, said in its title and told: ${r.threw || JSON.stringify(vs.map((v) => [extTitle(v) || titleOf(v), topOf(v)]))}`);
     const t = get(() => build(base({ cats: { bar: C('Month Name', { sortBy: { t: D, c: 'Month No' } }, D), column: C('Quarter', {}, D), donut: C('Channel') } }), { pages: hand(1280, 720, [{ kind: 'bar', title: 'B', x: 24, y: 80, w: 600, h: 300 }, { kind: 'column', title: 'K', x: 640, y: 80, w: 500, h: 300 }]) }));
     chk(() => t.files && visuals(t).filter((v) => /^clustered/.test(v.visual.visualType) && v.position.x !== 12).every((v) => topOf(v) == null), () => 'rc1-4: a time or known category (months, quarters) is never cut to a top N');
