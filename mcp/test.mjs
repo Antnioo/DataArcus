@@ -2937,7 +2937,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     // 6. an Arabic designed report: every column, line and bar chart of its pages is mirrored, the gradient stays, and the tooltip pages' bars grow from the right too
     const ar = await ask('create_report', { path: 'r13-mirror', name: 'R13 Mirror ar', lang: 'ar', design: arDesign }), ra = readM(ar);
     const pageCharts = (r) => r.vis.filter((v) => !v.tooltipPage && (upright(v) || lying(v)));
-    chk(() => pageCharts(ra).filter(upright).length >= 2 && pageCharts(ra).filter(lying).length >= 1 && pageCharts(ra).every((v) => (upright(v) ? mirroredUp(v) : mirroredBar(v)))
+    // (changed in writer round 9, D15: this layout's column chart by a text category is written as a bar chart, so one
+    // upright chart, the line, is left; every chart is still mirrored)
+    chk(() => pageCharts(ra).filter(upright).length >= 1 && pageCharts(ra).filter(lying).length >= 1 && pageCharts(ra).every((v) => (upright(v) ? mirroredUp(v) : mirroredBar(v)))
         && pageCharts(ra).filter((v) => vt(v) !== 'lineChart').every((v) => !!dpOf(v)) && ar.j.chartAxes.mode === 'mirrored' && ar.j.chartAxes.charts === pageCharts(ra).length && errors(ra.dir) === '0',
       () => `an Arabic report's column, line and bar charts must be mirrored (and keep the gradient), told in chartAxes: ${tellM(ra)} ${JSON.stringify(ar.j && ar.j.chartAxes)} validator ${ra.dir && errors(ra.dir)} ${short(ar)}`);
     chk(() => { const tips = ra.vis.filter((v) => v.tooltipPage && lying(v)); return tips.length >= 1 && tips.every((v) => mirroredBar(v) && P1(v, 'valueAxis').show.expr.Literal.Value === 'false' && !!P1(v, 'categoryAxis').fontSize && on(P1(v, 'labels').show)); },
@@ -4129,9 +4131,11 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const ops = async (dir) => ask('create_report', { path: dir, name: 'R18 ops', secondPage: false, design: (await ask('plan_layout', { layout: 'ops', kpis: 3, filters: 'top' })).j.design });
     const three = vis('r18-three', await ops('r18-three')), two = vis('r18-two', await ops('r18-two'));
     const pick = (vs) => ({ bars: vs.filter((v) => ty(v) === 'clusteredBarChart').sort((p, q) => p.position.y - q.position.y).map(catOf), donut: vs.filter((v) => ty(v) === 'donutChart').map(catOf), column: vs.filter((v) => ty(v) === 'clusteredColumnChart').map(catOf) });
-    chk(() => { const p = pick(three); return p.bars.length === 2 && new Set(p.bars.concat(p.donut)).size === 3 && p.bars[0] === 'Sales.Region' && p.donut[0] === 'Sales.Channel' && p.bars[1] === 'Sales.Product' && p.column.length === 1; },
+    // (changed in writer round 9, D15: the column chart, by a text category whose columns can't hold a 12-letter name, is
+    // written as a bar chart, its own category and title kept: a third bar; the two bar charts keep Region and Product)
+    chk(() => { const p = pick(three); return p.bars.length + p.column.length === 3 && p.bars.includes('Sales.Region') && p.bars.includes('Sales.Product') && p.donut[0] === 'Sales.Channel'; },
       () => `three text columns: the two bar charts and the donut must each take a different one (Region, Channel, Product): ${JSON.stringify(pick(three))}`);
-    chk(() => { const p = pick(two); return p.bars[0] === 'Sales.Region' && p.donut[0] === 'Sales.Channel' && p.bars.length === 2; }, () => `two text columns: bar by Region, donut by Channel, as before: ${JSON.stringify(pick(two))}`);
+    chk(() => { const p = pick(two); return p.bars[0] === 'Sales.Region' && p.donut[0] === 'Sales.Channel' && p.bars.length + p.column.length === 3; }, () => `two text columns: bar by Region, donut by Channel, as before: ${JSON.stringify(pick(two))}`);
   }
   // 2. (seen in Desktop: the Arabic slide-in panel's Filters button read "الفلاتر ☰" with the ☰ at the left of the word, the
   //    reading end.) In a right-to-left report the ☰ is written after the word, so the left-to-right button draws it at
@@ -4295,7 +4299,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
         // drew about 5 nearer its box's edge than the same chart without the option)
         // (the same night: a message card with a tabOrder was an unnamed Tab stop before its chart; without one it is none)
         noTab: pairs.filter((p) => p.m && !('tabOrder' in p.m.position) && p.c.position.tabOrder != null).length,
-        plain: pairs.filter((p) => p.m && JSON.stringify((p.m.visual.objects.outline || [])[0] || '') === JSON.stringify({ properties: { show: { expr: { Literal: { Value: 'false' } } } }, selector: { id: 'default' } }) && JSON.stringify(p.m.visual.objects.value[0].properties.horizontalAlignment || '').includes("'center'") && JSON.stringify((p.m.visual.visualContainerObjects || {}).dropShadow || '').includes('false')).length,
+        plain: pairs.filter((p) => p.m && JSON.stringify((p.m.visual.objects.outline || [])[0] || '') === JSON.stringify({ properties: { show: { expr: { Literal: { Value: 'false' } } } }, selector: { id: 'default' } }) && JSON.stringify(p.m.visual.objects.value[0].properties.horizontalAlignment || '').includes("'center'") && (JSON.stringify((p.m.visual.visualContainerObjects || {}).dropShadow || '').includes('false') || (ty(p.c) === 'tableEx' && pos(p.m).height > pos(p.c).height))).length,   // (changed in writer round 9: the card behind a table on its whole rows is the table's panel, with the panel's shadow, the laptop's S3 resolution proven in Desktop on rc.4)
         boxes: charts.map((c) => { const o = Object.assign({}, c.visual.visualContainerObjects || {}); delete o.background; delete o.visualTooltip;   /* the tooltip page's id is each report's own */ return ty(c) + ' ' + pos(c).x + ',' + pos(c).y + ' ' + JSON.stringify(o); }).sort() }; };
     const en = await one('en', true), ar = await one('ar', true), off = await one('en', false);
     chk(() => en.charts >= 3 && en.paired === en.charts && en.seeThrough === en.charts && en.tipOff === en.charts && en.ext && en.en && en.phone === 0, () => `English: every chart and table has its "No data" card below it: ${JSON.stringify(en)}`);
