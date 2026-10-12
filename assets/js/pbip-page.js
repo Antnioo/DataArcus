@@ -890,7 +890,8 @@
       // and the measured rows would not hold).
       if (tableH) {
         const ndBehind = NODATA && visual.visualContainerObjects && visual.visualContainerObjects.background && visual.visualContainerObjects.background[0].properties.show && visual.visualContainerObjects.background[0].properties.show.expr.Literal.Value === 'false';
-        if (SOLID && !ndBehind) container({ x: s.x, y: box.y, w: s.w, h: box.h, z: z - 500, parent, kind: 'panel', noPhone: true, visual: { visualType: 'textbox', objects: textbox('', 11, false, u.text), visualContainerObjects: { title: obj({ show: bool(false) }), general: obj({ altText: str('') }), visualTooltip: obj({ show: bool(false) }) } } });
+        if (SOLID && !ndBehind) container({ x: s.x, y: box.y, w: s.w, h: box.h, z: z - 500, parent, kind: 'panel', noPhone: true,   /* (written as the header's and the rail's bands: nothing but the title's switch, the theme draws it) */
+          visual: { visualType: 'textbox', objects: { general: obj({ paragraphs: [{ textRuns: [{ value: '' }] }] }) }, visualContainerObjects: { title: obj({ show: bool(false) }) } } });
       }
       const v = container({ x: s.x, y: box.y, w: s.w, h: tableH || box.h, z, parent, visual, kind: s.kind });
       if (vFilters && vFilters.length) v.filterConfig = { filters: vFilters };
