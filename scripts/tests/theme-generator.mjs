@@ -205,8 +205,10 @@ export default async function ({ browser, url, page = PAGE }) {
     const LEGEND = [...CART, 'waterfallChart', 'scatterChart', 'pieChart', 'donutChart', 'treemap', 'map', 'filledMap', 'shapeMap', 'azureMap'];
     const ALLOWED = {
       labels: [LABELS, ['show']], legend: [LEGEND, ['show', 'position']],
-      valueAxis: [[...CART, 'waterfallChart', 'scatterChart'], ['gridlineShow', 'gridlineStyle', 'gridlineColor', 'showAxisTitle']],
-      categoryAxis: [[...CART, 'scatterChart'], ['gridlineShow', 'showAxisTitle']], categoryAxisTitle: [[...CART, 'waterfallChart', 'scatterChart'], ['showAxisTitle']],
+      // labelColor (polish round P1, 12 Oct: the axis labels' grey mixed from the theme's text colour) is in Microsoft's
+      // report theme schema (reportThemeSchema-2.149.json) for the categoryAxis and valueAxis of every one of these charts
+      valueAxis: [[...CART, 'waterfallChart', 'scatterChart'], ['gridlineShow', 'gridlineStyle', 'gridlineColor', 'showAxisTitle', 'labelColor']],
+      categoryAxis: [[...CART, 'waterfallChart', 'scatterChart'], ['gridlineShow', 'showAxisTitle', 'labelColor']], categoryAxisTitle: [[...CART, 'waterfallChart', 'scatterChart'], ['showAxisTitle']],
       grid: [['tableEx', 'pivotTable'], ['gridVertical', 'gridHorizontal', 'gridHorizontalColor']],
       values: [['tableEx', 'pivotTable'], ['fontSize', 'backColorPrimary', 'backColorSecondary']]
     };
