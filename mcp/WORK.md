@@ -121,6 +121,11 @@ After the twin and tools: **1033** + 36 + 21 + 21 + 16, golden PASS (11 tasks, n
 (854) PASS. The startup instructions are **2,493 characters** (cap 2,500): builder 10's A7-4 (every rule from one source)
 must keep them under it.
 
+## Writer round 8 (12 Oct from 01:26 UTC, cloud builder 11; `fix/0.2.9-writer` reset to gate `07ad9bc`; not merged)
+`a06a5b3`: T6 (Top 6 tooltip by the lab's 27 + 40), D18 (tables 2 decimals, in the picker). T10 re-checked green; D15 builder 10's.
+**Open, need a decision or a Desktop measure:** S3 (rc1's row rule is wrong at the 1920 page; measure, or revert the trim that
+caused N6); T8 (a 376-wide tooltip page). Report: `mcp/work/0.2.9-writer.md` (round 8).
+
 ## rc1 release blockers, writer (11 Oct from 20:22 UTC, cloud builder 11; `fix/0.2.9-writer` reset to `46037f3`; not merged, no PR)
 Report: `mcp/work/0.2.9-writer.md` (section "rc1 release blockers"). Done: 1 O-13 `5f2d4e8`, 2 S1/S2 `b1eb2f8`, 4 S5/S7 `9ace5d8`;
 3 has no writer cause (for builder 5). Then the reviewer's additions `7664e72`: T1, T6/T9, T8, T10 (tooltips), S3 (tables end on a
