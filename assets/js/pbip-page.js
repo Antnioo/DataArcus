@@ -835,14 +835,14 @@
         }
         // rc1 (PERF-COMPARE S3, 6 models: the last row a table showed was cut in half by its total line): a table whose rows
         // don't all show ends on a whole row. Its height is the title, the header, the whole rows that fit and the total, by
-        // round 11's measured pitch (above: 1.415 x the text's height + 2 x rowPadding, 1 when none is written; the header 7
-        // more; the title 1.5 x its size; 16 of padding); the top stays. Not a table with pictures (their rows are taller).
+        // the measured rule (pbip-sizing.js TABLE_ROWS, MEASURE-TABLE-ROWS.md); the top stays. Not a table with pictures (their rows are taller).
         if (s.kind === 'table' && visual && visual.query) {
           const gp = (((visual.objects || {}).grid || [])[0] || {}).properties || {}, padOf = gp.rowPadding ? +String(gp.rowPadding.expr.Literal.Value).replace(/D$/, '') : 1;
           const tv = (((visual.objects || {}).values || [])[0] || {}).properties || {}, t = tv.fontSize ? +String(tv.fontSize.expr.Literal.Value).replace(/D$/, '') : (+((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10);
           const tf = tableFields(Bt, rtl).find(isTextField), n = ((tf && catKind(tf)) || {}).rows || 0;
           // (writer round 8: the one rule, pbip-sizing.js TABLE_ROWS, with the laptop's measure)
-          const pitch = rowPitch(t, padOf), fixed = tableHeight(0, t, TITLE, padOf), k0 = Math.floor((box.h - fixed) / pitch);
+          const hp = (((visual.objects || {}).columnHeaders || [])[0] || {}).properties || {}, ht = hp.fontSize ? +String(hp.fontSize.expr.Literal.Value).replace(/D$/, '') : t;
+          const pitch = rowPitch(t, padOf), fixed = tableHeight(0, t, TITLE, padOf, ht), k0 = Math.floor((box.h - fixed) / pitch);
           if (!gp.imageHeight && k0 >= 1 && !(n && n <= k0)) { const h1 = Math.ceil(fixed + k0 * pitch); if (h1 < box.h) box = { y: box.y, h: h1 }; }
         }
         if (B && visual && visual.query) vFilters = fixVisual(visual, s, pg, Bt, tableText);

@@ -177,15 +177,19 @@
   }
 
   // A table's height in rows (writer round 8, S3; one table of constants for the known-rows rule and the whole-rows rule).
-  // In page units, t the table's text in pt (t x 4 / 3 its height), pad the grid's rowPadding (Desktop draws 1 when none is
-  // written): a row's pitch is ink x t x 4 / 3 + 2 x pad + row; the header a pitch and header more; the total a pitch and
-  // total more; the title titleK x its size x 4 / 3; frame the visual's own padding.
-  // SOURCE: round 11's measure (8pt text, DESKTOP-TESTS.md "Item 3, the table"), a PLACEHOLDER until the laptop's
-  // MEASURE-TABLE-ROWS.md (1280 and 1920 pages, English and Arabic) lands: rc.3 showed the last row still cut at 1920.
-  const TABLE_ROWS = { source: 'round 11 (placeholder)', ink: 1.415, row: 0, header: 7, total: 0, titleK: 1.5, frame: 16 };
+  // In page units, t the values' text in pt, ht the header's (t when none of its own), pad the grid's rowPadding (Desktop
+  // draws 1 when none is written). SOURCE: MEASURED in Power BI Desktop 2.158, dataarcus-engine lab/proof-0.2.9-rc1
+  // business/beta/MEASURE-TABLE-ROWS.md (12 Oct 2026; 1920 x 1080 at 15pt and 1280 x 720 at 10pt, English and Arabic the
+  // same; the title on, 18pt and 12pt): a row 29.8 and 19.8; the title and a one-line header to the rule under it 90.3
+  // and 62.1; the total a row and 1.2 (its rule); about 6 and 4 under it. Fitted: a row's pitch is 1.5 x t x 4 / 3 + 2 x
+  // pad - 2.2; the title 2.275 x its size x 4 / 3; the header a pitch at its size and 5.9; under the total 0.4 x t.
+  // Each extra header line adds 26.9 at 15pt (measured; not used: the writer's columns hold their headers whole, S2).
+  // (Before: round 11's 8pt measure, 1.415 x t x 4 / 3 + 2 x pad, the header 7, the title 1.5, 16: rc.3 still cut the last
+  // row at 1920, the S3 of RESCORE-1.)
+  const TABLE_ROWS = { source: 'MEASURE-TABLE-ROWS.md (Desktop 2.158, 12 Oct 2026)', ink: 1.5, row: -2.2, header: 5.9, total: 1.2, titleK: 2.275, frameK: 0.4 };
   const rowPitch = (t, pad) => TABLE_ROWS.ink * t * 4 / 3 + 2 * pad + TABLE_ROWS.row;
-  // the height of a table with n rows (and its header, total and title)
-  const tableHeight = (n, t, title, pad) => { const p = rowPitch(t, pad); return TABLE_ROWS.titleK * title * 4 / 3 + (p + TABLE_ROWS.header) + n * p + (p + TABLE_ROWS.total) + TABLE_ROWS.frame; };
+  // the height that shows a table's n rows and its total whole
+  const tableHeight = (n, t, title, pad, ht) => { const p = rowPitch(t, pad); return TABLE_ROWS.titleK * title * 4 / 3 + (rowPitch(ht || t, pad) + TABLE_ROWS.header) + n * p + (p + TABLE_ROWS.total) + TABLE_ROWS.frameK * t; };
   const api = {
     TABLE_ROWS, rowPitch, tableHeight, cellRoom, numberSample, fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, tableFit, make
   };
