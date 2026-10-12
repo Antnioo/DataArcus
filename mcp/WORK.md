@@ -231,6 +231,9 @@ must keep them under it.
 ## Writer P3 (12 Oct from 22:03 UTC; branch `fix/0.2.9-writer-p3` from `d73a773`; not merged)
 `788bbba`: report-level measure names unique across the whole report (freeExt report-wide, without case). Whole chain and website
 17/17 green. Next: builder 5 merges; check_report could flag duplicate measure names (seen, not in scope).
+P3-2 `ee9406c` (+ the test's path fix): by / newDesign / detail live in `texts(lang)` (REPORT_TEXTS), both paths pass it unchanged.
+English 'by' and ': detail' in Arabic reports come from byTitle's same-script rule (English names keep an English title), on both
+paths alike. Reported, not changed: R1b (Arabic Top-N lead drawn left of an English phrase), R4 (ops table title cut with "...").
 
 ## Writer P2, the owner's polish (12 Oct from 19:30 UTC; `fix/0.2.9-writer` reset to the gate `f48057f`; not merged)
 `d389889`: lines 3 wide, donut ring 68, smoothLines option (off). Whole chain, layouts, website 17/17 (--full) green.
