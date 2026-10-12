@@ -28,9 +28,11 @@ report files are written by `create_report` for a new report, or by Microsoft's 
    It writes nothing yet: it returns the design, the colours and `sayInPlan`. A theme is light with the brand colour
    exact unless the user asks for dark (`mode: "dark"`); a colour is never changed for contrast without the user's yes:
    say a failing check in the plan and offer a darker or lighter shade. When the user names no colours, pass the model
-   (`path`): if one of its reports has its own theme, the colours start from it (keep the dashboard's identity), and
-   the plan says so in one line (`fromReport.sayInPlan`, or `colours.sayInPlan` from `plan_layout`); a preset, a
-   palette or a brand colour the user asks for always wins.
+   (`path`): the colours start from the model's own report (keep the dashboard's identity): its theme's own colours,
+   then the colours written on its visuals; the plan says which in one line (`fromReport.sayInPlan`, or
+   `colours.sayInPlan` from `plan_layout`), and that see-through visuals made for a page picture stay solid. Reports
+   DataArcus wrote are skipped; when the model has several of the user's, name them (`colours.otherReports`) and use
+   `themeFrom` for the one the user picks. A preset, a palette or a brand colour the user asks for always wins.
 4. **Layout and the plan's check.** `plan_layout` with that design, the model (`path`) and the plan's fields
    (`planFields`, the shape of `create_report`'s `fields`): the layout (exec, analysis, ops, focus), KPI cards,
    filters, page size. The page is 1920 x 1080 unless the user asks for another size, an Arabic report too
