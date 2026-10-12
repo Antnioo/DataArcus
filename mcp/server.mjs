@@ -18,7 +18,7 @@ import { proposeArabic } from './lib/arabic-names.mjs';
 import { readableName } from './lib/display-names.mjs';
 import { addGulfCalendar, gulfFixInputs } from './lib/gulf-calendar.mjs';
 import { checkReport, CHECKS } from './lib/check-report.mjs';
-import { readReport } from './lib/read-report.mjs';
+import { existingTheme, readReport } from './lib/read-report.mjs';
 import { planNative, writeNative } from './lib/native-copy.mjs';
 import { wordOf } from './lib/read-words.mjs';
 import { takenNames } from './lib/report-names.mjs';
@@ -588,7 +588,7 @@ const CREATE_REPORT_INPUTS = {
 // it with the plan; create_report computes the same from its own inputs, and the gate compares them key by key.
 // (Not pinned: name, title, theme, logo, colours and the report options; see the audit report.)
 const REPORT_PINNED = ['pages', 'page', 'lang', 'dir', 'fields', 'pageFilters', 'displayNames', 'text', 'subtitles', 'svgColumns', 'svgCards', 'customVisualsFrom'];
-const resolvedDesign = (a) => (a.pages ? null : planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang }).design);
+const resolvedDesign = (a) => (a.pages ? null : planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang, reportTheme: a.reportTheme }).design);
 const reportPin = (a, fields) => Object.assign({ design: resolvedDesign(a) }, Object.fromEntries(REPORT_PINNED.map((k) => [k, k === 'fields' ? fields : a[k]])));
 // the other writers pin every input they were proposed with (A6-5)
 const inputsPin = (a) => Object.fromEntries(Object.entries(a || {}).filter(([k]) => k !== 'planId'));
@@ -1076,23 +1076,24 @@ server.registerTool('generate_theme', {
       .describe('Page and style choices that change the theme (text sizes grow with the page, kept within 8-60)'),
     mode: z.enum(['light', 'dark']).optional().describe('light (default): a near-white page and white visuals; dark only when the user asks for it'),
     lang: langInput,
+    path: modelPath.optional().describe('The model the theme is for: when no colours are asked (no palette, brand, preset or mode) and one of its reports has its own theme, the colours start from that theme (said in sayInPlan)'),
     folder: z.string().optional().describe('Folder for the theme file, inside the DataArcus folder (default: the DataArcus folder)'),
     planId: planIdInput
   }, annotations: ADDS
 }, safe(async (a) => {
-  const { design, repaired, notes } = themeDesign(a);
+  const { design, repaired, notes, fromReport } = themeDesign(Object.assign({}, a, { reportTheme: a.path ? existingTheme(loadModel(a.path)) : null }));
   const { page, fitted } = pageOf(design.layout), { contrast, warnings } = contrastReport(design);
   if (fitted) warnings.push(`Page ${fitted.asked.w} x ${fitted.asked.h} is outside the sizes the generator allows; the theme is made for ${page.w} x ${page.h}.`);
   const arabic = a.lang === 'ar' || design.layout.dir === 'rtl';
   if (arabic && !AR_FONTS.includes(design.font)) warnings.push(`${design.font} has no Arabic letters, so Arabic text will show in another font. For Arabic reports use ${AR_FONTS.join(', ')}.`);
   // what the plan says about the colours (0.2.9, O-11): light unless dark was asked, the brand exact, a failing check said
   const light = lum(design.ui.background) > 0.45, colours = { page: design.ui.background, visuals: design.ui.card, text: design.ui.text, accent: design.ui.accent, data: design.data, mode: light ? 'light' : 'dark' };
-  const sayInPlan = `Say in the plan: a ${light ? 'light' : 'dark'} theme (page ${design.ui.background}, visuals ${design.ui.card}, text ${design.ui.text})${hexOk(a.brand) ? ` with the brand colour ${clampHex(a.brand)} exactly as given (the first data colour and the accent)` : ''}${light ? '; dark only if the user asks' : ''}.` +
+  const sayInPlan = (fromReport ? `${fromReport.sayInPlan} ` : '') + `Say in the plan: a ${light ? 'light' : 'dark'} theme (page ${design.ui.background}, visuals ${design.ui.card}, text ${design.ui.text})${hexOk(a.brand) ? ` with the brand colour ${clampHex(a.brand)} exactly as given (the first data colour and the accent)` : ''}${light ? '; dark only if the user asks' : ''}.` +
     (warnings.length ? ` These readability checks fail: ${warnings.join('; ')}. The colours were kept as given (a colour is never changed for contrast without the user's yes): say so and offer a darker or lighter shade.` : '');
   // the gate (0.2.9, P-1): the file only with an approved plan; without one, the theme for the plan and a proposed plan id
   if (a.planId == null || a.planId === '') {
     const base = fileBase(design.name) + '.json';
-    return text({ written: false, fileAfterGo: base, page, colours, sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}),
+    return text({ written: false, fileAfterGo: base, page, colours, ...(fromReport ? { fromReport } : {}), sayInPlan, design, contrast, warnings, repaired, ...(notes.length ? { notes } : {}),
       plan: Plans.proposal(Plans.propose('theme', null, [`the theme file "${base}" in ${a.folder ? 'the folder ' + a.folder : 'the working folder'} (a new file, never over another)`], { pins: { generate_theme: inputsPin(a) } }), { orWith: 'For a report, create_report puts the theme in the report itself (plan_layout\'s plan): a separate theme file is needed only when the user asks for one, and it needs this theme plan.' }) });
   }
   Plans.gate('generate_theme', a.planId, null, inputsPin(a));
@@ -1152,6 +1153,8 @@ server.registerTool('plan_layout', {
   let formats = {}, arabicNames = {}, displayNamesAns = {}, m0 = null, planNames = null;
   if (a.path) {
     const m = (m0 = loadModel(a.path)), sc = scopeOf(m, { focus: a.focus, tables: a.tables });
+    // (keep the dashboard's identity, the owner's go 12 Oct: the model's report's own theme, the design's default colours)
+    a.reportTheme = existingTheme(m);
     const keys = a.fields ? new Set(a.fields.map((x) => { const mk = String(x).trim().match(/^'?(.+?)'?\[(.+)\]$/); return mk ? `${mk[1]}[${mk[2]}]` : String(x); }))
       : sc.needsFocus ? null : (() => { const b = Bind.suggest(sc.tables, Math.max(1, a.kpis == null ? 4 : a.kpis), relsOf(m, a.lang === 'ar' ? 'ar' : 'en')); return new Set([b.date, b.measure, ...(b.kpis || []), ...Object.values(b.cats || {}), ...Object.values(b.y || {}), ...(b.table || []), ...(b.slicers || []), ...Object.values(b.tip || {})].filter(Boolean).map((f) => `${f.t}[${f.c != null ? f.c : f.m}]`)); })();
     const fmt = keys && formatsAnswer(m, a.path, keys, undefined, false, 'create_report writes it next to the project with the report, after the user\'s go (the same file check_model_health writes).');
@@ -1246,7 +1249,7 @@ server.registerTool('plan_layout', {
     } catch (e) { return { skipped: 'the planned page could not be built for the lint: ' + String(e && e.message || e).slice(0, 200) }; }
   })() };
   const chartColors = { chartColors: { mode: 'gradient', sayInPlan: 'Say in the plan: the bars of the bar and column charts fade by their value, the smallest value shown in a light tint and the largest in the theme\'s colour (the bar\'s length tells the size; the colour ranks). For one colour, create_report takes chartColors "solid".' } };
-  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => { const tops = r.slots.filter((x) => x.topN); return tops.length ? { categoryCharts: { tops: tops.map((x) => ({ role: x.role, kind: x.kind, top: x.topN })), sayInPlan: `Each bar and column chart by a category shows the categories its place can hold, its Top N by its measure (${tops.map((x) => `${x.role}: Top ${x.topN}`).join('; ')}): the rest are left out, with no "Other" bar. Its title says "Top N of M:" (for example "Top 9 of 16:") only when it leaves categories out, counted in the report; a chart with N or fewer keeps its plain title. Say it in the plan; a month or day axis keeps all its values in order.` } } : {}; })(), { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
+  return text(Object.assign(formats, arabicNames, displayNamesAns, customVisuals, plan, timeAxis, designLint, { blankCategories: 'Every chart leaves out a blank category ("(Blank)") with a visual filter: say it in the plan.', topCategories: 'A bar or column chart by a category that is not time (products, cities, departments) shows its top N by the measure, N the rows or columns the chart holds; the rest are left out, with no "Other" bar. Its title says "Top N of M:" only when the chart leaves categories out (M counted in the report from the data; the tools never read it), its plain title otherwise: say it in the plan.' }, (() => { const tops = r.slots.filter((x) => x.topN); return tops.length ? { categoryCharts: { tops: tops.map((x) => ({ role: x.role, kind: x.kind, top: x.topN })), sayInPlan: `Each bar and column chart by a category shows the categories its place can hold, its Top N by its measure (${tops.map((x) => `${x.role}: Top ${x.topN}`).join('; ')}): the rest are left out, with no "Other" bar. Its title says "Top N of M:" (for example "Top 9 of 16:") only when it leaves categories out, counted in the report; a chart with N or fewer keeps its plain title. Say it in the plan; a month or day axis keeps all its values in order.` } } : {}; })(), { limits: LIMITS, page, pageSize, fitted, slots: r.slots, why: r.why, forAuthoring: r.forAuthoring }, r.colours ? { colours: r.colours } : {}, r.smallPage ? { smallPage: r.smallPage } : {}, r.repaired ? { repaired: r.repaired } : {}, chartColors, unknown ? { ignored: unknown } : {}, { design: r.design }));
 }));
 
 server.registerTool('add_gulf_calendar', {
