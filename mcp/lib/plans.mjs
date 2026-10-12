@@ -119,4 +119,7 @@ export function gate(tool, id, model, pin) {
 export function pinned(id, tool, key) { const p = plans.get(String(id)), w = p && p.data && p.data.pins && p.data.pins[tool]; return w ? w[key] : undefined; }
 
 /** After a successful write (audit 6, A6-2): the plan is used for that tool, and the same id is refused for it again. */
+/** What a plan pinned for a tool (its approved inputs), or null: create_report reads the approved displayNames from it when
+ *  the call leaves them out (rc.4's N9: the plan says it writes them, so the call need not pass them back). */
+export function pinned(id, tool) { const p = id == null ? null : plans.get(String(id)); return (p && p.data && p.data.pins && p.data.pins[tool]) || null; }
 export function consume(id, tool) { const p = plans.get(String(id)); if (p) { p.used = p.used || {}; p.used[tool] = true; } }
