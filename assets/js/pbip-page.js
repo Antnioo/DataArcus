@@ -685,8 +685,9 @@
         if (B && own && !query && (CHARTS.includes(s.kind) || ['table', 'matrix', 'gauge', 'card'].includes(s.kind))) { leftOut.push({ page: pg.name || base, kind: s.kind, title: s.title || null }); return; }
         visual = { visualType: type, visualContainerObjects: frame(ttl, ttl, extra, true), drillFilterOtherVisuals: true };
         if (query) visual.query = query;
-        // bars that fade by value (gradientFill above): the report's own bar and column charts, never the tooltip pages'
-        if (GRAD && query && (s.kind === 'bar' || s.kind === 'column')) { visual.objects = { dataPoint: gradientFill(query.queryState.Y.projections[0].field, barNth++ % 2 && GRAD2 ? GRAD2 : GRAD) }; chartColors.charts++; }
+        // bars that fade by value (gradientFill above): the report's own bar and column charts, never the tooltip pages';
+        // the second of a page fades from the theme's second colour (polish round P1, B-71: colour 2 was never used)
+        if (GRAD && query && (s.kind === 'bar' || s.kind === 'column')) { const g2 = barNth++ % 2 && GRAD2; visual.objects = { dataPoint: gradientFill(query.queryState.Y.projections[0].field, g2 || GRAD) }; chartColors.charts++; if (g2) chartColors.second = (chartColors.second || 0) + 1; }
         if (MIRROR && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { mirrorChart(visual, s.kind); chartAxes.charts++; }
         // Round 21 (the capabilities lab's #6, Desktop 2.158, 7 Oct 2026: "77.7K" above the columns, kept on Save): a column
         // chart with few columns shows its values above them: labels at 'OutsideEnd', automatic units (0, K or M by the

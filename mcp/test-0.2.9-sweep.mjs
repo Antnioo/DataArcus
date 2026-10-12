@@ -246,14 +246,19 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     // 4. greys from the theme's text colour for axes and gridlines (never Power BI's default grey)
     const des = E.repairState({ name: 'G', font: 'Segoe UI', data: E.PRESETS.Corporate.data.slice(), ui: Object.assign({}, E.PRESETS.Corporate.ui, { text: '#2b1d3a' }), layout: { v: 3 } });
     const tj = E.buildTheme(des, 'en'), R0 = E.roles(des.ui), cc = ((tj.visualStyles.clusteredColumnChart || {})['*']) || {};
-    chk(() => JSON.stringify(cc.valueAxis || '').includes(R0.gridline) && JSON.stringify(cc.categoryAxis || '').includes(R0.secondary) && JSON.stringify(cc.valueAxis || '').includes(R0.secondary),
-      () => `P1-4: the column chart's axis labels and gridlines take the greys mixed from the theme's text colour: ${JSON.stringify([cc.valueAxis, cc.categoryAxis]).slice(0, 300)}`);
+    // the gridlines' grey is the report writer's quiet grid (text mixed 0.85 into the card): the theme leaves the gridline
+    // colour out, or the writer's grey would be switched off (pbip-export.js themeGrid)
+    chk(() => JSON.stringify(cc.categoryAxis || '').includes(R0.secondary) && JSON.stringify(cc.valueAxis || '').includes(R0.secondary) && !/gridline/.test(JSON.stringify(cc.valueAxis || '')),
+      () => `P1-4: the column chart's axis labels take the grey mixed from the theme's text colour, the gridlines left to the writer's quiet grid: ${JSON.stringify([cc.valueAxis, cc.categoryAxis]).slice(0, 300)}`);
     // 2. the second palette colour is used: the second bar or column chart of a page takes colour 2
     const two = await ask('create_report', { path: 's-shop', name: 'P1 colours', design: design({ preset: 'exec', page: '1920x1080' }), secondPage: false });
     const grads = visualsOf(two, 's-shop').filter((v) => v.visual && v.page.type !== 'Tooltip' && /^clustered(Bar|Column)Chart$/.test(typeOf(v))).sort((a, b) => a.position.y - b.position.y || a.position.x - b.position.x).map((v) => JSON.stringify(((v.visual.objects || {}).dataPoint) || ''));
     const C = E.PRESETS.Corporate.data.map((c) => c.toLowerCase());
     chk(() => !two.err && grads.length >= 2 && grads[0].includes(C[0]) && grads[1].includes(C[1]) && !grads[1].includes(C[0]),
       () => `P1-2: the first bar or column chart takes colour 1, the second colour 2: ${grads.map((g) => (g.match(/#[0-9a-f]{6}/g) || []).join('/')).join(' | ')} ${short(two)}`);
+    const sc = ((two.j || {}).chartColors || {}).second || {};
+    chk(() => !two.err && sc.charts >= 1 && String(sc.colour).toLowerCase() === C[1] && grads[1].includes(String(sc.high).toLowerCase()),
+      () => `P1-2: the answer tells the second colour's charts and ends: ${JSON.stringify((two.j || {}).chartColors).slice(0, 400)}`);
   }
 }
 

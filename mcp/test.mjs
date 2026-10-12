@@ -2868,8 +2868,10 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   // The high end is the theme's first data colour (the bars' colour today); the low end is that colour mixed towards
   // the card, as far as it still stands 3:1 off the card (so the smallest bar never fades into its panel).
   const grad = (v) => { const e = dpOf(v)[0], fr = e.properties.fill.solid.color.expr.FillRule; return { input: JSON.stringify(fr.Input), y: JSON.stringify(v.visual.query.queryState.Y.projections[0].field), low: hexOf(fr.FillRule.linearGradient2.min), high: hexOf(fr.FillRule.linearGradient2.max), sel: JSON.stringify(e.selector), n: dpOf(v).length }; };
-  const good = (r, minBars) => { const bars = r.vis.filter((v) => isBar(v) && !v.tooltipPage), card = cardOf(r.theme), d0 = String(r.theme.dataColors[0]).toLowerCase();
-    return bars.length >= minBars && bars.every((v) => { const g = grad(v); return g.n === 1 && g.input === g.y && g.sel === '{"data":[{"dataViewWildcard":{"matchingOption":1}}]}' && g.high === d0 && g.low !== g.high && ratio(g.low, card) >= 3 && ratio(g.low, card) < ratio(g.high, card); })
+  // Polish round P1 (B-71, 12 Oct): the second bar or column chart of a page fades from the theme's second colour, so a
+  // chart's high end is the first or the second data colour (the sweep checks which chart takes which)
+  const good = (r, minBars) => { const bars = r.vis.filter((v) => isBar(v) && !v.tooltipPage), card = cardOf(r.theme), d0 = String(r.theme.dataColors[0]).toLowerCase(), d1 = String(r.theme.dataColors[1]).toLowerCase();
+    return bars.length >= minBars && bars.every((v) => { const g = grad(v); return g.n === 1 && g.input === g.y && g.sel === '{"data":[{"dataViewWildcard":{"matchingOption":1}}]}' && (g.high === d0 || g.high === d1) && g.low !== g.high && ratio(g.low, card) >= 3 && ratio(g.low, card) < ratio(g.high, card); })
       && r.vis.filter((v) => !isBar(v) || v.tooltipPage).every((v) => !dpOf(v)); };
   const tell = (r) => JSON.stringify(r.vis.filter(isBar).map((v) => [v.visual.visualType, v.tooltipPage, dpOf(v) ? grad(v) : null])).slice(0, 700);
   for (const [lang, preset] of [['en', 'Corporate'], ['en', 'Midnight'], ['ar', 'Corporate']]) {
@@ -3863,7 +3865,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const x = await ask('create_report', { path: 'r15', name: 'R15 brand', design: dz, secondPage: false, fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]'], category: 'Sales[Region]', measure: 'Sales[Total Sales]' } });
     const rules = (x.err ? [] : visuals('r15', x.j.report)).filter((v) => v.visual && /Bar|Column/.test(v.visual.visualType)).map((v) => { const fr = (((((v.visual.objects || {}).dataPoint || [])[0] || {}).properties || {}).fill || {}).solid; const g = fr && fr.color && fr.color.expr && fr.color.expr.FillRule && fr.color.expr.FillRule.FillRule.linearGradient2; const v2 = (c) => String(c.Literal.Value).replace(/^'|'$/g, ''); return g ? { low: v2(g.min.color), high: v2(g.max.color) } : null; }).filter(Boolean);
     const card = dz.ui.card, text = dz.ui.text, cc = x.j && x.j.chartColors;
-    chk(() => !x.err && rules.length >= 2 && rules.every((r) => r && r.low === '#0f6cbd' && r.high !== r.low && cr(r.high, card) > cr(r.low, card) && cr(r.high, text) < cr(r.low, text)) && cc.mode === 'gradient' && cc.reversed === true && /brighter/i.test(cc.note),
+    // polish round P1 (B-71): the second chart of the page fades from the theme's second colour (told in chartColors.second)
+    const sec = (cc && cc.second) || {};
+    chk(() => !x.err && rules.length >= 2 && rules.every((r) => r && ((r.low === sec.low && r.high === sec.high) || r.low === '#0f6cbd' && r.high !== r.low && cr(r.high, card) > cr(r.low, card) && cr(r.high, text) < cr(r.low, text))) && rules.some((r) => r.low === '#0f6cbd') && cc.mode === 'gradient' && cc.reversed === true && /brighter/i.test(cc.note),
       () => `a brand colour that cannot fade towards the card fades towards the text colour, told: ${JSON.stringify(rules)} card ${card} text ${text} ${JSON.stringify(cc)} ${x.err ? x.t.slice(0, 200) : ''}`);
   }
 

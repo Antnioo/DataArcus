@@ -324,7 +324,7 @@
     // (polish round P1, RESCORE-5: bank's deep teal, its colour 2, never appeared) the second bar or column chart of a
     // page fades in colour 2, the third in colour 1 again (pbip-page.js counts them in reading order)
     const bar2 = ((o.theme || {}).dataColors || [])[1], GRAD2 = GRAD && bar2 && String(bar2).toLowerCase() !== String(barBase).toLowerCase() ? gradientEnds(bar2, u.card, u.text) : null;
-    const chartColors = { asked: o.chartColors === 'gradient', ends: GRAD, base: barBase, charts: 0 };
+    const chartColors = { asked: o.chartColors === 'gradient', ends: GRAD, base: barBase, charts: 0, ends2: GRAD2, base2: GRAD2 ? bar2 : null, second: 0 };
     // charts mirrored for a right-to-left report (o.chartAxes 'mirrored', round 13; see mirrorChart)
     const MIRROR = rtl && o.chartAxes === 'mirrored', chartAxes = { asked: o.chartAxes || null, rtl, charts: 0 };
     // Quiet gridlines (o.quietGrid, round 13; seen in Desktop 2.158 on 6 Oct, "GE EN dark": on a dark design the value
