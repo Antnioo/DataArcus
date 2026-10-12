@@ -4,6 +4,17 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Integration round 11 (12 Oct, cloud builder 5; `fix/0.2.9-gate` from `ad5c7f2`; not merged to main, no PR): rc.7's base
+Merged, each green on GitHub first: picker11 `53207b6` (`8378049`; N18: a CALENDAR-built table is a calendar by the picker's own
+note, its number columns (summed or "0"-formatted) never categories or the month axis, no calendar part beside a real category,
+noCategory when nothing is left; "[All x] - [x]" no card. The first try removed the named-parts fallback and broke 45 owner-
+approved checks: restored), writer `ec083d4` (`9ea9e8d`), design `54cd786` (`4e65f93`; layout matrix, golden task 12, the
+Preview line; stamps: design-engine pv, theme-generator / pbip-bind 20261012i11), reader `839652f` (`2230549`; keep the
+dashboard's identity; conflicts kept both: design.mjs + server.mjs answer preview and colours, npm test runs v029g and layouts).
+Decision kept for the owner: the explicit Year and Month slicers stay (N18 said no calendar column as a slicer by default).
+Tests (Linux) on `2230549`: mcp 1456, v029c/d/e/f/g 36/21/21/20/21, golden 12, fuzz 600 + FUZZ_LONG 10000, layouts 32 reports
+226 checks, website 17 of 17, deny-scan, site config, csp, check-min. GitHub CI on `2230549`: all 4 green.
+
 ## Integration round 10 + 10a, final for 0.2.9 (12 Oct, cloud builder 5; `fix/0.2.9-gate` from `1ed1530`; not merged to main, no PR): rc.6's base
 Merged, each green on GitHub first: picker10 `0e9428d` (`ed96a83`; WORK.md both sections kept), checks `3ecac67` (`5dc12de`; N16),
 writer `3524373` (`ea282eb`; N11 + N13, text-suffix formats). Round 10a: design `2edbdd9` (`b02f50a`; N14, N15, D19; golden task 6
