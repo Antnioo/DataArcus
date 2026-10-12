@@ -124,7 +124,9 @@ must keep them under it.
 ## Writer round 8 (12 Oct from 01:26 UTC, cloud builder 11; `fix/0.2.9-writer` reset to gate `07ad9bc`; not merged)
 `a06a5b3`: T6 (Top 6 tooltip by the lab's 27 + 40), D18 (tables 2 decimals, in the picker). T10 re-checked green; D15 builder 10's.
 Then, with the reviewer's yeses: T8 `7812ac2` (Top 6 tooltip 376 wide), S3 `bc57633` (TABLE_ROWS from the laptop's MEASURE-TABLE-ROWS.md).
-`npm test` 1338 + 36 + 21 + 21 + 20, golden, fuzz PASS; website 17/17. Next: the laptop checks S3 and T8 in Desktop. Report:
+`npm test` 1338 + 36 + 21 + 21 + 20, golden, fuzz PASS; website 17/17. Then design 3453718 merged (`f55049a`, `ed96b7c`): the table's panel keeps
+the slot, the table inside on whole rows; 1350 + golden (task 7 +2 bands, explained) + fuzz, website 17/17. Next: the laptop checks S3
+(shadow/border line inside the panel too) and T8 in Desktop. Report:
 `mcp/work/0.2.9-writer.md` (round 8).
 
 ## rc1 release blockers, writer (11 Oct from 20:22 UTC, cloud builder 11; `fix/0.2.9-writer` reset to `46037f3`; not merged, no PR)
