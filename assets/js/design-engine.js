@@ -626,7 +626,19 @@
     });
     // (the laptop's sweep of rc.1, S7: under the shortened rail the page stayed empty to its bottom) a slot wholly below
     // the rail's new bottom, beside the rail (within SLOT_GAP), takes the rail's column: the row reaches the page's edge
-    const rail = R && out.find((s) => s.kind === 'slicer' && s.stack);
+    let rail = R && out.find((s) => s.kind === 'slicer' && s.stack);
+    // (design round 8, the re-score's S7: on page 2 the rail shrank beside a chart that runs lower, and the table under
+    // both starts after that chart, so the page stayed empty under the rail) the rail reaches the bottom of the slots
+    // beside it that start above its own bottom, never past its first height; contentH keeps the height its dropdowns and
+    // Reset take, which the writer stacks at the top
+    if (rail) {
+      const s0 = slots.find((s) => s.kind === 'slicer' && s.x === rail.x && s.y === rail.y) || rail, bottom = rail.y + rail.h;
+      const beside = out.filter((s) => s !== rail && !OWN_SLOTS.includes(s.kind) && s.y >= rail.y - 1 && s.y < bottom
+        && ((s.x - (rail.x + rail.w) >= 0 && s.x - (rail.x + rail.w) <= SLOT_GAP) || (rail.x - (s.x + s.w) >= 0 && rail.x - (s.x + s.w) <= SLOT_GAP)));
+      const to = Math.min(s0.y + s0.h, Math.max(bottom, ...beside.map((s) => s.y + s.h)));
+      const grown = Object.assign({}, rail, { h: to - rail.y, contentH: rail.h });
+      out = out.map((s) => (s === rail ? grown : s)); rail = grown;
+    }
     if (rail) out = out.map((s) => {
       if (s === rail || s.y < rail.y + rail.h || OWN_SLOTS.includes(s.kind)) return s;
       const gapStart = s.x - (rail.x + rail.w), gapEnd = rail.x - (s.x + s.w);

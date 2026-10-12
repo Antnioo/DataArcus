@@ -307,7 +307,7 @@
       noData, noDataSkipped, noPageButtons, o, oneLine, own, pageFilters, paneObjects, pt, resetFill, resetFit, resetIcon,
       resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, same, shortDays, slicerH, subtitlesUsed, svgDone,
       svgSizes, tabRows, tableColumns, tableOrder, tableRows, tableSmaller, tableWide, textbox, tip, tipFor, tipName, titleFit, titles,
-      trend, u, valueEm, wrapLines
+      trend, u, valueEm, wrapLines, extMeasure, extField, daxOf
     } = c;
     const pageName = pg.id, filters = pageFilters();
     add(D + '/pages/' + pageName + '/page.json', json(Object.assign({
@@ -521,7 +521,10 @@
         const across = !s.stack && s.w > s.h && (stripW >= 160 * k || stackH > s.h);
         const room = across ? s.w - 2 * pad - bw - gap : s.w - 2 * pad;
         const sw = across ? (room - gap * (n - 1)) / n : room;
-        const sh = across ? s.h - 2 * pad : Math.max(slicerH(SLICER_TEXT), Math.min(76 * k, (s.h - 2 * pad - bh - gap * n) / n));
+        // (design round 8, S7: a rail grown to the row beside it keeps its dropdowns and Reset together at its top, in the
+        // height they take, contentH from the design engine's fitSlots; the rest of the rail is its panel)
+        const railH = !across && s.contentH && s.contentH < s.h ? s.contentH : s.h;
+        const sh = across ? s.h - 2 * pad : Math.max(slicerH(SLICER_TEXT), Math.min(76 * k, (railH - 2 * pad - bh - gap * n) / n));
         fields.forEach((f, i) => {
           // in a right-to-left report the first slicer is the rightmost one, so tab order follows the reading
           const x = across ? (rtl ? s.x + s.w - pad - sw - i * (sw + gap) : s.x + pad + i * (sw + gap)) : s.x + pad, y = across ? s.y + pad : s.y + pad + i * (sh + gap);
@@ -535,7 +538,7 @@
         });
         // Reset button: applies a bookmark that clears these slicers
         // (across: at the end of the strip; in a rail: at the reading start, lined up with the slicers)
-        const bm = rnd(), bx = across ? (rtl ? s.x + pad : s.x + s.w - pad - bw) : (rtl ? s.x + s.w - pad - bw : s.x + pad), by = across ? s.y + (s.h - bh) / 2 : s.y + s.h - pad - bh;
+        const bm = rnd(), bx = across ? (rtl ? s.x + pad : s.x + s.w - pad - bw) : (rtl ? s.x + s.w - pad - bw : s.x + pad), by = across ? s.y + (s.h - bh) / 2 : s.y + railH - pad - bh;
         container({ x: Math.round(bx), y: Math.round(by), w: Math.round(bw), h: Math.round(bh), z, parent, kind: 'button',
           visual: { visualType: 'actionButton',
             objects: { icon: def(resetIcon(reset)), text: def(resetLook(resetText, reset)),
@@ -634,7 +637,8 @@
         // user's model does; before, it kept the layout's role names, "Main trend")
         if (B && query) ttl = bindTitle(s.kind, Bt, W.by || 'by') || ttl;
         // (rc1: a chart cut to its top N says so in its title, as the tooltip page's "Top 6")
-        { const top = B && query ? topCount(c, s, pg, catOf(Bt, query)) : 0; if (top && ttl) ttl = (lang === 'ar' ? 'أعلى ' : 'Top ') + top + ': ' + ttl; }
+        let topOf = null;
+        { const top = B && query ? topCount(c, s, pg, catOf(Bt, query)) : 0; if (top && ttl) { ttl = (lang === 'ar' ? 'أعلى ' : 'Top ') + top + ': ' + ttl; topOf = { n: top, cat: catOf(Bt, query), y: query.queryState.Y.projections[0].field }; } }
         if ((s.kind === 'table' || s.kind === 'matrix') && ttl && chartTitles.has(ttl)) ttl = ttl + ': ' + (AR_LETTERS.test(ttl) ? (W.detail && AR_LETTERS.test(W.detail) ? W.detail : 'التفاصيل') : (W.detail && !AR_LETTERS.test(W.detail) ? W.detail : 'detail'));   // (round 14: in the title's own script)
         if (s.kind === 'kpi') { if (B && query) ttl = label(B.kpis[kpiIndex]); kpiIndex++; }
         // KPI names read as labels: semibold, so the number below stays the hero
@@ -676,7 +680,7 @@
           if (key != null) { visual.visualContainerObjects.subTitle = obj({ show: bool(true), text: str(o.subtitles[key].trim()) }); subtitlesUsed.add(key); } }
         if (s.kind !== 'kpi' && s.kind !== 'card' && ttl) {
           const tf = titleFit(ttl, TITLE, s.w - 2 * Math.round(16 * pg.page.h / 1080)), tp = visual.visualContainerObjects.title[0].properties;
-          fitted.set(visual, { ttl, avail: s.w - 2 * Math.round(16 * pg.page.h / 1080), page: pg.name || base });
+          fitted.set(visual, { ttl, avail: s.w - 2 * Math.round(16 * pg.page.h / 1080), page: pg.name || base, top: topOf });
           if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); titles[tf.mode].push(fitted.get(visual).entry = { page: pg.name || base, title: ttl, shown: tf.shown }); }
         }
         // the title already names the KPI, so the card's own label under the number is not repeated
@@ -842,7 +846,14 @@
           const tv = (((visual.objects || {}).values || [])[0] || {}).properties || {}, t = tv.fontSize ? +String(tv.fontSize.expr.Literal.Value).replace(/D$/, '') : (+((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10);
           const tf = tableFields(Bt, rtl).find(isTextField), n = ((tf && catKind(tf)) || {}).rows || 0;
           const pitch = 1.415 * t * 4 / 3 + 2 * padOf, fixed = 1.5 * TITLE * 4 / 3 + (pitch + 7) + pitch + 16, k0 = Math.floor((box.h - fixed) / pitch);
-          if (!gp.imageHeight && k0 >= 1 && !(n && n <= k0)) { const h1 = Math.ceil(fixed + k0 * pitch); if (h1 < box.h) box = { y: box.y, h: h1 }; }
+          // (design round 8, the re-score's N6: shortened to its whole rows, the table's panel ended about a row above the
+          // chart beside it) the table keeps its slot's height, and the room past its last whole row goes into the rows'
+          // padding, a whole unit on each side of every row (the header and the total too: k0 + 2 rows), by the same
+          // measured pitch; what is left under one unit a row stays under the total, inside the panel
+          if (!gp.imageHeight && k0 >= 1 && !(n && n <= k0)) {
+            const more = Math.floor((box.h - Math.ceil(fixed + k0 * pitch)) / (2 * (k0 + 2)));
+            if (more > 0) { visual.objects = visual.objects || {}; visual.objects.grid = [{ properties: Object.assign(gp, { rowPadding: num(padOf + more) }) }]; }
+          }
         }
         if (B && visual && visual.query) vFilters = fixVisual(visual, s, pg, Bt, tableText);
       }
@@ -1133,6 +1144,7 @@
       // the new title fitted like any title, the alt text the same name, the titles report following
       const rename = (v, k, name) => { const f = fitted.get(v.visual), tp = v.visual.visualContainerObjects.title[0].properties, g = (v.visual.visualContainerObjects.general || [])[0];
         const tf = f ? titleFit(name, TITLE, f.avail) : { mode: 'one', shown: name };
+        if (f) f.final = name;
         tp.text = str(tf.shown); if (tf.mode !== 'one' && !tf.one) tp.titleWrap = bool(true); else delete tp.titleWrap;
         if (g && g.properties && g.properties.altText) g.properties.altText = str(name);
         // (the reviewer's third review, item 4: the entry this visual's title gave, not the first with the same title,
@@ -1149,6 +1161,23 @@
         if (!c || adds(k)) return;
         nth[c] = (nth[c] || 0) + 1;
         rename(v, k, prefix(v) + k + ' (' + c + (nth[c] > 1 ? ' ' + nth[c] : '') + ')'); }); });
+      // (design round 8, the re-score's N2 and N3: "Top 8:" stood over charts of 2, 4 or 6 bars, and a chart that left
+      // categories out did not say how many there were) a chart cut to its Top N takes its title from a report-level
+      // measure: "Top N of M: <title>" when more than N of its categories have a value under the page's filters (M counted
+      // without the chart's own Top N, REMOVEFILTERS on its category column), its plain title otherwise. The tools never
+      // read the data, so only the report can know. Each text is fitted as the title is, "M" taken as 999.
+      const dq = (t) => '"' + String(t).replace(/"/g, '""') + '"';
+      visuals.forEach((v) => { const f = v.visual && fitted.get(v.visual); if (!f || !f.top || !f.top.cat || f.top.cat.c == null) return;
+        const y = daxOf(f.top.y); if (!y) return;
+        const word = lang === 'ar' ? ['أعلى ', ' من '] : ['Top ', ' of '], core = (f.final || f.ttl).replace(TOPPED, ''), lead = word[0] + f.top.n + word[1];
+        const plain = titleFit(core, TITLE, f.avail), long = titleFit(lead + '999: ' + core, TITLE, f.avail), rest = long.shown.indexOf(lead + '999: ') === 0 ? long.shown.slice((lead + '999: ').length) : null;
+        if (rest == null) return;
+        const col = daxNames.column(f.top.cat.t, f.top.cat.c);
+        const expression = 'VAR _n = CALCULATE ( COUNTROWS ( FILTER ( VALUES ( ' + col + ' ), NOT ISBLANK ( ' + col + ' ) && NOT ISBLANK ( ' + y + ' ) ) ), REMOVEFILTERS ( ' + col + ' ) ) RETURN IF ( _n > ' + f.top.n + ', ' + dq(lead) + ' & _n & ' + dq(': ' + rest) + ', ' + dq(plain.shown) + ' )';
+        const m = extMeasure(f.top.cat.t, 'Title: ' + core, expression, 'Text');
+        const tp = v.visual.visualContainerObjects.title[0].properties;
+        tp.text = { expr: extField(f.top.cat.t, m) };
+        if ((plain.mode !== 'one' && !plain.one) || (long.mode !== 'one' && !long.one)) tp.titleWrap = bool(true); else delete tp.titleWrap; });
     }
     // 0.2.9, audit 6's A6-12: what each written visual shows, in the page's order, for the caller's answer: its fields as
     // Table[Field] (a measure or a column) or Sum(Table[Field]) (a column the visual sums or counts), its roles in order; the
