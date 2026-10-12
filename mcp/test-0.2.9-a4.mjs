@@ -191,6 +191,19 @@ export async function v029a4({ call, check, ROOT, fs = fs0 }) {
     chk(() => of('Month Year').length === 1 && of('Month Year')[0].severity === 'high' && of('OrderDate').length === 1, () => `A4-9: "Month Year" and "OrderDate" still are: ${JSON.stringify([of('Month Year'), of('OrderDate')])}`);
   }
 
+  // ---------- N16 (the laptop's RESCORE-3 on rc.5): a time-named axis sorted by its value is no alphabetical axis ----------
+  {
+    const cat = (name) => ({ kind: 'column', table: 'T', name }), ms = { kind: 'measure', table: 'T', name: 'Total' };
+    const inv = (name, sort) => ({ theme: { labelSize: 10 }, pages: [{ n: 1, name: 'P', w: 1280, h: 720, visuals: [{ id: 'c', type: 'clusteredBarChart', x: 10, y: 100, w: 400, h: 300, title: 'T',
+      fields: { Category: [cat(name)], Y: [ms] }, sort, filters: [], format: {}, hidden: false, json: { visual: { visualType: 'clusteredBarChart' } } }] }] });
+    const model = (name) => [{ name: 'T', columns: [{ name, dataType: 'string' }] }];
+    const of = (name, sort, m) => lint(inv(name, sort), m === undefined ? model(name) : m, null, {}).findings.filter((f) => /^AXIS_TEXT_TIME|^AXIS_TIME/.test(f.rule));
+    chk(() => !of('Week', [{ field: ms, dir: 'desc' }]).length && !of('Year', [{ field: ms, dir: 'asc' }]).length && !of('Week', [{ field: ms, dir: 'desc' }], null).length,
+      () => `N16: a week or year axis sorted by the chart's measure (by value) gets no time-axis warning: ${JSON.stringify([of('Week', [{ field: ms, dir: 'desc' }]), of('Year', [{ field: ms, dir: 'asc' }]), of('Week', [{ field: ms, dir: 'desc' }], null)])}`);
+    chk(() => of('Month Year', []).length === 1 && of('Month Year', [{ field: cat('Month Year'), dir: 'asc' }]).length === 1,
+      () => `N16: a time axis left unsorted or sorted by its own text (A to Z) still gets it: ${JSON.stringify([of('Month Year', []), of('Month Year', [{ field: cat('Month Year'), dir: 'asc' }])])}`);
+  }
+
   // ---------- A4-10, C1: every measured source names a section of DESKTOP-TESTS.md ----------
   {
     const dt = fs.readFileSync(path.join(HERE, '..', 'scripts', 'tests', 'DESKTOP-TESTS.md'), 'utf8').replace(/`/g, '');
