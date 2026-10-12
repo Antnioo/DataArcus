@@ -77,6 +77,18 @@ export async function v029r({ check }) {
     chk(() => !k.includes('Fee %') && !k.includes('Fee Share'), () => `D14/N5: no card that is always 100 % (a measure over itself under ALL): ${JSON.stringify(k)}`);
   }
 
+  // ---------- N5 + D14 (rc.4, round 9): two more shapes: a row count over ALL of its table, and a share written as one
+  // measure over another whose value is the same under ALL ----------
+  {
+    const j = model([{ name: 'Visits', columns: [col('Ward', 'string'), col('Fee', 'double')],
+      measures: [ms('Patients', 'COUNTROWS ( Visits )', '#,0'), ms('All Patients', 'COUNTROWS ( ALL ( Visits ) )', '#,0'),
+        ms('Revenue', 'SUM ( Visits[Fee] )', '\\$#,0'), ms('Revenue All', 'CALCULATE ( [Revenue], REMOVEFILTERS () )', '\\$#,0'),
+        ms('Revenue %', 'DIVIDE ( [Revenue], [Revenue All] )', '0%'), ms('Avg Fee', 'AVERAGE ( Visits[Fee] )', '\\$#,0')] }]);
+    const k = names(pick(j, 5).kpis);
+    chk(() => k.filter((m) => ['Patients', 'All Patients'].includes(m)).length === 1 && k.filter((m) => ['Revenue', 'Revenue All'].includes(m)).length === 1 && !k.includes('Revenue %'),
+      () => `N5/D14: COUNTROWS ( ALL ( T ) ) is the table's count; a measure over its own value under ALL is no card: ${JSON.stringify(k)}`);
+  }
+
   // ---------- D5: a model with currency-formatted amounts shows an amount card first, by format, even when the amount is
   // computed across tables (RELATED) and the counts are plain ----------
   {

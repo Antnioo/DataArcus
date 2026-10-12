@@ -1,8 +1,30 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Picker round 8" just below (branch fix/0.2.9-picker8), then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## Picker round 9 (12 Oct, cloud builder 5; branch `fix/0.2.9-picker9` from the gate `961ef57`; not merged, no PR)
+RESCORE-2 on rc.4: 7.0, target 7.5. Done, each tests first:
+- N9: create_report takes the approved plan's displayNames when the call leaves them out (`Plans.pinned`); the same names
+  passed back write; other names are refused (test-0.2.9v, 3 checks). create_report's displayNames description says so.
+- N7: a text column whose name has a picture or link word (img, image, photo, picture, pic, logo, url, uri, link, href,
+  thumbnail, thumb, icon, avatar; whole words after splitting camel case and "_") ranks after every category (catRank 3).
+- The pbip suite's race, at the root: the theme generator loaded pbip-bind twice (the data option, then the folder); the model
+  read by one copy was picked by the other (its WeakMap knew nothing): empty KPI rows, one card. loadBind shares one promise;
+  the test reads the picker once the model is read. Stamps `20261012r9`. pbip 6 of 6 (before 3 of 8 failed).
+- N5 + D14, the shapes the rules cover (by formula; values never read):
+  - same value, one card: the same DAX (spaces, case); `[Other]` alone (alias chains); COUNTROWS(T), COUNT/COUNTA(T[c]) and
+    (round 9) COUNTROWS(ALL(T)) / COUNTROWS(ALLNOBLANKROW(T)) are T's count; CALCULATE(x, only ALL/ALLSELECTED/REMOVEFILTERS/
+    ALLEXCEPT/ALLNOBLANKROW filters) is x.
+  - never a card (100 %): DIVIDE(e, CALCULATE(e, ALL-family ...)) and e / CALCULATE(e, ALL-family ...) for any expression e;
+    (round 9) DIVIDE([A], [B]) and [A] / [B] where [B] has [A]'s value (its ALL form, or an alias).
+  - not covered yet: a VAR holding the total (VAR t = CALCULATE(...) RETURN DIVIDE([A], t)); DISTINCTCOUNT vs COUNTROWS of a
+    dimension (different values in general: can't be told by formula alone); FILTER(ALL(...)) forms. SHAPES-RC4.md (the
+    laptop's anonymised shapes) had not landed at the time of writing: cover those when it does.
+Round 8 on the gate (`961ef57`, before this branch): mcp 1361, v029c/d/e/f, golden 11, fuzz 600 + FUZZ_LONG 10000, deny-scan,
+site config, csp, check-min all pass; website 16 of 17 (pbip: the race fixed here).
+Waiting for the owner: round 8b (writer `fix/0.2.9-writer` 5f92d45 into the gate).
 
 ## Picker round 8 (12 Oct, cloud builder 5; branch `fix/0.2.9-picker8` from `07ad9bc`; not merged, no PR)
 The re-score (RESCORE-1: 4.1 -> 5.4 -> 6.8, target 7.5). Round 7b (merging `feat/0.2.9-custom-visuals` 29743c6 into the gate)
