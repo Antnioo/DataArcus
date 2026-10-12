@@ -114,5 +114,9 @@ export function gate(tool, id, model, pin) {
 
 
 
+/** A plan's pinned input for a tool (design round 8, S6: the display names the plan showed as its default), or undefined;
+ *  read only, the gate still checks the write */
+export function pinned(id, tool, key) { const p = plans.get(String(id)), w = p && p.data && p.data.pins && p.data.pins[tool]; return w ? w[key] : undefined; }
+
 /** After a successful write (audit 6, A6-2): the plan is used for that tool, and the same id is refused for it again. */
 export function consume(id, tool) { const p = plans.get(String(id)); if (p) { p.used = p.used || {}; p.used[tool] = true; } }

@@ -71,13 +71,16 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
   // ---------- S6: raw field names: the plan offers readable display names; the report uses the approved ones ----------
   {
     const pl = await ask('plan_layout', { layout: 'exec', path: 's-loans', lang: 'en', fields: ['loans[loan_intent]', 'loans[BranchName]', 'loans[Total Exposure]'] });
-    const sug = pl.j && pl.j.displayNames && pl.j.displayNames.suggestedDisplayNames;
-    chk(() => sug && sug['loans[loan_intent]'] === 'Loan Intent' && sug['loans[BranchName]'] === 'Branch Name' && !('loans[Total Exposure]' in sug) && /approve/i.test(pl.j.displayNames.sayFirst), () => `S6: plan_layout proposes readable names for raw ones, for the user to approve: ${JSON.stringify(pl.j && pl.j.displayNames)}`);
+    // (design round 8, S6: the readable names are the plan's default, inThePlan, named in it for the user's go)
+    const sug = pl.j && pl.j.displayNames && pl.j.displayNames.inThePlan;
+    chk(() => sug && sug['loans[loan_intent]'] === 'Loan Intent' && sug['loans[BranchName]'] === 'Branch Name' && !('loans[Total Exposure]' in sug) && /plan/i.test(pl.j.displayNames.sayInPlan), () => `S6: plan_layout proposes readable names for raw ones, named in the plan: ${JSON.stringify(pl.j && pl.j.displayNames)}`);
     const x = await ask('create_report', { path: 's-loans', name: 'S names', design: design({ preset: 'exec' }), secondPage: false, fields: { category: 'loans[loan_intent]' }, displayNames: { 'loans[loan_intent]': 'Loan Intent' } });
     const titles = JSON.stringify(visualsOf(x, 's-loans').map((v) => (v.visual || {}).visualContainerObjects || {}));
     chk(() => !x.err && /Loan Intent/.test(titles) && !/by loan_intent/.test(titles), () => `S6: the titles use the approved name: ${titles.slice(0, 300)}`);
-    const y = await ask('create_report', { path: 's-loans', name: 'S names raw', design: design({ preset: 'exec' }), secondPage: false, fields: { category: 'loans[loan_intent]' } });
-    chk(() => !y.err && /loan_intent/.test(JSON.stringify(visualsOf(y, 's-loans').map((v) => (v.visual || {}).visualContainerObjects || {}))), () => 'S6: without the user\'s go no name is changed (the raw name stays)');
+    // (design round 8, the re-score's S6: the plan's default is the readable name, named in the plan; the user who wants the
+    // model's own name gives it, and the plan keeps it)
+    const y = await ask('create_report', { path: 's-loans', name: 'S names raw', design: design({ preset: 'exec' }), secondPage: false, fields: { category: 'loans[loan_intent]' }, displayNames: { 'loans[loan_intent]': 'loan_intent' } });
+    chk(() => !y.err && /loan_intent/.test(JSON.stringify(visualsOf(y, 's-loans').map((v) => (v.visual || {}).visualContainerObjects || {}))), () => 'S6: a name the user keeps is kept (the raw name, given in displayNames)');
   }
 
   // ---------- the second sweep (DETAIL-2): T4, T5, A2: a chart's tooltip shows the hovered chart's own measure, by another category ----------
@@ -101,6 +104,54 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     }
     const ar = await ask('plan_layout', { layout: 'exec', path: 's-shop', lang: 'ar' }), say = ar.j && ar.j.arabicNames && ar.j.arabicNames.sayFirst;
     chk(() => /أعلى 6/.test(say || '') && /tooltip/i.test(say || ''), () => `A2: an Arabic plan with English measure names says the tooltip's «أعلى 6» title will mix the two scripts unless Arabic names are given: ${say}`);
+  }
+
+  // ---------- design round 8 (the laptop's re-score of the rc, RESCORE-1): N2, N3, S7, N6, S6 ----------
+  {
+    const extOf = (x, dir) => { if (x.err) return []; const f = path.join(ROOT, dir, x.j.report, 'definition', 'reportExtensions.json'); return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')).entities.flatMap((e) => e.measures.map((m) => Object.assign({ t: e.name }, m))) : []; };
+    // N2 and N3: a chart cut to its Top N says "Top N of M:" only when it leaves categories out (counted in the report, from
+    // the data the tools never read), else its plain title; the plan says the rest are left out, with no "Other" bar
+    const x = await ask('create_report', { path: 's-loans', name: 'R8 top', design: design({ preset: 'exec' }), secondPage: false });
+    const vs = visualsOf(x, 's-loans').filter((v) => v.page.type !== 'Tooltip'), ext = extOf(x, 's-loans');
+    const topped = vs.filter((v) => ((v.filterConfig || {}).filters || []).some((f) => f.type === 'TopN'));
+    const titleM = (v) => { const t = (((v.visual.visualContainerObjects || {}).title || [])[0] || {}).properties || {}, m = t.text && t.text.expr && t.text.expr.Measure; return m && m.Expression.SourceRef.Schema === 'extension' ? ext.find((e) => e.t === m.Expression.SourceRef.Entity && e.name === m.Property) : null; };
+    const topOf = (v) => v.filterConfig.filters.find((f) => f.type === 'TopN').filter.From[0].Expression.Subquery.Query.Top;
+    chk(() => !x.err && topped.length >= 2 && topped.every((v) => { const m = titleM(v), n = topOf(v); return m && /REMOVEFILTERS/.test(m.expression) && m.expression.includes('MIN ( _n, ' + (n + 1) + ' ) = ' + (n + 1)) && m.expression.includes('"Top ' + n + ' of "') && !/^[^,]*"Top/.test(m.expression.split(',').pop()); }),
+      () => `N2/N3: a Top N chart's title is a report measure: "Top N of M: ..." only when more than N categories have a value, the plain title otherwise: ${topped.map((v) => JSON.stringify(titleM(v) && titleM(v).expression || (((v.visual.visualContainerObjects || {}).title || [])[0] || {}).properties)).join(' | ').slice(0, 600)} ${short(x)}`);
+    chk(() => !x.err && vs.filter((v) => /Chart$/.test(typeOf(v))).every((v) => !/'Top \d+: /.test(JSON.stringify((v.visual.visualContainerObjects || {}).title || ''))), () => 'N2: no chart title is a fixed "Top N:" text');
+    const pl = await ask('plan_layout', { layout: 'exec', path: 's-loans' }), say = JSON.stringify((pl.j || {}).categoryCharts || {}) + ' ' + ((pl.j || {}).topCategories || '');
+    chk(() => /only when/i.test(say) && /Other/.test(say) && /of M|"Top \d+ of/.test(say), () => `N3: the plan says a chart shows "Top N of M" only when it leaves categories out, and that the rest are left out with no "Other" bar: ${say.slice(0, 400)}`);
+    chk(() => (x.j.reportNotes || []).some((n) => /Top \d+ of/.test(n) && /only when/i.test(n)), () => `N3: the report's notes say it too: ${JSON.stringify((x.j || {}).reportNotes || []).slice(0, 300)}`);
+
+    // S7: the rail stays as high as its contents (the owner's round-12 rule #18, kept by the reviewer on 12 Oct); the page
+    // reflows: the chart beside the rail ends where it ends, and the table under them moves up, keeping its bottom
+    const p2 = E.projectPages(design({ preset: 'exec', page: '1920x1080' }).layout, 'en', { second: true })[1].slots, R3 = { n: 3, minH: 56, maxH: 114, resetH: 40, pad: 15, gap: 12 };
+    const f2 = get(() => E.fitSlots(p2, { railItems: R3 }).slots), rail = f2.find((s) => s.kind === 'slicer'), beside = f2.find((s) => s.kind === 'column'), tab2 = f2.find((s) => s.kind === 'table'), tab0 = p2.find((s) => s.kind === 'table');
+    chk(() => rail.h < 491 && rail.y + rail.h === beside.y + beside.h && tab2.y < tab0.y && tab2.y + tab2.h === tab0.y + tab0.h && tab2.y - (beside.y + beside.h) === tab0.y - (p2.find((s) => s.kind === 'column').y + p2.find((s) => s.kind === 'column').h),
+      () => `S7: page 2 reflows under a rail kept to its contents: rail ${JSON.stringify(rail && [rail.y, rail.h])}, beside ${JSON.stringify(beside && [beside.y, beside.h])}, table ${JSON.stringify(tab2 && [tab2.y, tab2.h])}`);
+    const f1 = get(() => E.fitSlots(p2, { railItems: Object.assign({}, R3, { n: 1 }) }).slots);
+    const c1 = f1.find((s) => s.kind === 'column'), c0 = p2.find((s) => s.kind === 'column'), t1 = f1.find((s) => s.kind === 'table');
+    chk(() => c1.h === c0.h && t1.y === tab0.y, () => `S7: a reflow that would leave the chart beside the rail under 60% of its height is not made (the column chart and the table's top stay): ${JSON.stringify([c1.h, c0.h, t1.y, tab0.y])}`);
+    model('s-one', [{ name: 'desk', partitions: mp('desk'), columns: [col('Amount', 'double'), col('Region', 'string')], measures: [{ name: 'Revenue', expression: 'SUM ( desk[Amount] )', formatString: '#,0' }] }]);
+    const z = await ask('create_report', { path: 's-one', name: 'R8 rail', design: design({ preset: 'exec', page: '1920x1080', filters: true, fpos: 'start' }), secondPage: true });
+    const pv = visualsOf(z, 's-one').filter((v) => v.pi === 1), at = (v) => { const g = v.parentGroupName ? pv.find((w) => w.name === v.parentGroupName) : null; return { y: v.position.y + (g ? g.position.y : 0), h: v.position.height }; };
+    const sl = pv.filter((v) => typeOf(v) === 'slicer').map(at), btn = pv.filter((v) => typeOf(v) === 'actionButton' && /Bookmark/.test(JSON.stringify(v.visual.visualContainerObjects || {}))).map(at)[0];
+    chk(() => !z.err && sl.length >= 1 && btn && btn.y - Math.max(...sl.map((v) => v.y + v.h)) <= 30, () => `S7: Reset sits right under the dropdowns (#18): ${JSON.stringify([sl, btn])} ${short(z)}`);
+
+    // N6: on page 1 the table's panel ends where the chart beside it ends; its rows stay whole (the slack in their padding)
+    const w = await ask('create_report', { path: 's-shop', name: 'R8 table', design: design({ preset: 'exec', page: '1920x1080' }), secondPage: false, fields: { table: ['shop[Product]', 'shop[Revenue]', 'shop[Orders]'] } });
+    const p1 = visualsOf(w, 's-shop').filter((v) => v.pi === 0), tb = p1.find((v) => typeOf(v) === 'tableEx'), nb = tb && p1.find((v) => /Chart$/.test(typeOf(v)) && Math.abs(v.position.y - tb.position.y) <= 1);
+    // (changed in writer round 8, the reviewer's resolution of 12 Oct with the writer's S3: the PANEL behind the table keeps the
+    // slot's height and ends where the chart beside it ends; the table visual inside it ends on its whole rows, measured)
+    const pn = tb && p1.find((v) => v !== tb && /^(cardVisual|textbox)$/.test(typeOf(v)) && v.position.x === tb.position.x && v.position.y === tb.position.y && v.position.z < tb.position.z);
+    chk(() => !w.err && tb && nb && pn && Math.abs(pn.position.y + pn.position.height - nb.position.y - nb.position.height) <= 1 && tb.position.height <= pn.position.height, () => `N6: the table's panel ends where the chart beside it ends, the table inside it: ${JSON.stringify(tb && tb.position)} ${JSON.stringify(pn && pn.position)} ${JSON.stringify(nb && nb.position)} ${short(w)}`);
+
+    // S6: the plan's default display names are the readable ones, named in the plan, and the report uses them
+    const pd = await ask('plan_layout', { layout: 'exec', path: 's-loans', planFields: { category: 'loans[loan_intent]' } }), dn = (pd.j || {}).displayNames || {};
+    chk(() => dn.inThePlan && dn.inThePlan['loans[loan_intent]'] === 'Loan Intent' && /plan/i.test(dn.sayInPlan || ''), () => `S6: the plan shows the readable names as its default: ${JSON.stringify(dn).slice(0, 300)}`);
+    const d = await ask('create_report', { path: 's-loans', name: 'R8 names', design: design({ preset: 'exec' }), secondPage: false, fields: { category: 'loans[loan_intent]' } });
+    const dt = JSON.stringify(visualsOf(d, 's-loans').map((v) => ((v.visual || {}).visualContainerObjects || {}).title || '')) + JSON.stringify(extOf(d, 's-loans'));
+    chk(() => !d.err && /Loan Intent/.test(dt) && !/by loan_intent/.test(dt), () => `S6: the report shows the plan's names: ${dt.slice(0, 300)} ${short(d)}`);
   }
 }
 
