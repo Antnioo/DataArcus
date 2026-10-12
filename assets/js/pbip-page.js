@@ -250,7 +250,11 @@
       const top = col && st.Y && st.Y.projections[0] ? topCount(c, s, pg, catOf(Bt, visual.query)) : 0;
       if (top) { filters.push(topN(col, st.Y.projections[0].field, top)); n.topCharts.push({ page: pg.name || base, kind: s.kind, field: col.Expression.SourceRef.Entity + '[' + col.Property + ']', top }); }
       // O-4: a bar chart's names get 40% of its width, 50% on a narrow chart (under 560 on the 720-high page); the default 25 cut them at about 10 characters
-      if (visual.visualType === 'clusteredBarChart') put('categoryAxis', { maxMarginFactor: lit(barNameShare(s.w, pg.page.h) + 'L') });
+      // (design round 9, D19: a many-valued category's names, product names, get room for 25 characters where 40% of the
+      // chart holds them, else 50%: measured, REPORT-FIXES-LAB B1/B2, 40% of 508 held about 20 characters, 50% about 25,
+      // 10.2 page units a character on a 1080-high page)
+      if (visual.visualType === 'clusteredBarChart') { const cf = catOf(Bt, visual.query), need = 25 * 10.2 * pg.page.h / 1080;
+        put('categoryAxis', { maxMarginFactor: lit(Math.max(barNameShare(s.w, pg.page.h), cf && cf.wide && 0.4 * s.w < need ? 50 : 0) + 'L') }); }
       // O-13: the line chart's month label
       if (s.kind === 'line' && col && Bt.date && ['monthStart', 'monthLabel'].includes((timeAxisPlan(Bt.date) || {}).order) && col.Property === Bt.date.c) {
         byMonthStart(visual.query, Bt.date, MIRROR ? 'Descending' : 'Ascending');
@@ -377,7 +381,20 @@
       barCharts.push({ page: pg.name || base, field: label(f) });
       return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows: list.length });
     };
-    const sorted = pg.slots.map(asBar).sort((a, b) => (a.y - b.y) || (rtl ? b.x - a.x : a.x - b.x));
+    // (design round 9, the re-score's D11: two bars across a wide slot on four reports) a bar or column chart by a
+    // category the picker marks two-valued (true/false, an IF of two words) is a donut: two shares read at a glance.
+    // (D19: product names cut on a column chart, 6 of 8) a column chart by a many-valued category (a lookup table's name,
+    // a city) is a bar chart, its names level; its rows are the bar rows its slot holds (the measured 22.2 a row).
+    // A slot keeps the kind it was planned as (was): its category and its title are that kind's.
+    const byField = (s) => {
+      const f = B && (s.kind === 'bar' || s.kind === 'column') && (B.cats || {})[s.kind];
+      if (!f || f.c == null) return s;
+      if (f.two) return Object.assign({}, s, { kind: 'donut', was: s.kind, topN: null });
+      if (s.kind === 'column' && f.wide && !s.wasColumn) { const rows = Math.max(1, Math.floor((s.h * 720 / pg.page.h - 45 - 8 - 38) / 22.2));
+        barCharts.push({ page: pg.name || base, field: label(f) }); return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows, topN: s.topN ? rows : s.topN }); }
+      return s;
+    };
+    const sorted = pg.slots.map(asBar).map(byField).sort((a, b) => (a.y - b.y) || (rtl ? b.x - a.x : a.x - b.x));
     const groups = {};
     const groupOf = (kind) => (kind === 'title' || kind === 'logo' ? 'header' : kind === 'kpi' ? 'kpis' : kind === 'slicer' ? 'filters' : null);
     const GROUP_NAMES = { header: W.header || 'Header', kpis: W.kpis || 'KPI cards', filters: W.filters || 'Filters' };
@@ -437,7 +454,7 @@
     // is a chart's title on the same page is titled by what it adds, "...: detail"
     const pageCats = new Set();   // the categories this page's charts already show (round 16, #18)
     let catPlan = null;   // each categorical chart slot's category, given out once for the page (round 18)
-    const chartTitles = new Set(B ? sorted.filter((s) => CHARTS.includes(s.kind)).map((s) => bindTitle(s.wasColumn ? 'column' : s.kind, B, W.by || 'by')).filter(Boolean) : []);   // (wasColumn: a column chart written as a bar chart keeps its own title)
+    const chartTitles = new Set(B ? sorted.filter((s) => CHARTS.includes(s.kind)).map((s) => bindTitle(s.was || (s.wasColumn ? 'column' : s.kind), B, W.by || 'by')).filter(Boolean) : []);   // (wasColumn: a column chart written as a bar chart keeps its own title)
     const charts = [];
     sorted.forEach((s) => {
       const g = groupOf(s.kind);
@@ -624,7 +641,7 @@
         // then the column chart and the map; a chart repeats a category only when the pool has no unused one.
         // (night sitting 6-7 Oct, seen in Desktop: a column chart written as a bar chart, round 19, took the bar chart's
         // category: the page showed the same chart twice. It keeps the column chart's own: kindOf.)
-        const kindOf = (x) => (x.wasColumn ? 'column' : x.kind);
+        const kindOf = (x) => x.was || (x.wasColumn ? 'column' : x.kind);
         if (B && CAT_KINDS.includes(s.kind) && (B.cats || {})[kindOf(s)]) {
           const k0 = (f) => f.t + '\u0001' + f.c;
           if (!catPlan) { catPlan = new Map(); const last = (x) => kindOf(x) === 'column' || x.kind === 'map', all = sorted.filter((x) => CAT_KINDS.includes(x.kind) && (B.cats || {})[kindOf(x)]);

@@ -603,7 +603,8 @@ const cardProblems = (dir, rtl) => {
     const a = tooltipProblems(files), t = tooltipPageProblems(files), tb = tableProblems(files, rtl), cd = cardStyleProblems(files, rtl), sh = projectProblems(files);
     // the default two-page report: 4 charts (page 1 line, bar, column; page 2 column), 2 tables, 7 KPI cards and the two tooltip
     // cards (round 1: the bar and column charts show the monthly trend on hover, the line chart the bar chart by category)
-    check(a.charts === 4 && a.trend === 3 && !a.bad.length, `${name}: ${a.bad.length} of ${a.charts} charts with a wrong tooltip link, ${a.trend} linked to the monthly trend (4 charts, 3 to the trend expected): ${a.bad.slice(0, 2).join('; ')}`);
+    // (design round 9, S7: page 2's last row is the table beside a bar chart: 5 charts, 4 of them not by month)
+    check(a.charts === 5 && a.trend === 4 && !a.bad.length, `${name}: ${a.bad.length} of ${a.charts} charts with a wrong tooltip link, ${a.trend} linked to the monthly trend (5 charts, 4 to the trend expected): ${a.bad.slice(0, 2).join('; ')}`);
     check(t.pages === 2 && t.charts === 2 && t.trend === 1 && !t.bad.length, `${name}: tooltip pages: ${t.bad.slice(0, 2).join('; ') || `${t.pages} pages, ${t.charts} charts, ${t.trend} trend`}`);
     check(tb.columns >= 6 && !tb.bad.length, `${name}: ${tb.bad.length} of ${tb.columns} table columns without header alignment: ${tb.bad.slice(0, 2).join('; ')}`);
     check(cd.cards === 9 && !cd.bad.length, `${name}: ${new Set(cd.bad.map((x) => x.split(':')[0])).size} of ${cd.cards} cards with their own fill or ignored padding (9 cards expected): ${cd.bad.slice(0, 2).join('; ')}`);
@@ -669,7 +670,8 @@ const cardProblems = (dir, rtl) => {
     // a solid design shows its panels: 13 visuals (7 KPI cards, 4 charts, 2 tables) are left to the theme, the group
     // around the KPI cards draws no band, and the header, slicers and buttons keep theirs off
     const pp = panelProblems(files);
-    check(pp.solid && pp.panels === 13 && !pp.bad.length, `${name}: panels: ${pp.panels} visuals left to the theme (13 expected), ${pp.bad.length} wrong: ${pp.bad.slice(0, 2).join('; ')}`);
+    // (design round 9, S7: page 2's bar chart beside its table: 14)
+    check(pp.solid && pp.panels === 14 && !pp.bad.length, `${name}: panels: ${pp.panels} visuals left to the theme (14 expected), ${pp.bad.length} wrong: ${pp.bad.slice(0, 2).join('; ')}`);
     check(/own panel/.test(String(res.j.panels)), `${name}: the result should say what the report shows: ${JSON.stringify(res.j.panels)}`);
     // Microsoft's validator (their report authoring CLI, a pinned dev dependency of these tests) finds no error in the
     // export; and the card visual's theme entry has no "radius": inside a theme the card's "border" is the card's own
