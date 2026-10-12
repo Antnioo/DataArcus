@@ -117,7 +117,9 @@ export async function v029g({ call, check, ROOT }) {
     && (colOf(p3).filled || []).join() === '4,5,6,7,8' && /analogous/.test(colOf(p3).how || ''),
   () => `2d. 3 data colours: kept exactly, colours 4-8 filled by the engine's analogous harmony from the first, said: ${short(p3)}`);
   const pp = await plan('tp'), dp = pp.j && pp.j.design;
-  chk(() => !pp.err && dp.ui.text === '#cccccc' && dp.data[0] === '#eeeeee' && (colOf(pp).contrastWarnings || []).length > 0,
+  // polish round P1 (the owner's go, 12 Oct; LAB-POLISH (a)): a lead under 3:1 on the cards is darkened to 3:1, its hue
+  // kept, and the change named; the other colours are kept
+  chk(() => !pp.err && dp.ui.text === '#cccccc' && dp.data[0] === E.toContrast('#eeeeee', dp.ui.card, 3) && JSON.stringify(colOf(pp).changes || []).includes('#eeeeee') && (colOf(pp).contrastWarnings || []).length > 0,
     () => `2e. poor contrast: the theme's colours are kept, every failing check named: ${JSON.stringify(colOf(pp))}`);
   const pb = await plan('tb'), pn = await plan('tn');
   chk(() => !pb.err && !pn.err && [pb, pn].every((x) => x.j.design.data.join() === CORP.data.join() && x.j.design.ui.background === CORP.ui.background && !(x.j.colours && x.j.colours.from === 'report theme')),
@@ -158,7 +160,8 @@ export async function v029g5({ call, check }) {
   chk(() => !ps.err && ds.data.slice(0, 4).join() === '#2b2c8d,#eb6542,#3a877f,#20e2d7' && colOf(ps).source === 'theme and visuals' && !ds.data.includes('#c4c4dd') && !ds.data.includes('#10a010'),
     () => `5a. a stub theme: its own colours (not the base's leftovers) first, then the colours written on the visuals by frequency (a pale tint is not a data colour), source named: ${short(ps)}`);
   const pv = await plan('tv'), dv = pv.j && pv.j.design;
-  chk(() => !pv.err && dv.data[0] === '#20e2d7' && dv.data[1] === '#de6a73' && dv.ui.text === '#333333' && colOf(pv).source === 'visuals' && !dv.data.includes('#a01010')
+  // (P1, LAB-POLISH (a): the pale lead #20e2d7, 1.6:1 on white, is darkened to 3:1, its hue kept)
+  chk(() => !pv.err && dv.data[0] === E.toContrast('#20e2d7', dv.ui.card, 3) && dv.data[1] === '#de6a73' && dv.ui.text === '#333333' && colOf(pv).source === 'visuals' && !dv.data.includes('#a01010')
     && /visuals/.test(colOf(pv).sayInPlan || ''),
   () => `5b. a base theme only: the colours written on the visuals lead (by frequency; a base colour is not identity), the dark grey is the text, said: ${short(pv)}`);
   const pt = await plan('tt'), dt = pt.j && pt.j.design;
