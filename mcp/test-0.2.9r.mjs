@@ -109,6 +109,37 @@ export async function v029r({ check }) {
     chk(() => ch.catA && ch.catA.c === 'Name' && !used.some((c) => ['Img', 'Phone', 'Email', 'Address', 'Card'].includes(c)), () => `SHAPES N7: the people's name is the category; no picture, contact or glue column: ${JSON.stringify(used)}`);
   }
 
+  // ---------- round 10 (RESCORE-3 on rc.5, the final round): N10, N12, N5 on a hidden fenced denominator, D11 in ADDCOLUMNS ----------
+  {
+    // N10: a chart helper: a value only where it equals its own MAX over ALL ( ... ), else BLANK (): "No data" on a card
+    const j = model([{ name: 'Cal', dataCategory: 'Time', columns: [col('Date', 'dateTime'), col('Month', 'string')] },
+      { name: 'Visits', columns: [col('Date', 'dateTime'), col('Ward', 'string')], measures: [ms('Patients', 'COUNTROWS ( Visits )', '#,0'),
+        ms('Patients Max Value', 'VAR cur = [Patients]\nVAR mx = MAXX ( ALL ( Cal[Month] ), [Patients] )\nRETURN IF ( cur = mx, cur, BLANK () )', '#,0'),
+        ms('Lowest Month', 'IF ( [Patients] = MINX ( ALLSELECTED ( Cal[Month] ), [Patients] ), [Patients] )', '#,0'), ms('Wards', 'DISTINCTCOUNT ( Visits[Ward] )', '#,0')] }],
+    [rel('Visits', 'Date', 'Cal', 'Date')]);
+    const k = names(pick(j, 4).kpis);
+    chk(() => k.includes('Patients') && !k.includes('Patients Max Value') && !k.includes('Lowest Month'), () => `N10: a value shown only at its own max or min over ALL is no card: ${JSON.stringify(k)}`);
+    // N12: a calendar's year (a calculated calendar the files give no types, not marked) is a time level: never a bar-chart
+    // category, the table's first column or a default slicer from the categories
+    const y = model([{ name: 'DimDate', columns: [col('Date', 'unknown'), col('Year', 'unknown'), col('Quarter', 'unknown'), col('Fiscal Year', 'unknown')] },
+      { name: 'Calls', columns: [col('Date', 'unknown'), col('Agent', 'string'), col('Seconds', 'double')], measures: [ms('Calls', 'COUNTROWS ( Calls )', '#,0')] }],
+    [rel('Calls', 'Date', 'DimDate', 'Date')]);
+    const b = pick(y, 1), ch = b.choices || {}, used = [ch.catA, ch.catB].concat(b.table ? [b.table[0]] : []).filter(Boolean).map((x) => x.c);
+    chk(() => ch.catA && ch.catA.c === 'Agent' && !used.some((c) => /year|quarter/i.test(c)), () => `N12: a year or quarter is never the chart's category or the table's first column: ${JSON.stringify(used)}`);
+    // N5 (property): the denominator is hidden and written over several lines; the share's DIVIDE too
+    const h = model([{ name: 'Rent', columns: [col('Amount', 'double'), col('Unit', 'string')],
+      measures: [ms('Revenue', 'SUM ( Rent[Amount] )', '\\$#,0'), ms('Revenue Total', 'CALCULATE (\n    [Revenue],\n    ALL ( Rent )\n)', '\\$#,0', { isHidden: true }),
+        ms('Revenue %', 'DIVIDE (\n    [Revenue],\n    [Revenue Total]\n)', '0%'), ms('Revenue Share', 'VAR t = [Revenue Total]\nRETURN\n    DIVIDE ( [Revenue], t )', '0%'),
+        ms('Units', 'DISTINCTCOUNT ( Rent[Unit] )', '#,0')] }]);
+    const kh = names(pick(h, 4).kpis);
+    chk(() => kh.includes('Revenue') && !kh.includes('Revenue %') && !kh.includes('Revenue Share'), () => `N5: a share over a hidden, multi-line denominator (or one held in a VAR) is no card: ${JSON.stringify(kh)}`);
+    // D11 (er): a two-value column of a calculated calendar, its IF in the table's ADDCOLUMNS
+    const d = { model: { tables: [{ name: 'Days', columns: [col('Date', 'dateTime'), col('Week Type', 'unknown'), col('Day Name', 'unknown')],
+      partitions: [{ name: 'Days', source: { type: 'calculated', expression: 'ADDCOLUMNS (\n    CALENDAR ( DATE ( 2024, 1, 1 ), DATE ( 2024, 12, 31 ) ),\n    "Week Type", IF ( WEEKDAY ( [Date], 2 ) > 5, "Weekend", "Weekday" ),\n    "Day Name", FORMAT ( [Date], "dddd" )\n)' } }] }], relationships: [] } };
+    const dt = B.fromTmsl(d)[0], wt = B.fieldOf(dt, 'Week Type'), dn = B.fieldOf(dt, 'Day Name');
+    chk(() => wt && wt.two === true && dn && !dn.two, () => `D11: a calendar column whose ADDCOLUMNS expression is an IF of two texts is two-valued: ${JSON.stringify([wt, dn])}`);
+  }
+
   // ---------- D5: a model with currency-formatted amounts shows an amount card first, by format, even when the amount is
   // computed across tables (RELATED) and the counts are plain ----------
   {
