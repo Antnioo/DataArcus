@@ -41,6 +41,18 @@ export async function v029r({ check }) {
     chk(() => (pick(k, 1).choices || {}).catA && pick(k, 1).choices.catA.c === 'Agent Card', () => `N1: with no better category, the joined label is still one: ${JSON.stringify((pick(k, 1).choices || {}).catA)}`);
   }
 
+  // ---------- N7 (rc.4, round 9): a column of picture or web addresses with no data category ("Img") is never a category, a
+  // slicer or the table's first column while a better one exists: by its name's whole words; a word that only holds those
+  // letters ("Pickup", "Logout", "Thumbs Up Count" aside) is no hit ----------
+  {
+    const j = model([{ name: 'Desk', columns: [col('Img', 'string'), col('Photo URL', 'string'), col('product_image', 'string'), col('LogoLink', 'string'), col('Thumbnail', 'string'),
+      col('Pickup Point', 'string'), col('Team', 'string')] },
+    { name: 'Calls', columns: [col('Team', 'string'), col('Seconds', 'double')], measures: [ms('Calls Handled', 'COUNTROWS ( Calls )', '#,0')] }]);
+    const b = pick(j, 1), ch = b.choices || {}, used = [ch.catA, ch.catB].concat(ch.slicers || [], b.table ? [b.table[0]] : []).filter(Boolean).map((x) => x.c);
+    const bad = ['Img', 'Photo URL', 'product_image', 'LogoLink', 'Thumbnail'];
+    chk(() => used.length && used.every((c) => !bad.includes(c)) && used.includes('Pickup Point'), () => `N7: no picture or link column as a category, a slicer or the table's first column; "Pickup Point" stays one: ${JSON.stringify(used)}`);
+  }
+
   // ---------- N4: the model's placeholder measure (no expression, BLANK (), a literal) is never a card ----------
   {
     const j = model([{ name: 'Cases', columns: [col('Opened', 'dateTime'), col('Kind', 'string')],
