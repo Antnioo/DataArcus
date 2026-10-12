@@ -44,6 +44,14 @@ It works next to Microsoft's Power BI Authoring MCP server (model edits, DAX que
 | `read_report` | **0.2.9.** Reads a PBIR report that already exists and never changes it: one line per visual (type, place and size on the page, title, fields per role with display names, sort, visual filters by field and kind, group, hidden, action or tooltip page), pages in order, slicers, buttons and their targets, bookmarks, the theme's colours and label size, custom visuals. Read before a redesign, with `read_model` beside it. Text by default (`format: "json"` for data); over 40,000 characters, pages are listed without their visuals and `pages` reads them. Never reads filter values, slicer selections, bookmark states or data; long or instruction-like text is withheld. |
 | `create_arabic_twin` | **The Arabic twin (0.3.0).** The right-to-left twin of an existing PBIR report: a new "<name> AR" report and `.pbip` next to the original, on the same model, every page mirrored in place (positions, groups included; bar charts from the right; column, line and area charts with the value axis at the right and their order reversed by the sort; legends, titles, text boxes and table columns to the right), page ids, visual names and bookmarks kept so navigation keeps working. The original is only read. Without an approved `planId` it writes nothing and answers the plan: what mirrors, what cannot (custom visuals, the navigator's order, Power BI's own words, data values) and every text with an id; the Arabic texts are drafts the user approves and passes as `labels`. Offers the Arabic month column as a TMDL script the user applies (`arabicMonth`). Engine: `assets/js/report-mirror.js`. |
 
+## Layouts
+
+`plan_layout` and `create_report` lay out a page in one of four layouts. Executive summary (`exec`) and Single focus
+(`focus`) are the tested ones. Operations monitor (`ops`, preview), Analysis as the first page (`analysis`, preview)
+and a page under 1920 wide with the filters on top (preview) work, and the plan says so in one line:
+
+"Preview: this layout is still being tuned on real dashboards; the executive and single-focus layouts are the tested ones."
+
 ## Safety
 What stays on the machine and what the AI app sees: `PRIVACY.md`. What DataArcus promises: `PRODUCT_SPEC.md`.
 - Every path must be inside one folder, the working folder: `DATAARCUS_ROOT`. Anything outside is refused, also when a link (symbolic link or junction) inside the folder leads outside it, and also for the paths a tool picks itself (the model folder a `.pbip` points at).
