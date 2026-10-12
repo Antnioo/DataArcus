@@ -13,7 +13,7 @@
     mirrorChart, mixHex, namesOf, num, obj, orderHelper, orderedBy, pageFilterOf, proj, q, resource, rnd,
     rowLabelDax, rowLabelOf, shown, sorted, str, tableFields, timeAxisPlan, tproj
   } = Q;
-  const { barNameShare, cellRoom, columnRoom, fieldRoom, tableFit, textWidth } = Z;
+  const { barNameShare, cellRoom, columnRoom, fieldRoom, rowPitch, tableFit, tableHeight, textWidth } = Z;
 
 
   // The page buttons as tabs (see write): the layout of a page's tabs, made per page from the report's context c
@@ -307,7 +307,7 @@
       noData, noDataSkipped, noPageButtons, o, oneLine, own, pageFilters, paneObjects, pt, resetFill, resetFit, resetIcon,
       resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, same, shortDays, slicerH, subtitlesUsed, svgDone,
       svgSizes, tabRows, tableColumns, tableOrder, tableRows, tableSmaller, tableWide, textbox, tip, tipFor, tipName, titleFit, titles,
-      trend, u, valueEm, wrapLines
+      trend, u, valueEm, wrapLines, extMeasure, extField, daxOf
     } = c;
     const pageName = pg.id, filters = pageFilters();
     add(D + '/pages/' + pageName + '/page.json', json(Object.assign({
@@ -325,7 +325,7 @@
     const origin = {};
     const container = (spec) => {
       const o0 = spec.parent ? origin[spec.parent] : { x: 0, y: 0 };
-      const v = { $schema: SCHEMA.visual, name: spec.name || rnd(), position: Object.assign({ x: spec.x - o0.x, y: spec.y - o0.y, z: spec.z, height: spec.h, width: spec.w }, spec.kind === 'nodata' ? {} : { tabOrder: spec.z }) };   // (a "No data" message card is no tab stop: seen in Desktop, 6-7 Oct, a card with a tabOrder was an unnamed stop before its chart)
+      const v = { $schema: SCHEMA.visual, name: spec.name || rnd(), position: Object.assign({ x: spec.x - o0.x, y: spec.y - o0.y, z: spec.z, height: spec.h, width: spec.w }, spec.kind === 'nodata' || spec.kind === 'panel' ? {} : { tabOrder: spec.z }) };   // (a "No data" message card is no tab stop: seen in Desktop, 6-7 Oct, a card with a tabOrder was an unnamed stop before its chart)
       if (spec.group) origin[v.name] = { x: spec.x, y: spec.y };
       if (spec.group) v.visualGroup = spec.group; else v.visual = spec.visual;
       if (spec.parent) v.parentGroupName = spec.parent;
@@ -545,7 +545,7 @@
         bookmarks.push({ name: bm, page: pageName, targets: slicerNames.slice(), label: (W.reset || 'Reset filters') + (PAGES.length > 1 ? ' · ' + (pg.name || '') : '') });
         return;
       }
-      let visual, box = s, vFilters = null;   // (vFilters: the visual's own filters, from fixVisual; the cross-review's G12)
+      let visual, box = s, vFilters = null, tableH = null;   // (tableH: a table's whole-row height inside its panel, S3 with the design's N6)   // (vFilters: the visual's own filters, from fixVisual; the cross-review's G12)
       let hov = null;   // a chart's own measure and category, for its tooltip page (the second sweep's T4 and T5)
       if (s.kind === 'title') {
         // the title and the logo text follow the header's height (within 8-60pt), and stay on one line in it, with
@@ -634,7 +634,8 @@
         // user's model does; before, it kept the layout's role names, "Main trend")
         if (B && query) ttl = bindTitle(s.kind, Bt, W.by || 'by') || ttl;
         // (rc1: a chart cut to its top N says so in its title, as the tooltip page's "Top 6")
-        { const top = B && query ? topCount(c, s, pg, catOf(Bt, query)) : 0; if (top && ttl) ttl = (lang === 'ar' ? 'أعلى ' : 'Top ') + top + ': ' + ttl; }
+        let topOf = null;
+        { const top = B && query ? topCount(c, s, pg, catOf(Bt, query)) : 0; if (top && ttl) { ttl = (lang === 'ar' ? 'أعلى ' : 'Top ') + top + ': ' + ttl; topOf = { n: top, cat: catOf(Bt, query), y: query.queryState.Y.projections[0].field }; } }
         if ((s.kind === 'table' || s.kind === 'matrix') && ttl && chartTitles.has(ttl)) ttl = ttl + ': ' + (AR_LETTERS.test(ttl) ? (W.detail && AR_LETTERS.test(W.detail) ? W.detail : 'التفاصيل') : (W.detail && !AR_LETTERS.test(W.detail) ? W.detail : 'detail'));   // (round 14: in the title's own script)
         if (s.kind === 'kpi') { if (B && query) ttl = label(B.kpis[kpiIndex]); kpiIndex++; }
         // KPI names read as labels: semibold, so the number below stays the hero
@@ -676,7 +677,7 @@
           if (key != null) { visual.visualContainerObjects.subTitle = obj({ show: bool(true), text: str(o.subtitles[key].trim()) }); subtitlesUsed.add(key); } }
         if (s.kind !== 'kpi' && s.kind !== 'card' && ttl) {
           const tf = titleFit(ttl, TITLE, s.w - 2 * Math.round(16 * pg.page.h / 1080)), tp = visual.visualContainerObjects.title[0].properties;
-          fitted.set(visual, { ttl, avail: s.w - 2 * Math.round(16 * pg.page.h / 1080), page: pg.name || base });
+          fitted.set(visual, { ttl, avail: s.w - 2 * Math.round(16 * pg.page.h / 1080), page: pg.name || base, top: topOf });
           if (tf.mode !== 'one') { tp.text = str(tf.shown); if (!tf.one) tp.titleWrap = bool(true); titles[tf.mode].push(fitted.get(visual).entry = { page: pg.name || base, title: ttl, shown: tf.shown }); }
         }
         // the title already names the KPI, so the card's own label under the number is not repeated
@@ -761,7 +762,7 @@
           const tf = tableFields(Bt, rtl).find(isTextField), n = ((tf && catKind(tf)) || {}).rows || 0;   // (A3-7: the picker's count, else the kind's)
           if (n) {
             let T = tableText || +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
-            const need = (pad, t = T) => { const pitch = 1.415 * t * 4 / 3 + 2 * pad; return 1.5 * TITLE * 4 / 3 + pitch + 7 + (n + 1) * pitch + 16; };
+            const need = (pad, t = T) => tableHeight(n, t, TITLE, pad);   // (writer round 8: the one rule, pbip-sizing.js TABLE_ROWS)
             // Round 18 (FAIL 12: a 420 x 220 matrix at 1920 x 1080 showed three of seven days): a matrix whose rows do not
             // fit even tight takes the largest smaller text, down to Power BI's 8pt, that holds them (and told,
             // tableSmaller); only where even 8pt does not is it told that its last rows scroll (tableRows)
@@ -835,14 +836,19 @@
         }
         // rc1 (PERF-COMPARE S3, 6 models: the last row a table showed was cut in half by its total line): a table whose rows
         // don't all show ends on a whole row. Its height is the title, the header, the whole rows that fit and the total, by
-        // round 11's measured pitch (above: 1.415 x the text's height + 2 x rowPadding, 1 when none is written; the header 7
-        // more; the title 1.5 x its size; 16 of padding); the top stays. Not a table with pictures (their rows are taller).
+        // the measured rule (pbip-sizing.js TABLE_ROWS, MEASURE-TABLE-ROWS.md); the top stays. Not a table with pictures (their rows are taller).
+        // (writer round 8, with the design block's N6, 3453718, the reviewer's resolution: the PANEL keeps the slot's height, so
+        // its bottom lines up with the row's other panels; the TABLE inside it ends on its whole rows, tableH, and the rest
+        // of the panel stays under it. Not by row padding: a table's height that isn't whole rows shows a part row over its
+        // total, whatever the padding, as Desktop pins the total to the bottom.)
         if (s.kind === 'table' && visual && visual.query) {
           const gp = (((visual.objects || {}).grid || [])[0] || {}).properties || {}, padOf = gp.rowPadding ? +String(gp.rowPadding.expr.Literal.Value).replace(/D$/, '') : 1;
           const tv = (((visual.objects || {}).values || [])[0] || {}).properties || {}, t = tv.fontSize ? +String(tv.fontSize.expr.Literal.Value).replace(/D$/, '') : (+((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10);
           const tf = tableFields(Bt, rtl).find(isTextField), n = ((tf && catKind(tf)) || {}).rows || 0;
-          const pitch = 1.415 * t * 4 / 3 + 2 * padOf, fixed = 1.5 * TITLE * 4 / 3 + (pitch + 7) + pitch + 16, k0 = Math.floor((box.h - fixed) / pitch);
-          if (!gp.imageHeight && k0 >= 1 && !(n && n <= k0)) { const h1 = Math.ceil(fixed + k0 * pitch); if (h1 < box.h) box = { y: box.y, h: h1 }; }
+          // (writer round 8: the one rule, pbip-sizing.js TABLE_ROWS, with the laptop's measure)
+          const hp = (((visual.objects || {}).columnHeaders || [])[0] || {}).properties || {}, ht = hp.fontSize ? +String(hp.fontSize.expr.Literal.Value).replace(/D$/, '') : t;
+          const pitch = rowPitch(t, padOf), fixed = tableHeight(0, t, TITLE, padOf, ht), k0 = Math.floor((box.h - fixed) / pitch);
+          if (!gp.imageHeight && k0 >= 1 && !(n && n <= k0)) { const h1 = Math.ceil(fixed + k0 * pitch); if (h1 < box.h) tableH = h1; }
         }
         if (B && visual && visual.query) vFilters = fixVisual(visual, s, pg, Bt, tableText);
       }
@@ -876,7 +882,18 @@
           visual.visualContainerObjects.background = obj({ show: bool(false) });
         }
       }
-      const v = container({ x: s.x, y: box.y, w: s.w, h: box.h, z, parent, visual, kind: s.kind });
+      // (S3 + N6) a table shorter than its slot: the panel at the slot's height behind it, the "No data" card where the
+      // report has one (above, at the slot's box), else an empty text box, which the theme draws as a panel (measured,
+      // round 1), on a solid theme; a transparent theme's panel is the page's background picture. The table keeps its
+      // background and border (the panel's colour), and its shadow is left to the theme: over a "No data" card only the
+      // background is written (night of 6-7 Oct: with its border and shadow off a visual drew about 5 nearer its edges,
+      // and the measured rows would not hold).
+      if (tableH) {
+        const ndBehind = NODATA && visual.visualContainerObjects && visual.visualContainerObjects.background && visual.visualContainerObjects.background[0].properties.show && visual.visualContainerObjects.background[0].properties.show.expr.Literal.Value === 'false';
+        if (SOLID && !ndBehind) container({ x: s.x, y: box.y, w: s.w, h: box.h, z: z - 500, parent, kind: 'panel', noPhone: true,   /* (written as the header's and the rail's bands: nothing but the title's switch, the theme draws it) */
+          visual: { visualType: 'textbox', objects: { general: obj({ paragraphs: [{ textRuns: [{ value: '' }] }] }) }, visualContainerObjects: { title: obj({ show: bool(false) }) } } });
+      }
+      const v = container({ x: s.x, y: box.y, w: s.w, h: tableH || box.h, z, parent, visual, kind: s.kind });
       if (vFilters && vFilters.length) v.filterConfig = { filters: vFilters };
       if (CHARTS.includes(s.kind)) charts.push({ v, hov });
       z += 1000;
@@ -1133,6 +1150,7 @@
       // the new title fitted like any title, the alt text the same name, the titles report following
       const rename = (v, k, name) => { const f = fitted.get(v.visual), tp = v.visual.visualContainerObjects.title[0].properties, g = (v.visual.visualContainerObjects.general || [])[0];
         const tf = f ? titleFit(name, TITLE, f.avail) : { mode: 'one', shown: name };
+        if (f) f.final = name;
         tp.text = str(tf.shown); if (tf.mode !== 'one' && !tf.one) tp.titleWrap = bool(true); else delete tp.titleWrap;
         if (g && g.properties && g.properties.altText) g.properties.altText = str(name);
         // (the reviewer's third review, item 4: the entry this visual's title gave, not the first with the same title,
@@ -1149,6 +1167,28 @@
         if (!c || adds(k)) return;
         nth[c] = (nth[c] || 0) + 1;
         rename(v, k, prefix(v) + k + ' (' + c + (nth[c] > 1 ? ' ' + nth[c] : '') + ')'); }); });
+      // (design round 8, the re-score's N2 and N3: "Top 8:" stood over charts of 2, 4 or 6 bars, and a chart that left
+      // categories out did not say how many there were) a chart cut to its Top N takes its title from a report-level
+      // measure: "Top N of M: <title>" when more than N of its categories have a value under the page's filters (M counted
+      // without the chart's own Top N, REMOVEFILTERS on its category column), its plain title otherwise. The tools never
+      // read the data, so only the report can know. Each text is fitted as the title is, "M" taken as 999. (_n > N is written
+      // MIN ( _n, N + 1 ) = N + 1: no comparison sign in the DAX, which round 9's names check keeps to names and strings)
+      visuals.forEach((v) => { const f = v.visual && fitted.get(v.visual); if (!f || !f.top || !f.top.cat || f.top.cat.c == null) return;
+        const y = daxOf(f.top.y); if (!y) return;
+        const word = lang === 'ar' ? ['أعلى ', ' من '] : ['Top ', ' of '], core = (f.final || f.ttl).replace(TOPPED, ''), lead = word[0] + f.top.n + word[1];
+        const plain = titleFit(core, TITLE, f.avail), long = titleFit(lead + '999: ' + core, TITLE, f.avail), rest = long.shown.indexOf(lead + '999: ') === 0 ? long.shown.slice((lead + '999: ').length) : null;
+        if (rest == null) return;
+        // (a name with a control character has no DAX: daxNames refuses it, and the chart keeps its text title)
+        let col, expression; try { col = daxNames.column(f.top.cat.t, f.top.cat.c);
+        expression = 'VAR _n = CALCULATE ( COUNTROWS ( FILTER ( VALUES ( ' + col + ' ), NOT ISBLANK ( ' + col + ' ) && NOT ISBLANK ( ' + y + ' ) ) ), REMOVEFILTERS ( ' + col + ' ) ) RETURN IF ( MIN ( _n, ' + (f.top.n + 1) + ' ) = ' + (f.top.n + 1) + ', ' + daxNames.string(lead) + ' & _n & ' + daxNames.string(': ' + rest) + ', ' + daxNames.string(plain.shown) + ' )'; } catch (e) { return; }
+        const m = extMeasure(f.top.cat.t, 'Title: ' + core, expression, 'Text');
+        const tp = v.visual.visualContainerObjects.title[0].properties, g = (v.visual.visualContainerObjects.general || [])[0];
+        tp.text = { expr: extField(f.top.cat.t, m) };
+        if (g && g.properties && g.properties.altText) g.properties.altText = str(core);   // (the alt text promises no cut either)
+        // (the titles report tells the plain title's fit, the one shown when nothing is cut)
+        ['wrapped', 'shortened'].forEach((md) => { const i = titles[md].indexOf(f.entry); if (i >= 0) titles[md].splice(i, 1); });
+        f.entry = plain.mode !== 'one' ? { page: f.page, title: core, shown: plain.shown } : null; if (f.entry) titles[plain.mode].push(f.entry);
+        if ((plain.mode !== 'one' && !plain.one) || (long.mode !== 'one' && !long.one)) tp.titleWrap = bool(true); else delete tp.titleWrap; });
     }
     // 0.2.9, audit 6's A6-12: what each written visual shows, in the page's order, for the caller's answer: its fields as
     // Table[Field] (a measure or a column) or Sum(Table[Field]) (a column the visual sums or counts), its roles in order; the
@@ -1183,9 +1223,9 @@
     // tooltip page: small, hidden in view mode, shown when a chart is hovered. 320 x 284: the card, and a bar chart 184
     // high, which holds 6 rows (rc1: 187 and 287 by the measured rows, tipRows below; 284 stays for the empty page) (measured in Desktop 2.158: a bar row takes 22 and the title and padding 46; a tooltip
     // can't be scrolled, so rows past the last one would be lost behind a scrollbar)
-    const tipPage = (name, binding, displayName, visuals, height) => {
+    const tipPage = (name, binding, displayName, visuals, height, width) => {
       add(D + '/pages/' + name + '/page.json', json({
-        $schema: SCHEMA.page, name, displayName, displayOption: 'FitToPage', width: 320, height: height || 284,
+        $schema: SCHEMA.page, name, displayName, displayOption: 'FitToPage', width: width || 320, height: height || 284,
         type: 'Tooltip', visibility: 'HiddenInViewMode', pageBinding: { name: binding, type: 'Tooltip' },
         objects: { background: obj({ color: color(u.card), transparency: num(0) }), outspace: obj({ color: color(u.card) }) }
       }));
@@ -1207,9 +1247,9 @@
     // (the second sweep's T4: the card is the hovered chart's measure, with the card format the report gives it: the
     // picker's tooltip card, or the KPI card of the same measure)
     const cardOf = (m) => (sameField(m, tip.card) ? tip.card : (B && B.kpis || []).find((k) => sameField(k, m)) || m);
-    const tipCardVisual = (card) => { const objects = cardObjects(tipCard, null, card);
+    const tipCardVisual = (card, w) => { const objects = cardObjects(tipCard, null, card);
       if (FULL && card && card.m != null && card.cardFormat && !cardCode(card)) objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(card.cardFormat) }, selector: { metadata: card.t + '.' + card.m } });
-      return { x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(card)] }), objects, visualContainerObjects: cardFrame(tipFrame(label(card)), tipCard, TIP_TITLE) } }; };
+      return { x: 12, y: 8, w: w || 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(card)] }), objects, visualContainerObjects: cardFrame(tipFrame(label(card)), tipCard, TIP_TITLE) } }; };
     const notBlankOf = (f) => notBlank(fieldCol(f.t, f.c).field.Column);
     const tipTop = (tv, cat, m, t0) => { if (!cat || cat.c == null || cat.agg != null || isTime(cat)) return tv;
       tv.filters = [notBlankOf(cat), topN(fieldCol(cat.t, cat.c).field.Column, proj(m).field, 6)];
@@ -1221,10 +1261,19 @@
     // smaller): a bar chart without its value axis needs 22.2 a row, 45 above the first and 8 under the last. 184 for 6
     // bars and 310 for 12 months were short of that: a scrollbar beside the Top 6, the 12th month cut.
     const tipRows = (n) => Math.ceil(45 + 8 + 22.2 * n);
+    // writer round 8 (RESCORE-1 T6: a scrollbar beside the 6 bars at 187, on a model of long names): the Top 6 takes the
+    // tooltip lab's measure of this very chart (8pt names, values beside the bars; TOOLTIP-FIX-LAB, report-rules TIP_ROWS_6),
+    // 27 a bar and 40, plus 8 under the last, as the 6-month trend already does; the page rule above (10pt) stays for 12 months
+    const tipSix = 40 + 27 * 6 + 8;
+    // writer round 8 (RESCORE-1 T8: "Microsoft 365 Business Sta..." at 50% of 296): measured on the laptop's crops, the names'
+    // visible room is the share x the chart's width - 18 (40%: "Microsoft 365 Busin", 96; 50%: "...Business Sta", 129); 50%
+    // is the most measured to work, so the Top 6 page is 376 wide (the reviewer's yes, 12 Oct): its chart and card 352, room
+    // for a 31-letter name at 8pt (158). The trend's month names stay on 320.
+    const TOP_W = 376, topW = TOP_W - 24;
     // rc1 (T8: "Microsoft 365 Busin..."): the names take the share of a narrow bar chart, as the page's (barNameShare)
     // rc1 (T10: "8.0Kkg" where the card read "60,000 kg"): a measure the cards show whole (wholeFormat: a unit, a count)
     // keeps its own format on the bars' values (display units None), as on its card; the rest keep Power BI's automatic
-    const tipLook = (y) => ({ categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit(barNameShare(296, 720) + 'L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }),
+    const tipLook = (y, w) => ({ categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit(barNameShare(w || 296, 720) + 'L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }),
       labels: obj(Object.assign({ show: bool(true), fontSize: num(8) }, y && y.wholeFormat && !y.pct ? { labelDisplayUnits: num(1) } : {})) });
     const base = W.tooltipPage || 'Tooltip';
     if (!tip) {
@@ -1255,10 +1304,10 @@
         // each bar's value beside it instead, which leaves room for one more row
         // (0.2.9 part 2, TOOLTIP-FIX-LAB: 9 products in 184 showed 6 bars and a scrollbar a tooltip can't use: the Top 6
         // by the measure shown, said in the title; a time category is never cut by value)
-        tipPage(t.name, t.binding, nameOf(t), [tipCardVisual(card),
-          tipTop({ x: 12, y: 92, w: 296, h: tipRows(6), visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(t.cat)], Y: [proj(t.m)] }), t.cat, true),   /* (round 23: largest first) */
-            objects: tipLook(card),
-            visualContainerObjects: tipFrame(byTitle(label(t.m), W.by || 'by', label(t.cat))) }) }, t.cat, t.m, shown(byTitle(label(t.m), W.by || 'by', label(t.cat))))], 92 + tipRows(6) + 8);
+        tipPage(t.name, t.binding, nameOf(t), [tipCardVisual(card, topW),
+          tipTop({ x: 12, y: 92, w: topW, h: tipSix, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(t.cat)], Y: [proj(t.m)] }), t.cat, true),   /* (round 23: largest first) */
+            objects: tipLook(card, topW),
+            visualContainerObjects: tipFrame(byTitle(label(t.m), W.by || 'by', label(t.cat))) }) }, t.cat, t.m, shown(byTitle(label(t.m), W.by || 'by', label(t.cat))))], 92 + tipSix + 8, TOP_W);
         return;
       }
       const tv = { x: 12, y: 92, w: 296, h: six ? 40 + 27 * 6 + 8 : tipRows(12), visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(t.m)] }), tip.date),

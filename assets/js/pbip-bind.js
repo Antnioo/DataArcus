@@ -169,7 +169,11 @@
     const r = FM.reportFormatOf({ name: x.name, formatString: x.formatString, formatStringDefinition: x.formatStringDefinition, expression: exprOf(x) }, 'measure', tables || []);
     if (r && /%/.test(r.format)) return { pct: true, pctFormat: r.format, tableFormat: r.format };
     const own = ownKind(x);
-    if (!r) return Object.assign(own, own.pctFormat && own.pctFormat !== x.formatString ? { tableFormat: own.pctFormat } : {});
+    // (writer round 8, RESCORE-1 D18, radiation from the report writer's block: "$4,344,705.7026" in a table, the model's own
+    // format where the rule leaves it alone: a table shows 2 decimals at most, the report's number rule, its currency and
+    // separators kept; the cards keep their own rule)
+    const two = !own.pct && /\.[0#]{3,}/.test(String(x.formatString || '')) && !/%/.test(String(x.formatString || '')) ? String(x.formatString).replace(/\.([0#]{2})[0#]+/g, '.$1') : null;
+    if (!r) return Object.assign(own, own.pctFormat && own.pctFormat !== x.formatString ? { tableFormat: own.pctFormat } : two ? { tableFormat: two } : {});
     delete own.pctFormat; own.pct = false;
     // (the second sweep, I8: an amount by its formula, a sum of a decimal column or a row's quantity x price, keeps
     // automatic units on its card although the model gives it no format; a count or a whole quantity stays whole)
