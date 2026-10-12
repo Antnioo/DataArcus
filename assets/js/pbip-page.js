@@ -308,7 +308,7 @@
   // One report page: its page.json, and every visual in reading order (visual.json, and mobile.json for the phone)
   function write(c, pg, pageIndex) {
     const {
-      AUTO_EM, B, bound, CALLOUT, D, DEF, FULL, GRAD, GRID, LABEL, MIRROR, NODATA, PAGES,
+      AUTO_EM, B, bound, CALLOUT, D, DEF, FULL, GRAD, GRAD2, GRID, LABEL, MIRROR, NODATA, PAGES,
       SLICER_TEXT, SOLID, TIP_TITLE, TIP_VALUE, TITLE, W, add, align, barCharts, base, blankKept, bookmarks,
       boxFit, buttonH, cardCode, cardFit, cardFrame, cardObjects, centred, charW, chartAxes, chartColors, def, edge,
       extFile, fixVisual, font, frame, freeExt, headed, headerGrew, kpiTitleFit, kpiTitles, lang, leftOut, logoFile,
@@ -329,6 +329,7 @@
 
     // visuals, in reading order: z and tab order follow it, so keyboard users move through the page the way it reads
     const visuals = [], mob = [], slicerNames = [];
+    let barNth = 0;   // (polish round P1) the page's bar and column charts in reading order: every second one in colour 2
     // a visual inside a group stores its position relative to the group's top-left corner, not the page
     const origin = {};
     const container = (spec) => {
@@ -685,7 +686,7 @@
         visual = { visualType: type, visualContainerObjects: frame(ttl, ttl, extra, true), drillFilterOtherVisuals: true };
         if (query) visual.query = query;
         // bars that fade by value (gradientFill above): the report's own bar and column charts, never the tooltip pages'
-        if (GRAD && query && (s.kind === 'bar' || s.kind === 'column')) { visual.objects = { dataPoint: gradientFill(query.queryState.Y.projections[0].field, GRAD) }; chartColors.charts++; }
+        if (GRAD && query && (s.kind === 'bar' || s.kind === 'column')) { visual.objects = { dataPoint: gradientFill(query.queryState.Y.projections[0].field, barNth++ % 2 && GRAD2 ? GRAD2 : GRAD) }; chartColors.charts++; }
         if (MIRROR && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { mirrorChart(visual, s.kind); chartAxes.charts++; }
         // Round 21 (the capabilities lab's #6, Desktop 2.158, 7 Oct 2026: "77.7K" above the columns, kept on Save): a column
         // chart with few columns shows its values above them: labels at 'OutsideEnd', automatic units (0, K or M by the
