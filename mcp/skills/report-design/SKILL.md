@@ -27,7 +27,10 @@ report files are written by `create_report` for a new report, or by Microsoft's 
    (`lang: "ar"` for Arabic, with an Arabic font: Segoe UI, Segoe UI Semibold, Arial or Tahoma). Keep its `design`.
    It writes nothing yet: it returns the design, the colours and `sayInPlan`. A theme is light with the brand colour
    exact unless the user asks for dark (`mode: "dark"`); a colour is never changed for contrast without the user's yes:
-   say a failing check in the plan and offer a darker or lighter shade.
+   say a failing check in the plan and offer a darker or lighter shade. When the user names no colours, pass the model
+   (`path`): if one of its reports has its own theme, the colours start from it (keep the dashboard's identity), and
+   the plan says so in one line (`fromReport.sayInPlan`, or `colours.sayInPlan` from `plan_layout`); a preset, a
+   palette or a brand colour the user asks for always wins.
 4. **Layout and the plan's check.** `plan_layout` with that design, the model (`path`) and the plan's fields
    (`planFields`, the shape of `create_report`'s `fields`): the layout (exec, analysis, ops, focus), KPI cards,
    filters, page size. The page is 1920 x 1080 unless the user asks for another size, an Arabic report too
