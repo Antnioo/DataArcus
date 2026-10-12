@@ -176,8 +176,18 @@
     return { cardFit, pt, charW, boxH, buttonH, iconH, slicerH, RESET_GAP, resetFit, resetW, boxFit, textMid, centred, AUTO_EM, wrapLines, kpiTitleFit, titleFit, oneLine };
   }
 
+  // A table's height in rows (writer round 8, S3; one table of constants for the known-rows rule and the whole-rows rule).
+  // In page units, t the table's text in pt (t x 4 / 3 its height), pad the grid's rowPadding (Desktop draws 1 when none is
+  // written): a row's pitch is ink x t x 4 / 3 + 2 x pad + row; the header a pitch and header more; the total a pitch and
+  // total more; the title titleK x its size x 4 / 3; frame the visual's own padding.
+  // SOURCE: round 11's measure (8pt text, DESKTOP-TESTS.md "Item 3, the table"), a PLACEHOLDER until the laptop's
+  // MEASURE-TABLE-ROWS.md (1280 and 1920 pages, English and Arabic) lands: rc.3 showed the last row still cut at 1920.
+  const TABLE_ROWS = { source: 'round 11 (placeholder)', ink: 1.415, row: 0, header: 7, total: 0, titleK: 1.5, frame: 16 };
+  const rowPitch = (t, pad) => TABLE_ROWS.ink * t * 4 / 3 + 2 * pad + TABLE_ROWS.row;
+  // the height of a table with n rows (and its header, total and title)
+  const tableHeight = (n, t, title, pad) => { const p = rowPitch(t, pad); return TABLE_ROWS.titleK * title * 4 / 3 + (p + TABLE_ROWS.header) + n * p + (p + TABLE_ROWS.total) + TABLE_ROWS.frame; };
   const api = {
-    cellRoom, numberSample, fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, tableFit, make
+    TABLE_ROWS, rowPitch, tableHeight, cellRoom, numberSample, fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, tableFit, make
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.DAPbipSizing = api;
 })(typeof self !== 'undefined' ? self : this);

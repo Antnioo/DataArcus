@@ -13,7 +13,7 @@
     mirrorChart, mixHex, namesOf, num, obj, orderHelper, orderedBy, pageFilterOf, proj, q, resource, rnd,
     rowLabelDax, rowLabelOf, shown, sorted, str, tableFields, timeAxisPlan, tproj
   } = Q;
-  const { barNameShare, cellRoom, columnRoom, fieldRoom, tableFit, textWidth } = Z;
+  const { barNameShare, cellRoom, columnRoom, fieldRoom, rowPitch, tableFit, tableHeight, textWidth } = Z;
 
 
   // The page buttons as tabs (see write): the layout of a page's tabs, made per page from the report's context c
@@ -761,7 +761,7 @@
           const tf = tableFields(Bt, rtl).find(isTextField), n = ((tf && catKind(tf)) || {}).rows || 0;   // (A3-7: the picker's count, else the kind's)
           if (n) {
             let T = tableText || +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
-            const need = (pad, t = T) => { const pitch = 1.415 * t * 4 / 3 + 2 * pad; return 1.5 * TITLE * 4 / 3 + pitch + 7 + (n + 1) * pitch + 16; };
+            const need = (pad, t = T) => tableHeight(n, t, TITLE, pad);   // (writer round 8: the one rule, pbip-sizing.js TABLE_ROWS)
             // Round 18 (FAIL 12: a 420 x 220 matrix at 1920 x 1080 showed three of seven days): a matrix whose rows do not
             // fit even tight takes the largest smaller text, down to Power BI's 8pt, that holds them (and told,
             // tableSmaller); only where even 8pt does not is it told that its last rows scroll (tableRows)
@@ -841,7 +841,8 @@
           const gp = (((visual.objects || {}).grid || [])[0] || {}).properties || {}, padOf = gp.rowPadding ? +String(gp.rowPadding.expr.Literal.Value).replace(/D$/, '') : 1;
           const tv = (((visual.objects || {}).values || [])[0] || {}).properties || {}, t = tv.fontSize ? +String(tv.fontSize.expr.Literal.Value).replace(/D$/, '') : (+((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10);
           const tf = tableFields(Bt, rtl).find(isTextField), n = ((tf && catKind(tf)) || {}).rows || 0;
-          const pitch = 1.415 * t * 4 / 3 + 2 * padOf, fixed = 1.5 * TITLE * 4 / 3 + (pitch + 7) + pitch + 16, k0 = Math.floor((box.h - fixed) / pitch);
+          // (writer round 8: the one rule, pbip-sizing.js TABLE_ROWS, with the laptop's measure)
+          const pitch = rowPitch(t, padOf), fixed = tableHeight(0, t, TITLE, padOf), k0 = Math.floor((box.h - fixed) / pitch);
           if (!gp.imageHeight && k0 >= 1 && !(n && n <= k0)) { const h1 = Math.ceil(fixed + k0 * pitch); if (h1 < box.h) box = { y: box.y, h: h1 }; }
         }
         if (B && visual && visual.query) vFilters = fixVisual(visual, s, pg, Bt, tableText);
@@ -1183,9 +1184,9 @@
     // tooltip page: small, hidden in view mode, shown when a chart is hovered. 320 x 284: the card, and a bar chart 184
     // high, which holds 6 rows (rc1: 187 and 287 by the measured rows, tipRows below; 284 stays for the empty page) (measured in Desktop 2.158: a bar row takes 22 and the title and padding 46; a tooltip
     // can't be scrolled, so rows past the last one would be lost behind a scrollbar)
-    const tipPage = (name, binding, displayName, visuals, height) => {
+    const tipPage = (name, binding, displayName, visuals, height, width) => {
       add(D + '/pages/' + name + '/page.json', json({
-        $schema: SCHEMA.page, name, displayName, displayOption: 'FitToPage', width: 320, height: height || 284,
+        $schema: SCHEMA.page, name, displayName, displayOption: 'FitToPage', width: width || 320, height: height || 284,
         type: 'Tooltip', visibility: 'HiddenInViewMode', pageBinding: { name: binding, type: 'Tooltip' },
         objects: { background: obj({ color: color(u.card), transparency: num(0) }), outspace: obj({ color: color(u.card) }) }
       }));
@@ -1207,9 +1208,9 @@
     // (the second sweep's T4: the card is the hovered chart's measure, with the card format the report gives it: the
     // picker's tooltip card, or the KPI card of the same measure)
     const cardOf = (m) => (sameField(m, tip.card) ? tip.card : (B && B.kpis || []).find((k) => sameField(k, m)) || m);
-    const tipCardVisual = (card) => { const objects = cardObjects(tipCard, null, card);
+    const tipCardVisual = (card, w) => { const objects = cardObjects(tipCard, null, card);
       if (FULL && card && card.m != null && card.cardFormat && !cardCode(card)) objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(card.cardFormat) }, selector: { metadata: card.t + '.' + card.m } });
-      return { x: 12, y: 8, w: 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(card)] }), objects, visualContainerObjects: cardFrame(tipFrame(label(card)), tipCard, TIP_TITLE) } }; };
+      return { x: 12, y: 8, w: w || 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(card)] }), objects, visualContainerObjects: cardFrame(tipFrame(label(card)), tipCard, TIP_TITLE) } }; };
     const notBlankOf = (f) => notBlank(fieldCol(f.t, f.c).field.Column);
     const tipTop = (tv, cat, m, t0) => { if (!cat || cat.c == null || cat.agg != null || isTime(cat)) return tv;
       tv.filters = [notBlankOf(cat), topN(fieldCol(cat.t, cat.c).field.Column, proj(m).field, 6)];
@@ -1225,10 +1226,15 @@
     // tooltip lab's measure of this very chart (8pt names, values beside the bars; TOOLTIP-FIX-LAB, report-rules TIP_ROWS_6),
     // 27 a bar and 40, plus 8 under the last, as the 6-month trend already does; the page rule above (10pt) stays for 12 months
     const tipSix = 40 + 27 * 6 + 8;
+    // writer round 8 (RESCORE-1 T8: "Microsoft 365 Business Sta..." at 50% of 296): measured on the laptop's crops, the names'
+    // visible room is the share x the chart's width - 18 (40%: "Microsoft 365 Busin", 96; 50%: "...Business Sta", 129); 50%
+    // is the most measured to work, so the Top 6 page is 376 wide (the reviewer's yes, 12 Oct): its chart and card 352, room
+    // for a 31-letter name at 8pt (158). The trend's month names stay on 320.
+    const TOP_W = 376, topW = TOP_W - 24;
     // rc1 (T8: "Microsoft 365 Busin..."): the names take the share of a narrow bar chart, as the page's (barNameShare)
     // rc1 (T10: "8.0Kkg" where the card read "60,000 kg"): a measure the cards show whole (wholeFormat: a unit, a count)
     // keeps its own format on the bars' values (display units None), as on its card; the rest keep Power BI's automatic
-    const tipLook = (y) => ({ categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit(barNameShare(296, 720) + 'L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }),
+    const tipLook = (y, w) => ({ categoryAxis: obj({ fontSize: num(8), maxMarginFactor: lit(barNameShare(w || 296, 720) + 'L'), showAxisTitle: bool(false) }), valueAxis: obj({ show: bool(false) }),
       labels: obj(Object.assign({ show: bool(true), fontSize: num(8) }, y && y.wholeFormat && !y.pct ? { labelDisplayUnits: num(1) } : {})) });
     const base = W.tooltipPage || 'Tooltip';
     if (!tip) {
@@ -1259,10 +1265,10 @@
         // each bar's value beside it instead, which leaves room for one more row
         // (0.2.9 part 2, TOOLTIP-FIX-LAB: 9 products in 184 showed 6 bars and a scrollbar a tooltip can't use: the Top 6
         // by the measure shown, said in the title; a time category is never cut by value)
-        tipPage(t.name, t.binding, nameOf(t), [tipCardVisual(card),
-          tipTop({ x: 12, y: 92, w: 296, h: tipSix, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(t.cat)], Y: [proj(t.m)] }), t.cat, true),   /* (round 23: largest first) */
-            objects: tipLook(card),
-            visualContainerObjects: tipFrame(byTitle(label(t.m), W.by || 'by', label(t.cat))) }) }, t.cat, t.m, shown(byTitle(label(t.m), W.by || 'by', label(t.cat))))], 92 + tipSix + 8);
+        tipPage(t.name, t.binding, nameOf(t), [tipCardVisual(card, topW),
+          tipTop({ x: 12, y: 92, w: topW, h: tipSix, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(t.cat)], Y: [proj(t.m)] }), t.cat, true),   /* (round 23: largest first) */
+            objects: tipLook(card, topW),
+            visualContainerObjects: tipFrame(byTitle(label(t.m), W.by || 'by', label(t.cat))) }) }, t.cat, t.m, shown(byTitle(label(t.m), W.by || 'by', label(t.cat))))], 92 + tipSix + 8, TOP_W);
         return;
       }
       const tv = { x: 12, y: 92, w: 296, h: six ? 40 + 27 * 6 + 8 : tipRows(12), visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(t.m)] }), tip.date),

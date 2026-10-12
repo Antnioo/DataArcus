@@ -261,7 +261,9 @@ export function tooltipPageProblems(files) {
     // (changed in writer round 8, RESCORE-1 T6: the Top 6 by the tooltip lab's 27 a bar + 40, + 8: the chart 210, the page 310; was 287)
     const isT = isTrend(p), wantH = isT ? (six ? 314 : 420) : 310;
     if (isT) trend++;
-    if (p.page.width !== 320 || p.page.height !== wantH) bad.push(`tooltip page is ${p.page.width} x ${p.page.height}, want 320 x 310, or 320 x 420 for the trend (320 x 314 kept to its last 6 months)`);
+    // (changed in writer round 8, RESCORE-1 T8: the Top 6 page 376 wide, room for a 31-letter name at 50%: the reviewer's yes)
+    const wantW = isT ? 320 : 376;
+    if (p.page.width !== wantW || p.page.height !== wantH) bad.push(`tooltip page is ${p.page.width} x ${p.page.height}, want 376 x 310, or 320 x 420 for the trend (320 x 314 kept to its last 6 months)`);
     const cs = p.visuals.filter((v) => v.visual && /Chart$/.test(v.visual.visualType));
     if (cs.length > 1 || (isT && cs.length !== 1)) bad.push(`tooltip page "${p.page.displayName}" has ${cs.length} charts`);
     cs.forEach((v) => {
