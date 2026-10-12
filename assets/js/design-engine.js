@@ -236,8 +236,9 @@
   // the layout's rows as this page gets them (c.noTime: projectPages' opts.noTime, carried by the page's layout)
   // (design round 9, the re-score's S7 on all 9 reports: page 2's side rail shrank to its dropdowns and the page stayed
   // empty under it, and its full-width table, of rows no one can count before the data, left half its panel empty) the
-  // details page: its filters a strip on top (no area under a rail; the owner's #18 keeps a rail to its contents), the
-  // main chart, then the table beside a bar chart, so a short table leaves half a row, not half a page
+  // details page keeps the filter side the user asked for (the owner's O-1) and its rail kept to its contents (#18);
+  // its rows are the main chart, then the table beside a bar chart, so a short table leaves half a row, not half a
+  // page, and fitSlots reflows the rows beside and under a shortened rail
   const DETAIL_ROWS = [[[1, 'column', T('Main chart', 'المخطط الرئيسي')]], [[1, 'table', T('Detail table', 'جدول التفاصيل')], [1, 'bar', T('Breakdown', 'التوزيع')]]];
   const layoutOf = (c) => { const L = c.detail ? Object.assign({}, LAYOUTS[c.preset], { rows: DETAIL_ROWS }) : LAYOUTS[c.preset]; return c.noTime ? noTimeOf(L) : L; };
   const hasMain = (P) => P.rows[0].length > 1 && P.rows[0][0][0] > P.rows[0][1][0];   // a wider first chart
@@ -560,7 +561,7 @@
   // A first page with fewer KPI cards than its layout plans (a report with fewer measures) keeps the second page at that
   // count (0.2.9, A2-4: this was the MCP's kpiCards, which capped every page).
   const secondLayout = (c) => { const to = c.preset === 'analysis' ? 'exec' : 'analysis', own = LAYOUTS[to].kpis, k = +c.kpis < LAYOUTS[c.preset].kpis ? Math.min(own, +c.kpis) : own;
-    return Object.assign({}, c, to === 'exec' ? { preset: 'exec', kpis: k, filters: false } : { preset: 'analysis', kpis: k, filters: true, fpos: 'top', detail: true }, { kpiH: null, mainW: null, split: null }); };
+    return Object.assign({}, c, to === 'exec' ? { preset: 'exec', kpis: k, filters: false } : { preset: 'analysis', kpis: k, filters: true, fpos: ['start', 'end', 'top'].includes(c.fpos) ? c.fpos : 'start', detail: true }, { kpiH: null, mainW: null, split: null }); };
   // Filters as a slide-in panel: the page without its filter rail, and the panel's box (null when the page has no
   // filters or no header). The panel opens under the Filters button, at the end of the header (right in English, left in Arabic)
   const slidePanel = (cc, lang) => {
@@ -590,7 +591,7 @@
     return out;
   }
   const SLOT_GAP = 40;
-  const REFLOW_KEEP = 0.6;   // (round 8, S7) a chart beside the rail keeps this share of its height at least when the page reflows
+  const REFLOW_KEEP = 0.5;   // (round 8, S7; round 9: 0.6 -> 0.5, so two dropdowns reflow too) a chart beside the rail keeps this share of its height at least when the page reflows
   const slotsTouch = (a, b) => (Math.abs(a.y - b.y) <= 1 && Math.abs(a.h - b.h) <= 1 && Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w) <= SLOT_GAP)
     || (Math.abs(a.x - b.x) <= 1 && Math.abs(a.w - b.w) <= 1 && Math.max(a.y, b.y) - Math.min(a.y + a.h, b.y + b.h) <= SLOT_GAP);
   // fitSlots(slots, { dropKinds, headerRows, railItems }): { slots, dropped }; the slots given are never changed
@@ -637,7 +638,7 @@
     // both starts after that chart, so the page stayed empty under the rail) the content reflows, the rail kept to its
     // contents (the owner's round-12 rule #18): the slots beside the rail that run past its bottom end there, and the
     // slots under them and under the rail move up by as much, keeping their bottoms (they grow). Only where every chart
-    // beside keeps 60% of its height at least (REFLOW_KEEP); otherwise the page is left as it is.
+    // beside keeps half its height at least (REFLOW_KEEP); otherwise the page is left as it is.
     if (rail) {
       const B = rail.y + rail.h, beside = out.filter((s) => s !== rail && !OWN_SLOTS.includes(s.kind) && s.y < B && s.y + s.h > B
         && ((s.x - (rail.x + rail.w) >= 0 && s.x - (rail.x + rail.w) <= SLOT_GAP) || (rail.x - (s.x + s.w) >= 0 && rail.x - (s.x + s.w) <= SLOT_GAP)));
@@ -645,6 +646,12 @@
       if (cut > 0 && beside.every((s) => s.y + s.h === B + cut && B - s.y >= REFLOW_KEEP * s.h)) {
         const under = (s) => s.y >= B + cut && s.x < Math.max(...beside.map((q) => q.x + q.w).concat(rail.x + rail.w)) && s.x + s.w > Math.min(...beside.map((q) => q.x).concat(rail.x));
         out = out.map((s) => (beside.includes(s) ? Object.assign({}, s, { h: B - s.y }) : !OWN_SLOTS.includes(s.kind) && s !== rail && under(s) ? Object.assign({}, s, { y: s.y - cut, h: s.h + cut }) : s));
+      } else if (beside.length === 1) {
+        // (design round 9, S7 with one or two dropdowns: the chart beside would keep too little of its height) the one
+        // chart beside starts under the rail, a row's gap below it, and takes the rail's column: where it keeps its share
+        const s0 = beside[0], next = out.filter((q) => q.y >= s0.y + s0.h && q.x < s0.x + s0.w && q.x + q.w > s0.x).map((q) => q.y - (s0.y + s0.h)), g = next.length ? Math.min(...next) : SLOT_GAP / 2;
+        const y = B + g, h = s0.y + s0.h - y, x0 = Math.min(s0.x, rail.x), x1 = Math.max(s0.x + s0.w, rail.x + rail.w);
+        if (h >= REFLOW_KEEP * s0.h) out = out.map((s) => (s === s0 ? Object.assign({}, s, { x: x0, y, w: x1 - x0, h }) : s));
       }
     }
     if (rail) out = out.map((s) => {

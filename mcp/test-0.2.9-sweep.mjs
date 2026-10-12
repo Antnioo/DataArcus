@@ -124,15 +124,15 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     chk(() => (x.j.reportNotes || []).some((n) => /Top \d+ of/.test(n) && /only when/i.test(n)), () => `N3: the report's notes say it too: ${JSON.stringify((x.j || {}).reportNotes || []).slice(0, 300)}`);
 
     // S7: the rail stays as high as its contents (the owner's round-12 rule #18, kept by the reviewer on 12 Oct); the page
-    // reflows: the chart beside the rail ends where it ends, and the table under them moves up, keeping its bottom
-    // (design round 9: page 2 has its filters on top; the reflow is checked on a page with a side rail, analysis's first)
-    const p2 = E.projectPages(design({ preset: 'analysis', page: '1920x1080', filters: true, fpos: 'start' }).layout, 'en', {})[0].slots, R3 = { n: 3, minH: 56, maxH: 114, resetH: 40, pad: 15, gap: 12 };
-    const f2 = get(() => E.fitSlots(p2, { railItems: R3 }).slots), rail = f2.find((s) => s.kind === 'slicer'), beside = f2.find((s) => s.kind === 'column'), tab2 = f2.find((s) => s.kind === 'table'), tab0 = p2.find((s) => s.kind === 'table');
-    chk(() => rail.h < 491 && rail.y + rail.h === beside.y + beside.h && tab2.y < tab0.y && tab2.y + tab2.h === tab0.y + tab0.h && tab2.y - (beside.y + beside.h) === tab0.y - (p2.find((s) => s.kind === 'column').y + p2.find((s) => s.kind === 'column').h),
-      () => `S7: page 2 reflows under a rail kept to its contents: rail ${JSON.stringify(rail && [rail.y, rail.h])}, beside ${JSON.stringify(beside && [beside.y, beside.h])}, table ${JSON.stringify(tab2 && [tab2.y, tab2.h])}`);
-    const f1 = get(() => E.fitSlots(p2, { railItems: Object.assign({}, R3, { n: 1 }) }).slots);
-    const c1 = f1.find((s) => s.kind === 'column'), c0 = p2.find((s) => s.kind === 'column'), t1 = f1.find((s) => s.kind === 'table');
-    chk(() => c1.h === c0.h && t1.y === tab0.y, () => `S7: a reflow that would leave the chart beside the rail under 60% of its height is not made (the column chart and the table's top stay): ${JSON.stringify([c1.h, c0.h, t1.y, tab0.y])}`);
+    // reflows so nothing large stays empty under it (round 8: the chart beside ends at the rail; round 9: or it starts
+    // under the rail and takes its column, whichever keeps half its height)
+    const underRail = (sl) => { const r = sl.find((x) => x.kind === 'slicer' && x.stack), bottom = Math.max(...sl.map((x) => x.y + x.h));
+      const tops = sl.filter((x) => x !== r && x.x < r.x + r.w && x.x + x.w > r.x && x.y >= r.y + r.h).map((x) => x.y); return (tops.length ? Math.min(...tops) : bottom) - (r.y + r.h); };
+    for (const n of [1, 2, 3]) for (const [preset, pi] of [['analysis', 0], ['exec', 1]]) {
+      const pp = E.projectPages(design({ preset, page: '1920x1080', filters: true, fpos: 'start' }).layout, 'en', { second: true })[pi].slots;
+      const ff = get(() => E.fitSlots(pp, { railItems: { n, minH: 56, maxH: 114, resetH: 40, pad: 15, gap: 12 } }).slots), rail = ff.find((x) => x.kind === 'slicer');
+      chk(() => rail.h <= 2 * 15 + n * 114 + 12 * n + 40 && underRail(ff) <= 40, () => `S7 (${preset} page ${pi + 1}, ${n} dropdowns): the rail fits its contents (#18) and nothing large stays empty under it: ${underRail(ff)} empty, ${JSON.stringify(ff.filter((x) => !['title', 'logo', 'kpi'].includes(x.kind)).map((x) => [x.kind, x.x, x.y, x.w, x.h]))}`);
+    }
     model('s-one', [{ name: 'desk', partitions: mp('desk'), columns: [col('Amount', 'double'), col('Region', 'string')], measures: [{ name: 'Revenue', expression: 'SUM ( desk[Amount] )', formatString: '#,0' }] }]);
     const z = await ask('create_report', { path: 's-one', name: 'R8 rail', design: design({ preset: 'exec', page: '1920x1080', filters: true, fpos: 'start' }), secondPage: true });
     const pv = visualsOf(z, 's-one').filter((v) => v.pi === 1), at = (v) => { const g = v.parentGroupName ? pv.find((w) => w.name === v.parentGroupName) : null; return { y: v.position.y + (g ? g.position.y : 0), h: v.position.height }; };
@@ -157,13 +157,13 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
 
   // ---------- design round 9 (the laptop's RESCORE-2 on rc.4): S7 page 2, D19, D11 ----------
   {
-    // S7: page 2 has its filters on top, so no area under a rail (the owner's #18 kept: no rail is stretched), and its
-    // lower row is the table beside a bar chart, so a short table leaves no half page empty; both sizes, both languages
+    // S7 (round 9): page 2 keeps the filter side asked (the owner's O-1) and ends with the table beside a bar chart, so a
+    // table of few rows leaves half a row empty, not half a page; both sizes, both languages, each layout whose page 2 it is
     for (const pgSize of ['1280x720', '1920x1080']) for (const lang of ['en', 'ar']) for (const preset of ['exec', 'ops', 'focus']) {
       const ps = get(() => E.projectPages(design({ preset, page: pgSize }).layout, lang, { second: true })), p2 = Array.isArray(ps) && ps[1];
-      const sl = p2 && p2.slots.filter((x) => x.kind === 'slicer'), tb = p2 && p2.slots.find((x) => x.kind === 'table'), br = p2 && p2.slots.find((x) => x.kind === 'bar');
-      chk(() => p2 && sl.length === 1 && sl[0].w > sl[0].h && tb && br && Math.abs(tb.y - br.y) <= 1 && Math.abs(tb.h - br.h) <= 1 && tb.y + tb.h === Math.max(...p2.slots.map((x) => x.y + x.h)),
-        () => `S7 (${preset} ${pgSize} ${lang}): page 2's filters are a strip on top, and its last row is the table beside a bar chart: ${p2 ? JSON.stringify(p2.slots.map((x) => [x.kind, x.x, x.y, x.w, x.h])) : ps}`);
+      const tb = p2 && p2.slots.find((x) => x.kind === 'table'), br = p2 && p2.slots.find((x) => x.kind === 'bar');
+      chk(() => p2 && tb && br && Math.abs(tb.y - br.y) <= 1 && Math.abs(tb.h - br.h) <= 1 && tb.y + tb.h === Math.max(...p2.slots.map((x) => x.y + x.h)),
+        () => `S7 (${preset} ${pgSize} ${lang}): page 2's last row is the table beside a bar chart: ${p2 ? JSON.stringify(p2.slots.map((x) => [x.kind, x.x, x.y, x.w, x.h])) : ps}`);
     }
     // D11 and D19: a made-up model with a yes/no column made by IF and a product name in its own table
     model('s-items', [{ name: 'Items', partitions: mp('Items'), columns: [col('Amount', 'double'), col('Region', 'string'), Object.assign(col('Size Band', 'string'), { type: 'calculated', expression: 'IF ( Items[Amount] > 100, "Large", "Small" )' }), col('ProductKey', 'int64')],

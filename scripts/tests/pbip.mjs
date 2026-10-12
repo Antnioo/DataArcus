@@ -289,9 +289,10 @@ export default async function ({ browser, url }) {
     {
       const b = build(std('1920x1080'), 'en', { second: true, panel: false });
       const a = tooltipProblems(b.files), tb = tableProblems(b.files, false), cd = cardStyleProblems(b.files, false, b.insets), cardsBad = new Set(cd.bad.map((x) => x.split(':')[0])).size;
-      check(a.charts === 4 && !a.bad.length, `default report: ${a.bad.length} of ${a.charts} charts without the Canvas link (4 charts expected)`);
+      // (design round 9, S7: page 2's last row is the table beside a bar chart: 5 charts, 4 of them not by month)
+      check(a.charts === 5 && !a.bad.length, `default report: ${a.bad.length} of ${a.charts} charts without the Canvas link (5 charts expected)`);
       // round 1: the bar chart and the two column charts show the monthly trend on hover, the line chart (by month) the bar chart by category
-      check(a.trend === 3, `default report: ${a.trend} of 4 charts linked to the monthly trend tooltip (3 expected: all but the line chart)`);
+      check(a.trend === 4, `default report: ${a.trend} of 5 charts linked to the monthly trend tooltip (4 expected: all but the line chart)`);
       check(tb.columns === 8 && !tb.bad.length, `default report: ${tb.bad.length} of ${tb.columns} table columns without header alignment (8 columns expected)`);
       check(cd.cards === 9 && !cd.bad.length, `default report: ${cardsBad} of ${cd.cards} cards with their own fill or ignored padding (9 cards expected: 7 KPI cards and the two tooltip cards)`);
       // value sizes: the default cards keep 42 (1080) and 28 (720); the tooltip card 20
