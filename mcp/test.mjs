@@ -2879,8 +2879,9 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const th = await ask('generate_theme', { name: 'R13 ' + preset + ' ' + lang, preset, lang, folder: 'r13-themes' });
     const design = (await ask('plan_layout', { design: th.j.design, layout: 'exec', kpis: 3, filters: 'end', lang })).j.design;
     // 1. a designed report: every bar and column chart of the report's pages fades by value; lines, donuts and the tooltip pages' charts do not
+    // (P1+: the first chart read may be a page's second, which fades from the second colour: chartColors.low is a chart's)
     const g = await ask('create_report', { path: P, name: `R13 Grad ${preset} ${lang}`, lang, design }), rg = read(g);
-    chk(() => good(rg, 2) && g.j.chartColors.mode === 'gradient' && g.j.chartColors.charts === rg.vis.filter((v) => isBar(v) && !v.tooltipPage).length && g.j.chartColors.low === grad(rg.vis.find((v) => isBar(v) && !v.tooltipPage)).low && errors(rg.dir) === '0',
+    chk(() => good(rg, 2) && g.j.chartColors.mode === 'gradient' && g.j.chartColors.charts === rg.vis.filter((v) => isBar(v) && !v.tooltipPage).length && rg.vis.some((v) => isBar(v) && !v.tooltipPage && grad(v).low === g.j.chartColors.low) && errors(rg.dir) === '0',
       () => `${preset} ${lang}: a designed report's bar and column charts must carry the gradient rule (the chart's measure, literal ends, 3:1 off the card), told in chartColors: ${tell(rg)} ${JSON.stringify(g.j && g.j.chartColors)} validator ${rg.dir && errors(rg.dir)} ${short(g)}`);
     // 2. chartColors "solid": nothing is written on any chart (the theme's one colour, as before round 13)
     const s = await ask('create_report', { path: P, name: `R13 Solid ${preset} ${lang}`, lang, design, chartColors: 'solid' }), rs = read(s);
