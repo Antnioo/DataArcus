@@ -1,6 +1,6 @@
 # 0.2.9 release gate: the block-by-block audit of the release candidate (12 Oct 2026, builder 7)
 
-**Verdict: no open break**, the custom-visual replacement flow included (delta of 12 Oct, below: 3 low/medium findings, each failing safe).
+**Verdict: no open break on the final rc head `2230549`** (round 11 delta below), the custom-visual replacement flow included (its delta: 3 low/medium findings, each failing safe).
 
 Base: `fix/0.2.9-gate` at **`b9f04ba`** (integration round 10a, round 10 merged). The audit is read-only and was run on
 a detached checkout of that commit. Packaging was read from the engine repo's `fix/0.2.9-packaging` at `bfafa2a`, and
@@ -41,6 +41,41 @@ its build was run dry against `b9f04ba` into a scratch folder (nothing committed
 
 Integration commits with no audit ID since `d2300f9` (`4f0f133`, `7d379e4`, `3ca94fa`, `c902387`) were each found by
 an existing test that went red at the merge, and fixed. Every other product change names a finding that has a test.
+
+## Delta round 11: `b9f04ba` -> `2230549` (12 Oct)
+Merged: picker11 `53207b6` (N18 calendar and number columns never categories; the X-minus-ALL helper is no card), writer
+`ec083d4` (the written text-suffix card has no decimals; `unitAuto` carried), design `54cd786` (layout matrix test, golden
+task 12, the "Preview" line, README), reader `839652f` (builder 6: keep the dashboard's identity: `existingTheme`,
+`reportIdentity`, `reportTheme`, `paintedColours` in read-report.mjs; `themeColours` and the default in design.mjs;
+`themeFrom` on generate_theme and plan_layout). Read: the whole diff of read-report.mjs, design.mjs and server.mjs.
+
+### Runs on `2230549` (once each)
+| Run | Result |
+|---|---|
+| Full `npm test` | **PASS**: mcp 1456, c 36, d 21, e 21, f 20, g 21, golden 12 tasks match, fuzz 600 cases, layouts 32 reports 226 checks |
+| Website suites, `check-min`, `test-site-config` | **17 of 17 PASS**, 62 `.min.js` match, `?v=` stamps renewed, site config PASS |
+
+### Theme identity probes (made-up projects, through the MCP client)
+| Ask | Result |
+|---|---|
+| Hostile theme: an instruction-like name with U+202E and 200 Arabic letters; `rgb()`, `red`, `#12345`, `javascript:`, objects, `"#e69138 ; drop"` as colours; `expression(1)` text; a `__proto__` visual style; radius 1e9 | plan answers; the name is withheld ("reads like an instruction"); only `#rrggbb` reaches the design (`"  #6aa84f  "` trimmed and kept, the rest dropped); radius stays 8 (bounded 0-24); nothing written, the original unchanged |
+| A 9 MB theme; a theme nested 5,000 levels; 3,000 visuals each painting its own colour | default Corporate (over the 8 MB cap); answered; answered in 454 ms (source "visuals") |
+| A report outside the model's folder pointing at the model; the model's report folder a link to outside | neither read (default colours) |
+| Two human reports, a dark theme, a DataArcus-written report, non-hex values | tests 5f, 2c, 5e, 1b (green above) |
+| No existing report | Corporate, no colours line: unchanged |
+| An explicit brand, preset or `mode: "dark"` in generate_theme; a preset design in plan_layout | each wins (no `fromReport`); the plan says how to keep the report's theme instead |
+| `themeFrom` with `../h1/M`, U+202E, `M.Report/../../x`, 200 characters | matched only against the model's own report names; nothing echoed |
+| RTL and long theme and report names (Arabic, U+202E, U+200F, 150 letters) | shown screened (`\u202e`), cut at 60 with "…", in the Arabic line too |
+| Nothing written before approval; the original never changes | create_report refused before the go, folder listing unchanged; after the go the report is written and the user's report is byte for byte unchanged |
+| The user's theme changes after the approval | the approved colours are written (pinned through the design); a colourless design passed at create_report is refused ("differ ... in design") |
+
+### Findings (none a break)
+| ID | Sev | Finding | Owner |
+|---|---|---|---|
+| R11-1 | low | The layout matrix lists a KNOWN DEFECT on 8 of 32 reports: plan_layout's design lint labels a visual by its title, check_report's lint never names report text, so the same rule at the same place differs in label only. | the checks block (builder 7): one label rule for both lints; needs the owner's go |
+| R11-2 | note | `existingTheme`'s `themeFrom` may pick a report DataArcus wrote itself (only when asked by name); the default never does | by design |
+
+Not covered: Desktop. The reader report (`work/0.2.9-reader.md`) records the laptop's checks of the theme feature.
 
 ## Delta: the custom-visual replacement flow (12 Oct, on `b9f04ba`)
 The release-gate audit wrongly called this 0.3.0 work; the reviewer corrected it. Files read: `mcp/lib/native-copy.mjs`,
