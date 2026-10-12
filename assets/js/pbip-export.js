@@ -195,6 +195,7 @@
    *   data type: boolean, string, int64 or double), or literals already written as Power BI writes them (checked)
    * @property {string} [kpiValues]  'full': the cards show the full number
    * @property {boolean} [noDataMessage]  false: no "No data" cards (on by default on a user's model)
+   * @property {boolean} [smoothLines]  true: smooth (monotone) line charts; straight by default (P2)
    * @property {boolean} [logoPlaceholder]  false: no "Your logo" text without a logo
    *
    * @typedef {Object} BuildResult  the files, and what the writer did that its caller should tell (each a list of
