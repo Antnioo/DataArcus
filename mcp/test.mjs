@@ -14,6 +14,7 @@ import { round23 } from './test-round23.mjs';
 import { v029 } from './test-0.2.9.mjs';
 import { v029b } from './test-0.2.9b.mjs';
 import { v029i } from './test-0.2.9i.mjs';
+import { readableName } from './lib/display-names.mjs';
 import { v029w } from './test-0.2.9w.mjs';
 import { v029k } from './test-0.2.9k.mjs';
 import { v029p } from './test-0.2.9p.mjs';
@@ -629,7 +630,10 @@ const cardProblems = (dir, rtl) => {
     const projections = (fl) => { const out = []; Object.keys(fl).filter((k) => k.endsWith('/visual.json')).forEach((k) => { const v = JSON.parse(String(fl[k])); Object.values(((v.visual || {}).query || {}).queryState || {}).forEach((r) => (r.projections || []).forEach((p) => out.push(p))); }); return out; };
     // (round 12, #17: the calendar order's helper column carries a blank displayName, its header; not a display name)
     // (changed 8 Oct 2026, round 23, the owner's go: way 4 for the total row's word: the name column hidden first, the row-label measure at the right; the row-label measure's header is its column's name, so it carries a displayName)
-    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Short]') : !res.j.arabicNames),
+    // (design round 8, S6: an English plan's default names are the readable forms of database-style names, named in the
+    // plan and pinned with it: a displayName here is only that, the field's own name made readable)
+    const planName = (p) => { const f = p.field.Column || p.field.Measure; return !rtl && f && p.displayName === readableName(f.Property); };
+    check(projections(files).every((p) => p.displayName === undefined || (p.field.Aggregation && p.displayName === ' ') || isRowLabelP(p) || planName(p)) && (rtl ? Array.isArray((res.j.arabicNames || {}).missing) && res.j.arabicNames.missing.includes('Sales[Total Sales]') && res.j.arabicNames.missing.includes('Calendar[Month Short]') : !res.j.arabicNames),
       `${name}: without displayNames: a displayName written, or arabicNames ${JSON.stringify(res.j.arabicNames || null).slice(0, 200)}`);
     if (rtl) {
       const given = { 'Sales[Total Sales]': 'إجمالي المبيعات', 'Calendar[Month Short]': 'الشهر', 'Calendar[Quarter]': 'الربع', 'Nope[X]': 'لا شيء' };
@@ -3435,7 +3439,10 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const vs = pageVisuals(en, 'r12-project'), sl = vs.filter((v) => type(v) === 'slicer').sort((p, q) => p.at.y - q.at.y), last = sl[sl.length - 1];
     const reset = vs.find((v) => type(v) === 'actionButton' && /reset/.test(JSON.stringify(v.visual.objects.icon || [])));
     const band = vs.find((v) => type(v) === 'textbox' && !v.parentGroupName && v.at.x <= last.at.x && v.at.x + v.at.w >= last.at.x + last.at.w && v.at.h > last.at.h);
-    chk(() => last && reset && reset.at.y > last.at.y + last.at.h && reset.at.y - (last.at.y + last.at.h) <= 24 && (!band || band.at.y + band.at.h <= reset.at.y + reset.at.h + 24),
+    // (design round 8, the re-score's S7, asked by the reviewer: a panel taller than its content reaches the bottom of the
+    // row beside it, so the page under the rail is never left empty; Reset stays right under the last slicer)
+    const rowEnd = (b) => vs.some((v) => v !== b && /Chart$|tableEx/.test(type(v)) && Math.abs(v.at.y + v.at.h - (b.at.y + b.at.h)) <= 2);
+    chk(() => last && reset && reset.at.y > last.at.y + last.at.h && reset.at.y - (last.at.y + last.at.h) <= 24 && (!band || band.at.y + band.at.h <= reset.at.y + reset.at.h + 24 || rowEnd(band)),
       () => `#18: Reset right under the last slicer, the panel no taller than its content: last slicer ends ${last && last.at.y + last.at.h}, Reset at ${reset && reset.at.y}, panel ${band && JSON.stringify(band.at)}`);
   }
   // #2, #4, #5: the phone's page tabs each as wide as its name, from the reading start with a fixed gap; chart titles
@@ -4400,7 +4407,12 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
       if (x.err) return { err: x.t.slice(0, 200) };
       const def = path.join(ROOT, 'r20-plain', x.j.report, 'definition', 'pages'), order = JSON.parse(fs.readFileSync(path.join(def, 'pages.json'), 'utf8')).pageOrder;
       return order.map((pg) => fs.readdirSync(path.join(def, pg, 'visuals')).map((v) => JSON.parse(fs.readFileSync(path.join(def, pg, 'visuals', v, 'visual.json'), 'utf8')))
-        .filter((v) => v.visual && /Chart$|^tableEx$/.test(v.visual.visualType)).map((v) => { const t = ((v.visual.visualContainerObjects || {}).title || [{}])[0]; return t.properties && t.properties.text ? t.properties.text.expr.Literal.Value.replace(/^'|'$/g, '') : null; }).filter(Boolean)); };
+        // (design round 8, N2: a chart cut to its Top N takes its title from a report measure named "Title: <its title>")
+        .filter((v) => v.visual && /Chart$|^tableEx$/.test(v.visual.visualType)).map((v) => { const t = ((v.visual.visualContainerObjects || {}).title || [{}])[0], e = t.properties && t.properties.text && t.properties.text.expr;
+          return !e ? null : e.Literal ? e.Literal.Value.replace(/^'|'$/g, '') : e.Measure ? plainTitle(def, e.Measure.Property) : null; }).filter(Boolean)); };
+    // (the plain title: the last text of the title measure's DAX, shown when the chart leaves no category out)
+    const plainTitle = (def, name) => { const f = path.join(def, '..', 'reportExtensions.json'), m = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')).entities.flatMap((x) => x.measures).find((x) => x.name === name) : null;
+      const all = m ? [...m.expression.matchAll(/"((?:[^"]|"")*)"/g)] : []; return all.length ? all[all.length - 1][1].replace(/""/g, '"') : null; };
     for (const lang of ['en', 'ar']) {
       const pages = await titles(lang), dup = (ts) => ts.filter((t, i) => ts.indexOf(t) !== i);
       // (English titles carry "by <column>" and are already their own: unchanged, no brackets; the Arabic ones repeated)

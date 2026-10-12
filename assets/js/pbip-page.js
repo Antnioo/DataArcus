@@ -1165,18 +1165,23 @@
       // categories out did not say how many there were) a chart cut to its Top N takes its title from a report-level
       // measure: "Top N of M: <title>" when more than N of its categories have a value under the page's filters (M counted
       // without the chart's own Top N, REMOVEFILTERS on its category column), its plain title otherwise. The tools never
-      // read the data, so only the report can know. Each text is fitted as the title is, "M" taken as 999.
-      const dq = (t) => '"' + String(t).replace(/"/g, '""') + '"';
+      // read the data, so only the report can know. Each text is fitted as the title is, "M" taken as 999. (_n > N is written
+      // MIN ( _n, N + 1 ) = N + 1: no comparison sign in the DAX, which round 9's names check keeps to names and strings)
       visuals.forEach((v) => { const f = v.visual && fitted.get(v.visual); if (!f || !f.top || !f.top.cat || f.top.cat.c == null) return;
         const y = daxOf(f.top.y); if (!y) return;
         const word = lang === 'ar' ? ['أعلى ', ' من '] : ['Top ', ' of '], core = (f.final || f.ttl).replace(TOPPED, ''), lead = word[0] + f.top.n + word[1];
         const plain = titleFit(core, TITLE, f.avail), long = titleFit(lead + '999: ' + core, TITLE, f.avail), rest = long.shown.indexOf(lead + '999: ') === 0 ? long.shown.slice((lead + '999: ').length) : null;
         if (rest == null) return;
-        const col = daxNames.column(f.top.cat.t, f.top.cat.c);
-        const expression = 'VAR _n = CALCULATE ( COUNTROWS ( FILTER ( VALUES ( ' + col + ' ), NOT ISBLANK ( ' + col + ' ) && NOT ISBLANK ( ' + y + ' ) ) ), REMOVEFILTERS ( ' + col + ' ) ) RETURN IF ( _n > ' + f.top.n + ', ' + dq(lead) + ' & _n & ' + dq(': ' + rest) + ', ' + dq(plain.shown) + ' )';
+        // (a name with a control character has no DAX: daxNames refuses it, and the chart keeps its text title)
+        let col, expression; try { col = daxNames.column(f.top.cat.t, f.top.cat.c);
+        expression = 'VAR _n = CALCULATE ( COUNTROWS ( FILTER ( VALUES ( ' + col + ' ), NOT ISBLANK ( ' + col + ' ) && NOT ISBLANK ( ' + y + ' ) ) ), REMOVEFILTERS ( ' + col + ' ) ) RETURN IF ( MIN ( _n, ' + (f.top.n + 1) + ' ) = ' + (f.top.n + 1) + ', ' + daxNames.string(lead) + ' & _n & ' + daxNames.string(': ' + rest) + ', ' + daxNames.string(plain.shown) + ' )'; } catch (e) { return; }
         const m = extMeasure(f.top.cat.t, 'Title: ' + core, expression, 'Text');
-        const tp = v.visual.visualContainerObjects.title[0].properties;
+        const tp = v.visual.visualContainerObjects.title[0].properties, g = (v.visual.visualContainerObjects.general || [])[0];
         tp.text = { expr: extField(f.top.cat.t, m) };
+        if (g && g.properties && g.properties.altText) g.properties.altText = str(core);   // (the alt text promises no cut either)
+        // (the titles report tells the plain title's fit, the one shown when nothing is cut)
+        ['wrapped', 'shortened'].forEach((md) => { const i = titles[md].indexOf(f.entry); if (i >= 0) titles[md].splice(i, 1); });
+        f.entry = plain.mode !== 'one' ? { page: f.page, title: core, shown: plain.shown } : null; if (f.entry) titles[plain.mode].push(f.entry);
         if ((plain.mode !== 'one' && !plain.one) || (long.mode !== 'one' && !long.one)) tp.titleWrap = bool(true); else delete tp.titleWrap; });
     }
     // 0.2.9, audit 6's A6-12: what each written visual shows, in the page's order, for the caller's answer: its fields as
