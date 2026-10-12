@@ -106,6 +106,7 @@ const isDateCol = (c) => /^date(time)?$/i.test(String(c.dataType || ''));
 // A date table by its SHAPE, never its name: a date column (typed date, or untyped in a table built with CALENDAR or
 // CALENDARAUTO, which gives one row a day) and a month and a year column (by their DAX, or their names). Read from the
 // model's own definitions (m.tmsl), where an untyped column is undefined, not guessed.
+const untyped = (t) => (t == null || /^unknown$/i.test(String(t)) ? '' : String(t));
 const MONTHISH = /\bmonth|الشهر|شهر/i, YEARISH = /\byear|السنة|سنة/i;
 function dateTableShapes(m) {
   if (!m) return [];
@@ -114,7 +115,8 @@ function dateTableShapes(m) {
     const r = raw.find((x) => x && x.name === t.name) || {}, rc = Array.isArray(r.columns) ? r.columns : [];
     const expr = (Array.isArray(r.partitions) ? r.partitions : []).map((p) => (p && p.source && typeof p.source.expression === 'string' ? p.source.expression : Array.isArray(p && p.source && p.source.expression) ? p.source.expression.join('\n') : '')).join('\n');
     const calendar = /\bCALENDAR(AUTO)?\s*\(/i.test(expr);
-    const typeOf = (c) => { const x = rc.find((y) => y && y.name === c.name); return x && x.dataType ? String(x.dataType) : x ? '' : String(c.dataType || ''); };
+    // (rc.5: the TMDL reader marks an untyped DAX column 'unknown': untyped, as an empty type)
+    const typeOf = (c) => { const x = rc.find((y) => y && y.name === c.name); return untyped(x ? x.dataType : c.dataType); };
     const dates = (t.columns || []).filter((c) => /^date(time)?$/i.test(typeOf(c)) || (calendar && !typeOf(c) && /^\[?date\]?$/i.test(String((rc.find((y) => y && y.name === c.name) || {}).sourceColumn || c.name))));
     const text = expr + ' ' + (t.columns || []).map((c) => c.name).join(' ');
     const shaped = dates.length && MONTHISH.test(text) && YEARISH.test(text);
@@ -135,15 +137,23 @@ function monthOffer(model, loc) {
   const shapes = dateTableShapes(m);
   let pick = shapes; if (pick.length > 1 && pick.some((x) => x.marked)) pick = pick.filter((x) => x.marked); if (pick.length > 1 && pick.some((x) => x.calendar)) pick = pick.filter((x) => x.calendar);
   const cands = pick.map((x) => Object.assign({}, (m.tables || []).find((t) => t.name === x.name), { shapeDates: x.dates }));
-  if (cands.length !== 1) return { offered: false, why: cands.length ? `the model has ${cands.length} date tables: say which one, and the column is a model step done by hand` : 'the model has no date table (a table with a date column and month and year columns; its name and its mark do not matterr, with a date column)' };
+  if (cands.length !== 1) return { offered: false, why: cands.length ? `the model has ${cands.length} date tables: say which one, and the column is a model step done by hand` : 'the model has no date table (a table with a date column and month and year columns; built with CALENDAR or CALENDARAUTO, or imported; its name and its mark do not matter)' };
   const t = cands[0], cols = t.columns || [];
   const has = (re) => cols.find((c) => re.test(String(c.name)));
   if (has(/^month name \(arabic\)$/i) || cols.some((c) => /(arabic|عربي|\bAR\b)/i.test(c.name) && /(month|شهر)/i.test(c.name)) || has(/^(اسم\s*)?الشهر$/)) return { offered: false, why: `the date table "${visible(t.name)}" has an Arabic month column already` };
   const raw = ((m.tmsl && m.tmsl.model && m.tmsl.model.tables) || []).find((x) => x.name === t.name) || {};
   const date = (raw.columns || []).find((c) => c.name && isDate(c) && c.isKey) || cols.find(isDate) || cols.find((c) => (t.shapeDates || []).includes(c.name));
   // the month number to sort by: an integer column named like one (an untyped DAX column of that name counts: its DAX makes it a number)
-  const typedRaw = (c) => { const x = (raw.columns || []).find((y) => y && y.name === c.name); return x ? String(x.dataType || '') : String(c.dataType || ''); };
-  const num = cols.find((c) => /^(int64|)$/i.test(typedRaw(c)) && /^(month\s*(number|no\.?|num|nr|of year|index)|monthnum(ber)?|month)$/i.test(String(c.name).trim()));
+  const typedRaw = (c) => { const x = (raw.columns || []).find((y) => y && y.name === c.name); return untyped(x ? x.dataType : c.dataType); };
+  // (rc.5: an untyped column of a calculated calendar is a number only when its DAX there is MONTH ( ... ): a plain
+  // "Month" there was FORMAT ( [Date], "MMM" ), a text, and sorting by it puts the months in alphabetical order)
+  const calcExpr = (raw.partitions || []).filter((p) => p && p.source && p.source.type === 'calculated').map((p) => (Array.isArray(p.source.expression) ? p.source.expression.join('\n') : String(p.source.expression || ''))).join('\n');
+  const daxFn = (c) => { const r = new RegExp('"' + String(c.name).replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/"/g, '""') + '"\\s*,\\s*([A-Za-z.]+)\\s*\\(', 'i').exec(calcExpr); return r ? r[1].toUpperCase() : null; };
+  const isMonthNo = (c) => { const ty = typedRaw(c), fn = ty ? null : daxFn(c), name = String(c.name).trim();
+    if (ty) return /^int64$/i.test(ty) && /^(month\s*(number|no\.?|num|nr|of year|index)|monthnum(ber)?|month)$/i.test(name);
+    if (fn) return fn === 'MONTH';
+    return /^(month\s*(number|no\.?|num|nr|of year|index)|monthnum(ber)?)$/i.test(name); };
+  const num = cols.find(isMonthNo);
   const calculated = (raw.partitions || []).some((p) => p.source && p.source.type === 'calculated');
   const lines = ['createOrReplace', '', '\tref table ' + tmdlName(t.name), ''];
   if (!num) lines.push(`\t\tcolumn ${tmdlName(MONTH_SORT)} = MONTH ( ${daxCol(t.name, date.name)} )`, '\t\t\tdataType: int64', '\t\t\tisHidden', '\t\t\tsummarizeBy: none', '');
@@ -173,11 +183,15 @@ export function planTwin(a) {
   Object.keys(given).forEach((k) => { if (ids.has(k)) labels[k] = cleanLabel(given[k]); else unknown.push(visible(k).slice(0, 160)); });
   texts.forEach((t) => { if (labels[t.id] != null) t.label = labels[t.id]; });
   // what mirrors, counted per kind, and what cannot
-  const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [] };
+  const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [] }, together = { on: [], bars: [] };
   const pages = R.pages.map((pg) => {
     if (keepLtr(pg)) return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length, leftToRight: 'drawn on a background picture: kept left to right' };
     const r = Mirror.mirrorPage(pg.page, pg.visuals.map((v) => v.json), { timeRightToLeft: a.timeRightToLeft !== false, dateTables, dateColumns });
     Object.entries(r.kinds).forEach(([k, n]) => { kinds[k] = (kinds[k] || 0) + n; });
+    // (T-3, T-6 of rc.5: the pairs mirrored as one)
+    const u = r.units || { on: [], bars: [] }, at = (n) => safeName(pg.id) + '/' + safeName(n);
+    u.on.forEach((x) => together.on.push(at(x.visual) + ' on ' + safeName(x.host)));
+    u.bars.forEach((x) => together.bars.push(at(x.bars) + ' with ' + safeName(x.names)));
     pg.visuals.forEach((v) => { const k = Mirror.kindOf(v.json); if (where[k]) where[k].push(safeName(pg.id) + '/' + safeName(v.json.name) + (k === 'other' ? ' (' + safeName(v.json.visual.visualType) + ')' : '')); });
     return { id: safeName(pg.id), name: safeName(typeof pageOf(pg).displayName === 'string' ? pageOf(pg).displayName : ''), size: sizeOf(pg), tooltip: pageOf(pg).type === 'Tooltip', visuals: pg.visuals.length };
   });
@@ -196,8 +210,12 @@ export function planTwin(a) {
   cannot.push({ what: 'the phone layout', why: R.phone ? 'copied as it is (a phone shows one column; the phone layout is not mirrored)' : 'the report has none' });
   const checkInTwin = [];
   const offAxis = (v) => { const vis = isObj(v.json) && isObj(v.json.visual) ? v.json.visual : {}, es = isObj(vis.objects) && Array.isArray(vis.objects.categoryAxis) ? vis.objects.categoryAxis : []; return es.some((e) => isObj(e) && isObj(e.properties) && isObj(e.properties.show) && isObj(e.properties.show.expr) && isObj(e.properties.show.expr.Literal) && e.properties.show.expr.Literal.Value === 'false'); };
-  const pairs = R.pages.filter((pg) => !keepLtr(pg)).flatMap((pg) => pg.visuals.filter((v) => Mirror.kindOf(v.json) === 'bar' && offAxis(v)).map((v) => safeName(pg.id) + '/' + safeName(v.json.name)));
-  if (pairs.length) checkInTwin.push({ what: 'bar lists with their names hidden', why: 'the names are probably another visual beside the bars; both are mirrored, and the bars grow from the right: look that each pair still sits together in the twin', where: pairs.slice(0, 30) });
+  const paired = new Set(together.bars.map((w) => w.split(' with ')[0]));
+  const pairs = R.pages.filter((pg) => !keepLtr(pg)).flatMap((pg) => pg.visuals.filter((v) => Mirror.kindOf(v.json) === 'bar' && offAxis(v)).map((v) => safeName(pg.id) + '/' + safeName(v.json.name))).filter((w) => !paired.has(w));
+  if (pairs.length) checkInTwin.push({ what: 'bar lists with their names hidden, no names found beside them', why: 'the names may be another visual further away; the bars are mirrored on their own and grow from the right: look that each list still reads with its names in the twin', where: pairs.slice(0, 30) });
+  const keptTogether = [];
+  if (together.bars.length) keptTogether.push({ what: 'bar lists with their names beside them', why: 'mirrored as one block in their original order, the bars still growing toward their names (mirrored one by one, the bars and names came apart)', where: together.bars.slice(0, 30) });
+  if (together.on.length) keptTogether.push({ what: 'small visuals on a bigger visual (badges, icons)', why: 'they move with the visual they sit on, at the same place on it (what that visual draws inside does not flip, so mirrored on their own they covered its icon or text)', where: together.on.slice(0, 30) });
   if (!model.m) { const t = R.pages.filter((pg) => !keepLtr(pg)).flatMap((pg) => pg.visuals.filter((v) => Mirror.kindOf(v.json) === 'column').map((v) => safeName(pg.id) + '/' + safeName(v.json.name))); if (t.length) checkInTwin.push({ what: 'charts whose axis may be a date', why: 'the model could not be read, so a continuous date axis can\'t be told from a category: such a chart may stay left to right', where: t.slice(0, 30) }); }
   const month = a.arabicMonth === false ? { offered: false, why: 'not asked (arabicMonth false)' } : monthOffer(model, loc);
   const { script, howToApply, ...monthShown } = month;
@@ -206,7 +224,7 @@ export function planTwin(a) {
     written: false,
     original: { report: pathOut(loc.dir), pbip: loc.pbip ? pathOut(loc.pbip) : null, readOnly: 'only read: never changed' },
     twin: { report: path.basename(twinDir), pbip: path.basename(twinPbip), folder: pathOut(loc.project) || '.', model: ref && ref.path ? pathOut(path.resolve(loc.dir, String(ref.path))) : 'the same model as the original (definition.pbir copied as it is)', nameFree: free },
-    pages, mirrors, cannot, ...(checkInTwin.length ? { checkInTwin } : {}),
+    pages, mirrors, cannot, ...(keptTogether.length ? { keptTogether } : {}), ...(checkInTwin.length ? { checkInTwin } : {}),
     ...(pictureIds.size ? { picturePages: [...pictureIds].map((x) => ({ page: safeName(x), what: mirrorPictures ? 'mirrored as asked; its picture is not' : 'kept left to right (its background picture can\'t be mirrored); mirrorPicturePages true mirrors it anyway' })) } : {}),
     keptForNavigation: 'Page ids, visual names, bookmark names, page and bookmark links are kept: navigation and bookmarks work in the twin without rewiring.',
     timeRightToLeft: a.timeRightToLeft !== false ? 'yes: charts over time run right to left like the rest of the page (the user can choose false: time stays left to right)' : 'no: charts over time keep left to right (the user\'s choice)',
