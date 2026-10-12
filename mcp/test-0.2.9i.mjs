@@ -161,6 +161,20 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     chk(() => !/\^\[a-z\]\[A-Za-z\]\*\$/.test(cr) && /isCustom/.test(cr), () => 'one custom-visual test: check_report imports the reading block\'s isCustom');
     chk(() => !/export function approvedFor/.test(plans), () => 'G12: no unused approvedFor');
   }
+
+  // ---------- round 11 (RESCORE-4 on rc.6: F4 worse in the written report, "50.87KAED", "-50.87MA..."): the card create_report
+  // WRITES for a text-suffix format has no labelPrecision (N8-LAB setting B: "-51K AED", the space kept); checked on the
+  // written visual.json, through the server's own field resolution (the round-10 check went straight through the writer) ----------
+  {
+    model('i-aed', [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string')],
+      measures: [ms('Margin AED', 'SUM ( Sales[Amount] )', '#,0 "AED";-#,0 "AED"'), ms('Revenue EUR', 'SUM ( Sales[Amount] )', '€#,0'), ms('Orders', 'COUNTROWS ( Sales )', '#,0')] }]);
+    const pl = await ask('plan_layout', { layout: 'exec', kpis: 3 }), x = await ask('create_report', { path: 'i-aed', name: 'I AED', design: pl.j && pl.j.design, secondPage: false, noDataMessage: false, fields: { kpis: ['Sales[Margin AED]', 'Sales[Revenue EUR]', 'Sales[Orders]'], measure: 'Sales[Revenue EUR]', category: 'Sales[Region]' } });
+    const cardOf = (m) => visualsOf(x, 'i-aed').find((v) => v.page.type !== 'Tooltip' && v.visual && v.visual.visualType === 'cardVisual' && JSON.stringify(v.visual.query || '').includes('"' + m + '"'));
+    const def = (v) => ((((v && v.visual.objects.value) || []).find((e) => e.selector && e.selector.id === 'default')) || { properties: {} }).properties;
+    const aed = cardOf('Margin AED'), eur = cardOf('Revenue EUR');
+    chk(() => !x.err && aed && !('labelPrecision' in def(aed)) && !JSON.stringify(aed.visual.objects.value).includes('customFormatString') && eur && def(eur).labelPrecision,
+      () => `round 11, F4: the written AED card has no decimals set and no format of its own (automatic units); the EUR card keeps its 2 decimals: ${short(x)} ${JSON.stringify([aed && aed.visual.objects.value, eur && def(eur)])}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
