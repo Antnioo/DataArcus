@@ -122,7 +122,7 @@ export function v029w({ check }) {
   // ---------- A3-9 (writer side): build's input and result written down (JSDoc) and checked at its top; typed page filters ----------
   {
     const s = fs.readFileSync(path.join(REPO, 'assets/js/pbip-export.js'), 'utf8'), doc = (s.match(/\/\*\*(?:(?!\*\/)[\s\S])*@typedef \{Object\} BuildInput[\s\S]*?\*\//) || [''])[0], res = (s.match(/@typedef \{Object\} BuildResult[\s\S]*?\*\//) || [''])[0];
-    const KEYS = ['name', 'title', 'lang', 'rtl', 'font', 'ui', 'theme', 'page', 'pageName', 'slots', 'png', 'pages', 'logo', 'sample', 'model', 'bind', 'texts', 'svgColumns', 'svgCards', 'subtitles', 'chartColors', 'chartAxes', 'quietGrid', 'pageFilters', 'kpiValues', 'noDataMessage', 'logoPlaceholder'];
+    const KEYS = ['name', 'title', 'lang', 'rtl', 'font', 'ui', 'theme', 'page', 'pageName', 'slots', 'png', 'pages', 'logo', 'sample', 'model', 'bind', 'texts', 'svgColumns', 'svgCards', 'subtitles', 'chartColors', 'chartAxes', 'quietGrid', 'pageFilters', 'kpiValues', 'noDataMessage', 'logoPlaceholder', 'smoothLines'];
     const RES = ['base', 'files', 'zip', 'leftOut', 'kpiTitles', 'titles', 'tableOrder', 'tableRows', 'headerGrew', 'tableSmaller', 'tableWide', 'noDataSkipped', 'svgSizes', 'noPageButtons', 'tableColumns', 'rowLabels', 'rowLabelSkipped', 'extRenamed', 'chartColors', 'chartAxes', 'tabRows', 'ringsSmall', 'shortDays', 'barCharts', 'blankKept', 'subtitlesUsed', 'timeAxes', 'blankFiltered', 'tooltipLimits'];
     const TEXTS = ['by', 'detail', 'reset', 'resetTip', 'noDataName', 'top6', 'readme', 'logoHere', 'tooltipPage'];
     chk(() => KEYS.every((k) => new RegExp('\\b' + k + '\\b').test(doc)) && RES.every((k) => new RegExp('\\b' + k + '\\b').test(res)) && TEXTS.every((k) => doc.includes(k)) && /@property/.test(doc) && /sortBy/.test(doc) && /kind/.test(doc),
@@ -511,6 +511,24 @@ export function v029w({ check }) {
     const F = get(() => designLint(inv, [], null, { titles: false }).findings) || [];
     chk(() => Array.isArray(F) && !F.some((f) => f.rule === 'OVERLAP') && F.some((f) => f.rule === 'COVER_CARDS'),
       () => `the lint: the panel card behind its own table is a cover, not an overlap: ${JSON.stringify(F.filter((f) => /OVERLAP|COVER/.test(f.rule)))} ${JSON.stringify(inv.pages[0].visuals.map((x) => [x.type, x.x, x.y, x.w, x.h, x.z]))}`);
+  }
+
+  // ---------- P2, the owner's polish (LAB-POLISH, measured in Desktop 2.158): line width, the donut's ring, smooth lines as an option ----------
+  {
+    const mn = C('Month Name', { sortBy: { t: D, c: 'Month No' } }, D);
+    const slots = hand(1280, 720, [{ kind: 'line', title: 'L', x: 24, y: 80, w: 600, h: 300 }, { kind: 'donut', title: 'D', x: 640, y: 80, w: 500, h: 300 }]);
+    const ls = (r) => { const v = r.files ? visuals(r).find((x) => x.visual.visualType === 'lineChart') : null; return v ? ((v.visual.objects || {}).lineStyles || [])[0] : null; };
+    const dn = (r) => { const v = r.files ? visuals(r).find((x) => x.visual.visualType === 'donutChart' && x.position.x === 640) : null; return v ? ((v.visual.objects || {}).slices || [])[0] : null; };
+    const r = get(() => build(base({ date: mn }), { pages: slots })), rs = get(() => build(base({ date: mn }), { pages: slots, smoothLines: true }));
+    const P = (e) => (e && e.properties) || {};
+    // 1. the line 3 wide (rc.7's 1 px was the weakest mark on every page), no selector, as the lab wrote it; markers as today
+    chk(() => ls(r) && !ls(r).selector && L(P(ls(r)).strokeWidth) === '3D' && P(ls(r)).lineChartType == null && P(ls(r)).showMarker == null,
+      () => `P2-1: every line chart's line is 3 wide, straight, markers untouched: ${r.threw || JSON.stringify(ls(r))}`);
+    // 2. the donut's ring at 68 (65 to 70 looked right; 60 too heavy, 80 too thin)
+    chk(() => dn(r) && L(P(dn(r)).innerRadiusRatio) === '68L', () => `P2-2: every donut's ring at 68: ${r.threw || JSON.stringify(dn(r))}`);
+    // 3. smooth lines only as an option: lineChartType 'smooth' with interpolationSmooth 'monotoneX' ("interpolation" is no property)
+    chk(() => ls(rs) && L(P(ls(rs)).lineChartType) === "'smooth'" && L(P(ls(rs)).interpolationSmooth) === "'monotoneX'" && L(P(ls(rs)).strokeWidth) === '3D' && !('interpolation' in P(ls(rs))),
+      () => `P2-3: smoothLines gives smooth monotone lines, 3 wide: ${rs.threw || JSON.stringify(ls(rs))}`);
   }
 }
 
