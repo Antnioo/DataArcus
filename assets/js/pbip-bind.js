@@ -668,14 +668,17 @@
     if (reach) cats = cats.filter((c) => reach.has(c.t));
     cats = byLang(cats, L, note);
     // no category outside the date table: the date table's named parts (quarter, day, month names), never the time axis
-    // (round 11, RESCORE-4's N18: a calendar's columns are the trend's; with no other category the charts that need one are
-    // left out and the answer says so: noCategory)
+    // no category outside the date table: the date table's named parts (quarter, day, month names), never the time axis
+    // (round 11, RESCORE-4's N18: never its numbers: a summed or "0"-formatted column is no part; when even these are
+    // missing the charts that need a category are left out and the answer says so: noCategory)
+    if (!cats.length) cats = DATE_PARTS.map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date && (!reach || reach.has(c.t)))).filter(Boolean);
     const noCategory = !cats.length;
     // (the rc's laptop proof, D7: the column chart never by the bar chart's field, nor by a field of the same name in
     // another table: the same chart twice; with no other category, a date table's part, else the bar chart's: its slot
     // would stay empty)
     const nm = (c) => String(c.c).toLowerCase(), catA = cats[0] || null, otherName = (c) => catA && c !== catA && nm(c) !== nm(catA);
-    const catB = catA ? (cats.find((c) => otherName(c) && c.t !== catA.t && catRank(c) <= catRank(catA)) || cats.find((c) => otherName(c) && catRank(c) < 2) || catA) : null;   /* (round 10, N12: never the quarter beside a real category) */   // (catA only when the model has no other category: a chart left out leaves its slot empty, the writer's)
+    const catB = catA ? (cats.find((c) => otherName(c) && c.t !== catA.t && catRank(c) <= catRank(catA)) || cats.find((c) => otherName(c) && catRank(c) < 2)
+      || DATE_PARTS.slice(1).map((re) => inDate.find((c) => re.test(c.c) && textLike(c) && c !== date && otherName(c))).filter(Boolean)[0] || catA) : null;   /* (round 10, N12: never the quarter beside a real category) */   /* (round 10, N12: never the quarter beside a real category) */   // (catA only when the model has no other category: a chart left out leaves its slot empty, the writer's)
     // (D8 + D10: never two slicers on fields of the same name, never on a time stamp)
     const sl = [year, catA, catB, date].filter((x, i, l) => x && l.indexOf(x) === i && !metaOf(x).stamp && l.findIndex((y) => y && nm(y) === nm(x)) === i);
     // (round 23 part 5, the review's 2: the table's reach rule lives in build, so a binding built again from these choices
