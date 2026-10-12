@@ -123,8 +123,9 @@ must keep them under it.
 
 ## Writer round 8 (12 Oct from 01:26 UTC, cloud builder 11; `fix/0.2.9-writer` reset to gate `07ad9bc`; not merged)
 `a06a5b3`: T6 (Top 6 tooltip by the lab's 27 + 40), D18 (tables 2 decimals, in the picker). T10 re-checked green; D15 builder 10's.
-**Open, need a decision or a Desktop measure:** S3 (rc1's row rule is wrong at the 1920 page; measure, or revert the trim that
-caused N6); T8 (a 376-wide tooltip page). Report: `mcp/work/0.2.9-writer.md` (round 8).
+Then, with the reviewer's yeses: T8 `7812ac2` (Top 6 tooltip 376 wide), S3 `bc57633` (TABLE_ROWS from the laptop's MEASURE-TABLE-ROWS.md).
+`npm test` 1338 + 36 + 21 + 21 + 20, golden, fuzz PASS; website 17/17. Next: the laptop checks S3 and T8 in Desktop. Report:
+`mcp/work/0.2.9-writer.md` (round 8).
 
 ## rc1 release blockers, writer (11 Oct from 20:22 UTC, cloud builder 11; `fix/0.2.9-writer` reset to `46037f3`; not merged, no PR)
 Report: `mcp/work/0.2.9-writer.md` (section "rc1 release blockers"). Done: 1 O-13 `5f2d4e8`, 2 S1/S2 `b1eb2f8`, 4 S5/S7 `9ace5d8`;
