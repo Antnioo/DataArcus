@@ -196,7 +196,7 @@ must keep them under it.
 
 ## Writer round 10, final for 0.2.9 (12 Oct from 11:21 UTC; `fix/0.2.9-writer` reset to the gate `1ed1530`; not merged)
 `3609f1c`: N11 + N13: padded or text-suffix cards scale to millions in a format of their own ("-€50.87M", "-50.87M AED"). Whole chain
-and website 17/17 green. Next: builder 5 merges; the laptop checks the variance card and the six-card row on rc.6.
+and website 17/17 green. Review: millions only for padded formats, a text suffix in automatic units with decimals unset (`fb821e6`). Next: builder 5 merges; the laptop checks the variance card and the six-card row on rc.6.
 
 ## Writer round 9 (12 Oct from 06:02 UTC, cloud builder 11; `fix/0.2.9-writer` from `5f92d45`; not merged)
 `4d764b8`: D18 (fixed 2 decimals), D15 (text-category columns as bars by the 12-letter stand-in), the table's panel card (slot height,
