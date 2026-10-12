@@ -129,6 +129,10 @@ export function lint(inv, model, facts, opts) {
       if (ox <= 2 || oy <= 2) continue;
       const near = (m, n) => Math.abs(m - n) <= V('COVER_NEAR');
       if (near(A.x, B.x) && near(A.y, B.y) && near(A.w, B.w) && near(A.h, B.h) && (/^card/.test(A.type) || /^card/.test(B.type))) { covers++; continue; }
+      // (writer round 9, RESCORE-2's OVERLAP 2 on every rc.4 report) a card behind its own table: the table's panel, at the
+      // slot's height, the table on its whole rows inside it (same place and width, the card at least as high): a cover
+      const panelOf = (cd, tb) => /^card/.test(cd.type) && /^(tableEx|pivotTable)$/.test(tb.type) && cd.h >= tb.h - V('COVER_NEAR') && (cd.z == null || tb.z == null || cd.z < tb.z);
+      if (near(A.x, B.x) && near(A.y, B.y) && near(A.w, B.w) && (panelOf(A, B) || panelOf(B, A))) { covers++; continue; }
       const share = ox * oy / Math.max(1, Math.min(A.w * A.h, B.w * B.h));
       if (share > V('OVERLAP_SHARE')) add('OVERLAP', share > V('OVERLAP_HIGH') ? 'high' : 'medium', p, A, `covers ${Math.round(share * 100)}% of the smaller of it and ${where(B)}`, 'move one of the two, or show them one at a time with bookmarks when they are alternatives', false);
     }

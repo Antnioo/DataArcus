@@ -11,6 +11,7 @@ import { createRequire } from 'node:module';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const req = createRequire(import.meta.url);
+const { lint: designLint } = await import(pathToFileURL(path.join(HERE, 'lib', 'design-lint.mjs')).href);
 
 export function v029w({ check }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
@@ -357,14 +358,15 @@ export function v029w({ check }) {
       () => `S3: the 302-high table at 1920 x 1080 shows 5 whole rows and its total in ${w1080.h.toFixed(1)} (measured): ${r1.threw || JSON.stringify(t1 && t1.position)}`);
     // S3 with the design's N6 (the reviewer's resolution, 12 Oct): a table beside a chart in one row of the page: the table
     // visual ends on its whole rows (measured), its panel keeps the slot's height, and the panel's bottom is the chart's;
-    // the table's shadow is the theme's (over a "No data" card only the background is written: the owner's measured rule)
+    // (changed in writer round 9: the table's own shadow is off, the panel's is drawn: the laptop's local resolution, S3 FIXED
+    // in Desktop on rc.4 with it; the round-8 check had it left to the theme)
     const row = [{ kind: 'table', title: 'T', x: 24, y: 120, w: 900, h: 302 }, { kind: 'bar', title: 'B', x: 948, y: 120, w: 900, h: 302 }];
     for (const nd of [true, false]) {
       const rp = get(() => build(base({ table: [C('City'), M('Total Sales')] }), { theme: th15, noDataMessage: nd, pages: hand(1920, 1080, row) }));
       const vs = rp.files ? visuals(rp) : [], tb = vs.find((v) => v.visual.visualType === 'tableEx'), ch = vs.find((v) => v.visual.visualType === 'clusteredBarChart');
       const panel = vs.find((v) => v !== tb && v.position.x === 24 && v.position.y === 120 && v.position.height === 302 && /^(cardVisual|textbox)$/.test(v.visual.visualType));
       const shadowOff = tb && L((((tb.visual.visualContainerObjects || {}).dropShadow || [])[0] || { properties: {} }).properties.show) === 'false';
-      chk(() => tb && Math.abs(tb.position.height - w1080.h) <= 1.5 && panel && panel.position.y + panel.position.height === ch.position.y + ch.position.height && panel.position.z < tb.position.z && !shadowOff && panel.position.tabOrder == null,
+      chk(() => tb && Math.abs(tb.position.height - w1080.h) <= 1.5 && panel && panel.position.y + panel.position.height === ch.position.y + ch.position.height && panel.position.z < tb.position.z && shadowOff && panel.position.tabOrder == null,
         () => `S3/N6 (${nd ? 'with' : 'without'} the "No data" card): the table on whole rows (${w1080.h.toFixed(1)}) inside a panel whose bottom is the chart's: ${rp.threw || JSON.stringify({ table: tb && tb.position, panel: panel && [panel.visual.visualType, panel.position], chart: ch && ch.position, shadowOff })}`);
     }
     const rd = get(() => build(base({ table: [C('Day Name', { kind: 'day', rows: 7 }), M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 300 }]) }));
@@ -410,6 +412,43 @@ export function v029w({ check }) {
     const kb = rk.files ? pagesOf(rk).filter((p) => p.type === 'Tooltip').flatMap((p) => p.vs).filter((v) => v.visual.visualType === 'clusteredBarChart') : [];
     chk(() => kg.wholeFormat && kb.length && kb.every((v) => L(v.visual.objects.labels[0].properties.labelDisplayUnits) === '1D'),
       () => `T10: the kg measure's tooltip values keep "kg" whole (display units None): ${rk.threw || JSON.stringify([kg.wholeFormat, kb.map((v) => v.visual.objects.labels)])}`);
+  }
+
+  // ---------- writer round 9 (RESCORE-2): D18 fixed decimals, D15 labels by their width, the table's panel card ----------
+  {
+    const Bind = req('../assets/js/pbip-bind.js');
+    // D18 (RESCORE-2: "$2,484,247.5", "$1,395,881.25", "$2,721,900" in one column): a table amount shows exactly 2 decimals
+    const tb = { name: 'Sales', columns: [{ name: 'Amount', dataType: 'decimal' }], measures: [['A', '\\$#,0.####'], ['B', '\\$#,0.##'], ['C', '#,0.0000'], ['D', '#,0.0'], ['E', '#,0.00']].map(([n, f]) => ({ name: n, formatString: f, expression: 'SUM ( Sales[Amount] )' })) };
+    const tf = ['A', 'B', 'C', 'D', 'E'].map((n) => (get(() => Bind.measureOf(tb, n, [tb])) || {}).tableFormat || null);
+    chk(() => JSON.stringify(tf) === JSON.stringify(['\\$#,0.00', '\\$#,0.00', '#,0.00', null, null]),
+      () => `D18: one column, two fixed decimals (optional digits made fixed; 1 or 2 fixed decimals kept): ${JSON.stringify(tf)}`);
+    // D15 (RESCORE-2: bank's "Debtconsolidation" slanted and cut on a designed 6-column chart): a column chart by a text
+    // category whose columns can't each hold a 12-letter name (the writer's stand-in for a name it can't measure, as its
+    // tables use) is written as a bar chart, whose names are level, where its slot holds 3 rows or more
+    const slot = { kind: 'column', title: 'K', x: 24, y: 120, w: 600, h: 300, topN: 8 };
+    const rc = get(() => build(base({ cats: { bar: C('City'), column: C('Purpose'), donut: C('Channel') } }), { pages: hand(1280, 720, [slot]) }));
+    const cv = rc.files ? visuals(rc).filter((v) => /^clustered(Bar|Column)Chart$/.test(v.visual.visualType) && v.position.x === 24) : [];
+    chk(() => cv.length === 1 && cv[0].visual.visualType === 'clusteredBarChart' && (rc.barCharts || []).length === 1,
+      () => `D15: 8 columns in 600 can't hold 12-letter names: a bar chart: ${rc.threw || JSON.stringify([cv.map((v) => v.visual.visualType), rc.barCharts])}`);
+    const low = get(() => build(base({ cats: { bar: C('City'), column: C('Purpose'), donut: C('Channel') } }), { pages: hand(1280, 720, [Object.assign({}, slot, { h: 140 })]) }));
+    const lv = low.files ? visuals(low).find((v) => v.visual.visualType === 'clusteredColumnChart' && v.position.x === 24) : null;
+    const topOf = (v) => { const f = ((v && v.filterConfig || {}).filters || []).find((x) => x.type === 'TopN'); return f ? f.filter.From[0].Expression.Subquery.Query.Top : null; };
+    const plot = 600 - 2 * Math.round(16 * 720 / 1080) - 40, need = Px.textWidth('n'.repeat(12), 10, false, 'Segoe UI') + 6;
+    chk(() => lv && topOf(lv) === Math.max(3, Math.floor(plot / need)),
+      () => `D15: a slot too low for bars keeps its columns, as many as hold a 12-letter name (${Math.floor(plot / need)}): ${low.threw || JSON.stringify(lv && [lv.visual.visualType, topOf(lv)])}`);
+    // the panel card (RESCORE-2: OVERLAP 2 on every report): the "No data" card behind a table that ends on its whole rows
+    // keeps the slot's height and the panel's shadow; the table's own shadow is off (the laptop's local resolution, S3
+    // FIXED in Desktop on rc.4); the lint counts it as a cover, never an overlap
+    const th = (() => { const d = E.fresh(); E.repairState(d); const t = E.buildTheme(d, 'en'); const x = t.visualStyles.tableEx['*']; ['values', 'columnHeaders', 'total'].forEach((k) => (x[k] || []).forEach((e) => { if (e.fontSize != null) e.fontSize = 15; })); t.textClasses.title.fontSize = 18; return t; })();
+    const rp = get(() => build(base({ table: [C('City'), M('Total Sales')] }), { theme: th, pages: hand(1920, 1080, [{ kind: 'table', title: 'T', x: 24, y: 120, w: 900, h: 302 }, { kind: 'bar', title: 'B', x: 948, y: 120, w: 900, h: 302 }]) }));
+    const vs = rp.files ? visuals(rp) : [], t = vs.find((v) => v.visual.visualType === 'tableEx'), card = vs.find((v) => v.visual.visualType === 'cardVisual' && t && v.position.x === t.position.x && v.position.y === t.position.y);
+    const sh = (v) => L((((v.visual.visualContainerObjects || {}).dropShadow || [])[0] || { properties: {} }).properties.show);
+    chk(() => t && card && card.position.height === 302 && t.position.height < 302 && sh(card) === 'true' && sh(t) === 'false',
+      () => `the panel card: the slot's height, the panel's shadow; the table on its rows, its own shadow off: ${rp.threw || JSON.stringify({ t: t && [t.position, sh(t)], card: card && [card.position, sh(card)] })}`);
+    const inv = { pages: [{ n: 1, name: 'P', w: 1920, h: 1080, visuals: vs.filter((v) => v.position.x !== 12).map((v) => ({ type: v.visual.visualType, x: v.position.x, y: v.position.y, w: v.position.width, h: v.position.height, z: v.position.z, fields: {} })) }] };
+    const F = get(() => designLint(inv, [], null, { titles: false }).findings) || [];
+    chk(() => Array.isArray(F) && !F.some((f) => f.rule === 'OVERLAP') && F.some((f) => f.rule === 'COVER_CARDS'),
+      () => `the lint: the panel card behind its own table is a cover, not an overlap: ${JSON.stringify(F.filter((f) => /OVERLAP|COVER/.test(f.rule)))} ${JSON.stringify(inv.pages[0].visuals.map((x) => [x.type, x.x, x.y, x.w, x.h, x.z]))}`);
   }
 }
 
