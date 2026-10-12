@@ -701,6 +701,12 @@
             visual.objects = visual.objects || {};
             visual.objects.labels = obj(Object.assign({ show: bool(true), labelPosition: str('OutsideEnd'), labelDisplayUnits: num(0) }, pct ? {} : { labelPrecision: lit('1L') }));
           } }
+        // P2, the owner's polish (LAB-POLISH, measured in Desktop 2.158): a line chart's line 3 wide (1 px was the weakest mark
+        // on every page), its markers as before; smooth only with the design's smoothLines option (lineChartType 'smooth' with
+        // interpolationSmooth 'monotoneX'; "interpolation" is no property; smooth swings between the points of a jagged series)
+        if (query && s.kind === 'line') { visual.objects = visual.objects || {}; visual.objects.lineStyles = [{ properties: Object.assign({ strokeWidth: num(3) }, o.smoothLines ? { lineChartType: str('smooth'), interpolationSmooth: str('monotoneX') } : {}) }]; }
+        // P2: every donut's ring at 68 (65 to 70 looked right; 60 too heavy, 80 too thin)
+        if (query && s.kind === 'donut') { visual.objects = visual.objects || {}; visual.objects.slices = [{ properties: { innerRadiusRatio: lit('68L') } }]; }
         if (GRID && query && (s.kind === 'bar' || s.kind === 'column' || s.kind === 'line')) { visual.objects = visual.objects || {}; const va = visual.objects.valueAxis || (visual.objects.valueAxis = [{ properties: {} }]); va[0].properties.gridlineColor = color(GRID); }
         // a column chart written as a bar chart (asBar) in a slot too low for its rows and a value axis: no value axis,
         // each bar's value beside it (the tooltip pages' bar chart, measured in round 0)
