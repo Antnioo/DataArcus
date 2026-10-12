@@ -187,7 +187,10 @@
     // the unit letter glued to the text; with Custom units and the model's own format it read right: a format with quoted
     // text after the number (a suffix), or before it when it is no currency (the owner's O-2: "EUR" #,0 reads "EUR 54.66M"
     // in automatic units, and so does a currency code or sign before the number), is shown unscaled in that format, as N8's)
-    else if (!k.pct && !k.wholeFormat && glued(f)) k.wholeFormat = scaled(f);
+    // (round 10's review: a text suffix without padding is not forced to millions, "950 AED" would read "0.00M AED"; the
+    // card takes N8-LAB's setting B, automatic units with its decimals left unset, measured right: "-51K AED", "51K AED",
+    // the space kept, a small value whole)
+    else if (!k.pct && !k.wholeFormat && glued(f)) k.unitAuto = true;
     return k; };
   const cardKind0 = (x, tables) => {
     const r = FM.reportFormatOf({ name: x.name, formatString: x.formatString, formatStringDefinition: x.formatStringDefinition, expression: exprOf(x) }, 'measure', tables || []);

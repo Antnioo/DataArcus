@@ -51,7 +51,7 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     // (changed in writer round 9, the laptop's F4, N8-LAB measured in Desktop: a currency code AFTER the number, "#,0 \"AED\"",
     // read "50.87MAED" in automatic units; such a card now shows the number unscaled in its format. A code or sign before the
     // number stays an amount in automatic units, as G2 and the owner's O-2 want)
-    chk(() => !B.measureCard({ name: 'Gross Rupees', formatString: '₹#,0', expression: 'SUM ( Sales[Amount] )' }).wholeFormat && B.measureCard({ name: 'X', formatString: '#,0 "JPY"', expression: 'SUM ( T[A] )' }).wholeFormat === '#,0,,.00"M" "JPY"'   /* (round 10, N11 + N13: the card's own format scales to millions) */
+    chk(() => !B.measureCard({ name: 'Gross Rupees', formatString: '₹#,0', expression: 'SUM ( Sales[Amount] )' }).wholeFormat && B.measureCard({ name: 'X', formatString: '#,0 "JPY"', expression: 'SUM ( T[A] )' }).unitAuto === true   /* (round 10's review: a text suffix without padding takes automatic units with its decimals unset, N8-LAB's setting B) */
       && B.measureCard({ name: 'Value Index', formatString: '#,0', expression: 'SUMX ( T, T[A] )' }).wholeFormat,
       () => 'G2: a currency symbol or an ISO 4217 code makes an amount; "value" in a name alone does not');
   }

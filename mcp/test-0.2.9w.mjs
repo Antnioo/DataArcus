@@ -460,9 +460,22 @@ export function v029w({ check }) {
     const f4 = (f) => { const T = { name: 'S', columns: [{ name: 'A', dataType: 'decimal' }], measures: [{ name: 'X', formatString: f, expression: 'SUM ( S[A] )' }] }; return (get(() => Bind.measureOf(T, 'X', [T])) || {}).wholeFormat || null; };
     const g4 = ['#,0 "AED";-#,0 "AED"', '"AED" #,0;-"AED" #,0', '#,0.00 "AED"', '€#,0', '$#,0.00;($#,0.00)', '#,0'].map(f4);
     // (a currency code before the number reads right in automatic units, "EUR 54.66M": the owner's O-2, kept)
-    // (changed in round 10, N11 + N13: scaled to millions in the card's own format, as N8's)
-    chk(() => JSON.stringify(g4) === JSON.stringify([MIL('', ' "AED"') + ';' + MIL('-', ' "AED"'), null, MIL('', ' "AED"'), null, null, '#,0']) && f4('"Qty " #,0') === '"Qty " #,0',   /* (a whole quantity with text stays whole, as "#,0 \"kg\"") */
+    // (changed in round 10's review: a text suffix without padding is not forced to millions, "950 AED" would read "0.00M
+    // AED"; the card takes N8-LAB's setting B, automatic units with the decimals cleared, measured right: "-51K AED",
+    // "51K AED", the space kept, a small value whole. Only a padded format (large by construction) scales to millions)
+    const k4 = (f) => { const T = { name: 'S', columns: [{ name: 'A', dataType: 'decimal' }], measures: [{ name: 'X', formatString: f, expression: 'SUM ( S[A] )' }] }; return get(() => Bind.measureOf(T, 'X', [T])) || {}; };
+    chk(() => JSON.stringify(g4) === JSON.stringify([null, null, null, null, null, '#,0']) && f4('"Qty " #,0') === '"Qty " #,0'   /* (a whole quantity with text stays whole, as "#,0 \"kg\"") */
+      && k4('#,0 "AED";-#,0 "AED"').unitAuto === true && k4('#,0.00 "AED"').unitAuto === true && !k4('€#,0').unitAuto && !k4('"AED" #,0').unitAuto && f4('#,##0,000 "AED"') === MIL('', ' "AED"'),
       () => `F4: quoted text in a card's format: unscaled in that format; currency signs keep automatic units: ${JSON.stringify(g4)}`);
+    // the cards (round 10's review): 950 "AED" in automatic units with no decimals set (setting B), 8,000 "kg" whole, never
+    // "0.0xM"; the padded "€#,##0,000" card keeps its millions format
+    const cardOf = (f, n) => { const fld = Object.assign({}, k4(f), { t: 'Sales', m: n }), r = get(() => build(base({ kpis: [fld, M('Orders')], measure: M('Orders') })));
+      const v = r.files ? visuals(r).find((x) => x.visual.visualType === 'cardVisual' && JSON.stringify(x.visual.query || '').includes(n)) : null;
+      const es = v ? v.visual.objects.value : [], def = (es.find((e) => e.selector && e.selector.id === 'default') || { properties: {} }).properties, own = (es.find((e) => e.selector && e.selector.metadata) || { properties: {} }).properties;
+      return { prec: L(def.labelPrecision) || null, units: L(own.labelDisplayUnits) || null, fmt: S(own.customFormatString) || null }; };
+    const aed = cardOf('#,0 "AED";-#,0 "AED"', 'Small AED'), kg = cardOf('#,0 "kg"', 'Weight Kg'), pad = cardOf('€#,##0,000;-€#,##0,000;€0', 'Padded EUR');
+    chk(() => aed.prec == null && aed.units == null && aed.fmt == null && kg.units === '-1D' && kg.fmt === '#,0 "kg"' && pad.units === '-1D' && /,,\.00"M"/.test(pad.fmt || ''),
+      () => `the cards: 950 AED in automatic units, decimals cleared; 8,000 kg whole; the padded EUR in millions: ${JSON.stringify({ aed, kg, pad })}`);
     // D15 (RESCORE-2: bank's "Debtconsolidation" slanted and cut on a designed 6-column chart): a column chart by a text
     // category whose columns can't each hold a 12-letter name (the writer's stand-in for a name it can't measure, as its
     // tables use) is written as a bar chart, whose names are level, where its slot holds 3 rows or more
