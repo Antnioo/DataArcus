@@ -1,8 +1,44 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Picker round 8" just below (branch fix/0.2.9-picker8), then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Picker round 9" just below (branch fix/0.2.9-picker9), then "Picker round 8", then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## Owner's standing go (12 Oct, valid until 0.2.9 is released)
+Messages that start with "From the reviewer" carry the owner's approval: when the reviewer says to push a fix/, feat/ or
+lab/* branch, or (builder 5) to merge a reviewed branch into `fix/0.2.9-gate`, do it without asking again. Never main, never
+a PR to main, never a release: those stay the owner's.
+
+## Picker round 9 (12 Oct, cloud builder 5; branch `fix/0.2.9-picker9` rebased on the gate `69ea11c` (round 8b); not merged, no PR)
+RESCORE-2 on rc.4: 7.0, target 7.5. Done, each tests first:
+- N9: create_report takes the approved plan's displayNames when the call leaves them out (`Plans.pinned`); the same names
+  passed back write; other names are refused (test-0.2.9v, 3 checks). create_report's displayNames description says so.
+- N7: a text column whose name has a picture or link word (img, image, photo, picture, pic, logo, url, uri, link, href,
+  thumbnail, thumb, icon, avatar; whole words after splitting camel case and "_") ranks after every category (catRank 3).
+- The pbip suite's race, at the root: the theme generator loaded pbip-bind twice (the data option, then the folder); the model
+  read by one copy was picked by the other (its WeakMap knew nothing): empty KPI rows, one card. loadBind shares one promise;
+  the test reads the picker once the model is read. Stamps `20261012r9`. pbip 6 of 6 (before 3 of 8 failed).
+- N5 + D14, the shapes the rules cover (by formula; values never read):
+  - same value, one card: the same DAX (spaces, case); `[Other]` alone (alias chains); COUNTROWS(T), COUNT/COUNTA(T[c]) and
+    (round 9) COUNTROWS(ALL(T)) / COUNTROWS(ALLNOBLANKROW(T)) are T's count; CALCULATE(x, only ALL/ALLSELECTED/REMOVEFILTERS/
+    ALLEXCEPT/ALLNOBLANKROW filters) is x.
+  - never a card (100 %): DIVIDE(e, CALCULATE(e, ALL-family ...)) and e / CALCULATE(e, ALL-family ...) for any expression e;
+    (round 9) DIVIDE([A], [B]) and [A] / [B] where [B] has [A]'s value (its ALL form, or an alias).
+  - SHAPES-RC4 (landed 06:42, each with a check in test-0.2.9r): COUNTROWS(ALLSELECTED(T1)) beside COUNTROWS(T1) is its
+    denominator, never a card (any value widened to every row, beside the plain one); DIVIDE([m1],[m2]) with m2 =
+    CALCULATE([m1], ALL(T1[c1])) or ALL(T2[c2]) is a share, never a card; N7's people table: Img by name, Phone/Email/Address
+    by contact words (any case, whole words), the glue column by formula; the name, the join key, stays the category (a
+    relationship's key is an identifier only when its table has a better text column). The "freed column" for the share's
+    chart is not done (the share is only kept off the cards).
+  - not covered yet: a VAR holding the total (VAR t = CALCULATE(...) RETURN DIVIDE([A], t)); DISTINCTCOUNT vs COUNTROWS of a
+    dimension (different values in general: can't be told by formula alone); FILTER(ALL(...)) forms.
+Round 8 on the gate (`961ef57`, before this branch): mcp 1361, v029c/d/e/f, golden 11, fuzz 600 + FUZZ_LONG 10000, deny-scan,
+site config, csp, check-min all pass; website 16 of 17 (pbip: the race fixed here).
+Round 8b merged (`69ea11c`). Tests on this branch (Linux, after the rebase): mcp 1386, v029d/e/f 21/21/20, golden 11, fuzz 600
+and FUZZ_LONG 10000, website 17 of 17, deny-scan, site config, csp, check-min: pass. v029c fails 1 (L2), from round 8b:
+the writer's own 5f92d45 fails it alone too. The plan's lint predicts the table's panel as a cardVisual 1083 x 331, the
+report (the panel now written as page bands, ed96b7c) shows the table, tableEx 1083 x 307. For the writer/design block:
+the plan's lint should model the panel as the report writes it.
 
 ## Picker round 8 (12 Oct, cloud builder 5; branch `fix/0.2.9-picker8` from `07ad9bc`; not merged, no PR)
 The re-score (RESCORE-1: 4.1 -> 5.4 -> 6.8, target 7.5). Round 7b (merging `feat/0.2.9-custom-visuals` 29743c6 into the gate)

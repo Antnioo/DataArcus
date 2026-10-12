@@ -379,7 +379,8 @@ export default async function ({ browser, url }) {
     .map((v) => { const va = (((v.visual.objects || {}).valueAxis || [])[0] || {}).properties || {}, on = (x) => !!x && x.expr && x.expr.Literal && x.expr.Literal.Value === 'true';
       return { type: v.visual.visualType, mirrored: v.visual.visualType === 'clusteredBarChart' ? on(va.invertAxis) : on(va.switchAxisPosition) }; });
   const picker = async (pg) => {
-    await pg.waitForFunction(() => document.querySelectorAll('#pbipMap select').length > 0, null, { timeout: 15000 });
+    // (round 9: the picker is read once the model is read and its picks are shown, never while "Reading the model…")
+    await pg.waitForFunction(() => document.querySelectorAll('#pbipMap select').length > 0 && !/Reading the model|جارٍ قراءة النموذج/.test((document.getElementById('pbipOwnMsg') || {}).textContent || ''), null, { timeout: 15000 });
     return pg.$$eval('#pbipMap select', (ss) => ss.map((s) => (s.value ? s.options[s.selectedIndex].text.replace(/[\u2068\u2069]/g, '') : '')));
   };
 
