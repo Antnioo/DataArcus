@@ -186,6 +186,32 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     chk(() => !a.err && !b.err && ls(a) && L(ls(a).strokeWidth) === '3D' && !ls(a).lineChartType && ls(b) && L(ls(b).lineChartType) === "'smooth'" && dn(a).every((d) => /"68L"/.test(d)),
       () => `P2 through create_report: line 3 wide, smooth only on request, every donut's ring at 68: ${short(a)} ${JSON.stringify([ls(a), ls(b), dn(a)])}`);
   }
+
+  // ---------- P3 (LAYOUT-SWEEP-RC7, the laptop: a column "Agent" on two tables; Desktop: "Something's wrong with one or more
+  // filters" on 2 of 6 tiles, though check_report, the validator and the lint said clean): every report-level measure name is
+  // unique across the WHOLE report (Power BI's rule for measures, compared without case), not per table; each visual's
+  // reference finds its measure; the validator says 0 errors ----------
+  {
+    model('i-two', [
+      { name: 'Calls', partitions: mp('Calls'), columns: [col('Agent', 'string'), col('Duration', 'double'), col('Channel', 'string')],
+        measures: [ms('Calls', 'COUNTROWS ( Calls )', '#,0'), ms('Talk Time', 'SUM ( Calls[Duration] )', '#,0')] },
+      { name: 'Tickets', partitions: mp('Tickets'), columns: [col('Agent', 'string'), col('Status', 'string')],
+        measures: [ms('Tickets', 'COUNTROWS ( Tickets )', '#,0'), ms('Keep: Calls by Agent', '1', '#,0')] }]);
+    for (const layout of ['ops', 'exec']) {
+      const pl = await ask('plan_layout', { path: 'i-two', layout });
+      const x = await ask('create_report', { path: 'i-two', name: 'I two ' + layout, design: pl.j && pl.j.design, secondPage: true, fields: { kpis: ['Calls[Calls]', 'Tickets[Tickets]', 'Calls[Talk Time]'], measure: 'Calls[Calls]', category: 'Calls[Agent]', category2: 'Tickets[Agent]' } });
+      const extP = x.err ? null : path.join(ROOT, 'i-two', x.j.report, 'definition', 'reportExtensions.json');
+      const ents = extP && fs.existsSync(extP) ? JSON.parse(fs.readFileSync(extP, 'utf8')).entities : [];
+      const names = ents.flatMap((e) => e.measures.map((m) => ({ t: e.name, m: m.name })));
+      const lower = names.map((n) => n.m.toLowerCase()), dup = lower.filter((n, i) => lower.indexOf(n) !== i);
+      const modelTaken = names.filter((n) => n.m.toLowerCase() === 'keep: calls by agent');   /* (a model measure's name, on any table: measure names are unique across the model) */
+      const refs = []; JSON.stringify(visualsOf(x, 'i-two'), (k, v) => { if (v && v.Measure && v.Measure.Expression && v.Measure.Expression.SourceRef && v.Measure.Expression.SourceRef.Schema === 'extension') refs.push({ t: v.Measure.Expression.SourceRef.Entity, m: v.Measure.Property }); return v; });
+      const broken = refs.filter((r) => !names.some((n) => n.t === r.t && n.m === r.m));
+      const ck = await ask('check_report', { path: `i-two/I two ${layout}.pbip` }), errors = ck.j ? (ck.j.findings || []).filter((f) => f.severity === 'error') : null;
+      chk(() => !x.err && names.length > 0 && !dup.length && !modelTaken.length && !broken.length && errors && errors.length === 0,
+        () => `P3 (${layout}): report measure names unique across the report (no case), never a model name, every reference found, validator 0 errors: dup ${JSON.stringify(dup)} model ${JSON.stringify(modelTaken)} broken ${JSON.stringify(broken.slice(0, 3))} errors ${JSON.stringify(errors && errors.slice(0, 2))} ${short(x)}`);
+    }
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

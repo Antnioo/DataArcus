@@ -25,7 +25,13 @@
     // name its model table already has (o.model.names: { table: [its columns' and measures' names] }, from the MCP; DAX
     // names ignore case): the first free "<name> (2)", "(3)"... is used, and told (extRenamed)
     const modelNames = (o.model && o.model.names) || {}, extRenamed = [];
-    const freeExt = (t, want) => { const has = (n) => (modelNames[t] || []).some((x) => String(x).toLowerCase() === n.toLowerCase()); if (!has(want)) return want;
+    // (P3, LAYOUT-SWEEP-RC7: a column "Agent" on two tables gave "Keep: Calls by Agent" on both, and Desktop showed "Something's
+    // wrong with one or more filters", though the validator and check_report said clean. A measure's name is unique across
+    // the whole model, report-level measures included, without case: a name is taken when any model table has it, or a
+    // report measure of another table already has it; the same table's own lists keep their reuse of one measure for one
+    // expression, as before)
+    const reportNames = () => noData.concat(rowLabels, timeExt, o.svgColumns || [], o.svgCards || []);
+    const freeExt = (t, want) => { const has = (n) => { const l = n.toLowerCase(); return Object.values(modelNames).some((ns) => (ns || []).some((x) => String(x).toLowerCase() === l)) || reportNames().some((x) => x.t !== t && String(x.m).toLowerCase() === l); }; if (!has(want)) return want;
       let k = 2; while (has(want + ' (' + k + ')')) k++; const nm = want + ' (' + k + ')'; if (!extRenamed.some((x) => x.t === t && x.from === want)) extRenamed.push({ t, from: want, to: nm }); return nm; };
     const rowLabels = [], rowLabelSkipped = [];   // round 23: the tables' row-label measures { page, t, c, m, expression }; tables kept as before (a control character) { page, t, c }
     const barCharts = [];   // round 19: column charts by day or month names written as bar charts
