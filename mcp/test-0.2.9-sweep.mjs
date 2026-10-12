@@ -153,6 +153,32 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     const dt = JSON.stringify(visualsOf(d, 's-loans').map((v) => ((v.visual || {}).visualContainerObjects || {}).title || '')) + JSON.stringify(extOf(d, 's-loans'));
     chk(() => !d.err && /Loan Intent/.test(dt) && !/by loan_intent/.test(dt), () => `S6: the report shows the plan's names: ${dt.slice(0, 300)} ${short(d)}`);
   }
+
+  // ---------- design round 9 (the laptop's RESCORE-2 on rc.4): S7 page 2, D19, D11 ----------
+  {
+    // S7: page 2 has its filters on top, so no area under a rail (the owner's #18 kept: no rail is stretched), and its
+    // lower row is the table beside a bar chart, so a short table leaves no half page empty; both sizes, both languages
+    for (const pgSize of ['1280x720', '1920x1080']) for (const lang of ['en', 'ar']) for (const preset of ['exec', 'ops', 'focus']) {
+      const ps = get(() => E.projectPages(design({ preset, page: pgSize }).layout, lang, { second: true })), p2 = Array.isArray(ps) && ps[1];
+      const sl = p2 && p2.slots.filter((x) => x.kind === 'slicer'), tb = p2 && p2.slots.find((x) => x.kind === 'table'), br = p2 && p2.slots.find((x) => x.kind === 'bar');
+      chk(() => p2 && sl.length === 1 && sl[0].w > sl[0].h && tb && br && Math.abs(tb.y - br.y) <= 1 && Math.abs(tb.h - br.h) <= 1 && tb.y + tb.h === Math.max(...p2.slots.map((x) => x.y + x.h)),
+        () => `S7 (${preset} ${pgSize} ${lang}): page 2's filters are a strip on top, and its last row is the table beside a bar chart: ${p2 ? JSON.stringify(p2.slots.map((x) => [x.kind, x.x, x.y, x.w, x.h])) : ps}`);
+    }
+    // D11 and D19: a made-up model with a yes/no column made by IF and a product name in its own table
+    model('s-items', [{ name: 'Items', partitions: mp('Items'), columns: [col('Amount', 'double'), col('Region', 'string'), Object.assign(col('Size Band', 'string'), { type: 'calculated', expression: 'IF ( Items[Amount] > 100, "Large", "Small" )' }), col('ProductKey', 'int64')],
+      measures: [{ name: 'Revenue', expression: 'SUM ( Items[Amount] )', formatString: '#,0' }] },
+      { name: 'Products', partitions: mp('Products'), columns: [col('ProductKey', 'int64'), col('Product Name', 'string')] }]);
+    const kinds = (x) => visualsOf(x, 's-items').filter((v) => v.page.type !== 'Tooltip' && v.pi === 0 && v.visual).map((v) => [typeOf(v), JSON.stringify(((v.visual.query || {}).queryState || {}).Category || '')]);
+    const d11 = await ask('create_report', { path: 's-items', name: 'R9 two', design: design({ preset: 'exec' }), secondPage: false, fields: { measure: 'Items[Revenue]', category: 'Items[Size Band]', category2: 'Items[Region]' } });
+    const byTwo = kinds(d11).filter(([, c]) => c.includes('Size Band')).map(([t]) => t);
+    chk(() => !d11.err && byTwo.length && byTwo.every((t) => t === 'donutChart'), () => `D11: a chart by a two-valued category is a donut, not two bars in a wide slot: ${JSON.stringify(byTwo)} ${short(d11)}`);
+    const d19 = await ask('create_report', { path: 's-items', name: 'R9 names', design: design({ preset: 'exec', page: '1920x1080' }), secondPage: false, fields: { measure: 'Items[Revenue]', category: 'Items[Region]', category2: 'Products[Product Name]' } });
+    const vs19 = visualsOf(d19, 's-items').filter((v) => v.page.type !== 'Tooltip' && v.pi === 0 && v.visual), byName = vs19.filter((v) => JSON.stringify(((v.visual.query || {}).queryState || {}).Category || '').includes('Product Name') && /Chart$/.test(typeOf(v)));
+    const share = (v) => +String(((((v.visual.objects || {}).categoryAxis || [])[0] || {}).properties || {}).maxMarginFactor && v.visual.objects.categoryAxis[0].properties.maxMarginFactor.expr.Literal.Value || '0').replace(/L$/, '');
+    // (measured, REPORT-FIXES-LAB B1/B2: 40% of 508 held about 20 characters, 50% about 25: 10.2 page units a character at 1080)
+    chk(() => !d19.err && byName.length && byName.every((v) => typeOf(v) === 'clusteredBarChart' && (share(v) === 50 || share(v) * v.position.width / 100 >= 25 * 10.2 * (d19.j.pages[0].height / 1080))),
+      () => `D19: a chart by a product name is a bar chart, names level, with room for 25 characters where its width allows (50% at most): ${JSON.stringify(byName.map((v) => [typeOf(v), share(v), v.position.width]))} ${short(d19)}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
