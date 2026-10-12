@@ -190,7 +190,7 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     const vs = visualsOf(x, 's-loans').filter((v) => v.visual && /^clustered(Bar|Column)Chart$/.test(typeOf(v))), ext = extOf10(x, 's-loans');
     const keepOf = (v) => { const f = ((v.filterConfig || {}).filters || []).find((q) => q.field && q.field.Measure && q.field.Measure.Expression.SourceRef.Schema === 'extension' && /^Keep/.test(q.field.Measure.Property)); return f ? ext.find((m) => m.name === f.field.Measure.Property) : null; };
     const titleOf10 = (v) => { const t = (((v.visual.visualContainerObjects || {}).title || [])[0] || {}).properties || {}, m = t.text && t.text.expr && t.text.expr.Measure; return m ? ext.find((e) => e.name === m.Property) : null; };
-    const report = vs.filter((v) => v.page.type !== 'Tooltip'), tips = vs.filter((v) => v.page.type === 'Tooltip' && JSON.stringify(v.filterConfig || '').includes('Keep'));
+    const report = vs.filter((v) => v.page.type !== 'Tooltip'), tips = vs.filter((v) => v.page.type === 'Tooltip' && ((v.filterConfig || {}).filters || []).some((q) => q.type === 'TopN'));
     const nOf = (k) => +((k.expression.match(/MIN \( _n, (\d+) \) = \1, (\d+), _n \)/) || [])[2] || NaN), capOf = (k) => +((k.expression.match(/MIN \( _n, (\d+) \)/) || [])[1] || NaN);
     // N14: a chart shows every category when they are at most 2 more than its rows; its Top N is a report measure, not a fixed Top N filter
     chk(() => !x.err && report.length >= 2 && report.every((v) => { const k = keepOf(v); return k && /RANKX/.test(k.expression) && capOf(k) === nOf(k) + 3 && !((v.filterConfig || {}).filters || []).some((q) => q.type === 'TopN'); }),
@@ -199,7 +199,8 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     chk(() => report.concat(tips).every((v) => { const t = titleOf10(v); return t && /IF \( _s = _n, /.test(t.expression) && /RANKX/.test(t.expression); }),
       () => `N14/N15: the titles say Top only when the chart leaves categories out, with the number actually shown: ${report.concat(tips).map((v) => JSON.stringify(titleOf10(v) && titleOf10(v).expression.slice(-200))).join(' | ')}`);
     // N15: the tooltip's Top 6 is the same rule, without extra rows (a tooltip can't scroll)
-    chk(() => tips.length >= 1 && tips.every((v) => { const k = keepOf(v); return k && nOf(k) === 6 && capOf(k) === 7; }), () => `N15: the tooltip's bars keep their Top 6 by the same report measure, no extra rows: ${tips.map((v) => JSON.stringify(keepOf(v) && keepOf(v).expression.slice(0, 200))).join(' | ')}`);
+    // (the tooltip keeps its fixed Top 6 filter, which keeps the same bars, ties too, and check_report's TOOLTIP_SCROLL reads)
+    chk(() => tips.length >= 1 && tips.every((v) => { const t = titleOf10(v); return t && /MIN \( _n, 7 \) = 7, 6, _n \)/.test(t.expression); }), () => `N15: the tooltip's title counts its Top 6 with no extra rows: ${tips.map((v) => JSON.stringify(titleOf10(v) && titleOf10(v).expression.slice(0, 260))).join(' | ')}`);
     // D19: a bar chart cut to its Top N by a text category gets the measured name room (25 characters where 40% holds them, else 50%)
     const bars = report.filter((v) => typeOf(v) === 'clusteredBarChart' && keepOf(v)), share = (v) => +String((((v.visual.objects.categoryAxis || [])[0] || {}).properties || {}).maxMarginFactor.expr.Literal.Value).replace(/L$/, '');
     chk(() => bars.length && bars.every((v) => share(v) === 50 || share(v) * v.position.width / 100 >= 25 * 10.2 * (x.j.pages[0].height / 1080)), () => `D19: a bar chart cut to its Top N gives its names the measured room: ${JSON.stringify(bars.map((v) => [share(v), v.position.width]))}`);

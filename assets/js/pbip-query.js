@@ -438,13 +438,14 @@
       let c; try { c = daxNames.column(f.t, f.c); } catch (e) { return null; }
       const y = 'CALCULATE ( ' + y0 + ' )', cap = n + extra + 1;
       const head = 'VAR _t = CALCULATETABLE ( FILTER ( VALUES ( ' + c + ' ), NOT ISBLANK ( ' + c + ' ) && NOT ISBLANK ( ' + y + ' ) ), REMOVEFILTERS ( ' + c + ' ) ) VAR _n = COUNTROWS ( _t ) VAR _k = IF ( MIN ( _n, ' + cap + ' ) = ' + cap + ', ' + n + ', _n )';
-      const keepName = extMeasure(f.t, 'Keep: ' + shown(yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property) + ' by ' + label(f), head + ' VAR _r = RANKX ( _t, ' + y + ', , DESC ) RETURN IF ( MAX ( _r, _k ) = _k, 1 )', 'Integer');
+      const keep = () => { const keepName = extMeasure(f.t, 'Keep: ' + shown(yField.Measure ? yField.Measure.Property : yField.Aggregation.Expression.Column.Property) + ' by ' + label(f), head + ' VAR _r = RANKX ( _t, ' + y + ', , DESC ) RETURN IF ( MAX ( _r, _k ) = _k, 1 )', 'Integer');
       const filter = { name: 'Filter' + rnd() + rnd().slice(0, 4), type: 'Advanced', field: extField(f.t, keepName),
         filter: { Version: 2, From: [{ Name: 'm', Entity: f.t, Schema: 'extension', Type: 0 }],
           Where: [{ Condition: { Comparison: { ComparisonKind: 0, Left: { Measure: { Expression: { SourceRef: { Source: 'm' } }, Property: keepName } }, Right: { Literal: { Value: '1L' } } } } }] }, howCreated: 'User' };
+        return filter; };
       // the title: lead "Top ", of " of ", rest the title after "Top S of M: " as fitted, plain the plain title as fitted
       const title = (name, words, rest, plain) => extMeasure(f.t, name, head + ' VAR _s = COUNTROWS ( FILTER ( _t, MAX ( RANKX ( _t, ' + y + ', , DESC ), _k ) = _k ) ) RETURN IF ( _s = _n, ' + daxNames.string(plain) + ', ' + daxNames.string(words[0]) + ' & _s & ' + daxNames.string(words[1]) + ' & _n & ' + daxNames.string(': ' + rest) + ' )', 'Text');
-      return { filter, keepName, title };
+      return { keep, title };
     };
     return { extMeasure, extField, daxOf, monthStart, lastMonths, byMonthStart, notBlank, topN, topSet };
   }
