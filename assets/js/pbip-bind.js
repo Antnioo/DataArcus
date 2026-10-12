@@ -396,7 +396,7 @@
     const x = Object.assign({ t: table.name, m: m.name, variant: isVariant(m), stale: STALE.test(m.name), text: isText(m) }, cardKind(m, tables));
     const e = exprOf(m), dynamic = !!m.formatStringDefinition;
     Object.assign(meta(x), { expr: e, amount: !x.pct && !dynamic && (hasCurrency(m.formatString || '') || (!hasUnit(m.formatString || '') && sumOfDecimal(e, tables))), base: CORE.test(e) || ROW_PRODUCT.test(e), dynamic, currency: hasCurrency(m.formatString || ''),
-      notCard: PLACEHOLDER.test(e) ? 'placeholder' : PARAM_DAX.test(e) ? 'param' : HELPER_DAX.test(e) ? 'helper' : SHARE_OF_ALL.test(e) ? 'share' : null, key: valueKey(e), unformatted: !String(m.formatString || '').trim() && !dynamic });
+      notCard: PLACEHOLDER.test(e) ? 'placeholder' : PARAM_DAX.test(e) ? 'param' : HELPER_DAX.test(e) ? 'helper' : SHARE_OF_ALL.test(e) ? 'share' : null, key: valueKey(e), unformatted: !String(m.formatString || '').trim() && !dynamic, divides: !!m.divides });
     return x;
   }
   // the same by name, for a measure the user names (create_report's fields): null when the table has none of that name
@@ -513,8 +513,9 @@
     // (A3-5: every base measure before any time variant, then the shape score; the rc's proof, D5 + D13: a plain amount
     // (a sum of money, a revenue) before a plain count or quantity, then the computed measures, amounts first (O-7: no
     // computed indicator before the plain numbers); D17: a dynamic-format measure is no amount: its shown format is not known)
-    // (round 8, D5: a currency-formatted amount is a core amount however it is computed: RELATED, a variable)
-    const group = (x) => (metaOf(x).currency ? 0 : (metaOf(x).base ? 0 : 2) + (metaOf(x).amount ? 0 : 1));
+    // (round 8, D5: a currency-formatted total is a core amount however it is computed: RELATED, a variable; not an
+    // average or a ratio, which divides)
+    const group = (x) => (metaOf(x).currency && !metaOf(x).divides ? 0 : (metaOf(x).base ? 0 : 2) + (metaOf(x).amount ? 0 : 1));
     const ranked = measures.filter((x) => !x.text).sort((a, b) => (a.stale ? 1 : 0) - (b.stale ? 1 : 0) || other(a) - other(b) || (timeDep.get(a) ? 1 : 0) - (timeDep.get(b) ? 1 : 0)
       || group(a) - group(b) || score(b) - score(a));
     // a card shows one number for the whole page: never a period measure (S4: "No data" without its period), a what-if

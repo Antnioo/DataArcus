@@ -1411,7 +1411,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   // 2. AUD-016: read_model's summary of a large model has a ceiling, whatever the number of tables with measures
   {
     const make = (n, dir) => { const d = path.join(ROOT, dir, 'Big.SemanticModel/definition/tables'); fs.mkdirSync(d, { recursive: true });
-      for (let i = 0; i < n; i++) fs.writeFileSync(path.join(d, `T${i}.tmdl`), [`table 'Table number ${i}'`, ...Array.from({ length: 1 + (i % 7) }, (_, k) => `\tmeasure 'Measure ${i} ${k}' = 1\n\t\tformatString: #,0\n\t\tdisplayFolder: Area ${i % 12}`), ...Array.from({ length: 10 }, (_, k) => `\tcolumn 'Column ${k}'\n\t\tdataType: string\n\t\tsourceColumn: Column ${k}`), ''].join('\n')); };
+      // (picker round 8, N4: a constant measure (= 1) is the model's placeholder and no card, so these stand-ins count rows)
+      for (let i = 0; i < n; i++) fs.writeFileSync(path.join(d, `T${i}.tmdl`), [`table 'Table number ${i}'`, ...Array.from({ length: 1 + (i % 7) }, (_, k) => `\tmeasure 'Measure ${i} ${k}' = COUNTROWS ( 'Table number ${i}' ) + ${k}\n\t\tformatString: #,0\n\t\tdisplayFolder: Area ${i % 12}`), ...Array.from({ length: 10 }, (_, k) => `\tcolumn 'Column ${k}'\n\t\tdataType: string\n\t\tsourceColumn: Column ${k}`), ''].join('\n')); };
     make(500, 'm500'); make(3000, 'm3000');
     const a = await ask('read_model', { path: 'm500' }), b = await ask('read_model', { path: 'm3000' });
     chk(() => !a.err && a.j.summary === true && a.t.length < 40000, () => `read_model on 500 tables with measures: ${a.err ? a.t.slice(0, 200) : a.t.length + ' characters'}`);
