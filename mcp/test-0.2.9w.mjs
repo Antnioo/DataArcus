@@ -333,13 +333,23 @@ export function v029w({ check }) {
     chk(() => t2 && /Month start/.test(sd) && /Descending/.test(sd) && JSON.stringify(t2.filterConfig || {}).includes('Last'),
       () => `T2: the month tooltip of a month label is in time order, newest first, its last months: ${r2.threw || JSON.stringify([sd, (t2 && t2.filterConfig || {}).filters])}`);
     // S3: a table of rows the model doesn't count ends on a whole row: its height is the title, the header, whole rows
-    // and the total (round 11's measured pitch: 1.415 x the text + 2, the header 7 more, the title 1.5 x its size, 16 of padding)
+    // and the total. (Changed in writer round 8: the numbers MEASURED in Desktop 2.158, dataarcus-engine
+    // lab/proof-0.2.9-rc1 business/beta/MEASURE-TABLE-ROWS.md, at 1280 x 720, 10pt values, 12pt title: 62.1 to the header's
+    // rule, 19.8 a row, 21 the total, about 4 under it; at 1920 x 1080, 15pt, 18pt title: 90.3, 29.8, 31, about 6, and
+    // "for 6 rows 306, for 7 rows 336". The test before used round 11's 8pt numbers, which rc.3 showed wrong at 1920.)
+    const M720 = { top: 62.1, row: 19.8, total: 21, under: 4 }, M1080 = { top: 90.3, row: 29.8, total: 31, under: 6 };
+    const whole = (h, m) => { const k = Math.floor((h - m.top - m.total - m.under) / m.row); return { k, h: m.top + k * m.row + m.total + m.under }; };
     const rt = get(() => build(base({ table: [C('City'), M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 300 }]) }));
-    const tv = rt.files ? visuals(rt).find((v) => v.visual.visualType === 'tableEx') : null;
-    const th = JSON.parse(String(rt.files.find((f) => /RegisteredResources\/.*\.json$/.test(f.path)).data)), tt = +th.visualStyles.tableEx['*'].values[0].fontSize, pitch = 1.415 * tt * 4 / 3 + 2;
-    const TT = +(th.textClasses.title || {}).fontSize || 12, fixed = 1.5 * TT * 4 / 3 + (pitch + 7) + pitch + 16, rows = tv ? (tv.position.height - fixed) / pitch : 0;
-    chk(() => tv && tv.position.height <= 300 && 300 - tv.position.height < pitch && tv.position.y === 80 && rows - Math.floor(rows) < 1 / pitch + 1e-9,
-      () => `S3: a table ends on a whole row (pitch ${pitch.toFixed(1)}, ${rows.toFixed(2)} rows): ${rt.threw || JSON.stringify(tv && tv.position)}`);
+    const tv = rt.files ? visuals(rt).find((v) => v.visual.visualType === 'tableEx') : null, w720 = whole(300, M720);
+    chk(() => tv && tv.position.y === 80 && Math.abs(tv.position.height - w720.h) <= 1.5,
+      () => `S3: a 300-high table at 1280 x 720 shows ${w720.k} whole rows and its total in ${w720.h.toFixed(1)} (measured): ${rt.threw || JSON.stringify(tv && tv.position)}`);
+    // (the theme as create_report scales it for a 1920 x 1080 page: the table's text 15pt, the title 18pt, as measured)
+    const th15 = (() => { const d = E.fresh(); E.repairState(d); const t = E.buildTheme(d, 'en'); const tb = t.visualStyles.tableEx['*']; ['values', 'columnHeaders', 'total'].forEach((k) => (tb[k] || []).forEach((e) => { if (e.fontSize != null) e.fontSize = 15; })); tb.values[0].fontSize = 15; t.textClasses.title.fontSize = 18; return t; })();
+    const r1 = get(() => build(base({ table: [C('City'), M('Total Sales')] }), { theme: th15, pages: hand(1920, 1080, [{ kind: 'table', title: 'T', x: 24, y: 120, w: 900, h: 302 }]) }));
+    const t1 = r1.files ? visuals(r1).find((v) => v.visual.visualType === 'tableEx') : null, w1080 = whole(302, M1080);
+    // (RESCORE-1's page-1 case: 302 high at 1920 x 1080 holds 5.9 rows: 5 whole rows and the total, 276.3)
+    chk(() => t1 && w1080.k === 5 && Math.abs(t1.position.height - w1080.h) <= 1.5,
+      () => `S3: the 302-high table at 1920 x 1080 shows 5 whole rows and its total in ${w1080.h.toFixed(1)} (measured): ${r1.threw || JSON.stringify(t1 && t1.position)}`);
     const rd = get(() => build(base({ table: [C('Day Name', { kind: 'day', rows: 7 }), M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 300 }]) }));
     chk(() => rd.files && visuals(rd).find((v) => v.visual.visualType === 'tableEx').position.height === 300, () => 'S3: a table whose rows all show (7 days) keeps its height');
     // D3: a long slicer header takes a smaller text, down to 8pt, before it is shortened
