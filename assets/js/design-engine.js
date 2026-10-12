@@ -415,6 +415,11 @@
       v[card] = [Object.assign((v[card] || [{}])[0], props)];
     });
     if (c.labels !== 'auto') add(AXIS_CHARTS, 'labels', { show: c.labels === 'on' });
+    // (polish round P1, the owner's go, 12 Oct; B-72: axes and gridlines in Power BI's own default grey under a coloured
+    // theme) the axis labels and the value axis's gridlines take the greys mixed from the theme's own text colour (roles:
+    // secondary for labels, gridline for the lines); "off" still hides the gridlines (below)
+    { const R = roles(u); add(AXIS_CHARTS.concat('scatterChart'), 'categoryAxis', { labelColor: { solid: { color: R.secondary } } });
+      add(AXIS_CHARTS.concat('scatterChart'), 'valueAxis', Object.assign({ labelColor: { solid: { color: R.secondary } } }, c.grid === 'off' ? {} : { gridlineColor: { solid: { color: R.gridline } } })); }
     if (c.grid !== 'auto') {
       const g = c.grid === 'off' ? { gridlineShow: false } : { gridlineShow: true, gridlineStyle: 'dotted', gridlineColor: { solid: { color: roles(u).gridline } } };
       add(AXIS_CHARTS.concat('scatterChart'), 'valueAxis', g);

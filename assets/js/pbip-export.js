@@ -321,6 +321,9 @@
     const n = Notes.make(o), { noData, rowLabels, timeExt } = n;
     // bars that fade by value (o.chartColors 'gradient', round 13): the two ends, or null when the colour cannot fade
     const barBase = ((o.theme || {}).dataColors || [])[0] || (u || {}).accent, GRAD = o.chartColors === 'gradient' && u ? gradientEnds(barBase, u.card, u.text) : null;
+    // (polish round P1, RESCORE-5: bank's deep teal, its colour 2, never appeared) the second bar or column chart of a
+    // page fades in colour 2, the third in colour 1 again (pbip-page.js counts them in reading order)
+    const bar2 = ((o.theme || {}).dataColors || [])[1], GRAD2 = GRAD && bar2 && String(bar2).toLowerCase() !== String(barBase).toLowerCase() ? gradientEnds(bar2, u.card, u.text) : null;
     const chartColors = { asked: o.chartColors === 'gradient', ends: GRAD, base: barBase, charts: 0 };
     // charts mirrored for a right-to-left report (o.chartAxes 'mirrored', round 13; see mirrorChart)
     const MIRROR = rtl && o.chartAxes === 'mirrored', chartAxes = { asked: o.chartAxes || null, rtl, charts: 0 };
@@ -412,7 +415,7 @@
     // 0.2.9, audit 3's A3-12: the context the writer's modules share (pbip-query.js, pbip-sizing.js, pbip-page.js): this
     // report's settings, its files, and its notes; then the report's own measures and the visuals' look
     const c = Object.assign({
-      B, D, GRAD, GRID, MIRROR, NODATA, PAGES, W, add, align, base, bookmarks,
+      B, D, GRAD, GRAD2, GRID, MIRROR, NODATA, PAGES, W, add, align, base, bookmarks,
       chartAxes, chartColors, edge, font, lang, logoFile, o, own, rtl, same, sameField, tip, tipBinding,
       tipFor, tipName, tipPages, trend, u, n
     }, n);
