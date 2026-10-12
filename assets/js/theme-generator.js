@@ -455,7 +455,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // (0.2.9, A3-12: the writer is five files, its modules first, in this order; each written out with its own ?v= stamp;
     // audit 4's A4-5: text-measure.js first, the one text measurement the sizes use)
     const BUILDER = ['../assets/js/text-measure.min.js?v=20261011a4', '../assets/js/pbip-query.min.js?v=20261011w3', '../assets/js/pbip-sizing.min.js?v=20261011v', '../assets/js/pbip-notes.min.js?v=20261011r7',
-      '../assets/js/pbip-page.min.js?v=20261012d8', '../assets/js/pbip-export.min.js?v=20261011r7'];
+      '../assets/js/pbip-page.min.js?v=20261012r9', '../assets/js/pbip-export.min.js?v=20261011r7'];
     const loadBuilder = () => (window.DAPbip ? Promise.resolve(window.DAPbip) : BUILDER.reduce((p, src) => p.then(() => new Promise((resolve, reject) => {
       const sc = document.createElement('script'); sc.src = src; sc.onload = resolve; sc.onerror = reject; document.head.appendChild(sc);
     })), Promise.resolve()).then(() => window.DAPbip));
@@ -472,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadBind = () => binding || (binding = (window.DABind ? Promise.resolve(window.DABind)
       : (window.DataArcusFieldMeaning ? Promise.resolve() : loadScript('../assets/js/field-meaning.min.js?v=20261011t'))
         .then(() => (window.TmdlModel ? null : loadScript('../assets/js/tmdl-model.min.js?v=20261011t')))
-        .then(() => loadScript('../assets/js/pbip-bind.min.js?v=20261011p1')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
+        .then(() => loadScript('../assets/js/pbip-bind.min.js?v=20261012i9')).then(() => window.DABind)).catch((e) => { binding = null; throw e; }));
     const ownMsg = (text, bad) => { const m = $('pbipOwnMsg'); if (m) { m.textContent = text; m.style.color = bad ? '#fca5a5' : ''; } };
     const mode = () => (dataIn ? dataIn.value : 'sample');
     // KPI cards on the pages this download makes: the main layout and the second page (3 or 4)

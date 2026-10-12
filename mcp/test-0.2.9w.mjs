@@ -302,8 +302,10 @@ export function v029w({ check }) {
     // S7: under a rail fitted to its slicers, the bottom row's visual beside the rail takes the rail's column
     const sl = [{ kind: 'slicer', x: 1068, y: 70, w: 196, h: 634 }, { kind: 'bar', x: 16, y: 178, w: 1040, h: 293 }, { kind: 'column', x: 16, y: 483, w: 514, h: 221 }, { kind: 'table', x: 542, y: 483, w: 514, h: 221 }];
     const f = E.fitSlots(sl, { railItems: { n: 2, minH: 50, maxH: 50, resetH: 30, pad: 10, gap: 8 } }).slots, tb = f.find((x) => x.kind === 'table'), br = f.find((x) => x.kind === 'bar');
-    chk(() => tb.x === 542 && tb.w === 1264 - 542 && br.w === 1040 && f.find((x) => x.kind === 'column').w === 514,
-      () => `rc1-4 S7: the bottom row's visual beside a short rail takes the rail's column; a row beside the rail keeps its width: ${JSON.stringify(f)}`);
+    // (design round 9, the re-score's S7: a chart alone in its row beside a short rail, which would keep under half its
+    // height by ending at the rail, starts under the rail and takes its column: the bar, a row's gap under the rail)
+    chk(() => tb.x === 542 && tb.w === 1264 - 542 && br.w === 1264 - 16 && br.y === 70 + 166 + 12 && br.y + br.h === 178 + 293 && f.find((x) => x.kind === 'column').w === 514,
+      () => `rc1-4 S7: the bottom row's visual beside a short rail takes the rail's column; the chart alone beside it starts under the rail and takes its column: ${JSON.stringify(f)}`);
   }
 
   // ---------- rc1 DETAIL-2 and the reviewer's addition (S3, D3): tooltip pages, table rows, slicer headers ----------
