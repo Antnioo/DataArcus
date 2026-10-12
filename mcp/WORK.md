@@ -4,6 +4,15 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Integration round 10 + 10a, final for 0.2.9 (12 Oct, cloud builder 5; `fix/0.2.9-gate` from `1ed1530`; not merged to main, no PR): rc.6's base
+Merged, each green on GitHub first: picker10 `0e9428d` (`ed96a83`; WORK.md both sections kept), checks `3ecac67` (`5dc12de`; N16),
+writer `3524373` (`ea282eb`; N11 + N13, text-suffix formats). Round 10a: design `2edbdd9` (`b02f50a`; N14, N15, D19; golden task 6
+121 -> 142 traced by design); its own CI run was cancelled by its next push, so the gate's run proves it; its later layout-matrix
+commits (8286d57, b446016) wait as round 10b. `b9f04ba`: new stamps 20261012i10 for pbip-page, pbip-bind, theme-generator
+(each merged file differs from its stamp's build). Generated .min.js conflicts rebuilt from the merged sources.
+Tests (Linux) on `b9f04ba`: mcp 1442, v029c/d/e/f 36/21/21/20, golden 11, fuzz 600 + FUZZ_LONG 10000, website 17 of 17, deny-scan,
+site config, csp, check-min. GitHub CI on `b9f04ba`: Tests (mcp, mcp-windows, website) and Privacy scan green.
+
 ## Picker round 10, final for 0.2.9 (12 Oct, cloud builder 5; branch `fix/0.2.9-picker10` from `0a657a0`; not merged yet)
 RESCORE-3 on rc.5: 7.3, target 7.5. Only these four, tests first (test-0.2.9r: 4 red, then 18 of 18), formula and metadata:
 - N10: a value only where it equals its own MAX/MAXX/MIN/MINX over ALL (...), else blank: a chart helper, no card (VARs
