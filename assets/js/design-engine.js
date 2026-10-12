@@ -437,8 +437,9 @@
     // (polish round P1, the owner's go, 12 Oct; B-72: axes and gridlines in Power BI's own default grey under a coloured
     // theme) the axis labels take the secondary grey mixed from the theme's own text colour (roles); the gridlines get
     // theirs from the report writer's quiet grid (text mixed 0.85 towards the card), which a gridline colour in the
-    // theme would switch off, so none is written here unless a grid is asked (below)
-    { const R = roles(u); add(AXIS_CHARTS.concat('scatterChart'), 'categoryAxis', { labelColor: { solid: { color: R.secondary } } });
+    // theme would switch off, so none is written here unless a grid is asked (below). Only with a chart style chosen:
+    // "Power BI default" (every setting auto) writes no chart settings, as the website promises
+    if (Object.keys(CHART_DEFAULTS).some((k) => c[k] !== 'auto')) { const R = roles(u); add(AXIS_CHARTS.concat('scatterChart'), 'categoryAxis', { labelColor: { solid: { color: R.secondary } } });
       add(AXIS_CHARTS.concat('scatterChart'), 'valueAxis', { labelColor: { solid: { color: R.secondary } } }); }
     if (c.grid !== 'auto') {
       const g = c.grid === 'off' ? { gridlineShow: false } : { gridlineShow: true, gridlineStyle: 'dotted', gridlineColor: { solid: { color: roles(u).gridline } } };
