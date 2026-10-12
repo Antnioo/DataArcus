@@ -498,6 +498,18 @@ export async function v029visualsTools({ call, check, ROOT, fs }) {
     chk(() => miss.length === 0, () => `C10b: every native visual written has its required roles, none over its maximum: ${JSON.stringify(miss.map((j) => [j.name, j.visual.visualType, Object.keys(j.visual.query.queryState)]))}`); }
   const again = await ask('create_report', { path: 'cvt', planId: id, customVisualsFrom: 'cvt/Twin Sales.Report' });
   chk(() => again.err && /already used|already there/.test(again.t), () => `C11: a plan writes once: ${short(again)}`);
+  // N9 (rc.4, round 9): a plan made with display names writes with the call that leaves them out (the plan's own are used);
+  // the same names passed back write too; other names are refused
+  { const DN = { 'Sales[Product]': 'Product line' }, clean = () => { fs.rmSync(ND, { recursive: true, force: true }); fs.rmSync(path.join(P, 'Twin Sales native.pbip'), { force: true }); };
+    const planned = async () => { clean(); const x = await ask('plan_layout', { path: 'cvt', customVisualsFrom: 'cvt/Twin Sales.Report', displayNames: DN }), i = x.j && x.j.plan && x.j.plan.planId; await ask('approve_plan', { planId: i, userReply: 'go' }); return i; };
+    const i1 = await planned();
+    const diff = await ask('create_report', { path: 'cvt', planId: i1, customVisualsFrom: 'cvt/Twin Sales.Report', displayNames: { 'Sales[Product]': 'Item' } });
+    chk(() => diff.err && /differ/.test(diff.t) && /displayNames/.test(diff.t) && !fs.existsSync(ND), () => `N9: other display names than the approved ones are refused: ${short(diff)}`);
+    const omit = await ask('create_report', { path: 'cvt', planId: i1, customVisualsFrom: 'cvt/Twin Sales.Report' });
+    chk(() => omit.j && omit.j.written && fs.existsSync(ND), () => `N9: the call without displayNames writes with the approved plan's: ${short(omit)}`);
+    const i2 = await planned();
+    const same = await ask('create_report', { path: 'cvt', planId: i2, customVisualsFrom: 'cvt/Twin Sales.Report', displayNames: DN });
+    chk(() => same.j && same.j.written, () => `N9: the approved display names passed back write too: ${short(same)}`); }
   // a report changed after the plan: refused
   fs.rmSync(ND, { recursive: true, force: true }); fs.rmSync(path.join(P, 'Twin Sales native.pbip'), { force: true });
   const pl2 = await ask('plan_layout', { path: 'cvt', customVisualsFrom: 'cvt/Twin Sales.Report' }), id2 = pl2.j && pl2.j.plan && pl2.j.plan.planId;
