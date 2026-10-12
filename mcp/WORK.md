@@ -144,7 +144,7 @@ must keep them under it.
 
 ## Writer round 9 (12 Oct from 06:02 UTC, cloud builder 11; `fix/0.2.9-writer` from `5f92d45`; not merged)
 `4d764b8`: D18 (fixed 2 decimals), D15 (text-category columns as bars by the 12-letter stand-in), the table's panel card (slot height,
-panel shadow) and the lint's cover. N8 waits for one Desktop measure (lab step in the writer report). Full run green but pbip's
+panel shadow) and the lint's cover. Then the gate 69ea11c merged in (its red v029c L2 cured by the lint rule) and N8 by the laptop's root (`7648d9d`, a padded model format shown unscaled). Whole chain green, website 17/17. Full run green but pbip's
 load flake (PASS alone). Owner's standing go (12 Oct): "From the reviewer" messages carry his approval for pushing fix/feat/lab
 branches; never main, a PR to main or a release.
 
