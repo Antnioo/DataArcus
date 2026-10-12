@@ -172,7 +172,10 @@
     // (writer round 8, RESCORE-1 D18, radiation from the report writer's block: "$4,344,705.7026" in a table, the model's own
     // format where the rule leaves it alone: a table shows 2 decimals at most, the report's number rule, its currency and
     // separators kept; the cards keep their own rule)
-    const two = !own.pct && /\.[0#]{3,}/.test(String(x.formatString || '')) && !/%/.test(String(x.formatString || '')) ? String(x.formatString).replace(/\.([0#]{2})[0#]+/g, '.$1') : null;
+    // (writer round 9, RESCORE-2 D18: "$2,484,247.5", "$1,395,881.25" and "$2,721,900" in one column from "$#,0.####", cut to
+    // "$#,0.##": optional digits are made fixed, so one column has one number of decimals, 2; a fixed 1 or 2 stays as it is)
+    const fs0 = String(x.formatString || ''), dec = (fs0.match(/\.[0#]+/g) || []);
+    const two = !own.pct && !/%/.test(fs0) && dec.some((d) => d.length > 3 || d.includes('#')) ? fs0.replace(/\.[0#]+/g, '.00') : null;
     if (!r) return Object.assign(own, own.pctFormat && own.pctFormat !== x.formatString ? { tableFormat: own.pctFormat } : two ? { tableFormat: two } : {});
     delete own.pctFormat; own.pct = false;
     // (the second sweep, I8: an amount by its formula, a sum of a decimal column or a row's quantity x price, keeps

@@ -353,7 +353,21 @@
       if (!f || f.short || f.c == null) return s;
       const kind = f.kind ? (['day', 'month'].includes(String(f.kind)) ? String(f.kind) : null) : /(^|\s)(day|weekday)\s*name|اسم اليوم/i.test(f.c) ? 'day' : /(^|\s)month\s*name|اسم الشهر/i.test(f.c) ? 'month' : null;
       const list = kind && namesOf(f, kind);
-      if (!list) return s;
+      // writer round 9 (RESCORE-2 D15: bank's "Debtconsolidation" slanted and cut, 6 columns on a designed page): a text
+      // category whose names the writer can't measure (no values read) takes the writer's stand-in for a name, 12 letters at
+      // the label size, as its tables do; where its columns (the design's N, else as many as hold that name) can't each
+      // hold it, it is written as a bar chart, names level (the share of barNameShare), where the slot holds 3 rows (22.2 a
+      // row + 45 + 8 + 38, measured); in a slot too low for that it keeps its columns, as many as hold the name
+      if (!list) {
+        if (!own || !isTextField(f) || isTime(f) || catKind(f) || f.sortBy || f.ordered || f.dateOf) return s;
+        const plot = s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40, need = textWidth('n'.repeat(12), LABEL, false, font) + 6, fit = Math.max(3, Math.floor(plot / need));
+        const n = s.topN || fit;
+        if (plot / n >= need) return s;
+        const rows = Math.floor((s.h * 720 / pg.page.h - 45 - 8 - 38) / 22.2);
+        if (rows < 3) return Object.assign({}, s, { topN: fit });
+        barCharts.push({ page: pg.name || base, field: label(f) });
+        return Object.assign({}, s, { kind: 'bar', wasColumn: true, rows, topN: rows });
+      }
       const k = pg.page.h / 720, room = (s.w - 2 * Math.round(16 * pg.page.h / 1080) - 40) / list.length, widest = Math.max(...list.map((d) => textWidth(d, LABEL, false, font)));
       // (night sitting 6-7 Oct, measured in Desktop 2.158 on a 221-high slot at 1280 x 720, names at the theme's 10pt: a
       // row is 22.2, the first starts 45 under the box's top and 8 stay under the last; the value axis and its room
@@ -617,6 +631,9 @@
             all.filter((x) => !last(x)).concat(all.filter(last)).forEach((x) => { let c = B.cats[kindOf(x)]; if (pageCats.has(k0(c))) { const alt = (B.catPool || []).find((f) => !pageCats.has(k0(f))); if (alt) c = alt; } pageCats.add(k0(c)); catPlan.set(x, c); }); }
           const c = catPlan.get(s); if (c && c !== B.cats[s.kind]) Bt = Object.assign({}, Bt, { cats: Object.assign({}, Bt.cats, { [s.kind]: c }) });
         }
+        // (writer round 9: a column chart written as a bar chart keeps the column chart's own measure, as it keeps its
+        // category and title; it took the bar chart's, so a page could show one measure twice)
+        if (B && s.wasColumn) Bt = Object.assign({}, Bt, { y: Object.assign({}, Bt.y, { bar: (Bt.y || {}).column }) });
         // Round 18, S3 (the owner's yes, 6 Oct 2026; seen in Desktop: the day names slant on the 1920 x 1080 column
         // charts): a column chart by Day Name takes the calendar's Day Short where the model has it (c.short) and the
         // full names, at the label size, are wider than a seventh of the chart's plot (the value axis about 40)
@@ -873,23 +890,27 @@
           container({ x: s.x, y: box.y, w: s.w, h: box.h, z: z - 500, parent, kind: 'nodata', noPhone: true, visual: { visualType: 'cardVisual',
             query: q({ Data: [{ field: { Measure: { Expression: { SourceRef: { Schema: 'extension', Entity: ent } }, Property: nm } }, queryRef: ent + '.' + nm, nativeQueryRef: nm }] }),
             objects: { value: [{ properties: { fontSize: num(LABEL), fontColor: color(mixHex(u.text, u.card, 0.3)), horizontalAlignment: str('center') }, selector: { id: 'default' } }], label: [{ properties: { show: bool(false) }, selector: { id: 'default' } }], outline: [{ properties: { show: bool(false) }, selector: { id: 'default' } }], fillCustom: [{ properties: { show: bool(false) } }] },
-            visualContainerObjects: { title: obj({ show: bool(false) }), visualTooltip: obj({ show: bool(false) }), general: obj({ altText: str('') }), dropShadow: obj({ show: bool(false) }) } } });
+            visualContainerObjects: { title: obj({ show: bool(false) }), visualTooltip: obj({ show: bool(false) }), general: obj({ altText: str('') }), dropShadow: obj({ show: bool(!!tableH) }) } } });   /* (writer round 9: behind a table on its whole rows the card is the panel, with the panel's shadow) */
           // Night sitting 6-7 Oct (seen in Desktop 2.158): the card's own inner outline drew a grey box inside every chart,
           // and a chart whose border and shadow were switched off drew about 5 nearer its box's edges than without the
           // option. So the card has no outline, its text centred, and no shadow of its own; the chart keeps the theme's
           // border and shadow and only its background is off (with data the page then differs from one without the option
           // by the panels' edge pixels only, at most 19 of 255).
           visual.visualContainerObjects.background = obj({ show: bool(false) });
+          // (writer round 9, the laptop's local resolution, S3 FIXED in Desktop on rc.4: the table on its rows inside the card's panel
+          // has its own shadow off, so the shadow is the panel's)
+          if (tableH) visual.visualContainerObjects.dropShadow = obj({ show: bool(false) });
         }
       }
       // (S3 + N6) a table shorter than its slot: the panel at the slot's height behind it, the "No data" card where the
       // report has one (above, at the slot's box), else an empty text box, which the theme draws as a panel (measured,
       // round 1), on a solid theme; a transparent theme's panel is the page's background picture. The table keeps its
-      // background and border (the panel's colour), and its shadow is left to the theme: over a "No data" card only the
-      // background is written (night of 6-7 Oct: with its border and shadow off a visual drew about 5 nearer its edges,
-      // and the measured rows would not hold).
+      // background and border (the panel's colour; night of 6-7 Oct: with its border off a visual drew about 5 nearer its
+      // edges, and the measured rows would not hold); its shadow is off, the panel's is the one drawn (writer round 9: the
+      // laptop's local resolution, S3 FIXED in Desktop on rc.4 with the table's shadow off).
       if (tableH) {
         const ndBehind = NODATA && visual.visualContainerObjects && visual.visualContainerObjects.background && visual.visualContainerObjects.background[0].properties.show && visual.visualContainerObjects.background[0].properties.show.expr.Literal.Value === 'false';
+        if (SOLID) visual.visualContainerObjects.dropShadow = obj({ show: bool(false) });   // (writer round 9: the shadow is the panel's, as behind a "No data" card)
         if (SOLID && !ndBehind) container({ x: s.x, y: box.y, w: s.w, h: box.h, z: z - 500, parent, kind: 'panel', noPhone: true,   /* (written as the header's and the rail's bands: nothing but the title's switch, the theme draws it) */
           visual: { visualType: 'textbox', objects: { general: obj({ paragraphs: [{ textRuns: [{ value: '' }] }] }) }, visualContainerObjects: { title: obj({ show: bool(false) }) } } });
       }

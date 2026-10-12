@@ -577,7 +577,12 @@ export function panelProblems(files) {
       // message card under it is see-through: it writes its background off, and only that (border and shadow stay the
       // theme's, so the panel is drawn as every other one)
       const over = solid && panel && p.visuals.some((m) => m !== v && isMessageCard(m) && m.parentGroupName === v.parentGroupName && m.position.x === v.position.x && m.position.width === v.position.width);
-      if (over) { panels++; const has = KEYS.filter((k) => c[k]); if (has.join() !== 'background' || !off(c, 'background')) bad.push(`${id}: over its "No data" card only the background is written, off (${has.join(', ') || 'nothing'} written)`); return; }
+      // (changed in writer round 9: a table on its whole rows inside its panel, the "No data" card or a band at the slot's
+      // height, has its own shadow off too, the panel's is drawn: the laptop's S3 resolution, proven in Desktop on rc.4)
+      const inPanel = v.visual.visualType === 'tableEx' && p.visuals.some((m) => m !== v && m.visual && /^(cardVisual|textbox)$/.test(m.visual.visualType) && m.parentGroupName === v.parentGroupName && m.position.x === v.position.x && m.position.y === v.position.y && m.position.width === v.position.width && m.position.height > v.position.height);
+      const want = inPanel ? 'background,dropShadow' : 'background';
+      if (inPanel && !over && solid && panel) { panels++; const has = KEYS.filter((k) => c[k]); if (has.join() !== 'dropShadow' || !off(c, 'dropShadow')) bad.push(`${id}: in its panel only its shadow is written, off (${has.join(', ') || 'nothing'} written)`); return; }
+      if (over) { panels++; const has = KEYS.filter((k) => c[k]); if (has.join() !== want || !has.every((k) => off(c, k))) bad.push(`${id}: over its "No data" card only the background is written, off (${has.join(', ') || 'nothing'} written)`); return; }
       if (solid && panel) { panels++; const has = KEYS.filter((k) => c[k]); if (has.length) bad.push(`${id}: ${has.join(', ')} written, the theme can't draw its panel`); }
       else { const on = KEYS.filter((k) => !off(c, k)); if (on.length) bad.push(`${id}: ${on.join(', ')} not switched off`); }
     });
