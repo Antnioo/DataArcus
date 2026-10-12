@@ -49,16 +49,43 @@ export const namesColours = (d) => !!(d && typeof d === 'object' && ((Array.isAr
 // a preset's keep that preset's name. The page size is never taken: only colours, and the font, corner radius and
 // shadow when the report's theme sets them.
 // Returns { data, ui, preset, style { font, radius, shadow }, info } (info: what the plan says, in the plan's language).
+// (polish round P1, the owner's go, 12 Oct; RESCORE-5, B-71/B-72: inspection's whole report turned red, the only colours
+// on its visuals being a red and a green used as bad and good) a status colour is never the lead: the theme's own good,
+// neutral or bad, or a red, green or amber found on the visuals. Status colours leave the data palette and, where the
+// theme sets none, become its bad, good or neutral; with only status colours found the lead is the preset's, said in
+// the plan. Hue bands (degrees): red under 15 or 345 and over, amber 35 to 55, green 90 to 150, with saturation 0.35 and
+// over (a grey or a muted brand colour is never a status colour).
+const STATUS_HUES = { bad: (h) => h < 15 || h >= 345, neutral: (h) => h >= 35 && h <= 55, good: (h) => h >= 90 && h <= 150 };
+const statusOf = (c, t) => {
+  const x = String(c).toLowerCase(), own = ['good', 'neutral', 'bad'].find((k) => t[k] && String(t[k]).toLowerCase() === x);
+  if (own) return own;
+  const [h, sat] = E.hexToHsl(E.clampHex(c) || '#808080');
+  return sat >= 0.35 ? Object.keys(STATUS_HUES).find((k) => STATUS_HUES[k](h)) || null : null;
+};
+// a lead under 3:1 on the card is darkened, its hue kept (E.toContrast; P1, RESCORE-5)
+const toContrast = E.toContrast;
 export function themeColours(rt, lang) {
   const t = rt.theme, lumOf = (c) => E.lum(c), own = t.themeColours || [], painted = t.painted || [];
-  const palette = [...new Set(own.concat(painted))].slice(0, 8), usedPainted = palette.some((c) => !own.includes(c));
-  const source = own.length ? (usedPainted ? 'theme and visuals' : 'theme') : 'visuals';
+  const found = [...new Set(own.concat(painted))], status = found.filter((c) => statusOf(c, t)), lead1 = found.find((c) => !statusOf(c, t));
+  // a status colour stays a data colour, only never the lead: the first other colour leads, the rest keep their order
+  const palette = (lead1 ? [lead1] : []).concat(found.filter((c) => c !== lead1 && lead1)).slice(0, 8);
+  const usedPainted = palette.some((c) => !own.includes(c));
+  const source = own.length ? (usedPainted || !palette.length ? 'theme and visuals' : 'theme') : 'visuals';
   const dark = t.background ? lumOf(t.background) < 0.45 : t.card ? lumOf(t.card) < 0.45 : t.text ? lumOf(t.text) > 0.6 : false;
   const basis = dark ? 'DataArcus' : 'Corporate', base = E.PRESETS[basis];
+  const statusOnly = !palette.length && status.length > 0;
+  if (statusOnly) palette.push(base.data[0], ...status.slice(0, 7));
+  const card = t.card || base.ui.card, lead0 = palette[0], lead = palette.length ? toContrast(lead0, card, 3) : lead0;
+  if (lead !== lead0) palette[0] = lead;
   const fill = E.generate(palette[0], 'analogous');
   const data = Array.from({ length: 8 }, (_, i) => palette[i] || fill[i]);
-  const ui = { background: t.background || base.ui.background, card: t.card || base.ui.card, text: t.text || base.ui.text, accent: t.accent || palette[0],
-    good: t.good || base.ui.good, neutral: t.neutral || base.ui.neutral, bad: t.bad || base.ui.bad };
+  const byStatus = (k) => status.find((c) => statusOf(c, t) === k);
+  const ui = { background: t.background || base.ui.background, card, text: t.text || base.ui.text, accent: t.accent && !statusOf(t.accent, t) && t.accent !== lead0 ? t.accent : palette[0],
+    good: t.good || byStatus('good') || base.ui.good, neutral: t.neutral || byStatus('neutral') || base.ui.neutral, bad: t.bad || byStatus('bad') || base.ui.bad };
+  const changes = [].concat(found.length && statusOf(found[0], t) ? [statusOnly
+    ? `The report's only colours (${status.join(', ')}) are status colours (good, neutral, bad): they stay for good and bad, and the lead colour is the ${basis} preset's (${palette[0]}), so the report does not read as an alarm. You can ask for a brand colour instead.`
+    : `${status.join(', ')} ${status.length === 1 ? 'is a status colour' : 'are status colours'} (good, neutral, bad): never the lead colour; the lead is ${palette[0]}.`] : [],
+    lead !== lead0 ? [`Colour 1 ${lead0} is ${E.contrast(lead0, card).toFixed(1)}:1 on the cards (${card}): for lines, bars and accents it is ${lead}, the same hue ${dark ? 'lighter' : 'darker'}, at 3:1; the bars still fade towards ${lead0}'s tint.`] : []);
   const preset = Object.keys(E.PRESETS).find((k) => E.PRESETS[k].data.join() === data.join() && UI_KEYS.every((u) => E.PRESETS[k].ui[u] === ui[u])) || null;
   const filled = palette.length < 8 ? Array.from({ length: 8 - palette.length }, (_, i) => palette.length + i + 1) : [];
   const fromBase = UI_KEYS.filter((k) => !(k === 'accent' ? t.accent || palette[0] : t[k]));
@@ -67,6 +94,7 @@ export function themeColours(rt, lang) {
   const info = Object.assign({ from: 'report theme', source, report: rt.report, theme: t.name, mode: dark ? 'dark' : 'light', sayInPlan: E.label(line, lang) },
     usedPainted ? { fromVisuals: palette.filter((c) => !own.includes(c)) } : {},
     filled.length ? { filled, how: `The report gives ${palette.length} data colour${palette.length === 1 ? '' : 's'}: colours ${filled[0]}-8 come from the engine's analogous harmony from the first (${palette[0]}).` } : {},
+    changes.length ? { changes, sayInPlan2: 'Say each of these colour changes in the plan.' } : {},
     t.cardTransparent ? { solidVisuals: `The theme's visuals are ${t.cardTransparent}% transparent, made to sit on a page picture the new report will not have: the new visuals are solid (${ui.card}). Say it in the plan.` } : {},
     fromBase.length ? { fromPreset: { colours: fromBase, preset: basis, why: 'the report does not set them' } } : {},
     Object.keys(style).length ? { style } : {},
@@ -151,6 +179,15 @@ export function themeDesign(a) {
   }
   // the page and style choices on top of the engine's full current layout (its version, 1920 x 1080 and defaults)
   d.layout = layoutFrom(Object.assign({}, own && own.style.radius != null ? { radius: own.style.radius } : {}, own && own.style.shadow ? { shadow: true } : {}, a.layout || {}), withDefaults().layout, fix);
+  // (P1+, the laptop's LAB-POLISH section 5, measured in Desktop on 12 Oct: white panels on a white page lifted half a
+  // point with it) a light design's page is a 6% tint of the lead colour, the cards as they are; never on a dark design,
+  // over a background the user asked for (palette.ui.background) or a report theme's own page colour (one apart from its
+  // cards), and off with pageTint: false
+  const ownPage = own && a.reportTheme.theme.background && String(a.reportTheme.theme.background).toLowerCase() !== String(d.ui.card).toLowerCase();
+  if (a.pageTint !== false && !dark && E.lum(d.ui.background) > 0.45 && E.lum(d.ui.card) > 0.45 && !(a.palette && a.palette.ui && hex(a.palette.ui.background)) && !ownPage && hex(d.data[0]) && hex(d.ui.card)) {
+    const tint = E.mix(hex(d.ui.card), hex(d.data[0]), 0.06);
+    if (tint !== d.ui.background) { d.ui.background = tint; notes.push(`The page is a 6% tint of the lead colour (${tint}), so the white visuals stand off it; pageTint: false keeps the plain page. Say it in the plan.`); }
+  }
   const design = E.repairState(d);
   return Object.assign({ design, repaired, notes }, own ? { fromReport: Object.assign(own.info, { contrastWarnings: contrastReport(design).warnings }) } : {});
 }

@@ -222,6 +222,67 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     chk(() => readme.includes(LINE) && row('Operations monitor') && row('Analysis') && !/\b(first|only|unique)\b[^.\n]*(layout|tool|report)/i.test(readme.split('\n').filter((l) => /preview/i.test(l)).join('\n')),
       () => `preview: mcp/README.md marks Operations monitor and Analysis as preview, with the same line: ${row('Operations monitor')} | ${row('Analysis')}`);
   }
+
+  // ---------- polish round P1 (the owner's go, 12 Oct; RESCORE-5 and B-71/B-72): colour ----------
+  {
+    const D = await import('./lib/design.mjs');
+    const rt = (painted, themeColours, extra) => ({ report: 'R', theme: Object.assign({ name: 'Custom', themeColours: themeColours || [], painted }, extra || {}) });
+    const hue = (c) => E.hexToHsl(c)[0], card = '#ffffff';
+    // 1. a status colour is never the lead: only red and green found (inspection), the default lead, said in the plan
+    const st = D.themeColours(rt(['#D64554', '#6ACC84']), 'en');
+    chk(() => st.data[0] === E.PRESETS.Corporate.data[0] && st.ui.bad.toLowerCase() === '#d64554' && st.ui.good.toLowerCase() === '#6acc84' && /status/i.test(JSON.stringify(st.info)),
+      () => `P1-1: only status colours found: the default lead, the red and green as bad and good, said in the plan: ${JSON.stringify([st.data[0], st.ui, st.info]).slice(0, 400)}`);
+    const mixd = D.themeColours(rt(['#D64554', '#1F77B4']), 'en');
+    chk(() => mixd.data[0].toLowerCase() === '#1f77b4', () => `P1-1: a status colour found first gives the lead to the next colour: ${mixd.data.slice(0, 3)}`);
+    const th = D.themeColours(rt([], ['#C62828', '#0D6E8C'], { bad: '#C62828' }), 'en');
+    chk(() => th.data[0].toLowerCase() === '#0d6e8c', () => `P1-1: the theme's own bad colour is never the lead: ${th.data.slice(0, 3)}`);
+    // 3. a pale lead (under 3:1 on the card) is darkened, keeping its hue, to 3:1 for lines, bars and accents; the plan names it
+    const pale = D.themeColours(rt(['#20E2D7']), 'en');
+    chk(() => E.contrast(pale.data[0], card) >= 3 && Math.abs(hue(pale.data[0]) - hue('#20E2D7')) <= 6 && JSON.stringify(pale.info).includes('#20E2D7') && /3:1/.test(JSON.stringify(pale.info)),
+      () => `P1-3: a pale lead darkened to 3:1, its hue kept, the change named: ${pale.data[0]} ${E.contrast(pale.data[0], card).toFixed(2)}:1 ${JSON.stringify(pale.info).slice(0, 300)}`);
+    // explicit colours win: a brand colour given is used exactly, pale or not
+    const brand = D.themeDesign({ brand: '#20E2D7' });
+    chk(() => brand.design.data[0].toLowerCase() === '#20e2d7', () => `P1: an explicit brand colour wins, exactly: ${brand.design.data[0]}`);
+    // 4. greys from the theme's text colour for axes and gridlines (never Power BI's default grey)
+    // (with a chart style chosen: "Power BI default", every setting auto, writes no chart settings, the website's promise)
+    const des = E.repairState({ name: 'G', font: 'Segoe UI', data: E.PRESETS.Corporate.data.slice(), ui: Object.assign({}, E.PRESETS.Corporate.ui, { text: '#2b1d3a' }), chart: { labels: 'on' }, layout: { v: 3 } });
+    const plain = E.buildTheme(E.repairState({ name: 'G', font: 'Segoe UI', data: E.PRESETS.Corporate.data.slice(), ui: E.PRESETS.Corporate.ui, layout: { v: 3 } }), 'en');
+    chk(() => !JSON.stringify(plain.visualStyles.clusteredColumnChart || {}).includes('labelColor'), () => `P1-4: "Power BI default" writes no axis greys: ${JSON.stringify(plain.visualStyles.clusteredColumnChart || {}).slice(0, 200)}`);
+    const tj = E.buildTheme(des, 'en'), R0 = E.roles(des.ui), cc = ((tj.visualStyles.clusteredColumnChart || {})['*']) || {};
+    // the gridlines' grey is the report writer's quiet grid (text mixed 0.85 into the card): the theme leaves the gridline
+    // colour out, or the writer's grey would be switched off (pbip-export.js themeGrid)
+    chk(() => JSON.stringify(cc.categoryAxis || '').includes(R0.secondary) && JSON.stringify(cc.valueAxis || '').includes(R0.secondary) && !/gridline/.test(JSON.stringify(cc.valueAxis || '')),
+      () => `P1-4: the column chart's axis labels take the grey mixed from the theme's text colour, the gridlines left to the writer's quiet grid: ${JSON.stringify([cc.valueAxis, cc.categoryAxis]).slice(0, 300)}`);
+    // (P1+, the laptop's LAB-POLISH section 5, measured in Desktop, 12 Oct) (b) the second chart takes the palette's next
+    // DISTINCT colour, chosen: a hue at least 30 degrees from the lead and 3:1 on the card (Corporate's colour 2 is the
+    // lead's own blue, lighter: the page stayed one colour), not blindly data colour 2
+    const pick = E.secondColour && E.secondColour(E.PRESETS.Corporate.data, card), hd = (a, b) => { const x = Math.abs(hue(a) - hue(b)) % 360; return Math.min(x, 360 - x); };
+    chk(() => !!pick && hd(pick, E.PRESETS.Corporate.data[0]) >= 30 && E.contrast(pick, card) >= 3 && pick.toLowerCase() === '#c55a11',
+      () => `P1+b: the second colour is chosen, a distinct hue at 3:1 on the card: ${pick}`);
+    const darkened = E.secondColour && E.secondColour(['#1f4e79', '#2e75b6', '#ffd966', '#9dc3e6', '#bdd7ee', '#ddebf7', '#5b9bd5', '#4472c4'], card);
+    chk(() => !!darkened && hd(darkened, '#ffd966') <= 6 && E.contrast(darkened, card) >= 3,
+      () => `P1+b: no distinct colour at 3:1: the first distinct one darkened to 3:1, its hue kept: ${darkened}`);
+    // (d) a 6% tint of the lead as the page background on a light design (the cards stay as they are); never on a dark
+    // design, never over a background the user asked for, off with pageTint: false; the plan names it
+    const T = D.themeDesign({}), lead = T.design.data[0], tint = E.mix(T.design.ui.card, lead, 0.06);
+    chk(() => T.design.ui.background === tint && T.design.ui.card === E.PRESETS.Corporate.ui.card && T.notes.some((n) => n.includes(tint) && /6%/.test(n)),
+      () => `P1+d: a light design's page is a 6% tint of the lead (${tint}), named: ${T.design.ui.background} ${JSON.stringify(T.notes).slice(0, 300)}`);
+    const Tb = D.themeDesign({ brand: '#0F766E' });
+    chk(() => Tb.design.ui.background === E.mix(Tb.design.ui.card, '#0f766e', 0.06), () => `P1+d: a brand's light page is the brand's 6% tint: ${Tb.design.ui.background}`);
+    const Td = D.themeDesign({ mode: 'dark' }), Tp = D.themeDesign({ palette: { data: E.PRESETS.Corporate.data, ui: Object.assign({}, E.PRESETS.Corporate.ui, { background: '#ffffff' }) } }), To = D.themeDesign({ pageTint: false });
+    chk(() => Td.design.ui.background === E.PRESETS.DataArcus.ui.background && Tp.design.ui.background === '#ffffff' && To.design.ui.background === E.PRESETS.Corporate.ui.background,
+      () => `P1+d: no tint on a dark design, over an asked background or with pageTint false: ${Td.design.ui.background} ${Tp.design.ui.background} ${To.design.ui.background}`);
+    // 2. the second palette colour is used: the second bar or column chart of a page takes colour 2 (P1+: the chosen one)
+    const two = await ask('create_report', { path: 's-shop', name: 'P1 colours', design: design({ preset: 'exec', page: '1920x1080' }), secondPage: false });
+    const grads = visualsOf(two, 's-shop').filter((v) => v.visual && v.page.type !== 'Tooltip' && /^clustered(Bar|Column)Chart$/.test(typeOf(v))).sort((a, b) => a.position.y - b.position.y || a.position.x - b.position.x).map((v) => JSON.stringify(((v.visual.objects || {}).dataPoint) || ''));
+    const C = E.PRESETS.Corporate.data.map((c) => c.toLowerCase());
+    const C2 = String(E.secondColour ? E.secondColour(E.PRESETS.Corporate.data, card) : C[1]).toLowerCase();
+    chk(() => !two.err && grads.length >= 2 && grads[0].includes(C[0]) && grads[1].includes(C2) && !grads[1].includes(C[0]),
+      () => `P1-2: the first bar or column chart takes colour 1, the second colour 2: ${grads.map((g) => (g.match(/#[0-9a-f]{6}/g) || []).join('/')).join(' | ')} ${short(two)}`);
+    const sc = ((two.j || {}).chartColors || {}).second || {};
+    chk(() => !two.err && sc.charts >= 1 && String(sc.colour).toLowerCase() === C2 && grads[1].includes(String(sc.high).toLowerCase()),
+      () => `P1-2: the answer tells the second colour's charts and ends: ${JSON.stringify((two.j || {}).chartColors).slice(0, 400)}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
