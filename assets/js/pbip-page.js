@@ -200,7 +200,7 @@
     // reference, with Desktop's "Custom" display units (measured in Desktop 2.158, D8, for the full number).
     const cardCode = (f) => (f ? f.pctFormat || (!FULL && f.wholeFormat) || null : null);
     const cardObjects = (c, side, f) => ({
-      value: obj(Object.assign({ fontSize: num(c.V), horizontalAlignment: str(side || 'center') }, FULL || (f && (f.pct || cardCode(f))) ? {} : { labelPrecision: lit('2L') }), DEF)
+      value: obj(Object.assign({ fontSize: num(c.V), horizontalAlignment: str(side || 'center') }, FULL || (f && (f.pct || f.unitAuto || cardCode(f))) ? {} : { labelPrecision: lit('2L') }), DEF)
         .concat(cardCode(f) ? [{ properties: { labelDisplayUnits: num(-1), customFormatString: str(cardCode(f)) }, selector: { metadata: proj(f).queryRef } }] : []),
       label: obj({ show: bool(false) }, DEF),
       padding: obj({ paddingUniform: num(c.I) }, DEF),
