@@ -348,6 +348,32 @@ export function v029w({ check }) {
     chk(() => hd && L(hd.text) == null && +L(hd.textSize).replace(/D$/, '') >= 8 && !(rs.titles && (rs.titles.slicers || []).length),
       () => `D3: "Enforcement_History_Status" in a 196-wide slicer is whole at a smaller header text: ${rs.threw || JSON.stringify(hd)} ${JSON.stringify(rs.titles && rs.titles.slicers)}`);
   }
+
+  // ---------- writer round 8 (RESCORE-1): T6 by the tooltip's own measured rows, D18 the table's decimals, T10 through the picker ----------
+  {
+    const Bind = req('../assets/js/pbip-bind.js');
+    const pagesOf = (r) => r.files.filter((f) => /pages\/[^/]+\/page\.json$/.test(f.path)).map((f) => { const pj = JSON.parse(String(f.data)), dir = f.path.replace(/page\.json$/, '');
+      return Object.assign(pj, { vs: r.files.filter((x) => x.path.startsWith(dir) && /visual\.json$/.test(x.path)).map((x) => JSON.parse(String(x.data))).filter((v) => v.visual) }); });
+    const r = get(() => build(base()));
+    const tp = r.files ? pagesOf(r).find((p) => p.type === 'Tooltip' && !/ · /.test(p.displayName)) : null, bar = tp && tp.vs.find((v) => v.visual.visualType === 'clusteredBarChart');
+    // T6 (RESCORE-1: a scrollbar beside the 6 bars at 187): the tooltip lab's measure of this very chart (8pt names, values
+    // beside the bars, TOOLTIP-FIX-LAB, report-rules TIP_ROWS_6): 27 a bar and 40, plus the 8 under the last
+    chk(() => bar && bar.position.height >= 40 + 27 * 6 + 8 && bar.position.y + bar.position.height <= tp.height,
+      () => `T6: the Top 6 tooltip chart holds 6 bars at 27 + 40 (+ 8): ${r.threw || JSON.stringify([bar && bar.position, tp && tp.height])}`);
+    // D18 (RESCORE-1: "$4,344,705.7026" in a table): a measure the format rule leaves alone keeps its model format on the
+    // cards, and its table column shows 2 decimals at most (the report's number rule), the currency kept
+    const tb = { name: 'Sales', columns: [{ name: 'Amount', dataType: 'decimal' }], measures: [{ name: 'Revenue', formatString: '\\$#,0.0000', expression: 'SUM ( Sales[Amount] )' }, { name: 'Cost', formatString: '#,0.0000', expression: 'SUM ( Sales[Amount] )' }, { name: 'Units', formatString: '#,0', expression: 'SUM ( Sales[Amount] )' }] };
+    const rev = get(() => Bind.measureOf(tb, 'Revenue', [tb])), rate = get(() => Bind.measureOf(tb, 'Cost', [tb])), units = get(() => Bind.measureOf(tb, 'Units', [tb]));
+    chk(() => rev.tableFormat === '\\$#,0.00' && rate.tableFormat === '#,0.00' && !units.tableFormat,
+      () => `D18: a table amount with more than 2 decimals is shown with 2: ${JSON.stringify([rev.tableFormat, rate.tableFormat, units.tableFormat])}`);
+    // T10 re-checked through the picker: a "#,0 \"kg\"" measure is whole on its card, and the tooltip's values show its own format
+    const kgT = { name: 'Sales', columns: [{ name: 'Kg', dataType: 'int64' }], measures: [{ name: 'Weight', formatString: '#,0 "kg"', expression: 'SUM ( Sales[Kg] )' }] };
+    const kg = Object.assign({ t: 'Sales', m: 'Weight' }, get(() => Bind.measureOf(kgT, 'Weight', [kgT])));
+    const rk = get(() => build(base({ kpis: [kg, M('Orders')], measure: kg, tip: { card: kg, cat: C('Product'), y: kg } })));
+    const kb = rk.files ? pagesOf(rk).filter((p) => p.type === 'Tooltip').flatMap((p) => p.vs).filter((v) => v.visual.visualType === 'clusteredBarChart') : [];
+    chk(() => kg.wholeFormat && kb.length && kb.every((v) => L(v.visual.objects.labels[0].properties.labelDisplayUnits) === '1D'),
+      () => `T10: the kg measure's tooltip values keep "kg" whole (display units None): ${rk.threw || JSON.stringify([kg.wholeFormat, kb.map((v) => v.visual.objects.labels)])}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
