@@ -244,7 +244,10 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     const brand = D.themeDesign({ brand: '#20E2D7' });
     chk(() => brand.design.data[0].toLowerCase() === '#20e2d7', () => `P1: an explicit brand colour wins, exactly: ${brand.design.data[0]}`);
     // 4. greys from the theme's text colour for axes and gridlines (never Power BI's default grey)
-    const des = E.repairState({ name: 'G', font: 'Segoe UI', data: E.PRESETS.Corporate.data.slice(), ui: Object.assign({}, E.PRESETS.Corporate.ui, { text: '#2b1d3a' }), layout: { v: 3 } });
+    // (with a chart style chosen: "Power BI default", every setting auto, writes no chart settings, the website's promise)
+    const des = E.repairState({ name: 'G', font: 'Segoe UI', data: E.PRESETS.Corporate.data.slice(), ui: Object.assign({}, E.PRESETS.Corporate.ui, { text: '#2b1d3a' }), chart: { labels: 'on' }, layout: { v: 3 } });
+    const plain = E.buildTheme(E.repairState({ name: 'G', font: 'Segoe UI', data: E.PRESETS.Corporate.data.slice(), ui: E.PRESETS.Corporate.ui, layout: { v: 3 } }), 'en');
+    chk(() => !JSON.stringify(plain.visualStyles.clusteredColumnChart || {}).includes('labelColor'), () => `P1-4: "Power BI default" writes no axis greys: ${JSON.stringify(plain.visualStyles.clusteredColumnChart || {}).slice(0, 200)}`);
     const tj = E.buildTheme(des, 'en'), R0 = E.roles(des.ui), cc = ((tj.visualStyles.clusteredColumnChart || {})['*']) || {};
     // the gridlines' grey is the report writer's quiet grid (text mixed 0.85 into the card): the theme leaves the gridline
     // colour out, or the writer's grey would be switched off (pbip-export.js themeGrid)
