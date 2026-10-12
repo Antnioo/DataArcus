@@ -205,6 +205,23 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     const bars = report.filter((v) => typeOf(v) === 'clusteredBarChart' && keepOf(v)), share = (v) => +String((((v.visual.objects.categoryAxis || [])[0] || {}).properties || {}).maxMarginFactor.expr.Literal.Value).replace(/L$/, '');
     chk(() => bars.length && bars.every((v) => share(v) === 50 || share(v) * v.position.width / 100 >= 25 * 10.2 * (x.j.pages[0].height / 1080)), () => `D19: a bar chart cut to its Top N gives its names the measured room: ${JSON.stringify(bars.map((v) => [share(v), v.position.width]))}`);
   }
+
+  // ---------- the owner's decision on layouts (12 Oct, after LAYOUT-SWEEP-RC6): three setups ship as preview ----------
+  {
+    const LINE = 'Preview: this layout is still being tuned on real dashboards; the executive and single-focus layouts are the tested ones.';
+    const prev = async (args) => { const p = await ask('plan_layout', Object.assign({ path: 's-shop' }, args)); return { p, line: p.j && p.j.preview }; };
+    for (const [args, want] of [[{ layout: 'ops' }, true], [{ layout: 'analysis' }, true], [{ layout: 'exec', page: '1280x720', filters: 'top' }, true], [{ layout: 'exec', page: '960x720', filters: 'top' }, true],
+      [{ layout: 'exec' }, false], [{ layout: 'exec', page: '1920x1080', filters: 'top' }, false], [{ layout: 'exec', page: '1280x720', filters: 'end' }, false], [{ layout: 'focus' }, false], [{ layout: 'focus', page: '1280x720', filters: 'top' }, true]]) {
+      const { p, line } = await prev(args);
+      chk(() => !p.err && p.j.plan && p.j.plan.planId && (want ? line === LINE : line === undefined), () => `preview (${JSON.stringify(args)}): the plan says the preview line ${want ? 'once' : 'never'}, and nothing is refused: ${JSON.stringify(line)} ${short(p)}`);
+    }
+    const { line: ar } = await prev({ layout: 'ops', lang: 'ar' });
+    chk(() => typeof ar === 'string' && /^معاينة/.test(ar) && /[\u0600-\u06FF]/.test(ar) && !/[A-Za-z]/.test(ar), () => `preview: the Arabic plan says it in Arabic: ${ar}`);
+    const readme = fs.readFileSync(path.join(HERE, 'README.md'), 'utf8');
+    const row = (name) => (readme.split('\n').find((l) => l.includes(name) && /preview/i.test(l)) || '');
+    chk(() => readme.includes(LINE) && row('Operations monitor') && row('Analysis') && !/\b(first|only|unique)\b[^.\n]*(layout|tool|report)/i.test(readme.split('\n').filter((l) => /preview/i.test(l)).join('\n')),
+      () => `preview: mcp/README.md marks Operations monitor and Analysis as preview, with the same line: ${row('Operations monitor')} | ${row('Analysis')}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
