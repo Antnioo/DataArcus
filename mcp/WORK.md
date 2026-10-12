@@ -217,6 +217,10 @@ After the twin and tools: **1033** + 36 + 21 + 21 + 16, golden PASS (11 tasks, n
 (854) PASS. The startup instructions are **2,493 characters** (cap 2,500): builder 10's A7-4 (every rule from one source)
 must keep them under it.
 
+## Writer round 11 (12 Oct from 14:11 UTC; `fix/0.2.9-writer` reset to the gate `ad5c7f2`; not merged)
+`d46f3e7`: the written text-suffix card now has no decimals set (unitAuto carried through the picker's output and the server's field
+resolution). Whole chain and website 17/17 green. Backlog: N19 (padded card always in millions). Next: builder 5 merges as round 11.
+
 ## Writer round 10, final for 0.2.9 (12 Oct from 11:21 UTC; `fix/0.2.9-writer` reset to the gate `1ed1530`; not merged)
 `3609f1c`: N11 + N13: padded or text-suffix cards scale to millions in a format of their own ("-€50.87M", "-50.87M AED"). Whole chain
 and website 17/17 green. Review: millions only for padded formats, a text suffix in automatic units with decimals unset (`fb821e6`). Next: builder 5 merges; the laptop checks the variance card and the six-card row on rc.6.
