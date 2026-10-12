@@ -71,6 +71,25 @@
     const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
     return rgbToHex([(r + m) * 255, (g + m) * 255, (b + m) * 255]);
   };
+  // (polish round P1, RESCORE-5: adventureworks' lead 1.6:1 and property's 1.8:1 on their cards: thin lines and flat
+  // bars) a colour under min:1 on the card, its hue and saturation kept, stepped to the first lightness at min:1
+  // (darker on a light card, lighter on a dark one); moved here from the MCP so the writer chooses with it too
+  const toContrast = (c, card, min) => {
+    if (contrast(c, card) >= min) return c;
+    const [h, sat, l0] = hexToHsl(c), darker = lum(card) > 0.45;
+    for (let i = 1; i <= 100; i++) { const l = darker ? l0 - i / 100 : l0 + i / 100; if (l < 0 || l > 1) break; const x = hslToHex(h, sat, l); if (contrast(x, card) >= min) return x; }
+    return c;
+  };
+  // The second chart's colour (P1+, the laptop's LAB-POLISH section 5, measured in Desktop on 12 Oct: data colour 2 taken
+  // blindly was often the lead's own hue, lighter, and the page stayed one colour): the palette's next colour whose hue
+  // stands at least 30 degrees from the lead's (a grey, saturation under 0.15, has no hue to tell apart) and 3:1 on the
+  // card; with none at 3:1, the first such hue taken to 3:1 (toContrast); with no distinct hue at all, null
+  const secondColour = (data, card) => {
+    const lead = clampHex((data || [])[0] || ''); if (!lead || !clampHex(card || '')) return null;
+    const [h0, s0] = hexToHsl(lead), far = (c) => { const [h, sat] = hexToHsl(c); if (sat < 0.15) return false; if (s0 < 0.15) return true; const d = Math.abs(h - h0) % 360; return Math.min(d, 360 - d) >= 30; };
+    const rest = data.slice(1).map((c) => clampHex(c || '')).filter((c) => c && far(c));
+    return rest.find((c) => contrast(c, card) >= 3) || (rest.length ? toContrast(rest[0], card, 3) : null);
+  };
   const generate = (base, mode) => {
     const [h, s0, l0] = hexToHsl(base); const s = Math.max(0.45, s0), l = Math.min(0.55, Math.max(0.4, l0));
     const plans = {
@@ -794,7 +813,7 @@
 
   const api = {
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
-    clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, generate, calmPalette,
+    clampHex, hexToRgb, rgbToHex, mix, lum, contrast, hexToHsl, hslToHex, toContrast, secondColour, generate, calmPalette,
     within, fitCustom, page, pw, toPage, boxOf, upgrade, rtl, SMALL_PAGE, smallPage, isSmall, fitLayout, TABLE_NEED, tableWeight, rangeOf, clampTo, hasMain, hasSplit, sizes, computeSlots, pngSize, imageSize, kpiInset,
     fs, sizeAt, TEXT_BASES, LAYOUT_PREVIEW, isPreview, noTimeOf, CATEGORY_KINDS, CATEGORY_FIT, categoryFit, absorb, fitSlots, fitScale, SLOT_GAP, themeScaleOf, scaleTheme, chart, colours, roles, BAR_COLORS, SCHEMA, DESIGN_KEYS, LAYOUT_KEYS, OLD_LAYOUT_KEYS, buildTheme, contrastChecks, REPORT_TEXTS, texts, projectSlots, secondLayout, slidePanel, projectPages, barW, barColor, c0, bgSvg, fresh, repairState, fileBase
   };
