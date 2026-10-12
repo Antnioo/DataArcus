@@ -585,6 +585,7 @@
     return out;
   }
   const SLOT_GAP = 40;
+  const REFLOW_KEEP = 0.6;   // (round 8, S7) a chart beside the rail keeps this share of its height at least when the page reflows
   const slotsTouch = (a, b) => (Math.abs(a.y - b.y) <= 1 && Math.abs(a.h - b.h) <= 1 && Math.max(a.x, b.x) - Math.min(a.x + a.w, b.x + b.w) <= SLOT_GAP)
     || (Math.abs(a.x - b.x) <= 1 && Math.abs(a.w - b.w) <= 1 && Math.max(a.y, b.y) - Math.min(a.y + a.h, b.y + b.h) <= SLOT_GAP);
   // fitSlots(slots, { dropKinds, headerRows, railItems }): { slots, dropped }; the slots given are never changed
@@ -626,18 +627,20 @@
     });
     // (the laptop's sweep of rc.1, S7: under the shortened rail the page stayed empty to its bottom) a slot wholly below
     // the rail's new bottom, beside the rail (within SLOT_GAP), takes the rail's column: the row reaches the page's edge
-    let rail = R && out.find((s) => s.kind === 'slicer' && s.stack);
-    // (design round 8, the re-score's S7: on page 2 the rail shrank beside a chart that runs lower, and the table under
-    // both starts after that chart, so the page stayed empty under the rail) the rail reaches the bottom of the slots
-    // beside it that start above its own bottom, never past its first height; contentH keeps the height its dropdowns and
-    // Reset take, which the writer stacks at the top
+    const rail = R && out.find((s) => s.kind === 'slicer' && s.stack);
+    // (design round 8, the re-score's S7: on page 2 the rail shrank beside a chart that runs lower, and the visual under
+    // both starts after that chart, so the page stayed empty under the rail) the content reflows, the rail kept to its
+    // contents (the owner's round-12 rule #18): the slots beside the rail that run past its bottom end there, and the
+    // slots under them and under the rail move up by as much, keeping their bottoms (they grow). Only where every chart
+    // beside keeps 60% of its height at least (REFLOW_KEEP); otherwise the page is left as it is.
     if (rail) {
-      const s0 = slots.find((s) => s.kind === 'slicer' && s.x === rail.x && s.y === rail.y) || rail, bottom = rail.y + rail.h;
-      const beside = out.filter((s) => s !== rail && !OWN_SLOTS.includes(s.kind) && s.y >= rail.y - 1 && s.y < bottom
+      const B = rail.y + rail.h, beside = out.filter((s) => s !== rail && !OWN_SLOTS.includes(s.kind) && s.y < B && s.y + s.h > B
         && ((s.x - (rail.x + rail.w) >= 0 && s.x - (rail.x + rail.w) <= SLOT_GAP) || (rail.x - (s.x + s.w) >= 0 && rail.x - (s.x + s.w) <= SLOT_GAP)));
-      const to = Math.min(s0.y + s0.h, Math.max(bottom, ...beside.map((s) => s.y + s.h)));
-      const grown = Object.assign({}, rail, { h: to - rail.y, contentH: rail.h });
-      out = out.map((s) => (s === rail ? grown : s)); rail = grown;
+      const cut = beside.length ? Math.min(...beside.map((s) => s.y + s.h)) - B : 0;
+      if (cut > 0 && beside.every((s) => s.y + s.h === B + cut && B - s.y >= REFLOW_KEEP * s.h)) {
+        const under = (s) => s.y >= B + cut && s.x < Math.max(...beside.map((q) => q.x + q.w).concat(rail.x + rail.w)) && s.x + s.w > Math.min(...beside.map((q) => q.x).concat(rail.x));
+        out = out.map((s) => (beside.includes(s) ? Object.assign({}, s, { h: B - s.y }) : !OWN_SLOTS.includes(s.kind) && s !== rail && under(s) ? Object.assign({}, s, { y: s.y - cut, h: s.h + cut }) : s));
+      }
     }
     if (rail) out = out.map((s) => {
       if (s === rail || s.y < rail.y + rail.h || OWN_SLOTS.includes(s.kind)) return s;

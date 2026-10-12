@@ -521,10 +521,7 @@
         const across = !s.stack && s.w > s.h && (stripW >= 160 * k || stackH > s.h);
         const room = across ? s.w - 2 * pad - bw - gap : s.w - 2 * pad;
         const sw = across ? (room - gap * (n - 1)) / n : room;
-        // (design round 8, S7: a rail grown to the row beside it keeps its dropdowns and Reset together at its top, in the
-        // height they take, contentH from the design engine's fitSlots; the rest of the rail is its panel)
-        const railH = !across && s.contentH && s.contentH < s.h ? s.contentH : s.h;
-        const sh = across ? s.h - 2 * pad : Math.max(slicerH(SLICER_TEXT), Math.min(76 * k, (railH - 2 * pad - bh - gap * n) / n));
+        const sh = across ? s.h - 2 * pad : Math.max(slicerH(SLICER_TEXT), Math.min(76 * k, (s.h - 2 * pad - bh - gap * n) / n));
         fields.forEach((f, i) => {
           // in a right-to-left report the first slicer is the rightmost one, so tab order follows the reading
           const x = across ? (rtl ? s.x + s.w - pad - sw - i * (sw + gap) : s.x + pad + i * (sw + gap)) : s.x + pad, y = across ? s.y + pad : s.y + pad + i * (sh + gap);
@@ -538,7 +535,7 @@
         });
         // Reset button: applies a bookmark that clears these slicers
         // (across: at the end of the strip; in a rail: at the reading start, lined up with the slicers)
-        const bm = rnd(), bx = across ? (rtl ? s.x + pad : s.x + s.w - pad - bw) : (rtl ? s.x + s.w - pad - bw : s.x + pad), by = across ? s.y + (s.h - bh) / 2 : s.y + railH - pad - bh;
+        const bm = rnd(), bx = across ? (rtl ? s.x + pad : s.x + s.w - pad - bw) : (rtl ? s.x + s.w - pad - bw : s.x + pad), by = across ? s.y + (s.h - bh) / 2 : s.y + s.h - pad - bh;
         container({ x: Math.round(bx), y: Math.round(by), w: Math.round(bw), h: Math.round(bh), z, parent, kind: 'button',
           visual: { visualType: 'actionButton',
             objects: { icon: def(resetIcon(reset)), text: def(resetLook(resetText, reset)),
