@@ -125,7 +125,8 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
 
     // S7: the rail stays as high as its contents (the owner's round-12 rule #18, kept by the reviewer on 12 Oct); the page
     // reflows: the chart beside the rail ends where it ends, and the table under them moves up, keeping its bottom
-    const p2 = E.projectPages(design({ preset: 'exec', page: '1920x1080' }).layout, 'en', { second: true })[1].slots, R3 = { n: 3, minH: 56, maxH: 114, resetH: 40, pad: 15, gap: 12 };
+    // (design round 9: page 2 has its filters on top; the reflow is checked on a page with a side rail, analysis's first)
+    const p2 = E.projectPages(design({ preset: 'analysis', page: '1920x1080', filters: true, fpos: 'start' }).layout, 'en', {})[0].slots, R3 = { n: 3, minH: 56, maxH: 114, resetH: 40, pad: 15, gap: 12 };
     const f2 = get(() => E.fitSlots(p2, { railItems: R3 }).slots), rail = f2.find((s) => s.kind === 'slicer'), beside = f2.find((s) => s.kind === 'column'), tab2 = f2.find((s) => s.kind === 'table'), tab0 = p2.find((s) => s.kind === 'table');
     chk(() => rail.h < 491 && rail.y + rail.h === beside.y + beside.h && tab2.y < tab0.y && tab2.y + tab2.h === tab0.y + tab0.h && tab2.y - (beside.y + beside.h) === tab0.y - (p2.find((s) => s.kind === 'column').y + p2.find((s) => s.kind === 'column').h),
       () => `S7: page 2 reflows under a rail kept to its contents: rail ${JSON.stringify(rail && [rail.y, rail.h])}, beside ${JSON.stringify(beside && [beside.y, beside.h])}, table ${JSON.stringify(tab2 && [tab2.y, tab2.h])}`);

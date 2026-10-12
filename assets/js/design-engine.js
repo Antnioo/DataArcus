@@ -234,7 +234,12 @@
     return Object.assign({}, P, { rows: keep.map((i) => rows[i]), flex: keep.map((i) => P.flex[i] != null ? P.flex[i] : 1) });
   };
   // the layout's rows as this page gets them (c.noTime: projectPages' opts.noTime, carried by the page's layout)
-  const layoutOf = (c) => (c.noTime ? noTimeOf(LAYOUTS[c.preset]) : LAYOUTS[c.preset]);
+  // (design round 9, the re-score's S7 on all 9 reports: page 2's side rail shrank to its dropdowns and the page stayed
+  // empty under it, and its full-width table, of rows no one can count before the data, left half its panel empty) the
+  // details page: its filters a strip on top (no area under a rail; the owner's #18 keeps a rail to its contents), the
+  // main chart, then the table beside a bar chart, so a short table leaves half a row, not half a page
+  const DETAIL_ROWS = [[[1, 'column', T('Main chart', 'المخطط الرئيسي')]], [[1, 'table', T('Detail table', 'جدول التفاصيل')], [1, 'bar', T('Breakdown', 'التوزيع')]]];
+  const layoutOf = (c) => { const L = c.detail ? Object.assign({}, LAYOUTS[c.preset], { rows: DETAIL_ROWS }) : LAYOUTS[c.preset]; return c.noTime ? noTimeOf(L) : L; };
   const hasMain = (P) => P.rows[0].length > 1 && P.rows[0][0][0] > P.rows[0][1][0];   // a wider first chart
   const hasSplit = (P) => P.rows.length === 2;
   function sizes(c, PW) {
@@ -555,7 +560,7 @@
   // A first page with fewer KPI cards than its layout plans (a report with fewer measures) keeps the second page at that
   // count (0.2.9, A2-4: this was the MCP's kpiCards, which capped every page).
   const secondLayout = (c) => { const to = c.preset === 'analysis' ? 'exec' : 'analysis', own = LAYOUTS[to].kpis, k = +c.kpis < LAYOUTS[c.preset].kpis ? Math.min(own, +c.kpis) : own;
-    return Object.assign({}, c, to === 'exec' ? { preset: 'exec', kpis: k, filters: false } : { preset: 'analysis', kpis: k, filters: true, fpos: ['start', 'end', 'top'].includes(c.fpos) ? c.fpos : 'start' }, { kpiH: null, mainW: null, split: null }); };
+    return Object.assign({}, c, to === 'exec' ? { preset: 'exec', kpis: k, filters: false } : { preset: 'analysis', kpis: k, filters: true, fpos: 'top', detail: true }, { kpiH: null, mainW: null, split: null }); };
   // Filters as a slide-in panel: the page without its filter rail, and the panel's box (null when the page has no
   // filters or no header). The panel opens under the Filters button, at the end of the header (right in English, left in Arabic)
   const slidePanel = (cc, lang) => {
