@@ -259,8 +259,10 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     const pick = E.secondColour && E.secondColour(E.PRESETS.Corporate.data, card), hd = (a, b) => { const x = Math.abs(hue(a) - hue(b)) % 360; return Math.min(x, 360 - x); };
     chk(() => !!pick && hd(pick, E.PRESETS.Corporate.data[0]) >= 30 && E.contrast(pick, card) >= 3 && pick.toLowerCase() === '#c55a11',
       () => `P1+b: the second colour is chosen, a distinct hue at 3:1 on the card: ${pick}`);
-    const darkened = E.secondColour && E.secondColour(['#1f4e79', '#2e75b6', '#ffd966', '#9dc3e6', '#bdd7ee', '#ddebf7', '#5b9bd5', '#4472c4'], card);
-    chk(() => !!darkened && hd(darkened, '#ffd966') <= 6 && E.contrast(darkened, card) >= 3,
+    // (moved in P3 with its cause, N26: the yellow sample #ffd966 is an amber, a status hue, never the second colour; a pale
+    // lilac takes its place)
+    const darkened = E.secondColour && E.secondColour(['#1f4e79', '#2e75b6', '#c9b3e6', '#9dc3e6', '#bdd7ee', '#ddebf7', '#5b9bd5', '#4472c4'], card);
+    chk(() => !!darkened && hd(darkened, '#c9b3e6') <= 6 && E.contrast(darkened, card) >= 3,
       () => `P1+b: no distinct colour at 3:1: the first distinct one darkened to 3:1, its hue kept: ${darkened}`);
     // (d) a 6% tint of the lead as the page background on a light design (the cards stay as they are); never on a dark
     // design, never over a background the user asked for, off with pageTint: false; the plan names it
@@ -282,6 +284,58 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     const sc = ((two.j || {}).chartColors || {}).second || {};
     chk(() => !two.err && sc.charts >= 1 && String(sc.colour).toLowerCase() === C2 && grads[1].includes(String(sc.high).toLowerCase()),
       () => `P1-2: the answer tells the second colour's charts and ends: ${JSON.stringify((two.j || {}).chartColors).slice(0, 400)}`);
+  }
+
+  // ---------- polish round P3 (the reviewer, RESCORE-6, 12 Oct): N26, N27, N25, N28 ----------
+  {
+    const D = await import('./lib/design.mjs');
+    const card = '#ffffff', hue = (c) => E.hexToHsl(c)[0], hd = (a, b) => { const x = Math.abs(hue(a) - hue(b)) % 360; return Math.min(x, 360 - x); };
+    const STATUS = (c) => { const [h, sat] = E.hexToHsl(c); return sat >= 0.35 && (h < 15 || h >= 345 || (h >= 35 && h <= 55) || (h >= 90 && h <= 150)); };
+    // N26: the second colour is never a red or a status colour (red, amber, green family, or the design's good/neutral/bad)
+    // and never within a clear hue step (30 degrees) of the lead; with none in the palette, a derived calm colour
+    const cases = {
+      complaints: [['#1d3557', '#e63946', '#457b9d', '#a8dadc', '#f1faee', '#2a6f97', '#61a5c2', '#89c2d9'], {}],
+      ecommerce: [['#3a0ca3', '#e63946', '#f4a261', '#2a9d8f', '#264653', '#e9c46a', '#8ab17d', '#b5838d'], {}],
+      inspection: [['#0d6e8c', '#c62828', '#2e7d32', '#f9a825', '#0d6e8c', '#5a9fb5', '#1b5e75', '#0b4f63'], { good: '#2e7d32', neutral: '#f9a825', bad: '#c62828' }],
+      ownStatus: [['#1f4e79', '#6a4c93', '#c55a11'], { bad: '#6a4c93' }]
+    };
+    for (const [name, [data, st]] of Object.entries(cases)) {
+      const two2 = E.secondColour(data, card, st), own = Object.values(st).map((c) => c.toLowerCase());
+      chk(() => !!two2 && !STATUS(two2) && !own.includes(two2.toLowerCase()) && hd(two2, data[0]) >= 30 && E.contrast(two2, card) >= 3,
+        () => `P3 N26 ${name}: the second colour is never a red or status colour, a clear hue step from the lead, 3:1: ${two2} (lead ${data[0]})`);
+    }
+    // N25: the fade's strong end is exactly the chart's colour (the lead or the second), never past it; the weak end is a
+    // lighter tint (towards the card); the plan's sentence says the same
+    const pale = D.themeColours({ report: 'R', theme: { name: 'Sun', themeColours: ['#F5A04A', '#3B6FB6'], painted: [] } }, 'en');
+    const lead = pale.data[0], ends = E.fadeEnds ? E.fadeEnds(lead, card) : null;
+    chk(() => !!ends && ends.high === lead.toLowerCase() && E.contrast(ends.low, card) < E.contrast(ends.high, card) && !ends.reversed,
+      () => `P3 N25: the strong end is the lead itself, the weak end a lighter tint: ${lead} ${JSON.stringify(ends)}`);
+    chk(() => !/fade towards/i.test(JSON.stringify(pale.info.changes || [])) && /light tint/i.test(JSON.stringify(pale.info.changes || [])),
+      () => `P3 N25: the plan's sentence matches the files (the bars fade from a light tint up to the colour): ${JSON.stringify(pale.info.changes)}`);
+    const dark = E.fadeEnds ? E.fadeEnds('#0f6cbd', card) : null;
+    chk(() => !!dark && dark.high === '#0f6cbd' && !dark.reversed, () => `P3 N25: a dark brand keeps its colour as the strong end (no darker or brighter end past it): ${JSON.stringify(dark)}`);
+    // N27: a chart's colour follows what it shows (its category field), so one field has one colour on pages 1 and 2
+    const both = await ask('create_report', { path: 's-shop', name: 'P3 keyed', design: design({ preset: 'exec', page: '1920x1080' }) });
+    const charts = visualsOf(both, 's-shop').filter((v) => v.visual && v.page.type !== 'Tooltip' && /^clustered(Bar|Column)Chart$/.test(typeOf(v)) && v.visual.objects && v.visual.objects.dataPoint);
+    const keyOf = (v) => JSON.stringify(((v.visual.query.queryState.Category || {}).projections || [{}])[0].field), hiOf = (v) => (JSON.stringify(v.visual.objects.dataPoint).match(/max[^#]*'(#[0-9a-f]{6})'/) || [])[1];
+    const byKey = {}; charts.forEach((v) => { (byKey[keyOf(v)] = byKey[keyOf(v)] || new Set()).add(hiOf(v)); });
+    const pages = new Set(charts.map((v) => v.page.displayName || v.page.name));
+    chk(() => !both.err && pages.size >= 2 && Object.values(byKey).every((s) => s.size === 1) && new Set(charts.map(hiOf)).size >= 2,
+      () => `P3 N27: one field, one colour on every page: ${JSON.stringify(Object.fromEntries(Object.entries(byKey).map(([k, s2]) => [k.slice(0, 80), [...s2]])))} pages ${[...pages]} ${short(both)}`);
+    // N28: the default designed path (plan_layout without colours, no report theme) writes the 6% tint; a page colour
+    // from the dashboard's own theme is kept (identity)
+    const pl = await ask('plan_layout', { layout: 'exec' }), dd = pl.j && pl.j.design;
+    chk(() => !pl.err && dd.ui.background === E.mix(dd.ui.card, dd.data[0], 0.06) && /6%/.test(JSON.stringify(pl.j)),
+      () => `P3 N28: plan_layout's default design writes the 6% tint, said: ${dd && dd.ui.background} ${short(pl)}`);
+    const cr = await ask('create_report', { path: 's-shop', name: 'P3 tint', design: dd, secondPage: false });
+    const th = cr.err ? null : (() => { const R2 = path.join(ROOT, 's-shop', cr.j.report, 'StaticResources', 'RegisteredResources'); const f = fs.readdirSync(R2).find((n) => n.endsWith('.json')); return JSON.parse(fs.readFileSync(path.join(R2, f), 'utf8')); })();
+    const pageBg = th && JSON.stringify(((th.visualStyles || {}).page || {})['*'] || {});
+    chk(() => !!th && pageBg.toLowerCase().includes(E.mix(E.PRESETS.Corporate.ui.card, E.PRESETS.Corporate.data[0], 0.06)),
+      () => `P3 N28: create_report on the default path writes the tinted page: ${pageBg && pageBg.slice(0, 300)} ${short(cr)}`);
+    const own = D.themeColours({ report: 'R', theme: { name: 'Own', themeColours: ['#2b2c8d'], painted: [], background: '#eef3f8', card: '#ffffff' } }, 'en');
+    const none = D.themeColours({ report: 'R', theme: { name: 'Stub', themeColours: ['#2b2c8d'], painted: [] } }, 'en');
+    chk(() => own.ui.background === '#eef3f8' && none.ui.background === E.mix(none.ui.card, none.data[0], 0.06),
+      () => `P3 N28: a report theme's own page colour is kept; a theme without one gets the tint: ${own.ui.background} ${none.ui.background}`);
   }
 }
 
