@@ -18,7 +18,10 @@ Fixes in `assets/js/pbip-bind.js`, tests first (`mcp/test-0.2.9r.mjs`, 10 checks
 - D17: an unformatted amount beside currency cards is in formatsMixed too ({ unformatted: true }); the server's note names both kinds.
 - D11: a SWITCH or nested IFs with two text results is two-valued. The wide slot itself is the design's (layout slots): for design.
 Changed expectation with its cause: test.mjs's 500/3,000-table stand-in measures `= 1` -> COUNTROWS (N4 makes a constant no card).
-Golden: no moves. Tests: mcp 1342, v029c/d/e/f 36/21/21/20, golden 11, fuzz 600 + FUZZ_LONG (see the report).
+Golden: no moves. Tests (Linux): mcp 1342, v029c/d/e/f 36/21/21/20, golden 11 match, fuzz 600 (8199) and FUZZ_LONG 10000
+(135843); website 16 of 17 + pbip (see below); deny-scan 9; site config; csp 95 pages; check-min 62.
+Seen, not in scope: the website's `pbip` suite has a race (the picker read before it has filled in): it failed on the round-7
+head `07ad9bc` too (1 in 4: "local: suggestions Total Sales | | | |"), and here as "more KPI cards: ... ( bound cards)" in 3 of 8 runs.
 Not done by values (never read): a text column's real cardinality; WeekType-like columns made in Power Query (no DAX to read)
 stay unknown to D11.
 
