@@ -1,8 +1,26 @@
 # Current work (the memory between sessions)
 
-Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Integration round 7" just below (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
+Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the memory"). **Current: "Picker round 8" just below (branch fix/0.2.9-picker8), then "Integration round 7" (the rc head: picker + writer + design merged), then "Picker fixes from the rc's laptop proof", "Integration round 6", then "Integration round 5", then "Integration round 4: ALL MERGED", then "Integration round 3", then "Integration round 2", then "0.2.9 integration", then "0.2.9 audit fixes (picker)", then parts 2 and 1 (11 Oct).** Older header text: last updated 2026-10-03
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
+
+## Picker round 8 (12 Oct, cloud builder 5; branch `fix/0.2.9-picker8` from `07ad9bc`; not merged, no PR)
+The re-score (RESCORE-1: 4.1 -> 5.4 -> 6.8, target 7.5). Round 7b (merging `feat/0.2.9-custom-visuals` 29743c6 into the gate)
+is waiting for the owner's confirmation in the builder's chat (the session's safety check refused the merge twice).
+Fixes in `assets/js/pbip-bind.js`, tests first (`mcp/test-0.2.9r.mjs`, 10 checks, wired after v029q), by metadata and formula only:
+- N1: an identifier or contact-details text column ranks after every category (catRank 3): the model's isKey, a relationship's
+  two ends when the one side's table has another text column (a join on a readable name alone stays a category), a WebUrl,
+  ImageUrl or Barcode data category, a calculated column that joins two or more columns or breaks lines (UNICHAR(10/13)).
+- N4: a placeholder measure (no expression, BLANK (), a number or text constant) is no card (notCard 'placeholder').
+- D6 + N5: COUNTROWS(T) and COUNT/COUNTA(T[c]) share one value key; CALCULATE(x, ALL-family filters only) has x's key.
+- D14 + N5: any expression over itself under ALL/ALLSELECTED/REMOVEFILTERS/ALLEXCEPT, with DIVIDE or "/", is no card.
+- D5: a currency-formatted total that doesn't divide ranks with the core amounts (RELATED, variables).
+- D17: an unformatted amount beside currency cards is in formatsMixed too ({ unformatted: true }); the server's note names both kinds.
+- D11: a SWITCH or nested IFs with two text results is two-valued. The wide slot itself is the design's (layout slots): for design.
+Changed expectation with its cause: test.mjs's 500/3,000-table stand-in measures `= 1` -> COUNTROWS (N4 makes a constant no card).
+Golden: no moves. Tests: mcp 1342, v029c/d/e/f 36/21/21/20, golden 11, fuzz 600 + FUZZ_LONG (see the report).
+Not done by values (never read): a text column's real cardinality; WeekType-like columns made in Power Query (no DAX to read)
+stay unknown to D11.
 
 ## Integration round 7: picker + writer + design merged (11-12 Oct, cloud builder 5; `fix/0.2.9-gate` from `c83e86d`; not merged to main, no PR)
 Real merges, no squash, in the reviewer's order: (1) `fix/0.2.9-picker` ea6ccdb -> `84d016b`, no conflict; (2) `fix/0.2.9-writer`
