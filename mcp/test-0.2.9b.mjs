@@ -133,7 +133,8 @@ export async function v029b({ call, check, ROOT, fs = fs0 }) {
     const tips = r.pages.filter((p) => p.page.type === 'Tooltip'), bars = tips.map((p) => ({ p, v: p.visuals.find((v) => typeOf(v) === 'clusteredBarChart') })).filter((x) => x.v);
     const byCat = bars.find((x) => !/Calendar/.test(JSON.stringify(x.v.visual.query.queryState.Category))), byMonth = bars.find((x) => /Calendar/.test(JSON.stringify(x.v.visual.query.queryState.Category)));
     const top = get(() => filtersOf(byCat.v).find((f) => f.type === 'TopN'));
-    chk(() => top && /"Top":6/.test(JSON.stringify(top.filter)) && (tag === 'ar' ? /أعلى 6/ : /Top 6/).test(JSON.stringify(byCat.v.visual.visualContainerObjects.title)), () => `tooltip ${tag}: the category bars must be the Top 6 by their measure, said in the title: ${JSON.stringify(byCat && filtersOf(byCat.v)).slice(0, 300)}`);
+    // (design round 10, N15: the title is the report measure that counts the bars kept, "Top S of M" only when it cuts)
+    chk(() => top && /"Top":6/.test(JSON.stringify(top.filter)) && ((tag === 'ar' ? /أعلى 6/ : /Top 6/).test(JSON.stringify(byCat.v.visual.visualContainerObjects.title)) || /"Schema":"extension"[^}]*\}\},"Property":"Title: /.test(JSON.stringify(byCat.v.visual.visualContainerObjects.title))), () => `tooltip ${tag}: the category bars must be the Top 6 by their measure, said in the title: ${JSON.stringify(byCat && filtersOf(byCat.v)).slice(0, 300)}`);
     const m6 = get(() => filtersOf(byMonth.v).map((f) => extByField(r, f.field)).find((m) => m && /EDATE \( [^,]+, -6 \)/.test(m.expression)));
     const sd = get(() => byMonth.v.visual.query.sortDefinition.sort[0]);
     chk(() => m6 && sd.direction === 'Descending' && /MIN \( 'Calendar'\[Date\] \)/.test((extByField(r, sd.field) || {}).expression) && byMonth.v.position.height >= 40 + 27 * 6 && byMonth.v.position.height + byMonth.v.position.y <= byMonth.p.page.height,

@@ -4418,7 +4418,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
           return !e ? null : e.Literal ? e.Literal.Value.replace(/^'|'$/g, '') : e.Measure ? plainTitle(def, e.Measure.Property) : null; }).filter(Boolean)); };
     // (the plain title: the last text of the title measure's DAX, shown when the chart leaves no category out)
     const plainTitle = (def, name) => { const f = path.join(def, '..', 'reportExtensions.json'), m = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')).entities.flatMap((x) => x.measures).find((x) => x.name === name) : null;
-      const all = m ? [...m.expression.matchAll(/"((?:[^"]|"")*)"/g)] : []; return all.length ? all[all.length - 1][1].replace(/""/g, '"') : null; };
+      const p = m && m.expression.match(/IF \( _s = _n, "((?:[^"]|"")*)"/), all = m ? [...m.expression.matchAll(/"((?:[^"]|"")*)"/g)] : [];   // (round 10: the plain title follows IF ( _s = _n, )
+      return p ? p[1].replace(/""/g, '"') : all.length ? all[all.length - 1][1].replace(/""/g, '"') : null; };
     for (const lang of ['en', 'ar']) {
       const pages = await titles(lang), dup = (ts) => ts.filter((t, i) => ts.indexOf(t) !== i);
       // (English titles carry "by <column>" and are already their own: unchanged, no brackets; the Arabic ones repeated)

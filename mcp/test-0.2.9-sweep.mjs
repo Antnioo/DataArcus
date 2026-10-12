@@ -64,7 +64,8 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     const pl = await ask('plan_layout', { layout: 'exec', path: 's-loans' }), pb = pl.j && pl.j.slots.find((x) => x.kind === 'bar');
     chk(() => pb && pb.topN === rows && JSON.stringify(pl.j).includes('Top ' + rows), () => `S5: plan_layout gives each category chart's top N and says it: ${short(pl)}`);
     const x = await ask('create_report', { path: 's-loans', name: 'S top n', design: design({ preset: 'analysis' }), secondPage: false, fields: { category: 'loans[BranchName]' } });
-    const tops = visualsOf(x, 's-loans').filter((v) => v.page.type !== 'Tooltip' && /(Bar|Column)Chart$/.test(typeOf(v))).map((v) => ((v.filterConfig || {}).filters || []).find((f) => f.type === 'TopN'));
+    // (design round 10, N14: the Top N is kept by a report measure, "Keep: ...", not a fixed Top N filter)
+    const tops = visualsOf(x, 's-loans').filter((v) => v.page.type !== 'Tooltip' && /(Bar|Column)Chart$/.test(typeOf(v))).map((v) => ((v.filterConfig || {}).filters || []).find((f) => f.type === 'TopN' || (f.field && f.field.Measure && /^Keep: /.test(f.field.Measure.Property))));
     chk(() => !x.err && tops.length && tops.every(Boolean) && (x.j.reportNotes || []).some((n) => /Top \d+/.test(n)), () => `S5: every bar and column chart by a category gets its Top N filter, said in the notes: ${tops.map(Boolean)} ${short(x)}`);
   }
 
@@ -113,10 +114,11 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     // the data the tools never read), else its plain title; the plan says the rest are left out, with no "Other" bar
     const x = await ask('create_report', { path: 's-loans', name: 'R8 top', design: design({ preset: 'exec' }), secondPage: false });
     const vs = visualsOf(x, 's-loans').filter((v) => v.page.type !== 'Tooltip'), ext = extOf(x, 's-loans');
-    const topped = vs.filter((v) => ((v.filterConfig || {}).filters || []).some((f) => f.type === 'TopN'));
+    // (design round 10, N14: kept by a report measure "Keep: ...", and the title counts the bars kept: "Top S of M")
+    const keepF = (v) => ((v.filterConfig || {}).filters || []).find((f) => f.field && f.field.Measure && /^Keep: /.test(f.field.Measure.Property));
+    const topped = vs.filter((v) => keepF(v));
     const titleM = (v) => { const t = (((v.visual.visualContainerObjects || {}).title || [])[0] || {}).properties || {}, m = t.text && t.text.expr && t.text.expr.Measure; return m && m.Expression.SourceRef.Schema === 'extension' ? ext.find((e) => e.t === m.Expression.SourceRef.Entity && e.name === m.Property) : null; };
-    const topOf = (v) => v.filterConfig.filters.find((f) => f.type === 'TopN').filter.From[0].Expression.Subquery.Query.Top;
-    chk(() => !x.err && topped.length >= 2 && topped.every((v) => { const m = titleM(v), n = topOf(v); return m && /REMOVEFILTERS/.test(m.expression) && m.expression.includes('MIN ( _n, ' + (n + 1) + ' ) = ' + (n + 1)) && m.expression.includes('"Top ' + n + ' of "') && !/^[^,]*"Top/.test(m.expression.split(',').pop()); }),
+    chk(() => !x.err && topped.length >= 2 && topped.every((v) => { const m = titleM(v); return m && /REMOVEFILTERS/.test(m.expression) && /IF \( _s = _n, "[^"]*", "Top " & _s & " of " & _n/.test(m.expression); }),
       () => `N2/N3: a Top N chart's title is a report measure: "Top N of M: ..." only when more than N categories have a value, the plain title otherwise: ${topped.map((v) => JSON.stringify(titleM(v) && titleM(v).expression || (((v.visual.visualContainerObjects || {}).title || [])[0] || {}).properties)).join(' | ').slice(0, 600)} ${short(x)}`);
     chk(() => !x.err && vs.filter((v) => /Chart$/.test(typeOf(v))).every((v) => !/'Top \d+: /.test(JSON.stringify((v.visual.visualContainerObjects || {}).title || ''))), () => 'N2: no chart title is a fixed "Top N:" text');
     const pl = await ask('plan_layout', { layout: 'exec', path: 's-loans' }), say = JSON.stringify((pl.j || {}).categoryCharts || {}) + ' ' + ((pl.j || {}).topCategories || '');
@@ -179,6 +181,29 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     // (measured, REPORT-FIXES-LAB B1/B2: 40% of 508 held about 20 characters, 50% about 25: 10.2 page units a character at 1080)
     chk(() => !d19.err && byName.length && byName.every((v) => typeOf(v) === 'clusteredBarChart' && (share(v) === 50 || share(v) * v.position.width / 100 >= 25 * 10.2 * (d19.j.pages[0].height / 1080))),
       () => `D19: a chart by a product name is a bar chart, names level, with room for 25 characters where its width allows (50% at most): ${JSON.stringify(byName.map((v) => [typeOf(v), share(v), v.position.width]))} ${short(d19)}`);
+  }
+
+  // ---------- design round 10 (the laptop's RESCORE-3 on rc.5, final for 0.2.9): N14, N15, D19 ----------
+  {
+    const extOf10 = (x, dir) => { if (x.err) return []; const f = path.join(ROOT, dir, x.j.report, 'definition', 'reportExtensions.json'); return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')).entities.flatMap((e) => e.measures) : []; };
+    const x = await ask('create_report', { path: 's-loans', name: 'R10 top', design: design({ preset: 'exec', page: '1920x1080' }), secondPage: false });
+    const vs = visualsOf(x, 's-loans').filter((v) => v.visual && /^clustered(Bar|Column)Chart$/.test(typeOf(v))), ext = extOf10(x, 's-loans');
+    const keepOf = (v) => { const f = ((v.filterConfig || {}).filters || []).find((q) => q.field && q.field.Measure && q.field.Measure.Expression.SourceRef.Schema === 'extension' && /^Keep/.test(q.field.Measure.Property)); return f ? ext.find((m) => m.name === f.field.Measure.Property) : null; };
+    const titleOf10 = (v) => { const t = (((v.visual.visualContainerObjects || {}).title || [])[0] || {}).properties || {}, m = t.text && t.text.expr && t.text.expr.Measure; return m ? ext.find((e) => e.name === m.Property) : null; };
+    const report = vs.filter((v) => v.page.type !== 'Tooltip'), tips = vs.filter((v) => v.page.type === 'Tooltip' && ((v.filterConfig || {}).filters || []).some((q) => q.type === 'TopN'));
+    const nOf = (k) => +((k.expression.match(/MIN \( _n, (\d+) \) = \1, (\d+), _n \)/) || [])[2] || NaN), capOf = (k) => +((k.expression.match(/MIN \( _n, (\d+) \)/) || [])[1] || NaN);
+    // N14: a chart shows every category when they are at most 2 more than its rows; its Top N is a report measure, not a fixed Top N filter
+    chk(() => !x.err && report.length >= 2 && report.every((v) => { const k = keepOf(v); return k && /RANKX/.test(k.expression) && capOf(k) === nOf(k) + 3 && !((v.filterConfig || {}).filters || []).some((q) => q.type === 'TopN'); }),
+      () => `N14: each Top N chart keeps its categories with a report measure (rank within N, or all of them when they are N + 2 or fewer): ${report.map((v) => JSON.stringify(keepOf(v) && keepOf(v).expression.slice(0, 260))).join(' | ')} ${short(x)}`);
+    // N14/N15: the title counts what is shown: "Top S of M" only when S < M (a tie shows as more), the plain title otherwise
+    chk(() => report.concat(tips).every((v) => { const t = titleOf10(v); return t && /IF \( _s = _n, /.test(t.expression) && /RANKX/.test(t.expression); }),
+      () => `N14/N15: the titles say Top only when the chart leaves categories out, with the number actually shown: ${report.concat(tips).map((v) => JSON.stringify(titleOf10(v) && titleOf10(v).expression.slice(-200))).join(' | ')}`);
+    // N15: the tooltip's Top 6 is the same rule, without extra rows (a tooltip can't scroll)
+    // (the tooltip keeps its fixed Top 6 filter, which keeps the same bars, ties too, and check_report's TOOLTIP_SCROLL reads)
+    chk(() => tips.length >= 1 && tips.every((v) => { const t = titleOf10(v); return t && /MIN \( _n, 7 \) = 7, 6, _n \)/.test(t.expression); }), () => `N15: the tooltip's title counts its Top 6 with no extra rows: ${tips.map((v) => JSON.stringify(titleOf10(v) && titleOf10(v).expression.slice(0, 260))).join(' | ')}`);
+    // D19: a bar chart cut to its Top N by a text category gets the measured name room (25 characters where 40% holds them, else 50%)
+    const bars = report.filter((v) => typeOf(v) === 'clusteredBarChart' && keepOf(v)), share = (v) => +String((((v.visual.objects.categoryAxis || [])[0] || {}).properties || {}).maxMarginFactor.expr.Literal.Value).replace(/L$/, '');
+    chk(() => bars.length && bars.every((v) => share(v) === 50 || share(v) * v.position.width / 100 >= 25 * 10.2 * (x.j.pages[0].height / 1080)), () => `D19: a bar chart cut to its Top N gives its names the measured room: ${JSON.stringify(bars.map((v) => [share(v), v.position.width]))}`);
   }
 }
 
