@@ -1221,6 +1221,10 @@
     // smaller): a bar chart without its value axis needs 22.2 a row, 45 above the first and 8 under the last. 184 for 6
     // bars and 310 for 12 months were short of that: a scrollbar beside the Top 6, the 12th month cut.
     const tipRows = (n) => Math.ceil(45 + 8 + 22.2 * n);
+    // writer round 8 (RESCORE-1 T6: a scrollbar beside the 6 bars at 187, on a model of long names): the Top 6 takes the
+    // tooltip lab's measure of this very chart (8pt names, values beside the bars; TOOLTIP-FIX-LAB, report-rules TIP_ROWS_6),
+    // 27 a bar and 40, plus 8 under the last, as the 6-month trend already does; the page rule above (10pt) stays for 12 months
+    const tipSix = 40 + 27 * 6 + 8;
     // rc1 (T8: "Microsoft 365 Busin..."): the names take the share of a narrow bar chart, as the page's (barNameShare)
     // rc1 (T10: "8.0Kkg" where the card read "60,000 kg"): a measure the cards show whole (wholeFormat: a unit, a count)
     // keeps its own format on the bars' values (display units None), as on its card; the rest keep Power BI's automatic
@@ -1256,9 +1260,9 @@
         // (0.2.9 part 2, TOOLTIP-FIX-LAB: 9 products in 184 showed 6 bars and a scrollbar a tooltip can't use: the Top 6
         // by the measure shown, said in the title; a time category is never cut by value)
         tipPage(t.name, t.binding, nameOf(t), [tipCardVisual(card),
-          tipTop({ x: 12, y: 92, w: 296, h: tipRows(6), visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(t.cat)], Y: [proj(t.m)] }), t.cat, true),   /* (round 23: largest first) */
+          tipTop({ x: 12, y: 92, w: 296, h: tipSix, visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(t.cat)], Y: [proj(t.m)] }), t.cat, true),   /* (round 23: largest first) */
             objects: tipLook(card),
-            visualContainerObjects: tipFrame(byTitle(label(t.m), W.by || 'by', label(t.cat))) }) }, t.cat, t.m, shown(byTitle(label(t.m), W.by || 'by', label(t.cat))))], 92 + tipRows(6) + 8);
+            visualContainerObjects: tipFrame(byTitle(label(t.m), W.by || 'by', label(t.cat))) }) }, t.cat, t.m, shown(byTitle(label(t.m), W.by || 'by', label(t.cat))))], 92 + tipSix + 8);
         return;
       }
       const tv = { x: 12, y: 92, w: 296, h: six ? 40 + 27 * 6 + 8 : tipRows(12), visual: tipBar({ visualType: 'clusteredBarChart', query: sorted(q({ Category: [proj(tip.date)], Y: [proj(t.m)] }), tip.date),
