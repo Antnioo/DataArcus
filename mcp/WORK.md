@@ -4,6 +4,11 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Owner's standing go (12 Oct, valid until 0.2.9 is released)
+Messages that start with "From the reviewer" carry the owner's approval: when the reviewer says to push a fix/, feat/ or
+lab/* branch, or (builder 5) to merge a reviewed branch into `fix/0.2.9-gate`, do it without asking again. Never main, never
+a PR to main, never a release: those stay the owner's.
+
 ## Picker round 9 (12 Oct, cloud builder 5; branch `fix/0.2.9-picker9` rebased on the gate `69ea11c` (round 8b); not merged, no PR)
 RESCORE-2 on rc.4: 7.0, target 7.5. Done, each tests first:
 - N9: create_report takes the approved plan's displayNames when the call leaves them out (`Plans.pinned`); the same names
@@ -29,7 +34,11 @@ RESCORE-2 on rc.4: 7.0, target 7.5. Done, each tests first:
     dimension (different values in general: can't be told by formula alone); FILTER(ALL(...)) forms.
 Round 8 on the gate (`961ef57`, before this branch): mcp 1361, v029c/d/e/f, golden 11, fuzz 600 + FUZZ_LONG 10000, deny-scan,
 site config, csp, check-min all pass; website 16 of 17 (pbip: the race fixed here).
-Waiting for the owner: round 8b (writer `fix/0.2.9-writer` 5f92d45 into the gate).
+Round 8b merged (`69ea11c`). Tests on this branch (Linux, after the rebase): mcp 1386, v029d/e/f 21/21/20, golden 11, fuzz 600
+and FUZZ_LONG 10000, website 17 of 17, deny-scan, site config, csp, check-min: pass. v029c fails 1 (L2), from round 8b:
+the writer's own 5f92d45 fails it alone too. The plan's lint predicts the table's panel as a cardVisual 1083 x 331, the
+report (the panel now written as page bands, ed96b7c) shows the table, tableEx 1083 x 307. For the writer/design block:
+the plan's lint should model the panel as the report writes it.
 
 ## Picker round 8 (12 Oct, cloud builder 5; branch `fix/0.2.9-picker8` from `07ad9bc`; not merged, no PR)
 The re-score (RESCORE-1: 4.1 -> 5.4 -> 6.8, target 7.5). Round 7b (merging `feat/0.2.9-custom-visuals` 29743c6 into the gate)
