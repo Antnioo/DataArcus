@@ -4,6 +4,20 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Picker round 10, final for 0.2.9 (12 Oct, cloud builder 5; branch `fix/0.2.9-picker10` from `0a657a0`; not merged yet)
+RESCORE-3 on rc.5: 7.3, target 7.5. Only these four, tests first (test-0.2.9r: 4 red, then 18 of 18), formula and metadata:
+- N10: a value only where it equals its own MAX/MAXX/MIN/MINX over ALL (...), else blank: a chart helper, no card (VARs
+  are read through by inlineVars).
+- N12: year (fiscal, calendar) is a time level like a quarter; time levels never a category or the table's first column; the
+  second category never falls back to the quarter. Not done: saying in the plan that a model has no other category (the
+  date parts stay the categories then, as before).
+- N5 (property): hidden measures known to the share/denominator rules; a share over a hidden multi-line denominator, or a VAR
+  holding it, is no card.
+- D11 (er): a calculated table's ADDCOLUMNS / SELECTCOLUMNS pairs give their columns their expression (two-valued IF).
+Tests (Linux): mcp 1434, v029c/d/e/f 36/21/21/20, golden 11 (no moves), fuzz 600 + FUZZ_LONG 10000, website 17 of 17,
+deny-scan, site config, csp, check-min. GitHub CI on `1d0fbdf`: Tests (mcp, mcp-windows, website) and Privacy scan green.
+Next: merge into the gate as round 10 with the other round 10 branches the reviewer names.
+
 ## Integration round 9 (12 Oct, cloud builder 5; `fix/0.2.9-gate` from `69ea11c`; not merged to main, no PR): rc.5's base
 Merged in the reviewer's order: writer `bfd2904` (`91d5715`; the lint knows the panel card: v029c L2 green), picker9
 `1160b33` (`c111586`), design `f53ce35` (`095f989`; conflicts: pbip-bind twoValued = the design's expression read + round
