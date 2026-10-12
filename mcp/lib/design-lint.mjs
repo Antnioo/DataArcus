@@ -75,15 +75,17 @@ export function lint(inv, model, facts, opts) {
     if (o.pages && o.pages.length && !o.pages.includes(p.n)) continue;
     const shown = p.visuals.filter((x) => !x.hidden && !x.hiddenByGroup && x.type !== 'group');
     for (const x of shown) {
-      const F = x.fields || {}, cat = F.Category || [], ys = (F.Y || []).concat(F.Values || []);
+      const F = x.fields || {}, cat = F.Category || [];
       // (a) a text month or date on an axis, sorted A to Z (O-13)
       if (CHARTS.test(x.type)) for (const f of cat) {
         if (!f || f.kind !== 'column' || !TIMEY.test(f.name)) continue;
         const k = keyOf(f), m = cols[k];
-        const sortedByOther = x.sort.some((s) => s.field && !(s.field.table === f.table && s.field.name === f.name) && !ys.some((y) => y.table === s.field.table && y.name === s.field.name && y.kind === s.field.kind));
+        // (N16, the laptop's RESCORE-3: a chart sorted by anything but the axis's own text, its measure (by value)
+        // included, is ordered on purpose: no alphabetical time axis to warn about)
+        const sortedByOther = x.sort.some((s) => s.field && !(s.field.table === f.table && s.field.name === f.name));
         if (sortedByOther) continue;
         if (m && m.type === 'string' && !m.sortBy)
-          add('AXIS_TEXT_TIME_UNSORTED', many(f.name) ? 'high' : 'medium', p, x, `${refOf(f)} is a text column and the model gives it no sort-by column, so the axis runs in alphabetical order${x.sort.length ? ' (the visual is ordered by its value, not by time)' : ''}${many(f.name) ? '; a label holding month and year is likely to give many points and a scrollbar' : ''}`,
+          add('AXIS_TEXT_TIME_UNSORTED', many(f.name) ? 'high' : 'medium', p, x, `${refOf(f)} is a text column and the model gives it no sort-by column, so the axis runs in alphabetical order${x.sort.length ? ' (the visual is sorted by this text itself)' : ''}${many(f.name) ? '; a label holding month and year is likely to give many points and a scrollbar' : ''}`,
             'order the chart by the earliest date of each label (a MIN of the date column in Tooltips, then sort by it), and keep the last 12 months when there are more than about two years; or put Year and Month on the axis as two levels', true);   // (R7: a time field known by the words of its name: a guess)
         else if (m && m.type === 'unknown' && !m.sortBy)
           add('AXIS_TEXT_TIME_UNSORTED', 'medium', p, x, `${refOf(f)} has no type in the model's files (a column of a DAX table) and no sort-by column: if it holds text, the axis runs in alphabetical order`, 'check its type; order the chart by the earliest date of each label, or give the column a sort-by column in the model', true);
