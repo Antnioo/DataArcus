@@ -424,6 +424,30 @@ export function v029w({ check }) {
     const tf = ['A', 'B', 'C', 'D', 'E'].map((n) => (get(() => Bind.measureOf(tb, n, [tb])) || {}).tableFormat || null);
     chk(() => JSON.stringify(tf) === JSON.stringify(['\\$#,0.00', '\\$#,0.00', '#,0.00', null, null]),
       () => `D18: one column, two fixed decimals (optional digits made fixed; 1 or 2 fixed decimals kept): ${JSON.stringify(tf)}`);
+    // N8 (SHAPES-RC4, the laptop: "-€0,050.87M"): the model's format "€#,##0,000;-€#,##0,000;€0" has fixed zero placeholders
+    // after a thousands comma; scaled to millions by the card's automatic units it is padded to four digits. Such a card
+    // shows the number unscaled, in the model's format without the padding (as a whole number's card does: Custom units
+    // and its own format, measured D8); an ordinary "€#,0" stays in automatic units. EUR, USD, AED and no currency
+    const fm = (n, f) => ({ name: n, formatString: f, expression: 'SUM ( Sales[Amount] ) - SUM ( Sales[Amount] )' });
+    const nt = { name: 'Sales', columns: [{ name: 'Amount', dataType: 'decimal' }], measures: [fm('Budget Variance', '€#,##0,000;-€#,##0,000;€0'), fm('Var USD', '$#,##0,000;($#,##0,000)'), fm('Var AED', '#,##0,000 "AED";-#,##0,000 "AED"'), fm('Var plain', '#,##0,000;-#,##0,000'), fm('Plain EUR', '€#,0;-€#,0')] };
+    const kf = (n) => Object.assign({ t: 'Sales', m: n }, get(() => Bind.measureOf(nt, n, [nt])) || {});
+    const wf = ['Budget Variance', 'Var USD', 'Var AED', 'Var plain', 'Plain EUR'].map((n) => kf(n).wholeFormat || null);
+    chk(() => JSON.stringify(wf.slice(0, 3)) === JSON.stringify(['€#,###,##0;-€#,###,##0;€0', '$#,###,##0;($#,###,##0)', '#,###,##0 "AED";-#,###,##0 "AED"']) && wf[3] && !/0,0/.test(wf[3]) && wf[4] == null,
+      () => `N8: a padded format's card shows the number unscaled in that format without the padding; "€#,0" keeps automatic units: ${JSON.stringify(wf)}`);
+    const bv = kf('Budget Variance'), rn = get(() => build(base({ kpis: [bv, M('Orders')], measure: M('Orders') })));
+    const kc = rn.files ? visuals(rn).find((v) => v.visual.visualType === 'cardVisual' && JSON.stringify(v.visual.query || '').includes('Budget Variance')) : null;
+    const ve = kc ? kc.visual.objects.value.find((e) => e.selector && e.selector.metadata) : null;
+    chk(() => ve && L(ve.properties.labelDisplayUnits) === '-1D' && S(ve.properties.customFormatString) === '€#,###,##0;-€#,###,##0;€0',
+      () => `N8: the card writes Custom units and that format (positive and negative sections): ${rn.threw || JSON.stringify(kc && kc.visual.objects.value)}`);
+    // F4 (N8-LAB: "#,0 \"AED\";-#,0 \"AED\"" read "-50.87KAED" / "50.87MAED" in automatic units: the unit letter glued to the
+    // text, its space lost; with Custom units and the model's own format it read right, unscaled): a card whose model format
+    // carries quoted text after the number, or a prefix that is no currency, shows the number unscaled in that format, both signs; "€#,0",
+    // "$#,0.00;($#,0.00)" stay on automatic units, "#,0" whole, as before
+    const f4 = (f) => { const T = { name: 'S', columns: [{ name: 'A', dataType: 'decimal' }], measures: [{ name: 'X', formatString: f, expression: 'SUM ( S[A] )' }] }; return (get(() => Bind.measureOf(T, 'X', [T])) || {}).wholeFormat || null; };
+    const g4 = ['#,0 "AED";-#,0 "AED"', '"AED" #,0;-"AED" #,0', '#,0.00 "AED"', '€#,0', '$#,0.00;($#,0.00)', '#,0'].map(f4);
+    // (a currency code before the number reads right in automatic units, "EUR 54.66M": the owner's O-2, kept)
+    chk(() => JSON.stringify(g4) === JSON.stringify(['#,0 "AED";-#,0 "AED"', null, '#,0.00 "AED"', null, null, '#,0']) && f4('"Qty " #,0') === '"Qty " #,0',
+      () => `F4: quoted text in a card's format: unscaled in that format; currency signs keep automatic units: ${JSON.stringify(g4)}`);
     // D15 (RESCORE-2: bank's "Debtconsolidation" slanted and cut on a designed 6-column chart): a column chart by a text
     // category whose columns can't each hold a 12-letter name (the writer's stand-in for a name it can't measure, as its
     // tables use) is written as a bar chart, whose names are level, where its slot holds 3 rows or more
