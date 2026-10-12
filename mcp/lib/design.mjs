@@ -55,16 +55,18 @@ export const namesColours = (d) => !!(d && typeof d === 'object' && ((Array.isAr
 // theme sets none, become its bad, good or neutral; with only status colours found the lead is the preset's, said in
 // the plan. Hue bands (degrees): red under 15 or 345 and over, amber 35 to 55, green 90 to 150, with saturation 0.35 and
 // over (a grey or a muted brand colour is never a status colour).
-const STATUS_HUES = { bad: (h) => h < 15 || h >= 345, neutral: (h) => h >= 35 && h <= 55, good: (h) => h >= 90 && h <= 150 };
 const statusOf = (c, t) => {
   const x = String(c).toLowerCase(), own = ['good', 'neutral', 'bad'].find((k) => t[k] && String(t[k]).toLowerCase() === x);
   if (own) return own;
-  const [h, sat] = E.hexToHsl(E.clampHex(c) || '#808080');
-  return sat >= 0.35 ? Object.keys(STATUS_HUES).find((k) => STATUS_HUES[k](h)) || null : null;
+  return E.statusHue(c);   // (the hue bands are the engine's, shared with the second colour's choice)
 };
 // a lead under 3:1 on the card is darkened, its hue kept (E.toContrast; P1, RESCORE-5)
 const toContrast = E.toContrast;
-export function themeColours(rt, lang) {
+// (P1+, LAB-POLISH section 5; P3, RESCORE-6 N28: on the default path too) a light design's near-white page becomes a 6% tint
+// of the lead, the cards as they are; never on a dark design. Returns the tint, or null when it does not apply
+const pageTint = (ui, lead) => (hex(ui.background) && hex(ui.card) && hex(lead) && E.lum(ui.background) > 0.45 && E.lum(ui.card) > 0.45 ? E.mix(hex(ui.card), hex(lead), 0.06) : null);
+const TINT_LINE = (t) => `The page is a 6% tint of the lead colour (${t}), so the white visuals stand off it. Say it in the plan.`;
+export function themeColours(rt, lang, opts) {
   const t = rt.theme, lumOf = (c) => E.lum(c), own = t.themeColours || [], painted = t.painted || [];
   const found = [...new Set(own.concat(painted))], status = found.filter((c) => statusOf(c, t)), lead1 = found.find((c) => !statusOf(c, t));
   // a status colour stays a data colour, only never the lead: the first other colour leads, the rest keep their order
@@ -85,7 +87,10 @@ export function themeColours(rt, lang) {
   const changes = [].concat(found.length && statusOf(found[0], t) ? [statusOnly
     ? `The report's only colours (${status.join(', ')}) are status colours (good, neutral, bad): they stay for good and bad, and the lead colour is the ${basis} preset's (${palette[0]}), so the report does not read as an alarm. You can ask for a brand colour instead.`
     : `${status.join(', ')} ${status.length === 1 ? 'is a status colour' : 'are status colours'} (good, neutral, bad): never the lead colour; the lead is ${palette[0]}.`] : [],
-    lead !== lead0 ? [`Colour 1 ${lead0} is ${E.contrast(lead0, card).toFixed(1)}:1 on the cards (${card}): for lines, bars and accents it is ${lead}, the same hue ${dark ? 'lighter' : 'darker'}, at 3:1; the bars still fade towards ${lead0}'s tint.`] : []);
+    lead !== lead0 ? [`Colour 1 ${lead0} is ${E.contrast(lead0, card).toFixed(1)}:1 on the cards (${card}): for lines, bars and accents it is ${lead}, the same hue ${dark ? 'lighter' : 'darker'}, at 3:1; the bars fade from a light tint of it up to ${lead} itself, never past it.`] : []);
+  // (P3, N28) the page: the theme's own page colour is kept (identity); a theme without one gets the default's 6% tint
+  const tint = !t.background && !dark && !(opts && opts.pageTint === false) ? pageTint(ui, data[0]) : null;
+  if (tint) { ui.background = tint; changes.push(TINT_LINE(tint)); }
   const preset = Object.keys(E.PRESETS).find((k) => E.PRESETS[k].data.join() === data.join() && UI_KEYS.every((u) => E.PRESETS[k].ui[u] === ui[u])) || null;
   const filled = palette.length < 8 ? Array.from({ length: 8 - palette.length }, (_, i) => palette.length + i + 1) : [];
   const fromBase = UI_KEYS.filter((k) => !(k === 'accent' ? t.accent || palette[0] : t[k]));
@@ -110,7 +115,9 @@ export function themeColours(rt, lang) {
 // report (optional): told each value of the given design the engine could not use (E.repairState's report)
 export function withDefaults(given, report) {
   const base = E.repairState(E.fresh()), g = given ? JSON.parse(JSON.stringify(given)) : {};
-  if (!(Array.isArray(g.data) && g.data.length === 8)) { delete g.data; Object.assign(base, { preset: 'Corporate', data: E.PRESETS.Corporate.data.slice(), ui: Object.assign({}, E.PRESETS.Corporate.ui, g.ui && typeof g.ui === 'object' ? g.ui : {}) }); delete g.ui; delete g.preset; }
+  if (!(Array.isArray(g.data) && g.data.length === 8)) { const gu = g.ui && typeof g.ui === 'object' ? g.ui : {}; delete g.data; Object.assign(base, { preset: 'Corporate', data: E.PRESETS.Corporate.data.slice(), ui: Object.assign({}, E.PRESETS.Corporate.ui, gu) }); delete g.ui; delete g.preset;
+    // (P3, RESCORE-6 N28) the default's near-white page takes the 6% tint of the lead, unless a page colour was given
+    const tint = gu.background == null ? pageTint(base.ui, base.data[0]) : null; if (tint) base.ui.background = tint; }
   return E.repairState(Object.assign(base, g, { layout: Object.assign(base.layout, g.layout && typeof g.layout === 'object' ? g.layout : {}) }), report);
 }
 
@@ -132,7 +139,7 @@ export function themeDesign(a) {
   }
   // (keep the dashboard's identity) no colours asked (no preset, palette, brand or mode) and the model's report has its
   // own theme: the design starts from it
-  const own = a.reportTheme && a.reportTheme.theme && a.preset == null && !a.palette && a.brand == null && a.mode == null ? themeColours(a.reportTheme, a.lang) : null;
+  const own = a.reportTheme && a.reportTheme.theme && a.preset == null && !a.palette && a.brand == null && a.mode == null ? themeColours(a.reportTheme, a.lang, { pageTint: a.pageTint }) : null;
   if (!own && a.preset == null && !a.palette && a.brand == null) notes.push(dark ? 'No colours asked: the DataArcus preset (dark, as asked).' : 'No colours asked: the Corporate preset, light. Dark only when the user asks for it (mode "dark").');
   d.preset = preset; d.data = E.PRESETS[preset].data.slice(); d.ui = { ...E.PRESETS[preset].ui };
   if (own) { d.data = own.data; d.ui = own.ui; d.preset = own.preset; if (own.style.font && a.font == null) d.font = own.style.font; notes.push(own.info.sayInPlan); }
@@ -180,13 +187,12 @@ export function themeDesign(a) {
   // the page and style choices on top of the engine's full current layout (its version, 1920 x 1080 and defaults)
   d.layout = layoutFrom(Object.assign({}, own && own.style.radius != null ? { radius: own.style.radius } : {}, own && own.style.shadow ? { shadow: true } : {}, a.layout || {}), withDefaults().layout, fix);
   // (P1+, the laptop's LAB-POLISH section 5, measured in Desktop on 12 Oct: white panels on a white page lifted half a
-  // point with it) a light design's page is a 6% tint of the lead colour, the cards as they are; never on a dark design,
-  // over a background the user asked for (palette.ui.background) or a report theme's own page colour (one apart from its
-  // cards), and off with pageTint: false
-  const ownPage = own && a.reportTheme.theme.background && String(a.reportTheme.theme.background).toLowerCase() !== String(d.ui.card).toLowerCase();
-  if (a.pageTint !== false && !dark && E.lum(d.ui.background) > 0.45 && E.lum(d.ui.card) > 0.45 && !(a.palette && a.palette.ui && hex(a.palette.ui.background)) && !ownPage && hex(d.data[0]) && hex(d.ui.card)) {
-    const tint = E.mix(hex(d.ui.card), hex(d.data[0]), 0.06);
-    if (tint !== d.ui.background) { d.ui.background = tint; notes.push(`The page is a 6% tint of the lead colour (${tint}), so the white visuals stand off it; pageTint: false keeps the plain page. Say it in the plan.`); }
+  // point with it) a light design's page is a 6% tint of the lead colour, the cards as they are; never on a dark design or
+  // over a background the user asked for (palette.ui.background); off with pageTint: false
+  // (a report's own theme is tinted, or not, by themeColours: its own page colour is kept, P3 N28)
+  if (a.pageTint !== false && !dark && !own && !(a.palette && a.palette.ui && hex(a.palette.ui.background))) {
+    const tint = pageTint(d.ui, d.data[0]);
+    if (tint && tint !== d.ui.background) { d.ui.background = tint; notes.push(TINT_LINE(tint).replace(' Say it', ' pageTint: false keeps the plain page. Say it')); }
   }
   const design = E.repairState(d);
   return Object.assign({ design, repaired, notes }, own ? { fromReport: Object.assign(own.info, { contrastWarnings: contrastReport(design).warnings }) } : {});
@@ -228,6 +234,8 @@ export function planLayout(a) {
   else if (rt && a.design && a.design.preset === 'Corporate' && Array.isArray(a.design.data) && a.design.data.join() === E.PRESETS.Corporate.data.join())
     colours = { from: 'design', note: `The model's report "${rt.report}" has its own theme "${rt.theme.name}"; this design has the Corporate preset (generate_theme was called without the model). If the user asked for no colours, call generate_theme again with path (the model) to keep the report's theme, then plan again; otherwise say the colours are the Corporate preset.` };
   const design = withDefaults(given, fix), l = design.layout;
+  // (P3, N28) the default design's page is the 6% tint (withDefaults): said in the plan
+  const tinted = !namesColours(given) && !(given && given.ui && given.ui.background != null) ? { pageTint: TINT_LINE(design.ui.background) } : null;
   // choosing a layout, as on the website: its own KPI count and filters, and the size sliders back to its defaults
   if (a.layout) { l.preset = a.layout; l.kpis = E.LAYOUTS[a.layout].kpis; l.filters = E.LAYOUTS[a.layout].filters; delete l.kpiH; delete l.mainW; delete l.split; }
   // the KPI cards, 0-6: the engine's own count (0.2.9, A2-4: no kpiCards)
@@ -255,7 +263,7 @@ export function planLayout(a) {
     .map((s, i) => ({ role: s.role, kind: s.kind, position: { x: s.x, y: s.y, z: (i + 1) * 1000, width: s.w, height: s.h, tabOrder: (i + 1) * 1000 } }));
   if (colours && colours.from === 'report theme') colours.contrastWarnings = contrastReport(design).warnings;
   // (the owner's decision on layouts, 12 Oct: a setup that ships as preview says so in one plain line, E.isPreview)
-  return Object.assign({ design, slots, forAuthoring, why: E.LAYOUTS[layout.preset].why.map(nm) }, E.isPreview(layout) ? { preview: nm(E.LAYOUT_PREVIEW) } : {}, smallPage ? { smallPage } : {}, repaired.length ? { repaired } : {}, colours ? { colours } : {});
+  return Object.assign({ design, slots, forAuthoring, why: E.LAYOUTS[layout.preset].why.map(nm) }, E.isPreview(layout) ? { preview: nm(E.LAYOUT_PREVIEW) } : {}, tinted || {}, smallPage ? { smallPage } : {}, repaired.length ? { repaired } : {}, colours ? { colours } : {});
 }
 
 // The page size a layout really gets, and whether a custom size had to be fitted (as the website does)
