@@ -64,7 +64,8 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     const pl = await ask('plan_layout', { layout: 'exec', path: 's-loans' }), pb = pl.j && pl.j.slots.find((x) => x.kind === 'bar');
     chk(() => pb && pb.topN === rows && JSON.stringify(pl.j).includes('Top ' + rows), () => `S5: plan_layout gives each category chart's top N and says it: ${short(pl)}`);
     const x = await ask('create_report', { path: 's-loans', name: 'S top n', design: design({ preset: 'analysis' }), secondPage: false, fields: { category: 'loans[BranchName]' } });
-    const tops = visualsOf(x, 's-loans').filter((v) => v.page.type !== 'Tooltip' && /(Bar|Column)Chart$/.test(typeOf(v))).map((v) => ((v.filterConfig || {}).filters || []).find((f) => f.type === 'TopN'));
+    // (design round 10, N14: the Top N is kept by a report measure, "Keep: ...", not a fixed Top N filter)
+    const tops = visualsOf(x, 's-loans').filter((v) => v.page.type !== 'Tooltip' && /(Bar|Column)Chart$/.test(typeOf(v))).map((v) => ((v.filterConfig || {}).filters || []).find((f) => f.type === 'TopN' || (f.field && f.field.Measure && /^Keep: /.test(f.field.Measure.Property))));
     chk(() => !x.err && tops.length && tops.every(Boolean) && (x.j.reportNotes || []).some((n) => /Top \d+/.test(n)), () => `S5: every bar and column chart by a category gets its Top N filter, said in the notes: ${tops.map(Boolean)} ${short(x)}`);
   }
 
@@ -113,10 +114,11 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
     // the data the tools never read), else its plain title; the plan says the rest are left out, with no "Other" bar
     const x = await ask('create_report', { path: 's-loans', name: 'R8 top', design: design({ preset: 'exec' }), secondPage: false });
     const vs = visualsOf(x, 's-loans').filter((v) => v.page.type !== 'Tooltip'), ext = extOf(x, 's-loans');
-    const topped = vs.filter((v) => ((v.filterConfig || {}).filters || []).some((f) => f.type === 'TopN'));
+    // (design round 10, N14: kept by a report measure "Keep: ...", and the title counts the bars kept: "Top S of M")
+    const keepF = (v) => ((v.filterConfig || {}).filters || []).find((f) => f.field && f.field.Measure && /^Keep: /.test(f.field.Measure.Property));
+    const topped = vs.filter((v) => keepF(v));
     const titleM = (v) => { const t = (((v.visual.visualContainerObjects || {}).title || [])[0] || {}).properties || {}, m = t.text && t.text.expr && t.text.expr.Measure; return m && m.Expression.SourceRef.Schema === 'extension' ? ext.find((e) => e.t === m.Expression.SourceRef.Entity && e.name === m.Property) : null; };
-    const topOf = (v) => v.filterConfig.filters.find((f) => f.type === 'TopN').filter.From[0].Expression.Subquery.Query.Top;
-    chk(() => !x.err && topped.length >= 2 && topped.every((v) => { const m = titleM(v), n = topOf(v); return m && /REMOVEFILTERS/.test(m.expression) && m.expression.includes('MIN ( _n, ' + (n + 1) + ' ) = ' + (n + 1)) && m.expression.includes('"Top ' + n + ' of "') && !/^[^,]*"Top/.test(m.expression.split(',').pop()); }),
+    chk(() => !x.err && topped.length >= 2 && topped.every((v) => { const m = titleM(v); return m && /REMOVEFILTERS/.test(m.expression) && /IF \( _s = _n, "[^"]*", "Top " & _s & " of " & _n/.test(m.expression); }),
       () => `N2/N3: a Top N chart's title is a report measure: "Top N of M: ..." only when more than N categories have a value, the plain title otherwise: ${topped.map((v) => JSON.stringify(titleM(v) && titleM(v).expression || (((v.visual.visualContainerObjects || {}).title || [])[0] || {}).properties)).join(' | ').slice(0, 600)} ${short(x)}`);
     chk(() => !x.err && vs.filter((v) => /Chart$/.test(typeOf(v))).every((v) => !/'Top \d+: /.test(JSON.stringify((v.visual.visualContainerObjects || {}).title || ''))), () => 'N2: no chart title is a fixed "Top N:" text');
     const pl = await ask('plan_layout', { layout: 'exec', path: 's-loans' }), say = JSON.stringify((pl.j || {}).categoryCharts || {}) + ' ' + ((pl.j || {}).topCategories || '');

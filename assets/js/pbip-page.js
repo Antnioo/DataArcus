@@ -113,7 +113,7 @@
   function kit(c) {
     const {
       MIRROR, W, align, base, byMonthStart, edge, font, lastMonths, n, notBlank, o, rowLabels,
-      rtl, timeAxes, topN, u
+      rtl, timeAxes, topN, topSet, u
     } = c;
 
     // filter pane in the theme's colors, so it matches the page
@@ -248,13 +248,17 @@
       // engine's categoryFit), by its measure; never on a time axis or an ordered category, whose order would be lost;
       // said in its title (the writer's rc1 rule, topCount, with the design's N)
       const top = col && st.Y && st.Y.projections[0] ? topCount(c, s, pg, catOf(Bt, visual.query)) : 0;
-      if (top) { filters.push(topN(col, st.Y.projections[0].field, top)); n.topCharts.push({ page: pg.name || base, kind: s.kind, field: col.Expression.SourceRef.Entity + '[' + col.Property + ']', top }); }
+      // (design round 10, N14: kept by a report measure, every category where they are at most 2 more than its rows, the
+      // fixed Top N filter only where the DAX can't name the fields)
+      const keep = top ? topSet(catOf(Bt, visual.query), st.Y.projections[0].field, top, 2) : null;
+      if (top) { filters.push(keep ? keep.filter : topN(col, st.Y.projections[0].field, top)); n.topCharts.push({ page: pg.name || base, kind: s.kind, field: col.Expression.SourceRef.Entity + '[' + col.Property + ']', top }); }
       // O-4: a bar chart's names get 40% of its width, 50% on a narrow chart (under 560 on the 720-high page); the default 25 cut them at about 10 characters
       // (design round 9, D19: a many-valued category's names, product names, get room for 25 characters where 40% of the
       // chart holds them, else 50%: measured, REPORT-FIXES-LAB B1/B2, 40% of 508 held about 20 characters, 50% about 25,
       // 10.2 page units a character on a 1080-high page)
       if (visual.visualType === 'clusteredBarChart') { const cf = catOf(Bt, visual.query), need = 25 * 10.2 * pg.page.h / 1080;
-        put('categoryAxis', { maxMarginFactor: lit(Math.max(barNameShare(s.w, pg.page.h), cf && cf.wide && 0.4 * s.w < need ? 50 : 0) + 'L') }); }
+        // (design round 10, D19 on one more chart: names a chart is cut to the Top N of are names it has many of)
+        put('categoryAxis', { maxMarginFactor: lit(Math.max(barNameShare(s.w, pg.page.h), cf && (cf.wide || top) && 0.4 * s.w < need ? 50 : 0) + 'L') }); }
       // O-13: the line chart's month label
       if (s.kind === 'line' && col && Bt.date && ['monthStart', 'monthLabel'].includes((timeAxisPlan(Bt.date) || {}).order) && col.Property === Bt.date.c) {
         byMonthStart(visual.query, Bt.date, MIRROR ? 'Descending' : 'Ascending');
@@ -311,7 +315,7 @@
       noData, noDataSkipped, noPageButtons, o, oneLine, own, pageFilters, paneObjects, pt, resetFill, resetFit, resetIcon,
       resetLook, resetTip, resetW, ringsSmall, rowLabelSkipped, rowLabels, rtl, same, shortDays, slicerH, subtitlesUsed, svgDone,
       svgSizes, tabRows, tableColumns, tableOrder, tableRows, tableSmaller, tableWide, textbox, tip, tipFor, tipName, titleFit, titles,
-      trend, u, valueEm, wrapLines, extMeasure, extField, daxOf
+      trend, u, valueEm, wrapLines, extMeasure, extField, daxOf, topSet
     } = c;
     const pageName = pg.id, filters = pageFilters();
     add(D + '/pages/' + pageName + '/page.json', json(Object.assign({
@@ -1212,14 +1216,13 @@
       // read the data, so only the report can know. Each text is fitted as the title is, "M" taken as 999. (_n > N is written
       // MIN ( _n, N + 1 ) = N + 1: no comparison sign in the DAX, which round 9's names check keeps to names and strings)
       visuals.forEach((v) => { const f = v.visual && fitted.get(v.visual); if (!f || !f.top || !f.top.cat || f.top.cat.c == null) return;
-        const y = daxOf(f.top.y); if (!y) return;
-        const word = lang === 'ar' ? ['أعلى ', ' من '] : ['Top ', ' of '], core = (f.final || f.ttl).replace(TOPPED, ''), lead = word[0] + f.top.n + word[1];
-        const plain = titleFit(core, TITLE, f.avail), long = titleFit(lead + '999: ' + core, TITLE, f.avail), rest = long.shown.indexOf(lead + '999: ') === 0 ? long.shown.slice((lead + '999: ').length) : null;
+        // (design round 10, N14/N15: the title counts the bars kept, the same report measure's rank: "Top S of M" only when
+        // S < M; fitted with S and M taken as 999)
+        const word = lang === 'ar' ? ['أعلى ', ' من '] : ['Top ', ' of '], core = (f.final || f.ttl).replace(TOPPED, ''), lead = word[0] + '999' + word[1] + '999: ';
+        const plain = titleFit(core, TITLE, f.avail), long = titleFit(lead + core, TITLE, f.avail), rest = long.shown.indexOf(lead) === 0 ? long.shown.slice(lead.length) : null;
         if (rest == null) return;
-        // (a name with a control character has no DAX: daxNames refuses it, and the chart keeps its text title)
-        let col, expression; try { col = daxNames.column(f.top.cat.t, f.top.cat.c);
-        expression = 'VAR _n = CALCULATE ( COUNTROWS ( FILTER ( VALUES ( ' + col + ' ), NOT ISBLANK ( ' + col + ' ) && NOT ISBLANK ( ' + y + ' ) ) ), REMOVEFILTERS ( ' + col + ' ) ) RETURN IF ( MIN ( _n, ' + (f.top.n + 1) + ' ) = ' + (f.top.n + 1) + ', ' + daxNames.string(lead) + ' & _n & ' + daxNames.string(': ' + rest) + ', ' + daxNames.string(plain.shown) + ' )'; } catch (e) { return; }
-        const m = extMeasure(f.top.cat.t, 'Title: ' + core, expression, 'Text');
+        const set = topSet(f.top.cat, f.top.y, f.top.n, 2); if (!set) return;
+        let m; try { m = set.title('Title: ' + core, word, rest, plain.shown); } catch (e) { return; }   // (a control character: the text title stays)
         const tp = v.visual.visualContainerObjects.title[0].properties, g = (v.visual.visualContainerObjects.general || [])[0];
         tp.text = { expr: extField(f.top.cat.t, m) };
         if (g && g.properties && g.properties.altText) g.properties.altText = str(core);   // (the alt text promises no cut either)
@@ -1255,7 +1258,7 @@
     const {
       B, D, FULL, MIRROR, TIP_TITLE, TIP_VALUE, W, add, align, byMonthStart, cardCode, cardFit, cardFrame,
       cardObjects, frame, headed, lang, lastMonths, notBlank, sameField, textbox, tip, tipBinding, tipFor, tipName, tipPages, titleFit, topN, trend,
-      u
+      u, topSet, extField
     } = c;
 
     // tooltip page: small, hidden in view mode, shown when a chart is hovered. 320 x 284: the card, and a bar chart 184
@@ -1289,10 +1292,15 @@
       if (FULL && card && card.m != null && card.cardFormat && !cardCode(card)) objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(card.cardFormat) }, selector: { metadata: card.t + '.' + card.m } });
       return { x: 12, y: 8, w: w || 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(card)] }), objects, visualContainerObjects: cardFrame(tipFrame(label(card)), tipCard, TIP_TITLE) } }; };
     const notBlankOf = (f) => notBlank(fieldCol(f.t, f.c).field.Column);
+    // (design round 10, N15: "Top 6:" stood over 2 bars, and "Top 6" over 7 where two tied) the tooltip's bars are kept by
+    // the report's own Top N measure, 6 and no extra rows (a tooltip can't scroll), and its title says "Top S of M" only
+    // when it leaves categories out, S the bars shown; the fixed Top 6 filter and words only where the DAX can't name them
     const tipTop = (tv, cat, m, t0) => { if (!cat || cat.c == null || cat.agg != null || isTime(cat)) return tv;
-      tv.filters = [notBlankOf(cat), topN(fieldCol(cat.t, cat.c).field.Column, proj(m).field, 6)];
-      const top = (W.top6 || (lang === 'ar' ? 'أعلى 6' : 'Top 6')) + ': ' + t0;
-      tv.visual.visualContainerObjects.title[0].properties.text = str(tipTitle(top)); return tv; };
+      const set = topSet(cat, proj(m).field, 6, 0), word = lang === 'ar' ? ['أعلى ', ' من '] : ['Top ', ' of '], lead = word[0] + '999' + word[1] + '999: ';
+      const long = tipTitle(lead + t0), rest = long.indexOf(lead) === 0 ? long.slice(lead.length) : null;
+      let name = null; if (set && rest != null) { try { name = set.title('Title: ' + t0, word, rest, tipTitle(t0)); } catch (e) { name = null; } }
+      tv.filters = [notBlankOf(cat), set && name ? set.filter : topN(fieldCol(cat.t, cat.c).field.Column, proj(m).field, 6)];
+      tv.visual.visualContainerObjects.title[0].properties.text = name ? { expr: extField(cat.t, name) } : str(tipTitle((W.top6 || (lang === 'ar' ? 'أعلى 6' : 'Top 6')) + ': ' + t0)); return tv; };
     // (the tooltip pages' bars grow from the right in a mirrored report too)
     const tipBar = (vis) => (MIRROR ? mirrorChart(vis, 'bar') : vis);
     // rc1 (DETAIL-2 T6, T9; measured in Desktop 2.158 on the night of 6-7 Oct at the 10pt text, the tooltip's 8pt being
