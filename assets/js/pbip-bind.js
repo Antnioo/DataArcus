@@ -165,7 +165,17 @@
   // where the rule leaves it alone. tables: the model's (a sum of a whole-number column is a count).
   // Returns { pct, pctFormat?, wholeFormat?, tableFormat?, fullFormat? }: tableFormat, a table column's format;
   // fullFormat, the card's with kpiValues "full" (never a percent)
-  const cardKind = (x, tables) => {
+  // (writer round 9, the laptop's N8, SHAPES-RC4: "-€0,050.87M": the model's "€#,##0,000;-€#,##0,000;€0" has fixed zero
+  // placeholders after a thousands comma; scaled to millions by the card's automatic units the number is padded to four
+  // digits. Radiation from the report writer's block, explained: such a card shows the number unscaled, in the model's
+  // format with the padding taken out (all but the last zero of each section's whole part made "#"), as a whole number's
+  // card does (Custom units and its format, measured D8); an ordinary "€#,0" keeps automatic units.)
+  const padded = (f) => String(f || '').split(';').some((sec) => { const m = sec.replace(/"[^"]*"|\\./g, '').match(/[#0,]+/); return !!m && /0,*[#0]/.test(m[0]); });
+  const unpadded = (f) => String(f).split(';').map((sec) => sec.replace(/("[^"]*"|\\.)|([#0,]+)/g, (all, q, run) => (q ? q : run.replace(/0(?=[#0,]*[#0])/g, '#')))).join(';');
+  const cardKind = (x, tables) => { const k = cardKind0(x, tables), f = x.formatString;
+    if (!k.pct && padded(f) && !(k.wholeFormat && !padded(k.wholeFormat))) k.wholeFormat = unpadded(f);
+    return k; };
+  const cardKind0 = (x, tables) => {
     const r = FM.reportFormatOf({ name: x.name, formatString: x.formatString, formatStringDefinition: x.formatStringDefinition, expression: exprOf(x) }, 'measure', tables || []);
     if (r && /%/.test(r.format)) return { pct: true, pctFormat: r.format, tableFormat: r.format };
     const own = ownKind(x);
