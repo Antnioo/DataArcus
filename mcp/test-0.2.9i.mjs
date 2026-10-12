@@ -235,7 +235,7 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     chk(() => !dEn.err && !hEn.err && words(titles(dEn)) && words(titles(dEn)).split(',').every((w) => words(titles(hEn)).split(',').includes(w) || w === 'detail'),
       () => `P3-2: English names in an Arabic report, designed and hand paths, the same title words: ${JSON.stringify([words(titles(dEn)), words(titles(hEn))])}`);
     // the source: texts(lang) holds by, detail and newDesign for both languages; the server passes it as it is on both paths
-    const srv = fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), 'server.mjs'), 'utf8'), E = createRequire(import.meta.url)('../assets/js/design-engine.js');
+    const srv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8'), E = createRequire(import.meta.url)('../assets/js/design-engine.js');
     chk(() => E.texts('ar').by === 'حسب' && E.texts('ar').detail === 'التفاصيل' && E.texts('ar').newDesign && E.texts('en').detail === 'detail' && E.texts('en').by === 'by' && !/texts: Object\.assign\(\{\}, texts\(a\.lang\)/.test(srv),
       () => `P3-2: by, detail and newDesign in texts(lang), used as they are on both paths: ${JSON.stringify([E.texts('ar'), E.texts('en')].map((t) => [t.by, t.detail, t.newDesign]))}`);
   }
