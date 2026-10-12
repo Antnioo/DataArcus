@@ -309,6 +309,44 @@ export function inventory(src, reportName, opts) {
     bookmarks, bookmarkFiles: src.files('definition/bookmarks').filter((n) => /\.bookmark\.json$/i.test(n)).length, types, customVisuals: custom.map((t) => ({ type: safeName(t), source: sourceOf(t) })), installedNotUsed, reportFilters: safeFilters(report.filterConfig), unreadable: unreadableFiles.length, unreadableFiles, suspicious, sk };
 }
 
+// ---- an existing report's theme, as a design needs it (0.2.9, KEEP THE DASHBOARD'S IDENTITY: the owner's go, 12 Oct) ----
+// A new report started from the plain Corporate preset whenever the chat named no colours, even when the model already
+// had a designed report. The design block's default (lib/design.mjs) now starts from that report's own theme; this
+// reading gives it the colours, and nothing else: hex colours only (#rgb or #rrggbb, checked; any other value is left
+// out), never a model value, never a text. A report with a base theme only (no customTheme) has none: null.
+const hex6 = (c) => { const m = typeof c === 'string' ? /^#?([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(c.trim()) : null; return m ? '#' + (m[1].length === 3 ? m[1].replace(/./g, '$&$&') : m[1]).toLowerCase() : null; };
+const solidOf = (x) => { const e = Array.isArray(x) ? x[0] : null; return e && typeof e === 'object' && e.color && e.color.solid ? hex6(e.color.solid.color) : null; };
+// { name, dataColors (up to 8), background (the page), card (the visuals: visualStyles '*' background, else the theme's
+// background), border (the visuals' border), text (foreground), accent (tableAccent), good, neutral, bad } | null
+export function reportTheme(inv) {
+  const t = inv && inv.themeRef ? inv.themeJson : null;
+  if (!t || typeof t !== 'object' || Array.isArray(t)) return null;
+  const vs = t.visualStyles && typeof t.visualStyles === 'object' ? t.visualStyles : {};
+  const at = (v, k) => { const o = vs[v] && vs[v]['*']; return o && typeof o === 'object' ? solidOf(o[k]) : null; };
+  const out = { name: inv.theme.name, dataColors: (Array.isArray(t.dataColors) ? t.dataColors : []).map(hex6).filter(Boolean).slice(0, 8),
+    background: at('page', 'background'), card: at('*', 'background') || hex6(t.background), border: at('*', 'border'), text: hex6(t.foreground), accent: hex6(t.tableAccent),
+    good: hex6(t.good) || hex6(t.maximum), neutral: hex6(t.neutral) || hex6(t.center), bad: hex6(t.bad) || hex6(t.minimum) };
+  return Object.fromEntries(Object.entries(out).filter(([, v]) => v != null && !(Array.isArray(v) && !v.length)));
+}
+// Which report: one of the model's own reports (those the model loader counted: their definition.pbir points at this
+// model folder, inside the working folder; another model's report, or one outside, is never read). Several: the one
+// named as the model (X.Report beside X.SemanticModel), then one a .pbip opens, then by name; the answer says which.
+// The report a call is about to write does not exist yet, and a report written earlier is chosen only after the model's
+// own. Returns { report (its name, screened), theme (reportTheme's, or null for a base theme only), others } | null.
+export function existingTheme(m) {
+  if (!m || !m.projectDir || !m.folder || !m.report || !Array.isArray(m.report.files)) return null;
+  const root = path.resolve(m.projectDir), model = path.basename(m.folder).replace(/\.SemanticModel$/i, '');
+  const dirs = [...new Set(m.report.files.map((f) => path.relative(root, path.resolve(String(f.path))).split(path.sep)[0]).filter((n) => /\.Report$/i.test(n) && !n.startsWith('..')))];
+  if (!dirs.length) return null;
+  const base = (n) => n.replace(/\.Report$/i, '');
+  const opened = (n) => { const f = path.join(root, base(n) + '.pbip'); try { if (!isFile(f)) return false; const a = readJson(f); const r = ((Array.isArray(a.artifacts) ? a.artifacts : []).find((x) => x && x.report) || {}).report; return path.resolve(root, String((r && r.path) || n)) === path.join(root, n); } catch (e) { return false; } };
+  const rank = (n) => (base(n) === model ? 0 : 2) + (opened(n) ? 0 : 1);
+  const pick = dirs.slice().sort((a, b) => rank(a) - rank(b) || (a < b ? -1 : a > b ? 1 : 0))[0];
+  let theme = null;
+  try { const dir = path.join(root, pick); theme = reportTheme(inventory(diskSource({ reportDir: dir, defDir: path.join(dir, 'definition') }, { big: [], deep: 0 }), base(pick), { pages: [0] })); } catch (e) { theme = null; }
+  return { report: safeName(base(pick)), theme, others: dirs.length - 1 };
+}
+
 // ---- read_report's answer: one line per visual (text, the default) or the same as JSON ----
 // The text form is about a quarter of the JSON's size (measured on the laptop: a 4-page / 160-visual report is about
 // 18,000 characters as text). Capped at 40,000 characters, read_model's large-model line (lib/scope.mjs): pages past it
