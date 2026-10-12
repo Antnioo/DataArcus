@@ -4,6 +4,16 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Integration round 9 (12 Oct, cloud builder 5; `fix/0.2.9-gate` from `69ea11c`; not merged to main, no PR): rc.5's base
+Merged in the reviewer's order: writer `bfd2904` (`91d5715`; the lint knows the panel card: v029c L2 green), picker9
+`1160b33` (`c111586`), design `f53ce35` (`095f989`; conflicts: pbip-bind twoValued = the design's expression read + round
+8's D11 rule; theme-generator.js keeps the single engine load; stamps pbip-bind / theme-generator 20261012i9, design-engine
+r9; every .min.js rebuilt from the merged sources). `7458f87`: picker9 had carried two node_modules symlinks (cd8cc55; the
+ignore rule "node_modules/" matches a folder only): untracked, .gitignore now also ignores "node_modules".
+Tests (Linux): mcp 1409, v029c/d/e/f 36/21/21/20, golden 11 (no moves), fuzz 600 and FUZZ_LONG 10000, website 17 of 17,
+deny-scan, site config, csp, check-min (68). GitHub CI on `095f989`: Tests (mcp, mcp-windows, website) and Privacy scan green.
+Not merged: `fix/0.2.9-twin` (the laptop proves it on rc.5 first).
+
 ## Owner's standing go (12 Oct, valid until 0.2.9 is released)
 Messages that start with "From the reviewer" carry the owner's approval: when the reviewer says to push a fix/, feat/ or
 lab/* branch, or (builder 5) to merge a reviewed branch into `fix/0.2.9-gate`, do it without asking again. Never main, never
