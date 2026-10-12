@@ -15,10 +15,16 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
   const dir = 'r22';
   model(dir, [{ name: 'Sales', partitions: mp('Sales'), columns: [col('Amount', 'double'), col('Region', 'string'), col('Channel', 'string'), col('Quarter', 'string'), col('Year Quarter', 'string'), col('Fiscal Year Quarter', 'string')],
     measures: [{ name: 'Total Sales', expression: 'SUM ( Sales[Amount] )', formatString: '#,0' }, { name: 'Orders', expression: 'COUNTROWS ( Sales )', formatString: '#,0' }, { name: 'Margin %', expression: 'DIVIDE ( 1, 2 )', formatString: '0.0%' }] }]);
-  const vis = (x, d) => { if (x.err) return []; const out = []; const walk = (p) => fs.readdirSync(p, { withFileTypes: true }).forEach((f) => { const q = path.join(p, f.name); if (f.isDirectory()) walk(q); else if (f.name === 'visual.json') out.push(JSON.parse(fs.readFileSync(q, 'utf8'))); }); walk(path.join(ROOT, d || dir, x.j.report, 'definition', 'pages')); return out.filter((v) => v.visual); };
+  const vis = (x, d) => { if (x.err) return []; const out = []; const walk = (p) => fs.readdirSync(p, { withFileTypes: true }).forEach((f) => { const q = path.join(p, f.name); if (f.isDirectory()) walk(q); else if (f.name === 'visual.json') out.push(JSON.parse(fs.readFileSync(q, 'utf8'))); }); walk(path.join(ROOT, d || dir, x.j.report, 'definition', 'pages'));
+    // (design round 8, N2: a chart cut to its Top N takes its title from a report measure; each visual carries the report's measures)
+    const ef = path.join(ROOT, d || dir, x.j.report, 'definition', 'reportExtensions.json'), ext = fs.existsSync(ef) ? JSON.parse(fs.readFileSync(ef, 'utf8')).entities.flatMap((e) => e.measures) : [];
+    out.forEach((v) => Object.defineProperty(v, '_ext', { value: ext })); return out.filter((v) => v.visual); };
   const lit = (e) => (e && e.expr && e.expr.Literal ? String(e.expr.Literal.Value).replace(/^'|'$/g, '').replace(/''/g, "'") : null);
   const vco = (v, k) => ((v.visual.visualContainerObjects || {})[k] || [])[0];
-  const titleOf = (v) => { const t = vco(v, 'title'); return t ? lit(t.properties.text) : null; }, altOf = (v) => { const g = vco(v, 'general'); return g ? lit(g.properties.altText) : null; };
+  // (design round 8, N2: a measure title reads as its plain title, the last text of its DAX: "Top N of M: ..." is shown only
+  // when the chart leaves categories out)
+  const plainOf = (v, ref) => { const m = (v._ext || []).find((x) => x.name === ref.Property), all = m ? [...m.expression.matchAll(/"((?:[^"]|"")*)"/g)] : []; return all.length ? all[all.length - 1][1].replace(/""/g, '"') : null; };
+  const titleOf = (v) => { const t = vco(v, 'title'), e = t && t.properties.text && t.properties.text.expr; return !t ? null : e && e.Measure ? plainOf(v, e.Measure) : lit(t.properties.text); }, altOf = (v) => { const g = vco(v, 'general'); return g ? lit(g.properties.altText) : null; };
   const subs = (x) => vis(x).filter((v) => vco(v, 'subTitle')).map((v) => [v.visual.visualType, lit(vco(v, 'subTitle').properties.text)]);
   const notes = (x) => JSON.stringify(x.err ? x.t : x.j.reportNotes || []);
   const build = async (name, extra, lang) => { const pl = await ask('plan_layout', { layout: 'exec', kpis: 3, filters: 'end', lang: lang || 'en' }); return ask('create_report', Object.assign({ path: dir, name, lang: lang || 'en', secondPage: false, design: pl.j.design }, extra || {})); };
@@ -35,7 +41,9 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     const charts = (x) => vis(x).filter((v) => /Chart$|^tableEx$/.test(v.visual.visualType) && v.visual.query).length;
     chk(() => !dflt.err && charts(dflt) >= 3 && msg(dflt).length >= 3 && msg(dflt).length <= charts(dflt) && blank(dflt).length >= 3 && msg(dflt).every((v) => !('tabOrder' in v.position)),
       () => `by default the charts and the table of a page have their "No data" card (no tab stop; the tooltip pages have none) and the KPI cards their blank text: charts ${charts(dflt)}, message cards ${msg(dflt).length}, cards with a blank text ${blank(dflt).length} ${dflt.err ? dflt.t.slice(0, 200) : ''}`);
-    chk(() => !off.err && charts(off) >= 3 && msg(off).length === 0 && blank(off).length === 0 && !fs.existsSync(path.join(ROOT, dir, off.j.report, 'definition', 'reportExtensions.json')),
+    // (design round 8, N2: a chart cut to its Top N has a report-level title measure, "Title: ..."; no "No data" measure)
+    const extNames = (x) => { const f = path.join(ROOT, dir, x.j.report, 'definition', 'reportExtensions.json'); return fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')).entities.flatMap((e) => e.measures.map((m) => m.name)) : []; };
+    chk(() => !off.err && charts(off) >= 3 && msg(off).length === 0 && blank(off).length === 0 && extNames(off).every((n) => /^Title: /.test(n)),
       () => `noDataMessage: false writes no message card, no blank text and no report-level measure: ${msg(off).length} ${blank(off).length} ${off.err ? off.t.slice(0, 200) : ''}`);
   }
   // a. AUD-032's follow-up: the FORMATS script (check_model_health's, and the one plan_layout and create_report hand

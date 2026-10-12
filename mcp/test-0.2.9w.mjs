@@ -95,7 +95,9 @@ export function v029w({ check }) {
     chk(() => bars(given) === 1, () => `A3-7: a category the picker marks { kind: 'month', family: 'hijri' } is measured as Hijri month names: ${given.threw || JSON.stringify(given.barCharts)}`);
     // a table's known rows: "Year Quarter" holds many quarters (never 4); a quarter or a day the picker counts is known
     const tbl = (c) => get(() => build(base({ table: [c, M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 120 }]) }));
-    const tight = (r) => !!(r.files && visuals(r).some((v) => v.visual.visualType === 'tableEx' && JSON.stringify(v.visual.objects.grid || '').includes('rowPadding'))) || (r.tableRows || []).length > 0;
+    // (design round 8, N6: a table of unknown rows now takes the room past its last whole row as extra row padding; a table
+    // whose rows are known and tight has rowPadding 0)
+    const tight = (r) => !!(r.files && visuals(r).some((v) => v.visual.visualType === 'tableEx' && JSON.stringify(v.visual.objects.grid || '').includes('"rowPadding":{"expr":{"Literal":{"Value":"0D"}}}'))) || (r.tableRows || []).length > 0;
     const yq = tbl(C('Year Quarter', {}, D)), qq = tbl(C('Quarter', {}, D)), pk = tbl(C('Weekday Label', { kind: 'day', rows: 7 }, D)), my = tbl(C('Month Year', {}, D));
     chk(() => !tight(yq) && tight(qq) && tight(pk) && !tight(my), () => `A3-7: rows known only for a quarter without a year, a day or month name, or the picker's count: Year Quarter ${tight(yq)}, Quarter ${tight(qq)}, picker's 7 days ${tight(pk)}, Month Year ${tight(my)}`);
   }
@@ -284,8 +286,11 @@ export function v029w({ check }) {
     const topOf = (v) => { const f = ((v.filterConfig || {}).filters || []).find((x) => x.type === 'TopN'); return f ? f.filter.From[0].Expression.Subquery.Query.Top : null; };
     const bar = vs.find((v) => v.position.x === 24), col = vs.find((v) => v.position.x === 640 && v.position.y === 80);
     // a bar chart 300 high at 720: (300 - 45 - 8 - 38) / 22.2 = 9 rows; a column chart 500 wide: room for 12-character labels
-    chk(() => topOf(bar) === 9 && topOf(col) >= 3 && /^Top 9: /.test(titleOf(bar)) && new RegExp('^Top ' + topOf(col) + ': ').test(titleOf(col)) && (r.topCharts || []).length >= 2,   /* (round 7: S5 belongs to the design block, which reports the cut charts as topCharts) */
-      () => `rc1-4: a chart by a text category shows its top N by its measure, N the rows or columns it holds, said in its title and told: ${r.threw || JSON.stringify(vs.map((v) => [titleOf(v), topOf(v)]))}`);
+    // (design round 8, N2/N3: the title says "Top N of M:" only when the chart leaves categories out: a report measure)
+    const extTitle = (v) => { const m = (((v.visual.visualContainerObjects || {}).title || [])[0] || { properties: {} }).properties.text, ref = m && m.expr && m.expr.Measure; if (!ref || !r.files) return '';
+      const ext = r.files.find((f) => /reportExtensions\.json$/.test(f.path)); return ext ? (JSON.parse(String(ext.data)).entities.flatMap((e) => e.measures).find((x) => x.name === ref.Property) || {}).expression || '' : ''; };
+    chk(() => topOf(bar) === 9 && topOf(col) >= 3 && extTitle(bar).includes('"Top 9 of "') && extTitle(col).includes('"Top ' + topOf(col) + ' of "') && (r.topCharts || []).length >= 2,   /* (round 7: S5 belongs to the design block, which reports the cut charts as topCharts) */
+      () => `rc1-4: a chart by a text category shows its top N by its measure, N the rows or columns it holds, said in its title and told: ${r.threw || JSON.stringify(vs.map((v) => [extTitle(v) || titleOf(v), topOf(v)]))}`);
     const t = get(() => build(base({ cats: { bar: C('Month Name', { sortBy: { t: D, c: 'Month No' } }, D), column: C('Quarter', {}, D), donut: C('Channel') } }), { pages: hand(1280, 720, [{ kind: 'bar', title: 'B', x: 24, y: 80, w: 600, h: 300 }, { kind: 'column', title: 'K', x: 640, y: 80, w: 500, h: 300 }]) }));
     chk(() => t.files && visuals(t).filter((v) => /^clustered/.test(v.visual.visualType) && v.position.x !== 12).every((v) => topOf(v) == null), () => 'rc1-4: a time or known category (months, quarters) is never cut to a top N');
     // the website's sample report (4 values a category) is never cut and never titled "Top N" (the tooltip page's own
@@ -337,9 +342,12 @@ export function v029w({ check }) {
     const rt = get(() => build(base({ table: [C('City'), M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 300 }]) }));
     const tv = rt.files ? visuals(rt).find((v) => v.visual.visualType === 'tableEx') : null;
     const th = JSON.parse(String(rt.files.find((f) => /RegisteredResources\/.*\.json$/.test(f.path)).data)), tt = +th.visualStyles.tableEx['*'].values[0].fontSize, pitch = 1.415 * tt * 4 / 3 + 2;
-    const TT = +(th.textClasses.title || {}).fontSize || 12, fixed = 1.5 * TT * 4 / 3 + (pitch + 7) + pitch + 16, rows = tv ? (tv.position.height - fixed) / pitch : 0;
-    chk(() => tv && tv.position.height <= 300 && 300 - tv.position.height < pitch && tv.position.y === 80 && rows - Math.floor(rows) < 1 / pitch + 1e-9,
-      () => `S3: a table ends on a whole row (pitch ${pitch.toFixed(1)}, ${rows.toFixed(2)} rows): ${rt.threw || JSON.stringify(tv && tv.position)}`);
+    // (design round 8, the re-score's N6: the table keeps its slot's height, ending where the visual beside it ends; the
+    // room past its last whole row goes into its rows' padding, a whole unit a side, so less than one unit a row is left)
+    const TT = +(th.textClasses.title || {}).fontSize || 12, gp = tv && ((tv.visual.objects.grid || [])[0] || {}).properties || {}, pad = gp.rowPadding ? +String(gp.rowPadding.expr.Literal.Value).replace(/D$/, '') : 1;
+    const pitchP = pitch - 2 + 2 * pad, fixed = 1.5 * TT * 4 / 3 + (pitchP + 7) + pitchP + 16, k = tv ? Math.floor((tv.position.height - fixed) / pitchP) : 0, left = tv ? tv.position.height - fixed - k * pitchP : 0;
+    chk(() => tv && tv.position.height === 300 && tv.position.y === 80 && left >= 0 && left < 2 * (k + 2),
+      () => `S3/N6: a table ends on a whole row inside its full slot (pitch ${pitchP.toFixed(1)} with padding ${pad}, ${k} rows, ${left.toFixed(1)} left): ${rt.threw || JSON.stringify(tv && tv.position)}`);
     const rd = get(() => build(base({ table: [C('Day Name', { kind: 'day', rows: 7 }), M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 300 }]) }));
     chk(() => rd.files && visuals(rd).find((v) => v.visual.visualType === 'tableEx').position.height === 300, () => 'S3: a table whose rows all show (7 days) keeps its height');
     // D3: a long slicer header takes a smaller text, down to 8pt, before it is shortened
