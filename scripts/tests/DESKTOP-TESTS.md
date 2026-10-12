@@ -2451,6 +2451,19 @@ So the bars that fit are floor((height - 40) / 27): a trend kept to its last 6 m
 periods, never a Top N by value. (`MEASURED.TIP_ROWS_6` in `assets/js/report-rules.js`; round 0's 22 a row + 46 was measured on
 that round's tooltip format.)
 
+## 2026-10-12: A dropdown slicer's rounded box (the owner's polish round P2), Power BI Desktop 2.158
+Measured on the laptop (the lab's polish proof, 12 Oct), on the slicers of a generated report's filter rail:
+- A slicer in Dropdown mode (`objects.data` `mode: 'Dropdown'`) takes, in `visual.json`, an entry with no selector:
+  `objects.dropdown: [{ properties: { borderRadius: 8D, borderIndividualCorners: false, borderColor: solid '#9ca3af' } }]`
+  (each value in the usual `expr.Literal.Value` form). Desktop draws the dropdown box with rounded corners and that
+  border; the header text above is unchanged. Tried at 4, 8 and 12: 4 is a softened rectangle, 8 matches the cards'
+  corners, 12 is near a pill at the box's height.
+- Microsoft's validator 0.4.0 does not know the object: `PBIR_FORMATTING_OBJECT_UNKNOWN` (`Unknown formatting object
+  "dropdown" for visualType "slicer"`), one error per slicer. `check_report` shows exactly this shape as a known note
+  with this section as its evidence (`VALIDATOR_GAPS` in `mcp/lib/check-report.mjs`); one more property in the object,
+  a selector, another slicer mode, another visual or another object stays the validator's error.
+- Named by Desktop for the same object, not tried: the four single corners, the icon colour and the accent bar.
+
 ## 0.2.9 design block: laptop proofs still to run (`fix/0.2.9-design`; written before any run, nothing measured yet)
 Values the design engine uses that were measured at one size only, or not at all. Each row: what to open, what is
 expected, and what a different result changes. Results go in a new dated section above, with the Desktop version.
