@@ -48,7 +48,10 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     chk(() => by['Units Sold'].wholeFormat && req('../assets/js/pbip-bind.js').measureCard({ name: 'Shipped Weight', formatString: '#,0 "kg"', expression: 'SUM ( Sales[Weight] )' }).wholeFormat && !by['Revenue INR'].wholeFormat && !by['Cost CAD'].wholeFormat && by.Orders.wholeFormat === '#,0',
       () => `G2: a unit in the format ("pcs", "kg") is no currency: those stay whole; INR and CAD are amounts: ${JSON.stringify(Object.fromEntries(Object.entries(by).map(([n, x]) => [n, x.wholeFormat || null])))}`);
     const B = req('../assets/js/pbip-bind.js');
-    chk(() => !B.measureCard({ name: 'Gross Rupees', formatString: '₹#,0', expression: 'SUM ( Sales[Amount] )' }).wholeFormat && !B.measureCard({ name: 'X', formatString: '#,0 "JPY"', expression: 'SUM ( T[A] )' }).wholeFormat
+    // (changed in writer round 9, the laptop's F4, N8-LAB measured in Desktop: a currency code AFTER the number, "#,0 \"AED\"",
+    // read "50.87MAED" in automatic units; such a card now shows the number unscaled in its format. A code or sign before the
+    // number stays an amount in automatic units, as G2 and the owner's O-2 want)
+    chk(() => !B.measureCard({ name: 'Gross Rupees', formatString: '₹#,0', expression: 'SUM ( Sales[Amount] )' }).wholeFormat && B.measureCard({ name: 'X', formatString: '#,0 "JPY"', expression: 'SUM ( T[A] )' }).wholeFormat === '#,0 "JPY"'
       && B.measureCard({ name: 'Value Index', formatString: '#,0', expression: 'SUMX ( T, T[A] )' }).wholeFormat,
       () => 'G2: a currency symbol or an ISO 4217 code makes an amount; "value" in a name alone does not');
   }
