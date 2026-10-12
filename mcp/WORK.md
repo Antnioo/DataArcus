@@ -121,6 +121,12 @@ After the twin and tools: **1033** + 36 + 21 + 21 + 16, golden PASS (11 tasks, n
 (854) PASS. The startup instructions are **2,493 characters** (cap 2,500): builder 10's A7-4 (every rule from one source)
 must keep them under it.
 
+## Writer round 9 (12 Oct from 06:02 UTC, cloud builder 11; `fix/0.2.9-writer` from `5f92d45`; not merged)
+`4d764b8`: D18 (fixed 2 decimals), D15 (text-category columns as bars by the 12-letter stand-in), the table's panel card (slot height,
+panel shadow) and the lint's cover. N8 waits for one Desktop measure (lab step in the writer report). Full run green but pbip's
+load flake (PASS alone). Owner's standing go (12 Oct): "From the reviewer" messages carry his approval for pushing fix/feat/lab
+branches; never main, a PR to main or a release.
+
 ## Writer round 8 (12 Oct from 01:26 UTC, cloud builder 11; `fix/0.2.9-writer` reset to gate `07ad9bc`; not merged)
 `a06a5b3`: T6 (Top 6 tooltip by the lab's 27 + 40), D18 (tables 2 decimals, in the picker). T10 re-checked green; D15 builder 10's.
 Then, with the reviewer's yeses: T8 `7812ac2` (Top 6 tooltip 376 wide), S3 `bc57633` (TABLE_ROWS from the laptop's MEASURE-TABLE-ROWS.md).
