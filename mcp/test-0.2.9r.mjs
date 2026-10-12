@@ -140,6 +140,23 @@ export async function v029r({ check }) {
     chk(() => wt && wt.two === true && dn && !dn.two, () => `D11: a calendar column whose ADDCOLUMNS expression is an IF of two texts is two-valued: ${JSON.stringify([wt, dn])}`);
   }
 
+  // ---------- round 11 (RESCORE-4 on rc.6, a repair): N18 calendar numbers, the helper card "X minus its ALL form" ----------
+  {
+    // N18: a calendar by its shape (built with CALENDAR, named like nothing in particular): its number columns (format 0,
+    // summed) and its other columns are never a category, the table's first column or a slicer from the categories; a
+    // number column (format 0, summed) is never a category anywhere
+    const cal = { name: 'Timeline', columns: [col('Date', 'unknown'), col('Monthnum', 'unknown', { formatString: '0', summarizeBy: 'sum' }), col('Day', 'unknown', { formatString: '0', summarizeBy: 'sum' }), col('Weekday Name', 'unknown')],
+      partitions: [{ name: 'Timeline', source: { type: 'calculated', expression: 'ADDCOLUMNS ( CALENDAR ( DATE ( 2024, 1, 1 ), DATE ( 2024, 12, 31 ) ), "Monthnum", MONTH ( [Date] ), "Day", DAY ( [Date] ), "Weekday Name", FORMAT ( [Date], "dddd" ) )' } }] };
+    const j = model([cal, { name: 'Visits', columns: [col('Date', 'unknown'), col('Bed No', 'unknown', { formatString: '0', summarizeBy: 'sum' }), col('Ward', 'string')],
+      measures: [ms('Patients', 'COUNTROWS ( Visits )', '#,0'), ms('All Patients', 'CALCULATE ( [Patients], ALL ( Visits ) )', '#,0'),
+        ms('Patients dummy line', '[All Patients] - [Patients]', '#,0'), ms('Gap', 'CALCULATE ( [Patients], ALL ( Visits ) ) - [Patients]', '#,0'), ms('Wards', 'DISTINCTCOUNT ( Visits[Ward] )', '#,0')] }],
+    [rel('Visits', 'Date', 'Timeline', 'Date')]);
+    const b = pick(j, 4), ch = b.choices || {}, used = [ch.catA, ch.catB].concat(ch.slicers || [], b.table ? [b.table[0]] : []).filter(Boolean).map((x) => x.t + '[' + x.c + ']');
+    chk(() => ch.catA && ch.catA.c === 'Ward' && !used.some((u) => /Monthnum|\[Day\]|Weekday Name|Bed No/.test(u)), () => `N18: no calendar column or number column as a category, the table's first column or a slicer: ${JSON.stringify(used)}`);
+    const k = names(b.kpis);
+    chk(() => k.includes('Patients') && !k.includes('Patients dummy line') && !k.includes('Gap'), () => `N18 (er's 4th card): a value minus its own ALL form is a chart helper, no card: ${JSON.stringify(k)}`);
+  }
+
   // ---------- D5: a model with currency-formatted amounts shows an amount card first, by format, even when the amount is
   // computed across tables (RELATED) and the counts are plain ----------
   {
