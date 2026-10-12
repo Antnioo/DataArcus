@@ -142,7 +142,8 @@ export async function v030twin({ call, check, ROOT, fs = fs0 }) {
     chk(() => !col.visual.query.queryState.Series.projections[0].displayName, () => 'T6. an unlabelled field keeps no displayName');
     const line = p1.lineMonth;
     chk(() => line.visual.query.sortDefinition.sort[0].direction === 'Descending' && objProp(line, 'valueAxis', 'switchAxisPosition') === 'true' && objProp(line, 'categoryAxis', 'invertAxis') === undefined, () => `T6. line chart: its sort flipped (time right to left by default), axis at the right: ${JSON.stringify(line.visual.query.sortDefinition)}`);
-    chk(() => JSON.stringify(line.visual.visualContainerObjects.padding) === JSON.stringify(o1.lineMonth.visual.visualContainerObjects.padding), () => 'T6. padding kept (not in the labs)');
+    // (T-3 of the laptop's rc.2 twins: the container padding swaps sides; before, it was kept as not in the labs)
+    chk(() => lit(line.visual.visualContainerObjects.padding[0].properties.left) === '12D' && lit(line.visual.visualContainerObjects.padding[0].properties.right) === '4D', () => 'T6. padding swapped (T-3)');
     chk(() => objProp(line, 'title', 'alignment', true) === "'right'", () => 'T6. a title without alignment gets right');
     const bar = p2.barProduct;
     chk(() => objProp(bar, 'valueAxis', 'invertAxis') === 'true' && objProp(bar, 'categoryAxis', 'switchAxisPosition') === 'true' && objProp(bar, 'valueAxis', 'switchAxisPosition') === undefined && objProp(bar, 'categoryAxis', 'invertAxis') === undefined, () => `T6. bar chart: bars from the right, names at the right, nothing else: ${JSON.stringify(bar.visual.objects)}`);
@@ -275,6 +276,115 @@ export async function v030audit({ call, check, ROOT, fs = fs0 }) {
   }
 }
 
+// ---------- the laptop's rc.2 twins (T-1..T-6, 11 Oct): made-up shapes like the ones it saw, never its dashboards ----------
+export async function v029twin({ call, check, ROOT, fs = fs0 }) {
+  const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
+  const short = (x) => (x.err ? x.t.slice(0, 300) : JSON.stringify(x.j).slice(0, 300));
+  const rd = (f) => JSON.parse(fs.readFileSync(f, 'utf8'));
+  const lit = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
+  const S = 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.1.0/schema.json';
+  const col = (t, c) => ({ field: { Column: { Expression: { SourceRef: { Entity: t } }, Property: c } }, queryRef: t + '.' + c, nativeQueryRef: c });
+  const mea = (t, m) => ({ field: { Measure: { Expression: { SourceRef: { Entity: t } }, Property: m } }, queryRef: t + '.' + m, nativeQueryRef: m });
+  const setup = (dir, opts) => {
+    const P = path.join(ROOT, dir); fs.cpSync(path.join(HERE, 'fixtures/twin-project'), P, { recursive: true });
+    const def = path.join(P, 'Twin Sales.Report/definition');
+    const add = (pg, name, x, w, visual) => { const d = path.join(def, 'pages', pg, 'visuals', name); fs.mkdirSync(d, { recursive: true }); fs.writeFileSync(path.join(d, 'visual.json'), JSON.stringify({ $schema: S, name, position: { x, y: 600, z: 7000, width: w, height: 80, tabOrder: 7000 }, visual }, null, 2)); };
+    // T-2: a line over the date column (a continuous axis) and a sparkline (axes hidden) over it
+    add('p1overview', 'lineDate', 20, 300, { visualType: 'lineChart', query: { queryState: { Category: { projections: [col('Calendar', 'Date')] }, Y: { projections: [mea('Sales', 'Total Sales')] } } } });
+    add('p1overview', 'spark', 340, 120, { visualType: 'lineChart', query: { queryState: { Category: { projections: [col('Calendar', 'Date')] }, Y: { projections: [mea('Sales', 'Total Sales')] } } },
+      objects: { categoryAxis: [{ properties: { show: { expr: { Literal: { Value: 'false' } } } } }], valueAxis: [{ properties: { show: { expr: { Literal: { Value: 'false' } } } } }] } });
+    // T-6: a bar list with its names hidden (the names are another visual beside it)
+    add('p1overview', 'barsNoNames', 480, 200, { visualType: 'clusteredBarChart', query: { queryState: { Category: { projections: [col('Sales', 'Region')] }, Y: { projections: [mea('Sales', 'Total Sales')] } } },
+      objects: { categoryAxis: [{ properties: { show: { expr: { Literal: { Value: 'false' } } } } }] } });
+    // T-3 (rc.5): a badge on a tile and an icon at the end of a card's title, small visuals ON a bigger one (z above)
+    const addAt = (pg, name, x, y, w, h, z, visual) => { const d = path.join(def, 'pages', pg, 'visuals', name); fs.mkdirSync(d, { recursive: true }); fs.writeFileSync(path.join(d, 'visual.json'), JSON.stringify({ $schema: S, name, position: { x, y, z, width: w, height: h, tabOrder: z }, visual }, null, 2)); };
+    addAt('p1overview', 'tile3', 700, 600, 250, 100, 12000, { visualType: 'shape' });
+    addAt('p1overview', 'badge3', 880, 610, 60, 24, 12100, { visualType: 'textbox', objects: { general: [{ properties: { paragraphs: [{ textRuns: [{ value: '+5%' }] }] } }] } });
+    addAt('p1overview', 'card3', 980, 600, 280, 90, 12000, { visualType: 'card', query: { queryState: { Values: { projections: [mea('Sales', 'Total Sales')] } } } });
+    addAt('p1overview', 'icon3', 1220, 605, 30, 30, 12100, { visualType: 'image' });
+    // T-6 (rc.5): a bar list with its names hidden and the names in a table just beside it (the tooltip page, 320 wide)
+    addAt('p3tooltip', 'names6', 12, 120, 100, 100, 2000, { visualType: 'tableEx', query: { queryState: { Values: { projections: [col('Sales', 'Region')] } } } });
+    addAt('p3tooltip', 'bars6', 115, 120, 190, 100, 2000, { visualType: 'clusteredBarChart', query: { queryState: { Category: { projections: [col('Sales', 'Region')] }, Y: { projections: [mea('Sales', 'Total Sales')] } } },
+      objects: { categoryAxis: [{ properties: { show: { expr: { Literal: { Value: 'false' } } } } }] } });
+    // T-1: the details page is drawn on a background picture
+    const pj = path.join(def, 'pages/p2details/page.json'), page = rd(pj);
+    page.objects = { background: [{ properties: { image: { image: { name: { expr: { Literal: { Value: "'panels.png'" } } }, url: { expr: { ResourcePackageItem: { PackageName: 'RegisteredResources', PackageType: 1, ItemName: 'panels.png' } } } } } } }] };
+    fs.writeFileSync(pj, JSON.stringify(page, null, 2));
+    if (opts && opts.calendar) {
+      // T-5: the date table as a DAX table whose columns carry no type (as Desktop saves one), named as given, not marked
+      const mf = path.join(P, 'Twin Sales.SemanticModel/model.bim'), m = rd(mf), t = m.model.tables.find((x) => x.name === 'Calendar');
+      t.name = opts.calendar; delete t.dataCategory;
+      t.partitions = [{ name: opts.calendar, mode: 'import', source: { type: 'calculated', expression: 'ADDCOLUMNS ( CALENDAR ( DATE ( 2020, 1, 1 ), DATE ( 2025, 12, 31 ) ), "Year", YEAR ( [Date] ), "Month Number", MONTH ( [Date] ), "Month Name", FORMAT ( [Date], "MMMM" ) )' } }];
+      t.columns = [{ name: 'Date', type: 'calculatedTableColumn', isNameInferred: true, sourceColumn: '[Date]' }, { name: 'Year', type: 'calculatedTableColumn', isNameInferred: true, sourceColumn: '[Year]' },
+        { name: 'Month Number', type: 'calculatedTableColumn', isNameInferred: true, sourceColumn: '[Month Number]' }, { name: 'Month Name', type: 'calculatedTableColumn', isNameInferred: true, sourceColumn: '[Month Name]' }];
+      m.model.relationships.forEach((r) => { if (r.toTable === 'Calendar') r.toTable = opts.calendar; });
+      fs.writeFileSync(mf, JSON.stringify(m, null, 2));
+    }
+    if (opts && opts.tmdl) {
+      // T-5 (rc.5): the model saved as TMDL (no model.bim), its calendar a CALCULATED table, ADDCOLUMNS ( CALENDAR... ) or
+      // ADDCOLUMNS ( CALENDARAUTO () ), with Date, Year, Month and a month number: as Desktop saves one, no dataType
+      const sm = path.join(P, 'Twin Sales.SemanticModel'), dd = path.join(sm, 'definition'), td = path.join(dd, 'tables');
+      fs.rmSync(path.join(sm, 'model.bim')); fs.mkdirSync(td, { recursive: true });
+      const T = '\t';
+      fs.writeFileSync(path.join(dd, 'database.tmdl'), 'database\n\tcompatibilityLevel: 1567\n');
+      fs.writeFileSync(path.join(dd, 'model.tmdl'), 'model Model\n\tculture: en-US\n\nref table Sales\nref table Dates\n');
+      fs.writeFileSync(path.join(td, 'Sales.tmdl'), ['table Sales', '',
+        ...[['Order Date', 'dateTime'], ['Region', 'string'], ['Product', 'string'], ['Amount', 'double']].flatMap(([c, ty]) => [`${T}column '${c}'`, `${T}${T}dataType: ${ty}`, `${T}${T}sourceColumn: ${c}`, '']),
+        `${T}measure 'Total Sales' = SUM ( Sales[Amount] )`, '', `${T}partition Sales = m`, `${T}${T}mode: import`, `${T}${T}source = let Source = #table(type table [#"Order Date" = datetime, Region = text, Product = text, Amount = number], {}) in Source`, ''].join('\n'));
+      const gen = opts.tmdl === 'CALENDARAUTO' ? 'CALENDARAUTO ()' : 'CALENDAR ( DATE ( 2020, 1, 1 ), DATE ( 2025, 12, 31 ) )';
+      fs.writeFileSync(path.join(td, 'Dates.tmdl'), ['table Dates', '',
+        ...['Date', 'Year', 'Month', 'MonthNo'].flatMap((c) => [`${T}column ${c}`, `${T}${T}summarizeBy: none`, `${T}${T}isNameInferred`, `${T}${T}sourceColumn: [${c}]`, '']),
+        `${T}partition Dates = calculated`, `${T}${T}mode: import`, `${T}${T}source =`, `${T}${T}${T}${T}ADDCOLUMNS (`, `${T}${T}${T}${T}    ${gen},`,
+        `${T}${T}${T}${T}    "Year", YEAR ( [Date] ),`, `${T}${T}${T}${T}    "Month", FORMAT ( [Date], "MMM" ),`, `${T}${T}${T}${T}    "MonthNo", MONTH ( [Date] )`, `${T}${T}${T}${T})`, ''].join('\n'));
+      fs.writeFileSync(path.join(dd, 'relationships.tmdl'), "relationship r1\n\tfromColumn: Sales.'Order Date'\n\ttoColumn: Dates.Date\n");
+    }
+    return P;
+  };
+  // T-5 (rc.5): a calculated calendar in a TMDL model, built with CALENDAR or CALENDARAUTO, is the date table
+  for (const gen of ['CALENDAR', 'CALENDARAUTO']) {
+    const P = setup('tw5t' + gen, { tmdl: gen });
+    const x = await call('create_arabic_twin', { path: path.relative(ROOT, path.join(P, 'Twin Sales.pbip')) });
+    chk(() => !x.err && x.j.arabicMonth.offered === true && x.j.arabicMonth.table === 'Dates' && x.j.arabicMonth.dateColumn === 'Date' && x.j.arabicMonth.sortBy === 'MonthNo', () => `T-5. the Arabic month script offered on a calculated TMDL calendar (ADDCOLUMNS ( ${gen} ... )), sorted by its month number, not the text "Month": ${x.err ? short(x) : JSON.stringify(x.j.arabicMonth).slice(0, 300)}`);
+  }
+  // T-5: the date table found by its shape, whatever its name or mark
+  for (const name of ['Calender', 'Calendar']) {
+    setup('tw5' + name);
+    const P = setup('tw5x' + name, { calendar: name });
+    const x = await call('create_arabic_twin', { path: path.relative(ROOT, path.join(P, 'Twin Sales.pbip')) });
+    chk(() => !x.err && x.j.arabicMonth.offered === true && x.j.arabicMonth.table === name, () => `T-5. the Arabic month script offered on a date table named "${name}", not marked, untyped DAX columns: ${short(x)}`);
+  }
+  // T-1, T-2, T-6: the plan says it before approval
+  const P1 = setup('tw1');
+  const plan = await call('create_arabic_twin', { path: 'tw1/Twin Sales.pbip' }), j = plan.j || {};
+  chk(() => (j.picturePages || []).some((p) => p.page === 'p2details' && /left to right/.test(p.what)) && (j.cannot || []).some((c) => /background picture/.test(c.what)), () => `T-1. a page drawn on a picture is named in the plan, kept left to right unless asked: ${JSON.stringify(j.picturePages)} ${short(plan)}`);
+  chk(() => (j.checkInTwin || []).some((c) => /names hidden/.test(c.what) && c.where.some((w) => /barsNoNames/.test(w))), () => `T-6. a bar list with hidden names is named for a look in the twin: ${JSON.stringify(j.checkInTwin)}`);
+  chk(() => (j.cannot || []).some((c) => /data bars/.test(c.what)), () => 'T-4. data bars inside a table or matrix are said to keep their direction');
+  // the write: the picture page left to right, time reversed on the continuous axis, the padding swapped
+  const pl = await call('create_arabic_twin', { path: 'tw1/Twin Sales.pbip' }), pid = pl.j && pl.j.plan && pl.j.plan.planId;
+  await call('approve_plan', { planId: pid, userReply: 'go' });
+  const w = await call('create_arabic_twin', { path: 'tw1/Twin Sales.pbip', planId: pid });
+  const V = (r, pg, n) => { try { return rd(path.join(P1, r + '.Report/definition/pages', pg, 'visuals', n, 'visual.json')); } catch (e) { return null; } };
+  chk(() => !w.err && V('Twin Sales AR', 'p2details', 'tblProducts').position.x === V('Twin Sales', 'p2details', 'tblProducts').position.x && V('Twin Sales AR', 'p1overview', 'colRegion').position.x === 640, () => `T-1. the picture page is copied left to right; the other pages mirrored: ${short(w)}`);
+  chk(() => lit(V('Twin Sales AR', 'p1overview', 'lineDate').visual.objects.categoryAxis[0].properties.invertAxis) === 'true' && lit(V('Twin Sales AR', 'p1overview', 'spark').visual.objects.categoryAxis.find((e) => !e.selector).properties.invertAxis) === 'true', () => 'T-2/T-4. a continuous date axis (a line and a sparkline) is reversed by invertAxis');
+  chk(() => lit(V('Twin Sales AR', 'p1overview', 'colRegion').visual.objects.categoryAxis && V('Twin Sales AR', 'p1overview', 'colRegion').visual.objects.categoryAxis[0].properties.invertAxis) === undefined, () => 'T-2. a category axis gets no invertAxis (it is ignored there; the sort reverses it)');
+  chk(() => { const pd = V('Twin Sales AR', 'p1overview', 'lineMonth').visual.visualContainerObjects.padding[0].properties; return lit(pd.left) === '12D' && lit(pd.right) === '4D'; }, () => 'T-3. the container padding swaps sides (a text clear of an icon stays clear of it)');
+  // T-3 (rc.5): a small visual on a bigger one moves with it, keeping its offset (the tile's picture and the card's text don't flip under it)
+  const X = (pg, n) => { const v = V('Twin Sales AR', pg, n); return v && v.position.x; };
+  chk(() => X('p1overview', 'tile3') === 330 && X('p1overview', 'badge3') === 510 && X('p1overview', 'card3') === 20 && X('p1overview', 'icon3') === 260, () => `T-3. a badge and an icon keep their place on their tile and card (tile 330, badge 510; card 20, icon 260): ${JSON.stringify(['tile3', 'badge3', 'card3', 'icon3'].map((n) => X('p1overview', n)))}`);
+  // T-6 (rc.5): the bars and their names mirrored as one block, the bars keeping their direction toward the names
+  const b6 = V('Twin Sales AR', 'p3tooltip', 'bars6');
+  chk(() => X('p3tooltip', 'names6') === 15 && X('p3tooltip', 'bars6') === 118, () => `T-6. the names and their bars stay side by side as in the original (names 15, bars 118): ${JSON.stringify([X('p3tooltip', 'names6'), X('p3tooltip', 'bars6')])}`);
+  chk(() => b6 && !(b6.visual.objects.valueAxis || []).some((e) => e.properties && e.properties.invertAxis) && !(b6.visual.objects.categoryAxis || []).some((e) => e.properties && e.properties.switchAxisPosition), () => `T-6. the paired bars keep growing toward their names (no invertAxis, no switchAxisPosition): ${JSON.stringify(b6 && b6.visual.objects)}`);
+  chk(() => (j.keptTogether || []).some((k) => /bar lists/.test(k.what) && k.where.some((w) => /names6/.test(w) && /bars6/.test(w))) && (j.keptTogether || []).some((k) => /on a bigger visual/.test(k.what) && k.where.some((w) => /badge3 on tile3/.test(w))), () => `T-3/T-6. the plan says which visuals are kept together: ${JSON.stringify(j.keptTogether)}`);
+  chk(() => !(j.checkInTwin || []).some((c) => (c.where || []).some((w) => /bars6/.test(w))), () => `T-6. a paired bar list is no longer only a warning: ${JSON.stringify(j.checkInTwin)}`);
+  // mirrorPicturePages: the user's choice to mirror such a page anyway
+  const P2 = setup('tw1b'); void P2;
+  const pl2 = await call('create_arabic_twin', { path: 'tw1b/Twin Sales.pbip', mirrorPicturePages: true }), pid2 = pl2.j && pl2.j.plan && pl2.j.plan.planId;
+  await call('approve_plan', { planId: pid2, userReply: 'go' });
+  const w2 = await call('create_arabic_twin', { path: 'tw1b/Twin Sales.pbip', mirrorPicturePages: true, planId: pid2 });
+  chk(() => !w2.err && rd(path.join(ROOT, 'tw1b/Twin Sales AR.Report/definition/pages/p2details/visuals/tblProducts/visual.json')).position.x === 960, () => `T-1. mirrorPicturePages: the picture page mirrored as asked: ${short(w2)}`);
+}
+
 // ---------- T10. the engine alone (assets/js/report-mirror.js): what the fixture has not ----------
 export function v030engine({ check }) {
   const M = createRequire(import.meta.url)('../assets/js/report-mirror.js');
@@ -302,6 +412,13 @@ export function v030engine({ check }) {
     check(keep.visual && !keep.visual.query.sortDefinition && flip.visual && flip.visual.query.sortDefinition.sort[0].direction === 'Descending', `T10. timeRightToLeft false keeps a time axis; the default mirrors it: ${JSON.stringify([keep.visual && keep.visual.query.sortDefinition, flip.visual && flip.visual.query.sortDefinition])}`);
     const region = run(v('columnChart', { queryState: { Category: { projections: [col('S', 'Region')] }, Y: { projections: [mea('S', 'A')] } } }), 1280, { timeRightToLeft: false, dateTables: ['Calendar'] });
     check(region.visual && region.visual.query.sortDefinition.sort[0].direction === 'Descending', 'T10. timeRightToLeft false still mirrors a category that is not time'); }
+  // T-3 (rc.5): the guards: a panel carrying 4 small cards is a panel (they mirror one by one); a small visual drawn
+  // BELOW a bigger one is not on it; a badge on a tile moves with it
+  { const at = (name, type, x, y, w, h, z) => ({ name, position: { x, y, z, width: w, height: h }, visual: { visualType: type } });
+    const panel = [at('panel', 'shape', 0, 0, 1000, 400, 1)].concat([0, 1, 2, 3].map((i) => at('c' + i, 'card', 20 + i * 240, 20, 200, 60, 2)));
+    const u1 = M.unitsOf(panel), u2 = M.unitsOf([at('big', 'shape', 0, 0, 300, 100, 5), at('under', 'textbox', 200, 10, 60, 20, 1)]);
+    const r3 = M.mirrorPage({ width: 1000 }, [at('tile', 'shape', 100, 0, 300, 100, 1), at('badge', 'textbox', 320, 10, 60, 20, 2)]);
+    check(u1.on.length === 0 && u2.on.length === 0 && r3.visuals[0].position.x === 600 && r3.visuals[1].position.x === 820, `T10. units: a panel's cards and a visual below are mirrored on their own; a badge moves with its tile (600, 820): ${JSON.stringify([u1, u2, r3.visuals.map((v) => v.position.x)])}`); }
   // the fuzz test's F-T1..F-T3: odd shapes never throw; an odd part is left as it is, a hopeless visual copied and listed
   { const odd = [null, 7, 'x', { name: 'a', visual: 'text' }, { name: 'b', visual: { visualType: 'barChart', objects: 'none' } },
       { name: 'c', visual: { visualType: 'columnChart', objects: { valueAxis: [null, 5] }, query: { queryState: { Category: { projections: [null] } }, sortDefinition: 'x' } } },
@@ -324,6 +441,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   try { v030engine({ check }); } catch (e) { check(false, 'T10. the engine: ' + e.message); }
   await v030twin({ call: s.call, check, ROOT });
   await v030audit({ call: s.call, check, ROOT });
+  await v029twin({ call: s.call, check, ROOT });
   await s.close(); fs0.rmSync(ROOT, { recursive: true, force: true });
   console.log(problems.length ? `FAIL  v030twin  ${checks} checks, ${problems.length} failed\n` + problems.map((p) => '      - ' + p).join('\n') : `PASS  v030twin  ${checks} checks`);
   process.exit(problems.length ? 1 : 0);
