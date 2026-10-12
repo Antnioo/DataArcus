@@ -14,6 +14,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { serverClient } from './test-0.2.9.mjs';
 import { withPlans } from './test-plan.mjs';
+import { validatorCounts } from './test-validator.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
 const ROOT = fs.mkdtempSync(path.join(os.tmpdir(), 'dataarcus-layouts-')), t0 = Date.now();
@@ -37,10 +38,11 @@ LAYOUTS.forEach((layout, li) => [0, 1, 2, 3].forEach((i) => combos.push({ layout
 LAYOUTS.forEach((l) => { const c = combos.filter((x) => x.layout === l);
   check(PAGES.every((p) => c.some((x) => x.page === p)) && KPIS.every((k) => c.some((x) => x.kpis === k)) && FILTERS.every((f) => c.some((x) => x.filters === f)), `the matrix: ${l} must meet every page, KPI count and filter position`); });
 
+// (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
 const validate = (dir) => {
-  const p = spawnSync(process.execPath, [path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js'), 'validate', dir], { encoding: 'utf8' });
-  try { const d = JSON.parse(p.stdout).data, diag = d.diagnostics || {}; return d.errorCount ? Object.keys(diag).filter((k) => diag[k].severity === 'error').map((k) => `${k}: ${String(diag[k].items[0].message).slice(0, 80)}`).join('; ') : ''; }
-  catch (e) { return 'the validator did not run'; }
+  const r = validatorCounts(dir);
+  if (!r.ran) return 'the validator did not run';
+  return r.errors.map((e) => `${e.code}: ${e.message.slice(0, 80)}`).join('; ');
 };
 // a written report: its pages in order (tooltip pages apart), each with its top-level visuals at page positions
 const readReport = (dir) => {

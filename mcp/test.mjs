@@ -32,6 +32,7 @@ import { zgate } from './test-z.mjs';
 import { v029a4 } from './test-0.2.9-a4.mjs';
 import { v029sweep } from './test-0.2.9-sweep.mjs';
 import { withPlans } from './test-plan.mjs';
+import { validatorCounts, validatorErrors, checkReportClean } from './test-validator.mjs';
 import { layoutProblems, phoneTextProblems, navProblems, sortProblems, headerProblems, tooltipMeasures, tooltipProblems, tooltipPageProblems, tableProblems, cardStyleProblems, projectProblems, panelProblems, isMessageCard } from '../scripts/tests/report-check.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url)), REPO = path.join(HERE, '..');
@@ -588,11 +589,9 @@ const cardProblems = (dir, rtl) => {
   // Microsoft's validator on a report folder: { errors, what } (warnings are not errors)
   const validate = (dir) => {
     const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
-    const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' });
-    try {
-      const d = JSON.parse(p.stdout).data, diag = d.diagnostics || {};
-      return { errors: d.errorCount, what: Object.keys(diag).filter((k) => diag[k].severity === 'error').map((k) => `${k}: ${String(diag[k].items[0].message).split(': ')[0]}`).join('; ') };
-    } catch (e) { return { errors: -1, what: 'the validator did not run: ' + String(p.stderr || p.error || p.stdout).slice(0, 200) }; }
+    // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
+    const r = validatorCounts(dir);
+    return r.ran ? { errors: r.errorCount, what: r.errors.map((e) => `${e.code}: ${e.message}`).join('; ') } : { errors: -1, what: 'the validator did not run: ' + r.why };
   };
   const t4 = await tryCall('generate_theme', { name: 'Round0', brand: '#0F4C5C', folder: 'themes/r0' });
   const made = {};
@@ -961,7 +960,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   fs.cpSync(path.join(HERE, 'test-models/large-synthetic/Large Synthetic.SemanticModel'), path.join(ROOT, 'large/Large Synthetic.SemanticModel'), { recursive: true });
   fs.cpSync(path.join(HERE, 'test-models/no-measures'), path.join(ROOT, 'plain'), { recursive: true });
   const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
-  const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnostics || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run'; } };
+  // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
+  const errors = validatorErrors;
   const f = (x) => (x ? `${x.t}[${x.m != null ? x.m : x.c}]` : null);
   // (the rc's laptop proof, D14: a share of all, DIVIDE([X], CALCULATE([X], ALL(...))), is 100 % on a card: the 4th card was
   // 'Freight Costs[Freight Costs Units Share %]', now the next amount)
@@ -1462,7 +1462,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 300) : x.t.slice(0, 300));
   const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
-  const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnosticsByCode || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run: ' + String(p.stderr || p.error || p.stdout).slice(0, 200); } };
+  // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
+  const errors = validatorErrors;
   // every page.json of a written report: { tooltip, filters }
   const pagesOf = (dir) => { const def = path.join(dir, 'definition', 'pages');
     return fs.readdirSync(def).filter((n) => fs.existsSync(path.join(def, n, 'page.json'))).map((n) => JSON.parse(fs.readFileSync(path.join(def, n, 'page.json'), 'utf8')))
@@ -1549,7 +1550,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 400) : x.t.slice(0, 300));
   const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
-  const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnosticsByCode || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run: ' + String(p.stderr || p.error || p.stdout).slice(0, 200); } };
+  // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
+  const errors = validatorErrors;
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
   const col = (name, dataType) => ({ name, dataType, sourceColumn: name });
   // every page of a written report: { name, tooltip, filters, visuals }
@@ -1814,9 +1816,9 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
       () => `check_report must be listed, read-only, with path, checks, lang, maxFindings: ${JSON.stringify(t && { a: t.annotations, p: Object.keys(t.inputSchema.properties || {}) })}`);
     const before = [hashOf(RP('CR Gold EN')), hashOf(RP('CR Gold AR'))];
     const en = await ask('check_report', { path: 'cr-project/CR Gold EN.pbip' }), ar = await ask('check_report', { path: 'cr-project/CR Gold AR.Report' });
-    const ok = (a) => !a.err && a.j.validator.ran === true && a.j.validator.mode === 'offline' && a.j.validator.errors === 0 && /^0\.4\.0$/.test(a.j.validator.version) && a.j.schemas.checked > 20 && a.j.schemas.errors === 0
+    const ok = (a, dir) => !a.err && a.j.validator.ran === true && a.j.validator.mode === 'offline' && checkReportClean(a.j, dir) && /^0\.4\.0$/.test(a.j.validator.version) && a.j.schemas.checked > 20 && a.j.schemas.errors === 0
       && a.j.report.pages >= 2 && a.j.report.visuals > 20 && a.j.report.schemaVersions.page && !a.j.findings.some((f) => f.severity === 'error') && measured(a).filter((f) => f.severity !== 'note').length === 0 && Array.isArray(a.j.notChecked) && a.j.counts && typeof a.j.truncated === 'boolean';
-    chk(() => ok(en) && ok(ar) && en.j.lang === 'en' && ar.j.lang === 'ar' && hashOf(RP('CR Gold EN')) === before[0] && hashOf(RP('CR Gold AR')) === before[1],
+    chk(() => ok(en, RP('CR Gold EN')) && ok(ar, RP('CR Gold AR')) && en.j.lang === 'en' && ar.j.lang === 'ar' && hashOf(RP('CR Gold EN')) === before[0] && hashOf(RP('CR Gold AR')) === before[1],
       () => `our golden reports must pass check_report (validator offline 0 errors, schemas 0, no measured finding) and stay unchanged: EN ${short(en)} | AR ${short(ar)} ${JSON.stringify(ar.j && measured(ar)).slice(0, 400)}`);
     // the findings' shape: every finding has its rule, severity, file inside the report, source and a fix in words
     chk(() => [en, ar].every((a) => a.j.findings.every((f) => f.rule && ['error', 'warning', 'note'].includes(f.severity) && f.source && f.fix && f.what && (f.file == null || (!path.isAbsolute(f.file) && !/\.\./.test(f.file))))),
@@ -1914,7 +1916,7 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     let o = null; try { o = JSON.parse(p.stdout.trim().split('\n').pop()); } catch (e) { o = null; }
     const inProc = await ask('check_report', { path: 'cr-project/CR Gold AR.Report' });
     const src = fs.existsSync(path.join(HERE, 'lib', 'check-report.mjs')) ? fs.readFileSync(path.join(HERE, 'lib', 'check-report.mjs'), 'utf8') : '';
-    chk(() => o && o.tries.length === 0 && o.validator.ran === true && o.validator.mode === 'offline' && o.validator.errors === 0 && o.validator.warnings === inProc.j.validator.warnings && o.schemas.errors === 0 && o.findings === inProc.j.findings.length && !/child_process|https?\.get|https?\.request|fetch\(/.test(src),
+    chk(() => o && o.tries.length === 0 && o.validator.ran === true && o.validator.mode === 'offline' && checkReportClean(o, RP('CR Gold AR')) && o.validator.warnings === inProc.j.validator.warnings && o.schemas.errors === 0 && o.findings === inProc.j.findings.length && !/child_process|https?\.get|https?\.request|fetch\(/.test(src),
       () => `check_report must run with the network blocked and Playwright unloadable, with the same answer: ${p.stdout.slice(-400)} ${p.stderr.slice(-600)}`);
   }
 
@@ -2016,7 +2018,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   const ask = async (name, args) => { try { return await call(name, args); } catch (e) { return { err: true, t: String(e && e.message || e), j: null }; } };
   const short = (x) => (x.err ? 'error: ' + x.t.slice(0, 500) : x.t.slice(0, 300));
   const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
-  const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnostics || d.diagnosticsByCode || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run: ' + String(p.stderr || p.error || p.stdout).slice(0, 200); } };
+  // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
+  const errors = validatorErrors;
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
   const col = (name, dataType) => ({ name, dataType, sourceColumn: name });
   const L = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined), N = (p) => parseFloat(L(p));
@@ -2843,7 +2846,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
   const mp = (n) => [{ name: n, mode: 'import', source: { type: 'm', expression: 'let Source = #table({"Day"}, {}) in Source' } }];
   const col = (name, dataType, extra) => Object.assign({ name, dataType, sourceColumn: name }, extra || {});
   const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
-  const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnostics || d.diagnosticsByCode || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run: ' + String(p.stderr || p.error || p.stdout).slice(0, 200); } };
+  // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
+  const errors = validatorErrors;
   const P = 'r13-project';
   fs.mkdirSync(path.join(ROOT, P, 'R13 Test.SemanticModel'), { recursive: true });
   fs.writeFileSync(path.join(ROOT, P, 'R13 Test.SemanticModel/model.bim'), JSON.stringify({ compatibilityLevel: 1567, model: { tables: [{ name: 'Sales', partitions: mp('Sales'),
@@ -4111,7 +4115,8 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
 // G-13: every report created above still passes the validator: 0 errors each
 {
   const cli = path.join(HERE, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js');
-  const errors = (dir) => { const p = spawnSync(process.execPath, [cli, 'validate', dir], { encoding: 'utf8' }); try { const d = JSON.parse(p.stdout).data; return d.errorCount + (d.errorCount ? ' (' + Object.keys(d.diagnostics || d.diagnosticsByCode || {}).join(', ') + ')' : ''); } catch (e) { return 'the validator did not run: ' + String(p.stderr || p.error || p.stdout).slice(0, 200); } };
+  // (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs)
+  const errors = validatorErrors;
   const dirs = [...createdReports].filter((d) => fs.existsSync(path.join(d, 'definition')));
   const bad = dirs.map((d) => [path.relative(ROOT, d), errors(d)]).filter(([, e]) => String(e) !== '0');
   check(dirs.length > 50 && !bad.length, `every created report must validate with 0 errors (${dirs.length} reports): ${bad.map(([d, e]) => d + ': ' + e).join('; ').slice(0, 1500)}`);

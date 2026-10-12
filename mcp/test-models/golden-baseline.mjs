@@ -17,6 +17,7 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { withPlans } from '../test-plan.mjs';
+import { validatorCounts } from '../test-validator.mjs';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { layoutProblems, tableProblems, projectProblems } from '../../scripts/tests/report-check.mjs';
 
@@ -48,12 +49,12 @@ const call = withPlans(async (name, args) => {
 const hashes = (dir) => { const out = {}; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else out[f] = crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex'); }); walk(dir); return out; };
 const unchanged = (before) => Object.entries(before).filter(([f, h]) => !fs.existsSync(f) || hashes(path.dirname(f))[f] !== h).map(([f]) => path.relative(ROOT, f));
 const filesOf = (dir, rel) => { const out = {}; const walk = (d) => fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { const f = path.join(d, e.name); if (e.isDirectory()) walk(f); else out[path.relative(rel, f).split(path.sep).join('/')] = fs.readFileSync(f); }); walk(dir); return out; };
+// (polish round P2) 0 errors outside the known-false entry, its hits exactly the report's slicer boxes (test-validator.mjs);
+// the expected 0 means the same as before: nothing else
 const validate = (dir) => {
-  const p = spawnSync(process.execPath, [path.join(MCP, 'node_modules/@microsoft/powerbi-report-authoring-cli/dist/cli.js'), 'validate', dir], { encoding: 'utf8' });
-  try {
-    const d = JSON.parse(p.stdout).data, diag = d.diagnostics || {};
-    return d.errorCount ? `${d.errorCount} (${Object.keys(diag).filter((k) => diag[k].severity === 'error').map((k) => `${k} x${diag[k].items.length}: ${String(diag[k].items[0].message).slice(0, 90)}`).join('; ')})` : 0;
-  } catch (e) { return 'not run'; }
+  const r = validatorCounts(dir);
+  if (!r.ran) return 'not run';
+  return r.errorCount ? `${r.errorCount} (${r.codes.map((k) => `${k} x${r.errors.filter((e) => e.code === k).length}: ${r.errors.find((e) => e.code === k).message.slice(0, 90)}`).join('; ')})` : 0;
 };
 // a written report: pages (without tooltip pages), visuals, validator errors, measured size and phone problems
 const reportFacts = (project, report, rtl) => {
