@@ -95,7 +95,9 @@ export function v029w({ check }) {
     chk(() => bars(given) === 1, () => `A3-7: a category the picker marks { kind: 'month', family: 'hijri' } is measured as Hijri month names: ${given.threw || JSON.stringify(given.barCharts)}`);
     // a table's known rows: "Year Quarter" holds many quarters (never 4); a quarter or a day the picker counts is known
     const tbl = (c) => get(() => build(base({ table: [c, M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 120 }]) }));
-    const tight = (r) => !!(r.files && visuals(r).some((v) => v.visual.visualType === 'tableEx' && JSON.stringify(v.visual.objects.grid || '').includes('rowPadding'))) || (r.tableRows || []).length > 0;
+    // (design round 8, N6: a table of unknown rows now takes the room past its last whole row as extra row padding; a table
+    // whose rows are known and tight has rowPadding 0)
+    const tight = (r) => !!(r.files && visuals(r).some((v) => v.visual.visualType === 'tableEx' && JSON.stringify(v.visual.objects.grid || '').includes('"rowPadding":{"expr":{"Literal":{"Value":"0D"}}}'))) || (r.tableRows || []).length > 0;
     const yq = tbl(C('Year Quarter', {}, D)), qq = tbl(C('Quarter', {}, D)), pk = tbl(C('Weekday Label', { kind: 'day', rows: 7 }, D)), my = tbl(C('Month Year', {}, D));
     chk(() => !tight(yq) && tight(qq) && tight(pk) && !tight(my), () => `A3-7: rows known only for a quarter without a year, a day or month name, or the picker's count: Year Quarter ${tight(yq)}, Quarter ${tight(qq)}, picker's 7 days ${tight(pk)}, Month Year ${tight(my)}`);
   }
@@ -284,8 +286,11 @@ export function v029w({ check }) {
     const topOf = (v) => { const f = ((v.filterConfig || {}).filters || []).find((x) => x.type === 'TopN'); return f ? f.filter.From[0].Expression.Subquery.Query.Top : null; };
     const bar = vs.find((v) => v.position.x === 24), col = vs.find((v) => v.position.x === 640 && v.position.y === 80);
     // a bar chart 300 high at 720: (300 - 45 - 8 - 38) / 22.2 = 9 rows; a column chart 500 wide: room for 12-character labels
-    chk(() => topOf(bar) === 9 && topOf(col) >= 3 && /^Top 9: /.test(titleOf(bar)) && new RegExp('^Top ' + topOf(col) + ': ').test(titleOf(col)) && (r.topCharts || []).length >= 2,   /* (round 7: S5 belongs to the design block, which reports the cut charts as topCharts) */
-      () => `rc1-4: a chart by a text category shows its top N by its measure, N the rows or columns it holds, said in its title and told: ${r.threw || JSON.stringify(vs.map((v) => [titleOf(v), topOf(v)]))}`);
+    // (design round 8, N2/N3: the title says "Top N of M:" only when the chart leaves categories out: a report measure)
+    const extTitle = (v) => { const m = (((v.visual.visualContainerObjects || {}).title || [])[0] || { properties: {} }).properties.text, ref = m && m.expr && m.expr.Measure; if (!ref || !r.files) return '';
+      const ext = r.files.find((f) => /reportExtensions\.json$/.test(f.path)); return ext ? (JSON.parse(String(ext.data)).entities.flatMap((e) => e.measures).find((x) => x.name === ref.Property) || {}).expression || '' : ''; };
+    chk(() => topOf(bar) === 9 && topOf(col) >= 3 && extTitle(bar).includes('"Top 9 of "') && extTitle(col).includes('"Top ' + topOf(col) + ' of "') && (r.topCharts || []).length >= 2,   /* (round 7: S5 belongs to the design block, which reports the cut charts as topCharts) */
+      () => `rc1-4: a chart by a text category shows its top N by its measure, N the rows or columns it holds, said in its title and told: ${r.threw || JSON.stringify(vs.map((v) => [extTitle(v) || titleOf(v), topOf(v)]))}`);
     const t = get(() => build(base({ cats: { bar: C('Month Name', { sortBy: { t: D, c: 'Month No' } }, D), column: C('Quarter', {}, D), donut: C('Channel') } }), { pages: hand(1280, 720, [{ kind: 'bar', title: 'B', x: 24, y: 80, w: 600, h: 300 }, { kind: 'column', title: 'K', x: 640, y: 80, w: 500, h: 300 }]) }));
     chk(() => t.files && visuals(t).filter((v) => /^clustered/.test(v.visual.visualType) && v.position.x !== 12).every((v) => topOf(v) == null), () => 'rc1-4: a time or known category (months, quarters) is never cut to a top N');
     // the website's sample report (4 values a category) is never cut and never titled "Top N" (the tooltip page's own
@@ -333,13 +338,35 @@ export function v029w({ check }) {
     chk(() => t2 && /Month start/.test(sd) && /Descending/.test(sd) && JSON.stringify(t2.filterConfig || {}).includes('Last'),
       () => `T2: the month tooltip of a month label is in time order, newest first, its last months: ${r2.threw || JSON.stringify([sd, (t2 && t2.filterConfig || {}).filters])}`);
     // S3: a table of rows the model doesn't count ends on a whole row: its height is the title, the header, whole rows
-    // and the total (round 11's measured pitch: 1.415 x the text + 2, the header 7 more, the title 1.5 x its size, 16 of padding)
+    // and the total. (Changed in writer round 8: the numbers MEASURED in Desktop 2.158, dataarcus-engine
+    // lab/proof-0.2.9-rc1 business/beta/MEASURE-TABLE-ROWS.md, at 1280 x 720, 10pt values, 12pt title: 62.1 to the header's
+    // rule, 19.8 a row, 21 the total, about 4 under it; at 1920 x 1080, 15pt, 18pt title: 90.3, 29.8, 31, about 6, and
+    // "for 6 rows 306, for 7 rows 336". The test before used round 11's 8pt numbers, which rc.3 showed wrong at 1920.)
+    const M720 = { top: 62.1, row: 19.8, total: 21, under: 4 }, M1080 = { top: 90.3, row: 29.8, total: 31, under: 6 };
+    const whole = (h, m) => { const k = Math.floor((h - m.top - m.total - m.under) / m.row); return { k, h: m.top + k * m.row + m.total + m.under }; };
     const rt = get(() => build(base({ table: [C('City'), M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 300 }]) }));
-    const tv = rt.files ? visuals(rt).find((v) => v.visual.visualType === 'tableEx') : null;
-    const th = JSON.parse(String(rt.files.find((f) => /RegisteredResources\/.*\.json$/.test(f.path)).data)), tt = +th.visualStyles.tableEx['*'].values[0].fontSize, pitch = 1.415 * tt * 4 / 3 + 2;
-    const TT = +(th.textClasses.title || {}).fontSize || 12, fixed = 1.5 * TT * 4 / 3 + (pitch + 7) + pitch + 16, rows = tv ? (tv.position.height - fixed) / pitch : 0;
-    chk(() => tv && tv.position.height <= 300 && 300 - tv.position.height < pitch && tv.position.y === 80 && rows - Math.floor(rows) < 1 / pitch + 1e-9,
-      () => `S3: a table ends on a whole row (pitch ${pitch.toFixed(1)}, ${rows.toFixed(2)} rows): ${rt.threw || JSON.stringify(tv && tv.position)}`);
+    const tv = rt.files ? visuals(rt).find((v) => v.visual.visualType === 'tableEx') : null, w720 = whole(300, M720);
+    chk(() => tv && tv.position.y === 80 && Math.abs(tv.position.height - w720.h) <= 1.5,
+      () => `S3: a 300-high table at 1280 x 720 shows ${w720.k} whole rows and its total in ${w720.h.toFixed(1)} (measured): ${rt.threw || JSON.stringify(tv && tv.position)}`);
+    // (the theme as create_report scales it for a 1920 x 1080 page: the table's text 15pt, the title 18pt, as measured)
+    const th15 = (() => { const d = E.fresh(); E.repairState(d); const t = E.buildTheme(d, 'en'); const tb = t.visualStyles.tableEx['*']; ['values', 'columnHeaders', 'total'].forEach((k) => (tb[k] || []).forEach((e) => { if (e.fontSize != null) e.fontSize = 15; })); tb.values[0].fontSize = 15; t.textClasses.title.fontSize = 18; return t; })();
+    const r1 = get(() => build(base({ table: [C('City'), M('Total Sales')] }), { theme: th15, pages: hand(1920, 1080, [{ kind: 'table', title: 'T', x: 24, y: 120, w: 900, h: 302 }]) }));
+    const t1 = r1.files ? visuals(r1).find((v) => v.visual.visualType === 'tableEx') : null, w1080 = whole(302, M1080);
+    // (RESCORE-1's page-1 case: 302 high at 1920 x 1080 holds 5.9 rows: 5 whole rows and the total, 276.3)
+    chk(() => t1 && w1080.k === 5 && Math.abs(t1.position.height - w1080.h) <= 1.5,
+      () => `S3: the 302-high table at 1920 x 1080 shows 5 whole rows and its total in ${w1080.h.toFixed(1)} (measured): ${r1.threw || JSON.stringify(t1 && t1.position)}`);
+    // S3 with the design's N6 (the reviewer's resolution, 12 Oct): a table beside a chart in one row of the page: the table
+    // visual ends on its whole rows (measured), its panel keeps the slot's height, and the panel's bottom is the chart's;
+    // the table's shadow is the theme's (over a "No data" card only the background is written: the owner's measured rule)
+    const row = [{ kind: 'table', title: 'T', x: 24, y: 120, w: 900, h: 302 }, { kind: 'bar', title: 'B', x: 948, y: 120, w: 900, h: 302 }];
+    for (const nd of [true, false]) {
+      const rp = get(() => build(base({ table: [C('City'), M('Total Sales')] }), { theme: th15, noDataMessage: nd, pages: hand(1920, 1080, row) }));
+      const vs = rp.files ? visuals(rp) : [], tb = vs.find((v) => v.visual.visualType === 'tableEx'), ch = vs.find((v) => v.visual.visualType === 'clusteredBarChart');
+      const panel = vs.find((v) => v !== tb && v.position.x === 24 && v.position.y === 120 && v.position.height === 302 && /^(cardVisual|textbox)$/.test(v.visual.visualType));
+      const shadowOff = tb && L((((tb.visual.visualContainerObjects || {}).dropShadow || [])[0] || { properties: {} }).properties.show) === 'false';
+      chk(() => tb && Math.abs(tb.position.height - w1080.h) <= 1.5 && panel && panel.position.y + panel.position.height === ch.position.y + ch.position.height && panel.position.z < tb.position.z && !shadowOff && panel.position.tabOrder == null,
+        () => `S3/N6 (${nd ? 'with' : 'without'} the "No data" card): the table on whole rows (${w1080.h.toFixed(1)}) inside a panel whose bottom is the chart's: ${rp.threw || JSON.stringify({ table: tb && tb.position, panel: panel && [panel.visual.visualType, panel.position], chart: ch && ch.position, shadowOff })}`);
+    }
     const rd = get(() => build(base({ table: [C('Day Name', { kind: 'day', rows: 7 }), M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 300 }]) }));
     chk(() => rd.files && visuals(rd).find((v) => v.visual.visualType === 'tableEx').position.height === 300, () => 'S3: a table whose rows all show (7 days) keeps its height');
     // D3: a long slicer header takes a smaller text, down to 8pt, before it is shortened
@@ -347,6 +374,42 @@ export function v029w({ check }) {
     const sv = rs.files ? visuals(rs).find((v) => v.visual.visualType === 'slicer') : null, hd = sv && sv.visual.objects.header[0].properties;
     chk(() => hd && L(hd.text) == null && +L(hd.textSize).replace(/D$/, '') >= 8 && !(rs.titles && (rs.titles.slicers || []).length),
       () => `D3: "Enforcement_History_Status" in a 196-wide slicer is whole at a smaller header text: ${rs.threw || JSON.stringify(hd)} ${JSON.stringify(rs.titles && rs.titles.slicers)}`);
+  }
+
+  // ---------- writer round 8 (RESCORE-1): T6 by the tooltip's own measured rows, D18 the table's decimals, T10 through the picker ----------
+  {
+    const Bind = req('../assets/js/pbip-bind.js');
+    const pagesOf = (r) => r.files.filter((f) => /pages\/[^/]+\/page\.json$/.test(f.path)).map((f) => { const pj = JSON.parse(String(f.data)), dir = f.path.replace(/page\.json$/, '');
+      return Object.assign(pj, { vs: r.files.filter((x) => x.path.startsWith(dir) && /visual\.json$/.test(x.path)).map((x) => JSON.parse(String(x.data))).filter((v) => v.visual) }); });
+    const r = get(() => build(base()));
+    const tp = r.files ? pagesOf(r).find((p) => p.type === 'Tooltip' && !/ · /.test(p.displayName)) : null, bar = tp && tp.vs.find((v) => v.visual.visualType === 'clusteredBarChart');
+    // T6 (RESCORE-1: a scrollbar beside the 6 bars at 187): the tooltip lab's measure of this very chart (8pt names, values
+    // beside the bars, TOOLTIP-FIX-LAB, report-rules TIP_ROWS_6): 27 a bar and 40, plus the 8 under the last
+    chk(() => bar && bar.position.height >= 40 + 27 * 6 + 8 && bar.position.y + bar.position.height <= tp.height,
+      () => `T6: the Top 6 tooltip chart holds 6 bars at 27 + 40 (+ 8): ${r.threw || JSON.stringify([bar && bar.position, tp && tp.height])}`);
+    // T8 (RESCORE-1: "Microsoft 365 Business Sta..."): measured on the laptop's crops, a tooltip bar chart's visible name room
+    // is its share x its width - 18 (40%: 96, 50%: 129 at 296 wide); a 31-letter name at 8pt (158) needs a 352-wide chart
+    // at 50%: the Top 6 page 376 wide (the reviewer's yes), its card and chart 352
+    const need = Px.textWidth('Microsoft 365 Business Standard', 8, false, 'Segoe UI'), share = bar ? +String(L(bar.visual.objects.categoryAxis[0].properties.maxMarginFactor)).replace(/L$/, '') : 0;
+    chk(() => tp.width === 376 && bar.position.width === 352 && share / 100 * bar.position.width - 18 >= need && tp.vs.every((v) => v.position.x + v.position.width <= tp.width),
+      () => `T8: the Top 6 tooltip holds a 31-letter name (${need.toFixed(0)}): page ${tp && tp.width}, chart ${bar && bar.position.width}, share ${share}`);
+    // S3 (writer round 8): one table of constants for a table's rows (pbip-sizing.js TABLE_ROWS), used by both height rules
+    const Zs = req('../assets/js/pbip-sizing.js'), pgSrc = fs.readFileSync(path.join(REPO, 'assets/js/pbip-page.js'), 'utf8');
+    chk(() => Zs.TABLE_ROWS && typeof Zs.tableHeight === 'function' && !/1\.415 \* t/.test(pgSrc) && (pgSrc.match(/tableHeight\(/g) || []).length >= 2,
+      () => 'S3: the table row rule lives in pbip-sizing.js TABLE_ROWS, and pbip-page.js has no row constant of its own');
+    // D18 (RESCORE-1: "$4,344,705.7026" in a table): a measure the format rule leaves alone keeps its model format on the
+    // cards, and its table column shows 2 decimals at most (the report's number rule), the currency kept
+    const tb = { name: 'Sales', columns: [{ name: 'Amount', dataType: 'decimal' }], measures: [{ name: 'Revenue', formatString: '\\$#,0.0000', expression: 'SUM ( Sales[Amount] )' }, { name: 'Cost', formatString: '#,0.0000', expression: 'SUM ( Sales[Amount] )' }, { name: 'Units', formatString: '#,0', expression: 'SUM ( Sales[Amount] )' }] };
+    const rev = get(() => Bind.measureOf(tb, 'Revenue', [tb])), rate = get(() => Bind.measureOf(tb, 'Cost', [tb])), units = get(() => Bind.measureOf(tb, 'Units', [tb]));
+    chk(() => rev.tableFormat === '\\$#,0.00' && rate.tableFormat === '#,0.00' && !units.tableFormat,
+      () => `D18: a table amount with more than 2 decimals is shown with 2: ${JSON.stringify([rev.tableFormat, rate.tableFormat, units.tableFormat])}`);
+    // T10 re-checked through the picker: a "#,0 \"kg\"" measure is whole on its card, and the tooltip's values show its own format
+    const kgT = { name: 'Sales', columns: [{ name: 'Kg', dataType: 'int64' }], measures: [{ name: 'Weight', formatString: '#,0 "kg"', expression: 'SUM ( Sales[Kg] )' }] };
+    const kg = Object.assign({ t: 'Sales', m: 'Weight' }, get(() => Bind.measureOf(kgT, 'Weight', [kgT])));
+    const rk = get(() => build(base({ kpis: [kg, M('Orders')], measure: kg, tip: { card: kg, cat: C('Product'), y: kg } })));
+    const kb = rk.files ? pagesOf(rk).filter((p) => p.type === 'Tooltip').flatMap((p) => p.vs).filter((v) => v.visual.visualType === 'clusteredBarChart') : [];
+    chk(() => kg.wholeFormat && kb.length && kb.every((v) => L(v.visual.objects.labels[0].properties.labelDisplayUnits) === '1D'),
+      () => `T10: the kg measure's tooltip values keep "kg" whole (display units None): ${rk.threw || JSON.stringify([kg.wholeFormat, kb.map((v) => v.visual.objects.labels)])}`);
   }
 }
 

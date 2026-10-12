@@ -258,16 +258,20 @@ export function tooltipPageProblems(files) {
     // 40 + 27 a bar high: the page 320 x 314; a trend without a date column keeps its 12 rows on 320 x 410)
     const six = sixMonths(p);
     // (changed in 0.2.9 rc1, T6/T9: 6 bars need 187, 12 months 320, by the measured bar rows: the pages 287 and 420, were 284 and 410)
-    const isT = isTrend(p), wantH = isT ? (six ? 314 : 420) : 287;
+    // (changed in writer round 8, RESCORE-1 T6: the Top 6 by the tooltip lab's 27 a bar + 40, + 8: the chart 210, the page 310; was 287)
+    const isT = isTrend(p), wantH = isT ? (six ? 314 : 420) : 310;
     if (isT) trend++;
-    if (p.page.width !== 320 || p.page.height !== wantH) bad.push(`tooltip page is ${p.page.width} x ${p.page.height}, want 320 x 287, or 320 x 420 for the trend (320 x 314 kept to its last 6 months)`);
+    // (changed in writer round 8, RESCORE-1 T8: the Top 6 page 376 wide, room for a 31-letter name at 50%: the reviewer's yes)
+    const wantW = isT ? 320 : 376;
+    if (p.page.width !== wantW || p.page.height !== wantH) bad.push(`tooltip page is ${p.page.width} x ${p.page.height}, want 376 x 310, or 320 x 420 for the trend (320 x 314 kept to its last 6 months)`);
     const cs = p.visuals.filter((v) => v.visual && /Chart$/.test(v.visual.visualType));
     if (cs.length > 1 || (isT && cs.length !== 1)) bad.push(`tooltip page "${p.page.displayName}" has ${cs.length} charts`);
     cs.forEach((v) => {
       charts++;
       const o = v.visual.objects || {}, P = (k) => ((o[k] || [])[0] || {}).properties || {}, c = P('categoryAxis'), y = P('valueAxis'), l = P('labels');
       // (0.2.9 part 2: the last-6-months trend by the tooltip lab's measure, 27 a bar at 8pt and 40 for the title and padding)
-      const rows = isT && six ? MEASURED.TIP_ROWS_6(v.position.height) : MEASURED.TIP_ROWS(v.position.height);
+      // (writer round 8: the Top 6 is counted by the tooltip lab's rule too, as the 6-month trend)
+      const rows = !isT || six ? MEASURED.TIP_ROWS_6(v.position.height) : MEASURED.TIP_ROWS(v.position.height);
       const got = { type: v.visual.visualType, text: lit(c.fontSize), room: lit(c.maxMarginFactor), axisTitle: lit(c.showAxisTitle), valueAxis: lit(y.show), labels: lit(l.show), labelText: lit(l.fontSize), rows };
       // (changed in 0.2.9 rc1, T8: names cut at 40%; the share of a narrow bar chart, barNameShare, 50 at 296 wide)
       const want = { type: 'clusteredBarChart', text: '8D', room: '50L', axisTitle: 'false', valueAxis: 'false', labels: 'true', labelText: '8D', rows: isT ? (six ? 6 : 12) : 6 };
@@ -531,6 +535,10 @@ export function panelProblems(files) {
     // the bands (round 1): empty text boxes outside every group
     const emptyText = (v) => { const ps = ((((v.visual.objects || {}).general || [{}])[0].properties || {}).paragraphs || []); return ps.every((x) => (x.textRuns || []).every((r) => !r.value)); };
     const bands = p.visuals.filter((v) => v.visual && v.visual.visualType === 'textbox' && !v.parentGroupName && emptyText(v)), used = new Set();
+    // (writer round 8, S3 with the design's N6, the reviewer's resolution of 12 Oct: a table that ends on its whole rows has
+    // its panel behind it at the slot's height, a band like the header's: at the table's x, y and width, at least as high,
+    // under it in the layer order)
+    p.visuals.filter((t) => t.visual && t.visual.visualType === 'tableEx').forEach((t) => bands.forEach((b) => { if (b.position.x === t.position.x && b.position.y === t.position.y && b.position.width === t.position.width && b.position.height >= t.position.height && b.position.z < t.position.z) used.add(b.name); }));
     // groups first, so each band is matched to its group before the bands themselves are looked at
     p.visuals.slice().sort((a, b) => (a.visualGroup ? 0 : 1) - (b.visualGroup ? 0 : 1)).forEach((v) => {
       const id = `${p.page.displayName}/${v.visual ? v.visual.visualType : 'group ' + v.visualGroup.displayName}`;
