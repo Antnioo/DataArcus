@@ -10,6 +10,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { tableProblems, sortProblems, rowLabelProblems } from '../scripts/tests/report-check.mjs';
+import { checkReportClean } from './test-validator.mjs';
 
 export async function round23({ call, check, ROOT, fs = fs0 }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
@@ -49,7 +50,7 @@ export async function round23({ call, check, ROOT, fs = fs0 }) {
     chk(() => tp.bad.length === 0 && rl.tables === 1 && rl.bad.length === 0, () => `1. the website's table checks accept it and prove it: ${JSON.stringify(tp.bad)} ${JSON.stringify(rl)}`);
     chk(() => /الإجمالي/.test(notes(x)) && /Row label: Region/.test(notes(x)) && /reportExtensions\.json/.test(notes(x)), () => `1. the notes tell the user (the word, the measure, how to remove it): ${notes(x).slice(0, 1500)}`);
     const cr = x.err ? x : await ask('check_report', { path: d + '/' + x.j.report, lang: 'ar' });
-    chk(() => !cr.err && cr.j.validator.errors === 0 && !cr.j.findings.some((f) => /width|hidden|Row label/i.test(f.what)) && cr.j.notChecked.some((n) => /row-label measure/.test(n.why)),
+    chk(() => !cr.err && checkReportClean(cr.j, path.join(ROOT, d, x.j.report)) && !cr.j.findings.some((f) => /width|hidden|Row label/i.test(f.what)) && cr.j.notChecked.some((n) => /row-label measure/.test(n.why)),
       () => `1. check_report: the validator clean, no finding on the pattern, which it names as intentional: ${cr.err ? cr.t.slice(0, 300) : JSON.stringify(cr.j.findings.map((f) => f.rule + ' ' + f.what)).slice(0, 600) + ' ' + JSON.stringify(cr.j.notChecked).slice(0, 600)}`);
   }
   // 2. Its header is the column's display name: the Arabic name when one is given
