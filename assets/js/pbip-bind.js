@@ -419,7 +419,11 @@
   // N1 (round 8): a text column of identifiers or contact details: the model's key column, a relationship's key, a web or
   // image link or a barcode (its data category), or a calculated column that joins several columns or breaks lines (a
   // free-text label: "name, e-mail, phone"); by metadata and formula, never by values
-  const idLike = (c) => !!(metaOf(c).key || /^(WebUrl|ImageUrl|Barcode)$/i.test(String(c.dataCategory || ''))
+  // (rc.4, N7: a picture or web address with no data category: by its name's whole words, "Img", "Photo URL",
+  // "product_image", "LogoLink"; "Pickup" or "Logout" hold the letters only)
+  const LINK_WORD = /^(img|imgs|image|images|photo|photos|picture|pictures|pic|pics|logo|logos|url|urls|uri|link|links|href|thumbnail|thumbnails|thumb|icon|icons|avatar)$/i;
+  const linkName = (n) => splitName(n).split(/\s+/).some((w) => LINK_WORD.test(w));
+  const idLike = (c) => !!(metaOf(c).key || /^(WebUrl|ImageUrl|Barcode)$/i.test(String(c.dataCategory || '')) || linkName(c.name)
     || /UNICHAR\s*\(\s*1[03]\s*\)/i.test(metaOf(c).expr || '') || (/&|\b(CONCATENATE|COMBINEVALUES)\s*\(/i.test(metaOf(c).expr || '') && ((metaOf(c).expr || '').match(/\[[^\]]+\]/g) || []).length >= 2));
   function catalog(tables, modelTables) {
     const shown = tables.filter((t) => !t.hidden), all = modelTables || tables;
