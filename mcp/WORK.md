@@ -4,6 +4,16 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Integration round P2, the owner's polish round (12 Oct, cloud builder 5; `fix/0.2.9-gate` from `f48057f`; not merged to main, no PR): rc.8's base
+Integration round P2: writer `d73a773` (`3917b69`; line width 3, donut ring 68, smoothLines; no conflict; pbip-page stamp
+20261012p2) + design `a7581da` (`c8b6ebc`; colour polish: pale lead to 3:1, second chart colour, no status lead, greys with a chart
+style, 6% page tint, axis labelColor; conflicts: the theme generator's stamps only: design-engine p3 (the design's), pbip-page,
+pbip-export and theme-generator 20261012m2 (both blocks' changes); .min.js rebuilt from the merged sources).
+Checks P2 (B7: dropdown slicer radius 8, check_report's known-false note) held for the owner: its push needs the owner's approval.
+Tests (Linux) on `c8b6ebc`: mcp 1474, v029c/d/e/f/g 36/21/21/20/21, golden 12, fuzz 600 + FUZZ_LONG 10000, layouts 32 reports 226
+checks, website 17 of 17, deny-scan, site config, csp, check-min. GitHub CI on `c8b6ebc`: 4 of 4 green (the reviewer's check).
+Next: round P3 from the reviewer; the gate's code stays as it is until then.
+
 ## Integration round 11 (12 Oct, cloud builder 5; `fix/0.2.9-gate` from `ad5c7f2`; not merged to main, no PR): rc.7's base
 Merged, each green on GitHub first: picker11 `53207b6` (`8378049`; N18: a CALENDAR-built table is a calendar by the picker's own
 note, its number columns (summed or "0"-formatted) never categories or the month axis, no calendar part beside a real category,
