@@ -588,7 +588,9 @@ const CREATE_REPORT_INPUTS = {
 // it with the plan; create_report computes the same from its own inputs, and the gate compares them key by key.
 // (Not pinned: name, title, theme, logo, colours and the report options; see the audit report.)
 const REPORT_PINNED = ['pages', 'page', 'lang', 'dir', 'fields', 'pageFilters', 'displayNames', 'text', 'subtitles', 'svgColumns', 'svgCards', 'customVisualsFrom'];
-const resolvedDesign = (a) => (a.pages ? null : planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang, reportTheme: a.reportTheme }).design);
+// (a native copy, customVisualsFrom, uses no design: none is pinned, so the report theme read at plan time cannot make
+// its pin differ from create_report's)
+const resolvedDesign = (a) => (a.pages || a.customVisualsFrom != null ? null : planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang, reportTheme: a.reportTheme }).design);
 const reportPin = (a, fields) => Object.assign({ design: resolvedDesign(a) }, Object.fromEntries(REPORT_PINNED.map((k) => [k, k === 'fields' ? fields : a[k]])));
 // the other writers pin every input they were proposed with (A6-5)
 const inputsPin = (a) => Object.fromEntries(Object.entries(a || {}).filter(([k]) => k !== 'planId'));
