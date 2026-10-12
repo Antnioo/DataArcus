@@ -212,6 +212,33 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
         () => `P3 (${layout}): report measure names unique across the report (no case), never a model name, every reference found, validator 0 errors: dup ${JSON.stringify(dup)} model ${JSON.stringify(modelTaken)} broken ${JSON.stringify(broken.slice(0, 3))} errors ${JSON.stringify(errors && errors.slice(0, 2))} ${short(x)}`);
     }
   }
+
+  // ---------- P3 item 2 (LAYOUT-SWEEP-RC7, Arabic R1): the title words "by" and "detail" come from texts(lang), one source for
+  // the designed and the hand path; a title takes them in its own script (round 14: one script a title), so an Arabic report
+  // with Arabic names has no English "by" or "detail", and an Arabic report on English names reads the same on both paths ----------
+  {
+    model('i-ar', [{ name: 'Projects', partitions: mp('Projects'), columns: [col('Budget', 'double'), col('Product', 'string'), col('Region', 'string')],
+      measures: [ms('Total Budget', 'SUM ( Projects[Budget] )', '#,0'), ms('Projects', 'COUNTROWS ( Projects )', '#,0')] }]);
+    const AR = { 'Projects[Total Budget]': 'إجمالي الميزانية', 'Projects[Projects]': 'المشاريع', 'Projects[Product]': 'المنتج', 'Projects[Region]': 'المنطقة' };
+    const F = { kpis: ['Projects[Total Budget]', 'Projects[Projects]'], measure: 'Projects[Total Budget]', category: 'Projects[Product]', category2: 'Projects[Region]', table: ['Projects[Region]', 'Projects[Total Budget]'] };
+    const titles = (x) => visualsOf(x, 'i-ar').filter((v) => v.visual && v.page.type !== 'Tooltip').map((v) => { const t = ((v.visual.visualContainerObjects || {}).title || [])[0]; const val = t && t.properties.text && t.properties.text.expr.Literal ? t.properties.text.expr.Literal.Value : ''; return String(val).replace(/^'|'$/g, ''); }).filter(Boolean);
+    const designed = async (name, extra) => { const pl = await ask('plan_layout', { path: 'i-ar', layout: 'exec', lang: 'ar' }); return ask('create_report', Object.assign({ path: 'i-ar', name, lang: 'ar', design: pl.j && pl.j.design, secondPage: true, fields: F }, extra || {})); };
+    const handPages = [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w: 600, h: 280 }, { kind: 'table', x: 660, y: 100, w: 580, h: 280 }] }];
+    const hand = async (name, extra) => ask('create_report', Object.assign({ path: 'i-ar', name, lang: 'ar', pages: handPages, fields: F }, extra || {}));
+    const dAr = await designed('I ar names', { displayNames: AR }), hAr = await hand('I ar hand names', { displayNames: AR });
+    const EN = /\b(by|detail)\b/;
+    chk(() => !dAr.err && titles(dAr).length && !titles(dAr).some((t) => EN.test(t)) && titles(dAr).some((t) => /حسب/.test(t)) && !titles(hAr).some((t) => EN.test(t)),
+      () => `P3-2: an Arabic report with Arabic names: "حسب" and no English "by"/"detail", designed and hand: ${short(dAr)} ${JSON.stringify([titles(dAr), titles(hAr)])}`);
+    // English names in an Arabic report: one script a title (round 14), the same words on the designed path as on the hand one
+    const dEn = await designed('I ar en'), hEn = await hand('I ar hand en');
+    const words = (ts) => [...new Set(ts.flatMap((t) => (t.match(/\b(by|detail)\b|حسب|التفاصيل/g) || [])))].sort().join();
+    chk(() => !dEn.err && !hEn.err && words(titles(dEn)) && words(titles(dEn)).split(',').every((w) => words(titles(hEn)).split(',').includes(w) || w === 'detail'),
+      () => `P3-2: English names in an Arabic report, designed and hand paths, the same title words: ${JSON.stringify([words(titles(dEn)), words(titles(hEn))])}`);
+    // the source: texts(lang) holds by, detail and newDesign for both languages; the server passes it as it is on both paths
+    const srv = fs.readFileSync(path.join(path.dirname(new URL(import.meta.url).pathname), 'server.mjs'), 'utf8'), E = createRequire(import.meta.url)('../assets/js/design-engine.js');
+    chk(() => E.texts('ar').by === 'حسب' && E.texts('ar').detail === 'التفاصيل' && E.texts('ar').newDesign && E.texts('en').detail === 'detail' && E.texts('en').by === 'by' && !/texts: Object\.assign\(\{\}, texts\(a\.lang\)/.test(srv),
+      () => `P3-2: by, detail and newDesign in texts(lang), used as they are on both paths: ${JSON.stringify([E.texts('ar'), E.texts('en')].map((t) => [t.by, t.detail, t.newDesign]))}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
