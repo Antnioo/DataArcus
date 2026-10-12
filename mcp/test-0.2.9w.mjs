@@ -432,12 +432,26 @@ export function v029w({ check }) {
     const nt = { name: 'Sales', columns: [{ name: 'Amount', dataType: 'decimal' }], measures: [fm('Budget Variance', '€#,##0,000;-€#,##0,000;€0'), fm('Var USD', '$#,##0,000;($#,##0,000)'), fm('Var AED', '#,##0,000 "AED";-#,##0,000 "AED"'), fm('Var plain', '#,##0,000;-#,##0,000'), fm('Plain EUR', '€#,0;-€#,0')] };
     const kf = (n) => Object.assign({ t: 'Sales', m: n }, get(() => Bind.measureOf(nt, n, [nt])) || {});
     const wf = ['Budget Variance', 'Var USD', 'Var AED', 'Var plain', 'Plain EUR'].map((n) => kf(n).wholeFormat || null);
-    chk(() => JSON.stringify(wf.slice(0, 3)) === JSON.stringify(['€#,###,##0;-€#,###,##0;€0', '$#,###,##0;($#,###,##0)', '#,###,##0 "AED";-#,###,##0 "AED"']) && wf[3] && !/0,0/.test(wf[3]) && wf[4] == null,
-      () => `N8: a padded format's card shows the number unscaled in that format without the padding; "€#,0" keeps automatic units: ${JSON.stringify(wf)}`);
+    // (changed in round 10, RESCORE-3 N11 + N13: the unscaled number, "-€50,866,000", was cut on a 6-card row (290 wide,
+    // 36pt) and read in another style than the row's "€ 105.53M" cards. The card's own format now scales, to millions (the
+    // value's size isn't known when the report is written): the format's own symbols and sign sections, no padding, the
+    // "M" on the number and a text suffix after it; Microsoft's rule: two commas just left of the decimal point divide by
+    // a million, at every level of format string)
+    const MIL = (pre, post) => pre + '#,0,,.00"M"' + post;
+    chk(() => JSON.stringify(wf.slice(0, 4)) === JSON.stringify([MIL('€', '') + ';' + MIL('-€', '') + ';€0', MIL('$', '') + ';' + MIL('($', ')'), MIL('', ' "AED"') + ';' + MIL('-', ' "AED"'), MIL('', '') + ';' + MIL('-', '')]) && wf[4] == null,
+      () => `N8/N11: a padded format's card gets a scaled format of its own; "€#,0" keeps automatic units: ${JSON.stringify(wf)}`);
+    // the text it prints, by Microsoft's rule (",," left of the point: / 1,000,000; "#,0" grouped; ".00" two decimals;
+    // quoted text as is), positive and negative, against what the row's cards read ("€ 105.53M" style), and the width a
+    // 290-wide card holds at 36pt (8 to 10 characters, RESCORE-3)
+    const render = (fmt, v) => { const secs = fmt.split(';'), sec = v < 0 && secs[1] != null ? secs[1] : v === 0 && secs[2] != null ? secs[2] : secs[0];
+      return sec.replace(/("[^"]*")|(#,0,,\.00)/g, (a, q, n) => (q ? q.slice(1, -1) : (Math.abs(v) / 1e6).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','))); };
+    const shown = [[wf[0], -50866000], [wf[0], 105530000], [wf[2], -50870000], [wf[2], 50870], [wf[1], -50870000]].map(([f, v]) => render(f, v));
+    chk(() => JSON.stringify(shown) === JSON.stringify(['-€50.87M', '€105.53M', '-50.87M AED', '0.05M AED', '($50.87M)']) && shown.every((t) => t.length <= 11),
+      () => `N11/N13: the cards read "-€50.87M", "€105.53M", "-50.87M AED", "($50.87M)", short enough for a 290-wide card: ${JSON.stringify(shown)}`);
     const bv = kf('Budget Variance'), rn = get(() => build(base({ kpis: [bv, M('Orders')], measure: M('Orders') })));
     const kc = rn.files ? visuals(rn).find((v) => v.visual.visualType === 'cardVisual' && JSON.stringify(v.visual.query || '').includes('Budget Variance')) : null;
     const ve = kc ? kc.visual.objects.value.find((e) => e.selector && e.selector.metadata) : null;
-    chk(() => ve && L(ve.properties.labelDisplayUnits) === '-1D' && S(ve.properties.customFormatString) === '€#,###,##0;-€#,###,##0;€0',
+    chk(() => ve && L(ve.properties.labelDisplayUnits) === '-1D' && S(ve.properties.customFormatString) === MIL('€', '') + ';' + MIL('-€', '') + ';€0',
       () => `N8: the card writes Custom units and that format (positive and negative sections): ${rn.threw || JSON.stringify(kc && kc.visual.objects.value)}`);
     // F4 (N8-LAB: "#,0 \"AED\";-#,0 \"AED\"" read "-50.87KAED" / "50.87MAED" in automatic units: the unit letter glued to the
     // text, its space lost; with Custom units and the model's own format it read right, unscaled): a card whose model format
@@ -446,8 +460,22 @@ export function v029w({ check }) {
     const f4 = (f) => { const T = { name: 'S', columns: [{ name: 'A', dataType: 'decimal' }], measures: [{ name: 'X', formatString: f, expression: 'SUM ( S[A] )' }] }; return (get(() => Bind.measureOf(T, 'X', [T])) || {}).wholeFormat || null; };
     const g4 = ['#,0 "AED";-#,0 "AED"', '"AED" #,0;-"AED" #,0', '#,0.00 "AED"', '€#,0', '$#,0.00;($#,0.00)', '#,0'].map(f4);
     // (a currency code before the number reads right in automatic units, "EUR 54.66M": the owner's O-2, kept)
-    chk(() => JSON.stringify(g4) === JSON.stringify(['#,0 "AED";-#,0 "AED"', null, '#,0.00 "AED"', null, null, '#,0']) && f4('"Qty " #,0') === '"Qty " #,0',
+    // (changed in round 10's review: a text suffix without padding is not forced to millions, "950 AED" would read "0.00M
+    // AED"; the card takes N8-LAB's setting B, automatic units with the decimals cleared, measured right: "-51K AED",
+    // "51K AED", the space kept, a small value whole. Only a padded format (large by construction) scales to millions)
+    const k4 = (f) => { const T = { name: 'S', columns: [{ name: 'A', dataType: 'decimal' }], measures: [{ name: 'X', formatString: f, expression: 'SUM ( S[A] )' }] }; return get(() => Bind.measureOf(T, 'X', [T])) || {}; };
+    chk(() => JSON.stringify(g4) === JSON.stringify([null, null, null, null, null, '#,0']) && f4('"Qty " #,0') === '"Qty " #,0'   /* (a whole quantity with text stays whole, as "#,0 \"kg\"") */
+      && k4('#,0 "AED";-#,0 "AED"').unitAuto === true && k4('#,0.00 "AED"').unitAuto === true && !k4('€#,0').unitAuto && !k4('"AED" #,0').unitAuto && f4('#,##0,000 "AED"') === MIL('', ' "AED"'),
       () => `F4: quoted text in a card's format: unscaled in that format; currency signs keep automatic units: ${JSON.stringify(g4)}`);
+    // the cards (round 10's review): 950 "AED" in automatic units with no decimals set (setting B), 8,000 "kg" whole, never
+    // "0.0xM"; the padded "€#,##0,000" card keeps its millions format
+    const cardOf = (f, n) => { const fld = Object.assign({}, k4(f), { t: 'Sales', m: n }), r = get(() => build(base({ kpis: [fld, M('Orders')], measure: M('Orders') })));
+      const v = r.files ? visuals(r).find((x) => x.visual.visualType === 'cardVisual' && JSON.stringify(x.visual.query || '').includes(n)) : null;
+      const es = v ? v.visual.objects.value : [], def = (es.find((e) => e.selector && e.selector.id === 'default') || { properties: {} }).properties, own = (es.find((e) => e.selector && e.selector.metadata) || { properties: {} }).properties;
+      return { prec: L(def.labelPrecision) || null, units: L(own.labelDisplayUnits) || null, fmt: S(own.customFormatString) || null }; };
+    const aed = cardOf('#,0 "AED";-#,0 "AED"', 'Small AED'), kg = cardOf('#,0 "kg"', 'Weight Kg'), pad = cardOf('€#,##0,000;-€#,##0,000;€0', 'Padded EUR');
+    chk(() => aed.prec == null && aed.units == null && aed.fmt == null && kg.units === '-1D' && kg.fmt === '#,0 "kg"' && pad.units === '-1D' && /,,\.00"M"/.test(pad.fmt || ''),
+      () => `the cards: 950 AED in automatic units, decimals cleared; 8,000 kg whole; the padded EUR in millions: ${JSON.stringify({ aed, kg, pad })}`);
     // D15 (RESCORE-2: bank's "Debtconsolidation" slanted and cut on a designed 6-column chart): a column chart by a text
     // category whose columns can't each hold a 12-letter name (the writer's stand-in for a name it can't measure, as its
     // tables use) is written as a bar chart, whose names are level, where its slot holds 3 rows or more
