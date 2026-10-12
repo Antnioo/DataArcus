@@ -175,6 +175,17 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     chk(() => !x.err && aed && !('labelPrecision' in def(aed)) && !JSON.stringify(aed.visual.objects.value).includes('customFormatString') && eur && def(eur).labelPrecision,
       () => `round 11, F4: the written AED card has no decimals set and no format of its own (automatic units); the EUR card keeps its 2 decimals: ${short(x)} ${JSON.stringify([aed && aed.visual.objects.value, eur && def(eur)])}`);
   }
+
+  // ---------- P2 (LAB-POLISH): through create_report, the written line 3 wide; smooth only with smoothLines; the donut's ring at 68 ----------
+  {
+    const one = async (name, extra) => { const pl = await ask('plan_layout', { layout: 'exec', kpis: 3 }); return ask('create_report', Object.assign({ path: 'i-hr', name, design: pl.j && pl.j.design, secondPage: false, noDataMessage: false, fields: { kpis: ['Hires[Hires]'], measure: 'Hires[Hires]', timeAxis: 'Calendar[Month Name]', category: 'Hires[Department]' } }, extra || {})); };
+    const a = await one('I P2'), b = await one('I P2 smooth', { smoothLines: true });
+    const ls = (x) => { const v = visualsOf(x, 'i-hr').find((w) => w.visual && w.visual.visualType === 'lineChart'); return v ? (((v.visual.objects || {}).lineStyles || [])[0] || {}).properties : null; };
+    const dn = (x) => visualsOf(x, 'i-hr').filter((w) => w.visual && w.visual.visualType === 'donutChart' && w.page.type !== 'Tooltip').map((w) => JSON.stringify(((w.visual.objects || {}).slices || [])[0] || null));
+    const L = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : null);
+    chk(() => !a.err && !b.err && ls(a) && L(ls(a).strokeWidth) === '3D' && !ls(a).lineChartType && ls(b) && L(ls(b).lineChartType) === "'smooth'" && dn(a).every((d) => /"68L"/.test(d)),
+      () => `P2 through create_report: line 3 wide, smooth only on request, every donut's ring at 68: ${short(a)} ${JSON.stringify([ls(a), ls(b), dn(a)])}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
