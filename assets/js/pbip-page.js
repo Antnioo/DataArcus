@@ -251,7 +251,7 @@
       // (design round 10, N14: kept by a report measure, every category where they are at most 2 more than its rows, the
       // fixed Top N filter only where the DAX can't name the fields)
       const keep = top ? topSet(catOf(Bt, visual.query), st.Y.projections[0].field, top, 2) : null;
-      if (top) { filters.push(keep ? keep.filter : topN(col, st.Y.projections[0].field, top)); n.topCharts.push({ page: pg.name || base, kind: s.kind, field: col.Expression.SourceRef.Entity + '[' + col.Property + ']', top }); }
+      if (top) { filters.push(keep ? keep.keep() : topN(col, st.Y.projections[0].field, top)); n.topCharts.push({ page: pg.name || base, kind: s.kind, field: col.Expression.SourceRef.Entity + '[' + col.Property + ']', top }); }
       // O-4: a bar chart's names get 40% of its width, 50% on a narrow chart (under 560 on the 720-high page); the default 25 cut them at about 10 characters
       // (design round 9, D19: a many-valued category's names, product names, get room for 25 characters where 40% of the
       // chart holds them, else 50%: measured, REPORT-FIXES-LAB B1/B2, 40% of 508 held about 20 characters, 50% about 25,
@@ -1292,14 +1292,15 @@
       if (FULL && card && card.m != null && card.cardFormat && !cardCode(card)) objects.value.push({ properties: { labelDisplayUnits: num(-1), customFormatString: str(card.cardFormat) }, selector: { metadata: card.t + '.' + card.m } });
       return { x: 12, y: 8, w: w || 296, h: 76, visual: { visualType: 'cardVisual', query: q({ Data: [proj(card)] }), objects, visualContainerObjects: cardFrame(tipFrame(label(card)), tipCard, TIP_TITLE) } }; };
     const notBlankOf = (f) => notBlank(fieldCol(f.t, f.c).field.Column);
-    // (design round 10, N15: "Top 6:" stood over 2 bars, and "Top 6" over 7 where two tied) the tooltip's bars are kept by
-    // the report's own Top N measure, 6 and no extra rows (a tooltip can't scroll), and its title says "Top S of M" only
-    // when it leaves categories out, S the bars shown; the fixed Top 6 filter and words only where the DAX can't name them
+    // (design round 10, N15: "Top 6:" stood over 2 bars, and "Top 6" over 7 where two tied) the tooltip keeps its fixed
+    // Top 6 filter (no extra rows: a tooltip can't scroll; it keeps the same bars as the rank, ties too, and check_report's
+    // TOOLTIP_SCROLL reads it), and its title is the report measure that counts them: "Top S of M" only when it leaves
+    // categories out, S the bars shown (7 where two tie); the fixed words only where the DAX can't name the fields
     const tipTop = (tv, cat, m, t0) => { if (!cat || cat.c == null || cat.agg != null || isTime(cat)) return tv;
       const set = topSet(cat, proj(m).field, 6, 0), word = lang === 'ar' ? ['أعلى ', ' من '] : ['Top ', ' of '], lead = word[0] + '999' + word[1] + '999: ';
       const long = tipTitle(lead + t0), rest = long.indexOf(lead) === 0 ? long.slice(lead.length) : null;
       let name = null; if (set && rest != null) { try { name = set.title('Title: ' + t0, word, rest, tipTitle(t0)); } catch (e) { name = null; } }
-      tv.filters = [notBlankOf(cat), set && name ? set.filter : topN(fieldCol(cat.t, cat.c).field.Column, proj(m).field, 6)];
+      tv.filters = [notBlankOf(cat), topN(fieldCol(cat.t, cat.c).field.Column, proj(m).field, 6)];
       tv.visual.visualContainerObjects.title[0].properties.text = name ? { expr: extField(cat.t, name) } : str(tipTitle((W.top6 || (lang === 'ar' ? 'أعلى 6' : 'Top 6')) + ': ' + t0)); return tv; };
     // (the tooltip pages' bars grow from the right in a mirrored report too)
     const tipBar = (vis) => (MIRROR ? mirrorChart(vis, 'bar') : vis);
