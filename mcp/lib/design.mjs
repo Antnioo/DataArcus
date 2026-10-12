@@ -66,13 +66,15 @@ const statusOf = (c, t) => {
 const toContrast = E.toContrast;
 export function themeColours(rt, lang) {
   const t = rt.theme, lumOf = (c) => E.lum(c), own = t.themeColours || [], painted = t.painted || [];
-  const found = [...new Set(own.concat(painted))], status = found.filter((c) => statusOf(c, t)), palette = found.filter((c) => !statusOf(c, t)).slice(0, 8);
+  const found = [...new Set(own.concat(painted))], status = found.filter((c) => statusOf(c, t)), lead1 = found.find((c) => !statusOf(c, t));
+  // a status colour stays a data colour, only never the lead: the first other colour leads, the rest keep their order
+  const palette = (lead1 ? [lead1] : []).concat(found.filter((c) => c !== lead1 && lead1)).slice(0, 8);
   const usedPainted = palette.some((c) => !own.includes(c));
   const source = own.length ? (usedPainted || !palette.length ? 'theme and visuals' : 'theme') : 'visuals';
   const dark = t.background ? lumOf(t.background) < 0.45 : t.card ? lumOf(t.card) < 0.45 : t.text ? lumOf(t.text) > 0.6 : false;
   const basis = dark ? 'DataArcus' : 'Corporate', base = E.PRESETS[basis];
   const statusOnly = !palette.length && status.length > 0;
-  if (statusOnly) palette.push(base.data[0]);
+  if (statusOnly) palette.push(base.data[0], ...status.slice(0, 7));
   const card = t.card || base.ui.card, lead0 = palette[0], lead = palette.length ? toContrast(lead0, card, 3) : lead0;
   if (lead !== lead0) palette[0] = lead;
   const fill = E.generate(palette[0], 'analogous');
@@ -80,7 +82,7 @@ export function themeColours(rt, lang) {
   const byStatus = (k) => status.find((c) => statusOf(c, t) === k);
   const ui = { background: t.background || base.ui.background, card, text: t.text || base.ui.text, accent: t.accent && !statusOf(t.accent, t) && t.accent !== lead0 ? t.accent : palette[0],
     good: t.good || byStatus('good') || base.ui.good, neutral: t.neutral || byStatus('neutral') || base.ui.neutral, bad: t.bad || byStatus('bad') || base.ui.bad };
-  const changes = [].concat(status.length ? [statusOnly
+  const changes = [].concat(found.length && statusOf(found[0], t) ? [statusOnly
     ? `The report's only colours (${status.join(', ')}) are status colours (good, neutral, bad): they stay for good and bad, and the lead colour is the ${basis} preset's (${palette[0]}), so the report does not read as an alarm. You can ask for a brand colour instead.`
     : `${status.join(', ')} ${status.length === 1 ? 'is a status colour' : 'are status colours'} (good, neutral, bad): never the lead colour; the lead is ${palette[0]}.`] : [],
     lead !== lead0 ? [`Colour 1 ${lead0} is ${E.contrast(lead0, card).toFixed(1)}:1 on the cards (${card}): for lines, bars and accents it is ${lead}, the same hue ${dark ? 'lighter' : 'darker'}, at 3:1; the bars still fade towards ${lead0}'s tint.`] : []);
