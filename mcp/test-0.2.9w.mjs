@@ -349,7 +349,11 @@ export function v029w({ check }) {
     // lab/proof-0.2.9-rc1 business/beta/MEASURE-TABLE-ROWS.md, at 1280 x 720, 10pt values, 12pt title: 62.1 to the header's
     // rule, 19.8 a row, 21 the total, about 4 under it; at 1920 x 1080, 15pt, 18pt title: 90.3, 29.8, 31, about 6, and
     // "for 6 rows 306, for 7 rows 336". The test before used round 11's 8pt numbers, which rc.3 showed wrong at 1920.)
-    const M720 = { top: 62.1, row: 19.8, total: 21, under: 4 }, M1080 = { top: 90.3, row: 29.8, total: 31, under: 6 };
+    // (Changed in P3-3 N21, 13 Oct: re-measured in Desktop 2.158, N21-LAB.md (PDF and screen to 0.3 px), the reviewer's
+    // round: regular Segoe UI 62.0 to the header's rule, 20.0 a row, the pinned total block 29.3 at 1280 x 720 10pt; 90.0,
+    // 30.0, 40.2 at 1920 x 1080 15pt. S3's numbers were short by 4.2 and 2.9 a table, so the total line cut the last row (N21,
+    // D3). The rows these two slots hold stay 10 and 5; only the heights move, to 291.3 and 280.2.)
+    const M720 = { top: 62.0, row: 20.0, total: 29.3, under: 0 }, M1080 = { top: 90.0, row: 30.0, total: 40.2, under: 0 };
     const whole = (h, m) => { const k = Math.floor((h - m.top - m.total - m.under) / m.row); return { k, h: m.top + k * m.row + m.total + m.under }; };
     const rt = get(() => build(base({ table: [C('City'), M('Total Sales')] }), { pages: hand(1280, 720, [{ kind: 'table', title: 'T', x: 24, y: 80, w: 600, h: 300 }]) }));
     const tv = rt.files ? visuals(rt).find((v) => v.visual.visualType === 'tableEx') : null, w720 = whole(300, M720);
