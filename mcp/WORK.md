@@ -4,6 +4,18 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Integration round P4, the last code round for 0.2.9 before the owner's test (13 Oct, cloud builder 5; `fix/0.2.9-gate` from `f688ada`; not merged to main, no PR)
+Merged: design at `03dc11d` (`81d2a22`; B10, B-88, the owner's decision of 13 Oct, option B: in an Arabic plan the assistant
+suggests Arabic display names, the fixed list first and its own proposals for the rest, marked as suggestions; the user approves
+or edits them; only approved names are written. The rule is now "never show a name the user has not approved"). No conflicts:
+the branch changes only mcp/ (server.mjs texts, agent-text, arabic-names, the report-design skill, README, test-0.2.9-sweep,
+test-audit6, test.mjs auto-merged). No engine file changed, so no .min.js or ?v= stamp moved (check-min: 62 match).
+Tests (Linux) on `81d2a22`: mcp 1514 (1510 + the design's checks), v029c/d/e/f/g 36/21/21/20/21, golden 12, fuzz 600 +
+FUZZ_LONG 10000 (135843 checks), layouts 32 reports 226 checks, website 17 of 17 (a first website run beside the mcp run lost
+its browser, 11 suites crashed with 0 checks; alone, all 17 pass), deny-scan 9, site config, csp 95 pages, check-min.
+GitHub CI on `81d2a22`: all 4 green. (CI's Tests on `f688ada`, WORK.md only, was cancelled by this push; its code `4a2ae32` was 4/4.)
+Next: the owner's test of 0.2.9 on the gate. No main, no PR, no release from here.
+
 ## Integration round P2c, the owner's go (13 Oct, cloud builder 5; `fix/0.2.9-gate` from `52ed08b`; not merged to main, no PR)
 Merged: checks-p2 at `54e9e8b` (`4a2ae32`; builder 7: every dropdown slicer with the Desktop-proven rounded box, dropdown.
 borderRadius 8D + borderIndividualCorners false + borderColor; check_report's VALIDATOR_GAPS / knownGap: exactly that shape on a
