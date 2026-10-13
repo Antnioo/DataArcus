@@ -4,6 +4,15 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Integration round P2c, the owner's go (13 Oct, cloud builder 5; `fix/0.2.9-gate` from `52ed08b`; not merged to main, no PR)
+Merged: checks-p2 at `54e9e8b` (`4a2ae32`; builder 7: every dropdown slicer with the Desktop-proven rounded box, dropdown.
+borderRadius 8D + borderIndividualCorners false + borderColor; check_report's VALIDATOR_GAPS / knownGap: exactly that shape on a
+dropdown slicer is a known note with its evidence; the tests count the known notes per slicer exactly). Conflicts: the theme
+generator's stamps only (the branch is on f48057f): the gate's kept, pbip-page (changed) and theme-generator re-stamped
+20261013c2. pbip-page.js and the tests (test.mjs, layouts, golden-baseline, round22/23, validator) merged without conflict.
+Tests (Linux) on `4a2ae32`: mcp 1510, v029c/d/e/f/g 36/21/21/20/21, v029checks 37, golden 12, fuzz 600 + FUZZ_LONG 10000,
+layouts 32 reports 226 checks, website 17 of 17, deny-scan, site config, csp, check-min. GitHub CI on `4a2ae32`: all 4 green.
+
 ## Integration round P3b (13 Oct, cloud builder 5; `fix/0.2.9-gate` from `e189551`; not merged to main, no PR)
 Merged: writer-p3 at `2670ebe` (`569b768`; N21: the table's rows from the measured pitch max(2t, t+10) and the theme's written
 font, header and pinned-total blocks measured per face, a Semibold theme's totals bold via textClasses.boldLabel, the S3 test
