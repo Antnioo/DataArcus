@@ -10,7 +10,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { createRequire } from 'node:module';
 import { real, nothingAt, ROOT } from './model.mjs';
-import { safeName, readJson, readBytes, isFile, locate as readerLocate, strictFiles, inventory, diskSource } from './read-report.mjs';
+import { safeName, readJson, mustJson, readBytes, isFile, locate as readerLocate, strictFiles, inventory, diskSource } from './read-report.mjs';
 import { replacementsOf, replacementLine, typeOfModel } from './visual-meaning.mjs';
 import { writeTree } from './files.mjs';
 
@@ -80,10 +80,10 @@ export function writeNative(reportPath, model, plan) {
   // the report stops declaring the custom visuals no visual uses any more (no sign-in prompt for them)
   const used = []; inv.pages.forEach((p) => p.visuals.forEach((v) => { const e = approved.find((x) => x.visual === v.id); used.push(e ? e.native : v.type); }));
   let dropped = [];
-  try { const rj = readJson(path.join(loc.dir, 'definition', 'report.json')); const d = Replace.dropUnusedCustomVisuals(rj, used); dropped = d.dropped; out.set('definition/report.json', json(d.json)); } catch (e) { /* copied as it is */ }
-  if (files.includes('.platform')) { try { const pl = readJson(path.join(loc.dir, '.platform')); pl.metadata = Object.assign({}, pl.metadata, { displayName: loc.base + SUFFIX }); pl.config = Object.assign({}, pl.config, { logicalId: crypto.randomUUID() }); out.set('.platform', json(pl)); } catch (e) { /* copied as it is */ } }
+  if (files.includes('definition/report.json')) { const rj = mustJson(path.join(loc.dir, 'definition', 'report.json'), 'definition/report.json'); const d = Replace.dropUnusedCustomVisuals(rj, used); dropped = d.dropped; out.set('definition/report.json', json(d.json)); }
+  if (files.includes('.platform')) { const pl = mustJson(path.join(loc.dir, '.platform'), '.platform'); pl.metadata = Object.assign({}, pl.metadata, { displayName: loc.base + SUFFIX }); pl.config = Object.assign({}, pl.config, { logicalId: crypto.randomUUID() }); out.set('.platform', json(pl)); }
   let pbip = { $schema: 'https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json', version: '1.0', artifacts: [{ report: { path: path.basename(loc.outDir) } }], settings: { enableAutoRecovery: true } };
-  if (loc.pbip) { try { const o = readJson(loc.pbip); o.artifacts = (o.artifacts || []).map((x) => (x && x.report ? Object.assign({}, x, { report: Object.assign({}, x.report, { path: path.basename(loc.outDir) }) }) : x)); if (!o.artifacts.some((x) => x && x.report)) o.artifacts.push({ report: { path: path.basename(loc.outDir) } }); pbip = o; } catch (e) { /* the default */ } }
+  if (loc.pbip) { const o = mustJson(loc.pbip, path.basename(loc.pbip)); o.artifacts = (o.artifacts || []).map((x) => (x && x.report ? Object.assign({}, x, { report: Object.assign({}, x.report, { path: path.basename(loc.outDir) }) }) : x)); if (!o.artifacts.some((x) => x && x.report)) o.artifacts.push({ report: { path: path.basename(loc.outDir) } }); pbip = o; }
   // a private custom visual's own package folder stays in the copy only while a visual still uses it
   const tree = files.filter((rel) => { const m = /^CustomVisuals\/([^/]+)\//.exec(rel); return !(m && dropped.includes(m[1])); })
     .map((rel) => ({ path: path.basename(loc.outDir) + '/' + rel, data: out.has(rel) ? out.get(rel) : readBytes(path.join(loc.dir, ...rel.split('/'))) }));

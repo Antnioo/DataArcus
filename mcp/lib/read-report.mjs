@@ -42,6 +42,9 @@ export const readJson = (f) => {
   if (st.size > REPORT_LIMITS.file) throw new TooBig(st.size);
   return parse(readCapped(f, REPORT_LIMITS.file, 'report file'));
 };
+// a project file a copy must carry over changed (the native copy, the twin): read, or the write is refused (the outside
+// review of rc.12, R-02: never copied as it is, nor replaced by a default, when it can't be read)
+export const mustJson = (f, name) => { try { return readJson(f); } catch (e) { throw new Error(`Nothing was written: the original's ${name} could not be read (${e instanceof Linked ? 'it is a link' : 'not valid JSON, or too big'}). Open the original in Power BI Desktop and save it, then ask again.`); } };
 export const isFile = (f) => { try { return fs.lstatSync(f).isFile(); } catch (e) { return false; } };
 export const isDir = (f) => { try { return fs.lstatSync(f).isDirectory(); } catch (e) { return false; } };
 // files left unread for their size, and folders past the depth, go to sk = { big, deep } (one record per call)
