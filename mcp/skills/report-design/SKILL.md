@@ -138,9 +138,10 @@ them from the same model open in Power BI Desktop:
 
 ## Rules
 - **Plan first:** show the plan and wait for the user's "go" before `create_report`, every time.
-- **Display names come only from the user** (or are the model's own names). Never translate, shorten or relabel a
-  field yourself. In an Arabic report `create_report` lists the fields without an Arabic name (`arabicNames.missing`):
-  show the list and ask the user for the names.
+- **Never show a name the user has not approved** (the model's own names need no approval). In an Arabic report
+  `plan_layout`'s `arabicNames` suggests Arabic display names (a fixed list, and the fields you propose yourself in
+  plain, short business Arabic): show each beside the model's name as a suggestion, ask the user to approve or edit
+  them all, and pass only the approved ones as `displayNames`. The model is never renamed.
 - **A card's label must say what its value really is.** Never label an unfiltered total "This Ramadan", "This year"
   or the like.
 - **Gulf calendar** (`check_model_health` with a `country`, or on a model that already has Hijri or Ramadan columns): the `gulfCalendar` section is not scored, and say so. For
