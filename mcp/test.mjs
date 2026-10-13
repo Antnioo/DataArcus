@@ -29,6 +29,7 @@ import { v030twin, v030engine, v030audit } from './test-0.3.0-twin.mjs';
 import { v029twin } from './test-0.3.0-twin.mjs';
 import { audit6 } from './test-audit6.mjs';
 import { zgate } from './test-z.mjs';
+import { rgate } from './test-r.mjs';
 import { v029a4 } from './test-0.2.9-a4.mjs';
 import { v029sweep } from './test-0.2.9-sweep.mjs';
 import { withPlans } from './test-plan.mjs';
@@ -4557,6 +4558,8 @@ await v029twin({ call: rawCall, check, ROOT, fs });
 await audit6({ call: rawCall, check, ROOT, fs, meta: { instructions: client.getInstructions() || '', tools: (await client.listTools()).tools } });
 // ---------- the outside review of the 0.2.9 release candidate (Z-01..Z-07, the tools layer): test-z.mjs, which also runs alone ----------
 await zgate({ call: rawCall, check, ROOT, fs });
+// ---------- the outside review of rc.12 (R-01, R-02, R-04): test-r.mjs, which also runs alone ----------
+await rgate({ call: rawCall, check, ROOT, fs });
 // ---------- round 17 follow-up: G-04, check_report's instruction-like names in suspiciousNames (owner: all recommended) ----------
 // the name stays withheld (only the placeholder), each entry has its kind and reason, and the check's result is the
 // same as for a plainly named visual

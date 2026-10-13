@@ -15,7 +15,7 @@ import { themeDesign, planLayout, pageOf, contrastReport, DESIGN_KEYS, LAYOUT_KE
 import { freeFile } from './lib/files.mjs';
 import { fullAnswer, isLarge, largeSummary, namedTables, scopeOf } from './lib/scope.mjs';
 import { proposeArabic } from './lib/arabic-names.mjs';
-import { readableName } from './lib/display-names.mjs';
+import { readableName, writtenName } from './lib/display-names.mjs';
 import { addGulfCalendar, gulfFixInputs } from './lib/gulf-calendar.mjs';
 import { checkReport, CHECKS } from './lib/check-report.mjs';
 import { existingTheme, readReport } from './lib/read-report.mjs';
@@ -748,7 +748,7 @@ server.registerTool('create_report', {
   // display names: checked first, then put on the bound fields (the report writer shows a field's name when it has one)
   const given = new Map();
   for (const [k, v] of Object.entries(a.displayNames || {})) {
-    const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/), name = String(v == null ? '' : v).replace(/[\u0000-\u001f]/g, ' ').trim();
+    const mk = String(k).trim().match(/^'?(.+?)'?\[(.+)\]$/), name = writtenName(v, `displayNames: ${visible(String(k)).slice(0, 160)}`);
     if (!mk) throw new Error(`displayNames: "${k}" is not written as Table[Field]`);
     if (!name || name.length > 80) throw new Error(`displayNames: the display name for ${k} is empty or longer than 80 characters`);
     given.set(Bind.fieldKey(mk[1], mk[2]), { name, key: String(k), used: false });
@@ -1161,6 +1161,8 @@ server.registerTool('plan_layout', {
   // formats fixed at the source (the owner's ask, 6 Oct 2026): with the model, the fields that lack their right format
   // come first, with the script (the same file check_model_health writes)
   let formats = {}, arabicNames = {}, displayNamesAns = {}, m0 = null, planNames = null;
+  // (R-04: a name the plan pins is a name create_report can write: the same check, at the plan)
+  Object.entries(a.displayNames || {}).forEach(([k, v]) => writtenName(v, `displayNames: ${visible(String(k)).slice(0, 160)}`));
   if (a.path) {
     const m = (m0 = loadModel(a.path)), sc = scopeOf(m, { focus: a.focus, tables: a.tables });
     // (keep the dashboard's identity, the owner's go 12 Oct: the model's report's own theme, the design's default colours)
