@@ -231,7 +231,8 @@ must keep them under it.
 ## Writer P3 (12 Oct from 22:03 UTC; branch `fix/0.2.9-writer-p3` from `d73a773`; not merged)
 `788bbba`: report-level measure names unique across the whole report (freeExt report-wide, without case). Whole chain and website
 17/17 green. Next: builder 5 merges; check_report could flag duplicate measure names (seen, not in scope).
-P3-2 `ee9406c` (+ the test's path fix): by / newDesign / detail live in `texts(lang)` (REPORT_TEXTS), both paths pass it unchanged.
+P3-2 `ee9406c` + the reviewer's (b) (13 Oct): by / newDesign live in `texts(lang)` (REPORT_TEXTS), both paths pass it unchanged;
+"detail" stays the writer's own word by the title's script (pbip-page.js), so the design-engine fixtures are untouched.
 English 'by' and ': detail' in Arabic reports come from byTitle's same-script rule (English names keep an English title), on both
 paths alike. Reported, not changed: R1b (Arabic Top-N lead drawn left of an English phrase), R4 (ops table title cut with "...").
 
