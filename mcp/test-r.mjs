@@ -6,10 +6,14 @@
 //         is, nor replaced by a default)
 //   R-04: every name the tools write (create_report's and plan_layout's displayNames, the twin's labels) is refused
 //         with an invisible format sign (a direction override or isolate, a zero-width space); Arabic and its joiners pass
+// And the night audit of 13 Oct (same file):
+//   AUD-034: a preset named like an object's own property (__proto__, constructor, toString) is repaired, not a crash
+//   AUD-035: a Windows device name (CON, NUL, COM1, LPT1 ...) never becomes a theme file or a report's .pbip / .Report
 import fs0 from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { createRequire } from 'node:module';
 import { serverClient } from './test-0.2.9.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -74,6 +78,27 @@ export async function rgate({ call, check, ROOT, fs = fs0 }) {
     const f = path.join(T, 'broken.json'); fs.writeFileSync(f, '{');
     let err = ''; try { mustJson(f, 'report.json'); } catch (e) { err = e.message; }
     chk(() => /Nothing was written/.test(err) && /report\.json/.test(err), () => `R-02. the native copy's reader refuses an unreadable file: ${err}`);
+  }
+
+  // ---------- AUD-034: inherited property names are not presets ----------
+  for (const preset of ['__proto__', 'constructor', 'toString']) {
+    const t = await ask('generate_theme', { preset, name: 'Audit Theme' });
+    chk(() => !t.err && /not a preset/.test(JSON.stringify(t.j)), () => `AUD-034. preset ${preset} is repaired with the list of presets: ${short(t)}`);
+  }
+
+  // ---------- AUD-035: Windows device names ----------
+  {
+    const req = createRequire(import.meta.url), E = req('../assets/js/design-engine.js'), Pb = req('../assets/js/pbip-export.js');
+    const themes = ['CON', 'nul', 'Com1', 'LPT9', 'aux'].map((n) => E.fileBase(n));
+    chk(() => themes.join() === 'con_,nul_,com1_,lpt9_,aux_' && E.fileBase('Console') === 'console' && E.fileBase('CON sales') === 'con-sales',
+      () => `AUD-035. theme files never take a device name: ${themes.join()} / ${E.fileBase('Console')} / ${E.fileBase('CON sales')}`);
+    const d = E.fresh(); E.repairState(d);
+    const specs = E.projectPages(d.layout, 'en', { second: false, panel: false });
+    const baseOf = (name) => { const r = Pb.build({ name, title: 'T', pageName: specs[0].name, lang: 'en', rtl: false, font: d.font, ui: d.ui, theme: E.buildTheme(d, 'en'), sample: true, logo: null, texts: E.REPORT_TEXTS.en,
+      pages: specs.map((sp) => ({ name: sp.name, page: sp.page, slots: sp.slots, panel: sp.panel, kpiInset: E.kpiInset(sp.layout), png: new Uint8Array([1]) })) });
+      return String((r.files.find((f) => /\.pbip$/.test(f.path)) || {}).path).replace(/^.*\//, ""); };
+    const got = ['NUL', 'con', 'COM1', 'nul.tar', 'Contoso'].map(baseOf);
+    chk(() => got.join() === 'NUL_.pbip,con_.pbip,COM1_.pbip,nul_.tar.pbip,Contoso.pbip', () => `AUD-035. report names never take a device name: ${got.join()}`);
   }
 }
 

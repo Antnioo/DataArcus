@@ -292,7 +292,9 @@
   let cut = whole.slice(0, 30).join('');
   if (whole.length > 30 && whole[30] !== ' ' && cut.lastIndexOf(' ') > 0) cut = cut.slice(0, cut.lastIndexOf(' '));
   if (whole.length > 30) cut = cut.replace(/[\s\-\u2013\u2014\u00b7:,;&+]+$/, '');
-  let base = tidy(cut) || 'Power BI Report';
+  // (night audit AUD-035) a Windows device name (CON, PRN, AUX, NUL, COM1-9, LPT1-9) before the first dot is no file
+  // name on Windows ("CON.pbip", "nul.tar.Report" are the device): it gets "_" after it, as design-engine.js's themes
+  let base = (tidy(cut) || 'Power BI Report').replace(/^(con|prn|aux|nul|com[0-9\u00b9\u00b2\u00b3]|lpt[0-9\u00b9\u00b2\u00b3])(?=\.|\s*$)/i, '$1_');
   // next to someone's project: never the name of a report already there (o.model.taken: their X.Report folders and
   // X.pbip files), nor the model's own name, which their first report usually has
   const theirs = o.model && o.model.byPath ? String(o.model.byPath).replace(/^.*\//, '').replace(/\.(SemanticModel|Dataset)$/i, '') : null;

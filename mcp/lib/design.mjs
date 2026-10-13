@@ -134,7 +134,7 @@ export function themeDesign(a) {
   // (nothing asked: Corporate, light; DataArcus, the dark one, only when dark is asked)
   let preset = dark ? 'DataArcus' : 'Corporate';
   if (a.preset != null) {
-    if (E.PRESETS[a.preset]) preset = a.preset;
+    if (Object.hasOwn(E.PRESETS, a.preset)) preset = a.preset;
     else fix('preset', a.preset, preset, `not a preset; use one of ${Object.keys(E.PRESETS).join(', ')}`);
   }
   // (keep the dashboard's identity) no colours asked (no preset, palette, brand or mode) and the model's report has its
@@ -144,7 +144,7 @@ export function themeDesign(a) {
   d.preset = preset; d.data = E.PRESETS[preset].data.slice(); d.ui = { ...E.PRESETS[preset].ui };
   if (own) { d.data = own.data; d.ui = own.ui; d.preset = own.preset; if (own.style.font && a.font == null) d.font = own.style.font; notes.push(own.info.sayInPlan); }
   // a preset whose page is not what the user asked for (mode): the preset's data colours and accent on the asked page
-  if (a.preset != null && E.PRESETS[a.preset] && a.mode && !a.palette && a.brand == null && (E.lum(d.ui.background) > 0.45) === dark) {
+  if (a.preset != null && Object.hasOwn(E.PRESETS, a.preset) && a.mode && !a.palette && a.brand == null && (E.lum(d.ui.background) > 0.45) === dark) {
     d.ui = Object.assign({}, dark ? E.PRESETS.DataArcus.ui : LIGHT_UI, { accent: d.ui.accent }); d.preset = null;
     notes.push(`The ${preset} preset's colours on a ${dark ? 'dark' : 'light'} page, as asked.`); }
   if (a.palette) {
@@ -166,7 +166,7 @@ export function themeDesign(a) {
     // the website's Generate button makes the 8 colours from the brand (and keeps its lightness between 0.4 and 0.55);
     // here the brand itself is the first data colour and the accent, exactly, on a light page (dark only when asked:
     // mode "dark", or a dark preset chosen with the brand)
-    else { d.ui = Object.assign({}, a.mode ? (dark ? E.PRESETS.DataArcus.ui : LIGHT_UI) : a.preset != null && E.PRESETS[a.preset] ? E.PRESETS[a.preset].ui : LIGHT_UI);
+    else { d.ui = Object.assign({}, a.mode ? (dark ? E.PRESETS.DataArcus.ui : LIGHT_UI) : a.preset != null && Object.hasOwn(E.PRESETS, a.preset) ? E.PRESETS[a.preset].ui : LIGHT_UI);
       d.data = h === 'calm' ? E.calmPalette(b, d.ui.card, d.ui.text) : E.generate(b, h); d.data[0] = b; d.ui.accent = b; d.preset = null;
       notes.push(`The brand colour ${b} is used exactly as given: the first data colour and the accent. The other 7 data colours come from ${h === 'calm' ? 'the calm set' : 'the ' + h + ' harmony'}.`); }
   } else if (a.harmony != null) fix('harmony', a.harmony, null, 'not used: no brand colour given');
