@@ -4,6 +4,15 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Integration round P3b (13 Oct, cloud builder 5; `fix/0.2.9-gate` from `e189551`; not merged to main, no PR)
+Merged: writer-p3 at `2670ebe` (`569b768`; N21: the table's rows from the measured pitch max(2t, t+10) and the theme's written
+font, header and pinned-total blocks measured per face, a Semibold theme's totals bold via textClasses.boldLabel, the S3 test
+numbers re-measured with their source N21-LAB.md). Conflicts: only the generated pbip-export.min.js and pbip-page.min.js, rebuilt
+from the merged sources. pbip-page, pbip-export and pbip-sizing changed: their stamps and the theme generator's are 20261013p6.
+Tests (Linux) on `569b768`: mcp 1497, v029c/d/e/f/g 36/21/21/20/21, golden 12, fuzz 600 + FUZZ_LONG 10000, layouts 32 reports
+226 checks, website 17 of 17, deny-scan, site config, csp, check-min. GitHub CI on `569b768`: all 4 green.
+Still held for the owner: checks P2 (B7).
+
 ## Integration round P3 (13 Oct, cloud builder 5; `fix/0.2.9-gate` from `15139ed`; not merged to main, no PR)
 Merged: design `5c1ceab` (`9d758da`; N26 second colour never red or a status colour, N27 a chart's colour keyed to its category
 field, N25 the fade's strong end is the chart's colour, N28 the 6% tint on the default designed path only; no conflict, the
