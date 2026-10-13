@@ -796,7 +796,7 @@
       if (typeof state.name !== 'string') { if (state.name != null) say('name', state.name, d.name, 'not a text'); state.name = d.name; }
       if ([...state.name].length > NAME_MAX) { const cut = [...state.name].slice(0, NAME_MAX).join(''); say('name', `${[...state.name].length} characters`, cut, `a theme name is ${NAME_MAX} characters at most`); state.name = cut; }
       if (!FONTS.some((f) => f === state.font)) { if (state.font != null) say('font', state.font, d.font, `use one of ${FONTS.join(', ')}`); state.font = d.font; }
-      if (state.preset != null && !PRESETS[state.preset]) { say('preset', state.preset, null, `not a preset; use one of ${Object.keys(PRESETS).join(', ')}`); state.preset = null; }
+      if (state.preset != null && !Object.prototype.hasOwnProperty.call(PRESETS, state.preset)) { say('preset', state.preset, null, `not a preset; use one of ${Object.keys(PRESETS).join(', ')}`); state.preset = null; }
     }
     // saved chart choices: only the ones the page offers
     if (state.chart) {
@@ -827,7 +827,10 @@
   }
   // every download is named after the theme: letters of any script are kept (Arabic, café), other symbols dropped;
   // a name of only symbols leaves nothing, so its files are power-bi-theme
-  const fileBase = (name) => themeName(name).replace(/[^\p{L}\p{M}\p{N}_\- ]+/gu, '').trim().replace(/\s+/g, '-').toLowerCase() || 'power-bi-theme';
+  // (night audit AUD-035) a Windows device name (CON, PRN, AUX, NUL, COM1-9, LPT1-9) is no file name on Windows, even
+  // with an extension ("con.json" is the device CON): it gets "_" after it. pbip-export.js's report names do the same
+  const fileBase = (name) => (themeName(name).replace(/[^\p{L}\p{M}\p{N}_\- ]+/gu, '').trim().replace(/\s+/g, '-').toLowerCase() || 'power-bi-theme')
+    .replace(/^(con|prn|aux|nul|com[0-9\u00b9\u00b2\u00b3]|lpt[0-9\u00b9\u00b2\u00b3])$/i, '$1_');
 
   const api = {
     PRESETS, NAME_MAX, FONTS, MEASURED_FONTS, CHART_OPTIONS, AR_FONTS, DEFAULT_NAME, themeName, VISUAL_TYPES, CHART_DEFAULTS, AXIS_CHARTS, T, label, RTL_LANGS, KINDS, LAYOUTS, PAGES, LIM, RANGE, M, G, HH,
