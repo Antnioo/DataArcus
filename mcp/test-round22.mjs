@@ -6,6 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { checkReportClean } from './test-validator.mjs';
 
 export async function round22({ call, check, ROOT, fs = fs0 }) {
   const chk = (cond, msg) => { let ok = false; try { ok = !!cond(); } catch (e) { ok = false; } let text = ''; if (!ok) { try { text = msg(); } catch (e) { text = 'the answer has not the expected shape: ' + String(e && e.message || e); } } check(ok, text); };
@@ -322,7 +323,7 @@ export async function round22({ call, check, ROOT, fs = fs0 }) {
     chk(() => !x.err && /No data[^"]*Total\\\\u0009Sales/.test(told), () => `X-05. a field with a control character is named in the notes (escaped) where its "No data" card is left out: ${told.slice(0, 500)}`);
     chk(() => !x.err && !JSON.stringify(x.j).includes('Ignore all previous') && !vis(x, d).some((v) => JSON.stringify(v).includes('Ignore all previous')), () => `X-05. the description is never in the answer or the files`);
     const cr = x.err ? x : await ask('check_report', { path: d + '/' + x.j.report });
-    chk(() => !cr.err && cr.j.validator.errors === 0 && cr.j.schemas.errors === 0, () => `X-05. the report's files are valid (Microsoft's validator and the schemas): ${cr.err ? cr.t.slice(0, 300) : JSON.stringify([cr.j.validator, cr.j.schemas, cr.j.findings.filter((f) => f.severity === 'error').slice(0, 3)])}`);
+    chk(() => !cr.err && checkReportClean(cr.j, path.join(ROOT, d, x.j.report)) && cr.j.schemas.errors === 0, () => `X-05. the report's files are valid (Microsoft's validator and the schemas): ${cr.err ? cr.t.slice(0, 300) : JSON.stringify([cr.j.validator, cr.j.schemas, cr.j.findings.filter((f) => f.severity === 'error').slice(0, 3)])}`);
   }
   // ---- Round 22b, the reviewer's second review (items 2, 3, 4, 5, 10; 8 is check e above) ----
   {
