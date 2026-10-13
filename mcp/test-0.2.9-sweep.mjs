@@ -286,6 +286,28 @@ export async function v029sweep({ call, check, ROOT, fs = fs0 }) {
       () => `P1-2: the answer tells the second colour's charts and ends: ${JSON.stringify((two.j || {}).chartColors).slice(0, 400)}`);
   }
 
+  // ---------- B-88, the owner's decision (13 Oct, option B): the assistant suggests Arabic display names, the user approves ----------
+  {
+    model('s-b88', [{ name: 'Fin', partitions: mp('Fin'), columns: [col('ProductName', 'string'), col('Region', 'string'), col('Amount', 'double')],
+      measures: [{ name: 'Planned Budget', expression: 'SUM ( Fin[Amount] )', formatString: '#,0' }, { name: 'Total Sales', expression: 'SUM ( Fin[Amount] )', formatString: '#,0' }] }]);
+    const pa = await ask('plan_layout', { layout: 'exec', path: 's-b88', lang: 'ar', fields: ['Fin[Planned Budget]', 'Fin[Total Sales]', 'Fin[ProductName]'] }), an = (pa.j && pa.j.arabicNames) || {};
+    const listed = Object.keys(an.suggestedDisplayNames || {}), own = an.proposeYourself || [];
+    // every shown field without an Arabic name gets a proposal: the fixed list's, else one the assistant proposes itself
+    chk(() => !pa.err && listed.includes('Fin[Total Sales]') && own.includes('Fin[Planned Budget]') && !listed.concat(own).some((k, i, a2) => a2.indexOf(k) !== i) && !(an.needNames || []).length,
+      () => `B-88: every field without an Arabic name gets a proposal (the fixed list, else the assistant's own): ${JSON.stringify(an).slice(0, 500)}`);
+    const say = String(an.sayFirst || '') + ' ' + String(an.howToPropose || '');
+    chk(() => /approve or edit/i.test(say) && /beside/i.test(say) && /suggestion/i.test(say) && /الميزانية المخططة/.test(say) && /only the approved/i.test(say) && /never renamed/i.test(say) && /never show a name the user has not approved/i.test(say),
+      () => `B-88: the plan asks the user to approve or edit every proposal, beside the model's names, marked as suggestions: ${say.slice(0, 600)}`);
+    // create_report still writes only the names it is given; an English plan is unchanged (no arabicNames)
+    const cr = await ask('create_report', { path: 's-b88', name: 'B88', lang: 'ar', design: design({ preset: 'exec', page: '1920x1080' }), secondPage: false,
+      fields: { kpis: ['Fin[Planned Budget]', 'Fin[Total Sales]'], category: 'Fin[Region]', measure: 'Fin[Planned Budget]' }, displayNames: { 'Fin[Planned Budget]': 'الميزانية المخططة' } });
+    const shown = new Set(); visualsOf(cr, 's-b88').forEach((v) => { const st = ((v.visual || {}).query || {}).queryState || {}; Object.values(st).forEach((r) => (r.projections || []).forEach((p) => { if (p.displayName) shown.add(p.displayName); })); });
+    chk(() => !cr.err && shown.has('الميزانية المخططة') && [...shown].filter((n) => /[\u0600-\u06FF]/.test(n)).every((n) => n === 'الميزانية المخططة'),
+      () => `B-88: create_report writes only the names it is given: ${[...shown]} ${short(cr)}`);
+    const pe = await ask('plan_layout', { layout: 'exec', path: 's-b88', lang: 'en', fields: ['Fin[Planned Budget]'] });
+    chk(() => !pe.err && !pe.j.arabicNames, () => `B-88: an English plan has no Arabic names: ${short(pe)}`);
+  }
+
   // ---------- polish round P3 (the reviewer, RESCORE-6, 12 Oct): N26, N27, N25, N28 ----------
   {
     const D = await import('./lib/design.mjs');

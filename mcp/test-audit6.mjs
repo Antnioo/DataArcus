@@ -233,7 +233,9 @@ export async function audit6({ call, check, ROOT, fs = fs0, meta }) {
         measures: [{ name: "Chiffre d'affaires", expression: 'SUM ( Ventes[Montant] )', formatString: '#,0' }, { name: 'Total Sales', expression: 'SUM ( Ventes[Montant] )', formatString: '#,0' }] }] } }));
     const x = await call('plan_layout', { path: 'a6fr', layout: 'exec', lang: 'ar', fields: ["Ventes[Chiffre d'affaires]", 'Ventes[Total Sales]'] });
     const an = (x.j && x.j.arabicNames) || {};
-    chk(() => (an.needNames || []).includes("Ventes[Chiffre d'affaires]") && an.suggestedDisplayNames && an.suggestedDisplayNames['Ventes[Total Sales]'] && /English report words/.test(an.whyNoProposal || ''), () => `A6-18. a French name needs the user's name, with the reason: ${JSON.stringify(an).slice(0, 300)}`);
+    // (moved with its cause, B-88, the owner's decision of 13 Oct: a name off the fixed list is now proposed by the
+    // assistant and approved by the user, no longer only asked of the user)
+    chk(() => (an.proposeYourself || []).includes("Ventes[Chiffre d'affaires]") && an.suggestedDisplayNames && an.suggestedDisplayNames['Ventes[Total Sales]'] && /approve or edit/i.test(an.sayFirst || '') && /untrusted/i.test(an.howToPropose || ''), () => `A6-18. a French name is proposed by the assistant for the user to approve: ${JSON.stringify(an).slice(0, 300)}`);
     let words = {}; try { words = JSON.parse(fs.readFileSync(path.join(HERE, '..', 'assets/data/arabic-report-words.json'), 'utf8')); } catch (e) { words = {}; }
     chk(() => /heuristic/i.test(words._note || '') && words.words && words.words.sales === 'المبيعات', () => 'A6-18. the glossary is a shared data file marked as a heuristic');
   }
