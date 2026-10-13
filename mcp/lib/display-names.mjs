@@ -19,3 +19,15 @@ export function readableName(name) {
   s = s.split(/\s+/).filter(Boolean).map((w) => (w === w.toLowerCase() && /^\p{L}/u.test(w) ? w[0].toUpperCase() + w.slice(1) : w)).join(' ');
   return s && s !== raw ? s : null;
 }
+
+// A name the user approved, as it is written into the report (the outside review of rc.12, R-04): control characters
+// (\p{Cc}: a tab, a line break, C1) become a space, as before; a format character (\p{Cf}: a direction override or
+// isolate, a zero-width space, a byte order mark) is refused, never removed silently, so the name the user saw is the
+// name written. The zero-width non-joiner and joiner (U+200C, U+200D) stay: Arabic and Persian text uses them.
+// One rule for every name the tools write: create_report's display names, plan_layout's, the twin's labels.
+const HIDDEN = /(?![‌‍])\p{Cf}/u;
+export function writtenName(s, what) {
+  const raw = String(s == null ? '' : s), ch = HIDDEN.exec(raw), name = raw.replace(/\p{Cc}/gu, ' ').trim();
+  if (ch) throw new Error(`${what}: the name has an invisible sign (U+${ch[0].codePointAt(0).toString(16).toUpperCase().padStart(4, '0')}) that can change how it reads; nothing was written. Write the name without it, show it to the user again and wait for their go.`);
+  return name;
+}

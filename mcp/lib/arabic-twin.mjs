@@ -13,11 +13,12 @@ import { createRequire } from 'node:module';
 import { inside, real, nothingAt, writeNew, visible, loadModel, ROOT } from './model.mjs';
 // (the reading block's screen, locate, JSON reader, strict file list, inventory and limits: the cross-review's Break 1,
 // T3 and R1, 11 Oct; strictFiles refuses a link or a deep folder, never skips it, as a writer must)
-import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, readBytes, isFile, isDir, locate as readerLocate, strictFiles, inventory, diskSource } from './read-report.mjs';
+import { INSTRUCTION, WITHHELD, safeName, REPORT_LIMITS, readJson, mustJson, readBytes, isFile, isDir, locate as readerLocate, strictFiles, inventory, diskSource } from './read-report.mjs';
 import { proposeArabic } from './arabic-names.mjs';
 import { writeTree } from './files.mjs';
 // (the fuzz test's F-TP: the plan's own answer within 40,000 characters, whoever calls planTwin)
 import { capAnswer } from './answer.mjs';
+import { writtenName } from './display-names.mjs';
 
 const require = createRequire(import.meta.url);
 const Mirror = require('../../assets/js/report-mirror.js');
@@ -167,7 +168,7 @@ function monthOffer(model, loc) {
 
 // ---- the plan ----
 const sortKeys = (o) => Object.fromEntries(Object.keys(o || {}).sort().map((k) => [k, String(o[k])]));
-const cleanLabel = (s) => String(s).replace(/[\p{Cc}]/gu, ' ').trim().slice(0, TEXT_CAP);
+const cleanLabel = (s, id) => writtenName(s, `labels: ${visible(id).slice(0, 160)}`).slice(0, TEXT_CAP);
 export function twinKey(p) { const { dir } = locate(p); try { return fs.realpathSync.native(dir); } catch (e) { return dir; } }
 
 export function planTwin(a) {
@@ -180,7 +181,7 @@ export function planTwin(a) {
   const pictureIds = new Set(R.pages.filter((pg) => Mirror.pageHasPicture(pg.page)).map((pg) => pg.id)), mirrorPictures = a.mirrorPicturePages === true;
   const keepLtr = (pg) => pictureIds.has(pg.id) && !mirrorPictures;
   const given = a.labels || {}, labels = {}, unknown = [];
-  Object.keys(given).forEach((k) => { if (ids.has(k)) labels[k] = cleanLabel(given[k]); else unknown.push(visible(k).slice(0, 160)); });
+  Object.keys(given).forEach((k) => { if (ids.has(k)) labels[k] = cleanLabel(given[k], k); else unknown.push(visible(k).slice(0, 160)); });
   texts.forEach((t) => { if (labels[t.id] != null) t.label = labels[t.id]; });
   // what mirrors, counted per kind, and what cannot
   const kinds = {}, where = { custom: [], navigator: [], slicer: [], matrix: [], other: [] }, together = { on: [], bars: [] };
@@ -270,9 +271,9 @@ export function writeTwin(a, plan) {
     r.visuals.forEach((vj, i) => { applied += Mirror.labelVisual(pg.id, vj, labels); out.set(pg.visuals[i].rel, json(vj)); });
   });
   R.bookmarks.forEach((b) => { if (labels['bookmark:' + b.json.name] != null) { out.set(b.rel, json(Object.assign({}, b.json, { displayName: labels['bookmark:' + b.json.name] }))); applied++; } });
-  if (R.hasPlatform) { try { const pl = readJson(path.join(loc.dir, '.platform')); pl.metadata = Object.assign({}, pl.metadata, { displayName: loc.base + ' AR' }); pl.config = Object.assign({}, pl.config, { logicalId: crypto.randomUUID() }); out.set('.platform', json(pl)); } catch (e) { /* copied as it is */ } }
+  if (R.hasPlatform) { const pl = mustJson(path.join(loc.dir, '.platform'), '.platform'); pl.metadata = Object.assign({}, pl.metadata, { displayName: loc.base + ' AR' }); pl.config = Object.assign({}, pl.config, { logicalId: crypto.randomUUID() }); out.set('.platform', json(pl)); }
   let pbip = { $schema: 'https://developer.microsoft.com/json-schemas/fabric/pbip/pbipProperties/1.0.0/schema.json', version: '1.0', artifacts: [{ report: { path: path.basename(twinDir) } }], settings: { enableAutoRecovery: true } };
-  if (loc.pbip) { try { const o = readJson(loc.pbip); o.artifacts = (o.artifacts || []).map((x) => (x && x.report ? Object.assign({}, x, { report: Object.assign({}, x.report, { path: path.basename(twinDir) }) }) : x)); if (!o.artifacts.some((x) => x && x.report)) o.artifacts.push({ report: { path: path.basename(twinDir) } }); pbip = o; } catch (e) { /* the default above */ } }
+  if (loc.pbip) { const o = mustJson(loc.pbip, path.basename(loc.pbip)); o.artifacts = (o.artifacts || []).map((x) => (x && x.report ? Object.assign({}, x, { report: Object.assign({}, x.report, { path: path.basename(twinDir) }) }) : x)); if (!o.artifacts.some((x) => x && x.report)) o.artifacts.push({ report: { path: path.basename(twinDir) } }); pbip = o; }
   // the cross-review's T8 and audit 6's A6-4: the one writer (lib/files.mjs), all or nothing: the twin's folder, the month
   // script (when offered and not already there with the same text) and the .pbip last; on any failure nothing is left
   const tree = R.files.map((rel) => ({ path: path.basename(twinDir) + '/' + rel, data: out.has(rel) ? out.get(rel) : readBytes(path.join(loc.dir, ...rel.split('/'))) }));

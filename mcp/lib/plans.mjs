@@ -105,7 +105,10 @@ export function gate(tool, id, model, pin) {
   const want = p.data && p.data.pins && p.data.pins[tool];
   // (Z-01: the gate fails closed: a writing tool's plan must pin its inputs; the twin writes only from the plan's data)
   if (!want && tool !== 'create_arabic_twin') throw new Error(`Nothing was written: plan ${p.id} holds no pinned inputs for ${tool}, so it can't say what the user approved. Make the plan with the tool that proposes it, show it to the user and wait for their go.`);
-  if (want && pin !== undefined) {
+  // (the outside review of rc.12, R-01: a plan that pinned inputs is used only by a write that passes its own, so a
+  // writer that forgot them is refused, not waved through)
+  if (want && pin === undefined) throw new Error(`Nothing was written: ${tool} passed no inputs to compare with the approved plan ${p.id}. ${SHOW}`);
+  if (want) {
     const off = differences(want, pin);
     if (off.length) throw new Error(`Nothing was written: ${tool}'s inputs differ from the approved plan ${p.id} in ${off.join('; ')}. The user approved that plan, so only its inputs are written: pass the approved ones, or make a new plan with these, show it and wait for the user's go.`);
   }
