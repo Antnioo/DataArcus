@@ -122,7 +122,8 @@ export async function v029g({ call, check, ROOT }) {
   chk(() => !pp.err && dp.ui.text === '#cccccc' && dp.data[0] === E.toContrast('#eeeeee', dp.ui.card, 3) && JSON.stringify(colOf(pp).changes || []).includes('#eeeeee') && (colOf(pp).contrastWarnings || []).length > 0,
     () => `2e. poor contrast: the theme's colours are kept, every failing check named: ${JSON.stringify(colOf(pp))}`);
   const pb = await plan('tb'), pn = await plan('tn');
-  chk(() => !pb.err && !pn.err && [pb, pn].every((x) => x.j.design.data.join() === CORP.data.join() && x.j.design.ui.background === CORP.ui.background && !(x.j.colours && x.j.colours.from === 'report theme')),
+  // (moved in round P3 with its cause, RESCORE-6 N28: the default's near-white page is the 6% tint of the lead)
+  chk(() => !pb.err && !pn.err && [pb, pn].every((x) => x.j.design.data.join() === CORP.data.join() && x.j.design.ui.background === E.mix(CORP.ui.card, CORP.data[0], 0.06) && !(x.j.colours && x.j.colours.from === 'report theme')),
     () => `2f. a base theme only, or no report: today's default, unchanged (Corporate): ${short(pb)} | ${short(pn)}`);
 
   // ---------- 3. an explicit colour request always wins ----------
