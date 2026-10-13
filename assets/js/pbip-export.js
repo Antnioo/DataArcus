@@ -322,12 +322,13 @@
     // the notes: what the writer did that its caller should tell (pbip-notes.js)
     const n = Notes.make(o), { noData, rowLabels, timeExt } = n;
     // bars that fade by value (o.chartColors 'gradient', round 13): the two ends, or null when the colour cannot fade
-    const barBase = ((o.theme || {}).dataColors || [])[0] || (u || {}).accent, GRAD = o.chartColors === 'gradient' && u ? gradientEnds(barBase, u.card, u.text) : null;
+    const barBase = ((o.theme || {}).dataColors || [])[0] || (u || {}).accent, GRAD = o.chartColors === 'gradient' && u ? Engine.fadeEnds(barBase, u.card) : null;   // (P3, N25: the strong end is the colour itself, never past it)
     // (polish round P1, RESCORE-5: bank's deep teal, its colour 2, never appeared) the second bar or column chart of a
     // page fades in colour 2, the third in colour 1 again (pbip-page.js counts them in reading order)
     // (P1+, LAB-POLISH section 5) the second chart's colour is chosen, a distinct hue at 3:1 on the card (secondColour)
-    const bar2 = GRAD && Engine ? Engine.secondColour([barBase].concat(((o.theme || {}).dataColors || []).slice(1)), u.card) : null, GRAD2 = GRAD && bar2 && String(bar2).toLowerCase() !== String(barBase).toLowerCase() ? gradientEnds(bar2, u.card, u.text) : null;
-    const chartColors = { asked: o.chartColors === 'gradient', ends: GRAD, base: barBase, charts: 0, ends2: GRAD2, base2: GRAD2 ? bar2 : null, second: 0 };
+    // (P3, N26: never a red or status colour, the design's good/neutral/bad included)
+    const bar2 = GRAD ? Engine.secondColour([barBase].concat(((o.theme || {}).dataColors || []).slice(1)), u.card, u) : null, GRAD2 = GRAD && bar2 && String(bar2).toLowerCase() !== String(barBase).toLowerCase() ? Engine.fadeEnds(bar2, u.card) : null;
+    const chartColors = { asked: o.chartColors === 'gradient', ends: GRAD, base: barBase, charts: 0, ends2: GRAD2, base2: GRAD2 ? bar2 : null, second: 0, keys: {} };
     // charts mirrored for a right-to-left report (o.chartAxes 'mirrored', round 13; see mirrorChart)
     const MIRROR = rtl && o.chartAxes === 'mirrored', chartAxes = { asked: o.chartAxes || null, rtl, charts: 0 };
     // Quiet gridlines (o.quietGrid, round 13; seen in Desktop 2.158 on 6 Oct, "GE EN dark": on a dark design the value

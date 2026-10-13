@@ -3867,10 +3867,14 @@ register('data:text/javascript,' + encodeURIComponent('export async function res
     const x = await ask('create_report', { path: 'r15', name: 'R15 brand', design: dz, secondPage: false, fields: { kpis: ['Sales[Total Sales]', 'Sales[Orders]'], category: 'Sales[Region]', measure: 'Sales[Total Sales]' } });
     const rules = (x.err ? [] : visuals('r15', x.j.report)).filter((v) => v.visual && /Bar|Column/.test(v.visual.visualType)).map((v) => { const fr = (((((v.visual.objects || {}).dataPoint || [])[0] || {}).properties || {}).fill || {}).solid; const g = fr && fr.color && fr.color.expr && fr.color.expr.FillRule && fr.color.expr.FillRule.FillRule.linearGradient2; const v2 = (c) => String(c.Literal.Value).replace(/^'|'$/g, ''); return g ? { low: v2(g.min.color), high: v2(g.max.color) } : null; }).filter(Boolean);
     const card = dz.ui.card, text = dz.ui.text, cc = x.j && x.j.chartColors;
-    // polish round P1 (B-71): the second chart of the page fades from the theme's second colour (told in chartColors.second)
+    // Moved in round P3 with its cause (RESCORE-6 N25, the reviewer: the fade's strong end is exactly the chart's colour,
+    // never past it): a brand colour too dark to fade at 3:1 on its card keeps its colour as the largest bar and fades to
+    // a soft tint towards the card (soft: true, told), no longer brighter towards the text colour; the second chart of
+    // the page fades from its own colour (chartColors.second) the same way
     const sec = (cc && cc.second) || {};
-    chk(() => !x.err && rules.length >= 2 && rules.every((r) => r && ((r.low === sec.low && r.high === sec.high) || r.low === '#0f6cbd' && r.high !== r.low && cr(r.high, card) > cr(r.low, card) && cr(r.high, text) < cr(r.low, text))) && rules.some((r) => r.low === '#0f6cbd') && cc.mode === 'gradient' && cc.reversed === true && /brighter/i.test(cc.note),
-      () => `a brand colour that cannot fade towards the card fades towards the text colour, told: ${JSON.stringify(rules)} card ${card} text ${text} ${JSON.stringify(cc)} ${x.err ? x.t.slice(0, 200) : ''}`);
+    chk(() => !x.err && rules.length >= 2 && rules.some((r) => r.high === '#0f6cbd') && rules.every((r) => r && ((r.low === sec.low && r.high === sec.high) || (r.high === '#0f6cbd' && r.low !== r.high && cr(r.low, card) < cr(r.high, card))))
+      && cc.mode === 'gradient' && !cc.reversed && cc.soft === true && /under 3:1/.test(cc.note),
+      () => `a brand colour that cannot fade at 3:1 keeps its colour as the strong end, with a soft tint, told: ${JSON.stringify(rules)} card ${card} text ${text} ${JSON.stringify(cc)} ${x.err ? x.t.slice(0, 200) : ''}`);
   }
 
   // Round 13, recommendation 1: gradient bars stay on by default for designed pages (smallest -> largest), and the plan
