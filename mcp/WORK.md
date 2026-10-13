@@ -235,11 +235,11 @@ P3-2 `ee9406c` + the reviewer's (b) (13 Oct): by / newDesign live in `texts(lang
 "detail" stays the writer's own word by the title's script (pbip-page.js), so the design-engine fixtures are untouched.
 English 'by' and ': detail' in Arabic reports come from byTitle's same-script rule (English names keep an English title), on both
 paths alike. Reported, not changed: R1b (Arabic Top-N lead drawn left of an English phrase), R4 (ops table title cut with "...").
-P3-3 N21 (13 Oct, open, waiting on a Desktop measure): the table height rule (pbip-sizing.js TABLE_ROWS) is font-blind (measured in
-Segoe UI at 15pt and 10pt only) and the whole-row cap leaves under 1 unit spare (1920 exec 426: 0.7; 1280 filters-top 206: 0.1); the
-1280 ops table is written at 8pt, a size the rule never measured. Segoe UI Semibold gets the same heights as regular. Needed from the
-laptop before coding: row pitch, header and total of a Semibold table (1920 15pt, 1280 10pt and 8pt), the regular 8pt table, and which of
-total fontFamily 'Segoe UI Bold' (visual.json) or textClasses.boldLabel makes the total bold under a Semibold theme.
+P3-3 N21 (13 Oct) `22a0048` + `88f7909`: TABLE_ROWS by N21-LAB.md (Desktop 2.158): pitch max(2t, t + 10) in both faces; header and
+pinned-total blocks by face and size (Semibold apart; 11-14pt and an 8/9pt total interpolated/held, said in the code); both height
+rules take the theme's font. A Semibold theme gets textClasses.boldLabel = the full "'Segoe UI Bold', wf_segoe-ui_bold, ..." string
+(written by pbip-export, the design engine untouched). The S3 checks in test-0.2.9w take N21-LAB's numbers, cause beside them.
+Whole chain (mcp 1472, v029i 33), website 17/17, site config green. Next: laptop checks rc.10 tables (fintech 1920, 1280 filters-top, Arabic).
 
 ## Writer P2, the owner's polish (12 Oct from 19:30 UTC; `fix/0.2.9-writer` reset to the gate `f48057f`; not merged)
 `d389889`: lines 3 wide, donut ring 68, smoothLines option (off). Whole chain, layouts, website 17/17 (--full) green.
