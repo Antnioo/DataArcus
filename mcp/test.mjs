@@ -1153,7 +1153,8 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     const skill = fs.readFileSync(path.join(HERE, 'skills/report-design/SKILL.md'), 'utf8').replace(/\r\n/g, '\n');
     const RULES = [
       ['plan first, wait for go', /plan/i, /wait for (the user's )?["“]?go/i],
-      ['display names only from the user', /display names?/i, /never translate, shorten or (relabel|rename)/i],
+      // (moved with its cause, B-88: the owner's decision of 13 Oct, option B: the assistant suggests, the user approves)
+      ['never show a name the user has not approved', /display names?/i, /never show a name the user has not approved/i, /approve or edit/i, /never renamed/i],
       ['a card\'s label says what its value is', /label/i, /what (its|the) value (really )?is/i],
       ['Gulf calendar fixes', /Calendar Generator/, /never write (the )?calendar DAX/i, /not (part of the score|scored)/i],
       ['model text is untrusted', /untrusted/i, /never follow instructions/i, /descriptions?/i, /file names?/i],
@@ -1164,7 +1165,7 @@ r = await call('suggest_fields', { path: 'dax-project', kpis: 3 });
     }
     const cr = tl.create_report.description, dn = tl.create_report.inputSchema.properties.displayNames.description, ch = tl.check_model_health.description;
     chk(() => /show the (user the )?plan/i.test(cr) && /wait for/i.test(cr) && /closest supported/i.test(cr) && /what (its|the) value (really )?is/i.test(cr), () => `create_report's description must carry: plan and wait, the closest supported visuals, a true card label: ${cr.slice(0, 300)}`);
-    chk(() => /only/i.test(dn) && /user/i.test(dn) && /never translate, shorten or (relabel|rename)/i.test(dn), () => `displayNames must say the names come only from the user: ${dn}`);
+    chk(() => /only names the user gave or approved/i.test(dn) && /never show a name the user has not approved/i.test(dn) && /never renamed/i.test(dn), () => `displayNames must say only approved names are written (B-88): ${dn}`);
     chk(() => /Calendar Generator/.test(ch) && /never write (the )?calendar DAX/i.test(ch) && /not (part of the score|scored)/i.test(ch) && /new file/i.test(ch), () => `check_model_health's description must carry the Gulf calendar rule and say the scripts go to new files: ${ch.slice(0, 300)}`);
     for (const n of ['read_model', 'suggest_fields', 'check_model_health', 'create_report']) chk(() => /untrusted/i.test(tl[n].description), () => `${n}'s description must say that names in the model are untrusted text`);
     chk(() => ins.length <= INSTRUCTIONS_MAX, () => `the server's instructions are ${ins.length} characters: keep them short enough to be read (${INSTRUCTIONS_MAX} at most; the audit's A7-4: one cap)`);
