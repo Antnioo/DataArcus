@@ -14,6 +14,8 @@
     mixHex, obj, pageFilterOf, pfLiteral, rnd, timeAxisPlan
   } = Query;
   const { barNameShare, cellRoom, columnRoom, textWidth } = Sizing;
+  // the full font string for a bold total (N21-LAB.md: the family alone falls back to a serif face)
+  const BOLD_TOTAL = "'Segoe UI Bold', wf_segoe-ui_bold, helvetica, arial, sans-serif";
 
 
   // ---------- zip (stored) ----------
@@ -368,7 +370,13 @@
     // resources: the theme, the background, the logo
     // inside a project the theme carries the name report.json references, its file name with .json (Microsoft's
     // theming reference: customTheme.name, the registered item's name and path and the theme's own "name" must be equal)
-    add(R + '/StaticResources/RegisteredResources/' + themeFile, json(Object.assign({}, o.theme, { name: themeFile })));
+    // P3-3 (N21, C5; measured in Desktop 2.158, N21-LAB.md): with a Segoe UI Semibold theme a table or matrix total was not
+    // bold (Power BI's bold label takes the label's face, a bold weight of Semibold). "Segoe UI Bold" alone draws bold in a
+    // serif fallback; the full font string draws true Segoe UI Bold on screen and in the PDF, and survives Save. One line in
+    // the theme's boldLabel covers every total; a theme's own boldLabel is kept. Bold does not move the rows (N21-LAB).
+    const tc = (o.theme && o.theme.textClasses) || {}, semibold = /semibold/i.test(String((tc.label || {}).fontFace || o.font || ''));
+    const themeOut = semibold && !tc.boldLabel ? Object.assign({}, o.theme, { textClasses: Object.assign({}, tc, { boldLabel: { fontFace: BOLD_TOTAL } }) }) : o.theme;
+    add(R + '/StaticResources/RegisteredResources/' + themeFile, json(Object.assign({}, themeOut, { name: themeFile })));
     PAGES.forEach((pg) => add(R + '/StaticResources/RegisteredResources/' + pg.bgFile, pg.png));
     if (logoFile) add(R + '/StaticResources/RegisteredResources/' + logoFile, o.logo.bytes);
     const items = [{ name: themeFile, path: themeFile, type: 'CustomTheme' }].concat(PAGES.map((pg) => ({ name: pg.bgFile, path: pg.bgFile, type: 'Image' })));
