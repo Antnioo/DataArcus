@@ -4,6 +4,16 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## Integration round P3 (13 Oct, cloud builder 5; `fix/0.2.9-gate` from `15139ed`; not merged to main, no PR)
+Merged: design `5c1ceab` (`9d758da`; N26 second colour never red or a status colour, N27 a chart's colour keyed to its category
+field, N25 the fade's strong end is the chart's colour, N28 the 6% tint on the default designed path only; no conflict, the
+branch held the gate; its stamps 20261013p4 kept) and writer-p3 at `96dd8dd` (`e63e3be`; item 1 unique report-measure names,
+item 2 Arabic by / detail in designed titles; it landed within the 30 minutes, so the head was taken, not ba9823f; no conflict;
+pbip-notes and theme-generator stamps 20261013p5).
+Tests (Linux) on `e63e3be`: mcp 1490, v029c/d/e/f/g 36/21/21/20/21, golden 12, fuzz 600 + FUZZ_LONG 10000, layouts 32 reports
+226 checks, website 17 of 17, deny-scan, site config, csp, check-min. GitHub CI on `e63e3be`: Tests (mcp, mcp-windows, website)
+and Privacy scan green. Open: N21 (P3b). Checks P2 (B7) still held for the owner.
+
 ## Integration round P2, the owner's polish round (12 Oct, cloud builder 5; `fix/0.2.9-gate` from `f48057f`; not merged to main, no PR): rc.8's base
 Integration round P2: writer `d73a773` (`3917b69`; line width 3, donut ring 68, smoothLines; no conflict; pbip-page stamp
 20261012p2) + design `a7581da` (`c8b6ebc`; colour polish: pale lead to 3:1, second chart colour, no status lead, greys with a chart
