@@ -242,6 +242,45 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     chk(() => E.texts('ar').by === 'حسب' && E.texts('ar').newDesign === 'تصميم جديد' && E.texts('en').by === 'by' && !('detail' in E.texts('ar')) && !('detail' in E.texts('en')) && pgSrc.includes("'التفاصيل'") && !/texts: Object\.assign\(\{\}, texts\(a\.lang\)/.test(srv),
       () => `P3-2: by and newDesign in texts(lang), used as they are on both paths; detail the writer's own: ${JSON.stringify([E.texts('ar'), E.texts('en')].map((t) => [t.by, t.detail, t.newDesign]))}`);
   }
+
+  // ---------- P3-3 N21: a table's rows by the font the report writes (N21-LAB, Desktop 2.158, 13 Oct 2026) ----------
+  {
+    const Z = req('../assets/js/pbip-sizing.js'), SB = 'Segoe UI Semibold', RG = 'Segoe UI';
+    const near = (a, b) => Math.abs(a - b) < 0.05;
+    // the whole rows a table h high shows (title, header, rows, the pinned total), at the default row padding
+    const rowsIn = (h, t, title, font) => Math.floor((h - Z.tableHeight(0, t, title, 1, t, font)) / Z.rowPitch(t, 1));
+    // the measured pitch, max(2t, t + 10): the same in both faces
+    chk(() => [[8, 18], [9, 19], [10, 20], [15, 30]].every(([t, p]) => near(Z.rowPitch(t, 1), p)),
+      () => `P3-3: the row pitch is the measured max(2t, t + 10): ${JSON.stringify([8, 9, 10, 15].map((t) => Z.rowPitch(t, 1)))}`);
+    // the measured heights that hold N rows whole: Semibold 134.2 + 30N (15pt), 93.3 + 20N (10pt); regular 130.2 + 30N, 91.3 + 20N
+    chk(() => [0, 5, 10].every((n) => near(Z.tableHeight(n, 15, 18, 1, 15, SB), 134.2 + 30 * n) && near(Z.tableHeight(n, 10, 12, 1, 10, SB), 93.3 + 20 * n)
+      && near(Z.tableHeight(n, 15, 18, 1, 15, RG), 130.2 + 30 * n) && near(Z.tableHeight(n, 10, 12, 1, 10, RG), 91.3 + 20 * n)),
+      () => `P3-3: the measured heights by face: ${JSON.stringify([SB, RG].map((f) => [Z.tableHeight(0, 15, 18, 1, 15, f), Z.tableHeight(0, 10, 12, 1, 10, f)]))}`);
+    // rc.9's slots: Semibold 15pt in 307 shows 5 whole rows (the writer counted 6), 10pt in 167 shows 3 (it counted 4); 8pt in 253 about 9 (it counted 11)
+    chk(() => rowsIn(307, 15, 18, SB) === 5 && rowsIn(167, 10, 12, SB) === 3 && rowsIn(253, 8, 12, RG) === 9 && rowsIn(253, 8, 12, SB) === 9,
+      () => `P3-3: whole rows in rc.9's slots: ${JSON.stringify([rowsIn(307, 15, 18, SB), rowsIn(167, 10, 12, SB), rowsIn(253, 8, 12, RG), rowsIn(253, 8, 12, SB)])} (want 5, 3, 9, 9)`);
+    // regular is its own (not Semibold's): a 310.2 slot holds 6 regular rows at 15pt, 5 Semibold; a font never measured takes regular's numbers
+    chk(() => rowsIn(310.2, 15, 18, RG) === 6 && rowsIn(310.2, 15, 18, SB) === 5 && near(Z.tableHeight(4, 10, 12, 1, 10, 'Arial'), Z.tableHeight(4, 10, 12, 1, 10, RG)),
+      () => `P3-3: regular apart from Semibold: ${JSON.stringify([rowsIn(310.2, 15, 18, RG), rowsIn(310.2, 15, 18, SB)])}`);
+    // the writer: a Semibold report's tables end on whole rows by Semibold's numbers, and its total is bold by the full font string
+    model('i-n21', [{ name: 'Loans', partitions: mp('Loans'), columns: [col('Branch', 'string'), col('Product', 'string'), col('Amount', 'double'), col('Risk', 'double')],
+      measures: [ms('Total Loans', 'SUM ( Loans[Amount] )', '#,0'), ms('Avg Risk', 'AVERAGE ( Loans[Risk] )', '0.0'), ms('Loan Count', 'COUNTROWS ( Loans )', '#,0')] }]);
+    const BOLD = "'Segoe UI Bold', wf_segoe-ui_bold, helvetica, arial, sans-serif";
+    const build = async (font, page, filters) => { const pl = await ask('plan_layout', { path: 'i-n21', layout: 'exec', page, kpis: 3, filters, lang: 'en' }); if (pl.err) return pl;
+      return ask('create_report', { path: 'i-n21', name: 'N21 ' + font + ' ' + page, design: Object.assign({}, pl.j.design, { font }), lang: 'en' }); };
+    const themeOf = (x) => { const R = path.join(ROOT, 'i-n21', x.j.report, 'StaticResources', 'RegisteredResources'); return JSON.parse(fs.readFileSync(path.join(R, fs.readdirSync(R).find((f) => f.endsWith('.json'))), 'utf8')); };
+    const sb = await build(SB, '1920x1080', 'none'), rg = await build(RG, '1920x1080', 'none');
+    const tables = (x) => visualsOf(x, 'i-n21').filter((v) => v.visual && v.visual.visualType === 'tableEx' && !(((v.visual.objects || {}).grid || [])[0] || {}).properties?.imageHeight);
+    // a capped table's height is its whole rows by the face's numbers: (h - fixed) / pitch is whole, within the 1 the height is rounded up by
+    const whole = (x, fixed) => tables(x).length && tables(x).every((v) => { const r = (v.position.height - fixed) / 30; return r - Math.floor(r) < 1 / 30 + 1e-9 || v.position.height < fixed; });
+    chk(() => !sb.err && !rg.err && whole(sb, 134.2) && whole(rg, 130.2),
+      () => `P3-3: the written tables end on whole rows by their face (Semibold 134.2 + 30N, regular 130.2 + 30N): ${sb.err ? short(sb) : JSON.stringify(tables(sb).map((v) => v.position.height))} / ${rg.err ? short(rg) : JSON.stringify(tables(rg).map((v) => v.position.height))}`);
+    chk(() => !sb.err && (themeOf(sb).textClasses.boldLabel || {}).fontFace === BOLD && !(themeOf(rg).textClasses || {}).boldLabel,
+      () => `P3-3: a Semibold report's totals bold by the full string (textClasses.boldLabel); a regular one left to Power BI: ${sb.err ? short(sb) : JSON.stringify([themeOf(sb).textClasses.boldLabel, themeOf(rg).textClasses.boldLabel])}`);
+    // both height rules take the written font (pbip-page.js)
+    const pg3 = fs.readFileSync(path.join(REPO, 'assets/js/pbip-page.js'), 'utf8');
+    chk(() => (pg3.match(/tableHeight\([^;]*\.fontFace \|\| font\)/g) || []).length >= 2, () => 'P3-3: both table height rules in pbip-page.js pass the font the report writes');
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {

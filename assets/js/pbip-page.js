@@ -806,7 +806,8 @@
           const tf = tableFields(Bt, rtl).find(isTextField), n = ((tf && catKind(tf)) || {}).rows || 0;   // (A3-7: the picker's count, else the kind's)
           if (n) {
             let T = tableText || +((((((o.theme || {}).visualStyles || {}).tableEx || {})['*'] || {}).values || [{}])[0].fontSize) || 10;
-            const need = (pad, t = T) => tableHeight(n, t, TITLE, pad);   // (writer round 8: the one rule, pbip-sizing.js TABLE_ROWS)
+            // (P3-3 N21: by the font the report writes, the theme's, Semibold's rows apart; N21-LAB)
+            const need = (pad, t = T) => tableHeight(n, t, TITLE, pad, t, (((o.theme || {}).textClasses || {}).label || {}).fontFace || font);   // (writer round 8: the one rule, pbip-sizing.js TABLE_ROWS)
             // Round 18 (FAIL 12: a 420 x 220 matrix at 1920 x 1080 showed three of seven days): a matrix whose rows do not
             // fit even tight takes the largest smaller text, down to Power BI's 8pt, that holds them (and told,
             // tableSmaller); only where even 8pt does not is it told that its last rows scroll (tableRows)
@@ -891,7 +892,7 @@
           const tf = tableFields(Bt, rtl).find(isTextField), n = ((tf && catKind(tf)) || {}).rows || 0;
           // (writer round 8: the one rule, pbip-sizing.js TABLE_ROWS, with the laptop's measure)
           const hp = (((visual.objects || {}).columnHeaders || [])[0] || {}).properties || {}, ht = hp.fontSize ? +String(hp.fontSize.expr.Literal.Value).replace(/D$/, '') : t;
-          const pitch = rowPitch(t, padOf), fixed = tableHeight(0, t, TITLE, padOf, ht), k0 = Math.floor((box.h - fixed) / pitch);
+          const pitch = rowPitch(t, padOf), fixed = tableHeight(0, t, TITLE, padOf, ht, (((o.theme || {}).textClasses || {}).label || {}).fontFace || font), k0 = Math.floor((box.h - fixed) / pitch);
           if (!gp.imageHeight && k0 >= 1 && !(n && n <= k0)) { const h1 = Math.ceil(fixed + k0 * pitch); if (h1 < box.h) tableH = h1; }
         }
         if (B && visual && visual.query) vFilters = fixVisual(visual, s, pg, Bt, tableText);

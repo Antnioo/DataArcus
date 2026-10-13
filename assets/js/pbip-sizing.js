@@ -177,19 +177,39 @@
   }
 
   // A table's height in rows (writer round 8, S3; one table of constants for the known-rows rule and the whole-rows rule).
-  // In page units, t the values' text in pt, ht the header's (t when none of its own), pad the grid's rowPadding (Desktop
-  // draws 1 when none is written). SOURCE: MEASURED in Power BI Desktop 2.158, dataarcus-engine lab/proof-0.2.9-rc1
-  // business/beta/MEASURE-TABLE-ROWS.md (12 Oct 2026; 1920 x 1080 at 15pt and 1280 x 720 at 10pt, English and Arabic the
-  // same; the title on, 18pt and 12pt): a row 29.8 and 19.8; the title and a one-line header to the rule under it 90.3
-  // and 62.1; the total a row and 1.2 (its rule); about 6 and 4 under it. Fitted: a row's pitch is 1.5 x t x 4 / 3 + 2 x
-  // pad - 2.2; the title 2.275 x its size x 4 / 3; the header a pitch at its size and 5.9; under the total 0.4 x t.
+  // In page units (px at 100%), t the values' text in pt, ht the header's (t when none of its own), title the visual title's
+  // size, pad the grid's rowPadding (Desktop draws 1 when none is written), font the font the report writes (the theme's).
+  // SOURCE: MEASURED in Power BI Desktop 2.158, dataarcus-engine lab/proof-0.2.9-rc1 business/beta/N21-LAB.md (13 Oct 2026,
+  // P3-3 N21; PDF and screen agree to 0.3 px; the title on, 18pt at 15pt and 12pt at 10, 9 and 8pt):
+  //   a row's pitch, the same in Segoe UI and Segoe UI Semibold: 8pt 18.0, 9pt 19.0, 10pt 20.0, 15pt 30.0 = max(2t, t + 10);
+  //   the title and the header to the rule under it: regular 8pt 58.8, 9pt 59.9, 10pt 62.0, 15pt 90.0; Semibold 8pt 59.9,
+  //   10pt 63.0, 15pt 92.0; the pinned total, its rule to the visual's bottom: regular 10pt 29.3, 15pt 40.2; Semibold 10pt
+  //   30.3, 15pt 42.2 (so N whole rows need regular 130.2 + 30N at 15pt, 91.3 + 20N at 10pt; Semibold 134.2 + 30N, 93.3 + 20N).
+  // Between the measured sizes (11-14pt; Semibold's 9pt) the header and the total's part over a row are interpolated
+  // linearly; past 15pt they follow the 10-15pt line; a pinned total at 8 or 9pt was not measured and keeps 10pt's part
+  // over its row. The title's own share is still S3's 2.275 x its size x 4 / 3 (MEASURE-TABLE-ROWS.md), so a title other than
+  // the measured one moves the header by that. A row padding other than 1 moves every row (header and total too) by 2 x
+  // (pad - 1), S3's measured 2 x pad. A font never measured (DIN, Arial, Tahoma ...) takes regular Segoe UI's numbers.
   // Each extra header line adds 26.9 at 15pt (measured; not used: the writer's columns hold their headers whole, S2).
-  // (Before: round 11's 8pt measure, 1.415 x t x 4 / 3 + 2 x pad, the header 7, the title 1.5, 16: rc.3 still cut the last
-  // row at 1920, the S3 of RESCORE-1.)
-  const TABLE_ROWS = { source: 'MEASURE-TABLE-ROWS.md (Desktop 2.158, 12 Oct 2026)', ink: 1.5, row: -2.2, header: 5.9, total: 1.2, titleK: 2.275, frameK: 0.4 };
-  const rowPitch = (t, pad) => TABLE_ROWS.ink * t * 4 / 3 + 2 * pad + TABLE_ROWS.row;
+  // (Before, P3-3: S3's fit, a pitch of 2t - 0.2 and fixed parts 127.3 at 15pt and 87.1 at 10pt, for every font: short by
+  // 2.2 a row at 8pt, by 2.9 to 6.9 a table at 15pt, so the total line cut the last row (N21, D3, R3). Before S3: round 11's
+  // 8pt measure, 1.415 x t x 4 / 3 + 2 x pad.)
+  const TABLE_ROWS = { source: 'N21-LAB.md (Desktop 2.158, 13 Oct 2026)', titleK: 2.275,
+    head: { regular: [[8, 58.8, 12], [9, 59.9, 12], [10, 62.0, 12], [15, 90.0, 18]], semibold: [[8, 59.9, 12], [10, 63.0, 12], [15, 92.0, 18]] },
+    total: { regular: [[10, 29.3], [15, 40.2]], semibold: [[10, 30.3], [15, 42.2]] } };
+  const pitch1 = (t) => Math.max(2 * t, t + 10), padBy = (pad) => 2 * ((pad == null ? 1 : pad) - 1);
+  const face = (font) => (/semibold/i.test(String(font || '')) ? 'semibold' : 'regular');
+  // a measured series [[size, value], ...] at t: held below its first size, linear between, along its last line past its end
+  const along = (pts, t) => { if (t <= pts[0][0]) return pts[0][1]; let i = 1; while (i < pts.length - 1 && t > pts[i][0]) i++;
+    const [x0, y0] = pts[i - 1], [x1, y1] = pts[i]; return y0 + (y1 - y0) * (t - x0) / (x1 - x0); };
+  const titlePart = (title) => TABLE_ROWS.titleK * title * 4 / 3;
+  const rowPitch = (t, pad) => pitch1(t) + padBy(pad);
+  // the title and the header block, to the rule where row 1 starts
+  const tableHead = (ht, title, pad, font) => titlePart(title) + along(TABLE_ROWS.head[face(font)].map(([x, y, ti]) => [x, y - titlePart(ti)]), ht) + padBy(pad);
+  // the pinned total block: its row and what is under it
+  const tableTotal = (t, pad, font) => rowPitch(t, pad) + along(TABLE_ROWS.total[face(font)].map(([x, y]) => [x, y - pitch1(x)]), t);
   // the height that shows a table's n rows and its total whole
-  const tableHeight = (n, t, title, pad, ht) => { const p = rowPitch(t, pad); return TABLE_ROWS.titleK * title * 4 / 3 + (rowPitch(ht || t, pad) + TABLE_ROWS.header) + n * p + (p + TABLE_ROWS.total) + TABLE_ROWS.frameK * t; };
+  const tableHeight = (n, t, title, pad, ht, font) => tableHead(ht || t, title, pad, font) + n * rowPitch(t, pad) + tableTotal(t, pad, font);
   const api = {
     TABLE_ROWS, rowPitch, tableHeight, cellRoom, numberSample, fieldRoom, LETTER, TAHOMA_LATIN, textWidth, cutAt, columnRoom, BAR_NARROW_720, barNameShare, tableFit, make
   };
