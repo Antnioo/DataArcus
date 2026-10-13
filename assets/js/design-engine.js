@@ -100,9 +100,10 @@
   };
   // The ends of a bar's fade by value (P3, RESCORE-6 N25: a darkened lead faded the other way, the largest bars brown):
   // the strong end is the chart's colour exactly, never past it; the weak end the lightest tint of it towards the card
-  // that still stands 3:1 there, or, where none does (the colour itself near 3:1), a soft tint halfway (soft: true)
+  // that still stands 3:1 there, or, where none does (the colour itself near 3:1), a soft tint halfway (soft: true); a
+  // colour under 3:1 itself does not fade (null: every bar keeps it, round 13's rule)
   const fadeEnds = (base, card) => {
-    const b = clampHex(base || ''), k = clampHex(card || ''); if (!b || !k) return null;
+    const b = clampHex(base || ''), k = clampHex(card || ''); if (!b || !k || contrast(b, k) < 3) return null;
     for (let n = 12; n >= 3; n--) { const low = mix(b, k, n / 20); if (contrast(low, k) >= 3 && contrast(low, k) < contrast(b, k)) return { low, high: b }; }
     return { low: mix(b, k, 0.45), high: b, soft: true };
   };
