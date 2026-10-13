@@ -452,6 +452,11 @@
     // schema), so the field keeps its name everywhere else; the full name stays the slicer's alt text
     // (rc1, PERF-COMPARE D3: "Enforcement_History..." cut where a smaller text held it whole: the header takes the largest
     // size, down to 8pt, at which the name is whole, as a KPI card's title; it is shortened only where even 8pt doesn't hold it)
+    // (polish round P2, the owner's rounded slicer boxes; seen in Desktop 2.158, DESKTOP-TESTS.md 2026-10-12) a dropdown
+    // slicer's box rounded at 8, the cards' corners, with the design's edge colour as its border. Exactly these three
+    // properties: Microsoft's validator 0.4.0 does not know the "dropdown" object, and check_report shows exactly this
+    // shape as a known note (mcp/lib/check-report.mjs VALIDATOR_GAPS); any other property in it would stay an error.
+    const slicerBox = () => obj({ borderRadius: num(8), borderIndividualCorners: bool(false), borderColor: color(edge) });
     const slicerHeader = (f, w) => { const out = { show: bool(true), fontFamily: str(font) }; if (!f) return obj(out); const full = label(f), room = w - 2 * Math.round(8 * k);
       let size = SLICER_TEXT; while (size > 8 && oneLine(full, size, room) !== full) size = Math.ceil(size) - 1;
       if (size < SLICER_TEXT) out.textSize = num(size);
@@ -566,7 +571,7 @@
           const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
           const v = container({ x: Math.round(x), y: Math.round(y), w: Math.round(sw), h: Math.round(sh), z: z, parent, kind: 'slicer',
             visual: { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
-              objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, Math.round(sw)) },
+              objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, Math.round(sw)), dropdown: slicerBox() },
               visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true } });
           slicerNames.push(v.name);
           z += 1000;
@@ -1052,7 +1057,7 @@
         const ttl = label(f) || (W.slicer || 'Slicer') + ' ' + (i + 1);
         const v = add1({ x: Math.round(P.x + pad), y: Math.round(P.y + head + 8 * k + i * (sh + gap)), w: Math.round(sw), h: Math.round(sh), kind: 'slicer',
           visual: { visualType: 'slicer', query: f ? q({ Values: [proj(f)] }) : undefined,
-            objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, Math.round(sw)) },
+            objects: { data: obj({ mode: str('Dropdown') }), header: slicerHeader(f, Math.round(sw)), dropdown: slicerBox() },
             visualContainerObjects: frame(null, ttl), drillFilterOtherVisuals: true } });
         names.push(v.name);
       });

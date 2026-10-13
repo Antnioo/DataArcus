@@ -126,11 +126,44 @@ export const IMPACT = {
   canBreak: 'These can break the report in Power BI Desktop: a page or visual that does not open, or shows an error or nothing. Fix these first.',
   dataarcusRule: 'DataArcus\'s own rules, measured in Power BI Desktop: the report opens, but a part may not look or work as meant (cut text, a setting Desktop ignores, a scrollbar in a tooltip).'
 };
+// ---- what Microsoft's validator does not know yet and Power BI Desktop draws (polish round P2, the owner's rounded slicer
+// boxes, 12 Oct 2026) ----
+// One entry per Desktop proof, each with its evidence. A validator finding is "known" only when it is exactly the proven
+// shape: the code, the object, the visual type (and its mode), every property one of the proven ones with a value of the
+// proven kind, no selector. Anything else, even one more property of the same object, stays the validator's error.
+const litOf = (p) => (p && p.expr && p.expr.Literal ? p.expr.Literal.Value : undefined);
+const plainObj = (x) => x && typeof x === 'object' && !Array.isArray(x);
+export const VALIDATOR_GAPS = [{
+  code: 'PBIR_FORMATTING_OBJECT_UNKNOWN', object: 'dropdown', visualType: 'slicer',
+  // a dropdown slicer (the mode the report writer writes)
+  fits: (v) => { const d = arr(((v.objects || {}).data)).find((e) => plainObj(e) && !e.selector); return d && plainObj(d.properties) && litOf(d.properties.mode) === "'Dropdown'"; },
+  // the three properties seen on screen: corners 4, 8 and 12 (0-24 allowed, as the cards' radius), one radius for all
+  // four corners, a solid #RGB or #RRGGBB border colour
+  props: {
+    borderRadius: (p) => { const m = /^(\d{1,2}(?:\.\d+)?)[DL]?$/.exec(String(litOf(p))); return !!m && +m[1] <= 24; },
+    borderIndividualCorners: (p) => litOf(p) === 'false' || litOf(p) === false,
+    borderColor: (p) => !!(p && p.solid && /^'#(?:[0-9a-f]{3}|[0-9a-f]{6})'$/i.test(String(litOf(p.solid.color))))
+  },
+  what: 'known: Power BI Desktop 2.158 draws it; Microsoft\'s validator 0.4.0 does not list it yet (a dropdown slicer\'s rounded box: dropdown.borderRadius, borderIndividualCorners, borderColor). Not an error.',
+  evidence: 'scripts/tests/DESKTOP-TESTS.md, 2026-10-12, Desktop 2.158, "A dropdown slicer\'s rounded box"'
+}];
+// code: the validator's code; object: its item's path (the object's name); visualJson: the visual.json it names
+export function knownGap(code, object, visualJson) {
+  const v = plainObj(visualJson) && plainObj(visualJson.visual) ? visualJson.visual : null;
+  if (!v) return null;
+  const g = VALIDATOR_GAPS.find((x) => x.code === code && x.object === object && x.visualType === v.visualType);
+  if (!g || !g.fits(v)) return null;
+  const entries = (v.objects || {})[g.object];
+  if (!Array.isArray(entries) || !entries.length) return null;
+  const ok = entries.every((e) => plainObj(e) && !('selector' in e) && Object.keys(e).every((k) => k === 'properties') && plainObj(e.properties) && Object.keys(e.properties).length
+    && Object.entries(e.properties).every(([k, p]) => Object.prototype.hasOwnProperty.call(g.props, k) && g.props[k](p)));
+  return ok ? { what: g.what, evidence: g.evidence } : null;
+}
 // (A4-7 and C2, audit 4: the kind is read from the finding's origin, set where the finding is made, never guessed from
 // its source text. Every finding: { origin: validator | schema | rule | instruction (| lint, in the lint section),
 // rule, severity error | warning | note, file, page, visual, what, fix, source, impact } (CHECK-REPORT.md, "Finding shape"))
 export const impactOf = (f) => {
-  if (f.origin === 'validator') { const t = DESKTOP_OPENS[f.rule]; return t && t(f._base || '', f.file) ? 'desktopOpens' : 'canBreak'; }
+  if (f.origin === 'validator') { if (f.known) return 'desktopOpens'; const t = DESKTOP_OPENS[f.rule]; return t && t(f._base || '', f.file) ? 'desktopOpens' : 'canBreak'; }
   if (f.origin === 'schema') return 'canBreak';
   return 'dataarcusRule';
 };
@@ -139,7 +172,9 @@ export const impactOf = (f) => {
 // n: findings per kind; ctx: { validator: { ran, mode, why }, unread: files not read (too large, too deep, links,
 // not readable), desktopOpensErrors }. Pure: the same counts and context give the same sentence.
 export function impactSummary(n, ctx) {
-  const c = ctx || {}, v = c.validator || {}, unread = +c.unread || 0, E = +c.desktopOpensErrors || 0;
+  const c = ctx || {}, v = c.validator || {}, unread = +c.unread || 0, E = +c.desktopOpensErrors || 0, K = +c.known || 0;
+  // (polish round P2) the validator's known gaps are notes of their own: counted apart from the strict errors
+  n = Object.assign({}, n, { desktopOpens: Math.max(0, (+n.desktopOpens || 0) - K) });
   const s = (k, one, many) => (k === 1 ? one : many);
   const reasons = [].concat(v.ran && v.mode === 'offline' ? [] : [`Microsoft's validator did not run${v.why ? ` (${String(v.why).replace(/^not run: /, '')})` : ''}`],
     unread ? [`${unread} ${s(unread, 'file was', 'files were')} not read (see notChecked)`] : []);
@@ -148,7 +183,10 @@ export function impactSummary(n, ctx) {
   const strict = n.desktopOpens ? ` ${n.desktopOpens} ${s(n.desktopOpens, 'finding is', 'findings are')} only what Microsoft's strict validation or Fabric would refuse.` : '';
   if (n.canBreak) return `${n.canBreak} ${s(n.canBreak, 'finding', 'findings')} can break the report in Power BI Desktop: fix ${s(n.canBreak, 'it', 'these')} first.` + (n.desktopOpens ? ` ${n.desktopOpens} more ${s(n.desktopOpens, 'is', 'are')} only what strict validation or Fabric would refuse${notJudged ? '' : `; Desktop opens the report with ${s(n.desktopOpens, 'it', 'them')}`}.` : '') + (notJudged ? ' ' + notJudged : '');
   if (notJudged) return notJudged + strict + rules;
-  if (n.desktopOpens) return `The report opens in Power BI Desktop: it is not broken. Its ${E} ${s(E, 'error is', 'errors are')} what Microsoft's strict validation or Fabric would refuse (${n.desktopOpens} ${s(n.desktopOpens, 'finding', 'findings')}); fix ${s(n.desktopOpens, 'it', 'them')} only before publishing through Fabric or Git.` + (n.dataarcusRule ? ` ${n.dataarcusRule} DataArcus ${s(n.dataarcusRule, 'rule', 'rules')} also spoke: ${s(n.dataarcusRule, 'a part that', 'parts that')} may not look as meant.` : '');
+  // (polish round P2) only the validator's known gaps (notes, no error): Desktop draws them
+  const knownLine = K ? ` ${K} known ${s(K, 'note', 'notes')}: what Power BI Desktop 2.158 draws and Microsoft's validator 0.4.0 does not list yet (each finding's known); nothing to fix.` : '';
+  if (K && !n.desktopOpens) return 'The report opens in Power BI Desktop: it is not broken.' + knownLine + rules;
+  if (n.desktopOpens) return `The report opens in Power BI Desktop: it is not broken. Its ${E} ${s(E, 'error is', 'errors are')} what Microsoft's strict validation or Fabric would refuse (${n.desktopOpens} ${s(n.desktopOpens, 'finding', 'findings')}); fix ${s(n.desktopOpens, 'it', 'them')} only before publishing through Fabric or Git.` + knownLine + (n.dataarcusRule ? ` ${n.dataarcusRule} DataArcus ${s(n.dataarcusRule, 'rule', 'rules')} also spoke: ${s(n.dataarcusRule, 'a part that', 'parts that')} may not look as meant.` : '');
   if (n.dataarcusRule) return `Nothing found that breaks the report in Power BI Desktop or that Fabric would refuse; ${n.dataarcusRule} DataArcus ${s(n.dataarcusRule, 'rule', 'rules')} spoke: ${s(n.dataarcusRule, 'a part that', 'parts that')} may not look or work as meant.`;
   return 'Nothing found: the report opens in Power BI Desktop and passes the checks that ran.';
 }
@@ -191,12 +229,16 @@ export async function checkReport(p, opts) {
     try {
       const { runReportValidation, getMetadataProvider } = await import('@microsoft/powerbi-report-authoring-cli');
       const s = await runReportValidation({ reportDir: loc.reportDir, defDir: loc.defDir, provider: await getMetadataProvider(), skipSchema: true, pbipPath: loc.pbipPath || undefined });
-      Object.assign(validator, { ran: true, mode: 'offline', errors: s.errorCount, warnings: s.warningCount });
+      Object.assign(validator, { ran: true, mode: 'offline', errors: s.errorCount, warnings: s.warningCount, known: 0 });
       for (const [code, d] of Object.entries(s.diagnostics || {})) for (const it of (d.items || [])) {
         const file = it.file && path.isAbsolute(it.file) ? rel(loc.reportDir, it.file) : null;
-        add({ origin: 'validator', _base: it.file ? path.basename(String(it.file)) : '', rule: /^[A-Z0-9_]{3,60}$/.test(code) ? code : 'VALIDATOR', severity: d.severity === 'error' ? 'error' : d.severity === 'warning' ? 'warning' : 'note', file: file && !file.startsWith('..') ? file : null, page: null, visual: null,
+        // (polish round P2) a gap of the validator's own catalog that Desktop was seen to draw: a note with its evidence
+        let known = null;
+        if (file && !file.startsWith('..') && /visual\.json$/i.test(file) && VALIDATOR_GAPS.some((g) => g.code === code && g.object === it.path)) { try { known = knownGap(code, it.path, readJson(path.join(loc.reportDir, ...file.split('/')))); } catch (e) { known = null; } }
+        if (known) validator.known++;
+        add(Object.assign({ origin: 'validator', _base: it.file ? path.basename(String(it.file)) : '', rule: /^[A-Z0-9_]{3,60}$/.test(code) ? code : 'VALIDATOR', severity: known ? 'note' : d.severity === 'error' ? 'error' : d.severity === 'warning' ? 'warning' : 'note', file: file && !file.startsWith('..') ? file : null, page: null, visual: null,
           what: scrub(String(it.message || '').split(String(it.file || '\u0000')).join('').replace(/[:\s]+$/, ''), loc.reportDir), fix: 'See Microsoft\'s report authoring reference for this code; in Power BI Desktop, opening and saving the report fixes most structure problems.',
-          source: `Microsoft validator ${VALIDATOR_VERSION}: ${code}` });
+          source: `Microsoft validator ${VALIDATOR_VERSION}: ${code}` }, known ? { known, fix: 'Nothing to fix: Power BI Desktop draws it (see known.evidence). Keep it; only Microsoft\'s validator does not list it yet.' } : {}));
       }
     } catch (e) { Object.assign(validator, { ran: false, mode: 'not available', why: scrub(e && e.message, loc.reportDir) }); }
   }
@@ -270,7 +312,7 @@ export async function checkReport(p, opts) {
   const answer = {
     report: { pages: R.pages.filter((p) => !p.tooltip).length, tooltipPages: R.pages.filter((p) => p.tooltip).length, visuals: R.visuals.length, bookmarks, pageNames: R.pages.map((p) => p.name), schemaVersions: versions, builtBy: 'unknown' },
     lang, validator, schemas, rulesRun: ruled.ran,
-    impact: { summary: impactSummary(byImpact, { validator, unread: sk.big.length + sk.deep + unreadable + (sk.links || []).length, desktopOpensErrors: all.filter((f) => f.impact === 'desktopOpens' && f.severity === 'error').length }), kinds: Object.fromEntries(Object.entries(IMPACT).map(([k, means]) => [k, Object.assign({ count: byImpact[k], means }, k === 'desktopOpens' ? { measured: `measured: ${DESKTOP_OPENS_SOURCE.file}, ${DESKTOP_OPENS_SOURCE.date}, Desktop ${DESKTOP_OPENS_SOURCE.desktop}, "${DESKTOP_OPENS_SOURCE.section}"` } : {})])),
+    impact: { summary: impactSummary(byImpact, { validator, unread: sk.big.length + sk.deep + unreadable + (sk.links || []).length, desktopOpensErrors: all.filter((f) => f.impact === 'desktopOpens' && f.severity === 'error').length, known: all.filter((f) => f.known).length }), kinds: Object.fromEntries(Object.entries(IMPACT).map(([k, means]) => [k, Object.assign({ count: byImpact[k], means }, k === 'desktopOpens' ? { measured: `measured: ${DESKTOP_OPENS_SOURCE.file}, ${DESKTOP_OPENS_SOURCE.date}, Desktop ${DESKTOP_OPENS_SOURCE.desktop}, "${DESKTOP_OPENS_SOURCE.section}"` } : {})])),
       tellUser: 'Tell the user the summary and, for each kind with findings, its sentence: a report Desktop opens is not broken because of what only strict validation or Fabric would refuse. Each finding\'s "impact" is its kind; its code is Microsoft\'s or DataArcus\'s, unchanged.' },
     findings, notChecked,
     ...(lintSection ? { lint: lintSection } : {}),
