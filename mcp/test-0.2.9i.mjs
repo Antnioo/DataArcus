@@ -187,6 +187,62 @@ export async function v029i({ call, raw, check, ROOT, fs = fs0 }) {
     chk(() => !a.err && !b.err && ls(a) && L(ls(a).strokeWidth) === '3D' && !ls(a).lineChartType && ls(b) && L(ls(b).lineChartType) === "'smooth'" && dn(a).every((d) => /"68L"/.test(d)),
       () => `P2 through create_report: line 3 wide, smooth only on request, every donut's ring at 68: ${short(a)} ${JSON.stringify([ls(a), ls(b), dn(a)])}`);
   }
+
+  // ---------- P3 (LAYOUT-SWEEP-RC7, the laptop: a column "Agent" on two tables; Desktop: "Something's wrong with one or more
+  // filters" on 2 of 6 tiles, though check_report, the validator and the lint said clean): every report-level measure name is
+  // unique across the WHOLE report (Power BI's rule for measures, compared without case), not per table; each visual's
+  // reference finds its measure; the validator says 0 errors ----------
+  {
+    model('i-two', [
+      { name: 'Calls', partitions: mp('Calls'), columns: [col('Agent', 'string'), col('Duration', 'double'), col('Channel', 'string')],
+        measures: [ms('Calls', 'COUNTROWS ( Calls )', '#,0'), ms('Talk Time', 'SUM ( Calls[Duration] )', '#,0')] },
+      { name: 'Tickets', partitions: mp('Tickets'), columns: [col('Agent', 'string'), col('Status', 'string')],
+        measures: [ms('Tickets', 'COUNTROWS ( Tickets )', '#,0'), ms('Keep: Calls by Agent', '1', '#,0')] }]);
+    for (const layout of ['ops', 'exec']) {
+      const pl = await ask('plan_layout', { path: 'i-two', layout });
+      const x = await ask('create_report', { path: 'i-two', name: 'I two ' + layout, design: pl.j && pl.j.design, secondPage: true, fields: { kpis: ['Calls[Calls]', 'Tickets[Tickets]', 'Calls[Talk Time]'], measure: 'Calls[Calls]', category: 'Calls[Agent]', category2: 'Tickets[Agent]' } });
+      const extP = x.err ? null : path.join(ROOT, 'i-two', x.j.report, 'definition', 'reportExtensions.json');
+      const ents = extP && fs.existsSync(extP) ? JSON.parse(fs.readFileSync(extP, 'utf8')).entities : [];
+      const names = ents.flatMap((e) => e.measures.map((m) => ({ t: e.name, m: m.name })));
+      const lower = names.map((n) => n.m.toLowerCase()), dup = lower.filter((n, i) => lower.indexOf(n) !== i);
+      const modelTaken = names.filter((n) => n.m.toLowerCase() === 'keep: calls by agent');   /* (a model measure's name, on any table: measure names are unique across the model) */
+      const refs = []; JSON.stringify(visualsOf(x, 'i-two'), (k, v) => { if (v && v.Measure && v.Measure.Expression && v.Measure.Expression.SourceRef && v.Measure.Expression.SourceRef.Schema === 'extension') refs.push({ t: v.Measure.Expression.SourceRef.Entity, m: v.Measure.Property }); return v; });
+      const broken = refs.filter((r) => !names.some((n) => n.t === r.t && n.m === r.m));
+      const ck = await ask('check_report', { path: `i-two/I two ${layout}.pbip` }), errors = ck.j ? (ck.j.findings || []).filter((f) => f.severity === 'error') : null;
+      chk(() => !x.err && names.length > 0 && !dup.length && !modelTaken.length && !broken.length && errors && errors.length === 0,
+        () => `P3 (${layout}): report measure names unique across the report (no case), never a model name, every reference found, validator 0 errors: dup ${JSON.stringify(dup)} model ${JSON.stringify(modelTaken)} broken ${JSON.stringify(broken.slice(0, 3))} errors ${JSON.stringify(errors && errors.slice(0, 2))} ${short(x)}`);
+    }
+  }
+
+  // ---------- P3 item 2 (LAYOUT-SWEEP-RC7, Arabic R1): the title words "by" and "detail" come from texts(lang), one source for
+  // the designed and the hand path; a title takes them in its own script (round 14: one script a title), so an Arabic report
+  // with Arabic names has no English "by" or "detail", and an Arabic report on English names reads the same on both paths ----------
+  {
+    model('i-ar', [{ name: 'Projects', partitions: mp('Projects'), columns: [col('Budget', 'double'), col('Product', 'string'), col('Region', 'string')],
+      measures: [ms('Total Budget', 'SUM ( Projects[Budget] )', '#,0'), ms('Projects', 'COUNTROWS ( Projects )', '#,0')] }]);
+    const AR = { 'Projects[Total Budget]': 'إجمالي الميزانية', 'Projects[Projects]': 'المشاريع', 'Projects[Product]': 'المنتج', 'Projects[Region]': 'المنطقة' };
+    const F = { kpis: ['Projects[Total Budget]', 'Projects[Projects]'], measure: 'Projects[Total Budget]', category: 'Projects[Product]', category2: 'Projects[Region]', table: ['Projects[Region]', 'Projects[Total Budget]'] };
+    const titles = (x) => visualsOf(x, 'i-ar').filter((v) => v.visual && v.page.type !== 'Tooltip').map((v) => { const t = ((v.visual.visualContainerObjects || {}).title || [])[0]; const val = t && t.properties.text && t.properties.text.expr.Literal ? t.properties.text.expr.Literal.Value : ''; return String(val).replace(/^'|'$/g, ''); }).filter(Boolean);
+    const designed = async (name, extra) => { const pl = await ask('plan_layout', { path: 'i-ar', layout: 'exec', lang: 'ar' }); return ask('create_report', Object.assign({ path: 'i-ar', name, lang: 'ar', design: pl.j && pl.j.design, secondPage: true, fields: F }, extra || {})); };
+    const handPages = [{ name: 'P', width: 1280, height: 720, slots: [{ kind: 'title', x: 36, y: 18, w: 840, h: 48 }, { kind: 'bar', x: 36, y: 100, w: 600, h: 280 }, { kind: 'table', x: 660, y: 100, w: 580, h: 280 }] }];
+    const hand = async (name, extra) => ask('create_report', Object.assign({ path: 'i-ar', name, lang: 'ar', pages: handPages, fields: F }, extra || {}));
+    const dAr = await designed('I ar names', { displayNames: AR }), hAr = await hand('I ar hand names', { displayNames: AR });
+    const EN = /\b(by|detail)\b/;
+    chk(() => !dAr.err && titles(dAr).length && !titles(dAr).some((t) => EN.test(t)) && titles(dAr).some((t) => /حسب/.test(t)) && !titles(hAr).some((t) => EN.test(t)),
+      () => `P3-2: an Arabic report with Arabic names: "حسب" and no English "by"/"detail", designed and hand: ${short(dAr)} ${JSON.stringify([titles(dAr), titles(hAr)])}`);
+    // English names in an Arabic report: one script a title (round 14), the same words on the designed path as on the hand one
+    const dEn = await designed('I ar en'), hEn = await hand('I ar hand en');
+    const words = (ts) => [...new Set(ts.flatMap((t) => (t.match(/\b(by|detail)\b|حسب|التفاصيل/g) || [])))].sort().join();
+    chk(() => !dEn.err && !hEn.err && words(titles(dEn)) && words(titles(dEn)).split(',').every((w) => words(titles(hEn)).split(',').includes(w) || w === 'detail'),
+      () => `P3-2: English names in an Arabic report, designed and hand paths, the same title words: ${JSON.stringify([words(titles(dEn)), words(titles(hEn))])}`);
+    // the source: texts(lang) holds by and newDesign; the server passes it as it is on both paths. "detail" is the writer's
+    // own word, chosen by the title's script (pbip-page.js), not in the design engine's labels: the reviewer's (b), 13 Oct,
+    // so the design-engine fixtures (which record those labels) stay as they are
+    const srv = fs.readFileSync(path.join(HERE, 'server.mjs'), 'utf8'), E = createRequire(import.meta.url)('../assets/js/design-engine.js');
+    const pgSrc = fs.readFileSync(path.join(REPO, 'assets/js/pbip-page.js'), 'utf8');
+    chk(() => E.texts('ar').by === 'حسب' && E.texts('ar').newDesign === 'تصميم جديد' && E.texts('en').by === 'by' && !('detail' in E.texts('ar')) && !('detail' in E.texts('en')) && pgSrc.includes("'التفاصيل'") && !/texts: Object\.assign\(\{\}, texts\(a\.lang\)/.test(srv),
+      () => `P3-2: by and newDesign in texts(lang), used as they are on both paths; detail the writer's own: ${JSON.stringify([E.texts('ar'), E.texts('en')].map((t) => [t.by, t.detail, t.newDesign]))}`);
+  }
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
