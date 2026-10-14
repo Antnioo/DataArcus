@@ -4,6 +4,35 @@ Read this first; update it as you go (rules in `mcp/CLAUDE.md`, "Keeping the mem
 by the reviewer: **round 2 is merged (`ada2942`) and the Gulf Calendar pack is merged (`2e6fc3d`)**; main is at
 `2e6fc3d`. Next: "Next step" below (the queued builder work). The "Round 2 in progress" section is now history.
 
+## A-01: DataArcus's own approval window (14 Oct, cloud reviewer; branch `fix/0.2.9-approval-window` from the gate `42640c0` = rc.16; not merged)
+Why: the owner's rc.16 test in Claude Desktop answered `approvedBy: "assistant-reported"` (the app has no MCP elicitation:
+no DataArcus prompt appeared; Claude even passed a reply in its own words). The outside review's A-01 said: disable that
+fallback or redesign the gate. **The owner's decision (14 Oct): his own approval window** (option 2; rejected: shipping with
+the assistant-reported fallback disclosed, and blocking writes without elicitation).
+What it is (`mcp/lib/approval-window.mjs`, `approve_plan` in `server.mjs`, `lib/plans.mjs`):
+- approve_plan opens a page in the person's default browser (Windows `rundll32 url.dll,FileProtocolHandler`, no shell;
+  `open` / `xdg-open`; `DATAARCUS_BROWSER` overrides, the tests use it), served on 127.0.0.1 at a random port, link with
+  a one-time secret (24 random bytes) that no tool answer holds. The page shows the plan (name, title, language, page
+  size, layout, fields, display names, options with the bar colours, files; every pinned input, escaped) with Approve
+  and Not now. CSP no scripts, no framing, referrer same-origin, no-store. A POST is taken only with Host 127.0.0.1:port
+  and Origin of the page (or no/"null" Origin with Sec-Fetch-Site same-origin). Found by a real Chromium click: with
+  Referrer-Policy no-referrer Chromium sends Origin "null", so the first version refused the real click.
+- Only the click approves (`approvedBy: "user-in-browser"`); elicitation stays first when the app has it ("user-in-app").
+  The assistant-reported path and the reply word lists (saysGo) are gone; `userReply` is no longer an input.
+- approve_plan waits up to 45 s for the click (`DATAARCUS_APPROVAL_WAIT_MS` can only shorten it), else answers
+  `status: "waiting"`; called again it answers approved once clicked; `reopen: true` opens the same link again.
+- A browser that can't start: refused, said so. An expired plan's link: "no longer valid".
+Tests: `mcp/test-approval.mjs` W-01..W-08 (20 checks, in test.mjs too); old tests moved to the new contract (G3,
+A6-3, Z-02a now "no typed reply approves", the helper withPlans needs no reply); `test-env.mjs` + `test-browser.mjs`
+(the tests' browser clicks Approve). Real Chromium (scratch script, not in CI): en/ar, light/dark, phone width, the
+click approves.
+Wording: approve_plan's description, the instructions (2,2xx cap kept), README, PRIVACY (A6-3 closed), the skill,
+CHANGELOG, the beta page's approve_plan line (en + ar, `?v=20261014aw`). Packaging (engine `fix/0.2.9-packaging`):
+the manifest's approve_plan text; smoke.mjs's own browser clicks Approve and checks user-in-browser.
+Next: full runs (mcp, website, packaging with DATAARCUS_COMMIT), push, merge into the gate as rc.17, laptop proof in
+Claude Desktop (window opens in the default browser, 45 s wait vs Desktop's tool time limit, Arabic, Not now, reopen),
+then the owner's test. Open: B-125 per-page fields (after).
+
 ## Integration round P4, the last code round for 0.2.9 before the owner's test (13 Oct, cloud builder 5; `fix/0.2.9-gate` from `f688ada`; not merged to main, no PR)
 Merged: design at `03dc11d` (`81d2a22`; B10, B-88, the owner's decision of 13 Oct, option B: in an Arabic plan the assistant
 suggests Arabic display names, the fixed list first and its own proposals for the rest, marked as suggestions; the user approves

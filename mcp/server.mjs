@@ -25,6 +25,7 @@ import { wordOf } from './lib/read-words.mjs';
 import { takenNames } from './lib/report-names.mjs';
 import { planLint } from './lib/plan-lint.mjs';
 import * as Plans from './lib/plans.mjs';
+import * as Approval from './lib/approval-window.mjs';
 // the engines this server uses, required here (A1-10: the model reader exports reading only)
 const require = createRequire(import.meta.url);
 const Bind = require('../assets/js/pbip-bind.js'), Health = require('../assets/js/model-health-engine.js'), Pbip = require('../assets/js/pbip-export.js');
@@ -1347,28 +1348,43 @@ server.registerTool('create_arabic_twin', {
   return text(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', key, writes, { labels: P.labels, timeRightToLeft: a.timeRightToLeft !== false, arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, source: reportPrint(a.path) })) }));
 }));
 
+// (A-01, the owner's decision of 14 Oct) how long approve_plan waits for the click in the window before it answers
+// "waiting": under the apps' time limit for a tool call. DATAARCUS_APPROVAL_WAIT_MS can only shorten it (the tests)
+const APPROVAL_WAIT = (() => { const v = Number(process.env.DATAARCUS_APPROVAL_WAIT_MS); return Number.isFinite(v) && v >= 0 ? Math.min(45000, v) : 45000; })();
 server.registerTool('approve_plan', {
-  title: 'Approve a plan (after the user\'s go)',
-  description: 'Marks a plan approved, so the writing tools may write what it lists. When the app supports MCP elicitation, DataArcus asks the person itself, in the app\'s own prompt that shows what will be written: only their yes there approves (approvedBy "user-in-app"); a no or a closed prompt refuses. When the app can\'t, call it only after you showed the user the plan (pages, visuals and fields, page size, theme colours, the files that will be written) and the user replied go, never in the same turn as the request and never on your own: pass the planId and the user\'s reply in their own words (approvedBy "assistant-reported": the tools can\'t check that a person typed it). A reply that says no or not yet is refused. The plan ids, by the tools they allow: ' + planSources() + ' (a tool called without one answers what it would write and a proposed id). A plan is good for 2 hours in this session of the server. Nothing is written by this tool.' + REPORT_UNTRUSTED,
+  title: 'Ask the user to approve a plan',
+  description: 'Asks the person to approve a plan, so the writing tools may write what it lists. Call it only after you showed the user the plan (pages, visuals and fields, page size, the report\'s name, theme colours and options, the files that will be written) and the user replied go, never in the same turn as the request and never on your own. DataArcus then opens its own approval window in the user\'s browser (on their computer only), which shows the plan and every file it writes: only their click on Approve there approves it (approvedBy "user-in-browser"); "Not now" refuses. When the app supports MCP elicitation, the app\'s own prompt asks instead (approvedBy "user-in-app"). Nothing you pass approves a plan. It waits up to ' + Math.round(APPROVAL_WAIT / 1000) + ' seconds for the click; then it answers status "waiting": tell the user to click Approve in the DataArcus window in their browser, and call approve_plan again with the same planId once they say they did (with reopen true if they closed or can\'t find the window). The plan ids, by the tools they allow: ' + planSources() + ' (a tool called without one answers what it would write and a proposed id). A plan is good for 2 hours in this session of the server. Nothing is written by this tool.' + REPORT_UNTRUSTED,
   inputSchema: {
     planId: z.string().min(1).max(40).describe('The proposed plan id'),
-    userReply: z.string().min(1).max(500).optional().describe('The user\'s reply to the plan, in their own words ("go", "yes, build it"). Needed when the app can\'t ask the person itself (no MCP elicitation)')
+    reopen: z.boolean().optional().describe('Open the approval window again (the user closed it or can\'t find it); the same link, still one approval')
   }, annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false }
 }, safe(async (a) => {
+  const P = Plans.pending(a.planId), done = Plans.approval(P.id);
+  if (done) return text(done);
   // Audit 6, A6-3 (the owner's P-1: an assistant could approve its own plan): when the app declares MCP elicitation, the
-  // person answers DataArcus's own prompt, which lists what will be written; the assistant's reply is not used then
+  // person answers the app's own prompt, which lists what will be written
   const caps = server.server.getClientCapabilities() || {};
-  if (!(caps.elicitation && (caps.elicitation.form || !caps.elicitation.url))) return text(Plans.approve(a.planId, a.userReply, 'assistant-reported'));
-  const p = Plans.pending(a.planId);
-  let r;
-  try {
-    r = await server.server.elicitInput({ mode: 'form',
-      message: `DataArcus asks before it writes anything. Approve this plan (${p.kind}, ${p.id})? It will write:\n- ${p.writes.join('\n- ')}\nNothing is overwritten or deleted.`,
-      requestedSchema: { type: 'object', properties: { approve: { type: 'boolean', title: 'Write these files', description: 'Yes: DataArcus may write what is listed above. No: nothing is written.', default: false } }, required: ['approve'] } },
-    { timeout: 10 * 60 * 1000 });
-  } catch (e) { throw new Error('Not approved: the approval prompt in the app did not get an answer (' + String(e && e.message || e).slice(0, 120) + '). Nothing was written. Ask the user to try again.'); }
-  if (!r || r.action !== 'accept' || !r.content || r.content.approve !== true) throw new Error(`Not approved: the person ${r && r.action === 'cancel' ? 'closed' : 'declined'} DataArcus's approval prompt in the app (they did not approve writing these files). Nothing was written. Ask what to change in the plan.`);
-  return text(Plans.approve(a.planId, null, 'user-in-app'));
+  if (caps.elicitation && (caps.elicitation.form || !caps.elicitation.url)) {
+    let r;
+    try {
+      r = await server.server.elicitInput({ mode: 'form',
+        message: `DataArcus asks before it writes anything. Approve this plan (${P.kind}, ${P.id})? It will write:\n- ${P.writes.join('\n- ')}\nNothing is overwritten or deleted.`,
+        requestedSchema: { type: 'object', properties: { approve: { type: 'boolean', title: 'Write these files', description: 'Yes: DataArcus may write what is listed above. No: nothing is written.', default: false } }, required: ['approve'] } },
+      { timeout: 10 * 60 * 1000 });
+    } catch (e) { throw new Error('Not approved: the approval prompt in the app did not get an answer (' + String(e && e.message || e).slice(0, 120) + '). Nothing was written. Ask the user to try again.'); }
+    if (!r || r.action !== 'accept' || !r.content || r.content.approve !== true) throw new Error(`Not approved: the person ${r && r.action === 'cancel' ? 'closed' : 'declined'} DataArcus's approval prompt in the app (they did not approve writing these files). Nothing was written. Ask what to change in the plan.`);
+    return text(Plans.approve(a.planId, 'user-in-app'));
+  }
+  // (A-01) DataArcus's own approval window, in the person's browser: only their click approves
+  const plan = Plans.planOf(a.planId), st = Approval.state(plan.id);
+  if (st && st.decided === 'decline') throw new Error(`Not approved: the person clicked "Not now" in DataArcus's approval window for plan ${plan.id}. Nothing was written. Ask what to change, make a new plan, show it and wait for their go.`);
+  const o = await Approval.open(plan, Approval.summary(plan.kind, plan.data), plan.expires, (id, d) => { if (d === 'approve') Plans.approve(id, 'user-in-browser'); }, a.reopen === true);
+  if (!o.opened && o.why !== 'decided') throw new Error(`Not approved: DataArcus could not open its approval window in the browser (${String(o.why).slice(0, 160)}). Nothing was written. Ask the user to check that a default web browser is set, then call approve_plan again.`);
+  const d = await Approval.wait(plan.id, APPROVAL_WAIT);
+  if (d === 'approve') return text(Plans.approval(plan.id));
+  if (d === 'decline') throw new Error(`Not approved: the person clicked "Not now" in DataArcus's approval window for plan ${plan.id}. Nothing was written. Ask what to change, make a new plan, show it and wait for their go.`);
+  return text({ planId: plan.id, status: 'waiting', approvedBy: null, window: o.again ? 'opened again' : st ? 'open' : 'opened',
+    sayFirst: 'Not approved yet: DataArcus opened its approval window in the user\'s browser, with the plan and every file it writes. Tell the user to check it and click Approve there (or "Not now"). When they say they did, call approve_plan again with this planId; if they closed the window or can\'t find it, call it with reopen: true. Nothing is approved by what is typed in the chat, and nothing was written.' });
 }));
 
 prepareRoot();

@@ -1,3 +1,4 @@
+import './test-env.mjs';
 // Round 22 (sitting 7-8 Oct): the checks of the reviewer's code review of rounds 20 and 21 (findings a to i), each
 // written red first. test.mjs runs them with its own client (import { round22 }); run alone they start the server
 // themselves, so one block can be tried in seconds: node test-round22.mjs
