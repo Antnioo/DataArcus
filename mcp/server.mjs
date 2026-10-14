@@ -5,6 +5,7 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { z } from 'zod';
@@ -18,7 +19,7 @@ import { proposeArabic } from './lib/arabic-names.mjs';
 import { readableName, writtenName } from './lib/display-names.mjs';
 import { addGulfCalendar, gulfFixInputs } from './lib/gulf-calendar.mjs';
 import { checkReport, CHECKS } from './lib/check-report.mjs';
-import { existingTheme, readReport } from './lib/read-report.mjs';
+import { existingTheme, readReport, reportPrint } from './lib/read-report.mjs';
 import { planNative, writeNative } from './lib/native-copy.mjs';
 import { wordOf } from './lib/read-words.mjs';
 import { takenNames } from './lib/report-names.mjs';
@@ -544,8 +545,8 @@ const CREATE_REPORT_INPUTS = {
     layout: z.enum(['exec', 'analysis', 'ops', 'focus']).optional(), kpis: z.number().int().min(0).max(6).optional(),
     focus: focusInput, tables: tablesInput,
     filters: z.enum(['none', 'start', 'end', 'top']).optional(), header: z.boolean().optional(), page: pageInput.optional(), dir: z.enum(['ltr', 'rtl']).optional(),
-    secondPage: z.boolean().default(true).describe('With a design: a second page in a complementary layout (details after an overview, an overview after analysis), with page buttons'),
-    slidePanel: z.boolean().default(false).describe('With a design: filters as a slide-in panel opened from a Filters button in the header, instead of a filter rail'),
+    secondPage: z.boolean().optional().describe('(Default true.) With a design: a second page in a complementary layout (details after an overview, an overview after analysis), with page buttons'),
+    slidePanel: z.boolean().optional().describe('(Default false.) With a design: filters as a slide-in panel opened from a Filters button in the header, instead of a filter rail'),
     theme: z.string().optional().describe('Theme JSON file (e.g. from the DataArcus theme generator), inside the DataArcus folder'),
     fields: z.object({
       kpis: z.array(z.string()).max(LIMITS.kpiCards).describe('The KPI cards\' measures, in card order; the row gets one card per measure'),
@@ -573,13 +574,13 @@ const CREATE_REPORT_INPUTS = {
     chartColors: z.enum(['gradient', 'solid']).optional().describe('The bars of bar and column charts. "gradient": each bar fades by its value, from a light tint of the theme\'s first data colour (the smallest value shown) to the colour itself (the largest); the tint always stands 3:1 off the panel, in light and dark designs. "solid": every bar in the theme\'s colour. Left out: "gradient" with a design, "solid" with hand-placed pages. Line charts, donuts and the tooltip pages are not changed. The answer\'s chartColors says what was written'),
     chartAxes: z.enum(['mirrored', 'standard']).optional().describe('Only for a right-to-left report (Power BI does not mirror charts itself). "mirrored" (the default there): a column or line chart has its value axis at the right and its categories and dates run from the right; a bar chart\'s bars grow from the right, its names at the right. "standard": the charts stay left to right. The answer\'s chartAxes says what was written'),
     text: z.string().min(1).max(400).optional().describe('The sentence for the design\'s text box ("What it means" in the focus layout), from the approved plan: what the main chart shows and what to do about it, in the report\'s language. Without it the box is left out and the chart beside it takes its room: a placeholder is never written'),
-    kpiValues: z.enum(['auto', 'full']).default('auto').describe('How every KPI card shows its number. "auto" (the default): automatic units with 2 decimals (3.43M, 14.81K, 231.50); a percentage shows as the model formats it (35.4% for 0.0%). "full": the full number with thousand separators (101,914) for measures whose format has none, in a smaller size on narrow cards so it is never cut'),
+    kpiValues: z.enum(['auto', 'full']).optional().describe('How every KPI card shows its number. "auto" (the default): automatic units with 2 decimals (3.43M, 14.81K, 231.50); a percentage shows as the model formats it (35.4% for 0.0%). "full": the full number with thousand separators (101,914) for measures whose format has none, in a smaller size on narrow cards so it is never cut'),
     displayNames: z.record(z.string(), z.string()).optional().describe('Names to show instead of the model\'s field names, as { "Table[Field]": "name" } (for example Arabic names for an Arabic report). Never show a name the user has not approved: only names the user gave or approved are written (in an Arabic report, plan_layout\'s arabicNames suggests names for the user to approve or edit); without approval the model\'s names stay. The report shows the name wherever it shows the field: KPI titles, chart titles, axis and legend, table headers, slicer headers, the tooltip pages. The model is never renamed. Left out, the approved plan\'s displayNames are written'),
     logo: z.string().optional().describe('Logo image for the header: a PNG or JPG file inside the DataArcus folder, 2 MB at most. It is copied into the new report (the file itself is not changed) and shown at its own shape, never stretched; a horizontal logo reads best'),
     subtitles: z.record(z.string(), z.string().max(120)).optional().describe('A subtitle under a chart\'s title, from the plan the user approved only, never made up: { "<the slot\'s role as plan_layout names it, or a hand-placed slot\'s title>": "<text>" }. Without it no subtitle is written'),
-    smoothLines: z.boolean().default(false).describe('Line charts drawn as smooth (monotone) curves; straight by default. Smooth suits a calm series and swings between the points of a jagged one.'),
-    noDataMessage: z.boolean().default(true).describe('Charts and tables show "No data for this selection" (Arabic: لا توجد بيانات لهذا الاختيار) when their measure is blank for the current filters, instead of an empty box: a report-level measure and a card under each visual; the model is not touched. A KPI card wide enough for it says "No data" (لا توجد بيانات) at its usual size, a narrower one keeps "--". On by default (proven in Power BI Desktop, October 2026); false leaves all of it out'),
-    lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().optional().describe('Hand-placed pages only: right to left (Arabic: the default with lang "ar"; false keeps them left to right)'), font: z.string().default('Segoe UI'),
+    smoothLines: z.boolean().optional().describe('(Default false.) ' + 'Line charts drawn as smooth (monotone) curves; straight by default. Smooth suits a calm series and swings between the points of a jagged one.'),
+    noDataMessage: z.boolean().optional().describe('(Default true.) ' + 'Charts and tables show "No data for this selection" (Arabic: لا توجد بيانات لهذا الاختيار) when their measure is blank for the current filters, instead of an empty box: a report-level measure and a card under each visual; the model is not touched. A KPI card wide enough for it says "No data" (لا توجد بيانات) at its usual size, a narrower one keeps "--". On by default (proven in Power BI Desktop, October 2026); false leaves all of it out'),
+    lang: z.enum(['en', 'ar']).default('en'), rtl: z.boolean().optional().describe('Hand-placed pages only: right to left (Arabic: the default with lang "ar"; false keeps them left to right)'), font: z.string().optional().describe('Hand-placed pages: the font (default Segoe UI)'),
     colors: z.object({ text: z.string(), card: z.string(), background: z.string(), accent: z.string() }).partial().optional(),
     // (0.2.9, custom visuals, step C: lib/native-copy.mjs)
     customVisualsFrom: z.string().max(400).optional().describe('An existing PBIR report (its .pbip or .Report folder) whose custom visuals are replaced by native Power BI visuals in a NEW report "<name> native" next to it (the original is only read). In plan_layout: lists each replacement and what it loses, for the user\'s go. In create_report: with the approved planId, path (the model) and no pages or design, writes exactly the approved replacements')
@@ -592,15 +593,27 @@ const CREATE_REPORT_INPUTS = {
 // them in the plan, so nothing the user approved can change between the go and the write.)
 // REPORT_LOOK: what create_report takes for the report's look and options; when the call leaves one out, the plan's
 // value is used (one with a default, such as secondPage, is compared as given)
-const REPORT_LOOK = ['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines'];
-const REPORT_PINNED = ['pages', 'page', 'lang', 'dir', 'fields', 'pageFilters', 'displayNames', 'text', 'subtitles', 'svgColumns', 'svgCards', 'customVisualsFrom'].concat(REPORT_LOOK);
+const REPORT_LOOK = ['name', 'title', 'theme', 'logo', 'colors', 'chartColors', 'chartAxes', 'kpiValues', 'noDataMessage', 'secondPage', 'slidePanel', 'smoothLines', 'font', 'rtl'];
+// (B-03, the follow-up review: the options' defaults are given here, once, at the plan and at the write alike, so an
+// option left out of create_report takes the plan's value, not a schema default that differs from it)
+const LOOK_DEFAULTS = { kpiValues: 'auto', noDataMessage: true, secondPage: true, slidePanel: false, smoothLines: false, font: 'Segoe UI' };
+const withLookDefaults = (a) => Object.assign({}, a, Object.fromEntries(Object.entries(LOOK_DEFAULTS).filter(([k]) => a[k] === undefined)));
+// (B-01: focus and tables decide which fields are picked when the plan names none, so they are pinned too)
+const REPORT_PINNED = ['pages', 'page', 'lang', 'dir', 'fields', 'focus', 'tables', 'pageFilters', 'displayNames', 'text', 'subtitles', 'svgColumns', 'svgCards', 'customVisualsFrom'].concat(REPORT_LOOK);
 // (a native copy, customVisualsFrom, uses no design: none is pinned, so the report theme read at plan time cannot make
 // its pin differ from create_report's)
 const resolvedDesign = (a) => (a.pages || a.customVisualsFrom != null ? null : planLayout({ design: a.design, layout: a.layout, kpis: a.kpis, filters: a.filters, header: a.header, page: a.page, dir: a.dir, lang: a.lang, reportTheme: a.reportTheme }).design);
 // what the plan shows of the report's look and options (A-02): every value it pins, files by their names only
 const lookOf = (a) => Object.assign(Object.fromEntries(REPORT_LOOK.filter((k) => a[k] !== undefined).map((k) => [k, (k === 'theme' || k === 'logo') ? path.basename(String(a[k])) : a[k]])),
   { sayInPlan: 'Show these with the plan (the report\'s name and title, theme, logo, colours and options): they are approved with it, and create_report writes them as they are; a value left out here is the default. To change one after the go, make a new plan.' });
-const reportPin = (a, fields) => Object.assign({ design: resolvedDesign(a) }, Object.fromEntries(REPORT_PINNED.map((k) => [k, k === 'fields' ? fields : a[k]])));
+// (B-02, the follow-up review: a plan pinned the theme, logo and background files by their names only, and a native
+// copy's source report as it was read at the plan; a file changed after the go changed the report. The plan now pins
+// each file's contents, sha256, and the write reads them again: another file under the same name is refused)
+const printOf = (p, kind, max) => { try { return crypto.createHash('sha256').update(readUserFile(p, { kind, max })).digest('hex'); } catch (e) { return 'unreadable'; } };
+const filesPin = (a) => ({ theme: a.theme ? printOf(a.theme, 'theme', THEME_MAX) : null, logo: a.logo ? printOf(a.logo, 'logo', LOGO_MAX) : null,
+  backgrounds: (a.pages || []).map((p) => (p && p.background ? printOf(p.background, 'background image', BACKGROUND_MAX) : null)),
+  source: a.customVisualsFrom != null ? reportPrint(a.customVisualsFrom) : null });
+const reportPin = (a, fields) => Object.assign({ design: resolvedDesign(a), files: filesPin(a) }, Object.fromEntries(REPORT_PINNED.map((k) => [k, k === 'fields' ? fields : a[k]])));
 // the other writers pin every input they were proposed with (A6-5)
 const inputsPin = (a) => Object.fromEntries(Object.entries(a || {}).filter(([k]) => k !== 'planId'));
 server.registerTool('create_report', {
@@ -614,6 +627,7 @@ server.registerTool('create_report', {
   if (a.displayNames === undefined && a.planId != null) { const pn = Plans.pinned(a.planId, 'create_report', 'displayNames'); if (pn !== undefined) a = Object.assign({}, a, { displayNames: pn }); }
   // (A-02) the same for the report's look and options the plan holds: left out, the plan's value is written
   if (a.planId != null) { const fill = {}; REPORT_LOOK.forEach((k) => { if (a[k] === undefined) { const v = Plans.pinned(a.planId, 'create_report', k); if (v !== undefined) fill[k] = v; } }); if (Object.keys(fill).length) a = Object.assign({}, a, fill); }
+  a = withLookDefaults(a);
   // (0.2.9, custom visuals, step C) the native copy of an existing report: only the approved replacements, nothing else
   if (a.customVisualsFrom != null) {
     if (a.pages || a.design) throw new Error('Nothing was written: customVisualsFrom writes the native copy of that report alone; a new design is its own plan. Call create_report with customVisualsFrom, path and the approved planId only.');
@@ -1259,7 +1273,7 @@ server.registerTool('plan_layout', {
   const writes = a.customVisualsFrom != null && cvEntries ? planNative(a.customVisualsFrom, m0).writes : [`the report "<name>.Report" next to the model, with the theme inside it${formats.formats && formats.formats.scriptAfterGo ? `, and the format script "${formats.formats.scriptAfterGo}"` : ''} (create_report)`];
   const plan = planProblems.length ? { planProblems, sayFirst: 'This plan is outside the tools\' limits or names fields the model doesn\'t have: no plan id. Change the plan as each problem says (or ask the user), then call plan_layout again; never show a plan the tools would refuse.' }
     // (Z-01: a report plan allows create_report only, which needs the model; without path no plan id is given)
-    : model ? { plan: Plans.proposal(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: reportPin(planNames ? Object.assign({}, a, { displayNames: planNames }) : a, a.planFields) } }, cvEntries ? { customVisuals: cvEntries } : {})), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(a) })) }
+    : model ? { plan: Plans.proposal(Plans.propose('report', model, writes, Object.assign({ pins: { create_report: reportPin(withLookDefaults(planNames ? Object.assign({}, a, { displayNames: planNames }) : a), a.planFields) } }, cvEntries ? { customVisuals: cvEntries } : {})), Object.assign(planned ? { fields: planned } : {}, { reportLook: lookOf(withLookDefaults(a)) })) }
       : { noPlan: 'No plan id: this layout was planned without the model (path). For a report, call plan_layout with the model; for a separate theme file, generate_theme proposes its own theme plan.' };
   // round 15 (the owner's go on round 13's recommendation 1): gradient bars are the default for designed pages, and the
   // plan the user approves says so
@@ -1330,7 +1344,7 @@ server.registerTool('create_arabic_twin', {
   if (!P.answer.twin.nameFree) throw new Error(`Nothing was written: "${P.answer.twin.report}" or "${P.answer.twin.pbip}" is already there. DataArcus never writes over a file: rename or move the old twin, then ask again.`);
   const writes = [`the new report "${P.answer.twin.report}" and "${P.answer.twin.pbip}" next to the original (${P.answer.pages.length} pages mirrored, ${P.answer.labels.given} Arabic texts as approved); the original is not changed`]
     .concat(P.month.offered ? [`the TMDL script "${P.month.scriptAfterGo}" next to the project (the Arabic month column); never applied: the user applies it in TMDL view`] : []);
-  return text(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', key, writes, { labels: P.labels, timeRightToLeft: a.timeRightToLeft !== false, arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true })) }));
+  return text(Object.assign(P.answer, { plan: Plans.proposal(Plans.propose('twin', key, writes, { labels: P.labels, timeRightToLeft: a.timeRightToLeft !== false, arabicMonth: a.arabicMonth !== false, mirrorPicturePages: a.mirrorPicturePages === true, source: reportPrint(a.path) })) }));
 }));
 
 server.registerTool('approve_plan', {
